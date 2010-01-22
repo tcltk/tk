@@ -2,7 +2,7 @@
  *
  * Minimal sample ttk widget.
  *
- * $Id: ttkSquare.c,v 1.7 2009/02/08 19:35:35 jenglish Exp $
+ * $Id: ttkSquare.c,v 1.8 2010/01/22 14:17:53 nijtmans Exp $
  */
 
 #include <tk.h>
@@ -192,7 +192,7 @@ static Ttk_ElementOptionSpec SquareElementOptions[] =
     	"raised" },
     { "-width",  TK_OPTION_PIXELS, Tk_Offset(SquareElement,widthObj), "20"},
     { "-height", TK_OPTION_PIXELS, Tk_Offset(SquareElement,heightObj), "20"},
-    { NULL }
+    { NULL, 0, 0, NULL }
 };
 
 /*

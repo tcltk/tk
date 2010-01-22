@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.18 2009/11/01 18:12:44 jenglish Exp $
+/* $Id: ttkPanedwindow.c,v 1.19 2010/01/22 14:17:53 nijtmans Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -924,7 +924,7 @@ typedef struct {
 static Ttk_ElementOptionSpec SashElementOptions[] = {
     { "-sashthickness", TK_OPTION_INT,
 	    Tk_Offset(SashElement,thicknessObj), "5" },
-    {NULL}
+    { NULL, 0, 0, NULL }
 };
 
 static void SashElementSize(

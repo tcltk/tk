@@ -1,3 +1,29 @@
+2010-01-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.h            Don't depend on <stdio.h> from tcl.h any more
+	* generic/tkOldConfig.c
+	* generic/ttk/ttkClamTheme.c fix more gcc warnings: missing initializer
+	* generic/ttk/ttkClassicTheme.c
+	* generic/ttk/ttkDefaultTheme.c
+	* generic/ttk/ttkElements.c
+	* generic/ttk/ttkEntry.c
+	* generic/ttk/ttkInit.c
+	* generic/ttk/ttkLabel.c
+	* generic/ttk/ttkNotebook.c
+	* generic/ttk/ttkPanedwindow.c
+	* generic/ttk/ttkSquare.c
+	* generic/ttk/ttkTreeview.c
+	* win/ttkWinTheme.c
+	* win/tkWinMenu.c      Add missing #include <string.h>
+	* win/tkWinPort.h      Fix include files for CYGWIN
+	* win/tkWinSend.c
+	* win/tkWinSendCom.c
+	* win/tkWinTest.c      Fix gcc warning
+	* win/winMain.c:       Eliminate use of __argc and __argv for CYGWIN
+	* win/tcl.m4           Make cygwin configuration error into
+	* win/configure.in     a warning: CYGWIN compilation works
+	* win/configure        although there still are test failures.
+
 2010-01-19  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkCanvas.c (TagSearchScanExpr): [Bug 2931374]: Stop overflow
