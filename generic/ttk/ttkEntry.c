@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.17 2009/02/08 19:35:35 jenglish Exp $
+ * $Id: ttkEntry.c,v 1.18 2010/01/22 14:17:53 nijtmans Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -11,6 +11,7 @@
  */
 
 #include <string.h>
+#include <stdio.h>
 #include <tk.h>
 #include <X11/Xatom.h>
 
@@ -1946,7 +1947,7 @@ static Ttk_ElementOptionSpec TextareaElementOptions[] = {
 	Tk_Offset(TextareaElement,fontObj), DEF_ENTRY_FONT },
     { "-width", TK_OPTION_INT,
 	Tk_Offset(TextareaElement,widthObj), "20" },
-    {0,0,0}
+    { NULL, 0, 0, NULL }
 };
 
 static void TextareaElementSize(

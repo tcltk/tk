@@ -18,7 +18,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSendCom.c,v 1.9 2008/10/05 18:22:22 dkf Exp $
+ * RCS: @(#) $Id: tkWinSendCom.c,v 1.10 2010/01/22 14:17:53 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -252,9 +252,9 @@ WinSendCom_GetIDsOfNames(
 
     if (rgDispId) {
 	hr = DISP_E_UNKNOWNNAME;
-	if (_wcsicmp(*rgszNames, L"Send") == 0) {
+	if (wcscasecmp(*rgszNames, L"Send") == 0) {
 	    *rgDispId = TKWINSENDCOM_DISPID_SEND, hr = S_OK;
-	} else if (_wcsicmp(*rgszNames, L"Async") == 0) {
+	} else if (wcscasecmp(*rgszNames, L"Async") == 0) {
 	    *rgDispId = TKWINSENDCOM_DISPID_ASYNC, hr = S_OK;
 	}
     }

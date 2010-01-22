@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.21 2009/11/01 18:12:44 jenglish Exp $
+/* $Id: ttkNotebook.c,v 1.22 2010/01/22 14:17:53 nijtmans Exp $
  * Copyright (c) 2004, Joe English
  */
 
@@ -73,7 +73,7 @@ static Tk_OptionSpec TabOptionSpecs[] =
 	0,(ClientData)ttkCompoundStrings,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-underline", "underline", "Underline", "-1",
 	Tk_Offset(Tab,underlineObj), -1, 0,0,GEOMETRY_CHANGED },
-    {TK_OPTION_END}
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
 
 static Tk_OptionSpec PaneOptionSpecs[] =

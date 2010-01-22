@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.119 2010/01/10 20:27:23 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.120 2010/01/22 14:17:53 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -33,6 +33,7 @@
  * Darwin (where configure runs only once for multiple architectures).
  */
 
+#include <stdio.h>
 #ifdef HAVE_SYS_TYPES_H
 #    include <sys/types.h>
 #endif

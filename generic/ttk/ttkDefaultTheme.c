@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.14 2008/12/31 21:25:34 jenglish Exp $
+/* $Id: ttkDefaultTheme.c,v 1.15 2010/01/22 14:17:53 nijtmans Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -251,7 +251,7 @@ static Ttk_ElementOptionSpec BorderElementOptions[] = {
     	STRINGIFY(BORDERWIDTH) },
     { "-relief", TK_OPTION_RELIEF, Tk_Offset(BorderElement,reliefObj),
     	"flat" },
-    {NULL}
+        { NULL, 0, 0, NULL }
 };
 
 static void BorderElementSize(
@@ -325,7 +325,7 @@ static Ttk_ElementOptionSpec FieldElementOptions[] = {
     	"white" },
     { "-bordercolor",TK_OPTION_COLOR, Tk_Offset(FieldElement,borderColorObj),
 	"black" },
-    {NULL}
+    { NULL, 0, 0, NULL }
 };
 
 static void FieldElementSize(
@@ -476,7 +476,7 @@ static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 	    Tk_Offset(IndicatorElement,borderColorObj), "black" },
     { "-indicatormargin", TK_OPTION_STRING,
 	    Tk_Offset(IndicatorElement,marginObj), "0 2 4 2" },
-    {NULL}
+	    { NULL, 0, 0, NULL }
 };
 
 static void IndicatorElementSize(
@@ -614,7 +614,7 @@ static Ttk_ElementOptionSpec ArrowElementOptions[] = {
 	Tk_Offset(ArrowElement,reliefObj),"raised"},
     { "-arrowcolor", TK_OPTION_COLOR,
 	Tk_Offset(ArrowElement,colorObj),"black"},
-    { NULL }
+    { NULL, 0, 0, NULL }
 };
 
 /*
@@ -694,7 +694,7 @@ static Ttk_ElementOptionSpec MenubuttonArrowElementOptions[] = {
 	Tk_Offset(MenubuttonArrowElement,sizeObj), STRINGIFY(MENUBUTTON_ARROW_SIZE)},
     { "-arrowcolor",TK_OPTION_COLOR,
 	Tk_Offset(MenubuttonArrowElement,colorObj), "black"},
-    { NULL }
+    { NULL, 0, 0, NULL }
 };
 
 static Ttk_Padding MenubuttonArrowPadding = { 3, 0, 3, 0 };
@@ -782,7 +782,7 @@ static Ttk_ElementOptionSpec TroughElementOptions[] = {
 	Tk_Offset(TroughElement,reliefObj), "sunken" },
     { "-groovewidth", TK_OPTION_PIXELS,
 	Tk_Offset(TroughElement,grooveWidthObj), "-1" },
-    { NULL }
+    { NULL, 0, 0, NULL }
 };
 
 static void TroughElementSize(
@@ -860,7 +860,7 @@ static Ttk_ElementOptionSpec ThumbElementOptions[] = {
 	"black" },
     { "-relief", TK_OPTION_RELIEF,Tk_Offset(ThumbElement,reliefObj),"raised" },
     { "-orient", TK_OPTION_ANY,Tk_Offset(ThumbElement,orientObj),"horizontal"},
-    { NULL }
+    { NULL, 0, 0, NULL }
 };
 
 static void ThumbElementSize(
@@ -949,7 +949,7 @@ static Ttk_ElementOptionSpec SliderElementOptions[] = {
 	"black" },
     { "-orient", TK_OPTION_ANY, Tk_Offset(SliderElement,orientObj),
 	"horizontal" },
-    { NULL }
+    { NULL, 0, 0, NULL }
 };
 
 static void SliderElementSize(
@@ -1023,7 +1023,7 @@ static Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
 	Tk_Offset(TreeitemIndicator,diameterObj), "9" },
     { "-indicatormargins", TK_OPTION_STRING,
 	Tk_Offset(TreeitemIndicator,marginObj), "2 2 4 2" },
-    {NULL}
+    { NULL, 0, 0, NULL }
 };
 
 static void TreeitemIndicatorSize(
