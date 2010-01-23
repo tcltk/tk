@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: wm.test,v 1.21.2.8 2007/09/04 22:54:18 patthoyts Exp $
+# RCS: @(#) $Id: wm.test,v 1.21.2.9 2010/01/23 11:30:55 patthoyts Exp $
 
 # This file tests window manager interactions that work across
 # platforms. Window manager tests that only work on a specific
@@ -144,7 +144,7 @@ test wm-attributes-1.2.3 {usage} {pcOnly} {
 
 test wm-attributes-1.2.4 {usage} {macOrUnix notAqua} {
     list [catch {wm attributes . _} err] $err
-} {1 {wrong # args: should be "wm attributes window"}}
+} {1 {wrong # args: should be "wm attributes window ?-type list?"}}
 
 test wm-attributes-1.2.5 {usage} {aqua} {
     list [catch {wm attributes . _} err] $err
