@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.29.2.4 2005/01/14 21:09:47 jenglish Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.29.2.5 2010/01/23 01:36:03 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import -force tcltest::configure
@@ -2397,12 +2397,12 @@ test unixWm-60.1 {wm attributes} unix {
     destroy .t
     toplevel .t
     wm attributes .t
-} {}
+} {-type {}}
 test unixWm-60.2 {wm attributes} unix {
     destroy .t
     toplevel .t
     list [catch {wm attributes .t -foo} msg] $msg
-} {1 {wrong # args: should be "wm attributes window"}}
+} {1 {wrong # args: should be "wm attributes window ?-type list?"}}
 
 test unixWm-61.1 {Tk_WmCmd procedure, "iconphoto" option} unix {
     list [catch {wm iconph .} msg] $msg
@@ -2416,6 +2416,44 @@ test unixWm-61.2 {Tk_WmCmd procedure, "iconphoto" option} unix {
     wm iconphoto .t blank16 blank32
     image delete blank16 blank32
 } {}
+
+test unixWm-62.0 {wm attributes -type void} unix {
+    destroy .t
+    toplevel .t
+    set r [list [catch {wm attributes .t -type {}} err] $err]
+    destroy .t
+    set r
+} {0 {}}
+test unixWm-62.1 {wm attributes -type name} unix {
+    destroy .t
+    toplevel .t
+    set r [list [catch {wm attributes .t -type dialog} err] $err]
+    destroy .t
+    set r
+} {0 {}}
+test unixWm-62.1 {wm attributes -type name} unix {
+    destroy .t
+    toplevel .t
+    tkwait visibility .t
+    set r [list [catch {wm attributes .t -type dialog} err] $err]
+    destroy .t
+    set r
+} {0 {}}
+test unixWm-62.2 {wm attributes -type list} unix {
+    destroy .t
+    toplevel .t
+    set r [list [catch {wm attributes .t -type {xyzzy dialog}} err] $err]
+    destroy .t
+    set r
+} {0 {}}
+test unixWm-62.2 {wm attributes -type list} unix {
+    destroy .t
+    toplevel .t
+    tkwait visibility .t
+    set r [list [catch {wm attributes .t -type {xyzzy dialog}} err] $err]
+    destroy .t
+    set r
+} {0 {}}
 
 # cleanup
 catch {destroy .t}
