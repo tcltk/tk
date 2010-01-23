@@ -1,3 +1,13 @@
+2010-01-23  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/bgerror.tcl: [TIP #359]: Extended Window Manager Hints
+	* library/clrpick.tcl: backported from 8.5 for use on X11.
+	* library/dialog.tcl:
+	* library/msgbox.tcl:
+	* library/tkfbox.tcl:
+	* tests/unixWm.test:
+	* unix/tkUnixWm.c:
+
 2009-12-11  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/tk.tcl (::tk::ScreenChanged): [Bug 2912473]: Stop problems

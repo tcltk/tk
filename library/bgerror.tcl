@@ -9,8 +9,8 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.23.2.9 2007/11/09 06:26:54 das Exp $
-# $Id: bgerror.tcl,v 1.23.2.9 2007/11/09 06:26:54 das Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.23.2.10 2010/01/23 01:36:03 patthoyts Exp $
+# $Id: bgerror.tcl,v 1.23.2.10 2010/01/23 01:36:03 patthoyts Exp $
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
@@ -149,6 +149,8 @@ proc ::tk::dialog::error::bgerror err {
     if {($tcl_platform(platform) eq "macintosh")
             || ($windowingsystem eq "aqua")} {
 	::tk::unsupported::MacWindowStyle style .bgerrorDialog moveableAlert {}
+    } elseif {$windowingsystem eq "x11"} {
+	wm attributes .bgerrorDialog -type dialog
     }
 
     frame .bgerrorDialog.bot

@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# RCS: @(#) $Id: clrpick.tcl,v 1.20.2.2 2006/03/17 10:50:11 patthoyts Exp $
+# RCS: @(#) $Id: clrpick.tcl,v 1.20.2.3 2010/01/23 01:36:03 patthoyts Exp $
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -74,6 +74,7 @@ proc ::tk::dialog::color:: {args} {
 	    destroy $w
 	}
 	toplevel $w -class TkColorDialog -screen $sc
+	if {[tk windowingsystem] eq "x11"} {wm attributes $w -type dialog}
 	BuildDialog $w
     }
 
