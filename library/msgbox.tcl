@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.24.2.4 2007/05/30 06:37:03 das Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.24.2.5 2010/01/23 01:36:03 patthoyts Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -263,6 +263,8 @@ proc ::tk::MessageBox {args} {
 
     if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w moveableModal {}
+    } elseif {$windowingsystem eq "x11"} {
+        wm attributes $w -type dialog
     }
 
     frame $w.bot -background $bg
