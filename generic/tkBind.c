@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.60 2010/01/06 14:58:30 dkf Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.61 2010/01/29 23:29:06 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -2425,14 +2425,11 @@ ExpandPercents(
 	    } else if (flags & PROP) {
 		string = TkFindStateString(propNotify,
 			eventPtr->xproperty.state);
-		goto doString;
 	    } else if (flags & VISIBILITY) {
 		string = TkFindStateString(visNotify,
 			eventPtr->xvisibility.state);
-		goto doString;
-	    } else {
-		goto doString;
 	    }
+	    goto doString;
 	case 't':
 	    if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
 		number = (int) eventPtr->xkey.time;

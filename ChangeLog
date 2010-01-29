@@ -11,6 +11,7 @@
 	* generic/tkIntPlatDecls.h
 	* generic/tkIntXlibDecls.h
 	* generic/tkPlatDecls.h
+	* generic/tkBind.c     Little simplification
 
 2010-01-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
