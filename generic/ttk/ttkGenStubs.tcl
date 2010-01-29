@@ -1,14 +1,14 @@
 # ttkGenStubs.tcl --
 #
 #	This script generates a set of stub files for a given
-#	interface.  
-#	
+#	interface.
+#
 #
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# $Id: ttkGenStubs.tcl,v 1.2 2008/10/22 20:56:43 nijtmans Exp $
+# $Id: ttkGenStubs.tcl,v 1.3 2010/01/29 18:07:31 nijtmans Exp $
 #
 # SOURCE: tcl/tools/genStubs.tcl, revision 1.20
 #
@@ -281,7 +281,7 @@ proc genStubs::addPlatformGuard {plat text} {
 	    return "#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */\n${text}#endif /* X11 */\n"
 	}
     }
-    return "$text"
+    return $text
 }
 
 # genStubs::emitSlots --
@@ -418,7 +418,7 @@ proc genStubs::makeDecl {name decl index} {
 	append text ";\n"
 	return $text
     }
-    append line "$fname "
+    append line $fname
 
     set arg1 [lindex $args 0]
     switch -exact $arg1 {
@@ -430,8 +430,11 @@ proc genStubs::makeDecl {name decl index} {
 	    foreach arg [lrange $args 1 end] {
 		append line $sep
 		set next {}
-		append next [lindex $arg 0] " " [lindex $arg 1] \
-			[lindex $arg 2]
+		append next [lindex $arg 0]
+		if {[string index $next end] ne "*"} {
+		    append next " "
+		}
+		append next [lindex $arg 1] [lindex $arg 2]
 		if {[string length $line] + [string length $next] \
 			+ $pad > 76} {
 		    append text [string trimright $line] \n
@@ -448,8 +451,11 @@ proc genStubs::makeDecl {name decl index} {
 	    foreach arg $args {
 		append line $sep
 		set next {}
-		append next [lindex $arg 0] " " [lindex $arg 1] \
-			[lindex $arg 2]
+		append next [lindex $arg 0]
+		if {[string index $next end] ne "*"} {
+		    append next " "
+		}
+		append next [lindex $arg 1] [lindex $arg 2]
 		if {[string length $line] + [string length $next] \
 			+ $pad > 76} {
 		    append text [string trimright $line] \n
@@ -546,7 +552,7 @@ proc genStubs::makeSlot {name decl index} {
 	    append text ")"
 	}
     }
-    
+
     append text "; /* $index */\n"
     return $text
 }
@@ -874,14 +880,13 @@ proc genStubs::init {} {
 #	Returns any values that were not assigned to variables.
 
 if {[string length [namespace which lassign]] == 0} {
-proc lassign {valueList args} {
-  if {[llength $args] == 0} {
-      error "wrong # args: should be \"lassign list ?varName ...?\""
-  }
-
-  uplevel [list foreach $args $valueList {break}]
-  return [lrange $valueList [llength $args] end]
-}
+    proc lassign {valueList args} {
+	if {[llength $args] == 0} {
+	    error "wrong # args: should be \"lassign list varName ?varName ...?\""
+	}
+	uplevel [list foreach $args $valueList {break}]
+	return [lrange $valueList [llength $args] end]
+    }
 }
 
 genStubs::init
