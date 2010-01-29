@@ -1,3 +1,17 @@
+2010-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/ttk/ttkGenStubs.tcl: No longer generate a space after "*" and
+	                        immediately after a function name, so the
+	                        format of function definitions in *Decls.h 
+	                        match all other *.h header files.
+	* generic/ttk/ttkDecls.h (re-generated)
+	* generic/tk.decls       Formatting
+	* generic/tkDecls.h      (re-generated)
+	* generic/tkIntDecls.h
+	* generic/tkIntPlatDecls.h
+	* generic/tkIntXlibDecls.h
+	* generic/tkPlatDecls.h
+
 2010-01-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.h            Don't depend on <stdio.h> from tcl.h any more
