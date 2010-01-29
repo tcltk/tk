@@ -1,3 +1,10 @@
+2010-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkBind.c      Fix various gcc-4.4 warnings, all
+	* generic/tkListbox.c   backported from HEAD.
+	* generic/tkText.c
+	* generic/ttk/ttkInit.c
+
 2010-01-20  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/bgerror.tcl:  [TIP 359]: Extended Window Manager Hints
