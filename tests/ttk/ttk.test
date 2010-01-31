@@ -538,16 +538,45 @@ test ttk-14.3 "-textvariable in nonexistant namespace" -body {
 } -returnCodes 1 -result {can't trace *: parent namespace doesn't exist} \
   -match glob -cleanup { destroy .tw }
 
-test ttk-15.1 "style element create: insufficient args" -body {
+
+## Test ensemble processing:
+#
+# (See also: SF#2021443)
+#
+proc wrong#args {args} {
+    return "wrong # args: should be \"$args\""
+}
+proc wrong#varargs {varpart args} {
+    set usage $args
+    append usage " ?$varpart ...?"
+    return "wrong # args: should be \"$usage\""
+}
+
+test ttk-ensemble-0 "style element create: insufficient args" -body {
+     ttk::style
+} -returnCodes 1 -result \
+    [wrong#varargs arg ttk::style option]
+
+test ttk-ensemble-1 "style element create: insufficient args" -body {
+     ttk::style element
+} -returnCodes 1 -result \
+    [wrong#varargs arg ttk::style element option]
+
+test ttk-ensemble-2 "style element create: insufficient args" -body {
      ttk::style element create
-} -returnCodes 1 -result "wrong # args: should be \"ttk::style element create name type ?-option value ...?\""
-test ttk-15.2 "style element create: insufficient args" -body {
+} -returnCodes 1 -result \
+    [wrong#varargs {-option value} ttk::style element create name type]
+
+test ttk-ensemble-3 "style element create: insufficient args" -body {
      ttk::style element create plain.background
-} -returnCodes 1 -result "wrong # args: should be \"ttk::style element create name type ?-option value ...?\""
-test ttk-15.3 "style element create: insufficient args" -body {
+} -returnCodes 1 -result \
+    [wrong#varargs {-option value} ttk::style element create name type]
+
+test ttk-ensemble-4 "style element create: insufficient args" -body {
      ttk::style element create plain.background from
-} -returnCodes 1 -result "wrong # args: should be \"theme ?element?\""
-test ttk-15.4 "style element create: valid" -body {
+} -returnCodes 1 -result [wrong#args theme ?element?]
+
+test ttk-ensemble-5 "style element create: valid" -body {
      ttk::style element create plain.background from default
 } -returnCodes 0 -result ""
 

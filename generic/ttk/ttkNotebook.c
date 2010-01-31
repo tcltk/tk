@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.22 2010/01/22 14:17:53 nijtmans Exp $
+/* $Id: ttkNotebook.c,v 1.23 2010/01/31 22:50:55 jenglish Exp $
  * Copyright (c) 2004, Joe English
  */
 
@@ -876,7 +876,7 @@ static int GetTabIndex(
 /* $nb add window ?options ... ?
  */
 static int NotebookAddCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = recordPtr;
     int index = Ttk_NumberSlaves(nb->notebook.mgr);
@@ -916,7 +916,7 @@ static int NotebookAddCommand(
  * 	Insert new tab, or move existing one.
  */
 static int NotebookInsertCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = recordPtr;
     int current = nb->notebook.currentIndex;
@@ -990,7 +990,7 @@ static int NotebookInsertCommand(
  * 	Removes the specified tab.
  */
 static int NotebookForgetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = recordPtr;
     int index;
@@ -1014,7 +1014,7 @@ static int NotebookForgetCommand(
  * 	Hides the specified tab.
  */
 static int NotebookHideCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = recordPtr;
     int index;
@@ -1044,7 +1044,7 @@ static int NotebookHideCommand(
  * 	Returns name of tab element at $x,$y; empty string if none.
  */
 static int NotebookIdentifyCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     static const char *whatTable[] = { "element", "tab", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_TAB };
@@ -1101,7 +1101,7 @@ static int NotebookIdentifyCommand(
  *	See above for valid item formats.
  */
 static int NotebookIndexCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = recordPtr;
     int index, status;
@@ -1133,7 +1133,7 @@ static int NotebookIndexCommand(
  * 	the currently-selected pane.
  */
 static int NotebookSelectCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = recordPtr;
 
@@ -1159,7 +1159,7 @@ static int NotebookSelectCommand(
  * 	Return list of tabs.
  */
 static int NotebookTabsCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = recordPtr;
     Ttk_Manager *mgr = nb->notebook.mgr;
@@ -1184,7 +1184,7 @@ static int NotebookTabsCommand(
 /* $nb tab $tab ?-option ?value -option value...??
  */
 static int NotebookTabCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = recordPtr;
     Ttk_Manager *mgr = nb->notebook.mgr;
@@ -1228,22 +1228,21 @@ static int NotebookTabCommand(
 
 /* Subcommand table:
  */
-static WidgetCommandSpec NotebookCommands[] =
-{
-    { "add",    	NotebookAddCommand },
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "forget",		NotebookForgetCommand },
-    { "hide",		NotebookHideCommand },
-    { "identify",	NotebookIdentifyCommand },
-    { "index",		NotebookIndexCommand },
-    { "insert",  	NotebookInsertCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "select",		NotebookSelectCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "tab",   		NotebookTabCommand },
-    { "tabs",   	NotebookTabsCommand },
-    { 0,0 }
+static const Ttk_Ensemble NotebookCommands[] = {
+    { "add",    	NotebookAddCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "forget",		NotebookForgetCommand,0 },
+    { "hide",		NotebookHideCommand,0 },
+    { "identify",	NotebookIdentifyCommand,0 },
+    { "index",		NotebookIndexCommand,0 },
+    { "insert",  	NotebookInsertCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "select",		NotebookSelectCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "tab",   		NotebookTabCommand,0 },
+    { "tabs",   	NotebookTabsCommand,0 },
+    { 0,0,0 }
 };
 
 /*------------------------------------------------------------------------

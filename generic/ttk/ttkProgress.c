@@ -1,4 +1,4 @@
-/* $Id: ttkProgress.c,v 1.8 2009/02/08 19:35:35 jenglish Exp $
+/* $Id: ttkProgress.c,v 1.9 2010/01/31 22:50:56 jenglish Exp $
  *
  * Copyright (c) Joe English, Pat Thoyts, Michael Kirkham
  *
@@ -393,7 +393,7 @@ static Ttk_Layout ProgressbarGetLayout(
 /* $sb step ?amount?
  */
 static int ProgressbarStepCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Progressbar *pb = recordPtr;
     double value = 0.0, stepAmount = 1.0;
@@ -467,30 +467,29 @@ static int ProgressbarStartStopCommand(
 }
 
 static int ProgressbarStartCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     return ProgressbarStartStopCommand(
 	interp, "::ttk::progressbar::start", objc, objv);
 }
 
 static int ProgressbarStopCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     return ProgressbarStartStopCommand(
 	interp, "::ttk::progressbar::stop", objc, objv);
 }
 
-static WidgetCommandSpec ProgressbarCommands[] =
-{
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "start", 		ProgressbarStartCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "step", 		ProgressbarStepCommand },
-    { "stop", 		ProgressbarStopCommand },
-    { NULL, NULL }
+static const Ttk_Ensemble ProgressbarCommands[] = {
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "start", 		ProgressbarStartCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "step", 		ProgressbarStepCommand,0 },
+    { "stop", 		ProgressbarStopCommand,0 },
+    { 0,0,0 }
 };
 
 /*

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.19 2009/03/25 09:06:58 dkf Exp $
+ * $Id: ttkTheme.c,v 1.20 2010/01/31 22:50:56 jenglish Exp $
  */
 
 #include <stdlib.h>
@@ -1626,13 +1626,7 @@ StyleThemeUseCmd(
  *	Implementation of the [style] command.
  */
 
-struct Ensemble {
-    const char *name;		/* subcommand name */
-    Tcl_ObjCmdProc *command; 	/* subcommand implementation, OR: */
-    struct Ensemble *ensemble;	/* subcommand ensemble */
-};
-
-static struct Ensemble StyleThemeEnsemble[] = {
+static const Ttk_Ensemble StyleThemeEnsemble[] = {
     { "create", StyleThemeCreateCmd, 0 },
     { "names", StyleThemeNamesCmd, 0 },
     { "settings", StyleThemeSettingsCmd, 0 },
@@ -1640,14 +1634,14 @@ static struct Ensemble StyleThemeEnsemble[] = {
     { NULL, 0, 0 }
 };
 
-static struct Ensemble StyleElementEnsemble[] = {
+static const Ttk_Ensemble StyleElementEnsemble[] = {
     { "create", StyleElementCreateCmd, 0 },
     { "names", StyleElementNamesCmd, 0 },
     { "options", StyleElementOptionsCmd, 0 },
     { NULL, 0, 0 }
 };
 
-static struct Ensemble StyleEnsemble[] = {
+static const Ttk_Ensemble StyleEnsemble[] = {
     { "configure", StyleConfigureCmd, 0 },
     { "map", StyleMapCmd, 0 },
     { "lookup", StyleLookupCmd, 0 },
@@ -1664,13 +1658,17 @@ StyleObjCmd(
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
 {
-    struct Ensemble *ensemble = StyleEnsemble;
-    int optPtr = 1;
-    int index;
+    return Ttk_InvokeEnsemble(StyleEnsemble, 1, clientData,interp,objc,objv);
+}
 
-    while (optPtr < objc) {
+MODULE_SCOPE int Ttk_InvokeEnsemble(	/* Run an ensemble command */
+    const Ttk_Ensemble *ensemble, int cmdIndex,
+    void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+{
+    while (cmdIndex < objc) {
+	int index;
 	if (Tcl_GetIndexFromObjStruct(interp,
-		objv[optPtr], ensemble, sizeof(ensemble[0]),
+		objv[cmdIndex], ensemble, sizeof(ensemble[0]),
 		"command", 0, &index)
 	    != TCL_OK)
 	{
@@ -1681,9 +1679,9 @@ StyleObjCmd(
 	    return ensemble[index].command(clientData, interp, objc, objv);
 	}
 	ensemble = ensemble[index].ensemble;
-	++optPtr;
+	++cmdIndex;
     }
-    Tcl_WrongNumArgs(interp, optPtr, objv, "option ?arg arg...?");
+    Tcl_WrongNumArgs(interp, cmdIndex, objv, "option ?arg ...?");
     return TCL_ERROR;
 }
 
