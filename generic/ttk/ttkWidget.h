@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.h,v 1.11 2008/11/09 23:53:09 jenglish Exp $
+/* $Id: ttkWidget.h,v 1.12 2010/01/31 22:50:56 jenglish Exp $
  * Copyright (c) 2003, Joe English
  * Helper routines for widget implementations.
  */
@@ -49,20 +49,6 @@ typedef struct
 } WidgetCore;
 
 /*
- * Subcommand specifications:
- */
-typedef int (*WidgetSubcommandProc)(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr);
-typedef struct {
-    const char *name;
-    WidgetSubcommandProc command;
-} WidgetCommandSpec;
-
-MODULE_SCOPE int TtkWidgetEnsembleCommand(	/* Run an ensemble command */
-    const WidgetCommandSpec *commands, int cmdIndex,
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr);
-
-/*
  * Widget specifications:
  */
 struct WidgetSpec_
@@ -70,7 +56,7 @@ struct WidgetSpec_
     const char 		*className;	/* Widget class name */
     size_t 		recordSize;	/* #bytes in widget record */
     const Tk_OptionSpec	*optionSpecs;	/* Option specifications */
-    const WidgetCommandSpec *commands;	/* Widget instance subcommands */
+    const Ttk_Ensemble	*commands;	/* Widget instance subcommands */
 
     /*
      * Hooks:
@@ -104,15 +90,15 @@ MODULE_SCOPE int TtkCoreConfigure(Tcl_Interp*, void *, int mask);
 /* Common widget commands:
  */
 MODULE_SCOPE int TtkWidgetConfigureCommand(
-	Tcl_Interp *, int, Tcl_Obj*const[], void *);
+	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetCgetCommand(
-	Tcl_Interp *, int, Tcl_Obj*const[], void *);
+	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetInstateCommand(
-	Tcl_Interp *, int, Tcl_Obj*const[], void *);
+	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetStateCommand(
-	Tcl_Interp *, int, Tcl_Obj*const[], void *);
+	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetIdentifyCommand(
-	Tcl_Interp *, int, Tcl_Obj*const[], void *);
+	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 
 /* Widget constructor:
  */

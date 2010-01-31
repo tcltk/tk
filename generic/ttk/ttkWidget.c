@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.23 2010/01/13 23:08:13 nijtmans Exp $
+/* $Id: ttkWidget.c,v 1.24 2010/01/31 22:50:56 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -146,30 +146,6 @@ void TtkWidgetChangeState(WidgetCore *corePtr,
     }
 }
 
-/* TtkWidgetEnsembleCommand --
- * 	Invoke an ensemble defined by a WidgetCommandSpec.
- */
-int TtkWidgetEnsembleCommand(
-    const WidgetCommandSpec *commands,	/* Ensemble definition */
-    int cmdIndex,			/* Index of command word */
-    Tcl_Interp *interp,			/* Interpreter to use */
-    int objc, Tcl_Obj *const objv[],	/* Argument vector */
-    void *clientData)			/* User data (widget record pointer) */
-{
-    int index;
-
-    if (objc <= cmdIndex) {
-	Tcl_WrongNumArgs(interp, cmdIndex, objv, "option ?arg arg...?");
-	return TCL_ERROR;
-    }
-    if (Tcl_GetIndexFromObjStruct(interp, objv[cmdIndex], commands,
-		sizeof(commands[0]), "command", 0, &index) != TCL_OK)
-    {
-	return TCL_ERROR;
-    }
-    return commands[index].command(interp, objc, objv, clientData);
-}
-
 /* WidgetInstanceObjCmd --
  *	Widget instance command implementation.
  */
@@ -178,11 +154,11 @@ WidgetInstanceObjCmd(
     ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = clientData;
-    const WidgetCommandSpec *commands = corePtr->widgetSpec->commands;
+    const Ttk_Ensemble *commands = corePtr->widgetSpec->commands;
     int status;
 
     Tcl_Preserve(clientData);
-    status = TtkWidgetEnsembleCommand(commands,1, interp,objc,objv,clientData);
+    status = Ttk_InvokeEnsemble(commands,1, clientData,interp,objc,objv);
     Tcl_Release(clientData);
 
     return status;
@@ -615,7 +591,7 @@ int TtkWidgetSize(void *recordPtr, int *widthPtr, int *heightPtr)
 /* $w cget -option
  */
 int TtkWidgetCgetCommand(
-Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = recordPtr;
     Tcl_Obj *result;
@@ -635,7 +611,7 @@ Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 /* $w configure ?-option ?value ....??
  */
 int TtkWidgetConfigureCommand(
-Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = recordPtr;
     Tcl_Obj *result;
@@ -704,7 +680,7 @@ Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
  */
 
 int TtkWidgetStateCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = recordPtr;
     Ttk_StateSpec spec;
@@ -744,7 +720,7 @@ int TtkWidgetStateCommand(
  */
 
 int TtkWidgetInstateCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = recordPtr;
     Ttk_State state = corePtr->state;
@@ -775,7 +751,7 @@ int TtkWidgetInstateCommand(
  * 	Returns: name of element at $x, $y
  */
 int TtkWidgetIdentifyCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = recordPtr;
     Ttk_Element element;

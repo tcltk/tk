@@ -1,4 +1,4 @@
-/* $Id: ttkScrollbar.c,v 1.10 2009/02/08 19:35:35 jenglish Exp $
+/* $Id: ttkScrollbar.c,v 1.11 2010/01/31 22:50:56 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * ttk::scrollbar widget.
@@ -130,7 +130,7 @@ static void ScrollbarDoLayout(void *recordPtr)
  */
 static int
 ScrollbarSetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Scrollbar *scrollbar = recordPtr;
     Tcl_Obj *firstObj, *lastObj;
@@ -181,7 +181,7 @@ ScrollbarSetCommand(
  */
 static int
 ScrollbarGetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Scrollbar *scrollbar = recordPtr;
     Tcl_Obj *result[2];
@@ -204,7 +204,7 @@ ScrollbarGetCommand(
  */
 static int
 ScrollbarDeltaCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Scrollbar *sb = recordPtr;
     double dx, dy;
@@ -244,7 +244,7 @@ ScrollbarDeltaCommand(
  */
 static int
 ScrollbarFractionCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Scrollbar *sb = recordPtr;
     Ttk_Box b = sb->scrollbar.troughBox;
@@ -278,18 +278,17 @@ ScrollbarFractionCommand(
     return TCL_OK;
 }
 
-static WidgetCommandSpec ScrollbarCommands[] =
-{
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "delta",    	ScrollbarDeltaCommand },
-    { "fraction",    	ScrollbarFractionCommand },
-    { "get",    	ScrollbarGetCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "set",  		ScrollbarSetCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { 0,0 }
+static const Ttk_Ensemble ScrollbarCommands[] = {
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "delta",    	ScrollbarDeltaCommand,0 },
+    { "fraction",    	ScrollbarFractionCommand,0 },
+    { "get",    	ScrollbarGetCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "set",  		ScrollbarSetCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { 0,0,0 }
 };
 
 /*------------------------------------------------------------------------
