@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.18 2010/01/22 14:17:53 nijtmans Exp $
+ * $Id: ttkEntry.c,v 1.19 2010/01/31 22:50:55 jenglish Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -1360,7 +1360,7 @@ badIndex:
  */
 static int
 EntryBBoxCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     Ttk_Box b;
@@ -1390,7 +1390,7 @@ EntryBBoxCommand(
  */
 static int
 EntryDeleteCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     int first, last;
@@ -1419,7 +1419,7 @@ EntryDeleteCommand(
  */
 static int
 EntryGetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     if (objc != 2) {
@@ -1435,7 +1435,7 @@ EntryGetCommand(
  */
 static int
 EntryICursorCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     if (objc != 3) {
@@ -1455,7 +1455,7 @@ EntryICursorCommand(
  */
 static int
 EntryIndexCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     int index;
@@ -1477,7 +1477,7 @@ EntryIndexCommand(
  */
 static int
 EntryInsertCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     int index;
@@ -1495,11 +1495,11 @@ EntryInsertCommand(
     return TCL_OK;
 }
 
-/* selection clear --
+/* $entry selection clear --
  * 	Clear selection.
  */
 static int EntrySelectionClearCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
 
@@ -1516,7 +1516,7 @@ static int EntrySelectionClearCommand(
  * 	Returns 1 if any characters are selected, 0 otherwise.
  */
 static int EntrySelectionPresentCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     if (objc != 3) {
@@ -1532,7 +1532,7 @@ static int EntrySelectionPresentCommand(
  * 	Explicitly set the selection range.
  */
 static int EntrySelectionRangeCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     int start, end;
@@ -1559,27 +1559,18 @@ static int EntrySelectionRangeCommand(
     return TCL_OK;
 }
 
-/* $entry selection $command ?arg arg...?
- *	Ensemble, see above.
- */
-static int EntrySelectionCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
-{
-    static WidgetCommandSpec EntrySelectionCommands[] = {
-	{ "clear", EntrySelectionClearCommand },
-	{ "present", EntrySelectionPresentCommand },
-	{ "range", EntrySelectionRangeCommand },
-	{0,0}
-    };
-    return TtkWidgetEnsembleCommand(
-	    EntrySelectionCommands, 2, interp, objc, objv, recordPtr);
-}
+static const Ttk_Ensemble EntrySelectionCommands[] = {
+    { "clear",   EntrySelectionClearCommand,0 },
+    { "present", EntrySelectionPresentCommand,0 },
+    { "range",   EntrySelectionRangeCommand,0 },
+    { 0,0,0 }
+};
 
 /* $entry set $value
  * 	Sets the value of an entry widget.
  */
 static int EntrySetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     if (objc != 3) {
@@ -1595,7 +1586,7 @@ static int EntrySetCommand(
  * 	or error status from -validatecommand / -invalidcommand.
  */
 static int EntryValidateCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     int code;
@@ -1617,28 +1608,28 @@ static int EntryValidateCommand(
 /* $entry xview	-- horizontal scrolling interface
  */
 static int EntryXViewCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
     return TtkScrollviewCommand(interp, objc, objv, entryPtr->entry.xscrollHandle);
 }
 
-static WidgetCommandSpec EntryCommands[] = {
-    { "bbox", 		EntryBBoxCommand },
-    { "cget", 		TtkWidgetCgetCommand },
-    { "configure", 	TtkWidgetConfigureCommand },
-    { "delete", 	EntryDeleteCommand },
-    { "get", 		EntryGetCommand },
-    { "icursor", 	EntryICursorCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
-    { "index", 		EntryIndexCommand },
-    { "insert", 	EntryInsertCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "selection", 	EntrySelectionCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "validate", 	EntryValidateCommand },
-    { "xview", 		EntryXViewCommand },
-    {0,0}
+static const Ttk_Ensemble EntryCommands[] = {
+    { "bbox", 		EntryBBoxCommand,0 },
+    { "cget", 		TtkWidgetCgetCommand,0 },
+    { "configure", 	TtkWidgetConfigureCommand,0 },
+    { "delete", 	EntryDeleteCommand,0 },
+    { "get", 		EntryGetCommand,0 },
+    { "icursor", 	EntryICursorCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "index", 		EntryIndexCommand,0 },
+    { "insert", 	EntryInsertCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "selection", 	0,EntrySelectionCommands },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "validate", 	EntryValidateCommand,0 },
+    { "xview", 		EntryXViewCommand,0 },
+    { 0,0,0 }
 };
 
 /*------------------------------------------------------------------------
@@ -1727,7 +1718,7 @@ ComboboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  * 	in sync at all times, [$cb current] double-checks
  */
 static int ComboboxCurrentCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Combobox *cbPtr = recordPtr;
     int currentIndex = cbPtr->combobox.currentIndex;
@@ -1784,23 +1775,23 @@ static int ComboboxCurrentCommand(
 /*------------------------------------------------------------------------
  * +++ Combobox widget definition.
  */
-static WidgetCommandSpec ComboboxCommands[] = {
-    { "bbox", 		EntryBBoxCommand },
-    { "cget", 		TtkWidgetCgetCommand },
-    { "configure", 	TtkWidgetConfigureCommand },
-    { "current", 	ComboboxCurrentCommand },
-    { "delete", 	EntryDeleteCommand },
-    { "get", 		EntryGetCommand },
-    { "icursor", 	EntryICursorCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
-    { "index", 		EntryIndexCommand },
-    { "insert", 	EntryInsertCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "selection", 	EntrySelectionCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "set", 		EntrySetCommand },
-    { "xview", 		EntryXViewCommand },
-    {0,0}
+static const Ttk_Ensemble ComboboxCommands[] = {
+    { "bbox", 		EntryBBoxCommand,0 },
+    { "cget", 		TtkWidgetCgetCommand,0 },
+    { "configure", 	TtkWidgetConfigureCommand,0 },
+    { "current", 	ComboboxCurrentCommand,0 },
+    { "delete", 	EntryDeleteCommand,0 },
+    { "get", 		EntryGetCommand,0 },
+    { "icursor", 	EntryICursorCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "index", 		EntryIndexCommand,0 },
+    { "insert", 	EntryInsertCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "selection", 	0,EntrySelectionCommands },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "set", 		EntrySetCommand,0 },
+    { "xview", 		EntryXViewCommand,0 },
+    { 0,0,0 }
 };
 
 static WidgetSpec ComboboxWidgetSpec = {
@@ -1896,23 +1887,23 @@ SpinboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     return EntryConfigure(interp, recordPtr, mask);
 }
 
-static WidgetCommandSpec SpinboxCommands[] = {
-    { "bbox", 		EntryBBoxCommand },
-    { "cget", 		TtkWidgetCgetCommand },
-    { "configure", 	TtkWidgetConfigureCommand },
-    { "delete", 	EntryDeleteCommand },
-    { "get", 		EntryGetCommand },
-    { "icursor", 	EntryICursorCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
-    { "index", 		EntryIndexCommand },
-    { "insert", 	EntryInsertCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "selection", 	EntrySelectionCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "set", 		EntrySetCommand },
-    { "validate",	EntryValidateCommand },
-    { "xview", 		EntryXViewCommand },
-    {0,0}
+static const Ttk_Ensemble SpinboxCommands[] = {
+    { "bbox", 		EntryBBoxCommand,0 },
+    { "cget", 		TtkWidgetCgetCommand,0 },
+    { "configure", 	TtkWidgetConfigureCommand,0 },
+    { "delete", 	EntryDeleteCommand,0 },
+    { "get", 		EntryGetCommand,0 },
+    { "icursor", 	EntryICursorCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "index", 		EntryIndexCommand,0 },
+    { "insert", 	EntryInsertCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "selection", 	0,EntrySelectionCommands },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "set", 		EntrySetCommand,0 },
+    { "validate",	EntryValidateCommand,0 },
+    { "xview", 		EntryXViewCommand,0 },
+    { 0,0,0 }
 };
 
 static WidgetSpec SpinboxWidgetSpec = {

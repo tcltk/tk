@@ -1,4 +1,4 @@
-/* $Id: ttkFrame.c,v 1.14 2009/02/06 08:12:07 das Exp $
+/* $Id: ttkFrame.c,v 1.15 2010/01/31 22:50:55 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::frame and ttk::labelframe widgets.
@@ -47,13 +47,13 @@ static Tk_OptionSpec FrameOptionSpecs[] = {
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
-static WidgetCommandSpec FrameCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "identify",   TtkWidgetIdentifyCommand },
-    { NULL, NULL }
+static const Ttk_Ensemble FrameCommands[] = {
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",   	TtkWidgetCgetCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { 0,0,0 }
 };
 
 /*

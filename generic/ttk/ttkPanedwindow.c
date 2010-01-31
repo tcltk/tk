@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.19 2010/01/22 14:17:53 nijtmans Exp $
+/* $Id: ttkPanedwindow.c,v 1.20 2010/01/31 22:50:56 jenglish Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -617,7 +617,7 @@ static void PanedDisplay(void *recordPtr, Drawable d)
 /* $pw add window [ options ... ]
  */
 static int PanedAddCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = recordPtr;
     Tk_Window slaveWindow;
@@ -642,7 +642,7 @@ static int PanedAddCommand(
  * 	Insert new slave, or move existing one.
  */
 static int PanedInsertCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = recordPtr;
     int nSlaves = Ttk_NumberSlaves(pw->paned.mgr);
@@ -687,7 +687,7 @@ static int PanedInsertCommand(
 /* $pw forget $pane
  */
 static int PanedForgetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = recordPtr;
     int paneIndex;
@@ -711,7 +711,7 @@ static int PanedForgetCommand(
  * 	Return index of sash at $x,$y
  */
 static int PanedIdentifyCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     const char *whatTable[] = { "element", "sash", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_SASH };
@@ -766,7 +766,7 @@ static int PanedIdentifyCommand(
  * 	Query/modify pane options.
  */
 static int PanedPaneCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = recordPtr;
     int paneIndex;
@@ -803,7 +803,7 @@ static int PanedPaneCommand(
  * 	Return list of managed panes.
  */
 static int PanedPanesCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = recordPtr;
     Ttk_Manager *mgr = pw->paned.mgr;
@@ -830,7 +830,7 @@ static int PanedPanesCommand(
  * 	Query or modify sash position.
  */
 static int PanedSashposCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = recordPtr;
     int sashIndex, position = -1;
@@ -875,20 +875,19 @@ static int PanedSashposCommand(
     return TCL_OK;
 }
 
-static WidgetCommandSpec PanedCommands[] =
-{
-    { "add", 		PanedAddCommand },
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "forget", 	PanedForgetCommand },
-    { "identify", 	PanedIdentifyCommand },
-    { "insert", 	PanedInsertCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "pane",   	PanedPaneCommand },
-    { "panes",   	PanedPanesCommand },
-    { "sashpos",  	PanedSashposCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { 0,0 }
+static const Ttk_Ensemble PanedCommands[] = {
+    { "add", 		PanedAddCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "forget", 	PanedForgetCommand,0 },
+    { "identify", 	PanedIdentifyCommand,0 },
+    { "insert", 	PanedInsertCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "pane",   	PanedPaneCommand,0 },
+    { "panes",   	PanedPanesCommand,0 },
+    { "sashpos",  	PanedSashposCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { 0,0,0 }
 };
 
 /*------------------------------------------------------------------------
