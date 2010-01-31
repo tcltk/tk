@@ -1,3 +1,10 @@
+2010-01-31  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkTheme.h, generic/ttk/ttkWidget.h, 
+	generic/ttk/*.c: Change signature of widget subcommand
+	procedures to match Tcl_ObjCmdProc.  Merge now-redundant
+	ensemble dispatch code.
+
 2010-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkGenStubs.tcl: No longer generate a space after "*" and

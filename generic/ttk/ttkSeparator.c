@@ -1,4 +1,4 @@
-/* $Id: ttkSeparator.c,v 1.7 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkSeparator.c,v 1.8 2010/01/31 22:50:56 jenglish Exp $
  *
  * Copyright (c) 2004, Joe English
  *
@@ -49,14 +49,13 @@ static Ttk_Layout SeparatorGetLayout(
 /*
  * Widget commands:
  */
-static WidgetCommandSpec SeparatorCommands[] =
-{
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { NULL, NULL }
+static const Ttk_Ensemble SeparatorCommands[] = {
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { 0,0,0 }
 };
 
 /*
@@ -86,14 +85,13 @@ TTK_END_LAYOUT
  * 	Has no options or methods other than the standard ones.
  */
 
-static WidgetCommandSpec SizegripCommands[] =
-{
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { NULL, NULL }
+static const Ttk_Ensemble SizegripCommands[] = {
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { 0,0,0 }
 };
 
 static WidgetSpec SizegripWidgetSpec =

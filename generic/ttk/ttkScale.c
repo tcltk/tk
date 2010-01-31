@@ -1,4 +1,4 @@
-/* $Id: ttkScale.c,v 1.10 2009/02/08 19:35:35 jenglish Exp $
+/* $Id: ttkScale.c,v 1.11 2010/01/31 22:50:56 jenglish Exp $
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * ttk::scale widget.
@@ -242,7 +242,7 @@ static double ScaleFraction(Scale *scalePtr, double value)
  */
 static int
 ScaleGetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Scale *scalePtr = recordPtr;
     int x, y, r = TCL_OK;
@@ -270,7 +270,7 @@ ScaleGetCommand(
  */
 static int
 ScaleSetCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Scale *scalePtr = recordPtr;
     double from = 0.0, to = 1.0, value;
@@ -338,7 +338,7 @@ ScaleSetCommand(
 
 static int
 ScaleCoordsCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Scale *scalePtr = recordPtr;
     double value;
@@ -462,17 +462,16 @@ ValueToPoint(Scale *scalePtr, double value)
     return pt;
 }
 
-static WidgetCommandSpec ScaleCommands[] =
-{
-    { "configure",   TtkWidgetConfigureCommand },
-    { "cget",        TtkWidgetCgetCommand },
-    { "state",       TtkWidgetStateCommand },
-    { "instate",     TtkWidgetInstateCommand },
-    { "identify",    TtkWidgetIdentifyCommand },
-    { "set",         ScaleSetCommand },
-    { "get",         ScaleGetCommand },
-    { "coords",      ScaleCoordsCommand },
-    { 0, 0 }
+static const Ttk_Ensemble ScaleCommands[] = {
+    { "configure",   TtkWidgetConfigureCommand,0 },
+    { "cget",        TtkWidgetCgetCommand,0 },
+    { "state",       TtkWidgetStateCommand,0 },
+    { "instate",     TtkWidgetInstateCommand,0 },
+    { "identify",    TtkWidgetIdentifyCommand,0 },
+    { "set",         ScaleSetCommand,0 },
+    { "get",         ScaleGetCommand,0 },
+    { "coords",      ScaleCoordsCommand,0 },
+    { 0,0,0 }
 };
 
 static WidgetSpec ScaleWidgetSpec =

@@ -1,4 +1,4 @@
-/* $Id: ttkButton.c,v 1.11 2008/11/13 01:13:54 jenglish Exp $
+/* $Id: ttkButton.c,v 1.12 2010/01/31 22:50:55 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * label, button, checkbutton, radiobutton, and menubutton widgets.
@@ -247,14 +247,13 @@ static Tk_OptionSpec LabelOptionSpecs[] =
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)
 };
 
-static WidgetCommandSpec LabelCommands[] =
-{
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
-    { NULL, NULL }
+static const Ttk_Ensemble LabelCommands[] = {
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { 0,0,0 }
 };
 
 static WidgetSpec LabelWidgetSpec =
@@ -341,7 +340,7 @@ static int ButtonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  */
 static int
 ButtonInvokeCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Button *buttonPtr = recordPtr;
     if (objc > 2) {
@@ -354,15 +353,14 @@ ButtonInvokeCommand(
     return Tcl_EvalObjEx(interp, buttonPtr->button.commandObj, TCL_EVAL_GLOBAL);
 }
 
-static WidgetCommandSpec ButtonCommands[] =
-{
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "invoke",		ButtonInvokeCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
-    { NULL, NULL }
+static const Ttk_Ensemble ButtonCommands[] = {
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "invoke",		ButtonInvokeCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { 0,0,0 }
 };
 
 static WidgetSpec ButtonWidgetSpec =
@@ -521,7 +519,7 @@ CheckbuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  */
 static int
 CheckbuttonInvokeCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Checkbutton *checkPtr = recordPtr;
     WidgetCore *corePtr = &checkPtr->core;
@@ -555,16 +553,15 @@ CheckbuttonInvokeCommand(
 	checkPtr->checkbutton.commandObj, TCL_EVAL_GLOBAL);
 }
 
-static WidgetCommandSpec CheckbuttonCommands[] =
-{
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "invoke",		CheckbuttonInvokeCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
+static const Ttk_Ensemble CheckbuttonCommands[] = {
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "invoke",		CheckbuttonInvokeCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
     /* MISSING: select, deselect, toggle */
-    { NULL, NULL }
+    { 0,0,0 }
 };
 
 static WidgetSpec CheckbuttonWidgetSpec =
@@ -707,7 +704,7 @@ RadiobuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  */
 static int
 RadiobuttonInvokeCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Radiobutton *radioPtr = recordPtr;
     WidgetCore *corePtr = &radioPtr->core;
@@ -733,16 +730,15 @@ RadiobuttonInvokeCommand(
 	radioPtr->radiobutton.commandObj, TCL_EVAL_GLOBAL);
 }
 
-static WidgetCommandSpec RadiobuttonCommands[] =
-{
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "invoke",		RadiobuttonInvokeCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
+static const Ttk_Ensemble RadiobuttonCommands[] = {
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "invoke",		RadiobuttonInvokeCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
     /* MISSING: select, deselect */
-    { NULL, NULL }
+    { 0,0,0 }
 };
 
 static WidgetSpec RadiobuttonWidgetSpec =
@@ -804,14 +800,13 @@ static Tk_OptionSpec MenubuttonOptionSpecs[] =
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)
 };
 
-static WidgetCommandSpec MenubuttonCommands[] =
-{
-    { "configure",	TtkWidgetConfigureCommand },
-    { "cget",		TtkWidgetCgetCommand },
-    { "instate",	TtkWidgetInstateCommand },
-    { "state",  	TtkWidgetStateCommand },
-    { "identify",	TtkWidgetIdentifyCommand },
-    { NULL, NULL }
+static const Ttk_Ensemble MenubuttonCommands[] = {
+    { "configure",	TtkWidgetConfigureCommand,0 },
+    { "cget",		TtkWidgetCgetCommand,0 },
+    { "instate",	TtkWidgetInstateCommand,0 },
+    { "state",  	TtkWidgetStateCommand,0 },
+    { "identify",	TtkWidgetIdentifyCommand,0 },
+    { 0,0,0 }
 };
 
 static WidgetSpec MenubuttonWidgetSpec =
