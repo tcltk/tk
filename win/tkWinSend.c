@@ -10,11 +10,15 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinSend.c,v 1.22 2010/01/22 14:17:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinSend.c,v 1.23 2010/02/03 23:56:49 patthoyts Exp $
  */
 
 #include "tkInt.h"
 #include "tkWinSendCom.h"
+
+#ifdef _MSC_VER
+#define vsnprintf _vsnprintf
+#endif
 
 /*
  * Should be defined in WTypes.h but mingw 1.0 is missing them.
