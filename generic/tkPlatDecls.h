@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.22 2010/01/29 18:07:31 nijtmans Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.23 2010/02/05 10:56:43 nijtmans Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -143,14 +143,14 @@ typedef struct TkPlatStubs {
     HWND (*tk_GetHWND) (Window window); /* 2 */
     Tk_Window (*tk_HWNDToWindow) (HWND hwnd); /* 3 */
     void (*tk_PointerEvent) (HWND hwnd, int x, int y); /* 4 */
-    int (*tk_TranslateWinEvent) (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT * result); /* 5 */
+    int (*tk_TranslateWinEvent) (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT *result); /* 5 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    void (*tk_MacOSXSetEmbedHandler) (Tk_MacOSXEmbedRegisterWinProc * registerWinProcPtr, Tk_MacOSXEmbedGetGrafPortProc * getPortProcPtr, Tk_MacOSXEmbedMakeContainerExistProc * containerExistProcPtr, Tk_MacOSXEmbedGetClipProc * getClipProc, Tk_MacOSXEmbedGetOffsetInParentProc * getOffsetProc); /* 0 */
+    void (*tk_MacOSXSetEmbedHandler) (Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr, Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr, Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr, Tk_MacOSXEmbedGetClipProc *getClipProc, Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc); /* 0 */
     void (*tk_MacOSXTurnOffMenus) (void); /* 1 */
     void (*tk_MacOSXTkOwnsCursor) (int tkOwnsIt); /* 2 */
-    void (*tkMacOSXInitMenus) (Tcl_Interp * interp); /* 3 */
-    void (*tkMacOSXInitAppleEvents) (Tcl_Interp * interp); /* 4 */
+    void (*tkMacOSXInitMenus) (Tcl_Interp *interp); /* 3 */
+    void (*tkMacOSXInitAppleEvents) (Tcl_Interp *interp); /* 4 */
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 5 */
     void (*tkMacOSXInvalClipRgns) (Tk_Window tkwin); /* 6 */
     void * (*tkMacOSXGetDrawablePort) (Drawable drawable); /* 7 */

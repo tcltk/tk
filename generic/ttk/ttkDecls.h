@@ -1,5 +1,5 @@
 /*
- * $Id: ttkDecls.h,v 1.9 2010/01/29 18:07:32 nijtmans Exp $
+ * $Id: ttkDecls.h,v 1.10 2010/02/05 10:56:43 nijtmans Exp $
  *
  * This file is (mostly) automatically generated from ttk.decls.
  */
@@ -141,47 +141,47 @@ typedef struct TtkStubs {
     int revision;
     struct TtkStubHooks *hooks;
 
-    Ttk_Theme (*ttk_GetTheme) (Tcl_Interp * interp, const char * name); /* 0 */
-    Ttk_Theme (*ttk_GetDefaultTheme) (Tcl_Interp * interp); /* 1 */
-    Ttk_Theme (*ttk_GetCurrentTheme) (Tcl_Interp * interp); /* 2 */
-    Ttk_Theme (*ttk_CreateTheme) (Tcl_Interp * interp, const char * name, Ttk_Theme parent); /* 3 */
-    void (*ttk_RegisterCleanup) (Tcl_Interp * interp, void * deleteData, Ttk_CleanupProc * cleanupProc); /* 4 */
-    int (*ttk_RegisterElementSpec) (Ttk_Theme theme, const char * elementName, Ttk_ElementSpec * elementSpec, void * clientData); /* 5 */
-    Ttk_ElementClass * (*ttk_RegisterElement) (Tcl_Interp * interp, Ttk_Theme theme, const char * elementName, Ttk_ElementSpec * elementSpec, void * clientData); /* 6 */
-    int (*ttk_RegisterElementFactory) (Tcl_Interp * interp, const char * name, Ttk_ElementFactory factoryProc, void * clientData); /* 7 */
-    void (*ttk_RegisterLayout) (Ttk_Theme theme, const char * className, Ttk_LayoutSpec layoutSpec); /* 8 */
+    Ttk_Theme (*ttk_GetTheme) (Tcl_Interp *interp, const char *name); /* 0 */
+    Ttk_Theme (*ttk_GetDefaultTheme) (Tcl_Interp *interp); /* 1 */
+    Ttk_Theme (*ttk_GetCurrentTheme) (Tcl_Interp *interp); /* 2 */
+    Ttk_Theme (*ttk_CreateTheme) (Tcl_Interp *interp, const char *name, Ttk_Theme parent); /* 3 */
+    void (*ttk_RegisterCleanup) (Tcl_Interp *interp, void *deleteData, Ttk_CleanupProc *cleanupProc); /* 4 */
+    int (*ttk_RegisterElementSpec) (Ttk_Theme theme, const char *elementName, Ttk_ElementSpec *elementSpec, void *clientData); /* 5 */
+    Ttk_ElementClass * (*ttk_RegisterElement) (Tcl_Interp *interp, Ttk_Theme theme, const char *elementName, Ttk_ElementSpec *elementSpec, void *clientData); /* 6 */
+    int (*ttk_RegisterElementFactory) (Tcl_Interp *interp, const char *name, Ttk_ElementFactory factoryProc, void *clientData); /* 7 */
+    void (*ttk_RegisterLayout) (Ttk_Theme theme, const char *className, Ttk_LayoutSpec layoutSpec); /* 8 */
     void (*reserved9)(void);
-    int (*ttk_GetStateSpecFromObj) (Tcl_Interp * interp, Tcl_Obj * objPtr, Ttk_StateSpec * spec_rtn); /* 10 */
+    int (*ttk_GetStateSpecFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_StateSpec *spec_rtn); /* 10 */
     Tcl_Obj * (*ttk_NewStateSpecObj) (unsigned int onbits, unsigned int offbits); /* 11 */
-    Ttk_StateMap (*ttk_GetStateMapFromObj) (Tcl_Interp * interp, Tcl_Obj * objPtr); /* 12 */
-    Tcl_Obj * (*ttk_StateMapLookup) (Tcl_Interp * interp, Ttk_StateMap map, Ttk_State state); /* 13 */
+    Ttk_StateMap (*ttk_GetStateMapFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr); /* 12 */
+    Tcl_Obj * (*ttk_StateMapLookup) (Tcl_Interp *interp, Ttk_StateMap map, Ttk_State state); /* 13 */
     int (*ttk_StateTableLookup) (Ttk_StateTable map[], Ttk_State state); /* 14 */
     void (*reserved15)(void);
     void (*reserved16)(void);
     void (*reserved17)(void);
     void (*reserved18)(void);
     void (*reserved19)(void);
-    int (*ttk_GetPaddingFromObj) (Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr, Ttk_Padding * pad_rtn); /* 20 */
-    int (*ttk_GetBorderFromObj) (Tcl_Interp * interp, Tcl_Obj * objPtr, Ttk_Padding * pad_rtn); /* 21 */
-    int (*ttk_GetStickyFromObj) (Tcl_Interp * interp, Tcl_Obj * objPtr, Ttk_Sticky * sticky_rtn); /* 22 */
+    int (*ttk_GetPaddingFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, Ttk_Padding *pad_rtn); /* 20 */
+    int (*ttk_GetBorderFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Padding *pad_rtn); /* 21 */
+    int (*ttk_GetStickyFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Sticky *sticky_rtn); /* 22 */
     Ttk_Padding (*ttk_MakePadding) (short l, short t, short r, short b); /* 23 */
     Ttk_Padding (*ttk_UniformPadding) (short borderWidth); /* 24 */
     Ttk_Padding (*ttk_AddPadding) (Ttk_Padding pad1, Ttk_Padding pad2); /* 25 */
     Ttk_Padding (*ttk_RelievePadding) (Ttk_Padding padding, int relief, int n); /* 26 */
     Ttk_Box (*ttk_MakeBox) (int x, int y, int width, int height); /* 27 */
     int (*ttk_BoxContains) (Ttk_Box box, int x, int y); /* 28 */
-    Ttk_Box (*ttk_PackBox) (Ttk_Box * cavity, int w, int h, Ttk_Side side); /* 29 */
+    Ttk_Box (*ttk_PackBox) (Ttk_Box *cavity, int w, int h, Ttk_Side side); /* 29 */
     Ttk_Box (*ttk_StickBox) (Ttk_Box parcel, int w, int h, Ttk_Sticky sticky); /* 30 */
     Ttk_Box (*ttk_AnchorBox) (Ttk_Box parcel, int w, int h, Tk_Anchor anchor); /* 31 */
     Ttk_Box (*ttk_PadBox) (Ttk_Box b, Ttk_Padding p); /* 32 */
     Ttk_Box (*ttk_ExpandBox) (Ttk_Box b, Ttk_Padding p); /* 33 */
-    Ttk_Box (*ttk_PlaceBox) (Ttk_Box * cavity, int w, int h, Ttk_Side side, Ttk_Sticky sticky); /* 34 */
+    Ttk_Box (*ttk_PlaceBox) (Ttk_Box *cavity, int w, int h, Ttk_Side side, Ttk_Sticky sticky); /* 34 */
     Tcl_Obj * (*ttk_NewBoxObj) (Ttk_Box box); /* 35 */
     void (*reserved36)(void);
     void (*reserved37)(void);
     void (*reserved38)(void);
     void (*reserved39)(void);
-    int (*ttk_GetOrientFromObj) (Tcl_Interp * interp, Tcl_Obj * objPtr, int * orient); /* 40 */
+    int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *orient); /* 40 */
 } TtkStubs;
 
 #ifdef __cplusplus
