@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.44 2010/01/29 18:07:31 nijtmans Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.45 2010/02/05 10:56:43 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -1708,164 +1708,164 @@ typedef struct TkStubs {
     GC (*tk_3DBorderGC) (Tk_Window tkwin, Tk_3DBorder border, int which); /* 2 */
     void (*tk_3DHorizontalBevel) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int leftIn, int rightIn, int topBevel, int relief); /* 3 */
     void (*tk_3DVerticalBevel) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int leftBevel, int relief); /* 4 */
-    void (*tk_AddOption) (Tk_Window tkwin, const char * name, const char * value, int priority); /* 5 */
-    void (*tk_BindEvent) (Tk_BindingTable bindingTable, XEvent * eventPtr, Tk_Window tkwin, int numObjects, ClientData * objectPtr); /* 6 */
-    void (*tk_CanvasDrawableCoords) (Tk_Canvas canvas, double x, double y, short * drawableXPtr, short * drawableYPtr); /* 7 */
+    void (*tk_AddOption) (Tk_Window tkwin, const char *name, const char *value, int priority); /* 5 */
+    void (*tk_BindEvent) (Tk_BindingTable bindingTable, XEvent *eventPtr, Tk_Window tkwin, int numObjects, ClientData *objectPtr); /* 6 */
+    void (*tk_CanvasDrawableCoords) (Tk_Canvas canvas, double x, double y, short *drawableXPtr, short *drawableYPtr); /* 7 */
     void (*tk_CanvasEventuallyRedraw) (Tk_Canvas canvas, int x1, int y1, int x2, int y2); /* 8 */
-    int (*tk_CanvasGetCoord) (Tcl_Interp * interp, Tk_Canvas canvas, const char * str, double * doublePtr); /* 9 */
+    int (*tk_CanvasGetCoord) (Tcl_Interp *interp, Tk_Canvas canvas, const char *str, double *doublePtr); /* 9 */
     Tk_CanvasTextInfo * (*tk_CanvasGetTextInfo) (Tk_Canvas canvas); /* 10 */
-    int (*tk_CanvasPsBitmap) (Tcl_Interp * interp, Tk_Canvas canvas, Pixmap bitmap, int x, int y, int width, int height); /* 11 */
-    int (*tk_CanvasPsColor) (Tcl_Interp * interp, Tk_Canvas canvas, XColor * colorPtr); /* 12 */
-    int (*tk_CanvasPsFont) (Tcl_Interp * interp, Tk_Canvas canvas, Tk_Font font); /* 13 */
-    void (*tk_CanvasPsPath) (Tcl_Interp * interp, Tk_Canvas canvas, double * coordPtr, int numPoints); /* 14 */
-    int (*tk_CanvasPsStipple) (Tcl_Interp * interp, Tk_Canvas canvas, Pixmap bitmap); /* 15 */
+    int (*tk_CanvasPsBitmap) (Tcl_Interp *interp, Tk_Canvas canvas, Pixmap bitmap, int x, int y, int width, int height); /* 11 */
+    int (*tk_CanvasPsColor) (Tcl_Interp *interp, Tk_Canvas canvas, XColor *colorPtr); /* 12 */
+    int (*tk_CanvasPsFont) (Tcl_Interp *interp, Tk_Canvas canvas, Tk_Font font); /* 13 */
+    void (*tk_CanvasPsPath) (Tcl_Interp *interp, Tk_Canvas canvas, double *coordPtr, int numPoints); /* 14 */
+    int (*tk_CanvasPsStipple) (Tcl_Interp *interp, Tk_Canvas canvas, Pixmap bitmap); /* 15 */
     double (*tk_CanvasPsY) (Tk_Canvas canvas, double y); /* 16 */
     void (*tk_CanvasSetStippleOrigin) (Tk_Canvas canvas, GC gc); /* 17 */
-    int (*tk_CanvasTagsParseProc) (ClientData clientData, Tcl_Interp * interp, Tk_Window tkwin, const char * value, char * widgRec, int offset); /* 18 */
-    CONST86 char * (*tk_CanvasTagsPrintProc) (ClientData clientData, Tk_Window tkwin, char * widgRec, int offset, Tcl_FreeProc ** freeProcPtr); /* 19 */
+    int (*tk_CanvasTagsParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, int offset); /* 18 */
+    CONST86 char * (*tk_CanvasTagsPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr); /* 19 */
     Tk_Window (*tk_CanvasTkwin) (Tk_Canvas canvas); /* 20 */
-    void (*tk_CanvasWindowCoords) (Tk_Canvas canvas, double x, double y, short * screenXPtr, short * screenYPtr); /* 21 */
-    void (*tk_ChangeWindowAttributes) (Tk_Window tkwin, unsigned long valueMask, XSetWindowAttributes * attsPtr); /* 22 */
-    int (*tk_CharBbox) (Tk_TextLayout layout, int index, int * xPtr, int * yPtr, int * widthPtr, int * heightPtr); /* 23 */
+    void (*tk_CanvasWindowCoords) (Tk_Canvas canvas, double x, double y, short *screenXPtr, short *screenYPtr); /* 21 */
+    void (*tk_ChangeWindowAttributes) (Tk_Window tkwin, unsigned long valueMask, XSetWindowAttributes *attsPtr); /* 22 */
+    int (*tk_CharBbox) (Tk_TextLayout layout, int index, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 23 */
     void (*tk_ClearSelection) (Tk_Window tkwin, Atom selection); /* 24 */
-    int (*tk_ClipboardAppend) (Tcl_Interp * interp, Tk_Window tkwin, Atom target, Atom format, const char * buffer); /* 25 */
-    int (*tk_ClipboardClear) (Tcl_Interp * interp, Tk_Window tkwin); /* 26 */
-    int (*tk_ConfigureInfo) (Tcl_Interp * interp, Tk_Window tkwin, Tk_ConfigSpec * specs, char * widgRec, const char * argvName, int flags); /* 27 */
-    int (*tk_ConfigureValue) (Tcl_Interp * interp, Tk_Window tkwin, Tk_ConfigSpec * specs, char * widgRec, const char * argvName, int flags); /* 28 */
-    int (*tk_ConfigureWidget) (Tcl_Interp * interp, Tk_Window tkwin, Tk_ConfigSpec * specs, int argc, CONST84 char ** argv, char * widgRec, int flags); /* 29 */
-    void (*tk_ConfigureWindow) (Tk_Window tkwin, unsigned int valueMask, XWindowChanges * valuePtr); /* 30 */
-    Tk_TextLayout (*tk_ComputeTextLayout) (Tk_Font font, const char * str, int numChars, int wrapLength, Tk_Justify justify, int flags, int * widthPtr, int * heightPtr); /* 31 */
+    int (*tk_ClipboardAppend) (Tcl_Interp *interp, Tk_Window tkwin, Atom target, Atom format, const char *buffer); /* 25 */
+    int (*tk_ClipboardClear) (Tcl_Interp *interp, Tk_Window tkwin); /* 26 */
+    int (*tk_ConfigureInfo) (Tcl_Interp *interp, Tk_Window tkwin, Tk_ConfigSpec *specs, char *widgRec, const char *argvName, int flags); /* 27 */
+    int (*tk_ConfigureValue) (Tcl_Interp *interp, Tk_Window tkwin, Tk_ConfigSpec *specs, char *widgRec, const char *argvName, int flags); /* 28 */
+    int (*tk_ConfigureWidget) (Tcl_Interp *interp, Tk_Window tkwin, Tk_ConfigSpec *specs, int argc, CONST84 char **argv, char *widgRec, int flags); /* 29 */
+    void (*tk_ConfigureWindow) (Tk_Window tkwin, unsigned int valueMask, XWindowChanges *valuePtr); /* 30 */
+    Tk_TextLayout (*tk_ComputeTextLayout) (Tk_Font font, const char *str, int numChars, int wrapLength, Tk_Justify justify, int flags, int *widthPtr, int *heightPtr); /* 31 */
     Tk_Window (*tk_CoordsToWindow) (int rootX, int rootY, Tk_Window tkwin); /* 32 */
-    unsigned long (*tk_CreateBinding) (Tcl_Interp * interp, Tk_BindingTable bindingTable, ClientData object, const char * eventStr, const char * command, int append); /* 33 */
-    Tk_BindingTable (*tk_CreateBindingTable) (Tcl_Interp * interp); /* 34 */
-    Tk_ErrorHandler (*tk_CreateErrorHandler) (Display * display, int errNum, int request, int minorCode, Tk_ErrorProc * errorProc, ClientData clientData); /* 35 */
-    void (*tk_CreateEventHandler) (Tk_Window token, unsigned long mask, Tk_EventProc * proc, ClientData clientData); /* 36 */
-    void (*tk_CreateGenericHandler) (Tk_GenericProc * proc, ClientData clientData); /* 37 */
-    void (*tk_CreateImageType) (const Tk_ImageType * typePtr); /* 38 */
-    void (*tk_CreateItemType) (Tk_ItemType * typePtr); /* 39 */
-    void (*tk_CreatePhotoImageFormat) (const Tk_PhotoImageFormat * formatPtr); /* 40 */
-    void (*tk_CreateSelHandler) (Tk_Window tkwin, Atom selection, Atom target, Tk_SelectionProc * proc, ClientData clientData, Atom format); /* 41 */
-    Tk_Window (*tk_CreateWindow) (Tcl_Interp * interp, Tk_Window parent, const char * name, const char * screenName); /* 42 */
-    Tk_Window (*tk_CreateWindowFromPath) (Tcl_Interp * interp, Tk_Window tkwin, const char * pathName, const char * screenName); /* 43 */
-    int (*tk_OldDefineBitmap) (Tcl_Interp * interp, const char * name, const char * source, int width, int height); /* 44 */
+    unsigned long (*tk_CreateBinding) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventStr, const char *command, int append); /* 33 */
+    Tk_BindingTable (*tk_CreateBindingTable) (Tcl_Interp *interp); /* 34 */
+    Tk_ErrorHandler (*tk_CreateErrorHandler) (Display *display, int errNum, int request, int minorCode, Tk_ErrorProc *errorProc, ClientData clientData); /* 35 */
+    void (*tk_CreateEventHandler) (Tk_Window token, unsigned long mask, Tk_EventProc *proc, ClientData clientData); /* 36 */
+    void (*tk_CreateGenericHandler) (Tk_GenericProc *proc, ClientData clientData); /* 37 */
+    void (*tk_CreateImageType) (const Tk_ImageType *typePtr); /* 38 */
+    void (*tk_CreateItemType) (Tk_ItemType *typePtr); /* 39 */
+    void (*tk_CreatePhotoImageFormat) (const Tk_PhotoImageFormat *formatPtr); /* 40 */
+    void (*tk_CreateSelHandler) (Tk_Window tkwin, Atom selection, Atom target, Tk_SelectionProc *proc, ClientData clientData, Atom format); /* 41 */
+    Tk_Window (*tk_CreateWindow) (Tcl_Interp *interp, Tk_Window parent, const char *name, const char *screenName); /* 42 */
+    Tk_Window (*tk_CreateWindowFromPath) (Tcl_Interp *interp, Tk_Window tkwin, const char *pathName, const char *screenName); /* 43 */
+    int (*tk_OldDefineBitmap) (Tcl_Interp *interp, const char *name, const char *source, int width, int height); /* 44 */
     void (*tk_DefineCursor) (Tk_Window window, Tk_Cursor cursor); /* 45 */
     void (*tk_DeleteAllBindings) (Tk_BindingTable bindingTable, ClientData object); /* 46 */
-    int (*tk_DeleteBinding) (Tcl_Interp * interp, Tk_BindingTable bindingTable, ClientData object, const char * eventStr); /* 47 */
+    int (*tk_DeleteBinding) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventStr); /* 47 */
     void (*tk_DeleteBindingTable) (Tk_BindingTable bindingTable); /* 48 */
     void (*tk_DeleteErrorHandler) (Tk_ErrorHandler handler); /* 49 */
-    void (*tk_DeleteEventHandler) (Tk_Window token, unsigned long mask, Tk_EventProc * proc, ClientData clientData); /* 50 */
-    void (*tk_DeleteGenericHandler) (Tk_GenericProc * proc, ClientData clientData); /* 51 */
-    void (*tk_DeleteImage) (Tcl_Interp * interp, const char * name); /* 52 */
+    void (*tk_DeleteEventHandler) (Tk_Window token, unsigned long mask, Tk_EventProc *proc, ClientData clientData); /* 50 */
+    void (*tk_DeleteGenericHandler) (Tk_GenericProc *proc, ClientData clientData); /* 51 */
+    void (*tk_DeleteImage) (Tcl_Interp *interp, const char *name); /* 52 */
     void (*tk_DeleteSelHandler) (Tk_Window tkwin, Atom selection, Atom target); /* 53 */
     void (*tk_DestroyWindow) (Tk_Window tkwin); /* 54 */
     CONST84_RETURN char * (*tk_DisplayName) (Tk_Window tkwin); /* 55 */
     int (*tk_DistanceToTextLayout) (Tk_TextLayout layout, int x, int y); /* 56 */
-    void (*tk_Draw3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint * pointPtr, int numPoints, int borderWidth, int leftRelief); /* 57 */
+    void (*tk_Draw3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, int numPoints, int borderWidth, int leftRelief); /* 57 */
     void (*tk_Draw3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, int relief); /* 58 */
-    void (*tk_DrawChars) (Display * display, Drawable drawable, GC gc, Tk_Font tkfont, const char * source, int numBytes, int x, int y); /* 59 */
+    void (*tk_DrawChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, int x, int y); /* 59 */
     void (*tk_DrawFocusHighlight) (Tk_Window tkwin, GC gc, int width, Drawable drawable); /* 60 */
-    void (*tk_DrawTextLayout) (Display * display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, int firstChar, int lastChar); /* 61 */
-    void (*tk_Fill3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint * pointPtr, int numPoints, int borderWidth, int leftRelief); /* 62 */
+    void (*tk_DrawTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, int firstChar, int lastChar); /* 61 */
+    void (*tk_Fill3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, int numPoints, int borderWidth, int leftRelief); /* 62 */
     void (*tk_Fill3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, int relief); /* 63 */
-    Tk_PhotoHandle (*tk_FindPhoto) (Tcl_Interp * interp, const char * imageName); /* 64 */
+    Tk_PhotoHandle (*tk_FindPhoto) (Tcl_Interp *interp, const char *imageName); /* 64 */
     Font (*tk_FontId) (Tk_Font font); /* 65 */
     void (*tk_Free3DBorder) (Tk_3DBorder border); /* 66 */
-    void (*tk_FreeBitmap) (Display * display, Pixmap bitmap); /* 67 */
-    void (*tk_FreeColor) (XColor * colorPtr); /* 68 */
-    void (*tk_FreeColormap) (Display * display, Colormap colormap); /* 69 */
-    void (*tk_FreeCursor) (Display * display, Tk_Cursor cursor); /* 70 */
+    void (*tk_FreeBitmap) (Display *display, Pixmap bitmap); /* 67 */
+    void (*tk_FreeColor) (XColor *colorPtr); /* 68 */
+    void (*tk_FreeColormap) (Display *display, Colormap colormap); /* 69 */
+    void (*tk_FreeCursor) (Display *display, Tk_Cursor cursor); /* 70 */
     void (*tk_FreeFont) (Tk_Font f); /* 71 */
-    void (*tk_FreeGC) (Display * display, GC gc); /* 72 */
+    void (*tk_FreeGC) (Display *display, GC gc); /* 72 */
     void (*tk_FreeImage) (Tk_Image image); /* 73 */
-    void (*tk_FreeOptions) (Tk_ConfigSpec * specs, char * widgRec, Display * display, int needFlags); /* 74 */
-    void (*tk_FreePixmap) (Display * display, Pixmap pixmap); /* 75 */
+    void (*tk_FreeOptions) (Tk_ConfigSpec *specs, char *widgRec, Display *display, int needFlags); /* 74 */
+    void (*tk_FreePixmap) (Display *display, Pixmap pixmap); /* 75 */
     void (*tk_FreeTextLayout) (Tk_TextLayout textLayout); /* 76 */
-    void (*tk_FreeXId) (Display * display, XID xid); /* 77 */
-    GC (*tk_GCForColor) (XColor * colorPtr, Drawable drawable); /* 78 */
+    void (*tk_FreeXId) (Display *display, XID xid); /* 77 */
+    GC (*tk_GCForColor) (XColor *colorPtr, Drawable drawable); /* 78 */
     void (*tk_GeometryRequest) (Tk_Window tkwin, int reqWidth, int reqHeight); /* 79 */
-    Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp * interp, Tk_Window tkwin, Tk_Uid colorName); /* 80 */
-    void (*tk_GetAllBindings) (Tcl_Interp * interp, Tk_BindingTable bindingTable, ClientData object); /* 81 */
-    int (*tk_GetAnchor) (Tcl_Interp * interp, const char * str, Tk_Anchor * anchorPtr); /* 82 */
+    Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid colorName); /* 80 */
+    void (*tk_GetAllBindings) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object); /* 81 */
+    int (*tk_GetAnchor) (Tcl_Interp *interp, const char *str, Tk_Anchor *anchorPtr); /* 82 */
     CONST84_RETURN char * (*tk_GetAtomName) (Tk_Window tkwin, Atom atom); /* 83 */
-    CONST84_RETURN char * (*tk_GetBinding) (Tcl_Interp * interp, Tk_BindingTable bindingTable, ClientData object, const char * eventStr); /* 84 */
-    Pixmap (*tk_GetBitmap) (Tcl_Interp * interp, Tk_Window tkwin, const char * str); /* 85 */
-    Pixmap (*tk_OldGetBitmapFromData) (Tcl_Interp * interp, Tk_Window tkwin, const char * source, int width, int height); /* 86 */
-    int (*tk_GetCapStyle) (Tcl_Interp * interp, const char * str, int * capPtr); /* 87 */
-    XColor * (*tk_GetColor) (Tcl_Interp * interp, Tk_Window tkwin, Tk_Uid name); /* 88 */
-    XColor * (*tk_GetColorByValue) (Tk_Window tkwin, XColor * colorPtr); /* 89 */
-    Colormap (*tk_GetColormap) (Tcl_Interp * interp, Tk_Window tkwin, const char * str); /* 90 */
-    Tk_Cursor (*tk_GetCursor) (Tcl_Interp * interp, Tk_Window tkwin, Tk_Uid str); /* 91 */
-    Tk_Cursor (*tk_GetCursorFromData) (Tcl_Interp * interp, Tk_Window tkwin, const char * source, const char * mask, int width, int height, int xHot, int yHot, Tk_Uid fg, Tk_Uid bg); /* 92 */
-    Tk_Font (*tk_GetFont) (Tcl_Interp * interp, Tk_Window tkwin, const char * str); /* 93 */
-    Tk_Font (*tk_GetFontFromObj) (Tk_Window tkwin, Tcl_Obj * objPtr); /* 94 */
-    void (*tk_GetFontMetrics) (Tk_Font font, Tk_FontMetrics * fmPtr); /* 95 */
-    GC (*tk_GetGC) (Tk_Window tkwin, unsigned long valueMask, XGCValues * valuePtr); /* 96 */
-    Tk_Image (*tk_GetImage) (Tcl_Interp * interp, Tk_Window tkwin, const char * name, Tk_ImageChangedProc * changeProc, ClientData clientData); /* 97 */
-    ClientData (*tk_GetImageMasterData) (Tcl_Interp * interp, const char * name, CONST86 Tk_ImageType ** typePtrPtr); /* 98 */
+    CONST84_RETURN char * (*tk_GetBinding) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventStr); /* 84 */
+    Pixmap (*tk_GetBitmap) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 85 */
+    Pixmap (*tk_OldGetBitmapFromData) (Tcl_Interp *interp, Tk_Window tkwin, const char *source, int width, int height); /* 86 */
+    int (*tk_GetCapStyle) (Tcl_Interp *interp, const char *str, int *capPtr); /* 87 */
+    XColor * (*tk_GetColor) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid name); /* 88 */
+    XColor * (*tk_GetColorByValue) (Tk_Window tkwin, XColor *colorPtr); /* 89 */
+    Colormap (*tk_GetColormap) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 90 */
+    Tk_Cursor (*tk_GetCursor) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid str); /* 91 */
+    Tk_Cursor (*tk_GetCursorFromData) (Tcl_Interp *interp, Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, Tk_Uid fg, Tk_Uid bg); /* 92 */
+    Tk_Font (*tk_GetFont) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 93 */
+    Tk_Font (*tk_GetFontFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 94 */
+    void (*tk_GetFontMetrics) (Tk_Font font, Tk_FontMetrics *fmPtr); /* 95 */
+    GC (*tk_GetGC) (Tk_Window tkwin, unsigned long valueMask, XGCValues *valuePtr); /* 96 */
+    Tk_Image (*tk_GetImage) (Tcl_Interp *interp, Tk_Window tkwin, const char *name, Tk_ImageChangedProc *changeProc, ClientData clientData); /* 97 */
+    ClientData (*tk_GetImageMasterData) (Tcl_Interp *interp, const char *name, CONST86 Tk_ImageType **typePtrPtr); /* 98 */
     Tk_ItemType * (*tk_GetItemTypes) (void); /* 99 */
-    int (*tk_GetJoinStyle) (Tcl_Interp * interp, const char * str, int * joinPtr); /* 100 */
-    int (*tk_GetJustify) (Tcl_Interp * interp, const char * str, Tk_Justify * justifyPtr); /* 101 */
+    int (*tk_GetJoinStyle) (Tcl_Interp *interp, const char *str, int *joinPtr); /* 100 */
+    int (*tk_GetJustify) (Tcl_Interp *interp, const char *str, Tk_Justify *justifyPtr); /* 101 */
     int (*tk_GetNumMainWindows) (void); /* 102 */
-    Tk_Uid (*tk_GetOption) (Tk_Window tkwin, const char * name, const char * className); /* 103 */
-    int (*tk_GetPixels) (Tcl_Interp * interp, Tk_Window tkwin, const char * str, int * intPtr); /* 104 */
-    Pixmap (*tk_GetPixmap) (Display * display, Drawable d, int width, int height, int depth); /* 105 */
-    int (*tk_GetRelief) (Tcl_Interp * interp, const char * name, int * reliefPtr); /* 106 */
-    void (*tk_GetRootCoords) (Tk_Window tkwin, int * xPtr, int * yPtr); /* 107 */
-    int (*tk_GetScrollInfo) (Tcl_Interp * interp, int argc, CONST84 char ** argv, double * dblPtr, int * intPtr); /* 108 */
-    int (*tk_GetScreenMM) (Tcl_Interp * interp, Tk_Window tkwin, const char * str, double * doublePtr); /* 109 */
-    int (*tk_GetSelection) (Tcl_Interp * interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc * proc, ClientData clientData); /* 110 */
-    Tk_Uid (*tk_GetUid) (const char * str); /* 111 */
-    Visual * (*tk_GetVisual) (Tcl_Interp * interp, Tk_Window tkwin, const char * str, int * depthPtr, Colormap * colormapPtr); /* 112 */
-    void (*tk_GetVRootGeometry) (Tk_Window tkwin, int * xPtr, int * yPtr, int * widthPtr, int * heightPtr); /* 113 */
-    int (*tk_Grab) (Tcl_Interp * interp, Tk_Window tkwin, int grabGlobal); /* 114 */
-    void (*tk_HandleEvent) (XEvent * eventPtr); /* 115 */
-    Tk_Window (*tk_IdToWindow) (Display * display, Window window); /* 116 */
+    Tk_Uid (*tk_GetOption) (Tk_Window tkwin, const char *name, const char *className); /* 103 */
+    int (*tk_GetPixels) (Tcl_Interp *interp, Tk_Window tkwin, const char *str, int *intPtr); /* 104 */
+    Pixmap (*tk_GetPixmap) (Display *display, Drawable d, int width, int height, int depth); /* 105 */
+    int (*tk_GetRelief) (Tcl_Interp *interp, const char *name, int *reliefPtr); /* 106 */
+    void (*tk_GetRootCoords) (Tk_Window tkwin, int *xPtr, int *yPtr); /* 107 */
+    int (*tk_GetScrollInfo) (Tcl_Interp *interp, int argc, CONST84 char **argv, double *dblPtr, int *intPtr); /* 108 */
+    int (*tk_GetScreenMM) (Tcl_Interp *interp, Tk_Window tkwin, const char *str, double *doublePtr); /* 109 */
+    int (*tk_GetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, ClientData clientData); /* 110 */
+    Tk_Uid (*tk_GetUid) (const char *str); /* 111 */
+    Visual * (*tk_GetVisual) (Tcl_Interp *interp, Tk_Window tkwin, const char *str, int *depthPtr, Colormap *colormapPtr); /* 112 */
+    void (*tk_GetVRootGeometry) (Tk_Window tkwin, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 113 */
+    int (*tk_Grab) (Tcl_Interp *interp, Tk_Window tkwin, int grabGlobal); /* 114 */
+    void (*tk_HandleEvent) (XEvent *eventPtr); /* 115 */
+    Tk_Window (*tk_IdToWindow) (Display *display, Window window); /* 116 */
     void (*tk_ImageChanged) (Tk_ImageMaster master, int x, int y, int width, int height, int imageWidth, int imageHeight); /* 117 */
-    int (*tk_Init) (Tcl_Interp * interp); /* 118 */
-    Atom (*tk_InternAtom) (Tk_Window tkwin, const char * name); /* 119 */
+    int (*tk_Init) (Tcl_Interp *interp); /* 118 */
+    Atom (*tk_InternAtom) (Tk_Window tkwin, const char *name); /* 119 */
     int (*tk_IntersectTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height); /* 120 */
     void (*tk_MaintainGeometry) (Tk_Window slave, Tk_Window master, int x, int y, int width, int height); /* 121 */
-    Tk_Window (*tk_MainWindow) (Tcl_Interp * interp); /* 122 */
+    Tk_Window (*tk_MainWindow) (Tcl_Interp *interp); /* 122 */
     void (*tk_MakeWindowExist) (Tk_Window tkwin); /* 123 */
-    void (*tk_ManageGeometry) (Tk_Window tkwin, const Tk_GeomMgr * mgrPtr, ClientData clientData); /* 124 */
+    void (*tk_ManageGeometry) (Tk_Window tkwin, const Tk_GeomMgr *mgrPtr, ClientData clientData); /* 124 */
     void (*tk_MapWindow) (Tk_Window tkwin); /* 125 */
-    int (*tk_MeasureChars) (Tk_Font tkfont, const char * source, int numBytes, int maxPixels, int flags, int * lengthPtr); /* 126 */
+    int (*tk_MeasureChars) (Tk_Font tkfont, const char *source, int numBytes, int maxPixels, int flags, int *lengthPtr); /* 126 */
     void (*tk_MoveResizeWindow) (Tk_Window tkwin, int x, int y, int width, int height); /* 127 */
     void (*tk_MoveWindow) (Tk_Window tkwin, int x, int y); /* 128 */
     void (*tk_MoveToplevelWindow) (Tk_Window tkwin, int x, int y); /* 129 */
     CONST84_RETURN char * (*tk_NameOf3DBorder) (Tk_3DBorder border); /* 130 */
     CONST84_RETURN char * (*tk_NameOfAnchor) (Tk_Anchor anchor); /* 131 */
-    CONST84_RETURN char * (*tk_NameOfBitmap) (Display * display, Pixmap bitmap); /* 132 */
+    CONST84_RETURN char * (*tk_NameOfBitmap) (Display *display, Pixmap bitmap); /* 132 */
     CONST84_RETURN char * (*tk_NameOfCapStyle) (int cap); /* 133 */
-    CONST84_RETURN char * (*tk_NameOfColor) (XColor * colorPtr); /* 134 */
-    CONST84_RETURN char * (*tk_NameOfCursor) (Display * display, Tk_Cursor cursor); /* 135 */
+    CONST84_RETURN char * (*tk_NameOfColor) (XColor *colorPtr); /* 134 */
+    CONST84_RETURN char * (*tk_NameOfCursor) (Display *display, Tk_Cursor cursor); /* 135 */
     CONST84_RETURN char * (*tk_NameOfFont) (Tk_Font font); /* 136 */
     CONST84_RETURN char * (*tk_NameOfImage) (Tk_ImageMaster imageMaster); /* 137 */
     CONST84_RETURN char * (*tk_NameOfJoinStyle) (int join); /* 138 */
     CONST84_RETURN char * (*tk_NameOfJustify) (Tk_Justify justify); /* 139 */
     CONST84_RETURN char * (*tk_NameOfRelief) (int relief); /* 140 */
-    Tk_Window (*tk_NameToWindow) (Tcl_Interp * interp, const char * pathName, Tk_Window tkwin); /* 141 */
-    void (*tk_OwnSelection) (Tk_Window tkwin, Atom selection, Tk_LostSelProc * proc, ClientData clientData); /* 142 */
-    int (*tk_ParseArgv) (Tcl_Interp * interp, Tk_Window tkwin, int * argcPtr, CONST84 char ** argv, const Tk_ArgvInfo * argTable, int flags); /* 143 */
-    void (*tk_PhotoPutBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height); /* 144 */
-    void (*tk_PhotoPutZoomedBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY); /* 145 */
-    int (*tk_PhotoGetImage) (Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr); /* 146 */
+    Tk_Window (*tk_NameToWindow) (Tcl_Interp *interp, const char *pathName, Tk_Window tkwin); /* 141 */
+    void (*tk_OwnSelection) (Tk_Window tkwin, Atom selection, Tk_LostSelProc *proc, ClientData clientData); /* 142 */
+    int (*tk_ParseArgv) (Tcl_Interp *interp, Tk_Window tkwin, int *argcPtr, CONST84 char **argv, const Tk_ArgvInfo *argTable, int flags); /* 143 */
+    void (*tk_PhotoPutBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height); /* 144 */
+    void (*tk_PhotoPutZoomedBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY); /* 145 */
+    int (*tk_PhotoGetImage) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr); /* 146 */
     void (*tk_PhotoBlank) (Tk_PhotoHandle handle); /* 147 */
     void (*tk_PhotoExpand_Panic) (Tk_PhotoHandle handle, int width, int height); /* 148 */
-    void (*tk_PhotoGetSize) (Tk_PhotoHandle handle, int * widthPtr, int * heightPtr); /* 149 */
+    void (*tk_PhotoGetSize) (Tk_PhotoHandle handle, int *widthPtr, int *heightPtr); /* 149 */
     void (*tk_PhotoSetSize_Panic) (Tk_PhotoHandle handle, int width, int height); /* 150 */
     int (*tk_PointToChar) (Tk_TextLayout layout, int x, int y); /* 151 */
-    int (*tk_PostscriptFontName) (Tk_Font tkfont, Tcl_DString * dsPtr); /* 152 */
-    void (*tk_PreserveColormap) (Display * display, Colormap colormap); /* 153 */
-    void (*tk_QueueWindowEvent) (XEvent * eventPtr, Tcl_QueuePosition position); /* 154 */
+    int (*tk_PostscriptFontName) (Tk_Font tkfont, Tcl_DString *dsPtr); /* 152 */
+    void (*tk_PreserveColormap) (Display *display, Colormap colormap); /* 153 */
+    void (*tk_QueueWindowEvent) (XEvent *eventPtr, Tcl_QueuePosition position); /* 154 */
     void (*tk_RedrawImage) (Tk_Image image, int imageX, int imageY, int width, int height, Drawable drawable, int drawableX, int drawableY); /* 155 */
     void (*tk_ResizeWindow) (Tk_Window tkwin, int width, int height); /* 156 */
     int (*tk_RestackWindow) (Tk_Window tkwin, int aboveBelow, Tk_Window other); /* 157 */
-    Tk_RestrictProc * (*tk_RestrictEvents) (Tk_RestrictProc * proc, ClientData arg, ClientData * prevArgPtr); /* 158 */
-    int (*tk_SafeInit) (Tcl_Interp * interp); /* 159 */
-    const char * (*tk_SetAppName) (Tk_Window tkwin, const char * name); /* 160 */
+    Tk_RestrictProc * (*tk_RestrictEvents) (Tk_RestrictProc *proc, ClientData arg, ClientData *prevArgPtr); /* 158 */
+    int (*tk_SafeInit) (Tcl_Interp *interp); /* 159 */
+    const char * (*tk_SetAppName) (Tk_Window tkwin, const char *name); /* 160 */
     void (*tk_SetBackgroundFromBorder) (Tk_Window tkwin, Tk_3DBorder border); /* 161 */
-    void (*tk_SetClass) (Tk_Window tkwin, const char * className); /* 162 */
+    void (*tk_SetClass) (Tk_Window tkwin, const char *className); /* 162 */
     void (*tk_SetGrid) (Tk_Window tkwin, int reqWidth, int reqHeight, int gridWidth, int gridHeight); /* 163 */
     void (*tk_SetInternalBorder) (Tk_Window tkwin, int width); /* 164 */
     void (*tk_SetWindowBackground) (Tk_Window tkwin, unsigned long pixel); /* 165 */
@@ -1874,111 +1874,111 @@ typedef struct TkStubs {
     void (*tk_SetWindowBorderWidth) (Tk_Window tkwin, int width); /* 168 */
     void (*tk_SetWindowBorderPixmap) (Tk_Window tkwin, Pixmap pixmap); /* 169 */
     void (*tk_SetWindowColormap) (Tk_Window tkwin, Colormap colormap); /* 170 */
-    int (*tk_SetWindowVisual) (Tk_Window tkwin, Visual * visual, int depth, Colormap colormap); /* 171 */
-    void (*tk_SizeOfBitmap) (Display * display, Pixmap bitmap, int * widthPtr, int * heightPtr); /* 172 */
-    void (*tk_SizeOfImage) (Tk_Image image, int * widthPtr, int * heightPtr); /* 173 */
+    int (*tk_SetWindowVisual) (Tk_Window tkwin, Visual *visual, int depth, Colormap colormap); /* 171 */
+    void (*tk_SizeOfBitmap) (Display *display, Pixmap bitmap, int *widthPtr, int *heightPtr); /* 172 */
+    void (*tk_SizeOfImage) (Tk_Image image, int *widthPtr, int *heightPtr); /* 173 */
     int (*tk_StrictMotif) (Tk_Window tkwin); /* 174 */
-    void (*tk_TextLayoutToPostscript) (Tcl_Interp * interp, Tk_TextLayout layout); /* 175 */
-    int (*tk_TextWidth) (Tk_Font font, const char * str, int numBytes); /* 176 */
+    void (*tk_TextLayoutToPostscript) (Tcl_Interp *interp, Tk_TextLayout layout); /* 175 */
+    int (*tk_TextWidth) (Tk_Font font, const char *str, int numBytes); /* 176 */
     void (*tk_UndefineCursor) (Tk_Window window); /* 177 */
-    void (*tk_UnderlineChars) (Display * display, Drawable drawable, GC gc, Tk_Font tkfont, const char * source, int x, int y, int firstByte, int lastByte); /* 178 */
-    void (*tk_UnderlineTextLayout) (Display * display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, int underline); /* 179 */
+    void (*tk_UnderlineChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int x, int y, int firstByte, int lastByte); /* 178 */
+    void (*tk_UnderlineTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, int underline); /* 179 */
     void (*tk_Ungrab) (Tk_Window tkwin); /* 180 */
     void (*tk_UnmaintainGeometry) (Tk_Window slave, Tk_Window master); /* 181 */
     void (*tk_UnmapWindow) (Tk_Window tkwin); /* 182 */
     void (*tk_UnsetGrid) (Tk_Window tkwin); /* 183 */
     void (*tk_UpdatePointer) (Tk_Window tkwin, int x, int y, int state); /* 184 */
-    Pixmap (*tk_AllocBitmapFromObj) (Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr); /* 185 */
-    Tk_3DBorder (*tk_Alloc3DBorderFromObj) (Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr); /* 186 */
-    XColor * (*tk_AllocColorFromObj) (Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr); /* 187 */
-    Tk_Cursor (*tk_AllocCursorFromObj) (Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr); /* 188 */
-    Tk_Font (*tk_AllocFontFromObj) (Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr); /* 189 */
-    Tk_OptionTable (*tk_CreateOptionTable) (Tcl_Interp * interp, const Tk_OptionSpec * templatePtr); /* 190 */
+    Pixmap (*tk_AllocBitmapFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr); /* 185 */
+    Tk_3DBorder (*tk_Alloc3DBorderFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr); /* 186 */
+    XColor * (*tk_AllocColorFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr); /* 187 */
+    Tk_Cursor (*tk_AllocCursorFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr); /* 188 */
+    Tk_Font (*tk_AllocFontFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr); /* 189 */
+    Tk_OptionTable (*tk_CreateOptionTable) (Tcl_Interp *interp, const Tk_OptionSpec *templatePtr); /* 190 */
     void (*tk_DeleteOptionTable) (Tk_OptionTable optionTable); /* 191 */
-    void (*tk_Free3DBorderFromObj) (Tk_Window tkwin, Tcl_Obj * objPtr); /* 192 */
-    void (*tk_FreeBitmapFromObj) (Tk_Window tkwin, Tcl_Obj * objPtr); /* 193 */
-    void (*tk_FreeColorFromObj) (Tk_Window tkwin, Tcl_Obj * objPtr); /* 194 */
-    void (*tk_FreeConfigOptions) (char * recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 195 */
-    void (*tk_FreeSavedOptions) (Tk_SavedOptions * savePtr); /* 196 */
-    void (*tk_FreeCursorFromObj) (Tk_Window tkwin, Tcl_Obj * objPtr); /* 197 */
-    void (*tk_FreeFontFromObj) (Tk_Window tkwin, Tcl_Obj * objPtr); /* 198 */
-    Tk_3DBorder (*tk_Get3DBorderFromObj) (Tk_Window tkwin, Tcl_Obj * objPtr); /* 199 */
-    int (*tk_GetAnchorFromObj) (Tcl_Interp * interp, Tcl_Obj * objPtr, Tk_Anchor * anchorPtr); /* 200 */
-    Pixmap (*tk_GetBitmapFromObj) (Tk_Window tkwin, Tcl_Obj * objPtr); /* 201 */
-    XColor * (*tk_GetColorFromObj) (Tk_Window tkwin, Tcl_Obj * objPtr); /* 202 */
-    Tk_Cursor (*tk_GetCursorFromObj) (Tk_Window tkwin, Tcl_Obj * objPtr); /* 203 */
-    Tcl_Obj * (*tk_GetOptionInfo) (Tcl_Interp * interp, char * recordPtr, Tk_OptionTable optionTable, Tcl_Obj * namePtr, Tk_Window tkwin); /* 204 */
-    Tcl_Obj * (*tk_GetOptionValue) (Tcl_Interp * interp, char * recordPtr, Tk_OptionTable optionTable, Tcl_Obj * namePtr, Tk_Window tkwin); /* 205 */
-    int (*tk_GetJustifyFromObj) (Tcl_Interp * interp, Tcl_Obj * objPtr, Tk_Justify * justifyPtr); /* 206 */
-    int (*tk_GetMMFromObj) (Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr, double * doublePtr); /* 207 */
-    int (*tk_GetPixelsFromObj) (Tcl_Interp * interp, Tk_Window tkwin, Tcl_Obj * objPtr, int * intPtr); /* 208 */
-    int (*tk_GetReliefFromObj) (Tcl_Interp * interp, Tcl_Obj * objPtr, int * resultPtr); /* 209 */
-    int (*tk_GetScrollInfoObj) (Tcl_Interp * interp, int objc, Tcl_Obj *const objv[], double * dblPtr, int * intPtr); /* 210 */
-    int (*tk_InitOptions) (Tcl_Interp * interp, char * recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
-    void (*tk_MainEx) (int argc, char ** argv, Tcl_AppInitProc * appInitProc, Tcl_Interp * interp); /* 212 */
-    void (*tk_RestoreSavedOptions) (Tk_SavedOptions * savePtr); /* 213 */
-    int (*tk_SetOptions) (Tcl_Interp * interp, char * recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions * savePtr, int * maskPtr); /* 214 */
-    void (*tk_InitConsoleChannels) (Tcl_Interp * interp); /* 215 */
-    int (*tk_CreateConsoleWindow) (Tcl_Interp * interp); /* 216 */
-    void (*tk_CreateSmoothMethod) (Tcl_Interp * interp, const Tk_SmoothMethod * method); /* 217 */
+    void (*tk_Free3DBorderFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 192 */
+    void (*tk_FreeBitmapFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 193 */
+    void (*tk_FreeColorFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 194 */
+    void (*tk_FreeConfigOptions) (char *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 195 */
+    void (*tk_FreeSavedOptions) (Tk_SavedOptions *savePtr); /* 196 */
+    void (*tk_FreeCursorFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 197 */
+    void (*tk_FreeFontFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 198 */
+    Tk_3DBorder (*tk_Get3DBorderFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 199 */
+    int (*tk_GetAnchorFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Tk_Anchor *anchorPtr); /* 200 */
+    Pixmap (*tk_GetBitmapFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 201 */
+    XColor * (*tk_GetColorFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 202 */
+    Tk_Cursor (*tk_GetCursorFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 203 */
+    Tcl_Obj * (*tk_GetOptionInfo) (Tcl_Interp *interp, char *recordPtr, Tk_OptionTable optionTable, Tcl_Obj *namePtr, Tk_Window tkwin); /* 204 */
+    Tcl_Obj * (*tk_GetOptionValue) (Tcl_Interp *interp, char *recordPtr, Tk_OptionTable optionTable, Tcl_Obj *namePtr, Tk_Window tkwin); /* 205 */
+    int (*tk_GetJustifyFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Tk_Justify *justifyPtr); /* 206 */
+    int (*tk_GetMMFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr); /* 207 */
+    int (*tk_GetPixelsFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, int *intPtr); /* 208 */
+    int (*tk_GetReliefFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr); /* 209 */
+    int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr); /* 210 */
+    int (*tk_InitOptions) (Tcl_Interp *interp, char *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
+    void (*tk_MainEx) (int argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */
+    void (*tk_RestoreSavedOptions) (Tk_SavedOptions *savePtr); /* 213 */
+    int (*tk_SetOptions) (Tcl_Interp *interp, char *recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
+    void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
+    int (*tk_CreateConsoleWindow) (Tcl_Interp *interp); /* 216 */
+    void (*tk_CreateSmoothMethod) (Tcl_Interp *interp, const Tk_SmoothMethod *method); /* 217 */
     void *reserved218;
     void *reserved219;
-    int (*tk_GetDash) (Tcl_Interp * interp, const char * value, Tk_Dash * dash); /* 220 */
-    void (*tk_CreateOutline) (Tk_Outline * outline); /* 221 */
-    void (*tk_DeleteOutline) (Display * display, Tk_Outline * outline); /* 222 */
-    int (*tk_ConfigOutlineGC) (XGCValues * gcValues, Tk_Canvas canvas, Tk_Item * item, Tk_Outline * outline); /* 223 */
-    int (*tk_ChangeOutlineGC) (Tk_Canvas canvas, Tk_Item * item, Tk_Outline * outline); /* 224 */
-    int (*tk_ResetOutlineGC) (Tk_Canvas canvas, Tk_Item * item, Tk_Outline * outline); /* 225 */
-    int (*tk_CanvasPsOutline) (Tk_Canvas canvas, Tk_Item * item, Tk_Outline * outline); /* 226 */
+    int (*tk_GetDash) (Tcl_Interp *interp, const char *value, Tk_Dash *dash); /* 220 */
+    void (*tk_CreateOutline) (Tk_Outline *outline); /* 221 */
+    void (*tk_DeleteOutline) (Display *display, Tk_Outline *outline); /* 222 */
+    int (*tk_ConfigOutlineGC) (XGCValues *gcValues, Tk_Canvas canvas, Tk_Item *item, Tk_Outline *outline); /* 223 */
+    int (*tk_ChangeOutlineGC) (Tk_Canvas canvas, Tk_Item *item, Tk_Outline *outline); /* 224 */
+    int (*tk_ResetOutlineGC) (Tk_Canvas canvas, Tk_Item *item, Tk_Outline *outline); /* 225 */
+    int (*tk_CanvasPsOutline) (Tk_Canvas canvas, Tk_Item *item, Tk_Outline *outline); /* 226 */
     void (*tk_SetTSOrigin) (Tk_Window tkwin, GC gc, int x, int y); /* 227 */
-    int (*tk_CanvasGetCoordFromObj) (Tcl_Interp * interp, Tk_Canvas canvas, Tcl_Obj * obj, double * doublePtr); /* 228 */
-    void (*tk_CanvasSetOffset) (Tk_Canvas canvas, GC gc, Tk_TSOffset * offset); /* 229 */
+    int (*tk_CanvasGetCoordFromObj) (Tcl_Interp *interp, Tk_Canvas canvas, Tcl_Obj *obj, double *doublePtr); /* 228 */
+    void (*tk_CanvasSetOffset) (Tk_Canvas canvas, GC gc, Tk_TSOffset *offset); /* 229 */
     void (*tk_DitherPhoto) (Tk_PhotoHandle handle, int x, int y, int width, int height); /* 230 */
-    int (*tk_PostscriptBitmap) (Tcl_Interp * interp, Tk_Window tkwin, Tk_PostscriptInfo psInfo, Pixmap bitmap, int startX, int startY, int width, int height); /* 231 */
-    int (*tk_PostscriptColor) (Tcl_Interp * interp, Tk_PostscriptInfo psInfo, XColor * colorPtr); /* 232 */
-    int (*tk_PostscriptFont) (Tcl_Interp * interp, Tk_PostscriptInfo psInfo, Tk_Font font); /* 233 */
-    int (*tk_PostscriptImage) (Tk_Image image, Tcl_Interp * interp, Tk_Window tkwin, Tk_PostscriptInfo psinfo, int x, int y, int width, int height, int prepass); /* 234 */
-    void (*tk_PostscriptPath) (Tcl_Interp * interp, Tk_PostscriptInfo psInfo, double * coordPtr, int numPoints); /* 235 */
-    int (*tk_PostscriptStipple) (Tcl_Interp * interp, Tk_Window tkwin, Tk_PostscriptInfo psInfo, Pixmap bitmap); /* 236 */
+    int (*tk_PostscriptBitmap) (Tcl_Interp *interp, Tk_Window tkwin, Tk_PostscriptInfo psInfo, Pixmap bitmap, int startX, int startY, int width, int height); /* 231 */
+    int (*tk_PostscriptColor) (Tcl_Interp *interp, Tk_PostscriptInfo psInfo, XColor *colorPtr); /* 232 */
+    int (*tk_PostscriptFont) (Tcl_Interp *interp, Tk_PostscriptInfo psInfo, Tk_Font font); /* 233 */
+    int (*tk_PostscriptImage) (Tk_Image image, Tcl_Interp *interp, Tk_Window tkwin, Tk_PostscriptInfo psinfo, int x, int y, int width, int height, int prepass); /* 234 */
+    void (*tk_PostscriptPath) (Tcl_Interp *interp, Tk_PostscriptInfo psInfo, double *coordPtr, int numPoints); /* 235 */
+    int (*tk_PostscriptStipple) (Tcl_Interp *interp, Tk_Window tkwin, Tk_PostscriptInfo psInfo, Pixmap bitmap); /* 236 */
     double (*tk_PostscriptY) (double y, Tk_PostscriptInfo psInfo); /* 237 */
-    int (*tk_PostscriptPhoto) (Tcl_Interp * interp, Tk_PhotoImageBlock * blockPtr, Tk_PostscriptInfo psInfo, int width, int height); /* 238 */
-    void (*tk_CreateClientMessageHandler) (Tk_ClientMessageProc * proc); /* 239 */
-    void (*tk_DeleteClientMessageHandler) (Tk_ClientMessageProc * proc); /* 240 */
-    Tk_Window (*tk_CreateAnonymousWindow) (Tcl_Interp * interp, Tk_Window parent, const char * screenName); /* 241 */
-    void (*tk_SetClassProcs) (Tk_Window tkwin, const Tk_ClassProcs * procs, ClientData instanceData); /* 242 */
+    int (*tk_PostscriptPhoto) (Tcl_Interp *interp, Tk_PhotoImageBlock *blockPtr, Tk_PostscriptInfo psInfo, int width, int height); /* 238 */
+    void (*tk_CreateClientMessageHandler) (Tk_ClientMessageProc *proc); /* 239 */
+    void (*tk_DeleteClientMessageHandler) (Tk_ClientMessageProc *proc); /* 240 */
+    Tk_Window (*tk_CreateAnonymousWindow) (Tcl_Interp *interp, Tk_Window parent, const char *screenName); /* 241 */
+    void (*tk_SetClassProcs) (Tk_Window tkwin, const Tk_ClassProcs *procs, ClientData instanceData); /* 242 */
     void (*tk_SetInternalBorderEx) (Tk_Window tkwin, int left, int right, int top, int bottom); /* 243 */
     void (*tk_SetMinimumRequestSize) (Tk_Window tkwin, int minWidth, int minHeight); /* 244 */
     void (*tk_SetCaretPos) (Tk_Window tkwin, int x, int y, int height); /* 245 */
-    void (*tk_PhotoPutBlock_Panic) (Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int compRule); /* 246 */
-    void (*tk_PhotoPutZoomedBlock_Panic) (Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule); /* 247 */
-    int (*tk_CollapseMotionEvents) (Display * display, int collapse); /* 248 */
-    Tk_StyleEngine (*tk_RegisterStyleEngine) (const char * name, Tk_StyleEngine parent); /* 249 */
-    Tk_StyleEngine (*tk_GetStyleEngine) (const char * name); /* 250 */
-    int (*tk_RegisterStyledElement) (Tk_StyleEngine engine, Tk_ElementSpec * templatePtr); /* 251 */
-    int (*tk_GetElementId) (const char * name); /* 252 */
-    Tk_Style (*tk_CreateStyle) (const char * name, Tk_StyleEngine engine, ClientData clientData); /* 253 */
-    Tk_Style (*tk_GetStyle) (Tcl_Interp * interp, const char * name); /* 254 */
+    void (*tk_PhotoPutBlock_Panic) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int compRule); /* 246 */
+    void (*tk_PhotoPutZoomedBlock_Panic) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule); /* 247 */
+    int (*tk_CollapseMotionEvents) (Display *display, int collapse); /* 248 */
+    Tk_StyleEngine (*tk_RegisterStyleEngine) (const char *name, Tk_StyleEngine parent); /* 249 */
+    Tk_StyleEngine (*tk_GetStyleEngine) (const char *name); /* 250 */
+    int (*tk_RegisterStyledElement) (Tk_StyleEngine engine, Tk_ElementSpec *templatePtr); /* 251 */
+    int (*tk_GetElementId) (const char *name); /* 252 */
+    Tk_Style (*tk_CreateStyle) (const char *name, Tk_StyleEngine engine, ClientData clientData); /* 253 */
+    Tk_Style (*tk_GetStyle) (Tcl_Interp *interp, const char *name); /* 254 */
     void (*tk_FreeStyle) (Tk_Style style); /* 255 */
     const char * (*tk_NameOfStyle) (Tk_Style style); /* 256 */
-    Tk_Style (*tk_AllocStyleFromObj) (Tcl_Interp * interp, Tcl_Obj * objPtr); /* 257 */
-    Tk_Style (*tk_GetStyleFromObj) (Tcl_Obj * objPtr); /* 258 */
-    void (*tk_FreeStyleFromObj) (Tcl_Obj * objPtr); /* 259 */
+    Tk_Style (*tk_AllocStyleFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr); /* 257 */
+    Tk_Style (*tk_GetStyleFromObj) (Tcl_Obj *objPtr); /* 258 */
+    void (*tk_FreeStyleFromObj) (Tcl_Obj *objPtr); /* 259 */
     Tk_StyledElement (*tk_GetStyledElement) (Tk_Style style, int elementId, Tk_OptionTable optionTable); /* 260 */
-    void (*tk_GetElementSize) (Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin, int width, int height, int inner, int * widthPtr, int * heightPtr); /* 261 */
-    void (*tk_GetElementBox) (Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin, int x, int y, int width, int height, int inner, int * xPtr, int * yPtr, int * widthPtr, int * heightPtr); /* 262 */
-    int (*tk_GetElementBorderWidth) (Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin); /* 263 */
-    void (*tk_DrawElement) (Tk_Style style, Tk_StyledElement element, char * recordPtr, Tk_Window tkwin, Drawable d, int x, int y, int width, int height, int state); /* 264 */
-    int (*tk_PhotoExpand) (Tcl_Interp * interp, Tk_PhotoHandle handle, int width, int height); /* 265 */
-    int (*tk_PhotoPutBlock) (Tcl_Interp * interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int compRule); /* 266 */
-    int (*tk_PhotoPutZoomedBlock) (Tcl_Interp * interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock * blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule); /* 267 */
-    int (*tk_PhotoSetSize) (Tcl_Interp * interp, Tk_PhotoHandle handle, int width, int height); /* 268 */
-    long (*tk_GetUserInactiveTime) (Display * dpy); /* 269 */
-    void (*tk_ResetUserInactiveTime) (Display * dpy); /* 270 */
+    void (*tk_GetElementSize) (Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin, int width, int height, int inner, int *widthPtr, int *heightPtr); /* 261 */
+    void (*tk_GetElementBox) (Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin, int x, int y, int width, int height, int inner, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 262 */
+    int (*tk_GetElementBorderWidth) (Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin); /* 263 */
+    void (*tk_DrawElement) (Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin, Drawable d, int x, int y, int width, int height, int state); /* 264 */
+    int (*tk_PhotoExpand) (Tcl_Interp *interp, Tk_PhotoHandle handle, int width, int height); /* 265 */
+    int (*tk_PhotoPutBlock) (Tcl_Interp *interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int compRule); /* 266 */
+    int (*tk_PhotoPutZoomedBlock) (Tcl_Interp *interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule); /* 267 */
+    int (*tk_PhotoSetSize) (Tcl_Interp *interp, Tk_PhotoHandle handle, int width, int height); /* 268 */
+    long (*tk_GetUserInactiveTime) (Display *dpy); /* 269 */
+    void (*tk_ResetUserInactiveTime) (Display *dpy); /* 270 */
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
-    void (*tk_CreateOldImageType) (const Tk_ImageType * typePtr); /* 272 */
-    void (*tk_CreateOldPhotoImageFormat) (const Tk_PhotoImageFormat * formatPtr); /* 273 */
-    int (*tk_DefineBitmap) (Tcl_Interp * interp, const char * name, const void * source, int width, int height); /* 274 */
-    Pixmap (*tk_GetBitmapFromData) (Tcl_Interp * interp, Tk_Window tkwin, const void * source, int width, int height); /* 275 */
+    void (*tk_CreateOldImageType) (const Tk_ImageType *typePtr); /* 272 */
+    void (*tk_CreateOldPhotoImageFormat) (const Tk_PhotoImageFormat *formatPtr); /* 273 */
+    int (*tk_DefineBitmap) (Tcl_Interp *interp, const char *name, const void *source, int width, int height); /* 274 */
+    Pixmap (*tk_GetBitmapFromData) (Tcl_Interp *interp, Tk_Window tkwin, const void *source, int width, int height); /* 275 */
 } TkStubs;
 
 #if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
