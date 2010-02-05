@@ -1,4 +1,4 @@
-/* $Id: ttkButton.c,v 1.12 2010/01/31 22:50:55 jenglish Exp $
+/* $Id: ttkButton.c,v 1.13 2010/02/05 17:42:21 nijtmans Exp $
  * Copyright (c) 2003, Joe English
  *
  * label, button, checkbutton, radiobutton, and menubutton widgets.
@@ -784,7 +784,7 @@ typedef struct
 /*
  * Option specifications:
  */
-static const char *directionStrings[] = {
+static const char *const directionStrings[] = {
     "above", "below", "left", "right", "flush", NULL
 };
 static Tk_OptionSpec MenubuttonOptionSpecs[] =
