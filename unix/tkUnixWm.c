@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.79 2010/01/19 01:27:41 patthoyts Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.80 2010/02/05 22:45:03 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -1003,7 +1003,7 @@ Tk_WmObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = clientData;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"aspect", "attributes", "client", "colormapwindows",
 	"command", "deiconify", "focusmodel", "forget",
 	"frame", "geometry", "grid", "group", "iconbitmap",

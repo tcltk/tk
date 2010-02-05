@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.50 2010/01/29 18:07:31 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.51 2010/02/05 22:45:03 nijtmans Exp $
 
 library tk
 
@@ -128,7 +128,7 @@ declare 24 generic {
     void Tk_ClearSelection(Tk_Window tkwin, Atom selection)
 }
 declare 25 generic {
-    int Tk_ClipboardAppend(Tcl_Interp *interp,Tk_Window tkwin,
+    int Tk_ClipboardAppend(Tcl_Interp *interp, Tk_Window tkwin,
 	    Atom target, Atom format, const char *buffer)
 }
 declare 26 generic {
@@ -831,11 +831,11 @@ declare 217 generic {
 }
 
 #declare 218 generic {
-#    void Tk_CreateCanvasVisitor(Tcl_Interp *interp, VOID *typePtr)
+#    void Tk_CreateCanvasVisitor(Tcl_Interp *interp, void *typePtr)
 #}
 
 #declare 219 generic {
-#    VOID *Tk_GetCanvasVisitor(Tcl_Interp *interp, const char *name)
+#    void *Tk_GetCanvasVisitor(Tcl_Interp *interp, const char *name)
 #}
 
 declare 220 generic {
