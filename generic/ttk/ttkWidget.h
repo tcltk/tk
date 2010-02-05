@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.h,v 1.13 2010/02/05 17:42:21 nijtmans Exp $
+/* $Id: ttkWidget.h,v 1.14 2010/02/05 21:33:14 jenglish Exp $
  * Copyright (c) 2003, Joe English
  * Helper routines for widget implementations.
  */
@@ -240,9 +240,9 @@ MODULE_SCOPE Tk_OptionSpec ttkCoreOptionSpecs[];
  * String tables for widget resource specifications:
  */
 
-MODULE_SCOPE const char *const ttkOrientStrings[];
-MODULE_SCOPE const char *const ttkCompoundStrings[];
-MODULE_SCOPE const char *const ttkDefaultStrings[];
+MODULE_SCOPE const char *ttkOrientStrings[];
+MODULE_SCOPE const char *ttkCompoundStrings[];
+MODULE_SCOPE const char *ttkDefaultStrings[];
 
 /*
  * ... other option types...

@@ -1,4 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.16 2010/02/05 17:42:21 nijtmans Exp $
+/* $Id: ttkDefaultTheme.c,v 1.17 2010/02/05 21:33:14 jenglish Exp $
  *
  * Copyright (c) 2003, Joe English
  *
@@ -682,7 +682,7 @@ typedef struct {
     Tcl_Obj *colorObj;
 } MenubuttonArrowElement;
 
-static const char *const directionStrings[] = {	/* See also: button.c */
+static const char *directionStrings[] = {	/* See also: button.c */
     "above", "below", "left", "right", "flush", NULL
 };
 enum { POST_ABOVE, POST_BELOW, POST_LEFT, POST_RIGHT, POST_FLUSH };
