@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.c,v 1.25 2010/02/05 17:42:21 nijtmans Exp $
+/* $Id: ttkWidget.c,v 1.26 2010/02/05 21:33:14 jenglish Exp $
  * Copyright (c) 2003, Joe English
  *
  * Core widget utilities.
@@ -755,7 +755,7 @@ int TtkWidgetIdentifyCommand(
 {
     WidgetCore *corePtr = recordPtr;
     Ttk_Element element;
-    static const char *const whatTable[] = { "element", NULL };
+    static const char *whatTable[] = { "element", NULL };
     int x, y, what;
 
     if (objc < 4 || objc > 5) {

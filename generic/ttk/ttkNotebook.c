@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.24 2010/02/05 17:42:21 nijtmans Exp $
+/* $Id: ttkNotebook.c,v 1.25 2010/02/05 21:33:14 jenglish Exp $
  * Copyright (c) 2004, Joe English
  */
 
@@ -1046,7 +1046,7 @@ static int NotebookHideCommand(
 static int NotebookIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    static const char *const whatTable[] = { "element", "tab", NULL };
+    static const char *whatTable[] = { "element", "tab", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_TAB };
     int what = IDENTIFY_ELEMENT;
     Notebook *nb = recordPtr;

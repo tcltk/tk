@@ -1,3 +1,9 @@
+2010-02-05  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/*.[ch]: Revert contravariant const qualifiers added 
+	by the previous commit to keep codebase in sync with the Tile 
+	extension, which must remain 8.4 compatible.
+
 2010-02-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkGenStubs.tcl: Follow-up to [2010-01-29] commit:

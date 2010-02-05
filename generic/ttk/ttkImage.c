@@ -1,4 +1,4 @@
-/* $Id: ttkImage.c,v 1.9 2010/02/05 17:42:21 nijtmans Exp $
+/* $Id: ttkImage.c,v 1.10 2010/02/05 21:33:14 jenglish Exp $
  *	Image specifications and image element factory.
  *
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
@@ -314,7 +314,7 @@ Ttk_CreateImageElement(
     const char *elementName,
     int objc, Tcl_Obj *const objv[])
 {
-    const char *const optionStrings[] =
+    const char *optionStrings[] =
 	 { "-border","-height","-padding","-sticky","-width",NULL };
     enum { O_BORDER, O_HEIGHT, O_PADDING, O_STICKY, O_WIDTH };
 

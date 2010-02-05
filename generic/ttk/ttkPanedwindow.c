@@ -1,4 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.21 2010/02/05 17:42:21 nijtmans Exp $
+/* $Id: ttkPanedwindow.c,v 1.22 2010/02/05 21:33:14 jenglish Exp $
  *
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
@@ -713,7 +713,7 @@ static int PanedForgetCommand(
 static int PanedIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    const char *const whatTable[] = { "element", "sash", NULL };
+    const char *whatTable[] = { "element", "sash", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_SASH };
     int what = IDENTIFY_SASH;
     Paned *pw = recordPtr;
