@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.28 2010/01/13 23:08:11 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixButton.c,v 1.29 2010/02/05 22:45:03 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -59,7 +59,7 @@ const Tk_ClassProcs tkpButtonProcs = {
  */
 
 /* XPM */
-static const char *button_images[] = {
+static const char *const button_images[] = {
     /* width height ncolors chars_per_pixel */
     "52 26 7 1",
     /* colors */

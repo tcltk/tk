@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.71 2009/12/02 21:16:45 nijtmans Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.72 2010/02/05 22:45:03 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -47,9 +47,11 @@
  * below should be made in the generic/tk.decls script.
  */
 
+MODULE_SCOPE const TkStubs tkConstStubs;
+
 /* !BEGIN!: Do not edit below this line. */
 
-static const TkIntStubs tkIntStubs = {
+static const TkIntStubs tkIntConstStubs = {
     TCL_STUB_MAGIC,
     NULL,
     TkAllocWindow, /* 0 */
@@ -334,7 +336,7 @@ static const TkIntStubs tkIntStubs = {
     TkSmoothPrintProc, /* 180 */
 };
 
-static const TkIntPlatStubs tkIntPlatStubs = {
+static const TkIntPlatStubs tkIntPlatConstStubs = {
     TCL_STUB_MAGIC,
     NULL,
 #ifdef __WIN32__ /* WIN */
@@ -450,7 +452,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 #endif /* X11 */
 };
 
-static const TkIntXlibStubs tkIntXlibStubs = {
+static const TkIntXlibStubs tkIntXlibConstStubs = {
     TCL_STUB_MAGIC,
     NULL,
 #ifdef __WIN32__ /* WIN */
@@ -658,7 +660,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
 #endif /* AQUA */
 };
 
-static const TkPlatStubs tkPlatStubs = {
+static const TkPlatStubs tkPlatConstStubs = {
     TCL_STUB_MAGIC,
     NULL,
 #ifdef __WIN32__ /* WIN */
@@ -685,13 +687,13 @@ static const TkPlatStubs tkPlatStubs = {
 };
 
 static const TkStubHooks tkStubHooks = {
-    &tkPlatStubs,
-    &tkIntStubs,
-    &tkIntPlatStubs,
-    &tkIntXlibStubs
+    &tkPlatConstStubs,
+    &tkIntConstStubs,
+    &tkIntPlatConstStubs,
+    &tkIntXlibConstStubs
 };
 
-static const TkStubs tkStubs = {
+const TkStubs tkConstStubs = {
     TCL_STUB_MAGIC,
     &tkStubHooks,
     Tk_MainLoop, /* 0 */
@@ -973,14 +975,3 @@ static const TkStubs tkStubs = {
 };
 
 /* !END!: Do not edit above this line. */
-
-/* 
- * Module-scope pointer to the main static stubs table, used for package
- * initialization via Tcl_PkgProvideEx().
- */
-
-MODULE_SCOPE const TkStubs * const tkConstStubsPtr;
-
-const TkStubs * const tkConstStubsPtr = &tkStubs;
-
-#undef UNIX_TK

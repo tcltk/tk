@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgPNG.c,v 1.4 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPNG.c,v 1.5 2010/02/05 22:45:03 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -2212,7 +2212,7 @@ ParseFormat(
 {
     Tcl_Obj **objv = NULL;
     int objc = 0;
-    static const char *fmtOptions[] = {
+    static const char *const fmtOptions[] = {
 	"png", "-alpha", NULL
     };
     enum fmtOptions {

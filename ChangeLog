@@ -1,3 +1,14 @@
+2010-02-05  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* carbon/tkMacOSXDialog.c    Make more internal
+	* macosx/tkMacOSXDialog.c    tables "const"
+	* unix/tkUnixButton.c
+	* unix/tkUnixWm.c
+	* win/tkWinDialog.c
+	* generic/tkWindow.c
+	* generic/tk*Decls.h       (regenerated with new
+    * generic/tkStubInit.c      genStubs.tcl from Tcl)
+
 2010-02-05  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/*.[ch]: Revert contravariant const qualifiers added 

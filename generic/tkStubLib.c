@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubLib.c,v 1.25 2008/04/27 22:38:58 dkf Exp $
+ * RCS: @(#) $Id: tkStubLib.c,v 1.26 2010/02/05 22:45:03 nijtmans Exp $
  */
 
 /*
@@ -90,11 +90,11 @@ Tk_InitStubs(
     const char *version,
     int exact)
 {
-    const char *actualVersion;
-    const TkStubs **stubsPtrPtr = &tkStubsPtr;	/* squelch warning */
+    ClientData pkgClientData = NULL;
+    const char *actualVersion = Tcl_PkgRequireEx(interp, "Tk", version, 0,
+	    &pkgClientData);
+    const TkStubs *stubsPtr = pkgClientData;
 
-    actualVersion = Tcl_PkgRequireEx(interp, "Tk", version, 0,
-	    (ClientData *) stubsPtrPtr);
     if (!actualVersion) {
 	return NULL;
     }
@@ -125,17 +125,18 @@ Tk_InitStubs(
         }
     }
 
-    if (!tkStubsPtr) {
+    if (!stubsPtr) {
 	Tcl_SetResult(interp,
 		"This implementation of Tk does not support stubs",
 		TCL_STATIC);
 	return NULL;
     }
 
-    tkPlatStubsPtr = tkStubsPtr->hooks->tkPlatStubs;
-    tkIntStubsPtr = tkStubsPtr->hooks->tkIntStubs;
-    tkIntPlatStubsPtr = tkStubsPtr->hooks->tkIntPlatStubs;
-    tkIntXlibStubsPtr = tkStubsPtr->hooks->tkIntXlibStubs;
+    tkPlatStubsPtr = stubsPtr->hooks->tkPlatStubs;
+    tkIntStubsPtr = stubsPtr->hooks->tkIntStubs;
+    tkIntPlatStubsPtr = stubsPtr->hooks->tkIntPlatStubs;
+    tkIntXlibStubsPtr = stubsPtr->hooks->tkIntXlibStubs;
+    tkStubsPtr = stubsPtr;
 
     return actualVersion;
 }

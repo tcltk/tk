@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.47 2009/10/22 10:12:57 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.48 2010/02/05 22:45:03 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1117,7 +1117,7 @@ static Tcl_Interp *fontchooserInterp = NULL;
 static NSFont *fontPanelFont = nil;
 static NSMutableDictionary *fontPanelFontAttributes = nil;
 
-static const char *fontchooserOptionStrings[] = {
+static const char *const fontchooserOptionStrings[] = {
     "-parent", "-title", "-font", "-command",
     "-visible", NULL
 };
