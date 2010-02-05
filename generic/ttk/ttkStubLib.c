@@ -1,5 +1,5 @@
 /*
- * $Id: ttkStubLib.c,v 1.6 2008/04/02 21:31:58 das Exp $
+ * $Id: ttkStubLib.c,v 1.7 2010/02/05 17:42:21 nijtmans Exp $
  * SOURCE: tk/generic/tkStubLib.c, version 1.9 2004/03/17
  */
 
@@ -42,9 +42,9 @@ TtkInitializeStubs(
     const char *packageName = "Ttk";
     const char *errMsg = NULL;
     ClientData pkgClientData = NULL;
-    const char *actualVersion= Tcl_PkgRequireEx(
+    const char *actualVersion = Tcl_PkgRequireEx(
 	interp, packageName, version, exact, &pkgClientData);
-    TtkStubs *stubsPtr = pkgClientData;
+    const TtkStubs *stubsPtr = pkgClientData;
 
     if (!actualVersion) {
 	return NULL;

@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.19 2010/01/31 22:50:55 jenglish Exp $
+ * $Id: ttkEntry.c,v 1.20 2010/02/05 17:42:21 nijtmans Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -33,7 +33,7 @@ typedef enum validateMode {
     VMODE_ALL, VMODE_KEY, VMODE_FOCUS, VMODE_FOCUSIN, VMODE_FOCUSOUT, VMODE_NONE
 } VMODE;
 
-static const char *validateStrings[] = {
+static const char *const validateStrings[] = {
     "all", "key", "focus", "focusin", "focusout", "none", NULL
 };
 
@@ -46,7 +46,7 @@ typedef enum validateReason {
     VALIDATE_FORCED
 } VREASON;
 
-static const char *validateReasonStrings[] = {
+static const char *const validateReasonStrings[] = {
     "key", "key", "focusin", "focusout", "forced", NULL
 };
 

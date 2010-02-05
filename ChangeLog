@@ -2,10 +2,27 @@
 
 	* generic/ttk/ttkGenStubs.tcl: Follow-up to [2010-01-29] commit:
 	        prevent space within stub table function parameters
-	        if the parameter type is a pointer.
-	* generic/ttk/ttkDecls.h (re-generated)
-	* generic/tk*Decls.h
-	
+	        if the parameter type is a pointer. Make the
+	        various stub tables and hook pointers const,
+	        just as Tcl and Tk.
+	* generic/ttk/ttkDecls.h (regenerated)
+    * generic/ttk/ttkStubInit.c (regenerated)
+	* generic/ttk/ttk.decls Minor formatting
+	* generic/ttk/ttkButton.c    Make more internal tables "const"
+    * generic/ttk/ttkDefaultTheme.c
+    * generic/ttk/ttkEntry.c
+    * generic/ttk/ttkImage.c
+    * generic/ttk/ttkInit.c
+    * generic/ttk/ttkLayout.c
+    * generic/ttk/ttkNotebook.c
+    * generic/ttk/ttkPanedWindow.c
+    * generic/ttk/ttkProgress.c
+    * generic/ttk/ttkStubLib.c
+    * generic/ttk/ttkTheme.c
+    * generic/ttk/ttkTreeview.c
+    * generic/ttk/ttkWidget.c
+    * generic/ttk/ttkWidget.h
+
 2010-01-31  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTheme.h, generic/ttk/ttkWidget.h, 

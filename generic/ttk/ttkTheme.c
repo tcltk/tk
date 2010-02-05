@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.20 2010/01/31 22:50:56 jenglish Exp $
+ * $Id: ttkTheme.c,v 1.21 2010/02/05 17:42:21 nijtmans Exp $
  */
 
 #include <stdlib.h>
@@ -1372,7 +1372,7 @@ static int StyleThemeCreateCmd(
     ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = clientData;
-    static const char *optStrings[] =
+    static const char *const optStrings[] =
     	 { "-parent", "-settings", NULL };
     enum { OP_PARENT, OP_SETTINGS };
     Ttk_Theme parentTheme = pkgPtr->defaultTheme, newTheme;
