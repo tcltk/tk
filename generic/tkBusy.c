@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBusy.c,v 1.7 2010/01/13 23:08:09 nijtmans Exp $
+ * RCS: @(#) $Id: tkBusy.c,v 1.8 2010/02/05 22:45:03 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -791,7 +791,7 @@ Tk_BusyObjCmd(
     Busy *busyPtr;
     Tcl_Obj *objPtr;
     int index, result = TCL_OK;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"cget", "configure", "current", "forget", "hold", "status", NULL
     };
     enum options {

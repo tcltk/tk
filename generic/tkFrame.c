@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFrame.c,v 1.40 2010/01/13 23:08:08 nijtmans Exp $
+ * RCS: @(#) $Id: tkFrame.c,v 1.41 2010/02/05 22:45:03 nijtmans Exp $
  */
 
 #include "default.h"
@@ -164,7 +164,7 @@ enum labelanchor {
     LABELANCHOR_W, LABELANCHOR_WN, LABELANCHOR_WS
 };
 
-static const char *labelAnchorStrings[] = {
+static const char *const labelAnchorStrings[] = {
     "e", "en", "es", "n", "ne", "nw", "s", "se", "sw", "w", "wn", "ws",
     NULL
 };
