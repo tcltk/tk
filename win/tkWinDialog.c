@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.69 2010/01/13 23:08:11 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.70 2010/02/05 22:45:03 nijtmans Exp $
  *
  */
 
@@ -2718,7 +2718,7 @@ FontchooserConfigureCmd(
     Tk_Window tkwin = clientData;
     HookData *hdPtr = NULL;
     int i, r = TCL_OK;
-    static const char *optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"-parent", "-title", "-font", "-command", "-visible", NULL
     };
 

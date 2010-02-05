@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.1 2009/06/26 01:42:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.2 2010/02/05 22:45:03 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1783,7 +1783,7 @@ static FMFontStyle fontPanelFontStyle = -1;
 static FMFontSize fontPanelFontSize = 0;
 static FMFont fontPanelFontID = kInvalidFont;
 
-static const char *fontchooserOptionStrings[] = {
+static const char *const fontchooserOptionStrings[] = {
     "-parent", "-title", "-font", "-command",
     "-visible", NULL
 };
