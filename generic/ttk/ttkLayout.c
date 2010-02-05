@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
- * $Id: ttkLayout.c,v 1.16 2009/02/09 01:45:46 jenglish Exp $
+ * $Id: ttkLayout.c,v 1.17 2010/02/05 17:42:21 nijtmans Exp $
  */
 
 #include <string.h>
@@ -605,13 +605,13 @@ Ttk_InstantiateLayout(Ttk_Theme theme, Ttk_TemplateNode *op)
  */
 
 /* NB: This must match bit definitions TTK_PACK_LEFT etc. */
-static const char *packSideStrings[] =
+static const char *const packSideStrings[] =
     { "left", "right", "top", "bottom", NULL };
 
 Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 {
     enum {  OP_SIDE, OP_STICKY, OP_EXPAND, OP_BORDER, OP_UNIT, OP_CHILDREN };
-    static const char *optStrings[] = {
+    static const char *const optStrings[] = {
 	    "-side", "-sticky", "-expand", "-border", "-unit", "-children", 0 };
 
     int i = 0, objc;

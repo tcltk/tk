@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# $Id: ttkGenStubs.tcl,v 1.4 2010/02/05 10:56:43 nijtmans Exp $
+# $Id: ttkGenStubs.tcl,v 1.5 2010/02/05 17:42:21 nijtmans Exp $
 #
 # SOURCE: tcl/tools/genStubs.tcl, revision 1.20
 #
@@ -730,7 +730,7 @@ proc genStubs::emitHeader {name} {
 	foreach hook $hooks($name) {
 	    set capHook [string toupper [string index $hook 0]]
 	    append capHook [string range $hook 1 end]
-	    append text "    struct ${capHook}Stubs *${hook}Stubs;\n"
+	    append text "    const struct ${capHook}Stubs *${hook}Stubs;\n"
 	}
 	append text "} ${capName}StubHooks;\n"
     }
@@ -738,7 +738,7 @@ proc genStubs::emitHeader {name} {
     append text "    int magic;\n"
     append text "    int epoch;\n"
     append text "    int revision;\n"
-    append text "    struct ${capName}StubHooks *hooks;\n\n"
+    append text "    const struct ${capName}StubHooks *hooks;\n\n"
 
     emitSlots $name text
 
@@ -767,25 +767,40 @@ proc genStubs::emitHeader {name} {
 
 proc genStubs::emitInit {name textVar} {
     variable hooks
+    variable interfaces
     variable epoch
     variable revision
 
     upvar $textVar text
+    set root 1
 
     set capName [string toupper [string index $name 0]]
     append capName [string range $name 1 end]
     set CAPName [string toupper $name]
 
     if {[info exists hooks($name)]} {
- 	append text "\nstatic ${capName}StubHooks ${name}StubHooks = \{\n"
+	append text "\nstatic const ${capName}StubHooks ${name}StubHooks = \{\n"
 	set sep "    "
 	foreach sub $hooks($name) {
-	    append text $sep "&${sub}Stubs"
+	    append text $sep "&${sub}ConstStubs"
 	    set sep ",\n    "
 	}
 	append text "\n\};\n"
     }
-    append text "\n${capName}Stubs ${name}Stubs = \{\n"
+    foreach intf [array names interfaces] {
+	if {[info exists hooks($intf)]} {
+	    if {$name in $hooks($intf)} {
+		set root 0
+		break;
+	    }
+	}
+    }
+
+    if {$root} {
+	append text "\nconst ${capName}Stubs ${name}ConstStubs = \{\n"
+    } else {
+	append text "\nstatic const ${capName}Stubs ${name}ConstStubs = \{\n"
+    }
     append text "    TCL_STUB_MAGIC,\n"
     append text "    ${CAPName}_STUBS_EPOCH,\n"
     append text "    ${CAPName}_STUBS_REVISION,\n"
@@ -794,7 +809,7 @@ proc genStubs::emitInit {name textVar} {
     } else {
 	append text "    0,\n"
     }
-    
+
     forAllStubs $name makeInit noGuard text {"    0, /* $i */\n"}
 
     append text "\};\n"

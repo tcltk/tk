@@ -1,5 +1,5 @@
 #
-# $Id: ttk.decls,v 1.4 2009/02/08 19:35:35 jenglish Exp $
+# $Id: ttk.decls,v 1.5 2010/02/05 17:42:21 nijtmans Exp $
 #
 
 library 	ttk
@@ -64,7 +64,7 @@ declare 10 current {
 }
 declare 11 current {
     Tcl_Obj *Ttk_NewStateSpecObj(
-    	unsigned int onbits,unsigned int offbits);
+    	unsigned int onbits, unsigned int offbits);
 }
 declare 12 current {
     Ttk_StateMap Ttk_GetStateMapFromObj(

@@ -1,4 +1,4 @@
-/* $Id: ttkProgress.c,v 1.9 2010/01/31 22:50:56 jenglish Exp $
+/* $Id: ttkProgress.c,v 1.10 2010/02/05 17:42:21 nijtmans Exp $
  *
  * Copyright (c) Joe English, Pat Thoyts, Michael Kirkham
  *
@@ -19,7 +19,7 @@
 enum {
     TTK_PROGRESSBAR_DETERMINATE, TTK_PROGRESSBAR_INDETERMINATE
 };
-static const char *ProgressbarModeStrings[] = {
+static const char *const ProgressbarModeStrings[] = {
     "determinate", "indeterminate", NULL
 };
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ttkDecls.h,v 1.10 2010/02/05 10:56:43 nijtmans Exp $
+ * $Id: ttkDecls.h,v 1.11 2010/02/05 17:42:21 nijtmans Exp $
  *
  * This file is (mostly) automatically generated from ttk.decls.
  */
@@ -139,7 +139,7 @@ typedef struct TtkStubs {
     int magic;
     int epoch;
     int revision;
-    struct TtkStubHooks *hooks;
+    const struct TtkStubHooks *hooks;
 
     Ttk_Theme (*ttk_GetTheme) (Tcl_Interp *interp, const char *name); /* 0 */
     Ttk_Theme (*ttk_GetDefaultTheme) (Tcl_Interp *interp); /* 1 */

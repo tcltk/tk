@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.10 2010/01/22 14:17:53 nijtmans Exp $
+/* $Id: ttkInit.c,v 1.11 2010/02/05 17:42:21 nijtmans Exp $
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
@@ -13,7 +13,7 @@
  * Legal values for the button -default option.
  * See also: enum Ttk_ButtonDefaultState.
  */
-const char *ttkDefaultStrings[] = {
+const char *const ttkDefaultStrings[] = {
     "normal", "active", "disabled", NULL
 };
 
@@ -29,7 +29,7 @@ int Ttk_GetButtonDefaultStateFromObj(
  * Legal values for the -compound option.
  * See also: enum Ttk_Compound.
  */
-const char *ttkCompoundStrings[] = {
+const char *const ttkCompoundStrings[] = {
     "none", "text", "image", "center",
     "top", "bottom", "left", "right", NULL
 };
@@ -46,7 +46,7 @@ int Ttk_GetCompoundFromObj(
  * Legal values for the -orient option.
  * See also: enum Ttk_Orient.
  */
-const char *ttkOrientStrings[] = {
+const char *const ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
@@ -62,7 +62,7 @@ int Ttk_GetOrientFromObj(
  * Recognized values for the -state compatibility option.
  * Other options are accepted and interpreted as synonyms for "normal".
  */
-static const char *ttkStateStrings[] = {
+static const char *const ttkStateStrings[] = {
     "normal", "readonly", "disabled", "active", NULL
 };
 enum { 
@@ -259,7 +259,7 @@ static void RegisterThemes(Tcl_Interp *interp)
  * Ttk initialization.
  */
 
-extern TtkStubs ttkStubs;
+extern const TtkStubs ttkConstStubs;
 
 MODULE_SCOPE int
 Ttk_Init(Tcl_Interp *interp)
@@ -276,7 +276,8 @@ Ttk_Init(Tcl_Interp *interp)
 
     Ttk_PlatformInit(interp);
 
-    Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (void*)&ttkStubs);
+    Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL,
+	    (ClientData) &ttkConstStubs);
 
     return TCL_OK;
 }
