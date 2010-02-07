@@ -1,5 +1,5 @@
 #
-# $Id: ttk.decls,v 1.2 2006/12/10 19:19:44 jenglish Exp $
+# $Id: ttk.decls,v 1.2.4.1 2010/02/07 23:24:13 nijtmans Exp $
 #
 
 library 	ttk
@@ -27,7 +27,7 @@ declare 4 current {
 
 declare 5 current {
     int Ttk_RegisterElementSpec(
-	Ttk_Theme theme, 
+	Ttk_Theme theme,
 	const char *elementName,
 	Ttk_ElementSpec *elementSpec,
 	void *clientData);
@@ -36,7 +36,7 @@ declare 5 current {
 declare 6 current {
     Ttk_ElementImpl Ttk_RegisterElement(
 	Tcl_Interp *interp,
-	Ttk_Theme theme, 
+	Ttk_Theme theme,
 	const char *elementName,
 	Ttk_ElementSpec *elementSpec,
 	void *clientData);
@@ -44,7 +44,7 @@ declare 6 current {
 
 declare 7 current {
     int Ttk_RegisterElementFactory(
-	Tcl_Interp *interp, 
+	Tcl_Interp *interp,
 	const char *name,
 	Ttk_ElementFactory factoryProc,
 	void *clientData);
@@ -64,7 +64,7 @@ declare 10 current {
 }
 declare 11 current {
     Tcl_Obj *Ttk_NewStateSpecObj(
-    	unsigned int onbits,unsigned int offbits);
+    	unsigned int onbits, unsigned int offbits);
 }
 declare 12 current {
     Ttk_StateMap Ttk_GetStateMapFromObj(
@@ -85,15 +85,15 @@ declare 14 current {
 #
 declare 20 current {
     int Ttk_GetPaddingFromObj(
-    	Tcl_Interp *interp, 
-	Tk_Window tkwin, 
-	Tcl_Obj *objPtr, 
+    	Tcl_Interp *interp,
+	Tk_Window tkwin,
+	Tcl_Obj *objPtr,
 	Ttk_Padding *pad_rtn);
 }
 declare 21 current {
     int Ttk_GetBorderFromObj(
-    	Tcl_Interp *interp, 
-	Tcl_Obj *objPtr, 
+    	Tcl_Interp *interp,
+	Tcl_Obj *objPtr,
 	Ttk_Padding *pad_rtn);
 }
 declare 22 current {
