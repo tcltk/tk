@@ -1,3 +1,11 @@
+2010-02-07  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/ttk/ttkGenStubs.tcl Backport various formatting (spacing)
+	* generic/ttk/ttk.decls       changes from HEAD, so diffing
+	* generic/ttk/ttkDecls.h      between 8.5.x and 8.6 shows the
+	* generic/tk*.decls           real structural differences again.
+	* generic/tk*Decls.h          (any signature change not backported!)
+
 2010-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkBind.c      Fix various gcc-4.4 warnings, all
