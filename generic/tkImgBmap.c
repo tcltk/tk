@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.30 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.31 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1134,7 +1134,7 @@ ImgBmapPsImagemask(
      * within a byte so that the bits will be in the order postscript expects.
      */
 
-    static unsigned char bit_reverse[] = {
+    static const unsigned char bit_reverse[] = {
        0, 128, 64, 192, 32, 160,  96, 224, 16, 144, 80, 208, 48, 176, 112, 240,
        8, 136, 72, 200, 40, 168, 104, 232, 24, 152, 88, 216, 56, 184, 120, 248,
        4, 132, 68, 196, 36, 164, 100, 228, 20, 148, 84, 212, 52, 180, 116, 244,

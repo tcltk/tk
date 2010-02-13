@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.42 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.43 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -75,7 +75,7 @@ typedef struct TkWindowEvent {
  * Array of event masks corresponding to each X event:
  */
 
-static unsigned long realEventMasks[MappingNotify+1] = {
+static const unsigned long realEventMasks[MappingNotify+1] = {
     0,
     0,
     KeyPressMask,			/* KeyPress */
@@ -116,7 +116,7 @@ static unsigned long realEventMasks[MappingNotify+1] = {
     0					/* Mapping Notify */
 };
 
-static unsigned long virtualEventMasks[TK_LASTEVENT-VirtualEvent] = {
+static const unsigned long virtualEventMasks[TK_LASTEVENT-VirtualEvent] = {
     VirtualEventMask,			/* VirtualEvents */
     ActivateMask,			/* ActivateNotify */
     ActivateMask,			/* DeactivateNotify */

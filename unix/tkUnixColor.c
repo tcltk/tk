@@ -9,10 +9,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixColor.c,v 1.7 2009/10/25 16:27:21 dkf Exp $
+ * RCS: @(#) $Id: tkUnixColor.c,v 1.8 2010/02/13 13:47:49 nijtmans Exp $
  */
 
-#include "tkInt.h"
+#include "tkUnixInt.h"
 #include "tkColor.h"
 
 /*

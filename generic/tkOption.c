@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOption.c,v 1.29 2009/02/03 23:55:47 nijtmans Exp $
+ * RCS: @(#) $Id: tkOption.c,v 1.30 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -525,11 +525,12 @@ Tk_GetOption(
 	Tk_Uid nodeId, winClassId, winNameId;
 	unsigned int classNameLength;
 	register Element *nodePtr, *leafPtr;
-	static int searchOrder[] = {
+	static const int searchOrder[] = {
 	    EXACT_NODE_NAME, WILDCARD_NODE_NAME, EXACT_NODE_CLASS,
 	    WILDCARD_NODE_CLASS, -1
 	};
-	int *currentPtr, currentStack, leafCount;
+	const int *currentPtr;
+	int currentStack, leafCount;
 
 	/*
 	 * Extract the masquerade class name from the name field.
@@ -1228,7 +1229,8 @@ SetupStacks(
 				 * being probed. Zero means this is an
 				 * ancestor of the desired leaf. */
 {
-    int level, i, *iPtr;
+    int level, i;
+    const int *iPtr;
     register StackLevel *levelPtr;
     register ElArray *arrayPtr;
     ThreadSpecificData *tsdPtr =
@@ -1243,7 +1245,7 @@ SetupStacks(
      * differently.
      */
 
-    static int searchOrder[] = {WILDCARD_NODE_CLASS, WILDCARD_NODE_NAME,
+    static const int searchOrder[] = {WILDCARD_NODE_CLASS, WILDCARD_NODE_NAME,
 	    EXACT_NODE_CLASS, EXACT_NODE_NAME, -1};
 
     if (winPtr->mainPtr->optionRootPtr == NULL) {

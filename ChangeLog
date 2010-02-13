@@ -1,3 +1,22 @@
+2010-02-12  Jan Nijtmans  <nijtmans@users.sf.net>
+
+    * win/tcl.m4           use -pipe for gcc on win32
+    * win/configure        (mingw/cygwin) (regenerated)
+    * unix/tkUnixColor.c   make sure that TkpCmapStressed is exported
+    * generic/tkImgPhoto.c clean up unused Tk_CreatePhotoOption
+    * generic/tkBind.c     Make more internal arrays "const"
+    * generic/tkBusy.c         |
+    * generic/tkButton.c
+    * generic/tkEvent.c
+    * generic/tkGrab.c
+    * generic/tkImgBmap.c
+    * generic/tkObj.c
+    * generic/tkOption.c
+    * generic/tkPanedWindow.c
+    * generic/tkPointer.c
+    * generic/tkWindow.c
+    * generic/tkImgPhoto.c Eliminate never used Tk_CreatePhotoOption()
+
 2010-02-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* carbon/tkMacOSXDialog.c    Make more internal
