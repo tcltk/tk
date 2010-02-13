@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkObj.c,v 1.27 2009/12/15 18:12:07 dgp Exp $
+ * RCS: @(#) $Id: tkObj.c,v 1.28 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -155,7 +155,7 @@ GetPixelsFromObjEx(
     int result,fresh;
     double d;
     PixelRep *pixelPtr;
-    static double bias[] = {
+    static const double bias[] = {
 	1.0,	10.0,	25.4,	0.35278 /*25.4 / 72.0*/
     };
 
@@ -482,7 +482,7 @@ Tk_GetMMFromObj(
     int result;
     double d;
     MMRep *mmPtr;
-    static double bias[] = {
+    static const double bias[] = {
 	10.0,	25.4,	1.0,	0.35278 /*25.4 / 72.0*/
     };
 
