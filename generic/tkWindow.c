@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.109 2010/02/05 22:45:03 nijtmans Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.110 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -108,7 +108,7 @@ typedef struct {
 				 * clientData to command function. */
 } TkCmd;
 
-static TkCmd commands[] = {
+static const TkCmd commands[] = {
     /*
      * Commands that are part of the intrinsics:
      */
@@ -218,7 +218,7 @@ static char *use = NULL;
 static char *visual = NULL;
 static int rest = 0;
 
-static Tk_ArgvInfo argTable[] = {
+static const Tk_ArgvInfo argTable[] = {
     {"-colormap", TK_ARGV_STRING, NULL, (char *) &colormap,
 	"Colormap for main window"},
     {"-display", TK_ARGV_STRING, NULL, (char *) &display,
@@ -865,7 +865,7 @@ TkCreateMainWindow(
     Tcl_HashEntry *hPtr;
     register TkMainInfo *mainPtr;
     register TkWindow *winPtr;
-    register TkCmd *cmdPtr;
+    register const TkCmd *cmdPtr;
     ClientData clientData;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -1511,7 +1511,7 @@ Tk_DestroyWindow(
 	}
 	winPtr->mainPtr->refCount--;
 	if (winPtr->mainPtr->refCount == 0) {
-	    register TkCmd *cmdPtr;
+	    register const TkCmd *cmdPtr;
 
 	    /*
 	     * We just deleted the last window in the application. Delete the

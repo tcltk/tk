@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPointer.c,v 1.13 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkPointer.c,v 1.14 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -32,7 +32,7 @@
 
 #define ALL_BUTTONS \
 	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
-static unsigned int buttonMasks[] = {
+static const unsigned int buttonMasks[] = {
     Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask
 };
 #define ButtonMask(b) (buttonMasks[(b)-Button1])

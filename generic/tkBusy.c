@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBusy.c,v 1.8 2010/02/05 22:45:03 nijtmans Exp $
+ * RCS: @(#) $Id: tkBusy.c,v 1.9 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -23,7 +23,7 @@
  * OSX/Aqua, that's nothing at all.
  */
 
-static Tk_OptionSpec busyOptionSpecs[] = {
+static const Tk_OptionSpec busyOptionSpecs[] = {
 #ifndef MAC_OSX_TK
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUSY_CURSOR, -1, Tk_Offset(Busy, cursor),

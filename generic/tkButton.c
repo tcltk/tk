@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.37 2010/01/13 23:08:07 nijtmans Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.38 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -502,7 +502,7 @@ enum command {
     COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_DESELECT, COMMAND_FLASH,
     COMMAND_INVOKE, COMMAND_SELECT, COMMAND_TOGGLE
 };
-static enum command map[][8] = {
+static const enum command map[][8] = {
     {COMMAND_CGET, COMMAND_CONFIGURE},
     {COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_FLASH, COMMAND_INVOKE},
     {COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_DESELECT, COMMAND_FLASH,

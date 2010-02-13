@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.61 2010/01/29 23:29:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.62 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -354,7 +354,7 @@ typedef struct {
     const char *name;			/* Name of keysym. */
     KeySym value;		/* Numeric identifier for keysym. */
 } KeySymInfo;
-static KeySymInfo keyArray[] = {
+static const KeySymInfo keyArray[] = {
 #ifndef lint
 #include "ks_names.h"
 #endif
@@ -462,7 +462,7 @@ typedef struct {
  * unless you've asked about button events.
  */
 
-static EventInfo eventArray[] = {
+static const EventInfo eventArray[] = {
     {"Key",		KeyPress,		KeyPressMask},
     {"KeyPress",	KeyPress,		KeyPressMask},
     {"KeyRelease",	KeyRelease,		KeyPressMask|KeyReleaseMask},
@@ -534,7 +534,7 @@ static Tcl_HashTable eventTable;
 #define KEY_BUTTON_MOTION_VIRTUAL	(KEY|BUTTON|MOTION|VIRTUAL)
 #define KEY_BUTTON_MOTION_CROSSING	(KEY|BUTTON|MOTION|VIRTUAL|CROSSING)
 
-static int flagArray[TK_LASTEVENT] = {
+static const int flagArray[TK_LASTEVENT] = {
    /* Not used */		0,
    /* Not used */		0,
    /* KeyPress */		KEY,
@@ -734,10 +734,10 @@ TkBindInit(
 	if (!initialized) {
 	    Tcl_HashEntry *hPtr;
 	    const ModInfo *modPtr;
-	    EventInfo *eiPtr;
+	    const EventInfo *eiPtr;
 	    int newEntry;
 #ifdef REDO_KEYSYM_LOOKUP
-	    KeySymInfo *kPtr;
+	    const KeySymInfo *kPtr;
 
 	    Tcl_InitHashTable(&keySymTable, TCL_STRING_KEYS);
 	    Tcl_InitHashTable(&nameTable, TCL_ONE_WORD_KEYS);
@@ -4272,7 +4272,7 @@ ParseEventDescription(
     eventFlags = 0;
     hPtr = Tcl_FindHashEntry(&eventTable, field);
     if (hPtr != NULL) {
-	EventInfo *eiPtr = Tcl_GetHashValue(hPtr);
+	const EventInfo *eiPtr = Tcl_GetHashValue(hPtr);
 
 	patPtr->eventType = eiPtr->type;
 	eventFlags = flagArray[eiPtr->type];
@@ -4416,7 +4416,7 @@ GetPatternString(
     char c, buffer[TCL_INTEGER_SPACE];
     int patsLeft, needMods;
     const ModInfo *modPtr;
-    EventInfo *eiPtr;
+    const EventInfo *eiPtr;
 
     /*
      * The order of the patterns in the sequence is backwards from the order

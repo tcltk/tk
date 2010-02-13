@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.40 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.41 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "default.h"
@@ -2316,22 +2316,22 @@ GetSticky(
 				 * sticky value. */
 {
     int sticky = *(int *)(recordPtr + internalOffset);
-    static char buffer[5];
-    int count = 0;
+    char buffer[5];
+    char *p = &buffer[0];
 
     if (sticky & STICK_NORTH) {
-	buffer[count++] = 'n';
+	*p++ = 'n';
     }
     if (sticky & STICK_EAST) {
-	buffer[count++] = 'e';
+	*p++ = 'e';
     }
     if (sticky & STICK_SOUTH) {
-	buffer[count++] = 's';
+	*p++ = 's';
     }
     if (sticky & STICK_WEST) {
-	buffer[count++] = 'w';
+	*p++ = 'w';
     }
-    buffer[count] = '\0';
+    *p = '\0';
 
     return Tcl_NewStringObj(buffer, -1);
 }

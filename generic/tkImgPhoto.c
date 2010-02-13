@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.94 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.95 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -198,9 +198,6 @@ static int		MatchStringFormat(Tcl_Interp *interp, Tcl_Obj *data,
 			    Tcl_Obj *formatString,
 			    Tk_PhotoImageFormat **imageFormatPtr,
 			    int *widthPtr, int *heightPtr, int *oldformat);
-static Tcl_ObjCmdProc *	PhotoOptionFind(Tcl_Interp *interp, Tcl_Obj *obj);
-static void		PhotoOptionCleanupProc(ClientData clientData,
-			    Tcl_Interp *interp);
 
 /*
  *----------------------------------------------------------------------
@@ -426,12 +423,7 @@ ImgPhotoCmd(
 
     if (Tcl_GetIndexFromObj(interp, objv[1], photoOptions, "option", 0,
 	    &index) != TCL_OK) {
-	Tcl_ObjCmdProc *proc = PhotoOptionFind(interp, objv[1]);
-
-	if (proc == NULL) {
-	    return TCL_ERROR;
-	}
-	return proc(clientData, interp, objc, objv);
+	return TCL_ERROR;
     }
 
     switch ((enum PhotoOptions) index) {
@@ -3771,147 +3763,6 @@ Tk_PhotoGetImage(
     blockPtr->offset[2] = 2;
     blockPtr->offset[3] = 3;
     return 1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * PhotoOptionFind --
- *
- *	Finds a specific Photo option.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	After commands are removed.
- *
- *----------------------------------------------------------------------
- */
-
-typedef struct OptionAssocData {
-    struct OptionAssocData *nextPtr;
-				/* Pointer to next OptionAssocData. */
-    Tcl_ObjCmdProc *command;	/* Command associated with this option. */
-    char name[1];		/* Name of option (remaining chars) */
-} OptionAssocData;
-
-static Tcl_ObjCmdProc *
-PhotoOptionFind(
-    Tcl_Interp *interp,		/* Interpreter that is being deleted. */
-    Tcl_Obj *obj)		/* Name of option to be found. */
-{
-    int length;
-    const char *name = Tcl_GetStringFromObj(obj, &length);
-    char *prevname = NULL;
-    Tcl_ObjCmdProc *proc = NULL;
-    OptionAssocData *list = Tcl_GetAssocData(interp, "photoOption", NULL);
-
-    while (list != NULL) {
-	if (strncmp(name, list->name, (unsigned) length) == 0) {
-	    if (proc != NULL) {
-		Tcl_ResetResult(interp);
-		Tcl_AppendResult(interp, "ambiguous option \"", name,
-			"\": must be ", prevname, NULL);
-		while (list->nextPtr != NULL) {
-		    Tcl_AppendResult(interp, prevname, ", ",NULL);
-		    list = list->nextPtr;
-		    prevname = list->name;
-		}
-		Tcl_AppendResult(interp, ", or", prevname, NULL);
-		return NULL;
-	    }
-	    proc = list->command;
-	    prevname = list->name;
-	}
-	list = list->nextPtr;
-    }
-    if (proc != NULL) {
-	Tcl_ResetResult(interp);
-    }
-    return proc;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * PhotoOptionCleanupProc --
- *
- *	This function is invoked whenever an interpreter is deleted to cleanup
- *	the AssocData for "photoVisitor".
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Photo Visitor options are removed.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-PhotoOptionCleanupProc(
-    ClientData clientData,	/* Points to "photoVisitor" AssocData for the
-				 * interpreter. */
-    Tcl_Interp *interp)		/* Interpreter that is being deleted. */
-{
-    OptionAssocData *list = clientData;
-
-    while (list != NULL) {
-	register OptionAssocData *ptr = list;
-
-	list = list->nextPtr;
-	ckfree((char *) ptr);
-    }
-}
-
-/*
- *--------------------------------------------------------------
- *
- * Tk_CreatePhotoOption --
- *
- *	This function may be invoked to add a new kind of photo option to the
- *	core photo command supported by Tk.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	From now on, the new option will be useable by the photo command.
- *
- *--------------------------------------------------------------
- */
-
-MODULE_SCOPE void
-Tk_CreatePhotoOption(
-    Tcl_Interp *interp,		/* Interpreter. */
-    const char *name,		/* Option name. */
-    Tcl_ObjCmdProc *proc)	/* Function to execute command. */
-{
-    OptionAssocData *typePtr2, *prevPtr, *ptr;
-    OptionAssocData *list = Tcl_GetAssocData(interp, "photoOption", NULL);
-
-    /*
-     * If there's already a photo option with the given name, remove it.
-     */
-
-    for (typePtr2 = list, prevPtr = NULL; typePtr2 != NULL;
-	    prevPtr = typePtr2, typePtr2 = typePtr2->nextPtr) {
-	if (strcmp(typePtr2->name, name) == 0) {
-	    if (prevPtr == NULL) {
-		list = typePtr2->nextPtr;
-	    } else {
-		prevPtr->nextPtr = typePtr2->nextPtr;
-	    }
-	    ckfree((char *) typePtr2);
-	    break;
-	}
-    }
-    ptr = (OptionAssocData *) ckalloc(sizeof(OptionAssocData) + strlen(name));
-    strcpy(&(ptr->name[0]), name);
-    ptr->command = proc;
-    ptr->nextPtr = list;
-    Tcl_SetAssocData(interp, "photoOption", PhotoOptionCleanupProc, ptr);
 }
 
 /*

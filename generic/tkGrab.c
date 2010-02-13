@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.19 2009/06/29 14:35:01 das Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.20 2010/02/13 13:47:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -141,7 +141,7 @@ typedef struct NewGrabWinEvent {
 
 #define ALL_BUTTONS \
 	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
-static unsigned int buttonStates[] = {
+static const unsigned int buttonStates[] = {
     Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask
 };
 
