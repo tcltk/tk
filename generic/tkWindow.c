@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.110 2010/02/13 13:47:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.111 2010/02/16 21:12:56 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -2923,7 +2923,7 @@ Tk_SafeInit(
     return Initialize(interp);
 }
 
-MODULE_SCOPE const TkStubs tkConstStubs;
+MODULE_SCOPE const TkStubs tkStubs;
 
 /*
  *----------------------------------------------------------------------
@@ -3200,7 +3200,7 @@ Initialize(
      */
 
     code = Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
-	    (ClientData) &tkConstStubs);
+	    (ClientData) &tkStubs);
     if (code != TCL_OK) {
 	goto done;
     }

@@ -1,3 +1,17 @@
+2010-02-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+    * generic/tkWindow.c    Reverted rename from tkStubs to tkConstStubs
+    * generic/tkStubInit.c  (regenerated)
+    * generic/tkArgv.c      make defaultTable const
+    * generic/tkScrollbar.c Store default for "-with" in static non-const space
+    * win/tkWinInt.h        make tkWinProcs const, and 5
+    * win/tkWinX.c          procs MODULE_SCOPE
+    * win/tkWinColor.c      make sysColors const
+    * win/tkWinKey.c        make keymap const
+    * win/tkWinScrlbr.c     Simplify copying of "-with" default value.
+    * unix/tkUnixWm.c       make TkSetTransientFor static
+    * tests/textImage.test  textImage-1.13 depends on hash-order
+
 2010-02-12  Jan Nijtmans  <nijtmans@users.sf.net>
 
     * win/tcl.m4           use -pipe for gcc on win32
