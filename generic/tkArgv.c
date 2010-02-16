@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkArgv.c,v 1.17 2008/11/08 18:44:39 dkf Exp $
+ * RCS: @(#) $Id: tkArgv.c,v 1.18 2010/02/16 21:12:56 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -20,7 +20,7 @@
  * every application.
  */
 
-static Tk_ArgvInfo defaultTable[] = {
+static const Tk_ArgvInfo defaultTable[] = {
     {"-help",	TK_ARGV_HELP, NULL, NULL,
 	"Print summary of command-line options and abort"},
     {NULL,	TK_ARGV_END, NULL, NULL, NULL}
