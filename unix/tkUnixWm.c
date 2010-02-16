@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.58.2.7 2010/01/20 23:43:52 patthoyts Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.58.2.8 2010/02/16 21:15:11 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -6749,7 +6749,7 @@ GetMaxSize(
  *----------------------------------------------------------------------
  */
 
-void
+static void
 TkSetTransientFor(Tk_Window tkwin, Tk_Window parent)
 {
     if (parent == None) {
