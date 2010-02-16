@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.18 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkScrollbar.c,v 1.19 2010/02/16 21:12:56 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -25,6 +25,9 @@
 static const Tk_CustomOption orientOption = {
     TkOrientParseProc, TkOrientPrintProc, (ClientData) NULL
 };
+
+/* static space for "-width" default value */
+static char defScrollbarWidth[TCL_INTEGER_SPACE] = DEF_SCROLLBAR_WIDTH;
 
 /*
  * Information used for argv parsing.
@@ -87,7 +90,7 @@ Tk_ConfigSpec tkpScrollbarConfigSpecs[] = {
 	DEF_SCROLLBAR_TROUGH_MONO, Tk_Offset(TkScrollbar, troughColorPtr),
 	TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-width", "width", "Width",
-	DEF_SCROLLBAR_WIDTH, Tk_Offset(TkScrollbar, width), 0, NULL},
+	defScrollbarWidth, Tk_Offset(TkScrollbar, width), 0, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 

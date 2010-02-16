@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.13 2009/01/28 20:47:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.14 2010/02/16 21:12:56 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -37,7 +37,7 @@ typedef struct {
     int index;
 } SystemColorEntry;
 
-static SystemColorEntry sysColors[] = {
+static const SystemColorEntry sysColors[] = {
     {"3dDarkShadow",		COLOR_3DDKSHADOW},
     {"3dLight",			COLOR_3DLIGHT},
     {"ActiveBorder",		COLOR_ACTIVEBORDER},
@@ -64,7 +64,6 @@ static SystemColorEntry sysColors[] = {
     {"Window",			COLOR_WINDOW},
     {"WindowFrame",		COLOR_WINDOWFRAME},
     {"WindowText",		COLOR_WINDOWTEXT},
-    {NULL,			0}
 };
 
 typedef struct ThreadSpecificData {
@@ -104,37 +103,15 @@ FindSystemColor(
     int *indexPtr)		/* Out parameter to store color index. */
 {
     int l, u, r, i;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    /*
-     * Count the number of elements in the color array if we haven't done so
-     * yet.
-     */
-
-    if (tsdPtr->ncolors == 0) {
-	SystemColorEntry *ePtr;
-	int version;
-
-	version = LOBYTE(LOWORD(GetVersion()));
-	for (ePtr = sysColors; ePtr->name != NULL; ePtr++) {
-	    if (version < 4) {
-		if (ePtr->index == COLOR_3DDKSHADOW) {
-		    ePtr->index = COLOR_BTNSHADOW;
-		} else if (ePtr->index == COLOR_3DLIGHT) {
-		    ePtr->index = COLOR_BTNHIGHLIGHT;
-		}
-	    }
-	    tsdPtr->ncolors++;
-	}
-    }
+    int index;
+	int version = LOBYTE(LOWORD(GetVersion()));
 
     /*
      * Perform a binary search on the sorted array of colors.
      */
 
     l = 0;
-    u = tsdPtr->ncolors - 1;
+    u = (sizeof(sysColors) / sizeof(sysColors[0])) - 1;
     while (l <= u) {
 	i = (l + u) / 2;
 	r = strcasecmp(name, sysColors[i].name);
@@ -150,8 +127,16 @@ FindSystemColor(
 	return 0;
     }
 
-    *indexPtr = sysColors[i].index;
-    colorPtr->pixel = GetSysColor(sysColors[i].index);
+    index = sysColors[i].index;
+    if (version < 4) {
+	if (index == COLOR_3DDKSHADOW) {
+	    index = COLOR_BTNSHADOW;
+	} else if (index == COLOR_3DLIGHT) {
+	    index = COLOR_BTNHIGHLIGHT;
+	}
+    }
+    *indexPtr = index;
+    colorPtr->pixel = GetSysColor(index);
 
     /*
      * x257 is (value<<8 + value) to get the properly bit shifted and padded

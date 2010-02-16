@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.18 2010/01/13 23:08:11 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.19 2010/02/16 21:12:56 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -54,16 +54,9 @@ typedef struct WinScrollbar {
 
 static int initialized = 0;
 static int hArrowWidth, hThumb; /* Horizontal control metrics. */
-static int vArrowWidth, vArrowHeight, vThumb; /* Vertical control metrics. */
+static int vArrowHeight, vThumb; /* Vertical control metrics. */
 
 TCL_DECLARE_MUTEX(winScrlbrMutex)
-
-/*
- * This variable holds the default width for a scrollbar in string form for
- * use in a Tk_ConfigSpec.
- */
-
-static char defWidth[TCL_INTEGER_SPACE];
 
 /*
  * Declarations for functions defined in this file.
@@ -363,19 +356,22 @@ TkpDestroyScrollbar(
 void
 UpdateScrollbarMetrics(void)
 {
-    Tk_ConfigSpec *specPtr;
+    int arrowWidth = GetSystemMetrics(SM_CXVSCROLL);
+    const Tk_ConfigSpec *specPtr;
 
     hArrowWidth = GetSystemMetrics(SM_CXHSCROLL);
     hThumb = GetSystemMetrics(SM_CXHTHUMB);
-    vArrowWidth = GetSystemMetrics(SM_CXVSCROLL);
     vArrowHeight = GetSystemMetrics(SM_CYVSCROLL);
     vThumb = GetSystemMetrics(SM_CYVTHUMB);
 
-    sprintf(defWidth, "%d", vArrowWidth);
     for (specPtr = tkpScrollbarConfigSpecs; specPtr->type != TK_CONFIG_END;
 	    specPtr++) {
+	/* Make sure that the default value belonging to the "-width"
+	 * option of TkScrollbar points to static non-const space,
+	 * otherwise the following sprintf results in a crash!
+	 */
 	if (specPtr->offset == Tk_Offset(TkScrollbar, width)) {
-	    specPtr->defValue = defWidth;
+	    sprintf((char *)specPtr->defValue, "%d", arrowWidth);
 	}
     }
 }

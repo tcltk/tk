@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinKey.c,v 1.21 2010/01/13 23:08:11 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinKey.c,v 1.22 2010/02/16 21:12:56 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -25,7 +25,7 @@
 
 #define MAX_KEYCODE 145 /* VK_SCROLL is the last entry in our table below */
 
-static KeySym keymap[] = {
+static const KeySym keymap[] = {
     NoSymbol, NoSymbol, NoSymbol, XK_Cancel, NoSymbol,
     NoSymbol, NoSymbol, NoSymbol, XK_BackSpace, XK_Tab,
     NoSymbol, NoSymbol, XK_Clear, XK_Return, NoSymbol,
