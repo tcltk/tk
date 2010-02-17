@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvPs.c,v 1.29 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvPs.c,v 1.30 2010/02/17 19:21:17 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -94,7 +94,7 @@ typedef struct TkPostscriptInfo {
  * canvas "postscript" command and fill in TkPostscriptInfo structures.
  */
 
-static Tk_ConfigSpec configSpecs[] = {
+static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-colormap", NULL, NULL,
 	"", Tk_Offset(TkPostscriptInfo, colorVar), 0, NULL},
     {TK_CONFIG_STRING, "-colormode", NULL, NULL,

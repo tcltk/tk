@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvWind.c,v 1.21 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvWind.c,v 1.22 2010/02/17 19:21:16 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -46,7 +46,7 @@ static const Tk_CustomOption tagsOption = {
     Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, (ClientData) NULL
 };
 
-static Tk_ConfigSpec configSpecs[] = {
+static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
 	"center", Tk_Offset(WindowItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_PIXELS, "-height", NULL, NULL,

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.h,v 1.9 2010/01/13 23:08:08 nijtmans Exp $
+ * RCS: @(#) $Id: tkScrollbar.h,v 1.10 2010/02/17 19:21:16 nijtmans Exp $
  */
 
 #ifndef _TKSCROLLBAR
@@ -164,16 +164,12 @@ typedef struct TkScrollbar {
 #define GOT_FOCUS		4
 
 /*
- * Declaration of scrollbar class functions structure.
+ * Declaration of scrollbar class functions structure
+ * and default scrollbar width, for use in configSpec.
  */
 
 MODULE_SCOPE const Tk_ClassProcs tkpScrollbarProcs;
-
-/*
- * Declaration of scrollbar configuration options.
- */
-
-MODULE_SCOPE Tk_ConfigSpec tkpScrollbarConfigSpecs[];
+MODULE_SCOPE char tkDefScrollbarWidth[TCL_INTEGER_SPACE];
 
 /*
  * Declaration of functions used in the implementation of the scrollbar
