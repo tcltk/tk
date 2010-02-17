@@ -1,3 +1,30 @@
+2010-02-17  Jan Nijtmans  <nijtmans@users.sf.net>
+
+    * generic/tk.decls       CONSTify everything related to Tk_ConfigSpec
+    * generic/tk.h
+    * generic/tkCanvArc.c    Many tables can now be put in const memory
+    * generic/tkCanvas.c
+    * generic/tkCanvBmap.c
+    * generic/tkCanvImg.c
+    * generic/tkCanvLine.c
+    * generic/tkCanvPoly.c
+    * generic/tkCanvPs.c
+    * generic/tkCanvText.c
+    * generic/tkCanvWind.c
+    * generic/tkImgBmap.c
+    * generic/tkImgPhoto.c
+    * generic/tkOldConfig.c
+    * generic/tkRectOval.c
+    * generic/tkScrollbar.c
+    * generic/tkScrollbar.h
+    * generic/tkDecls.h       (regenerated)
+    * doc/CanvTkwin.3
+    * doc/ConfigWidg.3
+    * doc/CrtItemType.3
+    * win/tkWinScrlbr.c
+    * carbon/tkMacOSXScrlbr.c
+    * macosx/tkMacOSXScrlbr.c
+
 2010-02-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
     * generic/tkWindow.c    Reverted rename from tkStubs to tkConstStubs

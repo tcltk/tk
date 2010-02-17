@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.132 2009/09/04 09:39:54 dkf Exp $
+ * RCS: @(#) $Id: tk.h,v 1.133 2010/02/17 19:21:16 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -1031,7 +1031,7 @@ typedef struct Tk_ItemType {
     Tk_ItemCreateProc *createProc;
 				/* Procedure to create a new item of this
 				 * type. */
-    Tk_ConfigSpec *configSpecs;	/* Pointer to array of configuration specs for
+    CONST86 Tk_ConfigSpec *configSpecs; /* Pointer to array of configuration specs for
 				 * this type. Used for returning configuration
 				 * info. */
     Tk_ItemConfigureProc *configProc;
