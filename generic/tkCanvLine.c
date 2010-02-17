@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.31 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.32 2010/02/17 19:21:16 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -157,7 +157,7 @@ static const Tk_CustomOption pixelOption = {
     TkPixelParseProc, TkPixelPrintProc, (ClientData) NULL
 };
 
-static Tk_ConfigSpec configSpecs[] = {
+static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-activedash", NULL, NULL,
 	NULL, Tk_Offset(LineItem, outline.activeDash),
 	TK_CONFIG_NULL_OK, &dashOption},

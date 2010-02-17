@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.64 2010/01/19 22:10:03 dkf Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.65 2010/02/17 19:21:16 nijtmans Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -116,7 +116,7 @@ static const Tk_CustomOption offsetOption = {
  * Information used for argv parsing.
  */
 
-static Tk_ConfigSpec configSpecs[] = {
+static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_BORDER, "-background", "background", "Background",
 	DEF_CANVAS_BG_COLOR, Tk_Offset(TkCanvas, bgBorder),
 	TK_CONFIG_COLOR_ONLY, NULL},

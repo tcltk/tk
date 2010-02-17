@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.37 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.38 2010/02/17 19:21:16 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -95,7 +95,7 @@ static const Tk_CustomOption offsetOption = {
     TkOffsetParseProc, TkOffsetPrintProc, (ClientData) (TK_OFFSET_RELATIVE)
 };
 
-static Tk_ConfigSpec configSpecs[] = {
+static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
 	NULL, Tk_Offset(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,

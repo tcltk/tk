@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.29 2010/01/22 14:17:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkOldConfig.c,v 1.30 2010/02/17 19:21:17 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -38,9 +38,9 @@ static Tk_ConfigSpec *	FindConfigSpec(Tcl_Interp *interp,
 			    Tk_ConfigSpec *specs, const char *argvName,
 			    int needFlags, int hateFlags);
 static char *		FormatConfigInfo(Tcl_Interp *interp, Tk_Window tkwin,
-			    Tk_ConfigSpec *specPtr, char *widgRec);
+			    const Tk_ConfigSpec *specPtr, char *widgRec);
 static const char *	FormatConfigValue(Tcl_Interp *interp, Tk_Window tkwin,
-			    Tk_ConfigSpec *specPtr, char *widgRec,
+			    const Tk_ConfigSpec *specPtr, char *widgRec,
 			    char *buffer, Tcl_FreeProc **freeProcPtr);
 static Tk_ConfigSpec *	GetCachedSpecs(Tcl_Interp *interp,
 			    const Tk_ConfigSpec *staticSpecs);
@@ -74,7 +74,7 @@ Tk_ConfigureWidget(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Window containing widget (needed to set up
 				 * X resources). */
-    Tk_ConfigSpec *specs,	/* Describes legal options. */
+    const Tk_ConfigSpec *specs,	/* Describes legal options. */
     int argc,			/* Number of elements in argv. */
     const char **argv,		/* Command-line options. */
     char *widgRec,		/* Record whose fields are to be modified.
@@ -84,7 +84,7 @@ Tk_ConfigureWidget(
 				 * considered. Also, may have
 				 * TK_CONFIG_ARGV_ONLY set. */
 {
-    register Tk_ConfigSpec *specPtr;
+    register Tk_ConfigSpec *specPtr, *staticSpecs;
     Tk_Uid value;		/* Value of option from database. */
     int needFlags;		/* Specs must contain this set of flags or
 				 * else they are not considered. */
@@ -112,7 +112,7 @@ Tk_ConfigureWidget(
      * Get the build of the config for this interpreter.
      */
 
-    specs = GetCachedSpecs(interp, specs);
+    staticSpecs = GetCachedSpecs(interp, specs);
 
     /*
      * Pass one: scan through all of the arguments, processing those that
@@ -127,7 +127,7 @@ Tk_ConfigureWidget(
 	} else {
 	    arg = *argv;
 	}
-	specPtr = FindConfigSpec(interp, specs, arg, needFlags, hateFlags);
+	specPtr = FindConfigSpec(interp, staticSpecs, arg, needFlags, hateFlags);
 	if (specPtr == NULL) {
 	    return TCL_ERROR;
 	}
@@ -165,7 +165,7 @@ Tk_ConfigureWidget(
      */
 
     if (!(flags & TK_CONFIG_ARGV_ONLY)) {
-	for (specPtr=specs; specPtr->type!=TK_CONFIG_END; specPtr++) {
+	for (specPtr = staticSpecs; specPtr->type != TK_CONFIG_END; specPtr++) {
 	    if ((specPtr->specFlags & TK_CONFIG_OPTION_SPECIFIED)
 		    || (specPtr->argvName == NULL)
 		    || (specPtr->type == TK_CONFIG_SYNONYM)) {
@@ -593,7 +593,7 @@ int
 Tk_ConfigureInfo(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Window corresponding to widgRec. */
-    Tk_ConfigSpec *specs,	/* Describes legal options. */
+    const Tk_ConfigSpec *specs, /* Describes legal options. */
     char *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     const char *argvName,	/* If non-NULL, indicates a single option
@@ -603,7 +603,7 @@ Tk_ConfigureInfo(
 				 * be present in config specs for them to be
 				 * considered. */
 {
-    register Tk_ConfigSpec *specPtr;
+    register Tk_ConfigSpec *specPtr, *staticSpecs;
     int needFlags, hateFlags;
     char *list;
     const char *leader = "{";
@@ -619,7 +619,7 @@ Tk_ConfigureInfo(
      * Get the build of the config for this interpreter.
      */
 
-    specs = GetCachedSpecs(interp, specs);
+    staticSpecs = GetCachedSpecs(interp, specs);
 
     /*
      * If information is only wanted for a single configuration spec, then
@@ -628,7 +628,7 @@ Tk_ConfigureInfo(
 
     Tcl_ResetResult(interp);
     if (argvName != NULL) {
-	specPtr = FindConfigSpec(interp, specs, argvName, needFlags,hateFlags);
+	specPtr = FindConfigSpec(interp, staticSpecs, argvName, needFlags,hateFlags);
 	if (specPtr == NULL) {
 	    return TCL_ERROR;
 	}
@@ -643,7 +643,7 @@ Tk_ConfigureInfo(
      * information.
      */
 
-    for (specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++) {
+    for (specPtr = staticSpecs; specPtr->type != TK_CONFIG_END; specPtr++) {
 	if ((argvName != NULL) && (specPtr->argvName != argvName)) {
 	    continue;
 	}
@@ -685,7 +685,7 @@ FormatConfigInfo(
     Tcl_Interp *interp,		/* Interpreter to use for things like
 				 * floating-point precision. */
     Tk_Window tkwin,		/* Window corresponding to widget. */
-    register Tk_ConfigSpec *specPtr,
+    register const Tk_ConfigSpec *specPtr,
 				/* Pointer to information describing
 				 * option. */
     char *widgRec)		/* Pointer to record holding current values of
@@ -752,7 +752,7 @@ static const char *
 FormatConfigValue(
     Tcl_Interp *interp,		/* Interpreter for use in real conversions. */
     Tk_Window tkwin,		/* Window corresponding to widget. */
-    Tk_ConfigSpec *specPtr,	/* Pointer to information describing option.
+    const Tk_ConfigSpec *specPtr, /* Pointer to information describing option.
 				 * Must not point to a synonym option. */
     char *widgRec,		/* Pointer to record holding current values of
 				 * info for widget. */
@@ -904,7 +904,7 @@ int
 Tk_ConfigureValue(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Window corresponding to widgRec. */
-    Tk_ConfigSpec *specs,	/* Describes legal options. */
+    const Tk_ConfigSpec *specs, /* Describes legal options. */
     char *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     const char *argvName,	/* Gives the command-line name for the option
@@ -930,9 +930,9 @@ Tk_ConfigureValue(
      * Get the build of the config for this interpreter.
      */
 
-    specs = GetCachedSpecs(interp, specs);
+    specPtr = GetCachedSpecs(interp, specs);
 
-    specPtr = FindConfigSpec(interp, specs, argvName, needFlags, hateFlags);
+    specPtr = FindConfigSpec(interp, specPtr, argvName, needFlags, hateFlags);
     if (specPtr == NULL) {
 	return TCL_ERROR;
     }
@@ -973,7 +973,7 @@ Tk_ConfigureValue(
 	/* ARGSUSED */
 void
 Tk_FreeOptions(
-    Tk_ConfigSpec *specs,	/* Describes legal options. */
+    const Tk_ConfigSpec *specs,	/* Describes legal options. */
     char *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     Display *display,		/* X display; needed for freeing some
@@ -982,7 +982,7 @@ Tk_FreeOptions(
 				 * be present in config specs for them to be
 				 * considered. */
 {
-    register Tk_ConfigSpec *specPtr;
+    register const Tk_ConfigSpec *specPtr;
     char *ptr;
 
     for (specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++) {

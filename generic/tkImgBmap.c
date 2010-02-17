@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.31 2010/02/13 13:47:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgBmap.c,v 1.32 2010/02/17 19:21:16 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -108,7 +108,7 @@ Tk_ImageType tkBitmapImageType = {
  * Information used for parsing configuration specs:
  */
 
-static Tk_ConfigSpec configSpecs[] = {
+static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_UID, "-background", NULL, NULL,
 	"", Tk_Offset(BitmapMaster, bgUid), 0, NULL},
     {TK_CONFIG_STRING, "-data", NULL, NULL,

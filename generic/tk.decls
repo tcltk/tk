@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.51 2010/02/05 22:45:03 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.52 2010/02/17 19:21:15 nijtmans Exp $
 
 library tk
 
@@ -136,17 +136,17 @@ declare 26 generic {
 }
 declare 27 generic {
     int Tk_ConfigureInfo(Tcl_Interp *interp,
-	    Tk_Window tkwin, Tk_ConfigSpec *specs,
+	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
 	    char *widgRec, const char *argvName, int flags)
 }
 declare 28 generic {
     int Tk_ConfigureValue(Tcl_Interp *interp,
-	    Tk_Window tkwin, Tk_ConfigSpec *specs,
+	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
 	    char *widgRec, const char *argvName, int flags)
 }
 declare 29 generic {
     int Tk_ConfigureWidget(Tcl_Interp *interp,
-	    Tk_Window tkwin, Tk_ConfigSpec *specs,
+	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
 	    int argc, CONST84 char **argv, char *widgRec,
 	    int flags)
 }
@@ -318,7 +318,7 @@ declare 73 generic {
     void Tk_FreeImage(Tk_Image image)
 }
 declare 74 generic {
-    void Tk_FreeOptions(Tk_ConfigSpec *specs,
+    void Tk_FreeOptions(const Tk_ConfigSpec *specs,
 	    char *widgRec, Display *display, int needFlags)
 }
 declare 75 generic {

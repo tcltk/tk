@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ConfigWidg.3,v 1.24 2009/05/04 09:12:33 dkf Exp $
+'\" RCS: @(#) $Id: ConfigWidg.3,v 1.25 2010/02/17 19:21:17 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_ConfigureWidget 3 4.1 Tk "Tk Library Procedures"
@@ -27,12 +27,12 @@ int
 .sp
 \fBTk_FreeOptions(\fIspecs, widgRec, display, flags\fB)\fR
 .SH ARGUMENTS
-.AS Tk_ConfigSpec *widgRec in/out
+.AS char *widgRec in/out
 .AP Tcl_Interp *interp in
 Interpreter to use for returning error messages.
 .AP Tk_Window tkwin in
 Window used to represent widget (needed to set up X resources).
-.AP Tk_ConfigSpec *specs in
+.AP "const Tk_ConfigSpec" *specs in
 Pointer to table specifying legal configuration options for this
 widget.
 .AP int argc in

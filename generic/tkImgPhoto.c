@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.95 2010/02/13 13:47:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.96 2010/02/17 19:21:16 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -152,7 +152,7 @@ static Tcl_ThreadDataKey dataKey;
  * Information used for parsing configuration specifications:
  */
 
-static Tk_ConfigSpec configSpecs[] = {
+static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-file", NULL, NULL,
 	 NULL, Tk_Offset(PhotoMaster, fileString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_DOUBLE, "-gamma", NULL, NULL,

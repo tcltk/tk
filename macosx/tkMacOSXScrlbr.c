@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.32 2010/01/13 23:08:12 nijtmans Exp $
+ * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.33 2010/02/17 19:21:18 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -43,13 +43,6 @@ static ScrollbarMetrics metrics[2] = {
     {15, 54, 26, 14, 14, NSRegularControlSize}, /* kThemeScrollBarMedium */
     {11, 40, 20, 10, 10, NSSmallControlSize},  /* kThemeScrollBarSmall  */
 };
-
-/*
- * This variable holds the default width for a scrollbar in string form for
- * use in a Tk_ConfigSpec.
- */
-
-static char defWidth[TCL_INTEGER_SPACE];
 
 /*
  * Declarations for functions defined in this file.
@@ -189,7 +182,6 @@ UpdateScrollbarMetrics(void)
 	.trackInfo.scrollbar = {.viewsize = 1, .pressState = 0},
     };
     CGRect bounds;
-    Tk_ConfigSpec *specPtr;
 
     ChkErr(GetThemeMetric, kThemeMetricScrollBarWidth, &metrics[0].width);
     ChkErr(GetThemeMetric, kThemeMetricScrollBarMinThumbHeight,
@@ -212,13 +204,7 @@ UpdateScrollbarMetrics(void)
     metrics[1].minHeight = metrics[1].minThumbHeight +
 	    metrics[1].topArrowHeight + metrics[1].bottomArrowHeight;
 
-    sprintf(defWidth, "%d", (int)(metrics[0].width));
-    for (specPtr = tkpScrollbarConfigSpecs; specPtr->type != TK_CONFIG_END;
-	    specPtr++) {
-	if (specPtr->offset == Tk_Offset(TkScrollbar, width)) {
-	    specPtr->defValue = defWidth;
-	}
-    }
+    sprintf(tkDefScrollbarWidth, "%d", (int)(metrics[0].width));
 }
 
 /*

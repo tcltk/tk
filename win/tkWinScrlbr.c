@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.19 2010/02/16 21:12:56 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.20 2010/02/17 19:21:17 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -357,23 +357,13 @@ void
 UpdateScrollbarMetrics(void)
 {
     int arrowWidth = GetSystemMetrics(SM_CXVSCROLL);
-    const Tk_ConfigSpec *specPtr;
 
     hArrowWidth = GetSystemMetrics(SM_CXHSCROLL);
     hThumb = GetSystemMetrics(SM_CXHTHUMB);
     vArrowHeight = GetSystemMetrics(SM_CYVSCROLL);
     vThumb = GetSystemMetrics(SM_CYVTHUMB);
 
-    for (specPtr = tkpScrollbarConfigSpecs; specPtr->type != TK_CONFIG_END;
-	    specPtr++) {
-	/* Make sure that the default value belonging to the "-width"
-	 * option of TkScrollbar points to static non-const space,
-	 * otherwise the following sprintf results in a crash!
-	 */
-	if (specPtr->offset == Tk_Offset(TkScrollbar, width)) {
-	    sprintf((char *)specPtr->defValue, "%d", arrowWidth);
-	}
-    }
+    sprintf(tkDefScrollbarWidth, "%d", arrowWidth);
 }
 
 /*
