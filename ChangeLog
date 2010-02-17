@@ -1,3 +1,10 @@
+2010-02-17  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tkMenu.c: Defer TkMenuOptionTables cleanup
+	to CallWhenDeleted() time, to ensure that the record
+	doesn't get freed until after all widget instance commands
+	have been deleted (Fixes [Bug#2952745]).
+
 2010-02-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
     * generic/tk.decls       CONSTify everything related to Tk_ConfigSpec

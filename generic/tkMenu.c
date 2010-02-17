@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.58 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.59 2010/02/17 20:58:32 jenglish Exp $
  */
 
 /*
@@ -398,7 +398,8 @@ static const Tk_ClassProcs menuClass = {
 
 static void
 FreeOptionTables(
-    ClientData clientData)
+    ClientData clientData,
+    Tcl_Interp *interp)
 {
     ckfree(clientData);
 }
@@ -426,8 +427,8 @@ TkCreateMenuCmd(
     optionTablesPtr->entryOptionTables[CHECK_BUTTON_ENTRY] =
 	    Tk_CreateOptionTable(interp, specsArray[CHECK_BUTTON_ENTRY]);
 
-    Tcl_CreateObjCommand(interp, "menu", MenuCmd, optionTablesPtr,
-	    FreeOptionTables);
+    Tcl_CreateObjCommand(interp, "menu", MenuCmd, optionTablesPtr, 0);
+    Tcl_CallWhenDeleted(interp, FreeOptionTables, optionTablesPtr);
 
     if (Tcl_IsSafe(interp)) {
 	Tcl_HideCommand(interp, "menu", "menu");
