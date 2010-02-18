@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixPort.h,v 1.16 2008/12/17 22:51:25 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixPort.h,v 1.17 2010/02/18 22:31:31 nijtmans Exp $
  */
 
 #ifndef _UNIXPORT
@@ -167,7 +167,7 @@
  * These functions do nothing under Unix, so we just eliminate calls to them.
  */
 
-#define TkpButtonSetDefaults(specPtr) {}
+#define TkpButtonSetDefaults() {}
 #define TkpDestroyButton(butPtr) {}
 #define TkSelUpdateClipboard(a,b) {}
 #define TkSetPixmapColormap(p,c) {}

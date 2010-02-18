@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.36 2010/01/13 23:08:12 nijtmans Exp $
+ * RCS: @(#) $Id: tkMacOSXButton.c,v 1.37 2010/02/18 22:31:31 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -247,27 +247,16 @@ TkpComputeButtonGeometry(
  */
 
 void
-TkpButtonSetDefaults(
-    Tk_OptionSpec *specPtr)	/* Points to an array of option specs,
-				 * terminated by one with type
-				 * TK_OPTION_END. */
+TkpButtonSetDefaults()
 {
 #if TK_MAC_BUTTON_USE_COMPATIBILITY_METRICS
     if (!tkMacOSXUseCompatibilityMetrics) {
-	while (specPtr->type != TK_CONFIG_END) {
-	    switch (specPtr->internalOffset) {
-	    case Tk_Offset(TkButton, highlightWidth):
-		specPtr->defValue = DEF_BUTTON_HIGHLIGHT_WIDTH_NOCM;
-		break;
-	    case Tk_Offset(TkButton, padX):
-		specPtr->defValue = DEF_BUTTON_PADX_NOCM;
-		break;
-	    case Tk_Offset(TkButton, padY):
-		specPtr->defValue = DEF_BUTTON_PADY_NOCM;
-		break;
-	    }
-	    specPtr++;
-	}
+    	strcpy(tkDefButtonHighlightWidth, DEF_BUTTON_HIGHLIGHT_WIDTH_NOCM);
+    	strcpy(tkDefLabelHighlightWidth, DEF_BUTTON_HIGHLIGHT_WIDTH_NOCM);
+    	strcpy(tkDefButtonPadx, DEF_BUTTON_PADX_NOCM);
+    	strcpy(tkDefLabelPadx, DEF_BUTTON_PADX_NOCM);
+    	strcpy(tkDefButtonPady, DEF_BUTTON_PADY_NOCM);
+    	strcpy(tkDefLabelPady, DEF_BUTTON_PADY_NOCM);
     }
 #endif
 }

@@ -1,3 +1,12 @@
+2010-02-18  Jan Nijtmans  <nijtmans@users.sf.net>
+
+    * generic/tkButton.h       Put all Tk_OptionSpec for buttons and labels
+    * generic/tkButton.c       in const memory. With some changes to win32
+    * win/tkWinButton.c        and macosx, preventing direct writes to
+    * unix/tkUnixPort.h        read-only memory.
+    * carbon/tkMacOSXPort.h
+    * macosx/tkMacOSXButton.c
+
 2010-02-17  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tkMenu.c: Defer TkMenuOptionTables cleanup
