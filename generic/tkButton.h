@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.h,v 1.17 2010/01/13 23:08:07 nijtmans Exp $
+ * RCS: @(#) $Id: tkButton.h,v 1.18 2010/02/18 22:31:31 nijtmans Exp $
  */
 
 #ifndef _TKBUTTON
@@ -295,17 +295,25 @@ typedef struct {
 #define TRISTATED		(1 << 4)
 
 /*
- * Declaration of variables shared between the files in the button module.
+ * Declaration of button class functions structure
+ * and button/label defaults, for use in optionSpecs.
  */
 
 MODULE_SCOPE const Tk_ClassProcs tkpButtonProcs;
+MODULE_SCOPE char tkDefButtonHighlightWidth[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefButtonPadx[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefButtonPady[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefButtonBorderWidth[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefLabelHighlightWidth[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefLabelPadx[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefLabelPady[TCL_INTEGER_SPACE];
 
 /*
  * Declaration of functions used in the implementation of the button widget.
  */
 
 #ifndef TkpButtonSetDefaults
-MODULE_SCOPE void	TkpButtonSetDefaults(Tk_OptionSpec *specPtr);
+MODULE_SCOPE void	TkpButtonSetDefaults();
 #endif
 MODULE_SCOPE void	TkButtonWorldChanged(ClientData instanceData);
 MODULE_SCOPE void	TkpComputeButtonGeometry(TkButton *butPtr);

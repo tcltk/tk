@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.39 2010/01/13 23:08:11 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.40 2010/02/18 22:31:31 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -71,7 +71,6 @@ typedef struct ThreadSpecificData {
     LPSTR boxesBits;		/* Pointer to bitmap data. */
     DWORD boxHeight;		/* Height of each sub-image. */
     DWORD boxWidth;		/* Width of each sub-image. */
-    char defWidth[TCL_INTEGER_SPACE];
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -168,40 +167,6 @@ InitBoxes(void)
 /*
  *----------------------------------------------------------------------
  *
- * ButtonDefaultsExitHandler --
- *
- *	Frees the defaults for the buttons.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-ButtonDefaultsExitHandler(
-    ClientData clientData)	/* Points to an array of option specs,
-				 * terminated by one with type
-				 * TK_OPTION_END. */
-{
-    Tk_OptionSpec *specPtr = (Tk_OptionSpec *)clientData;
-
-    for ( ; specPtr->type != TK_OPTION_END; specPtr++) {
-	if (specPtr->internalOffset == Tk_Offset(TkButton, borderWidth)) {
-	    if (specPtr->defValue != NULL) {
-		ckfree((char *) specPtr->defValue);
-		specPtr->defValue = NULL;
-	    }
-	}
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpButtonSetDefaults --
  *
  *	This procedure is invoked before option tables are created for
@@ -218,31 +183,12 @@ ButtonDefaultsExitHandler(
  */
 
 void
-TkpButtonSetDefaults(
-    Tk_OptionSpec *specPtr)	/* Points to an array of option specs,
-				 * terminated by one with type
-				 * TK_OPTION_END. */
+TkpButtonSetDefaults()
 {
-    int width;
-    Tk_OptionSpec *savedSpecPtr = specPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    if (tsdPtr->defWidth[0] == 0) {
-	width = GetSystemMetrics(SM_CXEDGE);
-	if (width == 0) {
-	    width = 1;
+    int width = GetSystemMetrics(SM_CXEDGE);
+	if (width > 0) {
+	    sprintf(tkDefButtonBorderWidth, "%d", width);
 	}
-	sprintf(tsdPtr->defWidth, "%d", width);
-    }
-    for ( ; specPtr->type != TK_OPTION_END; specPtr++) {
-	if (specPtr->internalOffset == Tk_Offset(TkButton, borderWidth)) {
-	    char *defValue = (char *) ckalloc(strlen(tsdPtr->defWidth) + 1);
-	    strcpy(defValue, tsdPtr->defWidth);
-	    specPtr->defValue = defValue;
-	}
-    }
-    TkCreateExitHandler(ButtonDefaultsExitHandler, (ClientData) savedSpecPtr);
 }
 
 /*
