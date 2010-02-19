@@ -736,6 +736,7 @@ LOCALES
 TK_WINDOWINGSYSTEM
 TK_PKG_DIR
 TK_LIBRARY
+LIB_RUNTIME_DIR
 PRIVATE_INCLUDE_DIR
 HTML_DIR
 EXTRA_CC_SWITCHES
@@ -8526,7 +8527,7 @@ esac
 # search path to reflect this.
 #------------------------------------------------------------------------
 
-LIB_RUNTIME_DIR='${LIB_RUNTIME_DIR}'
+LIB_RUNTIME_DIR='$(libdir)'
 
 if test "$TCL_EXEC_PREFIX" != "$exec_prefix"; then
     LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${TCL_EXEC_PREFIX}/lib"
@@ -11565,6 +11566,7 @@ TK_SHARED_BUILD=${SHARED_BUILD}
 
 
 
+
 ac_config_files="$ac_config_files Makefile:../unix/Makefile.in tkConfig.sh:../unix/tkConfig.sh.in tk.pc:../unix/tk.pc.in"
 
 cat >confcache <<\_ACEOF
@@ -12376,6 +12378,7 @@ LOCALES!$LOCALES$ac_delim
 TK_WINDOWINGSYSTEM!$TK_WINDOWINGSYSTEM$ac_delim
 TK_PKG_DIR!$TK_PKG_DIR$ac_delim
 TK_LIBRARY!$TK_LIBRARY$ac_delim
+LIB_RUNTIME_DIR!$LIB_RUNTIME_DIR$ac_delim
 PRIVATE_INCLUDE_DIR!$PRIVATE_INCLUDE_DIR$ac_delim
 HTML_DIR!$HTML_DIR$ac_delim
 EXTRA_CC_SWITCHES!$EXTRA_CC_SWITCHES$ac_delim
@@ -12397,7 +12400,7 @@ REZ_FLAGS!$REZ_FLAGS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 46; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 47; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
