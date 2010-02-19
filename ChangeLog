@@ -1,5 +1,9 @@
 2010-02-19  Donal K. Fellows  <dkf@users.sf.net>
 
+	* unix/configure.in, unix/Makefile.in: [Bug 2415437]: Corrections to
+	allow installation of Tcl and Tk to different directories, especially
+	when neither is a system standard location. Also [Tcl Bug 2307398].
+
 	* unix/installManPage: [Tcl Bug 2954638]: Correct behaviour of manual
 	page installer. Also added armouring to check that assumptions about
 	the initial state are actually valid (e.g., look for existing input

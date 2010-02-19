@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.165 2009/12/23 07:16:52 nijtmans Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.166 2010/02/19 15:02:54 dkf Exp $
 
 # Current Tk version;  used in various names.
 
@@ -52,7 +52,7 @@ INSTALL_ROOT		= $(DESTDIR)
 TK_LIBRARY		= @TK_LIBRARY@
 
 # Path to use at runtime to refer to LIB_INSTALL_DIR:
-LIB_RUNTIME_DIR		= $(libdir)
+LIB_RUNTIME_DIR		= @LIB_RUNTIME_DIR@
 
 # Directory in which to install the program wish:
 BIN_INSTALL_DIR		= $(INSTALL_ROOT)$(bindir)
