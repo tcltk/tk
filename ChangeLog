@@ -1,3 +1,9 @@
+2010-02-19  Stuart Cassoff  <stwo@users.sourceforge.net>
+
+	* tcl.m4: Correct compiler/linker flags
+	for threaded builds on OpenBSD.
+	* configure: (regenerated).
+
 2010-02-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
     * generic/tkButton.h       Put all Tk_OptionSpec for buttons and labels
