@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xutil.c,v 1.4 2007/01/02 23:39:40 dkf Exp $
+ * RCS: @(#) $Id: xutil.c,v 1.5 2010/02/19 13:41:49 dkf Exp $
  */
 
 #include <stdlib.h>
@@ -71,6 +71,7 @@ XGetVisualInfo(
     int *nitems_return)
 {
     XVisualInfo *info = (XVisualInfo *) ckalloc(sizeof(XVisualInfo));
+
     info->visual = DefaultVisual(display, 0);
     info->visualid = info->visual->visualid;
     info->screen = 0;
