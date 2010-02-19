@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.14 2010/02/16 21:12:56 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.15 2010/02/19 22:39:04 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -63,13 +63,8 @@ static const SystemColorEntry sysColors[] = {
     {"Scrollbar",		COLOR_SCROLLBAR},
     {"Window",			COLOR_WINDOW},
     {"WindowFrame",		COLOR_WINDOWFRAME},
-    {"WindowText",		COLOR_WINDOWTEXT},
+    {"WindowText",		COLOR_WINDOWTEXT}
 };
-
-typedef struct ThreadSpecificData {
-    int ncolors;
-} ThreadSpecificData;
-static Tcl_ThreadDataKey dataKey;
 
 /*
  * Forward declarations for functions defined later in this file.
