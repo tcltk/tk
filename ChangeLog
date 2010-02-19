@@ -1,3 +1,10 @@
+2010-02-19  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/installManPage: [Tcl Bug 2954638]: Correct behaviour of manual
+	page installer. Also added armouring to check that assumptions about
+	the initial state are actually valid (e.g., look for existing input
+	file).
+
 2010-02-19  Stuart Cassoff  <stwo@users.sourceforge.net>
 
 	* tcl.m4: Correct compiler/linker flags
@@ -6,14 +13,13 @@
 
 2010-02-17  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/tkMenu.c: Defer TkMenuOptionTables cleanup
-	to CallWhenDeleted() time, to ensure that the record
-	doesn't get freed until after all widget instance commands
-	have been deleted (Fixes [Bug#2952745]).
+	* generic/tkMenu.c: [Bug 2952745]: Defer TkMenuOptionTables cleanup to
+	CallWhenDeleted() time, to ensure that the record doesn't get freed
+	until after all widget instance commands have been deleted.
 
 2010-02-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
-    * unix/tkUnixWm.c       make TkSetTransientFor static
+	* unix/tkUnixWm.c       make TkSetTransientFor static
 
 2010-02-07  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -162,7 +168,7 @@
 
 2009-12-27  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-       * win/tkWinMenu.c: [Bug 2879927]: Highlight for cascade items in
+	* win/tkWinMenu.c: [Bug 2879927]: Highlight for cascade items in
 	torn-off menus is incorrect on Windows.
 
 2009-12-25  Donal K. Fellows  <dkf@users.sf.net>
