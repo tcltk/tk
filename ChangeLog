@@ -1,139 +1,144 @@
+2010-02-19  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/installManPage: [Tcl Bug 2954638]: Correct behaviour of manual
+	page installer. Also added armouring to check that assumptions about
+	the initial state are actually valid (e.g., look for existing input
+	file).
+
 2010-02-19  Stuart Cassoff  <stwo@users.sourceforge.net>
 
-	* tcl.m4: Correct compiler/linker flags
-	for threaded builds on OpenBSD.
+	* tcl.m4: Correct compiler/linker flags for threaded builds on
+	OpenBSD.
 	* configure: (regenerated).
 
 2010-02-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
-    * generic/tkButton.h       Put all Tk_OptionSpec for buttons and labels
-    * generic/tkButton.c       in const memory. With some changes to win32
-    * win/tkWinButton.c        and macosx, preventing direct writes to
-    * unix/tkUnixPort.h        read-only memory.
-    * carbon/tkMacOSXPort.h
-    * macosx/tkMacOSXButton.c
+	* generic/tkButton.h:	Put all Tk_OptionSpec for buttons and labels
+	* generic/tkButton.c:	in const memory. With some changes to win32
+	* win/tkWinButton.c:	and macosx, preventing direct writes to
+	* unix/tkUnixPort.h:	read-only memory.
+	* carbon/tkMacOSXPort.h:
+	* macosx/tkMacOSXButton.c:
 
 2010-02-17  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/tkMenu.c: Defer TkMenuOptionTables cleanup
-	to CallWhenDeleted() time, to ensure that the record
-	doesn't get freed until after all widget instance commands
-	have been deleted (Fixes [Bug#2952745]).
+	* generic/tkMenu.c: [Bug 2952745]: Defer TkMenuOptionTables cleanup to
+	CallWhenDeleted() time, to ensure that the record doesn't get freed
+	until after all widget instance commands have been deleted.
 
 2010-02-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
-    * generic/tk.decls       CONSTify everything related to Tk_ConfigSpec
-    * generic/tk.h
-    * generic/tkCanvArc.c    Many tables can now be put in const memory
-    * generic/tkCanvas.c
-    * generic/tkCanvBmap.c
-    * generic/tkCanvImg.c
-    * generic/tkCanvLine.c
-    * generic/tkCanvPoly.c
-    * generic/tkCanvPs.c
-    * generic/tkCanvText.c
-    * generic/tkCanvWind.c
-    * generic/tkImgBmap.c
-    * generic/tkImgPhoto.c
-    * generic/tkOldConfig.c
-    * generic/tkRectOval.c
-    * generic/tkScrollbar.c
-    * generic/tkScrollbar.h
-    * generic/tkDecls.h       (regenerated)
-    * doc/CanvTkwin.3
-    * doc/ConfigWidg.3
-    * doc/CrtItemType.3
-    * win/tkWinScrlbr.c
-    * carbon/tkMacOSXScrlbr.c
-    * macosx/tkMacOSXScrlbr.c
+	* generic/tk.decls:	CONSTify everything related to Tk_ConfigSpec
+	* generic/tk.h:
+	* generic/tkCanvArc.c:	Many tables can now be put in const memory
+	* generic/tkCanvas.c:
+	* generic/tkCanvBmap.c:
+	* generic/tkCanvImg.c:
+	* generic/tkCanvLine.c:
+	* generic/tkCanvPoly.c:
+	* generic/tkCanvPs.c:
+	* generic/tkCanvText.c:
+	* generic/tkCanvWind.c:
+	* generic/tkImgBmap.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkOldConfig.c:
+	* generic/tkRectOval.c:
+	* generic/tkScrollbar.c:
+	* generic/tkScrollbar.h:
+	* generic/tkDecls.h:	(regenerated)
+	* doc/CanvTkwin.3:
+	* doc/ConfigWidg.3:
+	* doc/CrtItemType.3:
+	* win/tkWinScrlbr.c:
+	* carbon/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXScrlbr.c:
 
 2010-02-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
-    * generic/tkWindow.c    Reverted rename from tkStubs to tkConstStubs
-    * generic/tkStubInit.c  (regenerated)
-    * generic/tkArgv.c      make defaultTable const
-    * generic/tkScrollbar.c Store default for "-with" in static non-const space
-    * win/tkWinInt.h        make tkWinProcs const, and 5
-    * win/tkWinX.c          procs MODULE_SCOPE
-    * win/tkWinColor.c      make sysColors const
-    * win/tkWinKey.c        make keymap const
-    * win/tkWinScrlbr.c     Simplify copying of "-with" default value.
-    * unix/tkUnixWm.c       make TkSetTransientFor static
-    * tests/textImage.test  textImage-1.13 depends on hash-order
+	* generic/tkWindow.c:	Reverted rename from tkStubs to tkConstStubs
+	* generic/tkStubInit.c: (regenerated)
+	* generic/tkArgv.c:	make defaultTable const
+	* generic/tkScrollbar.c:Store default for "-with" in static non-const
+				space
+	* win/tkWinInt.h:	Make tkWinProcs const, and 5 procs
+	* win/tkWinX.c:		MODULE_SCOPE.
+	* win/tkWinColor.c:	Make sysColors const.
+	* win/tkWinKey.c:	Make keymap const.
+	* win/tkWinScrlbr.c:	Simplify copying of "-with" default value.
+	* unix/tkUnixWm.c:	Make TkSetTransientFor static.
+	* tests/textImage.test: textImage-1.13 depends on hash-order
 
 2010-02-12  Jan Nijtmans  <nijtmans@users.sf.net>
 
-    * win/tcl.m4           use -pipe for gcc on win32
-    * win/configure        (mingw/cygwin) (regenerated)
-    * unix/tkUnixColor.c   make sure that TkpCmapStressed is exported
-    * generic/tkImgPhoto.c clean up unused Tk_CreatePhotoOption
-    * generic/tkBind.c     Make more internal arrays "const"
-    * generic/tkBusy.c         |
-    * generic/tkButton.c
-    * generic/tkEvent.c
-    * generic/tkGrab.c
-    * generic/tkImgBmap.c
-    * generic/tkObj.c
-    * generic/tkOption.c
-    * generic/tkPanedWindow.c
-    * generic/tkPointer.c
-    * generic/tkWindow.c
-    * generic/tkImgPhoto.c Eliminate never used Tk_CreatePhotoOption()
+	* win/tcl.m4:		Use -pipe for gcc on win32
+	* win/configure:	(mingw/cygwin) (regenerated)
+	* unix/tkUnixColor.c:	Make sure that TkpCmapStressed is exported
+	* generic/tkImgPhoto.c:	Clean up unused Tk_CreatePhotoOption
+	* generic/tkBind.c:	Make more internal arrays "const"
+	* generic/tkBusy.c:
+	* generic/tkButton.c:
+	* generic/tkEvent.c:
+	* generic/tkGrab.c:
+	* generic/tkImgBmap.c:
+	* generic/tkObj.c:
+	* generic/tkOption.c:
+	* generic/tkPanedWindow.c:
+	* generic/tkPointer.c:
+	* generic/tkWindow.c:
+	* generic/tkImgPhoto.c:	Eliminate never used Tk_CreatePhotoOption()
 
 2010-02-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* carbon/tkMacOSXDialog.c    Make more internal
-	* macosx/tkMacOSXDialog.c    tables "const"
-	* unix/tkUnixButton.c
-	* unix/tkUnixWm.c
-	* win/tkWinDialog.c
-	* generic/tkWindow.c
-	* generic/tk*Decls.h       (regenerated with new
-    * generic/tkStubInit.c      genStubs.tcl from Tcl)
+	* carbon/tkMacOSXDialog.c:  Make more internal tables "const"
+	* macosx/tkMacOSXDialog.c:
+	* unix/tkUnixButton.c:
+	* unix/tkUnixWm.c:
+	* win/tkWinDialog.c:
+	* generic/tkWindow.c:
+	* generic/tk*Decls.h:       (regenerated with new
+	* generic/tkStubInit.c:     genStubs.tcl from Tcl)
 
 2010-02-05  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/*.[ch]: Revert contravariant const qualifiers added 
-	by the previous commit to keep codebase in sync with the Tile 
-	extension, which must remain 8.4 compatible.
+	* generic/ttk/*.[ch]: Revert contravariant const qualifiers added by
+	the previous commit to keep codebase in sync with the Tile extension,
+	which must remain 8.4 compatible.
 
 2010-02-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkGenStubs.tcl: Follow-up to [2010-01-29] commit:
-	        prevent space within stub table function parameters
-	        if the parameter type is a pointer. Make the
-	        various stub tables and hook pointers const,
-	        just as Tcl and Tk.
-	* generic/ttk/ttkDecls.h (regenerated)
-    * generic/ttk/ttkStubInit.c (regenerated)
-	* generic/ttk/ttk.decls Minor formatting
-	* generic/ttk/ttkButton.c    Make more internal tables "const"
-    * generic/ttk/ttkDefaultTheme.c
-    * generic/ttk/ttkEntry.c
-    * generic/ttk/ttkImage.c
-    * generic/ttk/ttkInit.c
-    * generic/ttk/ttkLayout.c
-    * generic/ttk/ttkNotebook.c
-    * generic/ttk/ttkPanedWindow.c
-    * generic/ttk/ttkProgress.c
-    * generic/ttk/ttkStubLib.c
-    * generic/ttk/ttkTheme.c
-    * generic/ttk/ttkTreeview.c
-    * generic/ttk/ttkWidget.c
-    * generic/ttk/ttkWidget.h
+	        prevent space within stub table function parameters if the
+	        parameter type is a pointer. Make the various stub tables and
+	        hook pointers const, just as Tcl and Tk.
+	* generic/ttk/ttkDecls.h: (regenerated)
+	* generic/ttk/ttkStubInit.c: (regenerated)
+	* generic/ttk/ttk.decls:	Minor formatting
+	* generic/ttk/ttkButton.c:	Make more internal tables "const"
+	* generic/ttk/ttkDefaultTheme.c:
+	* generic/ttk/ttkEntry.c:
+	* generic/ttk/ttkImage.c:
+	* generic/ttk/ttkInit.c:
+	* generic/ttk/ttkLayout.c:
+	* generic/ttk/ttkNotebook.c:
+	* generic/ttk/ttkPanedWindow.c:
+	* generic/ttk/ttkProgress.c:
+	* generic/ttk/ttkStubLib.c:
+	* generic/ttk/ttkTheme.c:
+	* generic/ttk/ttkTreeview.c:
+	* generic/ttk/ttkWidget.c:
+	* generic/ttk/ttkWidget.h:
 
 2010-01-31  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkTheme.h, generic/ttk/ttkWidget.h, 
-	generic/ttk/*.c: Change signature of widget subcommand
-	procedures to match Tcl_ObjCmdProc.  Merge now-redundant
-	ensemble dispatch code.
+	* generic/ttk/ttkTheme.h, generic/ttk/ttkWidget.h, generic/ttk/*.c:
+	Change signature of widget subcommand procedures to match
+	Tcl_ObjCmdProc. Merge now-redundant ensemble dispatch code.
 
 2010-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/ttk/ttkGenStubs.tcl: No longer generate a space after "*" and
-	                        immediately after a function name, so the
-	                        format of function definitions in *Decls.h 
+	* generic/ttk/ttkGenStubs.tcl: No longer generate a space after "*"
+	                        and immediately after a function name, so the
+	                        format of function definitions in *Decls.h
 	                        match all other *.h header files.
 	* generic/ttk/ttkDecls.h (re-generated)
 	* generic/tk.decls       Formatting
@@ -146,29 +151,29 @@
 
 2010-01-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkInt.h            Don't depend on <stdio.h> from tcl.h any more
-	* generic/tkOldConfig.c
-	* generic/ttk/ttkClamTheme.c fix more gcc warnings: missing initializer
-	* generic/ttk/ttkClassicTheme.c
-	* generic/ttk/ttkDefaultTheme.c
-	* generic/ttk/ttkElements.c
-	* generic/ttk/ttkEntry.c
-	* generic/ttk/ttkInit.c
-	* generic/ttk/ttkLabel.c
-	* generic/ttk/ttkNotebook.c
-	* generic/ttk/ttkPanedwindow.c
-	* generic/ttk/ttkSquare.c
-	* generic/ttk/ttkTreeview.c
-	* win/ttkWinTheme.c
-	* win/tkWinMenu.c      Add missing #include <string.h>
-	* win/tkWinPort.h      Fix include files for CYGWIN
-	* win/tkWinSend.c
-	* win/tkWinSendCom.c
-	* win/tkWinTest.c      Fix gcc warning
+	* generic/tkInt.h:           Don't depend on <stdio.h> from tcl.h any
+	* generic/tkOldConfig.c:     more.
+	* generic/ttk/ttkClamTheme.c:	 Fix more gcc warnings: missing
+	* generic/ttk/ttkClassicTheme.c: initializer.
+	* generic/ttk/ttkDefaultTheme.c:
+	* generic/ttk/ttkElements.c:
+	* generic/ttk/ttkEntry.c:
+	* generic/ttk/ttkInit.c:
+	* generic/ttk/ttkLabel.c:
+	* generic/ttk/ttkNotebook.c:
+	* generic/ttk/ttkPanedwindow.c:
+	* generic/ttk/ttkSquare.c:
+	* generic/ttk/ttkTreeview.c:
+	* win/ttkWinTheme.c:
+	* win/tkWinMenu.c:     Add missing #include <string.h>
+	* win/tkWinPort.h:     Fix include files for CYGWIN
+	* win/tkWinSend.c:
+	* win/tkWinSendCom.c:
+	* win/tkWinTest.c:     Fix gcc warning
 	* win/winMain.c:       Eliminate use of __argc and __argv for CYGWIN
-	* win/tcl.m4           Make cygwin configuration error into
-	* win/configure.in     a warning: CYGWIN compilation works
-	* win/configure        although there still are test failures.
+	* win/tcl.m4:          Make cygwin configuration error into
+	* win/configure.in:    a warning: CYGWIN compilation works
+	* win/configure:       although there still are test failures.
 
 2010-01-19  Donal K. Fellows  <dkf@users.sf.net>
 
