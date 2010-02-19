@@ -1,3 +1,7 @@
+2010-02-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinColor.c:	 remove unused "dataKey" variable
+
 2010-02-19  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/configure.in, unix/Makefile.in: [Bug 2415437]: Corrections to
