@@ -1,3 +1,10 @@
+2010-02-20  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkTreeview.c: Cache the result of the
+	last call to EndPosition() to avoid quadratic-time behavior
+	in the common cases where the treeview is populated 
+	in depth-first or breadth-first order.
+
 2010-02-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinColor.c:	 remove unused "dataKey" variable
