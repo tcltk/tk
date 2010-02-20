@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.36 2010/02/05 21:33:14 jenglish Exp $
+/* $Id: ttkTreeview.c,v 1.37 2010/02/20 21:30:37 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -392,6 +392,7 @@ typedef struct {
     TreeColumn *columns;	/* Array of column options for data columns */
 
     TreeItem *focus;		/* Current focus item */
+    TreeItem *endPtr;		/* See EndPosition() */
 
     /* Widget options:
      */
@@ -1031,7 +1032,7 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
     Tcl_InitHashTable(&tv->tree.items, TCL_STRING_KEYS);
     tv->tree.serial = 0;
 
-    tv->tree.focus = 0;
+    tv->tree.focus = tv->tree.endPtr = 0;
 
     /* Create root item "":
      */
@@ -1874,16 +1875,33 @@ static TreeItem *InsertPosition(TreeItem *parent, int index)
 
 /* + EndPosition --
  * 	Locate the last child of the specified node.
+ *
+ * 	To avoid quadratic-time behavior in the common cases
+ * 	where the treeview is populated in breadth-first or
+ * 	depth-first order using [$tv insert $parent end ...],
+ * 	we cache the result from the last call to EndPosition()
+ * 	and start the search from there on a cache hit.
+ *
  */
-static TreeItem *EndPosition(TreeItem *parent)
+static TreeItem *EndPosition(Treeview *tv, TreeItem *parent)
 {
-    TreeItem *sibling = parent->children;
-    if (sibling) {
-	while (sibling->next) {
-	    sibling = sibling->next;
-	}
+    TreeItem *endPtr = tv->tree.endPtr;
+
+    while (endPtr && endPtr->parent != parent) {
+	endPtr = endPtr->parent;
     }
-    return sibling;
+    if (!endPtr) {
+	endPtr = parent->children;
+    }
+
+    if (endPtr) {
+	while (endPtr->next) {
+	    endPtr = endPtr->next;
+	}
+	tv->tree.endPtr = endPtr;
+    }
+
+    return endPtr;
 }
 
 /* + AncestryCheck --
@@ -2556,7 +2574,7 @@ static int TreeviewInsertCommand(
     /* Locate previous sibling based on $index:
      */
     if (!strcmp(Tcl_GetString(objv[3]), "end")) {
-	sibling = EndPosition(parent);
+	sibling = EndPosition(tv, parent);
     } else {
 	int index;
 	if (Tcl_GetIntFromObj(interp, objv[3], &index) != TCL_OK)
@@ -2696,6 +2714,8 @@ static int TreeviewDeleteCommand(
 	TreeItem *next = delq->next;
 	if (tv->tree.focus == delq)
 	    tv->tree.focus = 0;
+	if (tv->tree.endPtr == delq)
+	    tv->tree.endPtr = 0;
 	FreeItem(delq);
 	delq = next;
     }
@@ -2728,7 +2748,7 @@ static int TreeviewMoveCommand(
     /* Locate previous sibling based on $index:
      */
     if (!strcmp(Tcl_GetString(objv[4]), "end")) {
-	sibling = EndPosition(parent);
+	sibling = EndPosition(tv, parent);
     } else {
 	TreeItem *p;
 	int index;
