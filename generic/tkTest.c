@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.45 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.46 2010/02/21 12:14:16 dkf Exp $
  */
 
 #undef STATIC_BUILD
@@ -124,8 +124,8 @@ typedef struct CBinding {
  * Header for trivial configuration command items.
  */
 
-#define ODD TK_CONFIG_USER_BIT
-#define EVEN (TK_CONFIG_USER_BIT << 1)
+#define ODD	TK_CONFIG_USER_BIT
+#define EVEN	(TK_CONFIG_USER_BIT << 1)
 
 enum {
     NONE,

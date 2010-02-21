@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.28 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkMenubutton.c,v 1.29 2010/02/21 12:14:16 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -255,7 +255,7 @@ Tk_MenubuttonObjCmd(
      */
 
     mbPtr->tkwin = tkwin;
-    mbPtr->display = Tk_Display (tkwin);
+    mbPtr->display = Tk_Display(tkwin);
     mbPtr->interp = interp;
     mbPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(mbPtr->tkwin), MenuButtonWidgetObjCmd, mbPtr,

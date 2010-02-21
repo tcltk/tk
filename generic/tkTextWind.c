@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.28 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.29 2010/02/21 12:14:16 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -65,7 +65,7 @@ static void		EmbWinStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		EmbWinUndisplayProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr);
-static TkTextEmbWindowClient* EmbWinGetClient(const TkText *textPtr,
+static TkTextEmbWindowClient *EmbWinGetClient(const TkText *textPtr,
 			    TkTextSegment *ewPtr);
 
 /*
@@ -1365,7 +1365,7 @@ TkTextWindowIndex(
  *--------------------------------------------------------------
  */
 
-static TkTextEmbWindowClient*
+static TkTextEmbWindowClient *
 EmbWinGetClient(
     const TkText *textPtr,	/* Information about text widget. */
     TkTextSegment *ewPtr)	/* Segment containing embedded window. */
