@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPointer.c,v 1.14 2010/02/13 13:47:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkPointer.c,v 1.15 2010/02/21 12:14:16 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -56,7 +56,7 @@ static Tcl_ThreadDataKey dataKey;
 
 static int		GenerateEnterLeave(TkWindow *winPtr, int x, int y,
 			    int state);
-static void		InitializeEvent(XEvent* eventPtr, TkWindow *winPtr,
+static void		InitializeEvent(XEvent *eventPtr, TkWindow *winPtr,
 			    int type, int x, int y, int state, int detail);
 static void		UpdateCursor(TkWindow *winPtr);
 
