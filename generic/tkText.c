@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.79.2.5 2010/01/29 12:41:11 nijtmans Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.79.2.6 2010/02/21 13:23:13 dkf Exp $
  */
 
 #include "default.h"
@@ -5000,7 +5000,7 @@ TextEditCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "?boolean?");
 	    return TCL_ERROR;
 	} else {
-	    int setModified;
+	    int setModified, oldModified;
 
 	    if (Tcl_GetBooleanFromObj(interp, objv[3],
 		    &setModified) != TCL_OK) {
@@ -5013,13 +5013,22 @@ TextEditCmd(
 
 	    setModified = setModified ? 1 : 0;
 
+	    oldModified = textPtr->sharedTextPtr->isDirty;
 	    textPtr->sharedTextPtr->isDirty = setModified;
 	    if (setModified) {
 		textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_FIXED;
 	    } else {
 		textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
 	    }
-	    GenerateModifiedEvent(textPtr);
+
+	    /*
+	     * Only issue the <<Modified>> event if the flag actually changed.
+	     * However, degree of modified-ness doesn't matter. [Bug 1799782]
+	     */
+
+	    if ((!oldModified) != (!setModified)) {
+		GenerateModifiedEvent(textPtr);
+	    }
 	}
 	break;
     case EDIT_REDO:
