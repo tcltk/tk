@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.46 2010/02/21 12:14:16 dkf Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.47 2010/02/22 23:38:53 nijtmans Exp $
  */
 
 #undef STATIC_BUILD
@@ -633,7 +633,7 @@ TestobjconfigObjCmd(
 				/* Holds pointers to option tables created by
 				 * commands below; indexed with same values as
 				 * "options" array. */
-    static Tk_ObjCustomOption CustomOption = {
+    static const Tk_ObjCustomOption CustomOption = {
 	"custom option",
 	CustomOptionSet,
 	CustomOptionGet,
