@@ -1,3 +1,14 @@
+2010-02-17  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/configure.in     Use @EXEEXT@ in stead of @EXT_SUFFIX@
+	* unix/tcl.m4
+	* unix/Makefile.in      Use -DBUILD_tk
+	* unix/configure        (regenerated)
+	* generic/tkConfig.c    Make internal Tk_ObjCustomOption const
+	* generic/tkPanedWindow.c
+	* generic/tkTest.c
+	* generic/tkText.c
+
 2010-02-21  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkText.c (TextEditCmd): [Bug 1799782]: Refix this, so that

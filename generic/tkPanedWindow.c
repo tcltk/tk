@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.41 2010/02/13 13:47:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkPanedWindow.c,v 1.42 2010/02/22 23:38:53 nijtmans Exp $
  */
 
 #include "default.h"
@@ -260,7 +260,7 @@ static const Tk_GeomMgr panedWindowMgrType = {
  * the custom "-sticky" option for slave windows.
  */
 
-static Tk_ObjCustomOption stickyOption = {
+static const Tk_ObjCustomOption stickyOption = {
     "sticky",			/* name */
     SetSticky,			/* setProc */
     GetSticky,			/* getProc */

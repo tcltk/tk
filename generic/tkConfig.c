@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkConfig.c,v 1.32 2009/12/15 18:12:07 dgp Exp $
+ * RCS: @(#) $Id: tkConfig.c,v 1.33 2010/02/22 23:38:53 nijtmans Exp $
  */
 
 /*
@@ -65,7 +65,7 @@ typedef struct TkOption {
 	struct TkOption *synonymPtr;
 				/* For synonym options, this points to the
 				 * master entry. */
-	struct Tk_ObjCustomOption *custom;
+	const struct Tk_ObjCustomOption *custom;
 				/* For TK_OPTION_CUSTOM. */
     } extra;
     int flags;			/* Miscellaneous flag values; see below for
@@ -940,7 +940,7 @@ DoObjConfig(
 	break;
     }
     case TK_OPTION_CUSTOM: {
-	Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+	const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
 
 	if (custom->setProc(custom->clientData, interp, tkwin,
 		&valuePtr, recordPtr, optionPtr->specPtr->internalOffset,
@@ -1530,7 +1530,7 @@ Tk_RestoreSavedOptions(
 		*((Tk_Window *) internalPtr) = *((Tk_Window *) ptr);
 		break;
 	    case TK_OPTION_CUSTOM: {
-		Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+		const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
 
 		if (custom->restoreProc != NULL) {
 		    custom->restoreProc(custom->clientData, savePtr->tkwin,
@@ -1755,7 +1755,7 @@ FreeResources(
 	}
 	break;
     case TK_OPTION_CUSTOM: {
-	Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+	const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
 	if (internalFormExists && custom->freeProc != NULL) {
 	    custom->freeProc(custom->clientData, tkwin, internalPtr);
 	}
@@ -2046,7 +2046,7 @@ GetObjectForOption(
 	break;
     }
     case TK_OPTION_CUSTOM: {
-	Tk_ObjCustomOption *custom = optionPtr->extra.custom;
+	const Tk_ObjCustomOption *custom = optionPtr->extra.custom;
 
 	objPtr = custom->getProc(custom->clientData, tkwin, recordPtr,
 		optionPtr->specPtr->internalOffset);
