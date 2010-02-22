@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.96 2010/02/21 12:11:13 dkf Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.97 2010/02/22 23:38:53 nijtmans Exp $
  */
 
 #include "default.h"
@@ -108,7 +108,7 @@ static void		RestoreLineStartEnd(ClientData clientData,
 			    char *oldInternalPtr);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
 
-static Tk_ObjCustomOption lineOption = {
+static const Tk_ObjCustomOption lineOption = {
     "line",			/* name */
     SetLineStartEnd,		/* setProc */
     GetLineStartEnd,		/* getProc */

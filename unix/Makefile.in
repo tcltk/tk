@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.166 2010/02/19 15:02:54 dkf Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.167 2010/02/22 23:38:53 nijtmans Exp $
 
 # Current Tk version;  used in various names.
 
@@ -208,7 +208,7 @@ BUILD_TCLSH		= @BUILD_TCLSH@
 # need it to be available on the PATH. This executable should *NOT* be
 # required just to do a normal build although it can be required to run
 # make dist. This variable is set to "" if no tclsh is available.
-EXE_SUFFIX		= @EXE_SUFFIX@
+EXE_SUFFIX		= @EXEEXT@
 TCL_EXE			= @TCLSH_PROG@
 WISH_EXE		= wish${EXE_SUFFIX}
 
@@ -229,7 +229,7 @@ INSTALL_DATA		= ${INSTALL} -m 644
 # libraries.  See configure.in for a description of what it means.
 # The value of the symbol is normally set by the configure script.
 
-SHLIB_CFLAGS		= @SHLIB_CFLAGS@
+SHLIB_CFLAGS		= @SHLIB_CFLAGS@ -DBUILD_tk
 
 # To enable support for stubs in Tcl.
 STUB_LIB_FILE		= @TK_STUB_LIB_FILE@
