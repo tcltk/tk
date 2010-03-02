@@ -1,3 +1,8 @@
+2010-03-02  Jan Nijtmans  <nijtmans@users.sf.net>
+
+    * unix/tcl.m4      [Enh 2959069] Support for -fvisibility=hidden
+    * unix/configure   (regenerated with autoconf-2.59)
+
 2010-02-23  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/configure.in     Use @EXEEXT@ in stead of @EXT_SUFFIX@
