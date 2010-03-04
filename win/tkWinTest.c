@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.30 2010/01/22 14:17:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.31 2010/03/04 22:59:28 nijtmans Exp $
  */
 
 #ifndef USE_TCL_STUBS
@@ -45,47 +45,35 @@ static int		TestwinlocaleObjCmd(ClientData clientData,
 static Tk_GetSelProc		SetSelectionResult;
 
 
-static TkWinProcs asciiProcs = {
+static const TkWinProcs asciiProcs = {
     0,
-
-    (LRESULT (WINAPI *)(WNDPROC lpPrevWndFunc, HWND hWnd, UINT Msg,
-	    WPARAM wParam, LPARAM lParam)) CallWindowProcA,
-    (LRESULT (WINAPI *)(HWND hWnd, UINT Msg, WPARAM wParam,
-	    LPARAM lParam)) DefWindowProcA,
-    (ATOM (WINAPI *)(const WNDCLASS *lpWndClass)) RegisterClassA,
-    (BOOL (WINAPI *)(HWND hWnd, LPCTSTR lpString)) SetWindowTextA,
-    (HWND (WINAPI *)(DWORD dwExStyle, LPCTSTR lpClassName,
-	    LPCTSTR lpWindowName, DWORD dwStyle, int x, int y,
-	    int nWidth, int nHeight, HWND hWndParent, HMENU hMenu,
-	    HINSTANCE hInstance, LPVOID lpParam)) CreateWindowExA,
-    (BOOL (WINAPI *)(HMENU hMenu, UINT uPosition, UINT uFlags,
-	    UINT uIDNewItem, LPCTSTR lpNewItem)) InsertMenuA,
-    (int (WINAPI *)(HWND hWnd, LPCTSTR lpString, int nMaxCount)) GetWindowTextA,
-    (HWND (WINAPI *)(LPCTSTR lpClassName, LPCTSTR lpWindowName)) FindWindowA,
-    (int (WINAPI *)(HWND hwnd, LPTSTR lpClassName, int nMaxCount)) GetClassNameA,
+    (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProcA,
+    (LRESULT (WINAPI *)(HWND, UINT, WPARAM, LPARAM)) DefWindowProcA,
+    (ATOM (WINAPI *)(const WNDCLASS *)) RegisterClassA,
+    (BOOL (WINAPI *)(HWND, LPCTSTR)) SetWindowTextA,
+    (HWND (WINAPI *)(DWORD, LPCTSTR, LPCTSTR, DWORD, int, int, int, int,
+	    HWND, HMENU, HINSTANCE, LPVOID)) CreateWindowExA,
+    (BOOL (WINAPI *)(HMENU, UINT, UINT, UINT, LPCTSTR)) InsertMenuA,
+    (int (WINAPI *)(HWND, LPCTSTR, int)) GetWindowTextA,
+    (HWND (WINAPI *)(LPCTSTR, LPCTSTR)) FindWindowA,
+    (int (WINAPI *)(HWND, LPTSTR, int)) GetClassNameA,
 };
 
-static TkWinProcs unicodeProcs = {
+static const TkWinProcs unicodeProcs = {
     1,
-
-    (LRESULT (WINAPI *)(WNDPROC lpPrevWndFunc, HWND hWnd, UINT Msg,
-	    WPARAM wParam, LPARAM lParam)) CallWindowProcW,
-    (LRESULT (WINAPI *)(HWND hWnd, UINT Msg, WPARAM wParam,
-	    LPARAM lParam)) DefWindowProcW,
-    (ATOM (WINAPI *)(const WNDCLASS *lpWndClass)) RegisterClassW,
-    (BOOL (WINAPI *)(HWND hWnd, LPCTSTR lpString)) SetWindowTextW,
-    (HWND (WINAPI *)(DWORD dwExStyle, LPCTSTR lpClassName,
-	    LPCTSTR lpWindowName, DWORD dwStyle, int x, int y,
-	    int nWidth, int nHeight, HWND hWndParent, HMENU hMenu,
-	    HINSTANCE hInstance, LPVOID lpParam)) CreateWindowExW,
-    (BOOL (WINAPI *)(HMENU hMenu, UINT uPosition, UINT uFlags,
-	    UINT uIDNewItem, LPCTSTR lpNewItem)) InsertMenuW,
-    (int (WINAPI *)(HWND hWnd, LPCTSTR lpString, int nMaxCount)) GetWindowTextW,
-    (HWND (WINAPI *)(LPCTSTR lpClassName, LPCTSTR lpWindowName)) FindWindowW,
-    (int (WINAPI *)(HWND hwnd, LPTSTR lpClassName, int nMaxCount)) GetClassNameW,
+    (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProcW,
+    (LRESULT (WINAPI *)(HWND, UINT, WPARAM, LPARAM)) DefWindowProcW,
+    (ATOM (WINAPI *)(const WNDCLASS *)) RegisterClassW,
+    (BOOL (WINAPI *)(HWND, LPCTSTR)) SetWindowTextW,
+    (HWND (WINAPI *)(DWORD, LPCTSTR, LPCTSTR, DWORD, int, int, int, int,
+	    HWND, HMENU, HINSTANCE, LPVOID)) CreateWindowExW,
+    (BOOL (WINAPI *)(HMENU, UINT, UINT, UINT, LPCTSTR)) InsertMenuW,
+    (int (WINAPI *)(HWND, LPCTSTR, int)) GetWindowTextW,
+    (HWND (WINAPI *)(LPCTSTR, LPCTSTR)) FindWindowW,
+    (int (WINAPI *)(HWND, LPTSTR, int)) GetClassNameW,
 };
 
-static TkWinProcs *tkTestWinProcs = &asciiProcs;
+static const TkWinProcs *tkTestWinProcs = &asciiProcs;
 
 
 /*
