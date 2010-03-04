@@ -1,3 +1,9 @@
+2010-02-23  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/configure.in:    Don't use -fvisibility=hidden
+	* unix/tcl.m4:          for cygwin.
+	* win/tkWinTest.c       Make tkTestWinProcs const
+
 2010-03-04  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/clipboard.n: Added note about STRING vs. UTF8_STRING types.
