@@ -1,4 +1,4 @@
-2010-02-23  Jan Nijtmans  <nijtmans@users.sf.net>
+2010-03-04  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/configure.in:    Don't use -fvisibility=hidden
 	* unix/tcl.m4:          for cygwin.
