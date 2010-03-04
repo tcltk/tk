@@ -1,18 +1,22 @@
+2010-03-04  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/clipboard.n: Added note about STRING vs. UTF8_STRING types.
+
 2010-03-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
-    * unix/tcl.m4      [Enh 2959069] Support for -fvisibility=hidden
-    * unix/configure   (regenerated with autoconf-2.59)
+	* unix/tcl.m4: [Tcl FRQ 2959069]: Support for -fvisibility=hidden
+	* unix/configure:  (regenerated with autoconf-2.59)
 
 2010-02-23  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/configure.in     Use @EXEEXT@ in stead of @EXT_SUFFIX@
-	* unix/tcl.m4
-	* unix/Makefile.in      Use -DBUILD_tk
-	* unix/configure        (regenerated)
-	* generic/tkConfig.c    Make internal Tk_ObjCustomOption const
-	* generic/tkPanedWindow.c
-	* generic/tkTest.c
-	* generic/tkText.c
+	* unix/configure.in:    Use @EXEEXT@ in stead of @EXT_SUFFIX@
+	* unix/tcl.m4:
+	* unix/Makefile.in:     Use -DBUILD_tk
+	* unix/configure:       (regenerated)
+	* generic/tkConfig.c:   Make internal Tk_ObjCustomOption const
+	* generic/tkPanedWindow.c:
+	* generic/tkTest.c:
+	* generic/tkText.c:
 
 2010-02-21  Donal K. Fellows  <dkf@users.sf.net>
 
