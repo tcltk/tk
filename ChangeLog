@@ -1,3 +1,9 @@
+2010-03-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
+
+	* library/menu.tcl: [Bug 2949774]: When using the non-ClickToFocus
+	menu mode cascade menus should popdown once the pointer moves to
+	another entry to be compatible with current X desktop usage.
+
 2010-03-04  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/configure.in:    Don't use -fvisibility=hidden
