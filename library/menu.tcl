@@ -4,7 +4,7 @@
 # It also implements keyboard traversal of menus and implements a few
 # other utility procedures related to menus.
 #
-# RCS: @(#) $Id: menu.tcl,v 1.33 2010/01/09 00:43:46 patthoyts Exp $
+# RCS: @(#) $Id: menu.tcl,v 1.34 2010/03/06 01:11:07 patthoyts Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -408,6 +408,8 @@ proc ::tk::MenuUnpost menu {
 
     after cancel [array get Priv menuActivatedTimer]
     unset -nocomplain Priv(menuActivated)
+    after cancel [array get Priv menuDeactivatedTimer]
+    unset -nocomplain Priv(menuDeactivated)
 
     catch {
 	if {$mb ne ""} {
@@ -563,13 +565,18 @@ proc ::tk::MenuMotion {menu x y state} {
         set index [$menu index @$x,$y]
         if {[info exists Priv(menuActivated)] \
                 && $index ne "none" \
-                && $index ne $activeindex \
-                && [$menu type $index] eq "cascade"} {
+                && $index ne $activeindex} {
             set mode [option get $menu clickToFocus ClickToFocus]
             if {$mode eq "" || ([string is boolean $mode] && !$mode)} {
-                set delay [expr {[$menu cget -type] eq "menubar"? 0 : 50}]
-                set Priv(menuActivatedTimer) \
-                    [after $delay [list $menu postcascade active]]
+                set delay [expr {[$menu cget -type] eq "menubar" ? 0 : 50}]
+                if {[$menu type $activeindex] eq "cascade"} {
+                    set Priv(menuDeactivatedTimer) \
+                        [after $delay [list $menu postcascade none]]
+                }
+                if {[$menu type $index] eq "cascade"} {
+                    set Priv(menuActivatedTimer) \
+                        [after $delay [list $menu postcascade active]]
+                }
             }
         }
     }
