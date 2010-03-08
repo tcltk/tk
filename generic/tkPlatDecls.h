@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.23 2010/02/05 10:56:43 nijtmans Exp $
+ * RCS: @(#) $Id: tkPlatDecls.h,v 1.24 2010/03/08 19:51:35 dgp Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -26,7 +26,7 @@
  */
 
 #ifdef __cplusplus
-#extern "C" {
+extern "C" {
 #endif
 
 /* !BEGIN!: Do not edit below this line. */

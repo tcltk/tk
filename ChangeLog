@@ -1,3 +1,7 @@
+2010-03-08  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkPlatDecls.h: Correct broken 2886635 fix. [Bug 2965600]
+
 2010-03-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
 	* library/menu.tcl: [Bug 2949774]: When using the non-ClickToFocus
