@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_intro.n,v 1.10 2007/12/13 15:23:44 dgp Exp $
+'\" RCS: @(#) $Id: ttk_intro.n,v 1.10.2.1 2010/03/09 04:20:56 hobbs Exp $
 '\" 
 .so man.macros
 .TH ttk::intro n 8.5 Tk "Tk Themed Widget"
@@ -21,7 +21,8 @@ the code implementing a widget's behavior from
 the code implementing its appearance.
 Widget class bindings are primarily responsible for
 maintaining the widget state and invoking callbacks;
-all aspects of the widgets appearance is
+all aspects of the widget's appearance are controlled by the style of
+the widget (i.e. the style of the elements of the widget).
 .SH "THEMES"
 A \fItheme\fR is a collection of elements and styles 
 that determine the look and feel of the widget set.
