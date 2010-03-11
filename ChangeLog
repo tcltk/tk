@@ -1,3 +1,10 @@
+2010-03-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkText.c (DumpLine): [Bug 2968379]: When peers are about,
+	there can be unnamed marks present during a dump. Ignore them as they
+	will just be for the peers' insert and current marks, which aren't
+	very important.
+
 2010-03-04  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/clipboard.n: Added note about STRING vs. UTF8_STRING types.
