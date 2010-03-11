@@ -6,7 +6,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: text.test,v 1.55 2009/10/22 21:36:24 dkf Exp $
+# RCS: @(#) $Id: text.test,v 1.56 2010/03/11 09:24:09 dkf Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -5875,7 +5875,13 @@ test text-24.26 {TextDumpCmd procedure, unicode characters} -body {
 } -cleanup {
     destroy .t
 } -result "text abc\xb1\xb1\xb1 1.0 mark insert 1.6 mark current 1.6 text {\n} 1.6"
-
+test text-24.27 {TextDumpCmd procedure, peer present} -body {
+    text .t
+    .t peer create .t.t
+    .t dump -all 1.0 end
+} -cleanup {
+    destroy .t
+} -result "mark insert 1.0 mark current 1.0 text {\n} 1.0"
 
 test text-25.1 {text widget vs hidden commands} -body {
     text .t
