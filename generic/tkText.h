@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.37 2009/10/22 21:36:24 dkf Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.38 2010/03/11 09:43:19 dkf Exp $
  */
 
 #ifndef _TKTEXT
@@ -964,6 +964,8 @@ MODULE_SCOPE const Tk_SegType tkTextLeftMarkType;
 MODULE_SCOPE const Tk_SegType tkTextRightMarkType;
 MODULE_SCOPE const Tk_SegType tkTextToggleOnType;
 MODULE_SCOPE const Tk_SegType tkTextToggleOffType;
+MODULE_SCOPE const Tk_SegType tkTextEmbWindowType;
+MODULE_SCOPE const Tk_SegType tkTextEmbImageType;
 
 /*
  * Convenience macros for use by B-tree clients which want to access pixel

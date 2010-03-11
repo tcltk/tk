@@ -4,6 +4,9 @@
 	there can be unnamed marks present during a dump. Ignore them as they
 	will just be for the peers' insert and current marks, which aren't
 	very important.
+	(DumpLine): Removed lame reliance on the leading letters of the names
+	of segment types. Entailed expanding the scope of the declarations of
+	the types of embedded images and windows.
 
 2010-03-08  Don Porter  <dgp@users.sourceforge.net>
 

@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextImage.c,v 1.28 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkTextImage.c,v 1.29 2010/03/11 09:43:19 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -56,7 +56,7 @@ static void		EmbImageProc(ClientData clientData, int x, int y,
  * The following structure declares the "embedded image" segment type.
  */
 
-static const Tk_SegType tkTextEmbImageType = {
+const Tk_SegType tkTextEmbImageType = {
     "image",			/* name */
     0,				/* leftGravity */
     NULL,			/* splitProc */

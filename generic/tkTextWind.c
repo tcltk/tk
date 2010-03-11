@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextWind.c,v 1.29 2010/02/21 12:14:16 dkf Exp $
+ * RCS: @(#) $Id: tkTextWind.c,v 1.30 2010/03/11 09:43:19 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -72,7 +72,7 @@ static TkTextEmbWindowClient *EmbWinGetClient(const TkText *textPtr,
  * The following structure declares the "embedded window" segment type.
  */
 
-static const Tk_SegType tkTextEmbWindowType = {
+const Tk_SegType tkTextEmbWindowType = {
     "window",			/* name */
     0,				/* leftGravity */
     NULL,			/* splitProc */
