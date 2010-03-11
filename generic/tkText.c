@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.97 2010/02/22 23:38:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.98 2010/03/11 09:24:07 dkf Exp $
  */
 
 #include "default.h"
@@ -3115,7 +3115,7 @@ DeleteIndexRange(
 	} else {
 	    lineAndByteIndex[resetViewCount] = -1;
 	}
-	resetViewCount+=2;
+	resetViewCount += 2;
     }
 
     /*
@@ -4580,8 +4580,8 @@ TextDumpCmd(
 	    if (lineno == lineend) {
 		break;
 	    }
-	    textChanged = DumpLine(interp, textPtr, what, linePtr, 0, 32000000,
-		    lineno, command);
+	    textChanged = DumpLine(interp, textPtr, what, linePtr, 0,
+		    32000000, lineno, command);
 	    if (textChanged) {
 		if (textPtr->flags & DESTROYED) {
 		    return TCL_OK;
@@ -4716,14 +4716,19 @@ DumpLine(
 		    name = "insert";
 		} else if (segPtr == textPtr->currentMarkPtr) {
 		    name = "current";
+		} else if (markPtr->hPtr == NULL) {
+		    name = NULL;
+		    lineChanged = 0;
 		} else {
 		    name = Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable,
 			    markPtr->hPtr);
 		}
-		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
-			lineno, offset, &index);
-		lineChanged = DumpSegment(textPtr, interp, "mark", name,
-			command, &index, what);
+		if (name != NULL) {
+		    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
+			    lineno, offset, &index);
+		    lineChanged = DumpSegment(textPtr, interp, "mark", name,
+			    command, &index, what);
+		}
 	    } else if ((what & TK_DUMP_TAG) &&
 		    (segPtr->typePtr == &tkTextToggleOnType)) {
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,

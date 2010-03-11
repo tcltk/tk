@@ -1,6 +1,13 @@
+2010-03-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkText.c (DumpLine): [Bug 2968379]: When peers are about,
+	there can be unnamed marks present during a dump. Ignore them as they
+	will just be for the peers' insert and current marks, which aren't
+	very important.
+
 2010-03-08  Don Porter  <dgp@users.sourceforge.net>
 
-	* generic/tkPlatDecls.h: Correct broken 2886635 fix. [Bug 2965600]
+	* generic/tkPlatDecls.h: [Bug 2965600]: Correct broken 2886635 fix.
 
 2010-03-06  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -12,7 +19,7 @@
 
 	* unix/configure.in:    Don't use -fvisibility=hidden
 	* unix/tcl.m4:          for cygwin.
-	* win/tkWinTest.c       Make tkTestWinProcs const
+	* win/tkWinTest.c:      Make tkTestWinProcs const
 
 2010-03-04  Donal K. Fellows  <dkf@users.sf.net>
 
