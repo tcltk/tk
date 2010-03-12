@@ -1,3 +1,18 @@
+2010-03-12  Jan Nijtmans  <nijtmans@users.sf.net>
+
+    * generic/tkButton.h       [Bug 2956548] TkpButtonSetDefaults only
+    * generic/tkButton.c       initializes one button type
+    * win/tkWinButton.c
+    * win/tkWinEmbed.c         Fix various gcc warnings, all
+    * win/tkWinMenu.c          backported from Tk 8.6
+    * win/tkWinPixmap.c
+    * win/tkWinSend.c
+    * win/tkWinTest.c
+    * win/tkWinWm.c
+    * win/tkWinX.c
+    * win/tkWinInt.h           VC6++ does not have SPI_SETKEYBOARDCUES
+    * win/.cvsignore
+
 2010-03-11  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkText.c (DumpLine): [Bug 2968379]: When peers are about,
