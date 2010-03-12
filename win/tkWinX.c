@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.57.2.1 2010/01/02 10:43:26 dkf Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.57.2.2 2010/03/12 13:02:36 nijtmans Exp $
  */
 
 /*
@@ -298,7 +298,7 @@ TkWinXInit(
      * Initialize input language info
      */
 
-    if (GetLocaleInfo(LANGIDFROMLCID(GetKeyboardLayout(0)),
+    if (GetLocaleInfo(LANGIDFROMLCID((DWORD)GetKeyboardLayout(0)),
 	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
 	       (LPTSTR) &lpCP, sizeof(lpCP)/sizeof(TCHAR))
 	    && TranslateCharsetInfo((DWORD *)lpCP, &lpCs, TCI_SRCCODEPAGE)) {
@@ -405,7 +405,7 @@ TkWinGetPlatformId(void)
 		    KEY_READ, &hKey) != ERROR_SUCCESS) {
 		tkWinTheme = TK_THEME_WIN_XP;
 	    } else {
-		RegQueryValueEx(hKey, szCurrent, NULL, NULL, pBuffer, &dwSize);
+		RegQueryValueEx(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
 		RegCloseKey(hKey);
 		if (strcmp(pBuffer, "Windows Standard") == 0) {
 		    tkWinTheme = TK_THEME_WIN_CLASSIC;
@@ -1002,10 +1002,11 @@ GenerateXEvent(
     LPARAM lParam)
 {
     XEvent event;
-    TkWindow *winPtr = (TkWindow *)Tk_HWNDToWindow(hwnd);
+    TkWindow *winPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+    winPtr = (TkWindow *)Tk_HWNDToWindow(hwnd);
     if (!winPtr || winPtr->window == None) {
 	return;
     }
@@ -1118,17 +1119,15 @@ GenerateXEvent(
 	unsigned int state = GetState(message, wParam, lParam);
 	Time time = TkpGetMS();
 	POINT clientPoint;
-	POINTS rootPoint;	/* Note: POINT and POINTS are different */
-	DWORD msgPos;
+	union {DWORD msgpos; POINTS point;} root;	/* Note: POINT and POINTS are different */
 
 	/*
 	 * Compute the screen and window coordinates of the event.
 	 */
 
-	msgPos = GetMessagePos();
-	rootPoint = MAKEPOINTS(msgPos);
-	clientPoint.x = rootPoint.x;
-	clientPoint.y = rootPoint.y;
+	root.msgpos = GetMessagePos();
+	clientPoint.x = root.point.x;
+	clientPoint.y = root.point.y;
 	ScreenToClient(hwnd, &clientPoint);
 
 	/*
@@ -1139,8 +1138,8 @@ GenerateXEvent(
 	event.xbutton.subwindow = None;
 	event.xbutton.x = clientPoint.x;
 	event.xbutton.y = clientPoint.y;
-	event.xbutton.x_root = rootPoint.x;
-	event.xbutton.y_root = rootPoint.y;
+	event.xbutton.x_root = root.point.x;
+	event.xbutton.y_root = root.point.y;
 	event.xbutton.state = state;
 	event.xbutton.time = time;
 	event.xbutton.same_screen = True;

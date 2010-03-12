@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPixmap.c,v 1.7.4.1 2009/04/30 13:48:00 dkf Exp $
+ * RCS: @(#) $Id: tkWinPixmap.c,v 1.7.4.2 2010/03/12 13:02:36 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -75,7 +75,7 @@ Tk_GetPixmap(
 
     if (newTwdPtr->bitmap.handle == NULL) {
 	static int repeatError = 0;
-	unsigned char *bits = NULL;
+	void *bits = NULL;
 	BITMAPINFO bitmapInfo;
 	HDC dc;
 
@@ -89,7 +89,7 @@ Tk_GetPixmap(
 	bitmapInfo.bmiHeader.biSizeImage = 0;
 	dc = GetDC(NULL);
 	newTwdPtr->bitmap.handle = CreateDIBSection(dc, &bitmapInfo,
-		DIB_RGB_COLORS, (void **) &bits, 0, 0);
+		DIB_RGB_COLORS, &bits, 0, 0);
 	ReleaseDC(NULL, dc);
 
 	/*

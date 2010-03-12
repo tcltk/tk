@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.8 2009/11/22 23:28:36 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.9 2010/03/12 13:02:36 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -837,18 +837,19 @@ static int
 ReadICOHeader(
     Tcl_Channel channel)
 {
-    WORD Input;
-    DWORD dwBytesRead;
+    union {
+	WORD word;
+	char bytes[sizeof(WORD)];
+    } input;
 
     /*
      * Read the 'reserved' WORD, which should be a zero word.
      */
 
-    dwBytesRead = Tcl_Read(channel, (char*) &Input, sizeof(WORD));
-    if (dwBytesRead != sizeof(WORD)) {
+    if (Tcl_Read(channel, input.bytes, sizeof(WORD)) != sizeof(WORD)) {
 	return -1;
     }
-    if (Input != 0) {
+    if (input.word != 0) {
 	return -1;
     }
 
@@ -856,28 +857,21 @@ ReadICOHeader(
      * Read the type WORD, which should be of type 1.
      */
 
-    dwBytesRead = Tcl_Read(channel, (char*)&Input, sizeof(WORD));
-    if (dwBytesRead != sizeof(WORD)) {
+    if (Tcl_Read(channel, input.bytes, sizeof(WORD)) != sizeof(WORD)) {
 	return -1;
     }
-    if (Input != 1) {
-	return -1;
-    }
-
-    /*
-     * Get the count of images
-     */
-
-    dwBytesRead = Tcl_Read( channel, (char*)&Input, sizeof( WORD ));
-    if (dwBytesRead != sizeof(WORD)) {
+    if (input.word != 1) {
 	return -1;
     }
 
     /*
-     * Return the count
+     * Get and return the count of images.
      */
 
-    return (int)Input;
+    if (Tcl_Read(channel, input.bytes, sizeof(WORD)) != sizeof(WORD)) {
+	return -1;
+    }
+    return (int) input.word;
 }
 
 /*
@@ -4320,7 +4314,8 @@ WmIconphotoCmd(
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
     int i, width, height, idx, bufferSize, startObj = 3;
-    unsigned char *bgraPixelPtr, *bgraMaskPtr;
+    union {unsigned char *ptr; void *voidPtr;} bgraPixel;
+    void *bgraMaskPtr;
     BlockOfIconImagesPtr lpIR;
     WinIconPtr titlebaricon = NULL;
     HICON hIcon;
@@ -4397,7 +4392,7 @@ WmIconphotoCmd(
 	bmInfo.bmiHeader.biCompression = BI_RGB;
 
 	iconInfo.hbmColor = CreateDIBSection( NULL, &bmInfo,
-	    DIB_RGB_COLORS, &bgraPixelPtr, NULL, 0 );
+	    DIB_RGB_COLORS, &bgraPixel.voidPtr, NULL, 0 );
 	if ( !iconInfo.hbmColor ) {
 	    ckfree((char *) lpIR);
 	    Tcl_AppendResult(interp, "failed to create color bitmap for \"",
@@ -4410,10 +4405,10 @@ WmIconphotoCmd(
 	 */
 	bufferSize = height * width * 4;
 	for (idx = 0 ; idx < bufferSize ; idx += 4) {
-	    bgraPixelPtr[idx] = block.pixelPtr[idx+2];
-	    bgraPixelPtr[idx+1] = block.pixelPtr[idx+1];
-	    bgraPixelPtr[idx+2] = block.pixelPtr[idx+0];
-	    bgraPixelPtr[idx+3] = block.pixelPtr[idx+3];
+	    bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
+	    bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
+	    bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
+	    bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
 	}
 
 	/*
