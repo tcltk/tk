@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.c,v 1.20.2.2 2003/11/12 00:05:13 hobbs Exp $
+ * RCS: @(#) $Id: tkButton.c,v 1.20.2.3 2010/03/12 13:12:35 nijtmans Exp $
  */
 
 #include "tkButton.h"
@@ -56,6 +56,8 @@ static char *compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", (char *) NULL
 };
 
+char tkDefButtonBorderWidth[TCL_INTEGER_SPACE] = DEF_BUTTON_BORDER_WIDTH;
+
 /*
  * Information used for parsing configuration options.  There is a
  * separate table for each of the four widget classes.
@@ -81,7 +83,7 @@ static Tk_OptionSpec labelOptionSpecs[] = {
 	DEF_BUTTON_BITMAP, -1, Tk_Offset(TkButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_BUTTON_BORDER_WIDTH, Tk_Offset(TkButton, borderWidthPtr),
+	tkDefButtonBorderWidth, Tk_Offset(TkButton, borderWidthPtr),
 	Tk_Offset(TkButton, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkButton, compound), 0,
@@ -167,7 +169,7 @@ static Tk_OptionSpec buttonOptionSpecs[] = {
 	DEF_BUTTON_BITMAP, -1, Tk_Offset(TkButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_BUTTON_BORDER_WIDTH, Tk_Offset(TkButton, borderWidthPtr),
+	tkDefButtonBorderWidth, Tk_Offset(TkButton, borderWidthPtr),
 	Tk_Offset(TkButton, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, Tk_Offset(TkButton, commandPtr), -1,
@@ -269,7 +271,7 @@ static Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	DEF_BUTTON_BITMAP, -1, Tk_Offset(TkButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_BUTTON_BORDER_WIDTH, Tk_Offset(TkButton, borderWidthPtr),
+	tkDefButtonBorderWidth, Tk_Offset(TkButton, borderWidthPtr),
 	Tk_Offset(TkButton, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, Tk_Offset(TkButton, commandPtr), -1,
@@ -378,7 +380,7 @@ static Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	DEF_BUTTON_BITMAP, -1, Tk_Offset(TkButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_BUTTON_BORDER_WIDTH, Tk_Offset(TkButton, borderWidthPtr),
+	tkDefButtonBorderWidth, Tk_Offset(TkButton, borderWidthPtr),
 	Tk_Offset(TkButton, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, Tk_Offset(TkButton, commandPtr), -1,
