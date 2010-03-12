@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.33 2007/12/13 15:28:55 dgp Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.33.2.1 2010/03/12 13:02:36 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -44,8 +44,6 @@ typedef struct ThreadSpecificData {
 static Tcl_ThreadDataKey dataKey;
 
 static void		ContainerEventProc(ClientData clientData,
-			    XEvent *eventPtr);
-static void		EmbeddedEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		EmbedGeometryRequest(Container *containerPtr,
 			    int width, int height);
@@ -388,39 +386,6 @@ TkpMakeContainer(
     Tk_CreateEventHandler(tkwin, StructureNotifyMask,
 	    ContainerEventProc, (ClientData) containerPtr);
 }
-
-#if 0
-/*
- *----------------------------------------------------------------------
- *
- * EmbeddedEventProc --
- *
- *	This procedure is invoked by the Tk event dispatcher when various
- *	useful events are received for a window that is embedded in another
- *	application.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Our internal state gets cleaned up when an embedded window is
- *	destroyed.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-EmbeddedEventProc(
-    ClientData clientData,	/* Token for container window. */
-    XEvent *eventPtr)		/* ResizeRequest event. */
-{
-    TkWindow *winPtr = (TkWindow *) clientData;
-
-    if (eventPtr->type == DestroyNotify) {
-	EmbedWindowDeleted(winPtr);
-    }
-}
-#endif
 
 /*
  *----------------------------------------------------------------------
