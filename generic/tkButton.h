@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.h,v 1.16 2007/12/13 15:24:13 dgp Exp $
+ * RCS: @(#) $Id: tkButton.h,v 1.16.2.1 2010/03/12 13:02:37 nijtmans Exp $
  */
 
 #ifndef _TKBUTTON
@@ -299,6 +299,7 @@ typedef struct {
  */
 
 MODULE_SCOPE Tk_ClassProcs tkpButtonProcs;
+MODULE_SCOPE char tkDefButtonBorderWidth[TCL_INTEGER_SPACE];
 
 /*
  * Declaration of functions used in the implementation of the button widget.

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.14.2.2 2009/11/13 23:32:05 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.14.2.3 2010/03/12 13:02:36 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -100,7 +100,7 @@ AppendSystemError(
     DWORD error)		/* Result code from error. */
 {
     int length;
-    WCHAR *wMsgPtr;
+    WCHAR *wMsgPtr, **wMsgPtrPtr = &wMsgPtr;
     char *msg;
     char id[TCL_INTEGER_SPACE], msgBuf[24 + TCL_INTEGER_SPACE];
     Tcl_DString ds;
@@ -108,7 +108,7 @@ AppendSystemError(
 
     length = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error,
-	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (WCHAR *) &wMsgPtr,
+	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (WCHAR *) wMsgPtrPtr,
 	    0, NULL);
     if (length == 0) {
 	char *msgPtr;
@@ -186,7 +186,6 @@ TestclipboardObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *CONST objv[])	/* Argument values. */
 {
-    TkWindow *winPtr = (TkWindow *) clientData;
     HGLOBAL handle;
     char *data;
     int code = TCL_OK;
@@ -276,16 +275,6 @@ TestwineventCmd(
 	return TCL_ERROR;
     }
 
-#if 0
-    TkpScanWindowId(interp, argv[1], &id);
-    if (
-#ifdef _WIN64
-	    (sscanf(string, "0x%p", &number) != 1) &&
-#endif /* _WIN64 */
-	    Tcl_GetInt(interp, string, (int *)&number) != TCL_OK) {
-	return TCL_ERROR;
-    }
-#endif
     hwnd = (HWND) strtol(argv[1], &rest, 0);
     if (rest == argv[1]) {
 	hwnd = FindWindow(NULL, argv[1]);
@@ -354,7 +343,7 @@ TestwineventCmd(
 	    wParam = MAKEWPARAM(id, 0);
 	    lParam = (LPARAM)child;
 	}
-	sprintf(buf, "%d", SendMessage(hwnd, message, wParam, lParam));
+	sprintf(buf, "%d", (int) SendMessage(hwnd, message, wParam, lParam));
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	break;
     }
@@ -362,7 +351,7 @@ TestwineventCmd(
 	char buf[TCL_INTEGER_SPACE];
 
 	sprintf(buf, "%d",
-		SendDlgItemMessage(hwnd, id, message, wParam, lParam));
+		(int) SendDlgItemMessage(hwnd, id, message, wParam, lParam));
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	break;
     }
@@ -388,7 +377,6 @@ TestfindwindowObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *CONST objv[])	/* Argument values. */
 {
-    TkWindow *winPtr = (TkWindow *) clientData;
     const char *title = NULL, *class = NULL;
     HWND hwnd = NULL;
     int r = TCL_OK;
@@ -428,7 +416,7 @@ TestgetwindowinfoObjCmd(
     int objc,
     Tcl_Obj *CONST objv[])
 {
-    HWND hwnd = NULL;
+    long hwnd;
     Tcl_Obj *resObj = NULL, *classObj = NULL, *textObj = NULL;
     Tcl_Obj *childrenObj = NULL;
     char buf[512];
@@ -439,14 +427,14 @@ TestgetwindowinfoObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetLongFromObj(interp, objv[1], (long *)&hwnd) != TCL_OK)
+    if (Tcl_GetLongFromObj(interp, objv[1], &hwnd) != TCL_OK)
 	return TCL_ERROR;
     
     if (tkWinProcs->useWide) {
-	cch = GetClassNameW(hwnd, (LPWSTR)buf, sizeof(buf)/sizeof(WCHAR));
+	cch = GetClassNameW((HWND)hwnd, (LPWSTR)buf, sizeof(buf)/sizeof(WCHAR));
 	classObj = Tcl_NewUnicodeObj((LPWSTR)buf, cch);
     } else {
-	cch = GetClassNameA(hwnd, (LPSTR)buf, sizeof(buf));
+	cch = GetClassNameA((HWND)hwnd, (LPSTR)buf, sizeof(buf));
 	classObj = Tcl_NewStringObj((LPSTR)buf, cch);
     }
     if (cch == 0) {
@@ -461,9 +449,9 @@ TestgetwindowinfoObjCmd(
 
     Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("id", -1));
     Tcl_ListObjAppendElement(interp, resObj, 
-	Tcl_NewLongObj(GetWindowLong(hwnd, GWL_ID)));
+	Tcl_NewLongObj(GetWindowLong((HWND)hwnd, GWL_ID)));
 
-    cch = tkWinProcs->getWindowText(hwnd, (LPTSTR)buf, cchBuf);
+    cch = tkWinProcs->getWindowText((HWND)hwnd, (LPTSTR)buf, cchBuf);
     if (tkWinProcs->useWide) {
 	textObj = Tcl_NewUnicodeObj((LPCWSTR)buf, cch);
     } else {
@@ -474,10 +462,10 @@ TestgetwindowinfoObjCmd(
     Tcl_ListObjAppendElement(interp, resObj, textObj);
     Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("parent", -1));
     Tcl_ListObjAppendElement(interp, resObj, 
-	Tcl_NewLongObj((long)GetParent(hwnd)));
+	Tcl_NewLongObj((long)GetParent((HWND)hwnd)));
 
     childrenObj = Tcl_NewListObj(0, NULL);
-    EnumChildWindows(hwnd, EnumChildrenProc, (LPARAM)childrenObj);
+    EnumChildWindows((HWND)hwnd, EnumChildrenProc, (LPARAM)childrenObj);
     Tcl_ListObjAppendElement(interp, resObj, Tcl_NewStringObj("children", -1));
     Tcl_ListObjAppendElement(interp, resObj, childrenObj);
 
@@ -492,8 +480,6 @@ TestwinlocaleObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
-
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;

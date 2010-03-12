@@ -15,3 +15,7 @@ tclConfig.sh
 *.dll
 wish.exe.manifest
 .#*
+tkConfig.sh
+*.a
+autom4te.cache
+config.status
