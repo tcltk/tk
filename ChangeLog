@@ -1,3 +1,12 @@
+2010-03-12  Jan Nijtmans  <nijtmans@users.sf.net>
+
+    * generic/tkButton.h       [Bug 2956548] TkpButtonSetDefaults only
+    * generic/tkButton.c       initializes one button type
+    * win/tkWinButton.c
+    * win/tkWinTest.c          Fix 2 minor gcc warnings
+    * win/.cvsignore
+    * doc/.cvsignore           Ignore man.macros
+
 2010-02-17  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tkMenu.c: Defer TkMenuOptionTables cleanup

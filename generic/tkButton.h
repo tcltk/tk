@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkButton.h,v 1.9.2.1 2003/04/26 02:53:46 hobbs Exp $
+ * RCS: @(#) $Id: tkButton.h,v 1.9.2.2 2010/03/12 13:12:35 nijtmans Exp $
  */
 
 #ifndef _TKBUTTON
@@ -287,10 +287,12 @@ typedef struct {
 #define GOT_FOCUS		(1 << 2)
 #define BUTTON_DELETED		(1 << 3)
 /*
- * Declaration of variables shared between the files in the button module.
+ * Declaration of button class functions structure
+ * and button/label defaults, for use in optionSpecs.
  */
 
 extern Tk_ClassProcs tkpButtonProcs;
+extern char tkDefButtonBorderWidth[TCL_INTEGER_SPACE];
 
 /*
  * Declaration of procedures used in the implementation of the button
