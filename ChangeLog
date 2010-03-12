@@ -1,3 +1,9 @@
+2010-03-12  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/iconlist.tcl:		Factor out some of the machinery for
+	* library/megawidget.tcl:	making a megawidget framework. Not a
+					public API at the moment.
+
 2010-03-11  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkText.c (DumpLine): [Bug 2968379]: When peers are about,
