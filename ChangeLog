@@ -1,3 +1,9 @@
+2010-03-12  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/rules.vc        Fix [Tcl Bug 2967340]: Static build failure
+	* win/makefile.vc 
+	* win/.cvsignore
+
 2010-03-12  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/iconlist.tcl:		Factor out some of the machinery for

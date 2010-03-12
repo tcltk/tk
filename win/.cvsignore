@@ -23,3 +23,6 @@ config.status
 *.manifest
 .#*
 *.a
+*.pch
+vercl.x
+versions.vc
