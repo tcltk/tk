@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.7 2002/08/14 15:31:21 vincentdarley Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.7.2.1 2010/03/12 13:12:35 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -171,7 +171,6 @@ TestclipboardObjCmd(clientData, interp, objc, objv)
     int objc;				/* Number of arguments. */
     Tcl_Obj *CONST objv[];		/* Argument values. */
 {
-    TkWindow *winPtr = (TkWindow *) clientData;
     HGLOBAL handle;
     char *data;
     int code = TCL_OK;
@@ -334,7 +333,7 @@ TestwineventCmd(clientData, interp, argc, argv)
 	    char buf[TCL_INTEGER_SPACE];
 	    
 	    sprintf(buf, "%d", 
-		    SendDlgItemMessage(hwnd, id, message, wParam, lParam));
+		    (int) SendDlgItemMessage(hwnd, id, message, wParam, lParam));
 	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    break;
 	}
