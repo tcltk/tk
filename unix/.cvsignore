@@ -8,3 +8,5 @@ wish
 tktest
 tk.pc
 tkConfig.sh
+*.so
+*.a
