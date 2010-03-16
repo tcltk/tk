@@ -1,3 +1,7 @@
+2010-03-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/.cvsignore     Ignore .a and .so
+
 2010-03-12  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/rules.vc        Fix [Tcl Bug 2967340]: Static build failure
