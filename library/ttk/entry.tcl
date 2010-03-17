@@ -1,5 +1,5 @@
 #
-# $Id: entry.tcl,v 1.7 2010/01/06 18:37:37 dkf Exp $
+# $Id: entry.tcl,v 1.8 2010/03/17 09:27:23 dkf Exp $
 #
 # DERIVED FROM: tk/library/entry.tcl r1.22
 #
@@ -137,6 +137,9 @@ bind TEntry <Key-Tab> 			{# nothing}
 if {[tk windowingsystem] eq "aqua"} {
     bind TEntry <Command-KeyPress>	{# nothing}
 }
+# Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
+bind TEntry <Down>			{# nothing}
+bind TEntry <Up>			{# nothing}
 
 ## Additional emacs-like bindings:
 #
