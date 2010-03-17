@@ -1,12 +1,19 @@
+2010-03-17  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/entry.tcl:	 [Bug 2971663]: Make the <Up> and <Down> keys
+	* library/ttk/entry.tcl: explicitly do nothing, since Tk-on-Cocoa will
+	generate (invisible zero-width) characters for them otherwise. The
+	explicitly empty bindings are harmless on other platforms.
+
 2010-03-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/.cvsignore     Ignore .a and .so
+	* unix/.cvsignore:	Ignore .a and .so
 
 2010-03-12  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/rules.vc        Fix [Tcl Bug 2967340]: Static build failure
-	* win/makefile.vc 
-	* win/.cvsignore
+	* win/rules.vc:		Fix [Tcl Bug 2967340]: Static build failure
+	* win/makefile.vc:
+	* win/.cvsignore:
 
 2010-03-12  Donal K. Fellows  <dkf@users.sf.net>
 
