@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.27 2010/01/06 18:37:36 dkf Exp $
+# RCS: @(#) $Id: entry.tcl,v 1.28 2010/03/17 09:27:23 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -215,6 +215,9 @@ bind Entry <Next> {# nothing}
 if {[tk windowingsystem] eq "aqua"} {
     bind Entry <Command-KeyPress> {# nothing}
 }
+# Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
+bind Entry <Down> {# nothing}
+bind Entry <Up> {# nothing}
 
 # On Windows, paste is done using Shift-Insert.  Shift-Insert already
 # generates the <<Paste>> event, so we don't need to do anything here.
