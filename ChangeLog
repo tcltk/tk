@@ -1,3 +1,9 @@
+2010-03-23  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/configure.in, unix/Makefile.in: [Bug 2965133]: Get rid of the
+	spurious NONE and some pointless quotes that were causing problems
+	with building Tk on OSX. Overall bug might not yet be solved.
+
 2010-03-17  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/entry.tcl:	 [Bug 2971663]: Make the <Up> and <Down> keys

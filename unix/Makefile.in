@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.167 2010/02/22 23:38:53 nijtmans Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.168 2010/03/23 10:45:13 dkf Exp $
 
 # Current Tk version;  used in various names.
 
@@ -679,7 +679,7 @@ demo:
 
 # This target can be used to run wish inside either gdb or insight
 gdb: ${WISH_EXE}
-	@echo "set env @LD_LIBRARY_PATH_VAR@=\"`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}\"" > gdb.run
+	@echo "set env @LD_LIBRARY_PATH_VAR@=`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}" > gdb.run
 	@echo "set env TCL_LIBRARY=@TCL_SRC_DIR@/library" >> gdb.run
 	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
 	gdb ./${WISH_EXE} --command=gdb.run
