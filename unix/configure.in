@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.170 2010/02/22 23:38:53 nijtmans Exp $
+# RCS: @(#) $Id: configure.in,v 1.171 2010/03/23 10:45:13 dkf Exp $
 
 AC_INIT([tk],[8.6])
 AC_PREREQ(2.59)
@@ -418,7 +418,9 @@ fi
 #--------------------------------------------------------------------
 
 if test "x${x_libraries}" != "x"; then
+  if test "x${x_libraries}" != "xNONE"; then
     LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${x_libraries}"
+  fi
 fi
 if test "${TCL_LD_SEARCH_FLAGS}" = '-L${LIB_RUNTIME_DIR}'; then
     LIB_RUNTIME_DIR=`echo ${LIB_RUNTIME_DIR} |sed -e 's/:/ -L/g'`
