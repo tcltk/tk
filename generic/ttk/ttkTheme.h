@@ -1,4 +1,4 @@
-/* $Id: ttkTheme.h,v 1.18 2010/01/31 22:50:56 jenglish Exp $
+/* $Id: ttkTheme.h,v 1.19 2010/03/28 21:43:25 jenglish Exp $
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  *
  * Declarations for Tk theme engine.
@@ -420,6 +420,8 @@ typedef struct TtkEnsemble {
 MODULE_SCOPE int Ttk_InvokeEnsemble(	/* Run an ensemble command */
     const Ttk_Ensemble *commands, int cmdIndex,
     void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+
+MODULE_SCOPE int TtkEnumerateHashTable(Tcl_Interp *, Tcl_HashTable *);
 
 /*------------------------------------------------------------------------
  * +++ Stub table declarations.

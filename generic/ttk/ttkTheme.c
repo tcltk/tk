@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.22 2010/02/05 21:33:14 jenglish Exp $
+ * $Id: ttkTheme.c,v 1.23 2010/03/28 21:43:25 jenglish Exp $
  */
 
 #include <stdlib.h>
@@ -1118,7 +1118,7 @@ Ttk_DrawElement(
  */
 
 /*
- * EnumerateHashTable --
+ * TtkEnumerateHashTable --
  * 	Helper routine.  Sets interp's result to the list of all keys
  * 	in the hash table.
  *
@@ -1126,7 +1126,8 @@ Ttk_DrawElement(
  * Side effects: Sets interp's result.
  */
 
-static int EnumerateHashTable(Tcl_Interp *interp, Tcl_HashTable *ht)
+MODULE_SCOPE
+int TtkEnumerateHashTable(Tcl_Interp *interp, Tcl_HashTable *ht)
 {
     Tcl_HashSearch search;
     Tcl_Obj *result = Tcl_NewListObj(0, NULL);
@@ -1436,7 +1437,7 @@ static int StyleThemeNamesCmd(
     ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = clientData;
-    return EnumerateHashTable(interp, &pkgPtr->themeTable);
+    return TtkEnumerateHashTable(interp, &pkgPtr->themeTable);
 }
 
 /* + style theme settings $theme $script
@@ -1516,7 +1517,7 @@ static int StyleElementNamesCmd(
 	Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	return TCL_ERROR;
     }
-    return EnumerateHashTable(interp, &theme->elementTable);
+    return TtkEnumerateHashTable(interp, &theme->elementTable);
 }
 
 /* + style element options $element --
@@ -1661,7 +1662,8 @@ StyleObjCmd(
     return Ttk_InvokeEnsemble(StyleEnsemble, 1, clientData,interp,objc,objv);
 }
 
-MODULE_SCOPE int Ttk_InvokeEnsemble(	/* Run an ensemble command */
+MODULE_SCOPE 
+int Ttk_InvokeEnsemble(	/* Run an ensemble command */
     const Ttk_Ensemble *ensemble, int cmdIndex,
     void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {

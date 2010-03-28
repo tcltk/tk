@@ -1,4 +1,4 @@
-/* $Id: ttkTagSet.c,v 1.4 2008/05/23 20:20:05 jenglish Exp $
+/* $Id: ttkTagSet.c,v 1.5 2010/03/28 21:43:25 jenglish Exp $
  *
  * Tag tables.  3/4-baked, work in progress.
  *
@@ -17,7 +17,8 @@
  */
 struct TtkTag {
     int 	priority;		/* 1=>highest */
-    void	*tagRecord;
+    const char	*tagName;		/* Back-pointer to hash table entry */
+    void	*tagRecord;		/* User data */
 };
 
 struct TtkTagTable {
@@ -32,13 +33,14 @@ struct TtkTagTable {
 /*------------------------------------------------------------------------
  * +++ Tags.
  */
-static Ttk_Tag NewTag(Ttk_TagTable tagTable)
+static Ttk_Tag NewTag(Ttk_TagTable tagTable, const char *tagName)
 {
     Ttk_Tag tag = (Ttk_Tag)ckalloc(sizeof(*tag));
     tag->tagRecord = ckalloc(tagTable->recordSize);
     memset(tag->tagRecord, 0, tagTable->recordSize);
     /* Don't need Tk_InitOptions() here, all defaults should be NULL. */
     tag->priority = ++tagTable->nTags;
+    tag->tagName = tagName;
     return tag;
 }
 
@@ -89,7 +91,8 @@ Ttk_Tag Ttk_GetTag(Ttk_TagTable tagTable, const char *tagName)
 	&tagTable->tags, tagName, &isNew);
 
     if (isNew) {
-	Tcl_SetHashValue(entryPtr, NewTag(tagTable));
+	tagName = Tcl_GetHashKey(&tagTable->tags, entryPtr);
+	Tcl_SetHashValue(entryPtr, NewTag(tagTable,tagName));
     }
     return Tcl_GetHashValue(entryPtr);
 }
@@ -139,6 +142,21 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
     return tagset;
 }
 
+/* Ttk_NewTagSetObj --
+ * 	Construct a fresh Tcl_Obj * from a tag set.
+ */
+Tcl_Obj *Ttk_NewTagSetObj(Ttk_TagSet tagset)
+{
+    Tcl_Obj *result = Tcl_NewListObj(0,0);
+    int i;
+
+    for (i = 0; i < tagset->nTags; ++i) {
+	Tcl_ListObjAppendElement(
+	    NULL, result, Tcl_NewStringObj(tagset->tags[i]->tagName, -1));
+    }
+    return result;
+}
+
 void Ttk_FreeTagSet(Ttk_TagSet tagset)
 {
     ckfree((ClientData)tagset->tags);
@@ -158,9 +176,54 @@ int Ttk_TagSetContains(Ttk_TagSet tagset, Ttk_Tag tag)
     return 0;
 }
 
+/* Ttk_TagSetAdd -- add a tag to a tag set.
+ *
+ * Returns: 0 if tagset already contained tag,
+ * 1 if tagset was modified.
+ */
+int Ttk_TagSetAdd(Ttk_TagSet tagset, Ttk_Tag tag)
+{
+    int i;
+    for (i = 0; i < tagset->nTags; ++i) {
+	if (tagset->tags[i] == tag) {
+	    return 0;
+	}
+    }
+    tagset->tags = (void*)ckrealloc((void*)tagset->tags, 
+	    (tagset->nTags+1)*sizeof(tagset->tags[0]));
+    tagset->tags[tagset->nTags++] = tag;
+    return 1;
+}
+
+/* Ttk_TagSetRemove -- remove a tag from a tag set.
+ *
+ * Returns: 0 if tagset did not contain tag,
+ * 1 if tagset was modified.
+ */
+int Ttk_TagSetRemove(Ttk_TagSet tagset, Ttk_Tag tag)
+{
+    int i = 0, j = 0;
+    while (i < tagset->nTags) {
+	if ((tagset->tags[j] = tagset->tags[i]) != tag) {
+	    ++j;
+	}
+	++i;
+    }
+    tagset->nTags = j;
+    return j != i;
+}
+
 /*------------------------------------------------------------------------
  * +++ Utilities for widget commands.
  */
+
+/* Ttk_EnumerateTags -- implements [$w tag names]
+ */
+int Ttk_EnumerateTags(
+    Tcl_Interp *interp, Ttk_TagTable tagTable)
+{
+    return TtkEnumerateHashTable(interp, &tagTable->tags);
+}
 
 /* Ttk_EnumerateTagOptions -- implements [$w tag configure $tag]
  */
@@ -171,6 +234,8 @@ int Ttk_EnumerateTagOptions(
 	tagTable->optionSpecs, tagTable->optionTable, tagTable->tkwin);
 }
 
+/* Ttk_TagOptionValue -- implements [$w tag configure $tag -option]
+ */
 Tcl_Obj *Ttk_TagOptionValue(
     Tcl_Interp *interp,
     Ttk_TagTable tagTable,
