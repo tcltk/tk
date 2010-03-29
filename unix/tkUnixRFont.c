@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.33 2010/01/05 08:49:50 dkf Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.34 2010/03/29 09:16:47 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -87,8 +87,17 @@ GetFont(
 	FcPattern *pat = FcFontRenderPrepare(0, fontPtr->pattern,
 		fontPtr->faces[i].source);
 	double s = sin(angle*PI/180.0), c = cos(angle*PI/180.0);
-	FcMatrix mat = {c, -s, s, c};
+	FcMatrix mat;
 	XftFont *ftFont;
+
+	/*
+	 * Initialize the matrix manually so this can compile with HP-UX cc
+	 * (which does not allow non-constant structure initializers). [Bug
+	 * 2978410]
+	 */
+
+	mat.xx = mat.yy = c;
+	mat.xy = -(mat.yx = s);
 
 	if (angle != 0.0) {
 	    FcPatternAddMatrix(pat, FC_MATRIX, &mat);
