@@ -1,9 +1,14 @@
+2010-03-29  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixRFont.c (GetFont): [Bug 2978410]: Do not use non-constant
+	initializers for structures, since HP-UX cc doesn't like it.
+
 2010-03-28  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTagSet.c, generic/ttk/ttkTheme.c,
-	generic/ttk/ttkTheme.h, generic/ttk/ttkTreeview.c,
-	generic/ttk/ttkWidget.h, doc/ttk_treeview.n,
-	tests/ttk/treetags.test: ttk::treeview widget: add 'tag names',
+	* generic/ttk/ttkTheme.h, generic/ttk/ttkTreeview.c,
+	* generic/ttk/ttkWidget.h, doc/ttk_treeview.n,
+	* tests/ttk/treetags.test: ttk::treeview widget: add 'tag names',
 	'tag add', and 'tag remove' methods.
 
 2010-03-23  Donal K. Fellows  <dkf@users.sf.net>
