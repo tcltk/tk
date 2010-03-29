@@ -1,3 +1,9 @@
+2010-03-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4             Only test for -visibility=hidden with gcc
+	                          (Second remark in [Bug 2976508])
+	* unix/configure          regen
+
 2010-03-29  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixRFont.c (GetFont): [Bug 2978410]: Do not use non-constant
