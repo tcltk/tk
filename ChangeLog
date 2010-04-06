@@ -1,3 +1,11 @@
+2010-04-06  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tcl.m4          Sync with Tcl version
+	* unix/tcl.m4
+	* win/configure       (regenerate with autoconf-2.59)
+	* unix/configure      [Bug 2982540] configure and install* script files
+	                      should always have LF
+
 2010-03-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4             Only test for -visibility=hidden with gcc

@@ -2943,7 +2943,7 @@ if test "${enable_threads+set}" = set; then
   enableval="$enable_threads"
   tcl_ok=$enableval
 else
-  tcl_ok=no
+  tcl_ok=yes
 fi;
 
     if test "$tcl_ok" = "yes"; then
@@ -2962,8 +2962,8 @@ _ACEOF
 
     else
 	TCL_THREADS=0
-	echo "$as_me:$LINENO: result: no (default)" >&5
-echo "${ECHO_T}no (default)" >&6
+	echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
     fi
 
 
