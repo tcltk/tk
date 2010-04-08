@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.13 2010/01/22 14:17:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.14 2010/04/08 14:06:20 nijtmans Exp $
  */
 
 #ifndef _WINPORT
@@ -22,20 +22,16 @@
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 
-#include <malloc.h>
+#include <wchar.h>
+#include <io.h>
+#include <stdlib.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <malloc.h>
 #include <ctype.h>
 #include <math.h>
-#include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include <fcntl.h>
-#ifdef __CYGWIN__
-#   include <unistd.h>
-#   include <wchar.h>
-#else
-#   include <io.h>
-#endif
 
 /*
  * Need to block out this include for building extensions with MetroWerks
@@ -47,28 +43,30 @@
 #endif
 
 #include <time.h>
-#ifdef __CYGWIN__
-#    define _T(x) L##x
-#else
-#    include <tchar.h>
-#endif
 
 #ifdef _MSC_VER
 #    define hypot _hypot
 #endif /* _MSC_VER */
 
-#ifdef __CYGWIN__
-#   ifdef _UNICODE
-#       define _tcsrchr wcsrchr
-#   else
-#       define _tcsrchr strrchr
-
+/*
+ *  Pull in the typedef of TCHAR for windows.
+ */
+#if !defined(_TCHAR_DEFINED)
+#   include <tchar.h>
+#   ifndef _TCHAR_DEFINED
+	/* Borland seems to forget to set this. */
+	typedef _TCHAR TCHAR;
+#	define _TCHAR_DEFINED
 #   endif
-#else
-#    define wcscasecmp _wcsicmp
-#    define strncasecmp strnicmp
-#    define strcasecmp stricmp
 #endif
+
+#ifdef __CYGWIN__
+#define _vsnprintf vsnprintf
+#define _wcsicmp wcscasecmp
+#endif
+
+#define strncasecmp strnicmp
+#define strcasecmp stricmp
 
 #define NBBY 8
 
