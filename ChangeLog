@@ -1,3 +1,9 @@
+2010-04-08  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinPort.h     Add <wchar.h> to tkWinPort.h, and
+	* win/tkWinSend.c     remove some earlier CYGWIN-related
+	* win/tkWinSendCom.c  hacks which are no longer necessary.
+
 2010-04-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tcl.m4          Sync with Tcl version
