@@ -1,22 +1,27 @@
+2010-04-09  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgPhoto.c (ImgPhotoCmd): [Bug 2983824]: Use the file
+	extension to guess the output format to use if one isn't specified.
+
 2010-04-08  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinPort.h     Add <wchar.h> to tkWinPort.h, and
-	* win/tkWinSend.c     remove some earlier CYGWIN-related
-	* win/tkWinSendCom.c  hacks which are no longer necessary.
+	* win/tkWinPort.h:    Add <wchar.h> to tkWinPort.h, and
+	* win/tkWinSend.c:    remove some earlier CYGWIN-related
+	* win/tkWinSendCom.c: hacks which are no longer necessary.
 
 2010-04-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tcl.m4          Sync with Tcl version
 	* unix/tcl.m4
 	* win/configure       (regenerate with autoconf-2.59)
-	* unix/configure      [Bug 2982540] configure and install* script files
-	                      should always have LF
+	* unix/configure      [Bug 2982540]: configure and install* script
+			      files should always have LF
 
 2010-03-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tcl.m4             Only test for -visibility=hidden with gcc
+	* unix/tcl.m4:            Only test for -visibility=hidden with gcc
 	                          (Second remark in [Bug 2976508])
-	* unix/configure          regen
+	* unix/configure:         regen
 
 2010-03-29  Donal K. Fellows  <dkf@users.sf.net>
 
