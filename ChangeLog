@@ -1,3 +1,7 @@
+2010-04-09  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/photo.n:    Follow-up to [Bug 2983824]: update doc.
+
 2010-04-09  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkImgPhoto.c (ImgPhotoCmd): [Bug 2983824]: Use the file
