@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.96 2010/02/17 19:21:16 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.97 2010/04/09 13:15:31 dkf Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -198,6 +198,7 @@ static int		MatchStringFormat(Tcl_Interp *interp, Tcl_Obj *data,
 			    Tcl_Obj *formatString,
 			    Tk_PhotoImageFormat **imageFormatPtr,
 			    int *widthPtr, int *heightPtr, int *oldformat);
+static const char *	GetExtension(const char *path);
 
 /*
  *----------------------------------------------------------------------
@@ -1237,7 +1238,9 @@ ImgPhotoCmd(
 
     case PHOTO_WRITE: {
 	char *data;
+	const char *fmtString;
 	Tcl_Obj *format;
+	int usedExt;
 
 	/*
 	 * Prevent file system access in safe interpreters.
@@ -1276,12 +1279,21 @@ ImgPhotoCmd(
 	}
 
 	/*
-	 * Fill in default values for unspecified parameters.
+	 * Fill in default values for unspecified parameters. Note that a
+	 * missing -format flag results in us having a guess from the file
+	 * extension. [Bug 2983824]
 	 */
 
 	if (!(options.options & OPT_FROM) || (options.fromX2 < 0)) {
 	    options.fromX2 = masterPtr->width;
 	    options.fromY2 = masterPtr->height;
+	}
+	if (options.format == NULL) {
+	    fmtString = GetExtension(Tcl_GetString(options.name));
+	    usedExt = (fmtString != NULL);
+	} else {
+	    fmtString = Tcl_GetString(options.format);
+	    usedExt = 0;
 	}
 
 	/*
@@ -1290,11 +1302,12 @@ ImgPhotoCmd(
 	 */
 
 	matched = 0;
+    redoFormatLookup:
 	for (imageFormat = tsdPtr->formatList; imageFormat != NULL;
 		imageFormat = imageFormat->nextPtr) {
-	    if ((options.format == NULL)
-		    || (strncasecmp(Tcl_GetString(options.format),
-		    imageFormat->name, strlen(imageFormat->name)) == 0)) {
+	    if ((fmtString == NULL)
+		    || (strncasecmp(fmtString, imageFormat->name,
+			    strlen(imageFormat->name)) == 0)) {
 		matched = 1;
 		if (imageFormat->fileWriteProc != NULL) {
 		    break;
@@ -1305,9 +1318,9 @@ ImgPhotoCmd(
 	    oldformat = 1;
 	    for (imageFormat = tsdPtr->oldFormatList; imageFormat != NULL;
 		    imageFormat = imageFormat->nextPtr) {
-		if ((options.format == NULL)
-			|| (strncasecmp(Tcl_GetString(options.format),
-			imageFormat->name, strlen(imageFormat->name)) == 0)) {
+		if ((fmtString == NULL)
+			|| (strncasecmp(fmtString, imageFormat->name,
+				strlen(imageFormat->name)) == 0)) {
 		    matched = 1;
 		    if (imageFormat->fileWriteProc != NULL) {
 			break;
@@ -1315,18 +1328,31 @@ ImgPhotoCmd(
 		}
 	    }
 	}
+	if (usedExt && !matched) {
+	    /*
+	     * If we didn't find one and we're using file extensions as the
+	     * basis for the guessing, go back and look again without
+	     * prejudice. Supports old broken code.
+	     */
+
+	    usedExt = 0;
+	    fmtString = NULL;
+	    goto redoFormatLookup;
+	}
 	if (imageFormat == NULL) {
-	    if (options.format == NULL) {
+	    if (fmtString == NULL) {
 		Tcl_AppendResult(interp, "no available image file format ",
 			"has file writing capability", NULL);
 	    } else if (!matched) {
 		Tcl_AppendResult(interp, "image file format \"",
-			Tcl_GetString(options.format),
-			"\" is unknown", NULL);
+			fmtString, "\" is unknown", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_FORMAT",
+			fmtString, NULL);
 	    } else {
 		Tcl_AppendResult(interp, "image file format \"",
-			Tcl_GetString(options.format),
-			"\" has no file writing capability", NULL);
+			fmtString, "\" has no file writing capability", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_FORMAT",
+			fmtString, NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -1354,6 +1380,36 @@ ImgPhotoCmd(
     }
     Tcl_Panic("unexpected fallthrough");
     return TCL_ERROR; /* NOT REACHED */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetExtension --
+ *
+ *	Return the extension part of a path, or NULL if there is no extension.
+ *	The returned string will be a substring of the argument string, so
+ *	should not be ckfree()d directly. No side effects.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static const char *
+GetExtension(
+    const char *path)
+{
+    char c;
+    const char *extension = NULL;
+
+    for (; (c=*path++) != '\0' ;) {
+	if (c == '.') {
+	    extension = path;
+	}
+    }
+    if (extension != NULL && extension[0] == '\0') {
+	extension = NULL;
+    }
+    return extension;
 }
 
 /*
@@ -1534,7 +1590,7 @@ ParseSubcommandOptions(
 		} else {
 		    break;
 		}
-		++argIndex;
+		argIndex++;
 	    }
 
 	    if (numValues == 0) {
@@ -3658,12 +3714,12 @@ ImgGetPhoto(
 	blockPtr->pixelSize = newPixelSize;
 	blockPtr->pitch = newPixelSize * blockPtr->width;
 	blockPtr->offset[0] = 0;
-	if (newPixelSize>2) {
-	    blockPtr->offset[1]= 1;
-	    blockPtr->offset[2]= 2;
+	if (newPixelSize > 2) {
+	    blockPtr->offset[1] = 1;
+	    blockPtr->offset[2] = 2;
 	} else {
-	    blockPtr->offset[1]= 0;
-	    blockPtr->offset[2]= 0;
+	    blockPtr->offset[1] = 0;
+	    blockPtr->offset[2] = 0;
 	}
 	return data;
     }
