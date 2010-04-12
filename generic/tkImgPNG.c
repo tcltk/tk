@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkImgPNG.c,v 1.5 2010/02/05 22:45:03 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgPNG.c,v 1.6 2010/04/12 08:40:15 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -256,6 +256,8 @@ static inline int	WriteChunk(Tcl_Interp *interp, PNGImage *pngPtr,
 static int		WriteData(Tcl_Interp *interp, PNGImage *pngPtr,
 			    const unsigned char *srcPtr, int srcSz,
 			    unsigned long *crcPtr);
+static int		WriteExtraChunks(Tcl_Interp *interp,
+			    PNGImage *pngPtr);
 static int		WriteIHDR(Tcl_Interp *interp, PNGImage *pngPtr,
 			    Tk_PhotoImageBlock *blockPtr);
 static int		WriteIDAT(Tcl_Interp *interp, PNGImage *pngPtr,
@@ -2127,6 +2129,22 @@ ReadIDAT(
 	 */
     }
 
+    /*
+     * Ensure that when we've got to the end of the compressed data, we've
+     * also got to the end of the compressed stream. This sanity check is
+     * enforced by most PNG readers.
+     */
+
+    if (!Tcl_ZlibStreamEof(pngPtr->stream)) {
+	Tcl_AppendResult(interp, "unfinalized data stream in PNG data", NULL);
+	return TCL_ERROR;
+    }
+    if (chunkSz != 0) {
+	Tcl_AppendResult(interp,
+		"compressed data after stream finalize in PNG data", NULL);
+	return TCL_ERROR;
+    }
+
     if (CheckCRC(interp, pngPtr, crc) == TCL_ERROR) {
 	return TCL_ERROR;
     }
@@ -3099,11 +3117,13 @@ WriteIDAT(
 
 	/*
 	 * Compress the line of pixels into the destination. If this is the
-	 * last line, flush at the same time.
+	 * last line, finalize the compressor at the same time. Note that this
+	 * can't be just a flush; that leads to a file that some PNG readers
+	 * choke on. [Bug 2984787]
 	 */
 
 	if (rowNum + 1 == blockPtr->height) {
-	    flush = TCL_ZLIB_FLUSH;
+	    flush = TCL_ZLIB_FINALIZE;
 	}
 	if (Tcl_ZlibStreamPut(pngPtr->stream, pngPtr->thisLineObj,
 		flush) != TCL_OK) {
@@ -3133,6 +3153,64 @@ WriteIDAT(
     result = WriteChunk(interp, pngPtr, CHUNK_IDAT, outputBytes, outputSize);
     Tcl_DecrRefCount(outputObj);
     return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WriteExtraChunks --
+ *
+ *	Writes an sBIT and a tEXt chunks to the PNG image, describing a bunch
+ *	of not very important metadata that many readers seem to need anyway.
+ *
+ * Results:
+ *	TCL_OK, or TCL_ERROR if the write fails.
+ *
+ * Side effects:
+ *	None
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WriteExtraChunks(
+    Tcl_Interp *interp,
+    PNGImage *pngPtr)
+{
+    static const unsigned char sBIT_contents[] = {
+	8, 8, 8, 8
+    };
+    Tcl_DString buf;
+
+    /*
+     * Each byte of each channel is always significant; we always write RGBA
+     * images with 8 bits per channel as that is what the photo image's basic
+     * data model is.
+     */
+
+    if (WriteChunk(interp, pngPtr, CHUNK_sBIT, sBIT_contents, 4) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    /*
+     * Say that it is Tk that made the PNG. Note that we *need* the NUL at the
+     * end of "Software" to be transferred; do *not* change the length
+     * parameter to -1 there!
+     */
+
+    Tcl_DStringInit(&buf);
+    Tcl_DStringAppend(&buf, "Software", 9);
+    Tcl_DStringAppend(&buf, "Tk Toolkit v", -1);
+    Tcl_DStringAppend(&buf, TK_PATCH_LEVEL, -1);
+    if (WriteChunk(interp, pngPtr, CHUNK_tEXt,
+	    (unsigned char *) Tcl_DStringValue(&buf),
+	    Tcl_DStringLength(&buf)) != TCL_OK) {
+	Tcl_DStringFree(&buf);
+	return TCL_ERROR;
+    }
+    Tcl_DStringFree(&buf);
+
+    return TCL_OK;
 }
 
 /*
@@ -3231,6 +3309,15 @@ EncodePNG(
      */
 
     if (WriteIHDR(interp, pngPtr, blockPtr) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+
+    /*
+     * Write out the extra chunks containing metadata that is of interest to
+     * other programs more than us.
+     */
+
+    if (WriteExtraChunks(interp, pngPtr) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 

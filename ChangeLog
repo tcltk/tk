@@ -1,3 +1,14 @@
+2010-04-12  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgPNG.c (WriteIDAT): [Bug 2984787]: Use the correct
+	flushing semantics when handling the last data from the image. Without
+	this, many PNG readers (notably including Firefox) refuse to show the
+	image and instead complain about errors.
+	(ReadIDAT): Added sanity checks to ensure that when we've got bad data
+	of the sorts of forms we were previously generating, we detect it and
+	error out rather than silently failing.
+	(WriteExtraChunks): New function to write in some basic metadata.
+
 2010-04-09  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/photo.n:    Follow-up to [Bug 2983824]: update doc.
@@ -15,10 +26,10 @@
 
 2010-04-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tcl.m4          Sync with Tcl version
-	* unix/tcl.m4
-	* win/configure       (regenerate with autoconf-2.59)
-	* unix/configure      [Bug 2982540]: configure and install* script
+	* win/tcl.m4:         Sync with Tcl version
+	* unix/tcl.m4:
+	* win/configure:      (regenerate with autoconf-2.59)
+	* unix/configure:     [Bug 2982540]: configure and install* script
 			      files should always have LF
 
 2010-03-29  Jan Nijtmans  <nijtmans@users.sf.net>
