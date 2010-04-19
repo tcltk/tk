@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.5 2010/01/05 22:36:59 patthoyts Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.6 2010/04/19 11:22:32 nijtmans Exp $
  *
  */
 
@@ -724,7 +724,7 @@ GetFileNameW(
     }
 
     if (MakeFilter(interp, filterObj, &utfFilterString, initialTypeObj,
-		    &filterIndex) != TCL_OK) {
+	    &filterIndex) != TCL_OK) {
 	goto end;
     }
     filter = Tcl_DStringValue(&utfFilterString);
@@ -748,11 +748,9 @@ GetFileNameW(
     } else {
 	ofn.Flags |= OFN_OVERWRITEPROMPT;
     }
-
     if (tsdPtr->debugFlag != 0) {
 	ofnData.interp = interp;
     }
-
     if (multi != 0) {
 	ofn.Flags |= OFN_ALLOWMULTISELECT;
 
@@ -925,8 +923,8 @@ GetFileNameW(
 		    &listObjc, &listObjv) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else if (Tcl_ListObjGetElements(interp,
-		    listObjv[ofn.nFilterIndex - 1],
-		    &count, &typeInfo) != TCL_OK) {
+		    listObjv[ofn.nFilterIndex - 1], &count,
+		    &typeInfo) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else if (Tcl_ObjSetVar2(interp, typeVariableObj, NULL,
 		    typeInfo[0], TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
@@ -1000,7 +998,7 @@ OFNHookProcW(
     } else if (uMsg == WM_NOTIFY) {
 	OFNOTIFYW *notifyPtr = (OFNOTIFYW *) lParam;
 
-	if (notifyPtr->hdr.code == CDN_SELCHANGE) {
+	if (notifyPtr->hdr.code == CDN_FILEOK) {
 	    int dirsize, selsize;
 	    WCHAR *buffer;
 	    int buffersize;
@@ -1058,7 +1056,7 @@ OFNHookProcW(
 		} else {
 		    buffer[selsize] = '\0';	/* Second NULL terminator. */
 
-		    /* 
+		    /*
 		     * Replace directory terminating NULL with a backslash.
 		     */
 
@@ -1181,8 +1179,8 @@ GetFileNameA(
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings,
-		"option", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option", 0,
+		&index) != TCL_OK) {
 	    goto end;
 	}
 
@@ -1257,7 +1255,7 @@ GetFileNameA(
     }
 
     if (MakeFilter(interp, filterObj, &utfFilterString, initialTypeObj,
-		    &filterIndex) != TCL_OK) {
+	    &filterIndex) != TCL_OK) {
 	goto end;
     }
     filter = Tcl_DStringValue(&utfFilterString);
@@ -1462,12 +1460,12 @@ GetFileNameA(
 	    Tcl_Obj **listObjv = NULL;
 	    Tcl_Obj **typeInfo = NULL;
 
-	    if (Tcl_ListObjGetElements(interp, filterObj,
-		    &listObjc, &listObjv) != TCL_OK) {
+	    if (Tcl_ListObjGetElements(interp, filterObj, &listObjc,
+		    &listObjv) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else if (Tcl_ListObjGetElements(interp,
-		    listObjv[ofn.nFilterIndex - 1],
-		    &count, &typeInfo) != TCL_OK) {
+		    listObjv[ofn.nFilterIndex - 1], &count,
+		    &typeInfo) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else if (Tcl_ObjSetVar2(interp, typeVariableObj, NULL,
 		    typeInfo[0], TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
@@ -1541,7 +1539,7 @@ OFNHookProcA(
     } else if (uMsg == WM_NOTIFY) {
 	OFNOTIFY *notifyPtr = (OFNOTIFY *) lParam;
 
-	if (notifyPtr->hdr.code == CDN_SELCHANGE) {
+	if (notifyPtr->hdr.code == CDN_FILEOK) {
 	    int dirsize, selsize;
 	    char *buffer;
 	    int buffersize;
@@ -1760,8 +1758,8 @@ MakeFilter(
 			clausePtr=clausePtr->next) {
 		    GlobPattern *globPtr;
 
-		    for (globPtr=clausePtr->patterns; globPtr;
-			    globPtr=globPtr->next) {
+		    for (globPtr = clausePtr->patterns; globPtr;
+			    globPtr = globPtr->next) {
 			strcpy(p, sep);
 			p += strlen(sep);
 			strcpy(p, globPtr->pattern);
@@ -2004,7 +2002,9 @@ Tk_ChooseDirectoryObjCmd(
     objPtr = Tcl_GetVar2Ex(interp, "::tk::winChooseDirFlags", NULL,
 	    TCL_GLOBAL_ONLY);
     if (objPtr != NULL) {
-	Tcl_GetIntFromObj(NULL, objPtr, &(bInfo.ulFlags));
+	int flags;
+	Tcl_GetIntFromObj(NULL, objPtr, &flags);
+	bInfo.ulFlags = flags;
     }
 
     /*
@@ -2016,7 +2016,7 @@ Tk_ChooseDirectoryObjCmd(
     /*
      * Display dialog in background and process result. We look to give the
      * user a chance to change their mind on an invalid folder if mustexist is
-     * 0;
+     * 0.
      */
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
@@ -2447,6 +2447,7 @@ MsgBoxCBTProc(
 
 	if (WC_DIALOG == lpcbtcreate->lpcs->lpszClass) {
 	    HWND hwnd = (HWND) wParam;
+
 	    SendMessage(hwnd, WM_SETICON, ICON_SMALL,
 		    (LPARAM) tsdPtr->hSmallIcon);
 	    SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM) tsdPtr->hBigIcon);
@@ -2460,6 +2461,19 @@ MsgBoxCBTProc(
     return CallNextHookEx(tsdPtr->hMsgBoxHook, nCode, wParam, lParam);
 }
 
+/*
+ * ----------------------------------------------------------------------
+ *
+ * SetTkDialog --
+ *
+ *	Records the HWND for a native dialog in the 'tk_dialog' variable so
+ *	that the test-suite can operate on the correct dialog window. Use of
+ *	this is enabled when a test program calls TkWinDialogDebug by calling
+ *	the test command 'tkwinevent debug 1'.
+ *
+ * ----------------------------------------------------------------------
+ */
+
 static void
 SetTkDialog(
     ClientData clientData)
