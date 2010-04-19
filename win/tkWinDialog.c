@@ -8,10 +8,12 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.6 2010/04/19 11:22:32 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.7 2010/04/19 13:58:33 nijtmans Exp $
  *
  */
 
+#define WINVER        0x0500   /* Requires Windows 2K definitions */
+#define _WIN32_WINNT  0x0500
 #include "tkWinInt.h"
 #include "tkFileFilter.h"
 
@@ -733,7 +735,11 @@ GetFileNameW(
     hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
 
     ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
-    ofn.lStructSize = sizeof(OPENFILENAMEW);
+    if (LOBYTE(LOWORD(GetVersion())) < 5) {
+	ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400;
+    } else {
+	ofn.lStructSize = sizeof(OPENFILENAMEW);
+    }
     ofn.hwndOwner = hWnd;
     ofn.hInstance = TkWinGetHInstance(ofn.hwndOwner);
     ofn.lpstrFile = (WCHAR *) file;
@@ -1264,7 +1270,11 @@ GetFileNameA(
     hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
 
     ZeroMemory(&ofn, sizeof(OPENFILENAMEA));
-    ofn.lStructSize = sizeof(ofn);
+    if (LOBYTE(LOWORD(GetVersion())) < 5) {
+	ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400;
+    } else {
+	ofn.lStructSize = sizeof(ofn);
+    }
     ofn.hwndOwner = hWnd;
     ofn.hInstance = TkWinGetHInstance(ofn.hwndOwner);
     ofn.lpstrFilter = NULL;
