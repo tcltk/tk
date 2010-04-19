@@ -1,9 +1,12 @@
+2010-04-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c   Fix [Bug 2987995]: Tk_GetOpenFile returns garbage
+	under described circumstances
+
 2010-04-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinPort.h     Fix [Patch 2986105]: conditionally defining
 	strcasecmp/strncasecmp
-	* win/tkWinDialog.c   Fix [Bug 2987995]: Tk_GetOpenFile returns garbage
-	under described circumstances
 
 2010-04-12  Donal K. Fellows  <dkf@users.sf.net>
 
