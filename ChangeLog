@@ -3,7 +3,7 @@
 	* win/tkWinDialog.c   Fix [Bug 2987995]: Tk_GetOpenFile returns garbage
 	under described circumstances
 	* win/tkWinDialog.c   [Patch 2898255]: Filenames limit with Tk_GetFileName()
-	                      Assure modern style dialogs where availab.e
+	Assure modern style dialogs where available
 
 2010-04-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
