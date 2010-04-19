@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.70 2010/02/05 22:45:03 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.71 2010/04/19 11:05:33 nijtmans Exp $
  *
  */
 
@@ -592,7 +592,7 @@ GetFileNameW(
     const char *extension = NULL, *filter = NULL, *title = NULL;
     Tk_Window tkwin = clientData;
     HWND hWnd;
-    Tcl_Obj *filterObj=NULL, *initialTypeObj=NULL, *typeVariableObj=NULL;
+    Tcl_Obj *filterObj = NULL, *initialTypeObj = NULL, *typeVariableObj = NULL;
     Tcl_DString utfFilterString, utfDirString, ds;
     Tcl_DString extString, filterString, dirString, titleString;
     Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
@@ -986,7 +986,7 @@ OFNHookProcW(
     } else if (uMsg == WM_NOTIFY) {
 	OFNOTIFYW *notifyPtr = (OFNOTIFYW *) lParam;
 
-	if (notifyPtr->hdr.code == CDN_SELCHANGE) {
+	if (notifyPtr->hdr.code == CDN_FILEOK) {
 	    int dirsize, selsize;
 	    WCHAR *buffer;
 	    int buffersize;
@@ -1044,7 +1044,7 @@ OFNHookProcW(
 		} else {
 		    buffer[selsize] = '\0';	/* Second NULL terminator. */
 
-		    /* 
+		    /*
 		     * Replace directory terminating NULL with a backslash.
 		     */
 
@@ -1517,7 +1517,7 @@ OFNHookProcA(
     } else if (uMsg == WM_NOTIFY) {
 	OFNOTIFY *notifyPtr = (OFNOTIFY *) lParam;
 
-	if (notifyPtr->hdr.code == CDN_SELCHANGE) {
+	if (notifyPtr->hdr.code == CDN_FILEOK) {
 	    int dirsize, selsize;
 	    char *buffer;
 	    int buffersize;
