@@ -10,17 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.15 2010/04/13 13:46:01 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.16 2010/04/20 08:17:33 nijtmans Exp $
  */
 
 #ifndef _WINPORT
 #define _WINPORT
-
-#include <X11/Xlib.h>
-#include <X11/cursorfont.h>
-#include <X11/keysym.h>
-#include <X11/Xatom.h>
-#include <X11/Xutil.h>
 
 /*
  *---------------------------------------------------------------------------
@@ -68,6 +62,12 @@
 #	define _TCHAR_DEFINED
 #   endif
 #endif
+
+#include <X11/Xlib.h>
+#include <X11/cursorfont.h>
+#include <X11/keysym.h>
+#include <X11/Xatom.h>
+#include <X11/Xutil.h>
 
 #ifdef __CYGWIN__
 #   ifndef _vsnprintf
