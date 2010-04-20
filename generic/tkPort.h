@@ -10,22 +10,19 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkPort.h,v 1.6 2004/04/24 06:00:18 das Exp $
+ * RCS: @(#) $Id: tkPort.h,v 1.7 2010/04/20 08:17:20 nijtmans Exp $
  */
 
 #ifndef _TKPORT
 #define _TKPORT
 
-#ifndef _TK
-#include "tk.h"
-#endif
-#ifndef _TCL
-#include "tcl.h"
-#endif
-
-#if defined(__WIN32__) || defined(_WIN32)
+#if defined(_WIN32)
 #   include "tkWinPort.h"
-#else
+#endif
+#ifndef _TK
+#   include "tk.h"
+#endif
+#if !defined(_WIN32)
 #   if defined(MAC_OSX_TK)
 #	include "tkMacOSXPort.h"
 #   else

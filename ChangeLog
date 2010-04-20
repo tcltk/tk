@@ -1,3 +1,11 @@
+2010-04-20  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkPort.h         Make sure that tkWinPort.h is always included
+	* generic/tkIntXlibDecls.h before tcl.h, otherwise the fallback for TCHAR
+	* win/tkWinPort.h          might go off before the inclusion of <tchar.h>
+	* compat/stdlib.h          Include <tcl.h> only when not already done.
+	* compat/unistd.h
+
 2010-04-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c   Fix [Bug 2987995]: Tk_GetOpenFile returns garbage
