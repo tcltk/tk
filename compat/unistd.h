@@ -10,7 +10,7 @@
  * no representations about the suitability of this software for any purpose.
  * It is provided "as is" without express or implied warranty.
  *
- * RCS: @(#) $Id: unistd.h,v 1.3 2008/05/02 10:28:18 dkf Exp $
+ * RCS: @(#) $Id: unistd.h,v 1.4 2010/04/20 08:17:26 nijtmans Exp $
  */
 
 #ifndef _UNISTD
@@ -18,7 +18,7 @@
 
 #include <sys/types.h>
 #ifndef _TCL
-#   include "tcl.h"
+#   include <tcl.h>
 #endif
 
 #ifndef NULL
