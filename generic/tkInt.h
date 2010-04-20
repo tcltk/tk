@@ -11,18 +11,12 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.120 2010/01/22 14:17:53 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.121 2010/04/20 15:14:29 nijtmans Exp $
  */
 
 #ifndef _TKINT
 #define _TKINT
 
-#ifndef _TK
-#include "tk.h"
-#endif
-#ifndef _TCL
-#include "tcl.h"
-#endif
 #ifndef _TKPORT
 #include "tkPort.h"
 #endif
