@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.72 2010/04/19 13:49:24 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.73 2010/04/20 19:57:46 nijtmans Exp $
  *
  */
 
@@ -50,6 +50,10 @@
 #define BFFM_VALIDATEFAILED 3
 #endif
 #endif /* BFFM_VALIDATEFAILED */
+
+#ifndef OPENFILENAME_SIZE_VERSION_400
+#define OPENFILENAME_SIZE_VERSION_400 76
+#endif
 
 /*
  * The following structure is used by the new Tk_ChooseDirectoryObjCmd to pass
