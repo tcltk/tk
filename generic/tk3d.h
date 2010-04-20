@@ -8,13 +8,13 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk3d.h,v 1.8 2008/10/09 09:42:50 dkf Exp $
+ * RCS: @(#) $Id: tk3d.h,v 1.9 2010/04/20 15:14:29 nijtmans Exp $
  */
 
 #ifndef _TK3D
 #define _TK3D
 
-#include <tkInt.h>
+#include "tkInt.h"
 
 #ifdef BUILD_tk
 # undef TCL_STORAGE_CLASS
