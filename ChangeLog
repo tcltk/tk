@@ -5,6 +5,11 @@
 	* win/tkWinPort.h          might go off before the inclusion of <tchar.h>
 	* compat/stdlib.h          Include <tcl.h> only when not already done.
 	* compat/unistd.h
+	* generic/tkInt.h          tkPort.h already includes tk.h, which includes tcl.h
+	* generic/tk3d.h           Always use #include "tkInt.h", not <tkInt.h>
+	* generic/tkColor.h
+	* xlib/xcolors.c
+	* xlib/xgc.c
 
 2010-04-19  Jan Nijtmans  <nijtmans@users.sf.net>
 

@@ -9,10 +9,10 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: xcolors.c,v 1.8 2008/10/17 23:18:38 nijtmans Exp $
+ * RCS: @(#) $Id: xcolors.c,v 1.9 2010/04/20 15:14:30 nijtmans Exp $
  */
 
-#include <tkInt.h>
+#include "tkInt.h"
 
 /*
  * This value will be set to the number of colors in the color table
