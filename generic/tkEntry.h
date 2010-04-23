@@ -16,11 +16,6 @@
 #include "tkInt.h"
 #endif
 
-#ifdef BUILD_tk
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLEXPORT
-#endif
-
 enum EntryType {
     TK_ENTRY, TK_SPINBOX
 };
@@ -299,8 +294,5 @@ enum selelement {
 MODULE_SCOPE int	TkpDrawEntryBorderAndFocus(Entry *entryPtr,
 			    Drawable d, int isSpinbox);
 MODULE_SCOPE int	TkpDrawSpinboxButtons(Spinbox *sbPtr, Drawable d);
-
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKENTRY */

@@ -1,3 +1,11 @@
+2010-04-23  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkImgGIF.c  Formatting
+	* generic/tkListbox.c fix typo;
+	* generic/tkTrig.c    fix typo;
+	* generic/tkInt.h     fix typo; remove not existing tkDisplayList;
+	* generic/*.h         Useless re-definitions of TCL_STORAGE_CLASS
+
 2010-04-20  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkPort.h         Make sure that tkWinPort.h is always included

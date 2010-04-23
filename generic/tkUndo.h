@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUndo.h,v 1.8 2007/12/13 15:24:21 dgp Exp $
+ * RCS: @(#) $Id: tkUndo.h,v 1.9 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #ifndef _TKUNDO
@@ -18,13 +18,8 @@
 #include "tkInt.h"
 #endif
 
-#ifdef BUILD_tk
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLEXPORT
-#endif
-
 /*
- * Enum definining the types used in an undo stack.
+ * Enum defining the types used in an undo stack.
  */
 
 typedef enum {
@@ -116,8 +111,5 @@ MODULE_SCOPE void	TkUndoPushAction(TkUndoRedoStack *stack,
 			    TkUndoSubAtom *apply, TkUndoSubAtom *revert);
 MODULE_SCOPE int	TkUndoRevert(TkUndoRedoStack *stack);
 MODULE_SCOPE int	TkUndoApply(TkUndoRedoStack *stack);
-
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKUNDO */

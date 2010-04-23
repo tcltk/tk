@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.h,v 1.17 2010/01/03 19:50:59 patthoyts Exp $
+ * RCS: @(#) $Id: tkMenu.h,v 1.18 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #ifndef _TKMENU
@@ -25,11 +25,6 @@
 
 #ifndef _DEFAULT
 #include "default.h"
-#endif
-
-#ifdef BUILD_tk
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -566,8 +561,5 @@ MODULE_SCOPE int	TkpNewMenu(TkMenu *menuPtr);
 MODULE_SCOPE int	TkpPostMenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    int x, int y);
 MODULE_SCOPE void	TkpSetWindowMenuBar(Tk_Window tkwin, TkMenu *menuPtr);
-
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKMENU */

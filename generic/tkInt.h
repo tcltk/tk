@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.121 2010/04/20 15:14:29 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.122 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #ifndef _TKINT
@@ -22,7 +22,7 @@
 #endif
 
 /*
- * Ensure WORDS_BIGENDIAN is defined correcly:
+ * Ensure WORDS_BIGENDIAN is defined correctly:
  * Needs to happen here in addition to configure to work with fat compiles on
  * Darwin (where configure runs only once for multiple architectures).
  */
@@ -883,12 +883,6 @@ typedef struct TkpClipMask {
 #define TKP_CLIP_REGION 1
 
 /*
- * Pointer to first entry in list of all displays currently known.
- */
-
-MODULE_SCOPE TkDisplay *tkDisplayList;
-
-/*
  * Return values from TkGrabState:
  */
 
@@ -1001,11 +995,6 @@ void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
  */
 
 #include "tkIntDecls.h"
-
-#ifdef BUILD_tk
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLEXPORT
-#endif
 
 /*
  * Themed widget set init function:
@@ -1261,9 +1250,6 @@ MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 #else
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 #endif
-
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKINT */
 

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkListbox.c,v 1.58 2010/01/13 23:08:06 nijtmans Exp $
+ * RCS: @(#) $Id: tkListbox.c,v 1.59 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #include "default.h"
@@ -26,7 +26,7 @@ typedef struct {
 				/* Table defining configuration options
 				 * available for the listbox. */
     Tk_OptionTable itemAttrOptionTable;
-				/* Table definining configuration options
+				/* Table defining configuration options
 				 * available for listbox items. */
 } ListboxOptionTables;
 

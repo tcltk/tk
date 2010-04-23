@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScrollbar.h,v 1.10 2010/02/17 19:21:16 nijtmans Exp $
+ * RCS: @(#) $Id: tkScrollbar.h,v 1.11 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #ifndef _TKSCROLLBAR
@@ -17,11 +17,6 @@
 
 #ifndef _TKINT
 #include "tkInt.h"
-#endif
-
-#ifdef BUILD_tk
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -186,8 +181,5 @@ MODULE_SCOPE void	TkpDisplayScrollbar(ClientData clientData);
 MODULE_SCOPE void	TkpConfigureScrollbar(TkScrollbar *scrollPtr);
 MODULE_SCOPE int	TkpScrollbarPosition(TkScrollbar *scrollPtr,
 			    int x, int y);
-
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKSCROLLBAR */
