@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.h,v 1.38 2010/03/11 09:43:19 dkf Exp $
+ * RCS: @(#) $Id: tkText.h,v 1.39 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #ifndef _TKTEXT
@@ -21,11 +21,6 @@
 
 #ifndef _TKUNDO
 #include "tkUndo.h"
-#endif
-
-#ifdef BUILD_tk
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -489,7 +484,7 @@ typedef struct TkTextTabArray {
 } TkTextTabArray;
 
 /*
- * Enumeration definining the edit modes of the widget.
+ * Enumeration defining the edit modes of the widget.
  */
 
 typedef enum {
@@ -1146,9 +1141,6 @@ MODULE_SCOPE int	TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
-
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKTEXT */
 
