@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkScale.h,v 1.10 2005/11/27 02:36:14 das Exp $
+ * RCS: @(#) $Id: tkScale.h,v 1.11 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #ifndef _TKSCALE
@@ -18,11 +18,6 @@
 
 #ifndef _TKINT
 #include "tkInt.h"
-#endif
-
-#ifdef BUILD_tk
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -241,8 +236,5 @@ MODULE_SCOPE void	TkScaleSetValue(TkScale *scalePtr, double value,
 			    int setVar, int invokeCommand);
 MODULE_SCOPE double	TkScalePixelToValue(TkScale *scalePtr, int x, int y);
 MODULE_SCOPE int	TkScaleValueToPixel(TkScale *scalePtr, double value);
-
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKSCALE */

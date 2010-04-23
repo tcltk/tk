@@ -10,16 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkFont.h,v 1.15 2010/01/05 19:06:09 dkf Exp $
+ * RCS: @(#) $Id: tkFont.h,v 1.16 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #ifndef _TKFONT
 #define _TKFONT
-
-#ifdef BUILD_tk
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLEXPORT
-#endif
 
 /*
  * The following structure keeps track of the attributes of a font. It can be
@@ -227,8 +222,5 @@ MODULE_SCOPE TkFont *	TkpGetFontFromAttributes(TkFont *tkFontPtr,
 MODULE_SCOPE void	TkpGetFontFamilies(Tcl_Interp *interp,
 			    Tk_Window tkwin);
 MODULE_SCOPE TkFont *	TkpGetNativeFont(Tk_Window tkwin, const char *name);
-
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif	/* _TKFONT */
