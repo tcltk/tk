@@ -29,10 +29,7 @@
  * |   provided "as is" without express or implied warranty.		|
  * +--------------------------------------------------------------------+
  *
- * This file also contains code from miGIF. See lower down in file for the
- * applicable copyright notice for that portion.
- *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.46 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkImgGIF.c,v 1.47 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1417,8 +1414,8 @@ Fread(
  *			lolo@pcsig22.etsimo.uniovi.es
  * Date:		Fri September 20 1996
  *
- * Modified for transparency handling (gif89a) and miGIF compression
- * by Jan Nijtmans <j.nijtmans@chello.nl>
+ * Modified for transparency handling (gif89a)
+ * by Jan Nijtmans <nijtmans@users.sourceforge.net>
  *
  *----------------------------------------------------------------------
  * FileWriteGIF-
@@ -1427,8 +1424,8 @@ Fread(
  *	data from a photo image into a given file
  *
  * Results:
- *	A standard TCL completion code. If TCL_ERROR is returned then an error
- *	message is left in interp->result.
+ *	A standard TCL completion code.  If TCL_ERROR is returned
+ *	then an error message is left in the interp's result.
  *
  *----------------------------------------------------------------------
  */
@@ -1534,7 +1531,7 @@ CommonWriteGIF(
 
     Tcl_Write(handle, (char *) (state.alphaOffset ? GIF89a : GIF87a), 6);
 
-    for (x=0 ; x<MAXCOLORMAPSIZE ; x++) {
+    for (x = 0; x < MAXCOLORMAPSIZE ;x++) {
 	state.mapa[x][CM_RED] = 255;
 	state.mapa[x][CM_GREEN] = 255;
 	state.mapa[x][CM_BLUE] = 255;
@@ -1583,7 +1580,7 @@ CommonWriteGIF(
 
     Tcl_Write(handle, (char *) &c, 1);
 
-    for (x=0 ; x<state.num ; x++) {
+    for (x = 0; x < state.num; x++) {
 	c = state.mapa[x][CM_RED];
 	Tcl_Write(handle, (char *) &c, 1);
 	c = state.mapa[x][CM_GREEN];
@@ -1647,7 +1644,7 @@ color(
 {
     int x = (statePtr->alphaOffset != 0);
 
-    for (; x<=MAXCOLORMAPSIZE ; x++) {
+    for (; x <= MAXCOLORMAPSIZE; x++) {
 	if ((statePtr->mapa[x][CM_RED] == red) &&
 		(statePtr->mapa[x][CM_GREEN] == green) &&
 		(statePtr->mapa[x][CM_BLUE] == blue)) {
@@ -1723,7 +1720,7 @@ ReadValue(
     if (statePtr->csize == 0) {
 	return EOF;
     }
-    if (statePtr->alphaOffset && statePtr->pixelo[statePtr->alphaOffset]==0) {
+    if (statePtr->alphaOffset && (statePtr->pixelo[statePtr->alphaOffset]==0)) {
 	col = 0;
     } else {
 	col = color(statePtr, statePtr->pixelo[0],

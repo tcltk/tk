@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTrig.c,v 1.12 2010/01/18 20:43:38 nijtmans Exp $
+ * RCS: @(#) $Id: tkTrig.c,v 1.13 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -753,7 +753,7 @@ TkOvalToPoint(
 
 int
 TkOvalToArea(
-    register double *ovalPtr,	/* Points to coordinates definining the
+    register double *ovalPtr,	/* Points to coordinates defining the
 				 * bounding rectangle for the oval: x1, y1,
 				 * x2, y2. X1 must be less than x2 and y1 less
 				 * than y2. */

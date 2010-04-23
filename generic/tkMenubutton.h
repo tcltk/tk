@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenubutton.h,v 1.15 2010/01/13 23:08:07 nijtmans Exp $
+ * RCS: @(#) $Id: tkMenubutton.h,v 1.16 2010/04/23 08:32:56 nijtmans Exp $
  */
 
 #ifndef _TKMENUBUTTON
@@ -21,11 +21,6 @@
 
 #ifndef _TKMENU
 #include "tkMenu.h"
-#endif
-
-#ifdef BUILD_tk
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
 /*
@@ -219,8 +214,5 @@ MODULE_SCOPE TkMenuButton *TkpCreateMenuButton(Tk_Window tkwin);
 MODULE_SCOPE void	TkpDisplayMenuButton(ClientData clientData);
 MODULE_SCOPE void 	TkpDestroyMenuButton(TkMenuButton *mbPtr);
 MODULE_SCOPE void	TkMenuButtonWorldChanged(ClientData instanceData);
-
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKMENUBUTTON */
