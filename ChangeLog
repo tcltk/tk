@@ -1,30 +1,41 @@
+2010-04-25  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgPNG.c (ReadIDAT, DecodePNG): Move the check for overall
+	termination of the compressed stream until after the final IDAT has
+	been read, so that multi-segment images will work right. Reported by
+	Andy Goth on the Wiki.
+
 2010-04-23  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkImgGIF.c  Formatting
-	* generic/tkListbox.c fix typo;
-	* generic/tkTrig.c    fix typo;
-	* generic/tkInt.h     fix typo; remove not existing tkDisplayList;
-	* generic/*.h         Useless re-definitions of TCL_STORAGE_CLASS
+	* generic/tkImgGIF.c:  Formatting
+	* generic/tkListbox.c: fix typo;
+	* generic/tkTrig.c:    fix typo;
+	* generic/tkInt.h:     fix typo; remove not existing tkDisplayList;
+	* generic/*.h:         Useless re-definitions of TCL_STORAGE_CLASS
 
 2010-04-20  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkPort.h         Make sure that tkWinPort.h is always included
-	* generic/tkIntXlibDecls.h before tcl.h, otherwise the fallback for TCHAR
-	* win/tkWinPort.h          might go off before the inclusion of <tchar.h>
-	* win/tkWinDialog.c        Define OPENFILENAME_SIZE_VERSION_400 if needed
-	* compat/stdlib.h          Include <tcl.h> only when not already done.
-	* compat/unistd.h
-	* generic/tkInt.h          tkPort.h already includes tk.h, which includes tcl.h
-	* generic/tk3d.h           Always use #include "tkInt.h", not <tkInt.h>
-	* generic/tkColor.h
-	* xlib/xcolors.c
-	* xlib/xgc.c
+	* generic/tkPort.h:         Make sure that tkWinPort.h is always
+	* generic/tkIntXlibDecls.h: included before tcl.h, otherwise the
+	* win/tkWinPort.h:          fallback for TCHAR might go off before the
+				    inclusion of <tchar.h>
+	* win/tkWinDialog.c:        Define OPENFILENAME_SIZE_VERSION_400 if
+				    needed.
+	* compat/stdlib.h:          Include <tcl.h> only when not already
+	* compat/unistd.h:	    done.
+	* generic/tkInt.h:          tkPort.h already includes tk.h, which
+				    includes tcl.h.
+	* generic/tk3d.h:           Always use #include "tkInt.h", not
+	* generic/tkColor.h:	    <tkInt.h>
+	* xlib/xcolors.c:
+	* xlib/xgc.c:
 
 2010-04-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinDialog.c   Fix [Bug 2987995]: Tk_GetOpenFile returns garbage
-	under described circumstances
-	* win/tkWinDialog.c   [Patch 2898255]: Filenames limit with Tk_GetFileName()
+	* win/tkWinDialog.c: Fix [Bug 2987995]: Tk_GetOpenFile returns garbage
+	under described circumstances.
+	* win/tkWinDialog.c: [Patch 2898255]: Filenames limit with
+	Tk_GetFileName().
 	Assure modern style dialogs where available
 
 2010-04-13  Jan Nijtmans  <nijtmans@users.sf.net>
