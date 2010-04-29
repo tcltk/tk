@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinButton.c,v 1.40 2010/02/18 22:31:31 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinButton.c,v 1.41 2010/04/29 15:28:04 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -133,7 +133,7 @@ InitBoxes(void)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    hrsrc = FindResource(module, "buttons", RT_BITMAP);
+    hrsrc = FindResource(module, TEXT("buttons"), RT_BITMAP);
     if (hrsrc == NULL) {
 	Tcl_Panic("FindResource() failed for buttons bitmap resource, "
             "resources in tk_base.rc must be linked into Tk dll or static executable");
@@ -243,15 +243,15 @@ CreateProc(
 {
     Window window;
     HWND parent;
-    const char *class;
+    const TCHAR *class;
     WinButton *butPtr = (WinButton *)instanceData;
 
     parent = Tk_GetHWND(parentWin);
     if (butPtr->info.type == TYPE_LABEL) {
-	class = "STATIC";
+	class = TEXT("STATIC");
 	butPtr->style = SS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     } else {
-	class = "BUTTON";
+	class = TEXT("BUTTON");
 	butPtr->style = BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     }
     butPtr->hwnd = CreateWindow(class, NULL, butPtr->style,

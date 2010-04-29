@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.15 2007/12/13 15:28:52 dgp Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.16 2010/04/29 15:28:04 nijtmans Exp $
  */
 
 #ifndef _TKWIN
@@ -37,11 +37,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
-
-#ifdef BUILD_tk
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLEXPORT
-#endif
 
 /*
  * The following messages are used to communicate between a Tk toplevel
@@ -84,8 +79,5 @@
  */
 
 #include "tkPlatDecls.h"
-
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKWIN */
