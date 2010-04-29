@@ -1,5 +1,5 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.26 2009/08/09 21:20:34 nijtmans Exp $
+ * $Id: ttkWinXPTheme.c,v 1.27 2010/04/29 15:28:04 nijtmans Exp $
  *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
@@ -101,7 +101,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
      * if we are running at least on Windows XP.
      */
     HINSTANCE handle;
-    *phlib = handle = LoadLibrary("uxtheme.dll");
+    *phlib = handle = LoadLibrary(TEXT("uxtheme.dll"));
     if (handle != 0)
     {
 	/*

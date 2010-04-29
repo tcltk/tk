@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.63 2010/02/16 21:12:56 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.64 2010/04/29 15:28:04 nijtmans Exp $
  */
 
 /*
@@ -389,8 +389,8 @@ TkWinGetPlatformId(void)
 	if ((os.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
 		(os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
 	    HKEY hKey;
-	    LPCSTR szSubKey = TEXT("Control Panel\\Appearance");
-	    LPCSTR szCurrent = TEXT("Current");
+	    LPCTSTR szSubKey = TEXT("Control Panel\\Appearance");
+	    LPCTSTR szCurrent = TEXT("Current");
 	    DWORD dwSize = 200;
 	    char pBuffer[200];
 
