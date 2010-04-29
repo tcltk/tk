@@ -1,4 +1,4 @@
-/* $Id: ttkWinMonitor.c,v 1.16 2007/12/13 15:28:56 dgp Exp $
+/* $Id: ttkWinMonitor.c,v 1.17 2010/04/29 15:28:04 nijtmans Exp $
  */
 
 #ifdef _MSC_VER
@@ -75,8 +75,8 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
 {
     WNDCLASSEX wc;
     HWND       hwnd = NULL;
-    CHAR       title[32] = "TtkMonitorWindow";
-    CHAR       name[32] = "TtkMonitorClass";
+    TCHAR      title[32] = TEXT("TtkMonitorWindow");
+    TCHAR      name[32] = TEXT("TtkMonitorClass");
     
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = CS_HREDRAW | CS_VREDRAW;

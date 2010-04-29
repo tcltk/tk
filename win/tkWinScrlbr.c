@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.20 2010/02/17 19:21:17 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.21 2010/04/29 15:28:04 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -226,7 +226,7 @@ CreateProc(
 		| SBS_HORZ | SBS_BOTTOMALIGN;
     }
 
-    scrollPtr->hwnd = CreateWindow("SCROLLBAR", NULL, style,
+    scrollPtr->hwnd = CreateWindow(TEXT("SCROLLBAR"), NULL, style,
 	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
 	    parent, NULL, Tk_GetHINSTANCE(), NULL);
 
