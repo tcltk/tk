@@ -1,6 +1,6 @@
 2010-04-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWin.h          Unnessarary TCL_STORAGE_CLASS re-definition
+	* win/tkWin.h          Unnecessary TCL_STORAGE_CLASS re-definition
 	* win/tkWinInt.h       Make various functions MODULE_SCOPE
 	* win/tkWinButton.c    TCHAR-related fixes, making al those
 	* win/tkWinFont.c      files compile fine when TCHAR != char.
