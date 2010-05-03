@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.20 2009/10/24 00:01:48 dkf Exp $
+# RCS: @(#) $Id: button.tcl,v 1.21 2010/05/03 11:59:11 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -659,7 +659,7 @@ proc ::tk::CheckInvoke {w} {
 	# Additional logic to switch the "selected" colors around if necessary
 	# (when we're indicator-less).
 
-	if {![$w cget -indicatoron]} {
+	if {![$w cget -indicatoron] && [info exist Priv($w,selectcolor)]} {
 	    if {[$w cget -selectcolor] eq $Priv($w,aselectcolor)} {
 		$w configure -selectcolor $Priv($w,selectcolor)
 	    } else {
@@ -697,7 +697,7 @@ proc ::tk::CheckEnter {w} {
 
 	# Compute what the "selected and active" color should be.
 
-	if {![$w cget -indicatoron]} {
+	if {![$w cget -indicatoron] && [$w cget -selectcolor] ne ""} {
 	    set Priv($w,selectcolor) [$w cget -selectcolor]
 	    lassign [winfo rgb $w [$w cget -selectcolor]]      r1 g1 b1
 	    lassign [winfo rgb $w [$w cget -activebackground]] r2 g2 b2
