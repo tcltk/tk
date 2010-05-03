@@ -1,15 +1,21 @@
+2010-05-03  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/button.tcl (CheckInvoke, CheckEnter): [Patch 1530276 redux]:
+	Apply a bit more care to ensure that things continue to work correctly
+	even when there is no -selectcolor defined.
+
 2010-04-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWin.h          Unnecessary TCL_STORAGE_CLASS re-definition
-	* win/tkWinInt.h       Make various functions MODULE_SCOPE
-	* win/tkWinButton.c    TCHAR-related fixes, making al those
-	* win/tkWinFont.c      files compile fine when TCHAR != char.
-	* win/tkWinScrlbr.c
-	* win/tkWinWindow.c
-	* win/tkWinWm.c
-	* win/tkWinX.c
-	* win/ttkWinMonitor.c
-	* win/ttkWinXPTheme.c
+	* win/tkWin.h:		Unnecessary TCL_STORAGE_CLASS re-definition
+	* win/tkWinInt.h:	Make various functions MODULE_SCOPE
+	* win/tkWinButton.c:	TCHAR-related fixes, making al those
+	* win/tkWinFont.c:	files compile fine when TCHAR != char.
+	* win/tkWinScrlbr.c:
+	* win/tkWinWindow.c:
+	* win/tkWinWm.c:
+	* win/tkWinX.c:
+	* win/ttkWinMonitor.c:
+	* win/ttkWinXPTheme.c:
 
 2010-04-25  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -346,14 +352,14 @@
 	                        and immediately after a function name, so the
 	                        format of function definitions in *Decls.h
 	                        match all other *.h header files.
-	* generic/ttk/ttkDecls.h (re-generated)
-	* generic/tk.decls       Formatting
-	* generic/tkDecls.h      (re-generated)
-	* generic/tkIntDecls.h
-	* generic/tkIntPlatDecls.h
-	* generic/tkIntXlibDecls.h
-	* generic/tkPlatDecls.h
-	* generic/tkBind.c     Little simplification
+	* generic/ttk/ttkDecls.h: (re-generated)
+	* generic/tk.decls:	Formatting
+	* generic/tkDecls.h:	(re-generated)
+	* generic/tkIntDecls.h:
+	* generic/tkIntPlatDecls.h:
+	* generic/tkIntXlibDecls.h:
+	* generic/tkPlatDecls.h:
+	* generic/tkBind.c:	Little simplification
 
 2010-01-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -401,34 +407,34 @@
 
 2010-01-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkCanvArc.c     Fix more gcc warnings: missing initializer
-	* generic/tkCanvBmap.c
-	* generic/tkCanvImg.c
-	* generic/tkCanvLine.c
-	* generic/tkCanvPoly.c
-	* generic/tkCanvPs.c
-	* generic/tkCanvText.c
-	* generic/tkCanvWind.c
-	* generic/tkCmds.c
-	* generic/tkImgBmap.c
-	* generic/tkImgGIF.c
-	* generic/tkImgPhoto.c
-	* generic/tkImgPNG.c
-	* generic/tkImgPPM.c
-	* generic/tkMenu.c
-	* generic/tkMenubutton.c
-	* generic/tkMessage.c
-	* generic/tkOldTest.c
-	* generic/tkPanedWindow.c
-	* generic/tkRectOval.c
-	* generic/tkScrollbar.c
-	* generic/tkSquare.c
-	* generic/tkTest.c
-	* generic/tkText.c
-	* generic/tkTextImage.c
-	* generic/tkTextTag.c
-	* generic/tkTextWind.c
-	* generic/tkTrig.c
+	* generic/tkCanvArc.c:	Fix more gcc warnings: missing initializer
+	* generic/tkCanvBmap.c:
+	* generic/tkCanvImg.c:
+	* generic/tkCanvLine.c:
+	* generic/tkCanvPoly.c:
+	* generic/tkCanvPs.c:
+	* generic/tkCanvText.c:
+	* generic/tkCanvWind.c:
+	* generic/tkCmds.c:
+	* generic/tkImgBmap.c:
+	* generic/tkImgGIF.c:
+	* generic/tkImgPhoto.c:
+	* generic/tkImgPNG.c:
+	* generic/tkImgPPM.c:
+	* generic/tkMenu.c:
+	* generic/tkMenubutton.c:
+	* generic/tkMessage.c:
+	* generic/tkOldTest.c:
+	* generic/tkPanedWindow.c:
+	* generic/tkRectOval.c:
+	* generic/tkScrollbar.c:
+	* generic/tkSquare.c:
+	* generic/tkTest.c:
+	* generic/tkText.c:
+	* generic/tkTextImage.c:
+	* generic/tkTextTag.c:
+	* generic/tkTextWind.c:
+	* generic/tkTrig.c:
 	* generic/tkCanvas.c:      [Patch 2932808]: Canvas items not updating
 				   on widget state change.
 
@@ -466,8 +472,8 @@
 	* win/tkWinInit.c
 	* win/tkWinKey.c
 	* win/tkWinScrlbr.c
-	* win/tkWinInt.h      Add SPI_SETKEYBOARDCUES definition,
-	                      needed for original VC++ 6.0
+	* win/tkWinInt.h      Add SPI_SETKEYBOARDCUES definition, needed for
+	                      original VC++ 6.0.
 
 2010-01-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -485,8 +491,8 @@
 	* library/obsolete.tcl: the .help menu on X11.
 	* unix/tkUnixMenu.c:
 
-	* library/menu.tcl:      [TIP 360] Make Tk menu activation
-	* library/obsolete.tcl:  follow mouse movements.
+	* library/menu.tcl:	[TIP 360]: Make Tk menu activation
+	* library/obsolete.tcl: follow mouse movements.
 
 2010-01-08  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
@@ -577,9 +583,9 @@
 
 2010-01-03  Pat Thoyts  <patthoyts@users.sourceforge.net>
 
-	* library/tearoff.tcl: tearoff menus should be transient and use the
+	* library/tearoff.tcl: Tearoff menus should be transient and use the
 	                       toolwindow style on Windows.
-	* tests/menu.test: menu tests using 'tkwait visibility' are unix only.
+	* tests/menu.test: Menu tests using 'tkwait visibility' are unix only.
 
 2010-01-02  Donal K. Fellows  <dkf@users.sf.net>
 
