@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.46 2010/02/17 19:21:16 nijtmans Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.47 2010/05/10 20:58:18 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -250,7 +250,7 @@ EXTERN Tk_Window	Tk_CoordsToWindow(int rootX, int rootY,
 EXTERN unsigned long	Tk_CreateBinding(Tcl_Interp *interp,
 				Tk_BindingTable bindingTable,
 				ClientData object, const char *eventStr,
-				const char *command, int append);
+				const char *script, int append);
 #endif
 #ifndef Tk_CreateBindingTable_TCL_DECLARED
 #define Tk_CreateBindingTable_TCL_DECLARED
@@ -1737,7 +1737,7 @@ typedef struct TkStubs {
     void (*tk_ConfigureWindow) (Tk_Window tkwin, unsigned int valueMask, XWindowChanges *valuePtr); /* 30 */
     Tk_TextLayout (*tk_ComputeTextLayout) (Tk_Font font, const char *str, int numChars, int wrapLength, Tk_Justify justify, int flags, int *widthPtr, int *heightPtr); /* 31 */
     Tk_Window (*tk_CoordsToWindow) (int rootX, int rootY, Tk_Window tkwin); /* 32 */
-    unsigned long (*tk_CreateBinding) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventStr, const char *command, int append); /* 33 */
+    unsigned long (*tk_CreateBinding) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventStr, const char *script, int append); /* 33 */
     Tk_BindingTable (*tk_CreateBindingTable) (Tcl_Interp *interp); /* 34 */
     Tk_ErrorHandler (*tk_CreateErrorHandler) (Display *display, int errNum, int request, int minorCode, Tk_ErrorProc *errorProc, ClientData clientData); /* 35 */
     void (*tk_CreateEventHandler) (Tk_Window token, unsigned long mask, Tk_EventProc *proc, ClientData clientData); /* 36 */
