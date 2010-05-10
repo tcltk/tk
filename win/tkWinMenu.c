@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.72 2010/01/22 14:17:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.73 2010/05/10 20:58:18 nijtmans Exp $
  */
 
 #define WINVER        0x0500   /* Requires Windows 2K definitions */
@@ -1431,7 +1431,7 @@ void
 TkpSetMainMenubar(
     Tcl_Interp *interp,		/* The interpreter of the application */
     Tk_Window tkwin,		/* The frame we are setting up */
-    char *menuName)		/* The name of the menu to put in front. If
+    const char *menuName)	/* The name of the menu to put in front. If
     				 * NULL, use the default menu bar. */
 {
     /*
@@ -3018,7 +3018,7 @@ MenuSelectEvent(
 void
 TkpMenuNotifyToplevelCreate(
     Tcl_Interp *interp,		/* The interp the menu lives in. */
-    char *menuName)		/* The name of the menu to reconfigure. */
+    const char *menuName)	/* The name of the menu to reconfigure. */
 {
     TkMenuReferences *menuRefPtr;
     TkMenu *menuPtr;

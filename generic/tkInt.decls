@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.60 2009/12/16 22:00:31 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.61 2010/05/10 20:58:18 nijtmans Exp $
 
 library tk
 
@@ -59,7 +59,7 @@ declare 9 generic {
 	    int innerWidth, int innerHeight, int *xPtr, int *yPtr)
 }
 declare 10 generic {
-    int TkCopyAndGlobalEval(Tcl_Interp *interp, char *script)
+    int TkCopyAndGlobalEval(Tcl_Interp *interp, const char *script)
 }
 declare 11 generic {
     unsigned long TkCreateBindingProcedure(Tcl_Interp *interp,
@@ -255,7 +255,7 @@ declare 66 generic {
     Window TkpMakeWindow(TkWindow *winPtr, Window parent)
 }
 declare 67 generic {
-    void TkpMenuNotifyToplevelCreate(Tcl_Interp *interp1, char *menuName)
+    void TkpMenuNotifyToplevelCreate(Tcl_Interp *interp, const char *menuName)
 }
 declare 68 generic {
     TkDisplay *TkpOpenDisplay(const char *display_name)
@@ -276,7 +276,7 @@ declare 73 generic {
     void TkpRedirectKeyEvent(TkWindow *winPtr, XEvent *eventPtr)
 }
 declare 74 generic {
-    void TkpSetMainMenubar(Tcl_Interp *interp, Tk_Window tkwin, char *menuName)
+    void TkpSetMainMenubar(Tcl_Interp *interp, Tk_Window tkwin, const char *menuName)
 }
 declare 75 generic {
     int TkpUseWindow(Tcl_Interp *interp, Tk_Window tkwin, const char *string)
@@ -314,7 +314,7 @@ declare 83 generic {
 
 declare 85 generic {
     void TkSetWindowMenuBar(Tcl_Interp *interp, Tk_Window tkwin,
-	    char *oldMenuName, char *menuName)
+	    const char *oldMenuName, const char *menuName)
 }
 declare 86 generic {
     KeySym TkStringToKeysym(const char *name)

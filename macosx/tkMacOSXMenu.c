@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.53 2009/07/06 15:45:54 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.54 2010/05/10 20:58:18 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -802,7 +802,7 @@ void
 TkpSetMainMenubar(
     Tcl_Interp *interp,		/* The interpreter of the application */
     Tk_Window tkwin,		/* The frame we are setting up */
-    char *menuName)		/* The name of the menu to put in front. If
+    const char *menuName)	/* The name of the menu to put in front. If
 				 * NULL, use the default menu bar. */
 {
     static Tcl_Interp *currentInterp = NULL;
@@ -1464,7 +1464,7 @@ TkpMenuThreadInit(void)
  * TkpMenuNotifyToplevelCreate --
  *
  *	This routine reconfigures the menu and the clones indicated by
- *	menuName becuase a toplevel has been created and any system menus need
+ *	menuName because a toplevel has been created and any system menus need
  *	to be created. Only applicable to Windows.
  *
  * Results:
@@ -1479,7 +1479,7 @@ TkpMenuThreadInit(void)
 void
 TkpMenuNotifyToplevelCreate(
     Tcl_Interp *interp,		/* The interp the menu lives in. */
-    char *menuName)		/* The name of the menu to reconfigure. */
+    const char *menuName)	/* The name of the menu to reconfigure. */
 {
     /*
      * Nothing to do.

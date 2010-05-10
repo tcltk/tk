@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixMenu.c,v 1.24 2010/01/09 00:48:36 patthoyts Exp $
+ * RCS: @(#) $Id: tkUnixMenu.c,v 1.25 2010/05/10 20:58:19 nijtmans Exp $
  */
 
 #include "default.h"
@@ -296,7 +296,7 @@ void
 TkpSetMainMenubar(
     Tcl_Interp *interp,
     Tk_Window tkwin,
-    char *menuName)
+    const char *menuName)
 {
     /*
      * Nothing to do.
@@ -1760,7 +1760,7 @@ TkpComputeStandardMenuGeometry(
 void
 TkpMenuNotifyToplevelCreate(
     Tcl_Interp *interp,		/* The interp the menu lives in. */
-    char *menuName)		/* The name of the menu to reconfigure. */
+    const char *menuName)	/* The name of the menu to reconfigure. */
 {
     /*
      * Nothing to do.
