@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.59 2010/02/17 20:58:32 jenglish Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.60 2010/05/10 20:58:18 nijtmans Exp $
  */
 
 /*
@@ -3164,10 +3164,10 @@ void
 TkSetWindowMenuBar(
     Tcl_Interp *interp,		/* The interpreter the toplevel lives in. */
     Tk_Window tkwin,		/* The toplevel window. */
-    char *oldMenuName,		/* The name of the menubar previously set in
+    const char *oldMenuName, /* The name of the menubar previously set in
     				 * this toplevel. NULL means no menu was set
     				 * previously. */
-    char *menuName)		/* The name of the new menubar that the
+    const char *menuName)	/* The name of the new menubar that the
 				 * toplevel needs to be set to. NULL means
 				 * that their is no menu now. */
 {

@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.52 2010/02/17 19:21:15 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.53 2010/05/10 20:58:18 nijtmans Exp $
 
 library tk
 
@@ -166,7 +166,7 @@ declare 32 generic {
 declare 33 generic {
     unsigned long Tk_CreateBinding(Tcl_Interp *interp,
 	    Tk_BindingTable bindingTable, ClientData object,
-	    const char *eventStr, const char *command, int append)
+	    const char *eventStr, const char *script, int append)
 }
 declare 34 generic {
     Tk_BindingTable Tk_CreateBindingTable(Tcl_Interp *interp)

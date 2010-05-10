@@ -1,3 +1,17 @@
+2010-05-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/BindTable.3      Bring in line with actual implementation.
+	* generic/tk.decls     Change Tk_CreateBinding param name, as in doc
+	* generic/tkInt.decls  CONSTify TkCopyAndGlobalEval, TkpSetMainMenubar,
+	* generic/tkBind.c     TkpMenuNotifyToplevelCreate, and TkSetWindowMenuBar
+	* generic/tkMenu.c
+	* generic/tkDecls.h    (regenerated)
+	* generic/tkIntDecls.h (regenerated)
+	* carbon/tkMacOSXMenu.c
+	* macosx/tkMacOSXMenu.c
+	* unix/tkUnixMenu.c
+	* win/tkWinMenu.c
+
 2010-05-03  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Bump patchlevel to 8.6b1.2 to distinguish
