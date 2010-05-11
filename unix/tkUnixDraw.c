@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixDraw.c,v 1.11 2007/12/13 15:28:50 dgp Exp $
+ * RCS: @(#) $Id: tkUnixDraw.c,v 1.12 2010/05/11 12:12:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -34,7 +34,7 @@ typedef struct ScrollInfo {
  * Forward declarations for functions declared later in this file:
  */
 
-static Tk_RestrictAction ScrollRestrictProc(ClientData arg, XEvent *eventPtr);
+static Tk_RestrictProc ScrollRestrictProc;
 
 /*
  *----------------------------------------------------------------------
@@ -65,8 +65,8 @@ TkScrollWindow(
     int dx, int dy,		/* Distance rectangle should be moved. */
     TkRegion damageRgn)		/* Region to accumulate damage in. */
 {
-    Tk_RestrictProc *oldProc;
-    ClientData oldArg, dummy;
+    Tk_RestrictProc *prevProc;
+    ClientData prevArg;
     ScrollInfo info;
 
     XCopyArea(Tk_Display(tkwin), Tk_WindowId(tkwin), Tk_WindowId(tkwin), gc,
@@ -86,12 +86,11 @@ TkScrollWindow(
      */
 
     TkpSync(info.display);
-    oldProc = Tk_RestrictEvents(ScrollRestrictProc, (ClientData) &info,
-	    &oldArg);
+    prevProc = Tk_RestrictEvents(ScrollRestrictProc, &info, &prevArg);
     while (!info.done) {
 	Tcl_ServiceEvent(TCL_WINDOW_EVENTS);
     }
-    Tk_RestrictEvents(oldProc, oldArg, &dummy);
+    Tk_RestrictEvents(prevProc, prevArg, &prevArg);
 
     if (XEmptyRegion((Region) damageRgn)) {
 	return 0;

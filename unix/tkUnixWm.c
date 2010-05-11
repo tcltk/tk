@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.81 2010/02/16 21:12:57 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.82 2010/05/11 12:12:49 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -358,8 +358,7 @@ static void		WaitForConfigureNotify(TkWindow *winPtr,
 static int		WaitForEvent(Display *display,
 			    WmInfo *wmInfoPtr, int type, XEvent *eventPtr);
 static void		WaitForMapNotify(TkWindow *winPtr, int mapped);
-static Tk_RestrictAction WaitRestrictProc(ClientData clientData,
-			    XEvent *eventPtr);
+static Tk_RestrictProc WaitRestrictProc;
 static void		WrapperEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		WmWaitMapProc(ClientData clientData,
@@ -5169,8 +5168,8 @@ WaitForEvent(
     XEvent *eventPtr)		/* Place to store event. */
 {
     WaitRestrictInfo info;
-    Tk_RestrictProc *oldRestrictProc;
-    ClientData oldRestrictData;
+    Tk_RestrictProc *prevProc;
+    ClientData prevArg;
     Tcl_Time timeout;
 
     /*
@@ -5184,8 +5183,7 @@ WaitForEvent(
     info.type = type;
     info.eventPtr = eventPtr;
     info.foundEvent = 0;
-    oldRestrictProc = Tk_RestrictEvents(WaitRestrictProc, &info,
-	    &oldRestrictData);
+    prevProc = Tk_RestrictEvents(WaitRestrictProc, &info, &prevArg);
 
     Tcl_GetTime(&timeout);
     timeout.sec += 2;
@@ -5195,8 +5193,7 @@ WaitForEvent(
 	    break;
 	}
     }
-    (void) Tk_RestrictEvents(oldRestrictProc, oldRestrictData,
-	    &oldRestrictData);
+    Tk_RestrictEvents(prevProc, prevArg, &prevArg);
     if (info.foundEvent) {
 	return TCL_OK;
     }
