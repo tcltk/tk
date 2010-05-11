@@ -1,3 +1,11 @@
+2010-05-11  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/RestrictEv.3    Consistent use of variable names in RestrictEvent
+	* generic/tkGrab.c    API documentation and implementation: Use 'prev'
+	* unix/tkUnixDraw.c   in stead of 'old', and 'arg' in stead of
+	* unix/tkUnixSend.c   'clientData' everywhere, just as in tkEvent.c.
+	* unix/tkUnixWm.c
+
 2010-05-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/BindTable.3      Bring in line with actual implementation.
