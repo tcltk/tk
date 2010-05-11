@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.26 2009/12/20 23:26:53 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSend.c,v 1.27 2010/05/11 12:12:50 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -220,8 +220,7 @@ static NameRegistry *	RegOpen(Tcl_Interp *interp,
 			    TkDisplay *dispPtr, int lock);
 static void		SendEventProc(ClientData clientData, XEvent *eventPtr);
 static int		SendInit(Tcl_Interp *interp, TkDisplay *dispPtr);
-static Tk_RestrictAction SendRestrictProc(ClientData clientData,
-			    XEvent *eventPtr);
+static Tk_RestrictProc SendRestrictProc;
 static int		ServerSecure(TkDisplay *dispPtr);
 static void		UpdateCommWindow(TkDisplay *dispPtr);
 static int		ValidateName(TkDisplay *dispPtr, const char *name,
@@ -946,7 +945,7 @@ Tk_SendCmd(
     const char *destName;
     int result, c, async, i, firstArg;
     size_t length;
-    Tk_RestrictProc *prevRestrictProc;
+    Tk_RestrictProc *prevProc;
     ClientData prevArg;
     TkDisplay *dispPtr;
     Tcl_Time timeout;
@@ -1138,7 +1137,7 @@ Tk_SendCmd(
      * other events in the application.
      */
 
-    prevRestrictProc = Tk_RestrictEvents(SendRestrictProc, NULL, &prevArg);
+    prevProc = Tk_RestrictEvents(SendRestrictProc, NULL, &prevArg);
     Tcl_GetTime(&timeout);
     timeout.sec += 2;
     while (!pending.gotResponse) {
@@ -1169,7 +1168,7 @@ Tk_SendCmd(
 	    }
 	}
     }
-    (void) Tk_RestrictEvents(prevRestrictProc, prevArg, &prevArg);
+    Tk_RestrictEvents(prevProc, prevArg, &prevArg);
 
     /*
      * Unregister the information about the pending command and return the
