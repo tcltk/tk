@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGrab.c,v 1.20 2010/02/13 13:47:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkGrab.c,v 1.21 2010/05/11 12:12:50 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -152,7 +152,7 @@ static const unsigned int buttonStates[] = {
 static void		EatGrabEvents(TkDisplay *dispPtr, unsigned int serial);
 static TkWindow *	FindCommonAncestor(TkWindow *winPtr1,
 			    TkWindow *winPtr2, int *countPtr1, int *countPtr2);
-static Tk_RestrictAction GrabRestrictProc(ClientData arg, XEvent *eventPtr);
+static Tk_RestrictProc GrabRestrictProc;
 static int		GrabWinEventProc(Tcl_Event *evPtr, int flags);
 static void		MovePointer2(TkWindow *sourcePtr, TkWindow *destPtr,
 			    int mode, int leaveEvents, int EnterEvents);
@@ -1242,18 +1242,18 @@ EatGrabEvents(
     unsigned int serial)	/* Only discard events that have a serial
 				 * number at least this great. */
 {
-    Tk_RestrictProc *oldProc;
+    Tk_RestrictProc *prevProc;
     GrabInfo info;
-    ClientData oldArg, dummy;
+    ClientData prevArg;
 
     info.display = dispPtr->display;
     info.serial = serial;
     TkpSync(info.display);
-    oldProc = Tk_RestrictEvents(GrabRestrictProc, &info, &oldArg);
+    prevProc = Tk_RestrictEvents(GrabRestrictProc, &info, &prevArg);
     while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
 	/* EMPTY */
     }
-    Tk_RestrictEvents(oldProc, oldArg, &dummy);
+    Tk_RestrictEvents(prevProc, prevArg, &prevArg);
 }
 
 /*
