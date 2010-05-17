@@ -1,3 +1,8 @@
+2010-05-17  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c   [Bug #2987995]: Tk_getOpenFile returns garbage under
+	described circumstances. Backported some formatting from trunk.
+
 2010-05-03  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/button.tcl (CheckInvoke, CheckEnter): [Patch 1530276 redux]:
