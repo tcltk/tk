@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.64 2010/05/17 08:44:00 nijtmans Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.65 2010/05/17 17:19:22 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -3199,7 +3199,9 @@ GetAllVirtualEvents(
     hPtr = Tcl_FirstHashEntry(&vetPtr->nameTable, &search);
     for ( ; hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	Tcl_DStringSetLength(&ds, 0);
+	Tcl_DStringAppend(&ds, "<<", 2);
 	Tcl_DStringAppend(&ds, Tcl_GetHashKey(hPtr->tablePtr, hPtr), -1);
+	Tcl_DStringAppend(&ds, ">>", 2);
 	Tcl_AppendElement(interp, Tcl_DStringValue(&ds));
     }
 
@@ -3917,6 +3919,7 @@ GetVirtualEventUid(
     Tcl_Interp *interp,
     char *virtString)
 {
+    Tk_Uid uid;
     size_t length;
 
     length = strlen(virtString);
@@ -3927,8 +3930,11 @@ GetVirtualEventUid(
 		"\" is badly formed", NULL);
 	return NULL;
     }
+    virtString[length - 2] = '\0';
+    uid = Tk_GetUid(virtString + 2);
+    virtString[length - 2] = '>';
 
-    return Tk_GetUid(virtString);
+    return uid;
 }
 
 /*
@@ -4134,7 +4140,7 @@ ParseEventDescription(
 				 * event string. */
     unsigned long *eventMaskPtr)/* Filled with event mask of matched event. */
 {
-    char *p, c;
+    char *p;
     unsigned long eventMask;
     int count, eventFlags;
 #define FIELD_SIZE 48
@@ -4221,12 +4227,11 @@ ParseEventDescription(
 	    count = 0;
 	    goto done;
 	}
-	c = p[2];
-	p[2] = '\0';
+	*p = '\0';
 	patPtr->eventType = VirtualEvent;
 	eventMask = VirtualEventMask;
-	patPtr->detail.name = Tk_GetUid(field - 2);
-	p[2] = c;
+	patPtr->detail.name = Tk_GetUid(field);
+	*p = '>';
 
 	p += 2;
 	goto end;
@@ -4441,7 +4446,9 @@ GetPatternString(
 	 */
 
 	if (patPtr->eventType == VirtualEvent) {
+	    Tcl_DStringAppend(dsPtr, "<<", 2);
 	    Tcl_DStringAppend(dsPtr, patPtr->detail.name, -1);
+	    Tcl_DStringAppend(dsPtr, ">>", 2);
 	    continue;
 	}
 
