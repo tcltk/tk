@@ -1,3 +1,10 @@
+2010-05-17  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkBind.c    [Patch #2999920]: Optimize Internal Virtual event
+	string operations
+	* win/tkWinDialog.c   [Bug #2987995]: Tk_getOpenFile returns garbage under
+	described circumstances
+
 2010-05-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/RestrictEv.3    Consistent use of variable names in RestrictEvent
