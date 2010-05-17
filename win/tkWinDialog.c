@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.73 2010/04/20 19:57:46 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.74 2010/05/17 08:44:00 nijtmans Exp $
  *
  */
 
@@ -996,7 +996,17 @@ OFNHookProcW(
     } else if (uMsg == WM_NOTIFY) {
 	OFNOTIFYW *notifyPtr = (OFNOTIFYW *) lParam;
 
-	if (notifyPtr->hdr.code == CDN_FILEOK) {
+	/*
+	 * This is weird... or not. The CDN_FILEOK is NOT sent when the selection
+	 * exceeds declared buffer size (the nMaxFile member of the OPENFILENAMEW
+	 * struct passed to GetOpenFileNameW function). So, we have to rely on
+	 * the most recent CDN_SELCHANGE then. Unfortunately this means, that
+	 * gathering the selected filenames happens twice when they fit into the
+	 * declared buffer. Luckily, it's not frequent operation so it should
+	 * not incur any noticeable delay. See [tktoolkit-Bugs-2987995]
+	 */
+	if (notifyPtr->hdr.code == CDN_FILEOK ||
+		notifyPtr->hdr.code == CDN_SELCHANGE) {
 	    int dirsize, selsize;
 	    WCHAR *buffer;
 	    int buffersize;
@@ -1531,7 +1541,17 @@ OFNHookProcA(
     } else if (uMsg == WM_NOTIFY) {
 	OFNOTIFY *notifyPtr = (OFNOTIFY *) lParam;
 
-	if (notifyPtr->hdr.code == CDN_FILEOK) {
+	/*
+	 * This is weird... or not. The CDN_FILEOK is NOT sent when the selection
+	 * exceeds declared buffer size (the nMaxFile member of the OPENFILENAMEW
+	 * struct passed to GetOpenFileNameW function). So, we have to rely on
+	 * the most recent CDN_SELCHANGE then. Unfortunately this means, that
+	 * gathering the selected filenames happens twice when they fit into the
+	 * declared buffer. Luckily, it's not frequent operation so it should
+	 * not incur any noticeable delay. See [tktoolkit-Bugs-2987995]
+	 */
+	if (notifyPtr->hdr.code == CDN_FILEOK ||
+		notifyPtr->hdr.code == CDN_SELCHANGE) {
 	    int dirsize, selsize;
 	    char *buffer;
 	    int buffersize;
