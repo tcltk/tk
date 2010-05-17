@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.7 2010/04/19 13:58:33 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.8 2010/05/17 14:35:00 nijtmans Exp $
  *
  */
 
@@ -49,6 +49,10 @@
 #define BFFM_VALIDATEFAILED 3
 #endif
 #endif /* BFFM_VALIDATEFAILED */
+
+#ifndef OPENFILENAME_SIZE_VERSION_400
+#define OPENFILENAME_SIZE_VERSION_400 76
+#endif
 
 /*
  * The following structure is used by the new Tk_ChooseDirectoryObjCmd to pass
@@ -313,7 +317,7 @@ Tk_ChooseColorObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin, parent;
+    Tk_Window tkwin = (Tk_Window) clientData, parent;
     HWND hWnd;
     int i, oldMode, winCode, result;
     CHOOSECOLOR chooseColor;
@@ -342,8 +346,6 @@ Tk_ChooseColorObjCmd(
 	oldColor = RGB(0xa0, 0xa0, 0xa0);
 	inited = 1;
     }
-
-    tkwin = (Tk_Window) clientData;
 
     parent			= tkwin;
     chooseColor.lStructSize	= sizeof(CHOOSECOLOR);
@@ -592,11 +594,11 @@ GetFileNameW(
     WCHAR file[TK_MULTI_MAX_PATH];
     OFNData ofnData;
     int cdlgerr;
-    int filterIndex, result, winCode, oldMode, i, multi = 0;
-    char *extension, *filter, *title;
-    Tk_Window tkwin;
+    int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
+    char *extension = NULL, *filter = NULL, *title = NULL;
+    Tk_Window tkwin = (Tk_Window) clientData;
     HWND hWnd;
-    Tcl_Obj *filterObj, *initialTypeObj, *typeVariableObj;
+    Tcl_Obj *filterObj = NULL, *initialTypeObj = NULL, *typeVariableObj = NULL;
     Tcl_DString utfFilterString, utfDirString, ds;
     Tcl_DString extString, filterString, dirString, titleString;
     Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
@@ -617,23 +619,14 @@ GetFileNameW(
 	FILE_MULTIPLE,	FILE_PARENT,	FILE_TITLE,     FILE_TYPEVARIABLE
     };
 
-    result = TCL_ERROR;
     file[0] = '\0';
     ZeroMemory(&ofnData, sizeof(OFNData));
+    Tcl_DStringInit(&utfFilterString);
+    Tcl_DStringInit(&utfDirString);
 
     /*
      * Parse the arguments.
      */
-
-    extension = NULL;
-    filter = NULL;
-    Tcl_DStringInit(&utfFilterString);
-    Tcl_DStringInit(&utfDirString);
-    tkwin = (Tk_Window) clientData;
-    title = NULL;
-    filterObj = NULL;
-    typeVariableObj = NULL;
-    initialTypeObj = NULL;
 
     if (open) {
 	optionStrings = openOptionStrings;
@@ -1004,7 +997,17 @@ OFNHookProcW(
     } else if (uMsg == WM_NOTIFY) {
 	OFNOTIFYW *notifyPtr = (OFNOTIFYW *) lParam;
 
-	if (notifyPtr->hdr.code == CDN_FILEOK) {
+	/*
+	 * This is weird... or not. The CDN_FILEOK is NOT sent when the selection
+	 * exceeds declared buffer size (the nMaxFile member of the OPENFILENAMEW
+	 * struct passed to GetOpenFileNameW function). So, we have to rely on
+	 * the most recent CDN_SELCHANGE then. Unfortunately this means, that
+	 * gathering the selected filenames happens twice when they fit into the
+	 * declared buffer. Luckily, it's not frequent operation so it should
+	 * not incur any noticeable delay. See [tktoolkit-Bugs-2987995]
+	 */
+	if (notifyPtr->hdr.code == CDN_FILEOK ||
+		notifyPtr->hdr.code == CDN_SELCHANGE) {
 	    int dirsize, selsize;
 	    WCHAR *buffer;
 	    int buffersize;
@@ -1129,11 +1132,11 @@ GetFileNameA(
     TCHAR file[TK_MULTI_MAX_PATH], savePath[MAX_PATH];
     OFNData ofnData;
     int cdlgerr;
-    int filterIndex, result, winCode, oldMode, i, multi = 0;
-    char *extension, *filter, *title;
-    Tk_Window tkwin;
+    int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
+    char *extension = NULL, *filter = NULL, *title = NULL;
+    Tk_Window tkwin = (Tk_Window) clientData;
     HWND hWnd;
-    Tcl_Obj *filterObj, *initialTypeObj, *typeVariableObj;
+    Tcl_Obj *filterObj = NULL, *initialTypeObj = NULL, *typeVariableObj = NULL;
     Tcl_DString utfFilterString, utfDirString, ds;
     Tcl_DString extString, filterString, dirString, titleString;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -1153,23 +1156,14 @@ GetFileNameA(
 	FILE_MULTIPLE,	FILE_PARENT,	FILE_TITLE, FILE_TYPEVARIABLE
     };
 
-    result = TCL_ERROR;
     file[0] = '\0';
     ZeroMemory(&ofnData, sizeof(OFNData));
+    Tcl_DStringInit(&utfFilterString);
+    Tcl_DStringInit(&utfDirString);
 
     /*
      * Parse the arguments.
      */
-
-    extension = NULL;
-    filter = NULL;
-    Tcl_DStringInit(&utfFilterString);
-    Tcl_DStringInit(&utfDirString);
-    tkwin = (Tk_Window) clientData;
-    title = NULL;
-    filterObj = NULL;
-    typeVariableObj = NULL;
-    initialTypeObj = NULL;
 
     if (open) {
 	optionStrings = openOptionStrings;
@@ -1280,7 +1274,6 @@ GetFileNameA(
     ofn.lpstrFilter = NULL;
     ofn.lpstrCustomFilter = NULL;
     ofn.nMaxCustFilter = 0;
-    ofn.nFilterIndex = 0;
     ofn.lpstrFile = (LPTSTR) file;
     ofn.nMaxFile = TK_MULTI_MAX_PATH;
     ofn.lpstrFileTitle = NULL;
@@ -1325,6 +1318,7 @@ GetFileNameA(
     Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&utfFilterString),
 	    Tcl_DStringLength(&utfFilterString), &filterString);
     ofn.lpstrFilter = (LPTSTR) Tcl_DStringValue(&filterString);
+    ofn.nFilterIndex = filterIndex;
 
     if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
 	Tcl_UtfToExternalDString(NULL, Tcl_DStringValue(&utfDirString),
@@ -1549,7 +1543,17 @@ OFNHookProcA(
     } else if (uMsg == WM_NOTIFY) {
 	OFNOTIFY *notifyPtr = (OFNOTIFY *) lParam;
 
-	if (notifyPtr->hdr.code == CDN_FILEOK) {
+	/*
+	 * This is weird... or not. The CDN_FILEOK is NOT sent when the selection
+	 * exceeds declared buffer size (the nMaxFile member of the OPENFILENAMEW
+	 * struct passed to GetOpenFileNameW function). So, we have to rely on
+	 * the most recent CDN_SELCHANGE then. Unfortunately this means, that
+	 * gathering the selected filenames happens twice when they fit into the
+	 * declared buffer. Luckily, it's not frequent operation so it should
+	 * not incur any noticeable delay. See [tktoolkit-Bugs-2987995]
+	 */
+	if (notifyPtr->hdr.code == CDN_FILEOK ||
+		notifyPtr->hdr.code == CDN_SELCHANGE) {
 	    int dirsize, selsize;
 	    char *buffer;
 	    int buffersize;
@@ -1739,8 +1743,8 @@ MakeFilter(
 	    FileFilterClause *clausePtr;
 
 	    /*
-	     * Check initial index for match, set index.
-	     * Filter index is 1 based so increment first
+	     * Check initial index for match, set index. Filter index is 1
+	     * based so increment first
 	     */
 	    ix++;
 	    if (index && initial && (strcmp(initial, filterPtr->name) == 0)) {
@@ -1883,15 +1887,14 @@ Tk_ChooseDirectoryObjCmd(
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     char path[MAX_PATH];
-    int oldMode, result, i;
+    int oldMode, result = TCL_ERROR, i;
     LPCITEMIDLIST pidl;		/* Returned by browser */
     BROWSEINFO bInfo;		/* Used by browser */
     CHOOSEDIRDATA cdCBData;	/* Structure to pass back and forth */
     LPMALLOC pMalloc;		/* Used by shell */
-
-    Tk_Window tkwin;
+    Tk_Window tkwin = (Tk_Window) clientData;
     HWND hWnd;
-    char *utfTitle;		/* Title for window */
+    char *utfTitle = NULL;/* Title for window */
     TCHAR saveDir[MAX_PATH];
     Tcl_DString titleString;	/* UTF Title */
     Tcl_DString initDirString;	/* Initial directory */
@@ -1907,14 +1910,9 @@ Tk_ChooseDirectoryObjCmd(
      * Initialize
      */
 
-    result = TCL_ERROR;
     path[0] = '\0';
-    utfTitle = NULL;
-
     ZeroMemory(&cdCBData, sizeof(CHOOSEDIRDATA));
     cdCBData.interp = interp;
-
-    tkwin = (Tk_Window) clientData;
 
     /*
      * Process the command line options
@@ -2001,10 +1999,10 @@ Tk_ChooseDirectoryObjCmd(
     }
 
     /*
-     * Set flags to add edit box, status text line and use the new ui.
-     * Allow override with magic variable (ignore errors in retrieval).
-     * See http://msdn.microsoft.com/en-us/library/bb773205(VS.85).aspx
-     * for possible flag values.
+     * Set flags to add edit box, status text line and use the new ui. Allow
+     * override with magic variable (ignore errors in retrieval). See
+     * http://msdn.microsoft.com/en-us/library/bb773205(VS.85).aspx for
+     * possible flag values.
      */
 
     bInfo.ulFlags = BIF_EDITBOX | BIF_STATUSTEXT | BIF_RETURNFSANCESTORS
@@ -2094,8 +2092,8 @@ Tk_ChooseDirectoryObjCmd(
  *	entered.
  *
  * Results:
- *	Returns 0 to allow default processing of message, or 1 to
- *	tell default dialog function not to close.
+ *	Returns 0 to allow default processing of message, or 1 to tell default
+ *	dialog function not to close.
  *
  *----------------------------------------------------------------------
  */
@@ -2108,13 +2106,11 @@ ChooseDirectoryValidateProc(
     LPARAM lpData)
 {
     TCHAR selDir[MAX_PATH];
-    CHOOSEDIRDATA *chooseDirSharedData;
+    CHOOSEDIRDATA *chooseDirSharedData = (CHOOSEDIRDATA *) lpData;
     Tcl_DString initDirString;
     char string[MAX_PATH];
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    chooseDirSharedData = (CHOOSEDIRDATA *)lpData;
 
     if (tsdPtr->debugFlag) {
 	tsdPtr->debugInterp = (Tcl_Interp *) chooseDirSharedData->interp;
@@ -2133,11 +2129,12 @@ ChooseDirectoryValidateProc(
 	 */
 
 	if (Tcl_TranslateFileName(chooseDirSharedData->interp,
-		(char *)lParam, &initDirString) == NULL) {
+		(char *) lParam, &initDirString) == NULL) {
 	    /*
 	     * Should we expose the error (in the interp result) to the user
 	     * at this point?
 	     */
+
 	    chooseDirSharedData->utfRetDir[0] = '\0';
 	    return 1;
 	}
@@ -2148,9 +2145,9 @@ ChooseDirectoryValidateProc(
 	    LPTSTR lpFilePart[MAX_PATH];
 
 	    /*
-	     * Get the full path name to the user entry, at this point it
-	     * doesn't exist so see if it is supposed to. Otherwise just
-	     * return it.
+	     * Get the full path name to the user entry, at this point it does
+	     * not exist so see if it is supposed to. Otherwise just return
+	     * it.
 	     */
 
 	    GetFullPathName(string, MAX_PATH,
@@ -2167,9 +2164,10 @@ ChooseDirectoryValidateProc(
 	    }
 	} else {
 	    /*
-	     * Changed to new folder OK, return immediatly with the
-	     * current directory in utfRetDir.
+	     * Changed to new folder OK, return immediatly with the current
+	     * directory in utfRetDir.
 	     */
+
 	    GetCurrentDirectory(MAX_PATH, chooseDirSharedData->utfRetDir);
 	    return 0;
 	}
@@ -2177,9 +2175,9 @@ ChooseDirectoryValidateProc(
 
     case BFFM_SELCHANGED:
 	/*
-	 * Set the status window to the currently selected path and enable
-	 * the OK button if a file system folder, otherwise disable the OK
-	 * button for things like server names. Perhaps a new switch
+	 * Set the status window to the currently selected path and enable the
+	 * OK button if a file system folder, otherwise disable the OK button
+	 * for things like server names. Perhaps a new switch
 	 * -enablenonfolders can be used to allow non folders to be selected.
 	 *
 	 * Not called when user changes edit box directly.
@@ -2207,8 +2205,8 @@ ChooseDirectoryValidateProc(
 	SetCurrentDirectory(initDir);
 	if (*initDir == '\\') {
 	    /*
-	     * BFFM_SETSELECTION only understands UNC paths as pidls,
-	     * so convert path to pidl using IShellFolder interface.
+	     * BFFM_SETSELECTION only understands UNC paths as pidls, so
+	     * convert path to pidl using IShellFolder interface.
 	     */
 
 	    LPMALLOC pMalloc;
@@ -2227,7 +2225,7 @@ ChooseDirectoryValidateProc(
 			    Tcl_DStringValue(&ds), &ulCount,&pidlMain,&ulAttr))
 			    && (pidlMain != NULL)) {
 			SendMessage(hwnd, BFFM_SETSELECTION, FALSE,
-				(LPARAM)pidlMain);
+				(LPARAM) pidlMain);
 			pMalloc->lpVtbl->Free(pMalloc, pidlMain);
 		    }
 		    psfFolder->lpVtbl->Release(psfFolder);
@@ -2236,7 +2234,7 @@ ChooseDirectoryValidateProc(
 		pMalloc->lpVtbl->Release(pMalloc);
 	    }
 	} else {
-	    SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)initDir);
+	    SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM) initDir);
 	}
 	SendMessage(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
 	break;
@@ -2271,7 +2269,7 @@ Tk_MessageBoxObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
-    Tk_Window tkwin, parent;
+    Tk_Window tkwin = (Tk_Window) clientData, parent;
     HWND hWnd;
     Tcl_Obj *messageObj, *titleObj, *detailObj, *tmpObj;
     int defaultBtn, icon, type;
@@ -2289,8 +2287,6 @@ Tk_MessageBoxObjCmd(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     (void) TkWinGetUnicodeEncoding();
-    tkwin = (Tk_Window) clientData;
-
     defaultBtn = -1;
     detailObj = NULL;
     icon = MB_ICONINFORMATION;
@@ -2369,7 +2365,7 @@ Tk_MessageBoxObjCmd(
     if (defaultBtn >= 0) {
 	int defaultBtnIdx = -1;
 
-	for (i = 0; i < NUM_TYPES; i++) {
+	for (i = 0; i < (int) NUM_TYPES; i++) {
 	    if (type == allowedTypes[i].type) {
 		int j;
 
@@ -2453,7 +2449,7 @@ MsgBoxCBTProc(
 	 * that it's the one we want.
 	 */
 
-	LPCBT_CREATEWND lpcbtcreate = (LPCBT_CREATEWND)lParam;
+	LPCBT_CREATEWND lpcbtcreate = (LPCBT_CREATEWND) lParam;
 
 	if (WC_DIALOG == lpcbtcreate->lpcs->lpszClass) {
 	    HWND hwnd = (HWND) wParam;
