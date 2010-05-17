@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.74 2010/05/17 08:44:00 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.75 2010/05/17 22:16:52 nijtmans Exp $
  *
  */
 
@@ -2035,6 +2035,13 @@ Tk_ChooseDirectoryObjCmd(
     GetCurrentDirectory(MAX_PATH, saveDir);
     if (SHGetMalloc(&pMalloc) == NOERROR) {
 	pidl = SHBrowseForFolder(&bInfo);
+
+	/*
+	 * This is a fix for Windows 2000, which seems to modify the folder name
+	 * buffer even when the dialog is canceled (in this case the buffer
+	 * contains garbage). See [Bug #3002230]
+	 */
+	path[0] = '\0';
 
 	/*
 	 * Null for cancel button or invalid dir, otherwise valid.
