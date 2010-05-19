@@ -1,3 +1,8 @@
+2010-05-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c:  Fix [Bug #3002230]: tk_chooseDirectory returns
+	garbage on cancel
+
 2010-05-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c   [Bug #2987995]: Tk_getOpenFile returns garbage under
