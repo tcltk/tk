@@ -1,12 +1,18 @@
+2010-05-20  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinX.c (HandleIMEComposition): [Bug 2992129]: Ensure that all
+	places that generate key events zero them out first; Tk relies on that
+	being true for the generic parts of the fix for Bug 1924761.
+
 2010-05-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinDialog.c:  Fix [Bug #3002230]: tk_chooseDirectory returns
-	garbage on cancel
+	* win/tkWinDialog.c: [Bug 3002230]: tk_chooseDirectory returns garbage
+	on cancel.
 
 2010-05-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinDialog.c   [Bug #2987995]: Tk_getOpenFile returns garbage under
-	described circumstances. Backported some formatting from trunk.
+	* win/tkWinDialog.c: [Bug 2987995]: Tk_getOpenFile returns garbage
+	under described circumstances. Backported some formatting from trunk.
 
 2010-05-03  Donal K. Fellows  <dkf@users.sf.net>
 
