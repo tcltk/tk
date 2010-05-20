@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.64 2010/04/29 15:28:04 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.65 2010/05/20 22:48:13 dkf Exp $
  */
 
 /*
@@ -1632,10 +1632,14 @@ HandleIMEComposition(
 	 * We set send_event to the special value of -2, so that TkpGetString
 	 * in tkWinKey.c knows that trans_chars[] already contains a UNICODE
 	 * char and there's no need to do encoding conversion.
+	 *
+	 * Note that the event *must* be zeroed out first; Tk plays cunning
+	 * games with the overalls structure. [Bug 2992129]
 	 */
 
 	winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
+	memset(&event, 0, sizeof(XEvent));
 	event.xkey.serial = winPtr->display->request++;
 	event.xkey.send_event = -2;
 	event.xkey.display = winPtr->display;

@@ -1,42 +1,47 @@
+2010-05-20  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinX.c (HandleIMEComposition): [Bug 2992129]: Ensure that all
+	places that generate key events zero them out first; Tk relies on that
+	being true for the generic parts of the fix for Bug 1924761.
+
 2010-05-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinDialog.c:  Fix [Bug #3002230]: tk_chooseDirectory returns
+	* win/tkWinDialog.c: Fix [Bug 3002230]: tk_chooseDirectory returns
 	garbage on cancel
 
 2010-05-17  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/tkBind.c: Revert [Patch #2999920], as it entails an
-	incompatible change to the C API is and is the cause of
-	[Bug #3002768].
+	* generic/tkBind.c: Revert [Patch 2999920], as it entails an
+	incompatible change to the C API is and is the cause of [Bug 3002768].
 
 2010-05-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkBind.c    [Patch #2999920]: Optimize Internal Virtual event
-	string operations
-	* win/tkWinDialog.c   [Bug #2987995]: Tk_getOpenFile returns garbage under
-	described circumstances
+	* generic/tkBind.c: [Patch 2999920]: Optimize Internal Virtual event
+	string operations.
+	* win/tkWinDialog.c: [Bug 2987995]: Tk_getOpenFile returns garbage
+	under described circumstances
 
 2010-05-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* doc/RestrictEv.3    Consistent use of variable names in RestrictEvent
-	* generic/tkGrab.c    API documentation and implementation: Use 'prev'
-	* unix/tkUnixDraw.c   in stead of 'old', and 'arg' in stead of
-	* unix/tkUnixSend.c   'clientData' everywhere, just as in tkEvent.c.
+	* doc/RestrictEv.3:  Consistent use of variable names in RestrictEvent
+	* generic/tkGrab.c:  API documentation and implementation: Use 'prev'
+	* unix/tkUnixDraw.c: instead of 'old', and 'arg' instead of
+	* unix/tkUnixSend.c: 'clientData' everywhere, just as in tkEvent.c.
 	* unix/tkUnixWm.c
 
 2010-05-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* doc/BindTable.3      Bring in line with actual implementation.
-	* generic/tk.decls     Change Tk_CreateBinding param name, as in doc
-	* generic/tkInt.decls  CONSTify TkCopyAndGlobalEval, TkpSetMainMenubar,
-	* generic/tkBind.c     TkpMenuNotifyToplevelCreate, and TkSetWindowMenuBar
-	* generic/tkMenu.c
-	* generic/tkDecls.h    (regenerated)
-	* generic/tkIntDecls.h (regenerated)
-	* carbon/tkMacOSXMenu.c
-	* macosx/tkMacOSXMenu.c
-	* unix/tkUnixMenu.c
-	* win/tkWinMenu.c
+	* doc/BindTable.3:     Bring in line with actual implementation.
+	* generic/tk.decls:    Change Tk_CreateBinding param name, as in doc
+	* generic/tkInt.decls: CONSTify TkCopyAndGlobalEval,
+	* generic/tkBind.c:    TkpSetMainMenubar, TkpMenuNotifyToplevelCreate,
+	* generic/tkMenu.c:    and TkSetWindowMenuBar
+	* generic/tkDecls.h:    (regenerated)
+	* generic/tkIntDecls.h: (regenerated)
+	* carbon/tkMacOSXMenu.c:
+	* macosx/tkMacOSXMenu.c:
+	* unix/tkUnixMenu.c:
+	* win/tkWinMenu.c:
 
 2010-05-03  Don Porter  <dgp@users.sourceforge.net>
 
