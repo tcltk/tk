@@ -2,6 +2,9 @@
 
 	* tests/wm.test: Fix 3 tests on Ubuntu 10.4, two of them timing dependent,
 	  one wm-dependent.
+	* generic/tkText.c    Fix some gcc strict-aliasing warnings (discovered
+	* unix/tkUnixFont.c   with "-Wstrict-aliasing=2"
+	* unix/tkUnixSelect.c
 
 2010-05-20  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -3545,7 +3548,7 @@
 	* changes:	Updates for 8.5.2 release.
 
 	* unix/tkUnixCursor.c:	Stop crash in [. configure -cursor] on X11.
-	Thanks to emiliano gavilán. [Bug 1922466]
+	Thanks to emiliano gavilan. [Bug 1922466]
 
 2008-03-26  Joe English  <jenglish@users.sourceforge.net>
 
