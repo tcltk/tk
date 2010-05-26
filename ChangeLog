@@ -1,3 +1,8 @@
+2010-05-26  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* tests/wm.test: Fix 3 tests on Ubuntu 10.4, two of them timing dependent,
+	  one wm-dependent.
+
 2010-05-20  Donal K. Fellows  <dkf@users.sf.net>
 
 	* win/tkWinX.c (HandleIMEComposition): [Bug 2992129]: Ensure that all
