@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.25 2009/07/18 19:30:36 dkf Exp $
+ * RCS: @(#) $Id: tkUnixSelect.c,v 1.26 2010/05/26 15:28:10 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -793,7 +793,10 @@ ConvertSelection(
     register XSelectionRequestEvent *eventPtr)
 				/* Event describing request. */
 {
-    XSelectionEvent reply;	/* Used to notify requestor that selection
+	union {
+		XSelectionEvent xsel;
+		XEvent ev;
+	} reply;	/* Used to notify requestor that selection
 				 * info is ready. */
     int multiple;		/* Non-zero means a MULTIPLE request is being
 				 * handled. */
@@ -814,18 +817,18 @@ ConvertSelection(
      * Initialize the reply event.
      */
 
-    reply.type = SelectionNotify;
-    reply.serial = 0;
-    reply.send_event = True;
-    reply.display = eventPtr->display;
-    reply.requestor = eventPtr->requestor;
-    reply.selection = eventPtr->selection;
-    reply.target = eventPtr->target;
-    reply.property = eventPtr->property;
-    if (reply.property == None) {
-	reply.property = reply.target;
+    reply.xsel.type = SelectionNotify;
+    reply.xsel.serial = 0;
+    reply.xsel.send_event = True;
+    reply.xsel.display = eventPtr->display;
+    reply.xsel.requestor = eventPtr->requestor;
+    reply.xsel.selection = eventPtr->selection;
+    reply.xsel.target = eventPtr->target;
+    reply.xsel.property = eventPtr->property;
+    if (reply.xsel.property == None) {
+	reply.xsel.property = reply.xsel.target;
     }
-    reply.time = eventPtr->time;
+    reply.xsel.time = eventPtr->time;
 
     for (infoPtr = winPtr->dispPtr->selectionInfoPtr; infoPtr != NULL;
 	    infoPtr = infoPtr->nextPtr) {
@@ -848,8 +851,8 @@ ConvertSelection(
     incr.selection = eventPtr->selection;
     if (eventPtr->target != winPtr->dispPtr->multipleAtom) {
 	multiple = 0;
-	singleInfo[0] = reply.target;
-	singleInfo[1] = reply.property;
+	singleInfo[0] = reply.xsel.target;
+	singleInfo[1] = reply.xsel.property;
 	incr.multAtoms = singleInfo;
 	incr.numConversions = 1;
     } else {
@@ -958,7 +961,7 @@ ConvertSelection(
 	    propPtr = (char *) buffer;
 	    format = 32;
 	    incr.converts[i].offset = 0;
-	    XChangeProperty(reply.display, reply.requestor,
+	    XChangeProperty(reply.xsel.display, reply.xsel.requestor,
 		    property, type, format, PropModeReplace,
 		    (unsigned char *) propPtr, numItems);
 	} else if (type == winPtr->dispPtr->utf8Atom) {
@@ -967,7 +970,7 @@ ConvertSelection(
 	     * allows us to pass our utf-8 information untouched.
 	     */
 
-	    XChangeProperty(reply.display, reply.requestor, property, type, 8,
+	    XChangeProperty(reply.xsel.display, reply.xsel.requestor, property, type, 8,
 		    PropModeReplace, (unsigned char *) buffer, numItems);
 	} else if ((type == XA_STRING)
 		|| (type == winPtr->dispPtr->compoundTextAtom)) {
@@ -986,7 +989,7 @@ ConvertSelection(
 		encoding = Tcl_GetEncoding(NULL, "iso2022");
 	    }
 	    Tcl_UtfToExternalDString(encoding, (char *) buffer, -1, &ds);
-	    XChangeProperty(reply.display, reply.requestor, property, type, 8,
+	    XChangeProperty(reply.xsel.display, reply.xsel.requestor, property, type, 8,
 		    PropModeReplace, (unsigned char *) Tcl_DStringValue(&ds),
 		    Tcl_DStringLength(&ds));
 	    if (encoding) {
@@ -1000,7 +1003,7 @@ ConvertSelection(
 		goto refuse;
 	    }
 	    format = 32;
-	    XChangeProperty(reply.display, reply.requestor, property, type,
+	    XChangeProperty(reply.xsel.display, reply.xsel.requestor, property, type,
 		    format, PropModeReplace, (unsigned char *) propPtr,
 		    numItems);
 	    ckfree(propPtr);
@@ -1014,17 +1017,16 @@ ConvertSelection(
      */
 
     if (incr.numIncrs > 0) {
-	XSelectInput(reply.display, reply.requestor, PropertyChangeMask);
-	incr.timeout = Tcl_CreateTimerHandler(1000, IncrTimeoutProc,
-	    (ClientData) &incr);
+	XSelectInput(reply.xsel.display, reply.xsel.requestor, PropertyChangeMask);
+	incr.timeout = Tcl_CreateTimerHandler(1000, IncrTimeoutProc, &incr);
 	incr.idleTime = 0;
-	incr.reqWindow = reply.requestor;
+	incr.reqWindow = reply.xsel.requestor;
 	incr.time = infoPtr->time;
 	incr.nextPtr = tsdPtr->pendingIncrs;
 	tsdPtr->pendingIncrs = &incr;
     }
     if (multiple) {
-	XChangeProperty(reply.display, reply.requestor, reply.property,
+	XChangeProperty(reply.xsel.display, reply.xsel.requestor, reply.xsel.property,
 		XA_ATOM, 32, PropModeReplace,
 		(unsigned char *) incr.multAtoms,
 		(int) incr.numConversions*2);
@@ -1034,9 +1036,9 @@ ConvertSelection(
 	 * to None if there was an error in conversion.
 	 */
 
-	reply.property = incr.multAtoms[1];
+	reply.xsel.property = incr.multAtoms[1];
     }
-    XSendEvent(reply.display, reply.requestor, False, 0, (XEvent *) &reply);
+    XSendEvent(reply.xsel.display, reply.xsel.requestor, False, 0, &reply.ev);
     Tk_DeleteErrorHandler(errorHandler);
 
     /*
@@ -1054,7 +1056,7 @@ ConvertSelection(
 	Tcl_DeleteTimerHandler(incr.timeout);
 	errorHandler = Tk_CreateErrorHandler(winPtr->display,
 		-1, -1,-1, (int (*)()) NULL, NULL);
-	XSelectInput(reply.display, reply.requestor, 0L);
+	XSelectInput(reply.xsel.display, reply.xsel.requestor, 0L);
 	Tk_DeleteErrorHandler(errorHandler);
 	if (tsdPtr->pendingIncrs == &incr) {
 	    tsdPtr->pendingIncrs = incr.nextPtr;
@@ -1084,8 +1086,8 @@ ConvertSelection(
      */
 
   refuse:
-    reply.property = None;
-    XSendEvent(reply.display, reply.requestor, False, 0, (XEvent *) &reply);
+    reply.xsel.property = None;
+    XSendEvent(reply.xsel.display, reply.xsel.requestor, False, 0, &reply.ev);
     Tk_DeleteErrorHandler(errorHandler);
     return;
 }
