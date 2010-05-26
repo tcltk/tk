@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.41 2010/01/05 08:49:49 dkf Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.42 2010/05/26 15:28:10 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -1086,7 +1086,7 @@ Tk_MeasureChars(
 	int newX, termX, sawNonSpace, dstWrote;
 	Tcl_UniChar ch;
 	FontFamily *familyPtr;
-	char buf[16];
+	XChar2b buf[8];
 
 	/*
 	 * How many chars will fit in the space allotted? This first version
@@ -1108,14 +1108,14 @@ Tk_MeasureChars(
 	    } else {
 		lastSubFontPtr = FindSubFontForChar(fontPtr, ch, NULL);
 		familyPtr = lastSubFontPtr->familyPtr;
-		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p,
-			0, NULL, buf, sizeof(buf), NULL, &dstWrote, NULL);
+		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, 0, NULL,
+			(char *)&buf[0].byte1, sizeof(buf), NULL, &dstWrote, NULL);
 		if (familyPtr->isTwoByteFont) {
 		    newX += XTextWidth16(lastSubFontPtr->fontStructPtr,
-			    (XChar2b *) buf, dstWrote >> 1);
+			    buf, dstWrote >> 1);
 		} else {
-		    newX += XTextWidth(lastSubFontPtr->fontStructPtr, buf,
-			    dstWrote);
+		    newX += XTextWidth(lastSubFontPtr->fontStructPtr,
+			    (char *)&buf[0].byte1, dstWrote);
 		}
 	    }
 	    if (newX > maxLength) {
