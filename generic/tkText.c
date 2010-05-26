@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkText.c,v 1.99 2010/03/11 09:43:19 dkf Exp $
+ * RCS: @(#) $Id: tkText.c,v 1.100 2010/05/26 15:28:09 nijtmans Exp $
  */
 
 #include "default.h"
@@ -4712,7 +4712,7 @@ DumpLine(
 		    && (segPtr->typePtr == &tkTextLeftMarkType
 		    || segPtr->typePtr == &tkTextRightMarkType)) {
 		const char *name;
-		TkTextMark *markPtr = (TkTextMark *) &segPtr->body;
+		TkTextMark *markPtr = &segPtr->body.mark;
 
 		if (segPtr == textPtr->insertMarkPtr) {
 		    name = "insert";
@@ -4747,7 +4747,7 @@ DumpLine(
 			what);
 	    } else if ((what & TK_DUMP_IMG) &&
 		    (segPtr->typePtr == &tkTextEmbImageType)) {
-		TkTextEmbImage *eiPtr = (TkTextEmbImage *)&segPtr->body;
+		TkTextEmbImage *eiPtr = &segPtr->body.ei;
 		const char *name = (eiPtr->name == NULL) ? "" : eiPtr->name;
 
 		TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr,
@@ -4756,7 +4756,7 @@ DumpLine(
 			command, &index, what);
 	    } else if ((what & TK_DUMP_WIN) &&
 		    (segPtr->typePtr == &tkTextEmbWindowType)) {
-		TkTextEmbWindow *ewPtr = (TkTextEmbWindow *)&segPtr->body;
+		TkTextEmbWindow *ewPtr = &segPtr->body.ew;
 		const char *pathname;
 
 		if (ewPtr->tkwin == (Tk_Window) NULL) {
