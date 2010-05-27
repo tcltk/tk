@@ -1,3 +1,10 @@
+2010-05-27  Joe English <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkTreeview.c, tests/ttk/treeview.test:
+	[$tv tag bind $tag <...> {}] now removes binding completely.
+	Fixes [Bug 3006842] (although there's still a problem somewhere
+	in Tk_CreateBinding()).
+
 2010-05-26  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* tests/wm.test: Fix 3 tests on Ubuntu 10.4, two of them timing dependent,
