@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.23 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkTreeview.c,v 1.23.2.1 2010/05/31 17:22:48 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -2894,6 +2894,8 @@ static int TreeviewTagBindCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], void *recordPtr)
 {
     Treeview *tv = recordPtr;
+    Ttk_TagTable tagTable = tv->tree.tagTable;
+    Tk_BindingTable bindingTable = tv->tree.bindingTable;
     Ttk_Tag tag;
 
     if (objc < 4 || objc > 6) {
@@ -2901,37 +2903,40 @@ static int TreeviewTagBindCommand(
 	return TCL_ERROR;
     }
 
-    tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[3]);
+    tag = Ttk_GetTagFromObj(tagTable, objv[3]);
     if (!tag) { return TCL_ERROR; }
 
     if (objc == 4) {		/* $tv tag bind $tag */
-	Tk_GetAllBindings(interp, tv->tree.bindingTable, tag);
+	Tk_GetAllBindings(interp, bindingTable, tag);
     } else if (objc == 5) { 	/* $tv tag bind $tag $sequence */
 	/* TODO: distinguish "no such binding" (OK) from "bad pattern" (ERROR)
 	 */
 	const char *script = Tk_GetBinding(interp,
-		tv->tree.bindingTable, tag, Tcl_GetString(objv[4]));
+		bindingTable, tag, Tcl_GetString(objv[4]));
 	if (script != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(script,-1));
 	}
     } else if (objc == 6) {	/* $tv tag bind $tag $sequence $script */
-	CONST char *sequence = Tcl_GetString(objv[4]);
-	CONST char *script = Tcl_GetString(objv[5]);
-	unsigned long mask = Tk_CreateBinding(interp,
-		tv->tree.bindingTable, tag, sequence, script, 0);
+	const char *sequence = Tcl_GetString(objv[4]);
+	const char *script = Tcl_GetString(objv[5]);
 
-	/* Test mask to make sure event is supported:
-	 */
-	if (mask & (~TreeviewBindEventMask)) {
-	    Tk_DeleteBinding(interp, tv->tree.bindingTable, tag, sequence);
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "unsupported event ", sequence,
-		"\nonly key, button, motion, and virtual events supported",
-		NULL);
-	    return TCL_ERROR;
+	if (!*script) { /* Delete existing binding */
+	    Tk_DeleteBinding(interp, bindingTable, tag, sequence);
+	} else {
+	    unsigned long mask = Tk_CreateBinding(interp,
+		    bindingTable, tag, sequence, script, 0);
+
+	    /* Test mask to make sure event is supported:
+	     */
+	    if (mask & (~TreeviewBindEventMask)) {
+		Tk_DeleteBinding(interp, bindingTable, tag, sequence);
+		Tcl_ResetResult(interp);
+		Tcl_AppendResult(interp, "unsupported event ", sequence,
+		    "\nonly key, button, motion, and virtual events supported",
+		    NULL);
+		return TCL_ERROR;
+	    }
 	}
-
-	return mask ? TCL_OK : TCL_ERROR;
     }
     return TCL_OK;
 }

@@ -1,5 +1,5 @@
 #
-# $Id: treeview.test,v 1.3.2.1 2008/08/19 14:48:00 jenglish Exp $
+# $Id: treeview.test,v 1.3.2.2 2010/05/31 17:22:49 jenglish Exp $
 #
 # [7Jun2005] TO CHECK: [$tv see {}] -- shouldn't work (at least, shouldn't do
 # what it currently does)
@@ -485,6 +485,17 @@ test treeview-10.1 "Root node properly initialized (#1541739)" -setup {
     .tv insert {} end -id a
     .tv see a
 } -cleanup {
+    destroy .tv
+}
+
+test treeview-3006842 "Null bindings" -setup {
+    ttk::treeview .tv -show tree
+} -body {
+    .tv tag bind empty <ButtonPress-1> {}
+    .tv insert {} end -text "Click me" -tags empty
+    event generate .tv <ButtonPress-1> -x 10 -y 10
+    .tv tag bind empty
+} -result {} -cleanup {
     destroy .tv
 }
 

@@ -1,3 +1,10 @@
+2010-05-31  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tkBind.c(Tk_CreateBinding): Silently ignore empty 
+	binding scripts (Fixes [Bug 3006842]).
+	* generic/ttk/ttkTreeview.c: [$tv tag bind $tag <...> {}]
+	now removes binding.
+
 2010-05-31  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkMain.c:  Fix CYGWIN warning: "fd_set and assiciated.macros
