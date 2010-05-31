@@ -13,19 +13,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.28.2.1 2009/10/15 17:48:50 dgp Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.28.2.2 2010/05/31 10:29:29 nijtmans Exp $
  */
 
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
 #include "tclInt.h"
 #include "tkInt.h"
-#ifdef NO_STDLIB_H
-#   include "../compat/stdlib.h"
-#else
-#   include <stdlib.h>
-#endif
 #ifdef __WIN32__
 #include "tkWinInt.h"
 #endif
