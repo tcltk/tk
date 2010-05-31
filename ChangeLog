@@ -1,3 +1,8 @@
+2010-05-31  Joe English <jenglish@users.sourceforge.net>
+
+	* generic/tkBind.c(Tk_CreateBinding): Silently ignore empty 
+	scripts (Fixes [Bug 3006842]).
+
 2010-05-27  Joe English <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTreeview.c, tests/ttk/treeview.test:
