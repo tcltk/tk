@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.35 2010/01/06 14:58:30 dkf Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.36 2010/06/15 11:16:03 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -130,7 +130,7 @@ TkpOpenDisplay(
     OpenIM(dispPtr);
 #endif
     Tcl_CreateFileHandler(ConnectionNumber(display), TCL_READABLE,
-	    DisplayFileProc, (ClientData) dispPtr);
+	    DisplayFileProc, dispPtr);
     return dispPtr;
 }
 
@@ -204,7 +204,7 @@ TkClipCleanup(
 		dispPtr->windowAtom);
 
 	Tk_DestroyWindow(dispPtr->clipWindow);
-	Tcl_Release((ClientData) dispPtr->clipWindow);
+	Tcl_Release(dispPtr->clipWindow);
 	dispPtr->clipWindow = NULL;
     }
 }
@@ -553,7 +553,7 @@ TkUnixDoOneXEvent(
 	index = fd/(NBBY*sizeof(fd_mask));
 	bit = ((fd_mask)1) << (fd%(NBBY*sizeof(fd_mask)));
 	if ((readMask[index] & bit) || (QLength(dispPtr->display) > 0)) {
-	    DisplayFileProc((ClientData)dispPtr, TCL_READABLE);
+	    DisplayFileProc(dispPtr, TCL_READABLE);
 	}
     }
     if (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {

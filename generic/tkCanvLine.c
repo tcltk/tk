@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvLine.c,v 1.32 2010/02/17 19:21:16 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvLine.c,v 1.33 2010/06/15 11:16:03 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -132,29 +132,29 @@ static void		TranslateLine(Tk_Canvas canvas,
  */
 
 static const Tk_CustomOption arrowShapeOption = {
-    ParseArrowShape, PrintArrowShape, (ClientData) NULL
+    ParseArrowShape, PrintArrowShape, NULL
 };
 static const Tk_CustomOption arrowOption = {
-    ArrowParseProc, ArrowPrintProc, (ClientData) NULL
+    ArrowParseProc, ArrowPrintProc, NULL
 };
 static const Tk_CustomOption smoothOption = {
-    TkSmoothParseProc, TkSmoothPrintProc, (ClientData) NULL
+    TkSmoothParseProc, TkSmoothPrintProc, NULL
 };
 static const Tk_CustomOption stateOption = {
-    TkStateParseProc, TkStatePrintProc, (ClientData) 2
+    TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, (ClientData) NULL
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
 };
 static const Tk_CustomOption dashOption = {
-    TkCanvasDashParseProc, TkCanvasDashPrintProc, (ClientData) NULL
+    TkCanvasDashParseProc, TkCanvasDashPrintProc, NULL
 };
 static const Tk_CustomOption offsetOption = {
     TkOffsetParseProc, TkOffsetPrintProc,
-    (ClientData) (TK_OFFSET_RELATIVE|TK_OFFSET_INDEX)
+    INT2PTR(TK_OFFSET_RELATIVE|TK_OFFSET_INDEX)
 };
 static const Tk_CustomOption pixelOption = {
-    TkPixelParseProc, TkPixelPrintProc, (ClientData) NULL
+    TkPixelParseProc, TkPixelPrintProc, NULL
 };
 
 static const Tk_ConfigSpec configSpecs[] = {

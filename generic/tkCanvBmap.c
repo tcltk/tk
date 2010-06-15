@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvBmap.c,v 1.19 2010/02/17 19:21:15 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvBmap.c,v 1.20 2010/06/15 11:16:03 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -43,10 +43,10 @@ typedef struct BitmapItem  {
  */
 
 static const Tk_CustomOption stateOption = {
-    TkStateParseProc, TkStatePrintProc, (ClientData) 2
+    TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, (ClientData) NULL
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
 };
 
 static const Tk_ConfigSpec configSpecs[] = {
