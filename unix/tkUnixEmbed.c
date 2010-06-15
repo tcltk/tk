@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEmbed.c,v 1.14 2008/10/20 10:50:20 dkf Exp $
+ * RCS: @(#) $Id: tkUnixEmbed.c,v 1.15 2010/06/15 11:16:02 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -139,7 +139,7 @@ TkpUseWindow(
 
     anyError = 0;
     handler = Tk_CreateErrorHandler(winPtr->display, -1, -1, -1,
-	    EmbedErrorProc, (ClientData) &anyError);
+	    EmbedErrorProc, &anyError);
     if (!XGetWindowAttributes(winPtr->display, parent, &parentAtts)) {
         anyError = 1;
     }
@@ -161,7 +161,7 @@ TkpUseWindow(
      */
 
     Tk_CreateEventHandler(tkwin, StructureNotifyMask, EmbeddedEventProc,
-	    (ClientData) winPtr);
+	    winPtr);
 
     /*
      * Save information about the container and the embedded window in a
@@ -303,11 +303,11 @@ TkpMakeContainer(
     XSelectInput(winPtr->display, winPtr->window, winPtr->atts.event_mask);
     Tk_CreateEventHandler(tkwin,
 	    SubstructureNotifyMask|SubstructureRedirectMask,
-	    ContainerEventProc, (ClientData) winPtr);
+	    ContainerEventProc, winPtr);
     Tk_CreateEventHandler(tkwin, StructureNotifyMask, EmbedStructureProc,
-	    (ClientData) containerPtr);
+	    containerPtr);
     Tk_CreateEventHandler(tkwin, FocusChangeMask, EmbedFocusProc,
-	    (ClientData) containerPtr);
+	    containerPtr);
 }
 
 /*
@@ -408,7 +408,7 @@ ContainerEventProc(
      */
 
     errHandler = Tk_CreateErrorHandler(eventPtr->xfocus.display, -1,
-	    -1, -1, NULL, (ClientData) NULL);
+	    -1, -1, NULL, NULL);
 
     /*
      * Find the Container structure associated with the parent window.
@@ -511,7 +511,7 @@ EmbedStructureProc(
 	     */
 
 	    errHandler = Tk_CreateErrorHandler(eventPtr->xfocus.display, -1,
-		    -1, -1, NULL, (ClientData) NULL);
+		    -1, -1, NULL, NULL);
 	    XMoveResizeWindow(eventPtr->xconfigure.display,
 		    containerPtr->wrapper, 0, 0,
 		    (unsigned) Tk_Width((Tk_Window) containerPtr->parentPtr),
@@ -562,7 +562,7 @@ EmbedFocusProc(
 
 	if (containerPtr->wrapper != None) {
 	    errHandler = Tk_CreateErrorHandler(eventPtr->xfocus.display, -1,
-		    -1, -1, NULL, (ClientData) NULL);
+		    -1, -1, NULL, NULL);
 	    XSetInputFocus(display, containerPtr->wrapper, RevertToParent,
 		    CurrentTime);
 	    Tk_DeleteErrorHandler(errHandler);

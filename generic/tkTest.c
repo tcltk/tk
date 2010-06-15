@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.47 2010/02/22 23:38:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.48 2010/06/15 11:16:03 nijtmans Exp $
  */
 
 #undef STATIC_BUILD
@@ -249,8 +249,7 @@ Tktest_Init(
         return TCL_ERROR;
     }
 
-    Tcl_CreateObjCommand(interp, "square", SquareObjCmd,
-	    (ClientData) NULL, NULL);
+    Tcl_CreateObjCommand(interp, "square", SquareObjCmd, NULL, NULL);
     Tcl_CreateCommand(interp, "testcbind", TestcbindCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testbitmap", TestbitmapObjCmd,
@@ -639,7 +638,7 @@ TestobjconfigObjCmd(
 	CustomOptionGet,
 	CustomOptionRestore,
 	CustomOptionFree,
-	(ClientData) 1
+	INT2PTR(1)
     };
     Tk_Window mainWin = (Tk_Window) clientData;
     Tk_Window tkwin;
@@ -1064,9 +1063,9 @@ TestobjconfigObjCmd(
 	if (result == TCL_OK) {
 	    recordPtr->header.widgetCmd = Tcl_CreateObjCommand(interp,
 		    Tcl_GetString(objv[2]), TrivialConfigObjCmd,
-		    (ClientData) recordPtr, TrivialCmdDeletedProc);
+		    recordPtr, TrivialCmdDeletedProc);
 	    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
-		    TrivialEventProc, (ClientData) recordPtr);
+		    TrivialEventProc, recordPtr);
 	    result = Tk_SetOptions(interp, (char *) recordPtr, optionTable,
 		    objc - 3, objv + 3, tkwin, NULL, NULL);
 	    if (result != TCL_OK) {
@@ -1207,9 +1206,9 @@ TestobjconfigObjCmd(
 	    if (result == TCL_OK) {
 		recordPtr->header.widgetCmd = Tcl_CreateObjCommand(interp,
 			Tcl_GetString(objv[2]), TrivialConfigObjCmd,
-			(ClientData) recordPtr, TrivialCmdDeletedProc);
+			recordPtr, TrivialCmdDeletedProc);
 		Tk_CreateEventHandler(tkwin, StructureNotifyMask,
-			TrivialEventProc, (ClientData) recordPtr);
+			TrivialEventProc, recordPtr);
 		Tcl_SetObjResult(interp, objv[2]);
 	    } else {
 		Tk_FreeConfigOptions((char *) recordPtr,
@@ -1529,8 +1528,8 @@ ImageCreate(
     strcpy(timPtr->imageName, name);
     timPtr->varName = (char *) ckalloc((unsigned) (strlen(varName) + 1));
     strcpy(timPtr->varName, varName);
-    Tcl_CreateCommand(interp, name, ImageCmd, (ClientData) timPtr, NULL);
-    *clientDataPtr = (ClientData) timPtr;
+    Tcl_CreateCommand(interp, name, ImageCmd, timPtr, NULL);
+    *clientDataPtr = timPtr;
     Tk_ImageChanged(master, 0, 0, 30, 15, 30, 15);
     return TCL_OK;
 }
@@ -1630,7 +1629,7 @@ ImageGet(
     instPtr->fg = Tk_GetColor(timPtr->interp, tkwin, "#ff0000");
     gcValues.foreground = instPtr->fg->pixel;
     instPtr->gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
-    return (ClientData) instPtr;
+    return instPtr;
 }
 
 /*

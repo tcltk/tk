@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvText.c,v 1.38 2010/02/17 19:21:16 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvText.c,v 1.39 2010/06/15 11:16:03 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -86,13 +86,13 @@ typedef struct TextItem {
  */
 
 static const Tk_CustomOption stateOption = {
-    TkStateParseProc, TkStatePrintProc, (ClientData) 2
+    TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, (ClientData) NULL
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
 };
 static const Tk_CustomOption offsetOption = {
-    TkOffsetParseProc, TkOffsetPrintProc, (ClientData) (TK_OFFSET_RELATIVE)
+    TkOffsetParseProc, TkOffsetPrintProc, INT2PTR(TK_OFFSET_RELATIVE)
 };
 
 static const Tk_ConfigSpec configSpecs[] = {

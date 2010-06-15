@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.82 2010/05/11 12:12:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.83 2010/06/15 11:16:02 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -613,7 +613,7 @@ TkWmNewWindow(
      * window manager.
      */
 
-    Tk_ManageGeometry((Tk_Window) winPtr, &wmMgrType, (ClientData) 0);
+    Tk_ManageGeometry((Tk_Window) winPtr, &wmMgrType, NULL);
 }
 
 /*

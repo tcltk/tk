@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStyle.c,v 1.12 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkStyle.c,v 1.13 2010/06/15 11:16:03 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -210,8 +210,7 @@ TkStylePkgInit(
      * Create the default system style.
      */
 
-    Tk_CreateStyle(NULL, (Tk_StyleEngine) tsdPtr->defaultEnginePtr,
-	    (ClientData) 0);
+    Tk_CreateStyle(NULL, (Tk_StyleEngine) tsdPtr->defaultEnginePtr, NULL);
 
     tsdPtr->nbInit++;
 }

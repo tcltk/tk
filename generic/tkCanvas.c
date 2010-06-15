@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvas.c,v 1.65 2010/02/17 19:21:16 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvas.c,v 1.66 2010/06/15 11:16:03 nijtmans Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */
@@ -104,12 +104,11 @@ typedef struct TagSearch {
 
 static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc,
-    (ClientData) NULL		/* Only "normal" and "disabled". */
+    NULL		/* Only "normal" and "disabled". */
 };
 
 static const Tk_CustomOption offsetOption = {
-    TkOffsetParseProc, TkOffsetPrintProc,
-    (ClientData) TK_OFFSET_RELATIVE
+    TkOffsetParseProc, TkOffsetPrintProc, INT2PTR(TK_OFFSET_RELATIVE)
 };
 
 /*
