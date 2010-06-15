@@ -1,3 +1,8 @@
+2010-06-15  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/ttk.tcl: Bump dummy [package ifneeded tile] version
+	to 0.8.6; see [Bug 3016598].
+
 2010-06-15  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/text.tcl (TextCursorInSelection): [Patch 2585265]: Make it
