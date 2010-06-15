@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.48 2010/02/05 22:45:03 nijtmans Exp $
+ * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.49 2010/06/15 12:40:07 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1108,9 +1108,10 @@ static void		DeleteFontchooserData(ClientData clientData,
 
 MODULE_SCOPE const TkEnsemble tkFontchooserEnsemble[];
 const TkEnsemble tkFontchooserEnsemble[] = {
-    { "configure", FontchooserConfigureCmd },
-    { "show", FontchooserShowCmd },
-    { "hide", FontchooserHideCmd },
+    { "configure", FontchooserConfigureCmd, NULL },
+    { "show", FontchooserShowCmd, NULL },
+    { "hide", FontchooserHideCmd, NULL },
+    { NULL, NULL, NULL }
 };
 
 static Tcl_Interp *fontchooserInterp = NULL;
