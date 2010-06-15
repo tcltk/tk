@@ -18,6 +18,8 @@
 	* unix/tkUnixScrlbr.c
 	* unix/tkUnixSelect.c
 	* unix/tkUnixWm.c
+	* carbon/tkMacOSXDialog.c:  Terminate TkEnsemble definition with NULL
+	* macosx/tkMacOSXDialog.c
 
 2010-05-31  Joe English <jenglish@users.sourceforge.net>
 
