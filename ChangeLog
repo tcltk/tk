@@ -1,30 +1,37 @@
+2010-06-15  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/text.tcl (TextCursorInSelection): [Patch 2585265]: Make it
+	so that pressing delete or backspace when the primary selection does
+	not include the insertion cursor does not cause the deletion of the
+	inserted text.
+
 2010-06-15  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkCanvArc.c   Eliminate many unnecessary
-	* generic/tkCanvas.c    (ClientData) type casts.
-	* generic/tkCanvBmap.c
-	* generic/tkCanvImg.c
-	* generic/tkCanvLine.c
-	* generic/tkCanvPoly.c
-	* generic/tkCanvTest.c
-	* generic/tkCanvWind.c
-	* generic/tkRectOval.c
-	* generic/tkScrollbar.c
-	* generic/tkStyle.c
-	* generic/tkTest.c
-	* unix/tkUnixEmbed.c
-	* unix/tkUnixEvent.c
-	* unix/tkUnixScale.c
-	* unix/tkUnixScrlbr.c
-	* unix/tkUnixSelect.c
-	* unix/tkUnixWm.c
-	* carbon/tkMacOSXDialog.c:  Terminate TkEnsemble definition with NULL
-	* macosx/tkMacOSXDialog.c
+	* generic/tkCanvArc.c:	Eliminate many unnecessary (ClientData) type
+	* generic/tkCanvas.c:	casts.
+	* generic/tkCanvBmap.c:
+	* generic/tkCanvImg.c:
+	* generic/tkCanvLine.c:
+	* generic/tkCanvPoly.c:
+	* generic/tkCanvTest.c:
+	* generic/tkCanvWind.c:
+	* generic/tkRectOval.c:
+	* generic/tkScrollbar.c:
+	* generic/tkStyle.c:
+	* generic/tkTest.c:
+	* unix/tkUnixEmbed.c:
+	* unix/tkUnixEvent.c:
+	* unix/tkUnixScale.c:
+	* unix/tkUnixScrlbr.c:
+	* unix/tkUnixSelect.c:
+	* unix/tkUnixWm.c:
+	* carbon/tkMacOSXDialog.c: Terminate TkEnsemble definition with NULL
+	* macosx/tkMacOSXDialog.c:
 
 2010-05-31  Joe English <jenglish@users.sourceforge.net>
 
-	* generic/tkBind.c(Tk_CreateBinding): Silently ignore empty 
-	scripts (Fixes [Bug 3006842]).
+	* generic/tkBind.c (Tk_CreateBinding): [Bug 3006842]: Silently ignore
+	empty scripts.
 
 2010-05-27  Joe English <jenglish@users.sourceforge.net>
 
@@ -35,11 +42,11 @@
 
 2010-05-26  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* tests/wm.test: Fix 3 tests on Ubuntu 10.4, two of them timing dependent,
-	  one wm-dependent.
-	* generic/tkText.c    Fix some gcc strict-aliasing warnings (discovered
-	* unix/tkUnixFont.c   with "-Wstrict-aliasing=2"
-	* unix/tkUnixSelect.c
+	* tests/wm.test: Fix 3 tests on Ubuntu 10.4, two of them timing
+	dependent, one wm-dependent.
+	* generic/tkText.c:	Fix some gcc strict-aliasing warnings, 
+	* unix/tkUnixFont.c:	discovered with "-Wstrict-aliasing=2"
+	* unix/tkUnixSelect.c:
 
 2010-05-20  Donal K. Fellows  <dkf@users.sf.net>
 
