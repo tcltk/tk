@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.9 2010/01/13 23:08:10 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.10 2010/06/15 11:16:02 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -73,7 +73,7 @@ TkpCreateScrollbar(
 
     Tk_CreateEventHandler(tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
-	    TkScrollbarEventProc, (ClientData) scrollPtr);
+	    TkScrollbarEventProc, scrollPtr);
 
     return (TkScrollbar *) scrollPtr;
 }
