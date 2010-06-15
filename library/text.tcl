@@ -3,7 +3,7 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.45 2010/01/06 18:37:36 dkf Exp $
+# RCS: @(#) $Id: text.tcl,v 1.46 2010/06/15 14:30:48 dkf Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -208,7 +208,7 @@ bind Text <Return> {
     }
 }
 bind Text <Delete> {
-    if {[%W tag nextrange sel 1.0 end] ne ""} {
+    if {[tk::TextCursorInSelection %W]} {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare end != insert+1c]} {
@@ -218,7 +218,7 @@ bind Text <Delete> {
     }
 }
 bind Text <BackSpace> {
-    if {[%W tag nextrange sel 1.0 end] ne ""} {
+    if {[tk::TextCursorInSelection %W]} {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare insert != 1.0]} {
@@ -866,6 +866,21 @@ proc ::tk::TextResetAnchor {w index} {
     }
 }
 
+# ::tk::TextCursorInSelection --
+# Check whether the selection exists and contains the insertion cursor. Note
+# that it assumes that the selection is contiguous.
+#
+# Arguments:
+# w -		The text widget whose selection is to be checked
+
+proc ::tk::TextCursorInSelection {w} {
+    expr {
+	[llength [$w tag ranges sel]]
+	&& [$w compare sel.first <= insert]
+	&& [$w compare sel.last >= insert]
+    }
+}
+
 # ::tk::TextInsert --
 # Insert a string into a text at the point of the insertion cursor.
 # If there is a selection in the text, and it covers the point of the
@@ -880,17 +895,14 @@ proc ::tk::TextInsert {w s} {
 	return
     }
     set compound 0
-    if {[llength [set range [$w tag ranges sel]]]} {
-	if {[$w compare [lindex $range 0] <= insert] \
-		&& [$w compare [lindex $range end] >= insert]} {
-	    set oldSeparator [$w cget -autoseparators]
-	    if {$oldSeparator} {
-		$w configure -autoseparators 0
-		$w edit separator
-		set compound 1
-	    }
-	    $w delete [lindex $range 0] [lindex $range end]
+    if {[TextCursorInSelection $w]} {
+	set oldSeparator [$w cget -autoseparators]
+	if {$oldSeparator} {
+	    $w configure -autoseparators 0
+	    $w edit separator
+	    set compound 1
 	}
+	$w delete sel.first sel.last
     }
     $w insert insert $s
     $w see insert
