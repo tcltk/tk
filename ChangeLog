@@ -1,3 +1,24 @@
+2010-06-15  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkCanvArc.c   Eliminate many unnecessary
+	* generic/tkCanvas.c    (ClientData) type casts.
+	* generic/tkCanvBmap.c
+	* generic/tkCanvImg.c
+	* generic/tkCanvLine.c
+	* generic/tkCanvPoly.c
+	* generic/tkCanvTest.c
+	* generic/tkCanvWind.c
+	* generic/tkRectOval.c
+	* generic/tkScrollbar.c
+	* generic/tkStyle.c
+	* generic/tkTest.c
+	* unix/tkUnixEmbed.c
+	* unix/tkUnixEvent.c
+	* unix/tkUnixScale.c
+	* unix/tkUnixScrlbr.c
+	* unix/tkUnixSelect.c
+	* unix/tkUnixWm.c
+
 2010-05-31  Joe English <jenglish@users.sourceforge.net>
 
 	* generic/tkBind.c(Tk_CreateBinding): Silently ignore empty 
