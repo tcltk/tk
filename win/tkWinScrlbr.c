@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.21 2010/04/29 15:28:04 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinScrlbr.c,v 1.22 2010/06/19 16:18:41 jenglish Exp $
  */
 
 #include "tkWinInt.h"
@@ -64,10 +64,7 @@ TCL_DECLARE_MUTEX(winScrlbrMutex)
 
 static Window		CreateProc(Tk_Window tkwin, Window parent,
 			    ClientData instanceData);
-static void		ModalLoopProc(Tk_Window tkwin, XEvent *eventPtr);
-static int		ScrollbarBindProc(ClientData clientData,
-			    Tcl_Interp *interp, XEvent *eventPtr,
-			    Tk_Window tkwin, KeySym keySym);
+static void		ModalLoop(WinScrollbar *, XEvent *eventPtr);
 static LRESULT CALLBACK	ScrollbarProc(HWND hwnd, UINT message, WPARAM wParam,
 			    LPARAM lParam);
 static void		UpdateScrollbar(WinScrollbar *scrollPtr);
@@ -81,8 +78,20 @@ const Tk_ClassProcs tkpScrollbarProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     NULL,			/* worldChangedProc */
     CreateProc,			/* createProc */
-    ModalLoopProc		/* modalProc */
+    NULL 			/* modalProc */
 };
+
+static void
+WinScrollbarEventProc(ClientData clientData, XEvent *eventPtr)
+{
+    WinScrollbar *scrollPtr = clientData;
+
+    if (eventPtr->type == ButtonPress) {
+	ModalLoop(scrollPtr, eventPtr);
+    } else {
+	TkScrollbarEventProc(clientData, eventPtr);
+    }
+}
 
 
 /*
@@ -106,7 +115,6 @@ TkpCreateScrollbar(
     Tk_Window tkwin)
 {
     WinScrollbar *scrollPtr;
-    TkWindow *winPtr = (TkWindow *)tkwin;
 
     if (!initialized) {
 	Tcl_MutexLock(&winScrlbrMutex);
@@ -120,17 +128,8 @@ TkpCreateScrollbar(
     scrollPtr->hwnd = NULL;
 
     Tk_CreateEventHandler(tkwin,
-	    ExposureMask|StructureNotifyMask|FocusChangeMask,
-	    TkScrollbarEventProc, (ClientData) scrollPtr);
-
-    if (!Tcl_GetAssocData(winPtr->mainPtr->interp, "TkScrollbar", NULL)) {
-	Tcl_SetAssocData(winPtr->mainPtr->interp, "TkScrollbar", NULL,
-		(ClientData)1);
-	TkCreateBindingProcedure(winPtr->mainPtr->interp,
-		winPtr->mainPtr->bindingTable,
-		(ClientData)Tk_GetUid("Scrollbar"), "<ButtonPress>",
-		ScrollbarBindProc, NULL, NULL);
-    }
+	    ExposureMask|StructureNotifyMask|FocusChangeMask|ButtonPressMask,
+	    WinScrollbarEventProc, scrollPtr);
 
     return (TkScrollbar *) scrollPtr;
 }
@@ -601,62 +600,22 @@ TkpConfigureScrollbar(
 }
 
 /*
- *--------------------------------------------------------------
- *
- * ScrollbarBindProc --
- *
- *	This procedure is invoked when the default <ButtonPress> binding on
- *	the Scrollbar bind tag fires.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The event enters a modal loop.
- *
- *--------------------------------------------------------------
- */
-
-static int
-ScrollbarBindProc(
-    ClientData clientData,
-    Tcl_Interp *interp,
-    XEvent *eventPtr,
-    Tk_Window tkwin,
-    KeySym keySym)
-{
-    TkWindow *winPtr = (TkWindow *) tkwin;
-
-    if (eventPtr->type == ButtonPress) {
-	winPtr->flags |= TK_DEFER_MODAL;
-    }
-    return TCL_OK;
-}
-
-/*
  *----------------------------------------------------------------------
  *
- * ModalLoopProc --
+ * ModalLoop --
  *
- *	This function is invoked at the end of the event processing whenever
- *	the ScrollbarBindProc has been invoked for a ButtonPress event.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Enters a modal loop.
+ *	This function is invoked in response to a ButtonPress event.
+ *	It resends the event to the Scrollbar window procedure,
+ * 	which in turn enters a modal loop.
  *
  *----------------------------------------------------------------------
  */
 
 static void
-ModalLoopProc(
-    Tk_Window tkwin,
+ModalLoop(
+    WinScrollbar *scrollPtr,
     XEvent *eventPtr)
 {
-    TkWindow *winPtr = (TkWindow*)tkwin;
-    WinScrollbar *scrollPtr = (WinScrollbar *) winPtr->instanceData;
     int oldMode;
 
     if (scrollPtr->hwnd) {
