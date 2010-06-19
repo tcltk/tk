@@ -1,3 +1,17 @@
+2010-06-19  Joe English  <jenglish@users.sourceforge.net>
+
+	* win/tkWinScrlbr.c, carbon/tkMacOSXScrlbr.c: Replace binding
+	  procedures with ordinary event handlers [Patch 3009998].
+	* generic/tkBind.c, generic/tk.h, generic/tkInt.h,
+	  generic/tkInt.decls: Simplifications enabled by previous change:
+	  TkCreateBindingProcedure() and associated machinery
+	  no longer needed; TkBindDeadWindow() no longer needed;
+	  TK_DEFER_MODAL_LOOP and associated machinery no longer needed.
+	* generic/tkTest.c, tests/bind.test: Tests related to C binding
+	  procedures no longer needed.
+	* generic/tkWindow.c: TkBindDeadWindow() no longer needed.
+	* generic/tkIntDecls.h, generic/tkStubInit.c: Regenerated.
+
 2010-06-15  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/ttk.tcl: Bump dummy [package ifneeded tile] version

@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.61 2010/05/10 20:58:18 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.62 2010/06/19 16:18:41 jenglish Exp $
 
 library tk
 
@@ -36,9 +36,9 @@ declare 2 generic {
     void TkBezierScreenPoints(Tk_Canvas canvas, double control[],
 	    int numSteps, XPoint *xPointPtr)
 }
-declare 3 generic {
-    void TkBindDeadWindow(TkWindow *winPtr)
-}
+#
+# Slot 3 unused (WAS: TkBindDeadWindow)
+#
 declare 4 generic {
     void TkBindEventProc(TkWindow *winPtr, XEvent *eventPtr)
 }
@@ -61,12 +61,9 @@ declare 9 generic {
 declare 10 generic {
     int TkCopyAndGlobalEval(Tcl_Interp *interp, const char *script)
 }
-declare 11 generic {
-    unsigned long TkCreateBindingProcedure(Tcl_Interp *interp,
-	    Tk_BindingTable bindingTable, ClientData object,
-	    const char *eventString, TkBindEvalProc *evalProc,
-	    TkBindFreeProc *freeProc, ClientData clientData)
-}
+#
+# Slot 11 unused (WAS: TkCreateBindingProcedure)
+#
 declare 12 generic {
     TkCursor *TkCreateCursorFromData(Tk_Window tkwin,
 	    const char *source, const char *mask, int width, int height,
