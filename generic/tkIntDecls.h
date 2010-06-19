@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.50 2010/05/10 20:58:18 nijtmans Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.51 2010/06/19 16:18:41 jenglish Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -60,11 +60,7 @@ EXTERN void		TkBezierScreenPoints(Tk_Canvas canvas,
 				double control[], int numSteps,
 				XPoint *xPointPtr);
 #endif
-#ifndef TkBindDeadWindow_TCL_DECLARED
-#define TkBindDeadWindow_TCL_DECLARED
-/* 3 */
-EXTERN void		TkBindDeadWindow(TkWindow *winPtr);
-#endif
+/* Slot 3 is reserved */
 #ifndef TkBindEventProc_TCL_DECLARED
 #define TkBindEventProc_TCL_DECLARED
 /* 4 */
@@ -104,16 +100,7 @@ EXTERN void		TkComputeAnchor(Tk_Anchor anchor, Tk_Window tkwin,
 EXTERN int		TkCopyAndGlobalEval(Tcl_Interp *interp,
 				const char *script);
 #endif
-#ifndef TkCreateBindingProcedure_TCL_DECLARED
-#define TkCreateBindingProcedure_TCL_DECLARED
-/* 11 */
-EXTERN unsigned long	TkCreateBindingProcedure(Tcl_Interp *interp,
-				Tk_BindingTable bindingTable,
-				ClientData object, const char *eventString,
-				TkBindEvalProc *evalProc,
-				TkBindFreeProc *freeProc,
-				ClientData clientData);
-#endif
+/* Slot 11 is reserved */
 #ifndef TkCreateCursorFromData_TCL_DECLARED
 #define TkCreateCursorFromData_TCL_DECLARED
 /* 12 */
@@ -1120,7 +1107,7 @@ typedef struct TkIntStubs {
     TkWindow * (*tkAllocWindow) (TkDisplay *dispPtr, int screenNum, TkWindow *parentPtr); /* 0 */
     void (*tkBezierPoints) (double control[], int numSteps, double *coordPtr); /* 1 */
     void (*tkBezierScreenPoints) (Tk_Canvas canvas, double control[], int numSteps, XPoint *xPointPtr); /* 2 */
-    void (*tkBindDeadWindow) (TkWindow *winPtr); /* 3 */
+    void *reserved3;
     void (*tkBindEventProc) (TkWindow *winPtr, XEvent *eventPtr); /* 4 */
     void (*tkBindFree) (TkMainInfo *mainPtr); /* 5 */
     void (*tkBindInit) (TkMainInfo *mainPtr); /* 6 */
@@ -1128,7 +1115,7 @@ typedef struct TkIntStubs {
     int (*tkClipInit) (Tcl_Interp *interp, TkDisplay *dispPtr); /* 8 */
     void (*tkComputeAnchor) (Tk_Anchor anchor, Tk_Window tkwin, int padX, int padY, int innerWidth, int innerHeight, int *xPtr, int *yPtr); /* 9 */
     int (*tkCopyAndGlobalEval) (Tcl_Interp *interp, const char *script); /* 10 */
-    unsigned long (*tkCreateBindingProcedure) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventString, TkBindEvalProc *evalProc, TkBindFreeProc *freeProc, ClientData clientData); /* 11 */
+    void *reserved11;
     TkCursor * (*tkCreateCursorFromData) (Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, XColor fg, XColor bg); /* 12 */
     int (*tkCreateFrame) (ClientData clientData, Tcl_Interp *interp, int argc, const char *const *argv, int toplevel, const char *appName); /* 13 */
     Tk_Window (*tkCreateMainWindow) (Tcl_Interp *interp, const char *screenName, const char *baseName); /* 14 */
@@ -1421,10 +1408,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 #define TkBezierScreenPoints \
 	(tkIntStubsPtr->tkBezierScreenPoints) /* 2 */
 #endif
-#ifndef TkBindDeadWindow
-#define TkBindDeadWindow \
-	(tkIntStubsPtr->tkBindDeadWindow) /* 3 */
-#endif
+/* Slot 3 is reserved */
 #ifndef TkBindEventProc
 #define TkBindEventProc \
 	(tkIntStubsPtr->tkBindEventProc) /* 4 */
@@ -1453,10 +1437,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 #define TkCopyAndGlobalEval \
 	(tkIntStubsPtr->tkCopyAndGlobalEval) /* 10 */
 #endif
-#ifndef TkCreateBindingProcedure
-#define TkCreateBindingProcedure \
-	(tkIntStubsPtr->tkCreateBindingProcedure) /* 11 */
-#endif
+/* Slot 11 is reserved */
 #ifndef TkCreateCursorFromData
 #define TkCreateCursorFromData \
 	(tkIntStubsPtr->tkCreateCursorFromData) /* 12 */

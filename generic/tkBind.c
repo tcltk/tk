@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.66 2010/05/31 17:35:29 jenglish Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.67 2010/06/19 16:18:41 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -78,7 +78,7 @@ typedef union {
  */
 
 #define EVENT_BUFFER_SIZE 30
-typedef struct BindingTable {
+typedef struct Tk_BindingTable_ {
     XEvent eventRing[EVENT_BUFFER_SIZE];
 				/* Circular queue of recent events (higher
 				 * indices are for more recent events). */
@@ -112,7 +112,7 @@ typedef struct BindingTable {
  * because the virtual event is actually in the event stream.
  */
 
-typedef struct VirtualEventTable {
+typedef struct {
     Tcl_HashTable patternTable;	/* Used to map from a physical event to a list
 				 * of patterns that may match that event. Keys
 				 * are PatternTableKey structs, values are
@@ -139,7 +139,7 @@ typedef struct VirtualEventTable {
  * tables and virtual event tables.
  */
 
-typedef struct PatternTableKey {
+typedef struct {
     ClientData object;		/* For binding table, identifies the binding
 				 * tag of the object (or class of objects)
 				 * relative to which the event occurred. For
@@ -155,7 +155,7 @@ typedef struct PatternTableKey {
  * events as part of the process of converting X events into Tcl commands.
  */
 
-typedef struct Pattern {
+typedef struct {
     int eventType;		/* Type of X event, e.g. ButtonPress. */
     int needMods;		/* Mask of modifiers that must be present (0
 				 * means no modifiers are required). */
@@ -192,21 +192,10 @@ typedef struct Pattern {
 typedef struct PatSeq {
     int numPats;		/* Number of patterns in sequence (usually
 				 * 1). */
-    TkBindEvalProc *eventProc;	/* The function that will be invoked on the
-				 * clientData when this pattern sequence
-				 * matches. */
-    TkBindFreeProc *freeProc;	/* The function that will be invoked to
-				 * release the clientData when this pattern
-				 * sequence is freed. */
-    ClientData clientData;	/* Arbitray data passed to eventProc and
-				 * freeProc when sequence matches. */
+    char *script;		/* Binding script to evaluate when sequence 
+				 * matches (ckalloc()ed) */
     int flags;			/* Miscellaneous flag values; see below for
 				 * definitions. */
-    int refCount;		/* Number of times that this binding is in the
-				 * midst of executing. If greater than 1, then
-				 * a recursive invocation is happening. Only
-				 * when this is zero can the binding actually
-				 * be freed. */
     struct PatSeq *nextSeqPtr;	/* Next in list of all pattern sequences that
 				 * have the same initial pattern. NULL means
 				 * end of list. */
@@ -237,16 +226,9 @@ typedef struct PatSeq {
  *			must occur with nearby X and Y mouse coordinates and
  *			close in time. This is typically used to restrict
  *			multiple button presses.
- * MARKED_DELETED	1 means that this binding has been marked as deleted
- *			and removed from the binding table, but its memory
- *			could not be released because it was already queued
- *			for execution. When the binding is actually about to
- *			be executed, this flag will be checked and the binding
- *			skipped if set.
  */
 
 #define PAT_NEARBY		0x1
-#define MARKED_DELETED		0x2
 
 /*
  * Constants that define how close together two events must be in milliseconds
@@ -274,7 +256,7 @@ typedef struct VirtualOwners {
  * to associate a virtual event with all the physical events that can trigger
  * it.
  */
-typedef struct PhysicalsOwned {
+typedef struct {
     int numOwned;		/* Number of physical events owned. */
     PatSeq *patSeqs[1];		/* Array of pointers to physical event
 				 * patterns. Enough space will actually be
@@ -297,44 +279,17 @@ typedef struct {
 } ScreenInfo;
 
 /*
- * The following structure is used to keep track of all the C bindings that
- * are awaiting invocation and whether the window they refer to has been
- * destroyed. If the window is destroyed, then all pending callbacks for that
- * window will be cancelled. The Tcl bindings will still all be invoked,
- * however.
- */
-
-typedef struct PendingBinding {
-    struct PendingBinding *nextPtr;
-				/* Next in chain of pending bindings, in case
-				 * a recursive binding evaluation is in
-				 * progress. */
-    Tk_Window tkwin;		/* The window that the following bindings
-				 * depend upon. */
-    int deleted;		/* Set to non-zero by window cleanup code if
-				 * tkwin is deleted. */
-    PatSeq *matchArray[5];	/* Array of pending C bindings. The actual
-				 * size of this depends on how many C bindings
-				 * matched the event passed to Tk_BindEvent.
-				 * THIS FIELD MUST BE THE LAST IN THE
-				 * STRUCTURE. */
-} PendingBinding;
-
-/*
  * The following structure keeps track of all the information local to the
  * binding package on a per interpreter basis.
  */
 
-typedef struct BindInfo {
+typedef struct TkBindInfo_ {
     VirtualEventTable virtualEventTable;
 				/* The virtual events that exist in this
 				 * interpreter. */
     ScreenInfo screenInfo;	/* Keeps track of the current display and
 				 * screen, so it can be restored after a
 				 * binding has executed. */
-    PendingBinding *pendingList;/* The list of pending C bindings, kept in
-				 * case a C or Tcl binding causes the target
-				 * window to be deleted. */
     int deleted;		/* 1 the application has been deleted but the
 				 * structure has been preserved. */
 } BindInfo;
@@ -660,7 +615,6 @@ static int		DeleteVirtualEvent(Tcl_Interp *interp,
 static void		DeleteVirtualEventTable(VirtualEventTable *vetPtr);
 static void		ExpandPercents(TkWindow *winPtr, const char *before,
 			    XEvent *eventPtr,KeySym keySym,Tcl_DString *dsPtr);
-static void		FreeTclBinding(ClientData clientData);
 static PatSeq *		FindSequence(Tcl_Interp *interp,
 			    Tcl_HashTable *patternTablePtr, ClientData object,
 			    const char *eventString, int create,
@@ -686,15 +640,6 @@ static int		ParseEventDescription(Tcl_Interp *interp,
 			    const char **eventStringPtr, Pattern *patPtr,
 			    unsigned long *eventMaskPtr);
 static void		DoWarp(ClientData clientData);
-
-/*
- * The following define is used as a short circuit for the callback function
- * to evaluate a TclBinding. The actual evaluation of the binding is handled
- * inline, because special things have to be done with a Tcl binding before
- * evaluation time.
- */
-
-#define EvalTclBinding	((TkBindEvalProc *) 1)
 
 /*
  *---------------------------------------------------------------------------
@@ -775,9 +720,8 @@ TkBindInit(
     bindInfoPtr->screenInfo.curDispPtr = NULL;
     bindInfoPtr->screenInfo.curScreenIndex = -1;
     bindInfoPtr->screenInfo.bindingDepth = 0;
-    bindInfoPtr->pendingList = NULL;
     bindInfoPtr->deleted = 0;
-    mainPtr->bindInfo = (TkBindInfo) bindInfoPtr;
+    mainPtr->bindInfo = bindInfoPtr;
 
     TkpInitializeMenuBindings(mainPtr->interp, mainPtr->bindingTable);
 }
@@ -808,7 +752,7 @@ TkBindFree(
     Tk_DeleteBindingTable(mainPtr->bindingTable);
     mainPtr->bindingTable = NULL;
 
-    bindInfoPtr = (BindInfo *) mainPtr->bindInfo;
+    bindInfoPtr = mainPtr->bindInfo;
     DeleteVirtualEventTable(&bindInfoPtr->virtualEventTable);
     bindInfoPtr->deleted = 1;
     Tcl_EventuallyFree(bindInfoPtr, TCL_DYNAMIC);
@@ -854,7 +798,7 @@ Tk_CreateBindingTable(
 	    sizeof(PatternTableKey)/sizeof(int));
     Tcl_InitHashTable(&bindPtr->objectTable, TCL_ONE_WORD_KEYS);
     bindPtr->interp = interp;
-    return (Tk_BindingTable) bindPtr;
+    return bindPtr;
 }
 
 /*
@@ -876,10 +820,8 @@ Tk_CreateBindingTable(
 
 void
 Tk_DeleteBindingTable(
-    Tk_BindingTable bindingTable)
-				/* Token for the binding table to destroy. */
+    Tk_BindingTable bindPtr)	/* Token for the binding table to destroy. */
 {
-    BindingTable *bindPtr = (BindingTable *) bindingTable;
     PatSeq *psPtr, *nextPtr;
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
@@ -892,13 +834,8 @@ Tk_DeleteBindingTable(
 	    hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	for (psPtr = Tcl_GetHashValue(hPtr); psPtr != NULL; psPtr = nextPtr) {
 	    nextPtr = psPtr->nextSeqPtr;
-	    psPtr->flags |= MARKED_DELETED;
-	    if (psPtr->refCount == 0) {
-		if (psPtr->freeProc != NULL) {
-		    psPtr->freeProc(psPtr->clientData);
-		}
-		ckfree((char *) psPtr);
-	    }
+	    ckfree(psPtr->script);
+	    ckfree((char *) psPtr);
 	}
     }
 
@@ -938,13 +875,12 @@ Tk_DeleteBindingTable(
 unsigned long
 Tk_CreateBinding(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_BindingTable bindingTable,
-				/* Table in which to create binding. */
+    Tk_BindingTable bindPtr,	/* Table in which to create binding. */
     ClientData object,		/* Token for object with which binding is
 				 * associated. */
     const char *eventString,	/* String describing event sequence that
 				 * triggers binding. */
-    const char *script,	/* Contains Tcl script to execute when
+    const char *script,		/* Contains Tcl script to execute when
 				 * binding triggers. */
     int append)			/* 0 means replace any existing binding for
 				 * eventString; 1 means append to that
@@ -953,7 +889,6 @@ Tk_CreateBinding(
 				 * string, the existing binding will always be
 				 * replaced. */
 {
-    BindingTable *bindPtr = (BindingTable *) bindingTable;
     PatSeq *psPtr;
     unsigned long eventMask;
     char *newStr, *oldStr;
@@ -967,7 +902,7 @@ Tk_CreateBinding(
     if (psPtr == NULL) {
 	return 0;
     }
-    if (psPtr->eventProc == NULL) {
+    if (psPtr->script == NULL) {
 	int isNew;
 	Tcl_HashEntry *hPtr;
 
@@ -985,19 +920,9 @@ Tk_CreateBinding(
 	    psPtr->nextObjPtr = Tcl_GetHashValue(hPtr);
 	}
 	Tcl_SetHashValue(hPtr, psPtr);
-    } else if (psPtr->eventProc != EvalTclBinding) {
-	/*
-	 * Free existing procedural binding.
-	 */
-
-	if (psPtr->freeProc != NULL) {
-	    psPtr->freeProc(psPtr->clientData);
-	}
-	psPtr->clientData = NULL;
-	append = 0;
     }
 
-    oldStr = psPtr->clientData;
+    oldStr = psPtr->script;
     if ((append != 0) && (oldStr != NULL)) {
 	size_t length1 = strlen(oldStr), length2 = strlen(script);
 
@@ -1014,91 +939,7 @@ Tk_CreateBinding(
     if (oldStr != NULL) {
 	ckfree(oldStr);
     }
-    psPtr->eventProc = EvalTclBinding;
-    psPtr->freeProc = FreeTclBinding;
-    psPtr->clientData = newStr;
-    return eventMask;
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkCreateBindingProcedure --
- *
- *	Add a C binding to a binding table, so that future calls to
- *	Tk_BindEvent may callback the function in the binding.
- *
- * Results:
-
- *	The return value is 0 if an error occurred while setting up the
- *	binding. In this case, an error message will be left in the interp's
- *	result. If all went well then the return value is a mask of the event
- *	types that must be made available to Tk_BindEvent in order to properly
- *	detect when this binding triggers. This value can be used to determine
- *	what events to select for in a window, for example.
- *
- * Side effects:
- *	Any existing binding on the same event sequence will be replaced.
- *
- *---------------------------------------------------------------------------
- */
-
-unsigned long
-TkCreateBindingProcedure(
-    Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_BindingTable bindingTable,
-				/* Table in which to create binding. */
-    ClientData object,		/* Token for object with which binding is
-				 * associated. */
-    const char *eventString,	/* String describing event sequence that
-				 * triggers binding. */
-    TkBindEvalProc *eventProc,	/* Function to invoke when binding triggers.
-				 * Must not be NULL. */
-    TkBindFreeProc *freeProc,	/* Function to invoke when binding is freed.
-				 * May be NULL for no function. */
-    ClientData clientData)	/* Arbitrary ClientData to pass to eventProc
-				 * and freeProc. */
-{
-    BindingTable *bindPtr = (BindingTable *) bindingTable;
-    PatSeq *psPtr;
-    unsigned long eventMask;
-
-    psPtr = FindSequence(interp, &bindPtr->patternTable, object, eventString,
-	    1, 1, &eventMask);
-    if (psPtr == NULL) {
-	return 0;
-    }
-    if (psPtr->eventProc == NULL) {
-	int isNew;
-	Tcl_HashEntry *hPtr;
-
-	/*
-	 * This pattern sequence was just created. Link the pattern into the
-	 * list associated with the object, so that if the object goes away,
-	 * these bindings will all automatically be deleted.
-	 */
-
-	hPtr = Tcl_CreateHashEntry(&bindPtr->objectTable, (char *) object,
-		&isNew);
-	if (isNew) {
-	    psPtr->nextObjPtr = NULL;
-	} else {
-	    psPtr->nextObjPtr = Tcl_GetHashValue(hPtr);
-	}
-	Tcl_SetHashValue(hPtr, psPtr);
-    } else {
-	/*
-	 * Free existing callback.
-	 */
-
-	if (psPtr->freeProc != NULL) {
-	    psPtr->freeProc(psPtr->clientData);
-	}
-    }
-
-    psPtr->eventProc = eventProc;
-    psPtr->freeProc = freeProc;
-    psPtr->clientData = clientData;
+    psPtr->script = newStr;
     return eventMask;
 }
 
@@ -1123,14 +964,12 @@ TkCreateBindingProcedure(
 int
 Tk_DeleteBinding(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_BindingTable bindingTable,
-				/* Table in which to delete binding. */
+    Tk_BindingTable bindPtr,	/* Table in which to delete binding. */
     ClientData object,		/* Token for object with which binding is
 				 * associated. */
     const char *eventString)	/* String describing event sequence that
 				 * triggers binding. */
 {
-    BindingTable *bindPtr = (BindingTable *) bindingTable;
     PatSeq *psPtr, *prevPtr;
     unsigned long eventMask;
     Tcl_HashEntry *hPtr;
@@ -1184,13 +1023,8 @@ Tk_DeleteBinding(
 	}
     }
 
-    psPtr->flags |= MARKED_DELETED;
-    if (psPtr->refCount == 0) {
-	if (psPtr->freeProc != NULL) {
-	    psPtr->freeProc(psPtr->clientData);
-	}
-	ckfree((char *) psPtr);
-    }
+    ckfree(psPtr->script);
+    ckfree((char *) psPtr);
     return TCL_OK;
 }
 
@@ -1218,14 +1052,12 @@ Tk_DeleteBinding(
 const char *
 Tk_GetBinding(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
-    Tk_BindingTable bindingTable,
-				/* Table in which to look for binding. */
+    Tk_BindingTable bindPtr,	/* Table in which to look for binding. */
     ClientData object,		/* Token for object with which binding is
 				 * associated. */
     const char *eventString)	/* String describing event sequence that
 				 * triggers binding. */
 {
-    BindingTable *bindPtr = (BindingTable *) bindingTable;
     PatSeq *psPtr;
     unsigned long eventMask;
 
@@ -1234,10 +1066,7 @@ Tk_GetBinding(
     if (psPtr == NULL) {
 	return NULL;
     }
-    if (psPtr->eventProc == EvalTclBinding) {
-	return (const char *) psPtr->clientData;
-    }
-    return "";
+    return psPtr->script;
 }
 
 /*
@@ -1263,11 +1092,9 @@ Tk_GetBinding(
 void
 Tk_GetAllBindings(
     Tcl_Interp *interp,		/* Interpreter returning result or error. */
-    Tk_BindingTable bindingTable,
-				/* Table in which to look for bindings. */
+    Tk_BindingTable bindPtr,	/* Table in which to look for bindings. */
     ClientData object)		/* Token for object. */
 {
-    BindingTable *bindPtr = (BindingTable *) bindingTable;
     PatSeq *psPtr;
     Tcl_HashEntry *hPtr;
     Tcl_DString ds;
@@ -1310,11 +1137,9 @@ Tk_GetAllBindings(
 
 void
 Tk_DeleteAllBindings(
-    Tk_BindingTable bindingTable,
-				/* Table in which to delete bindings. */
+    Tk_BindingTable bindPtr,	/* Table in which to delete bindings. */
     ClientData object)		/* Token for object. */
 {
-    BindingTable *bindPtr = (BindingTable *) bindingTable;
     PatSeq *psPtr, *prevPtr;
     PatSeq *nextPtr;
     Tcl_HashEntry *hPtr;
@@ -1351,14 +1176,8 @@ Tk_DeleteAllBindings(
 		}
 	    }
 	}
-	psPtr->flags |= MARKED_DELETED;
-
-	if (psPtr->refCount == 0) {
-	    if (psPtr->freeProc != NULL) {
-		psPtr->freeProc(psPtr->clientData);
-	    }
-	    ckfree((char *) psPtr);
-	}
+	ckfree(psPtr->script);
+	ckfree((char *) psPtr);
     }
     Tcl_DeleteHashEntry(hPtr);
 }
@@ -1384,21 +1203,13 @@ Tk_DeleteAllBindings(
  *	first binding is evaluated. If the action of a Tcl binding is to
  *	change or delete a binding, or delete the window associated with the
  *	binding, all the original Tcl binding scripts will still fire.
- *	Contrast this with C binding functions. If a pending C binding (one
- *	that hasn't fired yet, but is queued to be fired for this window) is
- *	deleted, it will not be called, and if it is changed, then the new
- *	binding function will be called. If the window itself is deleted, no
- *	further C binding functions will be called for this window. When both
- *	Tcl binding scripts and C binding functions are interleaved, the above
- *	rules still apply.
  *
  *---------------------------------------------------------------------------
  */
 
 void
 Tk_BindEvent(
-    Tk_BindingTable bindingTable,
-				/* Table in which to look for bindings. */
+    Tk_BindingTable bindPtr,	/* Table in which to look for bindings. */
     XEvent *eventPtr,		/* What actually happened. */
     Tk_Window tkwin,		/* Window on display where event occurred
 				 * (needed in order to locate display
@@ -1407,23 +1218,19 @@ Tk_BindEvent(
     ClientData *objectPtr)	/* Array of one or more objects to check for a
 				 * matching binding. */
 {
-    BindingTable *bindPtr;
     TkDisplay *dispPtr;
     ScreenInfo *screenPtr;
     BindInfo *bindInfoPtr;
     TkDisplay *oldDispPtr;
     XEvent *ringPtr;
     PatSeq *vMatchDetailList, *vMatchNoDetailList;
-    int flags, oldScreen, i, deferModal;
-    unsigned int matchCount, matchSpace;
+    int flags, oldScreen, i;
     Tcl_Interp *interp;
     Tcl_DString scripts, savedResult;
     Detail detail;
     char *p, *end;
-    PendingBinding staticPending, *pendingPtr;
     TkWindow *winPtr = (TkWindow *) tkwin;
     PatternTableKey key;
-    Tk_ClassModalProc *modalProc;
 
     /*
      * Ignore events on windows that don't have names: these are windows like
@@ -1454,9 +1261,8 @@ Tk_BindEvent(
 	}
     }
 
-    bindPtr = (BindingTable *) bindingTable;
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
-    bindInfoPtr = (BindInfo *) winPtr->mainPtr->bindInfo;
+    bindInfoPtr = winPtr->mainPtr->bindInfo;
 
     /*
      * Add the new event to the ring of saved events for the binding table.
@@ -1566,13 +1372,9 @@ Tk_BindEvent(
      * Loop over all the binding tags, finding the binding script or callback
      * for each one. Append all of the binding scripts, with %-sequences
      * expanded, to "scripts", with null characters separating the scripts for
-     * each object. Append all the callbacks to the array of pending
-     * callbacks.
+     * each object.
      */
 
-    pendingPtr = &staticPending;
-    matchCount = 0;
-    matchSpace = sizeof(staticPending.matchArray) / sizeof(PatSeq *);
     Tcl_DStringInit(&scripts);
 
     for ( ; numObjects > 0; numObjects--, objectPtr++) {
@@ -1618,39 +1420,11 @@ Tk_BindEvent(
 		matchPtr = MatchPatterns(dispPtr, bindPtr, vMatchNoDetailList,
 			matchPtr, objectPtr, &sourcePtr);
 	    }
-
 	}
 
 	if (matchPtr != NULL) {
-	    if (sourcePtr->eventProc == NULL) {
-		Tcl_Panic("Tk_BindEvent: missing command");
-	    }
-	    if (sourcePtr->eventProc == EvalTclBinding) {
-		ExpandPercents(winPtr, sourcePtr->clientData, eventPtr,
-			detail.keySym, &scripts);
-	    } else {
-		if (matchCount >= matchSpace) {
-		    PendingBinding *newPtr;
-		    unsigned int oldSize, newSize;
-
-		    oldSize = sizeof(staticPending)
-			    - sizeof(staticPending.matchArray)
-			    + matchSpace * sizeof(PatSeq*);
-		    matchSpace *= 2;
-		    newSize = sizeof(staticPending)
-			    - sizeof(staticPending.matchArray)
-			    + matchSpace * sizeof(PatSeq*);
-		    newPtr = (PendingBinding *) ckalloc(newSize);
-		    memcpy(newPtr, pendingPtr, oldSize);
-		    if (pendingPtr != &staticPending) {
-			ckfree((char *) pendingPtr);
-		    }
-		    pendingPtr = newPtr;
-		}
-		sourcePtr->refCount++;
-		pendingPtr->matchArray[matchCount] = sourcePtr;
-		matchCount++;
-	    }
+	    ExpandPercents(winPtr, sourcePtr->script, eventPtr,
+		    detail.keySym, &scripts);
 
 	    /*
 	     * A "" is added to the scripts string to separate the various
@@ -1700,28 +1474,6 @@ Tk_BindEvent(
 	ChangeScreen(interp, dispPtr->name, screenPtr->curScreenIndex);
     }
 
-    if (matchCount > 0) {
-	/*
-	 * Remember the list of pending C binding callbacks, so we can mark
-	 * them as deleted and not call them if the act of evaluating a C or
-	 * Tcl binding deletes a C binding callback or even the whole window.
-	 */
-
-	pendingPtr->nextPtr = bindInfoPtr->pendingList;
-	pendingPtr->tkwin = tkwin;
-	pendingPtr->deleted = 0;
-	bindInfoPtr->pendingList = pendingPtr;
-    }
-
-    /*
-     * Save the current value of the TK_DEFER_MODAL flag so we can restore it
-     * at the end of the loop. Clear the flag so we can detect any recursive
-     * requests for a modal loop.
-     */
-
-    flags = winPtr->flags;
-    winPtr->flags &= ~TK_DEFER_MODAL;
-
     p = Tcl_DStringValue(&scripts);
     end = p + Tcl_DStringLength(&scripts);
     i = 0;
@@ -1734,6 +1486,7 @@ Tk_BindEvent(
 
     Tcl_Preserve(bindInfoPtr);
     while (p < end) {
+	int len = (int) strlen(p);
 	int code;
 
 	if (!bindInfoPtr->deleted) {
@@ -1741,31 +1494,8 @@ Tk_BindEvent(
 	}
 	Tcl_AllowExceptions(interp);
 
-	if (*p == '\0') {
-	    PatSeq *psPtr;
-
-	    psPtr = pendingPtr->matchArray[i];
-	    i++;
-	    code = TCL_OK;
-	    if ((pendingPtr->deleted == 0)
-		    && ((psPtr->flags & MARKED_DELETED) == 0)) {
-		code = psPtr->eventProc(psPtr->clientData, interp, eventPtr,
-			tkwin, detail.keySym);
-	    }
-	    psPtr->refCount--;
-	    if ((psPtr->refCount == 0) && (psPtr->flags & MARKED_DELETED)) {
-		if (psPtr->freeProc != NULL) {
-		    psPtr->freeProc(psPtr->clientData);
-		}
-		ckfree((char *) psPtr);
-	    }
-	} else {
-	    int len = (int) strlen(p);
-
-	    code = Tcl_EvalEx(interp, p, len, TCL_EVAL_GLOBAL);
-	    p += len;
-	}
-	p++;
+	code = Tcl_EvalEx(interp, p, len, TCL_EVAL_GLOBAL);
+	p += len + 1;
 
 	if (!bindInfoPtr->deleted) {
 	    screenPtr->bindingDepth--;
@@ -1785,23 +1515,6 @@ Tk_BindEvent(
 	}
     }
 
-    if (matchCount > 0 && !pendingPtr->deleted) {
-	/*
-	 * Restore the original modal flag value and invoke the modal loop if
-	 * needed.
-	 */
-
-	deferModal = winPtr->flags & TK_DEFER_MODAL;
-	winPtr->flags = (winPtr->flags & (unsigned int) ~TK_DEFER_MODAL)
-		| (flags & TK_DEFER_MODAL);
-	if (deferModal) {
-	    modalProc = Tk_GetClassProc(winPtr->classProcsPtr, modalProc);
-	    if (modalProc != NULL) {
-		modalProc(tkwin, eventPtr);
-	    }
-	}
-    }
-
     if (!bindInfoPtr->deleted && (screenPtr->bindingDepth != 0)
 	    && ((oldDispPtr != screenPtr->curDispPtr)
 		    || (oldScreen != screenPtr->curScreenIndex))) {
@@ -1817,71 +1530,7 @@ Tk_BindEvent(
     Tcl_DStringResult(interp, &savedResult);
     Tcl_DStringFree(&scripts);
 
-    if (matchCount > 0) {
-	if (!bindInfoPtr->deleted) {
-	    /*
-	     * Delete the pending list from the list of pending scripts for
-	     * this window.
-	     */
-
-	    PendingBinding **curPtrPtr;
-
-	    for (curPtrPtr = &bindInfoPtr->pendingList; ; ) {
-		if (*curPtrPtr == pendingPtr) {
-		    *curPtrPtr = pendingPtr->nextPtr;
-		    break;
-		}
-		curPtrPtr = &(*curPtrPtr)->nextPtr;
-	    }
-	}
-	if (pendingPtr != &staticPending) {
-	    ckfree((char *) pendingPtr);
-	}
-    }
     Tcl_Release(bindInfoPtr);
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkBindDeadWindow --
- *
- *	This function is invoked when it is determined that a window is dead.
- *	It cleans up bind-related information about the window
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Any pending C bindings for this window are cancelled.
- *
- *---------------------------------------------------------------------------
- */
-
-void
-TkBindDeadWindow(
-    TkWindow *winPtr)		/* The window that is being deleted. */
-{
-    BindInfo *bindInfoPtr;
-    PendingBinding *curPtr;
-
-    /*
-     * Certain special windows like those used for send and clipboard have no
-     * mainPtr.
-     */
-
-    if (winPtr->mainPtr == NULL) {
-	return;
-    }
-
-    bindInfoPtr = (BindInfo *) winPtr->mainPtr->bindInfo;
-    curPtr = bindInfoPtr->pendingList;
-    while (curPtr != NULL) {
-	if (curPtr->tkwin == (Tk_Window) winPtr) {
-	    curPtr->deleted = 1;
-	}
-	curPtr = curPtr->nextPtr;
-    }
 }
 
 /*
@@ -2704,8 +2353,8 @@ Tk_EventObjCmd(
     char *name;
     const char *event;
     Tk_Window tkwin = clientData;
-    VirtualEventTable *vetPtr;
-    TkBindInfo bindInfo;
+    TkBindInfo bindInfo = ((TkWindow *) tkwin)->mainPtr->bindInfo;
+    VirtualEventTable *vetPtr = &bindInfo->virtualEventTable;
     static const char *const optionStrings[] = {
 	"add",		"delete",	"generate",	"info",
 	NULL
@@ -2714,8 +2363,6 @@ Tk_EventObjCmd(
 	EVENT_ADD,	EVENT_DELETE,	EVENT_GENERATE,	EVENT_INFO
     };
 
-    bindInfo = ((TkWindow *) tkwin)->mainPtr->bindInfo;
-    vetPtr = &((BindInfo *) bindInfo)->virtualEventTable;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg?");
@@ -4095,11 +3742,8 @@ FindSequence(
     psPtr = (PatSeq *) ckalloc((unsigned)
 	    (sizeof(PatSeq) + (numPats-1)*sizeof(Pattern)));
     psPtr->numPats = numPats;
-    psPtr->eventProc = NULL;
-    psPtr->freeProc = NULL;
-    psPtr->clientData = NULL;
+    psPtr->script = NULL;
     psPtr->flags = flags;
-    psPtr->refCount = 0;
     psPtr->nextSeqPtr = Tcl_GetHashValue(hPtr);
     psPtr->hPtr = hPtr;
     psPtr->voPtr = NULL;
@@ -4523,31 +4167,6 @@ GetPatternString(
 }
 
 /*
- *---------------------------------------------------------------------------
- *
- * EvalTclBinding --
- *
- *	The function that is invoked by Tk_BindEvent when a Tcl binding is
- *	fired.
- *
- * Results:
- *	A standard Tcl result code, the result of globally evaluating the
- *	percent-substitued binding string.
- *
- * Side effects:
- *	Normal side effects due to eval.
- *
- *---------------------------------------------------------------------------
- */
-
-static void
-FreeTclBinding(
-    ClientData clientData)
-{
-    ckfree((char *) clientData);
-}
-
-/*
  *----------------------------------------------------------------------
  *
  * TkStringToKeysym --
@@ -4678,7 +4297,7 @@ TkpGetBindingXEvent(
     Tcl_Interp *interp)		/* Interpreter. */
 {
    TkWindow *winPtr = (TkWindow *) Tk_MainWindow(interp);
-   BindingTable *bindPtr = (BindingTable *) winPtr->mainPtr->bindingTable;
+   BindingTable *bindPtr = winPtr->mainPtr->bindingTable;
 
    return &(bindPtr->eventRing[bindPtr->curEvent]);
 }
