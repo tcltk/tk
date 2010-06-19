@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.73 2010/02/16 21:12:56 nijtmans Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.74 2010/06/19 16:18:41 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -57,7 +57,7 @@ static const TkIntStubs tkIntStubs = {
     TkAllocWindow, /* 0 */
     TkBezierPoints, /* 1 */
     TkBezierScreenPoints, /* 2 */
-    TkBindDeadWindow, /* 3 */
+    NULL, /* 3 */
     TkBindEventProc, /* 4 */
     TkBindFree, /* 5 */
     TkBindInit, /* 6 */
@@ -65,7 +65,7 @@ static const TkIntStubs tkIntStubs = {
     TkClipInit, /* 8 */
     TkComputeAnchor, /* 9 */
     TkCopyAndGlobalEval, /* 10 */
-    TkCreateBindingProcedure, /* 11 */
+    NULL, /* 11 */
     TkCreateCursorFromData, /* 12 */
     TkCreateFrame, /* 13 */
     TkCreateMainWindow, /* 14 */

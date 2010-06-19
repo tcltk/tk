@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.111 2010/02/16 21:12:56 nijtmans Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.112 2010/06/19 16:18:41 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -1470,7 +1470,6 @@ Tk_DestroyWindow(
     }
     UnlinkWindow(winPtr);
     TkEventDeadWindow(winPtr);
-    TkBindDeadWindow(winPtr);
 #ifdef TK_USE_INPUT_METHODS
     if (winPtr->inputContext != NULL) {
 	XDestroyIC(winPtr->inputContext);

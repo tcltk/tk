@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.122 2010/04/23 08:32:56 nijtmans Exp $
+ * RCS: $Id: tkInt.h,v 1.123 2010/06/19 16:18:41 jenglish Exp $
  */
 
 #ifndef _TKINT
@@ -98,14 +98,6 @@ typedef struct TkRegion_ *TkRegion;
 typedef struct TkStressedCmap TkStressedCmap;
 typedef struct TkBindInfo_ *TkBindInfo;
 typedef struct Busy *TkBusy;
-
-/*
- * Function types.
- */
-
-typedef int (TkBindEvalProc)(ClientData clientData, Tcl_Interp *interp,
-	XEvent *eventPtr, Tk_Window tkwin, KeySym keySym);
-typedef void (TkBindFreeProc)(ClientData clientData);
 
 /*
  * One of the following structures is maintained for each cursor in use in the

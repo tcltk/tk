@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTest.c,v 1.48 2010/06/15 11:16:03 nijtmans Exp $
+ * RCS: @(#) $Id: tkTest.c,v 1.49 2010/06/19 16:18:41 jenglish Exp $
  */
 
 #undef STATIC_BUILD
@@ -114,12 +114,6 @@ typedef struct NewApp {
 
 static NewApp *newAppPtr = NULL;/* First in list of all new interpreters. */
 
-typedef struct CBinding {
-    Tcl_Interp *interp;
-    char *command;
-    char *delete;
-} CBinding;
-
 /*
  * Header for trivial configuration command items.
  */
@@ -147,13 +141,7 @@ typedef struct TrivialCommandHeader {
  * Forward declarations for functions defined later in this file:
  */
 
-static int		CBindingEvalProc(ClientData clientData,
-			    Tcl_Interp *interp, XEvent *eventPtr,
-			    Tk_Window tkwin, KeySym keySym);
-static void		CBindingFreeProc(ClientData clientData);
 static int		ImageCmd(ClientData dummy,
-			    Tcl_Interp *interp, int argc, const char **argv);
-static int		TestcbindCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, const char **argv);
 static int		TestbitmapObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
@@ -250,8 +238,6 @@ Tktest_Init(
     }
 
     Tcl_CreateObjCommand(interp, "square", SquareObjCmd, NULL, NULL);
-    Tcl_CreateCommand(interp, "testcbind", TestcbindCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testbitmap", TestbitmapObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testborder", TestborderObjCmd,
@@ -309,113 +295,6 @@ Tktest_Init(
      */
 
     return TkplatformtestInit(interp);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TestcbindCmd --
- *
- *	This function implements the "testcbinding" command. It provides a set
- *	of functions for testing C bindings in tkBind.c.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	Depends on option; see below.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-TestcbindCmd(
-    ClientData clientData,	/* Main window for application. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
-{
-    TkWindow *winPtr;
-    Tk_Window tkwin;
-    ClientData object;
-    CBinding *cbindPtr;
-
-
-    if (argc < 4 || argc > 5) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		" bindtag pattern command ?deletecommand?", NULL);
-	return TCL_ERROR;
-    }
-
-    tkwin = (Tk_Window) clientData;
-
-    if (argv[1][0] == '.') {
-	winPtr = (TkWindow *) Tk_NameToWindow(interp, argv[1], tkwin);
-	if (winPtr == NULL) {
-	    return TCL_ERROR;
-	}
-	object = (ClientData) winPtr->pathName;
-    } else {
-	winPtr = (TkWindow *) clientData;
-	object = (ClientData) Tk_GetUid(argv[1]);
-    }
-
-    if (argv[3][0] == '\0') {
-	return Tk_DeleteBinding(interp, winPtr->mainPtr->bindingTable,
-		object, argv[2]);
-    }
-
-    cbindPtr = (CBinding *) ckalloc(sizeof(CBinding));
-    cbindPtr->interp = interp;
-    cbindPtr->command =
-	    strcpy((char *) ckalloc(strlen(argv[3]) + 1), argv[3]);
-    if (argc == 4) {
-	cbindPtr->delete = NULL;
-    } else {
-	cbindPtr->delete =
-		strcpy((char *) ckalloc(strlen(argv[4]) + 1), argv[4]);
-    }
-
-    if (TkCreateBindingProcedure(interp, winPtr->mainPtr->bindingTable,
-	    object, argv[2], CBindingEvalProc, CBindingFreeProc,
-	    (ClientData) cbindPtr) == 0) {
-	ckfree((char *) cbindPtr->command);
-	if (cbindPtr->delete != NULL) {
-	    ckfree((char *) cbindPtr->delete);
-	}
-	ckfree((char *) cbindPtr);
-	return TCL_ERROR;
-    }
-    return TCL_OK;
-}
-
-static int
-CBindingEvalProc(
-    ClientData clientData,
-    Tcl_Interp *interp,
-    XEvent *eventPtr,
-    Tk_Window tkwin,
-    KeySym keySym)
-{
-    CBinding *cbindPtr;
-
-    cbindPtr = (CBinding *) clientData;
-
-    return Tcl_GlobalEval(interp, cbindPtr->command);
-}
-
-static void
-CBindingFreeProc(
-    ClientData clientData)
-{
-    CBinding *cbindPtr = (CBinding *) clientData;
-
-    if (cbindPtr->delete != NULL) {
-	Tcl_GlobalEval(cbindPtr->interp, cbindPtr->delete);
-	ckfree((char *) cbindPtr->delete);
-    }
-    ckfree((char *) cbindPtr->command);
-    ckfree((char *) cbindPtr);
 }
 
 /*
