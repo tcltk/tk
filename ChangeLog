@@ -1,3 +1,10 @@
+2010-06-21  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.decls  [Patch #2999889] TkCopyAndGlobalEval obsolete
+	* generic/tkIntDecls.h
+	* generic/tkBind.c
+	* generic/tkStubInit.c
+
 2010-06-19  Joe English  <jenglish@users.sourceforge.net>
 
 	* win/tkWinScrlbr.c, carbon/tkMacOSXScrlbr.c: Replace binding
