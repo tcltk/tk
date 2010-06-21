@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.51 2010/06/19 16:18:41 jenglish Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.52 2010/06/21 12:14:07 nijtmans Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -94,12 +94,7 @@ EXTERN void		TkComputeAnchor(Tk_Anchor anchor, Tk_Window tkwin,
 				int padX, int padY, int innerWidth,
 				int innerHeight, int *xPtr, int *yPtr);
 #endif
-#ifndef TkCopyAndGlobalEval_TCL_DECLARED
-#define TkCopyAndGlobalEval_TCL_DECLARED
-/* 10 */
-EXTERN int		TkCopyAndGlobalEval(Tcl_Interp *interp,
-				const char *script);
-#endif
+/* Slot 10 is reserved */
 /* Slot 11 is reserved */
 #ifndef TkCreateCursorFromData_TCL_DECLARED
 #define TkCreateCursorFromData_TCL_DECLARED
@@ -1114,7 +1109,7 @@ typedef struct TkIntStubs {
     void (*tkChangeEventWindow) (XEvent *eventPtr, TkWindow *winPtr); /* 7 */
     int (*tkClipInit) (Tcl_Interp *interp, TkDisplay *dispPtr); /* 8 */
     void (*tkComputeAnchor) (Tk_Anchor anchor, Tk_Window tkwin, int padX, int padY, int innerWidth, int innerHeight, int *xPtr, int *yPtr); /* 9 */
-    int (*tkCopyAndGlobalEval) (Tcl_Interp *interp, const char *script); /* 10 */
+    void *reserved10;
     void *reserved11;
     TkCursor * (*tkCreateCursorFromData) (Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, XColor fg, XColor bg); /* 12 */
     int (*tkCreateFrame) (ClientData clientData, Tcl_Interp *interp, int argc, const char *const *argv, int toplevel, const char *appName); /* 13 */
@@ -1433,10 +1428,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 #define TkComputeAnchor \
 	(tkIntStubsPtr->tkComputeAnchor) /* 9 */
 #endif
-#ifndef TkCopyAndGlobalEval
-#define TkCopyAndGlobalEval \
-	(tkIntStubsPtr->tkCopyAndGlobalEval) /* 10 */
-#endif
+/* Slot 10 is reserved */
 /* Slot 11 is reserved */
 #ifndef TkCreateCursorFromData
 #define TkCreateCursorFromData \

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkBind.c,v 1.67 2010/06/19 16:18:41 jenglish Exp $
+ * RCS: @(#) $Id: tkBind.c,v 1.68 2010/06/21 12:14:08 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -4234,43 +4234,6 @@ TkKeysymToString(
 #endif /* REDO_KEYSYM_LOOKUP */
 
     return XKeysymToString(keysym);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkCopyAndGlobalEval --
- *
- *	This function makes a copy of a script then calls Tcl_GlobalEval to
- *	evaluate it. It's used in situations where the execution of a command
- *	may cause the original command string to be reallocated.
- *
- *	OBSOLETE! NOT USED ANYWHERE IN TK! ONLY FOR STUB TABLE!
- *
- * Results:
- *	Returns the result of evaluating script, including both a standard Tcl
- *	completion code and a string in the interp's result.
- *
- * Side effects:
- *	Any; depends on script.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkCopyAndGlobalEval(
-    Tcl_Interp *interp,		/* Interpreter in which to evaluate script. */
-    const char *script)		/* Script to evaluate. */
-{
-    Tcl_DString buffer;
-    int code;
-
-    Tcl_DStringInit(&buffer);
-    Tcl_DStringAppend(&buffer, script, -1);
-    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buffer),
-	    Tcl_DStringLength(&buffer), TCL_EVAL_GLOBAL);
-    Tcl_DStringFree(&buffer);
-    return code;
 }
 
 /*
