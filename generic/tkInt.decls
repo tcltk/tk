@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.62 2010/06/19 16:18:41 jenglish Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.63 2010/06/21 12:14:08 nijtmans Exp $
 
 library tk
 
@@ -58,10 +58,8 @@ declare 9 generic {
     void TkComputeAnchor(Tk_Anchor anchor, Tk_Window tkwin, int padX, int padY,
 	    int innerWidth, int innerHeight, int *xPtr, int *yPtr)
 }
-declare 10 generic {
-    int TkCopyAndGlobalEval(Tcl_Interp *interp, const char *script)
-}
 #
+# Slot 10 unused (WAS: TkCopyAndGlobalEval)
 # Slot 11 unused (WAS: TkCreateBindingProcedure)
 #
 declare 12 generic {
