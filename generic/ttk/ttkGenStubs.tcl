@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# $Id: ttkGenStubs.tcl,v 1.6 2010/02/05 21:33:14 jenglish Exp $
+# $Id: ttkGenStubs.tcl,v 1.7 2010/06/22 07:41:17 nijtmans Exp $
 #
 # SOURCE: tcl/tools/genStubs.tcl, revision 1.20
 #
@@ -297,7 +297,7 @@ proc genStubs::addPlatformGuard {plat text} {
 
 proc genStubs::emitSlots {name textVar} {
     upvar $textVar text
-    forAllStubs $name makeSlot noGuard text {"    void (*reserved$i)(void);\n"}
+    forAllStubs $name makeSlot noGuard text {"    void *reserved$i;\n"}
     return
 }
 
@@ -789,7 +789,7 @@ proc genStubs::emitInit {name textVar} {
     }
     foreach intf [array names interfaces] {
 	if {[info exists hooks($intf)]} {
-	    if {$name in $hooks($intf)} {
+	    if {0<=[lsearch -exact $hooks($intf) $name]} {
 		set root 0
 		break;
 	    }
