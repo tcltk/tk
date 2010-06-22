@@ -1,3 +1,9 @@
+2010-06-22  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/ttk/ttkGenStubs.tcl [Bug #3019363] "make genstubs" failure
+	* generic/ttk/ttkDecls.h      (regenerated)
+	* generic/ttk/ttkTheme.c      Unnecessary type cast
+
 2010-06-21  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.decls  [Patch #2999889] TkCopyAndGlobalEval obsolete
