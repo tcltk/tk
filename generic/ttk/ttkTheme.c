@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: ttkTheme.c,v 1.23 2010/03/28 21:43:25 jenglish Exp $
+ * $Id: ttkTheme.c,v 1.24 2010/06/22 07:41:17 nijtmans Exp $
  */
 
 #include <stdlib.h>
@@ -1730,8 +1730,7 @@ void Ttk_StylePkgInit(Tcl_Interp *interp)
      */
     Tcl_CreateObjCommand(interp, "::ttk::style", StyleObjCmd, pkgPtr, 0);
 
-    nsPtr = Tcl_FindNamespace(interp, "::ttk", (Tcl_Namespace *) NULL,
-	    TCL_LEAVE_ERR_MSG);
+    nsPtr = Tcl_FindNamespace(interp, "::ttk", NULL, TCL_LEAVE_ERR_MSG);
     Tcl_Export(interp, nsPtr, "style", 0 /* dontResetList */);
 
     Ttk_RegisterElementFactory(interp, "from", Ttk_CloneElement, 0);
