@@ -1,3 +1,11 @@
+2010-06-22  Anton Kovalenko  <a_kovalenko@users.sf.net>
+
+	* generic/tkPlace.c: [Patch #3019624] modify "place" command,
+	making it get main window through ClientData (like grid or pack
+	do), instead of calling Tk_MainWindow(interp).
+	* generic/tkWindow.c: modify "place" entry in commands[],
+	turn on passMainWindow flag.
+
 2010-06-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkGenStubs.tcl [Bug #3019363] "make genstubs" failure

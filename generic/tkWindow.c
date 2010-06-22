@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.112 2010/06/19 16:18:41 jenglish Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.113 2010/06/22 14:02:32 a_kovalenko Exp $
  */
 
 #include "tkInt.h"
@@ -127,7 +127,7 @@ static const TkCmd commands[] = {
     {"lower",		NULL,		Tk_LowerObjCmd,		NULL, 1, 1},
     {"option",		NULL,		Tk_OptionObjCmd,	NULL, 1, 1},
     {"pack",		NULL,		Tk_PackObjCmd,		NULL, 1, 1},
-    {"place",		NULL,		Tk_PlaceObjCmd,		NULL, 1, 0},
+    {"place",		NULL,		Tk_PlaceObjCmd,		NULL, 1, 1},
     {"raise",		NULL,		Tk_RaiseObjCmd,		NULL, 1, 1},
     {"selection",	NULL,		Tk_SelectionObjCmd,	NULL, 0, 1},
     {"tk",		NULL,		NULL,		TkInitTkCmd,  1, 1},
