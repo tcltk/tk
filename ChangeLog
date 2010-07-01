@@ -1,3 +1,7 @@
+2010-07-01  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/rules.vc   [Bugs #3020677] wish can't link reg1.2
+
 2010-06-22  Anton Kovalenko  <a_kovalenko@users.sf.net>
 
 	* generic/tkPlace.c: [Patch #3019624] modify "place" command,
@@ -84,7 +88,7 @@
 
 	* tests/wm.test: Fix 3 tests on Ubuntu 10.4, two of them timing
 	dependent, one wm-dependent.
-	* generic/tkText.c:	Fix some gcc strict-aliasing warnings, 
+	* generic/tkText.c:	Fix some gcc strict-aliasing warnings,
 	* unix/tkUnixFont.c:	discovered with "-Wstrict-aliasing=2"
 	* unix/tkUnixSelect.c:
 
