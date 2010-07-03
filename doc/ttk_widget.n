@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\"
-'\" RCS: @(#) $Id: ttk_widget.n,v 1.18 2009/11/01 18:12:44 jenglish Exp $
+'\" RCS: @(#) $Id: ttk_widget.n,v 1.19 2010/07/03 17:25:51 jenglish Exp $
 '\"
 .so man.macros
 .TH ttk::widget n 8.5 Tk "Tk Themed Widget"
@@ -256,7 +256,7 @@ $b instate {pressed !disabled} { .b invoke }
 $b state !disabled
 .CE
 .SH "SEE ALSO"
-ttk::intro(n), style(n)
+ttk::intro(n), ttk::style(n)
 .SH KEYWORDS
 state, configure, option
 '\" Local Variables:
