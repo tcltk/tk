@@ -1,3 +1,8 @@
+2010-07-06  Andreas Kupries  <andreask@activestate.com>
+
+	* doc/text.n: Fixed minor typo in the description of 'text
+	  delete', as reported by <eee@users.sf.net> on the chat.
+
 2010-07-01  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/rules.vc   [Bugs #3020677] wish can't link reg1.2
