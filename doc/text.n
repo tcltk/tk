@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: text.n,v 1.53 2007/12/13 15:23:43 dgp Exp $
+'\" RCS: @(#) $Id: text.n,v 1.53.2.1 2010/07/06 17:15:15 andreas_kupries Exp $
 '\" 
 .so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
@@ -1199,7 +1199,7 @@ The command returns an empty string.
 If more indices are given, multiple ranges of text will be deleted.
 All indices are first checked for validity before any deletions are made.
 They are sorted and the text is removed from the last range to the
-first range to deleted text does not cause an undesired index shifting
+first range so deleted text does not cause an undesired index shifting
 side-effects.  If multiple ranges with the same start index are given,
 then the longest range is used.  If overlapping ranges are given, then
 they will be merged into spans that do not cause deletion of text
