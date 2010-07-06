@@ -1,3 +1,8 @@
+2010-07-06  Andreas Kupries  <andreask@activestate.com>
+
+	* doc/text.n: Fixed minor typo in the description of 'text
+	  delete', as reported by <eee@users.sf.net> on the chat.
+
 2010-05-31  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tkBind.c(Tk_CreateBinding): Silently ignore empty 
