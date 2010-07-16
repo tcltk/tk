@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.47 2010/05/10 20:58:18 nijtmans Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.48 2010/07/16 22:06:05 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -3097,6 +3097,12 @@ extern const TkStubs *tkStubsPtr;
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+/* Functions that don't belong in the stub table */
+#undef Tk_MainEx
+#undef Tk_Init
+#undef Tk_SafeInit
+#undef Tk_CreateConsoleWindow
 
 #endif /* _TKDECLS */
 

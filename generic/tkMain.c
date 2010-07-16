@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.32 2008/12/15 16:17:18 dgp Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.33 2010/07/16 22:06:05 nijtmans Exp $
  */
 
 #include <ctype.h>
@@ -115,7 +115,6 @@ Tk_MainEx(
 
     tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    Tcl_FindExecutable(argv[0]);
     tsdPtr->interp = interp;
     Tcl_Preserve(interp);
 
@@ -239,7 +238,7 @@ Tk_MainEx(
      * of length 0, (e.g. /dev/null, which is what Finder sets when double
      * clicking Wish) then use the GUI console.
      */
-    
+
     if (!tsdPtr->tty) {
 	struct stat st;
 
@@ -452,7 +451,7 @@ Prompt(
 	     */
 
 	    outChannel = Tcl_GetChannel(interp, "stdout", NULL);
-	    if (outChannel != (Tcl_Channel) NULL) {
+	    if (outChannel != NULL) {
 		Tcl_WriteChars(outChannel, "% ", 2);
 	    }
 	}
@@ -469,7 +468,7 @@ Prompt(
 	     */
 
 	    errChannel = Tcl_GetChannel(interp, "stderr", NULL);
-	    if (errChannel != (Tcl_Channel) NULL) {
+	    if (errChannel != NULL) {
 		Tcl_WriteObj(errChannel, Tcl_GetObjResult(interp));
 		Tcl_WriteChars(errChannel, "\n", 1);
 	    }
@@ -477,7 +476,7 @@ Prompt(
 	}
     }
     outChannel = Tcl_GetChannel(interp, "stdout", NULL);
-    if (outChannel != (Tcl_Channel) NULL) {
+    if (outChannel != NULL) {
 	Tcl_Flush(outChannel);
     }
 }
