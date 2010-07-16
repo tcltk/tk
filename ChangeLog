@@ -1,3 +1,10 @@
+2010-07-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkDecls.h  [Tcl Bug 3029891] Functions that don't belong in the
+	stub table (Tk part, not really removed from the stub table, just disabled)
+	* generic/tkMain.c   [Bug 3027438] Tk_Main calls Tcl_CreateInterp before
+	* generic/tk.h       Tcl_FindExecutable
+
 2010-07-06  Andreas Kupries  <andreask@activestate.com>
 
 	* doc/text.n: Fixed minor typo in the description of 'text
