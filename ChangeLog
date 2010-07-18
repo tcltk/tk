@@ -1,36 +1,44 @@
+2010-07-19  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgGIF.c (StringWriteGIF): Added ability to write a GIF to
+	a string (as a byte array, of course) following comments on c.l.t by
+	Aric Bills. Also improved readability of some of the function and
+	field names in this file.
+
 2010-07-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkDecls.h  [Tcl Bug 3029891] Functions that don't belong in the
-	stub table (Tk part, not really removed from the stub table, just disabled)
-	* generic/tkMain.c   [Bug 3027438] Tk_Main calls Tcl_CreateInterp before
-	* generic/tk.h       Tcl_FindExecutable
+	* generic/tkDecls.h: [Tcl Bug 3029891]: Functions that don't belong in
+	the stub table (Tk part, not really removed from the stub table, just
+	disabled)
+	* generic/tkMain.c:  [Bug 3027438]: Tk_Main calls Tcl_CreateInterp
+	* generic/tk.h:      before Tcl_FindExecutable
 
 2010-07-06  Andreas Kupries  <andreask@activestate.com>
 
-	* doc/text.n: Fixed minor typo in the description of 'text
-	  delete', as reported by <eee@users.sf.net> on the chat.
+	* doc/text.n: Fixed minor typo in the description of 'text delete', as
+	reported by <eee@users.sf.net> on the chat.
 
 2010-07-01  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/rules.vc   [Bugs #3020677] wish can't link reg1.2
+	* win/rules.vc:  [Bug 3020677]: wish can't link reg1.2
 
 2010-06-22  Anton Kovalenko  <a_kovalenko@users.sf.net>
 
-	* generic/tkPlace.c: [Patch #3019624] modify "place" command,
-	making it get main window through ClientData (like grid or pack
-	do), instead of calling Tk_MainWindow(interp).
-	* generic/tkWindow.c: modify "place" entry in commands[],
-	turn on passMainWindow flag.
+	* generic/tkPlace.c: [Patch 3019624]: modify "place" command, making
+	it get main window through ClientData (like grid or pack do), instead
+	of calling Tk_MainWindow(interp).
+	* generic/tkWindow.c: modify "place" entry in commands[], turn on
+	passMainWindow flag.
 
 2010-06-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/ttk/ttkGenStubs.tcl [Bug #3019363] "make genstubs" failure
-	* generic/ttk/ttkDecls.h      (regenerated)
-	* generic/ttk/ttkTheme.c      Unnecessary type cast
+	* generic/ttk/ttkGenStubs.tcl: [Bug 3019363]: "make genstubs" failure
+	* generic/ttk/ttkDecls.h:      (regenerated)
+	* generic/ttk/ttkTheme.c:      Unnecessary type cast
 
 2010-06-21  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkInt.decls  [Patch #2999889] TkCopyAndGlobalEval obsolete
+	* generic/tkInt.decls: [Patch 2999889]: TkCopyAndGlobalEval obsolete
 	* generic/tkIntDecls.h
 	* generic/tkBind.c
 	* generic/tkStubInit.c
@@ -38,21 +46,21 @@
 2010-06-19  Joe English  <jenglish@users.sourceforge.net>
 
 	* win/tkWinScrlbr.c, carbon/tkMacOSXScrlbr.c: Replace binding
-	  procedures with ordinary event handlers [Patch 3009998].
+	procedures with ordinary event handlers [Patch 3009998].
 	* generic/tkBind.c, generic/tk.h, generic/tkInt.h,
-	  generic/tkInt.decls: Simplifications enabled by previous change:
-	  TkCreateBindingProcedure() and associated machinery
-	  no longer needed; TkBindDeadWindow() no longer needed;
-	  TK_DEFER_MODAL_LOOP and associated machinery no longer needed.
+	* generic/tkInt.decls: Simplifications enabled by previous change:
+	TkCreateBindingProcedure() and associated machinery no longer needed;
+	TkBindDeadWindow() no longer needed; TK_DEFER_MODAL_LOOP and
+	associated machinery no longer needed.
 	* generic/tkTest.c, tests/bind.test: Tests related to C binding
-	  procedures no longer needed.
+	procedures no longer needed.
 	* generic/tkWindow.c: TkBindDeadWindow() no longer needed.
 	* generic/tkIntDecls.h, generic/tkStubInit.c: Regenerated.
 
 2010-06-15  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/ttk/ttk.tcl: Bump dummy [package ifneeded tile] version
-	to 0.8.6; see [Bug 3016598].
+	* library/ttk/ttk.tcl: Bump dummy [package ifneeded tile] version to
+	0.8.6; see [Bug 3016598].
 
 2010-06-15  Donal K. Fellows  <dkf@users.sf.net>
 
