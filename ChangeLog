@@ -1,3 +1,8 @@
+2010-08-03  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* library/button.tcl (::tk::CheckEnter): use uplevel set instead
+	of set :: to work with other var resolvers (itcl). [AS Bug#87409]
+
 2010-07-19  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkImgGIF.c (StringWriteGIF): Added ability to write a GIF to

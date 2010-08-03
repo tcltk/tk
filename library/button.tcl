@@ -4,7 +4,7 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# RCS: @(#) $Id: button.tcl,v 1.21 2010/05/03 11:59:11 dkf Exp $
+# RCS: @(#) $Id: button.tcl,v 1.22 2010/08/03 23:13:03 hobbs Exp $
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -704,7 +704,9 @@ proc ::tk::CheckEnter {w} {
 	    set Priv($w,aselectcolor) \
 		[format "#%04x%04x%04x" [expr {($r1+$r2)/2}] \
 		     [expr {($g1+$g2)/2}] [expr {($b1+$b2)/2}]]
-	    if {[set ::[$w cget -variable]] eq [$w cget -onvalue]} {
+	    # use uplevel to work with other var resolvers
+	    if {[uplevel #0 [list set [$w cget -variable]]]
+		 eq [$w cget -onvalue]} {
 		$w configure -selectcolor $Priv($w,aselectcolor)
 	    }
 	}
