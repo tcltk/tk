@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 #
-# RCS: @(#) $Id: unixWm.test,v 1.47 2010/01/19 01:27:41 patthoyts Exp $
+# RCS: @(#) $Id: unixWm.test,v 1.48 2010/08/03 16:14:35 dgp Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -2504,7 +2504,7 @@ test unixWm-62.1 {wm attributes -type name} -constraints unix -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.1 {wm attributes -type name} -constraints unix -setup {
+test unixWm-62.2 {wm attributes -type name} -constraints unix -setup {
     destroy .t
     toplevel .t
 } -body {
@@ -2514,7 +2514,7 @@ test unixWm-62.1 {wm attributes -type name} -constraints unix -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.2 {wm attributes -type list} -constraints unix -setup {
+test unixWm-62.3 {wm attributes -type list} -constraints unix -setup {
     destroy .t
     toplevel .t
 } -body {
@@ -2523,7 +2523,7 @@ test unixWm-62.2 {wm attributes -type list} -constraints unix -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.2 {wm attributes -type list} -constraints unix -setup {
+test unixWm-62.4 {wm attributes -type list} -constraints unix -setup {
     destroy .t
     toplevel .t
 } -body {
