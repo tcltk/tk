@@ -1,3 +1,7 @@
+2010-08-03  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updated for 8.5.9 release.
+
 2010-07-06  Andreas Kupries  <andreask@activestate.com>
 
 	* doc/text.n: Fixed minor typo in the description of 'text
