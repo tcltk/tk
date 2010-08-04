@@ -2,7 +2,7 @@ hhis file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.17 2010/08/03 14:43:46 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.18 2010/08/04 17:06:51 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6720,4 +6720,6 @@ in screen distances, reducing precision loss (ferrieux)
 
 2010-05-31 (bug fix)[3006842] crash on empty bind scripts (english)
 
---- Released 8.5.9, August ??, 2010 --- See ChangeLog for details ---
+2010-08-03 (bug fix) entry validation compat with Itcl scope (hobbs)
+
+--- Released 8.5.9, August 13, 2010 --- See ChangeLog for details ---
