@@ -1,3 +1,7 @@
+2010-08-04  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* license.terms: fix DFARs note for number-adjusted rights clause
+
 2010-08-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/button.tcl (::tk::CheckEnter): use uplevel set instead
