@@ -1,3 +1,19 @@
+2010-08-04  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5.9 TAGGED FOR RELEASE ***
+
+	* generic/tk.h:		Bump to 8.5.9 for release.
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
+	* changes:	Updated for 8.5.9 release.
+
 2010-08-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* library/button.tcl (::tk::CheckEnter): use uplevel set instead
