@@ -1,10 +1,10 @@
 2010-08-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	*** 8.5.9 TAGGED FOR RELEASE ***
+
 	* license.terms: fix DFARs note for number-adjusted rights clause
 
 2010-08-04  Don Porter  <dgp@users.sourceforge.net>
-
-	*** 8.5.9 TAGGED FOR RELEASE ***
 
 	* generic/tk.h:		Bump to 8.5.9 for release.
 	* library/tk.tcl:
