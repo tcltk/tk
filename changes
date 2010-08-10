@@ -2,7 +2,7 @@ hhis file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.18 2010/08/04 17:06:51 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.19 2010/08/10 20:36:31 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6606,7 +6606,7 @@ in screen distances, reducing precision loss (ferrieux)
 
 2009-04-23 (bug fix)[2779910] updated Win chooseDir (hobbs)
 
-2009-04-43 (bug fix) prevent delete of selected folder in Win dialog (hobbs)
+2009-04-24 (bug fix) prevent delete of selected folder in Win dialog (hobbs)
 
 2009-04-30 (bug fix)[2080533] panedwindow sash draw crash (fellows)
 
@@ -6678,7 +6678,7 @@ in screen distances, reducing precision loss (ferrieux)
 
 2009-11-24 (bug fix)[2902814] fix [wm iconphoto] on LP64 systems (fellows)
 
-2009-12-06 (bug fix)[2548661] OSX font crash (riefenstahl)
+2009-12-06 (bug fix)[2548661] crash in GetFontFamilyName (riefenstahl)
 
 2009-12-06 (bug fix)[2864685] Compiz menu item animation (gavilan,thoyts)
 
@@ -6712,7 +6712,7 @@ in screen distances, reducing precision loss (ferrieux)
 
 2010-01-19 (bug fix)[2931374] overflow in complex tag search (schmitz)
 
-2010-01-09 (new feature)[TIP 359] Extended Window Manager Hint Support (thoyts)
+2010-01-19 (new feature)[TIP 359] Extended Window Manager Hint Support (thoyts)
 
 2010-02-17 (bug fix)[2952745] crash in menu deletion (english)
 
