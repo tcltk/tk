@@ -1,3 +1,7 @@
+2010-08-10  Don Porter  <dgp@users.sourceforge.net>
+
+	* library/msgs/pl.msg:	Backport updates to pl.msg from HEAD
+
 2010-08-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	*** 8.5.9 TAGGED FOR RELEASE ***
