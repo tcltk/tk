@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.137 2008/12/19 19:58:50 dgp Exp $
+RCS: @(#) $Id: changes,v 1.138 2010/08/11 17:18:23 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6625,3 +6625,230 @@ in screen distances, reducing precision loss (ferrieux)
 2008-12-18 (enhancement)[24442309] Updated German messages (haertel)
 
 --- Released 8.6b1, December 19, 2008 --- See ChangeLog for details ---
+
+2008-12-27 (bug fix)[2381555] horiz. scroll [$treeview identify] (english)
+
+2008-12-28 (new feature)[TIP 244] PNG photo format support (fellows)
+
+2008-12-28 (new feature)[TIP 171] <MouseWheel> event handling (fellows)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+2008-12-31 (bug fix)[2003310] radio|check button indicator color (english)
+
+2009-01-06 (bug fix)[2484771] messagebox: system to task modal (ferrieux,thoyts,mjanssen)
+
+2009-01-06 (enhancement)[1539990] optimize photo building (jepler)
+
+2009-01-07 (bug fix)[2473120] chooseDir syntax error (bron)
+
+2009-01-07 (bug fix)[1847002] Win: prevent grab bypass (thoyts)
+
+2009-01-11 (bug fix)[2496162] crash calling Tk_DeleteOptionTable() (english)
+
+2009-01-11 (bug fix) crash on XCreateIC failure (staplin)
+
+2009-01-14 (bug fix)[2507326] Restore aMSN compat (nijtmans)
+
+2009-01-19 (new feature) CONFIG_INSTALL_DIR - where tkConfig.sh goes (cassoff)
+
+2009-01-19 (platform support) better tools for BSD ports (cassoff)
+
+2009-02-08 (bug fix)[2431428] panic computing layout on active widget (english)
+
+2009-02-17 (platform support) MSVC and _WIN64 (hobbs)
+
+2009-02-21 (bug fix)[2546087] [console] display of true UTF-8 \0 (thoyts)
+
+2009-02-23 (bug fix)[1329198,456299,2507419] menu image display (mcdonald)
+
+2009-02-23 (bug fix)[2513104] fix cursor hotspots (mcdonald)
+
+2009-02-23 (bug fix)[2542828] Win: standard question_arrow cursor (danckaert)
+
+2009-02-27 (bug fix)[2645457] crash in Tk_MakeWindowExist() (thoyts)
+
+2009-03-09 (bug fix)[2548661] crash in GetFontFamilyName (riefenstahl)
+
+2009-03-25 (bug fix)[2178820] stop zero-size allocs in ttk (fellows)
+
+2009-03-25 (bug fix)[1871101] blurry large fonts on Vista (garvey,fellows)
+
+2009-04-03 (bug fix)[1789819] stop panic on unexpected wm stack order (english)
+
+2009-04-10 (bug fix)[2116837] std virtual events with Caps Lock (fellows)
+
+2009-04-10 (platform) sse Darwin SUSv3 extensions if available (steffen)
+
+2009-04-10 (bug fix) Motif checkbutton on X11 only (steffen)
+
+2009-04-10 (bug fix) remove TkAqua Quit menu item on [console] (steffen)
+
+2009-04-10 (bug fix) crash deleting char range from [text] (steffen)
+
+2009-04-23 (bug fix)[2779910] updated Win chooseDir (hobbs)
+
+2009-04-24 (bug fix) prevent delete of selected folder in Win dialog (hobbs)
+
+2009-04-30 (bug fix)[2080533] panedwindow sash draw crash (fellows)
+
+2009-04-30 (bug fix)[2504402] iconphoto on non-32-bit displays (mcdonald,thoyts)
+
+2009-05-01 (bug fix)[2777019] anchor for text rotation (gavilan,fellows)
+
+2009-05-03 (bug fix)[2785744] broken flag twiddling (baker,fellows)
+
+2009-05-13 (bug fix)[2791352] XLFD parsing error (thoyts)
+
+2009-05-14 (new feature) Vista theme support (thoyts)
+
+2009-05-14 (bug fix)[1923684] confused checkbutton state (thoyts)
+
+2009-05-17 (new feature)[1470246] notebook tab orientation control (english)
+
+2009-05-21 (bug fix)[2794778] Win menu keyboard traversal (thoyts)
+
+2009-06-02 (bug fix)[2799589] crash on delayed window activation (thoyts)
+
+2009-06-23 (bug fix)[220935] canvas dash update problem (nijtmans)
+
+2009-06-23 (platform) new subdir 'carbon' preserved for OSX 10.4-
+use --enable-aqua=carbon option to unix/configure to enable (steffen)
+
+2009-06-29 (new feature) source in `macosx` now built on Cocoa (steffen)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+2009-06-30 (platform support) clang static analyzer macros (steffen)
+
+2009-07-15 (bug fix)[2821962] photo image copy/paste (rib,fellows)
+
+2009-07-21 (bug fix)[2356057] rotated underlined text (fellows)
+
+2009-07-22 (bug fix)[2496114] focus in dead window crash (griffin,fellows)
+
+2009-07-23 (bug fix)[2441988] report errors in selection handlers (fellows)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+2009-08-01 (bug fix)[2830420] X iconphoto for big endian (misch,fellows)
+
+2009-08-04 (bug fix) [text] word-wrap of non-breaking space (fellows)
+
+2009-08-14 (bug fix) copy from unmapped toplevel crash (alaoui,steffen)
+
+2009-08-19 (bug fix)[2475855] prevent grid & pack on same master (spjuth)
+
+2009-08-24 (bug fix)[2821084] Cocoa: let WM_DELETE_WINDOW handler stop window
+deletion (walzer,steffen) 
+
+2009-08-24 (bug fix) tk::MessageBox bindings for ttk::buttons (steiner,fellows)
+
+2009-08-25 (bug fix)[1909931] [send] update for Fedora 8 (fellows)
+
+2009-09-10 (bug fix) font allocation crash (berezhnoy,fellows)
+
+2009-09-14 (bug fix)[873608] win tearoff menu, no submenu arrows (traum,hobbs)
+
+2009-09-14 (bug fix)[873613] win tearoff menu repeat select (traum,hobbs)
+
+2009-09-25 (bug fix) grayscale from images (vetter,fellows)
+
+2009-10-07 (bug fix)[2088597] min scrollbar slider size (danckaert,fellows)
+
+2009-10-07 (bug fix)[2787164] combobox/menubutton arrow size (thoyts)
+
+2009-10-08 (bug fix)[2870648] file dialog cursor (danckaert,fellows)
+
+2009-10-10 (feature)[1961455] underline, overstrike Xft fonts (caffin,fellows)
+
+2009-10-20 (enhancement) Updates to Polish messages (pawlak)
+
+2009-10-22 (bug fix)[2168768] file dialog -typevariable scope (danckaert)
+
+2009-10-22 (bug fix)[1469210] [text] modified error (danckaert)
+
+2009-10-22 (bug fix)[2883712] 64-bit Aqua progress bar (haffner)
+
+2009-10-24 (bug fix)[1530276] X checkbutton -selectcolor (danckaert)
+
+2009-10-25 (bug fix)[1854913] [.t delete] before -startindex (danckaert)
+
+2009-10-25 (bug fix)[2809525] prevent X crash on overlong color name (goth)
+
+2009-10-29 (bug fix)[1825353] Russian Windows tiny fonts problem (thoyts)
+
+2009-11-01 (new feature) Ttk: [$w identify] now an ensemble (jenglish)
+
+2009-11-19 (bug fix)[2899685] fix [imove] redraw logic (schekin,ferrieux)
+
+2009-11-22 (bug fix)[2899949] crash on widget destroy (meier,thoyts)
+
+2009-11-23 (bug fix)[2902573] Update Safe Tk to new Safe Base (kurpies)
+
+2009-11-24 (bug fix)[2902814] fix [wm iconphoto] on LP64 systems (fellows)
+
+2009-12-08 (bug fix)[2864685] Compiz menu item animation (gavilan,thoyts)
+
+2009-12-11 (bug fix)[2912473] accept :: in DISPLAY name (fellows)
+
+2009-12-15 (bug fix)[2492179] Tcl_ObjType "option" no longer registered (porter)
+	*** POTENTIAL INCOMPATIBILITY for Tcl_GetObjType("option") ***
+	
+2009-12-20 (bug fix)[2917663] [send] accept SI:* on auth list (fellows)
+
+2009-12-22 (bug fix)[2912356] [ttk::sizegrip] accommodate Compiz (english)
+
+2009-12-25 (bug fix)[2977688,2546779] tab selection focus (english)
+
+2009-12-27 (bug fix)[2879927] Win: cascade menu highlight (pawlak,thoyts)
+
+2010-01-01 (bug fix)[1924761] stop [event generate] / XIM conflict (fellows)
+
+2010-01-03 (bug fix)[2848897] ODS_NOACCEL flag support (kovalenko,thoyts)
+
+2010-01-04 (bug fix)[2811266] <Return> binding in [tk_dialog] (thoyts)
+
+2010-01-04 (bug fix)[2727476] font dialog appearance (thoyts)
+
+2010-01-05 (bug fix)[220950] [$menu delete] bounds check (fellows)
+
+2010-01-05 [2898255] unlimited multi-file select (pawlak,fellows,thoyts)
+
+2010-01-06 (bug fix)[1163496] X: [wm transient] fix (bateman,fellows)
+
+2010-01-09 (new feature)[TIP 360] Modernize X11 Menus (thoyts)
+
+2010-01-18 (bug fix)[2932808] canvas update on state change (mcdonald,nijtmans)
+
+2010-01-19 (new feature)[TIP 359] Extended Window Manager Hint Support (thoyts)
+
+2010-01-19 (bug fix)[2931374] overflow in complex tag search (schmitz)
+
+2010-02-17 (bug fix)[2952745] crash in menu deletion (english)
+
+2010-02-20 (performance) treeview stop quadratic common case (english)
+
+2010-03-02 (enhancement) -fvisibility-hidden build support (nijtmans)
+
+2010-03-06 (bug fix)[2949774] cascade menu unpost (thoyts)
+
+2010-03-11 (bug fix)[2968379] crash in peer text dump (fellows)
+
+2010-03-17 (bug fix)[2971663] Cocoa entry <Up>, <Down> (goddard,fellows)
+
+2010-03-28 (new feature) [$treeview tag names|add|remove] (english)
+
+2010-04-09 (new feature)[2983824] [$image write -file] use extension of file
+name to select image format (fellows)
+
+2010-04-19 [2898255] unlimited multi-file select (pawlak,fellows,thoyts)
+
+2010-05-31 (bug fix)[3006842] crash on empty bind scripts (english)
+
+2010-06-15 (bug fix)[2585265] text <Delete>,<Backspace> note selection (fellows)
+
+2010-06-15 (new package)[3016598] Tk now provides "tile 0.8.6" (english)
+
+2010-07-19 (new feature) [$photo data -format GIF] (fellows)
+
+2010-08-03 (bug fix) entry validation compat with Itcl scope (hobbs)
+
+--- Released 8.6b2, September ??, 2010 --- See ChangeLog for details ---
