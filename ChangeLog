@@ -1,3 +1,7 @@
+2010-08-11  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.6b2 release.
+
 2010-08-04  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* license.terms: fix DFARs note for number-adjusted rights clause
@@ -1945,7 +1949,7 @@
 	using the native CC.
 	* unix/configure (autoconf-2.59)
 
-2008-02-08  Joe English  <jenglish@users.sourceforge.net>
+2009-02-08  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/*.[ch]: Renamed several internal data structures and
 	functions: ElementImpl -> ElementClass, LayoutNode -> Element. Remove
@@ -1953,7 +1957,7 @@
 	of entry, scale, progress, and treeview widgets.
 	* generic/ttk/ttkTrack.c: Fix [Bug 2431428].
 
-2008-02-06  Daniel Steffen  <das@users.sourceforge.net>
+2009-02-06  Daniel Steffen  <das@users.sourceforge.net>
 
 	* generic/tkImgPhInstance.c:	Fix numerous leaks discovered with the
 	* generic/tkMenu.c:		Mac OS X Instruments.app Leaks tool.
