@@ -1,3 +1,8 @@
+2010-08-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkCanvLine.c (LineDeleteCoords): [Bug 2900121]: Backport of
+	fix to sense of test.
+
 2010-08-10  Don Porter  <dgp@users.sourceforge.net>
 
 	* library/msgs/pl.msg:	Backport updates to pl.msg from HEAD
@@ -6,7 +11,7 @@
 
 	*** 8.5.9 TAGGED FOR RELEASE ***
 
-	* license.terms: fix DFARs note for number-adjusted rights clause
+	* license.terms: Fix DFARs note for number-adjusted rights clause
 
 2010-08-04  Don Porter  <dgp@users.sourceforge.net>
 
@@ -24,8 +29,8 @@
 
 2010-08-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* library/button.tcl (::tk::CheckEnter): use uplevel set instead
-	of set :: to work with other var resolvers (itcl). [AS Bug#87409]
+	* library/button.tcl (::tk::CheckEnter): [AS Bug#87409]: Use uplevel
+	set instead of set :: to work with other var resolvers (itcl).
 
 2010-08-03  Don Porter  <dgp@users.sourceforge.net>
 
@@ -33,20 +38,21 @@
 
 2010-07-06  Andreas Kupries  <andreask@activestate.com>
 
-	* doc/text.n: Fixed minor typo in the description of 'text
-	  delete', as reported by <eee@users.sf.net> on the chat.
+	* doc/text.n: Fixed minor typo in the description of 'text delete', as
+	reported by <eee@users.sf.net> on the chat.
 
 2010-05-31  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/tkBind.c(Tk_CreateBinding): Silently ignore empty 
-	binding scripts (Fixes [Bug 3006842]).
-	* generic/ttk/ttkTreeview.c: [$tv tag bind $tag <...> {}]
-	now removes binding.
+	* generic/tkBind.c (Tk_CreateBinding): [Bug 3006842]: Silently ignore
+	empty binding scripts.
+	* generic/ttk/ttkTreeview.c: [$tv tag bind $tag <...> {}] now removes
+	binding.
 
 2010-05-31  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkMain.c:  Fix CYGWIN warning: "fd_set and assiciated.macros
-	have been defined in sys/types. This may cause runtime problems with W32"
+	have been defined in sys/types. This may cause runtime problems with
+	W32"
 	* win/winMain.c:     Add command line processing for CYGWIN, backported
 	from trunk.
 
