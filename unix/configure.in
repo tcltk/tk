@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.172 2010/05/03 16:30:15 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.173 2010/08/12 00:34:56 hobbs Exp $
 
 AC_INIT([tk],[8.6])
 AC_PREREQ(2.59)
@@ -717,26 +717,13 @@ else
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
-    if test "$SHARED_BUILD" = "0" || test "$TCL_NEEDS_EXP_FILE" = "0"; then
-        if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-            TK_LIB_FLAG="-ltk${TK_VERSION}"
-        else
-            TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
-        fi
-        TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
-        TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
+    if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
+        TK_LIB_FLAG="-ltk${TK_VERSION}"
     else
-        TK_BUILD_EXP_FILE="lib.exp"
-        eval "TK_EXP_FILE=libtk${TCL_EXPORT_FILE_SUFFIX}"
-    
-        if test "$GCC" = "yes" ; then
-            TK_BUILD_LIB_SPEC="-Wl,-bI:`pwd | sed -e 's/ /\\\\ /g'`/${TK_BUILD_EXP_FILE} -L`pwd | sed -e 's/ /\\\\ /g'`"
-            TK_LIB_SPEC="-Wl,-bI:${libdir}/${TK_EXP_FILE} -L${libdir}"
-        else
-            TK_BUILD_LIB_SPEC="-bI:`pwd | sed -e 's/ /\\\\ /g'`/${TK_BUILD_EXP_FILE}"
-            TK_LIB_SPEC="-bI:${libdir}/${TK_EXP_FILE}"
-        fi
+        TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
     fi
+    TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
+    TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 fi
 
 # Extra bits for legacy Aqua Carbon build (carbon sources and resource files)
@@ -808,8 +795,6 @@ AC_SUBST(TK_SHARED_BUILD)
 AC_SUBST(LD_LIBRARY_PATH_VAR)
 
 AC_SUBST(TK_BUILD_LIB_SPEC)
-AC_SUBST(TK_BUILD_EXP_FILE)
-AC_SUBST(TK_EXP_FILE)
 
 AC_SUBST(TCL_STUB_FLAGS)
 AC_SUBST(XINCLUDES)
