@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.78.2.3 2009/10/15 17:48:50 dgp Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.78.2.4 2010/08/12 00:37:35 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -666,7 +666,7 @@ tkWindow.$(OBJEXT): configure Makefile
 
 # Implicit rule for all object files that will end up in the Tcl library
 
-.c.$(OBJEXT):
+%.$(OBJEXT): %.c
 	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
 
 .rc.$(RES):
