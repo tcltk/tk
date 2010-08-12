@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.143.2.7 2010/01/06 23:16:20 nijtmans Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.143.2.8 2010/08/12 00:14:33 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -254,8 +254,6 @@ TCL_LIB_SPEC		= @TCL_LIB_SPEC@
 TCL_STUB_LIB_SPEC	= @TCL_STUB_LIB_SPEC@
 TCL_STUB_LIB_FLAG	= @TCL_STUB_LIB_FLAG@
 TCL_STUB_LIB_FILE	= @TCL_STUB_LIB_FILE@
-TK_EXP_FILE		= @TK_EXP_FILE@
-TK_BUILD_EXP_FILE	= @TK_BUILD_EXP_FILE@
 
 TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
@@ -566,7 +564,7 @@ SHELL_ENV = \
 
 all: binaries libraries doc
 
-binaries: ${LIB_FILE} ${STUB_LIB_FILE} ${TK_BUILD_EXP_FILE} wish@EXEEXT@
+binaries: ${LIB_FILE} ${STUB_LIB_FILE} wish@EXEEXT@
 
 libraries:
 
@@ -692,7 +690,7 @@ install-strip:
 # some ranlibs write to current directory, and this might not always be
 # possible (e.g. if installing as root).
 
-install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish@EXEEXT@
+install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) wish@EXEEXT@
 	@for i in "$(LIB_INSTALL_DIR)" "$(BIN_INSTALL_DIR)" \
 	    "$(PKG_INSTALL_DIR)" "$(CONFIG_INSTALL_DIR)" ; \
 	    do \
@@ -719,11 +717,6 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish@E
 	@echo "Installing $(LIB_FILE) to $(LIB_INSTALL_DIR)/"
 	@@INSTALL_LIB@
 	@chmod 555 "$(LIB_INSTALL_DIR)"/$(LIB_FILE)
-	@if test "$(TK_BUILD_EXP_FILE)" != ""; then \
-	    echo "Installing $(TK_EXP_FILE) to $(LIB_INSTALL_DIR)/"; \
-	    $(INSTALL_DATA) $(TK_BUILD_EXP_FILE) \
-			"$(LIB_INSTALL_DIR)"/$(TK_EXP_FILE); \
-	    fi
 	@echo "Installing wish@EXEEXT@ as $(BIN_INSTALL_DIR)/wish$(VERSION)@EXEEXT@"
 	@$(INSTALL_PROGRAM) wish@EXEEXT@ "$(BIN_INSTALL_DIR)"/wish$(VERSION)@EXEEXT@
 	@echo "Installing tkConfig.sh to $(CONFIG_INSTALL_DIR)/"
