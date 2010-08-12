@@ -1,5 +1,7 @@
 2010-08-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* win/Makefile.in (%.${OBJEXT}): better implicit rules support
+
 	* unix/configure: regen with ac-2.59
 	* unix/configure.in, unix/Makefile.in:
 	* unix/tcl.m4 (AIX): remove the need for ldAIX, replace with
