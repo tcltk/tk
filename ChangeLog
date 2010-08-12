@@ -1,3 +1,9 @@
+2010-08-12  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/text.tcl (TextCursorInSelection): [Patch 2585265]: Backport
+	of factoring-out of decision logic for whether to delete the selected
+	text.
+
 2010-08-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/Makefile.in (%.${OBJEXT}): better implicit rules support
@@ -5,8 +11,8 @@
 	* unix/configure: regen with ac-2.59
 	* unix/configure.in, unix/Makefile.in:
 	* unix/tcl.m4 (AIX): remove the need for ldAIX, replace with
-	-bexpall/-brtl.  Remove TK_EXP_FILE (export file) and other
-	baggage that went with it.  Remove pre-4 AIX build support.
+	-bexpall/-brtl.  Remove TK_EXP_FILE (export file) and other baggage
+	that went with it.  Remove pre-4 AIX build support.
 
 2010-08-11  Donal K. Fellows  <dkf@users.sf.net>
 
