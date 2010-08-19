@@ -2,7 +2,8 @@
 
 	* generic/ttk/ttkGenStubs.tcl [Patch 3034251] partly: remove
 	some more unneeded ifdeffery, as in tcl/tools/genStubs.tcl.
-	* generic/*Decls.h   (regenerated)
+	* generic/tk.h:     Move USE_OLD_IMAGE support after tkDecls.h
+	* generic/*Decls.h  (regenerated)
 	* generic/ttk/ttkDecls.h
 
 2010-08-11  Jeff Hobbs  <jeffh@ActiveState.com>

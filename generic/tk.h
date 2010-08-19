@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.136 2010/07/16 22:06:05 nijtmans Exp $
+ * RCS: @(#) $Id: tk.h,v 1.137 2010/08/19 05:23:12 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -1359,11 +1359,6 @@ struct Tk_PhotoImageFormat {
 				 * currently known. Filled in by Tk, not by
 				 * image format handler. */
 };
-
-#ifdef USE_OLD_IMAGE
-#define Tk_CreateImageType		Tk_CreateOldImageType
-#define Tk_CreatePhotoImageFormat	Tk_CreateOldPhotoImageFormat
-#endif /* USE_OLD_IMAGE */
 
 /*
  *----------------------------------------------------------------------
@@ -1523,6 +1518,13 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 
 #include "tkDecls.h"
 
+#ifdef USE_OLD_IMAGE
+#undef Tk_CreateImageType
+#define Tk_CreateImageType		Tk_CreateOldImageType
+#undef Tk_CreatePhotoImageFormat
+#define Tk_CreatePhotoImageFormat	Tk_CreateOldPhotoImageFormat
+#endif /* USE_OLD_IMAGE */
+
 /*
  *----------------------------------------------------------------------
  *
