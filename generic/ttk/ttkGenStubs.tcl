@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# $Id: ttkGenStubs.tcl,v 1.8 2010/06/22 07:53:59 nijtmans Exp $
+# $Id: ttkGenStubs.tcl,v 1.9 2010/08/19 05:05:55 nijtmans Exp $
 #
 # SOURCE: tcl/tools/genStubs.tcl, revision 1.20
 #
@@ -468,10 +468,7 @@ proc genStubs::makeDecl {name decl index} {
 	    append line ")"
 	}
     }
-    append text $line
-    
-    append text ";\n"
-    return $text
+    return "$text$line;\n"
 }
 
 # genStubs::makeMacro --
@@ -492,14 +489,12 @@ proc genStubs::makeMacro {name decl index} {
     set lfname [string tolower [string index $fname 0]]
     append lfname [string range $fname 1 end]
 
-    set text "#ifndef $fname\n#define $fname"
+    set text "#define $fname \\\n\t("
     if {$args == ""} {
-	append text " \\\n\t(*${name}StubsPtr->$lfname)"
-	append text " /* $index */\n#endif\n"
-	return $text
+	append text "*"
     }
-    append text " \\\n\t(${name}StubsPtr->$lfname)"
-    append text " /* $index */\n#endif\n"
+    append text "${name}StubsPtr->$lfname)"
+    append text " /* $index */\n"
     return $text
 }
 
@@ -661,15 +656,10 @@ proc genStubs::ifdeffed {macro text} {
 #	None.
 
 proc genStubs::emitDeclarations {name textVar} {
-    variable libraryName
     upvar $textVar text
 
-    set upName [string toupper $libraryName]
-    append text "\n#if !defined(USE_${upName}_STUBS)\n"
     append text "\n/*\n * Exported function declarations:\n */\n\n"
     forAllStubs $name makeDecl noGuard text
-    append text "\n#endif /* !defined(USE_${upName}_STUBS) */\n"
-
     return
 }
 
@@ -691,7 +681,7 @@ proc genStubs::emitMacros {name textVar} {
     set upName [string toupper $libraryName]
     append text "\n#if defined(USE_${upName}_STUBS)\n"
     append text "\n/*\n * Inline function declarations:\n */\n\n"
-    
+
     forAllStubs $name makeMacro addGuard text
 
     append text "\n#endif /* defined(USE_${upName}_STUBS) */\n"
@@ -742,9 +732,9 @@ proc genStubs::emitHeader {name} {
 
     emitSlots $name text
 
-    append text "} ${capName}Stubs;\n"
+    append text "} ${capName}Stubs;\n\n"
 
-    append text "\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n"
+    append text "#ifdef __cplusplus\nextern \"C\" {\n#endif\n"
     append text "extern const ${capName}Stubs *${name}StubsPtr;\n"
     append text "#ifdef __cplusplus\n}\n#endif\n"
 

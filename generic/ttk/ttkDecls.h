@@ -1,5 +1,5 @@
 /*
- * $Id: ttkDecls.h,v 1.14 2010/06/22 07:53:59 nijtmans Exp $
+ * $Id: ttkDecls.h,v 1.15 2010/08/19 05:05:55 nijtmans Exp $
  *
  * This file is (mostly) automatically generated from ttk.decls.
  */
@@ -24,8 +24,6 @@ extern const char *TtkInitializeStubs(
 
 #define TTK_STUBS_EPOCH 0
 #define TTK_STUBS_REVISION 31
-
-#if !defined(USE_TTK_STUBS)
 
 /*
  * Exported function declarations:
@@ -133,8 +131,6 @@ TTKAPI Tcl_Obj *	Ttk_NewBoxObj(Ttk_Box box);
 TTKAPI int		Ttk_GetOrientFromObj(Tcl_Interp *interp,
 				Tcl_Obj *objPtr, int *orient);
 
-#endif /* !defined(USE_TTK_STUBS) */
-
 typedef struct TtkStubs {
     int magic;
     int epoch;
@@ -198,140 +194,78 @@ extern const TtkStubs *ttkStubsPtr;
  * Inline function declarations:
  */
 
-#ifndef Ttk_GetTheme
 #define Ttk_GetTheme \
 	(ttkStubsPtr->ttk_GetTheme) /* 0 */
-#endif
-#ifndef Ttk_GetDefaultTheme
 #define Ttk_GetDefaultTheme \
 	(ttkStubsPtr->ttk_GetDefaultTheme) /* 1 */
-#endif
-#ifndef Ttk_GetCurrentTheme
 #define Ttk_GetCurrentTheme \
 	(ttkStubsPtr->ttk_GetCurrentTheme) /* 2 */
-#endif
-#ifndef Ttk_CreateTheme
 #define Ttk_CreateTheme \
 	(ttkStubsPtr->ttk_CreateTheme) /* 3 */
-#endif
-#ifndef Ttk_RegisterCleanup
 #define Ttk_RegisterCleanup \
 	(ttkStubsPtr->ttk_RegisterCleanup) /* 4 */
-#endif
-#ifndef Ttk_RegisterElementSpec
 #define Ttk_RegisterElementSpec \
 	(ttkStubsPtr->ttk_RegisterElementSpec) /* 5 */
-#endif
-#ifndef Ttk_RegisterElement
 #define Ttk_RegisterElement \
 	(ttkStubsPtr->ttk_RegisterElement) /* 6 */
-#endif
-#ifndef Ttk_RegisterElementFactory
 #define Ttk_RegisterElementFactory \
 	(ttkStubsPtr->ttk_RegisterElementFactory) /* 7 */
-#endif
-#ifndef Ttk_RegisterLayout
 #define Ttk_RegisterLayout \
 	(ttkStubsPtr->ttk_RegisterLayout) /* 8 */
-#endif
 /* Slot 9 is reserved */
-#ifndef Ttk_GetStateSpecFromObj
 #define Ttk_GetStateSpecFromObj \
 	(ttkStubsPtr->ttk_GetStateSpecFromObj) /* 10 */
-#endif
-#ifndef Ttk_NewStateSpecObj
 #define Ttk_NewStateSpecObj \
 	(ttkStubsPtr->ttk_NewStateSpecObj) /* 11 */
-#endif
-#ifndef Ttk_GetStateMapFromObj
 #define Ttk_GetStateMapFromObj \
 	(ttkStubsPtr->ttk_GetStateMapFromObj) /* 12 */
-#endif
-#ifndef Ttk_StateMapLookup
 #define Ttk_StateMapLookup \
 	(ttkStubsPtr->ttk_StateMapLookup) /* 13 */
-#endif
-#ifndef Ttk_StateTableLookup
 #define Ttk_StateTableLookup \
 	(ttkStubsPtr->ttk_StateTableLookup) /* 14 */
-#endif
 /* Slot 15 is reserved */
 /* Slot 16 is reserved */
 /* Slot 17 is reserved */
 /* Slot 18 is reserved */
 /* Slot 19 is reserved */
-#ifndef Ttk_GetPaddingFromObj
 #define Ttk_GetPaddingFromObj \
 	(ttkStubsPtr->ttk_GetPaddingFromObj) /* 20 */
-#endif
-#ifndef Ttk_GetBorderFromObj
 #define Ttk_GetBorderFromObj \
 	(ttkStubsPtr->ttk_GetBorderFromObj) /* 21 */
-#endif
-#ifndef Ttk_GetStickyFromObj
 #define Ttk_GetStickyFromObj \
 	(ttkStubsPtr->ttk_GetStickyFromObj) /* 22 */
-#endif
-#ifndef Ttk_MakePadding
 #define Ttk_MakePadding \
 	(ttkStubsPtr->ttk_MakePadding) /* 23 */
-#endif
-#ifndef Ttk_UniformPadding
 #define Ttk_UniformPadding \
 	(ttkStubsPtr->ttk_UniformPadding) /* 24 */
-#endif
-#ifndef Ttk_AddPadding
 #define Ttk_AddPadding \
 	(ttkStubsPtr->ttk_AddPadding) /* 25 */
-#endif
-#ifndef Ttk_RelievePadding
 #define Ttk_RelievePadding \
 	(ttkStubsPtr->ttk_RelievePadding) /* 26 */
-#endif
-#ifndef Ttk_MakeBox
 #define Ttk_MakeBox \
 	(ttkStubsPtr->ttk_MakeBox) /* 27 */
-#endif
-#ifndef Ttk_BoxContains
 #define Ttk_BoxContains \
 	(ttkStubsPtr->ttk_BoxContains) /* 28 */
-#endif
-#ifndef Ttk_PackBox
 #define Ttk_PackBox \
 	(ttkStubsPtr->ttk_PackBox) /* 29 */
-#endif
-#ifndef Ttk_StickBox
 #define Ttk_StickBox \
 	(ttkStubsPtr->ttk_StickBox) /* 30 */
-#endif
-#ifndef Ttk_AnchorBox
 #define Ttk_AnchorBox \
 	(ttkStubsPtr->ttk_AnchorBox) /* 31 */
-#endif
-#ifndef Ttk_PadBox
 #define Ttk_PadBox \
 	(ttkStubsPtr->ttk_PadBox) /* 32 */
-#endif
-#ifndef Ttk_ExpandBox
 #define Ttk_ExpandBox \
 	(ttkStubsPtr->ttk_ExpandBox) /* 33 */
-#endif
-#ifndef Ttk_PlaceBox
 #define Ttk_PlaceBox \
 	(ttkStubsPtr->ttk_PlaceBox) /* 34 */
-#endif
-#ifndef Ttk_NewBoxObj
 #define Ttk_NewBoxObj \
 	(ttkStubsPtr->ttk_NewBoxObj) /* 35 */
-#endif
 /* Slot 36 is reserved */
 /* Slot 37 is reserved */
 /* Slot 38 is reserved */
 /* Slot 39 is reserved */
-#ifndef Ttk_GetOrientFromObj
 #define Ttk_GetOrientFromObj \
 	(ttkStubsPtr->ttk_GetOrientFromObj) /* 40 */
-#endif
 
 #endif /* defined(USE_TTK_STUBS) */
 
