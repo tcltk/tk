@@ -9,7 +9,7 @@
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
  *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.31 2010/08/19 05:05:55 nijtmans Exp $
+ * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.32 2010/08/21 16:35:33 nijtmans Exp $
  */
 
 #ifndef _TKINTXLIBDECLS
@@ -687,7 +687,7 @@ typedef struct TkIntXlibStubs {
     Bool (*xFilterEvent) (XEvent *x, Window w); /* 78 */
     int (*xmbLookupString) (XIC xi, XKeyPressedEvent *xk, char *c, int i, KeySym *k, Status *s); /* 79 */
     void (*tkPutImage) (unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height); /* 80 */
-    void *reserved81;
+    void (*reserved81)(void);
     Status (*xParseColor) (Display *display, Colormap map, _Xconst char *spec, XColor *colorPtr); /* 82 */
     GC (*xCreateGC) (Display *display, Drawable d, unsigned long valuemask, XGCValues *values); /* 83 */
     void (*xFreeGC) (Display *display, GC gc); /* 84 */
