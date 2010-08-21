@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkDecls.h,v 1.49 2010/08/19 05:05:55 nijtmans Exp $
+ * RCS: @(#) $Id: tkDecls.h,v 1.50 2010/08/21 16:35:34 nijtmans Exp $
  */
 
 #ifndef _TKDECLS
@@ -1100,8 +1100,8 @@ typedef struct TkStubs {
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
     int (*tk_CreateConsoleWindow) (Tcl_Interp *interp); /* 216 */
     void (*tk_CreateSmoothMethod) (Tcl_Interp *interp, const Tk_SmoothMethod *method); /* 217 */
-    void *reserved218;
-    void *reserved219;
+    void (*reserved218)(void);
+    void (*reserved219)(void);
     int (*tk_GetDash) (Tcl_Interp *interp, const char *value, Tk_Dash *dash); /* 220 */
     void (*tk_CreateOutline) (Tk_Outline *outline); /* 221 */
     void (*tk_DeleteOutline) (Display *display, Tk_Outline *outline); /* 222 */
