@@ -1,5 +1,5 @@
 /*
- * $Id: ttkStubLib.c,v 1.5 2008/03/27 12:04:02 das Exp $
+ * $Id: ttkStubLib.c,v 1.5.2.1 2010/08/26 02:06:09 hobbs Exp $
  * SOURCE: tk/generic/tkStubLib.c, version 1.9 2004/03/17
  */
 
@@ -8,10 +8,8 @@
  * contains no references to any of the tcl stub functions.
  */
 
-#ifndef USE_TCL_STUBS
+#undef USE_TCL_STUBS
 #define USE_TCL_STUBS
-#endif
-#undef USE_TCL_STUB_PROCS
 
 #include "tk.h"
 
@@ -44,9 +42,9 @@ TtkInitializeStubs(
     const char *packageName = "Ttk";
     const char *errMsg = NULL;
     ClientData pkgClientData = NULL;
-    const char *actualVersion= Tcl_PkgRequireEx(
+    const char *actualVersion = Tcl_PkgRequireEx(
 	interp, packageName, version, exact, &pkgClientData);
-    TtkStubs *stubsPtr = pkgClientData;
+    const TtkStubs *stubsPtr = pkgClientData;
 
     if (!actualVersion) {
 	return NULL;

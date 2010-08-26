@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_label.n,v 1.9.2.1 2008/05/11 00:31:01 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_label.n,v 1.9.2.2 2010/08/26 02:06:09 hobbs Exp $
 '\" 
 .so man.macros
 .TH ttk::label n 8.5 Tk "Tk Themed Widget"
@@ -15,6 +15,7 @@ ttk::label \- Display a text string and/or image
 \fBttk::label\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
+.PP
 A \fBttk::label\fR widget displays a textual label and/or image.
 The label may be linked to a Tcl variable 
 to automatically change the displayed text.
@@ -68,8 +69,12 @@ then automatic wrapping is not performed; otherwise
 the text is split into lines such that no line is longer
 than the specified value.
 .SH "WIDGET COMMAND"
+.PP
 Supports the standard widget commands
 \fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR;
 see \fIttk::widget(n)\fR.
 .SH "SEE ALSO"
 ttk::widget(n), label(n)
+'\" Local Variables:
+'\" mode: nroff
+'\" End:

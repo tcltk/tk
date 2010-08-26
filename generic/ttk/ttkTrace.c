@@ -1,4 +1,4 @@
-/* $Id: ttkTrace.c,v 1.1 2006/10/31 01:42:26 hobbs Exp $
+/* $Id: ttkTrace.c,v 1.1.4.1 2010/08/26 02:06:10 hobbs Exp $
  *
  * Copyright 2003, Joe English
  *
@@ -27,8 +27,8 @@ static char *
 VarTraceProc(
     ClientData clientData,	/* Widget record pointer */
     Tcl_Interp *interp, 	/* Interpreter containing variable. */
-    CONST char *name1,		/* (unused) */
-    CONST char *name2,		/* (unused) */
+    const char *name1,		/* (unused) */
+    const char *name2,		/* (unused) */
     int flags)			/* Information about what happened. */
 {
     Ttk_TraceHandle *tracePtr = clientData;

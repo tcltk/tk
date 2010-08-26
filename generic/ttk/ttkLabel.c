@@ -1,4 +1,4 @@
-/* $Id: ttkLabel.c,v 1.11.2.1 2008/05/23 17:58:08 jenglish Exp $
+/* $Id: ttkLabel.c,v 1.11.2.2 2010/08/26 02:06:09 hobbs Exp $
  *
  * text, image, and label elements.
  *
@@ -67,7 +67,7 @@ static Ttk_ElementOptionSpec TextElementOptions[] = {
 	Tk_Offset(TextElement,wrapLengthObj), "0" },
     { "-embossed", TK_OPTION_INT,
 	Tk_Offset(TextElement,embossedObj), "0"},
-    {NULL}
+    { NULL, 0, 0, NULL }
 };
 
 static int TextSetup(TextElement *text, Tk_Window tkwin)
@@ -236,7 +236,7 @@ static Ttk_ElementOptionSpec ImageElementOptions[] = {
 	Tk_Offset(ImageElement,stippleObj), "gray50" },
     { "-background", TK_OPTION_COLOR,
 	Tk_Offset(ImageElement,backgroundObj), DEFAULT_BACKGROUND },
-    {NULL}
+    { NULL, 0, 0, NULL }
 };
 
 /*
@@ -452,8 +452,7 @@ static Ttk_ElementOptionSpec LabelElementOptions[] = {
 	Tk_Offset(LabelElement,image.stippleObj), "gray50" },
     { "-background", TK_OPTION_COLOR,
 	Tk_Offset(LabelElement,image.backgroundObj), DEFAULT_BACKGROUND },
-
-    {NULL}
+    { NULL, 0, 0, NULL }
 };
 
 /*

@@ -1,5 +1,5 @@
 /*
- * $Id: ttkThemeInt.h,v 1.5 2007/12/13 15:26:26 dgp Exp $
+ * $Id: ttkThemeInt.h,v 1.5.2.1 2010/08/26 02:06:10 hobbs Exp $
  *
  * Theme engine: private definitions.
  *
@@ -11,18 +11,17 @@
 
 #include "ttkTheme.h"
 
-typedef struct Ttk_Style_ *Ttk_Style;
 typedef struct Ttk_TemplateNode_ Ttk_TemplateNode, *Ttk_LayoutTemplate;
 
-MODULE_SCOPE Ttk_ElementImpl Ttk_GetElement(Ttk_Theme theme, const char *name);
-MODULE_SCOPE const char *Ttk_ElementName(Ttk_ElementImpl);
+MODULE_SCOPE Ttk_ElementClass *Ttk_GetElement(Ttk_Theme, const char *name);
+MODULE_SCOPE const char *Ttk_ElementClassName(Ttk_ElementClass *);
 
 MODULE_SCOPE void Ttk_ElementSize(
-	Ttk_ElementImpl element, Ttk_Style, char *recordPtr, Tk_OptionTable,
+	Ttk_ElementClass *, Ttk_Style, char *recordPtr, Tk_OptionTable,
 	Tk_Window tkwin, Ttk_State state,
 	int *widthPtr, int *heightPtr, Ttk_Padding*);
 MODULE_SCOPE void Ttk_DrawElement(
-	Ttk_ElementImpl element, Ttk_Style, char *recordPtr, Tk_OptionTable,
+	Ttk_ElementClass *, Ttk_Style, char *recordPtr, Tk_OptionTable,
 	Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
 
 MODULE_SCOPE Tcl_Obj *Ttk_QueryStyle(

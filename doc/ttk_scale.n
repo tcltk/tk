@@ -4,7 +4,7 @@
 .\" See the file "license.terms" for information on usage and redistribution
 .\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 .\"
-.\" CVS: @(#) $Id: ttk_scale.n,v 1.1.4.1 2008/05/11 00:31:03 patthoyts Exp $
+.\" CVS: @(#) $Id: ttk_scale.n,v 1.1.4.2 2010/08/26 02:06:09 hobbs Exp $
 .\"
 .so man.macros
 .TH ttk::scale n 8.5 Tk "Tk Themed Widget"
@@ -15,6 +15,7 @@ ttk::scale \- Create and manipulate a scale widget
 \fBttk::scale \fIpathName \fR?\fIoptions...\fR?
 .BE
 .SH DESCRIPTION
+.PP
 A \fBttk::scale\fR widget is typically used to control the numeric value of a
 linked variable that varies uniformly over some range. A scale displays a
 \fIslider\fR that can be moved along over a \fItrough\fR, with the relative
@@ -49,6 +50,7 @@ value of the variable changes, the scale will update to reflect this value.
 Whenever the scale is manipulated interactively, the variable will be modified
 to reflect the scale's new value.
 .SH "WIDGET COMMAND"
+.PP
 .TP
 \fIpathName \fBcget \fIoption\fR
 .
@@ -84,6 +86,7 @@ named in the \fB\-variable\fR option) does not cause such clipping.
 .
 Modify or query the widget state; see \fIttk::widget(n)\fR.
 .SH "INTERNAL COMMANDS"
+.PP
 .TP
 \fIpathName \fBcoords \fR?\fIvalue\fR?
 .

@@ -1,3 +1,56 @@
+2010-08-25  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* doc/ttk_spinbox.n (new), doc/ttk_*.3, doc/ttk_*.n:
+	* generic/ttk/ttkGenStubs.tcl:
+	* generic/ttk/ttk.decls, generic/ttk/ttkDecls.h:
+	* generic/ttk/ttkButton.c, generic/ttk/ttkCache.c:
+	* generic/ttk/ttkClamTheme.c, generic/ttk/ttkClassicTheme.c:
+	* generic/ttk/ttkDefaultTheme.c, generic/ttk/ttkElements.c:
+	* generic/ttk/ttkEntry.c, generic/ttk/ttkFrame.c:
+	* generic/ttk/ttkImage.c, generic/ttk/ttkInit.c:
+	* generic/ttk/ttkLabel.c, generic/ttk/ttkLayout.c:
+	* generic/ttk/ttkNotebook.c, generic/ttk/ttkPanedwindow.c:
+	* generic/ttk/ttkProgress.c, generic/ttk/ttkScale.c:
+	* generic/ttk/ttkScroll.c, generic/ttk/ttkScrollbar.c:
+	* generic/ttk/ttkSeparator.c, generic/ttk/ttkSquare.c:
+	* generic/ttk/ttkState.c, generic/ttk/ttkStubInit.c:
+	* generic/ttk/ttkStubLib.c, generic/ttk/ttkTagSet.c:
+	* generic/ttk/ttkTheme.c, generic/ttk/ttkTheme.h:
+	* generic/ttk/ttkThemeInt.h, generic/ttk/ttkTrace.c:
+	* generic/ttk/ttkTrack.c, generic/ttk/ttkTreeview.c:
+	* generic/ttk/ttkWidget.c, generic/ttk/ttkWidget.h:
+	* library/ttk/spinbox.tcl (new):
+	* library/ttk/altTheme.tcl, library/ttk/aquaTheme.tcl:
+	* library/ttk/button.tcl, library/ttk/clamTheme.tcl:
+	* library/ttk/classicTheme.tcl, library/ttk/combobox.tcl:
+	* library/ttk/cursors.tcl, library/ttk/defaults.tcl:
+	* library/ttk/entry.tcl, library/ttk/notebook.tcl:
+	* library/ttk/panedwindow.tcl, library/ttk/scale.tcl:
+	* library/ttk/sizegrip.tcl, library/ttk/treeview.tcl:
+	* library/ttk/ttk.tcl, library/ttk/utils.tcl:
+	* library/ttk/vistaTheme.tcl, library/ttk/winTheme.tcl:
+	* library/ttk/xpTheme.tcl:
+	* macosx/ttkMacOSXTheme.c: used 8.6/carbon variant
+	* tests/ttk/combobox.test, tests/ttk/treetags.test:
+	* tests/ttk/treeview.test, tests/ttk/ttk.test:
+	* tests/ttk/vsapi.test:
+	* tests/ttk/checkbutton.test (new):
+	* tests/ttk/radiobutton.test (new):
+	* tests/ttk/spinbox.test (new):
+	* win/ttkWinMonitor.c, win/ttkWinTheme.c, win/ttkWinXPTheme.c:
+	Major backport of 8.6 Ttk for 8.5.9.  Most changes were only being
+	committed to head (8.6), although they could apply for 8.5 as well.
+	This re-sync makes future work easier to maintain and adds some
+	useful work for 8.5 users. Notable changes:
+	- Lots of code cleanup
+	- Some bug fixes never backported
+	- Addition of ttk::spinbox
+	- minor color changes
+	- Improved Vista/7 styling
+	- Move to tile version 0.8.6 (pseudo-package)
+	- ABI and API compatible (even $w identify)
+	- minor new features (extended $w identify)
+
 2010-08-03  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updated for 8.5.9 release.

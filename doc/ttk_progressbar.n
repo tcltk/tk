@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_progressbar.n,v 1.10.2.1 2008/05/11 00:31:03 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_progressbar.n,v 1.10.2.2 2010/08/26 02:06:09 hobbs Exp $
 '\" 
 .so man.macros
 .TH ttk::progressbar n 8.5 Tk "Tk Themed Widget"
@@ -15,6 +15,7 @@ ttk::progressbar \- Provide progress feedback
 \fBttk::progressbar\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
+.PP
 A \fBttk::progressbar\fR widget shows the status of a long-running
 operation.  They can operate in two modes: \fIdeterminate\fR mode shows the
 amount completed relative to the total amount of work to be done, and
@@ -56,6 +57,7 @@ in \fIdeterminate\fR mode, less than \fB\-maximum\fR.
 This option may be used by the current theme 
 to provide additional animation effects.
 .SH "WIDGET COMMAND"
+.PP
 .TP
 \fIpathName \fBcget\fR \fIoption\fR
 Returns the current value of the specified \fIoption\fR; see \fIttk::widget(n)\fR.
@@ -88,3 +90,6 @@ Stop autoincrement mode:
 cancels any recurring timer event initiated by \fIpathName \fBstart\fR.
 .SH "SEE ALSO"
 ttk::widget(n)
+'\" Local Variables:
+'\" mode: nroff
+'\" End:
