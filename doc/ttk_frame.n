@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_frame.n,v 1.9.2.1 2008/05/11 00:31:01 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_frame.n,v 1.9.2.2 2010/08/26 02:06:09 hobbs Exp $
 '\" 
 .so man.macros
 .TH ttk::frame n 8.5 Tk "Tk Themed Widget"
@@ -15,6 +15,7 @@ ttk::frame \- Simple container widget
 \fBttk::frame\fR \fIpathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
+.PP
 A \fBttk::frame\fR widget is a container, used to group other widgets
 together.
 .SO ttk_widget
@@ -36,10 +37,12 @@ If specified, the widget's requested width in pixels.
 .OP \-height height Height
 If specified, the widget's requested height in pixels.
 .SH "WIDGET COMMAND"
+.PP
 Supports the standard widget commands
 \fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR;
 see \fIttk::widget(n)\fR.
 .SH "NOTES"
+.PP
 Note that if the \fBpack\fR, \fBgrid\fR, or other geometry managers
 are used to manage the children of the \fBframe\fR,
 by the GM's requested size will normally take precedence
@@ -50,3 +53,6 @@ to change this.
 ttk::widget(n), ttk::labelframe(n), frame(n)
 .SH "KEYWORDS"
 widget, frame, container
+'\" Local Variables:
+'\" mode: nroff
+'\" End:
