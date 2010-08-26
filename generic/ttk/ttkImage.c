@@ -1,4 +1,4 @@
-/* $Id: ttkImage.c,v 1.7 2007/12/13 15:26:26 dgp Exp $
+/* $Id: ttkImage.c,v 1.7.2.1 2010/08/26 02:06:09 hobbs Exp $
  *	Image specifications and image element factory.
  *
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
@@ -312,7 +312,7 @@ Ttk_CreateImageElement(
     void *clientData,
     Ttk_Theme theme,
     const char *elementName,
-    int objc, Tcl_Obj *CONST objv[])
+    int objc, Tcl_Obj *const objv[])
 {
     const char *optionStrings[] =
 	 { "-border","-height","-padding","-sticky","-width",NULL };
