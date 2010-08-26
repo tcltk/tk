@@ -41,7 +41,7 @@
 	Major backport of 8.6 Ttk for 8.5.9.  Most changes were only being
 	committed to head (8.6), although they could apply for 8.5 as well.
 	This re-sync makes future work easier to maintain and adds some
-	useful work for 8.5 users. Notable changes:
+	useful work for 8.5 users. [Bug 3053320] Notable changes:
 	- Lots of code cleanup
 	- Some bug fixes never backported
 	- Addition of ttk::spinbox
