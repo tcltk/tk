@@ -2,7 +2,7 @@ hhis file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.20 2010/08/24 18:34:32 dgp Exp $
+RCS: @(#) $Id: changes,v 1.130.2.21 2010/08/26 19:56:38 hobbs Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6723,5 +6723,7 @@ in screen distances, reducing precision loss (ferrieux)
 2010-08-03 (bug fix) entry validation compat with Itcl scope (hobbs)
 
 2010-08-12 (bug fix)[2585265] text <Delete>,<Backspace> note selection (fellows)
+
+2010-08-25 (feature)[3053320] update Ttk to tile 0.8.6 feature set (hobbs)
 
 --- Released 8.5.9, August 31, 2010 --- See ChangeLog for details ---
