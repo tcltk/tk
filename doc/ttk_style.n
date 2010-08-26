@@ -4,7 +4,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_style.n,v 1.13.2.1 2009/05/14 00:53:04 patthoyts Exp $
+'\" RCS: @(#) $Id: ttk_style.n,v 1.13.2.2 2010/08/26 02:06:09 hobbs Exp $
 '\" 
 .so man.macros
 .TH ttk::style n 8.5 Tk "Tk Themed Widget"
@@ -15,9 +15,11 @@ ttk::style \- Manipulate style database
 \fBttk::style\fR \fIoption\fR ?\fIargs\fR?
 .BE
 .SH NOTES
+.PP
 See also the Tcl'2004 conference presentation,
 available at http://tktable.sourceforge.net/tile/tile-tcl2004.pdf
 .SH DEFINITIONS
+.PP
 Each widget is assigned a \fIstyle\fR,
 which specifies the set of elements making up the widget
 and how they are arranged, along with dynamic and default
@@ -28,6 +30,7 @@ this may be overridden by the \fB\-style\fR option.
 A \fItheme\fR is a collection of elements and styles 
 which controls the overall look and feel of an application.
 .SH DESCRIPTION
+.PP
 The \fBttk::style\fR command takes the following arguments:
 .TP
 \fBttk::style configure \fIstyle\fR ?\fI\-option\fR ?\fIvalue option value...\fR? ?
@@ -86,9 +89,12 @@ though arbitrary Tcl code may appear.
 \fBttk::style theme names\fR
 Returns a list of all known themes.
 .TP
-\fBttk::style theme use\fR \fIthemeName\fR
-Sets the current theme to \fIthemeName\fR, and refreshes all widgets.
+\fBttk::style theme use\fR ?\fIthemeName\fR?
+Without an argument the result is the name of the current theme.
+Otherwise this command sets the current theme to \fIthemeName\fR,
+and refreshes all widgets.
 .SH LAYOUTS
+.PP
 A \fIlayout\fR specifies a list of elements, each followed
 by one or more options specifying how to arrange the element.
 The layout mechanism uses a simplified version of the \fBpack\fR
@@ -122,3 +128,6 @@ ttk::style layout Horizontal.TScrollbar {
 ttk::intro(n), ttk::widget(n), photo(n), ttk_image(n)
 .SH KEYWORDS
 style, theme, appearance
+'\" Local Variables:
+'\" mode: nroff
+'\" End:
