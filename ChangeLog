@@ -1,5 +1,9 @@
 2010-08-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
+	* generic/tkText.c (DumpLine): s/segPtr->size/currentSize/
+	throughout, but particularly in if lineChanged block where segPtr
+	may no longer be valid. [Bug 3053347]
+
 	* unix/Makefile.in: add valgrind target
 	* unix/configure, unix/tcl.m4: SHLIB_LD_LIBS='${LIBS}' for OSF1-V*.
 	Add /usr/lib64 to set of auto-search dirs. [Bug 1230554]
