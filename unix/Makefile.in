@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.143.2.8 2010/08/12 00:14:33 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.143.2.9 2010/08/27 00:19:28 hobbs Exp $
 
 # Current Tk version;  used in various names.
 
@@ -676,6 +676,14 @@ gdb: wish@EXEEXT@
 	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
 	gdb ./wish@EXEEXT@ --command=gdb.run
 	rm gdb.run
+
+VALGRINDARGS=--tool=memcheck --num-callers=8 --leak-resolution=high --leak-check=yes --show-reachable=yes -v
+
+valgrind: tktest@EXEEXT@
+	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./tktest@EXEEXT@ $(TEST_DIR)/all.tcl -geometry +0+0 -singleproc 1 $(TESTFLAGS)
+
+valgrindshell: tktest@EXEEXT@
+	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./tktest@EXEEXT@ $(SCRIPT)
 
 INSTALL_TARGETS = install-binaries install-libraries install-demos install-doc @EXTRA_INSTALL@
 
