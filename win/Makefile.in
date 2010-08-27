@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.91 2010/08/12 00:36:31 hobbs Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.92 2010/08/27 00:57:50 hobbs Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -595,6 +595,7 @@ $(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES)
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TK_LIB_FILE) \
 	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
+	@VC_MANIFEST_EMBED_EXE@
 
 tktest: $(TKTEST)
 
@@ -602,6 +603,7 @@ $(TKTEST): testMain.$(OBJEXT) $(TEST_DLL_FILE) @LIBRARIES@ $(TK_STUB_LIB_FILE) w
 	$(CC) $(CFLAGS) testMain.$(OBJEXT) $(TEST_LIB_FILE) $(TK_LIB_FILE) \
 	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
+	@VC_MANIFEST_EMBED_EXE@
 
 ${TEST_DLL_FILE}: ${TKTEST_OBJS} ${TK_STUB_LIB_FILE}
 	@MAKE_DLL@ ${TKTEST_OBJS} $(TK_STUB_LIB_FILE) $(SHLIB_LD_LIBS)
@@ -626,6 +628,7 @@ ${TK_STUB_LIB_FILE}: ${STUB_OBJS}
 ${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES)
 	@$(RM) ${TK_DLL_FILE}
 	@MAKE_DLL@ ${TK_OBJS} $(TK_RES) $(SHLIB_LD_LIBS)
+	@VC_MANIFEST_EMBED_DLL@
 
 ${TK_LIB_FILE}: ${TK_OBJS}
 	@$(RM) ${TK_LIB_FILE}
