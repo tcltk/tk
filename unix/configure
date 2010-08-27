@@ -1433,6 +1433,7 @@ echo "$as_me: error: ${with_tclconfig} directory doesn't contain tclConfig.sh" >
 			`ls -d /usr/local/lib 2>/dev/null` \
 			`ls -d /usr/contrib/lib 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
+			`ls -d /usr/lib64 2>/dev/null` \
 			; do
 		    if test -f "$i/tclConfig.sh" ; then
 			ac_cv_c_tclconfig="`(cd $i; pwd)`"
@@ -6215,7 +6216,7 @@ else
 
 fi
 
-	    SHLIB_LD_LIBS=""
+	    SHLIB_LD_LIBS='${LIBS}'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
@@ -9975,7 +9976,7 @@ echo "${ECHO_T}$i" >&6
 	    found_xincludes="yes"
 	fi
     fi
-    if test found_xincludes = "no"; then
+    if test "$found_xincludes" = "no"; then
 	echo "$as_me:$LINENO: result: couldn't find any!" >&5
 echo "${ECHO_T}couldn't find any!" >&6
     fi
