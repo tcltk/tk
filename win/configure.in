@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.77.2.13 2010/08/04 17:06:53 dgp Exp $
+# RCS: @(#) $Id: configure.in,v 1.77.2.14 2010/08/27 00:21:45 hobbs Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.59)
@@ -156,6 +156,12 @@ AC_CHECK_HEADER([uxtheme.h], [AC_DEFINE(HAVE_UXTHEME_H)],
 SC_ENABLE_SYMBOLS
 
 TK_DBGX=${DBGX}
+
+#--------------------------------------------------------------------
+# Embed the manifest if we can determine how
+#--------------------------------------------------------------------
+
+SC_EMBED_MANIFEST(wish.exe.manifest)
 
 #--------------------------------------------------------------------
 # Locate and source the tclConfig.sh file.
