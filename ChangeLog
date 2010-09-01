@@ -1,13 +1,15 @@
-2010-09-01  Joe English  <jenglish@users.sourceforge.net>
-
-	* library/ttk/entry.tcl: Revert keyboard navigation bindings
-	to use real events instead of virtual events.
-
 2010-09-01  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.9 TAGGED FOR RELEASE ***
 
+	* changes:	Updated for 8.5.9 release.
+
 	* doc/menu.n:  Formatting error.
+
+2010-09-01  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/entry.tcl: Revert keyboard navigation bindings
+	to use real events instead of virtual events.
 
 2010-08-31  Andreas Kupries  <andreask@activestate.com>
 
