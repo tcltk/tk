@@ -1,12 +1,12 @@
 2010-08-31  Andreas Kupries  <andreask@activestate.com>
 
+	*** 8.5.9 TAGGED FOR RELEASE ***
+
 	* win/tcl.m4: Applied patch by Jeff fixing issues with the
 	manifest handling on Win64.
 	* win/configure: Regenerated.
 
 2010-08-26  Jeff Hobbs  <jeffh@ActiveState.com>
-
-	*** 8.5.9 TAGGED FOR RELEASE ***
 
 	* generic/tkText.c (DumpLine): s/segPtr->size/currentSize/
 	throughout, but particularly in if lineChanged block where segPtr
