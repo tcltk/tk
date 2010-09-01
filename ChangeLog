@@ -1,6 +1,10 @@
-2010-08-31  Andreas Kupries  <andreask@activestate.com>
+2010-09-01  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.9 TAGGED FOR RELEASE ***
+
+	* doc/menu.n:  Formatting error.
+
+2010-08-31  Andreas Kupries  <andreask@activestate.com>
 
 	* win/tcl.m4: Applied patch by Jeff fixing issues with the
 	manifest handling on Win64.
