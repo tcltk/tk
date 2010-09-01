@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: menu.n,v 1.23.2.3 2010/01/09 00:54:06 patthoyts Exp $
+'\" RCS: @(#) $Id: menu.n,v 1.23.2.4 2010/09/01 15:15:48 dgp Exp $
 '\" 
 .so man.macros
 .TH menu n 4.1 Tk "Tk Built-In Commands"
@@ -237,8 +237,8 @@ is provided. On X Windows, a special right-justified help menu may be
 provided if Motif menu compatibility is enabled. In all cases, these
 menus must be created with the command name of the menubar menu
 concatenated with the special name. So for a menubar named .menubar,
-on the Macintosh, the special menus would be .menubar.apple and
-.menubar.help; on Windows, the special menu would be .menubar.system;
+on the Macintosh, the special menus would be .menubar.apple
+and .menubar.help; on Windows, the special menu would be .menubar.system;
 on X Windows, the help menu would be .menubar.help.
 .PP
 When Tk sees a .menubar.apple menu on the Macintosh, that menu's contents
