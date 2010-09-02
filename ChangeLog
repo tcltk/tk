@@ -1,3 +1,9 @@
+2010-10-02  Joe English  <jenglish@users.sourceforge.net>
+
+        * library/ttk/winTheme.tcl, library/ttk/xpTheme.tcl, 
+	library/ttk/vistaTheme.tcl: Specify disabled combobox text 
+	foreground color [Bug#3057573].
+
 2010-08-31  Andreas Kupries  <andreask@activestate.com>
 
 	* win/tcl.m4: Applied patch by Jeff fixing issues with the
