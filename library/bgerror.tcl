@@ -11,7 +11,7 @@
 # Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
 # Copyright (c) 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
 # 
-# RCS: @(#) $Id: bgerror.tcl,v 1.41 2010/01/19 01:27:41 patthoyts Exp $
+# RCS: @(#) $Id: bgerror.tcl,v 1.42 2010/09/05 14:43:11 dkf Exp $
 #
 
 namespace eval ::tk::dialog::error {
@@ -30,13 +30,13 @@ namespace eval ::tk::dialog::error {
     }
 }
 
-proc ::tk::dialog::error::Return {} {
+proc ::tk::dialog::error::Return {which code} {
     variable button
 
-    .bgerrorDialog.ok configure -state active -relief sunken
+    .bgerrorDialog.$which state {active selected focus}
     update idletasks
     after 100
-    set button 0
+    set button $code
 }
 
 proc ::tk::dialog::error::Details {} {
@@ -77,6 +77,17 @@ proc ::tk::dialog::error::Destroy {w} {
 	variable button
 	set button -1
     }
+}
+
+proc ::tk::dialog::error::DeleteByProtocol {} {
+    variable button
+    set button 1
+}
+
+proc ::tk::dialog::error::ReturnInDetails w {
+    bind $w <Return> {}; # Remove this binding
+    $w invoke
+    return -code break
 }
 
 # ::tk::dialog::error::bgerror --
@@ -142,7 +153,7 @@ proc ::tk::dialog::error::bgerror err {
     wm withdraw $dlg
     wm title $dlg $title
     wm iconname $dlg ErrorDialog
-    wm protocol $dlg WM_DELETE_WINDOW { }
+    wm protocol $dlg WM_DELETE_WINDOW [namespace code DeleteByProtocol]
 
     if {$windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $dlg moveableAlert {}
@@ -206,8 +217,10 @@ proc ::tk::dialog::error::bgerror err {
     # The "OK" button is the default for this dialog.
     $dlg.ok configure -default active
 
-    bind $dlg <Return>	[namespace code Return]
-    bind $dlg <Destroy>	[namespace code [list Destroy %W]]
+    bind $dlg <Return>	[namespace code {Return ok 0}]
+    bind $dlg <Escape>	[namespace code {Return dismiss 1}]
+    bind $dlg <Destroy>	[namespace code {Destroy %W}]
+    bind $dlg.function <Return>	[namespace code {ReturnInDetails %W}]
     $dlg.function configure -command [namespace code Details]
 
     # 6. Place the window (centered in the display) and deiconify it.
