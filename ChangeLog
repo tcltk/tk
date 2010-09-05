@@ -1,31 +1,37 @@
+2010-09-05  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/bgerror.tcl: [Bugs 3046742,3046750]: Improve keybindings for
+	the background error dialog, and allow the use of the window manager
+	controls for closing it (where supported). The Escape key now causes
+	all remaining background error messages in the queue to be dropped.
+
 2010-10-02  Joe English  <jenglish@users.sourceforge.net>
 
-        * library/ttk/winTheme.tcl, library/ttk/xpTheme.tcl, 
-	library/ttk/vistaTheme.tcl: Specify disabled combobox text 
-	foreground color [Bug#3057573].
+        * library/ttk/winTheme.tcl, library/ttk/xpTheme.tcl,
+	* library/ttk/vistaTheme.tcl: [Bug 3057573]: Specify disabled combobox
+	text foreground color.
 
 2010-08-31  Andreas Kupries  <andreask@activestate.com>
 
-	* win/tcl.m4: Applied patch by Jeff fixing issues with the
-	manifest handling on Win64.
+	* win/tcl.m4: Applied patch by Jeff fixing issues with the manifest
+	handling on Win64.
 	* win/configure: Regenerated.
 
 2010-08-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* unix/Makefile.in: add valgrind target
-	* unix/configure, unix/tcl.m4: SHLIB_LD_LIBS='${LIBS}' for OSF1-V*.
-	Add /usr/lib64 to set of auto-search dirs. [Bug 1230554]
+	* unix/Makefile.in: Add valgrind target
+	* unix/configure, unix/tcl.m4: [Bug 1230554]: SHLIB_LD_LIBS='${LIBS}'
+	for OSF1-V*. Add /usr/lib64 to set of auto-search dirs.
 	(SC_PATH_X): Correct syntax error when xincludes not found.
 
 	* win/Makefile.in (VC_MANIFEST_EMBED_DLL VC_MANIFEST_EMBED_EXE):
-	* win/configure, win/configure.in, win/tcl.m4: SC_EMBED_MANIFEST
-	macro and --enable-embedded-manifest configure arg added to
-	support manifest embedding where we know the magic.  Help prevents
-	DLL hell with MSVC8+.
+	* win/configure, win/configure.in, win/tcl.m4: SC_EMBED_MANIFEST macro
+	and --enable-embedded-manifest configure arg added to support manifest
+	embedding where we know the magic. Help prevents DLL hell with MSVC8+.
 
-	* generic/tkText.c (DumpLine): s/segPtr->size/currentSize/
-	throughout, but particularly in if lineChanged block where segPtr
-	may no longer be valid. [Bug 3053347]
+	* generic/tkText.c (DumpLine): [Bug 3053347]: Replace segPtr->size
+	with currentSize throughout, but particularly in if lineChanged block
+	where segPtr may no longer be valid.
 
 2010-08-21  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -34,21 +40,21 @@
 
 2010-08-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/ttk/ttkGenStubs.tcl [Patch 3034251] partly: remove
-	some more unneeded ifdeffery, as in tcl/tools/genStubs.tcl.
+	* generic/ttk/ttkGenStubs.tcl: [Patch 3034251]: partly: remove some
+	more unneeded ifdeffery, as in tcl/tools/genStubs.tcl.
 	* generic/tk.h:     Move USE_OLD_IMAGE support after tkDecls.h
 	* generic/*Decls.h  (regenerated)
 	* generic/ttk/ttkDecls.h
 
 2010-08-11  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* win/Makefile.in (%.${OBJEXT}): better implicit rules support
+	* win/Makefile.in (%.${OBJEXT}): Better implicit rules support
 
 	* unix/configure: regen with ac-2.59
 	* unix/configure.in, unix/Makefile.in:
-	* unix/tcl.m4 (AIX): remove the need for ldAIX, replace with
-	-bexpall/-brtl.  Remove TK_EXP_FILE (export file) and other
-	baggage that went with it.  Remove pre-4 AIX build support.
+	* unix/tcl.m4 (AIX): Remove the need for ldAIX, replace with
+	-bexpall/-brtl.  Remove TK_EXP_FILE (export file) and other baggage
+	that went with it.  Remove pre-4 AIX build support.
 
 2010-08-11  Don Porter  <dgp@users.sourceforge.net>
 
@@ -60,8 +66,8 @@
 
 2010-08-03  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* library/button.tcl (::tk::CheckEnter): use uplevel set instead
-	of set :: to work with other var resolvers (itcl). [AS Bug#87409]
+	* library/button.tcl (::tk::CheckEnter): [AS Bug#87409]: Use uplevel
+	set instead of set :: to work with other var resolvers (itcl).
 
 2010-07-19  Donal K. Fellows  <dkf@users.sf.net>
 
