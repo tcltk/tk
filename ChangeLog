@@ -1,3 +1,8 @@
+2010-09-08  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkTreeview.c(TreeviewSeeCommand):
+	Schedule redisplay if [$tv see] opens any items [Bug#2829363].
+
 2010-09-05  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/bgerror.tcl: [Bugs 3046742,3046750]: Improve keybindings for
