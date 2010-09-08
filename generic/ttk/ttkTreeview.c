@@ -1,4 +1,4 @@
-/* $Id: ttkTreeview.c,v 1.23.2.2 2010/08/26 02:06:10 hobbs Exp $
+/* $Id: ttkTreeview.c,v 1.23.2.3 2010/09/08 17:57:52 jenglish Exp $
  * Copyright (c) 2004, Joe English
  *
  * ttk::treeview widget implementation.
@@ -2830,6 +2830,7 @@ static int TreeviewSeeCommand(
 	    parent->openObj = unshare(parent->openObj);
 	    Tcl_SetBooleanObj(parent->openObj, 1);
 	    parent->state |= TTK_STATE_OPEN;
+	    TtkRedisplayWidget(&tv->core);
 	}
     }
 
