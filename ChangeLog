@@ -1,12 +1,17 @@
-2010-09-02  Joe English  <jenglish@users.sourceforge.net>
+2010-09-08  Joe English  <jenglish@users.sourceforge.net>
 
-	*** 8.5.9 TAGGED FOR RELEASE ***
+	* generic/ttk/ttkTreeview.c(TreeviewSeeCommand):
+	Schedule redisplay if [$tv see] opens any items [Bug#2829363].
+
+2010-09-02  Joe English  <jenglish@users.sourceforge.net>
 
 	* library/ttk/winTheme.tcl, library/ttk/xpTheme.tcl, 
 	library/ttk/vistaTheme.tcl: Specify disabled combobox text 
 	foreground color [Bug#3057573].
 
 2010-09-01  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5.9 TAGGED FOR RELEASE ***
 
 	* changes:	Updated for 8.5.9 release.
 
