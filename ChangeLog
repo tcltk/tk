@@ -1,3 +1,13 @@
+2010-09-09  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/rules.vc:   (sync with tcl version)
+	* win/makefile.vc: mingw should always link with -ladvapi32
+	* win/tcl.m4:
+	* win/configure:   (regenerated)
+	* win/tkWinInt.h:  Remove ascii variant of tkWinPocs table,
+	* win/tkWinX.c:    it is no longer necessary.
+	* win/tkWinTest.c:
+
 2010-09-08  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTreeview.c(TreeviewSeeCommand):
