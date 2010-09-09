@@ -11,7 +11,7 @@
 # Copyright (c) 2003-2007 Patrick Thoyts
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: rules.vc,v 1.26 2010/07/01 21:31:26 nijtmans Exp $
+# RCS: @(#) $Id: rules.vc,v 1.27 2010/09/09 14:59:24 nijtmans Exp $
 #------------------------------------------------------------------------------
 
 !ifndef _RULES_VC
@@ -143,7 +143,7 @@ OPTIMIZATIONS  = $(OPTIMIZATIONS) -YX
 ### test for pentium errata
 !if [nmakehlp -c -QI0f]
 !message *** Compiler has 'Pentium 0x0f fix'
-COMPILERFLAGS  = $(COMPILERFLAGSS) -QI0f
+COMPILERFLAGS  = $(COMPILERFLAGS) -QI0f
 !else
 !message *** Compiler does not have 'Pentium 0x0f fix'
 !endif
@@ -212,14 +212,15 @@ _VC_MANIFEST_EMBED_DLL=if exist $@.manifest mt -nologo -manifest $@.manifest -ou
 
 !if "$(OPTS)" == "" || [nmakehlp -f "$(OPTS)" "none"]
 STATIC_BUILD	= 0
-TCL_THREADS	= 0
+TCL_THREADS	= 1
 DEBUG		= 0
 SYMBOLS		= 0
 PROFILE		= 0
+PGO		= 0
 MSVCRT		= 0
 LOIMPACT	= 0
 TCL_USE_STATIC_PACKAGES	= 0
-USE_THREAD_ALLOC = 0
+USE_THREAD_ALLOC = 1
 UNCHECKED	= 0
 !else
 !if [nmakehlp -f $(OPTS) "static"]
@@ -240,12 +241,12 @@ TCL_USE_STATIC_PACKAGES	= 1
 !else
 TCL_USE_STATIC_PACKAGES	= 0
 !endif
-!if [nmakehlp -f $(OPTS) "threads"]
+!if [nmakehlp -f $(OPTS) "nothreads"]
+TCL_THREADS	= 0
+!else
 !message *** Doing threads
 TCL_THREADS	= 1
 USE_THREAD_ALLOC= 1
-!else
-TCL_THREADS	= 0
 !endif
 !if [nmakehlp -f $(OPTS) "symbols"]
 !message *** Doing symbols
@@ -264,6 +265,15 @@ SYMBOLS		= 0
 PROFILE		= 1
 !else
 PROFILE		= 0
+!endif
+!if [nmakehlp -f $(OPTS) "pgi"]
+!message *** Doing profile guided optimization instrumentation
+PGO		= 1
+!elseif [nmakehlp -f $(OPTS) "pgo"]
+!message *** Doing profile guided optimization
+PGO		= 2
+!else
+PGO		= 0
 !endif
 !if [nmakehlp -f $(OPTS) "loimpact"]
 !message *** Doing loimpact
@@ -416,6 +426,24 @@ WARNINGS		    = -W3
 !if [nmakehlp -f $(CHECKS) "64bit"] && [nmakehlp -c -Wp64]
 !message *** Doing 64bit portability warnings
 WARNINGS		    = $(WARNINGS) -Wp64
+!endif
+!endif
+
+!if $(PGO) > 1
+!if [nmakehlp -l -ltcg:pgoptimize]
+LINKERFLAGS	= $(LINKERFLAGS:-ltcg=) -ltcg:pgoptimize
+!else
+MSG=^
+This compiler does not support profile guided optimization.
+!error $(MSG)
+!endif
+!elseif $(PGO) > 0
+!if [nmakehlp -l -ltcg:pginstrument]
+LINKERFLAGS	= $(LINKERFLAGS:-ltcg=) -ltcg:pginstrument
+!else
+MSG=^
+This compiler does not support profile guided optimization.
+!error $(MSG)
 !endif
 !endif
 

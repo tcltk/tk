@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.31 2010/03/04 22:59:28 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.32 2010/09/09 14:59:24 nijtmans Exp $
  */
 
 #ifndef USE_TCL_STUBS
@@ -45,20 +45,6 @@ static int		TestwinlocaleObjCmd(ClientData clientData,
 static Tk_GetSelProc		SetSelectionResult;
 
 
-static const TkWinProcs asciiProcs = {
-    0,
-    (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProcA,
-    (LRESULT (WINAPI *)(HWND, UINT, WPARAM, LPARAM)) DefWindowProcA,
-    (ATOM (WINAPI *)(const WNDCLASS *)) RegisterClassA,
-    (BOOL (WINAPI *)(HWND, LPCTSTR)) SetWindowTextA,
-    (HWND (WINAPI *)(DWORD, LPCTSTR, LPCTSTR, DWORD, int, int, int, int,
-	    HWND, HMENU, HINSTANCE, LPVOID)) CreateWindowExA,
-    (BOOL (WINAPI *)(HMENU, UINT, UINT, UINT, LPCTSTR)) InsertMenuA,
-    (int (WINAPI *)(HWND, LPCTSTR, int)) GetWindowTextA,
-    (HWND (WINAPI *)(LPCTSTR, LPCTSTR)) FindWindowA,
-    (int (WINAPI *)(HWND, LPTSTR, int)) GetClassNameA,
-};
-
 static const TkWinProcs unicodeProcs = {
     1,
     (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProcW,
@@ -73,7 +59,7 @@ static const TkWinProcs unicodeProcs = {
     (int (WINAPI *)(HWND, LPTSTR, int)) GetClassNameW,
 };
 
-static const TkWinProcs *tkTestWinProcs = &asciiProcs;
+static const TkWinProcs *const tkTestWinProcs = &unicodeProcs;
 
 
 /*
@@ -97,12 +83,6 @@ int
 TkplatformtestInit(
     Tcl_Interp *interp)		/* Interpreter to add commands to. */
 {
-    int useWide = (TkWinGetPlatformId() != VER_PLATFORM_WIN32_WINDOWS);
-    if (useWide) {
-	tkTestWinProcs = &unicodeProcs;
-    } else {
-	tkTestWinProcs = &asciiProcs;
-    }
     /*
      * Add commands for platform specific tests on MacOS here.
      */

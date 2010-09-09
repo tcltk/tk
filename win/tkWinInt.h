@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInt.h,v 1.36 2010/04/29 15:28:04 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinInt.h,v 1.37 2010/09/09 14:59:24 nijtmans Exp $
  */
 
 #ifndef _TKWININT
@@ -196,7 +196,7 @@ typedef struct TkWinProcs {
     int (WINAPI *getClassName)(HWND, LPTSTR, int);
 } TkWinProcs;
 
-MODULE_SCOPE const TkWinProcs *tkWinProcs;
+MODULE_SCOPE const TkWinProcs *const tkWinProcs;
 
 /*
  * The following allows us to cache these encoding for multiple functions.
