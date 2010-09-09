@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.65 2010/05/20 22:48:13 dkf Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.66 2010/09/09 14:59:24 nijtmans Exp $
  */
 
 /*
@@ -63,20 +63,6 @@
 #define UNICODE_NOCHAR 0xFFFF
 #endif
 
-static const TkWinProcs asciiProcs = {
-    0,
-    (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProcA,
-    (LRESULT (WINAPI *)(HWND, UINT, WPARAM, LPARAM)) DefWindowProcA,
-    (ATOM (WINAPI *)(const WNDCLASS *)) RegisterClassA,
-    (BOOL (WINAPI *)(HWND, LPCTSTR)) SetWindowTextA,
-    (HWND (WINAPI *)(DWORD, LPCTSTR, LPCTSTR, DWORD, int, int,
-	    int, int, HWND, HMENU, HINSTANCE, LPVOID)) CreateWindowExA,
-    (BOOL (WINAPI *)(HMENU, UINT, UINT, UINT, LPCTSTR)) InsertMenuA,
-    (int (WINAPI *)(HWND, LPCTSTR, int)) GetWindowTextA,
-    (HWND (WINAPI *)(LPCTSTR, LPCTSTR)) FindWindowA,
-    (int (WINAPI *)(HWND, LPTSTR, int)) GetClassNameA,
-};
-
 static const TkWinProcs unicodeProcs = {
     1,
     (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProcW,
@@ -91,7 +77,7 @@ static const TkWinProcs unicodeProcs = {
     (int (WINAPI *)(HWND, LPTSTR, int)) GetClassNameW,
 };
 
-const TkWinProcs *tkWinProcs;
+const TkWinProcs *const tkWinProcs = &unicodeProcs;
 
 /*
  * Declarations of static variables used in this file.
@@ -248,7 +234,6 @@ TkWinXInit(
     INITCOMMONCONTROLSEX comctl;
     CHARSETINFO lpCs;
     DWORD lpCP;
-    int useWide;
 
     if (childClassInitialized != 0) {
 	return;
@@ -259,13 +244,6 @@ TkWinXInit(
     comctl.dwICC = ICC_WIN95_CLASSES;
     if (!InitCommonControlsEx(&comctl)) {
 	Tcl_Panic("Unable to load common controls?!");
-    }
-
-    useWide = (TkWinGetPlatformId() != VER_PLATFORM_WIN32_WINDOWS);
-    if (useWide) {
-	tkWinProcs = &unicodeProcs;
-    } else {
-	tkWinProcs = &asciiProcs;
     }
 
     childClass.style = CS_HREDRAW | CS_VREDRAW;
