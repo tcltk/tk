@@ -11,15 +11,19 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.32 2010/09/09 14:59:24 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.33 2010/09/10 08:59:27 nijtmans Exp $
  */
 
-#ifndef USE_TCL_STUBS
-#   define USE_TCL_STUBS
-#endif
-#ifndef USE_TK_STUBS
-#   define USE_TK_STUBS
-#endif
+/* TODO: This file does not compile in UNICODE mode.
+ * See [Freq 2965056]: Windows build with -DUNICODE
+ */
+#undef UNICODE
+#undef _UNICODE
+
+#undef USE_TCL_STUBS
+#define USE_TCL_STUBS
+#undef USE_TK_STUBS
+#define USE_TK_STUBS
 #include "tkWinInt.h"
 
 HWND tkWinCurrentDialog;

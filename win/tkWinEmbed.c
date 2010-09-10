@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinEmbed.c,v 1.36 2010/01/13 23:08:11 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinEmbed.c,v 1.37 2010/09/10 08:59:25 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -300,7 +300,7 @@ TkpUseWindow(
 	char msg[256];
 
 	sprintf(msg, "Unable to get information of window \"%.80s\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
-	if (IDCANCEL == MessageBox(hwnd, msg, "Tk Warning",
+	if (IDCANCEL == MessageBoxA(hwnd, msg, "Tk Warning",
 		MB_OKCANCEL | MB_ICONWARNING)) {
     	    Tcl_SetResult(interp, "Operation has been canceled", TCL_STATIC);
 	    return TCL_ERROR;

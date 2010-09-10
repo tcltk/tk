@@ -8,9 +8,15 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.75 2010/05/17 22:16:52 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.76 2010/09/10 08:59:26 nijtmans Exp $
  *
  */
+
+/* TODO: This file does not compile in UNICODE mode.
+ * See [Freq 2965056]: Windows build with -DUNICODE
+ */
+#undef UNICODE
+#undef _UNICODE
 
 #define WINVER        0x0500   /* Requires Windows 2K definitions */
 #define _WIN32_WINNT  0x0500

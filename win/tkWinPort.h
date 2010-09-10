@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.16 2010/04/20 08:17:33 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.17 2010/09/10 08:59:26 nijtmans Exp $
  */
 
 #ifndef _WINPORT
@@ -54,13 +54,11 @@
 /*
  *  Pull in the typedef of TCHAR for windows.
  */
-#if !defined(_TCHAR_DEFINED)
-#   include <tchar.h>
-#   ifndef _TCHAR_DEFINED
-	/* Borland seems to forget to set this. */
-	typedef _TCHAR TCHAR;
-#	define _TCHAR_DEFINED
-#   endif
+#include <tchar.h>
+#ifndef _TCHAR_DEFINED
+    /* Borland seems to forget to set this. */
+    typedef _TCHAR TCHAR;
+#   define _TCHAR_DEFINED
 #endif
 
 #include <X11/Xlib.h>
