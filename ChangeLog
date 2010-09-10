@@ -1,3 +1,20 @@
+2010-09-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinEmbed.c:     Make compilable with -DUNICODE
+	* win/tkWinClipboard.c: Mark those files as not compilable with
+	* win/tkWinColor.c:     -DUNICODE, so add a TODO.
+	* win/tkWinCursor.c:
+	* win/tkWinDialog.c:
+	* win/tkWinFont.c:
+	* win/tkWinMenu.c:
+	* win/tkWinPixmap.c:
+	* win/tkWinTest.c:
+	* win/tkWinWm.c:
+	* win/tkWinX.c:
+	* win/winMain.c:
+	* win/tkWinPort.h:  mingw/cygwin fixes: <tchar.h> should always
+	be included here.
+
 2010-09-09  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/rules.vc:   (sync with tcl version)
