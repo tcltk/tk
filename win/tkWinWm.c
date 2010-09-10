@@ -12,8 +12,14 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.143 2010/04/29 15:28:04 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.144 2010/09/10 08:59:25 nijtmans Exp $
  */
+
+/* TODO: This file does not compile in UNICODE mode.
+ * See [Freq 2965056]: Windows build with -DUNICODE
+ */
+#undef UNICODE
+#undef _UNICODE
 
 #include "tkWinInt.h"
 #include <shellapi.h>

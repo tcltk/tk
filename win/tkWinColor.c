@@ -9,8 +9,14 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.15 2010/02/19 22:39:04 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.16 2010/09/10 08:59:26 nijtmans Exp $
  */
+
+/* TODO: This file does not compile in UNICODE mode.
+ * See [Freq 2965056]: Windows build with -DUNICODE
+ */
+#undef UNICODE
+#undef _UNICODE
 
 #include "tkWinInt.h"
 #include "tkColor.h"

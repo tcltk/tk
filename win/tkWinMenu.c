@@ -10,8 +10,14 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.73 2010/05/10 20:58:18 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.74 2010/09/10 08:59:25 nijtmans Exp $
  */
+
+/* TODO: This file does not compile in UNICODE mode.
+ * See [Freq 2965056]: Windows build with -DUNICODE
+ */
+#undef UNICODE
+#undef _UNICODE
 
 #define WINVER        0x0500   /* Requires Windows 2K definitions */
 #define _WIN32_WINNT  0x0500
