@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.16 2010/04/29 15:28:04 nijtmans Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.17 2010/09/13 08:11:59 nijtmans Exp $
  */
 
 #ifndef _TKWIN
@@ -24,10 +24,10 @@
  */
 
 #ifndef WINVER
-#define WINVER 0x0410
+#define WINVER 0x0500
 #endif
-#ifndef _WIN32_WINDOWS
-#define _WIN32_WINDOWS 0x0410
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0500
 #endif
 
 #ifndef _TK
