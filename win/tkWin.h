@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin.h,v 1.17 2010/09/13 08:11:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkWin.h,v 1.18 2010/09/13 08:14:57 nijtmans Exp $
  */
 
 #ifndef _TKWIN
@@ -20,7 +20,7 @@
  * the SystemParametersInfo API doesn't like to receive structures that
  * are larger than it expects which affects the font assignements.
  *
- * WINVER = 0x0410 means Windows 98 and above
+ * WINVER = 0x0500 means Windows 2000 and above
  */
 
 #ifndef WINVER
