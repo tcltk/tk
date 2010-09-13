@@ -1,3 +1,10 @@
+2013-09-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWin.h          Move definitions of WINVER/_WIN32_WINNT
+	* win/tkWinDialog.h    to one place, now that we only support
+	* win/tkWinMenu.c      Win2000+
+	* win/tkWinX.c
+
 2010-09-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinEmbed.c:     Make compilable with -DUNICODE

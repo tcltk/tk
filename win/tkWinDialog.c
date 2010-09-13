@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.76 2010/09/10 08:59:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.77 2010/09/13 08:11:59 nijtmans Exp $
  *
  */
 
@@ -18,8 +18,6 @@
 #undef UNICODE
 #undef _UNICODE
 
-#define WINVER        0x0500   /* Requires Windows 2K definitions */
-#define _WIN32_WINNT  0x0500
 #include "tkWinInt.h"
 #include "tkFileFilter.h"
 #include "tkFont.h"
