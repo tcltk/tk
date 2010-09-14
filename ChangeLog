@@ -1,3 +1,8 @@
+2013-09-14  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/rules.vc       [FRQ 2965056]: Windows build with -DUNICODE
+	* win/Makefile.in
+
 2013-09-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWin.h          Move definitions of WINVER/_WIN32_WINNT
