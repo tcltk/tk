@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.68 2010/09/13 08:11:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.69 2010/09/16 21:05:12 hobbs Exp $
  */
 
 /* TODO: This file does not compile in UNICODE mode.
@@ -28,7 +28,7 @@
  */
 
 #ifndef _WIN32_IE
-#define _WIN32_IE 0x0300
+#define _WIN32_IE 0x0550 /* IE 5.5 */
 #endif
 
 #include <commctrl.h>

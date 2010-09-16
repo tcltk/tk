@@ -1,9 +1,13 @@
-2013-09-14  Jan Nijtmans  <nijtmans@users.sf.net>
+2010-09-16  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* win/tkWinX.c (_WIN32_IE): update to IE5.5 base expectation
+
+2010-09-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/rules.vc       [FRQ 2965056]: Windows build with -DUNICODE
 	* win/Makefile.in
 
-2013-09-13  Jan Nijtmans  <nijtmans@users.sf.net>
+2010-09-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWin.h          Move definitions of WINVER/_WIN32_WINNT
 	* win/tkWinDialog.h    to one place, now that we only support
