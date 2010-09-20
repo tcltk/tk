@@ -1,3 +1,10 @@
+2010-09-14  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/ttk/ttkGenStubs.tcl: clean-up, port all genStubs.tcl changes
+	* generic/ttk/ttk.decls        from Tcl to ttkGenStubs.tcl as well
+	* generic/tk.decls             (no change in any output files)
+	* generic/tkInt.decls
+
 2010-09-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
 	* win/tkWinX.c (_WIN32_IE): update to IE5.5 base expectation
