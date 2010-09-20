@@ -1,9 +1,9 @@
-2010-09-14  Jan Nijtmans  <nijtmans@users.sf.net>
+2010-09-20  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkGenStubs.tcl: clean-up, port all genStubs.tcl changes
-	* generic/ttk/ttk.decls        from Tcl to ttkGenStubs.tcl as well
-	* generic/tk.decls             (no change in any output files)
-	* generic/tkInt.decls
+	* generic/ttk/ttk.decls:    from Tcl to ttkGenStubs.tcl as well (no
+	* generic/tk.decls:         change in any output files). This brings
+	* generic/tkInt.decls:      all *.decls in the same form as tcl.decls
 
 2010-09-16  Jeff Hobbs  <jeffh@ActiveState.com>
 
