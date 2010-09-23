@@ -10,14 +10,8 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.69 2010/09/16 21:05:12 hobbs Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.70 2010/09/23 10:01:57 nijtmans Exp $
  */
-
-/* TODO: This file does not compile in UNICODE mode.
- * See [Freq 2965056]: Windows build with -DUNICODE
- */
-#undef UNICODE
-#undef _UNICODE
 
 #include "tkWinInt.h"
 
@@ -63,16 +57,16 @@
 
 static const TkWinProcs unicodeProcs = {
     1,
-    (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProcW,
-    (LRESULT (WINAPI *)(HWND, UINT, WPARAM, LPARAM)) DefWindowProcW,
-    (ATOM (WINAPI *)(const WNDCLASS *)) RegisterClassW,
-    (BOOL (WINAPI *)(HWND, LPCTSTR)) SetWindowTextW,
+    (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProc,
+    (LRESULT (WINAPI *)(HWND, UINT, WPARAM, LPARAM)) DefWindowProc,
+    (ATOM (WINAPI *)(const WNDCLASS *)) RegisterClass,
+    (BOOL (WINAPI *)(HWND, LPCTSTR)) SetWindowText,
     (HWND (WINAPI *)(DWORD, LPCTSTR, LPCTSTR, DWORD, int, int,
-	    int, int, HWND, HMENU, HINSTANCE, LPVOID)) CreateWindowExW,
-    (BOOL (WINAPI *)(HMENU, UINT, UINT, UINT, LPCTSTR)) InsertMenuW,
-    (int (WINAPI *)(HWND, LPCTSTR, int)) GetWindowTextW,
-    (HWND (WINAPI *)(LPCTSTR, LPCTSTR)) FindWindowW,
-    (int (WINAPI *)(HWND, LPTSTR, int)) GetClassNameW,
+	    int, int, HWND, HMENU, HINSTANCE, LPVOID)) CreateWindowEx,
+    (BOOL (WINAPI *)(HMENU, UINT, UINT, UINT, LPCTSTR)) InsertMenu,
+    (int (WINAPI *)(HWND, LPCTSTR, int)) GetWindowText,
+    (HWND (WINAPI *)(LPCTSTR, LPCTSTR)) FindWindow,
+    (int (WINAPI *)(HWND, LPTSTR, int)) GetClassName,
 };
 
 const TkWinProcs *const tkWinProcs = &unicodeProcs;
@@ -336,9 +330,10 @@ TkWinXCleanup(
  *
  * Results:
  *	The return value is one of:
- *	    VER_PLATFORM_WIN32s		Win32s on Windows 3.1.
- *	    VER_PLATFORM_WIN32_WINDOWS	Win32 on Windows 95.
- *	    VER_PLATFORM_WIN32_NT	Win32 on Windows NT
+ *		VER_PLATFORM_WIN32s	   Win32s on Windows 3.1 (not supported)
+ *		VER_PLATFORM_WIN32_WINDOWS Win32 on Windows 95, 98, ME (not supported)
+ *		VER_PLATFORM_WIN32_NT	Win32 on Windows NT, 2000, XP
+ *		VER_PLATFORM_WIN32_CE	Win32 on Windows CE
  *
  * Side effects:
  *	None.
