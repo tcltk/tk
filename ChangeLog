@@ -1,3 +1,12 @@
+2010-09-23  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tcl.m4:            Add -Wdeclaration-after-statement
+	* win/configure:         (regenerated)
+	* win/tkWinX.c:          Make compilable with -DUNICODE.
+	* win/winMain.c:
+	* unix/tkAppInit.c:      Many clean-ups in comments, so all
+	(tcl|tk)AppInit.c variants use the same style.
+
 2010-09-20  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkGenStubs.tcl: clean-up, port all genStubs.tcl changes

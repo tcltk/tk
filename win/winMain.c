@@ -1,15 +1,17 @@
 /*
  * winMain.c --
  *
- *	Main entry point for wish and other Tk-based applications.
+ *	Provides a default version of the main program and Tcl_AppInit
+ *	procedure for wish and other Tk-based applications.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1993 The Regents of the University of California.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.30 2010/09/10 08:59:24 nijtmans Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.31 2010/09/23 10:01:57 nijtmans Exp $
  */
 
 /* TODO: This file does not compile in UNICODE mode.
@@ -18,33 +20,27 @@
 #undef UNICODE
 #undef _UNICODE
 
-/* Make sure this file is never compiled with Stubs! */
-#undef USE_TCL_STUBS
-#undef USE_TK_STUBS
-#include "tkInt.h"
+#include "tk.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
 #include <locale.h>
+#include <stdlib.h>
+#include <tchar.h>
 
+#ifdef TK_TEST
+extern Tcl_PackageInitProc Tktest_Init;
+#endif /* TK_TEST */
 
-/*
- * The following declarations refer to internal Tk routines. These interfaces
- * are available for use, but are not supported.
- */
+#if defined(__CYGWIN__)
+static void setargv(int *argcPtr, TCHAR ***argvPtr);
+#endif /* __CYGWIN__ */
 
 /*
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		WishPanic(const char *format, ...);
-#ifdef TK_TEST
-extern int		Tktest_Init(Tcl_Interp *interp);
-#endif /* TK_TEST */
-
-#if defined(__CYGWIN__)
-static void		setargv(int *argcPtr, char ***argvPtr);
-#endif /* __CYGWIN__ */
+static void WishPanic(const char *format, ...);
 
 static BOOL consoleRequired = TRUE;
 
@@ -66,7 +62,7 @@ extern int TK_LOCAL_APPINIT(Tcl_Interp *interp);
  */
 
 #ifdef TK_LOCAL_MAIN_HOOK
-extern int TK_LOCAL_MAIN_HOOK(int *argc, char ***argv);
+extern int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
 #endif
 
 /*
@@ -86,15 +82,15 @@ extern int TK_LOCAL_MAIN_HOOK(int *argc, char ***argv);
  */
 
 int APIENTRY
-WinMain(
+_tWinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
-    LPSTR lpszCmdLine,
+    LPTSTR lpszCmdLine,
     int nCmdShow)
 {
-    char **argv;
+    TCHAR **argv;
     int argc;
-    char *p;
+    TCHAR *p;
 
     Tcl_SetPanicProc(WishPanic);
 
@@ -121,16 +117,16 @@ WinMain(
     setargv(&argc, &argv);
 #else
     argc = __argc;
-    argv = __argv;
+    argv = __targv;
 #endif
 
     /*
      * Forward slashes substituted for backslashes.
      */
 
-    for (p = argv[0]; *p != '\0'; p++) {
-	if (*p == '\\') {
-	    *p = '/';
+    for (p = argv[0]; *p != TEXT('\0'); p++) {
+	if (*p == TEXT('\\')) {
+	    *p = TEXT('/');
 	}
     }
 
@@ -139,7 +135,7 @@ WinMain(
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);
-    return 1;
+    return 0;			/* Needed only to prevent compiler warning. */
 }
 
 /*
@@ -187,16 +183,17 @@ Tcl_AppInit(
     {
 	extern Tcl_PackageInitProc Registry_Init;
 	extern Tcl_PackageInitProc Dde_Init;
+	extern Tcl_PackageInitProc Dde_SafeInit;
 
 	if (Registry_Init(interp) == TCL_ERROR) {
-	    return TCL_ERROR;
+	    goto error;
 	}
 	Tcl_StaticPackage(interp, "registry", Registry_Init, NULL);
 
 	if (Dde_Init(interp) == TCL_ERROR) {
-	    return TCL_ERROR;
+	    goto error;
 	}
-	Tcl_StaticPackage(interp, "dde", Dde_Init, NULL);
+	Tcl_StaticPackage(interp, "dde", Dde_Init, Dde_SafeInit);
    }
 #endif
 
@@ -204,15 +201,39 @@ Tcl_AppInit(
     if (Tktest_Init(interp) == TCL_ERROR) {
 	goto error;
     }
-    Tcl_StaticPackage(interp, "Tktest", Tktest_Init, NULL);
+    Tcl_StaticPackage(interp, "Tktest", Tktest_Init, 0);
 #endif /* TK_TEST */
 
-    Tcl_SetVar(interp, "tcl_rcFileName", "~/wishrc.tcl", TCL_GLOBAL_ONLY);
+    /*
+     * Call the init procedures for included packages. Each call should look
+     * like this:
+     *
+     * if (Mod_Init(interp) == TCL_ERROR) {
+     *     return TCL_ERROR;
+     * }
+     *
+     * where "Mod" is the name of the module. (Dynamically-loadable packages
+     * should have the same entry-point name.)
+     */
+
+    /*
+     * Call Tcl_CreateCommand for application-specific commands, if they
+     * weren't already created by the init procedures called above.
+     */
+
+    /*
+     * Specify a user-specific startup file to invoke if the application is
+     * run interactively. Typically the startup file is "~/.apprc" where "app"
+     * is the name of the application. If this line is deleted then no user-
+     * specific startup file will be run under any conditions.
+     */
+
+    (Tcl_SetVar)(interp, "tcl_rcFileName", "~/wishrc.tcl", TCL_GLOBAL_ONLY);
     return TCL_OK;
 
 error:
     MessageBeep(MB_ICONEXCLAMATION);
-    MessageBox(NULL, Tcl_GetStringResult(interp), "Error in Wish",
+    MessageBoxA(NULL, Tcl_GetStringResult(interp), "Error in Wish",
 	    MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
     ExitProcess(1);
 
@@ -250,7 +271,7 @@ WishPanic(
     vsprintf(buf, format, argList);
 
     MessageBeep(MB_ICONEXCLAMATION);
-    MessageBox(NULL, buf, "Fatal Error in Wish",
+    MessageBoxA(NULL, buf, "Fatal Error in Wish",
 	    MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
 #ifdef _MSC_VER
     DebugBreak();
@@ -277,9 +298,9 @@ WishPanic(
  */
 
 int
-main(
+_tmain(
     int argc,
-    char **argv)
+    TCHAR **argv)
 {
     Tcl_SetPanicProc(WishPanic);
 
@@ -296,6 +317,10 @@ main(
      */
 
     consoleRequired = FALSE;
+
+#ifdef TK_LOCAL_MAIN_HOOK
+    TK_LOCAL_MAIN_HOOK(&argc, &argv);
+#endif
 
     Tk_Main(argc, argv, Tcl_AppInit);
     return 0;
@@ -334,13 +359,13 @@ main(
 static void
 setargv(
     int *argcPtr,		/* Filled with number of argument strings. */
-    char ***argvPtr)		/* Filled with argument strings (malloc'd). */
+    TCHAR ***argvPtr)		/* Filled with argument strings (malloc'd). */
 {
-    char *cmdLine, *p, *arg, *argSpace;
-    char **argv;
+    TCHAR *cmdLine, *p, *arg, *argSpace;
+    TCHAR **argv;
     int argc, size, inquote, copy, slashes;
 
-    cmdLine = GetCommandLine();	/* INTL: BUG */
+    cmdLine = GetCommandLine();
 
     /*
      * Precompute an overly pessimistic guess at the number of arguments in
@@ -348,30 +373,30 @@ setargv(
      */
 
     size = 2;
-    for (p = cmdLine; *p != '\0'; p++) {
-	if ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
+    for (p = cmdLine; *p != TEXT('\0'); p++) {
+	if ((*p == TEXT(' ')) || (*p == TEXT('\t'))) {	/* INTL: ISO space. */
 	    size++;
-	    while ((*p == ' ') || (*p == '\t')) { /* INTL: ISO space. */
+	    while ((*p == TEXT(' ')) || (*p == TEXT('\t'))) { /* INTL: ISO space. */
 		p++;
 	    }
-	    if (*p == '\0') {
+	    if (*p == TEXT('\0')) {
 		break;
 	    }
 	}
     }
-    argSpace = (char *) ckalloc(
-	    (unsigned) (size * sizeof(char *) + strlen(cmdLine) + 1));
-    argv = (char **) argSpace;
-    argSpace += size * sizeof(char *);
+    argSpace = (TCHAR *) ckalloc(
+	    (unsigned) (size * sizeof(TCHAR *) + (_tcslen(cmdLine) * sizeof(TCHAR)) + 1));
+    argv = (TCHAR **) argSpace;
+    argSpace += size * sizeof(TCHAR *);
     size--;
 
     p = cmdLine;
     for (argc = 0; argc < size; argc++) {
 	argv[argc] = arg = argSpace;
-	while ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
+	while ((*p == TEXT(' ')) || (*p == TEXT('\t'))) {	/* INTL: ISO space. */
 	    p++;
 	}
-	if (*p == '\0') {
+	if (*p == TEXT('\0')) {
 	    break;
 	}
 
@@ -379,14 +404,14 @@ setargv(
 	slashes = 0;
 	while (1) {
 	    copy = 1;
-	    while (*p == '\\') {
+	    while (*p == TEXT('\\')) {
 		slashes++;
 		p++;
 	    }
-	    if (*p == '"') {
+	    if (*p == TEXT('"')) {
 		if ((slashes & 1) == 0) {
 		    copy = 0;
-		    if ((inquote) && (p[1] == '"')) {
+		    if ((inquote) && (p[1] == TEXT('"'))) {
 			p++;
 			copy = 1;
 		    } else {
@@ -397,13 +422,13 @@ setargv(
 	    }
 
 	    while (slashes) {
-		*arg = '\\';
+		*arg = TEXT('\\');
 		arg++;
 		slashes--;
 	    }
 
-	    if ((*p == '\0') || (!inquote &&
-		    ((*p == ' ') || (*p == '\t')))) {	/* INTL: ISO space. */
+	    if ((*p == TEXT('\0')) || (!inquote &&
+		    ((*p == TEXT(' ')) || (*p == TEXT('\t'))))) {	/* INTL: ISO space. */
 		break;
 	    }
 	    if (copy != 0) {
@@ -412,7 +437,7 @@ setargv(
 	    }
 	    p++;
 	}
-	*arg = '\0';
+	*arg = TEXT('\0');
 	argSpace = arg + 1;
     }
     argv[argc] = NULL;
@@ -421,14 +446,6 @@ setargv(
     *argvPtr = argv;
 }
 #endif /* __CYGWIN__ */
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */
 
 /*
  * Local Variables:
