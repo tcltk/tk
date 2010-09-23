@@ -6,6 +6,7 @@
 	* win/winMain.c:
 	* unix/tkAppInit.c:      Many clean-ups in comments, so all
 	(tcl|tk)AppInit.c variants use the same style.
+	* generic/ttk/ttkGenStubs.tcl: Dummy genStubs::export (from genStubs.tcl)
 
 2010-09-20  Jan Nijtmans  <nijtmans@users.sf.net>
 

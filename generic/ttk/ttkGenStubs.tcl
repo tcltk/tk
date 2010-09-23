@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: ttkGenStubs.tcl,v 1.10 2010/09/20 21:18:23 nijtmans Exp $
+# RCS: @(#) $Id: ttkGenStubs.tcl,v 1.11 2010/09/23 11:50:46 nijtmans Exp $
 #
 # SOURCE: tcl/tools/genStubs.tcl, revision 1.44
 #
@@ -211,7 +211,25 @@ proc genStubs::declare {args} {
     if {$index > $stubs($curName,lastNum)} {
 	set stubs($curName,lastNum) $index
     }
+    return
+}
 
+# genStubs::export --
+#
+#	This function is used in the declarations file to declare a symbol
+#	that is exported from the library but is not in the stubs table.
+#
+# Arguments:
+#	decl		The C function declaration, or {} for an undefined
+#			entry.
+#
+# Results:
+#	None.
+
+proc genStubs::export {args} {
+    if {[llength $args] != 1} {
+	puts stderr "wrong # args: export $args"
+    }
     return
 }
 
