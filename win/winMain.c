@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.31 2010/09/23 10:01:57 nijtmans Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.32 2010/09/23 20:59:00 nijtmans Exp $
  */
 
 /* TODO: This file does not compile in UNICODE mode.
@@ -20,6 +20,9 @@
 #undef UNICODE
 #undef _UNICODE
 
+/* Make sure this file is never compiled with Stubs! */
+#undef USE_TCL_STUBS
+#undef USE_TK_STUBS
 #include "tk.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
