@@ -1,3 +1,8 @@
+2010-09-28  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinSend.c: [Bug 3076671] CVS HEAD Tk build fails on win32
+	with msys/mingw. Make it compile on older mingw as well.
+
 2010-09-23  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tcl.m4:            Add -Wdeclaration-after-statement
