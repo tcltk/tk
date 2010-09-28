@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.64 2010/09/20 21:18:22 nijtmans Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.65 2010/09/28 10:42:05 nijtmans Exp $
 
 library tk
 
@@ -19,6 +19,7 @@ library tk
 # Define the unsupported generic interfaces.
 
 interface tkInt
+scspec EXTERN
 
 # Declare each of the functions in the unsupported internal Tcl interface.
 # These interfaces are allowed to changed between versions. Use at your own

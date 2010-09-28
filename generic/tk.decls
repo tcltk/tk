@@ -11,7 +11,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tk.decls,v 1.54 2010/09/20 21:18:22 nijtmans Exp $
+# RCS: @(#) $Id: tk.decls,v 1.55 2010/09/28 10:42:05 nijtmans Exp $
 
 library tk
 
@@ -22,6 +22,7 @@ library tk
 
 interface tk
 hooks {tkPlat tkInt tkIntPlat tkIntXlib}
+scspec EXTERN
 
 # Declare each of the functions in the public Tk interface.  Note that
 # the an index should never be reused for a different function in order
