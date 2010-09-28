@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.76 2010/08/21 16:35:34 nijtmans Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.77 2010/09/28 10:42:05 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -39,6 +39,12 @@
  */
 
 MODULE_SCOPE const TkStubs tkStubs;
+
+/*
+ * Remove macro that might interfere with the definition below.
+ */
+
+#undef Tk_MainEx
 
 /* !BEGIN!: Do not edit below this line. */
 
