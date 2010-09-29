@@ -3,6 +3,7 @@
 	* unix/tcl.m4:         sync with tcl version
 	* unix/configure:      re-generate with autoconf-2.59
 	* win/configure:
+	* generic/tkMain.c     make compilable with -DUNICODE as well
 
 2010-09-28  Jan Nijtmans  <nijtmans@users.sf.net>
 

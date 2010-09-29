@@ -13,8 +13,18 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.33 2010/07/16 22:06:05 nijtmans Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.34 2010/09/29 20:10:57 nijtmans Exp $
  */
+
+/**
+ * On Windows, this file needs to be compiled twice, once with
+ * TK_ASCII_MAIN defined. This way both Tk_MainEx and Tk_MainExW
+ * can be implemented, sharing the same source code.
+ */
+#ifndef TK_ASCII_MAIN
+#   undef UNICODE
+#   undef _UNICODE
+#endif
 
 #include <ctype.h>
 #include <stdio.h>
@@ -25,25 +35,49 @@
 #else
 #   include <stdlib.h>
 #endif
+
+/*
+ * The default prompt used when the user has not overridden it.
+ */
+
+#define DEFAULT_PRIMARY_PROMPT	"% "
+
+/*
+ * This file can be compiled on Windows in UNICODE mode, as well as
+ * on all other platforms using the native encoding. This is done
+ * by using the normal Windows functions like _tcscmp, but on
+ * platforms which don't have <tchar.h> we have to translate that
+ * to strcmp here.
+ */
 #ifdef __WIN32__
-#include "tkWinInt.h"
+#   include "tkWinInt.h"
+#else
+#   define TCHAR char
+#   define TEXT(arg) arg
+#   define _tcscmp strcmp
+#   define _tcslen strlen
+#   define _tcsncmp strncmp
 #endif
+
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
 #endif
 
+/*
+ * Further on, in UNICODE mode, we need to use functions like
+ * Tcl_GetUnicodeFromObj, while otherwise Tcl_GetStringFromObj
+ * is needed. Those macro's assure that the right functions
+ * are used depending on the mode.
+ */
+#ifndef UNICODE
+#   undef Tcl_GetUnicodeFromObj
+#   define Tcl_GetUnicodeFromObj Tcl_GetStringFromObj
+#   undef Tcl_NewUnicodeObj
+#   define Tcl_NewUnicodeObj Tcl_NewStringObj
+#   undef Tcl_WinTCharToUtf
+#   define Tcl_WinTCharToUtf(a,b,c) Tcl_ExternalToUtfDString(NULL,a,b,c)
+#endif /* !UNICODE */
 
-typedef struct ThreadSpecificData {
-    Tcl_Interp *interp;		/* Interpreter for this thread. */
-    Tcl_DString command;	/* Used to assemble lines of terminal input
-				 * into Tcl commands. */
-    Tcl_DString line;		/* Used to read the next line from the
-				 * terminal input. */
-    int tty;			/* Non-zero means standard input is a
-				 * terminal-like device. Zero means it's a
-				 * file. */
-} ThreadSpecificData;
-static Tcl_ThreadDataKey dataKey;
 
 /*
  * Declarations for various library functions and variables (don't want to
@@ -57,6 +91,18 @@ static Tcl_ThreadDataKey dataKey;
 extern int		isatty(int fd);
 extern char *		strrchr(const char *string, int c);
 #endif
+
+typedef struct ThreadSpecificData {
+    Tcl_Interp *interp;		/* Interpreter for this thread. */
+    Tcl_DString command;	/* Used to assemble lines of terminal input
+				 * into Tcl commands. */
+    Tcl_DString line;		/* Used to read the next line from the
+				 * terminal input. */
+    int tty;			/* Non-zero means standard input is a
+				 * terminal-like device. Zero means it's a
+				 * file. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Forward declarations for functions defined later in this file.
@@ -74,7 +120,7 @@ static void		StdinProc(ClientData clientData, int mask);
  *
  * Results:
  *	None. This function never returns (it exits the process when it's
- *	done.
+ *	done).
  *
  * Side effects:
  *	This function initializes the Tk world and then starts interpreting
@@ -87,7 +133,7 @@ static void		StdinProc(ClientData clientData, int mask);
 void
 Tk_MainEx(
     int argc,			/* Number of arguments. */
-    char **argv,		/* Array of argument strings. */
+    TCHAR **argv,		/* Array of argument strings. */
     Tcl_AppInitProc *appInitProc,
 				/* Application-specific initialization
 				 * function to call after most initialization
@@ -96,7 +142,7 @@ Tk_MainEx(
 {
     Tcl_Obj *path, *argvPtr;
     const char *encodingName;
-    int code, nullStdin = 0;
+    int code, length, nullStdin = 0;
     Tcl_Channel inChannel, outChannel;
     ThreadSpecificData *tsdPtr;
 #ifdef __WIN32__
@@ -113,6 +159,8 @@ Tk_MainEx(
 	abort();
     }
 
+    Tcl_InitMemory(interp);
+
     tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->interp = interp;
@@ -126,10 +174,6 @@ Tk_MainEx(
     if (Tcl_GetStartupScript(NULL) == NULL) {
 	TkMacOSXDefaultStartupScript();
     }
-#endif
-
-#ifdef TCL_MEM_DEBUG
-    Tcl_InitMemory(interp);
 #endif
 
     /*
@@ -150,32 +194,33 @@ Tk_MainEx(
 	 *	-file FILENAME		(ancient history support only)
 	 */
 
-	if ((argc > 3) && (0 == strcmp("-encoding", argv[1]))
-		&& ('-' != argv[3][0])) {
-	    Tcl_SetStartupScript(Tcl_NewStringObj(argv[3], -1), argv[2]);
+	if ((argc > 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
+		&& (TEXT('-') != argv[3][0])) {
+		Tcl_Obj *value = Tcl_NewUnicodeObj(argv[2], -1);
+	    Tcl_SetStartupScript(Tcl_NewUnicodeObj(argv[3], -1), Tcl_GetString(value));
+	    Tcl_DecrRefCount(value);
 	    argc -= 3;
 	    argv += 3;
-	} else if ((argc > 1) && ('-' != argv[1][0])) {
-	    Tcl_SetStartupScript(Tcl_NewStringObj(argv[1], -1), NULL);
+	} else if ((argc > 1) && (TEXT('-') != argv[1][0])) {
+	    Tcl_SetStartupScript(Tcl_NewUnicodeObj(argv[1], -1), NULL);
 	    argc--;
 	    argv++;
-	} else if ((argc > 2) && (length = strlen(argv[1]))
-		&& (length > 1) && (0 == strncmp("-file", argv[1], length))
-		&& ('-' != argv[2][0])) {
-	    Tcl_SetStartupScript(Tcl_NewStringObj(argv[2], -1), NULL);
+	} else if ((argc > 2) && (length = _tcslen(argv[1]))
+		&& (length > 1) && (0 == _tcsncmp(TEXT("-file"), argv[1], length))
+		&& (TEXT('-') != argv[2][0])) {
+	    Tcl_SetStartupScript(Tcl_NewUnicodeObj(argv[2], -1), NULL);
 	    argc -= 2;
 	    argv += 2;
 	}
     }
 
     path = Tcl_GetStartupScript(&encodingName);
-    if (NULL == path) {
-	Tcl_ExternalToUtfDString(NULL, argv[0], -1, &appName);
+    if (path == NULL) {
+	Tcl_WinTCharToUtf(argv[0], -1, &appName);
     } else {
-	int numBytes;
-	const char *pathName = Tcl_GetStringFromObj(path, &numBytes);
+	const TCHAR *pathName = Tcl_GetUnicodeFromObj(path, &length);
 
-	Tcl_ExternalToUtfDString(NULL, pathName, numBytes, &appName);
+	Tcl_WinTCharToUtf(pathName, length * sizeof(TCHAR), &appName);
 	path = Tcl_NewStringObj(Tcl_DStringValue(&appName), -1);
 	Tcl_SetStartupScript(path, encodingName);
     }
@@ -190,7 +235,7 @@ Tk_MainEx(
     while (argc--) {
 	Tcl_DString ds;
 
-	Tcl_ExternalToUtfDString(NULL, *argv++, -1, &ds);
+	Tcl_WinTCharToUtf(*argv++, -1, &ds);
 	Tcl_ListObjAppendElement(NULL, argvPtr, Tcl_NewStringObj(
 		Tcl_DStringValue(&ds), Tcl_DStringLength(&ds)));
 	Tcl_DStringFree(&ds);
@@ -435,13 +480,13 @@ Prompt(
 				 * partial command, so use the secondary
 				 * prompt. */
 {
-    Tcl_Obj *promptCmd;
+    Tcl_Obj *promptCmdPtr;
     int code;
     Tcl_Channel outChannel, errChannel;
 
-    promptCmd = Tcl_GetVar2Ex(interp,
+    promptCmdPtr = Tcl_GetVar2Ex(interp,
 	partial ? "tcl_prompt2" : "tcl_prompt1", NULL, TCL_GLOBAL_ONLY);
-    if (promptCmd == NULL) {
+    if (promptCmdPtr == NULL) {
     defaultPrompt:
 	if (!partial) {
 	    /*
@@ -452,11 +497,12 @@ Prompt(
 
 	    outChannel = Tcl_GetChannel(interp, "stdout", NULL);
 	    if (outChannel != NULL) {
-		Tcl_WriteChars(outChannel, "% ", 2);
+		Tcl_WriteChars(outChannel, DEFAULT_PRIMARY_PROMPT,
+			strlen(DEFAULT_PRIMARY_PROMPT));
 	    }
 	}
     } else {
-	code = Tcl_EvalObjEx(interp, promptCmd, TCL_EVAL_GLOBAL);
+	code = Tcl_EvalObjEx(interp, promptCmdPtr, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (script that generates prompt)");
