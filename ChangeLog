@@ -1,3 +1,9 @@
+2010-09-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4:         sync with tcl version
+	* unix/configure:      re-generate with autoconf-2.59
+	* win/configure:
+
 2010-09-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinSend.c: [Bug 3076671] CVS HEAD Tk build fails on win32
