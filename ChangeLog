@@ -1,13 +1,19 @@
+2010-10-01  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):
+	[Bug 3078902]: Ensure that zero-dimensioned data blocks cause no
+	changes at all instead of causing a hang.
+
 2010-09-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tcl.m4:         sync with tcl version
-	* unix/configure:      re-generate with autoconf-2.59
+	* unix/tcl.m4:         Sync with Tcl version
+	* unix/configure:      Re-generate with autoconf-2.59
 	* win/configure:
-	* generic/tkMain.c     make compilable with -DUNICODE as well
+	* generic/tkMain.c     Make compilable with -DUNICODE as well
 
 2010-09-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinSend.c: [Bug 3076671] CVS HEAD Tk build fails on win32
+	* win/tkWinSend.c: [Bug 3076671]: CVS HEAD Tk build fails on win32
 	with msys/mingw. Make it compile on older mingw as well.
 	* generic/tk.decls:   Add explicit scspec "EXTERN", as in Tcl
 	* generic/tkInt.decls:
@@ -25,7 +31,7 @@
 
 2010-09-20  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/ttk/ttkGenStubs.tcl: clean-up, port all genStubs.tcl changes
+	* generic/ttk/ttkGenStubs.tcl: Clean-up, port all genStubs.tcl changes
 	* generic/ttk/ttk.decls:    from Tcl to ttkGenStubs.tcl as well (no
 	* generic/tk.decls:         change in any output files). This brings
 	* generic/tkInt.decls:      all *.decls in the same form as tcl.decls
