@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.97 2010/04/09 13:15:31 dkf Exp $
+ * RCS: @(#) $Id: tkImgPhoto.c,v 1.98 2010/10/01 12:04:15 dkf Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -2608,14 +2608,21 @@ Tk_PhotoPutBlock(
     int compRule)		/* Compositing rule to use when processing
 				 * transparent pixels. */
 {
-    register PhotoMaster *masterPtr;
+    register PhotoMaster *masterPtr = (PhotoMaster *) handle;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
     int wLeft, hLeft, wCopy, hCopy, pitch;
     unsigned char *srcPtr, *srcLinePtr, *destPtr, *destLinePtr;
     int sourceIsSimplePhoto = compRule & SOURCE_IS_SIMPLE_ALPHA_PHOTO;
     XRectangle rect;
 
-    masterPtr = (PhotoMaster *) handle;
+    /*
+     * Zero-sized blocks never cause any changes. [Bug 3078902]
+     */
+
+    if (blockPtr->height == 0 || blockPtr->width == 0) {
+	return TCL_OK;
+    }
+
     compRule &= ~SOURCE_IS_SIMPLE_ALPHA_PHOTO;
 
     if ((masterPtr->userWidth != 0) && ((x + width) > masterPtr->userWidth)) {
@@ -2995,6 +3002,14 @@ Tk_PhotoPutZoomedBlock(
     int pitch, xRepeat, yRepeat, blockXSkip, blockYSkip, sourceIsSimplePhoto;
     XRectangle rect;
 
+    /*
+     * Zero-sized blocks never cause any changes. [Bug 3078902]
+     */
+
+    if (blockPtr->height == 0 || blockPtr->width == 0) {
+	return TCL_OK;
+    }
+
     if (zoomX==1 && zoomY==1 && subsampleX==1 && subsampleY==1) {
 	return Tk_PhotoPutBlock(interp, handle, blockPtr, x, y, width, height,
 		compRule);
@@ -3021,6 +3036,7 @@ Tk_PhotoPutZoomedBlock(
     yEnd = y + height;
     if ((xEnd > masterPtr->width) || (yEnd > masterPtr->height)) {
 	int sameSrc = (blockPtr->pixelPtr == masterPtr->pix32);
+
 	if (ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
 		MAX(yEnd, masterPtr->height)) == TCL_ERROR) {
 	    if (interp != NULL) {
