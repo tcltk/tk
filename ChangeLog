@@ -1,3 +1,9 @@
+2010-10-05  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkWinX.c: [Bug 3080953] Malformed Unicode characters in %A substitution
+	The problem is somewhere in tkWinX.c, so temporary don't compile it with
+	-DUNICODE, until the real problem is found.
+
 2010-10-01  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkImgPhoto.c (Tk_PhotoPutBlock, Tk_PhotoPutZoomedBlock):

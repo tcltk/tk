@@ -10,9 +10,11 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.70 2010/09/23 10:01:57 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.71 2010/10/05 13:47:50 nijtmans Exp $
  */
 
+#undef UNICODE
+#undef _UNICODE
 #include "tkWinInt.h"
 
 /*
@@ -57,16 +59,16 @@
 
 static const TkWinProcs unicodeProcs = {
     1,
-    (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProc,
-    (LRESULT (WINAPI *)(HWND, UINT, WPARAM, LPARAM)) DefWindowProc,
-    (ATOM (WINAPI *)(const WNDCLASS *)) RegisterClass,
-    (BOOL (WINAPI *)(HWND, LPCTSTR)) SetWindowText,
+    (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProcW,
+    (LRESULT (WINAPI *)(HWND, UINT, WPARAM, LPARAM)) DefWindowProcW,
+    (ATOM (WINAPI *)(const WNDCLASS *)) RegisterClassW,
+    (BOOL (WINAPI *)(HWND, LPCTSTR)) SetWindowTextW,
     (HWND (WINAPI *)(DWORD, LPCTSTR, LPCTSTR, DWORD, int, int,
-	    int, int, HWND, HMENU, HINSTANCE, LPVOID)) CreateWindowEx,
-    (BOOL (WINAPI *)(HMENU, UINT, UINT, UINT, LPCTSTR)) InsertMenu,
-    (int (WINAPI *)(HWND, LPCTSTR, int)) GetWindowText,
-    (HWND (WINAPI *)(LPCTSTR, LPCTSTR)) FindWindow,
-    (int (WINAPI *)(HWND, LPTSTR, int)) GetClassName,
+	    int, int, HWND, HMENU, HINSTANCE, LPVOID)) CreateWindowExW,
+    (BOOL (WINAPI *)(HMENU, UINT, UINT, UINT, LPCTSTR)) InsertMenuW,
+    (int (WINAPI *)(HWND, LPCTSTR, int)) GetWindowTextW,
+    (HWND (WINAPI *)(LPCTSTR, LPCTSTR)) FindWindowW,
+    (int (WINAPI *)(HWND, LPTSTR, int)) GetClassNameW,
 };
 
 const TkWinProcs *const tkWinProcs = &unicodeProcs;
