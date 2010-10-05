@@ -10,11 +10,9 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.71 2010/10/05 13:47:50 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.72 2010/10/05 14:48:34 nijtmans Exp $
  */
 
-#undef UNICODE
-#undef _UNICODE
 #include "tkWinInt.h"
 
 /*
@@ -1366,12 +1364,12 @@ GetTranslatedKey(
     xkey->nbytes = 0;
 
     while ((xkey->nbytes < XMaxTransChars)
-	    && PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE)) {
+	    && PeekMessageA(&msg, NULL, 0, 0, PM_NOREMOVE)) {
 	if ((msg.message != WM_CHAR) && (msg.message != WM_SYSCHAR)) {
 	    break;
 	}
 
-	GetMessage(&msg, NULL, 0, 0);
+	GetMessageA(&msg, NULL, 0, 0);
 
 	/*
 	 * If this is a normal character message, we may need to strip off the
