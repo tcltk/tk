@@ -10,14 +10,8 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.75 2010/09/13 08:11:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.76 2010/10/06 14:33:29 nijtmans Exp $
  */
-
-/* TODO: This file does not compile in UNICODE mode.
- * See [Freq 2965056]: Windows build with -DUNICODE
- */
-#undef UNICODE
-#undef _UNICODE
 
 #define OEMRESOURCE
 #include "tkWinInt.h"
@@ -27,8 +21,8 @@
  * The class of the window for popup menus.
  */
 
-#define MENU_CLASS_NAME			"MenuWindowClass"
-#define EMBEDDED_MENU_CLASS_NAME	"EmbeddedMenuWindowClass"
+#define MENU_CLASS_NAME			TEXT("MenuWindowClass")
+#define EMBEDDED_MENU_CLASS_NAME	TEXT("EmbeddedMenuWindowClass")
 
 /*
  * Used to align a windows bitmap inside a rectangle
@@ -163,7 +157,7 @@ static void		DrawWindowsSystemBitmap(Display *display,
 			    Drawable drawable, GC gc, const RECT *rectPtr,
 			    int bitmapID, int alignFlags);
 static void		FreeID(WORD commandID);
-static TCHAR *		GetEntryText(TkMenuEntry *mePtr);
+static char *	GetEntryText(TkMenuEntry *mePtr);
 static void		GetMenuAccelGeometry(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Tk_Font tkfont,
 			    const Tk_FontMetrics *fmPtr, int *widthPtr,
@@ -554,7 +548,7 @@ ReconfigureWindowsMenu(
     TkMenu *menuPtr = (TkMenu *) clientData;
     TkMenuEntry *mePtr;
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
-    TCHAR *itemText = NULL;
+    char *itemText = NULL;
     const TCHAR *lpNewItem;
     UINT flags;
     UINT itemID;
@@ -592,7 +586,7 @@ ReconfigureWindowsMenu(
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
 	    Tcl_WinUtfToTChar(itemText, -1, &translatedText);
-	    lpNewItem = Tcl_DStringValue(&translatedText);
+	    lpNewItem = (const TCHAR *) Tcl_DStringValue(&translatedText);
 	    flags |= MF_STRING;
 	} else {
 	    lpNewItem = (LPCTSTR) mePtr;
@@ -897,7 +891,7 @@ TkWinMenuProc(
     LRESULT lResult;
 
     if (!TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &lResult)) {
-	lResult = DefWindowProc(hwnd, message, wParam, lParam);
+	lResult = DefWindowProcA(hwnd, message, wParam, lParam);
     }
     return lResult;
 }
@@ -995,7 +989,7 @@ TkWinEmbeddedMenuProc(
 	}
 
     default:
-	lResult = DefWindowProc(hwnd, message, wParam, lParam);
+	lResult = DefWindowProcA(hwnd, message, wParam, lParam);
 	break;
     }
     return lResult;
@@ -1626,7 +1620,7 @@ DrawWindowsSystemBitmap(
 
     SelectObject(scratchDC, bitmap);
     SetMapMode(scratchDC, GetMapMode(hdc));
-    GetObject(bitmap, sizeof(BITMAP), &bm);
+    GetObjectA(bitmap, sizeof(BITMAP), &bm);
     ptSize.x = bm.bmWidth;
     ptSize.y = bm.bmHeight;
     DPtoLP(scratchDC, &ptSize, 1);
@@ -2026,33 +2020,33 @@ TkWinMenuKeyObjCmd(
     if (eventPtr->type == KeyPress) {
 	switch (keySym) {
 	case XK_Alt_L:
-	    scanCode = MapVirtualKey(VK_LMENU, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyA(VK_LMENU, 0);
+	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_MENU,
 		    (int) (scanCode << 16) | (1 << 29));
 	    break;
 	case XK_Alt_R:
-	    scanCode = MapVirtualKey(VK_RMENU, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyA(VK_RMENU, 0);
+	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_MENU,
 		    (int) (scanCode << 16) | (1 << 29) | (1 << 24));
 	    break;
 	case XK_F10:
-	    scanCode = MapVirtualKey(VK_F10, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyA(VK_F10, 0);
+	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_F10, (int) (scanCode << 16));
 	    break;
 	default:
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
-	    scanCode = MapVirtualKey(virtualKey, 0);
+	    scanCode = MapVirtualKeyA(virtualKey, 0);
 	    if (0 != scanCode) {
 		XKeyEvent xkey = eventPtr->xkey;
-		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+		CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYDOWN, virtualKey,
 			(int) ((scanCode << 16) | (1 << 29)));
 		if (xkey.nbytes > 0) {
 		    for (i = 0; i < xkey.nbytes; i++) {
-			CallWindowProc(DefWindowProc,
+			CallWindowProcA(DefWindowProcA,
 				Tk_GetHWND(Tk_WindowId(tkwin)), WM_SYSCHAR,
 				xkey.trans_chars[i],
 				(int) ((scanCode << 16) | (1 << 29)));
@@ -2063,28 +2057,28 @@ TkWinMenuKeyObjCmd(
     } else if (eventPtr->type == KeyRelease) {
 	switch (keySym) {
 	case XK_Alt_L:
-	    scanCode = MapVirtualKey(VK_LMENU, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyA(VK_LMENU, 0);
+	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16)
 		    | (1 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_Alt_R:
-	    scanCode = MapVirtualKey(VK_RMENU, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyA(VK_RMENU, 0);
+	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16) | (1 << 24)
 		    | (0x111 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_F10:
-	    scanCode = MapVirtualKey(VK_F10, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyA(VK_F10, 0);
+	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_F10,
 		    (int) (scanCode << 16) | (1 << 30) | (1 << 31));
 	    break;
 	default:
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
-	    scanCode = MapVirtualKey(virtualKey, 0);
+	    scanCode = MapVirtualKeyA(virtualKey, 0);
 	    if (0 != scanCode) {
-		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+		CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYUP, virtualKey, (int) ((scanCode << 16)
 			| (1 << 29) | (1 << 30) | (1 << 31)));
 	    }
@@ -3193,10 +3187,10 @@ SetDefaults(
     HDC scratchDC;
     int bold = 0;
     int italic = 0;
-    TEXTMETRIC tm;
+    TEXTMETRICA tm;
     int pointSize;
     HFONT menuFont;
-    NONCLIENTMETRICS ncMetrics;
+    NONCLIENTMETRICSA ncMetrics;
 
     /*
      * Set all of the default options. The loop will terminate when we run out
@@ -3208,19 +3202,19 @@ SetDefaults(
 	defaultBorderWidth = GetSystemMetrics(SM_CYBORDER);
     }
 
-    scratchDC = CreateDC("DISPLAY", NULL, NULL, NULL);
+    scratchDC = CreateDCA("DISPLAY", NULL, NULL, NULL);
     if (!firstTime) {
 	Tcl_DStringFree(&menuFontDString);
     }
     Tcl_DStringInit(&menuFontDString);
 
     ncMetrics.cbSize = sizeof(ncMetrics);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics),
+    SystemParametersInfoA(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics),
 	    &ncMetrics, 0);
-    menuFont = CreateFontIndirect(&ncMetrics.lfMenuFont);
+    menuFont = CreateFontIndirectA(&ncMetrics.lfMenuFont);
     SelectObject(scratchDC, menuFont);
-    GetTextMetrics(scratchDC, &tm);
-    GetTextFace(scratchDC, LF_FACESIZE, faceName);
+    GetTextMetricsA(scratchDC, &tm);
+    GetTextFaceA(scratchDC, LF_FACESIZE, faceName);
     pointSize = MulDiv(tm.tmHeight - tm.tmInternalLeading,
 	    72, GetDeviceCaps(scratchDC, LOGPIXELSY));
     if (tm.tmWeight >= 700) {
@@ -3282,7 +3276,7 @@ SetDefaults(
 
     showMenuAccelerators = TRUE;
     if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
-	SystemParametersInfo(SPI_GETKEYBOARDCUES, 0, &showMenuAccelerators, 0);
+	SystemParametersInfoA(SPI_GETKEYBOARDCUES, 0, &showMenuAccelerators, 0);
     }
 }
 
@@ -3354,7 +3348,7 @@ TkpMenuThreadInit(void)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    tsdPtr->menuHWND = CreateWindow(MENU_CLASS_NAME, "MenuWindow", WS_POPUP,
+    tsdPtr->menuHWND = CreateWindow(MENU_CLASS_NAME, TEXT("MenuWindow"), WS_POPUP,
 	    0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
     if (!tsdPtr->menuHWND) {
@@ -3362,7 +3356,7 @@ TkpMenuThreadInit(void)
     }
 
     tsdPtr->embeddedMenuHWND =
-	    CreateWindow(EMBEDDED_MENU_CLASS_NAME, "EmbeddedMenuWindow",
+	    CreateWindow(EMBEDDED_MENU_CLASS_NAME, TEXT("EmbeddedMenuWindow"),
 	    WS_POPUP, 0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
     if (!tsdPtr->embeddedMenuHWND) {

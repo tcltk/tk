@@ -11,14 +11,8 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinTest.c,v 1.33 2010/09/10 08:59:27 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinTest.c,v 1.34 2010/10/06 14:33:30 nijtmans Exp $
  */
-
-/* TODO: This file does not compile in UNICODE mode.
- * See [Freq 2965056]: Windows build with -DUNICODE
- */
-#undef UNICODE
-#undef _UNICODE
 
 #undef USE_TCL_STUBS
 #define USE_TCL_STUBS
@@ -310,7 +304,7 @@ TestwineventCmd(
 #endif
     hwnd = (HWND) strtol(argv[1], &rest, 0);
     if (rest == argv[1]) {
-	hwnd = FindWindow(NULL, argv[1]);
+	hwnd = FindWindowA(NULL, argv[1]);
 	if (hwnd == NULL) {
 	    Tcl_SetResult(interp, "no such window", TCL_STATIC);
 	    return TCL_ERROR;
@@ -324,7 +318,7 @@ TestwineventCmd(
 
 	child = GetWindow(hwnd, GW_CHILD);
 	while (child != NULL) {
-	    SendMessage(child, WM_GETTEXT, (WPARAM) sizeof(buf), (LPARAM) buf);
+	    SendMessageA(child, WM_GETTEXT, (WPARAM) sizeof(buf), (LPARAM) buf);
 	    if (strcasecmp(buf, argv[2]) == 0) {
 		id = GetDlgCtrlID(child);
 		break;
@@ -353,7 +347,7 @@ TestwineventCmd(
 	Tcl_DString ds;
 	char buf[256];
 
-	GetDlgItemText(hwnd, id, buf, 256);
+	GetDlgItemTextA(hwnd, id, buf, 256);
 	Tcl_ExternalToUtfDString(NULL, buf, -1, &ds);
 	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
 	Tcl_DStringFree(&ds);
@@ -363,7 +357,7 @@ TestwineventCmd(
 	Tcl_DString ds;
 
 	Tcl_UtfToExternalDString(NULL, argv[4], -1, &ds);
-	SetDlgItemText(hwnd, id, Tcl_DStringValue(&ds));
+	SetDlgItemTextA(hwnd, id, Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
 	break;
     }
@@ -373,7 +367,7 @@ TestwineventCmd(
 	    wParam = MAKEWPARAM(id, 0);
 	    lParam = (LPARAM)child;
 	}
-	sprintf(buf, "%d", (int) SendMessage(hwnd, message, wParam, lParam));
+	sprintf(buf, "%d", (int) SendMessageA(hwnd, message, wParam, lParam));
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	break;
     }
@@ -381,7 +375,7 @@ TestwineventCmd(
 	char buf[TCL_INTEGER_SPACE];
 
 	sprintf(buf, "%d",
-		(int) SendDlgItemMessage(hwnd, id, message, wParam, lParam));
+		(int) SendDlgItemMessageA(hwnd, id, message, wParam, lParam));
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	break;
     }
@@ -462,8 +456,8 @@ TestgetwindowinfoObjCmd(
     long hwnd;
     Tcl_Obj *dictObj = NULL, *classObj = NULL, *textObj = NULL;
     Tcl_Obj *childrenObj = NULL;
-    char buf[512];
-    int cch, cchBuf = tkTestWinProcs->useWide ? 256 : 512;
+    TCHAR buf[512];
+    int cch, cchBuf = 256;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "hwnd");
@@ -488,14 +482,10 @@ TestgetwindowinfoObjCmd(
     dictObj = Tcl_NewDictObj();
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("class", 5), classObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
-	Tcl_NewLongObj(GetWindowLong((HWND)hwnd, GWL_ID)));
+	Tcl_NewLongObj(GetWindowLongA((HWND)hwnd, GWL_ID)));
 
     cch = tkTestWinProcs->getWindowText((HWND)hwnd, (LPTSTR)buf, cchBuf);
-    if (tkTestWinProcs->useWide) {
-	textObj = Tcl_NewUnicodeObj((LPCWSTR)buf, cch);
-    } else {
-	textObj = Tcl_NewStringObj((LPCSTR)buf, cch);
-    }
+    textObj = Tcl_NewUnicodeObj((LPCWSTR)buf, cch);
 
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("text", 4), textObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("parent", 6),
