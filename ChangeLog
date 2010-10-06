@@ -1,13 +1,17 @@
+2010-10-06  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/Makefile.in (genstubs): [Tcl Bug 3082049]: Typo.
+
 2010-09-08  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkTreeview.c(TreeviewSeeCommand):
-	Schedule redisplay if [$tv see] opens any items [Bug#2829363].
+	* generic/ttk/ttkTreeview.c (TreeviewSeeCommand): [Bug 2829363]:
+	Schedule redisplay if [$tv see] opens any items.
 
 2010-09-02  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/ttk/winTheme.tcl, library/ttk/xpTheme.tcl, 
-	library/ttk/vistaTheme.tcl: Specify disabled combobox text 
-	foreground color [Bug#3057573].
+	* library/ttk/winTheme.tcl, library/ttk/xpTheme.tcl,
+	* library/ttk/vistaTheme.tcl: [Bug 3057573]: Specify disabled combobox
+	text foreground color.
 
 2010-09-01  Don Porter  <dgp@users.sourceforge.net>
 
@@ -30,20 +34,20 @@
 
 2010-08-26  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* generic/tkText.c (DumpLine): s/segPtr->size/currentSize/
-	throughout, but particularly in if lineChanged block where segPtr
-	may no longer be valid. [Bug 3053347]
+	* generic/tkText.c (DumpLine): [Bug 3053347]:
+	s/segPtr->size/currentSize/ throughout, but particularly in if
+	lineChanged block where segPtr may no longer be valid.
 
 	* unix/Makefile.in: add valgrind target
-	* unix/configure, unix/tcl.m4: SHLIB_LD_LIBS='${LIBS}' for OSF1-V*.
-	Add /usr/lib64 to set of auto-search dirs. [Bug 1230554]
+	* unix/configure, unix/tcl.m4: [Bug 1230554]: SHLIB_LD_LIBS='${LIBS}'
+	for OSF1-V*. Add /usr/lib64 to set of auto-search dirs.
 	(SC_PATH_X): Correct syntax error when xincludes not found.
 
 	* win/Makefile.in (VC_MANIFEST_EMBED_DLL VC_MANIFEST_EMBED_EXE):
 	* win/configure, win/configure.in, win/tcl.m4: SC_EMBED_MANIFEST
-	macro and --enable-embedded-manifest configure arg added to
-	support manifest embedding where we know the magic.  Help prevents
-	DLL hell with MSVC8+.
+	macro and --enable-embedded-manifest configure arg added to support
+	manifest embedding where we know the magic.  Help prevents DLL hell
+	with MSVC8+.
 
 2010-08-25  Jeff Hobbs  <jeffh@ActiveState.com>
 
@@ -88,7 +92,7 @@
 	Major backport of 8.6 Ttk for 8.5.9.  Most changes were only being
 	committed to head (8.6), although they could apply for 8.5 as well.
 	This re-sync makes future work easier to maintain and adds some
-	useful work for 8.5 users. [Bug 3053320] Notable changes:
+	useful work for 8.5 users. [Bug 3053320]: Notable changes:
 	- Lots of code cleanup
 	- Some bug fixes never backported
 	- Addition of ttk::spinbox
