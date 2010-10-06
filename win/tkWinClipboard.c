@@ -9,14 +9,8 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinClipboard.c,v 1.12 2010/09/10 08:59:25 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinClipboard.c,v 1.13 2010/10/06 14:33:29 nijtmans Exp $
  */
-
-/* TODO: This file does not compile in UNICODE mode.
- * See [Freq 2965056]: Windows build with -DUNICODE
- */
-#undef UNICODE
-#undef _UNICODE
 
 #include "tkWinInt.h"
 #include "tkSelect.h"
@@ -112,7 +106,7 @@ TkSelGetSelection(
 	     */
 
 	    locale = LANGIDFROMLCID(*((int*)data));
-	    GetLocaleInfo(locale, LOCALE_IDEFAULTANSICODEPAGE,
+	    GetLocaleInfoA(locale, LOCALE_IDEFAULTANSICODEPAGE,
 		    Tcl_DStringValue(&ds)+2, Tcl_DStringLength(&ds)-2);
 	    GlobalUnlock(handle);
 

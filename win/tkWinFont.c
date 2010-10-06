@@ -11,14 +11,8 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinFont.c,v 1.51 2010/09/10 08:59:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinFont.c,v 1.52 2010/10/06 14:33:29 nijtmans Exp $
  */
-
-/* TODO: This file does not compile in UNICODE mode.
- * See [Freq 2965056]: Windows build with -DUNICODE
- */
-#undef UNICODE
-#undef _UNICODE
 
 #include "tkWinInt.h"
 #include "tkFont.h"
@@ -221,7 +215,7 @@ static inline void	InitSubFont(HDC hdc, HFONT hFont, int base,
 			    SubFont *subFontPtr);
 static int		CreateNamedSystemLogFont(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char* name,
-			    LOGFONT* logFontPtr);
+			    LOGFONTA* logFontPtr);
 static int		CreateNamedSystemFont(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char* name, HFONT hFont);
 static int		LoadFontRanges(HDC hdc, HFONT hFont,
@@ -237,14 +231,14 @@ static inline HFONT	SelectFont(HDC hdc, WinFont *fontPtr,
 			    SubFont *subFontPtr, double angle);
 static inline void	SwapLong(PULONG p);
 static inline void	SwapShort(USHORT *p);
-static int CALLBACK	WinFontCanUseProc(ENUMLOGFONT *lfPtr,
-			    NEWTEXTMETRIC *tmPtr, int fontType,
+static int CALLBACK	WinFontCanUseProc(ENUMLOGFONTA *lfPtr,
+			    NEWTEXTMETRICA *tmPtr, int fontType,
 			    LPARAM lParam);
-static int CALLBACK	WinFontExistProc(ENUMLOGFONT *lfPtr,
-			    NEWTEXTMETRIC *tmPtr, int fontType,
+static int CALLBACK	WinFontExistProc(ENUMLOGFONTA *lfPtr,
+			    NEWTEXTMETRICA *tmPtr, int fontType,
 			    LPARAM lParam);
-static int CALLBACK	WinFontFamilyEnumProc(ENUMLOGFONT *lfPtr,
-			    NEWTEXTMETRIC *tmPtr, int fontType,
+static int CALLBACK	WinFontFamilyEnumProc(ENUMLOGFONTA *lfPtr,
+			    NEWTEXTMETRICA *tmPtr, int fontType,
 			    LPARAM lParam);
 
 /*
@@ -348,12 +342,12 @@ CreateNamedSystemLogFont(
     Tcl_Interp *interp,
     Tk_Window tkwin,
     const char* name,
-    LOGFONT* logFontPtr)
+    LOGFONTA* logFontPtr)
 {
     HFONT hFont;
     int r;
 
-    hFont = CreateFontIndirect(logFontPtr);
+    hFont = CreateFontIndirectA(logFontPtr);
     r = CreateNamedSystemFont(interp, tkwin, name, hFont);
     DeleteObject((HGDIOBJ)hFont);
     return r;
@@ -409,8 +403,8 @@ TkWinSetupSystemFonts(
     Tcl_Interp *interp;
     Tk_Window tkwin;
     const TkStateMap *mapPtr;
-    NONCLIENTMETRICS ncMetrics;
-    ICONMETRICS iconMetrics;
+    NONCLIENTMETRICSA ncMetrics;
+    ICONMETRICSA iconMetrics;
     HFONT hFont;
 
     interp = (Tcl_Interp *) mainPtr->interp;
@@ -430,7 +424,7 @@ TkWinSetupSystemFonts(
 
     ZeroMemory(&ncMetrics, sizeof(ncMetrics));
     ncMetrics.cbSize = sizeof(ncMetrics);
-    if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
+    if (SystemParametersInfoA(SPI_GETNONCLIENTMETRICS,
 	    sizeof(ncMetrics), &ncMetrics, 0)) {
 	CreateNamedSystemLogFont(interp, tkwin, "TkDefaultFont",
 		&ncMetrics.lfMessageFont);
@@ -449,7 +443,7 @@ TkWinSetupSystemFonts(
     }
 
     iconMetrics.cbSize = sizeof(iconMetrics);
-    if (SystemParametersInfo(SPI_GETICONMETRICS, sizeof(iconMetrics),
+    if (SystemParametersInfoA(SPI_GETICONMETRICS, sizeof(iconMetrics),
 	    &iconMetrics, 0)) {
 	CreateNamedSystemLogFont(interp, tkwin, "TkIconFont",
 		&iconMetrics.lfFont);
@@ -461,9 +455,9 @@ TkWinSetupSystemFonts(
      */
 
     {
-	LOGFONT lfFixed = {
+	LOGFONTA lfFixed = {
 	    0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-	    0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, TEXT("")
+	    0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, ""
 	};
 	long pointSize, dpi;
 	HDC hdc = GetDC(NULL);
@@ -668,25 +662,20 @@ TkpGetFontFamilies(
      * because it only exists under NT.
      */
 
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
-	EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontFamilyEnumProc,
-		(LPARAM) resultObj);
-    } else {
-	EnumFontFamiliesA(hdc, NULL, (FONTENUMPROCA) WinFontFamilyEnumProc,
-		(LPARAM) resultObj);
-    }
+    EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontFamilyEnumProc,
+	    (LPARAM) resultObj);
     ReleaseDC(hwnd, hdc);
     Tcl_SetObjResult(interp, resultObj);
 }
 
 static int CALLBACK
 WinFontFamilyEnumProc(
-    ENUMLOGFONT *lfPtr,		/* Logical-font data. */
-    NEWTEXTMETRIC *tmPtr,	/* Physical-font data (not used). */
+    ENUMLOGFONTA *lfPtr,		/* Logical-font data. */
+    NEWTEXTMETRICA *tmPtr,	/* Physical-font data (not used). */
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* Result object to hold result. */
 {
-    TCHAR *faceName = lfPtr->elfLogFont.lfFaceName;
+    char *faceName = lfPtr->elfLogFont.lfFaceName;
     Tcl_Obj *resultObj = (Tcl_Obj *) lParam;
     Tcl_DString faceString;
 
@@ -773,14 +762,14 @@ TkpGetFontAttrsForChar(
 				 * character */
     FontFamily *familyPtr = thisSubFontPtr->familyPtr;
     HFONT oldfont;		/* Saved font from the device context */
-    TEXTMETRIC tm;		/* Font metrics of the selected subfont */
+    TEXTMETRICA tm;		/* Font metrics of the selected subfont */
 
     /*
      * Get the font attributes.
      */
 
     oldfont = SelectObject(hdc, thisSubFontPtr->hFont0);
-    GetTextMetrics(hdc, &tm);
+    GetTextMetricsA(hdc, &tm);
     SelectObject(hdc, oldfont);
     ReleaseDC(fontPtr->hwnd, hdc);
     faPtr->family = familyPtr->faceName;
@@ -880,7 +869,7 @@ Tk_MeasureChars(
 		    (int) (p - start), &runString);
 	    size.cx = 0;
 	    familyPtr->getTextExtentPoint32Proc(hdc,
-		    Tcl_DStringValue(&runString),
+		    (TCHAR *)Tcl_DStringValue(&runString),
 		    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		    &size);
 	    Tcl_DStringFree(&runString);
@@ -907,7 +896,7 @@ Tk_MeasureChars(
 	Tcl_UtfToExternalDString(familyPtr->encoding, start,
 		(int) (p - start), &runString);
 	size.cx = 0;
-	familyPtr->getTextExtentPoint32Proc(hdc, Tcl_DStringValue(&runString),
+	familyPtr->getTextExtentPoint32Proc(hdc, (TCHAR *) Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		&size);
 	Tcl_DStringFree(&runString);
@@ -941,7 +930,7 @@ Tk_MeasureChars(
 	    Tcl_DStringAppend(&runString,buf,dstWrote);
 	    size.cx = 0;
 	    familyPtr->getTextExtentPoint32Proc(hdc,
-		    Tcl_DStringValue(&runString),
+		    (TCHAR *) Tcl_DStringValue(&runString),
 		    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		    &size);
 	    if ((curX+size.cx) > maxLength) {
@@ -1131,7 +1120,7 @@ Tk_DrawChars(
 	HBRUSH oldBrush, stipple;
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
-	TEXTMETRIC tm;
+	TEXTMETRICA tm;
 	SIZE size;
 
 	if (twdPtr->type != TWD_BITMAP) {
@@ -1157,8 +1146,8 @@ Tk_DrawChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPoint(dcMem, source, numBytes, &size);
-	GetTextMetrics(dcMem, &tm);
+	GetTextExtentPointA(dcMem, source, numBytes, &size);
+	GetTextMetricsA(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = SelectObject(dcMem, bitmap);
@@ -1197,7 +1186,7 @@ Tk_DrawChars(
     } else {
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
-	TEXTMETRIC tm;
+	TEXTMETRICA tm;
 	SIZE size;
 
 	dcMem = CreateCompatibleDC(dc);
@@ -1211,8 +1200,8 @@ Tk_DrawChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPoint(dcMem, source, numBytes, &size);
-	GetTextMetrics(dcMem, &tm);
+	GetTextExtentPointA(dcMem, source, numBytes, &size);
+	GetTextMetricsA(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = SelectObject(dcMem, bitmap);
@@ -1279,7 +1268,7 @@ TkpDrawAngledChars(
 	HBRUSH oldBrush, stipple;
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
-	TEXTMETRIC tm;
+	TEXTMETRICA tm;
 	SIZE size;
 
 	if (twdPtr->type != TWD_BITMAP) {
@@ -1305,8 +1294,8 @@ TkpDrawAngledChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPoint(dcMem, source, numBytes, &size);
-	GetTextMetrics(dcMem, &tm);
+	GetTextExtentPointA(dcMem, source, numBytes, &size);
+	GetTextMetricsA(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = SelectObject(dcMem, bitmap);
@@ -1345,7 +1334,7 @@ TkpDrawAngledChars(
     } else {
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
-	TEXTMETRIC tm;
+	TEXTMETRICA tm;
 	SIZE size;
 
 	dcMem = CreateCompatibleDC(dc);
@@ -1359,8 +1348,8 @@ TkpDrawAngledChars(
 	 * Compute the bounding box and create a compatible bitmap.
 	 */
 
-	GetTextExtentPoint(dcMem, source, numBytes, &size);
-	GetTextMetrics(dcMem, &tm);
+	GetTextExtentPointA(dcMem, source, numBytes, &size);
+	GetTextMetricsA(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = SelectObject(dcMem, bitmap);
@@ -1463,11 +1452,11 @@ MultiFontTextOut(
     Tcl_DString runString;
     const char *p, *end, *next;
     SubFont *lastSubFontPtr, *thisSubFontPtr;
-    TEXTMETRIC tm;
+    TEXTMETRICA tm;
 
     lastSubFontPtr = &fontPtr->subFontArray[0];
     oldFont = SelectFont(hdc, fontPtr, lastSubFontPtr, angle);
-    GetTextMetrics(hdc, &tm);
+    GetTextMetricsA(hdc, &tm);
 
     end = source + numBytes;
     for (p = source; p < end; ) {
@@ -1479,10 +1468,10 @@ MultiFontTextOut(
  		Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			(int) (p - source), &runString);
 		familyPtr->textOutProc(hdc, x-(tm.tmOverhang/2), y,
-			Tcl_DStringValue(&runString),
+			(TCHAR *)Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString)>>familyPtr->isWideFont);
 		familyPtr->getTextExtentPoint32Proc(hdc,
-			Tcl_DStringValue(&runString),
+			(TCHAR *)Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 			&size);
 		x += size.cx;
@@ -1491,7 +1480,7 @@ MultiFontTextOut(
 	    lastSubFontPtr = thisSubFontPtr;
 	    source = p;
 	    SelectFont(hdc, fontPtr, lastSubFontPtr, angle);
-	    GetTextMetrics(hdc, &tm);
+	    GetTextMetricsA(hdc, &tm);
 	}
 	p = next;
     }
@@ -1500,7 +1489,7 @@ MultiFontTextOut(
  	Tcl_UtfToExternalDString(familyPtr->encoding, source,
 		(int) (p - source), &runString);
 	familyPtr->textOutProc(hdc, x-(tm.tmOverhang/2), y,
-		Tcl_DStringValue(&runString),
+		(TCHAR *)Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 	Tcl_DStringFree(&runString);
     }
@@ -1569,7 +1558,7 @@ InitFont(
     HDC hdc;
     HWND hwnd;
     HFONT oldFont;
-    TEXTMETRIC tm;
+    TEXTMETRICA tm;
     Window window;
     TkFontMetrics *fmPtr;
     Tcl_Encoding encoding;
@@ -1582,7 +1571,7 @@ InitFont(
     hdc = GetDC(hwnd);
     oldFont = SelectObject(hdc, hFont);
 
-    GetTextMetrics(hdc, &tm);
+    GetTextMetricsA(hdc, &tm);
 
     /*
      * On any version NT, there may fonts with international names. Use the
@@ -1599,11 +1588,7 @@ InitFont(
      * GetTextFace because it only exists under NT.
      */
 
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
-	GetTextFaceW(hdc, LF_FACESIZE, (WCHAR *) buf);
-    } else {
-	GetTextFaceA(hdc, LF_FACESIZE, (char *) buf);
-    }
+    GetTextFaceW(hdc, LF_FACESIZE, (WCHAR *) buf);
     Tcl_ExternalToUtfDString(systemEncoding, buf, -1, &faceString);
 
     fontPtr->font.fid	= (Font) fontPtr;
@@ -1780,11 +1765,7 @@ AllocFontFamily(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hFont = SelectObject(hdc, hFont);
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
-	GetTextFaceW(hdc, LF_FACESIZE, (WCHAR *) buf);
-    } else {
-	GetTextFaceA(hdc, LF_FACESIZE, (char *) buf);
-    }
+    GetTextFaceW(hdc, LF_FACESIZE, (WCHAR *) buf);
     Tcl_ExternalToUtfDString(systemEncoding, buf, -1, &faceString);
     faceName = Tk_GetUid(Tcl_DStringValue(&faceString));
     Tcl_DStringFree(&faceString);
@@ -2047,13 +2028,8 @@ FindSubFontForChar(
     canUse.ch = ch;
     canUse.subFontPtr = NULL;
     canUse.subFontPtrPtr = subFontPtrPtr;
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
-	EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontCanUseProc,
-		(LPARAM) &canUse);
-    } else {
-	EnumFontFamiliesA(hdc, NULL, (FONTENUMPROCA) WinFontCanUseProc,
-		(LPARAM) &canUse);
-    }
+    EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontCanUseProc,
+	    (LPARAM) &canUse);
     subFontPtr = canUse.subFontPtr;
 
   end:
@@ -2074,8 +2050,8 @@ FindSubFontForChar(
 
 static int CALLBACK
 WinFontCanUseProc(
-    ENUMLOGFONT *lfPtr,		/* Logical-font data. */
-    NEWTEXTMETRIC *tmPtr,	/* Physical-font data (not used). */
+    ENUMLOGFONTA *lfPtr,		/* Logical-font data. */
+    NEWTEXTMETRICA *tmPtr,	/* Physical-font data (not used). */
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* Result object to hold result. */
 {
@@ -2604,13 +2580,8 @@ FamilyExists(
      * non-zero value.
      */
 
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
-	result = EnumFontFamiliesW(hdc, (WCHAR*) Tcl_DStringValue(&faceString),
-		(FONTENUMPROCW) WinFontExistProc, 0);
-    } else {
-	result = EnumFontFamiliesA(hdc, (char *) Tcl_DStringValue(&faceString),
-		(FONTENUMPROCA) WinFontExistProc, 0);
-    }
+    result = EnumFontFamiliesW(hdc, (WCHAR*) Tcl_DStringValue(&faceString),
+	    (FONTENUMPROCW) WinFontExistProc, 0);
     Tcl_DStringFree(&faceString);
     return (result == 0);
 }
@@ -2639,8 +2610,8 @@ FamilyOrAliasExists(
 
 static int CALLBACK
 WinFontExistProc(
-    ENUMLOGFONT *lfPtr,		/* Logical-font data. */
-    NEWTEXTMETRIC *tmPtr,	/* Physical-font data (not used). */
+    ENUMLOGFONTA *lfPtr,		/* Logical-font data. */
+    NEWTEXTMETRICA *tmPtr,	/* Physical-font data (not used). */
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* EnumFontData to hold result. */
 {

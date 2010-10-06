@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.72 2010/10/05 14:48:34 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.73 2010/10/06 14:33:29 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -1540,7 +1540,6 @@ HandleIMEComposition(
 {
     HIMC hIMC;
     int n;
-    BOOL isWinNT = (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT);
 
     if ((lParam & GCS_RESULTSTR) == 0) {
 	/*
@@ -1555,11 +1554,7 @@ HandleIMEComposition(
 	return 0;
     }
 
-    if (isWinNT) {
-	n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
-    } else {
-	n = ImmGetCompositionStringA(hIMC, GCS_RESULTSTR, NULL, 0);
-    }
+    n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
 	char *buff = ckalloc((unsigned) n);
@@ -1567,35 +1562,7 @@ HandleIMEComposition(
 	XEvent event;
 	int i;
 
-	if (isWinNT) {
-	    n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, buff,
-		    (unsigned) n);
-	} else {
-	    Tcl_DString utfString, unicodeString;
-	    Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
-
-	    n = ImmGetCompositionStringA(hIMC, GCS_RESULTSTR, buff,
-		    (unsigned) n);
-	    Tcl_DStringInit(&utfString);
-	    Tcl_ExternalToUtfDString(keyInputEncoding, buff, n, &utfString);
-	    Tcl_UtfToExternalDString(unicodeEncoding,
-		    Tcl_DStringValue(&utfString), -1, &unicodeString);
-	    i = Tcl_DStringLength(&unicodeString);
-	    if (n < i) {
-		/*
-		 * Only alloc more space if we need, otherwise just use what
-		 * we've created. Don't realloc as that may copy data we no
-		 * longer need.
-		 */
-
-		ckfree((char *) buff);
-		buff = (char *) ckalloc((unsigned) i);
-	    }
-	    n = i;
-	    memcpy(buff, Tcl_DStringValue(&unicodeString), (unsigned) n);
-	    Tcl_DStringFree(&utfString);
-	    Tcl_DStringFree(&unicodeString);
-	}
+	n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, buff, (unsigned) n);
 
 	/*
 	 * Set up the fields pertinent to key event.
@@ -1908,32 +1875,10 @@ long
 Tk_GetUserInactiveTime(
      Display *dpy)		/* Ignored on Windows */
 {
-    struct tagLASTINPUTINFO {
-	UINT cbSize;
-	DWORD dwTime;
-    } li;
+    LASTINPUTINFO li;
 
-    /*
-     * Multiple settings of either of these variables should be OK; any thread
-     * hazards should just cause inefficiency...
-     */
-
-    static FARPROC pfnGetLastInputInfo = NULL;
-    static int initinfo = 0;
-
-    if (!initinfo) {
-	HMODULE hMod = GetModuleHandleA("USER32.DLL");
-
-	initinfo = 1;
-	if (hMod){
-	    pfnGetLastInputInfo = GetProcAddress(hMod, "GetLastInputInfo");
-	}
-    }
-    if (pfnGetLastInputInfo == NULL) {
-	return -1;
-    }
     li.cbSize = sizeof(li);
-    if (!(BOOL)(pfnGetLastInputInfo)(&li)) {
+    if (!(BOOL)GetLastInputInfo(&li)) {
 	return -1;
     }
 
