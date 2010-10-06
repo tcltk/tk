@@ -8,6 +8,7 @@
 	* win/tkWinMenu.c:
 	* win/tkWinPixmap.c:
 	* win/tkWinX.c:         Eliminate isWinNT variable
+	* win/Makefile.in (genstubs): Generate ttk files as well.
 
 2010-10-06  Donal K. Fellows  <dkf@users.sf.net>
 
