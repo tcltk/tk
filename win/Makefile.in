@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.94 2010/10/06 10:15:58 dkf Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.95 2010/10/06 14:34:38 nijtmans Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -706,7 +706,10 @@ genstubs:
 	$(TCL_EXE) "$(TCL_TOOL_DIR)\genStubs.tcl" \
 	    "$(GENERIC_DIR_NATIVE)" \
 	    "$(GENERIC_DIR_NATIVE)\tk.decls" \
-            "$(GENERIC_DIR_NATIVE)\tkInt.decls"
+	    "$(GENERIC_DIR_NATIVE)\tkInt.decls"
+	$(TCL_EXE) "$(TTK_DIR)/ttkGenStubs.tcl" \
+	    "$(TTK_DIR)" \
+	    "$(TTK_DIR)/ttk.decls"
 
 #
 # The list of all the targets that do not correspond to real files. This stops
