@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.93 2010/09/14 08:50:20 nijtmans Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.94 2010/10/06 10:15:58 dkf Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -703,7 +703,7 @@ $(GENERIC_DIR)/tkStubInit.c: $(GENERIC_DIR)/tk.decls \
 	@echo "This warning can be safely ignored, do not report as a bug!"
 
 genstubs:
-	$(TCL_EXE) "$(TCL_TOOL_DIR}\genStubs.tcl" \
+	$(TCL_EXE) "$(TCL_TOOL_DIR)\genStubs.tcl" \
 	    "$(GENERIC_DIR_NATIVE)" \
 	    "$(GENERIC_DIR_NATIVE)\tk.decls" \
             "$(GENERIC_DIR_NATIVE)\tkInt.decls"
