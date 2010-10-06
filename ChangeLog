@@ -1,7 +1,11 @@
+2010-10-06  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/Makefile.in (genstubs): [Tcl Bug 3082049]: Typo.
+
 2010-10-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkWinX.c: [Bug 3080953] Malformed Unicode characters in %A substitution
-	Problem was in the static function GetTranslatedKey().
+	* generic/tkWinX.c: [Bug 3080953]: Malformed Unicode characters in %A
+	substitution Problem was in the static function GetTranslatedKey().
 
 2010-10-01  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -32,7 +36,8 @@
 	* win/winMain.c:
 	* unix/tkAppInit.c:      Many clean-ups in comments, so all
 	(tcl|tk)AppInit.c variants use the same style.
-	* generic/ttk/ttkGenStubs.tcl: Dummy genStubs::export (from genStubs.tcl)
+	* generic/ttk/ttkGenStubs.tcl: Dummy genStubs::export (from
+	genStubs.tcl)
 
 2010-09-20  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -86,8 +91,8 @@
 
 2010-09-08  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkTreeview.c(TreeviewSeeCommand):
-	Schedule redisplay if [$tv see] opens any items [Bug#2829363].
+	* generic/ttk/ttkTreeview.c (TreeviewSeeCommand): [Bug 2829363]:
+	Schedule redisplay if [$tv see] opens any items.
 
 2010-09-05  Donal K. Fellows  <dkf@users.sf.net>
 
