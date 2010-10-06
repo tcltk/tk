@@ -1,3 +1,14 @@
+2010-10-06  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinClipboard.c: [FRQ 2965056]: Windows build with
+	* win/tkWinColor.c:     -DUNICODE
+	* win/tkWinCursor.c:
+	* win/tkWinFont.c:
+	* win/tkWinTest.c:
+	* win/tkWinMenu.c:
+	* win/tkWinPixmap.c:
+	* win/tkWinX.c:         Eliminate isWinNT variable
+
 2010-10-06  Donal K. Fellows  <dkf@users.sf.net>
 
 	* win/Makefile.in (genstubs): [Tcl Bug 3082049]: Typo.
