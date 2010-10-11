@@ -1,3 +1,8 @@
+2010-10-11  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkTreeview.c: Fix crash in 'tag add' / 'tag remove'
+	commands when no -tags specified [Bug 3085489].
+
 2010-10-06  Donal K. Fellows  <dkf@users.sf.net>
 
 	* win/Makefile.in (genstubs): [Tcl Bug 3082049]: Typo.
