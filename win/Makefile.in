@@ -4,7 +4,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.95 2010/10/06 14:34:38 nijtmans Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.96 2010/10/11 21:50:46 nijtmans Exp $
 
 TCLVERSION		= @TCL_VERSION@
 TCLPATCHL		= @TCL_PATCH_LEVEL@
@@ -315,6 +315,7 @@ TK_OBJS = \
 	tkListbox.$(OBJEXT) \
 	tkMacWinMenu.$(OBJEXT) \
 	tkMain.$(OBJEXT) \
+	tkMain2.$(OBJEXT) \
 	tkMenu.$(OBJEXT) \
 	tkMenubutton.$(OBJEXT) \
 	tkMenuDraw.$(OBJEXT) \
@@ -654,6 +655,9 @@ tkWinTest.$(OBJEXT): tkWinTest.c
 
 tkSquare.$(OBJEXT): tkSquare.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
+
+tkMain2.$(OBJEXT): tkMain.c
+	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DTK_ASCII_MAIN @DEPARG@ $(CC_OBJNAME)
 
 # Extra dependency info
 tkConsole.$(OBJEXT): configure Makefile

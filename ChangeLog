@@ -1,3 +1,12 @@
+2010-10-11  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkDecls.h:  [FRQ 491789]: "setargv() doesn't support a unicode
+	* doc/Tk_Main.3:      cmdline" implemented for Tk on MSVC++
+	* win/Makefile.in:
+	* win/makefile.vc:
+	* win/winMain.c:
+	* win/rules.vc:       Update for VS10
+
 2010-10-11  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTreeview.c: Fix crash in 'tag add' / 'tag remove'

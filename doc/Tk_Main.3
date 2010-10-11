@@ -5,7 +5,7 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: Tk_Main.3,v 1.9 2010/01/13 13:27:50 dkf Exp $
+'\" RCS: @(#) $Id: Tk_Main.3,v 1.10 2010/10/11 21:50:46 nijtmans Exp $
 '\" 
 .so man.macros
 .TH Tk_Main 3 4.0 Tk "Tk Library Procedures"
@@ -22,7 +22,8 @@ Tk_Main \- main program for Tk-based applications
 .AP int argc in
 Number of elements in \fIargv\fR.
 .AP char *argv[] in
-Array of strings containing command-line arguments.
+Array of strings containing command-line arguments. On Windows, when
+using -DUNICODE, the parameter type changes to wchar_t *.
 .AP Tcl_AppInitProc *appInitProc in
 Address of an application-specific initialization procedure.
 The value for this argument is usually \fBTcl_AppInit\fR.
