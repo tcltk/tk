@@ -1,3 +1,9 @@
+2010-10-11  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tcl.m4          Add netapi32 to the link line, so we no longer
+	* win/makefile.vc     have to use LoadLibrary to access those functions.
+	* win/configure
+
 2010-10-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinClipboard.c: [FRQ 2965056]: Windows build with
