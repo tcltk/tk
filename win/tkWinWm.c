@@ -12,14 +12,8 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.144 2010/09/10 08:59:25 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.145 2010/10/11 13:33:30 nijtmans Exp $
  */
-
-/* TODO: This file does not compile in UNICODE mode.
- * See [Freq 2965056]: Windows build with -DUNICODE
- */
-#undef UNICODE
-#undef _UNICODE
 
 #include "tkWinInt.h"
 #include <shellapi.h>
@@ -403,23 +397,6 @@ static Tcl_ThreadDataKey dataKey;
 static int initialized;		/* Flag indicating whether module has been
 				 * initialized. */
 
-/*
- * A pointer to a shell proc which allows us to extract icons from any file.
- * We just initialize this when we start up (if we can) and then it never
- * changes
- */
-
-DWORD* (WINAPI *shgetfileinfoProc) (LPCTSTR pszPath, DWORD dwFileAttributes,
-	SHFILEINFO* psfi, UINT cbFileInfo, UINT uFlags) = NULL;
-
-/*
- * A pointer to SetLayeredWindowAttributes (user32.dll) which we retrieve
- * dynamically because it is only valid on Win2K+.
- */
-
-BOOL (WINAPI *setLayeredWindowAttributesProc) (HWND hwnd, COLORREF crKey,
-	BYTE bAlpha, DWORD dwFlags) = NULL;
-
 TCL_DECLARE_MUTEX(winWmMutex)
 
 /*
@@ -771,8 +748,6 @@ MakeIconOrCursorFromResource(
     BOOL isIcon)
 {
     HICON hIcon;
-    static FARPROC pfnCreateIconFromResourceEx = NULL;
-    static int initinfo = 0;
 
     /*
      * Sanity Check
@@ -782,28 +757,14 @@ MakeIconOrCursorFromResource(
 	return NULL;
     }
 
-    if (!initinfo) {
-	HMODULE hMod = GetModuleHandleA("USER32.DLL");
-
-	initinfo = 1;
-	if (hMod) {
-	    pfnCreateIconFromResourceEx =
-		    GetProcAddress(hMod, "CreateIconFromResourceEx");
-	}
-    }
-
     /*
      * Let the OS do the real work :)
      */
 
-    if (pfnCreateIconFromResourceEx != NULL) {
-	hIcon = (HICON) pfnCreateIconFromResourceEx(lpIcon->lpBits,
-		lpIcon->dwNumBytes, isIcon, 0x00030000,
-		(*(LPBITMAPINFOHEADER) lpIcon->lpBits).biWidth,
-		(*(LPBITMAPINFOHEADER) lpIcon->lpBits).biHeight/2, 0);
-    } else {
-	 hIcon = NULL;
-    }
+    hIcon = (HICON) CreateIconFromResourceEx(lpIcon->lpBits,
+	    lpIcon->dwNumBytes, isIcon, 0x00030000,
+	    (*(LPBITMAPINFOHEADER) lpIcon->lpBits).biWidth,
+	    (*(LPBITMAPINFOHEADER) lpIcon->lpBits).biHeight/2, 0);
 
     /*
      * It failed, odds are good we're on NT so try the non-Ex way.
@@ -908,32 +869,9 @@ InitWindowClass(
     if (!initialized) {
 	Tcl_MutexLock(&winWmMutex);
 	if (!initialized) {
-	    Tcl_DString classString;
 	    WNDCLASS class;
 
 	    initialized = 1;
-
-	    if (shgetfileinfoProc == NULL) {
-		HINSTANCE hInstance = LoadLibrary(TEXT("shell32"));
-
-		if (hInstance != NULL) {
-		    shgetfileinfoProc = (DWORD* (WINAPI *) (LPCTSTR pszPath,
-			    DWORD dwFileAttributes, SHFILEINFO* psfi,
-			    UINT cbFileInfo, UINT uFlags))
-			GetProcAddress(hInstance, "SHGetFileInfo");
-		    FreeLibrary(hInstance);
-		}
-	    }
-	    if (setLayeredWindowAttributesProc == NULL) {
-		HINSTANCE hInstance = LoadLibrary(TEXT("user32"));
-
-		if (hInstance != NULL) {
-		    setLayeredWindowAttributesProc = (BOOL (WINAPI*)(HWND hwnd,
-			    COLORREF crKey, BYTE bAlpha, DWORD dwFlags))
-			GetProcAddress(hInstance,"SetLayeredWindowAttributes");
-		    FreeLibrary(hInstance);
-		}
-	    }
 
 	    /*
 	     * The only difference between WNDCLASSW and WNDCLASSA are in
@@ -944,8 +882,7 @@ InitWindowClass(
 
 	    class.style = CS_HREDRAW | CS_VREDRAW;
 	    class.hInstance = Tk_GetHINSTANCE();
-	    Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
-	    class.lpszClassName = (LPCTSTR) Tcl_DStringValue(&classString);
+	    class.lpszClassName = TK_WIN_TOPLEVEL_CLASS_NAME;
 	    class.lpfnWndProc = WmProc;
 	    if (titlebaricon == NULL) {
 		class.hIcon = LoadIcon(Tk_GetHINSTANCE(), TEXT("tk"));
@@ -964,11 +901,9 @@ InitWindowClass(
 	    }
 	    class.hCursor = LoadCursor(NULL, IDC_ARROW);
 
-	    if (!tkWinProcs->registerClass(&class)) {
+	    if (!RegisterClass(&class)) {
 		Tcl_Panic("Unable to register TkTopLevel class");
 	    }
-
-	    Tcl_DStringFree(&classString);
 	}
 	Tcl_MutexUnlock(&winWmMutex);
     }
@@ -1298,7 +1233,7 @@ ReadIconFromFile(
      * switching) display uses the right icon.
      */
 
-    if (lpIR == NULL && shgetfileinfoProc != NULL) {
+    if (lpIR == NULL) {
 	SHFILEINFO sfiSM;
 	Tcl_DString ds, ds2;
 	DWORD *res;
@@ -1308,9 +1243,9 @@ ReadIconFromFile(
 	if (file == NULL) {
 	    return NULL;
 	}
-	Tcl_UtfToExternalDString(NULL, file, -1, &ds2);
+	Tcl_WinUtfToTChar(file, -1, &ds2);
 	Tcl_DStringFree(&ds);
-	res = shgetfileinfoProc(Tcl_DStringValue(&ds2), 0, &sfiSM,
+	res = (DWORD *)SHGetFileInfo((TCHAR *)Tcl_DStringValue(&ds2), 0, &sfiSM,
 		sizeof(SHFILEINFO), SHGFI_SMALLICON|SHGFI_ICON);
 
 	if (res != 0) {
@@ -1318,7 +1253,7 @@ ReadIconFromFile(
 	    unsigned size;
 
 	    Tcl_ResetResult(interp);
-	    res = shgetfileinfoProc(Tcl_DStringValue(&ds2), 0, &sfi,
+	    res = (DWORD *)SHGetFileInfo((TCHAR *)Tcl_DStringValue(&ds2), 0, &sfi,
 		    sizeof(SHFILEINFO), SHGFI_ICON);
 
 	    /*
@@ -2033,7 +1968,7 @@ TkWmNewWindow(
      * window manager.
      */
 
-    Tk_ManageGeometry((Tk_Window) winPtr, &wmMgrType, (ClientData) 0);
+    Tk_ManageGeometry((Tk_Window) winPtr, &wmMgrType, NULL);
 }
 
 /*
@@ -2066,7 +2001,7 @@ UpdateWrapper(
     WINDOWPLACEMENT place;
     HICON hSmallIcon = NULL;
     HICON hBigIcon = NULL;
-    Tcl_DString titleString, classString;
+    Tcl_DString titleString;
     int *childStateInfo = NULL;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -2193,27 +2128,23 @@ UpdateWrapper(
 	Tcl_WinUtfToTChar(((wmPtr->title != NULL) ?
 		wmPtr->title : winPtr->nameUid), -1, &titleString);
 
-	Tcl_WinUtfToTChar(TK_WIN_TOPLEVEL_CLASS_NAME, -1, &classString);
-
-	wmPtr->wrapper = tkWinProcs->createWindowEx(wmPtr->exStyle,
-		(LPCTSTR) Tcl_DStringValue(&classString),
+	wmPtr->wrapper = CreateWindowEx(wmPtr->exStyle,
+		TK_WIN_TOPLEVEL_CLASS_NAME,
 		(LPCTSTR) Tcl_DStringValue(&titleString),
 		wmPtr->style, x, y, width, height,
 		parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
-	Tcl_DStringFree(&classString);
 	Tcl_DStringFree(&titleString);
 	SetWindowLongPtr(wmPtr->wrapper, GWLP_USERDATA, (INT_PTR) winPtr);
 	tsdPtr->createWindow = NULL;
 
-	if ((wmPtr->exStyleConfig & WS_EX_LAYERED)
-		&& setLayeredWindowAttributesProc != NULL) {
+	if (wmPtr->exStyleConfig & WS_EX_LAYERED) {
 	    /*
 	     * The user supplies a double from [0..1], but Windows wants an
 	     * int (transparent) 0..255 (opaque), so do the translation. Add
 	     * the 0.5 to round the value.
 	     */
 
-	    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
+	    SetLayeredWindowAttributes((HWND) wmPtr->wrapper,
 		    wmPtr->colorref, (BYTE) (wmPtr->alpha * 255 + 0.5),
 		    (unsigned)(LWA_ALPHA | (wmPtr->crefObj?LWA_COLORKEY:0)));
 	} else {
@@ -3237,8 +3168,7 @@ WmAttributesCmd(
 		if ((wmPtr->alpha < 1.0) || (wmPtr->crefObj != NULL)) {
 		    *stylePtr |= styleBit;
 		}
-		if ((setLayeredWindowAttributesProc != NULL)
-			&& (wmPtr->wrapper != NULL)) {
+		if (wmPtr->wrapper != NULL) {
 		    /*
 		     * Set the window directly regardless of UpdateWrapper.
 		     * The user supplies a double from [0..1], but Windows
@@ -3250,7 +3180,7 @@ WmAttributesCmd(
 			SetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE,
 				*stylePtr);
 		    }
-		    setLayeredWindowAttributesProc((HWND) wmPtr->wrapper,
+		    SetLayeredWindowAttributes((HWND) wmPtr->wrapper,
 			    wmPtr->colorref, (BYTE) (wmPtr->alpha * 255 + 0.5),
 			    (unsigned) (LWA_ALPHA |
 				    (wmPtr->crefObj ? LWA_COLORKEY : 0)));
@@ -4379,7 +4309,7 @@ WmIconphotoCmd(
 	 * CreateIconIndirect which takes device-independent bitmaps and
 	 * converts them as required. Initialise icon info structure.
 	 */
-	
+
 	ZeroMemory( &iconInfo, sizeof iconInfo );
 	iconInfo.fIcon = TRUE;
 
@@ -4401,7 +4331,7 @@ WmIconphotoCmd(
 	    ckfree((char *) lpIR);
 	    Tcl_AppendResult(interp, "failed to create color bitmap for \"",
 		    Tcl_GetString(objv[i]), "\"", NULL);
-	    return TCL_ERROR;	    
+	    return TCL_ERROR;
 	}
 
 	/*
@@ -4429,11 +4359,11 @@ WmIconphotoCmd(
 	    ckfree((char *) lpIR);
 	    Tcl_AppendResult(interp, "failed to create mask bitmap for \"",
 		    Tcl_GetString(objv[i]), "\"", NULL);
-	    return TCL_ERROR;	    
+	    return TCL_ERROR;
 	}
-	
+
 	ZeroMemory( bgraMask.ptr, width*height/8 );
-	
+
 	/*
 	 * Create an icon from the bitmaps.
 	 */
@@ -5433,13 +5363,13 @@ WmTitleCmd(
     }
     if (objc == 3) {
 	if (wrapper) {
-	    char buf[512];
+	    TCHAR buf[256];
 	    Tcl_DString titleString;
-	    int size = tkWinProcs->useWide ? 256 : 512;
+	    int size = 256;
 
-	    tkWinProcs->getWindowText(wrapper, (LPCTSTR) buf, size);
+	    GetWindowText(wrapper, buf, size);
 	    Tcl_WinTCharToUtf(buf, -1, &titleString);
-	    Tcl_SetResult(interp, Tcl_DStringValue(&titleString),TCL_VOLATILE);
+	    Tcl_SetResult(interp, Tcl_DStringValue(&titleString), TCL_VOLATILE);
 	    Tcl_DStringFree(&titleString);
 	} else {
 	    Tcl_SetResult(interp, (char *)
@@ -5458,8 +5388,7 @@ WmTitleCmd(
 	    Tcl_DString titleString;
 
 	    Tcl_WinUtfToTChar(wmPtr->title, -1, &titleString);
-	    tkWinProcs->setWindowText(wrapper,
-		    (LPCTSTR) Tcl_DStringValue(&titleString));
+	    SetWindowText(wrapper, (LPCTSTR) Tcl_DStringValue(&titleString));
 	    Tcl_DStringFree(&titleString);
 	}
     }
@@ -7972,8 +7901,7 @@ WmProc(
 	     * 2272]
 	     */
 
-	    result = tkWinProcs->defWindowProc(hwnd, message,
-		    wParam, lParam);
+	    result = DefWindowProc(hwnd, message, wParam, lParam);
 	    goto done;
 	}
 
@@ -8062,10 +7990,10 @@ WmProc(
 	    result = 0;
 	} else if (!Tk_TranslateWinEvent(child, message, wParam, lParam,
 		&result)) {
-	    result = tkWinProcs->defWindowProc(hwnd, message, wParam, lParam);
+	    result = DefWindowProc(hwnd, message, wParam, lParam);
 	}
     } else {
-	result = tkWinProcs->defWindowProc(hwnd, message, wParam, lParam);
+	result = DefWindowProc(hwnd, message, wParam, lParam);
     }
 
   done:

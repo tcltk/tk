@@ -1,5 +1,7 @@
 2010-10-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
+	* win/tkWinMenu.c:    [FRQ 2965056]: Windows build with -DUNICODE
+	* win/tkWinWm.c:
 	* win/tcl.m4          Add netapi32 to the link line, so we no longer
 	* win/makefile.vc     have to use LoadLibrary to access those functions.
 	* win/configure
