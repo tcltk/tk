@@ -11,7 +11,7 @@
 # Copyright (c) 2003-2007 Patrick Thoyts
 #
 #------------------------------------------------------------------------------
-# RCS: @(#) $Id: rules.vc,v 1.21.2.1 2009/10/15 21:07:49 patthoyts Exp $
+# RCS: @(#) $Id: rules.vc,v 1.21.2.2 2010/10/23 21:29:54 nijtmans Exp $
 #------------------------------------------------------------------------------
 
 !ifndef _RULES_VC
@@ -143,7 +143,7 @@ OPTIMIZATIONS  = $(OPTIMIZATIONS) -YX
 ### test for pentium errata
 !if [nmakehlp -c -QI0f]
 !message *** Compiler has 'Pentium 0x0f fix'
-COMPILERFLAGS  = $(COMPILERFLAGSS) -QI0f
+COMPILERFLAGS  = $(COMPILERFLAGS) -QI0f
 !else
 !message *** Compiler does not have 'Pentium 0x0f fix'
 !endif
@@ -189,7 +189,9 @@ VCVER=0
 !if ![echo VCVERSION=_MSC_VER > vercl.x] \
     && ![cl -nologo -TC -P vercl.x $(ERRNULL)]
 !include vercl.i
-!if $(VCVERSION) >= 1500
+!if $(VCVERSION) >= 1600
+VCVER=10
+!elseif $(VCVERSION) >= 1500
 VCVER=9
 !elseif $(VCVERSION) >= 1400
 VCVER=8
@@ -549,8 +551,8 @@ TCLSH           = "$(_TCLDIR)\bin\tclsh$(TCL_VERSION)t$(SUFX).exe"
 TCLSTUBLIB	= "$(_TCLDIR)\lib\tclstub$(TCL_VERSION).lib"
 TCLIMPLIB	= "$(_TCLDIR)\lib\tcl$(TCL_VERSION)$(SUFX).lib"
 TCL_LIBRARY	= $(_TCLDIR)\lib
-TCLREGLIB	= "$(_TCLDIR)\lib\tclreg11$(SUFX:t=).lib"
-TCLDDELIB	= "$(_TCLDIR)\lib\tcldde12$(SUFX:t=).lib"
+TCLREGLIB	= "$(_TCLDIR)\lib\tclreg12$(SUFX:t=).lib"
+TCLDDELIB	= "$(_TCLDIR)\lib\tcldde13$(SUFX:t=).lib"
 COFFBASE	= \must\have\tcl\sources\to\build\this\target
 TCLTOOLSDIR	= \must\have\tcl\sources\to\build\this\target
 TCL_INCLUDES    = -I"$(_TCLDIR)\include"

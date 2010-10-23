@@ -1,3 +1,7 @@
+2010-10-23  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/rules.vc        Update for VS10
+
 2010-10-11  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTreeview.c: Fix crash in 'tag add' / 'tag remove'
