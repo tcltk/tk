@@ -1,3 +1,7 @@
+2010-10-23  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/rules.vc          Update for VS10
+
 2010-03-12  Jan Nijtmans  <nijtmans@users.sf.net>
 
     * generic/tkButton.h       [Bug 2956548] TkpButtonSetDefaults only
@@ -3699,7 +3703,7 @@
 	[Merge from HEAD]
 
 	Mac OS X: Fix several problems with Icelandic (and Faroese) keyboards
-	reported by Jérôme Gagnon-Voyer <gagnonje5000<at>mac<dot>com> on
+	reported by Jï¿½rï¿½me Gagnon-Voyer <gagnonje5000<at>mac<dot>com> on
 	tcl-mac on 2004-03-22.
 	
 	* macosx/tkMacOSXKeyEvent.c (KLSInit): Add.
