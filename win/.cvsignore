@@ -19,3 +19,6 @@ nmakehlp.exe
 *.manifest
 config.cache
 config.status
+*.res
+*.exp
+*.lib
