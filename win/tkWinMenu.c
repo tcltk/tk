@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.77 2010/10/11 13:33:30 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.78 2010/11/03 12:11:44 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -3256,17 +3256,11 @@ SetDefaults(
      * only way to ensure menu items line up, and is not documented.
      */
 
-    if (TkWinGetPlatformId() >= VER_PLATFORM_WIN32_WINDOWS) {
-	indicatorDimensions[0] = GetSystemMetrics(SM_CYMENUCHECK);
-	indicatorDimensions[1] = ((GetSystemMetrics(SM_CXFIXEDFRAME) +
-		GetSystemMetrics(SM_CXBORDER)
-		+ GetSystemMetrics(SM_CXMENUCHECK) + 7) & 0xFFF8)
-		- GetSystemMetrics(SM_CXFIXEDFRAME);
-    } else {
-	DWORD dimensions = GetMenuCheckMarkDimensions();
-	indicatorDimensions[0] = HIWORD(dimensions);
-	indicatorDimensions[1] = LOWORD(dimensions);
-    }
+    indicatorDimensions[0] = GetSystemMetrics(SM_CYMENUCHECK);
+    indicatorDimensions[1] = ((GetSystemMetrics(SM_CXFIXEDFRAME) +
+	    GetSystemMetrics(SM_CXBORDER)
+	    + GetSystemMetrics(SM_CXMENUCHECK) + 7) & 0xFFF8)
+	    - GetSystemMetrics(SM_CXFIXEDFRAME);
 
     /*
      * Accelerators used to be always underlines until Win2K when a system

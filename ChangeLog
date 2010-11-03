@@ -1,3 +1,9 @@
+2010-11-03  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinClipboard.c: [FRQ 2965056]: Windows build with
+	* win/tkWinDialog.c:     -DUNICODE
+	* win/tkWinMenu.c:
+
 2010-10-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkDecls.h:  [FRQ 491789]: "setargv() doesn't support a unicode
