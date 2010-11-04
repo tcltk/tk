@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.138 2010/08/11 17:18:23 dgp Exp $
+RCS: @(#) $Id: changes,v 1.139 2010/11/04 15:17:42 dgp Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6851,4 +6851,30 @@ name to select image format (fellows)
 
 2010-08-03 (bug fix) entry validation compat with Itcl scope (hobbs)
 
---- Released 8.6b2, September ??, 2010 --- See ChangeLog for details ---
+2010-08-11 (platform) Drop pre-aix 4.2 support, ldAix (hobbs)
+
+2010-08-21 (patch)[3034251] genStubs steal features of ttkGenStubs (nijtmans)
+
+2010-08-26 (bug fix)[1230554] configure, OSF-1 problems, windows manifest issues (hobbs)
+
+2010-08-31 fixed manifest handling on windows (hobbs, kupries)
+
+2010-09-02 (bug fix)[3057573] specify combobox text fg color (jenglish)
+
+2010-09-05 (enhancement)[3046742,3046750] Improved error dialog UI (fellows)
+
+2010-09-08 (bug fix)[2829363] [$tv see] open item -> sched display (jenglish)
+
+2010-09-13 (platform) limit support to Win2000+ (nijtmans)
+
+2010-10-01 (bug fix)[3078902] no hang operating on zero-size subimages (fellows)
+
+2010-10-05 (bug fix)[3080953] corrupt multibyte char in %A subst (nijtmans)
+
+2010-10-11 (bug fix)[3085489] crash in [tag add/remove] (jenglish)
+
+2010-10-11 (enhancement)[491789] Unicode command line support on Win (nijtmans)
+
+2010-11-03 windows build with -UNICODE (nijtmans)
+
+--- Released 8.6b2, November 15, 2010 --- See ChangeLog for details ---
