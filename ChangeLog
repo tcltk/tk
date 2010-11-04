@@ -1,3 +1,8 @@
+2010-11-04  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/msgs/de.msg:  Updated German messages.  Thanks to Ruediger
+        Haertel. [Patch 2442309] [Bug 3102739].
+
 2010-10-23  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/rules.vc        Update for VS10
