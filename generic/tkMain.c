@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.34 2010/09/29 20:10:57 nijtmans Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.35 2010/11/05 08:20:00 nijtmans Exp $
  */
 
 /**
@@ -21,9 +21,14 @@
  * TK_ASCII_MAIN defined. This way both Tk_MainEx and Tk_MainExW
  * can be implemented, sharing the same source code.
  */
-#ifndef TK_ASCII_MAIN
-#   undef UNICODE
-#   undef _UNICODE
+#if defined(TK_ASCII_MAIN)
+#   ifdef UNICODE
+#	undef UNICODE
+#	undef _UNICODE
+#   else
+#	define UNICODE
+#	define _UNICODE
+#   endif
 #endif
 
 #include <ctype.h>
