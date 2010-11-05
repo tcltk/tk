@@ -1,3 +1,9 @@
+2010-11-05  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/demos/widget  Use unicode copyright sign, in stead
+	* library/demos/en.msg  of depending on translation.
+	* library/demos/nl.msg
+
 2010-11-04  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.6b2 release.
