@@ -1,3 +1,8 @@
+2010-11-06  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/msgs/*.msg   Update NL catalog. For other languages,
+	sorting and fix some locations of "&"
+
 2010-11-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/demos/widget  Use unicode copyright sign, in stead
