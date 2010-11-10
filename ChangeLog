@@ -1,3 +1,7 @@
+2010-11-10  Andreas Kupries  <andreask@activestate.com>
+
+	* changes:	Updates for 8.6b2 release.
+
 2010-11-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/msgs/*.msg   Update NL catalog. For other languages,
