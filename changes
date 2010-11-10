@@ -2,7 +2,7 @@ This file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.139 2010/11/04 15:17:42 dgp Exp $
+RCS: @(#) $Id: changes,v 1.140 2010/11/10 17:44:24 andreas_kupries Exp $
 
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
@@ -6876,5 +6876,9 @@ name to select image format (fellows)
 2010-10-11 (enhancement)[491789] Unicode command line support on Win (nijtmans)
 
 2010-11-03 windows build with -UNICODE (nijtmans)
+
+2010-11-05 Message catalogs reworked to use unicode copyright char (nijtmans)
+
+2010-11-06 Message catalogs resorted, updates to NL (nijtmans)
 
 --- Released 8.6b2, November 15, 2010 --- See ChangeLog for details ---
