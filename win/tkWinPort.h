@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinPort.h,v 1.17 2010/09/10 08:59:26 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinPort.h,v 1.18 2010/11/16 15:07:08 nijtmans Exp $
  */
 
 #ifndef _WINPORT
@@ -59,6 +59,10 @@
     /* Borland seems to forget to set this. */
     typedef _TCHAR TCHAR;
 #   define _TCHAR_DEFINED
+#endif
+#if defined(_MSC_VER) && defined(__STDC__)
+    /* VS2005 SP1 misses this. See [Bug #3110161] */
+    typedef _TCHAR TCHAR;
 #endif
 
 #include <X11/Xlib.h>
