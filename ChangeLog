@@ -1,3 +1,10 @@
+2010-11-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/winMain.c    Bring compilation under mingw-w64 a bit closer
+	* win/tcl.m4       to reality. See for what's missing:
+	*                  <https://sourceforge.net/apps/trac/mingw-w64/wiki/Unicode%20apps>
+	* win/configure    (re-generated)
+
 2010-11-10  Andreas Kupries  <andreask@activestate.com>
 
 	* changes:	Updates for 8.6b2 release.
