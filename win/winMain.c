@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.35 2010/11/16 14:05:36 nijtmans Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.36 2010/11/17 10:37:45 nijtmans Exp $
  */
 
 #ifdef TCL_BROKEN_MAINARGS
@@ -385,9 +385,9 @@ setargv(
 	}
     }
     argSpace = (char *) ckalloc(
-	    (unsigned) (size * sizeof(char *) + (strlen(cmdLine)) + 1));
+	    (unsigned) (size * sizeof(char *) + strlen(cmdLine) + 1));
     argv = (char **) argSpace;
-    argSpace += size;
+    argSpace += size * sizeof(char *);
     size--;
 
     p = cmdLine;
