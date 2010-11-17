@@ -1,3 +1,7 @@
+2010-11-17  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/winMain.c    Workaround for bug in some versions of mingw-w64
+
 2010-11-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/winMain.c    Bring compilation under mingw-w64 a bit closer

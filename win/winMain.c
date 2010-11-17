@@ -11,13 +11,19 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.36 2010/11/17 10:37:45 nijtmans Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.37 2010/11/17 14:31:40 nijtmans Exp $
  */
 
 #ifdef TCL_BROKEN_MAINARGS
 /* On mingw32 and cygwin this doesn't work */
 #   undef UNICODE
 #   undef _UNICODE
+#elif defined(UNICODE)
+/* workaround for bug in some versions of mingw32-w64 */
+#   undef _tWinMain
+#   define _tWinMain wWinMain
+#   undef __targv
+#   define __targv __wargv
 #endif
 
 #include "tk.h"
@@ -85,7 +91,7 @@ int APIENTRY
 _tWinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
-    LPWSTR lpszCmdLine,
+    LPTSTR lpszCmdLine,
     int nCmdShow)
 {
     TCHAR **argv;
