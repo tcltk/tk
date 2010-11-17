@@ -1,5 +1,8 @@
 2010-11-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
+	* win/tcl.m4:      [FRQ 491789]: "setargv() doesn't support a
+	unicode cmdline"   now implemented for mingw-w64
+	* win/configure    (regenerated)
 	* win/winMain.c    Workaround for bug in some versions of mingw-w64
 
 2010-11-16  Jan Nijtmans  <nijtmans@users.sf.net>
