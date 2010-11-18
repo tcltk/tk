@@ -11,20 +11,8 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.37 2010/11/17 14:31:40 nijtmans Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.38 2010/11/18 15:54:20 nijtmans Exp $
  */
-
-#ifdef TCL_BROKEN_MAINARGS
-/* On mingw32 and cygwin this doesn't work */
-#   undef UNICODE
-#   undef _UNICODE
-#elif defined(UNICODE)
-/* workaround for bug in some versions of mingw32-w64 */
-#   undef _tWinMain
-#   define _tWinMain wWinMain
-#   undef __targv
-#   define __targv __wargv
-#endif
 
 #include "tk.h"
 #define WIN32_LEAN_AND_MEAN
@@ -38,8 +26,14 @@
 extern Tcl_PackageInitProc Tktest_Init;
 #endif /* TK_TEST */
 
-#if defined(__CYGWIN__)
-static void setargv(int *argcPtr, char ***argvPtr);
+#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
+extern Tcl_PackageInitProc Registry_Init;
+extern Tcl_PackageInitProc Dde_Init;
+extern Tcl_PackageInitProc Dde_SafeInit;
+#endif
+
+#ifdef TCL_BROKEN_MAINARGS
+static void setargv(int *argcPtr, TCHAR ***argvPtr);
 #endif
 
 /*
@@ -74,7 +68,7 @@ extern int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
 /*
  *----------------------------------------------------------------------
  *
- * WinMain --
+ * _tWinMain --
  *
  *	Main entry point from Windows.
  *
@@ -87,12 +81,28 @@ extern int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
  *----------------------------------------------------------------------
  */
 
+#ifdef UNICODE
+/* workaround for bug in some versions of mingw32-w64 */
+#   undef _tWinMain
+#   define _tWinMain wWinMain
+#   undef __targv
+#   define __targv __wargv
+#endif
+
 int APIENTRY
+#ifdef TCL_BROKEN_MAINARGS
+WinMain(
+    HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPSTR lpszCmdLine,
+    int nCmdShow)
+#else
 _tWinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
     LPTSTR lpszCmdLine,
     int nCmdShow)
+#endif
 {
     TCHAR **argv;
     int argc;
@@ -119,7 +129,7 @@ _tWinMain(
      * Get our args from the c-runtime. Ignore lpszCmdLine.
      */
 
-#if defined(__CYGWIN__)
+#if defined(TCL_BROKEN_MAINARGS)
     setargv(&argc, &argv);
 #else
     argc = __argc;
@@ -186,21 +196,15 @@ Tcl_AppInit(
 	}
     }
 #if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
-    {
-	extern Tcl_PackageInitProc Registry_Init;
-	extern Tcl_PackageInitProc Dde_Init;
-	extern Tcl_PackageInitProc Dde_SafeInit;
+    if (Registry_Init(interp) == TCL_ERROR) {
+	goto error;
+    }
+    Tcl_StaticPackage(interp, "registry", Registry_Init, NULL);
 
-	if (Registry_Init(interp) == TCL_ERROR) {
-	    goto error;
-	}
-	Tcl_StaticPackage(interp, "registry", Registry_Init, NULL);
-
-	if (Dde_Init(interp) == TCL_ERROR) {
-	    goto error;
-	}
-	Tcl_StaticPackage(interp, "dde", Dde_Init, Dde_SafeInit);
-   }
+    if (Dde_Init(interp) == TCL_ERROR) {
+	goto error;
+    }
+    Tcl_StaticPackage(interp, "dde", Dde_Init, Dde_SafeInit);
 #endif
 
 #ifdef TK_TEST
@@ -238,10 +242,7 @@ Tcl_AppInit(
     return TCL_OK;
 
 error:
-    MessageBeep(MB_ICONEXCLAMATION);
-    MessageBoxA(NULL, (Tcl_GetStringResult)(interp), "Error in Wish",
-	    MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
-    ExitProcess(1);
+    WishPanic("%s", (Tcl_GetStringResult)(interp));
 
     /*
      * We won't reach this, but we need the return.
@@ -266,19 +267,25 @@ error:
  *----------------------------------------------------------------------
  */
 
+/* Make sure we don't call those through the stub table */
+#undef Tcl_WinUtfToTChar
+#undef Tcl_DStringFree
+
 void
 WishPanic(
     const char *format, ...)
 {
     va_list argList;
     char buf[1024];
-
-    va_start(argList, format);
-    vsprintf(buf, format, argList);
+    Tcl_DString ds;
 
     MessageBeep(MB_ICONEXCLAMATION);
-    MessageBoxA(NULL, buf, "Fatal Error in Wish",
+    va_start(argList, format);
+    vsprintf(buf, format, argList);
+    Tcl_WinUtfToTChar(buf, -1, &ds);
+    MessageBox(NULL, (TCHAR *)Tcl_DStringValue(&ds), TEXT("Error in Wish"),
 	    MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
+    Tcl_DStringFree(&ds);
 #ifdef _MSC_VER
     DebugBreak();
 #endif
@@ -289,7 +296,7 @@ WishPanic(
 /*
  *----------------------------------------------------------------------
  *
- * main --
+ * _tmain --
  *
  *	Main entry point from the console.
  *
@@ -303,11 +310,20 @@ WishPanic(
  *----------------------------------------------------------------------
  */
 
+#ifdef TCL_BROKEN_MAINARGS
+int
+main(
+    int argc,
+    char **dummy)
+{
+    TCHAR **argv;
+#else
 int
 _tmain(
     int argc,
     TCHAR **argv)
 {
+#endif
     (Tcl_SetPanicProc)(WishPanic);
 
     /*
@@ -317,6 +333,13 @@ _tmain(
 
     setlocale(LC_ALL, "C");
 
+#ifdef TCL_BROKEN_MAINARGS
+    /*
+     * Get our args from the c-runtime. Ignore argc/argv.
+     */
+
+    setargv(&argc, &argv);
+#endif
     /*
      * Console emulation widget not required as this entry is from the
      * console subsystem, thus stdin,out,err already have end-points.
@@ -361,14 +384,14 @@ _tmain(
  *--------------------------------------------------------------------------
  */
 
-#if defined(__CYGWIN__)
+#ifdef TCL_BROKEN_MAINARGS
 static void
 setargv(
     int *argcPtr,		/* Filled with number of argument strings. */
-    char ***argvPtr)		/* Filled with argument strings (malloc'd). */
+    TCHAR ***argvPtr)		/* Filled with argument strings (malloc'd). */
 {
-    char *cmdLine, *p, *arg, *argSpace;
-    char **argv;
+    TCHAR *cmdLine, *p, *arg, *argSpace;
+    TCHAR **argv;
     int argc, size, inquote, copy, slashes;
 
     cmdLine = GetCommandLine();
@@ -379,30 +402,35 @@ setargv(
      */
 
     size = 2;
-    for (p = cmdLine; *p != '\0'; p++) {
-	if ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
+    for (p = cmdLine; *p != TEXT('\0'); p++) {
+	if ((*p == TEXT(' ')) || (*p == TEXT('\t'))) {	/* INTL: ISO space. */
 	    size++;
-	    while ((*p == ' ') || (*p == '\t')) { /* INTL: ISO space. */
+	    while ((*p == TEXT(' ')) || (*p == TEXT('\t'))) { /* INTL: ISO space. */
 		p++;
 	    }
-	    if (*p == '\0') {
+	    if (*p == TEXT('\0')) {
 		break;
 	    }
 	}
     }
-    argSpace = (char *) ckalloc(
-	    (unsigned) (size * sizeof(char *) + strlen(cmdLine) + 1));
-    argv = (char **) argSpace;
-    argSpace += size * sizeof(char *);
+
+    /* Make sure we don't call ckalloc through the (not yet initialized) stub table */
+    #undef Tcl_Alloc
+    #undef Tcl_DbCkalloc
+
+    argSpace = (TCHAR *) ckalloc(
+	    (unsigned) (size * sizeof(char *) + (_tcslen(cmdLine) * sizeof(TCHAR)) + sizeof(TCHAR)));
+    argv = (TCHAR **) argSpace;
+    argSpace += size * (sizeof(char *)/sizeof(TCHAR));
     size--;
 
     p = cmdLine;
     for (argc = 0; argc < size; argc++) {
 	argv[argc] = arg = argSpace;
-	while ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
+	while ((*p == TEXT(' ')) || (*p == TEXT('\t'))) {	/* INTL: ISO space. */
 	    p++;
 	}
-	if (*p == '\0') {
+	if (*p == TEXT('\0')) {
 	    break;
 	}
 
@@ -410,14 +438,14 @@ setargv(
 	slashes = 0;
 	while (1) {
 	    copy = 1;
-	    while (*p == '\\') {
+	    while (*p == TEXT('\\')) {
 		slashes++;
 		p++;
 	    }
-	    if (*p == '"') {
+	    if (*p == TEXT('"')) {
 		if ((slashes & 1) == 0) {
 		    copy = 0;
-		    if ((inquote) && (p[1] == '"')) {
+		    if ((inquote) && (p[1] == TEXT('"'))) {
 			p++;
 			copy = 1;
 		    } else {
@@ -428,13 +456,13 @@ setargv(
 	    }
 
 	    while (slashes) {
-		*arg = '\\';
+		*arg = TEXT('\\');
 		arg++;
 		slashes--;
 	    }
 
-	    if ((*p == '\0') || (!inquote &&
-		    ((*p == ' ') || (*p == '\t')))) {	/* INTL: ISO space. */
+	    if ((*p == TEXT('\0')) || (!inquote &&
+		    ((*p == TEXT(' ')) || (*p == TEXT('\t'))))) {	/* INTL: ISO space. */
 		break;
 	    }
 	    if (copy != 0) {
@@ -451,7 +479,7 @@ setargv(
     *argcPtr = argc;
     *argvPtr = argv;
 }
-#endif /* __CYGWIN__ */
+#endif /* TCL_BROKEN_MAINARGS */
 
 /*
  * Local Variables:
