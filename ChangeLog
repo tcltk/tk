@@ -1,3 +1,8 @@
+2010-11-18  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/winMain.c:   [FRQ 491789]: "setargv() doesn't support a
+	unicode cmdline" now implemented for cygwin and mingw32 too.
+
 2010-11-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tcl.m4:      [FRQ 491789]: "setargv() doesn't support a
