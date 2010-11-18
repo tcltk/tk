@@ -2,6 +2,8 @@
 
 	* win/winMain.c:   [FRQ 491789]: "setargv() doesn't support a
 	unicode cmdline" now implemented for cygwin and mingw32 too.
+	* win/configure.in:	Allow cross-compilation by default.
+	* win/configure    (regenerated)
 
 2010-11-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
