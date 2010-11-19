@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.77.2.14 2010/08/27 00:21:45 hobbs Exp $
+# RCS: @(#) $Id: configure.in,v 1.77.2.15 2010/11/19 22:42:32 nijtmans Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.59)
@@ -29,7 +29,7 @@ fi
 if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
 fi
-# libdir must be a fully qualified path and (not ${exec_prefix}/lib)
+# libdir must be a fully qualified path (not ${exec_prefix}/lib)
 eval libdir="$libdir"
 
 #------------------------------------------------------------------------
@@ -46,34 +46,12 @@ AC_PROG_CC
 AC_C_INLINE
 AC_HEADER_STDC
 
-# To properly support cross-compilation, one would
-# need to use these tool checks instead of
-# the ones below and reconfigure with
-# autoconf 2.50. You can also just set
-# the CC, AR, RANLIB, and RC environment
-# variables if you want to cross compile.
-dnl AC_CHECK_TOOL(AR, ar)
-dnl AC_CHECK_TOOL(RANLIB, ranlib)
-dnl AC_CHECK_TOOL(RC, windres)
-
-if test "${GCC}" = "yes" ; then
-    AC_CHECK_PROG(AR, ar, ar)
-    AC_CHECK_PROG(RANLIB, ranlib, ranlib)
-    AC_CHECK_PROG(RC, windres, windres)
-
-    if test "${AR}" = "" ; then
-	AC_MSG_ERROR([Required archive tool 'ar' not found on PATH.])
-    fi
-    if test "${RANLIB}" = "" ; then
-	AC_MSG_ERROR([Required archive index tool 'ranlib' not found on PATH.])
-    fi
-    if test "${RC}" = "" ; then
-	AC_MSG_ERROR([Required resource tool 'windres' not found on PATH.])
-    fi
-fi
+AC_CHECK_TOOL(AR, ar)
+AC_CHECK_TOOL(RANLIB, ranlib)
+AC_CHECK_TOOL(RC, windres)
 
 #--------------------------------------------------------------------
-# Checks to see if the make progeam sets the $MAKE variable.
+# Checks to see if the make program sets the $MAKE variable.
 #--------------------------------------------------------------------
 
 AC_PROG_MAKE_SET
@@ -125,7 +103,7 @@ SC_ENABLE_THREADS
 SC_ENABLE_SHARED
 
 #--------------------------------------------------------------------
-# The statements below define a collection of compile flags.  This 
+# The statements below define a collection of compile flags.  This
 # macro depends on the value of SHARED_BUILD, and should be called
 # after SC_ENABLE_SHARED checks the configure switches.
 #--------------------------------------------------------------------
@@ -148,7 +126,7 @@ AC_CHECK_HEADER([uxtheme.h], [AC_DEFINE(HAVE_UXTHEME_H)],
 	[#include <windows.h>])
 
 #--------------------------------------------------------------------
-# Set the default compiler switches based on the --enable-symbols 
+# Set the default compiler switches based on the --enable-symbols
 # option.  This macro depends on C flags, and should be called
 # after SC_CONFIG_CFLAGS macro is called.
 #--------------------------------------------------------------------
@@ -221,7 +199,7 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
-if test "$SHARED_BUILD" = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
+if test ${SHARED_BUILD} = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
     if test "${DBGX}" = "d"; then
         RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
     else
@@ -325,3 +303,7 @@ AC_SUBST(TK_CC_SEARCH_FLAGS)
 AC_SUBST(TK_LD_SEARCH_FLAGS)
 
 AC_OUTPUT([Makefile tkConfig.sh wish.exe.manifest])
+
+dnl Local Variables:
+dnl mode: autoconf;
+dnl End:

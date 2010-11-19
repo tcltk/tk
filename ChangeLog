@@ -1,3 +1,9 @@
+2010-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/configure.in:	    Allow cross-compilation by default. (backported)
+	* win/tcl.m4:		    Use -pipe for gcc on win32 (backported)
+	* win/configure:        (regenerated)
+
 2010-11-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinPort.h  [Bug #3110161]: Extensions using TCHAR don't compile
