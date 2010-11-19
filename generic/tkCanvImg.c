@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkCanvImg.c,v 1.18 2010/06/15 11:16:03 nijtmans Exp $
+ * RCS: @(#) $Id: tkCanvImg.c,v 1.19 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -163,7 +163,7 @@ CreateImage(
     int i;
 
     if (objc == 0) {
-	Tcl_Panic("canvas did not pass any coords\n");
+	Tcl_Panic("canvas did not pass any coords");
     }
 
     /*

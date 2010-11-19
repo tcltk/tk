@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinColor.c,v 1.17 2010/10/06 14:33:29 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinColor.c,v 1.18 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -436,7 +436,7 @@ XFreeColors(
 	for (i = 0; i < npixels; i++) {
 	    entryPtr = Tcl_FindHashEntry(&cmap->refCounts, (char *) pixels[i]);
 	    if (!entryPtr) {
-		Tcl_Panic("Tried to free a color that isn't allocated.");
+		Tcl_Panic("Tried to free a color that isn't allocated");
 	    }
 	    refCount = (int) Tcl_GetHashValue(entryPtr) - 1;
 	    if (refCount == 0) {
@@ -452,7 +452,7 @@ XFreeColors(
 		    ckfree((char *) entries);
 		    cmap->size--;
 		} else {
-		    Tcl_Panic("Tried to free a color that isn't allocated.");
+		    Tcl_Panic("Tried to free a color that isn't allocated");
 		}
 		Tcl_DeleteHashEntry(entryPtr);
 	    } else {
@@ -550,7 +550,7 @@ XFreeColormap(
     TkWinColormap *cmap = (TkWinColormap *) colormap;
 
     if (!DeleteObject(cmap->palette)) {
-	Tcl_Panic("Unable to free colormap, palette is still selected.");
+	Tcl_Panic("Unable to free colormap, palette is still selected");
     }
     Tcl_DeleteHashTable(&cmap->refCounts);
     ckfree((char *) cmap);
