@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMenu.c,v 1.60 2010/05/10 20:58:18 nijtmans Exp $
+ * RCS: @(#) $Id: tkMenu.c,v 1.61 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 /*
@@ -1211,7 +1211,7 @@ DestroyMenuInstance(
 	    }
 	}
     } else if (menuPtr->nextInstancePtr != NULL) {
-	Tcl_Panic("Attempting to delete master menu when there are still clones.");
+	Tcl_Panic("Attempting to delete master menu when there are still clones");
     }
 
     /*
@@ -2480,7 +2480,7 @@ MenuAddOrInsert(
 		menuRefPtr = TkFindMenuReferencesObj(menuListPtr->interp,
 			newCascadePtr);
 		if (menuRefPtr == NULL) {
-		    Tcl_Panic("CloneMenu failed inside of MenuAddOrInsert.");
+		    Tcl_Panic("CloneMenu failed inside of MenuAddOrInsert");
 		}
 		newObjv[0] = menuNamePtr;
 		newObjv[1] = newCascadePtr;

@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWindow.c,v 1.113 2010/06/22 14:02:32 a_kovalenko Exp $
+ * RCS: @(#) $Id: tkWindow.c,v 1.114 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -1860,7 +1860,7 @@ Tk_ConfigureWindow(
 	winPtr->changes.border_width = valuePtr->border_width;
     }
     if (valueMask & (CWSibling|CWStackMode)) {
-	Tcl_Panic("Can't set sibling or stack mode from Tk_ConfigureWindow.");
+	Tcl_Panic("Can't set sibling or stack mode from Tk_ConfigureWindow");
     }
 
     if (winPtr->window != None) {

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.78 2010/11/03 12:11:44 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinMenu.c,v 1.79 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -1300,7 +1300,7 @@ TkWinHandleMenuEvent(
 		    TkActivateMenuEntry(menuPtr, -1);
 		} else {
 		    if (mePtr->index >= menuPtr->numEntries) {
-			Tcl_Panic("Trying to activate an entry which doesn't exist.");
+			Tcl_Panic("Trying to activate an entry which doesn't exist");
 		    }
 		    TkActivateMenuEntry(menuPtr, mePtr->index);
 		}
@@ -3305,13 +3305,13 @@ TkpMenuInit(void)
     wndClass.lpszMenuName = NULL;
     wndClass.lpszClassName = MENU_CLASS_NAME;
     if (!RegisterClass(&wndClass)) {
-	Tcl_Panic("Failed to register menu window class.");
+	Tcl_Panic("Failed to register menu window class");
     }
 
     wndClass.lpfnWndProc = TkWinEmbeddedMenuProc;
     wndClass.lpszClassName = EMBEDDED_MENU_CLASS_NAME;
     if (!RegisterClass(&wndClass)) {
-	Tcl_Panic("Failed to register embedded menu window class.");
+	Tcl_Panic("Failed to register embedded menu window class");
     }
 
     TkCreateExitHandler(MenuExitHandler, (ClientData) NULL);
@@ -3345,7 +3345,7 @@ TkpMenuThreadInit(void)
 	    0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
     if (!tsdPtr->menuHWND) {
-	Tcl_Panic("Failed to create the menu window.");
+	Tcl_Panic("Failed to create the menu window");
     }
 
     tsdPtr->embeddedMenuHWND =
@@ -3353,7 +3353,7 @@ TkpMenuThreadInit(void)
 	    WS_POPUP, 0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
     if (!tsdPtr->embeddedMenuHWND) {
-	Tcl_Panic("Failed to create the embedded menu window.");
+	Tcl_Panic("Failed to create the embedded menu window");
     }
 
     Tcl_InitHashTable(&tsdPtr->winMenuTable, TCL_ONE_WORD_KEYS);

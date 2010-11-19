@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.31 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkTextBTree.c,v 1.32 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -2939,7 +2939,7 @@ TkBTreeNextTag(
 		}
 		searchPtr->linesLeft -= nodePtr->numLines;
 		if (nodePtr->nextPtr == NULL) {
-		    Tcl_Panic("TkBTreeNextTag found incorrect tag summary info.");
+		    Tcl_Panic("TkBTreeNextTag found incorrect tag summary info");
 		}
 	    }
 	nextChild:
@@ -3157,7 +3157,7 @@ TkBTreePrevTag(
 		continue;
 	    }
 	    if (prevNodePtr == NULL) {
-		Tcl_Panic("TkBTreePrevTag found incorrect tag summary info.");
+		Tcl_Panic("TkBTreePrevTag found incorrect tag summary info");
 	    }
 	    searchPtr->linesLeft -= linesSkipped;
 	    nodePtr = prevNodePtr;

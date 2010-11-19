@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkGeometry.c,v 1.15 2009/08/19 23:02:00 pspjuth Exp $
+ * RCS: @(#) $Id: tkGeometry.c,v 1.16 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -373,7 +373,7 @@ TkFreeGeometryMaster(
 
     if (winPtr->geometryMaster != NULL &&
 	    strcmp(winPtr->geometryMaster, master) != 0) {
-	Tcl_Panic("Trying to free %s from geometry manager %s.",
+	Tcl_Panic("Trying to free %s from geometry manager %s",
 		winPtr->geometryMaster, master);
     }
     if (winPtr->geometryMaster != NULL) {

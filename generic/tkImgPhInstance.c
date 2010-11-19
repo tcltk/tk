@@ -17,7 +17,7 @@
  *	   Department of Computer Science,
  *	   Australian National University.
  *
- * RCS: @(#) $Id: tkImgPhInstance.c,v 1.3 2009/06/30 00:56:29 das Exp $
+ * RCS: @(#) $Id: tkImgPhInstance.c,v 1.4 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -761,7 +761,7 @@ TkImgPhotoInstanceSetSize(
 		(masterPtr->height > 0) ? masterPtr->height: 1,
 		instancePtr->visualInfo.depth);
 	if (!newPixmap) {
-	    Tcl_Panic("Fail to create pixmap with Tk_GetPixmap in TkImgPhotoInstanceSetSize.\n");
+	    Tcl_Panic("Fail to create pixmap with Tk_GetPixmap in TkImgPhotoInstanceSetSize");
 	}
 
 	/*

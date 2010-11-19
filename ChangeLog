@@ -1,3 +1,17 @@
+2010-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkCanv*.c:        Revise Tcl_Panic() calls ending with a newline
+	* generic/tkGeomerty.c      removing the newline, because Tcl_Panic()
+	* generic/tkImgPhInstance.c outputs a final newline already.
+	* generic/tkMenu.c
+	* generic/tkRectOval.c
+	* generic/tkTextBTree.c
+	* generic/tkWindow.c
+	* unix/tkUnixRFont.c
+	* win/tkWinColor.c
+	* win/tkWinDraw.c
+	* win/tkWinMenu.c
+
 2010-11-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/winMain.c:   [FRQ 491789]: "setargv() doesn't support a
