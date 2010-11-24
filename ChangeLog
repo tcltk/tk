@@ -1,6 +1,9 @@
 2010-11-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinDialog.c  [Bug #3071836]: Crash/Tcl_Panic on WinXP saving file to C:\
+	* win/tkWinDialog.c:  [Bug #3071836]: Crash/Tcl_Panic on WinXP saving file to C:\
+	* win/tkWinInit.c:    re-write TkpDisplayWarning not to use any Tcl functions
+	any more. This allows TkpDisplayWarning to be used as panic proc.
+	* win/winMain.c:      use TkpDisplayWarning as panic proc on Windows.
 
 2010-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
