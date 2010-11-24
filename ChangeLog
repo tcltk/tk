@@ -1,6 +1,10 @@
 2010-11-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [Bug #3071836]: Crash/Tcl_Panic on WinXP saving file to C:\
+	* win/tkWinInit.c:   re-wrote TkpDisplayWarning such that it does not use
+	an Tcl API calls any more, so it works even with an ill-initialized Tcl.
+	* win/winMain.c:     Teach WishPanic how to thread UTF-8 in it's messagebox.
+	Both of those changes backported from Tcl 8.6. No change in functionality.
 
 2010-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
