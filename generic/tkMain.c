@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.37 2010/11/15 10:10:52 nijtmans Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.38 2010/11/24 11:14:15 nijtmans Exp $
  */
 
 /**
@@ -94,7 +94,6 @@
 
 #if !defined(__WIN32__) && !defined(_WIN32)
 extern int		isatty(int fd);
-extern char *		strrchr(const char *string, int c);
 #endif
 
 typedef struct ThreadSpecificData {
@@ -148,7 +147,7 @@ Tk_MainEx(
     Tcl_Obj *path, *argvPtr;
     const char *encodingName;
     int code, length, nullStdin = 0;
-    Tcl_Channel inChannel, outChannel;
+    Tcl_Channel inChannel, chan;
     ThreadSpecificData *tsdPtr;
 #ifdef __WIN32__
     HANDLE handle;
@@ -352,9 +351,9 @@ Tk_MainEx(
 	}
     }
 
-    outChannel = Tcl_GetStdChannel(TCL_STDOUT);
-    if (outChannel) {
-	Tcl_Flush(outChannel);
+    chan = Tcl_GetStdChannel(TCL_STDOUT);
+    if (chan) {
+	Tcl_Flush(chan);
     }
     Tcl_DStringInit(&tsdPtr->command);
     Tcl_DStringInit(&tsdPtr->line);
@@ -487,7 +486,7 @@ Prompt(
 {
     Tcl_Obj *promptCmdPtr;
     int code;
-    Tcl_Channel outChannel, errChannel;
+    Tcl_Channel chan;
 
     promptCmdPtr = Tcl_GetVar2Ex(interp,
 	partial ? "tcl_prompt2" : "tcl_prompt1", NULL, TCL_GLOBAL_ONLY);
@@ -495,14 +494,14 @@ Prompt(
     defaultPrompt:
 	if (!partial) {
 	    /*
-	     * We must check that outChannel is a real channel - it is
+	     * We must check that chan is a real channel - it is
 	     * possible that someone has transferred stdout out of this
 	     * interpreter with "interp transfer".
 	     */
 
-	    outChannel = Tcl_GetChannel(interp, "stdout", NULL);
-	    if (outChannel != NULL) {
-		Tcl_WriteChars(outChannel, DEFAULT_PRIMARY_PROMPT,
+	    chan = Tcl_GetChannel(interp, "stdout", NULL);
+	    if (chan != NULL) {
+		Tcl_WriteChars(chan, DEFAULT_PRIMARY_PROMPT,
 			strlen(DEFAULT_PRIMARY_PROMPT));
 	    }
 	}
@@ -513,22 +512,23 @@ Prompt(
 		    "\n    (script that generates prompt)");
 
 	    /*
-	     * We must check that errChannel is a real channel - it is
+	     * We must check that chan is a real channel - it is
 	     * possible that someone has transferred stderr out of this
 	     * interpreter with "interp transfer".
 	     */
 
-	    errChannel = Tcl_GetChannel(interp, "stderr", NULL);
-	    if (errChannel != NULL) {
-		Tcl_WriteObj(errChannel, Tcl_GetObjResult(interp));
-		Tcl_WriteChars(errChannel, "\n", 1);
+	    chan = Tcl_GetChannel(interp, "stderr", NULL);
+	    if (chan != NULL) {
+		Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
+		Tcl_WriteChars(chan, "\n", 1);
 	    }
 	    goto defaultPrompt;
 	}
     }
-    outChannel = Tcl_GetChannel(interp, "stdout", NULL);
-    if (outChannel != NULL) {
-	Tcl_Flush(outChannel);
+
+    chan = Tcl_GetChannel(interp, "stdout", NULL);
+    if (chan != NULL) {
+	Tcl_Flush(chan);
     }
 }
 
