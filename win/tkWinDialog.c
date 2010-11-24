@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.9 2010/05/19 11:22:59 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinDialog.c,v 1.50.2.10 2010/11/24 15:11:36 nijtmans Exp $
  *
  */
 
@@ -1026,7 +1026,10 @@ OFNHookProcW(
 	    dirsize = SendMessageW(hdlg, CDM_GETFOLDERPATH, 0, 0);
 	    buffersize = (selsize + dirsize + 1) * 2;
 
-	    if (selsize > 1) {
+	    /*
+	     * Just empty the buffer if dirsize indicates an error [Bug 3071836]
+	     */
+	    if ((selsize > 1) && (dirsize > 0)) {
 		if (ofnData->dynFileBufferSize < buffersize) {
 		    buffer = (WCHAR *) ckrealloc((char *) buffer, buffersize);
 		    ofnData->dynFileBufferSize = buffersize;
@@ -1572,7 +1575,10 @@ OFNHookProcA(
 	    dirsize = SendMessage(hdlg, CDM_GETFOLDERPATH, 0, 0);
 	    buffersize = selsize + dirsize + 1;
 
-	    if (selsize > 1) {
+	    /*
+	     * Just empty the buffer if dirsize indicates an error [Bug 3071836]
+	     */
+	    if ((selsize > 1) && (dirsize > 0)) {
 		if (ofnData->dynFileBufferSize < buffersize) {
 		    buffer = ckrealloc(buffer, buffersize);
 		    ofnData->dynFileBufferSize = buffersize;
