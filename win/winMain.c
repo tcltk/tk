@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.39 2010/11/24 10:34:18 nijtmans Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.40 2010/11/24 12:57:54 nijtmans Exp $
  */
 
 #include "tk.h"
@@ -199,7 +199,7 @@ Tcl_AppInit(
     if (Registry_Init(interp) == TCL_ERROR) {
 	goto error;
     }
-    Tcl_StaticPackage(interp, "registry", Registry_Init, NULL);
+    Tcl_StaticPackage(interp, "registry", Registry_Init, 0);
 
     if (Dde_Init(interp) == TCL_ERROR) {
 	goto error;
@@ -242,7 +242,12 @@ Tcl_AppInit(
     return TCL_OK;
 
 error:
-    WishPanic("%s", (Tcl_GetStringResult)(interp));
+    MessageBeep(MB_ICONEXCLAMATION);
+    TkpDisplayWarning((Tcl_GetStringResult)(interp), "Error in Wish");
+#ifdef _MSC_VER
+    DebugBreak();
+#endif
+    ExitProcess(1);
 
     /*
      * We won't reach this, but we need the return.
@@ -267,10 +272,6 @@ error:
  *----------------------------------------------------------------------
  */
 
-/* Make sure we don't call those through the stub table */
-#undef Tcl_WinUtfToTChar
-#undef Tcl_DStringFree
-
 void
 WishPanic(
     const char *format, ...)
@@ -281,7 +282,7 @@ WishPanic(
     MessageBeep(MB_ICONEXCLAMATION);
     va_start(argList, format);
     vsprintf(buf, format, argList);
-	TkpDisplayWarning(buf, "Error in Wish");
+	TkpDisplayWarning(buf, "Fatal Error in Wish");
 #ifdef _MSC_VER
     DebugBreak();
 #endif
@@ -470,7 +471,7 @@ setargv(
 	*arg = '\0';
 	argSpace = arg + 1;
     }
-    argv[argc] = NULL;
+    argv[argc] = 0;
 
     *argcPtr = argc;
     *argvPtr = argv;
