@@ -1,3 +1,14 @@
+2010-11-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkAtom.c:    Fix various 64-bit gcc(-4.5.2) warnings: cast from pointer
+	* generic/tkSelect.c:  to integer of different size.
+	* win/stubs.c
+	* win/tkWinButton.c
+	* win/tkWinColor.c
+	* win/tkWinPixmap.c
+	* win/tkWinScrlbr.c
+	* win/ttkWinMonitor.c
+
 2010-11-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c:  [Bug #3071836]: Crash/Tcl_Panic on WinXP saving file to C:\

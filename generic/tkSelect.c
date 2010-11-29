@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.31 2010/01/02 22:52:38 dkf Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.32 2010/11/29 09:07:13 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -170,7 +170,7 @@ Tk_CreateSelHandler(
 	selPtr->size = 32;
     }
 
-    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) NULL)) {
+    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) 0)) {
 	/*
 	 * If the user asked for a STRING handler and we understand
 	 * UTF8_STRING, we implicitly create a UTF8_STRING handler for them.
@@ -283,7 +283,7 @@ Tk_DeleteSelHandler(
 	prevPtr->nextPtr = selPtr->nextPtr;
     }
 
-    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) NULL)) {
+    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) 0)) {
 	/*
 	 * If the user asked for a STRING handler and we understand
 	 * UTF8_STRING, we may have implicitly created a UTF8_STRING handler
@@ -1192,7 +1192,7 @@ TkSelInit(
 #if !defined(__WIN32__)
     dispPtr->utf8Atom		= Tk_InternAtom(tkwin, "UTF8_STRING");
 #else
-    dispPtr->utf8Atom		= (Atom) NULL;
+    dispPtr->utf8Atom		= (Atom) 0;
 #endif
 }
 
