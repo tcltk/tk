@@ -8,6 +8,7 @@
 	* win/tkWinPixmap.c
 	* win/tkWinScrlbr.c
 	* win/ttkWinMonitor.c
+	* win/tkWin32Dll.c:   Make assembler code compile in Win64 with gcc.
 
 2010-11-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
