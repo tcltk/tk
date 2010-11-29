@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.145 2010/10/11 13:33:30 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.146 2010/11/29 11:25:09 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -1946,7 +1946,7 @@ TkWmNewWindow(
     wmPtr->x = winPtr->changes.x;
     wmPtr->y = winPtr->changes.y;
     wmPtr->crefObj = NULL;
-    wmPtr->colorref = (COLORREF) NULL;
+    wmPtr->colorref = (COLORREF) 0;
     wmPtr->alpha = 1.0;
 
     wmPtr->configWidth = -1;
@@ -2134,7 +2134,7 @@ UpdateWrapper(
 		wmPtr->style, x, y, width, height,
 		parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
 	Tcl_DStringFree(&titleString);
-	SetWindowLongPtr(wmPtr->wrapper, GWLP_USERDATA, (INT_PTR) winPtr);
+	SetWindowLongPtr(wmPtr->wrapper, GWLP_USERDATA, (LONG_PTR) winPtr);
 	tsdPtr->createWindow = NULL;
 
 	if (wmPtr->exStyleConfig & WS_EX_LAYERED) {
@@ -2189,7 +2189,7 @@ UpdateWrapper(
 	    WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
 
     if (winPtr->flags & TK_EMBEDDED) {
-	SetWindowLongPtr(child, GWLP_WNDPROC, (INT_PTR) TopLevelProc);
+	SetWindowLongPtr(child, GWLP_WNDPROC, (LONG_PTR) TopLevelProc);
     }
 
     SetParent(child, wmPtr->wrapper);
@@ -2202,7 +2202,7 @@ UpdateWrapper(
 
     if (oldWrapper && (oldWrapper != wmPtr->wrapper)
 	    && (oldWrapper != GetDesktopWindow())) {
-	SetWindowLongPtr(oldWrapper, GWLP_USERDATA, (LONG) NULL);
+	SetWindowLongPtr(oldWrapper, GWLP_USERDATA, (LONG_PTR) 0);
 
 	if (wmPtr->numTransients > 0) {
 	    /*
