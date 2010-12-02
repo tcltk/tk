@@ -35,7 +35,7 @@
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.1 2009/06/26 01:42:46 das Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.2 2010/12/02 11:38:29 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -1143,7 +1143,7 @@ Tk_DrawChars(
 }
 
 void
-TkpDrawAngledChars(
+TkDrawAngledChars(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */

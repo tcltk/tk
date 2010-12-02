@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.46 2009/07/06 20:29:21 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.47 2010/12/02 11:38:29 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -943,7 +943,7 @@ Tk_DrawChars(
 }
 
 void
-TkpDrawAngledChars(
+TkDrawAngledChars(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */

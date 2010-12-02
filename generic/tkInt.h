@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: $Id: tkInt.h,v 1.123 2010/06/19 16:18:41 jenglish Exp $
+ * RCS: $Id: tkInt.h,v 1.124 2010/12/02 11:38:29 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -1198,21 +1198,10 @@ MODULE_SCOPE void	TkpMakeTransparentWindowExist(Tk_Window tkwin,
 MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    Window *parentPtr, Tk_Window tkParent,
 			    TkBusy busy);
-MODULE_SCOPE void	TkDrawAngledTextLayout(Display *display,
-			    Drawable drawable, GC gc, Tk_TextLayout layout,
-			    int x, int y, double angle, int firstChar,
-			    int lastChar);
-MODULE_SCOPE void	TkpDrawAngledChars(Display *display,Drawable drawable,
-			    GC gc, Tk_Font tkfont, const char *source,
-			    int numBytes, double x, double y, double angle);
-MODULE_SCOPE void	TkUnderlineAngledTextLayout(Display *display,
-			    Drawable drawable, GC gc, Tk_TextLayout layout,
-			    int x, int y, double angle, int underline);
-MODULE_SCOPE int	TkIntersectAngledTextLayout(Tk_TextLayout layout,
-			    int x,int y, int width, int height, double angle);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const *objv, int flags);
-MODULE_SCOPE void	TkSendVirtualEvent(Tk_Window tgtWin, const char *eventName);
+MODULE_SCOPE void	TkSendVirtualEvent(Tk_Window tgtWin,
+			    const char *eventName);
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    ClientData clientData, const TkEnsemble *map);

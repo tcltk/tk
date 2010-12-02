@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixRFont.c,v 1.35 2010/11/19 14:48:00 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixRFont.c,v 1.36 2010/12/02 11:38:29 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -837,7 +837,7 @@ Tk_DrawChars(
 /*
  *---------------------------------------------------------------------------
  *
- * TkpDrawAngledChars --
+ * TkDrawAngledChars --
  *
  *	Draw some characters at an angle. This would be simple code, except
  *	Xft has bugs with cumulative errors in character positioning which are
@@ -854,7 +854,7 @@ Tk_DrawChars(
  */
 
 void
-TkpDrawAngledChars(
+TkDrawAngledChars(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */

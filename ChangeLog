@@ -1,51 +1,58 @@
+2010-12-02  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkInt.decls (TkDrawAngledTextLayout,TkDrawAngledChars,...):
+	Expose angled text API for Emiliano Gavilan. Still only in internal
+	stub table.
+
 2010-11-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkAtom.c:    Fix various 64-bit gcc(-4.5.2) warnings: cast from pointer
-	* generic/tkSelect.c:  to integer of different size.
-	* win/stubs.c
-	* win/tkWinButton.c
-	* win/tkWinColor.c
-	* win/tkWinPixmap.c
-	* win/tkWinScrlbr.c
-	* win/tkWinWindow.c
-	* win/tkWinWm.c
-	* win/ttkWinMonitor.c
+	* generic/tkAtom.c:    Fix various 64-bit gcc(-4.5.2) warnings: cast
+	* generic/tkSelect.c:  from pointer to integer of different size.
+	* win/stubs.c:
+	* win/tkWinButton.c:
+	* win/tkWinColor.c:
+	* win/tkWinPixmap.c:
+	* win/tkWinScrlbr.c:
+	* win/tkWinWindow.c:
+	* win/tkWinWm.c:
+	* win/ttkWinMonitor.c:
 	* win/tkWin32Dll.c:   Make assembler code compile in Win64 with gcc.
 
 2010-11-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinDialog.c:  [Bug #3071836]: Crash/Tcl_Panic on WinXP saving file to C:\
-	* win/tkWinInit.c:    re-write TkpDisplayWarning not to use any Tcl functions
-	any more. This allows TkpDisplayWarning to be used as panic proc.
-	* win/winMain.c:      use TkpDisplayWarning as panic proc on Windows.
-	* generic/tkMain.c:   Remove unused strrchr, combine outChannel/errChannel
-	variables to a single variable
+	* win/tkWinDialog.c:  [Bug 3071836]: Crash/Tcl_Panic on WinXP saving
+	* win/tkWinInit.c:    file to C:\, and rewrite TkpDisplayWarning not
+	to use any Tcl functions any more. This allows TkpDisplayWarning to be
+	used as panic proc.
+	* win/winMain.c:      Use TkpDisplayWarning as panic proc on Windows.
+	* generic/tkMain.c:   Remove unused strrchr, combine outChannel and
+	errChannel variables to a single variable.
 
 2010-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkCanv*.c:        Revise Tcl_Panic() calls ending with a newline
-	* generic/tkGeomerty.c      removing the newline, because Tcl_Panic()
-	* generic/tkImgPhInstance.c outputs a final newline already.
-	* generic/tkMenu.c
-	* generic/tkRectOval.c
-	* generic/tkTextBTree.c
-	* generic/tkWindow.c
-	* unix/tkUnixRFont.c
-	* win/tkWinColor.c
-	* win/tkWinDraw.c
-	* win/tkWinMenu.c
+	* generic/tkCanv*.c:         Revise Tcl_Panic() calls ending with a
+	* generic/tkGeomerty.c:      newline removing the newline, because
+	* generic/tkImgPhInstance.c: Tcl_Panic() outputs a final newline
+	* generic/tkMenu.c:	     already.
+	* generic/tkRectOval.c:
+	* generic/tkTextBTree.c:
+	* generic/tkWindow.c:
+	* unix/tkUnixRFont.c:
+	* win/tkWinColor.c:
+	* win/tkWinDraw.c:
+	* win/tkWinMenu.c:
 
 2010-11-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/winMain.c:   [FRQ 491789]: "setargv() doesn't support a
-	unicode cmdline" now implemented for cygwin and mingw32 too.
+	* win/winMain.c:   [FRQ 491789]: "setargv() doesn't support a unicode
+	cmdline" now implemented for cygwin and mingw32 too.
 	* win/configure.in:	Allow cross-compilation by default.
 	* win/configure    (regenerated)
 
 2010-11-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tcl.m4:      [FRQ 491789]: "setargv() doesn't support a
-	unicode cmdline"   now implemented for mingw-w64
+	* win/tcl.m4:      [FRQ 491789]: "setargv() doesn't support a unicode
+	cmdline" now implemented for mingw-w64
 	* win/configure    (regenerated)
 	* win/winMain.c    Workaround for bug in some versions of mingw-w64
 
@@ -53,9 +60,9 @@
 
 	* win/winMain.c    Bring compilation under mingw-w64 a bit closer
 	* win/tcl.m4       to reality. See for what's missing:
-	*                  <https://sourceforge.net/apps/trac/mingw-w64/wiki/Unicode%20apps>
-	* win/configure    (re-generated)
-	* win/tkWinPort.h  [Bug #3110161]: Extensions using TCHAR don't compile
+	    https://sourceforge.net/apps/trac/mingw-w64/wiki/Unicode%20apps
+	* win/configure:   (re-generated)
+	* win/tkWinPort.h: [Bug 3110161]: Extensions using TCHAR don't compile
 	on VS2005 SP1
 
 2010-11-10  Andreas Kupries  <andreask@activestate.com>
@@ -64,14 +71,14 @@
 
 2010-11-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* library/msgs/*.msg   Update NL catalog. For other languages,
-	sorting and fix some locations of "&"
+	* library/msgs/*.msg:	Update NL catalog. For other languages,
+	sorting and fix some locations of "&".
 
 2010-11-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* library/demos/widget  Use unicode copyright sign, in stead
-	* library/demos/en.msg  of depending on translation.
-	* library/demos/nl.msg
+	* library/demos/widget: Use unicode copyright sign, instead of
+	* library/demos/en.msg: depending on translation.
+	* library/demos/nl.msg:
 	* generic/tkMain.c:    Sync TK_ASCII_MAIN usage with tclMain.c
 
 2010-11-04  Don Porter  <dgp@users.sourceforge.net>
@@ -86,8 +93,8 @@
 
 2010-10-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkDecls.h:  [FRQ 491789]: "setargv() doesn't support a unicode
-	* doc/Tk_Main.3:      cmdline" implemented for Tk on MSVC++
+	* generic/tkDecls.h:  [FRQ 491789]: "setargv() doesn't support a
+	* doc/Tk_Main.3:      unicode cmdline" implemented for Tk on MSVC++
 	* win/Makefile.in:
 	* win/makefile.vc:
 	* win/winMain.c:
@@ -95,16 +102,16 @@
 
 2010-10-11  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkTreeview.c: Fix crash in 'tag add' / 'tag remove'
-	commands when no -tags specified [Bug 3085489].
+	* generic/ttk/ttkTreeview.c: [Bug 3085489]: Fix crash in 'tag add' /
+	'tag remove' commands when no -tags specified.
 
 2010-10-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinMenu.c:    [FRQ 2965056]: Windows build with -DUNICODE
 	* win/tkWinWm.c:
-	* win/tcl.m4          Add netapi32 to the link line, so we no longer
-	* win/makefile.vc     have to use LoadLibrary to access those functions.
-	* win/configure
+	* win/tcl.m4:         Add netapi32 to the link line, so we no longer
+	* win/makefile.vc:    have to use LoadLibrary to access those
+	* win/configure:      functions.
 
 2010-10-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
