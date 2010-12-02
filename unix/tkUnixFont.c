@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.42 2010/05/26 15:28:10 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixFont.c,v 1.43 2010/12/02 11:38:29 dkf Exp $
  */
 
 #include "tkUnixInt.h"
@@ -3021,7 +3021,7 @@ GetEncodingAlias(
 /*
  *---------------------------------------------------------------------------
  *
- * TkpDrawAngledChars --
+ * TkDrawAngledChars --
  *
  *	Draw some characters at an angle. This is awkward here because we have
  *	no reliable way of drawing any characters at an angle in classic X11;
@@ -3117,7 +3117,7 @@ InitDestImage(
 }
 
 void
-TkpDrawAngledChars(
+TkDrawAngledChars(
     Display *display,		/* Display on which to draw. */
     Drawable drawable,		/* Window or pixmap in which to draw. */
     GC gc,			/* Graphics context for drawing characters. */
