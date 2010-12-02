@@ -10,7 +10,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: tkInt.decls,v 1.66 2010/12/02 11:38:29 dkf Exp $
+# RCS: @(#) $Id: tkInt.decls,v 1.67 2010/12/02 13:36:45 dkf Exp $
 
 library tk
 
@@ -618,21 +618,21 @@ declare 180 {
 declare 181 {
     void TkDrawAngledTextLayout(Display *display, Drawable drawable, GC gc,
 	    Tk_TextLayout layout, int x, int y, double angle, int firstChar,
-	    int lastChar);
+	    int lastChar)
 }
 declare 182 {
     void TkUnderlineAngledTextLayout(Display *display, Drawable drawable,
 	    GC gc, Tk_TextLayout layout, int x, int y, double angle,
-	    int underline);
+	    int underline)
 }
 declare 183 {
     int TkIntersectAngledTextLayout(Tk_TextLayout layout, int x, int y,
-	    int width, int height, double angle);
+	    int width, int height, double angle)
 }
 declare 184 {
     void TkDrawAngledChars(Display *display,Drawable drawable, GC gc,
 	    Tk_Font tkfont, const char *source, int numBytes, double x,
-	    double y, double angle);
+	    double y, double angle)
 }
 
 ##############################################################################
