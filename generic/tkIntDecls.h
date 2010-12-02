@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.54 2010/08/21 16:35:32 nijtmans Exp $
+ * RCS: @(#) $Id: tkIntDecls.h,v 1.55 2010/12/02 13:00:17 dkf Exp $
  */
 
 #ifndef _TKINTDECLS
@@ -581,6 +581,14 @@ EXTERN int		TkSmoothParseProc(ClientData clientData,
 EXTERN CONST86 char *	TkSmoothPrintProc(ClientData clientData,
 				Tk_Window tkwin, char *widgRec, int offset,
 				Tcl_FreeProc **freeProcPtr);
+/* 181 */
+EXTERN void TkDrawAngledTextLayout(Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int firstChar, int lastChar);;
+/* 182 */
+EXTERN void TkUnderlineAngledTextLayout(Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline);;
+/* 183 */
+EXTERN int TkIntersectAngledTextLayout(Tk_TextLayout layout, int x, int y, int width, int height, double angle);;
+/* 184 */
+EXTERN void TkDrawAngledChars(Display *display,Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, double x, double y, double angle);;
 
 typedef struct TkIntStubs {
     int magic;
@@ -866,6 +874,10 @@ typedef struct TkIntStubs {
     CONST86 char * (*tkOrientPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr); /* 178 */
     int (*tkSmoothParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, int offset); /* 179 */
     CONST86 char * (*tkSmoothPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr); /* 180 */
+    void TkDrawAngledTextLayout(Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int firstChar, int *lastChar);; /* 181 */
+    void TkUnderlineAngledTextLayout(Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int *underline);; /* 182 */
+    int TkIntersectAngledTextLayout(Tk_TextLayout layout, int x, int y, int width, int height, double *angle);; /* 183 */
+    void TkDrawAngledChars(Display *display,Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, double x, double y, double *angle);; /* 184 */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1280,6 +1292,14 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkSmoothParseProc) /* 179 */
 #define TkSmoothPrintProc \
 	(tkIntStubsPtr->tkSmoothPrintProc) /* 180 */
+#define lastChar); \
+	(*tkIntStubsPtr->lastChar);) /* 181 */
+#define underline); \
+	(*tkIntStubsPtr->underline);) /* 182 */
+#define angle); \
+	(*tkIntStubsPtr->angle);) /* 183 */
+#define angle); \
+	(*tkIntStubsPtr->angle);) /* 184 */
 
 #endif /* defined(USE_TK_STUBS) */
 
