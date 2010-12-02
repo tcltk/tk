@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkStubInit.c,v 1.78 2010/12/02 13:00:17 dkf Exp $
+ * RCS: @(#) $Id: tkStubInit.c,v 1.79 2010/12/02 13:36:45 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -331,10 +331,10 @@ static const TkIntStubs tkIntStubs = {
     TkOrientPrintProc, /* 178 */
     TkSmoothParseProc, /* 179 */
     TkSmoothPrintProc, /* 180 */
-    &lastChar);, /* 181 */
-    &underline);, /* 182 */
-    &angle);, /* 183 */
-    &angle);, /* 184 */
+    TkDrawAngledTextLayout, /* 181 */
+    TkUnderlineAngledTextLayout, /* 182 */
+    TkIntersectAngledTextLayout, /* 183 */
+    TkDrawAngledChars, /* 184 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
