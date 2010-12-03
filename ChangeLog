@@ -1,3 +1,10 @@
+2010-12-03  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tcl.m4           [Patch #3116490] cross-compile Tcl mingw32 on unix
+	* win/configure        This makes it possible to cross-compile Tcl/Tk for
+	Windows (either 32-bit or 64-bit) out-of-the-box on UNIX, using mingw-w64
+	build tools.
+
 2010-12-02  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkInt.decls (TkDrawAngledTextLayout,TkDrawAngledChars,...):
