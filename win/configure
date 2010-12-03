@@ -3388,10 +3388,6 @@ file for information about building with Mingw." >&2;}
     echo "$as_me:$LINENO: checking compiler flags" >&5
 echo $ECHO_N "checking compiler flags... $ECHO_C" >&6
     if test "${GCC}" = "yes" ; then
-	if test "$do64bit" != "no" ; then
-	    { echo "$as_me:$LINENO: WARNING: 64bit mode not supported with GCC on Windows" >&5
-echo "$as_me: WARNING: 64bit mode not supported with GCC on Windows" >&2;}
-	fi
 	SHLIB_LD=""
 	SHLIB_LD_LIBS='${LIBS}'
 	LIBS="-lnetapi32 -lkernel32 -luser32 -ladvapi32 -lws2_32"
