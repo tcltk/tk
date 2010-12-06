@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.32 2010/11/29 09:07:13 nijtmans Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.33 2010/12/06 10:30:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -30,7 +30,7 @@ typedef struct {
 				 * chunk. */
     char buffer[TCL_UTF_MAX];	/* A buffer to hold part of a UTF character
 				 * that is split across chunks. */
-    char command[4];		/* Command to invoke. Actual space is
+    char command[1];		/* Command to invoke. Actual space is
 				 * allocated as large as necessary. This must
 				 * be the last entry in the structure. */
 } CommandInfo;
@@ -902,13 +902,13 @@ Tk_SelectionObjCmd(
 	    Tk_DeleteSelHandler(tkwin, selection, target);
 	} else {
 	    cmdInfoPtr = (CommandInfo *) ckalloc((unsigned) (
-		    sizeof(CommandInfo) - 3 + cmdLength));
+		    (Tk_Offset(CommandInfo, command) + 1) + cmdLength));
 	    cmdInfoPtr->interp = interp;
 	    cmdInfoPtr->charOffset = 0;
 	    cmdInfoPtr->byteOffset = 0;
 	    cmdInfoPtr->buffer[0] = '\0';
 	    cmdInfoPtr->cmdLength = cmdLength;
-	    strcpy(cmdInfoPtr->command, string);
+	    memcpy(cmdInfoPtr->command, string, cmdLength + 1);
 	    Tk_CreateSelHandler(tkwin, selection, target, HandleTclCommand,
 		    cmdInfoPtr, format);
 	}
