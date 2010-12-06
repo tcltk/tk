@@ -1,3 +1,10 @@
+2010-12-06  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkSelect.c:     [Bug 3129527]: Fix buffer overflow w/ GCC 4.5 and
+	* generic/tkTextDisp.c    -D_FORTIFY_SOURCE=2
+	* unix/tkUnixWm.c
+	* win/tkWinWm.c
+
 2010-12-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4:      [Patch #3116490] cross-compile support for unix

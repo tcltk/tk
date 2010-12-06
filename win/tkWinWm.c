@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.146 2010/11/29 11:25:09 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.147 2010/12/06 10:30:50 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -60,7 +60,7 @@ typedef struct ProtocolHandler {
 				 * same top-level window, or NULL for end of
 				 * list. */
     Tcl_Interp *interp;		/* Interpreter in which to invoke command. */
-    char command[4];		/* Tcl command to invoke when a client message
+    char command[1];		/* Tcl command to invoke when a client message
 				 * for this protocol arrives. The actual size
 				 * of the structure varies to accommodate the
 				 * needs of the actual command. THIS MUST BE
@@ -68,7 +68,7 @@ typedef struct ProtocolHandler {
 } ProtocolHandler;
 
 #define HANDLER_SIZE(cmdLength) \
-    ((unsigned) (sizeof(ProtocolHandler) - 3 + cmdLength))
+    ((unsigned) ((Tk_Offset(ProtocolHandler, command) + 1) + cmdLength))
 
 /*
  * Helper type passed via lParam to TkWmStackorderToplevelEnumProc
@@ -4930,7 +4930,7 @@ WmProtocolCmd(
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
 	protPtr->interp = interp;
-	strcpy(protPtr->command, cmd);
+	memcpy(protPtr->command, cmd, cmdLength + 1);
     }
     return TCL_OK;
 }
