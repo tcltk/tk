@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.77 2010/01/07 15:32:18 dkf Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.78 2010/12/06 10:30:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -415,8 +415,8 @@ typedef struct TextDInfo {
 
 typedef struct CharInfo {
     int numBytes;		/* Number of bytes to display. */
-    char chars[4];		/* UTF characters to display. Actual size will
-				 * be numBytes, not 4. THIS MUST BE THE LAST
+    char chars[1];		/* UTF characters to display. Actual size will
+				 * be numBytes, not 1. THIS MUST BE THE LAST
 				 * FIELD IN THE STRUCTURE. */
 } CharInfo;
 
@@ -7170,7 +7170,7 @@ TkTextCharLayoutProc(
 
 #if !TK_LAYOUT_WITH_BASE_CHUNKS
     ciPtr = (CharInfo *)
-	    ckalloc((unsigned) bytesThatFit + Tk_Offset(CharInfo, chars) + 1);
+	    ckalloc((unsigned) ((Tk_Offset(CharInfo, chars) + 1) + bytesThatFit));
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, (unsigned) bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
