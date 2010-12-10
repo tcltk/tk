@@ -1,3 +1,8 @@
+2010-12-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tcl.m4:               Fix manifest-generation for 64-bit gcc (mingw-w64)
+	* win/configure:            (autoconf-2.59)
+
 2010-12-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkSelect.c:     [Bug 3129527]: Fix buffer overflow w/ GCC 4.5 and
