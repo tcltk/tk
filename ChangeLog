@@ -1,3 +1,8 @@
+2010-12-12  Stuart Cassoff  <stwo@users.sourceforge.net>
+
+	* unix/tcl.m4: Better building on OpenBSD.
+	* unix/configure: (autoconf-2.59)
+
 2010-11-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [Bug #3071836]: Crash/Tcl_Panic on WinXP saving file to C:\
