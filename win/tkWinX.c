@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinX.c,v 1.57.2.3 2010/05/20 22:43:23 dkf Exp $
+ * RCS: @(#) $Id: tkWinX.c,v 1.57.2.4 2010/12/13 21:23:59 nijtmans Exp $
  */
 
 /*
@@ -30,7 +30,7 @@
  */
 
 #ifndef _WIN32_IE
-#define _WIN32_IE 0x0300
+#define _WIN32_IE 0x0501 /* IE 5 */
 #endif
 
 #include <commctrl.h>
