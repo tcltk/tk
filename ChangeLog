@@ -1,3 +1,10 @@
+2010-12-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWin32Dll.c:   See also: [Patch 1910041] and [Patch 3059922]. SEH emulation
+	on Win64 was not correct here: it sometimes results in a crash. Contrary to the
+	other places, the code here is not meant to protect from OS bugs, but to protect
+	Finalizing Tk when the application went in an invalid state.
+
 2010-12-12  Stuart Cassoff  <stwo@users.sourceforge.net>
 
 	* unix/tcl.m4: Better building on OpenBSD.

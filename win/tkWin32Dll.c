@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWin32Dll.c,v 1.13 2010/11/29 11:01:53 nijtmans Exp $
+ * RCS: @(#) $Id: tkWin32Dll.c,v 1.14 2010/12/13 09:24:08 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -134,6 +134,77 @@ DllMain(
 	 */
 
 #ifdef HAVE_NO_SEH
+#   ifdef __WIN64
+	__asm__ __volatile__ (
+
+	    /*
+	     * Construct an EXCEPTION_REGISTRATION to protect the call to
+	     * TkFinalize
+	     */
+
+	    "leaq	%[registration], %%rdx"		"\n\t"
+	    "movq	%%gs:0,		%%rax"		"\n\t"
+	    "movq	%%rax,		0x0(%%edx)"	"\n\t" /* link */
+	    "leaq	1f,		%%rax"		"\n\t"
+	    "movq	%%rax,		0x8(%%rdx)"	"\n\t" /* handler */
+	    "movq	%%rbp,		0x10(%%rdx)"	"\n\t" /* ebp */
+	    "movq	%%rsp,		0x18(%%rdx)"	"\n\t" /* esp */
+	    "movl	%[error],	0x20(%%rdx)"	"\n\t" /* status */
+
+	    /*
+	     * Link the EXCEPTION_REGISTRATION on the chain
+	     */
+
+	    "movq	%%rdx,		%%gs:0"		"\n\t"
+
+	    /*
+	     * Call TkFinalize
+	     */
+
+	    "movq	$0x0,		0x0(%%esp)"		"\n\t"
+	    "call	_TkFinalize"			"\n\t"
+
+	    /*
+	     * Come here on a normal exit. Recover the EXCEPTION_REGISTRATION
+	     * and store a TCL_OK status
+	     */
+
+	    "movq	%%gs:0,		%%rdx"		"\n\t"
+	    "movl	%[ok],		%%eax"		"\n\t"
+	    "movl	%%eax,		0x20(%%rdx)"	"\n\t"
+	    "jmp	2f"				"\n"
+
+	    /*
+	     * Come here on an exception. Get the EXCEPTION_REGISTRATION that
+	     * we previously put on the chain.
+	     */
+
+	    "1:"					"\t"
+	    "movq	%%gs:0,		%%rdx"		"\n\t"
+	    "movq	0x10(%%rdx),	%%rdx"		"\n\t"
+
+	    /*
+	     * Come here however we exited. Restore context from the
+	     * EXCEPTION_REGISTRATION in case the stack is unbalanced.
+	     */
+
+	    "2:"					"\t"
+	    "movq	0x18(%%rdx),	%%rsp"		"\n\t"
+	    "movq	0x10(%%rdx),	%%rbp"		"\n\t"
+	    "movq	0x0(%%rdx),	%%rax"		"\n\t"
+	    "movq	%%rax,		%%gs:0"		"\n\t"
+
+	    :
+	    /* No outputs */
+	    :
+	    [registration]	"m"	(registration),
+	    [ok]		"i"	(TCL_OK),
+	    [error]		"i"	(TCL_ERROR)
+	    :
+	    "%rax", "%rbx", "%rcx", "%rdx", "%rsi", "%rdi", "memory"
+	);
+
+#   else
 	__asm__ __volatile__ (
 
 	    /*
@@ -202,8 +273,9 @@ DllMain(
 	    [error]		"i"	(TCL_ERROR)
 	    :
 	    "%eax", "%ebx", "%ecx", "%edx", "%esi", "%edi", "memory"
-	    );
+	);
 
+#   endif
 #else /* HAVE_NO_SEH */
 	__try {
 	    /*
