@@ -1,5 +1,7 @@
 2010-12-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
+	* unix/tcl.m4:      [Bug 3135271] Link error due to hidden
+	* unix/configure:    symbols (CentOS 4.2)  (autoconf-2.59)
     * generic/tkMain.c:   Change "Application initialization failed" to
     * tests/main.test:    "application-specific initialization failed",
     for consistency with Tcl.
