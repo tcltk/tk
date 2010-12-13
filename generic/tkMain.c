@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.38 2010/11/24 11:14:15 nijtmans Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.39 2010/12/13 15:25:36 nijtmans Exp $
  */
 
 /**
@@ -304,7 +304,7 @@ Tk_MainEx(
 
     if (appInitProc(interp) != TCL_OK) {
 	TkpDisplayWarning(Tcl_GetStringResult(interp),
-		"Application initialization failed");
+		"application-specific initialization failed");
     }
 
     /*

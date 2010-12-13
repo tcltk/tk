@@ -1,5 +1,8 @@
 2010-12-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
+    * generic/tkMain.c:   Change "Application initialization failed" to
+    * tests/main.test:    "application-specific initialization failed",
+    for consistency with Tcl.
 	* win/tkWin32Dll.c:   See also: [Patch 1910041] and [Patch 3059922]. SEH emulation
 	on Win64 was not correct here: it sometimes results in a crash. Contrary to the
 	other places, the code here is not meant to protect from OS bugs, but to protect
