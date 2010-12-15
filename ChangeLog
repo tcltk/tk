@@ -1,3 +1,7 @@
+2010-12-15  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkMain.c:  [Patch #3124683]: platform specific stuff in (tcl|tk)Main.c
+
 2010-12-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4:      [Bug 3135271] Link error due to hidden
