@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.39 2010/12/13 15:25:36 nijtmans Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.40 2010/12/15 08:56:03 nijtmans Exp $
  */
 
 /**
@@ -69,20 +69,22 @@
 #endif
 
 /*
- * Further on, in UNICODE mode, we need to use functions like
- * Tcl_GetUnicodeFromObj, while otherwise Tcl_GetStringFromObj
- * is needed. Those macro's assure that the right functions
- * are used depending on the mode.
+ * Further on, in UNICODE mode, we need to use Tcl_NewUnicodeObj,
+ * while otherwise NewNativeObj is needed (which provides proper
+ * conversion from native encoding to UTF-8).
  */
-#ifndef UNICODE
-#   undef Tcl_GetUnicodeFromObj
-#   define Tcl_GetUnicodeFromObj Tcl_GetStringFromObj
-#   undef Tcl_NewUnicodeObj
-#   define Tcl_NewUnicodeObj Tcl_NewStringObj
-#   undef Tcl_WinTCharToUtf
-#   define Tcl_WinTCharToUtf(a,b,c) Tcl_ExternalToUtfDString(NULL,a,b,c)
+#ifdef UNICODE
+#   define NewNativeObj Tcl_NewUnicodeObj
+#else /* !UNICODE */
+    static Tcl_Obj *NewNativeObj(char *string, int length) {
+	Tcl_Obj *obj;
+	Tcl_DString ds;
+	Tcl_ExternalToUtfDString(NULL, string, length, &ds);
+	obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+	Tcl_DStringFree(&ds);
+	return obj;
+}
 #endif /* !UNICODE */
-
 
 /*
  * Declarations for various library functions and variables (don't want to
@@ -96,23 +98,26 @@
 extern int		isatty(int fd);
 #endif
 
-typedef struct ThreadSpecificData {
-    Tcl_Interp *interp;		/* Interpreter for this thread. */
+typedef struct InteractiveState {
+    Tcl_Channel input;		/* The standard input channel from which lines
+				 * are read. */
+    int tty;			/* Non-zero means standard input is a
+				 * terminal-like device. Zero means it's a
+				 * file. */
     Tcl_DString command;	/* Used to assemble lines of terminal input
 				 * into Tcl commands. */
     Tcl_DString line;		/* Used to read the next line from the
 				 * terminal input. */
-    int tty;			/* Non-zero means standard input is a
-				 * terminal-like device. Zero means it's a
-				 * file. */
-} ThreadSpecificData;
-static Tcl_ThreadDataKey dataKey;
+    int gotPartial;
+    Tcl_Interp *interp;		/* Interpreter that evaluates interactive
+				 * commands. */
+} InteractiveState;
 
 /*
  * Forward declarations for functions defined later in this file.
  */
 
-static void		Prompt(Tcl_Interp *interp, int partial);
+static void		Prompt(Tcl_Interp *interp, InteractiveState *isPtr);
 static void		StdinProc(ClientData clientData, int mask);
 
 /*
@@ -144,15 +149,14 @@ Tk_MainEx(
 				 * but before starting to execute commands. */
     Tcl_Interp *interp)
 {
-    Tcl_Obj *path, *argvPtr;
+    Tcl_Obj *path, *argvPtr, *appName;
     const char *encodingName;
-    int code, length, nullStdin = 0;
-    Tcl_Channel inChannel, chan;
-    ThreadSpecificData *tsdPtr;
+    int code, nullStdin = 0;
+    Tcl_Channel chan;
+    InteractiveState is;
 #ifdef __WIN32__
     HANDLE handle;
 #endif
-    Tcl_DString appName;
 
     /*
      * Ensure that we are getting a compatible version of Tcl. This is really
@@ -165,9 +169,8 @@ Tk_MainEx(
 
     Tcl_InitMemory(interp);
 
-    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    tsdPtr->interp = interp;
+    is.interp = interp;
+    is.gotPartial = 0;
     Tcl_Preserve(interp);
 
 #if defined(__WIN32__)
@@ -191,28 +194,28 @@ Tk_MainEx(
 
 	/*
 	 * Check whether first 3 args (argv[1] - argv[3]) look like
-	 * 	-encoding ENCODING FILENAME
+	 *  -encoding ENCODING FILENAME
 	 * or like
-	 * 	FILENAME
+	 *  FILENAME
 	 * or like
-	 *	-file FILENAME		(ancient history support only)
+	 *  -file FILENAME		(ancient history support only)
 	 */
 
 	if ((argc > 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
 		&& (TEXT('-') != argv[3][0])) {
-		Tcl_Obj *value = Tcl_NewUnicodeObj(argv[2], -1);
-	    Tcl_SetStartupScript(Tcl_NewUnicodeObj(argv[3], -1), Tcl_GetString(value));
+		Tcl_Obj *value = NewNativeObj(argv[2], -1);
+	    Tcl_SetStartupScript(NewNativeObj(argv[3], -1), Tcl_GetString(value));
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
 	    argv += 3;
 	} else if ((argc > 1) && (TEXT('-') != argv[1][0])) {
-	    Tcl_SetStartupScript(Tcl_NewUnicodeObj(argv[1], -1), NULL);
+	    Tcl_SetStartupScript(NewNativeObj(argv[1], -1), NULL);
 	    argc--;
 	    argv++;
 	} else if ((argc > 2) && (length = _tcslen(argv[1]))
 		&& (length > 1) && (0 == _tcsncmp(TEXT("-file"), argv[1], length))
 		&& (TEXT('-') != argv[2][0])) {
-	    Tcl_SetStartupScript(Tcl_NewUnicodeObj(argv[2], -1), NULL);
+	    Tcl_SetStartupScript(NewNativeObj(argv[2], -1), NULL);
 	    argc -= 2;
 	    argv += 2;
 	}
@@ -220,16 +223,11 @@ Tk_MainEx(
 
     path = Tcl_GetStartupScript(&encodingName);
     if (path == NULL) {
-	Tcl_WinTCharToUtf(argv[0], -1, &appName);
+	appName = NewNativeObj(argv[0], -1);
     } else {
-	const TCHAR *pathName = Tcl_GetUnicodeFromObj(path, &length);
-
-	Tcl_WinTCharToUtf(pathName, length * sizeof(TCHAR), &appName);
-	path = Tcl_NewStringObj(Tcl_DStringValue(&appName), -1);
-	Tcl_SetStartupScript(path, encodingName);
+	appName = path;
     }
-    Tcl_SetVar(interp, "argv0", Tcl_DStringValue(&appName), TCL_GLOBAL_ONLY);
-    Tcl_DStringFree(&appName);
+    Tcl_SetVar2Ex(interp, "argv0", NULL, appName, TCL_GLOBAL_ONLY);
     argc--;
     argv++;
 
@@ -237,12 +235,7 @@ Tk_MainEx(
 
     argvPtr = Tcl_NewListObj(0, NULL);
     while (argc--) {
-	Tcl_DString ds;
-
-	Tcl_WinTCharToUtf(*argv++, -1, &ds);
-	Tcl_ListObjAppendElement(NULL, argvPtr, Tcl_NewStringObj(
-		Tcl_DStringValue(&ds), Tcl_DStringLength(&ds)));
-	Tcl_DStringFree(&ds);
+	Tcl_ListObjAppendElement(NULL, argvPtr, NewNativeObj(*argv++, -1));
     }
     Tcl_SetVar2Ex(interp, "argv", NULL, argvPtr, TCL_GLOBAL_ONLY);
 
@@ -267,19 +260,19 @@ Tk_MainEx(
 	 * console window.
 	 */
 
-	tsdPtr->tty = 1;
+	is.tty = 1;
     } else if (GetFileType(handle) == FILE_TYPE_CHAR) {
 	/*
 	 * A character file handle is a tty by definition.
 	 */
 
-	tsdPtr->tty = 1;
+	is.tty = 1;
     } else {
-	tsdPtr->tty = 0;
+	is.tty = 0;
     }
 
 #else
-    tsdPtr->tty = isatty(0);
+    is.tty = isatty(0);
 #endif
 #if defined(MAC_OSX_TK)
     /*
@@ -288,15 +281,14 @@ Tk_MainEx(
      * clicking Wish) then use the GUI console.
      */
 
-    if (!tsdPtr->tty) {
+    if (!is.tty) {
 	struct stat st;
 
 	nullStdin = fstat(0, &st) || (S_ISCHR(st.st_mode) && !st.st_blocks);
     }
 #endif
-    Tcl_SetVar(interp, "tcl_interactive",
-	    ((path == NULL) && (tsdPtr->tty || nullStdin)) ? "1" : "0",
-	    TCL_GLOBAL_ONLY);
+    Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
+	    Tcl_NewIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
@@ -328,7 +320,7 @@ Tk_MainEx(
 	    Tcl_DeleteInterp(interp);
 	    Tcl_Exit(1);
 	}
-	tsdPtr->tty = 0;
+	is.tty = 0;
     } else {
 
 	/*
@@ -341,13 +333,12 @@ Tk_MainEx(
 	 * Establish a channel handler for stdin.
 	 */
 
-	inChannel = Tcl_GetStdChannel(TCL_STDIN);
-	if (inChannel) {
-	    Tcl_CreateChannelHandler(inChannel, TCL_READABLE, StdinProc,
-		    inChannel);
+	is.input = Tcl_GetStdChannel(TCL_STDIN);
+	if (is.input) {
+	    Tcl_CreateChannelHandler(is.input, TCL_READABLE, StdinProc, &is);
 	}
-	if (tsdPtr->tty) {
-	    Prompt(interp, 0);
+	if (is.tty) {
+	    Prompt(interp, &is);
 	}
     }
 
@@ -355,8 +346,8 @@ Tk_MainEx(
     if (chan) {
 	Tcl_Flush(chan);
     }
-    Tcl_DStringInit(&tsdPtr->command);
-    Tcl_DStringInit(&tsdPtr->line);
+    Tcl_DStringInit(&is.command);
+    Tcl_DStringInit(&is.line);
     Tcl_ResetResult(interp);
 
     /*
@@ -393,36 +384,34 @@ Tk_MainEx(
     /* ARGSUSED */
 static void
 StdinProc(
-    ClientData clientData,	/* Not used. */
+    ClientData clientData,	/* The state of interactive cmd line */
     int mask)			/* Not used. */
 {
-    static int gotPartial = 0;
     char *cmd;
     int code, count;
-    Tcl_Channel chan = clientData;
-    ThreadSpecificData *tsdPtr =
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    Tcl_Interp *interp = tsdPtr->interp;
+    InteractiveState *isPtr = clientData;
+    Tcl_Channel chan = isPtr->input;
+    Tcl_Interp *interp = isPtr->interp;
 
-    count = Tcl_Gets(chan, &tsdPtr->line);
+    count = Tcl_Gets(chan, &isPtr->line);
 
-    if (count < 0 && !gotPartial) {
-	if (tsdPtr->tty) {
+    if (count < 0 && !isPtr->gotPartial) {
+	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {
-	    Tcl_DeleteChannelHandler(chan, StdinProc, chan);
+	    Tcl_DeleteChannelHandler(chan, StdinProc, isPtr);
 	}
 	return;
     }
 
-    Tcl_DStringAppend(&tsdPtr->command, Tcl_DStringValue(&tsdPtr->line), -1);
-    cmd = Tcl_DStringAppend(&tsdPtr->command, "\n", -1);
-    Tcl_DStringFree(&tsdPtr->line);
+    Tcl_DStringAppend(&isPtr->command, Tcl_DStringValue(&isPtr->line), -1);
+    cmd = Tcl_DStringAppend(&isPtr->command, "\n", -1);
+    Tcl_DStringFree(&isPtr->line);
     if (!Tcl_CommandComplete(cmd)) {
-	gotPartial = 1;
+	isPtr->gotPartial = 1;
 	goto prompt;
     }
-    gotPartial = 0;
+    isPtr->gotPartial = 0;
 
     /*
      * Disable the stdin channel handler while evaluating the command;
@@ -431,17 +420,17 @@ StdinProc(
      * things, this will trash the text of the command being evaluated.
      */
 
-    Tcl_CreateChannelHandler(chan, 0, StdinProc, chan);
+    Tcl_CreateChannelHandler(chan, 0, StdinProc, isPtr);
     code = Tcl_RecordAndEval(interp, cmd, TCL_EVAL_GLOBAL);
 
-    chan = Tcl_GetStdChannel(TCL_STDIN);
-    if (chan) {
-	Tcl_CreateChannelHandler(chan, TCL_READABLE, StdinProc, chan);
+    isPtr->input = Tcl_GetStdChannel(TCL_STDIN);
+    if (isPtr->input) {
+	Tcl_CreateChannelHandler(isPtr->input, TCL_READABLE, StdinProc, isPtr);
     }
-    Tcl_DStringFree(&tsdPtr->command);
+    Tcl_DStringFree(&isPtr->command);
     if (Tcl_GetStringResult(interp)[0] != '\0') {
-	if ((code != TCL_OK) || (tsdPtr->tty)) {
-	    chan = Tcl_GetStdChannel(TCL_STDOUT);
+	if ((code != TCL_OK) || (isPtr->tty)) {
+	    chan = Tcl_GetStdChannel((code != TCL_OK) ? TCL_STDERR : TCL_STDOUT);
 	    if (chan) {
 		Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
 		Tcl_WriteChars(chan, "\n", 1);
@@ -450,12 +439,12 @@ StdinProc(
     }
 
     /*
-     * Output a prompt.
+     * If a tty stdin is still around, output a prompt.
      */
 
   prompt:
-    if (tsdPtr->tty) {
-	Prompt(interp, gotPartial);
+    if (isPtr->tty && (isPtr->input != NULL)) {
+	Prompt(interp, isPtr);
     }
     Tcl_ResetResult(interp);
 }
@@ -480,26 +469,18 @@ StdinProc(
 static void
 Prompt(
     Tcl_Interp *interp,		/* Interpreter to use for prompting. */
-    int partial)		/* Non-zero means there already exists a
-				 * partial command, so use the secondary
-				 * prompt. */
+    InteractiveState *isPtr) /* InteractiveState. */
 {
     Tcl_Obj *promptCmdPtr;
     int code;
     Tcl_Channel chan;
 
     promptCmdPtr = Tcl_GetVar2Ex(interp,
-	partial ? "tcl_prompt2" : "tcl_prompt1", NULL, TCL_GLOBAL_ONLY);
+	isPtr->gotPartial ? "tcl_prompt2" : "tcl_prompt1", NULL, TCL_GLOBAL_ONLY);
     if (promptCmdPtr == NULL) {
     defaultPrompt:
-	if (!partial) {
-	    /*
-	     * We must check that chan is a real channel - it is
-	     * possible that someone has transferred stdout out of this
-	     * interpreter with "interp transfer".
-	     */
-
-	    chan = Tcl_GetChannel(interp, "stdout", NULL);
+	if (!isPtr->gotPartial) {
+	    chan = Tcl_GetStdChannel(TCL_STDOUT);
 	    if (chan != NULL) {
 		Tcl_WriteChars(chan, DEFAULT_PRIMARY_PROMPT,
 			strlen(DEFAULT_PRIMARY_PROMPT));
@@ -510,23 +491,18 @@ Prompt(
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (script that generates prompt)");
-
-	    /*
-	     * We must check that chan is a real channel - it is
-	     * possible that someone has transferred stderr out of this
-	     * interpreter with "interp transfer".
-	     */
-
-	    chan = Tcl_GetChannel(interp, "stderr", NULL);
-	    if (chan != NULL) {
-		Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
-		Tcl_WriteChars(chan, "\n", 1);
+	    if (Tcl_GetStringResult(interp)[0] != '\0') {
+		chan = Tcl_GetStdChannel(TCL_STDERR);
+		if (chan != NULL) {
+		    Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
+		    Tcl_WriteChars(chan, "\n", 1);
+		}
 	    }
 	    goto defaultPrompt;
 	}
     }
 
-    chan = Tcl_GetChannel(interp, "stdout", NULL);
+    chan = Tcl_GetStdChannel(TCL_STDOUT);
     if (chan != NULL) {
 	Tcl_Flush(chan);
     }
