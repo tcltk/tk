@@ -1,3 +1,8 @@
+2010-12-15  Stuart Cassoff  <stwo@users.sourceforge.net>
+
+	* unix/Makefile.in:	Installer Improvements.
+	* unix/install-sh:	Similar to Tcl [Patch 3101127].
+
 2010-12-15  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkMain.c:  [Patch #3124683]: platform specific stuff in (tcl|tk)Main.c
