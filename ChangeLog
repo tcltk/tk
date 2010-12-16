@@ -1,3 +1,9 @@
+2010-12-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.h:       [Patch 3124554]: Move WishPanic from Tk to Tcl
+	* win/winMain.c:      Remove special MessageBox'es here, since every
+	panic-related thing is now handled correctly by Tcl.
+
 2010-12-15  Stuart Cassoff  <stwo@users.sourceforge.net>
 
 	* unix/Makefile.in:	Installer Improvements.
