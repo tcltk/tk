@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tk.h,v 1.137 2010/08/19 05:23:12 nijtmans Exp $
+ * RCS: @(#) $Id: tk.h,v 1.138 2010/12/16 09:03:07 nijtmans Exp $
  */
 
 #ifndef _TK
@@ -1473,9 +1473,13 @@ typedef struct Tk_ElementSpec {
 #define Tk_Release		Tcl_Release
 
 /* Removed Tk_Main, use macro instead */
+#ifdef _WIN32
+#define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
+	(Tcl_FindExecutable(0), (Tcl_CreateInterp)()))
+#else
 #define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
 	(Tcl_FindExecutable(argv[0]), (Tcl_CreateInterp)()))
-
+#endif
 const char *		Tk_InitStubs(Tcl_Interp *interp, const char *version,
 				int exact);
 EXTERN const char *	Tk_PkgInitStubsCheck(Tcl_Interp *interp,
