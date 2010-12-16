@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: winMain.c,v 1.40 2010/11/24 12:57:54 nijtmans Exp $
+ * RCS: @(#) $Id: winMain.c,v 1.41 2010/12/16 09:03:07 nijtmans Exp $
  */
 
 #include "tk.h"
@@ -35,13 +35,11 @@ extern Tcl_PackageInitProc Dde_SafeInit;
 #ifdef TCL_BROKEN_MAINARGS
 static void setargv(int *argcPtr, TCHAR ***argvPtr);
 #endif
-extern void TkpDisplayWarning(const char *, const char *);
 
 /*
  * Forward declarations for procedures defined later in this file:
  */
 
-static void WishPanic(const char *format, ...);
 static BOOL consoleRequired = TRUE;
 
 /*
@@ -81,14 +79,6 @@ extern int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
  *----------------------------------------------------------------------
  */
 
-#ifdef UNICODE
-/* workaround for bug in some versions of mingw32-w64 */
-#   undef _tWinMain
-#   define _tWinMain wWinMain
-#   undef __targv
-#   define __targv __wargv
-#endif
-
 int APIENTRY
 #ifdef TCL_BROKEN_MAINARGS
 WinMain(
@@ -107,8 +97,6 @@ _tWinMain(
     TCHAR **argv;
     int argc;
     TCHAR *p;
-
-    (Tcl_SetPanicProc)(WishPanic);
 
     /*
      * Create the console channels and install them as the standard channels.
@@ -178,10 +166,10 @@ Tcl_AppInit(
     Tcl_Interp *interp)		/* Interpreter for application. */
 {
     if ((Tcl_Init)(interp) == TCL_ERROR) {
-	goto error;
+	return TCL_ERROR;
     }
     if (Tk_Init(interp) == TCL_ERROR) {
-	goto error;
+	return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 
@@ -192,24 +180,24 @@ Tcl_AppInit(
 
     if (consoleRequired) {
 	if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
-	    goto error;
+	    return TCL_ERROR;
 	}
     }
 #if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
     if (Registry_Init(interp) == TCL_ERROR) {
-	goto error;
+	return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "registry", Registry_Init, 0);
 
     if (Dde_Init(interp) == TCL_ERROR) {
-	goto error;
+	return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "dde", Dde_Init, Dde_SafeInit);
 #endif
 
 #ifdef TK_TEST
     if (Tktest_Init(interp) == TCL_ERROR) {
-	goto error;
+	return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tktest", Tktest_Init, 0);
 #endif /* TK_TEST */
@@ -240,56 +228,9 @@ Tcl_AppInit(
 
     (Tcl_SetVar)(interp, "tcl_rcFileName", "~/wishrc.tcl", TCL_GLOBAL_ONLY);
     return TCL_OK;
-
-error:
-    MessageBeep(MB_ICONEXCLAMATION);
-    TkpDisplayWarning((Tcl_GetStringResult)(interp), "Error in Wish");
-#ifdef _MSC_VER
-    DebugBreak();
-#endif
-    ExitProcess(1);
-
-    /*
-     * We won't reach this, but we need the return.
-     */
-
-    return TCL_ERROR;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * WishPanic --
- *
- *	Display a message and exit.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Exits the program.
- *
- *----------------------------------------------------------------------
- */
-
-void
-WishPanic(
-    const char *format, ...)
-{
-    va_list argList;
-    char buf[1024];
-
-    MessageBeep(MB_ICONEXCLAMATION);
-    va_start(argList, format);
-    vsprintf(buf, format, argList);
-	TkpDisplayWarning(buf, "Fatal Error in Wish");
-#ifdef _MSC_VER
-    DebugBreak();
-#endif
-    ExitProcess(1);
-}
-
-#if !defined(TCL_BROKEN_MAINARGS) || defined(TK_TEST)
+#if defined(__CYGWIN__) || defined(TK_TEST)
 /*
  *----------------------------------------------------------------------
  *
@@ -321,8 +262,6 @@ _tmain(
     TCHAR **argv)
 {
 #endif
-    (Tcl_SetPanicProc)(WishPanic);
-
     /*
      * Set up the default locale to be standard "C" locale so parsing is
      * performed correctly.
