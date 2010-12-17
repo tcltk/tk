@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinInit.c,v 1.17 2010/11/24 10:34:18 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinInit.c,v 1.18 2010/12/17 15:14:22 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -119,20 +119,31 @@ TkpDisplayWarning(
     const char *title)		/* Title of warning. */
 {
 #define TK_MAX_WARN_LEN 1024
-    WCHAR msgString[TK_MAX_WARN_LEN + 5];
-    WCHAR titleString[TK_MAX_WARN_LEN + 1];
+    WCHAR titleString[TK_MAX_WARN_LEN];
+    WCHAR *msgString; /* points to titleString, just after title, leaving space for ": " */
+    int len; /* size of title, including terminating NULL */
 
-    MultiByteToWideChar(CP_UTF8, 0, msg, -1, msgString, TK_MAX_WARN_LEN);
-    MultiByteToWideChar(CP_UTF8, 0, title, -1, titleString, TK_MAX_WARN_LEN);
+    len = MultiByteToWideChar(CP_UTF8, 0, title, -1, titleString, TK_MAX_WARN_LEN);
+    msgString = &titleString[len + 1];
+    titleString[TK_MAX_WARN_LEN - 1] = L'\0';
+    MultiByteToWideChar(CP_UTF8, 0, msg, -1, msgString, (TK_MAX_WARN_LEN - 1) - len);
     /*
      * Truncate MessageBox string if it is too long to not overflow the screen
      * and cause possible oversized window error.
      */
-	memcpy(msgString + TK_MAX_WARN_LEN, L" ...", 5 * sizeof(WCHAR));
-    titleString[TK_MAX_WARN_LEN] = L'\0';
-    MessageBoxW(NULL, msgString, titleString,
-	    MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL
-	    | MB_SETFOREGROUND | MB_TOPMOST);
+    if (titleString[TK_MAX_WARN_LEN - 1] != L'\0') {
+	memcpy(titleString + (TK_MAX_WARN_LEN - 5), L" ...", 5 * sizeof(WCHAR));
+    }
+    if (IsDebuggerPresent()) {
+	titleString[len - 1] = L':';
+	titleString[len] = L' ';
+	OutputDebugStringW(titleString);
+    } else {
+	titleString[len - 1] = L'\0';
+	MessageBoxW(NULL, msgString, titleString,
+		MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL
+		| MB_SETFOREGROUND | MB_TOPMOST);
+    }
 }
 
 /*
