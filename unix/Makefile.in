@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.143.2.10 2010/12/17 17:57:21 stwo Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.143.2.11 2010/12/17 21:57:14 stwo Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1627,32 +1627,10 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(MAC_OSX_DIR)/configure
 	mkdir $(DISTDIR)/tests/ttk
 	cp -p $(TEST_DIR)/ttk/*.{test,tcl} $(DISTDIR)/tests/ttk
 
-#
-# The following target can only be used for non-patch releases.  Use
-# the "allpatch" target below for patch releases.
-#
-
 alldist: dist
 	rm -f $(DISTROOT)/$(DISTNAME)-src.tar.gz $(DISTROOT)/$(ZIPNAME)
 	cd $(DISTROOT); tar cf $(DISTNAME)-src.tar $(DISTNAME); \
 		gzip -9 $(DISTNAME)-src.tar; zip -qr8 $(ZIPNAME) $(DISTNAME)
-
-#
-# The target below is similar to "alldist" except it works for patch
-# releases.  It is needed because patch releases are peculiar: the
-# patch designation appears in the name of the compressed file
-# (e.g. tk8.0p1.tar.gz) but the extracted source directory doesn't
-# include the patch designation (e.g. tk8.0).
-#
-
-allpatch: dist
-	rm -f $(DISTROOT)/$(DISTNAME)-src.tar.gz $(DISTROOT)/$(ZIPNAME)
-	mv $(DISTROOT)/tk${VERSION} $(DISTROOT)/old
-	mv $(DISTROOT)/$(DISTNAME) $(DISTROOT)/tk${VERSION}
-	cd $(DISTROOT); tar cf $(DISTNAME)-src.tar tk${VERSION}; \
-		gzip -9 $(DISTNAME)-src.tar; zip -r8 $(ZIPNAME) tk${VERSION}
-	mv $(DISTROOT)/tk${VERSION} $(DISTROOT)/$(DISTNAME)
-	mv $(DISTROOT)/old $(DISTROOT)/tk${VERSION}
 
 #
 # This target creates the HTML folder for Tcl & Tk and places it
