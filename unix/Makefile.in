@@ -5,7 +5,7 @@
 # "autoconf" program (constructs like "@foo@" will get replaced in the
 # actual Makefile.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.171 2010/12/16 01:55:02 stwo Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.172 2010/12/17 17:57:45 stwo Exp $
 
 # Current Tk version;  used in various names.
 
@@ -1493,13 +1493,13 @@ checkexports: $(TK_LIB_FILE)
 # system.
 #
 
-rpm: all /bin/rpm
+rpm: all
 	rm -f THIS.TCL.SPEC
 	echo "%define _builddir `pwd`" > THIS.TK.SPEC
 	echo "%define _rpmdir `pwd`/RPMS" >> THIS.TK.SPEC
 	cat tk.spec >> THIS.TK.SPEC
 	mkdir -p RPMS/i386
-	rpm -bb THIS.TK.SPEC
+	rpmbuild -bb THIS.TK.SPEC
 	mv RPMS/i386/*.rpm .
 	rm -rf RPMS THIS.TK.SPEC
 
