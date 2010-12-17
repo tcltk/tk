@@ -8,7 +8,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinImage.c,v 1.13 2009/08/02 21:40:17 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinImage.c,v 1.14 2010/12/17 15:14:22 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -303,8 +303,7 @@ XGetImageZPixmap(
     BOOL ret;
 
     if (format != ZPixmap) {
-	TkpDisplayWarning(
-		"XGetImageZPixmap: only ZPixmap types are implemented",
+	TkpDisplayWarning("Only ZPixmap types are implemented",
 		"XGetImageZPixmap Failure");
 	return NULL;
     }

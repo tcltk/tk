@@ -13,7 +13,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMain.c,v 1.40 2010/12/15 08:56:03 nijtmans Exp $
+ * RCS: @(#) $Id: tkMain.c,v 1.41 2010/12/17 15:14:22 nijtmans Exp $
  */
 
 /**
@@ -94,7 +94,26 @@
  * it will conflict with a declaration elsewhere on some systems.
  */
 
-#if !defined(__WIN32__) && !defined(_WIN32)
+#if defined(_WIN32)
+#define isatty WinIsTty
+static int WinIsTty(int fd) {
+    HANDLE handle;
+    /*
+     * For now, under Windows, we assume we are not running as a console mode
+     * app, so we need to use the GUI console. In order to enable this, we
+     * always claim to be running on a tty. This probably isn't the right way
+     * to do it.
+     */
+    handle = GetStdHandle(STD_INPUT_HANDLE + fd);
+	/*
+	 * If it's a bad or closed handle, then it's been connected to a wish
+	 * console window. A character file handle is a tty by definition.
+	 */
+    return (handle == INVALID_HANDLE_VALUE) || (handle == 0)
+	     || (GetFileType(handle) == FILE_TYPE_UNKNOWN)
+	     || (GetFileType(handle) == FILE_TYPE_CHAR);
+}
+#else
 extern int		isatty(int fd);
 #endif
 
@@ -154,9 +173,6 @@ Tk_MainEx(
     int code, nullStdin = 0;
     Tcl_Channel chan;
     InteractiveState is;
-#ifdef __WIN32__
-    HANDLE handle;
-#endif
 
     /*
      * Ensure that we are getting a compatible version of Tcl. This is really
@@ -243,37 +259,7 @@ Tk_MainEx(
      * Set the "tcl_interactive" variable.
      */
 
-#ifdef __WIN32__
-    /*
-     * For now, under Windows, we assume we are not running as a console mode
-     * app, so we need to use the GUI console. In order to enable this, we
-     * always claim to be running on a tty. This probably isn't the right way
-     * to do it.
-     */
-
-    handle = GetStdHandle(STD_INPUT_HANDLE);
-
-    if ((handle == INVALID_HANDLE_VALUE) || (handle == 0)
-	     || (GetFileType(handle) == FILE_TYPE_UNKNOWN)) {
-	/*
-	 * If it's a bad or closed handle, then it's been connected to a wish
-	 * console window.
-	 */
-
-	is.tty = 1;
-    } else if (GetFileType(handle) == FILE_TYPE_CHAR) {
-	/*
-	 * A character file handle is a tty by definition.
-	 */
-
-	is.tty = 1;
-    } else {
-	is.tty = 0;
-    }
-
-#else
     is.tty = isatty(0);
-#endif
 #if defined(MAC_OSX_TK)
     /*
      * On TkAqua, if we don't have a TTY and stdin is a special character file
