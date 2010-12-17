@@ -1,3 +1,10 @@
+2010-12-17  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkMain.c:  refactor isatty() function for Windows.
+	* win/tkWinImage.c:  better warning message.
+	* win/tkWinInit.c:   Let TkpDisplayWarning() send the message
+	directly to the debugger, if available, otherwise do as before.
+
 2010-12-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tk.h:       [Patch 3124554]: Move WishPanic from Tk to Tcl
