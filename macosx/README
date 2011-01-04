@@ -1,7 +1,7 @@
 Tcl/Tk Mac OS X README
 ----------------------
 
-RCS: @(#) $Id: README,v 1.30 2009/06/29 14:35:01 das Exp $
+RCS: @(#) $Id: README,v 1.31 2011/01/04 22:36:58 wordtech Exp $
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
@@ -187,11 +187,41 @@ Window attribute names:
     verticalZoom, closeBox, collapseBox, toolbarButton, sideTitlebar,
     noTitleBar, unifiedTitleAndToolbar, metal, hud, noShadow, doesNotCycle,
     noActivates, hideOnSuspend, inWindowMenu, ignoreClicks, doesNotHide,
-    canJoinAllSpaces, moveToActiveSpace, nonActivating
+    canJoinAllSpaces, moveToActiveSpace, nonActivating, black, dark, light,   
+    gray, red, green, blue, cyan, yellow, magenta, orange, purple,
+    brown, clear, opacity
+
 Note that not all attributes are valid for all window classes.
 Support for the 3 argument form was added with the Cocoa-based Tk 8.6b2, at the
 same time support for some legacy Carbon-specific classes and attributes was
 removed (they are still accepted by the command but no longer have any effect).
+
+The color window attributes (black, dark, red, etc.) and the "opacity" allow  one to set the background and opacity of a textured ("metal") window. This allows a Tk window to implement a window without the dividing line between the titlebar and the rest of the window, or the "unified toolbar" effect, which is increasingly standard in Mac applications. An example:
+
+toplevel .f
+tk::unsupported::MacWindowStyle style .f document {metal light opaque closeBox collapseBox resizable standardDocument }
+
+pack [label .f.f -bg  #ababab -text "This is a textured window\nwith opacity and a gray background\nsimilar to other Mac applications"] -fill both -expand yes
+
+The color attributes correspond to system-defined NSColor constants (e.g., red is [NSColor redColor]. The "light" and "dark" attributes correspond to lightGrayColor and darkGrayColor, respectively (because of the way the attributes are parsed, using "lightgray" and "darkgray" would cause a conflict with the core "gray" attribute). 
+
+Below are the corresponding hex and/or Tk-defined colors that can be used from Tk widgets to match the NSColor-based attributes:
+
+black	#000000
+dark	#545454
+light	#ababab
+white	#ffffff
+gray	#7f7f7f
+red 	#ff0000
+green	#00ff00
+blue	#0000ff
+cyan	#00ffff
+yellow	#ffff00
+magenta	#ff00ff
+orange	#ff8000
+purple 	#800080
+brown	#996633
+clear	systemTransparent
 
 - The Cocoa-based TkAqua can be distinguished from the older Carbon-based
 version via the [winfo server .] command, example output on Mac OS X 10.5.7:
