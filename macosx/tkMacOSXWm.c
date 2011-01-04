@@ -9,11 +9,12 @@
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.77 2009/08/14 14:51:02 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWm.c,v 1.78 2011/01/04 22:36:58 wordtech Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -51,6 +52,11 @@
 	| kWindowDoesNotCycleAttribute	    | tkWindowDoesNotHideAttribute \
 	| tkCanJoinAllSpacesAttribute	    | tkMoveToActiveSpaceAttribute \
 	| tkNonactivatingPanelAttribute	    | tkHUDWindowAttribute)
+
+
+/*Objects for use in setting background color and opacity of window.*/
+NSColor *colorName = NULL;
+NSString *opaqueTag = NULL;
 
 static const struct {
     const UInt64 validAttrs, defaultAttrs, forceOnAttrs, forceOffAttrs;
@@ -4995,6 +5001,62 @@ TkUnsupported1ObjCmd(
 	return TCL_ERROR;
     }
 
+
+    /* Iterate through objc/objv to set correct background color and toggle opacity of window. */
+    int i;
+    for (i= 0; i < objc; i++) {
+
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*black*") == 1) {
+    	    colorName = [NSColor blackColor];  // use #000000 in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*dark*") == 1) {
+    	    colorName = [NSColor darkGrayColor]; //use #545454 in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*light*") == 1) {
+    	    colorName = [NSColor lightGrayColor]; //use #ababab in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*white*") == 1) {
+    	    colorName = [NSColor whiteColor]; //use #ffffff in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "gray*") == 1) {
+    	    colorName = [NSColor grayColor]; //use  #7f7f7f in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*red*") == 1) {
+    	    colorName = [NSColor redColor]; //use #ff0000 in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*green*") == 1) {
+    	    colorName = [NSColor greenColor]; //use #00ff00 in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*blue*") == 1) {
+    	    colorName = [NSColor blueColor]; //use #0000ff in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*cyan*") == 1) {
+    	    colorName = [NSColor cyanColor]; //use  #00ffff in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*yellow*") == 1) {
+    	    colorName = [NSColor yellowColor]; //use  #ffff00 in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*magenta*") == 1) {
+    	    colorName = [NSColor magentaColor]; //use #ff00ff in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*orange*") == 1) {
+    	    colorName = [NSColor orangeColor]; //use  #ff8000 in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*purple*") == 1) {
+    	    colorName = [NSColor purpleColor]; //use  #800080 in Tk scripts to match
+    	}
+    	if  (Tcl_StringMatch(Tcl_GetString(objv[i]), "*brown*") == 1){
+    	    colorName = [NSColor brownColor]; //use #996633 in Tk scripts to match
+    	}
+    	if  (Tcl_StringMatch(Tcl_GetString(objv[i]), "*clear*") == 1) {
+    	    colorName = [NSColor clearColor]; //use systemTransparent in Tk scripts to match
+    	}
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*opacity*") == 1) {
+    	    opaqueTag=@"YES";
+    	}
+    }
+
+  
     winPtr = (TkWindow *)
 	    Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
     if (winPtr == NULL) {
@@ -5077,6 +5139,9 @@ WmWinStyle(
 	{ "fullZoom",		kWindowFullZoomAttribute		     },
 	{ NULL }
     };
+
+    /* Map window attributes. Color and opacity are mapped to NULL; these are parsed from the objv in TkUnsupported1ObjCmd.*/
+
     static const struct StrIntMap attrMap[] = {
 	{ "closeBox",		kWindowCloseBoxAttribute		     },
 	{ "horizontalZoom",	kWindowHorizontalZoomAttribute		     },
@@ -5106,8 +5171,24 @@ WmWinStyle(
 	{ "moveToActiveSpace",	tkMoveToActiveSpaceAttribute		     },
 	{ "nonActivating",	tkNonactivatingPanelAttribute		     },
 	{ "hud",		tkHUDWindowAttribute			     },
+	{ "black",		NULL			                     },
+	{ "dark",		NULL			                     },
+	{ "light",		NULL			                     },
+	{ "gray",		NULL			                     },
+	{ "red",		NULL 			                     },
+	{ "green",		NULL                			     },
+	{ "blue",		NULL           			             },
+	{ "cyan",		NULL			                     },
+	{ "yellow",		NULL			                     },
+	{ "magenta",		NULL  			                     },
+	{ "orange",		NULL 			                     },
+	{ "purple",		NULL			                     },
+	{ "brown",		NULL			                     },
+	{ "clear",		NULL			                     },
+	{ "opacity",		NULL			                     },
 	{ NULL }
     };
+
     int index, i;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
@@ -5124,6 +5205,7 @@ WmWinStyle(
 	if (newResult == NULL) {
 	    Tcl_Panic("invalid class");
 	}
+
 
 	attributeList = Tcl_NewListObj(0, NULL);
 	attributes = wmPtr->attributes;
@@ -5186,14 +5268,18 @@ WmWinStyle(
 		macClassAttrs[macClass].validAttrs);
 	wmPtr->flags |= macClassAttrs[macClass].flags;
 	wmPtr->macClass = macClass;
+
 	ApplyWindowAttributeFlagChanges(winPtr, NULL, oldAttributes, oldFlags,
 		0, 1);
+ 
 	return TCL_OK;
 
     badClassAttrs:
 	wmPtr->attributes = oldAttributes;
 	return TCL_ERROR;
     }
+
+
     return TCL_OK;
 }
 
@@ -5350,6 +5436,17 @@ TkMacOSXMakeRealWindowExist(
 	 */
 	[window setMovableByWindowBackground:NO];
     }
+   
+    
+    /* Set background color and opacity of window if those flags are set.  */
+    if (colorName != NULL) {
+    	[window setBackgroundColor: colorName];
+    	 }
+
+    if (opaqueTag != NULL) {
+    	[window setOpaque: opaqueTag];
+    }
+	   
     [window setDocumentEdited:NO];
     wmPtr->window = window;
     macWin->view = contentView;
@@ -6497,6 +6594,8 @@ RemapWindows(
 	RemapWindows(childPtr, (MacDrawable *) winPtr->window);
     }
 }
+
+
 
 /*
  * Local Variables:

@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.38 2009/08/24 00:55:08 das Exp $
+ * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.39 2011/01/04 22:36:58 wordtech Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -48,6 +48,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
 #endif
 
+extern NSString *opaqueTag;
+
 @implementation TKApplication(TKWindowEvent)
 
 - (void) windowActivation: (NSNotification *) notification
@@ -924,8 +926,13 @@ ExposeRestrictProc(
 {
     NSWindow *w = [self window];
 
-    return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
-	    ![w isOpaque]) ? NO : YES);
+    if (opaqueTag != NULL) {
+      return YES;
+	} else {
+
+     return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
+    	    ![w isOpaque]) ? NO : YES);
+    }
 }
 
 - (BOOL) wantsDefaultClipping
