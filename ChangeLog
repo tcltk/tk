@@ -1,3 +1,11 @@
+2011-01-06   Kevin Walzer <wordtech@users.sourceforge.net>
+
+	* macosx/README: 	Added info on textured background windows.
+	* macosx/tkMacOSXFont.c: Fix for 2857300, improves rounding up on text width [submitted by treectrl]
+	* macosx/tkMacOSXMenu.c:  Fix for radiobuttons and checkbuttons not displaying in popup menus, and disabled menu entries.
+	*macosx/ tkMacOSXWindowEvent.c:  Fix for 3086887, speeds up scrolling; also textured background windows
+	* macosx/tkMacOSXWm.c: Textured background windows.
+
 2011-01-06  Stuart Cassoff  <stwo@users.sourceforge.net>
 
 	* generic/tkEvent.c:	Cast some NULLs to (void *) in order to quash
