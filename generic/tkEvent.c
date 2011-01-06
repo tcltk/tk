@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkEvent.c,v 1.35.2.4 2010/01/02 10:43:26 dkf Exp $
+ * RCS: @(#) $Id: tkEvent.c,v 1.35.2.5 2011/01/06 06:00:12 stwo Exp $
  */
 
 #include "tkInt.h"
@@ -345,7 +345,7 @@ CreateXIC(
 	preedit_attlist = XVaCreateNestedList(0,
 		XNSpotLocation, &spot,
 		XNFontSet, dispPtr->inputXfs,
-		NULL);
+		(void *) NULL);
     }
 
     winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
@@ -353,7 +353,7 @@ CreateXIC(
 	    XNClientWindow, winPtr->window,
 	    XNFocusWindow, winPtr->window,
 	    preedit_attname, preedit_attlist,
-	    NULL);
+	    (void *) NULL);
 
     if (preedit_attlist) {
 	XFree(preedit_attlist);
@@ -368,7 +368,7 @@ CreateXIC(
     /*
      * Adjust the window's event mask if the IM requires it.
      */
-    XGetICValues(winPtr->inputContext, XNFilterEvents, &im_event_mask, NULL);
+    XGetICValues(winPtr->inputContext, XNFilterEvents, &im_event_mask, (void *) NULL);
     if ((winPtr->atts.event_mask & im_event_mask) != im_event_mask) {
 	winPtr->atts.event_mask |= im_event_mask;
 	XSelectInput(winPtr->display, winPtr->window, winPtr->atts.event_mask);
