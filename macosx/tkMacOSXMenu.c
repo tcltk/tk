@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.54 2010/05/10 20:58:18 nijtmans Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.55 2011/01/06 04:44:51 wordtech Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -665,6 +665,16 @@ TkpConfigureMenuEntry(
 	}
     }
     [menuItem setSubmenu:submenu];
+
+    /*Disabling parent menu disables entries; we must re-enable the entries here.*/
+    NSArray *itemArray = [submenu itemArray];
+    
+    if ([menuItem isEnabled]) {
+	    for (NSMenuItem *item in itemArray) {
+		    [item setEnabled:YES];
+	    }
+	}
+
     return TCL_OK;
 }
 
