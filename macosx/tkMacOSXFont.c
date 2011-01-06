@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.47 2010/12/02 11:38:29 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXFont.c,v 1.48 2011/01/06 00:04:44 wordtech Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -884,7 +884,7 @@ TkpMeasureCharsInContext(
     CFRelease(typesetter);
     [attributedString release];
     [string release];
-    length = lround(width - offset);
+    length = ceil(width - offset);
     fit = (Tcl_UtfAtIndex(source, index) - source) - rangeStart;
 done:
 #ifdef TK_MAC_DEBUG_FONTS
