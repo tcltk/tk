@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.36 2010/06/15 11:16:03 nijtmans Exp $
+ * RCS: @(#) $Id: tkUnixEvent.c,v 1.37 2011/01/06 05:58:15 stwo Exp $
  */
 
 #include "tkUnixInt.h"
@@ -647,7 +647,7 @@ OpenIM(
     }
 
     if ((XGetIMValues(dispPtr->inputMethod, XNQueryInputStyle, &stylePtr,
-	    NULL) != NULL) || (stylePtr == NULL)) {
+	    (void *) NULL) != NULL) || (stylePtr == NULL)) {
 	goto error;
     }
 
