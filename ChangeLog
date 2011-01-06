@@ -1,3 +1,10 @@
+2011-01-06  Stuart Cassoff  <stwo@users.sourceforge.net>
+
+	* generic/tkEvent.c:	Cast some NULLs to (void *) in order to quash
+	* unix/tkUnixEvent.c:	"missing sentinel in function call"
+	* unix/tkUnixKey.c:	compiler warnings.
+	* unix/tkUnixRFont.c:
+
 2010-12-17  Stuart Cassoff  <stwo@users.sourceforge.net>
 
 	* unix/Makefile.in:  [Bug 2446711]: Remove 'allpatch' target.
