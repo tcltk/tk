@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.55 2011/01/06 04:44:51 wordtech Exp $
+ * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.56 2011/01/06 08:05:05 wordtech Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -753,6 +753,7 @@ TkpPostMenu(
     NSPopUpButtonCell *popUpButtonCell = [[NSPopUpButtonCell alloc]
 	    initTextCell:@"" pullsDown:NO];
 
+    [popUpButtonCell setAltersStateOfSelectedItem:NO];
     [popUpButtonCell setMenu:menu];
     [popUpButtonCell selectItem:nil];
     [popUpButtonCell performClickWithFrame:frame inView:view];
