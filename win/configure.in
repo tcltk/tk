@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 #
-# RCS: @(#) $Id: configure.in,v 1.91 2010/11/18 22:49:44 nijtmans Exp $
+# RCS: @(#) $Id: configure.in,v 1.92 2011/01/12 11:05:43 nijtmans Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.59)
@@ -51,7 +51,7 @@ AC_CHECK_TOOL(RANLIB, ranlib)
 AC_CHECK_TOOL(RC, windres)
 
 #--------------------------------------------------------------------
-# Checks to see if the make progam sets the $MAKE variable.
+# Checks to see if the make program sets the $MAKE variable.
 #--------------------------------------------------------------------
 
 AC_PROG_MAKE_SET
