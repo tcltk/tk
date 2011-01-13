@@ -1,3 +1,7 @@
+2011-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/msgbox.tcl: [Patch #3154705] Close button has no effect
+
 2011-01-12  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tcl.m4:         handle --enable-64bit=ia64 for gcc
