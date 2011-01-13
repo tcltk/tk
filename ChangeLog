@@ -1,3 +1,7 @@
+2011-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/msgbox.tcl: [Patch #3154705] Close button has no effect
+
 2011-01-06  Stuart Cassoff  <stwo@users.sourceforge.net>
 
 	* generic/tkEvent.c:	Cast some NULLs to (void *) in order to quash
