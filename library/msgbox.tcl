@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.24.2.5 2010/01/23 01:36:03 patthoyts Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.24.2.6 2011/01/13 11:32:09 nijtmans Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -157,8 +157,6 @@ proc ::tk::MessageBox {args} {
     if {[lsearch -exact {info warning error question} $data(-icon)] == -1} {
 	error "bad -icon value \"$data(-icon)\": must be error, info, question, or warning"
     }
-
-    # Store tk windowingsystem to avoid too many calls
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
 	switch -- $data(-icon) {
@@ -179,26 +177,32 @@ proc ::tk::MessageBox {args} {
 	abortretryignore { 
 	    set names [list abort retry ignore]
 	    set labels [list &Abort &Retry &Ignore]
+	    set cancel abort
 	}
 	ok {
 	    set names [list ok]
 	    set labels {&OK}
+	    set cancel ok
 	}
 	okcancel {
 	    set names [list ok cancel]
 	    set labels [list &OK &Cancel]
+	    set cancel cancel
 	}
 	retrycancel {
 	    set names [list retry cancel]
 	    set labels [list &Retry &Cancel]
+	    set cancel cancel
 	}
 	yesno {
 	    set names [list yes no]
 	    set labels [list &Yes &No]
+	    set cancel no
 	}
 	yesnocancel {
 	    set names [list yes no cancel]
 	    set labels [list &Yes &No &Cancel]
+	    set cancel cancel
 	}
 	default {
 	    error "bad -type value \"$data(-type)\": must be\
@@ -242,11 +246,11 @@ proc ::tk::MessageBox {args} {
     # 3. Create the top-level window and divide it into top
     # and bottom parts.
 
-    destroy $w
+    catch {destroy $w}
     toplevel $w -class Dialog
     wm title $w $data(-title)
     wm iconname $w Dialog
-    wm protocol $w WM_DELETE_WINDOW { }
+    wm protocol $w WM_DELETE_WINDOW [list $w.$cancel invoke]
     # There is only one background colour for the whole dialog
     set bg [$w cget -background]
 
@@ -259,7 +263,7 @@ proc ::tk::MessageBox {args} {
     #
     if {[winfo viewable [winfo toplevel $data(-parent)]] } {
 	wm transient $w $data(-parent)
-    }    
+    }
 
     if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w moveableModal {}
@@ -391,13 +395,16 @@ proc ::tk::MessageBox {args} {
 	}
     }
 
-    # 6. Create a binding for <Return> on the dialog
+    # 6. Create bindings for <Return> and <Escape> on the dialog
 
     bind $w <Return> {
 	if {"Button" eq [winfo class %W]} {
 	    tk::ButtonInvoke %W
 	}
     }
+
+    # Invoke the designated cancelling operation
+    bind $w <Escape> [list $w.$cancel invoke]
 
     # 7. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
