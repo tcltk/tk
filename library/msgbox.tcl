@@ -3,7 +3,7 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.40 2010/01/19 01:27:41 patthoyts Exp $
+# RCS: @(#) $Id: msgbox.tcl,v 1.41 2011/01/13 07:39:12 nijtmans Exp $
 #
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
@@ -254,7 +254,7 @@ proc ::tk::MessageBox {args} {
     toplevel $w -class Dialog -bg $bg
     wm title $w $data(-title)
     wm iconname $w Dialog
-    wm protocol $w WM_DELETE_WINDOW { }
+    wm protocol $w WM_DELETE_WINDOW [list $w.$cancel invoke]
 
     # Message boxes should be transient with respect to their parent so that
     # they always stay on top of the parent window.  But some window managers
