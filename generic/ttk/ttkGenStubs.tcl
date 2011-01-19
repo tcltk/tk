@@ -7,12 +7,12 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-# 
-# $Id: ttkGenStubs.tcl,v 1.1.4.3 2011/01/19 08:37:45 nijtmans Exp $
+#
+# $Id: ttkGenStubs.tcl,v 1.1.4.4 2011/01/19 14:28:10 nijtmans Exp $
 #
 # SOURCE: tcl/tools/genStubs.tcl, revision 1.20
 #
-# CHANGES: 
+# CHANGES:
 #	+ Remove xxx_TCL_DECLARED #ifdeffery
 #	+ Use application-defined storage class specifier instead of "EXTERN"
 #	+ Add "epoch" and "revision" fields to stubs table record
@@ -20,7 +20,7 @@
 #	+ Second argument to "declare" is used as a status guard
 #	  instead of a platform guard.
 #	+ Use void (*reserved$i)(void) = 0 instead of void *reserved$i = NULL
-#	  for unused stub entries, in case pointer-to-function and 
+#	  for unused stub entries, in case pointer-to-function and
 #	  pointer-to-object are different sizes.
 #	+ Allow trailing semicolon in function declarations
 #	+ stubs table is const-qualified
@@ -281,7 +281,7 @@ proc genStubs::addPlatformGuard {plat text} {
 	}
 	unix {
 	    return "#if !defined(__WIN32__) /* UNIX */\n${text}#endif /* UNIX */\n"
-	}		    
+	}
 	macosx {
 	    return "#ifdef MAC_OSX_TCL\n${text}#endif /* MAC_OSX_TCL */\n"
 	}
@@ -415,8 +415,8 @@ proc genStubs::makeDecl {name decl index} {
     lassign $decl rtype fname args
 
     append text "/* $index */\n"
-    if {$rtype eq "VOID"} {
-	set rtype void
+    if {$rtype != "void"} {
+	regsub -all void $rtype VOID rtype
     }
     set line "$scspec $rtype"
     set count [expr {2 - ([string length $line] / 8)}]
@@ -532,8 +532,8 @@ proc genStubs::makeSlot {name decl index} {
     append lfname [string range $fname 1 end]
 
     set text "    "
-    if {$rtype eq "VOID"} {
-	set rtype void
+    if {$rtype != "void"} {
+	regsub -all void $rtype VOID rtype
     }
     if {$args == ""} {
 	append text $rtype " *" $lfname "; /* $index */\n"
@@ -619,7 +619,7 @@ proc genStubs::makeInit {name decl index} {
 # Results:
 #	None.
 
-proc genStubs::forAllStubs {name slotProc guardProc textVar 
+proc genStubs::forAllStubs {name slotProc guardProc textVar
     	{skipString {"/* Slot $i is reserved */\n"}}} {
     variable stubs
     upvar $textVar text
@@ -643,7 +643,7 @@ proc genStubs::addGuard {status text} {
     set upName [string toupper $libraryName]
 
     switch -- $status {
-	current	{ 
+	current	{
 	    # No change
 	}
 	deprecated {
@@ -656,7 +656,7 @@ proc genStubs::addGuard {status text} {
 	    puts stderr "Unrecognized status code $status"
 	}
     }
-    return $text 
+    return $text
 }
 
 proc genStubs::ifdeffed {macro text} {
