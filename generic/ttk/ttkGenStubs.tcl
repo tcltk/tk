@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 # 
-# $Id: ttkGenStubs.tcl,v 1.1.4.2 2010/08/26 02:06:09 hobbs Exp $
+# $Id: ttkGenStubs.tcl,v 1.1.4.3 2011/01/19 08:37:45 nijtmans Exp $
 #
 # SOURCE: tcl/tools/genStubs.tcl, revision 1.20
 #
@@ -32,7 +32,7 @@ namespace eval genStubs {
     # libraryName --
     #
     #	The name of the entire library.  This value is used to compute
-    #	the USE_*_STUBS macro, the name of the init file, and others.
+    #	the USE_*_STUBS macro and the name of the init file.
 
     variable libraryName "UNKNOWN"
 
@@ -183,12 +183,22 @@ proc genStubs::hooks {names} {
 #	decl		The C function declaration, or {} for an undefined
 #			entry.
 #
-proc genStubs::declare {index status decl} {
+proc genStubs::declare {args} {
     variable stubs
     variable curName
     variable revision
 
     incr revision
+
+    if {[llength $args] == 2} {
+	lassign $args index decl
+	set status current
+    } elseif {[llength $args] == 3} {
+	lassign $args index status decl
+    } else {
+	puts stderr "wrong # args: declare $args"
+	return
+    }
 
     # Check for duplicate declarations, then add the declaration and
     # bump the lastNum counter if necessary.
@@ -196,6 +206,7 @@ proc genStubs::declare {index status decl} {
     if {[info exists stubs($curName,decl,$index)]} {
 	puts stderr "Duplicate entry: $index"
     }
+    regsub -all const $decl CONST decl
     regsub -all "\[ \t\n\]+" [string trim $decl] " " decl
     set decl [parseDecl $decl]
 
@@ -404,6 +415,9 @@ proc genStubs::makeDecl {name decl index} {
     lassign $decl rtype fname args
 
     append text "/* $index */\n"
+    if {$rtype eq "VOID"} {
+	set rtype void
+    }
     set line "$scspec $rtype"
     set count [expr {2 - ([string length $line] / 8)}]
     append line [string range "\t\t\t" 0 $count]
@@ -420,9 +434,10 @@ proc genStubs::makeDecl {name decl index} {
     }
     append line $fname
 
+    regsub -all void $args VOID args
     set arg1 [lindex $args 0]
     switch -exact $arg1 {
-	void {
+	VOID {
 	    append line "(void)"
 	}
 	TCL_VARARGS {
@@ -517,15 +532,19 @@ proc genStubs::makeSlot {name decl index} {
     append lfname [string range $fname 1 end]
 
     set text "    "
+    if {$rtype eq "VOID"} {
+	set rtype void
+    }
     if {$args == ""} {
 	append text $rtype " *" $lfname "; /* $index */\n"
 	return $text
     }
     append text $rtype " (*" $lfname ") "
 
+    regsub -all void $args VOID args
     set arg1 [lindex $args 0]
     switch -exact $arg1 {
-	void {
+	VOID {
 	    append text "(void)"
 	}
 	TCL_VARARGS {
