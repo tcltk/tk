@@ -1,7 +1,7 @@
 2011-01-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkGenStubs.tcl:   Make sure to use CONST/VOID in stead of
-	* generic/ttkDecls.h            const/void when appropriate. This allows to
+	* generic/ttk/ttkDecls.h            const/void when appropriate. This allows to
 	use const/void in the *.decls file always, genStubs will do the right thing.
 
 2011-01-17  Jan Nijtmans  <nijtmans@users.sf.net>
