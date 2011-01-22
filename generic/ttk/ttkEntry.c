@@ -1,5 +1,5 @@
 /*
- * $Id: ttkEntry.c,v 1.9.4.1 2010/08/26 02:06:09 hobbs Exp $
+ * $Id: ttkEntry.c,v 1.9.4.2 2011/01/22 18:48:35 jenglish Exp $
  *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
@@ -1790,6 +1790,7 @@ static const Ttk_Ensemble ComboboxCommands[] = {
     { "selection", 	0,EntrySelectionCommands },
     { "state",  	TtkWidgetStateCommand,0 },
     { "set", 		EntrySetCommand,0 },
+    { "validate",	EntryValidateCommand,0 },
     { "xview", 		EntryXViewCommand,0 },
     { 0,0,0 }
 };
