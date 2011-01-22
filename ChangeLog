@@ -1,3 +1,8 @@
+2011-01-22  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/ttk/ttkEntry.c(ttk::combobox): Add missing 
+	'validate' command (reported by schelte).
+
 2011-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/msgbox.tcl: [Patch #3154705] Close button has no effect
