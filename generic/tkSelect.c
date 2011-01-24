@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.33 2010/12/06 10:30:49 nijtmans Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.34 2011/01/24 19:51:00 jenglish Exp $
  */
 
 #include "tkInt.h"
@@ -192,8 +192,8 @@ Tk_CreateSelHandler(
 		     * should make a copy for this selPtr.
 		     */
 
-		    unsigned cmdInfoLen = sizeof(CommandInfo) +
-			    ((CommandInfo *) clientData)->cmdLength - 3;
+		    unsigned cmdInfoLen = Tk_Offset(CommandInfo, command) +
+			    ((CommandInfo *)clientData)->cmdLength + 1;
 
 		    selPtr->clientData = ckalloc(cmdInfoLen);
 		    memcpy(selPtr->clientData, clientData, cmdInfoLen);

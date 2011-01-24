@@ -1,3 +1,8 @@
+2011-01-24  Joe English  <jenglish@users.sourceforge.net>
+
+	* generic/tkSelect.c: Fix for [Bug #3164879] 
+	(memory allocation bug introduced by [Patch #3129527])
+
 2011-01-22  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkEntry.c(ttk::combobox): Add missing 
