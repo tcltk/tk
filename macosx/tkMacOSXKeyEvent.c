@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.30 2010/01/06 14:27:33 dkf Exp $
+ * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.31 2011/01/24 15:20:50 wordtech Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -147,6 +147,9 @@ static NSModalSession modalSession = NULL;
 	} else {
 	    xEvent.xany.type = KeyPress;
 	}
+
+/* prevent SF bug 2907388 here (crash on composite characters) */
+if ([characters length] > 0) {
 	xEvent.xkey.keycode = (keyCode << 16) | (UInt16)
 		[characters characterAtIndex:0];
 	if (![characters getCString:xEvent.xkey.trans_chars
@@ -154,6 +157,9 @@ static NSModalSession modalSession = NULL;
 	    TkMacOSXDbgMsg("characters too long");
 	    return theEvent;
 	}
+}
+/* end workaround */
+
 	len = [charactersIgnoringModifiers length];
 	if (len) {
 	    xEvent.xkey.nbytes = [charactersIgnoringModifiers characterAtIndex:0];
