@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkSelect.c,v 1.20 2007/04/17 14:36:49 dkf Exp $
+ * RCS: @(#) $Id: tkSelect.c,v 1.20.4.1 2011/01/25 08:31:37 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -909,7 +909,7 @@ Tk_SelectionObjCmd(
 	    cmdInfoPtr->byteOffset = 0;
 	    cmdInfoPtr->buffer[0] = '\0';
 	    cmdInfoPtr->cmdLength = cmdLength;
-	    strcpy(cmdInfoPtr->command, string);
+	    memcpy(cmdInfoPtr->command, string, cmdLength + 1);
 	    Tk_CreateSelHandler(tkwin, selection, target, HandleTclCommand,
 		    (ClientData) cmdInfoPtr, format);
 	}
