@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.8 2010/01/23 01:36:03 patthoyts Exp $
+ * RCS: @(#) $Id: tkUnixWm.c,v 1.36.2.9 2011/01/25 08:49:59 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -2708,7 +2708,7 @@ WmProtocolCmd(tkwin, winPtr, interp, objc, objv)
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
 	protPtr->interp = interp;
-	strcpy(protPtr->command, cmd);
+	memcpy(protPtr->command, cmd, cmdLength + 1);
     }
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	UpdateWmProtocols(wmPtr);
