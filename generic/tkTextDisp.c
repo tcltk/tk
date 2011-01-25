@@ -11,7 +11,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.14.2.5 2007/04/29 02:24:02 das Exp $
+ * RCS: @(#) $Id: tkTextDisp.c,v 1.14.2.6 2011/01/25 08:49:59 nijtmans Exp $
  */
 
 #include "tkPort.h"
@@ -4586,7 +4586,7 @@ TkTextCharLayoutProc(textPtr, indexPtr, segPtr, byteOffset, maxX, maxBytes,
 	    (sizeof(CharInfo) - 3 + bytesThatFit));
     chunkPtr->clientData = (ClientData) ciPtr;
     ciPtr->numBytes = bytesThatFit;
-    strncpy(ciPtr->chars, p, (size_t) bytesThatFit);
+    memcpy(ciPtr->chars, p, (size_t) bytesThatFit);
     if (p[bytesThatFit - 1] == '\n') {
 	ciPtr->numBytes--;
     }
