@@ -12,7 +12,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.9 2010/03/12 13:02:36 nijtmans Exp $
+ * RCS: @(#) $Id: tkWinWm.c,v 1.124.2.10 2011/01/25 08:31:37 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -5005,7 +5005,7 @@ WmProtocolCmd(
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
 	protPtr->interp = interp;
-	strcpy(protPtr->command, cmd);
+	memcpy(protPtr->command, cmd, cmdLength + 1);
     }
     return TCL_OK;
 }
