@@ -52,6 +52,14 @@ then the command modifies the given named font to have the given values; in
 this case, all widgets using that font will redisplay themselves using the
 new attributes for the font.  See \fBFONT OPTIONS\fR below for a list of the
 possible attributes.
+.RS
+.PP
+Note that on Aqua/Mac OS X, the system fonts (see
+\fBPLATFORM-SPECIFIC FONTS\fR below) may not be actually altered because they
+are implemented by the system theme. To achieve the effect of modification,
+use \fBfont actual\fR to get their configuration and \fBfont create\fR to
+synthesize a copy of the font which can be modified.
+.RE
 .TP
 \fBfont create\fR ?\fIfontname\fR? ?\fIoption value ...\fR?
 .
