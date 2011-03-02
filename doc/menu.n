@@ -42,6 +42,8 @@ top.  If so, it will exist as entry 0 of the menu and the other
 entries will number starting at 1.  The default
 menu bindings arrange for the menu to be torn off when the tear-off
 entry is invoked.
+This option is ignored under Aqua/Mac OS X, where menus cannot
+be torn off.
 .OP \-tearoffcommand tearOffCommand TearOffCommand
 If this option has a non-empty value, then it specifies a Tcl command
 to invoke whenever the menu is torn off.  The actual command will
@@ -54,6 +56,8 @@ and menu \fB.x.y\fR is torn off to
 create a new menu \fB.x.tearoff1\fR, then the command
 .QW "\fBa b .x.y .x.tearoff1\fR"
 will be invoked.
+This option is ignored under Aqua/Mac OS X, where menus cannot
+be torn off.
 .OP \-title title Title
 The string will be used to title the window created when this menu is
 torn off. If the title is NULL, then the window will have the title
@@ -557,6 +561,8 @@ This option is not available for separator or tear-off entries.
 When this option is zero, the entry appears below the previous entry. When
 this option is one, the entry appears at the top of a new column in the
 menu.
+This option is ignored on Aqua/Mac OS X, where menus are always a single
+column.
 .TP
 \fB\-command \fIvalue\fR
 .

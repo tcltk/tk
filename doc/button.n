@@ -175,6 +175,14 @@ actions occur:  the button is completely non-responsive.
 .PP
 The behavior of buttons can be changed by defining new bindings for
 individual widgets or by redefining the class bindings.
+.SH "PLATFORM NOTES"
+.PP
+On Aqua/Mac OS X, some configuration options are ignored for the purpose of
+drawing of the widget because they would otherwise conflict with platform
+guidelines. The \fBconfigure\fR and \fBcget\fR subcommands can still
+manipulate the values, but do not cause any variation to the look of the
+widget. The options affected notably include \fB\-background\fR and
+\fB\-relief\fR.
 .SH EXAMPLES
 .PP
 This is the classic Tk

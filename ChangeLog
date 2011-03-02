@@ -1,3 +1,10 @@
+2011-03-02  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/tk_mac.n (new file): Description of OSX-specific functionality
+	in Tk, contributed by Kevin Walzer.
+	* doc/button.n, doc/font.n, doc/menu.n: Noted which parts of these
+	commands are intentionally not fully supported on OSX.
+
 2011-01-24  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/tkSelect.c: Fix for [Bug #3164879] 
