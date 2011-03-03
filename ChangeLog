@@ -1,3 +1,7 @@
+2011-03-03  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
+
+	* generic/tkCanvLine.c: [Bug 3175610]: Incomplete refresh of line items.
+
 2011-03-02  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/tk_mac.n (new file): Description of OSX-specific functionality
