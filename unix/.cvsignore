@@ -1,8 +1,0 @@
-*.so
-*.a
-Makefile
-tkConfig.sh
-tktest
-wish
-config.cache
-config.status
