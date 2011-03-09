@@ -1,3 +1,9 @@
+2011-03-09  Reinhard Max  <max@suse.de>
+
+	* unix/configure.in: Use a symbol from libXft itself for the link
+	test rather than one from libfreetype, because the latter doesn't
+	work when the linker is called with --as-needed.
+	
 2011-03-03  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
 
 	* generic/tkCanvLine.c: [Bug 3175610]: Incomplete refresh of line items.
