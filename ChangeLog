@@ -1,3 +1,9 @@
+2011-03-09  Reinhard Max  <max@suse.de>
+
+	* unix/configure.in: Use a symbol from libXft itself for the link
+	test rather than one from libfreetype, because the latter doesn't
+	work when the linker is called with --as-needed.
+	
 2011-01-25  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkSelect.c: [Patch #3129527]: Fix buffer overflow w/ GCC 4.5 and
