@@ -8635,9 +8635,10 @@ RemapWindows(winPtr, parentHWND)
      HWND parentHWND;
 {
     TkWindow *childPtr;
+    const char *className = Tk_Class(winPtr);
 
     /* Skip Menus as they are handled differently */
-    if (strcmp(Tk_Class(winPtr), "Menu") == 0) {
+    if (className != NULL && strcmp(className, "Menu") == 0) {
 	return;
     }
     if (winPtr->window) {
