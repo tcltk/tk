@@ -1,3 +1,10 @@
+2010-03-12  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWin32Dll.c:  SEH-emulation for AMD64
+	* win/tkWinX.c:      mingw-w64 does not accept _WIN32_IE < 0x0501
+	Merged --cherrypick from core-8-5-branch (2010-12-13, f4ecadb40d)
+	* win/tkWinPort.h:  remove conflicting definition of timezone struct
+
 2011-03-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/Makefile.in (VC_MANIFEST_EMBED_DLL VC_MANIFEST_EMBED_EXE):
