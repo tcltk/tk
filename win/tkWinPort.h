@@ -119,15 +119,6 @@
 #define TkpCreateNativeBitmap(display, source) None
 #define TkpGetNativeAppBitmap(display, name, w, h) None
 
-/*
- * Define timezone for gettimeofday.
- */
-
-struct timezone {
-    int tz_minuteswest;
-    int tz_dsttime;
-};
-
 #ifndef _TCLINT
 #include <tclInt.h>
 #endif

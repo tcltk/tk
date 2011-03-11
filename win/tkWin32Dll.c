@@ -1,4 +1,4 @@
-/* 
+/*
  * tkWin32Dll.c --
  *
  *	This file contains a stub dll entry point.
@@ -15,6 +15,7 @@
 #ifndef STATIC_BUILD
 
 #ifdef HAVE_NO_SEH
+
 /*
  * Unlike Borland and Microsoft, we don't register exception handlers by
  * pushing registration records onto the runtime stack. Instead, we register
@@ -30,23 +31,23 @@ typedef struct EXCEPTION_REGISTRATION {
     int status;
 } EXCEPTION_REGISTRATION;
 
-/* Need to add noinline flag to DllMain declaration so that gcc -O3
- * does not inline asm code into DllEntryPoint and cause a
- * compile time error because of redefined local labels.
+/*
+ * Need to add noinline flag to DllMain declaration so that gcc -O3 does not
+ * inline asm code into DllEntryPoint and cause a compile time error because
+ * of redefined local labels.
  */
 
-BOOL WINAPI		DllMain(HINSTANCE hInst, DWORD reason, 
-				LPVOID reserved)
-                        __attribute__ ((noinline));
+BOOL APIENTRY		DllMain(HINSTANCE hInst, DWORD reason,
+			    LPVOID reserved) __attribute__ ((noinline));
 
-#else
+#else /* !HAVE_NO_SEH */
 
 /*
  * The following declaration is for the VC++ DLL entry point.
  */
 
-BOOL WINAPI		DllMain _ANSI_ARGS_((HINSTANCE hInst,
-			    DWORD reason, LPVOID reserved));
+BOOL APIENTRY		DllMain(HINSTANCE hInst, DWORD reason,
+			    LPVOID reserved);
 #endif /* HAVE_NO_SEH */
 
 /*
@@ -54,9 +55,8 @@ BOOL WINAPI		DllMain _ANSI_ARGS_((HINSTANCE hInst,
  *
  * DllEntryPoint --
  *
- *	This wrapper function is used by Borland to invoke the
- *	initialization code for Tk.  It simply calls the DllMain
- *	routine.
+ *	This wrapper function is used by Borland to invoke the initialization
+ *	code for Tk. It simply calls the DllMain routine.
  *
  * Results:
  *	See DllMain.
@@ -67,7 +67,7 @@ BOOL WINAPI		DllMain _ANSI_ARGS_((HINSTANCE hInst,
  *----------------------------------------------------------------------
  */
 
-BOOL WINAPI
+BOOL APIENTRY
 DllEntryPoint(hInst, reason, reserved)
     HINSTANCE hInst;		/* Library instance handle. */
     DWORD reason;		/* Reason this function is being called. */
@@ -81,18 +81,18 @@ DllEntryPoint(hInst, reason, reserved)
  *
  * DllMain --
  *
- *	DLL entry point.  It is only necessary to specify our dll here so
- *	that resources are found correctly.  Otherwise Tk will initialize
- *	and clean up after itself through other methods, in order to be
- *	consistent whether the build is static or dynamic.
+ *	DLL entry point. It is only necessary to specify our dll here so that
+ *	resources are found correctly. Otherwise Tk will initialize and clean
+ *	up after itself through other methods, in order to be consistent
+ *	whether the build is static or dynamic.
  *
  * Results:
  *	Always TRUE.
  *
  * Side effects:
- *	This might call some sycronization functions, but MSDN
- *	documentation states: "Waiting on synchronization objects in
- *	DllMain can cause a deadlock."
+ *	This might call some synchronization functions, but MSDN documentation
+ *	states: "Waiting on synchronization objects in DllMain can cause a
+ *	deadlock."
  *
  *----------------------------------------------------------------------
  */
@@ -108,8 +108,8 @@ DllMain(hInstance, reason, reserved)
 #endif
 
     /*
-     * If we are attaching to the DLL from a new process, tell Tk about
-     * the hInstance to use.
+     * If we are attaching to the DLL from a new process, tell Tk about the
+     * hInstance to use.
      */
 
     switch (reason) {
@@ -120,12 +120,82 @@ DllMain(hInstance, reason, reserved)
 
     case DLL_PROCESS_DETACH:
 	/*
-	 * Protect the call to TkFinalize in an SEH block.  We can't
-	 * be guarenteed Tk is always being unloaded from a stable
-	 * condition.
+	 * Protect the call to TkFinalize in an SEH block. We can't be
+	 * guarenteed Tk is always being unloaded from a stable condition.
 	 */
 
 #ifdef HAVE_NO_SEH
+#   ifdef __WIN64
+	__asm__ __volatile__ (
+
+	    /*
+	     * Construct an EXCEPTION_REGISTRATION to protect the call to
+	     * TkFinalize
+	     */
+
+	    "leaq	%[registration], %%rdx"		"\n\t"
+	    "movq	%%gs:0,		%%rax"		"\n\t"
+	    "movq	%%rax,		0x0(%%edx)"	"\n\t" /* link */
+	    "leaq	1f,		%%rax"		"\n\t"
+	    "movq	%%rax,		0x8(%%rdx)"	"\n\t" /* handler */
+	    "movq	%%rbp,		0x10(%%rdx)"	"\n\t" /* ebp */
+	    "movq	%%rsp,		0x18(%%rdx)"	"\n\t" /* esp */
+	    "movl	%[error],	0x20(%%rdx)"	"\n\t" /* status */
+
+	    /*
+	     * Link the EXCEPTION_REGISTRATION on the chain
+	     */
+
+	    "movq	%%rdx,		%%gs:0"		"\n\t"
+
+	    /*
+	     * Call TkFinalize
+	     */
+
+	    "movq	$0x0,		%%rcx"		"\n\t"
+	    "call	TkFinalize"			"\n\t"
+
+	    /*
+	     * Come here on a normal exit. Recover the EXCEPTION_REGISTRATION
+	     * and store a TCL_OK status
+	     */
+
+	    "movq	%%gs:0,		%%rdx"		"\n\t"
+	    "movl	%[ok],		%%eax"		"\n\t"
+	    "movl	%%eax,		0x20(%%rdx)"	"\n\t"
+	    "jmp	2f"				"\n"
+
+	    /*
+	     * Come here on an exception. Get the EXCEPTION_REGISTRATION that
+	     * we previously put on the chain.
+	     */
+
+	    "1:"					"\t"
+	    "movq	%%gs:0,		%%rdx"		"\n\t"
+	    "movq	0x10(%%rdx),	%%rdx"		"\n\t"
+
+	    /*
+	     * Come here however we exited. Restore context from the
+	     * EXCEPTION_REGISTRATION in case the stack is unbalanced.
+	     */
+
+	    "2:"					"\t"
+	    "movq	0x18(%%rdx),	%%rsp"		"\n\t"
+	    "movq	0x10(%%rdx),	%%rbp"		"\n\t"
+	    "movq	0x0(%%rdx),	%%rax"		"\n\t"
+	    "movq	%%rax,		%%gs:0"		"\n\t"
+
+	    :
+	    /* No outputs */
+	    :
+	    [registration]	"m"	(registration),
+	    [ok]		"i"	(TCL_OK),
+	    [error]		"i"	(TCL_ERROR)
+	    :
+	    "%rax", "%rbx", "%rcx", "%rdx", "%rsi", "%rdi", "memory"
+	);
+
+#   else
 	__asm__ __volatile__ (
 
 	    /*
@@ -175,7 +245,7 @@ DllMain(hInstance, reason, reserved)
 	    "movl	0x8(%%edx),	%%edx"		"\n"
 
 
-	    /* 
+	    /*
 	     * Come here however we exited. Restore context from the
 	     * EXCEPTION_REGISTRATION in case the stack is unbalanced.
 	     */
@@ -194,15 +264,16 @@ DllMain(hInstance, reason, reserved)
 	    [error]		"i"	(TCL_ERROR)
 	    :
 	    "%eax", "%ebx", "%ecx", "%edx", "%esi", "%edi", "memory"
-	    );
+	);
 
+#   endif
 #else /* HAVE_NO_SEH */
 	__try {
 	    /*
-	     * Run and remove our exit handlers, if they haven't already
-	     * been run.  Just in case we are being unloaded prior to
-	     * Tcl (it can happen), we won't leave any dangling pointers
-	     * hanging around for when Tcl gets unloaded later.
+	     * Run and remove our exit handlers, if they haven't already been
+	     * run. Just in case we are being unloaded prior to Tcl (it can
+	     * happen), we won't leave any dangling pointers hanging around
+	     * for when Tcl gets unloaded later.
 	     */
 
 	    TkFinalize(NULL);
@@ -217,3 +288,11 @@ DllMain(hInstance, reason, reserved)
 }
 
 #endif /* !STATIC_BUILD */
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
