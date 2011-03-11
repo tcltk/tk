@@ -1,3 +1,9 @@
+2011-03-11  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/Makefile.in (VC_MANIFEST_EMBED_DLL VC_MANIFEST_EMBED_EXE):
+	* win/configure, win/configure.in, win/tcl.m4: SC_EMBED_MANIFEST macro.
+	Merged --cherrypick from core-8-5-branch (2010-08-26, 3416226333358009f)
+
 2011-01-25  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkSelect.c:     [Bug 3129527]: Fix buffer overflow w/ GCC 4.5 and
