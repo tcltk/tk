@@ -222,10 +222,9 @@ static void SquareElementDraw(
     Drawable d, Ttk_Box b, unsigned int state)
 {
     SquareElement *square = elementRecord;
-    Tk_3DBorder border = NULL, foreground = NULL;
+    Tk_3DBorder foreground = NULL;
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
 
-    border = Tk_Get3DBorderFromObj(tkwin, square->borderObj);
     foreground = Tk_Get3DBorderFromObj(tkwin, square->foregroundObj);
     Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, square->reliefObj, &relief);
