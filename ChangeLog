@@ -1,3 +1,9 @@
+2011-03-11  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/ttk/ttkDefaultTheme.c: Eliminate some unneeded write-only
+	* generic/ttk/ttkManager.c:      variables (discovered by gcc-4.6)
+	* generic/ttk/ttkSquare.c:
+
 2011-03-09  Reinhard Max  <max@suse.de>
 
 	* unix/configure.in: Use a symbol from libXft itself for the link
