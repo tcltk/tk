@@ -22,7 +22,7 @@
  */
 
 #ifndef _WIN32_IE
-#define _WIN32_IE 0x0300
+#define _WIN32_IE 0x0501 /* IE 5 */
 #endif
 
 #include <commctrl.h>
