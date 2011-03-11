@@ -499,7 +499,7 @@ static void IndicatorElementDraw(
     IndicatorElement *indicator = elementRecord;
     Display *display = Tk_Display(tkwin);
     Ttk_Padding padding;
-    XColor *fgColor, *frameColor, *lightColor, *shadeColor, *indicatorColor, *borderColor;
+    XColor *fgColor, *frameColor, *shadeColor, *indicatorColor, *borderColor;
 
     int index, ix, iy;
     XGCValues gcValues;
@@ -529,7 +529,6 @@ static void IndicatorElementDraw(
      */
     fgColor = Tk_GetColorFromObj(tkwin, indicator->foregroundObj);
     frameColor = Tk_GetColorFromObj(tkwin, indicator->backgroundObj);
-    lightColor = Tk_GetColorFromObj(tkwin, indicator->lightColorObj);
     shadeColor = Tk_GetColorFromObj(tkwin, indicator->shadeColorObj);
     indicatorColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     borderColor = Tk_GetColorFromObj(tkwin, indicator->borderColorObj);
