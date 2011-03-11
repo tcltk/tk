@@ -24,7 +24,7 @@ fi
 if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
 fi
-# libdir must be a fully qualified path and (not ${exec_prefix}/lib)
+# libdir must be a fully qualified path (not ${exec_prefix}/lib)
 eval libdir="$libdir"
 
 #------------------------------------------------------------------------
@@ -72,7 +72,7 @@ fi
 AC_PROG_MAKE_SET
 
 #--------------------------------------------------------------------
-# These two macros perform additinal compiler test.
+# Perform additinal compiler tests.
 #--------------------------------------------------------------------
 
 AC_CYGWIN
@@ -98,7 +98,7 @@ SC_ENABLE_THREADS
 SC_ENABLE_SHARED
 
 #--------------------------------------------------------------------
-# The statements below define a collection of compile flags.  This 
+# The statements below define a collection of compile flags.  This
 # macro depends on the value of SHARED_BUILD, and should be called
 # after SC_ENABLE_SHARED checks the configure switches.
 #--------------------------------------------------------------------
@@ -121,6 +121,12 @@ AC_SUBST(MAN2TCLFLAGS)
 SC_ENABLE_SYMBOLS
 
 TK_DBGX=${DBGX}
+
+#--------------------------------------------------------------------
+# Embed the manifest if we can determine how
+#--------------------------------------------------------------------
+
+SC_EMBED_MANIFEST(wish.exe.manifest)
 
 #--------------------------------------------------------------------
 # Locate and source the tclConfig.sh file.
@@ -146,7 +152,7 @@ TK_SHARED_LIB_SUFFIX="\${NODOT_VERSION}${DLLSUFFIX}"
 TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
-eval "TK_SRC_DIR=`cd $srcdir/..; pwd`"
+eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
 eval "TK_LIB_FILE=${LIBPREFIX}tk$VER${LIBSUFFIX}"
@@ -180,7 +186,7 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
-if test "$SHARED_BUILD" = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
+if test ${SHARED_BUILD} = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
     if test "${DBGX}" = "d"; then
         RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
     else
@@ -287,3 +293,7 @@ AC_SUBST(TK_CC_SEARCH_FLAGS)
 AC_SUBST(TK_LD_SEARCH_FLAGS)
 
 AC_OUTPUT([Makefile tkConfig.sh wish.exe.manifest])
+
+dnl Local Variables:
+dnl mode: autoconf;
+dnl End:
