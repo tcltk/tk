@@ -153,7 +153,7 @@ DllMain(
 	     */
 
 	    "movq	$0x0,		0x0(%%esp)"		"\n\t"
-	    "call	_TkFinalize"			"\n\t"
+	    "call	TkFinalize"			"\n\t"
 
 	    /*
 	     * Come here on a normal exit. Recover the EXCEPTION_REGISTRATION
