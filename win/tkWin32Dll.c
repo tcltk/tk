@@ -97,15 +97,6 @@ DllEntryPoint(
  *----------------------------------------------------------------------
  */
 
-#if defined(HAVE_NO_SEH) && defined(_WIN64)
-/* A little trick to make the assembler code below
- * compile on Win64 with gcc: It appears that Win64
- * does not decorate compiled functions with "_"
- */
-static void _TkFinalize(ClientData clientData) __attribute__((used));
-static void _TkFinalize(ClientData clientData) {TkFinalize(clientData);}
-#endif
-
 BOOL APIENTRY
 DllMain(
     HINSTANCE hInstance,
@@ -144,11 +135,11 @@ DllMain(
 
 	    "leaq	%[registration], %%rdx"		"\n\t"
 	    "movq	%%gs:0,		%%rax"		"\n\t"
-	    "movq	%%rax,		0x0(%%edx)"	"\n\t" /* link */
+	    "movq	%%rax,		0x0(%%rdx)"	"\n\t" /* link */
 	    "leaq	1f,		%%rax"		"\n\t"
 	    "movq	%%rax,		0x8(%%rdx)"	"\n\t" /* handler */
-	    "movq	%%rbp,		0x10(%%rdx)"	"\n\t" /* ebp */
-	    "movq	%%rsp,		0x18(%%rdx)"	"\n\t" /* esp */
+	    "movq	%%rbp,		0x10(%%rdx)"	"\n\t" /* rbp */
+	    "movq	%%rsp,		0x18(%%rdx)"	"\n\t" /* rsp */
 	    "movl	%[error],	0x20(%%rdx)"	"\n\t" /* status */
 
 	    /*
@@ -162,7 +153,7 @@ DllMain(
 	     */
 
 	    "movq	$0x0,		0x0(%%esp)"		"\n\t"
-	    "call	_TkFinalize"			"\n\t"
+	    "call	TkFinalize"			"\n\t"
 
 	    /*
 	     * Come here on a normal exit. Recover the EXCEPTION_REGISTRATION
