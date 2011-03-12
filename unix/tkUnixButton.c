@@ -330,7 +330,8 @@ TkButton *
 TkpCreateButton(
     Tk_Window tkwin)
 {
-    UnixButton *butPtr = (UnixButton *) ckalloc(sizeof(UnixButton));
+    UnixButton *butPtr = ckalloc(sizeof(UnixButton));
+
     return (TkButton *) butPtr;
 }
 

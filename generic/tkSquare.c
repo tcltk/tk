@@ -162,8 +162,8 @@ SquareObjCmd(
      * just the non-NULL/0 items.
      */
 
-    squarePtr = (Square *) ckalloc(sizeof(Square));
-    memset((void *) squarePtr, 0, (sizeof(Square)));
+    squarePtr = ckalloc(sizeof(Square));
+    memset(squarePtr, 0, sizeof(Square));
 
     squarePtr->tkwin = tkwin;
     squarePtr->display = Tk_Display(tkwin);
@@ -177,7 +177,7 @@ SquareObjCmd(
     if (Tk_InitOptions(interp, (char *) squarePtr, optionTable, tkwin)
 	    != TCL_OK) {
 	Tk_DestroyWindow(squarePtr->tkwin);
-	ckfree((char *) squarePtr);
+	ckfree(squarePtr);
 	return TCL_ERROR;
     }
 
@@ -560,7 +560,7 @@ SquareDestroy(
 {
     Square *squarePtr = (Square *) memPtr;
 
-    ckfree((char *) squarePtr);
+    ckfree(squarePtr);
 }
 
 /*

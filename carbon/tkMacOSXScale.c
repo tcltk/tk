@@ -76,7 +76,7 @@ TkScale *
 TkpCreateScale(
     Tk_Window tkwin)
 {
-    MacScale *macScalePtr = (MacScale *) ckalloc(sizeof(MacScale));
+    MacScale *macScalePtr = ckalloc(sizeof(MacScale));
 
     macScalePtr->scaleHandle = NULL;
     if (scaleActionProc == NULL) {

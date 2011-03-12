@@ -230,7 +230,7 @@ Tk_GetGC(
      * and add a new structure to the database.
      */
 
-    gcPtr = (TkGC *) ckalloc(sizeof(TkGC));
+    gcPtr = ckalloc(sizeof(TkGC));
 
     /*
      * Find or make a drawable to use to specify the screen and depth of the
@@ -320,7 +320,7 @@ Tk_FreeGC(
 	XFreeGC(gcPtr->display, gcPtr->gc);
 	Tcl_DeleteHashEntry(gcPtr->valueHashPtr);
 	Tcl_DeleteHashEntry(idHashPtr);
-	ckfree((char *) gcPtr);
+	ckfree(gcPtr);
     }
 }
 
@@ -362,7 +362,7 @@ TkGCCleanup(
 	XFreeGC(gcPtr->display, gcPtr->gc);
 	Tcl_DeleteHashEntry(gcPtr->valueHashPtr);
 	Tcl_DeleteHashEntry(entryPtr);
-	ckfree((char *) gcPtr);
+	ckfree(gcPtr);
     }
     Tcl_DeleteHashTable(&dispPtr->gcValueTable);
     Tcl_DeleteHashTable(&dispPtr->gcIdTable);

@@ -52,7 +52,7 @@ static TkpClipMask *AllocClipMask(GC gc) {
     TkpClipMask *clip_mask = (TkpClipMask*) gc->clip_mask;
     
     if (clip_mask == None) {
-	clip_mask = (TkpClipMask*) ckalloc(sizeof(TkpClipMask));
+	clip_mask = ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
 #ifdef MAC_OSX_TK
     } else if (clip_mask->type == TKP_CLIP_REGION) {
@@ -85,7 +85,7 @@ static void FreeClipMask(GC gc) {
 	    TkpReleaseRegion(((TkpClipMask*) gc->clip_mask)->value.region);
 	}
 #endif
-	ckfree((char*) gc->clip_mask);
+	ckfree(gc->clip_mask);
 	gc->clip_mask = None;
     }
 }
@@ -124,8 +124,7 @@ XCreateGC(
 
 #define MAX_DASH_LIST_SIZE 10
 
-    gp = (XGCValues *) ckalloc(sizeof(XGCValues) + MAX_DASH_LIST_SIZE +
-	    gcCacheSize);
+    gp = ckalloc(sizeof(XGCValues) + MAX_DASH_LIST_SIZE + gcCacheSize);
     if (!gp) {
 	return None;
     }
@@ -272,7 +271,7 @@ void XFreeGC(
     if (gc != None) {
 	FreeClipMask(gc);
 	TkpFreeGCCache(gc);
-	ckfree((char *) gc);
+	ckfree(gc);
     }
 }
 

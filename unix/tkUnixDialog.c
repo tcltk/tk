@@ -49,14 +49,14 @@ EvalObjv(
 
     cmdObj = Tcl_NewStringObj(cmdName, -1);
     Tcl_IncrRefCount(cmdObj);
-    objs = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj*) * (unsigned)(objc+1));
+    objs = ckalloc(sizeof(Tcl_Obj *) * (objc+1));
     objs[0] = cmdObj;
     memcpy(objs+1, objv, sizeof(Tcl_Obj *) * (unsigned)objc);
 
     result = Tcl_EvalObjv(interp, objc+1, objs, 0);
 
     Tcl_DecrRefCount(cmdObj);
-    ckfree((char *) objs);
+    ckfree(objs);
 
     return result;
 }

@@ -186,9 +186,8 @@ ImgBmapCreate(
     ClientData *clientDataPtr)	/* Store manager's token for image here; it
 				 * will be returned in later callbacks. */
 {
-    BitmapMaster *masterPtr;
+    BitmapMaster *masterPtr = ckalloc(sizeof(BitmapMaster));
 
-    masterPtr = (BitmapMaster *) ckalloc(sizeof(BitmapMaster));
     masterPtr->tkMaster = master;
     masterPtr->interp = interp;
     masterPtr->imageCmd = Tcl_CreateObjCommand(interp, name, ImgBmapCmd,
@@ -242,8 +241,8 @@ ImgBmapConfigureMaster(
 {
     BitmapInstance *instancePtr;
     int maskWidth, maskHeight, dummy1, dummy2;
+    const char **argv = ckalloc((objc+1) * sizeof(char *));
 
-    const char **argv = (const char **) ckalloc((objc+1) * sizeof(char *));
     for (dummy1 = 0; dummy1 < objc; dummy1++) {
 	argv[dummy1]=Tcl_GetString(objv[dummy1]);
     }
@@ -251,10 +250,10 @@ ImgBmapConfigureMaster(
 
     if (Tk_ConfigureWidget(masterPtr->interp, Tk_MainWindow(masterPtr->interp),
 	    configSpecs, objc, argv, (char *) masterPtr, flags) != TCL_OK) {
-	ckfree((char *) argv);
+	ckfree(argv);
 	return TCL_ERROR;
     }
-    ckfree((char *) argv);
+    ckfree(argv);
 
     /*
      * Parse the bitmap and/or mask to create binary data. Make sure that the
@@ -613,7 +612,7 @@ TkGetBitmapData(
 	goto error;
     }
     numBytes = ((width+7)/8) * height;
-    data = ckalloc((unsigned) numBytes);
+    data = ckalloc(numBytes);
     for (p = data; numBytes > 0; p++, numBytes--) {
 	if (NextBitmapWord(&pi) != TCL_OK) {
 	    goto error;
@@ -831,7 +830,7 @@ ImgBmapGet(
      * the image.
      */
 
-    instancePtr = (BitmapInstance *) ckalloc(sizeof(BitmapInstance));
+    instancePtr = ckalloc(sizeof(BitmapInstance));
     instancePtr->refCount = 1;
     instancePtr->masterPtr = masterPtr;
     instancePtr->tkwin = tkwin;
@@ -976,7 +975,7 @@ ImgBmapFree(
 	}
 	prevPtr->nextPtr = instancePtr->nextPtr;
     }
-    ckfree((char *) instancePtr);
+    ckfree(instancePtr);
 }
 
 /*
@@ -1017,7 +1016,7 @@ ImgBmapDelete(
 	ckfree(masterPtr->maskData);
     }
     Tk_FreeOptions(configSpecs, (char *) masterPtr, NULL, 0);
-    ckfree((char *) masterPtr);
+    ckfree(masterPtr);
 }
 
 /*

@@ -150,7 +150,7 @@ InitBoxes(void)
 	    && !(tsdPtr->boxesPtr->biHeight % 2)) {
 	size = tsdPtr->boxesPtr->biSize + (1 << tsdPtr->boxesPtr->biBitCount)
 		* sizeof(RGBQUAD) + tsdPtr->boxesPtr->biSizeImage;
-	newBitmap = (LPBITMAPINFOHEADER) ckalloc(size);
+	newBitmap = ckalloc(size);
 	memcpy(newBitmap, tsdPtr->boxesPtr, size);
 	tsdPtr->boxesPtr = newBitmap;
 	tsdPtr->boxWidth = tsdPtr->boxesPtr->biWidth / 4;
@@ -213,7 +213,7 @@ TkpCreateButton(
 {
     WinButton *butPtr;
 
-    butPtr = (WinButton *)ckalloc(sizeof(WinButton));
+    butPtr = ckalloc(sizeof(WinButton));
     butPtr->hwnd = NULL;
     return (TkButton *) butPtr;
 }

@@ -283,7 +283,7 @@ Tk_SetAppName(
      * We have found a unique name. Now add it to the registry.
      */
 
-    riPtr = (RegisteredInterp *) ckalloc(sizeof(RegisteredInterp));
+    riPtr = ckalloc(sizeof(RegisteredInterp));
     riPtr->interp = interp;
     riPtr->name = ckalloc(strlen(actualName) + 1);
     riPtr->nextPtr = interpListPtr;

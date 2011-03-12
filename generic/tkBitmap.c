@@ -413,7 +413,7 @@ GetBitmap(
      * Add information about this bitmap to our database.
      */
 
-    bitmapPtr = (TkBitmap *) ckalloc(sizeof(TkBitmap));
+    bitmapPtr = ckalloc(sizeof(TkBitmap));
     bitmapPtr->bitmap = bitmap;
     bitmapPtr->width = width;
     bitmapPtr->height = height;
@@ -505,7 +505,7 @@ Tk_DefineBitmap(
 		NULL);
 	return TCL_ERROR;
     }
-    predefPtr = (TkPredefBitmap *) ckalloc(sizeof(TkPredefBitmap));
+    predefPtr = ckalloc(sizeof(TkPredefBitmap));
     predefPtr->source = source;
     predefPtr->width = width;
     predefPtr->height = height;
@@ -641,7 +641,7 @@ FreeBitmap(
 	prevPtr->nextPtr = bitmapPtr->nextPtr;
     }
     if (bitmapPtr->objRefCount == 0) {
-	ckfree((char *) bitmapPtr);
+	ckfree(bitmapPtr);
     }
 }
 
@@ -749,7 +749,7 @@ FreeBitmapObj(
 	bitmapPtr->objRefCount--;
 	if ((bitmapPtr->objRefCount == 0)
 		&& (bitmapPtr->resourceRefCount == 0)) {
-	    ckfree((char *) bitmapPtr);
+	    ckfree(bitmapPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     }

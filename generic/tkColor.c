@@ -499,7 +499,7 @@ Tk_FreeColor(
      */
 
     if (tkColPtr->objRefCount == 0) {
-	ckfree((char *) tkColPtr);
+	ckfree(tkColPtr);
     }
 }
 
@@ -571,7 +571,7 @@ FreeColorObj(
 	tkColPtr->objRefCount--;
 	if ((tkColPtr->objRefCount == 0)
 		&& (tkColPtr->resourceRefCount == 0)) {
-	    ckfree((char *) tkColPtr);
+	    ckfree(tkColPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     }

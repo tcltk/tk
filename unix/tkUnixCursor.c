@@ -334,20 +334,20 @@ TkGetCursorByName(
     }
 
     if (cursor != None) {
-	cursorPtr = (TkUnixCursor *) ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = ckalloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }
 
   cleanup:
     if (argv != NULL) {
-	ckfree((char *) argv);
+	ckfree(argv);
     }
     return (TkCursor *) cursorPtr;
 
   badString:
     if (argv) {
-	ckfree((char *) argv);
+	ckfree(argv);
     }
     Tcl_AppendResult(interp, "bad cursor spec \"", string, "\"", NULL);
     return NULL;
@@ -594,7 +594,7 @@ TkCreateCursorFromData(
     Tk_FreePixmap(display, maskPixmap);
 
     if (cursor != None) {
-	cursorPtr = (TkUnixCursor *) ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = ckalloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }
