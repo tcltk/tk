@@ -141,7 +141,7 @@ Tk_CreateSelHandler(
 
     for (selPtr = winPtr->selHandlerList; ; selPtr = selPtr->nextPtr) {
 	if (selPtr == NULL) {
-	    selPtr = (TkSelHandler *) ckalloc(sizeof(TkSelHandler));
+	    selPtr = ckalloc(sizeof(TkSelHandler));
 	    selPtr->nextPtr = winPtr->selHandlerList;
 	    winPtr->selHandlerList = selPtr;
 	    break;
@@ -154,7 +154,7 @@ Tk_CreateSelHandler(
 	     */
 
 	    if (selPtr->proc == HandleTclCommand) {
-		ckfree((char *) selPtr->clientData);
+		ckfree(selPtr->clientData);
 	    }
 	    break;
 	}
@@ -179,7 +179,7 @@ Tk_CreateSelHandler(
 	target = winPtr->dispPtr->utf8Atom;
 	for (selPtr = winPtr->selHandlerList; ; selPtr = selPtr->nextPtr) {
 	    if (selPtr == NULL) {
-		selPtr = (TkSelHandler *) ckalloc(sizeof(TkSelHandler));
+		selPtr = ckalloc(sizeof(TkSelHandler));
 		selPtr->nextPtr = winPtr->selHandlerList;
 		winPtr->selHandlerList = selPtr;
 		selPtr->selection = selection;
@@ -322,7 +322,7 @@ Tk_DeleteSelHandler(
 	((CommandInfo *) selPtr->clientData)->interp = NULL;
 	Tcl_EventuallyFree(selPtr->clientData, TCL_DYNAMIC);
     }
-    ckfree((char *) selPtr);
+    ckfree(selPtr);
 }
 
 /*
@@ -384,7 +384,7 @@ Tk_OwnSelection(
 	}
     }
     if (infoPtr == NULL) {
-	infoPtr = (TkSelectionInfo *) ckalloc(sizeof(TkSelectionInfo));
+	infoPtr = ckalloc(sizeof(TkSelectionInfo));
 	infoPtr->selection = selection;
 	infoPtr->nextPtr = dispPtr->selectionInfoPtr;
 	dispPtr->selectionInfoPtr = infoPtr;
@@ -399,7 +399,7 @@ Tk_OwnSelection(
 	     * memory leak.
 	     */
 
-	    ckfree((char *) infoPtr->clearData);
+	    ckfree(infoPtr->clearData);
 	}
     }
 
@@ -492,7 +492,7 @@ Tk_ClearSelection(
     if (infoPtr != NULL) {
 	clearProc = infoPtr->clearProc;
 	clearData = infoPtr->clearData;
-	ckfree((char *) infoPtr);
+	ckfree(infoPtr);
     }
     XSetSelectionOwner(winPtr->display, selection, None, CurrentTime);
 
@@ -901,8 +901,8 @@ Tk_SelectionObjCmd(
 	if (cmdLength == 0) {
 	    Tk_DeleteSelHandler(tkwin, selection, target);
 	} else {
-	    cmdInfoPtr = (CommandInfo *) ckalloc((unsigned) (
-		    (Tk_Offset(CommandInfo, command) + 1) + cmdLength));
+	    cmdInfoPtr = ckalloc(Tk_Offset(CommandInfo, command)
+		    + 1 + cmdLength);
 	    cmdInfoPtr->interp = interp;
 	    cmdInfoPtr->charOffset = 0;
 	    cmdInfoPtr->byteOffset = 0;
@@ -1004,7 +1004,7 @@ Tk_SelectionObjCmd(
 	    Tk_OwnSelection(tkwin, selection, NULL, NULL);
 	    return TCL_OK;
 	}
-	lostPtr = (LostCommand *) ckalloc(sizeof(LostCommand));
+	lostPtr = ckalloc(sizeof(LostCommand));
 	lostPtr->interp = interp;
 	lostPtr->cmdObj = commandObj;
 	Tcl_IncrRefCount(commandObj);
@@ -1119,7 +1119,7 @@ TkSelDeadWindow(
 	    ((CommandInfo *) selPtr->clientData)->interp = NULL;
 	    Tcl_EventuallyFree(selPtr->clientData, TCL_DYNAMIC);
 	}
-	ckfree((char *) selPtr);
+	ckfree(selPtr);
     }
 
     /*
@@ -1131,9 +1131,9 @@ TkSelDeadWindow(
 	nextPtr = infoPtr->nextPtr;
 	if (infoPtr->owner == (Tk_Window) winPtr) {
 	    if (infoPtr->clearProc == LostSelection) {
-		ckfree((char *) infoPtr->clearData);
+		ckfree(infoPtr->clearData);
 	    }
-	    ckfree((char *) infoPtr);
+	    ckfree(infoPtr);
 	    infoPtr = prevPtr;
 	    if (prevPtr == NULL) {
 		winPtr->dispPtr->selectionInfoPtr = nextPtr;
@@ -1258,7 +1258,7 @@ TkSelClearSelection(
 	if (infoPtr->clearProc != NULL) {
 	    infoPtr->clearProc(infoPtr->clearData);
 	}
-	ckfree((char *) infoPtr);
+	ckfree(infoPtr);
     }
 }
 
@@ -1369,7 +1369,7 @@ HandleTclCommand(
     if (spaceNeeded < MAX_STATIC_SIZE) {
 	command = staticSpace;
     } else {
-	command = (char *) ckalloc((unsigned) spaceNeeded);
+	command = ckalloc(spaceNeeded);
     }
     sprintf(command, "%s %d %d", cmdInfoPtr->command, charOffset, maxBytes);
 
@@ -1597,7 +1597,7 @@ LostSelection(
      */
 
     Tcl_DecrRefCount(lostPtr->cmdObj);
-    ckfree((char *) lostPtr);
+    ckfree(lostPtr);
 }
 
 /*

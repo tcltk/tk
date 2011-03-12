@@ -1262,7 +1262,7 @@ ReadIconFromFile(
 
 	    size = sizeof(BlockOfIconImages)
 		    + ((res != 0) ? sizeof(ICONIMAGE) : 0);
-	    lpIR = (BlockOfIconImagesPtr) ckalloc(size);
+	    lpIR = ckalloc(size);
 	    if (lpIR == NULL) {
 		if (res != 0) {
 		    DestroyIcon(sfi.hIcon);
@@ -1293,7 +1293,7 @@ ReadIconFromFile(
 	Tcl_DStringFree(&ds2);
     }
     if (lpIR != NULL) {
-	titlebaricon = (WinIconPtr) ckalloc(sizeof(WinIconInstance));
+	titlebaricon = ckalloc(sizeof(WinIconInstance));
 	titlebaricon->iconBlock = lpIR;
 	titlebaricon->refCount = 1;
     }
@@ -1369,7 +1369,7 @@ GetIconFromPixmap(
 	return NULL;
     }
 
-    lpIR = (BlockOfIconImagesPtr) ckalloc(sizeof(BlockOfIconImages));
+    lpIR = ckalloc(sizeof(BlockOfIconImages));
     if (lpIR == NULL) {
 	DestroyIcon(hIcon);
 	return NULL;
@@ -1390,7 +1390,7 @@ GetIconFromPixmap(
     lpIR->IconImages[0].lpXOR = 0;
     lpIR->IconImages[0].lpAND = 0;
 
-    titlebaricon = (WinIconPtr) ckalloc(sizeof(WinIconInstance));
+    titlebaricon = ckalloc(sizeof(WinIconInstance));
     titlebaricon->iconBlock = lpIR;
     titlebaricon->refCount = 1;
     return titlebaricon;
@@ -1426,7 +1426,7 @@ DecrIconRefCount(
 	}
 	titlebaricon->iconBlock = NULL;
 
-	ckfree((char *) titlebaricon);
+	ckfree(titlebaricon);
     }
 }
 
@@ -1459,13 +1459,13 @@ FreeIconBlock(
 
     for (i=0 ; i<lpIR->nNumImages ; i++) {
 	if (lpIR->IconImages[i].lpBits != NULL) {
-	    ckfree((char *) lpIR->IconImages[i].lpBits);
+	    ckfree(lpIR->IconImages[i].lpBits);
 	}
 	if (lpIR->IconImages[i].hIcon != NULL) {
 	    DestroyIcon(lpIR->IconImages[i].hIcon);
 	}
     }
-    ckfree((char *) lpIR);
+    ckfree(lpIR);
 }
 
 /*
@@ -1596,7 +1596,7 @@ ReadIconOrCursorFromFile(
      * Allocate memory for the resource structure
      */
 
-    lpIR = (BlockOfIconImagesPtr) ckalloc(sizeof(BlockOfIconImages));
+    lpIR = ckalloc(sizeof(BlockOfIconImages));
 
     /*
      * Read in the header
@@ -1606,7 +1606,7 @@ ReadIconOrCursorFromFile(
     if (lpIR->nNumImages == -1) {
 	Tcl_AppendResult(interp, "Invalid file header", NULL);
 	Tcl_Close(NULL, channel);
-	ckfree((char *) lpIR);
+	ckfree(lpIR);
 	return NULL;
     }
 
@@ -1614,15 +1614,14 @@ ReadIconOrCursorFromFile(
      * Adjust the size of the struct to account for the images.
      */
 
-    lpIR = (BlockOfIconImagesPtr) ckrealloc((char *) lpIR,
-	    sizeof(BlockOfIconImages)
+    lpIR = ckrealloc(lpIR, sizeof(BlockOfIconImages)
 	    + (lpIR->nNumImages - 1) * sizeof(ICONIMAGE));
 
     /*
      * Allocate enough memory for the icon directory entries.
      */
 
-    lpIDE = (LPICONDIRENTRY) ckalloc(lpIR->nNumImages * sizeof(ICONDIRENTRY));
+    lpIDE = ckalloc(lpIR->nNumImages * sizeof(ICONDIRENTRY));
 
     /*
      * Read in the icon directory entries.
@@ -1633,8 +1632,8 @@ ReadIconOrCursorFromFile(
     if (dwBytesRead != lpIR->nNumImages * sizeof(ICONDIRENTRY)) {
 	Tcl_AppendResult(interp, "Error reading file", NULL);
 	Tcl_Close(NULL, channel);
-	ckfree((char *) lpIDE);
-	ckfree((char *) lpIR);
+	ckfree(lpIDE);
+	ckfree(lpIR);
 	return NULL;
     }
 
@@ -1655,7 +1654,7 @@ ReadIconOrCursorFromFile(
 	 * Allocate memory for the resource.
 	 */
 
-	lpIR->IconImages[i].lpBits = (LPBYTE) ckalloc(lpIDE[i].dwBytesInRes);
+	lpIR->IconImages[i].lpBits = ckalloc(lpIDE[i].dwBytesInRes);
 	lpIR->IconImages[i].dwNumBytes = lpIDE[i].dwBytesInRes;
 
 	/*
@@ -1682,20 +1681,20 @@ ReadIconOrCursorFromFile(
 	 * Set the internal pointers appropriately.
 	 */
 
-	if (!AdjustIconImagePointers( &(lpIR->IconImages[i]))) {
+	if (!AdjustIconImagePointers(&lpIR->IconImages[i])) {
 	    Tcl_AppendResult(interp, "Error converting to internal format",
 		    NULL);
 	    goto readError;
 	}
 	lpIR->IconImages[i].hIcon =
-		MakeIconOrCursorFromResource(&(lpIR->IconImages[i]), isIcon);
+		MakeIconOrCursorFromResource(&lpIR->IconImages[i], isIcon);
     }
 
     /*
      * Clean up
      */
 
-    ckfree((char *) lpIDE);
+    ckfree(lpIDE);
     Tcl_Close(NULL, channel);
     if (lpIR == NULL) {
 	Tcl_AppendResult(interp, "Reading of ", Tcl_GetString(fileName),
@@ -1708,11 +1707,11 @@ ReadIconOrCursorFromFile(
     Tcl_Close(NULL, channel);
     for (i = 0; i < lpIR->nNumImages; i++) {
 	if (lpIR->IconImages[i].lpBits != NULL) {
-	    ckfree((char *) lpIR->IconImages[i].lpBits);
+	    ckfree(lpIR->IconImages[i].lpBits);
 	}
     }
-    ckfree((char *) lpIDE);
-    ckfree((char *) lpIR);
+    ckfree(lpIDE);
+    ckfree(lpIR);
     return NULL;
 }
 
@@ -1909,7 +1908,7 @@ void
 TkWmNewWindow(
     TkWindow *winPtr)		/* Newly-created top-level window. */
 {
-    register WmInfo *wmPtr = (WmInfo *) ckalloc(sizeof(WmInfo));
+    register WmInfo *wmPtr = ckalloc(sizeof(WmInfo));
 
     /*
      * Initialize full structure, then set what isn't NULL
@@ -2212,8 +2211,7 @@ UpdateWrapper(
 
 	    WmInfo *wmPtr2;
 
-	    childStateInfo = (int *)
-		    ckalloc((unsigned) wmPtr->numTransients * sizeof(int));
+	    childStateInfo = ckalloc(wmPtr->numTransients * sizeof(int));
 	    state = 0;
 	    for (wmPtr2 = winPtr->dispPtr->firstWmPtr; wmPtr2 != NULL;
 		    wmPtr2 = wmPtr2->nextPtr) {
@@ -2312,7 +2310,7 @@ UpdateWrapper(
 	    }
 	}
 
-	ckfree((char *) childStateInfo);
+	ckfree(childStateInfo);
     }
 
     /*
@@ -2664,10 +2662,10 @@ TkWmDeadWindow(
 	Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
     }
     if (wmPtr->cmdArgv != NULL) {
-	ckfree((char *) wmPtr->cmdArgv);
+	ckfree(wmPtr->cmdArgv);
     }
     if (wmPtr->clientMachine != NULL) {
-	ckfree((char *) wmPtr->clientMachine);
+	ckfree(wmPtr->clientMachine);
     }
     if (wmPtr->flags & WM_UPDATE_PENDING) {
 	Tcl_CancelIdleCall(UpdateGeometryInfo, winPtr);
@@ -2717,7 +2715,7 @@ TkWmDeadWindow(
 	DecrIconRefCount(wmPtr->iconPtr);
     }
 
-    ckfree((char *) wmPtr);
+    ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
 
@@ -3336,7 +3334,7 @@ WmClientCmd(
     if (wmPtr->clientMachine != NULL) {
 	ckfree(wmPtr->clientMachine);
     }
-    wmPtr->clientMachine = ckalloc((unsigned) length + 1);
+    wmPtr->clientMachine = ckalloc(length + 1);
     memcpy(wmPtr->clientMachine, argv3, (unsigned) length + 1);
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	XTextProperty textProp;
@@ -3401,13 +3399,12 @@ WmColormapwindowsCmd(
 	    != TCL_OK) {
 	return TCL_ERROR;
     }
-    cmapList = (TkWindow **)
-	    ckalloc((unsigned) (windowObjc + 1) * sizeof(TkWindow*));
+    cmapList = ckalloc((windowObjc + 1) * sizeof(TkWindow*));
     gotToplevel = 0;
     for (i = 0; i < windowObjc; i++) {
 	if (TkGetWindowFromObj(interp, tkwin, windowObjv[i],
 		(Tk_Window *) winPtr2Ptr) != TCL_OK) {
-	    ckfree((char *) cmapList);
+	    ckfree(cmapList);
 	    return TCL_ERROR;
 	}
 	if (winPtr2 == winPtr) {
@@ -3427,7 +3424,7 @@ WmColormapwindowsCmd(
     }
     wmPtr->flags |= WM_COLORMAPS_EXPLICIT;
     if (wmPtr->cmapList != NULL) {
-	ckfree((char *) wmPtr->cmapList);
+	ckfree(wmPtr->cmapList);
     }
     wmPtr->cmapList = cmapList;
     wmPtr->cmapCount = windowObjc;
@@ -3488,7 +3485,7 @@ WmCommandCmd(
     argv3 = Tcl_GetString(objv[3]);
     if (argv3[0] == 0) {
 	if (wmPtr->cmdArgv != NULL) {
-	    ckfree((char *) wmPtr->cmdArgv);
+	    ckfree(wmPtr->cmdArgv);
 	    wmPtr->cmdArgv = NULL;
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 		XDeleteProperty(winPtr->display, winPtr->window,
@@ -3501,7 +3498,7 @@ WmCommandCmd(
 	return TCL_ERROR;
     }
     if (wmPtr->cmdArgv != NULL) {
-	ckfree((char *) wmPtr->cmdArgv);
+	ckfree(wmPtr->cmdArgv);
     }
     wmPtr->cmdArgc = cmdArgc;
     wmPtr->cmdArgv = cmdArgv;
@@ -3912,7 +3909,7 @@ WmGroupCmd(
 	}
 	wmPtr->hints.window_group = Tk_WindowId(tkwin2);
 	wmPtr->hints.flags |= WindowGroupHint;
-	wmPtr->leaderName = ckalloc((unsigned) length + 1);
+	wmPtr->leaderName = ckalloc(length + 1);
 	memcpy(wmPtr->leaderName, argv3, (unsigned) length + 1);
     }
     return TCL_OK;
@@ -4206,10 +4203,10 @@ WmIconnameCmd(
 	return TCL_OK;
     } else {
 	if (wmPtr->iconName != NULL) {
-	    ckfree((char *) wmPtr->iconName);
+	    ckfree(wmPtr->iconName);
 	}
 	argv3 = Tcl_GetStringFromObj(objv[3], &length);
-	wmPtr->iconName = ckalloc((unsigned) length + 1);
+	wmPtr->iconName = ckalloc(length + 1);
 	memcpy(wmPtr->iconName, argv3, (unsigned) length + 1);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	    XSetIconName(winPtr->display, winPtr->window, wmPtr->iconName);
@@ -4290,7 +4287,7 @@ WmIconphotoCmd(
      */
 
     size = sizeof(BlockOfIconImages) + (sizeof(ICONIMAGE) * (objc-startObj-1));
-    lpIR = (BlockOfIconImagesPtr) attemptckalloc(size);
+    lpIR = attemptckalloc(size);
     if (lpIR == NULL) {
 	return TCL_ERROR;
     }
@@ -4310,7 +4307,7 @@ WmIconphotoCmd(
 	 * converts them as required. Initialise icon info structure.
 	 */
 
-	ZeroMemory( &iconInfo, sizeof iconInfo );
+	ZeroMemory(&iconInfo, sizeof(iconInfo));
 	iconInfo.fIcon = TRUE;
 
 	/*
@@ -4325,10 +4322,10 @@ WmIconphotoCmd(
 	bmInfo.bmiHeader.biBitCount = 32;
 	bmInfo.bmiHeader.biCompression = BI_RGB;
 
-	iconInfo.hbmColor = CreateDIBSection( NULL, &bmInfo,
-	    DIB_RGB_COLORS, &bgraPixel.voidPtr, NULL, 0 );
-	if ( !iconInfo.hbmColor ) {
-	    ckfree((char *) lpIR);
+	iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
+		&bgraPixel.voidPtr, NULL, 0);
+	if (!iconInfo.hbmColor) {
+	    ckfree(lpIR);
 	    Tcl_AppendResult(interp, "failed to create color bitmap for \"",
 		    Tcl_GetString(objv[i]), "\"", NULL);
 	    return TCL_ERROR;
@@ -4337,6 +4334,7 @@ WmIconphotoCmd(
 	/*
 	 * Convert the photo image data into BGRA format (RGBQUAD).
 	 */
+
 	bufferSize = height * width * 4;
 	for (idx = 0 ; idx < bufferSize ; idx += 4) {
 	    bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
@@ -4350,24 +4348,26 @@ WmIconphotoCmd(
 	 * matter, as CreateIconIndirect will setup the icon mask based on the
 	 * alpha channel in our color bitmap.
 	 */
+
 	bmInfo.bmiHeader.biBitCount = 1;
 
-	iconInfo.hbmMask = CreateDIBSection( NULL, &bmInfo,
-	    DIB_RGB_COLORS, &bgraMask.voidPtr, NULL, 0 );
-	if ( !iconInfo.hbmMask ) {
+	iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
+		&bgraMask.voidPtr, NULL, 0);
+	if (!iconInfo.hbmMask) {
 	    DeleteObject(iconInfo.hbmColor);
-	    ckfree((char *) lpIR);
+	    ckfree(lpIR);
 	    Tcl_AppendResult(interp, "failed to create mask bitmap for \"",
 		    Tcl_GetString(objv[i]), "\"", NULL);
 	    return TCL_ERROR;
 	}
 
-	ZeroMemory( bgraMask.ptr, width*height/8 );
+	ZeroMemory(bgraMask.ptr, width*height/8);
 
 	/*
 	 * Create an icon from the bitmaps.
 	 */
-	hIcon = CreateIconIndirect( &iconInfo);
+
+	hIcon = CreateIconIndirect(&iconInfo);
 	DeleteObject(iconInfo.hbmColor);
 	DeleteObject(iconInfo.hbmMask);
 	if (hIcon == NULL) {
@@ -4375,7 +4375,7 @@ WmIconphotoCmd(
 	     * XXX should free up created icons.
 	     */
 
-	    ckfree((char *) lpIR);
+	    ckfree(lpIR);
 	    Tcl_AppendResult(interp, "failed to create icon for \"",
 		    Tcl_GetString(objv[i]), "\"", NULL);
 	    return TCL_ERROR;
@@ -4386,7 +4386,7 @@ WmIconphotoCmd(
 	lpIR->IconImages[i-startObj].hIcon = hIcon;
     }
 
-    titlebaricon = (WinIconPtr) ckalloc(sizeof(WinIconInstance));
+    titlebaricon = ckalloc(sizeof(WinIconInstance));
     titlebaricon->iconBlock = lpIR;
     titlebaricon->refCount = 1;
     if (WinSetIcon(interp, titlebaricon, (Tk_Window) useWinPtr) != TCL_OK) {
@@ -4925,7 +4925,7 @@ WmProtocolCmd(
     }
     cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
-	protPtr = (ProtocolHandler *) ckalloc(HANDLER_SIZE(cmdLength));
+	protPtr = ckalloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
@@ -5108,7 +5108,7 @@ WmStackorderCmd(
 	for (window_ptr = windows; *window_ptr ; window_ptr++) {
 	    Tcl_AppendElement(interp, (*window_ptr)->pathName);
 	}
-	ckfree((char *) windows);
+	ckfree(windows);
 	return TCL_OK;
     } else {
 	TkWindow *winPtr2, **winPtr2Ptr = &winPtr2;
@@ -5163,7 +5163,7 @@ WmStackorderCmd(
 	    Tcl_Panic("winPtr2 window not found");
 	}
 
-	ckfree((char *) windows);
+	ckfree(windows);
 
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
 		&index) != TCL_OK) {
@@ -5381,7 +5381,7 @@ WmTitleCmd(
 	    ckfree(wmPtr->title);
 	}
 	argv3 = Tcl_GetStringFromObj(objv[3], &length);
-	wmPtr->title = ckalloc((unsigned) length + 1);
+	wmPtr->title = ckalloc(length + 1);
 	memcpy(wmPtr->title, argv3, (unsigned) length + 1);
 
 	if (!(wmPtr->flags & WM_NEVER_MAPPED) && wmPtr->wrapper != NULL) {
@@ -6675,8 +6675,7 @@ TkWmStackorderToplevel(
     Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
     TkWmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
-    windows = (TkWindow **)
-	    ckalloc((table.numEntries+1) * sizeof(TkWindow *));
+    windows = ckalloc((table.numEntries+1) * sizeof(TkWindow *));
 
     /*
      * Special cases: If zero or one toplevels were mapped there is no need to
@@ -6706,7 +6705,7 @@ TkWmStackorderToplevel(
 
     if (EnumWindows((WNDENUMPROC) TkWmStackorderToplevelEnumProc,
 	    (LPARAM) &pair) == 0) {
-	ckfree((char *) windows);
+	ckfree(windows);
 	windows = NULL;
     } else if (pair.window_ptr != (windows-1)) {
 	Tcl_Panic("num matched toplevel windows does not equal num children");
@@ -6854,7 +6853,7 @@ TkWmAddToColormapWindows(
      * Automatically add the toplevel itself as the last element of the list.
      */
 
-    newPtr = (TkWindow **) ckalloc((unsigned) (count+2) * sizeof(TkWindow *));
+    newPtr = ckalloc((count+2) * sizeof(TkWindow *));
     if (count > 0) {
 	memcpy(newPtr, oldPtr, count * sizeof(TkWindow*));
     }
@@ -6864,7 +6863,7 @@ TkWmAddToColormapWindows(
     newPtr[count-1] = winPtr;
     newPtr[count] = topPtr;
     if (oldPtr != NULL) {
-	ckfree((char *) oldPtr);
+	ckfree(oldPtr);
     }
 
     topPtr->wmInfoPtr->cmapList = newPtr;
@@ -7778,7 +7777,7 @@ WmProc(
 	break;
 
     case WM_ACTIVATE:
-	if ( WA_ACTIVE == LOWORD(wParam) ) {
+	if (WA_ACTIVE == LOWORD(wParam)) {
 	    winPtr = GetTopLevel(hwnd);
 	    if (winPtr && (TkGrabState(winPtr) == TK_GRAB_EXCLUDED)) {
 		/*
@@ -8143,8 +8142,8 @@ TkpGetWrapperWindow(
 static void
 GenerateActivateEvent(TkWindow * winPtr, const int *flagPtr)
 {
-    ActivateEvent *eventPtr;
-    eventPtr = (ActivateEvent *)ckalloc(sizeof(ActivateEvent));
+    ActivateEvent *eventPtr = ckalloc(sizeof(ActivateEvent));
+
     eventPtr->ev.proc = ActivateWindow;
     eventPtr->winPtr = winPtr;
     eventPtr->flagPtr = flagPtr;

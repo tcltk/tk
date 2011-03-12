@@ -109,7 +109,7 @@ TkMenuButton *
 TkpCreateMenuButton(
     Tk_Window tkwin)
 {
-    MacMenuButton *mbPtr = (MacMenuButton *) ckalloc(sizeof(MacMenuButton));
+    MacMenuButton *mbPtr = ckalloc(sizeof(MacMenuButton));
 
     Tk_CreateEventHandler(tkwin, ActivateMask,
 	    MenuButtonEventProc, (ClientData) mbPtr);

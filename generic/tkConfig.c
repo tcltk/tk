@@ -191,10 +191,9 @@ Tk_CreateOptionTable(
      * doesn't already exist.
      */
 
-    hashTablePtr = (Tcl_HashTable *) Tcl_GetAssocData(interp, OPTION_HASH_KEY,
-	    NULL);
+    hashTablePtr = Tcl_GetAssocData(interp, OPTION_HASH_KEY, NULL);
     if (hashTablePtr == NULL) {
-	hashTablePtr = (Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
+	hashTablePtr = ckalloc(sizeof(Tcl_HashTable));
 	Tcl_InitHashTable(hashTablePtr, TCL_ONE_WORD_KEYS);
 	Tcl_SetAssocData(interp, OPTION_HASH_KEY, DestroyOptionHashTable,
 		hashTablePtr);
@@ -222,8 +221,7 @@ Tk_CreateOptionTable(
     for (specPtr = templatePtr; specPtr->type != TK_OPTION_END; specPtr++) {
 	numOptions++;
     }
-    tablePtr = (OptionTable *) (ckalloc(sizeof(OptionTable)
-	    + (numOptions * sizeof(Option))));
+    tablePtr = ckalloc(sizeof(OptionTable) + (numOptions * sizeof(Option)));
     tablePtr->refCount = 1;
     tablePtr->refCount2 = 1;
     tablePtr->hashEntryPtr = hashEntryPtr;
@@ -363,7 +361,7 @@ Tk_DeleteOptionTable(
     Tcl_DeleteHashEntry(tablePtr->hashEntryPtr);
     tablePtr->refCount2--;
     if (tablePtr->refCount2 <= 0) {
-	ckfree((char *) tablePtr);
+	ckfree(tablePtr);
     }
 }
 
@@ -417,7 +415,7 @@ DestroyOptionHashTable(
 	Tk_DeleteOptionTable((Tk_OptionTable) tablePtr);
     }
     Tcl_DeleteHashTable(hashTablePtr);
-    ckfree((char *) hashTablePtr);
+    ckfree(hashTablePtr);
 }
 
 /*
@@ -729,7 +727,7 @@ DoObjConfig(
 	if (internalPtr != NULL) {
 	    if (valuePtr != NULL) {
 		value = Tcl_GetStringFromObj(valuePtr, &length);
-		newStr = ckalloc((unsigned) (length + 1));
+		newStr = ckalloc(length + 1);
 		strcpy(newStr, value);
 	    } else {
 		newStr = NULL;
@@ -1266,7 +1264,7 @@ FreeOptionInternalRep(
 
     tablePtr->refCount2--;
     if (tablePtr->refCount2 <= 0) {
-	ckfree((char *)tablePtr);
+	ckfree(tablePtr);
     }
     objPtr->typePtr = NULL;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
@@ -1362,7 +1360,7 @@ Tk_SetOptions(
 	     * more space.
 	     */
 
-	    newSavePtr = (Tk_SavedOptions *) ckalloc(sizeof(Tk_SavedOptions));
+	    newSavePtr = ckalloc(sizeof(Tk_SavedOptions));
 	    newSavePtr->recordPtr = recordPtr;
 	    newSavePtr->tkwin = tkwin;
 	    newSavePtr->numItems = 0;
@@ -1438,7 +1436,7 @@ Tk_RestoreSavedOptions(
 
     if (savePtr->nextPtr != NULL) {
 	Tk_RestoreSavedOptions(savePtr->nextPtr);
-	ckfree((char *) savePtr->nextPtr);
+	ckfree(savePtr->nextPtr);
 	savePtr->nextPtr = NULL;
     }
     for (i = savePtr->numItems - 1; i >= 0; i--) {
@@ -1573,7 +1571,7 @@ Tk_FreeSavedOptions(
 
     if (savePtr->nextPtr != NULL) {
 	Tk_FreeSavedOptions(savePtr->nextPtr);
-	ckfree((char *) savePtr->nextPtr);
+	ckfree(savePtr->nextPtr);
     }
     for (count = savePtr->numItems,
 	    savedOptionPtr = &savePtr->items[savePtr->numItems-1];

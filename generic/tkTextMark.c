@@ -228,7 +228,7 @@ TkTextMarkCmd(
 		}
 		TkBTreeUnlinkSegment(markPtr, markPtr->body.mark.linePtr);
 		Tcl_DeleteHashEntry(hPtr);
-		ckfree((char *) markPtr);
+		ckfree(markPtr);
 	    }
 	}
 	break;
@@ -307,7 +307,7 @@ TkTextSetMark(
 	}
 	TkBTreeUnlinkSegment(markPtr, markPtr->body.mark.linePtr);
     } else {
-	markPtr = (TkTextSegment *) ckalloc(MSEG_SIZE);
+	markPtr = ckalloc(MSEG_SIZE);
 	markPtr->typePtr = &tkTextRightMarkType;
 	markPtr->size = 0;
 	markPtr->body.mark.textPtr = textPtr;

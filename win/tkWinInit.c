@@ -92,7 +92,7 @@ TkpGetAppName(
     }
     Tcl_DStringAppend(namePtr, name, namelength);
     if (argv != NULL) {
-	ckfree((char *)argv);
+	ckfree(argv);
     }
 }
 

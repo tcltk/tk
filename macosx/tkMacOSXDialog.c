@@ -162,12 +162,12 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
 		    callbackInfo->cmdObj, &objc, &objv);
 
 	    if (result == TCL_OK && objc) {
-		tmpv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		tmpv = ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
 		memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		tmpv[objc] = resultObj;
 		TkBackgroundEvalObjv(callbackInfo->interp, objc + 1, tmpv,
 			TCL_EVAL_GLOBAL);
-		ckfree((char *)tmpv);
+		ckfree(tmpv);
 	    }
 	} else {
 	    Tcl_SetObjResult(callbackInfo->interp, resultObj);
@@ -180,7 +180,7 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     }
     if (callbackInfo->cmdObj) {
 	Tcl_DecrRefCount(callbackInfo->cmdObj);
-	ckfree((char*) callbackInfo);
+	ckfree(callbackInfo);
     }
 }
 
@@ -200,12 +200,12 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
 		    callbackInfo->cmdObj, &objc, &objv);
 
 	    if (result == TCL_OK && objc) {
-		tmpv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+		tmpv = ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
 		memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		tmpv[objc] = resultObj;
 		TkBackgroundEvalObjv(callbackInfo->interp, objc + 1, tmpv,
 			TCL_EVAL_GLOBAL);
-		ckfree((char *)tmpv);
+		ckfree(tmpv);
 	    }
 	} else {
 	    Tcl_SetObjResult(callbackInfo->interp, resultObj);
@@ -216,7 +216,7 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     }
     if (callbackInfo->cmdObj) {
 	Tcl_DecrRefCount(callbackInfo->cmdObj);
-	ckfree((char*) callbackInfo);
+	ckfree(callbackInfo);
     }
 }
 @end
@@ -472,8 +472,7 @@ Tk_GetOpenFileObjCmd(
     }
     [panel setAllowsMultipleSelection:multiple];
     if (cmdObj) {
-	callbackInfo = (FilePanelCallbackInfo *)
-		ckalloc(sizeof(FilePanelCallbackInfo));
+	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
@@ -647,8 +646,7 @@ Tk_GetSaveFileObjCmd(
     [panel setCanSelectHiddenExtension:YES];
     [panel setExtensionHidden:NO];
     if (cmdObj) {
-	callbackInfo = (FilePanelCallbackInfo *)
-		ckalloc(sizeof(FilePanelCallbackInfo));
+	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
@@ -769,8 +767,7 @@ Tk_ChooseDirectoryObjCmd(
     [panel setCanChooseDirectories:YES];
     [panel setCanCreateDirectories:!mustexist];
     if (cmdObj) {
-	callbackInfo = (FilePanelCallbackInfo *)
-		ckalloc(sizeof(FilePanelCallbackInfo));
+	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
@@ -1042,8 +1039,7 @@ Tk_MessageBoxObjCmd(
     [[buttons objectAtIndex: defaultNativeButtonIndex-1]
 	    setKeyEquivalent: @"\r"];
     if (cmdObj) {
-	callbackInfo = (AlertCallbackInfo *)
-		ckalloc(sizeof(AlertCallbackInfo));
+	callbackInfo = ckalloc(sizeof(AlertCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
@@ -1220,13 +1216,12 @@ FontchooserEvent(
 		result = Tcl_ListObjGetElements(fontchooserInterp,
 			fcdPtr->cmdObj, &objc, &objv);
 		if (result == TCL_OK) {
-		    tmpv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) *
-			    (unsigned)(objc + 2));
+		    tmpv = ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
 		    memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 		    tmpv[objc] = fontObj;
 		    TkBackgroundEvalObjv(fontchooserInterp, objc + 1, tmpv,
 			    TCL_EVAL_GLOBAL);
-		    ckfree((char *)tmpv);
+		    ckfree(tmpv);
 		}
 	    }
 	    TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged");
@@ -1602,7 +1597,7 @@ DeleteFontchooserData(
     if (fcdPtr->cmdObj) {
 	Tcl_DecrRefCount(fcdPtr->cmdObj);
     }
-    ckfree((char *)fcdPtr);
+    ckfree(fcdPtr);
 
     if (fontchooserInterp == interp) {
 	fontchooserInterp = NULL;
@@ -1631,8 +1626,7 @@ TkInitFontchooser(
     Tcl_Interp *interp,
     ClientData clientData)
 {
-    FontchooserData *fcdPtr = (FontchooserData*)
-	    ckalloc(sizeof(FontchooserData));
+    FontchooserData *fcdPtr = ckalloc(sizeof(FontchooserData));
 
     bzero(fcdPtr, sizeof(FontchooserData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteFontchooserData,

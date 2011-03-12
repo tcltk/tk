@@ -1015,7 +1015,7 @@ OFNHookProc(
 	     */
 	    if ((selsize > 1) && (dirsize > 0)) {
 		if (ofnData->dynFileBufferSize < buffersize) {
-		    buffer = (WCHAR *) ckrealloc((char *) buffer, buffersize);
+		    buffer = ckrealloc(buffer, buffersize);
 		    ofnData->dynFileBufferSize = buffersize;
 		    ofnData->dynFileBuffer = (char *) buffer;
 		}
@@ -1137,7 +1137,7 @@ MakeFilter(
 	 */
 	const char *defaultFilter = "All Files (*.*)";
 
-	p = filterStr = (char*)ckalloc(30 * sizeof(char));
+	p = filterStr = ckalloc(30);
 
 	strcpy(p, defaultFilter);
 	p+= strlen(defaultFilter);
@@ -1173,7 +1173,7 @@ MakeFilter(
 	 * twice the size of the string to format the filter
 	 */
 
-	filterStr = ckalloc((unsigned) len * 3);
+	filterStr = ckalloc(len * 3);
 
 	for (filterPtr = flist.filters, p = filterStr; filterPtr;
 		filterPtr = filterPtr->next) {
@@ -1243,7 +1243,7 @@ MakeFilter(
     }
 
     Tcl_DStringAppend(dsPtr, filterStr, (int) (p - filterStr));
-    ckfree((char *) filterStr);
+    ckfree(filterStr);
 
     TkFreeFileFilters(&flist);
     return TCL_OK;
@@ -2021,11 +2021,11 @@ ApplyLogfont(Tcl_Interp *interp, Tcl_Obj *cmdObj, HDC hdc, LOGFONTA *logfontPtr)
     Tcl_Obj **objv, **tmpv;
 
     Tcl_ListObjGetElements(NULL, cmdObj, &objc, &objv);
-    tmpv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
+    tmpv = ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
     memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
     tmpv[objc] = GetFontObj(hdc, logfontPtr);
     TkBackgroundEvalObjv(interp, objc+1, tmpv, TCL_EVAL_GLOBAL);
-    ckfree((char *) tmpv);
+    ckfree(tmpv);
 }
 
 /*
@@ -2482,7 +2482,7 @@ DeleteHookData(ClientData clientData, Tcl_Interp *interp)
     if (hdPtr->cmdObj) {
 	Tcl_DecrRefCount(hdPtr->cmdObj);
     }
-    ckfree((char *) hdPtr);
+    ckfree(hdPtr);
 }
 
 /*
@@ -2507,7 +2507,7 @@ const TkEnsemble tkFontchooserEnsemble[] = {
 int
 TkInitFontchooser(Tcl_Interp *interp, ClientData clientData)
 {
-    HookData *hdPtr = (HookData *) ckalloc(sizeof(HookData));
+    HookData *hdPtr = ckalloc(sizeof(HookData));
 
     memset(hdPtr, 0, sizeof(HookData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteHookData, hdPtr);

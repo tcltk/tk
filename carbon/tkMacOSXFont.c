@@ -474,7 +474,7 @@ TkpGetNativeFont(
     }
     CopyPascalStringToC(fontName, (char*)fontName);
 
-    fontPtr = (MacFont *) ckalloc(sizeof(MacFont));
+    fontPtr = ckalloc(sizeof(MacFont));
     InitFont(fontFamily, (char*)fontName, fontSize, fontStyle, fontPtr);
 
     return (TkFont *) fontPtr;
@@ -549,7 +549,7 @@ TkpGetFontFromAttributes(
 	qdStyle |= underline;
     }
     if (tkFontPtr == NULL) {
-	fontPtr = (MacFont *) ckalloc(sizeof(MacFont));
+	fontPtr = ckalloc(sizeof(MacFont));
     } else {
 	fontPtr = (MacFont *) tkFontPtr;
 	ReleaseFont(fontPtr);
@@ -2328,7 +2328,7 @@ AddFontFamily(
 
     if (familyListNextFree >= familyListSize) {
 	familyListSize += 100;
-	familyList = (MacFontFamily *) ckrealloc((void*) familyList,
+	familyList = ckrealloc(familyList,
 		familyListSize * sizeof(*familyList));
     }
 
@@ -2442,7 +2442,7 @@ AddString(
 
     if (stringMemory == NULL
 	    || (stringMemory->nextFree+len) > STRING_BLOCK_MAX) {
-	StringBlock * newblock = (StringBlock *) ckalloc(sizeof(StringBlock));
+	StringBlock *newblock = ckalloc(sizeof(StringBlock));
 
 	newblock->next = stringMemory;
 	newblock->nextFree = 0;

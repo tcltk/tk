@@ -294,7 +294,7 @@ TkCloseDisplay(
 		errorPtr != NULL;
 		errorPtr = dispPtr->errorPtr) {
 	    dispPtr->errorPtr = errorPtr->nextPtr;
-	    ckfree((char *) errorPtr);
+	    ckfree(errorPtr);
 	}
     }
 
@@ -309,7 +309,7 @@ TkCloseDisplay(
 
     Tcl_DeleteHashTable(&dispPtr->winTable);
 
-    ckfree((char *) dispPtr);
+    ckfree(dispPtr);
 
     /*
      * There is more to clean up, we leave it at this for the time being.
@@ -520,7 +520,7 @@ GetScreen(
 
 	    Tcl_InitHashTable(&dispPtr->winTable, TCL_ONE_WORD_KEYS);
 
-	    dispPtr->name = (char *) ckalloc((unsigned) (length+1));
+	    dispPtr->name = ckalloc(length + 1);
 	    strncpy(dispPtr->name, screenName, length);
 	    dispPtr->name[length] = '\0';
 	    break;
@@ -654,9 +654,8 @@ TkAllocWindow(
 				 * inherit visual information. NULL means use
 				 * screen defaults instead of inheriting. */
 {
-    register TkWindow *winPtr;
+    register TkWindow *winPtr = ckalloc(sizeof(TkWindow));
 
-    winPtr = (TkWindow *) ckalloc(sizeof(TkWindow));
     winPtr->display = dispPtr->display;
     winPtr->dispPtr = dispPtr;
     winPtr->screenNum = screenNum;
@@ -803,7 +802,7 @@ NameWindow(
     if ((length1+length2+2) <= FIXED_SIZE) {
 	pathName = staticSpace;
     } else {
-	pathName = (char *) ckalloc((unsigned) (length1+length2+2));
+	pathName = ckalloc(length1 + length2 + 2);
     }
     if (length1 == 1) {
 	pathName[0] = '.';
@@ -895,7 +894,7 @@ TkCreateMainWindow(
      */
 
     winPtr = (TkWindow *) tkwin;
-    mainPtr = (TkMainInfo *) ckalloc(sizeof(TkMainInfo));
+    mainPtr = ckalloc(sizeof(TkMainInfo));
     mainPtr->winPtr = winPtr;
     mainPtr->refCount = 1;
     mainPtr->interp = interp;
@@ -1178,7 +1177,7 @@ Tk_CreateWindowFromPath(
     }
     numChars = (int) (p-pathName);
     if (numChars > FIXED_SPACE) {
-	p = (char *) ckalloc((unsigned) (numChars+1));
+	p = ckalloc(numChars + 1);
     } else {
 	p = fixedSpace;
     }
@@ -1285,7 +1284,7 @@ Tk_DestroyWindow(
 	    (tsdPtr->halfdeadWindowList->winPtr == winPtr)) {
 	halfdeadPtr = tsdPtr->halfdeadWindowList;
     } else {
-	halfdeadPtr = (TkHalfdeadWindow *) ckalloc(sizeof(TkHalfdeadWindow));
+	halfdeadPtr = ckalloc(sizeof(TkHalfdeadWindow));
 	halfdeadPtr->flags = 0;
 	halfdeadPtr->winPtr = winPtr;
 	halfdeadPtr->nextPtr = tsdPtr->halfdeadWindowList;
@@ -1429,7 +1428,7 @@ Tk_DestroyWindow(
 	    } else {
 		prev_halfdeadPtr->nextPtr = halfdeadPtr->nextPtr;
 	    }
-	    ckfree((char *) halfdeadPtr);
+	    ckfree(halfdeadPtr);
 	    break;
 	}
 	prev_halfdeadPtr = halfdeadPtr;
@@ -1554,7 +1553,7 @@ Tk_DestroyWindow(
 	    if (winPtr->flags & TK_EMBEDDED) {
 		XSync(winPtr->display, False);
 	    }
-	    ckfree((char *) winPtr->mainPtr);
+	    ckfree(winPtr->mainPtr);
 
 	    /*
 	     * If no other applications are using the display, close the
@@ -3230,7 +3229,7 @@ Initialize(
 
     Tcl_MutexUnlock(&windowMutex);
     if (argv != NULL) {
-	ckfree((char *) argv);
+	ckfree(argv);
     }
     code = TkpInit(interp);
     if (code == TCL_OK) {
@@ -3269,7 +3268,7 @@ tkInit");
   done:
     Tcl_MutexUnlock(&windowMutex);
     if (argv != NULL) {
-	ckfree((char *) argv);
+	ckfree(argv);
     }
     return code;
 }

@@ -172,7 +172,7 @@ TkpCreateScrollbar(
 	TkMacOSXInitScrollbarMetrics();
 	initialized = 1;
     }
-    macScrollPtr = (MacScrollbar *) ckalloc(sizeof(MacScrollbar));
+    macScrollPtr = ckalloc(sizeof(MacScrollbar));
     macScrollPtr->sbHandle = NULL;
     macScrollPtr->macFlags = 0;
     SetRect(&macScrollPtr->eraseRect, 0, 0, 0, 0);

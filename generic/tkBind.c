@@ -715,7 +715,7 @@ TkBindInit(
 
     mainPtr->bindingTable = Tk_CreateBindingTable(mainPtr->interp);
 
-    bindInfoPtr = (BindInfo *) ckalloc(sizeof(BindInfo));
+    bindInfoPtr = ckalloc(sizeof(BindInfo));
     InitVirtualEventTable(&bindInfoPtr->virtualEventTable);
     bindInfoPtr->screenInfo.curDispPtr = NULL;
     bindInfoPtr->screenInfo.curScreenIndex = -1;
@@ -782,14 +782,13 @@ Tk_CreateBindingTable(
 				 * table: commands are executed in this
 				 * interpreter. */
 {
-    BindingTable *bindPtr;
+    BindingTable *bindPtr = ckalloc(sizeof(BindingTable));
     int i;
 
     /*
      * Create and initialize a new binding table.
      */
 
-    bindPtr = (BindingTable *) ckalloc(sizeof(BindingTable));
     for (i = 0; i < EVENT_BUFFER_SIZE; i++) {
 	bindPtr->eventRing[i].type = -1;
     }
@@ -835,7 +834,7 @@ Tk_DeleteBindingTable(
 	for (psPtr = Tcl_GetHashValue(hPtr); psPtr != NULL; psPtr = nextPtr) {
 	    nextPtr = psPtr->nextSeqPtr;
 	    ckfree(psPtr->script);
-	    ckfree((char *) psPtr);
+	    ckfree(psPtr);
 	}
     }
 
@@ -845,7 +844,7 @@ Tk_DeleteBindingTable(
 
     Tcl_DeleteHashTable(&bindPtr->patternTable);
     Tcl_DeleteHashTable(&bindPtr->objectTable);
-    ckfree((char *) bindPtr);
+    ckfree(bindPtr);
 }
 
 /*
@@ -926,14 +925,14 @@ Tk_CreateBinding(
     if ((append != 0) && (oldStr != NULL)) {
 	size_t length1 = strlen(oldStr), length2 = strlen(script);
 
-	newStr = ckalloc((unsigned) length1 + length2 + 2);
+	newStr = ckalloc(length1 + length2 + 2);
 	memcpy(newStr, oldStr, length1);
 	newStr[length1] = '\n';
 	memcpy(newStr+length1+1, script, length2+1);
     } else {
 	size_t length = strlen(script);
 
-	newStr = ckalloc((unsigned) length+1);
+	newStr = ckalloc(length + 1);
 	memcpy(newStr, script, length+1);
     }
     if (oldStr != NULL) {
@@ -1024,7 +1023,7 @@ Tk_DeleteBinding(
     }
 
     ckfree(psPtr->script);
-    ckfree((char *) psPtr);
+    ckfree(psPtr);
     return TCL_OK;
 }
 
@@ -1177,7 +1176,7 @@ Tk_DeleteAllBindings(
 	    }
 	}
 	ckfree(psPtr->script);
-	ckfree((char *) psPtr);
+	ckfree(psPtr);
     }
     Tcl_DeleteHashEntry(hPtr);
 }
@@ -2482,8 +2481,8 @@ DeleteVirtualEventTable(
 	psPtr = Tcl_GetHashValue(hPtr);
 	for ( ; psPtr != NULL; psPtr = nextPtr) {
 	    nextPtr = psPtr->nextSeqPtr;
-	    ckfree((char *) psPtr->voPtr);
-	    ckfree((char *) psPtr);
+	    ckfree(psPtr->voPtr);
+	    ckfree(psPtr);
 	}
     }
     Tcl_DeleteHashTable(&vetPtr->patternTable);
@@ -2558,7 +2557,7 @@ CreateVirtualEvent(
 
     poPtr = Tcl_GetHashValue(vhPtr);
     if (poPtr == NULL) {
-	poPtr = (PhysicalsOwned *) ckalloc(sizeof(PhysicalsOwned));
+	poPtr = ckalloc(sizeof(PhysicalsOwned));
 	poPtr->numOwned = 0;
     } else {
 	/*
@@ -2573,8 +2572,8 @@ CreateVirtualEvent(
 		return TCL_OK;
 	    }
 	}
-	poPtr = (PhysicalsOwned *) ckrealloc((char *) poPtr,
-		sizeof(PhysicalsOwned) + poPtr->numOwned * sizeof(PatSeq *));
+	poPtr = ckrealloc(poPtr, sizeof(PhysicalsOwned)
+		+ poPtr->numOwned * sizeof(PatSeq *));
     }
     Tcl_SetHashValue(vhPtr, poPtr);
     poPtr->patSeqs[poPtr->numOwned] = psPtr;
@@ -2586,11 +2585,10 @@ CreateVirtualEvent(
 
     voPtr = psPtr->voPtr;
     if (voPtr == NULL) {
-	voPtr = (VirtualOwners *) ckalloc(sizeof(VirtualOwners));
+	voPtr = ckalloc(sizeof(VirtualOwners));
 	voPtr->numOwners = 0;
     } else {
-	voPtr = (VirtualOwners *) ckrealloc((char *) voPtr,
-		sizeof(VirtualOwners)
+	voPtr = ckrealloc(voPtr, sizeof(VirtualOwners)
 		+ voPtr->numOwners * sizeof(Tcl_HashEntry *));
     }
     psPtr->voPtr = voPtr;
@@ -2717,8 +2715,8 @@ DeleteVirtualEvent(
 			}
 		    }
 		}
-		ckfree((char *) psPtr->voPtr);
-		ckfree((char *) psPtr);
+		ckfree(psPtr->voPtr);
+		ckfree(psPtr);
 	    } else {
 		/*
 		 * This physical event still triggers some other virtual
@@ -2755,7 +2753,7 @@ DeleteVirtualEvent(
 	 * itself should be deleted.
 	 */
 
-	ckfree((char *) poPtr);
+	ckfree(poPtr);
 	Tcl_DeleteHashEntry(vhPtr);
     }
     return TCL_OK;
@@ -3739,8 +3737,7 @@ FindSequence(
 
 	return NULL;
     }
-    psPtr = (PatSeq *) ckalloc((unsigned)
-	    (sizeof(PatSeq) + (numPats-1)*sizeof(Pattern)));
+    psPtr = ckalloc(sizeof(PatSeq) + (numPats-1)*sizeof(Pattern));
     psPtr->numPats = numPats;
     psPtr->script = NULL;
     psPtr->flags = flags;

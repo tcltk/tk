@@ -48,7 +48,7 @@ TkScale *
 TkpCreateScale(
     Tk_Window tkwin)
 {
-    return (TkScale *) ckalloc(sizeof(TkScale));
+    return ckalloc(sizeof(TkScale));
 }
 
 /*

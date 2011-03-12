@@ -239,7 +239,7 @@ TkTextImageCmd(
 	 * Create the new image segment and initialize it.
 	 */
 
-	eiPtr = (TkTextSegment *) ckalloc(EI_SEG_SIZE);
+	eiPtr = ckalloc(EI_SEG_SIZE);
 	eiPtr->typePtr = &tkTextEmbImageType;
 	eiPtr->size = 1;
 	eiPtr->body.ei.sharedTextPtr = textPtr->sharedTextPtr;
@@ -413,7 +413,7 @@ EmbImageConfigure(
     }
     Tcl_SetHashValue(hPtr, eiPtr);
     Tcl_AppendResult(textPtr->interp, name, NULL);
-    eiPtr->body.ei.name = ckalloc((unsigned) Tcl_DStringLength(&newName)+1);
+    eiPtr->body.ei.name = ckalloc(Tcl_DStringLength(&newName) + 1);
     strcpy(eiPtr->body.ei.name, name);
     Tcl_DStringFree(&newName);
 
@@ -474,7 +474,7 @@ EmbImageDeleteProc(
     if (eiPtr->body.ei.name) {
 	ckfree(eiPtr->body.ei.name);
     }
-    ckfree((char *) eiPtr);
+    ckfree(eiPtr);
     return 0;
 }
 

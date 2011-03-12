@@ -526,7 +526,7 @@ CreateBusy(
     Window parent;
     Tk_FakeWin *winPtr;
 
-    busyPtr = (Busy *) ckalloc(sizeof(Busy));
+    busyPtr = ckalloc(sizeof(Busy));
     x = y = 0;
     length = strlen(Tk_Name(tkRef));
     name = ckalloc(length + 6);

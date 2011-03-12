@@ -498,7 +498,7 @@ TkPutImage(
 		sliceWidth = (long) image->width * maxRowBytes / rowBytes;
 		lastSliceWidth = image->width - (sliceWidth * slices);
 		dataPtr = image->data + image->xoffset;
-		newData = (char *) ckalloc(image->height * sliceRowBytes);
+		newData = ckalloc(image->height * sliceRowBytes);
 		do {
 		    if (slices) {
 			pixmap.bounds.right = pixmap.bounds.left + sliceWidth;
@@ -2007,7 +2007,7 @@ TkMacOSXMakeStippleMap(
     GetPortBounds(TkMacOSXGetDrawablePort(drawable), &portRect);
     width = portRect.right - portRect.left;
     height = portRect.bottom - portRect.top;
-    bitmapPtr = (BitMap *) ckalloc(sizeof(BitMap));
+    bitmapPtr = ckalloc(sizeof(BitMap));
     bitmapPtr->bounds.top = bitmapPtr->bounds.left = 0;
     bitmapPtr->bounds.right = (short) width;
     bitmapPtr->bounds.bottom = (short) height;
