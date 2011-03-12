@@ -354,8 +354,8 @@ setargv(
     #undef Tcl_Alloc
     #undef Tcl_DbCkalloc
 
-    argSpace = (TCHAR *) ckalloc(
-	    (unsigned) (size * sizeof(char *) + (_tcslen(cmdLine) * sizeof(TCHAR)) + sizeof(TCHAR)));
+    argSpace = ckalloc(size*sizeof(char *)
+	    + (_tcslen(cmdLine)+1) * sizeof(TCHAR));
     argv = (TCHAR **) argSpace;
     argSpace += size * (sizeof(char *)/sizeof(TCHAR));
     size--;

@@ -504,12 +504,11 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree((char *) dispPtr->modKeyCodes);
+	ckfree(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = (KeyCode *) ckalloc((unsigned)
-	    (KEYCODE_ARRAY_SIZE * sizeof(KeyCode)));
+    dispPtr->modKeyCodes = ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
 	if (*codePtr == 0) {
 	    continue;
@@ -532,11 +531,10 @@ TkpInitKeymapInfo(
 	     */
 
 	    arraySize *= 2;
-	    new = (KeyCode *) ckalloc((unsigned)
-		    (arraySize * sizeof(KeyCode)));
-	    memcpy((void *) new, (void *) dispPtr->modKeyCodes,
-		    (dispPtr->numModKeyCodes * sizeof(KeyCode)));
-	    ckfree((char *) dispPtr->modKeyCodes);
+	    new = ckalloc(arraySize * sizeof(KeyCode));
+	    memcpy(new, dispPtr->modKeyCodes,
+		    dispPtr->numModKeyCodes * sizeof(KeyCode));
+	    ckfree(dispPtr->modKeyCodes);
 	    dispPtr->modKeyCodes = new;
 	}
 	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
@@ -662,11 +660,10 @@ XModifierKeymap	*
 XGetModifierMapping(
     Display *display)
 {
-    XModifierKeymap *map = (XModifierKeymap *)
-	    ckalloc(sizeof(XModifierKeymap));
+    XModifierKeymap *map = ckalloc(sizeof(XModifierKeymap));
 
     map->max_keypermod = 1;
-    map->modifiermap = (KeyCode *) ckalloc(sizeof(KeyCode)*8);
+    map->modifiermap = ckalloc(sizeof(KeyCode) * 8);
     map->modifiermap[ShiftMapIndex] = VK_SHIFT;
     map->modifiermap[LockMapIndex] = VK_CAPITAL;
     map->modifiermap[ControlMapIndex] = VK_CONTROL;
@@ -698,8 +695,8 @@ void
 XFreeModifiermap(
     XModifierKeymap *modmap)
 {
-    ckfree((char *) modmap->modifiermap);
-    ckfree((char *) modmap);
+    ckfree(modmap->modifiermap);
+    ckfree(modmap);
 }
 
 /*

@@ -1,3 +1,8 @@
+2011-03-12  Donal K. Fellows  <dkf@users.sf.net>
+
+	Remove casts from uses of ckalloc/ckfree/... now that Tcl declares
+	them to be using useful casts internally.
+
 2011-03-12  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWin32Dll.c: Eliminate unneeded _TkFinalize wrapper.
@@ -13,7 +18,7 @@
 	* unix/configure.in: Use a symbol from libXft itself for the link
 	test rather than one from libfreetype, because the latter doesn't
 	work when the linker is called with --as-needed.
-	
+
 2011-03-03  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
 
 	* generic/tkCanvLine.c: [Bug 3175610]: Incomplete refresh of line items.
@@ -27,7 +32,7 @@
 
 2011-01-24  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/tkSelect.c: Fix for [Bug #3164879] 
+	* generic/tkSelect.c: Fix for [Bug #3164879]:
 	(memory allocation bug introduced by [Patch #3129527])
 
 2011-01-22  Joe English  <jenglish@users.sourceforge.net>

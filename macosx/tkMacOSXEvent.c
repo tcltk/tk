@@ -135,7 +135,7 @@ TkMacOSXFlushWindows(void)
 
     NSCountWindows(&windowCount);
     if(windowCount) {
-	windowNumbers = (NSInteger *) ckalloc(windowCount * sizeof(NSInteger));
+	windowNumbers = ckalloc(windowCount * sizeof(NSInteger));
 	NSWindowList(windowCount, windowNumbers);
 	for (NSInteger index = 0; index < windowCount; index++) {
 	    NSWindow *w = [NSApp windowWithWindowNumber:windowNumbers[index]];
@@ -143,7 +143,7 @@ TkMacOSXFlushWindows(void)
 		[w flushWindow];
 	    }
 	}
-	ckfree((char*) windowNumbers);
+	ckfree(windowNumbers);
     }
 }
 

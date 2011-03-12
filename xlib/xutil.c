@@ -70,7 +70,7 @@ XGetVisualInfo(
     XVisualInfo *vinfo_template,
     int *nitems_return)
 {
-    XVisualInfo *info = (XVisualInfo *) ckalloc(sizeof(XVisualInfo));
+    XVisualInfo *info = ckalloc(sizeof(XVisualInfo));
 
     info->visual = DefaultVisual(display, 0);
     info->visualid = info->visual->visualid;
@@ -102,7 +102,7 @@ XGetVisualInfo(
 	    || ((vinfo_mask & VisualBlueMaskMask)
 		    && (vinfo_template->blue_mask != info->blue_mask))
 	) {
-	ckfree((char *) info);
+	ckfree(info);
 	return NULL;
     }
 

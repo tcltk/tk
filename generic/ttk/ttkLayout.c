@@ -526,7 +526,7 @@ struct Ttk_LayoutNode_
 static Ttk_LayoutNode *Ttk_NewLayoutNode(
     unsigned flags, Ttk_ElementClass *elementClass)
 {
-    Ttk_LayoutNode *node = (Ttk_LayoutNode*)ckalloc(sizeof(*node));
+    Ttk_LayoutNode *node = ckalloc(sizeof(*node));
 
     node->flags = flags;
     node->eclass = elementClass;
@@ -542,7 +542,7 @@ static void Ttk_FreeLayoutNode(Ttk_LayoutNode *node)
     while (node) {
 	Ttk_LayoutNode *next = node->next;
 	Ttk_FreeLayoutNode(node->child);
-	ckfree((ClientData)node);
+	ckfree(node);
 	node = next;
     }
 }
@@ -559,7 +559,7 @@ struct Ttk_TemplateNode_ {
 
 static Ttk_TemplateNode *Ttk_NewTemplateNode(const char *name, unsigned flags)
 {
-    Ttk_TemplateNode *op = (Ttk_TemplateNode*)ckalloc(sizeof(*op));
+    Ttk_TemplateNode *op = ckalloc(sizeof(*op));
     op->name = ckalloc(strlen(name) + 1); strcpy(op->name, name);
     op->flags = flags;
     op->next = op->child = 0;
@@ -572,7 +572,7 @@ void Ttk_FreeLayoutTemplate(Ttk_LayoutTemplate op)
 	Ttk_LayoutTemplate next = op->next;
 	Ttk_FreeLayoutTemplate(op->child);
 	ckfree(op->name);
-	ckfree((ClientData)op);
+	ckfree(op);
 	op = next;
     }
 }
@@ -841,7 +841,7 @@ static Ttk_Layout TTKNewLayout(
     void *recordPtr,Tk_OptionTable optionTable, Tk_Window tkwin,
     Ttk_LayoutNode *root)
 {
-    Ttk_Layout layout = (Ttk_Layout)ckalloc(sizeof(*layout));
+    Ttk_Layout layout = ckalloc(sizeof(*layout));
     layout->style = style;
     layout->recordPtr = recordPtr;
     layout->optionTable = optionTable;
@@ -853,7 +853,7 @@ static Ttk_Layout TTKNewLayout(
 void Ttk_FreeLayout(Ttk_Layout layout)
 {
     Ttk_FreeLayoutNode(layout->root);
-    ckfree((ClientData)layout);
+    ckfree(layout);
 }
 
 /*

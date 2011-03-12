@@ -412,12 +412,12 @@ Tk_CanvasTagsParseProc(
      */
 
     if (itemPtr->tagSpace < argc) {
-	newPtr = (Tk_Uid *) ckalloc((unsigned) (argc * sizeof(Tk_Uid)));
+	newPtr = ckalloc(argc * sizeof(Tk_Uid));
 	for (i = itemPtr->numTags-1; i >= 0; i--) {
 	    newPtr[i] = itemPtr->tagPtr[i];
 	}
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
-	    ckfree((char *) itemPtr->tagPtr);
+	    ckfree(itemPtr->tagPtr);
 	}
 	itemPtr->tagPtr = newPtr;
 	itemPtr->tagSpace = argc;
@@ -426,7 +426,7 @@ Tk_CanvasTagsParseProc(
     for (i = 0; i < argc; i++) {
 	itemPtr->tagPtr[i] = Tk_GetUid(argv[i]);
     }
-    ckfree((char *) argv);
+    ckfree(argv);
     return TCL_OK;
 }
 
@@ -545,7 +545,7 @@ TkCanvasDashPrintProc(
     if (i < 0) {
 	i = -i;
 	*freeProcPtr = TCL_DYNAMIC;
-	buffer = (char *) ckalloc((unsigned int) (i+1));
+	buffer = ckalloc(i + 1);
 	p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
 	memcpy(buffer, p, (unsigned int) i);
 	buffer[i] = 0;
@@ -554,7 +554,7 @@ TkCanvasDashPrintProc(
 	*freeProcPtr = NULL;
 	return "";
     }
-    buffer = (char *) ckalloc((unsigned int) (4*i));
+    buffer = ckalloc(4 * i);
     *freeProcPtr = TCL_DYNAMIC;
 
     p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
@@ -590,14 +590,12 @@ InitSmoothMethods(
 {
     SmoothAssocData *methods, *ptr;
 
-    methods = (SmoothAssocData *) ckalloc(sizeof(SmoothAssocData));
+    methods = ckalloc(sizeof(SmoothAssocData));
     methods->smooth.name = tkRawSmoothMethod.name;
     methods->smooth.coordProc = tkRawSmoothMethod.coordProc;
     methods->smooth.postscriptProc = tkRawSmoothMethod.postscriptProc;
 
-    methods->nextPtr = (SmoothAssocData *) ckalloc(sizeof(SmoothAssocData));
-
-    ptr = methods->nextPtr;
+    ptr = methods->nextPtr = ckalloc(sizeof(SmoothAssocData));
     ptr->smooth.name = tkBezierSmoothMethod.name;
     ptr->smooth.coordProc = tkBezierSmoothMethod.coordProc;
     ptr->smooth.postscriptProc = tkBezierSmoothMethod.postscriptProc;
@@ -653,11 +651,11 @@ Tk_CreateSmoothMethod(
 	    } else {
 		prevPtr->nextPtr = typePtr2->nextPtr;
 	    }
-	    ckfree((char *) typePtr2);
+	    ckfree(typePtr2);
 	    break;
 	}
     }
-    ptr = (SmoothAssocData *) ckalloc(sizeof(SmoothAssocData));
+    ptr = ckalloc(sizeof(SmoothAssocData));
     ptr->smooth.name = smooth->name;
     ptr->smooth.coordProc = smooth->coordProc;
     ptr->smooth.postscriptProc = smooth->postscriptProc;
@@ -693,7 +691,7 @@ SmoothMethodCleanupProc(
     while (methods != NULL) {
 	ptr = methods;
 	methods = methods->nextPtr;
-	ckfree((char *) ptr);
+	ckfree(ptr);
     }
 }
 /*
@@ -880,10 +878,10 @@ Tk_GetDash(
     }
 
     if ((unsigned) ABS(dash->number) > sizeof(char *)) {
-	ckfree((char *) dash->pattern.pt);
+	ckfree(dash->pattern.pt);
     }
     if (argc > (int)sizeof(char *)) {
-	dash->pattern.pt = pt = ckalloc((unsigned) argc);
+	dash->pattern.pt = pt = ckalloc(argc);
     } else {
 	pt = dash->pattern.array;
     }
@@ -904,7 +902,7 @@ Tk_GetDash(
     }
 
     if (argv != NULL) {
-	ckfree((char *) argv);
+	ckfree(argv);
     }
     return TCL_OK;
 
@@ -917,10 +915,10 @@ Tk_GetDash(
 	    "\": must be a list of integers or a format like \"-..\"", NULL);
   syntaxError:
     if (argv != NULL) {
-	ckfree((char *) argv);
+	ckfree(argv);
     }
     if ((unsigned) ABS(dash->number) > sizeof(char *)) {
-	ckfree((char *) dash->pattern.pt);
+	ckfree(dash->pattern.pt);
     }
     dash->number = 0;
     return TCL_ERROR;
@@ -992,13 +990,13 @@ Tk_DeleteOutline(
 	Tk_FreeGC(display, outline->gc);
     }
     if ((unsigned) ABS(outline->dash.number) > sizeof(char *)) {
-	ckfree((char *) outline->dash.pattern.pt);
+	ckfree(outline->dash.pattern.pt);
     }
     if ((unsigned) ABS(outline->activeDash.number) > sizeof(char *)) {
-	ckfree((char *) outline->activeDash.pattern.pt);
+	ckfree(outline->activeDash.pattern.pt);
     }
     if ((unsigned) ABS(outline->disabledDash.number) > sizeof(char *)) {
-	ckfree((char *) outline->disabledDash.pattern.pt);
+	ckfree(outline->disabledDash.pattern.pt);
     }
     if (outline->color != NULL) {
 	Tk_FreeColor(outline->color);
@@ -1210,7 +1208,7 @@ Tk_ChangeOutlineGC(
 	int i = -dash->number;
 
 	p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
-	q = (char *) ckalloc(2 * (unsigned) i);
+	q = ckalloc(2 * i);
 	i = DashConvert(q, p, i, width);
 	XSetDashes(Canvas(canvas)->display, outline->gc, outline->offset, q,i);
 	ckfree(q);
@@ -1410,10 +1408,10 @@ Tk_CanvasPsOutline(
     Tcl_AppendResult(interp, string, NULL);
 
     if (dash->number > 10) {
-	str = (char *) ckalloc((unsigned) (1 + 4*dash->number));
+	str = ckalloc(1 + 4*dash->number);
     } else if (dash->number < -5) {
-	str = (char *) ckalloc((unsigned) (1 - 8*dash->number));
-	lptr = (char *) ckalloc((unsigned) (1 - 2*dash->number));
+	str = ckalloc(1 - 8*dash->number);
+	lptr = ckalloc(1 - 2*dash->number);
     }
     ptr = ((unsigned) ABS(dash->number) > sizeof(char *)) ?
 	    dash->pattern.pt : dash->pattern.array;
@@ -1704,7 +1702,7 @@ TkCanvTranslatePath(
     if (numVertex*12 <= (int) (sizeof(staticSpace) / sizeof(double))) {
 	tempArr = staticSpace;
     } else {
-	tempArr = (double *) ckalloc(numVertex * 12 * sizeof(double));
+	tempArr = ckalloc(numVertex * 12 * sizeof(double));
     }
     for (i=0; i<numVertex*2; i++){
 	tempArr[i] = coordArr[i];
@@ -1844,7 +1842,7 @@ TkCanvTranslatePath(
 	TranslateAndAppendCoords(canvPtr, a[i*2], a[i*2+1], outArr, i);
     }
     if (tempArr != staticSpace) {
-	ckfree((char *) tempArr);
+	ckfree(tempArr);
     }
     return numOutput;
 }

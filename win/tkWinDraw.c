@@ -243,9 +243,9 @@ ConvertPoints(
 
     if (npoints > tsdPtr->nWinPoints) {
 	if (tsdPtr->winPoints != NULL) {
-	    ckfree((char *) tsdPtr->winPoints);
+	    ckfree(tsdPtr->winPoints);
 	}
-	tsdPtr->winPoints = (POINT *) ckalloc(sizeof(POINT) * npoints);
+	tsdPtr->winPoints = ckalloc(sizeof(POINT) * npoints);
 	if (tsdPtr->winPoints == NULL) {
 	    tsdPtr->nWinPoints = -1;
 	    return NULL;
@@ -552,10 +552,10 @@ TkPutImage(
 	usePalette = (image->bits_per_pixel < 16);
 
 	if (usePalette) {
-	    infoPtr = (BITMAPINFO *) ckalloc(sizeof(BITMAPINFOHEADER)
+	    infoPtr = ckalloc(sizeof(BITMAPINFOHEADER)
 		    + sizeof(RGBQUAD)*ncolors);
 	} else {
-	    infoPtr = (BITMAPINFO *) ckalloc(sizeof(BITMAPINFOHEADER));
+	    infoPtr = ckalloc(sizeof(BITMAPINFOHEADER));
 	}
 
 	infoPtr->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -582,7 +582,7 @@ TkPutImage(
 	}
 	bitmap = CreateDIBitmap(dc, &infoPtr->bmiHeader, CBM_INIT,
 		image->data, infoPtr, DIB_RGB_COLORS);
-	ckfree((char *) infoPtr);
+	ckfree(infoPtr);
     }
     if (!bitmap) {
 	Tcl_Panic("Fail to allocate bitmap");

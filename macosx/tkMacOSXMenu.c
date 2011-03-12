@@ -1424,10 +1424,10 @@ TkpMenuInit(void)
     [NSMenuItem setUsesUserKeyEquivalents:NO];
     tkColPtr = TkpGetColor(None, DEF_MENU_BG_COLOR);
     defaultBg = tkColPtr->color.pixel;
-    ckfree((char *) tkColPtr);
+    ckfree(tkColPtr);
     tkColPtr = TkpGetColor(None, DEF_MENU_FG);
     defaultFg = tkColPtr->color.pixel;
-    ckfree((char *) tkColPtr);
+    ckfree(tkColPtr);
 
     ChkErr(GetThemeMetric, kThemeMetricMenuMarkColumnWidth,
 	    &menuMarkColumnWidth);

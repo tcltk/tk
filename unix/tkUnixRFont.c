@@ -240,7 +240,7 @@ InitFont(
     int i, iWidth;
 
     if (!fontPtr) {
-	fontPtr = (UnixFtFont *) ckalloc(sizeof(UnixFtFont));
+	fontPtr = ckalloc(sizeof(UnixFtFont));
     }
 
     FcConfigSubstitute(0, pattern, FcMatchPattern);
@@ -252,13 +252,13 @@ InitFont(
 
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
     if (!set) {
-	ckfree((char *) fontPtr);
+	ckfree(fontPtr);
 	return NULL;
     }
 
     fontPtr->fontset = set;
     fontPtr->pattern = pattern;
-    fontPtr->faces = (UnixFtFace *) ckalloc(set->nfont * sizeof(UnixFtFace));
+    fontPtr->faces = ckalloc(set->nfont * sizeof(UnixFtFace));
     fontPtr->nfaces = set->nfont;
 
     /*
@@ -357,7 +357,7 @@ FinishedWithFont(
 	}
     }
     if (fontPtr->faces) {
-	ckfree((char *) fontPtr->faces);
+	ckfree(fontPtr->faces);
     }
     if (fontPtr->pattern) {
 	FcPatternDestroy(fontPtr->pattern);
