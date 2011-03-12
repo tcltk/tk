@@ -1,3 +1,7 @@
+2011-03-12  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWin32Dll.c: Eliminate unneeded _TkFinalize wrapper.
+
 2011-03-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkDefaultTheme.c: Eliminate some unneeded write-only
