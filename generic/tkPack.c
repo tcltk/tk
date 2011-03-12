@@ -1035,7 +1035,7 @@ GetPacker(
     if (!isNew) {
 	return Tcl_GetHashValue(hPtr);
     }
-    packPtr = (Packer *) ckalloc(sizeof(Packer));
+    packPtr = ckalloc(sizeof(Packer));
     packPtr->tkwin = tkwin;
     packPtr->masterPtr = NULL;
     packPtr->nextPtr = NULL;
@@ -1368,7 +1368,8 @@ DestroyPacker(
 				 * dead. */
 {
     register Packer *packPtr = (Packer *) memPtr;
-    ckfree((char *) packPtr);
+
+    ckfree(packPtr);
 }
 
 /*

@@ -664,7 +664,7 @@ InvokeClientMessageHandlers(
 		if (tmpPtr == NULL) {
 		    tsdPtr->lastCmPtr = prevPtr;
 		}
-		(void) ckfree((char *) curPtr);
+		ckfree(curPtr);
 		curPtr = tmpPtr;
 		continue;
 	    }
@@ -726,7 +726,7 @@ InvokeGenericHandlers(
 		if (tmpPtr == NULL) {
 		    tsdPtr->lastGenericPtr = prevPtr;
 		}
-		(void) ckfree((char *) curPtr);
+		ckfree(curPtr);
 		curPtr = tmpPtr;
 		continue;
 	    }
@@ -790,7 +790,7 @@ Tk_CreateEventHandler(
 	 * No event handlers defined at all, so must create.
 	 */
 
-	handlerPtr = (TkEventHandler *) ckalloc(sizeof(TkEventHandler));
+	handlerPtr = ckalloc(sizeof(TkEventHandler));
 	winPtr->handlerList = handlerPtr;
     } else {
 	int found = 0;
@@ -821,8 +821,7 @@ Tk_CreateEventHandler(
 	 * No event handler matched, so create a new one.
 	 */
 
-	handlerPtr->nextPtr = (TkEventHandler *)
-		ckalloc(sizeof(TkEventHandler));
+	handlerPtr->nextPtr = ckalloc(sizeof(TkEventHandler));
 	handlerPtr = handlerPtr->nextPtr;
     }
 
@@ -908,7 +907,7 @@ Tk_DeleteEventHandler(
     } else {
 	prevPtr->nextPtr = handlerPtr->nextPtr;
     }
-    ckfree((char *) handlerPtr);
+    ckfree(handlerPtr);
 
     /*
      * No need to call XSelectInput: Tk always selects on all events for all
@@ -944,7 +943,7 @@ Tk_CreateGenericHandler(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    handlerPtr = (GenericHandler *) ckalloc(sizeof(GenericHandler));
+    handlerPtr = ckalloc(sizeof(GenericHandler));
 
     handlerPtr->proc		= proc;
     handlerPtr->clientData	= clientData;
@@ -1023,7 +1022,7 @@ Tk_CreateClientMessageHandler(
      * with an extra clientData field we'll never use.
      */
 
-    handlerPtr = (GenericHandler *) ckalloc(sizeof(GenericHandler));
+    handlerPtr = ckalloc(sizeof(GenericHandler));
 
     handlerPtr->proc = (Tk_GenericProc *) proc;
     handlerPtr->clientData = NULL;	/* never used */
@@ -1434,7 +1433,7 @@ TkEventDeadWindow(
 		ipPtr->winPtr = None;
 	    }
 	}
-	ckfree((char *) handlerPtr);
+	ckfree(handlerPtr);
     }
 }
 
@@ -1609,7 +1608,7 @@ Tk_QueueWindowEvent(
      */
 
     if (!(dispPtr->flags & TK_DISPLAY_COLLAPSE_MOTION_EVENTS)) {
-	wevPtr = (TkWindowEvent *) ckalloc(sizeof(TkWindowEvent));
+	wevPtr = ckalloc(sizeof(TkWindowEvent));
 	wevPtr->header.proc = WindowEventProc;
 	wevPtr->event = *eventPtr;
 	Tcl_QueueEvent(&wevPtr->header, position);
@@ -1641,7 +1640,7 @@ Tk_QueueWindowEvent(
 	}
     }
 
-    wevPtr = (TkWindowEvent *) ckalloc(sizeof(TkWindowEvent));
+    wevPtr = ckalloc(sizeof(TkWindowEvent));
     wevPtr->header.proc = WindowEventProc;
     wevPtr->event = *eventPtr;
     if ((eventPtr->type == MotionNotify) && (position == TCL_QUEUE_TAIL)) {
@@ -1862,7 +1861,7 @@ TkCreateExitHandler(
 {
     ExitHandler *exitPtr;
 
-    exitPtr = (ExitHandler *) ckalloc(sizeof(ExitHandler));
+    exitPtr = ckalloc(sizeof(ExitHandler));
     exitPtr->proc = proc;
     exitPtr->clientData = clientData;
     Tcl_MutexLock(&exitMutex);
@@ -1927,7 +1926,7 @@ TkDeleteExitHandler(
 	    } else {
 		prevPtr->nextPtr = exitPtr->nextPtr;
 	    }
-	    ckfree((char *) exitPtr);
+	    ckfree(exitPtr);
 	    break;
 	}
     }
@@ -1961,7 +1960,7 @@ TkCreateThreadExitHandler(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    exitPtr = (ExitHandler *) ckalloc(sizeof(ExitHandler));
+    exitPtr = ckalloc(sizeof(ExitHandler));
     exitPtr->proc = proc;
     exitPtr->clientData = clientData;
 
@@ -2011,7 +2010,7 @@ TkDeleteThreadExitHandler(
 	    } else {
 		prevPtr->nextPtr = exitPtr->nextPtr;
 	    }
-	    ckfree((char *) exitPtr);
+	    ckfree(exitPtr);
 	    return;
 	}
     }
@@ -2055,7 +2054,7 @@ TkFinalize(
 	firstExitPtr = exitPtr->nextPtr;
 	Tcl_MutexUnlock(&exitMutex);
 	exitPtr->proc(exitPtr->clientData);
-	ckfree((char *) exitPtr);
+	ckfree(exitPtr);
 	Tcl_MutexLock(&exitMutex);
     }
     firstExitPtr = NULL;
@@ -2105,7 +2104,7 @@ TkFinalizeThread(
 
 	    tsdPtr->firstExitPtr = exitPtr->nextPtr;
 	    exitPtr->proc(exitPtr->clientData);
-	    ckfree((char *) exitPtr);
+	    ckfree(exitPtr);
 	}
     }
 }

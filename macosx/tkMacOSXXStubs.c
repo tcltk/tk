@@ -153,8 +153,8 @@ TkpOpenDisplay(
 	}
     }
 
-    display = (Display *) ckalloc(sizeof(Display));
-    screen  = (Screen *) ckalloc(sizeof(Screen));
+    display = ckalloc(sizeof(Display));
+    screen  = ckalloc(sizeof(Screen));
     bzero(display, sizeof(Display));
     bzero(screen, sizeof(Screen));
 
@@ -194,7 +194,7 @@ TkpOpenDisplay(
     screen->white_pixel = 0x00FFFFFF | PIXEL_MAGIC << 24;
     screen->ext_data	= (XExtData *) &maxBounds;
 
-    screen->root_visual = (Visual *) ckalloc(sizeof(Visual));
+    screen->root_visual = ckalloc(sizeof(Visual));
     screen->root_visual->visualid     = 0;
     screen->root_visual->class	      = TrueColor;
     screen->root_visual->red_mask     = 0x00FF0000;
@@ -209,7 +209,7 @@ TkpOpenDisplay(
 
     TkMacOSXDisplayChanged(display);
 
-    gMacDisplay = (TkDisplay *) ckalloc(sizeof(TkDisplay));
+    gMacDisplay = ckalloc(sizeof(TkDisplay));
 
     /*
      * This is the quickest way to make sure that all the *Init flags get
@@ -251,11 +251,11 @@ TkpCloseDisplay(
     gMacDisplay = NULL;
     if (display->screens != NULL) {
 	if (display->screens->root_visual != NULL) {
-	    ckfree((char *) display->screens->root_visual);
+	    ckfree(display->screens->root_visual);
 	}
-	ckfree((char *) display->screens);
+	ckfree(display->screens);
     }
-    ckfree((char *) display);
+    ckfree(display);
 }
 
 /*
@@ -784,7 +784,7 @@ XCreateImage(
     XImage *ximage;
 
     display->request++;
-    ximage = (XImage *) ckalloc(sizeof(XImage));
+    ximage = ckalloc(sizeof(XImage));
 
     ximage->height = height;
     ximage->width = width;
@@ -946,7 +946,7 @@ DestroyImage(
 	} else if (image->data) {
 	    ckfree(image->data);
 	}
-	ckfree((char*) image);
+	ckfree(image);
     }
     return 0;
 }

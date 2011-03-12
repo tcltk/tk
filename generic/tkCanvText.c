@@ -1026,7 +1026,7 @@ TextInsert(
 	return;
     }
 
-    newStr = ckalloc((unsigned) textPtr->numBytes + byteCount + 1);
+    newStr = ckalloc(textPtr->numBytes + byteCount + 1);
     memcpy(newStr, text, (size_t) byteIndex);
     strcpy(newStr + byteIndex, string);
     strcpy(newStr + byteIndex + byteCount, text + byteIndex);
@@ -1107,7 +1107,7 @@ TextDeleteChars(
     byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved)
 	- (text + byteIndex);
 
-    newStr = ckalloc((unsigned) (textPtr->numBytes + 1 - byteCount));
+    newStr = ckalloc(textPtr->numBytes + 1 - byteCount);
     memcpy(newStr, text, (size_t) byteIndex);
     strcpy(newStr + byteIndex, text + byteIndex + byteCount);
 

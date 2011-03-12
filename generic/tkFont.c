@@ -379,7 +379,7 @@ void
 TkFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    TkFontInfo *fiPtr = (TkFontInfo *) ckalloc(sizeof(TkFontInfo));
+    TkFontInfo *fiPtr = ckalloc(sizeof(TkFontInfo));
 
     Tcl_InitHashTable(&fiPtr->fontCache, TCL_STRING_KEYS);
     Tcl_InitHashTable(&fiPtr->namedTable, TCL_STRING_KEYS);
@@ -444,7 +444,7 @@ TkFontPkgFree(
     if (fiPtr->updatePending != 0) {
 	Tcl_CancelIdleCall(TheWorldHasChanged, fiPtr);
     }
-    ckfree((char *) fiPtr);
+    ckfree(fiPtr);
 }
 
 /*
@@ -969,7 +969,7 @@ TkCreateNamedFont(
 	return TCL_OK;
     }
 
-    nfPtr = (NamedFont *) ckalloc(sizeof(NamedFont));
+    nfPtr = ckalloc(sizeof(NamedFont));
     nfPtr->deletePending = 0;
     Tcl_SetHashValue(namedHashPtr, nfPtr);
     nfPtr->fa = *faPtr;
@@ -1012,7 +1012,7 @@ TkDeleteNamedFont(
 	nfPtr->deletePending = 1;
     } else {
 	Tcl_DeleteHashEntry(namedHashPtr);
-	ckfree((char *) nfPtr);
+	ckfree(nfPtr);
     }
     return TCL_OK;
 }
@@ -1425,7 +1425,7 @@ Tk_FreeFont(
 	nfPtr->refCount--;
 	if ((nfPtr->refCount == 0) && (nfPtr->deletePending != 0)) {
 	    Tcl_DeleteHashEntry(fontPtr->namedHashPtr);
-	    ckfree((char *) nfPtr);
+	    ckfree(nfPtr);
 	}
     }
 
@@ -1445,7 +1445,7 @@ Tk_FreeFont(
 
     TkpDeleteFont(fontPtr);
     if (fontPtr->objRefCount == 0) {
-	ckfree((char *) fontPtr);
+	ckfree(fontPtr);
     }
 }
 
@@ -1512,7 +1512,7 @@ FreeFontObj(
     if (fontPtr != NULL) {
 	fontPtr->objRefCount--;
 	if ((fontPtr->resourceRefCount == 0) && (fontPtr->objRefCount == 0)) {
-	    ckfree((char *) fontPtr);
+	    ckfree(fontPtr);
 	    objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 	}
     }
@@ -1974,8 +1974,8 @@ Tk_ComputeTextLayout(
 
     maxChunks = 1;
 
-    layoutPtr = (TextLayout *)
-	    ckalloc(sizeof(TextLayout) + (maxChunks-1) * sizeof(LayoutChunk));
+    layoutPtr = ckalloc(sizeof(TextLayout)
+	    + (maxChunks-1) * sizeof(LayoutChunk));
     layoutPtr->tkfont = tkfont;
     layoutPtr->string = string;
     layoutPtr->numChunks = 0;
@@ -2231,7 +2231,7 @@ Tk_FreeTextLayout(
     TextLayout *layoutPtr = (TextLayout *) textLayout;
 
     if (layoutPtr != NULL) {
-	ckfree((char *) layoutPtr);
+	ckfree(layoutPtr);
     }
 }
 
@@ -3745,7 +3745,7 @@ NewChunk(
     if (layoutPtr->numChunks == maxChunks) {
 	maxChunks *= 2;
 	s = sizeof(TextLayout) + ((maxChunks - 1) * sizeof(LayoutChunk));
-	layoutPtr = (TextLayout *) ckrealloc((char *) layoutPtr, s);
+	layoutPtr = ckrealloc(layoutPtr, s);
 
 	*layoutPtrPtr = layoutPtr;
 	*maxPtr = maxChunks;

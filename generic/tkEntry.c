@@ -509,7 +509,7 @@ Tk_EntryObjCmd(
      * initialized as memset covers the rest.
      */
 
-    entryPtr = (Entry *) ckalloc(sizeof(Entry));
+    entryPtr = ckalloc(sizeof(Entry));
     memset(entryPtr, 0, sizeof(Entry));
 
     entryPtr->tkwin		= tkwin;
@@ -1016,7 +1016,7 @@ DestroyEntry(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
-    ckfree((char *)entryPtr->string);
+    ckfree(entryPtr->string);
     if (entryPtr->textVarName != NULL) {
 	Tcl_UntraceVar(entryPtr->interp, entryPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -1031,7 +1031,7 @@ DestroyEntry(
     }
     Tcl_DeleteTimerHandler(entryPtr->insertBlinkHandler);
     if (entryPtr->displayString != entryPtr->string) {
-	ckfree((char *)entryPtr->displayString);
+	ckfree(entryPtr->displayString);
     }
     if (entryPtr->type == TK_SPINBOX) {
 	Spinbox *sbPtr = (Spinbox *) entryPtr;
@@ -1050,7 +1050,7 @@ DestroyEntry(
     Tcl_Release(entryPtr->tkwin);
     entryPtr->tkwin = NULL;
 
-    ckfree((char *) entryPtr);
+    ckfree(entryPtr);
 }
 
 /*
@@ -1874,7 +1874,7 @@ EntryComputeGeometry(
     char *p;
 
     if (entryPtr->displayString != entryPtr->string) {
-	ckfree((char *)entryPtr->displayString);
+	ckfree(entryPtr->displayString);
 	entryPtr->displayString = entryPtr->string;
 	entryPtr->numDisplayBytes = entryPtr->numBytes;
     }
@@ -1900,7 +1900,7 @@ EntryComputeGeometry(
 	size = Tcl_UniCharToUtf(ch, buf);
 
 	entryPtr->numDisplayBytes = entryPtr->numChars * size;
-	p = (char *) ckalloc((unsigned) (entryPtr->numDisplayBytes + 1));
+	p = ckalloc(entryPtr->numDisplayBytes + 1);
 	entryPtr->displayString = p;
 
 	for (i = entryPtr->numChars; --i >= 0; ) {
@@ -2017,7 +2017,7 @@ InsertChars(
     }
 
     newByteCount = entryPtr->numBytes + byteCount + 1;
-    newStr = ckalloc((unsigned) newByteCount);
+    newStr = ckalloc(newByteCount);
     memcpy(newStr, string, byteIndex);
     strcpy(newStr + byteIndex, value);
     strcpy(newStr + byteIndex + byteCount, string + byteIndex);
@@ -2030,7 +2030,7 @@ InsertChars(
 	return;
     }
 
-    ckfree((char *)string);
+    ckfree(string);
     entryPtr->string = newStr;
 
     /*
@@ -2117,11 +2117,11 @@ DeleteChars(
     byteCount = Tcl_UtfAtIndex(string + byteIndex, count) - (string+byteIndex);
 
     newByteCount = entryPtr->numBytes + 1 - byteCount;
-    newStr = ckalloc((unsigned) newByteCount);
+    newStr = ckalloc(newByteCount);
     memcpy(newStr, string, (size_t) byteIndex);
     strcpy(newStr + byteIndex, string + byteIndex + byteCount);
 
-    toDelete = ckalloc((unsigned) (byteCount + 1));
+    toDelete = ckalloc(byteCount + 1);
     memcpy(toDelete, string + byteIndex, (size_t) byteCount);
     toDelete[byteCount] = '\0';
 
@@ -2135,7 +2135,7 @@ DeleteChars(
     }
 
     ckfree(toDelete);
-    ckfree((char *)entryPtr->string);
+    ckfree(entryPtr->string);
     entryPtr->string = newStr;
     entryPtr->numChars -= count;
     entryPtr->numBytes -= byteCount;
@@ -2293,7 +2293,7 @@ EntrySetValue(
 	 * during validation
 	 */
 
-	char *tmp = (char *) ckalloc((unsigned) (valueLen + 1));
+	char *tmp = ckalloc(valueLen + 1);
 
 	strcpy(tmp, value);
 	value = tmp;
@@ -2311,18 +2311,18 @@ EntrySetValue(
 
 	if (entryPtr->flags & VALIDATE_ABORT) {
 	    entryPtr->flags &= ~VALIDATE_ABORT;
-	    ckfree((char *)value);
+	    ckfree(value);
 	    return;
 	}
     }
 
     oldSource = entryPtr->string;
-    ckfree((char *)entryPtr->string);
+    ckfree(entryPtr->string);
 
     if (malloced) {
 	entryPtr->string = value;
     } else {
-	char *tmp = ckalloc((unsigned) (valueLen + 1));
+	char *tmp = ckalloc(valueLen + 1);
 
 	strcpy(tmp, value);
 	entryPtr->string = tmp;
@@ -3526,7 +3526,7 @@ Tk_SpinboxObjCmd(
      * initialized as memset covers the rest.
      */
 
-    sbPtr = (Spinbox *) ckalloc(sizeof(Spinbox));
+    sbPtr = ckalloc(sizeof(Spinbox));
     entryPtr			= (Entry *) sbPtr;
     memset(sbPtr, 0, sizeof(Spinbox));
 

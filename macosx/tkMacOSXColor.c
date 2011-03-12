@@ -595,7 +595,7 @@ TkpGetColor(
 		    color.red = color.green = color.blue = rgba[0] * 65535.0;
 		    break;
 		default:
-		    Tcl_Panic("CGColor with %d components", n);
+		  Tcl_Panic("CGColor with %d components", (int) n);
 		}
 		color.pixel = ((((((pixelCode << 8)
 		    | ((color.red   >> 8) & 0xff)) << 8)
@@ -609,11 +609,11 @@ TkpGetColor(
     }
 
     if (XParseColor(display, colormap, name, &color) == 0) {
-	return (TkColor *) NULL;
+	return NULL;
     }
 
 validXColor:
-    tkColPtr = (TkColor *) ckalloc(sizeof(TkColor));
+    tkColPtr = ckalloc(sizeof(TkColor));
     tkColPtr->color = color;
 
     return tkColPtr;
@@ -647,7 +647,7 @@ TkpGetColorByValue(
     XColor *colorPtr)		/* Red, green, and blue fields indicate
 				 * desired color. */
 {
-    TkColor *tkColPtr = (TkColor *) ckalloc(sizeof(TkColor));
+    TkColor *tkColPtr = ckalloc(sizeof(TkColor));
 
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;

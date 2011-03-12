@@ -83,9 +83,9 @@ XDestroyWindow(
 	}
 
 	if (macWin->toplevel->referenceCount == 0) {
-	    ckfree((char *) macWin->toplevel);
+	    ckfree(macWin->toplevel);
 	}
-	ckfree((char *) macWin);
+	ckfree(macWin);
 	return;
     }
     if (macWin->visRgn) {
@@ -105,7 +105,7 @@ XDestroyWindow(
      */
 
     if (macWin->toplevel->referenceCount == 0) {
-	ckfree((char *) macWin->toplevel);
+	ckfree(macWin->toplevel);
     }
 }
 
@@ -1290,7 +1290,7 @@ Tk_GetPixmap(
     if (display != NULL) {
 	display->request++;
     }
-    macPix = (MacDrawable *) ckalloc(sizeof(MacDrawable));
+    macPix = ckalloc(sizeof(MacDrawable));
     macPix->winPtr = NULL;
     macPix->xOff = 0;
     macPix->yOff = 0;
@@ -1339,7 +1339,7 @@ Tk_FreePixmap(
 	}
 	CFRelease(macPix->context);
     }
-    ckfree((char *) macPix);
+    ckfree(macPix);
 }
 
 /*

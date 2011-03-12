@@ -167,7 +167,7 @@ Tk_SetAppName(
     if (riPtr == NULL) {
 	LPUNKNOWN *objPtr;
 
-	riPtr = (RegisteredInterp *) ckalloc(sizeof(RegisteredInterp));
+	riPtr = ckalloc(sizeof(RegisteredInterp));
 	memset(riPtr, 0, sizeof(RegisteredInterp));
 	riPtr->interp = interp;
 
@@ -953,7 +953,7 @@ TkWinSend_QueueCommand(
 
     TRACE("SendQueueCommand()\n");
 
-    evPtr = (SendEvent *)ckalloc(sizeof(SendEvent));
+    evPtr = ckalloc(sizeof(SendEvent));
     evPtr->header.proc = SendEventProc;
     evPtr->header.nextPtr = NULL;
     evPtr->interp = interp;

@@ -590,7 +590,7 @@ DeleteArc(
 
     Tk_DeleteOutline(display, &(arcPtr->outline));
     if (arcPtr->numOutlinePoints != 0) {
-	ckfree((char *) arcPtr->outlinePtr);
+	ckfree(arcPtr->outlinePtr);
     }
     if (arcPtr->fillColor != NULL) {
 	Tk_FreeColor(arcPtr->fillColor);
@@ -1453,8 +1453,7 @@ ComputeArcOutline(
      */
 
     if (arcPtr->numOutlinePoints == 0) {
-	arcPtr->outlinePtr = (double *) ckalloc((unsigned)
-		(26 * sizeof(double)));
+	arcPtr->outlinePtr = ckalloc(26 * sizeof(double));
 	arcPtr->numOutlinePoints = 22;
     }
     outlinePtr = arcPtr->outlinePtr;

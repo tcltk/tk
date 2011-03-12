@@ -398,7 +398,7 @@ ItemConfigure(
 	result = itemPtr->typePtr->configProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, objc, (Tcl_Obj **) args, TK_CONFIG_ARGV_ONLY);
 	if (args != NULL) {
-	    ckfree((char *) args);
+	    ckfree(args);
 	}
     }
     return result;
@@ -447,7 +447,7 @@ ItemCoords(
 	result = itemPtr->typePtr->coordProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, objc, (Tcl_Obj **) args);
 	if (args != NULL) {
-	    ckfree((char *) args);
+	    ckfree(args);
 	}
     }
     return result;
@@ -473,7 +473,7 @@ ItemCreate(
 	result = itemPtr->typePtr->createProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, objc-3, (Tcl_Obj **) args);
 	if (args != NULL) {
-	    ckfree((char *) args);
+	    ckfree(args);
 	}
     }
     return result;
@@ -664,7 +664,7 @@ Tk_CanvasObjCmd(
      * pointers).
      */
 
-    canvasPtr = (TkCanvas *) ckalloc(sizeof(TkCanvas));
+    canvasPtr = ckalloc(sizeof(TkCanvas));
     canvasPtr->tkwin = newWin;
     canvasPtr->display = Tk_Display(newWin);
     canvasPtr->interp = interp;
@@ -1292,7 +1292,7 @@ CanvasWidgetCmd(
 	}
 
 	typePtr = matchPtr;
-	itemPtr = (Tk_Item *) ckalloc((unsigned) typePtr->itemSize);
+	itemPtr = ckalloc(typePtr->itemSize);
 	itemPtr->id = canvasPtr->nextId;
 	canvasPtr->nextId++;
 	itemPtr->tagPtr = itemPtr->staticTagSpace;
@@ -1303,7 +1303,7 @@ CanvasWidgetCmd(
 	itemPtr->redraw_flags = 0;
 
 	if (ItemCreate(canvasPtr, itemPtr, objc, objv) != TCL_OK) {
-	    ckfree((char *) itemPtr);
+	    ckfree(itemPtr);
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1386,7 +1386,7 @@ CanvasWidgetCmd(
 		}
 		ItemDelete(canvasPtr, itemPtr);
 		if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
-		    ckfree((char *) itemPtr->tagPtr);
+		    ckfree(itemPtr->tagPtr);
 		}
 		entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable,
 			(char *) INT2PTR(itemPtr->id));
@@ -1406,7 +1406,7 @@ CanvasWidgetCmd(
 		if (canvasPtr->lastItemPtr == itemPtr) {
 		    canvasPtr->lastItemPtr = itemPtr->prevPtr;
 		}
-		ckfree((char *) itemPtr);
+		ckfree(itemPtr);
 		if (itemPtr == canvasPtr->currentItemPtr) {
 		    canvasPtr->currentItemPtr = NULL;
 		    canvasPtr->flags |= REPICK_NEEDED;
@@ -1748,7 +1748,7 @@ CanvasWidgetCmd(
 
 	result = TkCanvPostscriptCmd(canvasPtr, interp, objc, args);
 	if (args != NULL) {
-	    ckfree((char *) args);
+	    ckfree(args);
 	}
 	break;
     }
@@ -2032,7 +2032,7 @@ CanvasWidgetCmd(
 
 	    type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
 	    if (args != NULL) {
-		ckfree((char *) args);
+		ckfree(args);
 	    }
 	    switch (type) {
 	    case TK_SCROLL_ERROR:
@@ -2079,7 +2079,7 @@ CanvasWidgetCmd(
 
 	    type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
 	    if (args != NULL) {
-		ckfree((char *) args);
+		ckfree(args);
 	    }
 	    switch (type) {
 	    case TK_SCROLL_ERROR:
@@ -2157,9 +2157,9 @@ DestroyCanvas(
 	canvasPtr->firstItemPtr = itemPtr->nextPtr;
 	ItemDelete(canvasPtr, itemPtr);
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
-	    ckfree((char *) itemPtr->tagPtr);
+	    ckfree(itemPtr->tagPtr);
 	}
-	ckfree((char *) itemPtr);
+	ckfree(itemPtr);
     }
 
     /*
@@ -2185,7 +2185,7 @@ DestroyCanvas(
     }
     Tk_FreeOptions(configSpecs, (char *) canvasPtr, canvasPtr->display, 0);
     canvasPtr->tkwin = NULL;
-    ckfree((char *) canvasPtr);
+    ckfree(canvasPtr);
 }
 
 /*
@@ -2307,7 +2307,7 @@ ConfigureCanvas(
 		    canvasPtr->regionString, "\"", NULL);
 	badRegion:
 	    ckfree(canvasPtr->regionString);
-	    ckfree((char *) argv2);
+	    ckfree(argv2);
 	    canvasPtr->regionString = NULL;
 	    return TCL_ERROR;
 	}
@@ -2321,7 +2321,7 @@ ConfigureCanvas(
 		    argv2[3], &canvasPtr->scrollY2) != TCL_OK)) {
 	    goto badRegion;
 	}
-	ckfree((char *) argv2);
+	ckfree(argv2);
     }
 
     flags = canvasPtr->tsoffset.flags;
@@ -3278,7 +3278,7 @@ TagSearchExprInit(
     TagSearchExpr *expr = *exprPtrPtr;
 
     if (expr == NULL) {
-	expr = (TagSearchExpr *) ckalloc(sizeof(TagSearchExpr));
+	expr = ckalloc(sizeof(TagSearchExpr));
 	expr->allocated = 0;
 	expr->uids = NULL;
 	expr->next = NULL;
@@ -3309,9 +3309,9 @@ TagSearchExprDestroy(
 {
     if (expr != NULL) {
     	if (expr->uids) {
-	    ckfree((char *) expr->uids);
+	    ckfree(expr->uids);
 	}
-	ckfree((char *) expr);
+	ckfree(expr);
     }
 }
 
@@ -3359,7 +3359,7 @@ TagSearchScan(
 	 * Allocate primary search struct on first call.
 	 */
 
-	*searchPtrPtr = searchPtr = (TagSearch *) ckalloc(sizeof(TagSearch));
+	*searchPtrPtr = searchPtr = ckalloc(sizeof(TagSearch));
 	searchPtr->expr = NULL;
 
 	/*
@@ -3513,8 +3513,8 @@ TagSearchDestroy(
 {
     if (searchPtr) {
 	TagSearchExprDestroy(searchPtr->expr);
-	ckfree((char *) searchPtr->rewritebuffer);
-	ckfree((char *) searchPtr);
+	ckfree(searchPtr->rewritebuffer);
+	ckfree(searchPtr);
     }
 }
 
@@ -3567,11 +3567,10 @@ TagSearchScanExpr(
 	if (expr->index >= expr->allocated-1) {
 	    expr->allocated += 15;
 	    if (expr->uids) {
-		expr->uids = (Tk_Uid *) ckrealloc((char *) expr->uids,
+		expr->uids = ckrealloc(expr->uids,
 			expr->allocated * sizeof(Tk_Uid));
 	    } else {
-		expr->uids = (Tk_Uid *)
-			ckalloc(expr->allocated * sizeof(Tk_Uid));
+		expr->uids = ckalloc(expr->allocated * sizeof(Tk_Uid));
 	    }
 	}
 
@@ -4191,12 +4190,11 @@ DoItem(
 	Tk_Uid *newTagPtr;
 
 	itemPtr->tagSpace += 5;
-	newTagPtr = (Tk_Uid *)
-		ckalloc((unsigned) itemPtr->tagSpace * sizeof(Tk_Uid));
+	newTagPtr = ckalloc(itemPtr->tagSpace * sizeof(Tk_Uid));
 	memcpy((void *) newTagPtr, itemPtr->tagPtr,
 		itemPtr->numTags * sizeof(Tk_Uid));
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
-	    ckfree((char *) itemPtr->tagPtr);
+	    ckfree(itemPtr->tagPtr);
 	}
 	itemPtr->tagPtr = newTagPtr;
 	tagPtr = &itemPtr->tagPtr[itemPtr->numTags];
@@ -5132,8 +5130,7 @@ CanvasDoEvent(
     if (numObjects <= NUM_STATIC) {
 	objectPtr = staticObjects;
     } else {
-	objectPtr = (ClientData *)
-		ckalloc((unsigned) numObjects * sizeof(ClientData));
+	objectPtr = ckalloc(numObjects * sizeof(ClientData));
     }
 #ifdef USE_OLD_TAG_SEARCH
     objectPtr[0] = (ClientData) Tk_GetUid("all");
@@ -5170,7 +5167,7 @@ CanvasDoEvent(
 		numObjects, objectPtr);
     }
     if (objectPtr != staticObjects) {
-	ckfree((char *) objectPtr);
+	ckfree(objectPtr);
     }
 }
 
@@ -5712,7 +5709,7 @@ TkGetStringsFromObjs(
     if (objc <= 0) {
 	return NULL;
     }
-    argv = (const char **) ckalloc((objc+1) * sizeof(char *));
+    argv = ckalloc((objc+1) * sizeof(char *));
     for (i = 0; i < objc; i++) {
 	argv[i] = Tcl_GetString(objv[i]);
     }

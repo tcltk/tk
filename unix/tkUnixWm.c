@@ -497,7 +497,7 @@ void TkWmCleanup(
 	    ckfree(wmPtr->iconName);
 	}
 	if (wmPtr->iconDataPtr != NULL) {
-	    ckfree((char *) wmPtr->iconDataPtr);
+	    ckfree(wmPtr->iconDataPtr);
 	}
 	if (wmPtr->leaderName != NULL) {
 	    ckfree(wmPtr->leaderName);
@@ -515,15 +515,15 @@ void TkWmCleanup(
 	    Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
 	}
 	if (wmPtr->cmdArgv != NULL) {
-	    ckfree((char *) wmPtr->cmdArgv);
+	    ckfree(wmPtr->cmdArgv);
 	}
 	if (wmPtr->clientMachine != NULL) {
-	    ckfree((char *) wmPtr->clientMachine);
+	    ckfree(wmPtr->clientMachine);
 	}
-	ckfree((char *) wmPtr);
+	ckfree(wmPtr);
     }
     if (dispPtr->iconDataPtr != NULL) {
-	ckfree((char *) dispPtr->iconDataPtr);
+	ckfree(dispPtr->iconDataPtr);
 	dispPtr->iconDataPtr = NULL;
     }
 }
@@ -552,7 +552,7 @@ TkWmNewWindow(
     register WmInfo *wmPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
 
-    wmPtr = (WmInfo *) ckalloc(sizeof(WmInfo));
+    wmPtr = ckalloc(sizeof(WmInfo));
     memset(wmPtr, 0, sizeof(WmInfo));
     wmPtr->winPtr = winPtr;
     wmPtr->reparent = None;
@@ -842,7 +842,7 @@ TkWmDeadWindow(
 	ckfree(wmPtr->iconName);
     }
     if (wmPtr->iconDataPtr != NULL) {
-	ckfree((char *) wmPtr->iconDataPtr);
+	ckfree(wmPtr->iconDataPtr);
     }
     if (wmPtr->hints.flags & IconPixmapHint) {
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
@@ -887,10 +887,10 @@ TkWmDeadWindow(
 	Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
     }
     if (wmPtr->cmdArgv != NULL) {
-	ckfree((char *) wmPtr->cmdArgv);
+	ckfree(wmPtr->cmdArgv);
     }
     if (wmPtr->clientMachine != NULL) {
-	ckfree((char *) wmPtr->clientMachine);
+	ckfree(wmPtr->clientMachine);
     }
     if (wmPtr->flags & WM_UPDATE_PENDING) {
 	Tcl_CancelIdleCall(UpdateGeometryInfo, winPtr);
@@ -935,7 +935,7 @@ TkWmDeadWindow(
 		StructureNotifyMask, WmWaitMapProc, winPtr);
 	wmPtr->masterPtr = NULL;
     }
-    ckfree((char *) wmPtr);
+    ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
 
@@ -1459,7 +1459,7 @@ WmClientCmd(
     argv3 = Tcl_GetStringFromObj(objv[3], &length);
     if (argv3[0] == 0) {
 	if (wmPtr->clientMachine != NULL) {
-	    ckfree((char *) wmPtr->clientMachine);
+	    ckfree(wmPtr->clientMachine);
 	    wmPtr->clientMachine = NULL;
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 		XDeleteProperty(winPtr->display, wmPtr->wrapperPtr->window,
@@ -1470,9 +1470,9 @@ WmClientCmd(
 	return TCL_OK;
     }
     if (wmPtr->clientMachine != NULL) {
-	ckfree((char *) wmPtr->clientMachine);
+	ckfree(wmPtr->clientMachine);
     }
-    wmPtr->clientMachine = ckalloc((unsigned) length + 1);
+    wmPtr->clientMachine = ckalloc(length + 1);
     strcpy(wmPtr->clientMachine, argv3);
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	XTextProperty textProp;
@@ -1569,14 +1569,14 @@ WmColormapwindowsCmd(
 	    != TCL_OK) {
 	return TCL_ERROR;
     }
-    cmapList = (Window *) ckalloc((unsigned) (windowObjc+1) * sizeof(Window));
+    cmapList = ckalloc((windowObjc+1) * sizeof(Window));
     gotToplevel = 0;
     for (i = 0; i < windowObjc; i++) {
 	Tk_Window mapWin;
 
 	if (TkGetWindowFromObj(interp, tkwin, windowObjv[i],
 		&mapWin) != TCL_OK) {
-	    ckfree((char *) cmapList);
+	    ckfree(cmapList);
 	    return TCL_ERROR;
 	}
 	winPtr2 = (TkWindow *) mapWin;
@@ -1598,7 +1598,7 @@ WmColormapwindowsCmd(
     wmPtr->flags |= WM_COLORMAPS_EXPLICIT;
     XSetWMColormapWindows(winPtr->display, wmPtr->wrapperPtr->window,
 	    cmapList, windowObjc);
-    ckfree((char *) cmapList);
+    ckfree(cmapList);
     return TCL_OK;
 }
 
@@ -1647,7 +1647,7 @@ WmCommandCmd(
     argv3 = Tcl_GetString(objv[3]);
     if (argv3[0] == 0) {
 	if (wmPtr->cmdArgv != NULL) {
-	    ckfree((char *) wmPtr->cmdArgv);
+	    ckfree(wmPtr->cmdArgv);
 	    wmPtr->cmdArgv = NULL;
 	    if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 		XDeleteProperty(winPtr->display, wmPtr->wrapperPtr->window,
@@ -1660,7 +1660,7 @@ WmCommandCmd(
 	return TCL_ERROR;
     }
     if (wmPtr->cmdArgv != NULL) {
-	ckfree((char *) wmPtr->cmdArgv);
+	ckfree(wmPtr->cmdArgv);
     }
     wmPtr->cmdArgc = cmdArgc;
     wmPtr->cmdArgv = cmdArgv;
@@ -2083,7 +2083,7 @@ WmGroupCmd(
 	}
 	wmPtr->hints.window_group = Tk_WindowId(wmPtr2->wrapperPtr);
 	wmPtr->hints.flags |= WindowGroupHint;
-	wmPtr->leaderName = ckalloc((unsigned) length + 1);
+	wmPtr->leaderName = ckalloc(length + 1);
 	strcpy(wmPtr->leaderName, argv3);
     }
     UpdateHints(winPtr);
@@ -2310,10 +2310,10 @@ WmIconnameCmd(
 	return TCL_OK;
     } else {
 	if (wmPtr->iconName != NULL) {
-	    ckfree((char *) wmPtr->iconName);
+	    ckfree(wmPtr->iconName);
 	}
 	argv3 = Tcl_GetStringFromObj(objv[3], &length);
-	wmPtr->iconName = ckalloc((unsigned) length + 1);
+	wmPtr->iconName = ckalloc(length + 1);
 	strcpy(wmPtr->iconName, argv3);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	    UpdateTitle(winPtr);
@@ -2396,8 +2396,7 @@ WmIconphotoCmd(
      * defines CARD32 arrays to use. [Bug 2902814]
      */
 
-    iconPropertyData = (unsigned long *)
-	    attemptckalloc(sizeof(unsigned long) * size);
+    iconPropertyData = attemptckalloc(sizeof(unsigned long) * size);
     if (iconPropertyData == NULL) {
 	return TCL_ERROR;
     }
@@ -2448,12 +2447,12 @@ WmIconphotoCmd(
 	}
     }
     if (wmPtr->iconDataPtr != NULL) {
-	ckfree((char *) wmPtr->iconDataPtr);
+	ckfree(wmPtr->iconDataPtr);
 	wmPtr->iconDataPtr = NULL;
     }
     if (isDefault) {
 	if (winPtr->dispPtr->iconDataPtr != NULL) {
-	    ckfree((char *) winPtr->dispPtr->iconDataPtr);
+	    ckfree(winPtr->dispPtr->iconDataPtr);
 	}
 	winPtr->dispPtr->iconDataPtr = (unsigned char *) iconPropertyData;
 	winPtr->dispPtr->iconDataSize = size;
@@ -3023,7 +3022,7 @@ WmProtocolCmd(
     }
     cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
-	protPtr = (ProtocolHandler *) ckalloc(HANDLER_SIZE(cmdLength));
+	protPtr = ckalloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
@@ -3205,7 +3204,7 @@ WmStackorderCmd(
 	    for (window_ptr = windows; *window_ptr ; window_ptr++) {
 		Tcl_AppendElement(interp, (*window_ptr)->pathName);
 	    }
-	    ckfree((char *) windows);
+	    ckfree(windows);
 	    return TCL_OK;
 	}
     } else {
@@ -3257,7 +3256,7 @@ WmStackorderCmd(
 	    }
 	}
 	/* ASSERT: index1 != -1 && index2 != -2 [Bug 1789819] */
-	ckfree((char *) windows);
+	ckfree(windows);
 
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
 		&index) != TCL_OK) {
@@ -3408,10 +3407,10 @@ WmTitleCmd(
 	return TCL_OK;
     } else {
 	if (wmPtr->title != NULL) {
-	    ckfree((char *) wmPtr->title);
+	    ckfree(wmPtr->title);
 	}
 	argv3 = Tcl_GetStringFromObj(objv[3], &length);
-	wmPtr->title = ckalloc((unsigned) length + 1);
+	wmPtr->title = ckalloc(length + 1);
 	strcpy(wmPtr->title, argv3);
 
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -5381,13 +5380,14 @@ SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr)
     }
 
     if (objc > 0) {
-	atoms = (Atom *)ckalloc(sizeof(Atom) * objc);
+	atoms = ckalloc(sizeof(Atom) * objc);
     }
 
     for (n = 0; n < objc; ++n) {
 	Tcl_DString ds, dsName;
 	int len;
 	char *name = Tcl_GetStringFromObj(objv[n], &len);
+
 	Tcl_UtfToUpper(name);
 	Tcl_UtfToExternalDString(NULL, name, len, &dsName);
 	Tcl_DStringInit(&ds);
@@ -5409,7 +5409,7 @@ SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr)
     XChangeProperty(Tk_Display(tkwin), wrapperPtr->window, typeAtom,
 	XA_ATOM, 32, PropModeReplace, (unsigned char *) atoms, objc);
 
-    ckfree((char *)atoms);
+    ckfree(atoms);
     return TCL_OK;
 }
 
@@ -6127,7 +6127,7 @@ UpdateWmProtocols(
 	    protPtr = protPtr->nextPtr, count++) {
 	/* Empty loop body; we're just counting the handlers. */
     }
-    arrayPtr = (Atom *) ckalloc((unsigned) count * sizeof(Atom));
+    arrayPtr = ckalloc(count * sizeof(Atom));
     deleteWindowAtom = Tk_InternAtom((Tk_Window) wmPtr->winPtr,
 	    "WM_DELETE_WINDOW");
     pingAtom = Tk_InternAtom((Tk_Window) wmPtr->winPtr, "_NET_WM_PING");
@@ -6144,7 +6144,7 @@ UpdateWmProtocols(
 	    Tk_InternAtom((Tk_Window) wmPtr->winPtr, "WM_PROTOCOLS"),
 	    XA_ATOM, 32, PropModeReplace, (unsigned char *) arrayPtr,
 	    atomPtr-arrayPtr);
-    ckfree((char *) arrayPtr);
+    ckfree(arrayPtr);
 }
 
 /*
@@ -6320,8 +6320,7 @@ TkWmStackorderToplevel(
     Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
     TkWmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
-    window_ptr = windows = (TkWindow **)
-	    ckalloc((table.numEntries+1) * sizeof(TkWindow *));
+    window_ptr = windows = ckalloc((table.numEntries+1) * sizeof(TkWindow *));
 
     /*
      * Special cases: If zero or one toplevels were mapped there is no need to
@@ -6346,7 +6345,7 @@ TkWmStackorderToplevel(
 
     if (XQueryTree(parentPtr->display, vRoot, &dummy1, &dummy2,
 	    &children, &numChildren) == 0) {
-	ckfree((char *) windows);
+	ckfree(windows);
 	windows = NULL;
     } else {
 	for (i = 0; i < numChildren; i++) {
@@ -6522,7 +6521,7 @@ TkWmAddToColormapWindows(
      * add the toplevel itself as the last element of the list.
      */
 
-    newPtr = (Window *) ckalloc((unsigned) (count+2) * sizeof(Window));
+    newPtr = ckalloc((count+2) * sizeof(Window));
     for (i = 0; i < count; i++) {
 	newPtr[i] = oldPtr[i];
     }
@@ -6533,7 +6532,7 @@ TkWmAddToColormapWindows(
     newPtr[count] = topPtr->window;
     XSetWMColormapWindows(topPtr->display, wrapperPtr->window, newPtr,
 	    count+1);
-    ckfree((char *) newPtr);
+    ckfree(newPtr);
     if (oldPtr != NULL) {
 	XFree((char *) oldPtr);
     }
@@ -7213,8 +7212,8 @@ UpdateCommand(
      * entire DString is done.
      */
 
-    cmdArgv = (char **) ckalloc(sizeof(char *) * wmPtr->cmdArgc);
-    offsets = (int *) ckalloc( sizeof(int) * wmPtr->cmdArgc);
+    cmdArgv = ckalloc(sizeof(char *) * wmPtr->cmdArgc);
+    offsets = ckalloc(sizeof(int) * wmPtr->cmdArgc);
     Tcl_DStringInit(&cmds);
     for (i = 0; i < wmPtr->cmdArgc; i++) {
 	Tcl_UtfToExternalDString(NULL, wmPtr->cmdArgv[i], -1, &ds);
@@ -7231,8 +7230,8 @@ UpdateCommand(
     XSetCommand(winPtr->display, wmPtr->wrapperPtr->window,
 	    cmdArgv, wmPtr->cmdArgc);
     Tcl_DStringFree(&cmds);
-    ckfree((char *) cmdArgv);
-    ckfree((char *) offsets);
+    ckfree(cmdArgv);
+    ckfree(offsets);
 }
 
 /*

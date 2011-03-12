@@ -429,7 +429,7 @@ TkCreateFrame(
 				 * application. */
 {
     int result, i;
-    Tcl_Obj **objv = (Tcl_Obj **) ckalloc((argc+1) * sizeof(Tcl_Obj **));
+    Tcl_Obj **objv = ckalloc((argc+1) * sizeof(Tcl_Obj **));
 
     for (i=0; i<argc; i++) {
 	objv[i] = Tcl_NewStringObj(argv[i], -1);
@@ -441,7 +441,7 @@ TkCreateFrame(
     for (i=0; i<argc; i++) {
 	Tcl_DecrRefCount(objv[i]);
     }
-    ckfree((char *) objv);
+    ckfree(objv);
     return result;
 }
 
@@ -622,10 +622,10 @@ CreateFrame(
      */
 
     if (type == TYPE_LABELFRAME) {
-	framePtr = (Frame *) ckalloc(sizeof(Labelframe));
+	framePtr = ckalloc(sizeof(Labelframe));
 	memset(framePtr, 0, sizeof(Labelframe));
     } else {
-	framePtr = (Frame *) ckalloc(sizeof(Frame));
+	framePtr = ckalloc(sizeof(Frame));
 	memset(framePtr, 0, sizeof(Frame));
     }
     framePtr->tkwin		= newWin;
@@ -846,7 +846,7 @@ DestroyFrame(
     if (framePtr->colormap != None) {
 	Tk_FreeColormap(framePtr->display, framePtr->colormap);
     }
-    ckfree((char *) framePtr);
+    ckfree(framePtr);
 }
 
 /*

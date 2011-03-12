@@ -92,8 +92,7 @@ Tk_MacOSXSetEmbedHandler(
     Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)
 {
     if (tkMacOSXEmbedHandler == NULL) {
-	tkMacOSXEmbedHandler = (TkMacOSXEmbedHandler *)
-		ckalloc(sizeof(TkMacOSXEmbedHandler));
+	tkMacOSXEmbedHandler = ckalloc(sizeof(TkMacOSXEmbedHandler));
     }
     tkMacOSXEmbedHandler->registerWinProc = registerWinProc;
     tkMacOSXEmbedHandler->getPortProc = getPortProc;
@@ -137,7 +136,7 @@ TkpMakeWindow(
 	 * Allocate sub window
 	 */
 
-	macWin = (MacDrawable *) ckalloc(sizeof(MacDrawable));
+	macWin = ckalloc(sizeof(MacDrawable));
 	if (macWin == NULL) {
 	    winPtr->privatePtr = NULL;
 	    return None;
@@ -263,7 +262,7 @@ TkpUseWindow(
      * Make the embedded window.
      */
 
-    macWin = (MacDrawable *) ckalloc(sizeof(MacDrawable));
+    macWin = ckalloc(sizeof(MacDrawable));
     if (macWin == NULL) {
 	winPtr->privatePtr = NULL;
 	return TCL_ERROR;
@@ -319,7 +318,7 @@ TkpUseWindow(
 		    " does not correspond to a valid Tk Window.", NULL);
 	    return TCL_ERROR;
 	} else {
-	    containerPtr = (Container *) ckalloc(sizeof(Container));
+	    containerPtr = ckalloc(sizeof(Container));
 
 	    containerPtr->parentPtr = NULL;
 	    containerPtr->embedded = (Window) macWin;
@@ -392,7 +391,7 @@ TkpMakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = (Container *) ckalloc(sizeof(Container));
+    containerPtr = ckalloc(sizeof(Container));
     containerPtr->parent = Tk_WindowId(tkwin);
     containerPtr->parentPtr = winPtr;
     containerPtr->embedded = None;
@@ -1117,7 +1116,7 @@ EmbedWindowDeleted(
 	} else {
 	    prevPtr->nextPtr = containerPtr->nextPtr;
 	}
-	ckfree((char *) containerPtr);
+	ckfree(containerPtr);
     }
 }
 

@@ -210,7 +210,7 @@ FileReadPPM(
 	nLines = 1;
     }
     nBytes = nLines * block.pitch;
-    pixelPtr = (unsigned char *) ckalloc((unsigned) nBytes);
+    pixelPtr = ckalloc(nBytes);
     block.pixelPtr = pixelPtr + srcX * block.pixelSize;
 
     for (h = height; h > 0; h -= nLines) {
@@ -224,7 +224,7 @@ FileReadPPM(
 		    fileName, "\": ",
 		    Tcl_Eof(chan) ? "not enough data" : Tcl_PosixError(interp),
 		    NULL);
-	    ckfree((char *) pixelPtr);
+	    ckfree(pixelPtr);
 	    return TCL_ERROR;
 	}
 	if (maxIntensity != 255) {
@@ -237,13 +237,13 @@ FileReadPPM(
 	block.height = nLines;
 	if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY,
 		width, nLines, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
-	    ckfree((char *) pixelPtr);
+	    ckfree(pixelPtr);
 	    return TCL_ERROR;
 	}
 	destY += nLines;
     }
 
-    ckfree((char *) pixelPtr);
+    ckfree(pixelPtr);
     return TCL_OK;
 }
 
@@ -562,7 +562,7 @@ StringReadPPM(
 	nLines = 1;
     }
     nBytes = nLines * block.pitch;
-    pixelPtr = (unsigned char *) ckalloc((unsigned) nBytes);
+    pixelPtr = ckalloc(nBytes);
     block.pixelPtr = pixelPtr + srcX * block.pixelSize;
 
     for (h = height; h > 0; h -= nLines) {
@@ -573,7 +573,7 @@ StringReadPPM(
 	    nBytes = nLines * block.pitch;
 	}
 	if (dataSize < nBytes) {
-	    ckfree((char *) pixelPtr);
+	    ckfree(pixelPtr);
 	    Tcl_AppendResult(interp, "truncated PPM data", NULL);
 	    return TCL_ERROR;
 	}
@@ -584,13 +584,13 @@ StringReadPPM(
 	block.height = nLines;
 	if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY,
 		width, nLines, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
-	    ckfree((char *) pixelPtr);
+	    ckfree(pixelPtr);
 	    return TCL_ERROR;
 	}
 	destY += nLines;
     }
 
-    ckfree((char *) pixelPtr);
+    ckfree(pixelPtr);
     return TCL_OK;
 }
 

@@ -284,8 +284,7 @@ TkBindEventProc(
 	 */
 
 	if (winPtr->numTags > MAX_OBJS) {
-	    objPtr = (ClientData *)
-		    ckalloc((unsigned) winPtr->numTags * sizeof(ClientData));
+	    objPtr = ckalloc(winPtr->numTags * sizeof(ClientData));
 	}
 	for (i = 0; i < winPtr->numTags; i++) {
 	    p = winPtr->tagPtr[i];
@@ -319,7 +318,7 @@ TkBindEventProc(
     Tk_BindEvent(winPtr->mainPtr->bindingTable, eventPtr, (Tk_Window) winPtr,
 	    count, objPtr);
     if (objPtr != objects) {
-	ckfree((char *) objPtr);
+	ckfree(objPtr);
     }
 }
 
@@ -401,8 +400,7 @@ Tk_BindtagsObjCmd(
     }
 
     winPtr->numTags = length;
-    winPtr->tagPtr = (ClientData *)
-	    ckalloc((unsigned) length * sizeof(ClientData));
+    winPtr->tagPtr = ckalloc(length * sizeof(ClientData));
     for (i = 0; i < length; i++) {
 	p = Tcl_GetString(tags[i]);
 	if (p[0] == '.') {
@@ -415,7 +413,7 @@ Tk_BindtagsObjCmd(
 	     * is one.
 	     */
 
-	    copy = ckalloc((unsigned) strlen(p) + 1);
+	    copy = ckalloc(strlen(p) + 1);
 	    strcpy(copy, p);
 	    winPtr->tagPtr[i] = (ClientData) copy;
 	} else {
@@ -458,10 +456,10 @@ TkFreeBindingTags(
 	     * have to be freed.
 	     */
 
-	    ckfree((char *) p);
+	    ckfree(p);
 	}
     }
-    ckfree((char *) winPtr->tagPtr);
+    ckfree(winPtr->tagPtr);
     winPtr->numTags = 0;
     winPtr->tagPtr = NULL;
 }

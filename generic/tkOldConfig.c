@@ -374,7 +374,7 @@ DoConfig(
 	    if (nullValue) {
 		newStr = NULL;
 	    } else {
-		newStr = (char *) ckalloc((unsigned) (strlen(value) + 1));
+		newStr = ckalloc(strlen(value) + 1);
 		strcpy(newStr, value);
 	    }
 	    oldStr = *((char **) ptr);
@@ -720,7 +720,7 @@ FormatConfigInfo(
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree((char *) argv[4]);
+	    ckfree(argv[4]);
 	} else {
 	    freeProc((char *) argv[4]);
 	}
@@ -941,7 +941,7 @@ Tk_ConfigureValue(
     Tcl_SetResult(interp, (char *) result, TCL_VOLATILE);
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree((char *) result);
+	    ckfree(result);
 	} else {
 	    freeProc((char *) result);
 	}
@@ -1073,7 +1073,7 @@ GetCachedSpecs(
     specCacheTablePtr =
 	    Tcl_GetAssocData(interp, "tkConfigSpec.threadTable", NULL);
     if (specCacheTablePtr == NULL) {
-	specCacheTablePtr = (Tcl_HashTable *) ckalloc(sizeof(Tcl_HashTable));
+	specCacheTablePtr = ckalloc(sizeof(Tcl_HashTable));
 	Tcl_InitHashTable(specCacheTablePtr, TCL_ONE_WORD_KEYS);
 	Tcl_SetAssocData(interp, "tkConfigSpec.threadTable",
 		DeleteSpecCacheTable, specCacheTablePtr);
@@ -1106,7 +1106,7 @@ GetCachedSpecs(
 	 * from the master copy.
 	 */
 
-	cachedSpecs = (Tk_ConfigSpec *) ckalloc(entrySpace);
+	cachedSpecs = ckalloc(entrySpace);
 	memcpy(cachedSpecs, staticSpecs, entrySpace);
 	Tcl_SetHashValue(entryPtr, cachedSpecs);
 
@@ -1172,7 +1172,7 @@ DeleteSpecCacheTable(
 	ckfree(Tcl_GetHashValue(entryPtr));
     }
     Tcl_DeleteHashTable(tablePtr);
-    ckfree((char *) tablePtr);
+    ckfree(tablePtr);
 }
 
 /*

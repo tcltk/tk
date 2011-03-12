@@ -438,7 +438,7 @@ TkTextTagCmd(
 		}
 	    }
 	    if (tagPtr->tabArrayPtr != NULL) {
-		ckfree((char *) tagPtr->tabArrayPtr);
+		ckfree(tagPtr->tabArrayPtr);
 		tagPtr->tabArrayPtr = NULL;
 	    }
 	    if (tagPtr->tabStringPtr != NULL) {
@@ -602,8 +602,8 @@ TkTextTagCmd(
 	    Tcl_HashSearch search;
 	    Tcl_HashEntry *hPtr;
 
-	    arrayPtr = (TkTextTag **) ckalloc((unsigned)
-		    (textPtr->sharedTextPtr->numTags * sizeof(TkTextTag *)));
+	    arrayPtr = ckalloc(textPtr->sharedTextPtr->numTags
+		    * sizeof(TkTextTag *));
 	    for (i=0, hPtr = Tcl_FirstHashEntry(
 		    &textPtr->sharedTextPtr->tagTable, &search);
 		    hPtr != NULL; i++, hPtr = Tcl_NextHashEntry(&search)) {
@@ -636,7 +636,7 @@ TkTextTagCmd(
 		    Tcl_NewStringObj(tagPtr->name,-1));
 	}
 	Tcl_SetObjResult(interp, listObj);
-	ckfree((char *) arrayPtr);
+	ckfree(arrayPtr);
 	break;
     }
     case TAG_NEXTRANGE: {
@@ -965,7 +965,7 @@ TkTextCreateTag(
      * to it to the hash table entry.
      */
 
-    tagPtr = (TkTextTag *) ckalloc(sizeof(TkTextTag));
+    tagPtr = ckalloc(sizeof(TkTextTag));
     tagPtr->name = name;
     tagPtr->textPtr = NULL;
     tagPtr->toggleCount = 0;
@@ -1169,7 +1169,7 @@ TkTextFreeTag(
      */
 
     if (tagPtr->tabArrayPtr != NULL) {
-	ckfree((char *) tagPtr->tabArrayPtr);
+	ckfree(tagPtr->tabArrayPtr);
     }
 
     /*
@@ -1198,7 +1198,7 @@ TkTextFreeTag(
 	}
 	textPtr->refCount--;
 	if (textPtr->refCount == 0) {
-	    ckfree((char *) textPtr);
+	    ckfree(textPtr);
 	}
 	tagPtr->textPtr = NULL;
     }
@@ -1207,7 +1207,7 @@ TkTextFreeTag(
      * Finally free the tag's memory.
      */
 
-    ckfree((char *) tagPtr);
+    ckfree(tagPtr);
 }
 
 /*
@@ -1461,7 +1461,7 @@ TkTextBindProc(
 
   done:
     if (--textPtr->refCount == 0) {
-	ckfree((char *) textPtr);
+	ckfree(textPtr);
     }
 }
 
@@ -1593,7 +1593,7 @@ TkTextPickCurrent(
     SortTags(textPtr->numCurTags, textPtr->curTagArrayPtr);
     if (numNewTags > 0) {
 	size = numNewTags * sizeof(TkTextTag *);
-	copyArrayPtr = (TkTextTag **) ckalloc((unsigned) size);
+	copyArrayPtr = ckalloc(size);
 	memcpy(copyArrayPtr, newArrayPtr, (size_t) size);
 	for (i = 0; i < textPtr->numCurTags; i++) {
 	    for (j = 0; j < numNewTags; j++) {
@@ -1635,7 +1635,7 @@ TkTextPickCurrent(
 	    event.xcrossing.detail = NotifyAncestor;
 	    TagBindEvent(textPtr, &event, numOldTags, oldArrayPtr);
 	}
-	ckfree((char *) oldArrayPtr);
+	ckfree(oldArrayPtr);
     }
 
     /*
@@ -1657,7 +1657,7 @@ TkTextPickCurrent(
 	    event.xcrossing.detail = NotifyAncestor;
 	    TagBindEvent(textPtr, &event, numNewTags, copyArrayPtr);
 	}
-	ckfree((char *) copyArrayPtr);
+	ckfree(copyArrayPtr);
     }
 }
 
@@ -1697,7 +1697,7 @@ TagBindEvent(
      */
 
     if (numTags > NUM_BIND_TAGS) {
-	nameArrPtr = (const char **) ckalloc(numTags * sizeof(const char *));
+	nameArrPtr = ckalloc(numTags * sizeof(const char *));
     } else {
 	nameArrPtr = nameArray;
     }
@@ -1710,6 +1710,7 @@ TagBindEvent(
 
     for (i = 0; i < numTags; i++) {
 	TkTextTag *tagPtr = tagArrayPtr[i];
+
 	if (tagPtr != NULL) {
 	    nameArrPtr[i] = tagPtr->name;
 	} else {
@@ -1726,7 +1727,7 @@ TagBindEvent(
 	    textPtr->tkwin, numTags, (ClientData *) nameArrPtr);
 
     if (numTags > NUM_BIND_TAGS) {
-	ckfree((char *) nameArrPtr);
+	ckfree(nameArrPtr);
     }
 }
 

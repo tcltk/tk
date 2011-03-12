@@ -189,7 +189,7 @@ static void SlaveEventHandler(ClientData clientData, XEvent *eventPtr)
 static Ttk_Slave *NewSlave(
     Ttk_Manager *mgr, Tk_Window slaveWindow, void *slaveData)
 {
-    Ttk_Slave *slave = (Ttk_Slave*)ckalloc(sizeof(*slave));
+    Ttk_Slave *slave = ckalloc(sizeof(*slave));
 
     slave->slaveWindow = slaveWindow;
     slave->manager = mgr;
@@ -201,7 +201,7 @@ static Ttk_Slave *NewSlave(
 
 static void DeleteSlave(Ttk_Slave *slave)
 {
-    ckfree((ClientData)slave);
+    ckfree(slave);
 }
 
 /*------------------------------------------------------------------------
@@ -211,7 +211,7 @@ static void DeleteSlave(Ttk_Slave *slave)
 Ttk_Manager *Ttk_CreateManager(
     Ttk_ManagerSpec *managerSpec, void *managerData, Tk_Window masterWindow)
 {
-    Ttk_Manager *mgr = (Ttk_Manager*)ckalloc(sizeof(*mgr));
+    Ttk_Manager *mgr = ckalloc(sizeof(*mgr));
 
     mgr->managerSpec 	= managerSpec;
     mgr->managerData	= managerData;
@@ -235,12 +235,12 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
 	Ttk_ForgetSlave(mgr, mgr->nSlaves - 1);
     }
     if (mgr->slaves) {
-	ckfree((ClientData)mgr->slaves);
+	ckfree(mgr->slaves);
     }
 
     Tk_CancelIdleCall(ManagerIdleProc, mgr);
 
-    ckfree((ClientData)mgr);
+    ckfree(mgr);
 }
 
 /*------------------------------------------------------------------------
@@ -253,8 +253,7 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
 static void InsertSlave(Ttk_Manager *mgr, Ttk_Slave *slave, int index)
 {
     int endIndex = mgr->nSlaves++;
-    mgr->slaves = (Ttk_Slave**)ckrealloc(
-	    (ClientData)mgr->slaves, mgr->nSlaves * sizeof(Ttk_Slave *));
+    mgr->slaves = ckrealloc(mgr->slaves, mgr->nSlaves * sizeof(Ttk_Slave *));
 
     while (endIndex > index) {
 	mgr->slaves[endIndex] = mgr->slaves[endIndex - 1];

@@ -626,7 +626,7 @@ TkTextCreateDInfo(
     register TextDInfo *dInfoPtr;
     XGCValues gcValues;
 
-    dInfoPtr = (TextDInfo *) ckalloc(sizeof(TextDInfo));
+    dInfoPtr = ckalloc(sizeof(TextDInfo));
     Tcl_InitHashTable(&dInfoPtr->styleTable, sizeof(StyleValues)/sizeof(int));
     dInfoPtr->dLinePtr = NULL;
     dInfoPtr->copyGC = None;
@@ -719,7 +719,7 @@ TkTextFreeDInfo(
 	textPtr->refCount--;
 	dInfoPtr->scrollbarTimer = NULL;
     }
-    ckfree((char *) dInfoPtr);
+    ckfree(dInfoPtr);
 }
 
 /*
@@ -923,7 +923,7 @@ GetStyle(
 	}
     }
     if (tagPtrs != NULL) {
-	ckfree((char *) tagPtrs);
+	ckfree(tagPtrs);
     }
 
     /*
@@ -942,7 +942,7 @@ GetStyle(
      * No existing style matched. Make a new one.
      */
 
-    stylePtr = (TextStyle *) ckalloc(sizeof(TextStyle));
+    stylePtr = ckalloc(sizeof(TextStyle));
     stylePtr->refCount = 1;
     if (styleValues.border != NULL) {
 	gcValues.foreground = Tk_3DBorderColor(styleValues.border)->pixel;
@@ -1007,7 +1007,7 @@ FreeStyle(
 	    Tk_FreeGC(textPtr->display, stylePtr->fgGC);
 	}
 	Tcl_DeleteHashEntry(stylePtr->hPtr);
-	ckfree((char *) stylePtr);
+	ckfree(stylePtr);
     }
 }
 
@@ -1106,7 +1106,7 @@ LayoutDLine(
      * Create and initialize a new DLine structure.
      */
 
-    dlPtr = (DLine *) ckalloc(sizeof(DLine));
+    dlPtr = ckalloc(sizeof(DLine));
     dlPtr->index = *indexPtr;
     dlPtr->byteCount = 0;
     dlPtr->y = 0;
@@ -1337,7 +1337,7 @@ LayoutDLine(
 	     * into a single display line.
 	     *
 	    if (segPtr == NULL && chunkPtr != NULL) {
-		ckfree((char *) chunkPtr);
+		ckfree(chunkPtr);
 		chunkPtr = NULL;
 	    }
 	     */
@@ -1351,7 +1351,7 @@ LayoutDLine(
 	    continue;
 	}
 	if (chunkPtr == NULL) {
-	    chunkPtr = (TkTextDispChunk *) ckalloc(sizeof(TkTextDispChunk));
+	    chunkPtr = ckalloc(sizeof(TkTextDispChunk));
 	    chunkPtr->nextPtr = NULL;
 	    chunkPtr->clientData = NULL;
 	}
@@ -1483,7 +1483,7 @@ LayoutDLine(
 	     */
 
 	    if (chunkPtr != NULL) {
-		ckfree((char *) chunkPtr);
+		ckfree(chunkPtr);
 	    }
 	    break;
 	}
@@ -1614,7 +1614,7 @@ LayoutDLine(
 	    if (chunkPtr->undisplayProc != NULL) {
 		chunkPtr->undisplayProc(textPtr, chunkPtr);
 	    }
-	    ckfree((char *) chunkPtr);
+	    ckfree(chunkPtr);
 	}
 	if (breakByteOffset != breakChunkPtr->numBytes) {
 	    if (breakChunkPtr->undisplayProc != NULL) {
@@ -2311,9 +2311,9 @@ FreeDLines(
 	    }
 	    FreeStyle(textPtr, chunkPtr->stylePtr);
 	    nextChunkPtr = chunkPtr->nextPtr;
-	    ckfree((char *) chunkPtr);
+	    ckfree(chunkPtr);
 	}
-	ckfree((char *) firstPtr);
+	ckfree(firstPtr);
 	firstPtr = nextDLinePtr;
     }
     if (action != DLINE_FREE_TEMP) {
@@ -2891,7 +2891,7 @@ AsyncUpdateLineMetrics(
 	 */
 
 	if (--textPtr->refCount == 0) {
-	    ckfree((char *) textPtr);
+	    ckfree(textPtr);
 	}
 	return;
     }
@@ -2943,7 +2943,7 @@ AsyncUpdateLineMetrics(
 
 	textPtr->refCount--;
 	if (textPtr->refCount == 0) {
-	    ckfree((char *) textPtr);
+	    ckfree(textPtr);
 	}
 	return;
     }
@@ -3954,7 +3954,7 @@ DisplayText(
 	dInfoPtr->flags &= ~REPICK_NEEDED;
 	TkTextPickCurrent(textPtr, &textPtr->pickEvent);
 	if (--textPtr->refCount == 0) {
-	    ckfree((char *) textPtr);
+	    ckfree(textPtr);
 	    goto end;
 	}
 	if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
@@ -6387,7 +6387,7 @@ AsyncUpdateYScrollbar(
     }
 
     if (--textPtr->refCount == 0) {
-	ckfree((char *) textPtr);
+	ckfree(textPtr);
     }
 }
 
@@ -7072,7 +7072,7 @@ TkTextCharLayoutProc(
 #if TK_LAYOUT_WITH_BASE_CHUNKS
     if (baseCharChunkPtr == NULL) {
 	baseCharChunkPtr = chunkPtr;
-	bciPtr = (BaseCharInfo *) ckalloc(sizeof(BaseCharInfo));
+	bciPtr = ckalloc(sizeof(BaseCharInfo));
 	baseString = &bciPtr->baseChars;
 	Tcl_DStringInit(baseString);
 	bciPtr->width = 0;
@@ -7080,7 +7080,7 @@ TkTextCharLayoutProc(
 	ciPtr = &bciPtr->ci;
     } else {
 	bciPtr = baseCharChunkPtr->clientData;
-	ciPtr = (CharInfo *) ckalloc(sizeof(CharInfo));
+	ciPtr = ckalloc(sizeof(CharInfo));
 	baseString = &bciPtr->baseChars;
     }
 
@@ -7143,7 +7143,7 @@ TkTextCharLayoutProc(
 	    } else {
 		Tcl_DStringSetLength(baseString,lineOffset);
 	    }
-	    ckfree((char *) ciPtr);
+	    ckfree(ciPtr);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	    return 0;
 	}
@@ -7169,8 +7169,7 @@ TkTextCharLayoutProc(
     chunkPtr->breakIndex = -1;
 
 #if !TK_LAYOUT_WITH_BASE_CHUNKS
-    ciPtr = (CharInfo *)
-	    ckalloc((unsigned) ((Tk_Offset(CharInfo, chars) + 1) + bytesThatFit));
+    ciPtr = ckalloc((Tk_Offset(CharInfo, chars) + 1) + bytesThatFit);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, (unsigned) bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -7550,7 +7549,7 @@ CharUndisplayProc(
 	ciPtr->numBytes = 0;
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
-	ckfree((char *) ciPtr);
+	ckfree(ciPtr);
 	chunkPtr->clientData = NULL;
     }
 }

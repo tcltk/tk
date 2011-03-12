@@ -227,7 +227,7 @@ TkScrollbar *
 TkpCreateScrollbar(
     Tk_Window tkwin)
 {
-    MacScrollbar *scrollPtr = (MacScrollbar *) ckalloc(sizeof(MacScrollbar));
+    MacScrollbar *scrollPtr = ckalloc(sizeof(MacScrollbar));
 
     scrollPtr->scroller = nil;
     Tk_CreateEventHandler(tkwin, StructureNotifyMask|FocusChangeMask|

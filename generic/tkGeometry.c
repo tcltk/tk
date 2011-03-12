@@ -462,7 +462,7 @@ Tk_MaintainGeometry(
     if (!isNew) {
 	masterPtr = Tcl_GetHashValue(hPtr);
     } else {
-	masterPtr = (MaintainMaster *) ckalloc(sizeof(MaintainMaster));
+	masterPtr = ckalloc(sizeof(MaintainMaster));
 	masterPtr->ancestor = master;
 	masterPtr->checkScheduled = 0;
 	masterPtr->slavePtr = NULL;
@@ -480,7 +480,7 @@ Tk_MaintainGeometry(
 	    goto gotSlave;
 	}
     }
-    slavePtr = (MaintainSlave *) ckalloc(sizeof(MaintainSlave));
+    slavePtr = ckalloc(sizeof(MaintainSlave));
     slavePtr->slave = slave;
     slavePtr->master = master;
     slavePtr->nextPtr = masterPtr->slavePtr;
@@ -608,7 +608,7 @@ Tk_UnmaintainGeometry(
     }
     Tk_DeleteEventHandler(slavePtr->slave, StructureNotifyMask,
 	    MaintainSlaveProc, slavePtr);
-    ckfree((char *) slavePtr);
+    ckfree(slavePtr);
     if (masterPtr->slavePtr == NULL) {
 	if (masterPtr->ancestor != NULL) {
 	    for (ancestor = master; ; ancestor = Tk_Parent(ancestor)) {
@@ -623,7 +623,7 @@ Tk_UnmaintainGeometry(
 	    Tcl_CancelIdleCall(MaintainCheckProc, masterPtr);
 	}
 	Tcl_DeleteHashEntry(hPtr);
-	ckfree((char *) masterPtr);
+	ckfree(masterPtr);
     }
 }
 

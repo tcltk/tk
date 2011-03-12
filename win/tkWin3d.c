@@ -45,7 +45,7 @@ typedef struct {
 TkBorder *
 TkpGetBorder(void)
 {
-    WinBorder *borderPtr = (WinBorder *) ckalloc(sizeof(WinBorder));
+    WinBorder *borderPtr = ckalloc(sizeof(WinBorder));
 
     borderPtr->light2ColorPtr = NULL;
     borderPtr->dark2ColorPtr = NULL;

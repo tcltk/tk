@@ -401,7 +401,7 @@ Tk_PanedWindowObjCmd(
 	 * easy access to it in the future.
 	 */
 
-	pwOpts = (OptionTables *) ckalloc(sizeof(OptionTables));
+	pwOpts = ckalloc(sizeof(OptionTables));
 
 	/*
 	 * Set up an exit handler to free the optionTables struct.
@@ -424,7 +424,7 @@ Tk_PanedWindowObjCmd(
      * Allocate and initialize the widget record.
      */
 
-    pwPtr = (PanedWindow *) ckalloc(sizeof(PanedWindow));
+    pwPtr = ckalloc(sizeof(PanedWindow));
     memset((void *)pwPtr, 0, (sizeof(PanedWindow)));
     pwPtr->tkwin = tkwin;
     pwPtr->display = Tk_Display(tkwin);
@@ -878,7 +878,7 @@ ConfigureSlaves(
      * structures may already have existed, some may be new.
      */
 
-    inserts = (Slave **)ckalloc(sizeof(Slave *) * (firstOptionArg - 2));
+    inserts = ckalloc(sizeof(Slave *) * (firstOptionArg - 2));
     insertIndex = 0;
 
     /*
@@ -945,7 +945,7 @@ ConfigureSlaves(
 	 * out with their "natural" dimensions.
 	 */
 
-	slavePtr = (Slave *) ckalloc(sizeof(Slave));
+	slavePtr = ckalloc(sizeof(Slave));
 	memset(slavePtr, 0, sizeof(Slave));
 	Tk_InitOptions(interp, (char *)slavePtr, pwPtr->slaveOpts,
 		pwPtr->tkwin);
@@ -984,8 +984,8 @@ ConfigureSlaves(
      * Allocate the new slaves array, then copy the slaves into it, in order.
      */
 
-    i = sizeof(Slave *) * (pwPtr->numSlaves+numNewSlaves);
-    newSlaves = (Slave **)ckalloc((unsigned) i);
+    i = sizeof(Slave *) * (pwPtr->numSlaves + numNewSlaves);
+    newSlaves = ckalloc(i);
     memset(newSlaves, 0, (size_t) i);
     if (index == -1) {
 	/*
@@ -1028,8 +1028,8 @@ ConfigureSlaves(
      * Make the new slaves array the paned window's slave array, and clean up.
      */
 
-    ckfree((void *)pwPtr->slaves);
-    ckfree((void *)inserts);
+    ckfree(pwPtr->slaves);
+    ckfree(inserts);
     pwPtr->slaves = newSlaves;
 
     /*
@@ -1539,11 +1539,11 @@ DestroyPanedWindow(
 	Tk_ManageGeometry(pwPtr->slaves[i]->tkwin, NULL, NULL);
 	Tk_FreeConfigOptions((char *) pwPtr->slaves[i], pwPtr->slaveOpts,
 		pwPtr->tkwin);
-	ckfree((char *) pwPtr->slaves[i]);
+	ckfree(pwPtr->slaves[i]);
 	pwPtr->slaves[i] = NULL;
     }
     if (pwPtr->slaves) {
-	ckfree((char *) pwPtr->slaves);
+	ckfree(pwPtr->slaves);
     }
 
     /*
@@ -1644,7 +1644,7 @@ PanedWindowLostSlaveProc(
 	    SlaveStructureProc, slavePtr);
     Tk_UnmapWindow(slavePtr->tkwin);
     slavePtr->tkwin = NULL;
-    ckfree((char *) slavePtr);
+    ckfree(slavePtr);
     ComputeGeometry(pwPtr);
 }
 
@@ -2080,7 +2080,7 @@ SlaveStructureProc(
     if (eventPtr->type == DestroyNotify) {
 	Unlink(slavePtr);
 	slavePtr->tkwin = NULL;
-	ckfree((char *) slavePtr);
+	ckfree(slavePtr);
 	ComputeGeometry(pwPtr);
     }
 }
@@ -2286,8 +2286,7 @@ DestroyOptionTables(
     ClientData clientData,	/* Pointer to the OptionTables struct */
     Tcl_Interp *interp)		/* Pointer to the calling interp */
 {
-    ckfree((char *) clientData);
-    return;
+    ckfree(clientData);
 }
 
 /*

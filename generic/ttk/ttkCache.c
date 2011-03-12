@@ -50,7 +50,7 @@ struct Ttk_ResourceCache_ {
  */
 Ttk_ResourceCache Ttk_CreateResourceCache(Tcl_Interp *interp)
 {
-    Ttk_ResourceCache cache = (Ttk_ResourceCache)ckalloc(sizeof(*cache));
+    Ttk_ResourceCache cache = ckalloc(sizeof(*cache));
 
     cache->tkwin = NULL;	/* initialized later */
     cache->interp = interp;
@@ -161,7 +161,7 @@ void Ttk_FreeResourceCache(Ttk_ResourceCache cache)
     }
     Tcl_DeleteHashTable(&cache->namedColors);
 
-    ckfree((ClientData)cache);
+    ckfree(cache);
 }
 
 /*

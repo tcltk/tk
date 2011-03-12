@@ -188,7 +188,7 @@ QuitHandler(
 	 * quickly as possible.
 	 */
 
-	eventPtr = (KillEvent *) ckalloc(sizeof(KillEvent));
+	eventPtr = ckalloc(sizeof(KillEvent));
 	eventPtr->header.proc = ReallyKillMe;
 	eventPtr->interp = interp;
 

@@ -44,7 +44,7 @@ Tk_GetPixmap(
 
     display->request++;
 
-    newTwdPtr = (TkWinDrawable *) ckalloc(sizeof(TkWinDrawable));
+    newTwdPtr = ckalloc(sizeof(TkWinDrawable));
     newTwdPtr->type = TWD_BITMAP;
     newTwdPtr->bitmap.depth = depth;
     twdPtr = (TkWinDrawable *) d;
@@ -116,7 +116,7 @@ Tk_GetPixmap(
     }
 
     if (newTwdPtr->bitmap.handle == NULL) {
-	ckfree((char *) newTwdPtr);
+	ckfree(newTwdPtr);
 	return None;
     }
 
@@ -149,7 +149,7 @@ Tk_FreePixmap(
     display->request++;
     if (twdPtr != NULL) {
 	DeleteObject(twdPtr->bitmap.handle);
-	ckfree((char *) twdPtr);
+	ckfree(twdPtr);
     }
 }
 

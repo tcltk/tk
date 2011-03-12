@@ -537,7 +537,7 @@ Tk_GetOption(
 	 */
 
 	classNameLength	= (unsigned) (masqName - name);
-	masqClass = (char *) ckalloc(classNameLength + 1);
+	masqClass = ckalloc(classNameLength + 1);
 	strncpy(masqClass, name, classNameLength);
 	masqClass[classNameLength] = '\0';
 
@@ -1116,9 +1116,9 @@ ReadOptionFile(
 		fileName, "\":", Tcl_PosixError(interp), NULL);
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
-
     }
-    buffer = ckalloc((unsigned) bufferSize+1);
+
+    buffer = ckalloc(bufferSize + 1);
     bufferSize = Tcl_Read(chan, buffer, bufferSize);
     if (bufferSize < 0) {
 	Tcl_AppendResult(interp, "error reading file \"", fileName, "\":",
@@ -1154,7 +1154,7 @@ static ElArray *
 NewArray(
     int numEls)			/* How many elements of space to allocate. */
 {
-    register ElArray *arrayPtr = (ElArray *) ckalloc(EL_ARRAY_SIZE(numEls));
+    register ElArray *arrayPtr = ckalloc(EL_ARRAY_SIZE(numEls));
 
     arrayPtr->arraySize = numEls;
     arrayPtr->numUsed = 0;
@@ -1191,8 +1191,7 @@ ExtendArray(
     if (arrayPtr->numUsed >= arrayPtr->arraySize) {
 	register int newSize = 2*arrayPtr->arraySize;
 
-	arrayPtr = (ElArray *)
-		ckrealloc((char *) arrayPtr, EL_ARRAY_SIZE(newSize));
+	arrayPtr = ckrealloc(arrayPtr, EL_ARRAY_SIZE(newSize));
 	arrayPtr->arraySize = newSize;
 	arrayPtr->nextToUse = &arrayPtr->els[arrayPtr->numUsed];
     }
@@ -1310,11 +1309,11 @@ SetupStacks(
      */
 
     if (tsdPtr->curLevel >= tsdPtr->numLevels) {
-	StackLevel *newLevels = (StackLevel *)
-		ckalloc((unsigned) (tsdPtr->numLevels*2*sizeof(StackLevel)));
+	StackLevel *newLevels =
+		ckalloc(tsdPtr->numLevels * 2 * sizeof(StackLevel));
 	memcpy(newLevels, tsdPtr->levels,
 		tsdPtr->numLevels * sizeof(StackLevel));
-	ckfree((char *) tsdPtr->levels);
+	ckfree(tsdPtr->levels);
 	tsdPtr->numLevels *= 2;
 	tsdPtr->levels = newLevels;
     }
@@ -1433,9 +1432,9 @@ OptionThreadExitProc(
 	int i;
 
 	for (i = 0; i < NUM_STACKS; i++) {
-	    ckfree((char *) tsdPtr->stacks[i]);
+	    ckfree(tsdPtr->stacks[i]);
 	}
-	ckfree((char *) tsdPtr->levels);
+	ckfree(tsdPtr->levels);
 	tsdPtr->initialized = 0;
     }
 }
@@ -1479,8 +1478,7 @@ OptionInit(
 	tsdPtr->curLevel = -1;
 	tsdPtr->serial = 0;
 
-	tsdPtr->levels = (StackLevel *)
-		ckalloc((unsigned) (5*sizeof(StackLevel)));
+	tsdPtr->levels = ckalloc(5 * sizeof(StackLevel));
 	for (i = 0; i < NUM_STACKS; i++) {
 	    tsdPtr->stacks[i] = NewArray(10);
 	    tsdPtr->levels[0].bases[i] = 0;
@@ -1536,7 +1534,7 @@ ClearOptionTree(
 	    ClearOptionTree(elPtr->child.arrayPtr);
 	}
     }
-    ckfree((char *) arrayPtr);
+    ckfree(arrayPtr);
 }
 
 /*

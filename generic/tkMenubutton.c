@@ -635,7 +635,7 @@ ConfigureMenuButton(
 	    if (mbPtr->text != NULL) {
 		ckfree(mbPtr->text);
 	    }
-	    mbPtr->text = (char *) ckalloc((unsigned) (strlen(value) + 1));
+	    mbPtr->text = ckalloc(strlen(value) + 1);
 	    strcpy(mbPtr->text, value);
 	}
 	Tcl_TraceVar(interp, mbPtr->textVarName,
@@ -907,7 +907,7 @@ MenuButtonTextVarProc(
 	ckfree(mbPtr->text);
     }
     len = 1 + (unsigned) strlen(value);
-    mbPtr->text = (char *) ckalloc(len);
+    mbPtr->text = ckalloc(len);
     memcpy(mbPtr->text, value, len);
     TkpComputeMenuButtonGeometry(mbPtr);
 

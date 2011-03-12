@@ -460,7 +460,7 @@ XGetModifierMapping(
      * don't generate them either. So there is no modifier map.
      */
 
-    modmap = (XModifierKeymap *) ckalloc(sizeof(XModifierKeymap));
+    modmap = ckalloc(sizeof(XModifierKeymap));
     modmap->max_keypermod = 0;
     modmap->modifiermap = NULL;
     return modmap;
@@ -487,9 +487,9 @@ XFreeModifiermap(
     XModifierKeymap *modmap)
 {
     if (modmap->modifiermap != NULL) {
-	ckfree((char *) modmap->modifiermap);
+	ckfree(modmap->modifiermap);
     }
-    ckfree((char *) modmap);
+    ckfree(modmap);
 }
 
 /*
@@ -899,7 +899,7 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree((char *) dispPtr->modKeyCodes);
+	ckfree(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = 0;
     dispPtr->modKeyCodes = NULL;

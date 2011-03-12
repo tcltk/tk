@@ -65,8 +65,7 @@ TkScrollbar *
 TkpCreateScrollbar(
     Tk_Window tkwin)
 {
-    UnixScrollbar *scrollPtr = (UnixScrollbar *)
-	    ckalloc(sizeof(UnixScrollbar));
+    UnixScrollbar *scrollPtr = ckalloc(sizeof(UnixScrollbar));
 
     scrollPtr->troughGC = None;
     scrollPtr->copyGC = None;

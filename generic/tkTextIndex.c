@@ -92,10 +92,10 @@ FreeTextIndexInternalRep(
 	     * The text widget has been deleted and we need to free it now.
 	     */
 
-	    ckfree((char *) indexPtr->textPtr);
+	    ckfree(indexPtr->textPtr);
 	}
     }
-    ckfree((char *) indexPtr);
+    ckfree(indexPtr);
     indexObjPtr->typePtr = NULL;
 }
 
@@ -107,7 +107,7 @@ DupTextIndexInternalRep(
     int epoch;
     TkTextIndex *dupIndexPtr, *indexPtr;
 
-    dupIndexPtr = (TkTextIndex *) ckalloc(sizeof(TkTextIndex));
+    dupIndexPtr = ckalloc(sizeof(TkTextIndex));
     indexPtr = GET_TEXTINDEX(srcPtr);
     epoch = GET_INDEXEPOCH(srcPtr);
 
@@ -140,7 +140,7 @@ UpdateStringOfTextIndex(
 
     len = TkTextPrintIndex(indexPtr->textPtr, indexPtr, buffer);
 
-    objPtr->bytes = ckalloc((unsigned) len + 1);
+    objPtr->bytes = ckalloc(len + 1);
     strcpy(objPtr->bytes, buffer);
     objPtr->length = len;
 }
@@ -187,7 +187,7 @@ MakeObjIndex(
 				 * position. */
     const TkTextIndex *origPtr)	/* Pointer to index. */
 {
-    TkTextIndex *indexPtr = (TkTextIndex *) ckalloc(sizeof(TkTextIndex));
+    TkTextIndex *indexPtr = ckalloc(sizeof(TkTextIndex));
 
     indexPtr->tree = origPtr->tree;
     indexPtr->linePtr = origPtr->linePtr;
@@ -1486,7 +1486,7 @@ TkTextIndexForwChars(
 	return;
     }
     if (checkElided) {
-	infoPtr = (TkTextElideInfo *) ckalloc(sizeof(TkTextElideInfo));
+	infoPtr = ckalloc(sizeof(TkTextElideInfo));
 	elide = TkTextIsElided(textPtr, srcPtr, infoPtr);
     }
 
@@ -1614,7 +1614,7 @@ TkTextIndexForwChars(
   forwardCharDone:
     if (infoPtr != NULL) {
 	TkTextFreeElideInfo(infoPtr);
-	ckfree((char *) infoPtr);
+	ckfree(infoPtr);
     }
 }
 
@@ -1670,7 +1670,7 @@ TkTextIndexCount(
     seg2Ptr = TkTextIndexToSeg(indexPtr2, &maxBytes);
 
     if (checkElided) {
-	infoPtr = (TkTextElideInfo *) ckalloc(sizeof(TkTextElideInfo));
+	infoPtr = ckalloc(sizeof(TkTextElideInfo));
 	elide = TkTextIsElided(textPtr, indexPtr1, infoPtr);
     }
 
@@ -1810,7 +1810,7 @@ TkTextIndexCount(
   countDone:
     if (infoPtr != NULL) {
 	TkTextFreeElideInfo(infoPtr);
-	ckfree((char *) infoPtr);
+	ckfree(infoPtr);
     }
     return count;
 }
@@ -1928,7 +1928,7 @@ TkTextIndexBackChars(
 	return;
     }
     if (checkElided) {
-	infoPtr = (TkTextElideInfo *) ckalloc(sizeof(TkTextElideInfo));
+	infoPtr = ckalloc(sizeof(TkTextElideInfo));
 	elide = TkTextIsElided(textPtr, srcPtr, infoPtr);
     }
 
@@ -2094,7 +2094,7 @@ TkTextIndexBackChars(
   backwardCharDone:
     if (infoPtr != NULL) {
 	TkTextFreeElideInfo(infoPtr);
-	ckfree((char *) infoPtr);
+	ckfree(infoPtr);
     }
 }
 

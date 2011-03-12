@@ -830,7 +830,7 @@ NavServicesGetFile(
 	int index = 0;
 	ofdPtr->curType = 0;
 
-	menuItemNames = (CFStringRef *)
+	menuItemNames =
 		ckalloc(ofdPtr->fl.numFilters * sizeof(CFStringRef));
 
 	for (filterPtr = ofdPtr->fl.filters; filterPtr != NULL;
@@ -1021,7 +1021,7 @@ NavServicesGetFile(
 	for (i = 0; i < ofdPtr->fl.numFilters; i++) {
 	    CFRelease(menuItemNames[i]);
 	}
-	ckfree((void *) menuItemNames);
+	ckfree(menuItemNames);
     }
     if (options.popupExtension) {
 	CFRelease(options.popupExtension);
@@ -1885,13 +1885,12 @@ TkMacOSXProcessFontEvent(
 		    result = Tcl_ListObjGetElements(fontchooserInterp,
 			    fcdPtr->cmdObj, &objc, &objv);
 		    if (result == TCL_OK) {
-			tmpv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) *
-				(unsigned)(objc + 2));
+			tmpv = ckalloc(sizeof(Tcl_Obj *) * (objc + 2));
 			memcpy(tmpv, objv, sizeof(Tcl_Obj *) * objc);
 			tmpv[objc] = fontObj;
 			result = TkBackgroundEvalObjv(fontchooserInterp,
 				objc + 1, tmpv, TCL_EVAL_GLOBAL);
-			ckfree((char *)tmpv);
+			ckfree(tmpv);
 		    }
 		}
 		TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged");
@@ -2259,7 +2258,7 @@ DeleteFontchooserData(
     if (fcdPtr->cmdObj) {
 	Tcl_DecrRefCount(fcdPtr->cmdObj);
     }
-    ckfree((char *)fcdPtr);
+    ckfree(fcdPtr);
 
     if (fontchooserInterp == interp) {
 	fontchooserInterp = NULL;
@@ -2288,8 +2287,7 @@ TkInitFontchooser(
     Tcl_Interp *interp,
     ClientData clientData)
 {
-    FontchooserData *fcdPtr = (FontchooserData*)
-	    ckalloc(sizeof(FontchooserData));
+    FontchooserData *fcdPtr = ckalloc(sizeof(FontchooserData));
 
     bzero(fcdPtr, sizeof(FontchooserData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteFontchooserData,

@@ -702,7 +702,7 @@ TkpNewMenu(
 	return TCL_ERROR;
     }
 
-    menuPtr->platformData = (TkMenuPlatformData) ckalloc(sizeof(MacMenu));
+    menuPtr->platformData = ckalloc(sizeof(MacMenu));
     ((MacMenu *) menuPtr->platformData)->menuHdl = macMenuHdl;
 
 #ifdef USE_TK_MDEF
@@ -791,7 +791,7 @@ TkpDestroyMenu(
 	DeleteMenu(menuID);
 	TkMacOSXFreeMenuID(menuID);
 	DisposeMenu(macMenuHdl);
-	ckfree((char *) menuPtr->platformData);
+	ckfree(menuPtr->platformData);
 	menuPtr->platformData = NULL;
     }
 }
@@ -853,7 +853,7 @@ TkpDestroyMenuEntry(
 {
     TkMenu *menuPtr = mePtr->menuPtr;
 
-    ckfree((char *) mePtr->platformEntryData);
+    ckfree(mePtr->platformEntryData);
     if ((menuPtr->platformData != NULL)
 	    && !(menuPtr->menuFlags & MENU_RECONFIGURE_PENDING)) {
 	menuPtr->menuFlags |= MENU_RECONFIGURE_PENDING;
@@ -1625,8 +1625,7 @@ int
 TkpMenuNewEntry(
     TkMenuEntry *mePtr)		/* The menu we are adding an entry to */
 {
-    EntryGeometry *geometryPtr = (EntryGeometry *)
-	    ckalloc(sizeof(EntryGeometry));
+    EntryGeometry *geometryPtr = ckalloc(sizeof(EntryGeometry));
     TkMenu *menuPtr = mePtr->menuPtr;
 
     geometryPtr->accelTextStart = 0;
@@ -1822,8 +1821,7 @@ DrawMenuBarWhenIdle(
 		TkMacOSXGetNewMenuID(appleMenuPtr->interp, appleMenuPtr, 0,
 			&appleID);
 		macMenuHdl = NewMenu(appleID, "\p\024");
-		appleMenuPtr->platformData = (TkMenuPlatformData)
-			ckalloc(sizeof(MacMenu));
+		appleMenuPtr->platformData = ckalloc(sizeof(MacMenu));
 		((MacMenu *)appleMenuPtr->platformData)->menuHdl
 			= macMenuHdl;
 		appleMenuPtr->menuFlags |= MENU_APPLE_MENU;
@@ -2148,11 +2146,11 @@ TkpSetWindowMenuBar(
 	} else {
 	    windowListPtr = listPtr->nextPtr;
 	}
-	ckfree((char *) listPtr);
+	ckfree(listPtr);
     }
 
     if (menuPtr != NULL) {
-	listPtr = (TopLevelMenubarList *) ckalloc(sizeof(TopLevelMenubarList));
+	listPtr = ckalloc(sizeof(TopLevelMenubarList));
 	listPtr->nextPtr = windowListPtr;
 	windowListPtr = listPtr;
 	listPtr->tkwin = tkwin;
@@ -2265,7 +2263,6 @@ TkMacOSXDispatchMenuEvent(
 		    result = TCL_OK;
 		} else {
 		    struct MenuCommandHandlerData *data =
-			    (struct MenuCommandHandlerData *)
 			    ckalloc(sizeof(struct MenuCommandHandlerData));
 
 		    Tcl_Preserve(menuPtr->interp);

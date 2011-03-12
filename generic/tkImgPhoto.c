@@ -227,13 +227,13 @@ PhotoFormatThreadExitProc(
     while (tsdPtr->oldFormatList != NULL) {
 	freePtr = tsdPtr->oldFormatList;
 	tsdPtr->oldFormatList = tsdPtr->oldFormatList->nextPtr;
-	ckfree((char *) freePtr);
+	ckfree(freePtr);
     }
     while (tsdPtr->formatList != NULL) {
 	freePtr = tsdPtr->formatList;
 	tsdPtr->formatList = tsdPtr->formatList->nextPtr;
-	ckfree((char *) freePtr->name);
-	ckfree((char *) freePtr);
+	ckfree(freePtr->name);
+	ckfree(freePtr);
     }
 }
 
@@ -271,7 +271,7 @@ Tk_CreateOldPhotoImageFormat(
 	tsdPtr->initialized = 1;
 	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
     }
-    copyPtr = (Tk_PhotoImageFormat *) ckalloc(sizeof(Tk_PhotoImageFormat));
+    copyPtr = ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
     copyPtr->nextPtr = tsdPtr->oldFormatList;
     tsdPtr->oldFormatList = copyPtr;
@@ -292,7 +292,7 @@ Tk_CreatePhotoImageFormat(
 	tsdPtr->initialized = 1;
 	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
     }
-    copyPtr = (Tk_PhotoImageFormat *) ckalloc(sizeof(Tk_PhotoImageFormat));
+    copyPtr = ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
     if (isupper((unsigned char) *formatPtr->name)) {
 	copyPtr->nextPtr = tsdPtr->oldFormatList;
@@ -344,7 +344,7 @@ ImgPhotoCreate(
      * Allocate and initialize the photo image master record.
      */
 
-    masterPtr = (PhotoMaster *) ckalloc(sizeof(PhotoMaster));
+    masterPtr = ckalloc(sizeof(PhotoMaster));
     memset(masterPtr, 0, sizeof(PhotoMaster));
     masterPtr->tkMaster = master;
     masterPtr->interp = interp;
@@ -875,8 +875,7 @@ ImgPhotoCmd(
 		    break;
 		}
 		dataWidth = listObjc;
-		pixelPtr = (unsigned char *)
-			ckalloc((unsigned) dataWidth * dataHeight * 3);
+		pixelPtr = ckalloc(dataWidth * dataHeight * 3);
 		block.pixelPtr = pixelPtr;
 	    } else if (listObjc != dataWidth) {
 		Tcl_AppendResult(interp, "all elements of color list must",
@@ -937,7 +936,7 @@ ImgPhotoCmd(
 	}
 	if (y < dataHeight || dataHeight == 0 || dataWidth == 0) {
 	    if (block.pixelPtr != NULL) {
-		ckfree((char *) block.pixelPtr);
+		ckfree(block.pixelPtr);
 	    }
 	    if (y < dataHeight) {
 		return TCL_ERROR;
@@ -966,7 +965,7 @@ ImgPhotoCmd(
 		options.toX, options.toY, options.toX2 - options.toX,
 		options.toY2 - options.toY,
 		TK_PHOTO_COMPOSITE_SET);
-	ckfree((char *) block.pixelPtr);
+	ckfree(block.pixelPtr);
 	return result;
 
     case PHOTO_READ: {
@@ -1722,7 +1721,7 @@ ImgPhotoConfigureMaster(
     Tk_PhotoImageFormat *imageFormat;
     const char **args;
 
-    args = (const char **) ckalloc((objc + 1) * sizeof(char *));
+    args = ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
 	args[j] = Tcl_GetStringFromObj(objv[i], &length);
 	if ((length > 1) && (args[j][0] == '-')) {
@@ -1732,7 +1731,7 @@ ImgPhotoConfigureMaster(
 		    data = objv[i];
 		    j--;
 		} else {
-		    ckfree((char *) args);
+		    ckfree(args);
 		    Tcl_AppendResult(interp,
 			    "value for \"-data\" missing", NULL);
 		    return TCL_ERROR;
@@ -1743,7 +1742,7 @@ ImgPhotoConfigureMaster(
 		    format = objv[i];
 		    j--;
 		} else {
-		    ckfree((char *) args);
+		    ckfree(args);
 		    Tcl_AppendResult(interp,
 			    "value for \"-format\" missing", NULL);
 		    return TCL_ERROR;
@@ -1781,10 +1780,10 @@ ImgPhotoConfigureMaster(
 
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
 	    j, args, (char *) masterPtr, flags) != TCL_OK) {
-	ckfree((char *) args);
+	ckfree(args);
 	goto errorExit;
     }
-    ckfree((char *) args);
+    ckfree(args);
 
     /*
      * Regard the empty string for -file, -data or -format as the null value.
@@ -2064,7 +2063,7 @@ ImgPhotoDelete(
 	Tcl_DeleteCommandFromToken(masterPtr->interp, masterPtr->imageCmd);
     }
     if (masterPtr->pix32 != NULL) {
-	ckfree((char *) masterPtr->pix32);
+	ckfree(masterPtr->pix32);
     }
     if (masterPtr->validRegion != NULL) {
 	TkDestroyRegion(masterPtr->validRegion);
@@ -2076,7 +2075,7 @@ ImgPhotoDelete(
 	Tcl_DecrRefCount(masterPtr->format);
     }
     Tk_FreeOptions(configSpecs, (char *) masterPtr, NULL, 0);
-    ckfree((char *) masterPtr);
+    ckfree(masterPtr);
 }
 
 /*
@@ -2169,7 +2168,7 @@ ImgPhotoSetSize(
 	if (newPixSize == 0) {
 	    newPix32 = NULL;
 	} else {
-	    newPix32 = (unsigned char *) attemptckalloc(newPixSize);
+	    newPix32 = attemptckalloc(newPixSize);
 	    if (newPix32 == NULL) {
 		return TCL_ERROR;
 	    }
@@ -2253,7 +2252,7 @@ ImgPhotoSetSize(
 		}
 	    }
 
-	    ckfree((char *) masterPtr->pix32);
+	    ckfree(masterPtr->pix32);
 	}
 
 	masterPtr->pix32 = newPix32;
@@ -3631,8 +3630,7 @@ ImgGetPhoto(
 	if ((greenOffset||blueOffset) && !(optPtr->options & OPT_GRAYSCALE)) {
 	    newPixelSize += 2;
 	}
-	data = attemptckalloc((unsigned int) (newPixelSize *
-		blockPtr->width * blockPtr->height));
+	data = attemptckalloc(newPixelSize*blockPtr->width*blockPtr->height);
 	if (data == NULL) {
 	    return NULL;
 	}
@@ -3773,7 +3771,7 @@ ImgStringWrite(
 
     Tcl_DStringInit(&data);
     if ((blockPtr->width > 0) && (blockPtr->height > 0)) {
-	char *line = ckalloc((unsigned) ((8 * blockPtr->width) + 2));
+	char *line = ckalloc((8 * blockPtr->width) + 2);
 	int row, col;
 
 	for (row=0; row<blockPtr->height; row++) {

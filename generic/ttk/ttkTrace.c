@@ -76,7 +76,7 @@ Ttk_TraceHandle *Ttk_TraceVariable(
     Ttk_TraceProc callback,
     void *clientData)
 {
-    Ttk_TraceHandle *h = (Ttk_TraceHandle*)ckalloc(sizeof(*h));
+    Ttk_TraceHandle *h = ckalloc(sizeof(*h));
     int status;
 
     h->interp = interp;
@@ -91,7 +91,7 @@ Ttk_TraceHandle *Ttk_TraceVariable(
 
     if (status != TCL_OK) {
 	Tcl_DecrRefCount(h->varnameObj);
-	ckfree((ClientData)h);
+	ckfree(h);
 	return NULL;
     }
 
@@ -109,7 +109,7 @@ void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		VarTraceProc, (ClientData)h);
 	Tcl_DecrRefCount(h->varnameObj);
-	ckfree((ClientData)h);
+	ckfree(h);
     }
 }
 

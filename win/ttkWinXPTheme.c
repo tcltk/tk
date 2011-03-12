@@ -108,7 +108,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 	 * We have successfully loaded the library. Proceed in storing the
 	 * addresses of the functions we want to use.
 	 */
-	XPThemeProcs *procs = (XPThemeProcs*)ckalloc(sizeof(XPThemeProcs));
+	XPThemeProcs *procs = ckalloc(sizeof(XPThemeProcs));
 #define LOADPROC(name) \
 	(0 != (procs->name = (name ## Proc *)GetProcAddress(handle, #name) ))
 
@@ -126,7 +126,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 	    return procs;
 	}
 #undef LOADPROC
-	ckfree((char*)procs);
+	ckfree(procs);
     }
     return 0;
 }
@@ -411,7 +411,7 @@ typedef struct
 static ElementData *
 NewElementData(XPThemeProcs *procs, ElementInfo *info)
 {
-    ElementData *elementData = (ElementData*)ckalloc(sizeof(ElementData));
+    ElementData *elementData = ckalloc(sizeof(ElementData));
 
     elementData->procs = procs;
     elementData->info = info;
@@ -429,10 +429,10 @@ static void DestroyElementData(void *clientData)
 {
     ElementData *elementData = clientData;
     if (elementData->info->flags & HEAP_ELEMENT) {
-	ckfree((char *)elementData->info->statemap);
-	ckfree((char *)elementData->info->className);
-	ckfree((char *)elementData->info->elementName);
-	ckfree((char *)elementData->info);
+	ckfree(elementData->info->statemap);
+	ckfree(elementData->info->className);
+	ckfree(elementData->info->elementName);
+	ckfree(elementData->info);
     }
     ckfree(clientData);
 }
@@ -1133,8 +1133,7 @@ Ttk_CreateVsapiElement(
 	if (Tcl_ListObjGetElements(interp, objv[2], &count, &specs) != TCL_OK)
 	    return TCL_ERROR;
 	/* we over-allocate to ensure there is a terminating entry */
-	stateTable = (Ttk_StateTable *)
-		ckalloc(sizeof(Ttk_StateTable) * (count + 1));
+	stateTable = ckalloc(sizeof(Ttk_StateTable) * (count + 1));
 	memset(stateTable, 0, sizeof(Ttk_StateTable) * (count + 1));
 	for (n = 0, j = 0; status == TCL_OK && n < count; n += 2, ++j) {
 	    Ttk_StateSpec spec = {0,0};
@@ -1147,15 +1146,15 @@ Ttk_CreateVsapiElement(
 	    }
 	}
 	if (status != TCL_OK) {
-	    ckfree((char *)stateTable);
+	    ckfree(stateTable);
 	    return status;
 	}
     } else {
-	stateTable = (Ttk_StateTable *)ckalloc(sizeof(Ttk_StateTable));
+	stateTable = ckalloc(sizeof(Ttk_StateTable));
 	memset(stateTable, 0, sizeof(Ttk_StateTable));
     }
 
-    elementPtr = (ElementInfo *)ckalloc(sizeof(ElementInfo));
+    elementPtr = ckalloc(sizeof(ElementInfo));
     elementPtr->elementSpec = &GenericElementSpec;
     elementPtr->partId = partId;
     elementPtr->statemap = stateTable;
@@ -1168,7 +1167,7 @@ Ttk_CreateVsapiElement(
     elementPtr->elementName = name;
 
     /* set the class name to an allocated copy */
-    wname = (LPWSTR) ckalloc(sizeof(WCHAR) * (length + 1));
+    wname = ckalloc(sizeof(WCHAR) * (length + 1));
     wcscpy(wname, className);
     elementPtr->className = wname;
 
@@ -1215,7 +1214,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * Set theme data and cleanup proc
      */
 
-    themeData = (XPThemeData *)ckalloc(sizeof(XPThemeData));
+    themeData = ckalloc(sizeof(XPThemeData));
     themeData->procs = procs;
     themeData->hlibrary = hlibrary;
 

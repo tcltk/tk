@@ -644,14 +644,14 @@ TkSelEventProc(
 	    }
 
 	    if (propInfo[numItems] != '\0') {
-		propData = ckalloc((size_t) numItems + 1);
+		propData = ckalloc(numItems + 1);
 		strcpy(propData, propInfo);
 		propData[numItems] = '\0';
 	    }
 	    retrPtr->result = retrPtr->proc(retrPtr->clientData,
 		    retrPtr->interp, propData);
 	    if (propData != propInfo) {
-		ckfree((char *) propData);
+		ckfree(propData);
 	    }
 
 	} else if (type == dispPtr->incrAtom) {
@@ -886,8 +886,7 @@ ConvertSelection(
      * below).
      */
 
-    incr.converts = (ConvertInfo *)
-	    ckalloc((unsigned) incr.numConversions * sizeof(ConvertInfo));
+    incr.converts = ckalloc(incr.numConversions * sizeof(ConvertInfo));
     incr.numIncrs = 0;
     for (i = 0; i < incr.numConversions; i++) {
 	Atom target, property, type;
@@ -1075,7 +1074,7 @@ ConvertSelection(
      * All done. Cleanup and return.
      */
 
-    ckfree((char *) incr.converts);
+    ckfree(incr.converts);
     if (multiple) {
 	XFree((char *) incr.multAtoms);
     }
@@ -1426,7 +1425,7 @@ SelCvtToX(
     if (Tcl_SplitList(NULL, string, &numFields, &field) != TCL_OK) {
 	return NULL;
     }
-    propPtr = (long *) ckalloc((unsigned) numFields*sizeof(long));
+    propPtr = ckalloc(numFields * sizeof(long));
 
     /*
      * Convert the fields one-by-one.
@@ -1451,7 +1450,7 @@ SelCvtToX(
      * Release the parsed list.
      */
 
-    ckfree((char *) field);
+    ckfree(field);
     *numLongsPtr = i;
     return propPtr;
 }

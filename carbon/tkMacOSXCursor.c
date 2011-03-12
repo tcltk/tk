@@ -198,7 +198,7 @@ TkGetCursorByName(
     TkMacOSXCursor *macCursorPtr;
     int count = -1;
 
-    macCursorPtr = (TkMacOSXCursor *) ckalloc(sizeof(TkMacOSXCursor));
+    macCursorPtr = ckalloc(sizeof(TkMacOSXCursor));
     macCursorPtr->info.cursor = (Tk_Cursor) macCursorPtr;
 
     /*
@@ -260,13 +260,13 @@ TkGetCursorByName(
 		if (argc > 1) {
 		    FindCursorByName(macCursorPtr, argv[0]);
 		}
-		ckfree((char *) argv);
+		ckfree(argv);
 	    }
 	}
     }
 
     if (macCursorPtr->macCursor == NULL) {
-	ckfree((char *)macCursorPtr);
+	ckfree(macCursorPtr);
 	Tcl_AppendResult(interp, "bad cursor spec \"", string, "\"", NULL);
 	return NULL;
     }

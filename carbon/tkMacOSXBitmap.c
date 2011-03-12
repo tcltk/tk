@@ -100,10 +100,8 @@ TkpDefineNativeBitmaps(void)
 	name = Tk_GetUid(builtInPtr->name);
 	predefHashPtr = Tcl_CreateHashEntry(tablePtr, name, &isNew);
 	if (isNew) {
-	    TkPredefBitmap *predefPtr = (TkPredefBitmap *)
-		    ckalloc(sizeof(TkPredefBitmap));
-	    NativeIcon *nativeIconPtr = (NativeIcon *)
-		    ckalloc(sizeof(NativeIcon));
+	    TkPredefBitmap *predefPtr = ckalloc(sizeof(TkPredefBitmap));
+	    NativeIcon *nativeIconPtr = ckalloc(sizeof(NativeIcon));
 
 	    nativeIconPtr->id = builtInPtr->id;
 	    nativeIconPtr->type = builtInPtr->type;

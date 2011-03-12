@@ -466,7 +466,7 @@ TestdeleteappsCmd(
     while (newAppPtr != NULL) {
 	nextPtr = newAppPtr->nextPtr;
 	Tcl_DeleteInterp(newAppPtr->interp);
-	ckfree((char *) newAppPtr);
+	ckfree(newAppPtr);
 	newAppPtr = nextPtr;
     }
 
@@ -640,7 +640,7 @@ TestobjconfigObjCmd(
 	}
 	Tk_SetClass(tkwin, "Test");
 
-	recordPtr = (TypesRecord *) ckalloc(sizeof(TypesRecord));
+	recordPtr = ckalloc(sizeof(TypesRecord));
 	recordPtr->header.interp = interp;
 	recordPtr->header.optionTable = optionTable;
 	recordPtr->header.tkwin = tkwin;
@@ -675,7 +675,7 @@ TestobjconfigObjCmd(
 	    }
 	} else {
 	    Tk_DestroyWindow(tkwin);
-	    ckfree((char *) recordPtr);
+	    ckfree(recordPtr);
 	}
 	if (result == TCL_OK) {
 	    Tcl_SetObjResult(interp, objv[2]);
@@ -697,8 +697,7 @@ TestobjconfigObjCmd(
 	optionTable = Tk_CreateOptionTable(interp, baseSpecs);
 	tables[index] = optionTable;
 
-	recordPtr = (ExtensionWidgetRecord *)
-		ckalloc(sizeof(ExtensionWidgetRecord));
+	recordPtr = ckalloc(sizeof(ExtensionWidgetRecord));
 	recordPtr->header.interp = interp;
 	recordPtr->header.optionTable = optionTable;
 	recordPtr->header.tkwin = tkwin;
@@ -750,8 +749,7 @@ TestobjconfigObjCmd(
 	optionTable = Tk_CreateOptionTable(interp, extensionSpecs);
 	tables[index] = optionTable;
 
-	recordPtr = (ExtensionWidgetRecord *) ckalloc(
-		sizeof(ExtensionWidgetRecord));
+	recordPtr = ckalloc(sizeof(ExtensionWidgetRecord));
 	recordPtr->header.interp = interp;
 	recordPtr->header.optionTable = optionTable;
 	recordPtr->header.tkwin = tkwin;
@@ -916,7 +914,7 @@ TestobjconfigObjCmd(
 	}
 	Tk_SetClass(tkwin, "Test");
 
-	recordPtr = (InternalRecord *) ckalloc(sizeof(InternalRecord));
+	recordPtr = ckalloc(sizeof(InternalRecord));
 	recordPtr->header.interp = interp;
 	recordPtr->header.optionTable = optionTable;
 	recordPtr->header.tkwin = tkwin;
@@ -952,7 +950,7 @@ TestobjconfigObjCmd(
 	    }
 	} else {
 	    Tk_DestroyWindow(tkwin);
-	    ckfree((char *) recordPtr);
+	    ckfree(recordPtr);
 	}
 	if (result == TCL_OK) {
 	    Tcl_SetObjResult(interp, objv[2]);
@@ -989,7 +987,7 @@ TestobjconfigObjCmd(
 	    return TCL_ERROR;
 	}
 
-	recordPtr = (FiveRecord *) ckalloc(sizeof(FiveRecord));
+	recordPtr = ckalloc(sizeof(FiveRecord));
 	recordPtr->header.interp = interp;
 	recordPtr->header.optionTable = Tk_CreateOptionTable(interp,
 		smallSpecs);
@@ -1014,7 +1012,7 @@ TestobjconfigObjCmd(
 	    }
 	}
 	if (result != TCL_OK) {
-	    ckfree((char *) recordPtr);
+	    ckfree(recordPtr);
 	}
 
 	break;
@@ -1068,7 +1066,7 @@ TestobjconfigObjCmd(
 	}
 	Tk_SetClass(tkwin, "Test");
 
-	recordPtr = (SlaveRecord *) ckalloc(sizeof(SlaveRecord));
+	recordPtr = ckalloc(sizeof(SlaveRecord));
 	recordPtr->header.interp = interp;
 	recordPtr->header.optionTable = Tk_CreateOptionTable(interp,
 		slaveSpecs);
@@ -1096,7 +1094,7 @@ TestobjconfigObjCmd(
 	}
 	if (result != TCL_OK) {
 	    Tk_DestroyWindow(tkwin);
-	    ckfree((char *) recordPtr);
+	    ckfree(recordPtr);
 	}
     }
     }
@@ -1398,14 +1396,14 @@ ImageCreate(
 	varName = Tcl_GetString(objv[i+1]);
     }
 
-    timPtr = (TImageMaster *) ckalloc(sizeof(TImageMaster));
+    timPtr = ckalloc(sizeof(TImageMaster));
     timPtr->master = master;
     timPtr->interp = interp;
     timPtr->width = 30;
     timPtr->height = 15;
-    timPtr->imageName = (char *) ckalloc((unsigned) (strlen(name) + 1));
+    timPtr->imageName = ckalloc(strlen(name) + 1);
     strcpy(timPtr->imageName, name);
-    timPtr->varName = (char *) ckalloc((unsigned) (strlen(varName) + 1));
+    timPtr->varName = ckalloc(strlen(varName) + 1);
     strcpy(timPtr->varName, varName);
     Tcl_CreateCommand(interp, name, ImageCmd, timPtr, NULL);
     *clientDataPtr = timPtr;
@@ -1503,7 +1501,7 @@ ImageGet(
     Tcl_SetVar(timPtr->interp, timPtr->varName, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 
-    instPtr = (TImageInstance *) ckalloc(sizeof(TImageInstance));
+    instPtr = ckalloc(sizeof(TImageInstance));
     instPtr->masterPtr = timPtr;
     instPtr->fg = Tk_GetColor(timPtr->interp, tkwin, "#ff0000");
     gcValues.foreground = instPtr->fg->pixel;
@@ -1594,7 +1592,7 @@ ImageFree(
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     Tk_FreeColor(instPtr->fg);
     Tk_FreeGC(display, instPtr->gc);
-    ckfree((char *) instPtr);
+    ckfree(instPtr);
 }
 
 /*
@@ -1630,7 +1628,7 @@ ImageDelete(
     Tcl_DeleteCommand(timPtr->interp, timPtr->imageName);
     ckfree(timPtr->imageName);
     ckfree(timPtr->varName);
-    ckfree((char *) timPtr);
+    ckfree(timPtr);
 }
 
 /*
@@ -2025,7 +2023,7 @@ CustomOptionSet(
     if (internalPtr != NULL) {
 	if ((*value) != NULL) {
 	    string = Tcl_GetStringFromObj((*value), &length);
-	    newStr = ckalloc((size_t) (length + 1));
+	    newStr = ckalloc(length + 1);
 	    strcpy(newStr, string);
 	} else {
 	    newStr = NULL;

@@ -178,7 +178,7 @@ TkpGetColor(
 	}
     }
 
-    tkColPtr = (TkColor *) ckalloc(sizeof(TkColor));
+    tkColPtr = ckalloc(sizeof(TkColor));
     tkColPtr->color = color;
 
     return tkColPtr;
@@ -213,7 +213,7 @@ TkpGetColorByValue(
 {
     Display *display = Tk_Display(tkwin);
     Colormap colormap = Tk_Colormap(tkwin);
-    TkColor *tkColPtr = (TkColor *) ckalloc(sizeof(TkColor));
+    TkColor *tkColPtr = ckalloc(sizeof(TkColor));
 
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;
@@ -271,7 +271,7 @@ FindClosestColor(
 
     for (stressPtr = dispPtr->stressPtr; ; stressPtr = stressPtr->nextPtr) {
 	if (stressPtr == NULL) {
-	    stressPtr = (TkStressedCmap *) ckalloc(sizeof(TkStressedCmap));
+	    stressPtr = ckalloc(sizeof(TkStressedCmap));
 	    stressPtr->colormap = colormap;
 	    template.visualid = XVisualIDFromVisual(Tk_Visual(tkwin));
 
@@ -283,8 +283,8 @@ FindClosestColor(
 
 	    stressPtr->numColors = visInfoPtr->colormap_size;
 	    XFree((char *) visInfoPtr);
-	    stressPtr->colorPtr = (XColor *) ckalloc((unsigned)
-		    (stressPtr->numColors * sizeof(XColor)));
+	    stressPtr->colorPtr =
+		    ckalloc(stressPtr->numColors * sizeof(XColor));
 	    for (i = 0; i < stressPtr->numColors; i++) {
 		stressPtr->colorPtr[i].pixel = (unsigned long) i;
 	    }
@@ -392,8 +392,8 @@ DeleteStressedCmap(
 	    } else {
 		prevPtr->nextPtr = stressPtr->nextPtr;
 	    }
-	    ckfree((char *) stressPtr->colorPtr);
-	    ckfree((char *) stressPtr);
+	    ckfree(stressPtr->colorPtr);
+	    ckfree(stressPtr);
 	    return;
 	}
     }

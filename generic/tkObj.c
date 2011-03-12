@@ -312,7 +312,7 @@ FreePixelInternalRep(
 
     if (!SIMPLE_PIXELREP(objPtr)) {
 	pixelPtr = GET_COMPLEXPIXEL(objPtr);
-	ckfree((char *) pixelPtr);
+	ckfree(pixelPtr);
     }
     SET_SIMPLEPIXEL(objPtr, 0);
     objPtr->typePtr = NULL;
@@ -349,7 +349,7 @@ DupPixelInternalRep(
 	SET_SIMPLEPIXEL(copyPtr, GET_SIMPLEPIXEL(srcPtr));
     } else {
 	oldPtr = GET_COMPLEXPIXEL(srcPtr);
-	newPtr = (PixelRep *) ckalloc(sizeof(PixelRep));
+	newPtr = ckalloc(sizeof(PixelRep));
 	newPtr->value = oldPtr->value;
 	newPtr->units = oldPtr->units;
 	newPtr->tkwin = oldPtr->tkwin;
@@ -433,7 +433,7 @@ SetPixelFromAny(
     if ((units < 0) && (i == d)) {
 	SET_SIMPLEPIXEL(objPtr, i);
     } else {
-	PixelRep *pixelPtr = (PixelRep *) ckalloc(sizeof(PixelRep));
+	PixelRep *pixelPtr = ckalloc(sizeof(PixelRep));
 
 	pixelPtr->value = d;
 	pixelPtr->units = units;
@@ -564,7 +564,7 @@ DupMMInternalRep(
 
     copyPtr->typePtr = srcPtr->typePtr;
     oldPtr = srcPtr->internalRep.otherValuePtr;
-    newPtr = (MMRep *) ckalloc(sizeof(MMRep));
+    newPtr = ckalloc(sizeof(MMRep));
     newPtr->value = oldPtr->value;
     newPtr->units = oldPtr->units;
     newPtr->tkwin = oldPtr->tkwin;
@@ -608,7 +608,7 @@ UpdateStringOfMM(
     Tcl_PrintDouble(NULL, mmPtr->value, buffer);
     len = (int)strlen(buffer);
 
-    objPtr->bytes = (char *) ckalloc((unsigned) len + 1);
+    objPtr->bytes = ckalloc(len + 1);
     strcpy(objPtr->bytes, buffer);
     objPtr->length = len;
 }
@@ -727,7 +727,7 @@ SetMMFromAny(
 
     objPtr->typePtr = &mmObjType;
 
-    mmPtr = (MMRep *) ckalloc(sizeof(MMRep));
+    mmPtr = ckalloc(sizeof(MMRep));
     mmPtr->value = d;
     mmPtr->units = units;
     mmPtr->tkwin = NULL;
@@ -837,7 +837,7 @@ SetWindowFromAny(
 	typePtr->freeIntRepProc(objPtr);
     }
 
-    winPtr = (WindowRep *) ckalloc(sizeof(WindowRep));
+    winPtr = ckalloc(sizeof(WindowRep));
     winPtr->tkwin = NULL;
     winPtr->mainPtr = NULL;
     winPtr->epoch = 0;
@@ -874,7 +874,7 @@ DupWindowInternalRep(
     register WindowRep *oldPtr, *newPtr;
 
     oldPtr = srcPtr->internalRep.otherValuePtr;
-    newPtr = (WindowRep *) ckalloc(sizeof(WindowRep));
+    newPtr = ckalloc(sizeof(WindowRep));
     newPtr->tkwin = oldPtr->tkwin;
     newPtr->mainPtr = oldPtr->mainPtr;
     newPtr->epoch = oldPtr->epoch;

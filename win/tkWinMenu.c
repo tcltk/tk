@@ -517,7 +517,7 @@ GetEntryText(
 	    }
 	}
 
-	itemText = ckalloc((unsigned)Tcl_DStringLength(&itemString) + 1);
+	itemText = ckalloc(Tcl_DStringLength(&itemString) + 1);
 	strcpy(itemText, Tcl_DStringValue(&itemString));
 	Tcl_DStringFree(&itemString);
     }
@@ -710,8 +710,8 @@ ReconfigureWindowsMenu(
 
     if ((menuPtr->menuType == MENUBAR)
 	    && (menuPtr->parentTopLevelPtr != NULL)) {
-	HANDLE bar;
-	bar = TkWinGetWrapperWindow(menuPtr->parentTopLevelPtr);
+	HANDLE bar = TkWinGetWrapperWindow(menuPtr->parentTopLevelPtr);
+
 	if (bar) {
 	    DrawMenuBar(bar);
 	}
@@ -1209,7 +1209,7 @@ TkWinHandleMenuEvent(
 	    }
 	    mePtr = (TkMenuEntry *) itemPtr->itemData;
 	    menuPtr = mePtr->menuPtr;
-	    twdPtr = (TkWinDrawable *) ckalloc(sizeof(TkWinDrawable));
+	    twdPtr = ckalloc(sizeof(TkWinDrawable));
 	    twdPtr->type = TWD_WINDC;
 	    twdPtr->winDC.hdc = itemPtr->hDC;
 
@@ -1252,7 +1252,7 @@ TkWinHandleMenuEvent(
 		    itemPtr->rcItem.bottom - itemPtr->rcItem.top,
 		    0, drawingParameters);
 
-	    ckfree((char *) twdPtr);
+	    ckfree(twdPtr);
 	}
 	*plResult = 1;
 	returnResult = 1;

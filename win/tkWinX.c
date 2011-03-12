@@ -490,9 +490,9 @@ TkWinDisplayChanged(
     screen->root_depth = GetDeviceCaps(dc, BITSPIXEL) * (int) screen->ext_data;
 
     if (screen->root_visual != NULL) {
-	ckfree((char *) screen->root_visual);
+	ckfree(screen->root_visual);
     }
-    screen->root_visual = (Visual *) ckalloc(sizeof(Visual));
+    screen->root_visual = ckalloc(sizeof(Visual));
     screen->root_visual->visualid = 0;
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 	screen->root_visual->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
@@ -559,7 +559,7 @@ TkpOpenDisplay(
     Screen *screen;
     TkWinDrawable *twdPtr;
     Display *display;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->winDisplay != NULL) {
@@ -570,10 +570,10 @@ TkpOpenDisplay(
 	}
     }
 
-    display = (Display *) ckalloc(sizeof(Display));
+    display = ckalloc(sizeof(Display));
     ZeroMemory(display, sizeof(Display));
 
-    display->display_name = (char *) ckalloc(strlen(display_name)+1);
+    display->display_name = ckalloc(strlen(display_name) + 1);
     strcpy(display->display_name, display_name);
 
     display->cursor_font = 1;
@@ -581,7 +581,7 @@ TkpOpenDisplay(
     display->request = 1;
     display->qlen = 0;
 
-    screen = (Screen *) ckalloc(sizeof(Screen));
+    screen = ckalloc(sizeof(Screen));
     ZeroMemory(screen, sizeof(Screen));
     screen->display = display;
 
@@ -589,7 +589,7 @@ TkpOpenDisplay(
      * Set up the root window.
      */
 
-    twdPtr = (TkWinDrawable*) ckalloc(sizeof(TkWinDrawable));
+    twdPtr = ckalloc(sizeof(TkWinDrawable));
     if (twdPtr == NULL) {
 	return None;
     }
@@ -612,7 +612,7 @@ TkpOpenDisplay(
 
     TkWinDisplayChanged(display);
 
-    tsdPtr->winDisplay = (TkDisplay *) ckalloc(sizeof(TkDisplay));
+    tsdPtr->winDisplay = ckalloc(sizeof(TkDisplay));
     ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
@@ -657,17 +657,17 @@ TkpCloseDisplay(
     }
     if (display->screens != NULL) {
 	if (display->screens->root_visual != NULL) {
-	    ckfree((char *) display->screens->root_visual);
+	    ckfree(display->screens->root_visual);
 	}
 	if (display->screens->root != None) {
-	    ckfree((char *) display->screens->root);
+	    ckfree(display->screens->root);
 	}
 	if (display->screens->cmap != None) {
 	    XFreeColormap(display, display->screens->cmap);
 	}
-	ckfree((char *) display->screens);
+	ckfree(display->screens);
     }
-    ckfree((char *) display);
+    ckfree(display);
 }
 
 /*
@@ -1557,7 +1557,7 @@ HandleIMEComposition(
     n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
-	char *buff = ckalloc((unsigned) n);
+	char *buff = ckalloc(n);
 	TkWindow *winPtr;
 	XEvent event;
 	int i;

@@ -204,7 +204,7 @@ TkpGetString(
      * from having to reenter the XIM engine. [Bug 1373712]
      */
 
-    kePtr->charValuePtr = ckalloc((unsigned) len + 1);
+    kePtr->charValuePtr = ckalloc(len + 1);
     kePtr->charValueLen = len;
     memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
     return Tcl_DStringValue(dsPtr);
@@ -417,12 +417,11 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree((char *) dispPtr->modKeyCodes);
+	ckfree(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = (KeyCode *)
-	    ckalloc((unsigned) (KEYCODE_ARRAY_SIZE * sizeof(KeyCode)));
+    dispPtr->modKeyCodes = ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
 	if (*codePtr == 0) {
 	    continue;
@@ -449,11 +448,10 @@ TkpInitKeymapInfo(
 	     */
 
 	    arraySize *= 2;
-	    newCodes = (KeyCode *)
-		    ckalloc((unsigned) (arraySize * sizeof(KeyCode)));
+	    newCodes = ckalloc(arraySize * sizeof(KeyCode));
 	    memcpy(newCodes, dispPtr->modKeyCodes,
 		    dispPtr->numModKeyCodes * sizeof(KeyCode));
-	    ckfree((char *) dispPtr->modKeyCodes);
+	    ckfree(dispPtr->modKeyCodes);
 	    dispPtr->modKeyCodes = newCodes;
 	}
 	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;

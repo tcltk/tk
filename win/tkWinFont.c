@@ -317,7 +317,7 @@ TkpGetNativeFont(
     }
 
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->mainPtr->winPtr;
-    fontPtr = (WinFont *) ckalloc(sizeof(WinFont));
+    fontPtr = ckalloc(sizeof(WinFont));
     InitFont(tkwin, GetStockObject(object), 0, fontPtr);
 
     return (TkFont *) fontPtr;
@@ -575,7 +575,7 @@ TkpGetFontFromAttributes(
     hFont = GetScreenFont(faPtr, faceName,
 	    TkFontGetPixels(tkwin, faPtr->size), 0.0);
     if (tkFontPtr == NULL) {
-	fontPtr = (WinFont *) ckalloc(sizeof(WinFont));
+	fontPtr = ckalloc(sizeof(WinFont));
     } else {
 	fontPtr = (WinFont *) tkFontPtr;
 	ReleaseFont(fontPtr);
@@ -1655,7 +1655,7 @@ ReleaseFont(
 	ReleaseSubFont(&fontPtr->subFontArray[i]);
     }
     if (fontPtr->subFontArray != fontPtr->staticSubFonts) {
-	ckfree((char *) fontPtr->subFontArray);
+	ckfree(fontPtr->subFontArray);
     }
 }
 
@@ -1779,7 +1779,7 @@ AllocFontFamily(
 	}
     }
 
-    familyPtr = (FontFamily *) ckalloc(sizeof(FontFamily));
+    familyPtr = ckalloc(sizeof(FontFamily));
     memset(familyPtr, 0, sizeof(FontFamily));
     familyPtr->nextPtr = tsdPtr->fontFamilyList;
     tsdPtr->fontFamilyList = familyPtr;
@@ -1881,10 +1881,10 @@ FreeFontFamily(
 	}
     }
     if (familyPtr->startCount != NULL) {
-	ckfree((char *) familyPtr->startCount);
+	ckfree(familyPtr->startCount);
     }
     if (familyPtr->endCount != NULL) {
-	ckfree((char *) familyPtr->endCount);
+	ckfree(familyPtr->endCount);
     }
     if (familyPtr->encoding != TkWinGetUnicodeEncoding()) {
 	Tcl_FreeEncoding(familyPtr->encoding);
@@ -1902,7 +1902,7 @@ FreeFontFamily(
 	familyPtrPtr = &(*familyPtrPtr)->nextPtr;
     }
 
-    ckfree((char *) familyPtr);
+    ckfree(familyPtr);
 }
 
 /*
@@ -2195,7 +2195,7 @@ FontMapLoadPage(
     USHORT *startCount, *endCount;
     int i, j, bitOffset, end, segCount;
 
-    subFontPtr->fontMap[row] = (char *) ckalloc(FONTMAP_BITSPERPAGE / 8);
+    subFontPtr->fontMap[row] = ckalloc(FONTMAP_BITSPERPAGE / 8);
     memset(subFontPtr->fontMap[row], 0, FONTMAP_BITSPERPAGE / 8);
 
     familyPtr = subFontPtr->familyPtr;
@@ -2426,12 +2426,11 @@ CanUseFallback(
     if (fontPtr->numSubFonts >= SUBFONT_SPACE) {
 	SubFont *newPtr;
 
-    	newPtr = (SubFont *)
-		ckalloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
+    	newPtr = ckalloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
 	memcpy(newPtr, fontPtr->subFontArray,
 		fontPtr->numSubFonts * sizeof(SubFont));
 	if (fontPtr->subFontArray != fontPtr->staticSubFonts) {
-	    ckfree((char *) fontPtr->subFontArray);
+	    ckfree(fontPtr->subFontArray);
 	}
 
 	/*
@@ -2823,8 +2822,8 @@ LoadFontRanges(
 		segCount = subTable.segment.segCountX2 / 2;
 		cbData = segCount * sizeof(USHORT);
 
-		startCount = (USHORT *) ckalloc((unsigned)cbData);
-		endCount = (USHORT *) ckalloc((unsigned)cbData);
+		startCount = ckalloc(cbData);
+		endCount = ckalloc(cbData);
 
 		offset = encTable.offset + sizeof(subTable.segment);
 		GetFontData(hdc, cmapKey, (DWORD) offset, endCount, cbData);
@@ -2867,8 +2866,8 @@ LoadFontRanges(
 
 	segCount = 1;
 	cbData = segCount * sizeof(USHORT);
-	startCount = (USHORT *) ckalloc((unsigned) cbData);
-	endCount = (USHORT *) ckalloc((unsigned) cbData);
+	startCount = ckalloc(cbData);
+	endCount = ckalloc(cbData);
 	startCount[0] = 0x0000;
 	endCount[0] = 0x00ff;
     }

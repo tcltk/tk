@@ -275,7 +275,7 @@ TkImgPhotoGet(
      * a new instance of the image.
      */
 
-    instancePtr = (PhotoInstance *) ckalloc(sizeof(PhotoInstance));
+    instancePtr = ckalloc(sizeof(PhotoInstance));
     instancePtr->masterPtr = masterPtr;
     instancePtr->display = Tk_Display(tkwin);
     instancePtr->colormap = Tk_Colormap(tkwin);
@@ -798,8 +798,8 @@ TkImgPhotoInstanceSetSize(
 	     * such possibility.
 	     */
 
-	    newError = (schar *) ckalloc((unsigned)
-		    masterPtr->height * masterPtr->width * 3 * sizeof(schar));
+	    newError = ckalloc(masterPtr->height * masterPtr->width
+		    * 3 * sizeof(schar));
 
 	    /*
 	     * Zero the new array so that we don't get bogus error values
@@ -852,7 +852,7 @@ TkImgPhotoInstanceSetSize(
 		    errSrcPtr += instancePtr->width * 3;
 		}
 	    }
-	    ckfree((char *) instancePtr->error);
+	    ckfree(instancePtr->error);
 	}
 
 	instancePtr->error = newError;
@@ -1033,7 +1033,7 @@ GetColorTable(
 	 * No color table currently available; need to make one.
 	 */
 
-	colorPtr = (ColorTable *) ckalloc(sizeof(ColorTable));
+	colorPtr = ckalloc(sizeof(ColorTable));
 
 	/*
 	 * The following line of code should not normally be needed due to the
@@ -1196,7 +1196,7 @@ AllocateColors(
 	    } else {
 		numColors = MAX(MAX(nRed, nGreen), nBlue);
 	    }
-	    colors = (XColor *) ckalloc(numColors * sizeof(XColor));
+	    colors = ckalloc(numColors * sizeof(XColor));
 
 	    for (i = 0; i < numColors; ++i) {
 		if (igam == 1.0) {
@@ -1216,7 +1216,7 @@ AllocateColors(
 	     */
 
 	    numColors = (mono) ? nRed: (nRed * nGreen * nBlue);
-	    colors = (XColor *) ckalloc(numColors * sizeof(XColor));
+	    colors = ckalloc(numColors * sizeof(XColor));
 
 	    if (!mono) {
 		/*
@@ -1260,7 +1260,7 @@ AllocateColors(
 	 * Now try to allocate the colors we've calculated.
 	 */
 
-	pixels = (unsigned long *) ckalloc(numColors * sizeof(unsigned long));
+	pixels = ckalloc(numColors * sizeof(unsigned long));
 	for (i = 0; i < numColors; ++i) {
 	    if (!XAllocColor(colorPtr->id.display, colorPtr->id.colormap,
 		    &colors[i])) {
@@ -1291,8 +1291,8 @@ AllocateColors(
 	    break;
 	}
 	XFreeColors(colorPtr->id.display, colorPtr->id.colormap, pixels, i, 0);
-	ckfree((char *) colors);
-	ckfree((char *) pixels);
+	ckfree(colors);
+	ckfree(pixels);
 
 	if (!mono) {
 	    if ((nRed == 2) && (nGreen == 2) && (nBlue == 2)) {
@@ -1394,7 +1394,7 @@ AllocateColors(
 	}
     }
 
-    ckfree((char *) colors);
+    ckfree(colors);
 }
 
 /*
@@ -1429,7 +1429,7 @@ DisposeColorTable(
 		    colorPtr->pixelMap, colorPtr->numColors, 0);
 	    Tk_FreeColormap(colorPtr->id.display, colorPtr->id.colormap);
 	}
-	ckfree((char *) colorPtr->pixelMap);
+	ckfree(colorPtr->pixelMap);
     }
 
     entry = Tcl_FindHashEntry(&imgPhotoColorHash, (char *) &colorPtr->id);
@@ -1438,7 +1438,7 @@ DisposeColorTable(
     }
     Tcl_DeleteHashEntry(entry);
 
-    ckfree((char *) colorPtr);
+    ckfree(colorPtr);
 }
 
 /*
@@ -1523,7 +1523,7 @@ ReclaimColors(
 		    colorPtr->pixelMap, colorPtr->numColors, 0);
 	    numColors -= colorPtr->numColors;
 	    colorPtr->numColors = 0;
-	    ckfree((char *) colorPtr->pixelMap);
+	    ckfree(colorPtr->pixelMap);
 	    colorPtr->pixelMap = NULL;
 	}
 
@@ -1567,7 +1567,7 @@ TkImgDisposeInstance(
 	XDestroyImage(instancePtr->imagePtr);
     }
     if (instancePtr->error != NULL) {
-	ckfree((char *) instancePtr->error);
+	ckfree(instancePtr->error);
     }
     if (instancePtr->colorTablePtr != NULL) {
 	FreeColorTable(instancePtr->colorTablePtr, 1);
@@ -1583,7 +1583,7 @@ TkImgDisposeInstance(
 	prevPtr->nextPtr = instancePtr->nextPtr;
     }
     Tk_FreeColormap(instancePtr->display, instancePtr->colormap);
-    ckfree((char *) instancePtr);
+    ckfree(instancePtr);
 }
 
 /*
@@ -1664,8 +1664,7 @@ TkImgDitherInstance(
      * recovering from the failure.
      */
 
-    imagePtr->data =
-	    ckalloc((unsigned) (imagePtr->bytes_per_line * nLines));
+    imagePtr->data = ckalloc(imagePtr->bytes_per_line * nLines);
     bigEndian = imagePtr->bitmap_bit_order == MSBFirst;
     firstBit = bigEndian? (1 << (imagePtr->bitmap_unit - 1)): 1;
 

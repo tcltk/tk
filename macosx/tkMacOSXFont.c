@@ -453,7 +453,7 @@ TkpGetNativeFont(
     ctFont = CTFontCreateUIFontForLanguage(HIThemeGetUIFontType(
 	    themeFontId), 0, NULL);
     if (ctFont) {
-	fontPtr = (MacFont *) ckalloc(sizeof(MacFont));
+	fontPtr = ckalloc(sizeof(MacFont));
 	InitFont((NSFont*) ctFont, NULL, fontPtr);
     }
 
@@ -522,7 +522,7 @@ TkpGetFontFromAttributes(
 	Tcl_Panic("Could not deternmine NSFont from TkFontAttributes");
     }
     if (tkFontPtr == NULL) {
-	fontPtr = (MacFont *) ckalloc(sizeof(MacFont));
+	fontPtr = ckalloc(sizeof(MacFont));
     } else {
 	fontPtr = (MacFont *) tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
