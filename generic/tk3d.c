@@ -463,7 +463,7 @@ Tk_Free3DBorder(
 	prevPtr->nextPtr = borderPtr->nextPtr;
     }
     if (borderPtr->objRefCount == 0) {
-	ckfree((char *) borderPtr);
+	ckfree(borderPtr);
     }
 }
 
@@ -535,7 +535,7 @@ FreeBorderObj(
 	borderPtr->objRefCount--;
 	if ((borderPtr->objRefCount == 0)
 		&& (borderPtr->resourceRefCount == 0)) {
-	    ckfree((char *) borderPtr);
+	    ckfree(borderPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     }

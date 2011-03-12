@@ -268,7 +268,7 @@ RegOpen(
 	SendInit(interp, dispPtr);
     }
 
-    regPtr = (NameRegistry *) ckalloc(sizeof(NameRegistry));
+    regPtr = ckalloc(sizeof(NameRegistry));
     regPtr->dispPtr = dispPtr;
     regPtr->locked = 0;
     regPtr->modified = 0;
@@ -475,7 +475,7 @@ RegAddName(
     sprintf(id, "%x ", (unsigned) commWindow);
     idLength = strlen(id);
     newBytes = idLength + strlen(name) + 1;
-    newProp = ckalloc((unsigned) (regPtr->propLength + newBytes));
+    newProp = ckalloc(regPtr->propLength + newBytes);
     strcpy(newProp, id);
     strcpy(newProp+idLength, name);
     if (regPtr->property != NULL) {
@@ -549,7 +549,7 @@ RegClose(
 	    ckfree(regPtr->property);
 	}
     }
-    ckfree((char *) regPtr);
+    ckfree(regPtr);
 }
 
 /*
@@ -635,7 +635,7 @@ ValidateName(
 		    break;
 		}
 	    }
-	    ckfree((char *) argv);
+	    ckfree(argv);
 	}
     } else {
 	result = 0;
@@ -819,7 +819,7 @@ Tk_SetAppName(
 	     * the "send" command to the interpreter.
 	     */
 
-	    riPtr = (RegisteredInterp *) ckalloc(sizeof(RegisteredInterp));
+	    riPtr = ckalloc(sizeof(RegisteredInterp));
 	    riPtr->interp = interp;
 	    riPtr->dispPtr = winPtr->dispPtr;
 	    riPtr->nextPtr = tsdPtr->interpListPtr;
@@ -903,7 +903,7 @@ Tk_SetAppName(
 
     RegAddName(regPtr, actualName, Tk_WindowId(dispPtr->commTkwin));
     RegClose(regPtr);
-    riPtr->name = (char *) ckalloc((unsigned) (strlen(actualName) + 1));
+    riPtr->name = ckalloc(strlen(actualName) + 1);
     strcpy(riPtr->name, actualName);
     if (actualName != name) {
 	Tcl_DStringFree(&dString);
@@ -1159,7 +1159,7 @@ Tk_SendCmd(
 		    msg = "target application died";
 		}
 		pending.code = TCL_ERROR;
-		pending.result = (char *) ckalloc((unsigned) (strlen(msg) + 1));
+		pending.result = ckalloc(strlen(msg) + 1);
 		strcpy(pending.result, msg);
 		pending.gotResponse = 1;
 	    } else {
@@ -1681,19 +1681,16 @@ SendEventProc(
 		}
 		pcPtr->code = code;
 		if (resultString != NULL) {
-		    pcPtr->result =
-			    ckalloc((unsigned) (strlen(resultString) + 1));
+		    pcPtr->result = ckalloc(strlen(resultString) + 1);
 		    strcpy(pcPtr->result, resultString);
 		}
 		if (code == TCL_ERROR) {
 		    if (errorInfo != NULL) {
-			pcPtr->errorInfo =
-				ckalloc((unsigned) (strlen(errorInfo) + 1));
+			pcPtr->errorInfo = ckalloc(strlen(errorInfo) + 1);
 			strcpy(pcPtr->errorInfo, errorInfo);
 		    }
 		    if (errorCode != NULL) {
-			pcPtr->errorCode =
-				ckalloc((unsigned) (strlen(errorCode) + 1));
+			pcPtr->errorCode = ckalloc(strlen(errorCode) + 1);
 			strcpy(pcPtr->errorCode, errorCode);
 		    }
 		}
@@ -1782,8 +1779,7 @@ AppendErrorProc(
     for (pcPtr = tsdPtr->pendingCommands; pcPtr != NULL;
 	    pcPtr = pcPtr->nextPtr) {
 	if ((pcPtr == pendingPtr) && (pcPtr->result == NULL)) {
-	    pcPtr->result = (char *) ckalloc((unsigned)
-		    (strlen(pcPtr->target) + 50));
+	    pcPtr->result = ckalloc(strlen(pcPtr->target) + 50);
 	    sprintf(pcPtr->result, "no application named \"%s\"",
 		    pcPtr->target);
 	    pcPtr->code = TCL_ERROR;
@@ -1837,7 +1833,7 @@ DeleteProc(
 	    }
 	}
     }
-    ckfree((char *) riPtr->name);
+    ckfree(riPtr->name);
     riPtr->interp = NULL;
     UpdateCommWindow(riPtr->dispPtr);
     Tcl_EventuallyFree(riPtr, TCL_DYNAMIC);

@@ -42,7 +42,7 @@ typedef struct Ttk_Style_
 
 static Style *NewStyle()
 {
-    Style *stylePtr = (Style*)ckalloc(sizeof(Style));
+    Style *stylePtr = ckalloc(sizeof(Style));
 
     stylePtr->styleName = NULL;
     stylePtr->parentStyle = NULL;
@@ -77,7 +77,7 @@ static void FreeStyle(Style *stylePtr)
 
     Ttk_FreeLayoutTemplate(stylePtr->layoutTemplate);
 
-    ckfree((ClientData)stylePtr);
+    ckfree(stylePtr);
 }
 
 /*
@@ -181,7 +181,7 @@ static const Tk_OptionSpec *TTKGetOptionSpec(
 static OptionMap
 BuildOptionMap(Ttk_ElementClass *elementClass, Tk_OptionTable optionTable)
 {
-    OptionMap optionMap = (OptionMap)ckalloc(
+    OptionMap optionMap = ckalloc(
 	    sizeof(const Tk_OptionSpec) * elementClass->nResources + 1);
     int i;
 
@@ -223,8 +223,7 @@ GetOptionMap(Ttk_ElementClass *elementClass, Tk_OptionTable optionTable)
 static Ttk_ElementClass *
 NewElementClass(const char *name, Ttk_ElementSpec *specPtr,void *clientData)
 {
-    Ttk_ElementClass *elementClass =
-	    (Ttk_ElementClass*)ckalloc(sizeof(Ttk_ElementClass));
+    Ttk_ElementClass *elementClass = ckalloc(sizeof(Ttk_ElementClass));
     int i;
 
     elementClass->name = name;
@@ -240,7 +239,7 @@ NewElementClass(const char *name, Ttk_ElementSpec *specPtr,void *clientData)
 
     /* Initialize default values:
      */
-    elementClass->defaultValues = (Tcl_Obj**)
+    elementClass->defaultValues =
 	ckalloc(elementClass->nResources * sizeof(Tcl_Obj *) + 1);
     for (i=0; i < elementClass->nResources; ++i) {
         const char *defaultValue = specPtr->options[i].defaultValue;
@@ -277,7 +276,7 @@ static void FreeElementClass(Ttk_ElementClass *elementClass)
 	    Tcl_DecrRefCount(elementClass->defaultValues[i]);
 	}
     }
-    ckfree((ClientData)elementClass->defaultValues);
+    ckfree(elementClass->defaultValues);
 
     /*
      * Free option map cache:
@@ -290,7 +289,7 @@ static void FreeElementClass(Ttk_ElementClass *elementClass)
     Tcl_DeleteHashTable(&elementClass->optMapCache);
 
     ckfree(elementClass->elementRecord);
-    ckfree((ClientData)elementClass);
+    ckfree(elementClass);
 }
 
 /*------------------------------------------------------------------------
@@ -313,7 +312,7 @@ typedef struct Ttk_Theme_
 
 static Theme *NewTheme(Ttk_ResourceCache cache, Ttk_Theme parent)
 {
-    Theme *themePtr = (Theme*)ckalloc(sizeof(Theme));
+    Theme *themePtr = ckalloc(sizeof(Theme));
     Tcl_HashEntry *entryPtr;
     int unused;
 
@@ -367,7 +366,7 @@ static void FreeTheme(Theme *themePtr)
     /*
      * Free theme record:
      */
-    ckfree((ClientData)themePtr);
+    ckfree(themePtr);
 
     return;
 }
@@ -456,11 +455,11 @@ static void Ttk_StylePkgFree(ClientData clientData, Tcl_Interp *interp)
     while (cleanup) {
 	Cleanup *next = cleanup->next;
 	cleanup->cleanupProc(cleanup->clientData);
-	ckfree((ClientData)cleanup);
+	ckfree(cleanup);
 	cleanup = next;
     }
 
-    ckfree((ClientData)pkgPtr);
+    ckfree(pkgPtr);
 }
 
 /*
@@ -486,7 +485,7 @@ void Ttk_RegisterCleanup(
     Tcl_Interp *interp, ClientData clientData, Ttk_CleanupProc *cleanupProc)
 {
     StylePackageData *pkgPtr = GetStylePackageData(interp);
-    Cleanup *cleanup = (Cleanup*)ckalloc(sizeof(*cleanup));
+    Cleanup *cleanup = ckalloc(sizeof(*cleanup));
 
     cleanup->clientData = clientData;
     cleanup->cleanupProc = cleanupProc;
@@ -802,7 +801,7 @@ int Ttk_RegisterElementFactory(
     Ttk_ElementFactory factory, void *clientData)
 {
     StylePackageData *pkgPtr = GetStylePackageData(interp);
-    FactoryRec *recPtr = (FactoryRec*)ckalloc(sizeof(*recPtr));
+    FactoryRec *recPtr = ckalloc(sizeof(*recPtr));
     Tcl_HashEntry *entryPtr;
     int newEntry;
 
@@ -1697,8 +1696,7 @@ void Ttk_StylePkgInit(Tcl_Interp *interp)
 {
     Tcl_Namespace *nsPtr;
 
-    StylePackageData *pkgPtr = (StylePackageData *)
-	ckalloc(sizeof(StylePackageData));
+    StylePackageData *pkgPtr = ckalloc(sizeof(StylePackageData));
 
     pkgPtr->interp = interp;
     Tcl_InitHashTable(&pkgPtr->themeTable, TCL_STRING_KEYS);

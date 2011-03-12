@@ -1926,8 +1926,7 @@ ResolveConstraints(
 
     gridCount = MAX(constraintCount, slotCount);
     if (gridCount >= TYPICAL_SIZE) {
-	layoutPtr = (GridLayout *)
-		ckalloc(sizeof(GridLayout) * (1+gridCount));
+	layoutPtr = ckalloc(sizeof(GridLayout) * (1+gridCount));
     } else {
 	layoutPtr = layoutData;
     }
@@ -2049,12 +2048,12 @@ ResolveConstraints(
 			    * sizeof(UniformGroup);
 		    size_t newSize = (uniformGroupsAlloced + UNIFORM_PREALLOC)
 			    * sizeof(UniformGroup);
-		    UniformGroup *newUG = (UniformGroup *) ckalloc(newSize);
+		    UniformGroup *newUG = ckalloc(newSize);
 		    UniformGroup *oldUG = uniformGroupPtr;
 
 		    memcpy(newUG, oldUG, oldSize);
 		    if (oldUG != uniformPre) {
-			ckfree((char *) oldUG);
+			ckfree(oldUG);
 		    }
 		    uniformGroupPtr = newUG;
 		    uniformGroupsAlloced += UNIFORM_PREALLOC;
@@ -2094,7 +2093,7 @@ ResolveConstraints(
     }
 
     if (uniformGroupPtr != uniformPre) {
-	ckfree((char *) uniformGroupPtr);
+	ckfree(uniformGroupPtr);
     }
 
     /*
@@ -2364,7 +2363,7 @@ ResolveConstraints(
 
     --layoutPtr;
     if (layoutPtr != layoutData) {
-	ckfree((char *) layoutPtr);
+	ckfree(layoutPtr);
     }
     return requiredSize;
 }
@@ -2412,7 +2411,7 @@ GetGrid(
     if (!isNew) {
 	return Tcl_GetHashValue(hPtr);
     }
-    gridPtr = (Gridder *) ckalloc(sizeof(Gridder));
+    gridPtr = ckalloc(sizeof(Gridder));
     gridPtr->tkwin = tkwin;
     gridPtr->masterPtr = NULL;
     gridPtr->masterDataPtr = NULL;
@@ -2619,14 +2618,14 @@ CheckSlotData(
 	    int newNumSlot = slot + PREALLOC;
 	    size_t oldSize = numSlot * sizeof(SlotInfo);
 	    size_t newSize = newNumSlot * sizeof(SlotInfo);
-	    SlotInfo *newSI = (SlotInfo *) ckalloc(newSize);
+	    SlotInfo *newSI = ckalloc(newSize);
 	    SlotInfo *oldSI = (slotType == ROW)
 		    ? masterPtr->masterDataPtr->rowPtr
 		    : masterPtr->masterDataPtr->columnPtr;
 
 	    memcpy(newSI, oldSI, oldSize);
 	    memset(newSI+numSlot, 0, newSize - oldSize);
-	    ckfree((char *) oldSI);
+	    ckfree(oldSI);
 	    if (slotType == ROW) {
 	 	masterPtr->masterDataPtr->rowPtr = newSI;
 	    	masterPtr->masterDataPtr->rowSpace = newNumSlot;
@@ -2669,17 +2668,17 @@ InitMasterData(
     Gridder *masterPtr)
 {
     if (masterPtr->masterDataPtr == NULL) {
-	GridMaster *gridPtr = masterPtr->masterDataPtr = (GridMaster *)
+	GridMaster *gridPtr = masterPtr->masterDataPtr =
 		ckalloc(sizeof(GridMaster));
 	size_t size = sizeof(SlotInfo) * TYPICAL_SIZE;
 
 	gridPtr->columnEnd = 0;
 	gridPtr->columnMax = 0;
-	gridPtr->columnPtr = (SlotInfo *) ckalloc(size);
+	gridPtr->columnPtr = ckalloc(size);
 	gridPtr->columnSpace = TYPICAL_SIZE;
 	gridPtr->rowEnd = 0;
 	gridPtr->rowMax = 0;
-	gridPtr->rowPtr = (SlotInfo *) ckalloc(size);
+	gridPtr->rowPtr = ckalloc(size);
 	gridPtr->rowSpace = TYPICAL_SIZE;
 	gridPtr->startX = 0;
 	gridPtr->startY = 0;
@@ -2781,14 +2780,14 @@ DestroyGrid(
 
     if (gridPtr->masterDataPtr != NULL) {
 	if (gridPtr->masterDataPtr->rowPtr != NULL) {
-	    ckfree((char *) gridPtr->masterDataPtr -> rowPtr);
+	    ckfree(gridPtr->masterDataPtr -> rowPtr);
 	}
 	if (gridPtr->masterDataPtr->columnPtr != NULL) {
-	    ckfree((char *) gridPtr->masterDataPtr -> columnPtr);
+	    ckfree(gridPtr->masterDataPtr -> columnPtr);
 	}
-	ckfree((char *) gridPtr->masterDataPtr);
+	ckfree(gridPtr->masterDataPtr);
     }
-    ckfree((char *) gridPtr);
+    ckfree(gridPtr);
 }
 
 /*

@@ -71,15 +71,15 @@ void
 TkWinCleanupContainerList(void)
 {
     Container *nextPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    for (; tsdPtr->firstContainerPtr != (Container *) NULL;
+    for (; tsdPtr->firstContainerPtr != NULL;
 	    tsdPtr->firstContainerPtr = nextPtr) {
 	nextPtr = tsdPtr->firstContainerPtr->nextPtr;
-	ckfree((char *) tsdPtr->firstContainerPtr);
+	ckfree(tsdPtr->firstContainerPtr);
     }
-    tsdPtr->firstContainerPtr = (Container *) NULL;
+    tsdPtr->firstContainerPtr = NULL;
 }
 
 /*
@@ -363,7 +363,7 @@ TkpMakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = (Container *) ckalloc(sizeof(Container));
+    containerPtr = ckalloc(sizeof(Container));
     containerPtr->parentPtr = winPtr;
     containerPtr->parentHWnd = Tk_GetHWND(Tk_WindowId(tkwin));
     containerPtr->embeddedHWnd = NULL;
@@ -1097,7 +1097,7 @@ EmbedWindowDeleted(
 	} else {
 	    prevPtr->nextPtr = containerPtr->nextPtr;
 	}
-	ckfree((char *) containerPtr);
+	ckfree(containerPtr);
     }
 }
 

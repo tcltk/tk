@@ -394,7 +394,7 @@ CreateSlave(
      * populate it with some default values.
      */
 
-    slavePtr = (Slave *) ckalloc(sizeof(Slave));
+    slavePtr = ckalloc(sizeof(Slave));
     memset(slavePtr, 0, sizeof(Slave));
     slavePtr->tkwin = tkwin;
     slavePtr->inTkwin = None;
@@ -429,7 +429,7 @@ FreeSlave(
 {
     Tk_FreeConfigOptions((char *) slavePtr, slavePtr->optionTable,
 	    slavePtr->tkwin);
-    ckfree((char *) slavePtr);
+    ckfree(slavePtr);
 }
 
 /*
@@ -540,7 +540,7 @@ CreateMaster(
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->masterTable, (char *) tkwin, &isNew);
     if (isNew) {
-	masterPtr = (Master *) ckalloc(sizeof(Master));
+	masterPtr = ckalloc(sizeof(Master));
 	masterPtr->tkwin = tkwin;
 	masterPtr->slavePtr = NULL;
 	masterPtr->abortPtr = NULL;

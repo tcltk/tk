@@ -179,7 +179,7 @@ TkpUseWindow(
 	}
     }
     if (containerPtr == NULL) {
-	containerPtr = (Container *) ckalloc(sizeof(Container));
+	containerPtr = ckalloc(sizeof(Container));
 	containerPtr->parent = parent;
 	containerPtr->parentRoot = parentAtts.root;
 	containerPtr->parentPtr = NULL;
@@ -282,7 +282,7 @@ TkpMakeContainer(
      */
 
     Tk_MakeWindowExist(tkwin);
-    containerPtr = (Container *) ckalloc(sizeof(Container));
+    containerPtr = ckalloc(sizeof(Container));
     containerPtr->parent = Tk_WindowId(tkwin);
     containerPtr->parentRoot = RootWindowOfScreen(Tk_Screen(tkwin));
     containerPtr->parentPtr = winPtr;
@@ -975,7 +975,7 @@ EmbedWindowDeleted(
 	} else {
 	    prevPtr->nextPtr = containerPtr->nextPtr;
 	}
-	ckfree((char *) containerPtr);
+	ckfree(containerPtr);
     }
 }
 

@@ -243,7 +243,7 @@ Tk_MessageObjCmd(
 
     optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
-    msgPtr = (Message *) ckalloc(sizeof(Message));
+    msgPtr = ckalloc(sizeof(Message));
     memset(msgPtr, 0, (size_t) sizeof(Message));
 
     /*
@@ -413,7 +413,7 @@ DestroyMessage(
     }
     Tk_FreeConfigOptions((char *) msgPtr, msgPtr->optionTable, msgPtr->tkwin);
     msgPtr->tkwin = NULL;
-    ckfree((char *) msgPtr);
+    ckfree(msgPtr);
 }
 
 /*
@@ -864,7 +864,7 @@ MessageTextVarProc(
 	ckfree(msgPtr->string);
     }
     msgPtr->numChars = Tcl_NumUtfChars(value, -1);
-    msgPtr->string = (char *) ckalloc((unsigned) (strlen(value) + 1));
+    msgPtr->string = ckalloc(strlen(value) + 1);
     strcpy(msgPtr->string, value);
     ComputeMessageGeometry(msgPtr);
 

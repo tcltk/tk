@@ -482,7 +482,7 @@ FreeCursor(
     }
     TkpFreeCursor(cursorPtr);
     if (cursorPtr->objRefCount == 0) {
-	ckfree((char *) cursorPtr);
+	ckfree(cursorPtr);
     }
 }
 
@@ -591,7 +591,7 @@ FreeCursorObj(
 	cursorPtr->objRefCount--;
 	if ((cursorPtr->objRefCount == 0)
 		&& (cursorPtr->resourceRefCount == 0)) {
-	    ckfree((char *) cursorPtr);
+	    ckfree(cursorPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     }

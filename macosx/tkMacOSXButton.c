@@ -106,7 +106,7 @@ TkButton *
 TkpCreateButton(
     Tk_Window tkwin)
 {
-    MacButton *macButtonPtr = (MacButton *) ckalloc(sizeof(MacButton));
+    MacButton *macButtonPtr = ckalloc(sizeof(MacButton));
 
     macButtonPtr->button = nil;
     macButtonPtr->image = nil;
