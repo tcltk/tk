@@ -192,7 +192,7 @@ typedef struct {
 typedef struct PatSeq {
     int numPats;		/* Number of patterns in sequence (usually
 				 * 1). */
-    char *script;		/* Binding script to evaluate when sequence 
+    char *script;		/* Binding script to evaluate when sequence
 				 * matches (ckalloc()ed) */
     int flags;			/* Miscellaneous flag values; see below for
 				 * definitions. */
@@ -1223,7 +1223,7 @@ Tk_BindEvent(
     TkDisplay *oldDispPtr;
     XEvent *ringPtr;
     PatSeq *vMatchDetailList, *vMatchNoDetailList;
-    int flags, oldScreen, i;
+    int flags, oldScreen;
     Tcl_Interp *interp;
     Tcl_DString scripts, savedResult;
     Detail detail;
@@ -1475,7 +1475,6 @@ Tk_BindEvent(
 
     p = Tcl_DStringValue(&scripts);
     end = p + Tcl_DStringLength(&scripts);
-    i = 0;
 
     /*
      * Be carefule when dereferencing screenPtr or bindInfoPtr. If we evaluate
