@@ -1067,10 +1067,9 @@ TkFocusSplit(
 				 * new toplevel. */
 {
     ToplevelFocusInfo *tlFocusPtr;
-    DisplayFocusInfo *displayFocusPtr;
     TkWindow *topLevelPtr, *subWinPtr;
 
-    displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
+    FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
 
     /*
      * Find the top-level window for winPtr, then find (or create) a record
