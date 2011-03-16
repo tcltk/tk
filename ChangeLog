@@ -1,3 +1,7 @@
+2011-03-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/configure (autoconf-2.59)
+
 2011-03-12  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWin32Dll.c: Eliminate unneeded _TkFinalize wrapper.
