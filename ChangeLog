@@ -5,6 +5,12 @@
 	Backported from TEA, but kept all original platform code which was
 	removed from TEA.
 
+2011-03-14  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkBind.c:      Eliminate some more unneeded write-only
+	* generic/tkCanvUtil.c:  variables (discovered by gcc-4.6)
+	* generic/tkFocus.c:
+
 2011-03-12  Donal K. Fellows  <dkf@users.sf.net>
 
 	Remove casts from uses of ckalloc/ckfree/... now that Tcl declares
