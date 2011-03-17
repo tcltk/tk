@@ -81,6 +81,11 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
     }
 
     if {[tk windowingsystem] eq "win32"} {
+        # [Bug 3181181]: Find the toplevel window for the menu
+        set parent [winfo toplevel $parent]
+        while {[winfo class $parent] eq "Menu"} {
+            set parent [winfo toplevel [winfo parent $parent]]
+        }
 	wm transient $menu [winfo toplevel $parent]
 	wm attributes $menu -toolwindow 1
     }
