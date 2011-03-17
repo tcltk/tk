@@ -1770,7 +1770,7 @@ TkCanvTranslatePath(
 		    b[numOutput*2] = -yN;
 		    b[numOutput*2 + 1] = xClip;
 		    numOutput++;
-		    assert(numOutput <= maxOutput);
+		    assert(numOutput <= numVertex*3);
 		    priorY = yN;
 		    inside = 0;
 		} else if (i == 0) {
@@ -1809,14 +1809,14 @@ TkCanvTranslatePath(
 			b[numOutput*2] = -yN;
 			b[numOutput*2 + 1] = xClip;
 			numOutput++;
-			assert(numOutput <= maxOutput);
+			assert(numOutput <= numVertex*3);
 		    }
 		    inside = 1;
 		}
 		b[numOutput*2] = -y;
 		b[numOutput*2 + 1] = x;
 		numOutput++;
-		assert(numOutput <= maxOutput);
+		assert(numOutput <= numVertex*3);
 	    }
 	}
 
