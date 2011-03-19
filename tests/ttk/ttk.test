@@ -197,6 +197,23 @@ test ttk-2.7 "instate scripts, true" -body {
     set x
 } -result 1
 
+test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
+    destroy .b
+    set ttk28 {}
+    pack [ttk::button .b -command {set ::ttk28 failed}]
+} -body { 
+    bind .b <ButtonPress-1> {after 0 {.b configure -state disabled}}
+    after 1 {event generate .b <ButtonPress-1>}
+    after 20 {event generate .b <ButtonRelease-1>}
+    set aid [after 100 {set ::ttk28 [.b instate {disabled !pressed}]}]
+    vwait ::ttk28
+    after cancel $aid
+    set ttk28
+} -cleanup {
+    destroy .b
+    unset -nocomplain ttk28 aid
+} -result 1
+
 # misc. error detection
 test ttk-3.0 "Bad option" -body {
     ttk::button .bad -badoption foo
