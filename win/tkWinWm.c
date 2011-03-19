@@ -3642,9 +3642,8 @@ WmForgetCmd(
     if (Tk_IsTopLevel(frameWin)) {
 	Tk_UnmapWindow(frameWin);
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
-	if (Tk_IsMapped(Tk_Parent(frameWin))) {
-	    RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
-	}
+	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
+	RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
 	TkWmDeadWindow(winPtr);
 	/* flags (above) must be cleared before calling */
 	/* TkMapTopFrame (below) */
