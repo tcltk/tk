@@ -2485,7 +2485,7 @@ GetMenuLabelGeometry(mePtr, tkfont, fmPtr, widthPtr, heightPtr)
 					 * portion */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
-    int haveImage = 0, haveText = 0;
+    int haveImage = 0;
  
     if (mePtr->image != NULL) {
     	Tk_SizeOfImage(mePtr->image, widthPtr, heightPtr);
@@ -2972,7 +2972,14 @@ SetDefaults(
     TEXTMETRIC tm;
     int pointSize;
     HFONT menuFont;
-    NONCLIENTMETRICS ncMetrics;
+    /* See: [Bug #3239768] tk8.4.19 (and later) WIN32 menu font support */
+    struct {
+        NONCLIENTMETRICS metrics;
+#if (WINVER < 0x0600)
+        int padding;
+#endif
+    } nc;
+    OSVERSIONINFO os;
 
     /*
      * Set all of the default options. The loop will terminate when we run 
@@ -2990,10 +2997,17 @@ SetDefaults(
     }
     Tcl_DStringInit(&menuFontDString);
 
-    ncMetrics.cbSize = sizeof(ncMetrics);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncMetrics),
-	    &ncMetrics, 0);
-    menuFont = CreateFontIndirect(&ncMetrics.lfMenuFont);
+    nc.metrics.cbSize = sizeof(nc);
+
+    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    GetVersionEx(&os);
+    if (os.dwMajorVersion < 6) {
+	nc.metrics.cbSize -= sizeof(int);
+    }
+
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, nc.metrics.cbSize,
+	    &nc.metrics, 0);
+    menuFont = CreateFontIndirect(&nc.metrics.lfMenuFont);
     SelectObject(scratchDC, menuFont);
     GetTextMetrics(scratchDC, &tm);
     GetTextFace(scratchDC, LF_FACESIZE, faceName);
