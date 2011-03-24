@@ -1,3 +1,8 @@
+2011-03-24  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinMenu.c: [Bug #3239768] tk8.4.19 (and later) WIN32
+	menu font support.
+
 2011-03-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4:    Make SHLIB_LD_LIBS='${LIBS}' the default and
@@ -20,7 +25,7 @@
 	* unix/configure.in: Use a symbol from libXft itself for the link
 	test rather than one from libfreetype, because the latter doesn't
 	work when the linker is called with --as-needed.
-	
+
 2011-01-25  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkSelect.c: [Patch #3129527]: Fix buffer overflow w/ GCC 4.5 and
@@ -29,7 +34,7 @@
 
 2011-01-22  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkEntry.c(ttk::combobox): Add missing 
+	* generic/ttk/ttkEntry.c(ttk::combobox): Add missing
 	'validate' command (reported by schelte).
 
 2011-01-19  Jan Nijtmans  <nijtmans@users.sf.net>
@@ -565,7 +570,7 @@
 	"Hebrew writing") to be consistent with at least the Greek and Russian
 	strings. Thanks to Rodrigo Readi for calling the inconsistency to our
 	attention.
-	
+
 2009-12-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkInt.decls:	[Bugs 220600, 220690]: Comment that
@@ -698,15 +703,15 @@
 2009-10-22  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkText.c (CreateWidget, TextEditUndo, TextEditRedo)
-	(TextEditCmd, UpdateDirtyFlag): 
+	(TextEditCmd, UpdateDirtyFlag):
 	* generic/tkText.h: [Patch 1469210]: Corrected handling of marking as
 	dirty when inserting after an undo from a non-dirty state.
 
 	* library/xmfbox.tcl (MotifFDialog_FileTypes)
-	(MotifFDialog_ActivateSEnt): 
-	* library/tkfbox.tcl (Done, ::tk::dialog::file::): 
-	* macosx/tkMacOSXDialog.c (Tk_GetOpenFileObjCmd): 
-	* win/tkWinDialog.c (GetFileNameW, GetFileNameA): 
+	(MotifFDialog_ActivateSEnt):
+	* library/tkfbox.tcl (Done, ::tk::dialog::file::):
+	* macosx/tkMacOSXDialog.c (Tk_GetOpenFileObjCmd):
+	* win/tkWinDialog.c (GetFileNameW, GetFileNameA):
 	* doc/getOpenFile.n: [Patch 2168768]: Corrected handling of the
 	-typevariable option to be consistently global; it's the only way it
 	can work even close to the same on all platforms.
@@ -936,7 +941,7 @@
 
 	* win/tkWinDialog.c (Tk_ChooseDirectoryObjCmd): [Bug 2779910]: Enable
 	the new style choosedir that has a "New Folder" button, with
-	::tk::winChooseDirFlags override for new behavior. 
+	::tk::winChooseDirFlags override for new behavior.
 
 2009-04-15  Don Porter  <dgp@users.sourceforge.net>
 
@@ -964,7 +969,7 @@
 
 2009-04-10  Joe English  <jenglish@users.sourceforge.net
 
-	* library/palette.tcl(tk_setPalette): Don't set 
+	* library/palette.tcl(tk_setPalette): Don't set
 	*selectColor: #b03060; this makes radio- and checkbuttons
 	look wrong post-TIP#109.
 
@@ -1077,7 +1082,7 @@
 	* unix/tcl.m4: Corrected a typo ($(SHLIB_VERSION) should be
 	${SHLIB_VERSION}).
 	* unix/configure: Autoconf 2.59
-	
+
 2009-01-19  Kevin B. Kenny  <kennykb@acm.org>
 
 	* unix/Makefile.in: Added a CONFIG_INSTALL_DIR parameter so that
@@ -1087,7 +1092,7 @@
 	packagers to customize SHLIB_VERSION on BSD-derived systems.
 	Thanks to Stuart Cassoff for [Patch 907924].
 	* unix/configure: Autoconf 2.59
-	
+
 2009-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkImgPhoto.c: fix for aMSN compatibility [tcl-Bug 2507326]
@@ -1112,7 +1117,7 @@
 
 2008-12-22  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkWidget.c: Don't crash when 
+	* generic/ttk/ttkWidget.c: Don't crash when
 	application uses nondefault visual [Bug 2264732]
 	(Backport from trunk change 2008-11-11)
 	* Workaround for [Bug 2207435]
@@ -1129,7 +1134,7 @@
 	* generic/tkInt.h:       2218964]
 	* generic/tkObj.c:
 	* generic/tkText.c:
-	
+
 2008-12-21  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tk.h:		Bump to 8.5.6 for release.
@@ -1350,7 +1355,7 @@
 2008-07-04  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkDefaultTheme.c, generic/ttk/ttkClamTheme.c,
-	generic/ttk/ttkClassicTheme.c, generic/ttk/ttkElements.c: 
+	generic/ttk/ttkClassicTheme.c, generic/ttk/ttkElements.c:
 	Backport [Bug 2009213].
 
 2008-06-29  Don Porter  <dgp@users.sourceforge.net>
@@ -1442,7 +1447,7 @@
 
 2008-05-23  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/ttk/ttkLabel.c: Avoid passing width or height <= 0 to 
+	* generic/ttk/ttkLabel.c: Avoid passing width or height <= 0 to
 	Tk_RedrawImage, as this leads to a panic on Windows [Bug 1967576]
 
 2008-05-11  Pat Thoyts  <patthoyts@users.sourceforge.net>
@@ -1538,7 +1543,7 @@
 
 2008-03-26  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/tkInt.h, generic/tkEvent.c, unix/tkUnixEvent.c, 
+	* generic/tkInt.h, generic/tkEvent.c, unix/tkUnixEvent.c,
 	unix/tkUnixKey.c: XIM reorganization and cleanup; see
 	[Patch 1919791] for details.
 
@@ -1818,8 +1823,8 @@
 
 2007-12-12  Jeff Hobbs  <jeffh@ActiveState.com>
 
-	* generic/tkText.c (DeleteIndexRange, TextEditCmd, UpdateDirtyFlag): 
-	* tests/text.test (text-25.10.1,25.11.[12]): 
+	* generic/tkText.c (DeleteIndexRange, TextEditCmd, UpdateDirtyFlag):
+	* tests/text.test (text-25.10.1,25.11.[12]):
 	Don't require [update idle] to trigger Modified event [Bug 1809538]
 	Modified virtual event should only fire on state change [Bug 1799782]
 	Make sure we delete chars before triggering <<Modified>> [Bug 1737288]
@@ -2184,7 +2189,7 @@
 2007-11-07  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/ttkTheme.c (Ttk_ElementSize): Fixed longstanding,
-	subtle bug that caused element padding to sometimes be counted 
+	subtle bug that caused element padding to sometimes be counted
 	twice in size computations.
 
 	* generic/ttk/ttkElements.c, generic/ttk/ttkClamTheme.c,
@@ -2217,10 +2222,10 @@
 
 	* generic/ttk/ttkTreeview.c: Use null "treearea" element for
 	treeview owner-draw area instead of "client", to avoid
-	nameclash with Notebook.client element (this was causing 
+	nameclash with Notebook.client element (this was causing
 	sizing anomalies in XP theme, and introduced extraneous
 	padding).
-	* generic/ttk/ttkDefaultTheme.c: Treeitem.indicator element 
+	* generic/ttk/ttkDefaultTheme.c: Treeitem.indicator element
 	needs left margin now.
 
 2007-11-04  Daniel Steffen  <das@users.sourceforge.net>
@@ -2245,7 +2250,7 @@
 	* doc/menu.n:
 
 	* macosx/tkMacOSXEvent.c (TkMacOSXProcessCommandEvent): fix boolean arg
-	
+
 	* macosx/Wish.xcodeproj/project.pbxproj: add new demo file.
 	* macosx/Wish.xcode/project.pbxproj:
 
@@ -2464,7 +2469,7 @@
 2007-10-24  Joe English  <jenglish@users.sourceforge.net>
 
 	* generic/ttk/*.c, win/{ttkWinMonitor,ttkWinTheme,ttkWinXPTheme}.c,
-	* macosx/ttkMacOSXTheme.c: Move widget layout registration 
+	* macosx/ttkMacOSXTheme.c: Move widget layout registration
 	from TtkElements_Init() to widget *_Init() routines.
 	Renaming/consistency: s/...ElementGeometry()/...ElementSize()/
 
