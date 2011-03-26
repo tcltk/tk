@@ -402,7 +402,7 @@ WISH_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES)
 #---------------------------------------------------------------------
 
 !if $(DEBUG)
-ldebug	= -debug:full -debugtype:cv
+ldebug	= -debug -debugtype:cv
 !else
 ldebug	= -release -opt:ref -opt:icf,3
 !endif
