@@ -562,7 +562,7 @@ typedef struct TkIntPlatStubs {
 
 #ifdef __WIN32__ /* WIN */
     char * (*tkAlignImageData) (XImage *image, int alignment, int bitOrder); /* 0 */
-    void *reserved1;
+    VOID *reserved1;
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 2 */
     unsigned long (*tkpGetMS) (void); /* 3 */
     void (*tkPointerDeadWindow) (TkWindow *winPtr); /* 4 */
@@ -601,8 +601,8 @@ typedef struct TkIntPlatStubs {
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 0 */
-    void *reserved1;
-    void *reserved2;
+    VOID *reserved1;
+    VOID *reserved2;
     void (*tkPointerDeadWindow) (TkWindow *winPtr); /* 3 */
     void (*tkpSetCapture) (TkWindow *winPtr); /* 4 */
     void (*tkpSetCursor) (TkpCursor cursor); /* 5 */
@@ -613,14 +613,14 @@ typedef struct TkIntPlatStubs {
     int (*tkMacOSXDispatchMenuEvent) (int menuID, int index); /* 10 */
     void (*tkMacOSXInstallCursor) (int resizeOverride); /* 11 */
     void (*tkMacOSXHandleTearoffMenu) (void); /* 12 */
-    void *reserved13;
+    VOID *reserved13;
     int (*tkMacOSXDoHLEvent) (EventRecord *theEvent); /* 14 */
-    void *reserved15;
+    VOID *reserved15;
     Window (*tkMacOSXGetXWindow) (WindowRef macWinPtr); /* 16 */
     int (*tkMacOSXGrowToplevel) (WindowRef whichWindow, Point start); /* 17 */
     void (*tkMacOSXHandleMenuSelect) (MenuID theMenu, MenuItemIndex theItem, int optionKeyPressed); /* 18 */
-    void *reserved19;
-    void *reserved20;
+    VOID *reserved19;
+    VOID *reserved20;
     void (*tkMacOSXInvalidateWindow) (MacDrawable *macWin, int flag); /* 21 */
     int (*tkMacOSXIsCharacterMissing) (Tk_Font tkfont, unsigned int searchChar); /* 22 */
     void (*tkMacOSXMakeRealWindowExist) (TkWindow *winPtr); /* 23 */
@@ -648,11 +648,11 @@ typedef struct TkIntPlatStubs {
     void (*tkMacOSXPreprocessMenu) (void); /* 45 */
     int (*tkpIsWindowFloating) (WindowRef window); /* 46 */
     Tk_Window (*tkMacOSXGetCapture) (void); /* 47 */
-    void *reserved48;
+    VOID *reserved48;
     Window (*tkGetTransientMaster) (TkWindow *winPtr); /* 49 */
     int (*tkGenerateButtonEvent) (int x, int y, Window window, unsigned int state); /* 50 */
     void (*tkGenWMDestroyEvent) (Tk_Window tkwin); /* 51 */
-    void *reserved52;
+    VOID *reserved52;
     unsigned long (*tkpGetMS) (void); /* 53 */
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
