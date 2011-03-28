@@ -1071,7 +1071,7 @@ TkBTreeInsertChars(
 	    curPtr->nextPtr = segPtr;
 	}
 	segPtr->size = chunkSize;
-	strncpy(segPtr->body.chars, string, (size_t) chunkSize);
+	memcpy(segPtr->body.chars, string, (size_t) chunkSize);
 	segPtr->body.chars[chunkSize] = 0;
 
 	if (eol[-1] != '\n') {
@@ -4550,12 +4550,13 @@ CharSplitProc(
     newPtr1->typePtr = &tkTextCharType;
     newPtr1->nextPtr = newPtr2;
     newPtr1->size = index;
-    strncpy(newPtr1->body.chars, segPtr->body.chars, (size_t) index);
+    memcpy(newPtr1->body.chars, segPtr->body.chars, (size_t) index);
     newPtr1->body.chars[index] = 0;
     newPtr2->typePtr = &tkTextCharType;
     newPtr2->nextPtr = segPtr->nextPtr;
     newPtr2->size = segPtr->size - index;
-    strcpy(newPtr2->body.chars, segPtr->body.chars + index);
+    memcpy(newPtr2->body.chars, segPtr->body.chars + index, newPtr2->size);
+    newPtr2->body.chars[newPtr2->size] = 0;
     ckfree(segPtr);
     return newPtr1;
 }
@@ -4595,8 +4596,9 @@ CharCleanupProc(
     newPtr->typePtr = &tkTextCharType;
     newPtr->nextPtr = segPtr2->nextPtr;
     newPtr->size = segPtr->size + segPtr2->size;
-    strcpy(newPtr->body.chars, segPtr->body.chars);
-    strcpy(newPtr->body.chars + segPtr->size, segPtr2->body.chars);
+    memcpy(newPtr->body.chars, segPtr->body.chars, segPtr->size);
+    memcpy(newPtr->body.chars + segPtr->size, segPtr2->body.chars, segPtr2->size);
+    newPtr->body.chars[newPtr->size] = 0;
     ckfree(segPtr);
     ckfree(segPtr2);
     return newPtr;

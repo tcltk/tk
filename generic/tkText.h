@@ -170,7 +170,7 @@ typedef struct TkTextSegment {
     int size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[4];		/* Characters that make up character info.
+	char chars[1];		/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
