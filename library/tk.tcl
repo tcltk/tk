@@ -522,10 +522,10 @@ proc ::tk::TabToWindow {w} {
 }
 
 # ::tk::UnderlineAmpersand --
-# This procedure takes some text with ampersand and returns
-# text w/o ampersand and position of the ampersand.
-# Double ampersands are converted to single ones.
-# Position returned is -1 when there is no ampersand.
+#	This procedure takes some text with ampersand and returns text w/o
+#	ampersand and position of the ampersand.  Double ampersands are
+#	converted to single ones.  Position returned is -1 when there is no
+#	ampersand.
 #
 proc ::tk::UnderlineAmpersand {text} {
     set s [string map {&& & & \ufeff} $text]
@@ -534,8 +534,8 @@ proc ::tk::UnderlineAmpersand {text} {
 }
 
 # ::tk::SetAmpText -- 
-# Given widget path and text with "magic ampersands",
-# sets -text and -underline options for the widget
+#	Given widget path and text with "magic ampersands", sets -text and
+#	-underline options for the widget
 #
 proc ::tk::SetAmpText {widget text} {
     lassign [UnderlineAmpersand $text] newtext under
@@ -543,8 +543,8 @@ proc ::tk::SetAmpText {widget text} {
 }
 
 # ::tk::AmpWidget --
-# Creates new widget, turning -text option into -text and
-# -underline options, returned by ::tk::UnderlineAmpersand.
+#	Creates new widget, turning -text option into -text and -underline
+#	options, returned by ::tk::UnderlineAmpersand.
 #
 proc ::tk::AmpWidget {class path args} {
     set options {}
@@ -564,8 +564,8 @@ proc ::tk::AmpWidget {class path args} {
 }
 
 # ::tk::AmpMenuArgs --
-# Processes arguments for a menu entry, turning -label option into
-# -label and -underline options, returned by ::tk::UnderlineAmpersand.
+#	Processes arguments for a menu entry, turning -label option into
+#	-label and -underline options, returned by ::tk::UnderlineAmpersand.
 #
 proc ::tk::AmpMenuArgs {widget add type args} {
     set options {}
@@ -581,36 +581,41 @@ proc ::tk::AmpMenuArgs {widget add type args} {
 }
 
 # ::tk::FindAltKeyTarget --
-# search recursively through the hierarchy of visible widgets
-# to find button or label which has $char as underlined character
+#	Search recursively through the hierarchy of visible widgets to find
+#	button or label which has $char as underlined character.
 #
 proc ::tk::FindAltKeyTarget {path char} {
-    switch -- [winfo class $path] {
-	Button - Label - 
-        TButton - TLabel - TCheckbutton {
-	    if {[string equal -nocase $char \
-		  [string index [$path cget -text] [$path cget -underline]]]} {
-		return $path
-	    } else {
-		return {}
+    set class [winfo class $path]
+    if {$class in {
+	Button Checkbutton Label Radiobutton
+	TButton TCheckbutton TLabel TRadiobutton
+    } && [string equal -nocase $char \
+	    [string index [$path cget -text] [$path cget -underline]]]} {
+	return $path
+    }
+    set subwins [concat [grid slaves $path] [pack slaves $path] \
+	    [place slaves $path]]
+    if {$class eq "Canvas"} {
+	foreach item [$path find all] {
+	    if {[$path type $item] eq "window"} {
+		set w [$path itemcget $item -window]
+		if {$w ne ""} {lappend subwins $w}
 	    }
 	}
-	default {
-	    foreach child [concat [grid slaves $path] \
-		    [pack slaves $path] [place slaves $path]] {
-		set target [FindAltKeyTarget $child $char]
-		if {$target ne ""} {
-		    return $target
-		}
-	    }
+    } elseif {$class eq "Text"} {
+	lappend subwins {*}[$path window names]
+    }
+    foreach child $subwins {
+	set target [FindAltKeyTarget $child $char]
+	if {$target ne ""} {
+	    return $target
 	}
     }
-    return {}
 }
 
 # ::tk::AltKeyInDialog --
-# <Alt-Key> event handler for standard dialogs. Sends <<AltUnderlined>>
-# to button or label which has appropriate underlined character
+#	<Alt-Key> event handler for standard dialogs. Sends <<AltUnderlined>>
+#	to button or label which has appropriate underlined character.
 #
 proc ::tk::AltKeyInDialog {path key} {
     set target [FindAltKeyTarget $path $key]
@@ -620,7 +625,7 @@ proc ::tk::AltKeyInDialog {path key} {
 }
 
 # ::tk::mcmaxamp --
-# Replacement for mcmax, used for texts with "magic ampersand" in it.
+#	Replacement for mcmax, used for texts with "magic ampersand" in it.
 #
 
 proc ::tk::mcmaxamp {args} {
