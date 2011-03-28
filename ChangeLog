@@ -1,11 +1,18 @@
+2011-03-28  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/tk.tcl (::tk::FindAltKeyTarget): Make this handle the
+	traversal of the logical window manager hierarchy correctly. Based on
+	comments by Emiliano Gavilan.
+
 2011-03-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkTextBTree.c: [Bug 3129527]: Fix buffer overflow w/ GCC 4.5 and
-	-D_FORTIFY_SOURCE=2. One more place where this problem could appear.
+	* generic/tkTextBTree.c: [Bug 3129527]: Fix buffer overflow w/ GCC 4.5
+	and -D_FORTIFY_SOURCE=2. One more place where this problem could
+	appear.
 
 2011-03-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinMenu.c: [Bug #3239768] tk8.4.19 (and later) WIN32
+	* win/tkWinMenu.c: [Bug #3239768]: tk8.4.19 (and later) WIN32
 	menu font support.
 
 2011-03-16  Jan Nijtmans  <nijtmans@users.sf.net>
