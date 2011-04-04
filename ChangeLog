@@ -1,3 +1,9 @@
+2011-04-04  Peter Spjuth  <peter.spjuth@gmail.com>
+
+	* tests/grid.test:
+	* generic/tkGrid.c: [Bug 723765]: When a slave was removed from grid,
+	the -in option was not remembered.
+
 2011-04-04  Joe Mistachkin  <joe@mistachkin.com>
 
 	* win/tkWinDialog.c (FontchooserShowCmd): Change the CHOOSEFONT and
