@@ -1,5 +1,11 @@
 2011-04-04  Peter Spjuth  <peter.spjuth@gmail.com>
 
+	* tests/grid.test:
+	* generic/tkGrid.c: [Bug 723765]: When a slave was removed from grid,
+	the -in option was not remembered.
+
+2011-04-04  Peter Spjuth  <peter.spjuth@gmail.com>
+
 	* doc/labelframe.n:
 	* doc/frame.n:
 	* generic/tkFrame.c: [Bug 2997657]: Removed -container from labelframe
