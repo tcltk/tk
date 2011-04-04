@@ -183,6 +183,10 @@ static const Tk_OptionSpec commonOptSpec[] = {
     {TK_OPTION_STRING, "-colormap", "colormap", "Colormap",
 	DEF_FRAME_COLORMAP, -1, Tk_Offset(Frame, colormapName),
 	TK_OPTION_NULL_OK, 0, 0},
+    /*
+     * Having -container is useless in a labelframe since a container has
+     * no border. It should be deprecated.
+     */
     {TK_OPTION_BOOLEAN, "-container", "container", "Container",
 	DEF_FRAME_CONTAINER, -1, Tk_Offset(Frame, isContainer), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",

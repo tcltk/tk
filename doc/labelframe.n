@@ -46,15 +46,6 @@ If the \fBcolormap\fR option is not specified, the new window
 uses the same colormap as its parent.
 This option may not be changed with the \fBconfigure\fR
 widget command.
-.OP \-container container Container
-The value must be a boolean.  If true, it means that this window will
-be used as a container in which some other application will be embedded
-(for example, a Tk toplevel can be embedded using the \fB\-use\fR option).
-The window will support the appropriate window manager protocols for
-things like geometry requests.  The window should not have any
-children of its own in this application.
-This option may not be changed with the \fBconfigure\fR
-widget command.
 .OP \-height height Height
 Specifies the desired height for the window in any of the forms
 acceptable to \fBTk_GetPixels\fR.
