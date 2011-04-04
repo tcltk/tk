@@ -1,3 +1,12 @@
+2011-04-04  Peter Spjuth  <peter.spjuth@gmail.com>
+
+	* doc/labelframe.n:
+	* doc/frame.n:
+	* generic/tkFrame.c: [Bug 2997657]: Removed -container from labelframe
+	documentation since it does not work as expected and does not make
+	sense as a container. Added note to frame about restrictions when used
+	as a container.
+
 2011-03-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkTextBTree.c: [Bug 3129527]: Fix buffer overflow w/ GCC 4.5 and
