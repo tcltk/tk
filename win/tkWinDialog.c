@@ -2356,10 +2356,10 @@ FontchooserShowCmd(
 
     Tk_MakeWindowExist(parent);
 
-    ZeroMemory(&cf, sizeof(CHOOSEFONT));
-    ZeroMemory(&lf, sizeof(LOGFONT));
+    ZeroMemory(&cf, sizeof(CHOOSEFONTA));
+    ZeroMemory(&lf, sizeof(LOGFONTA));
     lf.lfCharSet = DEFAULT_CHARSET;
-    cf.lStructSize = sizeof(CHOOSEFONT);
+    cf.lStructSize = sizeof(CHOOSEFONTA);
     cf.hwndOwner = Tk_GetHWND(Tk_WindowId(parent));
     cf.lpLogFont = &lf;
     cf.nFontType = SCREEN_FONTTYPE;
