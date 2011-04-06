@@ -14,6 +14,8 @@
  * RCS: @(#) $Id: tkAppInit.c,v 1.12 2010/09/23 21:45:14 nijtmans Exp $
  */
 
+#undef BUILD_tk
+#undef STATIC_BUILD
 #include "tk.h"
 
 #ifdef TK_TEST
@@ -29,7 +31,8 @@ extern Tcl_PackageInitProc Tktest_Init;
 #ifndef TK_LOCAL_APPINIT
 #define TK_LOCAL_APPINIT Tcl_AppInit
 #endif
-extern int TK_LOCAL_APPINIT(Tcl_Interp *interp);
+MODULE_SCOPE int TK_LOCAL_APPINIT(Tcl_Interp *);
+MODULE_SCOPE int main(int, char **);
 
 /*
  * The following #if block allows you to change how Tcl finds the startup
