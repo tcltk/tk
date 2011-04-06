@@ -1,3 +1,8 @@
+2011-04-06  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tkAppInit.c:  Make symbols "main" and "Tcl_AppInit"
+	MODULE_SCOPE: there is absolutely no reason for exporting them.
+
 2011-04-04  Peter Spjuth  <peter.spjuth@gmail.com>
 
 	* tests/grid.test:
