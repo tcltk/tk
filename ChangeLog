@@ -1,3 +1,13 @@
+<<<<<<< BEGIN MERGE CONFLICT: original content first <<<<<<<
+2011-03-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.decls:     [Tcl Bug 3029891]: Functions that don't belong in
+	* generic/tkDecls.h:    the stub table. Tk part follow-up: Separate non-stub
+	* generic/tkStubInit.c: entries in tkDecls.h, and hide away the obsolete
+	stub entries using macros.
+
+2011-03-28  Donal K. Fellows  <dkf@users.sf.net>
+======= original content above; conflict below =============
 2011-04-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tkAppInit.c:  Make symbols "main" and "Tcl_AppInit"
@@ -28,6 +38,7 @@
 	as a container.
 
 2011-03-28  Donal K. Fellows  <dkf@users.sf.net>
+>>>>>>> END MERGE CONFLICT: conflict last >>>>>>>>>>>>>>>>>>
 
 	* library/tk.tcl (::tk::FindAltKeyTarget): Make this handle the
 	traversal of the logical window manager hierarchy correctly. Based on
