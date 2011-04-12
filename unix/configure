@@ -1460,9 +1460,9 @@ fi
 
 	if test x"${ac_cv_c_tclconfig}" = x ; then
 	    TCL_BIN_DIR="# no Tcl configs found"
-	    { echo "$as_me:$LINENO: WARNING: Can't find Tcl configuration definitions" >&5
-echo "$as_me: WARNING: Can't find Tcl configuration definitions" >&2;}
-	    exit 0
+	    { { echo "$as_me:$LINENO: error: Can't find Tcl configuration definitions. Use --with-tcl to specify a directory containing tclConfig.sh" >&5
+echo "$as_me: error: Can't find Tcl configuration definitions. Use --with-tcl to specify a directory containing tclConfig.sh" >&2;}
+   { (exit 1); exit 1; }; }
 	else
 	    no_tcl=
 	    TCL_BIN_DIR="${ac_cv_c_tclconfig}"
@@ -1501,7 +1501,7 @@ echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
     elif test "`uname -s`" = "Darwin"; then
 	# If Tcl was built as a framework, attempt to use the libraries
 	# from the framework at the given location so that linking works
-	# against Tcl.framework installed in an arbitary location.
+	# against Tcl.framework installed in an arbitrary location.
 	case ${TCL_DEFS} in
 	    *TCL_FRAMEWORK*)
 		if test -f "${TCL_BIN_DIR}/${TCL_LIB_FILE}"; then
