@@ -45,7 +45,7 @@ that is, the progress bar completes one
 .QW cycle
 when the \fB\-value\fR increases by \fB\-maximum\fR.
 .OP \-variable variable Variable
-The name of a Tcl variable which is linked to the \fB\-value\fR.
+The name of a global Tcl variable which is linked to the \fB\-value\fR.
 If specified, the \fB\-value\fR of the progress bar is 
 automatically set to the value of the variable whenever 
 the latter is modified.
