@@ -68,7 +68,7 @@ Specifies one of three states for the entry,
 \fBnormal\fR, \fBdisabled\fR, or \fBreadonly\fR.
 See \fBWIDGET STATES\fR, below.
 .OP \-textvariable textVariable Variable
-Specifies the name of a variable whose value is linked 
+Specifies the name of a global variable whose value is linked 
 to the entry widget's contents.
 Whenever the variable changes value, the widget's contents are updated,
 and vice versa.

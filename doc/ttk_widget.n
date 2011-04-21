@@ -77,7 +77,7 @@ and other button-like widgets:
 Specifies a text string to be displayed inside the widget
 (unless overridden by \fB\-textvariable\fR).
 .OP \-textvariable textVariable Variable
-Specifies the name of variable whose value will be used
+Specifies the name of a global variable whose value will be used
 in place of the \fB\-text\fR resource.
 .OP \-underline underline Underline
 If set, specifies the integer index (0-based) of a character to underline
