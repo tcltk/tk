@@ -46,7 +46,7 @@ In the \fBnormal\fR state,
 the text field is directly editable.
 In the \fBdisabled\fR state, no interaction is possible.
 .OP \-textvariable textVariable TextVariable
-Specifies the name of a variable whose value is linked 
+Specifies the name of a global variable whose value is linked 
 to the widget value.
 Whenever the variable changes value the widget value is updated,
 and vice versa.

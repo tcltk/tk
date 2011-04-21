@@ -1,3 +1,15 @@
+2011-04-21  Peter Spjuth  <peter.spjuth@gmail.com>
+
+	* doc/checkbutton.n: Document all variable options as global.
+	* doc/radiobutton.n:
+	* doc/listbox.n:
+	* doc/menu.n:
+	* doc/options.n:
+	* doc/ttk_combobox.n:
+	* doc/ttk_entry.n:
+	* doc/ttk_progressbar.n:
+	* doc/ttk_widget.n:
+
 2011-04-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tkAppInit.c:  Make symbols "main" and "Tcl_AppInit"

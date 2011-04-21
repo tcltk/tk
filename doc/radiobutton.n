@@ -102,7 +102,7 @@ selection, also known as the tri-state mode.  Defaults to
 Specifies value to store in the button's associated variable whenever
 this button is selected.
 .OP \-variable variable Variable
-Specifies name of global variable to set whenever this button is
+Specifies the name of a global variable to set whenever this button is
 selected.  Changes in this variable also cause the button to select
 or deselect itself.
 Defaults to the value \fBselectedButton\fR.

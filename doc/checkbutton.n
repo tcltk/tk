@@ -106,7 +106,7 @@ Specifies the value that causes the checkbutton to display the multi-value
 selection, also known as the tri-state mode.  Defaults to
 .QW "" .
 .OP \-variable variable Variable
-Specifies name of global variable to set to indicate whether
+Specifies the name of a global variable to set to indicate whether
 or not this button is selected.  Defaults to the name of the
 button within its parent (i.e. the last element of the button
 window's path name).
