@@ -435,6 +435,9 @@ cdebug	= $(OPTIMIZATIONS)
 !else
 cdebug	=
 !endif
+!if $(SYMBOLS)
+cdebug = $(cdebug) -Zi
+!endif
 !else if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
 ### Warnings are too many, can't support warnings into errors.
 cdebug	= -Zi -Od $(DEBUGFLAGS)
