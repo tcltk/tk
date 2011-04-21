@@ -512,7 +512,7 @@ for the entry as the value to store in the variable.
 .TP
 \fB\-variable \fIvalue\fR
 Available only for checkbutton and radiobutton entries.  Specifies
-the name of a global value to set when the entry is selected.
+the name of a global variable to set when the entry is selected.
 For checkbutton entries the variable is also set when the entry
 is deselected.  For radiobutton entries, changing the variable
 causes the currently-selected entry to deselect itself.
