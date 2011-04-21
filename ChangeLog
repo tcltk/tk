@@ -1,3 +1,11 @@
+2011-04-21  Peter Spjuth  <peter.spjuth@gmail.com>
+
+	* doc/checkbutton.n: Document all variable options as global.
+	* doc/radiobutton.n:
+	* doc/listbox.n:
+	* doc/menu.n:
+	* doc/options.n:
+
 2011-03-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkTextBTree.c: [Bug 3129527]: Fix buffer overflow w/ GCC 4.5 and
