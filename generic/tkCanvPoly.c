@@ -1200,6 +1200,7 @@ PolygonDeleteCoords(
 	polyPtr->numPoints = 0;
 	if (polyPtr->coordPtr != NULL) {
 	    ckfree((char *) polyPtr->coordPtr);
+	    polyPtr->coordPtr = NULL;
 	}
 	ComputePolygonBbox(canvas, polyPtr);
 	return;
