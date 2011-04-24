@@ -1177,17 +1177,22 @@ PolygonDeleteCoords(
     int count, i;
     int length = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
-    while (first >= length) {
-	first -= length;
-    }
-    while (first < 0) {
-	first += length;
-    }
-    while (last >= length) {
-	last -= length;
-    }
-    while (last < 0) {
-	last += length;
+    if (length == 0) {
+	first = 0;
+	last = 0;
+    } else {
+	while (first >= length) {
+	    first -= length;
+	}
+	while (first < 0) {
+	    first += length;
+	}
+	while (last >= length) {
+	    last -= length;
+	}
+	while (last < 0) {
+	    last += length;
+	}
     }
 
     first &= -2;
