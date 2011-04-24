@@ -784,7 +784,7 @@ test canvas-18.3 {imove method - lines} -setup {
 } -cleanup {
     destroy .c
 } -result {0.0 0.0 4.0 4.0 2.0 2.0 3.0 3.0}
-test canvas-18.4 {imove method - lines} -constraints knownBug -setup {
+test canvas-18.4 {imove method - lines} -setup {
     canvas .c
 } -body {
     set id [.c create line 0 0 1 1 2 2 3 3]
@@ -792,7 +792,11 @@ test canvas-18.4 {imove method - lines} -constraints knownBug -setup {
     .c coords $id
 } -cleanup {
     destroy .c
-} -result {0.0 0.0 1.0 1.0 2.0 2.0 4.0 4.0}
+    # PS: Feels like a bug. Caused by end>last
+    # Deletion of "end" deletes nothing, insertion at "end" adds.
+    # imove should be changed to interpret anything > last
+    # as last, to give "end" a reasonable meaning.
+} -result {0.0 0.0 1.0 1.0 2.0 2.0 3.0 3.0 4.0 4.0}
 test canvas-18.5 {imove method - polygon} -setup {
     canvas .c
 } -body {
@@ -820,7 +824,7 @@ test canvas-18.7 {imove method - polygon} -setup {
 } -cleanup {
     destroy .c
 } -result {0.0 0.0 4.0 4.0 2.0 2.0 3.0 3.0}
-test canvas-18.8 {imove method - polygon} -constraints knownBug -setup {
+test canvas-18.8 {imove method - polygon} -setup {
     canvas .c
 } -body {
     set id [.c create polygon 0 0 1 1 2 2 3 3]
@@ -828,7 +832,11 @@ test canvas-18.8 {imove method - polygon} -constraints knownBug -setup {
     .c coords $id
 } -cleanup {
     destroy .c
-} -result {0.0 0.0 1.0 1.0 2.0 2.0 4.0 4.0}
+    # PS: Most definitely a bug. Caused by end!=last
+    # Also affected by the inconsistenecy between insert and delete in polygon
+    # imove should be changed to interpret anything > last
+    # as last, to give "end" a reasonable meaning.
+} -result {1.0 1.0 4.0 4.0 2.0 2.0 3.0 3.0}
 test canvas-18.9 {imove method - errors} -setup {
     canvas .c
 } -body {
@@ -881,6 +889,15 @@ test canvas-19.3 {rchars method - lines} -setup {
 } -cleanup {
     destroy .c
 } -result {0.0 0.0 10.0 11.0 12.0 13.0 14.0 15.0 3.0 3.0}
+test canvas-19.3b {rchars method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5 6 7]
+    .c rchars $id 2 end {10 11 12 13 14 15}
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 10.0 11.0 12.0 13.0 14.0 15.0}
 test canvas-19.4 {rchars method - polygon} -setup {
     canvas .c
 } -body {
@@ -908,6 +925,17 @@ test canvas-19.6 {rchars method - polygon} -setup {
 } -cleanup {
     destroy .c
 } -result {0.0 0.0 10.0 11.0 12.0 13.0 14.0 15.0 3.0 3.0}
+test canvas-19.6b {rchars method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5 6 7]
+    .c rchars $id 2 end {10 11 12 13 14 15}
+    .c rchars $id 2 end {10 11 12 13 14 15}
+    .c coords $id
+} -cleanup {
+    destroy .c
+    # PS: Since "dchars 2 end" deletes all, 0.0 1.0 is missing
+} -result {10.0 11.0 12.0 13.0 14.0 15.0}
 test canvas-19.7 {rchars method - text} -setup {
     canvas .c
 } -body {
@@ -935,6 +963,15 @@ test canvas-19.9 {rchars method - text} -setup {
 } -cleanup {
     destroy .c
 } -result aFOOBARe
+test canvas-19.9b {rchars method - text} -setup {
+    canvas .c
+} -body {
+    set id [.c create text 0 0 -text abcde]
+    .c rchars $id 1 end FOOBAR
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result aFOOBAR
 test canvas-19.10 {rchars method - errors} -setup {
     canvas .c
 } -body {
@@ -951,6 +988,474 @@ test canvas-19.11 {rchars method - errors} -setup {
 } -cleanup {
     destroy .c
 } -returnCodes error -result {bad index "foo"}
+
+test canvas-20.1 {index method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    set result {}
+    foreach i {-2 -1 0 1 2 3 4 5 6 7 end 2000000000} {
+        lappend result [.c index $id $i]
+    }
+    set result
+} -cleanup {
+    destroy .c
+} -result {0 0 0 0 2 2 4 4 6 6 6 6}
+
+test canvas-20.2 {index method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    set result {}
+    foreach i {-2 -1 0 1 2 3 4 5 6 7 8 9 10 11 12 13 end 2000000004} {
+        lappend result [.c index $id $i]
+    }
+    set result
+} -cleanup {
+    destroy .c
+    # PS: Wrapping is as documented.
+    # The negative result is in contradiction with the docs that guarantee >= 0
+} -result {-2 -2 0 0 2 2 4 4 6 6 2 2 4 4 6 6 6 6}
+
+test canvas-20.3 {index method - text} -setup {
+    canvas .c
+} -body {
+    set id [.c create text 0 0 -text "012"]
+    set result {}
+    foreach i {-2 -1 0 1 2 3 4 end 2000000000} {
+        lappend result [.c index $id $i]
+    }
+    set result
+} -cleanup {
+    destroy .c
+} -result {0 0 0 1 2 3 3 3 3}
+
+test canvas-21.1 {insert method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c insert $id 0 {8 9}
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {8.0 9.0 0.0 1.0 2.0 3.0 4.0 5.0}
+
+test canvas-21.2 {insert method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c insert $id 4 {8 9}
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 2.0 3.0 8.0 9.0 4.0 5.0}
+
+test canvas-21.3 {insert method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c insert $id 6 {8 9}
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 2.0 3.0 4.0 5.0 8.0 9.0}
+
+test canvas-21.4 {insert method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c insert $id 8 {8 9}
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 2.0 3.0 4.0 5.0 8.0 9.0}
+
+test canvas-21.5 {insert method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c insert $id end {8 9}
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 2.0 3.0 4.0 5.0 8.0 9.0}
+
+test canvas-21.6 {insert method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c insert $id 0 {8 9}
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {8.0 9.0 0.0 1.0 2.0 3.0 4.0 5.0}
+
+test canvas-21.7 {insert method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c insert $id 4 {8 9}
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 2.0 3.0 8.0 9.0 4.0 5.0}
+
+test canvas-21.8 {insert method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c insert $id 6 {8 9}
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 2.0 3.0 4.0 5.0 8.0 9.0}
+
+test canvas-21.9 {insert method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c insert $id 8 {8 9}
+    .c coords $id
+} -cleanup {
+    destroy .c
+    # Index 8 wraps to 2
+} -result {0.0 1.0 8.0 9.0 2.0 3.0 4.0 5.0}
+
+test canvas-21.10 {insert method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c insert $id end {8 9}
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 2.0 3.0 4.0 5.0 8.0 9.0}
+
+test canvas-21.11 {insert method - text} -setup {
+    canvas .c
+} -body {
+    set id [.c create text 0 0 -text "012"]
+    .c insert $id 0 4
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result {4012}
+
+test canvas-21.12 {insert method - text} -setup {
+    canvas .c
+} -body {
+    set id [.c create text  0 0 -text "012"]
+    .c insert $id 2 4
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result {0142}
+
+test canvas-21.13 {insert method - text} -setup {
+    canvas .c
+} -body {
+    set id [.c create text  0 0 -text "012"]
+    .c insert $id 3 4
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result {0124}
+
+test canvas-21.14 {insert method - text} -setup {
+    canvas .c
+} -body {
+    set id [.c create text  0 0 -text "012"]
+    .c insert $id 4 4
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result {0124}
+
+test canvas-21.15 {insert method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create text  0 0 -text "012"]
+    .c insert $id end 4
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result {0124}
+
+test canvas-22.1 {dchar method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c dchar $id 0 2
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {4.0 5.0}
+
+test canvas-22.2 {dchar method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c dchar $id 2 2
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 4.0 5.0}
+
+test canvas-22.3 {dchar method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c dchar $id 2 6
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0}
+
+test canvas-22.4 {dchar method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c dchar $id 4 end
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 2.0 3.0}
+
+test canvas-22.5 {dchar method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c dchar $id end end
+    .c coords $id
+} -cleanup {
+    destroy .c
+    # PS: Should deleting "end" mean deleting the last one?
+} -result {0.0 1.0 2.0 3.0 4.0 5.0}
+
+test canvas-22.6 {dchar method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5 6 7 8 9 10 11]
+    .c dchar $id 8 4
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0}
+
+test canvas-22.7 {dchar method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c dchar $id 0 2
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {4.0 5.0}
+
+test canvas-22.8 {dchar method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c dchar $id 2 2
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {0.0 1.0 4.0 5.0}
+
+test canvas-22.9 {dchar method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c dchar $id 2 6
+    .c coords $id
+} -cleanup {
+    destroy .c
+    # PS: This should keep 0 1, dchars wrapping semantics removes all
+} -result {}
+
+test canvas-22.10 {dchar method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c dchar $id 4 end
+    .c coords $id
+} -cleanup {
+    destroy .c
+    # PS: This should also keep 2 3, dchars wrapping semantics disturbs
+} -result {0.0 1.0}
+
+test canvas-22.11 {dchar method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c dchar $id end end
+    .c coords $id
+} -cleanup {
+    destroy .c
+    # PS: Wrapping causes "end" to point at beginning.
+} -result {2.0 3.0 4.0 5.0}
+
+test canvas-22.12 {dchar method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5 6 7 8 9]
+    .c dchar $id 8 4
+    .c coords $id
+} -cleanup {
+    destroy .c
+    # PS: WTF? Even if this is considered to be wrapping past
+    # end, 6.0 7.0 should be the result
+} -result {4.0 5.0}
+
+test canvas-22.13 {dchar method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5 6 7 8 9 10 11]
+    .c dchar $id 8 2
+    .c coords $id
+} -cleanup {
+    destroy .c
+    # PS: WTF? Even if this is considered to be wrapping past
+    # end, 4.0 5.0 6.0 7.0 should be the result
+} -result {2.0 3.0 4.0 5.0}
+
+test canvas-22.14 {dchar method - text} -setup {
+    canvas .c
+} -body {
+    set id [.c create text 0 0 -text "012"]
+    .c dchar $id 0 1
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result {2}
+
+test canvas-22.15 {dchar method - text} -setup {
+    canvas .c
+} -body {
+    set id [.c create text  0 0 -text "012"]
+    .c dchar $id 1 1
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result {02}
+
+test canvas-22.16 {dchar method - text} -setup {
+    canvas .c
+} -body {
+    set id [.c create text  0 0 -text "012"]
+    .c dchar $id 1 3
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result {0}
+
+test canvas-22.17 {dchar method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create text  0 0 -text "012"]
+    .c dchar $id 2 end
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result {01}
+
+test canvas-22.18 {dchar method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create text  0 0 -text "012345"]
+    .c dchar $id 4 2
+    .c itemcget $id -text
+} -cleanup {
+    destroy .c
+} -result {012345}
+
+test canvas-23.1 {coords method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c coords $id 6 7 8 9
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {6.0 7.0 8.0 9.0}
+
+test canvas-23.2 {coords method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c coords $id 6 7 8 9 10 11 12 13
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {6.0 7.0 8.0 9.0 10.0 11.0 12.0 13.0}
+
+test canvas-23.3 {coords method - lines} -setup {
+    canvas .c
+} -body {
+    set id [.c create line 0 1 2 3 4 5]
+    .c dchars $id 0 4
+    .c coords $id 6 7 8 9
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {6.0 7.0 8.0 9.0}
+
+test canvas-23.4 {coords method - line} -setup {
+    canvas .c
+} -body {
+    # This tests interaction between different coordinate allocators
+    set id [.c create line 0 1 2 3 4 5 6 7]
+    .c coords $id 6 7 8 9
+    .c insert $id 0 {4 5}
+    .c coords $id 6 7 8 9 10 11 12 13
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {6.0 7.0 8.0 9.0 10.0 11.0 12.0 13.0}
+
+test canvas-23.5 {coords method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c coords $id 6 7 8 9
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {6.0 7.0 8.0 9.0}
+
+test canvas-23.6 {coords method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c coords $id 6 7 8 9 10 11 12 13
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {6.0 7.0 8.0 9.0 10.0 11.0 12.0 13.0}
+
+test canvas-23.7 {coords method - polygon} -setup {
+    canvas .c
+} -body {
+    set id [.c create polygon 0 1 2 3 4 5]
+    .c dchars $id 0 4
+    .c coords $id 6 7 8 9
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {6.0 7.0 8.0 9.0}
+
+test canvas-23.8 {coords method - polygon} -setup {
+    canvas .c
+} -body {
+    # This tests interaction between different coordinate allocators
+    set id [.c create polygon 0 1 2 3 4 5 6 7]
+    .c coords $id 6 7 8 9
+    .c insert $id 0 {4 5}
+    .c coords $id 6 7 8 9 10 11 12 13
+    .c coords $id
+} -cleanup {
+    destroy .c
+} -result {6.0 7.0 8.0 9.0 10.0 11.0 12.0 13.0}
 
 # cleanup
 imageCleanup
