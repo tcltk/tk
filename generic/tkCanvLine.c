@@ -1167,6 +1167,9 @@ LineDeleteCoords(
     if (first < 0) {
 	first = 0;
     }
+    if (first >= length) {
+	first = length-2;
+    }
     if (last >= length) {
 	last = length-2;
     }
