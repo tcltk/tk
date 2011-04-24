@@ -1727,12 +1727,12 @@ GetPolygonIndex(
 	    goto badIndex;
 	}
 	*indexPtr &= -2; /* if odd, make it even */
-	if (!count) {
+	if (count == 0) {
 	    *indexPtr = 0;
 	} else if (*indexPtr > 0) {
 	    *indexPtr = ((*indexPtr - 2) % count) + 2;
-	} else {
-	    *indexPtr = -((-(*indexPtr)) % count);
+	} else if (*indexPtr < 0) {
+	    *indexPtr = count - (((-(*indexPtr) - 2) % count) + 2);
 	}
     }
     return TCL_OK;

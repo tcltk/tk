@@ -926,7 +926,6 @@ test canvas-19.6b {rchars method - polygon} -setup {
 } -body {
     set id [.c create polygon 0 1 2 3 4 5 6 7]
     .c rchars $id 2 end {10 11 12 13 14 15}
-    .c rchars $id 2 end {10 11 12 13 14 15}
     .c coords $id
 } -cleanup {
     destroy .c
@@ -1003,15 +1002,13 @@ test canvas-20.2 {index method - polygon} -setup {
 } -body {
     set id [.c create polygon 0 1 2 3 4 5]
     set result {}
-    foreach i {-2 -1 0 1 2 3 4 5 6 7 8 9 10 11 12 13 end 2000000004} {
+    foreach i {-10 -6 -2 -1 0 1 2 3 4 5 6 7 8 9 10 11 12 13 end 2000000004} {
         lappend result [.c index $id $i]
     }
     set result
 } -cleanup {
     destroy .c
-    # PS: Wrapping is as documented.
-    # The negative result is in contradiction with the docs that guarantee >= 0
-} -result {-2 -2 0 0 2 2 4 4 6 6 2 2 4 4 6 6 6 6}
+} -result {2 0 4 4 0 0 2 2 4 4 6 6 2 2 4 4 6 6 6 6}
 
 test canvas-20.3 {index method - text} -setup {
     canvas .c
