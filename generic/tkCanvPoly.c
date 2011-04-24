@@ -1031,6 +1031,9 @@ PolygonInsert(
 	return;
     }
     length = 2*(polyPtr->numPoints - polyPtr->autoClosed);
+    if (length == 0) {
+	beforeThis = 0;
+    }
     while (beforeThis > length) {
 	beforeThis -= length;
     }
@@ -1058,6 +1061,7 @@ PolygonInsert(
     length += objc;
     polyPtr->coordPtr = newCoordPtr;
     polyPtr->numPoints = (length/2) + polyPtr->autoClosed;
+    polyPtr->pointsAllocated = (length/2) + 1;
 
     /*
      * Close the polygon if it isn't already closed, or remove autoclosing if
@@ -1196,6 +1200,8 @@ PolygonDeleteCoords(
 
     if (count >= length) {
 	polyPtr->numPoints = 0;
+	polyPtr->autoClosed = 0;
+	polyPtr->pointsAllocated = 0;
 	if (polyPtr->coordPtr != NULL) {
 	    ckfree(polyPtr->coordPtr);
 	    polyPtr->coordPtr = NULL;
