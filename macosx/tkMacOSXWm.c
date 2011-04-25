@@ -1637,7 +1637,7 @@ WmForgetCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-#if 1
+#ifndef WM_FORGET_SUPPORTED
     Tcl_AppendResult(interp, "wm forget is not yet supported", NULL);
     return TCL_ERROR;
 #else
@@ -2393,7 +2393,7 @@ WmManageCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-#if 1
+#ifndef WM_FORGET_SUPPORTED
     Tcl_AppendResult(interp, "wm manage is not yet supported", NULL);
     return TCL_ERROR;
 #else
