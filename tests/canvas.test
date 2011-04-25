@@ -533,7 +533,7 @@ test canvas-11.3 {canvas poly dchars, bug 3291543} {
     .c create polygon 0 0 0 10 10 0
     .c dchars 1 2 end
     .c coords 1
-} {}
+} {0.0 0.0}
 
 test canvas-12.1 {canvas mm obj, patch SF-403327, 102471} -setup {
     destroy .c
@@ -828,11 +828,7 @@ test canvas-18.8 {imove method - polygon} -setup {
     .c coords $id
 } -cleanup {
     destroy .c
-    # PS: Most definitely a bug. Caused by end!=last
-    # Also affected by the inconsistenecy between insert and delete in polygon
-    # imove should be changed to interpret anything > last
-    # as last, to give "end" a reasonable meaning.
-} -result {1.0 1.0 4.0 4.0 2.0 2.0 3.0 3.0}
+} -result {0.0 0.0 1.0 1.0 2.0 2.0 4.0 4.0}
 test canvas-18.9 {imove method - errors} -setup {
     canvas .c
 } -body {
@@ -929,8 +925,7 @@ test canvas-19.6b {rchars method - polygon} -setup {
     .c coords $id
 } -cleanup {
     destroy .c
-    # PS: Since "dchars 2 end" deletes all, 0.0 1.0 is missing
-} -result {10.0 11.0 12.0 13.0 14.0 15.0}
+} -result {0.0 1.0 10.0 11.0 12.0 13.0 14.0 15.0}
 test canvas-19.7 {rchars method - text} -setup {
     canvas .c
 } -body {
@@ -1262,8 +1257,7 @@ test canvas-22.9 {dchars method - polygon} -setup {
     .c coords $id
 } -cleanup {
     destroy .c
-    # PS: This should keep 0 1, dchars wrapping semantics removes all
-} -result {}
+} -result {0.0 1.0}
 
 test canvas-22.10 {dchars method - polygon} -setup {
     canvas .c
@@ -1273,8 +1267,7 @@ test canvas-22.10 {dchars method - polygon} -setup {
     .c coords $id
 } -cleanup {
     destroy .c
-    # PS: This should also keep 2 3, dchars wrapping semantics disturbs
-} -result {0.0 1.0}
+} -result {0.0 1.0 2.0 3.0}
 
 test canvas-22.11 {dchars method - polygon} -setup {
     canvas .c
@@ -1284,8 +1277,7 @@ test canvas-22.11 {dchars method - polygon} -setup {
     .c coords $id
 } -cleanup {
     destroy .c
-    # PS: Wrapping causes "end" to point at beginning.
-} -result {2.0 3.0 4.0 5.0}
+} -result {0.0 1.0 2.0 3.0}
 
 test canvas-22.12 {dchars method - polygon} -setup {
     canvas .c
@@ -1295,9 +1287,7 @@ test canvas-22.12 {dchars method - polygon} -setup {
     .c coords $id
 } -cleanup {
     destroy .c
-    # PS: WTF? Even if this is considered to be wrapping past
-    # end, 6.0 7.0 should be the result
-} -result {4.0 5.0}
+} -result {6.0 7.0}
 
 test canvas-22.13 {dchars method - polygon} -setup {
     canvas .c
@@ -1307,9 +1297,7 @@ test canvas-22.13 {dchars method - polygon} -setup {
     .c coords $id
 } -cleanup {
     destroy .c
-    # PS: WTF? Even if this is considered to be wrapping past
-    # end, 4.0 5.0 6.0 7.0 should be the result
-} -result {2.0 3.0 4.0 5.0}
+} -result {4.0 5.0 6.0 7.0}
 
 test canvas-22.14 {dchars method - text} -setup {
     canvas .c

@@ -1034,11 +1034,11 @@ PolygonInsert(
     if (length == 0) {
 	beforeThis = 0;
     }
-    while (beforeThis > length) {
-	beforeThis -= length;
+    if (beforeThis > length) {
+	beforeThis = length;
     }
-    while (beforeThis < 0) {
-	beforeThis += length;
+    if (beforeThis < 0) {
+	beforeThis = 0;
     }
     newCoordPtr = ckalloc(sizeof(double) * (length + 2 + objc));
     for (i=0; i<beforeThis; i++) {
@@ -1181,17 +1181,17 @@ PolygonDeleteCoords(
 	first = 0;
 	last = 0;
     } else {
-	while (first >= length) {
-	    first -= length;
+	if (first >= length) {
+	    first = length - 2;
 	}
-	while (first < 0) {
-	    first += length;
+	if (first < 0) {
+	    first = 0;
 	}
-	while (last >= length) {
-	    last -= length;
+	if (last >= length) {
+	    last = length - 2;
 	}
-	while (last < 0) {
-	    last += length;
+	if (last < 0) {
+	    last = 0;
 	}
     }
 
@@ -1220,8 +1220,8 @@ PolygonDeleteCoords(
 	    polyPtr->coordPtr[i-count] = polyPtr->coordPtr[i];
 	}
     } else {
-	for (i=last; i<=first; i++) {
-	    polyPtr->coordPtr[i-last] = polyPtr->coordPtr[i];
+	for (i=last+2; i<=first; i++) {
+	    polyPtr->coordPtr[i-last-2] = polyPtr->coordPtr[i];
 	}
     }
     polyPtr->coordPtr[length-count] = polyPtr->coordPtr[0];
