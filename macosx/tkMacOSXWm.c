@@ -563,6 +563,7 @@ TkWmNewWindow(
 
     UpdateVRootGeometry(wmPtr);
 
+
     /*
      * Tk must monitor structure events for top-level windows, in order to
      * detect size and position changes caused by window managers.
@@ -1637,41 +1638,28 @@ WmForgetCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-#ifndef WM_FORGET_SUPPORTED
-    Tcl_AppendResult(interp, "wm forget is not yet supported", NULL);
-    return TCL_ERROR;
-#else
+
     register Tk_Window frameWin = (Tk_Window)winPtr;
-    char *oldClass = (char*)Tk_Class(frameWin);
 
     if (Tk_IsTopLevel(frameWin)) {
-	MacDrawable *macWin = (MacDrawable *) winPtr->window;
-	CGrafPtr destPort = TkMacOSXGetDrawablePort(winPtr->window);
 
-	TkFocusJoin(winPtr);
-	Tk_UnmapWindow(frameWin);
-
-	if (destPort != NULL) {
-	    WindowRef winRef = GetWindowFromPort(destPort);
-
-	    TkMacOSXUnregisterMacWindow(winRef);
-	    DisposeWindow(winRef);
-	}
-	macWin->grafPtr = NULL;
-	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
-	macWin->flags &= ~TK_HOST_EXISTS;
-
+	MacDrawable *macWin = (MacDrawable *) winPtr->parentPtr->window;
+    	TkFocusJoin(winPtr);
+    	Tk_UnmapWindow(frameWin); 
 	RemapWindows(winPtr, macWin);
-	TkWmDeadWindow(winPtr);
-	winPtr->flags &=
-		~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
+       
+	TkWmDeadWindow(macWin);
+	winPtr->flags &=~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
+
+	/*
+         * Flags (above) must be cleared before calling TkMapTopFrame (below).
+         */
 
 	TkMapTopFrame(frameWin);
     } else {
-	/* Already not managed by wm - ignore it */
+    	/* Already not managed by wm - ignore it */
     }
     return TCL_OK;
-#endif
 }
 
 /*
@@ -2393,10 +2381,7 @@ WmManageCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-#ifndef WM_FORGET_SUPPORTED
-    Tcl_AppendResult(interp, "wm manage is not yet supported", NULL);
-    return TCL_ERROR;
-#else
+
     register Tk_Window frameWin = (Tk_Window)winPtr;
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *oldClass = (char*)Tk_Class(frameWin);
@@ -2423,7 +2408,6 @@ WmManageCmd(
 	}
 	wmPtr = winPtr->wmInfoPtr;
 	winPtr->flags &= ~TK_MAPPED;
-	macWin->grafPtr = NULL;
 	macWin->toplevel = macWin;
 	RemapWindows(winPtr, macWin);
 	winPtr->flags |=
@@ -2433,7 +2417,6 @@ WmManageCmd(
 	/* Already managed by wm - ignore it */
     }
     return TCL_OK;
-#endif
 }
 
 /*
