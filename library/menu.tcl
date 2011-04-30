@@ -567,15 +567,14 @@ proc ::tk::MenuMotion {menu x y state} {
                 && $index ne "none" \
                 && $index ne $activeindex} {
             set mode [option get $menu clickToFocus ClickToFocus]
-            if {$mode eq "" || ([string is boolean $mode] && !$mode)} {
+            if {[string is false $mode]} {
                 set delay [expr {[$menu cget -type] eq "menubar" ? 0 : 50}]
-                if {[$menu type $activeindex] eq "cascade"} {
-                    set Priv(menuDeactivatedTimer) \
-                        [after $delay [list $menu postcascade none]]
-                }
                 if {[$menu type $index] eq "cascade"} {
                     set Priv(menuActivatedTimer) \
                         [after $delay [list $menu postcascade active]]
+                } else {
+                    set Priv(menuDeactivatedTimer) \
+                        [after $delay [list $menu postcascade none]]
                 }
             }
         }
