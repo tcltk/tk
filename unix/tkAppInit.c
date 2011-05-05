@@ -31,6 +31,9 @@ extern Tcl_PackageInitProc Tktest_Init;
 #ifndef TK_LOCAL_APPINIT
 #define TK_LOCAL_APPINIT Tcl_AppInit
 #endif
+#ifndef MODULE_SCOPE
+#   define MODULE_SCOPE extern
+#endif
 MODULE_SCOPE int TK_LOCAL_APPINIT(Tcl_Interp *);
 MODULE_SCOPE int main(int, char **);
 
