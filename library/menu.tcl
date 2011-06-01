@@ -1224,24 +1224,35 @@ proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 	}
 	incr x [expr {-[winfo reqwidth $menu]/2}]
     }
-    if {$tcl_platform(platform) == "windows"} {
+
+    if {$tcl_platform(platform) eq "windows"} {
+	# osVersion is not available in safe interps
+	set ver 5
+	if {[info exists tcl_platform(osVersion)]} {
+	    scan $tcl_platform(osVersion) %d ver
+	}
+
 	# We need to fix some problems with menu posting on Windows,
 	# where, if the menu would overlap top or bottom of screen,
 	# Windows puts it in the wrong place for us.  We must also
 	# subtract an extra amount for half the height of the current
 	# entry.  To be safe we subtract an extra 10.
-	set yoffset [expr {[winfo screenheight $menu] \
-		- $y - [winfo reqheight $menu] - 10}]
-	if {$yoffset < 0} {
-	    # The bottom of the menu is offscreen, so adjust upwards
-	    incr y $yoffset
-	    if {$y < 0} { set y 0 }
-	}
-	# If we're off the top of the screen (either because we were
-	# originally or because we just adjusted too far upwards),
-	# then make the menu popup on the top edge.
-	if {$y < 0} {
-	    set y 0
+        # NOTE: this issue appears to have been resolved in the Window
+        # manager provided with Vista and Windows 7.
+	if {$ver < 6} {
+	    set yoffset [expr {[winfo screenheight $menu] \
+				   - $y - [winfo reqheight $menu] - 10}]
+	    if {$yoffset < 0} {
+		# The bottom of the menu is offscreen, so adjust upwards
+		incr y $yoffset
+		if {$y < 0} { set y 0 }
+	    }
+	    # If we're off the top of the screen (either because we were
+	    # originally or because we just adjusted too far upwards),
+	    # then make the menu popup on the top edge.
+	    if {$y < 0} {
+		set y 0
+	    }
 	}
     }
     $menu post $x $y
