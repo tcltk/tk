@@ -298,7 +298,7 @@ Tk_InitConsoleChannels(
 	    Tcl_SetChannelOption(NULL, consoleChannel,
 		    "-buffering", "none");
 	    Tcl_SetChannelOption(NULL, consoleChannel,
-		    "-encoding", "identity");
+		    "-encoding", "utf-8");
 	}
 	Tcl_SetStdChannel(consoleChannel, TCL_STDOUT);
 	Tcl_RegisterChannel(NULL, consoleChannel);
@@ -317,7 +317,7 @@ Tk_InitConsoleChannels(
 	    Tcl_SetChannelOption(NULL, consoleChannel,
 		    "-buffering", "none");
 	    Tcl_SetChannelOption(NULL, consoleChannel,
-		    "-encoding", "identity");
+		    "-encoding", "utf-8");
 	}
 	Tcl_SetStdChannel(consoleChannel, TCL_STDERR);
 	Tcl_RegisterChannel(NULL, consoleChannel);
@@ -509,7 +509,22 @@ ConsoleOutput(
 	Tcl_Interp *consoleInterp = info->consoleInterp;
 
 	if (consoleInterp && !Tcl_InterpDeleted(consoleInterp)) {
+	    Tcl_DString ds;
+	    Tcl_Encoding utf8 = Tcl_GetEncoding(NULL, "utf-8");
+
+	    /*
+	     * Not checking for utf8 == NULL.  Did not check for TCL_ERROR
+	     * from Tcl_SetChannelOption() in Tk_InitConsoleChannels() either.
+	     * Assumption is utf-8 Tcl_Encoding is reliably present.
+	     */
+
+	    CONST char *bytes
+		    = Tcl_ExternalToUtfDString(utf8, buf, toWrite, &ds);
+	    int numBytes = Tcl_DStringLength(&ds);
 	    Tcl_Obj *cmd = Tcl_NewStringObj("tk::ConsoleOutput", -1);
+
+	    Tcl_FreeEncoding(utf8);
+
 	    if (data->type == TCL_STDERR) {
 		Tcl_ListObjAppendElement(NULL, cmd,
 			Tcl_NewStringObj("stderr", -1));
@@ -517,7 +532,10 @@ ConsoleOutput(
 		Tcl_ListObjAppendElement(NULL, cmd,
 			Tcl_NewStringObj("stdout", -1));
 	    }
-	    Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj(buf, toWrite));
+	    Tcl_ListObjAppendElement(NULL, cmd,
+		    Tcl_NewStringObj(bytes, numBytes));
+
+	    Tcl_DStringFree(&ds);
 	    Tcl_IncrRefCount(cmd);
 	    Tcl_GlobalEvalObj(consoleInterp, cmd);
 	    Tcl_DecrRefCount(cmd);
