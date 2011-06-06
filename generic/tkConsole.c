@@ -298,7 +298,7 @@ Tk_InitConsoleChannels(
 	    Tcl_SetChannelOption(NULL, consoleChannel,
 		    "-buffering", "none");
 	    Tcl_SetChannelOption(NULL, consoleChannel,
-		    "-encoding", "utf-8");
+		    "-encoding", "identity");
 	}
 	Tcl_SetStdChannel(consoleChannel, TCL_STDOUT);
 	Tcl_RegisterChannel(NULL, consoleChannel);
@@ -317,7 +317,7 @@ Tk_InitConsoleChannels(
 	    Tcl_SetChannelOption(NULL, consoleChannel,
 		    "-buffering", "none");
 	    Tcl_SetChannelOption(NULL, consoleChannel,
-		    "-encoding", "utf-8");
+		    "-encoding", "identity");
 	}
 	Tcl_SetStdChannel(consoleChannel, TCL_STDERR);
 	Tcl_RegisterChannel(NULL, consoleChannel);
