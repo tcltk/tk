@@ -1,3 +1,8 @@
+2011-06-06  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkConsole.c:	Restore proper NUL output to the [console].
+	* library/console.tcl: [Bug 2546087]
+
 2011-04-22  Peter Spjuth  <peter.spjuth@gmail.com>
 
 	* generic/tkCanvPoly.c: [Bug 3291543] There was a crash if dchars
