@@ -1327,11 +1327,10 @@ ConfigureEntry(
 	     * isn't a double value, we set it to -from.
 	     */
 
-	    int code;
 	    double dvalue;
 
-	    code = Tcl_GetDouble(NULL, entryPtr->string, &dvalue);
-	    if (code != TCL_OK) {
+	    if (sscanf(entryPtr->string, "%lf", &dvalue) == 0) {
+		/* Scan failure */
 		dvalue = sbPtr->fromValue;
 	    } else if (dvalue > sbPtr->toValue) {
 		dvalue = sbPtr->toValue;
@@ -4227,9 +4226,9 @@ SpinboxInvoke(
 	} else if (!DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)) {
 	    double dvalue;
 
-	    if (Tcl_GetDouble(NULL, entryPtr->string, &dvalue) != TCL_OK) {
+	    if (sscanf(entryPtr->string, "%lf", &dvalue) == 0) {
 		/*
-		 * If the string is empty, or isn't a valid double value, just
+		 * If the string doesn't scan as a double value, just
 		 * use the -from value
 		 */
 
