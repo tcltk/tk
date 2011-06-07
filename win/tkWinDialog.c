@@ -2371,6 +2371,9 @@ Tk_MessageBoxObjCmd(
 	}
     }
 
+    while (!Tk_IsTopLevel(parent)) {
+	parent = Tk_Parent(parent);
+    }
     Tk_MakeWindowExist(parent);
     hWnd = Tk_GetHWND(Tk_WindowId(parent));
 
