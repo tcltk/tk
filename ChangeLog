@@ -1,5 +1,7 @@
 2011-06-07  Don Porter  <dgp@users.sourceforge.net>
 
+	* win/tkWinDialog.c:	Backport [Bug 2482771] fix.
+
 	* generic/tkEntry.c:	Restore support for values "08" and "09"
 	in a [spinbox] configured to use -from and -to values.  [Bug 2358545].
 
