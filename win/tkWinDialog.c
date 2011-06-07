@@ -2400,7 +2400,7 @@ Tk_MessageBoxObjCmd(
 	flags = buttonFlagMap[defaultBtnIdx];
     }
 
-    flags |= icon | type | MB_SYSTEMMODAL;
+    flags |= icon | type | MB_TASKMODAL | MB_SETFOREGROUND;
 
     tmpObj = messageObj ? Tcl_DuplicateObj(messageObj)
 	    : Tcl_NewUnicodeObj(NULL, 0);
