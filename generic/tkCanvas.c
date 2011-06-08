@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkCanvas.c,v 1.46.2.4 2010/01/19 22:02:43 dkf Exp $
  */
 
 /* #define USE_OLD_TAG_SEARCH 1 */

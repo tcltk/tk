@@ -8,8 +8,6 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# $Id: ttkGenStubs.tcl,v 1.1.4.4 2011/01/19 14:28:10 nijtmans Exp $
-#
 # SOURCE: tcl/tools/genStubs.tcl, revision 1.20
 #
 # CHANGES:

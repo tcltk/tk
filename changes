@@ -2,8 +2,6 @@ hhis file summarizes all changes made to Tk since version 1.0 was
 released on March 13, 1991.  Changes that aren't backward compatible
 are marked specially.
 
-RCS: @(#) $Id: changes,v 1.130.2.22 2010/09/01 20:04:29 dgp Exp $
-
 3/16/91 (bug fix) Modified tkWindow.c to remove Tk's Tcl commands from
 the interpreter when the main window is deleted (otherwise there will
 be dangling pointers to the non-existent window).

@@ -1,6 +1,4 @@
 /* winTheme.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>
- *
- * $Id: ttkWinTheme.c,v 1.13.2.1 2010/08/26 02:06:10 hobbs Exp $
  */
 
 #ifdef _MSC_VER

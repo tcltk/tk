@@ -1,5 +1,4 @@
-/* $Id: ttkTrace.c,v 1.1.4.1 2010/08/26 02:06:10 hobbs Exp $
- *
+/*
  * Copyright 2003, Joe English
  *
  * Simplified interface to Tcl_TraceVariable.

@@ -5,8 +5,6 @@
 # Copyright (c) 1996-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: unixEmbed.test,v 1.14 2004/12/04 00:04:42 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

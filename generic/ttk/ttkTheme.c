@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * $Id: ttkTheme.c,v 1.11.2.2 2010/08/26 02:06:09 hobbs Exp $
  */
 
 #include <stdlib.h>

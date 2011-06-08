@@ -1,6 +1,4 @@
 /*
- * $Id: ttkClassicTheme.c,v 1.6.2.2 2010/08/26 02:06:09 hobbs Exp $
- *
  * Copyright (c) 2004, Joe English
  *
  * "classic" theme; implements the classic Motif-like Tk look.
