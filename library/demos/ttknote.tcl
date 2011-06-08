@@ -2,8 +2,6 @@
 #
 # This demonstration script creates a toplevel window containing a Ttk
 # notebook widget.
-#
-# RCS: @(#) $Id: ttknote.tcl,v 1.6 2008/12/11 18:13:08 jenglish Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

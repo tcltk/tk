@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkFocus.c,v 1.23 2009/09/07 07:29:03 das Exp $
  */
 
 #include "tkInt.h"

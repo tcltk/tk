@@ -12,8 +12,6 @@
  * Author: Paul Mackerras (paulus@cs.anu.edu.au),
  *	Department of Computer Science,
  *	Australian National University.
- *
- * RCS: @(#) $Id: tkImgPPM.c,v 1.23 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "tkInt.h"

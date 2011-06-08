@@ -1,4 +1,3 @@
-# $Id: treeview.tcl,v 1.8 2009/11/12 18:17:14 jenglish Exp $
 #
 # ttk::treeview widget bindings and utilities.
 #

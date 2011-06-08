@@ -1,6 +1,4 @@
 /*
- * $Id: ttkThemeInt.h,v 1.7 2009/02/08 19:35:35 jenglish Exp $
- *
  * Theme engine: private definitions.
  *
  * Copyright (c) 2004 Joe English.  Freely redistributable.

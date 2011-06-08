@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: default.h,v 1.6 2008/11/06 22:19:00 nijtmans Exp $
  */
 
 #ifndef _DEFAULT

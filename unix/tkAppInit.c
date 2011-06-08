@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkAppInit.c,v 1.12 2010/09/23 21:45:14 nijtmans Exp $
  */
 
 #undef BUILD_tk

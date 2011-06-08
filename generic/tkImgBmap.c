@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkImgBmap.c,v 1.32 2010/02/17 19:21:16 nijtmans Exp $
  */
 
 #include "tkInt.h"

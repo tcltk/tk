@@ -4,8 +4,6 @@
  * Generic layout processing.
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.
- *
- * $Id: ttkLayout.c,v 1.18 2010/02/05 21:33:14 jenglish Exp $
  */
 
 #include <string.h>
