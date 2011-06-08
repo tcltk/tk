@@ -7,8 +7,6 @@
 
 	See the file "license.terms" for information on usage and redistribution of
 	this file, and for a DISCLAIMER OF ALL WARRANTIES.
-
-	RCS: @(#) $Id: Wish.sdef,v 1.1 2009/08/24 00:57:20 das Exp $
 -->
 <dictionary title="Wish Terminology">
 	<suite name="Standard Suite" code="reqd" description="Common commands for all applications.">

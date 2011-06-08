@@ -1,5 +1,4 @@
-/* $Id: ttkLabel.c,v 1.14 2011/01/14 23:43:10 wordtech Exp $
- *
+/*
  * text, image, and label elements.
  *
  * The label element combines text and image elements,

@@ -1,6 +1,4 @@
 #
-# $Id: defaults.tcl,v 1.9 2008/11/29 00:43:48 patthoyts Exp $
-#
 # Settings for default theme.
 #
 

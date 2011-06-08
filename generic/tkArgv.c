@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkArgv.c,v 1.18 2010/02/16 21:12:56 nijtmans Exp $
  */
 
 #include "tkInt.h"

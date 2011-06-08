@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkTextWind.c,v 1.30 2010/03/11 09:43:19 dkf Exp $
  */
 
 #include "tkPort.h"

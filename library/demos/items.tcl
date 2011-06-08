@@ -2,8 +2,6 @@
 #
 # This demonstration script creates a canvas that displays the
 # canvas item types.
-#
-# RCS: @(#) $Id: items.tcl,v 1.11 2010/01/04 22:13:59 patthoyts Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

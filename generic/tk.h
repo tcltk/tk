@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tk.h,v 1.138 2010/12/16 09:03:07 nijtmans Exp $
  */
 
 #ifndef _TK

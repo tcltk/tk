@@ -1,4 +1,4 @@
-/* $Id: ttkButton.c,v 1.13 2010/02/05 17:42:21 nijtmans Exp $
+/*
  * Copyright (c) 2003, Joe English
  *
  * label, button, checkbutton, radiobutton, and menubutton widgets.

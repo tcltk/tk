@@ -3,8 +3,6 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# RCS: @(#) $Id: text.tcl,v 1.46 2010/06/15 14:30:48 dkf Exp $
-#
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998 by Scriptics Corporation.

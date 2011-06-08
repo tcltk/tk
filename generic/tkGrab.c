@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkGrab.c,v 1.21 2010/05/11 12:12:50 nijtmans Exp $
  */
 
 #include "tkInt.h"

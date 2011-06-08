@@ -1,5 +1,4 @@
-/* $Id: ttkSeparator.c,v 1.8 2010/01/31 22:50:56 jenglish Exp $
- *
+/*
  * Copyright (c) 2004, Joe English
  *
  * ttk::separator and ttk::sizegrip widgets.

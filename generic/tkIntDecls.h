@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkIntDecls.h,v 1.56 2010/12/02 13:36:45 dkf Exp $
  */
 
 #ifndef _TKINTDECLS

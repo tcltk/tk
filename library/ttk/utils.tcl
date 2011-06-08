@@ -1,6 +1,4 @@
 #
-# $Id: utils.tcl,v 1.8 2009/12/25 19:11:56 jenglish Exp $
-#
 # Utilities for widget implementations.
 #
 

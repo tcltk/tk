@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: xgc.c,v 1.18 2010/04/20 15:14:30 nijtmans Exp $
  */
 
 #include "tkInt.h"

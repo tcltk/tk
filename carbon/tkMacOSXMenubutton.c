@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXMenubutton.c,v 1.2 2010/01/13 23:08:12 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"

@@ -1,8 +1,6 @@
 /* square.c - Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * Minimal sample ttk widget.
- *
- * $Id: ttkSquare.c,v 1.9 2010/01/31 22:50:56 jenglish Exp $
  */
 
 #include <tk.h>

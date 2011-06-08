@@ -1,7 +1,5 @@
 # This file creates a visual test for button layout.  It is part of
 # the Tk visual test suite, which is invoked via the "visual" script.
-#
-# RCS: @(#) $Id: butGeom.tcl,v 1.3 1999/04/16 01:51:34 stanton Exp $
 
 catch {destroy .t}
 toplevel .t

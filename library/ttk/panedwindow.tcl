@@ -1,6 +1,4 @@
 #
-# $Id: panedwindow.tcl,v 1.6 2008/10/28 20:02:03 jenglish Exp $
-#
 # Bindings for ttk::panedwindow widget.
 #
 

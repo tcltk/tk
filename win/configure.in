@@ -2,8 +2,6 @@
 # This file is an input file used by the GNU "autoconf" program to
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
-#
-# RCS: @(#) $Id: configure.in,v 1.92 2011/01/12 11:05:43 nijtmans Exp $
 
 AC_INIT(../generic/tk.h)
 AC_PREREQ(2.59)

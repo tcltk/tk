@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.25 2010/08/19 05:05:55 nijtmans Exp $
  */
 
 #ifndef _TKPLATDECLS

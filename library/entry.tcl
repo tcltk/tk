@@ -3,8 +3,6 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# RCS: @(#) $Id: entry.tcl,v 1.28 2010/03/17 09:27:23 dkf Exp $
-#
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #

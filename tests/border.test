@@ -4,8 +4,6 @@
 # Copyright (c) 1998 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: border.test,v 1.8 2008/07/22 11:55:57 aniap Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*

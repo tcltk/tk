@@ -1,8 +1,6 @@
 # This file creates a screen to exercise Postscript generation
 # for some of the graphical objects in canvases.  It is part of the Tk
 # visual test suite, which is invoked via the "visual" script.
-#
-# RCS: @(#) $Id: canvPsGrph.tcl,v 1.3 1999/04/16 01:51:35 stanton Exp $
 
 catch {destroy .t}
 toplevel .t

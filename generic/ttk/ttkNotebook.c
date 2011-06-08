@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.25 2010/02/05 21:33:14 jenglish Exp $
+/*
  * Copyright (c) 2004, Joe English
  */
 

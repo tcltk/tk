@@ -2,8 +2,6 @@
 #
 # This demonstration script creates a text widget with a bunch of
 # embedded windows.
-#
-# RCS: @(#) $Id: twind.tcl,v 1.12 2009/02/11 15:17:26 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

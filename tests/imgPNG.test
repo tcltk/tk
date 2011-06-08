@@ -7,8 +7,6 @@
 # Copyright (c) 1998 Willem van Schaik (images only)
 # Copyright (c) 2008 Donal K. Fellows
 # All rights reserved.
-#
-# RCS: @(#) $Id: imgPNG.test,v 1.4 2010/04/25 18:23:52 dkf Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*

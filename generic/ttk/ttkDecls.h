@@ -1,6 +1,4 @@
 /*
- * $Id: ttkDecls.h,v 1.15 2010/08/19 05:05:55 nijtmans Exp $
- *
  * This file is (mostly) automatically generated from ttk.decls.
  */
 

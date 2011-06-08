@@ -5,8 +5,6 @@
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: canvRect.test,v 1.11 2008/10/07 00:10:07 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*

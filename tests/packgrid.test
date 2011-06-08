@@ -4,9 +4,6 @@
 #
 # Copyright (c) 2008 Peter Spjuth
 # All rights reserved.
-#
-# RCS: @(#) $Id: packgrid.test,v 1.2 2009/09/18 22:35:00 pspjuth Exp $
-#
 
 package require tcltest 2.2
 eval tcltest::configure $argv

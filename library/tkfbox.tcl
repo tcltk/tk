@@ -10,8 +10,6 @@
 #	"Directory" option menu.  The user can select files by clicking on the
 #	file icons or by entering a filename in the "Filename:" entry.
 #
-# RCS: @(#) $Id: tkfbox.tcl,v 1.76 2010/01/19 01:27:41 patthoyts Exp $
-#
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution

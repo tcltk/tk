@@ -47,8 +47,6 @@
  *	authors grant the U.S. Government and others acting in its behalf
  *	permission to use and distribute the software in accordance with the
  *	terms specified in this license.
- *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.3 2010/01/06 14:58:30 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"

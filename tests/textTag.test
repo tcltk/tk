@@ -5,8 +5,6 @@
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: textTag.test,v 1.16 2009/04/02 09:41:06 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*

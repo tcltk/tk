@@ -1,4 +1,4 @@
-/* $Id: ttkFrame.c,v 1.15 2010/01/31 22:50:55 jenglish Exp $
+/*
  * Copyright (c) 2004, Joe English
  *
  * ttk::frame and ttk::labelframe widgets.

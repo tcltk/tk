@@ -1,5 +1,4 @@
-/* $Id: ttkElements.c,v 1.12 2010/01/22 14:17:53 nijtmans Exp $
- *
+/*
  * Copyright (c) 2003, Joe English
  *
  * Default implementation for themed elements.

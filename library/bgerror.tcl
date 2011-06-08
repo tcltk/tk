@@ -10,9 +10,6 @@
 # Copyright (c) 2007 by ActiveState Software Inc.
 # Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
 # Copyright (c) 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
-# 
-# RCS: @(#) $Id: bgerror.tcl,v 1.42 2010/09/05 14:43:11 dkf Exp $
-#
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*

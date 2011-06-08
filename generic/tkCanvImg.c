@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkCanvImg.c,v 1.19 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 #include "tkInt.h"

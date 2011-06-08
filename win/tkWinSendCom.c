@@ -17,8 +17,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinSendCom.c,v 1.11 2010/04/08 14:06:20 nijtmans Exp $
  */
 
 #include "tkInt.h"

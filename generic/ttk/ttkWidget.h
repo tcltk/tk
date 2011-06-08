@@ -1,4 +1,4 @@
-/* $Id: ttkWidget.h,v 1.15 2010/03/28 21:43:25 jenglish Exp $
+/*
  * Copyright (c) 2003, Joe English
  * Helper routines for widget implementations.
  */

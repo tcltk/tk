@@ -1,6 +1,4 @@
 #
-# $Id: altTheme.tcl,v 1.10 2008/12/31 21:25:34 jenglish Exp $
-#
 # Ttk widget set: Alternate theme
 #
 

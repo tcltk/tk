@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinSend.c,v 1.25 2010/09/28 08:22:30 nijtmans Exp $
  */
 
 #include "tkInt.h"
