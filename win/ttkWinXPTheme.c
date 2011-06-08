@@ -1,6 +1,4 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.18.2.3 2010/08/26 02:06:10 hobbs Exp $
- *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
  *

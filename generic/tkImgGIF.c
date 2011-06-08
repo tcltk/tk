@@ -31,8 +31,6 @@
  *
  * This file also contains code from miGIF. See lower down in file for the
  * applicable copyright notice for that portion.
- *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.41 2008/02/01 16:53:53 rmax Exp $
  */
 
 #include "tkInt.h"

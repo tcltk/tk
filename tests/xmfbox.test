@@ -9,8 +9,6 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Contributions from Don Porter, NIST, 2002.  (not subject to US copyright)
 # All rights reserved.
-#
-# RCS: @(#) $Id: xmfbox.test,v 1.10 2004/06/24 12:45:45 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

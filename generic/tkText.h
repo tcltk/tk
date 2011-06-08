@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkText.h,v 1.34.2.1 2009/10/22 21:41:20 dkf Exp $
  */
 
 #ifndef _TKTEXT

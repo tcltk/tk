@@ -6,8 +6,6 @@
 # Copyright (c) 1994 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: image.test,v 1.14 2007/05/14 20:58:27 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

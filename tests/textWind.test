@@ -5,8 +5,6 @@
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: textWind.test,v 1.22 2006/10/17 10:21:50 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

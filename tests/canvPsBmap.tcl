@@ -1,8 +1,6 @@
 # This file creates a screen to exercise Postscript generation
 # for bitmaps in canvases.  It is part of the Tk visual test suite,
 # which is invoked via the "visual" script.
-#
-# RCS: @(#) $Id: canvPsBmap.tcl,v 1.5 2005/10/12 09:29:21 dkf Exp $
 
 catch {destroy .t}
 toplevel .t

@@ -1,8 +1,6 @@
 # This file is a Tcl script to test the Windows specific message box
 #
 # Copyright (c) 2007 Pat Thoyts <patthoyts@users.sourceforge.net>
-#
-# RCS: @(#) $Id: winMsgbox.test,v 1.2 2007/12/13 15:27:55 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
