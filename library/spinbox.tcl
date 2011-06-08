@@ -4,8 +4,6 @@
 # procedures that help in implementing those bindings.  The spinbox builds
 # off the entry widget, so it can reuse Entry bindings and procedures.
 #
-# RCS: @(#) $Id: spinbox.tcl,v 1.6.2.1 2006/01/25 18:21:41 dgp Exp $
-#
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 # Copyright (c) 1999-2000 Jeffrey Hobbs

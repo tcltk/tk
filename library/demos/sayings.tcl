@@ -3,8 +3,6 @@
 # This demonstration script creates a listbox that can be scrolled
 # both horizontally and vertically.  It displays a collection of
 # well-known sayings.
-#
-# RCS: @(#) $Id: sayings.tcl,v 1.2 1998/09/14 18:23:30 stanton Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

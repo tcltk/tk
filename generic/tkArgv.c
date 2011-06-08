@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkArgv.c,v 1.4 2002/01/25 21:09:36 dgp Exp $
  */
 
 #include "tkPort.h"

@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixColor.c,v 1.2.26.1 2009/10/25 17:08:28 dkf Exp $
  */
 
 #include <tkColor.h>

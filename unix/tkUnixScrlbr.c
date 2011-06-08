@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixScrlbr.c,v 1.3.6.1 2009/10/07 14:28:37 dkf Exp $
  */
 
 #include "tkScrollbar.h"

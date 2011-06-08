@@ -17,8 +17,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkScale.c,v 1.17.2.1 2006/06/14 22:15:22 dgp Exp $
  */
 
 #include "tkPort.h"

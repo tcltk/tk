@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixKey.c,v 1.10 2002/06/17 20:09:01 hobbs Exp $
  */
 
 #include "tkInt.h"

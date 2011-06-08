@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkSquare.c,v 1.5 2002/01/17 23:33:53 dgp Exp $
  */
 
 #include "tkPort.h"

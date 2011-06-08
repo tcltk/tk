@@ -8,8 +8,6 @@
 # Copyright (c) 1996 by Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: winWm.test,v 1.9.2.4 2006/12/01 19:47:42 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

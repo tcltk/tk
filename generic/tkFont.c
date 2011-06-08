@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkFont.c,v 1.21.2.2 2007/05/31 13:39:26 das Exp $
  */
 
 #include "tkPort.h"

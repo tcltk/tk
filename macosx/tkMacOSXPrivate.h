@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.1.2.5 2007/12/18 18:20:34 das Exp $
  */
 
 #ifndef _TKMACPRIV

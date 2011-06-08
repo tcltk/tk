@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacBitmap.c,v 1.6 2002/10/09 11:56:36 das Exp $
  */
 
 #include "tkPort.h"

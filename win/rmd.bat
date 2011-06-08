@@ -1,5 +1,4 @@
 @echo off
-rem RCS: @(#) $Id: rmd.bat,v 1.5 2001/11/13 02:46:23 davygrvy Exp $
 
 if not exist %1\nul goto end
 

@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinClipboard.c,v 1.7 2000/04/12 18:51:11 hobbs Exp $
  */
 
 #include "tkWinInt.h"

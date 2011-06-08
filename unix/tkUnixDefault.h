@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixDefault.h,v 1.16.2.1 2006/03/29 16:27:53 dgp Exp $
  */
 
 #ifndef _TKUNIXDEFAULT
