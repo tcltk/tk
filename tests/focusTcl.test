@@ -6,8 +6,6 @@
 # Copyright (c) 1995 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: focusTcl.test,v 1.5.2.1 2003/10/29 01:08:19 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

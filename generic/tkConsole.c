@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkConsole.c,v 1.18.2.6 2006/09/25 17:28:20 andreas_kupries Exp $
  *    
  */
 

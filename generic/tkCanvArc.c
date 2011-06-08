@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkCanvArc.c,v 1.11 2003/02/09 07:48:22 hobbs Exp $
  */
 
 #include <stdio.h>

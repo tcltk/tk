@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.2.2.31 2008/02/27 00:12:59 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"

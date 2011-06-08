@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkTextTag.c,v 1.8.2.1 2006/10/17 05:38:48 dgp Exp $
  */
 
 #include "default.h"

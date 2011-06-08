@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkCanvUtil.c,v 1.10 2003/01/17 19:54:09 drh Exp $
  */
 
 #include "tkInt.h"

@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinPixmap.c,v 1.3.10.1 2009/04/30 14:57:43 dgp Exp $
  */
 
 #include "tkWinInt.h"

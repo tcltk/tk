@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXXCursors.r,v 1.2.2.1 2007/04/29 02:26:51 das Exp $
  */
 
 /*
