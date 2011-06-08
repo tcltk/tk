@@ -6727,3 +6727,43 @@ in screen distances, reducing precision loss (ferrieux)
 2010-08-25 (feature)[3053320] update Ttk to tile 0.8.6 feature set (hobbs)
 
 --- Released 8.5.9, September 6, 2010 --- See ChangeLog for details ---
+
+2010-09-02 (bug fix)[3057573] disabled ttk::combobox colors (godfrey,english)
+
+2010-09-08 (bug fix)[2829363] [$treeview see] redisplay (barden,english)
+
+2010-10-11 (bug fix)[3085489] crash in [$treeview add] with no -tags (english)
+
+2010-11-04 (enhancement) Updated German messages. (haertel,nijtmans)
+
+2010-11-16 (platform) VS 2005 SP1 MSVC compiler (nijtmans)
+
+2010-11-24 (bug fix)[3071836] crash in tk_getSaveFile (twylite)
+
+2010-12-12 (platform) OpenBSD build improvements (cassoff)
+
+2010-12-17 (platform) Revisions to support rpm 4.4.2 (cassoff)
+
+2011-01-13 (bug fix)[3154705] tk_messageBox close button disabled (skylera)
+
+2011-01-22 (enhancement) add [ttk::entry validate] (schelte,english)
+
+2011-03-24 (bug fix)[3239768] Win menu font support (wehle)
+
+2011-03-28 (bug fix)[3129527] stop buffer overflows (dirtyepic,nijtmans)
+
+2011-04-04 (feature change)[2997657] No -container for [labelframe] (spjuth)
+
+2011-04-04 (bug fix)[723765] [grid remove] lost -in value (saye,spjuth)
+
+2011-04-22 (bug fix)[3291543] mem corrupt when [$canvas dchars] removes all
+coords of a polygon (rogers,spjuth)
+
+2011-06-06 (bug fix)[2546087] [console] treatment of '\0' (porter)
+
+2011-06-07 (bug fix)[2358545] Restore "08" in spinbox configured with -from
+and -to (porter)
+
+2011-06-07 (bug fix)[2484771] modal dialog settings (hoff, thoyts)
+
+--- Released 8.5.10, June 17, 2010 --- See ChangeLog for details ---

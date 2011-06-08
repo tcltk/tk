@@ -1,6 +1,10 @@
 2011-06-07  Don Porter  <dgp@users.sourceforge.net>
 
-	* win/tkWinDialog.c:	Backport [Bug 2482771] fix.
+	* changes:	Updated for 8.5.10 release.
+
+2011-06-07  Don Porter  <dgp@users.sourceforge.net>
+
+	* win/tkWinDialog.c:	Backport [Bug 2484771] fix.
 
 	* generic/tkEntry.c:	Restore support for values "08" and "09"
 	in a [spinbox] configured to use -from and -to values.  [Bug 2358545].
@@ -44,8 +48,9 @@
 
 2011-03-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkTextBTree.c: [Bug 3129527]: Fix buffer overflow w/ GCC 4.5 and
-	-D_FORTIFY_SOURCE=2. One more place where this problem could appear.
+	* generic/tkTextBTree.c:	[Bug 3129527]: Fix buffer overflow
+	w/ GCC 4.5 and -D_FORTIFY_SOURCE=2. One more place where this problem
+	could appear.
 
 2011-03-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -77,9 +82,10 @@
 
 2011-01-25  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkSelect.c: [Patch #3129527]: Fix buffer overflow w/ GCC 4.5 and
-	* win/tkWinWm.c       -D_FORTIFY_SOURCE=2. Just the strcpy->memcpy part,
-	* unix/tkUnixWm.c     to prevent anything like [Bug #3164879]
+	* generic/tkSelect.c:	[Patch #3129527]: Fix buffer overflow
+	* win/tkWinWm.c:	w/ GCC 4.5 and -D_FORTIFY_SOURCE=2. Just the
+	* unix/tkUnixWm.c:	strcpy->memcpy part, to prevent anything
+	like [Bug #3164879]
 
 2011-01-22  Joe English  <jenglish@users.sourceforge.net>
 
@@ -88,9 +94,10 @@
 
 2011-01-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/ttk/ttkGenStubs.tcl:   Make sure to use CONST/VOID in stead of
-	* generic/ttk/ttkDecls.h            const/void when appropriate. This allows to
-	use const/void in the *.decls file always, genStubs will do the right thing.
+	* generic/ttk/ttkGenStubs.tcl:	Make sure to use CONST/VOID in stead of
+	* generic/ttk/ttkDecls.h: const/void when appropriate. This allows to
+	use const/void in the *.decls file always, genStubs will do the right
+	thing.
 
 2011-01-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -133,17 +140,18 @@
 
 2010-11-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinDialog.c: [Bug #3071836]: Crash/Tcl_Panic on WinXP saving file to C:\
-	* win/tkWinInit.c:   re-wrote TkpDisplayWarning such that it does not use
-	an Tcl API calls any more, so it works even with an ill-initialized Tcl.
-	* win/winMain.c:     Teach WishPanic how to thread UTF-8 in it's messagebox.
-	Both of those changes backported from Tcl 8.6. No change in functionality.
+	* win/tkWinDialog.c:	[Bug #3071836]: Crash/Tcl_Panic on WinXP saving
+	* win/tkWinInit.c:	file to C:\ re-wrote TkpDisplayWarning such
+	that it does not use an Tcl API calls any more, so it works even with
+	an ill-initialized Tcl.
+	* win/winMain.c:	Teach WishPanic how to thread UTF-8 in it's
+	messagebox.  Backports from Tcl 8.6. No change in functionality.
 
 2010-11-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/configure.in:	    Allow cross-compilation by default. (backported)
-	* win/tcl.m4:		    Use -pipe for gcc on win32 (backported)
-	* win/configure:        (regenerated)
+	* win/configure.in:	Allow cross-compilation by default. (backported)
+	* win/tcl.m4:		Use -pipe for gcc on win32 (backported)
+	* win/configure:	(regenerated)
 
 2010-11-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -153,7 +161,7 @@
 2010-11-04  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/msgs/de.msg:  Updated German messages.  Thanks to Ruediger
-        Haertel. [Patch 2442309] [Bug 3102739].
+	Haertel. [Patch 2442309] [Bug 3102739].
 
 2010-10-23  Jan Nijtmans  <nijtmans@users.sf.net>
 
