@@ -1,4 +1,4 @@
-/* $Id: ttkScale.c,v 1.7.2.1 2010/08/26 02:06:09 hobbs Exp $
+/*
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * ttk::scale widget.

@@ -53,8 +53,6 @@
  *	acting in its behalf permission to use and distribute the
  *	software in accordance with the terms specified in this
  *	license.
- *
- * RCS: @(#) $Id: tkMacOSXDebug.c,v 1.19.2.1 2008/06/19 00:15:04 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"

@@ -5,8 +5,6 @@
 # Copyright (c) 1996-1998 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: font.test,v 1.17.2.1 2009/05/13 21:49:12 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

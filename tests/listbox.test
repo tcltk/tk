@@ -5,8 +5,6 @@
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: listbox.test,v 1.28.2.2 2008/11/12 22:43:25 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

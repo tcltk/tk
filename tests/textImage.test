@@ -6,8 +6,6 @@
 #
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: textImage.test,v 1.10 2004/09/10 12:13:43 vincentdarley Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

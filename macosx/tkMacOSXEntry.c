@@ -52,8 +52,6 @@
  *	acting in its behalf permission to use and distribute the
  *	software in accordance with the terms specified in this
  *	license.
- *
- * RCS: @(#) $Id: tkMacOSXEntry.c,v 1.14 2007/12/13 15:27:09 dgp Exp $
  */
 
 #include "tkMacOSXPrivate.h"

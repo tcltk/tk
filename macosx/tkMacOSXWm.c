@@ -12,8 +12,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.63.2.3 2009/02/06 08:13:23 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"

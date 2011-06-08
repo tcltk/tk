@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.68.2.2 2010/01/07 15:35:04 dkf Exp $
  */
 
 #include "tkInt.h"

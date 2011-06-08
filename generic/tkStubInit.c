@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkStubInit.c,v 1.60.2.3 2009/12/02 22:20:01 nijtmans Exp $
  */
 
 #include "tkInt.h"

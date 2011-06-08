@@ -12,8 +12,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkText.c,v 1.79.2.8 2010/08/27 00:32:28 hobbs Exp $
  */
 
 #include "default.h"

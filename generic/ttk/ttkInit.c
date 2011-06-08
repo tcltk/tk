@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.7.2.2 2010/08/26 02:06:09 hobbs Exp $
+/*
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.

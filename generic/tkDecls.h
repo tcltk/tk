@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkDecls.h,v 1.30.4.1 2010/02/07 23:24:13 nijtmans Exp $
  */
 
 #ifndef _TKDECLS

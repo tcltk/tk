@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: winMain.c,v 1.26.2.2 2010/11/24 15:15:25 nijtmans Exp $
  */
 
 #include "tkInt.h"

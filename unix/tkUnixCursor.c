@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixCursor.c,v 1.13 2008/03/26 19:34:53 dgp Exp $
  */
 
 #include "tkInt.h"

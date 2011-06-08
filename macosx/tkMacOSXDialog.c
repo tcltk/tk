@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXDialog.c,v 1.36.2.6 2009/10/22 10:27:58 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"

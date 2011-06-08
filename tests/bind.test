@@ -6,8 +6,6 @@
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: bind.test,v 1.19 2007/05/16 15:23:44 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
