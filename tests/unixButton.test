@@ -7,8 +7,6 @@
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: unixButton.test,v 1.6 2003/02/25 01:39:56 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

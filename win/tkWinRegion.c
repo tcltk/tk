@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinRegion.c,v 1.3 2002/06/14 13:35:49 dkf Exp $
  */
 
 #include "tkWinInt.h"

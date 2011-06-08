@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkOption.c,v 1.15.2.1 2006/03/30 01:38:39 hobbs Exp $
  */
 
 #include "tkPort.h"

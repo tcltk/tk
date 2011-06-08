@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkCanvPoly.c,v 1.10.2.3 2006/10/16 15:35:50 das Exp $
  */
 
 #include <stdio.h>

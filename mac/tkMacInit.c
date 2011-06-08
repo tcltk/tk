@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacInit.c,v 1.10 2002/05/20 12:30:16 das Exp $
  */
 
 #include <Resources.h>

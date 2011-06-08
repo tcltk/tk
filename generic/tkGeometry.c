@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkGeometry.c,v 1.5 2001/09/26 20:25:17 pspjuth Exp $
  */
 
 #include "tkPort.h"

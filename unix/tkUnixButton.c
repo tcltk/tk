@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixButton.c,v 1.11.2.5 2004/12/02 02:07:43 hobbs Exp $
  */
 
 #include "tkButton.h"

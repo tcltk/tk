@@ -2,9 +2,6 @@
 #
 # This file defines the default bindings for Tk panedwindow widgets and
 # provides procedures that help in implementing those bindings.
-#
-# RCS: @(#) $Id: panedwindow.tcl,v 1.6.2.4 2006/01/25 18:21:41 dgp Exp $
-#
 
 bind Panedwindow <Button-1> { ::tk::panedwindow::MarkSash %W %x %y 1 }
 bind Panedwindow <Button-2> { ::tk::panedwindow::MarkSash %W %x %y 0 }

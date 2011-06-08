@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXHLEvents.c,v 1.5.2.12 2009/08/24 00:59:29 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"

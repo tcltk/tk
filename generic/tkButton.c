@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkButton.c,v 1.20.2.3 2010/03/12 13:12:35 nijtmans Exp $
  */
 
 #include "tkButton.h"

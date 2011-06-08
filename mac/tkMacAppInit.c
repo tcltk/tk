@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacAppInit.c,v 1.15 2002/10/18 03:01:33 das Exp $
  */
 
 #include <Gestalt.h>

@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: xcolors.c,v 1.5.2.1 2005/09/10 14:54:18 das Exp $
  */
 
 #include <tkInt.h>

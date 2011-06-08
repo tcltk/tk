@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinFont.c,v 1.17.2.3 2004/08/09 23:48:11 mdejong Exp $
  */
 
 #include "tkWinInt.h"

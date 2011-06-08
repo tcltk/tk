@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacColor.c,v 1.6 1999/05/22 06:32:36 jingham Exp $
  */
 
 #include <tkColor.h>

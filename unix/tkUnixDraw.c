@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixDraw.c,v 1.6.8.1 2005/07/28 04:57:38 hobbs Exp $
  */
 
 #include "tkPort.h"

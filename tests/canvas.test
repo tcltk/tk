@@ -5,8 +5,6 @@
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # All rights reserved.
-#
-# RCS: @(#) $Id: canvas.test,v 1.16 2003/02/09 07:48:22 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

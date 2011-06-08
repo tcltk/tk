@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacCursors.r,v 1.2 1998/09/14 18:23:34 stanton Exp $
  */
 
 /*

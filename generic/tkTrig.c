@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkTrig.c,v 1.4 1999/12/14 06:52:33 hobbs Exp $
  */
 
 #include <stdio.h>
