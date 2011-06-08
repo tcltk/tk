@@ -4,9 +4,6 @@
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: clrpick.test,v 1.13 2007/05/09 12:52:44 das Exp $
-#
 
 package require tcltest 2.1
 eval tcltest::configure $argv

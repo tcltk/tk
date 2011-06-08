@@ -1,6 +1,4 @@
 /*
- * $Id: ttkThemeInt.h,v 1.5.2.1 2010/08/26 02:06:10 hobbs Exp $
- *
  * Theme engine: private definitions.
  *
  * Copyright (c) 2004 Joe English.  Freely redistributable.

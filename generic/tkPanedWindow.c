@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.30.2.1 2008/06/26 21:26:09 dgp Exp $
  */
 
 #include "default.h"

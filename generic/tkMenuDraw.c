@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMenuDraw.c,v 1.10.2.1 2009/09/14 23:40:42 hobbs Exp $
  */
 
 #include "tkInt.h"
