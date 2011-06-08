@@ -9,8 +9,6 @@
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: tkInt.decls,v 1.44.2.5 2010/02/07 23:24:13 nijtmans Exp $
 
 library tk
 

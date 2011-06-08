@@ -1,5 +1,4 @@
 /*
- * $Id: ttkCache.c,v 1.1.4.1 2010/08/26 02:06:09 hobbs Exp $
  *      Theme engine resource cache.
  *
  * Copyright (c) 2004, Joe English

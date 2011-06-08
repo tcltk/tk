@@ -1,4 +1,4 @@
-/* $Id: ttkNotebook.c,v 1.13.2.2 2010/08/26 02:06:09 hobbs Exp $
+/*
  * Copyright (c) 2004, Joe English
  */
 

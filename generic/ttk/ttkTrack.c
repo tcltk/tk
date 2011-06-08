@@ -1,4 +1,4 @@
-/* $Id: ttkTrack.c,v 1.4.2.1 2010/08/26 02:06:10 hobbs Exp $
+/*
  * Copyright (c) 2004, Joe English
  *
  * TtkTrackElementState() -- helper routine for widgets

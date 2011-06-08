@@ -53,8 +53,6 @@
  *	acting in its behalf permission to use and distribute the
  *	software in accordance with the terms specified in this
  *	license.
- *
- * RCS: @(#) $Id: tkMacOSXEvent.h,v 1.12 2007/04/23 21:24:33 das Exp $
  */
 
 #ifndef _TKMACEVENT
