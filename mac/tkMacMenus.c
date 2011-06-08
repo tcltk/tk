@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacMenus.c,v 1.8 2002/01/27 11:11:02 das Exp $
  */
 
 #include "tcl.h"

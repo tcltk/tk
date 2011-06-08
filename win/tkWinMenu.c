@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.21.2.10 2009/09/14 23:39:53 hobbs Exp $
  */
 
 #define OEMRESOURCE

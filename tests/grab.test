@@ -6,8 +6,6 @@
 #
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # All rights reserved.
-#
-# RCS: @(#) $Id: grab.test,v 1.2 2002/07/13 21:52:34 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

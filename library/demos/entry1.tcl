@@ -2,8 +2,6 @@
 #
 # This demonstration script creates several entry widgets without
 # scrollbars.
-#
-# RCS: @(#) $Id: entry1.tcl,v 1.2 1998/09/14 18:23:28 stanton Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkGC.c,v 1.4 2002/04/12 10:02:40 hobbs Exp $
  */
 
 #include "tkPort.h"

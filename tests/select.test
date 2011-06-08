@@ -5,8 +5,6 @@
 # Copyright (c) 1994 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: select.test,v 1.9.2.1 2005/11/22 11:32:37 dkf Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the

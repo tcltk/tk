@@ -12,8 +12,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.2.2.21 2008/06/12 06:38:57 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"

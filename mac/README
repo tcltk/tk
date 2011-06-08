@@ -3,8 +3,6 @@ Tk 8.4 for Macintosh
 Originally by Ray Johnson while at Sun Microsystems Labs
 with major help from Jim Ingham while at Cygnus Solutions
 
-RCS: @(#) $Id: README,v 1.17.2.1 2005/12/04 00:51:29 das Exp $
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Note that Tk on Mac OS Classic is no longer supported and likely no longer
