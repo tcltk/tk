@@ -1,6 +1,4 @@
 /*
- * $Id: ttkState.c,v 1.4 2009/01/28 20:47:49 nijtmans Exp $
- *
  * Tk widget state utilities.
  *
  * Copyright (c) 2003 Joe English.  Freely redistributable.

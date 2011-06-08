@@ -1,4 +1,3 @@
-# $Id: tk.spec,v 1.41 2008/12/19 14:32:25 dgp Exp $
 # This file is the basis for a binary Tk Linux RPM.
 
 %{!?directory:%define directory /usr/local}

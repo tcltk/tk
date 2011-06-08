@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkStyle.c,v 1.13 2010/06/15 11:16:03 nijtmans Exp $
  */
 
 #include "tkInt.h"

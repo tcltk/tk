@@ -3,8 +3,6 @@
 #	Implements the icon-list megawidget used in the "Tk" standard file
 #	selection dialog boxes.
 #
-# RCS: @(#) $Id: iconlist.tcl,v 1.4 2010/03/12 13:53:43 dkf Exp $
-#
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 # Copyright (c) 2009 Donal K. Fellows
 #

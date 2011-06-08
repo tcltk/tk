@@ -10,8 +10,6 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: ttkGenStubs.tcl,v 1.11 2010/09/23 11:50:46 nijtmans Exp $
-#
 # SOURCE: tcl/tools/genStubs.tcl, revision 1.44
 #
 # CHANGES: 

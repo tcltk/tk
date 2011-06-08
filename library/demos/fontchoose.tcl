@@ -1,8 +1,6 @@
 # fontchoose.tcl --
 #
 # Show off the stock font selector dialog
-#
-# RCS: @(#) $Id: fontchoose.tcl,v 1.2 2010/01/04 12:09:36 patthoyts Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
