@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinButton.c,v 1.42 2010/11/29 09:07:12 nijtmans Exp $
  */
 
 #define OEMRESOURCE

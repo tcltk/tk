@@ -1,6 +1,3 @@
-#
-# $Id: treetags.test,v 1.3 2010/03/28 21:43:25 jenglish Exp $
-#
 
 package require Tk
 package require tcltest ; namespace import -force tcltest::*

@@ -1,4 +1,4 @@
-/* $Id: ttkImage.c,v 1.10 2010/02/05 21:33:14 jenglish Exp $
+/*
  *	Image specifications and image element factory.
  *
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>

@@ -1,5 +1,4 @@
-/* $Id: ttkProgress.c,v 1.10 2010/02/05 17:42:21 nijtmans Exp $
- *
+/*
  * Copyright (c) Joe English, Pat Thoyts, Michael Kirkham
  *
  * ttk::progressbar widget.

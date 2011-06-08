@@ -1,5 +1,4 @@
-/* $Id: ttkPanedwindow.c,v 1.22 2010/02/05 21:33:14 jenglish Exp $
- *
+/*
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
  * ttk::panedwindow widget implementation.

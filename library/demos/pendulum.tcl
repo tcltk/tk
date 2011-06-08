@@ -2,8 +2,6 @@
 #
 # This demonstration illustrates how Tcl/Tk can be used to construct
 # simulations of physical systems.
-#
-# RCS: @(#) $Id: pendulum.tcl,v 1.5 2009/08/08 08:23:40 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

@@ -5,8 +5,6 @@
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: text.test,v 1.56 2010/03/11 09:24:09 dkf Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
