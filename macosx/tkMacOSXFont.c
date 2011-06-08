@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.48 2011/01/06 00:04:44 wordtech Exp $
  */
 
 #include "tkMacOSXPrivate.h"

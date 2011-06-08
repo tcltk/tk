@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkPlace.c,v 1.30 2010/06/22 14:02:32 a_kovalenko Exp $
  */
 
 #include "tkInt.h"

@@ -1,8 +1,6 @@
 # toolbar.tcl --
 #
 # This demonstration script creates a toolbar that can be torn off.
-#
-# RCS: @(#) $Id: toolbar.tcl,v 1.4 2008/12/11 18:13:08 jenglish Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

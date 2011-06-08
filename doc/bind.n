@@ -6,8 +6,6 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: bind.n,v 1.32 2009/01/03 00:05:19 ferrieux Exp $
-'\" 
 .so man.macros
 .TH bind n 8.0 Tk "Tk Built-In Commands"
 .BS

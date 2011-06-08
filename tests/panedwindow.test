@@ -5,8 +5,6 @@
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: panedwindow.test,v 1.23 2008/08/21 11:19:33 aniap Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv

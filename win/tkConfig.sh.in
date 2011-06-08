@@ -10,8 +10,6 @@
 # file in addition to this one.
 #
 # The information in this file is specific to a single platform.
-#
-# RCS: @(#) $Id: tkConfig.sh.in,v 1.3 2003/03/19 03:21:22 mdejong Exp $
 
 TK_DLL_FILE="@TK_DLL_FILE@"
 
