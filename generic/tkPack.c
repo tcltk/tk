@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkPack.c,v 1.16.2.3 2005/08/11 12:17:09 dkf Exp $
  */
 
 #include "tkPort.h"

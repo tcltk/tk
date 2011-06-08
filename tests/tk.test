@@ -4,8 +4,6 @@
 # Copyright (c) 1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2002 ActiveState Corporation.
-#
-# RCS: @(#) $Id: tk.test,v 1.9 2002/09/02 19:15:38 hobbs Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

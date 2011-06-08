@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWin32Dll.c,v 1.6.2.3 2005/08/23 18:34:49 mdejong Exp $
  */
 
 #include "tkWinInt.h"

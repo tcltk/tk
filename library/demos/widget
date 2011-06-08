@@ -10,8 +10,6 @@ exec wish "$0" "$@"
 # code for the actual demonstrations is contained in separate
 # ".tcl" files is this directory, which are sourced by this script
 # as needed.
-#
-# RCS: @(#) $Id: widget,v 1.9.2.3 2007/11/09 06:48:32 das Exp $
 
 eval destroy [winfo child .]
 wm title . "Widget Demonstration"

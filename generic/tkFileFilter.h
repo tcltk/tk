@@ -8,9 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkFileFilter.h,v 1.4 1998/09/14 18:23:10 stanton Exp $
- *
  */
 
 #ifndef _TK_FILE_FILTER

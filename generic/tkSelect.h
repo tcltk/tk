@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkSelect.h,v 1.4 1999/05/25 20:40:54 stanton Exp $
  */
 
 #ifndef _TKSELECT

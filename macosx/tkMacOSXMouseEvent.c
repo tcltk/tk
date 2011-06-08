@@ -53,8 +53,6 @@
  *	acting in its behalf permission to use and distribute the
  *	software in accordance with the terms specified in this
  *	license.
- *
- * RCS: @(#) $Id: tkMacOSXMouseEvent.c,v 1.6.2.23 2007/12/18 18:21:30 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"

@@ -28,8 +28,6 @@
  * |   notice appear in supporting documentation.  This software is	|
  * |   provided "as is" without express or implied warranty.		|
  * +-------------------------------------------------------------------+
- *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.24.2.6 2008/02/01 16:59:58 rmax Exp $
  */
 
 /*

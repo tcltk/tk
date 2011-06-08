@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkFrame.c,v 1.15.2.4 2007/04/29 02:24:02 das Exp $
  */
 
 #include "default.h"

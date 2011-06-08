@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinTest.c,v 1.7.2.1 2010/03/12 13:12:35 nijtmans Exp $
  */
 
 #include "tkWinInt.h"

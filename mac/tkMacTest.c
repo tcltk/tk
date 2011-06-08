@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacTest.c,v 1.4 2002/10/09 11:56:57 das Exp $
  */
 
 #include <Types.h>

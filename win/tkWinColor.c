@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinColor.c,v 1.6 2000/07/06 03:17:44 mo Exp $
  */
 
 #include "tkWinInt.h"

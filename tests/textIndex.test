@@ -5,8 +5,6 @@
 # Copyright (c) 1994 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: textIndex.test,v 1.7.2.1 2005/05/13 13:48:21 vincentdarley Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

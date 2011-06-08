@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkCanvBmap.c,v 1.7.2.2 2005/02/11 19:27:52 hobbs Exp $
  */
 
 #include <stdio.h>

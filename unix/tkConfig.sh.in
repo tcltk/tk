@@ -10,8 +10,6 @@
 # file in addition to this one.
 #
 # The information in this file is specific to a single platform.
-#
-# RCS: @(#) $Id: tkConfig.sh.in,v 1.8.2.1 2007/09/11 05:17:07 das Exp $
 
 # Tk's version number.
 TK_VERSION='@TK_VERSION@'

@@ -2,8 +2,6 @@
 #
 # This demonstration script creates a toplevel window containing
 # several radiobutton widgets.
-#
-# RCS: @(#) $Id: radio.tcl,v 1.4 2001/11/12 14:32:50 dkf Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

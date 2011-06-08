@@ -6,8 +6,6 @@
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: unixWm.test,v 1.29.2.5 2010/01/23 01:36:03 patthoyts Exp $
 
 package require tcltest 2.2
 namespace import -force tcltest::configure

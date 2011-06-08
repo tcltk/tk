@@ -14,8 +14,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacMDEF.r,v 1.3 2001/11/23 02:06:02 das Exp $
  */
 
 #include <Types.r>

@@ -8,8 +8,6 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-# 
-# RCS: @(#) $Id: tkInt.decls,v 1.33.2.6 2005/11/27 02:44:25 das Exp $
 
 library tk
 

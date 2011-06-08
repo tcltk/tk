@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinDraw.c,v 1.12.2.3 2007/12/05 19:17:32 hobbs Exp $
  */
 
 #include "tkWinInt.h"

@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXAETE.r,v 1.1.2.1 2007/04/29 02:26:47 das Exp $
  */
 
 #define SystemSevenOrLater 1

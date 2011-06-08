@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkOldConfig.c,v 1.12.2.3 2005/12/05 22:42:42 hobbs Exp $
  */
 
 #include "tkPort.h"

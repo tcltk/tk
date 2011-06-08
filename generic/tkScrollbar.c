@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkScrollbar.c,v 1.6 2002/08/05 04:30:40 dgp Exp $
  */
 
 #include "tkPort.h"

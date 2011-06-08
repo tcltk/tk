@@ -8,9 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * ----------------------------------------------------------------------------
- * RCS: @(#) $Id: nmakehlp.c,v 1.1.6.5 2006/10/18 08:56:21 patthoyts Exp $
  * ----------------------------------------------------------------------------
  */
 

@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinScrlbr.c,v 1.9 2003/02/21 02:07:50 hobbs Exp $
  */
 
 #include "tkWinInt.h"

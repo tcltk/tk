@@ -6,8 +6,6 @@ exec wish "$0" "$@"
 # This script implements a simple remote-control mechanism for
 # Tk applications.  It allows you to select an application and
 # then type commands to that application.
-#
-# RCS: @(#) $Id: rmt,v 1.3 2001/10/29 16:23:32 dkf Exp $
 
 wm title . "Tk Remote Controller"
 wm iconname . "Tk Remote"

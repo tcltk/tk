@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkFocus.c,v 1.10.2.2 2009/07/22 07:51:29 dkf Exp $
  */
 
 #include "tkInt.h"

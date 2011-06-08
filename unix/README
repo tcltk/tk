@@ -21,8 +21,6 @@ a PC running Windows, see the README file in the directory ../win.  To
 compile for Mac OS X, see the README file in the directory ../macosx.  To
 compile for a classic Macintosh, see the README file in the directory ../mac.
 
-RCS: @(#) $Id: README,v 1.19.2.3 2007/05/25 16:03:37 dgp Exp $
-
 How To Compile And Install Tk:
 ------------------------------
 

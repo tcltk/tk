@@ -3,8 +3,6 @@
 # This demonstration script creates a listbox widget that displays
 # many of the colors from the X color database.  You can click on
 # a color to change the application's palette.
-#
-# RCS: @(#) $Id: colors.tcl,v 1.2 1998/09/14 18:23:27 stanton Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

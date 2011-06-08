@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkEvent.c,v 1.17.2.8 2006/01/20 18:42:04 jenglish Exp $
  */
 
 #include "tkPort.h"

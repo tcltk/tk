@@ -8,8 +8,6 @@
 # All rights reserved.
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
-#
-# RCS: @(#) $Id: imgPhoto.test,v 1.15.2.6 2008/02/01 16:59:58 rmax Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

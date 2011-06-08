@@ -3,8 +3,6 @@
 #
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: spinbox.test,v 1.5.2.1 2003/03/13 19:33:48 dgp Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

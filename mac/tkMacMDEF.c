@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacMDEF.c,v 1.2 1998/09/14 18:23:37 stanton Exp $
  */
 
 #define MAC_TCL

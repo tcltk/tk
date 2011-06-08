@@ -6,8 +6,6 @@
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: winMenu.test,v 1.6.2.1 2004/10/29 11:16:38 patthoyts Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

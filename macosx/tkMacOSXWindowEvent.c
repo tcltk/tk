@@ -53,8 +53,6 @@
  *	acting in its behalf permission to use and distribute the
  *	software in accordance with the terms specified in this
  *	license.
- *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.3.2.27 2008/06/19 00:11:23 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"

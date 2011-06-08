@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMac.h,v 1.8 2001/11/23 02:05:24 das Exp $
  */
 
 #ifndef _TKMAC

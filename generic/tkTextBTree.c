@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkTextBTree.c,v 1.6.2.3 2006/09/10 17:07:35 das Exp $
  */
 
 #include "tkInt.h"

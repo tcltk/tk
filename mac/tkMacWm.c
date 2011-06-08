@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacWm.c,v 1.24.2.1 2005/12/01 18:31:43 dgp Exp $
  */
 
 #include <Gestalt.h>

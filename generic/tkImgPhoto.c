@@ -16,8 +16,6 @@
  * Author: Paul Mackerras (paulus@cs.anu.edu.au),
  *	   Department of Computer Science,
  *	   Australian National University.
- *
- * RCS: @(#) $Id: tkImgPhoto.c,v 1.36.2.19 2009/02/06 08:14:29 das Exp $
  */
 
 #include "tkInt.h"

@@ -1,4 +1,3 @@
-# $Id: tk.spec,v 1.15.2.19 2008/04/07 19:17:57 dgp Exp $
 # This file is the basis for a binary Tk Linux RPM.
 
 %define version 8.4.19

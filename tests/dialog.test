@@ -1,8 +1,5 @@
 # This file is a Tcl script to test out Tk's "tk_dialog" command.
 # It is organized in the standard fashion for Tcl tests.
-#
-# RCS: @(#) $Id: dialog.test,v 1.3 2002/07/14 05:48:46 dgp Exp $
-#
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

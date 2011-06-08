@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkCanvas.h,v 1.7 2003/01/08 23:02:33 drh Exp $
  */
 
 #ifndef _TKCANVAS

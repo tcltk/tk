@@ -7,9 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinDialog.c,v 1.30.2.5 2005/10/05 03:51:09 hobbs Exp $
- *
  */
 
 #include "tkWinInt.h"

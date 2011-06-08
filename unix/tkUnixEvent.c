@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixEvent.c,v 1.11.2.7 2006/12/22 19:06:12 dkf Exp $
  */
 
 #include "tkInt.h"

@@ -5,8 +5,6 @@
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: imgPPM.test,v 1.5.2.1 2007/11/26 20:53:57 kennykb Exp $
 
 package require tcltest 2.1
 namespace import -force tcltest::configure

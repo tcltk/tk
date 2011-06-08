@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkCursor.c,v 1.9.2.2 2004/09/24 17:35:48 dgp Exp $
  */
 
 #include "tkPort.h"
