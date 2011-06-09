@@ -6726,11 +6726,11 @@ in screen distances, reducing precision loss (ferrieux)
 
 --- Released 8.5.9, September 6, 2010 --- See ChangeLog for details ---
 
-2010-09-02 (bug fix)[3057573] disabled ttk::combobox colors (godfrey,english)
+2010-09-02 (bug fix)[3057573] specify combobox text fg color (english)
 
-2010-09-08 (bug fix)[2829363] [$treeview see] redisplay (barden,english)
+2010-09-08 (bug fix)[2829363] [$tv see] open item -> sched display (english)
 
-2010-10-11 (bug fix)[3085489] crash in [$treeview add] with no -tags (english)
+2010-10-11 (bug fix)[3085489] crash in [tag add/remove] (english)
 
 2010-11-04 (enhancement) Updated German messages. (haertel,nijtmans)
 
