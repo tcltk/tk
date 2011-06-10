@@ -138,10 +138,13 @@
 
 2011-01-06   Kevin Walzer <wordtech@users.sourceforge.net>
 
-	* macosx/README: 	Added info on textured background windows.
-	* macosx/tkMacOSXFont.c: Fix for 2857300, improves rounding up on text width [submitted by treectrl]
-	* macosx/tkMacOSXMenu.c:  Fix for radiobuttons and checkbuttons not displaying in popup menus, and disabled menu entries.
-	*macosx/ tkMacOSXWindowEvent.c:  Fix for 3086887, speeds up scrolling; also textured background windows
+	* macosx/README:	Added info on textured background windows.
+	* macosx/tkMacOSXFont.c: Fix for 2857300, improves rounding up on text
+	width [submitted by treectrl]
+	* macosx/tkMacOSXMenu.c: Fix for radiobuttons and checkbuttons not
+	displaying in popup menus, and disabled menu entries.
+	* macosx/tkMacOSXWindowEvent.c:	Fix for 3086887, speeds up scrolling;
+	also textured background windows
 	* macosx/tkMacOSXWm.c: Textured background windows.
 
 2011-01-06  Stuart Cassoff  <stwo@users.sourceforge.net>
@@ -185,19 +188,21 @@
 
 2010-12-15  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkMain.c:  [Patch #3124683]: platform specific stuff in (tcl|tk)Main.c
+	* generic/tkMain.c:	[Patch #3124683]: platform specific stuff
+	in (tcl|tk)Main.c
 
 2010-12-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tcl.m4:      [Bug 3135271] Link error due to hidden
-	* unix/configure:    symbols (CentOS 4.2)  (autoconf-2.59)
-    * generic/tkMain.c:   Change "Application initialization failed" to
-    * tests/main.test:    "application-specific initialization failed",
-    for consistency with Tcl.
-	* win/tkWin32Dll.c:   See also: [Patch 1910041] and [Patch 3059922]. SEH emulation
-	on Win64 was not correct here: it sometimes results in a crash. Contrary to the
-	other places, the code here is not meant to protect from OS bugs, but to protect
-	Finalizing Tk when the application went in an invalid state.
+	* unix/tcl.m4:		[Bug 3135271] Link error due to hidden
+	* unix/configure:	symbols (CentOS 4.2)  (autoconf-2.59)
+	* generic/tkMain.c:	Change "Application initialization failed" to
+	* tests/main.test:	"application-specific initialization failed",
+	for consistency with Tcl.
+	* win/tkWin32Dll.c:	See also: [Patch 1910041] and [Patch 3059922].
+	SEH emulation on Win64 was not correct here: it sometimes results in
+	a crash. Contrary to the other places, the code here is not meant to
+	protect from OS bugs, but to protect Finalizing Tk when the application
+	went in an invalid state.
 
 2010-12-12  Stuart Cassoff  <stwo@users.sourceforge.net>
 
@@ -206,15 +211,15 @@
 
 2010-12-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tcl.m4:               Fix manifest-generation for 64-bit gcc (mingw-w64)
-	* win/configure:            (autoconf-2.59)
+	* win/tcl.m4:	Fix manifest-generation for 64-bit gcc (mingw-w64)
+	* win/configure: (autoconf-2.59)
 
 2010-12-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkSelect.c:     [Bug 3129527]: Fix buffer overflow w/ GCC 4.5 and
-	* generic/tkTextDisp.c    -D_FORTIFY_SOURCE=2
-	* unix/tkUnixWm.c
-	* win/tkWinWm.c
+	* generic/tkSelect.c:	[Bug 3129527]: Fix buffer overflow w/ GCC 4.5
+	* generic/tkTextDisp.c: and -D_FORTIFY_SOURCE=2
+	* unix/tkUnixWm.c:
+	* win/tkWinWm.c:
 
 2010-12-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -223,10 +228,10 @@
 
 2010-12-03  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tcl.m4           [Patch #3116490] cross-compile Tcl mingw32 on unix
-	* win/configure        This makes it possible to cross-compile Tcl/Tk for
-	Windows (either 32-bit or 64-bit) out-of-the-box on UNIX, using mingw-w64
-	build tools.
+	* win/tcl.m4:	[Patch #3116490] cross-compile Tcl mingw32 on unix
+	* win/configure: This makes it possible to cross-compile Tcl/Tk for
+	Windows (either 32-bit or 64-bit) out-of-the-box on UNIX, using
+	mingw-w64 build tools.
 
 2010-12-02  Donal K. Fellows  <dkf@users.sf.net>
 

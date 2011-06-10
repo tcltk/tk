@@ -6857,11 +6857,11 @@ name to select image format (fellows)
 
 2010-08-31 fixed manifest handling on windows (hobbs, kupries)
 
-2010-09-02 (bug fix)[3057573] specify combobox text fg color (jenglish)
+2010-09-02 (bug fix)[3057573] specify combobox text fg color (english)
 
 2010-09-05 (enhancement)[3046742,3046750] Improved error dialog UI (fellows)
 
-2010-09-08 (bug fix)[2829363] [$tv see] open item -> sched display (jenglish)
+2010-09-08 (bug fix)[2829363] [$tv see] open item -> sched display (english)
 
 2010-09-13 (platform) limit support to Win2000+ (nijtmans)
 
@@ -6869,7 +6869,7 @@ name to select image format (fellows)
 
 2010-10-05 (bug fix)[3080953] corrupt multibyte char in %A subst (nijtmans)
 
-2010-10-11 (bug fix)[3085489] crash in [tag add/remove] (jenglish)
+2010-10-11 (bug fix)[3085489] crash in [tag add/remove] (english)
 
 2010-10-11 (enhancement)[491789] Unicode command line support on Win (nijtmans)
 
@@ -6879,4 +6879,39 @@ name to select image format (fellows)
 
 2010-11-06 Message catalogs resorted, updates to NL (nijtmans)
 
---- Released 8.6b2, November 15, 2010 --- See ChangeLog for details ---
+2010-11-16 (platform) VS 2005 SP1 MSVC compiler (nijtmans)
+
+2010-11-24 (bug fix)[3071836] crash in tk_getSaveFile (twylite)
+
+2010-12-03 (enhancement)[3116490] mingw x-compile improvements (nijtmans)
+
+2010-12-12 (platform) OpenBSD build improvements (cassoff)
+
+2010-12-17 (platform) Revisions to support rpm 4.4.2 (cassoff)
+
+2011-01-06 (bug fix)[2857300] Cocoa: correct text width rounding (walzer)
+
+2011-01-06 (bug fix)[3086887] Cocoa: textured bg windows (walzer)
+
+2011-01-13 (bug fix)[3154705] tk_messageBox close button disabled (skylera)
+
+2011-01-22 (enhancement) add [ttk::entry validate] (schelte,english)
+
+2011-03-03 (bug fix)[3175610] incomplete line item refresh (ferrieux)
+
+2011-03-24 (bug fix)[3239768] Win menu font support (wehle)
+
+2011-03-28 (bug fix)[3129527] stop buffer overflows (dirtyepic,nijtmans)
+
+2011-04-04 (feature change)[2997657] No -container for [labelframe] (spjuth)
+
+2011-04-04 (bug fix)[723765] [grid remove] lost -in value (saye,spjuth)
+
+2011-04-22 (bug fix)[3291543] mem corrupt when [$canvas dchars] removes all
+coords of a polygon (rogers,spjuth)
+
+2011-06-06 (bug fix)[2546087] [console] treatment of '\0' (porter)
+
+2011-06-07 (bug fix)[2358545] Restore "08" in spinbox configured with -from
+and -to (porter)
+
