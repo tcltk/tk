@@ -10,9 +10,6 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # Copyright (c) 2001-2005 ActiveState Corporation.
 # Copyright (c) 2001-2004 David Gravereaux.
-#
-#------------------------------------------------------------------------------
-# RCS: @(#) $Id: makefile.vc,v 1.117.2.2 2009/10/15 17:48:50 dgp Exp $
 #------------------------------------------------------------------------------
 
 # Check to see we are configured to build with MSVC (MSDEVDIR or MSVCDIR)

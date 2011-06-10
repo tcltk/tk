@@ -1,7 +1,3 @@
-#
-# $Id: ttk.decls,v 1.2.4.2 2010/08/26 02:06:09 hobbs Exp $
-#
-
 library 	ttk
 interface 	ttk
 epoch  		0

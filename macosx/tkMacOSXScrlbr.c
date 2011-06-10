@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXScrlbr.c,v 1.26.2.1 2008/10/05 11:34:46 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"

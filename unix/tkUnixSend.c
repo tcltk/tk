@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.20.2.2 2009/12/20 23:16:30 dkf Exp $
  */
 
 #include "tkUnixInt.h"

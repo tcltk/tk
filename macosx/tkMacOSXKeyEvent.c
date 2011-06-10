@@ -53,8 +53,6 @@
  *	acting in its behalf permission to use and distribute the
  *	software in accordance with the terms specified in this
  *	license.
- *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.24.2.2 2010/01/02 10:43:26 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"

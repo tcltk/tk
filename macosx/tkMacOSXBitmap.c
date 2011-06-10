@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXBitmap.c,v 1.7.4.1 2008/05/03 21:09:16 das Exp $
  */
 
 #include "tkMacOSXInt.h"
