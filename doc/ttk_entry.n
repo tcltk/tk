@@ -6,9 +6,6 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" SOURCE: entry.n, r1.12
-'\" RCS: @(#) $Id: ttk_entry.n,v 1.11.2.1 2010/08/26 02:06:09 hobbs Exp $
-'\" 
 .so man.macros
 .TH ttk::entry n 8.5 Tk "Tk Themed Widget"
 .BS

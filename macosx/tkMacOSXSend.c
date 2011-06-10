@@ -29,8 +29,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXSend.c,v 1.8.2.1 2008/05/03 21:09:16 das Exp $
  */
 
 #include "tkMacOSXInt.h"

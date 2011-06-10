@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinPointer.c,v 1.10 2005/12/02 00:19:04 dkf Exp $
  */
 
 #include "tkWinInt.h"

@@ -5,8 +5,6 @@
 # Copyright (c) 1996-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: canvText.test,v 1.16.4.2 2008/10/11 06:55:03 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

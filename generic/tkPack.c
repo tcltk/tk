@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkPack.c,v 1.27 2007/12/13 15:24:16 dgp Exp $
  */
 
 #include "tkInt.h"

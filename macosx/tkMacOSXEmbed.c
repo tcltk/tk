@@ -13,8 +13,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.16.2.2 2008/06/19 00:14:21 das Exp $
  */
 
 #include "tkMacOSXInt.h"

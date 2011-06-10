@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixInt.h,v 1.5 2006/12/22 22:38:46 dkf Exp $
  */
 
 #ifndef _TKUNIXINT
