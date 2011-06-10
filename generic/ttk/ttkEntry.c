@@ -1,6 +1,4 @@
 /*
- * $Id: ttkEntry.c,v 1.9.4.2 2011/01/22 18:48:35 jenglish Exp $
- *
  * DERIVED FROM: tk/generic/tkEntry.c r1.35.
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.

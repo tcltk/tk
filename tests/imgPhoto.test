@@ -8,8 +8,6 @@
 # All rights reserved.
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
-#
-# RCS: @(#) $Id: imgPhoto.test,v 1.28.2.1 2008/07/22 14:35:21 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv
