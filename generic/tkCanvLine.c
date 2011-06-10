@@ -1031,9 +1031,12 @@ LineInsert(canvas, itemPtr, beforeThis, obj)
     for(i=beforeThis; i<length; i++) {
 	new[i+objc] = linePtr->coordPtr[i];
     }
-    if(linePtr->coordPtr) ckfree((char *)linePtr->coordPtr);
+    if (linePtr->coordPtr) {
+	ckfree((char *) linePtr->coordPtr);
+    }
     linePtr->coordPtr = new;
-    linePtr->numPoints = (length + objc)/2;
+    length += objc;
+    linePtr->numPoints = length / 2;
 
     if ((length>3) && (state != TK_STATE_HIDDEN)) {
 	/*
