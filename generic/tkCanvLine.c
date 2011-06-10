@@ -1005,10 +1005,11 @@ LineInsert(
 	newCoordPtr[i+objc] = linePtr->coordPtr[i];
     }
     if (linePtr->coordPtr) {
-	ckfree((char *)linePtr->coordPtr);
+	ckfree((char *) linePtr->coordPtr);
     }
     linePtr->coordPtr = newCoordPtr;
-    linePtr->numPoints = (length + objc)/2;
+    length += objc;
+    linePtr->numPoints = length / 2;
 
     if ((length>3) && (state != TK_STATE_HIDDEN)) {
 	/*
