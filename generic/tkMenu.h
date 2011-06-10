@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMenu.h,v 1.14.2.1 2010/01/03 20:03:55 patthoyts Exp $
  */
 
 #ifndef _TKMENU

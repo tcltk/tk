@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkPointer.c,v 1.10.4.2 2009/04/10 16:20:11 das Exp $
  */
 
 #include "tkInt.h"

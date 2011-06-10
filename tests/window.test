@@ -4,8 +4,6 @@
 # Copyright (c) 1995 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: window.test,v 1.12.4.1 2008/12/29 16:29:52 das Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

@@ -1,4 +1,4 @@
-/* $Id: ttkImage.c,v 1.7.2.1 2010/08/26 02:06:09 hobbs Exp $
+/*
  *	Image specifications and image element factory.
  *
  * Copyright (C) 2004 Pat Thoyts <patthoyts@users.sf.net>

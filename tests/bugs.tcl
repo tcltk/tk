@@ -7,8 +7,6 @@
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: bugs.tcl,v 1.3 1999/04/16 01:51:34 stanton Exp $
 
 if {[info procs test] != "test"} {
     source defs

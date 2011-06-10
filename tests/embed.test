@@ -3,8 +3,6 @@
 # Copyright (c) 1996-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: embed.test,v 1.4.4.1 2008/12/22 13:59:09 dgp Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

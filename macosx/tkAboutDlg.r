@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkAboutDlg.r,v 1.9.2.2 2009/04/14 00:55:35 das Exp $
  */
 
 /*

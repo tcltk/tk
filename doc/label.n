@@ -5,8 +5,6 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: label.n,v 1.12 2007/12/13 15:23:43 dgp Exp $
-'\" 
 .so man.macros
 .TH label n 4.0 Tk "Tk Built-In Commands"
 .BS

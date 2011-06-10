@@ -6,8 +6,6 @@
 # Copyright (c) 1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 1998-1999 ActiveState Corporation.
-#
-# RCS: @(#) $Id: winDialog.test,v 1.15.2.3 2009/11/13 23:32:05 patthoyts Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

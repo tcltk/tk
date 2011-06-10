@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkImage.c,v 1.35.2.1 2008/11/19 00:37:35 nijtmans Exp $
  */
 
 #include "tkInt.h"

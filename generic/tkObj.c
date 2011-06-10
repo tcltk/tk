@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkObj.c,v 1.19.2.1 2008/12/21 23:52:45 ferrieux Exp $
  */
 
 #include "tkInt.h"

@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: $Id: tkInt.h,v 1.82.2.6 2010/01/02 10:43:26 dkf Exp $
  */
 
 #ifndef _TKINT

@@ -5,8 +5,6 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: wm.n,v 1.38.2.1 2008/11/15 00:37:30 patthoyts Exp $
-'\" 
 .so man.macros
 .TH wm n 8.5 Tk "Tk Built-In Commands"
 .BS

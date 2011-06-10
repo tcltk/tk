@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixEmbed.c,v 1.12 2007/12/13 15:28:50 dgp Exp $
  */
 
 #include "tkUnixInt.h"

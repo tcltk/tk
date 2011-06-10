@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixFont.c,v 1.33 2007/02/28 09:23:30 dkf Exp $
  */
 
 #include "tkUnixInt.h"

@@ -1,5 +1,4 @@
-/* $Id: ttkScroll.c,v 1.5.4.2 2010/08/26 02:06:09 hobbs Exp $
- *
+/*
  * Copyright 2004, Joe English
  *
  * Support routines for scrollable widgets.

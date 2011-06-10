@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixSelect.c,v 1.21.4.2 2009/07/18 19:32:20 dkf Exp $
  */
 
 #include "tkInt.h"

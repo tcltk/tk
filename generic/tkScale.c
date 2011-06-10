@@ -15,8 +15,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkScale.c,v 1.28 2007/12/13 15:24:16 dgp Exp $
  */
 
 #include "default.h"

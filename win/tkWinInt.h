@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinInt.h,v 1.31.2.2 2010/03/12 13:02:36 nijtmans Exp $
  */
 
 #ifndef _TKWININT

@@ -1,6 +1,4 @@
 /*
- * $Id: ttkStubInit.c,v 1.2.4.1 2010/08/26 02:06:09 hobbs Exp $
- *
  * This file is (mostly) automatically generated from ttk.decls.
  * It is compiled and linked in with the ttk package proper.
  */
