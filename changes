@@ -6899,6 +6899,16 @@ name to select image format (fellows)
 
 2011-03-03 (bug fix)[3175610] incomplete line item refresh (ferrieux)
 
+2011-03-10 (bug fix)[3205160] crash in [wm manage] (boudaillier, thoyts)
+
+2011-03-16 (bug fix)[3181181] tearoff submenu fix (menez, thoyts)
+
+2011-03-19 (bug fix)[3205464] [wm forget] loses window (boudaillier,thoyts)
+
+2011-03-19 (bug fix)[3223850] ttk button state disabled during click (thoyts)
+
+2011-03-22 (bug fix)[3000002] ttk scrollbar size Appearance (garvey,thoyts)
+
 2011-03-24 (bug fix)[3239768] Win menu font support (wehle)
 
 2011-03-28 (bug fix)[3129527] stop buffer overflows (dirtyepic,nijtmans)
