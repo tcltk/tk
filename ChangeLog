@@ -1,3 +1,8 @@
+2011-06-10  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkCanvLine.c: [Bug 3175610] Incomplete refresh of line item.
+	Backport of 2011-03-03 trunk commit from Alexandre Ferrieux.
+
 2011-06-06  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkConsole.c:	Restore proper NUL output to the [console].
