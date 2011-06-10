@@ -6746,6 +6746,16 @@ in screen distances, reducing precision loss (ferrieux)
 
 2011-01-22 (enhancement) add [ttk::entry validate] (schelte,english)
 
+2011-03-10 (bug fix)[3205160] crash in [wm manage] (boudaillier, thoyts)
+
+2011-03-16 (bug fix)[3181181] tearoff submenu fix (menez, thoyts)
+
+2011-03-19 (bug fix)[3205464] [wm forget] loses window (boudaillier,thoyts)
+
+2011-03-19 (bug fix)[3223850] ttk button state disabled during click (thoyts)
+
+2011-03-22 (bug fix)[3000002] ttk scrollbar size Appearance (garvey,thoyts)
+
 2011-03-24 (bug fix)[3239768] Win menu font support (wehle)
 
 2011-03-28 (bug fix)[3129527] stop buffer overflows (dirtyepic,nijtmans)
@@ -6756,6 +6766,8 @@ in screen distances, reducing precision loss (ferrieux)
 
 2011-04-22 (bug fix)[3291543] mem corrupt when [$canvas dchars] removes all
 coords of a polygon (rogers,spjuth)
+
+2010-04-30 (bug fix)[2949774] cascade menu unpost (thoyts)
 
 2011-06-06 (bug fix)[2546087] [console] treatment of '\0' (porter)
 
