@@ -8,8 +8,6 @@
  *
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * All rights reserved.
- *
- * RCS: @(#) $Id: tkIntXlibDecls.h,v 1.23.2.1 2010/02/07 23:24:13 nijtmans Exp $
  */
 
 #ifndef _TKINTXLIBDECLS

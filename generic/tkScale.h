@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkScale.h,v 1.10 2005/11/27 02:36:14 das Exp $
  */
 
 #ifndef _TKSCALE
