@@ -3269,17 +3269,19 @@ EntryValidateChange(
 	if (varValidate) {
 	    entryPtr->validate = VALIDATE_NONE;
 	} else if (entryPtr->invalidCmd != NULL) {
+	    int result;
+
 	    Tcl_DStringInit(&script);
 	    ExpandPercents(entryPtr, entryPtr->invalidCmd,
 		    change, newValue, index, type, &script);
 	    Tcl_DStringAppend(&script, "", 1);
 	    p = Tcl_DStringValue(&script);
-	    code = Tcl_EvalEx(entryPtr->interp, p, -1,
+	    result = Tcl_EvalEx(entryPtr->interp, p, -1,
 		    TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
-	    if (code != TCL_OK) {
+	    if (result != TCL_OK) {
 		Tcl_AddErrorInfo(entryPtr->interp,
 			"\n\t(in invalidcommand executed by entry)");
-		Tcl_BackgroundException(entryPtr->interp, code);
+		Tcl_BackgroundException(entryPtr->interp, result);
 		code = TCL_ERROR;
 		entryPtr->validate = VALIDATE_NONE;
 	    }
