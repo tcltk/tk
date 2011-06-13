@@ -1,5 +1,9 @@
 2011-06-10  Don Porter  <dgp@users.sourceforge.net>
 
+	* generic/tkEntry.c:	[Bug 3315731] Fix [$entry -invcmd].
+
+2011-06-10  Don Porter  <dgp@users.sourceforge.net>
+
 	* README:	Correct some README bitrot.
 	* macosx/README:
 
