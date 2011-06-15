@@ -6925,3 +6925,5 @@ coords of a polygon (rogers,spjuth)
 2011-06-07 (bug fix)[2358545] Restore "08" in spinbox configured with -from
 and -to (porter)
 
+2011-06-10 (bug fix)[3315731] fix [$entry -invcmd] (porter)
+
