@@ -44,6 +44,11 @@ VarTraceProc(
      * If the variable is being unset, then re-establish the trace:
      */
     if (flags & TCL_TRACE_DESTROYED) {
+	if (tracePtr->interp == NULL) {
+	    Tcl_DecrRefCount(tracePtr->varnameObj);
+	    ckfree((ClientData)tracePtr);
+	    return NULL;
+	}
 	Tcl_TraceVar(interp, name,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		VarTraceProc, clientData);
@@ -104,6 +109,18 @@ Ttk_TraceHandle *Ttk_TraceVariable(
 void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 {
     if (h) {
+	ClientData cd = NULL;
+
+	while ((cd = Tcl_VarTraceInfo(h->interp, Tcl_GetString(h->varnameObj),
+		0, VarTraceProc, cd)) != NULL) {
+	    if (cd == (ClientData) h) {
+		break;
+	    }
+	}
+	if (cd == NULL) {
+	    h->interp = NULL;
+	    return;
+	}
 	Tcl_UntraceVar(h->interp, Tcl_GetString(h->varnameObj),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		VarTraceProc, (ClientData)h);
