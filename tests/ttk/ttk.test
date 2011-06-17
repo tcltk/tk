@@ -555,6 +555,16 @@ test ttk-14.3 "-textvariable in nonexistant namespace" -body {
 } -returnCodes 1 -result {can't trace *: parent namespace doesn't exist} \
   -match glob -cleanup { destroy .tw }
 
+test ttk-15.1 {Bug 3062331} -setup {
+    destroy .b
+} -body {
+    set Y {}
+    ttk::button .b -textvariable Y
+    trace variable Y u "destroy .b"
+    unset Y
+} -cleanup {
+    destroy .b
+} -result {}
 
 ## Test ensemble processing:
 #
