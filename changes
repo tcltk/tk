@@ -6927,3 +6927,4 @@ and -to (porter)
 
 2011-06-10 (bug fix)[3315731] fix [$entry -invcmd] (porter)
 
+2011-06-17 (bug fix)[3062331] crash in unset traces (macdonald,porter)
