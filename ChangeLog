@@ -1,3 +1,9 @@
+2011-06-19  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/wm.n: Added documentation of the -type attribute that was
+	introduced in TIP#359, and moved documentation of -alpha to common
+	section as it is supported on all platforms now.
+
 2011-06-17  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/ttk/ttkTrace.c:	Workaround Bug 3062331.
