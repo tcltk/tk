@@ -6778,4 +6778,6 @@ and -to (porter)
 
 2011-06-10 (bug fix)[3175610] incomplete line item refresh (ferrieux)
 
---- Released 8.5.10, June 17, 2011 --- See ChangeLog for details ---
+2011-06-17 (bug fix)[3062331] crash in unset traces (macdonald,porter)
+
+--- Released 8.5.10, June 22, 2011 --- See ChangeLog for details ---
