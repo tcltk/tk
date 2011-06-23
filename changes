@@ -6746,7 +6746,7 @@ in screen distances, reducing precision loss (ferrieux)
 
 2011-01-22 (enhancement) add [ttk::entry validate] (schelte,english)
 
-2011-03-10 (bug fix)[3205160] crash in [wm manage] (boudaillier, thoyts)
+2011-03-10 (bug fix)[3205260] crash in [wm manage] (boudaillier, thoyts)
 
 2011-03-16 (bug fix)[3181181] tearoff submenu fix (menez, thoyts)
 
@@ -6767,7 +6767,7 @@ in screen distances, reducing precision loss (ferrieux)
 2011-04-22 (bug fix)[3291543] mem corrupt when [$canvas dchars] removes all
 coords of a polygon (rogers,spjuth)
 
-2010-04-30 (bug fix)[2949774] cascade menu unpost (thoyts)
+2011-04-30 (bug fix)[2949774] cascade menu unpost (thoyts)
 
 2011-06-06 (bug fix)[2546087] [console] treatment of '\0' (porter)
 
@@ -6780,4 +6780,4 @@ and -to (porter)
 
 2011-06-17 (bug fix)[3062331] crash in unset traces (macdonald,porter)
 
---- Released 8.5.10, June 22, 2011 --- See ChangeLog for details ---
+--- Released 8.5.10, June 23, 2011 --- See ChangeLog for details ---
