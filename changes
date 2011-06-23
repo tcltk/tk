@@ -6899,7 +6899,7 @@ name to select image format (fellows)
 
 2011-03-03 (bug fix)[3175610] incomplete line item refresh (ferrieux)
 
-2011-03-10 (bug fix)[3205160] crash in [wm manage] (boudaillier, thoyts)
+2011-03-10 (bug fix)[3205260] crash in [wm manage] (boudaillier, thoyts)
 
 2011-03-16 (bug fix)[3181181] tearoff submenu fix (menez, thoyts)
 
