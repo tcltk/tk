@@ -4,6 +4,8 @@
 
 2011-06-17  Don Porter  <dgp@users.sourceforge.net>
 
+	*** 8.5.10 TAGGED FOR RELEASE ***
+
 	* generic/ttk/ttkTrace.c:	Workaround Bug 3062331.
 	* tests/ttk/ttk.test:
 	* changes:	Updated
