@@ -560,10 +560,27 @@ test ttk-15.1 {Bug 3062331} -setup {
 } -body {
     set Y {}
     ttk::button .b -textvariable Y
-    trace variable Y u "destroy .b"
+    trace variable Y u "destroy .b; #"
     unset Y
 } -cleanup {
     destroy .b
+} -result {}
+
+test ttk-15.2 {Bug 3341056} -setup {
+    proc foo {} {
+	destroy .lf
+	ttk::labelframe .lf
+	ttk::checkbutton .lf.cb -text xxx
+    }
+} -body {
+    ttk::button .b -text xxx -command foo
+    .b invoke
+    .b invoke
+    .lf.cb invoke
+    destroy .b
+} -cleanup {
+    rename foo {}
+    destroy .lf
 } -result {}
 
 ## Test ensemble processing:
