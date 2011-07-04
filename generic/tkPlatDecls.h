@@ -7,6 +7,8 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * RCS: @(#) $Id$
  */
 
 #ifndef _TKPLATDECLS
@@ -108,12 +110,12 @@ EXTERN void		TkMacOSXInvalClipRgns(Tk_Window tkwin);
 #ifndef TkMacOSXGetDrawablePort_TCL_DECLARED
 #define TkMacOSXGetDrawablePort_TCL_DECLARED
 /* 7 */
-EXTERN GWorldPtr	TkMacOSXGetDrawablePort(Drawable drawable);
+EXTERN void *		TkMacOSXGetDrawablePort(Drawable drawable);
 #endif
 #ifndef TkMacOSXGetRootControl_TCL_DECLARED
 #define TkMacOSXGetRootControl_TCL_DECLARED
 /* 8 */
-EXTERN ControlRef	TkMacOSXGetRootControl(Drawable drawable);
+EXTERN void *		TkMacOSXGetRootControl(Drawable drawable);
 #endif
 #ifndef Tk_MacOSXSetupTkNotifier_TCL_DECLARED
 #define Tk_MacOSXSetupTkNotifier_TCL_DECLARED
@@ -147,8 +149,8 @@ typedef struct TkPlatStubs {
     void (*tkMacOSXInitAppleEvents) (Tcl_Interp *interp); /* 4 */
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 5 */
     void (*tkMacOSXInvalClipRgns) (Tk_Window tkwin); /* 6 */
-    GWorldPtr (*tkMacOSXGetDrawablePort) (Drawable drawable); /* 7 */
-    ControlRef (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
+    void * (*tkMacOSXGetDrawablePort) (Drawable drawable); /* 7 */
+    void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
 #endif /* AQUA */
