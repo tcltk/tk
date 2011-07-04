@@ -136,7 +136,7 @@ void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 	 * with removing is present.
 	 */
 	while ((cd = Tcl_VarTraceInfo(h->interp, Tcl_GetString(h->varnameObj),
-		TCL_GLOBAL_ONLY, VarTraceProc, cd)) != NULL) {
+		0, VarTraceProc, cd)) != NULL) {
 	    if (cd == (ClientData) h) {
 		break;
 	    }
