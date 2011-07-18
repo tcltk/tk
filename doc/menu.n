@@ -207,7 +207,7 @@ supported on Windows.
 .SS "TEAR-OFF ENTRIES"
 .PP
 A tear-off entry appears at the top of the menu if enabled with the
-\fBtearOff\fR option.  It is not like other menu entries in that
+\fB\-tearoff\fR option.  It is not like other menu entries in that
 it cannot be created with the \fBadd\fR widget command and
 cannot be deleted with the \fBdelete\fR widget command.
 When a tear-off entry is created it appears as a dashed line at
@@ -350,7 +350,7 @@ indicates the top-most entry in the window.
 If the index does not satisfy one of the above forms then this
 form is used.  \fIPattern\fR is pattern-matched against the label of
 each entry in the menu, in order from the top down, until a
-matching entry is found.  The rules of \fBTcl_StringMatch\fR
+matching entry is found.  The rules of \fBstring match\fR
 are used.
 .PP
 The following widget commands are possible for menu widgets:
@@ -374,14 +374,14 @@ are present, they specify the options listed in the \fBMENU ENTRY OPTIONS\fR
 section below.
 The \fBadd\fR widget command returns an empty string.
 .TP
-\fIpathName \fBcget\fR \fIoption\fR
+\fIpathName \fBcget \fIoption\fR
 .
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBmenu\fR
 command.
 .TP
-\fIpathName\fR \fBclone\fR \fInewPathname\fR ?\fIcloneType\fR?
+\fIpathName \fBclone \fInewPathname\fR ?\fIcloneType\fR?
 .
 Makes a clone of the current menu named \fInewPathName\fR. This clone
 is a menu in its own right, but any changes to the clone are
@@ -411,9 +411,9 @@ Delete all of the menu entries between \fIindex1\fR and
 \fIindex2\fR inclusive.
 If \fIindex2\fR is omitted then it defaults to \fIindex1\fR.
 Attempts to delete a tear-off menu entry are ignored (instead, you
-should change the \fBtearOff\fR option to remove the tear-off entry).
+should change the \fB\-tearoff\fR option to remove the tear-off entry).
 .TP
-\fIpathName \fBentrycget\fR \fIindex option\fR
+\fIpathName \fBentrycget \fIindex option\fR
 .
 Returns the current value of a configuration option for
 the entry given by \fIindex\fR.
@@ -465,7 +465,7 @@ Arrange for the menu to be displayed on the screen at the root-window
 coordinates given by \fIx\fR and \fIy\fR.  These coordinates are
 adjusted if necessary to guarantee that the entire menu is visible on
 the screen.  This command normally returns an empty string.
-If the \fBpostCommand\fR option has been specified, then its value is
+If the \fB\-postcommand\fR option has been specified, then its value is
 executed as a Tcl script before posting the menu and the result of
 that script is returned as the result of the \fBpost\fR widget
 command.
@@ -513,7 +513,7 @@ supported by all entry types.
 Specifies a background color to use for displaying this entry when it
 is active.
 If this option is specified as an empty string (the default), then the
-\fBactiveBackground\fR option for the overall menu is used.
+\fB\-activebackground\fR option for the overall menu is used.
 If the \fBtk_strictMotif\fR variable has been set to request strict
 Motif compliance, then this option is ignored and the \fB\-background\fR
 option is used in its place.
@@ -524,7 +524,7 @@ This option is not available for separator or tear-off entries.
 Specifies a foreground color to use for displaying this entry when it
 is active.
 If this option is specified as an empty string (the default), then the
-\fBactiveForeground\fR option for the overall menu is used.
+\fB\-activeforeground\fR option for the overall menu is used.
 This option is not available for separator or tear-off entries.
 .TP
 \fB\-accelerator \fIvalue\fR
@@ -539,7 +539,7 @@ is not available for separator or tear-off entries.
 Specifies a background color to use for displaying this entry when it
 is in the normal state (neither active nor disabled).
 If this option is specified as an empty string (the default), then the
-\fBbackground\fR option for the overall menu is used.
+\fB\-background\fR option for the overall menu is used.
 This option is not available for separator or tear-off entries.
 .TP
 \fB\-bitmap \fIvalue\fR
@@ -582,7 +582,7 @@ options.
 Specifies the font to use when drawing the label or accelerator
 string in this entry.
 If this option is specified as an empty string (the default) then
-the \fBfont\fR option for the overall menu is used.
+the \fB\-font\fR option for the overall menu is used.
 This option is not available for separator or tear-off entries.
 .TP
 \fB\-foreground \fIvalue\fR
@@ -590,7 +590,7 @@ This option is not available for separator or tear-off entries.
 Specifies a foreground color to use for displaying this entry when it
 is in the normal state (neither active nor disabled).
 If this option is specified as an empty string (the default), then the
-\fBforeground\fR option for the overall menu is used.
+\fB\-foreground\fR option for the overall menu is used.
 This option is not available for separator or tear-off entries.
 .TP
 \fB\-hidemargin \fIvalue\fR
@@ -645,7 +645,7 @@ store in the entry's associated variable when the entry is selected.
 Available only for checkbutton and radiobutton entries.
 Specifies the color to display in the indicator when the entry is
 selected.
-If the value is an empty string (the default) then the \fBselectColor\fR
+If the value is an empty string (the default) then the \fB\-selectcolor\fR
 option for the menu determines the indicator color.
 .TP
 \fB\-selectimage \fIvalue\fR
@@ -662,17 +662,17 @@ been specified.
 .
 Specifies one of three states for the entry:  \fBnormal\fR, \fBactive\fR,
 or \fBdisabled\fR.  In normal state the entry is displayed using the
-\fBforeground\fR option for the menu and the \fBbackground\fR
+\fB\-foreground\fR option for the menu and the \fB\-background\fR
 option from the entry or the menu.
 The active state is typically used when the pointer is over the entry.
-In active state the entry is displayed using the \fBactiveForeground\fR
-option for the menu along with the \fBactivebackground\fR option from
+In active state the entry is displayed using the \fB\-activeforeground\fR
+option for the menu along with the \fB\-activebackground\fR option from
 the entry.  Disabled state means that the entry
 should be insensitive:  the default bindings will refuse to activate
 or invoke the entry.
 In this state the entry is displayed according to the 
-\fBdisabledForeground\fR option for the menu and the
-\fBbackground\fR option from the entry.
+\fB\-disabledforeground\fR option for the menu and the
+\fB\-background\fR option from the entry.
 This option is not available for separator entries.
 .TP
 \fB\-underline \fIvalue\fR
