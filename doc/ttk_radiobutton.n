@@ -29,7 +29,7 @@ it sets the variable to its associated value.
 .OP \-command command Command
 A Tcl script to evaluate whenever the widget is invoked.
 .OP \-value Value Value
-The value to store in the associated \fI\-variable\fR 
+The value to store in the associated \fB\-variable\fR 
 when the widget is selected. 
 .OP \-variable variable Variable
 The name of a global variable whose value is linked to the widget.
