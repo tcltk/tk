@@ -88,7 +88,7 @@ Retrieve data from the clipboard on \fIwindow\fR's display.
 the data is to be returned and should be an atom name such as \fBSTRING\fR
 or \fBFILE_NAME\fR.  \fIType\fR defaults to \fBSTRING\fR.  This command is
 equivalent to
-.QW "\fBselection\fR \fBget \-selection CLIPBOARD\fR" .
+.QW "\fBselection get\fR \fB\-selection CLIPBOARD\fR" .
 .RS
 .PP
 Note that on modern X11 systems, the most useful type to retrieve for
