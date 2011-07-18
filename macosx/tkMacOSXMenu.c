@@ -245,7 +245,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     ((m) & NSFunctionKeyMask))) ? NO : YES)
 - (BOOL)menuHasKeyEquivalent:(NSMenu*)menu forEvent:(NSEvent*)event
 	target:(id*)target action:(SEL*)action {
-    NSString *key = [event charactersIgnoringModifiers];
+    NSString *key = [[event charactersIgnoringModifiers] lowercaseString];
     NSUInteger modifiers = [event modifierFlags] &
 	    NSDeviceIndependentModifierFlagsMask;
     if (modifiers == (NSCommandKeyMask | NSShiftKeyMask) &&
