@@ -280,7 +280,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (BOOL) menuHasKeyEquivalent: (NSMenu *) menu forEvent: (NSEvent *) event
 	target: (id *) target action: (SEL *) action
 {
-    NSString *key = [event charactersIgnoringModifiers];
+    /*Use lowercaseString to keep "shift" from firing twice if bound to different procedure.*/
+    NSString *key = [[event charactersIgnoringModifiers] lowercaseString];
     NSUInteger modifiers = [event modifierFlags] &
 	    NSDeviceIndependentModifierFlagsMask;
 
