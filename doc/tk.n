@@ -60,8 +60,8 @@ used for indicating global focus (e.g. to comply with Microsoft
 Accessibility guidelines), as well as for location of the over-the-spot
 XIM (X Input Methods) or Windows IME windows.  If no options are specified,
 the last values used for setting the caret are return in option-value pair
-format.  \fI\-x\fR and \fI\-y\fR represent window-relative coordinates, and
-\fI\-height\fR is the height of the current cursor location, or the height
+format.  \fB\-x\fR and \fB\-y\fR represent window-relative coordinates, and
+\fB\-height\fR is the height of the current cursor location, or the height
 of the specified \fIwindow\fR if none is given.
 .TP
 \fBtk inactive \fR?\fB\-displayof \fIwindow\fR? ?\fBreset\fR?

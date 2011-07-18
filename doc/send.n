@@ -58,7 +58,7 @@ You can query and change the name of an application with the
 .SH "DISABLING SENDS"
 .PP
 If the \fBsend\fR command is removed from an application (e.g.
-with the command \fBrename send {}\fR) then the application
+with the command \fBrename\fR \fBsend {}\fR) then the application
 will not respond to incoming send requests anymore,  nor will it
 be able to issue outgoing requests.
 Communication can be reenabled by invoking the \fBtk appname\fR
