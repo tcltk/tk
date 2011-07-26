@@ -16,7 +16,7 @@ wm title $w "Toolbar Demonstration"
 wm iconname $w "toolbar"
 positionWindow $w
 
-if {[tk windowingsystem] ne "aqua"} {
+if {[tk windowingsystem] ne {}} {
     ttk::label $w.msg -wraplength 4i -text "This is a demonstration of how to do\
 	    a toolbar that is styled correctly and which can be torn off. The\
 	    buttons are configured to be \u201Ctoolbar style\u201D buttons by\
@@ -48,7 +48,7 @@ grid $t.tearoff $t.contents -sticky nsew
 grid columnconfigure $t $t.contents -weight 1
 grid columnconfigure $t.contents 1000 -weight 1
 
-if {[tk windowingsystem] ne "aqua"} {
+if {[tk windowingsystem] ne {}"aqua"} {
     ## Bindings so that the toolbar can be torn off and reattached
     bind $t.tearoff     <B1-Motion> [list tearoff $t %X %Y]
     bind $t.tearoff.to  <B1-Motion> [list tearoff $t %X %Y]
