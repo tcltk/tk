@@ -48,7 +48,7 @@ grid $t.tearoff $t.contents -sticky nsew
 grid columnconfigure $t $t.contents -weight 1
 grid columnconfigure $t.contents 1000 -weight 1
 
-if {[tk windowingsystem] ne {}"aqua"} {
+if {[tk windowingsystem] ne {}} {
     ## Bindings so that the toolbar can be torn off and reattached
     bind $t.tearoff     <B1-Motion> [list tearoff $t %X %Y]
     bind $t.tearoff.to  <B1-Motion> [list tearoff $t %X %Y]
