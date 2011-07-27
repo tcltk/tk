@@ -272,7 +272,7 @@ extern NSString *opaqueTag;
 	int code = Tcl_EvalEx(_eventInterp, cmd, -1, TCL_EVAL_GLOBAL);
 
 	if (code != TCL_OK) {
-	    Tcl_BackgroundException(_eventInterp, code);
+	    Tcl_BackgroundError(_eventInterp);
 	}
 	Tcl_ResetResult(_eventInterp);
     }
@@ -708,7 +708,7 @@ TkWmProtocolEventProc(
 		Tcl_AddErrorInfo(interp,
 			Tk_GetAtomName((Tk_Window) winPtr, protocol));
 		Tcl_AddErrorInfo(interp, "\" window manager protocol)");
-		Tcl_BackgroundException(interp, result);
+		Tcl_BackgroundError(interp);
 	    }
 	    Tcl_Release(interp);
 	    Tcl_Release(protPtr);
