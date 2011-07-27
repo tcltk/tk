@@ -1644,9 +1644,9 @@ WmForgetCmd(
 	MacDrawable *macWin = (MacDrawable *) winPtr->parentPtr->window;
     	TkFocusJoin(winPtr);
     	Tk_UnmapWindow(frameWin); 
+	TkWmDeadWindow(macWin);
 	RemapWindows(winPtr, macWin);
        
-	TkWmDeadWindow(macWin);
 	winPtr->flags &=~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 
 	/*
