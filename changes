@@ -6897,6 +6897,10 @@ name to select image format (fellows)
 
 2011-01-22 (enhancement) add [ttk::entry validate] (schelte,english)
 
+2011-01-24 (bug fix)[2907388] OSX: composite character entry crash (berg,walzer)
+
+2011-03-02 (new doc) tk_mac.n: OS X specific functions (walzer)
+
 2011-03-03 (bug fix)[3175610] incomplete line item refresh (ferrieux)
 
 2011-03-10 (bug fix)[3205260] crash in [wm manage] (boudaillier, thoyts)
@@ -6920,6 +6924,8 @@ name to select image format (fellows)
 2011-04-22 (bug fix)[3291543] mem corrupt when [$canvas dchars] removes all
 coords of a polygon (rogers,spjuth)
 
+2011-04-29 (platform support) [wm forget|manage] on OS X (walzer)
+
 2011-06-06 (bug fix)[2546087] [console] treatment of '\0' (porter)
 
 2011-06-07 (bug fix)[2358545] Restore "08" in spinbox configured with -from
@@ -6928,3 +6934,5 @@ and -to (porter)
 2011-06-10 (bug fix)[3315731] fix [$entry -invcmd] (porter)
 
 2011-06-17 (bug fix)[3062331] crash in unset traces (macdonald,porter)
+
+--- Released 8.6b2, August 3, 2011 --- See ChangeLog for details ---
