@@ -719,7 +719,7 @@ GetFileName(
     ofn.lpstrFile = (WCHAR *) file;
     ofn.nMaxFile = TK_MULTI_MAX_PATH;
     ofn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR
-	    | OFN_EXPLORER | OFN_ENABLEHOOK;
+	    | OFN_EXPLORER | OFN_ENABLEHOOK| OFN_ENABLESIZING;
     ofn.lpfnHook = (LPOFNHOOKPROC) OFNHookProc;
     ofn.lCustData = (LPARAM) &ofnData;
 
