@@ -6935,4 +6935,6 @@ and -to (porter)
 
 2011-06-17 (bug fix)[3062331] crash in unset traces (macdonald,porter)
 
+2011-08-03 (bug fix)[2891541] fix grab behaviour for main window (thoyts)
+
 --- Released 8.6b2, August 5, 2011 --- See ChangeLog for details ---
