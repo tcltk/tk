@@ -1,3 +1,8 @@
+2011-08-03  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 3314770] regression - Windows file
+	dialogs not resizable
+
 2011-07-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* xlib/X11/Xutil.h: [Bug 3380684] XEmptyRegion prototype doesn't
