@@ -1,3 +1,14 @@
+2011-08-03  Don Porter  <dgp@users.sourceforge.net>
+
+	* win/tkWinWm.c: [Bug 2891541] Merge of 8.5.8 fix from Pat Thoyts.
+	Permit normal behaviour on Windows for a grabbed toplevel when it
+	is the main window.
+
+2011-08-03  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 3314770] regression - Windows file
+	dialogs not resizable
+
 2011-07-28  Don Porter  <dgp@users.sourceforge.net>
 
 	* changes:	Updates for 8.6b2 release.
