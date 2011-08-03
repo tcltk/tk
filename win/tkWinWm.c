@@ -7939,6 +7939,10 @@ WmProc(
     case WM_SYSCOMMAND:
 	/*
 	 * If there is a grab in effect then ignore the minimize command
+	 * unless the grab is on the main window (.). This is to permit
+	 * applications that leave a grab on . to work normally.
+	 * All other toplevels are deemed non-minimizable when a grab is
+	 * present.
 	 * If there is a grab in effect and this window is outside the
 	 * grab tree then ignore all system commands. [Bug 1847002]
 	 */
@@ -7946,8 +7950,11 @@ WmProc(
 	if (winPtr) {
 	    int cmd = wParam & 0xfff0;
 	    int grab = TkGrabState(winPtr);
-	    if (grab != TK_GRAB_NONE && SC_MINIMIZE == cmd)
+	    if ((SC_MINIMIZE == cmd)
+		&& (grab == TK_GRAB_IN_TREE || grab == TK_GRAB_ANCESTOR)
+		&& (winPtr != winPtr->mainPtr->winPtr)) {
 		goto done;
+	    }
 	    if (grab == TK_GRAB_EXCLUDED
 		&& !(SC_MOVE == cmd || SC_SIZE == cmd)) {
 		goto done;
