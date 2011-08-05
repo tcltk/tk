@@ -1,3 +1,9 @@
+2011-08-05  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.6b2 TAGGED FOR RELEASE ***
+
+	* changes:	Updates for 8.6b2 release.
+
 2011-08-03  Don Porter  <dgp@users.sourceforge.net>
 
 	* win/tkWinWm.c: [Bug 2891541] Merge of 8.5.8 fix from Pat Thoyts.
