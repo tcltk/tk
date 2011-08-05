@@ -251,6 +251,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
+	    /*Add time for errors to fire if necessary. This is sub-optimal but avoids issues with Tcl/Cocoa event loop integration.*/
+	    Tcl_Sleep(100);
 
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
@@ -343,8 +345,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	int result = TkPostCommand(_tkMenu);
 
 	if (result!=TCL_OK && result!=TCL_CONTINUE && result!=TCL_BREAK) {
-	    Tcl_AddErrorInfo(interp, "\n    (menu preprocess)");
-	    Tcl_BackgroundException(interp, result);
+	      Tcl_AddErrorInfo(interp, "\n    (menu preprocess)");
+	      Tcl_BackgroundException(interp, result);
 	}
 	Tcl_Release(menuPtr);
 	Tcl_Release(interp);
