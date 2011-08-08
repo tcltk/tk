@@ -1311,7 +1311,7 @@ SHELL=/bin/sh
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL="b1.2"
+TK_PATCH_LEVEL="b2"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------

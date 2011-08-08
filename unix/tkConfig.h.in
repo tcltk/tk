@@ -91,7 +91,7 @@
 /* Are we building TkAqua? */
 #undef MAC_OSX_TK
 
-/* Compiler support for module scope symbols */
+/* No Compiler support for module scope symbols */
 #undef MODULE_SCOPE
 
 /* Is Darwin CoreFoundation unavailable for 64-bit? */
@@ -105,6 +105,9 @@
 
 /* Do we have <stdlib.h>? */
 #undef NO_STDLIB_H
+
+/* No visibility attribute */
+#undef NO_VIZ
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
@@ -165,9 +168,6 @@
 
 /* Are TkAqua debug messages enabled? */
 #undef TK_MAC_DEBUG
-
-/* Do we need a special AIX hack for timezones? */
-#undef USE_DELTA_FOR_TZ
 
 /* Do we want to use the threaded memory allocator? */
 #undef USE_THREAD_ALLOC
