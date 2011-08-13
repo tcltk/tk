@@ -807,8 +807,8 @@ ReadImage(interp, imagePtr, chan, len, rows, cmap,
     int v;
     int xpos = 0, ypos = 0, pass = 0, i;
     register char *pixelPtr;
-    CONST static int interlaceStep[] = { 8, 8, 4, 2 };
-    CONST static int interlaceStart[] = { 0, 4, 2, 1 };
+    static CONST int interlaceStep[] = { 8, 8, 4, 2 };
+    static CONST int interlaceStart[] = { 0, 4, 2, 1 };
     unsigned short prefix[(1 << MAX_LWZ_BITS)];
     unsigned char  append[(1 << MAX_LWZ_BITS)];
     unsigned char  stack[(1 << MAX_LWZ_BITS)*2];
