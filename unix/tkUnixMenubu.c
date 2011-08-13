@@ -21,6 +21,8 @@
 Tk_ClassProcs tkpMenubuttonClass = {
     sizeof(Tk_ClassProcs),	/* size */
     TkMenuButtonWorldChanged,	/* worldChangedProc */
+    NULL,
+    NULL
 };
 
 /*
