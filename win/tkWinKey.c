@@ -328,7 +328,7 @@ KeycodeToKeysym(
      */
 
   skipToAscii:
-    if (keycode < 0 || keycode > MAX_KEYCODE) {
+    if (keycode > MAX_KEYCODE) {
 	return NoSymbol;
     }
     switch (keycode) {
