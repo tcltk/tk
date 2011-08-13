@@ -1,3 +1,11 @@
+2011-08-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkBitmap.c: [Bug 3388350] mingw64 compiler warnings
+	* generic/tkConsole.c
+	* win/tkWinDialog.c
+	* win/tkWinSend.c
+	* win/tkWinSendCom.c
+
 2011-08-05  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.6b2 TAGGED FOR RELEASE ***
