@@ -153,8 +153,8 @@ TkGetServerInfo(interp, tkwin)
 
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&os);
-    sprintf(buffer, "Windows %d.%d %d %s", os.dwMajorVersion,
-	    os.dwMinorVersion, os.dwBuildNumber,
+    sprintf(buffer, "Windows %d.%d %d %s", (int)os.dwMajorVersion,
+	    (int)os.dwMinorVersion, (int)os.dwBuildNumber,
 #ifdef _WIN64
 	    "Win64"
 #else

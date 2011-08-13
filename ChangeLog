@@ -1,3 +1,10 @@
+2011-08-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkBitmap.c: [Bug 3388350] mingw64 compiler warnings
+	* generic/tkImgGIF.c
+	* win/tkWinColor.c
+	* win/tkWinX.c
+
 2011-07-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* xlib/X11/Xutil.h: [Bug 3380684] XEmptyRegion prototype doesn't
