@@ -1,3 +1,16 @@
+2011-08-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkBitmap.c: [Bug 3388350] mingw64 compiler warnings
+	* generic/tkConsole.c
+	* unix/tkUnixMenubu.c
+	* win/tkWinButton.c
+	* win/tkWinEmbed.c
+	* win/tkWinFont.c
+	* win/tkWinImage.c
+	* win/tkWinKey.c
+	* win/tkWinTest.c
+	* win/tkWinWm.c
+
 2011-08-03  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [Bug 3314770] regression - Windows file

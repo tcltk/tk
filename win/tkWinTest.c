@@ -303,9 +303,6 @@ TestwineventCmd(
 	}
     }
     message = TkFindStateNum(NULL, NULL, messageMap, argv[3]);
-    if (message < 0) {
-	message = strtol(argv[3], NULL, 0);
-    }
     wParam = 0;
     lParam = 0;
 
