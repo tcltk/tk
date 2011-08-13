@@ -577,7 +577,7 @@ GetFileName(
     OFNData ofnData;
     int cdlgerr;
     int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
-    const char *extension = NULL, *filter = NULL, *title = NULL;
+    const char *extension = NULL, *title = NULL;
     Tk_Window tkwin = clientData;
     HWND hWnd;
     Tcl_Obj *filterObj = NULL, *initialTypeObj = NULL, *typeVariableObj = NULL;
@@ -703,7 +703,6 @@ GetFileName(
 	    &filterIndex) != TCL_OK) {
 	goto end;
     }
-    filter = Tcl_DStringValue(&utfFilterString);
 
     Tk_MakeWindowExist(tkwin);
     hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
