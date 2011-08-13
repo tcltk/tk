@@ -24,7 +24,7 @@
  * temporarily turn off that warning message.
  */
 
-#if defined(__WIN32__) || defined(_WIN32)
+#if defined(_MSC_VER)
 #pragma warning (disable : 4305)
 #endif
 
@@ -39,7 +39,7 @@
 #include "question.bmp"
 #include "warning.bmp"
 
-#if defined(__WIN32__) || defined(_WIN32)
+#if defined(_MSC_VER)
 #pragma warning (default : 4305)
 #endif
 
