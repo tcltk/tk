@@ -736,7 +736,7 @@ TkWinEmbeddedEventProc(
 	     */
 
 	    if (topwinPtr) {
-		if (wParam >= 0 && wParam <= 3) {
+		if (wParam <= 3) {
 		    TkpWmSetState(topwinPtr, wParam);
 		}
 		result = 1+TkpWmGetState(topwinPtr);
