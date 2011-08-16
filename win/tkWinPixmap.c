@@ -59,7 +59,7 @@ Tk_GetPixmap(
     screen = &display->screens[0];
     planes = 1;
     if (depth == screen->root_depth) {
-	planes = (int) screen->ext_data;
+	planes = PTR2INT(screen->ext_data);
 	depth /= planes;
     }
     newTwdPtr->bitmap.handle =

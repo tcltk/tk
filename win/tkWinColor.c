@@ -386,13 +386,13 @@ XAllocColor(
 
 	color->pixel = PALETTERGB(entry.peRed, entry.peGreen, entry.peBlue);
 	entryPtr = Tcl_CreateHashEntry(&cmap->refCounts,
-		(char *) color->pixel, &new);
+		INT2PTR(color->pixel), &new);
 	if (new) {
 	    refCount = 1;
 	} else {
-	    refCount = ((int) Tcl_GetHashValue(entryPtr)) + 1;
+	    refCount = (PTR2INT(Tcl_GetHashValue(entryPtr))) + 1;
 	}
-	Tcl_SetHashValue(entryPtr, (ClientData)refCount);
+	Tcl_SetHashValue(entryPtr, INT2PTR(refCount));
     } else {
 	/*
 	 * Determine what color will actually be used on non-colormap systems.
@@ -452,11 +452,11 @@ XFreeColors(
 	 */
 
 	for (i = 0; i < npixels; i++) {
-	    entryPtr = Tcl_FindHashEntry(&cmap->refCounts, (char *) pixels[i]);
+	    entryPtr = Tcl_FindHashEntry(&cmap->refCounts, INT2PTR(pixels[i]));
 	    if (!entryPtr) {
 		Tcl_Panic("Tried to free a color that isn't allocated.");
 	    }
-	    refCount = (int) Tcl_GetHashValue(entryPtr) - 1;
+	    refCount = PTR2INT(Tcl_GetHashValue(entryPtr)) - 1;
 	    if (refCount == 0) {
 		cref = pixels[i] & 0x00ffffff;
 		index = GetNearestPaletteIndex(cmap->palette, cref);
@@ -474,7 +474,7 @@ XFreeColors(
 		}
 		Tcl_DeleteHashEntry(entryPtr);
 	    } else {
-		Tcl_SetHashValue(entryPtr, (ClientData)refCount);
+		Tcl_SetHashValue(entryPtr, INT2PTR(refCount));
 	    }
 	}
     }
@@ -535,9 +535,9 @@ XCreateColormap(
     Tcl_InitHashTable(&cmap->refCounts, TCL_ONE_WORD_KEYS);
     for (i = 0; i < logPalettePtr->palNumEntries; i++) {
 	entryPtr = logPalettePtr->palPalEntry + i;
-	hashPtr = Tcl_CreateHashEntry(&cmap->refCounts, (char*) PALETTERGB(
-		entryPtr->peRed, entryPtr->peGreen, entryPtr->peBlue), &new);
-	Tcl_SetHashValue(hashPtr, (ClientData)1);
+	hashPtr = Tcl_CreateHashEntry(&cmap->refCounts, INT2PTR(PALETTERGB(
+		entryPtr->peRed, entryPtr->peGreen, entryPtr->peBlue)), &new);
+	Tcl_SetHashValue(hashPtr, INT2PTR(1));
     }
 
     return (Colormap)cmap;
