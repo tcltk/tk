@@ -592,7 +592,7 @@ GetFileNameW(
     OFNData ofnData;
     int cdlgerr;
     int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
-    char *extension = NULL, *filter = NULL, *title = NULL;
+    char *extension = NULL, *title = NULL;
     Tk_Window tkwin = (Tk_Window) clientData;
     HWND hWnd;
     Tcl_Obj *filterObj = NULL, *initialTypeObj = NULL, *typeVariableObj = NULL;
@@ -719,7 +719,6 @@ GetFileNameW(
 	    &filterIndex) != TCL_OK) {
 	goto end;
     }
-    filter = Tcl_DStringValue(&utfFilterString);
 
     Tk_MakeWindowExist(tkwin);
     hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
@@ -1133,7 +1132,7 @@ GetFileNameA(
     OFNData ofnData;
     int cdlgerr;
     int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
-    char *extension = NULL, *filter = NULL, *title = NULL;
+    char *extension = NULL, *title = NULL;
     Tk_Window tkwin = (Tk_Window) clientData;
     HWND hWnd;
     Tcl_Obj *filterObj = NULL, *initialTypeObj = NULL, *typeVariableObj = NULL;
@@ -1258,7 +1257,6 @@ GetFileNameA(
 	    &filterIndex) != TCL_OK) {
 	goto end;
     }
-    filter = Tcl_DStringValue(&utfFilterString);
 
     Tk_MakeWindowExist(tkwin);
     hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
