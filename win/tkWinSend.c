@@ -996,12 +996,11 @@ SendEventProc(
     Tcl_Event *eventPtr,
     int flags)
 {
-    int result = TCL_OK;
     SendEvent *evPtr = (SendEvent *)eventPtr;
 
     TRACE("SendEventProc\n");
 
-    result = Tcl_EvalObjEx(evPtr->interp, evPtr->cmdPtr,
+    Tcl_EvalObjEx(evPtr->interp, evPtr->cmdPtr,
 	    TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
 
     Tcl_DecrRefCount(evPtr->cmdPtr);
