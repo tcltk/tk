@@ -12,6 +12,7 @@
 	* win/tkWinMenu.c
 	* win/tkWinWm.c
 	* win/tkWinX.c
+	* win/tkWindow.c
 	* win/tcl.m4: Sync with win/tcl.m4 from Tcl
 	* win/configure: (regenerated)
 	* unix/tcl.m4: Sync with win/tcl.m4 from Tcl
