@@ -1821,7 +1821,7 @@ DisplayListbox(clientData)
     register Listbox *listPtr = (Listbox *) clientData;
     register Tk_Window tkwin = listPtr->tkwin;
     GC gc;
-    int i, limit, x, y, width, prevSelected, freeGC;
+    int i, limit, x, y, width = 0, prevSelected, freeGC;
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;

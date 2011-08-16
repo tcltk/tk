@@ -68,7 +68,7 @@ ImageGetPixel(image, x, y)
     int x, y;
 {
     unsigned long pixel = 0;
-    unsigned char *srcPtr = &(image->data[(y * image->bytes_per_line)
+    unsigned char *srcPtr = (unsigned char *) &(image->data[(y * image->bytes_per_line)
 	    + ((x * image->bits_per_pixel) / NBBY)]);
 
     switch (image->bits_per_pixel) {
@@ -116,7 +116,7 @@ PutPixel(image, x, y, pixel)
     int x, y;
     unsigned long pixel;
 {
-    unsigned char *destPtr = &(image->data[(y * image->bytes_per_line)
+    unsigned char *destPtr = (unsigned char *) &(image->data[(y * image->bytes_per_line)
 	    + ((x * image->bits_per_pixel) / NBBY)]);
 
     switch  (image->bits_per_pixel) {
@@ -289,7 +289,7 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
     int	format;
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
-    XImage *ret_image;
+    XImage *ret_image = NULL;
     HDC hdc, hdcMem;
     HBITMAP hbmp, hbmpPrev;
     BITMAPINFO *bmInfo = NULL;
@@ -364,16 +364,16 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
     if (depth == 1) {
 	unsigned char *p, *pend;
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
-	data = ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *) ckalloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
 	    goto cleanup;
 	}
-	ret_image = XCreateImage(display, NULL, depth, ZPixmap, 0, data,
+	ret_image = XCreateImage(display, NULL, depth, ZPixmap, 0, (char *) data,
 		width, height, 32, ((width + 31) >> 3) & ~1);
 	if (ret_image == NULL) {
-	    ckfree(data);
+	    ckfree((char *)data);
 	    goto cleanup;
 	}
 
@@ -397,13 +397,13 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 	unsigned char *p;
 
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_PAL_COLORS);
-	data = ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *) ckalloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
 	    goto cleanup;
 	}
-	ret_image = XCreateImage(display, NULL, 8, ZPixmap, 0, data,
+	ret_image = XCreateImage(display, NULL, 8, ZPixmap, 0, (char *) data,
 		width, height, 8, width);
 	if (ret_image == NULL) {
 	    ckfree((char *) data);
@@ -425,13 +425,13 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 	}
     } else if (depth == 16) {
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_RGB_COLORS);
-	data = ckalloc(bmInfo->bmiHeader.biSizeImage);
+	data = (unsigned char *) ckalloc(bmInfo->bmiHeader.biSizeImage);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
 	    goto cleanup;
 	}
-	ret_image = XCreateImage(display, NULL, 16, ZPixmap, 0, data,
+	ret_image = XCreateImage(display, NULL, 16, ZPixmap, 0, (char *) data,
 		width, height, 16, 0 /* will be calc'ed from bitmap_pad */);
 	if (ret_image == NULL) {
 	    ckfree((char *) data);
@@ -448,13 +448,13 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 	}
     } else {
 	GetDIBits(hdcMem, hbmp, 0, height, NULL, bmInfo, DIB_RGB_COLORS);
-	data = ckalloc(width * height * 4);
+	data = (unsigned char *) ckalloc(width * height * 4);
 	if (!data) {
 	    /* printf("Failed to allocate data area for XImage.\n"); */
 	    ret_image = NULL;
 	    goto cleanup;
 	}
-	ret_image = XCreateImage(display, NULL, 32, ZPixmap, 0, data,
+	ret_image = XCreateImage(display, NULL, 32, ZPixmap, 0, (char *) data,
 		width, height, 0, width * 4);
 	if (ret_image == NULL) {
 	    ckfree((char *) data);
@@ -470,7 +470,7 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 	    unsigned int byte_width, h, w;
 
 	    byte_width = ((width * 3 + 3) & ~3);
-	    smallBitBase = ckalloc(byte_width * height);
+	    smallBitBase = (unsigned char *) ckalloc(byte_width * height);
 	    if (!smallBitBase) {
 		ckfree((char *) ret_image->data);
 		ckfree((char *) ret_image);
@@ -490,7 +490,7 @@ XGetImageZPixmap(display, d, x, y, width, height, plane_mask, format)
 	    }
 	    /* Copy the 24 Bit Pixmap to a 32-Bit one. */
 	    for (h = 0; h < height; h++) {
-		bigBitData   = ret_image->data + h * ret_image->bytes_per_line;
+		bigBitData   = (unsigned char *)ret_image->data + h * ret_image->bytes_per_line;
 		smallBitData = smallBitBase + h * byte_width;
 
 		for (w = 0; w < width; w++) {
