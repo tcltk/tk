@@ -2002,7 +2002,7 @@ TkWmNewWindow(
     wmPtr->x = winPtr->changes.x;
     wmPtr->y = winPtr->changes.y;
     wmPtr->crefObj = NULL;
-    wmPtr->colorref = (COLORREF) NULL;
+    wmPtr->colorref = (COLORREF)0;
     wmPtr->alpha = 1.0;
 
     wmPtr->configWidth = -1;
@@ -2261,7 +2261,7 @@ UpdateWrapper(
 
     if (oldWrapper && (oldWrapper != wmPtr->wrapper)
 	    && (oldWrapper != GetDesktopWindow())) {
-	SetWindowLongPtr(oldWrapper, GWLP_USERDATA, (LONG) NULL);
+	SetWindowLongPtr(oldWrapper, GWLP_USERDATA, (LONG) 0);
 
 	if (wmPtr->numTransients > 0) {
 	    /*
@@ -3755,7 +3755,7 @@ WmFrameCmd(
     if (hwnd == NULL) {
 	hwnd = Tk_GetHWND(Tk_WindowId((Tk_Window) winPtr));
     }
-    sprintf(buf, "0x%x", (unsigned int) hwnd);
+    sprintf(buf, "0x%x", PTR2UINT(hwnd));
     Tcl_SetResult(interp, buf, TCL_VOLATILE);
     return TCL_OK;
 }
