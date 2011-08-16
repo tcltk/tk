@@ -4,6 +4,18 @@
 	* win/tkWinDraw.c
 	* win/tkWinSend.c
 	* win/tkWinSendCom.c
+	* win/tkWinColor.c
+	* win/tkWinDialog.c
+	* win/tkWinEmbed.c
+	* win/tkWinMenu.c
+	* win/tkWinPixmap.c
+	* win/tkWinTest.c
+	* win/tkWinWindow.c
+	* win/tkWinWm.c
+	* win/tkWinX.c
+	* win/stubs.c
+	* generic/tkAtom.c
+	* generic/tkSelect.c
 
 2011-08-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
