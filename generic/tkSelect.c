@@ -170,7 +170,7 @@ Tk_CreateSelHandler(
 	selPtr->size = 32;
     }
 
-    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) NULL)) {
+    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) 0)) {
 	/*
 	 * If the user asked for a STRING handler and we understand
 	 * UTF8_STRING, we implicitly create a UTF8_STRING handler for them.
@@ -283,7 +283,7 @@ Tk_DeleteSelHandler(
 	prevPtr->nextPtr = selPtr->nextPtr;
     }
 
-    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) NULL)) {
+    if ((target == XA_STRING) && (winPtr->dispPtr->utf8Atom != (Atom) 0)) {
 	/*
 	 * If the user asked for a STRING handler and we understand
 	 * UTF8_STRING, we may have implicitly created a UTF8_STRING handler
@@ -1193,7 +1193,7 @@ TkSelInit(
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK))
     dispPtr->utf8Atom		= Tk_InternAtom(tkwin, "UTF8_STRING");
 #else
-    dispPtr->utf8Atom		= (Atom) NULL;
+    dispPtr->utf8Atom		= (Atom) 0;
 #endif
 }
 
