@@ -864,7 +864,6 @@ DisplayLine(canvas, itemPtr, display, drawable, x, y, width, height)
     double linewidth;
     int numPoints;
     Tk_State state = itemPtr->state;
-    Pixmap stipple = linePtr->outline.stipple;
 
     if ((!linePtr->numPoints)||(linePtr->outline.gc==None)) {
 	return;
@@ -875,16 +874,10 @@ DisplayLine(canvas, itemPtr, display, drawable, x, y, width, height)
     }
     linewidth = linePtr->outline.width;
     if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
-	if (linePtr->outline.activeStipple != None) {
-	    stipple = linePtr->outline.activeStipple;
-	}
 	if (linePtr->outline.activeWidth != linewidth) {
 	    linewidth = linePtr->outline.activeWidth;
 	}
     } else if (state==TK_STATE_DISABLED) {
-	if (linePtr->outline.disabledStipple != None) {
-	    stipple = linePtr->outline.disabledStipple;
-	}
 	if (linePtr->outline.disabledWidth != linewidth) {
 	    linewidth = linePtr->outline.disabledWidth;
 	}

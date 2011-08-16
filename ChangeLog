@@ -1,3 +1,22 @@
+2011-08-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkCanvLine.c: [Bug 3388350] mingw64 compiler warnings
+	* generic/tkConsole.c
+	* generic/tkListbox.c
+	* win/tkWin3d.c
+	* win/tkWinButton.c
+	* win/tkWinCursor.c
+	* win/tkWinDraw.c
+	* win/tkWinImage.c
+	* win/tkWinKey.c
+	* win/tkWinMenu.c
+	* win/tkWinWm.c
+	* win/tkWinX.c
+	* win/tcl.m4: Sync with win/tcl.m4 from Tcl
+	* win/configure: (regenerated)
+	* unix/tcl.m4: Sync with win/tcl.m4 from Tcl
+	* unix/configure: (regenerated)
+
 2011-08-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkBitmap.c: [Bug 3388350] mingw64 compiler warnings

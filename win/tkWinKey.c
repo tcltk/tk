@@ -85,7 +85,6 @@ TkpGetString(winPtr, eventPtr, dsPtr)
 				 * result. */
 {
     KeySym keysym;
-    XKeyEvent* keyEv = &eventPtr->xkey;
 
     Tcl_DStringInit(dsPtr);
     if (eventPtr->xkey.send_event == -1) {

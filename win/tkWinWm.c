@@ -1482,23 +1482,6 @@ GetIcon(WinIconPtr titlebaricon, int icon_size)
     return NULL;
 }
 
-static HCURSOR 
-TclWinReadCursorFromFile(Tcl_Interp* interp, Tcl_Obj* fileName)
-{
-    BlockOfIconImagesPtr lpIR;
-    HICON res = NULL;
-    
-    lpIR = ReadIconOrCursorFromFile(interp, fileName, FALSE);
-    if (lpIR == NULL) {
-        return NULL;
-    }
-    if (lpIR->nNumImages >= 1) {
-	res = CopyImage(lpIR->IconImages[0].hIcon, IMAGE_CURSOR,0,0,0);
-    }
-    FreeIconBlock(lpIR);
-    return res;
-}
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1603,7 +1586,7 @@ ReadIconOrCursorFromFile(Tcl_Interp* interp, Tcl_Obj* fileName, BOOL isIcon)
 	    goto readError;
 	}
 	/*  Read it in */
-	dwBytesRead = Tcl_Read( channel, lpIR->IconImages[i].lpBits, 
+	dwBytesRead = Tcl_Read(channel, (char *) lpIR->IconImages[i].lpBits, 
 			       lpIDE[i].dwBytesInRes);
 	if (dwBytesRead != lpIDE[i].dwBytesInRes) {
 	    Tcl_AppendResult(interp,"Error reading file",(char*)NULL);
@@ -2371,7 +2354,7 @@ TkpWmSetState(winPtr, state)
 				 * or WithdrawnState. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int cmd;
+    int cmd = 0;
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	wmPtr->hints.initial_state = state;
@@ -4001,7 +3984,6 @@ WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
     int objc;			/* Number of arguments. */
     Tcl_Obj *CONST objv[];	/* Argument objects. */
 {
-    register WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow *useWinPtr = winPtr; /* window to apply to (NULL if -default) */
     Tk_PhotoHandle photo;
     Tk_PhotoImageBlock block;
@@ -4057,7 +4039,7 @@ WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
 	 * encode the image data into an HICON.
 	 */
 	bufferSize = height * width * block.pixelSize;
-	bgraPixelPtr = ckalloc(bufferSize);
+	bgraPixelPtr = (unsigned char *) ckalloc(bufferSize);
 	for (idx = 0 ; idx < bufferSize ; idx += 4) {
 	    bgraPixelPtr[idx] = block.pixelPtr[idx+2];
 	    bgraPixelPtr[idx+1] = block.pixelPtr[idx+1];
@@ -4066,7 +4048,7 @@ WmIconphotoCmd(tkwin, winPtr, interp, objc, objv)
 	}
 	hIcon = CreateIcon(Tk_GetHINSTANCE(), width, height, 1, 32,
 		NULL, (BYTE *) bgraPixelPtr);
-	ckfree(bgraPixelPtr);
+	ckfree((char *) bgraPixelPtr);
 	if (hIcon == NULL) {
 	    /* XXX should free up created icons */
 	    Tcl_Free((char *) lpIR);
@@ -6625,7 +6607,7 @@ ConfigureTopLevel(pos)
 {
     TkWindow *winPtr = GetTopLevel(pos->hwnd);
     WmInfo *wmPtr;
-    int state;			/* Current window state. */
+    int state = 0;			/* Current window state. */
     RECT rect;
     WINDOWPLACEMENT windowPos;
 

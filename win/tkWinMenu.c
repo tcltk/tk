@@ -545,7 +545,7 @@ ReconfigureWindowsMenu(
     UINT flags;
     UINT itemID;
     int i, count, systemMenu = 0, base;
-    int width, height;
+    int width = 0, height = 0;
     Tcl_DString translatedText;
   
     if (NULL == winMenuHdl) {
@@ -1672,7 +1672,7 @@ DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
 {
     int baseline;
     int leftEdge = x + mePtr->indicatorSpace + mePtr->labelWidth;
-    char *accel;
+    char *accel = NULL;
     
     if (mePtr->accelPtr != NULL) {
 	accel = Tcl_GetStringFromObj(mePtr->accelPtr, NULL);
