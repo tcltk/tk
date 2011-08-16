@@ -1,8 +1,18 @@
+2011-08-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 3388350] mingw64 compiler warnings
+	* win/tkWinEmbed.c
+	* win/tkWinMenu.c
+	* win/tkWinTest.c
+	* win/tkWinWm.c
+	* win/tkWinX.c
+
 2011-08-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkBitmap.c: [Bug 3388350] mingw64 compiler warnings
 	* generic/tkConsole.c
 	* win/tkWinDialog.c
+	* win/tkWinEmbed.c
 	* win/tkWinSend.c
 	* win/tkWinSendCom.c
 
