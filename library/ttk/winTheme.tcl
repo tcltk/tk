@@ -62,6 +62,8 @@ namespace eval ttk::theme::winnative {
 	    {disabled flat selected sunken  pressed sunken  active raised}
 
 	ttk::style configure TScale -groovewidth 4
+	
+	ttk::style configure TRange groovewidth 4
 
 	ttk::style configure TNotebook -tabmargins {2 2 2 0}
 	ttk::style configure TNotebook.Tab -padding {3 1} -borderwidth 1

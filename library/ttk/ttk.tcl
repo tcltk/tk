@@ -109,6 +109,7 @@ source [file join $::ttk::library combobox.tcl]	;# dependency: entry.tcl
 source [file join $::ttk::library spinbox.tcl]  ;# dependency: entry.tcl
 source [file join $::ttk::library treeview.tcl]
 source [file join $::ttk::library sizegrip.tcl]
+source [file join $::ttk::library range.tcl]
 
 ## Label and Labelframe bindings:
 #  (not enough to justify their own file...)

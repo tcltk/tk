@@ -95,6 +95,9 @@ namespace eval ttk::theme::alt {
 	ttk::style configure TScale \
 	    -groovewidth 4 -troughrelief sunken \
 	    -sliderwidth raised -borderwidth 2
+	ttk::style configure TRange \
+	    -groovewidth 4 -troughrelief sunken \
+	    -sliderwidth raised -borderwidth 2
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg) -borderwidth 0
     }

@@ -79,6 +79,8 @@ namespace eval ttk::theme::default {
 
 	ttk::style configure TScale \
 	    -sliderrelief raised
+	ttk::style configure TRange \
+	    -sliderrelief raised
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg)
 
