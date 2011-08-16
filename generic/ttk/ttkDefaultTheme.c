@@ -1104,6 +1104,8 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "trough", &TroughElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "thumb", &ThumbElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "slider", &SliderElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "minslider", &SliderElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "maxslider", &SliderElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
 	    &ArrowElementSpec, &ArrowElements[0]);

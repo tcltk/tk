@@ -955,6 +955,8 @@ TtkClamTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "client", &ClientElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "slider", &SliderElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "minslider", &SliderElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "maxslider", &SliderElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "bar", &PbarElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "pbar", &PbarElementSpec, NULL);
 

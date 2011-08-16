@@ -215,6 +215,38 @@ namespace eval ttk::theme::vista {
                 }
             }
         }
+	
+        # Range
+        ttk::style element create Horizontal.Range.minslider vsapi \
+            TRACKBAR 3 {disabled 5 focus 4 pressed 3 active 2 {} 1} \
+            -width 6 -height 12
+        ttk::style element create Horizontal.Range.maxslider vsapi \
+            TRACKBAR 3 {disabled 5 focus 4 pressed 3 active 2 {} 1} \
+            -width 6 -height 12
+        ttk::style layout Horizontal.TRange {
+            Range.focus -expand 1 -sticky nswe -children {
+                Horizontal.Range.trough -expand 1 -sticky nswe -children {
+                    Horizontal.Range.track -sticky we
+                    Horizontal.Range.minslider -side left -sticky {}
+		    Horizontal.Range.maxslider -side right -sticky {}
+                }
+            }
+        }
+        ttk::style element create Vertical.Range.minslider vsapi \
+            TRACKBAR 6 {disabled 5 focus 4 pressed 3 active 2 {} 1} \
+            -width 12 -height 6
+        ttk::style element create Vertical.Range.maxslider vsapi \
+            TRACKBAR 6 {disabled 5 focus 4 pressed 3 active 2 {} 1} \
+            -width 12 -height 6
+        ttk::style layout Vertical.TRange {
+            Range.focus -expand 1 -sticky nswe -children {
+                Vertical.Range.trough -expand 1 -sticky nswe -children {
+                    Vertical.Range.track -sticky ns
+                    Vertical.Range.maxslider -side top -sticky {}
+		    Vertical.Range.minslider -side bottom -sticky {}
+                }
+            }
+        }
         
         # Treeview
         ttk::style configure Item -padding {4 0 0 0}
