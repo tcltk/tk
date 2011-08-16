@@ -1004,6 +1004,9 @@ TkpComputeButtonGeometry(butPtr)
 		}
 		break;
 	    }
+	    case COMPOUND_NONE: {
+		break;
+	    }
 	} /* switch */
 
         /* Fix up for minimum width */
