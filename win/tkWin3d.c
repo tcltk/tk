@@ -123,7 +123,7 @@ Tk_3DVerticalBevel(tkwin, drawable, border, x, y, width, height,
 				 * exterior. */
 {
     TkBorder *borderPtr = (TkBorder *) border;
-    int left, right;
+    int left = 0, right = 0;
     Display *display = Tk_Display(tkwin);
     TkWinDCState state;
     HDC dc = TkWinGetDrawableDC(display, drawable, &state);
@@ -223,7 +223,7 @@ Tk_3DHorizontalBevel(tkwin, drawable, border, x, y, width, height,
     int bottom, halfway, x1, x2, x1Delta, x2Delta;
     TkWinDCState state;
     HDC dc = TkWinGetDrawableDC(display, drawable, &state);
-    int topColor, bottomColor;
+    int topColor = 0, bottomColor = 0;
 
     if ((borderPtr->lightGC == None) && (relief != TK_RELIEF_FLAT)) {
 	TkpGetShadows(borderPtr, tkwin);

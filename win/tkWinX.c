@@ -380,7 +380,7 @@ TkWinGetPlatformId()
                     KEY_READ, &hKey) != ERROR_SUCCESS) {
                 tkWinTheme = TK_THEME_WIN_XP;
 	    } else {
-	        RegQueryValueEx(hKey, szCurrent, NULL, NULL, pBuffer, &dwSize);
+	        RegQueryValueEx(hKey, szCurrent, NULL, NULL, (BYTE *) pBuffer, &dwSize);
 	        RegCloseKey(hKey);
 	        if (strcmp(pBuffer, "Windows Standard") == 0) {
 	            tkWinTheme = TK_THEME_WIN_CLASSIC;
