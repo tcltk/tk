@@ -385,6 +385,7 @@ TTK_OBJS = \
         $(TMP_DIR)\ttkNotebook.obj \
         $(TMP_DIR)\ttkPanedwindow.obj \
         $(TMP_DIR)\ttkProgress.obj \
+	$(TMP_DIR)\ttkRange.obj \
         $(TMP_DIR)\ttkScale.obj \
         $(TMP_DIR)\ttkScrollbar.obj \
         $(TMP_DIR)\ttkScroll.obj \

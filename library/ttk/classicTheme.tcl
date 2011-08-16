@@ -82,6 +82,9 @@ namespace eval ttk::theme::classic {
 
 	ttk::style configure TScale -sliderrelief raised
 	ttk::style map TScale -sliderrelief {{pressed !disabled} sunken}
+	
+	ttk::style configure TRange -sliderrelief raised
+	ttk::style map TRange -sliderrelief {{pressed !disabled} sunken}
 
 	ttk::style configure TProgressbar -background SteelBlue
 	ttk::style configure TNotebook.Tab \
