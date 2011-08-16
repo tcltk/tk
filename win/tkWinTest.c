@@ -300,7 +300,7 @@ TestwineventCmd(
 	return TCL_ERROR;
     }
 #endif
-    hwnd = (HWND) strtol(argv[1], &rest, 0);
+    hwnd = INT2PTR(strtol(argv[1], &rest, 0));
     if (rest == argv[1]) {
 	hwnd = FindWindowA(NULL, argv[1]);
 	if (hwnd == NULL) {
@@ -424,7 +424,7 @@ TestfindwindowObjCmd(
 	AppendSystemError(interp, GetLastError());
 	r = TCL_ERROR;
     } else {
-        Tcl_SetObjResult(interp, Tcl_NewLongObj((long)hwnd));
+        Tcl_SetObjResult(interp, Tcl_NewLongObj(PTR2INT(hwnd)));
     }
 
     Tcl_DStringFree(&titleString);
@@ -440,7 +440,7 @@ EnumChildrenProc(
 {
     Tcl_Obj *listObj = (Tcl_Obj *) lParam;
 
-    Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewLongObj((long) hwnd));
+    Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewLongObj(PTR2INT(hwnd)));
     return TRUE;
 }
 
@@ -465,7 +465,7 @@ TestgetwindowinfoObjCmd(
     if (Tcl_GetLongFromObj(interp, objv[1], &hwnd) != TCL_OK)
 	return TCL_ERROR;
 
-    cch = tkTestWinProcs->getClassName((HWND)hwnd, buf, cchBuf);
+    cch = tkTestWinProcs->getClassName(INT2PTR(hwnd), buf, cchBuf);
     if (cch == 0) {
     	Tcl_SetResult(interp, "failed to get class name: ", TCL_STATIC);
     	AppendSystemError(interp, GetLastError());
@@ -480,17 +480,17 @@ TestgetwindowinfoObjCmd(
     dictObj = Tcl_NewDictObj();
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("class", 5), classObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
-	Tcl_NewLongObj(GetWindowLongA((HWND)hwnd, GWL_ID)));
+	Tcl_NewLongObj(GetWindowLongA(INT2PTR(hwnd), GWL_ID)));
 
-    cch = tkTestWinProcs->getWindowText((HWND)hwnd, (LPTSTR)buf, cchBuf);
+    cch = tkTestWinProcs->getWindowText(INT2PTR(hwnd), (LPTSTR)buf, cchBuf);
     textObj = Tcl_NewUnicodeObj((LPCWSTR)buf, cch);
 
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("text", 4), textObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("parent", 6),
-	Tcl_NewLongObj((long)GetParent((HWND)hwnd)));
+	Tcl_NewLongObj(PTR2INT(GetParent((INT2PTR(hwnd))))));
 
     childrenObj = Tcl_NewListObj(0, NULL);
-    EnumChildWindows((HWND)hwnd, EnumChildrenProc, (LPARAM)childrenObj);
+    EnumChildWindows(INT2PTR(hwnd), EnumChildrenProc, (LPARAM)childrenObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("children", -1), childrenObj);
 
     Tcl_SetObjResult(interp, dictObj);
