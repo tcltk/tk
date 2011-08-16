@@ -1016,10 +1016,10 @@ OFNHookProc(
 		    ofnData->dynFileBuffer = (char *) buffer;
 		}
 
-		SendMessage(hdlg, CDM_GETFOLDERPATH, dirsize, (int) buffer);
+		SendMessage(hdlg, CDM_GETFOLDERPATH, dirsize, PTR2INT(buffer));
 		buffer += dirsize;
 
-		SendMessage(hdlg, CDM_GETSPEC, selsize, (int) buffer);
+		SendMessage(hdlg, CDM_GETSPEC, selsize, PTR2INT(buffer));
 
 		/*
 		 * If there are multiple files, delete the quotes and change
