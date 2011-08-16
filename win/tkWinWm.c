@@ -3755,7 +3755,7 @@ WmFrameCmd(
     if (hwnd == NULL) {
 	hwnd = Tk_GetHWND(Tk_WindowId((Tk_Window) winPtr));
     }
-    sprintf(buf, "0x%x", PTR2UINT(hwnd));
+    sprintf(buf, "0x%x", PTR2INT(hwnd));
     Tcl_SetResult(interp, buf, TCL_VOLATILE);
     return TCL_OK;
 }

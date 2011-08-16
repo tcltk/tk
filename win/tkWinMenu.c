@@ -440,7 +440,7 @@ TkpDestroyMenuEntry(
 	    Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
 	}
     }
-    FreeID((WORD) PTR2UINT(mePtr->platformEntryData));
+    FreeID((WORD) PTR2INT(mePtr->platformEntryData));
     mePtr->platformEntryData = NULL;
 }
 
@@ -629,7 +629,7 @@ ReconfigureWindowsMenu(
 	    flags |= MF_MENUBREAK;
 	}
 
-	itemID = PTR2UINT(mePtr->platformEntryData);
+	itemID = PTR2INT(mePtr->platformEntryData);
 	if ((mePtr->type == CASCADE_ENTRY)
 		&& (mePtr->childMenuRefPtr != NULL)
 		&& (mePtr->childMenuRefPtr->menuPtr != NULL)) {
@@ -649,7 +649,7 @@ ReconfigureWindowsMenu(
 		     * If the MF_POPUP flag is set, then the id is interpreted
 		     * as the handle of a submenu.
 		     */
-		    itemID = PTR2UINT(childMenuHdl);
+		    itemID = PTR2INT(childMenuHdl);
 		}
 	    }
 	    if ((menuPtr->menuType == MENUBAR)
@@ -860,7 +860,7 @@ TkpMenuNewEntry(
     	Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
     }
 
-    mePtr->platformEntryData = (TkMenuPlatformEntryData) UINT2PTR(commandID);
+    mePtr->platformEntryData = (TkMenuPlatformEntryData) INT2PTR(commandID);
 
     return TCL_OK;
 }
