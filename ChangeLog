@@ -1,3 +1,8 @@
+2011-09-01  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/photo.n: Correctly documented what the [$ph data] command
+	produces without the -format option.
+
 2011-08-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [Bug 3388350] mingw64 compiler warnings
