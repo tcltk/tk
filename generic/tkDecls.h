@@ -1734,8 +1734,9 @@ extern const TkStubs *tkStubsPtr;
 #undef Tk_CreateConsoleWindow
 
 #if defined(_WIN32) && defined(UNICODE)
-EXTERN void Tk_MainExW(int, TCHAR **, Tcl_AppInitProc *, Tcl_Interp *);
 #   define Tk_MainEx Tk_MainExW
+    EXTERN void Tk_MainExW(int argc, wchar_t **argv,
+	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 #endif
 
 #undef TCL_STORAGE_CLASS
