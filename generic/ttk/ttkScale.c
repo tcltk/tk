@@ -68,7 +68,7 @@ static Tk_OptionSpec ScaleOptionSpecs[] =
 	DEF_SCALE_LENGTH, Tk_Offset(Scale,scale.lengthObj), -1, 0, 0, 
     	GEOMETRY_CHANGED},
 
-    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs + 1)
 };
 
 static XPoint ValueToPoint(Scale *scalePtr, double value);
