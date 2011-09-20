@@ -94,7 +94,7 @@ static Tk_OptionSpec BaseOptionSpecs[] =
 	 "normal", Tk_Offset(Base,base.stateObj), -1,
 	 0,0,STATE_CHANGED },
 
-    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs + 1)
 };
 
 /*
