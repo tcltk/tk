@@ -200,7 +200,7 @@ static Tk_OptionSpec EntryOptionSpecs[] = {
 	NULL, Tk_Offset(Entry, entry.styleData.backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
 
-    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs + 1)
 };
 
 /*------------------------------------------------------------------------

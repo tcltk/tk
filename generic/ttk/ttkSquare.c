@@ -76,7 +76,7 @@ static Tk_OptionSpec SquareOptionSpecs[] =
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
      NULL, Tk_Offset(Square,square.anchorObj), -1, TK_OPTION_NULL_OK, 0, 0},
     
-    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs + 1)
 };
 
 /*

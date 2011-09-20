@@ -125,7 +125,7 @@ static Tk_OptionSpec NotebookOptionSpecs[] =
 	Tk_Offset(Notebook,notebook.paddingObj),-1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
-    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs + 1)
 };
 
 /* Notebook style options:

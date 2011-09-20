@@ -468,7 +468,7 @@ static Tk_OptionSpec TreeviewOptionSpecs[] = {
 	NULL, -1, Tk_Offset(Treeview, tree.yscroll.scrollCmd),
 	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
 
-    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
+    WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs + 1)
 };
 
 /*------------------------------------------------------------------------

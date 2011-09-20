@@ -123,7 +123,7 @@ MODULE_SCOPE int TtkWidgetConstructorObjCmd(
  * the options from 'baseOptionSpecs'.
  */
 #define WIDGET_INHERIT_OPTIONS(baseOptionSpecs) \
-    {TK_OPTION_END, 0,0,0, NULL, -1,-1, 0, (ClientData)baseOptionSpecs, 0}
+    {TK_OPTION_END, 0,0,0, NULL, -1,-1, 0, (ClientData)(baseOptionSpecs), 0}
 
 /*
  * Useful routines for use inside widget implementations:
