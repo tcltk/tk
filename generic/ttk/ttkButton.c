@@ -219,6 +219,8 @@ typedef struct
 
 static Tk_OptionSpec LabelOptionSpecs[] =
 {
+    {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
+	"", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 },
     {TK_OPTION_BORDER, "-background", "frameColor", "FrameColor",
 	NULL, Tk_Offset(Label,label.backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
