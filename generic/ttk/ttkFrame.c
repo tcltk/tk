@@ -44,6 +44,7 @@ static Tk_OptionSpec FrameOptionSpecs[] = {
 	Tk_Offset(Frame,frame.heightObj), -1,
 	0,0,GEOMETRY_CHANGED },
 
+    WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
