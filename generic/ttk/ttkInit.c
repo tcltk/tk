@@ -177,8 +177,6 @@ int TtkGetOptionValue(
 /* public */ 
 Tk_OptionSpec ttkCoreOptionSpecs[] =
 {
-    {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	"", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 },
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", NULL,
 	Tk_Offset(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "-style", "style", "Style", "",
