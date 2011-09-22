@@ -438,8 +438,6 @@ typedef struct {
 static const char *SelectModeStrings[] = { "none", "browse", "extended", NULL };
 
 static Tk_OptionSpec TreeviewOptionSpecs[] = {
-    WIDGET_TAKES_FOCUS,
-
     {TK_OPTION_STRING, "-columns", "columns", "Columns",
 	"", Tk_Offset(Treeview,tree.columnsObj), -1,
 	0,0,COLUMNS_CHANGED | GEOMETRY_CHANGED /*| READONLY_OPTION*/ },
@@ -468,6 +466,7 @@ static Tk_OptionSpec TreeviewOptionSpecs[] = {
 	NULL, -1, Tk_Offset(Treeview, tree.yscroll.scrollCmd),
 	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
 
+    WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
