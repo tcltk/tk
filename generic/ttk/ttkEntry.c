@@ -155,8 +155,6 @@ typedef struct {
 #define DEF_LIST_HEIGHT	"10"
 
 static Tk_OptionSpec EntryOptionSpecs[] = {
-    WIDGET_TAKES_FOCUS,
-
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
         "ExportSelection", "1", -1, Tk_Offset(Entry, entry.exportSelection),
 	0,0,0 },
@@ -200,6 +198,7 @@ static Tk_OptionSpec EntryOptionSpecs[] = {
 	NULL, Tk_Offset(Entry, entry.styleData.backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
 
+    WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 

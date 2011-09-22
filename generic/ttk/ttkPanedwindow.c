@@ -86,6 +86,7 @@ static Tk_OptionSpec PanedOptionSpecs[] = {
 	-1,Tk_Offset(Paned,paned.height),
 	0,0,GEOMETRY_CHANGED },
 
+    WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
