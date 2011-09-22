@@ -50,8 +50,6 @@ typedef struct
 
 static Tk_OptionSpec SquareOptionSpecs[] =
 {
-    WIDGET_TAKES_FOCUS,
-
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
      DEFAULT_BORDERWIDTH, Tk_Offset(Square,square.borderWidthObj), -1,
      0,0,GEOMETRY_CHANGED },
@@ -76,6 +74,7 @@ static Tk_OptionSpec SquareOptionSpecs[] =
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
      NULL, Tk_Offset(Square,square.anchorObj), -1, TK_OPTION_NULL_OK, 0, 0},
     
+    WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
