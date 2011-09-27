@@ -1,3 +1,8 @@
+2011-09-27  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkImgPNG.c (WriteExtraChunks): [Bug 3405839]: Write the sDAT
+	chunk with the correct length.
+
 2011-09-08  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkDecls.h: Don't let tkDecls.h depend on <tchar.h> on
