@@ -3180,6 +3180,7 @@ WriteExtraChunks(
     static const unsigned char sBIT_contents[] = {
 	8, 8, 8, 8
     };
+    int sBIT_length = 4;
     Tcl_DString buf;
 
     /*
@@ -3188,7 +3189,23 @@ WriteExtraChunks(
      * data model is.
      */
 
-    if (WriteChunk(interp, pngPtr, CHUNK_sBIT, sBIT_contents, 4) != TCL_OK) {
+    switch (pngPtr->colorType) {
+    case PNG_COLOR_GRAY:
+	sBIT_length = 1;
+	break;
+    case PNG_COLOR_GRAYALPHA:
+	sBIT_length = 2;
+	break;
+    case PNG_COLOR_RGB:
+    case PNG_COLOR_PLTE:
+	sBIT_length = 3;
+	break;
+    case PNG_COLOR_RGBA:
+	sBIT_length = 4;
+	break;
+    }
+    if (WriteChunk(interp, pngPtr, CHUNK_sBIT, sBIT_contents, sBIT_length)
+	    != TCL_OK) {
 	return TCL_ERROR;
     }
 
