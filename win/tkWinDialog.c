@@ -591,7 +591,7 @@ GetFileNameW(
     WCHAR file[TK_MULTI_MAX_PATH];
     OFNData ofnData;
     int cdlgerr;
-    int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
+    int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0, noComplain = 0;
     char *extension = NULL, *title = NULL;
     Tk_Window tkwin = (Tk_Window) clientData;
     HWND hWnd;
@@ -603,7 +603,7 @@ GetFileNameW(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static CONST char *saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent", "-title", "-typevariable", NULL
+	"-parent", "-title", "-typevariable", "-nocomplain", NULL
     };
     static CONST char *openOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
@@ -613,7 +613,8 @@ GetFileNameW(
 
     enum options {
 	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
-	FILE_MULTIPLE,	FILE_PARENT,	FILE_TITLE,     FILE_TYPEVARIABLE
+	FILE_MULTIPLE,	FILE_PARENT,	FILE_TITLE,     FILE_TYPEVARIABLE,
+	FILE_NOCOMPLAIN
     };
 
     file[0] = '\0';
@@ -712,6 +713,11 @@ GetFileNameW(
 	    initialTypeObj = Tcl_ObjGetVar2(interp, typeVariableObj, NULL,
 		    TCL_GLOBAL_ONLY);
 	    break;
+	case FILE_NOCOMPLAIN:
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &noComplain) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    break;
 	}
     }
 
@@ -740,7 +746,7 @@ GetFileNameW(
 
     if (open != 0) {
 	ofn.Flags |= OFN_FILEMUSTEXIST;
-    } else {
+    } else if (noComplain == 0) {
 	ofn.Flags |= OFN_OVERWRITEPROMPT;
     }
     if (tsdPtr->debugFlag != 0) {
