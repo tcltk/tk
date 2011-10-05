@@ -1,8 +1,8 @@
 2011-10-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkWinInt.h:   Remove tclWinProcs, as it is no longer
-	* generic/tkWinX.c:     being used.
-	* generic/tkWinTest.c:
+	* win/tkWinInt.h:   Remove tclWinProcs, as it is no longer
+	* win/tkWinX.c:     being used.
+	* win/tkWinTest.c:
 
 2011-09-27  Donal K. Fellows  <dkf@users.sf.net>
 
