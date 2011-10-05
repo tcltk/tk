@@ -986,7 +986,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     # The "-nocomplain" option is only available for the "save" file dialog.
     #
     if {$type eq "save"} {
-	lappend specs {-nocomplain "" "" "0"}
+	lappend specs {-confirmoverwrite "" "" "1"}
     }
 
     # 2: default values depending on the type of the dialog
@@ -1865,7 +1865,7 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 	set Priv(selectFile) $data(selectFile)
 	set Priv(selectPath) $data(selectPath)
 
-	if {($data(type) eq "save") && !$data(-nocomplain) && [file exists $selectFilePath]} {
+	if {($data(type) eq "save") && $data(-confirmoverwrite) && [file exists $selectFilePath]} {
 	    set reply [tk_messageBox -icon warning -type yesno -parent $w \
 		    -message [mc "File \"%1\$s\" already exists.\nDo you want\
 		    to overwrite it?" $selectFilePath]]
