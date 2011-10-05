@@ -53,22 +53,6 @@
 #define UNICODE_NOCHAR 0xFFFF
 #endif
 
-static const TkWinProcs unicodeProcs = {
-    1,
-    (LRESULT (WINAPI *)(WNDPROC, HWND, UINT, WPARAM, LPARAM)) CallWindowProcW,
-    (LRESULT (WINAPI *)(HWND, UINT, WPARAM, LPARAM)) DefWindowProcW,
-    (ATOM (WINAPI *)(const WNDCLASS *)) RegisterClassW,
-    (BOOL (WINAPI *)(HWND, LPCTSTR)) SetWindowTextW,
-    (HWND (WINAPI *)(DWORD, LPCTSTR, LPCTSTR, DWORD, int, int,
-	    int, int, HWND, HMENU, HINSTANCE, LPVOID)) CreateWindowExW,
-    (BOOL (WINAPI *)(HMENU, UINT, UINT, UINT, LPCTSTR)) InsertMenuW,
-    (int (WINAPI *)(HWND, LPCTSTR, int)) GetWindowTextW,
-    (HWND (WINAPI *)(LPCTSTR, LPCTSTR)) FindWindowW,
-    (int (WINAPI *)(HWND, LPTSTR, int)) GetClassNameW,
-};
-
-const TkWinProcs *const tkWinProcs = &unicodeProcs;
-
 /*
  * Declarations of static variables used in this file.
  */
@@ -1552,7 +1536,7 @@ HandleIMEComposition(
 	return 0;
     }
 
-    n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
+    n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
 	char *buff = ckalloc(n);
@@ -1560,7 +1544,7 @@ HandleIMEComposition(
 	XEvent event;
 	int i;
 
-	n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, buff, (unsigned) n);
+	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n);
 
 	/*
 	 * Set up the fields pertinent to key event.
