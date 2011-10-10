@@ -311,7 +311,7 @@ Tk_ChooseColorObjCmd(
     Tk_Window tkwin = clientData, parent;
     HWND hWnd;
     int i, oldMode, winCode, result;
-    CHOOSECOLORA chooseColor;
+    CHOOSECOLOR chooseColor;
     static int inited = 0;
     static COLORREF dwCustColors[16];
     static long oldColor;		/* the color selected last time */
@@ -347,7 +347,7 @@ Tk_ChooseColorObjCmd(
     chooseColor.Flags		= CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     chooseColor.lCustData	= (LPARAM) NULL;
     chooseColor.lpfnHook	= (LPOFNHOOKPROC) ColorDlgHookProc;
-    chooseColor.lpTemplateName	= (LPSTR) interp;
+    chooseColor.lpTemplateName	= (LPTSTR) interp;
 
     for (i = 1; i < objc; i += 2) {
 	int index;
@@ -399,7 +399,7 @@ Tk_ChooseColorObjCmd(
     chooseColor.hwndOwner = hWnd;
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-    winCode = ChooseColorA(&chooseColor);
+    winCode = ChooseColor(&chooseColor);
     (void) Tcl_SetServiceMode(oldMode);
 
     /*
