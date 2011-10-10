@@ -1,6 +1,11 @@
+2011-10-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [BUG 3163893] -initialdir option bug for
+	tk_chooseDirectory under XP
+
 2011-10-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinInt.h:   Remove tclWinProcs, as it is no longer
+	* win/tkWinInt.h:   Remove tkWinProcs, as it is no longer
 	* win/tkWinX.c:     being used.
 	* win/tkWinTest.c:
 

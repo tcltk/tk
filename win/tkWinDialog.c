@@ -1649,7 +1649,10 @@ ChooseDirectoryValidateProc(
 
 	char *initDir = chooseDirSharedData->utfInitDir;
 
-	SetCurrentDirectoryA(initDir);
+	Tcl_DString initDirDStr;
+	Tcl_UtfToExternalDString(TkWinGetUnicodeEncoding(), initDir, -1, &initDirDStr);
+	SetCurrentDirectoryA(Tcl_DStringValue(&initDirDStr));
+	
 	if (*initDir == '\\') {
 	    /*
 	     * BFFM_SETSELECTION only understands UNC paths as pidls, so
@@ -1663,26 +1666,23 @@ ChooseDirectoryValidateProc(
 		if (SUCCEEDED(SHGetDesktopFolder(&psfFolder))) {
 		    LPITEMIDLIST pidlMain;
 		    ULONG ulCount, ulAttr;
-		    Tcl_DString ds;
 
-		    Tcl_UtfToExternalDString(TkWinGetUnicodeEncoding(),
-			    initDir, -1, &ds);
 		    if (SUCCEEDED(psfFolder->lpVtbl->ParseDisplayName(
 			    psfFolder, hwnd, NULL, (WCHAR *)
-			    Tcl_DStringValue(&ds), &ulCount,&pidlMain,&ulAttr))
+			    Tcl_DStringValue(&initDirDStr), &ulCount,&pidlMain,&ulAttr))
 			    && (pidlMain != NULL)) {
 			SendMessageA(hwnd, BFFM_SETSELECTION, FALSE,
 				(LPARAM) pidlMain);
 			pMalloc->lpVtbl->Free(pMalloc, pidlMain);
 		    }
 		    psfFolder->lpVtbl->Release(psfFolder);
-		    Tcl_DStringFree(&ds);
 		}
 		pMalloc->lpVtbl->Release(pMalloc);
 	    }
 	} else {
-	    SendMessageA(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM) initDir);
+	    SendMessageA(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM) Tcl_DStringValue(&initDirDStr));
 	}
+	Tcl_DStringFree(&initDirDStr);
 	SendMessageA(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
 	break;
     }
