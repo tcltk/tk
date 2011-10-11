@@ -653,6 +653,10 @@ typedef struct Tk_GeomMgr {
  * the most information to the user.  The only difference is the changing
  * of the detail field for a virtual event so that it holds the name of the
  * virtual event being triggered.
+ *
+ * When using this structure, if you want your code to work correctly
+ * in Tk 8.5 as well, you should ensure that you zero out all the
+ * fields first using memset() or bzero().
  */
 
 typedef struct {
@@ -669,6 +673,7 @@ typedef struct {
     unsigned int state;	    /* key or button mask */
     Tk_Uid name;	    /* Name of virtual event. */
     Bool same_screen;	    /* same screen flag */
+    Tcl_Obj *user_data;		/* not used in Tk 8.4 */
 } XVirtualEvent;
 
 typedef struct {
