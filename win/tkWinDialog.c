@@ -138,7 +138,7 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
 	SetWindowLongPtr((to), GWLP_USERDATA, (LPARAM)(what))
 
 /*
- * The value of TK_MULTI_MAX_PATH dictactes how many files can be retrieved
+ * The value of TK_MULTI_MAX_PATH dictates how many files can be retrieved
  * with tk_get*File -multiple 1. It must be allocated on the stack, so make it
  * large enough but not too large. - hobbs
  *
@@ -168,7 +168,7 @@ typedef struct ChooseDir {
 				 * the default dialog proc stores a '\0' in
 				 * it, since, of course, no _file_ was
 				 * selected. */
-    OPENFILENAMEA *ofnPtr;	/* pointer to the OFN structure */
+    OPENFILENAME *ofnPtr;	/* pointer to the OFN structure */
 } ChooseDir;
 
 /*
@@ -182,8 +182,7 @@ typedef struct OFNData {
     int dynFileBufferSize;	/* Dynamic filename buffer size, stored to
 				 * avoid shrinking and expanding the buffer
 				 * when selection changes */
-    char *dynFileBuffer;	/* Dynamic filename buffer, cast to WCHAR* in
-				 * UNICODE procedures */
+    TCHAR *dynFileBuffer;	/* Dynamic filename buffer */
 } OFNData;
 
 /*
@@ -707,15 +706,15 @@ GetFileName(
     Tk_MakeWindowExist(tkwin);
     hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
 
-    ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
+    ZeroMemory(&ofn, sizeof(OPENFILENAME));
     if (LOBYTE(LOWORD(GetVersion())) < 5) {
 	ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400;
     } else {
-	ofn.lStructSize = sizeof(OPENFILENAMEW);
+	ofn.lStructSize = sizeof(OPENFILENAME);
     }
     ofn.hwndOwner = hWnd;
     ofn.hInstance = TkWinGetHInstance(ofn.hwndOwner);
-    ofn.lpstrFile = (WCHAR *) file;
+    ofn.lpstrFile = file;
     ofn.nMaxFile = TK_MULTI_MAX_PATH;
     ofn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR
 	    | OFN_EXPLORER | OFN_ENABLEHOOK| OFN_ENABLESIZING;
@@ -738,19 +737,19 @@ GetFileName(
 	 * procedure when necessary
 	 */
 
-	ofnData.dynFileBufferSize = 1024;
-	ofnData.dynFileBuffer = ckalloc(1024);
+	ofnData.dynFileBufferSize = 512;
+	ofnData.dynFileBuffer = ckalloc(512 * sizeof(TCHAR));
     }
 
     if (extension != NULL) {
 	Tcl_UtfToExternalDString(unicodeEncoding, extension, -1, &extString);
-	ofn.lpstrDefExt = (WCHAR *) Tcl_DStringValue(&extString);
+	ofn.lpstrDefExt = (TCHAR *) Tcl_DStringValue(&extString);
     }
 
     Tcl_UtfToExternalDString(unicodeEncoding,
 	    Tcl_DStringValue(&utfFilterString),
 	    Tcl_DStringLength(&utfFilterString), &filterString);
-    ofn.lpstrFilter = (WCHAR *) Tcl_DStringValue(&filterString);
+    ofn.lpstrFilter = (TCHAR *) Tcl_DStringValue(&filterString);
     ofn.nFilterIndex = filterIndex;
 
     if (Tcl_DStringValue(&utfDirString)[0] != '\0') {
@@ -776,11 +775,11 @@ GetFileName(
 	}
 	Tcl_DStringFree(&cwd);
     }
-    ofn.lpstrInitialDir = (WCHAR *) Tcl_DStringValue(&dirString);
+    ofn.lpstrInitialDir = (TCHAR *) Tcl_DStringValue(&dirString);
 
     if (title != NULL) {
 	Tcl_UtfToExternalDString(unicodeEncoding, title, -1, &titleString);
-	ofn.lpstrTitle = (WCHAR *) Tcl_DStringValue(&titleString);
+	ofn.lpstrTitle = (TCHAR *) Tcl_DStringValue(&titleString);
     }
 
     /*
@@ -840,7 +839,7 @@ GetFileName(
 	     * first element is the directory path.
 	     */
 
-	    WCHAR *files = (WCHAR *) ofnData.dynFileBuffer;
+	    TCHAR *files = ofnData.dynFileBuffer;
 	    Tcl_Obj *returnList = Tcl_NewObj();
 	    int count = 0;
 
@@ -989,7 +988,7 @@ OFNHookProc(
 	if (notifyPtr->hdr.code == CDN_FILEOK ||
 		notifyPtr->hdr.code == CDN_SELCHANGE) {
 	    int dirsize, selsize;
-	    WCHAR *buffer;
+	    TCHAR *buffer;
 	    int buffersize;
 
 	    /*
@@ -999,21 +998,21 @@ OFNHookProc(
 
 	    ofnPtr = notifyPtr->lpOFN;
 	    ofnData = (OFNData *) ofnPtr->lCustData;
-	    buffer = (WCHAR *) ofnData->dynFileBuffer;
+	    buffer = ofnData->dynFileBuffer;
 	    hdlg = GetParent(hdlg);
 
 	    selsize = SendMessage(hdlg, CDM_GETSPEC, 0, 0);
 	    dirsize = SendMessage(hdlg, CDM_GETFOLDERPATH, 0, 0);
-	    buffersize = (selsize + dirsize + 1) * 2;
+	    buffersize = (selsize + dirsize + 1);
 
 	    /*
 	     * Just empty the buffer if dirsize indicates an error [Bug 3071836]
 	     */
 	    if ((selsize > 1) && (dirsize > 0)) {
 		if (ofnData->dynFileBufferSize < buffersize) {
-		    buffer = ckrealloc(buffer, buffersize);
+		    buffer = ckrealloc(buffer, buffersize * sizeof(TCHAR));
 		    ofnData->dynFileBufferSize = buffersize;
-		    ofnData->dynFileBuffer = (char *) buffer;
+		    ofnData->dynFileBuffer = buffer;
 		}
 
 		SendMessage(hdlg, CDM_GETFOLDERPATH, dirsize, PTR2INT(buffer));
@@ -1028,7 +1027,7 @@ OFNHookProc(
 
 		if (buffer[0] == '"') {
 		    BOOL findquote = TRUE;
-		    WCHAR *tmp = buffer;
+		    TCHAR *tmp = buffer;
 
 		    while(*buffer != '\0') {
 			if (findquote) {
@@ -1668,7 +1667,7 @@ ChooseDirectoryValidateProc(
 		    ULONG ulCount, ulAttr;
 
 		    if (SUCCEEDED(psfFolder->lpVtbl->ParseDisplayName(
-			    psfFolder, hwnd, NULL, (WCHAR *)
+			    psfFolder, hwnd, NULL, (TCHAR *)
 			    Tcl_DStringValue(&initDirDStr), &ulCount,&pidlMain,&ulAttr))
 			    && (pidlMain != NULL)) {
 			SendMessageA(hwnd, BFFM_SETSELECTION, FALSE,
@@ -1860,7 +1859,7 @@ Tk_MessageBoxObjCmd(
 
     tsdPtr->hSmallIcon = TkWinGetIcon(parent, ICON_SMALL);
     tsdPtr->hBigIcon   = TkWinGetIcon(parent, ICON_BIG);
-    tsdPtr->hMsgBoxHook = SetWindowsHookExA(WH_CBT, MsgBoxCBTProc, NULL,
+    tsdPtr->hMsgBoxHook = SetWindowsHookEx(WH_CBT, MsgBoxCBTProc, NULL,
 	    GetCurrentThreadId());
     winCode = MessageBox(hWnd, Tcl_GetUnicode(tmpObj),
 	    titleObj ? Tcl_GetUnicode(titleObj) : L"", flags);
