@@ -1981,14 +1981,17 @@ ConvertExternalFilename(
  */
 
 static Tcl_Obj *
-GetFontObj(HDC hdc, LOGFONTA *plf)
+GetFontObj(HDC hdc, LOGFONT *plf)
 {
+    Tcl_DString ds;
     Tcl_Obj *resObj;
     int pt = 0;
 
     resObj = Tcl_NewListObj(0, NULL);
+    Tcl_ExternalToUtfDString(TkWinGetUnicodeEncoding(), (char *) plf->lfFaceName, -1, &ds);
     Tcl_ListObjAppendElement(NULL, resObj,
-	    Tcl_NewStringObj(plf->lfFaceName, -1));
+	    Tcl_NewStringObj(Tcl_DStringValue(&ds), -1));
+    Tcl_DStringFree(&ds);
     pt = -MulDiv(plf->lfHeight, 72, GetDeviceCaps(hdc, LOGPIXELSY));
     Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewIntObj(pt));
     if (plf->lfWeight >= 700) {
@@ -2010,7 +2013,7 @@ GetFontObj(HDC hdc, LOGFONTA *plf)
 }
 
 static void
-ApplyLogfont(Tcl_Interp *interp, Tcl_Obj *cmdObj, HDC hdc, LOGFONTA *logfontPtr)
+ApplyLogfont(Tcl_Interp *interp, Tcl_Obj *cmdObj, HDC hdc, LOGFONT *logfontPtr)
 {
     int objc;
     Tcl_Obj **objv, **tmpv;
@@ -2098,10 +2101,10 @@ HookProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
      */
 
     if (WM_COMMAND == msg && LOWORD(wParam) == 1026) {
-	LOGFONTA lf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0, 0}};
+	LOGFONT lf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0, 0}};
 	HDC hdc = GetDC(hwndDlg);
 
-	SendMessageA(hwndDlg, WM_CHOOSEFONT_GETLOGFONT, 0, (LPARAM) &lf);
+	SendMessage(hwndDlg, WM_CHOOSEFONT_GETLOGFONT, 0, (LPARAM) &lf);
 	if (phd && phd->cmdObj) {
 	    ApplyLogfont(phd->interp, phd->cmdObj, hdc, &lf);
 	}
@@ -2331,9 +2334,10 @@ FontchooserShowCmd(
     int objc,
     Tcl_Obj *const objv[])
 {
+    Tcl_DString ds;
     Tk_Window tkwin = clientData, parent;
-    CHOOSEFONTA cf;
-    LOGFONTA lf;
+    CHOOSEFONT cf;
+    LOGFONT lf;
     HDC hdc;
     HookData *hdPtr;
     int r = TCL_OK, oldMode = 0;
@@ -2351,10 +2355,10 @@ FontchooserShowCmd(
 
     Tk_MakeWindowExist(parent);
 
-    ZeroMemory(&cf, sizeof(CHOOSEFONTA));
-    ZeroMemory(&lf, sizeof(LOGFONTA));
+    ZeroMemory(&cf, sizeof(CHOOSEFONT));
+    ZeroMemory(&lf, sizeof(LOGFONT));
     lf.lfCharSet = DEFAULT_CHARSET;
-    cf.lStructSize = sizeof(CHOOSEFONTA);
+    cf.lStructSize = sizeof(CHOOSEFONT);
     cf.hwndOwner = Tk_GetHWND(Tk_WindowId(parent));
     cf.lpLogFont = &lf;
     cf.nFontType = SCREEN_FONTTYPE;
@@ -2375,7 +2379,9 @@ FontchooserShowCmd(
 	}
 	fontPtr = (TkFont *) f;
 	cf.Flags |= CF_INITTOLOGFONTSTRUCT;
-	strncpy(lf.lfFaceName, Tk_GetUid(fontPtr->fa.family), LF_FACESIZE-1);
+    Tcl_UtfToExternalDString(TkWinGetUnicodeEncoding(), fontPtr->fa.family, -1, &ds);
+    _tcsncpy(lf.lfFaceName, (TCHAR *)Tcl_DStringValue(&ds), LF_FACESIZE-1);
+    Tcl_DStringFree(&ds);
 	lf.lfFaceName[LF_FACESIZE-1] = 0;
 	lf.lfHeight = -MulDiv(TkFontGetPoints(tkwin, fontPtr->fa.size),
 	    GetDeviceCaps(hdc, LOGPIXELSY), 72);
@@ -2405,7 +2411,7 @@ FontchooserShowCmd(
 
     if (TCL_OK == r) {
 	oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	if (ChooseFontA(&cf)) {
+	if (ChooseFont(&cf)) {
 	    if (hdPtr->cmdObj) {
 		ApplyLogfont(hdPtr->interp, hdPtr->cmdObj, hdc, &lf);
 	    }
