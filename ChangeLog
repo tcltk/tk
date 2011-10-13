@@ -1,3 +1,8 @@
+2011-10-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: Internationalization of all Windows font
+	* win/tkWinFont.c:   handling.
+
 2011-10-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [BUG 3163893] -initialdir option bug for
