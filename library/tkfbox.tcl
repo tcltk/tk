@@ -983,7 +983,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 	lappend specs {-multiple "" "" "0"}
     }
 
-    # The "-nocomplain" option is only available for the "save" file dialog.
+    # The "-confirmoverwrite" option is only for the "save" file dialog.
     #
     if {$type eq "save"} {
 	lappend specs {-confirmoverwrite "" "" "1"}
