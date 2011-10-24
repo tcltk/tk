@@ -84,7 +84,8 @@ static int		NavServicesGetFile(Tcl_Interp *interp,
 			    OpenFileData *ofd, AEDesc *initialDescPtr,
 			    char *initialFile, AEDescList *selectDescPtr,
 			    CFStringRef title, CFStringRef message,
-			    const char *initialType, int multiple, int isOpen,
+			    const char *initialType, int multiple,
+			    int confirmOverwrite, int isOpen,
 			    Tk_Window parent);
 static int		HandleInitialDirectory(Tcl_Interp *interp,
 			    char *initialFile, char *initialDir, FSRef *dirRef,
@@ -366,7 +367,7 @@ Tk_GetOpenFileObjCmd(
 		TCL_GLOBAL_ONLY);
     }
     result = NavServicesGetFile(interp, &ofd, initialPtr, NULL, &selectDesc,
-	    title, message, initialtype, multiple, OPEN_FILE, parent);
+	    title, message, initialtype, multiple, false, OPEN_FILE, parent);
 
     if (typeVariablePtr) {
 	FileFilter *filterPtr = ofd.fl.filters;
@@ -422,6 +423,7 @@ Tk_GetSaveFileObjCmd(
     Tcl_Obj *CONST objv[])	/* Argument objects. */
 {
     int i, result = TCL_ERROR;
+    int confirmOverwrite = 1;
     char *initialFile = NULL;
     Tk_Window parent = NULL;
     AEDesc initialDesc = {typeNull, NULL};
@@ -431,11 +433,13 @@ Tk_GetSaveFileObjCmd(
     OpenFileData ofd;
     static const char *saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-message", "-parent", "-title", "-typevariable", NULL
+	"-message", "-parent", "-title", "-typevariable",
+	"-confirmoverwrite", NULL
     };
     enum saveOptions {
 	SAVE_DEFAULT, SAVE_FILETYPES, SAVE_INITDIR, SAVE_INITFILE,
 	SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE,
+	SAVE_CONFIRMOW
     };
 
     if (!fileDlgInited) {
@@ -508,6 +512,12 @@ Tk_GetSaveFileObjCmd(
 	    title = CFStringCreateWithBytes(NULL, (unsigned char *) choice,
 		    choiceLen, kCFStringEncodingUTF8, false);
 	    break;
+	case SAVE_CONFIRMOW:
+	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1], &confirmOverwrite)
+		    != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    break;
 	}
     }
 
@@ -515,7 +525,7 @@ Tk_GetSaveFileObjCmd(
 	initialPtr = &initialDesc;
     }
     result = NavServicesGetFile(interp, &ofd, initialPtr, initialFile, NULL,
-	    title, message, NULL, false, SAVE_FILE, parent);
+	    title, message, NULL, false, confirmOverwrite, SAVE_FILE, parent);
     TkFreeFileFilters(&ofd.fl);
   end:
     if (initialDesc.dataHandle) {
@@ -627,7 +637,7 @@ Tk_ChooseDirectoryObjCmd(
 	initialPtr = &initialDesc;
     }
     result = NavServicesGetFile(interp, &ofd, initialPtr, NULL, NULL, title,
-	    message, NULL, false, CHOOSE_FOLDER, parent);
+	    message, NULL, false, false, CHOOSE_FOLDER, parent);
     TkFreeFileFilters(&ofd.fl);
   end:
     if (initialDesc.dataHandle) {
@@ -778,6 +788,7 @@ NavServicesGetFile(
     CFStringRef message,
     const char *initialtype,
     int multiple,
+    int confirmOverwrite,
     int isOpen,
     Tk_Window parent)
 {
@@ -798,6 +809,9 @@ NavServicesGetFile(
 	    | kNavSupportPackages | kNavAllFilesInPopup;
     if (multiple) {
 	options.optionFlags |= kNavAllowMultipleFiles;
+    }
+    if (!confirmOverwrite) {
+	options.optionFlags |= kNavDontConfirmReplacement;
     }
     options.modality = kWindowModalityAppModal;
     if (parent && ((TkWindow *) parent)->window != None &&

@@ -592,6 +592,7 @@ GetFileNameW(
     OFNData ofnData;
     int cdlgerr;
     int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
+    int inValue, confirmOverwrite = 1;
     char *extension = NULL, *title = NULL;
     Tk_Window tkwin = (Tk_Window) clientData;
     HWND hWnd;
@@ -603,33 +604,26 @@ GetFileNameW(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static CONST char *saveOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent", "-title", "-typevariable", NULL
+	"-parent", "-title", "-typevariable",
+	"-confirmoverwrite",
+	NULL
     };
     static CONST char *openOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-multiple", "-parent", "-title", "-typevariable", NULL
+	"-parent", "-title", "-typevariable",
+	"-multiple",
+	NULL
     };
-    CONST char **optionStrings;
-
     enum options {
-	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
-	FILE_MULTIPLE,	FILE_PARENT,	FILE_TITLE,     FILE_TYPEVARIABLE
+	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR, FILE_INITFILE,
+	FILE_PARENT,	FILE_TITLE, FILE_TYPEVARIABLE,
+	FILE_MULTIPLE_OR_CONFIRMOW
     };
 
     file[0] = '\0';
     ZeroMemory(&ofnData, sizeof(OFNData));
     Tcl_DStringInit(&utfFilterString);
     Tcl_DStringInit(&utfDirString);
-
-    /*
-     * Parse the arguments.
-     */
-
-    if (open) {
-	optionStrings = openOptionStrings;
-    } else {
-	optionStrings = saveOptionStrings;
-    }
 
     for (i = 1; i < objc; i += 2) {
 	int index;
@@ -639,26 +633,12 @@ GetFileNameW(
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings,
+	if (Tcl_GetIndexFromObj(interp, optionPtr,
+		open ? openOptionStrings : saveOptionStrings,
 		"option", 0, &index) != TCL_OK) {
 	    goto end;
 	}
 
-	/*
-	 * We want to maximize code sharing between the open and save file
-	 * dialog implementations; in particular, the switch statement below.
-	 * We use different sets of option strings from the GetIndexFromObj
-	 * call above, but a single enumeration for both. The save file dialog
-	 * doesn't support -multiple, but it falls in the middle of the
-	 * enumeration. Ultimately, this means that when the index found by
-	 * GetIndexFromObj is >= FILE_MULTIPLE, when doing a save file dialog,
-	 * we have to increment the index, so that it matches the open file
-	 * dialog enumeration.
-	 */
-
-	if (!open && index >= FILE_MULTIPLE) {
-	    index++;
-	}
 	if (i + 1 == objc) {
 	    string = Tcl_GetString(optionPtr);
 	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
@@ -693,11 +673,6 @@ GetFileNameW(
 		    sizeof(file), NULL, NULL, NULL);
 	    Tcl_DStringFree(&ds);
 	    break;
-	case FILE_MULTIPLE:
-	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &multi) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    break;
 	case FILE_PARENT:
 	    tkwin = Tk_NameToWindow(interp, string, tkwin);
 	    if (tkwin == NULL) {
@@ -711,6 +686,16 @@ GetFileNameW(
 	    typeVariableObj = valuePtr;
 	    initialTypeObj = Tcl_ObjGetVar2(interp, typeVariableObj, NULL,
 		    TCL_GLOBAL_ONLY);
+	    break;
+	case FILE_MULTIPLE_OR_CONFIRMOW:
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &inValue) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    if (open) {
+		multi = inValue;
+	    } else {
+		confirmOverwrite = inValue;
+	    }
 	    break;
 	}
     }
@@ -740,7 +725,7 @@ GetFileNameW(
 
     if (open != 0) {
 	ofn.Flags |= OFN_FILEMUSTEXIST;
-    } else {
+    } else if (confirmOverwrite) {
 	ofn.Flags |= OFN_OVERWRITEPROMPT;
     }
     if (tsdPtr->debugFlag != 0) {
