@@ -864,6 +864,8 @@ typedef struct {
 				 * allocated with ckalloc(). */
     int charValueLen;		/* Length of string in charValuePtr when that
 				 * is non-NULL. */
+    KeySym keysym;		/* Key symbol computed after input methods
+				 * have been invoked */
 } TkKeyEvent;
 
 /*

@@ -1,3 +1,13 @@
+2011-10-01  Kevin B. Kenny  <kennykb@acm.org>
+
+	* generic/tkInt.h:	[Bug 3410609] Change the event mechanism
+	* unix/tkUnixEvent.c:	for <KeyPress> events to use the keysym
+	* unix/tkUnixKey.c:	returned by XLookupString in preference to
+	the one that appears in the raw X event at any level. This change
+	allows binding to ISO_Level3_Shift-ed characters, composed characters,
+	and similar beasts. KeyRelease events still work as they did before,
+	as does Tk with input methods disabled.
+
 2011-09-01  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/photo.n: Correctly documented what the [$ph data] command
