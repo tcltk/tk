@@ -123,13 +123,13 @@ TkpGetString(
 	Tcl_DStringSetLength(dsPtr, TCL_DSTRING_STATIC_SIZE-1);
 	len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
 		Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
-		NULL, &status);
+		&kePtr->keysym, &status);
 
 	if (status == XBufferOverflow) { /* Expand buffer and try again */
 	    Tcl_DStringSetLength(dsPtr, len);
 	    len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
 		    Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr), 
-		    NULL, &status);
+		    &kePtr->keysym, &status);
 	}
 	if ((status != XLookupChars) && (status != XLookupBoth)) {
 	    len = 0;
@@ -144,8 +144,8 @@ TkpGetString(
 	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
 
 	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
-		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf), NULL,
-		&status);
+		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf), 
+                &kePtr->keysym, &status);
 
 	/*
 	 * If the buffer wasn't big enough, grow the buffer and try again.
@@ -154,7 +154,7 @@ TkpGetString(
 	if (status == XBufferOverflow) {
 	    Tcl_DStringSetLength(&buf, len);
 	    len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
-		    Tcl_DStringValue(&buf), len, NULL, &status);
+		    Tcl_DStringValue(&buf), len, &kePtr->keysym, &status);
 	}
 	if ((status != XLookupChars) && (status != XLookupBoth)) {
 	    len = 0;
@@ -179,7 +179,7 @@ TkpGetString(
 	Tcl_DStringInit(&buf);
 	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
 	len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
-		TCL_DSTRING_STATIC_SIZE, 0, 0);
+		TCL_DSTRING_STATIC_SIZE, &kePtr->keysym, 0);
 	Tcl_DStringValue(&buf)[len] = '\0';
 
 	if (len == 1) {
@@ -277,6 +277,29 @@ TkpGetKeySym(
 {
     KeySym sym;
     int index;
+    TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
+
+#ifdef TK_USE_INPUT_METHODS
+    /* 
+     * If input methods are active, we may already have determined a keysym.
+     * Return it.
+     */
+
+    if (eventPtr->type == KeyPress && dispPtr
+	    && (dispPtr->flags & TK_DISPLAY_USE_IM)) {
+	if (kePtr->charValuePtr == NULL) {
+	    Tcl_DString ds;
+	    TkWindow *winPtr = (TkWindow *)
+		Tk_IdToWindow(eventPtr->xany.display, eventPtr->xany.window);
+	    Tcl_DStringInit(&ds);
+	    (void) TkpGetString(winPtr, eventPtr, &ds);
+	    Tcl_DStringFree(&ds);
+	}
+	if (kePtr->charValuePtr != NULL) {
+	    return kePtr->keysym;
+	}
+    }
+#endif
 
     /*
      * Refresh the mapping information if it's stale
