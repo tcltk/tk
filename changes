@@ -6781,3 +6781,15 @@ and -to (porter)
 2011-06-17 (bug fix)[3062331] crash in unset traces (macdonald,porter)
 
 --- Released 8.5.10, June 23, 2011 --- See ChangeLog for details ---
+
+2011-06-29 (bug fix)[3341056] new crash in unset traces (militaru,porter)
+
+2011-08-03 (bug fix)[3314770] restore file dialog resizeability (nijtmans)
+
+2011-09-22 (bug fix)[3404541] -takefocus option (dzach,english)
+
+2011-10-24 (new feature)[TIP 382] -confirmoverwrite on save dialog (porter)
+
+2011-10-25 (bug fix)[3410609] AltGr keysyms on Swiss keyboard (tasser,kenny)
+
+--- Released 8.5.11, November 11, 2011 --- See ChangeLog for details ---
