@@ -6938,3 +6938,11 @@ and -to (porter)
 2011-08-03 (bug fix)[2891541] fix grab behaviour for main window (thoyts)
 
 --- Released 8.6b2, August 8, 2011 --- See ChangeLog for details ---
+
+2011-09-22 (bug fix)[3404541] -takefocus option (dzach,english)
+
+2011-10-24 (new feature)[TIP 382] -confirmoverwrite on save dialog (porter)
+
+2011-10-25 (bug fix)[3410609] AltGr keysyms on Swiss keyboard (tasser,kenny)
+
+--- Released 8.6b3, November 20, 2011 --- See ChangeLog for details ---
