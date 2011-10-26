@@ -1,3 +1,7 @@
+2011-10-26  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.5.11.
+
 2011-10-01  Kevin B. Kenny  <kennykb@acm.org>
 
 	* generic/tkInt.h:	[Bug 3410609] Change the event mechanism
