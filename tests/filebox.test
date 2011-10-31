@@ -111,7 +111,7 @@ if {$tcl_platform(platform) == "unix"} {
 }
 
 set unknownOptionsMsg(tk_getOpenFile) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, -title, or -typevariable}
-set unknownOptionsMsg(tk_getSaveFile) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -parent, -title, or -typevariable}
+set unknownOptionsMsg(tk_getSaveFile) {bad option "-foo": must be -confirmoverwrite, -defaultextension, -filetypes, -initialdir, -initialfile, -parent, -title, or -typevariable}
 
 set tmpFile "filebox.tmp"
 makeFile {
