@@ -21,7 +21,7 @@
 
 2011-10-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinDialog.c: [BUG 3163893] -initialdir option bug for
+	* win/tkWinDialog.c: [Bug 3163893]: -initialdir option bug for
 	tk_chooseDirectory under XP
 
 2011-10-05  Jan Nijtmans  <nijtmans@users.sf.net>
@@ -257,8 +257,8 @@
 
 2011-01-24  Joe English  <jenglish@users.sourceforge.net>
 
-	* generic/tkSelect.c: Fix for [Bug #3164879]:
-	(memory allocation bug introduced by [Patch #3129527])
+	* generic/tkSelect.c: Fix for [Bug #3164879]: (memory allocation
+	bug introduced by [Patch #3129527])
 
 2011-01-22  Joe English  <jenglish@users.sourceforge.net>
 
@@ -305,7 +305,7 @@
 
 2010-12-17  Stuart Cassoff  <stwo@users.sourceforge.net>
 
-	* unix/Makefile.in:  Use 'rpmbuild', not 'rpm' [Bug 2537626].
+	* unix/Makefile.in:  [Bug 2537626]: Use 'rpmbuild', not 'rpm'.
 
 2010-12-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
