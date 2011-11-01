@@ -48,8 +48,8 @@ typedef struct PixelRep {
  */
 
 typedef struct ThreadSpecificData {
-    Tcl_ObjType *doubleTypePtr;
-    Tcl_ObjType *intTypePtr;
+    const Tcl_ObjType *doubleTypePtr;
+    const Tcl_ObjType *intTypePtr;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -82,8 +82,8 @@ typedef struct WindowRep {
  */
 
 static void		DupMMInternalRep(Tcl_Obj *srcPtr, Tcl_Obj *copyPtr);
-static void		DupPixelInternalRep(Tcl_Obj *srcPtr, Tcl_Obj *copyPtr);
-static void		DupWindowInternalRep(Tcl_Obj *srcPtr,Tcl_Obj *copyPtr);
+static void		DupPixelInternalRep(Tcl_Obj *srcPtr, Tcl_Obj*copyPtr);
+static void		DupWindowInternalRep(Tcl_Obj *srcPtr,Tcl_Obj*copyPtr);
 static void		FreeMMInternalRep(Tcl_Obj *objPtr);
 static void		FreePixelInternalRep(Tcl_Obj *objPtr);
 static void		FreeWindowInternalRep(Tcl_Obj *objPtr);
@@ -163,7 +163,7 @@ GetPixelsFromObjEx(
     int *intPtr,
     double *dblPtr)		/* Places to store resulting pixels. */
 {
-    int result,fresh;
+    int result, fresh;
     double d;
     PixelRep *pixelPtr;
     static const double bias[] = {
@@ -178,7 +178,7 @@ GetPixelsFromObjEx(
      */
 
     if (objPtr->typePtr != &pixelObjType) {
-	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	ThreadSpecificData *tsdPtr =
 		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
 	if (tsdPtr->doubleTypePtr == NULL) {
@@ -203,33 +203,31 @@ GetPixelsFromObjEx(
     }
 
  retry:
-    if (objPtr->typePtr != &pixelObjType) {
+    fresh = (objPtr->typePtr != &pixelObjType);
+    if (fresh) {
 	result = SetPixelFromAny(interp, objPtr);
 	if (result != TCL_OK) {
 	    return result;
 	}
-	fresh=1;
-    } else {
-	fresh=0;
     }
 
     if (SIMPLE_PIXELREP(objPtr)) {
 	*intPtr = GET_SIMPLEPIXEL(objPtr);
 	if (dblPtr) {
-	    *dblPtr=(double)(*intPtr);
+	    *dblPtr = (double) (*intPtr);
 	}
     } else {
 	pixelPtr = GET_COMPLEXPIXEL(objPtr);
-	if ((!fresh) && (pixelPtr->tkwin != tkwin))
-	    {
-		/* in case of exo-screen conversions of non-pixels
-		 * we force a recomputation from the string
-		 */
+	if ((!fresh) && (pixelPtr->tkwin != tkwin)) {
+	    /*
+	     * In the case of exo-screen conversions of non-pixels, we force a
+	     * recomputation from the string.
+	     */
 
-		FreePixelInternalRep(objPtr);
-		goto retry;
-	    }
-	if ((pixelPtr->tkwin != tkwin)||dblPtr) {
+	    FreePixelInternalRep(objPtr);
+	    goto retry;
+	}
+	if ((pixelPtr->tkwin != tkwin) || dblPtr) {
 	    d = pixelPtr->value;
 	    if (pixelPtr->units >= 0) {
 		d *= bias[pixelPtr->units] * WidthOfScreen(Tk_Screen(tkwin));
@@ -242,7 +240,7 @@ GetPixelsFromObjEx(
 	    }
 	    pixelPtr->tkwin = tkwin;
 	    if (dblPtr) {
-		*dblPtr=(double)d;
+		*dblPtr = d;
 	    }
 	}
 	*intPtr = pixelPtr->returnValue;
@@ -278,7 +276,7 @@ Tk_GetPixelsFromObj(
     Tcl_Obj *objPtr,		/* The object from which to get pixels. */
     int *intPtr)		/* Place to store resulting pixels. */
 {
-    return GetPixelsFromObjEx(interp,tkwin,objPtr,intPtr,NULL);
+    return GetPixelsFromObjEx(interp, tkwin, objPtr, intPtr, NULL);
 }
 
 /*
@@ -310,19 +308,22 @@ Tk_GetDoublePixelsFromObj(
     double *doublePtr)		/* Place to store resulting pixels. */
 {
     double d;
-    int result,val;
+    int result, val;
 
-    result=GetPixelsFromObjEx(interp, tkwin, objPtr, &val, &d);
+    result = GetPixelsFromObjEx(interp, tkwin, objPtr, &val, &d);
     if (result != TCL_OK) {
 	return result;
     }
     if (objPtr->typePtr == &pixelObjType && !SIMPLE_PIXELREP(objPtr)) {
-	PixelRep *pixelPtr;
-	pixelPtr = GET_COMPLEXPIXEL(objPtr);
+	PixelRep *pixelPtr = GET_COMPLEXPIXEL(objPtr);
+
 	if (pixelPtr->units >= 0) {
-	    /* internally "shimmer" to pixel units */
-	    pixelPtr->units=-1;
-	    pixelPtr->value=d;
+	    /*
+	     * Internally "shimmer" to pixel units.
+	     */
+
+	    pixelPtr->units = -1;
+	    pixelPtr->value = d;
 	}
     }
     *doublePtr = d;
@@ -1022,12 +1023,12 @@ TkParsePadAmount(
     Tcl_Obj **objv;		/* The objects in the list */
 
     /*
-     * Check for a common case where a single object would otherwise
-     * be shimmered between a list and a pixel spec.
+     * Check for a common case where a single object would otherwise be
+     * shimmered between a list and a pixel spec.
      */
 
     if (specObj->typePtr == &pixelObjType) {
-	if (Tk_GetPixelsFromObj(interp, tkwin, specObj, &firstInt) != TCL_OK) {
+	if (Tk_GetPixelsFromObj(interp, tkwin, specObj, &firstInt) != TCL_OK){
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp, "bad pad value \"",
 		    Tcl_GetString(specObj),
