@@ -39,7 +39,7 @@ static const char *saveOptionStrings[] = {
 };
 enum saveOptions {
     SAVE_DEFAULT, SAVE_FILETYPES, SAVE_INITDIR, SAVE_INITFILE,
-    SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE, SAVE_COMMAND,
+    SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE, SAVE_COMMAND, SAVE_CONFIRMOW
 };
 static const char *chooseOptionStrings[] = {
     "-initialdir", "-message", "-mustexist", "-parent", "-title", "-command",
@@ -529,6 +529,7 @@ Tk_GetSaveFileObjCmd(
     Tk_Window tkwin = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
+    int confirmOverwrite = 1;
     int index, len;
     FileFilterList fl;
     Tcl_Obj *cmdObj = NULL;
@@ -607,6 +608,12 @@ Tk_GetSaveFileObjCmd(
 	    break;
 	case SAVE_COMMAND:
 	    cmdObj = objv[i+1];
+	    break;
+	case SAVE_CONFIRMOW:
+	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
+				      &confirmOverwrite) != TCL_OK) {
+		goto end;
+	    }
 	    break;
 	}
     }
