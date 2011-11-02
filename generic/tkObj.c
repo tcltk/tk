@@ -87,6 +87,7 @@ static void		DupWindowInternalRep(Tcl_Obj *srcPtr,Tcl_Obj*copyPtr);
 static void		FreeMMInternalRep(Tcl_Obj *objPtr);
 static void		FreePixelInternalRep(Tcl_Obj *objPtr);
 static void		FreeWindowInternalRep(Tcl_Obj *objPtr);
+static ThreadSpecificData *GetTypeCache(void);
 static void		UpdateStringOfMM(Tcl_Obj *objPtr);
 static int		SetMMFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetPixelFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
@@ -136,6 +137,31 @@ static const Tcl_ObjType windowObjType = {
 /*
  *----------------------------------------------------------------------
  *
+ * GetTypeCache --
+ *
+ *	Get (and build if necessary) the cache of useful Tcl object types for
+ *	comparisons in the conversion functions.  This allows optimized checks
+ *	for standard cases.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static ThreadSpecificData *
+GetTypeCache(void)
+{
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (tsdPtr->doubleTypePtr == NULL) {
+	tsdPtr->doubleTypePtr = Tcl_GetObjType("double");
+	tsdPtr->intTypePtr = Tcl_GetObjType("int");
+    }
+    return tsdPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * GetPixelsFromObjEx --
  *
  *	Attempt to return a pixel value from the Tcl object "objPtr". If the
@@ -178,22 +204,16 @@ GetPixelsFromObjEx(
      */
 
     if (objPtr->typePtr != &pixelObjType) {
-	ThreadSpecificData *tsdPtr =
-		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	ThreadSpecificData *typeCache = GetTypeCache();
 
-	if (tsdPtr->doubleTypePtr == NULL) {
-	    tsdPtr->doubleTypePtr = Tcl_GetObjType("double");
-	    tsdPtr->intTypePtr = Tcl_GetObjType("int");
-	}
-
-	if (objPtr->typePtr == tsdPtr->doubleTypePtr) {
+	if (objPtr->typePtr == typeCache->doubleTypePtr) {
 	    (void) Tcl_GetDoubleFromObj(interp, objPtr, &d);
 	    if (dblPtr != NULL) {
 		*dblPtr = d;
 	    }
 	    *intPtr = (int) d;
 	    return TCL_OK;
-	} else if (objPtr->typePtr == tsdPtr->intTypePtr) {
+	} else if (objPtr->typePtr == typeCache->intTypePtr) {
 	    (void) Tcl_GetIntFromObj(interp, objPtr, intPtr);
 	    if (dblPtr) {
 		*dblPtr = (double) (*intPtr);
@@ -681,6 +701,7 @@ SetMMFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
+    ThreadSpecificData *typeCache = GetTypeCache();
     const Tcl_ObjType *typePtr;
     const char *string;
     char *rest;
@@ -688,23 +709,10 @@ SetMMFromAny(
     int units;
     MMRep *mmPtr;
 
-    static const Tcl_ObjType *tclDoubleObjType = NULL;
-    static const Tcl_ObjType *tclIntObjType = NULL;
-
-    if (tclDoubleObjType == NULL) {
-	/*
-	 * Cache the object types for comaprison below. This allows optimized
-	 * checks for standard cases.
-	 */
-
-	tclDoubleObjType = Tcl_GetObjType("double");
-	tclIntObjType = Tcl_GetObjType("int");
-    }
-
-    if (objPtr->typePtr == tclDoubleObjType) {
+    if (objPtr->typePtr == typeCache->doubleTypePtr) {
 	Tcl_GetDoubleFromObj(interp, objPtr, &d);
 	units = -1;
-    } else if (objPtr->typePtr == tclIntObjType) {
+    } else if (objPtr->typePtr == typeCache->intTypePtr) {
 	Tcl_GetIntFromObj(interp, objPtr, &units);
 	d = (double) units;
 	units = -1;
