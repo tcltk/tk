@@ -10,6 +10,8 @@
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+# RCS: @(#) $Id$
 
 library tk
 
@@ -1135,10 +1137,10 @@ declare 6 aqua {
     void TkMacOSXInvalClipRgns(Tk_Window tkwin)
 }
 declare 7 aqua {
-    GWorldPtr TkMacOSXGetDrawablePort(Drawable drawable)
+    void *TkMacOSXGetDrawablePort(Drawable drawable)
 }
 declare 8 aqua {
-    ControlRef TkMacOSXGetRootControl(Drawable drawable)
+    void *TkMacOSXGetRootControl(Drawable drawable)
 }
 declare 9 aqua {
     void Tk_MacOSXSetupTkNotifier(void)
