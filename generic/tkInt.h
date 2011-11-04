@@ -10,6 +10,8 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
+ * RCS: $Id$
  */
 
 #ifndef _TKINT
@@ -864,8 +866,6 @@ typedef struct {
 				 * allocated with ckalloc(). */
     int charValueLen;		/* Length of string in charValuePtr when that
 				 * is non-NULL. */
-    KeySym keysym;		/* Key symbol computed after input methods
-				 * have been invoked */
 } TkKeyEvent;
 
 /*
@@ -1179,6 +1179,8 @@ MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 			    int firstByte, int lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    Tcl_UniChar c, struct TkFontAttributes *faPtr);
+MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
+			    int objc, Tcl_Obj *const *objv, int flags);
 
 /*
  * Unsupported commands.
