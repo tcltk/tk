@@ -17,6 +17,8 @@ xlib/xgc.c
 generic/tk.decls
 generic/tkPlatDecls.h
 generic/tkIntPlatDecls.h
+generic/tkInt.h
+generic/tkUtil.c
 
 Check Sourceforge and/or Fossil for recent commits in Tk-Cocoa; these changes should be backported to the corresponding 8.5 file. This most likely will have to be done manually. 
 
