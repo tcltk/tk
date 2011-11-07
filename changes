@@ -6792,4 +6792,6 @@ and -to (porter)
 
 2011-10-25 (bug fix)[3410609] AltGr keysyms on Swiss keyboard (tasser,kenny)
 
---- Released 8.5.11, November 11, 2011 --- See ChangeLog for details ---
+2011-11-02 (performance)[3431491] improved "pixels" shimmer logic (fellows)
+
+--- Released 8.5.11, November 4, 2011 --- See ChangeLog for details ---
