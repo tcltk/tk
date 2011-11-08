@@ -199,9 +199,9 @@ virtual event after a new tab is selected.
 .SH "EXAMPLE"
 .CS
 pack [\fBttk::notebook\fR .nb]
-\.nb add [frame .nb.f1] \-text "First tab"
-\.nb add [frame .nb.f2] \-text "Second tab"
-\.nb select .nb.f2
+\&.nb add [frame .nb.f1] \-text "First tab"
+\&.nb add [frame .nb.f2] \-text "Second tab"
+\&.nb select .nb.f2
 ttk::notebook::enableTraversal .nb
 .CE
 .SH "SEE ALSO"

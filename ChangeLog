@@ -1,3 +1,13 @@
+2011-11-08  Reinhard Max  <max@suse.de>
+
+	* unix/Makefile.in: Add square to DEMOPROGS. It contains a shebang
+	and hence should get installed with executable bits.
+
+	* doc/label.n:         Fix the escaping of leading dots in lines that
+	* doc/text.n:          start with a widget name, so that nroff
+	* doc/ttk_notebook.n:  doesn't mistake it as a non-existing macro
+	* doc/pack.n:          and skips the entire line.
+
 2011-11-04  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.11 TAGGED FOR RELEASE ***
