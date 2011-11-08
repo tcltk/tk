@@ -113,7 +113,7 @@ labels are not intended to be interactive.
 \fBlabel\fR .l \-text "Left\enHand\enSide"
 \fBlabel\fR .r \-text "Right\enHand\enSide"
 text .mid
-\.mid insert end "This layout is like Java's BorderLayout"
+\&.mid insert end "This layout is like Java's BorderLayout"
 # Lay them out
 pack .t   \-side top    \-fill x
 pack .b   \-side bottom \-fill x
