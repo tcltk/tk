@@ -1,3 +1,8 @@
+2011-11-14  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
+
+	* generic/tkCanvas.c: [Bug 3437816]: Missing TCL_ERROR return
+	in [canvas lower].
+
 2011-11-08  Reinhard Max  <max@suse.de>
 
 	* unix/Makefile.in: Add square to DEMOPROGS. It contains a shebang
