@@ -1505,6 +1505,7 @@ CanvasWidgetCmd(clientData, interp, objc, objv)
 	    if (itemPtr == NULL) {
 		Tcl_AppendResult(interp, "tag \"", Tcl_GetString(objv[3]),
 			"\" doesn't match any items", (char *) NULL);
+		result = TCL_ERROR;
 		goto done;
 	    }
 	    itemPtr = itemPtr->prevPtr;
