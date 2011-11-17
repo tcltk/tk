@@ -1,3 +1,9 @@
+2011-11-17  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/pack.n: Fix the escaping of leading dots in lines that start with
+	a widget name, so that nroff doesn't mistake it as a non-existing macro
+	and skips the entire line.
+
 2011-11-17  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
 
 	* generic/tkCanvas.c: [Bug 3437816]: Missing TCL_ERROR return

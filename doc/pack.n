@@ -264,7 +264,7 @@ label .b \-text "This widget is at the bottom" \-bg green
 label .l \-text "Left\\nHand\\nSide"
 label .r \-text "Right\\nHand\\nSide"
 text .mid
-\.mid insert end "This layout is like Java's BorderLayout"
+\&.mid insert end "This layout is like Java's BorderLayout"
 # Lay them out
 \fBpack\fR .t   \-side top    \-fill x
 \fBpack\fR .b   \-side bottom \-fill x
