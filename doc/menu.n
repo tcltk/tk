@@ -236,12 +236,12 @@ Certain menus in a menubar will be treated specially.  On the Macintosh,
 access to the special Application, Window and Help menus is provided. On
 Windows, access to the Windows System menu in each window is provided.
 On X Windows, a special right-justified help menu may be provided if
-Motif menu compatibility is enabled. In all
-cases, these menus must be created with the command name of the menubar
-menu concatenated with the special name. So for a menubar named
-\.menubar, on the Macintosh, the special menus would be .menubar.apple,
-\.menubar.window and .menubar.help; on Windows, the special menu would be
-\.menubar.system; on X Windows, the help menu would be .menubar.help.
+Motif menu compatibility is enabled. In all cases, these menus must be
+created with the command name of the menubar menu concatenated with the
+special name. So for a menubar named .menubar, on the Macintosh, the
+special menus would be .menubar.apple, .menubar.window and .menubar.help;
+on Windows, the special menu would be .menubar.system; on X Windows,
+the help menu would be .menubar.help.
 .PP
 When Tk sees a .menubar.apple menu as the first menu in a menubar on the
 Macintosh, that menu's contents make up the first items of the
