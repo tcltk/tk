@@ -1,3 +1,8 @@
+2011-11-22  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/Makefile.in: [Bug 1945073]: Demo square.tcl
+	* win/Makefile.in: cannot run; need package tktest
+
 2011-11-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/menu.n: Fix the escaping of leading dots in lines that start with
