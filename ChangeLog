@@ -1,3 +1,15 @@
+2011-11-22  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/wish.1: Use the same shebang comment everywhere.
+	* library/demos/hello
+	* library/demos/rmt
+	* library/demos/square
+	* library/demos/tcolor
+	* library/demos/timer
+	* library/demos/widget
+	* unix/Makefile.in: [Bug 1945073]: Demo square.tcl
+	* win/Makefile.in: cannot run; need package tktest
+
 2011-11-17  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
 
 	* generic/tkCanvas.c: [Bug 3437816]: Missing TCL_ERROR return

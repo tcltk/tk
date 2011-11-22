@@ -556,13 +556,17 @@ install-demos:
 	@for i in $(ROOT_DIR)/library/demos/*; \
 	    do \
 	    if [ -f $$i ] ; then \
-		sed -e '3 s|exec $(WISH)|exec $(WISH)|' \
+		sed -e '3 s|exec wish|exec wish$(VER)|' \
 			$$i > $(SCRIPT_INSTALL_DIR)/demos/`basename $$i`; \
 	    fi; \
 	    done;
 	@for i in $(DEMOPROGS); \
 	    do \
+	    if test $$i = "square"; then \
+	    rm -f  $(SCRIPT_INSTALL_DIR)/demos/$$i; \
+	    else \
 	    chmod 755 $(SCRIPT_INSTALL_DIR)/demos/$$i; \
+	    fi; \
 	    done;
 	@echo "Installing demo images";
 	@for i in $(ROOT_DIR)/library/demos/images/*; \
