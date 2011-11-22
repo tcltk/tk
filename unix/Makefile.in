@@ -807,7 +807,11 @@ install-demos:
 	    done;
 	@for i in $(DEMOPROGS); \
 	    do \
+	    if test $$i = "square"; then \
+	    rm -f  "$(DEMO_INSTALL_DIR)"/$$i; \
+	    else \
 	    chmod 755 "$(DEMO_INSTALL_DIR)"/$$i; \
+	    fi; \
 	    done;
 	@echo "Installing demo images";
 	@for i in $(TOP_DIR)/library/demos/images/*; \
