@@ -1,3 +1,7 @@
+2011-11-29  Donal K. Fellows  <dkf@users.sf.net>
+
+	* tests/safe.test: [Bug 1847925]: Update list of hidden commands.
+
 2011-11-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/Makefile.in: [Bug 1945073]: Demo square.tcl
