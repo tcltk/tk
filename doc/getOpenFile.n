@@ -182,9 +182,9 @@ set types {
     {{GIF Files}        {}        GIFF}
     {{All Files}        *             }
 }
-set filename [tk_getOpenFile \-filetypes $types]
+set filename [\fBtk_getOpenFile\fR \-filetypes $types]
 
-if {$filename != ""} {
+if {$filename ne ""} {
     # Open the file ...
 }
 .CE
