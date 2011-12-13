@@ -1,3 +1,8 @@
+2011-12-13  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/getOpenFile.n: Make example follow best practices. Issue spotted
+	by Emiliano Gavilan.
+
 2011-11-29  Donal K. Fellows  <dkf@users.sf.net>
 
 	* tests/safe.test: [Bug 1847925]: Update list of hidden commands.
