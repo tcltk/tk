@@ -213,30 +213,36 @@ GetNewID(
     TkMenuEntry *mePtr,		/* The menu we are working with. */
     WORD *menuIDPtr)		/* The resulting id. */
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    WORD curID = tsdPtr->lastCommandID + 1;
+    WORD curID = tsdPtr->lastCommandID;
 
-    /*
-     * The following code relies on WORD wrapping when the highest value is
-     * incremented.
-     */
-
-    while (curID != tsdPtr->lastCommandID) {
+    while (1) {
 	Tcl_HashEntry *commandEntryPtr;
-	int newEntry;
+	int new;
 
-    	commandEntryPtr = Tcl_CreateHashEntry(&tsdPtr->commandTable,
-		((char *) NULL) + curID, &newEntry);
-    	if (newEntry == 1) {
+	/*
+	 * Try the next ID number, taking care to wrap rather than stray
+	 * into the system menu IDs.  [Bug 3235256]
+	 */
+	if (++curID >= 0xF000) {
+	    curID = 1;
+	}
+
+	/* Return error when we've checked all IDs without success. */
+	if (curID == tsdPtr->lastCommandID) {
+	    return TCL_ERROR;
+	}
+
+	commandEntryPtr = Tcl_CreateHashEntry(&tsdPtr->commandTable,
+		(char *) curID, &new);
+	if (new) {
 	    Tcl_SetHashValue(commandEntryPtr, mePtr);
 	    *menuIDPtr = curID;
 	    tsdPtr->lastCommandID = curID;
 	    return TCL_OK;
-    	}
-    	curID++;
+	}
     }
-    return TCL_ERROR;
 }
 
 /*
