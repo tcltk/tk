@@ -1,3 +1,8 @@
+2012-01-19  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkText.c: [Bug-3021557]: Moving the cursor in
+	* tests/text.test:  elided text freezes Tk
+
 2011-12-13  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/getOpenFile.n: Make example follow best practices. Issue spotted

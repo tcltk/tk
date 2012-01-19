@@ -2615,6 +2615,24 @@ test text-10.38 {TextWidgetCmd procedure, "count" option} -setup {
 } -cleanup {
     destroy .t
 } -result {3 903 903 45}
+test text-10.39 {TextWidgetCmd procedure, "count" option} -setup {
+    text .t
+    pack .t
+    update
+    set res {}
+} -body {
+    .t insert end "Line 1 - This is Line 1\n"
+    .t insert end "Line 2 - This is Line 2\n"
+    .t insert end "Line 3 - This is Line 3\n"
+    .t insert end "Line 4 - This is Line 4\n"
+    .t insert end "Line 5 - This is Line 5\n"
+    lappend res [.t count -displaylines 1.19 3.24] [.t count -displaylines 1.0 end]
+    .t tag add hidden 2.9 3.17
+    .t tag configure hidden -elide true
+    lappend res [.t count -displaylines 1.19 3.24] [.t count -displaylines 1.0 end]
+} -cleanup {
+    destroy .t
+} -result {2 6 2 5}
 
 
 test text-11.1 {counting with tag priority eliding} -setup {
