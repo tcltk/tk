@@ -907,7 +907,7 @@ TextWidgetObjCmd(
 		 * We're going to count up all display lines in the logical
 		 * line of 'indexFromPtr' up to, but not including the logical
 		 * line of 'indexToPtr', and then subtract off what we didn't
-		 * what from 'from' and add on what we didn't count from 'to.
+		 * want from 'from' and add on what we didn't count from 'to.
 		 */
 
 		while (index.linePtr != indexToPtr->linePtr) {
@@ -916,17 +916,9 @@ TextWidgetObjCmd(
 		    /*
 		     * We might have skipped past indexToPtr, if we have
 		     * multiple logical lines in a single display line.
-		     * Therefore we iterate through each intermediate logical
-		     * line, just to check. Another approach would be just to
-		     * use TkTextIndexCmp on every while() iteration, but that
-		     * would be less efficient.
 		     */
-
-		    while (fromPtr != index.linePtr) {
-			fromPtr = TkBTreeNextLine(textPtr, fromPtr);
-			if (fromPtr == indexToPtr->linePtr) {
-			    break;
-			}
+		    if (TkTextIndexCmp(&index,indexToPtr) > 0) {
+			break;
 		    }
 		}
 
