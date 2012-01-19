@@ -1,3 +1,8 @@
+2012-??-??  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextMark.c: [Bug-3288113,3288121]: Missing marks/endless 
+	* tests/textMark.test:  loop in text mark prev/next
+
 2012-01-19  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c: [Bug-3021557]: Moving the cursor in
