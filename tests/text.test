@@ -684,6 +684,21 @@ test text-9.2.43 {TextWidgetCmd procedure, "count" option} {
     .t count -lines -chars -indices -displaylines 1.0 end
 } {3 903 903 45}
 .t configure -wrap none
+test text-9.2.44 {TextWidgetCmd procedure, "count" option} -setup {
+    .t delete 1.0 end
+    update
+    set res {}
+} -body {
+    .t insert end "Line 1 - This is Line 1\n"
+    .t insert end "Line 2 - This is Line 2\n"
+    .t insert end "Line 3 - This is Line 3\n"
+    .t insert end "Line 4 - This is Line 4\n"
+    .t insert end "Line 5 - This is Line 5\n"
+    lappend res [.t count -displaylines 1.19 3.24] [.t count -displaylines 1.0 end]
+    .t tag add hidden 2.9 3.17
+    .t tag configure hidden -elide true
+    lappend res [.t count -displaylines 1.19 3.24] [.t count -displaylines 1.0 end]
+} -result {2 6 2 5}
 
 # Newer tags are higher priority
 .t tag configure elide1 -elide 0
