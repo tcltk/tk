@@ -19,7 +19,8 @@ pack append . .t {top expand fill}
 update
 .t debug on
 wm geometry . {}
-  
+.t peer create .pt
+
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
 
@@ -175,47 +176,77 @@ test textMark-7.8 {MarkFindNext - no next mark} haveCourier12 {
     .t mark set insert 3.0
     .t mark next insert
 } {}
-test textMark-8.1 {MarkFindPrev - invalid mark name} haveCourier12 {
+test textMark-7.9 {MarkFindNext - mark set in a text widget and retrieved from a peer} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set mymark 1.0
+    set res [list [.pt mark next 1.0] [.pt mark next mymark] [.pt mark next insert]]
+} -result {mymark insert current}
+
+test textMark-8.1 {MarkFindPrev - invalid mark name} -constraints haveCourier12 -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
     catch {.t mark prev bogus} x
     set x
-} {bad text index "bogus"}
-test textMark-8.2 {MarkFindPrev - marks at same location} haveCourier12 {
+} -result {bad text index "bogus"}
+test textMark-8.2 {MarkFindPrev - marks at same location} -constraints haveCourier12 -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
     .t mark set insert 2.0
     .t mark set current 2.0
     .t mark prev insert
-} {current}
-test textMark-8.3 {MarkFindPrev - numerical starting mark} haveCourier12 {
+} -result {current}
+test textMark-8.3 {MarkFindPrev - numerical starting mark} -constraints haveCourier12 -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
     .t mark set current 1.0
     .t mark set insert 1.0
     .t mark prev 1.1
-} {current}
-test textMark-8.4 {MarkFindPrev - mark on the same line} haveCourier12 {
+} -result {current}
+test textMark-8.4 {MarkFindPrev - mark on the same line} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
     .t mark set current 1.0
     .t mark set insert 1.1
     .t mark prev insert
-} {current}
-test textMark-8.5 {MarkFindPrev - mark on the previous line} haveCourier12 {
+} -result {current}
+test textMark-8.5 {MarkFindPrev - mark on the previous line} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
     .t mark set current 1.end
     .t mark set insert 2.0
     .t mark prev insert
-} {current}
-test textMark-8.6 {MarkFindPrev - mark far away} haveCourier12 {
+} -result {current}
+test textMark-8.6 {MarkFindPrev - mark far away} -constraints haveCourier12 -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
     .t mark set current 1.2
     .t mark set insert 7.0
     .t mark prev insert
-} {current}
-test textMark-8.7 {MarkFindPrev - mark on top of end} haveCourier12 {
+} -result {current}
+test textMark-8.7 {MarkFindPrev - mark on top of end} -constraints haveCourier12 -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
     .t mark set insert 3.0
     .t mark set current end
     .t mark prev end
-} {insert}
-test textMark-8.8 {MarkFindPrev - no previous mark} haveCourier12 {
+} -result {insert}
+test textMark-8.8 {MarkFindPrev - no previous mark} -constraints haveCourier12 -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
     .t mark set current 1.0
     .t mark set insert 3.0
     .t mark prev current
-} {}
+} -result {}
+test textMark-8.9 {MarkFindPrev - mark set in a text widget and retrieved from a peer} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set mymark 1.0
+    set res [list [.pt mark prev end] [.pt mark prev current] [.pt mark prev insert]]
+} -result {current insert mymark}
 
 catch {destroy .t}
+catch {destroy .pt}
 
 # cleanup
 cleanupTests
