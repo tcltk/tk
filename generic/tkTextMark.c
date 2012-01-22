@@ -806,11 +806,17 @@ MarkFindNext(
 		    Tcl_SetResult(interp, "current", TCL_STATIC);
 		} else if (segPtr == textPtr->insertMarkPtr) {
 		    Tcl_SetResult(interp, "insert", TCL_STATIC);
-		} else if (segPtr->body.mark.textPtr != textPtr) {
+		} else if (segPtr->body.mark.hPtr == NULL) {
 		    /*
 		     * Ignore widget-specific marks for the other widgets.
-		     */
-
+                     * This is either an insert or a current mark
+                     * (markPtr->body.mark.hPtr actually receives NULL
+                     * for these marks in TkTextSetMark).
+                     * The insert and current marks for textPtr having
+                     * already been tested above, the current segment is
+                     * an insert or current mark from a peer of textPtr,
+                     * which we don't want to return.
+                     */
 		    continue;
 		} else {
 		    Tcl_SetResult(interp,
@@ -893,7 +899,7 @@ MarkFindPrev(
     while (1) {
 	/*
 	 * segPtr points just past the first possible candidate, or at the
-	 * begining of the line.
+	 * beginning of the line.
 	 */
 
 	for (prevPtr = NULL, seg2Ptr = index.linePtr->segPtr;
@@ -901,26 +907,43 @@ MarkFindPrev(
 		seg2Ptr = seg2Ptr->nextPtr) {
 	    if (seg2Ptr->typePtr == &tkTextRightMarkType ||
 		    seg2Ptr->typePtr == &tkTextLeftMarkType) {
+	        if (seg2Ptr->body.mark.hPtr == NULL) {
+                    if (seg2Ptr != textPtr->currentMarkPtr &&
+                            seg2Ptr != textPtr->insertMarkPtr) {
+	                /*
+                         * This is an insert or current mark from a
+                         * peer of textPtr.
+                         */
+                        continue;
+                    }
+	        }
 		prevPtr = seg2Ptr;
 	    }
 	}
 	if (prevPtr != NULL) {
 	    if (prevPtr == textPtr->currentMarkPtr) {
 		Tcl_SetResult(interp, "current", TCL_STATIC);
+	        return TCL_OK;
 	    } else if (prevPtr == textPtr->insertMarkPtr) {
 		Tcl_SetResult(interp, "insert", TCL_STATIC);
-	    } else if (prevPtr->body.mark.textPtr != textPtr) {
+	        return TCL_OK;
+	    } else if (prevPtr->body.mark.hPtr == NULL) {
 		/*
 		 * Ignore widget-specific marks for the other widgets.
-		 */
-
-		continue;
+                 * This is either an insert or a current mark
+                 * (markPtr->body.mark.hPtr actually receives NULL
+                 * for these marks in TkTextSetMark).
+                 * The insert and current marks for textPtr having
+                 * already been tested above, the current segment is
+                 * an insert or current mark from a peer of textPtr,
+                 * which we don't want to return.
+                 */
 	    } else {
 		Tcl_SetResult(interp,
 			Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable,
 			prevPtr->body.mark.hPtr), TCL_STATIC);
+	        return TCL_OK;
 	    }
-	    return TCL_OK;
 	}
 	index.linePtr = TkBTreePreviousLine(textPtr, index.linePtr);
 	if (index.linePtr == NULL) {
