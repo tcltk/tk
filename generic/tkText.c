@@ -2009,6 +2009,7 @@ ConfigureText(
     textPtr->sharedTextPtr->undo = textPtr->undo;
     textPtr->sharedTextPtr->maxUndo = textPtr->maxUndo;
     textPtr->sharedTextPtr->autoSeparators = textPtr->autoSeparators;
+    textPtr->sharedTextPtr->stateEpoch++;
 
     TkUndoSetDepth(textPtr->sharedTextPtr->undoStack,
 	    textPtr->sharedTextPtr->maxUndo);
