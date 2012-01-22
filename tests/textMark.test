@@ -18,6 +18,7 @@ update
 .t debug on
 wm geometry . {}
 entry .t.e
+.t peer create .pt
 
 .t insert 1.0 "Line 1
 abcdefghijklm
@@ -188,6 +189,12 @@ test textMark-7.8 {MarkFindNext - no next mark} -setup {
     .t mark set insert 3.0
     .t mark next insert
 } -result {}
+test textMark-7.9 {MarkFindNext - mark set in a text widget and retrieved from a peer} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set mymark 1.0
+    set res [list [.pt mark next 1.0] [.pt mark next mymark] [.pt mark next insert]]
+} -result {mymark insert current}
 
 test textMark-8.1 {MarkFindPrev - invalid mark name} -body {
     .t mark prev bogus
@@ -239,7 +246,14 @@ test textMark-8.8 {MarkFindPrev - no previous mark} -setup {
     .t mark set insert 3.0
     .t mark prev current
 } -result {}
+test textMark-8.9 {MarkFindPrev - mark set in a text widget and retrieved from a peer} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set mymark 1.0
+    set res [list [.pt mark prev end] [.pt mark prev current] [.pt mark prev insert]]
+} -result {current insert mymark}
 
+destroy .pt
 destroy .t
 
 # cleanup
