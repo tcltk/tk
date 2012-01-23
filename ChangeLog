@@ -1,3 +1,9 @@
+2012-01-??  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkText.c:      [Bug-1630271]: segfault/infinite loop
+	* generic/tkTextMark.c:  when a mark is before -startline
+	* tests/textMark.test:
+
 2012-01-22  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextMark.c: [Bug-3288113,3288121]: Missing marks/endless 

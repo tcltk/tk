@@ -402,6 +402,8 @@ TkTextMarkNameToIndex(
     TkTextIndex *indexPtr)	/* Index information gets stored here. */
 {
     TkTextSegment *segPtr;
+    TkTextIndex index;
+    int start, end;
 
     if (textPtr == NULL) {
         return TCL_ERROR;
@@ -420,6 +422,29 @@ TkTextMarkNameToIndex(
 	segPtr = (TkTextSegment *) Tcl_GetHashValue(hPtr);
     }
     TkTextMarkSegToIndex(textPtr, segPtr, indexPtr);
+
+    /* If indexPtr refers to somewhere outside the -startline/-endline
+     * range limits of the widget, error out since the mark indeed is not
+     * reachable from this text widget (it may be reachable from a peer)
+     * (bug 1630271).
+     */
+
+    if (textPtr->start != NULL) {
+    start = TkBTreeLinesTo(NULL, textPtr->start);
+    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
+	    &index);
+    if (TkTextIndexCmp(indexPtr, &index) < 0) {
+	return TCL_ERROR;
+	}
+    }
+    if (textPtr->end != NULL) {
+	end = TkBTreeLinesTo(NULL, textPtr->end);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, end, 0,
+		&index);
+	if (TkTextIndexCmp(indexPtr, &index) > 0) {
+	    return TCL_ERROR;
+	}
+    }
     return TCL_OK;
 }
 
