@@ -2022,6 +2022,7 @@ ConfigureText(
 
     if (mask & TK_TEXT_LINE_RANGE) {
 	int start, end, current;
+	TkTextIndex index1, index2, index3;
 
 	/*
 	 * Line start and/or end have been adjusted. We need to validate the
@@ -2048,13 +2049,15 @@ ConfigureText(
 	    return TCL_ERROR;
 	}
 	current = TkBTreeLinesTo(NULL, textPtr->topIndex.linePtr);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
+		    &index1);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, end, 0,
+		    &index2);
 	if (current < start || current > end) {
 	    TkTextSearch search;
-	    TkTextIndex index1, first, last;
+	    TkTextIndex first, last;
 	    int selChanged = 0;
 
-	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
-		    &index1);
 	    TkTextSetYView(textPtr, &index1, 0);
 
 	    /*
@@ -2097,6 +2100,29 @@ ConfigureText(
 		TkTextSelectionEvent(textPtr);
 		textPtr->abortSelections = 1;
 	    }
+	}
+
+	/* Indices are potentially obsolete after changing -startline and/or
+	 * -endline, therefore increase the epoch.
+	 * Also, clamp the insert and current (unshared) marks to the new
+	 * -startline/-endline range limits of the widget. All other (shared)
+	 * marks are unchanged.
+	 */
+
+	textPtr->sharedTextPtr->stateEpoch++;
+	TkTextMarkNameToIndex(textPtr, "insert", &index3);
+	if (TkTextIndexCmp(&index3, &index1) < 0) {
+	    textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &index1);
+	}
+	if (TkTextIndexCmp(&index3, &index2) > 0) {
+	    textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &index2);
+	}
+	TkTextMarkNameToIndex(textPtr, "current", &index3);
+	if (TkTextIndexCmp(&index3, &index1) < 0) {
+	    textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &index1);
+	}
+	if (TkTextIndexCmp(&index3, &index2) > 0) {
+	    textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &index2);
 	}
     }
 
