@@ -1,3 +1,7 @@
+2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkText.c: [Bug-3475627]: Test text-31.11 fails
+
 2012-01-22  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextMark.c: [Bug-3288113,3288121]: Missing marks/endless 
