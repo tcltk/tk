@@ -1,3 +1,8 @@
+2012-01-25  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkImgPhoto.c: [Bug 2433260]: non-critical error in
+	Tk_PhotoPutBlock
+
 2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c: Don't increase the epoch twice
