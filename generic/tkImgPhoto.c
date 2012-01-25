@@ -4406,7 +4406,7 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height, compRule)
 
     /*
      * Copy the data into our local 32-bit/pixel array.
-     * If we can do it with a single memcpy, we do.
+     * If we can do it with a single memmove, we do.
      */
 
     destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
@@ -4414,7 +4414,7 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height, compRule)
 
     /*
      * This test is probably too restrictive.  We should also be able to
-     * do a memcpy if pixelSize == 3 and alphaOffset == 0.  Maybe other cases
+     * do a memmove if pixelSize == 3 and alphaOffset == 0.  Maybe other cases
      * too.
      */
     if ((blockPtr->pixelSize == 4)
@@ -4423,7 +4423,7 @@ Tk_PhotoPutBlock(handle, blockPtr, x, y, width, height, compRule)
 	    && ((height == 1) || ((x == 0) && (width == masterPtr->width)
 		&& (blockPtr->pitch == pitch)))
 	    && (compRule == TK_PHOTO_COMPOSITE_SET)) {
-	memcpy((VOID *) destLinePtr,
+	memmove((VOID *) destLinePtr,
 		(VOID *) (blockPtr->pixelPtr + blockPtr->offset[0]),
 		(size_t) (height * width * 4));
     } else {

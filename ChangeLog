@@ -1,3 +1,8 @@
+2012-01-25  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkImgPhoto.c: [Bug 2433260]: non-critical error in
+	Tk_PhotoPutBlock
+
 2011-11-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/wish.1: Use the same shebang comment everywhere.
