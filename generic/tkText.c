@@ -2098,6 +2098,7 @@ ConfigureText(
 		textPtr->abortSelections = 1;
 	    }
 	}
+        textPtr->sharedTextPtr->stateEpoch++;
     }
 
     /*
