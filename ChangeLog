@@ -1,5 +1,11 @@
 2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
 
+	* generic/tkText.c:      [Bug-1630271]: segfault/infinite loop
+	* generic/tkTextMark.c:  when a mark is before -startline
+	* tests/textMark.test:
+
+2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+
 	* generic/tkText.c: [Bug-3475627]: Test text-31.11 fails
 
 2012-01-22  Francois Vogel  <fvogelnew1@free.fr>
