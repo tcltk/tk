@@ -2124,7 +2124,6 @@ ConfigureText(
 	if (TkTextIndexCmp(&index3, &index2) > 0) {
 	    textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &index2);
 	}
-        textPtr->sharedTextPtr->stateEpoch++;
     }
 
     /*
