@@ -430,7 +430,7 @@ TkTextMarkNameToIndex(
      */
 
     if (textPtr->start != NULL) {
-    start = TkBTreeLinesTo(NULL, textPtr->start);
+	start = TkBTreeLinesTo(NULL, textPtr->start);
     TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
 	    &index);
     if (TkTextIndexCmp(indexPtr, &index) < 0) {
