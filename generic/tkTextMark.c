@@ -432,11 +432,11 @@ TkTextMarkNameToIndex(
      */
 
     if (textPtr->start != NULL) {
-    start = TkBTreeLinesTo(NULL, textPtr->start);
-    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
-	    &index);
-    if (TkTextIndexCmp(indexPtr, &index) < 0) {
-	return TCL_ERROR;
+	start = TkBTreeLinesTo(NULL, textPtr->start);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
+		&index);
+	if (TkTextIndexCmp(indexPtr, &index) < 0) {
+	    return TCL_ERROR;
 	}
     }
     if (textPtr->end != NULL) {
