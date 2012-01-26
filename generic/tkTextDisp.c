@@ -6851,6 +6851,9 @@ TkTextIndexBbox(
 
 	if (charWidthPtr != NULL) {
 	    *charWidthPtr = dInfoPtr->maxX - *xPtr;
+            if (*charWidthPtr > textPtr->charWidth) {
+                *charWidthPtr = textPtr->charWidth;
+            }
 	}
 	if (*xPtr > dInfoPtr->maxX) {
 	    *xPtr = dInfoPtr->maxX;
