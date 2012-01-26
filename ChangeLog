@@ -1,3 +1,9 @@
+2012-01-26  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextDisp.c: [Bug-1754043] and [Bug-2321450]: When
+	-blockcursor is true, the cursor appears as a blinking bar which
+	expands to the right edge of the widget.
+
 2012-01-25  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkImgPhoto.c: [Bug 2433260]: non-critical error in
