@@ -1,3 +1,7 @@
+2012-01-27  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 3480471]: tk_getOpenFile crashes on Win64
+
 2012-01-26  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextDisp.c: [Bug-1754043] and [Bug-2321450]: When

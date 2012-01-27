@@ -1017,10 +1017,10 @@ OFNHookProcW(
 		    ofnData->dynFileBuffer = (char *) buffer;
 		}
 
-		SendMessageW(hdlg, CDM_GETFOLDERPATH, dirsize, PTR2INT(buffer));
+		SendMessageW(hdlg, CDM_GETFOLDERPATH, dirsize, (LPARAM) buffer);
 		buffer += dirsize;
 
-		SendMessageW(hdlg, CDM_GETSPEC, selsize, PTR2INT(buffer));
+		SendMessageW(hdlg, CDM_GETSPEC, selsize, (LPARAM) buffer);
 
 		/*
 		 * If there are multiple files, delete the quotes and change
@@ -1565,9 +1565,9 @@ OFNHookProcA(
 		    ofnData->dynFileBuffer = buffer;
 		}
 
-		SendMessage(hdlg, CDM_GETFOLDERPATH, dirsize, PTR2INT(buffer));
+		SendMessage(hdlg, CDM_GETFOLDERPATH, dirsize, (LPARAM) buffer);
 		buffer += dirsize;
-		SendMessage(hdlg, CDM_GETSPEC, selsize, PTR2INT(buffer));
+		SendMessage(hdlg, CDM_GETSPEC, selsize, (LPARAM) buffer);
 
 		/*
 		 * If there are multiple files, delete the quotes and change
