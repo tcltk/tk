@@ -576,6 +576,15 @@ ComputeNativeButtonGeometry(
 	[button setImagePosition:pos];
     }
 
+    // if font is too tall, we can't use the fixed-height rounded bezel
+    if (!haveImage && haveText && style == NSRoundedBezelStyle) {
+      Tk_FontMetrics fm;
+      Tk_GetFontMetrics(butPtr->tkfont, &fm);
+      if (fm.linespace > 18) {
+        [button setBezelStyle:(style = NSShadowlessSquareBezelStyle)];
+      }
+    }
+
     bounds.size = [cell cellSize];
     if (haveText) {
 	titleRect = [cell titleRectForBounds:bounds];
