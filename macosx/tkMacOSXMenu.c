@@ -292,6 +292,12 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	return NO;
     }
 
+    // For command key, take input manager's word so things
+    // like dvorak / qwerty layout work.
+    if (([event modifierFlags] & NSCommandKeyMask) == NSCommandKeyMask) {
+      key = [event characters];
+    }
+
     NSArray *itemArray = [self itemArray];
 
     for (NSMenuItem *item in itemArray) {
