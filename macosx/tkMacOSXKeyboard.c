@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id$
  */
 
 #include "tkMacOSXPrivate.h"
@@ -122,7 +120,8 @@ static int	KeycodeToUnicode(UniChar * uniChars, int maxChars,
 #pragma mark TKApplication(TKKeyboard)
 
 @implementation TKApplication(TKKeyboard)
-- (void)keyboardChanged:(NSNotification *)notification {
+- (void) keyboardChanged: (NSNotification *) notification
+{
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -417,7 +416,7 @@ XKeycodeToKeysym(
  *----------------------------------------------------------------------
  */
 
-char *
+const char *
 TkpGetString(
     TkWindow *winPtr,		/* Window where event occurred: Needed to get
 				 * input context. */
@@ -459,7 +458,7 @@ XGetModifierMapping(
      * don't generate them either. So there is no modifier map.
      */
 
-    modmap = (XModifierKeymap *) ckalloc(sizeof(XModifierKeymap));
+    modmap = ckalloc(sizeof(XModifierKeymap));
     modmap->max_keypermod = 0;
     modmap->modifiermap = NULL;
     return modmap;
@@ -486,9 +485,9 @@ XFreeModifiermap(
     XModifierKeymap *modmap)
 {
     if (modmap->modifiermap != NULL) {
-	ckfree((char *) modmap->modifiermap);
+	ckfree(modmap->modifiermap);
     }
-    ckfree((char *) modmap);
+    ckfree(modmap);
 }
 
 /*
@@ -767,11 +766,11 @@ TkpGetKeySym(
 	}
     }
 
-#if 0
+    /* If nbytes has been set, it's not a function key, but a regular key that
+       has been translated in tkMacOSXKeyEvent.c; just use that. */
     if (eventPtr->xkey.nbytes) {
-	return eventPtr->xkey.nbytes;
+      return eventPtr->xkey.keycode & 0xFFFF;
     }
-#endif
 
     /*
      * Figure out which of the four slots in the keymap vector to use for this
@@ -898,7 +897,7 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree((char *) dispPtr->modKeyCodes);
+	ckfree(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = 0;
     dispPtr->modKeyCodes = NULL;
@@ -906,7 +905,7 @@ TkpInitKeymapInfo(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8
