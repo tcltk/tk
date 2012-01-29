@@ -316,11 +316,16 @@ VISIBILITY_HIDDEN
 @end
 
 VISIBILITY_HIDDEN
-@interface TKContentView : NSView {
+@interface TKContentView : NSView <NSTextInput> {
 @private
     id _savedSubviews;
     BOOL _subviewsSetAside;
+    NSString *_workingText;
 }
+@end
+
+@interface TKContentView(TKKeyEvent)
+- (void) deleteWorkingText;
 @end
 
 VISIBILITY_HIDDEN

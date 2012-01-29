@@ -766,11 +766,11 @@ TkpGetKeySym(
 	}
     }
 
-#if 0
+    /* If nbytes has been set, it's not a function key, but a regular key that
+       has been translated in tkMacOSXKeyEvent.c; just use that. */
     if (eventPtr->xkey.nbytes) {
-	return eventPtr->xkey.nbytes;
+      return eventPtr->xkey.keycode & 0xFFFF;
     }
-#endif
 
     /*
      * Figure out which of the four slots in the keymap vector to use for this
