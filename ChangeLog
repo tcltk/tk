@@ -1,3 +1,7 @@
+2012-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkImgPhoto.c: [Bug 3480634]: PNG Images missing in menus on Mac
+
 2012-01-27  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [Bug 3480471]: tk_getOpenFile crashes on Win64
@@ -29,7 +33,7 @@
 
 2012-01-22  Francois Vogel  <fvogelnew1@free.fr>
 
-	* generic/tkTextMark.c: [Bug-3288113,3288121]: Missing marks/endless 
+	* generic/tkTextMark.c: [Bug-3288113,3288121]: Missing marks/endless
 	* tests/textMark.test:  loop in text mark prev/next
 
 2012-01-19  Francois Vogel  <fvogelnew1@free.fr>
