@@ -3219,6 +3219,34 @@ TextInvalidateLineMetrics(
     int fromLine;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
+    /*
+     * All lines to invalidate must be inside the -startline/-endline range.
+     */
+
+    if (linePtr != NULL) {
+        int start;
+        TkTextLine *toLinePtr;
+        if (textPtr->start != NULL) {
+            fromLine = TkBTreeLinesTo(NULL, linePtr);
+            start = TkBTreeLinesTo(NULL, textPtr->start);
+            if (fromLine < start) {
+                lineCount -= start - fromLine;
+                linePtr = textPtr->start;
+            }
+        }
+        if (textPtr->end != NULL) {
+            int count = 0;
+            toLinePtr = linePtr;
+            while (count < lineCount && toLinePtr != NULL) {
+                toLinePtr = TkBTreeNextLine(textPtr, toLinePtr);
+                count++;
+            }
+            if (toLinePtr == NULL) {
+                lineCount = count;
+            }
+        }
+    }
+
     if (linePtr != NULL) {
 	int counter = lineCount;
 
@@ -3229,7 +3257,7 @@ TextInvalidateLineMetrics(
 	 */
 
 	TkBTreeLinePixelEpoch(textPtr, linePtr) = 0;
-	while (counter > 0 && linePtr != 0) {
+	while (counter > 0 && linePtr != NULL) {
 	    linePtr = TkBTreeNextLine(textPtr, linePtr);
 	    if (linePtr != NULL) {
 		TkBTreeLinePixelEpoch(textPtr, linePtr) = 0;
@@ -3244,7 +3272,7 @@ TextInvalidateLineMetrics(
 	 * more lines than is strictly necessary (but the examination of the
 	 * extra lines should be quick, since their pixelCalculationEpoch will
 	 * be up to date). However, to keep track of that would require more
-	 * complex record-keeping that what we have.
+	 * complex record-keeping than what we have.
 	 */
 
 	if (dInfoPtr->lineUpdateTimer == NULL) {
