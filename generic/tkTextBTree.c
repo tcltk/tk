@@ -662,12 +662,12 @@ AdjustStartEndRefs(
 	if (textPtr->start != NULL) {
 	    count--;
 	    treePtr->startEnd[count] = textPtr->start;
-	    treePtr->startEndRef[count] = treePtr->sharedTextPtr->peers;
+	    treePtr->startEndRef[count] = textPtr;
 	}
 	if (textPtr->end != NULL) {
 	    count--;
 	    treePtr->startEnd[count] = textPtr->end;
-	    treePtr->startEndRef[count] = treePtr->sharedTextPtr->peers;
+	    treePtr->startEndRef[count] = textPtr;
 	}
     }
 }
@@ -1609,7 +1609,7 @@ TkBTreeFindLine(
     }
 
     /*
-     * Check for the any start/end offset for this text widget.
+     * Check for any start/end offset for this text widget.
      */
 
     if (textPtr != NULL) {
@@ -1993,6 +1993,11 @@ TkBTreeLinesTo(
     }
     if (textPtr != NULL && textPtr->start != NULL) {
 	index -= TkBTreeLinesTo(NULL, textPtr->start);
+        if (index < 0) {
+            /* One should panic here!
+            Tcl_Panic("TkBTreeLinesTo: linePtr comes before -startline");
+             */
+        }
     }
     return index;
 }
