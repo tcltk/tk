@@ -1991,17 +1991,37 @@ TkBTreeLinesTo(
 	    index += nodePtr2->numLines;
 	}
     }
-    if (textPtr != NULL && textPtr->start != NULL) {
-	index -= TkBTreeLinesTo(NULL, textPtr->start);
-        if (index < 0) {
-            /* One should panic here!
-            Tcl_Panic("TkBTreeLinesTo: linePtr comes before -startline");
-             */
+    if (textPtr != NULL) {
+        /* 
+         * The index to return must be relative to textPtr, not to the entire
+         * tree. Take care to never return a negative index when linePtr
+         * denotes a line before -startline, or an index larger than the
+         * number of lines in textPtr when linePtr is a line past -endline.
+         */
+
+        int indexStart, indexEnd;
+
+        if (textPtr->start != NULL) {
+            indexStart = TkBTreeLinesTo(NULL, textPtr->start);
+        } else {
+            indexStart = 0;
+        }
+        if (textPtr->end != NULL) {
+            indexEnd = TkBTreeLinesTo(NULL, textPtr->end);
+        } else {
+            indexEnd = TkBTreeNumLines(textPtr->sharedTextPtr->tree, NULL);
+        }
+        if (index < indexStart) {
+            index = 0;
+        } else if (index > indexEnd) {
+            index = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
+        } else {
+            index -= indexStart;
         }
     }
     return index;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
