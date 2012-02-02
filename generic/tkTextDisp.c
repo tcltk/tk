@@ -3219,34 +3219,6 @@ TextInvalidateLineMetrics(
     int fromLine;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
-    /*
-     * All lines to invalidate must be inside the -startline/-endline range.
-     */
-
-    if (linePtr != NULL) {
-        int start;
-        TkTextLine *toLinePtr;
-        if (textPtr->start != NULL) {
-            fromLine = TkBTreeLinesTo(NULL, linePtr);
-            start = TkBTreeLinesTo(NULL, textPtr->start);
-            if (fromLine < start) {
-                lineCount -= start - fromLine;
-                linePtr = textPtr->start;
-            }
-        }
-        if (textPtr->end != NULL) {
-            int count = 0;
-            toLinePtr = linePtr;
-            while (count < lineCount && toLinePtr != NULL) {
-                toLinePtr = TkBTreeNextLine(textPtr, toLinePtr);
-                count++;
-            }
-            if (toLinePtr == NULL) {
-                lineCount = count;
-            }
-        }
-    }
-
     if (linePtr != NULL) {
 	int counter = lineCount;
 
