@@ -1,9 +1,9 @@
 2012-01-??  Francois Vogel  <fvogelnew1@free.fr>
 
-	* generic/tkText.c:      [Bug-1630262]: segfault when deleting lines
-	* generic/tkTextBTree.c  with peer text widgets
-	* generic/tkTextDisp.c
-	* tests/text.test
+	* generic/tkText.c:      [Bug-1630262] and [Bug-1615425]: segfault
+	* generic/tkTextBTree.c  when deleting lines or tagging outside of
+	* generic/tkTextDisp.c   the -startline/-endline range with peer
+	* tests/text.test        text widgets.
 
 2012-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
