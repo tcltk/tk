@@ -1,3 +1,10 @@
+2012-02-10  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinDialog.c (GetFileNameW): Ensure that we do not convert a
+	result list to a string inadvertently, as this causes problems with
+	Tkinter's handling of multiple filename results. Issue was reported
+	via StackOverflow: http://stackoverflow.com/q/9227859/301832
+
 2012-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkImgPhoto.c: [Bug 3480634]: PNG Images missing in menus on Mac
