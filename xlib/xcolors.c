@@ -882,24 +882,71 @@ XParseColor(display, map, spec, colorPtr)
     XColor *colorPtr;
 {
     if (spec[0] == '#') {
-	char fmt[16];
-	int i, red, green, blue;
+    char rstr[5], gstr[5], bstr[5];
 
-	if ((i = (int) strlen(spec+1))%3) {
-	    return 0;
-	}
-	i /= 3;
-
-	sprintf(fmt, "%%%dx%%%dx%%%dx", i, i, i);
-	if (sscanf(spec+1, fmt, &red, &green, &blue) != 3) {
-	    return 0;
-	}
-	colorPtr->red = (((unsigned short) red) << (4 * (4 - i)))
-	    | ((unsigned short) red);
-	colorPtr->green = (((unsigned short) green) << (4 * (4 - i)))
-	    | ((unsigned short) green);
-	colorPtr->blue = (((unsigned short) blue) << (4 * (4 - i)))
-	    | ((unsigned short) blue);
+    if (!isxdigit((unsigned char) spec[1])
+	    || !isxdigit((unsigned char) spec[2])
+	    || !isxdigit((unsigned char) spec[3])) {
+	/* Not at least 3 hex digits, so invalid */
+	return 0;
+    } else if (!spec[4]) {
+	/* Exactly 3 hex digits */
+	rstr[0] = rstr[1] = rstr[2] = rstr[3] = spec[1];
+	gstr[0] = gstr[1] = gstr[2] = gstr[3] = spec[2];
+	bstr[0] = bstr[1] = bstr[2] = bstr[3] = spec[3];
+    } else if (!isxdigit((unsigned char) spec[4])
+	    || !isxdigit((unsigned char) spec[5])
+	    || !isxdigit((unsigned char) spec[6])) {
+	/* Not at least 6 hex digits, so invalid */
+	return 0;
+    } else if (!spec[7]) {
+	/* Exactly 6 hex digits */
+	rstr[0] = rstr[2] = spec[1];
+	rstr[1] = rstr[3] = spec[2];
+	gstr[0] = gstr[2] = spec[3];
+	gstr[1] = gstr[3] = spec[4];
+	bstr[0] = bstr[2] = spec[5];
+	bstr[1] = bstr[3] = spec[6];
+    } else if (!isxdigit((unsigned char) spec[7])
+	    || !isxdigit((unsigned char) spec[8])
+	    || !isxdigit((unsigned char) spec[9])) {
+	/* Not at least 9 hex digits, so invalid */
+	return 0;
+    } else if (!spec[10]) {
+	/* Exactly 9 hex digits */
+	rstr[0] = rstr[3] = spec[1];
+	rstr[1] = spec[2];
+	rstr[2] = spec[3];
+	gstr[0] = gstr[3] = spec[4];
+	gstr[1] = spec[5];
+	gstr[2] = spec[6];
+	bstr[0] = bstr[3] = spec[7];
+	bstr[1] = spec[8];
+	bstr[2] = spec[9];
+    } else if (!isxdigit((unsigned char) spec[10])
+	    || !isxdigit((unsigned char) spec[11])
+	    || !isxdigit((unsigned char) spec[12]) || spec[13]) {
+	/* Not exactly 12 hex digits, so invalid */
+	return 0;
+    } else {
+	/* Exactly 12 hex digits */
+	rstr[0] = spec[1];
+	rstr[1] = spec[2];
+	rstr[2] = spec[3];
+	rstr[3] = spec[4];
+	gstr[0] = spec[5];
+	gstr[1] = spec[6];
+	gstr[2] = spec[7];
+	gstr[3] = spec[8];
+	bstr[0] = spec[9];
+	bstr[1] = spec[10];
+	bstr[2] = spec[11];
+	bstr[3] = spec[12];
+    }
+    rstr[4] = gstr[4] = bstr[4] = '\0';
+    colorPtr->red = strtol(rstr, NULL, 16);
+    colorPtr->green = strtol(gstr, NULL, 16);
+    colorPtr->blue = strtol(bstr, NULL, 16);
     } else {
 	if (!FindColor(spec, colorPtr)) {
 	    return 0;
