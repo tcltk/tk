@@ -821,7 +821,7 @@ void
 TkpSetMainMenubar(
     Tcl_Interp *interp,		/* The interpreter of the application */
     Tk_Window tkwin,		/* The frame we are setting up */
-    const char *menuName)	/* The name of the menu to put in front. If
+    char *menuName)	/* The name of the menu to put in front. If
 				 * NULL, use the default menu bar. */
 {
     static Tcl_Interp *currentInterp = NULL;
@@ -1498,7 +1498,7 @@ TkpMenuThreadInit(void)
 void
 TkpMenuNotifyToplevelCreate(
     Tcl_Interp *interp,		/* The interp the menu lives in. */
-    const char *menuName)	/* The name of the menu to reconfigure. */
+    char *menuName)	/* The name of the menu to reconfigure. */
 {
     /*
      * Nothing to do.

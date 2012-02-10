@@ -585,6 +585,8 @@ ComputeNativeButtonGeometry(
 	    }
 	}
 	[button setImagePosition:pos];
+    }
+
     // if font is too tall, we can't use the fixed-height rounded bezel
    if (!haveImage && haveText && style == NSRoundedBezelStyle) {
      Tk_FontMetrics fm;
@@ -670,6 +672,7 @@ ComputeNativeButtonGeometry(
 	    butPtr->borderWidth);
 #endif
 }
+
 
 #pragma mark -
 #pragma mark Unix Buttons:
