@@ -834,6 +834,11 @@ GetFileNameW(
     if ((winCode != 0)
 	    || ((cdlgerr == FNERR_BUFFERTOOSMALL)
 		    && (ofn.Flags & OFN_ALLOWMULTISELECT))) {
+	int gotFilename = 0;	/* Flag for tracking whether we have any
+				 * filename at all. For details, see
+				 * http://stackoverflow.com/q/9227859/301832
+				 */
+
 	if (ofn.Flags & OFN_ALLOWMULTISELECT) {
 	    /*
 	     * The result in dynFileBuffer contains many items, separated by
@@ -870,6 +875,7 @@ GetFileNameW(
 		    Tcl_AppendToObj(fullnameObj, "/", -1);
 		    Tcl_AppendToObj(fullnameObj, Tcl_DStringValue(&filenameBuf),
 			    Tcl_DStringLength(&filenameBuf));
+		    gotFilename = 1;
 		    Tcl_DStringFree(&filenameBuf);
 		    Tcl_ListObjAppendElement(NULL, returnList, fullnameObj);
 		}
@@ -883,18 +889,19 @@ GetFileNameW(
 		Tcl_ListObjAppendElement(NULL, returnList,
 			Tcl_NewStringObj(Tcl_DStringValue(&ds),
 				Tcl_DStringLength(&ds)));
+		gotFilename |= (Tcl_DStringLength(&ds) > 0);
 	    }
 	    Tcl_SetObjResult(interp, returnList);
 	    Tcl_DStringFree(&ds);
 	} else {
 	    Tcl_AppendResult(interp, ConvertExternalFilename(unicodeEncoding,
 		    (char *) ofn.lpstrFile, &ds), NULL);
+	    gotFilename = (Tcl_DStringLength(&ds) > 0);
 	    Tcl_DStringFree(&ds);
 	}
 	result = TCL_OK;
-	if ((ofn.nFilterIndex > 0) &&
-		Tcl_GetCharLength(Tcl_GetObjResult(interp)) > 0 &&
-		typeVariableObj && filterObj) {
+	if ((ofn.nFilterIndex > 0) && gotFilename && typeVariableObj
+		&& filterObj) {
 	    int listObjc, count;
 	    Tcl_Obj **listObjv = NULL;
 	    Tcl_Obj **typeInfo = NULL;
