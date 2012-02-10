@@ -416,7 +416,7 @@ XKeycodeToKeysym(
  *----------------------------------------------------------------------
  */
 
-const char *
+char *
 TkpGetString(
     TkWindow *winPtr,		/* Window where event occurred: Needed to get
 				 * input context. */
