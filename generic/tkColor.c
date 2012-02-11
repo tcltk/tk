@@ -375,6 +375,21 @@ Tk_NameOfColor(colorPtr)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 	sprintf(tsdPtr->rgbString, "#%04x%04x%04x", colorPtr->red, 
 		colorPtr->green, colorPtr->blue);
+	/* If the string has the form #RSRSTUTUVWVW (where equal
+	 * letters denote equal hexdigits) then this is
+	 * equivalent to #RSTUVW. Then output the shorter form */
+	if ((tsdPtr->rgbString[1] == tsdPtr->rgbString[3])
+		&& (tsdPtr->rgbString[2] == tsdPtr->rgbString[4])
+		&& (tsdPtr->rgbString[5] == tsdPtr->rgbString[7])
+		&& (tsdPtr->rgbString[6] == tsdPtr->rgbString[8])
+		&& (tsdPtr->rgbString[9] == tsdPtr->rgbString[11])
+		&& (tsdPtr->rgbString[10] == tsdPtr->rgbString[12])) {
+	    tsdPtr->rgbString[3] = tsdPtr->rgbString[5];
+	    tsdPtr->rgbString[4] = tsdPtr->rgbString[6];
+	    tsdPtr->rgbString[5] = tsdPtr->rgbString[9];
+	    tsdPtr->rgbString[6] = tsdPtr->rgbString[10];
+	    tsdPtr->rgbString[7] = '\0';
+	}
 	return tsdPtr->rgbString;
     }
 }
