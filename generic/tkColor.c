@@ -377,7 +377,8 @@ Tk_NameOfColor(colorPtr)
 		colorPtr->green, colorPtr->blue);
 	/* If the string has the form #RSRSTUTUVWVW (where equal
 	 * letters denote equal hexdigits) then this is
-	 * equivalent to #RSTUVW. Then output the shorter form */
+	 * equivalent to #RSTUVW. Then output the shorter form
+	 * !!!! Only to be merged to Tcl 8.6, not earlier versions!!! */
 	if ((tsdPtr->rgbString[1] == tsdPtr->rgbString[3])
 		&& (tsdPtr->rgbString[2] == tsdPtr->rgbString[4])
 		&& (tsdPtr->rgbString[5] == tsdPtr->rgbString[7])
@@ -838,42 +839,42 @@ TkParseColor(display, map, spec, colorPtr)
     if (*spec == '#') {
     char buf[14];
     buf[0] = '#'; buf[13] = '\0';
-	if (!spec[1] || !spec[2] || !spec[3]) {
+	if (!*(++spec) || !*(++spec) || !*(++spec)) {
 	/* Not at least 3 hex digits, so invalid */
 	return 0;
-	} else if (!spec[4]) {
+	} else if (!*(++spec)) {
 	/* Exactly 3 hex digits */
-	buf[1] = buf[2] = buf[3] = buf[4] = spec[1];
-	buf[5] = buf[6] = buf[7] = buf[8] = spec[2];
-	buf[9] = buf[10] = buf[11] = buf[12] = spec[3];
-	return XParseColor(display, map, buf, colorPtr);
-	} else if (!spec[5]	|| !spec[6]) {
+	buf[9] = buf[10] = buf[11] = buf[12] = *(--spec);
+	buf[5] = buf[6] = buf[7] = buf[8] = *(--spec);
+	buf[1] = buf[2] = buf[3] = buf[4] = *(--spec);
+	spec = buf;
+	} else if (!*(++spec)	|| !*(++spec)) {
 	/* Not at least 6 hex digits, so invalid */
 	return 0;
-	} else if (!spec[7]) {
+	} else if (!*(++spec)) {
 	/* Exactly 6 hex digits */
-	buf[1] = buf[3] = spec[1];
-	buf[2] = buf[4] = spec[2];
-	buf[5] = buf[7] = spec[3];
-	buf[6] = buf[8] = spec[4];
-	buf[9] = buf[11] = spec[5];
-	buf[10] = buf[12] = spec[6];
-	return XParseColor(display, map, buf, colorPtr);
-	} else if (!spec[8] || !spec[9]) {
+	buf[10] = buf[12] = *(--spec);
+	buf[9] = buf[11] = *(--spec);
+	buf[6] = buf[8] = *(--spec);
+	buf[5] = buf[7] = *(--spec);
+	buf[2] = buf[4] = *(--spec);
+	buf[1] = buf[3] = *(--spec);
+	spec = buf;
+	} else if (!*(++spec) || !*(++spec)) {
 	/* Not at least 9 hex digits, so invalid */
 	return 0;
-	} else if (!spec[10]) {
+	} else if (!*(++spec)) {
 	/* Exactly 9 hex digits */
-	buf[1] = buf[4] = spec[1];
-	buf[2] = spec[2];
-	buf[3] = spec[3];
-	buf[5] = buf[8] = spec[4];
-	buf[6] = spec[5];
-	buf[7] = spec[6];
-	buf[9] = buf[12] = spec[7];
-	buf[10] = spec[8];
-	buf[11] = spec[9];
-	return XParseColor(display, map, buf, colorPtr);
+	buf[11] = *(--spec);
+	buf[10] = *(--spec);
+	buf[9] = buf[12] = *(--spec);
+	buf[7] = *(--spec);
+	buf[6] = *(--spec);
+	buf[5] = buf[8] = *(--spec);
+	buf[3] = *(--spec);
+	buf[2] = *(--spec);
+	buf[1] = buf[4] = *(--spec);
+	spec = buf;
 	}
     }
     return XParseColor(display, map, spec, colorPtr);
