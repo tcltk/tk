@@ -44,6 +44,12 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 #undef Tk_MainEx
 
+#ifndef __WIN32__
+/* Make sure that extensions which call XParseColor through
+ * the stub table, call TkParseColor in stead. See bug #3486474 */
+#   define XParseColor TkParseColor
+#endif
+
 /* !BEGIN!: Do not edit below this line. */
 
 static const TkIntStubs tkIntStubs = {

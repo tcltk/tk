@@ -918,7 +918,7 @@ ImgPhotoCmd(
 		    }
 		}
 
-		if (!XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
+		if (!TkParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
 			colorString, &color)) {
 		    Tcl_AppendResult(interp, "can't parse color \"",
 			    colorString, "\"", NULL);

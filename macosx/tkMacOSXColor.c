@@ -606,7 +606,7 @@ TkpGetColor(
 	}
     }
 
-    if (XParseColor(display, colormap, name, &color) == 0) {
+    if (TkParseColor(display, colormap, name, &color) == 0) {
 	return NULL;
     }
 
