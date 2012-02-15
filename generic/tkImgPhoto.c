@@ -1150,7 +1150,7 @@ ImgPhotoCmd(clientData, interp, objc, objv)
 		break;
 	    }
 	    for (x = 0; x < dataWidth; ++x) {
-		if (!XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
+		if (!TkParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
 			listArgv[x], &color)) {
 		    Tcl_AppendResult(interp, "can't parse color \"",
 			    listArgv[x], "\"", (char *) NULL);
