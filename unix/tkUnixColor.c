@@ -166,7 +166,7 @@ TkpGetColor(
 	    FindClosestColor(tkwin, &screen, &color);
 	}
     } else {
-	if (XParseColor(display, colormap, buf, &color) == 0) {
+	if (TkParseColor(display, colormap, buf, &color) == 0) {
 	    return NULL;
 	}
 	if (XAllocColor(display, colormap, &color) != 0) {

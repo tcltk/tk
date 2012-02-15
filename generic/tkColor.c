@@ -371,6 +371,23 @@ Tk_NameOfColor(
 
 	sprintf(tsdPtr->rgbString, "#%04x%04x%04x", colorPtr->red,
 		colorPtr->green, colorPtr->blue);
+
+	/* If the string has the form #RSRSTUTUVWVW (where equal
+	 * letters denote equal hexdigits) then this is
+	 * equivalent to #RSTUVW. Then output the shorter form.
+	 */
+	if ((tsdPtr->rgbString[1] == tsdPtr->rgbString[3])
+		&& (tsdPtr->rgbString[2] == tsdPtr->rgbString[4])
+		&& (tsdPtr->rgbString[5] == tsdPtr->rgbString[7])
+		&& (tsdPtr->rgbString[6] == tsdPtr->rgbString[8])
+		&& (tsdPtr->rgbString[9] == tsdPtr->rgbString[11])
+		&& (tsdPtr->rgbString[10] == tsdPtr->rgbString[12])) {
+	    tsdPtr->rgbString[3] = tsdPtr->rgbString[5];
+	    tsdPtr->rgbString[4] = tsdPtr->rgbString[6];
+	    tsdPtr->rgbString[5] = tsdPtr->rgbString[9];
+	    tsdPtr->rgbString[6] = tsdPtr->rgbString[10];
+	    tsdPtr->rgbString[7] = '\0';
+	}
 	return tsdPtr->rgbString;
     }
 }
@@ -807,7 +824,61 @@ TkDebugColor(
     }
     return resultPtr;
 }
-
+
+#ifndef __WIN32__
+/* This function is not necessary for Win32,
+ * since XParseColor already does the right thing */
+Status
+TkParseColor(
+    Display * display,		/* The display */
+    Colormap map,			/* Color map */
+    _Xconst char* spec,     /* String to be parsed */
+    XColor * colorPtr)
+{
+    if (*spec == '#') {
+    char buf[14];
+    buf[0] = '#'; buf[13] = '\0';
+	if (!*(++spec) || !*(++spec) || !*(++spec)) {
+	/* Not at least 3 hex digits, so invalid */
+	return 0;
+	} else if (!*(++spec)) {
+	/* Exactly 3 hex digits */
+	buf[9] = buf[10] = buf[11] = buf[12] = *(--spec);
+	buf[5] = buf[6] = buf[7] = buf[8] = *(--spec);
+	buf[1] = buf[2] = buf[3] = buf[4] = *(--spec);
+	spec = buf;
+	} else if (!*(++spec)	|| !*(++spec)) {
+	/* Not at least 6 hex digits, so invalid */
+	return 0;
+	} else if (!*(++spec)) {
+	/* Exactly 6 hex digits */
+	buf[10] = buf[12] = *(--spec);
+	buf[9] = buf[11] = *(--spec);
+	buf[6] = buf[8] = *(--spec);
+	buf[5] = buf[7] = *(--spec);
+	buf[2] = buf[4] = *(--spec);
+	buf[1] = buf[3] = *(--spec);
+	spec = buf;
+	} else if (!*(++spec) || !*(++spec)) {
+	/* Not at least 9 hex digits, so invalid */
+	return 0;
+	} else if (!*(++spec)) {
+	/* Exactly 9 hex digits */
+	buf[11] = *(--spec);
+	buf[10] = *(--spec);
+	buf[9] = buf[12] = *(--spec);
+	buf[7] = *(--spec);
+	buf[6] = *(--spec);
+	buf[5] = buf[8] = *(--spec);
+	buf[3] = *(--spec);
+	buf[2] = *(--spec);
+	buf[1] = buf[4] = *(--spec);
+	spec = buf;
+	}
+    }
+    return XParseColor(display, map, spec, colorPtr);
+}
+#endif /* __WIN32__ */
 /*
  * Local Variables:
  * mode: c

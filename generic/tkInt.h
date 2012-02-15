@@ -1211,6 +1211,14 @@ MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
 
+#ifdef __WIN32__
+#define TkParseColor XParseColor
+#else
+MODULE_SCOPE Status TkParseColor (Display * display,
+				Colormap map, _Xconst char* spec,
+				XColor * colorPtr);
+#endif
+
 /*
  * Unsupported commands.
  */
