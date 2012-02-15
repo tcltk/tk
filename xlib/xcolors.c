@@ -882,24 +882,33 @@ XParseColor(display, map, spec, colorPtr)
     XColor *colorPtr;
 {
     if (spec[0] == '#') {
-	char fmt[16];
-	int i, red, green, blue;
+	char *p;
+	Tcl_WideInt value = _strtoi64(++spec, &p, 16);
 
-	if ((i = (int) strlen(spec+1))%3) {
+	switch ((int)(p-spec)) {
+	case 3:
+	    colorPtr->red = (unsigned short) (((value >> 8) & 0xf) * 0x1111);
+	    colorPtr->green = (unsigned short) (((value >> 4) & 0xf) * 0x1111);
+	    colorPtr->blue = (unsigned short) ((value & 0xf) * 0x1111);
+	    break;
+	case 6:
+	    colorPtr->red = (unsigned short) (((value >> 16) & 0xff) | ((value >> 8) & 0xff00));
+	    colorPtr->green = (unsigned short) (((value >> 8) & 0xff) | (value & 0xff00));
+	    colorPtr->blue = (unsigned short) ((value & 0xff) | (value << 8));
+	    break;
+	case 9:
+	    colorPtr->red = (unsigned short) (((value >> 32) & 0xf) | ((value >> 20) & 0xfff0));
+	    colorPtr->green = (unsigned short) (((value >> 20) & 0xf) | ((value >> 8) & 0xfff0));
+	    colorPtr->blue = (unsigned short) (((value >> 8) & 0xf) | (value << 4));
+	    break;
+	case 12:
+	    colorPtr->red = (unsigned short) (value >> 32);
+	    colorPtr->green = (unsigned short) (value >> 16);
+	    colorPtr->blue = (unsigned short) value;
+	    break;
+	default:
 	    return 0;
 	}
-	i /= 3;
-
-	sprintf(fmt, "%%%dx%%%dx%%%dx", i, i, i);
-	if (sscanf(spec+1, fmt, &red, &green, &blue) != 3) {
-	    return 0;
-	}
-	colorPtr->red = (((unsigned short) red) << (4 * (4 - i)))
-	    | ((unsigned short) red);
-	colorPtr->green = (((unsigned short) green) << (4 * (4 - i)))
-	    | ((unsigned short) green);
-	colorPtr->blue = (((unsigned short) blue) << (4 * (4 - i)))
-	    | ((unsigned short) blue);
     } else {
 	if (!FindColor(spec, colorPtr)) {
 	    return 0;
