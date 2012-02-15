@@ -1,3 +1,10 @@
+2012-02-15  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* xlib/xcolors.c: [Bug 3486474]: Inconsistent color scaling
+	* generic/tkColor.c: new internal function TkParseColor
+	* generic/tkInt.h:
+	* generic/tk*.c:   Change XParseColor() to TkParseColor() everywhere.
+
 2012-02-10  Donal K. Fellows  <dkf@users.sf.net>
 
 	* win/tkWinDialog.c (GetFileName): Ensure that we do not convert a
