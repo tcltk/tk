@@ -1247,7 +1247,7 @@ ImgBmapPostscript(
     if ((masterPtr->bgUid != NULL) && (masterPtr->bgUid[0] != '\000')) {
 	XColor color;
 
-	XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), masterPtr->bgUid,
+	TkParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), masterPtr->bgUid,
 		&color);
 	if (Tk_PostscriptColor(interp, psinfo, &color) != TCL_OK) {
 	    return TCL_ERROR;
@@ -1269,7 +1269,7 @@ ImgBmapPostscript(
     if ((masterPtr->fgUid != NULL) && (masterPtr->data != NULL)) {
 	XColor color;
 
-	XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), masterPtr->fgUid,
+	TkParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), masterPtr->fgUid,
 		&color);
 	if (Tk_PostscriptColor(interp, psinfo, &color) != TCL_OK) {
 	    return TCL_ERROR;

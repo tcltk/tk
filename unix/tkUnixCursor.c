@@ -274,7 +274,7 @@ TkGetCursorByName(
 	    fg.red = fg.green = fg.blue = 0;
 	    bg.red = bg.green = bg.blue = 65535;
 	} else {
-	    if (XParseColor(display, Tk_Colormap(tkwin), argv[1], &fg) == 0) {
+	    if (TkParseColor(display, Tk_Colormap(tkwin), argv[1], &fg) == 0) {
 		Tcl_AppendResult(interp, "invalid color name \"", argv[1],
 			"\"", NULL);
 		goto cleanup;
@@ -282,7 +282,7 @@ TkGetCursorByName(
 	    if (argc == 2) {
 		bg.red = bg.green = bg.blue = 0;
 		maskIndex = namePtr->shape;
-	    } else if (XParseColor(display, Tk_Colormap(tkwin), argv[2],
+	    } else if (TkParseColor(display, Tk_Colormap(tkwin), argv[2],
 		    &bg) == 0) {
 		Tcl_AppendResult(interp, "invalid color name \"", argv[2],
 			"\"", NULL);
@@ -456,7 +456,7 @@ CreateCursorFromTableOrFile(
 	bg.red = bg.green = bg.blue = 65535;
     } else if (argc == 2) {
 	fgColor = argv[1];
-	if (XParseColor(display, Tk_Colormap(tkwin), fgColor, &fg) == 0) {
+	if (TkParseColor(display, Tk_Colormap(tkwin), fgColor, &fg) == 0) {
 	    Tcl_AppendResult(interp, "invalid color name \"",
 		    fgColor, "\"", NULL);
 	    goto cleanup;
@@ -475,12 +475,12 @@ CreateCursorFromTableOrFile(
 	    fgColor = argv[2];
 	    bgColor = argv[3];
 	}
-	if (XParseColor(display, Tk_Colormap(tkwin), fgColor, &fg) == 0) {
+	if (TkParseColor(display, Tk_Colormap(tkwin), fgColor, &fg) == 0) {
 	    Tcl_AppendResult(interp, "invalid color name \"",
 		    fgColor, "\"", NULL);
 	    goto cleanup;
 	}
-	if (XParseColor(display, Tk_Colormap(tkwin), bgColor, &bg) == 0) {
+	if (TkParseColor(display, Tk_Colormap(tkwin), bgColor, &bg) == 0) {
 	    Tcl_AppendResult(interp, "invalid color name \"",
 		    bgColor, "\"", NULL);
 	    goto cleanup;
