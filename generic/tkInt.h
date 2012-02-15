@@ -1213,6 +1213,13 @@ EXTERN int		TkParsePadAmount _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,
 			    int *pad1Ptr, int *pad2Ptr));
 EXTERN int		TkpAlwaysShowSelection _ANSI_ARGS_((Tk_Window tkwin));
+#ifdef __WIN32__
+#define TkParseColor XParseColor
+#else
+EXTERN Status TkParseColor _ANSI_ARGS_((Display * display,
+				Colormap map, _Xconst char* spec,
+				XColor * colorPtr));
+#endif
 
 /*
  * Unsupported commands.
