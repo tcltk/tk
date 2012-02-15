@@ -357,12 +357,12 @@ Tk_GetCursorFromData(interp, tkwin, source, mask, width, height,
      * available and add it to the database.
      */
 
-    if (XParseColor(dataKey.display, Tk_Colormap(tkwin), fg, &fgColor) == 0) {
+    if (TkParseColor(dataKey.display, Tk_Colormap(tkwin), fg, &fgColor) == 0) {
 	Tcl_AppendResult(interp, "invalid color name \"", fg, "\"",
 		(char *) NULL);
 	goto error;
     }
-    if (XParseColor(dataKey.display, Tk_Colormap(tkwin), bg, &bgColor) == 0) {
+    if (TkParseColor(dataKey.display, Tk_Colormap(tkwin), bg, &bgColor) == 0) {
 	Tcl_AppendResult(interp, "invalid color name \"", bg, "\"",
 		(char *) NULL);
 	goto error;
