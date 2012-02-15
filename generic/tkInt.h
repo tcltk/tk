@@ -1179,6 +1179,13 @@ MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 			    int firstByte, int lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    Tcl_UniChar c, struct TkFontAttributes *faPtr);
+#ifdef __WIN32__
+#define TkParseColor XParseColor
+#else
+MODULE_SCOPE Status TkParseColor (Display * display,
+				Colormap map, _Xconst char* spec,
+				XColor * colorPtr);
+#endif
 
 /*
  * Unsupported commands.
