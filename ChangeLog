@@ -1,4 +1,11 @@
-2012-01-??  Francois Vogel  <fvogelnew1@free.fr>
+2012-02-??  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkText.c:      [Bug-3487407]: Weird text indices.
+	* generic/tkTextDisp.c
+	* generic/tkTextMark.c
+	* tests/textMark.test
+
+2012-02-??  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c:      [Bug-1630262] and [Bug-1615425]: segfault
 	* generic/tkTextBTree.c  when deleting lines or tagging outside of
