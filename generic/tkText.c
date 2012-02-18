@@ -2107,6 +2107,10 @@ ConfigureText(
 	 * Also, clamp the insert and current (unshared) marks to the new
 	 * -startline/-endline range limits of the widget. All other (shared)
 	 * marks are unchanged.
+         * The return value of TkTextMarkNameToIndex does not need to be
+         * checked: "insert" and "current" marks always exist, and the
+         * purpose of the code below precisely is to move them inside the
+         * -startline/-endline range.
 	 */
 
 	textPtr->sharedTextPtr->stateEpoch++;

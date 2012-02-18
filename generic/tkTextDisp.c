@@ -1971,7 +1971,7 @@ UpdateDisplayInfo(
 
 	if (spaceLeft <= dInfoPtr->newTopPixelOffset) {
 	    /*
-	     * We can full up all the needed space just by showing more of the
+	     * We can fill up all the needed space just by showing more of the
 	     * current top line.
 	     */
 
