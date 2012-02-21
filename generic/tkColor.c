@@ -817,7 +817,7 @@ Status
 TkParseColor(display, map, spec, colorPtr)
     Display * display;		/* The display */
     Colormap map;			/* Color map */
-    _Xconst char* spec;     /* String to be parsed */
+    CONST char* spec;     /* String to be parsed */
     XColor * colorPtr;
 {
     if (*spec == '#') {
