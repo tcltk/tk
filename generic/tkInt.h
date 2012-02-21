@@ -1183,7 +1183,7 @@ MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 #define TkParseColor XParseColor
 #else
 MODULE_SCOPE Status TkParseColor (Display * display,
-				Colormap map, _Xconst char* spec,
+				Colormap map, CONST char* spec,
 				XColor * colorPtr);
 #endif
 
