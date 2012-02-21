@@ -1217,7 +1217,7 @@ EXTERN int		TkpAlwaysShowSelection _ANSI_ARGS_((Tk_Window tkwin));
 #define TkParseColor XParseColor
 #else
 EXTERN Status TkParseColor _ANSI_ARGS_((Display * display,
-				Colormap map, _Xconst char* spec,
+				Colormap map, CONST char* spec,
 				XColor * colorPtr));
 #endif
 
