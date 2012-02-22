@@ -229,7 +229,7 @@ InitFont(
     NSRect bounds;
     CGFloat kern = 0.0;
     NSFontRenderingMode renderingMode = NSFontDefaultRenderingMode;
-    int ascent, descent, dontAA;
+    int ascent, descent/*, dontAA*/;
     static const UniChar ch[] = {'.', 'W', ' ', 0xc4, 0xc1, 0xc2, 0xc3, 0xc7};
 			/* ., W, Space, Auml, Aacute, Acirc, Atilde, Ccedilla */
     #define nCh (sizeof(ch) / sizeof(UniChar))
@@ -244,9 +244,10 @@ InitFont(
 	TkInitFontAttributes(faPtr);
     }
     fontPtr->nsFont = nsFont;
-    dontAA = [nsFont isFixedPitch] && fontPtr->font.fa.size <= 10;
-    if (antialiasedTextEnabled >= 0 || dontAA) {
-	renderingMode = (antialiasedTextEnabled == 0 || dontAA) ?
+    // some don't like antialiasing on fixed-width even if bigger than limit
+//    dontAA = [nsFont isFixedPitch] && fontPtr->font.fa.size <= 10;
+    if (antialiasedTextEnabled >= 0/* || dontAA*/) {
+	renderingMode = (antialiasedTextEnabled == 0/* || dontAA*/) ?
 		NSFontIntegerAdvancementsRenderingMode :
 		NSFontAntialiasedRenderingMode;
     }
@@ -828,7 +829,7 @@ TkpMeasureCharsInContext(
     typesetter = CTTypesetterCreateWithAttributedString(
 	    (CFAttributedStringRef)attributedString);
     start = Tcl_NumUtfChars(source, rangeStart);
-    len = Tcl_NumUtfChars(source, rangeStart + rangeLength);
+    len = Tcl_NumUtfChars(source + rangeStart, rangeLength);
     if (start > 0) {
 	range.length = start;
 	line = CTTypesetterCreateLine(typesetter, range);
@@ -847,13 +848,13 @@ TkpMeasureCharsInContext(
 
 	index = start;
 	if (flags & TK_WHOLE_WORDS) {
-	    index = CTTypesetterSuggestLineBreak(typesetter, 0, maxWidth);
+	    index = CTTypesetterSuggestLineBreak(typesetter, start, maxWidth);
 	    if (index <= start && (flags & TK_AT_LEAST_ONE)) {
 		flags &= ~TK_WHOLE_WORDS;
 	    }
 	}
 	if (index <= start && !(flags & TK_WHOLE_WORDS)) {
-	    index = CTTypesetterSuggestClusterBreak(typesetter, 0, maxWidth);
+	    index = CTTypesetterSuggestClusterBreak(typesetter, start, maxWidth);
 	}
 	cs = (index < len || (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
@@ -878,6 +879,17 @@ TkpMeasureCharsInContext(
 	    width = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
 	    CFRelease(line);
 	}
+
+        /* The call to CTTypesetterSuggestClusterBreak above will always
+           return at least one character regardless of whether it exceeded
+           it or not.  Clean that up now. */
+	while (width > maxWidth && !(flags & TK_PARTIAL_OK) && index > start) {
+	    range.length = --index;
+	    line = CTTypesetterCreateLine(typesetter, range);
+	    width = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
+	    CFRelease(line);
+	}
+
     }
     CFRelease(typesetter);
     [attributedString release];
@@ -894,6 +906,7 @@ done:
 	    flags & TK_AT_LEAST_ONE ? "atLeastOne " : "",
 	    flags & TK_ISOLATE_END  ? "isolateEnd " : "",
 	    length, fit);
+//if (!(rangeLength==1 && rangeStart == 0)) fprintf(stderr, "   measure len=%d (max=%d, w=%.0f) from %d (nb=%d): source=\"%s\": index=%d return %d\n",rangeLength,maxLength,width,rangeStart,numBytes, source+rangeStart, index, fit);
 #endif
     *lengthPtr = length;
     return fit;
