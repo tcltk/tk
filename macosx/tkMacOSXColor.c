@@ -268,13 +268,15 @@ GetThemeColor(
 	    break;
 	}
 
-	*c = CGColorCreateGenericRGB(rgba[0], rgba[1], rgba[2], rgba[3]);
+        // this attempts to find something roughly fitting for any display
+//	*c = CGColorCreateGenericRGB(rgba[0], rgba[1], rgba[2], rgba[3]);
 
-	/*static CGColorSpaceRef deviceRGBSpace = NULL;
+        // may be off for non-main display but in most cases better than prev
+	static CGColorSpaceRef deviceRGBSpace = NULL;
 	if (!deviceRGBSpace) {
 	    deviceRGBSpace = CGDisplayCopyColorSpace(CGMainDisplayID());
 	}
-	*c = CGColorCreate(deviceRGBSpace, rgba );*/
+	*c = CGColorCreate(deviceRGBSpace, rgba );
     }
     return err;
 }
