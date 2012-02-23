@@ -512,7 +512,7 @@ ConsoleOutput(
 	     * Assumption is utf-8 Tcl_Encoding is reliably present.
 	     */
 
-	    CONST char *bytes
+	    const char *bytes
 		    = Tcl_ExternalToUtfDString(utf8, buf, toWrite, &ds);
 	    int numBytes = Tcl_DStringLength(&ds);
 	    Tcl_Obj *cmd = Tcl_NewStringObj("tk::ConsoleOutput", -1);
