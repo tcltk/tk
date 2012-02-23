@@ -6306,7 +6306,7 @@ TkMacOSXMakeFullscreen(
 	    wmPtr->flags |= WM_FULLSCREEN;
 	}
     } else {
-	wmPtr->flags &= ~WM_FULLSCREEN;
+	wmPtr->flags &= ~WM_FULLSCREEN; 
     }
     TkMacOSXEnterExitFullscreen(winPtr, [window isKeyWindow]);
     if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {
