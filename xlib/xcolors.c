@@ -871,6 +871,29 @@ FindColor(
  *----------------------------------------------------------------------
  */
 
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
+static __int64
+_strtoi64(const char *spec, char  **p, int base)
+{
+    __int64 result = 0;
+    char c;
+    while ((c = *spec)) {
+	if ((c >= '0') && (c <= '9')) {
+	    result = (result << 4) + (c - '0');
+	} else if ((c >= 'A') && (c <= 'F')) {
+	    result = (result << 4) + (c + (10 - 'A'));
+	} else if ((c >= 'a') && (c <= 'f')) {
+	    result = (result << 4) + (c + (10 - 'a'));
+	} else {
+	    break;
+	}
+	++spec;
+    }
+    *p = (char *) spec;
+    return result;
+}
+#endif
+
 Status
 XParseColor(
     Display *display,
