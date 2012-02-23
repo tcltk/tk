@@ -1215,7 +1215,7 @@ MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
 #define TkParseColor XParseColor
 #else
 MODULE_SCOPE Status TkParseColor (Display * display,
-				Colormap map, _Xconst char* spec,
+				Colormap map, const char* spec,
 				XColor * colorPtr);
 #endif
 

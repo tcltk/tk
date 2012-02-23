@@ -2,6 +2,7 @@
 
 	* win/tkWinDialog.c: [Bug 1913750]: tk_chooseDirectory -initialdir
 	internationalization problem.
+	* xlib/xcolors.c: provide _strtoi64 fallback for MSVC6.0
 
 2012-02-15  Jan Nijtmans  <nijtmans@users.sf.net>
 
