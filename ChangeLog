@@ -1,3 +1,8 @@
+2012-02-25  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 1913750]: tk_chooseDirectory -initialdir
+	internationalization problem.
+
 2012-02-15  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* xlib/xcolors.c: [Bug 3486474]: Inconsistent color scaling
