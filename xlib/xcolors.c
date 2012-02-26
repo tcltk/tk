@@ -13,13 +13,6 @@
 #include "tkInt.h"
 
 /*
- * This value will be set to the number of colors in the color table
- * the first time it is needed.
- */
-
-static int numXColors = 0;
-
-/*
  * Forward declarations for functions used only in this file.
  */
 
@@ -789,7 +782,6 @@ static const XColorEntry xColors[] = {
      { "yellow3", 205, 205, 0 },
      { "yellow4", 139, 139, 0 },
      { "YellowGreen", 154, 205, 50 },
-     { NULL, 0, 0, 0 }
 };
 
 /*
@@ -818,23 +810,11 @@ FindColor(
     int l, u, r, i = 0;
 
     /*
-     * Count the number of elements in the color array if we haven't done so
-     * yet.
-     */
-
-    if (numXColors == 0) {
-	const XColorEntry *ePtr;
-	for (ePtr = xColors; ePtr->name != NULL; ePtr++) {
-	    numXColors++;
-	}
-    }
-
-    /*
      * Perform a binary search on the sorted array of colors.
      */
 
     l = 0;
-    u = numXColors - 1;
+    u = sizeof(xColors)/sizeof(xColors[0]) - 1;
     while (l <= u) {
 	i = (l + u) / 2;
 	r = strcasecmp(name, xColors[i].name);
@@ -870,6 +850,35 @@ FindColor(
  *
  *----------------------------------------------------------------------
  */
+
+#ifdef __WIN32__
+#   ifdef NO_STRTOI64
+/* This version only handles hex-strings without 0x prefix */
+static __int64
+_strtoi64(const char *spec, char **p, int base)
+{
+    __int64 result = 0;
+    char c;
+    while ((c = *spec)) {
+	if ((c >= '0') && (c <= '9')) {
+	    c -= '0';
+	} else if ((c >= 'A') && (c <= 'F')) {
+	    c += (10 - 'A');
+	} else if ((c >= 'a') && (c <= 'f')) {
+	    c += (10 - 'a');
+	} else {
+	    break;
+	}
+	result = (result << 4) + c;
+	++spec;
+    }
+    *p = (char *) spec;
+    return result;
+}
+#   endif
+#else
+#   define _strtoi64 strtoll
+#endif
 
 Status
 XParseColor(
