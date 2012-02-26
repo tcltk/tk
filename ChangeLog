@@ -1,3 +1,9 @@
+2012-02-26  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* xlib/xcolors.c: Provide fallback for _strtoi64
+	* win/configure.in: Detect whether _strtoi64 is available
+	* win/configure: (regenerated)
+
 2012-02-15  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* xlib/xcolors.c: [Bug 3486474]: Inconsistent color scaling
