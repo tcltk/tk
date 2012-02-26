@@ -1,31 +1,35 @@
-/* 
+/*
  * xcolors.c --
  *
- *	This file contains the routines used to map from X color
- *	names to RGB and pixel values.
+ *	This file contains the routines used to map from X color names to RGB
+ *	and pixel values.
  *
  * Copyright (c) 1996 by Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include <tkInt.h>
+#include "tkInt.h"
 
 /*
+ * Forward declarations for functions used only in this file.
+ */
+
+static int	FindColor(const char *name, XColor *colorPtr);
+
+/*
  * Define an array that defines the mapping from color names to RGB values.
- * Note that this array must be kept sorted alphabetically so that the
- * binary search used in XParseColor will succeed.
+ * Note that this array must be kept sorted alphabetically so that the binary
+ * search used in XParseColor will succeed.
  */
 
 typedef struct {
-    char *name;
-    unsigned char red;
-    unsigned char green;
-    unsigned char blue;
+    const char *name;
+    unsigned char red, green, blue;
 } XColorEntry;
 
-static XColorEntry xColors[] = {
+static const XColorEntry xColors[] = {
      { "alice blue", 240, 248, 255 },
      { "AliceBlue", 240, 248, 255 },
      { "antique white", 250, 235, 215 },
@@ -778,34 +782,19 @@ static XColorEntry xColors[] = {
      { "yellow3", 205, 205, 0 },
      { "yellow4", 139, 139, 0 },
      { "YellowGreen", 154, 205, 50 },
-     { NULL, 0, 0, 0 }
 };
-
-
-/*
- * This value will be set to the number of colors in the color table
- * the first time it is needed.
- */
-
-static int numXColors = 0;
-
-/*
- * Forward declarations for functions used only in this file.
- */
-
-static int	FindColor _ANSI_ARGS_((const char *name, XColor *colorPtr));
 
 /*
  *----------------------------------------------------------------------
  *
  * FindColor --
  *
- *	This routine finds the color entry that corresponds to the
- *	specified color.
+ *	This routine finds the color entry that corresponds to the specified
+ *	color.
  *
  * Results:
- *	Returns non-zero on success.  The RGB values of the XColor
- *	will be initialized to the proper values on success.
+ *	Returns non-zero on success. The RGB values of the XColor will be
+ *	initialized to the proper values on success.
  *
  * Side effects:
  *	None.
@@ -814,30 +803,18 @@ static int	FindColor _ANSI_ARGS_((const char *name, XColor *colorPtr));
  */
 
 static int
-FindColor(name, colorPtr)
-    const char *name;
-    XColor *colorPtr;
+FindColor(
+    const char *name,
+    XColor *colorPtr)
 {
     int l, u, r, i = 0;
-
-    /*
-     * Count the number of elements in the color array if we haven't
-     * done so yet.
-     */
-
-    if (numXColors == 0) {
-	XColorEntry *ePtr;
-	for (ePtr = xColors; ePtr->name != NULL; ePtr++) {
-	    numXColors++;
-	}
-    }
 
     /*
      * Perform a binary search on the sorted array of colors.
      */
 
     l = 0;
-    u = numXColors - 1;
+    u = sizeof(xColors)/sizeof(xColors[0]) - 1;
     while (l <= u) {
 	i = (l + u) / 2;
 	r = strcasecmp(name, xColors[i].name);
@@ -874,12 +851,41 @@ FindColor(name, colorPtr)
  *----------------------------------------------------------------------
  */
 
+#ifdef __WIN32__
+#   ifdef NO_STRTOI64
+/* This version only handles hex-strings without 0x prefix */
+static __int64
+_strtoi64(const char *spec, char **p, int base)
+{
+    __int64 result = 0;
+    char c;
+    while ((c = *spec)) {
+	if ((c >= '0') && (c <= '9')) {
+	    c -= '0';
+	} else if ((c >= 'A') && (c <= 'F')) {
+	    c += (10 - 'A');
+	} else if ((c >= 'a') && (c <= 'f')) {
+	    c += (10 - 'a');
+	} else {
+	    break;
+	}
+	result = (result << 4) + c;
+	++spec;
+    }
+    *p = (char *) spec;
+    return result;
+}
+#   endif
+#else
+#   define _strtoi64 strtoll
+#endif
+
 Status
-XParseColor(display, map, spec, colorPtr)
-    Display *display;
-    Colormap map;
-    const char* spec;
-    XColor *colorPtr;
+XParseColor(
+    Display *display,
+    Colormap map,
+    const char *spec,
+    XColor *colorPtr)
 {
     if (spec[0] == '#') {
 	char *p;
@@ -919,3 +925,11 @@ XParseColor(display, map, spec, colorPtr)
     colorPtr->pad = 0;
     return 1;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
