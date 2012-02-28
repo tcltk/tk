@@ -285,6 +285,7 @@ TkTextSetMark(
 
 	if (markPtr == textPtr->insertMarkPtr) {
 	    TkTextIndex index, index2;
+            int nblines;
 
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 	    TkTextIndexForwChars(NULL,&index, 1, &index2, COUNT_INDICES);
@@ -295,8 +296,17 @@ TkTextSetMark(
 	     */
 
 	    TkTextChanged(NULL, textPtr, &index, &index2);
-	    if (TkBTreeLinesTo(textPtr, indexPtr->linePtr) ==
-		    TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr))  {
+
+            /*
+             * The number of lines in the widget is zero if and only if it is
+             * a partial peer with -startline == -endline, i.e. an empty
+             * peer. In this case the mark shall be set exactly at the given
+             * index, and not one character backwards (bug 3487407).
+             */
+
+	    nblines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
+	    if ((TkBTreeLinesTo(textPtr, indexPtr->linePtr) == nblines)
+		    && (nblines > 0))  {
 		TkTextIndexBackChars(NULL,indexPtr, 1, &insertIndex,
 			COUNT_INDICES);
 		indexPtr = &insertIndex;
@@ -385,9 +395,15 @@ TkTextMarkSegToIndex(
  *
  * Results:
  *	The return value is TCL_OK if "name" exists as a mark in the text
- *	widget. In this case *indexPtr is filled in with the next segment
- *	whose after the mark whose size is non-zero. TCL_ERROR is returned if
- *	the mark doesn't exist in the text widget.
+ *	widget and is located within its -starline/-endline range. In this
+ *	case *indexPtr is filled in with the next segment who is after the
+ *	mark whose size is non-zero. TCL_ERROR is returned if the mark
+ *	doesn't exist in the text widget, or if it is out of its -starline/
+ *	-endline range. In this latter case *indexPtr still contains valid
+ *	information, in particular TkTextMarkNameToIndex called with the
+ *	"insert" or "current" mark name may return TCL_ERROR, but *indexPtr
+ *	contains the correct index of this mark before -startline or after
+ *	-endline.
  *
  * Side effects:
  *	None.

@@ -170,6 +170,13 @@ test textMark-6.4 {TkTextMarkNameToIndex, with mark outside -startline/-endline 
   .pt configure -startline {} -endline {}
   .t mark unset mymark
 } -result {1 {bad text index "mymark"} 1.0 1.0 1 {bad text index "mymark"} L 1 {bad text index "mymark"}}
+test textMark-6.5 {insert and current marks in an empty peer - bug 3487407} -body {
+  .t mark set insert 1.0
+  .t configure -start 5 -end 5
+  set res [.t index insert]
+} -cleanup {
+  .t configure -startline {} -endline {}
+} -result {1.0}
 
 catch {eval {.t mark unset} [.t mark names]}
 test textMark-7.1 {MarkFindNext - invalid mark name} haveCourier12 {
