@@ -1972,7 +1972,7 @@ UpdateDisplayInfo(
 
 	if (spaceLeft <= dInfoPtr->newTopPixelOffset) {
 	    /*
-	     * We can full up all the needed space just by showing more of the
+	     * We can fill up all the needed space just by showing more of the
 	     * current top line.
 	     */
 
@@ -3231,7 +3231,7 @@ TextInvalidateLineMetrics(
 	 */
 
 	TkBTreeLinePixelEpoch(textPtr, linePtr) = 0;
-	while (counter > 0 && linePtr != 0) {
+	while (counter > 0 && linePtr != NULL) {
 	    linePtr = TkBTreeNextLine(textPtr, linePtr);
 	    if (linePtr != NULL) {
 		TkBTreeLinePixelEpoch(textPtr, linePtr) = 0;
@@ -3246,7 +3246,7 @@ TextInvalidateLineMetrics(
 	 * more lines than is strictly necessary (but the examination of the
 	 * extra lines should be quick, since their pixelCalculationEpoch will
 	 * be up to date). However, to keep track of that would require more
-	 * complex record-keeping that what we have.
+	 * complex record-keeping than what we have.
 	 */
 
 	if (dInfoPtr->lineUpdateTimer == NULL) {
