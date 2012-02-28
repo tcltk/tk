@@ -662,12 +662,12 @@ AdjustStartEndRefs(
 	if (textPtr->start != NULL) {
 	    count--;
 	    treePtr->startEnd[count] = textPtr->start;
-	    treePtr->startEndRef[count] = treePtr->sharedTextPtr->peers;
+	    treePtr->startEndRef[count] = textPtr;
 	}
 	if (textPtr->end != NULL) {
 	    count--;
 	    treePtr->startEnd[count] = textPtr->end;
-	    treePtr->startEndRef[count] = treePtr->sharedTextPtr->peers;
+	    treePtr->startEndRef[count] = textPtr;
 	}
     }
 }
@@ -1609,7 +1609,7 @@ TkBTreeFindLine(
     }
 
     /*
-     * Check for the any start/end offset for this text widget.
+     * Check for any start/end offset for this text widget.
      */
 
     if (textPtr != NULL) {
@@ -1991,12 +1991,37 @@ TkBTreeLinesTo(
 	    index += nodePtr2->numLines;
 	}
     }
-    if (textPtr != NULL && textPtr->start != NULL) {
-	index -= TkBTreeLinesTo(NULL, textPtr->start);
+    if (textPtr != NULL) {
+        /* 
+         * The index to return must be relative to textPtr, not to the entire
+         * tree. Take care to never return a negative index when linePtr
+         * denotes a line before -startline, or an index larger than the
+         * number of lines in textPtr when linePtr is a line past -endline.
+         */
+
+        int indexStart, indexEnd;
+
+        if (textPtr->start != NULL) {
+            indexStart = TkBTreeLinesTo(NULL, textPtr->start);
+        } else {
+            indexStart = 0;
+        }
+        if (textPtr->end != NULL) {
+            indexEnd = TkBTreeLinesTo(NULL, textPtr->end);
+        } else {
+            indexEnd = TkBTreeNumLines(textPtr->sharedTextPtr->tree, NULL);
+        }
+        if (index < indexStart) {
+            index = 0;
+        } else if (index > indexEnd) {
+            index = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
+        } else {
+            index -= indexStart;
+        }
     }
     return index;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
