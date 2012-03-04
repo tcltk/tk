@@ -1,3 +1,8 @@
+2012-03-04  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4:    Patch from the cygwin folks
+	* unix/configure: (re-generated)
+
 2012-02-28  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c:      [Bug-1630262], [Bug-1615425]: segfault
