@@ -228,27 +228,27 @@ GetPixelsFromObjEx(
 	if (result != TCL_OK) {
 	    return result;
 	}
-	fresh=1;
+	fresh = 1;
     } else {
-	fresh=0;
+	fresh = 0;
     }
 
     if (SIMPLE_PIXELREP(objPtr)) {
 	*intPtr = GET_SIMPLEPIXEL(objPtr);
 	if (dblPtr) {
-	    *dblPtr=(double)(*intPtr);
+	    *dblPtr = (double) (*intPtr);
 	}
     } else {
 	pixelPtr = GET_COMPLEXPIXEL(objPtr);
-	if ((!fresh) && (pixelPtr->tkwin != tkwin))
-	    {
-		/* in case of exo-screen conversions of non-pixels
-		 * we force a recomputation from the string
-		 */
+	if ((!fresh) && (pixelPtr->tkwin != tkwin)) {
+	    /*
+	     * In case of exo-screen conversions of non-pixels we force a
+	     * recomputation from the string.
+	     */
 
-		FreePixelInternalRep(objPtr);
-		goto retry;
-	    }
+	    FreePixelInternalRep(objPtr);
+	    goto retry;
+	}
 	if ((pixelPtr->tkwin != tkwin)||dblPtr) {
 	    d = pixelPtr->value;
 	    if (pixelPtr->units >= 0) {
@@ -258,7 +258,7 @@ GetPixelsFromObjEx(
 	    pixelPtr->returnValue = (int) (d<0 ? d-0.5 : d+0.5);
 	    pixelPtr->tkwin = tkwin;
 	    if (dblPtr) {
-		*dblPtr=(double)d;
+		*dblPtr = d;
 	    }
 	}
 	*intPtr = pixelPtr->returnValue;
@@ -328,17 +328,20 @@ Tk_GetDoublePixelsFromObj(
     double d;
     int result,val;
 
-    result=GetPixelsFromObjEx(interp, tkwin, objPtr, &val, &d);
+    result = GetPixelsFromObjEx(interp, tkwin, objPtr, &val, &d);
     if (result != TCL_OK) {
 	return result;
     }
     if (objPtr->typePtr == &pixelObjType && !SIMPLE_PIXELREP(objPtr)) {
-	PixelRep *pixelPtr;
-	pixelPtr = GET_COMPLEXPIXEL(objPtr);
+	PixelRep *pixelPtr = GET_COMPLEXPIXEL(objPtr);
+
 	if (pixelPtr->units >= 0) {
-	    /* internally "shimmer" to pixel units */
-	    pixelPtr->units=-1;
-	    pixelPtr->value=d;
+	    /*
+	     * Internally "shimmer" to pixel units.
+	     */
+
+	    pixelPtr->units = -1;
+	    pixelPtr->value = d;
 	}
     }
     *doublePtr = d;
@@ -367,10 +370,9 @@ static void
 FreePixelInternalRep(
     Tcl_Obj *objPtr)		/* Pixel object with internal rep to free. */
 {
-    PixelRep *pixelPtr;
-
     if (!SIMPLE_PIXELREP(objPtr)) {
-	pixelPtr = GET_COMPLEXPIXEL(objPtr);
+	PixelRep *pixelPtr = GET_COMPLEXPIXEL(objPtr);
+
 	ckfree((char *) pixelPtr);
     }
     SET_SIMPLEPIXEL(objPtr, 0);
@@ -400,13 +402,13 @@ DupPixelInternalRep(
     register Tcl_Obj *srcPtr,	/* Object with internal rep to copy. */
     register Tcl_Obj *copyPtr)	/* Object with internal rep to set. */
 {
-    PixelRep *oldPtr, *newPtr;
-
     copyPtr->typePtr = srcPtr->typePtr;
 
     if (SIMPLE_PIXELREP(srcPtr)) {
 	SET_SIMPLEPIXEL(copyPtr, GET_SIMPLEPIXEL(srcPtr));
     } else {
+	PixelRep *oldPtr, *newPtr;
+
 	oldPtr = GET_COMPLEXPIXEL(srcPtr);
 	newPtr = (PixelRep *) ckalloc(sizeof(PixelRep));
 	newPtr->value = oldPtr->value;
@@ -834,8 +836,10 @@ TkGetWindowFromObj(
 	 || winPtr->mainPtr != mainPtr
 	 || winPtr->epoch != mainPtr->deletionEpoch)
     {
-	/* Cache is invalid.
+	/*
+	 * Cache is invalid.
 	 */
+
 	winPtr->tkwin = Tk_NameToWindow(interp,
 		Tcl_GetStringFromObj(objPtr, NULL), tkwin);
 	winPtr->mainPtr = mainPtr;
@@ -997,8 +1001,8 @@ TkParsePadAmount(
     Tcl_Obj **objv;		/* The objects in the list */
 
     /*
-     * Check for a common case where a single object would otherwise
-     * be shimmered between a list and a pixel spec.
+     * Check for a common case where a single object would otherwise be
+     * shimmered between a list and a pixel spec.
      */
 
     if (specObj->typePtr == &pixelObjType) {
