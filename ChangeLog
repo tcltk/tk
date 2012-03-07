@@ -1,3 +1,8 @@
+2012-03-07  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkObj.c (GetPixelsFromObjEx): [Bug 3497848]: Better rounding
+	of pixel values to integers.
+
 2012-03-04  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4:    Patch from the cygwin folks
@@ -5,11 +10,11 @@
 
 2012-02-28  Francois Vogel  <fvogelnew1@free.fr>
 
-	* generic/tkText.c:      [Bug-1630262], [Bug-1615425]: segfault
+	* generic/tkText.c:      [Bug 1630262, Bug 1615425]: segfault
 	* generic/tkTextBTree.c  when deleting lines or tagging outside of
 	* generic/tkTextDisp.c   the -startline/-endline range with peer
 	* generic/tkTextMark.c   text widgets.
-	* tests/text.test        [Bug-3487407]: Weird text indices.
+	* tests/text.test        [Bug 3487407]: Weird text indices.
 	* tests/textMark.test
 
 2012-02-28  Donal K. Fellows  <dkf@users.sf.net>
