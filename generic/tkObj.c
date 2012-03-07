@@ -368,10 +368,9 @@ static void
 FreePixelInternalRep(
     Tcl_Obj *objPtr)		/* Pixel object with internal rep to free. */
 {
-    PixelRep *pixelPtr;
-
     if (!SIMPLE_PIXELREP(objPtr)) {
-	pixelPtr = GET_COMPLEXPIXEL(objPtr);
+	PixelRep *pixelPtr = GET_COMPLEXPIXEL(objPtr);
+
 	ckfree(pixelPtr);
     }
     SET_SIMPLEPIXEL(objPtr, 0);
@@ -401,13 +400,13 @@ DupPixelInternalRep(
     register Tcl_Obj *srcPtr,	/* Object with internal rep to copy. */
     register Tcl_Obj *copyPtr)	/* Object with internal rep to set. */
 {
-    PixelRep *oldPtr, *newPtr;
-
     copyPtr->typePtr = srcPtr->typePtr;
 
     if (SIMPLE_PIXELREP(srcPtr)) {
 	SET_SIMPLEPIXEL(copyPtr, GET_SIMPLEPIXEL(srcPtr));
     } else {
+	PixelRep *oldPtr, *newPtr;
+
 	oldPtr = GET_COMPLEXPIXEL(srcPtr);
 	newPtr = ckalloc(sizeof(PixelRep));
 	newPtr->value = oldPtr->value;
