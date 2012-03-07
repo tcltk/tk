@@ -211,7 +211,7 @@ GetPixelsFromObjEx(
 	    if (dblPtr != NULL) {
 		*dblPtr = d;
 	    }
-	    *intPtr = (int) d;
+	    *intPtr = (int) (d<0 ? d-0.5 : d+0.5);
 	    return TCL_OK;
 	} else if (objPtr->typePtr == tsdPtr->intTypePtr) {
 	    (void) Tcl_GetIntFromObj(interp, objPtr, intPtr);
@@ -255,11 +255,7 @@ GetPixelsFromObjEx(
 		d *= bias[pixelPtr->units] * WidthOfScreen(Tk_Screen(tkwin));
 		d /= WidthMMOfScreen(Tk_Screen(tkwin));
 	    }
-	    if (d < 0) {
-		pixelPtr->returnValue = (int) (d - 0.5);
-	    } else {
-		pixelPtr->returnValue = (int) (d + 0.5);
-	    }
+	    pixelPtr->returnValue = (int) (d<0 ? d-0.5 : d+0.5);
 	    pixelPtr->tkwin = tkwin;
 	    if (dblPtr) {
 		*dblPtr=(double)d;
