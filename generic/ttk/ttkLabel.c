@@ -325,10 +325,14 @@ static void ImageDraw(
      * stipple the image.
      * @@@ Possibly: Don't do disabled-stippling at all;
      * @@@ it's ugly and out of fashion.
+     * Do not stipple at all under Aqua, just draw the image: it shows up 
+     * as a white rectangle otherwise.
      */
-    if (state & TTK_STATE_DISABLED) {
+      if (state & TTK_STATE_DISABLED) {
 	if (TtkSelectImage(image->imageSpec, 0ul) == image->tkimg) {
+	 #ifndef MAC_OSX_TK
 	    StippleOver(image, tkwin, d, b.x,b.y);
+	  #endif
 	}
     }
 }
@@ -667,4 +671,6 @@ void TtkLabel_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "image", &ImageElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "label", &LabelElementSpec, NULL);
 }
+
+
 
