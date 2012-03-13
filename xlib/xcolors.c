@@ -11,6 +11,7 @@
  */
 
 #include "tkInt.h"
+#include <stdlib.h>
 
 /*
  * Forward declarations for functions used only in this file.
