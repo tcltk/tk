@@ -25,7 +25,7 @@ the Tk library. Except for TkAqua, this command is not available when
 Tk is loaded into a tclsh interpreter with
 .QW "\fBpackage require Tk\fR" ,
 as a conventional terminal is expected to be present in that case.
-In TkAqua, this command is ony available when stdin is \fB/dev/null\fR
+In TkAqua, this command is only available when stdin is \fB/dev/null\fR
 (as is the case e.g. when the application embedding Tk is started
 from the Mac OS X Finder).
 .PP

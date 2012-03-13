@@ -114,7 +114,7 @@ can be dragged and dropped in lieu of the file's finder icon).
 \fB\-transparent\fR
 .
 Makes the window content area transparent and turns off the window shadow. For
-the transparency to be effecive, the toplevel background needs to be set to a
+the transparency to be effective, the toplevel background needs to be set to a
 color with some alpha, e.g.
 .QW systemTransparent .
 .PP
@@ -127,9 +127,9 @@ window managers, and will have no effect under older WMs.
 Requests that the window should be interpreted by the window manager as being
 of the specified type(s). This may cause the window to be decorated in a
 different way or otherwise managed differently, though exactly what happens is
-entirely up to the window manager. A list of types may be used, in order of preferance. The following values are mapped to
-constants defined in the EWMH specification (using others is possible, but not
-advised):
+entirely up to the window manager. A list of types may be used, in order of
+preference. The following values are mapped to constants defined in the EWMH
+specification (using others is possible, but not advised):
 .RS
 .TP
 \fBdesktop\fR

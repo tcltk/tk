@@ -16,7 +16,7 @@ ttk_vsapi \- Define a Microsoft Visual Styles element
 .PP
 The \fBvsapi\fR element factory creates a new element
 in the current theme whose visual appearance is drawn using the
-Microsoft Visual Styles API which is reponsible for the themed styles
+Microsoft Visual Styles API which is responsible for the themed styles
 on Windows XP and Vista. This factory permits any of the Visual
 Styles parts to be declared as Ttk elements that can then be
 included in a style layout to modify the appearance of Ttk widgets.
@@ -58,7 +58,7 @@ Specifies the height of the element. See the comments for \fB\-width\fR.
 .PP
 The \fIstateMap\fR parameter is a list of ttk states and the
 corresponding Visual Styles API state value.
-This permits the element appearence to respond to changes in the
+This permits the element appearance to respond to changes in the
 widget state such as becoming active or being pressed. The list should
 be as described for the \fBttk::style map\fR command but note that the
 last pair in the list should be the default state and is typically and
@@ -83,7 +83,7 @@ ttk::style layout CloseButton {CloseButton.smallclose -sticky news}
 pack [ttk::button .close -style CloseButton]
 .CE
 .PP
-Change the appearence of a \fBttk::checkbutton\fR(n) to use the
+Change the appearance of a \fBttk::checkbutton\fR(n) to use the
 Explorer pin part EBP_HEADERPIN.
 .CS
 ttk::style element create pin \fBvsapi\fR EXPLORERBAR 3 {

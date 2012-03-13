@@ -432,7 +432,7 @@ then a solid fill will be used for the background.
 .
 \fIPixels\fR specifies the width of a border to draw around the tag using any
 of the forms accepted by \fBTk_GetPixels\fR. This option should be used in
-conjuction with the \fB\-relief\fR option to provide the desired border.
+conjunction with the \fB\-relief\fR option to provide the desired border.
 .TP
 \fB\-elide \fIboolean\fR
 .

@@ -26,7 +26,7 @@ first argument.  The following forms are currently supported:
 Returns information about the actual attributes that are obtained when
 \fIfont\fR is used on \fIwindow\fR's display; the actual attributes obtained
 may differ from the attributes requested due to platform-dependent
-limitations, such as the availability of font families and pointsizes.
+limitations, such as the availability of font families and point sizes.
 \fIfont\fR is a font description; see \fBFONT DESCRIPTIONS\fR below.  If the
 \fIwindow\fR argument is omitted, it defaults to the main window.  If
 \fIoption\fR is specified, returns the value of that attribute; if it is
