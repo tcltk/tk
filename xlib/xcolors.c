@@ -732,13 +732,20 @@ _strtoi64(const char *spec, char **p, int base)
 static int colorcmp(const char *spec, const char *pname) {
     int r;
     int c, d;
+    int notequal = 0;
     do {
 	d = *pname++;
+	c = (*spec == ' ');
+	if (c) {
+	    spec++;
+	}
 	if ((d >= 'A') && (d <= 'Z')) {
 	    d += 'a' - 'A';
-	    if (*spec == ' ') {
-		spec++;
-	    }
+	} else if (c) {
+	    /* A space doesn't match a lowercase, but we don't know
+	     * yet whether we should return a negative or positive
+	     * number. That depends on what follows. */
+	    notequal = 1;
 	}
 	c = *spec++;
 	if ((c >= 'A') && (c <= 'Z')) {
@@ -746,6 +753,11 @@ static int colorcmp(const char *spec, const char *pname) {
 	}
 	r = c - d;
     } while(!r && c);
+    if (!r && notequal) {
+	/* Strings are equal, but difference in spacings only. We should still
+	 * report not-equal, so "burly wood" is not a valid color */
+	r = 1;
+    }
     return r;
 }
 
