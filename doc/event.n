@@ -76,7 +76,7 @@ defined for the given virtual event;  if the virtual event is
 not defined then an empty string is returned.
 .RS
 .PP
-Note that virtual events that that are not bound to physical event
+Note that virtual events that are not bound to physical event
 sequences are \fInot\fR returned by \fBevent info\fR.
 .RE
 .SH "EVENT FIELDS"
