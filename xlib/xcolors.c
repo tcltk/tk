@@ -11,7 +11,6 @@
  */
 
 #include "tkInt.h"
-#include <stdlib.h>
 
 /*
  * Forward declarations for functions used only in this file.
@@ -855,7 +854,6 @@ FindColor(
 #ifdef __WIN32__
 #   ifdef NO_STRTOI64
 /* This version only handles hex-strings without 0x prefix */
-#define _strtoi64 something_out_of_the_way /* workaround for win64 problem ??? */
 static __int64
 _strtoi64(const char *spec, char **p, int base)
 {
