@@ -114,12 +114,14 @@ AC_SUBST(MAN2TCLFLAGS)
 #     Check for _strtoi64
 #-------------------------------------------
 
+if test "${MACHINE}" = "X86" ; then
 AC_CACHE_CHECK([availability of _strtoi64], tcl_have_strtoi64, [
     AC_TRY_LINK([#include <stdlib.h>],
 	    [_strtoi64(0,0,0)],
 	    tcl_have_strtoi64=yes, tcl_have_strtoi64=no)])
 if test $tcl_have_strtoi64 = no; then
     AC_DEFINE(NO_STRTOI64, 1, [Is _strtoi64 function available?])
+fi
 fi
 
 #--------------------------------------------------------------------

@@ -1752,21 +1752,22 @@ fi
 #     Check for _strtoi64
 #-------------------------------------------
 
+if test "${MACHINE}" = "X86" ; then
 echo $ac_n "checking availability of _strtoi64""... $ac_c" 1>&6
-echo "configure:1757: checking availability of _strtoi64" >&5
+echo "configure:1758: checking availability of _strtoi64" >&5
 if eval "test \"`echo '$''{'tcl_have_strtoi64'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   
     cat > conftest.$ac_ext <<EOF
-#line 1763 "configure"
+#line 1764 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 int main() {
 _strtoi64(0,0,0)
 ; return 0; }
 EOF
-if { (eval echo configure:1770: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:1771: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   tcl_have_strtoi64=yes
 else
@@ -1785,6 +1786,7 @@ if test $tcl_have_strtoi64 = no; then
 EOF
 
 fi
+fi
 
 #--------------------------------------------------------------------
 # Set the default compiler switches based on the --enable-symbols
@@ -1794,7 +1796,7 @@ fi
 
 
     echo $ac_n "checking for build with symbols""... $ac_c" 1>&6
-echo "configure:1798: checking for build with symbols" >&5
+echo "configure:1800: checking for build with symbols" >&5
     # Check whether --enable-symbols or --disable-symbols was given.
 if test "${enable_symbols+set}" = set; then
   enableval="$enable_symbols"
@@ -1855,7 +1857,7 @@ TK_DBGX=${DBGX}
 
 
     echo $ac_n "checking whether to embed manifest""... $ac_c" 1>&6
-echo "configure:1859: checking whether to embed manifest" >&5
+echo "configure:1861: checking whether to embed manifest" >&5
     # Check whether --enable-embedded-manifest or --disable-embedded-manifest was given.
 if test "${enable_embedded_manifest+set}" = set; then
   enableval="$enable_embedded_manifest"
@@ -1872,7 +1874,7 @@ fi
        -a "$GCC" != "yes" ; then
 	# Add the magic to embed the manifest into the dll/exe
 	cat > conftest.$ac_ext <<EOF
-#line 1876 "configure"
+#line 1878 "configure"
 #include "confdefs.h"
 
 #if defined(_MSC_VER) && _MSC_VER >= 1400
@@ -1909,7 +1911,7 @@ rm -f conftest*
 
 
     echo $ac_n "checking the location of tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1913: checking the location of tclConfig.sh" >&5
+echo "configure:1915: checking the location of tclConfig.sh" >&5
 
     if test -d ../../tcl8.4$TK_PATCH_LEVEL/win;  then
 	TCL_BIN_DIR_DEFAULT=../../tcl8.4$TK_PATCH_LEVEL/win
@@ -1937,7 +1939,7 @@ fi
 
 
     echo $ac_n "checking for existence of $TCL_BIN_DIR/tclConfig.sh""... $ac_c" 1>&6
-echo "configure:1941: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "configure:1943: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
     if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
         echo "$ac_t""loading" 1>&6
@@ -1990,14 +1992,14 @@ echo "configure:1941: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
 
 
     echo $ac_n "checking for tclsh in Tcl build directory""... $ac_c" 1>&6
-echo "configure:1994: checking for tclsh in Tcl build directory" >&5
+echo "configure:1996: checking for tclsh in Tcl build directory" >&5
     BUILD_TCLSH=${TCL_BIN_DIR}/tclsh${TCL_MAJOR_VERSION}${TCL_MINOR_VERSION}${TCL_DBGX}${EXEEXT}
     echo "$ac_t""$BUILD_TCLSH" 1>&6
     
 
 
     echo $ac_n "checking for tclsh""... $ac_c" 1>&6
-echo "configure:2001: checking for tclsh" >&5
+echo "configure:2003: checking for tclsh" >&5
 
     if eval "test \"`echo '$''{'ac_cv_path_tclsh'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
