@@ -848,6 +848,8 @@ TkParseColor(
 	buf[2] = *(--spec);
 	buf[1] = buf[4] = *(--spec);
 	spec = buf;
+	} else {
+	    spec -= 10;
 	}
     }
     return XParseColor(display, map, spec, colorPtr);
