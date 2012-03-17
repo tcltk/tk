@@ -281,17 +281,18 @@ _strtoi64(const char *spec, char **p, int base)
 #   define _strtoi64 strtoll
 #endif
 
-static int colorcmp(const char *spec, const char *pname) {
+static int colorcmp(const char *spec, const char *pname, int *special) {
     int r;
     int c, d;
     int notequal = 0;
+    int num = 0;
     do {
 	d = *pname++;
 	c = (*spec == ' ');
 	if (c) {
 	    spec++;
 	}
-	if ((d >= 'A') && (d <= 'Z')) {
+	if ((unsigned)(d - 'A') <= (unsigned)('Z' - 'A')) {
 	    d += 'a' - 'A';
 	} else if (c) {
 	    /* A space doesn't match a lowercase, but we don't know
@@ -300,22 +301,32 @@ static int colorcmp(const char *spec, const char *pname) {
 	    notequal = 1;
 	}
 	c = *spec++;
-	if ((c >= 'A') && (c <= 'Z')) {
+	if ((unsigned)(c - 'A') <= (unsigned)('Z' - 'A')) {
 	    c += 'a' - 'A';
+	} else if (((unsigned)(c - '1') <= (unsigned)('9' - '1'))) {
+	    if (d == '0') {
+	    	d += 10;
+	    } else if (!d) {
+		num = c - '0';
+		while ((unsigned)((c = *spec++) - '0') <= (unsigned)('9' - '0')) {
+		    num = num * 10 + c - '0';
+		}
+	    }
 	}
 	r = c - d;
-    } while(!r && c);
+    } while(!r && d);
     if (!r && notequal) {
 	/* Strings are equal, but difference in spacings only. We should still
 	 * report not-equal, so "burly wood" is not a valid color */
 	r = 1;
     }
+    *special = num;
     return r;
 }
 
-#define RED(p) ((unsigned char)(p)[28])
-#define GREEN(p) ((unsigned char)(p)[29])
-#define BLUE(p) ((unsigned char)(p)[30])
+#define RED(p) ((unsigned char)(p)[0])
+#define GREEN(p) ((unsigned char)(p)[1])
+#define BLUE(p) ((unsigned char)(p)[2])
 
 Status
 XParseColor(
@@ -353,8 +364,9 @@ XParseColor(
 	    return 0;
 	}
     } else {
-	int size;
+	int size, num;
 	const elem *p;
+	const char *q;
 	/*
 	 * Perform a binary search on the sorted array of colors.
 	 * size = current size of search range
@@ -366,7 +378,7 @@ XParseColor(
 	}
 	size = az[r + 1] - az[r];
 	p = &xColors[(az[r + 1] + az[r]) >> 1];
-	r = colorcmp(spec + 1, *p);
+	r = colorcmp(spec + 1, *p, &num);
 
 	while (r != 0) {
 	    if (r < 0) {
@@ -380,11 +392,18 @@ XParseColor(
 	    if (!size) {
 		return 0;
 	    }
-	    r = colorcmp(spec + 1, *p);
+	    r = colorcmp(spec + 1, *p, &num);
 	}
-	colorPtr->red = ((RED(*p) << 8) | RED(*p));
-	colorPtr->green = ((GREEN(*p) << 8) | GREEN(*p));
-	colorPtr->blue = ((BLUE(*p) << 8) | BLUE(*p));
+	if (num > (*p)[31]) {
+	    if (((*p)[31] != 8) || num > 100)
+	    	return 0;
+	    q = graymap + 300 - num * 3;
+	} else {
+	    q = *p + 28 - num * 3;
+	}
+	colorPtr->red = ((RED(q) << 8) | RED(q));
+	colorPtr->green = ((GREEN(q) << 8) | GREEN(q));
+	colorPtr->blue = ((BLUE(q) << 8) | BLUE(q));
     }
     colorPtr->pixel = TkpGetPixel(colorPtr);
     colorPtr->flags = DoRed|DoGreen|DoBlue;
@@ -400,6 +419,8 @@ int main() {
     int charindex;
     int i, result;
     int repeat = 1;
+    int num, maxnum;
+    char *end;
 
     while (repeat--) {
 	buf[0] = 'a';
@@ -410,11 +431,20 @@ int main() {
 		++(buf[0]);
 	    }
 	    strcpy(buf + 1, xColors[i]);
+	    end = buf + strlen(buf);
+	    num = 0;
 	    result = XParseColor(0, 0, buf, &color);
+	    printf("%s %d %d %d\n", buf, color.red >> 8, color.green >> 8, color.blue >> 8);
+	    maxnum = xColors[i][31];
+	    if (maxnum == 8) maxnum = 100;
+	    while (result && ++num <= maxnum) {
+	    	sprintf(end, "%d", num);
+		result = XParseColor(0, 0, buf, &color);
+		printf("%s %d %d %d\n", buf, color.red >> 8, color.green >> 8, color.blue >> 8);
+	    }
 	    if (!result) {
 		break;
 	    }
-	    printf("color %d: %s %d %d %d %d\n", i, buf, result, color.red >> 8, color.green >> 8, color.blue >> 8);
 	}
     }
     if (!result) {
