@@ -418,13 +418,13 @@ int main() {
 	    end = buf + strlen(buf);
 	    num = 0;
 	    result = XParseColor(0, 0, buf, &color);
-	    printf("%s %d %d %d\n", buf, color.red >> 8, color.green >> 8, color.blue >> 8);
+	    printf("%3d %3d %3d\t\t%s\n", color.red >> 8, color.green >> 8, color.blue >> 8, buf);
 	    maxnum = xColors[i][31];
 	    if (maxnum == 8) maxnum = 100;
 	    while (result && ++num <= maxnum) {
 	    	sprintf(end, "%d", num);
 		result = XParseColor(0, 0, buf, &color);
-		printf("%s %d %d %d\n", buf, color.red >> 8, color.green >> 8, color.blue >> 8);
+		printf("%3d %3d %3d\t\t%s\n", color.red >> 8, color.green >> 8, color.blue >> 8, buf);
 	    }
 	    if (!result) {
 		break;
