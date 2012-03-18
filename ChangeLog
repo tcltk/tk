@@ -1,3 +1,9 @@
+2012-03-18  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* xlib/xcolors.c:   [RFE 3503317]: XParseColor speedup
+	* xlib/rgb.txt:     List of all colors accepted by Tk in Xorg format
+	* tests/color.test: Added test case for all colors in rgb.txt
+
 2012-03-13  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/*.3, doc/*.n: Minor spelling fixes.
