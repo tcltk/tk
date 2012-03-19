@@ -154,7 +154,7 @@ test color-1.4 {Tk_AllocColorFromObj - try other colors in list} colorsFree {
     pack .b2 -side top
     lappend result [testcolor purple]
 } {{{1 1}} {{1 1} {1 0}} {{1 0} {2 1}}}
-test color-1.5 {Color table} nonPortable {
+test color-1.5 {Color table} {
     set fd [open ../xlib/rgb.txt]
     set result {}
     while {[gets $fd line] != -1} {
