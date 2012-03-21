@@ -1,3 +1,8 @@
+2012-03-21  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkColor.c:  [Bug 2809525] Abort on overlong color name.
+	* unix/tkUnixColor.c:
+
 2012-03-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* xlib/xcolors.c:   [RFE 3503317]: XParseColor speedup
