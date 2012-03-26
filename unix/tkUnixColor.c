@@ -133,7 +133,8 @@ TkpGetColor(
      * names.
      */
 
-    if (*name != '#') {
+    /* TODO: better wrapper for XAllocNamedColor, for now always use TkParseColor */
+    if (0 && *name != '#') {
 	XColor screen;
 
 	if (strlen(name) > 99) {
@@ -419,6 +420,7 @@ TkpCmapStressed(
     }
     return 0;
 }
+
 
 /*
  * Local Variables:
