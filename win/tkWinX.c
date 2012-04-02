@@ -452,8 +452,8 @@ TkWinDisplayChanged(
     screen = display->screens;
 
     dc = GetDC(NULL);
-    screen->width = GetDeviceCaps(dc, HORZRES);
-    screen->height = GetDeviceCaps(dc, VERTRES);
+    screen->width = GetSystemMetrics(SM_CXVIRTUALSCREEN);;
+    screen->height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
     screen->mwidth = MulDiv(screen->width, 254,
 	    GetDeviceCaps(dc, LOGPIXELSX) * 10);
     screen->mheight = MulDiv(screen->height, 254,
