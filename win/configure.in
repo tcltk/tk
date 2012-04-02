@@ -55,15 +55,6 @@ AC_CHECK_TOOL(RC, windres)
 AC_PROG_MAKE_SET
 
 #--------------------------------------------------------------------
-# Perform additinal compiler tests.
-#--------------------------------------------------------------------
-
-dnl Currently AC_CYGWIN is disabled since it invokes AC_CANONICAL_HOST
-dnl under autoconf 2.5X.
-dnl
-dnl AC_CYGWIN
-
-#--------------------------------------------------------------------
 # Determines the correct binary file extension (.o, .obj, .exe etc.)
 #--------------------------------------------------------------------
 
@@ -102,11 +93,11 @@ AC_SUBST(MAN2TCLFLAGS)
 #     Check for _strtoi64
 #-------------------------------------------
 
-AC_CACHE_CHECK([availability of _strtoi64], tcl_have_strtoi64, [
+AC_CACHE_CHECK([availability of _strtoi64], tcl_cv_strtoi64, [
     AC_TRY_LINK([#include <stdlib.h>],
 	    [_strtoi64(0,0,0)],
-	    tcl_have_strtoi64=yes, tcl_have_strtoi64=no)])
-if test $tcl_have_strtoi64 = no; then
+	    tcl_cv_strtoi64=yes, tcl_cv_strtoi64=no)])
+if test $tcl_cv_strtoi64 = no; then
     AC_DEFINE(NO_STRTOI64, 1, [Is _strtoi64 function available?])
 fi
 
