@@ -7821,8 +7821,8 @@ WmProc(
 	    } else {
 		HDC dc = GetDC(NULL);
 
-		screen->width = LOWORD(lParam);		/* horizontal res */
-		screen->height = HIWORD(lParam);	/* vertical res */
+		screen->width = GetSystemMetrics(SM_CXVIRTUALSCREEN);		/* horizontal res */
+		screen->height = GetSystemMetrics(SM_CYVIRTUALSCREEN);	/* vertical res */
 		screen->mwidth = MulDiv(screen->width, 254,
 			GetDeviceCaps(dc, LOGPIXELSX) * 10);
 		screen->mheight = MulDiv(screen->height, 254,
