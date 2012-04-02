@@ -17,7 +17,7 @@
  * Index array. For each of the characters 'a'-'y', this table gives the first color
  * starting with that character in the xColors table.
  */
-static int az[] = {0, 4, 12, 19, 43, 43, 46, 56, 58, 60, 60, 61, 84, 99,
+static unsigned char az[] = {0, 4, 12, 19, 43, 43, 46, 56, 58, 60, 60, 61, 84, 99,
 	102, 107, 118, 118, 121, 134, 138, 138, 140, 143, 143, 145};
 
 /*
@@ -351,7 +351,7 @@ XParseColor(
 	 * p    = pointer to current element being considered.
 	 */
 	int r = (spec[0] - 'A') & 0xdf;
-	if (r > (sizeof(az)/sizeof(az[0] - 1))) {
+	if (r >= (int) sizeof(az) - 1) {
 	    return 0;
 	}
 	size = az[r + 1] - az[r];
