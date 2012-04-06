@@ -238,7 +238,7 @@ typedef struct TkMenuEntry {
  * Menu states
  */
 
-EXTERN char *tkMenuStateStrings[];
+EXTERN CONST char *tkMenuStateStrings[];
 
 #define ENTRY_ACTIVE 0
 #define ENTRY_NORMAL 1

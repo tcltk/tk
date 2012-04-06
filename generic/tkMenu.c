@@ -101,7 +101,7 @@ TCL_DECLARE_MUTEX(menuMutex)
  * to update code in TkpMenuInit that changes the font string entry.
  */
 
-char *tkMenuStateStrings[] = {"active", "normal", "disabled", (char *) NULL};
+CONST char *tkMenuStateStrings[] = {"active", "normal", "disabled", (char *) NULL};
 
 static CONST char *menuEntryTypeStrings[] = {
     "cascade", "checkbutton", "command", "radiobutton", "separator",
@@ -113,7 +113,7 @@ static CONST char *menuEntryTypeStrings[] = {
  * It is used with the "enum compound" declaration in tkMenu.h
  */
 
-static char *compoundStrings[] = {
+static const char *compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", (char *) NULL
 };
 
