@@ -230,7 +230,7 @@ static const elem xColors[] = {
  *----------------------------------------------------------------------
  */
 
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__CYGWIN__)
 #   ifdef NO_STRTOI64
 /* This version only handles hex-strings without 0x prefix */
 static __int64
