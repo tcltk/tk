@@ -128,8 +128,8 @@ typedef struct {
  * Win32 raster and BitBlt op modes.
  */
 
-extern int tkpWinRopModes[];
-extern int tkpWinBltModes[];
+extern CONST int tkpWinRopModes[];
+extern CONST int tkpWinBltModes[];
 
 /*
  * The following defines are used with TkWinGetBorderPixels to get the
