@@ -746,7 +746,6 @@ declare 194 {
 declare 195 {
     void  Tk_FreeConfigOptions(char *recordPtr, Tk_OptionTable optionToken,
 	    Tk_Window tkwin)
-
 }
 declare 196 {
     void  Tk_FreeSavedOptions(Tk_SavedOptions *savePtr)
@@ -828,15 +827,12 @@ declare 216 {
 declare 217 {
     void Tk_CreateSmoothMethod(Tcl_Interp *interp, const Tk_SmoothMethod *method)
 }
-
 #declare 218 {
 #    void Tk_CreateCanvasVisitor(Tcl_Interp *interp, void *typePtr)
 #}
-
 #declare 219 {
 #    void *Tk_GetCanvasVisitor(Tcl_Interp *interp, const char *name)
 #}
-
 declare 220 {
     int Tk_GetDash(Tcl_Interp *interp, const char *value, Tk_Dash *dash)
 }
@@ -1167,3 +1163,7 @@ export {
     const char *Tk_PkgInitStubsCheck(Tcl_Interp *interp, const char *version,
 	    int exact)
 }
+
+# Local Variables:
+# mode: tcl
+# End:
