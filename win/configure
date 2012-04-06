@@ -3296,7 +3296,7 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-	    #ifdef __WIN32__
+	    #ifndef __WIN32__
 		#error cross-compiler
 	    #endif
 
@@ -3330,12 +3330,12 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  ac_cv_cross=yes
+  ac_cv_cross=no
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-ac_cv_cross=no
+ac_cv_cross=yes
 fi
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 
@@ -3647,8 +3647,8 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-		    #ifdef _WIN64
-			#error 64-bit
+		    #ifndef _WIN64
+			#error 32-bit
 		    #endif
 
 int
@@ -3681,12 +3681,12 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   ac_status=$?
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
-  tcl_win_64bit=no
+  tcl_win_64bit=yes
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-tcl_win_64bit=yes
+tcl_win_64bit=no
 
 fi
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
@@ -4788,9 +4788,13 @@ echo "$as_me: error: Tcl directory $TCL_BIN_DIR does not exist" >&2;}
    { (exit 1); exit 1; }; }
     fi
     if test ! -f $TCL_BIN_DIR/tclConfig.sh; then
-	{ { echo "$as_me:$LINENO: error: There is no tclConfig.sh in $TCL_BIN_DIR:  perhaps you did not specify the Tcl *build* directory (not the toplevel Tcl directory) or you forgot to configure Tcl?" >&5
+	if test ! -f $TCL_BIN_DIR/../unix/tclConfig.sh; then
+	    { { echo "$as_me:$LINENO: error: There is no tclConfig.sh in $TCL_BIN_DIR:  perhaps you did not specify the Tcl *build* directory (not the toplevel Tcl directory) or you forgot to configure Tcl?" >&5
 echo "$as_me: error: There is no tclConfig.sh in $TCL_BIN_DIR:  perhaps you did not specify the Tcl *build* directory (not the toplevel Tcl directory) or you forgot to configure Tcl?" >&2;}
    { (exit 1); exit 1; }; }
+	fi
+	TCL_BIN_DIR=`cd ${TCL_BIN_DIR}/../unix; pwd`
+	CFLAGS="$CFLAGS -mwin32"
     fi
     echo "$as_me:$LINENO: result: $TCL_BIN_DIR/tclConfig.sh" >&5
 echo "${ECHO_T}$TCL_BIN_DIR/tclConfig.sh" >&6
