@@ -1,3 +1,7 @@
+2012-04-07  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkBind.c: [Bug 3176239] control-MouseWheel causes segv
+
 2012-03-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4:        [Bug 3511806] Compiler checks too early
