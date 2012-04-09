@@ -32,49 +32,49 @@
 
 #ifdef __WIN32__
 /* 0 */
-EXTERN char *		TkAlignImageData _ANSI_ARGS_((XImage * image, 
+EXTERN char *		TkAlignImageData _ANSI_ARGS_((XImage *image,
 				int alignment, int bitOrder));
 /* Slot 1 is reserved */
 /* 2 */
 EXTERN void		TkGenerateActivateEvents _ANSI_ARGS_((
-				TkWindow * winPtr, int active));
+				TkWindow *winPtr, int active));
 /* 3 */
 EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
 /* 4 */
-EXTERN void		TkPointerDeadWindow _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN void		TkPointerDeadWindow _ANSI_ARGS_((TkWindow *winPtr));
 /* 5 */
-EXTERN void		TkpPrintWindowId _ANSI_ARGS_((char * buf, 
+EXTERN void		TkpPrintWindowId _ANSI_ARGS_((char *buf,
 				Window window));
 /* 6 */
-EXTERN int		TkpScanWindowId _ANSI_ARGS_((Tcl_Interp * interp, 
-				CONST char * string, Window * idPtr));
+EXTERN int		TkpScanWindowId _ANSI_ARGS_((Tcl_Interp *interp,
+				CONST char *string, Window *idPtr));
 /* 7 */
-EXTERN void		TkpSetCapture _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN void		TkpSetCapture _ANSI_ARGS_((TkWindow *winPtr));
 /* 8 */
 EXTERN void		TkpSetCursor _ANSI_ARGS_((TkpCursor cursor));
 /* 9 */
-EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow * winPtr, 
+EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow *winPtr,
 				int state));
 /* 10 */
-EXTERN void		TkSetPixmapColormap _ANSI_ARGS_((Pixmap pixmap, 
+EXTERN void		TkSetPixmapColormap _ANSI_ARGS_((Pixmap pixmap,
 				Colormap colormap));
 /* 11 */
 EXTERN void		TkWinCancelMouseTimer _ANSI_ARGS_((void));
 /* 12 */
-EXTERN void		TkWinClipboardRender _ANSI_ARGS_((
-				TkDisplay * dispPtr, UINT format));
+EXTERN void		TkWinClipboardRender _ANSI_ARGS_((TkDisplay *dispPtr,
+				UINT format));
 /* 13 */
-EXTERN LRESULT		TkWinEmbeddedEventProc _ANSI_ARGS_((HWND hwnd, 
+EXTERN LRESULT		TkWinEmbeddedEventProc _ANSI_ARGS_((HWND hwnd,
 				UINT message, WPARAM wParam, LPARAM lParam));
 /* 14 */
-EXTERN void		TkWinFillRect _ANSI_ARGS_((HDC dc, int x, int y, 
+EXTERN void		TkWinFillRect _ANSI_ARGS_((HDC dc, int x, int y,
 				int width, int height, int pixel));
 /* 15 */
-EXTERN COLORREF		TkWinGetBorderPixels _ANSI_ARGS_((Tk_Window tkwin, 
+EXTERN COLORREF		TkWinGetBorderPixels _ANSI_ARGS_((Tk_Window tkwin,
 				Tk_3DBorder border, int which));
 /* 16 */
-EXTERN HDC		TkWinGetDrawableDC _ANSI_ARGS_((Display * display, 
-				Drawable d, TkWinDCState* state));
+EXTERN HDC		TkWinGetDrawableDC _ANSI_ARGS_((Display *display,
+				Drawable d, TkWinDCState*state));
 /* 17 */
 EXTERN int		TkWinGetModifierState _ANSI_ARGS_((void));
 /* 18 */
@@ -82,25 +82,25 @@ EXTERN HPALETTE		TkWinGetSystemPalette _ANSI_ARGS_((void));
 /* 19 */
 EXTERN HWND		TkWinGetWrapperWindow _ANSI_ARGS_((Tk_Window tkwin));
 /* 20 */
-EXTERN int		TkWinHandleMenuEvent _ANSI_ARGS_((HWND * phwnd, 
-				UINT * pMessage, WPARAM * pwParam, 
-				LPARAM * plParam, LRESULT * plResult));
+EXTERN int		TkWinHandleMenuEvent _ANSI_ARGS_((HWND *phwnd,
+				UINT *pMessage, WPARAM *pwParam,
+				LPARAM *plParam, LRESULT *plResult));
 /* 21 */
-EXTERN int		TkWinIndexOfColor _ANSI_ARGS_((XColor * colorPtr));
+EXTERN int		TkWinIndexOfColor _ANSI_ARGS_((XColor *colorPtr));
 /* 22 */
-EXTERN void		TkWinReleaseDrawableDC _ANSI_ARGS_((Drawable d, 
-				HDC hdc, TkWinDCState* state));
+EXTERN void		TkWinReleaseDrawableDC _ANSI_ARGS_((Drawable d,
+				HDC hdc, TkWinDCState*state));
 /* 23 */
-EXTERN LRESULT		TkWinResendEvent _ANSI_ARGS_((WNDPROC wndproc, 
-				HWND hwnd, XEvent * eventPtr));
+EXTERN LRESULT		TkWinResendEvent _ANSI_ARGS_((WNDPROC wndproc,
+				HWND hwnd, XEvent *eventPtr));
 /* 24 */
-EXTERN HPALETTE		TkWinSelectPalette _ANSI_ARGS_((HDC dc, 
+EXTERN HPALETTE		TkWinSelectPalette _ANSI_ARGS_((HDC dc,
 				Colormap colormap));
 /* 25 */
-EXTERN void		TkWinSetMenu _ANSI_ARGS_((Tk_Window tkwin, 
+EXTERN void		TkWinSetMenu _ANSI_ARGS_((Tk_Window tkwin,
 				HMENU hMenu));
 /* 26 */
-EXTERN void		TkWinSetWindowPos _ANSI_ARGS_((HWND hwnd, 
+EXTERN void		TkWinSetWindowPos _ANSI_ARGS_((HWND hwnd,
 				HWND siblingHwnd, int pos));
 /* 27 */
 EXTERN void		TkWinWmCleanup _ANSI_ARGS_((HINSTANCE hInstance));
@@ -110,13 +110,13 @@ EXTERN void		TkWinXCleanup _ANSI_ARGS_((ClientData clientData));
 EXTERN void		TkWinXInit _ANSI_ARGS_((HINSTANCE hInstance));
 /* 30 */
 EXTERN void		TkWinSetForegroundWindow _ANSI_ARGS_((
-				TkWindow * winPtr));
+				TkWindow *winPtr));
 /* 31 */
 EXTERN void		TkWinDialogDebug _ANSI_ARGS_((int debug));
 /* 32 */
 EXTERN Tcl_Obj *	TkWinGetMenuSystemDefault _ANSI_ARGS_((
-				Tk_Window tkwin, CONST char * dbName, 
-				CONST char * className));
+				Tk_Window tkwin, CONST char *dbName,
+				CONST char *className));
 /* 33 */
 EXTERN int		TkWinGetPlatformId _ANSI_ARGS_((void));
 /* 34 */
@@ -127,20 +127,20 @@ EXTERN int		TkWinGetPlatformTheme _ANSI_ARGS_((void));
 #ifdef MAC_TCL
 /* 0 */
 EXTERN void		TkGenerateActivateEvents _ANSI_ARGS_((
-				TkWindow * winPtr, int active));
+				TkWindow *winPtr, int active));
 /* Slot 1 is reserved */
 /* Slot 2 is reserved */
 /* 3 */
 EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
 /* Slot 4 is reserved */
 /* 5 */
-EXTERN void		TkPointerDeadWindow _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN void		TkPointerDeadWindow _ANSI_ARGS_((TkWindow *winPtr));
 /* 6 */
-EXTERN void		TkpSetCapture _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN void		TkpSetCapture _ANSI_ARGS_((TkWindow *winPtr));
 /* 7 */
 EXTERN void		TkpSetCursor _ANSI_ARGS_((TkpCursor cursor));
 /* 8 */
-EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow * winPtr, 
+EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow *winPtr,
 				int state));
 /* Slot 9 is reserved */
 /* 10 */
@@ -148,9 +148,9 @@ EXTERN void		TkAboutDlg _ANSI_ARGS_((void));
 /* Slot 11 is reserved */
 /* Slot 12 is reserved */
 /* 13 */
-EXTERN Window		TkGetTransientMaster _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN Window		TkGetTransientMaster _ANSI_ARGS_((TkWindow *winPtr));
 /* 14 */
-EXTERN int		TkGenerateButtonEvent _ANSI_ARGS_((int x, int y, 
+EXTERN int		TkGenerateButtonEvent _ANSI_ARGS_((int x, int y,
 				Window window, unsigned int state));
 /* Slot 15 is reserved */
 /* 16 */
@@ -162,7 +162,7 @@ EXTERN unsigned int	TkMacButtonKeyState _ANSI_ARGS_((void));
 EXTERN void		TkMacClearMenubarActive _ANSI_ARGS_((void));
 /* Slot 20 is reserved */
 /* 21 */
-EXTERN int		TkMacDispatchMenuEvent _ANSI_ARGS_((int menuID, 
+EXTERN int		TkMacDispatchMenuEvent _ANSI_ARGS_((int menuID,
 				int index));
 /* 22 */
 EXTERN void		TkMacInstallCursor _ANSI_ARGS_((int resizeOverride));
@@ -172,36 +172,36 @@ EXTERN void		TkMacHandleTearoffMenu _ANSI_ARGS_((void));
 /* Slot 25 is reserved */
 /* Slot 26 is reserved */
 /* 27 */
-EXTERN void		TkMacDoHLEvent _ANSI_ARGS_((EventRecord * theEvent));
+EXTERN void		TkMacDoHLEvent _ANSI_ARGS_((EventRecord *theEvent));
 /* Slot 28 is reserved */
 /* 29 */
 EXTERN Time		TkMacGenerateTime _ANSI_ARGS_((void));
 /* Slot 30 is reserved */
 /* 31 */
 EXTERN TkWindow *	TkMacGetScrollbarGrowWindow _ANSI_ARGS_((
-				TkWindow * winPtr));
+				TkWindow *winPtr));
 /* 32 */
 EXTERN Window		TkMacGetXWindow _ANSI_ARGS_((WindowRef macWinPtr));
 /* 33 */
-EXTERN int		TkMacGrowToplevel _ANSI_ARGS_((WindowRef whichWindow, 
+EXTERN int		TkMacGrowToplevel _ANSI_ARGS_((WindowRef whichWindow,
 				Point start));
 /* 34 */
-EXTERN void		TkMacHandleMenuSelect _ANSI_ARGS_((long mResult, 
+EXTERN void		TkMacHandleMenuSelect _ANSI_ARGS_((long mResult,
 				int optionKeyPressed));
 /* Slot 35 is reserved */
 /* Slot 36 is reserved */
 /* Slot 37 is reserved */
 /* 38 */
 EXTERN void		TkMacInvalidateWindow _ANSI_ARGS_((
-				MacDrawable * macWin, int flag));
+				MacDrawable *macWin, int flag));
 /* 39 */
-EXTERN int		TkMacIsCharacterMissing _ANSI_ARGS_((Tk_Font tkfont, 
+EXTERN int		TkMacIsCharacterMissing _ANSI_ARGS_((Tk_Font tkfont,
 				unsigned int searchChar));
 /* 40 */
 EXTERN void		TkMacMakeRealWindowExist _ANSI_ARGS_((
-				TkWindow * winPtr));
+				TkWindow *winPtr));
 /* 41 */
-EXTERN BitMapPtr	TkMacMakeStippleMap _ANSI_ARGS_((Drawable d1, 
+EXTERN BitMapPtr	TkMacMakeStippleMap _ANSI_ARGS_((Drawable d1,
 				Drawable d2));
 /* 42 */
 EXTERN void		TkMacMenuClick _ANSI_ARGS_((void));
@@ -209,52 +209,52 @@ EXTERN void		TkMacMenuClick _ANSI_ARGS_((void));
 EXTERN void		TkMacRegisterOffScreenWindow _ANSI_ARGS_((
 				Window window, GWorldPtr portPtr));
 /* 44 */
-EXTERN int		TkMacResizable _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN int		TkMacResizable _ANSI_ARGS_((TkWindow *winPtr));
 /* Slot 45 is reserved */
 /* 46 */
 EXTERN void		TkMacSetHelpMenuItemCount _ANSI_ARGS_((void));
 /* 47 */
-EXTERN void		TkMacSetScrollbarGrow _ANSI_ARGS_((TkWindow * winPtr, 
+EXTERN void		TkMacSetScrollbarGrow _ANSI_ARGS_((TkWindow *winPtr,
 				int flag));
 /* 48 */
 EXTERN void		TkMacSetUpClippingRgn _ANSI_ARGS_((Drawable drawable));
 /* 49 */
 EXTERN void		TkMacSetUpGraphicsPort _ANSI_ARGS_((GC gc));
 /* 50 */
-EXTERN void		TkMacUpdateClipRgn _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN void		TkMacUpdateClipRgn _ANSI_ARGS_((TkWindow *winPtr));
 /* 51 */
 EXTERN void		TkMacUnregisterMacWindow _ANSI_ARGS_((
 				GWorldPtr portPtr));
 /* 52 */
 EXTERN int		TkMacUseMenuID _ANSI_ARGS_((short macID));
 /* 53 */
-EXTERN RgnHandle	TkMacVisableClipRgn _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN RgnHandle	TkMacVisableClipRgn _ANSI_ARGS_((TkWindow *winPtr));
 /* 54 */
-EXTERN void		TkMacWinBounds _ANSI_ARGS_((TkWindow * winPtr, 
-				Rect * geometry));
+EXTERN void		TkMacWinBounds _ANSI_ARGS_((TkWindow *winPtr,
+				Rect *geometry));
 /* 55 */
-EXTERN void		TkMacWindowOffset _ANSI_ARGS_((WindowRef wRef, 
-				int * xOffset, int * yOffset));
+EXTERN void		TkMacWindowOffset _ANSI_ARGS_((WindowRef wRef,
+				int *xOffset, int *yOffset));
 /* Slot 56 is reserved */
 /* 57 */
-EXTERN int		TkSetMacColor _ANSI_ARGS_((unsigned long pixel, 
-				RGBColor * macColor));
+EXTERN int		TkSetMacColor _ANSI_ARGS_((unsigned long pixel,
+				RGBColor *macColor));
 /* 58 */
-EXTERN void		TkSetWMName _ANSI_ARGS_((TkWindow * winPtr, 
+EXTERN void		TkSetWMName _ANSI_ARGS_((TkWindow *winPtr,
 				Tk_Uid titleUid));
 /* 59 */
 EXTERN void		TkSuspendClipboard _ANSI_ARGS_((void));
 /* Slot 60 is reserved */
 /* 61 */
-EXTERN int		TkMacZoomToplevel _ANSI_ARGS_((WindowPtr whichWindow, 
+EXTERN int		TkMacZoomToplevel _ANSI_ARGS_((WindowPtr whichWindow,
 				Point where, short zoomPart));
 /* 62 */
-EXTERN Tk_Window	Tk_TopCoordsToWindow _ANSI_ARGS_((Tk_Window tkwin, 
-				int rootX, int rootY, int * newX, int * newY));
+EXTERN Tk_Window	Tk_TopCoordsToWindow _ANSI_ARGS_((Tk_Window tkwin,
+				int rootX, int rootY, int *newX, int *newY));
 /* 63 */
-EXTERN MacDrawable *	TkMacContainerId _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN MacDrawable *	TkMacContainerId _ANSI_ARGS_((TkWindow *winPtr));
 /* 64 */
-EXTERN MacDrawable *	TkMacGetHostToplevel _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN MacDrawable *	TkMacGetHostToplevel _ANSI_ARGS_((TkWindow *winPtr));
 /* 65 */
 EXTERN void		TkMacPreprocessMenu _ANSI_ARGS_((void));
 /* 66 */
@@ -263,17 +263,17 @@ EXTERN int		TkpIsWindowFloating _ANSI_ARGS_((WindowRef window));
 #ifdef MAC_OSX_TK
 /* 0 */
 EXTERN void		TkGenerateActivateEvents _ANSI_ARGS_((
-				TkWindow * winPtr, int active));
+				TkWindow *winPtr, int active));
 /* Slot 1 is reserved */
 /* Slot 2 is reserved */
 /* 3 */
-EXTERN void		TkPointerDeadWindow _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN void		TkPointerDeadWindow _ANSI_ARGS_((TkWindow *winPtr));
 /* 4 */
-EXTERN void		TkpSetCapture _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN void		TkpSetCapture _ANSI_ARGS_((TkWindow *winPtr));
 /* 5 */
 EXTERN void		TkpSetCursor _ANSI_ARGS_((TkpCursor cursor));
 /* 6 */
-EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow * winPtr, 
+EXTERN void		TkpWmSetState _ANSI_ARGS_((TkWindow *winPtr,
 				int state));
 /* 7 */
 EXTERN void		TkAboutDlg _ANSI_ARGS_((void));
@@ -282,7 +282,7 @@ EXTERN unsigned int	TkMacOSXButtonKeyState _ANSI_ARGS_((void));
 /* 9 */
 EXTERN void		TkMacOSXClearMenubarActive _ANSI_ARGS_((void));
 /* 10 */
-EXTERN int		TkMacOSXDispatchMenuEvent _ANSI_ARGS_((int menuID, 
+EXTERN int		TkMacOSXDispatchMenuEvent _ANSI_ARGS_((int menuID,
 				int index));
 /* 11 */
 EXTERN void		TkMacOSXInstallCursor _ANSI_ARGS_((
@@ -291,8 +291,7 @@ EXTERN void		TkMacOSXInstallCursor _ANSI_ARGS_((
 EXTERN void		TkMacOSXHandleTearoffMenu _ANSI_ARGS_((void));
 /* Slot 13 is reserved */
 /* 14 */
-EXTERN int		TkMacOSXDoHLEvent _ANSI_ARGS_((
-				EventRecord * theEvent));
+EXTERN int		TkMacOSXDoHLEvent _ANSI_ARGS_((EventRecord *theEvent));
 /* Slot 15 is reserved */
 /* 16 */
 EXTERN Window		TkMacOSXGetXWindow _ANSI_ARGS_((WindowRef macWinPtr));
@@ -300,21 +299,21 @@ EXTERN Window		TkMacOSXGetXWindow _ANSI_ARGS_((WindowRef macWinPtr));
 EXTERN int		TkMacOSXGrowToplevel _ANSI_ARGS_((
 				WindowRef whichWindow, Point start));
 /* 18 */
-EXTERN void		TkMacOSXHandleMenuSelect _ANSI_ARGS_((MenuID theMenu, 
+EXTERN void		TkMacOSXHandleMenuSelect _ANSI_ARGS_((MenuID theMenu,
 				MenuItemIndex theItem, int optionKeyPressed));
 /* Slot 19 is reserved */
 /* Slot 20 is reserved */
 /* 21 */
 EXTERN void		TkMacOSXInvalidateWindow _ANSI_ARGS_((
-				MacDrawable * macWin, int flag));
+				MacDrawable *macWin, int flag));
 /* 22 */
 EXTERN int		TkMacOSXIsCharacterMissing _ANSI_ARGS_((
 				Tk_Font tkfont, unsigned int searchChar));
 /* 23 */
 EXTERN void		TkMacOSXMakeRealWindowExist _ANSI_ARGS_((
-				TkWindow * winPtr));
+				TkWindow *winPtr));
 /* 24 */
-EXTERN BitMapPtr	TkMacOSXMakeStippleMap _ANSI_ARGS_((Drawable d1, 
+EXTERN BitMapPtr	TkMacOSXMakeStippleMap _ANSI_ARGS_((Drawable d1,
 				Drawable d2));
 /* 25 */
 EXTERN void		TkMacOSXMenuClick _ANSI_ARGS_((void));
@@ -322,39 +321,38 @@ EXTERN void		TkMacOSXMenuClick _ANSI_ARGS_((void));
 EXTERN void		TkMacOSXRegisterOffScreenWindow _ANSI_ARGS_((
 				Window window, GWorldPtr portPtr));
 /* 27 */
-EXTERN int		TkMacOSXResizable _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN int		TkMacOSXResizable _ANSI_ARGS_((TkWindow *winPtr));
 /* 28 */
 EXTERN void		TkMacOSXSetHelpMenuItemCount _ANSI_ARGS_((void));
 /* 29 */
 EXTERN void		TkMacOSXSetScrollbarGrow _ANSI_ARGS_((
-				TkWindow * winPtr, int flag));
+				TkWindow *winPtr, int flag));
 /* 30 */
 EXTERN void		TkMacOSXSetUpClippingRgn _ANSI_ARGS_((
 				Drawable drawable));
 /* 31 */
-EXTERN void		TkMacOSXSetUpGraphicsPort _ANSI_ARGS_((GC gc, 
+EXTERN void		TkMacOSXSetUpGraphicsPort _ANSI_ARGS_((GC gc,
 				GWorldPtr destPort));
 /* 32 */
-EXTERN void		TkMacOSXUpdateClipRgn _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN void		TkMacOSXUpdateClipRgn _ANSI_ARGS_((TkWindow *winPtr));
 /* 33 */
 EXTERN void		TkMacOSXUnregisterMacWindow _ANSI_ARGS_((
 				WindowRef portPtr));
 /* 34 */
 EXTERN int		TkMacOSXUseMenuID _ANSI_ARGS_((short macID));
 /* 35 */
-EXTERN RgnHandle	TkMacOSXVisableClipRgn _ANSI_ARGS_((
-				TkWindow * winPtr));
+EXTERN RgnHandle	TkMacOSXVisableClipRgn _ANSI_ARGS_((TkWindow *winPtr));
 /* 36 */
-EXTERN void		TkMacOSXWinBounds _ANSI_ARGS_((TkWindow * winPtr, 
-				Rect * geometry));
+EXTERN void		TkMacOSXWinBounds _ANSI_ARGS_((TkWindow *winPtr,
+				Rect *geometry));
 /* 37 */
-EXTERN void		TkMacOSXWindowOffset _ANSI_ARGS_((WindowRef wRef, 
-				int * xOffset, int * yOffset));
+EXTERN void		TkMacOSXWindowOffset _ANSI_ARGS_((WindowRef wRef,
+				int *xOffset, int *yOffset));
 /* 38 */
-EXTERN int		TkSetMacColor _ANSI_ARGS_((unsigned long pixel, 
-				RGBColor * macColor));
+EXTERN int		TkSetMacColor _ANSI_ARGS_((unsigned long pixel,
+				RGBColor *macColor));
 /* 39 */
-EXTERN void		TkSetWMName _ANSI_ARGS_((TkWindow * winPtr, 
+EXTERN void		TkSetWMName _ANSI_ARGS_((TkWindow *winPtr,
 				Tk_Uid titleUid));
 /* 40 */
 EXTERN void		TkSuspendClipboard _ANSI_ARGS_((void));
@@ -362,13 +360,13 @@ EXTERN void		TkSuspendClipboard _ANSI_ARGS_((void));
 EXTERN int		TkMacOSXZoomToplevel _ANSI_ARGS_((
 				WindowPtr whichWindow, short zoomPart));
 /* 42 */
-EXTERN Tk_Window	Tk_TopCoordsToWindow _ANSI_ARGS_((Tk_Window tkwin, 
-				int rootX, int rootY, int * newX, int * newY));
+EXTERN Tk_Window	Tk_TopCoordsToWindow _ANSI_ARGS_((Tk_Window tkwin,
+				int rootX, int rootY, int *newX, int *newY));
 /* 43 */
-EXTERN MacDrawable *	TkMacOSXContainerId _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN MacDrawable *	TkMacOSXContainerId _ANSI_ARGS_((TkWindow *winPtr));
 /* 44 */
 EXTERN MacDrawable *	TkMacOSXGetHostToplevel _ANSI_ARGS_((
-				TkWindow * winPtr));
+				TkWindow *winPtr));
 /* 45 */
 EXTERN void		TkMacOSXPreprocessMenu _ANSI_ARGS_((void));
 /* 46 */
@@ -377,9 +375,9 @@ EXTERN int		TkpIsWindowFloating _ANSI_ARGS_((WindowRef window));
 EXTERN Tk_Window	TkMacOSXGetCapture _ANSI_ARGS_((void));
 /* Slot 48 is reserved */
 /* 49 */
-EXTERN Window		TkGetTransientMaster _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN Window		TkGetTransientMaster _ANSI_ARGS_((TkWindow *winPtr));
 /* 50 */
-EXTERN int		TkGenerateButtonEvent _ANSI_ARGS_((int x, int y, 
+EXTERN int		TkGenerateButtonEvent _ANSI_ARGS_((int x, int y,
 				Window window, unsigned int state));
 /* 51 */
 EXTERN void		TkGenWMDestroyEvent _ANSI_ARGS_((Tk_Window tkwin));
@@ -391,33 +389,33 @@ EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
 /* 0 */
 EXTERN void		TkCreateXEventSource _ANSI_ARGS_((void));
 /* 1 */
-EXTERN void		TkFreeWindowId _ANSI_ARGS_((TkDisplay * dispPtr, 
+EXTERN void		TkFreeWindowId _ANSI_ARGS_((TkDisplay *dispPtr,
 				Window w));
 /* 2 */
-EXTERN void		TkInitXId _ANSI_ARGS_((TkDisplay * dispPtr));
+EXTERN void		TkInitXId _ANSI_ARGS_((TkDisplay *dispPtr));
 /* 3 */
-EXTERN int		TkpCmapStressed _ANSI_ARGS_((Tk_Window tkwin, 
+EXTERN int		TkpCmapStressed _ANSI_ARGS_((Tk_Window tkwin,
 				Colormap colormap));
 /* 4 */
-EXTERN void		TkpSync _ANSI_ARGS_((Display * display));
+EXTERN void		TkpSync _ANSI_ARGS_((Display *display));
 /* 5 */
-EXTERN Window		TkUnixContainerId _ANSI_ARGS_((TkWindow * winPtr));
+EXTERN Window		TkUnixContainerId _ANSI_ARGS_((TkWindow *winPtr));
 /* 6 */
-EXTERN int		TkUnixDoOneXEvent _ANSI_ARGS_((Tcl_Time * timePtr));
+EXTERN int		TkUnixDoOneXEvent _ANSI_ARGS_((Tcl_Time *timePtr));
 /* 7 */
-EXTERN void		TkUnixSetMenubar _ANSI_ARGS_((Tk_Window tkwin, 
+EXTERN void		TkUnixSetMenubar _ANSI_ARGS_((Tk_Window tkwin,
 				Tk_Window menubar));
 /* 8 */
-EXTERN int		TkpScanWindowId _ANSI_ARGS_((Tcl_Interp * interp, 
-				CONST char * string, Window * idPtr));
+EXTERN int		TkpScanWindowId _ANSI_ARGS_((Tcl_Interp *interp,
+				CONST char *string, Window *idPtr));
 /* 9 */
-EXTERN void		TkWmCleanup _ANSI_ARGS_((TkDisplay * dispPtr));
+EXTERN void		TkWmCleanup _ANSI_ARGS_((TkDisplay *dispPtr));
 /* 10 */
-EXTERN void		TkSendCleanup _ANSI_ARGS_((TkDisplay * dispPtr));
+EXTERN void		TkSendCleanup _ANSI_ARGS_((TkDisplay *dispPtr));
 /* 11 */
-EXTERN void		TkFreeXId _ANSI_ARGS_((TkDisplay * dispPtr));
+EXTERN void		TkFreeXId _ANSI_ARGS_((TkDisplay *dispPtr));
 /* 12 */
-EXTERN int		TkpWmSetState _ANSI_ARGS_((TkWindow * winPtr, 
+EXTERN int		TkpWmSetState _ANSI_ARGS_((TkWindow *winPtr,
 				int state));
 #endif /* X11 */
 
@@ -426,182 +424,182 @@ typedef struct TkIntPlatStubs {
     struct TkIntPlatStubHooks *hooks;
 
 #ifdef __WIN32__
-    char * (*tkAlignImageData) _ANSI_ARGS_((XImage * image, int alignment, int bitOrder)); /* 0 */
-    void *reserved1;
-    void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 2 */
+    char * (*tkAlignImageData) _ANSI_ARGS_((XImage *image, int alignment, int bitOrder)); /* 0 */
+    VOID *reserved1;
+    void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow *winPtr, int active)); /* 2 */
     unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 3 */
-    void (*tkPointerDeadWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 4 */
-    void (*tkpPrintWindowId) _ANSI_ARGS_((char * buf, Window window)); /* 5 */
-    int (*tkpScanWindowId) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * string, Window * idPtr)); /* 6 */
-    void (*tkpSetCapture) _ANSI_ARGS_((TkWindow * winPtr)); /* 7 */
+    void (*tkPointerDeadWindow) _ANSI_ARGS_((TkWindow *winPtr)); /* 4 */
+    void (*tkpPrintWindowId) _ANSI_ARGS_((char *buf, Window window)); /* 5 */
+    int (*tkpScanWindowId) _ANSI_ARGS_((Tcl_Interp *interp, CONST char *string, Window *idPtr)); /* 6 */
+    void (*tkpSetCapture) _ANSI_ARGS_((TkWindow *winPtr)); /* 7 */
     void (*tkpSetCursor) _ANSI_ARGS_((TkpCursor cursor)); /* 8 */
-    void (*tkpWmSetState) _ANSI_ARGS_((TkWindow * winPtr, int state)); /* 9 */
+    void (*tkpWmSetState) _ANSI_ARGS_((TkWindow *winPtr, int state)); /* 9 */
     void (*tkSetPixmapColormap) _ANSI_ARGS_((Pixmap pixmap, Colormap colormap)); /* 10 */
     void (*tkWinCancelMouseTimer) _ANSI_ARGS_((void)); /* 11 */
-    void (*tkWinClipboardRender) _ANSI_ARGS_((TkDisplay * dispPtr, UINT format)); /* 12 */
+    void (*tkWinClipboardRender) _ANSI_ARGS_((TkDisplay *dispPtr, UINT format)); /* 12 */
     LRESULT (*tkWinEmbeddedEventProc) _ANSI_ARGS_((HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)); /* 13 */
     void (*tkWinFillRect) _ANSI_ARGS_((HDC dc, int x, int y, int width, int height, int pixel)); /* 14 */
     COLORREF (*tkWinGetBorderPixels) _ANSI_ARGS_((Tk_Window tkwin, Tk_3DBorder border, int which)); /* 15 */
-    HDC (*tkWinGetDrawableDC) _ANSI_ARGS_((Display * display, Drawable d, TkWinDCState* state)); /* 16 */
+    HDC (*tkWinGetDrawableDC) _ANSI_ARGS_((Display *display, Drawable d, TkWinDCState*state)); /* 16 */
     int (*tkWinGetModifierState) _ANSI_ARGS_((void)); /* 17 */
     HPALETTE (*tkWinGetSystemPalette) _ANSI_ARGS_((void)); /* 18 */
     HWND (*tkWinGetWrapperWindow) _ANSI_ARGS_((Tk_Window tkwin)); /* 19 */
-    int (*tkWinHandleMenuEvent) _ANSI_ARGS_((HWND * phwnd, UINT * pMessage, WPARAM * pwParam, LPARAM * plParam, LRESULT * plResult)); /* 20 */
-    int (*tkWinIndexOfColor) _ANSI_ARGS_((XColor * colorPtr)); /* 21 */
-    void (*tkWinReleaseDrawableDC) _ANSI_ARGS_((Drawable d, HDC hdc, TkWinDCState* state)); /* 22 */
-    LRESULT (*tkWinResendEvent) _ANSI_ARGS_((WNDPROC wndproc, HWND hwnd, XEvent * eventPtr)); /* 23 */
+    int (*tkWinHandleMenuEvent) _ANSI_ARGS_((HWND *phwnd, UINT *pMessage, WPARAM *pwParam, LPARAM *plParam, LRESULT *plResult)); /* 20 */
+    int (*tkWinIndexOfColor) _ANSI_ARGS_((XColor *colorPtr)); /* 21 */
+    void (*tkWinReleaseDrawableDC) _ANSI_ARGS_((Drawable d, HDC hdc, TkWinDCState*state)); /* 22 */
+    LRESULT (*tkWinResendEvent) _ANSI_ARGS_((WNDPROC wndproc, HWND hwnd, XEvent *eventPtr)); /* 23 */
     HPALETTE (*tkWinSelectPalette) _ANSI_ARGS_((HDC dc, Colormap colormap)); /* 24 */
     void (*tkWinSetMenu) _ANSI_ARGS_((Tk_Window tkwin, HMENU hMenu)); /* 25 */
     void (*tkWinSetWindowPos) _ANSI_ARGS_((HWND hwnd, HWND siblingHwnd, int pos)); /* 26 */
     void (*tkWinWmCleanup) _ANSI_ARGS_((HINSTANCE hInstance)); /* 27 */
     void (*tkWinXCleanup) _ANSI_ARGS_((ClientData clientData)); /* 28 */
     void (*tkWinXInit) _ANSI_ARGS_((HINSTANCE hInstance)); /* 29 */
-    void (*tkWinSetForegroundWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 30 */
+    void (*tkWinSetForegroundWindow) _ANSI_ARGS_((TkWindow *winPtr)); /* 30 */
     void (*tkWinDialogDebug) _ANSI_ARGS_((int debug)); /* 31 */
-    Tcl_Obj * (*tkWinGetMenuSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, CONST char * dbName, CONST char * className)); /* 32 */
+    Tcl_Obj * (*tkWinGetMenuSystemDefault) _ANSI_ARGS_((Tk_Window tkwin, CONST char *dbName, CONST char *className)); /* 32 */
     int (*tkWinGetPlatformId) _ANSI_ARGS_((void)); /* 33 */
     void (*tkWinSetHINSTANCE) _ANSI_ARGS_((HINSTANCE hInstance)); /* 34 */
     int (*tkWinGetPlatformTheme) _ANSI_ARGS_((void)); /* 35 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
-    void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 0 */
-    void *reserved1;
-    void *reserved2;
+    void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow *winPtr, int active)); /* 0 */
+    VOID *reserved1;
+    VOID *reserved2;
     unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 3 */
-    void *reserved4;
-    void (*tkPointerDeadWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 5 */
-    void (*tkpSetCapture) _ANSI_ARGS_((TkWindow * winPtr)); /* 6 */
+    VOID *reserved4;
+    void (*tkPointerDeadWindow) _ANSI_ARGS_((TkWindow *winPtr)); /* 5 */
+    void (*tkpSetCapture) _ANSI_ARGS_((TkWindow *winPtr)); /* 6 */
     void (*tkpSetCursor) _ANSI_ARGS_((TkpCursor cursor)); /* 7 */
-    void (*tkpWmSetState) _ANSI_ARGS_((TkWindow * winPtr, int state)); /* 8 */
-    void *reserved9;
+    void (*tkpWmSetState) _ANSI_ARGS_((TkWindow *winPtr, int state)); /* 8 */
+    VOID *reserved9;
     void (*tkAboutDlg) _ANSI_ARGS_((void)); /* 10 */
-    void *reserved11;
-    void *reserved12;
-    Window (*tkGetTransientMaster) _ANSI_ARGS_((TkWindow * winPtr)); /* 13 */
+    VOID *reserved11;
+    VOID *reserved12;
+    Window (*tkGetTransientMaster) _ANSI_ARGS_((TkWindow *winPtr)); /* 13 */
     int (*tkGenerateButtonEvent) _ANSI_ARGS_((int x, int y, Window window, unsigned int state)); /* 14 */
-    void *reserved15;
+    VOID *reserved15;
     void (*tkGenWMDestroyEvent) _ANSI_ARGS_((Tk_Window tkwin)); /* 16 */
-    void *reserved17;
+    VOID *reserved17;
     unsigned int (*tkMacButtonKeyState) _ANSI_ARGS_((void)); /* 18 */
     void (*tkMacClearMenubarActive) _ANSI_ARGS_((void)); /* 19 */
-    void *reserved20;
+    VOID *reserved20;
     int (*tkMacDispatchMenuEvent) _ANSI_ARGS_((int menuID, int index)); /* 21 */
     void (*tkMacInstallCursor) _ANSI_ARGS_((int resizeOverride)); /* 22 */
-    void *reserved23;
+    VOID *reserved23;
     void (*tkMacHandleTearoffMenu) _ANSI_ARGS_((void)); /* 24 */
-    void *reserved25;
-    void *reserved26;
-    void (*tkMacDoHLEvent) _ANSI_ARGS_((EventRecord * theEvent)); /* 27 */
-    void *reserved28;
+    VOID *reserved25;
+    VOID *reserved26;
+    void (*tkMacDoHLEvent) _ANSI_ARGS_((EventRecord *theEvent)); /* 27 */
+    VOID *reserved28;
     Time (*tkMacGenerateTime) _ANSI_ARGS_((void)); /* 29 */
-    void *reserved30;
-    TkWindow * (*tkMacGetScrollbarGrowWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 31 */
+    VOID *reserved30;
+    TkWindow * (*tkMacGetScrollbarGrowWindow) _ANSI_ARGS_((TkWindow *winPtr)); /* 31 */
     Window (*tkMacGetXWindow) _ANSI_ARGS_((WindowRef macWinPtr)); /* 32 */
     int (*tkMacGrowToplevel) _ANSI_ARGS_((WindowRef whichWindow, Point start)); /* 33 */
     void (*tkMacHandleMenuSelect) _ANSI_ARGS_((long mResult, int optionKeyPressed)); /* 34 */
-    void *reserved35;
-    void *reserved36;
-    void *reserved37;
-    void (*tkMacInvalidateWindow) _ANSI_ARGS_((MacDrawable * macWin, int flag)); /* 38 */
+    VOID *reserved35;
+    VOID *reserved36;
+    VOID *reserved37;
+    void (*tkMacInvalidateWindow) _ANSI_ARGS_((MacDrawable *macWin, int flag)); /* 38 */
     int (*tkMacIsCharacterMissing) _ANSI_ARGS_((Tk_Font tkfont, unsigned int searchChar)); /* 39 */
-    void (*tkMacMakeRealWindowExist) _ANSI_ARGS_((TkWindow * winPtr)); /* 40 */
+    void (*tkMacMakeRealWindowExist) _ANSI_ARGS_((TkWindow *winPtr)); /* 40 */
     BitMapPtr (*tkMacMakeStippleMap) _ANSI_ARGS_((Drawable d1, Drawable d2)); /* 41 */
     void (*tkMacMenuClick) _ANSI_ARGS_((void)); /* 42 */
     void (*tkMacRegisterOffScreenWindow) _ANSI_ARGS_((Window window, GWorldPtr portPtr)); /* 43 */
-    int (*tkMacResizable) _ANSI_ARGS_((TkWindow * winPtr)); /* 44 */
-    void *reserved45;
+    int (*tkMacResizable) _ANSI_ARGS_((TkWindow *winPtr)); /* 44 */
+    VOID *reserved45;
     void (*tkMacSetHelpMenuItemCount) _ANSI_ARGS_((void)); /* 46 */
-    void (*tkMacSetScrollbarGrow) _ANSI_ARGS_((TkWindow * winPtr, int flag)); /* 47 */
+    void (*tkMacSetScrollbarGrow) _ANSI_ARGS_((TkWindow *winPtr, int flag)); /* 47 */
     void (*tkMacSetUpClippingRgn) _ANSI_ARGS_((Drawable drawable)); /* 48 */
     void (*tkMacSetUpGraphicsPort) _ANSI_ARGS_((GC gc)); /* 49 */
-    void (*tkMacUpdateClipRgn) _ANSI_ARGS_((TkWindow * winPtr)); /* 50 */
+    void (*tkMacUpdateClipRgn) _ANSI_ARGS_((TkWindow *winPtr)); /* 50 */
     void (*tkMacUnregisterMacWindow) _ANSI_ARGS_((GWorldPtr portPtr)); /* 51 */
     int (*tkMacUseMenuID) _ANSI_ARGS_((short macID)); /* 52 */
-    RgnHandle (*tkMacVisableClipRgn) _ANSI_ARGS_((TkWindow * winPtr)); /* 53 */
-    void (*tkMacWinBounds) _ANSI_ARGS_((TkWindow * winPtr, Rect * geometry)); /* 54 */
-    void (*tkMacWindowOffset) _ANSI_ARGS_((WindowRef wRef, int * xOffset, int * yOffset)); /* 55 */
-    void *reserved56;
-    int (*tkSetMacColor) _ANSI_ARGS_((unsigned long pixel, RGBColor * macColor)); /* 57 */
-    void (*tkSetWMName) _ANSI_ARGS_((TkWindow * winPtr, Tk_Uid titleUid)); /* 58 */
+    RgnHandle (*tkMacVisableClipRgn) _ANSI_ARGS_((TkWindow *winPtr)); /* 53 */
+    void (*tkMacWinBounds) _ANSI_ARGS_((TkWindow *winPtr, Rect *geometry)); /* 54 */
+    void (*tkMacWindowOffset) _ANSI_ARGS_((WindowRef wRef, int *xOffset, int *yOffset)); /* 55 */
+    VOID *reserved56;
+    int (*tkSetMacColor) _ANSI_ARGS_((unsigned long pixel, RGBColor *macColor)); /* 57 */
+    void (*tkSetWMName) _ANSI_ARGS_((TkWindow *winPtr, Tk_Uid titleUid)); /* 58 */
     void (*tkSuspendClipboard) _ANSI_ARGS_((void)); /* 59 */
-    void *reserved60;
+    VOID *reserved60;
     int (*tkMacZoomToplevel) _ANSI_ARGS_((WindowPtr whichWindow, Point where, short zoomPart)); /* 61 */
-    Tk_Window (*tk_TopCoordsToWindow) _ANSI_ARGS_((Tk_Window tkwin, int rootX, int rootY, int * newX, int * newY)); /* 62 */
-    MacDrawable * (*tkMacContainerId) _ANSI_ARGS_((TkWindow * winPtr)); /* 63 */
-    MacDrawable * (*tkMacGetHostToplevel) _ANSI_ARGS_((TkWindow * winPtr)); /* 64 */
+    Tk_Window (*tk_TopCoordsToWindow) _ANSI_ARGS_((Tk_Window tkwin, int rootX, int rootY, int *newX, int *newY)); /* 62 */
+    MacDrawable * (*tkMacContainerId) _ANSI_ARGS_((TkWindow *winPtr)); /* 63 */
+    MacDrawable * (*tkMacGetHostToplevel) _ANSI_ARGS_((TkWindow *winPtr)); /* 64 */
     void (*tkMacPreprocessMenu) _ANSI_ARGS_((void)); /* 65 */
     int (*tkpIsWindowFloating) _ANSI_ARGS_((WindowRef window)); /* 66 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
-    void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow * winPtr, int active)); /* 0 */
-    void *reserved1;
-    void *reserved2;
-    void (*tkPointerDeadWindow) _ANSI_ARGS_((TkWindow * winPtr)); /* 3 */
-    void (*tkpSetCapture) _ANSI_ARGS_((TkWindow * winPtr)); /* 4 */
+    void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow *winPtr, int active)); /* 0 */
+    VOID *reserved1;
+    VOID *reserved2;
+    void (*tkPointerDeadWindow) _ANSI_ARGS_((TkWindow *winPtr)); /* 3 */
+    void (*tkpSetCapture) _ANSI_ARGS_((TkWindow *winPtr)); /* 4 */
     void (*tkpSetCursor) _ANSI_ARGS_((TkpCursor cursor)); /* 5 */
-    void (*tkpWmSetState) _ANSI_ARGS_((TkWindow * winPtr, int state)); /* 6 */
+    void (*tkpWmSetState) _ANSI_ARGS_((TkWindow *winPtr, int state)); /* 6 */
     void (*tkAboutDlg) _ANSI_ARGS_((void)); /* 7 */
     unsigned int (*tkMacOSXButtonKeyState) _ANSI_ARGS_((void)); /* 8 */
     void (*tkMacOSXClearMenubarActive) _ANSI_ARGS_((void)); /* 9 */
     int (*tkMacOSXDispatchMenuEvent) _ANSI_ARGS_((int menuID, int index)); /* 10 */
     void (*tkMacOSXInstallCursor) _ANSI_ARGS_((int resizeOverride)); /* 11 */
     void (*tkMacOSXHandleTearoffMenu) _ANSI_ARGS_((void)); /* 12 */
-    void *reserved13;
-    int (*tkMacOSXDoHLEvent) _ANSI_ARGS_((EventRecord * theEvent)); /* 14 */
-    void *reserved15;
+    VOID *reserved13;
+    int (*tkMacOSXDoHLEvent) _ANSI_ARGS_((EventRecord *theEvent)); /* 14 */
+    VOID *reserved15;
     Window (*tkMacOSXGetXWindow) _ANSI_ARGS_((WindowRef macWinPtr)); /* 16 */
     int (*tkMacOSXGrowToplevel) _ANSI_ARGS_((WindowRef whichWindow, Point start)); /* 17 */
     void (*tkMacOSXHandleMenuSelect) _ANSI_ARGS_((MenuID theMenu, MenuItemIndex theItem, int optionKeyPressed)); /* 18 */
-    void *reserved19;
-    void *reserved20;
-    void (*tkMacOSXInvalidateWindow) _ANSI_ARGS_((MacDrawable * macWin, int flag)); /* 21 */
+    VOID *reserved19;
+    VOID *reserved20;
+    void (*tkMacOSXInvalidateWindow) _ANSI_ARGS_((MacDrawable *macWin, int flag)); /* 21 */
     int (*tkMacOSXIsCharacterMissing) _ANSI_ARGS_((Tk_Font tkfont, unsigned int searchChar)); /* 22 */
-    void (*tkMacOSXMakeRealWindowExist) _ANSI_ARGS_((TkWindow * winPtr)); /* 23 */
+    void (*tkMacOSXMakeRealWindowExist) _ANSI_ARGS_((TkWindow *winPtr)); /* 23 */
     BitMapPtr (*tkMacOSXMakeStippleMap) _ANSI_ARGS_((Drawable d1, Drawable d2)); /* 24 */
     void (*tkMacOSXMenuClick) _ANSI_ARGS_((void)); /* 25 */
     void (*tkMacOSXRegisterOffScreenWindow) _ANSI_ARGS_((Window window, GWorldPtr portPtr)); /* 26 */
-    int (*tkMacOSXResizable) _ANSI_ARGS_((TkWindow * winPtr)); /* 27 */
+    int (*tkMacOSXResizable) _ANSI_ARGS_((TkWindow *winPtr)); /* 27 */
     void (*tkMacOSXSetHelpMenuItemCount) _ANSI_ARGS_((void)); /* 28 */
-    void (*tkMacOSXSetScrollbarGrow) _ANSI_ARGS_((TkWindow * winPtr, int flag)); /* 29 */
+    void (*tkMacOSXSetScrollbarGrow) _ANSI_ARGS_((TkWindow *winPtr, int flag)); /* 29 */
     void (*tkMacOSXSetUpClippingRgn) _ANSI_ARGS_((Drawable drawable)); /* 30 */
     void (*tkMacOSXSetUpGraphicsPort) _ANSI_ARGS_((GC gc, GWorldPtr destPort)); /* 31 */
-    void (*tkMacOSXUpdateClipRgn) _ANSI_ARGS_((TkWindow * winPtr)); /* 32 */
+    void (*tkMacOSXUpdateClipRgn) _ANSI_ARGS_((TkWindow *winPtr)); /* 32 */
     void (*tkMacOSXUnregisterMacWindow) _ANSI_ARGS_((WindowRef portPtr)); /* 33 */
     int (*tkMacOSXUseMenuID) _ANSI_ARGS_((short macID)); /* 34 */
-    RgnHandle (*tkMacOSXVisableClipRgn) _ANSI_ARGS_((TkWindow * winPtr)); /* 35 */
-    void (*tkMacOSXWinBounds) _ANSI_ARGS_((TkWindow * winPtr, Rect * geometry)); /* 36 */
-    void (*tkMacOSXWindowOffset) _ANSI_ARGS_((WindowRef wRef, int * xOffset, int * yOffset)); /* 37 */
-    int (*tkSetMacColor) _ANSI_ARGS_((unsigned long pixel, RGBColor * macColor)); /* 38 */
-    void (*tkSetWMName) _ANSI_ARGS_((TkWindow * winPtr, Tk_Uid titleUid)); /* 39 */
+    RgnHandle (*tkMacOSXVisableClipRgn) _ANSI_ARGS_((TkWindow *winPtr)); /* 35 */
+    void (*tkMacOSXWinBounds) _ANSI_ARGS_((TkWindow *winPtr, Rect *geometry)); /* 36 */
+    void (*tkMacOSXWindowOffset) _ANSI_ARGS_((WindowRef wRef, int *xOffset, int *yOffset)); /* 37 */
+    int (*tkSetMacColor) _ANSI_ARGS_((unsigned long pixel, RGBColor *macColor)); /* 38 */
+    void (*tkSetWMName) _ANSI_ARGS_((TkWindow *winPtr, Tk_Uid titleUid)); /* 39 */
     void (*tkSuspendClipboard) _ANSI_ARGS_((void)); /* 40 */
     int (*tkMacOSXZoomToplevel) _ANSI_ARGS_((WindowPtr whichWindow, short zoomPart)); /* 41 */
-    Tk_Window (*tk_TopCoordsToWindow) _ANSI_ARGS_((Tk_Window tkwin, int rootX, int rootY, int * newX, int * newY)); /* 42 */
-    MacDrawable * (*tkMacOSXContainerId) _ANSI_ARGS_((TkWindow * winPtr)); /* 43 */
-    MacDrawable * (*tkMacOSXGetHostToplevel) _ANSI_ARGS_((TkWindow * winPtr)); /* 44 */
+    Tk_Window (*tk_TopCoordsToWindow) _ANSI_ARGS_((Tk_Window tkwin, int rootX, int rootY, int *newX, int *newY)); /* 42 */
+    MacDrawable * (*tkMacOSXContainerId) _ANSI_ARGS_((TkWindow *winPtr)); /* 43 */
+    MacDrawable * (*tkMacOSXGetHostToplevel) _ANSI_ARGS_((TkWindow *winPtr)); /* 44 */
     void (*tkMacOSXPreprocessMenu) _ANSI_ARGS_((void)); /* 45 */
     int (*tkpIsWindowFloating) _ANSI_ARGS_((WindowRef window)); /* 46 */
     Tk_Window (*tkMacOSXGetCapture) _ANSI_ARGS_((void)); /* 47 */
-    void *reserved48;
-    Window (*tkGetTransientMaster) _ANSI_ARGS_((TkWindow * winPtr)); /* 49 */
+    VOID *reserved48;
+    Window (*tkGetTransientMaster) _ANSI_ARGS_((TkWindow *winPtr)); /* 49 */
     int (*tkGenerateButtonEvent) _ANSI_ARGS_((int x, int y, Window window, unsigned int state)); /* 50 */
     void (*tkGenWMDestroyEvent) _ANSI_ARGS_((Tk_Window tkwin)); /* 51 */
-    void *reserved52;
+    VOID *reserved52;
     unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 53 */
 #endif /* MAC_OSX_TK */
 #if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) _ANSI_ARGS_((void)); /* 0 */
-    void (*tkFreeWindowId) _ANSI_ARGS_((TkDisplay * dispPtr, Window w)); /* 1 */
-    void (*tkInitXId) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 2 */
+    void (*tkFreeWindowId) _ANSI_ARGS_((TkDisplay *dispPtr, Window w)); /* 1 */
+    void (*tkInitXId) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 2 */
     int (*tkpCmapStressed) _ANSI_ARGS_((Tk_Window tkwin, Colormap colormap)); /* 3 */
-    void (*tkpSync) _ANSI_ARGS_((Display * display)); /* 4 */
-    Window (*tkUnixContainerId) _ANSI_ARGS_((TkWindow * winPtr)); /* 5 */
-    int (*tkUnixDoOneXEvent) _ANSI_ARGS_((Tcl_Time * timePtr)); /* 6 */
+    void (*tkpSync) _ANSI_ARGS_((Display *display)); /* 4 */
+    Window (*tkUnixContainerId) _ANSI_ARGS_((TkWindow *winPtr)); /* 5 */
+    int (*tkUnixDoOneXEvent) _ANSI_ARGS_((Tcl_Time *timePtr)); /* 6 */
     void (*tkUnixSetMenubar) _ANSI_ARGS_((Tk_Window tkwin, Tk_Window menubar)); /* 7 */
-    int (*tkpScanWindowId) _ANSI_ARGS_((Tcl_Interp * interp, CONST char * string, Window * idPtr)); /* 8 */
-    void (*tkWmCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 9 */
-    void (*tkSendCleanup) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 10 */
-    void (*tkFreeXId) _ANSI_ARGS_((TkDisplay * dispPtr)); /* 11 */
-    int (*tkpWmSetState) _ANSI_ARGS_((TkWindow * winPtr, int state)); /* 12 */
+    int (*tkpScanWindowId) _ANSI_ARGS_((Tcl_Interp *interp, CONST char *string, Window *idPtr)); /* 8 */
+    void (*tkWmCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 9 */
+    void (*tkSendCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 10 */
+    void (*tkFreeXId) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 11 */
+    int (*tkpWmSetState) _ANSI_ARGS_((TkWindow *winPtr, int state)); /* 12 */
 #endif /* X11 */
 } TkIntPlatStubs;
 
