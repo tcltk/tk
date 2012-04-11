@@ -143,7 +143,7 @@ EXTERN CONST84_RETURN char * TkGetDefaultScreenName _ANSI_ARGS_((
 EXTERN TkDisplay *	TkGetDisplay _ANSI_ARGS_((Display *display));
 /* 35 */
 EXTERN int		TkGetDisplayOf _ANSI_ARGS_((Tcl_Interp *interp,
-				int objc, Tcl_Obj *CONST objv[],
+				int objc, Tcl_Obj * CONST objv[],
 				Tk_Window *tkwinPtr));
 /* 36 */
 EXTERN TkWindow *	TkGetFocusWin _ANSI_ARGS_((TkWindow *winPtr));
@@ -266,12 +266,12 @@ EXTERN int		TkpWindowWasRecentlyDeleted _ANSI_ARGS_((Window win,
 EXTERN void		TkQueueEventForAllChildren _ANSI_ARGS_((
 				TkWindow *winPtr, XEvent *eventPtr));
 /* 78 */
-EXTERN int		TkReadBitmapFile _ANSI_ARGS_((Display*display,
-				Drawable d, CONST char*filename,
-				unsigned int*width_return,
-				unsigned int*height_return,
-				Pixmap*bitmap_return, int*x_hot_return,
-				int*y_hot_return));
+EXTERN int		TkReadBitmapFile _ANSI_ARGS_((Display *display,
+				Drawable d, CONST char *filename,
+				unsigned int *width_return,
+				unsigned int *height_return,
+				Pixmap *bitmap_return, int *x_hot_return,
+				int *y_hot_return));
 /* 79 */
 EXTERN int		TkScrollWindow _ANSI_ARGS_((Tk_Window tkwin, GC gc,
 				int x, int y, int width, int height, int dx,
@@ -365,17 +365,17 @@ EXTERN void		TkpMenuThreadInit _ANSI_ARGS_((void));
 #ifdef __WIN32__
 /* 113 */
 EXTERN void		TkClipBox _ANSI_ARGS_((TkRegion rgn,
-				XRectangle*rect_return));
+				XRectangle *rect_return));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* 113 */
 EXTERN void		TkClipBox _ANSI_ARGS_((TkRegion rgn,
-				XRectangle*rect_return));
+				XRectangle *rect_return));
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 /* 113 */
 EXTERN void		TkClipBox _ANSI_ARGS_((TkRegion rgn,
-				XRectangle*rect_return));
+				XRectangle *rect_return));
 #endif /* MAC_OSX_TK */
 #ifdef __WIN32__
 /* 114 */
@@ -436,32 +436,32 @@ EXTERN int		TkRectInRegion _ANSI_ARGS_((TkRegion rgn, int x,
 #endif /* MAC_OSX_TK */
 #ifdef __WIN32__
 /* 118 */
-EXTERN void		TkSetRegion _ANSI_ARGS_((Display*display, GC gc,
+EXTERN void		TkSetRegion _ANSI_ARGS_((Display *display, GC gc,
 				TkRegion rgn));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* 118 */
-EXTERN void		TkSetRegion _ANSI_ARGS_((Display*display, GC gc,
+EXTERN void		TkSetRegion _ANSI_ARGS_((Display *display, GC gc,
 				TkRegion rgn));
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 /* 118 */
-EXTERN void		TkSetRegion _ANSI_ARGS_((Display*display, GC gc,
+EXTERN void		TkSetRegion _ANSI_ARGS_((Display *display, GC gc,
 				TkRegion rgn));
 #endif /* MAC_OSX_TK */
 #ifdef __WIN32__
 /* 119 */
-EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle*rect,
+EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle *rect,
 				TkRegion src, TkRegion dr_return));
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
 /* 119 */
-EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle*rect,
+EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle *rect,
 				TkRegion src, TkRegion dr_return));
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
 /* 119 */
-EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle*rect,
+EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle *rect,
 				TkRegion src, TkRegion dr_return));
 #endif /* MAC_OSX_TK */
 /* Slot 120 is reserved */
@@ -602,7 +602,7 @@ typedef struct TkIntStubs {
     TkCursor * (*tkGetCursorByName) _ANSI_ARGS_((Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid string)); /* 32 */
     CONST84_RETURN char * (*tkGetDefaultScreenName) _ANSI_ARGS_((Tcl_Interp *interp, CONST char *screenName)); /* 33 */
     TkDisplay * (*tkGetDisplay) _ANSI_ARGS_((Display *display)); /* 34 */
-    int (*tkGetDisplayOf) _ANSI_ARGS_((Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], Tk_Window *tkwinPtr)); /* 35 */
+    int (*tkGetDisplayOf) _ANSI_ARGS_((Tcl_Interp *interp, int objc, Tcl_Obj * CONST objv[], Tk_Window *tkwinPtr)); /* 35 */
     TkWindow * (*tkGetFocusWin) _ANSI_ARGS_((TkWindow *winPtr)); /* 36 */
     int (*tkGetInterpNames) _ANSI_ARGS_((Tcl_Interp *interp, Tk_Window tkwin)); /* 37 */
     int (*tkGetMiterPoints) _ANSI_ARGS_((double p1[], double p2[], double p3[], double width, double m1[], double m2[])); /* 38 */
@@ -645,7 +645,7 @@ typedef struct TkIntStubs {
     int (*tkpUseWindow) _ANSI_ARGS_((Tcl_Interp *interp, Tk_Window tkwin, CONST char *string)); /* 75 */
     int (*tkpWindowWasRecentlyDeleted) _ANSI_ARGS_((Window win, TkDisplay *dispPtr)); /* 76 */
     void (*tkQueueEventForAllChildren) _ANSI_ARGS_((TkWindow *winPtr, XEvent *eventPtr)); /* 77 */
-    int (*tkReadBitmapFile) _ANSI_ARGS_((Display*display, Drawable d, CONST char*filename, unsigned int*width_return, unsigned int*height_return, Pixmap*bitmap_return, int*x_hot_return, int*y_hot_return)); /* 78 */
+    int (*tkReadBitmapFile) _ANSI_ARGS_((Display *display, Drawable d, CONST char *filename, unsigned int *width_return, unsigned int *height_return, Pixmap *bitmap_return, int *x_hot_return, int *y_hot_return)); /* 78 */
     int (*tkScrollWindow) _ANSI_ARGS_((Tk_Window tkwin, GC gc, int x, int y, int width, int height, int dx, int dy, TkRegion damageRgn)); /* 79 */
     void (*tkSelDeadWindow) _ANSI_ARGS_((TkWindow *winPtr)); /* 80 */
     void (*tkSelEventProc) _ANSI_ARGS_((Tk_Window tkwin, XEvent *eventPtr)); /* 81 */
@@ -684,13 +684,13 @@ typedef struct TkIntStubs {
     VOID *reserved113;
 #endif /* UNIX */
 #ifdef __WIN32__
-    void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle*rect_return)); /* 113 */
+    void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle *rect_return)); /* 113 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
-    void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle*rect_return)); /* 113 */
+    void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle *rect_return)); /* 113 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
-    void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle*rect_return)); /* 113 */
+    void (*tkClipBox) _ANSI_ARGS_((TkRegion rgn, XRectangle *rect_return)); /* 113 */
 #endif /* MAC_OSX_TK */
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     VOID *reserved114;
@@ -744,25 +744,25 @@ typedef struct TkIntStubs {
     VOID *reserved118;
 #endif /* UNIX */
 #ifdef __WIN32__
-    void (*tkSetRegion) _ANSI_ARGS_((Display*display, GC gc, TkRegion rgn)); /* 118 */
+    void (*tkSetRegion) _ANSI_ARGS_((Display *display, GC gc, TkRegion rgn)); /* 118 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
-    void (*tkSetRegion) _ANSI_ARGS_((Display*display, GC gc, TkRegion rgn)); /* 118 */
+    void (*tkSetRegion) _ANSI_ARGS_((Display *display, GC gc, TkRegion rgn)); /* 118 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
-    void (*tkSetRegion) _ANSI_ARGS_((Display*display, GC gc, TkRegion rgn)); /* 118 */
+    void (*tkSetRegion) _ANSI_ARGS_((Display *display, GC gc, TkRegion rgn)); /* 118 */
 #endif /* MAC_OSX_TK */
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     VOID *reserved119;
 #endif /* UNIX */
 #ifdef __WIN32__
-    void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle*rect, TkRegion src, TkRegion dr_return)); /* 119 */
+    void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle *rect, TkRegion src, TkRegion dr_return)); /* 119 */
 #endif /* __WIN32__ */
 #ifdef MAC_TCL
-    void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle*rect, TkRegion src, TkRegion dr_return)); /* 119 */
+    void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle *rect, TkRegion src, TkRegion dr_return)); /* 119 */
 #endif /* MAC_TCL */
 #ifdef MAC_OSX_TK
-    void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle*rect, TkRegion src, TkRegion dr_return)); /* 119 */
+    void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle *rect, TkRegion src, TkRegion dr_return)); /* 119 */
 #endif /* MAC_OSX_TK */
     VOID *reserved120;
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */

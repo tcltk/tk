@@ -90,6 +90,13 @@ SC_ENABLE_THREADS
 SC_ENABLE_SHARED
 
 #--------------------------------------------------------------------
+# Locate and source the tclConfig.sh file.
+#--------------------------------------------------------------------
+
+SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
+SC_LOAD_TCLCONFIG
+
+#--------------------------------------------------------------------
 # The statements below define a collection of compile flags.  This
 # macro depends on the value of SHARED_BUILD, and should be called
 # after SC_ENABLE_SHARED checks the configure switches.
@@ -133,13 +140,6 @@ TK_DBGX=${DBGX}
 #--------------------------------------------------------------------
 
 SC_EMBED_MANIFEST(wish.exe.manifest)
-
-#--------------------------------------------------------------------
-# Locate and source the tclConfig.sh file.
-#--------------------------------------------------------------------
-
-SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
-SC_LOAD_TCLCONFIG
 
 SC_BUILD_TCLSH
 SC_PROG_TCLSH

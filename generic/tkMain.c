@@ -126,7 +126,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     tsdPtr->interp = interp;
     Tcl_Preserve((ClientData) interp);
 
-#if (defined(__WIN32__) || defined(MAC_TCL))
+#if ((defined(__WIN32__) && !defined(__CYGWIN__)) || defined(MAC_TCL))
     Tk_InitConsoleChannels(interp);
 #endif
 
