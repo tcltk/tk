@@ -2147,7 +2147,7 @@ ExpandPercents(
 	    }
 	    goto doNumber;
 	case 'A':
-	    if (flags & KEY) {
+	    if ((flags & KEY) && (eventPtr->type != MouseWheelEvent)) {
 		Tcl_DStringFree(&buf);
 		string = TkpGetString(winPtr, eventPtr, &buf);
 	    }

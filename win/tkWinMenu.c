@@ -235,7 +235,7 @@ GetNewID(
 	}
 
 	commandEntryPtr = Tcl_CreateHashEntry(&tsdPtr->commandTable,
-		(char *) curID, &new);
+		INT2PTR(curID), &new);
 	if (new) {
 	    Tcl_SetHashValue(commandEntryPtr, mePtr);
 	    *menuIDPtr = curID;

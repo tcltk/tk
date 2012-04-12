@@ -17,8 +17,8 @@
  * Index array. For each of the characters 'a'-'y', this table gives the first color
  * starting with that character in the xColors table.
  */
-static int az[] = {0, 5, 13, 21, 45, 45, 49, 59, 61, 64, 64, 65, 89, 104,
-	107, 113, 124, 124, 127, 141, 146, 146, 148, 151, 151, 153};
+static int az[] = {0, 5, 13, 21, 45, 46, 50, 60, 62, 65, 66, 67, 91, 106,
+	109, 115, 126, 127, 130, 144, 149, 150, 152, 155, 156, 158};
 
 /*
  * Define an array that defines the mapping from color names to RGB values.
@@ -90,6 +90,7 @@ static const elem xColors[] = {
     "imGrey\0                     \151\151\151\0",
     "odgerBlue\0      \020\116\213\030\164\315\034\206\356\036\220\377\036\220\377\4",
     /* Colors starting with 'e' */
+    "\377" /* placeholder */,
     /* Colors starting with 'f' */
     "irebrick\0       \213\032\032\315\046\046\356\054\054\377\060\060\262\042\042\4",
     "loralWhite\0                 \377\372\360\0",
@@ -116,6 +117,7 @@ static const elem xColors[] = {
     "ndigo\0                      \113\000\202\0",
     "vory\0           \213\213\203\315\315\301\356\356\340\377\377\360\377\377\360\4",
     /* Colors starting with 'j' */
+    "\377" /* placeholder */,
     /* Colors starting with 'k' */
     "haki\0           \213\206\116\315\306\163\356\346\205\377\366\217\360\346\214\4",
     /* Colors starting with 'l' */
@@ -183,6 +185,7 @@ static const elem xColors[] = {
     "owderBlue\0                  \260\340\346\0",
     "urple\0          \125\032\213\175\046\315\221\054\356\233\060\377\200\000\200\4",
     /* Colors starting with 'q' */
+    "\377" /* placeholder */,
     /* Colors starting with 'r' */
     "ed\0             \213\000\000\315\000\000\356\000\000\377\000\000\377\000\000\4",
     "osyBrown\0       \213\151\151\315\233\233\356\264\264\377\301\301\274\217\217\4",
@@ -209,6 +212,7 @@ static const elem xColors[] = {
     "omato\0          \213\066\046\315\117\071\356\134\102\377\143\107\377\143\107\4",
     "urquoise\0       \000\206\213\000\305\315\000\345\356\000\365\377\100\340\320\4",
     /* Colors starting with 'u' */
+    "\377" /* placeholder */,
     /* Colors starting with 'v' */
     "iolet\0                      \356\202\356\0",
     "ioletRed\0       \213\042\122\315\062\170\356\072\214\377\076\226\320\040\220\4",
@@ -217,6 +221,7 @@ static const elem xColors[] = {
     "hite\0                       \377\377\377\0",
     "hiteSmoke\0                  \365\365\365\0",
     /* Colors starting with 'x' */
+    "\377" /* placeholder */,
     /* Colors starting with 'y' */
     "ellow\0          \213\213\000\315\315\000\356\356\000\377\377\000\377\377\000\4",
     "ellowGreen\0                 \232\315\062\0"
@@ -238,7 +243,7 @@ static const elem xColors[] = {
  *----------------------------------------------------------------------
  */
 
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(__CYGWIN__)
 #   ifdef NO_STRTOI64
 /* This version only handles hex-strings without 0x prefix */
 static __int64
@@ -359,7 +364,7 @@ XParseColor(
 	 * p    = pointer to current element being considered.
 	 */
 	int r = (spec[0] - 'A') & 0xdf;
-	if (r > (sizeof(az)/sizeof(az[0] - 1))) {
+	if (r >= (int) sizeof(az) - 1) {
 	    return 0;
 	}
 	size = az[r + 1] - az[r];
