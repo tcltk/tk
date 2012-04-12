@@ -415,7 +415,7 @@ EXTERN Window		TkpMakeWindow(TkWindow *winPtr, Window parent);
 #ifndef TkpMenuNotifyToplevelCreate_TCL_DECLARED
 #define TkpMenuNotifyToplevelCreate_TCL_DECLARED
 /* 67 */
-EXTERN void		TkpMenuNotifyToplevelCreate(Tcl_Interp *interp1,
+EXTERN void		TkpMenuNotifyToplevelCreate(Tcl_Interp *interp,
 				char *menuName);
 #endif
 #ifndef TkpOpenDisplay_TCL_DECLARED
@@ -1110,7 +1110,7 @@ typedef struct TkIntStubs {
     void (*tkpMakeContainer) (Tk_Window tkwin); /* 64 */
     void (*tkpMakeMenuWindow) (Tk_Window tkwin, int transient); /* 65 */
     Window (*tkpMakeWindow) (TkWindow *winPtr, Window parent); /* 66 */
-    void (*tkpMenuNotifyToplevelCreate) (Tcl_Interp *interp1, char *menuName); /* 67 */
+    void (*tkpMenuNotifyToplevelCreate) (Tcl_Interp *interp, char *menuName); /* 67 */
     TkDisplay * (*tkpOpenDisplay) (CONST char *display_name); /* 68 */
     int (*tkPointerEvent) (XEvent *eventPtr, TkWindow *winPtr); /* 69 */
     int (*tkPolygonToArea) (double *polyPtr, int numPoints, double *rectPtr); /* 70 */
