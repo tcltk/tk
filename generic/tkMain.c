@@ -187,7 +187,7 @@ Tk_MainEx(
     is.gotPartial = 0;
     Tcl_Preserve(interp);
 
-#if defined(__WIN32__)
+#if defined(__WIN32__) && !defined(__CYGWIN__)
     Tk_InitConsoleChannels(interp);
 #endif
 
