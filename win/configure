@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP AR ac_ct_AR RANLIB ac_ct_RANLIB RC ac_ct_RC SET_MAKE TCL_THREADS CYGPATH CELIB_DIR DL_LIBS CFLAGS_DEBUG CFLAGS_OPTIMIZE CFLAGS_WARNING MAN2TCLFLAGS CFLAGS_DEFAULT LDFLAGS_DEFAULT VC_MANIFEST_EMBED_DLL VC_MANIFEST_EMBED_EXE TCL_VERSION TCL_BIN_DIR TCL_SRC_DIR TCL_LIB_FILE TCL_LIB_FLAG TCL_LIB_SPEC TCL_STUB_LIB_FILE TCL_STUB_LIB_FLAG TCL_STUB_LIB_SPEC TCL_DEFS BUILD_TCLSH TCLSH_PROG TK_WIN_VERSION MACHINE TK_VERSION TK_MAJOR_VERSION TK_MINOR_VERSION TK_PATCH_LEVEL TK_DBGX TK_LIB_FILE TK_DLL_FILE TK_STUB_LIB_FILE TK_STUB_LIB_FLAG TK_BUILD_STUB_LIB_SPEC TK_SRC_DIR TK_BIN_DIR TCL_MAJOR_VERSION TCL_MINOR_VERSION TCL_PATCH_LEVEL TCL_DBGX CFG_TK_SHARED_LIB_SUFFIX CFG_TK_UNSHARED_LIB_SUFFIX CFG_TK_EXPORT_FILE_SUFFIX EXTRA_CFLAGS DEPARG CC_OBJNAME CC_EXENAME LDFLAGS_DEBUG LDFLAGS_OPTIMIZE LDFLAGS_CONSOLE LDFLAGS_WINDOW TK_RES STLIB_LD SHLIB_LD SHLIB_LD_LIBS SHLIB_CFLAGS SHLIB_SUFFIX TK_SHARED_BUILD LIBS_GUI DLLSUFFIX LIBPREFIX LIBSUFFIX EXESUFFIX LIBRARIES MAKE_LIB POST_MAKE_LIB MAKE_DLL MAKE_EXE TK_LIB_FLAG TK_LIB_SPEC TK_BUILD_LIB_SPEC TK_STUB_LIB_SPEC TK_STUB_LIB_PATH TK_BUILD_STUB_LIB_PATH TK_CC_SEARCH_FLAGS TK_LD_SEARCH_FLAGS RC_OUT RC_TYPE RC_INCLUDE RC_DEFINE RC_DEFINES RES LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT CPP EGREP AR ac_ct_AR RANLIB ac_ct_RANLIB RC ac_ct_RC SET_MAKE TCL_THREADS TCL_VERSION TCL_BIN_DIR TCL_SRC_DIR TCL_LIB_FILE TCL_LIB_FLAG TCL_LIB_SPEC TCL_STUB_LIB_FILE TCL_STUB_LIB_FLAG TCL_STUB_LIB_SPEC TCL_DEFS CYGPATH CELIB_DIR DL_LIBS CFLAGS_DEBUG CFLAGS_OPTIMIZE CFLAGS_WARNING MAN2TCLFLAGS CFLAGS_DEFAULT LDFLAGS_DEFAULT VC_MANIFEST_EMBED_DLL VC_MANIFEST_EMBED_EXE BUILD_TCLSH TCLSH_PROG TK_WIN_VERSION MACHINE TK_VERSION TK_MAJOR_VERSION TK_MINOR_VERSION TK_PATCH_LEVEL TK_DBGX TK_LIB_FILE TK_DLL_FILE TK_STUB_LIB_FILE TK_STUB_LIB_FLAG TK_BUILD_STUB_LIB_SPEC TK_SRC_DIR TK_BIN_DIR TCL_MAJOR_VERSION TCL_MINOR_VERSION TCL_PATCH_LEVEL TCL_DBGX CFG_TK_SHARED_LIB_SUFFIX CFG_TK_UNSHARED_LIB_SUFFIX CFG_TK_EXPORT_FILE_SUFFIX EXTRA_CFLAGS DEPARG CC_OBJNAME CC_EXENAME LDFLAGS_DEBUG LDFLAGS_OPTIMIZE LDFLAGS_CONSOLE LDFLAGS_WINDOW TK_RES STLIB_LD SHLIB_LD SHLIB_LD_LIBS SHLIB_CFLAGS SHLIB_SUFFIX TK_SHARED_BUILD LIBS_GUI DLLSUFFIX LIBPREFIX LIBSUFFIX EXESUFFIX LIBRARIES MAKE_LIB POST_MAKE_LIB MAKE_DLL MAKE_EXE TK_LIB_FLAG TK_LIB_SPEC TK_BUILD_LIB_SPEC TK_STUB_LIB_SPEC TK_STUB_LIB_PATH TK_BUILD_STUB_LIB_PATH TK_CC_SEARCH_FLAGS TK_LD_SEARCH_FLAGS RC_OUT RC_TYPE RC_INCLUDE RC_DEFINE RC_DEFINES RES LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -851,8 +851,8 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-celib=DIR        use Windows/CE support library from DIR
   --with-tcl=DIR          use Tcl 8.6 binaries from DIR
+  --with-celib=DIR        use Windows/CE support library from DIR
 
 Some influential environment variables:
   CC          C compiler command
@@ -3111,6 +3111,101 @@ _ACEOF
 
 
 #--------------------------------------------------------------------
+# Locate and source the tclConfig.sh file.
+#--------------------------------------------------------------------
+
+
+    echo "$as_me:$LINENO: checking the location of tclConfig.sh" >&5
+echo $ECHO_N "checking the location of tclConfig.sh... $ECHO_C" >&6
+
+    if test -d ../../tcl8.6$TK_PATCH_LEVEL/win;  then
+	TCL_BIN_DIR_DEFAULT=../../tcl8.6$TK_PATCH_LEVEL/win
+    elif test -d ../../tcl8.6/win;  then
+	TCL_BIN_DIR_DEFAULT=../../tcl8.6/win
+    else
+	TCL_BIN_DIR_DEFAULT=../../tcl/win
+    fi
+
+
+# Check whether --with-tcl or --without-tcl was given.
+if test "${with_tcl+set}" = set; then
+  withval="$with_tcl"
+  TCL_BIN_DIR=$withval
+else
+  TCL_BIN_DIR=`cd $TCL_BIN_DIR_DEFAULT; pwd`
+fi;
+    if test ! -d $TCL_BIN_DIR; then
+	{ { echo "$as_me:$LINENO: error: Tcl directory $TCL_BIN_DIR does not exist" >&5
+echo "$as_me: error: Tcl directory $TCL_BIN_DIR does not exist" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    if test ! -f $TCL_BIN_DIR/tclConfig.sh; then
+	if test ! -f $TCL_BIN_DIR/../unix/tclConfig.sh; then
+	    { { echo "$as_me:$LINENO: error: There is no tclConfig.sh in $TCL_BIN_DIR:  perhaps you did not specify the Tcl *build* directory (not the toplevel Tcl directory) or you forgot to configure Tcl?" >&5
+echo "$as_me: error: There is no tclConfig.sh in $TCL_BIN_DIR:  perhaps you did not specify the Tcl *build* directory (not the toplevel Tcl directory) or you forgot to configure Tcl?" >&2;}
+   { (exit 1); exit 1; }; }
+	fi
+	TCL_BIN_DIR=`cd ${TCL_BIN_DIR}/../unix; pwd`
+    fi
+    echo "$as_me:$LINENO: result: $TCL_BIN_DIR/tclConfig.sh" >&5
+echo "${ECHO_T}$TCL_BIN_DIR/tclConfig.sh" >&6
+
+
+    echo "$as_me:$LINENO: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
+echo $ECHO_N "checking for existence of $TCL_BIN_DIR/tclConfig.sh... $ECHO_C" >&6
+
+    if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
+        echo "$as_me:$LINENO: result: loading" >&5
+echo "${ECHO_T}loading" >&6
+	. $TCL_BIN_DIR/tclConfig.sh
+    else
+        echo "$as_me:$LINENO: result: file not found" >&5
+echo "${ECHO_T}file not found" >&6
+    fi
+
+    #
+    # If the TCL_BIN_DIR is the build directory (not the install directory),
+    # then set the common variable name to the value of the build variables.
+    # For example, the variable TCL_LIB_SPEC will be set to the value
+    # of TCL_BUILD_LIB_SPEC. An extension should make use of TCL_LIB_SPEC
+    # instead of TCL_BUILD_LIB_SPEC since it will work with both an
+    # installed and uninstalled version of Tcl.
+    #
+
+    if test -f $TCL_BIN_DIR/Makefile ; then
+        TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
+        TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
+        TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
+    fi
+
+    #
+    # eval is required to do the TCL_DBGX substitution
+    #
+
+    eval "TCL_LIB_FILE=\"${TCL_LIB_FILE}\""
+    eval "TCL_LIB_FLAG=\"${TCL_LIB_FLAG}\""
+    eval "TCL_LIB_SPEC=\"${TCL_LIB_SPEC}\""
+
+    eval "TCL_STUB_LIB_FILE=\"${TCL_STUB_LIB_FILE}\""
+    eval "TCL_STUB_LIB_FLAG=\"${TCL_STUB_LIB_FLAG}\""
+    eval "TCL_STUB_LIB_SPEC=\"${TCL_STUB_LIB_SPEC}\""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#--------------------------------------------------------------------
 # The statements below define a collection of compile flags.  This
 # macro depends on the value of SHARED_BUILD, and should be called
 # after SC_ENABLE_SHARED checks the configure switches.
@@ -3284,6 +3379,9 @@ fi
 
     if test "$GCC" = "yes"; then
 
+      if test "$TCL_CC" = "gcc"; then
+	CFLAGS="$CFLAGS -mwin32"
+      fi
       echo "$as_me:$LINENO: checking for cross-compile version of gcc" >&5
 echo $ECHO_N "checking for cross-compile version of gcc... $ECHO_C" >&6
 if test "${ac_cv_cross+set}" = set; then
@@ -4645,6 +4743,11 @@ fi;
 	CFLAGS_DEFAULT='$(CFLAGS_OPTIMIZE)'
 	LDFLAGS_DEFAULT='$(LDFLAGS_OPTIMIZE)'
 	DBGX=""
+
+cat >>confdefs.h <<\_ACEOF
+#define NDEBUG 1
+_ACEOF
+
 	echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
 
@@ -4669,18 +4772,21 @@ _ACEOF
 
 
     if test "$tcl_ok" = "mem" -o "$tcl_ok" = "all"; then
-	cat >>confdefs.h <<\_ACEOF
+
+cat >>confdefs.h <<\_ACEOF
 #define TCL_MEM_DEBUG 1
 _ACEOF
 
     fi
 
     if test "$tcl_ok" = "compile" -o "$tcl_ok" = "all"; then
-	cat >>confdefs.h <<\_ACEOF
+
+cat >>confdefs.h <<\_ACEOF
 #define TCL_COMPILE_DEBUG 1
 _ACEOF
 
-	cat >>confdefs.h <<\_ACEOF
+
+cat >>confdefs.h <<\_ACEOF
 #define TCL_COMPILE_STATS 1
 _ACEOF
 
@@ -4754,102 +4860,6 @@ rm -f conftest*
     fi
     echo "$as_me:$LINENO: result: $result" >&5
 echo "${ECHO_T}$result" >&6
-
-
-
-
-#--------------------------------------------------------------------
-# Locate and source the tclConfig.sh file.
-#--------------------------------------------------------------------
-
-
-    echo "$as_me:$LINENO: checking the location of tclConfig.sh" >&5
-echo $ECHO_N "checking the location of tclConfig.sh... $ECHO_C" >&6
-
-    if test -d ../../tcl8.6$TK_PATCH_LEVEL/win;  then
-	TCL_BIN_DIR_DEFAULT=../../tcl8.6$TK_PATCH_LEVEL/win
-    elif test -d ../../tcl8.6/win;  then
-	TCL_BIN_DIR_DEFAULT=../../tcl8.6/win
-    else
-	TCL_BIN_DIR_DEFAULT=../../tcl/win
-    fi
-
-
-# Check whether --with-tcl or --without-tcl was given.
-if test "${with_tcl+set}" = set; then
-  withval="$with_tcl"
-  TCL_BIN_DIR=$withval
-else
-  TCL_BIN_DIR=`cd $TCL_BIN_DIR_DEFAULT; pwd`
-fi;
-    if test ! -d $TCL_BIN_DIR; then
-	{ { echo "$as_me:$LINENO: error: Tcl directory $TCL_BIN_DIR does not exist" >&5
-echo "$as_me: error: Tcl directory $TCL_BIN_DIR does not exist" >&2;}
-   { (exit 1); exit 1; }; }
-    fi
-    if test ! -f $TCL_BIN_DIR/tclConfig.sh; then
-	if test ! -f $TCL_BIN_DIR/../unix/tclConfig.sh; then
-	    { { echo "$as_me:$LINENO: error: There is no tclConfig.sh in $TCL_BIN_DIR:  perhaps you did not specify the Tcl *build* directory (not the toplevel Tcl directory) or you forgot to configure Tcl?" >&5
-echo "$as_me: error: There is no tclConfig.sh in $TCL_BIN_DIR:  perhaps you did not specify the Tcl *build* directory (not the toplevel Tcl directory) or you forgot to configure Tcl?" >&2;}
-   { (exit 1); exit 1; }; }
-	fi
-	TCL_BIN_DIR=`cd ${TCL_BIN_DIR}/../unix; pwd`
-	CFLAGS="$CFLAGS -mwin32"
-    fi
-    echo "$as_me:$LINENO: result: $TCL_BIN_DIR/tclConfig.sh" >&5
-echo "${ECHO_T}$TCL_BIN_DIR/tclConfig.sh" >&6
-
-
-    echo "$as_me:$LINENO: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
-echo $ECHO_N "checking for existence of $TCL_BIN_DIR/tclConfig.sh... $ECHO_C" >&6
-
-    if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
-        echo "$as_me:$LINENO: result: loading" >&5
-echo "${ECHO_T}loading" >&6
-	. $TCL_BIN_DIR/tclConfig.sh
-    else
-        echo "$as_me:$LINENO: result: file not found" >&5
-echo "${ECHO_T}file not found" >&6
-    fi
-
-    #
-    # If the TCL_BIN_DIR is the build directory (not the install directory),
-    # then set the common variable name to the value of the build variables.
-    # For example, the variable TCL_LIB_SPEC will be set to the value
-    # of TCL_BUILD_LIB_SPEC. An extension should make use of TCL_LIB_SPEC
-    # instead of TCL_BUILD_LIB_SPEC since it will work with both an
-    # installed and uninstalled version of Tcl.
-    #
-
-    if test -f $TCL_BIN_DIR/Makefile ; then
-        TCL_LIB_SPEC=${TCL_BUILD_LIB_SPEC}
-        TCL_STUB_LIB_SPEC=${TCL_BUILD_STUB_LIB_SPEC}
-        TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
-    fi
-
-    #
-    # eval is required to do the TCL_DBGX substitution
-    #
-
-    eval "TCL_LIB_FILE=\"${TCL_LIB_FILE}\""
-    eval "TCL_LIB_FLAG=\"${TCL_LIB_FLAG}\""
-    eval "TCL_LIB_SPEC=\"${TCL_LIB_SPEC}\""
-
-    eval "TCL_STUB_LIB_FILE=\"${TCL_STUB_LIB_FILE}\""
-    eval "TCL_STUB_LIB_FLAG=\"${TCL_STUB_LIB_FLAG}\""
-    eval "TCL_STUB_LIB_SPEC=\"${TCL_STUB_LIB_SPEC}\""
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -5710,6 +5720,16 @@ s,@RC@,$RC,;t t
 s,@ac_ct_RC@,$ac_ct_RC,;t t
 s,@SET_MAKE@,$SET_MAKE,;t t
 s,@TCL_THREADS@,$TCL_THREADS,;t t
+s,@TCL_VERSION@,$TCL_VERSION,;t t
+s,@TCL_BIN_DIR@,$TCL_BIN_DIR,;t t
+s,@TCL_SRC_DIR@,$TCL_SRC_DIR,;t t
+s,@TCL_LIB_FILE@,$TCL_LIB_FILE,;t t
+s,@TCL_LIB_FLAG@,$TCL_LIB_FLAG,;t t
+s,@TCL_LIB_SPEC@,$TCL_LIB_SPEC,;t t
+s,@TCL_STUB_LIB_FILE@,$TCL_STUB_LIB_FILE,;t t
+s,@TCL_STUB_LIB_FLAG@,$TCL_STUB_LIB_FLAG,;t t
+s,@TCL_STUB_LIB_SPEC@,$TCL_STUB_LIB_SPEC,;t t
+s,@TCL_DEFS@,$TCL_DEFS,;t t
 s,@CYGPATH@,$CYGPATH,;t t
 s,@CELIB_DIR@,$CELIB_DIR,;t t
 s,@DL_LIBS@,$DL_LIBS,;t t
@@ -5721,16 +5741,6 @@ s,@CFLAGS_DEFAULT@,$CFLAGS_DEFAULT,;t t
 s,@LDFLAGS_DEFAULT@,$LDFLAGS_DEFAULT,;t t
 s,@VC_MANIFEST_EMBED_DLL@,$VC_MANIFEST_EMBED_DLL,;t t
 s,@VC_MANIFEST_EMBED_EXE@,$VC_MANIFEST_EMBED_EXE,;t t
-s,@TCL_VERSION@,$TCL_VERSION,;t t
-s,@TCL_BIN_DIR@,$TCL_BIN_DIR,;t t
-s,@TCL_SRC_DIR@,$TCL_SRC_DIR,;t t
-s,@TCL_LIB_FILE@,$TCL_LIB_FILE,;t t
-s,@TCL_LIB_FLAG@,$TCL_LIB_FLAG,;t t
-s,@TCL_LIB_SPEC@,$TCL_LIB_SPEC,;t t
-s,@TCL_STUB_LIB_FILE@,$TCL_STUB_LIB_FILE,;t t
-s,@TCL_STUB_LIB_FLAG@,$TCL_STUB_LIB_FLAG,;t t
-s,@TCL_STUB_LIB_SPEC@,$TCL_STUB_LIB_SPEC,;t t
-s,@TCL_DEFS@,$TCL_DEFS,;t t
 s,@BUILD_TCLSH@,$BUILD_TCLSH,;t t
 s,@TCLSH_PROG@,$TCLSH_PROG,;t t
 s,@TK_WIN_VERSION@,$TK_WIN_VERSION,;t t
