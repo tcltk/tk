@@ -305,7 +305,6 @@ declare 83 {
 #    void TkSetClassProcs(Tk_Window tkwin,
 #	    TkClassProcs *procs, ClientData instanceData)
 #}
-
 declare 85 {
     void TkSetWindowMenuBar(Tcl_Interp *interp, Tk_Window tkwin,
 	    const char *oldMenuName, const char *menuName)
@@ -1037,7 +1036,6 @@ declare 9 win {
 declare 10 win {
     XHostAddress *XListHosts(Display *d, int *i, Bool *b)
 }
-
 # second parameter was of type KeyCode
 declare 11 win {
     KeySym XKeycodeToKeysym(Display *d, unsigned int k, int i)
