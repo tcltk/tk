@@ -868,8 +868,8 @@ TkParseColor(
     const char *name,     /* String to be parsed */
     XColor *color)
 {
+    char buf[14];
     if (*name == '#') {
-	char buf[14];
 	buf[0] = '#'; buf[13] = '\0';
 	if (!*(++name) || !*(++name) || !*(++name)) {
 	    /* Not at least 3 hex digits, so invalid */
