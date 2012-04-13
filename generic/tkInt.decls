@@ -223,7 +223,7 @@ declare 57 {
     void TkpClaimFocus(TkWindow *topLevelPtr, int force)
 }
 declare 58 {
-    void TkpDisplayWarning( const char *msg, const char *title)
+    void TkpDisplayWarning(const char *msg, const char *title)
 }
 declare 59 {
     void TkpGetAppName(Tcl_Interp *interp, Tcl_DString *name)
@@ -254,7 +254,7 @@ declare 67 {
     void TkpMenuNotifyToplevelCreate(Tcl_Interp *interp, char *menuName)
 }
 declare 68 {
-    TkDisplay *TkpOpenDisplay( const char *display_name)
+    TkDisplay *TkpOpenDisplay(const char *display_name)
 }
 declare 69 {
     int TkPointerEvent(XEvent *eventPtr, TkWindow *winPtr)
