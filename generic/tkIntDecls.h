@@ -143,7 +143,7 @@ EXTERN CONST84_RETURN char * TkGetDefaultScreenName _ANSI_ARGS_((
 EXTERN TkDisplay *	TkGetDisplay _ANSI_ARGS_((Display *display));
 /* 35 */
 EXTERN int		TkGetDisplayOf _ANSI_ARGS_((Tcl_Interp *interp,
-				int objc, Tcl_Obj * CONST objv[],
+				int objc, Tcl_Obj *CONST objv[],
 				Tk_Window *tkwinPtr));
 /* 36 */
 EXTERN TkWindow *	TkGetFocusWin _ANSI_ARGS_((TkWindow *winPtr));
@@ -235,7 +235,7 @@ EXTERN Window		TkpMakeWindow _ANSI_ARGS_((TkWindow *winPtr,
 				Window parent));
 /* 67 */
 EXTERN void		TkpMenuNotifyToplevelCreate _ANSI_ARGS_((
-				Tcl_Interp *interp1, char *menuName));
+				Tcl_Interp *interp, char *menuName));
 /* 68 */
 EXTERN TkDisplay *	TkpOpenDisplay _ANSI_ARGS_((CONST char *display_name));
 /* 69 */
@@ -602,7 +602,7 @@ typedef struct TkIntStubs {
     TkCursor * (*tkGetCursorByName) _ANSI_ARGS_((Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid string)); /* 32 */
     CONST84_RETURN char * (*tkGetDefaultScreenName) _ANSI_ARGS_((Tcl_Interp *interp, CONST char *screenName)); /* 33 */
     TkDisplay * (*tkGetDisplay) _ANSI_ARGS_((Display *display)); /* 34 */
-    int (*tkGetDisplayOf) _ANSI_ARGS_((Tcl_Interp *interp, int objc, Tcl_Obj * CONST objv[], Tk_Window *tkwinPtr)); /* 35 */
+    int (*tkGetDisplayOf) _ANSI_ARGS_((Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], Tk_Window *tkwinPtr)); /* 35 */
     TkWindow * (*tkGetFocusWin) _ANSI_ARGS_((TkWindow *winPtr)); /* 36 */
     int (*tkGetInterpNames) _ANSI_ARGS_((Tcl_Interp *interp, Tk_Window tkwin)); /* 37 */
     int (*tkGetMiterPoints) _ANSI_ARGS_((double p1[], double p2[], double p3[], double width, double m1[], double m2[])); /* 38 */
@@ -634,7 +634,7 @@ typedef struct TkIntStubs {
     void (*tkpMakeContainer) _ANSI_ARGS_((Tk_Window tkwin)); /* 64 */
     void (*tkpMakeMenuWindow) _ANSI_ARGS_((Tk_Window tkwin, int transient)); /* 65 */
     Window (*tkpMakeWindow) _ANSI_ARGS_((TkWindow *winPtr, Window parent)); /* 66 */
-    void (*tkpMenuNotifyToplevelCreate) _ANSI_ARGS_((Tcl_Interp *interp1, char *menuName)); /* 67 */
+    void (*tkpMenuNotifyToplevelCreate) _ANSI_ARGS_((Tcl_Interp *interp, char *menuName)); /* 67 */
     TkDisplay * (*tkpOpenDisplay) _ANSI_ARGS_((CONST char *display_name)); /* 68 */
     int (*tkPointerEvent) _ANSI_ARGS_((XEvent *eventPtr, TkWindow *winPtr)); /* 69 */
     int (*tkPolygonToArea) _ANSI_ARGS_((double *polyPtr, int numPoints, double *rectPtr)); /* 70 */
