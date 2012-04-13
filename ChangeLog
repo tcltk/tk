@@ -1,3 +1,8 @@
+2012-04-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/rules.vc: [Bug 3517448] TclKit build fails (unresolved
+	__strtoi64)
+
 2012-04-07  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkBind.c: [Bug 3176239] control-MouseWheel causes segv
