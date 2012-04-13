@@ -6401,20 +6401,24 @@ Tk_GetVRootGeometry(
     int *widthPtr, int *heightPtr)
 				/* Store dimensions of virtual root here. */
 {
-    TkWindow *winPtr = (TkWindow *) tkwin;
+    register TkWindow *winPtr = (TkWindow *) tkwin;
+    POINT point;
+
+    point.x = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    point.y = GetSystemMetrics(SM_YVIRTUALSCREEN);
 
     /*
-     * XXX: This is not correct for multiple monitors. There may be many
-     * changes required to get this right, and it may effect existing
-     * applications that don't consider possible <0 vroot. See
-     * http://msdn.microsoft.com/library/en-us/gdi/monitor_3lrn.asp for more
-     * info.
+     * If the window is mapped, let Windows figure out the translation.
      */
 
-    *xPtr = 0;
-    *yPtr = 0;
-    *widthPtr = DisplayWidth(winPtr->display, winPtr->screenNum);
-    *heightPtr = DisplayHeight(winPtr->display, winPtr->screenNum);
+    if (winPtr->window != None) {
+	HWND hwnd = Tk_GetHWND(winPtr->window);
+	ClientToScreen(hwnd, &point);
+    }
+    *xPtr = point.x;
+    *yPtr = point.y;
+    *widthPtr = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    *heightPtr = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 }
 
 /*
