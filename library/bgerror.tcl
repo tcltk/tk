@@ -242,8 +242,9 @@ proc ::tk::dialog::error::bgerror err {
     bind .bgerrorDialog <Destroy>	[namespace code [list Destroy %W]]
     .bgerrorDialog.function configure -command [namespace code Details]
 
-    # 6. Update all the geometry information so we know how big it wants
-    # to be, then center the window in the display and deiconify it.
+    # 6. Withdraw the window, then update all the geometry information
+    # so we know how big it wants to be, then center the window in the
+    # display (Motif style) and de-iconify it.
 
     ::tk::PlaceWindow .bgerrorDialog
 
