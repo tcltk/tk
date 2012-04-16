@@ -122,6 +122,7 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	    if {$y < 22} { set y 22 }
 	}
     }
+    wm maxsize $w [winfo vrootwidth $w] [winfo vrootheight $w]
     wm geometry $w +$x+$y
     wm deiconify $w
 }
