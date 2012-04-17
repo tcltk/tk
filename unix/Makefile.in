@@ -632,8 +632,15 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    (\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
 	    echo "if {[package vcompare [package provide Tcl] $(TCLVERSION)] != 0} { return }";\
-	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)\
-		[list load [file join \$$dir $${relative}$(TK_LIB_FILE)] Tk]";\
+	    echo "if {[string match CYGWIN* \$$::tcl_platform(os)]} {";\
+	    echo "    if {([info exists ::env(DISPLAY)] || [lsearch -exact \$$::argv -display] > -1)} {";\
+	    echo "	package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION) [list load [file join \$$dir $${relative}.. bin $(TK_LIB_FILE)] Tk]";\
+	    echo "    } else {";\
+	    echo "	package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION) [list load [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll] Tk]";\
+	    echo "    }";\
+	    echo "} else {";\
+	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION) [list load [file join \$$dir $${relative}$(TK_LIB_FILE)] Tk]";\
+	    echo "}";\
 	    ) > $(PKG_INDEX); \
 	    fi
 	@echo "Installing $(LIB_FILE) to $(LIB_INSTALL_DIR)/"
