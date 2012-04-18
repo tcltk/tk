@@ -151,7 +151,7 @@ static const TkCmd commands[] = {
     {"scrollbar",	Tk_ScrollbarCmd,	NULL,			PASSMAINWINDOW|ISSAFE},
     {"spinbox",		NULL,			Tk_SpinboxObjCmd,	ISSAFE},
     {"text",		NULL,			Tk_TextObjCmd,		PASSMAINWINDOW|ISSAFE},
-    {"toplevel",	NULL,			Tk_ToplevelObjCmd,	0, 0},
+    {"toplevel",	NULL,			Tk_ToplevelObjCmd,	0},
 
     /*
      * Classic widget class commands.
@@ -860,7 +860,7 @@ TkCreateMainWindow(
     Tcl_HashEntry *hPtr;
     register TkMainInfo *mainPtr;
     register TkWindow *winPtr;
-    register TkCmd *cmdPtr;
+    register const TkCmd *cmdPtr;
     ClientData clientData;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -1502,7 +1502,7 @@ Tk_DestroyWindow(
 	}
 	winPtr->mainPtr->refCount--;
 	if (winPtr->mainPtr->refCount == 0) {
-	    register TkCmd *cmdPtr;
+	    register const TkCmd *cmdPtr;
 
 	    /*
 	     * We just deleted the last window in the application. Delete the
