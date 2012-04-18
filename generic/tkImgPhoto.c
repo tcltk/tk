@@ -274,7 +274,7 @@ struct SubcommandOptions {
  * of the OPT_* constants above.
  */
 
-static char *optionNames[] = {
+static const char *const optionNames[] = {
     "-background",
     "-compositingrule",
     "-format",
@@ -1630,7 +1630,8 @@ ParseSubcommandOptions(
 {
     int index, c, bit, currentBit, length;
     int values[4], numValues, maxValues, argIndex;
-    char *option, **listPtr;
+    char *option;
+    const char *const *listPtr;
 
     for (index = *optIndexPtr; index < objc; *optIndexPtr = ++index) {
 	/*
