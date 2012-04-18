@@ -85,7 +85,7 @@ static const Tk_SegType tkTextEmbWindowType = {
  * Definitions for alignment values:
  */
 
-static char *alignStrings[] = {
+static const char *alignStrings[] = {
     "baseline", "bottom", "center", "top", NULL
 };
 
