@@ -34,7 +34,7 @@
  * The following table defines the legal values for the -orient option.
  */
 
-static char *orientStrings[] = {
+static CONST char *orientStrings[] = {
     "horizontal", "vertical", (char *) NULL
 };
 

@@ -717,7 +717,7 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 		Tcl_Obj *customPtr;
 	    } TypesRecord;
 	    TypesRecord *recordPtr;
-	    static char *stringTable[] = {"one", "two", "three", "four", 
+	    static CONST char *stringTable[] = {"one", "two", "three", "four", 
 		    (char *) NULL};
 	    static Tk_OptionSpec typesSpecs[] = {
 		{TK_OPTION_BOOLEAN,
@@ -1032,7 +1032,7 @@ TestobjconfigObjCmd(clientData, interp, objc, objv)
 		char *custom;
 	    } InternalRecord;
 	    InternalRecord *recordPtr;
-	    static char *internalStringTable[] = {
+	    static CONST char *internalStringTable[] = {
 		    "one", "two", "three", "four", (char *) NULL
 	    };
 	    static Tk_OptionSpec internalSpecs[] = {
