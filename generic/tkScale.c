@@ -26,7 +26,7 @@
  * used together with the "enum orient" declaration in tkScale.h.
  */
 
-static char *orientStrings[] = {
+static CONST char *orientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
@@ -35,7 +35,7 @@ static char *orientStrings[] = {
  * used together with the "enum state" declaration in tkScale.h.
  */
 
-static char *stateStrings[] = {
+static CONST char *stateStrings[] = {
     "active", "disabled", "normal", NULL
 };
 

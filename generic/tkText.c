@@ -48,7 +48,7 @@
  * table below.
  */
 
-static char *stateStrings[] = {
+static const char *stateStrings[] = {
     "disabled", "normal", NULL
 };
 
@@ -58,7 +58,7 @@ static char *stateStrings[] = {
  * table below.
  */
 
-static char *wrapStrings[] = {
+static const char *wrapStrings[] = {
     "char", "none", "word", NULL
 };
 
@@ -68,7 +68,7 @@ static char *wrapStrings[] = {
  * the string table below.
  */
 
-static char *tabStyleStrings[] = {
+static const char *tabStyleStrings[] = {
     "tabular", "wordprocessor", NULL
 };
 
