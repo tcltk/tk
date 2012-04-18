@@ -25,14 +25,14 @@ static Tcl_ThreadDataKey dataKey;
  * in tkButton.h.
  */
 
-static char *classNames[] = {"Label", "Button", "Checkbutton", "Radiobutton"};
+static CONST char *classNames[] = {"Label", "Button", "Checkbutton", "Radiobutton"};
 
 /*
  * The following table defines the legal values for the -default option.
  * It is used together with the "enum defaultValue" declaration in tkButton.h.
  */
 
-static char *defaultStrings[] = {
+static CONST char *defaultStrings[] = {
     "active", "disabled", "normal", (char *) NULL
 };
 
@@ -41,7 +41,7 @@ static char *defaultStrings[] = {
  * It is used together with the "enum state" declaration in tkButton.h.
  */
 
-static char *stateStrings[] = {
+static CONST char *stateStrings[] = {
     "active", "disabled", "normal", (char *) NULL
 };
 
@@ -50,7 +50,7 @@ static char *stateStrings[] = {
  * It is used with the "enum compound" declaration in tkButton.h
  */
 
-static char *compoundStrings[] = {
+static CONST char *compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", (char *) NULL
 };
 
