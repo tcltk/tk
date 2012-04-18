@@ -20,7 +20,7 @@
  * those found in xatom.h
  */
 
-static char * atomNameArray[] = {
+static const char *atomNameArray[] = {
     "PRIMARY",		"SECONDARY",		"ARC",
     "ATOM",		"BITMAP",		"CARDINAL",
     "COLORMAP",		"CURSOR",		"CUT_BUFFER0",
@@ -190,7 +190,7 @@ AtomInit(
     Tcl_InitHashTable(&dispPtr->atomTable, TCL_ONE_WORD_KEYS);
 
     for (atom = 1; atom <= XA_LAST_PREDEFINED; atom++) {
-	char *name;
+	const char *name;
 	int isNew;
 
 	hPtr = Tcl_FindHashEntry(&dispPtr->atomTable, INT2PTR(atom));
