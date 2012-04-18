@@ -35,7 +35,7 @@
 #define DOUBLES_EQ(d1, d2)	(fabs((d1) - (d2)) < MIN_DBL_VAL)
 
 
-static char *stateStrings[] = {
+static CONST char *stateStrings[] = {
     "disabled", "normal", "readonly", NULL
 };
 
@@ -43,7 +43,7 @@ static char *stateStrings[] = {
  * Definitions for -validate option values:
  */
 
-static char *validateStrings[] = {
+static CONST char *validateStrings[] = {
     "all", "key", "focus", "focusin", "focusout", "none", NULL
 };
 enum validateType {
