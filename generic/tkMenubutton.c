@@ -20,7 +20,7 @@
  * is used together with the "enum direction" declaration in tkMenubutton.h.
  */
 
-static char *directionStrings[] = {
+static CONST char *directionStrings[] = {
     "above", "below", "flush", "left", "right", NULL
 };
 
@@ -29,7 +29,7 @@ static char *directionStrings[] = {
  * used together with the "enum state" declaration in tkMenubutton.h.
  */
 
-static char *stateStrings[] = {
+static CONST char *stateStrings[] = {
     "active", "disabled", "normal", NULL
 };
 
@@ -38,7 +38,7 @@ static char *stateStrings[] = {
  * is used with the "enum compound" declaration in tkMenuButton.h
  */
 
-static char *compoundStrings[] = {
+static CONST char *compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", NULL
 };
 
