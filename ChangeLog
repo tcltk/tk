@@ -1,3 +1,11 @@
+2012-04-20  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.tcl: Use vroot size in stead of screen size for
+	clipping window coordinates in ::tk::PlaceWindow.
+	* generic/dialog.tcl: Use ::tk::PlaceWindow in dialog.tcl, in
+	stead of dumplicating the code there.
+	(harmless part of [Bug 533519])
+
 2012-04-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/rules.vc: [Bug 3517448] TclKit build fails (unresolved
