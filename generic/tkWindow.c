@@ -184,7 +184,7 @@ static const TkCmd commands[] = {
 
 #if defined(__WIN32__) || defined(MAC_OSX_TK)
     {"tk_chooseColor",	NULL,		Tk_ChooseColorObjCmd,	NULL, PASSMAINWINDOW},
-    {"tk_chooseDirectory", NULL,	Tk_ChooseDirectoryObjCmd,NULL, 0, 1},
+    {"tk_chooseDirectory", NULL,	Tk_ChooseDirectoryObjCmd,NULL,PASSMAINWINDOW},
     {"tk_getOpenFile",	NULL,		Tk_GetOpenFileObjCmd,	NULL, PASSMAINWINDOW},
     {"tk_getSaveFile",	NULL,		Tk_GetSaveFileObjCmd,	NULL, PASSMAINWINDOW},
     {"tk_messageBox",	NULL,		Tk_MessageBoxObjCmd,	NULL, PASSMAINWINDOW},
