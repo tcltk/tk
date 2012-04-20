@@ -857,7 +857,7 @@ TkPostTearoffMenu(interp, menuPtr, x, y)
 					 * are posting */
 {
     int vRootX, vRootY, vRootWidth, vRootHeight;
-    int tmp, result;
+    int result;
 
     TkActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
