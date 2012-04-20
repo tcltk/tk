@@ -111,21 +111,22 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
         set checkBounds 0
     }
     if {$checkBounds} {
-	if {$x < 0} {
-	    set x 0
-	} elseif {$x > ([winfo screenwidth $w]-[winfo reqwidth $w])} {
-	    set x [expr {[winfo screenwidth $w]-[winfo reqwidth $w]}]
+	if {$x < [winfo vrootx $w]} {
+	    set x [winfo vrootx $w]
+	} elseif {$x > ([winfo vrootx $w]+[winfo vrootwidth $w]-[winfo reqwidth $w])} {
+	    set x [expr {[winfo vrootx $w]+[winfo vrootwidth $w]-[winfo reqwidth $w]}]
 	}
-	if {$y < 0} {
-	    set y 0
-	} elseif {$y > ([winfo screenheight $w]-[winfo reqheight $w])} {
-	    set y [expr {[winfo screenheight $w]-[winfo reqheight $w]}]
+	if {$y < [winfo vrooty $w]} {
+	    set y [winfo vrooty $w]
+	} elseif {$y > ([winfo vrooty $w]+[winfo vrootheight $w]-[winfo reqheight $w])} {
+	    set y [expr {[winfo vrooty $w]+[winfo vrootheight $w]-[winfo reqheight $w]}]
 	}
 	if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
 	    # Avoid the native menu bar which sits on top of everything.
 	    if {$y < 22} { set y 22 }
 	}
     }
+    wm maxsize $w [winfo vrootwidth $w] [winfo vrootheight $w]
     wm geometry $w +$x+$y
     wm deiconify $w
 }
