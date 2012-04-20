@@ -737,7 +737,7 @@ TkFocusKeyEvent(winPtr, eventPtr)
 {
     DisplayFocusInfo *displayFocusPtr;
     TkWindow *focusWinPtr;
-    int focusX, focusY, vRootX, vRootY, vRootWidth, vRootHeight;
+    int focusX, focusY;
 
     displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
     focusWinPtr = displayFocusPtr->focusWinPtr;
@@ -770,11 +770,9 @@ TkFocusKeyEvent(winPtr, eventPtr)
 	    eventPtr->xkey.x = -1;
 	    eventPtr->xkey.y = -1;
 	} else {
-	    Tk_GetVRootGeometry((Tk_Window) focusWinPtr, &vRootX, &vRootY,
-		    &vRootWidth, &vRootHeight);
 	    Tk_GetRootCoords((Tk_Window) focusWinPtr, &focusX, &focusY);
-	    eventPtr->xkey.x = eventPtr->xkey.x_root - vRootX - focusX;
-	    eventPtr->xkey.y = eventPtr->xkey.y_root - vRootY - focusY;
+	    eventPtr->xkey.x = eventPtr->xkey.x_root - focusX;
+	    eventPtr->xkey.y = eventPtr->xkey.y_root - focusY;
 	}
 	eventPtr->xkey.window = focusWinPtr->window;
 	return focusWinPtr;

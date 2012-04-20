@@ -355,7 +355,7 @@ PrintUsage(interp, argTable, flags)
     register Tk_ArgvInfo *infoPtr;
     int width, i, numSpaces;
 #define NUM_SPACES 20
-    static char spaces[] = "                    ";
+    static CONST char spaces[] = "                    ";
     char tmp[TCL_DOUBLE_SPACE];
 
     /*

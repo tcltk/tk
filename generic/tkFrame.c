@@ -170,7 +170,7 @@ enum labelanchor {
     LABELANCHOR_W, LABELANCHOR_WN, LABELANCHOR_WS
 };
 
-static char *labelAnchorStrings[] = {
+static CONST char *labelAnchorStrings[] = {
     "e", "en", "es", "n", "ne", "nw", "s", "se", "sw", "w", "wn", "ws",
     (char *) NULL
 };
@@ -302,7 +302,7 @@ static Tk_OptionSpec labelframeOptSpec[] = {
  * Class names for widgets, indexed by FrameType.
  */
 
-static char *classNames[] = {"Frame", "Toplevel", "Labelframe"};
+static CONST char *classNames[] = {"Frame", "Toplevel", "Labelframe"};
 
 /*
  * The following table maps from FrameType to the option template for
@@ -312,7 +312,7 @@ static char *classNames[] = {"Frame", "Toplevel", "Labelframe"};
 static Tk_OptionSpec *optionSpecs[] = {
     frameOptSpec,
     toplevelOptSpec,
-    labelframeOptSpec,
+    labelframeOptSpec
 };
 
 /*
