@@ -2428,7 +2428,7 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		string = numStorage;
 		goto doString;
 	    case 'k':
-		if (flags & KEY) {
+		if ((flags & KEY) && (eventPtr->type != MouseWheelEvent)) {
 		    number = eventPtr->xkey.keycode;
 		    goto doNumber;
 		}
@@ -2567,7 +2567,7 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		/*
 		 * This is used only by the MouseWheel event.
 		 */
-		if (flags & KEY) {
+		if ((flags & KEY) && (eventPtr->type == MouseWheelEvent)) {
 		    number = eventPtr->xkey.keycode;
 		    goto doNumber;
 		}
@@ -2576,7 +2576,7 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		number = (int) eventPtr->xany.send_event;
 		goto doNumber;
 	    case 'K':
-		if (flags & KEY) {
+		if ((flags & KEY) && (eventPtr->type != MouseWheelEvent)) {
 		    char *name;
 
 		    name = TkKeysymToString(keySym);
@@ -2586,7 +2586,7 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 		}
 		goto doString;
 	    case 'N':
-		if (flags & KEY) {
+		if ((flags & KEY) && (eventPtr->type != MouseWheelEvent)) {
 		    number = (int) keySym;
 		    goto doNumber;
 		}
