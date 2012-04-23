@@ -866,6 +866,8 @@ typedef struct {
 				 * allocated with ckalloc(). */
     int charValueLen;		/* Length of string in charValuePtr when that
 				 * is non-NULL. */
+    KeySym keysym;		/* Key symbol computed after input methods
+				 * have been invoked */
 } TkKeyEvent;
 
 /*
@@ -1181,6 +1183,14 @@ MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    Tcl_UniChar c, struct TkFontAttributes *faPtr);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const *objv, int flags);
+
+#ifdef __WIN32__
+#define TkParseColor XParseColor
+#else
+MODULE_SCOPE Status TkParseColor (Display * display,
+				Colormap map, CONST char* spec,
+				XColor * colorPtr);
+#endif
 
 /*
  * Unsupported commands.

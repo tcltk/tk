@@ -35,6 +35,12 @@ whether the existing file should be overwritten or not.
 The following \fIoption\-value\fR pairs are possible as command line
 arguments to these two commands:
 .TP
+\fB\-confirmoverwrite\fR \fIboolean\fR
+Configures how the Save dialog reacts when the selected file already
+exists, and saving would overwrite it.  A true value requests a
+confirmation dialog be presented to the user.  A false value requests
+that the overwrite take place without confirmation.  Default value is true.
+.TP
 \fB\-defaultextension\fR \fIextension\fR
 Specifies a string that will be appended to the filename if the user
 enters a filename without an extension. The default value is the empty

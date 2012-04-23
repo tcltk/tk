@@ -914,7 +914,7 @@ proc ::tk::dialog::file:: {type args} {
 
     # Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
-    # display and de-iconify it.
+    # display (Motif style) and de-iconify it.
 
     ::tk::PlaceWindow $w widget $data(-parent)
     wm title $w $data(-title)
@@ -981,6 +981,12 @@ proc ::tk::dialog::file::Config {dataName type argList} {
     #
     if {$type eq "open"} {
 	lappend specs {-multiple "" "" "0"}
+    }
+
+    # The "-confirmoverwrite" option is only for the "save" file dialog.
+    #
+    if {$type eq "save"} {
+	lappend specs {-confirmoverwrite "" "" "1"}
     }
 
     # 2: default values depending on the type of the dialog
@@ -1859,7 +1865,7 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 	set Priv(selectFile) $data(selectFile)
 	set Priv(selectPath) $data(selectPath)
 
-	if {($data(type) eq "save") && [file exists $selectFilePath]} {
+	if {($data(type) eq "save") && $data(-confirmoverwrite) && [file exists $selectFilePath]} {
 	    set reply [tk_messageBox -icon warning -type yesno -parent $w \
 		    -message [mc "File \"%1\$s\" already exists.\nDo you want\
 		    to overwrite it?" $selectFilePath]]
