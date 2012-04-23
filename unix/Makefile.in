@@ -541,7 +541,7 @@ PRIVATE_HDRS = $(GENERIC_DIR)/tkInt.h $(GENERIC_DIR)/tkIntDecls.h \
 	$(GENERIC_DIR)/tkIntPlatDecls.h $(GENERIC_DIR)/tkPort.h \
 	$(TTK_HDRS) $(@TK_WINDOWINGSYSTEM@_PRIVATE_HDRS)
 
-DEMOPROGS = browse hello ixset rmt rolodex tcolor timer widget
+DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
 
 SHELL_ENV = \
 	@LD_LIBRARY_PATH_VAR@="`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}"; \
@@ -694,8 +694,15 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) wish@EXEEXT@
 	    (\
 	    echo "if {[catch {package present Tcl 8.5.0}]} { return }";\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
-	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL)\
-		[list load [file join \$$dir $${relative}$(TK_LIB_FILE)] Tk]";\
+	    echo "if {[string match CYGWIN* \$$::tcl_platform(os)]} {";\
+	    echo "    if {([info exists ::env(DISPLAY)] || [lsearch -exact \$$::argv -display] > -1)} {";\
+	    echo "	package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file join \$$dir $${relative}.. bin $(TK_LIB_FILE)] Tk]";\
+	    echo "    } else {";\
+	    echo "	package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll] Tk]";\
+	    echo "    }";\
+	    echo "} else {";\
+	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file join \$$dir $${relative}$(TK_LIB_FILE)] Tk]";\
+	    echo "}";\
 	    ) > "$(PKG_INDEX)"; \
 	    fi
 	@echo "Installing $(LIB_FILE) to $(LIB_INSTALL_DIR)/"
@@ -785,7 +792,11 @@ install-demos:
 	    done;
 	@for i in $(DEMOPROGS); \
 	    do \
+	    if test $$i = "square"; then \
+	    rm -f  "$(DEMO_INSTALL_DIR)"/$$i; \
+	    else \
 	    chmod 755 "$(DEMO_INSTALL_DIR)"/$$i; \
+	    fi; \
 	    done;
 	@echo "Installing demo images";
 	@for i in $(TOP_DIR)/library/demos/images/*; \

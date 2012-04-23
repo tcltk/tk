@@ -798,7 +798,71 @@ TkDebugColor(
     }
     return resultPtr;
 }
-
+
+#ifndef __WIN32__
+/* This function is not necessary for Win32,
+ * since XParseColor already does the right thing */
+Status
+TkParseColor(
+    Display *display,		/* The display */
+    Colormap map,			/* Color map */
+    const char *name,     /* String to be parsed */
+    XColor *color)
+{
+    char buf[14];
+    if (*name == '#') {
+	buf[0] = '#'; buf[13] = '\0';
+	if (!*(++name) || !*(++name) || !*(++name)) {
+	    /* Not at least 3 hex digits, so invalid */
+	return 0;
+	} else if (!*(++name)) {
+	    /* Exactly 3 hex digits */
+	    buf[9] = buf[10] = buf[11] = buf[12] = *(--name);
+	    buf[5] = buf[6] = buf[7] = buf[8] = *(--name);
+	    buf[1] = buf[2] = buf[3] = buf[4] = *(--name);
+	    name = buf;
+	} else if (!*(++name)	|| !*(++name)) {
+	    /* Not at least 6 hex digits, so invalid */
+	    return 0;
+	} else if (!*(++name)) {
+	    /* Exactly 6 hex digits */
+	    buf[10] = buf[12] = *(--name);
+	    buf[9] = buf[11] = *(--name);
+	    buf[6] = buf[8] = *(--name);
+	    buf[5] = buf[7] = *(--name);
+	    buf[2] = buf[4] = *(--name);
+	    buf[1] = buf[3] = *(--name);
+	    name = buf;
+	} else if (!*(++name) || !*(++name)) {
+	    /* Not at least 9 hex digits, so invalid */
+	    return 0;
+	} else if (!*(++name)) {
+	    /* Exactly 9 hex digits */
+	    buf[11] = *(--name);
+	    buf[10] = *(--name);
+	    buf[9] = buf[12] = *(--name);
+	    buf[7] = *(--name);
+	    buf[6] = *(--name);
+	    buf[5] = buf[8] = *(--name);
+	    buf[3] = *(--name);
+	    buf[2] = *(--name);
+	    buf[1] = buf[4] = *(--name);
+	    name = buf;
+	} else if (!*(++name) || !*(++name) || *(++name)) {
+	    /* Not exactly 12 hex digits, so invalid */
+	    return 0;
+	} else {
+	    name -= 13;
+	}
+    } else {
+	if (strlen(name) > 99) {
+	    /* Don't bother to parse this. [Bug 2809525]*/
+	    return 0;
+	}
+    }
+    return XParseColor(display, map, name, color);
+}
+#endif /* __WIN32__ */
 /*
  * Local Variables:
  * mode: c

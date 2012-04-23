@@ -24,7 +24,7 @@
  * Translation table between X gc functions and Win32 raster op modes.
  */
 
-int tkpWinRopModes[] = {
+CONST int tkpWinRopModes[] = {
     R2_BLACK,			/* GXclear */
     R2_MASKPEN,			/* GXand */
     R2_MASKPENNOT,		/* GXandReverse */
@@ -55,7 +55,7 @@ int tkpWinRopModes[] = {
 #define SRCORREVERSE	(DWORD)0x00DD0228 /* dest = source OR (NOT dest) */
 #define SRCNAND		(DWORD)0x007700E6 /* dest = NOT (source AND dest) */
 
-int tkpWinBltModes[] = {
+CONST int tkpWinBltModes[] = {
     BLACKNESS,			/* GXclear */
     SRCAND,			/* GXand */
     SRCERASE,			/* GXandReverse */
@@ -93,9 +93,10 @@ int tkpWinBltModes[] = {
 /*
  * Macros used later in the file.
  */
-
-#define MIN(a,b)	((a>b) ? b : a)
-#define MAX(a,b)	((a<b) ? b : a)
+#ifndef MIN
+#   define MIN(a,b)	((a>b) ? b : a)
+#   define MAX(a,b)	((a<b) ? b : a)
+#endif
 
 /*
  * The followng typedef is used to pass Windows GDI drawing functions.
@@ -744,7 +745,7 @@ RenderObject(
     HPEN pen,
     WinDrawFunc func)
 {
-    RECT rect;
+    RECT rect = {0, 0, 0, 0};
     HPEN oldPen;
     HBRUSH oldBrush;
     POINT *winPoints = ConvertPoints(points, npoints, mode, &rect);

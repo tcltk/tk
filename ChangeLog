@@ -1,3 +1,245 @@
+2012-04-22  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkBind.c (ExpandPercents): [Bug 3520202]: Ensure that the
+	%k, %K and %N substitutions use dummy tokens with <MouseWheel> events
+	and that the %D subsitution is a dummy with <Key>/<KeyRelease>. This
+	was causing significant indigestion (and a read of goodness knows what
+	memory) to Tkinter/Python because of the way they map events between
+	languages.
+
+2012-04-20  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.tcl: Use vroot size in stead of screen size for
+	clipping window coordinates in ::tk::PlaceWindow.
+	* generic/dialog.tcl: Use ::tk::PlaceWindow in dialog.tcl, in
+	stead of dumplicating the code there.
+	(harmless part of [Bug 533519])
+
+2012-04-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/rules.vc: [Bug 3517448] TclKit build fails (unresolved
+	__strtoi64)
+
+2012-04-07  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkBind.c: [Bug 3176239] control-MouseWheel causes segv
+
+2012-03-30  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4:        [Bug 3511806] Compiler checks too early
+	* unix/configure.in:  This change allows to build the cygwin
+	* unix/configure      and mingw32 ports of Tcl/Tk to build
+	* win/tcl.m4:         out-of-the-box using a native or cross-
+	* win/configure.in:   compiler.
+	* win/configure
+
+2012-03-21  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkColor.c:  [Bug 2809525] Abort on overlong color name.
+	* unix/tkUnixColor.c:
+
+2012-03-18  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* xlib/xcolors.c:   [RFE 3503317]: XParseColor speedup
+	* xlib/rgb.txt:     List of all colors accepted by Tk in Xorg format
+	* tests/color.test: Added test case for all colors in rgb.txt
+
+2012-03-07  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkObj.c (GetPixelsFromObjEx): [Bug 3497848]: Better rounding
+	of pixel values to integers.
+
+2012-03-04  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4:    Patch from the cygwin folks
+	* unix/configure: (re-generated)
+
+2012-02-28  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkText.c:      [Bug 1630262, Bug 1615425]: segfault
+	* generic/tkTextBTree.c  when deleting lines or tagging outside of
+	* generic/tkTextDisp.c   the -startline/-endline range with peer
+	* generic/tkTextMark.c   text widgets.
+	* tests/text.test        [Bug 3487407]: Weird text indices.
+	* tests/textMark.test
+
+2012-02-28  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/canvas.n: [Bug 3495198]: Corrected types of bitmap options.
+
+2012-02-26  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* xlib/xcolors.c: Provide fallback for _strtoi64
+	* win/configure.in: Detect whether _strtoi64 is available
+	* win/configure: (regenerated)
+
+2012-02-15  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* xlib/xcolors.c: [Bug 3486474]: Inconsistent color scaling
+	* generic/tkColor.c: new internal function TkParseColor
+	* generic/tkInt.h:
+	* generic/tk*.c:   Change XParseColor() to TkParseColor() everywhere.
+
+2012-02-10  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinDialog.c (GetFileNameW): Ensure that we do not convert a
+	result list to a string inadvertently, as this causes problems with
+	Tkinter's handling of multiple filename results. Issue was reported
+	via StackOverflow: http://stackoverflow.com/q/9227859/301832
+
+2012-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkImgPhoto.c: [Bug 3480634]: PNG Images missing in menus on Mac
+
+2012-01-27  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 3480471]: tk_getOpenFile crashes on Win64
+
+2012-01-26  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextDisp.c: [Bug-1754043] and [Bug-2321450]: When
+	-blockcursor is true, the cursor appears as a blinking bar which
+	expands to the right edge of the widget.
+
+2012-01-25  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkImgPhoto.c: [Bug 2433260]: non-critical error in
+	Tk_PhotoPutBlock
+
+2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkText.c: Don't increase the epoch twice
+
+2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkText.c:      [Bug-1630271]: segfault/infinite loop
+	* generic/tkTextMark.c:  when a mark is before -startline
+	* tests/textMark.test:
+
+2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkText.c: [Bug-3475627]: Test text-31.11 fails
+
+2012-01-22  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextMark.c: [Bug-3288113,3288121]: Missing marks/endless
+	* tests/textMark.test:  loop in text mark prev/next
+
+2012-01-19  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkText.c: [Bug-3021557]: Moving the cursor in
+	* tests/text.test:  elided text freezes Tk
+
+2011-11-22  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/wish.1: Use the same shebang comment everywhere.
+	* library/demos/hello
+	* library/demos/rmt
+	* library/demos/square
+	* library/demos/tcolor
+	* library/demos/timer
+	* library/demos/widget
+	* unix/Makefile.in: [Bug 1945073]: Demo square.tcl
+	* win/Makefile.in: cannot run; need package tktest
+
+2011-11-17  Alexandre Ferrieux  <ferrieux@users.sourceforge.net>
+
+	* generic/tkCanvas.c: [Bug 3437816]: Missing TCL_ERROR return
+	in [canvas lower].
+
+2011-11-08  Reinhard Max  <max@suse.de>
+
+	* unix/Makefile.in: Add square to DEMOPROGS. It contains a shebang
+	and hence should get installed with executable bits.
+
+	* doc/label.n:         Fix the escaping of leading dots in lines that
+	* doc/text.n:          start with a widget name, so that nroff
+	* doc/ttk_notebook.n:  doesn't mistake it as a non-existing macro
+	* doc/pack.n:          and skips the entire line.
+
+2011-11-04  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5.11 TAGGED FOR RELEASE ***
+
+	* generic/tk.h:		Bump to 8.5.11 for release.
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
+	* changes:	Updated for 8.5.11 release.
+
+2011-11-01  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkObj.c (GetPixelsFromObjEx): [Bug 3431491]: Use a bit of
+	type hackery to allow numbers to be interpreted as coordinates (most
+	notably on a canvas) without reinterpreting via a string.
+
+2011-10-26  Don Porter  <dgp@users.sourceforge.net>
+
+	* changes:	Updates for 8.5.11.
+
+2011-10-01  Kevin B. Kenny  <kennykb@acm.org>
+
+	* generic/tkInt.h:	[Bug 3410609] Change the event mechanism
+	* unix/tkUnixEvent.c:	for <KeyPress> events to use the keysym
+	* unix/tkUnixKey.c:	returned by XLookupString in preference to
+	the one that appears in the raw X event at any level. This change
+	allows binding to ISO_Level3_Shift-ed characters, composed characters,
+	and similar beasts. KeyRelease events still work as they did before,
+	as does Tk with input methods disabled.
+
+2011-09-01  Donal K. Fellows  <dkf@users.sf.net>
+
+	* doc/photo.n: Correctly documented what the [$ph data] command
+	produces without the -format option.
+
+2011-08-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 3388350] mingw64 compiler warnings
+	* win/tkWinDraw.c
+	* win/tkWinSend.c
+	* win/tkWinSendCom.c
+	* win/tkWinColor.c
+	* win/tkWinDialog.c
+	* win/tkWinEmbed.c
+	* win/tkWinMenu.c
+	* win/tkWinPixmap.c
+	* win/tkWinTest.c
+	* win/tkWinWindow.c
+	* win/tkWinWm.c
+	* win/tkWinX.c
+	* win/stubs.c
+	* generic/tkAtom.c
+	* generic/tkSelect.c
+
+2011-08-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkBitmap.c: [Bug 3388350] mingw64 compiler warnings
+	* generic/tkConsole.c
+	* unix/tkUnixMenubu.c
+	* win/tkWinButton.c
+	* win/tkWinEmbed.c
+	* win/tkWinFont.c
+	* win/tkWinImage.c
+	* win/tkWinKey.c
+	* win/tkWinTest.c
+	* win/tkWinWm.c
+
+2011-08-03  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 3314770] regression - Windows file
+	dialogs not resizable
+
+2011-07-28  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* xlib/X11/Xutil.h: [Bug 3380684] XEmptyRegion prototype doesn't
+	match usage
+
 2011-06-29  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/ttk/ttkTrace.c: [Bug 3341056] Correct segfault due to flaw
