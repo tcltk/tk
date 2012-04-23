@@ -561,9 +561,10 @@ typedef struct TkSharedText {
 				 * Each "object" used for this table is the
 				 * name of a tag. */
     int stateEpoch;		/* This is incremented each time the B-tree's
-				 * contents change structurally, and means
-				 * that any cached TkTextIndex objects are no
-				 * longer valid. */
+				 * contents change structurally, or when the
+				 * start/end limits change, and means that any
+				 * cached TkTextIndex objects are no longer
+				 * valid. */
 
     /*
      * Information related to the undo/redo functionality.

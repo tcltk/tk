@@ -466,7 +466,7 @@ FrontWindowAtPoint(
 
     NSCountWindows(&windowCount);
     if (windowCount) {
-	windowNumbers = ckalloc(windowCount * sizeof(NSInteger));
+	windowNumbers = (NSInteger *) ckalloc(windowCount * sizeof(NSInteger));
 	NSWindowList(windowCount, windowNumbers);
 	for (NSInteger index = 0; index < windowCount; index++) {
 	    NSWindow *w = [NSApp windowWithWindowNumber:windowNumbers[index]];
@@ -475,7 +475,7 @@ FrontWindowAtPoint(
 		break;
 	    }
 	}
-	ckfree(windowNumbers);
+	ckfree((char *) windowNumbers);
     }
     return (win ? TkMacOSXGetTkWindow(win) : NULL);
 }
@@ -502,7 +502,7 @@ void
 TkWmNewWindow(
     TkWindow *winPtr)		/* Newly-created top-level window. */
 {
-    WmInfo *wmPtr = ckalloc(sizeof(WmInfo));
+    WmInfo *wmPtr = (WmInfo *) ckalloc(sizeof(WmInfo));
 
     wmPtr->winPtr = winPtr;
     wmPtr->reparent = None;
@@ -760,7 +760,7 @@ TkWmDeadWindow(
 	Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
     }
     if (wmPtr->cmdArgv != NULL) {
-	ckfree(wmPtr->cmdArgv);
+	ckfree((char *) wmPtr->cmdArgv);
     }
     if (wmPtr->clientMachine != NULL) {
 	ckfree(wmPtr->clientMachine);
@@ -787,7 +787,7 @@ TkWmDeadWindow(
 	TkMacOSXMakeCollectableAndRelease(wmPtr->window);
     }
 
-    ckfree(wmPtr);
+    ckfree((char *) wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
 
@@ -1413,11 +1413,11 @@ WmColormapwindowsCmd(
 	!= TCL_OK) {
 	return TCL_ERROR;
     }
-    cmapList = ckalloc((windowObjc+1) * sizeof(TkWindow*));
+    cmapList = (TkWindow **) ckalloc((windowObjc+1) * sizeof(TkWindow*));
     for (i = 0; i < windowObjc; i++) {
 	if (TkGetWindowFromObj(interp, tkwin, windowObjv[i],
 		(Tk_Window *) &winPtr2) != TCL_OK) {
-	    ckfree(cmapList);
+	    ckfree((char *) cmapList);
 	    return TCL_ERROR;
 	}
 	if (winPtr2 == winPtr) {
@@ -1437,7 +1437,7 @@ WmColormapwindowsCmd(
     }
     wmPtr->flags |= WM_COLORMAPS_EXPLICIT;
     if (wmPtr->cmapList != NULL) {
-	ckfree(wmPtr->cmapList);
+	ckfree((char *) wmPtr->cmapList);
     }
     wmPtr->cmapList = cmapList;
     wmPtr->cmapCount = windowObjc;
@@ -1495,7 +1495,7 @@ WmCommandCmd(
     argv3 = Tcl_GetString(objv[3]);
     if (argv3[0] == 0) {
 	if (wmPtr->cmdArgv != NULL) {
-	    ckfree(wmPtr->cmdArgv);
+	    ckfree((char *) wmPtr->cmdArgv);
 	    wmPtr->cmdArgv = NULL;
 	}
 	return TCL_OK;
@@ -1504,7 +1504,7 @@ WmCommandCmd(
 	return TCL_ERROR;
     }
     if (wmPtr->cmdArgv != NULL) {
-	ckfree(wmPtr->cmdArgv);
+	ckfree((char *) wmPtr->cmdArgv);
     }
     wmPtr->cmdArgc = cmdArgc;
     wmPtr->cmdArgv = cmdArgv;
@@ -2711,7 +2711,7 @@ WmProtocolCmd(
     }
     cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
-	protPtr = ckalloc(HANDLER_SIZE(cmdLength));
+	protPtr = (ProtocolHandler *) ckalloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
@@ -2908,7 +2908,7 @@ WmStackorderCmd(
 	for (window_ptr = windows; *window_ptr ; window_ptr++) {
 	    Tcl_AppendElement(interp, (*window_ptr)->pathName);
 	}
-	ckfree(windows);
+	ckfree((char *) windows);
 	return TCL_OK;
     } else {
 	TkWindow *winPtr2;
@@ -2963,7 +2963,7 @@ WmStackorderCmd(
 	    Tcl_Panic("winPtr2 window not found");
 	}
 
-	ckfree(windows);
+	ckfree((char *) windows);
 
 	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
 		&index) != TCL_OK) {
@@ -4532,7 +4532,7 @@ TkWmAddToColormapWindows(
     newPtr[count-1] = winPtr;
     newPtr[count] = topPtr;
     if (oldPtr != NULL) {
-	ckfree(oldPtr);
+	ckfree((char *) oldPtr);
     }
 
     topPtr->wmInfoPtr->cmapList = newPtr;
@@ -5945,7 +5945,7 @@ TkWmStackorderToplevel(
 
     NSCountWindows(&windowCount);
     if (!windowCount) {
-	ckfree(windows);
+	ckfree((char *) windows);
 	windows = NULL;
     } else {
 	window_ptr = windows + table.numEntries;
@@ -5967,7 +5967,7 @@ TkWmStackorderToplevel(
 	    Tcl_Panic("num matched toplevel windows does not equal num "
 		    "children");
 	}
-	ckfree(windowNumbers);
+	ckfree((char *) windowNumbers);
     }
 
   done:

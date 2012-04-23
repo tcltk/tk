@@ -90,6 +90,7 @@ Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
     CreateProc,			/* createProc */
+    NULL
 };
 
 

@@ -23,7 +23,7 @@
  * a whole is not.
  */
 
-static char *wrapStrings[] = {
+static const char *wrapStrings[] = {
     "char", "none", "word", "", NULL
 };
 
@@ -34,7 +34,7 @@ static char *wrapStrings[] = {
  * widget as a whole is not.
  */
 
-static char *tabStyleStrings[] = {
+static const char *tabStyleStrings[] = {
     "tabular", "wordprocessor", "", NULL
 };
 

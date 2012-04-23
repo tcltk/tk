@@ -48,7 +48,7 @@
  * table below.
  */
 
-static char *stateStrings[] = {
+static const char *stateStrings[] = {
     "disabled", "normal", NULL
 };
 
@@ -58,7 +58,7 @@ static char *stateStrings[] = {
  * table below.
  */
 
-static char *wrapStrings[] = {
+static const char *wrapStrings[] = {
     "char", "none", "word", NULL
 };
 
@@ -68,7 +68,7 @@ static char *wrapStrings[] = {
  * the string table below.
  */
 
-static char *tabStyleStrings[] = {
+static const char *tabStyleStrings[] = {
     "tabular", "wordprocessor", NULL
 };
 
@@ -907,7 +907,7 @@ TextWidgetObjCmd(
 		 * We're going to count up all display lines in the logical
 		 * line of 'indexFromPtr' up to, but not including the logical
 		 * line of 'indexToPtr', and then subtract off what we didn't
-		 * what from 'from' and add on what we didn't count from 'to.
+		 * want from 'from' and add on what we didn't count from 'to.
 		 */
 
 		while (index.linePtr != indexToPtr->linePtr) {
@@ -916,17 +916,9 @@ TextWidgetObjCmd(
 		    /*
 		     * We might have skipped past indexToPtr, if we have
 		     * multiple logical lines in a single display line.
-		     * Therefore we iterate through each intermediate logical
-		     * line, just to check. Another approach would be just to
-		     * use TkTextIndexCmp on every while() iteration, but that
-		     * would be less efficient.
 		     */
-
-		    while (fromPtr != index.linePtr) {
-			fromPtr = TkBTreeNextLine(textPtr, fromPtr);
-			if (fromPtr == indexToPtr->linePtr) {
-			    break;
-			}
+		    if (TkTextIndexCmp(&index,indexToPtr) > 0) {
+			break;
 		    }
 		}
 
@@ -2030,6 +2022,7 @@ ConfigureText(
 
     if (mask & TK_TEXT_LINE_RANGE) {
 	int start, end, current;
+	TkTextIndex index1, index2, index3;
 
 	/*
 	 * Line start and/or end have been adjusted. We need to validate the
@@ -2056,13 +2049,15 @@ ConfigureText(
 	    return TCL_ERROR;
 	}
 	current = TkBTreeLinesTo(NULL, textPtr->topIndex.linePtr);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
+		    &index1);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, end, 0,
+		    &index2);
 	if (current < start || current > end) {
 	    TkTextSearch search;
-	    TkTextIndex index1, first, last;
+	    TkTextIndex first, last;
 	    int selChanged = 0;
 
-	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
-		    &index1);
 	    TkTextSetYView(textPtr, &index1, 0);
 
 	    /*
@@ -2105,6 +2100,33 @@ ConfigureText(
 		TkTextSelectionEvent(textPtr);
 		textPtr->abortSelections = 1;
 	    }
+	}
+
+	/* Indices are potentially obsolete after changing -startline and/or
+	 * -endline, therefore increase the epoch.
+	 * Also, clamp the insert and current (unshared) marks to the new
+	 * -startline/-endline range limits of the widget. All other (shared)
+	 * marks are unchanged.
+         * The return value of TkTextMarkNameToIndex does not need to be
+         * checked: "insert" and "current" marks always exist, and the
+         * purpose of the code below precisely is to move them inside the
+         * -startline/-endline range.
+	 */
+
+	textPtr->sharedTextPtr->stateEpoch++;
+	TkTextMarkNameToIndex(textPtr, "insert", &index3);
+	if (TkTextIndexCmp(&index3, &index1) < 0) {
+	    textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &index1);
+	}
+	if (TkTextIndexCmp(&index3, &index2) > 0) {
+	    textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &index2);
+	}
+	TkTextMarkNameToIndex(textPtr, "current", &index3);
+	if (TkTextIndexCmp(&index3, &index1) < 0) {
+	    textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &index1);
+	}
+	if (TkTextIndexCmp(&index3, &index2) > 0) {
+	    textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &index2);
 	}
     }
 
@@ -3079,6 +3101,11 @@ DeleteIndexRange(
 		resetView = 1;
 		line = line1;
 		byteIndex = tPtr->topIndex.byteIndex;
+            } else {
+                /*
+                 * Deletion range starts after the top line. This peers's view
+                 * will not need to be reset. Nothing to do.
+                 */
 	    }
 	} else if (index2.linePtr == tPtr->topIndex.linePtr) {
 	    /*
@@ -3095,6 +3122,11 @@ DeleteIndexRange(
 	    } else {
 		byteIndex -= (index2.byteIndex - index1.byteIndex);
 	    }
+        } else {
+            /*
+             * Deletion range ends before the top line. This peers's view
+             * will not need to be reset. Nothing to do.
+             */
 	}
 	if (resetView) {
 	    lineAndByteIndex[resetViewCount] = line;
@@ -3139,14 +3171,43 @@ DeleteIndexRange(
 	    TkTextIndex indexTmp;
 
 	    if (tPtr == textPtr) {
-		if (viewUpdate) {
+                if (viewUpdate) {
+                    /*
+                     * line cannot be before -startline of textPtr because
+                     * this line corresponds to an index which is necessarily
+                     * between "1.0" and "end" relative to textPtr.
+                     * Therefore no need to clamp line to the -start/-end
+                     * range.
+                     */
+
 		    TkTextMakeByteIndex(sharedTextPtr->tree, textPtr, line,
 			    byteIndex, &indexTmp);
 		    TkTextSetYView(tPtr, &indexTmp, 0);
 		}
 	    } else {
-		TkTextMakeByteIndex(sharedTextPtr->tree, NULL, line,
+                TkTextMakeByteIndex(sharedTextPtr->tree, tPtr, line,
 			byteIndex, &indexTmp);
+                /*
+                 * line may be before -startline of tPtr and must be
+                 * clamped to -startline before providing it to
+                 * TkTextSetYView otherwise lines before -startline
+                 * would be displayed.
+                 * There is no need to worry about -endline however,
+                 * because the view will only be reset if the deletion
+                 * involves the TOP line of the screen
+                 */
+
+                if (tPtr->start != NULL) {
+                    int start;
+                    TkTextIndex indexStart;
+
+                    start = TkBTreeLinesTo(NULL, tPtr->start);
+                    TkTextMakeByteIndex(sharedTextPtr->tree, NULL, start,
+			    0, &indexStart);
+                    if (TkTextIndexCmp(&indexTmp, &indexStart) < 0) {
+                        indexTmp = indexStart;
+                    }
+                }
 		TkTextSetYView(tPtr, &indexTmp, 0);
 	    }
 	}

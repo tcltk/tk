@@ -35,11 +35,13 @@ enum openOptions {
 };
 static const char *saveOptionStrings[] = {
     "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-    "-message", "-parent", "-title", "-typevariable", "-command", NULL
+    "-message", "-parent", "-title", "-typevariable", "-command",
+    "-confirmoverwrite", NULL
 };
 enum saveOptions {
     SAVE_DEFAULT, SAVE_FILETYPES, SAVE_INITDIR, SAVE_INITFILE,
-    SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE, SAVE_COMMAND, SAVE_CONFIRMOW
+    SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE, SAVE_COMMAND,
+    SAVE_CONFIRMOW
 };
 static const char *chooseOptionStrings[] = {
     "-initialdir", "-message", "-mustexist", "-parent", "-title", "-command",

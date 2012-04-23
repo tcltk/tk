@@ -166,7 +166,7 @@ following three lines:
 .CS
 \fB#!/bin/sh
 # the next line restarts using wish \e
-exec wish "$0" "$@"\fR
+exec wish "$0" ${1+"$@"}\fR
 .CE
 This approach has three advantages over the approach in the previous
 paragraph.  First, the location of the \fBwish\fR binary does not have

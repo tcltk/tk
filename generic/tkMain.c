@@ -111,7 +111,7 @@ Tk_MainEx(
     tsdPtr->interp = interp;
     Tcl_Preserve((ClientData) interp);
 
-#if defined(__WIN32__)
+#if defined(__WIN32__) && !defined(__CYGWIN__)
     Tk_InitConsoleChannels(interp);
 #endif
 

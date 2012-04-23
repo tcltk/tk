@@ -209,7 +209,7 @@ TkpScanWindowId(
     Window *idPtr)		/* Place to store converted result. */
 {
     Tk_Window tkwin;
-    Window number, *numberPtr = &number;
+    void *number, *numberPtr = &number;
 
     /*
      * We want sscanf for the 64-bit check, but if that doesn't work, then
