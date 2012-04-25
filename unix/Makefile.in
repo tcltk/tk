@@ -56,6 +56,7 @@ BIN_INSTALL_DIR		= $(INSTALL_ROOT)$(bindir)
 
 # Directory in which to install the .a or .so binary for the Tk library:
 LIB_INSTALL_DIR		= $(INSTALL_ROOT)$(libdir)
+DLL_INSTALL_DIR		= @DLL_INSTALL_DIR@
 
 # Path name to use when installing library scripts.
 SCRIPT_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)
@@ -643,9 +644,9 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    echo "}";\
 	    ) > $(PKG_INDEX); \
 	    fi
-	@echo "Installing $(LIB_FILE) to $(LIB_INSTALL_DIR)/"
+	@echo "Installing $(LIB_FILE) to $(DLL_INSTALL_DIR)/"
 	@@INSTALL_LIB@
-	@chmod 555 $(LIB_INSTALL_DIR)/$(LIB_FILE)
+	@chmod 555 $(DLL_INSTALL_DIR)/$(LIB_FILE)
 	@if test "$(TK_BUILD_EXP_FILE)" != ""; then \
 	    echo "Installing $(TK_EXP_FILE) to $(LIB_INSTALL_DIR)/"; \
 	    $(INSTALL_DATA) $(TK_BUILD_EXP_FILE) \
