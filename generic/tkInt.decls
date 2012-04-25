@@ -403,26 +403,26 @@ declare 111 {
 declare 112 {
     void TkpMenuThreadInit(void)
 }
-declare 113 {mac aqua win} {
+declare 113 {
     void TkClipBox(TkRegion rgn, XRectangle *rect_return)
 }
-declare 114 {mac aqua win} {
+declare 114 {
     TkRegion TkCreateRegion(void)
 }
-declare 115 {mac aqua win} {
+declare 115 {
     void TkDestroyRegion(TkRegion rgn)
 }
-declare 116 {mac aqua win} {
+declare 116 {
     void TkIntersectRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
 }
-declare 117 {mac aqua win} {
+declare 117 {
     int TkRectInRegion(TkRegion rgn, int x, int y, unsigned int width,
 	    unsigned int height)
 }
-declare 118 {mac aqua win} {
+declare 118 {
     void TkSetRegion(Display *display, GC gc, TkRegion rgn)
 }
-declare 119 {mac aqua win} {
+declare 119 {
     void TkUnionRectWithRegion(XRectangle *rect,
 	    TkRegion src, TkRegion dr_return)
 }
@@ -468,7 +468,7 @@ declare 143 {
 declare 144 {
     void TkGCCleanup(TkDisplay *dispPtr)
 }
-declare 145 {mac win aqua} {
+declare 145 {
     void TkSubtractRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
 }
 declare 146 {
@@ -655,6 +655,9 @@ declare 33 win {
 declare 34 win {
     void TkWinSetHINSTANCE(HINSTANCE hInstance)
 }
+declare 35 win {
+    int TkWinGetPlatformTheme(void)
+}
 
 ################################
 # Mac specific functions
@@ -835,9 +838,6 @@ declare 65 mac {
 }
 declare 66 mac {
     int TkpIsWindowFloating(WindowRef window)
-}
-declare 35 win {
-    int TkWinGetPlatformTheme(void)
 }
 ################################
 # Aqua specific functions
