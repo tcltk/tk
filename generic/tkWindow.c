@@ -101,6 +101,7 @@ static CONST XSetWindowAttributes defAtts= {
 
 #define ISSAFE 1
 #define PASSMAINWINDOW 2
+#define WINMACONLY 4
 
 typedef struct {
     CONST char *name;			/* Name of command. */
@@ -135,9 +136,9 @@ static CONST TkCmd commands[] = {
     {"tkwait",		NULL,			Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
 #if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)
     {"tk_chooseColor",  NULL,			Tk_ChooseColorObjCmd,	PASSMAINWINDOW},
-    {"tk_chooseDirectory", NULL,		Tk_ChooseDirectoryObjCmd, PASSMAINWINDOW},
-    {"tk_getOpenFile",  NULL,			Tk_GetOpenFileObjCmd,	PASSMAINWINDOW},
-    {"tk_getSaveFile",  NULL,			Tk_GetSaveFileObjCmd,	PASSMAINWINDOW},
+    {"tk_chooseDirectory", NULL,		Tk_ChooseDirectoryObjCmd, WINMACONLY|PASSMAINWINDOW},
+    {"tk_getOpenFile",  NULL,			Tk_GetOpenFileObjCmd,	WINMACONLY|PASSMAINWINDOW},
+    {"tk_getSaveFile",  NULL,			Tk_GetSaveFileObjCmd,	WINMACONLY|PASSMAINWINDOW},
 #endif
 #if defined(__WIN32__) || defined(MAC_OSX_TK)
     {"tk_messageBox",   NULL,			Tk_MessageBoxObjCmd,	PASSMAINWINDOW},
@@ -851,6 +852,9 @@ TkCreateMainWindow(interp, screenName, baseName)
     Tk_Window tkwin;
     int dummy;
     int isSafe;
+#ifdef __WIN32__
+    int isWin32 = 0;
+#endif
     Tcl_HashEntry *hPtr;
     register TkMainInfo *mainPtr;
     register TkWindow *winPtr;
@@ -858,7 +862,15 @@ TkCreateMainWindow(interp, screenName, baseName)
     ClientData clientData;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    
+#ifdef __WIN32__
+    Tcl_Obj *stringObjPtr = Tcl_GetVar2Ex(interp, "::tcl_platform", "platform", 0);
+
+    if (stringObjPtr
+            && !strcmp(Tcl_GetString(stringObjPtr), "windows")) {
+        isWin32 = 1;
+    }
+#endif
+
     /*
      * Panic if someone updated the TkWindow structure without
      * also updating the Tk_FakeWin structure (or vice versa).
@@ -941,6 +953,11 @@ TkCreateMainWindow(interp, screenName, baseName)
 	if ((cmdPtr->cmdProc == NULL) && (cmdPtr->objProc == NULL)) {
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
+#ifdef __WIN32__
+	if (!isWin32 && (cmdPtr->flags & WINMACONLY)) {
+	    continue;
+	}
+#endif
 	if (cmdPtr->flags & PASSMAINWINDOW) {
 	    clientData = (ClientData) tkwin;
 	} else {
