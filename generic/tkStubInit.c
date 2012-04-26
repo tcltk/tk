@@ -59,12 +59,14 @@ static const TkIntStubs tkIntStubs;
  * the stub table, call TkParseColor in stead. See bug #3486474 */
 #   define XParseColor TkParseColor
 
-#   if !defined(MAC_TCL) && !defined(MAC_OSX_TCL)
+#   ifndef __CYGWIN__
 #	define Tk_AttachHWND 0
 #	define Tk_GetHWND 0
 #	define Tk_HWNDToWindow 0
 #	define Tk_PointerEvent 0
 #	define Tk_TranslateWinEvent 0
+#   endif
+#   if !defined(MAC_TCL) && !defined(MAC_OSX_TCL)
 #	define TkClipBox (void (*) (TkRegion, XRectangle *)) XClipBox
 #	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
 #	define TkDestroyRegion (void (*) (TkRegion)) XDestroyRegion
