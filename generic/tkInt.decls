@@ -405,26 +405,26 @@ declare 111 {
 declare 112 {
     void TkpMenuThreadInit(void)
 }
-declare 113 {aqua win} {
+declare 113 {
     void TkClipBox(TkRegion rgn, XRectangle *rect_return)
 }
-declare 114 {aqua win} {
+declare 114 {
     TkRegion TkCreateRegion(void)
 }
-declare 115 {aqua win} {
+declare 115 {
     void TkDestroyRegion(TkRegion rgn)
 }
-declare 116 {aqua win} {
+declare 116 {
     void TkIntersectRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
 }
-declare 117 {aqua win} {
+declare 117 {
     int TkRectInRegion(TkRegion rgn, int x, int y, unsigned int width,
 	    unsigned int height)
 }
-declare 118 {aqua win} {
+declare 118 {
     void TkSetRegion(Display *display, GC gc, TkRegion rgn)
 }
-declare 119 {aqua win} {
+declare 119 {
     void TkUnionRectWithRegion(XRectangle *rect,
 	    TkRegion src, TkRegion dr_return)
 }
@@ -470,7 +470,7 @@ declare 143 {
 declare 144 {
     void TkGCCleanup(TkDisplay *dispPtr)
 }
-declare 145 {win aqua} {
+declare 145 {
     void TkSubtractRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
 }
 declare 146 {
