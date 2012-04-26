@@ -1746,4 +1746,17 @@ package-generate:
 	pkgtrans -s . $(PACKAGE).`arch` $(PACKAGE)
 	rm -rf $(PACKAGE)
 
+#
+# The list of all the targets that do not correspond to real files. This stops
+# 'make' from getting confused when someone makes an error in a rule.
+#
+
+.PHONY: all binaries libraries objs doc html html-tcl html-tk test runtest
+.PHONY: install install-strip install-binaries install-libraries
+.PHONY: install-headers install-private-headers install-doc
+.PHONY: clean distclean depend genstubs checkstubs checkexports checkuchar
+.PHONY: shell gdb valgrind valgrindshell dist alldist rpm
+.PHONY: tkLibObjs tktest-real test-classic test-ttk testlang
+.PHONY: demo install-demos
+
 # DO NOT DELETE THIS LINE -- make depend depends on it.
