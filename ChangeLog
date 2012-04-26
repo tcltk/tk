@@ -1,3 +1,11 @@
+2012-04-26  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.decls:      [Bug 3508771]: Implement TkClipBox, Tk*Region and
+	* generic/tkInt.decls:   Tk_GetHINSTANCE for Cygwin
+	* generic/tkPlatDecls.h:
+	* generic/tkintDecls.h:
+	* generic/tkStubInit.c:
+
 2012-04-22  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkBind.c (ExpandPercents): [Bug 3520202]: Ensure that the
