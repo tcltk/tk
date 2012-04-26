@@ -48,20 +48,24 @@
 #undef TkSetRegion
 #undef TkUnionRectWithRegion
 #undef TkSubtractRegion
-
-TkIntStubs tkIntStubs;
+#undef TkPutImage
 
 #ifndef __WIN32__
-/* Make sure that extensions which call XParseColor through
- * the stub table, call TkParseColor in stead. See bug #3486474 */
-#   define XParseColor TkParseColor
+/*
+ * Make sure that extensions which call XParseColor through the stub
+ * table, call TkParseColor instead. [Bug 3486474]
+ */
+#   define XParseColor	TkParseColor
 
+#   ifndef __CYGWIN__
+#	define Tk_AttachHWND		0
+#	define Tk_GetHWND		0
+#	define Tk_HWNDToWindow		0
+#	define Tk_PointerEvent		0
+#	define Tk_TranslateWinEvent	0
+#	define Tk_GetHINSTANCE		0
+#   endif
 #   if !defined(MAC_TCL) && !defined(MAC_OSX_TCL)
-#	define Tk_AttachHWND 0
-#	define Tk_GetHWND 0
-#	define Tk_HWNDToWindow 0
-#	define Tk_PointerEvent 0
-#	define Tk_TranslateWinEvent 0
 #	define TkClipBox (void (*) _ANSI_ARGS_((TkRegion, XRectangle *))) XClipBox
 #	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
 #	define TkDestroyRegion (void (*) _ANSI_ARGS_((TkRegion))) XDestroyRegion
@@ -71,26 +75,32 @@ TkIntStubs tkIntStubs;
 #	define TkUnionRectWithRegion (void (*) _ANSI_ARGS_((XRectangle *, TkRegion, TkRegion))) XUnionRectWithRegion
 #	define TkSubtractRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XSubtractRegion
 
-#ifdef __CYGWIN__
-/* Trick, so we don't have to include <windows.h> here, which
- * - b.t.w. - lacks this function anyway */
-#define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS 0x00000004
+#	ifdef __CYGWIN__
+#	    define Tk_GetHINSTANCE	TkPlatGetHINSTANCE
+#	    define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
+
+/*
+ * Trick, so we don't have to include <windows.h> here, which in any
+ * case lacks this function anyway.
+ */
+
 int __stdcall GetModuleHandleExW(unsigned int, const char *, void *);
 
-#define Tk_GetHINSTANCE TkPlatGetHINSTANCE
+TkIntStubs tkIntStubs;
+
 static void *Tk_GetHINSTANCE()
 {
     void *hInstance = NULL;
+
     GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-	    (const char *)&tkIntStubs, &hInstance);
+	    (const char *) &tkIntStubs, &hInstance);
     return hInstance;
 }
-#else
-#   define Tk_GetHINSTANCE 0
-#endif
 
+#	else /* !__CYGWIN__ */
+#	    define TkPutImage		0
+#	endif /* __CYGWIN__ */
 #   endif /* !MAC_TCL && !MACC_OSX_TCL */
-
 #endif /* !__WIN32__ */
 
 /*
