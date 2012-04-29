@@ -63,14 +63,14 @@ TCL_DECLARE_MUTEX(windowMutex)
  * on internal windows: these events are generated internally.
  */
 
-static XWindowChanges defChanges = {
+static const XWindowChanges defChanges = {
     0, 0, 1, 1, 0, 0, Above
 };
 #define ALL_EVENTS_MASK \
     KeyPressMask|KeyReleaseMask|ButtonPressMask|ButtonReleaseMask| \
     EnterWindowMask|LeaveWindowMask|PointerMotionMask|ExposureMask| \
     VisibilityChangeMask|PropertyChangeMask|ColormapChangeMask
-static XSetWindowAttributes defAtts= {
+static const XSetWindowAttributes defAtts= {
     None,			/* background_pixmap */
     0,				/* background_pixel */
     CopyFromParent,		/* border_pixmap */
@@ -92,18 +92,17 @@ static XSetWindowAttributes defAtts= {
  * The following structure defines all of the commands supported by Tk, and
  * the C functions that execute them.
  */
+
+#define ISSAFE 1
+#define PASSMAINWINDOW 2
+
 typedef int (TkInitProc)(Tcl_Interp *interp, ClientData clientData);
 typedef struct {
     const char *name;		/* Name of command. */
     Tcl_CmdProc *cmdProc;	/* Command's string-based function. */
     Tcl_ObjCmdProc *objProc;	/* Command's object-based function. */
     TkInitProc *initProc;	/* Command's initialization function */
-    int isSafe;			/* If !0, this command will be exposed in a
-				 * safe interpreter. Otherwise it will be
-				 * hidden in a safe interpreter. */
-    int passMainWindow;		/* 0 means provide NULL clientData to command
-				 * function; 1 means pass main window as
-				 * clientData to command function. */
+    int flags;
 } TkCmd;
 
 static const TkCmd commands[] = {
@@ -111,72 +110,72 @@ static const TkCmd commands[] = {
      * Commands that are part of the intrinsics:
      */
 
-    {"bell",		NULL,		Tk_BellObjCmd,		NULL, 0, 1},
-    {"bind",		NULL,		Tk_BindObjCmd,		NULL, 1, 1},
-    {"bindtags",	NULL,		Tk_BindtagsObjCmd,	NULL, 1, 1},
-    {"clipboard",	NULL,		Tk_ClipboardObjCmd,	NULL, 0, 1},
-    {"destroy",		NULL,		Tk_DestroyObjCmd,	NULL, 1, 1},
-    {"event",		NULL,		Tk_EventObjCmd,		NULL, 1, 1},
-    {"focus",		NULL,		Tk_FocusObjCmd,		NULL, 1, 1},
-    {"font",		NULL,		Tk_FontObjCmd,		NULL, 1, 1},
-    {"grab",		NULL,		Tk_GrabObjCmd,		NULL, 0, 1},
-    {"grid",		NULL,		Tk_GridObjCmd,		NULL, 1, 1},
-    {"image",		NULL,		Tk_ImageObjCmd,		NULL, 1, 1},
-    {"lower",		NULL,		Tk_LowerObjCmd,		NULL, 1, 1},
-    {"option",		NULL,		Tk_OptionObjCmd,	NULL, 1, 1},
-    {"pack",		NULL,		Tk_PackObjCmd,		NULL, 1, 1},
-    {"place",		NULL,		Tk_PlaceObjCmd,		NULL, 1, 1},
-    {"raise",		NULL,		Tk_RaiseObjCmd,		NULL, 1, 1},
-    {"selection",	NULL,		Tk_SelectionObjCmd,	NULL, 0, 1},
-    {"tk",		NULL,		NULL,		TkInitTkCmd,  1, 1},
-    {"tkwait",		NULL,		Tk_TkwaitObjCmd,	NULL, 1, 1},
-    {"update",		NULL,		Tk_UpdateObjCmd,	NULL, 1, 1},
-    {"winfo",		NULL,		Tk_WinfoObjCmd,		NULL, 1, 1},
-    {"wm",		NULL,		Tk_WmObjCmd,		NULL, 0, 1},
+    {"bell",		NULL,		Tk_BellObjCmd,		NULL, PASSMAINWINDOW},
+    {"bind",		NULL,		Tk_BindObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"bindtags",	NULL,		Tk_BindtagsObjCmd,	NULL, PASSMAINWINDOW|ISSAFE},
+    {"clipboard",	NULL,		Tk_ClipboardObjCmd,	NULL, PASSMAINWINDOW},
+    {"destroy",		NULL,		Tk_DestroyObjCmd,	NULL, PASSMAINWINDOW|ISSAFE},
+    {"event",		NULL,		Tk_EventObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"focus",		NULL,		Tk_FocusObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"font",		NULL,		Tk_FontObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"grab",		NULL,		Tk_GrabObjCmd,		NULL, PASSMAINWINDOW},
+    {"grid",		NULL,		Tk_GridObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"image",		NULL,		Tk_ImageObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"lower",		NULL,		Tk_LowerObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"option",		NULL,		Tk_OptionObjCmd,	NULL, PASSMAINWINDOW|ISSAFE},
+    {"pack",		NULL,		Tk_PackObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"place",		NULL,		Tk_PlaceObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"raise",		NULL,		Tk_RaiseObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"selection",	NULL,		Tk_SelectionObjCmd,	NULL, PASSMAINWINDOW},
+    {"tk",		NULL,		NULL,		TkInitTkCmd,  PASSMAINWINDOW|ISSAFE},
+    {"tkwait",		NULL,		Tk_TkwaitObjCmd,	NULL, PASSMAINWINDOW|ISSAFE},
+    {"update",		NULL,		Tk_UpdateObjCmd,	NULL, PASSMAINWINDOW|ISSAFE},
+    {"winfo",		NULL,		Tk_WinfoObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"wm",		NULL,		Tk_WmObjCmd,		NULL, PASSMAINWINDOW},
 
     /*
      * Default widget class commands.
      */
 
-    {"button",		NULL,		Tk_ButtonObjCmd,	NULL, 1, 0},
-    {"canvas",		NULL,		Tk_CanvasObjCmd,	NULL, 1, 1},
-    {"checkbutton",	NULL,		Tk_CheckbuttonObjCmd,	NULL, 1, 0},
-    {"entry",		NULL,		Tk_EntryObjCmd,		NULL, 1, 0},
-    {"frame",		NULL,		Tk_FrameObjCmd,		NULL, 1, 0},
-    {"label",		NULL,		Tk_LabelObjCmd,		NULL, 1, 0},
-    {"labelframe",	NULL,		Tk_LabelframeObjCmd,	NULL, 1, 0},
-    {"listbox",		NULL,		Tk_ListboxObjCmd,	NULL, 1, 0},
-    {"menubutton",	NULL,		Tk_MenubuttonObjCmd,	NULL, 1, 0},
-    {"message",		NULL,		Tk_MessageObjCmd,	NULL, 1, 0},
-    {"panedwindow",	NULL,		Tk_PanedWindowObjCmd,	NULL, 1, 0},
-    {"radiobutton",	NULL,		Tk_RadiobuttonObjCmd,	NULL, 1, 0},
-    {"scale",		NULL,		Tk_ScaleObjCmd,		NULL, 1, 0},
-    {"scrollbar",	Tk_ScrollbarCmd,NULL,			NULL, 1, 1},
-    {"spinbox",		NULL,		Tk_SpinboxObjCmd,	NULL, 1, 0},
-    {"text",		NULL,		Tk_TextObjCmd,		NULL, 1, 1},
-    {"toplevel",	NULL,		Tk_ToplevelObjCmd,	NULL, 0, 0},
+    {"button",		NULL,		Tk_ButtonObjCmd,	NULL, ISSAFE},
+    {"canvas",		NULL,		Tk_CanvasObjCmd,	NULL, PASSMAINWINDOW|ISSAFE},
+    {"checkbutton",	NULL,		Tk_CheckbuttonObjCmd,	NULL, ISSAFE},
+    {"entry",		NULL,		Tk_EntryObjCmd,		NULL, ISSAFE},
+    {"frame",		NULL,		Tk_FrameObjCmd,		NULL, ISSAFE},
+    {"label",		NULL,		Tk_LabelObjCmd,		NULL, ISSAFE},
+    {"labelframe",	NULL,		Tk_LabelframeObjCmd,	NULL, ISSAFE},
+    {"listbox",		NULL,		Tk_ListboxObjCmd,	NULL, ISSAFE},
+    {"menubutton",	NULL,		Tk_MenubuttonObjCmd,	NULL, ISSAFE},
+    {"message",		NULL,		Tk_MessageObjCmd,	NULL, ISSAFE},
+    {"panedwindow",	NULL,		Tk_PanedWindowObjCmd,	NULL, ISSAFE},
+    {"radiobutton",	NULL,		Tk_RadiobuttonObjCmd,	NULL, ISSAFE},
+    {"scale",		NULL,		Tk_ScaleObjCmd,		NULL, ISSAFE},
+    {"scrollbar",	Tk_ScrollbarCmd,NULL,			NULL, PASSMAINWINDOW|ISSAFE},
+    {"spinbox",		NULL,		Tk_SpinboxObjCmd,	NULL, ISSAFE},
+    {"text",		NULL,		Tk_TextObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"toplevel",	NULL,		Tk_ToplevelObjCmd,	NULL, 0},
 
     /*
      * Classic widget class commands.
      */
 
-    {"::tk::button",	NULL,		Tk_ButtonObjCmd,	NULL, 1, 0},
-    {"::tk::canvas",	NULL,		Tk_CanvasObjCmd,	NULL, 1, 1},
-    {"::tk::checkbutton",NULL,		Tk_CheckbuttonObjCmd,	NULL, 1, 0},
-    {"::tk::entry",	NULL,		Tk_EntryObjCmd,		NULL, 1, 0},
-    {"::tk::frame",	NULL,		Tk_FrameObjCmd,		NULL, 1, 0},
-    {"::tk::label",	NULL,		Tk_LabelObjCmd,		NULL, 1, 0},
-    {"::tk::labelframe",NULL,		Tk_LabelframeObjCmd,	NULL, 1, 0},
-    {"::tk::listbox",	NULL,		Tk_ListboxObjCmd,	NULL, 1, 0},
-    {"::tk::menubutton",NULL,		Tk_MenubuttonObjCmd,	NULL, 1, 0},
-    {"::tk::message",	NULL,		Tk_MessageObjCmd,	NULL, 1, 0},
-    {"::tk::panedwindow",NULL,		Tk_PanedWindowObjCmd,	NULL, 1, 0},
-    {"::tk::radiobutton",NULL,		Tk_RadiobuttonObjCmd,	NULL, 1, 0},
-    {"::tk::scale",	NULL,		Tk_ScaleObjCmd,		NULL, 1, 0},
-    {"::tk::scrollbar",	Tk_ScrollbarCmd,NULL,			NULL, 1, 1},
-    {"::tk::spinbox",	NULL,		Tk_SpinboxObjCmd,	NULL, 1, 0},
-    {"::tk::text",	NULL,		Tk_TextObjCmd,		NULL, 1, 1},
-    {"::tk::toplevel",	NULL,		Tk_ToplevelObjCmd,	NULL, 0, 0},
+    {"::tk::button",	NULL,		Tk_ButtonObjCmd,	NULL, ISSAFE},
+    {"::tk::canvas",	NULL,		Tk_CanvasObjCmd,	NULL, PASSMAINWINDOW|ISSAFE},
+    {"::tk::checkbutton",NULL,		Tk_CheckbuttonObjCmd,	NULL, ISSAFE},
+    {"::tk::entry",	NULL,		Tk_EntryObjCmd,		NULL, ISSAFE},
+    {"::tk::frame",	NULL,		Tk_FrameObjCmd,		NULL, ISSAFE},
+    {"::tk::label",	NULL,		Tk_LabelObjCmd,		NULL, ISSAFE},
+    {"::tk::labelframe",NULL,		Tk_LabelframeObjCmd,	NULL, ISSAFE},
+    {"::tk::listbox",	NULL,		Tk_ListboxObjCmd,	NULL, ISSAFE},
+    {"::tk::menubutton",NULL,		Tk_MenubuttonObjCmd,	NULL, ISSAFE},
+    {"::tk::message",	NULL,		Tk_MessageObjCmd,	NULL, ISSAFE},
+    {"::tk::panedwindow",NULL,		Tk_PanedWindowObjCmd,	NULL, ISSAFE},
+    {"::tk::radiobutton",NULL,		Tk_RadiobuttonObjCmd,	NULL, ISSAFE},
+    {"::tk::scale",	NULL,		Tk_ScaleObjCmd,		NULL, ISSAFE},
+    {"::tk::scrollbar",	Tk_ScrollbarCmd,NULL,			NULL, PASSMAINWINDOW|ISSAFE},
+    {"::tk::spinbox",	NULL,		Tk_SpinboxObjCmd,	NULL, ISSAFE},
+    {"::tk::text",	NULL,		Tk_TextObjCmd,		NULL, PASSMAINWINDOW|ISSAFE},
+    {"::tk::toplevel",	NULL,		Tk_ToplevelObjCmd,	NULL, 0},
 
     /*
      * Standard dialog support. Note that the Unix/X11 platform implements
@@ -184,11 +183,11 @@ static const TkCmd commands[] = {
      */
 
 #if defined(__WIN32__) || defined(MAC_OSX_TK)
-    {"tk_chooseColor",	NULL,		Tk_ChooseColorObjCmd,	NULL, 0, 1},
-    {"tk_chooseDirectory", NULL,	Tk_ChooseDirectoryObjCmd,NULL, 0,1},
-    {"tk_getOpenFile",	NULL,		Tk_GetOpenFileObjCmd,	NULL, 0, 1},
-    {"tk_getSaveFile",	NULL,		Tk_GetSaveFileObjCmd,	NULL, 0, 1},
-    {"tk_messageBox",	NULL,		Tk_MessageBoxObjCmd,	NULL, 0, 1},
+    {"tk_chooseColor",	NULL,		Tk_ChooseColorObjCmd,	NULL, PASSMAINWINDOW},
+    {"tk_chooseDirectory", NULL,	Tk_ChooseDirectoryObjCmd,NULL,PASSMAINWINDOW},
+    {"tk_getOpenFile",	NULL,		Tk_GetOpenFileObjCmd,	NULL, PASSMAINWINDOW},
+    {"tk_getSaveFile",	NULL,		Tk_GetSaveFileObjCmd,	NULL, PASSMAINWINDOW},
+    {"tk_messageBox",	NULL,		Tk_MessageBoxObjCmd,	NULL, PASSMAINWINDOW},
 #endif
 
     /*
@@ -197,9 +196,9 @@ static const TkCmd commands[] = {
 
 #if defined(MAC_OSX_TK)
     {"::tk::unsupported::MacWindowStyle",
-			NULL,		TkUnsupported1ObjCmd,	NULL, 1, 1},
+			NULL,		TkUnsupported1ObjCmd,	NULL, PASSMAINWINDOW|ISSAFE},
 #endif
-    {NULL,		NULL,		NULL,			NULL, 0, 0}
+    {NULL,		NULL,		NULL,			NULL, 0}
 };
 
 /*
@@ -951,7 +950,7 @@ TkCreateMainWindow(
 		&& (cmdPtr->initProc == NULL)) {
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
-	if (cmdPtr->passMainWindow) {
+	if (cmdPtr->flags & PASSMAINWINDOW) {
 	    clientData = tkwin;
 	} else {
 	    clientData = NULL;
@@ -966,7 +965,7 @@ TkCreateMainWindow(
 		    clientData, NULL);
 	}
 	if (isSafe) {
-	    if (!(cmdPtr->isSafe)) {
+	    if (!(cmdPtr->flags & ISSAFE)) {
 		Tcl_HideCommand(interp, cmdPtr->name, cmdPtr->name);
 	    }
 	}
