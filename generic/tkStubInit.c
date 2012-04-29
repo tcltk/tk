@@ -36,7 +36,7 @@
  * below should be made in the generic/tk.decls script.
  */
 
-MODULE_SCOPE const TkStubs tkStubs;
+static const TkIntStubs tkIntStubs;
 
 /*
  * Remove macro that might interfere with the definition below.
@@ -44,11 +44,66 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 #undef Tk_MainEx
 
+#undef TkClipBox
+#undef TkCreateRegion
+#undef TkDestroyRegion
+#undef TkIntersectRegion
+#undef TkRectInRegion
+#undef TkSetRegion
+#undef TkUnionRectWithRegion
+#undef TkSubtractRegion
+#undef TkPutImage
+
 #ifndef __WIN32__
-/* Make sure that extensions which call XParseColor through
- * the stub table, call TkParseColor in stead. See bug #3486474 */
-#   define XParseColor TkParseColor
-#endif
+/*
+ * Make sure that extensions which call XParseColor through the stub
+ * table, call TkParseColor instead. [Bug 3486474]
+ */
+#   define XParseColor	TkParseColor
+
+#   ifndef __CYGWIN__
+#	define Tk_AttachHWND		0
+#	define Tk_GetHWND		0
+#	define Tk_HWNDToWindow		0
+#	define Tk_PointerEvent		0
+#	define Tk_TranslateWinEvent	0
+#	define Tk_GetHINSTANCE		0
+#   endif
+#   if !defined(MAC_TCL) && !defined(MAC_OSX_TCL)
+#	define TkClipBox (void (*) (TkRegion, XRectangle *)) XClipBox
+#	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
+#	define TkDestroyRegion (void (*) (TkRegion)) XDestroyRegion
+#	define TkIntersectRegion (void (*) (TkRegion, TkRegion, TkRegion)) XIntersectRegion
+#	define TkRectInRegion (int (*) (TkRegion, int, int, unsigned int, unsigned int)) XRectInRegion
+#	define TkSetRegion (void (*) (Display *, GC, TkRegion)) XSetRegion
+#	define TkUnionRectWithRegion (void (*) (XRectangle *, TkRegion, TkRegion)) XUnionRectWithRegion
+#	define TkSubtractRegion (void (*) (TkRegion, TkRegion, TkRegion)) XSubtractRegion
+
+#	ifdef __CYGWIN__
+#	    define Tk_GetHINSTANCE	TkPlatGetHINSTANCE
+#	    define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
+
+/*
+ * Trick, so we don't have to include <windows.h> here, which in any
+ * case lacks this function anyway.
+ */
+
+int __stdcall GetModuleHandleExW(unsigned int, const char *, void *);
+
+static void *Tk_GetHINSTANCE()
+{
+    void *hInstance = NULL;
+
+    GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+	    (const char *) &tkIntStubs, &hInstance);
+    return hInstance;
+}
+
+#	else /* !__CYGWIN__ */
+#	    define TkPutImage		0
+#	endif /* __CYGWIN__ */
+#   endif /* !MAC_TCL && !MACC_OSX_TCL */
+#endif /* !__WIN32__ */
 
 /* !BEGIN!: Do not edit below this line. */
 
@@ -168,76 +223,13 @@ static const TkIntStubs tkIntStubs = {
     TkpGetSubFonts, /* 110 */
     TkpGetSystemDefault, /* 111 */
     TkpMenuThreadInit, /* 112 */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 113 */
-#endif /* X11 */
-#ifdef __WIN32__ /* WIN */
     TkClipBox, /* 113 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 113 */ /* Dummy entry for stubs table backwards compatibility */
-    TkClipBox, /* 113 */
-#endif /* AQUA */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 114 */
-#endif /* X11 */
-#ifdef __WIN32__ /* WIN */
     TkCreateRegion, /* 114 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 114 */ /* Dummy entry for stubs table backwards compatibility */
-    TkCreateRegion, /* 114 */
-#endif /* AQUA */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 115 */
-#endif /* X11 */
-#ifdef __WIN32__ /* WIN */
     TkDestroyRegion, /* 115 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 115 */ /* Dummy entry for stubs table backwards compatibility */
-    TkDestroyRegion, /* 115 */
-#endif /* AQUA */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 116 */
-#endif /* X11 */
-#ifdef __WIN32__ /* WIN */
     TkIntersectRegion, /* 116 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 116 */ /* Dummy entry for stubs table backwards compatibility */
-    TkIntersectRegion, /* 116 */
-#endif /* AQUA */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 117 */
-#endif /* X11 */
-#ifdef __WIN32__ /* WIN */
     TkRectInRegion, /* 117 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 117 */ /* Dummy entry for stubs table backwards compatibility */
-    TkRectInRegion, /* 117 */
-#endif /* AQUA */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 118 */
-#endif /* X11 */
-#ifdef __WIN32__ /* WIN */
     TkSetRegion, /* 118 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 118 */ /* Dummy entry for stubs table backwards compatibility */
-    TkSetRegion, /* 118 */
-#endif /* AQUA */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 119 */
-#endif /* X11 */
-#ifdef __WIN32__ /* WIN */
     TkUnionRectWithRegion, /* 119 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 119 */ /* Dummy entry for stubs table backwards compatibility */
-    TkUnionRectWithRegion, /* 119 */
-#endif /* AQUA */
     0, /* 120 */
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     0, /* 121 */
@@ -290,16 +282,7 @@ static const TkIntStubs tkIntStubs = {
     TkFocusFree, /* 142 */
     TkClipCleanup, /* 143 */
     TkGCCleanup, /* 144 */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 145 */
-#endif /* X11 */
-#ifdef __WIN32__ /* WIN */
     TkSubtractRegion, /* 145 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 145 */ /* Dummy entry for stubs table backwards compatibility */
-    TkSubtractRegion, /* 145 */
-#endif /* AQUA */
     TkStylePkgInit, /* 146 */
     TkStylePkgFree, /* 147 */
     TkToplevelWindowForCommand, /* 148 */
@@ -668,6 +651,14 @@ static const TkIntXlibStubs tkIntXlibStubs = {
 static const TkPlatStubs tkPlatStubs = {
     TCL_STUB_MAGIC,
     0,
+#if !defined(__WIN32__) && !defined(MAC_OSX_TCL) /* UNIX */
+    Tk_AttachHWND, /* 0 */
+    Tk_GetHINSTANCE, /* 1 */
+    Tk_GetHWND, /* 2 */
+    Tk_HWNDToWindow, /* 3 */
+    Tk_PointerEvent, /* 4 */
+    Tk_TranslateWinEvent, /* 5 */
+#endif /* UNIX */
 #ifdef __WIN32__ /* WIN */
     Tk_AttachHWND, /* 0 */
     Tk_GetHINSTANCE, /* 1 */
@@ -677,12 +668,12 @@ static const TkPlatStubs tkPlatStubs = {
     Tk_TranslateWinEvent, /* 5 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    Tk_MacOSXSetEmbedHandler, /* 0 */
-    Tk_MacOSXTurnOffMenus, /* 1 */
-    Tk_MacOSXTkOwnsCursor, /* 2 */
-    TkMacOSXInitMenus, /* 3 */
-    TkMacOSXInitAppleEvents, /* 4 */
-    TkGenWMConfigureEvent, /* 5 */
+    Tk_AttachHWND, /* 0 */
+    Tk_GetHINSTANCE, /* 1 */
+    Tk_GetHWND, /* 2 */
+    Tk_HWNDToWindow, /* 3 */
+    Tk_PointerEvent, /* 4 */
+    Tk_TranslateWinEvent, /* 5 */
     TkMacOSXInvalClipRgns, /* 6 */
     TkMacOSXGetDrawablePort, /* 7 */
     TkMacOSXGetRootControl, /* 8 */
