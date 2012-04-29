@@ -1,10 +1,57 @@
+2012-04-29  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/tk.tcl:    [Bug 3508771]: Window placement with multiple screens
+	* generic/tkBind.c:
+	* generic/tkFocus.c:
+	* generic/tkMenuDraw.c:
+	* generic/tkWinWm.c:
+
+2012-04-26  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkStubInit.c (Tk_GetHINSTANCE): Ensure that this is defined
+	for OSX.
+
+2012-04-26  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.decls:      [Bug 3508771]: Implement TkClipBox, Tk*Region and
+	* generic/tkInt.decls:   Tk_GetHINSTANCE for Cygwin
+	* generic/tkPlatDecls.h:
+	* generic/tkintDecls.h:
+	* generic/tkStubInit.c:
+
+2012-04-22  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkBind.c (ExpandPercents): [Bug 3520202]: Ensure that the
+	%k, %K and %N substitutions use dummy tokens with <MouseWheel> events
+	and that the %D subsitution is a dummy with <Key>/<KeyRelease>. This
+	was causing significant indigestion (and a read of goodness knows what
+	memory) to Tkinter/Python because of the way they map events between
+	languages.
+
+2012-04-20  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkWindow.c (commands): Ensure that all descriptions of
+	commands created by Tk are correct.
+
+2012-04-20  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tk.tcl: Use vroot size in stead of screen size for clipping
+	window coordinates in ::tk::PlaceWindow.
+	* generic/dialog.tcl: Use ::tk::PlaceWindow in dialog.tcl, instead of
+	dumplicating the code there. (harmless part of [Bug 533519])
+
+2012-04-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/rules.vc: [Bug 3517448]: TclKit build fails (unresolved
+	__strtoi64)
+
 2012-04-07  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkBind.c: [Bug 3176239] control-MouseWheel causes segv
+	* generic/tkBind.c: [Bug 3176239]: control-MouseWheel causes segv
 
 2012-03-30  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tcl.m4:        [Bug 3511806] Compiler checks too early
+	* unix/tcl.m4:        [Bug 3511806]: Compiler checks too early
 	* unix/configure.in:  This change allows to build the cygwin
 	* unix/configure      and mingw32 ports of Tcl/Tk to build
 	* win/tcl.m4:         out-of-the-box using a native or cross-
@@ -13,7 +60,7 @@
 
 2012-03-21  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkColor.c:  [Bug 2809525] Abort on overlong color name.
+	* generic/tkColor.c:  [Bug 2809525]: Abort on overlong color name.
 	* unix/tkUnixColor.c:
 
 2012-03-18  Jan Nijtmans  <nijtmans@users.sf.net>
