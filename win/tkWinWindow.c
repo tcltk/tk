@@ -294,7 +294,7 @@ TkpMakeWindow(winPtr, parent)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDestroyWindow(display, w)
     Display* display;
     Window w;
@@ -330,6 +330,7 @@ XDestroyWindow(display, w)
     if (hwnd != NULL && !(winPtr->flags & TK_DONT_DESTROY_WINDOW)) {
 	DestroyWindow(hwnd);
     }
+    return 0;
 }
 
 /*
@@ -349,7 +350,7 @@ XDestroyWindow(display, w)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMapWindow(display, w)
     Display* display;
     Window w;
@@ -373,7 +374,7 @@ XMapWindow(display, w)
 	for (parentPtr = winPtr->parentPtr; ;
 	        parentPtr = parentPtr->parentPtr) {
 	    if ((parentPtr == NULL) || !(parentPtr->flags & TK_MAPPED)) {
-		return;
+		return 0;
 	    }
 	    if (parentPtr->flags & TK_TOP_HIERARCHY) {
 		break;
@@ -402,6 +403,7 @@ XMapWindow(display, w)
     event.xvisibility.window = winPtr->window;
     event.xvisibility.state = VisibilityUnobscured;
     NotifyVisibility(&event, winPtr);
+    return 0;
 }
 
 /*
@@ -458,7 +460,7 @@ NotifyVisibility(eventPtr, winPtr)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XUnmapWindow(display, w)
     Display* display;
     Window w;
@@ -486,6 +488,7 @@ XUnmapWindow(display, w)
 	event.xunmap.from_configure = False;
 	Tk_HandleEvent(&event);
     }
+    return 0;
 }
 
 /*
@@ -504,7 +507,7 @@ XUnmapWindow(display, w)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMoveResizeWindow(display, w, x, y, width, height)
     Display* display;
     Window w;
@@ -515,6 +518,7 @@ XMoveResizeWindow(display, w, x, y, width, height)
 {
     display->request++;
     MoveWindow(Tk_GetHWND(w), x, y, width, height, TRUE);
+    return 0;
 }
 
 /*
@@ -533,7 +537,7 @@ XMoveResizeWindow(display, w, x, y, width, height)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMoveWindow(display, w, x, y)
     Display* display;
     Window w;
@@ -546,6 +550,7 @@ XMoveWindow(display, w, x, y)
 
     MoveWindow(Tk_GetHWND(w), x, y, winPtr->changes.width,
 	    winPtr->changes.height, TRUE);
+    return 0;
 }
 
 /*
@@ -564,7 +569,7 @@ XMoveWindow(display, w, x, y)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XResizeWindow(display, w, width, height)
     Display* display;
     Window w;
@@ -577,6 +582,7 @@ XResizeWindow(display, w, width, height)
 
     MoveWindow(Tk_GetHWND(w), winPtr->changes.x, winPtr->changes.y, width,
 	    height, TRUE);
+    return 0;
 }
 
 /*
@@ -595,7 +601,7 @@ XResizeWindow(display, w, width, height)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XRaiseWindow(display, w)
     Display* display;
     Window w;
@@ -605,6 +611,7 @@ XRaiseWindow(display, w)
     display->request++;
     SetWindowPos(window, HWND_TOPMOST, 0, 0, 0, 0,
 	    SWP_NOMOVE | SWP_NOSIZE);
+    return 0;
 }
 
 /*
@@ -626,7 +633,7 @@ XRaiseWindow(display, w)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XConfigureWindow(display, w, value_mask, values)
     Display* display;
     Window w;
@@ -660,6 +667,7 @@ XConfigureWindow(display, w, value_mask, values)
 	}
 	TkWinSetWindowPos(hwnd, sibling, values->stack_mode);
     }
+    return 0;
 }
 
 /*
@@ -678,7 +686,7 @@ XConfigureWindow(display, w, value_mask, values)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XClearWindow(display, w)
     Display* display;
     Window w;
@@ -706,6 +714,7 @@ XClearWindow(display, w)
     DeleteObject(brush);
     SelectPalette(dc, oldPalette, TRUE);
     ReleaseDC(hwnd, dc);
+    return 0;
 }
 
 /*
@@ -726,7 +735,7 @@ XClearWindow(display, w)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XChangeWindowAttributes(display, w, valueMask, attributes)
     Display* display;
     Window w;
@@ -736,6 +745,7 @@ XChangeWindowAttributes(display, w, valueMask, attributes)
     if (valueMask & CWCursor) {
 	XDefineCursor(display, w, attributes->cursor);
     }
+    return 0;
 }
 
 /*
