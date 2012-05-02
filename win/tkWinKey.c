@@ -690,12 +690,13 @@ XGetModifierMapping(display)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFreeModifiermap(modmap)
     XModifierKeymap* modmap;
 {
     ckfree((char *) modmap->modifiermap);
     ckfree((char *) modmap);
+    return 0;
 }
 
 /*

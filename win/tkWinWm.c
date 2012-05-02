@@ -2347,7 +2347,7 @@ TkWmUnmapWindow(winPtr)
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkpWmSetState(winPtr, state)
      TkWindow *winPtr;		/* Toplevel window to operate on. */
      int state;			/* One of IconicState, ZoomState, NormalState,
@@ -2358,7 +2358,7 @@ TkpWmSetState(winPtr, state)
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	wmPtr->hints.initial_state = state;
-	return;
+	return 1;
     }
 
     wmPtr->flags |= WM_SYNC_PENDING;
@@ -2374,6 +2374,7 @@ TkpWmSetState(winPtr, state)
 
     ShowWindow(wmPtr->wrapper, cmd);
     wmPtr->flags &= ~WM_SYNC_PENDING;
+    return 1;
 }
 
 /*
@@ -3265,7 +3266,7 @@ WmCommandCmd(tkwin, winPtr, interp, objc, objv)
     wmPtr->cmdArgc = cmdArgc;
     wmPtr->cmdArgv = cmdArgv;
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	XSetCommand(winPtr->display, winPtr->window, cmdArgv, cmdArgc);
+	XSetCommand(winPtr->display, winPtr->window, (char **)cmdArgv, cmdArgc);
     }
     return TCL_OK;
 }
