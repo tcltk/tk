@@ -106,10 +106,6 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 
     set windowingsystem [tk windowingsystem]
 
-    if {$windowingsystem eq "win32"} {
-        # Bug 533519: win32 multiple desktops may produce negative geometry.
-        set checkBounds 0
-    }
     if {$checkBounds} {
 	if {$x < [winfo vrootx $w]} {
 	    set x [winfo vrootx $w]
