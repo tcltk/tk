@@ -34,7 +34,7 @@ XStringListToTextProperty(list, count, text_prop_return)
  * From Xlib.h
  */
 
-void
+int
 XChangeProperty(display, w, property, type, format, mode, data, nelements)
     Display* display;
     Window w;
@@ -45,6 +45,7 @@ XChangeProperty(display, w, property, type, format, mode, data, nelements)
     _Xconst unsigned char* data;
     int nelements;
 {
+    return 0;
 }
 
 Cursor
@@ -55,14 +56,14 @@ XCreateGlyphCursor(display, source_font, mask_font, source_char, mask_char,
     Font mask_font;
     unsigned int source_char;
     unsigned int mask_char;
-    XColor* foreground_color;
-    XColor* background_color;
+    XColor _Xconst *foreground_color;
+    XColor _Xconst *background_color;
 {
     return 1;
 }
 
 XIC
-XCreateIC()
+XCreateIC TCL_VARARGS_DEF(XIM,xim)
 {
     return NULL;
 }
@@ -81,12 +82,13 @@ XCreatePixmapCursor(display, source, mask, foreground_color,
     return (Cursor) NULL;
 }
 
-void
+int
 XDeleteProperty(display, w, property)
     Display* display;
     Window w;
     Atom property;
 {
+    return 0;
 }
 
 void
@@ -103,17 +105,19 @@ XFilterEvent(event, window)
     return 0;
 }
 
-extern void XForceScreenSaver(display, mode)
+int XForceScreenSaver(display, mode)
     Display* display;
     int mode;
 {
+    return 0;
 }
 
-void
+int
 XFreeCursor(display, cursor)
     Display* display;
     Cursor cursor;
 {
+    return 0;
 }
 
 GContext
@@ -180,27 +184,30 @@ XLookupColor(display, colormap, color_name, exact_def_return,
     return 0;
 }
 
-void
+int
 XNextEvent(display, event_return)
     Display* display;
     XEvent* event_return;
 {
+    return 0;
 }
 
-void
+int
 XPutBackEvent(display, event)
     Display* display;
     XEvent* event;
 {
+    return 0;
 }
 
-void
+int
 XQueryColors(display, colormap, defs_in_out, ncolors)
     Display* display;
     Colormap colormap;
     XColor* defs_in_out;
     int ncolors;
 {
+    return 0;
 }
 
 int
@@ -216,10 +223,11 @@ XQueryTree(display, w, root_return, parent_return, children_return,
     return 0;
 }
 
-void
+int
 XRefreshKeyboardMapping(event_map)
     XMappingEvent* event_map;
 {
+    return 0;
 }
 
 Window
@@ -230,12 +238,13 @@ XRootWindow(display, screen_number)
     return (Window) NULL;
 }
 
-void
+int
 XSelectInput(display, w, event_mask)
     Display* display;
     Window w;
     long event_mask;
 {
+    return 0;
 }
 
 int
@@ -249,13 +258,14 @@ XSendEvent(display, w, propagate, event_mask, event_send)
     return 0;
 }
 
-void
+int
 XSetCommand(display, w, argv, argc)
     Display* display;
     Window w;
-    CONST char** argv;
+    char** argv;
     int argc;
 {
+    return 0;
 }
 
 XErrorHandler
@@ -265,60 +275,67 @@ XSetErrorHandler (handler)
     return NULL;
 }
 
-void
+int
 XSetIconName(display, w, icon_name)
     Display* display;
     Window w;
     _Xconst char* icon_name;
 {
+    return 0;
 }
 
-void
+int
 XSetWindowBackground(display, w, background_pixel)
     Display* display;
     Window w;
     unsigned long background_pixel;
 {
+    return 0;
 }
 
-void
+int
 XSetWindowBackgroundPixmap(display, w, background_pixmap)
     Display* display;
     Window w;
     Pixmap background_pixmap;
 {
+    return 0;
 }
 
-void
+int
 XSetWindowBorder(display, w, border_pixel)
     Display* display;
     Window w;
     unsigned long border_pixel;
 {
+    return 0;
 }
 
-void
+int
 XSetWindowBorderPixmap(display, w, border_pixmap)
     Display* display;
     Window w;
     Pixmap border_pixmap;
 {
+    return 0;
 }
 
-void
+int
 XSetWindowBorderWidth(display, w, width)
     Display* display;
     Window w;
     unsigned int width;
 {
+    return 0;
 }
 
-void
+int
 XSetWindowColormap(display, w, colormap)
     Display* display;
     Window w;
     Colormap colormap;
 {
+    return 0;
 }
 
 Bool
@@ -336,13 +353,14 @@ XTranslateCoordinates(display, src_w, dest_w, src_x, src_y, dest_x_return,
     return 0;
 }
 
-void
+int
 XWindowEvent(display, w, event_mask, event_return)
     Display* display;
     Window w;
     long event_mask;
     XEvent* event_return;
 {
+    return 0;
 }
 
 int
