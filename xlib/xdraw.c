@@ -28,7 +28,7 @@
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawLine(display, d, gc, x1, y1, x2, y2)
     Display* display;
     Drawable d;
@@ -42,6 +42,7 @@ XDrawLine(display, d, gc, x1, y1, x2, y2)
     points[1].x = x2;
     points[1].y = y2;
     XDrawLines(display, d, gc, points, 2, CoordModeOrigin);
+    return 0;
 }
 
 /*
@@ -61,7 +62,7 @@ XDrawLine(display, d, gc, x1, y1, x2, y2)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillRectangle(display, d, gc, x, y, width, height)
     Display* display;
     Drawable d;
@@ -77,4 +78,5 @@ XFillRectangle(display, d, gc, x, y, width, height)
     rectangle.width = width;
     rectangle.height = height;
     XFillRectangles(display, d, gc, &rectangle, 1);
+    return 0;
 }

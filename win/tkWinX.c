@@ -759,12 +759,13 @@ TkClipCleanup(dispPtr)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XBell(display, percent)
     Display* display;
     int percent;
 {
     MessageBeep(MB_OK);
+    return 0;
 }
 
 /*
