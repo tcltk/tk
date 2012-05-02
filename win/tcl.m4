@@ -317,7 +317,6 @@ AC_DEFUN([SC_ENABLE_SYMBOLS], [
     fi
     AC_SUBST(CFLAGS_DEFAULT)
     AC_SUBST(LDFLAGS_DEFAULT)
-    AC_DEFINE(TCL_CFG_DEBUG)
 
     if test "$tcl_ok" = "mem" -o "$tcl_ok" = "all"; then
 	AC_DEFINE(TCL_MEM_DEBUG, 1, [Is memory debugging enabled?])
@@ -418,9 +417,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 
     if test "$GCC" = "yes"; then
 
-      if test "$TCL_CC" = "gcc"; then
-	CFLAGS="$CFLAGS -mwin32"
-      fi
       AC_CACHE_CHECK(for cross-compile version of gcc,
 	ac_cv_cross,
 	AC_TRY_COMPILE([
