@@ -2625,21 +2625,13 @@ ExpandPercents(winPtr, before, eventPtr, keySym, dsPtr)
 	    }
 	    case 'X':
 		if (flags & KEY_BUTTON_MOTION_CROSSING) {
-		    Tk_Window tkwin;
-
 		    number = eventPtr->xkey.x_root;
-		    tkwin = Tk_IdToWindow(eventPtr->xany.display,
-			    eventPtr->xany.window);
 		    goto doNumber;
 		}
 		goto doString;
 	    case 'Y':
 		if (flags & KEY_BUTTON_MOTION_CROSSING) {
-		    Tk_Window tkwin;
-
 		    number = eventPtr->xkey.y_root;
-		    tkwin = Tk_IdToWindow(eventPtr->xany.display,
-			    eventPtr->xany.window);
 		    goto doNumber;
 		}
 		goto doString;
