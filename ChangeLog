@@ -1,6 +1,6 @@
 2012-04-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* library/tk.tcl:    [Bug 3508771]: Window placement with multiple screens
+	* library/tk.tcl:    [Bug 533519]: Window placement with multiple screens
 	* generic/tkBind.c:
 	* generic/tkFocus.c:
 	* generic/tkMenuDraw.c:
