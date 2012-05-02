@@ -190,7 +190,7 @@ error:
  *----------------------------------------------------------------------
  */
 
-void
+int
 XSetSelectionOwner(display, selection, owner, time)
     Display* display;
     Atom selection;
@@ -218,6 +218,7 @@ XSetSelectionOwner(display, selection, owner, time)
 	    UpdateClipboard(hwnd);
 	}
     }
+    return 0;
 }
 
 /*

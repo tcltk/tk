@@ -430,7 +430,7 @@ XAllocColor(display, colormap, color)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFreeColors(display, colormap, pixels, npixels, planes)
     Display* display;
     Colormap colormap;
@@ -485,6 +485,7 @@ XFreeColors(display, colormap, pixels, npixels, planes)
 	}
     }
     ReleaseDC(NULL, dc);
+    return 0;
 }
 
 /*
@@ -567,7 +568,7 @@ XCreateColormap(display, w, visual, alloc)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFreeColormap(display, colormap)
     Display* display;
     Colormap colormap;
@@ -578,6 +579,7 @@ XFreeColormap(display, colormap)
     }
     Tcl_DeleteHashTable(&cmap->refCounts);
     ckfree((char *) cmap);
+    return 0;
 }
 
 /*
