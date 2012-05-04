@@ -1,3 +1,7 @@
+2012-05-04  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/menu.tcl:    [Bug 2768586]: Menu posting problem on dual monitors
+
 2012-05-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/tk.tcl:    [Bug 533519]: Window placement with multiple screens
