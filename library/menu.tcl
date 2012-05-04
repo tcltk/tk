@@ -286,8 +286,8 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     	    	set x [winfo rootx $w]
     	    	set y [expr {[winfo rooty $w] - [winfo reqheight $menu]}]
 		# if we go offscreen to the top, show as 'below'
-		if {$y < 0} {
-		    set y [expr {[winfo rooty $w] + [winfo height $w]}]
+		if {$y < [winfo vrooty $w]} {
+		    set y [expr {[winfo vrooty $w] + [winfo rooty $w] + [winfo reqheight $w]}]
 		}
 		PostOverPoint $menu $x $y
     	    }
@@ -296,8 +296,8 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     	    	set y [expr {[winfo rooty $w] + [winfo height $w]}]
 		# if we go offscreen to the bottom, show as 'above'
 		set mh [winfo reqheight $menu]
-		if {($y + $mh) > [winfo screenheight $w]} {
-		    set y [expr {[winfo rooty $w] - $mh}]
+		if {($y + $mh) > ([winfo vrooty $w] + [winfo vrootheight $w])} {
+		    set y [expr {[winfo vrooty $w] + [winfo vrootheight $w] + [winfo rooty $w] - $mh}]
 		}
 		PostOverPoint $menu $x $y
     	    }
@@ -1240,16 +1240,15 @@ proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 	if {$ver < 6} {
 	    set yoffset [expr {[winfo screenheight $menu] \
 				   - $y - [winfo reqheight $menu] - 10}]
-	    if {$yoffset < 0} {
+	    if {$yoffset < [winfo vrooty $menu]} {
 		# The bottom of the menu is offscreen, so adjust upwards
-		incr y $yoffset
-		if {$y < 0} { set y 0 }
+		incr y [expr {$yoffset - [winfo vrooty $menu]}]
 	    }
 	    # If we're off the top of the screen (either because we were
 	    # originally or because we just adjusted too far upwards),
 	    # then make the menu popup on the top edge.
-	    if {$y < 0} {
-		set y 0
+	    if {$y < [winfo vrooty $menu]} {
+		set y [winfo vrooty $menu]
 	    }
 	}
     }
