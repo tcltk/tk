@@ -36,7 +36,7 @@
  * Exported function declarations:
  */
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__CYGWIN__)
 /* 0 */
 EXTERN int		XSetDashes _ANSI_ARGS_((Display *display, GC gc,
 				int dash_offset, _Xconst char *dash_list,
@@ -951,7 +951,7 @@ typedef struct TkIntXlibStubs {
     int magic;
     struct TkIntXlibStubHooks *hooks;
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__CYGWIN__)
     int (*xSetDashes) _ANSI_ARGS_((Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n)); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) _ANSI_ARGS_((Display *d)); /* 1 */
     XImage * (*xCreateImage) _ANSI_ARGS_((Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4)); /* 2 */
@@ -1263,7 +1263,7 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
  * Inline function declarations:
  */
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__CYGWIN__)
 #ifndef XSetDashes
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */

@@ -76,6 +76,7 @@
 #	define TkSubtractRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XSubtractRegion
 
 #	ifdef __CYGWIN__
+#	    define TkPutImage	TkIntXlibPutImage
 #	    define Tk_GetHINSTANCE	TkPlatGetHINSTANCE
 #	    define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
 
@@ -96,6 +97,13 @@ static void *Tk_GetHINSTANCE()
 	    (const char *) &tkIntStubs, &hInstance);
     return hInstance;
 }
+static void TkPutImage(unsigned long *colors, int ncolors, Display *display,
+	    Drawable d, GC gc, XImage *image, int destx, int desty,
+	    int srcx, int srcy, unsigned int width, unsigned int height)
+{
+	XPutImage(display, d, gc, image, destx, desty, srcx, srcy, width, height);
+}
+
 	    /* TODO: To be implemented for Cygwin */
 #	    define Tk_AttachHWND		0
 #	    define Tk_GetHWND		0
@@ -103,8 +111,6 @@ static void *Tk_GetHINSTANCE()
 #	    define Tk_PointerEvent		0
 #	    define Tk_TranslateWinEvent	0
 
-#	else /* !__CYGWIN__ */
-#	    define TkPutImage		0
 #	endif /* __CYGWIN__ */
 #   endif /* !MAC_TCL && !MACC_OSX_TCL */
 #endif /* !__WIN32__ */
@@ -494,7 +500,7 @@ TkIntPlatStubs tkIntPlatStubs = {
 TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     NULL,
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__CYGWIN__)
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
