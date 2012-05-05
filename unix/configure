@@ -6969,7 +6969,7 @@ fi
 	UNSHARED_LIB_SUFFIX='${VERSION}.a'
 fi
 
-	DLL_INSTALL_DIR="\$(LIB_INSTALL_DIR)"
+    DLL_INSTALL_DIR="\$(LIB_INSTALL_DIR)"
 
     if test "${SHARED_BUILD}" = 1 -a "${SHLIB_SUFFIX}" != ""; then
 
@@ -7177,12 +7177,6 @@ echo "${ECHO_T}yes (standard debugging)" >&6
 	fi
     fi
 
-
-    ### FIXME: Surely TCL_CFG_DEBUG should be set to whether we're debugging?
-
-cat >>confdefs.h <<\_ACEOF
-#define TCL_CFG_DEBUG 1
-_ACEOF
 
 
     if test "$tcl_ok" = "mem" -o "$tcl_ok" = "all"; then
