@@ -17,8 +17,8 @@
  * Index array. For each of the characters 'a'-'y', this table gives the first color
  * starting with that character in the xColors table.
  */
-static const int az[] = {0, 5, 13, 21, 45, 46, 50, 60, 62, 65, 66, 67,
-	91, 106, 109, 115, 126, 127, 130, 144, 149, 150, 152, 155, 156, 158};
+static const unsigned char az[] = {0, 5, 13, 21, 45, 46, 50, 60, 62, 65, 66,
+	67, 91, 106, 109, 115, 126, 127, 130, 144, 149, 150, 152, 155, 156, 158};
 
 /*
  * Define an array that defines the mapping from color names to RGB values.
