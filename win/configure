@@ -3379,9 +3379,6 @@ fi
 
     if test "$GCC" = "yes"; then
 
-      if test "$TCL_CC" = "gcc"; then
-	CFLAGS="$CFLAGS -mwin32"
-      fi
       echo "$as_me:$LINENO: checking for cross-compile version of gcc" >&5
 echo $ECHO_N "checking for cross-compile version of gcc... $ECHO_C" >&6
 if test "${ac_cv_cross+set}" = set; then
@@ -4765,10 +4762,6 @@ echo "${ECHO_T}yes (standard debugging)" >&6
 	fi
     fi
 
-
-    cat >>confdefs.h <<\_ACEOF
-#define TCL_CFG_DEBUG 1
-_ACEOF
 
 
     if test "$tcl_ok" = "mem" -o "$tcl_ok" = "all"; then

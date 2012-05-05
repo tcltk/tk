@@ -98,6 +98,12 @@ static void *Tk_GetHINSTANCE()
 	    (const char *) &tkIntStubs, &hInstance);
     return hInstance;
 }
+	    /* TODO: To be implemented for Cygwin */
+#	    define Tk_AttachHWND		0
+#	    define Tk_GetHWND		0
+#	    define Tk_HWNDToWindow		0
+#	    define Tk_PointerEvent		0
+#	    define Tk_TranslateWinEvent	0
 
 #	else /* !__CYGWIN__ */
 #	    define TkPutImage		0

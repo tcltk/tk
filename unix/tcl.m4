@@ -750,8 +750,6 @@ AC_DEFUN([SC_ENABLE_SYMBOLS], [
     fi
     AC_SUBST(CFLAGS_DEFAULT)
     AC_SUBST(LDFLAGS_DEFAULT)
-    ### FIXME: Surely TCL_CFG_DEBUG should be set to whether we're debugging?
-    AC_DEFINE(TCL_CFG_DEBUG, 1, [Is debugging enabled?])
 
     if test "$tcl_ok" = "mem" -o "$tcl_ok" = "all"; then
 	AC_DEFINE(TCL_MEM_DEBUG, 1, [Is memory debugging enabled?])
@@ -2090,7 +2088,7 @@ dnl # preprocessing tests use only CPPFLAGS.
 	SHARED_LIB_SUFFIX='${VERSION}${SHLIB_SUFFIX}'])
     AS_IF([test "$UNSHARED_LIB_SUFFIX" = ""], [
 	UNSHARED_LIB_SUFFIX='${VERSION}.a'])
-	DLL_INSTALL_DIR="\$(LIB_INSTALL_DIR)"
+    DLL_INSTALL_DIR="\$(LIB_INSTALL_DIR)"
 
     AS_IF([test "${SHARED_BUILD}" = 1 -a "${SHLIB_SUFFIX}" != ""], [
         LIB_SUFFIX=${SHARED_LIB_SUFFIX}
