@@ -1,3 +1,9 @@
+2012-05-05  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/menu.tcl:    [Bug 2768586]: Only do menu correction on Windows < Win7
+	* xlib/xcolors.c:      Single "const" addition
+	* generic/tkWindow.c:  If tk.dll loaded in cygwin, don't use the win32 file dialogs
+
 2012-05-04  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/menu.tcl:    [Bug 2768586]: Menu posting problem on dual monitors
