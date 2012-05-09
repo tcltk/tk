@@ -852,7 +852,7 @@ TkCreateMainWindow(interp, screenName, baseName)
     Tk_Window tkwin;
     int dummy;
     int isSafe;
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(STATIC_BUILD)
     int isWin32 = 0;
 #endif
     Tcl_HashEntry *hPtr;
@@ -862,7 +862,7 @@ TkCreateMainWindow(interp, screenName, baseName)
     ClientData clientData;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(STATIC_BUILD)
     Tcl_Obj *stringObjPtr = Tcl_GetVar2Ex(interp, "::tcl_platform", "platform", 0);
 
     if (stringObjPtr
@@ -953,7 +953,7 @@ TkCreateMainWindow(interp, screenName, baseName)
 	if (cmdPtr->objProc == NULL) {
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
-#ifdef __WIN32__
+#if defined(__WIN32__) && !defined(STATIC_BUILD)
 	if (!isWin32 && (cmdPtr->flags & WINMACONLY)) {
 	    continue;
 	}

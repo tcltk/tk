@@ -1,3 +1,11 @@
+2012-05-09  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinWm.c:           Change TkpWmSetState signature to match UNIX,
+	* generic/tkInt.decls:     needed for Cygwin. (not needed for Mac)
+	* generic/tkIntPlatDeclsDecls.h:
+	* generic/tkWindow.c:      Don't check for cygwin in win32 static build.
+	* unix/tkUnixPort.h:       Some more useful #defines for Cygwin
+
 2012-05-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/menu.tcl:    [Bug 2768586]: Only do menu correction on Windows < Win7
