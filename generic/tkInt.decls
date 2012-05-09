@@ -706,7 +706,7 @@ declare 8 win {
     void TkpSetCursor(TkpCursor cursor)
 }
 declare 9 win {
-    void TkpWmSetState(TkWindow *winPtr, int state)
+    int TkpWmSetState(TkWindow *winPtr, int state)
 }
 declare 10 win {
     void TkSetPixmapColormap(Pixmap pixmap, Colormap colormap)

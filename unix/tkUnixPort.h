@@ -122,6 +122,21 @@
 	XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
 	desty, width, height);
 
+#ifdef __CYGWIN__
+#   define UINT unsigned int
+#   define HWND void *
+#   define HDC void *
+#   define HINSTANCE void *
+#   define COLORREF void *
+#   define HMENU void *
+#   define TkWinDCState void
+#   define HPALETTE void *
+#   define WNDPROC void *
+#   define WPARAM void *
+#   define LPARAM void *
+#   define LRESULT void *
+#endif
+
 /*
  * Supply macros for seek offsets, if they're not already provided by
  * an include file.

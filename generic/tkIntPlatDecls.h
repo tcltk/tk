@@ -52,7 +52,7 @@ EXTERN void		TkpSetCapture(TkWindow *winPtr);
 /* 8 */
 EXTERN void		TkpSetCursor(TkpCursor cursor);
 /* 9 */
-EXTERN void		TkpWmSetState(TkWindow *winPtr, int state);
+EXTERN int		TkpWmSetState(TkWindow *winPtr, int state);
 /* 10 */
 EXTERN void		TkSetPixmapColormap(Pixmap pixmap, Colormap colormap);
 /* 11 */
@@ -275,7 +275,7 @@ typedef struct TkIntPlatStubs {
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 6 */
     void (*tkpSetCapture) (TkWindow *winPtr); /* 7 */
     void (*tkpSetCursor) (TkpCursor cursor); /* 8 */
-    void (*tkpWmSetState) (TkWindow *winPtr, int state); /* 9 */
+    int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 9 */
     void (*tkSetPixmapColormap) (Pixmap pixmap, Colormap colormap); /* 10 */
     void (*tkWinCancelMouseTimer) (void); /* 11 */
     void (*tkWinClipboardRender) (TkDisplay *dispPtr, UINT format); /* 12 */
