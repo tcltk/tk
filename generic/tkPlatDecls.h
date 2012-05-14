@@ -29,25 +29,7 @@
  * Exported function declarations:
  */
 
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
-/* 0 */
-EXTERN Window		Tk_AttachHWND _ANSI_ARGS_((Tk_Window tkwin,
-				VOID *hwnd));
-/* 1 */
-EXTERN VOID *		Tk_GetHINSTANCE _ANSI_ARGS_((void));
-/* 2 */
-EXTERN VOID *		Tk_GetHWND _ANSI_ARGS_((Window window));
-/* 3 */
-EXTERN Tk_Window	Tk_HWNDToWindow _ANSI_ARGS_((VOID *hwnd));
-/* 4 */
-EXTERN void		Tk_PointerEvent _ANSI_ARGS_((VOID *hwnd, int x,
-				int y));
-/* 5 */
-EXTERN int		Tk_TranslateWinEvent _ANSI_ARGS_((VOID *hwnd,
-				unsigned int message, int wParam, int lParam,
-				int *result));
-#endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__CYGWIN__)
 /* 0 */
 EXTERN Window		Tk_AttachHWND _ANSI_ARGS_((Tk_Window tkwin,
 				HWND hwnd));
@@ -135,15 +117,7 @@ typedef struct TkPlatStubs {
     int magic;
     struct TkPlatStubHooks *hooks;
 
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
-    Window (*tk_AttachHWND) _ANSI_ARGS_((Tk_Window tkwin, VOID *hwnd)); /* 0 */
-    VOID * (*tk_GetHINSTANCE) _ANSI_ARGS_((void)); /* 1 */
-    VOID * (*tk_GetHWND) _ANSI_ARGS_((Window window)); /* 2 */
-    Tk_Window (*tk_HWNDToWindow) _ANSI_ARGS_((VOID *hwnd)); /* 3 */
-    void (*tk_PointerEvent) _ANSI_ARGS_((VOID *hwnd, int x, int y)); /* 4 */
-    int (*tk_TranslateWinEvent) _ANSI_ARGS_((VOID *hwnd, unsigned int message, int wParam, int lParam, int *result)); /* 5 */
-#endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__CYGWIN__)
     Window (*tk_AttachHWND) _ANSI_ARGS_((Tk_Window tkwin, HWND hwnd)); /* 0 */
     HINSTANCE (*tk_GetHINSTANCE) _ANSI_ARGS_((void)); /* 1 */
     HWND (*tk_GetHWND) _ANSI_ARGS_((Window window)); /* 2 */
@@ -193,33 +167,7 @@ extern TkPlatStubs *tkPlatStubsPtr;
  * Inline function declarations:
  */
 
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
-#ifndef Tk_AttachHWND
-#define Tk_AttachHWND \
-	(tkPlatStubsPtr->tk_AttachHWND) /* 0 */
-#endif
-#ifndef Tk_GetHINSTANCE
-#define Tk_GetHINSTANCE \
-	(tkPlatStubsPtr->tk_GetHINSTANCE) /* 1 */
-#endif
-#ifndef Tk_GetHWND
-#define Tk_GetHWND \
-	(tkPlatStubsPtr->tk_GetHWND) /* 2 */
-#endif
-#ifndef Tk_HWNDToWindow
-#define Tk_HWNDToWindow \
-	(tkPlatStubsPtr->tk_HWNDToWindow) /* 3 */
-#endif
-#ifndef Tk_PointerEvent
-#define Tk_PointerEvent \
-	(tkPlatStubsPtr->tk_PointerEvent) /* 4 */
-#endif
-#ifndef Tk_TranslateWinEvent
-#define Tk_TranslateWinEvent \
-	(tkPlatStubsPtr->tk_TranslateWinEvent) /* 5 */
-#endif
-#endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__CYGWIN__)
 #ifndef Tk_AttachHWND
 #define Tk_AttachHWND \
 	(tkPlatStubsPtr->tk_AttachHWND) /* 0 */
