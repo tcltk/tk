@@ -81,7 +81,7 @@ doNothing(void)
 #   undef TkPutImage
 #   undef TkSetPixmapColormap
 #   undef TkpPrintWindowId
-#   undef TkWinChildProc 0
+#   undef TkWinChildProc
 
 /*
  * Make sure that extensions which call XParseColor through the stub
