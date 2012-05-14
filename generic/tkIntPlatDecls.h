@@ -488,7 +488,7 @@ typedef struct TkIntPlatStubs {
     int (*tkWinGetPlatformId) _ANSI_ARGS_((void)); /* 33 */
     void (*tkWinSetHINSTANCE) _ANSI_ARGS_((HINSTANCE hInstance)); /* 34 */
     int (*tkWinGetPlatformTheme) _ANSI_ARGS_((void)); /* 35 */
-    LRESULT __stdcall (*tkWinChildProc) _ANSI_ARGS_((HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)); /* 36 */
+    LRESULT (__stdcall *tkWinChildProc) _ANSI_ARGS_((HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)); /* 36 */
     void (*tkCreateXEventSource) _ANSI_ARGS_((void)); /* 37 */
     void (*tkFreeWindowId) _ANSI_ARGS_((TkDisplay *dispPtr, Window w)); /* 38 */
     void (*tkInitXId) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 39 */

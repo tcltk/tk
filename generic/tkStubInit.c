@@ -54,17 +54,17 @@ doNothing(void)
 #   undef TkpCmapStressed
 #   undef TkpSync
 
-#	define TkCreateXEventSource (void (*) ()) doNothing
-#	define TkFreeWindowId (void (*) _ANSI_ARGS_((TkDisplay *, Window))) doNothing
-#   define TkInitXId (void (*) _ANSI_ARGS_((TkDisplay *))) doNothing
-#   define TkpCmapStressed (int (*) _ANSI_ARGS_((Tk_Window, Colormap))) doNothing
-#   define TkpSync (void (*) _ANSI_ARGS_((TkDisplay *))) doNothing
+#	define TkCreateXEventSource (void (*) (void)) doNothing
+#	define TkFreeWindowId (void (*) (TkDisplay *, Window)) doNothing
+#   define TkInitXId (void (*) (TkDisplay *)) doNothing
+#   define TkpCmapStressed (int (*) (Tk_Window, Colormap)) doNothing
+#   define TkpSync (void (*) (Display *)) doNothing
 #   define TkUnixContainerId 0
 #   define TkUnixDoOneXEvent 0
 #   define TkUnixSetMenubar 0
-#   define TkWmCleanup (void (*) _ANSI_ARGS_((TkDisplay *))) doNothing
-#   define TkSendCleanup (void (*) _ANSI_ARGS_((TkDisplay *))) doNothing
-#   define TkFreeXId (void (*) _ANSI_ARGS_((TkDisplay *))) doNothing
+#   define TkWmCleanup (void (*) (TkDisplay *)) doNothing
+#   define TkSendCleanup (void (*) (TkDisplay *)) doNothing
+#   define TkFreeXId (void (*) (TkDisplay *)) doNothing
 
 #else
 /*
