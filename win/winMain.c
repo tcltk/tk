@@ -16,7 +16,6 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <locale.h>
 
-
 /*
  * The following declarations refer to internal Tk routines. These interfaces
  * are available for use, but are not supported.
@@ -36,10 +35,6 @@ extern Tcl_PackageInitProc Dde_SafeInit;
  */
 
 static void		WishPanic(CONST char *format, ...);
-
-#if defined(__CYGWIN__)
-static void		setargv(int *argcPtr, char ***argvPtr);
-#endif /* __CYGWIN__ */
 
 static BOOL consoleRequired = TRUE;
 
@@ -112,12 +107,8 @@ WinMain(
      * Get our args from the c-runtime. Ignore lpszCmdLine.
      */
 
-#if defined(__CYGWIN__)
-    setargv(&argc, &argv);
-#else
     argc = __argc;
     argv = __argv;
-#endif
 
     /*
      * Forward slashes substituted for backslashes.
@@ -289,7 +280,7 @@ WishPanic(
     ExitProcess(1);
 }
 
-#if !defined(__GNUC__) || defined(TK_TEST)
+#if defined(TK_TEST)
 /*
  *----------------------------------------------------------------------
  *
@@ -331,128 +322,7 @@ main(
     Tk_Main(argc, argv, Tcl_AppInit);
     return 0;
 }
-#endif /* !__GNUC__ || TK_TEST */
-
-
-/*
- *-------------------------------------------------------------------------
- *
- * setargv --
- *
- *	Parse the Windows command line string into argc/argv. Done here
- *	because we don't trust the builtin argument parser in crt0. Windows
- *	applications are responsible for breaking their command line into
- *	arguments.
- *
- *	2N backslashes + quote -> N backslashes + begin quoted string
- *	2N + 1 backslashes + quote -> literal
- *	N backslashes + non-quote -> literal
- *	quote + quote in a quoted string -> single quote
- *	quote + quote not in quoted string -> empty string
- *	quote -> begin quoted string
- *
- * Results:
- *	Fills argcPtr with the number of arguments and argvPtr with the array
- *	of arguments.
- *
- * Side effects:
- *	Memory allocated.
- *
- *--------------------------------------------------------------------------
- */
-
-#if defined(__CYGWIN__)
-static void
-setargv(
-    int *argcPtr,		/* Filled with number of argument strings. */
-    char ***argvPtr)		/* Filled with argument strings (malloc'd). */
-{
-    char *cmdLine, *p, *arg, *argSpace;
-    char **argv;
-    int argc, size, inquote, copy, slashes;
-
-    cmdLine = GetCommandLine();	/* INTL: BUG */
-
-    /*
-     * Precompute an overly pessimistic guess at the number of arguments in
-     * the command line by counting non-space spans.
-     */
-
-    size = 2;
-    for (p = cmdLine; *p != '\0'; p++) {
-	if ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
-	    size++;
-	    while ((*p == ' ') || (*p == '\t')) { /* INTL: ISO space. */
-		p++;
-	    }
-	    if (*p == '\0') {
-		break;
-	    }
-	}
-    }
-    argSpace = (char *) ckalloc(
-	    (unsigned) (size * sizeof(char *) + strlen(cmdLine) + 1));
-    argv = (char **) argSpace;
-    argSpace += size * sizeof(char *);
-    size--;
-
-    p = cmdLine;
-    for (argc = 0; argc < size; argc++) {
-	argv[argc] = arg = argSpace;
-	while ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
-	    p++;
-	}
-	if (*p == '\0') {
-	    break;
-	}
-
-	inquote = 0;
-	slashes = 0;
-	while (1) {
-	    copy = 1;
-	    while (*p == '\\') {
-		slashes++;
-		p++;
-	    }
-	    if (*p == '"') {
-		if ((slashes & 1) == 0) {
-		    copy = 0;
-		    if ((inquote) && (p[1] == '"')) {
-			p++;
-			copy = 1;
-		    } else {
-			inquote = !inquote;
-		    }
-		}
-		slashes >>= 1;
-	    }
-
-	    while (slashes) {
-		*arg = '\\';
-		arg++;
-		slashes--;
-	    }
-
-	    if ((*p == '\0') || (!inquote &&
-		    ((*p == ' ') || (*p == '\t')))) {	/* INTL: ISO space. */
-		break;
-	    }
-	    if (copy != 0) {
-		*arg = *p;
-		arg++;
-	    }
-	    p++;
-	}
-	*arg = '\0';
-	argSpace = arg + 1;
-    }
-    argv[argc] = NULL;
-
-    *argcPtr = argc;
-    *argvPtr = argv;
-}
-#endif /* __CYGWIN__ */
-
+#endif /* TK_TEST */
 /*
  * Local Variables:
  * mode: c
