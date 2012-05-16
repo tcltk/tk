@@ -182,7 +182,9 @@
 #define TkpButtonSetDefaults(specPtr) {}
 #define TkpDestroyButton(butPtr) {}
 #define TkSelUpdateClipboard(a,b) {}
+#ifndef __CYGWIN__
 #define TkSetPixmapColormap(p,c) {}
+#endif
 
 /*
  * These calls implement native bitmaps which are not supported under
@@ -197,9 +199,10 @@
  * This macro stores a representation of the window handle in a string.
  * This should perhaps use the real size of an XID.
  */
-
+#ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
 	sprintf((buf), "%#08lx", (unsigned long) (w))
+#endif
 
 /*
  * The following declaration is used to get access to a private Tcl interface
