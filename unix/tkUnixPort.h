@@ -113,15 +113,6 @@
 #   define NBBY 8
 #endif
 
-/*
- * The TkPutImage macro strips off the color table information, which isn't
- * needed for X.
- */
-
-#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
-	XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
-	desty, width, height);
-
 #ifdef __CYGWIN__
 #   define UINT unsigned int
 #   define HWND void *
@@ -135,6 +126,16 @@
 #   define WPARAM void *
 #   define LPARAM void *
 #   define LRESULT void *
+#else
+/*
+ * The TkPutImage macro strips off the color table information, which isn't
+ * needed for X.
+ */
+
+#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
+	desty, width, height);
+
 #endif
 
 /*
@@ -167,7 +168,9 @@
 #define TkpButtonSetDefaults() {}
 #define TkpDestroyButton(butPtr) {}
 #define TkSelUpdateClipboard(a,b) {}
+#ifndef __CYGWIN__
 #define TkSetPixmapColormap(p,c) {}
+#endif
 
 /*
  * These calls implement native bitmaps which are not supported under
@@ -182,8 +185,9 @@
  * This macro stores a representation of the window handle in a string.
  * This should perhaps use the real size of an XID.
  */
-
+#ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
 	sprintf((buf), "%#08lx", (unsigned long) (w))
+#endif
 
 #endif /* _UNIXPORT */
