@@ -275,6 +275,9 @@ declare 74 {
 declare 75 {
     int TkpUseWindow(Tcl_Interp *interp, Tk_Window tkwin, const char *string)
 }
+#
+# Slot 76 unused (WAS: TkpWindowWasRecentlyDeleted)
+#
 declare 77 {
     void TkQueueEventForAllChildren(TkWindow *winPtr, XEvent *eventPtr)
 }
@@ -429,7 +432,7 @@ declare 122 aqua {
 }
 declare 124 aqua {
     Pixmap TkpGetNativeAppBitmap(Display *display,
- 	    const char *name, int *width, int *height)
+	    const char *name, int *width, int *height)
 }
 declare 135 {
     void TkpDrawHighlightBorder(Tk_Window tkwin, GC fgGC, GC bgGC,
@@ -645,6 +648,10 @@ interface tkIntPlat
 declare 0 x11 {
     void TkCreateXEventSource(void)
 }
+#
+# Slot 1 unused (WAS: TkFreeWindowId)
+# Slot 2 unused (WAS: TkInitXId)
+#
 declare 3 x11 {
     int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 }
@@ -669,6 +676,9 @@ declare 9 x11 {
 declare 10 x11 {
     void TkSendCleanup(TkDisplay *dispPtr)
 }
+#
+# Slot 11 unused (WAS: TkFreeXId)
+#
 declare 12 x11 {
     int TkpWmSetState(TkWindow *winPtr, int state)
 }
@@ -797,11 +807,42 @@ declare 35 win {
     int TkWinGetPlatformTheme(void)
 }
 
-# Exported through stub table since Tk 8.5.9
+# Exported through stub table since Tk 8.4.20/8.5.9
 
 declare 36 win {
-    LRESULT CALLBACK TkWinChildProc(HWND hwnd,
+    LRESULT __stdcall TkWinChildProc(HWND hwnd,
 	    UINT message, WPARAM wParam, LPARAM lParam)
+}
+
+# new for 8.4.20+, Cygwin only
+declare 37 win {
+    void TkCreateXEventSource(void)
+}
+declare 38 win {
+    int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
+}
+declare 39 win {
+    void TkpSync(Display *display)
+}
+declare 40 win {
+    Window TkUnixContainerId(TkWindow *winPtr)
+}
+declare 41 win {
+    int TkUnixDoOneXEvent(Tcl_Time *timePtr)
+}
+declare 42 win {
+    void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
+}
+declare 43 win {
+    void TkWmCleanup(TkDisplay *dispPtr)
+}
+declare 44 win {
+    void TkSendCleanup(TkDisplay *dispPtr)
+}
+# only needed by tktest:
+declare 45 win {
+    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int argc,
+	    const char **argv)
 }
 
 ################################

@@ -112,7 +112,7 @@
  */
 
 #define XFlush(display)
-#define XFree(data) {if ((data) != NULL) ckfree((char *) (data));}
+#define XFree(data) {if ((data) != NULL) ckfree(data);}
 #define XGrabServer(display)
 #define XNoOp(display) {display->request++;}
 #define XUngrabServer(display)
