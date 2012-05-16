@@ -238,6 +238,7 @@ proc genStubs::rewriteFile {file text} {
     }
     set in [open ${file} r]
     set out [open ${file}.new w]
+    fconfigure $out -translation lf
 
     while {![eof $in]} {
 	set line [gets $in]
