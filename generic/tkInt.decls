@@ -743,11 +743,51 @@ declare 35 win {
     int TkWinGetPlatformTheme(void)
 }
 
-# Exported through stub table since Tk 8.5.9
+# Exported through stub table since Tk 8.4.20/8.5.9
 
 declare 36 win {
-    LRESULT CALLBACK TkWinChildProc(HWND hwnd,
+    LRESULT __stdcall TkWinChildProc(HWND hwnd,
 	    UINT message, WPARAM wParam, LPARAM lParam)
+}
+
+# new for 8.4.20+, Cygwin only
+declare 37 win {
+    void TkCreateXEventSource(void)
+}
+declare 38 win {
+    void TkFreeWindowId(TkDisplay *dispPtr, Window w)
+}
+declare 39 win {
+    void TkInitXId(TkDisplay *dispPtr)
+}
+declare 40 win {
+    int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
+}
+declare 41 win {
+    void TkpSync(Display *display)
+}
+declare 42 win {
+    Window TkUnixContainerId(TkWindow *winPtr)
+}
+declare 43 win {
+    int TkUnixDoOneXEvent(Tcl_Time *timePtr)
+}
+declare 44 win {
+    void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
+}
+declare 45 win {
+    void TkWmCleanup(TkDisplay *dispPtr)
+}
+declare 46 win {
+    void TkSendCleanup(TkDisplay *dispPtr)
+}
+declare 47 win {
+    void TkFreeXId(TkDisplay *dispPtr)
+}
+# only needed by tktest:
+declare 48 win {
+    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int argc,
+	    const char **argv)
 }
 
 ################################

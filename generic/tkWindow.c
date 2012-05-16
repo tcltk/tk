@@ -14,7 +14,9 @@
 
 #include "tkInt.h"
 
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
+#ifdef __WIN32__
+#include "tkWinInt.h"
+#elif !(defined(__WIN32__) || defined(MAC_OSX_TK))
 #include "tkUnixInt.h"
 #endif
 
