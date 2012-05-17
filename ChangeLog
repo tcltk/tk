@@ -1,3 +1,9 @@
+2012-05-??  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextDisp.c:    [Bug 1630254]: missing scrolling of text widget
+	when from a -startline == -endline initial state it is configured to display
+	a non-empty part of it
+
 2012-05-09  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinWm.c:           Change TkpWmSetState signature to match UNIX,
