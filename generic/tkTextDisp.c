@@ -2005,8 +2005,21 @@ UpdateDisplayInfo(
 		 * widget.
 		 */
 
-		lineNum = -1;
-		bytesToCount = 0;	/* Stop compiler warning. */
+                if (textPtr->start == textPtr->end) {
+                    /*
+                     * Empty peer widget.
+                     */
+                    lineNum = -1;
+                    bytesToCount = 0;	/* Stop compiler warning. */
+                } else {
+                    /*
+                     * Widget that was empty, but no longer is.
+                     * (Bug 1630254)
+                     */
+                    lineNum = TkBTreeNumLines(textPtr->sharedTextPtr->tree,
+                            textPtr) - 1;
+                    bytesToCount = INT_MAX;
+                }
 	    } else {
 		lineNum = TkBTreeLinesTo(textPtr,
 			dInfoPtr->dLinePtr->index.linePtr);
