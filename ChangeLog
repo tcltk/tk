@@ -1,3 +1,7 @@
+2012-05-??  Francois Vogel  <fvogelnew1@free.fr>
+
+	* doc/text.n:  [Bug 1630251]: Documentation for -endline option was wrong
+
 2012-05-09  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinWm.c:           Change TkpWmSetState signature to match UNIX,
