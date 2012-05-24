@@ -30,7 +30,7 @@
  * Exported function declarations:
  */
 
-#if defined(__WIN32__) || defined(__CYGWIN__)
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN char *		TkAlignImageData _ANSI_ARGS_((XImage *image,
 				int alignment, int bitOrder));
@@ -151,7 +151,7 @@ EXTERN void		TkWmCleanup _ANSI_ARGS_((TkDisplay *dispPtr));
 EXTERN void		TkSendCleanup _ANSI_ARGS_((TkDisplay *dispPtr));
 /* 47 */
 EXTERN void		TkFreeXId _ANSI_ARGS_((TkDisplay *dispPtr));
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
 /* 0 */
 EXTERN void		TkGenerateActivateEvents _ANSI_ARGS_((
@@ -288,7 +288,7 @@ EXTERN void		TkMacPreprocessMenu _ANSI_ARGS_((void));
 /* 66 */
 EXTERN int		TkpIsWindowFloating _ANSI_ARGS_((WindowRef window));
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
 EXTERN void		TkGenerateActivateEvents _ANSI_ARGS_((
 				TkWindow *winPtr, int active));
@@ -412,7 +412,7 @@ EXTERN void		TkGenWMDestroyEvent _ANSI_ARGS_((Tk_Window tkwin));
 /* Slot 52 is reserved */
 /* 53 */
 EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_TCL) || defined(MAC_OSX_TK)) /* X11 */
 /* 0 */
 EXTERN void		TkCreateXEventSource _ANSI_ARGS_((void));
@@ -451,7 +451,7 @@ typedef struct TkIntPlatStubs {
     int magic;
     struct TkIntPlatStubHooks *hooks;
 
-#if defined(__WIN32__) || defined(__CYGWIN__)
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     char * (*tkAlignImageData) _ANSI_ARGS_((XImage *image, int alignment, int bitOrder)); /* 0 */
     VOID *reserved1;
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow *winPtr, int active)); /* 2 */
@@ -500,7 +500,7 @@ typedef struct TkIntPlatStubs {
     void (*tkWmCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 45 */
     void (*tkSendCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 46 */
     void (*tkFreeXId) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 47 */
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow *winPtr, int active)); /* 0 */
     VOID *reserved1;
@@ -570,7 +570,7 @@ typedef struct TkIntPlatStubs {
     void (*tkMacPreprocessMenu) _ANSI_ARGS_((void)); /* 65 */
     int (*tkpIsWindowFloating) _ANSI_ARGS_((WindowRef window)); /* 66 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow *winPtr, int active)); /* 0 */
     VOID *reserved1;
     VOID *reserved2;
@@ -625,7 +625,7 @@ typedef struct TkIntPlatStubs {
     void (*tkGenWMDestroyEvent) _ANSI_ARGS_((Tk_Window tkwin)); /* 51 */
     VOID *reserved52;
     unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 53 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_TCL) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) _ANSI_ARGS_((void)); /* 0 */
     void (*tkFreeWindowId) _ANSI_ARGS_((TkDisplay *dispPtr, Window w)); /* 1 */
@@ -657,7 +657,7 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
  * Inline function declarations:
  */
 
-#if defined(__WIN32__) || defined(__CYGWIN__)
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
 #ifndef TkAlignImageData
 #define TkAlignImageData \
 	(tkIntPlatStubsPtr->tkAlignImageData) /* 0 */
@@ -847,7 +847,7 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkFreeXId \
 	(tkIntPlatStubsPtr->tkFreeXId) /* 47 */
 #endif
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
 #ifndef TkGenerateActivateEvents
 #define TkGenerateActivateEvents \
@@ -1058,7 +1058,7 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkpIsWindowFloating) /* 66 */
 #endif
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 #ifndef TkGenerateActivateEvents
 #define TkGenerateActivateEvents \
 	(tkIntPlatStubsPtr->tkGenerateActivateEvents) /* 0 */
@@ -1251,7 +1251,7 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkpGetMS \
 	(tkIntPlatStubsPtr->tkpGetMS) /* 53 */
 #endif
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_TCL) || defined(MAC_OSX_TK)) /* X11 */
 #ifndef TkCreateXEventSource
 #define TkCreateXEventSource \
