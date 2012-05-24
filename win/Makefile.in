@@ -709,10 +709,10 @@ $(GENERIC_DIR)/tkStubInit.c: $(GENERIC_DIR)/tk.decls \
 	@echo "This warning can be safely ignored, do not report as a bug!"
 
 genstubs:
-	$(TCL_EXE) "$(TCL_TOOL_DIR)\genStubs.tcl" \
+	$(TCL_EXE) "$(TCL_TOOL_DIR)/genStubs.tcl" \
 	    "$(GENERIC_DIR_NATIVE)" \
-	    "$(GENERIC_DIR_NATIVE)\tk.decls" \
-	    "$(GENERIC_DIR_NATIVE)\tkInt.decls"
+	    "$(GENERIC_DIR_NATIVE)/tk.decls" \
+	    "$(GENERIC_DIR_NATIVE)/tkInt.decls"
 	$(TCL_EXE) "$(TTK_DIR)/ttkGenStubs.tcl" \
 	    "$(TTK_DIR)" \
 	    "$(TTK_DIR)/ttk.decls"
