@@ -1290,7 +1290,7 @@ declare 61 win {
     Status XSendEvent(Display *d, Window w, Bool b, long l, XEvent *x)
 }
 declare 62 win {
-    void XSetCommand(Display *d, Window w, const char **c, int i)
+    void XSetCommand(Display *d, Window w, char **c, int i)
 }
 declare 63 win {
     void XSetIconName(Display *d, Window w, _Xconst char *c)
