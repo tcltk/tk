@@ -321,7 +321,7 @@ TkIntStubs tkIntStubs = {
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     NULL, /* 121 */
 #endif /* X11 */
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
     NULL, /* 121 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
@@ -331,7 +331,7 @@ TkIntStubs tkIntStubs = {
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     NULL, /* 122 */
 #endif /* X11 */
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
     NULL, /* 122 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
@@ -342,7 +342,7 @@ TkIntStubs tkIntStubs = {
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     NULL, /* 124 */
 #endif /* X11 */
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
     NULL, /* 124 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
@@ -538,7 +538,7 @@ TkIntPlatStubs tkIntPlatStubs = {
 TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     NULL,
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -746,7 +746,7 @@ TkIntXlibStubs tkIntXlibStubs = {
 TkPlatStubs tkPlatStubs = {
     TCL_STUB_MAGIC,
     NULL,
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     Tk_AttachHWND, /* 0 */
     Tk_GetHINSTANCE, /* 1 */
     Tk_GetHWND, /* 2 */

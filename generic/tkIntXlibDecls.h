@@ -32,7 +32,7 @@
  * Exported function declarations:
  */
 
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
 #ifndef XSetDashes_TCL_DECLARED
 #define XSetDashes_TCL_DECLARED
 /* 0 */
@@ -395,8 +395,7 @@ EXTERN Status		XSendEvent(Display *d, Window w, Bool b, long l,
 #ifndef XSetCommand_TCL_DECLARED
 #define XSetCommand_TCL_DECLARED
 /* 62 */
-EXTERN void		XSetCommand(Display *d, Window w, CONST char **c,
-				int i);
+EXTERN void		XSetCommand(Display *d, Window w, char **c, int i);
 #endif
 #ifndef XSetIconName_TCL_DECLARED
 #define XSetIconName_TCL_DECLARED
@@ -1193,7 +1192,7 @@ typedef struct TkIntXlibStubs {
     int magic;
     struct TkIntXlibStubHooks *hooks;
 
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
     void (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
@@ -1256,7 +1255,7 @@ typedef struct TkIntXlibStubs {
     void (*xResizeWindow) (Display *d, Window w, unsigned int ui1, unsigned int ui2); /* 59 */
     void (*xSelectInput) (Display *d, Window w, long l); /* 60 */
     Status (*xSendEvent) (Display *d, Window w, Bool b, long l, XEvent *x); /* 61 */
-    void (*xSetCommand) (Display *d, Window w, CONST char **c, int i); /* 62 */
+    void (*xSetCommand) (Display *d, Window w, char **c, int i); /* 62 */
     void (*xSetIconName) (Display *d, Window w, _Xconst char *c); /* 63 */
     void (*xSetInputFocus) (Display *d, Window w, int i, Time t); /* 64 */
     void (*xSetSelectionOwner) (Display *d, Atom a, Window w, Time t); /* 65 */
@@ -1412,7 +1411,7 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
  * Inline function declarations:
  */
 
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
 #ifndef XSetDashes
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */

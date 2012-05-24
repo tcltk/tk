@@ -1091,7 +1091,7 @@ typedef struct TkIntStubs {
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     VOID *reserved121;
 #endif /* X11 */
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
     VOID *reserved121;
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
@@ -1101,7 +1101,7 @@ typedef struct TkIntStubs {
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     VOID *reserved122;
 #endif /* X11 */
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
     VOID *reserved122;
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
@@ -1112,7 +1112,7 @@ typedef struct TkIntStubs {
 #if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     VOID *reserved124;
 #endif /* X11 */
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
     VOID *reserved124;
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
