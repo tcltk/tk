@@ -1,6 +1,13 @@
+2012-05-24  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/stubs.c:          Change XSetCommand signature to match Xorg,
+	* win/tkWinWm.c:        needed for Cygwin.
+	* generic/tkInt.decls
+	* generic/tk*Decls.h:   re-generated
+
 2012-05-09  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tkWinWm.c:           Change TkpWmSetState signature to match UNIX,
+	* win/tkWinWm.c:           Change TkpWmSetState signature to match Xorg,
 	* generic/tkInt.decls:     needed for Cygwin. (not needed for Mac)
 	* generic/tkIntPlatDeclsDecls.h:
 	* generic/tkWindow.c:      Don't check for cygwin in win32 static build.

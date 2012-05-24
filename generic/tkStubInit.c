@@ -325,40 +325,40 @@ TkIntStubs tkIntStubs = {
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 121 */
 #endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) /* WIN */
     NULL, /* 121 */
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     TkpCreateNativeBitmap, /* 121 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     TkpCreateNativeBitmap, /* 121 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 122 */
 #endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) /* WIN */
     NULL, /* 122 */
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     TkpDefineNativeBitmaps, /* 122 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     TkpDefineNativeBitmaps, /* 122 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
     NULL, /* 123 */
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     NULL, /* 124 */
 #endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) /* WIN */
     NULL, /* 124 */
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     TkpGetNativeAppBitmap, /* 124 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     TkpGetNativeAppBitmap, /* 124 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
     NULL, /* 125 */
     NULL, /* 126 */
     NULL, /* 127 */
@@ -392,7 +392,7 @@ TkIntStubs tkIntStubs = {
 TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
     NULL,
-#if defined(__WIN32__) || defined(__CYGWIN__)
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     TkAlignImageData, /* 0 */
     NULL, /* 1 */
     TkGenerateActivateEvents, /* 2 */
@@ -441,7 +441,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkWmCleanup, /* 45 */
     TkSendCleanup, /* 46 */
     TkFreeXId, /* 47 */
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     TkGenerateActivateEvents, /* 0 */
     NULL, /* 1 */
@@ -511,7 +511,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkMacPreprocessMenu, /* 65 */
     TkpIsWindowFloating, /* 66 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     TkGenerateActivateEvents, /* 0 */
     NULL, /* 1 */
     NULL, /* 2 */
@@ -566,7 +566,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkGenWMDestroyEvent, /* 51 */
     NULL, /* 52 */
     TkpGetMS, /* 53 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_TCL) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
     TkFreeWindowId, /* 1 */
@@ -587,7 +587,7 @@ TkIntPlatStubs tkIntPlatStubs = {
 TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     NULL,
-#ifdef __WIN32__
+#if defined(__WIN32__) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -695,7 +695,7 @@ TkIntXlibStubs tkIntXlibStubs = {
     XDrawLine, /* 104 */
     XWarpPointer, /* 105 */
     XFillRectangle, /* 106 */
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
@@ -789,7 +789,7 @@ TkIntXlibStubs tkIntXlibStubs = {
     XQueryColors, /* 89 */
     XQueryTree, /* 90 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -882,20 +882,20 @@ TkIntXlibStubs tkIntXlibStubs = {
     XQueryColors, /* 89 */
     XQueryTree, /* 90 */
     XSync, /* 91 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 };
 
 TkPlatStubs tkPlatStubs = {
     TCL_STUB_MAGIC,
     NULL,
-#if defined(__WIN32__) || defined(__CYGWIN__)
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     Tk_AttachHWND, /* 0 */
     Tk_GetHINSTANCE, /* 1 */
     Tk_GetHWND, /* 2 */
     Tk_HWNDToWindow, /* 3 */
     Tk_PointerEvent, /* 4 */
     Tk_TranslateWinEvent, /* 5 */
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     Tk_MacSetEmbedHandler, /* 0 */
     Tk_MacTurnOffMenus, /* 1 */
@@ -909,7 +909,7 @@ TkPlatStubs tkPlatStubs = {
     TkMacHaveAppearance, /* 9 */
     TkMacGetDrawablePort, /* 10 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     Tk_MacOSXSetEmbedHandler, /* 0 */
     Tk_MacOSXTurnOffMenus, /* 1 */
     Tk_MacOSXTkOwnsCursor, /* 2 */
@@ -921,7 +921,7 @@ TkPlatStubs tkPlatStubs = {
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 };
 
 static TkStubHooks tkStubHooks = {

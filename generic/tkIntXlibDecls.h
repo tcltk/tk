@@ -36,7 +36,7 @@
  * Exported function declarations:
  */
 
-#ifdef __WIN32__
+#if defined(__WIN32__) /* WIN */
 /* 0 */
 EXTERN void		XSetDashes _ANSI_ARGS_((Display *display, GC gc,
 				int dash_offset, _Xconst char *dash_list,
@@ -229,7 +229,7 @@ EXTERN Status		XSendEvent _ANSI_ARGS_((Display *d, Window w, Bool b,
 				long l, XEvent *x));
 /* 62 */
 EXTERN void		XSetCommand _ANSI_ARGS_((Display *d, Window w,
-				CONST char **c, int i));
+				char **c, int i));
 /* 63 */
 EXTERN void		XSetIconName _ANSI_ARGS_((Display *d, Window w,
 				_Xconst char *c));
@@ -363,7 +363,7 @@ EXTERN void		XWarpPointer _ANSI_ARGS_((Display *d, Window s,
 EXTERN void		XFillRectangle _ANSI_ARGS_((Display *display,
 				Drawable d, GC gc, int x, int y,
 				unsigned int width, unsigned int height));
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
 /* 0 */
 EXTERN void		XSetDashes _ANSI_ARGS_((Display *display, GC gc,
@@ -654,7 +654,7 @@ EXTERN Status		XQueryTree _ANSI_ARGS_((Display *d, Window w1,
 				Window *w2, Window *w3, Window **w4,
 				unsigned int *ui));
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
 EXTERN void		XSetDashes _ANSI_ARGS_((Display *display, GC gc,
 				int dash_offset, _Xconst char *dash_list,
@@ -945,13 +945,13 @@ EXTERN Status		XQueryTree _ANSI_ARGS_((Display *d, Window w1,
 				unsigned int *ui));
 /* 91 */
 EXTERN int		XSync _ANSI_ARGS_((Display *display, Bool flag));
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 
 typedef struct TkIntXlibStubs {
     int magic;
     struct TkIntXlibStubHooks *hooks;
 
-#ifdef __WIN32__
+#if defined(__WIN32__) /* WIN */
     void (*xSetDashes) _ANSI_ARGS_((Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n)); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) _ANSI_ARGS_((Display *d)); /* 1 */
     XImage * (*xCreateImage) _ANSI_ARGS_((Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4)); /* 2 */
@@ -1014,7 +1014,7 @@ typedef struct TkIntXlibStubs {
     void (*xResizeWindow) _ANSI_ARGS_((Display *d, Window w, unsigned int ui1, unsigned int ui2)); /* 59 */
     void (*xSelectInput) _ANSI_ARGS_((Display *d, Window w, long l)); /* 60 */
     Status (*xSendEvent) _ANSI_ARGS_((Display *d, Window w, Bool b, long l, XEvent *x)); /* 61 */
-    void (*xSetCommand) _ANSI_ARGS_((Display *d, Window w, CONST char **c, int i)); /* 62 */
+    void (*xSetCommand) _ANSI_ARGS_((Display *d, Window w, char **c, int i)); /* 62 */
     void (*xSetIconName) _ANSI_ARGS_((Display *d, Window w, _Xconst char *c)); /* 63 */
     void (*xSetInputFocus) _ANSI_ARGS_((Display *d, Window w, int i, Time t)); /* 64 */
     void (*xSetSelectionOwner) _ANSI_ARGS_((Display *d, Atom a, Window w, Time t)); /* 65 */
@@ -1059,7 +1059,7 @@ typedef struct TkIntXlibStubs {
     void (*xDrawLine) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 104 */
     void (*xWarpPointer) _ANSI_ARGS_((Display *d, Window s, Window dw, int sx, int sy, unsigned int sw, unsigned int sh, int dx, int dy)); /* 105 */
     void (*xFillRectangle) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 106 */
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     void (*xSetDashes) _ANSI_ARGS_((Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n)); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) _ANSI_ARGS_((Display *d)); /* 1 */
@@ -1153,7 +1153,7 @@ typedef struct TkIntXlibStubs {
     void (*xQueryColors) _ANSI_ARGS_((Display *display, Colormap colormap, XColor *defs_in_out, int ncolors)); /* 89 */
     Status (*xQueryTree) _ANSI_ARGS_((Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui)); /* 90 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     void (*xSetDashes) _ANSI_ARGS_((Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n)); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) _ANSI_ARGS_((Display *d)); /* 1 */
     XImage * (*xCreateImage) _ANSI_ARGS_((Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4)); /* 2 */
@@ -1246,7 +1246,7 @@ typedef struct TkIntXlibStubs {
     void (*xQueryColors) _ANSI_ARGS_((Display *display, Colormap colormap, XColor *defs_in_out, int ncolors)); /* 89 */
     Status (*xQueryTree) _ANSI_ARGS_((Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui)); /* 90 */
     int (*xSync) _ANSI_ARGS_((Display *display, Bool flag)); /* 91 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 } TkIntXlibStubs;
 
 #ifdef __cplusplus
@@ -1263,7 +1263,7 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
  * Inline function declarations:
  */
 
-#ifdef __WIN32__
+#if defined(__WIN32__) /* WIN */
 #ifndef XSetDashes
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
@@ -1689,7 +1689,7 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XFillRectangle \
 	(tkIntXlibStubsPtr->xFillRectangle) /* 106 */
 #endif
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
 #ifndef XSetDashes
 #define XSetDashes \
@@ -2056,7 +2056,7 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xQueryTree) /* 90 */
 #endif
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 #ifndef XSetDashes
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
@@ -2425,7 +2425,7 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XSync \
 	(tkIntXlibStubsPtr->xSync) /* 91 */
 #endif
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
