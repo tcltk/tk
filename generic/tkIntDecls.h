@@ -388,30 +388,30 @@ EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle *rect,
 EXTERN Pixmap		TkpCreateNativeBitmap _ANSI_ARGS_((Display *display,
 				CONST char *source));
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 /* 121 */
 EXTERN Pixmap		TkpCreateNativeBitmap _ANSI_ARGS_((Display *display,
 				CONST char *source));
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 #ifdef MAC_TCL
 /* 122 */
 EXTERN void		TkpDefineNativeBitmaps _ANSI_ARGS_((void));
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 /* 122 */
 EXTERN void		TkpDefineNativeBitmaps _ANSI_ARGS_((void));
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 /* Slot 123 is reserved */
 #ifdef MAC_TCL
 /* 124 */
 EXTERN Pixmap		TkpGetNativeAppBitmap _ANSI_ARGS_((Display *display,
 				CONST char *name, int *width, int *height));
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 /* 124 */
 EXTERN Pixmap		TkpGetNativeAppBitmap _ANSI_ARGS_((Display *display,
 				CONST char *name, int *width, int *height));
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 /* Slot 125 is reserved */
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
@@ -597,40 +597,40 @@ typedef struct TkIntStubs {
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     VOID *reserved121;
 #endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) /* WIN */
     VOID *reserved121;
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     Pixmap (*tkpCreateNativeBitmap) _ANSI_ARGS_((Display *display, CONST char *source)); /* 121 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     Pixmap (*tkpCreateNativeBitmap) _ANSI_ARGS_((Display *display, CONST char *source)); /* 121 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     VOID *reserved122;
 #endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) /* WIN */
     VOID *reserved122;
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     void (*tkpDefineNativeBitmaps) _ANSI_ARGS_((void)); /* 122 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     void (*tkpDefineNativeBitmaps) _ANSI_ARGS_((void)); /* 122 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
     VOID *reserved123;
 #if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
     VOID *reserved124;
 #endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) /* WIN */
     VOID *reserved124;
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     Pixmap (*tkpGetNativeAppBitmap) _ANSI_ARGS_((Display *display, CONST char *name, int *width, int *height)); /* 124 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     Pixmap (*tkpGetNativeAppBitmap) _ANSI_ARGS_((Display *display, CONST char *name, int *width, int *height)); /* 124 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
     VOID *reserved125;
     VOID *reserved126;
     VOID *reserved127;
@@ -1159,24 +1159,24 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkpCreateNativeBitmap) /* 121 */
 #endif
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 #ifndef TkpCreateNativeBitmap
 #define TkpCreateNativeBitmap \
 	(tkIntStubsPtr->tkpCreateNativeBitmap) /* 121 */
 #endif
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 #ifdef MAC_TCL
 #ifndef TkpDefineNativeBitmaps
 #define TkpDefineNativeBitmaps \
 	(tkIntStubsPtr->tkpDefineNativeBitmaps) /* 122 */
 #endif
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 #ifndef TkpDefineNativeBitmaps
 #define TkpDefineNativeBitmaps \
 	(tkIntStubsPtr->tkpDefineNativeBitmaps) /* 122 */
 #endif
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 /* Slot 123 is reserved */
 #ifdef MAC_TCL
 #ifndef TkpGetNativeAppBitmap
@@ -1184,12 +1184,12 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkpGetNativeAppBitmap) /* 124 */
 #endif
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 #ifndef TkpGetNativeAppBitmap
 #define TkpGetNativeAppBitmap \
 	(tkIntStubsPtr->tkpGetNativeAppBitmap) /* 124 */
 #endif
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 /* Slot 125 is reserved */
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
