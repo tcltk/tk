@@ -61,17 +61,6 @@ TkpSync(Display *display)
 #   define TkpTestsendCmd 0
 
 #else
-#   undef TkClipBox
-#   undef TkCreateRegion
-#   undef TkDestroyRegion
-#   undef TkIntersectRegion
-#   undef TkRectInRegion
-#   undef TkSetRegion
-#   undef TkUnionRectWithRegion
-#   undef TkSubtractRegion
-#   undef TkSetPixmapColormap
-#   undef TkpPrintWindowId
-#   undef TkWinChildProc
 
 /*
  * Make sure that extensions which call XParseColor through the stub
@@ -211,7 +200,28 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #   define TkWinSetHINSTANCE 0
 #   define TkWinGetPlatformTheme 0
 #   define TkWinChildProc 0
-#	endif /* __CYGWIN__ */
+
+#elif !defined(MAC_OSC_TK) /* UNIX */
+
+#   undef TkClipBox
+#   undef TkCreateRegion
+#   undef TkDestroyRegion
+#   undef TkIntersectRegion
+#   undef TkRectInRegion
+#   undef TkSetRegion
+#   undef TkUnionRectWithRegion
+#   undef TkSubtractRegion
+
+#	define TkClipBox (void (*) _ANSI_ARGS_((TkRegion, XRectangle *))) XClipBox
+#	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
+#	define TkDestroyRegion (void (*) _ANSI_ARGS_((TkRegion))) XDestroyRegion
+#	define TkIntersectRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XIntersectRegion
+#	define TkRectInRegion (int (*) _ANSI_ARGS_((TkRegion, int, int, unsigned int, unsigned int))) XRectInRegion
+#	define TkSetRegion (void (*) _ANSI_ARGS_((Display *, GC, TkRegion))) XSetRegion
+#	define TkUnionRectWithRegion (void (*) _ANSI_ARGS_((XRectangle *, TkRegion, TkRegion))) XUnionRectWithRegion
+#	define TkSubtractRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XSubtractRegion
+
+#	endif
 #endif /* !__WIN32__ */
 
 /*
