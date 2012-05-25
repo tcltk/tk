@@ -129,28 +129,21 @@ EXTERN LRESULT __stdcall TkWinChildProc _ANSI_ARGS_((HWND hwnd, UINT message,
 /* 37 */
 EXTERN void		TkCreateXEventSource _ANSI_ARGS_((void));
 /* 38 */
-EXTERN void		TkFreeWindowId _ANSI_ARGS_((TkDisplay *dispPtr,
-				Window w));
-/* 39 */
-EXTERN void		TkInitXId _ANSI_ARGS_((TkDisplay *dispPtr));
-/* 40 */
 EXTERN int		TkpCmapStressed _ANSI_ARGS_((Tk_Window tkwin,
 				Colormap colormap));
-/* 41 */
+/* 39 */
 EXTERN void		TkpSync _ANSI_ARGS_((Display *display));
-/* 42 */
+/* 40 */
 EXTERN Window		TkUnixContainerId _ANSI_ARGS_((TkWindow *winPtr));
-/* 43 */
+/* 41 */
 EXTERN int		TkUnixDoOneXEvent _ANSI_ARGS_((Tcl_Time *timePtr));
-/* 44 */
+/* 42 */
 EXTERN void		TkUnixSetMenubar _ANSI_ARGS_((Tk_Window tkwin,
 				Tk_Window menubar));
-/* 45 */
+/* 43 */
 EXTERN void		TkWmCleanup _ANSI_ARGS_((TkDisplay *dispPtr));
-/* 46 */
+/* 44 */
 EXTERN void		TkSendCleanup _ANSI_ARGS_((TkDisplay *dispPtr));
-/* 47 */
-EXTERN void		TkFreeXId _ANSI_ARGS_((TkDisplay *dispPtr));
 #endif /* WIN */
 #ifdef MAC_TCL
 /* 0 */
@@ -490,16 +483,13 @@ typedef struct TkIntPlatStubs {
     int (*tkWinGetPlatformTheme) _ANSI_ARGS_((void)); /* 35 */
     LRESULT (__stdcall *tkWinChildProc) _ANSI_ARGS_((HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)); /* 36 */
     void (*tkCreateXEventSource) _ANSI_ARGS_((void)); /* 37 */
-    void (*tkFreeWindowId) _ANSI_ARGS_((TkDisplay *dispPtr, Window w)); /* 38 */
-    void (*tkInitXId) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 39 */
-    int (*tkpCmapStressed) _ANSI_ARGS_((Tk_Window tkwin, Colormap colormap)); /* 40 */
-    void (*tkpSync) _ANSI_ARGS_((Display *display)); /* 41 */
-    Window (*tkUnixContainerId) _ANSI_ARGS_((TkWindow *winPtr)); /* 42 */
-    int (*tkUnixDoOneXEvent) _ANSI_ARGS_((Tcl_Time *timePtr)); /* 43 */
-    void (*tkUnixSetMenubar) _ANSI_ARGS_((Tk_Window tkwin, Tk_Window menubar)); /* 44 */
-    void (*tkWmCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 45 */
-    void (*tkSendCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 46 */
-    void (*tkFreeXId) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 47 */
+    int (*tkpCmapStressed) _ANSI_ARGS_((Tk_Window tkwin, Colormap colormap)); /* 38 */
+    void (*tkpSync) _ANSI_ARGS_((Display *display)); /* 39 */
+    Window (*tkUnixContainerId) _ANSI_ARGS_((TkWindow *winPtr)); /* 40 */
+    int (*tkUnixDoOneXEvent) _ANSI_ARGS_((Tcl_Time *timePtr)); /* 41 */
+    void (*tkUnixSetMenubar) _ANSI_ARGS_((Tk_Window tkwin, Tk_Window menubar)); /* 42 */
+    void (*tkWmCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 43 */
+    void (*tkSendCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 44 */
 #endif /* WIN */
 #ifdef MAC_TCL
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow *winPtr, int active)); /* 0 */
@@ -807,45 +797,33 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkCreateXEventSource \
 	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 37 */
 #endif
-#ifndef TkFreeWindowId
-#define TkFreeWindowId \
-	(tkIntPlatStubsPtr->tkFreeWindowId) /* 38 */
-#endif
-#ifndef TkInitXId
-#define TkInitXId \
-	(tkIntPlatStubsPtr->tkInitXId) /* 39 */
-#endif
 #ifndef TkpCmapStressed
 #define TkpCmapStressed \
-	(tkIntPlatStubsPtr->tkpCmapStressed) /* 40 */
+	(tkIntPlatStubsPtr->tkpCmapStressed) /* 38 */
 #endif
 #ifndef TkpSync
 #define TkpSync \
-	(tkIntPlatStubsPtr->tkpSync) /* 41 */
+	(tkIntPlatStubsPtr->tkpSync) /* 39 */
 #endif
 #ifndef TkUnixContainerId
 #define TkUnixContainerId \
-	(tkIntPlatStubsPtr->tkUnixContainerId) /* 42 */
+	(tkIntPlatStubsPtr->tkUnixContainerId) /* 40 */
 #endif
 #ifndef TkUnixDoOneXEvent
 #define TkUnixDoOneXEvent \
-	(tkIntPlatStubsPtr->tkUnixDoOneXEvent) /* 43 */
+	(tkIntPlatStubsPtr->tkUnixDoOneXEvent) /* 41 */
 #endif
 #ifndef TkUnixSetMenubar
 #define TkUnixSetMenubar \
-	(tkIntPlatStubsPtr->tkUnixSetMenubar) /* 44 */
+	(tkIntPlatStubsPtr->tkUnixSetMenubar) /* 42 */
 #endif
 #ifndef TkWmCleanup
 #define TkWmCleanup \
-	(tkIntPlatStubsPtr->tkWmCleanup) /* 45 */
+	(tkIntPlatStubsPtr->tkWmCleanup) /* 43 */
 #endif
 #ifndef TkSendCleanup
 #define TkSendCleanup \
-	(tkIntPlatStubsPtr->tkSendCleanup) /* 46 */
-#endif
-#ifndef TkFreeXId
-#define TkFreeXId \
-	(tkIntPlatStubsPtr->tkFreeXId) /* 47 */
+	(tkIntPlatStubsPtr->tkSendCleanup) /* 44 */
 #endif
 #endif /* WIN */
 #ifdef MAC_TCL
@@ -1313,5 +1291,12 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#ifdef __CYGWIN__
+    void TkFreeXId(TkDisplay *dispPtr);
+    void TkFreeWindowId(TkDisplay *dispPtr, Window w);
+    void TkInitXId(TkDisplay *dispPtr);
+#endif
+
 
 #endif /* _TKINTPLATDECLS */
