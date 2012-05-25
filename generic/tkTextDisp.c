@@ -18,6 +18,8 @@
 
 #ifdef __WIN32__
 #include "tkWinInt.h"
+#elif defined(__CYGWIN__)
+#include "tkUnixInt.h"
 #endif
 
 #ifdef TK_NO_DOUBLE_BUFFERING

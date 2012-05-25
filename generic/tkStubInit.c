@@ -49,14 +49,10 @@ doNothing(void)
 /*
  * Remove macros that will interfere with the definitions below.
  */
-#   undef TkFreeWindowId
-#   undef TkInitXId
 #   undef TkpCmapStressed
 #   undef TkpSync
 
-#	define TkCreateXEventSource (void (*) (void)) doNothing
-#	define TkFreeWindowId (void (*) (TkDisplay *, Window)) doNothing
-#   define TkInitXId (void (*) (TkDisplay *)) doNothing
+#   define TkCreateXEventSource (void (*) (void)) doNothing
 #   define TkpCmapStressed (int (*) (Tk_Window, Colormap)) doNothing
 #   define TkpSync (void (*) (Display *)) doNothing
 #   define TkUnixContainerId 0
@@ -64,40 +60,18 @@ doNothing(void)
 #   define TkUnixSetMenubar 0
 #   define TkWmCleanup (void (*) (TkDisplay *)) doNothing
 #   define TkSendCleanup (void (*) (TkDisplay *)) doNothing
-#   define TkFreeXId (void (*) (TkDisplay *)) doNothing
 
-#else
-/*
- * Remove macros that will interfere with the definitions below.
- */
-#   undef TkClipBox
-#   undef TkCreateRegion
-#   undef TkDestroyRegion
-#   undef TkIntersectRegion
-#   undef TkRectInRegion
-#   undef TkSetRegion
-#   undef TkUnionRectWithRegion
-#   undef TkSubtractRegion
-#   undef TkPutImage
-#   undef TkSetPixmapColormap
-#   undef TkpPrintWindowId
-#   undef TkWinChildProc
+#else /* !__WIN32__ */
 
-/*
- * Make sure that extensions which call XParseColor through the stub
- * table, call TkParseColor instead. [Bug 3486474]
- */
-#   define XParseColor	TkParseColor
+#	undef TkClipBox
+#	undef TkCreateRegion
+#	undef TkDestroyRegion
+#	undef TkIntersectRegion
+#	undef TkRectInRegion
+#	undef TkSetRegion
+#	undef TkUnionRectWithRegion
+#	undef TkSubtractRegion
 
-#   ifndef __CYGWIN__
-#	define Tk_AttachHWND		0
-#	define Tk_GetHWND		0
-#	define Tk_HWNDToWindow		0
-#	define Tk_PointerEvent		0
-#	define Tk_TranslateWinEvent	0
-#	define Tk_GetHINSTANCE		0
-#   endif
-#   if !defined(MAC_TCL) && !defined(MAC_OSX_TCL)
 #	define TkClipBox (void (*) _ANSI_ARGS_((TkRegion, XRectangle *))) XClipBox
 #	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
 #	define TkDestroyRegion (void (*) _ANSI_ARGS_((TkRegion))) XDestroyRegion
@@ -107,22 +81,34 @@ doNothing(void)
 #	define TkUnionRectWithRegion (void (*) _ANSI_ARGS_((XRectangle *, TkRegion, TkRegion))) XUnionRectWithRegion
 #	define TkSubtractRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XSubtractRegion
 
-#	ifdef __CYGWIN__
-#   define Tk_GetHINSTANCE TkPlatGetHINSTANCE
-#   define TkSetPixmapColormap TkPlatSetPixmapColormap
-#   define TkpPrintWindowId TkPlatpPrintWindowId
-
 /*
- * Trick, so we don't have to include <windows.h> here, which in any
- * case lacks this function anyway.
+ * Make sure that extensions which call XParseColor through the stub
+ * table, call TkParseColor instead. [Bug 3486474]
  */
+#   define XParseColor	TkParseColor
 
-#define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
+#   ifdef __CYGWIN__
+
+    /*
+     * Remove macros that will interfere with the definitions below.
+     */
+#	undef TkPutImage
+#	undef TkSetPixmapColormap
+#	undef TkpPrintWindowId
+#	undef TkWinChildProc
+
+
+	/*
+	 * Trick, so we don't have to include <windows.h> here, which in any
+	 * case lacks this function anyway.
+	 */
+
+#	define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
 int __stdcall GetModuleHandleExW(unsigned int, const char *, void *);
 
 TkIntStubs tkIntStubs;
 
-static void *Tk_GetHINSTANCE()
+void *Tk_GetHINSTANCE()
 {
     void *hInstance = NULL;
 
@@ -131,14 +117,14 @@ static void *Tk_GetHINSTANCE()
     return hInstance;
 }
 
-static void
+void
 TkSetPixmapColormap(pixmap, colormap)
     Pixmap pixmap;
     Colormap colormap;
 {
 }
 
-static void
+void
 TkpPrintWindowId(buf, window)
     char *buf;			/* Pointer to string large enough to hold
 				 * the hex representation of a pointer. */
@@ -147,47 +133,46 @@ TkpPrintWindowId(buf, window)
 	sprintf(buf, "%#08lx", (unsigned long) (window));
 }
 
-    /* TODO: To be implemented for Cygwin */
-#   define Tk_AttachHWND 0
-#   define Tk_GetHWND 0
-#   define Tk_HWNDToWindow 0
-#   define Tk_PointerEvent 0
-#   define Tk_TranslateWinEvent 0
-#   define TkAlignImageData 0
-#   define TkGenerateActivateEvents 0
-#   define TkpGetMS 0
-#   define TkPointerDeadWindow 0
-#   define TkpSetCapture 0
-#   define TkpSetCursor 0
-#   define TkWinCancelMouseTimer 0
-#   define TkWinClipboardRender 0
-#   define TkWinEmbeddedEventProc 0
-#   define TkWinFillRect 0
-#   define TkWinGetBorderPixels 0
-#   define TkWinGetDrawableDC 0
-#   define TkWinGetModifierState 0
-#   define TkWinGetSystemPalette 0
-#   define TkWinGetWrapperWindow 0
-#   define TkWinHandleMenuEvent 0
-#   define TkWinIndexOfColor 0
-#   define TkWinReleaseDrawableDC 0
-#   define TkWinResendEvent 0
-#   define TkWinSelectPalette 0
-#   define TkWinSetMenu 0
-#   define TkWinSetWindowPos 0
-#   define TkWinWmCleanup 0
-#   define TkWinXCleanup 0
-#   define TkWinXInit 0
-#   define TkWinSetForegroundWindow 0
-#   define TkWinDialogDebug 0
-#   define TkWinGetMenuSystemDefault 0
-#   define TkWinGetPlatformId 0
-#   define TkWinSetHINSTANCE 0
-#   define TkWinGetPlatformTheme 0
-#   define TkWinChildProc 0
+	/* TODO: To be implemented for Cygwin */
+#	define Tk_AttachHWND 0
+#	define Tk_GetHWND 0
+#	define Tk_HWNDToWindow 0
+#	define Tk_PointerEvent 0
+#	define Tk_TranslateWinEvent 0
+#	define TkAlignImageData 0
+#	define TkGenerateActivateEvents 0
+#	define TkpGetMS 0
+#	define TkPointerDeadWindow 0
+#	define TkpSetCapture 0
+#	define TkpSetCursor 0
+#	define TkWinCancelMouseTimer 0
+#	define TkWinClipboardRender 0
+#	define TkWinEmbeddedEventProc 0
+#	define TkWinFillRect 0
+#	define TkWinGetBorderPixels 0
+#	define TkWinGetDrawableDC 0
+#	define TkWinGetModifierState 0
+#	define TkWinGetSystemPalette 0
+#	define TkWinGetWrapperWindow 0
+#	define TkWinHandleMenuEvent 0
+#	define TkWinIndexOfColor 0
+#	define TkWinReleaseDrawableDC 0
+#	define TkWinResendEvent 0
+#	define TkWinSelectPalette 0
+#	define TkWinSetMenu 0
+#	define TkWinSetWindowPos 0
+#	define TkWinWmCleanup 0
+#	define TkWinXCleanup 0
+#	define TkWinXInit 0
+#	define TkWinSetForegroundWindow 0
+#	define TkWinDialogDebug 0
+#	define TkWinGetMenuSystemDefault 0
+#	define TkWinGetPlatformId 0
+#	define TkWinSetHINSTANCE 0
+#	define TkWinGetPlatformTheme 0
+#	define TkWinChildProc 0
 
 #	endif /* __CYGWIN__ */
-#   endif /* !MAC_TCL && !MACC_OSX_TCL */
 #endif /* !__WIN32__ */
 
 /*
@@ -431,16 +416,13 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkWinGetPlatformTheme, /* 35 */
     TkWinChildProc, /* 36 */
     TkCreateXEventSource, /* 37 */
-    TkFreeWindowId, /* 38 */
-    TkInitXId, /* 39 */
-    TkpCmapStressed, /* 40 */
-    TkpSync, /* 41 */
-    TkUnixContainerId, /* 42 */
-    TkUnixDoOneXEvent, /* 43 */
-    TkUnixSetMenubar, /* 44 */
-    TkWmCleanup, /* 45 */
-    TkSendCleanup, /* 46 */
-    TkFreeXId, /* 47 */
+    TkpCmapStressed, /* 38 */
+    TkpSync, /* 39 */
+    TkUnixContainerId, /* 40 */
+    TkUnixDoOneXEvent, /* 41 */
+    TkUnixSetMenubar, /* 42 */
+    TkWmCleanup, /* 43 */
+    TkSendCleanup, /* 44 */
 #endif /* WIN */
 #ifdef MAC_TCL
     TkGenerateActivateEvents, /* 0 */
