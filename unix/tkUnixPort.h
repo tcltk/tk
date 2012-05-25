@@ -125,6 +125,31 @@
 #   define NBBY 8
 #endif
 
+#ifdef __CYGWIN__
+#   define UINT unsigned int
+#   define HWND void *
+#   define HDC void *
+#   define HINSTANCE void *
+#   define COLORREF void *
+#   define HMENU void *
+#   define TkWinDCState void
+#   define HPALETTE void *
+#   define WNDPROC void *
+#   define WPARAM void *
+#   define LPARAM void *
+#   define LRESULT void *
+#endif /* This really should be an #else, as soon as the Xlib stubs are enabled for Cygwin. */
+    /*
+     * The TkPutImage macro strips off the color table information, which isn't
+     * needed for X.
+     */
+
+#   define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+		XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
+		desty, width, height);
+
+/* #endif */
+
 /*
  * These macros are just wrappers for the equivalent X Region calls.
  */
@@ -141,29 +166,7 @@
 #define TkUnionRectWithRegion(rect, src, ret) XUnionRectWithRegion(rect, \
 	(Region) src, (Region) ret)
 
-/*
- * The TkPutImage macro strips off the color table information, which isn't
- * needed for X.
- */
-
-#define TkPutImage(colors, ncolors, display, pixels, gc, image, destx, desty, srcx, srcy, width, height) \
-	XPutImage(display, pixels, gc, image, destx, desty, srcx, \
-	srcy, width, height);
-
-#ifdef __CYGWIN__
-#   define UINT unsigned int
-#   define HWND void *
-#   define HDC void *
-#   define HINSTANCE void *
-#   define COLORREF void *
-#   define HMENU void *
-#   define TkWinDCState void
-#   define HPALETTE void *
-#   define WNDPROC void *
-#   define WPARAM void *
-#   define LPARAM void *
-#   define LRESULT void *
-#endif
+/* #endif */
 
 /*
  * Supply macros for seek offsets, if they're not already provided by
@@ -195,7 +198,9 @@
 #define TkpButtonSetDefaults(specPtr) {}
 #define TkpDestroyButton(butPtr) {}
 #define TkSelUpdateClipboard(a,b) {}
+#ifndef __CYGWIN__
 #define TkSetPixmapColormap(p,c) {}
+#endif
 
 /*
  * These calls implement native bitmaps which are not supported under
@@ -211,8 +216,10 @@
  * This should perhaps use the real size of an XID.
  */
 
+#ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
 	sprintf((buf), "%#08lx", (unsigned long) (w))
+#endif
 
 /*
  * The following declaration is used to get access to a private Tcl interface
