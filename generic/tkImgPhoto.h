@@ -19,6 +19,8 @@
 #include "tkInt.h"
 #ifdef __WIN32__
 #include "tkWinInt.h"
+#elif defined(__CYGWIN__)
+#include "tkUnixInt.h"
 #endif
 
 /*
