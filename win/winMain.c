@@ -228,7 +228,7 @@ Tcl_AppInit(
     return TCL_OK;
 }
 
-#if defined(__CYGWIN__) || defined(TK_TEST)
+#if defined(TK_TEST)
 /*
  *----------------------------------------------------------------------
  *
