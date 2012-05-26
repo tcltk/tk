@@ -36,7 +36,7 @@
  * Exported function declarations:
  */
 
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
 /* 0 */
 EXTERN void		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);
@@ -211,8 +211,7 @@ EXTERN void		XSelectInput(Display *d, Window w, long l);
 EXTERN Status		XSendEvent(Display *d, Window w, Bool b, long l,
 				XEvent *x);
 /* 62 */
-EXTERN void		XSetCommand(Display *d, Window w, const char **c,
-				int i);
+EXTERN void		XSetCommand(Display *d, Window w, char **c, int i);
 /* 63 */
 EXTERN void		XSetIconName(Display *d, Window w, _Xconst char *c);
 /* 64 */
@@ -603,7 +602,7 @@ typedef struct TkIntXlibStubs {
     int magic;
     const struct TkIntXlibStubHooks *hooks;
 
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
     void (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
@@ -666,7 +665,7 @@ typedef struct TkIntXlibStubs {
     void (*xResizeWindow) (Display *d, Window w, unsigned int ui1, unsigned int ui2); /* 59 */
     void (*xSelectInput) (Display *d, Window w, long l); /* 60 */
     Status (*xSendEvent) (Display *d, Window w, Bool b, long l, XEvent *x); /* 61 */
-    void (*xSetCommand) (Display *d, Window w, const char **c, int i); /* 62 */
+    void (*xSetCommand) (Display *d, Window w, char **c, int i); /* 62 */
     void (*xSetIconName) (Display *d, Window w, _Xconst char *c); /* 63 */
     void (*xSetInputFocus) (Display *d, Window w, int i, Time t); /* 64 */
     void (*xSetSelectionOwner) (Display *d, Atom a, Window w, Time t); /* 65 */
@@ -822,7 +821,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
  * Inline function declarations:
  */
 
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) /* WIN */
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
 #define XGetModifierMapping \
