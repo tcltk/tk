@@ -2006,8 +2006,9 @@ UpdateDisplayInfo(
 		 * widget.
 		 */
 
-		lineNum = -1;
-		bytesToCount = 0;	/* Stop compiler warning. */
+                lineNum = TkBTreeNumLines(textPtr->sharedTextPtr->tree,
+                        textPtr) - 1;
+                bytesToCount = INT_MAX;
 	    } else {
 		lineNum = TkBTreeLinesTo(textPtr,
 			dInfoPtr->dLinePtr->index.linePtr);
