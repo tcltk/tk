@@ -36,14 +36,12 @@ Specifies a boolean that says whether the blinking insertion cursor should be
 drawn as a character-sized rectangular block. If false (the default) a thin
 vertical line is used for the insertion cursor.
 .OP \-endline endLine EndLine
-.VS 8.5
 Specifies an integer line index representing the line of the underlying
 textual data store that should be just after the last line contained in
 the widget. This allows a text widget to reflect only a portion of a
 larger piece of text. Instead of an integer, the empty string can be
 provided to this configuration option, which will configure the widget
 to end at the very last line in the textual data store.
-.VE 8.5
 .OP \-height height Height
 Specifies the desired height for the window, in units of characters in the
 font given by the \fB\-font\fR option. Must be at least one.
