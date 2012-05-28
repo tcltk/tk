@@ -1,3 +1,9 @@
+2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextDisp.c:    [Bug 1630254]: missing scrolling of text widget
+	when from a -startline == -endline initial state it is configured to display
+	a non-empty part of it
+
 2012-05-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/stubs.c:          Change XSetCommand signature to match Xorg,
