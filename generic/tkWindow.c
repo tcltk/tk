@@ -16,7 +16,9 @@
 #include "tkPort.h"
 #include "tkInt.h"
 
-#if !( defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#ifdef __WIN32__
+#include "tkWinInt.h"
+#elif !(defined(MAC_TCL) ||  defined(MAC_OSX_TK))
 #include "tkUnixInt.h"
 #endif
 
@@ -852,9 +854,6 @@ TkCreateMainWindow(interp, screenName, baseName)
     Tk_Window tkwin;
     int dummy;
     int isSafe;
-#ifdef __WIN32__
-    int isWin32 = 0;
-#endif
     Tcl_HashEntry *hPtr;
     register TkMainInfo *mainPtr;
     register TkWindow *winPtr;
@@ -862,14 +861,6 @@ TkCreateMainWindow(interp, screenName, baseName)
     ClientData clientData;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-#ifdef __WIN32__
-    Tcl_Obj *stringObjPtr = Tcl_GetVar2Ex(interp, "::tcl_platform", "platform", 0);
-
-    if (stringObjPtr
-            && !strcmp(Tcl_GetString(stringObjPtr), "windows")) {
-        isWin32 = 1;
-    }
-#endif
 
     /*
      * Panic if someone updated the TkWindow structure without
@@ -953,8 +944,9 @@ TkCreateMainWindow(interp, screenName, baseName)
 	if (cmdPtr->objProc == NULL) {
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
-#ifdef __WIN32__
-	if (!isWin32 && (cmdPtr->flags & WINMACONLY)) {
+#if defined(__WIN32__) && !defined(STATIC_BUILD)
+	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->reserved9) {
+	    /* We are running on Cygwin, so don't use the win32 dialogs */
 	    continue;
 	}
 #endif
@@ -3209,9 +3201,7 @@ Initialize(interp)
 	Tcl_SetMainLoop(Tk_MainLoop);
     }
 
-#ifdef Tk_InitStubs
 #undef Tk_InitStubs
-#endif
 
     Tk_InitStubs(interp, TK_VERSION, 1);
 
