@@ -201,7 +201,7 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #   define TkWinGetPlatformTheme 0
 #   define TkWinChildProc 0
 
-#elif !defined(MAC_OSC_TK) /* UNIX */
+#elif !defined(MAC_OSX_TK) /* UNIX */
 
 #   undef TkClipBox
 #   undef TkCreateRegion
@@ -577,7 +577,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 static const TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(__WIN32__) /* WIN */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
