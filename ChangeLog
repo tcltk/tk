@@ -1,3 +1,38 @@
+2012-05-09  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.decls:   Change XFillRectangle(s)/XDrawLines(s) signature
+	* generic/tkIntXlibDeclsDecls.h: to match Xorg, needed for Cygwin.
+	* xlib/xdraw.c:
+	* mac/tkMacDraw.c:
+	* macosx/tkMacOSXDraw.c:
+	* win/tkWinDraw.c:
+	* win/Makefile.in:       Generate same pkgIndex.tcl file for win32 and
+	* unix/Makefile.in:      cygwin, one that is equally useable for both.
+
+2012-05-25  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkWindow.c:    Simpify determination whether we are running on cygwin.
+	* generic/tkStubInit.c:  Export Tk_GetHINSTANCE, TkSetPixmapColormap and
+	* generic/tkInt.decls: 	 TkpPrintWindowId on the Cygwin dll, sync stub table
+	with Tk 8.6 win32 version.
+	* generic/tk*Decls.h:    re-generated
+	* win/Makefile.in:       Fix "make genstubs" when cross-compiling on UNIX
+
+2012-05-24  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/stubs.c:          Change XSetCommand signature to match Xorg,
+	* win/tkWinWm.c:        needed for Cygwin.
+	* generic/tkInt.decls
+	* generic/tk*Decls.h:   re-generated
+
+2012-05-09  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinWm.c:           Change TkpWmSetState signature to match Xorg,
+	* generic/tkInt.decls:     needed for Cygwin. (not needed for Mac)
+	* generic/tkIntPlatDeclsDecls.h:
+	* generic/tkWindow.c:      Don't check for cygwin in win32 static build.
+	* unix/tkUnixPort.h:       Some more useful #defines for Cygwin
+
 2012-05-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/menu.tcl:    [Bug 2768586]: Only do menu correction on Windows < Win7

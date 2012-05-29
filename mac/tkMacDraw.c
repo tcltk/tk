@@ -399,7 +399,7 @@ TkPutImage(
  *----------------------------------------------------------------------
  */
 
-void 
+int
 XFillRectangles(
     Display* display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -433,6 +433,7 @@ XFillRectangles(
     }
 
     SetGWorld(saveWorld, saveDevice);
+    return 1;
 }
 
 /*
@@ -451,7 +452,7 @@ XFillRectangles(
  *----------------------------------------------------------------------
  */
 
-void 
+int
 XDrawLines(
     Display* display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -470,7 +471,7 @@ XDrawLines(
 
     display->request++;
     if (npoints < 2) {
-    	return;  /* TODO: generate BadValue error. */
+    	return 0;  /* TODO: generate BadValue error. */
     }
     GetGWorld(&saveWorld, &saveDevice);
     SetGWorld(destPort, NULL);
@@ -495,6 +496,7 @@ XDrawLines(
     }
 
     SetGWorld(saveWorld, saveDevice);
+    return 1;
 }
 
 /*

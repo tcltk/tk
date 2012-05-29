@@ -2426,7 +2426,7 @@ ChooseDirectoryHookProc(
 		     * Directory must exist.  Complain, then rehighlight text.
 		     */
 
-		    wsprintf(tmp, _T("Cannot change directory to \"%.200s\"."),
+		    wsprintf(tmp, "Cannot change directory to \"%.200s\".",
 			    cdPtr->path);
 		    MessageBox(hwnd, tmp, NULL, MB_OK);
 		    SendDlgItemMessage(hwnd, edt10, EM_SETSEL, 0, -1);

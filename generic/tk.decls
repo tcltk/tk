@@ -1025,31 +1025,6 @@ declare 264 {
 interface tkPlat
 
 ################################
-# Unix specific functions
-#
-
-declare 0 unix {
-    Window Tk_AttachHWND(Tk_Window tkwin, void *hwnd)
-}
-declare 1 unix {
-    void *Tk_GetHINSTANCE(void)
-}
-declare 2 unix {
-    void *Tk_GetHWND(Window window)
-}
-declare 3 unix {
-    Tk_Window Tk_HWNDToWindow(void *hwnd)
-}
-declare 4 unix {
-    void Tk_PointerEvent(void *hwnd, int x, int y)
-}
-declare 5 unix {
-    int Tk_TranslateWinEvent(void *hwnd,
-	    unsigned int message, int wParam, int lParam, int *result)
-}
-
-
-################################
 # Windows specific functions
 
 declare 0 win {
@@ -1082,7 +1057,7 @@ declare 0 mac {
 	    Tk_MacEmbedGetClipProc *getClipProc,
 	    Tk_MacEmbedGetOffsetInParentProc *getOffsetProc)
 }
- 
+
 declare 1 mac {
     void Tk_MacTurnOffMenus(void)
 }

@@ -724,7 +724,7 @@ XFillRectangles(display, d, gc, rectangles, nrectangles)
     }
     DeleteObject(brush);
     TkWinReleaseDrawableDC(d, dc, &state);
-    return 0;
+    return 1;
 }
 
 /*
@@ -899,7 +899,7 @@ XDrawLines(display, d, gc, points, npoints, mode)
     DeleteObject(pen);
     
     TkWinReleaseDrawableDC(d, dc, &state);
-    return 0;
+    return 1;
 }
 
 /*

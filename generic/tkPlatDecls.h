@@ -29,25 +29,7 @@
  * Exported function declarations:
  */
 
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
-/* 0 */
-EXTERN Window		Tk_AttachHWND _ANSI_ARGS_((Tk_Window tkwin,
-				VOID *hwnd));
-/* 1 */
-EXTERN VOID *		Tk_GetHINSTANCE _ANSI_ARGS_((void));
-/* 2 */
-EXTERN VOID *		Tk_GetHWND _ANSI_ARGS_((Window window));
-/* 3 */
-EXTERN Tk_Window	Tk_HWNDToWindow _ANSI_ARGS_((VOID *hwnd));
-/* 4 */
-EXTERN void		Tk_PointerEvent _ANSI_ARGS_((VOID *hwnd, int x,
-				int y));
-/* 5 */
-EXTERN int		Tk_TranslateWinEvent _ANSI_ARGS_((VOID *hwnd,
-				unsigned int message, int wParam, int lParam,
-				int *result));
-#endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN Window		Tk_AttachHWND _ANSI_ARGS_((Tk_Window tkwin,
 				HWND hwnd));
@@ -63,7 +45,7 @@ EXTERN void		Tk_PointerEvent _ANSI_ARGS_((HWND hwnd, int x, int y));
 EXTERN int		Tk_TranslateWinEvent _ANSI_ARGS_((HWND hwnd,
 				UINT message, WPARAM wParam, LPARAM lParam,
 				LRESULT *result));
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
 /* 0 */
 EXTERN void		Tk_MacSetEmbedHandler _ANSI_ARGS_((
@@ -96,7 +78,7 @@ EXTERN int		TkMacHaveAppearance _ANSI_ARGS_((void));
 /* 10 */
 EXTERN GWorldPtr	TkMacGetDrawablePort _ANSI_ARGS_((Drawable drawable));
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
 EXTERN void		Tk_MacOSXSetEmbedHandler _ANSI_ARGS_((
 				Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr,
@@ -129,28 +111,20 @@ EXTERN ControlRef	TkMacOSXGetRootControl _ANSI_ARGS_((
 EXTERN void		Tk_MacOSXSetupTkNotifier _ANSI_ARGS_((void));
 /* 10 */
 EXTERN int		Tk_MacOSXIsAppInFront _ANSI_ARGS_((void));
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 
 typedef struct TkPlatStubs {
     int magic;
     struct TkPlatStubHooks *hooks;
 
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
-    Window (*tk_AttachHWND) _ANSI_ARGS_((Tk_Window tkwin, VOID *hwnd)); /* 0 */
-    VOID * (*tk_GetHINSTANCE) _ANSI_ARGS_((void)); /* 1 */
-    VOID * (*tk_GetHWND) _ANSI_ARGS_((Window window)); /* 2 */
-    Tk_Window (*tk_HWNDToWindow) _ANSI_ARGS_((VOID *hwnd)); /* 3 */
-    void (*tk_PointerEvent) _ANSI_ARGS_((VOID *hwnd, int x, int y)); /* 4 */
-    int (*tk_TranslateWinEvent) _ANSI_ARGS_((VOID *hwnd, unsigned int message, int wParam, int lParam, int *result)); /* 5 */
-#endif /* UNIX */
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     Window (*tk_AttachHWND) _ANSI_ARGS_((Tk_Window tkwin, HWND hwnd)); /* 0 */
     HINSTANCE (*tk_GetHINSTANCE) _ANSI_ARGS_((void)); /* 1 */
     HWND (*tk_GetHWND) _ANSI_ARGS_((Window window)); /* 2 */
     Tk_Window (*tk_HWNDToWindow) _ANSI_ARGS_((HWND hwnd)); /* 3 */
     void (*tk_PointerEvent) _ANSI_ARGS_((HWND hwnd, int x, int y)); /* 4 */
     int (*tk_TranslateWinEvent) _ANSI_ARGS_((HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT *result)); /* 5 */
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
     void (*tk_MacSetEmbedHandler) _ANSI_ARGS_((Tk_MacEmbedRegisterWinProc *registerWinProcPtr, Tk_MacEmbedGetGrafPortProc *getPortProcPtr, Tk_MacEmbedMakeContainerExistProc *containerExistProcPtr, Tk_MacEmbedGetClipProc *getClipProc, Tk_MacEmbedGetOffsetInParentProc *getOffsetProc)); /* 0 */
     void (*tk_MacTurnOffMenus) _ANSI_ARGS_((void)); /* 1 */
@@ -164,7 +138,7 @@ typedef struct TkPlatStubs {
     int (*tkMacHaveAppearance) _ANSI_ARGS_((void)); /* 9 */
     GWorldPtr (*tkMacGetDrawablePort) _ANSI_ARGS_((Drawable drawable)); /* 10 */
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
     void (*tk_MacOSXSetEmbedHandler) _ANSI_ARGS_((Tk_MacOSXEmbedRegisterWinProc *registerWinProcPtr, Tk_MacOSXEmbedGetGrafPortProc *getPortProcPtr, Tk_MacOSXEmbedMakeContainerExistProc *containerExistProcPtr, Tk_MacOSXEmbedGetClipProc *getClipProc, Tk_MacOSXEmbedGetOffsetInParentProc *getOffsetProc)); /* 0 */
     void (*tk_MacOSXTurnOffMenus) _ANSI_ARGS_((void)); /* 1 */
     void (*tk_MacOSXTkOwnsCursor) _ANSI_ARGS_((int tkOwnsIt)); /* 2 */
@@ -176,7 +150,7 @@ typedef struct TkPlatStubs {
     ControlRef (*tkMacOSXGetRootControl) _ANSI_ARGS_((Drawable drawable)); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) _ANSI_ARGS_((void)); /* 9 */
     int (*tk_MacOSXIsAppInFront) _ANSI_ARGS_((void)); /* 10 */
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 } TkPlatStubs;
 
 #ifdef __cplusplus
@@ -193,7 +167,7 @@ extern TkPlatStubs *tkPlatStubsPtr;
  * Inline function declarations:
  */
 
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
 #ifndef Tk_AttachHWND
 #define Tk_AttachHWND \
 	(tkPlatStubsPtr->tk_AttachHWND) /* 0 */
@@ -218,33 +192,7 @@ extern TkPlatStubs *tkPlatStubsPtr;
 #define Tk_TranslateWinEvent \
 	(tkPlatStubsPtr->tk_TranslateWinEvent) /* 5 */
 #endif
-#endif /* UNIX */
-#ifdef __WIN32__
-#ifndef Tk_AttachHWND
-#define Tk_AttachHWND \
-	(tkPlatStubsPtr->tk_AttachHWND) /* 0 */
-#endif
-#ifndef Tk_GetHINSTANCE
-#define Tk_GetHINSTANCE \
-	(tkPlatStubsPtr->tk_GetHINSTANCE) /* 1 */
-#endif
-#ifndef Tk_GetHWND
-#define Tk_GetHWND \
-	(tkPlatStubsPtr->tk_GetHWND) /* 2 */
-#endif
-#ifndef Tk_HWNDToWindow
-#define Tk_HWNDToWindow \
-	(tkPlatStubsPtr->tk_HWNDToWindow) /* 3 */
-#endif
-#ifndef Tk_PointerEvent
-#define Tk_PointerEvent \
-	(tkPlatStubsPtr->tk_PointerEvent) /* 4 */
-#endif
-#ifndef Tk_TranslateWinEvent
-#define Tk_TranslateWinEvent \
-	(tkPlatStubsPtr->tk_TranslateWinEvent) /* 5 */
-#endif
-#endif /* __WIN32__ */
+#endif /* WIN */
 #ifdef MAC_TCL
 #ifndef Tk_MacSetEmbedHandler
 #define Tk_MacSetEmbedHandler \
@@ -291,7 +239,7 @@ extern TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tkMacGetDrawablePort) /* 10 */
 #endif
 #endif /* MAC_TCL */
-#ifdef MAC_OSX_TK
+#ifdef MAC_OSX_TK /* AQUA */
 #ifndef Tk_MacOSXSetEmbedHandler
 #define Tk_MacOSXSetEmbedHandler \
 	(tkPlatStubsPtr->tk_MacOSXSetEmbedHandler) /* 0 */
@@ -336,7 +284,7 @@ extern TkPlatStubs *tkPlatStubsPtr;
 #define Tk_MacOSXIsAppInFront \
 	(tkPlatStubsPtr->tk_MacOSXIsAppInFront) /* 10 */
 #endif
-#endif /* MAC_OSX_TK */
+#endif /* AQUA */
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
