@@ -550,7 +550,7 @@ TkPutImage(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawLines(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -568,12 +568,12 @@ XDrawLines(
 	 * TODO: generate BadValue error.
 	 */
 
-	return;
+	return 0;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, tkMacOSXUseCGDrawing, &dc)) {
-	return;
+	return 0;
     }
     if (dc.context) {
 	double prevx, prevy;
@@ -614,6 +614,7 @@ XDrawLines(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return 1;
 }
 
 /*
@@ -902,7 +903,7 @@ XDrawRectangles(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillRectangles(
     Display* display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -917,7 +918,7 @@ XFillRectangles(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, tkMacOSXUseCGDrawing, &dc)) {
-	return;
+	return 0;
     }
     if (dc.context) {
 	CGRect rect;
@@ -944,6 +945,7 @@ XFillRectangles(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return 1;
 }
 
 /*

@@ -620,7 +620,7 @@ TkPutImage(colors, ncolors, display, d, gc, image, src_x, src_y, dest_x,
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillRectangles(display, d, gc, rectangles, nrectangles)
     Display* display;
     Drawable d;
@@ -635,7 +635,7 @@ XFillRectangles(display, d, gc, rectangles, nrectangles)
     HBRUSH brush, oldBrush;
 
     if (d == None) {
-	return;
+	return 0;
     }
 
     dc = TkWinGetDrawableDC(display, d, &state);
@@ -722,6 +722,7 @@ XFillRectangles(display, d, gc, rectangles, nrectangles)
     }
     DeleteObject(brush);
     TkWinReleaseDrawableDC(d, dc, &state);
+    return 1;
 }
 
 /*
@@ -871,7 +872,7 @@ RenderObject(dc, gc, points, npoints, mode, pen, func)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawLines(display, d, gc, points, npoints, mode)
     Display* display;
     Drawable d;
@@ -885,7 +886,7 @@ XDrawLines(display, d, gc, points, npoints, mode)
     HDC dc;
     
     if (d == None) {
-	return;
+	return 0;
     }
 
     dc = TkWinGetDrawableDC(display, d, &state);
@@ -896,6 +897,7 @@ XDrawLines(display, d, gc, points, npoints, mode)
     DeleteObject(pen);
     
     TkWinReleaseDrawableDC(d, dc, &state);
+    return 1;
 }
 
 /*

@@ -129,8 +129,6 @@ static void		StdinProc _ANSI_ARGS_((ClientData clientData,
  *
  *----------------------------------------------------------------------
  */
-int LoadCygwinTk(Tcl_Interp *interp);
-
 void
 Tk_MainEx(argc, argv, appInitProc, interp)
     int argc;				/* Number of arguments. */
