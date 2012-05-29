@@ -1,3 +1,9 @@
+2012-05-29  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkInt.decls (TkMacOSXDrawable): Added OSX-specific mechanism
+	to allow retrieval of the drawing surface. Allows Canvas3d to be
+	adapted to 8.6.
+
 2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
 
 	* doc/text.n:  [Bug 1630251]: Documentation for -endline option was wrong
