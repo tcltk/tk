@@ -249,6 +249,8 @@ EXTERN void		TkGenWMDestroyEvent(Tk_Window tkwin);
 /* Slot 52 is reserved */
 /* 53 */
 EXTERN unsigned long	TkpGetMS(void);
+/* 54 */
+EXTERN void *		TkMacOSXDrawable(Drawable drawable);
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 /* 0 */
@@ -388,6 +390,7 @@ typedef struct TkIntPlatStubs {
     void (*tkGenWMDestroyEvent) (Tk_Window tkwin); /* 51 */
     void (*reserved52)(void);
     unsigned long (*tkpGetMS) (void); /* 53 */
+    void * (*tkMacOSXDrawable) (Drawable drawable); /* 54 */
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) (void); /* 0 */
@@ -615,6 +618,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 /* Slot 52 is reserved */
 #define TkpGetMS \
 	(tkIntPlatStubsPtr->tkpGetMS) /* 53 */
+#define TkMacOSXDrawable \
+	(tkIntPlatStubsPtr->tkMacOSXDrawable) /* 54 */
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 #define TkCreateXEventSource \
