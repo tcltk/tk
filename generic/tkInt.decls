@@ -427,7 +427,7 @@ declare 119 {
 	    TkRegion src, TkRegion dr_return)
 }
 declare 121 {mac aqua} {
-    Pixmap TkpCreateNativeBitmap(Display *display, const char *source) 
+    Pixmap TkpCreateNativeBitmap(Display *display, const char *source)
 }
 declare 122 {mac aqua} {
     void TkpDefineNativeBitmaps(void)
@@ -659,6 +659,38 @@ declare 35 win {
     int TkWinGetPlatformTheme(void)
 }
 
+# Exported through stub table since Tk 8.4.20/8.5.9
+
+declare 36 win {
+    LRESULT __stdcall TkWinChildProc(HWND hwnd,
+	    UINT message, WPARAM wParam, LPARAM lParam)
+}
+
+# new for 8.4.20+/8.5.12+, Cygwin only
+declare 37 win {
+    void TkCreateXEventSource(void)
+}
+declare 38 win {
+    int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
+}
+declare 39 win {
+    void TkpSync(Display *display)
+}
+declare 40 win {
+    Window TkUnixContainerId(TkWindow *winPtr)
+}
+declare 41 win {
+    int TkUnixDoOneXEvent(Tcl_Time *timePtr)
+}
+declare 42 win {
+    void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
+}
+declare 43 win {
+    void TkWmCleanup(TkDisplay *dispPtr)
+}
+declare 44 win {
+    void TkSendCleanup(TkDisplay *dispPtr)
+}
 ################################
 # Mac specific functions
 
@@ -1488,7 +1520,7 @@ declare 22 {mac aqua} {
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 23 {mac aqua} {
-    void XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
+    int XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
 }
 declare 24 {mac aqua} {
     void XDrawRectangle(Display *d, Drawable dr, GC g, int i1, int i2,
@@ -1503,7 +1535,7 @@ declare 26 {mac aqua} {
 	    int i1, int i2, int i3)
 }
 declare 27 {mac aqua} {
-    void XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
+    int XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
 }
 declare 28 {mac aqua} {
     void XFreeColormap(Display *d, Colormap c)
