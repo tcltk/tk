@@ -154,9 +154,6 @@ extern CONST int tkpWinBltModes[];
 #define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
-EXTERN LRESULT CALLBACK	TkWinChildProc _ANSI_ARGS_((HWND hwnd, UINT message,
-			    WPARAM wParam, LPARAM lParam));
-
 /*
  * Special proc needed as tsd accessor function between
  * tkWinX.c:GenerateXEvent and tkWinClipboard.c:UpdateClipboard

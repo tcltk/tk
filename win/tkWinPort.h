@@ -40,15 +40,27 @@
 #endif
 
 #include <time.h>
-#ifdef __CYGWIN__
-#    define _T(x) L##x
-#else
-#    include <tchar.h>
-#endif
 
 #ifdef _MSC_VER
-#    define hypot _hypot
+#   ifndef hypot
+#	define hypot _hypot
+#   endif
 #endif /* _MSC_VER */
+
+/*
+ *  Pull in the typedef of TCHAR for windows.
+ */
+#include <tchar.h>
+#ifndef _TCHAR_DEFINED
+    /* Borland seems to forget to set this. */
+    typedef _TCHAR TCHAR;
+#   define _TCHAR_DEFINED
+#endif
+#if defined(_MSC_VER) && defined(__STDC__)
+    /* VS2005 SP1 misses this. See [Bug #3110161] */
+    typedef _TCHAR TCHAR;
+#endif
+
 
 #ifndef __GNUC__
 #    define strncasecmp strnicmp
