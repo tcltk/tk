@@ -1057,7 +1057,7 @@ declare 0 mac {
 	    Tk_MacEmbedGetClipProc *getClipProc,
 	    Tk_MacEmbedGetOffsetInParentProc *getOffsetProc)
 }
- 
+
 declare 1 mac {
     void Tk_MacTurnOffMenus(void)
 }

@@ -427,14 +427,12 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)"; 
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[package vcompare [package provide Tcl]\
-		$(TCLVERSION)] != 0} { return }";\
-	echo "if {([info exists ::env(DISPLAY)] || [lsearch -exact \$$::argv -display] > -1)} {";\
-	echo "    package ifneeded Tk $(VERSION)\
-		[list load [file join \$$dir .. .. bin libtk$(VERSION).dll] Tk]";\
+	echo "if {[package vcompare [package provide Tcl] $(TCLVERSION)] != 0} { return }";\
+	echo "if {(\$$::tcl_platform(platform) eq \"unix\")";\
+	echo "	&& ([info exists ::env(DISPLAY)] || [lsearch -exact \$$::argv -display] > -1)} {";\
+	echo "    package ifneeded Tk $(VERSION) [list load [file join \$$dir .. .. bin libtk$(VERSION).dll] Tk]";\
 	echo "} else {";\
-	echo "    package ifneeded Tk $(VERSION)\
-		[list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
+	echo "    package ifneeded Tk $(VERSION) [list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
 	echo "}";\
 	) > $(PKG_INDEX);
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \

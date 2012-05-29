@@ -427,7 +427,7 @@ declare 119 {
 	    TkRegion src, TkRegion dr_return)
 }
 declare 121 {mac aqua} {
-    Pixmap TkpCreateNativeBitmap(Display *display, const char *source) 
+    Pixmap TkpCreateNativeBitmap(Display *display, const char *source)
 }
 declare 122 {mac aqua} {
     void TkpDefineNativeBitmaps(void)
@@ -1173,7 +1173,7 @@ declare 30 win {
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 31 win {
-    void XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
+    int XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
 }
 declare 32 win {
     void XDrawRectangle(Display *d, Drawable dr, GC g, int i1, int i2,
@@ -1188,7 +1188,7 @@ declare 34 win {
 	    int i1, int i2, int i3)
 }
 declare 35 win {
-    void XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
+    int XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
 }
 declare 36 win {
     void XForceScreenSaver(Display *d, int i)
@@ -1422,11 +1422,11 @@ declare 103 win {
 	    XTextProperty *text_prop_return)
 }
 declare 104 win {
-    void XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
+    int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
 	    int x2, int y2)
 }
 declare 106 win {
-    void XFillRectangle(Display *display, Drawable d, GC gc,
+    int XFillRectangle(Display *display, Drawable d, GC gc,
 	    int x, int y, unsigned int width, unsigned int height)
 }
 declare 105 win {
@@ -1519,7 +1519,7 @@ declare 22 {mac aqua} {
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 23 {mac aqua} {
-    void XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
+    int XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
 }
 declare 24 {mac aqua} {
     void XDrawRectangle(Display *d, Drawable dr, GC g, int i1, int i2,
@@ -1534,7 +1534,7 @@ declare 26 {mac aqua} {
 	    int i1, int i2, int i3)
 }
 declare 27 {mac aqua} {
-    void XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
+    int XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
 }
 declare 28 {mac aqua} {
     void XFreeColormap(Display *d, Colormap c)
@@ -1721,11 +1721,11 @@ declare 81 {mac aqua} {
     void XForceScreenSaver(Display *display, int mode)
 }
 declare 82 {mac aqua} {
-    void XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
+    int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
 	    int x2, int y2)
 }
 declare 83 {mac aqua} {
-    void XFillRectangle(Display *display, Drawable d, GC gc,
+    int XFillRectangle(Display *display, Drawable d, GC gc,
 	    int x, int y, unsigned int width, unsigned int height)
 }
 declare 84 {mac aqua} {

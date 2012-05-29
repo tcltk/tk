@@ -134,7 +134,7 @@ EXTERN void		XDrawArc _ANSI_ARGS_((Display *d, Drawable dr, GC g,
 				int i1, int i2, unsigned int ui1,
 				unsigned int ui2, int i3, int i4));
 /* 31 */
-EXTERN void		XDrawLines _ANSI_ARGS_((Display *d, Drawable dr,
+EXTERN int		XDrawLines _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XPoint *x, int i1, int i2));
 /* 32 */
 EXTERN void		XDrawRectangle _ANSI_ARGS_((Display *d, Drawable dr,
@@ -148,7 +148,7 @@ EXTERN void		XFillArc _ANSI_ARGS_((Display *d, Drawable dr, GC g,
 EXTERN void		XFillPolygon _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XPoint *x, int i1, int i2, int i3));
 /* 35 */
-EXTERN void		XFillRectangles _ANSI_ARGS_((Display *d, Drawable dr,
+EXTERN int		XFillRectangles _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XRectangle *x, int i));
 /* 36 */
 EXTERN void		XForceScreenSaver _ANSI_ARGS_((Display *d, int i));
@@ -353,14 +353,14 @@ EXTERN void		XSetWMClientMachine _ANSI_ARGS_((Display *display,
 EXTERN Status		XStringListToTextProperty _ANSI_ARGS_((char **list,
 				int count, XTextProperty *text_prop_return));
 /* 104 */
-EXTERN void		XDrawLine _ANSI_ARGS_((Display *d, Drawable dr, GC g,
+EXTERN int		XDrawLine _ANSI_ARGS_((Display *d, Drawable dr, GC g,
 				int x1, int y1, int x2, int y2));
 /* 105 */
 EXTERN void		XWarpPointer _ANSI_ARGS_((Display *d, Window s,
 				Window dw, int sx, int sy, unsigned int sw,
 				unsigned int sh, int dx, int dy));
 /* 106 */
-EXTERN void		XFillRectangle _ANSI_ARGS_((Display *display,
+EXTERN int		XFillRectangle _ANSI_ARGS_((Display *display,
 				Drawable d, GC gc, int x, int y,
 				unsigned int width, unsigned int height));
 #endif /* WIN */
@@ -438,7 +438,7 @@ EXTERN void		XDrawArc _ANSI_ARGS_((Display *d, Drawable dr, GC g,
 				int i1, int i2, unsigned int ui1,
 				unsigned int ui2, int i3, int i4));
 /* 23 */
-EXTERN void		XDrawLines _ANSI_ARGS_((Display *d, Drawable dr,
+EXTERN int		XDrawLines _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XPoint *x, int i1, int i2));
 /* 24 */
 EXTERN void		XDrawRectangle _ANSI_ARGS_((Display *d, Drawable dr,
@@ -452,7 +452,7 @@ EXTERN void		XFillArc _ANSI_ARGS_((Display *d, Drawable dr, GC g,
 EXTERN void		XFillPolygon _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XPoint *x, int i1, int i2, int i3));
 /* 27 */
-EXTERN void		XFillRectangles _ANSI_ARGS_((Display *d, Drawable dr,
+EXTERN int		XFillRectangles _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XRectangle *x, int i));
 /* 28 */
 EXTERN void		XFreeColormap _ANSI_ARGS_((Display *d, Colormap c));
@@ -621,10 +621,10 @@ EXTERN void		XDrawSegments _ANSI_ARGS_((Display *display,
 EXTERN void		XForceScreenSaver _ANSI_ARGS_((Display *display,
 				int mode));
 /* 82 */
-EXTERN void		XDrawLine _ANSI_ARGS_((Display *d, Drawable dr, GC g,
+EXTERN int		XDrawLine _ANSI_ARGS_((Display *d, Drawable dr, GC g,
 				int x1, int y1, int x2, int y2));
 /* 83 */
-EXTERN void		XFillRectangle _ANSI_ARGS_((Display *display,
+EXTERN int		XFillRectangle _ANSI_ARGS_((Display *display,
 				Drawable d, GC gc, int x, int y,
 				unsigned int width, unsigned int height));
 /* 84 */
@@ -728,7 +728,7 @@ EXTERN void		XDrawArc _ANSI_ARGS_((Display *d, Drawable dr, GC g,
 				int i1, int i2, unsigned int ui1,
 				unsigned int ui2, int i3, int i4));
 /* 23 */
-EXTERN void		XDrawLines _ANSI_ARGS_((Display *d, Drawable dr,
+EXTERN int		XDrawLines _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XPoint *x, int i1, int i2));
 /* 24 */
 EXTERN void		XDrawRectangle _ANSI_ARGS_((Display *d, Drawable dr,
@@ -742,7 +742,7 @@ EXTERN void		XFillArc _ANSI_ARGS_((Display *d, Drawable dr, GC g,
 EXTERN void		XFillPolygon _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XPoint *x, int i1, int i2, int i3));
 /* 27 */
-EXTERN void		XFillRectangles _ANSI_ARGS_((Display *d, Drawable dr,
+EXTERN int		XFillRectangles _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XRectangle *x, int i));
 /* 28 */
 EXTERN void		XFreeColormap _ANSI_ARGS_((Display *d, Colormap c));
@@ -911,10 +911,10 @@ EXTERN void		XDrawSegments _ANSI_ARGS_((Display *display,
 EXTERN void		XForceScreenSaver _ANSI_ARGS_((Display *display,
 				int mode));
 /* 82 */
-EXTERN void		XDrawLine _ANSI_ARGS_((Display *d, Drawable dr, GC g,
+EXTERN int		XDrawLine _ANSI_ARGS_((Display *d, Drawable dr, GC g,
 				int x1, int y1, int x2, int y2));
 /* 83 */
-EXTERN void		XFillRectangle _ANSI_ARGS_((Display *display,
+EXTERN int		XFillRectangle _ANSI_ARGS_((Display *display,
 				Drawable d, GC gc, int x, int y,
 				unsigned int width, unsigned int height));
 /* 84 */
@@ -983,11 +983,11 @@ typedef struct TkIntXlibStubs {
     void (*xDeleteProperty) _ANSI_ARGS_((Display *d, Window w, Atom a)); /* 28 */
     void (*xDestroyWindow) _ANSI_ARGS_((Display *d, Window w)); /* 29 */
     void (*xDrawArc) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 30 */
-    void (*xDrawLines) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)); /* 31 */
+    int (*xDrawLines) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)); /* 31 */
     void (*xDrawRectangle) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 32 */
     void (*xFillArc) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 33 */
     void (*xFillPolygon) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2, int i3)); /* 34 */
-    void (*xFillRectangles) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XRectangle *x, int i)); /* 35 */
+    int (*xFillRectangles) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XRectangle *x, int i)); /* 35 */
     void (*xForceScreenSaver) _ANSI_ARGS_((Display *d, int i)); /* 36 */
     void (*xFreeColormap) _ANSI_ARGS_((Display *d, Colormap c)); /* 37 */
     void (*xFreeColors) _ANSI_ARGS_((Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul)); /* 38 */
@@ -1056,9 +1056,9 @@ typedef struct TkIntXlibStubs {
     XVisualInfo * (*xGetVisualInfo) _ANSI_ARGS_((Display *display, long vinfo_mask, XVisualInfo *vinfo_template, int *nitems_return)); /* 101 */
     void (*xSetWMClientMachine) _ANSI_ARGS_((Display *display, Window w, XTextProperty *text_prop)); /* 102 */
     Status (*xStringListToTextProperty) _ANSI_ARGS_((char **list, int count, XTextProperty *text_prop_return)); /* 103 */
-    void (*xDrawLine) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 104 */
+    int (*xDrawLine) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 104 */
     void (*xWarpPointer) _ANSI_ARGS_((Display *d, Window s, Window dw, int sx, int sy, unsigned int sw, unsigned int sh, int dx, int dy)); /* 105 */
-    void (*xFillRectangle) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 106 */
+    int (*xFillRectangle) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 106 */
 #endif /* WIN */
 #ifdef MAC_TCL
     void (*xSetDashes) _ANSI_ARGS_((Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n)); /* 0 */
@@ -1084,11 +1084,11 @@ typedef struct TkIntXlibStubs {
     void (*xDefineCursor) _ANSI_ARGS_((Display *d, Window w, Cursor c)); /* 20 */
     void (*xDestroyWindow) _ANSI_ARGS_((Display *d, Window w)); /* 21 */
     void (*xDrawArc) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 22 */
-    void (*xDrawLines) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)); /* 23 */
+    int (*xDrawLines) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)); /* 23 */
     void (*xDrawRectangle) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 24 */
     void (*xFillArc) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 25 */
     void (*xFillPolygon) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2, int i3)); /* 26 */
-    void (*xFillRectangles) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XRectangle *x, int i)); /* 27 */
+    int (*xFillRectangles) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XRectangle *x, int i)); /* 27 */
     void (*xFreeColormap) _ANSI_ARGS_((Display *d, Colormap c)); /* 28 */
     void (*xFreeColors) _ANSI_ARGS_((Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul)); /* 29 */
     void (*xFreeModifiermap) _ANSI_ARGS_((XModifierKeymap *x)); /* 30 */
@@ -1143,8 +1143,8 @@ typedef struct TkIntXlibStubs {
     Status (*xStringListToTextProperty) _ANSI_ARGS_((char **list, int count, XTextProperty *text_prop_return)); /* 79 */
     void (*xDrawSegments) _ANSI_ARGS_((Display *display, Drawable d, GC gc, XSegment *segments, int nsegments)); /* 80 */
     void (*xForceScreenSaver) _ANSI_ARGS_((Display *display, int mode)); /* 81 */
-    void (*xDrawLine) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 82 */
-    void (*xFillRectangle) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 83 */
+    int (*xDrawLine) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 82 */
+    int (*xFillRectangle) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 83 */
     void (*xClearWindow) _ANSI_ARGS_((Display *d, Window w)); /* 84 */
     void (*xDrawPoint) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y)); /* 85 */
     void (*xDrawPoints) _ANSI_ARGS_((Display *display, Drawable d, GC gc, XPoint *points, int npoints, int mode)); /* 86 */
@@ -1177,11 +1177,11 @@ typedef struct TkIntXlibStubs {
     void (*xDefineCursor) _ANSI_ARGS_((Display *d, Window w, Cursor c)); /* 20 */
     void (*xDestroyWindow) _ANSI_ARGS_((Display *d, Window w)); /* 21 */
     void (*xDrawArc) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 22 */
-    void (*xDrawLines) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)); /* 23 */
+    int (*xDrawLines) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)); /* 23 */
     void (*xDrawRectangle) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2)); /* 24 */
     void (*xFillArc) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 25 */
     void (*xFillPolygon) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2, int i3)); /* 26 */
-    void (*xFillRectangles) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XRectangle *x, int i)); /* 27 */
+    int (*xFillRectangles) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XRectangle *x, int i)); /* 27 */
     void (*xFreeColormap) _ANSI_ARGS_((Display *d, Colormap c)); /* 28 */
     void (*xFreeColors) _ANSI_ARGS_((Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul)); /* 29 */
     void (*xFreeModifiermap) _ANSI_ARGS_((XModifierKeymap *x)); /* 30 */
@@ -1236,8 +1236,8 @@ typedef struct TkIntXlibStubs {
     Status (*xStringListToTextProperty) _ANSI_ARGS_((char **list, int count, XTextProperty *text_prop_return)); /* 79 */
     void (*xDrawSegments) _ANSI_ARGS_((Display *display, Drawable d, GC gc, XSegment *segments, int nsegments)); /* 80 */
     void (*xForceScreenSaver) _ANSI_ARGS_((Display *display, int mode)); /* 81 */
-    void (*xDrawLine) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 82 */
-    void (*xFillRectangle) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 83 */
+    int (*xDrawLine) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 82 */
+    int (*xFillRectangle) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 83 */
     void (*xClearWindow) _ANSI_ARGS_((Display *d, Window w)); /* 84 */
     void (*xDrawPoint) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y)); /* 85 */
     void (*xDrawPoints) _ANSI_ARGS_((Display *display, Drawable d, GC gc, XPoint *points, int npoints, int mode)); /* 86 */
