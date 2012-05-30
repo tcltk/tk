@@ -231,59 +231,44 @@ EXTERN LRESULT __stdcall TkWinChildProc(HWND hwnd, UINT message,
 /* 37 */
 EXTERN void		TkCreateXEventSource(void);
 #endif
-#ifndef TkFreeWindowId_TCL_DECLARED
-#define TkFreeWindowId_TCL_DECLARED
-/* 38 */
-EXTERN void		TkFreeWindowId(TkDisplay *dispPtr, Window w);
-#endif
-#ifndef TkInitXId_TCL_DECLARED
-#define TkInitXId_TCL_DECLARED
-/* 39 */
-EXTERN void		TkInitXId(TkDisplay *dispPtr);
-#endif
 #ifndef TkpCmapStressed_TCL_DECLARED
 #define TkpCmapStressed_TCL_DECLARED
-/* 40 */
+/* 38 */
 EXTERN int		TkpCmapStressed(Tk_Window tkwin, Colormap colormap);
 #endif
 #ifndef TkpSync_TCL_DECLARED
 #define TkpSync_TCL_DECLARED
-/* 41 */
+/* 39 */
 EXTERN void		TkpSync(Display *display);
 #endif
 #ifndef TkUnixContainerId_TCL_DECLARED
 #define TkUnixContainerId_TCL_DECLARED
-/* 42 */
+/* 40 */
 EXTERN Window		TkUnixContainerId(TkWindow *winPtr);
 #endif
 #ifndef TkUnixDoOneXEvent_TCL_DECLARED
 #define TkUnixDoOneXEvent_TCL_DECLARED
-/* 43 */
+/* 41 */
 EXTERN int		TkUnixDoOneXEvent(Tcl_Time *timePtr);
 #endif
 #ifndef TkUnixSetMenubar_TCL_DECLARED
 #define TkUnixSetMenubar_TCL_DECLARED
-/* 44 */
+/* 42 */
 EXTERN void		TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar);
 #endif
 #ifndef TkWmCleanup_TCL_DECLARED
 #define TkWmCleanup_TCL_DECLARED
-/* 45 */
+/* 43 */
 EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
 #endif
 #ifndef TkSendCleanup_TCL_DECLARED
 #define TkSendCleanup_TCL_DECLARED
-/* 46 */
+/* 44 */
 EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
-#endif
-#ifndef TkFreeXId_TCL_DECLARED
-#define TkFreeXId_TCL_DECLARED
-/* 47 */
-EXTERN void		TkFreeXId(TkDisplay *dispPtr);
 #endif
 #ifndef TkpTestsendCmd_TCL_DECLARED
 #define TkpTestsendCmd_TCL_DECLARED
-/* 48 */
+/* 45 */
 EXTERN int		TkpTestsendCmd(ClientData clientData,
 				Tcl_Interp *interp, int argc,
 				CONST char **argv);
@@ -659,17 +644,14 @@ typedef struct TkIntPlatStubs {
     int (*tkWinGetPlatformTheme) (void); /* 35 */
     LRESULT (__stdcall *tkWinChildProc) (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam); /* 36 */
     void (*tkCreateXEventSource) (void); /* 37 */
-    void (*tkFreeWindowId) (TkDisplay *dispPtr, Window w); /* 38 */
-    void (*tkInitXId) (TkDisplay *dispPtr); /* 39 */
-    int (*tkpCmapStressed) (Tk_Window tkwin, Colormap colormap); /* 40 */
-    void (*tkpSync) (Display *display); /* 41 */
-    Window (*tkUnixContainerId) (TkWindow *winPtr); /* 42 */
-    int (*tkUnixDoOneXEvent) (Tcl_Time *timePtr); /* 43 */
-    void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 44 */
-    void (*tkWmCleanup) (TkDisplay *dispPtr); /* 45 */
-    void (*tkSendCleanup) (TkDisplay *dispPtr); /* 46 */
-    void (*tkFreeXId) (TkDisplay *dispPtr); /* 47 */
-    int (*tkpTestsendCmd) (ClientData clientData, Tcl_Interp *interp, int argc, CONST char **argv); /* 48 */
+    int (*tkpCmapStressed) (Tk_Window tkwin, Colormap colormap); /* 38 */
+    void (*tkpSync) (Display *display); /* 39 */
+    Window (*tkUnixContainerId) (TkWindow *winPtr); /* 40 */
+    int (*tkUnixDoOneXEvent) (Tcl_Time *timePtr); /* 41 */
+    void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
+    void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
+    void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
+    int (*tkpTestsendCmd) (ClientData clientData, Tcl_Interp *interp, int argc, CONST char **argv); /* 45 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 0 */
@@ -909,49 +891,37 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkCreateXEventSource \
 	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 37 */
 #endif
-#ifndef TkFreeWindowId
-#define TkFreeWindowId \
-	(tkIntPlatStubsPtr->tkFreeWindowId) /* 38 */
-#endif
-#ifndef TkInitXId
-#define TkInitXId \
-	(tkIntPlatStubsPtr->tkInitXId) /* 39 */
-#endif
 #ifndef TkpCmapStressed
 #define TkpCmapStressed \
-	(tkIntPlatStubsPtr->tkpCmapStressed) /* 40 */
+	(tkIntPlatStubsPtr->tkpCmapStressed) /* 38 */
 #endif
 #ifndef TkpSync
 #define TkpSync \
-	(tkIntPlatStubsPtr->tkpSync) /* 41 */
+	(tkIntPlatStubsPtr->tkpSync) /* 39 */
 #endif
 #ifndef TkUnixContainerId
 #define TkUnixContainerId \
-	(tkIntPlatStubsPtr->tkUnixContainerId) /* 42 */
+	(tkIntPlatStubsPtr->tkUnixContainerId) /* 40 */
 #endif
 #ifndef TkUnixDoOneXEvent
 #define TkUnixDoOneXEvent \
-	(tkIntPlatStubsPtr->tkUnixDoOneXEvent) /* 43 */
+	(tkIntPlatStubsPtr->tkUnixDoOneXEvent) /* 41 */
 #endif
 #ifndef TkUnixSetMenubar
 #define TkUnixSetMenubar \
-	(tkIntPlatStubsPtr->tkUnixSetMenubar) /* 44 */
+	(tkIntPlatStubsPtr->tkUnixSetMenubar) /* 42 */
 #endif
 #ifndef TkWmCleanup
 #define TkWmCleanup \
-	(tkIntPlatStubsPtr->tkWmCleanup) /* 45 */
+	(tkIntPlatStubsPtr->tkWmCleanup) /* 43 */
 #endif
 #ifndef TkSendCleanup
 #define TkSendCleanup \
-	(tkIntPlatStubsPtr->tkSendCleanup) /* 46 */
-#endif
-#ifndef TkFreeXId
-#define TkFreeXId \
-	(tkIntPlatStubsPtr->tkFreeXId) /* 47 */
+	(tkIntPlatStubsPtr->tkSendCleanup) /* 44 */
 #endif
 #ifndef TkpTestsendCmd
 #define TkpTestsendCmd \
-	(tkIntPlatStubsPtr->tkpTestsendCmd) /* 48 */
+	(tkIntPlatStubsPtr->tkpTestsendCmd) /* 45 */
 #endif
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
@@ -1214,13 +1184,13 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+#ifdef __CYGWIN__
+    void TkFreeXId(TkDisplay *dispPtr);
+    void TkFreeWindowId(TkDisplay *dispPtr, Window w);
+    void TkInitXId(TkDisplay *dispPtr);
+#endif
+
 #ifdef __WIN32__
-#undef TkFreeWindowId
-#undef TkInitXId
-#undef TkpCmapStressed
-#undef TkpSync
-#define TkFreeWindowId(dispPtr,w)
-#define TkInitXId(dispPtr)
 #define TkpCmapStressed(tkwin,colormap) (0)
 #define TkpSync(display)
 #endif
