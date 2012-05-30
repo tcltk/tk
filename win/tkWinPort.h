@@ -95,6 +95,8 @@
  * under Windows.
  */
 
+#define TkFreeWindowId(dispPtr,w)
+#define TkInitXId(dispPtr)
 #define XFlush(display)
 #define XGrabServer(display)
 #define XUngrabServer(display)

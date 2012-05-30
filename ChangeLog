@@ -1,3 +1,12 @@
+2012-05-30  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkWindow.c:    Simpify determination whether we are running on cygwin.
+	* generic/tkStubInit.c:  Export Tk_GetHINSTANCE, TkSetPixmapColormap and
+	* generic/tkInt.decls: 	 TkpPrintWindowId on the Cygwin dll, sync stub table
+	with Tk 8.6 win32 version.
+	* generic/tk*Decls.h:    re-generated
+	* win/Makefile.in:       Fix "make genstubs" when cross-compiling on UNIX
+
 2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
 
 	* doc/text.n:  [Bug 1630251]: Documentation for -endline option was wrong
