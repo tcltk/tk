@@ -80,7 +80,9 @@ TkpSync(Display *display)
 #define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
 int __stdcall GetModuleHandleExW(unsigned int, const char *, void *);
 
-static void *Tk_GetHINSTANCE()
+TkIntStubs tkIntStubs;
+
+void *Tk_GetHINSTANCE()
 {
     void *hInstance = NULL;
 

@@ -137,6 +137,14 @@
 	desty, width, height);
 
 #endif
+    /*
+     * The TkPutImage macro strips off the color table information, which isn't
+     * needed for X.
+     */
+
+#   define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+		XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
+		desty, width, height);
 
 /*
  * Supply macros for seek offsets, if they're not already provided by
@@ -185,6 +193,7 @@
  * This macro stores a representation of the window handle in a string.
  * This should perhaps use the real size of an XID.
  */
+
 #ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
 	sprintf((buf), "%#08lx", (unsigned long) (w))

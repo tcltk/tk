@@ -102,6 +102,7 @@ static int WinIsTty(int fd) {
      * always claim to be running on a tty. This probably isn't the right way
      * to do it.
      */
+
     handle = GetStdHandle(STD_INPUT_HANDLE + fd);
 	/*
 	 * If it's a bad or closed handle, then it's been connected to a wish
@@ -180,6 +181,27 @@ Tk_MainEx(
     if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
 	abort();
     }
+
+#if defined(__WIN32__) && !defined(STATIC_BUILD)
+    if (tclStubsPtr->reserved9) {
+	/* We are running win32 Tk under Cygwin, so let's check
+	 * whether the env("DISPLAY") variable or the -display
+	 * argument is set. If so, we really want to run the
+	 * Tk_MainEx function of libtk.dll, not this one. */
+ 	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
+	loadCygwinTk:
+	    Tcl_Panic("Should load libtk.dll now, not yet implemented");
+	} else {
+	    int i;
+
+	    for (i = 1; i < argc; ++i) {
+		if (!_tcscmp(argv[i], TEXT("-display"))) {
+		    goto loadCygwinTk;
+		}
+	    }
+	}
+    }
+#endif
 
     Tcl_InitMemory(interp);
 
