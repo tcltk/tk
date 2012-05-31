@@ -33,7 +33,7 @@ namespace import -force tcltest::test
 
 # The set of hidden commands is platform dependent:
 
-set hidden_cmds {bell cd clipboard encoding exec exit fconfigure file glob grab load menu open pwd selection socket source toplevel unload wm}
+set hidden_cmds {bell cd clipboard encoding exec exit fconfigure glob grab load menu open pwd selection socket source toplevel unload wm}
 lappend hidden_cmds {*}[apply {{} {
     foreach cmd {
 	atime attributes copy delete dirname executable exists extension
@@ -42,10 +42,11 @@ lappend hidden_cmds {*}[apply {{} {
 	volumes writable
     } {lappend result tcl:file:$cmd}; return $result
 }}]
-if {$tcl_platform(platform) eq "windows"} {
+if {[tk windowingsystem] ne "x11"} {
     lappend hidden_cmds tk_chooseColor tk_chooseDirectory tk_getOpenFile \
 	tk_getSaveFile tk_messageBox
-} else {
+}
+if {[llength [info commands send]]} {
     lappend hidden_cmds send
 }
 
@@ -78,7 +79,7 @@ test safe-1.3 {Safe Tk loading into an interpreter} -setup {
     lsort [interp aliases a]
 } -cleanup {
     safe::interpDelete a
-} -match glob -result {*encoding*exit*file*load*source*}
+} -match glob -result {*encoding*exit*glob*load*source*}
 
 test safe-2.1 {Unsafe commands not available} -setup {
     catch {safe::interpDelete a}
@@ -187,20 +188,20 @@ test safe-5.1 {loading Tk in safe interps without master's clearance} -body {
 } -cleanup {
     safe::interpDelete $i
 } -returnCodes error -result {not allowed to start Tk by master's safe::TkInit}
-test safe-5.2 {multi-level Tk loading with clearance} -body {
+test safe-5.2 {multi-level Tk loading with clearance} -setup {
+    set safeParent [safe::interpCreate]
+} -body {
     # No error shall occur in that test and no window shall remain at the end.
-    set i [safe::interpCreate]
-    set j [list $i x]
-    set j [safe::interpCreate $j]
-    safe::loadTk $j
-    interp eval $j {
+    set i [safe::interpCreate [list $safeParent x]]
+    safe::loadTk $i
+    interp eval $i {
 	button .b -text Ok -command {destroy .}
 	pack .b
 #	tkwait window . ; # for interactive testing/debugging
     }
 } -cleanup {
-    safe::interpDelete $j
-    safe::interpDelete $i
+    catch {safe::interpDelete $i}
+    safe::interpDelete $safeParent
 } -result {}
 
 test safe-6.1 {loadTk -use windowPath} -setup {
