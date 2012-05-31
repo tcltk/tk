@@ -80,8 +80,6 @@ TkpSync(Display *display)
 #define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
 int __stdcall GetModuleHandleExW(unsigned int, const char *, void *);
 
-TkIntStubs tkIntStubs;
-
 void *Tk_GetHINSTANCE()
 {
     void *hInstance = NULL;
@@ -580,7 +578,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 static const TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(__WIN32__) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -688,6 +686,14 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XDrawLine, /* 104 */
     XWarpPointer, /* 105 */
     XFillRectangle, /* 106 */
+    XFlush, /* 107 */
+    XGrabServer, /* 108 */
+    XUngrabServer, /* 109 */
+    XFree, /* 110 */
+    XNoOp, /* 111 */
+    XSynchronize, /* 112 */
+    XSync, /* 113 */
+    XVisualIDFromVisual, /* 114 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */
