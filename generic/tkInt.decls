@@ -814,7 +814,7 @@ declare 36 win {
 	    UINT message, WPARAM wParam, LPARAM lParam)
 }
 
-# new for 8.4.20+, Cygwin only
+# new for 8.4.20+/8.5.12+, Cygwin only
 declare 37 win {
     void TkCreateXEventSource(void)
 }
