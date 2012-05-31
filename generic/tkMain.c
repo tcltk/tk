@@ -53,6 +53,7 @@
  * to strcmp here.
  */
 #ifdef __WIN32__
+#   include "tclInt.h"
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char
@@ -92,10 +93,11 @@
  * it will conflict with a declaration elsewhere on some systems.
  */
 
-#if defined(_WIN32)
+#if defined(__WIN32__) || defined(_WIN32)
 #define isatty WinIsTty
 static int WinIsTty(int fd) {
     HANDLE handle;
+
     /*
      * For now, under Windows, we assume we are not running as a console mode
      * app, so we need to use the GUI console. In order to enable this, we
@@ -103,6 +105,12 @@ static int WinIsTty(int fd) {
      * to do it.
      */
 
+#if !defined(STATIC_BUILD)
+	if (tclStubsPtr->reserved9 && TclpIsAtty) {
+	    /* We are running on Cygwin */
+	    return TclpIsAtty(fd);
+	}
+#endif
     handle = GetStdHandle(STD_INPUT_HANDLE + fd);
 	/*
 	 * If it's a bad or closed handle, then it's been connected to a wish

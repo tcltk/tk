@@ -36,7 +36,7 @@
  * Exported function declarations:
  */
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(__WIN32__) /* WIN */
 /* 0 */
 EXTERN void		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);
@@ -332,6 +332,22 @@ EXTERN void		XWarpPointer(Display *d, Window s, Window dw, int sx,
 EXTERN void		XFillRectangle(Display *display, Drawable d, GC gc,
 				int x, int y, unsigned int width,
 				unsigned int height);
+/* 107 */
+EXTERN int		XFlush(Display *display);
+/* 108 */
+EXTERN int		XGrabServer(Display *display);
+/* 109 */
+EXTERN int		XUngrabServer(Display *display);
+/* 110 */
+EXTERN int		XFree(void *data);
+/* 111 */
+EXTERN int		XNoOp(Display *display);
+/* 112 */
+EXTERN int		XSynchronize(Display *display, Bool onoff);
+/* 113 */
+EXTERN int		XSync(Display *display, Bool discard);
+/* 114 */
+EXTERN VisualID		XVisualIDFromVisual(Visual *visual);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -602,7 +618,7 @@ typedef struct TkIntXlibStubs {
     int magic;
     const struct TkIntXlibStubHooks *hooks;
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(__WIN32__) /* WIN */
     void (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
@@ -710,6 +726,14 @@ typedef struct TkIntXlibStubs {
     void (*xDrawLine) (Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2); /* 104 */
     void (*xWarpPointer) (Display *d, Window s, Window dw, int sx, int sy, unsigned int sw, unsigned int sh, int dx, int dy); /* 105 */
     void (*xFillRectangle) (Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height); /* 106 */
+    int (*xFlush) (Display *display); /* 107 */
+    int (*xGrabServer) (Display *display); /* 108 */
+    int (*xUngrabServer) (Display *display); /* 109 */
+    int (*xFree) (void *data); /* 110 */
+    int (*xNoOp) (Display *display); /* 111 */
+    int (*xSynchronize) (Display *display, Bool onoff); /* 112 */
+    int (*xSync) (Display *display, Bool discard); /* 113 */
+    VisualID (*xVisualIDFromVisual) (Visual *visual); /* 114 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     void (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -821,7 +845,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
  * Inline function declarations:
  */
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(__WIN32__) /* WIN */
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
 #define XGetModifierMapping \
@@ -1035,6 +1059,22 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xWarpPointer) /* 105 */
 #define XFillRectangle \
 	(tkIntXlibStubsPtr->xFillRectangle) /* 106 */
+#define XFlush \
+	(tkIntXlibStubsPtr->xFlush) /* 107 */
+#define XGrabServer \
+	(tkIntXlibStubsPtr->xGrabServer) /* 108 */
+#define XUngrabServer \
+	(tkIntXlibStubsPtr->xUngrabServer) /* 109 */
+#define XFree \
+	(tkIntXlibStubsPtr->xFree) /* 110 */
+#define XNoOp \
+	(tkIntXlibStubsPtr->xNoOp) /* 111 */
+#define XSynchronize \
+	(tkIntXlibStubsPtr->xSynchronize) /* 112 */
+#define XSync \
+	(tkIntXlibStubsPtr->xSync) /* 113 */
+#define XVisualIDFromVisual \
+	(tkIntXlibStubsPtr->xVisualIDFromVisual) /* 114 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #define XSetDashes \
@@ -1229,5 +1269,16 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#if !(defined(__WIN32__) || defined(__CYGWIN__))
+/*
+ * The TkPutImage macro strips off the color table information, which isn't
+ * needed for X.
+ */
+
+#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
+	desty, width, height);
+#endif
 
 #endif /* _TKINTXLIBDECLS */

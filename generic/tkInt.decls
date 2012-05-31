@@ -1412,6 +1412,31 @@ declare 105 win {
     void XWarpPointer(Display *d, Window s, Window dw, int sx, int sy,
 	    unsigned int sw, unsigned int sh, int dx, int dy)
 }
+# New in Tk 8.6
+declare 107 win {
+   int XFlush(Display *display)
+}
+declare 108 win {
+   int XGrabServer(Display *display)
+}
+declare 109 win {
+   int XUngrabServer(Display *display)
+}
+declare 110 win {
+   int XFree(void *data)
+}
+declare 111 win {
+   int XNoOp(Display *display)
+}
+declare 112 win {
+   int XSynchronize(Display *display, Bool onoff)
+}
+declare 113 win {
+   int XSync(Display *display, Bool discard)
+}
+declare 114 win {
+   VisualID XVisualIDFromVisual(Visual *visual)
+}
 
 ################################
 # X functions for Aqua

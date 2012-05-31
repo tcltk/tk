@@ -94,6 +94,10 @@ TCL_BIN_DIR		= @TCL_BIN_DIR@
 # been replaced by the configure script):
 TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
 
+# The directory containing the platform specific Tcl sources and headers
+# appropriate for this version of Tk:
+TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/win
+
 TCL_TOOL_DIR		= @TCL_SRC_DIR@/tools
 
 # Converts a POSIX path to a Windows native path.
@@ -120,6 +124,7 @@ BITMAP_DIR_NATIVE	= $(ROOT_DIR_NATIVE)/bitmaps
 XLIB_DIR_NATIVE		= $(ROOT_DIR_NATIVE)/xlib
 RC_DIR_NATIVE      	= $(WIN_DIR_NATIVE)/rc
 TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) '$(TCL_GENERIC_DIR)' | sed 's!\\!/!g')
+TCL_PLATFORM_NATIVE	= $(shell $(CYGPATH) '$(TCL_PLATFORM_DIR)' | sed 's!\\!/!g')
 TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_SRC_DIR)' | sed 's!\\!/!g')
 
 DLLSUFFIX		= @DLLSUFFIX@
@@ -208,7 +213,7 @@ TCL_EXE			= @TCLSH_PROG@
 CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
 -I"${XLIB_DIR_NATIVE}" -I"${BITMAP_DIR_NATIVE}" \
--I"${TCL_GENERIC_NATIVE}" ${AC_FLAGS} -DUSE_TCL_STUBS
+-I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}" ${AC_FLAGS} -DUSE_TCL_STUBS
 
 CC_OBJNAME = @CC_OBJNAME@
 CC_EXENAME = @CC_EXENAME@

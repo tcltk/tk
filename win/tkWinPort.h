@@ -98,27 +98,6 @@
 #endif /* _MSC_VER */
 
 /*
- * The following stubs implement various calls that don't do anything
- * under Windows.
- */
-
-#define TkFreeWindowId(dispPtr,w)
-#define TkInitXId(dispPtr)
-#define XFlush(display)
-#define XGrabServer(display)
-#define XUngrabServer(display)
-
-/*
- * The following functions are implemented as macros under Windows.
- */
-
-#define XFree(data) {if ((data) != NULL) ckfree(data);}
-#define XNoOp(display) {display->request++;}
-#define XSynchronize(display, bool) {display->request++;}
-#define XSync(display, bool) {display->request++;}
-#define XVisualIDFromVisual(visual) (visual->visualid)
-
-/*
  * The following Tk functions are implemented as macros under Windows.
  */
 
