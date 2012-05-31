@@ -7,6 +7,10 @@
 	* generic/tk*Decls.h:    re-generated
 	* win/Makefile.in:       Fix "make genstubs" when cross-compiling on UNIX
 
+	* win/stubs.c:           Implement XFlush and various others for win32 as stubs,
+	* win/tkWinPort.h:       so win32 extensions using those can run under CYGWIN as well.
+	* generic/tkMain.c:      Allow tk86.dll to cooperate with the cygwin console.
+
 2012-05-29  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkInt.decls (TkMacOSXDrawable): Added OSX-specific mechanism
