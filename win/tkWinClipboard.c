@@ -1,4 +1,4 @@
-/* 
+/*
  * tkWinClipboard.c --
  *
  *	This file contains functions for managing the clipboard.
@@ -23,7 +23,7 @@ static void	UpdateClipboard _ANSI_ARGS_((HWND hwnd));
  *	Retrieve the specified selection from another process.  For
  *	now, only fetching XA_STRING from CLIPBOARD is supported.
  *	Eventually other types should be allowed.
- * 
+ *
  * Results:
  *	The return value is a standard Tcl return value.
  *	If an error occurs (such as no selection exists)
@@ -98,10 +98,9 @@ TkSelGetSelection(interp, tkwin, selection, target, proc, clientData)
 	    Tcl_DStringInit(&ds);
 	    Tcl_DStringAppend(&ds, "cp######", -1);
 	    data = GlobalLock(handle);
-	    
 
 	    /*
-	     * Even though the documentation claims that GetLocaleInfo 
+	     * Even though the documentation claims that GetLocaleInfo
 	     * expects an LCID, on Windows 9x it really seems to expect
 	     * a LanguageID.
 	     */
@@ -144,7 +143,7 @@ TkSelGetSelection(interp, tkwin, selection, target, proc, clientData)
     /*
      * Translate CR/LF to LF.
      */
-	
+
     data = destPtr = Tcl_DStringValue(&ds);
     while (*data) {
 	if (data[0] == '\r' && data[1] == '\n') {
@@ -163,7 +162,7 @@ TkSelGetSelection(interp, tkwin, selection, target, proc, clientData)
     Tcl_DStringFree(&ds);
     CloseClipboard();
     return result;
-     
+
 error:
     Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
 	    " selection doesn't exist or form \"",
@@ -190,7 +189,7 @@ error:
  *----------------------------------------------------------------------
  */
 
-void
+int
 XSetSelectionOwner(display, selection, owner, time)
     Display* display;
     Atom selection;
@@ -218,6 +217,7 @@ XSetSelectionOwner(display, selection, owner, time)
 	    UpdateClipboard(hwnd);
 	}
     }
+    return Success;
 }
 
 /*
@@ -403,7 +403,7 @@ UpdateClipboard(hwnd)
  * TkSelEventProc --
  *
  *	This procedure is invoked whenever a selection-related
- *	event occurs. 
+ *	event occurs.
  *
  * Results:
  *	None.

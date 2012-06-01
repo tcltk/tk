@@ -138,7 +138,7 @@
 #   define WPARAM void *
 #   define LPARAM void *
 #   define LRESULT void *
-#endif /* This really should be an #else, as soon as the Xlib stubs are enabled for Cygwin. */
+#else /* !__CYGWIN__ */
     /*
      * The TkPutImage macro strips off the color table information, which isn't
      * needed for X.
@@ -148,25 +148,23 @@
 		XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
 		desty, width, height);
 
-/* #endif */
+    /*
+     * These macros are just wrappers for the equivalent X Region calls.
+     */
 
-/*
- * These macros are just wrappers for the equivalent X Region calls.
- */
+#   define TkClipBox(rgn, rect) XClipBox((Region) (rgn), (rect))
+#   define TkCreateRegion() (TkRegion) XCreateRegion()
+#   define TkDestroyRegion(rgn) XDestroyRegion((Region) (rgn))
+#   define TkIntersectRegion(a, b, r) XIntersectRegion((Region) (a), \
+	(Region) (b), (Region) (r))
+#   define TkRectInRegion(r, x, y, w, h) XRectInRegion((Region) (r), (x), (y), (w), (h))
+#   define TkSetRegion(d, gc, rgn) XSetRegion((d), (gc), (Region) (rgn))
+#   define TkSubtractRegion(a, b, r) XSubtractRegion((Region) (a), \
+	(Region) (b), (Region) (r))
+#   define TkUnionRectWithRegion(rect, src, ret) XUnionRectWithRegion((rect), \
+	(Region) (src), (Region) (ret))
 
-#define TkClipBox(rgn, rect) XClipBox((Region) rgn, rect)
-#define TkCreateRegion() (TkRegion) XCreateRegion()
-#define TkDestroyRegion(rgn) XDestroyRegion((Region) rgn)
-#define TkIntersectRegion(a, b, r) XIntersectRegion((Region) a, \
-	(Region) b, (Region) r)
-#define TkRectInRegion(r, x, y, w, h) XRectInRegion((Region) r, x, y, w, h)
-#define TkSetRegion(d, gc, rgn) XSetRegion(d, gc, (Region) rgn)
-#define TkSubtractRegion(a, b, r) XSubtractRegion((Region) a, \
-	(Region) b, (Region) r)
-#define TkUnionRectWithRegion(rect, src, ret) XUnionRectWithRegion(rect, \
-	(Region) src, (Region) ret)
-
-/* #endif */
+#endif /* !__CYGWIN__ */
 
 /*
  * Supply macros for seek offsets, if they're not already provided by

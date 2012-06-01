@@ -475,7 +475,7 @@ XGrabPointer(display, grab_window, owner_events, event_mask, pointer_mode,
  *----------------------------------------------------------------------
  */
 
-void
+int
 XUngrabPointer(display, time)
     Display* display;
     Time time;
@@ -488,6 +488,7 @@ XUngrabPointer(display, time)
     tsdPtr->restrictWinPtr = NULL;
     TkpSetCapture(NULL);
     UpdateCursor(tsdPtr->lastWinPtr);
+    return Success;
 }
 
 /*
@@ -590,7 +591,7 @@ UpdateCursor(winPtr)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDefineCursor(display, w, cursor)
     Display* display;
     Window w;
@@ -604,6 +605,7 @@ XDefineCursor(display, w, cursor)
 	UpdateCursor(winPtr);
     }
     display->request++;
+    return Success;
 }
 
 /*

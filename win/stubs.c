@@ -6,7 +6,7 @@
 
 int _XInitImageFuncPtrs(XImage *image)
 {
-    return 0;
+    return Success;
 }
 
 /*
@@ -55,8 +55,8 @@ XCreateGlyphCursor(display, source_font, mask_font, source_char, mask_char,
     Font mask_font;
     unsigned int source_char;
     unsigned int mask_char;
-    XColor* foreground_color;
-    XColor* background_color;
+    XColor _Xconst* foreground_color;
+    XColor _Xconst* background_color;
 {
     return 1;
 }
@@ -137,7 +137,7 @@ XGetWindowAttributes(display, w, window_attributes_return)
     Window w;
     XWindowAttributes* window_attributes_return;
 {
-    return 0;
+    return Success;
 }
 
 Status
@@ -156,7 +156,7 @@ XIconifyWindow(display, w, screen_number)
     Window w;
     int screen_number;
 {
-    return 0;
+    return Success;
 }
 
 XHostAddress *
@@ -177,7 +177,7 @@ XLookupColor(display, colormap, color_name, exact_def_return,
     XColor* exact_def_return;
     XColor* screen_def_return;
 {
-    return 0;
+    return Success;
 }
 
 void
@@ -213,7 +213,7 @@ XQueryTree(display, w, root_return, parent_return, children_return,
     Window** children_return;
     unsigned int* nchildren_return;
 {
-    return 0;
+    return Success;
 }
 
 void
@@ -246,16 +246,17 @@ XSendEvent(display, w, propagate, event_mask, event_send)
     long event_mask;
     XEvent* event_send;
 {
-    return 0;
+    return Success;
 }
 
-void
+int
 XSetCommand(display, w, argv, argc)
     Display* display;
     Window w;
     char** argv;
     int argc;
 {
+    return Success;
 }
 
 XErrorHandler
@@ -351,7 +352,7 @@ XWithdrawWindow(display, w, screen_number)
     Window w;
     int screen_number;
 {
-    return 0;
+    return Success;
 }
 
 int
@@ -364,7 +365,7 @@ XmbLookupString(ic, event, buffer_return, bytes_buffer, keysym_return,
     KeySym* keysym_return;
     Status* status_return;
 {
-    return 0;
+    return Success;
 }
 
 int

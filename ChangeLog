@@ -1,4 +1,11 @@
-2012-05-09  Jan Nijtmans  <nijtmans@users.sf.net>
+2012-06-02  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.decls:   Change XSetDashes signature and many others
+	* generic/tkIntXlibDeclsDecls.h: to match Xorg, needed for Cygwin.
+	* unix/Makefile.in:      Add .PHONY targets, and various quoting issues
+	* win/Makefile.in:       (Backported from Tcl 8.5)
+
+2012-05-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.decls:   Change XFillRectangle(s)/XDrawLines(s) signature
 	* generic/tkIntXlibDeclsDecls.h: to match Xorg, needed for Cygwin.
