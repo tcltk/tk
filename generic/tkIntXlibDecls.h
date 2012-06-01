@@ -1270,15 +1270,4 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
-#if !(defined(__WIN32__) || defined(__CYGWIN__))
-/*
- * The TkPutImage macro strips off the color table information, which isn't
- * needed for X.
- */
-
-#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
-	XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
-	desty, width, height);
-#endif
-
 #endif /* _TKINTXLIBDECLS */
