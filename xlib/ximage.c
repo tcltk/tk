@@ -1,4 +1,4 @@
-/* 
+/*
  * ximage.c --
  *
  *	X bitmap and image routines.

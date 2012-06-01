@@ -1,4 +1,4 @@
-/* 
+/*
  * tkWinColor.c --
  *
  *	Functions to map color names to system color values.
@@ -67,7 +67,7 @@ static SystemColorEntry sysColors[] = {
     {NULL,			0}
 };
 
-typedef struct ThreadSpecificData { 
+typedef struct ThreadSpecificData {
     int ncolors;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -104,7 +104,7 @@ FindSystemColor(name, colorPtr, indexPtr)
     int *indexPtr;		/* Out parameter to store color index. */
 {
     int l, u, r, i;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -209,7 +209,7 @@ TkpGetColor(tkwin, name)
 
 	XAllocColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
 		&winColPtr->info.color);
- 	return (TkColor *) winColPtr; 
+ 	return (TkColor *) winColPtr;
     }
     return (TkColor *) NULL;
 }
@@ -308,7 +308,7 @@ TkWinIndexOfColor(colorPtr)
     register WinColor *winColPtr = (WinColor *) colorPtr;
     if (winColPtr->info.magic == COLOR_MAGIC) {
 	return winColPtr->index;
-    }    
+    }
     return -1;
 }
 
@@ -354,7 +354,7 @@ XAllocColor(display, colormap, color)
 	/*
 	 * Find the nearest existing palette entry.
 	 */
-	
+
 	newPixel = RGB(entry.peRed, entry.peGreen, entry.peBlue);
 	index = GetNearestPaletteIndex(cmap->palette, newPixel);
 	GetPaletteEntries(cmap->palette, index, 1, &closeEntry);
@@ -370,7 +370,7 @@ XAllocColor(display, colormap, color)
 	 * those values and just put the new color in as if the colors
 	 * had not matched.
 	 */
-	
+
 	if ((index >= cmap->size) || (newPixel != closePixel)) {
 	    if (cmap->size == sizePalette) {
 		color->red   = closeEntry.peRed * 257;
@@ -397,11 +397,11 @@ XAllocColor(display, colormap, color)
 	}
 	Tcl_SetHashValue(entryPtr, (ClientData)refCount);
     } else {
-	
+
 	/*
 	 * Determine what color will actually be used on non-colormap systems.
 	 */
-	
+
 	color->pixel = GetNearestColor(dc,
 		RGB(entry.peRed, entry.peGreen, entry.peBlue));
 	color->red    = GetRValue(color->pixel) * 257;
@@ -430,7 +430,7 @@ XAllocColor(display, colormap, color)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFreeColors(display, colormap, pixels, npixels, planes)
     Display* display;
     Colormap colormap;
@@ -449,7 +449,7 @@ XFreeColors(display, colormap, pixels, npixels, planes)
     /*
      * We don't have to do anything for non-palette devices.
      */
-    
+
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 
 	/*
@@ -485,6 +485,7 @@ XFreeColors(display, colormap, pixels, npixels, planes)
 	}
     }
     ReleaseDC(NULL, dc);
+    return Success;
 }
 
 /*
@@ -567,7 +568,7 @@ XCreateColormap(display, w, visual, alloc)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFreeColormap(display, colormap)
     Display* display;
     Colormap colormap;
@@ -578,6 +579,7 @@ XFreeColormap(display, colormap)
     }
     Tcl_DeleteHashTable(&cmap->refCounts);
     ckfree((char *) cmap);
+    return Success;
 }
 
 /*

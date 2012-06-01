@@ -276,7 +276,7 @@ XCopyPlane(
  *----------------------------------------------------------------------
  */
 
-void 
+int
 TkPutImage(
     unsigned long *colors,	/* Unused on Macintosh. */
     int ncolors,		/* Unused on Macintosh. */
@@ -381,6 +381,7 @@ TkPutImage(
 	ckfree(newData);
     }
     SetGWorld(saveWorld, saveDevice);
+    return Success;
 }
 
 /*
@@ -433,7 +434,7 @@ XFillRectangles(
     }
 
     SetGWorld(saveWorld, saveDevice);
-    return 1;
+    return Success;
 }
 
 /*
