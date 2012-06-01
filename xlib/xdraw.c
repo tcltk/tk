@@ -1,4 +1,4 @@
-/* 
+/*
  * xdraw.c --
  *
  *	This file contains generic procedures related to X drawing
@@ -17,7 +17,7 @@
  *
  * XDrawLine --
  *
- *	Draw a single line between two points in a given drawable. 
+ *	Draw a single line between two points in a given drawable.
  *
  * Results:
  *	None.

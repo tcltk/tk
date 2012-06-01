@@ -1,8 +1,8 @@
-/* 
+/*
  * xgc.c --
  *
  *	This file contains generic routines for manipulating X graphics
- *	contexts. 
+ *	contexts.
  *
  * Copyright (c) 1995-1996 Sun Microsystems, Inc.
  * Copyright (c) 2002-2007 Daniel A. Steffen <das@users.sourceforge.net>
@@ -49,7 +49,7 @@
 
 static TkpClipMask *AllocClipMask(GC gc) {
     TkpClipMask *clip_mask = (TkpClipMask*) gc->clip_mask;
-    
+
     if (clip_mask == None) {
 	clip_mask = (TkpClipMask*) ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
@@ -97,7 +97,7 @@ static void FreeClipMask(GC gc) {
  *	Allocate a new GC, and initialize the specified fields.
  *
  * Results:
- *	Returns a newly allocated GC. 
+ *	Returns a newly allocated GC.
  *
  * Side effects:
  *	None.
@@ -133,7 +133,7 @@ XCreateGC(display, d, mask, values)
 	    BlackPixelOfScreen(DefaultScreenOfDisplay(display));
     gp->background = 	(mask & GCBackground) 	?values->background 	:
 	    WhitePixelOfScreen(DefaultScreenOfDisplay(display));
-    gp->line_width = 	(mask & GCLineWidth)	?values->line_width	:1;	
+    gp->line_width = 	(mask & GCLineWidth)	?values->line_width	:1;
     gp->line_style = 	(mask & GCLineStyle)	?values->line_style	:LineSolid;
     gp->cap_style =  	(mask & GCCapStyle)	?values->cap_style	:0;
     gp->join_style = 	(mask & GCJoinStyle)	?values->join_style	:0;
@@ -156,7 +156,7 @@ XCreateGC(display, d, mask, values)
     gp->clip_mask = None;
     if (mask & GCClipMask) {
 	TkpClipMask *clip_mask = AllocClipMask(gp);
-	
+
 	clip_mask->type = TKP_CLIP_PIXMAP;
 	clip_mask->value.pixmap = values->clip_mask;
     }
@@ -192,7 +192,7 @@ XChangeGC(d, gc, mask, values)
     if (mask & GCPlaneMask) { gc->plane_mask = values->plane_mask; }
     if (mask & GCForeground) { gc->foreground = values->foreground; }
     if (mask & GCBackground) { gc->background = values->background; }
-    if (mask & GCLineWidth) { gc->line_width = values->line_width; }	
+    if (mask & GCLineWidth) { gc->line_width = values->line_width; }
     if (mask & GCLineStyle) { gc->line_style = values->line_style; }
     if (mask & GCCapStyle) { gc->cap_style = values->cap_style; }
     if (mask & GCJoinStyle) { gc->join_style = values->join_style; }
@@ -256,7 +256,7 @@ void XFreeGC(d, gc)
  *----------------------------------------------------------------------
  */
 
-void 
+void
 XSetForeground(display, gc, foreground)
     Display *display;
     GC gc;
@@ -265,7 +265,7 @@ XSetForeground(display, gc, foreground)
     gc->foreground = foreground;
 }
 
-void 
+void
 XSetBackground(display, gc, background)
     Display *display;
     GC gc;
@@ -274,7 +274,7 @@ XSetBackground(display, gc, background)
     gc->background = background;
 }
 
-void
+int
 XSetDashes(display, gc, dash_offset, dash_list, n)
     Display* display;
     GC gc;
@@ -296,6 +296,7 @@ XSetDashes(display, gc, dash_offset, dash_list, n)
 	*p++ = *dash_list++;
     }
     *p = 0;
+    return Success;
 }
 
 void
