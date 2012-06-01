@@ -1065,7 +1065,7 @@ interface tkIntXlib
 # X functions for Windows
 
 declare 0 win {
-    void XSetDashes(Display *display, GC gc, int dash_offset,
+    int XSetDashes(Display *display, GC gc, int dash_offset,
 	    _Xconst char *dash_list, int n)
 }
 declare 1 win {
@@ -1095,7 +1095,8 @@ declare 7 win {
 }
 declare 8 win {
     Cursor XCreateGlyphCursor(Display *d, Font f1, Font f2,
-	    unsigned int ui1, unsigned int ui2, XColor *x1, XColor *x2)
+	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
+	    XColor _Xconst *x2)
 }
 declare 9 win {
     GContext XGContextFromGC(GC g)
@@ -1129,7 +1130,7 @@ declare 18 win {
     Status XAllocColor(Display *d, Colormap c, XColor *xp)
 }
 declare 19 win {
-    void XBell(Display *d, int i)
+    int XBell(Display *d, int i)
 }
 declare 20 win {
     void XChangeProperty(Display *d, Window w, Atom a1, Atom a2, int i1,
@@ -1160,7 +1161,7 @@ declare 26 win {
 	    _Xconst char *data, unsigned int width, unsigned int height)
 }
 declare 27 win {
-    void XDefineCursor(Display *d, Window w, Cursor c)
+    int XDefineCursor(Display *d, Window w, Cursor c)
 }
 declare 28 win {
     void XDeleteProperty(Display *d, Window w, Atom a)
@@ -1194,17 +1195,17 @@ declare 36 win {
     void XForceScreenSaver(Display *d, int i)
 }
 declare 37 win {
-    void XFreeColormap(Display *d, Colormap c)
+    int XFreeColormap(Display *d, Colormap c)
 }
 declare 38 win {
-    void XFreeColors(Display *d, Colormap c,
+    int XFreeColors(Display *d, Colormap c,
 	    unsigned long *ulp, int i, unsigned long ul)
 }
 declare 39 win {
     void XFreeCursor(Display *d, Cursor c)
 }
 declare 40 win {
-    void XFreeModifiermap(XModifierKeymap *x)
+    int XFreeModifiermap(XModifierKeymap *x)
 }
 declare 41 win {
     Status XGetGeometry(Display *d, Drawable dr, Window *w, int *i1,
@@ -1280,7 +1281,7 @@ declare 61 win {
     Status XSendEvent(Display *d, Window w, Bool b, long l, XEvent *x)
 }
 declare 62 win {
-    void XSetCommand(Display *d, Window w, char **c, int i)
+    int XSetCommand(Display *d, Window w, char **c, int i)
 }
 declare 63 win {
     void XSetIconName(Display *d, Window w, _Xconst char *c)
@@ -1289,7 +1290,7 @@ declare 64 win {
     void XSetInputFocus(Display *d, Window w, int i, Time t)
 }
 declare 65 win {
-    void XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
+    int XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
 }
 declare 66 win {
     void XSetWindowBackground(Display *d, Window w, unsigned long ul)
@@ -1317,7 +1318,7 @@ declare 73 win {
     void XUngrabKeyboard(Display *d, Time t)
 }
 declare 74 win {
-    void XUngrabPointer(Display *d, Time t)
+    int XUngrabPointer(Display *d, Time t)
 }
 declare 75 win {
     void XUnmapWindow(Display *d, Window w)
@@ -1336,7 +1337,7 @@ declare 79 win {
 	    KeySym *k, Status *s)
 }
 declare 80 win {
-    void TkPutImage(unsigned long *colors, int ncolors, Display *display,
+    int TkPutImage(unsigned long *colors, int ncolors, Display *display,
 	    Drawable d, GC gc, XImage *image, int src_x, int src_y,
 	    int dest_x, int dest_y, unsigned int width, unsigned int height)
 }
@@ -1425,20 +1426,20 @@ declare 104 win {
     int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
 	    int x2, int y2)
 }
+declare 105 win {
+    int XWarpPointer(Display *d, Window s, Window dw, int sx, int sy,
+	    unsigned int sw, unsigned int sh, int dx, int dy)
+}
 declare 106 win {
     int XFillRectangle(Display *display, Drawable d, GC gc,
 	    int x, int y, unsigned int width, unsigned int height)
-}
-declare 105 win {
-    void XWarpPointer(Display *d, Window s, Window dw, int sx, int sy,
-	    unsigned int sw, unsigned int sh, int dx, int dy)
 }
 
 ################################
 # X functions for Mac and Aqua
 
 declare 0 {mac aqua} {
-    void XSetDashes(Display *display, GC gc, int dash_offset,
+    int XSetDashes(Display *display, GC gc, int dash_offset,
 	    _Xconst char *dash_list, int n)
 }
 declare 1 {mac aqua} {
@@ -1481,7 +1482,7 @@ declare 12 {mac aqua} {
     Status XAllocColor(Display *d, Colormap c, XColor *xp)
 }
 declare 13 {mac aqua} {
-    void XBell(Display *d, int i)
+    int XBell(Display *d, int i)
 }
 declare 14 {mac aqua} {
     void XChangeProperty(Display *d, Window w, Atom a1, Atom a2, int i1,
@@ -1509,7 +1510,7 @@ declare 19 {mac aqua} {
 	    _Xconst char *data, unsigned int width, unsigned int height)
 }
 declare 20 {mac aqua} {
-    void XDefineCursor(Display *d, Window w, Cursor c)
+    int XDefineCursor(Display *d, Window w, Cursor c)
 }
 declare 21 {mac aqua} {
     void XDestroyWindow(Display *d, Window w)
@@ -1537,14 +1538,14 @@ declare 27 {mac aqua} {
     int XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
 }
 declare 28 {mac aqua} {
-    void XFreeColormap(Display *d, Colormap c)
+    int XFreeColormap(Display *d, Colormap c)
 }
 declare 29 {mac aqua} {
-    void XFreeColors(Display *d, Colormap c,
+    int XFreeColors(Display *d, Colormap c,
 	    unsigned long *ulp, int i, unsigned long ul)
 }
 declare 30 {mac aqua} {
-    void XFreeModifiermap(XModifierKeymap *x)
+    int XFreeModifiermap(XModifierKeymap *x)
 }
 declare 31 {mac aqua} {
     Status XGetGeometry(Display *d, Drawable dr, Window *w, int *i1,
@@ -1603,7 +1604,7 @@ declare 46 {mac aqua} {
     void XSetInputFocus(Display *d, Window w, int i, Time t)
 }
 declare 47 {mac aqua} {
-    void XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
+    int XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
 }
 declare 48 {mac aqua} {
     void XSetWindowBackground(Display *d, Window w, unsigned long ul)
@@ -1627,13 +1628,13 @@ declare 54 {mac aqua} {
     void XUngrabKeyboard(Display *d, Time t)
 }
 declare 55 {mac aqua} {
-    void XUngrabPointer(Display *d, Time t)
+    int XUngrabPointer(Display *d, Time t)
 }
 declare 56 {mac aqua} {
     void XUnmapWindow(Display *d, Window w)
 }
 declare 57 {mac aqua} {
-    void TkPutImage(unsigned long *colors, int ncolors, Display *display,
+    int TkPutImage(unsigned long *colors, int ncolors, Display *display,
 	    Drawable d, GC gc, XImage *image, int src_x, int src_y,
 	    int dest_x, int dest_y, unsigned int width, unsigned int height)
 }
@@ -1739,7 +1740,7 @@ declare 86 {mac aqua} {
 	    int npoints, int mode)
 }
 declare 87 {mac aqua} {
-    void XWarpPointer(Display *display, Window src_w, Window dest_w,
+    int XWarpPointer(Display *display, Window src_w, Window dest_w,
 	    int src_x, int src_y, unsigned int src_width,
 	    unsigned int src_height, int dest_x, int dest_y)
 }
