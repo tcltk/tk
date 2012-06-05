@@ -1,12 +1,12 @@
-/* 
+/*
  * tkStubInit.c --
  *
  *	This file contains the initializers for the Tk stub vectors.
  *
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkInt.h"
@@ -46,13 +46,19 @@ doNothing(void)
     return 0;
 }
 
+#define TkCreateXEventSource TkPlatCreateXEventSource
+static void
+TkCreateXEventSource(void)
+{
+	TkWinXInit(Tk_GetHINSTANCE());
+}
+
 /*
  * Remove macros that will interfere with the definitions below.
  */
 #   undef TkpCmapStressed
 #   undef TkpSync
 
-#   define TkCreateXEventSource (void (*) (void)) doNothing
 #   define TkpCmapStressed (int (*) (Tk_Window, Colormap)) doNothing
 #   define TkpSync (void (*) (Display *)) doNothing
 #   define TkUnixContainerId 0
@@ -63,24 +69,6 @@ doNothing(void)
 
 #else /* !__WIN32__ */
 
-#	undef TkClipBox
-#	undef TkCreateRegion
-#	undef TkDestroyRegion
-#	undef TkIntersectRegion
-#	undef TkRectInRegion
-#	undef TkSetRegion
-#	undef TkUnionRectWithRegion
-#	undef TkSubtractRegion
-
-#	define TkClipBox (void (*) _ANSI_ARGS_((TkRegion, XRectangle *))) XClipBox
-#	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
-#	define TkDestroyRegion (void (*) _ANSI_ARGS_((TkRegion))) XDestroyRegion
-#	define TkIntersectRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XIntersectRegion
-#	define TkRectInRegion (int (*) _ANSI_ARGS_((TkRegion, int, int, unsigned int, unsigned int))) XRectInRegion
-#	define TkSetRegion (void (*) _ANSI_ARGS_((Display *, GC, TkRegion))) XSetRegion
-#	define TkUnionRectWithRegion (void (*) _ANSI_ARGS_((XRectangle *, TkRegion, TkRegion))) XUnionRectWithRegion
-#	define TkSubtractRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XSubtractRegion
-
 /*
  * Make sure that extensions which call XParseColor through the stub
  * table, call TkParseColor instead. [Bug 3486474]
@@ -89,24 +77,15 @@ doNothing(void)
 
 #   ifdef __CYGWIN__
 
-    /*
-     * Remove macros that will interfere with the definitions below.
-     */
-#	undef TkPutImage
-#	undef TkSetPixmapColormap
-#	undef TkpPrintWindowId
-#	undef TkWinChildProc
+	TkIntStubs tkIntStubs;
 
+/*
+ * Trick, so we don't have to include <windows.h> here, which in any
+ * case lacks this function anyway.
+ */
 
-	/*
-	 * Trick, so we don't have to include <windows.h> here, which in any
-	 * case lacks this function anyway.
-	 */
-
-#	define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
+#define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
 int __stdcall GetModuleHandleExW(unsigned int, const char *, void *);
-
-TkIntStubs tkIntStubs;
 
 void *Tk_GetHINSTANCE()
 {
@@ -118,19 +97,76 @@ void *Tk_GetHINSTANCE()
 }
 
 void
-TkSetPixmapColormap(pixmap, colormap)
-    Pixmap pixmap;
-    Colormap colormap;
+TkSetPixmapColormap(
+    Pixmap pixmap,
+    Colormap colormap)
 {
 }
 
 void
-TkpPrintWindowId(buf, window)
-    char *buf;			/* Pointer to string large enough to hold
+TkpPrintWindowId(
+    char *buf,			/* Pointer to string large enough to hold
 				 * the hex representation of a pointer. */
-    Window window;		/* Window to be printed into buffer. */
+    Window window)		/* Window to be printed into buffer. */
 {
 	sprintf(buf, "%#08lx", (unsigned long) (window));
+}
+
+int
+TkPutImage(
+    unsigned long *colors,	/* Array of pixel values used by this image.
+				 * May be NULL. */
+    int ncolors,		/* Number of colors used, or 0. */
+    Display *display,
+    Drawable d,			/* Destination drawable. */
+    GC gc,
+    XImage *image,		/* Source image. */
+    int src_x, int src_y,	/* Offset of subimage. */
+    int dest_x, int dest_y,	/* Position of subimage origin in drawable. */
+    unsigned int width, unsigned int height)
+				/* Dimensions of subimage. */
+{
+    return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
+}
+
+TkRegion TkCreateRegion()
+{
+    return (TkRegion) XCreateRegion();
+}
+
+void TkDestroyRegion(TkRegion r)
+{
+    XDestroyRegion((Region)r);
+}
+
+void TkSetRegion(Display *d, GC g, TkRegion r)
+{
+    XSetRegion(d, g, (Region)r);
+}
+
+void TkUnionRectWithRegion(XRectangle *a, TkRegion b, TkRegion c)
+{
+    XUnionRectWithRegion(a, (Region) b, (Region) c);
+}
+
+void TkClipBox(TkRegion a, XRectangle *b)
+{
+    XClipBox((Region) a, b);
+}
+
+void TkIntersectRegion(TkRegion a, TkRegion b, TkRegion c)
+{
+    XIntersectRegion((Region) a, (Region) b, (Region) c);
+}
+
+int TkRectInRegion (TkRegion r, int a, int b, unsigned int c, unsigned int d)
+{
+    return XRectInRegion((Region) r, a, b, c, d);
+}
+
+void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
+{
+    XSubtractRegion((Region) a, (Region) b, (Region) c);
 }
 
 	/* TODO: To be implemented for Cygwin */
@@ -172,7 +208,26 @@ TkpPrintWindowId(buf, window)
 #	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0
 
-#	endif /* __CYGWIN__ */
+#   elif !defined(MAC_TCL) && !defined(MAC_OSX_TK) /* UNIX */
+
+#	undef TkClipBox
+#	undef TkCreateRegion
+#	undef TkDestroyRegion
+#	undef TkIntersectRegion
+#	undef TkRectInRegion
+#	undef TkSetRegion
+#	undef TkUnionRectWithRegion
+#	undef TkSubtractRegion
+
+#	define TkClipBox (void (*) _ANSI_ARGS_((TkRegion, XRectangle *))) XClipBox
+#	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
+#	define TkDestroyRegion (void (*) _ANSI_ARGS_((TkRegion))) XDestroyRegion
+#	define TkIntersectRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XIntersectRegion
+#	define TkRectInRegion (int (*) _ANSI_ARGS_((TkRegion, int, int, unsigned int, unsigned int))) XRectInRegion
+#	define TkSetRegion (void (*) _ANSI_ARGS_((Display *, GC, TkRegion))) XSetRegion
+#	define TkUnionRectWithRegion (void (*) _ANSI_ARGS_((XRectangle *, TkRegion, TkRegion))) XUnionRectWithRegion
+#	define TkSubtractRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XSubtractRegion
+#   endif
 #endif /* !__WIN32__ */
 
 /*
@@ -569,7 +624,7 @@ TkIntPlatStubs tkIntPlatStubs = {
 TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     NULL,
-#if defined(__WIN32__) /* WIN */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */

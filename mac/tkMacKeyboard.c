@@ -293,7 +293,7 @@ XGetModifierMapping(
  *----------------------------------------------------------------------
  */
 
-void 
+int
 XFreeModifiermap(
     XModifierKeymap *modmap)
 {
@@ -301,6 +301,7 @@ XFreeModifiermap(
 	ckfree((char *) modmap->modifiermap);
     }
     ckfree((char *) modmap);
+    return Success;
 }
 
 /*

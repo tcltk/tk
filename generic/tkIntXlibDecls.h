@@ -279,7 +279,7 @@ EXTERN int		XmbLookupString _ANSI_ARGS_((XIC xi,
 				XKeyPressedEvent *xk, char *c, int i,
 				KeySym *k, Status *s));
 /* 80 */
-EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long *colors,
+EXTERN int		TkPutImage _ANSI_ARGS_((unsigned long *colors,
 				int ncolors, Display *display, Drawable d,
 				GC gc, XImage *image, int src_x, int src_y,
 				int dest_x, int dest_y, unsigned int width,
@@ -402,7 +402,7 @@ EXTERN XErrorHandler	XSetErrorHandler _ANSI_ARGS_((XErrorHandler x));
 EXTERN Status		XAllocColor _ANSI_ARGS_((Display *d, Colormap c,
 				XColor *xp));
 /* 13 */
-EXTERN void		XBell _ANSI_ARGS_((Display *d, int i));
+EXTERN int		XBell _ANSI_ARGS_((Display *d, int i));
 /* 14 */
 EXTERN void		XChangeProperty _ANSI_ARGS_((Display *d, Window w,
 				Atom a1, Atom a2, int i1, int i2,
@@ -455,12 +455,12 @@ EXTERN void		XFillPolygon _ANSI_ARGS_((Display *d, Drawable dr,
 EXTERN int		XFillRectangles _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XRectangle *x, int i));
 /* 28 */
-EXTERN void		XFreeColormap _ANSI_ARGS_((Display *d, Colormap c));
+EXTERN int		XFreeColormap _ANSI_ARGS_((Display *d, Colormap c));
 /* 29 */
-EXTERN void		XFreeColors _ANSI_ARGS_((Display *d, Colormap c,
+EXTERN int		XFreeColors _ANSI_ARGS_((Display *d, Colormap c,
 				unsigned long *ulp, int i, unsigned long ul));
 /* 30 */
-EXTERN void		XFreeModifiermap _ANSI_ARGS_((XModifierKeymap *x));
+EXTERN int		XFreeModifiermap _ANSI_ARGS_((XModifierKeymap *x));
 /* 31 */
 EXTERN Status		XGetGeometry _ANSI_ARGS_((Display *d, Drawable dr,
 				Window *w, int *i1, int *i2,
@@ -514,7 +514,7 @@ EXTERN void		XSetIconName _ANSI_ARGS_((Display *d, Window w,
 EXTERN void		XSetInputFocus _ANSI_ARGS_((Display *d, Window w,
 				int i, Time t));
 /* 47 */
-EXTERN void		XSetSelectionOwner _ANSI_ARGS_((Display *d, Atom a,
+EXTERN int		XSetSelectionOwner _ANSI_ARGS_((Display *d, Atom a,
 				Window w, Time t));
 /* 48 */
 EXTERN void		XSetWindowBackground _ANSI_ARGS_((Display *d,
@@ -541,7 +541,7 @@ EXTERN int		XUngrabPointer _ANSI_ARGS_((Display *d, Time t));
 /* 56 */
 EXTERN void		XUnmapWindow _ANSI_ARGS_((Display *d, Window w));
 /* 57 */
-EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long *colors,
+EXTERN int		TkPutImage _ANSI_ARGS_((unsigned long *colors,
 				int ncolors, Display *display, Drawable d,
 				GC gc, XImage *image, int src_x, int src_y,
 				int dest_x, int dest_y, unsigned int width,
@@ -637,7 +637,7 @@ EXTERN void		XDrawPoints _ANSI_ARGS_((Display *display,
 				Drawable d, GC gc, XPoint *points,
 				int npoints, int mode));
 /* 87 */
-EXTERN void		XWarpPointer _ANSI_ARGS_((Display *display,
+EXTERN int		XWarpPointer _ANSI_ARGS_((Display *display,
 				Window src_w, Window dest_w, int src_x,
 				int src_y, unsigned int src_width,
 				unsigned int src_height, int dest_x,
@@ -692,7 +692,7 @@ EXTERN XErrorHandler	XSetErrorHandler _ANSI_ARGS_((XErrorHandler x));
 EXTERN Status		XAllocColor _ANSI_ARGS_((Display *d, Colormap c,
 				XColor *xp));
 /* 13 */
-EXTERN void		XBell _ANSI_ARGS_((Display *d, int i));
+EXTERN int		XBell _ANSI_ARGS_((Display *d, int i));
 /* 14 */
 EXTERN void		XChangeProperty _ANSI_ARGS_((Display *d, Window w,
 				Atom a1, Atom a2, int i1, int i2,
@@ -745,12 +745,12 @@ EXTERN void		XFillPolygon _ANSI_ARGS_((Display *d, Drawable dr,
 EXTERN int		XFillRectangles _ANSI_ARGS_((Display *d, Drawable dr,
 				GC g, XRectangle *x, int i));
 /* 28 */
-EXTERN void		XFreeColormap _ANSI_ARGS_((Display *d, Colormap c));
+EXTERN int		XFreeColormap _ANSI_ARGS_((Display *d, Colormap c));
 /* 29 */
-EXTERN void		XFreeColors _ANSI_ARGS_((Display *d, Colormap c,
+EXTERN int		XFreeColors _ANSI_ARGS_((Display *d, Colormap c,
 				unsigned long *ulp, int i, unsigned long ul));
 /* 30 */
-EXTERN void		XFreeModifiermap _ANSI_ARGS_((XModifierKeymap *x));
+EXTERN int		XFreeModifiermap _ANSI_ARGS_((XModifierKeymap *x));
 /* 31 */
 EXTERN Status		XGetGeometry _ANSI_ARGS_((Display *d, Drawable dr,
 				Window *w, int *i1, int *i2,
@@ -804,7 +804,7 @@ EXTERN void		XSetIconName _ANSI_ARGS_((Display *d, Window w,
 EXTERN void		XSetInputFocus _ANSI_ARGS_((Display *d, Window w,
 				int i, Time t));
 /* 47 */
-EXTERN void		XSetSelectionOwner _ANSI_ARGS_((Display *d, Atom a,
+EXTERN int		XSetSelectionOwner _ANSI_ARGS_((Display *d, Atom a,
 				Window w, Time t));
 /* 48 */
 EXTERN void		XSetWindowBackground _ANSI_ARGS_((Display *d,
@@ -831,7 +831,7 @@ EXTERN int		XUngrabPointer _ANSI_ARGS_((Display *d, Time t));
 /* 56 */
 EXTERN void		XUnmapWindow _ANSI_ARGS_((Display *d, Window w));
 /* 57 */
-EXTERN void		TkPutImage _ANSI_ARGS_((unsigned long *colors,
+EXTERN int		TkPutImage _ANSI_ARGS_((unsigned long *colors,
 				int ncolors, Display *display, Drawable d,
 				GC gc, XImage *image, int src_x, int src_y,
 				int dest_x, int dest_y, unsigned int width,
@@ -927,7 +927,7 @@ EXTERN void		XDrawPoints _ANSI_ARGS_((Display *display,
 				Drawable d, GC gc, XPoint *points,
 				int npoints, int mode));
 /* 87 */
-EXTERN void		XWarpPointer _ANSI_ARGS_((Display *display,
+EXTERN int		XWarpPointer _ANSI_ARGS_((Display *display,
 				Window src_w, Window dest_w, int src_x,
 				int src_y, unsigned int src_width,
 				unsigned int src_height, int dest_x,
@@ -1032,7 +1032,7 @@ typedef struct TkIntXlibStubs {
     void (*xDestroyIC) _ANSI_ARGS_((XIC x)); /* 77 */
     Bool (*xFilterEvent) _ANSI_ARGS_((XEvent *x, Window w)); /* 78 */
     int (*xmbLookupString) _ANSI_ARGS_((XIC xi, XKeyPressedEvent *xk, char *c, int i, KeySym *k, Status *s)); /* 79 */
-    void (*tkPutImage) _ANSI_ARGS_((unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 80 */
+    int (*tkPutImage) _ANSI_ARGS_((unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 80 */
     VOID *reserved81;
     Status (*xParseColor) _ANSI_ARGS_((Display *display, Colormap map, _Xconst char *spec, XColor *colorPtr)); /* 82 */
     GC (*xCreateGC) _ANSI_ARGS_((Display *display, Drawable d, unsigned long valuemask, XGCValues *values)); /* 83 */
@@ -1074,7 +1074,7 @@ typedef struct TkIntXlibStubs {
     Window (*xRootWindow) _ANSI_ARGS_((Display *d, int i)); /* 10 */
     XErrorHandler (*xSetErrorHandler) _ANSI_ARGS_((XErrorHandler x)); /* 11 */
     Status (*xAllocColor) _ANSI_ARGS_((Display *d, Colormap c, XColor *xp)); /* 12 */
-    void (*xBell) _ANSI_ARGS_((Display *d, int i)); /* 13 */
+    int (*xBell) _ANSI_ARGS_((Display *d, int i)); /* 13 */
     void (*xChangeProperty) _ANSI_ARGS_((Display *d, Window w, Atom a1, Atom a2, int i1, int i2, _Xconst unsigned char *c, int i3)); /* 14 */
     void (*xChangeWindowAttributes) _ANSI_ARGS_((Display *d, Window w, unsigned long ul, XSetWindowAttributes *x)); /* 15 */
     void (*xConfigureWindow) _ANSI_ARGS_((Display *d, Window w, unsigned int i, XWindowChanges *x)); /* 16 */
@@ -1089,9 +1089,9 @@ typedef struct TkIntXlibStubs {
     void (*xFillArc) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 25 */
     void (*xFillPolygon) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2, int i3)); /* 26 */
     int (*xFillRectangles) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XRectangle *x, int i)); /* 27 */
-    void (*xFreeColormap) _ANSI_ARGS_((Display *d, Colormap c)); /* 28 */
-    void (*xFreeColors) _ANSI_ARGS_((Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul)); /* 29 */
-    void (*xFreeModifiermap) _ANSI_ARGS_((XModifierKeymap *x)); /* 30 */
+    int (*xFreeColormap) _ANSI_ARGS_((Display *d, Colormap c)); /* 28 */
+    int (*xFreeColors) _ANSI_ARGS_((Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul)); /* 29 */
+    int (*xFreeModifiermap) _ANSI_ARGS_((XModifierKeymap *x)); /* 30 */
     Status (*xGetGeometry) _ANSI_ARGS_((Display *d, Drawable dr, Window *w, int *i1, int *i2, unsigned int *ui1, unsigned int *ui2, unsigned int *ui3, unsigned int *ui4)); /* 31 */
     int (*xGetWindowProperty) _ANSI_ARGS_((Display *d, Window w, Atom a1, long l1, long l2, Bool b, Atom a2, Atom *ap, int *ip, unsigned long *ulp1, unsigned long *ulp2, unsigned char **cpp)); /* 32 */
     int (*xGrabKeyboard) _ANSI_ARGS_((Display *d, Window w, Bool b, int i1, int i2, Time t)); /* 33 */
@@ -1108,7 +1108,7 @@ typedef struct TkIntXlibStubs {
     Status (*xSendEvent) _ANSI_ARGS_((Display *d, Window w, Bool b, long l, XEvent *x)); /* 44 */
     void (*xSetIconName) _ANSI_ARGS_((Display *d, Window w, _Xconst char *c)); /* 45 */
     void (*xSetInputFocus) _ANSI_ARGS_((Display *d, Window w, int i, Time t)); /* 46 */
-    void (*xSetSelectionOwner) _ANSI_ARGS_((Display *d, Atom a, Window w, Time t)); /* 47 */
+    int (*xSetSelectionOwner) _ANSI_ARGS_((Display *d, Atom a, Window w, Time t)); /* 47 */
     void (*xSetWindowBackground) _ANSI_ARGS_((Display *d, Window w, unsigned long ul)); /* 48 */
     void (*xSetWindowBackgroundPixmap) _ANSI_ARGS_((Display *d, Window w, Pixmap p)); /* 49 */
     void (*xSetWindowBorder) _ANSI_ARGS_((Display *d, Window w, unsigned long ul)); /* 50 */
@@ -1118,7 +1118,7 @@ typedef struct TkIntXlibStubs {
     void (*xUngrabKeyboard) _ANSI_ARGS_((Display *d, Time t)); /* 54 */
     int (*xUngrabPointer) _ANSI_ARGS_((Display *d, Time t)); /* 55 */
     void (*xUnmapWindow) _ANSI_ARGS_((Display *d, Window w)); /* 56 */
-    void (*tkPutImage) _ANSI_ARGS_((unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 57 */
+    int (*tkPutImage) _ANSI_ARGS_((unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 57 */
     Status (*xParseColor) _ANSI_ARGS_((Display *display, Colormap map, _Xconst char *spec, XColor *colorPtr)); /* 58 */
     GC (*xCreateGC) _ANSI_ARGS_((Display *display, Drawable d, unsigned long valuemask, XGCValues *values)); /* 59 */
     int (*xFreeGC) _ANSI_ARGS_((Display *display, GC gc)); /* 60 */
@@ -1148,7 +1148,7 @@ typedef struct TkIntXlibStubs {
     void (*xClearWindow) _ANSI_ARGS_((Display *d, Window w)); /* 84 */
     void (*xDrawPoint) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y)); /* 85 */
     void (*xDrawPoints) _ANSI_ARGS_((Display *display, Drawable d, GC gc, XPoint *points, int npoints, int mode)); /* 86 */
-    void (*xWarpPointer) _ANSI_ARGS_((Display *display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y)); /* 87 */
+    int (*xWarpPointer) _ANSI_ARGS_((Display *display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y)); /* 87 */
     void (*xQueryColor) _ANSI_ARGS_((Display *display, Colormap colormap, XColor *def_in_out)); /* 88 */
     void (*xQueryColors) _ANSI_ARGS_((Display *display, Colormap colormap, XColor *defs_in_out, int ncolors)); /* 89 */
     Status (*xQueryTree) _ANSI_ARGS_((Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui)); /* 90 */
@@ -1167,7 +1167,7 @@ typedef struct TkIntXlibStubs {
     Window (*xRootWindow) _ANSI_ARGS_((Display *d, int i)); /* 10 */
     XErrorHandler (*xSetErrorHandler) _ANSI_ARGS_((XErrorHandler x)); /* 11 */
     Status (*xAllocColor) _ANSI_ARGS_((Display *d, Colormap c, XColor *xp)); /* 12 */
-    void (*xBell) _ANSI_ARGS_((Display *d, int i)); /* 13 */
+    int (*xBell) _ANSI_ARGS_((Display *d, int i)); /* 13 */
     void (*xChangeProperty) _ANSI_ARGS_((Display *d, Window w, Atom a1, Atom a2, int i1, int i2, _Xconst unsigned char *c, int i3)); /* 14 */
     void (*xChangeWindowAttributes) _ANSI_ARGS_((Display *d, Window w, unsigned long ul, XSetWindowAttributes *x)); /* 15 */
     void (*xConfigureWindow) _ANSI_ARGS_((Display *d, Window w, unsigned int i, XWindowChanges *x)); /* 16 */
@@ -1182,9 +1182,9 @@ typedef struct TkIntXlibStubs {
     void (*xFillArc) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)); /* 25 */
     void (*xFillPolygon) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2, int i3)); /* 26 */
     int (*xFillRectangles) _ANSI_ARGS_((Display *d, Drawable dr, GC g, XRectangle *x, int i)); /* 27 */
-    void (*xFreeColormap) _ANSI_ARGS_((Display *d, Colormap c)); /* 28 */
-    void (*xFreeColors) _ANSI_ARGS_((Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul)); /* 29 */
-    void (*xFreeModifiermap) _ANSI_ARGS_((XModifierKeymap *x)); /* 30 */
+    int (*xFreeColormap) _ANSI_ARGS_((Display *d, Colormap c)); /* 28 */
+    int (*xFreeColors) _ANSI_ARGS_((Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul)); /* 29 */
+    int (*xFreeModifiermap) _ANSI_ARGS_((XModifierKeymap *x)); /* 30 */
     Status (*xGetGeometry) _ANSI_ARGS_((Display *d, Drawable dr, Window *w, int *i1, int *i2, unsigned int *ui1, unsigned int *ui2, unsigned int *ui3, unsigned int *ui4)); /* 31 */
     int (*xGetWindowProperty) _ANSI_ARGS_((Display *d, Window w, Atom a1, long l1, long l2, Bool b, Atom a2, Atom *ap, int *ip, unsigned long *ulp1, unsigned long *ulp2, unsigned char **cpp)); /* 32 */
     int (*xGrabKeyboard) _ANSI_ARGS_((Display *d, Window w, Bool b, int i1, int i2, Time t)); /* 33 */
@@ -1201,7 +1201,7 @@ typedef struct TkIntXlibStubs {
     Status (*xSendEvent) _ANSI_ARGS_((Display *d, Window w, Bool b, long l, XEvent *x)); /* 44 */
     void (*xSetIconName) _ANSI_ARGS_((Display *d, Window w, _Xconst char *c)); /* 45 */
     void (*xSetInputFocus) _ANSI_ARGS_((Display *d, Window w, int i, Time t)); /* 46 */
-    void (*xSetSelectionOwner) _ANSI_ARGS_((Display *d, Atom a, Window w, Time t)); /* 47 */
+    int (*xSetSelectionOwner) _ANSI_ARGS_((Display *d, Atom a, Window w, Time t)); /* 47 */
     void (*xSetWindowBackground) _ANSI_ARGS_((Display *d, Window w, unsigned long ul)); /* 48 */
     void (*xSetWindowBackgroundPixmap) _ANSI_ARGS_((Display *d, Window w, Pixmap p)); /* 49 */
     void (*xSetWindowBorder) _ANSI_ARGS_((Display *d, Window w, unsigned long ul)); /* 50 */
@@ -1211,7 +1211,7 @@ typedef struct TkIntXlibStubs {
     void (*xUngrabKeyboard) _ANSI_ARGS_((Display *d, Time t)); /* 54 */
     int (*xUngrabPointer) _ANSI_ARGS_((Display *d, Time t)); /* 55 */
     void (*xUnmapWindow) _ANSI_ARGS_((Display *d, Window w)); /* 56 */
-    void (*tkPutImage) _ANSI_ARGS_((unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 57 */
+    int (*tkPutImage) _ANSI_ARGS_((unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height)); /* 57 */
     Status (*xParseColor) _ANSI_ARGS_((Display *display, Colormap map, _Xconst char *spec, XColor *colorPtr)); /* 58 */
     GC (*xCreateGC) _ANSI_ARGS_((Display *display, Drawable d, unsigned long valuemask, XGCValues *values)); /* 59 */
     int (*xFreeGC) _ANSI_ARGS_((Display *display, GC gc)); /* 60 */
@@ -1241,7 +1241,7 @@ typedef struct TkIntXlibStubs {
     void (*xClearWindow) _ANSI_ARGS_((Display *d, Window w)); /* 84 */
     void (*xDrawPoint) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y)); /* 85 */
     void (*xDrawPoints) _ANSI_ARGS_((Display *display, Drawable d, GC gc, XPoint *points, int npoints, int mode)); /* 86 */
-    void (*xWarpPointer) _ANSI_ARGS_((Display *display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y)); /* 87 */
+    int (*xWarpPointer) _ANSI_ARGS_((Display *display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y)); /* 87 */
     void (*xQueryColor) _ANSI_ARGS_((Display *display, Colormap colormap, XColor *def_in_out)); /* 88 */
     void (*xQueryColors) _ANSI_ARGS_((Display *display, Colormap colormap, XColor *defs_in_out, int ncolors)); /* 89 */
     Status (*xQueryTree) _ANSI_ARGS_((Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui)); /* 90 */
