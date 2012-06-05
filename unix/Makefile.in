@@ -34,6 +34,7 @@ exec_prefix		= @exec_prefix@
 bindir			= @bindir@
 libdir			= @libdir@
 includedir		= @includedir@
+datarootdir		= @datarootdir@
 mandir			= @mandir@
 
 # The following definition can be set to non-null for special systems
@@ -90,10 +91,20 @@ HTML_DIR		= @HTML_DIR@
 # Directory in which to install html documentation:
 HTML_INSTALL_DIR	= $(INSTALL_ROOT)$(HTML_DIR)
 
+# Directory in which to install the configuration file tkConfig.sh:
+CONFIG_INSTALL_DIR	= $(INSTALL_ROOT)$(libdir)
+
+# Directory in which to install the demo files:
+DEMO_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)/demos
+
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
 TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
+
+# The directory containing the platform specific Tcl sources and headers
+# appropriate for this version of Tk:
+TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/unix
 
 # The directory containing the Tcl library archive file appropriate
 # for this version of Tk:
@@ -200,6 +211,7 @@ BUILD_TCLSH		= @BUILD_TCLSH@
 # required just to do a normal build although it can be required to run
 # make dist. This variable is set to "" if no tclsh is available.
 TCL_EXE			= @TCLSH_PROG@
+WISH_EXE		= wish
 
 # Tk used to let the configure script choose which program to use
 # for installing, but there are just too many different versions of
@@ -207,7 +219,7 @@ TCL_EXE			= @TCLSH_PROG@
 # with the distribution, which is slower but guaranteed to work.
 
 INSTALL_STRIP_PROGRAM   = -s
-INSTALL_STRIP_LIBRARY   = -S -S
+INSTALL_STRIP_LIBRARY   = -S -x
 
 INSTALL			= @srcdir@/install-sh -c
 INSTALL_PROGRAM		= ${INSTALL}
@@ -293,9 +305,10 @@ RANLIB			= @RANLIB@
 SRC_DIR			= @srcdir@
 TOP_DIR			= $(SRC_DIR)/..
 GENERIC_DIR		= $(TOP_DIR)/generic
-UNIX_DIR		= $(SRC_DIR)
+UNIX_DIR		= $(TOP_DIR)/unix
 BMAP_DIR		= $(TOP_DIR)/bitmaps
 TOOL_DIR		= @TCL_SRC_DIR@/tools
+TEST_DIR		= $(TOP_DIR)/tests
 MAC_OSX_DIR		= $(TOP_DIR)/macosx
 XLIB_DIR		= $(TOP_DIR)/xlib
 
@@ -305,8 +318,8 @@ XLIB_DIR		= $(TOP_DIR)/xlib
 # either.
 #----------------------------------------------------------------
 
-# Flags to be passed to installManPage to control whether the manpages
-# should be compressed and linked with softlinks
+# Flags to be passed to installManPage to control how the manpages
+# should be installed (symlinks, compression, package name suffix).
 MAN_FLAGS               = @MAN_FLAGS@
 
 CC			= @CC@
@@ -477,11 +490,25 @@ HDRS = bltList.h \
 	default.h ks_names.h tkPatch.h tk.h tkButton.h tkCanvas.h tkInt.h  \
 	tkPort.h tkScrollbar.h tkText.h
 
+PUBLIC_HDRS = $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkDecls.h \
+	$(GENERIC_DIR)/tkPlatDecls.h $(@TK_WINDOWINGSYSTEM@_HDRS)
+
+# The private headers we want installed for install-private-headers
+PRIVATE_HDRS = $(GENERIC_DIR)/tkInt.h $(GENERIC_DIR)/tkIntDecls.h \
+	$(GENERIC_DIR)/tkIntPlatDecls.h \
+	$(@TK_WINDOWINGSYSTEM@_PRIVATE_HDRS)
+
 DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
+
+SHELL_ENV = \
+	@LD_LIBRARY_PATH_VAR@="`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}"; \
+	export @LD_LIBRARY_PATH_VAR@; \
+	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
+	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY;
 
 all: binaries libraries doc
 
-binaries: ${LIB_FILE} ${STUB_LIB_FILE} wish
+binaries: ${LIB_FILE} ${STUB_LIB_FILE} ${WISH_EXE}
 
 libraries:
 
@@ -522,9 +549,9 @@ tkLibObjs:
 objs: ${OBJS}
 
 
-wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
+${WISH_EXE}: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
 	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o wish
+		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o ${WISH_EXE}
 
 # Resetting the LIB_RUNTIME_DIR below is required so that
 # the generated tktest executable gets the build directory
@@ -533,7 +560,7 @@ wish: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
 # Tk shared libraries.
 
 tktest: $(TKTEST_OBJS) $(TK_LIB_FILE)
-	$(MAKE) tktest-real LIB_RUNTIME_DIR=`pwd`:$(TCL_BIN_DIR)
+	$(MAKE) tktest-real LIB_RUNTIME_DIR="`pwd`:$(TCL_BIN_DIR)"
 
 tktest-real:
 	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ \
@@ -555,51 +582,49 @@ xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 # args to tcltest, ie:
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
-test: tktest
-	@LD_LIBRARY_PATH_VAR@=`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}; \
-	export @LD_LIBRARY_PATH_VAR@; \
-	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
-	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
-	./tktest $(TOP_DIR)/tests/all.tcl -geometry +0+0 \
+test: test-classic
+
+test-classic: tktest
+	$(SHELL_ENV) ./tktest $(TEST_DIR)/all.tcl -geometry +0+0 \
 	$(TESTFLAGS) $(TCLTESTARGS)
 
 # Tests with different languages
 testlang: tktest
-	@LD_LIBRARY_PATH_VAR@=`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}; \
-	export @LD_LIBRARY_PATH_VAR@; \
-	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
-	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
+	$(SHELL_ENV) \
 	for lang in $(LOCALES) ;  \
 	do \
 	LANG=$(lang); export LANG; \
-	./tktest $(TOP_DIR)/tests/all.tcl -geometry +0+0 \
+	./tktest $(TEST_DIR)/all.tcl -geometry +0+0 \
 	$(TESTFLAGS) $(TCLTESTARGS); \
 	done
 
 # Useful target to launch a built tktest with the proper path,...
 runtest: tktest
-	@LD_LIBRARY_PATH_VAR@=`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}; \
-	export @LD_LIBRARY_PATH_VAR@; \
-	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
-	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
-	./tktest
+	$(SHELL_ENV) ./tktest
 
 # This target can be used to run wish from the build directory
 # via `make shell` or `make shell SCRIPT=/tmp/foo.tcl`
-shell: wish
-	@LD_LIBRARY_PATH_VAR@=`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}; \
-	export @LD_LIBRARY_PATH_VAR@; \
-	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
-	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY; \
-	./wish $(SCRIPT)
+shell: ${WISH_EXE}
+	$(SHELL_ENV) ./${WISH_EXE} $(SCRIPT)
+
+demo:
+	$(SHELL_ENV) ./${WISH_EXE} $(TOP_DIR)/library/demos/widget
 
 # This target can be used to run wish inside either gdb or insight
-gdb: wish
-	@echo "set env @LD_LIBRARY_PATH_VAR@=`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}" > gdb.run
+gdb: ${WISH_EXE}
+	@echo "set env @LD_LIBRARY_PATH_VAR@=\"`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}\"" > gdb.run
 	@echo "set env TCL_LIBRARY=@TCL_SRC_DIR@/library" >> gdb.run
 	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
-	gdb ./wish --command=gdb.run
+	gdb ./${WISH_EXE} --command=gdb.run
 	rm gdb.run
+
+VALGRINDARGS=--tool=memcheck --num-callers=8 --leak-resolution=high --leak-check=yes --show-reachable=yes -v
+
+valgrind: tktest
+	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./tktest $(TEST_DIR)/all.tcl -geometry +0+0 -singleproc 1 $(TESTFLAGS)
+
+valgrindshell: tktest
+	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./tktest $(SCRIPT)
 
 INSTALL_TARGETS = install-binaries install-libraries install-demos install-doc @EXTRA_INSTALL@
 
@@ -614,13 +639,13 @@ install-strip:
 # some ranlibs write to current directory, and this might not always be
 # possible (e.g. if installing as root).
 
-install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
-	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) $(PKG_INSTALL_DIR); \
+install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) ${WISH_EXE}
+	@for i in "$(LIB_INSTALL_DIR)" "$(BIN_INSTALL_DIR)" "$(PKG_INSTALL_DIR)"; \
 	    do \
-		if [ ! -d $$i ] ; then \
+	    if [ ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
-		mkdir -p $$i; \
-		chmod 755 $$i; \
+		mkdir -p "$$i"; \
+		chmod 755 "$$i"; \
 		else true; \
 		fi; \
 	    done;
@@ -629,7 +654,7 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    fi
 	@if test "x$(TK_SHARED_BUILD)" = "x1"; then \
 	    echo "Creating package index $(PKG_INDEX)"; \
-	    rm -f $(PKG_INDEX); \
+	    rm -f "$(PKG_INDEX)"; \
 	    (\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
 	    echo "if {[package vcompare [package provide Tcl] $(TCLVERSION)] != 0} { return }";\
@@ -653,10 +678,10 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 	    $(INSTALL_DATA) $(TK_BUILD_EXP_FILE) \
 			$(LIB_INSTALL_DIR)/$(TK_EXP_FILE); \
 	    fi
-	@echo "Installing wish as $(BIN_INSTALL_DIR)/wish$(VERSION)"
-	@$(INSTALL_PROGRAM) wish $(BIN_INSTALL_DIR)/wish$(VERSION)
-	@echo "Installing tkConfig.sh to $(LIB_INSTALL_DIR)/"
-	@$(INSTALL_DATA) tkConfig.sh $(LIB_INSTALL_DIR)/tkConfig.sh
+	@echo "Installing ${WISH_EXE} as $(BIN_INSTALL_DIR)/wish$(VERSION)"
+	@$(INSTALL_PROGRAM) ${WISH_EXE} "$(BIN_INSTALL_DIR)/wish$(VERSION)"
+	@echo "Installing tkConfig.sh to $(CONFIG_INSTALL_DIR)/"
+	@$(INSTALL_DATA) tkConfig.sh "$(CONFIG_INSTALL_DIR)/tkConfig.sh"
 	@if test "$(STUB_LIB_FILE)" != "" ; then \
 	    echo "Installing $(STUB_LIB_FILE) to $(LIB_INSTALL_DIR)/"; \
 	    @INSTALL_STUB_LIB@ ; \
@@ -665,15 +690,15 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) wish
 
 install-libraries: libraries
 	@if test "$(@TK_WINDOWINGSYSTEM@_XLIB_HDRS)" != ""; then \
-	    XLIB_INCLUDE_INSTALL_DIR=$(INCLUDE_INSTALL_DIR)/X11; fi; \
-	for i in $(INCLUDE_INSTALL_DIR) $${XLIB_INCLUDE_INSTALL_DIR} \
-		$(SCRIPT_INSTALL_DIR) $(SCRIPT_INSTALL_DIR)/images \
-		$(SCRIPT_INSTALL_DIR)/msgs; \
+	    XLIB_INCLUDE_INSTALL_DIR="$(INCLUDE_INSTALL_DIR)/X11"; fi; \
+	for i in "$(INCLUDE_INSTALL_DIR)" "$${XLIB_INCLUDE_INSTALL_DIR}" \
+		"$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)/images" \
+		"$(SCRIPT_INSTALL_DIR)/msgs"; \
 	    do \
-		if [ ! -d $$i ] ; then \
+	    if [ -n "$$i" -a ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
-		mkdir -p $$i; \
-		chmod 755 $$i; \
+		mkdir -p "$$i"; \
+		chmod 755 "$$i"; \
 		else true; \
 		fi; \
 	    done;
@@ -681,8 +706,7 @@ install-libraries: libraries
 	    chmod +x $(SRC_DIR)/install-sh; \
 	    fi
 	@echo "Installing header files";
-	@for i in $(GENERIC_DIR)/tk.h $(GENERIC_DIR)/tkDecls.h \
-		$(GENERIC_DIR)/tkPlatDecls.h $(@TK_WINDOWINGSYSTEM@_HDRS) ; \
+	@for i in $(PUBLIC_HDRS); \
 	    do \
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR); \
 	    done;
@@ -779,25 +803,23 @@ install-doc:
 install-private-headers: libraries
 	@for i in $(PRIVATE_INCLUDE_INSTALL_DIR); \
 	    do \
-	    if [ ! -d $$i ] ; then \
+	    if [ ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
-		mkdir -p $$i; \
-		chmod 755 $$i; \
+		mkdir -p "$$i"; \
+		chmod 755 "$$i"; \
 		else true; \
 		fi; \
 	    done;
 	@if test ! -x $(SRC_DIR)/install-sh; then \
 	    chmod +x $(SRC_DIR)/install-sh; \
 	    fi
-	@echo "Installing private header files";
-	@for i in $(GENERIC_DIR)/tkInt.h $(GENERIC_DIR)/tkIntDecls.h \
-		$(GENERIC_DIR)/tkIntPlatDecls.h \
-		$(@TK_WINDOWINGSYSTEM@_PRIVATE_HDRS); \
+	@echo "Installing private header files to $(PRIVATE_INCLUDE_INSTALL_DIR)/";
+	@for i in $(PRIVATE_HDRS); \
 	    do \
-	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
+	    $(INSTALL_DATA) $$i "$(PRIVATE_INCLUDE_INSTALL_DIR)"; \
 	    done;
 	@sed -e 's#\.\./unix/##' $(GENERIC_DIR)/tkPort.h > tkPort.h; \
-	    $(INSTALL_DATA) tkPort.h $(PRIVATE_INCLUDE_INSTALL_DIR); \
+	    $(INSTALL_DATA) tkPort.h "$(PRIVATE_INCLUDE_INSTALL_DIR)"; \
 	    rm -f tkPort.h
 
 Makefile: $(UNIX_DIR)/Makefile.in
@@ -805,7 +827,7 @@ Makefile: $(UNIX_DIR)/Makefile.in
 
 clean:
 	rm -f *.a *.o libtk* core errs *~ \#* TAGS *.E a.out \
-		errors wish tktest lib.exp Tk *.rsrc
+		errors ${WISH_EXE} tktest lib.exp Tk *.rsrc
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
@@ -822,7 +844,7 @@ depend:
 # execute concurrently with the renaming and recompiling of that same object
 # file in the target below.
 
-tkTestInit.o: $(UNIX_DIR)/tkAppInit.c wish
+tkTestInit.o: $(UNIX_DIR)/tkAppInit.c ${WISH_EXE}
 	@if test -f tkAppInit.o ; then \
 	    rm -f tkAppInit.sav; \
 	    mv tkAppInit.o tkAppInit.sav; \
@@ -1169,7 +1191,7 @@ tkMacOSXHLEvents.o: $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 
 tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c $(GENERIC_DIR)/tkInitScript.h tkConfig.sh
-	$(CC) -c $(CC_SWITCHES)  -DTK_LIBRARY=\"${TK_LIBRARY}\" \
+	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \
 	    $(MAC_OSX_DIR)/tkMacOSXInit.c
 
 tkMacOSXKeyboard.o: $(MAC_OSX_DIR)/tkMacOSXKeyboard.c
@@ -1298,13 +1320,13 @@ checkexports: $(TK_LIB_FILE)
 # system.
 #
 
-rpm: all /bin/rpm
+rpm: all
 	rm -f THIS.TCL.SPEC
 	echo "%define _builddir `pwd`" > THIS.TK.SPEC
 	echo "%define _rpmdir `pwd`/RPMS" >> THIS.TK.SPEC
 	cat tk.spec >> THIS.TK.SPEC
 	mkdir -p RPMS/i386
-	rpm -bb THIS.TK.SPEC
+	rpmbuild -bb THIS.TK.SPEC
 	mv RPMS/i386/*.rpm .
 	rm -rf RPMS THIS.TK.SPEC
 
@@ -1340,7 +1362,7 @@ dist:
 	    fi; \
 	done;)
 	mkdir $(DISTDIR)/generic
-	cp -p $(GENERIC_DIR)/*.c $(GENERIC_DIR)/*.h $(GENERIC_DIR)/prolog.ps \
+	cp -p $(GENERIC_DIR)/*.[ch] $(GENERIC_DIR)/prolog.ps \
 		$(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/*.decls $(DISTDIR)/generic
 	cp -p $(GENERIC_DIR)/README $(DISTDIR)/generic
@@ -1354,8 +1376,7 @@ dist:
 		$(TOP_DIR)/win/tkConfig.sh.in \
 		$(TOP_DIR)/win/aclocal.m4 $(TOP_DIR)/win/tcl.m4 \
 		$(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/*.c $(TOP_DIR)/win/*.h $(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/*.bat $(DISTDIR)/win
+	cp -p $(TOP_DIR)/win/*.[ch] $(TOP_DIR)/win/*.bat $(DISTDIR)/win
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/*.bat
 	cp -p $(TOP_DIR)/win/makefile.* $(DISTDIR)/win
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/makefile.*
@@ -1366,9 +1387,7 @@ dist:
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
 	mkdir $(DISTDIR)/win/rc
 	cp -p $(TOP_DIR)/win/wish.exe.manifest.in $(DISTDIR)/win/
-	cp -p $(TOP_DIR)/win/rc/*.rc $(TOP_DIR)/win/rc/*.cur \
-		$(TOP_DIR)/win/rc/*.ico $(TOP_DIR)/win/rc/*.bmp \
-		$(DISTDIR)/win/rc
+	cp -p $(TOP_DIR)/win/rc/*.{rc,cur,ico,bmp} $(DISTDIR)/win/rc
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/rc/*.rc
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/wish.exe.manifest.in
 	mkdir $(DISTDIR)/mac
@@ -1393,7 +1412,7 @@ dist:
 		$(TCLDIR)/compat/stdlib.h $(TCLDIR)/compat/limits.h \
 		$(DISTDIR)/compat
 	mkdir $(DISTDIR)/xlib
-	cp -p $(XLIB_DIR)/*.h $(XLIB_DIR)/*.c $(DISTDIR)/xlib
+	cp -p $(XLIB_DIR)/*.[ch] $(DISTDIR)/xlib
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/xlib
 	mkdir $(DISTDIR)/xlib/X11
 	cp -p $(XLIB_DIR)/X11/*.h $(DISTDIR)/xlib/X11
@@ -1436,36 +1455,14 @@ dist:
 	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/doc/*.[13n] \
 		$(TCLDIR)/doc/man.macros $(DISTDIR)/doc
 	mkdir $(DISTDIR)/tests
-	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/tests/*.test \
-		$(TOP_DIR)/tests/*.tcl $(TOP_DIR)/tests/README \
-		$(TOP_DIR)/tests/option.file* $(DISTDIR)/tests
-
-#
-# The following target can only be used for non-patch releases.  Use
-# the "allpatch" target below for patch releases.
-#
+	cp -p $(TOP_DIR)/license.terms $(TEST_DIR)/*.{test,tcl} \
+		$(TEST_DIR)/README \
+		$(TEST_DIR)/option.file* $(DISTDIR)/tests
 
 alldist: dist
 	rm -f $(DISTROOT)/$(DISTNAME)-src.tar.gz $(DISTROOT)/$(ZIPNAME)
 	cd $(DISTROOT); tar cf $(DISTNAME)-src.tar $(DISTNAME); \
 		gzip -9 $(DISTNAME)-src.tar; zip -qr8 $(ZIPNAME) $(DISTNAME)
-
-#
-# The target below is similar to "alldist" except it works for patch
-# releases.  It is needed because patch releases are peculiar: the
-# patch designation appears in the name of the compressed file
-# (e.g. tk8.0p1.tar.gz) but the extracted source directory doesn't
-# include the patch designation (e.g. tk8.0).
-#
-
-allpatch: dist
-	rm -f $(DISTROOT)/$(DISTNAME)-src.tar.gz $(DISTROOT)/$(ZIPNAME)
-	mv $(DISTROOT)/tk${VERSION} $(DISTROOT)/old
-	mv $(DISTROOT)/$(DISTNAME) $(DISTROOT)/tk${VERSION}
-	cd $(DISTROOT); tar cf $(DISTNAME)-src.tar tk${VERSION}; \
-		gzip -9 $(DISTNAME)-src.tar; zip -r8 $(ZIPNAME) tk${VERSION}
-	mv $(DISTROOT)/tk${VERSION} $(DISTROOT)/$(DISTNAME)
-	mv $(DISTROOT)/old $(DISTROOT)/tk${VERSION}
 
 #
 # This target creates the HTML folder for Tcl & Tk and places it
@@ -1487,11 +1484,9 @@ html-tk:
 
 BUILD_HTML = \
 	@if test -f "$(BUILD_TCLSH)"; then \
-	@LD_LIBRARY_PATH_VAR@=$(TCL_BIN_DIR):$${@LD_LIBRARY_PATH_VAR@}; export @LD_LIBRARY_PATH_VAR@; \
-	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
-	TCLSH="$(BUILD_TCLSH)"; else \
+	$(SHELL_ENV) TCLSH="$(BUILD_TCLSH)"; else \
 	TCLSH="$(TCL_EXE)"; fi ;\
-	$${TCLSH} $(TOOL_DIR)/tcltk-man2html.tcl --htmldir=$(HTML_INSTALL_DIR) \
+	"$${TCLSH}" $(TOOL_DIR)/tcltk-man2html.tcl --htmldir="$(HTML_INSTALL_DIR)" \
 		--srcdir=$(TOP_DIR)/.. $(BUILD_HTML_FLAGS)
 
 #
@@ -1590,5 +1585,18 @@ package-generate:
 	pkgmk -o -d . -f prototype -a `arch`
 	pkgtrans -s . $(PACKAGE).`arch` $(PACKAGE)
 	rm -rf $(PACKAGE)
+
+#
+# The list of all the targets that do not correspond to real files. This stops
+# 'make' from getting confused when someone makes an error in a rule.
+#
+
+.PHONY: all binaries libraries objs doc html html-tcl html-tk test runtest
+.PHONY: install install-strip install-binaries install-libraries
+.PHONY: install-headers install-private-headers install-doc
+.PHONY: clean distclean depend genstubs checkstubs checkexports checkuchar
+.PHONY: shell gdb valgrind valgrindshell dist alldist rpm
+.PHONY: tkLibObjs tktest-real test-classic test-ttk testlang
+.PHONY: demo install-demos
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
