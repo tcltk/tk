@@ -478,8 +478,12 @@ install-binaries: binaries
 	@$(RM) $(PKG_INDEX);
 	@(\
 	echo "if {[catch {package present Tcl 8.5.0}]} { return }";\
-	echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL)\
-		[list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
+	echo "if {(\$$::tcl_platform(platform) eq \"unix\")";\
+	echo "	&& ([info exists ::env(DISPLAY)] || [lsearch -exact \$$::argv -display] > -1)} {";\
+	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin libtk$(VERSION).dll] Tk]";\
+	echo "} else {";\
+	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
+	echo "}";\
 	) > $(PKG_INDEX);
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \
 	    do \
@@ -669,7 +673,7 @@ tkWindow.$(OBJEXT): configure Makefile
 .SUFFIXES: .$(RES)
 .SUFFIXES: .rc
 
-# Implicit rule for all object files that will end up in the Tcl library
+# Implicit rule for all object files that will end up in the Tk library
 
 %.$(OBJEXT): %.c
 	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
