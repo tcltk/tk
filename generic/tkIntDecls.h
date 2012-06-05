@@ -1854,7 +1854,7 @@ extern TkIntStubs *tkIntStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
-#if !defined(__WIN32__) && !defined(MAC_OSX_TK)
+#if !defined(__WIN32__) && !defined(__CYGWIN__) && !defined(MAC_OSX_TK)
 
 /*
  * These macros are just wrappers for the equivalent X Region calls.
