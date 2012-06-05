@@ -3,6 +3,8 @@
 	* generic/tkInt.decls:   Change XSetDashes signature and many others
 	* generic/tkIntDecls.h:  to match Xorg, needed for Cygwin.
 	* generic/tkIntXlibDeclsDecls.h
+	* win/Makefile.in:       Generate same pkgIndex.tcl file for win32 and
+	* unix/Makefile.in:      cygwin, one that is equally useable for both.
 
 2012-05-30  Jan Nijtmans  <nijtmans@users.sf.net>
 

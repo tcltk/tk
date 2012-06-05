@@ -208,6 +208,8 @@ BUILD_TCLSH		= @BUILD_TCLSH@@EXEEXT@
 # required just to do a normal build although it can be required to run
 # make dist. This variable is set to "" if no tclsh is available.
 TCL_EXE			= @TCLSH_PROG@
+WISH_EXE		= wish@EXEEXT@
+TKTEST_EXE		= tktest@EXEEXT@
 
 # Tk used to let the configure script choose which program to use
 # for installing, but there are just too many different versions of
@@ -563,7 +565,7 @@ SHELL_ENV = \
 
 all: binaries libraries doc
 
-binaries: ${LIB_FILE} ${STUB_LIB_FILE} wish@EXEEXT@
+binaries: ${LIB_FILE} ${STUB_LIB_FILE} ${WISH_EXE}
 
 libraries:
 
@@ -604,9 +606,9 @@ tkLibObjs:
 objs: ${OBJS}
 
 
-wish@EXEEXT@: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
+${WISH_EXE}: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
 	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o wish@EXEEXT@
+		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o ${WISH_EXE}
 
 # Resetting the LIB_RUNTIME_DIR below is required so that
 # the generated tktest executable gets the build directory
@@ -614,12 +616,12 @@ wish@EXEEXT@: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
 # picking up an already installed version of the Tcl or
 # Tk shared libraries.
 
-tktest@EXEEXT@: $(TKTEST_OBJS) $(TK_LIB_FILE)
+$(TKTEST_EXE): $(TKTEST_OBJS) $(TK_LIB_FILE)
 	$(MAKE) tktest-real LIB_RUNTIME_DIR="`pwd`:$(TCL_BIN_DIR)"
 
 tktest-real:
 	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o tktest@EXEEXT@
+		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
 
 # FIXME: This xttest rule seems to be broken in a number of ways.
 # It should use CC_SEARCH_FLAGS, it does not include the shared
@@ -639,50 +641,50 @@ xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 
 test: test-classic test-ttk
 
-test-classic: tktest@EXEEXT@
-	$(SHELL_ENV) ./tktest@EXEEXT@ $(TEST_DIR)/all.tcl -geometry +0+0 $(TESTFLAGS)
+test-classic: $(TKTEST_EXE)
+	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 $(TESTFLAGS)
 
-test-ttk: tktest@EXEEXT@
-	$(SHELL_ENV) ./tktest@EXEEXT@ $(TEST_DIR)/ttk/all.tcl -geometry +0+0 \
+test-ttk: $(TKTEST_EXE)
+	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/ttk/all.tcl -geometry +0+0 \
 	$(TESTFLAGS)
 
 # Tests with different languages
-testlang: tktest@EXEEXT@
+testlang: $(TKTEST_EXE)
 	$(SHELL_ENV) \
 	for lang in $(LOCALES) ;  \
 	do \
 	LANG=$(lang); export LANG; \
-	./tktest@EXEEXT@ $(TEST_DIR)/all.tcl -geometry +0+0 \
+	./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 \
 	$(TESTFLAGS); \
 	done
 
 # Useful target to launch a built tktest with the proper path,...
-runtest: tktest@EXEEXT@
-	$(SHELL_ENV) ./tktest@EXEEXT@
+runtest: $(TKTEST_EXE)
+	$(SHELL_ENV) ./$(TKTEST_EXE)
 
 # This target can be used to run wish from the build directory
 # via `make shell` or `make shell SCRIPT=/tmp/foo.tcl`
-shell: wish@EXEEXT@
-	$(SHELL_ENV) ./wish@EXEEXT@ $(SCRIPT)
+shell: ${WISH_EXE}
+	$(SHELL_ENV) ./${WISH_EXE} $(SCRIPT)
 
 demo:
-	$(SHELL_ENV) ./wish@EXEEXT@ $(TOP_DIR)/library/demos/widget
+	$(SHELL_ENV) ./${WISH_EXE} $(TOP_DIR)/library/demos/widget
 
 # This target can be used to run wish inside either gdb or insight
-gdb: wish@EXEEXT@
+gdb: ${WISH_EXE}
 	@echo "set env @LD_LIBRARY_PATH_VAR@=\"`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}\"" > gdb.run
 	@echo "set env TCL_LIBRARY=@TCL_SRC_DIR@/library" >> gdb.run
 	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
-	gdb ./wish@EXEEXT@ --command=gdb.run
+	gdb ./${WISH_EXE} --command=gdb.run
 	rm gdb.run
 
 VALGRINDARGS=--tool=memcheck --num-callers=8 --leak-resolution=high --leak-check=yes --show-reachable=yes -v
 
-valgrind: tktest@EXEEXT@
-	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./tktest@EXEEXT@ $(TEST_DIR)/all.tcl -geometry +0+0 -singleproc 1 $(TESTFLAGS)
+valgrind: $(TKTEST_EXE)
+	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 -singleproc 1 $(TESTFLAGS)
 
-valgrindshell: tktest@EXEEXT@
-	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./tktest@EXEEXT@ $(SCRIPT)
+valgrindshell: $(TKTEST_EXE)
+	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(SCRIPT)
 
 INSTALL_TARGETS = install-binaries install-libraries install-demos install-doc @EXTRA_INSTALL@
 
@@ -697,7 +699,7 @@ install-strip:
 # some ranlibs write to current directory, and this might not always be
 # possible (e.g. if installing as root).
 
-install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) wish@EXEEXT@
+install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) ${WISH_EXE}
 	@for i in "$(LIB_INSTALL_DIR)" "$(BIN_INSTALL_DIR)" \
 	    "$(PKG_INSTALL_DIR)" "$(CONFIG_INSTALL_DIR)" ; \
 	    do \
@@ -731,10 +733,10 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) wish@EXEEXT@
 	@echo "Installing $(LIB_FILE) to $(DLL_INSTALL_DIR)/"
 	@@INSTALL_LIB@
 	@chmod 555 "$(DLL_INSTALL_DIR)/$(LIB_FILE)"
-	@echo "Installing wish@EXEEXT@ as $(BIN_INSTALL_DIR)/wish$(VERSION)@EXEEXT@"
-	@$(INSTALL_PROGRAM) wish@EXEEXT@ "$(BIN_INSTALL_DIR)"/wish$(VERSION)@EXEEXT@
+	@echo "Installing ${WISH_EXE} as $(BIN_INSTALL_DIR)/wish$(VERSION)@EXEEXT@"
+	@$(INSTALL_PROGRAM) ${WISH_EXE} "$(BIN_INSTALL_DIR)/wish$(VERSION)@EXEEXT@"
 	@echo "Installing tkConfig.sh to $(CONFIG_INSTALL_DIR)/"
-	@$(INSTALL_DATA) tkConfig.sh "$(CONFIG_INSTALL_DIR)"/tkConfig.sh
+	@$(INSTALL_DATA) tkConfig.sh "$(CONFIG_INSTALL_DIR)/tkConfig.sh"
 	@if test "$(STUB_LIB_FILE)" != "" ; then \
 	    echo "Installing $(STUB_LIB_FILE) to $(LIB_INSTALL_DIR)/"; \
 	    @INSTALL_STUB_LIB@ ; \
@@ -743,10 +745,10 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) wish@EXEEXT@
 
 install-libraries: libraries
 	@if test "$(@TK_WINDOWINGSYSTEM@_XLIB_HDRS)" != ""; then \
-	    XLIB_INCLUDE_INSTALL_DIR="$(INCLUDE_INSTALL_DIR)"/X11; fi; \
+	    XLIB_INCLUDE_INSTALL_DIR="$(INCLUDE_INSTALL_DIR)/X11"; fi; \
 	for i in "$(INCLUDE_INSTALL_DIR)" "$${XLIB_INCLUDE_INSTALL_DIR}" \
-		"$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)"/images \
-		"$(SCRIPT_INSTALL_DIR)"/msgs "$(SCRIPT_INSTALL_DIR)"/ttk; \
+		"$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)/images" \
+		"$(SCRIPT_INSTALL_DIR)/msgs" "$(SCRIPT_INSTALL_DIR)/ttk"; \
 	    do \
 	    if [ -n "$$i" -a ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
@@ -765,7 +767,7 @@ install-libraries: libraries
 	    done;
 	@list='$(@TK_WINDOWINGSYSTEM@_XLIB_HDRS)'; for i in $$list ; \
 	    do \
-	    $(INSTALL_DATA) $$i "$(INCLUDE_INSTALL_DIR)"/X11; \
+	    $(INSTALL_DATA) $$i "$(INCLUDE_INSTALL_DIR)/X11"; \
 	    done;
 	@echo "Installing library files to $(SCRIPT_INSTALL_DIR)";
 	@for i in $(TOP_DIR)/library/*.tcl \
@@ -784,19 +786,19 @@ install-libraries: libraries
 	@for i in $(TOP_DIR)/library/images/*; \
 	    do \
 	    if [ -f $$i ] ; then \
-		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)"/images; \
+		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/images"; \
 	    fi; \
 	    done;
 	@echo "Installing translation directory";
 	@for i in $(TOP_DIR)/library/msgs/*.msg; \
 	    do \
 	    if [ -f $$i ] ; then \
-		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)"/msgs; \
+		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/msgs"; \
 	    fi; \
 	    done;
 
 install-demos:
-	@for i in "$(DEMO_INSTALL_DIR)" "$(DEMO_INSTALL_DIR)"/images ; \
+	@for i in "$(DEMO_INSTALL_DIR)" "$(DEMO_INSTALL_DIR)/images" ; \
 	    do \
 	    if [ ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
@@ -816,16 +818,16 @@ install-demos:
 	@for i in $(DEMOPROGS); \
 	    do \
 	    if test $$i = "square"; then \
-	    rm -f  "$(DEMO_INSTALL_DIR)"/$$i; \
+	    rm -f  "$(DEMO_INSTALL_DIR)/$$i"; \
 	    else \
-	    chmod 755 "$(DEMO_INSTALL_DIR)"/$$i; \
+	    chmod 755 "$(DEMO_INSTALL_DIR)/$$i"; \
 	    fi; \
 	    done;
 	@echo "Installing demo images";
 	@for i in $(TOP_DIR)/library/demos/images/*; \
 	    do \
 	    if [ -f $$i ] ; then \
-		$(INSTALL_DATA) $$i "$(DEMO_INSTALL_DIR)"/images; \
+		$(INSTALL_DATA) $$i "$(DEMO_INSTALL_DIR)/images"; \
 		fi; \
 	    done;
 
@@ -884,7 +886,7 @@ Makefile: $(UNIX_DIR)/Makefile.in
 
 clean:
 	rm -f *.a *.o libtk* core errs *~ \#* TAGS *.E a.out \
-		errors wish@EXEEXT@ tktest@EXEEXT@ lib.exp Tk *.rsrc
+		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
@@ -901,7 +903,7 @@ depend:
 # execute concurrently with the renaming and recompiling of that same object
 # file in the target below.
 
-tkTestInit.o: $(UNIX_DIR)/tkAppInit.c wish@EXEEXT@
+tkTestInit.o: $(UNIX_DIR)/tkAppInit.c ${WISH_EXE}
 	@if test -f tkAppInit.o ; then \
 	    rm -f tkAppInit.sav; \
 	    mv tkAppInit.o tkAppInit.sav; \
