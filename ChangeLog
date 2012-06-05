@@ -1,3 +1,62 @@
+2012-06-02  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.decls:   Change XSetDashes signature and many others
+	* generic/tkIntDecls.h:  to match Xorg, needed for Cygwin.
+	* generic/tkIntXlibDeclsDecls.h
+	* win/Makefile.in:       Generate same pkgIndex.tcl file for win32 and
+	* unix/Makefile.in:      cygwin, one that is equally useable for both.
+
+2012-05-30  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkWindow.c:    Simpify determination whether we are running on cygwin.
+	* generic/tkStubInit.c:  Export Tk_GetHINSTANCE, TkSetPixmapColormap and
+	* generic/tkInt.decls: 	 TkpPrintWindowId on the Cygwin dll, sync stub table
+	with Tk 8.6 win32 version.
+	* generic/tk*Decls.h:    re-generated
+	* win/Makefile.in:       Fix "make genstubs" when cross-compiling on UNIX
+
+2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
+
+	* doc/text.n:  [Bug 1630251]: Documentation for -endline option was wrong
+
+2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextDisp.c:    [Bug 1630254]: missing scrolling of text widget
+	when from a -startline == -endline initial state it is configured to display
+	a non-empty part of it
+
+2012-05-24  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/stubs.c:          Change XSetCommand signature to match Xorg,
+	* win/tkWinWm.c:        needed for Cygwin.
+	* generic/tkInt.decls
+	* generic/tk*Decls.h:   re-generated
+
+2012-05-09  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinWm.c:           Change TkpWmSetState signature to match Xorg,
+	* generic/tkInt.decls:     needed for Cygwin. (not needed for Mac)
+	* generic/tkIntPlatDeclsDecls.h:
+	* generic/tkWindow.c:      Don't check for cygwin in win32 static build.
+	* unix/tkUnixPort.h:       Some more useful #defines for Cygwin
+
+2012-05-05  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* xlib/xcolors.c:      Single "const" addition
+	* generic/tkWindow.c:  If tk.dll loaded in cygwin, don't use the win32 file dialogs
+
+2012-05-04  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/menu.tcl:    [Bug 2768586]: Menu posting problem on dual monitors
+
+2012-05-02  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/tk.tcl:    [Bug 533519]: Window placement with multiple screens
+	* generic/tkBind.c:
+	* generic/tkFocus.c:
+	* generic/tkMenuDraw.c:
+	* generic/tkWinWm.c:
+
 2012-04-26  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkStubInit.c (Tk_GetHINSTANCE): Ensure that this is defined

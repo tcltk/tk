@@ -701,14 +701,15 @@ XCreateColormap(
     return index++;
 }
 
-void
+int
 XFreeColormap(
     Display* display,		/* Display. */
     Colormap colormap)		/* Colormap. */
 {
+    return Success;
 }
 
-void
+int
 XFreeColors(
     Display* display,		/* Display. */
     Colormap colormap,		/* Colormap. */
@@ -721,6 +722,7 @@ XFreeColors(
      * needs to be done to release colors as there really is
      * no colormap in the Tk sense.
      */
+    return Success;
 }
 
 /*

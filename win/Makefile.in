@@ -478,8 +478,12 @@ install-binaries: binaries
 	@$(RM) $(PKG_INDEX);
 	@(\
 	echo "if {[catch {package present Tcl 8.5.0}]} { return }";\
-	echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL)\
-		[list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
+	echo "if {(\$$::tcl_platform(platform) eq \"unix\")";\
+	echo "	&& ([info exists ::env(DISPLAY)] || [lsearch -exact \$$::argv -display] > -1)} {";\
+	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin libtk$(VERSION).dll] Tk]";\
+	echo "} else {";\
+	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
+	echo "}";\
 	) > $(PKG_INDEX);
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \
 	    do \
@@ -669,7 +673,7 @@ tkWindow.$(OBJEXT): configure Makefile
 .SUFFIXES: .$(RES)
 .SUFFIXES: .rc
 
-# Implicit rule for all object files that will end up in the Tcl library
+# Implicit rule for all object files that will end up in the Tk library
 
 %.$(OBJEXT): %.c
 	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
@@ -705,7 +709,19 @@ $(GENERIC_DIR)/tkStubInit.c: $(GENERIC_DIR)/tk.decls \
 	@echo "This warning can be safely ignored, do not report as a bug!"
 
 genstubs:
-	$(TCL_EXE) "$(TCL_TOOL_DIR)\genStubs.tcl" \
+	$(TCL_EXE) "$(TCL_TOOL_DIR)/genStubs.tcl" \
 	    "$(GENERIC_DIR_NATIVE)" \
-	    "$(GENERIC_DIR_NATIVE)\tk.decls" \
-            "$(GENERIC_DIR_NATIVE)\tkInt.decls"
+	    "$(GENERIC_DIR_NATIVE)/tk.decls" \
+	    "$(GENERIC_DIR_NATIVE)/tkInt.decls"
+#
+# The list of all the targets that do not correspond to real files. This stops
+# 'make' from getting confused when someone makes an error in a rule.
+#
+
+.PHONY: all binaries libraries doc tkLibObjs objs tktest-real test test-classic
+.PHONY: test-ttk testlang runtest shell demo gdb install install-strip
+.PHONY: install-binaries install-libraries install-demos install-doc
+.PHONY: install-private-headers clean distclean depend genstubs checkstubs
+.PHONY: checkuchar checkexports rpm dist alldist allpatch html html-tcl html-tk
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.

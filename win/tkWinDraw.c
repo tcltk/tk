@@ -499,7 +499,7 @@ XCopyPlane(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkPutImage(
     unsigned long *colors,	/* Array of pixel values used by this image.
 				 * May be NULL. */
@@ -588,7 +588,7 @@ TkPutImage(
 	Tcl_Panic("Fail to allocate bitmap\n");
 	DeleteDC(dcMem);
     	TkWinReleaseDrawableDC(d, dc, &state);
-	return;
+	return BadValue;
     }
     bitmap = SelectObject(dcMem, bitmap);
     BitBlt(dc, dest_x, dest_y, (int) width, (int) height, dcMem, src_x, src_y,
@@ -596,6 +596,7 @@ TkPutImage(
     DeleteObject(SelectObject(dcMem, bitmap));
     DeleteDC(dcMem);
     TkWinReleaseDrawableDC(d, dc, &state);
+    return Success;
 }
 
 /*
@@ -614,7 +615,7 @@ TkPutImage(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillRectangles(
     Display *display,
     Drawable d,
@@ -629,7 +630,7 @@ XFillRectangles(
     HBRUSH brush, oldBrush;
 
     if (d == None) {
-	return;
+	return BadDrawable;
     }
 
     dc = TkWinGetDrawableDC(display, d, &state);
@@ -716,6 +717,7 @@ XFillRectangles(
     }
     DeleteObject(brush);
     TkWinReleaseDrawableDC(d, dc, &state);
+    return Success;
 }
 
 /*
@@ -865,7 +867,7 @@ RenderObject(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawLines(
     Display *display,
     Drawable d,
@@ -879,7 +881,7 @@ XDrawLines(
     HDC dc;
 
     if (d == None) {
-	return;
+	return BadDrawable;
     }
 
     dc = TkWinGetDrawableDC(display, d, &state);
@@ -890,6 +892,7 @@ XDrawLines(
     DeleteObject(pen);
 
     TkWinReleaseDrawableDC(d, dc, &state);
+    return Success;
 }
 
 /*

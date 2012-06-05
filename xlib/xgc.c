@@ -31,6 +31,7 @@
 #   define gcCacheSize sizeof(TkpGCCache)
 #endif
 
+#undef TkSetRegion
 
 /*
  *----------------------------------------------------------------------
@@ -50,7 +51,7 @@
 
 static TkpClipMask *AllocClipMask(GC gc) {
     TkpClipMask *clip_mask = (TkpClipMask*) gc->clip_mask;
-    
+
     if (clip_mask == None) {
 	clip_mask = (TkpClipMask*) ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
@@ -162,7 +163,7 @@ XCreateGC(
     gp->clip_mask = None;
     if (mask & GCClipMask) {
 	TkpClipMask *clip_mask = AllocClipMask(gp);
-	
+
 	clip_mask->type = TKP_CLIP_PIXMAP;
 	clip_mask->value.pixmap = values->clip_mask;
     }
@@ -311,7 +312,7 @@ XSetBackground(
     gc->background = background;
 }
 
-void
+int
 XSetDashes(
     Display *display,
     GC gc,
@@ -333,6 +334,7 @@ XSetDashes(
 	*p++ = *dash_list++;
     }
     *p = 0;
+    return Success;
 }
 
 void

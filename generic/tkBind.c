@@ -2581,33 +2581,13 @@ ExpandPercents(
 	}
 	case 'X':
 	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
-		Tk_Window tkwin;
-		int x, y;
-		int width, height;
-
 		number = eventPtr->xkey.x_root;
-		tkwin = Tk_IdToWindow(eventPtr->xany.display,
-			eventPtr->xany.window);
-		if (tkwin != NULL) {
-		    Tk_GetVRootGeometry(tkwin, &x, &y, &width, &height);
-		    number -= x;
-		}
 		goto doNumber;
 	    }
 	    goto doString;
 	case 'Y':
 	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
-		Tk_Window tkwin;
-		int x, y;
-		int width, height;
-
 		number = eventPtr->xkey.y_root;
-		tkwin = Tk_IdToWindow(eventPtr->xany.display,
-			eventPtr->xany.window);
-		if (tkwin != NULL) {
-		    Tk_GetVRootGeometry(tkwin, &x, &y, &width, &height);
-		    number -= y;
-		}
 		goto doNumber;
 	    }
 	    goto doString;
