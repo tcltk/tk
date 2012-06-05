@@ -789,8 +789,6 @@ AC_DEFUN([SC_ENABLE_SYMBOLS], [
     fi
     AC_SUBST(CFLAGS_DEFAULT)
     AC_SUBST(LDFLAGS_DEFAULT)
-    ### FIXME: Surely TCL_CFG_DEBUG should be set to whether we're debugging?
-    AC_DEFINE(TCL_CFG_DEBUG, 1, [Is debugging enabled?])
 
     if test "$tcl_ok" = "mem" -o "$tcl_ok" = "all"; then
 	AC_DEFINE(TCL_MEM_DEBUG, 1, [Is memory debugging enabled?])
@@ -2111,11 +2109,17 @@ dnl # preprocessing tests use only CPPFLAGS.
 	SHARED_LIB_SUFFIX='${VERSION}${SHLIB_SUFFIX}'])
     AS_IF([test "$UNSHARED_LIB_SUFFIX" = ""], [
 	UNSHARED_LIB_SUFFIX='${VERSION}.a'])
+    DLL_INSTALL_DIR="\$(LIB_INSTALL_DIR)"
 
     AS_IF([test "${SHARED_BUILD}" = 1 -a "${SHLIB_SUFFIX}" != ""], [
         LIB_SUFFIX=${SHARED_LIB_SUFFIX}
         MAKE_LIB='${SHLIB_LD} -o [$]@ ${OBJS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
-        INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)"/$(LIB_FILE)'
+        AS_IF([test "${SHLIB_SUFFIX}" = ".dll"], [
+            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) $(BIN_INSTALL_DIR)/$(LIB_FILE)'
+            DLL_INSTALL_DIR="\$(BIN_INSTALL_DIR)"
+        ], [
+            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) $(LIB_INSTALL_DIR)/$(LIB_FILE)'
+        ])
     ], [
         LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}
 
@@ -2196,6 +2200,7 @@ dnl # preprocessing tests use only CPPFLAGS.
     AC_SUBST(MAKE_LIB)
     AC_SUBST(MAKE_STUB_LIB)
     AC_SUBST(INSTALL_LIB)
+    AC_SUBST(DLL_INSTALL_DIR)
     AC_SUBST(INSTALL_STUB_LIB)
     AC_SUBST(RANLIB)
 ])

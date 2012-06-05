@@ -18,6 +18,8 @@
 
 #ifdef __WIN32__
 #include "tkWinInt.h"
+#elif defined(__CYGWIN__)
+#include "tkUnixInt.h"
 #endif
 
 #ifdef MAC_OSX_TK
@@ -2005,8 +2007,9 @@ UpdateDisplayInfo(
 		 * widget.
 		 */
 
-		lineNum = -1;
-		bytesToCount = 0;	/* Stop compiler warning. */
+                lineNum = TkBTreeNumLines(textPtr->sharedTextPtr->tree,
+                        textPtr) - 1;
+                bytesToCount = INT_MAX;
 	    } else {
 		lineNum = TkBTreeLinesTo(textPtr,
 			dInfoPtr->dLinePtr->index.linePtr);
