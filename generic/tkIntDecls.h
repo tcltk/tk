@@ -1854,31 +1854,33 @@ extern TkIntStubs *tkIntStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
-#ifndef __WIN32__
+#if !defined(__WIN32__) && !defined(MAC_OSX_TK)
+
 /*
  * These macros are just wrappers for the equivalent X Region calls.
  */
-#undef TkClipBox
-#undef TkCreateRegion
-#undef TkDestroyRegion
-#undef TkIntersectRegion
-#undef TkRectInRegion
-#undef TkSetRegion
-#undef TkSubtractRegion
-#undef TkUnionRectWithRegion
+#   undef TkClipBox
+#   undef TkCreateRegion
+#   undef TkDestroyRegion
+#   undef TkIntersectRegion
+#   undef TkRectInRegion
+#   undef TkSetRegion
+#   undef TkSubtractRegion
+#   undef TkUnionRectWithRegion
 
-#define TkClipBox(rgn, rect) XClipBox((Region) rgn, rect)
-#define TkCreateRegion() (TkRegion) XCreateRegion()
-#define TkDestroyRegion(rgn) XDestroyRegion((Region) rgn)
-#define TkIntersectRegion(a, b, r) XIntersectRegion((Region) a, \
-	(Region) b, (Region) r)
-#define TkRectInRegion(r, x, y, w, h) XRectInRegion((Region) r, x, y, w, h)
-#define TkSetRegion(d, gc, rgn) XSetRegion(d, gc, (Region) rgn)
-#define TkSubtractRegion(a, b, r) XSubtractRegion((Region) a, \
-	(Region) b, (Region) r)
-#define TkUnionRectWithRegion(rect, src, ret) XUnionRectWithRegion(rect, \
-	(Region) src, (Region) ret)
-#endif /* __WIN32__ */
+#   define TkClipBox(rgn, rect) XClipBox((Region) (rgn), (rect))
+#   define TkCreateRegion() (TkRegion) XCreateRegion()
+#   define TkDestroyRegion(rgn) XDestroyRegion((Region) (rgn))
+#   define TkIntersectRegion(a, b, r) XIntersectRegion((Region) (a), \
+(Region) (b), (Region) (r))
+#   define TkRectInRegion(r, x, y, w, h) XRectInRegion((Region) (r), (x), (y), (w), (h))
+#   define TkSetRegion(d, gc, rgn) XSetRegion((d), (gc), (Region) (rgn))
+#   define TkSubtractRegion(a, b, r) XSubtractRegion((Region) (a), \
+(Region) (b), (Region) (r))
+#   define TkUnionRectWithRegion(rect, src, ret) XUnionRectWithRegion((rect), \
+(Region) (src), (Region) (ret))
+#endif /* !__CYGWIN__*/
+
 
 #endif /* _TKINTDECLS */
 
