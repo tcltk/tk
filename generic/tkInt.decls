@@ -1337,7 +1337,7 @@ declare 79 win {
 	    KeySym *k, Status *s)
 }
 declare 80 win {
-    void TkPutImage(unsigned long *colors, int ncolors, Display *display,
+    int TkPutImage(unsigned long *colors, int ncolors, Display *display,
 	    Drawable d, GC gc, XImage *image, int src_x, int src_y,
 	    int dest_x, int dest_y, unsigned int width, unsigned int height)
 }
@@ -1426,13 +1426,13 @@ declare 104 win {
     int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
 	    int x2, int y2)
 }
-declare 106 win {
-    int XFillRectangle(Display *display, Drawable d, GC gc,
-	    int x, int y, unsigned int width, unsigned int height)
-}
 declare 105 win {
     int XWarpPointer(Display *d, Window s, Window dw, int sx, int sy,
 	    unsigned int sw, unsigned int sh, int dx, int dy)
+}
+declare 106 win {
+    int XFillRectangle(Display *display, Drawable d, GC gc,
+	    int x, int y, unsigned int width, unsigned int height)
 }
 
 ################################
@@ -1482,7 +1482,7 @@ declare 12 {mac aqua} {
     Status XAllocColor(Display *d, Colormap c, XColor *xp)
 }
 declare 13 {mac aqua} {
-    void XBell(Display *d, int i)
+    int XBell(Display *d, int i)
 }
 declare 14 {mac aqua} {
     void XChangeProperty(Display *d, Window w, Atom a1, Atom a2, int i1,
@@ -1538,14 +1538,14 @@ declare 27 {mac aqua} {
     int XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
 }
 declare 28 {mac aqua} {
-    void XFreeColormap(Display *d, Colormap c)
+    int XFreeColormap(Display *d, Colormap c)
 }
 declare 29 {mac aqua} {
-    void XFreeColors(Display *d, Colormap c,
+    int XFreeColors(Display *d, Colormap c,
 	    unsigned long *ulp, int i, unsigned long ul)
 }
 declare 30 {mac aqua} {
-    void XFreeModifiermap(XModifierKeymap *x)
+    int XFreeModifiermap(XModifierKeymap *x)
 }
 declare 31 {mac aqua} {
     Status XGetGeometry(Display *d, Drawable dr, Window *w, int *i1,
@@ -1604,7 +1604,7 @@ declare 46 {mac aqua} {
     void XSetInputFocus(Display *d, Window w, int i, Time t)
 }
 declare 47 {mac aqua} {
-    void XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
+    int XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
 }
 declare 48 {mac aqua} {
     void XSetWindowBackground(Display *d, Window w, unsigned long ul)
@@ -1634,7 +1634,7 @@ declare 56 {mac aqua} {
     void XUnmapWindow(Display *d, Window w)
 }
 declare 57 {mac aqua} {
-    void TkPutImage(unsigned long *colors, int ncolors, Display *display,
+    int TkPutImage(unsigned long *colors, int ncolors, Display *display,
 	    Drawable d, GC gc, XImage *image, int src_x, int src_y,
 	    int dest_x, int dest_y, unsigned int width, unsigned int height)
 }
@@ -1739,7 +1739,7 @@ declare 86 {mac aqua} {
 	    int npoints, int mode)
 }
 declare 87 {mac aqua} {
-    void XWarpPointer(Display *display, Window src_w, Window dest_w,
+    int XWarpPointer(Display *display, Window src_w, Window dest_w,
 	    int src_x, int src_y, unsigned int src_width,
 	    unsigned int src_height, int dest_x, int dest_y)
 }

@@ -464,12 +464,13 @@ XSelectInput(
     Debugger();
 }
 
-void
+int
 XBell(
     Display* display,
     int percent)
 {
     SysBeep(percent);
+    return Success;
 }
 
 #if 0
@@ -549,7 +550,7 @@ XDrawPoints(
 }
 */
 
-void
+int
 XWarpPointer(
     Display* display,
     Window src_w,
@@ -561,6 +562,7 @@ XWarpPointer(
     int dest_x,
     int dest_y)
 {
+    return Success;
 }
 
 void

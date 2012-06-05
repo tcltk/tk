@@ -1,8 +1,8 @@
-/* 
+/*
  * xgc.c --
  *
  *	This file contains generic routines for manipulating X graphics
- *	contexts. 
+ *	contexts.
  *
  * Copyright (c) 1995-1996 Sun Microsystems, Inc.
  * Copyright (c) 2002-2007 Daniel A. Steffen <das@users.sourceforge.net>
@@ -49,7 +49,7 @@
 
 static TkpClipMask *AllocClipMask(GC gc) {
     TkpClipMask *clip_mask = (TkpClipMask*) gc->clip_mask;
-    
+
     if (clip_mask == None) {
 	clip_mask = (TkpClipMask*) ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
@@ -97,7 +97,7 @@ static void FreeClipMask(GC gc) {
  *	Allocate a new GC, and initialize the specified fields.
  *
  * Results:
- *	Returns a newly allocated GC. 
+ *	Returns a newly allocated GC.
  *
  * Side effects:
  *	None.
@@ -133,7 +133,7 @@ XCreateGC(display, d, mask, values)
 	    BlackPixelOfScreen(DefaultScreenOfDisplay(display));
     gp->background = 	(mask & GCBackground) 	?values->background 	:
 	    WhitePixelOfScreen(DefaultScreenOfDisplay(display));
-    gp->line_width = 	(mask & GCLineWidth)	?values->line_width	:1;	
+    gp->line_width = 	(mask & GCLineWidth)	?values->line_width	:1;
     gp->line_style = 	(mask & GCLineStyle)	?values->line_style	:LineSolid;
     gp->cap_style =  	(mask & GCCapStyle)	?values->cap_style	:0;
     gp->join_style = 	(mask & GCJoinStyle)	?values->join_style	:0;
@@ -156,7 +156,7 @@ XCreateGC(display, d, mask, values)
     gp->clip_mask = None;
     if (mask & GCClipMask) {
 	TkpClipMask *clip_mask = AllocClipMask(gp);
-	
+
 	clip_mask->type = TKP_CLIP_PIXMAP;
 	clip_mask->value.pixmap = values->clip_mask;
     }
@@ -192,7 +192,7 @@ XChangeGC(d, gc, mask, values)
     if (mask & GCPlaneMask) { gc->plane_mask = values->plane_mask; }
     if (mask & GCForeground) { gc->foreground = values->foreground; }
     if (mask & GCBackground) { gc->background = values->background; }
-    if (mask & GCLineWidth) { gc->line_width = values->line_width; }	
+    if (mask & GCLineWidth) { gc->line_width = values->line_width; }
     if (mask & GCLineStyle) { gc->line_style = values->line_style; }
     if (mask & GCCapStyle) { gc->cap_style = values->cap_style; }
     if (mask & GCJoinStyle) { gc->join_style = values->join_style; }
@@ -211,7 +211,7 @@ XChangeGC(d, gc, mask, values)
     if (mask & GCClipMask) { XSetClipMask(d, gc, values->clip_mask); }
     if (mask & GCDashOffset) { gc->dash_offset = values->dash_offset; }
     if (mask & GCDashList) { gc->dashes = values->dashes; (&(gc->dashes))[1] = 0;}
-    return 0;
+    return Success;
 }
 
 /*
@@ -238,7 +238,7 @@ int XFreeGC(d, gc)
 	FreeClipMask(gc);
 	ckfree((char *) gc);
     }
-    return 0;
+    return Success;
 }
 
 /*
@@ -265,7 +265,7 @@ XSetForeground(display, gc, foreground)
     unsigned long foreground;
 {
     gc->foreground = foreground;
-    return 0;
+    return Success;
 }
 
 int
@@ -275,7 +275,7 @@ XSetBackground(display, gc, background)
     unsigned long background;
 {
     gc->background = background;
-    return 0;
+    return Success;
 }
 
 int
@@ -300,7 +300,7 @@ XSetDashes(display, gc, dash_offset, dash_list, n)
 	*p++ = *dash_list++;
     }
     *p = 0;
-    return 0;
+    return Success;
 }
 
 int
@@ -310,7 +310,7 @@ XSetFunction(display, gc, function)
     int function;
 {
     gc->function = function;
-    return 0;
+    return Success;
 }
 
 int
@@ -320,7 +320,7 @@ XSetFillRule(display, gc, fill_rule)
     int fill_rule;
 {
     gc->fill_rule = fill_rule;
-    return 0;
+    return Success;
 }
 
 int
@@ -330,7 +330,7 @@ XSetFillStyle(display, gc, fill_style)
     int fill_style;
 {
     gc->fill_style = fill_style;
-    return 0;
+    return Success;
 }
 
 int
@@ -341,7 +341,7 @@ XSetTSOrigin(display, gc, x, y)
 {
     gc->ts_x_origin = x;
     gc->ts_y_origin = y;
-    return 0;
+    return Success;
 }
 
 int
@@ -351,7 +351,7 @@ XSetFont(display, gc, font)
     Font font;
 {
     gc->font = font;
-    return 0;
+    return Success;
 }
 
 int
@@ -361,7 +361,7 @@ XSetArcMode(display, gc, arc_mode)
     int arc_mode;
 {
     gc->arc_mode = arc_mode;
-    return 0;
+    return Success;
 }
 
 int
@@ -371,7 +371,7 @@ XSetStipple(display, gc, stipple)
     Pixmap stipple;
 {
     gc->stipple = stipple;
-    return 0;
+    return Success;
 }
 
 int
@@ -388,7 +388,7 @@ XSetLineAttributes(display, gc, line_width, line_style, cap_style,
     gc->line_style = line_style;
     gc->cap_style = cap_style;
     gc->join_style = join_style;
-    return 0;
+    return Success;
 }
 
 int
@@ -400,7 +400,7 @@ XSetClipOrigin(display, gc, clip_x_origin, clip_y_origin)
 {
     gc->clip_x_origin = clip_x_origin;
     gc->clip_y_origin = clip_y_origin;
-    return 0;
+    return Success;
 }
 
 /*
@@ -457,7 +457,7 @@ XSetClipMask(display, gc, pixmap)
 	clip_mask->type = TKP_CLIP_PIXMAP;
 	clip_mask->value.pixmap = pixmap;
     }
-    return 0;
+    return Success;
 }
 
 /*

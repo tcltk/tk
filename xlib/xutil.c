@@ -1,4 +1,4 @@
-/* 
+/*
  * xutil.c --
  *
  *	This function contains generic X emulation routines.
@@ -46,7 +46,7 @@ XInternAtom(display, atom_name, only_if_exists)
     Bool only_if_exists;
 {
     static Atom atom = XA_LAST_PREDEFINED;
-    
+
     display->request++;
     return ++atom;
 }
@@ -85,7 +85,7 @@ XGetVisualInfo(display, vinfo_mask, vinfo_template, nitems_return)
     info->red_mask = info->visual->red_mask;
     info->green_mask = info->visual->green_mask;
     info->blue_mask = info->visual->blue_mask;
-    
+
     if (((vinfo_mask & VisualIDMask)
 	    && (vinfo_template->visualid != info->visualid))
 	    || ((vinfo_mask & VisualScreenMask)
