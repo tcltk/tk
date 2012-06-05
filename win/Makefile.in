@@ -92,6 +92,11 @@ TCL_BIN_DIR		= @TCL_BIN_DIR@
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
 TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
+
+# The directory containing the platform specific Tcl sources and headers
+# appropriate for this version of Tk:
+TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/win
+
 TCL_TOOL_DIR		= @TCL_SRC_DIR@/tools
 
 # Converts a POSIX path to a Windows native path.
@@ -117,6 +122,7 @@ BITMAP_DIR_NATIVE	= $(ROOT_DIR_NATIVE)/bitmaps
 XLIB_DIR_NATIVE		= $(ROOT_DIR_NATIVE)/xlib
 RC_DIR_NATIVE      	= $(WIN_DIR_NATIVE)/rc
 TCL_GENERIC_NATIVE	= $(shell $(CYGPATH) '$(TCL_GENERIC_DIR)' | sed 's!\\!/!g')
+TCL_PLATFORM_NATIVE	= $(shell $(CYGPATH) '$(TCL_PLATFORM_DIR)' | sed 's!\\!/!g')
 TCL_SRC_DIR_NATIVE      = $(shell $(CYGPATH) '$(TCL_SRC_DIR)' | sed 's!\\!/!g')
 
 DLLSUFFIX		= @DLLSUFFIX@
@@ -203,7 +209,7 @@ TCL_EXE			= @TCLSH_PROG@
 CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
 -I"${XLIB_DIR_NATIVE}" -I"${BITMAP_DIR_NATIVE}" \
- -I"${TCL_GENERIC_NATIVE}" ${AC_FLAGS}
+-I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}" ${AC_FLAGS}
 
 CC_OBJNAME = @CC_OBJNAME@
 CC_EXENAME = @CC_EXENAME@
@@ -349,6 +355,11 @@ CORE_DOCS = $(TCL_DOCS) $(TK_DOCS)
 
 DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
 
+SHELL_ENV = \
+	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
+	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
+	PATH="$(TCL_BIN_DIR):$(PATH)"; export PATH;
+
 # Main targets.  The default target -- all -- builds the binaries, 
 # performs any post processing on libraries or documents.
 
@@ -376,26 +387,22 @@ $(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/tools/man2tcl.c
 # args to tcltest, ie:
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
-test: binaries $(TKTEST)
-	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
-	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
-	PATH="$(TCL_BIN_DIR):$(PATH)"; export PATH; \
-	./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" $(TESTFLAGS) \
-	| ./$(CAT32)
+test: test-classic
+
+test-classic: binaries $(TKTEST)
+	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" \
+	$(TESTFLAGS) | ./$(CAT32)
 
 runtest: binaries $(TKTEST)
-	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
-	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
-	PATH="$(TCL_BIN_DIR):$(PATH)"; export PATH; \
-	./$(TKTEST) $(TESTFLAGS) $(SCRIPT)
+	$(SHELL_ENV) ./$(TKTEST) $(TESTFLAGS) $(SCRIPT)
 
 # This target can be used to run wish from the build directory
 # via `make shell` or `make shell SCRIPT=foo.tcl`
 shell: binaries
-	@TCL_LIBRARY="$(TCL_SRC_DIR_NATIVE)/library"; export TCL_LIBRARY; \
-	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
-	PATH="$(TCL_BIN_DIR):$(PATH)"; export PATH; \
-	./$(WISH) $(SCRIPT)
+	$(SHELL_ENV) ./$(WISH) $(SCRIPT)
+
+demo: $(WISH)
+	$(SHELL_ENV) ./$(WISH) $(ROOT_DIR)/library/demos/widget
 
 # This target can be used to run wish inside either gdb or insight
 gdb: binaries
@@ -539,8 +546,7 @@ install-private-headers: libraries
 	@echo "Installing private header files to $(PRIVATE_INCLUDE_INSTALL_DIR)/";
 	@for i in $(GENERIC_DIR)/tkInt.h $(GENERIC_DIR)/tkIntDecls.h \
 		$(GENERIC_DIR)/tkIntPlatDecls.h $(GENERIC_DIR)/tkPort.h \
-		$(WIN_DIR)/tkWinPort.h $(WIN_DIR)/tkWinInt.h \
-		$(WIN_DIR)/tkWin.h; \
+		$(WIN_DIR)/tkWinPort.h $(WIN_DIR)/tkWinInt.h $(WIN_DIR)/tkWin.h; \
 	    do \
 	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
 	    done;
@@ -562,7 +568,7 @@ $(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
 $(TCL_SRC_DIR)/win/cat.c:
 
 cat32.${OBJEXT}: $(TCL_SRC_DIR)/win/cat.c
-	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
+	$(CC) -c $(CC_SWITCHES) "$(TCL_SRC_DIR)/win/cat.c" $(CC_OBJNAME)
 
 $(CAT32): cat32.${OBJEXT}
 	$(CC) $(CFLAGS) cat32.$(OBJEXT) $(CC_EXENAME) $(LIBS) $(LDFLAGS_CONSOLE)
@@ -602,6 +608,11 @@ tkWinTest.$(OBJEXT): tkWinTest.c
 tkSquare.$(OBJEXT): tkSquare.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
+# Extra dependency info
+tkConsole.$(OBJEXT): configure Makefile
+tkMain.$(OBJEXT): configure Makefile
+tkWindow.$(OBJEXT): configure Makefile
+
 # Add the object extension to the implicit rules.  By default .obj is not
 # automatically added.
 
@@ -609,9 +620,9 @@ tkSquare.$(OBJEXT): tkSquare.c
 .SUFFIXES: .$(RES)
 .SUFFIXES: .rc
 
-# Implicit rule for all object files that will end up in the Tcl library
+# Implicit rule for all object files that will end up in the Tk library
 
-.c.$(OBJEXT):
+%.$(OBJEXT): %.c
 	$(CC) -c $(STUB_CC_SWITCHES) -DBUILD_tk @DEPARG@ $(CC_OBJNAME)
 
 .rc.$(RES):
