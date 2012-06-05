@@ -189,19 +189,12 @@ XSetSelectionOwner(
  *----------------------------------------------------------------------
  */
 
-<<<<<<< BEGIN MERGE CONFLICT: original content first <<<<<<<
 void
 TkMacOSXSelDeadWindow(
     TkWindow *winPtr)
 {
     if (winPtr && winPtr == (TkWindow *)clipboardOwner) {
 	clipboardOwner = NULL;
-======= original content above; conflict below =============
-	dispPtr = TkGetMainInfoList()->winPtr->dispPtr;
-	if (!dispPtr->clipboardActive) {
-	    ClearCurrentScrap();
-	}
->>>>>>> END MERGE CONFLICT: conflict last >>>>>>>>>>>>>>>>>>
     }
     return Success;
 }
