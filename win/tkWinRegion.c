@@ -11,6 +11,13 @@
 
 #include "tkWinInt.h"
 
+#undef TkCreateRegion
+#undef TkDestroyRegion
+#undef TkClipBox
+#undef TkIntersectRegion
+#undef TkUnionRectWithRegion
+#undef TkRectInRegion
+#undef TkSubtractRegion
 
 /*
  *----------------------------------------------------------------------

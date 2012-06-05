@@ -343,7 +343,7 @@ XQueryPointer(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XWarpPointer(
     Display *display,
     Window src_w,

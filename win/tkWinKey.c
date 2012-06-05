@@ -692,12 +692,13 @@ XGetModifierMapping(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFreeModifiermap(
     XModifierKeymap *modmap)
 {
     ckfree((char *) modmap->modifiermap);
     ckfree((char *) modmap);
+    return Success;
 }
 
 /*

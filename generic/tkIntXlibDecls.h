@@ -32,11 +32,11 @@
  * Exported function declarations:
  */
 
-#if defined(__WIN32__) /* WIN */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
 #ifndef XSetDashes_TCL_DECLARED
 #define XSetDashes_TCL_DECLARED
 /* 0 */
-EXTERN void		XSetDashes(Display *display, GC gc, int dash_offset,
+EXTERN int		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);
 #endif
 #ifndef XGetModifierMapping_TCL_DECLARED
@@ -86,7 +86,7 @@ EXTERN Cursor		XCreatePixmapCursor(Display *d, Pixmap p1, Pixmap p2,
 /* 8 */
 EXTERN Cursor		XCreateGlyphCursor(Display *d, Font f1, Font f2,
 				unsigned int ui1, unsigned int ui2,
-				XColor *x1, XColor *x2);
+				XColor _Xconst *x1, XColor _Xconst *x2);
 #endif
 #ifndef XGContextFromGC_TCL_DECLARED
 #define XGContextFromGC_TCL_DECLARED
@@ -142,7 +142,7 @@ EXTERN Status		XAllocColor(Display *d, Colormap c, XColor *xp);
 #ifndef XBell_TCL_DECLARED
 #define XBell_TCL_DECLARED
 /* 19 */
-EXTERN void		XBell(Display *d, int i);
+EXTERN int		XBell(Display *d, int i);
 #endif
 #ifndef XChangeProperty_TCL_DECLARED
 #define XChangeProperty_TCL_DECLARED
@@ -193,7 +193,7 @@ EXTERN Pixmap		XCreateBitmapFromData(Display *display, Drawable d,
 #ifndef XDefineCursor_TCL_DECLARED
 #define XDefineCursor_TCL_DECLARED
 /* 27 */
-EXTERN void		XDefineCursor(Display *d, Window w, Cursor c);
+EXTERN int		XDefineCursor(Display *d, Window w, Cursor c);
 #endif
 #ifndef XDeleteProperty_TCL_DECLARED
 #define XDeleteProperty_TCL_DECLARED
@@ -215,7 +215,7 @@ EXTERN void		XDrawArc(Display *d, Drawable dr, GC g, int i1,
 #ifndef XDrawLines_TCL_DECLARED
 #define XDrawLines_TCL_DECLARED
 /* 31 */
-EXTERN void		XDrawLines(Display *d, Drawable dr, GC g, XPoint *x,
+EXTERN int		XDrawLines(Display *d, Drawable dr, GC g, XPoint *x,
 				int i1, int i2);
 #endif
 #ifndef XDrawRectangle_TCL_DECLARED
@@ -240,7 +240,7 @@ EXTERN void		XFillPolygon(Display *d, Drawable dr, GC g,
 #ifndef XFillRectangles_TCL_DECLARED
 #define XFillRectangles_TCL_DECLARED
 /* 35 */
-EXTERN void		XFillRectangles(Display *d, Drawable dr, GC g,
+EXTERN int		XFillRectangles(Display *d, Drawable dr, GC g,
 				XRectangle *x, int i);
 #endif
 #ifndef XForceScreenSaver_TCL_DECLARED
@@ -251,12 +251,12 @@ EXTERN void		XForceScreenSaver(Display *d, int i);
 #ifndef XFreeColormap_TCL_DECLARED
 #define XFreeColormap_TCL_DECLARED
 /* 37 */
-EXTERN void		XFreeColormap(Display *d, Colormap c);
+EXTERN int		XFreeColormap(Display *d, Colormap c);
 #endif
 #ifndef XFreeColors_TCL_DECLARED
 #define XFreeColors_TCL_DECLARED
 /* 38 */
-EXTERN void		XFreeColors(Display *d, Colormap c,
+EXTERN int		XFreeColors(Display *d, Colormap c,
 				unsigned long *ulp, int i, unsigned long ul);
 #endif
 #ifndef XFreeCursor_TCL_DECLARED
@@ -267,7 +267,7 @@ EXTERN void		XFreeCursor(Display *d, Cursor c);
 #ifndef XFreeModifiermap_TCL_DECLARED
 #define XFreeModifiermap_TCL_DECLARED
 /* 40 */
-EXTERN void		XFreeModifiermap(XModifierKeymap *x);
+EXTERN int		XFreeModifiermap(XModifierKeymap *x);
 #endif
 #ifndef XGetGeometry_TCL_DECLARED
 #define XGetGeometry_TCL_DECLARED
@@ -395,7 +395,7 @@ EXTERN Status		XSendEvent(Display *d, Window w, Bool b, long l,
 #ifndef XSetCommand_TCL_DECLARED
 #define XSetCommand_TCL_DECLARED
 /* 62 */
-EXTERN void		XSetCommand(Display *d, Window w, char **c, int i);
+EXTERN int		XSetCommand(Display *d, Window w, char **c, int i);
 #endif
 #ifndef XSetIconName_TCL_DECLARED
 #define XSetIconName_TCL_DECLARED
@@ -410,7 +410,7 @@ EXTERN void		XSetInputFocus(Display *d, Window w, int i, Time t);
 #ifndef XSetSelectionOwner_TCL_DECLARED
 #define XSetSelectionOwner_TCL_DECLARED
 /* 65 */
-EXTERN void		XSetSelectionOwner(Display *d, Atom a, Window w,
+EXTERN int		XSetSelectionOwner(Display *d, Atom a, Window w,
 				Time t);
 #endif
 #ifndef XSetWindowBackground_TCL_DECLARED
@@ -463,7 +463,7 @@ EXTERN void		XUngrabKeyboard(Display *d, Time t);
 #ifndef XUngrabPointer_TCL_DECLARED
 #define XUngrabPointer_TCL_DECLARED
 /* 74 */
-EXTERN void		XUngrabPointer(Display *d, Time t);
+EXTERN int		XUngrabPointer(Display *d, Time t);
 #endif
 #ifndef XUnmapWindow_TCL_DECLARED
 #define XUnmapWindow_TCL_DECLARED
@@ -494,7 +494,7 @@ EXTERN int		XmbLookupString(XIC xi, XKeyPressedEvent *xk,
 #ifndef TkPutImage_TCL_DECLARED
 #define TkPutImage_TCL_DECLARED
 /* 80 */
-EXTERN void		TkPutImage(unsigned long *colors, int ncolors,
+EXTERN int		TkPutImage(unsigned long *colors, int ncolors,
 				Display *display, Drawable d, GC gc,
 				XImage *image, int src_x, int src_y,
 				int dest_x, int dest_y, unsigned int width,
@@ -629,20 +629,20 @@ EXTERN Status		XStringListToTextProperty(char **list, int count,
 #ifndef XDrawLine_TCL_DECLARED
 #define XDrawLine_TCL_DECLARED
 /* 104 */
-EXTERN void		XDrawLine(Display *d, Drawable dr, GC g, int x1,
+EXTERN int		XDrawLine(Display *d, Drawable dr, GC g, int x1,
 				int y1, int x2, int y2);
 #endif
 #ifndef XWarpPointer_TCL_DECLARED
 #define XWarpPointer_TCL_DECLARED
 /* 105 */
-EXTERN void		XWarpPointer(Display *d, Window s, Window dw, int sx,
+EXTERN int		XWarpPointer(Display *d, Window s, Window dw, int sx,
 				int sy, unsigned int sw, unsigned int sh,
 				int dx, int dy);
 #endif
 #ifndef XFillRectangle_TCL_DECLARED
 #define XFillRectangle_TCL_DECLARED
 /* 106 */
-EXTERN void		XFillRectangle(Display *display, Drawable d, GC gc,
+EXTERN int		XFillRectangle(Display *display, Drawable d, GC gc,
 				int x, int y, unsigned int width,
 				unsigned int height);
 #endif
@@ -651,7 +651,7 @@ EXTERN void		XFillRectangle(Display *display, Drawable d, GC gc,
 #ifndef XSetDashes_TCL_DECLARED
 #define XSetDashes_TCL_DECLARED
 /* 0 */
-EXTERN void		XSetDashes(Display *display, GC gc, int dash_offset,
+EXTERN int		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);
 #endif
 #ifndef XGetModifierMapping_TCL_DECLARED
@@ -722,7 +722,7 @@ EXTERN Status		XAllocColor(Display *d, Colormap c, XColor *xp);
 #ifndef XBell_TCL_DECLARED
 #define XBell_TCL_DECLARED
 /* 13 */
-EXTERN void		XBell(Display *d, int i);
+EXTERN int		XBell(Display *d, int i);
 #endif
 #ifndef XChangeProperty_TCL_DECLARED
 #define XChangeProperty_TCL_DECLARED
@@ -768,7 +768,7 @@ EXTERN Pixmap		XCreateBitmapFromData(Display *display, Drawable d,
 #ifndef XDefineCursor_TCL_DECLARED
 #define XDefineCursor_TCL_DECLARED
 /* 20 */
-EXTERN void		XDefineCursor(Display *d, Window w, Cursor c);
+EXTERN int		XDefineCursor(Display *d, Window w, Cursor c);
 #endif
 #ifndef XDestroyWindow_TCL_DECLARED
 #define XDestroyWindow_TCL_DECLARED
@@ -785,7 +785,7 @@ EXTERN void		XDrawArc(Display *d, Drawable dr, GC g, int i1,
 #ifndef XDrawLines_TCL_DECLARED
 #define XDrawLines_TCL_DECLARED
 /* 23 */
-EXTERN void		XDrawLines(Display *d, Drawable dr, GC g, XPoint *x,
+EXTERN int		XDrawLines(Display *d, Drawable dr, GC g, XPoint *x,
 				int i1, int i2);
 #endif
 #ifndef XDrawRectangle_TCL_DECLARED
@@ -810,24 +810,24 @@ EXTERN void		XFillPolygon(Display *d, Drawable dr, GC g,
 #ifndef XFillRectangles_TCL_DECLARED
 #define XFillRectangles_TCL_DECLARED
 /* 27 */
-EXTERN void		XFillRectangles(Display *d, Drawable dr, GC g,
+EXTERN int		XFillRectangles(Display *d, Drawable dr, GC g,
 				XRectangle *x, int i);
 #endif
 #ifndef XFreeColormap_TCL_DECLARED
 #define XFreeColormap_TCL_DECLARED
 /* 28 */
-EXTERN void		XFreeColormap(Display *d, Colormap c);
+EXTERN int		XFreeColormap(Display *d, Colormap c);
 #endif
 #ifndef XFreeColors_TCL_DECLARED
 #define XFreeColors_TCL_DECLARED
 /* 29 */
-EXTERN void		XFreeColors(Display *d, Colormap c,
+EXTERN int		XFreeColors(Display *d, Colormap c,
 				unsigned long *ulp, int i, unsigned long ul);
 #endif
 #ifndef XFreeModifiermap_TCL_DECLARED
 #define XFreeModifiermap_TCL_DECLARED
 /* 30 */
-EXTERN void		XFreeModifiermap(XModifierKeymap *x);
+EXTERN int		XFreeModifiermap(XModifierKeymap *x);
 #endif
 #ifndef XGetGeometry_TCL_DECLARED
 #define XGetGeometry_TCL_DECLARED
@@ -926,7 +926,7 @@ EXTERN void		XSetInputFocus(Display *d, Window w, int i, Time t);
 #ifndef XSetSelectionOwner_TCL_DECLARED
 #define XSetSelectionOwner_TCL_DECLARED
 /* 47 */
-EXTERN void		XSetSelectionOwner(Display *d, Atom a, Window w,
+EXTERN int		XSetSelectionOwner(Display *d, Atom a, Window w,
 				Time t);
 #endif
 #ifndef XSetWindowBackground_TCL_DECLARED
@@ -972,7 +972,7 @@ EXTERN void		XUngrabKeyboard(Display *d, Time t);
 #ifndef XUngrabPointer_TCL_DECLARED
 #define XUngrabPointer_TCL_DECLARED
 /* 55 */
-EXTERN void		XUngrabPointer(Display *d, Time t);
+EXTERN int		XUngrabPointer(Display *d, Time t);
 #endif
 #ifndef XUnmapWindow_TCL_DECLARED
 #define XUnmapWindow_TCL_DECLARED
@@ -982,7 +982,7 @@ EXTERN void		XUnmapWindow(Display *d, Window w);
 #ifndef TkPutImage_TCL_DECLARED
 #define TkPutImage_TCL_DECLARED
 /* 57 */
-EXTERN void		TkPutImage(unsigned long *colors, int ncolors,
+EXTERN int		TkPutImage(unsigned long *colors, int ncolors,
 				Display *display, Drawable d, GC gc,
 				XImage *image, int src_x, int src_y,
 				int dest_x, int dest_y, unsigned int width,
@@ -1127,13 +1127,13 @@ EXTERN void		XForceScreenSaver(Display *display, int mode);
 #ifndef XDrawLine_TCL_DECLARED
 #define XDrawLine_TCL_DECLARED
 /* 82 */
-EXTERN void		XDrawLine(Display *d, Drawable dr, GC g, int x1,
+EXTERN int		XDrawLine(Display *d, Drawable dr, GC g, int x1,
 				int y1, int x2, int y2);
 #endif
 #ifndef XFillRectangle_TCL_DECLARED
 #define XFillRectangle_TCL_DECLARED
 /* 83 */
-EXTERN void		XFillRectangle(Display *display, Drawable d, GC gc,
+EXTERN int		XFillRectangle(Display *display, Drawable d, GC gc,
 				int x, int y, unsigned int width,
 				unsigned int height);
 #endif
@@ -1157,7 +1157,7 @@ EXTERN void		XDrawPoints(Display *display, Drawable d, GC gc,
 #ifndef XWarpPointer_TCL_DECLARED
 #define XWarpPointer_TCL_DECLARED
 /* 87 */
-EXTERN void		XWarpPointer(Display *display, Window src_w,
+EXTERN int		XWarpPointer(Display *display, Window src_w,
 				Window dest_w, int src_x, int src_y,
 				unsigned int src_width,
 				unsigned int src_height, int dest_x,
@@ -1192,8 +1192,8 @@ typedef struct TkIntXlibStubs {
     int magic;
     struct TkIntXlibStubHooks *hooks;
 
-#if defined(__WIN32__) /* WIN */
-    void (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+    int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
     XImage * (*xGetImage) (Display *d, Drawable dr, int i1, int i2, unsigned int ui1, unsigned int ui2, unsigned long ul, int i3); /* 3 */
@@ -1201,7 +1201,7 @@ typedef struct TkIntXlibStubs {
     char * (*xKeysymToString) (KeySym k); /* 5 */
     Colormap (*xCreateColormap) (Display *d, Window w, Visual *v, int i); /* 6 */
     Cursor (*xCreatePixmapCursor) (Display *d, Pixmap p1, Pixmap p2, XColor *x1, XColor *x2, unsigned int ui1, unsigned int ui2); /* 7 */
-    Cursor (*xCreateGlyphCursor) (Display *d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor *x1, XColor *x2); /* 8 */
+    Cursor (*xCreateGlyphCursor) (Display *d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor _Xconst *x1, XColor _Xconst *x2); /* 8 */
     GContext (*xGContextFromGC) (GC g); /* 9 */
     XHostAddress * (*xListHosts) (Display *d, int *i, Bool *b); /* 10 */
     KeySym (*xKeycodeToKeysym) (Display *d, unsigned int k, int i); /* 11 */
@@ -1212,7 +1212,7 @@ typedef struct TkIntXlibStubs {
     Status (*xWithdrawWindow) (Display *d, Window w, int i); /* 16 */
     Status (*xGetWMColormapWindows) (Display *d, Window w, Window **wpp, int *ip); /* 17 */
     Status (*xAllocColor) (Display *d, Colormap c, XColor *xp); /* 18 */
-    void (*xBell) (Display *d, int i); /* 19 */
+    int (*xBell) (Display *d, int i); /* 19 */
     void (*xChangeProperty) (Display *d, Window w, Atom a1, Atom a2, int i1, int i2, _Xconst unsigned char *c, int i3); /* 20 */
     void (*xChangeWindowAttributes) (Display *d, Window w, unsigned long ul, XSetWindowAttributes *x); /* 21 */
     void (*xClearWindow) (Display *d, Window w); /* 22 */
@@ -1220,20 +1220,20 @@ typedef struct TkIntXlibStubs {
     void (*xCopyArea) (Display *d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4); /* 24 */
     void (*xCopyPlane) (Display *d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4, unsigned long ul); /* 25 */
     Pixmap (*xCreateBitmapFromData) (Display *display, Drawable d, _Xconst char *data, unsigned int width, unsigned int height); /* 26 */
-    void (*xDefineCursor) (Display *d, Window w, Cursor c); /* 27 */
+    int (*xDefineCursor) (Display *d, Window w, Cursor c); /* 27 */
     void (*xDeleteProperty) (Display *d, Window w, Atom a); /* 28 */
     void (*xDestroyWindow) (Display *d, Window w); /* 29 */
     void (*xDrawArc) (Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4); /* 30 */
-    void (*xDrawLines) (Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2); /* 31 */
+    int (*xDrawLines) (Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2); /* 31 */
     void (*xDrawRectangle) (Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2); /* 32 */
     void (*xFillArc) (Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4); /* 33 */
     void (*xFillPolygon) (Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2, int i3); /* 34 */
-    void (*xFillRectangles) (Display *d, Drawable dr, GC g, XRectangle *x, int i); /* 35 */
+    int (*xFillRectangles) (Display *d, Drawable dr, GC g, XRectangle *x, int i); /* 35 */
     void (*xForceScreenSaver) (Display *d, int i); /* 36 */
-    void (*xFreeColormap) (Display *d, Colormap c); /* 37 */
-    void (*xFreeColors) (Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul); /* 38 */
+    int (*xFreeColormap) (Display *d, Colormap c); /* 37 */
+    int (*xFreeColors) (Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul); /* 38 */
     void (*xFreeCursor) (Display *d, Cursor c); /* 39 */
-    void (*xFreeModifiermap) (XModifierKeymap *x); /* 40 */
+    int (*xFreeModifiermap) (XModifierKeymap *x); /* 40 */
     Status (*xGetGeometry) (Display *d, Drawable dr, Window *w, int *i1, int *i2, unsigned int *ui1, unsigned int *ui2, unsigned int *ui3, unsigned int *ui4); /* 41 */
     void (*xGetInputFocus) (Display *d, Window *w, int *i); /* 42 */
     int (*xGetWindowProperty) (Display *d, Window w, Atom a1, long l1, long l2, Bool b, Atom a2, Atom *ap, int *ip, unsigned long *ulp1, unsigned long *ulp2, unsigned char **cpp); /* 43 */
@@ -1255,10 +1255,10 @@ typedef struct TkIntXlibStubs {
     void (*xResizeWindow) (Display *d, Window w, unsigned int ui1, unsigned int ui2); /* 59 */
     void (*xSelectInput) (Display *d, Window w, long l); /* 60 */
     Status (*xSendEvent) (Display *d, Window w, Bool b, long l, XEvent *x); /* 61 */
-    void (*xSetCommand) (Display *d, Window w, char **c, int i); /* 62 */
+    int (*xSetCommand) (Display *d, Window w, char **c, int i); /* 62 */
     void (*xSetIconName) (Display *d, Window w, _Xconst char *c); /* 63 */
     void (*xSetInputFocus) (Display *d, Window w, int i, Time t); /* 64 */
-    void (*xSetSelectionOwner) (Display *d, Atom a, Window w, Time t); /* 65 */
+    int (*xSetSelectionOwner) (Display *d, Atom a, Window w, Time t); /* 65 */
     void (*xSetWindowBackground) (Display *d, Window w, unsigned long ul); /* 66 */
     void (*xSetWindowBackgroundPixmap) (Display *d, Window w, Pixmap p); /* 67 */
     void (*xSetWindowBorder) (Display *d, Window w, unsigned long ul); /* 68 */
@@ -1267,13 +1267,13 @@ typedef struct TkIntXlibStubs {
     void (*xSetWindowColormap) (Display *d, Window w, Colormap c); /* 71 */
     Bool (*xTranslateCoordinates) (Display *d, Window w1, Window w2, int i1, int i2, int *i3, int *i4, Window *w3); /* 72 */
     void (*xUngrabKeyboard) (Display *d, Time t); /* 73 */
-    void (*xUngrabPointer) (Display *d, Time t); /* 74 */
+    int (*xUngrabPointer) (Display *d, Time t); /* 74 */
     void (*xUnmapWindow) (Display *d, Window w); /* 75 */
     void (*xWindowEvent) (Display *d, Window w, long l, XEvent *x); /* 76 */
     void (*xDestroyIC) (XIC x); /* 77 */
     Bool (*xFilterEvent) (XEvent *x, Window w); /* 78 */
     int (*xmbLookupString) (XIC xi, XKeyPressedEvent *xk, char *c, int i, KeySym *k, Status *s); /* 79 */
-    void (*tkPutImage) (unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height); /* 80 */
+    int (*tkPutImage) (unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height); /* 80 */
     VOID *reserved81;
     Status (*xParseColor) (Display *display, Colormap map, _Xconst char *spec, XColor *colorPtr); /* 82 */
     GC (*xCreateGC) (Display *display, Drawable d, unsigned long valuemask, XGCValues *values); /* 83 */
@@ -1297,12 +1297,12 @@ typedef struct TkIntXlibStubs {
     XVisualInfo * (*xGetVisualInfo) (Display *display, long vinfo_mask, XVisualInfo *vinfo_template, int *nitems_return); /* 101 */
     void (*xSetWMClientMachine) (Display *display, Window w, XTextProperty *text_prop); /* 102 */
     Status (*xStringListToTextProperty) (char **list, int count, XTextProperty *text_prop_return); /* 103 */
-    void (*xDrawLine) (Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2); /* 104 */
-    void (*xWarpPointer) (Display *d, Window s, Window dw, int sx, int sy, unsigned int sw, unsigned int sh, int dx, int dy); /* 105 */
-    void (*xFillRectangle) (Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height); /* 106 */
+    int (*xDrawLine) (Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2); /* 104 */
+    int (*xWarpPointer) (Display *d, Window s, Window dw, int sx, int sy, unsigned int sw, unsigned int sh, int dx, int dy); /* 105 */
+    int (*xFillRectangle) (Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height); /* 106 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    void (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
+    int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
     XImage * (*xGetImage) (Display *d, Drawable dr, int i1, int i2, unsigned int ui1, unsigned int ui2, unsigned long ul, int i3); /* 3 */
@@ -1315,24 +1315,24 @@ typedef struct TkIntXlibStubs {
     Window (*xRootWindow) (Display *d, int i); /* 10 */
     XErrorHandler (*xSetErrorHandler) (XErrorHandler x); /* 11 */
     Status (*xAllocColor) (Display *d, Colormap c, XColor *xp); /* 12 */
-    void (*xBell) (Display *d, int i); /* 13 */
+    int (*xBell) (Display *d, int i); /* 13 */
     void (*xChangeProperty) (Display *d, Window w, Atom a1, Atom a2, int i1, int i2, _Xconst unsigned char *c, int i3); /* 14 */
     void (*xChangeWindowAttributes) (Display *d, Window w, unsigned long ul, XSetWindowAttributes *x); /* 15 */
     void (*xConfigureWindow) (Display *d, Window w, unsigned int i, XWindowChanges *x); /* 16 */
     void (*xCopyArea) (Display *d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4); /* 17 */
     void (*xCopyPlane) (Display *d, Drawable dr1, Drawable dr2, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4, unsigned long ul); /* 18 */
     Pixmap (*xCreateBitmapFromData) (Display *display, Drawable d, _Xconst char *data, unsigned int width, unsigned int height); /* 19 */
-    void (*xDefineCursor) (Display *d, Window w, Cursor c); /* 20 */
+    int (*xDefineCursor) (Display *d, Window w, Cursor c); /* 20 */
     void (*xDestroyWindow) (Display *d, Window w); /* 21 */
     void (*xDrawArc) (Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4); /* 22 */
-    void (*xDrawLines) (Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2); /* 23 */
+    int (*xDrawLines) (Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2); /* 23 */
     void (*xDrawRectangle) (Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2); /* 24 */
     void (*xFillArc) (Display *d, Drawable dr, GC g, int i1, int i2, unsigned int ui1, unsigned int ui2, int i3, int i4); /* 25 */
     void (*xFillPolygon) (Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2, int i3); /* 26 */
-    void (*xFillRectangles) (Display *d, Drawable dr, GC g, XRectangle *x, int i); /* 27 */
-    void (*xFreeColormap) (Display *d, Colormap c); /* 28 */
-    void (*xFreeColors) (Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul); /* 29 */
-    void (*xFreeModifiermap) (XModifierKeymap *x); /* 30 */
+    int (*xFillRectangles) (Display *d, Drawable dr, GC g, XRectangle *x, int i); /* 27 */
+    int (*xFreeColormap) (Display *d, Colormap c); /* 28 */
+    int (*xFreeColors) (Display *d, Colormap c, unsigned long *ulp, int i, unsigned long ul); /* 29 */
+    int (*xFreeModifiermap) (XModifierKeymap *x); /* 30 */
     Status (*xGetGeometry) (Display *d, Drawable dr, Window *w, int *i1, int *i2, unsigned int *ui1, unsigned int *ui2, unsigned int *ui3, unsigned int *ui4); /* 31 */
     int (*xGetWindowProperty) (Display *d, Window w, Atom a1, long l1, long l2, Bool b, Atom a2, Atom *ap, int *ip, unsigned long *ulp1, unsigned long *ulp2, unsigned char **cpp); /* 32 */
     int (*xGrabKeyboard) (Display *d, Window w, Bool b, int i1, int i2, Time t); /* 33 */
@@ -1349,7 +1349,7 @@ typedef struct TkIntXlibStubs {
     Status (*xSendEvent) (Display *d, Window w, Bool b, long l, XEvent *x); /* 44 */
     void (*xSetIconName) (Display *d, Window w, _Xconst char *c); /* 45 */
     void (*xSetInputFocus) (Display *d, Window w, int i, Time t); /* 46 */
-    void (*xSetSelectionOwner) (Display *d, Atom a, Window w, Time t); /* 47 */
+    int (*xSetSelectionOwner) (Display *d, Atom a, Window w, Time t); /* 47 */
     void (*xSetWindowBackground) (Display *d, Window w, unsigned long ul); /* 48 */
     void (*xSetWindowBackgroundPixmap) (Display *d, Window w, Pixmap p); /* 49 */
     void (*xSetWindowBorder) (Display *d, Window w, unsigned long ul); /* 50 */
@@ -1357,9 +1357,9 @@ typedef struct TkIntXlibStubs {
     void (*xSetWindowBorderWidth) (Display *d, Window w, unsigned int ui); /* 52 */
     void (*xSetWindowColormap) (Display *d, Window w, Colormap c); /* 53 */
     void (*xUngrabKeyboard) (Display *d, Time t); /* 54 */
-    void (*xUngrabPointer) (Display *d, Time t); /* 55 */
+    int (*xUngrabPointer) (Display *d, Time t); /* 55 */
     void (*xUnmapWindow) (Display *d, Window w); /* 56 */
-    void (*tkPutImage) (unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height); /* 57 */
+    int (*tkPutImage) (unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height); /* 57 */
     Status (*xParseColor) (Display *display, Colormap map, _Xconst char *spec, XColor *colorPtr); /* 58 */
     GC (*xCreateGC) (Display *display, Drawable d, unsigned long valuemask, XGCValues *values); /* 59 */
     void (*xFreeGC) (Display *display, GC gc); /* 60 */
@@ -1384,12 +1384,12 @@ typedef struct TkIntXlibStubs {
     Status (*xStringListToTextProperty) (char **list, int count, XTextProperty *text_prop_return); /* 79 */
     void (*xDrawSegments) (Display *display, Drawable d, GC gc, XSegment *segments, int nsegments); /* 80 */
     void (*xForceScreenSaver) (Display *display, int mode); /* 81 */
-    void (*xDrawLine) (Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2); /* 82 */
-    void (*xFillRectangle) (Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height); /* 83 */
+    int (*xDrawLine) (Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2); /* 82 */
+    int (*xFillRectangle) (Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height); /* 83 */
     void (*xClearWindow) (Display *d, Window w); /* 84 */
     void (*xDrawPoint) (Display *display, Drawable d, GC gc, int x, int y); /* 85 */
     void (*xDrawPoints) (Display *display, Drawable d, GC gc, XPoint *points, int npoints, int mode); /* 86 */
-    void (*xWarpPointer) (Display *display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y); /* 87 */
+    int (*xWarpPointer) (Display *display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y); /* 87 */
     void (*xQueryColor) (Display *display, Colormap colormap, XColor *def_in_out); /* 88 */
     void (*xQueryColors) (Display *display, Colormap colormap, XColor *defs_in_out, int ncolors); /* 89 */
     Status (*xQueryTree) (Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui); /* 90 */
@@ -1411,7 +1411,7 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
  * Inline function declarations:
  */
 
-#if defined(__WIN32__) /* WIN */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
 #ifndef XSetDashes
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */

@@ -1,3 +1,9 @@
+2012-06-02  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.decls:   Change XSetDashes signature and many others
+	* generic/tkIntDecls.h:  to match Xorg, needed for Cygwin.
+	* generic/tkIntXlibDeclsDecls.h
+
 2012-05-30  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkWindow.c:    Simpify determination whether we are running on cygwin.
