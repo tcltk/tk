@@ -185,7 +185,7 @@ TkSelGetSelection(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XSetSelectionOwner(
     Display *display,
     Atom selection,
@@ -212,6 +212,7 @@ XSetSelectionOwner(
 	    UpdateClipboard(hwnd);
 	}
     }
+    return Success;
 }
 
 /*
