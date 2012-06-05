@@ -94,7 +94,7 @@ TkpGetString(winPtr, eventPtr, dsPtr)
         }
     } else if (eventPtr->xkey.send_event == -2) {
         /*
-         * Special case for win2000 multi-lingal IME input. 
+         * Special case for win2000 multi-lingal IME input.
          * xkey.trans_chars[] already contains a UNICODE char.
          */
 
@@ -119,12 +119,12 @@ TkpGetString(winPtr, eventPtr, dsPtr)
     } else  {
 	/*
 	 * This is an event generated from generic code.  It has no
-	 * nchars or trans_chars members. 
+	 * nchars or trans_chars members.
 	 */
 
 	keysym = KeycodeToKeysym(eventPtr->xkey.keycode,
 		eventPtr->xkey.state, 0);
-	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256)) 
+	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
 		|| (keysym == XK_Return)
 		|| (keysym == XK_Tab)) {
 	    char buf[TCL_UTF_MAX];
@@ -226,7 +226,7 @@ KeycodeToKeysym(keycode, state, noascii)
     if (state & Mod2Mask)
 	keys[VK_MENU] = 0x80;
 
-    /* 
+    /*
      * Make sure all lock button info is correct so we don't mess up the
      * lights
      */
@@ -260,7 +260,7 @@ KeycodeToKeysym(keycode, state, noascii)
          * Call ToAscii() again with proper parameters to restore it.
          */
 
-        /* 
+        /*
 	 * Get information about the old char
 	 */
 
@@ -557,7 +557,7 @@ TkpSetKeycodeAndState(tkwin, keySym, eventPtr)
     int i;
     SHORT result;
     int shift;
-    
+
     eventPtr->xkey.keycode = 0;
     if (keySym == NoSymbol) {
         return;
@@ -696,7 +696,7 @@ XFreeModifiermap(modmap)
 {
     ckfree((char *) modmap->modifiermap);
     ckfree((char *) modmap);
-    return 0;
+    return Success;
 }
 
 /*
@@ -704,7 +704,7 @@ XFreeModifiermap(modmap)
  *
  * XStringToKeysym --
  *
- *	Translate a keysym name to the matching keysym. 
+ *	Translate a keysym name to the matching keysym.
  *
  * Results:
  *	Returns the keysym.  Since this is already handled by
