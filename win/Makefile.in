@@ -445,7 +445,7 @@ runtest: binaries $(TKTEST) $(TEST_DLL_FILE)
 shell: binaries
 	$(SHELL_ENV) ./$(WISH) $(SCRIPT)
 
-demo:
+demo: $(WISH)
 	$(SHELL_ENV) ./$(WISH) $(ROOT_DIR)/library/demos/widget
 
 # This target can be used to run wish inside either gdb or insight
@@ -478,10 +478,13 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)"; 
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[catch {package present Tcl\
-		$(TCLVERSION)$(TCLPATCHL)}]} { return }";\
-	echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL)\
-		[list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
+	echo "if {[catch {package present Tcl $(TCLVERSION)$(TCLPATCHL)}]} { return }";\
+	echo "if {(\$$::tcl_platform(platform) eq \"unix\")";\
+	echo "	&& ([info exists ::env(DISPLAY)] || [lsearch -exact \$$::argv -display] > -1)} {";\
+	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin libtk$(VERSION).dll] Tk]";\
+	echo "} else {";\
+	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
+	echo "}";\
 	) > $(PKG_INDEX);
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \
 	    do \
@@ -678,7 +681,7 @@ tkWindow.$(OBJEXT): configure Makefile
 .SUFFIXES: .$(RES)
 .SUFFIXES: .rc
 
-# Implicit rule for all object files that will end up in the Tcl library
+# Implicit rule for all object files that will end up in the Tk library
 
 %.$(OBJEXT): %.c
 	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
