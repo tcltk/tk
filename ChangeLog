@@ -1,3 +1,8 @@
+2012-06-06  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/Makefile.in:      [Bug 3532186] pkgIndex.tcl file complexity
+	* win/Makefile.in:
+
 2012-06-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.decls:   Change XSetDashes signature and many others
