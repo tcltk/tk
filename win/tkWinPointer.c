@@ -360,6 +360,7 @@ XWarpPointer(
 
     GetWindowRect(Tk_GetHWND(dest_w), &r);
     SetCursorPos(r.left+dest_x, r.top+dest_y);
+    return Success;
 }
 
 /*
