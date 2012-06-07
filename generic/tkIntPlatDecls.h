@@ -1191,6 +1191,8 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #endif
 
 #ifdef __WIN32__
+#undef TkpCmapStressed
+#undef TkpSync
 #define TkpCmapStressed(tkwin,colormap) (0)
 #define TkpSync(display)
 #endif
