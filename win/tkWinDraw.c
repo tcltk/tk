@@ -117,7 +117,7 @@ static Tcl_ThreadDataKey dataKey;
 
 static POINT *		ConvertPoints _ANSI_ARGS_((XPoint *points, int npoints,
 			    int mode, RECT *bbox));
-static void		DrawOrFillArc _ANSI_ARGS_((Display *display,
+static int		DrawOrFillArc _ANSI_ARGS_((Display *display,
 			    Drawable d, GC gc, int x, int y,
 			    unsigned int width, unsigned int height,
 			    int start, int extent, int fill));
@@ -299,7 +299,7 @@ ConvertPoints(points, npoints, mode, bbox)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XCopyArea(display, src, dest, gc, src_x, src_y, width, height, dest_x, dest_y)
     Display* display;
     Drawable src;
@@ -335,6 +335,7 @@ XCopyArea(display, src, dest, gc, src_x, src_y, width, height, dest_x, dest_y)
 	TkWinReleaseDrawableDC(dest, destDC, &destState);
     }
     TkWinReleaseDrawableDC(src, srcDC, &srcState);
+    return Success;
 }
 
 /*
@@ -356,7 +357,7 @@ XCopyArea(display, src, dest, gc, src_x, src_y, width, height, dest_x, dest_y)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
 	dest_y, plane)
     Display* display;
@@ -486,6 +487,7 @@ XCopyPlane(display, src, dest, gc, src_x, src_y, width, height, dest_x,
 	TkWinReleaseDrawableDC(dest, destDC, &destState);
     }
     TkWinReleaseDrawableDC(src, srcDC, &srcState);
+    return Success;
 }
 
 /*
@@ -917,7 +919,7 @@ XDrawLines(display, d, gc, points, npoints, mode)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillPolygon(display, d, gc, points, npoints, shape, mode)
     Display* display;
     Drawable d;
@@ -932,7 +934,7 @@ XFillPolygon(display, d, gc, points, npoints, shape, mode)
     HDC dc;
 
     if (d == None) {
-	return;
+	return BadDrawable;
     }
 
     dc = TkWinGetDrawableDC(display, d, &state);
@@ -941,6 +943,7 @@ XFillPolygon(display, d, gc, points, npoints, shape, mode)
     RenderObject(dc, gc, points, npoints, mode, pen, Polygon);
 
     TkWinReleaseDrawableDC(d, dc, &state);
+    return Success;
 }
 
 /*
@@ -959,7 +962,7 @@ XFillPolygon(display, d, gc, points, npoints, shape, mode)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawRectangle(display, d, gc, x, y, width, height)
     Display* display;
     Drawable d;
@@ -975,7 +978,7 @@ XDrawRectangle(display, d, gc, x, y, width, height)
     HDC dc;
 
     if (d == None) {
-	return;
+	return BadDrawable;
     }
 
     dc = TkWinGetDrawableDC(display, d, &state);
@@ -991,6 +994,7 @@ XDrawRectangle(display, d, gc, x, y, width, height)
     DeleteObject(SelectObject(dc, oldPen));
     SelectObject(dc, oldBrush);
     TkWinReleaseDrawableDC(d, dc, &state);
+    return Success;
 }
 
 /*
@@ -1009,7 +1013,7 @@ XDrawRectangle(display, d, gc, x, y, width, height)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawArc(display, d, gc, x, y, width, height, start, extent)
     Display* display;
     Drawable d;
@@ -1023,7 +1027,7 @@ XDrawArc(display, d, gc, x, y, width, height, start, extent)
 {
     display->request++;
 
-    DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 0);
+    return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 0);
 }
 
 /*
@@ -1042,7 +1046,7 @@ XDrawArc(display, d, gc, x, y, width, height, start, extent)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillArc(display, d, gc, x, y, width, height, start, extent)
     Display* display;
     Drawable d;
@@ -1056,7 +1060,7 @@ XFillArc(display, d, gc, x, y, width, height, start, extent)
 {
     display->request++;
 
-    DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 1);
+    return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 1);
 }
 
 /*
@@ -1076,7 +1080,7 @@ XFillArc(display, d, gc, x, y, width, height, start, extent)
  *----------------------------------------------------------------------
  */
 
-static void
+static int
 DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, fill)
     Display *display;
     Drawable d;
@@ -1096,7 +1100,7 @@ DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, fill)
     double radian_start, radian_end, xr, yr;
 
     if (d == None) {
-	return;
+	return BadDrawable;
     }
 
     dc = TkWinGetDrawableDC(display, d, &state);
@@ -1166,6 +1170,7 @@ DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, fill)
     }
     DeleteObject(SelectObject(dc, oldPen));
     TkWinReleaseDrawableDC(d, dc, &state);
+    return Success;
 }
 
 /*
