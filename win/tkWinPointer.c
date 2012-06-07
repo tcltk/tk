@@ -195,12 +195,13 @@ XGrabKeyboard(display, grab_window, owner_events, pointer_mode,
  *----------------------------------------------------------------------
  */
 
-void
+int
 XUngrabKeyboard(display, time)
     Display* display;
     Time time;
 {
     keyboardWinPtr = NULL;
+    return Success;
 }
 
 /*
@@ -383,7 +384,7 @@ XWarpPointer(display, src_w, dest_w, src_x, src_y, src_width,
  *----------------------------------------------------------------------
  */
 
-void
+int
 XGetInputFocus(display, focus_return, revert_to_return)
     Display *display;
     Window *focus_return;
@@ -393,6 +394,7 @@ XGetInputFocus(display, focus_return, revert_to_return)
     *focus_return = tkwin ? Tk_WindowId(tkwin) : None;
     *revert_to_return = RevertToParent;
     display->request++;
+    return Success;
 }
 
 /*
@@ -412,7 +414,7 @@ XGetInputFocus(display, focus_return, revert_to_return)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XSetInputFocus(display, focus, revert_to, time)
     Display* display;
     Window focus;
@@ -423,6 +425,7 @@ XSetInputFocus(display, focus, revert_to, time)
     if (focus != None) {
 	SetFocus(Tk_GetHWND(focus));
     }
+    return Success;
 }
 
 /*
