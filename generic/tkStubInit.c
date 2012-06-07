@@ -624,7 +624,7 @@ TkIntPlatStubs tkIntPlatStubs = {
 TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     NULL,
-#if defined(__WIN32__) /* WIN */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
