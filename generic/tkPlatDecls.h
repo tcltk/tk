@@ -110,12 +110,12 @@ EXTERN void		TkMacOSXInvalClipRgns(Tk_Window tkwin);
 #ifndef TkMacOSXGetDrawablePort_TCL_DECLARED
 #define TkMacOSXGetDrawablePort_TCL_DECLARED
 /* 7 */
-EXTERN void *		TkMacOSXGetDrawablePort(Drawable drawable);
+EXTERN VOID *		TkMacOSXGetDrawablePort(Drawable drawable);
 #endif
 #ifndef TkMacOSXGetRootControl_TCL_DECLARED
 #define TkMacOSXGetRootControl_TCL_DECLARED
 /* 8 */
-EXTERN void *		TkMacOSXGetRootControl(Drawable drawable);
+EXTERN VOID *		TkMacOSXGetRootControl(Drawable drawable);
 #endif
 #ifndef Tk_MacOSXSetupTkNotifier_TCL_DECLARED
 #define Tk_MacOSXSetupTkNotifier_TCL_DECLARED
@@ -149,8 +149,8 @@ typedef struct TkPlatStubs {
     void (*tkMacOSXInitAppleEvents) (Tcl_Interp *interp); /* 4 */
     void (*tkGenWMConfigureEvent) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 5 */
     void (*tkMacOSXInvalClipRgns) (Tk_Window tkwin); /* 6 */
-    void * (*tkMacOSXGetDrawablePort) (Drawable drawable); /* 7 */
-    void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
+    VOID * (*tkMacOSXGetDrawablePort) (Drawable drawable); /* 7 */
+    VOID * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
     void (*tk_MacOSXSetupTkNotifier) (void); /* 9 */
     int (*tk_MacOSXIsAppInFront) (void); /* 10 */
 #endif /* AQUA */

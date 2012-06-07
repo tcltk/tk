@@ -36,7 +36,7 @@ XStringListToTextProperty(
  * From Xlib.h
  */
 
-void
+int
 XChangeProperty(
     Display *display,
     Window w,
@@ -47,6 +47,7 @@ XChangeProperty(
     _Xconst unsigned char *data,
     int nelements)
 {
+    return Success;
 }
 
 Cursor
@@ -63,7 +64,7 @@ XCreateGlyphCursor(
 }
 
 XIC
-XCreateIC(void)
+XCreateIC TCL_VARARGS_DEF(XIM,xim)
 {
     return NULL;
 }
@@ -81,12 +82,13 @@ XCreatePixmapCursor(
     return (Cursor) NULL;
 }
 
-void
+int
 XDeleteProperty(
     Display *display,
     Window w,
     Atom property)
 {
+    return Success;
 }
 
 void
@@ -103,18 +105,20 @@ XFilterEvent(
     return 0;
 }
 
-void
+int
 XForceScreenSaver(
     Display *display,
     int mode)
 {
+    return Success;
 }
 
-void
+int
 XFreeCursor(
     Display *display,
     Cursor cursor)
 {
+    return Success;
 }
 
 GContext
@@ -180,27 +184,30 @@ XLookupColor(
     return Success;
 }
 
-void
+int
 XNextEvent(
     Display *display,
     XEvent *event_return)
 {
+    return Success;
 }
 
-void
+int
 XPutBackEvent(
     Display *display,
     XEvent *event)
 {
+    return Success;
 }
 
-void
+int
 XQueryColors(
     Display *display,
     Colormap colormap,
     XColor *defs_in_out,
     int ncolors)
 {
+    return Success;
 }
 
 int
@@ -215,10 +222,11 @@ XQueryTree(
     return Success;
 }
 
-void
+int
 XRefreshKeyboardMapping(
     XMappingEvent *event_map)
 {
+    return Success;
 }
 
 Window
@@ -229,12 +237,13 @@ XRootWindow(
     return (Window) NULL;
 }
 
-void
+int
 XSelectInput(
     Display *display,
     Window w,
     long event_mask)
 {
+    return Success;
 }
 
 int
@@ -265,60 +274,67 @@ XSetErrorHandler(
     return NULL;
 }
 
-void
+int
 XSetIconName(
     Display *display,
     Window w,
     _Xconst char *icon_name)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBackground(
     Display *display,
     Window w,
     unsigned long background_pixel)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBackgroundPixmap(
     Display *display,
     Window w,
     Pixmap background_pixmap)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBorder(
     Display *display,
     Window w,
     unsigned long border_pixel)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBorderPixmap(
     Display *display,
     Window w,
     Pixmap border_pixmap)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBorderWidth(
     Display *display,
     Window w,
     unsigned int width)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowColormap(
     Display *display,
     Window w,
     Colormap colormap)
 {
+    return Success;
 }
 
 Bool
@@ -335,13 +351,14 @@ XTranslateCoordinates(
     return 0;
 }
 
-void
+int
 XWindowEvent(
     Display *display,
     Window w,
     long event_mask,
     XEvent *event_return)
 {
+    return Success;
 }
 
 int
