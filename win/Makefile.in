@@ -349,8 +349,8 @@ STUB_OBJS = \
 	tkStubLib.$(OBJEXT) \
 	tkStubImg.$(OBJEXT)
 
-TCL_DOCS = "$(TCL_SRC_DIR_NATIVE)"/doc/*.[13n]
-TK_DOCS = "$(ROOT_DIR_NATIVE)"/doc/*.[13n]
+TCL_DOCS = "$(TCL_SRC_DIR_NATIVE)/doc/*.[13n]"
+TK_DOCS = "$(ROOT_DIR_NATIVE)/doc/*.[13n]"
 CORE_DOCS = $(TCL_DOCS) $(TK_DOCS)
 
 DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
@@ -376,12 +376,12 @@ doc: $(ROOT_DIR)/doc/man.macros
 
 winhelp: $(TCL_SRC_DIR_NATIVE)/tools/man2help.tcl $(MAN2TCL)
 	$(TCL_EXE) "$(TCL_SRC_DIR_NATIVE)/tools/man2help.tcl" tcl "$(VER)" $(CORE_DOCS)
-	$(COPY) "$(TCL_BIN_DIR)"/tcl.hpj ./
+	$(COPY) "$(TCL_BIN_DIR)/tcl.hpj" ./
 	hcw /c /e tcl.hpj
-	$(COPY) ./tcl$(VER).cnt ./TCL$(VER).HLP "$(TCL_SRC_DIR_NATIVE)"/tools/
+	$(COPY) ./tcl$(VER).cnt ./TCL$(VER).HLP "$(TCL_SRC_DIR_NATIVE)/tools/"
 
 $(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/tools/man2tcl.c
-	$(CC) $(CFLAGS_OPTIMIZE) $(MAN2TCLFLAGS) -o $(MAN2TCL) "$(TCL_SRC_DIR_NATIVE)"/tools/man2tcl.c
+	$(CC) $(CFLAGS_OPTIMIZE) $(MAN2TCLFLAGS) -o $(MAN2TCL) "$(TCL_SRC_DIR_NATIVE)/tools/man2tcl.c"
 
 # Specifying TESTFLAGS on the command line is the standard way to pass
 # args to tcltest, ie:
