@@ -780,7 +780,7 @@ install-libraries: libraries
 	@for i in $(TOP_DIR)/library/ttk/*.tcl; \
 	    do \
 	    if [ -f $$i ] ; then \
-		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)"/ttk; \
+		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/ttk"; \
 	    fi; \
 	    done;
 	@echo "Installing library images directory";
