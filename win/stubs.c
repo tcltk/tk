@@ -64,7 +64,7 @@ XCreateGlyphCursor(
 }
 
 XIC
-XCreateIC TCL_VARARGS_DEF(XIM,xim)
+XCreateIC(XIM xim, ...)
 {
     return NULL;
 }
