@@ -212,6 +212,7 @@ BUILD_TCLSH		= @BUILD_TCLSH@
 # make dist. This variable is set to "" if no tclsh is available.
 TCL_EXE			= @TCLSH_PROG@
 WISH_EXE		= wish
+TKTEST_EXE		= tktest
 
 # Tk used to let the configure script choose which program to use
 # for installing, but there are just too many different versions of
@@ -559,12 +560,12 @@ ${WISH_EXE}: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
 # picking up an already installed version of the Tcl or
 # Tk shared libraries.
 
-tktest: $(TKTEST_OBJS) $(TK_LIB_FILE)
+$(TKTEST_EXE): $(TKTEST_OBJS) $(TK_LIB_FILE)
 	$(MAKE) tktest-real LIB_RUNTIME_DIR="`pwd`:$(TCL_BIN_DIR)"
 
 tktest-real:
 	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o tktest
+		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
 
 # FIXME: This xttest rule seems to be broken in a number of ways.
 # It should use CC_SEARCH_FLAGS, it does not include the shared
@@ -584,23 +585,23 @@ xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE)
 
 test: test-classic
 
-test-classic: tktest
-	$(SHELL_ENV) ./tktest $(TEST_DIR)/all.tcl -geometry +0+0 \
+test-classic: $(TKTEST_EXE)
+	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 \
 	$(TESTFLAGS) $(TCLTESTARGS)
 
 # Tests with different languages
-testlang: tktest
+testlang: $(TKTEST_EXE)
 	$(SHELL_ENV) \
 	for lang in $(LOCALES) ;  \
 	do \
 	LANG=$(lang); export LANG; \
-	./tktest $(TEST_DIR)/all.tcl -geometry +0+0 \
+	./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 \
 	$(TESTFLAGS) $(TCLTESTARGS); \
 	done
 
 # Useful target to launch a built tktest with the proper path,...
-runtest: tktest
-	$(SHELL_ENV) ./tktest
+runtest: $(TKTEST_EXE)
+	$(SHELL_ENV) ./$(TKTEST_EXE)
 
 # This target can be used to run wish from the build directory
 # via `make shell` or `make shell SCRIPT=/tmp/foo.tcl`
@@ -620,11 +621,11 @@ gdb: ${WISH_EXE}
 
 VALGRINDARGS=--tool=memcheck --num-callers=8 --leak-resolution=high --leak-check=yes --show-reachable=yes -v
 
-valgrind: tktest
-	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./tktest $(TEST_DIR)/all.tcl -geometry +0+0 -singleproc 1 $(TESTFLAGS)
+valgrind: $(TKTEST_EXE)
+	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 -singleproc 1 $(TESTFLAGS)
 
-valgrindshell: tktest
-	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./tktest $(SCRIPT)
+valgrindshell: $(TKTEST_EXE)
+	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(SCRIPT)
 
 INSTALL_TARGETS = install-binaries install-libraries install-demos install-doc @EXTRA_INSTALL@
 
@@ -767,7 +768,7 @@ install-demos:
 	@for i in $(TOP_DIR)/library/demos/images/*; \
 	    do \
 	    if [ -f $$i ] ; then \
-		$(INSTALL_DATA) $$i $(DEMO_INSTALL_DIR)/images; \
+		$(INSTALL_DATA) $$i "$(DEMO_INSTALL_DIR)/images"; \
 		fi; \
 	    done;
 
