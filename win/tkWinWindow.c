@@ -302,7 +302,7 @@ TkpMakeWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDestroyWindow(
     Display *display,
     Window w)
@@ -338,6 +338,7 @@ XDestroyWindow(
     if (hwnd != NULL && !(winPtr->flags & TK_DONT_DESTROY_WINDOW)) {
 	DestroyWindow(hwnd);
     }
+    return Success;
 }
 
 /*
@@ -356,7 +357,7 @@ XDestroyWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMapWindow(
     Display *display,
     Window w)
@@ -380,7 +381,7 @@ XMapWindow(
 	for (parentPtr = winPtr->parentPtr; ;
 		parentPtr = parentPtr->parentPtr) {
 	    if ((parentPtr == NULL) || !(parentPtr->flags & TK_MAPPED)) {
-		return;
+		return Success;
 	    }
 	    if (parentPtr->flags & TK_TOP_HIERARCHY) {
 		break;
@@ -409,6 +410,7 @@ XMapWindow(
     event.xvisibility.window = winPtr->window;
     event.xvisibility.state = VisibilityUnobscured;
     NotifyVisibility(&event, winPtr);
+    return Success;
 }
 
 /*
@@ -464,7 +466,7 @@ NotifyVisibility(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XUnmapWindow(
     Display *display,
     Window w)
@@ -492,6 +494,7 @@ XUnmapWindow(
 	event.xunmap.from_configure = False;
 	Tk_HandleEvent(&event);
     }
+    return Success;
 }
 
 /*
@@ -510,7 +513,7 @@ XUnmapWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMoveResizeWindow(
     Display *display,
     Window w,
@@ -519,6 +522,7 @@ XMoveResizeWindow(
 {
     display->request++;
     MoveWindow(Tk_GetHWND(w), x, y, (int) width, (int) height, TRUE);
+    return Success;
 }
 
 /*
@@ -537,7 +541,7 @@ XMoveResizeWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMoveWindow(
     Display *display,
     Window w,
@@ -549,6 +553,7 @@ XMoveWindow(
 
     MoveWindow(Tk_GetHWND(w), x, y, winPtr->changes.width,
 	    winPtr->changes.height, TRUE);
+    return Success;
 }
 
 /*
@@ -567,7 +572,7 @@ XMoveWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XResizeWindow(
     Display *display,
     Window w,
@@ -579,6 +584,7 @@ XResizeWindow(
 
     MoveWindow(Tk_GetHWND(w), winPtr->changes.x, winPtr->changes.y, (int)width,
 	    (int)height, TRUE);
+    return Success;
 }
 
 /*
@@ -597,7 +603,7 @@ XResizeWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XRaiseWindow(
     Display *display,
     Window w)
@@ -606,6 +612,7 @@ XRaiseWindow(
 
     display->request++;
     SetWindowPos(window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    return Success;
 }
 
 /*
@@ -627,7 +634,7 @@ XRaiseWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XConfigureWindow(
     Display *display,
     Window w,
@@ -662,6 +669,7 @@ XConfigureWindow(
 	}
 	TkWinSetWindowPos(hwnd, sibling, values->stack_mode);
     }
+    return Success;
 }
 
 /*
@@ -680,7 +688,7 @@ XConfigureWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XClearWindow(
     Display *display,
     Window w)
@@ -708,6 +716,7 @@ XClearWindow(
     DeleteObject(brush);
     SelectPalette(dc, oldPalette, TRUE);
     ReleaseDC(hwnd, dc);
+    return Success;
 }
 
 /*
@@ -728,7 +737,7 @@ XClearWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XChangeWindowAttributes(
     Display *display,
     Window w,
@@ -738,6 +747,7 @@ XChangeWindowAttributes(
     if (valueMask & CWCursor) {
 	XDefineCursor(display, w, attributes->cursor);
     }
+    return Success;
 }
 
 /*

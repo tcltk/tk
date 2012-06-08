@@ -338,7 +338,7 @@ end:
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkPutImage(
     unsigned long *colors,	/* Unused on Macintosh. */
     int ncolors,		/* Unused on Macintosh. */
@@ -358,7 +358,7 @@ TkPutImage(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 0, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	TkMacOSXDbgMsg("Ignored CG drawing of XImage");
@@ -530,6 +530,7 @@ TkPutImage(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
@@ -548,7 +549,7 @@ TkPutImage(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawLines(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -562,16 +563,12 @@ XDrawLines(
     int i, lw = gc->line_width;
 
     if (npoints < 2) {
-	/*
-	 * TODO: generate BadValue error.
-	 */
-
-	return;
+	return BadValue;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, tkMacOSXUseCGDrawing, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	double prevx, prevy;
@@ -612,6 +609,7 @@ XDrawLines(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
@@ -900,7 +898,7 @@ XDrawRectangles(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillRectangles(
     Display* display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -915,7 +913,7 @@ XFillRectangles(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, tkMacOSXUseCGDrawing, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -942,6 +940,7 @@ XFillRectangles(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*

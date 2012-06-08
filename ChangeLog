@@ -1,3 +1,10 @@
+2012-06-08  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkMain.c:   Implement TkCygwinMainEx for loading
+	* generic/tkWindow.c: Cygwin's Tk_MainEx from the Tk dll.
+	* generic/tkInt.decls:   Change XChangeWindowAttributes signature and
+	* generic/tkIntXlibDeclsDecls.h: many others to match Xorg, needed for Cygwin.
+
 2012-06-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/Makefile.in:      [Bug 3532186] pkgIndex.tcl file complexity

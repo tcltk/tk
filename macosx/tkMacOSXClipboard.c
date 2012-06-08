@@ -161,7 +161,7 @@ TkSelGetSelection(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XSetSelectionOwner(
     Display *display,		/* X Display. */
     Atom selection,		/* What selection to own. */
@@ -178,6 +178,7 @@ XSetSelectionOwner(
 	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
 	}
     }
+    return Success;
 }
 
 /*
@@ -197,13 +198,14 @@ XSetSelectionOwner(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkMacOSXSelDeadWindow(
     TkWindow *winPtr)
 {
     if (winPtr && winPtr == (TkWindow *)clipboardOwner) {
 	clipboardOwner = NULL;
     }
+    return Success;
 }
 
 /*

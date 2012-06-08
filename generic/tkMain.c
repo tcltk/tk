@@ -39,6 +39,8 @@
 #   include <stdlib.h>
 #endif
 
+extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+
 /*
  * The default prompt used when the user has not overridden it.
  */
@@ -190,15 +192,19 @@ Tk_MainEx(
 	abort();
     }
 
-#if defined(__WIN32__) && !defined(STATIC_BUILD)
+#if defined(__WIN32__) && !defined(__WIN64__) && !defined(UNICODE) && !defined(STATIC_BUILD)
+
     if (tclStubsPtr->reserved9) {
 	/* We are running win32 Tk under Cygwin, so let's check
 	 * whether the env("DISPLAY") variable or the -display
 	 * argument is set. If so, we really want to run the
-	 * Tk_MainEx function of libtk.dll, not this one. */
- 	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
+	 * Tk_MainEx function of libtk8.?.dll, not this one. */
+	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
 	loadCygwinTk:
-	    Tcl_Panic("Should load libtk.dll now, not yet implemented");
+	    if (TkCygwinMainEx(argc, argv, appInitProc, interp)) {
+		/* Should never reach here. */
+		return;
+	    }
 	} else {
 	    int i;
 
