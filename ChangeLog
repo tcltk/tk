@@ -1,3 +1,8 @@
+2012-06-08  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkMain.c:   Implement TkCygwinMainEx for loading
+	* generic/tkWindow.c: Cygwin's Tk_MainEx from the Tk dll.
+
 2012-06-07  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.decls:   Change XChangeWindowAttributes signature and

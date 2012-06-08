@@ -1,4 +1,4 @@
-/* 
+/*
  * tkWindow.c --
  *
  *	This file provides basic window-manipulation procedures,
@@ -24,7 +24,7 @@
 
 #include "tclInt.h" /* for Tcl_CreateNamespace() */
 
-/* 
+/*
  * Type used to keep track of Window objects that were
  * only partically deallocated by Tk_DestroyWindow.
  */
@@ -52,15 +52,15 @@ typedef struct ThreadSpecificData {
                            /* First in list of partially deallocated
 			    * windows. */
     TkDisplay *displayList;
-                           /* List of all displays currently in use by 
+                           /* List of all displays currently in use by
 			    * the current thread. */
-    int initialized;       /* 0 means the structures above need 
+    int initialized;       /* 0 means the structures above need
 			    * initializing. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-/* 
- * The Mutex below is used to lock access to the Tk_Uid structs above. 
+/*
+ * The Mutex below is used to lock access to the Tk_Uid structs above.
  */
 
 TCL_DECLARE_MUTEX(windowMutex)
@@ -222,7 +222,7 @@ static Tk_ArgvInfo argTable[] = {
  */
 
 static Tk_Window	CreateTopLevelWindow _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tk_Window parent, CONST char *name, 
+			    Tk_Window parent, CONST char *name,
 			    CONST char *screenName, unsigned int flags));
 static void		DeleteWindowsExitProc _ANSI_ARGS_((
 			    ClientData clientData));
@@ -335,7 +335,7 @@ CreateTopLevelWindow(interp, parent, name, screenName, flags)
     register TkWindow *winPtr;
     register TkDisplay *dispPtr;
     int screenId;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
@@ -382,9 +382,9 @@ CreateTopLevelWindow(interp, parent, name, screenName, flags)
      * Set the flags specified in the call.
      */
     winPtr->flags |= flags;
-    
+
     /*
-     * Force the window to use a border pixel instead of border pixmap. 
+     * Force the window to use a border pixel instead of border pixmap.
      * This is needed for the case where the window doesn't use the
      * default visual.  In this case, the default border is a pixmap
      * inherited from the root window, which won't work because it will
@@ -447,7 +447,7 @@ GetScreen(interp, screenName, screenPtr)
     CONST char *p;
     int screenId;
     size_t length;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -523,7 +523,7 @@ GetScreen(interp, screenName, screenPtr)
     }
     if (screenId >= ScreenCount(dispPtr->display)) {
 	char buf[32 + TCL_INTEGER_SPACE];
-	
+
 	sprintf(buf, "bad screen number \"%d\"", screenId);
 	Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	return (TkDisplay *) NULL;
@@ -537,7 +537,7 @@ GetScreen(interp, screenName, screenPtr)
  *
  * TkGetDisplay --
  *
- *	Given an X display, TkGetDisplay returns the TkDisplay 
+ *	Given an X display, TkGetDisplay returns the TkDisplay
  *      structure for the display.
  *
  * Results:
@@ -555,7 +555,7 @@ TkGetDisplay(display)
      Display *display;          /* X's display pointer */
 {
     TkDisplay *dispPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
@@ -587,9 +587,9 @@ TkGetDisplay(display)
 TkDisplay *
 TkGetDisplayList()
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    
+
     return tsdPtr->displayList;
 }
 
@@ -614,9 +614,9 @@ TkGetDisplayList()
 TkMainInfo *
 TkGetMainInfoList()
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    
+
     return tsdPtr->mainWindowList;
 }
 /*
@@ -859,7 +859,7 @@ TkCreateMainWindow(interp, screenName, baseName)
     register TkWindow *winPtr;
     register CONST TkCmd *cmdPtr;
     ClientData clientData;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -880,7 +880,7 @@ TkCreateMainWindow(interp, screenName, baseName)
     if (tkwin == NULL) {
 	return NULL;
     }
-    
+
     /*
      * Create the TkMainInfo structure for this application, and set
      * up name-related information for the new window.
@@ -1208,11 +1208,11 @@ Tk_CreateWindowFromPath(interp, tkwin, pathName, screenName)
 	return NULL;
     }
     if (((TkWindow *) parent)->flags & TK_ALREADY_DEAD) {
-	Tcl_AppendResult(interp, 
+	Tcl_AppendResult(interp,
 	    "can't create window: parent has been destroyed", (char *) NULL);
 	return NULL;
     } else if (((TkWindow *) parent)->flags & TK_CONTAINER) {
-	Tcl_AppendResult(interp, 
+	Tcl_AppendResult(interp,
 	    "can't create window: its parent has -container = yes",
 		(char *) NULL);
 	return NULL;
@@ -1269,7 +1269,7 @@ Tk_DestroyWindow(tkwin)
     TkDisplay *dispPtr = winPtr->dispPtr;
     XEvent event;
     TkHalfdeadWindow *halfdeadPtr, *prev_halfdeadPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->flags & TK_ALREADY_DEAD) {
@@ -1541,12 +1541,12 @@ Tk_DestroyWindow(tkwin)
                             (void (*) _ANSI_ARGS_((ClientData))) NULL);
                 }
                 Tcl_CreateCommand(winPtr->mainPtr->interp, "send",
-                        TkDeadAppCmd, (ClientData) NULL, 
+                        TkDeadAppCmd, (ClientData) NULL,
                         (void (*) _ANSI_ARGS_((ClientData))) NULL);
                 Tcl_UnlinkVar(winPtr->mainPtr->interp, "tk_strictMotif");
                 Tcl_UnlinkVar(winPtr->mainPtr->interp, "::tk::AlwaysShowSelection");
             }
-                
+
 	    Tcl_DeleteHashTable(&winPtr->mainPtr->nameTable);
 	    TkBindFree(winPtr->mainPtr);
 	    TkDeleteAllImages(winPtr->mainPtr);
@@ -1555,14 +1555,14 @@ Tk_DestroyWindow(tkwin)
 	    TkStylePkgFree(winPtr->mainPtr);
 
             /*
-             * When embedding Tk into other applications, make sure 
+             * When embedding Tk into other applications, make sure
              * that all destroy events reach the server. Otherwise
              * the embedding application may also attempt to destroy
              * the windows, resulting in an X error
              */
 
             if (winPtr->flags & TK_EMBEDDED) {
-                XSync(winPtr->display, False); 
+                XSync(winPtr->display, False);
             }
 	    ckfree((char *) winPtr->mainPtr);
 
@@ -1586,13 +1586,13 @@ Tk_DestroyWindow(tkwin)
 		 * addressed before this can be enabled.  The current cleanup
 		 * works except for send event issues. -- hobbs 04/2002
 		 */
-                
+
                 TkDisplay *theDispPtr, *backDispPtr;
-                
+
                 /*
                  * Splice this display out of the list of displays.
                  */
-                
+
                 for (theDispPtr = tsdPtr->displayList, backDispPtr = NULL;
                          (theDispPtr != winPtr->dispPtr) &&
                              (theDispPtr != NULL);
@@ -2118,7 +2118,7 @@ Tk_DefineCursor(tkwin, cursor)
 #else
     winPtr->atts.cursor = (Cursor) cursor;
 #endif
-    
+
     if (winPtr->window != None) {
 	XDefineCursor(winPtr->display, winPtr->window, winPtr->atts.cursor);
     } else {
@@ -2346,7 +2346,7 @@ Tk_NameToWindow(interp, pathName, tkwin)
 	Tcl_AppendResult(interp, "NULL main window", (char *)NULL);
 	return NULL;
     }
-    
+
     hPtr = Tcl_FindHashEntry(&((TkWindow *) tkwin)->mainPtr->nameTable,
 	    pathName);
     if (hPtr == NULL) {
@@ -2635,7 +2635,7 @@ Tk_MainWindow(interp)
 	return NULL;
     }
 #endif
-    tsdPtr = (ThreadSpecificData *) 
+    tsdPtr = (ThreadSpecificData *)
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (mainPtr = tsdPtr->mainWindowList; mainPtr != NULL;
@@ -2704,7 +2704,7 @@ Tk_GetNumMainWindows()
     }
 #endif
 
-    tsdPtr = (ThreadSpecificData *) 
+    tsdPtr = (ThreadSpecificData *)
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->numMainWindows;
@@ -2789,7 +2789,7 @@ DeleteWindowsExitProc(clientData)
      * Destroy any remaining main windows.
      */
 
-    while (tsdPtr->mainWindowList != NULL) {        
+    while (tsdPtr->mainWindowList != NULL) {
         interp = tsdPtr->mainWindowList->interp;
         Tcl_Preserve((ClientData) interp);
         Tk_DestroyWindow((Tk_Window) tsdPtr->mainWindowList->winPtr);
@@ -2815,7 +2815,7 @@ DeleteWindowsExitProc(clientData)
          * if it needs to dispatch a message.
          */
 
-        for (tsdPtr->displayList = NULL; dispPtr != NULL; 
+        for (tsdPtr->displayList = NULL; dispPtr != NULL;
                 dispPtr = nextPtr) {
             nextPtr = dispPtr->nextPtr;
             TkCloseDisplay(dispPtr);
@@ -2827,6 +2827,51 @@ DeleteWindowsExitProc(clientData)
     tsdPtr->initialized = 0;
 }
 
+#if defined(__WIN32__) && !defined(__WIN64__)
+
+static HMODULE tkcygwindll = NULL;
+
+/*
+ * Run Tk_MainEx from libtk8.?.dll
+ *
+ * This function is only ever called from wish8.4.exe, the cygwin
+ * port of Tcl. This means that the system encoding is utf-8,
+ * so we don't have to do any encoding conversions.
+ */
+int
+TkCygwinMainEx(argc, argv, appInitProc, interp)
+    int argc;				/* Number of arguments. */
+    char **argv;			/* Array of argument strings. */
+    Tcl_AppInitProc *appInitProc;	/* Application-specific initialization
+					 * procedure to call after most
+					 * initialization but before starting
+					 * to execute commands. */
+    Tcl_Interp *interp;
+{
+    char name[MAX_PATH];
+    int len;
+    void (*sym)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+
+    /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
+	len = GetModuleFileName(Tk_GetHINSTANCE(), name, MAX_PATH);
+	name[len-2] = '.';
+	name[len-1] = name[len-5];
+	strcpy(name+len, ".dll");
+	memcpy(name+len-8, "libtk8", 6);
+
+	tkcygwindll = LoadLibrary(name);
+	if (!tkcygwindll) {
+	    /* dll is not present */
+	    return 0;
+	}
+	sym = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_MainEx");
+	if (!sym) {
+		return 0;
+	}
+	sym(argc, argv, appInitProc, interp);
+    return 1;
+}
+#endif
 /*
  *----------------------------------------------------------------------
  *
@@ -2855,6 +2900,16 @@ int
 Tk_Init(interp)
     Tcl_Interp *interp;		/* Interpreter to initialize. */
 {
+#if defined(__WIN32__) && !defined(__WIN64__)
+    if (tkcygwindll) {
+	int (*sym)(Tcl_Interp *);
+
+	sym = (int (*)(Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_Init");
+	if (sym) {
+	    return sym(interp);
+	}
+    }
+#endif
     return Initialize(interp);
 }
 
@@ -2917,6 +2972,16 @@ Tk_SafeInit(interp)
      *  is checked at several places to differentiate the two initialisations.
      */
 
+#if defined(__WIN32__) && !defined(__WIN64__)
+    if (tkcygwindll) {
+	int (*sym)(Tcl_Interp *);
+
+	sym = (int (*)(Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_SafeInit");
+	if (sym) {
+	    return sym(interp);
+	}
+    }
+#endif
     return Initialize(interp);
 }
 
@@ -2945,12 +3010,12 @@ Initialize(interp)
 {
     char *p;
     int argc, code;
-    CONST char **argv; 
+    CONST char **argv;
     char *args[20];
     CONST char *argString = NULL;
     Tcl_DString class;
     ThreadSpecificData *tsdPtr;
-    
+
     /*
      * Ensure that we are getting the matching version of Tcl.  This is
      * really only an issue when Tk is loaded dynamically.
@@ -2965,7 +3030,7 @@ Initialize(interp)
      */
     TkRegisterObjTypes();
 
-    tsdPtr = (ThreadSpecificData *) 
+    tsdPtr = (ThreadSpecificData *)
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -3043,13 +3108,13 @@ Initialize(interp)
 	     * We don't. (no API to do it and maybe security reasons).
 	     */
 	    Tcl_DStringFree(&ds);
-	    Tcl_AppendResult(interp, 
+	    Tcl_AppendResult(interp,
 		    "not allowed to start Tk by master's safe::TkInit",
 		    (char *) NULL);
 	    goto done;
 	}
 	Tcl_DStringFree(&ds);
-	/* 
+	/*
 	 * Use the master's result as argv.
 	 * Note: We don't use the Obj interfaces to avoid dealing with
 	 * cross interp refcounting and changing the code below.
