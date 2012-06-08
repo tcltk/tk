@@ -311,7 +311,7 @@ XCopyPlane(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkPutImage(
     unsigned long *colors,	/* Unused on Macintosh. */
     int ncolors,		/* Unused on Macintosh. */
@@ -330,7 +330,7 @@ TkPutImage(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGImageRef img = CreateCGImageWithXImage(image);
@@ -745,6 +745,7 @@ DrawCGImage(
     } else {
 	TkMacOSXDbgMsg("Drawing of empty CGImage requested");
     }
+    return Success;
 }
 
 /*
@@ -763,7 +764,7 @@ DrawCGImage(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawLines(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -777,16 +778,12 @@ XDrawLines(
     int i, lw = gc->line_width;
 
     if (npoints < 2) {
-	/*
-	 * TODO: generate BadValue error.
-	 */
-
-	return;
+	return BadValue;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	double prevx, prevy;
@@ -810,6 +807,7 @@ XDrawLines(
 	CGContextStrokePath(dc.context);
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
@@ -1048,7 +1046,7 @@ XDrawRectangles(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillRectangles(
     Display* display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -1063,7 +1061,7 @@ XFillRectangles(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1080,6 +1078,7 @@ XFillRectangles(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
