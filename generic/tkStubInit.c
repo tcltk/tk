@@ -202,7 +202,7 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0
 
-#   elif !defined(MAC_TCL) && !defined(MAC_OSX_TK) /* UNIX */
+#   elif !defined(MAC_OSX_TK) /* UNIX */
 
 #	undef TkClipBox
 #	undef TkCreateRegion
@@ -213,14 +213,14 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	undef TkUnionRectWithRegion
 #	undef TkSubtractRegion
 
-#	define TkClipBox (void (*) _ANSI_ARGS_((TkRegion, XRectangle *))) XClipBox
+#	define TkClipBox (void (*) (TkRegion, XRectangle *)) XClipBox
 #	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
-#	define TkDestroyRegion (void (*) _ANSI_ARGS_((TkRegion))) XDestroyRegion
-#	define TkIntersectRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XIntersectRegion
-#	define TkRectInRegion (int (*) _ANSI_ARGS_((TkRegion, int, int, unsigned int, unsigned int))) XRectInRegion
-#	define TkSetRegion (void (*) _ANSI_ARGS_((Display *, GC, TkRegion))) XSetRegion
-#	define TkUnionRectWithRegion (void (*) _ANSI_ARGS_((XRectangle *, TkRegion, TkRegion))) XUnionRectWithRegion
-#	define TkSubtractRegion (void (*) _ANSI_ARGS_((TkRegion, TkRegion, TkRegion))) XSubtractRegion
+#	define TkDestroyRegion (void (*) (TkRegion)) XDestroyRegion
+#	define TkIntersectRegion (void (*) (TkRegion, TkRegion, TkRegion)) XIntersectRegion
+#	define TkRectInRegion (int (*) (TkRegion, int, int, unsigned int, unsigned int)) XRectInRegion
+#	define TkSetRegion (void (*) (Display *, GC, TkRegion)) XSetRegion
+#	define TkUnionRectWithRegion (void (*) (XRectangle *, TkRegion, TkRegion)) XUnionRectWithRegion
+#	define TkSubtractRegion (void (*) (TkRegion, TkRegion, TkRegion)) XSubtractRegion
 #   endif
 #endif /* !__WIN32__ */
 
