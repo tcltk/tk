@@ -1044,7 +1044,7 @@ interface tkIntXlib
 # X functions for Windows
 
 declare 0 win {
-    void XSetDashes(Display *display, GC gc, int dash_offset,
+    int XSetDashes(Display *display, GC gc, int dash_offset,
 	    _Xconst char *dash_list, int n)
 }
 declare 1 win {
@@ -1074,7 +1074,8 @@ declare 7 win {
 }
 declare 8 win {
     Cursor XCreateGlyphCursor(Display *d, Font f1, Font f2,
-	    unsigned int ui1, unsigned int ui2, XColor *x1, XColor *x2)
+	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
+	    XColor _Xconst *x2)
 }
 declare 9 win {
     GContext XGContextFromGC(GC g)
@@ -1108,82 +1109,82 @@ declare 18 win {
     Status XAllocColor(Display *d, Colormap c, XColor *xp)
 }
 declare 19 win {
-    void XBell(Display *d, int i)
+    int XBell(Display *d, int i)
 }
 declare 20 win {
-    void XChangeProperty(Display *d, Window w, Atom a1, Atom a2, int i1,
+    int XChangeProperty(Display *d, Window w, Atom a1, Atom a2, int i1,
 	    int i2, _Xconst unsigned char *c, int i3)
 }
 declare 21 win {
-    void XChangeWindowAttributes(Display *d, Window w, unsigned long ul,
+    int XChangeWindowAttributes(Display *d, Window w, unsigned long ul,
 	    XSetWindowAttributes *x)
 }
 declare 22 win {
-    void XClearWindow(Display *d, Window w)
+    int XClearWindow(Display *d, Window w)
 }
 declare 23 win {
-    void XConfigureWindow(Display *d, Window w, unsigned int i,
+    int XConfigureWindow(Display *d, Window w, unsigned int i,
 	    XWindowChanges *x)
 }
 declare 24 win {
-    void XCopyArea(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
+    int XCopyArea(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
 	    int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 25 win {
-    void XCopyPlane(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
-	    int i2, unsigned int ui1,
-	    unsigned int ui2, int i3, int i4, unsigned long ul)
+    int XCopyPlane(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
+	    int i2, unsigned int ui1, unsigned int ui2,
+	    int i3, int i4, unsigned long ul)
 }
 declare 26 win {
     Pixmap XCreateBitmapFromData(Display *display, Drawable d,
 	    _Xconst char *data, unsigned int width, unsigned int height)
 }
 declare 27 win {
-    void XDefineCursor(Display *d, Window w, Cursor c)
+    int XDefineCursor(Display *d, Window w, Cursor c)
 }
 declare 28 win {
-    void XDeleteProperty(Display *d, Window w, Atom a)
+    int XDeleteProperty(Display *d, Window w, Atom a)
 }
 declare 29 win {
-    void XDestroyWindow(Display *d, Window w)
+    int XDestroyWindow(Display *d, Window w)
 }
 declare 30 win {
-    void XDrawArc(Display *d, Drawable dr, GC g, int i1, int i2,
+    int XDrawArc(Display *d, Drawable dr, GC g, int i1, int i2,
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 31 win {
-    void XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
+    int XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
 }
 declare 32 win {
-    void XDrawRectangle(Display *d, Drawable dr, GC g, int i1, int i2,
+    int XDrawRectangle(Display *d, Drawable dr, GC g, int i1, int i2,
 	    unsigned int ui1, unsigned int ui2)
 }
 declare 33 win {
-    void XFillArc(Display *d, Drawable dr, GC g, int i1, int i2,
+    int XFillArc(Display *d, Drawable dr, GC g, int i1, int i2,
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 34 win {
-    void XFillPolygon(Display *d, Drawable dr, GC g, XPoint *x,
+    int XFillPolygon(Display *d, Drawable dr, GC g, XPoint *x,
 	    int i1, int i2, int i3)
 }
 declare 35 win {
-    void XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
+    int XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
 }
 declare 36 win {
-    void XForceScreenSaver(Display *d, int i)
+    int XForceScreenSaver(Display *d, int i)
 }
 declare 37 win {
-    void XFreeColormap(Display *d, Colormap c)
+    int XFreeColormap(Display *d, Colormap c)
 }
 declare 38 win {
-    void XFreeColors(Display *d, Colormap c,
+    int XFreeColors(Display *d, Colormap c,
 	    unsigned long *ulp, int i, unsigned long ul)
 }
 declare 39 win {
-    void XFreeCursor(Display *d, Cursor c)
+    int XFreeCursor(Display *d, Cursor c)
 }
 declare 40 win {
-    void XFreeModifiermap(XModifierKeymap *x)
+    int XFreeModifiermap(XModifierKeymap *x)
 }
 declare 41 win {
     Status XGetGeometry(Display *d, Drawable dr, Window *w, int *i1,
@@ -1191,7 +1192,7 @@ declare 41 win {
 	    unsigned int *ui4)
 }
 declare 42 win {
-    void XGetInputFocus(Display *d, Window *w, int *i)
+    int XGetInputFocus(Display *d, Window *w, int *i)
 }
 declare 43 win {
     int XGetWindowProperty(Display *d, Window w, Atom a1, long l1, long l2,
@@ -1216,23 +1217,23 @@ declare 48 win {
 	    XColor *x1, XColor *x2)
 }
 declare 49 win {
-    void XMapWindow(Display *d, Window w)
+    int XMapWindow(Display *d, Window w)
 }
 declare 50 win {
-    void XMoveResizeWindow(Display *d, Window w, int i1, int i2,
+    int XMoveResizeWindow(Display *d, Window w, int i1, int i2,
 	    unsigned int ui1, unsigned int ui2)
 }
 declare 51 win {
-    void XMoveWindow(Display *d, Window w, int i1, int i2)
+    int XMoveWindow(Display *d, Window w, int i1, int i2)
 }
 declare 52 win {
-    void XNextEvent(Display *d, XEvent *x)
+    int XNextEvent(Display *d, XEvent *x)
 }
 declare 53 win {
-    void XPutBackEvent(Display *d, XEvent *x)
+    int XPutBackEvent(Display *d, XEvent *x)
 }
 declare 54 win {
-    void XQueryColors(Display *d, Colormap c, XColor *x, int i)
+    int XQueryColors(Display *d, Colormap c, XColor *x, int i)
 }
 declare 55 win {
     Bool XQueryPointer(Display *d, Window w1, Window *w2, Window *w3,
@@ -1243,66 +1244,66 @@ declare 56 win {
 	    Window **w4, unsigned int *ui)
 }
 declare 57 win {
-    void XRaiseWindow(Display *d, Window w)
+    int XRaiseWindow(Display *d, Window w)
 }
 declare 58 win {
-    void XRefreshKeyboardMapping(XMappingEvent *x)
+    int XRefreshKeyboardMapping(XMappingEvent *x)
 }
 declare 59 win {
-    void XResizeWindow(Display *d, Window w, unsigned int ui1,
+    int XResizeWindow(Display *d, Window w, unsigned int ui1,
 	    unsigned int ui2)
 }
 declare 60 win {
-    void XSelectInput(Display *d, Window w, long l)
+    int XSelectInput(Display *d, Window w, long l)
 }
 declare 61 win {
     Status XSendEvent(Display *d, Window w, Bool b, long l, XEvent *x)
 }
 declare 62 win {
-    void XSetCommand(Display *d, Window w, char **c, int i)
+    int XSetCommand(Display *d, Window w, char **c, int i)
 }
 declare 63 win {
-    void XSetIconName(Display *d, Window w, _Xconst char *c)
+    int XSetIconName(Display *d, Window w, _Xconst char *c)
 }
 declare 64 win {
-    void XSetInputFocus(Display *d, Window w, int i, Time t)
+    int XSetInputFocus(Display *d, Window w, int i, Time t)
 }
 declare 65 win {
-    void XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
+    int XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
 }
 declare 66 win {
-    void XSetWindowBackground(Display *d, Window w, unsigned long ul)
+    int XSetWindowBackground(Display *d, Window w, unsigned long ul)
 }
 declare 67 win {
-    void XSetWindowBackgroundPixmap(Display *d, Window w, Pixmap p)
+    int XSetWindowBackgroundPixmap(Display *d, Window w, Pixmap p)
 }
 declare 68 win {
-    void XSetWindowBorder(Display *d, Window w, unsigned long ul)
+    int XSetWindowBorder(Display *d, Window w, unsigned long ul)
 }
 declare 69 win {
-    void XSetWindowBorderPixmap(Display *d, Window w, Pixmap p)
+    int XSetWindowBorderPixmap(Display *d, Window w, Pixmap p)
 }
 declare 70 win {
-    void XSetWindowBorderWidth(Display *d, Window w, unsigned int ui)
+    int XSetWindowBorderWidth(Display *d, Window w, unsigned int ui)
 }
 declare 71 win {
-    void XSetWindowColormap(Display *d, Window w, Colormap c)
+    int XSetWindowColormap(Display *d, Window w, Colormap c)
 }
 declare 72 win {
     Bool XTranslateCoordinates(Display *d, Window w1, Window w2, int i1,
 	    int i2, int *i3, int *i4, Window *w3)
 }
 declare 73 win {
-    void XUngrabKeyboard(Display *d, Time t)
+    int XUngrabKeyboard(Display *d, Time t)
 }
 declare 74 win {
-    void XUngrabPointer(Display *d, Time t)
+    int XUngrabPointer(Display *d, Time t)
 }
 declare 75 win {
-    void XUnmapWindow(Display *d, Window w)
+    int XUnmapWindow(Display *d, Window w)
 }
 declare 76 win {
-    void XWindowEvent(Display *d, Window w, long l, XEvent *x)
+    int XWindowEvent(Display *d, Window w, long l, XEvent *x)
 }
 declare 77 win {
     void XDestroyIC(XIC x)
@@ -1315,7 +1316,7 @@ declare 79 win {
 	    KeySym *k, Status *s)
 }
 declare 80 win {
-    void TkPutImage(unsigned long *colors, int ncolors, Display *display,
+    int TkPutImage(unsigned long *colors, int ncolors, Display *display,
 	    Drawable d, GC gc, XImage *image, int src_x, int src_y,
 	    int dest_x, int dest_y, unsigned int width, unsigned int height)
 }
@@ -1334,59 +1335,59 @@ declare 83 win {
 	    unsigned long valuemask, XGCValues *values)
 }
 declare 84 win {
-    void XFreeGC(Display *display, GC gc)
+    int XFreeGC(Display *display, GC gc)
 }
 declare 85 win {
     Atom XInternAtom(Display *display, _Xconst char *atom_name,
 	    Bool only_if_exists)
 }
 declare 86 win {
-    void XSetBackground(Display *display, GC gc, unsigned long foreground)
+    int XSetBackground(Display *display, GC gc, unsigned long foreground)
 }
 declare 87 win {
-    void XSetForeground(Display *display, GC gc, unsigned long foreground)
+    int XSetForeground(Display *display, GC gc, unsigned long foreground)
 }
 declare 88 win {
-    void XSetClipMask(Display *display, GC gc, Pixmap pixmap)
+    int XSetClipMask(Display *display, GC gc, Pixmap pixmap)
 }
 declare 89 win {
-    void XSetClipOrigin(Display *display, GC gc,
+    int XSetClipOrigin(Display *display, GC gc,
 	    int clip_x_origin, int clip_y_origin)
 }
 declare 90 win {
-    void XSetTSOrigin(Display *display, GC gc,
+    int XSetTSOrigin(Display *display, GC gc,
 	    int ts_x_origin, int ts_y_origin)
 }
 declare 91 win {
-    void XChangeGC(Display *d, GC gc, unsigned long mask, XGCValues *values)
+    int XChangeGC(Display *d, GC gc, unsigned long mask, XGCValues *values)
 }
 declare 92 win {
-    void XSetFont(Display *display, GC gc, Font font)
+    int XSetFont(Display *display, GC gc, Font font)
 }
 declare 93 win {
-    void XSetArcMode(Display *display, GC gc, int arc_mode)
+    int XSetArcMode(Display *display, GC gc, int arc_mode)
 }
 declare 94 win {
-    void XSetStipple(Display *display, GC gc, Pixmap stipple)
+    int XSetStipple(Display *display, GC gc, Pixmap stipple)
 }
 declare 95 win {
-    void XSetFillRule(Display *display, GC gc, int fill_rule)
+    int XSetFillRule(Display *display, GC gc, int fill_rule)
 }
 declare 96 win {
-    void XSetFillStyle(Display *display, GC gc, int fill_style)
+    int XSetFillStyle(Display *display, GC gc, int fill_style)
 }
 declare 97 win {
-    void XSetFunction(Display *display, GC gc, int function)
+    int XSetFunction(Display *display, GC gc, int function)
 }
 declare 98 win {
-    void XSetLineAttributes(Display *display, GC gc, unsigned int line_width,
+    int XSetLineAttributes(Display *display, GC gc, unsigned int line_width,
 	    int line_style, int cap_style, int join_style)
 }
 declare 99 win {
     int _XInitImageFuncPtrs(XImage *image)
 }
 declare 100 win {
-    XIC XCreateIC(void)
+    XIC XCreateIC(XIM xim, ...)
 }
 declare 101 win {
     XVisualInfo *XGetVisualInfo(Display *display, long vinfo_mask,
@@ -1401,17 +1402,18 @@ declare 103 win {
 	    XTextProperty *text_prop_return)
 }
 declare 104 win {
-    void XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
+    int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
 	    int x2, int y2)
 }
-declare 106 win {
-    void XFillRectangle(Display *display, Drawable d, GC gc,
-	    int x, int y, unsigned int width, unsigned int height)
-}
 declare 105 win {
-    void XWarpPointer(Display *d, Window s, Window dw, int sx, int sy,
+    int XWarpPointer(Display *d, Window s, Window dw, int sx, int sy,
 	    unsigned int sw, unsigned int sh, int dx, int dy)
 }
+declare 106 win {
+    int XFillRectangle(Display *display, Drawable d, GC gc,
+	    int x, int y, unsigned int width, unsigned int height)
+}
+
 # New in Tk 8.6
 declare 107 win {
    int XFlush(Display *display)
@@ -1442,7 +1444,7 @@ declare 114 win {
 # X functions for Aqua
 
 declare 0 aqua {
-    void XSetDashes(Display *display, GC gc, int dash_offset,
+    int XSetDashes(Display *display, GC gc, int dash_offset,
 	    _Xconst char *dash_list, int n)
 }
 declare 1 aqua {
@@ -1485,7 +1487,7 @@ declare 12 aqua {
     Status XAllocColor(Display *d, Colormap c, XColor *xp)
 }
 declare 13 aqua {
-    void XBell(Display *d, int i)
+    int XBell(Display *d, int i)
 }
 declare 14 aqua {
     void XChangeProperty(Display *d, Window w, Atom a1, Atom a2, int i1,
@@ -1513,7 +1515,7 @@ declare 19 aqua {
 	    _Xconst char *data, unsigned int width, unsigned int height)
 }
 declare 20 aqua {
-    void XDefineCursor(Display *d, Window w, Cursor c)
+    int XDefineCursor(Display *d, Window w, Cursor c)
 }
 declare 21 aqua {
     void XDestroyWindow(Display *d, Window w)
@@ -1523,7 +1525,7 @@ declare 22 aqua {
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 23 aqua {
-    void XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
+    int XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
 }
 declare 24 aqua {
     void XDrawRectangle(Display *d, Drawable dr, GC g, int i1, int i2,
@@ -1538,17 +1540,17 @@ declare 26 aqua {
 	    int i1, int i2, int i3)
 }
 declare 27 aqua {
-    void XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
+    int XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
 }
 declare 28 aqua {
-    void XFreeColormap(Display *d, Colormap c)
+    int XFreeColormap(Display *d, Colormap c)
 }
 declare 29 aqua {
-    void XFreeColors(Display *d, Colormap c,
+    int XFreeColors(Display *d, Colormap c,
 	    unsigned long *ulp, int i, unsigned long ul)
 }
 declare 30 aqua {
-    void XFreeModifiermap(XModifierKeymap *x)
+    int XFreeModifiermap(XModifierKeymap *x)
 }
 declare 31 aqua {
     Status XGetGeometry(Display *d, Drawable dr, Window *w, int *i1,
@@ -1607,7 +1609,7 @@ declare 46 aqua {
     void XSetInputFocus(Display *d, Window w, int i, Time t)
 }
 declare 47 aqua {
-    void XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
+    int XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
 }
 declare 48 aqua {
     void XSetWindowBackground(Display *d, Window w, unsigned long ul)
@@ -1631,13 +1633,13 @@ declare 54 aqua {
     void XUngrabKeyboard(Display *d, Time t)
 }
 declare 55 aqua {
-    void XUngrabPointer(Display *d, Time t)
+    int XUngrabPointer(Display *d, Time t)
 }
 declare 56 aqua {
     void XUnmapWindow(Display *d, Window w)
 }
 declare 57 aqua {
-    void TkPutImage(unsigned long *colors, int ncolors, Display *display,
+    int TkPutImage(unsigned long *colors, int ncolors, Display *display,
 	    Drawable d, GC gc, XImage *image, int src_x, int src_y,
 	    int dest_x, int dest_y, unsigned int width, unsigned int height)
 }
@@ -1650,54 +1652,53 @@ declare 59 aqua {
 	    unsigned long valuemask, XGCValues *values)
 }
 declare 60 aqua {
-    void XFreeGC(Display *display, GC gc)
+    int XFreeGC(Display *display, GC gc)
 }
 declare 61 aqua {
     Atom XInternAtom(Display *display, _Xconst char *atom_name,
 	    Bool only_if_exists)
 }
 declare 62 aqua {
-    void XSetBackground(Display *display, GC gc, unsigned long foreground)
+    int XSetBackground(Display *display, GC gc, unsigned long foreground)
 }
 declare 63 aqua {
-    void XSetForeground(Display *display, GC gc, unsigned long foreground)
+    int XSetForeground(Display *display, GC gc, unsigned long foreground)
 }
 declare 64 aqua {
-    void XSetClipMask(Display *display, GC gc, Pixmap pixmap)
+    int XSetClipMask(Display *display, GC gc, Pixmap pixmap)
 }
 declare 65 aqua {
-    void XSetClipOrigin(Display *display, GC gc,
+    int XSetClipOrigin(Display *display, GC gc,
 	    int clip_x_origin, int clip_y_origin)
 }
 declare 66 aqua {
-    void XSetTSOrigin(Display *display, GC gc,
+    int XSetTSOrigin(Display *display, GC gc,
 	    int ts_x_origin, int ts_y_origin)
 }
 declare 67 aqua {
-    void XChangeGC(Display *d, GC gc, unsigned long mask, XGCValues *values)
+    int XChangeGC(Display *d, GC gc, unsigned long mask, XGCValues *values)
 }
 declare 68 aqua {
-    void XSetFont(Display *display, GC gc, Font font)
+    int XSetFont(Display *display, GC gc, Font font)
 }
 declare 69 aqua {
-    void XSetArcMode(Display *display, GC gc, int arc_mode)
+    int XSetArcMode(Display *display, GC gc, int arc_mode)
 }
 declare 70 aqua {
-    void XSetStipple(Display *display, GC gc, Pixmap stipple)
+    int XSetStipple(Display *display, GC gc, Pixmap stipple)
 }
 declare 71 aqua {
-    void XSetFillRule(Display *display, GC gc, int fill_rule)
+    int XSetFillRule(Display *display, GC gc, int fill_rule)
 }
 declare 72 aqua {
-    void XSetFillStyle(Display *display, GC gc, int fill_style)
+    int XSetFillStyle(Display *display, GC gc, int fill_style)
 }
 declare 73 aqua {
-    void XSetFunction(Display *display, GC gc, int function)
+    int XSetFunction(Display *display, GC gc, int function)
 }
 declare 74 aqua {
-    void XSetLineAttributes(Display *display, GC gc,
-	    unsigned int line_width, int line_style,
-	    int cap_style, int join_style)
+    int XSetLineAttributes(Display *display, GC gc, unsigned int line_width,
+	    int line_style, int cap_style, int join_style)
 }
 declare 75 aqua {
     int _XInitImageFuncPtrs(XImage *image)
@@ -1725,11 +1726,11 @@ declare 81 aqua {
     void XForceScreenSaver(Display *display, int mode)
 }
 declare 82 aqua {
-    void XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
+    int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
 	    int x2, int y2)
 }
 declare 83 aqua {
-    void XFillRectangle(Display *display, Drawable d, GC gc,
+    int XFillRectangle(Display *display, Drawable d, GC gc,
 	    int x, int y, unsigned int width, unsigned int height)
 }
 declare 84 aqua {
@@ -1743,7 +1744,7 @@ declare 86 aqua {
 	    int npoints, int mode)
 }
 declare 87 aqua {
-    void XWarpPointer(Display *display, Window src_w, Window dest_w,
+    int XWarpPointer(Display *display, Window src_w, Window dest_w,
 	    int src_x, int src_y, unsigned int src_width,
 	    unsigned int src_height, int dest_x, int dest_y)
 }
