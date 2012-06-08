@@ -1628,7 +1628,7 @@ declare 80 aqua {
 	    XSegment *segments, int nsegments)
 }
 declare 81 aqua {
-    int XForceScreenSaver(Display *display, int mode)
+    void XForceScreenSaver(Display *display, int mode)
 }
 declare 82 aqua {
     int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,

@@ -1122,7 +1122,7 @@ EXTERN void		XDrawSegments(Display *display, Drawable d, GC gc,
 #ifndef XForceScreenSaver_TCL_DECLARED
 #define XForceScreenSaver_TCL_DECLARED
 /* 81 */
-EXTERN int		XForceScreenSaver(Display *display, int mode);
+EXTERN void		XForceScreenSaver(Display *display, int mode);
 #endif
 #ifndef XDrawLine_TCL_DECLARED
 #define XDrawLine_TCL_DECLARED
@@ -1383,7 +1383,7 @@ typedef struct TkIntXlibStubs {
     void (*xSetWMClientMachine) (Display *display, Window w, XTextProperty *text_prop); /* 78 */
     Status (*xStringListToTextProperty) (char **list, int count, XTextProperty *text_prop_return); /* 79 */
     void (*xDrawSegments) (Display *display, Drawable d, GC gc, XSegment *segments, int nsegments); /* 80 */
-    int (*xForceScreenSaver) (Display *display, int mode); /* 81 */
+    void (*xForceScreenSaver) (Display *display, int mode); /* 81 */
     int (*xDrawLine) (Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2); /* 82 */
     int (*xFillRectangle) (Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height); /* 83 */
     void (*xClearWindow) (Display *d, Window w); /* 84 */
