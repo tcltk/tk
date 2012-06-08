@@ -2833,6 +2833,51 @@ DeleteWindowsExitProc(
     tsdPtr->initialized = 0;
 }
 
+#if defined(__WIN32__) && !defined(__WIN64__)
+
+static HMODULE tkcygwindll = NULL;
+
+/*
+ * Run Tk_MainEx from libtk8.?.dll
+ *
+ * This function is only ever called from wish8.4.exe, the cygwin
+ * port of Tcl. This means that the system encoding is utf-8,
+ * so we don't have to do any encoding conversions.
+ */
+int
+TkCygwinMainEx(argc, argv, appInitProc, interp)
+    int argc;				/* Number of arguments. */
+    char **argv;			/* Array of argument strings. */
+    Tcl_AppInitProc *appInitProc;	/* Application-specific initialization
+					 * procedure to call after most
+					 * initialization but before starting
+					 * to execute commands. */
+    Tcl_Interp *interp;
+{
+    TCHAR name[MAX_PATH];
+    int len;
+    void (*sym)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+
+    /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
+	len = GetModuleFileNameW(Tk_GetHINSTANCE(), name, MAX_PATH);
+	name[len-2] = TEXT('.');
+	name[len-1] = name[len-5];
+	_tcscpy(name+len, TEXT(".dll"));
+	memcpy(name+len-8, TEXT("libtk8"), 6 * sizeof(TCHAR));
+
+	tkcygwindll = LoadLibrary(name);
+	if (!tkcygwindll) {
+	    /* dll is not present */
+	    return 0;
+	}
+	sym = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_MainEx");
+	if (!sym) {
+		return 0;
+	}
+	sym(argc, argv, appInitProc, interp);
+    return 1;
+}
+#endif
 /*
  *----------------------------------------------------------------------
  *
@@ -2860,6 +2905,16 @@ int
 Tk_Init(
     Tcl_Interp *interp)		/* Interpreter to initialize. */
 {
+#if defined(__WIN32__) && !defined(__WIN64__)
+    if (tkcygwindll) {
+	int (*sym)(Tcl_Interp *);
+
+	sym = (int (*)(Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_Init");
+	if (sym) {
+	    return sym(interp);
+	}
+    }
+#endif
     return Initialize(interp);
 }
 
@@ -2923,6 +2978,16 @@ Tk_SafeInit(
      * checked at several places to differentiate the two initialisations.
      */
 
+#if defined(__WIN32__) && !defined(__WIN64__)
+    if (tkcygwindll) {
+	int (*sym)(Tcl_Interp *);
+
+	sym = (int (*)(Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_SafeInit");
+	if (sym) {
+	    return sym(interp);
+	}
+    }
+#endif
     return Initialize(interp);
 }
 
