@@ -34,6 +34,7 @@
 #include "tkMacOSXInt.h"
 #endif
 
+extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
 typedef struct ThreadSpecificData {
     Tcl_Interp *interp;         /* Interpreter for this thread. */
@@ -156,7 +157,6 @@ Tk_MainEx(argc, argv, appInitProc, interp)
     }
 
 #if defined(__WIN32__) && !defined(__WIN64__) && !defined(STATIC_BUILD)
-    extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
     if (tclStubsPtr->reserved9) {
 	/* We are running win32 Tk under Cygwin, so let's check
