@@ -618,7 +618,7 @@ EXTERN void		XDrawSegments _ANSI_ARGS_((Display *display,
 				Drawable d, GC gc, XSegment *segments,
 				int nsegments));
 /* 81 */
-EXTERN int		XForceScreenSaver _ANSI_ARGS_((Display *display,
+EXTERN void		XForceScreenSaver _ANSI_ARGS_((Display *display,
 				int mode));
 /* 82 */
 EXTERN int		XDrawLine _ANSI_ARGS_((Display *d, Drawable dr, GC g,
@@ -908,7 +908,7 @@ EXTERN void		XDrawSegments _ANSI_ARGS_((Display *display,
 				Drawable d, GC gc, XSegment *segments,
 				int nsegments));
 /* 81 */
-EXTERN int		XForceScreenSaver _ANSI_ARGS_((Display *display,
+EXTERN void		XForceScreenSaver _ANSI_ARGS_((Display *display,
 				int mode));
 /* 82 */
 EXTERN int		XDrawLine _ANSI_ARGS_((Display *d, Drawable dr, GC g,
@@ -1142,7 +1142,7 @@ typedef struct TkIntXlibStubs {
     void (*xSetWMClientMachine) _ANSI_ARGS_((Display *display, Window w, XTextProperty *text_prop)); /* 78 */
     Status (*xStringListToTextProperty) _ANSI_ARGS_((char **list, int count, XTextProperty *text_prop_return)); /* 79 */
     void (*xDrawSegments) _ANSI_ARGS_((Display *display, Drawable d, GC gc, XSegment *segments, int nsegments)); /* 80 */
-    int (*xForceScreenSaver) _ANSI_ARGS_((Display *display, int mode)); /* 81 */
+    void (*xForceScreenSaver) _ANSI_ARGS_((Display *display, int mode)); /* 81 */
     int (*xDrawLine) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 82 */
     int (*xFillRectangle) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 83 */
     void (*xClearWindow) _ANSI_ARGS_((Display *d, Window w)); /* 84 */
@@ -1235,7 +1235,7 @@ typedef struct TkIntXlibStubs {
     void (*xSetWMClientMachine) _ANSI_ARGS_((Display *display, Window w, XTextProperty *text_prop)); /* 78 */
     Status (*xStringListToTextProperty) _ANSI_ARGS_((char **list, int count, XTextProperty *text_prop_return)); /* 79 */
     void (*xDrawSegments) _ANSI_ARGS_((Display *display, Drawable d, GC gc, XSegment *segments, int nsegments)); /* 80 */
-    int (*xForceScreenSaver) _ANSI_ARGS_((Display *display, int mode)); /* 81 */
+    void (*xForceScreenSaver) _ANSI_ARGS_((Display *display, int mode)); /* 81 */
     int (*xDrawLine) _ANSI_ARGS_((Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2)); /* 82 */
     int (*xFillRectangle) _ANSI_ARGS_((Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height)); /* 83 */
     void (*xClearWindow) _ANSI_ARGS_((Display *d, Window w)); /* 84 */

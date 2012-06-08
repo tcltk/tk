@@ -1718,7 +1718,7 @@ declare 80 {mac aqua} {
 	    XSegment *segments, int nsegments)
 }
 declare 81 {mac aqua} {
-    int XForceScreenSaver(Display *display, int mode)
+    void XForceScreenSaver(Display *display, int mode)
 }
 declare 82 {mac aqua} {
     int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
