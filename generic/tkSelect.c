@@ -127,6 +127,7 @@ Tk_CreateSelHandler(
 {
     register TkSelHandler *selPtr;
     TkWindow *winPtr = (TkWindow *) tkwin;
+    Tk_SelectionProc *oldProc;
 
     if (winPtr->dispPtr->multipleAtom == None) {
 	TkSelInit(tkwin);
@@ -142,9 +143,23 @@ Tk_CreateSelHandler(
 	    selPtr = ckalloc(sizeof(TkSelHandler));
 	    selPtr->nextPtr = winPtr->selHandlerList;
 	    winPtr->selHandlerList = selPtr;
+
+	    /*
+	     * When creating a new handler, we set the old proc to zero which
+	     * compares unequal to any real Tk selection handler entry.
+	     */
+
+	    oldProc = NULL;
 	    break;
 	}
 	if ((selPtr->selection == selection) && (selPtr->target == target)) {
+	    /*
+	     * When replacing an existing handler, we remember the previous
+	     * proc for later comparison with the UTF8_STRING handler.
+	     */
+
+	    oldProc = selPtr->proc;
+
 	    /*
 	     * Special case: when replacing handler created by "selection
 	     * handle", free up memory. Should there be a callback to allow
@@ -172,42 +187,51 @@ Tk_CreateSelHandler(
 	/*
 	 * If the user asked for a STRING handler and we understand
 	 * UTF8_STRING, we implicitly create a UTF8_STRING handler for them.
+	 * First we check if a UTF8_STRING handler already exists for the same
+	 * widget and selection.  If one doesn't exist, one must be created.
+	 * If one does exist and it has the same proc as the STRING handler
+	 * that we just replaced, it must also be replaced.  If one does exist
+	 * but it has a different proc, or if we didn't just replace an
+	 * existing STRING handler, we must leave it alone, since we didn't
+	 * automatically create it in the first place.
 	 */
 
+	TkSelHandler *utf8selPtr;
+
 	target = winPtr->dispPtr->utf8Atom;
-	for (selPtr = winPtr->selHandlerList; ; selPtr = selPtr->nextPtr) {
-	    if (selPtr == NULL) {
-		selPtr = ckalloc(sizeof(TkSelHandler));
-		selPtr->nextPtr = winPtr->selHandlerList;
-		winPtr->selHandlerList = selPtr;
-		selPtr->selection = selection;
-		selPtr->target = target;
-		selPtr->format = target; /* We want UTF8_STRING format */
-		selPtr->proc = proc;
-		if (selPtr->proc == HandleTclCommand) {
-		    /*
-		     * The clientData is selection controlled memory, so we
-		     * should make a copy for this selPtr.
-		     */
-
-		    unsigned cmdInfoLen = Tk_Offset(CommandInfo, command) +
-			    ((CommandInfo *)clientData)->cmdLength + 1;
-
-		    selPtr->clientData = ckalloc(cmdInfoLen);
-		    memcpy(selPtr->clientData, clientData, cmdInfoLen);
-		} else {
-		    selPtr->clientData = clientData;
-		}
-		selPtr->size = 8;
+	for (utf8selPtr = winPtr->selHandlerList; utf8selPtr != NULL;
+		utf8selPtr = utf8selPtr->nextPtr) {
+	    if ((utf8selPtr->selection == selection)
+		    && (utf8selPtr->target == target)) {
 		break;
 	    }
-	    if (selPtr->selection==selection && selPtr->target==target) {
+	}
+	if (utf8selPtr == NULL || ((utf8selPtr->format == target)
+		&& (utf8selPtr->proc == oldProc))) {
+	    ClientData newClientData;
+
+	    if (proc == HandleTclCommand) {
 		/*
-		 * Looks like we had a utf-8 target already. Leave it alone.
+		 * The clientData is selection controlled memory, so we should
+		 * make a copy for this new selection handler.
 		 */
 
-		break;
+		unsigned cmdInfoLen = sizeof(CommandInfo) +
+			((CommandInfo*)clientData)->cmdLength - 3;
+		
+		newClientData = (ClientData) ckalloc(cmdInfoLen);
+		memcpy(newClientData, clientData, cmdInfoLen);
+	    } else {
+		newClientData = clientData;
 	    }
+
+	    /*
+	     * This recursive call is OK, because we've changed the value
+	     * of 'target'.
+	     */
+
+	    Tk_CreateSelHandler(tkwin, selection, target, proc, newClientData,
+		    target);
 	}
     }
 }
