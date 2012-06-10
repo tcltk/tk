@@ -1,3 +1,8 @@
+2012-06-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/*.tcl:      [Bug 3534137]: $tcl_platform(platform) !=
+	[tk windowingsystem]
+
 2012-06-08  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkMain.c:   Implement TkCygwinMainEx for loading

@@ -94,7 +94,7 @@ proc ::tk::dialog::error::bgerror err {
     # we use the default dialog then :
     set windowingsystem [tk windowingsystem]
 
-    if {($tcl_platform(platform) eq "macintosh")
+    if {($windowingsystem eq "classic")
              || ($windowingsystem eq "aqua")} {
 	set ok		[mc Ok]
 	set messageFont	system
@@ -143,7 +143,7 @@ proc ::tk::dialog::error::bgerror err {
     wm iconname .bgerrorDialog ErrorDialog
     wm protocol .bgerrorDialog WM_DELETE_WINDOW { }
 
-    if {($tcl_platform(platform) eq "macintosh")
+    if {($windowingsystem eq "classic")
             || ($windowingsystem eq "aqua")} {
 	::tk::unsupported::MacWindowStyle style .bgerrorDialog moveableAlert {}
     } elseif {$windowingsystem eq "x11"} {
@@ -190,7 +190,7 @@ proc ::tk::dialog::error::bgerror err {
     set wrapwidth [expr {$wrapwidth-60-[winfo pixels .bgerrorDialog 9m]}]
     label .bgerrorDialog.msg -justify left -text $text -font $messageFont \
 	    -wraplength $wrapwidth
-    if {($tcl_platform(platform) eq "macintosh")
+    if {($windowingsystem eq "classic")
             || ($windowingsystem eq "aqua")} {
 	# On the Macintosh, use the stop bitmap
 	label .bgerrorDialog.bitmap -bitmap stop
@@ -226,7 +226,7 @@ proc ::tk::dialog::error::bgerror err {
 		-padx 10
 	grid columnconfigure .bgerrorDialog.bot $i -weight 1
 	# We boost the size of some Mac buttons for l&f
-	if {($tcl_platform(platform) eq "macintosh")
+	if {($windowingsystem eq "classic")
 	    || ($windowingsystem eq "aqua")} {
 	    if {($name eq "ok") || ($name eq "dismiss")} {
 		grid columnconfigure .bgerrorDialog.bot $i -minsize 90
@@ -251,7 +251,7 @@ proc ::tk::dialog::error::bgerror err {
     # 7. Ensure that we are topmost.
 
     raise .bgerrorDialog
-    if {$tcl_platform(platform) eq "windows"} {
+    if {[tk windowingsystem] eq "win32"} {
 	# Place it topmost if we aren't at the top of the stacking
 	# order to ensure that it's seen
 	if {[lindex [wm stackorder .] end] ne ".bgerrorDialog"} {
