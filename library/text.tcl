@@ -345,7 +345,7 @@ bind Text <<Redo>> {
     catch { %W edit redo }
 }
 
-if {$tcl_platform(platform) ne "windows"} {
+if {[tk windowingsystem] ne "win32"} {
 bind Text <Control-v> {
     if {!$tk_strictMotif} {
 	tk::TextScrollPages %W 1
@@ -530,7 +530,7 @@ proc ::tk::TextButton1 {w x y} {
     $w mark set anchor insert
     # Allow focus in any case on Windows, because that will let the
     # selection be displayed even for state disabled text widgets.
-    if {$::tcl_platform(platform) eq "windows" || [$w cget -state] eq "normal"} {focus $w}
+    if {[tk windowingsystem] eq "win32" || [$w cget -state] eq "normal"} {focus $w}
     if {[$w cget -autoseparators]} {$w edit separator}
 }
 
@@ -1040,7 +1040,7 @@ proc ::tk_textPaste w {
 # w -		The text window in which the cursor is to move.
 # start -	Position at which to start search.
 
-if {$tcl_platform(platform) eq "windows"}  {
+if {[tk windowingsystem] eq "win32"}  {
     proc ::tk::TextNextWord {w start} {
 	TextNextPos $w [TextNextPos $w $start tcl_endOfWord] \
 	    tcl_startOfNextWord
