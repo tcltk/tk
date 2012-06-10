@@ -1219,7 +1219,7 @@ proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 	incr x [expr {-[winfo reqwidth $menu]/2}]
     }
 
-    if {$tcl_platform(platform) eq "windows"} {
+    if {[tk windowingsystem] eq "win32"} {
 	# osVersion is not available in safe interps
 	set ver 5
 	if {[info exists tcl_platform(osVersion)]} {
