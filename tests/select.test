@@ -238,7 +238,7 @@ test select-2.3 {Tk_DeleteSelHandler procedure} -constraints unix -setup {
     selection handle -selection CLIPBOARD .f1 {}
     list [lsort [selection get TARGETS]] \
 	[lsort [selection get -selection CLIPBOARD TARGETS]]
-} -result {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
+} -result {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING}}
 test select-2.4 {Tk_DeleteSelHandler procedure} -constraints win -setup {
     setup
 } -body {
