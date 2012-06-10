@@ -203,7 +203,7 @@ test clipboard-5.1 {Tk_ClipboardClear procedure} -setup {
     list $result [lsort [clipboard get TARGETS]]
 } -cleanup {
     clipboard clear
-}  -result {{MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
+}  -result {{MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING}}
 test clipboard-5.2 {Tk_ClipboardClear procedure} -setup {
     clipboard clear
 } -body {
@@ -216,7 +216,7 @@ test clipboard-5.2 {Tk_ClipboardClear procedure} -setup {
     lappend result [lsort [clipboard get TARGETS]]
 } -cleanup {
     clipboard clear
-}  -result {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
+}  -result {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING}}
 
 ##############################################################################
 
