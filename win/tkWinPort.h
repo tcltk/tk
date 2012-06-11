@@ -69,20 +69,9 @@
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 
-#ifdef __CYGWIN__
-#   ifndef _vsnprintf
-#	define _vsnprintf vsnprintf
-#   endif
-#   ifndef _wcsicmp
-#	define _wcsicmp wcscasecmp
-#   endif
-#else
-#   ifndef strncasecmp
-#	define strncasecmp strnicmp
-#   endif
-#   ifndef strcasecmp
-#	define strcasecmp stricmp
-#   endif
+#ifndef __GNUC__
+#    define strncasecmp strnicmp
+#    define strcasecmp stricmp
 #endif
 
 #define NBBY 8
@@ -107,27 +96,6 @@
 #else /* _MSC_VER */
 #    define TK_READ_DATA_PENDING(f) ((f)->level > 0)
 #endif /* _MSC_VER */
-
-/*
- * The following stubs implement various calls that don't do anything
- * under Windows.
- */
-
-#define TkpCmapStressed(tkwin,colormap) (0)
-#define XFlush(display)
-#define XGrabServer(display)
-#define XUngrabServer(display)
-#define TkpSync(display)
-
-/*
- * The following functions are implemented as macros under Windows.
- */
-
-#define XFree(data) {if ((data) != NULL) ckfree((char *) (data));}
-#define XNoOp(display) {display->request++;}
-#define XSynchronize(display, bool) {display->request++;}
-#define XSync(display, bool) {display->request++;}
-#define XVisualIDFromVisual(visual) (visual->visualid)
 
 /*
  * The following Tk functions are implemented as macros under Windows.

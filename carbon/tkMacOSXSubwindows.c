@@ -1051,6 +1051,13 @@ TkMacOSXDrawableWindow(
     }
     return result;
 }
+
+void *
+TkMacOSXDrawable(
+    Drawable drawable)
+{
+    return TkMacOSXDrawableWindow(drawable);
+}
 
 /*
  *----------------------------------------------------------------------

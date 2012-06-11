@@ -159,7 +159,7 @@ TkSelGetSelection(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XSetSelectionOwner(
     Display *display,		/* X Display. */
     Atom selection,		/* What selection to own. */
@@ -184,10 +184,11 @@ XSetSelectionOwner(
 
 	dispPtr = TkGetMainInfoList()->winPtr->dispPtr;
 	if (dispPtr->clipboardActive) {
-	    return;
+	    return Success;
 	}
 	ClearCurrentScrap();
     }
+    return Success;
 }
 
 /*
