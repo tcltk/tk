@@ -2436,7 +2436,7 @@ TkWmUnmapWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkpWmSetState(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
     int state)			/* One of IconicState, ZoomState, NormalState,
@@ -2447,7 +2447,7 @@ TkpWmSetState(
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	wmPtr->hints.initial_state = state;
-	return;
+	goto setStateEnd;
     }
 
     wmPtr->flags |= WM_SYNC_PENDING;
@@ -2460,11 +2460,13 @@ TkpWmSetState(
     } else if (state == ZoomState) {
 	cmd = SW_SHOWMAXIMIZED;
     } else {
-	return;
+    	goto setStateEnd;
     }
 
     ShowWindow(wmPtr->wrapper, cmd);
     wmPtr->flags &= ~WM_SYNC_PENDING;
+setStateEnd:
+    return 1;
 }
 
 /*
@@ -3501,7 +3503,7 @@ WmCommandCmd(
     wmPtr->cmdArgc = cmdArgc;
     wmPtr->cmdArgv = cmdArgv;
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	XSetCommand(winPtr->display, winPtr->window, cmdArgv, cmdArgc);
+	XSetCommand(winPtr->display, winPtr->window, (char **) cmdArgv, cmdArgc);
     }
     return TCL_OK;
 }

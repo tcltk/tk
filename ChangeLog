@@ -1,3 +1,75 @@
+2012-06-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/ttk/ttkLabel.c (TextDraw): [Bug 3294450]: Get the clipping
+	* generic/ttk/ttkEntry.c (EntryDisplay): of text in Ttk various text
+	elements (e.g., buttons, entries, etc.) correct. Stops a whole range
+	of visual problems, including loss of the second and subsequent lines
+	of a label when the first line doesn't entirely fit, and failing to
+	draw the last character of an entry at all if it doesn't all exactly
+	fit in the space available (a problem I've noticed in tkchat, and been
+	very frustrated with).
+
+2012-06-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/*.tcl:      [Bug 3534137]: $tcl_platform(platform) !=
+	[tk windowingsystem]
+
+2012-06-08  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkMain.c:   Implement TkCygwinMainEx for loading
+	* generic/tkWindow.c: Cygwin's Tk_MainEx from the Tk dll.
+	* generic/tkInt.decls:   Change XChangeWindowAttributes signature and
+	* generic/tkIntXlibDeclsDecls.h: many others to match Xorg, needed for Cygwin.
+
+2012-06-06  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/Makefile.in:      [Bug 3532186] pkgIndex.tcl file complexity
+	* win/Makefile.in:
+
+2012-05-31  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkWindow.c:    Simpify determination whether we are running on cygwin.
+	* generic/tkStubInit.c:  Export Tk_GetHINSTANCE, TkSetPixmapColormap and
+	* generic/tkInt.decls: 	 TkpPrintWindowId on the Cygwin dll, sync stub table
+	with Tk 8.6 win32 version.
+	* generic/tk*Decls.h:    re-generated
+	* win/Makefile.in:       Fix "make genstubs" when cross-compiling on UNIX
+
+	* win/stubs.c:           Implement XFlush and various others for win32 as stubs,
+	* win/tkWinPort.h:       so win32 extensions using those can run under CYGWIN as well.
+	* generic/tkMain.c:      Allow tk86.dll to cooperate with the cygwin console.
+
+2012-05-29  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkInt.decls (TkMacOSXDrawable): Added OSX-specific mechanism
+	to allow retrieval of the drawing surface. Allows Canvas3d to be
+	adapted to 8.6.
+
+2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
+
+	* doc/text.n:  [Bug 1630251]: Documentation for -endline option was wrong
+
+2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextDisp.c:    [Bug 1630254]: missing scrolling of text widget
+	when from a -startline == -endline initial state it is configured to display
+	a non-empty part of it
+
+2012-05-24  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/stubs.c:          Change XSetCommand signature to match Xorg,
+	* win/tkWinWm.c:        needed for Cygwin.
+	* generic/tkInt.decls
+	* generic/tk*Decls.h:   re-generated
+
+2012-05-09  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinWm.c:           Change TkpWmSetState signature to match Xorg,
+	* generic/tkInt.decls:     needed for Cygwin. (not needed for Mac)
+	* generic/tkIntPlatDeclsDecls.h:
+	* generic/tkWindow.c:      Don't check for cygwin in win32 static build.
+	* unix/tkUnixPort.h:       Some more useful #defines for Cygwin
+
 2012-05-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* xlib/xcolors.c:      Single "const" addition

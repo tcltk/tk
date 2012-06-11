@@ -10,7 +10,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <tk.h>
+#include <tkInt.h>
 #include <X11/Xatom.h>
 
 #include "ttkTheme.h"
@@ -1135,13 +1135,14 @@ EntryDoLayout(void *recordPtr)
  *      Get a GC using the specified foreground color and the entry's font.
  *      Result must be freed with Tk_FreeGC().
  */
-static GC EntryGetGC(Entry *entryPtr, Tcl_Obj *colorObj)
+static GC EntryGetGC(Entry *entryPtr, Tcl_Obj *colorObj, TkRegion clip)
 {
     Tk_Window tkwin = entryPtr->core.tkwin;
     Tk_Font font = Tk_GetFontFromObj(tkwin, entryPtr->entry.fontObj);
     XColor *colorPtr;
     unsigned long mask = 0ul;
     XGCValues gcValues;
+    GC gc;
 
     gcValues.line_width = 1; mask |= GCLineWidth;
     gcValues.font = Tk_FontId(font); mask |= GCFont;
@@ -1149,7 +1150,9 @@ static GC EntryGetGC(Entry *entryPtr, Tcl_Obj *colorObj)
 	gcValues.foreground = colorPtr->pixel;
 	mask |= GCForeground;
     }
-    return Tk_GetGC(entryPtr->core.tkwin, mask, &gcValues);
+    gc = Tk_GetGC(entryPtr->core.tkwin, mask, &gcValues);
+    TkSetRegion(Tk_Display(entryPtr->core.tkwin), gc, clip);
+    return gc;
 }
 
 /* EntryDisplay --
@@ -1160,15 +1163,19 @@ static void EntryDisplay(void *clientData, Drawable d)
     Entry *entryPtr = clientData;
     Tk_Window tkwin = entryPtr->core.tkwin;
     int leftIndex = entryPtr->entry.xscroll.first,
-	rightIndex = entryPtr->entry.xscroll.last,
+	rightIndex = entryPtr->entry.xscroll.last + 1,
 	selFirst = entryPtr->entry.selectFirst,
 	selLast = entryPtr->entry.selectLast;
     EntryStyleData es;
     GC gc;
     int showSelection, showCursor;
+    Ttk_Box textarea;
+    TkRegion clipRegion;
+    XRectangle rect;
 
     EntryInitStyleData(entryPtr, &es);
 
+    textarea = Ttk_ClientRegion(entryPtr->core.layout, "textarea");
     showCursor =
 	   (entryPtr->core.flags & CURSOR_ON) != 0
 	&& EntryEditable(entryPtr)
@@ -1214,6 +1221,16 @@ static void EntryDisplay(void *clientData, Drawable d)
 	}
     }
 
+    /* Initialize the clip region:
+     */
+
+    rect.x = entryPtr->entry.layoutX;
+    rect.y = entryPtr->entry.layoutY;
+    rect.width = textarea.width;
+    rect.height = entryPtr->entry.layoutHeight;
+    clipRegion = TkCreateRegion();
+    TkUnionRectWithRegion(&rect, clipRegion, clipRegion);
+
     /* Draw cursor:
      */
     if (showCursor) {
@@ -1230,7 +1247,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	/* @@@ should: maybe: SetCaretPos even when blinked off */
 	Tk_SetCaretPos(tkwin, cursorX, cursorY, cursorHeight);
 
-	gc = EntryGetGC(entryPtr, es.insertColorObj);
+	gc = EntryGetGC(entryPtr, es.insertColorObj, clipRegion);
 	XFillRectangle(Tk_Display(tkwin), d, gc,
 	    cursorX-cursorWidth/2, cursorY, cursorWidth, cursorHeight);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
@@ -1238,7 +1255,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 
     /* Draw the text:
      */
-    gc = EntryGetGC(entryPtr, es.foregroundObj);
+    gc = EntryGetGC(entryPtr, es.foregroundObj, clipRegion);
     Tk_DrawTextLayout(
 	Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
 	entryPtr->entry.layoutX, entryPtr->entry.layoutY,
@@ -1248,13 +1265,14 @@ static void EntryDisplay(void *clientData, Drawable d)
     /* Overwrite the selected portion (if any) in the -selectforeground color:
      */
     if (showSelection) {
-	gc = EntryGetGC(entryPtr, es.selForegroundObj);
+	gc = EntryGetGC(entryPtr, es.selForegroundObj, clipRegion);
 	Tk_DrawTextLayout(
 	    Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
 	    entryPtr->entry.layoutX, entryPtr->entry.layoutY,
 	    selFirst, selLast);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     }
+    TkDestroyRegion(clipRegion);
 }
 
 /*------------------------------------------------------------------------
