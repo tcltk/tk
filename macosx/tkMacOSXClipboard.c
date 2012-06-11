@@ -198,14 +198,13 @@ XSetSelectionOwner(
  *----------------------------------------------------------------------
  */
 
-int
+void
 TkMacOSXSelDeadWindow(
     TkWindow *winPtr)
 {
     if (winPtr && winPtr == (TkWindow *)clipboardOwner) {
 	clipboardOwner = NULL;
     }
-    return Success;
 }
 
 /*
