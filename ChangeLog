@@ -1,12 +1,13 @@
 2012-06-11  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/ttk/ttkLabel.c (TextDraw): [Bug 3294450]: Get the clipping
-	of text in Ttk text elements (e.g., buttons, entries, etc.) correct.
-	Stops a whole range of visual problems, including loss of the second
-	and subsequent lines of a label when the first line doesn't entirely
-	fit, and failing to draw the last character of an entry at all if it
-	doesn't all exactly fit in the space available (a problem I've noticed
-	in tkchat, and been very frustrated with).
+	* generic/ttk/ttkEntry.c (EntryDisplay): of text in Ttk various text
+	elements (e.g., buttons, entries, etc.) correct. Stops a whole range
+	of visual problems, including loss of the second and subsequent lines
+	of a label when the first line doesn't entirely fit, and failing to
+	draw the last character of an entry at all if it doesn't all exactly
+	fit in the space available (a problem I've noticed in tkchat, and been
+	very frustrated with).
 
 2012-06-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
