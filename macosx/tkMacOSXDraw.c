@@ -348,6 +348,7 @@ TkPutImage(
 	TkMacOSXDbgMsg("Invalid destination drawable");
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
@@ -731,7 +732,8 @@ DrawCGImage(
 		dstBounds.size.width, dstBounds.size.height);
 #else /* TK_MAC_DEBUG_IMAGE_DRAWING */
 	CGContextSaveGState(context);
-	CGContextTranslateCTM(context, 0, dstBounds.origin.y + CGRectGetMaxY(dstBounds));
+	CGContextTranslateCTM(context,
+		0, dstBounds.origin.y + CGRectGetMaxY(dstBounds));
 	CGContextScaleCTM(context, 1, -1);
 	CGContextDrawImage(context, dstBounds, image);
 	CGContextRestoreGState(context);
@@ -745,7 +747,6 @@ DrawCGImage(
     } else {
 	TkMacOSXDbgMsg("Drawing of empty CGImage requested");
     }
-    return Success;
 }
 
 /*
