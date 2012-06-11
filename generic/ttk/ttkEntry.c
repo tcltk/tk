@@ -1175,7 +1175,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 
     EntryInitStyleData(entryPtr, &es);
 
-    textarea = Ttk_ClientRegion(corePtr->layout, "textarea");
+    textarea = Ttk_ClientRegion(entryPtr->core.layout, "textarea");
     showCursor =
 	   (entryPtr->core.flags & CURSOR_ON) != 0
 	&& EntryEditable(entryPtr)
