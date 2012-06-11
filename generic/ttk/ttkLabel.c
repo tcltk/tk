@@ -7,7 +7,7 @@
  */
 
 #include <tcl.h>
-#include <tk.h>
+#include <tkInt.h>
 #include "ttkTheme.h"
 
 /*----------------------------------------------------------------------
@@ -128,7 +128,6 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, text->foregroundObj);
     int underline = -1;
-    int lastChar = -1;
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
@@ -147,21 +146,30 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 
     /*
      * Clip text if it's too wide:
-     * @@@ BUG: This will overclip multi-line text.
      */
     if (b.width < text->width) {
-	lastChar = Tk_PointToChar(text->textLayout, b.width, 1) + 1;
+	TkRegion clipRegion = TkCreateRegion();
+	XRectangle rect;
+
+	rect.x = b.x;
+	rect.y = b.y;
+	rect.width = b.width + (text->embossed ? 1 : 0);
+	rect.height = b.height + (text->embossed ? 1 : 0);
+	TkUnionRectWithRegion(&rect, clipRegion, clipRegion);
+	TkSetRegion(Tk_Display(tkwin), gc1, clipRegion);
+	TkSetRegion(Tk_Display(tkwin), gc2, clipRegion);
+	TkDestroyRegion(clipRegion);
     }
 
     if (text->embossed) {
 	Tk_DrawTextLayout(Tk_Display(tkwin), d, gc2,
-	    text->textLayout, b.x+1, b.y+1, 0/*firstChar*/, lastChar);
+	    text->textLayout, b.x+1, b.y+1, 0/*firstChar*/, -1/*lastChar*/);
     }
     Tk_DrawTextLayout(Tk_Display(tkwin), d, gc1,
-	    text->textLayout, b.x, b.y, 0/*firstChar*/, lastChar);
+	    text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
 
     Tcl_GetIntFromObj(NULL, text->underlineObj, &underline);
-    if (underline >= 0 && (lastChar == -1 || underline <= lastChar)) {
+    if (underline >= 0) {
 	if (text->embossed) {
 	    Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
 		text->textLayout, b.x+1, b.y+1, underline);
