@@ -1175,7 +1175,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 
     EntryInitStyleData(entryPtr, &es);
 
-    textarea = Ttk_ClientRegion(corePtr->layout, "textarea");
+    textarea = Ttk_ClientRegion(entryPtr->core.layout, "textarea");
     showCursor =
 	   (entryPtr->core.flags & CURSOR_ON) != 0
 	&& EntryEditable(entryPtr)
@@ -1224,10 +1224,10 @@ static void EntryDisplay(void *clientData, Drawable d)
     /* Initialize the clip region:
      */
 
-    rect.x = textarea.x;
-    rect.y = textarea.y;
+    rect.x = entryPtr->entry.layoutX;
+    rect.y = entryPtr->entry.layoutY;
     rect.width = textarea.width;
-    rect.height = textarea.height;
+    rect.height = entryPtr->entry.layoutHeight;
     clipRegion = TkCreateRegion();
     TkUnionRectWithRegion(&rect, clipRegion, clipRegion);
 
