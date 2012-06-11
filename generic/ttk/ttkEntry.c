@@ -1123,7 +1123,7 @@ EntryDoLayout(void *recordPtr)
 	 * rightIndex is set to one past the last fully-visible character.
 	 */
 	Tk_CharBbox(textLayout, leftIndex, &leftX, NULL, NULL, NULL);
-	rightIndex = Tk_PointToChar(textLayout, leftX + textarea.width, 0)+1;
+	rightIndex = Tk_PointToChar(textLayout, leftX + textarea.width, 0);
 	entryPtr->entry.layoutX = textarea.x - leftX;
     }
 
@@ -1163,7 +1163,7 @@ static void EntryDisplay(void *clientData, Drawable d)
     Entry *entryPtr = clientData;
     Tk_Window tkwin = entryPtr->core.tkwin;
     int leftIndex = entryPtr->entry.xscroll.first,
-	rightIndex = entryPtr->entry.xscroll.last,
+	rightIndex = entryPtr->entry.xscroll.last + 1,
 	selFirst = entryPtr->entry.selectFirst,
 	selLast = entryPtr->entry.selectLast;
     EntryStyleData es;
@@ -1265,7 +1265,7 @@ static void EntryDisplay(void *clientData, Drawable d)
     /* Overwrite the selected portion (if any) in the -selectforeground color:
      */
     if (showSelection) {
-      gc = EntryGetGC(entryPtr, es.selForegroundObj, clipRegion);
+	gc = EntryGetGC(entryPtr, es.selForegroundObj, clipRegion);
 	Tk_DrawTextLayout(
 	    Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
 	    entryPtr->entry.layoutX, entryPtr->entry.layoutY,
