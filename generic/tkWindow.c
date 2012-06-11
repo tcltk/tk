@@ -14,7 +14,9 @@
 
 #include "tkInt.h"
 
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
+#ifdef __WIN32__
+#include "tkWinInt.h"
+#elif !defined(MAC_OSX_TK)
 #include "tkUnixInt.h"
 #endif
 
@@ -859,9 +861,6 @@ TkCreateMainWindow(
 {
     Tk_Window tkwin;
     int dummy, isSafe;
-#ifdef __WIN32__
-    int isWin32 = 0;
-#endif
     Tcl_HashEntry *hPtr;
     register TkMainInfo *mainPtr;
     register TkWindow *winPtr;
@@ -869,14 +868,6 @@ TkCreateMainWindow(
     ClientData clientData;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-#ifdef __WIN32__
-    Tcl_Obj *stringObjPtr = Tcl_GetVar2Ex(interp, "::tcl_platform", "platform", 0);
-
-    if (stringObjPtr
-            && !strcmp(Tcl_GetString(stringObjPtr), "windows")) {
-        isWin32 = 1;
-    }
-#endif
 
     /*
      * Panic if someone updated the TkWindow structure without also updating
@@ -961,8 +952,9 @@ TkCreateMainWindow(
 	if ((cmdPtr->objProc == NULL)) {
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
-#ifdef __WIN32__
-	if (!isWin32 && (cmdPtr->flags & WINMACONLY)) {
+#if defined(__WIN32__) && !defined(STATIC_BUILD)
+	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->reserved9) {
+	    /* We are running on Cygwin, so don't use the win32 dialogs */
 	    continue;
 	}
 #endif
@@ -2841,6 +2833,51 @@ DeleteWindowsExitProc(
     tsdPtr->initialized = 0;
 }
 
+#if defined(__WIN32__) && !defined(__WIN64__)
+
+static HMODULE tkcygwindll = NULL;
+
+/*
+ * Run Tk_MainEx from libtk8.?.dll
+ *
+ * This function is only ever called from wish8.4.exe, the cygwin
+ * port of Tcl. This means that the system encoding is utf-8,
+ * so we don't have to do any encoding conversions.
+ */
+int
+TkCygwinMainEx(argc, argv, appInitProc, interp)
+    int argc;				/* Number of arguments. */
+    char **argv;			/* Array of argument strings. */
+    Tcl_AppInitProc *appInitProc;	/* Application-specific initialization
+					 * procedure to call after most
+					 * initialization but before starting
+					 * to execute commands. */
+    Tcl_Interp *interp;
+{
+    TCHAR name[MAX_PATH];
+    int len;
+    void (*sym)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+
+    /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
+	len = GetModuleFileNameW(Tk_GetHINSTANCE(), name, MAX_PATH);
+	name[len-2] = TEXT('.');
+	name[len-1] = name[len-5];
+	_tcscpy(name+len, TEXT(".dll"));
+	memcpy(name+len-8, TEXT("libtk8"), 6 * sizeof(TCHAR));
+
+	tkcygwindll = LoadLibrary(name);
+	if (!tkcygwindll) {
+	    /* dll is not present */
+	    return 0;
+	}
+	sym = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_MainEx");
+	if (!sym) {
+		return 0;
+	}
+	sym(argc, argv, appInitProc, interp);
+    return 1;
+}
+#endif
 /*
  *----------------------------------------------------------------------
  *
@@ -2868,6 +2905,16 @@ int
 Tk_Init(
     Tcl_Interp *interp)		/* Interpreter to initialize. */
 {
+#if defined(__WIN32__) && !defined(__WIN64__)
+    if (tkcygwindll) {
+	int (*sym)(Tcl_Interp *);
+
+	sym = (int (*)(Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_Init");
+	if (sym) {
+	    return sym(interp);
+	}
+    }
+#endif
     return Initialize(interp);
 }
 
@@ -2931,6 +2978,16 @@ Tk_SafeInit(
      * checked at several places to differentiate the two initialisations.
      */
 
+#if defined(__WIN32__) && !defined(__WIN64__)
+    if (tkcygwindll) {
+	int (*sym)(Tcl_Interp *);
+
+	sym = (int (*)(Tcl_Interp *)) GetProcAddress(tkcygwindll, "Tk_SafeInit");
+	if (sym) {
+	    return sym(interp);
+	}
+    }
+#endif
     return Initialize(interp);
 }
 
