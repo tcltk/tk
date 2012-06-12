@@ -1218,6 +1218,9 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 				Colormap map, const char* spec,
 				XColor * colorPtr);
 #endif
+#ifdef HAVE_XFT
+MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
+#endif
 
 /*
  * Unsupported commands.
