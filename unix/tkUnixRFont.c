@@ -35,6 +35,16 @@ typedef struct {
     XftDraw *ftDraw;
     XftColor color;
 } UnixFtFont;
+
+/*
+ * Used to describe the current clipping box. Can't be passed normally because
+ * the information isn't retrievable from the GC.
+ */
+
+typedef struct ThreadSpecificData {
+    Region clipRegion;		/* The clipping region, or None. */
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
 
 /*
  * Package initialization:
@@ -754,6 +764,8 @@ Tk_DrawChars(
     int clen, nspec, xStart = x;
     XftGlyphFontSpec specs[NUM_SPEC];
     XGlyphInfo metrics;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (fontPtr->ftDraw == 0) {
 #if DEBUG_FONTSEL
@@ -779,6 +791,9 @@ Tk_DrawChars(
 	fontPtr->color.color.blue = xcolor.blue;
 	fontPtr->color.color.alpha = 0xffff;
 	fontPtr->color.pixel = values.foreground;
+    }
+    if (tsdPtr->clipRegion != None) {
+	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
     nspec = 0;
     while (numBytes > 0 && x <= maxCoord && y <= maxCoord) {
@@ -819,6 +834,9 @@ Tk_DrawChars(
     }
 
   doUnderlineStrikeout:
+    if (tsdPtr->clipRegion != None) {
+	XftDrawSetClip(fontPtr->ftDraw, None);
+    }
     if (fontPtr->font.fa.underline != 0) {
 	XFillRectangle(display, drawable, gc, xStart,
 		y + fontPtr->font.underlinePos, (unsigned) (x - xStart),
@@ -876,6 +894,8 @@ TkDrawAngledChars(
     XGCValues values;
     XColor xcolor;
     int xStart = x, yStart = y;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 #ifdef XFT_HAS_FIXED_ROTATED_PLACEMENT
     int clen, nglyph;
     FT_UInt glyphs[NUM_SPEC];
@@ -908,6 +928,9 @@ TkDrawAngledChars(
 	fontPtr->color.color.blue = xcolor.blue;
 	fontPtr->color.color.alpha = 0xffff;
 	fontPtr->color.pixel = values.foreground;
+    }
+    if (tsdPtr->clipRegion != None) {
+	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
 
     nglyph = 0;
@@ -995,6 +1018,9 @@ TkDrawAngledChars(
 	fontPtr->color.color.alpha = 0xffff;
 	fontPtr->color.pixel = values.foreground;
     }
+    if (tsdPtr->clipRegion != None) {
+	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
+    }
     nspec = 0;
     while (numBytes > 0 && x <= maxCoord && x >= minCoord
 	    && y <= maxCoord && y >= minCoord) {
@@ -1037,6 +1063,9 @@ TkDrawAngledChars(
 #endif /* XFT_HAS_FIXED_ROTATED_PLACEMENT */
 
   doUnderlineStrikeout:
+    if (tsdPtr->clipRegion != None) {
+	XftDrawSetClip(fontPtr->ftDraw, None);
+    }
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
 	XPoint points[5];
 	double width = (x - xStart) * cosA + (yStart - y) * sinA;
@@ -1091,6 +1120,16 @@ TkDrawAngledChars(
 	    }
 	}
     }
+}
+
+void
+TkUnixSetXftClipRegion(
+    Region clipRegion)		/* The clipping region to install. */
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    tsdPtr->clipRegion = clipRegion;
 }
 
 /*
