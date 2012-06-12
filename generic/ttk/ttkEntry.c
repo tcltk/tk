@@ -1221,7 +1221,8 @@ static void EntryDisplay(void *clientData, Drawable d)
 	}
     }
 
-    /* Initialize the clip region:
+    /* Initialize the clip region. Note that Xft does _not_ derive its
+     * clipping area from the GC, so we have to supply that by other means.
      */
 
     rect.x = textarea.x;
@@ -1230,6 +1231,9 @@ static void EntryDisplay(void *clientData, Drawable d)
     rect.height = textarea.height;
     clipRegion = TkCreateRegion();
     TkUnionRectWithRegion(&rect, clipRegion, clipRegion);
+#ifdef HAVE_XFT
+    TkUnixSetXftClipRegion(clipRegion);
+#endif
 
     /* Draw cursor:
      */
@@ -1272,6 +1276,13 @@ static void EntryDisplay(void *clientData, Drawable d)
 	    selFirst, selLast);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     }
+
+    /* Drop the region. Note that we have to manually remove the reference to
+     * it from the Xft guts (if they're being used).
+     */
+#ifdef HAVE_XFT
+    TkUnixSetXftClipRegion(None);
+#endif
     TkDestroyRegion(clipRegion);
 }
 
