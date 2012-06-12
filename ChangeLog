@@ -1,3 +1,11 @@
+2012-06-12  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixRFont.c (Tk_DrawChars, TkUnixSetXftClipRegion): Add some
+	* generic/ttk/ttkEntry.c (EntryDisplay): special magic to make the
+	* generic/ttk/ttkLabel.c (TextDraw): text clipping work right with the
+	Xft-based renderer (which doesn't use the standard Tk GC except to
+	supply the color).
+
 2012-06-11  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/ttk/ttkLabel.c (TextDraw): [Bug 3294450]: Get the clipping
