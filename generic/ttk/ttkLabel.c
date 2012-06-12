@@ -131,6 +131,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
+    TkRegion clipRegion = NULL;
 
     gcValues.font = Tk_FontId(text->tkfont);
     gcValues.foreground = color->pixel;
@@ -148,9 +149,9 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
      * Clip text if it's too wide:
      */
     if (b.width < text->width) {
-	TkRegion clipRegion = TkCreateRegion();
 	XRectangle rect;
 
+	clipRegion = TkCreateRegion();
 	rect.x = b.x;
 	rect.y = b.y;
 	rect.width = b.width + (text->embossed ? 1 : 0);
@@ -158,7 +159,11 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 	TkUnionRectWithRegion(&rect, clipRegion, clipRegion);
 	TkSetRegion(Tk_Display(tkwin), gc1, clipRegion);
 	TkSetRegion(Tk_Display(tkwin), gc2, clipRegion);
+#ifdef HAVE_XFT
+	TkUnixSetXftClipRegion(clipRegion);
+#else
 	TkDestroyRegion(clipRegion);
+#endif
     }
 
     if (text->embossed) {
@@ -180,6 +185,12 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 
     Tk_FreeGC(Tk_Display(tkwin), gc1);
     Tk_FreeGC(Tk_Display(tkwin), gc2);
+#ifdef HAVE_XFT
+    if (clipRegion != NULL) {
+	TkUnixSetXftClipRegion(None);
+	TkDestroyRegion(clipRegion);
+    }
+#endif
 }
 
 static void TextElementSize(
