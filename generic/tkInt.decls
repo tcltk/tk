@@ -834,22 +834,22 @@ declare 12 aqua {
 #}
 
 declare 14 aqua {
-    int TkMacOSXDoHLEvent(EventRecord *theEvent)
+    int TkMacOSXDoHLEvent(void *theEvent)
 }
 
 # removed duplicate from tkPlat table(tk.decls)
 #declare 15 aqua {
-#    GWorldPtr TkMacOSXGetDrawablePort(Drawable drawable)
+#    void *TkMacOSXGetDrawablePort(Drawable drawable)
 #}
 
 declare 16 aqua {
-    Window TkMacOSXGetXWindow(WindowRef macWinPtr)
+    Window TkMacOSXGetXWindow(void *macWinPtr)
 }
 declare 17 aqua {
-    int TkMacOSXGrowToplevel(WindowRef whichWindow, Point start)
+    int TkMacOSXGrowToplevel(void *whichWindow, XPoint start)
 }
 declare 18 aqua {
-    void TkMacOSXHandleMenuSelect(MenuID theMenu, MenuItemIndex theItem,
+    void TkMacOSXHandleMenuSelect(short theMenu, unsigned short theItem,
 	    int optionKeyPressed)
 }
 
@@ -872,13 +872,13 @@ declare 23 aqua {
     void TkMacOSXMakeRealWindowExist(TkWindow *winPtr)
 }
 declare 24 aqua {
-    BitMapPtr TkMacOSXMakeStippleMap(Drawable d1, Drawable d2)
+    void *    TkMacOSXMakeStippleMap(Drawable d1, Drawable d2)
 }
 declare 25 aqua {
     void TkMacOSXMenuClick(void)
 }
 declare 26 aqua {
-    void TkMacOSXRegisterOffScreenWindow(Window window, GWorldPtr portPtr)
+    void TkMacOSXRegisterOffScreenWindow(Window window, void *portPtr)
 }
 declare 27 aqua {
     int TkMacOSXResizable(TkWindow *winPtr)
@@ -893,28 +893,28 @@ declare 30 aqua {
     void TkMacOSXSetUpClippingRgn(Drawable drawable)
 }
 declare 31 aqua {
-    void TkMacOSXSetUpGraphicsPort(GC gc, GWorldPtr destPort)
+    void TkMacOSXSetUpGraphicsPort(GC gc, void *destPort)
 }
 declare 32 aqua {
     void TkMacOSXUpdateClipRgn(TkWindow *winPtr)
 }
 declare 33 aqua {
-    void TkMacOSXUnregisterMacWindow(WindowRef portPtr)
+    void TkMacOSXUnregisterMacWindow(void *portPtr)
 }
 declare 34 aqua {
     int TkMacOSXUseMenuID(short macID)
 }
 declare 35 aqua {
-    RgnHandle TkMacOSXVisableClipRgn(TkWindow *winPtr)
+    TkRegion TkMacOSXVisableClipRgn(TkWindow *winPtr)
 }
 declare 36 aqua {
-    void TkMacOSXWinBounds(TkWindow *winPtr, Rect *geometry)
+    void TkMacOSXWinBounds(TkWindow *winPtr, void *geometry)
 }
 declare 37 aqua {
-    void TkMacOSXWindowOffset(WindowRef wRef, int *xOffset, int *yOffset)
+    void TkMacOSXWindowOffset(void *wRef, int *xOffset, int *yOffset)
 }
 declare 38 aqua {
-    int TkSetMacColor(unsigned long pixel, RGBColor *macColor)
+    int TkSetMacColor(unsigned long pixel, void *macColor)
 }
 declare 39 aqua {
     void TkSetWMName(TkWindow *winPtr, Tk_Uid titleUid)
@@ -923,7 +923,7 @@ declare 40 aqua {
     void TkSuspendClipboard(void)
 }
 declare 41 aqua {
-    int TkMacOSXZoomToplevel(WindowPtr whichWindow, short zoomPart)
+    int TkMacOSXZoomToplevel(void *whichWindow, short zoomPart)
 }
 declare 42 aqua {
     Tk_Window Tk_TopCoordsToWindow(Tk_Window tkwin, int rootX, int rootY,
@@ -939,7 +939,7 @@ declare 45 aqua {
     void TkMacOSXPreprocessMenu(void)
 }
 declare 46 aqua {
-    int TkpIsWindowFloating(WindowRef window)
+    int TkpIsWindowFloating(void *window)
 }
 declare 47 aqua {
     Tk_Window TkMacOSXGetCapture(void)
