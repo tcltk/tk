@@ -207,8 +207,8 @@ declare 43 {
 	    const char *pathName, const char *screenName)
 }
 declare 44 {
-    int Tk_OldDefineBitmap(Tcl_Interp *interp, const char *name,
-	    const char *source, int width, int height)
+    int Tk_DefineBitmap(Tcl_Interp *interp, const char *name,
+	    const void *source, int width, int height)
 }
 declare 45 {
     void Tk_DefineCursor(Tk_Window window, Tk_Cursor cursor)
@@ -359,8 +359,8 @@ declare 85 {
     Pixmap Tk_GetBitmap(Tcl_Interp *interp, Tk_Window tkwin, const char *str)
 }
 declare 86 {
-    Pixmap Tk_OldGetBitmapFromData(Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *source, int width, int height)
+    Pixmap Tk_GetBitmapFromData(Tcl_Interp *interp,
+	    Tk_Window tkwin, const void *source, int width, int height)
 }
 declare 87 {
     int Tk_GetCapStyle(Tcl_Interp *interp, const char *str, int *capPtr)
@@ -1067,17 +1067,6 @@ declare 272 {
 }
 declare 273 {
     void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
-}
-
-# See [Enhancement request 2636558] Tk_DefineBitmap and
-# Tk_GetBitmapFromData signature problem
-declare 274 {
-    int Tk_DefineBitmap(Tcl_Interp *interp, const char *name,
-	    const void *source, int width, int height)
-}
-declare 275 {
-    Pixmap Tk_GetBitmapFromData(Tcl_Interp *interp,
-	    Tk_Window tkwin, const void *source, int width, int height)
 }
 
 # Define the platform specific public Tk interface.  These functions are

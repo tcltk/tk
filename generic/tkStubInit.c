@@ -873,7 +873,7 @@ const TkStubs tkStubs = {
     Tk_CreateSelHandler, /* 41 */
     Tk_CreateWindow, /* 42 */
     Tk_CreateWindowFromPath, /* 43 */
-    Tk_OldDefineBitmap, /* 44 */
+    Tk_DefineBitmap, /* 44 */
     Tk_DefineCursor, /* 45 */
     Tk_DeleteAllBindings, /* 46 */
     Tk_DeleteBinding, /* 47 */
@@ -915,7 +915,7 @@ const TkStubs tkStubs = {
     Tk_GetAtomName, /* 83 */
     Tk_GetBinding, /* 84 */
     Tk_GetBitmap, /* 85 */
-    Tk_OldGetBitmapFromData, /* 86 */
+    Tk_GetBitmapFromData, /* 86 */
     Tk_GetCapStyle, /* 87 */
     Tk_GetColor, /* 88 */
     Tk_GetColorByValue, /* 89 */
@@ -1103,8 +1103,6 @@ const TkStubs tkStubs = {
     Tk_Interp, /* 271 */
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
-    Tk_DefineBitmap, /* 274 */
-    Tk_GetBitmapFromData, /* 275 */
 };
 
 /* !END!: Do not edit above this line. */

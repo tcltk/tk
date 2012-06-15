@@ -181,9 +181,8 @@ EXTERN Tk_Window	Tk_CreateWindowFromPath(Tcl_Interp *interp,
 				Tk_Window tkwin, const char *pathName,
 				const char *screenName);
 /* 44 */
-EXTERN int		Tk_OldDefineBitmap(Tcl_Interp *interp,
-				const char *name, const char *source,
-				int width, int height);
+EXTERN int		Tk_DefineBitmap(Tcl_Interp *interp, const char *name,
+				const void *source, int width, int height);
 /* 45 */
 EXTERN void		Tk_DefineCursor(Tk_Window window, Tk_Cursor cursor);
 /* 46 */
@@ -304,8 +303,8 @@ EXTERN CONST84_RETURN char * Tk_GetBinding(Tcl_Interp *interp,
 EXTERN Pixmap		Tk_GetBitmap(Tcl_Interp *interp, Tk_Window tkwin,
 				const char *str);
 /* 86 */
-EXTERN Pixmap		Tk_OldGetBitmapFromData(Tcl_Interp *interp,
-				Tk_Window tkwin, const char *source,
+EXTERN Pixmap		Tk_GetBitmapFromData(Tcl_Interp *interp,
+				Tk_Window tkwin, const void *source,
 				int width, int height);
 /* 87 */
 EXTERN int		Tk_GetCapStyle(Tcl_Interp *interp, const char *str,
@@ -861,13 +860,6 @@ EXTERN void		Tk_CreateOldImageType(const Tk_ImageType *typePtr);
 /* 273 */
 EXTERN void		Tk_CreateOldPhotoImageFormat(
 				const Tk_PhotoImageFormat *formatPtr);
-/* 274 */
-EXTERN int		Tk_DefineBitmap(Tcl_Interp *interp, const char *name,
-				const void *source, int width, int height);
-/* 275 */
-EXTERN Pixmap		Tk_GetBitmapFromData(Tcl_Interp *interp,
-				Tk_Window tkwin, const void *source,
-				int width, int height);
 
 typedef struct TkStubHooks {
     const struct TkPlatStubs *tkPlatStubs;
@@ -924,7 +916,7 @@ typedef struct TkStubs {
     void (*tk_CreateSelHandler) (Tk_Window tkwin, Atom selection, Atom target, Tk_SelectionProc *proc, ClientData clientData, Atom format); /* 41 */
     Tk_Window (*tk_CreateWindow) (Tcl_Interp *interp, Tk_Window parent, const char *name, const char *screenName); /* 42 */
     Tk_Window (*tk_CreateWindowFromPath) (Tcl_Interp *interp, Tk_Window tkwin, const char *pathName, const char *screenName); /* 43 */
-    int (*tk_OldDefineBitmap) (Tcl_Interp *interp, const char *name, const char *source, int width, int height); /* 44 */
+    int (*tk_DefineBitmap) (Tcl_Interp *interp, const char *name, const void *source, int width, int height); /* 44 */
     void (*tk_DefineCursor) (Tk_Window window, Tk_Cursor cursor); /* 45 */
     void (*tk_DeleteAllBindings) (Tk_BindingTable bindingTable, ClientData object); /* 46 */
     int (*tk_DeleteBinding) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventStr); /* 47 */
@@ -966,7 +958,7 @@ typedef struct TkStubs {
     CONST84_RETURN char * (*tk_GetAtomName) (Tk_Window tkwin, Atom atom); /* 83 */
     CONST84_RETURN char * (*tk_GetBinding) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventStr); /* 84 */
     Pixmap (*tk_GetBitmap) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 85 */
-    Pixmap (*tk_OldGetBitmapFromData) (Tcl_Interp *interp, Tk_Window tkwin, const char *source, int width, int height); /* 86 */
+    Pixmap (*tk_GetBitmapFromData) (Tcl_Interp *interp, Tk_Window tkwin, const void *source, int width, int height); /* 86 */
     int (*tk_GetCapStyle) (Tcl_Interp *interp, const char *str, int *capPtr); /* 87 */
     XColor * (*tk_GetColor) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid name); /* 88 */
     XColor * (*tk_GetColorByValue) (Tk_Window tkwin, XColor *colorPtr); /* 89 */
@@ -1154,8 +1146,6 @@ typedef struct TkStubs {
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
     void (*tk_CreateOldImageType) (const Tk_ImageType *typePtr); /* 272 */
     void (*tk_CreateOldPhotoImageFormat) (const Tk_PhotoImageFormat *formatPtr); /* 273 */
-    int (*tk_DefineBitmap) (Tcl_Interp *interp, const char *name, const void *source, int width, int height); /* 274 */
-    Pixmap (*tk_GetBitmapFromData) (Tcl_Interp *interp, Tk_Window tkwin, const void *source, int width, int height); /* 275 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -1260,8 +1250,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_CreateWindow) /* 42 */
 #define Tk_CreateWindowFromPath \
 	(tkStubsPtr->tk_CreateWindowFromPath) /* 43 */
-#define Tk_OldDefineBitmap \
-	(tkStubsPtr->tk_OldDefineBitmap) /* 44 */
+#define Tk_DefineBitmap \
+	(tkStubsPtr->tk_DefineBitmap) /* 44 */
 #define Tk_DefineCursor \
 	(tkStubsPtr->tk_DefineCursor) /* 45 */
 #define Tk_DeleteAllBindings \
@@ -1344,8 +1334,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_GetBinding) /* 84 */
 #define Tk_GetBitmap \
 	(tkStubsPtr->tk_GetBitmap) /* 85 */
-#define Tk_OldGetBitmapFromData \
-	(tkStubsPtr->tk_OldGetBitmapFromData) /* 86 */
+#define Tk_GetBitmapFromData \
+	(tkStubsPtr->tk_GetBitmapFromData) /* 86 */
 #define Tk_GetCapStyle \
 	(tkStubsPtr->tk_GetCapStyle) /* 87 */
 #define Tk_GetColor \
@@ -1718,10 +1708,6 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_CreateOldImageType) /* 272 */
 #define Tk_CreateOldPhotoImageFormat \
 	(tkStubsPtr->tk_CreateOldPhotoImageFormat) /* 273 */
-#define Tk_DefineBitmap \
-	(tkStubsPtr->tk_DefineBitmap) /* 274 */
-#define Tk_GetBitmapFromData \
-	(tkStubsPtr->tk_GetBitmapFromData) /* 275 */
 
 #endif /* defined(USE_TK_STUBS) */
 
