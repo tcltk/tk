@@ -1,3 +1,27 @@
+2012-06-12  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixRFont.c (Tk_DrawChars, TkUnixSetXftClipRegion): Add some
+	* generic/ttk/ttkEntry.c (EntryDisplay): special magic to make the
+	* generic/ttk/ttkLabel.c (TextDraw): text clipping work right with the
+	Xft-based renderer (which doesn't use the standard Tk GC except to
+	supply the color).
+
+2012-06-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/ttk/ttkLabel.c (TextDraw): [Bug 3294450]: Get the clipping
+	* generic/ttk/ttkEntry.c (EntryDisplay): of text in Ttk various text
+	elements (e.g., buttons, entries, etc.) correct. Stops a whole range
+	of visual problems, including loss of the second and subsequent lines
+	of a label when the first line doesn't entirely fit, and failing to
+	draw the last character of an entry at all if it doesn't all exactly
+	fit in the space available (a problem I've noticed in tkchat, and been
+	very frustrated with).
+
+2012-06-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/*.tcl:      [Bug 3534137]: $tcl_platform(platform) !=
+	[tk windowingsystem]
+
 2012-06-08  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkMain.c:   Implement TkCygwinMainEx for loading
