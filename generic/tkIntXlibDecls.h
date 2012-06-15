@@ -30,6 +30,10 @@
 #define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
+typedef int (*XAfterFunction) (	    /* WARNING, this type not in Xlib spec */
+    Display*		/* display */
+);
+
 /* !BEGIN!: Do not edit below this line. */
 
 /*
@@ -343,7 +347,7 @@ EXTERN int		XFree(void *data);
 /* 111 */
 EXTERN int		XNoOp(Display *display);
 /* 112 */
-EXTERN int		XSynchronize(Display *display, Bool onoff);
+EXTERN XAfterFunction	XSynchronize(Display *display, Bool onoff);
 /* 113 */
 EXTERN int		XSync(Display *display, Bool discard);
 /* 114 */
@@ -731,7 +735,7 @@ typedef struct TkIntXlibStubs {
     int (*xUngrabServer) (Display *display); /* 109 */
     int (*xFree) (void *data); /* 110 */
     int (*xNoOp) (Display *display); /* 111 */
-    int (*xSynchronize) (Display *display, Bool onoff); /* 112 */
+    XAfterFunction (*xSynchronize) (Display *display, Bool onoff); /* 112 */
     int (*xSync) (Display *display, Bool discard); /* 113 */
     VisualID (*xVisualIDFromVisual) (Visual *visual); /* 114 */
 #endif /* WIN */
