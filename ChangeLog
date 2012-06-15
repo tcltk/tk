@@ -1,3 +1,8 @@
+2012-06-15  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/ttk/ttkTreeview.c (unshareObj): [Bug 3535362]: Changed name
+	of 'unshare' internal function to avoid clash with some libc versions.
+
 2012-06-12  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixRFont.c (Tk_DrawChars, TkUnixSetXftClipRegion): Add some
