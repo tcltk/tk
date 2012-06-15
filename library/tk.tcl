@@ -205,7 +205,7 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 # Results:
 #   Returns the selection, or an error if none could be found
 #
-if {$tcl_platform(platform) eq "unix"} {
+if {[tk windowingsystem] ne "win32"} {
     proc ::tk::GetSelection {w {sel PRIMARY}} {
 	if {[catch {selection get -displayof $w -selection $sel \
 		-type UTF8_STRING} txt] \

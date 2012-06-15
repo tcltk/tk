@@ -223,7 +223,7 @@ proc ::tk::dialog::error::bgerror err {
     # 7. Ensure that we are topmost.
 
     raise $dlg
-    if {$tcl_platform(platform) eq "windows"} {
+    if {[tk windowingsystem] eq "win32"} {
 	# Place it topmost if we aren't at the top of the stacking
 	# order to ensure that it's seen
 	if {[lindex [wm stackorder .] end] ne "$dlg"} {
