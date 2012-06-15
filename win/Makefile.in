@@ -478,7 +478,7 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)"; 
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[catch {package present Tcl $(TCLVERSION)$(TCLPATCHL)}]} { return }";\
+	echo "if {[catch {package present Tcl $(TCLVERSION)$(TCLPATCHL)}]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\")";\
 	echo "	&& ([info exists ::env(DISPLAY)] || [lsearch -exact \$$::argv -display] > -1)} {";\
 	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin libtk$(VERSION).dll] Tk]";\
