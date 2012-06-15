@@ -854,7 +854,7 @@ declare 0 aqua {
 
 # removed duplicates from tkInt table
 #declare 1 aqua {
-#    Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
+#    Pixmap TkpCreateNativeBitmap(Display *display, const char *source)
 #}
 #
 #declare 2 aqua {
