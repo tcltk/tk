@@ -75,8 +75,6 @@ TkCreateXEventSource(void)
 
 #   ifdef __CYGWIN__
 
-	TkIntStubs tkIntStubs;
-
 /*
  * Trick, so we don't have to include <windows.h> here, which in any
  * case lacks this function anyway.
