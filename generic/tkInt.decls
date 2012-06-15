@@ -1431,7 +1431,7 @@ declare 111 win {
    int XNoOp(Display *display)
 }
 declare 112 win {
-   int XSynchronize(Display *display, Bool onoff)
+   XAfterFunction XSynchronize(Display *display, Bool onoff)
 }
 declare 113 win {
    int XSync(Display *display, Bool discard)
