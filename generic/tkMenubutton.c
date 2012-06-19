@@ -21,7 +21,7 @@
  * in tkMenubutton.h.
  */
 
-static CONST char *directionStrings[] = {
+static CONST char *CONST directionStrings[] = {
     "above", "below", "flush", "left", "right", (char *) NULL
 };
 
@@ -30,7 +30,7 @@ static CONST char *directionStrings[] = {
  * It is used together with the "enum state" declaration in tkMenubutton.h.
  */
 
-static CONST char *stateStrings[] = {
+static CONST char *CONST stateStrings[] = {
     "active", "disabled", "normal", (char *) NULL
 };
 
@@ -39,7 +39,7 @@ static CONST char *stateStrings[] = {
  * It is used with the "enum compound" declaration in tkMenuButton.h
  */
 
-static CONST char *compoundStrings[] = {
+static CONST char *CONST compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", (char *) NULL
 };
 
@@ -47,7 +47,7 @@ static CONST char *compoundStrings[] = {
  * Information used for parsing configuration specs:
  */
 
-static Tk_OptionSpec optionSpecs[] = {
+static CONST Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
         DEF_MENUBUTTON_ACTIVE_BG_COLOR, -1, 
         Tk_Offset(TkMenuButton, activeBorder), 0, 

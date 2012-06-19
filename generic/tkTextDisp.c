@@ -1693,9 +1693,9 @@ DisplayDLine(textPtr, dlPtr, prevPtr, pixmap)
     Display *display;
     int height, x;
 #ifndef TK_NO_DOUBLE_BUFFERING
-    const int y = 0;
+    CONST int y = 0;
 #else
-    const int y = dlPtr->y;
+    CONST int y = dlPtr->y;
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
     if (dlPtr->chunkPtr == NULL) return;
@@ -1875,9 +1875,9 @@ DisplayLineBackground(textPtr, dlPtr, prevPtr, pixmap)
     StyleValues *sValuePtr;
     Display *display;
 #ifndef TK_NO_DOUBLE_BUFFERING
-    const int y = 0;
+    CONST int y = 0;
 #else
-    const int y = dlPtr->y;
+    CONST int y = dlPtr->y;
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
     /*
