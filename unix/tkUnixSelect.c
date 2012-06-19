@@ -1414,7 +1414,7 @@ SelCvtToX(string, type, tkwin, numLongsPtr)
     int *numLongsPtr;		/* Number of 32-bit words contained in the
 				 * result. */
 {
-    const char **field;
+    CONST char **field;
     int numFields, i;
     long *propPtr;
 

@@ -35,7 +35,7 @@
 #define DOUBLES_EQ(d1, d2)	(fabs((d1) - (d2)) < MIN_DBL_VAL)
 
 
-static CONST char *stateStrings[] = {
+static CONST char *CONST stateStrings[] = {
     "disabled", "normal", "readonly", (char *) NULL
 };
 
@@ -43,7 +43,7 @@ static CONST char *stateStrings[] = {
  * Definitions for -validate option values:
  */
 
-static CONST char *validateStrings[] = {
+static CONST char *CONST validateStrings[] = {
     "all", "key", "focus", "focusin", "focusout", "none", (char *) NULL
 };
 enum validateType {
@@ -61,7 +61,7 @@ enum validateType {
  * Information used for Entry objv parsing.
  */
 
-static Tk_OptionSpec entryOptSpec[] = {
+static CONST Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_ENTRY_BG_COLOR, -1, Tk_Offset(Entry, normalBorder),
 	0, (ClientData) DEF_ENTRY_BG_MONO, 0},
@@ -189,7 +189,7 @@ static Tk_OptionSpec entryOptSpec[] = {
 #define DEF_SPINBOX_VALUES		""
 #define DEF_SPINBOX_WRAP		"0"
 
-static Tk_OptionSpec sbOptSpec[] = {
+static CONST Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Background",
 	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(Spinbox, activeBorder),
 	0, (ClientData) DEF_BUTTON_ACTIVE_BG_MONO, 0},
