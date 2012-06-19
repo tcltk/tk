@@ -211,7 +211,7 @@ enum state {
     STATE_DISABLED, STATE_NORMAL
 };
 
-static CONST char *stateStrings[] = {
+static const char *const stateStrings[] = {
     "disabled", "normal", NULL
 };
 
@@ -219,7 +219,7 @@ enum activeStyle {
     ACTIVE_STYLE_DOTBOX, ACTIVE_STYLE_NONE, ACTIVE_STYLE_UNDERLINE
 };
 
-static CONST char *activeStyleStrings[] = {
+static const char *const activeStyleStrings[] = {
     "dotbox", "none", "underline", NULL
 };
 
