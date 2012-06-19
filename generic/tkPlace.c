@@ -79,7 +79,7 @@ typedef struct Slave {
  */
 #define IN_MASK		1
 
-static Tk_OptionSpec optionSpecs[] = {
+static CONST Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", NULL, NULL, "nw", -1,
 	 Tk_Offset(Slave, anchor), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", -1,

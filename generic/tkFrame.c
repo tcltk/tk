@@ -170,7 +170,7 @@ enum labelanchor {
     LABELANCHOR_W, LABELANCHOR_WN, LABELANCHOR_WS
 };
 
-static CONST char *labelAnchorStrings[] = {
+static CONST char *CONST labelAnchorStrings[] = {
     "e", "en", "es", "n", "ne", "nw", "s", "se", "sw", "w", "wn", "ws",
     (char *) NULL
 };
@@ -180,7 +180,7 @@ static CONST char *labelAnchorStrings[] = {
  * one common table used by all and one table for each widget class.
  */
 
-static Tk_OptionSpec commonOptSpec[] = {
+static CONST Tk_OptionSpec commonOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_FRAME_BG_COLOR, -1, Tk_Offset(Frame, border),
 	TK_OPTION_NULL_OK, (ClientData) DEF_FRAME_BG_MONO, 0},
@@ -226,7 +226,7 @@ static Tk_OptionSpec commonOptSpec[] = {
 	(char *) NULL, 0, 0, 0, 0, 0}
 };
 
-static Tk_OptionSpec frameOptSpec[] = {
+static CONST Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
@@ -242,7 +242,7 @@ static Tk_OptionSpec frameOptSpec[] = {
 	(char *) NULL, 0, 0, 0, (ClientData) commonOptSpec, 0}
 };
 
-static Tk_OptionSpec toplevelOptSpec[] = {
+static CONST Tk_OptionSpec toplevelOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
@@ -267,7 +267,7 @@ static Tk_OptionSpec toplevelOptSpec[] = {
 	(char *) NULL, 0, 0, 0, (ClientData) commonOptSpec, 0}
 };
 
-static Tk_OptionSpec labelframeOptSpec[] = {
+static CONST Tk_OptionSpec labelframeOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
@@ -309,7 +309,7 @@ static CONST char *classNames[] = {"Frame", "Toplevel", "Labelframe"};
  * that class of widgets.
  */
 
-static Tk_OptionSpec *optionSpecs[] = {
+static CONST Tk_OptionSpec *CONST optionSpecs[] = {
     frameOptSpec,
     toplevelOptSpec,
     labelframeOptSpec

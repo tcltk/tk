@@ -30,7 +30,7 @@
  * It is used together with the "enum orient" declaration in tkScale.h.
  */
 
-static CONST char *orientStrings[] = {
+static CONST char *CONST orientStrings[] = {
     "horizontal", "vertical", (char *) NULL
 };
 
@@ -39,11 +39,11 @@ static CONST char *orientStrings[] = {
  * It is used together with the "enum state" declaration in tkScale.h.
  */
 
-static CONST char *stateStrings[] = {
+static CONST char *CONST stateStrings[] = {
     "active", "disabled", "normal", (char *) NULL
 };
 
-static Tk_OptionSpec optionSpecs[] = {
+static CONST Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
 	DEF_SCALE_ACTIVE_BG_COLOR, -1, Tk_Offset(TkScale, activeBorder),
 	0, (ClientData) DEF_SCALE_ACTIVE_BG_MONO, 0},

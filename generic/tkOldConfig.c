@@ -44,7 +44,7 @@ static CONST char *	FormatConfigValue _ANSI_ARGS_((Tcl_Interp *interp,
 			    char *widgRec, char *buffer,
 			    Tcl_FreeProc **freeProcPtr));
 static Tk_ConfigSpec *	GetCachedSpecs _ANSI_ARGS_((Tcl_Interp *interp,
-			    const Tk_ConfigSpec *staticSpecs));
+			    CONST Tk_ConfigSpec *staticSpecs));
 static void		DeleteSpecCacheTable _ANSI_ARGS_((
 			    ClientData clientData, Tcl_Interp *interp));
 
@@ -1074,7 +1074,7 @@ Tk_FreeOptions(specs, widgRec, display, needFlags)
 static Tk_ConfigSpec *
 GetCachedSpecs(interp, staticSpecs)
     Tcl_Interp *interp;		/* Interpreter in which to store the cache. */
-    const Tk_ConfigSpec *staticSpecs;
+    CONST Tk_ConfigSpec *staticSpecs;
 				/* Value to cache a copy of; it is also used
 				 * as a key into the cache. */
 {
@@ -1107,7 +1107,7 @@ GetCachedSpecs(interp, staticSpecs)
 	    &isNew);
     if (isNew) {
 	unsigned int entrySpace = sizeof(Tk_ConfigSpec);
-	const Tk_ConfigSpec *staticSpecPtr;
+	CONST Tk_ConfigSpec *staticSpecPtr;
 	Tk_ConfigSpec *specPtr;
 
 	/*

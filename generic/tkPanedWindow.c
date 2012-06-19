@@ -34,7 +34,7 @@
  * The following table defines the legal values for the -orient option.
  */
 
-static CONST char *orientStrings[] = {
+static CONST char *CONST orientStrings[] = {
     "horizontal", "vertical", (char *) NULL
 };
 
@@ -234,7 +234,7 @@ static Tk_ObjCustomOption stickyOption = {
     0
 };
 
-static Tk_OptionSpec optionSpecs[] = {
+static CONST Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	 DEF_PANEDWINDOW_BG_COLOR, -1, Tk_Offset(PanedWindow, background), 0,
 	 (ClientData) DEF_PANEDWINDOW_BG_MONO},
@@ -286,7 +286,7 @@ static Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_END}
 };
 
-static Tk_OptionSpec slaveOptionSpecs[] = {
+static CONST Tk_OptionSpec slaveOptionSpecs[] = {
     {TK_OPTION_WINDOW, "-after", (char *) NULL, (char *) NULL,
 	 DEF_PANEDWINDOW_PANE_AFTER, -1, Tk_Offset(Slave, after),
          TK_OPTION_NULL_OK, 0, 0},
@@ -1368,7 +1368,7 @@ DisplayPanedWindow(clientData)
     Pixmap pixmap;
     Tk_Window tkwin = pwPtr->tkwin;
     int i, sashWidth, sashHeight;
-    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+    CONST int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
 
     pwPtr->flags &= ~REDRAW_PENDING;
     if ((pwPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -1639,7 +1639,7 @@ ArrangePanes(clientData)
     int internalBW;
     int paneDynSize, paneDynMinSize, pwHeight, pwWidth, pwSize;
     int stretchReserve, stretchAmount;
-    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+    CONST int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
 
     pwPtr->flags &= ~(REQUESTED_RELAYOUT|RESIZE_PENDING);
 
@@ -2039,7 +2039,7 @@ ComputeGeometry(pwPtr)
     int sashWidth, sashOffset, handleOffset;
     int reqWidth, reqHeight, dim;
     Slave *slavePtr;
-    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+    CONST int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
 
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
@@ -2447,7 +2447,7 @@ MoveSash(pwPtr, sash, diff)
     Slave *slavePtr;
     int stretchReserve = 0;
     int nextSash = sash + 1;
-    const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+    CONST int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
 
     if (diff == 0)
 	return;

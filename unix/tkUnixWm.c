@@ -4487,7 +4487,7 @@ UpdateTitle(winPtr)
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Atom XA_UTF8_STRING = Tk_InternAtom((Tk_Window) winPtr, "UTF8_STRING");
-    const char *string;
+    CONST char *string;
     Tcl_DString ds;
 
     /*
@@ -4502,7 +4502,7 @@ UpdateTitle(winPtr)
     XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
 	    Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_NAME"),
 	    XA_UTF8_STRING, 8, PropModeReplace, 
-	    (const unsigned char*)string, (signed int)strlen(string));
+	    (CONST unsigned char*)string, (signed int)strlen(string));
 
     /*
      * Set icon name:
@@ -4516,7 +4516,7 @@ UpdateTitle(winPtr)
 	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
 		Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_ICON_NAME"),
 		XA_UTF8_STRING, 8, PropModeReplace,
-		(const unsigned char*)wmPtr->iconName,
+		(CONST unsigned char*)wmPtr->iconName,
 		(signed int)strlen(wmPtr->iconName));
     }
 }
@@ -4969,7 +4969,7 @@ GetNetWmType(winPtr)
 	    &bytesAfter, &propertyValue)) {
 	atoms = (Atom *)propertyValue;
 	for (n = 0; n < count; ++n) {
-	    const char *name = Tk_GetAtomName(tkwin, atoms[n]);
+	    CONST char *name = Tk_GetAtomName(tkwin, atoms[n]);
 	    if (strncmp("_NET_WM_WINDOW_TYPE_", name, 20) == 0) {
 		Tcl_ExternalToUtfDString(NULL, name+20, -1, &ds);
 		Tcl_UtfToLower(Tcl_DStringValue(&ds));

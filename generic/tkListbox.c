@@ -210,7 +210,7 @@ enum state {
     STATE_DISABLED, STATE_NORMAL
 };
 
-static CONST char *stateStrings[] = {
+static CONST char *CONST stateStrings[] = {
     "disabled", "normal", (char *) NULL
 };
 
@@ -218,7 +218,7 @@ enum activeStyle {
     ACTIVE_STYLE_DOTBOX, ACTIVE_STYLE_NONE, ACTIVE_STYLE_UNDERLINE
 };
 
-static CONST char *activeStyleStrings[] = {
+static CONST char *CONST activeStyleStrings[] = {
     "dotbox", "none", "underline", (char *) NULL
 };
 
@@ -226,7 +226,7 @@ static CONST char *activeStyleStrings[] = {
  * The optionSpecs table defines the valid configuration options for the
  * listbox widget
  */
-static Tk_OptionSpec optionSpecs[] = {
+static CONST Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-activestyle", "activeStyle", "ActiveStyle",
 	DEF_LISTBOX_ACTIVE_STYLE, -1, Tk_Offset(Listbox, activeStyle),
         0, (ClientData) activeStyleStrings, 0},
@@ -307,7 +307,7 @@ static Tk_OptionSpec optionSpecs[] = {
  * The itemAttrOptionSpecs table defines the valid configuration options for
  * listbox items
  */
-static Tk_OptionSpec itemAttrOptionSpecs[] = {
+static CONST Tk_OptionSpec itemAttrOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
      (char *)NULL, -1, Tk_Offset(ItemAttr, border),
      TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,

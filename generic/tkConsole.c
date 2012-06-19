@@ -351,9 +351,9 @@ Tk_CreateConsoleWindow(interp)
     int haveConsoleChannel = 1;
 
 #ifdef MAC_TCL
-    static const char *initCmd = "if {[catch {source $tk_library:console.tcl}]} {source -rsrc console}";
+    static CONST char *initCmd = "if {[catch {source $tk_library:console.tcl}]} {source -rsrc console}";
 #else
-    static const char *initCmd = "source $tk_library/console.tcl";
+    static CONST char *initCmd = "source $tk_library/console.tcl";
 #endif
 
     /* Init an interp with Tcl and Tk */

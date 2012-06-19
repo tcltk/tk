@@ -2096,7 +2096,7 @@ compress(init_bits, handle, readValue)
     out_clear_init = (init_bits <= 3) ? 9 : (out_bump_init-1);
 #ifdef MIGIF_DEBUGGING_ENVARS
     {
-	const char *ocienv;
+	CONST char *ocienv;
 	ocienv = getenv("MIGIF_OUT_CLEAR_INIT");
 	if (ocienv) {
 	    out_clear_init = atoi(ocienv);
