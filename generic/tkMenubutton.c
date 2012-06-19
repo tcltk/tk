@@ -20,7 +20,7 @@
  * is used together with the "enum direction" declaration in tkMenubutton.h.
  */
 
-static CONST char *directionStrings[] = {
+static const char *const directionStrings[] = {
     "above", "below", "flush", "left", "right", NULL
 };
 
@@ -29,7 +29,7 @@ static CONST char *directionStrings[] = {
  * used together with the "enum state" declaration in tkMenubutton.h.
  */
 
-static CONST char *stateStrings[] = {
+static const char *const stateStrings[] = {
     "active", "disabled", "normal", NULL
 };
 
@@ -38,7 +38,7 @@ static CONST char *stateStrings[] = {
  * is used with the "enum compound" declaration in tkMenuButton.h
  */
 
-static CONST char *compoundStrings[] = {
+static const char *const compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", NULL
 };
 
@@ -151,7 +151,7 @@ static const Tk_OptionSpec optionSpecs[] = {
  * dispatch the scale widget command.
  */
 
-static CONST char *commandNames[] = {
+static const char *commandNames[] = {
     "cget", "configure", NULL
 };
 
@@ -170,14 +170,14 @@ static void		MenuButtonImageProc(ClientData clientData,
 			    int x, int y, int width, int height, int imgWidth,
 			    int imgHeight);
 static char *		MenuButtonTextVarProc(ClientData clientData,
-			    Tcl_Interp *interp, CONST char *name1,
-			    CONST char *name2, int flags);
+			    Tcl_Interp *interp, const char *name1,
+			    const char *name2, int flags);
 static int		MenuButtonWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *CONST objv[]);
+			    Tcl_Obj *const objv[]);
 static int		ConfigureMenuButton(Tcl_Interp *interp,
 			    TkMenuButton *mbPtr, int objc,
-			    Tcl_Obj *CONST objv[]);
+			    Tcl_Obj *const objv[]);
 static void		DestroyMenuButton(char *memPtr);
 
 /*
@@ -203,7 +203,7 @@ Tk_MenubuttonObjCmd(
     ClientData clientData,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register TkMenuButton *mbPtr;
     Tk_OptionTable optionTable;
@@ -333,7 +333,7 @@ MenuButtonWidgetObjCmd(
     ClientData clientData,	/* Information about button widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register TkMenuButton *mbPtr = (TkMenuButton *) clientData;
     int result, index;
@@ -484,7 +484,7 @@ ConfigureMenuButton(
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in objv. */
-    Tcl_Obj *CONST objv[])	/* Arguments. */
+    Tcl_Obj *const objv[])	/* Arguments. */
 {
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
@@ -614,7 +614,7 @@ ConfigureMenuButton(
 	 * Set up a trace to watch for any changes in it, create the variable
 	 * if it doesn't exist, and fetch its current value.
 	 */
-	CONST char *value;
+	const char *value;
 
 	value = Tcl_GetVar(interp, mbPtr->textVarName, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
@@ -865,12 +865,12 @@ static char *
 MenuButtonTextVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    CONST char *name1,		/* Name of variable. */
-    CONST char *name2,		/* Second part of variable name. */
+    const char *name1,		/* Name of variable. */
+    const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     register TkMenuButton *mbPtr = (TkMenuButton *) clientData;
-    CONST char *value;
+    const char *value;
     unsigned len;
 
     /*
