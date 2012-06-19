@@ -48,7 +48,7 @@
  * table below.
  */
 
-static const char *stateStrings[] = {
+static const char *const stateStrings[] = {
     "disabled", "normal", NULL
 };
 
@@ -58,7 +58,7 @@ static const char *stateStrings[] = {
  * table below.
  */
 
-static const char *wrapStrings[] = {
+static const char *const wrapStrings[] = {
     "char", "none", "word", NULL
 };
 
@@ -68,7 +68,7 @@ static const char *wrapStrings[] = {
  * the string table below.
  */
 
-static const char *tabStyleStrings[] = {
+static const char *const tabStyleStrings[] = {
     "tabular", "wordprocessor", NULL
 };
 
@@ -96,7 +96,7 @@ static void		RestoreLineStartEnd(ClientData clientData,
 			    char *oldInternalPtr);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
 
-static Tk_ObjCustomOption lineOption = {
+static const Tk_ObjCustomOption lineOption = {
     "line",			/* name */
     SetLineStartEnd,		/* setProc */
     GetLineStartEnd,		/* getProc */
@@ -329,13 +329,13 @@ int tkTextDebug = 0;
  */
 
 static int		ConfigureText(Tcl_Interp *interp,
-			    TkText *textPtr, int objc, Tcl_Obj *CONST objv[]);
+			    TkText *textPtr, int objc, Tcl_Obj *const objv[]);
 static int		DeleteIndexRange(TkSharedText *sharedPtr,
-			    TkText *textPtr, CONST TkTextIndex *indexPtr1,
-			    CONST TkTextIndex *indexPtr2, int viewUpdate);
-static int		CountIndices(CONST TkText *textPtr,
-			    CONST TkTextIndex *indexPtr1,
-			    CONST TkTextIndex *indexPtr2,
+			    TkText *textPtr, const TkTextIndex *indexPtr1,
+			    const TkTextIndex *indexPtr2, int viewUpdate);
+static int		CountIndices(const TkText *textPtr,
+			    const TkTextIndex *indexPtr1,
+			    const TkTextIndex *indexPtr2,
 			    TkTextCountType type);
 static void		DestroyText(TkText *textPtr);
 static int		InsertChars(TkSharedText *sharedTextPtr,
@@ -344,58 +344,58 @@ static int		InsertChars(TkSharedText *sharedTextPtr,
 static void		TextBlinkProc(ClientData clientData);
 static void		TextCmdDeletedProc(ClientData clientData);
 static int		CreateWidget(TkSharedText *sharedPtr, Tk_Window tkwin,
-			    Tcl_Interp *interp, CONST TkText *parent,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    Tcl_Interp *interp, const TkText *parent,
+			    int objc, Tcl_Obj *const objv[]);
 static void		TextEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static int		TextFetchSelection(ClientData clientData, int offset,
 			    char *buffer, int maxBytes);
-static int		TextIndexSortProc(CONST void *first,
-			    CONST void *second);
+static int		TextIndexSortProc(const void *first,
+			    const void *second);
 static int		TextInsertCmd(TkSharedText *sharedTextPtr,
 			    TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *CONST objv[],
-			    CONST TkTextIndex *indexPtr, int viewUpdate);
+			    int objc, Tcl_Obj *const objv[],
+			    const TkTextIndex *indexPtr, int viewUpdate);
 static int		TextReplaceCmd(TkText *textPtr, Tcl_Interp *interp,
-			    CONST TkTextIndex *indexFromPtr,
-			    CONST TkTextIndex *indexToPtr,
-			    int objc, Tcl_Obj *CONST objv[], int viewUpdate);
+			    const TkTextIndex *indexFromPtr,
+			    const TkTextIndex *indexToPtr,
+			    int objc, Tcl_Obj *const objv[], int viewUpdate);
 static int		TextSearchCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		TextEditCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		TextWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		SharedTextObjCmd(ClientData clientData,
 			    Tcl_Interp *interp,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		TextWorldChangedCallback(ClientData instanceData);
 static void		TextWorldChanged(TkText *textPtr, int mask);
 static int		TextDumpCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		DumpLine(Tcl_Interp *interp, TkText *textPtr,
 			    int what, TkTextLine *linePtr, int start, int end,
 			    int lineno, Tcl_Obj *command);
 static int		DumpSegment(TkText *textPtr, Tcl_Interp *interp,
-			    CONST char *key, CONST char *value,
-			    Tcl_Obj *command, CONST TkTextIndex *index,
+			    const char *key, const char *value,
+			    Tcl_Obj *command, const TkTextIndex *index,
 			    int what);
 static int		TextEditUndo(TkText *textPtr);
 static int		TextEditRedo(TkText *textPtr);
-static Tcl_Obj *	TextGetText(CONST TkText *textPtr,
-			    CONST TkTextIndex *index1,
-			    CONST TkTextIndex *index2, int visibleOnly);
+static Tcl_Obj *	TextGetText(const TkText *textPtr,
+			    const TkTextIndex *index1,
+			    const TkTextIndex *index2, int visibleOnly);
 static void		GenerateModifiedEvent(TkText *textPtr);
 static void		UpdateDirtyFlag(TkSharedText *sharedPtr);
 static void		TextPushUndoAction(TkText *textPtr,
 			    Tcl_Obj *undoString, int insert,
-			    CONST TkTextIndex *index1Ptr,
-			    CONST TkTextIndex *index2Ptr);
-static int		TextSearchIndexInLine(CONST SearchSpec *searchSpecPtr,
+			    const TkTextIndex *index1Ptr,
+			    const TkTextIndex *index2Ptr);
+static int		TextSearchIndexInLine(const SearchSpec *searchSpecPtr,
 			    TkTextLine *linePtr, int byteIndex);
 static int		TextPeerCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *CONST objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static TkUndoProc	TextUndoRedoCallback;
 
 /*
@@ -441,7 +441,7 @@ Tk_TextObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window) clientData;
 
@@ -479,10 +479,10 @@ CreateWidget(
     TkSharedText *sharedPtr,	/* Shared widget info, or NULL. */
     Tk_Window tkwin,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    CONST TkText *parent,	/* If non-NULL then take default start, end
+    const TkText *parent,	/* If non-NULL then take default start, end
 				 * from this parent. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register TkText *textPtr;
     Tk_OptionTable optionTable;
@@ -680,13 +680,13 @@ TextWidgetObjCmd(
     ClientData clientData,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register TkText *textPtr = (TkText *) clientData;
     int result = TCL_OK;
     int index;
 
-    static CONST char *optionStrings[] = {
+    static const char *optionStrings[] = {
 	"bbox", "cget", "compare", "configure", "count", "debug", "delete",
 	"dlineinfo", "dump", "edit", "get", "image", "index", "insert",
 	"mark", "peer", "replace", "scan", "search", "see", "tag", "window",
@@ -714,7 +714,7 @@ TextWidgetObjCmd(
     switch ((enum options) index) {
     case TEXT_BBOX: {
 	int x, y, width, height;
-	CONST TkTextIndex *indexPtr;
+	const TkTextIndex *indexPtr;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -758,8 +758,8 @@ TextWidgetObjCmd(
 	break;
     case TEXT_COMPARE: {
 	int relation, value;
-	CONST char *p;
-	CONST TkTextIndex *index1Ptr, *index2Ptr;
+	const char *p;
+	const TkTextIndex *index1Ptr, *index2Ptr;
 
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index1 op index2");
@@ -819,7 +819,7 @@ TextWidgetObjCmd(
 	}
 	break;
     case TEXT_COUNT: {
-	CONST TkTextIndex *indexFromPtr, *indexToPtr;
+	const TkTextIndex *indexFromPtr, *indexToPtr;
 	int i, found = 0, update = 0;
 	Tcl_Obj *objPtr = NULL;
 
@@ -842,7 +842,7 @@ TextWidgetObjCmd(
 
 	for (i = 2; i < objc-2; i++) {
 	    int value, length;
-	    CONST char *option = Tcl_GetStringFromObj(objv[i], &length);
+	    const char *option = Tcl_GetStringFromObj(objv[i], &length);
 	    char c;
 
 	    if (length < 2 || option[0] != '-') {
@@ -881,7 +881,7 @@ TextWidgetObjCmd(
 		}
 
 		if (compare > 0) {
-		    CONST TkTextIndex *tmpPtr = indexFromPtr;
+		    const TkTextIndex *tmpPtr = indexFromPtr;
 
 		    indexFromPtr = indexToPtr;
 		    indexToPtr = tmpPtr;
@@ -1054,7 +1054,7 @@ TextWidgetObjCmd(
 		 * Simple case requires no predetermination of indices.
 		 */
 
-		CONST TkTextIndex *indexPtr1, *indexPtr2;
+		const TkTextIndex *indexPtr1, *indexPtr2;
 
 		/*
 		 * Parse the starting and stopping indices.
@@ -1100,7 +1100,7 @@ TextWidgetObjCmd(
 		 */
 
 		for (i = 0; i < objc; i++) {
-		    CONST TkTextIndex *indexPtr =
+		    const TkTextIndex *indexPtr =
 			    TkTextGetIndexFromObj(interp, textPtr, objv[i]);
 
 		    if (indexPtr == NULL) {
@@ -1191,7 +1191,7 @@ TextWidgetObjCmd(
 	break;
     case TEXT_DLINEINFO: {
 	int x, y, width, height, base;
-	CONST TkTextIndex *indexPtr;
+	const TkTextIndex *indexPtr;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -1226,7 +1226,7 @@ TextWidgetObjCmd(
     case TEXT_GET: {
 	Tcl_Obj *objPtr = NULL;
 	int i, found = 0, visible = 0;
-	CONST char *name;
+	const char *name;
 	int length;
 
 	if (objc < 3) {
@@ -1257,7 +1257,7 @@ TextWidgetObjCmd(
 	}
 
 	for (; i < objc; i += 2) {
-	    CONST TkTextIndex *index1Ptr, *index2Ptr;
+	    const TkTextIndex *index1Ptr, *index2Ptr;
 	    TkTextIndex index2;
 
 	    index1Ptr = TkTextGetIndexFromObj(interp, textPtr, objv[i]);
@@ -1321,7 +1321,7 @@ TextWidgetObjCmd(
 	result = TkTextImageCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_INDEX: {
-	CONST TkTextIndex *indexPtr;
+	const TkTextIndex *indexPtr;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -1338,7 +1338,7 @@ TextWidgetObjCmd(
 	break;
     }
     case TEXT_INSERT: {
-	CONST TkTextIndex *indexPtr;
+	const TkTextIndex *indexPtr;
 
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
@@ -1364,7 +1364,7 @@ TextWidgetObjCmd(
 	result = TextPeerCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_REPLACE: {
-	CONST TkTextIndex *indexFromPtr, *indexToPtr;
+	const TkTextIndex *indexFromPtr, *indexToPtr;
 
 	if (objc < 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
@@ -1523,13 +1523,13 @@ SharedTextObjCmd(
     ClientData clientData,	/* Information about shared test B-tree. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register TkSharedText *sharedPtr = (TkSharedText *) clientData;
     int result = TCL_OK;
     int index;
 
-    static CONST char *optionStrings[] = {
+    static const char *optionStrings[] = {
 	"delete", "insert", NULL
     };
     enum options {
@@ -1629,12 +1629,12 @@ TextPeerCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = textPtr->tkwin;
     int index;
 
-    static CONST char *peerOptionStrings[] = {
+    static const char *peerOptionStrings[] = {
 	"create", "names", NULL
     };
     enum peerOptions {
@@ -1703,12 +1703,12 @@ static int
 TextReplaceCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    CONST TkTextIndex *indexFromPtr,
+    const TkTextIndex *indexFromPtr,
 				/* Index from which to replace. */
-    CONST TkTextIndex *indexToPtr,
+    const TkTextIndex *indexToPtr,
 				/* Index to which to replace. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[],	/* Argument objects. */
+    Tcl_Obj *const objv[],	/* Argument objects. */
     int viewUpdate)		/* Update vertical view if set. */
 {
     /*
@@ -1773,8 +1773,8 @@ TextReplaceCmd(
 
 static int
 TextIndexSortProc(
-    CONST void *first,		/* Elements to be compared. */
-    CONST void *second)
+    const void *first,		/* Elements to be compared. */
+    const void *second)
 {
     TkTextIndex *pair1 = (TkTextIndex *) first;
     TkTextIndex *pair2 = (TkTextIndex *) second;
@@ -1991,7 +1991,7 @@ ConfigureText(
     register TkText *textPtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_SavedOptions savedOptions;
     int oldExport = textPtr->exportSelection;
@@ -2532,7 +2532,7 @@ InsertChars(
     int resetViewCount;
     int pixels[2*PIXEL_CLIENTS];
 
-    CONST char *string = Tcl_GetStringFromObj(stringPtr, &length);
+    const char *string = Tcl_GetStringFromObj(stringPtr, &length);
 
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -2664,9 +2664,9 @@ TextPushUndoAction(
     TkText *textPtr,		/* Overall information about text widget. */
     Tcl_Obj *undoString,	/* New text. */
     int insert,			/* 1 if insert, else delete. */
-    CONST TkTextIndex *index1Ptr,
+    const TkTextIndex *index1Ptr,
 				/* Index describing first location. */
-    CONST TkTextIndex *index2Ptr)
+    const TkTextIndex *index2Ptr)
 				/* Index describing second location. */
 {
     TkUndoSubAtom *iAtom, *dAtom;
@@ -2888,11 +2888,11 @@ TextUndoRedoCallback(
 
 static int
 CountIndices(
-    CONST TkText *textPtr,	/* Overall information about text widget. */
-    CONST TkTextIndex *indexPtr1,
+    const TkText *textPtr,	/* Overall information about text widget. */
+    const TkTextIndex *indexPtr1,
 				/* Index describing location of first
 				 * character to delete. */
-    CONST TkTextIndex *indexPtr2,
+    const TkTextIndex *indexPtr2,
 				/* Index describing location of last character
 				 * to delete. NULL means just delete the one
 				 * character given by indexPtr1. */
@@ -2945,10 +2945,10 @@ static int
 DeleteIndexRange(
     TkSharedText *sharedTextPtr,/* Shared portion of peer widgets. */
     TkText *textPtr,		/* Overall information about text widget. */
-    CONST TkTextIndex *indexPtr1,
+    const TkTextIndex *indexPtr1,
 				/* Index describing location of first
 				 * character (or other entity) to delete. */
-    CONST TkTextIndex *indexPtr2,
+    const TkTextIndex *indexPtr2,
 				/* Index describing location of last
 				 * character (or other entity) to delete.
 				 * NULL means just delete the one character
@@ -3554,8 +3554,8 @@ TextInsertCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[],	/* Argument objects. */
-    CONST TkTextIndex *indexPtr,/* Index at which to insert. */
+    Tcl_Obj *const objv[],	/* Argument objects. */
+    const TkTextIndex *indexPtr,/* Index at which to insert. */
     int viewUpdate)		/* Update the view if set. */
 {
     TkTextIndex index1, index2;
@@ -3599,7 +3599,7 @@ TextInsertCmd(
 		int i;
 
 		for (i = 0; i < numTags; i++) {
-		    CONST char *strTag = Tcl_GetString(tagNamePtrs[i]);
+		    const char *strTag = Tcl_GetString(tagNamePtrs[i]);
 
 		    TkBTreeTag(&index1, &index2,
 			    TkTextCreateTag(textPtr, strTag, NULL), 1);
@@ -3633,12 +3633,12 @@ TextSearchCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int i, argsLeft, code;
     SearchSpec searchSpec;
 
-    static CONST char *switchStrings[] = {
+    static const char *switchStrings[] = {
 	"--", "-all", "-backwards", "-count", "-elide", "-exact", "-forwards",
 	"-hidden", "-nocase", "-nolinestop", "-overlap", "-regexp",
 	"-strictlimits", NULL
@@ -3850,7 +3850,7 @@ TextSearchGetLineIndex(
     int *offsetPosPtr)		/* For returning the text offset in the
 				 * line. */
 {
-    CONST TkTextIndex *indexPtr;
+    const TkTextIndex *indexPtr;
     int line;
     TkText *textPtr = (TkText *) searchSpecPtr->clientData;
 
@@ -3909,7 +3909,7 @@ TextSearchGetLineIndex(
 
 static int
 TextSearchIndexInLine(
-    CONST SearchSpec *searchSpecPtr,
+    const SearchSpec *searchSpecPtr,
 				/* Search parameters. */
     TkTextLine *linePtr,	/* The line we're looking at. */
     int byteIndex)		/* Index into the line. */
@@ -4129,7 +4129,7 @@ TextSearchFoundMatch(
      */
 
     if (searchSpecPtr->exact) {
-	CONST char *startOfLine = Tcl_GetString(theLine);
+	const char *startOfLine = Tcl_GetString(theLine);
 
 	numChars = Tcl_NumUtfChars(startOfLine + matchOffset, matchLength);
     } else {
@@ -4340,7 +4340,7 @@ TkTextGetTabs(
     /*
      * Map these strings to TkTextTabAlign values.
      */
-    static CONST char *tabOptionStrings[] = {
+    static const char *tabOptionStrings[] = {
 	"left", "right", "center", "numeric", NULL
     };
 
@@ -4492,7 +4492,7 @@ TextDumpCmd(
     register TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. Someone else has already
+    Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "dump". */
 {
@@ -4510,7 +4510,7 @@ TextDumpCmd(
 #define TK_DUMP_IMG	0x10
 #define TK_DUMP_ALL	(TK_DUMP_TEXT|TK_DUMP_MARK|TK_DUMP_TAG| \
 	TK_DUMP_WIN|TK_DUMP_IMG)
-    static CONST char *optStrings[] = {
+    static const char *optStrings[] = {
 	"-all", "-command", "-image", "-mark", "-tag", "-text", "-window",
 	NULL
     };
@@ -4882,10 +4882,10 @@ static int
 DumpSegment(
     TkText *textPtr,
     Tcl_Interp *interp,
-    CONST char *key,		/* Segment type key. */
-    CONST char *value,		/* Segment value. */
+    const char *key,		/* Segment type key. */
+    const char *value,		/* Segment value. */
     Tcl_Obj *command,		/* Script callback. */
-    CONST TkTextIndex *index,	/* index with line/byte position info. */
+    const TkTextIndex *index,	/* index with line/byte position info. */
     int what)			/* Look for TK_DUMP_INDEX bit. */
 {
     char buffer[TK_POS_CHARS];
@@ -4897,7 +4897,7 @@ DumpSegment(
 	Tcl_AppendElement(interp, buffer);
 	return 0;
     } else {
-	CONST char *argv[4];
+	const char *argv[4];
 	char *list;
 	int oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
 
@@ -5034,11 +5034,11 @@ TextEditCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
-    Tcl_Obj *CONST objv[])	/* Argument objects. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index;
 
-    static CONST char *editOptionStrings[] = {
+    static const char *editOptionStrings[] = {
 	"modified", "redo", "reset", "separator", "undo", NULL
     };
     enum editOptions {
@@ -5168,10 +5168,10 @@ TextEditCmd(
 
 static Tcl_Obj *
 TextGetText(
-    CONST TkText *textPtr,	/* Information about text widget. */
-    CONST TkTextIndex *indexPtr1,
+    const TkText *textPtr,	/* Information about text widget. */
+    const TkTextIndex *indexPtr1,
 				/* Get text from this index... */
-    CONST TkTextIndex *indexPtr2,
+    const TkTextIndex *indexPtr2,
 				/* ...to this index. */
     int visibleOnly)		/* If non-zero, then only return non-elided
 				 * characters. */
@@ -5362,7 +5362,7 @@ SearchPerform(
      */
 
     if (toPtr != NULL) {
-	CONST TkTextIndex *indexToPtr, *indexFromPtr;
+	const TkTextIndex *indexToPtr, *indexFromPtr;
 	TkText *textPtr = (TkText *) searchSpecPtr->clientData;
 
 	indexToPtr = TkTextGetIndexFromObj(interp, textPtr, toPtr);
@@ -5456,7 +5456,7 @@ SearchCore(
     Tcl_Obj *theLine;
     int alreadySearchOffset = -1;
 
-    CONST char *pattern = NULL;	/* For exact searches only. */
+    const char *pattern = NULL;	/* For exact searches only. */
     int firstNewLine = -1; 	/* For exact searches only. */
     Tcl_RegExp regexp = NULL;	/* For regexp searches only. */
 
@@ -5514,7 +5514,7 @@ SearchCore(
      */
 
     if (searchSpecPtr->exact) {
-	CONST char *nl;
+	const char *nl;
 
 	/*
 	 * We only need to set the matchLength once for exact searches, and we
@@ -5651,11 +5651,11 @@ SearchCore(
 
 	if (searchSpecPtr->exact) {
 	    int maxExtraLines = 0;
-	    CONST char *startOfLine = Tcl_GetString(theLine);
+	    const char *startOfLine = Tcl_GetString(theLine);
 
 	    do {
 		Tcl_UniChar ch;
-		CONST char *p;
+		const char *p;
 		int lastFullLine = lastOffset;
 
 		if (firstNewLine == -1) {
@@ -5680,7 +5680,7 @@ SearchCore(
 			 * match.
 			 */
 
-			CONST char c = pattern[0];
+			const char c = pattern[0];
 
 			if (alreadySearchOffset != -1) {
 			    p = startOfLine + alreadySearchOffset;
@@ -6626,7 +6626,7 @@ TkpTesttextCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
-    CONST char **argv)		/* Argument strings. */
+    const char **argv)		/* Argument strings. */
 {
     TkText *textPtr;
     size_t len;
