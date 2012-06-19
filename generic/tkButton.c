@@ -25,14 +25,14 @@ static Tcl_ThreadDataKey dataKey;
  * in tkButton.h.
  */
 
-static CONST char *classNames[] = {"Label", "Button", "Checkbutton", "Radiobutton"};
+static CONST char *CONST classNames[] = {"Label", "Button", "Checkbutton", "Radiobutton"};
 
 /*
  * The following table defines the legal values for the -default option.
  * It is used together with the "enum defaultValue" declaration in tkButton.h.
  */
 
-static CONST char *defaultStrings[] = {
+static CONST char *CONST defaultStrings[] = {
     "active", "disabled", "normal", (char *) NULL
 };
 
@@ -41,7 +41,7 @@ static CONST char *defaultStrings[] = {
  * It is used together with the "enum state" declaration in tkButton.h.
  */
 
-static CONST char *stateStrings[] = {
+static CONST char *CONST stateStrings[] = {
     "active", "disabled", "normal", (char *) NULL
 };
 
@@ -50,7 +50,7 @@ static CONST char *stateStrings[] = {
  * It is used with the "enum compound" declaration in tkButton.h
  */
 
-static CONST char *compoundStrings[] = {
+static CONST char *CONST compoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", (char *) NULL
 };
 
@@ -61,7 +61,7 @@ char tkDefButtonBorderWidth[TCL_INTEGER_SPACE] = DEF_BUTTON_BORDER_WIDTH;
  * separate table for each of the four widget classes.
  */
 
-static Tk_OptionSpec labelOptionSpecs[] = {
+static CONST Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
 	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(TkButton, activeBorder),
 	0, (ClientData) DEF_BUTTON_ACTIVE_BG_MONO, 0},
@@ -147,7 +147,7 @@ static Tk_OptionSpec labelOptionSpecs[] = {
 	(char *) NULL, 0, 0, 0, 0}
 };
 
-static Tk_OptionSpec buttonOptionSpecs[] = {
+static CONST Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
 	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(TkButton, activeBorder),
 	0, (ClientData) DEF_BUTTON_ACTIVE_BG_MONO, 0},
@@ -249,7 +249,7 @@ static Tk_OptionSpec buttonOptionSpecs[] = {
 	(char *) NULL, 0, -1, 0, 0, 0}
 };
 
-static Tk_OptionSpec checkbuttonOptionSpecs[] = {
+static CONST Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
 	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(TkButton, activeBorder),
 	0, (ClientData) DEF_BUTTON_ACTIVE_BG_MONO, 0},
@@ -358,7 +358,7 @@ static Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	(char *) NULL, 0, -1, 0, 0, 0}
 };
 
-static Tk_OptionSpec radiobuttonOptionSpecs[] = {
+static CONST Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
 	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(TkButton, activeBorder),
 	0, (ClientData) DEF_BUTTON_ACTIVE_BG_MONO, 0},
@@ -472,7 +472,7 @@ static Tk_OptionSpec radiobuttonOptionSpecs[] = {
  * class of widgets.
  */
 
-static Tk_OptionSpec *optionSpecs[] = {
+static CONST Tk_OptionSpec *CONST optionSpecs[] = {
     labelOptionSpecs,
     buttonOptionSpecs,
     checkbuttonOptionSpecs,
@@ -631,7 +631,7 @@ ButtonCreate(clientData, interp, objc, objv, type)
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->defaultsInitialized) {
-	TkpButtonSetDefaults(optionSpecs[type]);
+	TkpButtonSetDefaults(NULL);
 	tsdPtr->defaultsInitialized = 1;
     }
 
