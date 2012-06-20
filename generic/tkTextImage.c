@@ -84,7 +84,7 @@ typedef enum {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", -1, Tk_Offset(TkTextEmbImage, align),
-	0, (ClientData) alignStrings, 0},
+	0, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
 	"0", -1, Tk_Offset(TkTextEmbImage, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
