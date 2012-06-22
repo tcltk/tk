@@ -374,13 +374,13 @@ $(ROOT_DIR)/doc/man.macros:
 
 doc: $(ROOT_DIR)/doc/man.macros
 
-winhelp: $(TCL_SRC_DIR_NATIVE)/tools/man2help.tcl $(MAN2TCL)
+winhelp: $(TCL_SRC_DIR)/tools/man2help.tcl $(MAN2TCL)
 	$(TCL_EXE) "$(TCL_SRC_DIR_NATIVE)/tools/man2help.tcl" tcl "$(VER)" $(CORE_DOCS)
 	$(COPY) "$(TCL_BIN_DIR)/tcl.hpj" ./
 	hcw /c /e tcl.hpj
 	$(COPY) ./tcl$(VER).cnt ./TCL$(VER).HLP "$(TCL_SRC_DIR_NATIVE)/tools/"
 
-$(MAN2TCL): $(TCL_SRC_DIR_NATIVE)/tools/man2tcl.c
+$(MAN2TCL): $(TCL_SRC_DIR)/tools/man2tcl.c
 	$(CC) $(CFLAGS_OPTIMIZE) $(MAN2TCLFLAGS) -o $(MAN2TCL) "$(TCL_SRC_DIR_NATIVE)/tools/man2tcl.c"
 
 # Specifying TESTFLAGS on the command line is the standard way to pass
