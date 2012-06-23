@@ -1,3 +1,9 @@
+2012-06-22  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/Makefile.in:    [Bug 1844430]: cygwin make fails in 8.4.14-8.5b3
+	* unix/tcl.m4:        Sync with Tcl version.
+	* unix/configure:     autoconf-2.59
+
 2012-06-20  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tk.decls:    rfe-2636558 simplification. Restore forwards
