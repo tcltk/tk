@@ -414,9 +414,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 
     if test "$GCC" = "yes"; then
 
-      if test "$TCL_CC" = "gcc"; then
-	CFLAGS="$CFLAGS -mwin32"
-      fi
       AC_CACHE_CHECK(for cross-compile version of gcc,
 	ac_cv_cross,
 	AC_TRY_COMPILE([

@@ -2,6 +2,7 @@
 
 	* win/Makefile.in:    [Bug 1844430]: cygwin make fails in 8.4.14-8.5b3
 	* unix/tcl.m4:        Sync with Tcl version.
+	* unix/configure:     autoconf-2.13
 
 2012-06-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
