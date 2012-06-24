@@ -1,3 +1,9 @@
+2012-06-24  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/SetOptions.3:   [Frq-3536507]: clientData field in Tk_OptionSpec
+	* generic/tk.h:       should be "const void *"
+	* generic/tk*.c:      Eliminate many unnessessary type casts
+
 2012-06-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/Makefile.in:    [Bug 1844430]: cygwin make fails in 8.4.14-8.5b3
