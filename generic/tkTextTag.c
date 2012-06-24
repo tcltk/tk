@@ -80,13 +80,13 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, Tk_Offset(TkTextTag, tabStringPtr), -1, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, tabStyle),
-	TK_OPTION_NULL_OK, (ClientData) tabStyleStrings, 0},
+	TK_OPTION_NULL_OK, tabStyleStrings, 0},
     {TK_OPTION_STRING, "-underline", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, underlineString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, wrapMode),
-	TK_OPTION_NULL_OK, (ClientData) wrapStrings, 0},
+	TK_OPTION_NULL_OK, wrapStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
