@@ -709,6 +709,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     # can pick up a potential make override of VERSION. Also, don't put this
     # into CFLAGS as it should not go into tkConfig.sh
     EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES"' -DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
+    WISH_BUILD_LIB_SPEC="${TK_BUILD_LIB_SPEC} ${WISH_LIBS}"
 else
     if test $tk_aqua = yes; then
         EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)" && mkdir -p "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
@@ -721,6 +722,11 @@ else
         TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
     fi
     TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
+    if test "${ac_cv_cygwin+set}" = set; then
+        WISH_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win -ltk86 \${TCL_LIB_SPEC}"
+    else
+        WISH_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG} \${WISH_LIBS}"
+    fi
     TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 fi
 
@@ -793,6 +799,7 @@ AC_SUBST(TK_SHARED_BUILD)
 AC_SUBST(LD_LIBRARY_PATH_VAR)
 
 AC_SUBST(TK_BUILD_LIB_SPEC)
+AC_SUBST(WISH_BUILD_LIB_SPEC)
 
 AC_SUBST(TCL_STUB_FLAGS)
 AC_SUBST(XINCLUDES)
