@@ -650,6 +650,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     TK_LIB_FILE="Tk"
     TK_LIB_FLAG="-framework Tk"
     TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
+    WISH_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk \${WISH_LIBS}"
     TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
@@ -686,6 +687,11 @@ else
         TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
     fi
     TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
+    if test "${ac_cv_cygwin+set}" = set; then
+	WISH_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win -ltk84 \${TCL_LIB_SPEC}"
+    else
+	WISH_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG} \${WISH_LIBS}"
+    fi
     TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 fi
 
@@ -756,6 +762,7 @@ AC_SUBST(TK_SHARED_BUILD)
 AC_SUBST(LD_LIBRARY_PATH_VAR)
 
 AC_SUBST(TK_BUILD_LIB_SPEC)
+AC_SUBST(WISH_BUILD_LIB_SPEC)
 
 AC_SUBST(TCL_STUB_FLAGS)
 AC_SUBST(XINCLUDES)
