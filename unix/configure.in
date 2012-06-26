@@ -496,12 +496,17 @@ else
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
     if test "$SHARED_BUILD" = "0" || test "$TCL_NEEDS_EXP_FILE" = "0"; then
-        if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-            eval TK_LIB_FLAG="-ltk${VERSION}\${TK_DBGX}"
-        else
-            eval TK_LIB_FLAG="-ltk`echo ${VERSION} | tr -d .`\${TK_DBGX}"
-        fi
-        TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
+	if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
+	    eval TK_LIB_FLAG="-ltk${VERSION}\${TK_DBGX}"
+	else
+	    eval TK_LIB_FLAG="-ltk`echo ${VERSION} | tr -d .`\${TK_DBGX}"
+	fi
+	TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
+	if test "${ac_cv_cygwin+set}" = set; then
+	    WISH_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win -ltk84 \${TCL_LIB_SPEC}"
+	else
+	    WISH_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG} \${WISH_LIBS}"
+	fi
         TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
     else
         TK_BUILD_EXP_FILE="lib.exp"
@@ -509,9 +514,11 @@ else
     
         if test "$GCC" = "yes" ; then
             TK_BUILD_LIB_SPEC="-Wl,-bI:`pwd`/${TK_BUILD_EXP_FILE} -L`pwd`"
+            WISH_BUILD_LIB_SPEC="-Wl,-bI:`pwd`/${TK_BUILD_EXP_FILE} -L`pwd`"
             TK_LIB_SPEC="-Wl,-bI:${libdir}/${TK_EXP_FILE} -L`pwd`"
         else
             TK_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
+            WISH_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
             TK_LIB_SPEC="-bI:${libdir}/${TK_EXP_FILE}"
         fi
     fi
