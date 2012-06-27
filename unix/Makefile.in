@@ -551,8 +551,11 @@ objs: ${OBJS}
 
 
 ${WISH_EXE}: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
-	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o ${WISH_EXE}
+	@if test -f "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
+	    cp "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll" .; \
+	fi
+	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @WISH_BUILD_LIB_SPEC@ \
+		$(CC_SEARCH_FLAGS) -o ${WISH_EXE}
 
 # Resetting the LIB_RUNTIME_DIR below is required so that
 # the generated tktest executable gets the build directory
@@ -674,6 +677,10 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) ${WISH
 	@echo "Installing $(LIB_FILE) to $(DLL_INSTALL_DIR)/"
 	@@INSTALL_LIB@
 	@chmod 555 "$(DLL_INSTALL_DIR)/$(LIB_FILE)"
+	@if test -f "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
+	    $(INSTALL_LIBRARY) "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll" "$(DLL_INSTALL_DIR)";\
+	    chmod 555 "$(DLL_INSTALL_DIR)/tk${MAJOR_VERSION}${MINOR_VERSION}.dll";\
+	fi
 	@if test "$(TK_BUILD_EXP_FILE)" != ""; then \
 	    echo "Installing $(TK_EXP_FILE) to $(LIB_INSTALL_DIR)/"; \
 	    $(INSTALL_DATA) $(TK_BUILD_EXP_FILE) \
@@ -728,7 +735,7 @@ install-libraries: libraries
 		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/images"; \
 	    fi; \
 	    done;
-	@echo "Installing translation directory";
+	@echo "Installing message catalog files to $(SCRIPT_INSTALL_DIR)/msgs/";
 	@for i in $(TOP_DIR)/library/msgs/*.msg; \
 	    do \
 	    if [ -f $$i ] ; then \
@@ -748,7 +755,7 @@ install-demos:
 		else true; \
 		fi; \
 	    done;
-	@echo "Installing demos to $(DEMO_INSTALL_DIR)/";
+	@echo "Installing demo files to $(DEMO_INSTALL_DIR)/";
 	@for i in $(TOP_DIR)/library/demos/*; \
 	    do \
 	    if [ -f $$i ] ; then \
@@ -764,7 +771,7 @@ install-demos:
 	    chmod 755 "$(DEMO_INSTALL_DIR)/$$i"; \
 	    fi; \
 	    done;
-	@echo "Installing demo images";
+	@echo "Installing demo images to $(DEMO_INSTALL_DIR)/images/";
 	@for i in $(TOP_DIR)/library/demos/images/*; \
 	    do \
 	    if [ -f $$i ] ; then \
@@ -814,7 +821,7 @@ install-private-headers: libraries
 	@if test ! -x $(SRC_DIR)/install-sh; then \
 	    chmod +x $(SRC_DIR)/install-sh; \
 	    fi
-	@echo "Installing private header files";
+	@echo "Installing private header files to $(PRIVATE_INCLUDE_INSTALL_DIR)/";
 	@for i in $(PRIVATE_HDRS); \
 	    do \
 	    $(INSTALL_DATA) $$i "$(PRIVATE_INCLUDE_INSTALL_DIR)"; \

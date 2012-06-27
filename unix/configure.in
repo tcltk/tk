@@ -40,8 +40,8 @@ if test "${exec_prefix}" = "NONE"; then
     exec_prefix=$prefix
 fi
 # Make sure srcdir is fully qualified!
-srcdir=`cd $srcdir ; pwd`
-TK_SRC_DIR=`cd $srcdir/..; pwd`
+srcdir="`cd "$srcdir" ; pwd`"
+TK_SRC_DIR="`cd "$srcdir/.."; pwd`"
 
 #------------------------------------------------------------------------
 # Compress and/or soft link the manpages?
@@ -181,12 +181,12 @@ if test $tk_ok = no; then
 	AC_EGREP_HEADER(fd_mask, sys/select.h,
 	     tcl_cv_grep_fd_mask=present, tcl_cv_grep_fd_mask=missing)])
     if test $tcl_cv_grep_fd_mask = present; then
-	AC_DEFINE(HAVE_SYS_SELECT_H)
+	AC_DEFINE(HAVE_SYS_SELECT_H, 1, [Should we include <sys/select.h>?])
 	tk_ok=yes
     fi
 fi
 if test $tk_ok = no; then
-    AC_DEFINE(NO_FD_SET)
+    AC_DEFINE(NO_FD_SET, 1, [Do we have fd_set?])
 fi
 
 #------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ AC_CACHE_CHECK([pw_gecos in struct pwd], tcl_cv_pwd_pw_gecos, [
 	    [struct passwd pwd; pwd.pw_gecos;],
 	    tcl_cv_pwd_pw_gecos=yes, tcl_cv_pwd_pw_gecos=no)])
 if test $tcl_cv_pwd_pw_gecos = yes; then
-    AC_DEFINE(HAVE_PW_GECOS)
+    AC_DEFINE(HAVE_PW_GECOS, 1, [Does struct password have a pw_gecos field?])
 fi
 
 #--------------------------------------------------------------------
@@ -434,7 +434,7 @@ WISH_RSRC_FILE='wish$(VERSION).rsrc'
 if test "`uname -s`" = "Darwin" ; then
     SC_ENABLE_FRAMEWORK
     TK_SHLIB_LD_EXTRAS="-compatibility_version ${TK_VERSION} -current_version ${TK_VERSION}`echo ${TK_PATCH_LEVEL} | awk ['{match($0, "\\\.[0-9]+"); print substr($0,RSTART,RLENGTH)}']`"
-    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name ${DYLIB_INSTALL_DIR}/${TK_LIB_FILE} -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | grep ^_[[^_]] > $$f && echo $$f)'
+    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name "${DYLIB_INSTALL_DIR}/${TK_LIB_FILE}" -unexported_symbols_list $$(f=$(TCL_STUB_LIB_FILE).E && nm -gjp $(TCL_BIN_DIR)/$(TCL_STUB_LIB_FILE) | grep ^_[[^_]] > $$f && echo $$f)'
     echo "$LDFLAGS " | grep -q -- '-prebind ' && TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -seg1addr 0xb000000'
     TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -sectcreate __TEXT __info_plist Tk-Info.plist'
     EXTRA_WISH_LIBS='-sectcreate __TEXT __info_plist Wish-Info.plist'
@@ -464,7 +464,8 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     fi
     TK_LIB_FILE="Tk"
     TK_LIB_FLAG="-framework Tk"
-    TK_BUILD_LIB_SPEC="-F`pwd` -framework Tk"
+    TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
+    WISH_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk \${WISH_LIBS}"
     TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
@@ -514,11 +515,11 @@ else
     
         if test "$GCC" = "yes" ; then
             TK_BUILD_LIB_SPEC="-Wl,-bI:`pwd`/${TK_BUILD_EXP_FILE} -L`pwd`"
-            WISH_BUILD_LIB_SPEC="-Wl,-bI:`pwd`/${TK_BUILD_EXP_FILE} -L`pwd`"
+            WISH_BUILD_LIB_SPEC="-Wl,-bI:`pwd`/${TK_BUILD_EXP_FILE} -L`pwd` \${WISH_LIBS}"
             TK_LIB_SPEC="-Wl,-bI:${libdir}/${TK_EXP_FILE} -L`pwd`"
         else
             TK_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
-            WISH_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE}"
+            WISH_BUILD_LIB_SPEC="-bI:`pwd`/${TK_BUILD_EXP_FILE} \${WISH_LIBS}"
             TK_LIB_SPEC="-bI:${libdir}/${TK_EXP_FILE}"
         fi
     fi
@@ -531,9 +532,10 @@ if test $tk_aqua = yes; then
     REZ=/Developer/Tools/Rez
     REZ_FLAGS='-d "SystemSevenOrLater=1" -useDF -ro'
     if test "$SHARED_BUILD" = 0; then
-        EXTRA_INSTALL_BINARIES='@echo "Installing $(TK_RSRC_FILE) to $(LIB_INSTALL_DIR)" && $(INSTALL_DATA) $(TK_RSRC_FILE) $(LIB_INSTALL_DIR)'
-	TK_BUILD_LIB_SPEC="$TK_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd`/\${TK_RSRC_FILE}"
-	TK_LIB_SPEC="$TK_LIB_SPEC -sectcreate __TEXT __tk_rsrc ${libdir}/\${TK_RSRC_FILE}"        
+	EXTRA_INSTALL_BINARIES='@echo "Installing $(TK_RSRC_FILE) to $(LIB_INSTALL_DIR)" && $(INSTALL_DATA) $(TK_RSRC_FILE) "$(LIB_INSTALL_DIR)"'
+	TK_BUILD_LIB_SPEC="$TK_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd | sed -e 's/ /\\\\ /g'`/\${TK_RSRC_FILE}"
+	WISH_BUILD_LIB_SPEC="$WISH_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd | sed -e 's/ /\\\\ /g'`/\${TK_RSRC_FILE}"
+	TK_LIB_SPEC="$TK_LIB_SPEC -sectcreate __TEXT __tk_rsrc ${libdir}/\${TK_RSRC_FILE}"
     else
         TK_SHLIB_LD_EXTRAS="$TK_SHLIB_LD_EXTRAS -sectcreate __TEXT __tk_rsrc \${TK_RSRC_FILE}"
     fi
@@ -554,7 +556,7 @@ else
     eval TK_STUB_LIB_FLAG="-ltkstub`echo ${TK_VERSION} | tr -d .`\${TK_DBGX}"
 fi
 
-TK_BUILD_STUB_LIB_SPEC="-L`pwd` ${TK_STUB_LIB_FLAG}"
+TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"
 TK_STUB_LIB_SPEC="-L${TK_STUB_LIB_DIR} ${TK_STUB_LIB_FLAG}"
 TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
 TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
@@ -592,6 +594,7 @@ AC_SUBST(TK_SHARED_BUILD)
 AC_SUBST(LD_LIBRARY_PATH_VAR)
 
 AC_SUBST(TK_BUILD_LIB_SPEC)
+AC_SUBST(WISH_BUILD_LIB_SPEC)
 AC_SUBST(TK_BUILD_EXP_FILE)
 AC_SUBST(TK_EXP_FILE)
 
