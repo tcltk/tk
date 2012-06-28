@@ -551,7 +551,8 @@ objs: ${OBJS}
 
 
 ${WISH_EXE}: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
-	@if test -f "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
+	@if test "x$(TK_SHARED_BUILD)" = "x1" -a \
+		-f "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
 	    cp "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll" .; \
 	fi
 	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @WISH_BUILD_LIB_SPEC@ \
@@ -677,7 +678,7 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) ${WISH
 	@echo "Installing $(LIB_FILE) to $(DLL_INSTALL_DIR)/"
 	@@INSTALL_LIB@
 	@chmod 555 "$(DLL_INSTALL_DIR)/$(LIB_FILE)"
-	@if test -f "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
+	@if test -f "tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
 	    $(INSTALL_LIBRARY) "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll" "$(DLL_INSTALL_DIR)";\
 	    chmod 555 "$(DLL_INSTALL_DIR)/tk${MAJOR_VERSION}${MINOR_VERSION}.dll";\
 	fi
