@@ -1,8 +1,15 @@
+2012-06-26  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/configure.in:  Link cygwin wish.exe with win32 tk.dll, only
+	* unix/Makefile.in:   in combination with --enable-shared.
+	* unix/tcl.m4:
+	* unix/configure:     autoconf-2.59
+
 2012-06-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/Makefile.in:    [Bug 1844430]: cygwin make fails in 8.4.14-8.5b3
 	* unix/tcl.m4:        Sync with Tcl version.
-	* unix/configure:     autoconf-2.13
+	* unix/configure:     autoconf-2.59
 
 2012-06-15  Donal K. Fellows  <dkf@users.sf.net>
 
