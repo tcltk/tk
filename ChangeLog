@@ -1,3 +1,10 @@
+2012-06-26  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/configure.in:  Link cygwin wish.exe with win32 tk.dll, only
+	* unix/Makefile.in:   in combination with --enable-shared.
+	* unix/tcl.m4:
+	* unix/configure:     autoconf-2.59
+
 2012-06-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/SetOptions.3:   [Frq-3536507]: clientData field in Tk_OptionSpec

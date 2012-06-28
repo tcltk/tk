@@ -4969,7 +4969,7 @@ echo "$as_me: error: ${CC} is not a cygwin compiler." >&2;}
 echo "$as_me: error: CYGWIN compile is only supported with --enable-threads" >&2;}
    { (exit 1); exit 1; }; }
 	    fi
-	    if test ! -f "../win/tcldde14.dll" -a ! -f "../win/tk86.dll"; then
+	    if test "x${SHARED_BUILD}" = "x1" -a ! -f "../win/tcldde13.dll" -a ! -f "../win/tk85.dll"; then
 		{ { echo "$as_me:$LINENO: error: Please configure and make the ../win directory first." >&5
 echo "$as_me: error: Please configure and make the ../win directory first." >&2;}
    { (exit 1); exit 1; }; }
@@ -11234,10 +11234,10 @@ else
         TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
     fi
     TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
-    if test "${ac_cv_cygwin+set}" = set; then
-        WISH_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win -ltk86 \${TCL_LIB_SPEC}"
+    if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
+	WISH_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win -ltk${TK_MAJOR_VERSION}${TK_MINOR_VERSION} \${TCL_LIB_SPEC}"
     else
-        WISH_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG} \${WISH_LIBS}"
+	WISH_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG} \${WISH_LIBS}"
     fi
     TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 fi
