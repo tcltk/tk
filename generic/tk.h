@@ -181,7 +181,7 @@ typedef struct Tk_OptionSpec {
 				 * the record. */
     int flags;			/* Any combination of the values defined
 				 * below. */
-    ClientData clientData;	/* An alternate place to put option-specific
+    const void *clientData;	/* An alternate place to put option-specific
 				 * data. Used for the monochrome default value
 				 * for colors, etc. */
     int typeMask;		/* An arbitrary bit mask defined by the class
