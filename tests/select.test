@@ -628,7 +628,7 @@ test select-5.15 {Tk_GetSelection procedure} -setup {
     set ::bgerrors {}
 } -body {
     proc ::bgerror msg {lappend ::bgerrors $msg}
-    selection handle .f1 ERROR errHandler
+    selection handle -type ERROR .f1 errHandler
     list [catch {selection get ERROR} msg] $msg [update] {*}$::bgerrors
 } -cleanup {
     rename ::bgerror {}
