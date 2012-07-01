@@ -448,13 +448,13 @@ XNoOp(
     return 0;
 }
 
-int
+XAfterFunction
 XSynchronize(
     Display *display,
     Bool bool)
 {
 	display->request++;
-    return 0;
+    return NULL;
 }
 
 int

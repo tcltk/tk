@@ -458,18 +458,6 @@ GetBitmap(
  */
 
 int
-Tk_OldDefineBitmap(
-    Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    const char *name,		/* Name to use for bitmap. Must not already be
-				 * defined as a bitmap. */
-    const char *source,		/* Address of bits for bitmap. */
-    int width,			/* Width of bitmap. */
-    int height)			/* Height of bitmap. */
-{
-    return Tk_DefineBitmap(interp, name, source, width, height);
-}
-
-int
 Tk_DefineBitmap(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     const char *name,		/* Name to use for bitmap. Must not already be
@@ -813,16 +801,6 @@ DupBitmapObjProc(
  */
 
 	/* ARGSUSED */
-Pixmap
-Tk_OldGetBitmapFromData(
-    Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    Tk_Window tkwin,		/* Window in which bitmap will be used. */
-    const char *source,		/* Bitmap data for bitmap shape. */
-    int width, int height)	/* Dimensions of bitmap. */
-{
-	return Tk_GetBitmapFromData(interp, tkwin, source, width, height);
-}
-
 Pixmap
 Tk_GetBitmapFromData(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */

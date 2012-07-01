@@ -84,7 +84,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", NULL, NULL, "nw", -1,
 	 Tk_Offset(Slave, anchor), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", -1,
-	 Tk_Offset(Slave, borderMode), 0, (ClientData) borderModeStrings, 0},
+	 Tk_Offset(Slave, borderMode), 0, borderModeStrings, 0},
     {TK_OPTION_PIXELS, "-height", NULL, NULL, "", Tk_Offset(Slave, heightPtr),
 	 Tk_Offset(Slave, height), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_WINDOW, "-in", NULL, NULL, "", -1, Tk_Offset(Slave, inTkwin),
