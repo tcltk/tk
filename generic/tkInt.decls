@@ -1345,6 +1345,32 @@ declare 106 win {
 	    int x, int y, unsigned int width, unsigned int height)
 }
 
+# new for 8.4.20+/8.5.12+ Cygwin only
+declare 107 win {
+   int XFlush(Display *display)
+}
+declare 108 win {
+   int XGrabServer(Display *display)
+}
+declare 109 win {
+   int XUngrabServer(Display *display)
+}
+declare 110 win {
+   int XFree(void *data)
+}
+declare 111 win {
+   int XNoOp(Display *display)
+}
+declare 112 win {
+   XAfterFunction XSynchronize(Display *display, Bool onoff)
+}
+declare 113 win {
+   int XSync(Display *display, Bool discard)
+}
+declare 114 win {
+   VisualID XVisualIDFromVisual(Visual *visual)
+}
+
 ################################
 # X functions for Aqua
 

@@ -46,11 +46,36 @@ TkCreateXEventSource(void)
 	TkWinXInit(Tk_GetHINSTANCE());
 }
 
+#undef XFree
+#define XFree TkPlatXFree
+static int
+XFree(void *data)
+{
+	if (data != NULL) {
+		ckfree((char *) data);
+	}
+	return 0;
+}
+
+#undef XVisualIDFromVisual
+#define XVisualIDFromVisual TkPlatXVisualIDFromVisual
+static VisualID
+XVisualIDFromVisual(Visual *visual)
+{
+    return visual->visualid;
+}
+
 /*
  * Remove macros that will interfere with the definitions below.
  */
 #   undef TkpCmapStressed
 #   undef TkpSync
+#   undef XFlush
+#   undef XGrabServer
+#   undef XUngrabServer
+#   undef XNoOp
+#   undef XSynchronize
+#   undef XSync
 
 #   define TkpCmapStressed (int (*) (Tk_Window, Colormap)) doNothing
 #   define TkpSync (void (*) (Display *)) doNothing
@@ -60,6 +85,12 @@ TkCreateXEventSource(void)
 #   define TkWmCleanup (void (*) (TkDisplay *)) doNothing
 #   define TkSendCleanup (void (*) (TkDisplay *)) doNothing
 #   define TkpTestsendCmd 0
+#   define XFlush (int (*) (Display *)) doNothing
+#   define XGrabServer (int (*) (Display *)) doNothing
+#   define XUngrabServer (int (*) (Display *)) doNothing
+#   define XNoOp (int (*) (Display *)) doNothing
+#   define XSynchronize (XAfterFunction (*) (Display *, Bool)) doNothing
+#   define XSync (int (*) (Display *, Bool)) doNothing
 
 #else /* !__WIN32__ */
 
@@ -201,6 +232,8 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkWinSetHINSTANCE 0
 #	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0
+
+#	define TkBindDeadWindow 0 /* On purpose not in Cygwin's stub table */
 
 #   elif !defined(MAC_OSX_TK) /* UNIX */
 
@@ -681,6 +714,14 @@ TkIntXlibStubs tkIntXlibStubs = {
     XDrawLine, /* 104 */
     XWarpPointer, /* 105 */
     XFillRectangle, /* 106 */
+    XFlush, /* 107 */
+    XGrabServer, /* 108 */
+    XUngrabServer, /* 109 */
+    XFree, /* 110 */
+    XNoOp, /* 111 */
+    XSynchronize, /* 112 */
+    XSync, /* 113 */
+    XVisualIDFromVisual, /* 114 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */
