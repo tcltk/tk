@@ -564,28 +564,41 @@ GetFileNameW(clientData, interp, objc, objv, open)
     Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static CONST char *saveOptionStrings[] = {
-	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent", "-title", NULL
-    };
-    static CONST char *openOptionStrings[] = {
-	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-multiple", "-parent", "-title", NULL
-    };
-    CONST char **optionStrings;
-
     enum options {
 	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR,	FILE_INITFILE,
 	FILE_MULTIPLE,	FILE_PARENT,	FILE_TITLE
     };
-
-    result = TCL_ERROR;
-    file[0] = '\0';
+    struct Options {
+	CONST char *name;
+	enum options value;
+    };
+    CONST struct Options *options;
+    static CONST struct Options saveOptions[] = {
+	{"-defaultextension",	FILE_DEFAULT},
+	{"-filetypes",		FILE_TYPES},
+	{"-initialdir",		FILE_INITDIR},
+	{"-initialfile",	FILE_INITFILE},
+	{"-parent",		FILE_PARENT},
+	{"-title",		FILE_TITLE},
+	{NULL,			FILE_DEFAULT/*ignored*/ }
+    };
+    static CONST struct Options openOptions[] = {
+	{"-defaultextension",	FILE_DEFAULT},
+	{"-filetypes",		FILE_TYPES},
+	{"-initialdir",		FILE_INITDIR},
+	{"-initialfile",	FILE_INITFILE},
+	{"-multiple",		FILE_MULTIPLE},
+	{"-parent",		FILE_PARENT},
+	{"-title",		FILE_TITLE},
+	{NULL,			FILE_DEFAULT/*ignored*/ }
+    };
 
     /*
      * Parse the arguments.
      */
 
+    result = TCL_ERROR;
+    file[0] = '\0';
     extension = NULL;
     filter = NULL;
     Tcl_DStringInit(&utfFilterString);
@@ -594,9 +607,9 @@ GetFileNameW(clientData, interp, objc, objv, open)
     title = NULL;
 
     if (open) {
-	optionStrings = openOptionStrings;
+	options = openOptions;
     } else {
-	optionStrings = saveOptionStrings;
+	options = saveOptions;
     }
 
     for (i = 1; i < objc; i += 2) {
@@ -607,23 +620,9 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings,
-		"option", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, optionPtr, options,
+		sizeof(struct Option), "option", 0, &index) != TCL_OK) {
 	    goto end;
-	}
-	/*
-	 * We want to maximize code sharing between the open and save file
-	 * dialog implementations; in particular, the switch statement below.
-	 * We use different sets of option strings from the GetIndexFromObj
-	 * call above, but a single enumeration for both.  The save file
-	 * dialog doesn't support -multiple, but it falls in the middle of
-	 * the enumeration.  Ultimately, this means that when the index found
-	 * by GetIndexFromObj is >= FILE_MULTIPLE, when doing a save file
-	 * dialog, we have to increment the index, so that it matches the
-	 * open file dialog enumeration.
-	 */
-	if (!open && index >= FILE_MULTIPLE) {
-	    index++;
 	}
 	if (i + 1 == objc) {
 	    string = Tcl_GetStringFromObj(optionPtr, NULL);
@@ -633,7 +632,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	}
 
 	string = Tcl_GetStringFromObj(valuePtr, NULL);
-	switch ((enum options) index) {
+	switch (options[index].value) {
 	    case FILE_DEFAULT: {
 		if (string[0] == '.') {
 		    string++;
