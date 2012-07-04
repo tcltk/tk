@@ -586,21 +586,16 @@ GetFileName(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static const char *const saveOptionStrings[] = {
-	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent", "-title", "-typevariable",
-	"-confirmoverwrite",
-	NULL
+	"-confirmoverwrite", "-defaultextension", "-filetypes", "-initialdir",
+	"-initialfile", "-parent", "-title", "-typevariable", NULL
     };
     static const char *const openOptionStrings[] = {
 	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent", "-title", "-typevariable",
-	"-multiple",
-	NULL
+	"-multiple", "-parent", "-title", "-typevariable", NULL
     };
     enum options {
-	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR, FILE_INITFILE,
-	FILE_PARENT,	FILE_TITLE, FILE_TYPEVARIABLE,
-	FILE_MULTIPLE_OR_CONFIRMOW
+	FILE_MULTIPLE_OR_CONFIRMOW, FILE_DEFAULT, FILE_TYPES,	FILE_INITDIR,
+	FILE_INITFILE, FILE_PARENT,	FILE_TITLE, FILE_TYPEVARIABLE
     };
 
     file[0] = '\0';
@@ -620,6 +615,12 @@ GetFileName(
 		open ? openOptionStrings : saveOptionStrings,
 		"option", 0, &index) != TCL_OK) {
 	    goto end;
+	}
+	/* Compensate for the "openOptionStrings" having different ordering [Bug #3540127] */
+	if (open && (index < FILE_PARENT)) {
+	    if (++index > FILE_INITFILE) {
+		index = FILE_MULTIPLE_OR_CONFIRMOW;
+	    }
 	}
 
 	if (i + 1 == objc) {
