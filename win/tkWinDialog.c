@@ -576,7 +576,7 @@ GetFileName(
     OFNData ofnData;
     int cdlgerr;
     int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
-    int inValue, confirmOverwrite = 1;
+    int confirmOverwrite = 1;
     const char *extension = NULL, *title = NULL;
     Tk_Window tkwin = clientData;
     HWND hWnd;
@@ -615,7 +615,7 @@ GetFileName(
 	{"-typevariable",	FILE_TYPEVARIABLE},
 	{NULL,			FILE_DEFAULT/*ignored*/ }
     };
-    const struct Options *options = open ? optionOptions : saveOptions;
+    const struct Options *const options = open ? openOptions : saveOptions;
 
     file[0] = '\0';
     ZeroMemory(&ofnData, sizeof(OFNData));
@@ -632,7 +632,7 @@ GetFileName(
 	Tcl_Obj *valuePtr = objv[i + 1];
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], options,
-		sizeof(struct Option), "option", 0, &index) != TCL_OK) {
+		sizeof(struct Options), "option", 0, &index) != TCL_OK) {
 	    goto end;
 	} else if (i + 1 == objc) {
 	    Tcl_AppendResult(interp, "value for \"", options[index].name,
