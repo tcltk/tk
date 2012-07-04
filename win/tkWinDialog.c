@@ -602,53 +602,63 @@ GetFileNameW(
     Tcl_Encoding unicodeEncoding = TkWinGetUnicodeEncoding();
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static CONST char *saveOptionStrings[] = {
-	"-confirmoverwrite", "-defaultextension", "-filetypes", "-initialdir",
-	"-initialfile", "-parent", "-title", "-typevariable", NULL
-    };
-    static CONST char *openOptionStrings[] = {
-	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-multiple", "-parent", "-title", "-typevariable", NULL
-    };
     enum options {
-	FILE_MULTIPLE_OR_CONFIRMOW, FILE_DEFAULT, FILE_TYPES,	FILE_INITDIR,
-	FILE_INITFILE, FILE_PARENT,	FILE_TITLE, FILE_TYPEVARIABLE
+	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE, FILE_PARENT,
+	FILE_TITLE, FILE_TYPEVARIABLE, FILE_MULTIPLE, FILE_CONFIRMOW
     };
+    struct Options {
+	CONST char *name;
+	enum options value;
+    };
+    static CONST struct Options saveOptions[] = {
+	{"-confirmoverwrite",	FILE_CONFIRMOW},
+	{"-defaultextension",	FILE_DEFAULT},
+	{"-filetypes",		FILE_TYPES},
+	{"-initialdir",		FILE_INITDIR},
+	{"-initialfile",	FILE_INITFILE},
+	{"-parent",		FILE_PARENT},
+	{"-title",		FILE_TITLE},
+	{"-typevariable",	FILE_TYPEVARIABLE},
+	{NULL,			FILE_DEFAULT/*ignored*/ }
+    };
+    static CONST struct Options openOptions[] = {
+	{"-defaultextension",	FILE_DEFAULT},
+	{"-filetypes",		FILE_TYPES},
+	{"-initialdir",		FILE_INITDIR},
+	{"-initialfile",	FILE_INITFILE},
+	{"-multiple",		FILE_MULTIPLE},
+	{"-parent",		FILE_PARENT},
+	{"-title",		FILE_TITLE},
+	{"-typevariable",	FILE_TYPEVARIABLE},
+	{NULL,			FILE_DEFAULT/*ignored*/ }
+    };
+    CONST struct Options *options = open ? optionOptions : saveOptions;
 
     file[0] = '\0';
     ZeroMemory(&ofnData, sizeof(OFNData));
     Tcl_DStringInit(&utfFilterString);
     Tcl_DStringInit(&utfDirString);
 
+    /*
+     * Parse the arguments.
+     */
+
     for (i = 1; i < objc; i += 2) {
 	int index;
 	char *string;
-	Tcl_Obj *optionPtr, *valuePtr;
+	Tcl_Obj *valuePtr = objv[i + 1];
 
-	optionPtr = objv[i];
-	valuePtr = objv[i + 1];
-
-	if (Tcl_GetIndexFromObj(interp, optionPtr,
-		open ? openOptionStrings : saveOptionStrings,
-		"option", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], options,
+		sizeof(struct Option), "option", 0, &index) != TCL_OK) {
 	    goto end;
-	}
-	/* Compensate for the "openOptionStrings" having different ordering [Bug #3540127] */
-	if (open && (index < FILE_PARENT)) {
-	    if (++index > FILE_INITFILE) {
-		index = FILE_MULTIPLE_OR_CONFIRMOW;
-	    }
-	}
-
-	if (i + 1 == objc) {
-	    string = Tcl_GetString(optionPtr);
-	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    NULL);
+	} else if (i + 1 == objc) {
+	    Tcl_AppendResult(interp, "value for \"", options[index].name,
+		    "\" missing", NULL);
 	    goto end;
 	}
 
 	string = Tcl_GetString(valuePtr);
-	switch ((enum options) index) {
+	switch (options[index].value) {
 	case FILE_DEFAULT:
 	    if (string[0] == '.') {
 		string++;
@@ -688,14 +698,15 @@ GetFileNameW(
 	    initialTypeObj = Tcl_ObjGetVar2(interp, typeVariableObj, NULL,
 		    TCL_GLOBAL_ONLY);
 	    break;
-	case FILE_MULTIPLE_OR_CONFIRMOW:
-	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &inValue) != TCL_OK) {
+	case FILE_MULTIPLE:
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &multi) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (open) {
-		multi = inValue;
-	    } else {
-		confirmOverwrite = inValue;
+	    break;
+	case FILE_CONFIRMOW:
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
+		    &confirmOverwrite) != TCL_OK) {
+		return TCL_ERROR;
 	    }
 	    break;
 	}
