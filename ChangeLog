@@ -1,3 +1,9 @@
+2012-07-04  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinDialog.c (GetFileNameW): [Bug 3540127]: Clean up the tables
+	of options for the file dialogs so that options are listed in error
+	messages in alphabetical order.
+
 2012-07-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [Bug 3540127]: filebox.test fails on win32
