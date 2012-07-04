@@ -1,3 +1,7 @@
+2012-07-02  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 3540127]: filebox.test fails on win32
+
 2012-06-26  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/configure.in:  Link cygwin wish.exe with win32 tk.dll, only
