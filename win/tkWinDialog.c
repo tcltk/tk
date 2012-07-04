@@ -621,7 +621,7 @@ GetFileNameW(clientData, interp, objc, objv, open)
 	valuePtr = objv[i + 1];
 
 	if (Tcl_GetIndexFromObjStruct(interp, optionPtr, options,
-		sizeof(struct Option), "option", 0, &index) != TCL_OK) {
+		sizeof(struct Options), "option", 0, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
