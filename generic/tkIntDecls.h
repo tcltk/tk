@@ -1274,5 +1274,10 @@ extern TkIntStubs *tkIntStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+#if defined(__CYGWIN__) && defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
+#   undef TkBindDeadWindow
+#   define TkBindDeadWindow(winPtr) /* Removed from Cygwins stub table, just do nothing */
+#endif
+
 #endif /* _TKINTDECLS */
 
