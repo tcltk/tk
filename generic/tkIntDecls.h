@@ -1881,6 +1881,10 @@ extern TkIntStubs *tkIntStubsPtr;
 (Region) (src), (Region) (ret))
 #endif /* !__CYGWIN__*/
 
+#if defined(__CYGWIN__) && defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
+#   undef TkBindDeadWindow
+#   define TkBindDeadWindow(winPtr) /* Removed from Cygwins stub table, just do nothing */
+#endif
 
 #endif /* _TKINTDECLS */
 
