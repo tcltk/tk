@@ -727,7 +727,7 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) ${WISH_EXE}
 	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file join \$$dir $${relative}$(TK_LIB_FILE)] Tk]";\
 	    else \
 	    echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
-	    echo "	|| ([info exists ::argv] && [lsearch -exact \$$::argv -display] > -1))} {";\
+	    echo "	|| ([info exists ::argv] && ("-display" in \$$::argv)))} {";\
 	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file join \$$dir $${relative}.. bin $(TK_LIB_FILE)] Tk]";\
 	    echo "} else {";\
 	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll] Tk]";\
