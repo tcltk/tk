@@ -480,7 +480,7 @@ install-binaries: binaries
 	@(\
 	echo "if {[catch {package present Tcl $(TCLVERSION)$(TCLPATCHL)}]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
-	echo "	|| ([info exists ::argv] && ("-display" in \$$::argv)))} {";\
+	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
 	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin libtk$(VERSION).dll] Tk]";\
 	echo "} else {";\
 	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
