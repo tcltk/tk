@@ -478,8 +478,8 @@ install-binaries: binaries
 	@$(RM) $(PKG_INDEX);
 	@(\
 	echo "if {[catch {package present Tcl 8.5.0}]} { return }";\
-	echo "if {(\$$::tcl_platform(platform) eq \"unix\")";\
-	echo "	&& ([info exists ::env(DISPLAY)] || [lsearch -exact \$$::argv -display] > -1)} {";\
+	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
+	echo "	|| ([info exists ::argv] && [lsearch -exact \$$::argv -display] > -1))} {";\
 	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin libtk$(VERSION).dll] Tk]";\
 	echo "} else {";\
 	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
