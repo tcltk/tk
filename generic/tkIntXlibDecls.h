@@ -2315,6 +2315,33 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #undef XSync
 #undef XVisualIDFromVisual
 
+#if defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
+/*
+ * The following stubs implement various calls that don't do anything
+ * under Windows. In win32 tclsh 8.4 and 8.5 holds:
+ *         tkIntStubsPtr->tkBindDeadWindow != NULL
+ * Then the following macros don't do anything. But when running Tcl win32
+ * version 8.6 or Cygwin (8.4, 8.5 or 8.6) then the functions are available in
+ * the stub table. The real function from the stub table will be called,
+ * even though it might be doing nothing.
+ */
+
+#define XFlush(display) (tkIntStubsPtr->tkBindDeadWindow? 0: tkIntXlibStubsPtr->xFlush(display))
+#define XGrabServer(display) (tkIntStubsPtr->tkBindDeadWindow? 0: tkIntXlibStubsPtr->xGrabServer(display))
+#define XUngrabServer(display) (tkIntStubsPtr->tkBindDeadWindow? 0: tkIntXlibStubsPtr->xUngrabServer(display))
+
+/*
+ * The following functions are implemented as macros under Windows.
+ */
+
+
+#define XFree(data) (tkIntStubsPtr->tkBindDeadWindow? ((data)? (ckfree((char *) (data)), 0): 0): tkIntXlibStubsPtr->xFree(data))
+#define XNoOp(display) (tkIntStubsPtr->tkBindDeadWindow? 0: tkIntXlibStubsPtr->xNoOp(display))
+#define XSynchronize(display, bool) (tkIntStubsPtr->tkBindDeadWindow? 0: tkIntXlibStubsPtr->xSynchronize(display, bool))
+#define XSync(display, bool) (tkIntStubsPtr->tkBindDeadWindow? 0: tkIntXlibStubsPtr->xSync(display, bool))
+#define XVisualIDFromVisual(visual) (tkIntStubsPtr->tkBindDeadWindow? ((visual)->visualid): tkIntXlibStubsPtr->xVisualIDFromVisual(visual))
+
+#else /* !USE_TK_STUBS */
 /*
  * The following stubs implement various calls that don't do anything
  * under Windows.
@@ -2334,6 +2361,8 @@ extern TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XSync(display, bool) {display->request++;}
 #define XVisualIDFromVisual(visual) (visual->visualid)
 
-#endif
+#endif /* !USE_TK_STUBS */
+
+#endif /* __WIN32__ */
 
 #endif /* _TKINTXLIBDECLS */
