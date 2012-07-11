@@ -1,3 +1,10 @@
+2012-07-11  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* doc/CrtSelHdlr.3:   [Bug 2443069]: Cannot replace [selection handle]
+	* generic/tkSelect.c: command
+	* tests/clipboard.test:
+	* tests/select.test:
+
 2012-07-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c (GetFileNameW): [Bug 3540127]: Better solution,
