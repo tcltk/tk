@@ -109,8 +109,19 @@ If \fBTk_CreateSelHandler\fR is called when there already exists a
 handler for \fIselection\fR and \fItarget\fR on \fItkwin\fR, then the
 existing handler is replaced with a new one.
 .PP
+When \fBTk_CreateSelHandler\fR is called with a \fItarget\fR argument
+of STRING, Tk automatically creates a second handler with \fItarget\fR
+and \fIformat\fR set to UTF8_STRING.  If a UTF8_STRING handler already
+exists for \fIselection\fR on \fItkwin\fR, it is replaced, unless an
+existing STRING handler is also being replaced that has a different
+\fIproc\fR than the existing UTF8_STRING handler.
+.PP
 \fBTk_DeleteSelHandler\fR removes the handler given by \fItkwin\fR,
 \fIselection\fR, and \fItarget\fR, if such a handler exists.
-If there is no such handler then it has no effect.
+If there is no such handler then it has no effect.  If
+\fBTk_DeleteSelHandler\fR successfully removes a handler with a
+\fItarget\fR of STRING, it also attempts to remove a corresponding
+handler with \fItarget\fR and \fIformat\fR equal to UTF8_STRING and
+the same values of \fItkwin\fR and \fIproc\fR as the STRING handler.
 .SH KEYWORDS
 format, handler, selection, target
