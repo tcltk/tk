@@ -1219,7 +1219,7 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 				XColor * colorPtr);
 #endif
 #ifdef HAVE_XFT
-MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
+MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #endif
 
 /*
