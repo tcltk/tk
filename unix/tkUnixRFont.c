@@ -810,10 +810,10 @@ Tk_DrawChars(
 
 void
 TkUnixSetXftClipRegion(
-    Region clipRegion)		/* The clipping region to install. */
+    TkRegion clipRegion)	/* The clipping region to install. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    tsdPtr->clipRegion = clipRegion;
+    tsdPtr->clipRegion = (Region) clipRegion;
 }
