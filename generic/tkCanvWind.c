@@ -246,22 +246,19 @@ WinItemCoords(
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
 
     if (objc == 0) {
-	Tcl_Obj *obj = Tcl_NewObj();
-	Tcl_Obj *subobj = Tcl_NewDoubleObj(winItemPtr->x);
-	Tcl_ListObjAppendElement(interp, obj, subobj);
-	subobj = Tcl_NewDoubleObj(winItemPtr->y);
-	Tcl_ListObjAppendElement(interp, obj, subobj);
-	Tcl_SetObjResult(interp, obj);
+	Tcl_Obj *objs[2];
+
+	objs[0] = Tcl_NewDoubleObj(winItemPtr->x);
+	objs[1] = Tcl_NewDoubleObj(winItemPtr->y);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, objs));
     } else if (objc < 3) {
 	if (objc==1) {
 	    if (Tcl_ListObjGetElements(interp, objv[0], &objc,
 		    (Tcl_Obj ***) &objv) != TCL_OK) {
 		return TCL_ERROR;
 	    } else if (objc != 2) {
-		char buf[64 + TCL_INTEGER_SPACE];
-
-		sprintf(buf, "wrong # coordinates: expected 2, got %d", objc);
-		Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"wrong # coordinates: expected 2, got %d", objc));
 		return TCL_ERROR;
 	    }
 	}
@@ -272,10 +269,8 @@ WinItemCoords(
 	}
 	ComputeWindowBbox(canvas, winItemPtr);
     } else {
-	char buf[64 + TCL_INTEGER_SPACE];
-
-	sprintf(buf, "wrong # coordinates: expected 0 or 2, got %d", objc);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"wrong # coordinates: expected 0 or 2, got %d", objc));
 	return TCL_ERROR;
     }
     return TCL_OK;

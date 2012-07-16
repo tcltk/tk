@@ -249,10 +249,8 @@ BitmapCoords(
     if (objc == 0) {
 	Tcl_Obj *obj = Tcl_NewObj();
 
-	Tcl_Obj *subobj = Tcl_NewDoubleObj(bmapPtr->x);
-	Tcl_ListObjAppendElement(interp, obj, subobj);
-	subobj = Tcl_NewDoubleObj(bmapPtr->y);
-	Tcl_ListObjAppendElement(interp, obj, subobj);
+	Tcl_ListObjAppendElement(NULL, obj, Tcl_NewDoubleObj(bmapPtr->x));
+	Tcl_ListObjAppendElement(NULL, obj, Tcl_NewDoubleObj(bmapPtr->y));
 	Tcl_SetObjResult(interp, obj);
     } else if (objc < 3) {
 	if (objc == 1) {
@@ -260,10 +258,8 @@ BitmapCoords(
 		    (Tcl_Obj ***) &objv) != TCL_OK) {
 		return TCL_ERROR;
 	    } else if (objc != 2) {
-		char buf[64 + TCL_INTEGER_SPACE];
-
-		sprintf(buf, "wrong # coordinates: expected 2, got %d", objc);
-		Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"wrong # coordinates: expected 2, got %d", objc));
 		return TCL_ERROR;
 	    }
 	}
@@ -275,10 +271,8 @@ BitmapCoords(
 	}
 	ComputeBitmapBbox(canvas, bmapPtr);
     } else {
-	char buf[64 + TCL_INTEGER_SPACE];
-
-	sprintf(buf, "wrong # coordinates: expected 0 or 2, got %d", objc);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"wrong # coordinates: expected 0 or 2, got %d", objc));
 	return TCL_ERROR;
     }
     return TCL_OK;
