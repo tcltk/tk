@@ -576,7 +576,7 @@ GetFileName(
     OFNData ofnData;
     int cdlgerr;
     int filterIndex = 0, result = TCL_ERROR, winCode, oldMode, i, multi = 0;
-    int inValue, confirmOverwrite = 1;
+    int confirmOverwrite = 1;
     const char *extension = NULL, *title = NULL;
     Tk_Window tkwin = clientData;
     HWND hWnd;
@@ -586,21 +586,16 @@ GetFileName(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static const char *const saveOptionStrings[] = {
-	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent", "-title", "-typevariable",
-	"-confirmoverwrite",
-	NULL
+	"-confirmoverwrite", "-defaultextension", "-filetypes", "-initialdir",
+	"-initialfile", "", "-parent", "-title", "-typevariable", NULL
     };
     static const char *const openOptionStrings[] = {
-	"-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-parent", "-title", "-typevariable",
-	"-multiple",
-	NULL
+	"", "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
+	"-multiple", "-parent", "-title", "-typevariable", NULL
     };
     enum options {
-	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR, FILE_INITFILE,
-	FILE_PARENT,	FILE_TITLE, FILE_TYPEVARIABLE,
-	FILE_MULTIPLE_OR_CONFIRMOW
+	FILE_CONFIRMOW,	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR, FILE_INITFILE,
+	FILE_MULTIPLE,	FILE_PARENT,	FILE_TITLE, FILE_TYPEVARIABLE
     };
 
     file[0] = '\0';
@@ -608,22 +603,23 @@ GetFileName(
     Tcl_DStringInit(&utfFilterString);
     Tcl_DStringInit(&utfDirString);
 
+    /*
+     * Parse the arguments.
+     */
+
     for (i = 1; i < objc; i += 2) {
 	int index;
 	const char *string;
-	Tcl_Obj *optionPtr, *valuePtr;
+	Tcl_Obj *valuePtr = objv[i + 1];
 
-	optionPtr = objv[i];
-	valuePtr = objv[i + 1];
-
-	if (Tcl_GetIndexFromObj(interp, optionPtr,
+	if (Tcl_GetIndexFromObj(interp, objv[i],
 		open ? openOptionStrings : saveOptionStrings,
 		"option", 0, &index) != TCL_OK) {
 	    goto end;
 	}
 
 	if (i + 1 == objc) {
-	    string = Tcl_GetString(optionPtr);
+	    string = Tcl_GetString(objv[i]);
 	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
 		    NULL);
 	    goto end;
@@ -670,14 +666,15 @@ GetFileName(
 	    initialTypeObj = Tcl_ObjGetVar2(interp, typeVariableObj, NULL,
 		    TCL_GLOBAL_ONLY);
 	    break;
-	case FILE_MULTIPLE_OR_CONFIRMOW:
-	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &inValue) != TCL_OK) {
+	case FILE_MULTIPLE:
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &multi) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (open) {
-		multi = inValue;
-	    } else {
-		confirmOverwrite = inValue;
+	    break;
+	case FILE_CONFIRMOW:
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
+		    &confirmOverwrite) != TCL_OK) {
+		return TCL_ERROR;
 	    }
 	    break;
 	}
