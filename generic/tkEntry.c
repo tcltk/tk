@@ -2935,10 +2935,9 @@ EntryUpdateScrollbar(
     code = Tcl_VarEval(interp, entryPtr->scrollCmd, " ", firstStr, " ",
 	    lastStr, NULL);
     if (code != TCL_OK) {
-	Tcl_AddErrorInfo(interp,
-		"\n    (horizontal scrolling command executed by ");
-	Tcl_AddErrorInfo(interp, Tk_PathName(entryPtr->tkwin));
-	Tcl_AddErrorInfo(interp, ")");
+	Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
+		"\n    (horizontal scrolling command executed by %s)",
+		Tk_PathName(entryPtr->tkwin)));
 	Tcl_BackgroundException(interp, code);
     }
     Tcl_ResetResult(interp);
@@ -3141,7 +3140,7 @@ EntryValidate(
 
     if (code != TCL_OK && code != TCL_RETURN) {
 	Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
-		"\n\t(in validation command executed by %s)",
+		"\n    (in validation command executed by %s)",
 		Tk_PathName(entryPtr->tkwin)));
 	Tcl_BackgroundException(interp, code);
 	return TCL_ERROR;
@@ -3154,7 +3153,7 @@ EntryValidate(
     if (Tcl_GetBooleanFromObj(interp, Tcl_GetObjResult(interp),
 	    &bool) != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
-		 "\nvalid boolean not returned by validation command");
+		 "\n    (invalid boolean result from validation command)");
 	Tcl_BackgroundError(interp);
 	Tcl_ResetResult(interp);
 	return TCL_ERROR;
@@ -3280,7 +3279,7 @@ EntryValidateChange(
 		    TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
 	    if (result != TCL_OK) {
 		Tcl_AddErrorInfo(entryPtr->interp,
-			"\n\t(in invalidcommand executed by entry)");
+			"\n    (in invalidcommand executed by entry)");
 		Tcl_BackgroundException(entryPtr->interp, result);
 		code = TCL_ERROR;
 		entryPtr->validate = VALIDATE_NONE;
@@ -4284,7 +4283,8 @@ SpinboxInvoke(
 	Tcl_DStringFree(&script);
 
 	if (code != TCL_OK) {
-	    Tcl_AddErrorInfo(interp, "\n\t(in command executed by spinbox)");
+	    Tcl_AddErrorInfo(interp,
+		    "\n    (in command executed by spinbox)");
 	    Tcl_BackgroundException(interp, code);
 
 	    /*

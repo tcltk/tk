@@ -506,6 +506,7 @@ SetPixelFromAny(
     if (interp != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad screen distance \"%.50s\"", string));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
     }
     return TCL_ERROR;
 }
@@ -736,6 +737,7 @@ SetMMFromAny(
 	error:
 	    Tcl_AppendResult(interp, "bad screen distance \"", string,
 		    "\"", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "DISTANCE", NULL);
 	    return TCL_ERROR;
 	}
 	while ((*rest != '\0') && isspace(UCHAR(*rest))) {
@@ -1036,6 +1038,7 @@ TkParsePadAmount(
 	    Tcl_AppendResult(interp, "bad pad value \"",
 		    Tcl_GetString(specObj),
 		    "\": must be positive screen distance", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "DIST", NULL);
 	    return TCL_ERROR;
 	}
 	secondInt = firstInt;
@@ -1053,6 +1056,7 @@ TkParsePadAmount(
     if (objc != 1 && objc != 2) {
 	Tcl_AppendResult(interp,
 		"wrong number of parts to pad specification", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "PARTS", NULL);
 	return TCL_ERROR;
     }
 
@@ -1065,6 +1069,7 @@ TkParsePadAmount(
 	Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, "bad pad value \"", Tcl_GetString(objv[0]),
 		"\": must be positive screen distance", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "DIST", NULL);
 	return TCL_ERROR;
     }
 
@@ -1081,6 +1086,7 @@ TkParsePadAmount(
 	Tcl_AppendResult(interp, "bad 2nd pad value \"",
 		Tcl_GetString(objv[1]),
 		"\": must be positive screen distance", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "DIST", NULL);
 	return TCL_ERROR;
     }
 

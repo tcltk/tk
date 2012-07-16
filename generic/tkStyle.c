@@ -1358,6 +1358,7 @@ Tk_GetStyle(
 	if (interp != NULL) {
 	    Tcl_AppendResult(interp, "style \"", name, "\" doesn't exist",
 		    NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "STYLE", name, NULL);
 	}
 	return (Tk_Style) NULL;
     }

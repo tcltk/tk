@@ -344,27 +344,21 @@ ArcCoords(
     ArcItem *arcPtr = (ArcItem *) itemPtr;
 
     if (objc == 0) {
-	Tcl_Obj *obj = Tcl_NewObj();
-	Tcl_Obj *subobj = Tcl_NewDoubleObj(arcPtr->bbox[0]);
+	Tcl_Obj *objs[4];
 
-	Tcl_ListObjAppendElement(interp, obj, subobj);
-	subobj = Tcl_NewDoubleObj(arcPtr->bbox[1]);
-	Tcl_ListObjAppendElement(interp, obj, subobj);
-	subobj = Tcl_NewDoubleObj(arcPtr->bbox[2]);
-	Tcl_ListObjAppendElement(interp, obj, subobj);
-	subobj = Tcl_NewDoubleObj(arcPtr->bbox[3]);
-	Tcl_ListObjAppendElement(interp, obj, subobj);
-	Tcl_SetObjResult(interp, obj);
+	objs[0] = Tcl_NewDoubleObj(arcPtr->bbox[0]);
+	objs[1] = Tcl_NewDoubleObj(arcPtr->bbox[1]);
+	objs[2] = Tcl_NewDoubleObj(arcPtr->bbox[2]);
+	objs[3] = Tcl_NewDoubleObj(arcPtr->bbox[3]);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(4, objs));
     } else if ((objc == 1)||(objc == 4)) {
 	if (objc==1) {
 	    if (Tcl_ListObjGetElements(interp, objv[0], &objc,
 		    (Tcl_Obj ***) &objv) != TCL_OK) {
 		return TCL_ERROR;
 	    } else if (objc != 4) {
-		char buf[64 + TCL_INTEGER_SPACE];
-
-		sprintf(buf, "wrong # coordinates: expected 4, got %d", objc);
-		Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"wrong # coordinates: expected 4, got %d", objc));
 		return TCL_ERROR;
 	    }
 	}
@@ -380,10 +374,8 @@ ArcCoords(
 	}
 	ComputeArcBbox(canvas, arcPtr);
     } else {
-	char buf[64 + TCL_INTEGER_SPACE];
-
-	sprintf(buf, "wrong # coordinates: expected 0 or 4, got %d", objc);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"wrong # coordinates: expected 0 or 4, got %d", objc));
 	return TCL_ERROR;
     }
     return TCL_OK;

@@ -583,13 +583,11 @@ TkSelEventProc(
 	if ((type == XA_STRING) || (type == dispPtr->textAtom)
 		|| (type == dispPtr->compoundTextAtom)) {
 	    Tcl_Encoding encoding;
-	    if (format != 8) {
-		char buf[64 + TCL_INTEGER_SPACE];
 
-		sprintf(buf,
+	    if (format != 8) {
+		Tcl_SetObjResult(retrPtr->interp, Tcl_ObjPrintf(
 			"bad format for string selection: wanted \"8\", got \"%d\"",
-			format);
-		Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
+			format));
 		retrPtr->result = TCL_ERROR;
 		return;
 	    }
@@ -631,12 +629,9 @@ TkSelEventProc(
 	    char *propData = propInfo;
 
 	    if (format != 8) {
-		char buf[64 + TCL_INTEGER_SPACE];
-
-		sprintf(buf,
+		Tcl_SetObjResult(retrPtr->interp, Tcl_ObjPrintf(
 			"bad format for string selection: wanted \"8\", got \"%d\"",
-			format);
-		Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
+			format));
 		retrPtr->result = TCL_ERROR;
 		return;
 	    }
@@ -673,11 +668,9 @@ TkSelEventProc(
 	    Tcl_DString ds;
 
 	    if (format != 32 && format != 8) {
-		char buf[64 + TCL_INTEGER_SPACE];
-
-		sprintf(buf, "bad format for selection: wanted \"32\" or "
-			"\"8\", got \"%d\"", format);
-		Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
+		Tcl_SetObjResult(retrPtr->interp, Tcl_ObjPrintf(
+			"bad format for selection: wanted \"32\" or "
+			"\"8\", got \"%d\"", format));
 		retrPtr->result = TCL_ERROR;
 		return;
 	    }
@@ -1150,12 +1143,9 @@ SelRcvIncrProc(
 	Tcl_DString *dstPtr, temp;
 
 	if (format != 8) {
-	    char buf[64 + TCL_INTEGER_SPACE];
-
-	    sprintf(buf,
+	    Tcl_SetObjResult(retrPtr->interp, Tcl_ObjPrintf(
 		    "bad format for string selection: wanted \"8\", got \"%d\"",
-		    format);
-	    Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
+		    format));
 	    retrPtr->result = TCL_ERROR;
 	    goto done;
 	}
@@ -1257,11 +1247,9 @@ SelRcvIncrProc(
 	Tcl_DString ds;
 
 	if (format != 32 && format != 8) {
-	    char buf[64 + TCL_INTEGER_SPACE];
-
-	    sprintf(buf, "bad format for selection: wanted \"32\" or "
-		    "\"8\", got \"%d\"", format);
-	    Tcl_SetResult(retrPtr->interp, buf, TCL_VOLATILE);
+	    Tcl_SetObjResult(retrPtr->interp, Tcl_ObjPrintf(
+		    "bad format for selection: wanted \"32\" or "
+		    "\"8\", got \"%d\"", format));
 	    retrPtr->result = TCL_ERROR;
 	    goto done;
 	}

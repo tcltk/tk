@@ -424,13 +424,11 @@ Tk_ChooseColorObjCmd(
 	/*
 	 * User has selected a color
 	 */
-	char color[100];
 
-	sprintf(color, "#%02x%02x%02x",
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%02x%02x%02x",
 		GetRValue(chooseColor.rgbResult),
 		GetGValue(chooseColor.rgbResult),
-		GetBValue(chooseColor.rgbResult));
-	Tcl_AppendResult(interp, color, NULL);
+		GetBValue(chooseColor.rgbResult)));
 	oldColor = chooseColor.rgbResult;
 	result = TCL_OK;
     }
