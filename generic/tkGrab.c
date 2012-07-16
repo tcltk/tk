@@ -215,6 +215,7 @@ Tk_GrabObjCmd(
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
 		Tcl_GetString(objv[0]), " ?-global? window\" or \"",
 		Tcl_GetString(objv[0]), " option ?arg ...?\"", NULL);
+	Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	return TCL_ERROR;
     }
 
@@ -410,10 +411,7 @@ Tk_Grab(
 	    return TCL_OK;
 	}
 	if (dispPtr->eventualGrabWinPtr->mainPtr != winPtr->mainPtr) {
-	alreadyGrabbed:
-	    Tcl_SetResult(interp, "grab failed: another application has grab",
-		    TCL_STATIC);
-	    return TCL_ERROR;
+	    goto alreadyGrabbed;
 	}
 	Tk_Ungrab((Tk_Window) dispPtr->eventualGrabWinPtr);
     }
@@ -423,7 +421,7 @@ Tk_Grab(
     if (!grabGlobal)
 #else
     if (0)
-#endif
+#endif /* MAC_OSX_TK */
     {
 	Window dummy1, dummy2;
 	int dummy3, dummy4, dummy5, dummy6;
@@ -479,26 +477,7 @@ Tk_Grab(
 	    Tcl_Sleep(100);
 	}
 	if (grabResult != 0) {
-	grabError:
-	    if (grabResult == GrabNotViewable) {
-		Tcl_SetResult(interp, "grab failed: window not viewable",
-			TCL_STATIC);
-	    } else if (grabResult == AlreadyGrabbed) {
-		goto alreadyGrabbed;
-	    } else if (grabResult == GrabFrozen) {
-		Tcl_SetResult(interp,
-			"grab failed: keyboard or pointer frozen", TCL_STATIC);
-	    } else if (grabResult == GrabInvalidTime) {
-		Tcl_SetResult(interp, "grab failed: invalid time",
-			TCL_STATIC);
-	    } else {
-		char msg[64 + TCL_INTEGER_SPACE];
-
-		sprintf(msg, "grab failed for unknown reason (code %d)",
-			grabResult);
-		Tcl_AppendResult(interp, msg, NULL);
-	    }
-	    return TCL_ERROR;
+	    goto grabError;
 	}
 	grabResult = XGrabKeyboard(dispPtr->display, Tk_WindowId(tkwin),
 		False, GrabModeAsync, GrabModeAsync, CurrentTime);
@@ -546,6 +525,29 @@ Tk_Grab(
     }
     QueueGrabWindowChange(dispPtr, winPtr);
     return TCL_OK;
+
+  grabError:
+    if (grabResult == GrabNotViewable) {
+	Tcl_SetResult(interp, "grab failed: window not viewable", TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNVIEWABLE", NULL);
+    } else if (grabResult == AlreadyGrabbed) {
+    alreadyGrabbed:
+	Tcl_SetResult(interp, "grab failed: another application has grab",
+		TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "GRABBED", NULL);
+    } else if (grabResult == GrabFrozen) {
+	Tcl_SetResult(interp,
+		"grab failed: keyboard or pointer frozen", TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "FROZEN", NULL);
+    } else if (grabResult == GrabInvalidTime) {
+	Tcl_SetResult(interp, "grab failed: invalid time", TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "BADTIME", NULL);
+    } else {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"grab failed for unknown reason (code %d)", grabResult));
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNKNOWN", NULL);
+    }
+    return TCL_ERROR;
 }
 
 /*
