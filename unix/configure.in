@@ -640,7 +640,7 @@ WISH_RSRC_FILE='wish$(VERSION).rsrc'
 if test "`uname -s`" = "Darwin" ; then
     SC_ENABLE_FRAMEWORK
     TK_SHLIB_LD_EXTRAS="-compatibility_version ${TK_VERSION} -current_version ${TK_VERSION}`echo ${TK_PATCH_LEVEL} | awk ['{match($0, "\\\.[0-9]+"); print substr($0,RSTART,RLENGTH)}']`"
-    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name "${DYLIB_INSTALL_DIR}"/${TK_LIB_FILE}'
+    TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -install_name "${DYLIB_INSTALL_DIR}/${TK_LIB_FILE}"'
     if test $tk_aqua = yes; then
 	TK_SHLIB_LD_EXTRAS="${TK_SHLIB_LD_EXTRAS}"' -unexported_symbols_list $$(f=$(TK_LIB_FILE).E && nm -gp tkMacOSX*.o 2>/dev/null | awk "/^[[0-9a-f]]+ . \.objc/ {print \$$3}" > $$f && echo $$f)'
     fi
@@ -673,6 +673,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     TK_LIB_FILE="Tk"
     TK_LIB_FLAG="-framework Tk"
     TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
+    WISH_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk \${WISH_LIBS}"
     TK_LIB_SPEC="-F${libdir} -framework Tk"
     libdir="${libdir}/Tk.framework/Versions/\${VERSION}"
     TK_LIBRARY="${libdir}/Resources/Scripts"
@@ -721,6 +722,11 @@ else
         TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
     fi
     TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
+    if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
+	WISH_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win -ltk${TK_MAJOR_VERSION}${TK_MINOR_VERSION} \${TCL_LIB_SPEC}"
+    else
+	WISH_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG} \${WISH_LIBS}"
+    fi
     TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 fi
 
@@ -735,6 +741,7 @@ if test $tk_aqua = carbon; then
     if test "$SHARED_BUILD" = 0; then
 	EXTRA_INSTALL_BINARIES='@echo "Installing $(TK_RSRC_FILE) to $(LIB_INSTALL_DIR)" && $(INSTALL_DATA) $(TK_RSRC_FILE) "$(LIB_INSTALL_DIR)"'
 	TK_BUILD_LIB_SPEC="$TK_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd | sed -e 's/ /\\\\ /g'`/\${TK_RSRC_FILE}"
+	WISH_BUILD_LIB_SPEC="$WISH_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd | sed -e 's/ /\\\\ /g'`/\${TK_RSRC_FILE}"
 	TK_LIB_SPEC="$TK_LIB_SPEC -sectcreate __TEXT __tk_rsrc ${libdir}/\${TK_RSRC_FILE}"
     else
         TK_SHLIB_LD_EXTRAS="$TK_SHLIB_LD_EXTRAS -sectcreate __TEXT __tk_rsrc \${TK_RSRC_FILE}"
@@ -793,6 +800,7 @@ AC_SUBST(TK_SHARED_BUILD)
 AC_SUBST(LD_LIBRARY_PATH_VAR)
 
 AC_SUBST(TK_BUILD_LIB_SPEC)
+AC_SUBST(WISH_BUILD_LIB_SPEC)
 
 AC_SUBST(TCL_STUB_FLAGS)
 AC_SUBST(XINCLUDES)
