@@ -673,11 +673,10 @@ Tk_GetRelief(
     } else if ((c == 's') && (strncmp(name, "sunken", length) == 0)) {
 	*reliefPtr = TK_RELIEF_SUNKEN;
     } else {
-	char buf[200];
-
-	sprintf(buf, "bad relief \"%.50s\": must be %s",
-		name, "flat, groove, raised, ridge, solid, or sunken");
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp,
+		Tcl_ObjPrintf("bad relief \"%.50s\": must be %s",
+		name, "flat, groove, raised, ridge, solid, or sunken"));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "RELIEF", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;

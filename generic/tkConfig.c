@@ -946,15 +946,12 @@ DoObjConfig(
 	break;
     }
 
-    {
-	char buf[40+TCL_INTEGER_SPACE];
-
     default:
-	sprintf(buf, "bad config table: unknown type %d",
-		optionPtr->specPtr->type);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad config table: unknown type %d",
+		optionPtr->specPtr->type));
+	Tcl_SetErrorCode(interp, "TK", "BAD_CONFIG", NULL);
 	return TCL_ERROR;
-    }
     }
 
     /*
@@ -1162,6 +1159,7 @@ GetOptionFromObj(
   error:
     if (interp != NULL) {
 	Tcl_AppendResult(interp, "unknown option \"", name, "\"", NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", name, NULL);
     }
     return NULL;
 }
@@ -1231,9 +1229,10 @@ SetOptionFromAny(
     Tcl_AppendResult(interp,
 	    "can't convert value to option except via GetOptionFromObj API",
 	    NULL);
+    Tcl_SetErrorCode(interp, "TK", "API_ABUSE", NULL);
     return TCL_ERROR;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1348,6 +1347,7 @@ Tk_SetOptions(
 	    if (interp != NULL) {
 		Tcl_AppendResult(interp, "value for \"",
 			Tcl_GetStringFromObj(*objv, NULL), "\" missing",NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", NULL);
 		goto error;
 	    }
 	}
@@ -1369,11 +1369,9 @@ Tk_SetOptions(
 	if (DoObjConfig(interp, recordPtr, optionPtr, objv[1], tkwin,
 		(savePtr != NULL) ? &lastSavePtr->items[lastSavePtr->numItems]
 		: NULL) != TCL_OK) {
-	    char msg[100];
-
-	    sprintf(msg, "\n    (processing \"%.40s\" option)",
-		    Tcl_GetStringFromObj(*objv, NULL));
-	    Tcl_AddErrorInfo(interp, msg);
+	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
+		    "\n    (processing \"%.40s\" option)",
+		    Tcl_GetStringFromObj(*objv, NULL)));
 	    goto error;
 	}
 	if (savePtr != NULL) {
@@ -1771,7 +1769,6 @@ FreeResources(
  *	single option or all the configuration options in a table.
  *
  * Results:
-
  *	This function normally returns a pointer to an object. If namePtr
  *	isn't NULL, then the result object is a list with five elements: the
  *	option's name, its database name, database class, default value, and
@@ -2154,8 +2151,7 @@ TkDebugConfig(
     Tcl_Obj *objPtr;
 
     objPtr = Tcl_NewObj();
-    hashTablePtr = (Tcl_HashTable *) Tcl_GetAssocData(interp, OPTION_HASH_KEY,
-	    NULL);
+    hashTablePtr = Tcl_GetAssocData(interp, OPTION_HASH_KEY, NULL);
     if (hashTablePtr == NULL) {
 	return objPtr;
     }

@@ -55,7 +55,7 @@ TkpSync(Display *display)
 void
 TkCreateXEventSource(void)
 {
-	TkWinXInit(Tk_GetHINSTANCE());
+    TkWinXInit(Tk_GetHINSTANCE());
 }
 
 #   define TkUnixContainerId 0
@@ -105,7 +105,7 @@ TkpPrintWindowId(
 				 * the hex representation of a pointer. */
     Window window)		/* Window to be printed into buffer. */
 {
-	sprintf(buf, "%#08lx", (unsigned long) (window));
+    sprintf(buf, "%#08lx", (unsigned long) (window));
 }
 
 int

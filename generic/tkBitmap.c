@@ -344,6 +344,7 @@ GetBitmap(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_AppendResult(interp, "can't specify bitmap with '@' in a",
 		    " safe interpreter", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", NULL);
 	    goto error;
 	}
 
@@ -365,6 +366,7 @@ GetBitmap(
 	    if (interp != NULL) {
 		Tcl_AppendResult(interp, "error reading bitmap file \"",
 			string, "\"", NULL);
+		Tcl_SetErrorCode(interp, "TK", "BITMAP", "FILE_ERROR", NULL);
 	    }
 	    Tcl_DStringFree(&buffer);
 	    goto error;
@@ -386,6 +388,7 @@ GetBitmap(
 		if (interp != NULL) {
 		    Tcl_AppendResult(interp, "bitmap \"", string,
 			    "\" not defined", NULL);
+		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "BITMAP", NULL);
 		}
 		goto error;
 	    }
@@ -489,6 +492,7 @@ Tk_DefineBitmap(
     if (!isNew) {
 	Tcl_AppendResult(interp, "bitmap \"", name, "\" is already defined",
 		NULL);
+	Tcl_SetErrorCode(interp, "TK", "BITMAP", "EXISTS", NULL);
 	return TCL_ERROR;
     }
     predefPtr = ckalloc(sizeof(TkPredefBitmap));

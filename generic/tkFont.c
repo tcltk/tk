@@ -569,6 +569,7 @@ Tk_FontObjCmd(
 			-1, 40, "...");
 		Tcl_AppendToObj(resultPtr, "\"", -1);
 		Tcl_SetObjResult(interp, resultPtr);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "FONT_SAMPLE", NULL);
 		return TCL_ERROR;
 	    }
 	    uniChar = Tcl_GetUniChar(charPtr, 0);
@@ -618,6 +619,7 @@ Tk_FontObjCmd(
 	if ((namedHashPtr == NULL) || (nfPtr->deletePending != 0)) {
 	    Tcl_AppendResult(interp, "named font \"", string,
 		    "\" doesn't exist", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
 	    return TCL_ERROR;
 	}
 	if (objc == 3) {
@@ -951,6 +953,7 @@ TkCreateNamedFont(
 	    if (interp) {
 		Tcl_AppendResult(interp, "named font \"", name,
 			"\" already exists", NULL);
+		Tcl_SetErrorCode(interp, "TK", "FONT", "EXISTS", NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -1002,6 +1005,7 @@ TkDeleteNamedFont(
 	if (interp) {
 	    Tcl_AppendResult(interp, "named font \"", name,
 		    "\" doesn't exist", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", name, NULL);
 	}
 	return TCL_ERROR;
     }
@@ -1185,6 +1189,7 @@ Tk_AllocFontFromObj(
 	}
 	Tcl_AppendResult(interp, "failed to allocate font due to ",
 		"internal system font engine problem", NULL);
+	Tcl_SetErrorCode(interp, "TK", "FONT", "INTERNAL_PROBLEM", NULL);
 	return NULL;
     }
 
@@ -3405,6 +3410,7 @@ ConfigAttributesObj(
 	    if (interp != NULL) {
 		Tcl_AppendResult(interp, "value for \"",
 			Tcl_GetString(optionPtr), "\" option missing", NULL);
+		Tcl_SetErrorCode(interp, "TK", "FONT", "NO_ATTRIBUTE", NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -3648,6 +3654,7 @@ ParseFontNameObj(
 	if (interp != NULL) {
 	    Tcl_AppendResult(interp, "font \"", string, "\" doesn't exist",
 		    NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
 	}
 	return TCL_ERROR;
     }
@@ -3696,6 +3703,8 @@ ParseFontNameObj(
 	if (interp != NULL) {
 	    Tcl_AppendResult(interp, "unknown font style \"",
 		    Tcl_GetString(objv[i]), "\"", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT_STYLE",
+		    Tcl_GetString(objv[i]), NULL);
 	}
 	return TCL_ERROR;
     }
@@ -4077,7 +4086,6 @@ TkFontGetPoints(
  *	platform expects when asking for the font.
  *
  * Results:
-
  *	As above. The return value is NULL if the font name has no aliases.
  *
  * Side effects:

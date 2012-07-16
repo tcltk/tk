@@ -273,6 +273,7 @@ Tk_ImageObjCmd(
 	if (typePtr == NULL) {
 	    Tcl_AppendResult(interp, "image type \"", arg, "\" doesn't exist",
 		    NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -306,6 +307,7 @@ Tk_ImageObjCmd(
 	    if (topWin != NULL && winPtr->mainPtr->winPtr == topWin) {
 		Tcl_AppendResult(interp, "images may not be named the ",
 			"same as the main window", NULL);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SMASH_MAIN", NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -491,6 +493,7 @@ Tk_ImageObjCmd(
 
   alreadyDeleted:
     Tcl_AppendResult(interp, "image \"", arg, "\" doesn't exist", NULL);
+    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", NULL);
     return TCL_ERROR;
 }
 
@@ -631,6 +634,7 @@ Tk_GetImage(
   noSuchImage:
     if (interp) {
 	Tcl_AppendResult(interp, "image \"", name, "\" doesn't exist", NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", NULL);
     }
     return NULL;
 }

@@ -391,54 +391,50 @@ LineCoords(
 	}
     }
     if (objc & 1) {
-	char buf[64 + TCL_INTEGER_SPACE];
-
-	sprintf(buf, "wrong # coordinates: expected an even number, got %d",
-		objc);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"wrong # coordinates: expected an even number, got %d",
+		objc));
 	return TCL_ERROR;
     } else if (objc < 4) {
-	char buf[64 + TCL_INTEGER_SPACE];
-
-	sprintf(buf, "wrong # coordinates: expected at least 4, got %d", objc);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"wrong # coordinates: expected at least 4, got %d", objc));
 	return TCL_ERROR;
-    } else {
-	numPoints = objc/2;
-	if (linePtr->numPoints != numPoints) {
-	    coordPtr = ckalloc(sizeof(double) * objc);
-	    if (linePtr->coordPtr != NULL) {
-		ckfree(linePtr->coordPtr);
-	    }
-	    linePtr->coordPtr = coordPtr;
-	    linePtr->numPoints = numPoints;
-	}
-	coordPtr = linePtr->coordPtr;
-	for (i = 0; i < objc ; i++) {
-	    if (Tk_CanvasGetCoordFromObj(interp, canvas, objv[i],
-		    coordPtr++) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	}
-
-	/*
-	 * Update arrowheads by throwing away any existing arrow-head
-	 * information and calling ConfigureArrows to recompute it.
-	 */
-
-	if (linePtr->firstArrowPtr != NULL) {
-	    ckfree(linePtr->firstArrowPtr);
-	    linePtr->firstArrowPtr = NULL;
-	}
-	if (linePtr->lastArrowPtr != NULL) {
-	    ckfree(linePtr->lastArrowPtr);
-	    linePtr->lastArrowPtr = NULL;
-	}
-	if (linePtr->arrow != ARROWS_NONE) {
-	    ConfigureArrows(canvas, linePtr);
-	}
-	ComputeLineBbox(canvas, linePtr);
     }
+
+    numPoints = objc/2;
+    if (linePtr->numPoints != numPoints) {
+	coordPtr = ckalloc(sizeof(double) * objc);
+	if (linePtr->coordPtr != NULL) {
+	    ckfree(linePtr->coordPtr);
+	}
+	linePtr->coordPtr = coordPtr;
+	linePtr->numPoints = numPoints;
+    }
+    coordPtr = linePtr->coordPtr;
+    for (i = 0; i < objc ; i++) {
+	if (Tk_CanvasGetCoordFromObj(interp, canvas, objv[i],
+		coordPtr++) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+    }
+
+    /*
+     * Update arrowheads by throwing away any existing arrow-head information
+     * and calling ConfigureArrows to recompute it.
+     */
+
+    if (linePtr->firstArrowPtr != NULL) {
+	ckfree(linePtr->firstArrowPtr);
+	linePtr->firstArrowPtr = NULL;
+    }
+    if (linePtr->lastArrowPtr != NULL) {
+	ckfree(linePtr->lastArrowPtr);
+	linePtr->lastArrowPtr = NULL;
+    }
+    if (linePtr->arrow != ARROWS_NONE) {
+	ConfigureArrows(canvas, linePtr);
+    }
+    ComputeLineBbox(canvas, linePtr);
     return TCL_OK;
 }
 
@@ -1894,16 +1890,8 @@ ParseArrowShape(
     }
 
     if (Tcl_SplitList(interp, (char *) value, &argc, &argv) != TCL_OK) {
-	syntaxError:
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "bad arrow shape \"", value,
-		"\": must be list with three numbers", NULL);
-	if (argv != NULL) {
-	    ckfree(argv);
-	}
-	return TCL_ERROR;
-    }
-    if (argc != 3) {
+	goto syntaxError;
+    } else if (argc != 3) {
 	goto syntaxError;
     }
     if ((Tk_CanvasGetCoord(interp, linePtr->canvas, argv[0], &a) != TCL_OK)
@@ -1913,11 +1901,21 @@ ParseArrowShape(
 		!= TCL_OK)) {
 	goto syntaxError;
     }
+
     linePtr->arrowShapeA = (float) a;
     linePtr->arrowShapeB = (float) b;
     linePtr->arrowShapeC = (float) c;
     ckfree(argv);
     return TCL_OK;
+
+  syntaxError:
+    Tcl_ResetResult(interp);
+    Tcl_AppendResult(interp, "bad arrow shape \"", value,
+	    "\": must be list with three numbers", NULL);
+    if (argv != NULL) {
+	ckfree(argv);
+    }
+    return TCL_ERROR;
 }
 
 /*

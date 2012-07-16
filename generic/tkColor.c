@@ -226,9 +226,11 @@ Tk_GetColor(
 	    if (*name == '#') {
 		Tcl_AppendResult(interp, "invalid color name \"", name,
 			"\"", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "COLOR", NULL);
 	    } else {
 		Tcl_AppendResult(interp, "unknown color name \"", name,
 			"\"", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "COLOR", name, NULL);
 	    }
 	}
 	if (isNew) {
@@ -372,10 +374,12 @@ Tk_NameOfColor(
 	sprintf(tsdPtr->rgbString, "#%04x%04x%04x", colorPtr->red,
 		colorPtr->green, colorPtr->blue);
 
-	/* If the string has the form #RSRSTUTUVWVW (where equal
-	 * letters denote equal hexdigits) then this is
-	 * equivalent to #RSTUVW. Then output the shorter form.
+	/*
+	 * If the string has the form #RSRSTUTUVWVW (where equal letters
+	 * denote equal hexdigits) then this is equivalent to #RSTUVW. Then
+	 * output the shorter form.
 	 */
+
 	if ((tsdPtr->rgbString[1] == tsdPtr->rgbString[3])
 		&& (tsdPtr->rgbString[2] == tsdPtr->rgbString[4])
 		&& (tsdPtr->rgbString[5] == tsdPtr->rgbString[7])

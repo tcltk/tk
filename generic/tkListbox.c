@@ -168,6 +168,13 @@ typedef struct {
 } Listbox;
 
 /*
+ * How to encode the keys for the hash tables used to store what items are
+ * selected and what the attributes are.
+ */
+
+#define KEY(i)		((char *) INT2PTR(i))
+
+/*
  * ItemAttr structures are used to store item configuration information for
  * the items in a listbox
  */
@@ -437,8 +444,8 @@ static void		MigrateHashEntries(Tcl_HashTable *table,
 static const Tk_ClassProcs listboxClass = {
     sizeof(Tk_ClassProcs),	/* size */
     ListboxWorldChanged,	/* worldChangedProc */
-    NULL,					/* createProc */
-    NULL					/* modalProc */
+    NULL,			/* createProc */
+    NULL			/* modalProc */
 };
 
 /*
@@ -480,8 +487,7 @@ Tk_ListboxObjCmd(
 	return TCL_ERROR;
     }
 
-    optionTables = (ListboxOptionTables *)
-	Tcl_GetAssocData(interp, "ListboxOptionTables", NULL);
+    optionTables = Tcl_GetAssocData(interp, "ListboxOptionTables", NULL);
     if (optionTables == NULL) {
 	/*
 	 * We haven't created the option tables for this widget class yet. Do
@@ -515,7 +521,7 @@ Tk_ListboxObjCmd(
      */
 
     listPtr			 = ckalloc(sizeof(Listbox));
-    memset(listPtr, 0, (sizeof(Listbox)));
+    memset(listPtr, 0, sizeof(Listbox));
 
     listPtr->tkwin		 = tkwin;
     listPtr->display		 = Tk_Display(tkwin);
@@ -597,6 +603,7 @@ ListboxWidgetObjCmd(
     register Listbox *listPtr = clientData;
     int cmdIndex, index;
     int result = TCL_OK;
+    Tcl_Obj *objPtr;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
@@ -661,9 +668,7 @@ ListboxWidgetObjCmd(
 	result = ListboxBboxSubCmd(interp, listPtr, index);
 	break;
 
-    case COMMAND_CGET: {
-	Tcl_Obj *objPtr;
-
+    case COMMAND_CGET:
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    result = TCL_ERROR;
@@ -679,11 +684,8 @@ ListboxWidgetObjCmd(
 	Tcl_SetObjResult(interp, objPtr);
 	result = TCL_OK;
 	break;
-    }
 
-    case COMMAND_CONFIGURE: {
-	Tcl_Obj *objPtr;
-
+    case COMMAND_CONFIGURE:
 	if (objc <= 3) {
 	    objPtr = Tk_GetOptionInfo(interp, (char *) listPtr,
 		    listPtr->optionTable,
@@ -698,10 +700,8 @@ ListboxWidgetObjCmd(
 	    result = ConfigureListbox(interp, listPtr, objc-2, objv+2, 0);
 	}
 	break;
-    }
 
     case COMMAND_CURSELECTION: {
-	char indexStringRep[TCL_INTEGER_SPACE];
 	int i;
 
 	if (objc != 2) {
@@ -718,12 +718,13 @@ ListboxWidgetObjCmd(
 	 * selected.
 	 */
 
+	objPtr = Tcl_NewObj();
 	for (i = 0; i < listPtr->nElements; i++) {
-	    if (Tcl_FindHashEntry(listPtr->selection, (char *) INT2PTR(i))) {
-		sprintf(indexStringRep, "%d", i);
-		Tcl_AppendElement(interp, indexStringRep);
+	    if (Tcl_FindHashEntry(listPtr->selection, KEY(i))) {
+		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewIntObj(i));
 	    }
 	}
+	Tcl_SetObjResult(interp, objPtr);
 	result = TCL_OK;
 	break;
     }
@@ -857,7 +858,6 @@ ListboxWidgetObjCmd(
 	break;
 
     case COMMAND_ITEMCGET: {
-	Tcl_Obj *objPtr;
 	ItemAttr *attrPtr;
 
 	if (objc != 4) {
@@ -892,7 +892,6 @@ ListboxWidgetObjCmd(
     }
 
     case COMMAND_ITEMCONFIGURE: {
-	Tcl_Obj *objPtr;
 	ItemAttr *attrPtr;
 
 	if (objc < 3) {
@@ -922,10 +921,9 @@ ListboxWidgetObjCmd(
 	    if (objPtr == NULL) {
 		result = TCL_ERROR;
 		break;
-	    } else {
-		Tcl_SetObjResult(interp, objPtr);
-		result = TCL_OK;
 	    }
+	    Tcl_SetObjResult(interp, objPtr);
+	    result = TCL_OK;
 	} else {
 	    result = ConfigureListboxItem(interp, listPtr, attrPtr,
 		    objc-3, objv+3, index);
@@ -1007,7 +1005,7 @@ ListboxWidgetObjCmd(
 	}
 	diff = listPtr->topIndex - index;
 	if (diff > 0) {
-	    if (diff <= (listPtr->fullLines/3)) {
+	    if (diff <= listPtr->fullLines / 3) {
 		ChangeListboxView(listPtr, index);
 	    } else {
 		ChangeListboxView(listPtr, index - (listPtr->fullLines-1)/2);
@@ -1015,7 +1013,7 @@ ListboxWidgetObjCmd(
 	} else {
 	    diff = index - (listPtr->topIndex + listPtr->fullLines - 1);
 	    if (diff > 0) {
-		if (diff <= (listPtr->fullLines/3)) {
+		if (diff <= listPtr->fullLines / 3) {
 		    ChangeListboxView(listPtr, listPtr->topIndex + diff);
 		} else {
 		    ChangeListboxView(listPtr, index-(listPtr->fullLines-1)/2);
@@ -1090,7 +1088,7 @@ ListboxBboxSubCmd(
      */
 
     if ((listPtr->topIndex <= index) && (index < lastVisibleIndex)) {
-	Tcl_Obj *el;
+	Tcl_Obj *el, *results[4];
 	const char *stringRep;
 	int pixelWidth, stringLen, x, y, result;
 	Tk_FontMetrics fm;
@@ -1111,8 +1109,11 @@ ListboxBboxSubCmd(
 	x = listPtr->inset + listPtr->selBorderWidth - listPtr->xOffset;
 	y = ((index - listPtr->topIndex)*listPtr->lineHeight)
 		+ listPtr->inset + listPtr->selBorderWidth;
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d %d %d",
-		x, y, pixelWidth, fm.linespace));
+	results[0] = Tcl_NewIntObj(x);
+	results[1] = Tcl_NewIntObj(y);
+	results[2] = Tcl_NewIntObj(pixelWidth);
+	results[3] = Tcl_NewIntObj(fm.linespace);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(4, results));
     }
     return TCL_OK;
 }
@@ -1197,9 +1198,8 @@ ListboxSelectionSubCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "index");
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp,
-		Tcl_NewBooleanObj((Tcl_FindHashEntry(listPtr->selection,
-			(char *) INT2PTR(first)) != NULL)));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+		Tcl_FindHashEntry(listPtr->selection, KEY(first)) != NULL));
 	result = TCL_OK;
 	break;
     case SELECTION_SET:
@@ -1232,43 +1232,45 @@ ListboxXviewSubCmd(
     int objc,			/* Number of arguments in the objv array */
     Tcl_Obj *const objv[])	/* Array of arguments to the procedure */
 {
-
-    int index, count, type, windowWidth, windowUnits;
+    int index, count, windowWidth, windowUnits;
     int offset = 0;		/* Initialized to stop gcc warnings. */
     double fraction;
 
     windowWidth = Tk_Width(listPtr->tkwin)
 	    - 2*(listPtr->inset + listPtr->selBorderWidth);
     if (objc == 2) {
+	Tcl_Obj *results[2];
+
 	if (listPtr->maxWidth == 0) {
-	    Tcl_SetResult(interp, "0.0 1.0", TCL_STATIC);
+	    results[0] = Tcl_NewDoubleObj(0.0);
+	    results[1] = Tcl_NewDoubleObj(1.0);
 	} else {
 	    double fraction2;
 
-	    fraction = listPtr->xOffset/((double) listPtr->maxWidth);
+	    fraction = listPtr->xOffset / (double) listPtr->maxWidth;
 	    fraction2 = (listPtr->xOffset + windowWidth)
-		    / ((double) listPtr->maxWidth);
+		    / (double) listPtr->maxWidth;
 	    if (fraction2 > 1.0) {
 		fraction2 = 1.0;
 	    }
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%g %g",
-		    fraction, fraction2));
+	    results[0] = Tcl_NewDoubleObj(fraction);
+	    results[1] = Tcl_NewDoubleObj(fraction2);
 	}
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
     } else if (objc == 3) {
 	if (Tcl_GetIntFromObj(interp, objv[2], &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	ChangeListboxOffset(listPtr, index*listPtr->xScrollUnit);
     } else {
-	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
-	switch (type) {
+	switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count)) {
 	case TK_SCROLL_ERROR:
 	    return TCL_ERROR;
 	case TK_SCROLL_MOVETO:
 	    offset = (int) (fraction*listPtr->maxWidth + 0.5);
 	    break;
 	case TK_SCROLL_PAGES:
-	    windowUnits = windowWidth/listPtr->xScrollUnit;
+	    windowUnits = windowWidth / listPtr->xScrollUnit;
 	    if (windowUnits > 2) {
 		offset = listPtr->xOffset
 			+ count*listPtr->xScrollUnit*(windowUnits-2);
@@ -1308,12 +1310,15 @@ ListboxYviewSubCmd(
     int objc,			/* Number of arguments in the objv array */
     Tcl_Obj *const objv[])	/* Array of arguments to the procedure */
 {
-    int index, count, type;
+    int index, count;
     double fraction;
 
     if (objc == 2) {
+	Tcl_Obj *results[2];
+
 	if (listPtr->nElements == 0) {
-	    Tcl_SetResult(interp, "0.0 1.0", TCL_STATIC);
+	    results[0] = Tcl_NewDoubleObj(0.0);
+	    results[1] = Tcl_NewDoubleObj(1.0);
 	} else {
 	    double fraction2, numEls = (double) listPtr->nElements;
 
@@ -1322,17 +1327,17 @@ ListboxYviewSubCmd(
 	    if (fraction2 > 1.0) {
 		fraction2 = 1.0;
 	    }
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%g %g",
-		    fraction, fraction2));
+	    results[0] = Tcl_NewDoubleObj(fraction);
+	    results[1] = Tcl_NewDoubleObj(fraction2);
 	}
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
     } else if (objc == 3) {
 	if (GetListboxIndex(interp, listPtr, objv[2], 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	ChangeListboxView(listPtr, index);
     } else {
-	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
-	switch (type) {
+	switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count)) {
 	case TK_SCROLL_MOVETO:
 	    index = (int) (listPtr->nElements*fraction + 0.5);
 	    break;
@@ -1383,8 +1388,7 @@ ListboxGetItemAttributes(
     Tcl_HashEntry *entry;
     ItemAttr *attrs;
 
-    entry = Tcl_CreateHashEntry(listPtr->itemAttrTable,
-	    (char *) INT2PTR(index), &isNew);
+    entry = Tcl_CreateHashEntry(listPtr->itemAttrTable, KEY(index), &isNew);
     if (isNew) {
 	attrs = ckalloc(sizeof(ItemAttr));
 	attrs->border = NULL;
@@ -1910,7 +1914,7 @@ DisplayListbox(
 	 * special foreground/background colors.
 	 */
 
-	entry = Tcl_FindHashEntry(listPtr->itemAttrTable, (char *) INT2PTR(i));
+	entry = Tcl_FindHashEntry(listPtr->itemAttrTable, KEY(i));
 
 	/*
 	 * If the listbox is enabled, items may be drawn differently; they may
@@ -1919,7 +1923,7 @@ DisplayListbox(
 	 */
 
 	if (listPtr->state & STATE_NORMAL) {
-	    if (Tcl_FindHashEntry(listPtr->selection, (char *) INT2PTR(i))) {
+	    if (Tcl_FindHashEntry(listPtr->selection, KEY(i))) {
 		/*
 		 * Selected items are drawn differently.
 		 */
@@ -2001,8 +2005,7 @@ DisplayListbox(
 		}
 		/* Draw bottom bevel */
 		if (i + 1 == listPtr->nElements ||
-			Tcl_FindHashEntry(listPtr->selection,
-				(char *) INT2PTR(i + 1)) == NULL ) {
+			!Tcl_FindHashEntry(listPtr->selection, KEY(i + 1))) {
 		    Tk_3DHorizontalBevel(tkwin, pixmap, selectedBg, x-left,
 			    y + listPtr->lineHeight - listPtr->selBorderWidth,
 			    width+left+right, listPtr->selBorderWidth, 0, 0, 0,
@@ -2238,7 +2241,7 @@ ListboxComputeGeometry(
     width = listPtr->width;
     if (width <= 0) {
 	width = (listPtr->maxWidth + listPtr->xScrollUnit - 1)
-		/listPtr->xScrollUnit;
+		/ listPtr->xScrollUnit;
 	if (width < 1) {
 	    width = 1;
 	}
@@ -2439,13 +2442,13 @@ ListboxDeleteSubCmd(
 	 * Remove selection information.
 	 */
 
-	entry = Tcl_FindHashEntry(listPtr->selection, (char *) INT2PTR(i));
+	entry = Tcl_FindHashEntry(listPtr->selection, KEY(i));
 	if (entry != NULL) {
 	    listPtr->numSelected--;
 	    Tcl_DeleteHashEntry(entry);
 	}
 
-	entry = Tcl_FindHashEntry(listPtr->itemAttrTable, (char *) INT2PTR(i));
+	entry = Tcl_FindHashEntry(listPtr->itemAttrTable, KEY(i));
 	if (entry != NULL) {
 	    ckfree(Tcl_GetHashValue(entry));
 	    Tcl_DeleteHashEntry(entry);
@@ -2903,7 +2906,7 @@ ListboxScanTo(
      */
 
     newTopIndex = listPtr->scanMarkYIndex
-	    - (10*(y - listPtr->scanMarkY))/listPtr->lineHeight;
+	    - (10*(y - listPtr->scanMarkY)) / listPtr->lineHeight;
     if (newTopIndex > maxIndex) {
 	newTopIndex = listPtr->scanMarkYIndex = maxIndex;
 	listPtr->scanMarkY = y;
@@ -2955,7 +2958,7 @@ NearestListboxElement(
 {
     int index;
 
-    index = (y - listPtr->inset)/listPtr->lineHeight;
+    index = (y - listPtr->inset) / listPtr->lineHeight;
     if (index >= (listPtr->fullLines + listPtr->partialLine)) {
 	index = listPtr->fullLines + listPtr->partialLine - 1;
     }
@@ -3026,7 +3029,7 @@ ListboxSelect(
      */
 
     for (i = first; i <= last; i++) {
-	entry = Tcl_FindHashEntry(listPtr->selection, (char *) INT2PTR(i));
+	entry = Tcl_FindHashEntry(listPtr->selection, KEY(i));
 	if (entry != NULL) {
 	    if (!select) {
 		Tcl_DeleteHashEntry(entry);
@@ -3037,8 +3040,8 @@ ListboxSelect(
 	    }
 	} else {
 	    if (select) {
-		entry = Tcl_CreateHashEntry(listPtr->selection,
-			(char *) INT2PTR(i), &isNew);
+		entry = Tcl_CreateHashEntry(listPtr->selection, KEY(i),
+			&isNew);
 		Tcl_SetHashValue(entry, NULL);
 		listPtr->numSelected++;
 		if (firstRedisplay < 0) {
@@ -3052,7 +3055,7 @@ ListboxSelect(
 	EventuallyRedrawRange(listPtr, first, last);
     }
     if ((oldCount == 0) && (listPtr->numSelected > 0)
-	    && (listPtr->exportSelection)) {
+	    && listPtr->exportSelection) {
 	Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY,
 		ListboxLostSelection, listPtr);
     }
@@ -3109,7 +3112,7 @@ ListboxFetchSelection(
     needNewline = 0;
     Tcl_DStringInit(&selection);
     for (i = 0; i < listPtr->nElements; i++) {
-	entry = Tcl_FindHashEntry(listPtr->selection, (char *) INT2PTR(i));
+	entry = Tcl_FindHashEntry(listPtr->selection, KEY(i));
 	if (entry != NULL) {
 	    if (needNewline) {
 		Tcl_DStringAppend(&selection, "\n", 1);
@@ -3250,9 +3253,9 @@ ListboxUpdateVScrollbar(
 	first = 0.0;
 	last = 1.0;
     } else {
-	first = listPtr->topIndex / ((double) listPtr->nElements);
+	first = listPtr->topIndex / (double) listPtr->nElements;
 	last = (listPtr->topIndex + listPtr->fullLines)
-		/ ((double) listPtr->nElements);
+		/ (double) listPtr->nElements;
 	if (last > 1.0) {
 	    last = 1.0;
 	}
@@ -3309,15 +3312,15 @@ ListboxUpdateHScrollbar(
     if (listPtr->xScrollCmd == NULL) {
 	return;
     }
-    windowWidth = Tk_Width(listPtr->tkwin) - 2*(listPtr->inset
-	    + listPtr->selBorderWidth);
+
+    windowWidth = Tk_Width(listPtr->tkwin)
+	    - 2*(listPtr->inset + listPtr->selBorderWidth);
     if (listPtr->maxWidth == 0) {
 	first = 0;
 	last = 1.0;
     } else {
-	first = listPtr->xOffset/((double) listPtr->maxWidth);
-	last = (listPtr->xOffset + windowWidth)
-		/((double) listPtr->maxWidth);
+	first = listPtr->xOffset / (double) listPtr->maxWidth;
+	last = (listPtr->xOffset + windowWidth) / (double) listPtr->maxWidth;
 	if (last > 1.0) {
 	    last = 1.0;
 	}
@@ -3429,7 +3432,7 @@ ListboxListVarProc(
 	     * Clean up selection.
 	     */
 
-	    entry = Tcl_FindHashEntry(listPtr->selection, (char *) INT2PTR(i));
+	    entry = Tcl_FindHashEntry(listPtr->selection, KEY(i));
 	    if (entry != NULL) {
 		listPtr->numSelected--;
 		Tcl_DeleteHashEntry(entry);
@@ -3439,8 +3442,7 @@ ListboxListVarProc(
 	     * Clean up attributes.
 	     */
 
-	    entry = Tcl_FindHashEntry(listPtr->itemAttrTable,
-		    (char *) INT2PTR(i));
+	    entry = Tcl_FindHashEntry(listPtr->itemAttrTable, KEY(i));
 	    if (entry != NULL) {
 		ckfree(Tcl_GetHashValue(entry));
 		Tcl_DeleteHashEntry(entry);
@@ -3514,23 +3516,21 @@ MigrateHashEntries(
 
     if (offset > 0) {
 	for (i = last; i >= first; i--) {
-	    entry = Tcl_FindHashEntry(table, (char *) INT2PTR(i));
+	    entry = Tcl_FindHashEntry(table, KEY(i));
 	    if (entry != NULL) {
 		clientData = Tcl_GetHashValue(entry);
 		Tcl_DeleteHashEntry(entry);
-		entry = Tcl_CreateHashEntry(table,
-			(char *) INT2PTR(i + offset), &isNew);
+		entry = Tcl_CreateHashEntry(table, KEY(i + offset), &isNew);
 		Tcl_SetHashValue(entry, clientData);
 	    }
 	}
     } else {
 	for (i = first; i <= last; i++) {
-	    entry = Tcl_FindHashEntry(table, (char *) INT2PTR(i));
+	    entry = Tcl_FindHashEntry(table, KEY(i));
 	    if (entry != NULL) {
 		clientData = Tcl_GetHashValue(entry);
 		Tcl_DeleteHashEntry(entry);
-		entry = Tcl_CreateHashEntry(table,
-			(char *) INT2PTR(i + offset), &isNew);
+		entry = Tcl_CreateHashEntry(table, KEY(i + offset), &isNew);
 		Tcl_SetHashValue(entry, clientData);
 	    }
 	}

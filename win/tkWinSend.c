@@ -55,7 +55,7 @@ typedef struct {
     int initialized;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
-#endif
+#endif /* TK_SEND_ENABLED_ON_WINDOWS */
 
 /*
  * Functions internal to this file.
@@ -66,12 +66,12 @@ static void		CmdDeleteProc(ClientData clientData);
 static void		InterpDeleteProc(ClientData clientData,
 			    Tcl_Interp *interp);
 static void		RevokeObjectRegistration(RegisteredInterp *riPtr);
-#endif
+#endif /* TK_SEND_ENABLED_ON_WINDOWS */
 static HRESULT		BuildMoniker(const char *name, LPMONIKER *pmk);
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
 static HRESULT		RegisterInterp(const char *name,
 			    RegisteredInterp *riPtr);
-#endif
+#endif /* TK_SEND_ENABLED_ON_WINDOWS */
 static int		FindInterpreterObject(Tcl_Interp *interp,
 			    const char *name, LPDISPATCH *ppdisp);
 static int		Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
@@ -85,7 +85,7 @@ static Tcl_EventProc	SendEventProc;
 #define TRACE SendTrace
 #else
 #define TRACE 1 ? ((void)0) : SendTrace
-#endif
+#endif /* DEBUG || _DEBUG */
 
 /*
  *--------------------------------------------------------------
@@ -553,7 +553,7 @@ RevokeObjectRegistration(
 	riPtr->name = NULL;
     }
 }
-#endif
+#endif /* TK_SEND_ENABLED_ON_WINDOWS */
 
 /*
  * ----------------------------------------------------------------------
@@ -580,7 +580,7 @@ InterpDeleteProc(
 {
     CoUninitialize();
 }
-#endif
+#endif /* TK_SEND_ENABLED_ON_WINDOWS */
 
 /*
  * ----------------------------------------------------------------------
@@ -701,7 +701,7 @@ RegisterInterp(
     Tcl_DStringFree(&dString);
     return hr;
 }
-#endif
+#endif /* TK_SEND_ENABLED_ON_WINDOWS */
 
 /*
  * ----------------------------------------------------------------------
@@ -782,21 +782,14 @@ Send(
      * variables.
      */
 
-    if (hr == DISP_E_EXCEPTION) {
+    if (hr == DISP_E_EXCEPTION && ei.bstrSource != NULL) {
 	Tcl_Obj *opError, *opErrorCode, *opErrorInfo;
 
-	if (ei.bstrSource != NULL) {
-	    int len;
-	    const char *szErrorInfo;
-
-	    opError = Tcl_NewUnicodeObj(ei.bstrSource, -1);
-	    Tcl_ListObjIndex(interp, opError, 0, &opErrorCode);
-	    Tcl_SetObjErrorCode(interp, opErrorCode);
-
-	    Tcl_ListObjIndex(interp, opError, 1, &opErrorInfo);
-	    szErrorInfo = Tcl_GetStringFromObj(opErrorInfo, &len);
-	    Tcl_AddObjErrorInfo(interp, szErrorInfo, len);
-	}
+	opError = Tcl_NewUnicodeObj(ei.bstrSource, -1);
+	Tcl_ListObjIndex(interp, opError, 0, &opErrorCode);
+	Tcl_SetObjErrorCode(interp, opErrorCode);
+	Tcl_ListObjIndex(interp, opError, 1, &opErrorInfo);
+	Tcl_AppendObjToErrorInfo(interp, opErrorInfo);
     }
 
     /*
@@ -852,7 +845,7 @@ Win32ErrorObj(
     errPtr = Tcl_NewUnicodeObj(lpBuffer, (int)wcslen(lpBuffer));
 #else
     errPtr = Tcl_NewStringObj(lpBuffer, (int)strlen(lpBuffer));
-#endif
+#endif /* _UNICODE */
 
     if (lpBuffer != sBuffer) {
 	LocalFree((HLOCAL)lpBuffer);
@@ -864,7 +857,7 @@ Win32ErrorObj(
 /*
  * ----------------------------------------------------------------------
  *
- * SetErrorInfo --
+ * TkWinSend_SetExcepInfo --
  *
  *	Convert the error information from a Tcl interpreter into a COM
  *	exception structure. This information is then registered with the COM
@@ -881,48 +874,51 @@ Win32ErrorObj(
  */
 
 void
-SetExcepInfo(
-    Tcl_Interp* interp,
+TkWinSend_SetExcepInfo(
+    Tcl_Interp *interp,
     EXCEPINFO *pExcepInfo)
 {
-    if (pExcepInfo) {
-	Tcl_Obj *opError, *opErrorInfo, *opErrorCode;
-	ICreateErrorInfo *pCEI;
-	IErrorInfo *pEI, **ppEI = &pEI;
-	HRESULT hr;
+    Tcl_Obj *opError, *opErrorInfo, *opErrorCode;
+    ICreateErrorInfo *pCEI;
+    IErrorInfo *pEI, **ppEI = &pEI;
+    HRESULT hr;
 
-	opError = Tcl_GetObjResult(interp);
-	opErrorInfo = Tcl_GetVar2Ex(interp, "errorInfo",NULL, TCL_GLOBAL_ONLY);
-	opErrorCode = Tcl_GetVar2Ex(interp, "errorCode",NULL, TCL_GLOBAL_ONLY);
-
-	if (Tcl_IsShared(opErrorCode)) {
-	    Tcl_Obj *ec = Tcl_DuplicateObj(opErrorCode);
-
-	    Tcl_IncrRefCount(ec);
-	    Tcl_DecrRefCount(opErrorCode);
-	    opErrorCode = ec;
-	}
-	Tcl_ListObjAppendElement(interp, opErrorCode, opErrorInfo);
-
-	pExcepInfo->bstrDescription = SysAllocString(Tcl_GetUnicode(opError));
-	pExcepInfo->bstrSource = SysAllocString(Tcl_GetUnicode(opErrorCode));
-	pExcepInfo->scode = E_FAIL;
-
-	hr = CreateErrorInfo(&pCEI);
-	if (SUCCEEDED(hr)) {
-	    hr = pCEI->lpVtbl->SetGUID(pCEI, &IID_IDispatch);
-	    hr = pCEI->lpVtbl->SetDescription(pCEI,
-		    pExcepInfo->bstrDescription);
-	    hr = pCEI->lpVtbl->SetSource(pCEI, pExcepInfo->bstrSource);
-	    hr = pCEI->lpVtbl->QueryInterface(pCEI, &IID_IErrorInfo,
-		    (void**) ppEI);
-	    if (SUCCEEDED(hr)) {
-		SetErrorInfo(0, pEI);
-		pEI->lpVtbl->Release(pEI);
-	    }
-	    pCEI->lpVtbl->Release(pCEI);
-	}
+    if (!pExcepInfo) {
+	return;
     }
+
+    opError = Tcl_GetObjResult(interp);
+    opErrorInfo = Tcl_GetVar2Ex(interp, "errorInfo", NULL, TCL_GLOBAL_ONLY);
+    opErrorCode = Tcl_GetVar2Ex(interp, "errorCode", NULL, TCL_GLOBAL_ONLY);
+
+    /*
+     * Pack the trace onto the end of the Tcl exception descriptor.
+     */
+
+    opErrorCode = Tcl_DuplicateObj(opErrorCode);
+    Tcl_IncrRefCount(opErrorCode);
+    Tcl_ListObjAppendElement(interp, opErrorCode, opErrorInfo);
+    /* TODO: Handle failure to append */
+
+    pExcepInfo->bstrDescription = SysAllocString(Tcl_GetUnicode(opError));
+    pExcepInfo->bstrSource = SysAllocString(Tcl_GetUnicode(opErrorCode));
+    Tcl_DecrRefCount(opErrorCode);
+    pExcepInfo->scode = E_FAIL;
+
+    hr = CreateErrorInfo(&pCEI);
+    if (!SUCCEEDED(hr)) {
+	return;
+    }
+
+    hr = pCEI->lpVtbl->SetGUID(pCEI, &IID_IDispatch);
+    hr = pCEI->lpVtbl->SetDescription(pCEI, pExcepInfo->bstrDescription);
+    hr = pCEI->lpVtbl->SetSource(pCEI, pExcepInfo->bstrSource);
+    hr = pCEI->lpVtbl->QueryInterface(pCEI, &IID_IErrorInfo, (void **) ppEI);
+    if (SUCCEEDED(hr)) {
+	SetErrorInfo(0, pEI);
+	pEI->lpVtbl->Release(pEI);
+    }
+    pCEI->lpVtbl->Release(pCEI);
 }
 
 /*

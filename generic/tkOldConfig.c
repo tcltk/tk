@@ -96,6 +96,7 @@ Tk_ConfigureWidget(
 	 */
 
 	Tcl_AppendResult(interp, "NULL main window", NULL);
+	Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
 	return TCL_ERROR;
     }
 
@@ -136,6 +137,7 @@ Tk_ConfigureWidget(
 
 	if (argc < 2) {
 	    Tcl_AppendResult(interp, "value for \"", arg, "\" missing", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", NULL);
 	    return TCL_ERROR;
 	}
 	if (flags & TK_CONFIG_OBJS) {
@@ -144,11 +146,8 @@ Tk_ConfigureWidget(
 	    arg = argv[1];
 	}
 	if (DoConfig(interp, tkwin, specPtr, arg, 0, widgRec) != TCL_OK) {
-	    char msg[100];
-
-	    sprintf(msg, "\n    (processing \"%.40s\" option)",
-		    specPtr->argvName);
-	    Tcl_AddErrorInfo(interp, msg);
+	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
+		    "\n    (processing \"%.40s\" option)",specPtr->argvName));
 	    return TCL_ERROR;
 	}
 	if (!(flags & TK_CONFIG_ARGV_ONLY)) {
@@ -181,12 +180,10 @@ Tk_ConfigureWidget(
 	    if (value != NULL) {
 		if (DoConfig(interp, tkwin, specPtr, value, 1, widgRec) !=
 			TCL_OK) {
-		    char msg[200];
-
-		    sprintf(msg, "\n    (%s \"%.50s\" in widget \"%.50s\")",
-			    "database entry for",
-			    specPtr->dbName, Tk_PathName(tkwin));
-		    Tcl_AddErrorInfo(interp, msg);
+		    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
+			    "\n    (%s \"%.50s\" in widget \"%.50s\")",
+			    "database entry for", specPtr->dbName,
+			    Tk_PathName(tkwin)));
 		    return TCL_ERROR;
 		}
 	    } else {
@@ -199,13 +196,10 @@ Tk_ConfigureWidget(
 			& TK_CONFIG_DONT_SET_DEFAULT)) {
 		    if (DoConfig(interp, tkwin, specPtr, value, 1, widgRec) !=
 			    TCL_OK) {
-			char msg[200];
-
-			sprintf(msg,
+			Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 				"\n    (%s \"%.50s\" in widget \"%.50s\")",
-				"default value for",
-				specPtr->dbName, Tk_PathName(tkwin));
-			Tcl_AddErrorInfo(interp, msg);
+				"default value for", specPtr->dbName,
+				Tk_PathName(tkwin)));
 			return TCL_ERROR;
 		    }
 		}
@@ -274,6 +268,7 @@ FindConfigSpec(
 	if (matchPtr != NULL) {
 	    Tcl_AppendResult(interp, "ambiguous option \"", argvName,
 		    "\"", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName,NULL);
 	    return NULL;
 	}
 	matchPtr = specPtr;
@@ -281,6 +276,7 @@ FindConfigSpec(
 
     if (matchPtr == NULL) {
 	Tcl_AppendResult(interp, "unknown option \"", argvName, "\"", NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName, NULL);
 	return NULL;
     }
 
@@ -296,6 +292,8 @@ FindConfigSpec(
 	    if (specPtr->type == TK_CONFIG_END) {
 		Tcl_AppendResult(interp, "couldn't find synonym for option \"",
 			argvName, "\"", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName,
+			NULL);
 		return NULL;
 	    }
 	    if ((specPtr->dbName == matchPtr->dbName)
@@ -546,13 +544,11 @@ DoConfig(
 		return TCL_ERROR;
 	    }
 	    break;
-	default: {
-	    char buf[64 + TCL_INTEGER_SPACE];
-
-	    sprintf(buf, "bad config table: unknown type %d", specPtr->type);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	default:
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad config table: unknown type %d", specPtr->type));
+	    Tcl_SetErrorCode(interp, "TK", "BAD_CONFIG", NULL);
 	    return TCL_ERROR;
-	}
 	}
 	specPtr++;
     } while ((specPtr->argvName == NULL) && (specPtr->type != TK_CONFIG_END));

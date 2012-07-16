@@ -149,11 +149,13 @@ FileReadPPM(
     if (type == 0) {
 	Tcl_AppendResult(interp, "couldn't read raw PPM header from file \"",
 		fileName, "\"", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "NO_HEADER", NULL);
 	return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
 	Tcl_AppendResult(interp, "PPM image file \"", fileName,
 		"\" has dimension(s) <= 0", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "DIMENSIONS", NULL);
 	return TCL_ERROR;
     }
     if ((maxIntensity <= 0) || (maxIntensity >= 256)) {
@@ -162,6 +164,7 @@ FileReadPPM(
 	sprintf(buffer, "%d", maxIntensity);
 	Tcl_AppendResult(interp, "PPM image file \"", fileName,
 		"\" has bad maximum intensity value ", buffer, NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "INTENSITY", NULL);
 	return TCL_ERROR;
     }
 
@@ -484,11 +487,13 @@ StringReadPPM(
     if (type == 0) {
 	Tcl_AppendResult(interp, "couldn't read raw PPM header from string",
 		NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "NO_HEADER", NULL);
 	return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
 	Tcl_AppendResult(interp, "PPM image data has dimension(s) <= 0",
 		NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "DIMENSIONS", NULL);
 	return TCL_ERROR;
     }
     if ((maxIntensity <= 0) || (maxIntensity >= 256)) {
@@ -498,6 +503,7 @@ StringReadPPM(
 	Tcl_AppendResult(interp,
 		"PPM image data has bad maximum intensity value ", buffer,
 		NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "INTENSITY", NULL);
 	return TCL_ERROR;
     }
 
@@ -539,6 +545,7 @@ StringReadPPM(
 
 	if (block.pitch*height > dataSize) {
 	    Tcl_AppendResult(interp, "truncated PPM data", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "TRUNCATED", NULL);
 	    return TCL_ERROR;
 	}
 	block.pixelPtr = dataBuffer + srcX * block.pixelSize;
@@ -573,6 +580,7 @@ StringReadPPM(
 	if (dataSize < nBytes) {
 	    ckfree(pixelPtr);
 	    Tcl_AppendResult(interp, "truncated PPM data", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "TRUNCATED", NULL);
 	    return TCL_ERROR;
 	}
 	for (p=pixelPtr,count=nBytes ; count>0 ; count--,p++,dataBuffer++) {
