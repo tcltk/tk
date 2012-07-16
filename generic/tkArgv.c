@@ -70,7 +70,7 @@ Tk_ParseArgv(
     register const Tk_ArgvInfo *infoPtr;
 				/* Pointer to the current entry in the table
 				 * of argument descriptions. */
-    const Tk_ArgvInfo *matchPtr;	/* Descriptor that matches current argument. */
+    const Tk_ArgvInfo *matchPtr;/* Descriptor that matches current argument. */
     const char *curArg;		/* Current argument */
     register char c;		/* Second character of current arg (used for
 				 * quick check for matching; use 2nd char.
@@ -83,6 +83,7 @@ Tk_ParseArgv(
 				 * than srcIndex). */
     int argc;			/* # arguments in argv still to process. */
     size_t length;		/* Number of characters in current argument. */
+    char *endPtr;		/* Used for identifying junk in arguments. */
     int i;
 
     if (flags & TK_ARGV_DONT_SKIP_FIRST_ARG) {
@@ -139,8 +140,9 @@ Tk_ParseArgv(
 		    continue;
 		}
 		if (matchPtr != NULL) {
-		    Tcl_AppendResult(interp, "ambiguous option \"", curArg,
-			    "\"", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "ambiguous option \"%s\"", curArg));
+		    Tcl_SetErrorCode(interp, "TK", "ARG", "AMBIGUOUS", NULL);
 		    return TCL_ERROR;
 		}
 		matchPtr = infoPtr;
@@ -153,8 +155,9 @@ Tk_ParseArgv(
 	     */
 
 	    if (flags & TK_ARGV_NO_LEFTOVERS) {
-		Tcl_AppendResult(interp, "unrecognized argument \"",
-			curArg, "\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"unrecognized argument \"%s\"", curArg));
+		Tcl_SetErrorCode(interp, "TK", "ARG", "UNRECOGNIZED", NULL);
 		return TCL_ERROR;
 	    }
 	    argv[dstIndex] = curArg;
@@ -175,19 +178,17 @@ Tk_ParseArgv(
 	case TK_ARGV_INT:
 	    if (argc == 0) {
 		goto missingArg;
-	    } else {
-		char *endPtr;
-
-		*((int *) infoPtr->dst) = strtol(argv[srcIndex], &endPtr, 0);
-		if ((endPtr == argv[srcIndex]) || (*endPtr != 0)) {
-		    Tcl_AppendResult(interp,"expected integer argument for \"",
-			    infoPtr->key, "\" but got \"", argv[srcIndex],
-			    "\"", NULL);
-		    return TCL_ERROR;
-		}
-		srcIndex++;
-		argc--;
 	    }
+	    *((int *) infoPtr->dst) = strtol(argv[srcIndex], &endPtr, 0);
+	    if ((endPtr == argv[srcIndex]) || (*endPtr != 0)) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"expected %s argument for \"%s\" but got \"%s\"",
+			"integer", infoPtr->key, argv[srcIndex]));
+		Tcl_SetErrorCode(interp, "TK", "ARG", "INTEGER", NULL);
+		return TCL_ERROR;
+	    }
+	    srcIndex++;
+	    argc--;
 	    break;
 	case TK_ARGV_STRING:
 	    if (argc == 0) {
@@ -211,19 +212,17 @@ Tk_ParseArgv(
 	case TK_ARGV_FLOAT:
 	    if (argc == 0) {
 		goto missingArg;
-	    } else {
-		char *endPtr;
-
-		*((double *) infoPtr->dst) = strtod(argv[srcIndex], &endPtr);
-		if ((endPtr == argv[srcIndex]) || (*endPtr != 0)) {
-		    Tcl_AppendResult(interp, "expected floating-point ",
-			    "argument for \"", infoPtr->key, "\" but got \"",
-			    argv[srcIndex], "\"", NULL);
-		    return TCL_ERROR;
-		}
-		srcIndex++;
-		argc--;
 	    }
+	    *((double *) infoPtr->dst) = strtod(argv[srcIndex], &endPtr);
+	    if ((endPtr == argv[srcIndex]) || (*endPtr != 0)) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"expected %s argument for \"%s\" but got \"%s\"",
+			"floating-point", infoPtr->key, argv[srcIndex]));
+		Tcl_SetErrorCode(interp, "TK", "ARG", "FLOAT", NULL);
+		return TCL_ERROR;
+	    }
+	    srcIndex++;
+	    argc--;
 	    break;
 	case TK_ARGV_FUNC: {
 	    typedef int (ArgvFunc)(char *, const char *, const char *);
@@ -249,6 +248,7 @@ Tk_ParseArgv(
 	}
 	case TK_ARGV_HELP:
 	    PrintUsage(interp, argTable, flags);
+	    Tcl_SetErrorCode(interp, "TK", "ARG", "HELP", NULL);
 	    return TCL_ERROR;
 	case TK_ARGV_CONST_OPTION:
 	    Tk_AddOption(tkwin, infoPtr->dst, infoPtr->src,
@@ -265,8 +265,10 @@ Tk_ParseArgv(
 	    break;
 	case TK_ARGV_OPTION_NAME_VALUE:
 	    if (argc < 2) {
-		Tcl_AppendResult(interp, "\"", curArg,
-			"\" option requires two following arguments", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"\"%s\" option requires two following arguments",
+			curArg));
+		Tcl_SetErrorCode(interp, "TK", "ARG", "NAME_VALUE", NULL);
 		return TCL_ERROR;
 	    }
 	    Tk_AddOption(tkwin, argv[srcIndex], argv[srcIndex+1],
@@ -274,13 +276,11 @@ Tk_ParseArgv(
 	    srcIndex += 2;
 	    argc -= 2;
 	    break;
-	default: {
-	    char buf[64 + TCL_INTEGER_SPACE];
-
-	    sprintf(buf, "bad argument type %d in Tk_ArgvInfo", infoPtr->type);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	default:
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad argument type %d in Tk_ArgvInfo", infoPtr->type));
+	    Tcl_SetErrorCode(interp, "TK", "ARG", "BAD_TYPE", NULL);
 	    return TCL_ERROR;
-	}
 	}
     }
 
@@ -301,8 +301,9 @@ Tk_ParseArgv(
     return TCL_OK;
 
   missingArg:
-    Tcl_AppendResult(interp, "\"", curArg,
-	    "\" option requires an additional argument", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "\"%s\" option requires an additional argument", curArg));
+    Tcl_SetErrorCode(interp, "TK", "ARG", "MISSING", NULL);
     return TCL_ERROR;
 }
 

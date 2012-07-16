@@ -432,6 +432,8 @@ FileReadGIF(
 	if (i == (argc-1)) {
 	    Tcl_AppendResult(interp, "no value given for \"",
 		    Tcl_GetString(objv[i]), "\" option", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "OPT_VALUE",
+		    NULL);
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, objv[++i], &index) != TCL_OK) {
@@ -446,11 +448,13 @@ FileReadGIF(
     if (!ReadGIFHeader(gifConfPtr, chan, &fileWidth, &fileHeight)) {
 	Tcl_AppendResult(interp, "couldn't read GIF header from file \"",
 		fileName, "\"", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "HEADER", NULL);
 	return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
 	Tcl_AppendResult(interp, "GIF image file \"", fileName,
 		"\" has dimension(s) <= 0", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BOGUS_SIZE", NULL);
 	return TCL_ERROR;
     }
 
@@ -466,6 +470,8 @@ FileReadGIF(
     if (BitSet(buf[0], LOCALCOLORMAP)) {	/* Global Colormap */
 	if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
 	    Tcl_AppendResult(interp, "error reading color map", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLOR_MAP",
+		    NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -503,12 +509,15 @@ FileReadGIF(
 
 	    Tcl_AppendResult(interp,
 		    "premature end of image data for this index", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "PREMATURE_END",
+		    NULL);
 	    goto error;
 	}
 
 	switch (buf[0]) {
 	case GIF_TERMINATOR:
 	    Tcl_AppendResult(interp, "no image data for this index", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "NO_DATA", NULL);
 	    goto error;
 
 	case GIF_EXTENSION:
@@ -520,12 +529,16 @@ FileReadGIF(
 		Tcl_SetResult(interp,
 			"error reading extension function code in GIF image",
 			TCL_STATIC);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
+			NULL);
 		goto error;
 	    }
 	    if (DoExtension(gifConfPtr, chan, buf[0],
 		    gifConfPtr->workingBuffer, &transparent) < 0) {
 		Tcl_SetResult(interp, "error reading extension in GIF image",
 			TCL_STATIC);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
+			NULL);
 		goto error;
 	    }
 	    continue;
@@ -534,6 +547,8 @@ FileReadGIF(
 		Tcl_SetResult(interp,
 			"couldn't read left/top/width/height in GIF image",
 			TCL_STATIC);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "DIMENSIONS",
+			NULL);
 		goto error;
 	    }
 	    break;
@@ -562,6 +577,8 @@ FileReadGIF(
 	    if (BitSet(buf[8], LOCALCOLORMAP)) {
 		if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
 		    Tcl_AppendResult(interp, "error reading color map", NULL);
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF",
+			    "COLOR_MAP", NULL);
 		    goto error;
 		}
 	    }
@@ -609,6 +626,7 @@ FileReadGIF(
     if (BitSet(buf[8], LOCALCOLORMAP)) {
 	if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
 	    Tcl_AppendResult(interp, "error reading color map", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLOR_MAP", NULL);
 	    goto error;
 	}
     }
@@ -1018,6 +1036,7 @@ ReadImage(
 
     if (initialCodeSize > MAX_LWZ_BITS) {
 	Tcl_SetResult(interp, "malformed image", TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "MALFORMED", NULL);
 	return TCL_ERROR;
     }
 
@@ -1690,6 +1709,7 @@ CommonWriteGIF(
     SaveMap(&state, blockPtr);
     if (state.num >= MAXCOLORMAPSIZE) {
 	Tcl_AppendResult(interp, "too many colors", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLORFUL", NULL);
 	return TCL_ERROR;
     }
     if (state.num<2) {
