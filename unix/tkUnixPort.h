@@ -126,6 +126,10 @@
 #   define WPARAM void *
 #   define LPARAM void *
 #   define LRESULT void *
+
+EXTERN int TkPutImage (unsigned long *, int, Display *, Drawable, GC,
+	XImage *, int, int, int, int, unsigned int, unsigned int);
+
 #else /* !__CYGWIN__ */
     /*
      * The TkPutImage macro strips off the color table information, which isn't
