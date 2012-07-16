@@ -548,11 +548,9 @@ TkCanvPostscriptCmd(
 	result = itemPtr->typePtr->postscriptProc(interp,
 		(Tk_Canvas) canvasPtr, itemPtr, 0);
 	if (result != TCL_OK) {
-	    char msg[64 + TCL_INTEGER_SPACE];
-
-	    sprintf(msg, "\n    (generating Postscript for item %d)",
-		    itemPtr->id);
-	    Tcl_AddErrorInfo(interp, msg);
+	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
+		    "\n    (generating Postscript for item %d)",
+		    itemPtr->id));
 	    goto cleanup;
 	}
 	Tcl_AppendResult(interp, "grestore\n", NULL);
