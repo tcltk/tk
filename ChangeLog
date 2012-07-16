@@ -69,7 +69,8 @@
 2012-06-07  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.decls:   Change XChangeWindowAttributes signature and
-	* generic/tkIntXlibDeclsDecls.h: many others to match Xorg, needed for Cygwin.
+	* generic/tkIntXlibDeclsDecls.h: many others to match Xorg, needed for
+	Cygwin.
 
 2012-06-06  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -86,22 +87,22 @@
 
 2012-05-30  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tkWindow.c:    Simpify determination whether we are running on cygwin.
-	* generic/tkStubInit.c:  Export Tk_GetHINSTANCE, TkSetPixmapColormap and
-	* generic/tkInt.decls: 	 TkpPrintWindowId on the Cygwin dll, sync stub table
-	with Tk 8.6 win32 version.
+	* generic/tkWindow.c:	Simplify determination whether we are running
+	* generic/tkStubInit.c:	on cygwin.  Export Tk_GetHINSTANCE,
+	* generic/tkInt.decls:	TkSetPixmapColormap and TkpPrintWindowId on the
+	Cygwin dll, sync stub table with Tk 8.6 win32 version.
 	* generic/tk*Decls.h:    re-generated
-	* win/Makefile.in:       Fix "make genstubs" when cross-compiling on UNIX
+	* win/Makefile.in:       "make genstubs" when cross-compiling on UNIX
 
 2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
 
-	* doc/text.n:  [Bug 1630251]: Documentation for -endline option was wrong
+	* doc/text.n:  [Bug 1630251]: Doc for -endline option was wrong
 
 2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
 
-	* generic/tkTextDisp.c:    [Bug 1630254]: missing scrolling of text widget
-	when from a -startline == -endline initial state it is configured to display
-	a non-empty part of it
+	* generic/tkTextDisp.c: [Bug 1630254]: missing scrolling of text widget
+	when from a -startline == -endline initial state it is configured to
+	display a non-empty part of it
 
 2012-05-24  Jan Nijtmans  <nijtmans@users.sf.net>
 
@@ -121,15 +122,16 @@
 2012-05-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* xlib/xcolors.c:      Single "const" addition
-	* generic/tkWindow.c:  If tk.dll loaded in cygwin, don't use the win32 file dialogs
+	* generic/tkWindow.c:  If tk.dll loaded in cygwin, don't use the
+	win32 file dialogs
 
 2012-05-04  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* library/menu.tcl:    [Bug 2768586]: Menu posting problem on dual monitors
+	* library/menu.tcl: [Bug 2768586]: Menu posting on dual monitors
 
 2012-05-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* library/tk.tcl:    [Bug 533519]: Window placement with multiple screens
+	* library/tk.tcl: [Bug 533519]: Window placement with multiple screens
 	* generic/tkBind.c:
 	* generic/tkFocus.c:
 	* generic/tkMenuDraw.c:
@@ -142,12 +144,13 @@
 
 2012-04-26  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* generic/tk.decls:      [Bug 3508771]: Implement TkClipBox, Tk*Region and
-	* generic/tkInt.decls:   Tk_GetHINSTANCE for Cygwin
+	* generic/tk.decls:	[Bug 3508771]: Implement TkClipBox, Tk*Region
+	* generic/tkInt.decls:	and Tk_GetHINSTANCE for Cygwin
 	* generic/tkPlatDecls.h:
 	* generic/tkintDecls.h:
 	* generic/tkStubInit.c:
-	* unix/Makefile.in:   [Bug 3519917]: Snow Leopard unix/Makefile `make test` fail
+	* unix/Makefile.in:   [Bug 3519917]: Snow Leopard unix/Makefile
+	`make test` fail
 
 2012-04-22  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -238,6 +241,11 @@
 	Tkinter's handling of multiple filename results. Issue was reported
 	via StackOverflow: http://stackoverflow.com/q/9227859/301832
 
+2012-01-30  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/combobox.tcl: [Bug 2925561] Don't take focus in
+	disabled state.
+
 2012-01-29  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkImgPhoto.c: [Bug 3480634]: PNG Images missing in menus on Mac
@@ -280,6 +288,11 @@
 
 	* generic/tkText.c: [Bug-3021557]: Moving the cursor in
 	* tests/text.test:  elided text freezes Tk
+
+2011-12-22  Don Porter  <dgp@users.sourceforge.net>
+
+	* win/tkWinMenu.c: [Bug 3235256] Keep menu entry IDs out of system
+	values. Thanks Colin McDonald. 
 
 2011-11-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
