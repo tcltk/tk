@@ -348,10 +348,8 @@ RectOvalCoords(
      */
 
     if (objc != 4) {
-	char buf[64 + TCL_INTEGER_SPACE];
-
-	sprintf(buf, "wrong # coordinates: expected 0 or 4, got %d", objc);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"wrong # coordinates: expected 0 or 4, got %d", objc));
 	return TCL_ERROR;
     }
 

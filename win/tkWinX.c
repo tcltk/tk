@@ -120,20 +120,19 @@ TkGetServerInfo(
     Tk_Window tkwin)		/* Token for window; this selects a particular
 				 * display and server. */
 {
-    char buffer[60];
     OSVERSIONINFO os;
 
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&os);
-    sprintf(buffer, "Windows %d.%d %d %s", (int)os.dwMajorVersion,
-	    (int)os.dwMinorVersion, (int)os.dwBuildNumber,
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Windows %d.%d %d %s",
+	    (int) os.dwMajorVersion, (int) os.dwMinorVersion,
+	    (int) os.dwBuildNumber,
 #ifdef _WIN64
 	    "Win64"
 #else
 	    "Win32"
 #endif
-	    );
-    Tcl_SetResult(interp, buffer, TCL_VOLATILE);
+	    ));
 }
 
 /*

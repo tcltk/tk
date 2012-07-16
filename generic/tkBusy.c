@@ -689,6 +689,7 @@ GetBusy(
     if (hPtr == NULL) {
 	Tcl_AppendResult(interp, "can't find busy window \"",
 		Tcl_GetString(windowObj), "\"", NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "BUSY", NULL);
 	return NULL;
     }
     return Tcl_GetHashValue(hPtr);

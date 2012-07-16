@@ -176,6 +176,7 @@ Tk_GetVisual(
 	    Tcl_ResetResult(interp);
 	    Tcl_AppendResult(interp, "bad X identifier for visual: \"",
 		    string, "\"", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "VISUALID", NULL);
 	    return NULL;
 	}
 	template.visualid = visualId;
@@ -204,6 +205,7 @@ Tk_GetVisual(
 	if (template.class == -1) {
 	    Tcl_AppendResult(interp, "unknown or ambiguous visual name \"",
 		    string, "\": class must be ", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "VISUAL", NULL);
 	    for (dictPtr = visualNames; dictPtr->name != NULL; dictPtr++) {
 		Tcl_AppendResult(interp, dictPtr->name, ", ", NULL);
 	    }
@@ -239,6 +241,7 @@ Tk_GetVisual(
     if (visInfoList == NULL) {
 	Tcl_SetResult(interp, "couldn't find an appropriate visual",
 		TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "VISUAL", "INAPPROPRIATE", NULL);
 	return NULL;
     }
 
@@ -405,11 +408,13 @@ Tk_GetColormap(
     if (Tk_Screen(other) != Tk_Screen(tkwin)) {
 	Tcl_AppendResult(interp, "can't use colormap for ", string,
 		": not on same screen", NULL);
+	Tcl_SetErrorCode(interp, "TK", "COLORMAP", "SCREEN", NULL);
 	return None;
     }
     if (Tk_Visual(other) != Tk_Visual(tkwin)) {
 	Tcl_AppendResult(interp, "can't use colormap for ", string,
 		": incompatible visuals", NULL);
+	Tcl_SetErrorCode(interp, "TK", "COLORMAP", "INCOMPATIBLE", NULL);
 	return None;
     }
     colormap = Tk_Colormap(other);

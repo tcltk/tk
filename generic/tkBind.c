@@ -2926,6 +2926,7 @@ HandleEventGenerate(
 	    || (mainPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr)) {
 	Tcl_AppendResult(interp, "window id \"", Tcl_GetString(objv[0]),
 		"\" doesn't exist in this application", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "FOREIGN_TARGET", NULL);
 	return TCL_ERROR;
     }
 
@@ -2941,11 +2942,13 @@ HandleEventGenerate(
     if (count != 1) {
 	Tcl_SetResult(interp, "Double or Triple modifier not allowed",
 		TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", NULL);
 	return TCL_ERROR;
     }
     if (*p != '\0') {
 	Tcl_SetResult(interp, "only one event specification allowed",
 		TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "MULTIPLE", NULL);
 	return TCL_ERROR;
     }
 
@@ -3023,6 +3026,7 @@ HandleEventGenerate(
 
 	    Tcl_AppendResult(interp, "value for \"", Tcl_GetString(optionPtr),
 		    "\" missing", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "MISSING_VALUE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3165,6 +3169,7 @@ HandleEventGenerate(
 	    if (keysym == NoSymbol) {
 		Tcl_AppendResult(interp, "unknown keysym \"", value, "\"",
 			NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", NULL);
 		return TCL_ERROR;
 	    }
 
@@ -3172,6 +3177,7 @@ HandleEventGenerate(
 	    if (event.general.xkey.keycode == 0) {
 		Tcl_AppendResult(interp, "no keycode for keysym \"", value,
 			"\"", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", NULL);
 		return TCL_ERROR;
 	    }
 	    if (!(flags & KEY)
@@ -3402,6 +3408,7 @@ HandleEventGenerate(
     badopt:
 	Tcl_AppendResult(interp, name, " event doesn't accept \"",
 		Tcl_GetString(optionPtr), "\" option", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", NULL);
 	return TCL_ERROR;
     }
 
@@ -3496,6 +3503,7 @@ NameToWindow(
 
   badWindow:
     Tcl_AppendResult(interp, "bad window name/identifier \"",name,"\"", NULL);
+    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", NULL);
     return TCL_ERROR;
 }
 
@@ -3560,6 +3568,7 @@ GetVirtualEventUid(
 	    virtString[length - 2] != '>' || virtString[length - 1] != '>') {
 	Tcl_AppendResult(interp, "virtual event \"", virtString,
 		"\" is badly formed", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED", NULL);
 	return NULL;
     }
     virtString[length - 2] = '\0';
@@ -3654,6 +3663,8 @@ FindSequence(
 		Tcl_SetResult(interp,
 			"virtual event not allowed in definition of another virtual event",
 			TCL_STATIC);
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "INNER",
+			NULL);
 		return NULL;
 	    }
 	    virtualFound = 1;
@@ -3680,11 +3691,14 @@ FindSequence(
 
     if (numPats == 0) {
 	Tcl_SetResult(interp, "no events specified in binding", TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "NO_EVENTS", NULL);
 	return NULL;
     }
     if ((numPats > 1) && (virtualFound != 0)) {
 	Tcl_SetResult(interp, "virtual events may not be composed",
 		TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION",
+		NULL);
 	return NULL;
     }
 
@@ -3804,6 +3818,7 @@ ParseEventDescription(
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad ASCII character 0x%x", UCHAR(*p)));
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_CHAR", NULL);
 		count = 0;
 		goto done;
 	    }
@@ -3846,12 +3861,16 @@ ParseEventDescription(
 	if (p == field) {
 	    Tcl_SetResult(interp, "virtual event \"<<>>\" is badly formed",
 		    TCL_STATIC);
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED",
+		    NULL);
 	    count = 0;
 	    goto done;
 	}
 	if ((p == NULL) || (p[1] != '>')) {
 	    Tcl_SetResult(interp, "missing \">\" in virtual binding",
 		    TCL_STATIC);
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED",
+		    NULL);
 	    count = 0;
 	    goto done;
 	}
@@ -3920,6 +3939,7 @@ ParseEventDescription(
 	    } else if ((eventFlags & BUTTON) == 0) {
 		Tcl_AppendResult(interp, "specified button \"", field,
 			"\" for non-button event", NULL);
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "NON_BUTTON", NULL);
 		count = 0;
 		goto done;
 	    }
@@ -3931,6 +3951,7 @@ ParseEventDescription(
 	    if (patPtr->detail.keySym == NoSymbol) {
 		Tcl_AppendResult(interp, "bad event type or keysym \"",
 			field, "\"", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", NULL);
 		count = 0;
 		goto done;
 	    }
@@ -3940,6 +3961,7 @@ ParseEventDescription(
 	    } else if ((eventFlags & KEY) == 0) {
 		Tcl_AppendResult(interp, "specified keysym \"", field,
 			"\" for non-key event", NULL);
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "NON_KEY", NULL);
 		count = 0;
 		goto done;
 	    }
@@ -3947,6 +3969,7 @@ ParseEventDescription(
     } else if (eventFlags == 0) {
 	Tcl_SetResult(interp, "no event type or button # or keysym",
 		TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "UNMODIFIABLE", NULL);
 	count = 0;
 	goto done;
     }
@@ -3961,11 +3984,13 @@ ParseEventDescription(
 		Tcl_SetResult(interp,
 			"extra characters after detail in binding",
 			TCL_STATIC);
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "PAST_DETAIL", NULL);
 		count = 0;
 		goto done;
 	    }
 	}
 	Tcl_SetResult(interp, "missing \">\" in binding", TCL_STATIC);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "MALFORMED", NULL);
 	count = 0;
 	goto done;
     }
