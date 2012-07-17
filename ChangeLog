@@ -1,3 +1,7 @@
+2012-07-17  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/makefile.vc: [Bug 3544932]: Visual studio compiler check fails
+
 2012-07-08  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkIntXlibDecls.h: [Bug 3541305]: Xfree/Xsync...
