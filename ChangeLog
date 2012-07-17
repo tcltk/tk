@@ -1,3 +1,7 @@
+2012-07-17  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/makefile.vc: [Bug 3544932]: Visual studio compiler check fails
+
 2012-07-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c (GetFileNameW): [Bug 3540127]: Better solution,
