@@ -840,11 +840,11 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-threads        build with threads
-  --enable-shared         build and link with shared libraries --enable-shared
+  --enable-threads        build with threads (default: off)
+  --enable-shared         build and link with shared libraries (default: on)
   --enable-64bit          enable 64bit support (where applicable)
   --enable-wince          enable Win/CE support (where applicable)
-  --enable-symbols        build with debugging symbols --disable-symbols
+  --enable-symbols        build with debugging symbols (default: off)
   --enable-embedded-manifest
                           embed manifest if possible (default: yes)
 
