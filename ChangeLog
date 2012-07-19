@@ -1,3 +1,7 @@
+2012-07-??  Francois Vogel  <fvogelnew1@free.fr>
+
+	* unix/tkUnixMenuBu.c: [Bug 3545457]: Crash on packing a menubutton
+
 2012-07-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/makefile.vc: [Bug 3544932]: Visual studio compiler check fails
