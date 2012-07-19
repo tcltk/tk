@@ -1,4 +1,4 @@
-2012-07-??  Francois Vogel  <fvogelnew1@free.fr>
+2012-07-19  Francois Vogel  <fvogelnew1@free.fr>
 
 	* unix/tkUnixMenuBu.c: [Bug 3545457]: Crash on packing a menubutton
 
