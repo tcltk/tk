@@ -342,8 +342,9 @@ GetBitmap(
 	int result;
 
 	if (Tcl_IsSafe(interp)) {
-	    Tcl_AppendResult(interp, "can't specify bitmap with '@' in a",
-		    " safe interpreter", NULL);
+	    Tcl_SetResult(interp,
+		    "can't specify bitmap with '@' in a safe interpreter",
+		    TCL_STATIC);
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", NULL);
 	    goto error;
 	}
@@ -364,8 +365,8 @@ GetBitmap(
 		&bitmap, &dummy2, &dummy2);
 	if (result != BitmapSuccess) {
 	    if (interp != NULL) {
-		Tcl_AppendResult(interp, "error reading bitmap file \"",
-			string, "\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"error reading bitmap file \"%s\"", string));
 		Tcl_SetErrorCode(interp, "TK", "BITMAP", "FILE_ERROR", NULL);
 	    }
 	    Tcl_DStringFree(&buffer);
@@ -386,8 +387,8 @@ GetBitmap(
 
 	    if (bitmap == None) {
 		if (interp != NULL) {
-		    Tcl_AppendResult(interp, "bitmap \"", string,
-			    "\" not defined", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bitmap \"%s\" not defined", string));
 		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "BITMAP", NULL);
 		}
 		goto error;
@@ -490,8 +491,8 @@ Tk_DefineBitmap(
     predefHashPtr = Tcl_CreateHashEntry(&tsdPtr->predefBitmapTable,
 	    name, &isNew);
     if (!isNew) {
-	Tcl_AppendResult(interp, "bitmap \"", name, "\" is already defined",
-		NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bitmap \"%s\" is already defined", name));
 	Tcl_SetErrorCode(interp, "TK", "BITMAP", "EXISTS", NULL);
 	return TCL_ERROR;
     }
