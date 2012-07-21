@@ -260,6 +260,8 @@ BitmapCoords(
 	    } else if (objc != 2) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"wrong # coordinates: expected 2, got %d", objc));
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "BITMAP",
+			NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -273,6 +275,7 @@ BitmapCoords(
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 2, got %d", objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "BITMAP", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -934,8 +937,9 @@ BitmapToPostscript(
 	}
 	if (width > 60000) {
 	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "can't generate Postscript",
-		    " for bitmaps more than 60000 pixels wide", NULL);
+	    Tcl_SetResult(interp, "can't generate Postscript for bitmaps more"
+		    " than 60000 pixels wide", TCL_STATIC);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
 	    return TCL_ERROR;
 	}
 	rowsAtOnce = 60000/width;

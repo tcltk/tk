@@ -756,8 +756,9 @@ TkSmoothParseProc(
     while (methods != NULL) {
 	if (strncmp(value, methods->smooth.name, length) == 0) {
 	    if (smooth != NULL) {
-		Tcl_AppendResult(interp, "ambiguous smooth method \"", value,
-			"\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"ambiguous smooth method \"%s\"", value));
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "SMOOTH", NULL);
 		return TCL_ERROR;
 	    }
 	    smooth = &methods->smooth;
@@ -878,7 +879,7 @@ Tk_GetDash(
     if ((unsigned) ABS(dash->number) > sizeof(char *)) {
 	ckfree(dash->pattern.pt);
     }
-    if (argc > (int)sizeof(char *)) {
+    if (argc > (int) sizeof(char *)) {
 	dash->pattern.pt = pt = ckalloc(argc);
     } else {
 	pt = dash->pattern.array;
@@ -886,12 +887,12 @@ Tk_GetDash(
     dash->number = argc;
 
     largv = argv;
-    while (argc>0) {
+    while (argc > 0) {
 	if (Tcl_GetInt(interp, *largv, &i) != TCL_OK || i < 1 || i>255) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp,
-		    "expected integer in the range 1..255 but got \"",
-		    *largv, "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "expected integer in the range 1..255 but got \"%s\"",
+		    *largv));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "DASH", NULL);
 	    goto syntaxError;
 	}
 	*pt++ = i;
@@ -909,8 +910,10 @@ Tk_GetDash(
      */
 
   badDashList:
-    Tcl_AppendResult(interp, "bad dash list \"", value,
-	    "\": must be a list of integers or a format like \"-..\"", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad dash list \"%s\": must be a list of integers or a format like \"-..\"",
+	    value));
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "DASH", NULL);
   syntaxError:
     if (argv != NULL) {
 	ckfree(argv);
@@ -1252,9 +1255,9 @@ Tk_ChangeOutlineGC(
  *
  * Tk_ResetOutlineGC
  *
- *	Restores the GC to the situation before Tk_ChangeOutlineGC() was called.
- *	This function should be called just after the dashed item is drawn,
- *	because the GC is supposed to be read-only.
+ *	Restores the GC to the situation before Tk_ChangeOutlineGC() was
+ *	called. This function should be called just after the dashed item is
+ *	drawn, because the GC is supposed to be read-only.
  *
  * Results:
  *	1 if there is a stipple pattern, and 0 otherwise.
@@ -1731,7 +1734,7 @@ TkCanvTranslatePath(
      * This is the loop that makes the four passes through the data.
      */
 
-    for (j=0; j<4; j++){
+    for (j=0; j<4; j++) {
 	double xClip = limit[j];
 	int inside = a[0] < xClip;
 	double priorY = a[1];
@@ -1742,7 +1745,7 @@ TkCanvTranslatePath(
 	 * rotated by 90 degrees clockwise.
 	 */
 
-	for (i=0; i<numVertex; i++){
+	for (i=0; i<numVertex; i++) {
 	    double x = a[i*2];
 	    double y = a[i*2 + 1];
 
@@ -1833,7 +1836,7 @@ TkCanvTranslatePath(
      * XPoints and translate the origin for the drawable.
      */
 
-    for (i=0; i<numVertex; i++){
+    for (i=0; i<numVertex; i++) {
 	TranslateAndAppendCoords(canvPtr, a[i*2], a[i*2+1], outArr, i);
     }
     if (tempArr != staticSpace) {

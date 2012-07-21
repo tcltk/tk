@@ -394,10 +394,12 @@ LineCoords(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected an even number, got %d",
 		objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     } else if (objc < 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected at least 4, got %d", objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     }
 
@@ -1748,15 +1750,7 @@ GetLineIndex(
 	if (strncmp(string, "end", (unsigned) length) == 0) {
 	    *indexPtr = 2*linePtr->numPoints;
 	} else {
-	    /*
-	     * Some of the paths here leave messages in interp->result, so we
-	     * have to clear it out before storing our own message.
-	     */
-
-	badIndex:
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "bad index \"", string, "\"", NULL);
-	    return TCL_ERROR;
+	    goto badIndex;
 	}
     } else if (string[0] == '@') {
 	int i;
@@ -1797,6 +1791,17 @@ GetLineIndex(
 	}
     }
     return TCL_OK;
+
+    /*
+     * Some of the paths here leave messages in interp->result, so we have to
+     * clear it out before storing our own message.
+     */
+
+  badIndex:
+    Tcl_ResetResult(interp);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEMINDEX", "LINE", NULL);
+    return TCL_ERROR;
 }
 
 /*
@@ -1910,8 +1915,10 @@ ParseArrowShape(
 
   syntaxError:
     Tcl_ResetResult(interp);
-    Tcl_AppendResult(interp, "bad arrow shape \"", value,
-	    "\": must be list with three numbers", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad arrow shape \"%s\": must be list with three numbers",
+	    value));
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROWSHAPE", NULL);
     if (argv != NULL) {
 	ckfree(argv);
     }
@@ -2012,8 +2019,10 @@ ArrowParseProc(
 	return TCL_OK;
     }
 
-    Tcl_AppendResult(interp, "bad arrow spec \"", value,
-	    "\": must be none, first, last, or both", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad arrow spec \"%s\": must be none, first, last, or both",
+	    value));
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW", NULL);
     *arrowPtr = ARROWS_NONE;
     return TCL_ERROR;
 }

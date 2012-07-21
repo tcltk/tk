@@ -338,29 +338,32 @@ TextCoords(
 	subobj = Tcl_NewDoubleObj(textPtr->y);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	Tcl_SetObjResult(interp, obj);
-    } else if (objc < 3) {
-	if (objc == 1) {
-	    if (Tcl_ListObjGetElements(interp, objv[0], &objc,
-		    (Tcl_Obj ***) &objv) != TCL_OK) {
-		return TCL_ERROR;
-	    } else if (objc != 2) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"wrong # coordinates: expected 2, got %d", objc));
-		return TCL_ERROR;
-	    }
-	}
-	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
-		    &textPtr->x) != TCL_OK)
-		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
-		    &textPtr->y) != TCL_OK)) {
-	    return TCL_ERROR;
-	}
-	ComputeTextBbox(canvas, textPtr);
-    } else {
+	return TCL_OK;
+    } else if (objc > 2) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 2, got %d", objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
 	return TCL_ERROR;
     }
+
+    if (objc == 1) {
+	if (Tcl_ListObjGetElements(interp, objv[0], &objc,
+		(Tcl_Obj ***) &objv) != TCL_OK) {
+	    return TCL_ERROR;
+	} else if (objc != 2) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "wrong # coordinates: expected 2, got %d", objc));
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
+	    return TCL_ERROR;
+	}
+    }
+    if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
+		&textPtr->x) != TCL_OK)
+	    || (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
+		&textPtr->y) != TCL_OK)) {
+	return TCL_ERROR;
+    }
+    ComputeTextBbox(canvas, textPtr);
     return TCL_OK;
 }
 
@@ -1357,6 +1360,7 @@ GetTextIndex(
 	    && (strncmp(string, "sel.first", (unsigned) length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetResult(interp, "selection isn't in item", TCL_STATIC);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = textInfoPtr->selectFirst;
@@ -1364,6 +1368,7 @@ GetTextIndex(
 	    && (strncmp(string, "sel.last", (unsigned) length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetResult(interp, "selection isn't in item", TCL_STATIC);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = textInfoPtr->selectLast;
@@ -1403,6 +1408,7 @@ GetTextIndex(
 
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEMINDEX", "TEXT", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;

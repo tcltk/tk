@@ -2924,8 +2924,9 @@ HandleEventGenerate(
     mainPtr = (TkWindow *) mainWin;
     if ((tkwin == NULL)
 	    || (mainPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr)) {
-	Tcl_AppendResult(interp, "window id \"", Tcl_GetString(objv[0]),
-		"\" doesn't exist in this application", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"window id \"%s\" doesn't exist in this application",
+		Tcl_GetString(objv[0])));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "FOREIGN_TARGET", NULL);
 	return TCL_ERROR;
     }
@@ -3024,8 +3025,8 @@ HandleEventGenerate(
 	     * is missing.
 	     */
 
-	    Tcl_AppendResult(interp, "value for \"", Tcl_GetString(optionPtr),
-		    "\" missing", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(optionPtr)));
 	    Tcl_SetErrorCode(interp, "TK", "EVENT", "MISSING_VALUE", NULL);
 	    return TCL_ERROR;
 	}
@@ -3167,16 +3168,16 @@ HandleEventGenerate(
 	    value = Tcl_GetString(valuePtr);
 	    keysym = TkStringToKeysym(value);
 	    if (keysym == NoSymbol) {
-		Tcl_AppendResult(interp, "unknown keysym \"", value, "\"",
-			NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"unknown keysym \"%s\"", value));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", NULL);
 		return TCL_ERROR;
 	    }
 
 	    TkpSetKeycodeAndState(tkwin, keysym, &event.general);
 	    if (event.general.xkey.keycode == 0) {
-		Tcl_AppendResult(interp, "no keycode for keysym \"", value,
-			"\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"no keycode for keysym \"%s\"", value));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", NULL);
 		return TCL_ERROR;
 	    }
@@ -3406,8 +3407,9 @@ HandleEventGenerate(
 	continue;
 
     badopt:
-	Tcl_AppendResult(interp, name, " event doesn't accept \"",
-		Tcl_GetString(optionPtr), "\" option", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"%s event doesn't accept \"%s\" option",
+		name, Tcl_GetString(optionPtr)));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", NULL);
 	return TCL_ERROR;
     }
@@ -3502,7 +3504,8 @@ NameToWindow(
     return TCL_OK;
 
   badWindow:
-    Tcl_AppendResult(interp, "bad window name/identifier \"",name,"\"", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad window name/identifier \"%s\"", name));
     Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", NULL);
     return TCL_ERROR;
 }
@@ -3566,8 +3569,8 @@ GetVirtualEventUid(
 
     if (length < 5 || virtString[0] != '<' || virtString[1] != '<' ||
 	    virtString[length - 2] != '>' || virtString[length - 1] != '>') {
-	Tcl_AppendResult(interp, "virtual event \"", virtString,
-		"\" is badly formed", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"virtual event \"%s\" is badly formed", virtString));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED", NULL);
 	return NULL;
     }
@@ -3937,8 +3940,9 @@ ParseEventDescription(
 	    } else if (eventFlags & KEY) {
 		goto getKeysym;
 	    } else if ((eventFlags & BUTTON) == 0) {
-		Tcl_AppendResult(interp, "specified button \"", field,
-			"\" for non-button event", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"specified button \"%s\" for non-button event",
+			field));
 		Tcl_SetErrorCode(interp, "TK", "EVENT", "NON_BUTTON", NULL);
 		count = 0;
 		goto done;
@@ -3949,8 +3953,8 @@ ParseEventDescription(
 	getKeysym:
 	    patPtr->detail.keySym = TkStringToKeysym(field);
 	    if (patPtr->detail.keySym == NoSymbol) {
-		Tcl_AppendResult(interp, "bad event type or keysym \"",
-			field, "\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad event type or keysym \"%s\"", field));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", NULL);
 		count = 0;
 		goto done;
@@ -3959,8 +3963,8 @@ ParseEventDescription(
 		patPtr->eventType = KeyPress;
 		eventMask = KeyPressMask;
 	    } else if ((eventFlags & KEY) == 0) {
-		Tcl_AppendResult(interp, "specified keysym \"", field,
-			"\" for non-key event", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"specified keysym \"%s\" for non-key event", field));
 		Tcl_SetErrorCode(interp, "TK", "EVENT", "NON_KEY", NULL);
 		count = 0;
 		goto done;

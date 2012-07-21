@@ -406,7 +406,7 @@ test canvas-10.2 {check errors from tag expressions} -setup {
     .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
 } -body {
     .c find withtag {&&c}
-} -returnCodes error -result {Unexpected operator in tag search expression}
+} -returnCodes error -result {unexpected operator in tag search expression}
 test canvas-10.3 {check errors from tag expressions} -setup {
     catch {destroy .c}
     canvas .c
@@ -414,7 +414,7 @@ test canvas-10.3 {check errors from tag expressions} -setup {
     .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
 } -body {
     .c find withtag {!!c}
-} -returnCodes error -result {Too many '!' in tag search expression}
+} -returnCodes error -result {too many '!' in tag search expression}
 test canvas-10.4 {check errors from tag expressions} -setup {
     catch {destroy .c}
     canvas .c
@@ -422,7 +422,7 @@ test canvas-10.4 {check errors from tag expressions} -setup {
     .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
 } -body {
     .c find withtag {b||}
-} -returnCodes error -result {Missing tag in tag search expression}
+} -returnCodes error -result {missing tag in tag search expression}
 test canvas-10.5 {check errors from tag expressions} -setup {
     catch {destroy .c}
     canvas .c
@@ -430,7 +430,7 @@ test canvas-10.5 {check errors from tag expressions} -setup {
     .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
 } -body {
     .c find withtag {b&&(c||)}
-} -returnCodes error -result {Unexpected operator in tag search expression}
+} -returnCodes error -result {unexpected operator in tag search expression}
 test canvas-10.6 {check errors from tag expressions} -setup {
     catch {destroy .c}
     canvas .c
@@ -438,7 +438,7 @@ test canvas-10.6 {check errors from tag expressions} -setup {
     .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
 } -body {
     .c find withtag {d&&""}
-} -returnCodes error -result {Null quoted tag string in tag search expression}
+} -returnCodes error -result {null quoted tag string in tag search expression}
 test canvas-10.7 {check errors from tag expressions} -setup {
     catch {destroy .c}
     canvas .c
@@ -446,7 +446,7 @@ test canvas-10.7 {check errors from tag expressions} -setup {
     .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
 } -body {
     .c find withtag "d&&\"tag with spaces"
-} -returnCodes error -result {Missing endquote in tag search expression}
+} -returnCodes error -result {missing endquote in tag search expression}
 test canvas-10.8 {check errors from tag expressions} -setup {
     catch {destroy .c}
     canvas .c
@@ -454,7 +454,7 @@ test canvas-10.8 {check errors from tag expressions} -setup {
     .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
 } -returnCodes error -body {
     .c find withtag {a&&"tag with spaces"z}
-} -result {Invalid boolean operator in tag search expression}
+} -result {invalid boolean operator in tag search expression}
 test canvas-10.9 {check errors from tag expressions} -setup {
     catch {destroy .c}
     canvas .c
@@ -462,7 +462,7 @@ test canvas-10.9 {check errors from tag expressions} -setup {
     .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
 } -body {
     .c find withtag {a&&b&c}
-} -returnCodes error -result {Singleton '&' in tag search expression}
+} -returnCodes error -result {singleton '&' in tag search expression}
 test canvas-10.10 {check errors from tag expressions} -setup {
     catch {destroy .c}
     canvas .c
@@ -470,7 +470,7 @@ test canvas-10.10 {check errors from tag expressions} -setup {
     .c create oval 20 260 40 280 -fill bisque -tag [list d "tag with spaces"]
 } -body {
     .c find withtag {a||b|c}
-} -returnCodes error -result {Singleton '|' in tag search expression}
+} -returnCodes error -result {singleton '|' in tag search expression}
 test canvas-10.11 {backward compatility - strange tags that are not expressions} -setup {
     catch {destroy .c}
     canvas .c

@@ -166,6 +166,7 @@ TkCanvPostscriptCmd(
     TkPostscriptInfo psInfo, *psInfoPtr = &psInfo;
     Tk_PostscriptInfo oldInfoPtr;
     int result;
+    int written;
     Tk_Item *itemPtr;
 #define STRING_LENGTH 400
     char string[STRING_LENGTH+1];
@@ -321,8 +322,11 @@ TkCanvPostscriptCmd(
 	} else if (strncmp(psInfo.colorMode, "color", length) == 0) {
 	    psInfo.colorLevel = 2;
 	} else {
-	    Tcl_AppendResult(interp, "bad color mode \"", psInfo.colorMode,
-		    "\": must be monochrome, gray, or color", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad color mode \"%s\": must be monochrome, gray, or color",
+		    psInfo.colorMode));
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "COLORMODE", NULL);
+	    result = TCL_ERROR;
 	    goto cleanup;
 	}
     }
@@ -333,8 +337,9 @@ TkCanvPostscriptCmd(
 	 */
 
 	if (psInfo.channelName != NULL) {
-	    Tcl_AppendResult(interp, "can't specify both -file",
-		    " and -channel", NULL);
+	    Tcl_SetResult(interp, "can't specify both -file and -channel",
+		    TCL_STATIC);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "USAGE", NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -345,8 +350,9 @@ TkCanvPostscriptCmd(
 	 */
 
 	if (Tcl_IsSafe(interp)) {
-	    Tcl_AppendResult(interp, "can't specify -file in a",
-		    " safe interpreter", NULL);
+	    Tcl_SetResult(interp, "can't specify -file in a safe interpreter",
+		    TCL_STATIC);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "SAFE", NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -376,8 +382,10 @@ TkCanvPostscriptCmd(
 	    goto cleanup;
 	}
 	if ((mode & TCL_WRITABLE) == 0) {
-	    Tcl_AppendResult(interp, "channel \"", psInfo.channelName,
-		    "\" wasn't opened for writing", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "channel \"%s\" wasn't opened for writing",
+		    psInfo.channelName));
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "UNWRITABLE",NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -475,8 +483,16 @@ TkCanvPostscriptCmd(
 	Tcl_AppendResult(interp, Tcl_GetString(preambleObj), NULL);
 
 	if (psInfo.chan != NULL) {
-	    Tcl_Write(psInfo.chan, Tcl_GetStringResult(interp), -1);
-	    Tcl_ResetResult(canvasPtr->interp);
+	    written = Tcl_WriteObj(psInfo.chan, Tcl_GetObjResult(interp));
+	    Tcl_ResetResult(interp);
+	    if (written == -1) {
+	    channelWriteFailed:
+		Tcl_AppendResult(interp,
+			"problem writing postscript data to channel: ",
+			Tcl_PosixError(interp), NULL);
+		result = TCL_ERROR;
+		goto cleanup;
+	    }
 	}
 
 	/*
@@ -522,8 +538,11 @@ TkCanvPostscriptCmd(
 		" lineto closepath clip newpath\n", NULL);
     }
     if (psInfo.chan != NULL) {
-	Tcl_Write(psInfo.chan, Tcl_GetStringResult(interp), -1);
-	Tcl_ResetResult(canvasPtr->interp);
+	written = Tcl_WriteObj(psInfo.chan, Tcl_GetObjResult(interp));
+	Tcl_ResetResult(interp);
+	if (written == -1) {
+	    goto channelWriteFailed;
+	}
     }
 
     /*
@@ -555,8 +574,11 @@ TkCanvPostscriptCmd(
 	}
 	Tcl_AppendResult(interp, "grestore\n", NULL);
 	if (psInfo.chan != NULL) {
-	    Tcl_Write(psInfo.chan, Tcl_GetStringResult(interp), -1);
+	    written = Tcl_WriteObj(psInfo.chan, Tcl_GetObjResult(interp));
 	    Tcl_ResetResult(interp);
+	    if (written == -1) {
+		goto channelWriteFailed;
+	    }
 	}
     }
 
@@ -570,8 +592,11 @@ TkCanvPostscriptCmd(
 		"%%Trailer\nend\n%%EOF\n", NULL);
     }
     if (psInfo.chan != NULL) {
-	Tcl_Write(psInfo.chan, Tcl_GetStringResult(interp), -1);
-	Tcl_ResetResult(canvasPtr->interp);
+	Tcl_WriteObj(psInfo.chan, Tcl_GetObjResult(interp));
+	Tcl_ResetResult(interp);
+	if (written == -1) {
+	    goto channelWriteFailed;
+	}
     }
 
     /*
@@ -747,8 +772,11 @@ Tk_PostscriptFont(
 		    || Tcl_GetDoubleFromObj(interp, objv[1], &size) != TCL_OK
 		    || size <= 0) {
 		Tcl_ResetResult(interp);
-		Tcl_AppendResult(interp, "bad font map entry for \"", name,
-			"\": \"", Tcl_GetString(list), "\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad font map entry for \"%s\": \"%s\"",
+			name, Tcl_GetString(list)));
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "FONTMAP",
+			NULL);
 		return TCL_ERROR;
 	    }
 
@@ -1079,7 +1107,8 @@ GetPostscriptPoints(
     return TCL_OK;
 
   error:
-    Tcl_AppendResult(interp, "bad distance \"", string, "\"", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad distance \"%s\"", string));
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "POINTS", NULL);
     return TCL_ERROR;
 }
 
@@ -1287,10 +1316,10 @@ TkPostscriptImage(
 
     if (bytesPerLine > 60000) {
 	Tcl_ResetResult(interp);
-	sprintf(buffer,
-		"Can't generate Postscript for images more than %d pixels wide",
-		maxWidth);
-	Tcl_AppendResult(interp, buffer, NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't generate Postscript for images more than %d pixels wide",
+		maxWidth));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
 	ckfree(cdata.colors);
 	return TCL_ERROR;
     }
@@ -1480,10 +1509,10 @@ Tk_PostscriptPhoto(
     }
     if (bytesPerLine > 60000) {
 	Tcl_ResetResult(interp);
-	sprintf(buffer,
-		"Can't generate Postscript for images more than %d pixels wide",
-		maxWidth);
-	Tcl_AppendResult(interp, buffer, NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't generate Postscript for images more than %d pixels wide",
+		maxWidth));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
 	return TCL_ERROR;
     }
 

@@ -245,10 +245,13 @@ ImageCoords(
 	    } else if (objc != 2) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"wrong # coordinates: expected 2, got %d", objc));
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "IMAGE",
+			NULL);
 		return TCL_ERROR;
 	    }
 	}
-	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0], &imgPtr->x) != TCL_OK)
+	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
+		    &imgPtr->x) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
   		    &imgPtr->y) != TCL_OK)) {
 	    return TCL_ERROR;
@@ -257,6 +260,7 @@ ImageCoords(
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 2, got %d", objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "IMAGE", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
