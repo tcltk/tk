@@ -259,6 +259,8 @@ WinItemCoords(
 	    } else if (objc != 2) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"wrong # coordinates: expected 2, got %d", objc));
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "WINDOW",
+			NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -271,6 +273,7 @@ WinItemCoords(
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 2, got %d", objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "WINDOW", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -337,8 +340,7 @@ ConfigureWinItem(
 	     */
 
 	    parent = Tk_Parent(winItemPtr->tkwin);
-	    for (ancestor = canvasTkwin; ;
-		    ancestor = Tk_Parent(ancestor)) {
+	    for (ancestor = canvasTkwin ;; ancestor = Tk_Parent(ancestor)) {
 		if (ancestor == parent) {
 		    break;
 		}
@@ -370,8 +372,10 @@ ConfigureWinItem(
     return TCL_OK;
 
   badWindow:
-    Tcl_AppendResult(interp, "can't use ", Tk_PathName(winItemPtr->tkwin),
-	    " in a window item of this canvas", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "can't use %s in a window item of this canvas",
+	    Tk_PathName(winItemPtr->tkwin)));
+    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
     winItemPtr->tkwin = NULL;
     return TCL_ERROR;
 }
@@ -842,7 +846,7 @@ CanvasPsWindow(
     Tcl_DStringInit(&buffer1);
     Tcl_DStringInit(&buffer2);
     Tcl_DStringGetResult(interp, &buffer2);
-    sprintf(buffer, "%s postscript -prolog 0\n", Tk_PathName(tkwin));
+    sprintf(buffer, "%s postscript -prolog 0", Tk_PathName(tkwin));
     result = Tcl_Eval(interp, buffer);
     Tcl_DStringGetResult(interp, &buffer1);
     Tcl_DStringResult(interp, &buffer2);
