@@ -59,9 +59,9 @@ TtkGetImageSpec(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr)
 
     if ((objc % 2) != 1) {
 	if (interp) {
-	    Tcl_SetResult(interp,
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"image specification must contain an odd number of elements",
-		TCL_STATIC);
+		-1));
 	}
 	goto error;
     }

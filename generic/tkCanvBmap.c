@@ -936,9 +936,9 @@ BitmapToPostscript(
 	    return TCL_ERROR;
 	}
 	if (width > 60000) {
-	    Tcl_ResetResult(interp);
-	    Tcl_SetResult(interp, "can't generate Postscript for bitmaps more"
-		    " than 60000 pixels wide", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "can't generate Postscript for bitmaps more than 60000"
+		    " pixels wide", -1));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
 	    return TCL_ERROR;
 	}

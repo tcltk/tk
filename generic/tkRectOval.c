@@ -318,17 +318,13 @@ RectOvalCoords(
      */
 
     if (objc == 0) {
-	Tcl_Obj *obj = Tcl_NewObj();
+	Tcl_Obj *bbox[4];
 
-	Tcl_ListObjAppendElement(NULL, obj,
-		Tcl_NewDoubleObj(rectOvalPtr->bbox[0]));
-	Tcl_ListObjAppendElement(NULL, obj,
-		Tcl_NewDoubleObj(rectOvalPtr->bbox[1]));
-	Tcl_ListObjAppendElement(NULL, obj,
-		Tcl_NewDoubleObj(rectOvalPtr->bbox[2]));
-	Tcl_ListObjAppendElement(NULL, obj,
-		Tcl_NewDoubleObj(rectOvalPtr->bbox[3]));
-	Tcl_SetObjResult(interp, obj);
+	bbox[0] = Tcl_NewDoubleObj(rectOvalPtr->bbox[0]);
+	bbox[1] = Tcl_NewDoubleObj(rectOvalPtr->bbox[1]);
+	bbox[2] = Tcl_NewDoubleObj(rectOvalPtr->bbox[2]);
+	bbox[3] = Tcl_NewDoubleObj(rectOvalPtr->bbox[3]);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(4, bbox));
 	return TCL_OK;
     }
 
@@ -350,6 +346,9 @@ RectOvalCoords(
     if (objc != 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 4, got %d", objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS",
+		(rectOvalPtr->header.typePtr == &tkRectangleType
+			? "RECTANGLE" : "OVAL"), NULL);
 	return TCL_ERROR;
     }
 
@@ -513,9 +512,10 @@ ConfigureRectOval(
 	}
 #ifdef MAC_OSX_TK
 	/*
-	 * Mac OS X CG drawing needs access to the outline linewidth
-	 * even for fills (as linewidth controls antialiasing).
+	 * Mac OS X CG drawing needs access to the outline linewidth even for
+	 * fills (as linewidth controls antialiasing).
 	 */
+
 	gcValues.line_width = rectOvalPtr->outline.gc != None ?
 		rectOvalPtr->outline.gc->line_width : 0;
 	mask |= GCLineWidth;
@@ -675,7 +675,7 @@ ComputeRectOvalBbox(
 	bloat = 1;
 #else
 	bloat = 0;
-#endif
+#endif /* __WIN32__ */
     } else {
 #ifdef MAC_OSX_TK
 	/*
@@ -687,7 +687,7 @@ ComputeRectOvalBbox(
 	bloat = (int) (width+1.5)/2;
 #else
 	bloat = (int) (width+1)/2;
-#endif
+#endif /* MAC_OSX_TK */
     }
 
     /*
@@ -755,9 +755,9 @@ DisplayRectOval(
      * will die if it isn't.
      */
 
-    Tk_CanvasDrawableCoords(canvas, rectOvalPtr->bbox[0], rectOvalPtr->bbox[1],
+    Tk_CanvasDrawableCoords(canvas, rectOvalPtr->bbox[0],rectOvalPtr->bbox[1],
 	    &x1, &y1);
-    Tk_CanvasDrawableCoords(canvas, rectOvalPtr->bbox[2], rectOvalPtr->bbox[3],
+    Tk_CanvasDrawableCoords(canvas, rectOvalPtr->bbox[2],rectOvalPtr->bbox[3],
 	    &x2, &y2);
     if (x2 <= x1) {
 	x2 = x1+1;

@@ -440,7 +440,8 @@ int TtkWidgetConstructorObjCmd(
 
 error:
     if (WidgetDestroyed(corePtr)) {
-	Tcl_SetResult(interp, "Widget has been destroyed", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"widget has been destroyed", -1));
     } else {
 	Tk_DestroyWindow(tkwin);
     }
@@ -634,8 +635,8 @@ int TtkWidgetConfigureCommand(
 	    return status;
 
 	if (mask & READONLY_OPTION) {
-	    Tcl_SetResult(interp,
-		    "Attempt to change read-only option", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "attempt to change read-only option", -1));
 	    Tk_RestoreSavedOptions(&savedOptions);
 	    return TCL_ERROR;
 	}
@@ -649,7 +650,8 @@ int TtkWidgetConfigureCommand(
 
 	status = corePtr->widgetSpec->postConfigureProc(interp,recordPtr,mask);
 	if (WidgetDestroyed(corePtr)) {
-	    Tcl_SetResult(interp, "Widget has been destroyed", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "widget has been destroyed", -1));
 	    status = TCL_ERROR;
 	}
 	if (status != TCL_OK) {

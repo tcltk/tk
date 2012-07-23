@@ -5987,8 +5987,11 @@ TkTextScanCmd(
 	dInfoPtr->scanTotalYScroll = 0;
 	dInfoPtr->scanMarkY = y;
     } else {
-	Tcl_AppendResult(interp, "bad scan option \"", Tcl_GetString(objv[2]),
-		"\": must be mark or dragto", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad scan option \"%s\": must be mark or dragto",
+		Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option",
+		Tcl_GetString(objv[2]), NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -7299,7 +7302,7 @@ CharChunkMeasureChars(
 
     return MeasureChars(tkfont, chars, charsLen, start, end-start,
 	    startX, maxX, flags, nextXPtr);
-#else
+#else /* TK_LAYOUT_WITH_BASE_CHUNKS */
     {
 	int xDisplacement;
 	int fit, bstart = start, bend = end;
@@ -7339,7 +7342,7 @@ CharChunkMeasureChars(
 	    return fit - bstart;
 	}
     }
-#endif
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 }
 
 /*

@@ -1452,7 +1452,7 @@ EntryGetCommand(
 	Tcl_WrongNumArgs(interp, 2, objv, NULL);
 	return TCL_ERROR;
     }
-    Tcl_SetResult(interp, entryPtr->entry.string, TCL_VOLATILE);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(entryPtr->entry.string, -1));
     return TCL_OK;
 }
 

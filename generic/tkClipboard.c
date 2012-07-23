@@ -367,10 +367,12 @@ Tk_ClipboardAppend(
 	Tk_CreateSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
 		type, ClipboardHandler, targetPtr, format);
     } else if (targetPtr->format != format) {
-	Tcl_AppendResult(interp, "format \"", Tk_GetAtomName(tkwin, format),
-		"\" does not match current format \"",
-		Tk_GetAtomName(tkwin, targetPtr->format),"\" for ",
-		Tk_GetAtomName(tkwin, type), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"format \"%s\" does not match current format \"%s\" for %s",
+		Tk_GetAtomName(tkwin, format),
+		Tk_GetAtomName(tkwin, targetPtr->format),
+		Tk_GetAtomName(tkwin, type)));
+	Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "FORMAT_MISMATCH", NULL);
 	return TCL_ERROR;
     }
 
@@ -474,8 +476,9 @@ Tk_ClipboardObjCmd(
 
 	    i++;
 	    if (i >= objc) {
-		Tcl_AppendResult(interp, "value for \"", string,
-			"\" missing", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"value for \"%s\" missing", string));
+		Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "VALUE", NULL);
 		return TCL_ERROR;
 	    }
 	    switch ((enum appendOptions) subIndex) {
@@ -563,8 +566,9 @@ Tk_ClipboardObjCmd(
 	    }
 	    i++;
 	    if (i >= objc) {
-		Tcl_AppendResult(interp, "value for \"", string,
-			"\" missing", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"value for \"%s\" missing", string));
+		Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "VALUE", NULL);
 		return TCL_ERROR;
 	    }
 	    switch ((enum getOptions) subIndex) {
@@ -702,12 +706,11 @@ ClipboardGetProc(
 				 * selection. */
     Tcl_Interp *interp,		/* Interpreter used for error reporting (not
 				 * used). */
-    const char *portion)		/* New information to be appended. */
+    const char *portion)	/* New information to be appended. */
 {
     Tcl_DStringAppend((Tcl_DString *) clientData, portion, -1);
     return TCL_OK;
 }
-
 
 /*
  * Local Variables:

@@ -276,10 +276,10 @@ TkTextTagCmd(
 		    |KeyReleaseMask|PointerMotionMask|VirtualEventMask)) {
 		Tk_DeleteBinding(interp, textPtr->sharedTextPtr->bindingTable,
 			(ClientData) tagPtr->name, Tcl_GetString(objv[4]));
-		Tcl_ResetResult(interp);
-		Tcl_AppendResult(interp, "requested illegal events; ",
-			"only key, button, motion, enter, leave, and virtual ",
-			"events may be used", NULL);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"requested illegal events; only key, button, motion,"
+			" enter, leave, and virtual events may be used", -1));
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "TAG_BIND_EVENT",NULL);
 		return TCL_ERROR;
 	    }
 	} else if (objc == 5) {
@@ -302,7 +302,7 @@ TkTextTagCmd(
 		}
 		Tcl_ResetResult(interp);
 	    } else {
-		Tcl_SetResult(interp, (char *) command, TCL_STATIC);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(command, -1));
 	    }
 	} else {
 	    Tk_GetAllBindings(interp, textPtr->sharedTextPtr->bindingTable,
@@ -879,12 +879,12 @@ TkTextTagCmd(
 		0, &last);
 	TkBTreeStartSearch(&first, &last, tagPtr, &tSearch);
 	if (TkBTreeCharTagged(&first, tagPtr)) {
-	    Tcl_ListObjAppendElement(interp, listObj,
+	    Tcl_ListObjAppendElement(NULL, listObj,
 		    TkTextNewIndexObj(textPtr, &first));
 	    count++;
 	}
 	while (TkBTreeNextTag(&tSearch)) {
-	    Tcl_ListObjAppendElement(interp, listObj,
+	    Tcl_ListObjAppendElement(NULL, listObj,
 		    TkTextNewIndexObj(textPtr, &tSearch.curIndex));
 	    count++;
 	}
@@ -895,7 +895,7 @@ TkTextTagCmd(
 	     * closed. In this case we add the end of the range.
 	     */
 
-	    Tcl_ListObjAppendElement(interp, listObj,
+	    Tcl_ListObjAppendElement(NULL, listObj,
 		    TkTextNewIndexObj(textPtr, &last));
 	}
 	Tcl_SetObjResult(interp, listObj);
@@ -1050,7 +1050,7 @@ FindTag(
     const char *str;
 
     str = Tcl_GetStringFromObj(tagName, &len);
-    if (len == 3 && !strcmp(str,"sel")) {
+    if (len == 3 && !strcmp(str, "sel")) {
         return textPtr->selTagPtr;
     }
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->tagTable,
@@ -1059,8 +1059,10 @@ FindTag(
 	return Tcl_GetHashValue(hPtr);
     }
     if (interp != NULL) {
-	Tcl_AppendResult(interp, "tag \"", Tcl_GetString(tagName),
-		"\" isn't defined in text widget", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"tag \"%s\" isn't defined in text widget",
+		Tcl_GetString(tagName)));
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_TAG", NULL);
     }
     return NULL;
 }

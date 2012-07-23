@@ -619,8 +619,9 @@ ConfigureSlave(
     Tk_Window masterWin = (Tk_Window) NULL;
 
     if (Tk_TopWinHierarchy(tkwin)) {
-	Tcl_AppendResult(interp, "can't use placer on top-level window \"",
-		Tk_PathName(tkwin), "\"; use wm command instead", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't use placer on top-level window \"%s\"; use "
+		"wm command instead", Tk_PathName(tkwin)));
 	Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
 	return TCL_ERROR;
     }
@@ -679,17 +680,17 @@ ConfigureSlave(
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
-		Tcl_AppendResult(interp, "can't place ",
-			Tk_PathName(slavePtr->tkwin), " relative to ",
-			Tk_PathName(tkwin), NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"can't place %s relative to %s",
+			Tk_PathName(slavePtr->tkwin), Tk_PathName(tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		goto error;
 	    }
 	}
 	if (slavePtr->tkwin == tkwin) {
-	    Tcl_AppendResult(interp, "can't place ",
-		    Tk_PathName(slavePtr->tkwin), " relative to itself",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't place %s relative to itself",
+		    Tk_PathName(slavePtr->tkwin)));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 	    goto error;
 	}

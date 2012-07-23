@@ -124,9 +124,8 @@ Tk_InitStubs(
     }
 
     if (!stubsPtr) {
-	Tcl_SetResult(interp,
-		"This implementation of Tk does not support stubs",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"this implementation of Tk does not support stubs", -1));
 	return NULL;
     }
 

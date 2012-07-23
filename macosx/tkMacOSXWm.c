@@ -1030,7 +1030,8 @@ WmAspectCmd(
 	}
 	if ((numer1 <= 0) || (denom1 <= 0) || (numer2 <= 0) ||
 		(denom2 <= 0)) {
-	    Tcl_SetResult(interp, "aspect number can't be <= 0", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "aspect number can't be <= 0", -1));
 	    return TCL_ERROR;
 	}
 	wmPtr->minAspect.x = numer1;
@@ -1340,7 +1341,8 @@ WmClientCmd(
     }
     if (objc == 3) {
 	if (wmPtr->clientMachine != NULL) {
-	    Tcl_SetResult(interp, wmPtr->clientMachine, TCL_STATIC);
+	    Tcl_SetObjResult(interp,
+		    Tcl_NewStringObj(wmPtr->clientMachine, -1));
 	}
 	return TCL_OK;
     }
@@ -1951,9 +1953,9 @@ WmIconbitmapCmd(
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconPixmapHint) {
-	    Tcl_SetResult(interp, (char *)
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    Tk_NameOfBitmap(winPtr->display,wmPtr->hints.icon_pixmap),
-		    TCL_STATIC);
+		    -1));
 	}
 	return TCL_OK;
     }
@@ -2073,9 +2075,9 @@ WmIconmaskCmd(
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconMaskHint) {
-	    Tcl_SetResult(interp, (char *)
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_mask),
-		    TCL_STATIC);
+		    -1));
 	}
 	return TCL_OK;
     }
@@ -2305,7 +2307,7 @@ WmIconwindowCmd(
     }
     if (objc == 3) {
 	if (wmPtr->icon != NULL) {
-	    Tcl_SetResult(interp, Tk_PathName(wmPtr->icon), TCL_STATIC);
+	    Tcl_SetObjResult(interp, TkNewWindowObj(wmPtr->icon));
 	}
 	return TCL_OK;
     }
@@ -2686,7 +2688,8 @@ WmProtocolCmd(
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
 		protPtr = protPtr->nextPtr) {
 	    if (protPtr->protocol == protocol) {
-		Tcl_SetResult(interp, protPtr->command, TCL_STATIC);
+		Tcl_SetObjResult(interp,
+			Tcl_NewStringObj(protPtr->command, -1));
 		return TCL_OK;
 	    }
 	}
@@ -3118,8 +3121,8 @@ WmTitleCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	Tcl_SetResult(interp, (char *)((wmPtr->titleUid != NULL) ?
-		wmPtr->titleUid : winPtr->nameUid), TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		wmPtr->titleUid ? wmPtr->titleUid : winPtr->nameUid, -1));
 	return TCL_OK;
     }
     argv3 = Tcl_GetStringFromObj(objv[3], &length);
@@ -3167,7 +3170,8 @@ WmTransientCmd(
     }
     if (objc == 3) {
 	if (wmPtr->master != None) {
-	    Tcl_SetResult(interp, wmPtr->masterWindowName, TCL_STATIC);
+	    Tcl_SetObjResult(interp,
+		    Tcl_NewStringObj(wmPtr->masterWindowName, -1));
 	}
 	return TCL_OK;
     }

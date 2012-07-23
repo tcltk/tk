@@ -872,8 +872,10 @@ ListboxWidgetObjCmd(
 	}
 
 	if (index < 0 || index >= listPtr->nElements) {
-	    Tcl_AppendResult(interp, "item number \"",
-		    Tcl_GetString(objv[2]), "\" out of range", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "item number \"%s\" out of range",
+		    Tcl_GetString(objv[2])));
+	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEMIDX", NULL);
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -907,8 +909,10 @@ ListboxWidgetObjCmd(
 	}
 
 	if (index < 0 || index >= listPtr->nElements) {
-	    Tcl_AppendResult(interp, "item number \"", Tcl_GetString(objv[2]),
-		    "\" out of range", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "item number \"%s\" out of range",
+		    Tcl_GetString(objv[2])));
+	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEMIDX", NULL);
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -2742,18 +2746,12 @@ GetListboxIndex(
 	start = stringRep + 1;
 	y = strtol(start, &end, 0);
 	if ((start == end) || (*end != ',')) {
-	    Tcl_AppendResult(interp, "bad listbox index \"", stringRep,
-		    "\": must be active, anchor, end, @x,y, or a number",
-		    NULL);
-	    return TCL_ERROR;
+	    goto badIndex;
 	}
 	start = end+1;
 	y = strtol(start, &end, 0);
 	if ((start == end) || (*end != '\0')) {
-	    Tcl_AppendResult(interp, "bad listbox index \"", stringRep,
-		    "\": must be active, anchor, end, @x,y, or a number",
-		    NULL);
-	    return TCL_ERROR;
+	    goto badIndex;
 	}
 	*indexPtr = NearestListboxElement(listPtr, y);
 	return TCL_OK;
@@ -2771,10 +2769,11 @@ GetListboxIndex(
      * Everything failed, nothing matched. Throw up an error message.
      */
 
-    Tcl_ResetResult(interp);
-    Tcl_AppendResult(interp, "bad listbox index \"",
-	    Tcl_GetString(indexObj), "\": must be active, anchor, ",
-	    "end, @x,y, or a number", NULL);
+  badIndex:
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad listbox index \"%s\": must be active, anchor, end, @x,y,"
+	    " or a number", Tcl_GetString(indexObj)));
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "LISTBOX_INDEX", NULL);
     return TCL_ERROR;
 }
 

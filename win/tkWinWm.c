@@ -3315,7 +3315,7 @@ WmClientCmd(
     }
     if (objc == 3) {
 	if (wmPtr->clientMachine != NULL) {
-	    Tcl_SetResult(interp, wmPtr->clientMachine, TCL_STATIC);
+	    Tcl_SetResult(interp, Tcl_NewStringObj(wmPtr->clientMachine, -1));
 	}
 	return TCL_OK;
     }
@@ -3477,7 +3477,8 @@ WmCommandCmd(
     }
     if (objc == 3) {
 	if (wmPtr->cmdArgv != NULL) {
-		char *merged = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
+	    char *merged = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
+
 	    Tcl_SetResult(interp, merged, TCL_DYNAMIC);
 	}
 	return TCL_OK;
@@ -3965,9 +3966,9 @@ WmIconbitmapCmd(
 	 */
 
 	if (wmPtr->hints.flags & IconPixmapHint) {
-	    Tcl_SetResult(interp, (char *)
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_pixmap),
-		    TCL_STATIC);
+		    -1));
 	}
 	return TCL_OK;
     }
@@ -4139,9 +4140,9 @@ WmIconmaskCmd(
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconMaskHint) {
-	    Tcl_SetResult(interp, (char *)
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    Tk_NameOfBitmap(winPtr->display, wmPtr->hints.icon_mask),
-		    TCL_STATIC);
+		    -1));
 	}
 	return TCL_OK;
     }
@@ -4196,9 +4197,8 @@ WmIconnameCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	Tcl_SetResult(interp,
-		((wmPtr->iconName != NULL) ? wmPtr->iconName : ""),
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		(wmPtr->iconName ? wmPtr->iconName : ""), -1));
 	return TCL_OK;
     } else {
 	if (wmPtr->iconName != NULL) {
@@ -4488,7 +4488,7 @@ WmIconwindowCmd(
     }
     if (objc == 3) {
 	if (wmPtr->icon != NULL) {
-	    Tcl_SetResult(interp, Tk_PathName(wmPtr->icon), TCL_STATIC);
+	    Tcl_SetObjResult(interp, TkNewWindowObj(wmPtr->icon));
 	}
 	return TCL_OK;
     }
@@ -4898,7 +4898,8 @@ WmProtocolCmd(
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
 		protPtr = protPtr->nextPtr) {
 	    if (protPtr->protocol == protocol) {
-		Tcl_SetResult(interp, protPtr->command, TCL_STATIC);
+		Tcl_SetObjResult(interp,
+			Tcl_NewStringObj(protPtr->command, -1));
 		return TCL_OK;
 	    }
 	}
@@ -5368,12 +5369,13 @@ WmTitleCmd(
 
 	    GetWindowText(wrapper, buf, size);
 	    Tcl_WinTCharToUtf(buf, -1, &titleString);
-	    Tcl_SetResult(interp, Tcl_DStringValue(&titleString), TCL_VOLATILE);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    Tcl_DStringValue(&titleString),
+		    Tcl_DStringLength(&titleString)));
 	    Tcl_DStringFree(&titleString);
 	} else {
-	    Tcl_SetResult(interp, (char *)
-		    ((wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid),
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    (wmPtr->title ? wmPtr->title : winPtr->nameUid), -1));
 	}
     } else {
 	if (wmPtr->title != NULL) {
@@ -5429,7 +5431,7 @@ WmTransientCmd(
     }
     if (objc == 3) {
 	if (masterPtr != NULL) {
-	    Tcl_SetResult(interp, Tk_PathName(masterPtr), TCL_STATIC);
+	    Tcl_SetObjResult(interp, TkNewWindowObj(masterPtr));
 	}
 	return TCL_OK;
     }

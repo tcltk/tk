@@ -173,8 +173,10 @@ TkTextWindowCmd(
 	}
 	ewPtr = TkTextIndexToSeg(&index, NULL);
 	if (ewPtr->typePtr != &tkTextEmbWindowType) {
-	    Tcl_AppendResult(interp, "no embedded window at index \"",
-		    Tcl_GetString(objv[3]), "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "no embedded window at index \"%s\"",
+		    Tcl_GetString(objv[3])));
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_WINDOW", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -210,8 +212,10 @@ TkTextWindowCmd(
 	}
 	ewPtr = TkTextIndexToSeg(&index, NULL);
 	if (ewPtr->typePtr != &tkTextEmbWindowType) {
-	    Tcl_AppendResult(interp, "no embedded window at index \"",
-		    Tcl_GetString(objv[3]), "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "no embedded window at index \"%s\"",
+		    Tcl_GetString(objv[3])));
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_WINDOW", NULL);
 	    return TCL_ERROR;
 	}
 	if (objc <= 5) {
@@ -436,9 +440,12 @@ EmbWinConfigure(
 		}
 		if (Tk_TopWinHierarchy(ancestor)) {
 		badMaster:
-		    Tcl_AppendResult(textPtr->interp, "can't embed ",
-			    Tk_PathName(ewPtr->body.ew.tkwin), " in ",
-			    Tk_PathName(textPtr->tkwin), NULL);
+		    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf(
+			    "can't embed %s in %s",
+			    Tk_PathName(ewPtr->body.ew.tkwin),
+			    Tk_PathName(textPtr->tkwin)));
+		    Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY",
+			    "HIERARCHY", NULL);
 		    ewPtr->body.ew.tkwin = NULL;
 		    if (client != NULL) {
 			client->tkwin = NULL;
@@ -846,7 +853,8 @@ EmbWinLayoutProc(
 	Tk_Window ancestor;
 	Tcl_HashEntry *hPtr;
 	const char *before, *string;
-	Tcl_DString name, buf, *dsPtr = NULL;
+	Tcl_DString buf, *dsPtr = NULL;
+	Tcl_Obj *nameObj;
 
 	before = ewPtr->body.ew.create;
 
@@ -905,36 +913,40 @@ EmbWinLayoutProc(
 	    code = Tcl_GlobalEval(textPtr->interp, ewPtr->body.ew.create);
 	}
 	if (code != TCL_OK) {
-	createError:
 	    Tcl_BackgroundException(textPtr->interp, code);
 	    goto gotWindow;
 	}
-	Tcl_DStringInit(&name);
-	Tcl_DStringAppend(&name, Tcl_GetStringResult(textPtr->interp), -1);
+	nameObj = Tcl_GetObjResult(textPtr->interp);
+	Tcl_IncrRefCount(nameObj);
 	Tcl_ResetResult(textPtr->interp);
 	ewPtr->body.ew.tkwin = Tk_NameToWindow(textPtr->interp,
-		Tcl_DStringValue(&name), textPtr->tkwin);
-	Tcl_DStringFree(&name);
+		Tcl_GetString(nameObj), textPtr->tkwin);
+	Tcl_DecrRefCount(nameObj);
 	if (ewPtr->body.ew.tkwin == NULL) {
-	    goto createError;
+	    Tcl_BackgroundError(textPtr->interp);
+	    goto gotWindow;
 	}
+
 	for (ancestor = textPtr->tkwin; ; ancestor = Tk_Parent(ancestor)) {
 	    if (ancestor == Tk_Parent(ewPtr->body.ew.tkwin)) {
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
-	    badMaster:
-		Tcl_AppendResult(textPtr->interp, "can't embed ",
-			Tk_PathName(ewPtr->body.ew.tkwin), " relative to ",
-			Tk_PathName(textPtr->tkwin), NULL);
-		Tcl_BackgroundError(textPtr->interp);
-		ewPtr->body.ew.tkwin = NULL;
-		goto gotWindow;
+		goto badMaster;
 	    }
 	}
 	if (Tk_TopWinHierarchy(ewPtr->body.ew.tkwin)
 		|| (textPtr->tkwin == ewPtr->body.ew.tkwin)) {
-	    goto badMaster;
+	badMaster:
+	    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf(
+		    "can't embed %s relative to %s",
+		    Tk_PathName(ewPtr->body.ew.tkwin),
+		    Tk_PathName(textPtr->tkwin)));
+	    Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY", "HIERARCHY",
+		    NULL);
+	    Tcl_BackgroundError(textPtr->interp);
+	    ewPtr->body.ew.tkwin = NULL;
+	    goto gotWindow;
 	}
 
 	if (client == NULL) {

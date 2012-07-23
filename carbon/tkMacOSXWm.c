@@ -591,7 +591,7 @@ Tk_WmObjCmd(
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
-	    Tcl_SetResult(interp, ((wmTracing) ? "on" : "off"), TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(wmTracing));
 	    return TCL_OK;
 	}
 	return Tcl_GetBooleanFromObj(interp, objv[2], &wmTracing);
@@ -723,12 +723,13 @@ WmAspectCmd(
     }
     if (objc == 3) {
 	if (wmPtr->sizeHintsFlags & PAspect) {
-	    char buf[TCL_INTEGER_SPACE * 4];
+	    Tcl_Obj *aspect[4];
 
-	    sprintf(buf, "%d %d %d %d", wmPtr->minAspect.x,
-		    wmPtr->minAspect.y, wmPtr->maxAspect.x,
-		    wmPtr->maxAspect.y);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    aspect[0] = wmPtr->minAspect.x;
+	    aspect[1] = wmPtr->minAspect.y;
+	    aspect[2] = wmPtr->maxAspect.x;
+	    aspect[3] = wmPtr->maxAspect.y;
+	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, aspect));
 	}
 	return TCL_OK;
     }
@@ -743,7 +744,8 @@ WmAspectCmd(
 	}
 	if ((numer1 <= 0) || (denom1 <= 0) || (numer2 <= 0) ||
 		(denom2 <= 0)) {
-	    Tcl_SetResult(interp, "aspect number can't be <= 0", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "aspect number can't be <= 0", -1));
 	    return TCL_ERROR;
 	}
 	wmPtr->minAspect.x = numer1;
@@ -1115,7 +1117,8 @@ WmClientCmd(
     }
     if (objc == 3) {
 	if (wmPtr->clientMachine != NULL) {
-	    Tcl_SetResult(interp, wmPtr->clientMachine, TCL_STATIC);
+	    Tcl_SetObjResult(interp,
+		    Tcl_NewStringObj(wmPtr->clientMachine, -1));
 	}
 	return TCL_OK;
     }
@@ -1258,8 +1261,8 @@ WmCommandCmd(
     }
     if (objc == 3) {
 	if (wmPtr->cmdArgv != NULL) {
-		argv3 = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
-	    Tcl_SetResult(interp, argv3, TCL_VOLATILE);
+	    argv3 = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(argv3, -1));
 	    ckfree(argv3);
 	}
 	return TCL_OK;
@@ -1366,8 +1369,8 @@ WmFocusmodelCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	Tcl_SetResult(interp, (wmPtr->hints.input ? "passive" : "active"),
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		wmPtr->hints.input ? "passive" : "active", -1));
 	return TCL_OK;
     }
 
@@ -1472,7 +1475,6 @@ WmFrameCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Window window;
-    char buf[TCL_INTEGER_SPACE];
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -1482,8 +1484,7 @@ WmFrameCmd(
     if (window == None) {
 	window = Tk_WindowId((Tk_Window) winPtr);
     }
-    sprintf(buf, "0x%x", (unsigned) window);
-    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("0x%x", (unsigned) window));
     return TCL_OK;
 }
 
@@ -1522,8 +1523,6 @@ WmGeometryCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	char buf[16 + TCL_INTEGER_SPACE * 4];
-
 	xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
 	ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
 	if (wmPtr->gridWin != NULL) {
@@ -1535,9 +1534,8 @@ WmGeometryCmd(
 	    width = winPtr->changes.width;
 	    height = winPtr->changes.height;
 	}
-	sprintf(buf, "%dx%d%c%d%c%d",
-		width, height, xSign, wmPtr->x, ySign, wmPtr->y);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
+		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
 	return TCL_OK;
     }
     argv3 = Tcl_GetString(objv[3]);
@@ -1585,12 +1583,13 @@ WmGridCmd(
     }
     if (objc == 3) {
 	if (wmPtr->sizeHintsFlags & PBaseSize) {
-	    char buf[TCL_INTEGER_SPACE * 4];
+	    Tcl_Obj *grid[4];
 
-	    sprintf(buf, "%d %d %d %d", wmPtr->reqGridWidth,
-		    wmPtr->reqGridHeight, wmPtr->widthInc,
-		    wmPtr->heightInc);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    grid[0] = Tcl_NewIntObj(wmPtr->reqGridWidth);
+	    grid[1] = Tcl_NewIntObj(wmPtr->reqGridHeight);
+	    grid[2] = Tcl_NewIntObj(wmPtr->widthInc);
+	    grid[3] = Tcl_NewIntObj(wmPtr->heightInc);
+	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, grid));
 	}
 	return TCL_OK;
     }
@@ -1676,7 +1675,7 @@ WmGroupCmd(
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & WindowGroupHint) {
-	    Tcl_SetResult(interp, wmPtr->leaderName, TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->leaderName, -1));
 	}
 	return TCL_OK;
     }
@@ -1739,8 +1738,9 @@ WmIconbitmapCmd(
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconPixmapHint) {
-	    Tcl_SetResult(interp, (char*)Tk_NameOfBitmap(winPtr->display,
-		    wmPtr->hints.icon_pixmap), TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    Tk_NameOfBitmap(winPtr->display,
+			    wmPtr->hints.icon_pixmap), -1));
 	}
 	return TCL_OK;
     }
@@ -1860,8 +1860,9 @@ WmIconmaskCmd(
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconMaskHint) {
-	    Tcl_SetResult(interp, (char *) Tk_NameOfBitmap(winPtr->display,
-		    wmPtr->hints.icon_mask), TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    Tk_NameOfBitmap(winPtr->display,
+			    wmPtr->hints.icon_mask), -1));
 	}
 	return TCL_OK;
     }
@@ -2034,11 +2035,11 @@ WmIconpositionCmd(
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & IconPositionHint) {
-	    char buf[TCL_INTEGER_SPACE * 2];
+	    Tcl_Obj *pos[2];
 
-	    sprintf(buf, "%d %d", wmPtr->hints.icon_x,
-		    wmPtr->hints.icon_y);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    pos[0] = Tcl_NewIntObj(wmPtr->hints.icon_x);
+	    pos[1] = Tcl_NewIntObj(wmPtr->hints.icon_y);
+	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, pos));
 	}
 	return TCL_OK;
     }
@@ -2091,7 +2092,7 @@ WmIconwindowCmd(
     }
     if (objc == 3) {
 	if (wmPtr->icon != NULL) {
-	    Tcl_SetResult(interp, Tk_PathName(wmPtr->icon), TCL_STATIC);
+	    Tcl_SetObjResult(interp, TkNewWindowObj(wmPtr->icon));
 	}
 	return TCL_OK;
     }
@@ -2240,15 +2241,16 @@ WmMaxsizeCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	char buf[TCL_INTEGER_SPACE * 2];
+	Tcl_Obj *size[2];
 
 	GetMaxSize(winPtr, &width, &height);
-	sprintf(buf, "%d %d", width, height);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	size[0] = Tcl_NewIntObj(width);
+	size[1] = Tcl_NewIntObj(height);
+	Tcl_SetObjResult(interp, Tcl_NewIntObj(2, size));
 	return TCL_OK;
     }
     if ((Tcl_GetIntFromObj(interp, objv[3], &width) != TCL_OK)
-	|| (Tcl_GetIntFromObj(interp, objv[4], &height) != TCL_OK)) {
+	    || (Tcl_GetIntFromObj(interp, objv[4], &height) != TCL_OK)) {
 	return TCL_ERROR;
     }
     wmPtr->maxWidth = width;
@@ -2291,11 +2293,12 @@ WmMinsizeCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	char buf[TCL_INTEGER_SPACE * 2];
+	Tcl_Obj *size[2];
 
 	GetMinSize(winPtr, &width, &height);
-	sprintf(buf, "%d %d", width, height);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	size[0] = Tcl_NewIntObj(width);
+	size[1] = Tcl_NewIntObj(height);
+	Tcl_SetObjResult(interp, Tcl_NewIntObj(2, size));
 	return TCL_OK;
     }
     if ((Tcl_GetIntFromObj(interp, objv[3], &width) != TCL_OK)
@@ -2475,7 +2478,8 @@ WmProtocolCmd(
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
 		protPtr = protPtr->nextPtr) {
 	    if (protPtr->protocol == protocol) {
-		Tcl_SetResult(interp, protPtr->command, TCL_STATIC);
+		Tcl_SetObjResult(interp,
+			Tcl_NewStringObj(protPtr->command, -1));
 		return TCL_OK;
 	    }
 	}
@@ -2545,16 +2549,15 @@ WmResizableCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	char buf[TCL_INTEGER_SPACE * 2];
+	Tcl_Obj *resize[2];
 
-	sprintf(buf, "%d %d",
-		(wmPtr->flags  & WM_WIDTH_NOT_RESIZABLE) ? 0 : 1,
-		(wmPtr->flags  & WM_HEIGHT_NOT_RESIZABLE) ? 0 : 1);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	resize[0] = Tcl_NewBooleanObj(!(wmPtr->flags & WM_WIDTH_NOT_RESIZABLE));
+	resize[1] = Tcl_NewBooleanObj(!(wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE));
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, resize));
 	return TCL_OK;
     }
     if ((Tcl_GetBooleanFromObj(interp, objv[3], &width) != TCL_OK)
-	|| (Tcl_GetBooleanFromObj(interp, objv[4], &height) != TCL_OK)) {
+	    || (Tcl_GetBooleanFromObj(interp, objv[4], &height) != TCL_OK)) {
 	return TCL_ERROR;
     }
     if (width) {
@@ -2908,8 +2911,8 @@ WmTitleCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	Tcl_SetResult(interp, (char *)((wmPtr->titleUid != NULL) ?
-		wmPtr->titleUid : winPtr->nameUid), TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		wmPtr->titleUid ? wmPtr->titleUid : winPtr->nameUid, -1));
 	return TCL_OK;
     }
     argv3 = Tcl_GetStringFromObj(objv[3], &length);
@@ -2957,7 +2960,8 @@ WmTransientCmd(
     }
     if (objc == 3) {
 	if (wmPtr->master != None) {
-	    Tcl_SetResult(interp, wmPtr->masterWindowName, TCL_STATIC);
+	    Tcl_SetObjResult(interp,
+		    Tcl_NewStringObj(wmPtr->masterWindowName, -1));
 	}
 	return TCL_OK;
     }

@@ -548,8 +548,9 @@ CreateFrame(
 	 * are being destroyed. Let an error be thrown.
 	 */
 
-	Tcl_AppendResult(interp, "unable to create widget \"",
-		Tcl_GetString(objv[1]), "\"", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"unable to create widget \"%s\"", Tcl_GetString(objv[1])));
+	Tcl_SetErrorCode(interp, "TK", "APP_GONE", NULL);
 	newWin = NULL;
     } else {
 	/*
@@ -562,9 +563,11 @@ CreateFrame(
 	goto error;
     } else {
 	/*
-	 * Mark Tk frames as suitable candidates for [wm manage]
+	 * Mark Tk frames as suitable candidates for [wm manage].
 	 */
+
 	TkWindow *winPtr = (TkWindow *)newWin;
+
 	winPtr->flags |= TK_WM_MANAGEABLE;
     }
     if (className == NULL) {
@@ -669,8 +672,10 @@ CreateFrame(
 	if (framePtr->useThis == NULL) {
 	    TkpMakeContainer(framePtr->tkwin);
 	} else {
-	    Tcl_AppendResult(interp, "A window cannot have both the -use ",
-		    "and the -container option set.", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "windows cannot have both the -use and the -container"
+		    " option set", -1));
+	    Tcl_SetErrorCode(interp, "TK", "FRAME", "CONTAINMENT", NULL);
 	    goto error;
 	}
     }
@@ -765,6 +770,7 @@ FrameWidgetObjCmd(
 
 	    for (i = 2; i < objc; i++) {
 		const char *arg = Tcl_GetStringFromObj(objv[i], &length);
+
 		if (length < 2) {
 		    continue;
 		}
@@ -785,23 +791,22 @@ FrameWidgetObjCmd(
 #ifdef SUPPORT_CONFIG_EMBEDDED
 		    if (c == 'u') {
 			const char *string = Tcl_GetString(objv[i+1]);
+
 			if (TkpUseWindow(interp, framePtr->tkwin,
 				string) != TCL_OK) {
 			    result = TCL_ERROR;
 			    goto done;
 			}
-		    } else {
-			Tcl_AppendResult(interp, "can't modify ", arg,
-				" option after widget is created", NULL);
-			result = TCL_ERROR;
-			goto done;
+			continue;
 		    }
-#else
-			Tcl_AppendResult(interp, "can't modify ", arg,
-				" option after widget is created", NULL);
-			result = TCL_ERROR;
-			goto done;
 #endif
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "can't modify %s option after widget is created",
+			    arg));
+		    Tcl_SetErrorCode(interp, "TK", "FRAME", "CREATE_ONLY",
+			    NULL);
+		    result = TCL_ERROR;
+		    goto done;
 		}
 	    }
 	    result = ConfigureFrame(interp, framePtr, objc-2, objv+2);
@@ -1011,19 +1016,14 @@ ConfigureFrame(
 		    }
 		    sibling = ancestor;
 		    if (Tk_IsTopLevel(ancestor)) {
-		    badWindow:
-			Tcl_AppendResult(interp, "can't use ",
-				Tk_PathName(labelframePtr->labelWin),
-				" as label in this frame", NULL);
-			labelframePtr->labelWin = NULL;
-			return TCL_ERROR;
+			goto badLabelWindow;
 		    }
 		}
 		if (Tk_IsTopLevel(labelframePtr->labelWin)) {
-		    goto badWindow;
+		    goto badLabelWindow;
 		}
 		if (labelframePtr->labelWin == framePtr->tkwin) {
-		    goto badWindow;
+		    goto badLabelWindow;
 		}
 		Tk_CreateEventHandler(labelframePtr->labelWin,
 			StructureNotifyMask, FrameStructureProc, framePtr);
@@ -1044,6 +1044,14 @@ ConfigureFrame(
 
     FrameWorldChanged(framePtr);
     return TCL_OK;
+
+  badLabelWindow:
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "can't use %s as label in this frame",
+	    Tk_PathName(labelframePtr->labelWin)));
+    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
+    labelframePtr->labelWin = NULL;
+    return TCL_ERROR;
 }
 
 /*

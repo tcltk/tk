@@ -658,10 +658,12 @@ PanedWindowWidgetObjCmd(
 			objv[3], tkwin);
 	    }
 	}
-	if (i == pwPtr->numSlaves) {
-	    Tcl_SetResult(interp, "not managed by this window", TCL_STATIC);
-	}
 	if (resultObj == NULL) {
+	    if (i == pwPtr->numSlaves) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"not managed by this window", -1));
+		Tcl_SetErrorCode(interp, "TK", "PANEDWIN", "UNMANAGED", NULL);
+	    }
 	    result = TCL_ERROR;
 	} else {
 	    Tcl_SetObjResult(interp, resultObj);
@@ -700,15 +702,11 @@ PanedWindowWidgetObjCmd(
 
     case PW_PANES:
 	resultObj = Tcl_NewObj();
-
-	Tcl_IncrRefCount(resultObj);
-
 	for (i = 0; i < pwPtr->numSlaves; i++) {
-	    Tcl_ListObjAppendElement(interp, resultObj,
-		    Tcl_NewStringObj(Tk_PathName(pwPtr->slaves[i]->tkwin),-1));
+	    Tcl_ListObjAppendElement(NULL, resultObj,
+		    TkNewWindowObj(pwPtr->slaves[i]->tkwin));
 	}
 	Tcl_SetObjResult(interp, resultObj);
-	Tcl_DecrRefCount(resultObj);
 	break;
 
     case PW_PROXY:
@@ -778,18 +776,19 @@ ConfigureSlaves(
 		 * A panedwindow cannot manage itself.
 		 */
 
-		Tcl_ResetResult(interp);
-		Tcl_AppendResult(interp, "can't add ", arg, " to itself",
-			NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"can't add %s to itself", arg));
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", NULL);
 		return TCL_ERROR;
 	    } else if (Tk_IsTopLevel(tkwin)) {
 		/*
 		 * A panedwindow cannot manage a toplevel.
 		 */
 
-		Tcl_ResetResult(interp);
-		Tcl_AppendResult(interp, "can't add toplevel ", arg, " to ",
-			Tk_PathName(pwPtr->tkwin), NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"can't add toplevel %s to %s", arg,
+			Tk_PathName(pwPtr->tkwin)));
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
 		return TCL_ERROR;
 	    } else {
 		/*
@@ -803,9 +802,11 @@ ConfigureSlaves(
 			break;
 		    }
 		    if (Tk_IsTopLevel(ancestor)) {
-			Tcl_ResetResult(interp);
-			Tcl_AppendResult(interp, "can't add ", arg, " to ",
-				Tk_PathName(pwPtr->tkwin), NULL);
+			Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+				"can't add %s to %s", arg,
+				Tk_PathName(pwPtr->tkwin)));
+			Tcl_SetErrorCode(interp, "TK", "GEOMETRY",
+				"HIERARCHY", NULL);
 			return TCL_ERROR;
 		    }
 		}
@@ -862,9 +863,10 @@ ConfigureSlaves(
      */
 
     if (haveLoc && index == -1) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "window \"", Tk_PathName(tkwin),
-		"\" is not managed by ", Tk_PathName(pwPtr->tkwin), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"window \"%s\" is not managed by %s",
+		Tk_PathName(tkwin), Tk_PathName(pwPtr->tkwin)));
+	Tcl_SetErrorCode(interp, "TK", "PANEDWINDOW", "UNMANAGED", NULL);
 	Tk_FreeConfigOptions((char *) &options, pwPtr->slaveOpts,
 		pwPtr->tkwin);
 	return TCL_ERROR;
@@ -1086,7 +1088,6 @@ PanedWindowSashCommand(
 	return TCL_ERROR;
     }
 
-    Tcl_ResetResult(interp);
     switch ((enum sashOptions) index) {
     case SASH_COORD:
 	if (objc != 4) {
@@ -1099,8 +1100,9 @@ PanedWindowSashCommand(
 	}
 
 	if (!ValidSashIndex(pwPtr, sash)) {
-	    Tcl_ResetResult(interp);
-	    Tcl_SetResult(interp, "invalid sash index", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "invalid sash index", -1));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_IDX", NULL);
 	    return TCL_ERROR;
 	}
 	slavePtr = pwPtr->slaves[sash];
@@ -1121,8 +1123,9 @@ PanedWindowSashCommand(
 	}
 
 	if (!ValidSashIndex(pwPtr, sash)) {
-	    Tcl_ResetResult(interp);
-	    Tcl_SetResult(interp, "invalid sash index", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "invalid sash index", -1));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_IDX", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1156,8 +1159,9 @@ PanedWindowSashCommand(
 	}
 
 	if (!ValidSashIndex(pwPtr, sash)) {
-	    Tcl_ResetResult(interp);
-	    Tcl_SetResult(interp, "invalid sash index", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "invalid sash index", -1));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_IDX", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -2398,10 +2402,11 @@ SetSticky(
 	    case ' ': case ',': case '\t': case '\r': case '\n':
 		break;
 	    default:
-		Tcl_ResetResult(interp);
-		Tcl_AppendResult(interp, "bad stickyness value \"",
-			Tcl_GetString(*value), "\": must be a string ",
-			"containing zero or more of n, e, s, and w", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad stickyness value \"%s\": must be a string"
+			" containing zero or more of n, e, s, and w",
+			Tcl_GetString(*value)));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "STICKY", NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -2654,7 +2659,7 @@ MoveSash(
  *	None.
  *
  * Side effects:
- *	When the window gets deleted, internal structures get cleaned up. Whena
+ *	When the window gets deleted, internal structures get cleaned up. When
  *	it gets exposed, it is redisplayed.
  *
  *--------------------------------------------------------------
@@ -2958,10 +2963,8 @@ PanedWindowIdentifyCoords(
     Tcl_Interp *interp,		/* Interpreter in which to store result. */
     int x, int y)		/* Coordinates of the point to identify. */
 {
-    Tcl_Obj *list;
     int i, sashHeight, sashWidth, thisx, thisy;
     int found, isHandle, lpad, rpad, tpad, bpad;
-    list = Tcl_NewObj();
 
     if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	if (Tk_IsMapped(pwPtr->tkwin)) {
@@ -3036,16 +3039,17 @@ PanedWindowIdentifyCoords(
     }
 
     /*
-     * Set results.
+     * Set results. Note that the empty string is the default (this function
+     * is called inside the implementation of a command).
      */
 
     if (found != -1) {
-	Tcl_ListObjAppendElement(interp, list, Tcl_NewIntObj(found));
-	Tcl_ListObjAppendElement(interp, list, Tcl_NewStringObj(
-		(isHandle ? "handle" : "sash"), -1));
-    }
+	Tcl_Obj *list[2];
 
-    Tcl_SetObjResult(interp, list);
+	list[0] = Tcl_NewIntObj(found);
+	list[1] = Tcl_NewStringObj((isHandle ? "handle" : "sash"), -1);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, list));
+    }
     return TCL_OK;
 }
 
