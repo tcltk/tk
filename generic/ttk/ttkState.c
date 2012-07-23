@@ -241,9 +241,8 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
 
     if (nSpecs % 2 != 0) {
 	if (interp)
-	    Tcl_SetResult(interp,
-		    "State map must have an even number of elements",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "State map must have an even number of elements", -1));
 	return 0;
     }
 

@@ -984,15 +984,19 @@ Tk_SendCmd(
 	    i++;
 	    break;
 	} else {
-	    Tcl_AppendResult(interp, "bad option \"", argv[i],
-		    "\": must be -async, -displayof, or --", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad option \"%s\": must be -async, -displayof, or --",
+		    argv[i]));
+	    Tcl_SetErrorCode(interp, "TK", "SEND", "OPTION", NULL);
 	    return TCL_ERROR;
 	}
     }
 
     if (argc < (i+2)) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		" ?-option value ...? interpName arg ?arg ...?\"", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("wrong # args: should be "
+		"\"%s ?-option value ...? interpName arg ?arg ...?\"",
+		argv[0]));
+	Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	return TCL_ERROR;
     }
     destName = argv[i];
@@ -1067,7 +1071,9 @@ Tk_SendCmd(
     commWindow = RegFindName(regPtr, destName);
     RegClose(regPtr);
     if (commWindow == None) {
-	Tcl_AppendResult(interp, "no application named \"",destName,"\"",NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"no application named \"%s\"", destName));
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION", NULL);
 	return TCL_ERROR;
     }
 
@@ -1190,12 +1196,10 @@ Tk_SendCmd(
 	ckfree(pending.errorInfo);
     }
     if (pending.errorCode != NULL) {
-	Tcl_Obj *errorObjPtr = Tcl_NewStringObj(pending.errorCode, -1);
-
-	Tcl_SetObjErrorCode(interp, errorObjPtr);
+	Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(pending.errorCode, -1));
 	ckfree(pending.errorCode);
     }
-    Tcl_SetResult(interp, pending.result, TCL_VOLATILE);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(pending.result, -1));
     ckfree(pending.result);
     return pending.code;
 }
@@ -1989,7 +1993,7 @@ TkpTestsendCmd(
 			*p = '\n';
 		    }
 		}
-		Tcl_SetResult(interp, property, TCL_VOLATILE);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(property, -1));
 	    }
 	    if (property != NULL) {
 		XFree(property);
@@ -2013,10 +2017,7 @@ TkpTestsendCmd(
 	    Tcl_DStringFree(&tmp);
 	}
     } else if (strcmp(argv[1], "serial") == 0) {
-	char buf[TCL_INTEGER_SPACE];
-
-	sprintf(buf, "%d", localData.sendSerial+1);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewIntObj(localData.sendSerial+1));
     } else {
 	Tcl_AppendResult(interp, "bad option \"", argv[1],
 		"\": must be bogus, prop, or serial", NULL);

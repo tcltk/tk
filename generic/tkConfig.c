@@ -1158,7 +1158,8 @@ GetOptionFromObj(
 
   error:
     if (interp != NULL) {
-	Tcl_AppendResult(interp, "unknown option \"", name, "\"", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"unknown option \"%s\"", name));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", name, NULL);
     }
     return NULL;
@@ -1226,9 +1227,9 @@ SetOptionFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     register Tcl_Obj *objPtr)	/* The object to convert. */
 {
-    Tcl_AppendResult(interp,
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "can't convert value to option except via GetOptionFromObj API",
-	    NULL);
+	    -1));
     Tcl_SetErrorCode(interp, "TK", "API_ABUSE", NULL);
     return TCL_ERROR;
 }
@@ -1345,8 +1346,9 @@ Tk_SetOptions(
 
 	if (objc < 2) {
 	    if (interp != NULL) {
-		Tcl_AppendResult(interp, "value for \"",
-			Tcl_GetStringFromObj(*objv, NULL), "\" missing",NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"value for \"%s\" missing",
+			Tcl_GetStringFromObj(*objv, NULL)));
 		Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", NULL);
 		goto error;
 	    }

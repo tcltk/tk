@@ -1359,7 +1359,8 @@ GetTextIndex(
     } else if ((c == 's') && (length >= 5)
 	    && (strncmp(string, "sel.first", (unsigned) length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
-	    Tcl_SetResult(interp, "selection isn't in item", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "selection isn't in item", -1));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", NULL);
 	    return TCL_ERROR;
 	}
@@ -1367,7 +1368,8 @@ GetTextIndex(
     } else if ((c == 's') && (length >= 5)
 	    && (strncmp(string, "sel.last", (unsigned) length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
-	    Tcl_SetResult(interp, "selection isn't in item", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "selection isn't in item", -1));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", NULL);
 	    return TCL_ERROR;
 	}

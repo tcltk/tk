@@ -155,8 +155,10 @@ TkTextImageCmd(
 	}
 	eiPtr = TkTextIndexToSeg(&index, NULL);
 	if (eiPtr->typePtr != &tkTextEmbImageType) {
-	    Tcl_AppendResult(interp, "no embedded image at index \"",
-		    Tcl_GetString(objv[3]), "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "no embedded image at index \"%s\"",
+		    Tcl_GetString(objv[3])));
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", NULL);
 	    return TCL_ERROR;
 	}
 	objPtr = Tk_GetOptionValue(interp, (char *) &eiPtr->body.ei,
@@ -178,14 +180,17 @@ TkTextImageCmd(
 	}
 	eiPtr = TkTextIndexToSeg(&index, NULL);
 	if (eiPtr->typePtr != &tkTextEmbImageType) {
-	    Tcl_AppendResult(interp, "no embedded image at index \"",
-		    Tcl_GetString(objv[3]), "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "no embedded image at index \"%s\"",
+		    Tcl_GetString(objv[3])));
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", NULL);
 	    return TCL_ERROR;
 	}
 	if (objc <= 5) {
 	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp,
 		    (char *) &eiPtr->body.ei, eiPtr->body.ei.optionTable,
 		    (objc == 5) ? objv[4] : NULL, textPtr->tkwin);
+
 	    if (objPtr == NULL) {
 		return TCL_ERROR;
 	    } else {
@@ -323,11 +328,12 @@ EmbImageConfigure(
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
     char *name;
+    int dummy;
     int count = 0;		/* The counter for picking a unique name */
     int conflict = 0;		/* True if we have a name conflict */
-    size_t len;		/* length of image name */
+    size_t len;			/* length of image name */
 
-    if (Tk_SetOptions(textPtr->interp, (char*)&eiPtr->body.ei,
+    if (Tk_SetOptions(textPtr->interp, (char *) &eiPtr->body.ei,
 	    eiPtr->body.ei.optionTable,
 	    objc, objv, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;
@@ -369,9 +375,11 @@ EmbImageConfigure(
     	name = eiPtr->body.ei.imageString;
     }
     if (name == NULL) {
-	Tcl_AppendResult(textPtr->interp, "Either a \"-name\" ",
-		"or a \"-image\" argument must be provided ",
-		"to the \"image create\" subcommand.", NULL);
+	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(
+		"Either a \"-name\" or a \"-image\" argument must be"
+		" provided to the \"image create\" subcommand", -1));
+	Tcl_SetErrorCode(textPtr->interp, "TK", "TEXT", "IMAGE_CREATE_USAGE",
+		NULL);
 	return TCL_ERROR;
     }
     len = strlen(name);
@@ -403,14 +411,10 @@ EmbImageConfigure(
 	Tcl_DStringAppend(&newName, buf, -1);
     }
     name = Tcl_DStringValue(&newName);
-    {
-	int dummy;
-
-	hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name,
-		&dummy);
-    }
+    hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name,
+	    &dummy);
     Tcl_SetHashValue(hPtr, eiPtr);
-    Tcl_AppendResult(textPtr->interp, name, NULL);
+    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
     eiPtr->body.ei.name = ckalloc(Tcl_DStringLength(&newName) + 1);
     strcpy(eiPtr->body.ei.name, name);
     Tcl_DStringFree(&newName);
