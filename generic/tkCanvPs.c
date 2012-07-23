@@ -337,8 +337,8 @@ TkCanvPostscriptCmd(
 	 */
 
 	if (psInfo.channelName != NULL) {
-	    Tcl_SetResult(interp, "can't specify both -file and -channel",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "can't specify both -file and -channel", -1));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "USAGE", NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
@@ -350,8 +350,8 @@ TkCanvPostscriptCmd(
 	 */
 
 	if (Tcl_IsSafe(interp)) {
-	    Tcl_SetResult(interp, "can't specify -file in a safe interpreter",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "can't specify -file in a safe interpreter", -1));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "SAFE", NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
