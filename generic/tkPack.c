@@ -152,7 +152,8 @@ void
 TkPrintPadAmount(
     Tcl_Interp *interp,		/* The interpreter into which the result is
 				 * written. */
-    const char *switchName,	/* One of "padx", "pady", "ipadx" or "ipady" */
+    const char *switchName,	/* One of "padx", "pady", "ipadx" or
+				 * "ipady" */
     int halfSpace,		/* The left or top padding amount */
     int allSpace)		/* The total amount of padding */
 {
@@ -239,8 +240,8 @@ Tk_PackObjCmd(
 	}
 	prevPtr = GetPacker(tkwin2);
 	if (prevPtr->masterPtr == NULL) {
-	    Tcl_AppendResult(interp, "window \"", argv2,
-		    "\" isn't packed", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" isn't packed", argv2));
 	    Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED", NULL);
 	    return TCL_ERROR;
 	}
@@ -273,8 +274,8 @@ Tk_PackObjCmd(
 	}
 	packPtr = GetPacker(tkwin2);
 	if (packPtr->masterPtr == NULL) {
-	    Tcl_AppendResult(interp, "window \"", argv2,
-		    "\" isn't packed", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" isn't packed", argv2));
 	    Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED", NULL);
 	    return TCL_ERROR;
 	}
@@ -296,8 +297,8 @@ Tk_PackObjCmd(
     }
     case PACK_CONFIGURE:
 	if (argv2[0] != '.') {
-	    Tcl_AppendResult(interp, "bad argument \"", argv2,
-		    "\": must be name of window", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad argument \"%s\": must be name of window", argv2));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW", NULL);
 	    return TCL_ERROR;
 	}
@@ -337,8 +338,8 @@ Tk_PackObjCmd(
 	}
 	slavePtr = GetPacker(slave);
 	if (slavePtr->masterPtr == NULL) {
-	    Tcl_AppendResult(interp, "window \"", argv2,
-		    "\" isn't packed", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" isn't packed", argv2));
 	    Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED", NULL);
 	    return TCL_ERROR;
 	}
@@ -1101,9 +1102,9 @@ PackAfter(
 
     for ( ; objc > 0; objc -= 2, objv += 2, prevPtr = packPtr) {
 	if (objc < 2) {
-	    Tcl_AppendResult(interp, "wrong # args: window \"",
-		    Tcl_GetString(objv[0]), "\" should be followed by options",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "wrong # args: \"%s\" should be followed by options",
+		    Tcl_GetString(objv[0])));
 	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	    return TCL_ERROR;
 	}
@@ -1126,8 +1127,9 @@ PackAfter(
 	    }
 	    if (((Tk_FakeWin *) (ancestor))->flags & TK_TOP_HIERARCHY) {
 	    badWindow:
-		Tcl_AppendResult(interp, "can't pack ", Tcl_GetString(objv[0]),
-			" inside ", Tk_PathName(masterPtr->tkwin), NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"can't pack %s inside %s", Tcl_GetString(objv[0]),
+			Tk_PathName(masterPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		return TCL_ERROR;
 	    }
@@ -1186,9 +1188,9 @@ PackAfter(
 	    } else if ((c == 'p') && (strcmp(curOpt, "padx")) == 0) {
 		if (optionCount < (index+2)) {
 		missingPad:
-		    Tcl_AppendResult(interp, "wrong # args: \"", curOpt,
-			    "\" option must be followed by screen distance",
-			    NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "wrong # args: window \"%s\" option must be"
+			    " followed by screen distance", curOpt));
 		    Tcl_SetErrorCode(interp, "TK", "OLDPACK", "BAD_PARAMETER",
 			    NULL);
 		    return TCL_ERROR;
@@ -1216,8 +1218,9 @@ PackAfter(
 	    } else if ((c == 'f') && (length > 1)
 		    && (strncmp(curOpt, "frame", (size_t) length) == 0)) {
 		if (optionCount < (index+2)) {
-		    Tcl_AppendResult(interp, "wrong # args: \"frame\" ",
-			    "option must be followed by anchor point", NULL);
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			    "wrong # args: \"frame\""
+			    " option must be followed by anchor point", -1));
 		    Tcl_SetErrorCode(interp, "TK", "OLDPACK", "BAD_PARAMETER",
 			    NULL);
 		    return TCL_ERROR;
@@ -1228,9 +1231,10 @@ PackAfter(
 		}
 		index++;
 	    } else {
-		Tcl_AppendResult(interp, "bad option \"", curOpt,
-			"\": should be top, bottom, left, right, expand, ",
-			"fill, fillx, filly, padx, pady, or frame", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad option \"%s\": should be top, bottom, left,"
+			" right, expand, fill, fillx, filly, padx, pady, or"
+			" frame", curOpt));
 		Tcl_SetErrorCode(interp, "TK", "OLDPACK", "BAD_PARAMETER",
 			NULL);
 		return TCL_ERROR;
@@ -1238,7 +1242,6 @@ PackAfter(
 	}
 
 	if (packPtr != prevPtr) {
-
 	    /*
 	     * Unpack this window if it's currently packed.
 	     */
@@ -1547,8 +1550,9 @@ ConfigureSlaves(
 	    return TCL_ERROR;
 	}
 	if (Tk_TopWinHierarchy(slave)) {
-	    Tcl_AppendResult(interp, "can't pack \"", Tcl_GetString(objv[j]),
-		    "\": it's a top-level window", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't pack \"%s\": it's a top-level window",
+		    Tcl_GetString(objv[j])));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
 	    return TCL_ERROR;
 	}
@@ -1572,9 +1576,9 @@ ConfigureSlaves(
 
 	for (i = numWindows; i < objc; i+=2) {
 	    if ((i+2) > objc) {
-		Tcl_AppendResult(interp, "extra option \"",
-			Tcl_GetString(objv[i]),
-			"\" (option with no value?)", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"extra option \"%s\" (option with no value?)",
+			Tcl_GetString(objv[i])));
 		Tcl_SetErrorCode(interp, "TK", "PACK", "BAD_PARAMETER", NULL);
 		return TCL_ERROR;
 	    }
@@ -1593,9 +1597,9 @@ ConfigureSlaves(
 		    prevPtr = GetPacker(other);
 		    if (prevPtr->masterPtr == NULL) {
 		    notPacked:
-			Tcl_AppendResult(interp, "window \"",
-				Tcl_GetString(objv[i+1]), "\" isn't packed",
-				NULL);
+			Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+				"window \"%s\" isn't packed",
+				Tcl_GetString(objv[i+1])));
 			Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED",
 				NULL);
 			return TCL_ERROR;
@@ -1652,8 +1656,9 @@ ConfigureSlaves(
 		} else if (strcmp(string, "both") == 0) {
 		    slavePtr->flags |= FILLX|FILLY;
 		} else {
-		    Tcl_AppendResult(interp, "bad fill style \"", string,
-			    "\": must be none, x, y, or both", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bad fill style \"%s\": must be "
+			    "none, x, y, or both", string));
 		    Tcl_SetErrorCode(interp, "TK", "VALUE", "FILL", NULL);
 		    return TCL_ERROR;
 		}
@@ -1676,12 +1681,10 @@ ConfigureSlaves(
 		break;
 	    case CONF_IPADX:
 		if ((Tk_GetPixelsFromObj(interp, slave, objv[i+1], &tmp)
-			!= TCL_OK)
-			|| (tmp < 0)) {
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp, "bad ipadx value \"",
-			    Tcl_GetString(objv[i+1]),
-			    "\": must be positive screen distance", NULL);
+			!= TCL_OK) || (tmp < 0)) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bad ipadx value \"%s\": must be positive screen"
+			    " distance", Tcl_GetString(objv[i+1])));
 		    Tcl_SetErrorCode(interp, "TK", "VALUE", "INT_PAD", NULL);
 		    return TCL_ERROR;
 		}
@@ -1689,12 +1692,10 @@ ConfigureSlaves(
 		break;
 	    case CONF_IPADY:
 		if ((Tk_GetPixelsFromObj(interp, slave, objv[i+1], &tmp)
-			!= TCL_OK)
-			|| (tmp < 0)) {
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp, "bad ipady value \"",
-			    Tcl_GetString(objv[i+1]),
-			    "\": must be positive screen distance", NULL);
+			!= TCL_OK) || (tmp < 0)) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bad ipady value \"%s\": must be positive screen"
+			    " distance", Tcl_GetString(objv[i+1])));
 		    Tcl_SetErrorCode(interp, "TK", "VALUE", "INT_PAD", NULL);
 		    return TCL_ERROR;
 		}
@@ -1772,15 +1773,16 @@ ConfigureSlaves(
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
-		Tcl_AppendResult(interp, "can't pack ", Tcl_GetString(objv[j]),
-			" inside ", Tk_PathName(masterPtr->tkwin), NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"can't pack %s inside %s", Tcl_GetString(objv[j]),
+			Tk_PathName(masterPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		return TCL_ERROR;
 	    }
 	}
 	if (slave == masterPtr->tkwin) {
-	    Tcl_AppendResult(interp, "can't pack ", Tcl_GetString(objv[j]),
-		    " inside itself", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't pack %s inside itself", Tcl_GetString(objv[j])));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", NULL);
 	    return TCL_ERROR;
 	}

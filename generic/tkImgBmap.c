@@ -277,8 +277,8 @@ ImgBmapConfigureMaster(
     if ((masterPtr->maskFileString != NULL)
 	    || (masterPtr->maskDataString != NULL)) {
 	if (masterPtr->data == NULL) {
-	    Tcl_SetResult(masterPtr->interp, "can't have mask without bitmap",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(masterPtr->interp, Tcl_NewStringObj(
+		    "can't have mask without bitmap", -1));
 	    Tcl_SetErrorCode(masterPtr->interp, "TK", "IMAGE", "BITMAP",
 		    "NO_BITMAP", NULL);
 	    return TCL_ERROR;
@@ -293,8 +293,8 @@ ImgBmapConfigureMaster(
 		|| (maskHeight != masterPtr->height)) {
 	    ckfree(masterPtr->maskData);
 	    masterPtr->maskData = NULL;
-	    Tcl_SetResult(masterPtr->interp,
-		    "bitmap and mask have different sizes", TCL_STATIC);
+	    Tcl_SetObjResult(masterPtr->interp, Tcl_NewStringObj(
+		    "bitmap and mask have different sizes", -1));
 	    Tcl_SetErrorCode(masterPtr->interp, "TK", "IMAGE", "BITMAP",
 		    "MASK_SIZE", NULL);
 	    return TCL_ERROR;
@@ -494,8 +494,9 @@ TkGetBitmapData(
     pi.string = string;
     if (string == NULL) {
 	if ((interp != NULL) && Tcl_IsSafe(interp)) {
-	    Tcl_AppendResult(interp, "can't get bitmap data from a file in a",
-		    " safe interpreter", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "can't get bitmap data from a file in a safe interpreter",
+		    -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "SAFE", NULL);
 	    return NULL;
 	}
@@ -508,8 +509,9 @@ TkGetBitmapData(
 	if (pi.chan == NULL) {
 	    if (interp != NULL) {
 		Tcl_ResetResult(interp);
-		Tcl_AppendResult(interp, "couldn't read bitmap file \"",
-			fileName, "\": ", Tcl_PosixError(interp), NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"couldn't read bitmap file \"%s\": %s",
+			fileName, Tcl_PosixError(interp)));
 	    }
 	    return NULL;
 	}
@@ -598,8 +600,9 @@ TkGetBitmapData(
 	    }
 	} else if ((pi.word[0] == '{') && (pi.word[1] == 0)) {
 	    if (interp != NULL) {
-		Tcl_AppendResult(interp, "format error in bitmap data; ",
-			"looks like it's an obsolete X10 bitmap file", NULL);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"format error in bitmap data; looks like it's an"
+			" obsolete X10 bitmap file", -1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "OBSOLETE",
 			NULL);
 	    }
@@ -643,7 +646,8 @@ TkGetBitmapData(
 
   error:
     if (interp != NULL) {
-	Tcl_SetResult(interp, "format error in bitmap data", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"format error in bitmap data", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "FORMAT", NULL);
     }
 
@@ -1159,9 +1163,9 @@ ImgBmapPsImagemask(
     };
 
     if (width*height > 60000) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "unable to generate postscript for bitmaps "
-		"larger than 60000 pixels", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"unable to generate postscript for bitmaps larger than 60000"
+		" pixels", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "OUTSIZE", NULL);
 	return TCL_ERROR;
     }

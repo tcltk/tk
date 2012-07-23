@@ -1356,8 +1356,8 @@ Tk_GetStyle(
     entryPtr = Tcl_FindHashEntry(&tsdPtr->styleTable, (name!=NULL?name:""));
     if (entryPtr == NULL) {
 	if (interp != NULL) {
-	    Tcl_AppendResult(interp, "style \"", name, "\" doesn't exist",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "style \"%s\" doesn't exist", name));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "STYLE", name, NULL);
 	}
 	return (Tk_Style) NULL;
