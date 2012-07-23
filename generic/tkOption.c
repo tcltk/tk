@@ -690,7 +690,7 @@ Tk_OptionObjCmd(
 	value = Tk_GetOption(window, Tcl_GetString(objv[3]),
 		Tcl_GetString(objv[4]));
 	if (value != NULL) {
-	    Tcl_SetResult(interp, (char *) value, TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(value, -1));
 	}
 	break;
     }
@@ -877,9 +877,10 @@ ParsePriority(
 	priority = strtoul(string, &end, 0);
 	if ((end == string) || (*end != 0) || (priority < 0)
 		|| (priority > 100)) {
-	    Tcl_AppendResult(interp, "bad priority level \"", string,
-		    "\": must be widgetDefault, startupFile, userDefault, ",
-		    "interactive, or a number between 0 and 100", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad priority level \"%s\": must be "
+		    "widgetDefault, startupFile, userDefault, "
+		    "interactive, or a number between 0 and 100", string));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PRIORITY", NULL);
 	    return -1;
 	}
@@ -1061,7 +1062,7 @@ ReadOptionFile(
     Tcl_Interp *interp,		/* Interpreter to use for reporting results. */
     Tk_Window tkwin,		/* Token for window: options are entered for
 				 * this window's main window. */
-    const char *fileName,		/* Name of file containing options. */
+    const char *fileName,	/* Name of file containing options. */
     int priority)		/* Priority level to use for options in this
 				 * file, such as TK_USER_DEFAULT_PRIO or
 				 * TK_INTERACTIVE_PRIO. Must be between 0 and
@@ -1078,8 +1079,8 @@ ReadOptionFile(
      */
 
     if (Tcl_IsSafe(interp)) {
-	Tcl_AppendResult(interp, "can't read options from a file in a",
-		" safe interpreter", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"can't read options from a file in a safe interpreter", -1));
 	Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "SAFE", NULL);
 	return TCL_ERROR;
     }
@@ -1091,9 +1092,8 @@ ReadOptionFile(
     chan = Tcl_OpenFileChannel(interp, realName, "r", 0);
     Tcl_DStringFree(&newName);
     if (chan == NULL) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "couldn't open \"", fileName,
-		"\": ", Tcl_PosixError(interp), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("couldn't open \"%s\": %s",
+		fileName, Tcl_PosixError(interp)));
 	return TCL_ERROR;
     }
 
@@ -1106,8 +1106,9 @@ ReadOptionFile(
     Tcl_Seek(chan, (Tcl_WideInt) 0, SEEK_SET);
 
     if (bufferSize < 0) {
-	Tcl_AppendResult(interp, "error seeking to end of file \"",
-		fileName, "\":", Tcl_PosixError(interp), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"error seeking to end of file \"%s\": %s",
+		fileName, Tcl_PosixError(interp)));
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
@@ -1115,8 +1116,9 @@ ReadOptionFile(
     buffer = ckalloc(bufferSize + 1);
     bufferSize = Tcl_Read(chan, buffer, bufferSize);
     if (bufferSize < 0) {
-	Tcl_AppendResult(interp, "error reading file \"", fileName, "\":",
-		Tcl_PosixError(interp), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"error reading file \"%s\": %s",
+		fileName, Tcl_PosixError(interp)));
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }

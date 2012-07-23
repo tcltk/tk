@@ -224,12 +224,12 @@ Tk_GetColor(
     if (tkColPtr == NULL) {
 	if (interp != NULL) {
 	    if (*name == '#') {
-		Tcl_AppendResult(interp, "invalid color name \"", name,
-			"\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"invalid color name \"%s\"", name));
 		Tcl_SetErrorCode(interp, "TK", "VALUE", "COLOR", NULL);
 	    } else {
-		Tcl_AppendResult(interp, "unknown color name \"", name,
-			"\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"unknown color name \"%s\"", name));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "COLOR", name, NULL);
 	    }
 	}
