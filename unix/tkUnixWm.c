@@ -1082,8 +1082,9 @@ Tk_WmObjCmd(
     winPtr = (TkWindow *) targetWin;
     if (!Tk_IsTopLevel(winPtr) &&
 	    (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)) {
-	Tcl_AppendResult(interp, "window \"", winPtr->pathName,
-		"\" isn't a top-level window", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"window \"%s\" isn't a top-level window", winPtr->pathName));
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", NULL);
 	return TCL_ERROR;
     }
 
@@ -1214,8 +1215,9 @@ WmAspectCmd(
 	}
 	if ((numer1 <= 0) || (denom1 <= 0) || (numer2 <= 0) ||
 		(denom2 <= 0)) {
-	    Tcl_SetResult(interp, "aspect number can't be <= 0",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "aspect number can't be <= 0", -1));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "ASPECT", NULL);
 	    return TCL_ERROR;
 	}
 	wmPtr->minAspect.x = numer1;
@@ -1650,10 +1652,10 @@ WmCommandCmd(
     }
     if (objc == 3) {
 	if (wmPtr->cmdArgv != NULL) {
-	    /* TODO: Convert this to work with the Tcl_Obj API */
 	    char *arg = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
 
-	    Tcl_SetResult(interp, arg, TCL_DYNAMIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(arg, -1));
+	    ckfree(arg);
 	}
 	return TCL_OK;
     }
@@ -1715,13 +1717,17 @@ WmDeiconifyCmd(
 	return TCL_ERROR;
     }
     if (wmPtr->iconFor != NULL) {
-	Tcl_AppendResult(interp, "can't deiconify ", Tcl_GetString(objv[2]),
-		": it is an icon for ", Tk_PathName(wmPtr->iconFor), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't deiconify %s: it is an icon for %s",
+		Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
+	Tcl_SetErrorCode(interp, "TK", "WM", "DEICONIFY", "ICON", NULL);
 	return TCL_ERROR;
     }
     if (winPtr->flags & TK_EMBEDDED) {
-	Tcl_AppendResult(interp, "can't deiconify ", winPtr->pathName,
-		": it is an embedded window", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't deiconify %s: it is an embedded window",
+		winPtr->pathName));
+	Tcl_SetErrorCode(interp, "TK", "WM", "DEICONIFY", "EMBEDDED", NULL);
 	return TCL_ERROR;
     }
     wmPtr->flags &= ~WM_WITHDRAWN;
@@ -1766,8 +1772,8 @@ WmFocusmodelCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	Tcl_SetResult(interp, (wmPtr->hints.input ? "passive" : "active"),
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		wmPtr->hints.input ? "passive" : "active", -1));
 	return TCL_OK;
     }
 
@@ -2000,19 +2006,27 @@ WmGridCmd(
 	    return TCL_ERROR;
 	}
 	if (reqWidth < 0) {
-	    Tcl_SetResult(interp, "baseWidth can't be < 0", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "baseWidth can't be < 0", -1));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
 	    return TCL_ERROR;
 	}
 	if (reqHeight < 0) {
-	    Tcl_SetResult(interp, "baseHeight can't be < 0", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "baseHeight can't be < 0", -1));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
 	    return TCL_ERROR;
 	}
 	if (widthInc <= 0) {
-	    Tcl_SetResult(interp, "widthInc can't be <= 0", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "widthInc can't be <= 0", -1));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
 	    return TCL_ERROR;
 	}
 	if (heightInc <= 0) {
-	    Tcl_SetResult(interp, "heightInc can't be <= 0", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "heightInc can't be <= 0", -1));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
 	    return TCL_ERROR;
 	}
 	Tk_SetGrid((Tk_Window) winPtr, reqWidth, reqHeight, widthInc,
@@ -2191,29 +2205,40 @@ WmIconifyCmd(
 	return TCL_ERROR;
     }
     if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
-	Tcl_AppendResult(interp, "can't iconify \"", winPtr->pathName,
-		"\": override-redirect flag is set", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't iconify \"%s\": override-redirect flag is set",
+		winPtr->pathName));
+	Tcl_SetErrorCode(interp, "TK", "WM", "CANNOT_ICONIFY",
+		"OVERRIDE_REDIRECT", NULL);
 	return TCL_ERROR;
     }
     if (wmPtr->masterPtr != NULL) {
-	Tcl_AppendResult(interp, "can't iconify \"", winPtr->pathName,
-		"\": it is a transient", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't iconify \"%s\": it is a transient",
+		winPtr->pathName));
+	Tcl_SetErrorCode(interp, "TK", "WM", "CANNOT_ICONIFY", "TRANSIENT",
+		NULL);
 	return TCL_ERROR;
     }
     if (wmPtr->iconFor != NULL) {
-	Tcl_AppendResult(interp, "can't iconify ", winPtr->pathName,
-		": it is an icon for ", Tk_PathName(wmPtr->iconFor), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't iconify %s: it is an icon for %s",
+		winPtr->pathName, Tk_PathName(wmPtr->iconFor)));
+	Tcl_SetErrorCode(interp, "TK", "WM", "CANNOT_ICONIFY", "ICON", NULL);
 	return TCL_ERROR;
     }
     if (winPtr->flags & TK_EMBEDDED) {
-	Tcl_AppendResult(interp, "can't iconify ", winPtr->pathName,
-		": it is an embedded window", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't iconify %s: it is an embedded window",
+		winPtr->pathName));
+	Tcl_SetErrorCode(interp, "TK", "WM", "CANNOT_ICONIFY", "EMBEDDED",
+		NULL);
 	return TCL_ERROR;
     }
     if (TkpWmSetState(winPtr, IconicState) == 0) {
-	Tcl_SetResult(interp,
-		"couldn't send iconify message to window manager",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"couldn't send iconify message to window manager", -1));
+	Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -2383,8 +2408,10 @@ WmIconphotoCmd(
     for (i = 3 + isDefault; i < objc; i++) {
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
 	if (photo == NULL) {
-	    Tcl_AppendResult(interp, "can't use \"", Tcl_GetString(objv[i]),
-		    "\" as iconphoto: not a photo image", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't use \"%s\" as iconphoto: not a photo image",
+		    Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
 	    return TCL_ERROR;
 	}
 	Tk_PhotoGetSize(photo, &width, &height);
@@ -2594,15 +2621,18 @@ WmIconwindowCmd(
 	    return TCL_ERROR;
 	}
 	if (!Tk_IsTopLevel(tkwin2)) {
-	    Tcl_AppendResult(interp, "can't use ", Tcl_GetString(objv[3]),
-		    " as icon window: not at top level", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't use %s as icon window: not at top level",
+		    Tcl_GetString(objv[3])));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWIN", "INNER", NULL);
 	    return TCL_ERROR;
 	}
 	wmPtr2 = ((TkWindow *) tkwin2)->wmInfoPtr;
 	if (wmPtr2->iconFor != NULL) {
-	    Tcl_AppendResult(interp, Tcl_GetString(objv[3]),
-		    " is already an icon for ", Tk_PathName(wmPtr2->iconFor),
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "%s is already an icon for %s",
+		    Tcl_GetString(objv[3]), Tk_PathName(wmPtr2->iconFor)));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWIN", "ICON", NULL);
 	    return TCL_ERROR;
 	}
 	if (wmPtr->icon != NULL) {
@@ -2635,9 +2665,10 @@ WmIconwindowCmd(
 	    if (XWithdrawWindow(Tk_Display(tkwin2),
 		    Tk_WindowId(wmPtr2->wrapperPtr),
 		    Tk_ScreenNumber(tkwin2)) == 0) {
-		Tcl_SetResult(interp,
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"couldn't send withdraw message to window manager",
-			TCL_STATIC);
+			-1));
+		Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
 		return TCL_ERROR;
 	    }
 	    WaitForMapNotify((TkWindow *) tkwin2, 0);
@@ -2677,9 +2708,10 @@ WmManageCmd(
 
     if (!Tk_IsTopLevel(frameWin)) {
 	if (!Tk_IsManageable(frameWin)) {
-	    Tcl_AppendResult(interp, "window \"", Tk_PathName(frameWin),
-		    "\" is not manageable: must be a frame, labelframe or "
-		    "toplevel", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" is not manageable: must be a frame,"
+		    " labelframe or toplevel", Tk_PathName(frameWin)));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "MANAGE", "TYPE", NULL);
 	    return TCL_ERROR;
 	}
 	TkFocusSplit(winPtr);
@@ -2913,11 +2945,14 @@ WmPositionfromCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
+	const char *sourceStr = "";
+
 	if (wmPtr->sizeHintsFlags & USPosition) {
-	    Tcl_SetResult(interp, "user", TCL_STATIC);
+	    sourceStr = "user";
 	} else if (wmPtr->sizeHintsFlags & PPosition) {
-	    Tcl_SetResult(interp, "program", TCL_STATIC);
+	    sourceStr = "program";
 	}
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(sourceStr, -1));
 	return TCL_OK;
     }
     if (*Tcl_GetString(objv[3]) == '\0') {
@@ -3012,8 +3047,9 @@ WmProtocolCmd(
      */
 
     if (strcmp(Tcl_GetString(objv[3]), "_NET_WM_PING") == 0) {
-	Tcl_SetResult(interp, "may not alter handling of that protocol",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"may not alter handling of that protocol", -1));
+	Tcl_SetErrorCode(interp, "TK", "WM", "PROTOCOL", "RESERVED", NULL);
 	return TCL_ERROR;
     }
 
@@ -3145,11 +3181,14 @@ WmSizefromCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
+	const char *sourceStr = "";
+
 	if (wmPtr->sizeHintsFlags & USSize) {
-	    Tcl_SetResult(interp, "user", TCL_STATIC);
+	    sourceStr = "user";
 	} else if (wmPtr->sizeHintsFlags & PSize) {
-	    Tcl_SetResult(interp, "program", TCL_STATIC);
+	    sourceStr = "program";
 	}
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(sourceStr, -1));
 	return TCL_OK;
     }
 
@@ -3235,20 +3274,24 @@ WmStackorderCmd(
 	winPtr2 = (TkWindow *) relWin;
 
 	if (!Tk_IsTopLevel(winPtr2)) {
-	    Tcl_AppendResult(interp, "window \"", winPtr2->pathName,
-		    "\" isn't a top-level window", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" isn't a top-level window",
+		    winPtr2->pathName));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "TOPLEVEL", NULL);
 	    return TCL_ERROR;
 	}
 
 	if (!Tk_IsMapped(winPtr)) {
-	    Tcl_AppendResult(interp, "window \"", winPtr->pathName,
-		    "\" isn't mapped", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" isn't mapped", winPtr->pathName));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "MAPPED", NULL);
 	    return TCL_ERROR;
 	}
 
 	if (!Tk_IsMapped(winPtr2)) {
-	    Tcl_AppendResult(interp, "window \"", winPtr2->pathName,
-		    "\" isn't mapped", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" isn't mapped", winPtr2->pathName));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "MAPPED", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3258,9 +3301,10 @@ WmStackorderCmd(
 	 */
 
 	windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
-
 	if (windows == NULL) {
-	    Tcl_AppendResult(interp, "TkWmStackorderToplevel failed", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "TkWmStackorderToplevel failed", -1));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "INTERNAL", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3328,9 +3372,10 @@ WmStateCmd(
     }
     if (objc == 4) {
 	if (wmPtr->iconFor != NULL) {
-	    Tcl_AppendResult(interp, "can't change state of ",
-		    Tcl_GetString(objv[2]), ": it is an icon for ",
-		    Tk_PathName(wmPtr->iconFor), NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't change state of %s: it is an icon for %s",
+		    Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "ICON", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3344,27 +3389,35 @@ WmStateCmd(
 	    (void) TkpWmSetState(winPtr, NormalState);
 	} else if (index == OPT_ICONIC) {
 	    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
-		Tcl_AppendResult(interp, "can't iconify \"", winPtr->pathName,
-			"\": override-redirect flag is set", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"can't iconify \"%s\": override-redirect flag is set",
+			winPtr->pathName));
+		Tcl_SetErrorCode(interp, "TK", "WM", "STATE",
+			"ICONIFY_REDIRECTED", NULL);
 		return TCL_ERROR;
 	    }
 	    if (wmPtr->masterPtr != NULL) {
-		Tcl_AppendResult(interp, "can't iconify \"", winPtr->pathName,
-			"\": it is a transient", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"can't iconify \"%s\": it is a transient",
+			winPtr->pathName));
+		Tcl_SetErrorCode(interp, "TK", "WM", "STATE",
+			"ICONIFY_TRANSIENT", NULL);
 		return TCL_ERROR;
 	    }
 	    if (TkpWmSetState(winPtr, IconicState) == 0) {
-		Tcl_SetResult(interp,
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"couldn't send iconify message to window manager",
-			TCL_STATIC);
+			-1));
+		Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
 		return TCL_ERROR;
 	    }
 	} else { /* OPT_WITHDRAWN */
 	    wmPtr->flags |= WM_WITHDRAWN;
 	    if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
-		Tcl_SetResult(interp,
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"couldn't send withdraw message to window manager",
-			TCL_STATIC);
+			-1));
+		Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -3516,9 +3569,10 @@ WmTransientCmd(
 	Tk_MakeWindowExist((Tk_Window) masterPtr);
 
 	if (wmPtr->iconFor != NULL) {
-	    Tcl_AppendResult(interp, "can't make \"", Tcl_GetString(objv[2]),
-		    "\" a transient: it is an icon for ",
-		    Tk_PathName(wmPtr->iconFor), NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't make \"%s\" a transient: it is an icon for %s",
+		    Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3528,15 +3582,17 @@ WmTransientCmd(
 	}
 
 	if (wmPtr2->iconFor != NULL) {
-	    Tcl_AppendResult(interp, "can't make \"", Tcl_GetString(objv[3]),
-		    "\" a master: it is an icon for ",
-		    Tk_PathName(wmPtr2->iconFor), NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't make \"%s\" a master: it is an icon for %s",
+		    Tcl_GetString(objv[3]), Tk_PathName(wmPtr2->iconFor)));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "ICON", NULL);
 	    return TCL_ERROR;
 	}
 
 	if (masterPtr == winPtr) {
-	    Tcl_AppendResult(interp, "can't make \"", Tk_PathName(winPtr),
-		    "\" its own master", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't make \"%s\" its own master", Tk_PathName(winPtr)));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
 	    return TCL_ERROR;
 	} else if (masterPtr != wmPtr->masterPtr) {
 	    /*
@@ -3561,9 +3617,10 @@ WmTransientCmd(
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	if (wmPtr->masterPtr != NULL && !Tk_IsMapped(wmPtr->masterPtr)) {
 	    if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
-		Tcl_SetResult(interp,
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"couldn't send withdraw message to window manager",
-			TCL_STATIC);
+			-1));
+		Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
 		return TCL_ERROR;
 	    }
 	} else {
@@ -3612,15 +3669,17 @@ WmWithdrawCmd(
 	return TCL_ERROR;
     }
     if (wmPtr->iconFor != NULL) {
-	Tcl_AppendResult(interp, "can't withdraw ", Tcl_GetString(objv[2]),
-		": it is an icon for ", Tk_PathName(wmPtr->iconFor), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't withdraw %s: it is an icon for %s",
+		Tcl_GetString(objv[2]), Tk_PathName(wmPtr->iconFor)));
+	Tcl_SetErrorCode(interp, "TK", "WM", "WITHDRAW", "ICON", NULL);
 	return TCL_ERROR;
     }
     wmPtr->flags |= WM_WITHDRAWN;
     if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
-	Tcl_SetResult(interp,
-		"couldn't send withdraw message to window manager",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"couldn't send withdraw message to window manager", -1));
+	Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -5614,7 +5673,9 @@ ParseGeometry(
     return TCL_OK;
 
   error:
-    Tcl_AppendResult(interp, "bad geometry specifier \"", string, "\"", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad geometry specifier \"%s\"", string));
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "GEOMETRY", NULL);
     return TCL_ERROR;
 }
 
@@ -6371,9 +6432,11 @@ TkWmStackorderToplevel(
 		*window_ptr++ = childWinPtr;
 	    }
 	}
+
 	/* ASSERT: window_ptr - windows == table.numEntries 
 	 * (#matched toplevel windows == #children) [Bug 1789819]
 	 */
+
 	*window_ptr = NULL;
 	if (numChildren) {
 	    XFree((char *) children);

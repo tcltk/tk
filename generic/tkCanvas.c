@@ -1032,9 +1032,9 @@ CanvasWidgetCmd(
 		    |KeyReleaseMask|PointerMotionMask|VirtualEventMask)) {
 		Tk_DeleteBinding(interp, canvasPtr->bindingTable,
 			object, Tcl_GetString(objv[3]));
-		Tcl_SetResult(interp, "requested illegal events;"
-			" only key, button, motion, enter, leave, and virtual"
-			" events may be used", TCL_STATIC);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"requested illegal events; only key, button, motion,"
+			" enter, leave, and virtual events may be used", -1));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_EVENTS", NULL);
 		result = TCL_ERROR;
 		goto done;
@@ -1856,7 +1856,8 @@ CanvasWidgetCmd(
 	    goto done;
 	}
 	if ((xScale == 0.0) || (yScale == 0.0)) {
-	    Tcl_SetResult(interp, "scale factor cannot be zero", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "scale factor cannot be zero", -1));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_SCALE", NULL);
 	    result = TCL_ERROR;
 	    goto done;
@@ -3592,9 +3593,8 @@ TagSearchScanExpr(
 
 	    case '!':		/* Negate next tag or subexpr */
 		if (looking_for_tag > 1) {
-		    Tcl_SetResult(interp,
-			    "too many '!' in tag search expression",
-			    TCL_STATIC);
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			    "too many '!' in tag search expression", -1));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			    "COMPLEXITY", NULL);
 		    return TCL_ERROR;
@@ -3643,17 +3643,16 @@ TagSearchScanExpr(
 		    *tag++ = c;
 		}
 		if (!found_endquote) {
-		    Tcl_SetResult(interp,
-			    "missing endquote in tag search expression",
-			    TCL_STATIC);
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			    "missing endquote in tag search expression", -1));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			    "ENDQUOTE", NULL);
 		    return TCL_ERROR;
 		}
 		if (!(tag - searchPtr->rewritebuffer)) {
-		    Tcl_SetResult(interp,
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "null quoted tag string in tag search expression",
-			    TCL_STATIC);
+			    -1));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			    "EMPTY", NULL);
 		    return TCL_ERROR;
@@ -3669,9 +3668,8 @@ TagSearchScanExpr(
 	    case '|':
 	    case '^':
 	    case ')':
-		Tcl_SetResult(interp,
-			"unexpected operator in tag search expression",
-			TCL_STATIC);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"unexpected operator in tag search expression", -1));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			"UNEXPECTED", NULL);
 		return TCL_ERROR;
@@ -3734,9 +3732,8 @@ TagSearchScanExpr(
 	    case '&':		/* AND operator */
 		c = searchPtr->string[searchPtr->stringIndex++];
 		if (c != '&') {
-		    Tcl_SetResult(interp,
-			    "singleton '&' in tag search expression",
-			    TCL_STATIC);
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			    "singleton '&' in tag search expression", -1));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			    "INCOMPLETE_OP", NULL);
 		    return TCL_ERROR;
@@ -3748,9 +3745,8 @@ TagSearchScanExpr(
 	    case '|':		/* OR operator */
 		c = searchPtr->string[searchPtr->stringIndex++];
 		if (c != '|') {
-		    Tcl_SetResult(interp,
-			    "singleton '|' in tag search expression",
-			    TCL_STATIC);
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			    "singleton '|' in tag search expression", -1));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			    "INCOMPLETE_OP", NULL);
 		    return TCL_ERROR;
@@ -3769,9 +3765,9 @@ TagSearchScanExpr(
 		goto breakwhile;
 
 	    default:		/* syntax error */
-		Tcl_SetResult(interp,
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"invalid boolean operator in tag search expression",
-			TCL_STATIC);
+			-1));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH", "BAD_OP",
 			NULL);
 		return TCL_ERROR;
@@ -3783,7 +3779,8 @@ TagSearchScanExpr(
     if (found_tag && !looking_for_tag) {
 	return TCL_OK;
     }
-    Tcl_SetResult(interp, "missing tag in tag search expression", TCL_STATIC);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    "missing tag in tag search expression", -1));
     Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH", "NO_TAG", NULL);
     return TCL_ERROR;
 }

@@ -59,7 +59,7 @@ test grid-1.4 {basic argument checking} -body {
 	grid configure .b - foo
 } -cleanup {
     grid_reset 1.4
-} -returnCodes error -result {unexpected parameter, "foo", in configure list. Should be window name or option}
+} -returnCodes error -result {unexpected parameter "foo" in configure list: should be window name or option}
 test grid-1.5 {basic argument checking} -body {
 	grid .
 } -returnCodes error -result {can't manage ".": it's a top-level window}
@@ -546,7 +546,7 @@ test grid-9.5 {slaves} -body {
 } -returnCodes error -result {expected integer but got "x"}
 test grid-9.6 {slaves} -body {
 	grid slaves . -row -3
-} -returnCodes error -result {-row is an invalid value: should NOT be < 0}
+} -returnCodes error -result {-3 is an invalid value: should NOT be < 0}
 test grid-9.7 {slaves} -body {
 	grid slaves . -foo 3
 } -returnCodes error -result {bad option "-foo": must be -column or -row}
@@ -865,12 +865,12 @@ test grid-10.35 {column/row configure} -body {
     lappend res [catch {grid .f -row 9998 -rowspan 2} msg] $msg ; update
     set res
 } -cleanup {destroy .f} -result [lrange {
-    1 {Column out of bounds}
-    1 {Row out of bounds}
-    1 {Column out of bounds}
-    1 {Row out of bounds}
-    1 {Column out of bounds}
-    1 {Row out of bounds}
+    1 {column out of bounds}
+    1 {row out of bounds}
+    1 {column out of bounds}
+    1 {row out of bounds}
+    1 {column out of bounds}
+    1 {row out of bounds}
 } 0 end]
 grid_reset 10.38
 
@@ -889,10 +889,10 @@ test grid-10.36 {column/row configure} -body {
     update
     set res
 } -cleanup {destroy .f .g} -result [lrange {
-    1 {Row out of bounds}
-    1 {Row out of bounds}
-    1 {Column out of bounds}
-    1 {Column out of bounds}
+    1 {row out of bounds}
+    1 {row out of bounds}
+    1 {column out of bounds}
+    1 {column out of bounds}
 } 0 end]
 grid_reset 10.39
 
@@ -909,7 +909,7 @@ test grid-11.2 {default widget placement} -body {
 	grid .b ^
 } -cleanup {
     grid_reset 11.2
-} -returnCodes error -result {can't find slave to extend with "^".}
+} -returnCodes error -result {can't find slave to extend with "^"}
 
 test grid-11.3 {default widget placement} -body {
 	button .b
@@ -930,7 +930,7 @@ test grid-11.5 {default widget placement} -body {
 	grid .b - x -
 } -cleanup {
     grid_reset 11.5
-} -returnCodes error -result {Must specify window before shortcut '-'.}
+} -returnCodes error -result {must specify window before shortcut '-'}
 
 test grid-11.6 {default widget placement} -body {
     foreach i {1 2 3 4 5 6} {
@@ -955,7 +955,7 @@ test grid-11.7 {default widget placement} -body {
     grid .f x -
 } -cleanup {
     grid_reset 11.7
-} -returnCodes error -result {Must specify window before shortcut '-'.}
+} -returnCodes error -result {must specify window before shortcut '-'}
 
 test grid-11.8 {default widget placement} -body {
     frame .f -width 20 -height 20 -highlightthickness 0 -bg red
@@ -963,7 +963,7 @@ test grid-11.8 {default widget placement} -body {
     grid .f ^ -
 } -cleanup {
     grid_reset 11.8
-} -returnCodes error -result {Must specify window before shortcut '-'.}
+} -returnCodes error -result {must specify window before shortcut '-'}
 
 test grid-11.9 {default widget placement} -body {
     frame .f -width 20 -height 20 -highlightthickness 0 -bg red
@@ -971,7 +971,7 @@ test grid-11.9 {default widget placement} -body {
     grid .f x ^
 } -cleanup {
     grid_reset 11.9
-} -returnCodes error -result {can't find slave to extend with "^".}
+} -returnCodes error -result {can't find slave to extend with "^"}
 
 test grid-11.10 {default widget placement} -body {
     foreach i {1 2 3} {
@@ -1210,7 +1210,7 @@ test grid-13.1 {-in} -body {
     grid .f -in .f
 } -cleanup {
     grid_reset 13.1
-} -returnCodes error -result {Window can't be managed in itself}
+} -returnCodes error -result {window can't be managed in itself}
 
 test grid-13.2 {-in} -body {
     frame .f -bg red
@@ -1219,7 +1219,7 @@ test grid-13.2 {-in} -body {
          [winfo manager .f]
 } -cleanup {
     grid_reset 13.1.1
-} -result {{} 1 {Window can't be managed in itself} {}}
+} -result {{} 1 {window can't be managed in itself} {}}
 
 test grid-13.3 {-in} -body {
     frame .f -bg red
