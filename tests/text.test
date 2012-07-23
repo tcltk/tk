@@ -1397,7 +1397,7 @@ abcdefghijklm
     .t replace 3.1 2.3 foo
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {Index "2.3" before "3.1" in the text}
+} -returnCodes {error} -result {index "2.3" before "3.1" in the text}
 test text-8.20 {TextWidgetCmd procedure, "replace" option} -setup {
     text .t
 } -body {
@@ -3705,7 +3705,7 @@ test text-22.1 {TextSearchCmd procedure, argument parsing} -body {
     .t search -
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad switch "-": must be --, -all, -backward, -count, -elide, -exact, -forward, -nocase, -nolinestop, -overlap, -regexp, or -strictlimits}
+} -returnCodes error -result {ambiguous switch "-": must be --, -all, -backwards, -count, -elide, -exact, -forwards, -nocase, -nolinestop, -overlap, -regexp, or -strictlimits}
 test text-22.2 {TextSearchCmd procedure, -backwards option} -body {
     text .t
     .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
@@ -3769,7 +3769,7 @@ test text-22.10 {TextSearchCmd procedure, -n ambiguous option} -body {
     .t search -n BaR 1.1
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad switch "-n": must be --, -all, -backward, -count, -elide, -exact, -forward, -nocase, -nolinestop, -overlap, -regexp, or -strictlimits}
+} -returnCodes error -result {ambiguous switch "-n": must be --, -all, -backwards, -count, -elide, -exact, -forwards, -nocase, -nolinestop, -overlap, -regexp, or -strictlimits}
 test text-22.11 {TextSearchCmd procedure, -nocase option} -body {
     text .t
     .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"

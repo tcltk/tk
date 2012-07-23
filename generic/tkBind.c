@@ -2927,7 +2927,7 @@ HandleEventGenerate(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window id \"%s\" doesn't exist in this application",
 		Tcl_GetString(objv[0])));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "FOREIGN_TARGET", NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", NULL);
 	return TCL_ERROR;
     }
 
@@ -2941,14 +2941,14 @@ HandleEventGenerate(
 	return TCL_ERROR;
     }
     if (count != 1) {
-	Tcl_SetResult(interp, "Double or Triple modifier not allowed",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"Double or Triple modifier not allowed", -1));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", NULL);
 	return TCL_ERROR;
     }
     if (*p != '\0') {
-	Tcl_SetResult(interp, "only one event specification allowed",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"only one event specification allowed", -1));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "MULTIPLE", NULL);
 	return TCL_ERROR;
     }
@@ -3663,9 +3663,9 @@ FindSequence(
 
 	if (eventMask & VirtualEventMask) {
 	    if (allowVirtual == 0) {
-		Tcl_SetResult(interp,
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"virtual event not allowed in definition of another virtual event",
-			TCL_STATIC);
+			-1));
 		Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "INNER",
 			NULL);
 		return NULL;
@@ -3693,13 +3693,14 @@ FindSequence(
      */
 
     if (numPats == 0) {
-	Tcl_SetResult(interp, "no events specified in binding", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"no events specified in binding", -1));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "NO_EVENTS", NULL);
 	return NULL;
     }
     if ((numPats > 1) && (virtualFound != 0)) {
-	Tcl_SetResult(interp, "virtual events may not be composed",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"virtual events may not be composed", -1));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION",
 		NULL);
 	return NULL;
@@ -3862,16 +3863,16 @@ ParseEventDescription(
 
 	p = strchr(field, '>');
 	if (p == field) {
-	    Tcl_SetResult(interp, "virtual event \"<<>>\" is badly formed",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "virtual event \"<<>>\" is badly formed", -1));
 	    Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED",
 		    NULL);
 	    count = 0;
 	    goto done;
 	}
 	if ((p == NULL) || (p[1] != '>')) {
-	    Tcl_SetResult(interp, "missing \">\" in virtual binding",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "missing \">\" in virtual binding", -1));
 	    Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED",
 		    NULL);
 	    count = 0;
@@ -3971,8 +3972,8 @@ ParseEventDescription(
 	    }
 	}
     } else if (eventFlags == 0) {
-	Tcl_SetResult(interp, "no event type or button # or keysym",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"no event type or button # or keysym", -1));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "UNMODIFIABLE", NULL);
 	count = 0;
 	goto done;
@@ -3985,15 +3986,15 @@ ParseEventDescription(
 	while (*p != '\0') {
 	    p++;
 	    if (*p == '>') {
-		Tcl_SetResult(interp,
-			"extra characters after detail in binding",
-			TCL_STATIC);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"extra characters after detail in binding", -1));
 		Tcl_SetErrorCode(interp, "TK", "EVENT", "PAST_DETAIL", NULL);
 		count = 0;
 		goto done;
 	    }
 	}
-	Tcl_SetResult(interp, "missing \">\" in binding", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"missing \">\" in binding", -1));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "MALFORMED", NULL);
 	count = 0;
 	goto done;
