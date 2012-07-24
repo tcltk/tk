@@ -405,7 +405,7 @@ test treeview-7.1 "move" -body {
 
 test treeview-7.2 "illegal move" -body {
    .tv move d d2 end
-} -returnCodes 1 -result "Cannot insert d as a descendant of d2"
+} -returnCodes 1 -result "Cannot insert d as descendant of d2"
 
 test treeview-7.3 "illegal move has no effect" -body {
     consistencyCheck .tv
@@ -426,7 +426,7 @@ test treeview-7.5 "replace children - precondition" -body {
 
 test treeview-7.6 "Replace children - illegal move" -body {
     .tv children newnode.n1 [list newnode.n1 newnode.n2 newnode.n3]
-} -returnCodes 1 -result "Cannot insert newnode.n1 as a descendant of newnode.n1"
+} -returnCodes 1 -result "Cannot insert newnode.n1 as descendant of newnode.n1"
 
 consistencyCheck .tv
 
