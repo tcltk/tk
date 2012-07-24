@@ -257,16 +257,16 @@ Tk_ChooseColorObjCmd(
 
     for (i = 1; i < objc; i += 2) {
 	int index;
-	const char *option, *value;
+	const char *value;
 
 	if (Tcl_GetIndexFromObj(interp, objv[i], colorOptionStrings, "option",
 		TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
-	    option = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", option, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "COLORDIALOG", "VALUE", NULL);
 	    goto end;
 	}
 	value = Tcl_GetString(objv[i + 1]);
@@ -378,8 +378,9 @@ Tk_GetOpenFileObjCmd(
 	    goto end;
 	}
 	if (i + 1 == objc) {
-	    str = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", str, "\" missing", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
 	    goto end;
 	}
 	switch (index) {
@@ -556,9 +557,9 @@ Tk_GetSaveFileObjCmd(
 	    goto end;
 	}
 	if (i + 1 == objc) {
-	    str = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", str, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
 	    goto end;
 	}
 	switch (index) {
@@ -726,8 +727,9 @@ Tk_ChooseDirectoryObjCmd(
 	    goto end;
 	}
 	if (i + 1 == objc) {
-	    str = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", str, "\" missing", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "VALUE", NULL);
 	    goto end;
 	}
 	switch (index) {
@@ -942,8 +944,9 @@ Tk_MessageBoxObjCmd(
 	    goto end;
 	}
 	if (i + 1 == objc) {
-	    str = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", str, "\" missing", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "VALUE", NULL);
 	    goto end;
 	}
 	switch (index) {
@@ -1024,6 +1027,7 @@ Tk_MessageBoxObjCmd(
 	if (!defaultNativeButtonIndex) {
 	    Tcl_SetObjResult(interp,
 		    Tcl_NewStringObj("Illegal default option", -1));
+	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "DEFAULT", NULL);
 	    goto end;
 	}
     }
@@ -1366,99 +1370,99 @@ FontchooserConfigureCmd(
 	    return TCL_OK;
 	}
 	if (i + 1 == objc) {
-	    Tcl_AppendResult(interp, "value for \"",
-		    Tcl_GetString(objv[i]), "\" missing", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "VALUE", NULL);
 	    return TCL_ERROR;
 	}
 	switch (optionIndex) {
-	    case FontchooserVisible: {
-		const char *msg = "cannot change read-only option "
-			"\"-visible\": use the show or hide command";
+	case FontchooserVisible: {
+	    const char *msg = "cannot change read-only option "
+		    "\"-visible\": use the show or hide command";
 
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, sizeof(msg)-1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, -1));
+	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "READONLY", NULL);
+	    return TCL_ERROR;
+	}
+	case FontchooserParent: {
+	    Tk_Window parent = Tk_NameToWindow(interp,
+		    Tcl_GetString(objv[i+1]), tkwin);
+
+	    if (parent == None) {
 		return TCL_ERROR;
 	    }
-	    case FontchooserParent: {
-		Tk_Window parent = Tk_NameToWindow(interp,
-			Tcl_GetString(objv[i+1]), tkwin);
+	    if (fcdPtr->parent) {
+		Tk_DeleteEventHandler(fcdPtr->parent, StructureNotifyMask,
+			FontchooserParentEventHandler, fcdPtr);
+	    }
+	    fcdPtr->parent = parent;
+	    Tk_CreateEventHandler(fcdPtr->parent, StructureNotifyMask,
+		    FontchooserParentEventHandler, fcdPtr);
+	    break;
+	}
+	case FontchooserTitle:
+	    if (fcdPtr->titleObj) {
+		Tcl_DecrRefCount(fcdPtr->titleObj);
+	    }
+	    Tcl_GetStringFromObj(objv[i+1], &len);
+	    if (len) {
+		fcdPtr->titleObj = objv[i+1];
+		if (Tcl_IsShared(fcdPtr->titleObj)) {
+		    fcdPtr->titleObj = Tcl_DuplicateObj(fcdPtr->titleObj);
+		}
+		Tcl_IncrRefCount(fcdPtr->titleObj);
+	    } else {
+		fcdPtr->titleObj = NULL;
+	    }
+	    break;
+	case FontchooserFont:
+	    Tcl_GetStringFromObj(objv[i+1], &len);
+	    if (len) {
+		Tk_Font f = Tk_AllocFontFromObj(interp, tkwin, objv[i+1]);
 
-		if (parent == None) {
+		if (!f) {
 		    return TCL_ERROR;
 		}
-		if (fcdPtr->parent) {
-		    Tk_DeleteEventHandler(fcdPtr->parent, StructureNotifyMask,
-			    FontchooserParentEventHandler, fcdPtr);
-		}
-		fcdPtr->parent = parent;
-		Tk_CreateEventHandler(fcdPtr->parent, StructureNotifyMask,
-			FontchooserParentEventHandler, fcdPtr);
-		break;
+		[fontPanelFont autorelease];
+		fontPanelFont = [TkMacOSXNSFontForFont(f) retain];
+		[fontPanelFontAttributes setDictionary:
+			TkMacOSXNSFontAttributesForFont(f)];
+		[fontPanelFontAttributes removeObjectsForKeys:[NSArray
+			arrayWithObjects:NSFontAttributeName,
+			NSLigatureAttributeName, NSKernAttributeName, nil]];
+		Tk_FreeFont(f);
+	    } else {
+		[fontPanelFont release];
+		fontPanelFont = nil;
+		[fontPanelFontAttributes removeAllObjects];
 	    }
-	    case FontchooserTitle:
-		if (fcdPtr->titleObj) {
-		    Tcl_DecrRefCount(fcdPtr->titleObj);
-		}
-		Tcl_GetStringFromObj(objv[i+1], &len);
-		if (len) {
-		    fcdPtr->titleObj = objv[i+1];
-		    if (Tcl_IsShared(fcdPtr->titleObj)) {
-			fcdPtr->titleObj = Tcl_DuplicateObj(fcdPtr->titleObj);
-		    }
-		    Tcl_IncrRefCount(fcdPtr->titleObj);
-		} else {
-		    fcdPtr->titleObj = NULL;
-		}
-		break;
-	    case FontchooserFont:
-		Tcl_GetStringFromObj(objv[i+1], &len);
-		if (len) {
-		    Tk_Font f = Tk_AllocFontFromObj(interp, tkwin, objv[i+1]);
 
-		    if (!f) {
-			return TCL_ERROR;
-		    }
-		    [fontPanelFont autorelease];
-		    fontPanelFont = [TkMacOSXNSFontForFont(f) retain];
-		    [fontPanelFontAttributes setDictionary:
-			    TkMacOSXNSFontAttributesForFont(f)];
-		    [fontPanelFontAttributes removeObjectsForKeys:[NSArray
-			    arrayWithObjects:NSFontAttributeName,
-			    NSLigatureAttributeName, NSKernAttributeName,
-			    nil]];
-		    Tk_FreeFont(f);
-		} else {
-		    [fontPanelFont release];
-		    fontPanelFont = nil;
-		    [fontPanelFontAttributes removeAllObjects];
-		}
+	    NSFontManager *fm = [NSFontManager sharedFontManager];
+	    NSFontPanel *fp = [fm fontPanel:NO];
 
-		NSFontManager *fm = [NSFontManager sharedFontManager];
-		NSFontPanel *fp = [fm fontPanel:NO];
-
-		[fp setPanelFont:fontPanelFont isMultiple:NO];
-		[fm setSelectedFont:fontPanelFont isMultiple:NO];
-		[fm setSelectedAttributes:fontPanelFontAttributes
-			isMultiple:NO];
-		if ([fp isVisible]) {
-		    TkSendVirtualEvent(fcdPtr->parent,
-			    "TkFontchooserFontChanged");
+	    [fp setPanelFont:fontPanelFont isMultiple:NO];
+	    [fm setSelectedFont:fontPanelFont isMultiple:NO];
+	    [fm setSelectedAttributes:fontPanelFontAttributes
+		    isMultiple:NO];
+	    if ([fp isVisible]) {
+		TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged");
+	    }
+	    break;
+	case FontchooserCmd:
+	    if (fcdPtr->cmdObj) {
+		Tcl_DecrRefCount(fcdPtr->cmdObj);
+	    }
+	    Tcl_GetStringFromObj(objv[i+1], &len);
+	    if (len) {
+		fcdPtr->cmdObj = objv[i+1];
+		if (Tcl_IsShared(fcdPtr->cmdObj)) {
+		    fcdPtr->cmdObj = Tcl_DuplicateObj(fcdPtr->cmdObj);
 		}
-		break;
-	    case FontchooserCmd:
-		if (fcdPtr->cmdObj) {
-		    Tcl_DecrRefCount(fcdPtr->cmdObj);
-		}
-		Tcl_GetStringFromObj(objv[i+1], &len);
-		if (len) {
-		    fcdPtr->cmdObj = objv[i+1];
-		    if (Tcl_IsShared(fcdPtr->cmdObj)) {
-			fcdPtr->cmdObj = Tcl_DuplicateObj(fcdPtr->cmdObj);
-		    }
-		    Tcl_IncrRefCount(fcdPtr->cmdObj);
-		} else {
-		    fcdPtr->cmdObj = NULL;
-		}
-		break;
+		Tcl_IncrRefCount(fcdPtr->cmdObj);
+	    } else {
+		fcdPtr->cmdObj = NULL;
+	    }
+	    break;
 	}
     }
     return TCL_OK;
