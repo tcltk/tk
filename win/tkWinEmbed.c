@@ -134,7 +134,7 @@ Tk_DetachEmbeddedWindow(
 	TkpWinToplevelOverrideRedirect(winPtr, 0);
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -243,8 +243,9 @@ TkpUseWindow(
 
 /*
     if (winPtr->window != None) {
-	Tcl_AppendResult(interp,
-		"can't modify container after widget is created", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"can't modify container after widget is created", -1));
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
 	return TCL_ERROR;
     }
 */
@@ -272,8 +273,9 @@ TkpUseWindow(
 
     if (!IsWindow(hwnd)) {
 	if (interp != NULL) {
-	    Tcl_AppendResult(interp, "window \"", string,
-		    "\" doesn't exist", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" doesn't exist", string));
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "EXIST", NULL);
 	}
 	return TCL_ERROR;
     }
@@ -281,12 +283,15 @@ TkpUseWindow(
     id = SendMessage(hwnd, TK_INFO, TK_CONTAINER_VERIFY, 0);
     if (id == PTR2INT(hwnd)) {
 	if (!SendMessage(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
-    	    Tcl_AppendResult(interp, "The container is already in use", NULL);
+    	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "The container is already in use", -1));
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "USED", NULL);
 	    return TCL_ERROR;
 	}
     } else if (id == -PTR2INT(hwnd)) {
-	Tcl_AppendResult(interp, "the window to use is not a Tk container",
-		NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"the window to use is not a Tk container", -1));
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "NOT", NULL);
 	return TCL_ERROR;
     } else {
 	/*
@@ -300,7 +305,9 @@ TkpUseWindow(
 	sprintf(msg, "Unable to get information of window \"%.80s\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
 	if (IDCANCEL == MessageBoxA(hwnd, msg, "Tk Warning",
 		MB_OKCANCEL | MB_ICONWARNING)) {
-    	    Tcl_SetResult(interp, "Operation has been canceled", TCL_STATIC);
+    	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "Operation has been canceled", -1));
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "CANCEL", NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -935,7 +942,7 @@ Tk_GetEmbeddedHWnd(
     }
     return NULL;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
