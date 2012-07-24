@@ -48,7 +48,7 @@ test ttk-6.4 "Destroy widget in configure" -setup {
     pack [ttk::checkbutton .b]
     set rc [catch { .b configure -variable OUCH } msg]
     list $rc $msg [winfo exists .b] [info commands .b]
-} -result [list 1 "Widget has been destroyed" 0 {}]
+} -result [list 1 "widget has been destroyed" 0 {}]
 
 test ttk-6.5 "Clean up -textvariable traces" -body {
     foreach class {ttk::button ttk::checkbutton ttk::radiobutton} {
@@ -121,7 +121,7 @@ test ttk-construction-failure-2 "Destroy widget in constructor" -setup {
     	[winfo exists .b] \
 	[info commands .b] \
 	;
-} -result [list 1 "Widget has been destroyed" 0 {}]
+} -result [list 1 "widget has been destroyed" 0 {}]
 
 test ttk-selfdestruct-ok-1 "Intentional self-destruction" -body {
     # see #2298720
@@ -222,15 +222,11 @@ test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
 foreach wc $widgetClasses {
     test ttk-coreoptions-$wc "$wc has all core options" -body {
 	ttk::$wc .w
-	foreach option {
-	    -class
-	    -style
-	    -cursor
-	    -takefocus
-	} {
+	foreach option {-class -style -cursor -takefocus} {
 	    .w cget $option
 	}
-	destroy .w
+    } -cleanup {
+	catch {destroy .w}
     }
 }
 
