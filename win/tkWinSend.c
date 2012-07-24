@@ -1,4 +1,4 @@
-/*
+`/*
  * tkWinSend.c --
  *
  *	This file provides functions that implement the "send" command,
@@ -136,9 +136,7 @@ Tk_SetAppName(
     HRESULT hr = S_OK;
 
     interp = winPtr->mainPtr->interp;
-
-    tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Initialise the COM library for this interpreter just once.
@@ -147,8 +145,9 @@ Tk_SetAppName(
     if (tsdPtr->initialized == 0) {
 	hr = CoInitialize(0);
 	if (FAILED(hr)) {
-	    Tcl_SetResult(interp,
-		    "failed to initialize the COM library", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "failed to initialize the COM library", -1));
+	    Tcl_SetErrorcode(interp, "TK", "SEND", "COM", NULL);
 	    return "";
 	}
 	tsdPtr->initialized = 1;
@@ -363,8 +362,10 @@ Tk_SendObjCmd(
      */
 
     if (displayPtr) {
-	Tcl_SetResult(interp, "option not implemented: \"displayof\" is "
-		"not available for this platform.", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"option not implemented: \"displayof\" is not available"
+		" for this platform.", -1));
+	Tcl_SetErrorcode(interp, "TK", "SEND", "DISPLAYOF_WIN", NULL);
 	result = TCL_ERROR;
     }
 
@@ -436,9 +437,10 @@ FindInterpreterObject(
 		    pUnkInterp->lpVtbl->Release(pUnkInterp);
 
 		} else {
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp,
-			    "no application named \"", name, "\"", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "no application named \"%s\"", name));
+		    Tcl_SetErrorcode(interp, "TK", "LOOKUP", "APPLICATION",
+			    NULL);
 		    result = TCL_ERROR;
 		}
 
