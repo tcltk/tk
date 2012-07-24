@@ -727,9 +727,9 @@ static int AddTab(
     }
 #if 0 /* can't happen */
     if (Ttk_SlaveIndex(nb->notebook.mgr, slaveWindow) >= 0) {
-	Tcl_AppendResult(interp,
-	    Tk_PathName(slaveWindow), " already added",
-	    NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s already added",
+	    Tk_PathName(slaveWindow)));
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "PRESENT", NULL);
 	return TCL_ERROR;
     }
 #endif
@@ -859,10 +859,9 @@ static int GetTabIndex(
     int status = FindTabIndex(interp, nb, objPtr, index_rtn);
 
     if (status == TCL_OK && *index_rtn < 0) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp,
-	    "tab '", Tcl_GetString(objPtr), "' not found",
-	    NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "tab '%s' not found", Tcl_GetString(objPtr)));
+	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "TAB", NULL);
 	status = TCL_ERROR;
     }
     return status;
@@ -1082,7 +1081,8 @@ static int NotebookIdentifyCommand(
 	case IDENTIFY_ELEMENT:
 	    if (element) {
 		const char *elementName = Ttk_ElementName(element);
-		Tcl_SetObjResult(interp,Tcl_NewStringObj(elementName,-1));
+
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, -1));
 	    }
 	    break;
 	case IDENTIFY_TAB:
@@ -1173,10 +1173,10 @@ static int NotebookTabsCommand(
     result = Tcl_NewListObj(0, NULL);
     for (i = 0; i < Ttk_NumberSlaves(mgr); ++i) {
 	const char *pathName = Tk_PathName(Ttk_SlaveWindow(mgr,i));
-	Tcl_ListObjAppendElement(interp, result, Tcl_NewStringObj(pathName,-1));
+
+	Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj(pathName,-1));
     }
     Tcl_SetObjResult(interp, result);
-
     return TCL_OK;
 }
 

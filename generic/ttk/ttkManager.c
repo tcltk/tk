@@ -455,10 +455,9 @@ int Ttk_GetSlaveIndexFromObj(
      */
     if (Tcl_GetIntFromObj(NULL, objPtr, &slaveIndex) == TCL_OK) {
 	if (slaveIndex < 0 || slaveIndex >= mgr->nSlaves) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp,
-		"Slave index ", Tcl_GetString(objPtr), " out of bounds",
-		NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Slave index %d out of bounds", slaveIndex));
+	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = slaveIndex;
@@ -467,23 +466,23 @@ int Ttk_GetSlaveIndexFromObj(
 
     /* Try interpreting as a slave window name;
      */
-    if (   (*string == '.')
-	&& (tkwin = Tk_NameToWindow(interp, string, mgr->masterWindow)))
-    {
+    if ((*string == '.') &&
+	    (tkwin = Tk_NameToWindow(interp, string, mgr->masterWindow))) {
 	slaveIndex = Ttk_SlaveIndex(mgr, tkwin);
 	if (slaveIndex < 0) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp,
-		string, " is not managed by ", Tk_PathName(mgr->masterWindow),
-		NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "%s is not managed by %s", string,
+		    Tk_PathName(mgr->masterWindow)));
+	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "MANAGER", NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = slaveIndex;
 	return TCL_OK;
     }
 
-    Tcl_ResetResult(interp);
-    Tcl_AppendResult(interp, "Invalid slave specification ", string, NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "Invalid slave specification %s", string));
+    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "SPEC", NULL);
     return TCL_ERROR;
 }
 
@@ -542,10 +541,9 @@ int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window slave, Tk_Window master)
     return 1;
 
 badWindow:
-    Tcl_AppendResult(interp,
-	"can't add ", Tk_PathName(slave),
-	" as slave of ", Tk_PathName(master),
-	NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("can't add %s as slave of %s",
+	    Tk_PathName(slave), Tk_PathName(master)));
+    Tcl_SetErrorCode(interp, "TTK", "GEOMETRY", "MAINTAINABLE", NULL);
     return 0;
 }
 
