@@ -645,7 +645,7 @@ TkClipInit(
      * and set up an event handler for it.
      */
 
-    dispPtr->clipWindow = TkAllocWindow(dispPtr,
+    dispPtr->clipWindow = (Tk_Window) TkAllocWindow(dispPtr,
 	DefaultScreen(dispPtr->display), NULL);
     Tcl_Preserve((ClientData) dispPtr->clipWindow);
     atts.override_redirect = True;
