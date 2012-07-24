@@ -274,7 +274,8 @@ FreeID(
 
     if (tsdPtr->menuHWND != NULL) {
 	Tcl_HashEntry *entryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
-		((char *) NULL) + commandID);
+		INT2PTR(commandID));
+
 	if (entryPtr != NULL) {
 	    Tcl_DeleteHashEntry(entryPtr);
 	}
@@ -311,10 +312,10 @@ TkpNewMenu(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     winMenuHdl = CreatePopupMenu();
-
     if (winMenuHdl == NULL) {
-    	Tcl_AppendResult(menuPtr->interp, "No more menus can be allocated.",
-    		(char *) NULL);
+    	Tcl_SetObjResult(menuPtr->interp, Tcl_NewStringObj(
+		"No more menus can be allocated.", -1));
+	Tcl_SetErrorCode(interp, "TK", "MENU", "SYSTEM_RESOURCES", NULL);
     	return TCL_ERROR;
     }
 
@@ -923,11 +924,12 @@ UpdateEmbeddedMenu(
 {
     RECT rc;
     HWND hMenuWnd = (HWND)clientData;
+
     GetClientRect(hMenuWnd, &rc);
     InvalidateRect(hMenuWnd, &rc, FALSE);
     UpdateWindow(hMenuWnd);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -997,7 +999,7 @@ TkWinEmbeddedMenuProc(
     }
     return lResult;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1090,7 +1092,7 @@ TkWinHandleMenuEvent(
 	    break;
 	}
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
-		((char *) NULL) + LOWORD(*pwParam));
+		INT2PTR(LOWORD(*pwParam)));
 	if (hashEntryPtr == NULL) {
 	    break;
 	}
@@ -1292,7 +1294,7 @@ TkWinHandleMenuEvent(
 			mePtr = menuPtr->entries[entryIndex];
 		    } else {
 			hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
-				((char *) NULL) + entryIndex);
+				INT2PTR(entryIndex));
 			if (hashEntryPtr != NULL) {
 			    mePtr = (TkMenuEntry *)
 				    Tcl_GetHashValue(hashEntryPtr);
