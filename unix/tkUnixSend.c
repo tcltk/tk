@@ -1349,7 +1349,7 @@ SendInit(
      * for it.
      */
 
-    dispPtr->commTkwin = TkAllocWindow(dispPtr,
+    dispPtr->commTkwin = (Tk_Window) TkAllocWindow(dispPtr,
     	DefaultScreen(dispPtr->display), NULL);
     Tcl_Preserve(dispPtr->commTkwin);
     atts.override_redirect = True;
