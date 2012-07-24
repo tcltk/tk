@@ -182,7 +182,7 @@ static const struct TkCursorName {
 static Cursor		CreateCursorFromTableOrFile(Tcl_Interp *interp,
 			    Tk_Window tkwin, int argc, const char **argv,
 			    const struct TkCursorName *tkCursorPtr);
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -357,7 +357,7 @@ TkGetCursorByName(
     Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", NULL);
     return NULL;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -426,8 +426,9 @@ CreateCursorFromTableOrFile(
 	data = TkGetBitmapData(NULL, tkCursorPtr->data, NULL,
 		&width, &height, &xHot, &yHot);
 	if (data == NULL) {
-	    Tcl_AppendResult(interp, "error reading bitmap data for \"",
-		    argv[0], "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "error reading bitmap data for \"%s\"", argv[0]));
+	    Tcl_SetErrorCode(interp, "TK", "CURSOR", "BITMAPDATA", NULL);
 	    goto cleanup;
 	}
 
@@ -437,19 +438,20 @@ CreateCursorFromTableOrFile(
 	if (TkReadBitmapFile(display, drawable, &argv[0][1],
 		(unsigned *) &width, (unsigned *) &height,
 		&source, &xHot, &yHot) != BitmapSuccess) {
-	    Tcl_AppendResult(interp, "cleanup reading bitmap file \"",
-		    &argv[0][1], "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "cleanup reading bitmap file \"%s\"", &argv[0][1]));
+	    Tcl_SetErrorCode(interp, "TK", "CURSOR", "BITMAPFILE", NULL);
 	    goto cleanup;
 	}
     }
 
     if ((xHot < 0) || (yHot < 0) || (xHot >= width) || (yHot >= height)) {
 	if (inTkTable) {
-	    Tcl_AppendResult(interp, "bad hot spot in bitmap data for \"",
-		    argv[0], "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad hot spot in bitmap data for \"%s\"", argv[0]));
 	} else {
-	    Tcl_AppendResult(interp, "bad hot spot in bitmap file \"",
-		    &argv[0][1], "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad hot spot in bitmap file \"%s\"", &argv[0][1]));
 	}
 	Tcl_SetErrorCode(interp, "TK", "CURSOR", "HOTSPOT", NULL);
 	goto cleanup;
@@ -465,8 +467,9 @@ CreateCursorFromTableOrFile(
     } else if (argc == 2) {
 	fgColor = argv[1];
 	if (TkParseColor(display, Tk_Colormap(tkwin), fgColor, &fg) == 0) {
-	    Tcl_AppendResult(interp, "invalid color name \"",
-		    fgColor, "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "invalid color name \"%s\"", fgColor));
+	    Tcl_SetErrorCode(interp, "TK", "CURSOR", "FGCOL", NULL);
 	    goto cleanup;
 	}
 	if (inTkTable) {
@@ -523,7 +526,7 @@ CreateCursorFromTableOrFile(
 	if (data == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "error reading bitmap mask data for \"%s\"", argv[0]));
-	    Tcl_SetErrorCode(interp, "TK", "CURSOR", "READ", -1);
+	    Tcl_SetErrorCode(interp, "TK", "CURSOR", "MASKDATA", -1);
 	    goto cleanup;
 	}
 
@@ -537,7 +540,7 @@ CreateCursorFromTableOrFile(
 		&mask, &dummy1, &dummy2) != BitmapSuccess) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "cleanup reading bitmap file \"%s\"", argv[1]));
-	    Tcl_SetErrorCode(interp, "TK", "CURSOR", "READ", -1);
+	    Tcl_SetErrorCode(interp, "TK", "CURSOR", "MASKFILE", -1);
 	    goto cleanup;
 	}
     }
@@ -561,7 +564,7 @@ CreateCursorFromTableOrFile(
     }
     return cursor;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -611,7 +614,7 @@ TkCreateCursorFromData(
     }
     return (TkCursor *) cursorPtr;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -638,7 +641,7 @@ TkpFreeCursor(
     XFreeCursor(unixCursorPtr->display, (Cursor) unixCursorPtr->info.cursor);
     Tk_FreeXId(unixCursorPtr->display, (XID) unixCursorPtr->info.cursor);
 }
-
+
 /*
  * Local Variables:
  * mode: c
