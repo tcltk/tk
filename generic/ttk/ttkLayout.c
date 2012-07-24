@@ -326,8 +326,9 @@ int Ttk_GetPaddingFromObj(
 
     if (padc > 4) {
 	if (interp) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "Wrong #elements in padding spec", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "Wrong #elements in padding spec", -1));
+	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "PADDING", NULL);
 	}
 	goto error;
     }
@@ -363,8 +364,9 @@ int Ttk_GetBorderFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Padding *pad)
 
     if (padc > 4) {
 	if (interp) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "Wrong #elements in border spec", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "Wrong #elements in padding spec", -1));
+	    Tcl_SetErrorCode(interp, "TTK", "VALUE", "BORDER", NULL);
 	}
 	goto error;
     }
@@ -476,11 +478,10 @@ int Ttk_GetStickyFromObj(
 	    case 's': case 'S': sticky |= TTK_STICK_S; break;
 	    default:
 	    	if (interp) {
-		    Tcl_ResetResult(interp);
-		    Tcl_AppendResult(interp,
-			"Bad -sticky specification ",
-			Tcl_GetString(objPtr),
-			NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"Bad -sticky specification %s",
+			Tcl_GetString(objPtr)));
+		    Tcl_SetErrorCode(interp, "TTK", "VALUE", "STICKY", NULL);
 		}
 		return TCL_ERROR;
 	}
@@ -643,10 +644,10 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	    }
 
 	    if (++i >= objc) {
-		Tcl_ResetResult(interp);
-		Tcl_AppendResult(interp,
-			"Missing value for option ",Tcl_GetString(objv[i-1]),
-			NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"Missing value for option %s",
+			Tcl_GetString(objv[i-1])));
+		Tcl_SetErrorCode(interp, "TTK", "VALUE", "LAYOUT", NULL);
 		goto error;
 	    }
 
@@ -875,8 +876,9 @@ Ttk_Layout Ttk_CreateLayout(
     Ttk_LayoutNode *bgnode;
 
     if (!layoutTemplate) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "Layout ", styleName, " not found", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Layout %s not found", styleName));
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", NULL);
 	return 0;
     }
 
@@ -915,8 +917,9 @@ Ttk_CreateSublayout(
     layoutTemplate = Ttk_FindLayoutTemplate(themePtr, styleName);
 
     if (!layoutTemplate) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "Layout ", styleName, " not found", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Layout %s not found", styleName));
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", NULL);
 	return 0;
     }
 
