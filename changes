@@ -6795,3 +6795,53 @@ and -to (porter)
 2011-11-02 (performance)[3431491] improved "pixels" shimmer logic (fellows)
 
 --- Released 8.5.11, November 4, 2011 --- See ChangeLog for details ---
+
+2011-11-17 (bug fix)[3437816] return code of [canvas lower] (hirner,ferrieux)
+
+2011-12-22 (bug fix)[3235256] correct menu failure on Windows (mcdonald)
+
+2012-01-19 (bug fix)[3021557] cursor freeze in elided text (vogel)
+
+2012-01-22 (bug fix)[3476698] hang in [text mark prev/next] (vogel)
+
+2012-01-25 (bug fix)[3475627] Stop text-31.11 failure (vogel)
+
+2012-01-25 (bug fix)[1630271] hang/crash on mark before -startline (vogel)
+
+2012-01-26 (bug fix)[1754043,2321450] -blockcursor appearance (vogel)
+
+2012-01-27 (bug fix)[3480471] crash in [tk_getOpenFile] (nijtmans)
+
+2012-01-29 (bug fix)[3480634] PNG image in menus (nijtmans)
+
+2012-01-30 (bug fix)[2925561] disabled combobox don't take focus (english)
+
+2012-02-10 (bug fix) win dialog avoid shimmer that confuses Python (fellows)
+
+2012-02-15 (bug fix)[3486474] Correct color scaling (goth,nijtmans)
+
+2012-02-28 (bug fix)[1630262,1615425] [text] crash tags & -*line (vogel)
+
+2012-03-07 (bug fix)[3497848] consistent pixel rounding (fassel,fellows)
+
+2012-03-18 (enhancement)[3503317] XParseColor speedup (nijtmans)
+
+2012-04-07 (bug fix)[3176239] control-Mousewheel crash (couch,nijtmans)
+
+2012-04-22 (bug fix)[3520202] <MouseWheel> %k,%K,%N for Python (deily,fellows)
+
+2012-05-02 (bug fix)[533519] multiscreen window placement (nijtmans)
+
+2012-05-04 (bug fix)[2768586] multiscreen menu posting (nijtmans)
+
+2012-05-28 (bug fix)[1630254] text peer update on -startline reset (baker,vogel)
+
+2012-06-11 (bug fix)[3294450] ttk text element clipping (oehlmann,fellows)
+
+2012-07-02 (bug fix) Make sure all index tables are static (kirkham,english)
+
+2012-07-23 (bug fix)[3546073] DisplayString() -> DefaultDisplay() (english)
+
+Many revisions to better support a Cygwin environment (nijtmans)
+
+--- Released 8.5.12, July 27, 2012 --- See ChangeLog for details ---

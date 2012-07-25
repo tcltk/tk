@@ -485,11 +485,11 @@ static void foreachHashEntry(Tcl_HashTable *ht, HashEntryIterator func)
     }
 }
 
-/* + unshare(objPtr) --
+/* + unshareObj(objPtr) --
  * 	Ensure that a Tcl_Obj * has refcount 1 -- either return objPtr
  * 	itself,	or a duplicated copy.
  */
-static Tcl_Obj *unshare(Tcl_Obj *objPtr)
+static Tcl_Obj *unshareObj(Tcl_Obj *objPtr)
 {
     if (Tcl_IsShared(objPtr)) {
 	Tcl_Obj *newObj = Tcl_DuplicateObj(objPtr);
@@ -2525,7 +2525,7 @@ static int TreeviewSetCommand(
     } else {		/* set column */
 	int length;
 
-	item->valuesObj = unshare(item->valuesObj);
+	item->valuesObj = unshareObj(item->valuesObj);
 
 	/* Make sure -values is fully populated:
 	 */
@@ -2826,15 +2826,15 @@ static int TreeviewSeeCommand(
      */
     for (parent = item->parent; parent; parent = parent->parent) {
 	if (!(parent->state & TTK_STATE_OPEN)) {
-	    parent->openObj = unshare(parent->openObj);
+	    parent->openObj = unshareObj(parent->openObj);
 	    Tcl_SetBooleanObj(parent->openObj, 1);
 	    parent->state |= TTK_STATE_OPEN;
 	    TtkRedisplayWidget(&tv->core);
 	}
     }
+    tv->tree.yscroll.total = CountRows(tv->tree.root) - 1;
 
     /* Make sure item is visible:
-     * @@@ DOUBLE-CHECK THIS:
      */
     rowNumber = RowNumber(tv, item);
     if (rowNumber < tv->tree.yscroll.first) {
