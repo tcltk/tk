@@ -6838,6 +6838,10 @@ and -to (porter)
 
 2012-06-11 (bug fix)[3294450] ttk text element clipping (oehlmann,fellows)
 
+2012-07-02 (bug fix) Make sure all index tables are static (kirkham,english)
+
+2012-07-23 (bug fix)[3546073] DisplayString() -> DefaultDisplay() (english)
+
 Many revisions to better support a Cygwin environment (nijtmans)
 
---- Released 8.5.12, July 20, 2012 --- See ChangeLog for details ---
+--- Released 8.5.12, July 27, 2012 --- See ChangeLog for details ---
