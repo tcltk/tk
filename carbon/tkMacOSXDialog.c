@@ -89,7 +89,8 @@ static int		NavServicesGetFile(Tcl_Interp *interp,
 			    Tk_Window parent);
 static int		HandleInitialDirectory(Tcl_Interp *interp,
 			    char *initialFile, char *initialDir, FSRef *dirRef,
-			    AEDescList *selectDescPtr, AEDesc *dirDescPtr);
+			    AEDescList *selectDescPtr, AEDesc *dirDescPtr,
+			    const char *dlgType);
 
 /*
  * Have we initialized the file dialog subsystem
@@ -104,7 +105,7 @@ static int fileDlgInited = 0;
 
 static NavObjectFilterUPP openFileFilterUPP;
 static NavEventUPP openFileEventUPP;
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -152,16 +153,16 @@ Tk_ChooseColorObjCmd(
 
     for (i = 1; i < objc; i += 2) {
 	int index;
-	const char *option, *value;
+	const char *value;
 
 	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option",
 		TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
-	    option = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", option, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "COLORDIALOG", "VALUE", NULL);
 	    goto end;
 	}
 	value = Tcl_GetString(objv[i + 1]);
@@ -225,7 +226,7 @@ Tk_ChooseColorObjCmd(
   end:
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -282,7 +283,6 @@ Tk_GetOpenFileObjCmd(
     for (i = 1; i < objc; i += 2) {
 	char *choice;
 	int index, choiceLen;
-	char *string;
 	Tcl_Obj *types;
 
 	if (Tcl_GetIndexFromObj(interp, objv[i], openOptionStrings, "option",
@@ -290,9 +290,9 @@ Tk_GetOpenFileObjCmd(
 	    goto end;
 	}
 	if (i + 1 == objc) {
-	    string = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
 	    goto end;
 	}
 
@@ -355,7 +355,7 @@ Tk_GetOpenFileObjCmd(
     }
 
     if (HandleInitialDirectory(interp, initialFile, initialDir, &dirRef,
-	    &selectDesc, &initialDesc) != TCL_OK) {
+	    &selectDesc, &initialDesc, "FILEDIALOG") != TCL_OK) {
 	goto end;
     }
     if (initialDesc.descriptorType == typeFSRef) {
@@ -394,7 +394,7 @@ Tk_GetOpenFileObjCmd(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -446,7 +446,7 @@ Tk_GetSaveFileObjCmd(
     ofd.usePopup = 0;
 
     for (i = 1; i < objc; i += 2) {
-	char *choice, *string;
+	char *choice;
 	int index, choiceLen;
 	Tcl_Obj *types;
 
@@ -455,9 +455,9 @@ Tk_GetSaveFileObjCmd(
 	    goto end;
 	}
 	if (i + 1 == objc) {
-	    string = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
 	    goto end;
 	}
 	switch (index) {
@@ -473,7 +473,7 @@ Tk_GetSaveFileObjCmd(
 	    choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
 	    /* empty strings should be like no selection given */
 	    if (choiceLen && HandleInitialDirectory(interp, NULL, choice,
-		    &dirRef, NULL, &initialDesc) != TCL_OK) {
+		    &dirRef, NULL, &initialDesc, "FILEDIALOG") != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -533,7 +533,7 @@ Tk_GetSaveFileObjCmd(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -578,7 +578,7 @@ Tk_ChooseDirectoryObjCmd(
     }
 
     for (i = 1; i < objc; i += 2) {
-	char *string, *choice;
+	char *choice;
 	int index, choiceLen;
 
 	if (Tcl_GetIndexFromObj(interp, objv[i], chooseOptionStrings, "option",
@@ -586,16 +586,16 @@ Tk_ChooseDirectoryObjCmd(
 	    goto end;
 	}
 	if (i + 1 == objc) {
-	    string = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "VALUE", NULL);
 	    goto end;
 	}
 	switch (index) {
 	case CHOOSE_INITDIR:
 	    choice = Tcl_GetStringFromObj(objv[i + 1], &choiceLen);
 	    if (choiceLen && HandleInitialDirectory(interp, NULL, choice,
-		    &dirRef, NULL, &initialDesc) != TCL_OK) {
+		    &dirRef, NULL, &initialDesc, "DIRDIALOG") != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -645,7 +645,7 @@ Tk_ChooseDirectoryObjCmd(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -669,7 +669,8 @@ HandleInitialDirectory(
     char *initialDir,
     FSRef *dirRef,
     AEDescList *selectDescPtr,
-    AEDesc *dirDescPtr)
+    AEDesc *dirDescPtr,
+    const char *dlgType)
 {
     Tcl_DString ds;
     OSStatus err;
@@ -685,13 +686,16 @@ HandleInitialDirectory(
 	err = ChkErr(FSPathMakeRef, (unsigned char *) dirName, dirRef,
 		&isDirectory);
 	if (err != noErr) {
-	    Tcl_AppendResult(interp, "bad directory \"", initialDir, "\"",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad directory \"%s\"", initialDir));
+	    Tcl_SetErrorCode(interp, "TK", dlgType, "NO_INITDIR", NULL);
 	    goto end;
 	}
 	if (!isDirectory) {
-	    Tcl_AppendResult(interp, "-intialdir \"", initialDir, "\""
-		    " is a file, not a directory.", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "-intialdir \"%s\" is a file, not a directory.",
+		    initialDir));
+	    Tcl_SetErrorCode(interp, "TK", dlgType, "BAD_INITDIR", NULL);
 	    goto end;
 	}
 	ChkErr(AECreateDesc, typeFSRef, dirRef, sizeof(*dirRef), dirDescPtr);
@@ -715,8 +719,10 @@ HandleInitialDirectory(
 	err = ChkErr(FSPathMakeRef, (unsigned char *) namePtr, &fileRef,
 		&isDirectory);
 	if (err != noErr) {
-	    Tcl_AppendResult(interp, "bad initialfile \"", initialFile,
-		    "\" file does not exist.", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad initialfile \"%s\" file does not exist.",
+		    initialFile));
+	    Tcl_SetErrorCode(interp, "TK", dlgType, "NO_INITFILE", NULL);
 	    goto end;
 	}
 	ChkErr(AECreateDesc, typeFSRef, &fileRef, sizeof(fileRef), &fileDesc);
@@ -730,7 +736,7 @@ HandleInitialDirectory(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -754,7 +760,7 @@ InitFileDialogs(void)
     openFileFilterUPP = NewNavObjectFilterUPP(OpenFileFilterProc);
     openFileEventUPP = NewNavEventUPP(OpenEventProc);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1039,7 +1045,7 @@ NavServicesGetFile(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1124,7 +1130,7 @@ OpenEventProc(
 	    break;
     }
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1221,7 +1227,7 @@ OpenFileFilterProc(
     }
     return (result == MATCHED);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1338,7 +1344,7 @@ MatchOneType(
 
     return UNMATCHED;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1377,7 +1383,7 @@ TkAboutDlg(void)
     DisposeDialog(aboutDlog);
     SelectWindow(ActiveNonFloatingWindow());
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1486,16 +1492,15 @@ Tk_MessageBoxObjCmd(
 
     for (i = 1; i < objc; i += 2) {
 	int iconIndex;
-	char *string;
 
 	if (Tcl_GetIndexFromObj(interp, objv[i], movableAlertStrings, "option",
 		TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
-	    string = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "VALUE", NULL);
 	    goto end;
 	}
 
@@ -1624,6 +1629,7 @@ Tk_MessageBoxObjCmd(
 	if (defaultNativeButtonIndex == 0) {
 	    Tcl_SetObjResult(interp,
 		    Tcl_NewStringObj("Illegal default option", -1));
+	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "DEFAULT", NULL);
 	    goto end;
 	}
 	paramCFStringRec.defaultButton = defaultNativeButtonIndex;
@@ -1705,7 +1711,7 @@ Tk_MessageBoxObjCmd(
     }
     return result;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -2033,6 +2039,7 @@ FontchooserConfigureCmd(
 
     for (i = 1; i < objc; i += 2) {
 	int optionIndex, len;
+
 	if (Tcl_GetIndexFromObj(interp, objv[i], fontchooserOptionStrings,
 		"option", 0, &optionIndex) != TCL_OK) {
 	    return TCL_ERROR;
@@ -2043,91 +2050,93 @@ FontchooserConfigureCmd(
 	    return TCL_OK;
 	}
 	if (i + 1 == objc) {
-	    Tcl_AppendResult(interp, "value for \"",
-		Tcl_GetString(objv[i]), "\" missing", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "VALUE", NULL);
 	    return TCL_ERROR;
 	}
 	switch (optionIndex) {
-	    case FontchooserVisible: {
-		const char *msg = "cannot change read-only option "
+	case FontchooserVisible: {
+	    const char *msg = "cannot change read-only option "
 		    "\"-visible\": use the show or hide command";
 
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, sizeof(msg)-1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, -1));
+	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "READONLY", NULL);
+	    return TCL_ERROR;
+	}
+	case FontchooserParent: {
+	    Tk_Window parent = Tk_NameToWindow(interp,
+		    Tcl_GetString(objv[i+1]), tkwin);
+
+	    if (parent == None) {
 		return TCL_ERROR;
 	    }
-	    case FontchooserParent: {
-		Tk_Window parent = Tk_NameToWindow(interp,
-		    Tcl_GetString(objv[i+1]), tkwin);
-		if (parent == None) {
+	    if (fcdPtr->parent) {
+		Tk_DeleteEventHandler(fcdPtr->parent, StructureNotifyMask,
+			FontchooserParentEventHandler, fcdPtr);
+	    }
+	    fcdPtr->parent = parent;
+	    Tk_CreateEventHandler(fcdPtr->parent, StructureNotifyMask,
+		    FontchooserParentEventHandler, fcdPtr);
+	    break;
+	}
+	case FontchooserTitle:
+	    if (fcdPtr->titleObj) {
+		Tcl_DecrRefCount(fcdPtr->titleObj);
+	    }
+	    Tcl_GetStringFromObj(objv[i+1], &len);
+	    if (len) {
+		fcdPtr->titleObj = objv[i+1];
+		if (Tcl_IsShared(fcdPtr->titleObj)) {
+		    fcdPtr->titleObj = Tcl_DuplicateObj(fcdPtr->titleObj);
+		}
+		Tcl_IncrRefCount(fcdPtr->titleObj);
+	    } else {
+		fcdPtr->titleObj = NULL;
+	    }
+	    break;
+	case FontchooserFont:
+	    Tcl_GetStringFromObj(objv[i+1], &len);
+	    if (len) {
+		Tk_Font f = Tk_AllocFontFromObj(interp, tkwin, objv[i+1]);
+
+		if (f) {
+		    ATSUStyle atsuStyle;
+
+		    TkMacOSXFMFontInfoForFont(f, &fontPanelFontFamily,
+			    &fontPanelFontStyle, &fontPanelFontSize,
+			    &atsuStyle);
+		    ChkErr(SetFontInfoForSelection, kFontSelectionATSUIType,
+			    1, &atsuStyle, NULL);
+		    Tk_FreeFont(f);
+		} else {
 		    return TCL_ERROR;
 		}
-		if (fcdPtr->parent) {
-		    Tk_DeleteEventHandler(fcdPtr->parent, StructureNotifyMask,
-			    FontchooserParentEventHandler, fcdPtr);
-		}
-		fcdPtr->parent = parent;
-		Tk_CreateEventHandler(fcdPtr->parent, StructureNotifyMask,
-			FontchooserParentEventHandler, fcdPtr);
-		break;
+	    } else {
+		fontPanelFontFamily = kInvalidFontFamily;
+		ChkErr(SetFontInfoForSelection, kFontSelectionATSUIType, 0,
+			NULL, NULL);
 	    }
-	    case FontchooserTitle:
-		if (fcdPtr->titleObj) {
-		    Tcl_DecrRefCount(fcdPtr->titleObj);
-		}
-		Tcl_GetStringFromObj(objv[i+1], &len);
-		if (len) {
-		    fcdPtr->titleObj = objv[i+1];
-		    if (Tcl_IsShared(fcdPtr->titleObj)) {
-			fcdPtr->titleObj = Tcl_DuplicateObj(fcdPtr->titleObj);
-		    }
-		    Tcl_IncrRefCount(fcdPtr->titleObj);
-		} else {
-		    fcdPtr->titleObj = NULL;
-		}
-		break;
-	    case FontchooserFont: {
-
-		Tcl_GetStringFromObj(objv[i+1], &len);
-		if (len) {
-		    Tk_Font f = Tk_AllocFontFromObj(interp, tkwin, objv[i+1]);
-		    if (f) {
-			ATSUStyle atsuStyle;
-
-			TkMacOSXFMFontInfoForFont(f, &fontPanelFontFamily,
-				 &fontPanelFontStyle, &fontPanelFontSize,
-				 &atsuStyle);
-			ChkErr(SetFontInfoForSelection,
-				kFontSelectionATSUIType, 1, &atsuStyle, NULL);
-			Tk_FreeFont(f);
-		    } else {
-			return TCL_ERROR;
-		    }
-		} else {
-		    fontPanelFontFamily = kInvalidFontFamily;
-		    ChkErr(SetFontInfoForSelection,
-			    kFontSelectionATSUIType, 0, NULL, NULL);
-		}
-		if (FPIsFontPanelVisible()) {
-		    TkSendVirtualEvent(fcdPtr->parent,
-			    "TkFontchooserFontChanged");
-		}
-		break;
+	    if (FPIsFontPanelVisible()) {
+		TkSendVirtualEvent(fcdPtr->parent,
+			"TkFontchooserFontChanged");
 	    }
-	    case FontchooserCmd:
-		if (fcdPtr->cmdObj) {
-		    Tcl_DecrRefCount(fcdPtr->cmdObj);
+	    break;
+	case FontchooserCmd:
+	    if (fcdPtr->cmdObj) {
+		Tcl_DecrRefCount(fcdPtr->cmdObj);
+	    }
+	    Tcl_GetStringFromObj(objv[i+1], &len);
+	    if (len) {
+		fcdPtr->cmdObj = objv[i+1];
+		if (Tcl_IsShared(fcdPtr->cmdObj)) {
+		    fcdPtr->cmdObj = Tcl_DuplicateObj(fcdPtr->cmdObj);
 		}
-		Tcl_GetStringFromObj(objv[i+1], &len);
-		if (len) {
-		    fcdPtr->cmdObj = objv[i+1];
-		    if (Tcl_IsShared(fcdPtr->cmdObj)) {
-			fcdPtr->cmdObj = Tcl_DuplicateObj(fcdPtr->cmdObj);
-		    }
-		    Tcl_IncrRefCount(fcdPtr->cmdObj);
-		} else {
-		    fcdPtr->cmdObj = NULL;
-		}
-		break;
+		Tcl_IncrRefCount(fcdPtr->cmdObj);
+	    } else {
+		fcdPtr->cmdObj = NULL;
+	    }
+	    break;
 	}
     }
     return TCL_OK;

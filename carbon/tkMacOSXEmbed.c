@@ -208,8 +208,9 @@ TkpUseWindow(
     Container *containerPtr;
 
     if (winPtr->window != None) {
-	Tcl_AppendResult(interp, "can't modify container after widget is "
-		"created", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"can't modify container after widget is created", -1));
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "CREATION", NULL);
 	return TCL_ERROR;
     }
 
@@ -229,8 +230,10 @@ TkpUseWindow(
     usePtr = (TkWindow *) Tk_IdToWindow(winPtr->display, (Window) parent);
     if (usePtr != NULL) {
 	if (!(usePtr->flags & TK_CONTAINER)) {
-	    Tcl_AppendResult(interp, "window \"", usePtr->pathName,
-		    "\" doesn't have -container option set", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" doesn't have -container option set",
+		    usePtr->pathName));
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "TARGET", NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -312,8 +315,10 @@ TkpUseWindow(
 	if (tkMacOSXEmbedHandler == NULL ||
 		tkMacOSXEmbedHandler->registerWinProc((int) parent,
 		(Tk_Window) winPtr) != TCL_OK) {
-	    Tcl_AppendResult(interp, "The window ID ", string,
-		    " does not correspond to a valid Tk Window.", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "The window ID %s does not correspond to a valid Tk Window",
+		    string));
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "HANDLE", NULL);
 	    return TCL_ERROR;
 	} else {
 	    containerPtr = ckalloc(sizeof(Container));
