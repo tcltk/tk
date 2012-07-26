@@ -531,8 +531,10 @@ TkMacOSXGetNewMenuID(
     }
 
     if (!found) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "No more menus can be allocated.", NULL);
+    	Tcl_SetObjResult(menuPtr->interp, Tcl_NewStringObj(
+		"No more menus can be allocated.", -1));
+	Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "SYSTEM_RESOURCES",
+		NULL);
 	return TCL_ERROR;
     }
     Tcl_SetHashValue(commandEntryPtr, menuPtr);
@@ -682,21 +684,25 @@ TkpNewMenu(
     err = ChkErr(CreateNewMenu, menuID, kMenuAttrDoNotUseUserCommandKeys,
 	    &macMenuHdl);
     if (err != noErr) {
-	Tcl_AppendResult(menuPtr->interp, "CreateNewMenu failed.", NULL);
+	Tcl_SetObjResult(menuPtr->interp, Tcl_NewStringObj(
+		"CreateNewMenu failed.", -1));
+	Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "CREATE", NULL);
 	return TCL_ERROR;
     }
     cfStr = CFStringCreateWithCString(NULL, Tk_PathName(menuPtr->tkwin),
 	    kCFStringEncodingUTF8);
     if (!cfStr) {
-	Tcl_AppendResult(menuPtr->interp, "CFStringCreateWithCString failed.",
-		NULL);
+	Tcl_SetObjResult(menuPtr->interp, Tcl_NewStringObj(
+		"CFStringCreateWithCString failed.", -1));
+	Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "CREATE_STRING",NULL);
 	return TCL_ERROR;
     }
     err = ChkErr(SetMenuTitleWithCFString, macMenuHdl, cfStr);
     CFRelease(cfStr);
     if (err != noErr) {
-	Tcl_AppendResult(menuPtr->interp, "SetMenuTitleWithCFString failed.",
-		NULL);
+	Tcl_SetObjResult(menuPtr->interp, Tcl_NewStringObj(
+		"SetMenuTitleWithCFString failed.", -1));
+	Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "SET_TITLE", NULL);
 	return TCL_ERROR;
     }
 
@@ -1546,8 +1552,9 @@ TkpPostMenu(
     int result;
 
     if (inPostMenu > 0) {
-	Tcl_AppendResult(interp,
-		"Cannot call post menu while already posting menu", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"Cannot call post menu while already posting menu", -1));
+	Tcl_SetErrorCode(interp, "TK", "MENU", "POSTING", NULL);
 	result = TCL_ERROR;
     } else {
 	short menuID;
