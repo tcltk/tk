@@ -142,7 +142,8 @@ Tk_ParseArgv(
 		if (matchPtr != NULL) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "ambiguous option \"%s\"", curArg));
-		    Tcl_SetErrorCode(interp, "TK", "ARG", "AMBIGUOUS", NULL);
+		    Tcl_SetErrorCode(interp, "TK", "ARG", "AMBIGUOUS", curArg,
+			    NULL);
 		    return TCL_ERROR;
 		}
 		matchPtr = infoPtr;
@@ -157,7 +158,8 @@ Tk_ParseArgv(
 	    if (flags & TK_ARGV_NO_LEFTOVERS) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"unrecognized argument \"%s\"", curArg));
-		Tcl_SetErrorCode(interp, "TK", "ARG", "UNRECOGNIZED", NULL);
+		Tcl_SetErrorCode(interp, "TK", "ARG", "UNRECOGNIZED", curArg,
+			NULL);
 		return TCL_ERROR;
 	    }
 	    argv[dstIndex] = curArg;
@@ -184,7 +186,7 @@ Tk_ParseArgv(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"expected %s argument for \"%s\" but got \"%s\"",
 			"integer", infoPtr->key, argv[srcIndex]));
-		Tcl_SetErrorCode(interp, "TK", "ARG", "INTEGER", NULL);
+		Tcl_SetErrorCode(interp, "TK", "ARG", "INTEGER", curArg,NULL);
 		return TCL_ERROR;
 	    }
 	    srcIndex++;
@@ -218,7 +220,7 @@ Tk_ParseArgv(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"expected %s argument for \"%s\" but got \"%s\"",
 			"floating-point", infoPtr->key, argv[srcIndex]));
-		Tcl_SetErrorCode(interp, "TK", "ARG", "FLOAT", NULL);
+		Tcl_SetErrorCode(interp, "TK", "ARG", "FLOAT", curArg, NULL);
 		return TCL_ERROR;
 	    }
 	    srcIndex++;
@@ -268,7 +270,8 @@ Tk_ParseArgv(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"\"%s\" option requires two following arguments",
 			curArg));
-		Tcl_SetErrorCode(interp, "TK", "ARG", "NAME_VALUE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "ARG", "NAME_VALUE", curArg,
+			NULL);
 		return TCL_ERROR;
 	    }
 	    Tk_AddOption(tkwin, argv[srcIndex], argv[srcIndex+1],
@@ -303,7 +306,7 @@ Tk_ParseArgv(
   missingArg:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "\"%s\" option requires an additional argument", curArg));
-    Tcl_SetErrorCode(interp, "TK", "ARG", "MISSING", NULL);
+    Tcl_SetErrorCode(interp, "TK", "ARG", "MISSING", curArg, NULL);
     return TCL_ERROR;
 }
 
@@ -329,7 +332,7 @@ static void
 PrintUsage(
     Tcl_Interp *interp,		/* Place information in this interp's result
 				 * area. */
-    const Tk_ArgvInfo *argTable,	/* Array of command-specific argument
+    const Tk_ArgvInfo *argTable,/* Array of command-specific argument
 				 * descriptions. */
     int flags)			/* If the TK_ARGV_NO_DEFAULTS bit is set in
 				 * this word, then don't generate information
@@ -337,7 +340,7 @@ PrintUsage(
 {
     register const Tk_ArgvInfo *infoPtr;
     size_t width, i, numSpaces;
-    char tmp[TCL_DOUBLE_SPACE];
+    Tcl_Obj *message;
 
     /*
      * First, compute the width of the widest option key, so that we can make
@@ -349,6 +352,7 @@ PrintUsage(
 	for (infoPtr = i ? defaultTable : argTable;
 		infoPtr->type != TK_ARGV_END; infoPtr++) {
 	    size_t length;
+
 	    if (infoPtr->key == NULL) {
 		continue;
 	    }
@@ -359,35 +363,35 @@ PrintUsage(
 	}
     }
 
-    Tcl_AppendResult(interp, "Command-specific options:", NULL);
+    message = Tcl_NewStringObj("Command-specific options:", -1);
     for (i = 0; ; i++) {
 	for (infoPtr = i ? defaultTable : argTable;
 		infoPtr->type != TK_ARGV_END; infoPtr++) {
 	    if ((infoPtr->type == TK_ARGV_HELP) && (infoPtr->key == NULL)) {
-		Tcl_AppendResult(interp, "\n", infoPtr->help, NULL);
+		Tcl_AppendPrintfToObj(message, "\n%s", infoPtr->help);
 		continue;
 	    }
-	    Tcl_AppendResult(interp, "\n ", infoPtr->key, ":", NULL);
+	    Tcl_AppendPrintfToObj(message, "\n %s:", infoPtr->key);
 	    numSpaces = width + 1 - strlen(infoPtr->key);
 	    while (numSpaces-- > 0) {
-		Tcl_AppendResult(interp, " ", NULL);
+		Tcl_AppendToObj(message, " ", 1);
 	    }
-	    Tcl_AppendResult(interp, infoPtr->help, NULL);
+	    Tcl_AppendToObj(message, infoPtr->help, -1);
 	    switch (infoPtr->type) {
 	    case TK_ARGV_INT:
-		sprintf(tmp, "%d", *((int *) infoPtr->dst));
-		Tcl_AppendResult(interp, "\n\t\tDefault value: ", tmp, NULL);
+		Tcl_AppendPrintfToObj(message, "\n\t\tDefault value: %d",
+			*((int *) infoPtr->dst));
 		break;
 	    case TK_ARGV_FLOAT:
-		Tcl_PrintDouble(NULL, *((double *) infoPtr->dst), tmp);
-		Tcl_AppendResult(interp, "\n\t\tDefault value: ", tmp, NULL);
+		Tcl_AppendPrintfToObj(message, "\n\t\tDefault value: %f",
+			*((double *) infoPtr->dst));
 		break;
 	    case TK_ARGV_STRING: {
 		char *string = *((char **) infoPtr->dst);
 
 		if (string != NULL) {
-		    Tcl_AppendResult(interp, "\n\t\tDefault value: \"", string,
-			    "\"", NULL);
+		    Tcl_AppendPrintfToObj(message,
+			    "\n\t\tDefault value: \"%s\"", string);
 		}
 		break;
 	    }
@@ -399,8 +403,9 @@ PrintUsage(
 	if ((flags & TK_ARGV_NO_DEFAULTS) || (i > 0)) {
 	    break;
 	}
-	Tcl_AppendResult(interp, "\nGeneric options for all commands:", NULL);
+	Tcl_AppendToObj(message, "\nGeneric options for all commands:", -1);
     }
+    Tcl_SetObjResult(interp, message);
 }
 
 /*
