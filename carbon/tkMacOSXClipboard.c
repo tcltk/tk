@@ -61,8 +61,10 @@ TkSelGetSelection(
 
 	err = ChkErr(GetCurrentScrap, &scrapRef);
 	if (err != noErr) {
-	    Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
-		    " GetCurrentScrap failed.", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "%s GetCurrentScrap failed.",
+		    Tk_GetAtomName(tkwin, selection)));
+	    Tcl_SetErrorCode(interp, "TK", "SELECTION", "SCRAP", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -79,8 +81,8 @@ TkSelGetSelection(
 	    buf = ckalloc(length + 2);
 	    buf[length] = 0;
 	    buf[length+1] = 0; /* 2-byte unicode null */
-	    err = ChkErr(GetScrapFlavorData, scrapRef, kScrapFlavorTypeUnicode,
-		    &length, buf);
+	    err = ChkErr(GetScrapFlavorData, scrapRef,
+		    kScrapFlavorTypeUnicode, &length, buf);
 	    if (err == noErr) {
 		Tcl_DStringInit(&ds);
 		Tcl_UniCharToUtfDString((Tcl_UniChar *) buf,
@@ -99,8 +101,10 @@ TkSelGetSelection(
 
 	err = ChkErr(GetScrapFlavorSize, scrapRef, 'TEXT', &length);
 	if (err != noErr) {
-	    Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
-		    " GetScrapFlavorSize failed.", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "%s GetScrapFlavorSize failed.",
+		    Tk_GetAtomName(tkwin, selection)));
+	    Tcl_SetErrorCode(interp, "TK", "SELECTION", "FLAVORSIZE", NULL);
 	    return TCL_ERROR;
 	}
 	if (length > 0) {
@@ -111,9 +115,12 @@ TkSelGetSelection(
 	    buf[length] = 0;
 	    err = ChkErr(GetScrapFlavorData, scrapRef, 'TEXT', &length, buf);
 	    if (err != noErr) {
-		    Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
-			" GetScrapFlavorData failed.", NULL);
-		    return TCL_ERROR;
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"%s GetScrapFlavorData failed.",
+			Tk_GetAtomName(tkwin, selection)));
+		Tcl_SetErrorCode(interp, "TK", "SELECTION", "FLAVORDATA",
+			NULL);
+		return TCL_ERROR;
 	    }
 
 	    /*
@@ -136,9 +143,10 @@ TkSelGetSelection(
 	}
     }
 
-    Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
-	    " selection doesn't exist or form \"",
-	    Tk_GetAtomName(tkwin, target), "\" not defined", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "%s selection doesn't exist or form \"%s\" not defined",
+	    Tk_GetAtomName(tkwin, selection), Tk_GetAtomName(tkwin, target)));
+    Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
     return TCL_ERROR;
 }
 
