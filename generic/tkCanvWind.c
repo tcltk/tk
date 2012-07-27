@@ -826,45 +826,44 @@ CanvasPsWindow(
     double x, double y,		/* origin of window. */
     int width, int height)	/* width/height of window. */
 {
-    char buffer[256];
     XImage *ximage;
     int result;
-    Tcl_DString buffer1, buffer2;
 #ifdef X_GetImage
     Tk_ErrorHandler handle;
 #endif
+    Tcl_Obj *cmdObj, *psObj;
+    Tcl_InterpState interpState = Tcl_SaveInterpState(interp, TCL_OK);
 
-    sprintf(buffer, "\n%%%% %s item (%s, %d x %d)\n%.15g %.15g translate\n",
+    /*
+     * Locate the subwindow within the wider window.
+     */
+
+    psObj = Tcl_ObjPrintf(
+	    "\n%%%% %s item (%s, %d x %d)\n"	// Comment
+	    "%.15g %.15g translate\n",		// Position
 	    Tk_Class(tkwin), Tk_PathName(tkwin), width, height, x, y);
-    Tcl_AppendResult(interp, buffer, NULL);
 
     /*
      * First try if the widget has its own "postscript" command. If it exists,
      * this will produce much better postscript than when a pixmap is used.
      */
 
-    Tcl_DStringInit(&buffer1);
-    Tcl_DStringInit(&buffer2);
-    Tcl_DStringGetResult(interp, &buffer2);
-    sprintf(buffer, "%s postscript -prolog 0", Tk_PathName(tkwin));
-    result = Tcl_Eval(interp, buffer);
-    Tcl_DStringGetResult(interp, &buffer1);
-    Tcl_DStringResult(interp, &buffer2);
-    Tcl_DStringFree(&buffer2);
+    Tcl_ResetResult(interp);
+    cmdObj = Tcl_ObjPrintf("%s postscript -prolog 0", Tk_PathName(tkwin));
+    Tcl_IncrRefCount(cmdObj);
+    result = Tcl_EvalObjEx(interp, cmdObj, 0);
+    Tcl_DecrRefCount(cmdObj);
 
     if (result == TCL_OK) {
-	Tcl_AppendResult(interp, "50 dict begin\nsave\ngsave\n", NULL);
-	sprintf(buffer, "0 %d moveto %d 0 rlineto 0 -%d rlineto -%d",
-		height, width, height, width);
-	Tcl_AppendResult(interp, buffer, NULL);
-	Tcl_AppendResult(interp, " 0 rlineto closepath\n",
+	Tcl_AppendPrintfToObj(psObj,
+		"50 dict begin\nsave\ngsave\n"
+		"0 %d moveto %d 0 rlineto 0 -%d rlineto -%d 0 rlineto closepath\n"
 		"1.000 1.000 1.000 setrgbcolor AdjustColor\nfill\ngrestore\n",
-		Tcl_DStringValue(&buffer1), "\nrestore\nend\n\n\n", NULL);
-	Tcl_DStringFree(&buffer1);
-
-	return result;
+		height, width, height, width);
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+	Tcl_AppendToObj(psObj, "\nrestore\nend\n\n\n", -1);
+	goto done;
     }
-    Tcl_DStringFree(&buffer1);
 
     /*
      * If the window is off the screen it will generate a BadMatch/XError. We
@@ -889,13 +888,27 @@ CanvasPsWindow(
 #endif
 
     if (ximage == NULL) {
-	return TCL_OK;
+	result = TCL_OK;
+    } else {
+	Tcl_ResetResult(interp);
+	result = TkPostscriptImage(interp, tkwin, Canvas(canvas)->psInfo,
+		ximage, 0, 0, width, height);
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+	XDestroyImage(ximage);
     }
 
-    result = TkPostscriptImage(interp, tkwin, Canvas(canvas)->psInfo, ximage,
-	    0, 0, width, height);
+    /*
+     * Plug the accumulated postscript back into the result.
+     */
 
-    XDestroyImage(ximage);
+  done:
+    if (result == TCL_OK) {
+	(void) Tcl_RestoreInterpState(interp, interpState);
+	Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    } else {
+	Tcl_DiscardInterpState(interpState);
+    }
+    Tcl_DecrRefCount(psObj);
     return result;
 }
 
