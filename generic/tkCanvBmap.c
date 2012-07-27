@@ -850,11 +850,12 @@ BitmapToPostscript(
     double x, y;
     int width, height, rowsAtOnce, rowsThisTime;
     int curRow;
-    char buffer[100 + TCL_DOUBLE_SPACE * 2 + TCL_INTEGER_SPACE * 4];
     XColor *fgColor;
     XColor *bgColor;
     Pixmap bitmap;
     Tk_State state = itemPtr->state;
+    Tcl_Obj *psObj;
+    Tcl_InterpState interpState;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -910,18 +911,29 @@ BitmapToPostscript(
     }
 
     /*
+     * Make our working space.
+     */
+
+    psObj = Tcl_NewObj();
+    interpState = Tcl_SaveInterpState(interp, TCL_OK);
+
+    /*
      * Color the background, if there is one.
      */
 
     if (bgColor != NULL) {
-	sprintf(buffer,
-		"%.15g %.15g moveto %d 0 rlineto 0 %d rlineto %d %s\n",
-		x, y, width, height, -width, "0 rlineto closepath");
-	Tcl_AppendResult(interp, buffer, NULL);
+	Tcl_AppendPrintfToObj(psObj,
+		"%.15g %.15g moveto %d 0 rlineto 0 %d rlineto "
+		"%d 0 rlineto closepath\n",
+		x, y, width, height, -width);
+
+	Tcl_ResetResult(interp);
 	if (Tk_CanvasPsColor(interp, canvas, bgColor) != TCL_OK) {
-	    return TCL_ERROR;
+	    goto error;
 	}
-	Tcl_AppendResult(interp, "fill\n", NULL);
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
+	Tcl_AppendToObj(psObj, "fill\n", -1);
     }
 
     /*
@@ -932,38 +944,61 @@ BitmapToPostscript(
      */
 
     if (fgColor != NULL) {
+	Tcl_ResetResult(interp);
 	if (Tk_CanvasPsColor(interp, canvas, fgColor) != TCL_OK) {
-	    return TCL_ERROR;
+	    goto error;
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 	if (width > 60000) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't generate Postscript for bitmaps more than 60000"
 		    " pixels wide", -1));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
-	    return TCL_ERROR;
+	    goto error;
 	}
+
 	rowsAtOnce = 60000/width;
 	if (rowsAtOnce < 1) {
 	    rowsAtOnce = 1;
 	}
-	sprintf(buffer, "%.15g %.15g translate\n", x, y+height);
-	Tcl_AppendResult(interp, buffer, NULL);
+
+	Tcl_AppendPrintfToObj(psObj, "%.15g %.15g translate\n", x, y+height);
+
 	for (curRow = 0; curRow < height; curRow += rowsAtOnce) {
 	    rowsThisTime = rowsAtOnce;
 	    if (rowsThisTime > (height - curRow)) {
 		rowsThisTime = height - curRow;
 	    }
-	    sprintf(buffer, "0 -%.15g translate\n%d %d true matrix {\n",
+
+	    Tcl_AppendPrintfToObj(psObj,
+		    "0 -%.15g translate\n%d %d true matrix {\n",
 		    (double) rowsThisTime, width, rowsThisTime);
-	    Tcl_AppendResult(interp, buffer, NULL);
+
+	    Tcl_ResetResult(interp);
 	    if (Tk_CanvasPsBitmap(interp, canvas, bitmap,
 		    0, curRow, width, rowsThisTime) != TCL_OK) {
-		return TCL_ERROR;
+		goto error;
 	    }
-	    Tcl_AppendResult(interp, "\n} imagemask\n", NULL);
+	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
+	    Tcl_AppendToObj(psObj, "\n} imagemask\n", -1);
 	}
     }
+
+    /*
+     * Plug the accumulated postscript back into the result.
+     */
+
+    (void) Tcl_RestoreInterpState(interp, interpState);
+    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_DecrRefCount(psObj);
     return TCL_OK;
+
+  error:
+    Tcl_DiscardInterpState(interpState);
+    Tcl_DecrRefCount(psObj);
+    return TCL_ERROR;
 }
 
 /*
