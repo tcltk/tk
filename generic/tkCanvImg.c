@@ -695,14 +695,12 @@ ImageToPostscript(
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
     Tk_Window canvasWin = Tk_CanvasTkwin(canvas);
-
-    char buffer[256];
     double x, y;
     int width, height;
     Tk_Image image;
     Tk_State state = itemPtr->state;
 
-    if(state == TK_STATE_NULL) {
+    if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
     }
 
@@ -746,8 +744,14 @@ ImageToPostscript(
     }
 
     if (!prepass) {
-	sprintf(buffer, "%.15g %.15g", x, y);
-	Tcl_AppendResult(interp, buffer, " translate\n", NULL);
+	Tcl_Obj *psObj = Tcl_GetObjResult(interp);
+
+	if (Tcl_IsShared(psObj)) {
+	    psObj = Tcl_DuplicateObj(psObj);
+	    Tcl_SetObjResult(interp, psObj);
+	}
+
+	Tcl_AppendPrintfToObj(psObj, "%.15g %.15g translate\n", x, y);
     }
 
     return Tk_PostscriptImage(image, interp, canvasWin,

@@ -1544,6 +1544,8 @@ TextToPostscript(
     XColor *color;
     Pixmap stipple;
     Tk_State state = itemPtr->state;
+    Tcl_Obj *psObj;
+    Tcl_InterpState interpState;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -1569,25 +1571,39 @@ TextToPostscript(
 	}
     }
 
+    /*
+     * Make our working space.
+     */
+
+    psObj = Tcl_NewObj();
+    interpState = Tcl_SaveInterpState(interp, TCL_OK);
+
+    /*
+     * Generate postscript.
+     */
+
+    Tcl_ResetResult(interp);
     if (Tk_CanvasPsFont(interp, canvas, textPtr->tkfont) != TCL_OK) {
-	return TCL_ERROR;
+	goto error;
     }
+    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
     if (prepass != 0) {
-	return TCL_OK;
+	goto done;
     }
+
+    Tcl_ResetResult(interp);
     if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	return TCL_ERROR;
+	goto error;
     }
+    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
     if (stipple != None) {
-	Tcl_AppendResult(interp, "/StippleText {\n    ", NULL);
+	Tcl_ResetResult(interp);
 	Tk_CanvasPsStipple(interp, canvas, stipple);
-	Tcl_AppendResult(interp, "} bind def\n", NULL);
+	Tcl_AppendPrintfToObj(psObj, "/StippleText {\n    %s} bind def\n",
+		Tcl_GetString(Tcl_GetObjResult(interp)));
     }
-
-    Tcl_AppendPrintfToObj(Tcl_GetObjResult(interp), "%.15g %.15g %.15g [\n",
-	    textPtr->angle, textPtr->x, Tk_CanvasPsY(canvas, textPtr->y));
-
-    Tk_TextLayoutToPostscript(interp, textPtr->textLayout);
 
     x = 0;  y = 0;  justify = NULL;	/* lint. */
     switch (textPtr->anchor) {
@@ -1608,12 +1624,31 @@ TextToPostscript(
     }
 
     Tk_GetFontMetrics(textPtr->tkfont, &fm);
-    Tcl_AppendPrintfToObj(Tcl_GetObjResult(interp),
+
+    Tcl_AppendPrintfToObj(psObj, "%.15g %.15g %.15g [\n",
+	    textPtr->angle, textPtr->x, Tk_CanvasPsY(canvas, textPtr->y));
+    Tcl_ResetResult(interp);
+    Tk_TextLayoutToPostscript(interp, textPtr->textLayout);
+    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+    Tcl_AppendPrintfToObj(psObj,
 	    "] %d %g %g %s %s DrawText\n",
 	    fm.linespace, x / -2.0, y / 2.0, justify,
 	    ((stipple == None) ? "false" : "true"));
 
+    /*
+     * Plug the accumulated postscript back into the result.
+     */
+
+  done:
+    (void) Tcl_RestoreInterpState(interp, interpState);
+    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_DecrRefCount(psObj);
     return TCL_OK;
+
+  error:
+    Tcl_DiscardInterpState(interpState);
+    Tcl_DecrRefCount(psObj);
+    return TCL_ERROR;
 }
 
 /*

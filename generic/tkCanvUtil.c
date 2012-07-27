@@ -49,8 +49,22 @@ static int		DashConvert(char *l, const char *p, int n,
 			    double width);
 static void		TranslateAndAppendCoords(TkCanvas *canvPtr,
 			    double x, double y, XPoint *outArr, int numOut);
+static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
 
 #define ABS(a) ((a>=0)?(a):(-(a)))
+
+static inline Tcl_Obj *
+GetPostscriptBuffer(
+    Tcl_Interp *interp)
+{
+    Tcl_Obj *psObj = Tcl_GetObjResult(interp);
+
+    if (Tcl_IsShared(psObj)) {
+	psObj = Tcl_DuplicateObj(psObj);
+	Tcl_SetObjResult(interp, psObj);
+    }
+    return psObj;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -1364,15 +1378,16 @@ Tk_CanvasPsOutline(
     Tk_Item *item,
     Tk_Outline *outline)
 {
-    char string[41], pattern[11];
+    char pattern[11];
     int i;
-    char *ptr, *str = string, *lptr = pattern;
+    char *ptr, *lptr = pattern;
     Tcl_Interp *interp = Canvas(canvas)->interp;
     double width = outline->width;
     Tk_Dash *dash = &outline->dash;
     XColor *color = outline->color;
     Pixmap stipple = outline->stipple;
     Tk_State state = item->state;
+    Tcl_Obj *psObj = GetPostscriptBuffer(interp);
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -1383,7 +1398,7 @@ Tk_CanvasPsOutline(
 	    width = outline->activeWidth;
 	}
 	if (outline->activeDash.number > 0) {
-	    dash = &(outline->activeDash);
+	    dash = &outline->activeDash;
 	}
 	if (outline->activeColor != NULL) {
 	    color = outline->activeColor;
@@ -1396,7 +1411,7 @@ Tk_CanvasPsOutline(
 	    width = outline->disabledWidth;
 	}
 	if (outline->disabledDash.number > 0) {
-	    dash = &(outline->disabledDash);
+	    dash = &outline->disabledDash;
 	}
 	if (outline->disabledColor != NULL) {
 	    color = outline->disabledColor;
@@ -1405,66 +1420,65 @@ Tk_CanvasPsOutline(
 	    stipple = outline->disabledStipple;
 	}
     }
-    sprintf(string, "%.15g setlinewidth\n", width);
-    Tcl_AppendResult(interp, string, NULL);
 
-    if (dash->number > 10) {
-	str = ckalloc(1 + 4*dash->number);
-    } else if (dash->number < -5) {
-	str = ckalloc(1 - 8*dash->number);
-	lptr = ckalloc(1 - 2*dash->number);
-    }
+    Tcl_AppendPrintfToObj(psObj, "%.15g setlinewidth\n", width);
+
     ptr = ((unsigned) ABS(dash->number) > sizeof(char *)) ?
 	    dash->pattern.pt : dash->pattern.array;
+    Tcl_AppendToObj(psObj, "[", -1);
     if (dash->number > 0) {
-	char *ptr0 = ptr;
+	Tcl_Obj *converted;
+	char *p = ptr;
 
-	sprintf(str, "[%d", *ptr++ & 0xff);
-	i = dash->number-1;
-	while (i--) {
-	    sprintf(str+strlen(str), " %d", *ptr++ & 0xff);
+	converted = Tcl_ObjPrintf("%d", *p++ & 0xff);
+	for (i = dash->number-1 ; i>=0 ; i--) {
+	    Tcl_AppendPrintfToObj(converted, " %d", *p++ & 0xff);
 	}
-	Tcl_AppendResult(interp, str, NULL);
-	if (dash->number&1) {
-	    Tcl_AppendResult(interp, " ", str+1, NULL);
+	Tcl_AppendObjToObj(psObj, converted);
+	if (dash->number & 1) {
+	    Tcl_AppendToObj(psObj, " ", -1);
+	    Tcl_AppendObjToObj(psObj, converted);
 	}
-	sprintf(str, "] %d setdash\n", outline->offset);
-	Tcl_AppendResult(interp, str, NULL);
-	ptr = ptr0;
+	Tcl_DecrRefCount(converted);
+	Tcl_AppendPrintfToObj(psObj, "] %d setdash\n", outline->offset);
     } else if (dash->number < 0) {
-	if ((i = DashConvert(lptr, ptr, -dash->number, width)) != 0) {
-	    char *lptr0 = lptr;
+	if (dash->number < -5) {
+	    lptr = ckalloc(1 - 2*dash->number);
+	}
+	i = DashConvert(lptr, ptr, -dash->number, width);
+	if (i > 0) {
+	    char *p = lptr;
 
-	    sprintf(str, "[%d", *lptr++ & 0xff);
-	    while (--i) {
-		sprintf(str+strlen(str), " %d", *lptr++ & 0xff);
+	    Tcl_AppendPrintfToObj(psObj, "%d", *p++ & 0xff);
+	    for (; --i>0 ;) {
+		Tcl_AppendPrintfToObj(psObj, " %d", *p++ & 0xff);
 	    }
-	    Tcl_AppendResult(interp, str, NULL);
-	    sprintf(str, "] %d setdash\n", outline->offset);
-	    Tcl_AppendResult(interp, str, NULL);
-	    lptr = lptr0;
+	    Tcl_AppendPrintfToObj(psObj, "] %d setdash\n", outline->offset);
 	} else {
-	    Tcl_AppendResult(interp, "[] 0 setdash\n", NULL);
+	    Tcl_AppendToObj(psObj, "] 0 setdash\n", -1);
+	}
+	if (lptr != pattern) {
+	    ckfree(lptr);
 	}
     } else {
-	Tcl_AppendResult(interp, "[] 0 setdash\n", NULL);
+	Tcl_AppendToObj(psObj, "] 0 setdash\n", -1);
     }
-    if (str != string) {
-	ckfree(str);
-    }
-    if (lptr != pattern) {
-	ckfree(lptr);
-    }
+
     if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
 	return TCL_ERROR;
     }
+
+    /*
+     * Note that psObj might hold an invalid reference now.
+     */
+
     if (stipple != None) {
-	Tcl_AppendResult(interp, "StrokeClip ", NULL);
+	Tcl_AppendToObj(GetPostscriptBuffer(interp), "StrokeClip ", -1);
 	if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     } else {
-	Tcl_AppendResult(interp, "stroke\n", NULL);
+	Tcl_AppendToObj(GetPostscriptBuffer(interp), "stroke\n", -1);
     }
 
     return TCL_OK;
