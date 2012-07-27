@@ -1818,13 +1818,14 @@ ArcToPostscript(
 				 * being created. */
 {
     ArcItem *arcPtr = (ArcItem *) itemPtr;
-    char buffer[400];
     double y1, y2, ang1, ang2;
     XColor *color;
     Pixmap stipple;
     XColor *fillColor;
     Pixmap fillStipple;
     Tk_State state = itemPtr->state;
+    Tcl_Obj *psObj;
+    Tcl_InterpState interpState;
 
     y1 = Tk_CanvasPsY(canvas, arcPtr->bbox[1]);
     y2 = Tk_CanvasPsY(canvas, arcPtr->bbox[3]);
@@ -1871,37 +1872,51 @@ ArcToPostscript(
     }
 
     /*
+     * Make our working space.
+     */
+
+    psObj = Tcl_NewObj();
+    interpState = Tcl_SaveInterpState(interp, TCL_OK);
+
+    /*
      * If the arc is filled, output Postscript for the interior region of the
      * arc.
      */
 
     if (arcPtr->fillGC != None) {
-	sprintf(buffer, "matrix currentmatrix\n%.15g %.15g translate %.15g %.15g scale\n",
+	Tcl_AppendPrintfToObj(psObj,
+		"matrix currentmatrix\n"
+		"%.15g %.15g translate %.15g %.15g scale\n",
 		(arcPtr->bbox[0] + arcPtr->bbox[2])/2, (y1 + y2)/2,
 		(arcPtr->bbox[2] - arcPtr->bbox[0])/2, (y1 - y2)/2);
-	Tcl_AppendResult(interp, buffer, NULL);
-	if (arcPtr->style == CHORD_STYLE) {
-	    sprintf(buffer, "0 0 1 %.15g %.15g arc closepath\nsetmatrix\n",
-		    ang1, ang2);
-	} else {
-	    sprintf(buffer,
-		    "0 0 moveto 0 0 1 %.15g %.15g arc closepath\nsetmatrix\n",
-		    ang1, ang2);
+
+	if (arcPtr->style != CHORD_STYLE) {
+	    Tcl_AppendToObj(psObj, "0 0 moveto ", -1);
 	}
-	Tcl_AppendResult(interp, buffer, NULL);
+	Tcl_AppendPrintfToObj(psObj,
+		"0 0 1 %.15g %.15g arc closepath\nsetmatrix\n",
+		ang1, ang2);
+
+	Tcl_ResetResult(interp);
 	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
-	    return TCL_ERROR;
+	    goto error;
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 	if (fillStipple != None) {
-	    Tcl_AppendResult(interp, "clip ", NULL);
+	    Tcl_AppendToObj(psObj, "clip ", -1);
+
+	    Tcl_ResetResult(interp);
 	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
-		return TCL_ERROR;
+		goto error;
 	    }
+	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 	    if (arcPtr->outline.gc != None) {
-		Tcl_AppendResult(interp, "grestore gsave\n", NULL);
+		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
 	    }
 	} else {
-	    Tcl_AppendResult(interp, "fill\n", NULL);
+	    Tcl_AppendToObj(psObj, "fill\n", -1);
 	}
     }
 
@@ -1910,57 +1925,86 @@ ArcToPostscript(
      */
 
     if (arcPtr->outline.gc != None) {
-	sprintf(buffer, "matrix currentmatrix\n%.15g %.15g translate %.15g %.15g scale\n",
+	Tcl_AppendPrintfToObj(psObj,
+		"matrix currentmatrix\n"
+		"%.15g %.15g translate %.15g %.15g scale\n",
 		(arcPtr->bbox[0] + arcPtr->bbox[2])/2, (y1 + y2)/2,
 		(arcPtr->bbox[2] - arcPtr->bbox[0])/2, (y1 - y2)/2);
-	Tcl_AppendResult(interp, buffer, NULL);
-	sprintf(buffer, "0 0 1 %.15g %.15g", ang1, ang2);
-	Tcl_AppendResult(interp, buffer,
-		" arc\nsetmatrix\n0 setlinecap\n", NULL);
-	if (Tk_CanvasPsOutline(canvas, itemPtr, &(arcPtr->outline)) != TCL_OK){
-	    return TCL_ERROR;
+	Tcl_AppendPrintfToObj(psObj,
+		"0 0 1 %.15g %.15g arc\nsetmatrix\n0 setlinecap\n",
+		ang1, ang2);
+
+	Tcl_ResetResult(interp);
+	if (Tk_CanvasPsOutline(canvas, itemPtr, &arcPtr->outline) != TCL_OK) {
+	    goto error;
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 	if (arcPtr->style != ARC_STYLE) {
-	    Tcl_AppendResult(interp, "grestore gsave\n", NULL);
+	    Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
+
+	    Tcl_ResetResult(interp);
 	    if (arcPtr->style == CHORD_STYLE) {
 		Tk_CanvasPsPath(interp, canvas, arcPtr->outlinePtr,
 			CHORD_OUTLINE_PTS);
 	    } else {
 		Tk_CanvasPsPath(interp, canvas, arcPtr->outlinePtr,
 			PIE_OUTLINE1_PTS);
-		if (Tk_CanvasPsColor(interp, canvas, color)
-			!= TCL_OK) {
-		    return TCL_ERROR;
+		if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
+		    goto error;
 		}
+		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 		if (stipple != None) {
-		    Tcl_AppendResult(interp, "clip ", NULL);
-		    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK){
-			return TCL_ERROR;
+		    Tcl_AppendToObj(psObj, "clip ", -1);
+
+		    Tcl_ResetResult(interp);
+		    if (Tk_CanvasPsStipple(interp, canvas, stipple) !=TCL_OK){
+			goto error;
 		    }
+		    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 		} else {
-		    Tcl_AppendResult(interp, "fill\n", NULL);
+		    Tcl_AppendToObj(psObj, "fill\n", -1);
 		}
-		Tcl_AppendResult(interp, "grestore gsave\n", NULL);
+		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
+
+		Tcl_ResetResult(interp);
 		Tk_CanvasPsPath(interp, canvas,
 			arcPtr->outlinePtr + 2*PIE_OUTLINE1_PTS,
 			PIE_OUTLINE2_PTS);
 	    }
-	    if (Tk_CanvasPsColor(interp, canvas, color)
-		    != TCL_OK) {
-		return TCL_ERROR;
+	    if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
+		goto error;
 	    }
+	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 	    if (stipple != None) {
-		Tcl_AppendResult(interp, "clip ", NULL);
+		Tcl_AppendToObj(psObj, "clip ", -1);
+
+		Tcl_ResetResult(interp);
 		if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-		    return TCL_ERROR;
+		    goto error;
 		}
+		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	    } else {
-		Tcl_AppendResult(interp, "fill\n", NULL);
+		Tcl_AppendToObj(psObj, "fill\n", -1);
 	    }
 	}
     }
 
+    /*
+     * Plug the accumulated postscript back into the result.
+     */
+
+    (void) Tcl_RestoreInterpState(interp, interpState);
+    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_DecrRefCount(psObj);
     return TCL_OK;
+
+  error:
+    Tcl_DiscardInterpState(interpState);
+    Tcl_DecrRefCount(psObj);
+    return TCL_ERROR;
 }
 
 /*

@@ -1801,13 +1801,15 @@ PolygonToPostscript(
 				 * being created. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    const char *style;
+    int style;
     XColor *color;
     XColor *fillColor;
     Pixmap stipple;
     Pixmap fillStipple;
     Tk_State state = itemPtr->state;
     double width;
+    Tcl_Obj *psObj;
+    Tcl_InterpState interpState;
 
     if (polyPtr->numPoints < 2 || polyPtr->coordPtr == NULL) {
 	return TCL_OK;
@@ -1854,9 +1856,17 @@ PolygonToPostscript(
 	    fillStipple = polyPtr->disabledFillStipple;
 	}
     }
+
+    /*
+     * Make our working space.
+     */
+
+    psObj = Tcl_NewObj();
+    interpState = Tcl_SaveInterpState(interp, TCL_OK);
+
     if (polyPtr->numPoints == 2) {
 	if (color == NULL) {
-	    return TCL_OK;
+	    goto done;
 	}
 
 	/*
@@ -1864,7 +1874,7 @@ PolygonToPostscript(
 	 * tiny to be used directly...)
 	 */
 
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	Tcl_AppendPrintfToObj(psObj,
 		"matrix currentmatrix\n"	/* save state */
 		"%.15g %.15g translate "	/* go to drawing location */
 		"%.15g %.15g scale "		/* scale the drawing */
@@ -1873,24 +1883,30 @@ PolygonToPostscript(
 		"setmatrix\n",			/* restore state */
 		polyPtr->coordPtr[0],
 		Tk_CanvasPsY(canvas, polyPtr->coordPtr[1]),
-		width/2.0, width/2.0));
+		width/2.0, width/2.0);
 
 	/*
 	 * Color it in.
 	 */
 
+	Tcl_ResetResult(interp);
 	if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	    return TCL_ERROR;
+	    goto error;
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 	if (stipple != None) {
-	    Tcl_AppendResult(interp, "clip ", NULL);
+	    Tcl_AppendToObj(psObj, "clip ", -1);
+
+	    Tcl_ResetResult(interp);
 	    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-		return TCL_ERROR;
+		goto error;
 	    }
+	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	} else {
-	    Tcl_AppendResult(interp, "fill\n", NULL);
+	    Tcl_AppendToObj(psObj, "fill\n", -1);
 	}
-	return TCL_OK;
+	goto done;
     }
 
     /*
@@ -1898,6 +1914,7 @@ PolygonToPostscript(
      */
 
     if (fillColor != NULL && polyPtr->numPoints > 3) {
+	Tcl_ResetResult(interp);
 	if (!polyPtr->smooth || !polyPtr->smooth->postscriptProc) {
 	    Tk_CanvasPsPath(interp, canvas, polyPtr->coordPtr,
 		    polyPtr->numPoints);
@@ -1906,18 +1923,24 @@ PolygonToPostscript(
 		    polyPtr->numPoints, polyPtr->splineSteps);
 	}
 	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
-	    return TCL_ERROR;
+	    goto error;
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 	if (fillStipple != None) {
-	    Tcl_AppendResult(interp, "eoclip ", NULL);
+	    Tcl_AppendToObj(psObj, "eoclip ", -1);
+
+	    Tcl_ResetResult(interp);
 	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
-		return TCL_ERROR;
+		goto error;
 	    }
+	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 	    if (color != NULL) {
-		Tcl_AppendResult(interp, "grestore gsave\n", NULL);
+		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
 	    }
 	} else {
-	    Tcl_AppendResult(interp, "eofill\n", NULL);
+	    Tcl_AppendToObj(psObj, "eofill\n", -1);
 	}
     }
 
@@ -1926,6 +1949,7 @@ PolygonToPostscript(
      */
 
     if (color != NULL) {
+	Tcl_ResetResult(interp);
 	if (!polyPtr->smooth || !polyPtr->smooth->postscriptProc) {
 	    Tk_CanvasPsPath(interp, canvas, polyPtr->coordPtr,
 		    polyPtr->numPoints);
@@ -1933,20 +1957,38 @@ PolygonToPostscript(
 	    polyPtr->smooth->postscriptProc(interp, canvas, polyPtr->coordPtr,
 		    polyPtr->numPoints, polyPtr->splineSteps);
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (polyPtr->joinStyle == JoinRound) {
-	    style = "1";
+	    style = 1;
 	} else if (polyPtr->joinStyle == JoinBevel) {
-	    style = "2";
+	    style = 2;
 	} else {
-	    style = "0";
+	    style = 0;
 	}
-	Tcl_AppendResult(interp, style, " setlinejoin 1 setlinecap\n", NULL);
+	Tcl_AppendPrintfToObj(psObj, "%d setlinejoin 1 setlinecap\n", style);
+
+	Tcl_ResetResult(interp);
 	if (Tk_CanvasPsOutline(canvas, itemPtr, &polyPtr->outline) != TCL_OK){
-	    return TCL_ERROR;
+	    goto error;
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
     }
+
+    /*
+     * Plug the accumulated postscript back into the result.
+     */
+
+  done:
+    (void) Tcl_RestoreInterpState(interp, interpState);
+    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_DecrRefCount(psObj);
     return TCL_OK;
+
+  error:
+    Tcl_DiscardInterpState(interpState);
+    Tcl_DecrRefCount(psObj);
+    return TCL_ERROR;
 }
 
 /*
