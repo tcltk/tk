@@ -13,6 +13,9 @@
 /* Define to 1 if you have the <AvailabilityMacros.h> header file. */
 #undef HAVE_AVAILABILITYMACROS_H
 
+/* Defined when compiler supports casting to union type. */
+#undef HAVE_CAST_TO_UNION
+
 /* Do we have access to Darwin CoreFoundation.framework? */
 #undef HAVE_COREFOUNDATION
 
@@ -109,6 +112,9 @@
 /* Compiler support for module scope symbols */
 #undef MODULE_SCOPE
 
+/* Is no debugging enabled? */
+#undef NDEBUG
+
 /* Is Darwin CoreFoundation unavailable for 64-bit? */
 #undef NO_COREFOUNDATION_64
 
@@ -141,9 +147,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Is debugging enabled? */
-#undef TCL_CFG_DEBUG
 
 /* Is this a 64-bit build? */
 #undef TCL_CFG_DO64BIT
