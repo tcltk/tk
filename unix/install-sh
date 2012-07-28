@@ -120,7 +120,7 @@ Options:
   -m MODE       $chmodprog installed files to MODE.
   -o USER       $chownprog installed files to USER.
   -s            $stripprog installed files.
-  -S $stripprog installed files.
+  -S            $stripprog installed files.
   -t DIRECTORY  install into DIRECTORY.
   -T            report an error if DSTFILE is a directory.
 
@@ -156,8 +156,8 @@ while test $# -ne 0; do
 
     -s) stripcmd=$stripprog;;
 
--S) stripcmd="$stripprog $2" 
-         shift;; 
+    -S) stripcmd="$stripprog $2"
+	shift;;
 
     -t) dst_arg=$2
 	shift;;
