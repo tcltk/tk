@@ -504,7 +504,7 @@ ImgPhotoCmd(
 		     * TODO: Modifying result is bad!
 		     */
 
-		    Tcl_ListObjAppendElement(interp, Tcl_GetObjResult(interp),
+		    Tcl_ListObjAppendElement(NULL, Tcl_GetObjResult(interp),
 			    masterPtr->dataString);
 		} else {
 		    Tcl_AppendResult(interp, " {}", NULL);
@@ -518,7 +518,7 @@ ImgPhotoCmd(
 		     * TODO: Modifying result is bad!
 		     */
 
-		    Tcl_ListObjAppendElement(interp, Tcl_GetObjResult(interp),
+		    Tcl_ListObjAppendElement(NULL, Tcl_GetObjResult(interp),
 			    masterPtr->format);
 		} else {
 		    Tcl_AppendResult(interp, " {}", NULL);
@@ -1467,10 +1467,16 @@ ParseSubcommandOptions(
     int objc,			/* Number of arguments in objv[]. */
     Tcl_Obj *const objv[])	/* Arguments to be parsed. */
 {
+    static const char *const compositingRules[] = {
+	"overlay", "set",	/* Note that these must match the
+				 * TK_PHOTO_COMPOSITE_* constants. */
+	NULL
+    };
     int index, c, bit, currentBit, length;
     int values[4], numValues, maxValues, argIndex;
-    const char *option;
+    const char *option, *expandedOption, *needed;
     const char *const *listPtr;
+    Tcl_Obj *msgObj;
 
     for (index = *optIndexPtr; index < objc; *optIndexPtr = ++index) {
 	/*
@@ -1478,7 +1484,7 @@ ParseSubcommandOptions(
 	 * optPtr->name.
 	 */
 
-	option = Tcl_GetStringFromObj(objv[index], &length);
+	expandedOption = option = Tcl_GetStringFromObj(objv[index], &length);
 	if (option[0] != '-') {
 	    if (optPtr->name == NULL) {
 		optPtr->name = objv[index];
@@ -1497,9 +1503,9 @@ ParseSubcommandOptions(
 	for (listPtr = optionNames; *listPtr != NULL; ++listPtr) {
 	    if ((c == *listPtr[0])
 		    && (strncmp(option, *listPtr, (size_t) length) == 0)) {
+		expandedOption = *listPtr;
 		if (bit != 0) {
-		    bit = 0;	/* An ambiguous option. */
-		    break;
+		    goto unknownOrAmbiguousOption;
 		}
 		bit = currentBit;
 	    }
@@ -1512,24 +1518,7 @@ ParseSubcommandOptions(
 	 */
 
 	if ((allowedOptions & bit) == 0) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "unrecognized option \"",
-	    	    Tcl_GetString(objv[index]), "\": must be ", NULL);
-	    bit = 1;
-	    for (listPtr = optionNames; *listPtr != NULL; ++listPtr) {
-		if ((allowedOptions & bit) != 0) {
-		    if ((allowedOptions & (bit - 1)) != 0) {
-			Tcl_AppendResult(interp, ", ", NULL);
-			if ((allowedOptions & ~((bit << 1) - 1)) == 0) {
-			    Tcl_AppendResult(interp, "or ", NULL);
-			}
-		    }
-		    Tcl_AppendResult(interp, *listPtr, NULL);
-		}
-		bit <<= 1;
-	    }
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_OPTION", NULL);
-	    return TCL_ERROR;
+	    goto unknownOrAmbiguousOption;
 	}
 
 	/*
@@ -1542,18 +1531,13 @@ ParseSubcommandOptions(
 	     * The -background option takes a single XColor value.
 	     */
 
-	    if (index + 1 < objc) {
-		*optIndexPtr = ++index;
-		optPtr->background = Tk_GetColor(interp, Tk_MainWindow(interp),
-			Tk_GetUid(Tcl_GetString(objv[index])));
-		if (!optPtr->background) {
-		    return TCL_ERROR;
-		}
-	    } else {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"the \"-background\" option requires a value", -1));
-		Tcl_SetErrorCode(interp, "TK", "PHOTO", "MISSING_VALUE",
-			NULL);
+	    if (index + 1 >= objc) {
+		goto oneValueRequired;
+	    }
+	    *optIndexPtr = ++index;
+	    optPtr->background = Tk_GetColor(interp, Tk_MainWindow(interp),
+		    Tk_GetUid(Tcl_GetString(objv[index])));
+	    if (!optPtr->background) {
 		return TCL_ERROR;
 	    }
 	} else if (bit == OPT_FORMAT) {
@@ -1562,50 +1546,31 @@ ParseSubcommandOptions(
 	     * parsing this is outside the scope of this function.
 	     */
 
-	    if (index + 1 < objc) {
-		*optIndexPtr = ++index;
-		optPtr->format = objv[index];
-	    } else {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"the \"-format\" option requires a value", -1));
-		Tcl_SetErrorCode(interp, "TK", "PHOTO", "MISSING_VALUE",
-			NULL);
-		return TCL_ERROR;
+	    if (index + 1 >= objc) {
+		goto oneValueRequired;
 	    }
+	    *optIndexPtr = ++index;
+	    optPtr->format = objv[index];
 	} else if (bit == OPT_COMPOSITE) {
 	    /*
 	     * The -compositingrule option takes a single value from a
 	     * well-known set.
 	     */
 
-	    if (index + 1 < objc) {
-		/*
-		 * Note that these must match the TK_PHOTO_COMPOSITE_*
-		 * constants.
-		 */
-
-		static const char *const compositingRules[] = {
-		    "overlay", "set", NULL
-		};
-
-		index++;
-		if (Tcl_GetIndexFromObj(interp, objv[index], compositingRules,
-			"compositing rule", 0, &optPtr->compositingRule)
-			!= TCL_OK) {
-		    return TCL_ERROR;
-		}
-		*optIndexPtr = index;
-	    } else {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"the \"-compositingrule\" option requires a value",
-			-1));
-		Tcl_SetErrorCode(interp, "TK", "PHOTO", "MISSING_VALUE",
-			NULL);
+	    if (index + 1 >= objc) {
+		goto oneValueRequired;
+	    }
+	    index++;
+	    if (Tcl_GetIndexFromObj(interp, objv[index], compositingRules,
+		    "compositing rule", 0, &optPtr->compositingRule)
+		    != TCL_OK) {
 		return TCL_ERROR;
 	    }
+	    *optIndexPtr = index;
 	} else if ((bit != OPT_SHRINK) && (bit != OPT_GRAYSCALE)) {
 	    const char *val;
-	    maxValues = ((bit == OPT_FROM) || (bit == OPT_TO))? 4: 2;
+
+	    maxValues = ((bit == OPT_FROM) || (bit == OPT_TO)) ? 4 : 2;
 	    argIndex = index + 1;
 	    for (numValues = 0; numValues < maxValues; ++numValues) {
 		if (argIndex >= objc) {
@@ -1625,12 +1590,7 @@ ParseSubcommandOptions(
 	    }
 
 	    if (numValues == 0) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"the \"%s\" option requires one %s integer values",
-			option, (maxValues == 2) ? "or two": "to four"));
-		Tcl_SetErrorCode(interp, "TK", "PHOTO", "MISSING_VALUE",
-			NULL);
-		return TCL_ERROR;
+		goto manyValuesRequired;
 	    }
 	    *optIndexPtr = (index += numValues);
 
@@ -1654,11 +1614,8 @@ ParseSubcommandOptions(
 	    case OPT_FROM:
 		if ((values[0] < 0) || (values[1] < 0) || ((numValues > 2)
 			&& ((values[2] < 0) || (values[3] < 0)))) {
-		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "value(s) for the -from option must be"
-			    " non-negative", -1));
-		    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_FROM", NULL);
-		    return TCL_ERROR;
+		    needed = "non-negative";
+		    goto numberOutOfRange;
 		}
 		if (numValues <= 2) {
 		    optPtr->fromX = values[0];
@@ -1679,11 +1636,8 @@ ParseSubcommandOptions(
 	    case OPT_TO:
 		if ((values[0] < 0) || (values[1] < 0) || ((numValues > 2)
 			&& ((values[2] < 0) || (values[3] < 0)))) {
-		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "value(s) for the -to option must be non-negative",
-			    -1));
-		    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_TO", NULL);
-		    return TCL_ERROR;
+		    needed = "non-negative";
+		    goto numberOutOfRange;
 		}
 		if (numValues <= 2) {
 		    optPtr->toX = values[0];
@@ -1699,11 +1653,8 @@ ParseSubcommandOptions(
 		break;
 	    case OPT_ZOOM:
 		if ((values[0] <= 0) || (values[1] <= 0)) {
-		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "value(s) for the -zoom option must be positive",
-			    -1));
-		    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_ZOOM", NULL);
-		    return TCL_ERROR;
+		    needed = "positive";
+		    goto numberOutOfRange;
 		}
 		optPtr->zoomX = values[0];
 		optPtr->zoomY = values[1];
@@ -1717,8 +1668,50 @@ ParseSubcommandOptions(
 
 	optPtr->options |= bit;
     }
-
     return TCL_OK;
+
+    /*
+     * Exception generation.
+     */
+
+  oneValueRequired:
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "the \"%s\" option requires a value", expandedOption));
+    Tcl_SetErrorCode(interp, "TK", "PHOTO", "MISSING_VALUE", NULL);
+    return TCL_ERROR;
+
+  manyValuesRequired:
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "the \"%s\" option requires one %s integer values",
+	    expandedOption, (maxValues == 2) ? "or two": "to four"));
+    Tcl_SetErrorCode(interp, "TK", "PHOTO", "MISSING_VALUE", NULL);
+    return TCL_ERROR;
+
+  numberOutOfRange:
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "value(s) for the %s option must be %s", expandedOption, needed));
+    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_VALUE", NULL);
+    return TCL_ERROR;
+
+  unknownOrAmbiguousOption:
+    msgObj = Tcl_ObjPrintf("unrecognized option \"%s\": must be ", option);
+    bit = 1;
+    for (listPtr = optionNames; *listPtr != NULL; ++listPtr) {
+	if (allowedOptions & bit) {
+	    if (allowedOptions & (bit - 1)) {
+		if (allowedOptions & ~((bit << 1) - 1)) {
+		    Tcl_AppendToObj(msgObj, ", ", -1);
+		} else {
+		    Tcl_AppendToObj(msgObj, ", or ", -1);
+		}
+	    }
+	    Tcl_AppendToObj(msgObj, *listPtr, -1);
+	}
+	bit <<= 1;
+    }
+    Tcl_SetObjResult(interp, msgObj);
+    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_OPTION", NULL);
+    return TCL_ERROR;
 }
 
 /*

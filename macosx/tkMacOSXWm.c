@@ -1392,10 +1392,9 @@ WmColormapwindowsCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    TkWindow **cmapList;
-    TkWindow *winPtr2;
+    TkWindow **cmapList, *winPtr2;
     int i, windowObjc, gotToplevel = 0;
-    Tcl_Obj **windowObjv;
+    Tcl_Obj **windowObjv, *resultObj;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?windowList?");
@@ -1403,13 +1402,16 @@ WmColormapwindowsCmd(
     }
     if (objc == 3) {
 	Tk_MakeWindowExist((Tk_Window) winPtr);
+	resultObj = Tcl_NewObj();
 	for (i = 0; i < wmPtr->cmapCount; i++) {
 	    if ((i == (wmPtr->cmapCount-1))
 		    && (wmPtr->flags & WM_ADDED_TOPLEVEL_COLORMAP)) {
 		break;
 	    }
-	    Tcl_AppendElement(interp, wmPtr->cmapList[i]->pathName);
+	    Tcl_ListObjAppendElement(NULL, resultObj,
+		    TkNewWindowObj((Tk_Window) wmPtr->cmapList[i]));
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
     }
     if (Tcl_ListObjGetElements(interp, objv[3], &windowObjc, &windowObjv)
@@ -2696,6 +2698,7 @@ WmProtocolCmd(
     Atom protocol;
     char *cmd;
     int cmdLength;
+    Tcl_Obj *resultObj;
 
     if ((objc < 3) || (objc > 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name? ?command?");
@@ -2707,11 +2710,13 @@ WmProtocolCmd(
 	 * Return a list of all defined protocols for the window.
 	 */
 
+	resultObj = Tcl_NewObj();
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
 		protPtr = protPtr->nextPtr) {
-	    Tcl_AppendElement(interp,
-		    Tk_GetAtomName((Tk_Window) winPtr, protPtr->protocol));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
+		    Tk_GetAtomName((Tk_Window)winPtr, protPtr->protocol),-1));
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
     }
 
@@ -2929,11 +2934,14 @@ WmStackorderCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    TkWindow **windows, **window_ptr;
+    TkWindow **windows, **windowPtr;
     static const char *const optionStrings[] = {
-	"isabove", "isbelow", NULL };
+	"isabove", "isbelow", NULL
+    };
     enum options {
-	OPT_ISABOVE, OPT_ISBELOW };
+	OPT_ISABOVE, OPT_ISBELOW
+    };
+    Tcl_Obj *resultObj;
     int index;
 
     if ((objc != 3) && (objc != 5)) {
@@ -2947,17 +2955,20 @@ WmStackorderCmd(
 	    Tcl_Panic("TkWmStackorderToplevel failed");
 	}
 
-	for (window_ptr = windows; *window_ptr ; window_ptr++) {
-	    Tcl_AppendElement(interp, (*window_ptr)->pathName);
+	resultObj = Tcl_NewObj();
+	for (windowPtr = windows; *windowPtr ; windowPtr++) {
+	    Tcl_ListObjAppendElement(NULL, resultObj,
+		    TkNewWindowObj((Tk_Window) *windowPtr));
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	ckfree(windows);
 	return TCL_OK;
     } else {
 	TkWindow *winPtr2;
-	int index1=-1, index2=-1, result;
+	int index1 = -1, index2 = -1, result;
 
 	if (TkGetWindowFromObj(interp, tkwin, objv[4], (Tk_Window *) &winPtr2)
-	    != TCL_OK) {
+		!= TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -2994,12 +3005,12 @@ WmStackorderCmd(
 	    return TCL_ERROR;
 	}
 
-	for (window_ptr = windows; *window_ptr ; window_ptr++) {
-	    if (*window_ptr == winPtr) {
-		index1 = (window_ptr - windows);
+	for (windowPtr = windows; *windowPtr ; windowPtr++) {
+	    if (*windowPtr == winPtr) {
+		index1 = windowPtr - windows;
 	    }
-	    if (*window_ptr == winPtr2) {
-		index2 = (window_ptr - windows);
+	    if (*windowPtr == winPtr2) {
+		index2 = windowPtr - windows;
 	    }
 	}
 	if (index1 == -1) {
@@ -5963,7 +5974,7 @@ TkWindow **
 TkWmStackorderToplevel(
     TkWindow *parentPtr)	/* Parent toplevel window. */
 {
-    TkWindow *childWinPtr, **windows, **window_ptr;
+    TkWindow *childWinPtr, **windows, **windowPtr;
     Tcl_HashTable table;
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
@@ -6000,8 +6011,8 @@ TkWmStackorderToplevel(
 	ckfree(windows);
 	windows = NULL;
     } else {
-	window_ptr = windows + table.numEntries;
-	*window_ptr-- = NULL;
+	windowPtr = windows + table.numEntries;
+	*windowPtr-- = NULL;
 	windowNumbers = ckalloc(windowCount * sizeof(NSInteger));
 	NSWindowList(windowCount, windowNumbers);
 	for (NSInteger index = 0; index < windowCount; index++) {
@@ -6011,11 +6022,11 @@ TkWmStackorderToplevel(
 		hPtr = Tcl_FindHashEntry(&table, (char*) w);
 		if (hPtr != NULL) {
 		    childWinPtr = Tcl_GetHashValue(hPtr);
-		    *window_ptr-- = childWinPtr;
+		    *windowPtr-- = childWinPtr;
 		}
 	    }
 	}
-	if (window_ptr != (windows-1)) {
+	if (windowPtr != windows-1) {
 	    Tcl_Panic("num matched toplevel windows does not equal num "
 		    "children");
 	}

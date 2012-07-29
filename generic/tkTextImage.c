@@ -277,16 +277,20 @@ TkTextImageCmd(
     case CMD_NAMES: {
 	Tcl_HashSearch search;
 	Tcl_HashEntry *hPtr;
+	Tcl_Obj *resultObj;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
+	resultObj = Tcl_NewObj();
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable,
 		&search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	    Tcl_AppendElement(interp,
-		    Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
+		    Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr),
+		    -1));
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
     }
     default:

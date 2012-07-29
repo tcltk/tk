@@ -1679,17 +1679,21 @@ TextPeerCmd(
 		objc-2, objv+2);
     case PEER_NAMES: {
 	TkText *tPtr = textPtr->sharedTextPtr->peers;
+	Tcl_Obj *peersObj;
 
 	if (objc > 3) {
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
+	peersObj = Tcl_NewObj();
 	while (tPtr != NULL) {
 	    if (tPtr != textPtr) {
-		Tcl_AppendElement(interp, Tk_PathName(tPtr->tkwin));
+		Tcl_ListObjAppendElement(NULL, peersObj,
+			TkNewWindowObj(tPtr->tkwin));
 	    }
 	    tPtr = tPtr->next;
 	}
+	Tcl_SetObjResult(interp, peersObj);
     }
     }
 
@@ -4838,6 +4842,7 @@ DumpLine(
 			command, &index, what);
 	    }
 	}
+
 	offset += currentSize;
 	if (lineChanged) {
 	    TkTextSegment *newSegPtr;
@@ -4855,9 +4860,7 @@ DumpLine(
 	    linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree,
 		    textPtr, lineno);
 	    newSegPtr = linePtr->segPtr;
-	    if (segPtr == newSegPtr) {
-		segPtr = segPtr->nextPtr;
-	    } else {
+	    if (segPtr != newSegPtr) {
 		while ((newOffset < endByte) && (newOffset < offset)
 			&& (newSegPtr != NULL)) {
 		    newOffset += currentSize;
@@ -4879,11 +4882,9 @@ DumpLine(
 		    }
 		}
 		segPtr = newSegPtr;
-		if (segPtr != NULL) {
-		    segPtr = segPtr->nextPtr;
-		}
 	    }
-	} else {
+	}
+	if (segPtr != NULL) {
 	    segPtr = segPtr->nextPtr;
 	}
     }
@@ -4922,31 +4923,25 @@ DumpSegment(
     int what)			/* Look for TK_DUMP_INDEX bit. */
 {
     char buffer[TK_POS_CHARS];
+    Tcl_Obj *values[3], *tuple;
 
     TkTextPrintIndex(textPtr, index, buffer);
+    values[0] = Tcl_NewStringObj(key, -1);
+    values[1] = Tcl_NewStringObj(value, -1);
+    values[2] = Tcl_NewStringObj(buffer, -1);
+    tuple = Tcl_NewListObj(3, values);
     if (command == NULL) {
-	Tcl_AppendElement(interp, key);
-	Tcl_AppendElement(interp, value);
-	Tcl_AppendElement(interp, buffer);
+	Tcl_ListObjAppendList(NULL, Tcl_GetObjResult(interp), tuple);
+	Tcl_DecrRefCount(tuple);
 	return 0;
     } else {
-	const char *argv[4];
-	char *list;
 	int oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
 
-	argv[0] = key;
-	argv[1] = value;
-	argv[2] = buffer;
-	argv[3] = NULL;
-	list = Tcl_Merge(3, argv);
-	Tcl_VarEval(interp, Tcl_GetString(command), " ", list, NULL);
-	ckfree(list);
-	if ((textPtr->flags & DESTROYED) ||
-		TkBTreeEpoch(textPtr->sharedTextPtr->tree) != oldStateEpoch) {
-	    return 1;
-	} else {
-	    return 0;
-	}
+	Tcl_VarEval(interp, Tcl_GetString(command), " ", Tcl_GetString(tuple),
+		NULL);
+	Tcl_DecrRefCount(tuple);
+	return ((textPtr->flags & DESTROYED) ||
+		TkBTreeEpoch(textPtr->sharedTextPtr->tree) != oldStateEpoch);
     }
 }
 
@@ -6715,9 +6710,7 @@ TkpTesttextCmd(
 
     TkTextSetMark(textPtr, "insert", &index);
     TkTextPrintIndex(textPtr, &index, buf);
-    sprintf(buf + strlen(buf), " %d", index.byteIndex);
-    Tcl_AppendResult(interp, buf, NULL);
-
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s %d", buf, index.byteIndex));
     return TCL_OK;
 }
 

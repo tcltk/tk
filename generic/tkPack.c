@@ -133,11 +133,11 @@ static int		YExpansion(Packer *slavePtr, int cavityHeight);
 /*
  *------------------------------------------------------------------------
  *
- * TkPrintPadAmount --
+ * TkAppendPadAmount --
  *
  *	This function generates a text value that describes one of the -padx,
  *	-pady, -ipadx, or -ipady configuration options. The text value
- *	generated is appended to the interpreter result.
+ *	generated is appended to the given Tcl_Obj.
  *
  * Results:
  *	None.
@@ -149,23 +149,25 @@ static int		YExpansion(Packer *slavePtr, int cavityHeight);
  */
 
 void
-TkPrintPadAmount(
-    Tcl_Interp *interp,		/* The interpreter into which the result is
+TkAppendPadAmount(
+    Tcl_Obj *bufferObj,		/* The interpreter into which the result is
 				 * written. */
     const char *switchName,	/* One of "padx", "pady", "ipadx" or
 				 * "ipady" */
     int halfSpace,		/* The left or top padding amount */
     int allSpace)		/* The total amount of padding */
 {
-    char buffer[60 + 2*TCL_INTEGER_SPACE];
+    Tcl_Obj *padding[2];
 
     if (halfSpace*2 == allSpace) {
-	sprintf(buffer, " -%.10s %d", switchName, halfSpace);
+	Tcl_DictObjPut(NULL, bufferObj, Tcl_NewStringObj(switchName, -1),
+		Tcl_NewIntObj(halfSpace));
     } else {
-	sprintf(buffer, " -%.10s {%d %d}", switchName, halfSpace,
-		allSpace - halfSpace);
+	padding[0] = Tcl_NewIntObj(halfSpace);
+	padding[1] = Tcl_NewIntObj(allSpace - halfSpace);
+	Tcl_DictObjPut(NULL, bufferObj, Tcl_NewStringObj(switchName, -1),
+		Tcl_NewListObj(2, padding));
     }
-    Tcl_AppendResult(interp, buffer, NULL);
 }
 
 /*
@@ -328,6 +330,7 @@ Tk_PackObjCmd(
     case PACK_INFO: {
 	register Packer *slavePtr;
 	Tk_Window slave;
+	Tcl_Obj *infoObj;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -343,31 +346,39 @@ Tk_PackObjCmd(
 	    Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED", NULL);
 	    return TCL_ERROR;
 	}
-	Tcl_AppendElement(interp, "-in");
-	Tcl_AppendElement(interp, Tk_PathName(slavePtr->masterPtr->tkwin));
-	Tcl_AppendElement(interp, "-anchor");
-	Tcl_AppendElement(interp, Tk_NameOfAnchor(slavePtr->anchor));
-	Tcl_AppendResult(interp, " -expand ",
-		(slavePtr->flags & EXPAND) ? "1" : "0", " -fill ", NULL);
+
+	infoObj = Tcl_NewObj();
+	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", -1),
+		TkNewWindowObj(slavePtr->masterPtr->tkwin));
+	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-anchor", -1),
+		Tcl_NewStringObj(Tk_NameOfAnchor(slavePtr->anchor), -1));
+	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-expand", -1),
+		Tcl_NewBooleanObj(slavePtr->flags & EXPAND));
 	switch (slavePtr->flags & (FILLX|FILLY)) {
 	case 0:
-	    Tcl_AppendResult(interp, "none", NULL);
+	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", -1),
+		    Tcl_NewStringObj("none", -1));
 	    break;
 	case FILLX:
-	    Tcl_AppendResult(interp, "x", NULL);
+	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", -1),
+		    Tcl_NewStringObj("x", -1));
 	    break;
 	case FILLY:
-	    Tcl_AppendResult(interp, "y", NULL);
+	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", -1),
+		    Tcl_NewStringObj("y", -1));
 	    break;
 	case FILLX|FILLY:
-	    Tcl_AppendResult(interp, "both", NULL);
+	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", -1),
+		    Tcl_NewStringObj("both", -1));
 	    break;
 	}
-	TkPrintPadAmount(interp, "ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
-	TkPrintPadAmount(interp, "ipady", slavePtr->iPadY/2, slavePtr->iPadY);
-	TkPrintPadAmount(interp, "padx", slavePtr->padLeft, slavePtr->padX);
-	TkPrintPadAmount(interp, "pady", slavePtr->padTop, slavePtr->padY);
-	Tcl_AppendResult(interp, " -side ", sideNames[slavePtr->side], NULL);
+	TkAppendPadAmount(infoObj, "-ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
+	TkAppendPadAmount(infoObj, "-ipady", slavePtr->iPadY/2, slavePtr->iPadY);
+	TkAppendPadAmount(infoObj, "-padx", slavePtr->padLeft,slavePtr->padX);
+	TkAppendPadAmount(infoObj, "-pady", slavePtr->padTop, slavePtr->padY);
+	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-side", -1),
+		Tcl_NewStringObj(sideNames[slavePtr->side], -1));
+	Tcl_SetObjResult(interp, infoObj);
 	break;
     }
     case PACK_PROPAGATE: {

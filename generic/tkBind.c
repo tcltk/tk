@@ -620,7 +620,7 @@ static PatSeq *		FindSequence(Tcl_Interp *interp,
 static void		GetAllVirtualEvents(Tcl_Interp *interp,
 			    VirtualEventTable *vetPtr);
 static char *		GetField(char *p, char *copy, int size);
-static void		GetPatternString(PatSeq *psPtr, Tcl_DString *dsPtr);
+static Tcl_Obj *	GetPatternObj(PatSeq *psPtr);
 static int		GetVirtualEvent(Tcl_Interp *interp,
 			    VirtualEventTable *vetPtr, Tcl_Obj *virtName);
 static Tk_Uid		GetVirtualEventUid(Tcl_Interp *interp,
@@ -1094,13 +1094,14 @@ Tk_GetAllBindings(
 {
     PatSeq *psPtr;
     Tcl_HashEntry *hPtr;
-    Tcl_DString ds;
+    Tcl_Obj *resultObj;
 
     hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object);
     if (hPtr == NULL) {
 	return;
     }
-    Tcl_DStringInit(&ds);
+
+    resultObj = Tcl_NewObj();
     for (psPtr = Tcl_GetHashValue(hPtr); psPtr != NULL;
 	    psPtr = psPtr->nextObjPtr) {
 	/*
@@ -1108,11 +1109,9 @@ Tk_GetAllBindings(
 	 * its sequence.
 	 */
 
-	Tcl_DStringSetLength(&ds, 0);
-	GetPatternString(psPtr, &ds);
-	Tcl_AppendElement(interp, Tcl_DStringValue(&ds));
+	Tcl_ListObjAppendElement(NULL, resultObj, GetPatternObj(psPtr));
     }
-    Tcl_DStringFree(&ds);
+    Tcl_SetObjResult(interp, resultObj);
 }
 
 /*
@@ -1223,7 +1222,8 @@ Tk_BindEvent(
     PatSeq *vMatchDetailList, *vMatchNoDetailList;
     int flags, oldScreen;
     Tcl_Interp *interp;
-    Tcl_DString scripts, savedResult;
+    Tcl_DString scripts;
+    Tcl_InterpState interpState;
     Detail detail;
     char *p, *end;
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -1453,14 +1453,13 @@ Tk_BindEvent(
      */
 
     interp = bindPtr->interp;
-    Tcl_DStringInit(&savedResult);
 
     /*
      * Save information about the current screen, then invoke a script if the
      * screen has changed.
      */
 
-    Tcl_DStringGetResult(interp, &savedResult);
+    interpState = Tcl_SaveInterpState(interp, TCL_OK);
     screenPtr = &bindInfoPtr->screenInfo;
     oldDispPtr = screenPtr->curDispPtr;
     oldScreen = screenPtr->curScreenIndex;
@@ -1475,7 +1474,7 @@ Tk_BindEvent(
     end = p + Tcl_DStringLength(&scripts);
 
     /*
-     * Be carefule when dereferencing screenPtr or bindInfoPtr. If we evaluate
+     * Be careful when dereferencing screenPtr or bindInfoPtr. If we evaluate
      * something that destroys ".", bindInfoPtr would have been freed, but we
      * can tell that by first checking to see if winPtr->mainPtr == NULL.
      */
@@ -1523,7 +1522,7 @@ Tk_BindEvent(
 	screenPtr->curScreenIndex = oldScreen;
 	ChangeScreen(interp, oldDispPtr->name, oldScreen);
     }
-    Tcl_DStringResult(interp, &savedResult);
+    (void) Tcl_RestoreInterpState(interp, interpState);
     Tcl_DStringFree(&scripts);
 
     Tcl_Release(bindInfoPtr);
@@ -2771,10 +2770,10 @@ GetVirtualEvent(
     Tcl_Obj *virtName)		/* String describing virtual event. */
 {
     Tcl_HashEntry *vhPtr;
-    Tcl_DString ds;
     int iPhys;
     PhysicalsOwned *poPtr;
     Tk_Uid virtUid;
+    Tcl_Obj *resultObj;
 
     virtUid = GetVirtualEventUid(interp, Tcl_GetString(virtName));
     if (virtUid == NULL) {
@@ -2786,15 +2785,13 @@ GetVirtualEvent(
 	return TCL_OK;
     }
 
-    Tcl_DStringInit(&ds);
-
+    resultObj = Tcl_NewObj();
     poPtr = Tcl_GetHashValue(vhPtr);
     for (iPhys = 0; iPhys < poPtr->numOwned; iPhys++) {
-	Tcl_DStringSetLength(&ds, 0);
-	GetPatternString(poPtr->patSeqs[iPhys], &ds);
-	Tcl_AppendElement(interp, Tcl_DStringValue(&ds));
+	Tcl_ListObjAppendElement(NULL, resultObj,
+		GetPatternObj(poPtr->patSeqs[iPhys]));
     }
-    Tcl_DStringFree(&ds);
+    Tcl_SetObjResult(interp, resultObj);
 
     return TCL_OK;
 }
@@ -2824,20 +2821,15 @@ GetAllVirtualEvents(
 {
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
-    Tcl_DString ds;
+    Tcl_Obj *resultObj;
 
-    Tcl_DStringInit(&ds);
-
+    resultObj = Tcl_NewObj();
     hPtr = Tcl_FirstHashEntry(&vetPtr->nameTable, &search);
     for ( ; hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	Tcl_DStringSetLength(&ds, 0);
-	Tcl_DStringAppend(&ds, "<<", 2);
-	Tcl_DStringAppend(&ds, Tcl_GetHashKey(hPtr->tablePtr, hPtr), -1);
-	Tcl_DStringAppend(&ds, ">>", 2);
-	Tcl_AppendElement(interp, Tcl_DStringValue(&ds));
+	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_ObjPrintf(
+		"<<%s>>", (char *) Tcl_GetHashKey(hPtr->tablePtr, hPtr)));
     }
-
-    Tcl_DStringFree(&ds);
+    Tcl_SetObjResult(interp, resultObj);
 }
 
 /*
@@ -4050,31 +4042,30 @@ GetField(
 /*
  *---------------------------------------------------------------------------
  *
- * GetPatternString --
+ * GetPatternObj --
  *
  *	Produce a string version of the given event, for displaying to the
  *	user.
  *
  * Results:
- *	The string is left in dsPtr.
+ *	The string is returned as a Tcl_Obj.
  *
  * Side effects:
- *	It is the caller's responsibility to initialize the DString before and
- *	to free it after calling this function.
+ *	It is the caller's responsibility to arrange for the object to be
+ *	released; it starts with a refCount of zero.
  *
  *---------------------------------------------------------------------------
  */
 
-static void
-GetPatternString(
-    PatSeq *psPtr,
-    Tcl_DString *dsPtr)
+static Tcl_Obj *
+GetPatternObj(
+    PatSeq *psPtr)
 {
     Pattern *patPtr;
-    char c, buffer[TCL_INTEGER_SPACE];
     int patsLeft, needMods;
     const ModInfo *modPtr;
     const EventInfo *eiPtr;
+    Tcl_Obj *patternObj = Tcl_NewObj();
 
     /*
      * The order of the patterns in the sequence is backwards from the order
@@ -4094,8 +4085,9 @@ GetPatternString(
 		&& isprint(UCHAR(patPtr->detail.keySym))
 		&& (patPtr->detail.keySym != '<')
 		&& (patPtr->detail.keySym != ' ')) {
-	    c = (char) patPtr->detail.keySym;
-	    Tcl_DStringAppend(dsPtr, &c, 1);
+	    char c = (char) patPtr->detail.keySym;
+
+	    Tcl_AppendToObj(patternObj, &c, 1);
 	    continue;
 	}
 
@@ -4104,9 +4096,7 @@ GetPatternString(
 	 */
 
 	if (patPtr->eventType == VirtualEvent) {
-	    Tcl_DStringAppend(dsPtr, "<<", 2);
-	    Tcl_DStringAppend(dsPtr, patPtr->detail.name, -1);
-	    Tcl_DStringAppend(dsPtr, ">>", 2);
+	    Tcl_AppendPrintfToObj(patternObj, "<<%s>>", patPtr->detail.name);
 	    continue;
 	}
 
@@ -4116,7 +4106,7 @@ GetPatternString(
 	 * or button detail.
 	 */
 
-	Tcl_DStringAppend(dsPtr, "<", 1);
+	Tcl_AppendToObj(patternObj, "<", 1);
 
 	if ((psPtr->flags & PAT_NEARBY) && (patsLeft > 1)
 		&& (memcmp(patPtr, patPtr-1, sizeof(Pattern)) == 0)) {
@@ -4130,12 +4120,12 @@ GetPatternString(
 			(memcmp(patPtr, patPtr-1, sizeof(Pattern)) == 0)) {
 		    patsLeft--;
 		    patPtr--;
-		    Tcl_DStringAppend(dsPtr, "Quadruple-", 10);
+		    Tcl_AppendToObj(patternObj, "Quadruple-", 10);
 		} else {
-		    Tcl_DStringAppend(dsPtr, "Triple-", 7);
+		    Tcl_AppendToObj(patternObj, "Triple-", 7);
 		}
 	    } else {
-		Tcl_DStringAppend(dsPtr, "Double-", 7);
+		Tcl_AppendToObj(patternObj, "Double-", 7);
 	    }
 	}
 
@@ -4143,16 +4133,15 @@ GetPatternString(
 		needMods != 0; modPtr++) {
 	    if (modPtr->mask & needMods) {
 		needMods &= ~modPtr->mask;
-		Tcl_DStringAppend(dsPtr, modPtr->name, -1);
-		Tcl_DStringAppend(dsPtr, "-", 1);
+		Tcl_AppendPrintfToObj(patternObj, "%s-", modPtr->name);
 	    }
 	}
 
 	for (eiPtr = eventArray; eiPtr->name != NULL; eiPtr++) {
 	    if (eiPtr->type == patPtr->eventType) {
-		Tcl_DStringAppend(dsPtr, eiPtr->name, -1);
+		Tcl_AppendToObj(patternObj, eiPtr->name, -1);
 		if (patPtr->detail.clientData != 0) {
-		    Tcl_DStringAppend(dsPtr, "-", 1);
+		    Tcl_AppendToObj(patternObj, "-", 1);
 		}
 		break;
 	    }
@@ -4164,16 +4153,17 @@ GetPatternString(
 		const char *string = TkKeysymToString(patPtr->detail.keySym);
 
 		if (string != NULL) {
-		    Tcl_DStringAppend(dsPtr, string, -1);
+		    Tcl_AppendToObj(patternObj, string, -1);
 		}
 	    } else {
-		sprintf(buffer, "%d", patPtr->detail.button);
-		Tcl_DStringAppend(dsPtr, buffer, -1);
+		Tcl_AppendPrintfToObj(patternObj, "%d", patPtr->detail.button);
 	    }
 	}
 
-	Tcl_DStringAppend(dsPtr, ">", 1);
+	Tcl_AppendToObj(patternObj, ">", 1);
     }
+
+    return patternObj;
 }
 
 /*

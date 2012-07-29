@@ -179,19 +179,27 @@ TkTextMarkCmd(
 	TkBTreeLinkSegment(markPtr, &index);
 	break;
     }
-    case MARK_NAMES:
+    case MARK_NAMES: {
+	Tcl_Obj *resultObj;
+
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
-	Tcl_AppendElement(interp, "insert");
-	Tcl_AppendElement(interp, "current");
+	resultObj = Tcl_NewObj();
+	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
+		"insert", -1));
+	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
+		"current", -1));
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->markTable,
 		&search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	    Tcl_AppendElement(interp,
-		    Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
+		    Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr),
+		    -1));
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	break;
+    }
     case MARK_NEXT:
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "index");

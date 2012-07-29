@@ -269,7 +269,7 @@ static int		ConfigureCanvas(Tcl_Interp *interp,
 			    Tcl_Obj *const *argv, int flags);
 static void		DestroyCanvas(char *memPtr);
 static void		DisplayCanvas(ClientData clientData);
-static void		DoItem(Tcl_Interp *interp,
+static void		DoItem(Tcl_Obj *accumObj,
 			    Tk_Item *itemPtr, Tk_Uid tag);
 static void		EventuallyRedrawItem(TkCanvas *canvasPtr,
 			    Tk_Item *itemPtr);
@@ -333,10 +333,10 @@ static const Tk_ClassProcs canvasClass = {
 
 #ifdef USE_OLD_TAG_SEARCH
 #define FIRST_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
-    (itemPtr) = StartTagSearch(canvasPtr,(objPtr),&search)
+    itemPtr = StartTagSearch(canvasPtr,(objPtr),&search)
 #define FOR_EVERY_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
-    for ((itemPtr) = StartTagSearch(canvasPtr, (objPtr), &search); \
-	    (itemPtr) != NULL; (itemPtr) = NextItem(&search))
+    for (itemPtr = StartTagSearch(canvasPtr, (objPtr), &search); \
+	    itemPtr != NULL; itemPtr = NextItem(&search))
 #define FIND_ITEMS(objPtr, n) \
     FindItems(interp, canvasPtr, objc, objv, (objPtr), (n))
 #define RELINK_ITEMS(objPtr, itemPtr) \
@@ -1504,9 +1504,13 @@ CanvasWidgetCmd(
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
 	    int i;
+	    Tcl_Obj *resultObj = Tcl_NewObj();
+
 	    for (i = 0; i < itemPtr->numTags; i++) {
-		Tcl_AppendElement(interp, (char *) itemPtr->tagPtr[i]);
+		Tcl_ListObjAppendElement(NULL, resultObj,
+			Tcl_NewStringObj(itemPtr->tagPtr[i], -1));
 	    }
+	    Tcl_SetObjResult(interp, resultObj);
 	}
 	break;
     case CANV_ICURSOR: {
@@ -4162,23 +4166,23 @@ TagSearchNext(
  * DoItem --
  *
  *	This is a utility function called by FindItems. It either adds
- *	itemPtr's id to the result forming in interp, or it adds a new tag to
+ *	itemPtr's id to the list being constructed, or it adds a new tag to
  *	itemPtr, depending on the value of tag.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	If tag is NULL then itemPtr's id is added as a list element to the
- *	interp's result; otherwise tag is added to itemPtr's list of tags.
+ *	If tag is NULL then itemPtr's id is added as an element to the
+ *	supplied object; otherwise tag is added to itemPtr's list of tags.
  *
  *--------------------------------------------------------------
  */
 
 static void
 DoItem(
-    Tcl_Interp *interp,		/* Interpreter in which to (possibly) record
-				 * item id. */
+    Tcl_Obj *accumObj,		/* Object in which to (possibly) record item
+				 * id. */
     Tk_Item *itemPtr,		/* Item to (possibly) modify. */
     Tk_Uid tag)			/* Tag to add to those already present for
 				 * item, or NULL. */
@@ -4191,10 +4195,7 @@ DoItem(
      */
 
     if (tag == NULL) {
-	char msg[TCL_INTEGER_SPACE];
-
-	sprintf(msg, "%d", itemPtr->id);
-	Tcl_AppendElement(interp, msg);
+	Tcl_ListObjAppendElement(NULL, accumObj, Tcl_NewIntObj(itemPtr->id));
 	return;
     }
 
@@ -4281,6 +4282,7 @@ FindItems(
     Tk_Item *itemPtr;
     Tk_Uid uid;
     int index, result;
+    Tcl_Obj *resultObj;
     static const char *const optionStrings[] = {
 	"above", "all", "below", "closest",
 	"enclosed", "overlapping", "withtag", NULL
@@ -4312,7 +4314,9 @@ FindItems(
 	    lastPtr = itemPtr;
 	}
 	if ((lastPtr != NULL) && (lastPtr->nextPtr != NULL)) {
-	    DoItem(interp, lastPtr->nextPtr, uid);
+	    resultObj = Tcl_NewObj();
+	    DoItem(resultObj, lastPtr->nextPtr, uid);
+	    Tcl_SetObjResult(interp, resultObj);
 	}
 	break;
     }
@@ -4322,10 +4326,12 @@ FindItems(
 	    return TCL_ERROR;
 	}
 
+	resultObj = Tcl_NewObj();
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 		itemPtr = itemPtr->nextPtr) {
-	    DoItem(interp, itemPtr, uid);
+	    DoItem(resultObj, itemPtr, uid);
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	break;
 
     case CANV_BELOW:
@@ -4335,10 +4341,10 @@ FindItems(
 	}
 	FIRST_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr,
 		return TCL_ERROR);
-	if (itemPtr != NULL) {
-	    if (itemPtr->prevPtr != NULL) {
-		DoItem(interp, itemPtr->prevPtr, uid);
-	    }
+	if ((itemPtr != NULL) && (itemPtr->prevPtr != NULL)) {
+	    resultObj = Tcl_NewObj();
+	    DoItem(resultObj, itemPtr->prevPtr, uid);
+	    Tcl_SetObjResult(interp, resultObj);
 	}
 	break;
     case CANV_CLOSEST: {
@@ -4428,7 +4434,9 @@ FindItems(
 		    itemPtr = canvasPtr->firstItemPtr;
 		}
 		if (itemPtr == startPtr) {
-		    DoItem(interp, closestPtr, uid);
+		    resultObj = Tcl_NewObj();
+		    DoItem(resultObj, closestPtr, uid);
+		    Tcl_SetObjResult(interp, resultObj);
 		    return TCL_OK;
 		}
 		if (itemPtr->state == TK_STATE_HIDDEN ||
@@ -4466,10 +4474,16 @@ FindItems(
 	    Tcl_WrongNumArgs(interp, first+1, objv, "tagOrId");
 	    return TCL_ERROR;
 	}
+	resultObj = Tcl_NewObj();
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr,
-		return TCL_ERROR) {
-	    DoItem(interp, itemPtr, uid);
+		goto badWithTagSearch) {
+	    DoItem(resultObj, itemPtr, uid);
 	}
+	Tcl_SetObjResult(interp, resultObj);
+	return TCL_OK;
+    badWithTagSearch:
+	Tcl_DecrRefCount(resultObj);
+	return TCL_ERROR;
     }
     return TCL_OK;
 }
@@ -4514,6 +4528,7 @@ FindArea(
     double rect[4], tmp;
     int x1, y1, x2, y2;
     Tk_Item *itemPtr;
+    Tcl_Obj *resultObj;
 
     if ((Tk_CanvasGetCoordFromObj(interp, (Tk_Canvas) canvasPtr, objv[0],
 		&rect[0]) != TCL_OK)
@@ -4541,6 +4556,7 @@ FindArea(
     y1 = (int) (rect[1] - 1.0);
     x2 = (int) (rect[2] + 1.0);
     y2 = (int) (rect[3] + 1.0);
+    resultObj = Tcl_NewObj();
     for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 	    itemPtr = itemPtr->nextPtr) {
 	if (itemPtr->state == TK_STATE_HIDDEN ||
@@ -4553,9 +4569,10 @@ FindArea(
 	    continue;
 	}
 	if (ItemOverlap(canvasPtr, itemPtr, rect) >= enclosed) {
-	    DoItem(interp, itemPtr, uid);
+	    DoItem(resultObj, itemPtr, uid);
 	}
     }
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
 

@@ -3241,121 +3241,92 @@ Tk_TextLayoutToPostscript(
     Tk_TextLayout layout)	/* The layout to be rendered. */
 {
     TextLayout *layoutPtr = (TextLayout *) layout;
-#define MAXUSE 128
-    char buf[MAXUSE+30];
-    LayoutChunk *chunkPtr;
-    int i, j, used, baseline, charsize;
-    Tcl_UniChar ch;
+    LayoutChunk *chunkPtr = layoutPtr->chunks;
+    int baseline = chunkPtr->y;
+    Tcl_Obj *psObj = Tcl_NewObj();
+    int i, j, len;
     const char *p, *glyphname;
+    char uindex[5], c, *ps;
+    Tcl_UniChar ch;
 
-    chunkPtr = layoutPtr->chunks;
-    baseline = chunkPtr->y;
-    used = 0;
-    buf[used++] = '[';
-    buf[used++] = '(';
-    for (i = 0; i < layoutPtr->numChunks; i++) {
+    Tcl_AppendToObj(psObj, "[(", -1);
+    for (i = 0; i < layoutPtr->numChunks; i++, chunkPtr++) {
 	if (baseline != chunkPtr->y) {
-	    buf[used++] = ')';
-	    buf[used++] = ']';
-	    buf[used++] = '\n';
-	    buf[used++] = '[';
-	    buf[used++] = '(';
+	    Tcl_AppendToObj(psObj, ")]\n[(", -1);
 	    baseline = chunkPtr->y;
 	}
 	if (chunkPtr->numDisplayChars <= 0) {
 	    if (chunkPtr->start[0] == '\t') {
-		buf[used++] = '\\';
-		buf[used++] = 't';
+		Tcl_AppendToObj(psObj, "\\t", -1);
 	    }
-	} else {
-	    p = chunkPtr->start;
-	    for (j = 0; j < chunkPtr->numDisplayChars; j++) {
-		/*
-		 * INTL: We only handle symbols that have an encoding as a
-		 * flyph from the standard set defined by Adobe. The rest get
-		 * punted. Eventually this should be revised to handle more
-		 * sophsticiated international postscript fonts.
-		 */
-
-		charsize = Tcl_UtfToUniChar(p, &ch);
-		p += charsize;
-
-		if ((ch == '(') || (ch == ')') || (ch == '\\')
-			|| (ch < 0x20)) {
-		    /*
-		     * Tricky point: the "03" is necessary in the sprintf
-		     * below, so that a full three digits of octal are always
-		     * generated. Without the "03", a number following this
-		     * sequence could be interpreted by Postscript as part of
-		     * this sequence.
-		     */
-
-		    sprintf(buf + used, "\\%03o", ch);
-		    used += 4;
-		} else if (ch <= 0x7f) {
-		    /*
-		     * Normal ASCII character.
-		     */
-
-		    buf[used++] = (char) ch;
-		} else {
-		    char uindex[5];
-
-		    /*
-		     * This character doesn't belong to the ASCII character
-		     * set, so we use the full glyph name.
-		     */
-
-		    sprintf(uindex, "%04X", ch);	/* endianness? */
-		    glyphname = Tcl_GetVar2(interp, "::tk::psglyphs", uindex,
-			    0);
-		    if (glyphname) {
-			if (used > 0 && buf[used-1] == '(') {
-			    used--;
-			} else {
-			    buf[used++] = ')';
-			}
-			buf[used++] = '/';
-			while ((*glyphname) && (used < MAXUSE+27)) {
-			    buf[used++] = *glyphname++;
-			}
-			buf[used++] = '(';
-		    } else {
-			/*
-			 * No known mapping for the character into the space
-			 * of PostScript glyphs. Ignore it. :-(
-			 */
-
-#ifdef TK_DEBUG_POSTSCRIPT_OUTPUT
-			fprintf(stderr, "Warning: no mapping to PostScript "
-				"glyphs for \\u%04x\n", ch);
-#endif
-		    }
-		}
-		if (used >= MAXUSE) {
-		    buf[used] = '\0';
-		    Tcl_AppendResult(interp, buf, NULL);
-		    used = 0;
-		}
-	    }
+	    continue;
 	}
-	if (used >= MAXUSE) {
+
+	for (p=chunkPtr->start, j=0; j<chunkPtr->numDisplayChars; j++) {
 	    /*
-	     * If there are a whole bunch of returns or tabs in a row, then
-	     * buf[] could get filled up.
+	     * INTL: We only handle symbols that have an encoding as a glyph
+	     * from the standard set defined by Adobe. The rest get punted.
+	     * Eventually this should be revised to handle more sophsticiated
+	     * international postscript fonts.
 	     */
 
-	    buf[used] = '\0';
-	    Tcl_AppendResult(interp, buf, NULL);
-	    used = 0;
+	    p += Tcl_UtfToUniChar(p, &ch);
+	    if ((ch == '(') || (ch == ')') || (ch == '\\') || (ch < 0x20)) {
+		/*
+		 * Tricky point: the "03" is necessary in the sprintf below,
+		 * so that a full three digits of octal are always generated.
+		 * Without the "03", a number following this sequence could be
+		 * interpreted by Postscript as part of this sequence.
+		 */
+
+		Tcl_AppendPrintfToObj(psObj, "\\%03o", ch);
+		continue;
+	    } else if (ch <= 0x7f) {
+		/*
+		 * Normal ASCII character.
+		 */
+
+		c = (char) ch;
+		Tcl_AppendToObj(psObj, &c, 1);
+		continue;
+	    }
+
+	    /*
+	     * This character doesn't belong to the ASCII character set, so we
+	     * use the full glyph name.
+	     */
+
+	    sprintf(uindex, "%04X", ch);		/* endianness? */
+	    glyphname = Tcl_GetVar2(interp, "::tk::psglyphs", uindex, 0);
+	    if (glyphname) {
+		ps = Tcl_GetStringFromObj(psObj, &len);
+		if (ps[len-1] == '(') {
+		    /*
+		     * In-place edit. Ewww!
+		     */
+
+		    ps[len-1] = '/';
+		} else {
+		    Tcl_AppendToObj(psObj, ")/", -1);
+		}
+		Tcl_AppendToObj(psObj, glyphname, -1);
+		Tcl_AppendToObj(psObj, "(", -1);
+	    } else {
+		/*
+		 * No known mapping for the character into the space of
+		 * PostScript glyphs. Ignore it. :-(
+		 */
+
+#ifdef TK_DEBUG_POSTSCRIPT_OUTPUT
+		fprintf(stderr, "Warning: no mapping to PostScript "
+			"glyphs for \\u%04x\n", ch);
+#endif
+	    }
 	}
-	chunkPtr++;
     }
-    buf[used++] = ')';
-    buf[used++] = ']';
-    buf[used++] = '\n';
-    buf[used] = '\0';
-    Tcl_AppendResult(interp, buf, NULL);
+    Tcl_AppendToObj(psObj, ")]\n", -1);
+    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_DecrRefCount(psObj);
 }
 
 /*
