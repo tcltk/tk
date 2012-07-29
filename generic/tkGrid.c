@@ -301,7 +301,7 @@ static int		SetSlaveColumn(Tcl_Interp *interp, Gridder *slavePtr,
 			    int column, int numCols);
 static int		SetSlaveRow(Tcl_Interp *interp, Gridder *slavePtr,
 			    int row, int numRows);
-static void		StickyToString(int flags, char *result);
+static Tcl_Obj *	StickyToObj(int flags);
 static int		StringToSticky(const char *string);
 static void		Unlink(Gridder *gridPtr);
 
@@ -722,7 +722,7 @@ GridInfoCommand(
 {
     register Gridder *slavePtr;
     Tk_Window slave;
-    char buffer[64 + TCL_INTEGER_SPACE * 4];
+    Tcl_Obj *infoObj;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -737,18 +737,24 @@ GridInfoCommand(
 	return TCL_OK;
     }
 
-    Tcl_AppendElement(interp, "-in");
-    Tcl_AppendElement(interp, Tk_PathName(slavePtr->masterPtr->tkwin));
-    sprintf(buffer, " -column %d -row %d -columnspan %d -rowspan %d",
-	    slavePtr->column, slavePtr->row,
-	    slavePtr->numCols, slavePtr->numRows);
-    Tcl_AppendResult(interp, buffer, NULL);
-    TkPrintPadAmount(interp, "ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
-    TkPrintPadAmount(interp, "ipady", slavePtr->iPadY/2, slavePtr->iPadY);
-    TkPrintPadAmount(interp, "padx", slavePtr->padLeft, slavePtr->padX);
-    TkPrintPadAmount(interp, "pady", slavePtr->padTop, slavePtr->padY);
-    StickyToString(slavePtr->sticky, buffer);
-    Tcl_AppendResult(interp, " -sticky ", buffer, NULL);
+    infoObj = Tcl_NewObj();
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", -1),
+	    TkNewWindowObj(slavePtr->masterPtr->tkwin));
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-column", -1),
+	    Tcl_NewIntObj(slavePtr->column));
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-row", -1),
+	    Tcl_NewIntObj(slavePtr->row));
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-columnspan", -1),
+	    Tcl_NewIntObj(slavePtr->numCols));
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-rowspan", -1),
+	    Tcl_NewIntObj(slavePtr->numRows));
+    TkAppendPadAmount(infoObj, "-ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
+    TkAppendPadAmount(infoObj, "-ipady", slavePtr->iPadY/2, slavePtr->iPadY);
+    TkAppendPadAmount(infoObj, "-padx", slavePtr->padLeft, slavePtr->padX);
+    TkAppendPadAmount(infoObj, "-pady", slavePtr->padTop, slavePtr->padY);
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-sticky", -1),
+	    StickyToObj(slavePtr->sticky));
+    Tcl_SetObjResult(interp, infoObj);
     return TCL_OK;
 }
 
@@ -1018,7 +1024,7 @@ GridRowColumnConfigureCommand(
 	}
 	if (Tcl_GetIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
 	    Tcl_AppendResult(interp,
-		    " (when retreiving options only integer indices are "
+		    " (when retrieving options only integer indices are "
 		    "allowed)", NULL);
 	    Tcl_SetErrorCode(interp, "TK", "GRID", "INDEX_FORMAT", NULL);
 	    Tcl_DecrRefCount(listCopy);
@@ -3516,13 +3522,13 @@ ConfigureSlaves(
 /*
  *----------------------------------------------------------------------
  *
- * StickyToString
+ * StickyToObj
  *
  *	Converts the internal boolean combination of "sticky" bits onto a Tcl
  *	list element containing zero or more of n, s, e, or w.
  *
  * Results:
- *	A string is placed into the "result" pointer.
+ *	A new object is returned that holds the sticky representation.
  *
  * Side effects:
  *	none.
@@ -3530,30 +3536,26 @@ ConfigureSlaves(
  *----------------------------------------------------------------------
  */
 
-static void
-StickyToString(
-    int flags,			/* The sticky flags. */
-    char *result)		/* Where to put the result. */
+static Tcl_Obj *
+StickyToObj(
+    int flags)			/* The sticky flags. */
 {
     int count = 0;
+    char buffer[4];
 
-    if (flags&STICK_NORTH) {
-    	result[count++] = 'n';
+    if (flags & STICK_NORTH) {
+    	buffer[count++] = 'n';
     }
-    if (flags&STICK_EAST) {
-    	result[count++] = 'e';
+    if (flags & STICK_EAST) {
+    	buffer[count++] = 'e';
     }
-    if (flags&STICK_SOUTH) {
-    	result[count++] = 's';
+    if (flags & STICK_SOUTH) {
+    	buffer[count++] = 's';
     }
-    if (flags&STICK_WEST) {
-    	result[count++] = 'w';
+    if (flags & STICK_WEST) {
+    	buffer[count++] = 'w';
     }
-    if (count) {
-	result[count] = '\0';
-    } else {
-	sprintf(result, "{}");
-    }
+    return Tcl_NewStringObj(buffer, count);
 }
 
 /*
