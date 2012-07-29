@@ -56,6 +56,7 @@ TkStateParseProc(
     int c;
     int flags = PTR2INT(clientData);
     size_t length;
+    Tcl_Obj *msgObj;
 
     register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
 
@@ -84,19 +85,19 @@ TkStateParseProc(
 	return TCL_OK;
     }
 
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad %s value \"%s\": must be normal",
-	    ((flags & 4) ? "-default" : "state"), value));
+    msgObj = Tcl_ObjPrintf("bad %s value \"%s\": must be normal",
+	    ((flags & 4) ? "-default" : "state"), value);
     if (flags & 1) {
-	Tcl_AppendResult(interp, ", active", NULL);
+	Tcl_AppendToObj(msgObj, ", active", -1);
     }
     if (flags & 2) {
-	Tcl_AppendResult(interp, ", hidden", NULL);
+	Tcl_AppendToObj(msgObj, ", hidden", -1);
     }
     if (flags & 3) {
-	Tcl_AppendResult(interp, ",", NULL);
+	Tcl_AppendToObj(msgObj, ",", -1);
     }
-    Tcl_AppendResult(interp, " or disabled", NULL);
+    Tcl_AppendToObj(msgObj, " or disabled", -1);
+    Tcl_SetObjResult(interp, msgObj);
     Tcl_SetErrorCode(interp, "TK", "VALUE", "STATE", NULL);
     *statePtr = TK_STATE_NORMAL;
     return TCL_ERROR;
@@ -269,6 +270,7 @@ TkOffsetParseProc(
     Tk_TSOffset tsoffset;
     const char *q, *p;
     int result;
+    Tcl_Obj *msgObj;
 
     if ((value == NULL) || (*value == 0)) {
 	tsoffset.flags = TK_OFFSET_CENTER|TK_OFFSET_MIDDLE;
@@ -380,15 +382,15 @@ TkOffsetParseProc(
     return TCL_OK;
 
   badTSOffset:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad offset \"%s\": expected \"x,y\"", value));
+    msgObj = Tcl_ObjPrintf("bad offset \"%s\": expected \"x,y\"", value);
     if (PTR2INT(clientData) & TK_OFFSET_RELATIVE) {
-	Tcl_AppendResult(interp, ", \"#x,y\"", NULL);
+	Tcl_AppendToObj(msgObj, ", \"#x,y\"", -1);
     }
     if (PTR2INT(clientData) & TK_OFFSET_INDEX) {
-	Tcl_AppendResult(interp, ", <index>", NULL);
+	Tcl_AppendToObj(msgObj, ", <index>", -1);
     }
-    Tcl_AppendResult(interp, ", n, ne, e, se, s, sw, w, nw, or center", NULL);
+    Tcl_AppendToObj(msgObj, ", n, ne, e, se, s, sw, w, nw, or center", -1);
+    Tcl_SetObjResult(interp, msgObj);
     Tcl_SetErrorCode(interp, "TK", "VALUE", "OFFSET", NULL);
     return TCL_ERROR;
 }
@@ -929,16 +931,17 @@ TkFindStateNum(
      */
 
     if (interp != NULL) {
+	Tcl_Obj *msgObj;
+
 	mPtr = mapPtr;
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad %s value \"%s\": must be %s",
-		option, strKey, mPtr->strKey));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", option, NULL);
+	msgObj = Tcl_ObjPrintf("bad %s value \"%s\": must be %s",
+		option, strKey, mPtr->strKey);
 	for (mPtr++; mPtr->strKey != NULL; mPtr++) {
-	    Tcl_AppendResult(interp,
-		    ((mPtr[1].strKey != NULL) ? ", " : ", or "),
-		    mPtr->strKey, NULL);
+	    Tcl_AppendPrintfToObj(msgObj, ",%s %s",
+		    ((mPtr[1].strKey != NULL) ? "" : "or "), mPtr->strKey);
 	}
+	Tcl_SetObjResult(interp, msgObj);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", option, strKey, NULL);
     }
     return mPtr->numKey;
 }
@@ -987,17 +990,19 @@ TkFindStateNumObj(
      */
 
     if (interp != NULL) {
+	Tcl_Obj *msgObj;
+
 	mPtr = mapPtr;
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	msgObj = Tcl_ObjPrintf(
 		"bad %s value \"%s\": must be %s",
-		Tcl_GetString(optionPtr), key, mPtr->strKey));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", Tcl_GetString(optionPtr),
-		NULL);
+		Tcl_GetString(optionPtr), key, mPtr->strKey);
 	for (mPtr++; mPtr->strKey != NULL; mPtr++) {
-	    Tcl_AppendResult(interp,
-		((mPtr[1].strKey != NULL) ? ", " : ", or "),
-		mPtr->strKey, NULL);
+	    Tcl_AppendPrintfToObj(msgObj, ",%s %s",
+		    ((mPtr[1].strKey != NULL) ? "" : "or "), mPtr->strKey);
 	}
+	Tcl_SetObjResult(interp, msgObj);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", Tcl_GetString(optionPtr),
+		key, NULL);
     }
     return mPtr->numKey;
 }

@@ -641,6 +641,7 @@ TkTextTagCmd(
 	TkTextIndex last;
 	TkTextSearch tSearch;
 	char position[TK_POS_CHARS];
+	Tcl_Obj *resultObj;
 
 	if ((objc != 5) && (objc != 6)) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "tagName index1 ?index2?");
@@ -709,11 +710,15 @@ TkTextTagCmd(
 	if (TkTextIndexCmp(&tSearch.curIndex, &index2) >= 0) {
 	    return TCL_OK;
 	}
+	resultObj = Tcl_NewObj();
 	TkTextPrintIndex(textPtr, &tSearch.curIndex, position);
-	Tcl_AppendElement(interp, position);
+	Tcl_ListObjAppendElement(NULL, resultObj,
+		Tcl_NewStringObj(position, -1));
 	TkBTreeNextTag(&tSearch);
 	TkTextPrintIndex(textPtr, &tSearch.curIndex, position);
-	Tcl_AppendElement(interp, position);
+	Tcl_ListObjAppendElement(NULL, resultObj,
+		Tcl_NewStringObj(position, -1));
+	Tcl_SetObjResult(interp, resultObj);
 	break;
     }
     case TAG_PREVRANGE: {
@@ -721,6 +726,7 @@ TkTextTagCmd(
 	TkTextSearch tSearch;
 	char position1[TK_POS_CHARS];
 	char position2[TK_POS_CHARS];
+	Tcl_Obj *resultObj;
 
 	if ((objc != 5) && (objc != 6)) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "tagName index1 ?index2?");
@@ -768,8 +774,7 @@ TkTextTagCmd(
 
 		TkTextPrintIndex(textPtr, &index2, position1);
 		TkTextPrintIndex(textPtr, &index1, position2);
-		Tcl_AppendElement(interp, position1);
-		Tcl_AppendElement(interp, position2);
+		goto gotPrevIndexPair;
 	    }
 	    return TCL_OK;
 	}
@@ -819,8 +824,14 @@ TkTextTagCmd(
 		}
 	    }
 	}
-	Tcl_AppendElement(interp, position1);
-	Tcl_AppendElement(interp, position2);
+
+    gotPrevIndexPair:
+	resultObj = Tcl_NewObj();
+	Tcl_ListObjAppendElement(NULL, resultObj,
+		Tcl_NewStringObj(position1, -1));
+	Tcl_ListObjAppendElement(NULL, resultObj,
+		Tcl_NewStringObj(position2, -1));
+	Tcl_SetObjResult(interp, resultObj);
 	break;
     }
     case TAG_RAISE: {
