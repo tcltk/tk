@@ -74,7 +74,7 @@ typedef struct ProtocolHandler {
 
 typedef struct TkWmStackorderToplevelPair {
     Tcl_HashTable *table;
-    TkWindow **window_ptr;
+    TkWindow **windowPtr;
 } TkWmStackorderToplevelPair;
 
 /*
@@ -3390,10 +3390,9 @@ WmColormapwindowsCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    TkWindow **cmapList;
-    TkWindow *winPtr2, **winPtr2Ptr = &winPtr2;
+    TkWindow **cmapList, *winPtr2, **winPtr2Ptr = &winPtr2;
     int i, windowObjc, gotToplevel;
-    Tcl_Obj **windowObjv;
+    Tcl_Obj **windowObjv, *resultObj;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?windowList?");
@@ -3401,13 +3400,16 @@ WmColormapwindowsCmd(
     }
     if (objc == 3) {
 	Tk_MakeWindowExist((Tk_Window) winPtr);
+	resultObj = Tcl_NewObj();
 	for (i = 0; i < wmPtr->cmapCount; i++) {
 	    if ((i == (wmPtr->cmapCount-1))
 		    && (wmPtr->flags & WM_ADDED_TOPLEVEL_COLORMAP)) {
 		break;
 	    }
-	    Tcl_AppendElement(interp, wmPtr->cmapList[i]->pathName);
+	    Tcl_ListObjAppendElement(NULL, resultObj,
+		    TkNewWindowObj((Tk_Window) wmPtr->cmapList[i]));
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
     }
     if (Tcl_ListObjGetElements(interp, objv[3], &windowObjc, &windowObjv)
@@ -4945,6 +4947,7 @@ WmProtocolCmd(
     Atom protocol;
     const char *cmd;
     int cmdLength;
+    Tcl_Obj *resultObj;
 
     if ((objc < 3) || (objc > 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name? ?command?");
@@ -4955,11 +4958,13 @@ WmProtocolCmd(
 	 * Return a list of all defined protocols for the window.
 	 */
 
+	resultObj = Tcl_NewObj();
 	for (protPtr = wmPtr->protPtr; protPtr != NULL;
 		protPtr = protPtr->nextPtr) {
-	    Tcl_AppendElement(interp,
-		    Tk_GetAtomName((Tk_Window) winPtr, protPtr->protocol));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
+		    Tk_GetAtomName((Tk_Window)winPtr, protPtr->protocol), -1));
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
     }
     protocol = Tk_InternAtom((Tk_Window) winPtr, Tcl_GetString(objv[3]));
@@ -5164,13 +5169,14 @@ WmStackorderCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    TkWindow **windows, **window_ptr;
+    TkWindow **windows, **windowPtr;
     static const char *const optionStrings[] = {
 	"isabove", "isbelow", NULL
     };
     enum options {
 	OPT_ISABOVE, OPT_ISBELOW
     };
+    Tcl_Obj *resultObj;
     int index;
 
     if ((objc != 3) && (objc != 5)) {
@@ -5183,9 +5189,13 @@ WmStackorderCmd(
 	if (windows == NULL) {
 	    Tcl_Panic("TkWmStackorderToplevel failed");
 	}
-	for (window_ptr = windows; *window_ptr ; window_ptr++) {
-	    Tcl_AppendElement(interp, (*window_ptr)->pathName);
+
+	resultObj = Tcl_NewObj();
+	for (windowPtr = windows; *windowPtr ; windowPtr++) {
+	    Tcl_ListObjAppendElement(NULL, resultObj,
+		    TkNewWindowObj((Tk_Window) *windowPtr));
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	ckfree(windows);
 	return TCL_OK;
     } else {
@@ -5232,12 +5242,12 @@ WmStackorderCmd(
 	    return TCL_ERROR;
 	}
 
-	for (window_ptr = windows; *window_ptr ; window_ptr++) {
-	    if (*window_ptr == winPtr) {
-		index1 = (window_ptr - windows);
+	for (windowPtr = windows; *windowPtr ; windowPtr++) {
+	    if (*windowPtr == winPtr) {
+		index1 = (windowPtr - windows);
 	    }
-	    if (*window_ptr == winPtr2) {
-		index2 = (window_ptr - windows);
+	    if (*windowPtr == winPtr2) {
+		index2 = (windowPtr - windows);
 	    }
 	}
 	if (index1 == -1) {
@@ -6676,7 +6686,7 @@ TkWmStackorderToplevelEnumProc(
 	fprintf(stderr, "Found mapped HWND %d -> %x (%s)\n", hwnd,
 		childWinPtr, childWinPtr->pathName);
 	*/
-	*(pair->window_ptr)-- = childWinPtr;
+	*(pair->windowPtr)-- = childWinPtr;
     }
     return TRUE;
 }
@@ -6786,14 +6796,14 @@ TkWmStackorderToplevel(
      */
 
     pair.table = &table;
-    pair.window_ptr = windows + table.numEntries;
-    *pair.window_ptr-- = NULL;
+    pair.windowPtr = windows + table.numEntries;
+    *pair.windowPtr-- = NULL;
 
     if (EnumWindows((WNDENUMPROC) TkWmStackorderToplevelEnumProc,
 	    (LPARAM) &pair) == 0) {
 	ckfree(windows);
 	windows = NULL;
-    } else if (pair.window_ptr != (windows-1)) {
+    } else if (pair.windowPtr != (windows-1)) {
 	Tcl_Panic("num matched toplevel windows does not equal num children");
     }
 

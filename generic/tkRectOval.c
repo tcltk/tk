@@ -1291,13 +1291,14 @@ RectOvalToPostscript(
 				 * information; 0 means final Postscript is
 				 * being created. */
 {
-    char pathCmd[500];
+    Tcl_Obj *pathObj, *psObj;
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
     double y1, y2;
     XColor *color;
     XColor *fillColor;
     Pixmap fillStipple;
     Tk_State state = itemPtr->state;
+    Tcl_InterpState interpState;
 
     y1 = Tk_CanvasPsY(canvas, rectOvalPtr->bbox[1]);
     y2 = Tk_CanvasPsY(canvas, rectOvalPtr->bbox[3]);
@@ -1308,12 +1309,23 @@ RectOvalToPostscript(
      */
 
     if (rectOvalPtr->header.typePtr == &tkRectangleType) {
-	sprintf(pathCmd, "%.15g %.15g moveto %.15g 0 rlineto 0 %.15g rlineto %.15g 0 rlineto closepath\n",
+	pathObj = Tcl_ObjPrintf(
+		"%.15g %.15g moveto "
+		"%.15g 0 rlineto "
+		"0 %.15g rlineto "
+		"%.15g 0 rlineto "
+		"closepath\n",
 		rectOvalPtr->bbox[0], y1,
-		rectOvalPtr->bbox[2]-rectOvalPtr->bbox[0], y2-y1,
+		rectOvalPtr->bbox[2]-rectOvalPtr->bbox[0],
+		y2-y1,
 		rectOvalPtr->bbox[0]-rectOvalPtr->bbox[2]);
     } else {
-	sprintf(pathCmd, "matrix currentmatrix\n%.15g %.15g translate %.15g %.15g scale 1 0 moveto 0 0 1 0 360 arc\nsetmatrix\n",
+	pathObj = Tcl_ObjPrintf(
+		"matrix currentmatrix\n"
+		"%.15g %.15g translate "
+		"%.15g %.15g scale "
+		"1 0 moveto 0 0 1 0 360 arc\n"
+		"setmatrix\n",
 		(rectOvalPtr->bbox[0] + rectOvalPtr->bbox[2])/2, (y1 + y2)/2,
 		(rectOvalPtr->bbox[2] - rectOvalPtr->bbox[0])/2, (y1 - y2)/2);
     }
@@ -1347,24 +1359,38 @@ RectOvalToPostscript(
     }
 
     /*
+     * Make our working space.
+     */
+
+    psObj = Tcl_NewObj();
+    interpState = Tcl_SaveInterpState(interp, TCL_OK);
+
+    /*
      * First draw the filled area of the rectangle.
      */
 
     if (fillColor != NULL) {
-	Tcl_AppendResult(interp, pathCmd, NULL);
+	Tcl_AppendObjToObj(psObj, pathObj);
+
+	Tcl_ResetResult(interp);
 	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
-	    return TCL_ERROR;
+	    goto error;
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 	if (fillStipple != None) {
-	    Tcl_AppendResult(interp, "clip ", NULL);
+	    Tcl_AppendToObj(psObj, "clip ", -1);
+
+	    Tcl_ResetResult(interp);
 	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
-		return TCL_ERROR;
+		goto error;
 	    }
+	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	    if (color != NULL) {
-		Tcl_AppendResult(interp, "grestore gsave\n", NULL);
+		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
 	    }
 	} else {
-	    Tcl_AppendResult(interp, "fill\n", NULL);
+	    Tcl_AppendToObj(psObj, "fill\n", -1);
 	}
     }
 
@@ -1373,14 +1399,32 @@ RectOvalToPostscript(
      */
 
     if (color != NULL) {
-	Tcl_AppendResult(interp, pathCmd, "0 setlinejoin 2 setlinecap\n",
-		NULL);
+	Tcl_AppendObjToObj(psObj, pathObj);
+	Tcl_AppendToObj(psObj, "0 setlinejoin 2 setlinecap\n", -1);
+
+	Tcl_ResetResult(interp);
 	if (Tk_CanvasPsOutline(canvas, itemPtr,
 		&rectOvalPtr->outline)!= TCL_OK) {
-	    return TCL_ERROR;
+	    goto error;
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
     }
+
+    /*
+     * Plug the accumulated postscript back into the result.
+     */
+
+    (void) Tcl_RestoreInterpState(interp, interpState);
+    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_DecrRefCount(psObj);
+    Tcl_DecrRefCount(pathObj);
     return TCL_OK;
+
+  error:
+    Tcl_DiscardInterpState(interpState);
+    Tcl_DecrRefCount(psObj);
+    Tcl_DecrRefCount(pathObj);
+    return TCL_ERROR;
 }
 
 /*
