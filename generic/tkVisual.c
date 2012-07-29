@@ -202,14 +202,16 @@ Tk_GetVisual(
 	    }
 	}
 	if (template.class == -1) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    Tcl_Obj *msgObj = Tcl_ObjPrintf(
 		    "unknown or ambiguous visual name \"%s\": class must be ",
-		    string));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "VISUAL", NULL);
+		    string);
+
 	    for (dictPtr = visualNames; dictPtr->name != NULL; dictPtr++) {
-		Tcl_AppendResult(interp, dictPtr->name, ", ", NULL);
+		Tcl_AppendPrintfToObj(msgObj, "%s, ", dictPtr->name);
 	    }
-	    Tcl_AppendResult(interp, "or default", NULL);
+	    Tcl_AppendToObj(msgObj, "or default", -1);
+	    Tcl_SetObjResult(interp, msgObj);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "VISUAL", string, NULL);
 	    return NULL;
 	}
 	while (isspace(UCHAR(*p))) {
