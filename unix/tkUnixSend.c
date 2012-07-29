@@ -1232,6 +1232,7 @@ TkGetInterpNames(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     NameRegistry *regPtr;
+    Tcl_Obj *resultObj = Tcl_NewObj();
     char *p;
 
     /*
@@ -1266,7 +1267,8 @@ TkGetInterpNames(
 	     * The application still exists; add its name to the result.
 	     */
 
-	    Tcl_AppendElement(interp, entryName);
+	    Tcl_ListObjAppendElement(NULL, resultObj,
+		    Tcl_NewStringObj(entryName, -1));
 	} else {
 	    int count;
 
@@ -1289,6 +1291,7 @@ TkGetInterpNames(
 	}
     }
     RegClose(regPtr);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
 
