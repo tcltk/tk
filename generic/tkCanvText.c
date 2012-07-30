@@ -1410,7 +1410,7 @@ GetTextIndex(
 
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEMINDEX", "TEXT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "TEXT", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -1641,7 +1641,7 @@ TextToPostscript(
 
   done:
     (void) Tcl_RestoreInterpState(interp, interpState);
-    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
 

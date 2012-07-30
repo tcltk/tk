@@ -403,7 +403,7 @@ Tk_GridObjCmd(
 
     /* This should not happen */
     Tcl_SetObjResult(interp, Tcl_NewStringObj("internal error in grid", -1));
-    Tcl_SetErrorCode(interp, "TK", "UNREACHABLE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "API_ABUSE", NULL);
     return TCL_ERROR;
 }
 
@@ -1004,7 +1004,7 @@ GridRowColumnConfigureCommand(
     if (lObjc == 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("no %s indices specified",
 		(slotType == COLUMN) ? "column" : "row"));
-	Tcl_SetErrorCode(interp, "TK", "GRID", "NOINDEX", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRID", "NO_INDEX", NULL);
 	Tcl_DecrRefCount(listCopy);
 	return TCL_ERROR;
     }
