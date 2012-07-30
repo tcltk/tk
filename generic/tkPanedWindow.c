@@ -662,7 +662,8 @@ PanedWindowWidgetObjCmd(
 	    if (i == pwPtr->numSlaves) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"not managed by this window", -1));
-		Tcl_SetErrorCode(interp, "TK", "PANEDWIN", "UNMANAGED", NULL);
+		Tcl_SetErrorCode(interp, "TK", "PANEDWINDOW", "UNMANAGED",
+			NULL);
 	    }
 	    result = TCL_ERROR;
 	} else {
@@ -1102,7 +1103,7 @@ PanedWindowSashCommand(
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid sash index", -1));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_IDX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
 	    return TCL_ERROR;
 	}
 	slavePtr = pwPtr->slaves[sash];
@@ -1125,7 +1126,7 @@ PanedWindowSashCommand(
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid sash index", -1));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_IDX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1161,7 +1162,7 @@ PanedWindowSashCommand(
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid sash index", -1));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_IDX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
 	    return TCL_ERROR;
 	}
 

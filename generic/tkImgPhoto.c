@@ -565,7 +565,8 @@ ImgPhotoCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "image \"%s\" doesn't exist or is not a photo image",
 		    Tcl_GetString(options.name)));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO",
+		    Tcl_GetString(options.name), NULL);
 	    return TCL_ERROR;
 	}
 	Tk_PhotoGetImage(srcHandle, &block);
@@ -729,7 +730,7 @@ ImgPhotoCmd(
 			Tcl_GetString(options.format),
 			(matched ? "not supported" : "unknown")));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_FORMAT",
-			NULL);
+			Tcl_GetString(options.format), NULL);
 		return TCL_ERROR;
 	    }
 	} else {
@@ -2461,7 +2462,8 @@ MatchFileFormat(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "image file format \"%s\" is not supported",
 		    formatString));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_FORMAT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_FORMAT",
+		    formatString, NULL);
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "couldn't recognize data in image file \"%s\"",
@@ -2586,7 +2588,8 @@ MatchStringFormat(
 	if ((formatObj != NULL) && !matched) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "image format \"%s\" is not supported", formatString));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_FORMAT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_FORMAT",
+		    formatString, NULL);
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "couldn't recognize image data", -1));
