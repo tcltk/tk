@@ -301,7 +301,7 @@ Tk_PackObjCmd(
 	if (argv2[0] != '.') {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad argument \"%s\": must be name of window", argv2));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", NULL);
 	    return TCL_ERROR;
 	}
 	return ConfigureSlaves(interp, tkwin, objc-2, objv+2);

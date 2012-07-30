@@ -1039,7 +1039,7 @@ TextWidgetObjCmd(
 		"bad option \"%s\" must be -chars, -displaychars, "
 		"-displayindices, -displaylines, -indices, -lines, -update, "
 		"-xpixels, or -ypixels", Tcl_GetString(objv[i])));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEXOPT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", NULL);
 	result = TCL_ERROR;
 	goto done;
     }
@@ -1403,7 +1403,7 @@ TextWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "index \"%s\" before \"%s\" in the text",
 		    Tcl_GetString(objv[3]), Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEXORDER", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -2066,7 +2066,7 @@ ConfigureText(
 	if (start > end) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "-startline must be less than or equal to -endline", -1));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEXORDER", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", NULL);
 	    Tk_RestoreSavedOptions(&savedOptions);
 	    return TCL_ERROR;
 	}
@@ -4421,7 +4421,7 @@ TkTextGetTabs(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "tab stop \"%s\" is not at a positive distance",
 		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TABSTOP", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TAB_STOP", NULL);
 	    goto error;
 	}
 
@@ -4455,7 +4455,7 @@ TkTextGetTabs(
 		    "tabs must be monotonically increasing, but \"%s\" is "
 		    "smaller than or equal to the previous tab",
 		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TABSTOP", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TAB_STOP", NULL);
 	    goto error;
 #endif /* _TK_ALLOW_DECREASING_TABS */
 	}

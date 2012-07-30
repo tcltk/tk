@@ -878,7 +878,7 @@ Ttk_Layout Ttk_CreateLayout(
     if (!layoutTemplate) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Layout %s not found", styleName));
-	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", styleName, NULL);
 	return 0;
     }
 
@@ -919,7 +919,7 @@ Ttk_CreateSublayout(
     if (!layoutTemplate) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Layout %s not found", styleName));
-	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", styleName, NULL);
 	return 0;
     }
 

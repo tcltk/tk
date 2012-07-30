@@ -1073,7 +1073,8 @@ Tk_SendCmd(
     if (commWindow == None) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"no application named \"%s\"", destName));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION", NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION", destName,
+		NULL);
 	return TCL_ERROR;
     }
 
