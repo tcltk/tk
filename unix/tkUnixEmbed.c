@@ -121,14 +121,12 @@ TkpUseWindow(
     parent = (Window) id;
 
     usePtr = (TkWindow *) Tk_IdToWindow(winPtr->display, parent);
-    if (usePtr != NULL) {
-	if (!(usePtr->flags & TK_CONTAINER)) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "window \"%s\" doesn't have -container option set",
-		    usePtr->pathName));
-	    Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", NULL);
-	    return TCL_ERROR;
-	}
+    if (usePtr != NULL && !(usePtr->flags & TK_CONTAINER)) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"window \"%s\" doesn't have -container option set",
+		usePtr->pathName));
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", NULL);
+	return TCL_ERROR;
     }
 
     /*
@@ -150,7 +148,7 @@ TkpUseWindow(
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "couldn't create child of window \"%s\"", string));
-	    Tcl_SetErrorCode(interp, "TK", "EMBED", "CHILD", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "NO_TARGET", NULL);
 	}
 	return TCL_ERROR;
     }

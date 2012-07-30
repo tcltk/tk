@@ -4120,8 +4120,7 @@ WmIconifyCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't iconify %s: the container does not support the request",
 		    winPtr->pathName));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "CANNOT_ICONIFY", "EMBEDDED",
-		    NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "EMBEDDED", NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -4129,23 +4128,22 @@ WmIconifyCmd(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't iconify \"%s\": override-redirect flag is set",
 		winPtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "WM", "CANNOT_ICONIFY",
-		"OVERRIDE_REDIRECT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "OVERRIDE_REDIRECT",
+		NULL);
 	return TCL_ERROR;
     }
     if (wmPtr->masterPtr != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't iconify \"%s\": it is a transient",
 		winPtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "WM", "CANNOT_ICONIFY", "TRANSIENT",
-		NULL);
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "TRANSIENT", NULL);
 	return TCL_ERROR;
     }
     if (wmPtr->iconFor != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't iconify %s: it is an icon for %s",
 		winPtr->pathName, Tk_PathName(wmPtr->iconFor)));
-	Tcl_SetErrorCode(interp, "TK", "WM", "CANNOT_ICONIFY", "ICON", NULL);
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "ICON", NULL);
 	return TCL_ERROR;
     }
     TkpWmSetState(winPtr, IconicState);
