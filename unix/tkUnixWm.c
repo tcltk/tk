@@ -1084,7 +1084,8 @@ Tk_WmObjCmd(
 	    (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
+		NULL);
 	return TCL_ERROR;
     }
 
@@ -2622,7 +2623,7 @@ WmIconwindowCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't use %s as icon window: not at top level",
 		    Tcl_GetString(objv[3])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWIN", "INNER", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWINDOW", "INNER", NULL);
 	    return TCL_ERROR;
 	}
 	wmPtr2 = ((TkWindow *) tkwin2)->wmInfoPtr;
@@ -2630,7 +2631,7 @@ WmIconwindowCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s is already an icon for %s",
 		    Tcl_GetString(objv[3]), Tk_PathName(wmPtr2->iconFor)));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWIN", "ICON", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONWINDOW", "ICON", NULL);
 	    return TCL_ERROR;
 	}
 	if (wmPtr->icon != NULL) {
@@ -2709,7 +2710,7 @@ WmManageCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window \"%s\" is not manageable: must be a frame,"
 		    " labelframe or toplevel", Tk_PathName(frameWin)));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "MANAGE", "TYPE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "MANAGE", NULL);
 	    return TCL_ERROR;
 	}
 	TkFocusSplit(winPtr);
@@ -3302,7 +3303,7 @@ WmStackorderCmd(
 	if (windows == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "TkWmStackorderToplevel failed", -1));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "INTERNAL", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3391,15 +3392,15 @@ WmStateCmd(
 			"can't iconify \"%s\": override-redirect flag is set",
 			winPtr->pathName));
 		Tcl_SetErrorCode(interp, "TK", "WM", "STATE",
-			"ICONIFY_REDIRECTED", NULL);
+			"OVERRIDE_REDIRECT", NULL);
 		return TCL_ERROR;
 	    }
 	    if (wmPtr->masterPtr != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't iconify \"%s\": it is a transient",
 			winPtr->pathName));
-		Tcl_SetErrorCode(interp, "TK", "WM", "STATE",
-			"ICONIFY_TRANSIENT", NULL);
+		Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "TRANSIENT",
+			NULL);
 		return TCL_ERROR;
 	    }
 	    if (TkpWmSetState(winPtr, IconicState) == 0) {
