@@ -1441,7 +1441,7 @@ TkMakeBezierPostscript(
 		control[6], Tk_CanvasPsY(canvas, control[7]));
     }
 
-    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
 }
 
@@ -1552,7 +1552,7 @@ TkMakeRawCurvePostscript(
 	}
     }
 
-    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
 }
 

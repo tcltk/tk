@@ -991,7 +991,7 @@ BitmapToPostscript(
      */
 
     (void) Tcl_RestoreInterpState(interp, interpState);
-    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
 
