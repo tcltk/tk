@@ -497,7 +497,7 @@ TkGetBitmapData(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't get bitmap data from a file in a safe interpreter",
 		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "SAFE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", NULL);
 	    return NULL;
 	}
 	expandedFileName = Tcl_TranslateFileName(interp, fileName, &buffer);

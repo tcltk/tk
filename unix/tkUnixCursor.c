@@ -313,7 +313,7 @@ TkGetCursorByName(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't get cursor from a file in a safe interpreter",
 		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "CURSOR", "SAFE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "CURSOR_FILE", NULL);
 	    cursorPtr = NULL;
 	    goto cleanup;
 	}

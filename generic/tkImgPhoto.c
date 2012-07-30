@@ -1011,7 +1011,7 @@ ImgPhotoCmd(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't get image from a file in a safe interpreter", -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SAFE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PHOTO_FILE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1274,7 +1274,7 @@ ImgPhotoCmd(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't write image to a file in a safe interpreter", -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SAFE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PHOTO_FILE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1898,7 +1898,7 @@ ImgPhotoConfigureMaster(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't get image from a file in a safe interpreter",
 		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SAFE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PHOTO_FILE", NULL);
 	    goto errorExit;
 	}
 
