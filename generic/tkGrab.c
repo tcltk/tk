@@ -552,7 +552,7 @@ Tk_Grab(
     } else if (grabResult == GrabInvalidTime) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"grab failed: invalid time", -1));
-	Tcl_SetErrorCode(interp, "TK", "GRAB", "BADTIME", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "BAD_TIME", NULL);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"grab failed for unknown reason (code %d)", grabResult));

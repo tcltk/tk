@@ -151,7 +151,7 @@ SetTextIndexFromAny(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "can't convert value to textindex except via"
 	    " TkTextGetIndexFromObj API", -1));
-    Tcl_SetErrorCode(interp, "TK", "ILLEGAL_API_USAGE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "API_ABUSE", NULL);
     return TCL_ERROR;
 }
 

@@ -285,13 +285,13 @@ TkpUseWindow(
 	if (!SendMessage(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
     	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "The container is already in use", -1));
-	    Tcl_SetErrorCode(interp, "TK", "EMBED", "USED", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "IN_USE", NULL);
 	    return TCL_ERROR;
 	}
     } else if (id == -PTR2INT(hwnd)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"the window to use is not a Tk container", -1));
-	Tcl_SetErrorCode(interp, "TK", "EMBED", "NOT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", NULL);
 	return TCL_ERROR;
     } else {
 	/*

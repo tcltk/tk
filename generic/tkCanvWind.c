@@ -904,7 +904,7 @@ CanvasPsWindow(
   done:
     if (result == TCL_OK) {
 	(void) Tcl_RestoreInterpState(interp, interpState);
-	Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+	Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     } else {
 	Tcl_DiscardInterpState(interpState);
     }

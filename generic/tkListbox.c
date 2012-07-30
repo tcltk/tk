@@ -875,7 +875,7 @@ ListboxWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "item number \"%s\" out of range",
 		    Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEMIDX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEM_INDEX", NULL);
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -912,7 +912,7 @@ ListboxWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "item number \"%s\" out of range",
 		    Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEMIDX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEM_INDEX", NULL);
 	    result = TCL_ERROR;
 	    break;
 	}

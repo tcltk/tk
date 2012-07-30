@@ -2317,7 +2317,7 @@ ConfigureCanvas(
 	if (argc2 != 4) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad scrollRegion \"%s\"", canvasPtr->regionString));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SCROLLREGION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SCROLL_REGION", NULL);
 	badRegion:
 	    ckfree(canvasPtr->regionString);
 	    ckfree(argv2);

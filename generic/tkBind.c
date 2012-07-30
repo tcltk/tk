@@ -2919,7 +2919,8 @@ HandleEventGenerate(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window id \"%s\" doesn't exist in this application",
 		Tcl_GetString(objv[0])));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW",
+		Tcl_GetString(objv[0]), NULL);
 	return TCL_ERROR;
     }
 
@@ -3162,7 +3163,8 @@ HandleEventGenerate(
 	    if (keysym == NoSymbol) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"unknown keysym \"%s\"", value));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", value,
+			NULL);
 		return TCL_ERROR;
 	    }
 
@@ -3170,7 +3172,8 @@ HandleEventGenerate(
 	    if (event.general.xkey.keycode == 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"no keycode for keysym \"%s\"", value));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", value,
+			NULL);
 		return TCL_ERROR;
 	    }
 	    if (!(flags & KEY)
@@ -3498,7 +3501,7 @@ NameToWindow(
   badWindow:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad window name/identifier \"%s\"", name));
-    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", NULL);
+    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", name, NULL);
     return TCL_ERROR;
 }
 

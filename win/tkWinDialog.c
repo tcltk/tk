@@ -896,7 +896,8 @@ GetFileName(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"invalid filename \"%s\"",
 		ConvertExternalFilename(ofn.lpstrFile, &ds)));
-	Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "INVALIDFILENAME", NULL);
+	Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "INVALID_FILENAME",
+		NULL);
 	Tcl_DStringFree(&ds);
     } else {
 	result = TCL_OK;

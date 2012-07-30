@@ -1800,7 +1800,7 @@ GetLineIndex(
   badIndex:
     Tcl_ResetResult(interp);
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEMINDEX", "LINE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);
     return TCL_ERROR;
 }
 
@@ -1918,7 +1918,7 @@ ParseArrowShape(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad arrow shape \"%s\": must be list with three numbers",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROWSHAPE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW_SHAPE", NULL);
     if (argv != NULL) {
 	ckfree(argv);
     }
@@ -2433,7 +2433,7 @@ LineToPostscript(
 
   done:
     (void) Tcl_RestoreInterpState(interp, interpState);
-    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
 

@@ -1262,7 +1262,7 @@ TextWidgetObjCmd(
 	if (objc > 3) {
 	    name = Tcl_GetStringFromObj(objv[i], &length);
 	    if (length > 1 && name[0] == '-') {
-		if (strncmp("-displaychars", name, (unsigned)length)==0) {
+		if (strncmp("-displaychars", name, (unsigned) length) == 0) {
 		    i++;
 		    visible = 1;
 		    name = Tcl_GetStringFromObj(objv[i], &length);
@@ -1669,7 +1669,7 @@ TextPeerCmd(
 	return TCL_ERROR;
     }
 
-    switch ((enum peerOptions)index) {
+    switch ((enum peerOptions) index) {
     case PEER_CREATE:
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "pathName ?-option value ...?");
@@ -4620,7 +4620,7 @@ TextDumpCmd(
 	    return TCL_ERROR;
 	}
 	str = Tcl_GetStringFromObj(objv[arg], &length);
-	if (strncmp(str, "end", (unsigned)length) == 0) {
+	if (strncmp(str, "end", (unsigned) length) == 0) {
 	    atEnd = 1;
 	}
     }
@@ -5064,8 +5064,7 @@ TextEditCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int index;
-
+    int index, setModified, oldModified;
     static const char *const editOptionStrings[] = {
 	"modified", "redo", "reset", "separator", "undo", NULL
     };
@@ -5088,39 +5087,36 @@ TextEditCmd(
 	if (objc == 3) {
 	    Tcl_SetObjResult(interp,
 		    Tcl_NewBooleanObj(textPtr->sharedTextPtr->isDirty));
+	    return TCL_OK;
 	} else if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "?boolean?");
 	    return TCL_ERROR;
+	} else if (Tcl_GetBooleanFromObj(interp, objv[3],
+		&setModified) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * Set or reset the dirty info, and trigger a Modified event.
+	 */
+
+	setModified = setModified ? 1 : 0;
+
+	oldModified = textPtr->sharedTextPtr->isDirty;
+	textPtr->sharedTextPtr->isDirty = setModified;
+	if (setModified) {
+	    textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_FIXED;
 	} else {
-	    int setModified, oldModified;
+	    textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
+	}
 
-	    if (Tcl_GetBooleanFromObj(interp, objv[3],
-		    &setModified) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+	/*
+	 * Only issue the <<Modified>> event if the flag actually changed.
+	 * However, degree of modified-ness doesn't matter. [Bug 1799782]
+	 */
 
-	    /*
-	     * Set or reset the dirty info, and trigger a Modified event.
-	     */
-
-	    setModified = setModified ? 1 : 0;
-
-	    oldModified = textPtr->sharedTextPtr->isDirty;
-	    textPtr->sharedTextPtr->isDirty = setModified;
-	    if (setModified) {
-		textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_FIXED;
-	    } else {
-		textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
-	    }
-
-	    /*
-	     * Only issue the <<Modified>> event if the flag actually changed.
-	     * However, degree of modified-ness doesn't matter. [Bug 1799782]
-	     */
-
-	    if ((!oldModified) != (!setModified)) {
-		GenerateModifiedEvent(textPtr);
-	    }
+	if ((!oldModified) != (!setModified)) {
+	    GenerateModifiedEvent(textPtr);
 	}
 	break;
     case EDIT_REDO:
@@ -5215,11 +5211,10 @@ TextGetText(
 
     if (TkTextIndexCmp(indexPtr1, indexPtr2) < 0) {
 	while (1) {
-	    int offset, last;
-	    TkTextSegment *segPtr;
+	    int offset;
+	    TkTextSegment *segPtr = TkTextIndexToSeg(&tmpIndex, &offset);
+	    int last = segPtr->size, last2;
 
-	    segPtr = TkTextIndexToSeg(&tmpIndex, &offset);
-	    last = segPtr->size;
 	    if (tmpIndex.linePtr == indexPtr2->linePtr) {
 		/*
 		 * The last line that was requested must be handled carefully,
@@ -5229,20 +5224,16 @@ TextGetText(
 
 		if (indexPtr2->byteIndex == tmpIndex.byteIndex) {
 		    break;
-		} else {
-		    int last2 = indexPtr2->byteIndex - tmpIndex.byteIndex
-			    + offset;
-
-		    if (last2 < last) {
-			last = last2;
-		    }
+		}
+		last2 = indexPtr2->byteIndex - tmpIndex.byteIndex + offset;
+		if (last2 < last) {
+		    last = last2;
 		}
 	    }
-	    if (segPtr->typePtr == &tkTextCharType) {
-		if (!visibleOnly || !TkTextIsElided(textPtr,&tmpIndex,NULL)) {
-		    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset,
-			    last - offset);
-		}
+	    if (segPtr->typePtr == &tkTextCharType &&
+		    !(visibleOnly && TkTextIsElided(textPtr,&tmpIndex,NULL))){
+		Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset,
+			last - offset);
 	    }
 	    TkTextIndexForwBytes(textPtr, &tmpIndex, last-offset, &tmpIndex);
 	}
@@ -5271,7 +5262,10 @@ static void
 GenerateModifiedEvent(
     TkText *textPtr)	/* Information about text widget. */
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
+    union {
+	XEvent general;
+	XVirtualEvent virtual;
+    } event;
 
     Tk_MakeWindowExist(textPtr->tkwin);
 
@@ -5407,14 +5401,9 @@ SearchPerform(
 	 * wrap when given a negative search range).
 	 */
 
-	if (searchSpecPtr->backwards) {
-	    if (TkTextIndexCmp(indexFromPtr, indexToPtr) == -1) {
-		return TCL_OK;
-	    }
-	} else {
-	    if (TkTextIndexCmp(indexFromPtr, indexToPtr) == 1) {
-		return TCL_OK;
-	    }
+	if (TkTextIndexCmp(indexFromPtr, indexToPtr) ==
+		(searchSpecPtr->backwards ? -1 : 1)) {
+	    return TCL_OK;
 	}
 
 	if (searchSpecPtr->lineIndexProc(interp, toPtr, searchSpecPtr,
@@ -5721,7 +5710,7 @@ SearchCore(
 			}
 			while (p >= startOfLine + firstOffset) {
 			    if (p[0] == c && !strncmp(p, pattern,
-				    (unsigned)matchLength)) {
+				    (unsigned) matchLength)) {
 				goto backwardsMatch;
 			    }
 			    p--;
@@ -5750,7 +5739,7 @@ SearchCore(
 		     */
 
 		    p = startOfLine + lastOffset - firstNewLine - 1;
-		    if (strncmp(p, pattern, (unsigned)(firstNewLine + 1))) {
+		    if (strncmp(p, pattern, (unsigned) firstNewLine + 1)) {
 			/*
 			 * No match.
 			 */

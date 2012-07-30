@@ -3325,7 +3325,7 @@ Tk_TextLayoutToPostscript(
 	}
     }
     Tcl_AppendToObj(psObj, ")]\n", -1);
-    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
 }
 

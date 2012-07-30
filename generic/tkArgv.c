@@ -282,7 +282,7 @@ Tk_ParseArgv(
 	default:
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad argument type %d in Tk_ArgvInfo", infoPtr->type));
-	    Tcl_SetErrorCode(interp, "TK", "ARG", "BAD_TYPE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "API_ABUSE", NULL);
 	    return TCL_ERROR;
 	}
     }

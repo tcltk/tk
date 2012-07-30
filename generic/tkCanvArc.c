@@ -1997,7 +1997,7 @@ ArcToPostscript(
      */
 
     (void) Tcl_RestoreInterpState(interp, interpState);
-    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
 
@@ -2063,7 +2063,7 @@ StyleParseProc(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad -style option \"%s\": must be arc, chord, or pieslice",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARCSTYLE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARC_STYLE", NULL);
     *stylePtr = PIESLICE_STYLE;
     return TCL_ERROR;
 }
