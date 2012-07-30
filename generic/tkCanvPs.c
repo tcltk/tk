@@ -357,7 +357,7 @@ TkCanvPostscriptCmd(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't specify -file in a safe interpreter", -1));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "SAFE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PS_FILE", NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
