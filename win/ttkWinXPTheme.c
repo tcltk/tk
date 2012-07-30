@@ -1119,7 +1119,7 @@ Ttk_CreateVsapiElement(
     if (objc < 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "missing required arguments 'class' and/or 'partId'", -1));
-	Tcl_SetErrorCode(interp, "TCL", "VSAPI", "REQUIRED", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "VSAPI", "REQUIRED", NULL);
 	return TCL_ERROR;
     }
 
@@ -1137,7 +1137,7 @@ Ttk_CreateVsapiElement(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"Missing value for \"%s\".",
 			Tcl_GetString(objv[i])));
-		Tcl_SetErrorCode(interp, "TCL", "VSAPI", "MISSING", NULL);
+		Tcl_SetErrorCode(interp, "TTK", "VSAPI", "MISSING", NULL);
 		return TCL_ERROR;
 	    }
 	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,

@@ -1224,7 +1224,7 @@ ImgBmapPostscript(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"unable to generate postscript for bitmaps larger than 60000"
 		" pixels", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "OUTSIZE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
 	return TCL_ERROR;
     }
 
@@ -1304,7 +1304,7 @@ ImgBmapPostscript(
      */
 
     (void) Tcl_RestoreInterpState(interp, interpState);
-    Tcl_AppendResult(interp, Tcl_GetString(psObj), NULL);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
 

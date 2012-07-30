@@ -575,7 +575,7 @@ ImgPhotoCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside source image",
 		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_FROM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_FROM", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -678,7 +678,7 @@ ImgPhotoCmd(
 		|| (options.fromY2 > masterPtr->height)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside image", -1));
-	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_FROM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_FROM", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -793,7 +793,8 @@ ImgPhotoCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s get: coordinates out of range",
 		    Tcl_GetString(objv[0])));
-	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "COORDINATES", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "COORDINATES",
+		    NULL);
 	    return TCL_ERROR;
 	}
 
@@ -890,8 +891,8 @@ ImgPhotoCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"all elements of color list must have the same"
 			" number of elements", -1));
-		Tcl_SetErrorCode(interp, "TK", "PHOTO", "NON_RECTANGULAR",
-			NULL);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			"NON_RECTANGULAR", NULL);
 		break;
 	    }
 
@@ -1009,7 +1010,7 @@ ImgPhotoCmd(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't get image from a file in a safe interpreter", -1));
-	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "SAFE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SAFE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1050,7 +1051,7 @@ ImgPhotoCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside source image",
 		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_FROM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_FROM", NULL);
 	    Tcl_Close(NULL, chan);
 	    return TCL_ERROR;
 	}
@@ -1166,7 +1167,8 @@ ImgPhotoCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"%s transparency get: coordinates out of range",
 			Tcl_GetString(objv[0])));
-		Tcl_SetErrorCode(interp, "TK", "PHOTO", "COORDINATES", NULL);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "COORDINATES",
+			NULL);
 		return TCL_ERROR;
 	    }
 
@@ -1205,7 +1207,8 @@ ImgPhotoCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"%s transparency set: coordinates out of range",
 			Tcl_GetString(objv[0])));
-		Tcl_SetErrorCode(interp, "TK", "PHOTO", "COORDINATES", NULL);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "COORDINATES",
+			NULL);
 		return TCL_ERROR;
 	    }
 
@@ -1270,7 +1273,7 @@ ImgPhotoCmd(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't write image to a file in a safe interpreter", -1));
-	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "SAFE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SAFE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1297,7 +1300,7 @@ ImgPhotoCmd(
 		|| (options.fromY2 > masterPtr->height)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside image", -1));
-	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_FROM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_FROM", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1677,20 +1680,20 @@ ParseSubcommandOptions(
   oneValueRequired:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "the \"%s\" option requires a value", expandedOption));
-    Tcl_SetErrorCode(interp, "TK", "PHOTO", "MISSING_VALUE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "MISSING_VALUE", NULL);
     return TCL_ERROR;
 
   manyValuesRequired:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "the \"%s\" option requires one %s integer values",
 	    expandedOption, (maxValues == 2) ? "or two": "to four"));
-    Tcl_SetErrorCode(interp, "TK", "PHOTO", "MISSING_VALUE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "MISSING_VALUE", NULL);
     return TCL_ERROR;
 
   numberOutOfRange:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "value(s) for the %s option must be %s", expandedOption, needed));
-    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_VALUE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_VALUE", NULL);
     return TCL_ERROR;
 
   unknownOrAmbiguousOption:
@@ -1710,7 +1713,7 @@ ParseSubcommandOptions(
 	bit <<= 1;
     }
     Tcl_SetObjResult(interp, msgObj);
-    Tcl_SetErrorCode(interp, "TK", "PHOTO", "BAD_OPTION", NULL);
+    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", NULL);
     return TCL_ERROR;
 }
 
@@ -1767,8 +1770,8 @@ ImgPhotoConfigureMaster(
 		    ckfree(args);
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-data\" missing", -1));
-		    Tcl_SetErrorCode(interp, "TK", "PHOTO", "MISSING_VALUE",
-			    NULL);
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			    "MISSING_VALUE", NULL);
 		    return TCL_ERROR;
 		}
 	    } else if ((args[j][1] == 'f') &&
@@ -1780,8 +1783,8 @@ ImgPhotoConfigureMaster(
 		    ckfree(args);
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-format\" missing", -1));
-		    Tcl_SetErrorCode(interp, "TK", "PHOTO", "MISSING_VALUE",
-			    NULL);
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			    "MISSING_VALUE", NULL);
 		    return TCL_ERROR;
 		}
 	    }
@@ -1894,7 +1897,7 @@ ImgPhotoConfigureMaster(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't get image from a file in a safe interpreter",
 		    -1));
-	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "SAFE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "SAFE", NULL);
 	    goto errorExit;
 	}
 
@@ -2398,8 +2401,8 @@ MatchFileFormat(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"-file option isn't supported for %s images",
 			formatString));
-		Tcl_SetErrorCode(interp, "TK", "PHOTO", "NOT_FILE_FORMAT",
-			NULL);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			"NOT_FILE_FORMAT", NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -2432,8 +2435,8 @@ MatchFileFormat(
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "-file option isn't supported for %s images",
 			    formatString));
-		    Tcl_SetErrorCode(interp, "TK", "PHOTO", "NOT_FILE_FORMAT",
-			    NULL);
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			    "NOT_FILE_FORMAT", NULL);
 		    return TCL_ERROR;
 		}
 	    }
@@ -2463,8 +2466,8 @@ MatchFileFormat(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "couldn't recognize data in image file \"%s\"",
 		    fileName));
-	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "UNRECOGNIZED_DATA",
-		    NULL);
+	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "IMAGE",
+		    "UNRECOGNIZED_DATA", NULL);
 	}
 	return TCL_ERROR;
     }
@@ -2537,8 +2540,8 @@ MatchStringFormat(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"-data option isn't supported for %s images",
 			formatString));
-		Tcl_SetErrorCode(interp, "TK", "PHOTO", "NOT_DATA_FORMAT",
-			NULL);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			"NOT_DATA_FORMAT", NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -2564,8 +2567,8 @@ MatchStringFormat(
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "-data option isn't supported for %s images",
 			    formatString));
-		    Tcl_SetErrorCode(interp, "TK", "PHOTO", "NOT_DATA_FORMAT",
-			    NULL);
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			    "NOT_DATA_FORMAT", NULL);
 		    return TCL_ERROR;
 		}
 	    }
@@ -2587,8 +2590,8 @@ MatchStringFormat(
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "couldn't recognize image data", -1));
-	    Tcl_SetErrorCode(interp, "TK", "PHOTO", "UNRECOGNIZED_DATA",
-		    NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		    "UNRECOGNIZED_DATA", NULL);
 	}
 	return TCL_ERROR;
     }
