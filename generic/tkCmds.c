@@ -687,7 +687,7 @@ AppnameCmd(
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"appname not accessible in a safe interpreter", -1));
-	Tcl_SetErrorCode(interp, "TK", "SAFE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "APPLICATION", NULL);
 	return TCL_ERROR;
     }
 
@@ -812,7 +812,7 @@ ScalingCmd(
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"scaling not accessible in a safe interpreter", -1));
-	Tcl_SetErrorCode(interp, "TK", "SAFE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "SCALING", NULL);
 	return TCL_ERROR;
     }
 
@@ -862,7 +862,7 @@ UseinputmethodsCmd(
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"useinputmethods not accessible in a safe interpreter", -1));
-	Tcl_SetErrorCode(interp, "TK", "SAFE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "INPUT_METHODS", NULL);
 	return TCL_ERROR;
     }
 
@@ -959,7 +959,7 @@ InactiveCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "resetting the user inactivity timer "
 		    "is not allowed in a safe interpreter", -1));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "INACTIVITY_TIMER", NULL);
 	    return TCL_ERROR;
 	}
 	Tk_ResetUserInactiveTime(Tk_Display(tkwin));
