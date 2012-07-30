@@ -662,7 +662,7 @@ test grid-10.19 {column/row configure} -body {
     grid columnconfigure . {0 -1 2} -weight 1
 } -cleanup {
     grid_reset 10.19
-} -returnCodes error -result {grid columnconfigure: "-1" is out of range}
+} -returnCodes error -result {"-1" is out of range}
 test grid-10.20 {column/row configure} -body {
     grid columnconfigure . 0 -uniform foo
     grid columnconfigure . 0 -uniform
@@ -673,13 +673,13 @@ test grid-10.21 {column/row configure} -body {
     grid columnconfigure . .b -weight 1
 } -cleanup {
     grid_reset 10.21
-} -returnCodes error -result {grid columnconfigure: illegal index ".b"}
+} -returnCodes error -result {illegal index ".b"}
 test grid-10.22 {column/row configure} -body {
     button .b
     grid columnconfigure . .b -weight 1
 } -cleanup {
     grid_reset 10.22
-} -returnCodes error -result {grid columnconfigure: the window ".b" is not managed by "."}
+} -returnCodes error -result {the window ".b" is not managed by "."}
 test grid-10.23 {column/row configure} -body {
     button .b
     grid .b -column 1 -columnspan 2
@@ -747,10 +747,10 @@ test grid-10.28 {column/row configure - no indices} -body {
 } -returnCodes error -result {no row indices specified}
 test grid-10.29 {column/row configure - invalid indices} -body {
     grid columnconfigure . {0 1 2} -weight
-} -returnCodes error -result {grid columnconfigure: must specify a single element on retrieval}
+} -returnCodes error -result {must specify a single element on retrieval}
 test grid-10.30 {column/row configure - invalid indices} -body {
     grid rowconfigure . {0 1 2} -weight
-} -returnCodes error -result {grid rowconfigure: must specify a single element on retrieval}
+} -returnCodes error -result {must specify a single element on retrieval}
 test grid-10.31 {column/row configure - empty 'all' configure} -body {
     # Bug 1422430
     set t [toplevel .test]
