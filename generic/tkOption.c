@@ -1081,7 +1081,7 @@ ReadOptionFile(
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't read options from a file in a safe interpreter", -1));
-	Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "SAFE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "OPTION_FILE", NULL);
 	return TCL_ERROR;
     }
 
