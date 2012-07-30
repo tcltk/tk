@@ -930,7 +930,8 @@ CanvasWidgetCmd(
 	    if (object == NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"item \"%s\" doesn't exist", Tcl_GetString(objv[2])));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVASITEM", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVAS_ITEM",
+			Tcl_GetString(objv[2]), NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -956,7 +957,8 @@ CanvasWidgetCmd(
 	    if (object == 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"item \"%s\" doesn't exist", Tcl_GetString(objv[2])));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVASITEM", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVAS_ITEM",
+			Tcl_GetString(objv[2]), NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -1278,7 +1280,8 @@ CanvasWidgetCmd(
 	badType:
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "unknown or ambiguous item type \"%s\"", arg));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVASITEM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVAS_ITEM_TYPE", arg,
+		    NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}

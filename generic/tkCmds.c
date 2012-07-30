@@ -1598,7 +1598,8 @@ Tk_WinfoObjCmd(
 	if (strcmp(name, "?bad atom?") == 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no atom exists with id \"%s\"", Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "ATOM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "ATOM",
+		    Tcl_GetString(objv[2]), NULL);
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
@@ -1659,7 +1660,7 @@ Tk_WinfoObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window id \"%s\" doesn't exist in this application",
 		    string));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", string, NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1781,7 +1782,7 @@ Tk_WinfoObjCmd(
 	if (visInfoPtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't find any visuals for screen", -1));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "VISUAL", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VISUAL", "NONE", NULL);
 	    return TCL_ERROR;
 	}
 	resultPtr = Tcl_NewObj();
@@ -1904,7 +1905,8 @@ Tk_WmObjCmd(
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
+		NULL);
 	return TCL_ERROR;
     }
 

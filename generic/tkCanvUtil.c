@@ -772,7 +772,8 @@ TkSmoothParseProc(
 	    if (smooth != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"ambiguous smooth method \"%s\"", value));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "SMOOTH", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "SMOOTH", value,
+			NULL);
 		return TCL_ERROR;
 	    }
 	    smooth = &methods->smooth;

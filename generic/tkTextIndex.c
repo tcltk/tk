@@ -832,15 +832,14 @@ GetIndex(
 	if (!TkBTreeCharTagged(&first, tagPtr) && !TkBTreeNextTag(&search)) {
 	    if (tagPtr == textPtr->selTagPtr) {
 		tagName = "sel";
-	    } else {
-		if (hPtr != NULL) {
-		    tagName = Tcl_GetHashKey(&sharedPtr->tagTable, hPtr);
-		}
+	    } else if (hPtr != NULL) {
+		tagName = Tcl_GetHashKey(&sharedPtr->tagTable, hPtr);
 	    }
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "text doesn't contain any characters tagged with \"%s\"",
 		    tagName));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", tagName,
+		    NULL);
 	    Tcl_DStringFree(&copy);
 	    return TCL_ERROR;
 	}

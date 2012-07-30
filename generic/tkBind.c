@@ -3951,7 +3951,8 @@ ParseEventDescription(
 	    if (patPtr->detail.keySym == NoSymbol) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad event type or keysym \"%s\"", field));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", field,
+			NULL);
 		count = 0;
 		goto done;
 	    }

@@ -1073,7 +1073,8 @@ FindTag(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"tag \"%s\" isn't defined in text widget",
 		Tcl_GetString(tagName)));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_TAG", NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_TAG",
+		Tcl_GetString(tagName), NULL);
     }
     return NULL;
 }

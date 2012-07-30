@@ -1185,7 +1185,7 @@ Tk_CreateWindowFromPath(
     if (p == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad window path name \"%s\"", pathName));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOWPATH", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", NULL);
 	return NULL;
     }
     numChars = (int) (p-pathName);
@@ -2351,7 +2351,8 @@ Tk_NameToWindow(
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad window path name \"%s\"", pathName));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOWNAME", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", pathName,
+		    NULL);
 	}
 	return NULL;
     }

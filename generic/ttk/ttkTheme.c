@@ -594,7 +594,7 @@ static Ttk_Theme LookupTheme(
     if (!entryPtr) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"theme \"%s\" doesn't exist", name));
-	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "THEME", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "THEME", name, NULL);
 	return NULL;
     }
 
@@ -1499,7 +1499,8 @@ static int StyleElementCreateCmd(
     if (!entryPtr) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"No such element type %s", factoryName));
-	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "ELEMENT_TYPE", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "ELEMENT_TYPE", factoryName,
+		NULL);
 	return TCL_ERROR;
     }
 
@@ -1560,7 +1561,7 @@ static int StyleElementOptionsCmd(
 
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	"element %s not found", elementName));
-    Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "ELEMENT", NULL);
+    Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "ELEMENT", elementName, NULL);
     return TCL_ERROR;
 }
 
@@ -1586,7 +1587,8 @@ static int StyleLayoutCmd(
 	if (!layoutTemplate) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Layout %s not found", layoutName));
-	    Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", NULL);
+	    Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", layoutName,
+		NULL);
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, Ttk_UnparseLayoutTemplate(layoutTemplate));

@@ -218,7 +218,7 @@ Tcl_Obj *Ttk_StateMapLookup(
     }
     if (interp) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("No match in state map", -1));
-	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "STATE", NULL);
+	Tcl_SetErrorCode(interp, "TTK", "STATE", "UNMATCHED", NULL);
     }
     return NULL;
 }

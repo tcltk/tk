@@ -133,7 +133,7 @@ TkTextMarkCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "markName ?gravity?");
 	    return TCL_ERROR;
 	}
-	str = Tcl_GetStringFromObj(objv[3],&length);
+	str = Tcl_GetStringFromObj(objv[3], &length);
 	if (length == 6 && !strcmp(str, "insert")) {
 	    markPtr = textPtr->insertMarkPtr;
 	} else if (length == 7 && !strcmp(str, "current")) {
@@ -142,9 +142,9 @@ TkTextMarkCmd(
 	    hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable, str);
 	    if (hPtr == NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"there is no mark named \"%s\"",
-			Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_MARK", NULL);
+			"there is no mark named \"%s\"", str));
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_MARK", str,
+			NULL);
 		return TCL_ERROR;
 	    }
 	    markPtr = Tcl_GetHashValue(hPtr);

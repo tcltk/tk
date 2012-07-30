@@ -1015,9 +1015,8 @@ GridRowColumnConfigureCommand(
 
     if ((objc == 4) || (objc == 5)) {
 	if (lObjc != 1) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "%s %s: must specify a single element on retrieval",
-		    Tcl_GetString(objv[0]), Tcl_GetString(objv[1])));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "must specify a single element on retrieval", -1));
 	    Tcl_SetErrorCode(interp, "TK", "GRID", "USAGE", NULL);
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
@@ -1129,18 +1128,15 @@ GridRowColumnConfigureCommand(
 	    slavePtr = GetGrid(slave);
 	    if (slavePtr->masterPtr != masterPtr) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"%s %s: the window \"%s\" is not managed by \"%s\"",
-			Tcl_GetString(objv[0]), Tcl_GetString(objv[1]),
+			"the window \"%s\" is not managed by \"%s\"",
 			Tcl_GetString(lObjv[j]), Tcl_GetString(objv[2])));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "GRID_MASTER", NULL);
+		Tcl_SetErrorCode(interp, "TK", "GRID", "NOT_MASTER", NULL);
 		Tcl_DecrRefCount(listCopy);
 		return TCL_ERROR;
 	    }
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "%s %s: illegal index \"%s\"",
-		    Tcl_GetString(objv[0]), Tcl_GetString(objv[1]),
-		    Tcl_GetString(lObjv[j])));
+		    "illegal index \"%s\"", Tcl_GetString(lObjv[j])));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID_INDEX", NULL);
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
@@ -1162,8 +1158,7 @@ GridRowColumnConfigureCommand(
 		ok = CheckSlotData(masterPtr, slot, slotType, /*checkOnly*/ 0);
 		if (ok != TCL_OK) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "%s %s: \"%s\" is out of range",
-			    Tcl_GetString(objv[0]), Tcl_GetString(objv[1]),
+			    "\"%s\" is out of range",
 			    Tcl_GetString(lObjv[j])));
 		    Tcl_SetErrorCode(interp, "TK", "GRID", "INDEX_RANGE",
 			    NULL);

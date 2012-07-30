@@ -1375,7 +1375,6 @@ TkMakeBezierPostscript(
     int closed, i;
     int numCoords = numPoints*2;
     double control[8];
-    char buffer[200];
     Tcl_Obj *psObj;
 
     /*
@@ -1477,7 +1476,6 @@ TkMakeRawCurvePostscript(
 {
     int i;
     double *segPtr;
-    char buffer[200];
     Tcl_Obj *psObj;
 
     /*

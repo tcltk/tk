@@ -389,7 +389,8 @@ GetBitmap(
 		if (interp != NULL) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "bitmap \"%s\" not defined", string));
-		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "BITMAP", NULL);
+		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "BITMAP", string,
+			    NULL);
 		}
 		goto error;
 	    }
