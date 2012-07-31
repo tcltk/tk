@@ -687,10 +687,10 @@ void
 TkScrollbarEventuallyRedraw(
     TkScrollbar *scrollPtr)	/* Information about widget. */
 {
-    if ((scrollPtr->tkwin == NULL) || (!Tk_IsMapped(scrollPtr->tkwin))) {
+    if ((scrollPtr->tkwin == NULL) || !Tk_IsMapped(scrollPtr->tkwin)) {
 	return;
     }
-    if ((scrollPtr->flags & REDRAW_PENDING) == 0) {
+    if (!(scrollPtr->flags & REDRAW_PENDING)) {
 	Tcl_DoWhenIdle(TkpDisplayScrollbar, scrollPtr);
 	scrollPtr->flags |= REDRAW_PENDING;
     }

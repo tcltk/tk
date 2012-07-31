@@ -387,7 +387,7 @@ CreateTopLevelWindow(
     } else {
 	dispPtr = GetScreen(interp, screenName, &screenId);
 	if (dispPtr == NULL) {
-	    return (Tk_Window) NULL;
+	    return NULL;
 	}
     }
 
@@ -420,7 +420,7 @@ CreateTopLevelWindow(
     if (parent != NULL) {
 	if (NameWindow(interp, winPtr, (TkWindow *) parent, name) != TCL_OK) {
 	    Tk_DestroyWindow((Tk_Window) winPtr);
-	    return (Tk_Window) NULL;
+	    return NULL;
 	}
     }
     TkWmNewWindow(winPtr);
@@ -803,7 +803,7 @@ NameWindow(
 
     length1 = strlen(parentPtr->pathName);
     length2 = strlen(name);
-    if ((length1+length2+2) <= FIXED_SIZE) {
+    if ((length1 + length2 + 2) <= FIXED_SIZE) {
 	pathName = staticSpace;
     } else {
 	pathName = ckalloc(length1 + length2 + 2);
@@ -861,7 +861,7 @@ TkCreateMainWindow(
     const char *screenName,	/* Name of screen on which to create window.
 				 * Empty or NULL string means use DISPLAY
 				 * environment variable. */
-    const char *baseName)		/* Base name for application; usually of the
+    const char *baseName)	/* Base name for application; usually of the
 				 * form "prog instance". */
 {
     Tk_Window tkwin;
@@ -954,15 +954,20 @@ TkCreateMainWindow(
 
     isSafe = Tcl_IsSafe(interp);
     for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
-	if ((cmdPtr->objProc == NULL)) {
+	if (cmdPtr->objProc == NULL) {
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
+
 #if defined(__WIN32__) && !defined(STATIC_BUILD)
 	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->reserved9) {
-	    /* We are running on Cygwin, so don't use the win32 dialogs */
+	    /*
+	     * We are running on Cygwin, so don't use the win32 dialogs.
+	     */
+
 	    continue;
 	}
-#endif
+#endif /* __WIN32__ && !STATIC_BUILD */
+
 	if (cmdPtr->flags & PASSMAINWINDOW) {
 	    clientData = tkwin;
 	} else {
@@ -1218,8 +1223,7 @@ Tk_CreateWindowFromPath(
 		"can't create window: parent has been destroyed", -1));
 	Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", NULL);
 	return NULL;
-    }
-    if (((TkWindow *) parent)->flags & TK_CONTAINER) {
+    } else if (((TkWindow *) parent)->flags & TK_CONTAINER) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't create window: its parent has -container = yes", -1));
 	Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", NULL);
@@ -1538,7 +1542,7 @@ Tk_DestroyWindow(
 	     */
 
 	    if ((winPtr->mainPtr->interp != NULL) &&
-		    (!Tcl_InterpDeleted(winPtr->mainPtr->interp))) {
+		    !Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
 		for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
 		    Tcl_CreateCommand(winPtr->mainPtr->interp, cmdPtr->name,
 			    TkDeadAppCmd, NULL, NULL);
@@ -1623,7 +1627,7 @@ Tk_DestroyWindow(
 
 		TkCloseDisplay(dispPtr);
 	    }
-#endif
+#endif /* !WIN32 && NOT_YET */
 	}
     }
     Tcl_EventuallyFree(winPtr, TCL_DYNAMIC);
@@ -2446,8 +2450,8 @@ Tcl_Interp *
 Tk_Interp(
     Tk_Window tkwin)
 {
-    if (tkwin != NULL && ((TkWindow *)tkwin)->mainPtr != NULL) {
-	return ((TkWindow *)tkwin)->mainPtr->interp;
+    if (tkwin != NULL && ((TkWindow *) tkwin)->mainPtr != NULL) {
+	return ((TkWindow *) tkwin)->mainPtr->interp;
     }
     return NULL;
 }

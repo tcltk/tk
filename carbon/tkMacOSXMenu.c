@@ -2372,7 +2372,7 @@ GetMenuAccelGeometry (
 		    CFRelease(cfStr);
 		}
 	    }
-	    if ((mePtr->entryFlags & ENTRY_ACCEL_MASK) == 0) {
+	    if (!(mePtr->entryFlags & ENTRY_ACCEL_MASK)) {
 		if (!geometryPtr->accelGlyph) {
 		     width = Tk_TextWidth(tkfont, accel, mePtr->accelLength);
 		 }
@@ -2636,7 +2636,7 @@ DrawMenuEntryAccelerator(
 		drawState = kThemeStateActive;
 		break;
 	    }
-	    if ((mePtr->entryFlags & ENTRY_ACCEL_MASK) == 0) {
+	    if (!(mePtr->entryFlags & ENTRY_ACCEL_MASK)) {
 		leftEdge -= geometryPtr->modifierWidth;
 	    }
 	    if (geometryPtr->accelGlyph) {

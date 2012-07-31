@@ -791,7 +791,7 @@ Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node)
 		int side = 0;
 		unsigned sideFlags = flags & _TTK_MASK_PACK;
 
-		while ((sideFlags & TTK_PACK_LEFT) == 0) {
+		while (!(sideFlags & TTK_PACK_LEFT)) {
 		    ++side;
 		    sideFlags >>= 1;
 		}
@@ -800,9 +800,11 @@ Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_TemplateNode *node)
 	    }
 	}
 
-	/* In Ttk_ParseLayoutTemplate, default -sticky is "nsew",
-	 * so always include this even if no sticky bits are set.
+	/*
+	 * In Ttk_ParseLayoutTemplate, default -sticky is "nsew", so always
+	 * include this even if no sticky bits are set.
 	 */
+
 	APPENDSTR("-sticky");
 	APPENDOBJ(Ttk_NewStickyObj(flags & _TTK_MASK_STICK));
 

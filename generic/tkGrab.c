@@ -447,7 +447,7 @@ Tk_Grab(
 	dispPtr->grabFlags &= ~(GRAB_GLOBAL|GRAB_TEMP_GLOBAL);
 	XQueryPointer(dispPtr->display, winPtr->window, &dummy1,
 		&dummy2, &dummy3, &dummy4, &dummy5, &dummy6, &state);
-	if ((state & ALL_BUTTONS) != 0) {
+	if (state & ALL_BUTTONS) {
 	    dispPtr->grabFlags |= GRAB_TEMP_GLOBAL;
 	    goto setGlobalGrab;
 	}
@@ -859,7 +859,7 @@ TkPointerEvent(
 	    }
 	}
 	if (eventPtr->type == ButtonPress) {
-	    if ((eventPtr->xbutton.state & ALL_BUTTONS) == 0) {
+	    if (!(eventPtr->xbutton.state & ALL_BUTTONS)) {
 		if (outsideGrabTree) {
 		    TkChangeEventWindow(eventPtr, dispPtr->grabWinPtr);
 		    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_HEAD);

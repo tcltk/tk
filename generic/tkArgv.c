@@ -196,7 +196,7 @@ Tk_ParseArgv(
 	    if (argc == 0) {
 		goto missingArg;
 	    }
-	    *((const char **)infoPtr->dst) = argv[srcIndex];
+	    *((const char **) infoPtr->dst) = argv[srcIndex];
 	    srcIndex++;
 	    argc--;
 	    break;
@@ -204,7 +204,7 @@ Tk_ParseArgv(
 	    if (argc == 0) {
 		goto missingArg;
 	    }
-	    *((Tk_Uid *)infoPtr->dst) = Tk_GetUid(argv[srcIndex]);
+	    *((Tk_Uid *) infoPtr->dst) = Tk_GetUid(argv[srcIndex]);
 	    srcIndex++;
 	    argc--;
 	    break;

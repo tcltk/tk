@@ -1786,7 +1786,7 @@ DrawMenuEntryAccelerator(
 	    COLORREF oldFgColor = gc->foreground;
 
 	    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-	    if ((mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) == 0) {
+	    if (!(mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)) {
 		Tk_DrawChars(menuPtr->display, d, gc, tkfont, accel,
 			mePtr->accelLength, leftEdge + 1, baseline + 1);
 	    }
@@ -2318,8 +2318,9 @@ DrawMenuEntryLabel(
 		 */
 
 		if ((mePtr->state == ENTRY_DISABLED) &&
-			((mePtr->entryFlags & ENTRY_PLATFORM_FLAG1) == 0)) {
+			!(mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)) {
 		    COLORREF oldFgColor = gc->foreground;
+
 		    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
 		    Tk_DrawChars(menuPtr->display, d, gc, tkfont, label,
 			    mePtr->labelLength, leftEdge + textXOffset + 1,

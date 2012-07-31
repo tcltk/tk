@@ -334,8 +334,8 @@ static void		MapFrame(ClientData clientData);
 static const Tk_ClassProcs frameClass = {
     sizeof(Tk_ClassProcs),	/* size */
     FrameWorldChanged,		/* worldChangedProc */
-    NULL,					/* createProc */
-    NULL					/* modalProc */
+    NULL,			/* createProc */
+    NULL			/* modalProc */
 };
 
 /*
@@ -465,7 +465,7 @@ CreateFrame(
     Tk_Window newWin;
     const char *className, *screenName, *visualName, *colormapName;
     const char *arg, *useOption;
-    int i, c, length, depth;
+    int i, length, depth;
     unsigned int mask;
     Colormap colormap;
     Visual *visual;
@@ -496,20 +496,19 @@ CreateFrame(
 	if (length < 2) {
 	    continue;
 	}
-	c = arg[1];
-	if ((c == 'c') && (length >= 3)
+	if ((arg[1] == 'c') && (length >= 3)
 		&& (strncmp(arg, "-class", (unsigned) length) == 0)) {
 	    className = Tcl_GetString(objv[i+1]);
-	} else if ((c == 'c')
+	} else if ((arg[1] == 'c') && (length >= 3)
 		&& (strncmp(arg, "-colormap", (unsigned) length) == 0)) {
 	    colormapName = Tcl_GetString(objv[i+1]);
-	} else if ((c == 's') && (type == TYPE_TOPLEVEL)
+	} else if ((arg[1] == 's') && (type == TYPE_TOPLEVEL)
 		&& (strncmp(arg, "-screen", (unsigned) length) == 0)) {
 	    screenName = Tcl_GetString(objv[i+1]);
-	} else if ((c == 'u') && (type == TYPE_TOPLEVEL)
+	} else if ((arg[1] == 'u') && (type == TYPE_TOPLEVEL)
 		&& (strncmp(arg, "-use", (unsigned) length) == 0)) {
 	    useOption = Tcl_GetString(objv[i+1]);
-	} else if ((c == 'v')
+	} else if ((arg[1] == 'v')
 		&& (strncmp(arg, "-visual", (unsigned) length) == 0)) {
 	    visualName = Tcl_GetString(objv[i+1]);
 	}
@@ -550,8 +549,8 @@ CreateFrame(
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"unable to create widget \"%s\"", Tcl_GetString(objv[1])));
-	Tcl_SetErrorCode(interp, "TK", "APP_GONE", NULL);
-	newWin = NULL;
+	Tcl_SetErrorCode(interp, "TK", "APPLICATION_GONE", NULL);
+	return TCL_ERROR;
     } else {
 	/*
 	 * We were called from Tk_Init; create a new application.
@@ -561,15 +560,14 @@ CreateFrame(
     }
     if (newWin == NULL) {
 	goto error;
-    } else {
-	/*
-	 * Mark Tk frames as suitable candidates for [wm manage].
-	 */
-
-	TkWindow *winPtr = (TkWindow *)newWin;
-
-	winPtr->flags |= TK_WM_MANAGEABLE;
     }
+
+    /*
+     * Mark Tk frames as suitable candidates for [wm manage].
+     */
+
+    ((TkWindow *) newWin)->flags |= TK_WM_MANAGEABLE;
+
     if (className == NULL) {
 	className = Tk_GetOption(newWin, "class", "Class");
 	if (className == NULL) {
@@ -580,10 +578,9 @@ CreateFrame(
     if (useOption == NULL) {
 	useOption = Tk_GetOption(newWin, "use", "Use");
     }
-    if ((useOption != NULL) && (*useOption != 0)) {
-	if (TkpUseWindow(interp, newWin, useOption) != TCL_OK) {
-	    goto error;
-	}
+    if ((useOption != NULL) && (*useOption != 0)
+	    && (TkpUseWindow(interp, newWin, useOption) != TCL_OK)) {
+	goto error;
     }
     if (visualName == NULL) {
 	visualName = Tk_GetOption(newWin, "visual", "Visual");
@@ -633,12 +630,11 @@ CreateFrame(
 	framePtr = ckalloc(sizeof(Frame));
 	memset(framePtr, 0, sizeof(Frame));
     }
-    framePtr->tkwin		= newWin;
-    framePtr->display		= Tk_Display(newWin);
-    framePtr->interp		= interp;
-    framePtr->widgetCmd		= Tcl_CreateObjCommand(interp,
-	    Tk_PathName(newWin), FrameWidgetObjCmd, framePtr,
-	    FrameCmdDeletedProc);
+    framePtr->tkwin = newWin;
+    framePtr->display = Tk_Display(newWin);
+    framePtr->interp = interp;
+    framePtr->widgetCmd	= Tcl_CreateObjCommand(interp, Tk_PathName(newWin),
+	    FrameWidgetObjCmd, framePtr, FrameCmdDeletedProc);
     framePtr->optionTable = optionTable;
     framePtr->type = type;
     framePtr->colormap = colormap;
@@ -668,16 +664,15 @@ CreateFrame(
 	    (ConfigureFrame(interp, framePtr, objc-2, objv+2) != TCL_OK)) {
 	goto error;
     }
-    if ((framePtr->isContainer)) {
-	if (framePtr->useThis == NULL) {
-	    TkpMakeContainer(framePtr->tkwin);
-	} else {
+    if (framePtr->isContainer) {
+	if (framePtr->useThis != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "windows cannot have both the -use and the -container"
 		    " option set", -1));
 	    Tcl_SetErrorCode(interp, "TK", "FRAME", "CONTAINMENT", NULL);
 	    goto error;
 	}
+	TkpMakeContainer(framePtr->tkwin);
     }
     if (type == TYPE_TOPLEVEL) {
 	Tcl_DoWhenIdle(MapFrame, framePtr);

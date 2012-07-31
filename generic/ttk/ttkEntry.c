@@ -1177,13 +1177,13 @@ static void EntryDisplay(void *clientData, Drawable d)
 
     textarea = Ttk_ClientRegion(entryPtr->core.layout, "textarea");
     showCursor =
-	   (entryPtr->core.flags & CURSOR_ON) != 0
+	   (entryPtr->core.flags & CURSOR_ON)
 	&& EntryEditable(entryPtr)
 	&& entryPtr->entry.insertPos >= leftIndex
 	&& entryPtr->entry.insertPos <= rightIndex
 	;
     showSelection =
-	   (entryPtr->core.state & TTK_STATE_DISABLED) == 0
+	   !(entryPtr->core.state & TTK_STATE_DISABLED)
 	&& selFirst > -1
 	&& selLast > leftIndex
 	&& selFirst <= rightIndex

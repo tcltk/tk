@@ -386,7 +386,7 @@ TkCanvPostscriptCmd(
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
-	if ((mode & TCL_WRITABLE) == 0) {
+	if (!(mode & TCL_WRITABLE)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "channel \"%s\" wasn't opened for writing",
 		    psInfo.channelName));
