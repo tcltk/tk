@@ -11,6 +11,7 @@
  */
 
 #include "tkInt.h"
+#include <X11/XKBlib.h>
 
 /*
  * Prototypes for local procedures defined in this file:
@@ -155,7 +156,7 @@ TkpGetString(winPtr, eventPtr, dsPtr)
 /*
  * When mapping from a keysym to a keycode, need
  * information about the modifier state that should be used
- * so that when they call XKeycodeToKeysym taking into
+ * so that when they call XkbKeycodeToKeysym taking into
  * account the xkey.state, they will get back the original
  * keysym.
  */
@@ -179,7 +180,7 @@ TkpSetKeycodeAndState(tkwin, keySym, eventPtr)
     }
     if (keycode != 0) {
 	for (state = 0; state < 4; state++) {
-	    if (XKeycodeToKeysym(display, keycode, state) == keySym) {
+	    if (XkbKeycodeToKeysym(display, keycode, 0, state) == keySym) {
 		if (state & 1) {
 		    eventPtr->xkey.state |= ShiftMask;
 		}
@@ -248,7 +249,8 @@ TkpGetKeySym(dispPtr, eventPtr)
 	    && (eventPtr->xkey.state & LockMask))) {
 	index += 1;
     }
-    sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, index);
+    sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, 0,
+	    index);
 
     /*
      * Special handling:  if the key was shifted because of Lock, but
@@ -263,8 +265,8 @@ TkpGetKeySym(dispPtr, eventPtr)
 		|| ((sym >= XK_Agrave) && (sym <= XK_Odiaeresis))
 		|| ((sym >= XK_Ooblique) && (sym <= XK_Thorn)))) {
 	    index &= ~1;
-	    sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
-		    index);
+	    sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
+		    0, index);
 	}
     }
 
@@ -274,8 +276,8 @@ TkpGetKeySym(dispPtr, eventPtr)
      */
 
     if ((index & 1) && (sym == NoSymbol)) {
-	sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
-		index & ~1);
+	sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
+		0, index & ~1);
     }
     return sym;
 }
@@ -325,7 +327,7 @@ TkpInitKeymapInfo(dispPtr)
 	if (*codePtr == 0) {
 	    continue;
 	}
-	keysym = XKeycodeToKeysym(dispPtr->display, *codePtr, 0);
+	keysym = XkbKeycodeToKeysym(dispPtr->display, *codePtr, 0, 0);
 	if (keysym == XK_Shift_Lock) {
 	    dispPtr->lockUsage = LU_SHIFT;
 	    break;
@@ -351,7 +353,7 @@ TkpInitKeymapInfo(dispPtr)
 	if (*codePtr == 0) {
 	    continue;
 	}
-	keysym = XKeycodeToKeysym(dispPtr->display, *codePtr, 0);
+	keysym = XkbKeycodeToKeysym(dispPtr->display, *codePtr, 0, 0);
 	if (keysym == XK_Mode_switch) {
 	    dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
 	}
