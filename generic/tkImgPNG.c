@@ -1964,7 +1964,7 @@ DecodeLine(
 	 */
 
 	if ((PNG_COLOR_PLTE != pngPtr->colorType) &&
-		((pngPtr->colorType & PNG_COLOR_ALPHA) == 0)) {
+		!(pngPtr->colorType & PNG_COLOR_ALPHA)) {
 	    unsigned char alpha;
 
 	    if (pngPtr->useTRNS) {
