@@ -1,3 +1,8 @@
+2012-07-31  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/nmakehlp.c: Backport from Tcl 8.6, but add -Q option from
+	sampleextension.
+
 2012-07-17  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.12 TAGGED FOR RELEASE ***
