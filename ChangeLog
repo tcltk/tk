@@ -1,3 +1,9 @@
+2012-07-31  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixKey.c (TkpSetKeycodeAndState, TkpInitKeymapInfo)
+	(TkpGetKeySym): [Bug 3551802]: Convert from XKeycodeToKeysym to
+	XkbKeycodeToKeysym to fix deprecation warning.
+
 2012-07-31  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/nmakehlp.c: Backport from Tcl 8.6, but add -Q option from
