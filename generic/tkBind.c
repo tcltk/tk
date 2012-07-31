@@ -3935,7 +3935,7 @@ ParseEventDescription(
 		eventMask = ButtonPressMask;
 	    } else if (eventFlags & KEY) {
 		goto getKeysym;
-	    } else if ((eventFlags & BUTTON) == 0) {
+	    } else if (!(eventFlags & BUTTON)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"specified button \"%s\" for non-button event",
 			field));
@@ -3959,7 +3959,7 @@ ParseEventDescription(
 	    if (eventFlags == 0) {
 		patPtr->eventType = KeyPress;
 		eventMask = KeyPressMask;
-	    } else if ((eventFlags & KEY) == 0) {
+	    } else if (!(eventFlags & KEY)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"specified keysym \"%s\" for non-key event", field));
 		Tcl_SetErrorCode(interp, "TK", "EVENT", "NON_KEY", NULL);
@@ -4083,7 +4083,7 @@ GetPatternObj(
 	 */
 
 	if ((patPtr->eventType == KeyPress)
-		&& ((psPtr->flags & PAT_NEARBY) == 0)
+		&& !(psPtr->flags & PAT_NEARBY)
 		&& (patPtr->needMods == 0)
 		&& (patPtr->detail.keySym < 128)
 		&& isprint(UCHAR(patPtr->detail.keySym))
