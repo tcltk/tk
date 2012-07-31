@@ -1314,11 +1314,9 @@ SendInit(interp, dispPtr)
      * event handler for it.
      */
 
-    dispPtr->commTkwin = Tk_CreateWindow(interp, (Tk_Window) NULL,
-	    "_comm", DisplayString(dispPtr->display));
-    if (dispPtr->commTkwin == NULL) {
-	panic("Tk_CreateWindow failed in SendInit!");
-    }
+    dispPtr->commTkwin = (Tk_Window) TkAllocWindow(dispPtr,
+	DefaultScreen(dispPtr->display), NULL);
+
     Tcl_Preserve((ClientData) dispPtr->commTkwin);
     atts.override_redirect = True;
     Tk_ChangeWindowAttributes(dispPtr->commTkwin,
