@@ -687,7 +687,7 @@ ImgPhotoCmd(
 	 * Fill in default values for unspecified parameters.
 	 */
 
-	if (((options.options & OPT_FROM) == 0) || (options.fromX2 < 0)) {
+	if (!(options.options & OPT_FROM) || (options.fromX2 < 0)) {
 	    options.fromX2 = masterPtr->width;
 	    options.fromY2 = masterPtr->height;
 	}
@@ -833,7 +833,7 @@ ImgPhotoCmd(
 		&imageHeight, &oldformat) == TCL_OK) {
 	    Tcl_Obj *format, *data;
 
-	    if (((options.options & OPT_TO) == 0) || (options.toX2 < 0)) {
+	    if (!(options.options & OPT_TO) || (options.toX2 < 0)) {
 		options.toX2 = options.toX + imageWidth;
 		options.toY2 = options.toY + imageHeight;
 	    }
@@ -1056,7 +1056,7 @@ ImgPhotoCmd(
 	    Tcl_Close(NULL, chan);
 	    return TCL_ERROR;
 	}
-	if (((options.options & OPT_FROM) == 0) || (options.fromX2 < 0)) {
+	if (!(options.options & OPT_FROM) || (options.fromX2 < 0)) {
 	    width = imageWidth - options.fromX;
 	    height = imageHeight - options.fromY;
 	} else {
@@ -1521,7 +1521,7 @@ ParseSubcommandOptions(
 	 * in the interpreter and return.
 	 */
 
-	if ((allowedOptions & bit) == 0) {
+	if (!(allowedOptions & bit)) {
 	    goto unknownOrAmbiguousOption;
 	}
 
