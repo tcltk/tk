@@ -439,7 +439,7 @@ TkFontPkgFree(
 	hPtr = Tcl_NextHashEntry(&search);
     }
     Tcl_DeleteHashTable(&fiPtr->namedTable);
-    if (fiPtr->updatePending != 0) {
+    if (fiPtr->updatePending) {
 	Tcl_CancelIdleCall(TheWorldHasChanged, fiPtr);
     }
     ckfree(fiPtr);
@@ -616,7 +616,7 @@ Tk_FontObjCmd(
 	if (namedHashPtr != NULL) {
 	    nfPtr = Tcl_GetHashValue(namedHashPtr);
 	}
-	if ((namedHashPtr == NULL) || (nfPtr->deletePending != 0)) {
+	if ((namedHashPtr == NULL) || nfPtr->deletePending) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "named font \"%s\" doesn't exist", string));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
@@ -688,7 +688,7 @@ Tk_FontObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "fontname ?fontname ...?");
 	    return TCL_ERROR;
 	}
-	for (i = 2; i < objc && result == TCL_OK; i++) {
+	for (i = 2; (i < objc) && (result == TCL_OK); i++) {
 	    string = Tcl_GetString(objv[i]);
 	    result = TkDeleteNamedFont(interp, tkwin, string);
 	}
@@ -794,7 +794,7 @@ Tk_FontObjCmd(
 	while (namedHashPtr != NULL) {
 	    NamedFont *nfPtr = Tcl_GetHashValue(namedHashPtr);
 
-	    if (nfPtr->deletePending == 0) {
+	    if (!nfPtr->deletePending) {
 		char *string = Tcl_GetHashKey(&fiPtr->namedTable,
 			namedHashPtr);
 
@@ -855,7 +855,7 @@ UpdateDependentFonts(
 		fontPtr != NULL; fontPtr = fontPtr->nextPtr) {
 	    if (fontPtr->namedHashPtr == namedHashPtr) {
 		TkpGetFontFromAttributes(fontPtr, tkwin, &nfPtr->fa);
-		if (fiPtr->updatePending == 0) {
+		if (!fiPtr->updatePending) {
 		    fiPtr->updatePending = 1;
 		    Tcl_DoWhenIdle(TheWorldHasChanged, fiPtr);
 		}
@@ -949,7 +949,7 @@ TkCreateNamedFont(
     namedHashPtr = Tcl_CreateHashEntry(&fiPtr->namedTable, name, &isNew);
     if (!isNew) {
 	nfPtr = Tcl_GetHashValue(namedHashPtr);
-	if (nfPtr->deletePending == 0) {
+	if (!nfPtr->deletePending) {
 	    if (interp) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"named font \"%s\" already exists", name));
@@ -1427,7 +1427,7 @@ Tk_FreeFont(
 
 	nfPtr = Tcl_GetHashValue(fontPtr->namedHashPtr);
 	nfPtr->refCount--;
-	if ((nfPtr->refCount == 0) && (nfPtr->deletePending != 0)) {
+	if ((nfPtr->refCount == 0) && nfPtr->deletePending) {
 	    Tcl_DeleteHashEntry(fontPtr->namedHashPtr);
 	    ckfree(nfPtr);
 	}
@@ -1755,7 +1755,7 @@ Tk_PostscriptFontName(
 
     slantString = NULL;
     if (fontPtr->fa.slant == TK_FS_ROMAN) {
-	;
+	/* Do nothing */
     } else if ((strcmp(family, "Helvetica") == 0)
 	    || (strcmp(family, "Courier") == 0)
 	    || (strcmp(family, "AvantGarde") == 0)) {
@@ -2143,7 +2143,7 @@ Tk_ComputeTextLayout(
      * on the next line. Otherwise "Hello" and "Hello\n" are the same height.
      */
 
-    if ((layoutPtr->numChunks > 0) && ((flags & TK_IGNORE_NEWLINES) == 0)) {
+    if ((layoutPtr->numChunks > 0) && !(flags & TK_IGNORE_NEWLINES)) {
 	if (layoutPtr->chunks[layoutPtr->numChunks - 1].start[0] == '\n') {
 	    chunkPtr = NewChunk(&layoutPtr, &maxChunks, start, 0, curX,
 		    curX, baseline);
@@ -2905,7 +2905,7 @@ Tk_IntersectTextLayout(
 
     result = 0;
     for (i = 0; i < layoutPtr->numChunks; i++) {
-	if ((chunkPtr->start[0] == '\n') || (chunkPtr->numBytes==0)) {
+	if ((chunkPtr->start[0] == '\n') || (chunkPtr->numBytes == 0)) {
 	    /*
 	     * Newline characters and empty chunks are not counted when
 	     * computing area intersection (but tab characters would still be
@@ -3577,7 +3577,7 @@ ParseFontNameObj(
 	}
 	dash = strchr(string + 1, '-');
 	if ((dash != NULL)
-		&& (!isspace(UCHAR(dash[-1])))) { /* INTL: ISO space */
+		&& !isspace(UCHAR(dash[-1]))) {	/* INTL: ISO space */
 	    goto xlfd;
 	}
 
@@ -3830,7 +3830,7 @@ TkFontParseXLFD(
      * parsed set of attributes)".
      */
 
-    if ((i > XLFD_ADD_STYLE) && (FieldSpecified(field[XLFD_ADD_STYLE]))) {
+    if ((i > XLFD_ADD_STYLE) && FieldSpecified(field[XLFD_ADD_STYLE])) {
 	if (atoi(field[XLFD_ADD_STYLE]) != 0) {
 	    for (j = XLFD_NUMFIELDS - 1; j >= XLFD_ADD_STYLE; j--) {
 		field[j + 1] = field[j];
@@ -4228,12 +4228,11 @@ TkFontGetFirstTextLayout(
     Tk_Font *font,
     char *dst)
 {
-    TextLayout *layoutPtr;
+    TextLayout *layoutPtr = (TextLayout *) layout;
     LayoutChunk *chunkPtr;
     int numBytesInChunk;
 
-    layoutPtr = (TextLayout *) layout;
-    if ((layoutPtr==NULL) || (layoutPtr->numChunks==0)
+    if ((layoutPtr == NULL) || (layoutPtr->numChunks == 0)
 	    || (layoutPtr->chunks->numDisplayChars <= 0)) {
 	dst[0] = '\0';
 	return 0;

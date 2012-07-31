@@ -654,7 +654,7 @@ ConfigureSlave(
 	slavePtr->flags |= CHILD_WIDTH;
     }
 
-    if (((mask & IN_MASK) == 0) && (slavePtr->masterPtr != NULL)) {
+    if (!(mask & IN_MASK) && (slavePtr->masterPtr != NULL)) {
 	/*
 	 * If no -in option was passed and the slave is already placed then
 	 * just recompute the placement.
@@ -1183,8 +1183,8 @@ PlaceRequestProc(
     Slave *slavePtr = clientData;
     Master *masterPtr;
 
-    if (((slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH)) != 0)
-	    && ((slavePtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT)) != 0)) {
+    if ((slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH))
+	    && (slavePtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT))) {
 	return;
     }
     masterPtr = slavePtr->masterPtr;

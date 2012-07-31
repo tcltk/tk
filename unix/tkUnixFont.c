@@ -587,7 +587,7 @@ UtfToUcs2beProc(
     srcStart = src;
     srcEnd = src + srcLen;
     srcClose = srcEnd;
-    if ((flags & TCL_ENCODING_END) == 0) {
+    if (!(flags & TCL_ENCODING_END)) {
 	srcClose -= TCL_UTF_MAX;
     }
 
@@ -1648,7 +1648,7 @@ InitFont(
     pageMap = fontPtr->subFontArray[0].fontMap[0];
     for (i = 0; i < 256; i++) {
 	if ((minHi > 0) || (i < minLo) || (i > maxLo)
-		|| (((pageMap[i>>3] >> (i&7)) & 1) == 0)) {
+		|| !((pageMap[i>>3] >> (i&7)) & 1)) {
 	    n = 0;
 	} else if (fontStructPtr->per_char == NULL) {
 	    n = fontStructPtr->max_bounds.width;
