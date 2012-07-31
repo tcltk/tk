@@ -1,3 +1,8 @@
+2012-07-31  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/nmakehlp.c: Backport from Tcl 8.6, but add -Q option from
+	sampleextension.
+
 2012-07-19  Francois Vogel  <fvogelnew1@free.fr>
 
 	* unix/tkUnixMenuBu.c: [Bug 3545457]: Crash on packing a menubutton
