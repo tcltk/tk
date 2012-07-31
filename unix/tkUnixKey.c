@@ -211,7 +211,7 @@ TkpGetString(
 
 /*
  * When mapping from a keysym to a keycode, need information about the
- * modifier state tp be used so that when they call XkbKeycodeToKeysym taking
+ * modifier state to be used so that when they call XkbKeycodeToKeysym taking
  * into account the xkey.state, they will get back the original keysym.
  */
 
