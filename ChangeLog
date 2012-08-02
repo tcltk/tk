@@ -1,3 +1,7 @@
+2012-08-02  Francois Vogel  <fvogelnew1@free.fr>
+
+	* tests/spinbox.test:  [Bug 3553311]: Test spinbox-3.70 failed
+
 2012-07-31  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixKey.c (TkpSetKeycodeAndState, TkpInitKeymapInfo)
