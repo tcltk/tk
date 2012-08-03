@@ -1,3 +1,7 @@
+2012-08-03  Francois Vogel  <fvogelnew1@free.fr>
+
+	* tests/bind.test:  [Bug 3554081]: Test bind-22.10 failed
+
 2012-08-02  Francois Vogel  <fvogelnew1@free.fr>
 
 	* tests/spinbox.test:  [Bug 3553311]: Test spinbox-3.70 failed
