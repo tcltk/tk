@@ -1979,9 +1979,9 @@ test bind-22.10 {HandleEventGenerate} {
     setup
     bind .b.f <Key> {set x "%s %K"}
     set x {}
-    event gen .b.f <Control-Key-1>
+    event gen .b.f <Control-Key-space>
     set x
-} {4 1}
+} {4 space}
 test bind-22.11 {HandleEventGenerate} {
     setup
     bind .b.f <<Paste>> {set x "%s"}
