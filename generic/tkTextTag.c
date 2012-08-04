@@ -457,6 +457,11 @@ TkTextTagCmd(
 			&tagPtr->elide) != TCL_OK) {
 		    return TCL_ERROR;
 		}
+	        /* Indices are potentially obsolete after changing -elide,
+	         * especially those computed with "display" or "any"
+                 * submodifier, therefore increase the epoch.
+                 */
+	        textPtr->sharedTextPtr->stateEpoch++;
 	    }
 
 	    /*
