@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
-
+ 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
@@ -417,7 +417,6 @@ GenerateActivateEvents(
 {
     TkGenerateActivateEvents(winPtr, activeFlag);
     TkMacOSXGenerateFocusEvent(winPtr, activeFlag);
-    TkMacOSXEnterExitFullscreen(winPtr, activeFlag);
     return true;
 }
 
