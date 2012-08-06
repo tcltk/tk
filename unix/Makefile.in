@@ -362,7 +362,7 @@ TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
 	tkTextMark.o tkTextTag.o tkTextWind.o
 
 # either tkUnixFont.o (default) or tkUnixRFont.o (if --enable-xft)
-# 
+#
 FONT_OBJS = @UNIX_FONT_OBJS@
 
 GENERIC_OBJS = tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBusy.o \
@@ -635,7 +635,7 @@ tktest-real: ${TK_STUB_LIB_FILE}
 # # FIXME: This xttest rule seems to be broken in a number of ways.  It should
 # # use CC_SEARCH_FLAGS, it does not include the shared lib location logic from
 # # tktest, and it is not clear where this test.o object file comes from.
-# 
+#
 # xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE) ${TK_STUB_LIB_FILE}
 # 	${CC} ${CFLAGS} ${LDFLAGS} test.o tkTest.o tkSquare.o \
 # 		@TK_BUILD_LIB_SPEC@ ${TK_STUB_LIB_FILE}  ${TCL_STUB_LIB_SPEC} \
