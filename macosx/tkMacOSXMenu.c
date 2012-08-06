@@ -669,19 +669,24 @@ TkpConfigureMenuEntry(
 		submenu = nil;
 	    } else {
 		[submenu setTitle:title];
+
+    		if ([menuItem isEnabled]) {
+		  /* This menuItem might have been previously disabled (XXX:
+		     track this), which would have disabled entries; we must
+		     re-enable the entries here. */
+		  int i = 0;
+		  NSArray *itemArray = [submenu itemArray];
+		  for (NSMenuItem *item in itemArray) {
+		    TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
+		    [item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
+		    i++;
+		  }
+		}
+
 	    }
 	}
     }
     [menuItem setSubmenu:submenu];
-
-    /*Disabling parent menu disables entries; we must re-enable the entries here.*/
-    NSArray *itemArray = [submenu itemArray];
-    
-    if ([menuItem isEnabled]) {
-	    for (NSMenuItem *item in itemArray) {
-		    [item setEnabled:YES];
-	    }
-	}
 
     return TCL_OK;
 }
