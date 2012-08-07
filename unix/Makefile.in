@@ -825,7 +825,7 @@ install-demos:
 	    chmod 755 "$(DEMO_INSTALL_DIR)/$$i"; \
 	    fi; \
 	    done;
-	@echo "Installing demo images to $(DEMO_INSTALL_DIR)/images/";
+	@echo "Installing demo image files to $(DEMO_INSTALL_DIR)/images/";
 	@for i in $(TOP_DIR)/library/demos/images/*; \
 	    do \
 	    if [ -f $$i ] ; then \
