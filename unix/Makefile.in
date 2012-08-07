@@ -219,10 +219,11 @@ TKTEST_EXE		= tktest@EXEEXT@
 INSTALL_STRIP_PROGRAM   = -s
 INSTALL_STRIP_LIBRARY   = -S -x
 
-INSTALL			= @srcdir@/install-sh -c
+INSTALL			= $(SHELL) $(UNIX_DIR)/install-sh -c
 INSTALL_PROGRAM		= ${INSTALL}
 INSTALL_LIBRARY		= ${INSTALL}
 INSTALL_DATA		= ${INSTALL} -m 644
+INSTALL_DATA_DIR	= ${INSTALL} -d -m 755
 
 # The symbol below provides support for dynamic loading and shared
 # libraries.  See configure.in for a description of what it means.
@@ -570,7 +571,6 @@ binaries: ${LIB_FILE} ${STUB_LIB_FILE} ${WISH_EXE}
 libraries:
 
 $(TOP_DIR)/doc/man.macros:
-	chmod +x $(UNIX_DIR)/install-sh
 	$(INSTALL_DATA) @TCL_SRC_DIR@/doc/man.macros $(TOP_DIR)/doc/man.macros
 
 doc: $(TOP_DIR)/doc/man.macros
@@ -709,14 +709,10 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) ${WISH_EXE}
 	    do \
 	    if [ ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
-		mkdir -p "$$i"; \
-		chmod 755 "$$i"; \
+		$(INSTALL_DATA_DIR) "$$i"; \
 		else true; \
 		fi; \
 	    done;
-	@if test ! -x $(SRC_DIR)/install-sh; then \
-	    chmod +x $(SRC_DIR)/install-sh; \
-	    fi
 	@if test "x$(TK_SHARED_BUILD)" = "x1"; then \
 	    echo "Creating package index $(PKG_INDEX)"; \
 	    rm -f "$(PKG_INDEX)"; \
@@ -761,15 +757,11 @@ install-libraries: libraries
 	    do \
 	    if [ -n "$$i" -a ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
-		mkdir -p "$$i"; \
-		chmod 755 "$$i"; \
+		$(INSTALL_DATA_DIR) "$$i"; \
 		else true; \
 		fi; \
 	    done;
-	@if test ! -x $(SRC_DIR)/install-sh; then \
-	    chmod +x $(SRC_DIR)/install-sh; \
-	    fi
-	@echo "Installing header files";
+	@echo "Installing header files to $(INCLUDE_INSTALL_DIR)/";
 	@for i in $(PUBLIC_HDRS); \
 	    do \
 	    $(INSTALL_DATA) $$i "$(INCLUDE_INSTALL_DIR)"; \
@@ -778,27 +770,27 @@ install-libraries: libraries
 	    do \
 	    $(INSTALL_DATA) $$i "$(INCLUDE_INSTALL_DIR)/X11"; \
 	    done;
-	@echo "Installing library files to $(SCRIPT_INSTALL_DIR)";
+	@echo "Installing Tk library files to $(SCRIPT_INSTALL_DIR)/";
 	@for i in $(TOP_DIR)/library/*.tcl \
 	        $(TOP_DIR)/library/tclIndex $(UNIX_DIR)/tkAppInit.c; \
 	    do \
 	    $(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)"; \
 	    done;
-	@echo "Installing library ttk directory";
+	@echo "Installing Ttk library files to $(SCRIPT_INSTALL_DIR)/ttk/";
 	@for i in $(TOP_DIR)/library/ttk/*.tcl; \
 	    do \
 	    if [ -f $$i ] ; then \
 		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/ttk"; \
 	    fi; \
 	    done;
-	@echo "Installing library images directory";
+	@echo "Installing library image files to $(SCRIPT_INSTALL_DIR)/images/";
 	@for i in $(TOP_DIR)/library/images/*; \
 	    do \
 	    if [ -f $$i ] ; then \
 		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/images"; \
 	    fi; \
 	    done;
-	@echo "Installing translation directory";
+	@echo "Installing message catalog files to $(SCRIPT_INSTALL_DIR)/msgs/";
 	@for i in $(TOP_DIR)/library/msgs/*.msg; \
 	    do \
 	    if [ -f $$i ] ; then \
@@ -811,12 +803,11 @@ install-demos:
 	    do \
 	    if [ ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
-		mkdir -p "$$i"; \
-		chmod 755 "$$i"; \
+		$(INSTALL_DATA_DIR) "$$i"; \
 		else true; \
 		fi; \
 	    done;
-	@echo "Installing demos to $(DEMO_INSTALL_DIR)/";
+	@echo "Installing demo files to $(DEMO_INSTALL_DIR)/";
 	@for i in $(TOP_DIR)/library/demos/*; \
 	    do \
 	    if [ -f $$i ] ; then \
@@ -832,7 +823,7 @@ install-demos:
 	    chmod 755 "$(DEMO_INSTALL_DIR)/$$i"; \
 	    fi; \
 	    done;
-	@echo "Installing demo images";
+	@echo "Installing demo image files to $(DEMO_INSTALL_DIR)/images/";
 	@for i in $(TOP_DIR)/library/demos/images/*; \
 	    do \
 	    if [ -f $$i ] ; then \
@@ -845,22 +836,19 @@ install-doc:
 	    do \
 	    if [ ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
-		mkdir -p "$$i"; \
-		chmod 755 "$$i"; \
+		$(INSTALL_DATA_DIR) "$$i"; \
 		else true; \
 		fi; \
 	    done;
-	@echo "Installing and cross-linking top-level (.1) docs";
+	@echo "Installing and cross-linking top-level (.1) docs to $(MAN1_INSTALL_DIR)/";
 	@for i in $(TOP_DIR)/doc/*.1; do \
 	    $(SHELL) $(UNIX_DIR)/installManPage $(MAN_FLAGS) $$i "$(MAN1_INSTALL_DIR)"; \
 	done
-
-	@echo "Installing and cross-linking C API (.3) docs";
+	@echo "Installing and cross-linking C API (.3) docs to $(MAN3_INSTALL_DIR)/";
 	@for i in $(TOP_DIR)/doc/*.3; do \
 	    $(SHELL) $(UNIX_DIR)/installManPage $(MAN_FLAGS) $$i "$(MAN3_INSTALL_DIR)"; \
 	done
-
-	@echo "Installing and cross-linking command (.n) docs";
+	@echo "Installing and cross-linking command (.n) docs to $(MANN_INSTALL_DIR)/";
 	@for i in $(TOP_DIR)/doc/*.n; do \
 	    $(SHELL) $(UNIX_DIR)/installManPage $(MAN_FLAGS) $$i "$(MANN_INSTALL_DIR)"; \
 	done
@@ -871,15 +859,11 @@ install-private-headers: libraries
 	    do \
 	    if [ ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
-		mkdir -p "$$i"; \
-		chmod 755 "$$i"; \
+		$(INSTALL_DATA_DIR) "$$i"; \
 		else true; \
 		fi; \
 	    done;
-	@if test ! -x $(SRC_DIR)/install-sh; then \
-	    chmod +x $(SRC_DIR)/install-sh; \
-	    fi
-	@echo "Installing private header files";
+	@echo "Installing private header files to $(PRIVATE_INCLUDE_INSTALL_DIR)/";
 	@for i in $(PRIVATE_HDRS); \
 	    do \
 	    $(INSTALL_DATA) $$i "$(PRIVATE_INCLUDE_INSTALL_DIR)"; \
@@ -1538,7 +1522,6 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(MAC_OSX_DIR)/configure
 		$(UNIX_DIR)/README $(UNIX_DIR)/installManPage \
 		$(UNIX_DIR)/tkConfig.h.in $(DISTDIR)/unix
 	chmod 775 $(DISTDIR)/unix/configure $(DISTDIR)/unix/configure.in
-	chmod +x $(DISTDIR)/unix/install-sh
 	mkdir $(DISTDIR)/bitmaps
 	@(cd $(TOP_DIR); for i in bitmaps/* ; do \
 	    if [ -f $$i ] ; then \
