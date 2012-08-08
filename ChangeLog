@@ -1,3 +1,22 @@
+2012-08-03  Francois Vogel  <fvogelnew1@free.fr>
+
+	* tests/bind.test:  [Bug 3554081]: Test bind-22.10 failed
+
+2012-08-02  Francois Vogel  <fvogelnew1@free.fr>
+
+	* tests/spinbox.test:  [Bug 3553311]: Test spinbox-3.70 failed
+
+2012-07-31  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixKey.c (TkpSetKeycodeAndState, TkpInitKeymapInfo)
+	(TkpGetKeySym): [Bug 3551802]: Convert from XKeycodeToKeysym to
+	XkbKeycodeToKeysym to fix deprecation warning.
+
+2012-07-31  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/nmakehlp.c: Backport from Tcl 8.6, but add -Q option from
+	sampleextension.
+
 2012-07-17  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.5.12 TAGGED FOR RELEASE ***
