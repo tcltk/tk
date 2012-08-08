@@ -417,7 +417,6 @@ GenerateActivateEvents(
 {
     TkGenerateActivateEvents(winPtr, activeFlag);
     TkMacOSXGenerateFocusEvent(winPtr, activeFlag);
-    TkMacOSXEnterExitFullscreen(winPtr, activeFlag);
     return true;
 }
 

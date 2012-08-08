@@ -205,7 +205,7 @@ Tk_CreateOptionTable(
     hashEntryPtr = Tcl_CreateHashEntry(hashTablePtr, (char *) templatePtr,
 	    &newEntry);
     if (!newEntry) {
-	tablePtr = (OptionTable *) Tcl_GetHashValue(hashEntryPtr);
+	tablePtr = Tcl_GetHashValue(hashEntryPtr);
 	tablePtr->refCount++;
 	return (Tk_OptionTable) tablePtr;
     }
@@ -391,12 +391,11 @@ DestroyOptionHashTable(
     Tcl_HashTable *hashTablePtr = clientData;
     Tcl_HashSearch search;
     Tcl_HashEntry *hashEntryPtr;
-    OptionTable *tablePtr;
 
     for (hashEntryPtr = Tcl_FirstHashEntry(hashTablePtr, &search);
 	    hashEntryPtr != NULL;
 	    hashEntryPtr = Tcl_NextHashEntry(&search)) {
-	tablePtr = (OptionTable *) Tcl_GetHashValue(hashEntryPtr);
+	OptionTable *tablePtr = Tcl_GetHashValue(hashEntryPtr);
 
 	/*
 	 * The following statements do two tricky things:
