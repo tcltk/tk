@@ -6332,6 +6332,7 @@ TkMacOSXMakeFullscreen(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int result = TCL_OK, wasFullscreen = (wmPtr->flags & WM_FULLSCREEN);
+    static unsigned long prevMask = 0, prevPres = 0;
 
     if (fullscreen) {
 	int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
@@ -6370,10 +6371,20 @@ TkMacOSXMakeFullscreen(
 	    }
 	    wmPtr->flags |= WM_FULLSCREEN;
 	}
+
+	prevMask = [window styleMask];
+	prevPres = [NSApp presentationOptions];
+	[window setStyleMask: NSBorderlessWindowMask];
+	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
+	                          | NSApplicationPresentationAutoHideMenuBar];
+
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN; 
+
+	[NSApp setPresentationOptions: prevPres];
+	[window setStyleMask: prevMask];
     }
-    TkMacOSXEnterExitFullscreen(winPtr, [window isKeyWindow]);
+
     if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {
 	UInt64 oldAttributes = wmPtr->attributes;
 	NSRect bounds = NSMakeRect(wmPtr->configX, tkMacOSXZeroScreenHeight -
@@ -6390,55 +6401,6 @@ TkMacOSXMakeFullscreen(
 	wmPtr->flags &= ~WM_SYNC_PENDING;
     }
     return result;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXEnterExitFullscreen --
- *
- *	This procedure enters or exits fullscreen mode if required.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXEnterExitFullscreen(
-    TkWindow *winPtr,
-    int active)
-{
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
-    NSWindow *window = TkMacOSXDrawableWindow(winPtr->window);
-    SystemUIMode mode;
-    SystemUIOptions options;
-
-    GetSystemUIMode(&mode, &options);
-    if (window && wmPtr && (wmPtr->flags & WM_FULLSCREEN) && active) {
-	static SystemUIMode fullscreenMode = 0;
-	static SystemUIOptions fullscreenOptions = 0;
-
-	if (!fullscreenMode) {
-	    fullscreenMode = kUIModeAllSuppressed;
-	}
-	if (mode != fullscreenMode) {
-	    ChkErr(SetSystemUIMode, fullscreenMode, fullscreenOptions);
-	    wmPtr->flags |= WM_SYNC_PENDING;
-	    [window setFrame:[window frameRectForContentRect:NSMakeRect(0, 0,
-		    WidthOfScreen(Tk_Screen(winPtr)),
-		    HeightOfScreen(Tk_Screen(winPtr)))] display:YES];
-	    wmPtr->flags &= ~WM_SYNC_PENDING;
-	}
-    } else {
-	if (mode != kUIModeNormal) {
-	    ChkErr(SetSystemUIMode, kUIModeNormal, 0);
-	}
-    }
 }
 
 /*

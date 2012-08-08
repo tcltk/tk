@@ -5494,7 +5494,7 @@ SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr)
  * GetNetWmType --
  *
  *	Read the extended window manager type hint from a window
- *	and return as a list of names suitable for use with 
+ *	and return as a list of names suitable for use with
  *	SetNetWmType.
  *
  *----------------------------------------------------------------------
@@ -6409,7 +6409,7 @@ TkWmStackorderToplevel(
 	goto done;
     case 1:
 	hPtr = Tcl_FirstHashEntry(&table, &search);
-	windows[0] = (TkWindow *) Tcl_GetHashValue(hPtr);
+	windows[0] = Tcl_GetHashValue(hPtr);
 	windows[1] = NULL;
 	goto done;
     }
@@ -6427,12 +6427,13 @@ TkWmStackorderToplevel(
 	for (i = 0; i < numChildren; i++) {
 	    hPtr = Tcl_FindHashEntry(&table, (char *) children[i]);
 	    if (hPtr != NULL) {
-		childWinPtr = (TkWindow *) Tcl_GetHashValue(hPtr);
+		childWinPtr = Tcl_GetHashValue(hPtr);
 		*window_ptr++ = childWinPtr;
 	    }
 	}
 
-	/* ASSERT: window_ptr - windows == table.numEntries 
+	/*
+	 * ASSERT: window_ptr - windows == table.numEntries 
 	 * (#matched toplevel windows == #children) [Bug 1789819]
 	 */
 

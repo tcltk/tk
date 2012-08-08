@@ -1225,10 +1225,10 @@ static void EntryDisplay(void *clientData, Drawable d)
      * clipping area from the GC, so we have to supply that by other means.
      */
 
-    rect.x = entryPtr->entry.layoutX;
-    rect.y = entryPtr->entry.layoutY;
+    rect.x = textarea.x;
+    rect.y = textarea.y;
     rect.width = textarea.width;
-    rect.height = entryPtr->entry.layoutHeight;
+    rect.height = textarea.height;
     clipRegion = TkCreateRegion();
     TkUnionRectWithRegion(&rect, clipRegion, clipRegion);
 #ifdef HAVE_XFT
