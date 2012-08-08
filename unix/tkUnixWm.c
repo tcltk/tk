@@ -278,14 +278,20 @@ typedef struct TkWmInfo {
 #define WM_WITHDRAWN			0x4000
 
 /*
- * Wrapper for XGetWindowProperty to make it a *bit* less verbose.
+ * Wrapper for XGetWindowProperty and XChangeProperty to make them a *bit*
+ * less verbose.
  */
 
 #define GetWindowProperty(wrapperPtr, atom, length, type, typePtr, formatPtr, numItemsPtr, bytesAfterPtr, itemsPtr) \
     (XGetWindowProperty((wrapperPtr)->display, (wrapperPtr)->window,	\
 	    (atom), 0, (long) (length), False, (type),			\
-	    (typePtr),(formatPtr),(numItemsPtr),(bytesAfterPtr),	\
+	    (typePtr), (formatPtr), (numItemsPtr), (bytesAfterPtr),	\
 	    (unsigned char **) (itemsPtr)) == Success)
+#define SetWindowProperty(wrapperPtr, atomName, type, width, data, length) \
+    XChangeProperty((wrapperPtr)->display, (wrapperPtr)->window,	\
+	    Tk_InternAtom((Tk_Window) wrapperPtr, (atomName)),		\
+	    (type), (width), PropModeReplace, (unsigned char *) (data), \
+	    (int) (length))
 
 /*
  * This module keeps a list of all top-level windows, primarily to simplify
@@ -708,7 +714,6 @@ TkWmMapWindow(
 	    if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		    &textProp) != 0) {
 		unsigned long pid = (unsigned long) getpid();
-		Atom atom;
 
 		XSetWMClientMachine(winPtr->display,
 			wmPtr->wrapperPtr->window, &textProp);
@@ -721,10 +726,8 @@ TkWmMapWindow(
 		 * _NET_WM_PID requires that to be set too.
 		 */
 
-		atom = Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_PID");
-		XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
-			atom, XA_CARDINAL, 32, PropModeReplace,
-			(unsigned char *) &pid, 1);
+		SetWindowProperty(wmPtr->wrapperPtr, "_NET_WM_PID",
+			XA_CARDINAL, 32, &pid, 1);
 	    }
 	    Tcl_DStringFree(&ds);
 	}
@@ -1277,10 +1280,8 @@ WmSetAttribute(
 	}
 
 	opacity = 0xFFFFFFFFul * wmPtr->reqState.alpha;
-	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
-		Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_WINDOW_OPACITY"),
-		XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &opacity,
-		1L);
+	SetWindowProperty(wmPtr->wrapperPtr, "_NET_WM_WINDOW_OPACITY",
+		XA_CARDINAL, 32, &opacity, 1L);
 	wmPtr->attributes.alpha = wmPtr->reqState.alpha;
 
 	break;
@@ -1507,9 +1508,8 @@ WmClientCmd(
 	     * be set too.
 	     */
 
-	    XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
-		    Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_PID"),
-		    XA_CARDINAL,32, PropModeReplace, (unsigned char*)&pid, 1);
+	    SetWindowProperty(wmPtr->wrapperPtr, "_NET_WM_PID", XA_CARDINAL,
+		    32, &pid, 1);
 	}
 	Tcl_DStringFree(&ds);
     }
@@ -4925,10 +4925,8 @@ UpdateTitle(
 	    Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
 
-    XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
-	    Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_NAME"),
-	    XA_UTF8_STRING, 8, PropModeReplace,
-	    (const unsigned char *) string, (signed int) strlen(string));
+    SetWindowProperty(wmPtr->wrapperPtr, "_NET_WM_NAME", XA_UTF8_STRING, 8,
+	    string, strlen(string));
 
     /*
      * Set icon name:
@@ -4940,11 +4938,8 @@ UpdateTitle(
 		Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
 
-	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
-		Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_ICON_NAME"),
-		XA_UTF8_STRING, 8, PropModeReplace,
-		(const unsigned char *) wmPtr->iconName,
-		(signed int) strlen(wmPtr->iconName));
+	SetWindowProperty(wmPtr->wrapperPtr, "_NET_WM_ICON_NAME",
+		XA_UTF8_STRING, 8, wmPtr->iconName, strlen(wmPtr->iconName));
     }
 }
 
@@ -4975,14 +4970,8 @@ UpdatePhotoIcon(
 	size = winPtr->dispPtr->iconDataSize;
     }
     if (data != NULL) {
-	/*
-	 * Set icon:
-	 */
-
-	XChangeProperty(winPtr->display, wmPtr->wrapperPtr->window,
-		Tk_InternAtom((Tk_Window) winPtr, "_NET_WM_ICON"),
-		XA_CARDINAL, 32, PropModeReplace,
-		(unsigned char *) data, size);
+	SetWindowProperty(wmPtr->wrapperPtr, "_NET_WM_ICON", XA_CARDINAL, 32,
+		data, size);
     }
 }
 
@@ -5123,11 +5112,10 @@ UpdateNetWmState(
 	atoms[numAtoms++] = Tk_InternAtom(tkwin, "_NET_WM_STATE_FULLSCREEN");
     }
 
-    XChangeProperty(Tk_Display(tkwin), wmPtr->wrapperPtr->window,
-	    Tk_InternAtom(tkwin, "_NET_WM_STATE"), XA_ATOM, 32,
-	    PropModeReplace, (unsigned char *) atoms, numAtoms);
+    SetWindowProperty(wmPtr->wrapperPtr, "_NET_WM_STATE", XA_ATOM, 32, atoms,
+	    numAtoms);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -5425,25 +5413,26 @@ UpdateHints(
  *
  * SetNetWmType --
  *
- *	Set the extended window manager hints for a toplevel window
- *	to the types provided. The specification states that this
- *	may be a list of window types in preferred order. To permit
- *	for future type definitions, the set of names is unconstrained
- *	and names are converted to upper-case and appended to
- *	"_NET_WM_WINDOW_TYPE_" before being converted to an Atom.
+ *	Set the extended window manager hints for a toplevel window to the
+ *	types provided. The specification states that this may be a list of
+ *	window types in preferred order. To permit for future type
+ *	definitions, the set of names is unconstrained and names are converted
+ *	to upper-case and appended to "_NET_WM_WINDOW_TYPE_" before being
+ *	converted to an Atom.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr)
+SetNetWmType(
+    TkWindow *winPtr,
+    Tcl_Obj *typePtr)
 {
-    Atom typeAtom, *atoms = NULL;
+    Atom *atoms = NULL;
     WmInfo *wmPtr;
-    TkWindow *wrapperPtr;
     Tcl_Obj **objv;
     int objc, n;
-    Tk_Window tkwin = (Tk_Window)winPtr;
+    Tk_Window tkwin = (Tk_Window) winPtr;
     Tcl_Interp *interp = Tk_Interp(tkwin);
 
     if (TCL_OK != Tcl_ListObjGetElements(interp, typePtr, &objc, &objv)) {
@@ -5478,11 +5467,9 @@ SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr)
     if (wmPtr->wrapperPtr == NULL) {
 	CreateWrapper(wmPtr);
     }
-    wrapperPtr = wmPtr->wrapperPtr;
 
-    typeAtom = Tk_InternAtom(tkwin, "_NET_WM_WINDOW_TYPE");
-    XChangeProperty(Tk_Display(tkwin), wrapperPtr->window, typeAtom,
-	XA_ATOM, 32, PropModeReplace, (unsigned char *) atoms, objc);
+    SetWindowProperty(wmPtr->wrapperPtr, "_NET_WM_WINDOW_TYPE", XA_ATOM, 32,
+	    atoms, objc);
 
     ckfree(atoms);
     return TCL_OK;
@@ -5493,22 +5480,22 @@ SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr)
  *
  * GetNetWmType --
  *
- *	Read the extended window manager type hint from a window
- *	and return as a list of names suitable for use with
- *	SetNetWmType.
+ *	Read the extended window manager type hint from a window and return as
+ *	a list of names suitable for use with SetNetWmType.
  *
  *----------------------------------------------------------------------
  */
 
 static Tcl_Obj *
-GetNetWmType(TkWindow *winPtr)
+GetNetWmType(
+    TkWindow *winPtr)
 {
     Atom typeAtom, actualType, *atoms;
     int actualFormat;
     unsigned long n, count, bytesAfter;
     unsigned char *propertyValue = NULL;
     long maxLength = 1024;
-    Tk_Window tkwin = (Tk_Window)winPtr;
+    Tk_Window tkwin = (Tk_Window) winPtr;
     TkWindow *wrapperPtr;
     Tcl_Obj *typePtr;
     Tcl_Interp *interp;
@@ -6216,10 +6203,8 @@ UpdateWmProtocols(
 	    *(atomPtr++) = protPtr->protocol;
 	}
     }
-    XChangeProperty(wmPtr->winPtr->display, wmPtr->wrapperPtr->window,
-	    Tk_InternAtom((Tk_Window) wmPtr->winPtr, "WM_PROTOCOLS"),
-	    XA_ATOM, 32, PropModeReplace, (unsigned char *) arrayPtr,
-	    atomPtr-arrayPtr);
+    SetWindowProperty(wmPtr->wrapperPtr, "WM_PROTOCOLS", XA_ATOM, 32,
+	    arrayPtr, atomPtr-arrayPtr);
     ckfree(arrayPtr);
 }
 
@@ -7383,14 +7368,13 @@ TkpWmSetState(
  *
  * RemapWindows
  *
- *	Adjust parent/child relation ships of
- *	the given window hierarchy.
+ *	Adjust parent/child relationships of the given window hierarchy.
  *
  * Results:
- *	none
+ *	None
  *
  * Side effects:
- *	keeps windowing system (X11) happy
+ *	Keeps windowing system (X11) happy
  *
  *----------------------------------------------------------------------
  */
