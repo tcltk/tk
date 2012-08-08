@@ -839,7 +839,7 @@ declare 14 aqua {
 
 # removed duplicate from tkPlat table(tk.decls)
 #declare 15 aqua {
-#    void *TkMacOSXGetDrawablePort(Drawable drawable)
+#    GWorldPtr TkMacOSXGetDrawablePort(Drawable drawable)
 #}
 
 declare 16 aqua {
