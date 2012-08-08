@@ -157,7 +157,7 @@ TkpMakeWindow(
 	    macWin->xOff = 0;
 	    macWin->yOff = 0;
 	    macWin->toplevel = macWin;
-	} else {
+	} else if (winPtr->parentPtr) {
 	    macWin->xOff = winPtr->parentPtr->privatePtr->xOff +
 		    winPtr->parentPtr->changes.border_width +
 		    winPtr->changes.x;
