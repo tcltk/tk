@@ -2,8 +2,6 @@
 #
 # This demonstration script creates a toplevel window containing a Ttk
 # tree widget configured as a multi-column listbox.
-#
-# RCS: @(#) $Id$
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
