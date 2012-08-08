@@ -11197,23 +11197,23 @@ _ACEOF
     HTML_DIR="${libdir}/Resources/Documentation/Reference/Tk"
     EXTRA_INSTALL="install-private-headers html-tk"
     EXTRA_BUILD_HTML='@ln -fs contents.htm "$(HTML_INSTALL_DIR)"/TkTOC.html'
-    EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources" && mkdir -p "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
-    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing license.terms to $(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) "$(TOP_DIR)/license.terms" "$(LIB_INSTALL_DIR)/Resources"'
+    EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
+    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing license.terms to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA) "$(TOP_DIR)/license.terms" "$(LIB_INSTALL_DIR)/Resources"'
     if test $tk_aqua != no; then
 	if test $tk_aqua = yes; then
-	    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Images to $(LIB_INSTALL_DIR)/Resources" && mkdir -p "$(LIB_INSTALL_DIR)/Resources" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)/Resources"; done'
+	    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Images to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)/Resources"; done'
 	else
-	    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing ${TK_RSRC_FILE} to $(LIB_INSTALL_DIR)/Resources" && mkdir -p "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) "${TK_RSRC_FILE}" "$(LIB_INSTALL_DIR)/Resources"'
+	    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing ${TK_RSRC_FILE} to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) "${TK_RSRC_FILE}" "$(LIB_INSTALL_DIR)/Resources"'
         fi
-        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing wish$(VERSION) script to $(INSTALL_ROOT)/'"${bindir}"'" && mkdir -p "$(INSTALL_ROOT)/'"${bindir}"'" && printf > "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)" "#!/bin/sh\n\"\$$(dirname \$$0)'"`eval d="${bindir}"; echo "$d" | sed -e 's#/[^/][^/]*#/..#g'`"'$(bindir)/Wish\" \"\$$@\"" && chmod +x "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)"'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing wish$(VERSION) script to $(INSTALL_ROOT)/'"${bindir}"'/" && $(INSTALL_DATA_DIR) "$(INSTALL_ROOT)/'"${bindir}"'" && printf > "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)" "#!/bin/sh\n\"\$$(dirname \$$0)'"`eval d="${bindir}"; echo "$d" | sed -e 's#/[^/][^/]*#/..#g'`"'$(bindir)/Wish\" \"\$$@\"" && chmod +x "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)"'
         bindir="${libdir}/Resources/Wish.app/Contents/MacOS"
-        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Info.plist to $(BIN_INSTALL_DIR)/.." && $(INSTALL_DATA) Wish-Info.plist "$(BIN_INSTALL_DIR)/../Info.plist" && mv -f "$(BIN_INSTALL_DIR)/wish$(VERSION)" "$(BIN_INSTALL_DIR)/Wish"'
-        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.icns to $(BIN_INSTALL_DIR)/../Resources" && mkdir -p "$(BIN_INSTALL_DIR)/../Resources"'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Info.plist to $(BIN_INSTALL_DIR)/../" && $(INSTALL_DATA) Wish-Info.plist "$(BIN_INSTALL_DIR)/../Info.plist" && mv -f "$(BIN_INSTALL_DIR)/wish$(VERSION)" "$(BIN_INSTALL_DIR)/Wish"'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.icns to $(BIN_INSTALL_DIR)/../Resources/" && $(INSTALL_DATA_DIR) "$(BIN_INSTALL_DIR)/../Resources"'
 	if test $tk_aqua = yes; then
 	    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Tk.icns" "$(BIN_INSTALL_DIR)/../Resources/Wish.icns"'
-	    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.sdef to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.sdef" "$(BIN_INSTALL_DIR)/../Resources"'
+	    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.sdef to $(BIN_INSTALL_DIR)/../Resources/" && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.sdef" "$(BIN_INSTALL_DIR)/../Resources"'
 	else
-	    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.icns" "$(BIN_INSTALL_DIR)/../Resources" && echo "Installing ${WISH_RSRC_FILE} to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "${WISH_RSRC_FILE}" "$(BIN_INSTALL_DIR)/../Resources"'
+	    EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.icns" "$(BIN_INSTALL_DIR)/../Resources" && echo "Installing ${WISH_RSRC_FILE} to $(BIN_INSTALL_DIR)/../Resources/" && $(INSTALL_DATA) "${WISH_RSRC_FILE}" "$(BIN_INSTALL_DIR)/../Resources"'
         fi
     fi
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
@@ -11224,7 +11224,7 @@ _ACEOF
     EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES"' -DTK_FRAMEWORK_VERSION=\"$(VERSION)\"'
 else
     if test $tk_aqua = yes; then
-        EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)" && mkdir -p "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
+        EXTRA_INSTALL_BINARIES='@echo "Installing Images to $(LIB_INSTALL_DIR)/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)"; done'
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
@@ -11251,7 +11251,7 @@ if test $tk_aqua = carbon; then
     REZ=/Developer/Tools/Rez
     REZ_FLAGS='-d "SystemSevenOrLater=1" -useDF -ro'
     if test "$SHARED_BUILD" = 0; then
-	EXTRA_INSTALL_BINARIES='@echo "Installing $(TK_RSRC_FILE) to $(LIB_INSTALL_DIR)" && $(INSTALL_DATA) $(TK_RSRC_FILE) "$(LIB_INSTALL_DIR)"'
+	EXTRA_INSTALL_BINARIES='@echo "Installing $(TK_RSRC_FILE) to $(LIB_INSTALL_DIR)/" && $(INSTALL_DATA) $(TK_RSRC_FILE) "$(LIB_INSTALL_DIR)"'
 	TK_BUILD_LIB_SPEC="$TK_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd | sed -e 's/ /\\\\ /g'`/\${TK_RSRC_FILE}"
 	WISH_BUILD_LIB_SPEC="$WISH_BUILD_LIB_SPEC -sectcreate __TEXT __tk_rsrc `pwd | sed -e 's/ /\\\\ /g'`/\${TK_RSRC_FILE}"
 	TK_LIB_SPEC="$TK_LIB_SPEC -sectcreate __TEXT __tk_rsrc ${libdir}/\${TK_RSRC_FILE}"
