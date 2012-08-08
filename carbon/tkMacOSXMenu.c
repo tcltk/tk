@@ -2255,7 +2255,7 @@ TkMacOSXDispatchMenuEvent(
 	    Tcl_HashEntry *commandEntryPtr =
 		    Tcl_FindHashEntry(&commandTable, (char*)(intptr_t)menuID);
 	    if (commandEntryPtr != NULL) {
-		TkMenu *menuPtr = (TkMenu *) Tcl_GetHashValue(commandEntryPtr);
+		TkMenu *menuPtr = Tcl_GetHashValue(commandEntryPtr);
 
 		if ((currentAppleMenuID == menuID)
 			&& (index > menuPtr->numEntries + 1)) {
