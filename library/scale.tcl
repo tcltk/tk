@@ -77,10 +77,10 @@ bind Scale <Up> {
 bind Scale <Down> {
     tk::ScaleIncrement %W down little noRepeat
 }
-bind Scale <Left> {
+bind Scale <<PrevChar>> {
     tk::ScaleIncrement %W up little noRepeat
 }
-bind Scale <Right> {
+bind Scale <<NextChar>> {
     tk::ScaleIncrement %W down little noRepeat
 }
 bind Scale <Control-Up> {
@@ -89,16 +89,16 @@ bind Scale <Control-Up> {
 bind Scale <Control-Down> {
     tk::ScaleIncrement %W down big noRepeat
 }
-bind Scale <Control-Left> {
+bind Scale <<PrevWord>> {
     tk::ScaleIncrement %W up big noRepeat
 }
-bind Scale <Control-Right> {
+bind Scale <<NextWord>> {
     tk::ScaleIncrement %W down big noRepeat
 }
-bind Scale <Home> {
+bind Scale <<LineStart>> {
     %W set [%W cget -from]
 }
-bind Scale <End> {
+bind Scale <<LineEnd>> {
     %W set [%W cget -to]
 }
 

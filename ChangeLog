@@ -1,3 +1,7 @@
+2012-08-??  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/*.tcl: [Bug 3555644]: Better use of virtual events.
+
 2012-07-31  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixKey.c (TkpSetKeycodeAndState, TkpInitKeymapInfo)

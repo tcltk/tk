@@ -103,16 +103,16 @@ bind Scrollbar <Control-Up> {
 bind Scrollbar <Control-Down> {
     tk::ScrollByPages %W v 1
 }
-bind Scrollbar <Left> {
+bind Scrollbar <<PrevChar>> {
     tk::ScrollByUnits %W h -1
 }
-bind Scrollbar <Right> {
+bind Scrollbar <<NextChar>> {
     tk::ScrollByUnits %W h 1
 }
-bind Scrollbar <Control-Left> {
+bind Scrollbar <<PrevWord>> {
     tk::ScrollByPages %W h -1
 }
-bind Scrollbar <Control-Right> {
+bind Scrollbar <<NextWord>> {
     tk::ScrollByPages %W h 1
 }
 bind Scrollbar <Prior> {
@@ -121,10 +121,10 @@ bind Scrollbar <Prior> {
 bind Scrollbar <Next> {
     tk::ScrollByPages %W hv 1
 }
-bind Scrollbar <Home> {
+bind Scrollbar <<LineStart>> {
     tk::ScrollToPos %W 0
 }
-bind Scrollbar <End> {
+bind Scrollbar <<LineEnd>> {
     tk::ScrollToPos %W 1
 }
 }
