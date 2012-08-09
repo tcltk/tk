@@ -38,8 +38,6 @@ scriptversion=2011-04-20.01; # UTC
 # `make' implicit rules from creating a file called install from it
 # when there is no Makefile.
 #
-# $XConsortium: install.sh,v 1.2 89/12/18 14:47:22 jim Exp $
-#
 # This script is compatible with the BSD install script, but was written
 # from scratch.
 
