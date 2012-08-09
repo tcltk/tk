@@ -136,8 +136,8 @@ if {[tk windowingsystem] eq "aqua"} {
     bind TEntry <Command-KeyPress>	{# nothing}
 }
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
-bind TEntry <Down>			{# nothing}
-bind TEntry <Up>			{# nothing}
+bind TEntry <<PrevLine>>		{# nothing}
+bind TEntry <<NextLine>>		{# nothing}
 
 ## Additional emacs-like bindings:
 #

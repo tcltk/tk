@@ -69,16 +69,16 @@ bind Listbox <B1-Enter> {
     tk::CancelRepeat
 }
 
-bind Listbox <Up> {
+bind Listbox <<PrevLine>> {
     tk::ListboxUpDown %W -1
 }
-bind Listbox <Shift-Up> {
+bind Listbox <<SelectPrevLine>> {
     tk::ListboxExtendUpDown %W -1
 }
-bind Listbox <Down> {
+bind Listbox <<NextLine>> {
     tk::ListboxUpDown %W 1
 }
-bind Listbox <Shift-Down> {
+bind Listbox <<SelectNextLine>> {
     tk::ListboxExtendUpDown %W 1
 }
 bind Listbox <<PrevChar>> {
