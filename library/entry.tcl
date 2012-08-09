@@ -227,11 +227,6 @@ if {[tk windowingsystem] ne "win32"} {
 
 # Additional emacs-like bindings:
 
-bind Entry <Control-a> {
-    if {!$tk_strictMotif} {
-	tk::EntrySetCursor %W 0
-    }
-}
 bind Entry <Control-b> {
     if {!$tk_strictMotif} {
 	tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
@@ -240,11 +235,6 @@ bind Entry <Control-b> {
 bind Entry <Control-d> {
     if {!$tk_strictMotif} {
 	%W delete insert
-    }
-}
-bind Entry <Control-e> {
-    if {!$tk_strictMotif} {
-	tk::EntrySetCursor %W end
     }
 }
 bind Entry <Control-f> {
