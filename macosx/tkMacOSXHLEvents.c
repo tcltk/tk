@@ -5,11 +5,11 @@
  *	only event that really does anything is the Quit event.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001, Apple Computer, Inc.
+ * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
- * See the file "license.terms" for information on usage and redistribution of
- * this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkMacOSXPrivate.h"
@@ -31,22 +31,38 @@ typedef struct KillEvent {
  */
 
 static OSErr		QuitHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		OappHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		RappHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		OdocHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		PrintHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		ScriptHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static OSErr		PrefsHandler(const AppleEvent *event,
-			    AppleEvent *reply, long handlerRefcon);
+			    AppleEvent *reply, SRefCon handlerRefcon);
 static int		MissedAnyParameters(const AppleEvent *theEvent);
 static int		ReallyKillMe(Tcl_Event *eventPtr, int flags);
 static OSStatus		FSRefToDString(const FSRef *fsref, Tcl_DString *ds);
+
+#pragma mark TKApplication(TKHLEvents)
+
+@implementation TKApplication(TKHLEvents)
+
+- (void)terminate:(id)sender {
+    QuitHandler(NULL, NULL, (SRefCon) _eventInterp);
+}
+
+- (void)preferences:(id)sender {
+    PrefsHandler(NULL, NULL, (SRefCon) _eventInterp);
+}
+
+@end
+
+#pragma mark -
 
 /*
  *----------------------------------------------------------------------
@@ -83,32 +99,32 @@ TkMacOSXInitAppleEvents(
 
 	QuitHandlerUPP = NewAEEventHandlerUPP(QuitHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEQuitApplication,
-		QuitHandlerUPP, (long) interp, false);
+		QuitHandlerUPP, (SRefCon) interp, false);
 
 	OappHandlerUPP = NewAEEventHandlerUPP(OappHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEOpenApplication,
-		OappHandlerUPP, (long) interp, false);
+		OappHandlerUPP, (SRefCon) interp, false);
 
 	RappHandlerUPP = NewAEEventHandlerUPP(RappHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEReopenApplication,
-		RappHandlerUPP, (long) interp, false);
+		RappHandlerUPP, (SRefCon) interp, false);
 
 	OdocHandlerUPP = NewAEEventHandlerUPP(OdocHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEOpenDocuments,
-		OdocHandlerUPP, (long) interp, false);
+		OdocHandlerUPP, (SRefCon) interp, false);
 
 	PrintHandlerUPP = NewAEEventHandlerUPP(PrintHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEPrintDocuments,
-		PrintHandlerUPP, (long) interp, false);
+		PrintHandlerUPP, (SRefCon) interp, false);
 
 	PrefsHandlerUPP = NewAEEventHandlerUPP(PrefsHandler);
 	ChkErr(AEInstallEventHandler, kCoreEventClass, kAEShowPreferences,
-		PrefsHandlerUPP, (long) interp, false);
+		PrefsHandlerUPP, (SRefCon) interp, false);
 
 	if (interp) {
 	    ScriptHandlerUPP = NewAEEventHandlerUPP(ScriptHandler);
 	    ChkErr(AEInstallEventHandler, kAEMiscStandards, kAEDoScript,
-		    ScriptHandlerUPP, (long) interp, false);
+		    ScriptHandlerUPP, (SRefCon) interp, false);
 	}
     }
 }
@@ -131,9 +147,9 @@ TkMacOSXInitAppleEvents(
 
 int
 TkMacOSXDoHLEvent(
-    EventRecord *theEvent)
+    void *theEvent)
 {
-    return AEProcessAppleEvent(theEvent);
+    return AEProcessAppleEvent((EventRecord *)theEvent);
 }
 
 /*
@@ -156,7 +172,7 @@ static OSErr
 QuitHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
     KillEvent *eventPtr;
@@ -199,14 +215,15 @@ static OSErr
 OappHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_CmdInfo dummy;
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
 
     if (interp &&
 	    Tcl_GetCommandInfo(interp, "::tk::mac::OpenApplication", &dummy)){
-	if (Tcl_GlobalEval(interp, "::tk::mac::OpenApplication") != TCL_OK) {
+	int code = Tcl_GlobalEval(interp, "::tk::mac::OpenApplication");
+	if (code != TCL_OK) {
 	    Tcl_BackgroundError(interp);
 	}
     }
@@ -233,7 +250,7 @@ static OSErr
 RappHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_CmdInfo dummy;
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
@@ -242,7 +259,8 @@ RappHandler(
 
     if (interp && Tcl_GetCommandInfo(interp,
 	    "::tk::mac::ReopenApplication", &dummy)) {
-	if (Tcl_GlobalEval(interp, "::tk::mac::ReopenApplication") != TCL_OK){
+	int code = Tcl_GlobalEval(interp, "::tk::mac::ReopenApplication");
+	if (code != TCL_OK){
 	    Tcl_BackgroundError(interp);
 	}
     }
@@ -270,14 +288,15 @@ static OSErr
 PrefsHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_CmdInfo dummy;
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
 
     if (interp &&
 	    Tcl_GetCommandInfo(interp, "::tk::mac::ShowPreferences", &dummy)){
-	if (Tcl_GlobalEval(interp, "::tk::mac::ShowPreferences") != TCL_OK) {
+	int code = Tcl_GlobalEval(interp, "::tk::mac::ShowPreferences");
+	if (code != TCL_OK) {
 	    Tcl_BackgroundError(interp);
 	}
     }
@@ -304,7 +323,7 @@ static OSErr
 OdocHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
     AEDescList fileSpecList;
@@ -315,6 +334,7 @@ OdocHandler(
     AEKeyword keyword;
     Tcl_DString command, pathName;
     Tcl_CmdInfo dummy;
+    int code;
 
     /*
      * Don't bother if we don't have an interp or the open document procedure
@@ -365,8 +385,9 @@ OdocHandler(
      * Now handle the event by evaluating a script.
      */
 
-    if (Tcl_EvalEx(interp, Tcl_DStringValue(&command),
-	    Tcl_DStringLength(&command), TCL_EVAL_GLOBAL) != TCL_OK) {
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&command),
+	    Tcl_DStringLength(&command), TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
 	Tcl_BackgroundError(interp);
     }
     Tcl_DStringFree(&command);
@@ -393,7 +414,7 @@ static OSErr
 PrintHandler(
     const AppleEvent * event,
     AppleEvent * reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     Tcl_Interp *interp = (Tcl_Interp *) handlerRefcon;
     AEDescList fileSpecList;
@@ -404,6 +425,7 @@ PrintHandler(
     AEKeyword keyword;
     Tcl_DString command, pathName;
     Tcl_CmdInfo dummy;
+    int code;
 
     /*
      * Don't bother if we don't have an interp or the print document procedure
@@ -449,8 +471,9 @@ PrintHandler(
      * Now handle the event by evaluating a script.
      */
 
-    if (Tcl_EvalEx(interp, Tcl_DStringValue(&command),
-	    Tcl_DStringLength(&command), TCL_EVAL_GLOBAL) != TCL_OK) {
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&command),
+	    Tcl_DStringLength(&command), TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
 	Tcl_BackgroundError(interp);
     }
     Tcl_DStringFree(&command);
@@ -477,7 +500,7 @@ static OSErr
 ScriptHandler(
     const AppleEvent *event,
     AppleEvent *reply,
-    long handlerRefcon)
+    SRefCon handlerRefcon)
 {
     OSStatus theErr;
     AEDescList theDesc;
@@ -602,8 +625,9 @@ ReallyKillMe(
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
     Tcl_CmdInfo dummy;
     int quit = Tcl_GetCommandInfo(interp, "::tk::mac::Quit", &dummy);
+    int code = Tcl_GlobalEval(interp, quit ? "::tk::mac::Quit" : "exit");
 
-    if (Tcl_GlobalEval(interp, quit ? "::tk::mac::Quit" : "exit") != TCL_OK) {
+    if (code != TCL_OK) {
 	/*
 	 * Should be never reached...
 	 */
@@ -678,6 +702,7 @@ FSRefToDString(
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
- * fill-column: 78
+ * fill-column: 79
+ * coding: utf-8
  * End:
  */
