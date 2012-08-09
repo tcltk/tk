@@ -214,8 +214,8 @@ if {[tk windowingsystem] eq "aqua"} {
     bind Entry <Command-KeyPress> {# nothing}
 }
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
-bind Entry <Down> {# nothing}
-bind Entry <Up> {# nothing}
+bind Entry <<NextLine>> {# nothing}
+bind Entry <<PrevLine>> {# nothing}
 
 # On Windows, paste is done using Shift-Insert.  Shift-Insert already
 # generates the <<Paste>> event, so we don't need to do anything here.
@@ -227,19 +227,9 @@ if {[tk windowingsystem] ne "win32"} {
 
 # Additional emacs-like bindings:
 
-bind Entry <Control-b> {
-    if {!$tk_strictMotif} {
-	tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
-    }
-}
 bind Entry <Control-d> {
     if {!$tk_strictMotif} {
 	%W delete insert
-    }
-}
-bind Entry <Control-f> {
-    if {!$tk_strictMotif} {
-	tk::EntrySetCursor %W [expr {[%W index insert] + 1}]
     }
 }
 bind Entry <Control-h> {

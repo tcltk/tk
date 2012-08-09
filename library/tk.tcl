@@ -311,6 +311,10 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
     event $op <<Copy>> <Meta-Key-w> 
     event $op <<Paste>> <Control-Key-y>
     event $op <<Undo>> <Control-underscore>
+    event $op <<PrevChar>> <Control-Key-b>
+    event $op <<NextChar>> <Control-Key-f>
+    event $op <<PrevLine>> <Control-Key-p>
+    event $op <<NextLine>> <Control-Key-n>
 }
 
 #----------------------------------------------------------------------
@@ -381,6 +385,14 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectLineStart>>	<Shift-Home>
 	event add <<LineEnd>>		<End> <Control-Key-e> <Control-Lock-Key-E>
 	event add <<SelectLineEnd>>	<Shift-End>
+	event add <<PrevLine>>		<Up>
+	event add <<NextLine>>		<Down>
+	event add <<SelectPrevLine>>	<Shift-Up>
+	event add <<SelectNextLine>>	<Shift-Down>
+	event add <<PrevPara>>		<Control-Up>
+	event add <<NextPara>>		<Control-Down>
+	event add <<SelectPrevPara>>	<Shift-Control-Up>
+	event add <<SelectPrevPara>>	<Shift-Control-Down>
 
 	# Some OS's define a goofy (as in, not <Shift-Tab>) keysym that is
 	# returned when the user presses <Shift-Tab>. In order for tab
@@ -422,6 +434,14 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectLineStart>>	<Shift-Home>
 	event add <<LineEnd>>		<End> <Control-Key-e> <Control-Lock-Key-E>
 	event add <<SelectLineEnd>>	<Shift-End>
+	event add <<PrevLine>>		<Up>
+	event add <<NextLine>>		<Down>
+	event add <<SelectPrevLine>>	<Shift-Up>
+	event add <<SelectNextLine>>	<Shift-Down>
+	event add <<PrevPara>>		<Control-Up>
+	event add <<NextPara>>		<Control-Down>
+	event add <<SelectPrevPara>>	<Shift-Control-Up>
+	event add <<SelectPrevPara>>	<Shift-Control-Down>
     }
     "aqua" {
 	event add <<Cut>> <Command-Key-x> <Key-F2> <Control-Lock-Key-X>
@@ -449,6 +469,14 @@ switch -exact -- [tk windowingsystem] {
 	# bindings present in MS Word on OSX.
 	event add <<LineStart>>		<Home> <Command-Left> <Command-Key-a> <Control-Lock-Key-A>
 	event add <<LineEnd>>		<End> <Command-Right> <Command-Key-e> <Control-Lock-Key-E>
+	event add <<PrevLine>>		<Up>
+	event add <<NextLine>>		<Down>
+	event add <<SelectPrevLine>>	<Shift-Up>
+	event add <<SelectNextLine>>	<Shift-Down>
+	event add <<PrevPara>>		<Option-Up>
+	event add <<NextPara>>		<Option-Down>
+	event add <<SelectPrevPara>>	<Shift-Option-Up>
+	event add <<SelectPrevPara>>	<Shift-Option-Down>
     }
 }
 

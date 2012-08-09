@@ -155,10 +155,10 @@ bind Menu <<PrevChar>> {
 bind Menu <<NextChar>> {
     tk::MenuRightArrow %W
 }
-bind Menu <Up> {
+bind Menu <<PrevLine>> {
     tk::MenuUpArrow %W
 }
-bind Menu <Down> {
+bind Menu <<NextLine>> {
     tk::MenuDownArrow %W
 }
 bind Menu <KeyPress> {

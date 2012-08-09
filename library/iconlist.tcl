@@ -444,8 +444,8 @@ package require Tk 8.6
 	bind $canvas <Control-B1-Motion> {;}
 	bind $canvas <Shift-B1-Motion>	[namespace code {my ShiftMotion1 %x %y}]
 
-	bind $canvas <Up>		[namespace code {my UpDown -1}]
-	bind $canvas <Down>		[namespace code {my UpDown  1}]
+	bind $canvas <<PrevLine>>	[namespace code {my UpDown -1}]
+	bind $canvas <<NextLine>>	[namespace code {my UpDown  1}]
 	bind $canvas <<PrevChar>>	[namespace code {my LeftRight -1}]
 	bind $canvas <<NextChar>>	[namespace code {my LeftRight  1}]
 	bind $canvas <Return>		[namespace code {my ReturnKey}]
