@@ -1,3 +1,10 @@
+2012-08-09  Stuart Cassoff  <stwo@users.sourceforge.net>
+
+	* generic/tkEvent.c:	Remove useless (void *) casts
+	* unix/tkUnixEvent.c:	introduced in checkin [b7a58eae61].
+	* unix/tkUnixKey.c:	The warnings were false flags from a
+	* unix/tkUnixRFont.c:	faulty OpenBSD C compiler.
+
 2012-08-03  Francois Vogel  <fvogelnew1@free.fr>
 
 	* tests/bind.test:  [Bug 3554081]: Test bind-22.10 failed
