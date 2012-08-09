@@ -145,7 +145,7 @@ TkpGetString(
 	Tcl_DStringInit(&buf);
 	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
 	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
-		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf), 
+		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf),
                 &kePtr->keysym, &status);
 
 	/*
@@ -277,7 +277,7 @@ TkpGetKeySym(
     TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
 
 #ifdef TK_USE_INPUT_METHODS
-    /* 
+    /*
      * If input methods are active, we may already have determined a keysym.
      * Return it.
      */
