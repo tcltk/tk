@@ -377,9 +377,9 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectNextWord>>	<Shift-Control-Right>
 	event add <<PrevWord>>		<Control-Left>
 	event add <<SelectPrevWord>>	<Shift-Control-Left>
-	event add <<LineStart>>		<Home>
+	event add <<LineStart>>		<Home> <Control-Key-a> <Control-Lock-Key-A>
 	event add <<SelectLineStart>>	<Shift-Home>
-	event add <<LineEnd>>		<End>
+	event add <<LineEnd>>		<End> <Control-Key-e> <Control-Lock-Key-E>
 	event add <<SelectLineEnd>>	<Shift-End>
 
 	# Some OS's define a goofy (as in, not <Shift-Tab>) keysym that is
@@ -418,9 +418,9 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectNextWord>>	<Shift-Control-Right>
 	event add <<PrevWord>>		<Control-Left>
 	event add <<SelectPrevWord>>	<Shift-Control-Left>
-	event add <<LineStart>>		<Home>
+	event add <<LineStart>>		<Home> <Control-Key-a> <Control-Lock-Key-A>
 	event add <<SelectLineStart>>	<Shift-Home>
-	event add <<LineEnd>>		<End>
+	event add <<LineEnd>>		<End> <Control-Key-e> <Control-Lock-Key-E>
 	event add <<SelectLineEnd>>	<Shift-End>
     }
     "aqua" {
@@ -447,8 +447,8 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right>
 	# Not official, but logical extensions of above. Also derived from
 	# bindings present in MS Word on OSX.
-	event add <<LineStart>>		<Home> <Command-Left>
-	event add <<LineEnd>>		<End> <Command-Right>
+	event add <<LineStart>>		<Home> <Command-Left> <Command-Key-a> <Control-Lock-Key-A>
+	event add <<LineEnd>>		<End> <Command-Right> <Command-Key-e> <Control-Lock-Key-E>
     }
 }
 
