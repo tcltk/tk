@@ -240,7 +240,7 @@ bind Text <Shift-Select> {
     set tk::Priv(selectMode) char
     tk::TextKeyExtend %W insert
 }
-bind Text <Control-slash> {
+bind Text <<SelectAll>> {
     %W tag add sel 1.0 end
 }
 bind Text <Control-backslash> {
