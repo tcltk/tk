@@ -81,16 +81,16 @@ bind Listbox <Down> {
 bind Listbox <Shift-Down> {
     tk::ListboxExtendUpDown %W 1
 }
-bind Listbox <Left> {
+bind Listbox <<PrevChar>> {
     %W xview scroll -1 units
 }
-bind Listbox <Control-Left> {
+bind Listbox <<PrevWord>> {
     %W xview scroll -1 pages
 }
-bind Listbox <Right> {
+bind Listbox <<NextChar>> {
     %W xview scroll 1 units
 }
-bind Listbox <Control-Right> {
+bind Listbox <<NextWord>> {
     %W xview scroll 1 pages
 }
 bind Listbox <Prior> {
@@ -107,10 +107,10 @@ bind Listbox <Control-Prior> {
 bind Listbox <Control-Next> {
     %W xview scroll 1 pages
 }
-bind Listbox <Home> {
+bind Listbox <<LineStart>> {
     %W xview moveto 0
 }
-bind Listbox <End> {
+bind Listbox <<LineEnd>> {
     %W xview moveto 1
 }
 bind Listbox <Control-Home> {
