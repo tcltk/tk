@@ -185,10 +185,10 @@ bind Entry <Control-Shift-space> {
 bind Entry <Shift-Select> {
     %W selection adjust insert
 }
-bind Entry <Control-slash> {
+bind Entry <<SelectAll>> {
     %W selection range 0 end
 }
-bind Entry <Control-backslash> {
+bind Entry <<SelectNone>> {
     %W selection clear
 }
 bind Entry <KeyPress> {

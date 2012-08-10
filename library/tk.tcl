@@ -362,17 +362,19 @@ if {![llength [info command tk_chooseDirectory]]} {
 
 switch -exact -- [tk windowingsystem] {
     "x11" {
-	event add <<Cut>> <Control-Key-x> <Key-F20> <Control-Lock-Key-X>
-	event add <<Copy>> <Control-Key-c> <Key-F16> <Control-Lock-Key-C>
-	event add <<Paste>> <Control-Key-v> <Key-F18> <Control-Lock-Key-V>
-	event add <<PasteSelection>> <ButtonRelease-2>
-	event add <<Undo>> <Control-Key-z> <Control-Lock-Key-Z>
-	event add <<Redo>> <Control-Key-Z> <Control-Lock-Key-z>
-	event add <<ContextMenu>> <Button-3>
+	event add <<Cut>>		<Control-Key-x> <Key-F20> <Control-Lock-Key-X>
+	event add <<Copy>>		<Control-Key-c> <Key-F16> <Control-Lock-Key-C>
+	event add <<Paste>>		<Control-Key-v> <Key-F18> <Control-Lock-Key-V>
+	event add <<PasteSelection>>	<ButtonRelease-2>
+	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z>
+	event add <<Redo>>		<Control-Key-Z> <Control-Lock-Key-z>
+	event add <<ContextMenu>>	<Button-3>
 	if {[info exists tcl_platform(os)] && $tcl_platform(os) eq "Darwin"} {
-	    event add <<ContextMenu>> <Button-2>
+	    event add <<ContextMenu>>	<Button-2>
 	}
 
+	event add <<SelectAll>>		<Control-Key-slash>
+	event add <<SelectNone>>	<Control-Key-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
 	event add <<PrevChar>>		<Left>
@@ -411,17 +413,16 @@ switch -exact -- [tk windowingsystem] {
 	set ::tk::AlwaysShowSelection 1
     }
     "win32" {
-	event add <<Cut>> <Control-Key-x> <Shift-Key-Delete> \
-	    <Control-Lock-Key-X>
-	event add <<Copy>> <Control-Key-c> <Control-Key-Insert> \
-	    <Control-Lock-Key-C>
-	event add <<Paste>> <Control-Key-v> <Shift-Key-Insert> \
-	    <Control-Lock-Key-V>
-	event add <<PasteSelection>> <ButtonRelease-2>
-  	event add <<Undo>> <Control-Key-z> <Control-Lock-Key-Z>
-	event add <<Redo>> <Control-Key-y> <Control-Lock-Key-Y>
-	event add <<ContextMenu>> <Button-3>
+	event add <<Cut>>		<Control-Key-x> <Shift-Key-Delete> <Control-Lock-Key-X>
+	event add <<Copy>>		<Control-Key-c> <Control-Key-Insert> <Control-Lock-Key-C>
+	event add <<Paste>>		<Control-Key-v> <Shift-Key-Insert> <Control-Lock-Key-V>
+	event add <<PasteSelection>>	<ButtonRelease-2>
+  	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z>
+	event add <<Redo>>		<Control-Key-y> <Control-Lock-Key-Y>
+	event add <<ContextMenu>>	<Button-3>
 
+	event add <<SelectAll>>		<Control-Key-slash>
+	event add <<SelectNone>>	<Control-Key-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
 	event add <<PrevChar>>		<Left>
@@ -444,35 +445,37 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectPrevPara>>	<Shift-Control-Down>
     }
     "aqua" {
-	event add <<Cut>> <Command-Key-x> <Key-F2> <Control-Lock-Key-X>
-	event add <<Copy>> <Command-Key-c> <Key-F3> <Control-Lock-Key-C>
-	event add <<Paste>> <Command-Key-v> <Key-F4> <Control-Lock-Key-V>
-	event add <<PasteSelection>> <ButtonRelease-2>
-	event add <<Clear>> <Clear>
-  	event add <<Undo>> <Command-Key-z> <Control-Lock-Key-Z>
-	event add <<Redo>> <Command-Key-y> <Control-Lock-Key-Y>
-	event add <<ContextMenu>> <Button-2>
+	event add <<Cut>>		<Command-Key-x> <Key-F2> <Control-Lock-Key-X>
+	event add <<Copy>>		<Command-Key-c> <Key-F3> <Control-Lock-Key-C>
+	event add <<Paste>>		<Command-Key-v> <Key-F4> <Control-Lock-Key-V>
+	event add <<PasteSelection>>	<ButtonRelease-2>
+	event add <<Clear>>		<Clear>
+	event add <<ContextMenu>>	<Button-2>
 
 	# Official bindings
 	# See http://support.apple.com/kb/HT1343
-	event add <<NextChar>>		<Right>
+	event add <<SelectAll>>		<Command-Key-a>
+	event add <<SelectNone>>	<Option-Command-Key-a>
+	event add <<Undo>>		<Command-Key-z> <Control-Lock-Key-Z>
+	event add <<Redo>>		<Command-Key-Z> <Control-Lock-Key-z>
+	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
 	event add <<SelectNextChar>>	<Shift-Right>
-	event add <<PrevChar>>		<Left>
+	event add <<PrevChar>>		<Left> <Control-Key-b> <Control-Lock-Key-B>
 	event add <<SelectPrevChar>>	<Shift-Left>
 	event add <<NextWord>>		<Option-Right>
 	event add <<SelectNextWord>>	<Shift-Option-Right>
 	event add <<PrevWord>>		<Option-Left>
 	event add <<SelectPrevWord>>	<Shift-Option-Left>
-	event add <<SelectLineStart>>	<Shift-Home> <Shift-Command-Left>
-	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right>
+	event add <<LineStart>>		<Home> <Command-Left> <Control-Key-a> <Control-Lock-Key-A>
+	event add <<SelectLineStart>>	<Shift-Home> <Shift-Command-Left> <Control-Key-A> <Control-Lock-Key-a>
+	event add <<LineEnd>>		<End> <Command-Right> <Control-Key-e> <Control-Lock-Key-E>
+	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right> <Control-Key-E> <Control-Lock-Key-e>
+	event add <<PrevLine>>		<Up> <Control-Key-p> <Control-Lock-Key-P>
+	event add <<SelectPrevLine>>	<Shift-Up> <Control-Key-P> <Control-Lock-Key-p>
+	event add <<NextLine>>		<Down> <Control-Key-n> <Control-Lock-Key-N>
+	event add <<SelectNextLine>>	<Shift-Down> <Control-Key-N> <Control-Lock-Key-n>
 	# Not official, but logical extensions of above. Also derived from
 	# bindings present in MS Word on OSX.
-	event add <<LineStart>>		<Home> <Command-Left> <Command-Key-a> <Control-Lock-Key-A>
-	event add <<LineEnd>>		<End> <Command-Right> <Command-Key-e> <Control-Lock-Key-E>
-	event add <<PrevLine>>		<Up>
-	event add <<NextLine>>		<Down>
-	event add <<SelectPrevLine>>	<Shift-Up>
-	event add <<SelectNextLine>>	<Shift-Down>
 	event add <<PrevPara>>		<Option-Up>
 	event add <<NextPara>>		<Option-Down>
 	event add <<SelectPrevPara>>	<Shift-Option-Up>
