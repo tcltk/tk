@@ -120,7 +120,7 @@ bind Listbox <Control-Home> {
     %W selection set 0
     event generate %W <<ListboxSelect>>
 }
-bind Listbox <Shift-Control-Home> {
+bind Listbox <Control-Shift-Home> {
     tk::ListboxDataExtend %W 0
 }
 bind Listbox <Control-End> {
@@ -130,7 +130,7 @@ bind Listbox <Control-End> {
     %W selection set end
     event generate %W <<ListboxSelect>>
 }
-bind Listbox <Shift-Control-End> {
+bind Listbox <Control-Shift-End> {
     tk::ListboxDataExtend %W [%W index end]
 }
 bind Listbox <<Copy>> {

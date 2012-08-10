@@ -123,7 +123,7 @@ GetFont(
 		    FC_FAMILY, FcTypeString, "sans",
 		    FC_SIZE, FcTypeDouble, 12.0,
 		    FC_MATRIX, FcTypeMatrix, &mat,
-		    (void *) NULL);
+		    NULL);
 	}
 	if (!ftFont) {
 	    /*
