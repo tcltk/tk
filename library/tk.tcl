@@ -374,9 +374,9 @@ switch -exact -- [tk windowingsystem] {
 	event add <<PrevChar>>		<Left>
 	event add <<SelectPrevChar>>	<Shift-Left>
 	event add <<NextWord>>		<Control-Right>
-	event add <<SelectNextWord>>	<Shift-Control-Right>
+	event add <<SelectNextWord>>	<Control-Shift-Right>
 	event add <<PrevWord>>		<Control-Left>
-	event add <<SelectPrevWord>>	<Shift-Control-Left>
+	event add <<SelectPrevWord>>	<Control-Shift-Left>
 	event add <<LineStart>>		<Home>
 	event add <<SelectLineStart>>	<Shift-Home>
 	event add <<LineEnd>>		<End>
@@ -415,9 +415,9 @@ switch -exact -- [tk windowingsystem] {
 	event add <<PrevChar>>		<Left>
 	event add <<SelectPrevChar>>	<Shift-Left>
 	event add <<NextWord>>		<Control-Right>
-	event add <<SelectNextWord>>	<Shift-Control-Right>
+	event add <<SelectNextWord>>	<Control-Shift-Right>
 	event add <<PrevWord>>		<Control-Left>
-	event add <<SelectPrevWord>>	<Shift-Control-Left>
+	event add <<SelectPrevWord>>	<Control-Shift-Left>
 	event add <<LineStart>>		<Home>
 	event add <<SelectLineStart>>	<Shift-Home>
 	event add <<LineEnd>>		<End>
