@@ -184,7 +184,7 @@ containing the notebook as follows:
 .IP \(bu
 \fBControl-Tab\fR selects the tab following the currently selected one.
 .IP \(bu
-\fBShift-Control-Tab\fR selects the tab preceding the currently selected one.
+\fBControl-Shift-Tab\fR selects the tab preceding the currently selected one.
 .IP \(bu
 \fBAlt-\fIK\fR, where \fIK\fR is the mnemonic (underlined) character
 of any tab, will select that tab.

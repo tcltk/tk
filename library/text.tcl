@@ -128,10 +128,10 @@ bind Text <<SelectPrevWord>> {
 bind Text <<SelectNextWord>> {
     tk::TextKeySelect %W [tk::TextNextWord %W insert]
 }
-bind Text <Shift-Control-Up> {
+bind Text <Control-Shift-Up> {
     tk::TextKeySelect %W [tk::TextPrevPara %W insert]
 }
-bind Text <Shift-Control-Down> {
+bind Text <Control-Shift-Down> {
     tk::TextKeySelect %W [tk::TextNextPara %W insert]
 }
 bind Text <Prior> {
