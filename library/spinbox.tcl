@@ -193,10 +193,10 @@ bind Spinbox <Control-Shift-space> {
 bind Spinbox <Shift-Select> {
     %W selection adjust insert
 }
-bind Spinbox <Control-slash> {
+bind Spinbox <<SelectAll>> {
     %W selection range 0 end
 }
-bind Spinbox <Control-backslash> {
+bind Spinbox <<SelectNone>> {
     %W selection clear
 }
 bind Spinbox <KeyPress> {

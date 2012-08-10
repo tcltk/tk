@@ -107,8 +107,8 @@ bind TEntry <<SelectNextWord>>		{ ttk::entry::Extend %W nextword }
 bind TEntry <<SelectLineStart>>		{ ttk::entry::Extend %W home }
 bind TEntry <<SelectLineEnd>>		{ ttk::entry::Extend %W end }
 
-bind TEntry <Control-Key-slash> 	{ %W selection range 0 end }
-bind TEntry <Control-Key-backslash> 	{ %W selection clear }
+bind TEntry <<SelectAll>> 		{ %W selection range 0 end }
+bind TEntry <<SelectNone>> 		{ %W selection clear }
 
 bind TEntry <<TraverseIn>> 	{ %W selection range 0 end; %W icursor end }
 

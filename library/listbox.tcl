@@ -154,10 +154,10 @@ bind Listbox <Shift-Select> {
 bind Listbox <Escape> {
     tk::ListboxCancel %W
 }
-bind Listbox <Control-slash> {
+bind Listbox <<SelectAll>> {
     tk::ListboxSelectAll %W
 }
-bind Listbox <Control-backslash> {
+bind Listbox <<SelectNone>> {
     if {[%W cget -selectmode] ne "browse"} {
 	%W selection clear 0 end
 	event generate %W <<ListboxSelect>>
