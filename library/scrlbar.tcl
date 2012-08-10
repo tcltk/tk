@@ -91,16 +91,16 @@ bind Scrollbar <Control-2> {
     tk::ScrollTopBottom %W %x %y
 }
 
-bind Scrollbar <Up> {
+bind Scrollbar <<PrevLine>> {
     tk::ScrollByUnits %W v -1
 }
-bind Scrollbar <Down> {
+bind Scrollbar <<NextLine>> {
     tk::ScrollByUnits %W v 1
 }
-bind Scrollbar <Control-Up> {
+bind Scrollbar <<PrevPara>> {
     tk::ScrollByPages %W v -1
 }
-bind Scrollbar <Control-Down> {
+bind Scrollbar <<NextPara>> {
     tk::ScrollByPages %W v 1
 }
 bind Scrollbar <<PrevChar>> {
