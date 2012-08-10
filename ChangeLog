@@ -1,6 +1,15 @@
 2012-08-??  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/*.tcl: [Bug 3555644]: Better use of virtual events.
+	Pre-define 10 new Virtual events, and correct various
+	bindings according to the Mac OSX documentation.
+
+2012-08-09  Stuart Cassoff  <stwo@users.sourceforge.net>
+
+	* generic/tkEvent.c:    Remove useless (void *) casts
+	* unix/tkUnixEvent.c:   introduced in checkin [81e50c85ed].
+	* unix/tkUnixKey.c:     The warnings were false flags from a 
+	* unix/tkUnixRFont.c:   faulty OpenBSD C compiler.
 
 2012-07-31  Donal K. Fellows  <dkf@users.sf.net>
 
