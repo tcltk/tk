@@ -3,6 +3,7 @@
 	* library/*.tcl: [Bug 3555644]: Better use of virtual events.
 	Pre-define 10 new Virtual events, and correct various
 	bindings according to the Mac OSX documentation.
+	* win/rules.vc: Sync with tcl version of rules.vc
 
 2012-08-11  Francois Vogel  <fvogelnew1@free.fr>
 
