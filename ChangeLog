@@ -1,3 +1,9 @@
+2012-08-11  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/*.tcl: [Bug 3555644]: Better use of virtual events.
+	Pre-define 10 new Virtual events, and correct various
+	bindings according to the Mac OSX documentation.
+
 2012-08-11  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextTag.c:  [Bug 3554273]: Test textDisp-32.2 failed

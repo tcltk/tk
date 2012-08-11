@@ -499,18 +499,16 @@ proc ::tk::ConsoleBind {w} {
     }
     bind Console <Control-h> [bind Console <BackSpace>]
 
-    bind Console <Home> {
+    bind Console <<LineStart>> {
 	if {[%W compare insert < promptEnd]} {
 	    tk::TextSetCursor %W {insert linestart}
 	} else {
 	    tk::TextSetCursor %W promptEnd
 	}
     }
-    bind Console <Control-a> [bind Console <Home>]
-    bind Console <End> {
+    bind Console <<LineEnd>> {
 	tk::TextSetCursor %W {insert lineend}
     }
-    bind Console <Control-e> [bind Console <End>]
     bind Console <Control-d> {
 	if {[%W compare insert < promptEnd]} {
 	    break
