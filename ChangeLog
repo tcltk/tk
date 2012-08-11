@@ -1,3 +1,7 @@
+2012-08-11  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextTag.c:  [Bug 3554273]: Test textDisp-32.2 failed
+
 2012-08-09  Stuart Cassoff  <stwo@users.sourceforge.net>
 
 	* generic/tkEvent.c:    Remove useless (void *) casts
