@@ -311,18 +311,6 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
     event $op <<Copy>> <Meta-Key-w> <Control-Key-Insert>
     event $op <<Paste>> <Control-Key-y> <Shift-Key-Insert>
     event $op <<Undo>> <Control-underscore>
-    event $op <<PrevChar>> <Control-Key-b> <Control-Lock-Key-B>
-    event $op <<NextChar>> <Control-Key-f> <Control-Lock-Key-F>
-    event $op <<PrevLine>> <Control-Key-p> <Control-Lock-Key-P>
-    event $op <<NextLine>> <Control-Key-n> <Control-Lock-Key-N>
-    event $op <<LineStart>> <Control-Key-a> <Control-Lock-Key-A>
-    event $op <<LineEnd>> <Control-Key-e> <Control-Lock-Key-E>
-    event $op <<SelectPrevChar>> <Control-Key-B> <Control-Lock-Key-b>
-    event $op <<SelectNextChar>> <Control-Key-F> <Control-Lock-Key-f>
-    event $op <<SelectPrevLine>> <Control-Key-P> <Control-Lock-Key-p>
-    event $op <<SelectNextLine>> <Control-Key-N> <Control-Lock-Key-n>
-    event $op <<SelectLineStart>> <Control-Key-A> <Control-Lock-Key-a>
-    event $op <<SelectLineEnd>> <Control-Key-E> <Control-Lock-Key-e>
 }
 
 #----------------------------------------------------------------------
@@ -383,22 +371,22 @@ switch -exact -- [tk windowingsystem] {
 
 	event add <<SelectAll>>		<Control-Key-slash>
 	event add <<SelectNone>>	<Control-Key-backslash>
-	event add <<NextChar>>		<Right>
-	event add <<SelectNextChar>>	<Shift-Right>
-	event add <<PrevChar>>		<Left>
-	event add <<SelectPrevChar>>	<Shift-Left>
+	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
+	event add <<SelectNextChar>>	<Shift-Right> <Control-Key-F> <Control-Lock-Key-f>
+	event add <<PrevChar>>		<Left> <Control-Key-b> <Control-Lock-Key-B>
+	event add <<SelectPrevChar>>	<Shift-Left> <Control-Key-B> <Control-Lock-Key-b>
 	event add <<NextWord>>		<Control-Right>
 	event add <<SelectNextWord>>	<Control-Shift-Right>
 	event add <<PrevWord>>		<Control-Left>
 	event add <<SelectPrevWord>>	<Control-Shift-Left>
-	event add <<LineStart>>		<Home>
-	event add <<SelectLineStart>>	<Shift-Home>
-	event add <<LineEnd>>		<End>
-	event add <<SelectLineEnd>>	<Shift-End>
-	event add <<PrevLine>>		<Up>
-	event add <<NextLine>>		<Down>
-	event add <<SelectPrevLine>>	<Shift-Up>
-	event add <<SelectNextLine>>	<Shift-Down>
+	event add <<LineStart>>		<Home> <Control-Key-a> <Control-Lock-Key-A>
+	event add <<SelectLineStart>>	<Shift-Home> <Control-Key-A> <Control-Lock-Key-a>
+	event add <<LineEnd>>		<End> <Control-Key-e> <Control-Lock-Key-E>
+	event add <<SelectLineEnd>>	<Shift-End> <Control-Key-E> <Control-Lock-Key-e>
+	event add <<PrevLine>>		<Up> <Control-Key-p> <Control-Lock-Key-P>
+	event add <<NextLine>>		<Down> <Control-Key-n> <Control-Lock-Key-N>
+	event add <<SelectPrevLine>>	<Shift-Up> <Control-Key-P> <Control-Lock-Key-p>
+	event add <<SelectNextLine>>	<Shift-Down> <Control-Key-N> <Control-Lock-Key-n>
 	event add <<PrevPara>>		<Control-Up>
 	event add <<NextPara>>		<Control-Down>
 	event add <<SelectPrevPara>>	<Control-Shift-Up>
