@@ -455,9 +455,9 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Undo>>		<Command-Key-z> <Control-Lock-Key-Z>
 	event add <<Redo>>		<Command-Key-Z> <Control-Lock-Key-z>
 	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
-	event add <<SelectNextChar>>	<Shift-Right>
+	event add <<SelectNextChar>>	<Shift-Right> <Control-Key-F> <Control-Lock-Key-f>
 	event add <<PrevChar>>		<Left> <Control-Key-b> <Control-Lock-Key-B>
-	event add <<SelectPrevChar>>	<Shift-Left>
+	event add <<SelectPrevChar>>	<Shift-Left> <Control-Key-B> <Control-Lock-Key-b>
 	event add <<NextWord>>		<Option-Right>
 	event add <<SelectNextWord>>	<Shift-Option-Right>
 	event add <<PrevWord>>		<Option-Left>
