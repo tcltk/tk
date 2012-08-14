@@ -149,16 +149,16 @@ bind Menu <Return> {
 bind Menu <Escape> {
     tk::MenuEscape %W
 }
-bind Menu <Left> {
+bind Menu <<PrevChar>> {
     tk::MenuLeftArrow %W
 }
-bind Menu <Right> {
+bind Menu <<NextChar>> {
     tk::MenuRightArrow %W
 }
-bind Menu <Up> {
+bind Menu <<PrevLine>> {
     tk::MenuUpArrow %W
 }
-bind Menu <Down> {
+bind Menu <<NextLine>> {
     tk::MenuDownArrow %W
 }
 bind Menu <KeyPress> {
