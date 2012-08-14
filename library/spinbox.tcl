@@ -120,10 +120,10 @@ bind Spinbox <Control-1> {
     %W icursor @%x
 }
 
-bind Spinbox <Up> {
+bind Spinbox <<PrevLine>> {
     %W invoke buttonup
 }
-bind Spinbox <Down> {
+bind Spinbox <<NextLine>> {
     %W invoke buttondown
 }
 
@@ -193,10 +193,10 @@ bind Spinbox <Control-Shift-space> {
 bind Spinbox <Shift-Select> {
     %W selection adjust insert
 }
-bind Spinbox <Control-slash> {
+bind Spinbox <<SelectAll>> {
     %W selection range 0 end
 }
-bind Spinbox <Control-backslash> {
+bind Spinbox <<SelectNone>> {
     %W selection clear
 }
 bind Spinbox <KeyPress> {
@@ -231,29 +231,9 @@ if {[tk windowingsystem] ne "win32"} {
 
 # Additional emacs-like bindings:
 
-bind Spinbox <Control-a> {
-    if {!$tk_strictMotif} {
-	::tk::EntrySetCursor %W 0
-    }
-}
-bind Spinbox <Control-b> {
-    if {!$tk_strictMotif} {
-	::tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
-    }
-}
 bind Spinbox <Control-d> {
     if {!$tk_strictMotif} {
 	%W delete insert
-    }
-}
-bind Spinbox <Control-e> {
-    if {!$tk_strictMotif} {
-	::tk::EntrySetCursor %W end
-    }
-}
-bind Spinbox <Control-f> {
-    if {!$tk_strictMotif} {
-	::tk::EntrySetCursor %W [expr {[%W index insert] + 1}]
     }
 }
 bind Spinbox <Control-h> {

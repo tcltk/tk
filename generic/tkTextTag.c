@@ -100,7 +100,7 @@ static TkTextTag *	FindTag(Tcl_Interp *interp, TkText *textPtr,
 			    Tcl_Obj *tagName);
 static void		SortTags(int numTags, TkTextTag **tagArrayPtr);
 static int		TagSortProc(const void *first, const void *second);
-static void             TagBindEvent(TkText *textPtr, XEvent *eventPtr,
+static void		TagBindEvent(TkText *textPtr, XEvent *eventPtr,
 			    int numTags, TkTextTag **tagArrayPtr);
 
 /*
@@ -213,7 +213,7 @@ TkTextTagCmd(
 
 		if (tagPtr == textPtr->selTagPtr) {
 		    /*
-		     * Send an event that the selection changed.  This is
+		     * Send an event that the selection changed. This is
 		     * equivalent to:
 		     *	   event generate $textWidget <<Selection>>
 		     */
@@ -457,6 +457,14 @@ TkTextTagCmd(
 			&tagPtr->elide) != TCL_OK) {
 		    return TCL_ERROR;
 		}
+
+		/*
+		 * Indices are potentially obsolete after changing -elide,
+		 * especially those computed with "display" or "any"
+		 * submodifier, therefore increase the epoch.
+		 */
+
+		textPtr->sharedTextPtr->stateEpoch++;
 	    }
 
 	    /*
@@ -947,15 +955,15 @@ TkTextCreateTag(
     const char *name;
 
     if (!strcmp(tagName, "sel")) {
-        if (textPtr->selTagPtr != NULL) {
+	if (textPtr->selTagPtr != NULL) {
 	    if (newTag != NULL) {
-	        *newTag = 0;
+		*newTag = 0;
 	    }
-            return textPtr->selTagPtr;
-        }
+	    return textPtr->selTagPtr;
+	}
 	if (newTag != NULL) {
 	    *newTag = 1;
-        }
+	}
 	name = "sel";
     } else {
 	hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->tagTable,
@@ -1054,7 +1062,7 @@ FindTag(
 				 * NULL, then don't record an error
 				 * message. */
     TkText *textPtr,		/* Widget in which tag is being used. */
-    Tcl_Obj *tagName)	        /* Name of desired tag. */
+    Tcl_Obj *tagName)		/* Name of desired tag. */
 {
     Tcl_HashEntry *hPtr;
     int len;
@@ -1062,7 +1070,7 @@ FindTag(
 
     str = Tcl_GetStringFromObj(tagName, &len);
     if (len == 3 && !strcmp(str, "sel")) {
-        return textPtr->selTagPtr;
+	return textPtr->selTagPtr;
     }
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->tagTable,
 	    Tcl_GetString(tagName));
@@ -1394,7 +1402,7 @@ TkTextBindProc(
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkText *textPtr = clientData;
-    int repick  = 0;
+    int repick = 0;
 
 # define AnyButtonMask \
 	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
@@ -1438,7 +1446,7 @@ TkTextBindProc(
 	}
     } else if ((eventPtr->type == EnterNotify)
 	    || (eventPtr->type == LeaveNotify)) {
-	if (eventPtr->xcrossing.state & AnyButtonMask)  {
+	if (eventPtr->xcrossing.state & AnyButtonMask) {
 	    textPtr->flags |= BUTTON_DOWN;
 	} else {
 	    textPtr->flags &= ~BUTTON_DOWN;
@@ -1446,7 +1454,7 @@ TkTextBindProc(
 	TkTextPickCurrent(textPtr, eventPtr);
 	goto done;
     } else if (eventPtr->type == MotionNotify) {
-	if (eventPtr->xmotion.state & AnyButtonMask)  {
+	if (eventPtr->xmotion.state & AnyButtonMask) {
 	    textPtr->flags |= BUTTON_DOWN;
 	} else {
 	    textPtr->flags &= ~BUTTON_DOWN;
@@ -1570,7 +1578,7 @@ TkTextPickCurrent(
 		    = eventPtr->xmotion.same_screen;
 	    textPtr->pickEvent.xcrossing.focus = False;
 	    textPtr->pickEvent.xcrossing.state = eventPtr->xmotion.state;
-	} else  {
+	} else {
 	    textPtr->pickEvent = *eventPtr;
 	}
     }
