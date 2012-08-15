@@ -2,6 +2,7 @@
 
 	* win/buildall.vc.bat: Only build the threaded builds by default
 	* win/rules.vc:        Backport some improvements from Tcl 8.6
+	* win/makefile.vc:
 
 2012-08-11  Francois Vogel  <fvogelnew1@free.fr>
 
