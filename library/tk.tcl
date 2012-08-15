@@ -417,7 +417,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Redo>>		<Control-Key-y> <Control-Lock-Key-Y>
 	event add <<ContextMenu>>	<Button-3>
 
-	event add <<SelectAll>>		<Control-Key-slash>
+	event add <<SelectAll>>		<Control-Key-slash> <Control-Key-a> <Control-Lock-Key-A>
 	event add <<SelectNone>>	<Control-Key-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
@@ -427,9 +427,9 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectNextWord>>	<Control-Shift-Right>
 	event add <<PrevWord>>		<Control-Left>
 	event add <<SelectPrevWord>>	<Control-Shift-Left>
-	event add <<LineStart>>		<Home> <Control-Key-a> <Control-Lock-Key-A>
+	event add <<LineStart>>		<Home>
 	event add <<SelectLineStart>>	<Shift-Home>
-	event add <<LineEnd>>		<End> <Control-Key-e> <Control-Lock-Key-E>
+	event add <<LineEnd>>		<End>
 	event add <<SelectLineEnd>>	<Shift-End>
 	event add <<PrevLine>>		<Up>
 	event add <<NextLine>>		<Down>
