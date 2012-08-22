@@ -944,6 +944,8 @@ MODULE_SCOPE TkMainInfo		*tkMainWindowList;
 MODULE_SCOPE Tk_ImageType	tkPhotoImageType;
 MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
 
+MODULE_SCOPE const char *const tkWebColors[20];
+
 /*
  * The definition of pi, at least from the perspective of double-precision
  * floats.
