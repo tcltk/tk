@@ -131,6 +131,9 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     [TYPE_YESNOCANCEL] =	{5, 6, 4},
 };
 
+static int TkBackgroundEvalObjv(Tcl_Interp *interp, int objc, Tcl_Obj *const *objv,
+				int flags);
+
 #pragma mark TKApplication(TKDialog)
 
 @interface NSColorPanel(TKDialog)
