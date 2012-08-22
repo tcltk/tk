@@ -1,3 +1,11 @@
+2012-08-22  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* xlib/xcolors.c:     [TIP 405]: Web Colors for Tk. New colors aqua,
+	* xlib/rgb.txt:       crimson, fuchsia, indigo, lime, olive, silver
+	* unix/tkUnixColor.c: and teal. Modified RGB values for gray/grey,
+	* generic/tkInt.h:    green, maroon and purple.
+	* generic/tkColor.c
+
 2012-08-17  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/nmakehlp.c: Add "-V<num>" option, in order to be able
