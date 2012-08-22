@@ -1,6 +1,6 @@
 2012-08-22  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	TIP #404 IMPLEMENTATION
+	TIP #403 IMPLEMENTATION
 
 	* xlib/xcolors.c:     Web Colors for Tk. New colors aqua, crimson,
 	* xlib/rgb.txt:       fuchsia, indigo, lime, olive, silver and teal.
