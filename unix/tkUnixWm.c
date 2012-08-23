@@ -6755,6 +6755,13 @@ TkSetTransientFor(Tk_Window tkwin, Tk_Window parent)
 	while (!Tk_IsTopLevel(parent))
 	    parent = Tk_Parent(tkwin);
     }
+    /*
+     * Prevent crash due to incomplete initialization, or other problems.
+     * [Bugs 3554026, 3561016]
+     */
+    if (((TkWindow *)parent)->wmInfoPtr->wrapperPtr == NULL) {
+	return;
+    }
     XSetTransientForHint(Tk_Display(tkwin),
 	((TkWindow *)tkwin)->wmInfoPtr->wrapperPtr->window,
 	((TkWindow *)parent)->wmInfoPtr->wrapperPtr->window);
