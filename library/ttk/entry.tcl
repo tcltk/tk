@@ -78,7 +78,7 @@ bind TEntry <B1-Leave> 		{ ttk::Repeatedly ttk::entry::AutoScroll %W }
 bind TEntry <B1-Enter>		{ ttk::CancelRepeat }
 bind TEntry <ButtonRelease-1>	{ ttk::CancelRepeat }
 
-bind TEntry <Control-ButtonPress-1> {
+bind TEntry <<ToggleSelection>> {
     %W instate {!readonly !disabled} { %W icursor @%x ; focus %W }
 }
 
