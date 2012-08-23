@@ -480,7 +480,12 @@ range of selected contents.
 Move to the previous group of items (i.e., visible word) in the current widget
 while extending the range of selected contents.
 .TP
+\fB<<ToggleSelection>>\fR
+.
+Toggle the selection.
+.TP
 \fB<<Undo>>\fR
+.
 Undo the last action.
 .SH EXAMPLES
 .SS "MAPPING KEYS TO VIRTUAL EVENTS"
