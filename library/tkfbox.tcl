@@ -16,7 +16,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-
+
 #----------------------------------------------------------------------
 #
 #		      I C O N   L I S T
@@ -759,7 +759,7 @@ proc ::tk::IconList_Reset {w} {
 
     unset -nocomplain Priv(ILAccel,$w)
 }
-
+
 #----------------------------------------------------------------------
 #
 #		      F I L E   D I A L O G
@@ -1260,34 +1260,16 @@ rSASvJTGhnhcV3EJlo3kh53ltF5nAhQAOw==}]
 
     set showHidden $::tk::dialog::file::showHiddenVar
 
-    # Make the dir list
-    # Using -directory [pwd] is better in some VFS cases.
-    set cmd [list glob -tails -directory [pwd] -type d -nocomplain *]
-    if {$showHidden} { lappend cmd .* }
-    set dirs [lsort -dictionary -unique [eval $cmd]]
-    set dirList {}
-    foreach d $dirs {
-	if {$d eq "." || $d eq ".."} {
-	    continue
-	}
-	lappend dirList $d
-    }
-    ::tk::IconList_Add $data(icons) $folder $dirList
+    # Make the dir list. Note that using an explicit [pwd] (instead of '.') is
+    # better in some VFS cases.
+    ::tk::IconList_Add $data(icons) $folder [GlobFiltered [pwd] d 1]
 
     if {$class eq "TkFDialog"} {
-	# Make the file list if this is a File Dialog, selecting all
-	# but 'd'irectory type files.
+	# Make the file list if this is a File Dialog, selecting all but
+	# 'd'irectory type files.
 	#
-	set cmd [list glob -tails -directory [pwd] \
-		     -type {f b c l p s} -nocomplain]
-	if {$data(filter) eq "*"} {
-	    lappend cmd *
-	    if {$showHidden} { lappend cmd .* }
-	} else {
-	    eval [list lappend cmd] $data(filter)
-	}
-	set fileList [lsort -dictionary -unique [eval $cmd]]
-	::tk::IconList_Add $data(icons) $file $fileList
+	::tk::IconList_Add $data(icons) $file \
+	    [GlobFiltered [pwd] {f b c l p s}]
     }
 
     ::tk::IconList_Arrange $data(icons)
@@ -1811,4 +1793,42 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
     }
     bind $data(okBtn) <Destroy> {}
     set Priv(selectFilePath) $selectFilePath
+}
+
+proc ::tk::dialog::file::GlobFiltered {dir type {overrideFilter 0}} {
+    # $dir == where to search
+    # $type == what to look for ('d' or 'f b c l p s')
+    # $overrideFilter == whether to ignore the filter
+
+    variable showHiddenVar
+    upvar 1 data(filter) filter
+
+    if {$filter eq "*" || $overrideFilter} {
+	set patterns [list *]
+	if {$showHiddenVar} {
+	    lappend patterns .*
+	}
+    } elseif {[catch {
+	set patterns [lreplace $filter 0 -1]
+    }]} then {
+	# Invalid list; assume we can use non-whitespace sequences as words
+	set patterns [regexp -inline -all {\S+} $filter]
+    }
+
+    set cmd [list glob -tails -directory $dir -type $type -nocomplain --]
+
+    set result {}
+    catch {
+	# We have a catch because we might have a really bad pattern (e.g.,
+	# with an unbalanced brace); even [glob -nocomplain] doesn't like it.
+	# Using a catch ensures that it just means we match nothing instead of
+	# throwing a nasty error at the user...
+	foreach f [eval $cmd $patterns] {
+	    if {$f eq "." || $f eq ".."} {
+		continue
+	    }
+	    lappend result $f
+	}
+    }
+    return [lsort -dictionary -unique $result]
 }
