@@ -6757,14 +6757,14 @@ TkSetTransientFor(Tk_Window tkwin, Tk_Window parent)
     if (parent == None) {
 	parent = Tk_Parent(tkwin);
 	while (!Tk_IsTopLevel(parent))
-	    parent = Tk_Parent(tkwin);
+	    parent = Tk_Parent(parent);
     }
     /*
      * Prevent crash due to incomplete initialization, or other problems.
      * [Bugs 3554026, 3561016]
      */
     if (((TkWindow *)parent)->wmInfoPtr->wrapperPtr == NULL) {
-	return;
+	CreateWrapper(((TkWindow *)parent)->wmInfoPtr);
     }
     XSetTransientForHint(Tk_Display(tkwin),
 	((TkWindow *)tkwin)->wmInfoPtr->wrapperPtr->window,
