@@ -1,4 +1,4 @@
-/* $Id: ttkInit.c,v 1.12 2010/02/05 21:33:14 jenglish Exp $
+/*
  * Copyright (c) 2003, Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
@@ -177,8 +177,6 @@ int TtkGetOptionValue(
 /* public */ 
 Tk_OptionSpec ttkCoreOptionSpecs[] =
 {
-    {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	"", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 },
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", NULL,
 	Tk_Offset(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "-style", "style", "Style", "",

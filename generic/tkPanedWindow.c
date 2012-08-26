@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkPanedWindow.c,v 1.42 2010/02/22 23:38:53 nijtmans Exp $
  */
 
 #include "default.h"
@@ -272,11 +270,11 @@ static const Tk_ObjCustomOption stickyOption = {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	 DEF_PANEDWINDOW_BG_COLOR, -1, Tk_Offset(PanedWindow, background), 0,
-	 (ClientData) DEF_PANEDWINDOW_BG_MONO, 0},
+	 DEF_PANEDWINDOW_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	 NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
+	 NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
-	 NULL, 0, -1, 0, (ClientData) "-background", 0},
+	 NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	 DEF_PANEDWINDOW_BORDERWIDTH, -1, Tk_Offset(PanedWindow, borderWidth),
 	 0, 0, GEOMETRY},
@@ -297,7 +295,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 Tk_Offset(PanedWindow, resizeOpaque), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	 DEF_PANEDWINDOW_ORIENT, -1, Tk_Offset(PanedWindow, orient),
-	 0, (ClientData) orientStrings, GEOMETRY},
+	 0, orientStrings, GEOMETRY},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	 DEF_PANEDWINDOW_RELIEF, -1, Tk_Offset(PanedWindow, relief), 0, 0, 0},
     {TK_OPTION_CURSOR, "-sashcursor", "sashCursor", "Cursor",
@@ -341,7 +339,7 @@ static const Tk_OptionSpec slaveOptionSpecs[] = {
 	 DEF_PANEDWINDOW_PANE_PADY, -1, Tk_Offset(Slave, pady), 0, 0, 0},
     {TK_OPTION_CUSTOM, "-sticky", NULL, NULL,
 	 DEF_PANEDWINDOW_PANE_STICKY, -1, Tk_Offset(Slave, sticky), 0,
-	 (ClientData) &stickyOption, 0},
+	 &stickyOption, 0},
     {TK_OPTION_STRING_TABLE, "-stretch", "stretch", "Stretch",
 	DEF_PANEDWINDOW_PANE_STRETCH, -1, Tk_Offset(Slave, stretch), 0,
 	(ClientData) stretchStrings, 0},

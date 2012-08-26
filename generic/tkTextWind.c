@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkTextWind.c,v 1.30 2010/03/11 09:43:19 dkf Exp $
  */
 
 #include "tkPort.h"
@@ -102,7 +100,7 @@ typedef enum {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", -1, Tk_Offset(TkTextEmbWindow, align),
-	0, (ClientData) alignStrings, 0},
+	0, alignStrings, 0},
     {TK_OPTION_STRING, "-create", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,

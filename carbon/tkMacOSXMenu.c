@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.2 2010/05/10 20:58:18 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"

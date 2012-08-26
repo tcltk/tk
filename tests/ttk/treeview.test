@@ -1,6 +1,4 @@
 #
-# $Id: treeview.test,v 1.8 2010/10/11 21:34:45 jenglish Exp $
-#
 # [7Jun2005] TO CHECK: [$tv see {}] -- shouldn't work (at least, shouldn't do
 # what it currently does)
 #

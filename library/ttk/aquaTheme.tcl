@@ -1,6 +1,4 @@
 #
-# $Id: aquaTheme.tcl,v 1.14 2009/07/15 21:50:40 das Exp $
-#
 # Aqua theme (OSX native look and feel)
 #
 

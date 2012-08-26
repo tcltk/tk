@@ -1,6 +1,4 @@
 /*
- * $Id: ttkWinXPTheme.c,v 1.27 2010/04/29 15:28:04 nijtmans Exp $
- *
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
  *
@@ -1111,7 +1109,7 @@ Ttk_CreateVsapiElement(
     LPWSTR wname;
     Ttk_ElementSpec *elementSpec = &GenericElementSpec;
 
-    const char *optionStrings[] =
+    static const char *optionStrings[] =
 	{ "-padding","-width","-height","-margins", "-syssize",
 	  "-halfheight", "-halfwidth", NULL };
     enum { O_PADDING, O_WIDTH, O_HEIGHT, O_MARGINS, O_SYSSIZE,

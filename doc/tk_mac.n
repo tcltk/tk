@@ -185,7 +185,7 @@ or to using a \fBttk::frame\fR.
 .TP
 \fB::tk::mac::iconBitmap \fIname width height \-kind value\fR
 .
-Renders native icons and bitmpas in Tk applications (including any image file
+Renders native icons and bitmaps in Tk applications (including any image file
 readable by NSImage). A native bitmap name is interpreted as follows (in
 order):
 .RS

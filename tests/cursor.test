@@ -5,8 +5,6 @@
 # Copyright (c) 1998 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: cursor.test,v 1.19 2008/07/28 10:53:45 aniap Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*

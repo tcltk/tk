@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXKeyboard.c,v 1.27 2009/12/16 22:00:30 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -482,7 +480,7 @@ XGetModifierMapping(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFreeModifiermap(
     XModifierKeymap *modmap)
 {
@@ -490,6 +488,7 @@ XFreeModifiermap(
 	ckfree(modmap->modifiermap);
     }
     ckfree(modmap);
+    return Success;
 }
 
 /*
@@ -768,11 +767,11 @@ TkpGetKeySym(
 	}
     }
 
-#if 0
+    /* If nbytes has been set, it's not a function key, but a regular key that
+       has been translated in tkMacOSXKeyEvent.c; just use that. */
     if (eventPtr->xkey.nbytes) {
-	return eventPtr->xkey.nbytes;
+      return eventPtr->xkey.keycode & 0xFFFF;
     }
-#endif
 
     /*
      * Figure out which of the four slots in the keymap vector to use for this

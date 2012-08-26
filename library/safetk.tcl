@@ -2,8 +2,6 @@
 #
 # Support procs to use Tk in safe interpreters.
 #
-# RCS: @(#) $Id: safetk.tcl,v 1.13 2009/11/23 19:17:30 andreas_kupries Exp $
-#
 # Copyright (c) 1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution

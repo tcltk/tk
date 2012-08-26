@@ -1,6 +1,4 @@
 #
-# $Id: button.tcl,v 1.3 2009/11/12 18:17:14 jenglish Exp $
-#
 # Bindings for Buttons, Checkbuttons, and Radiobuttons.
 #
 # Notes: <Button1-Leave>, <Button1-Enter> only control the "pressed"

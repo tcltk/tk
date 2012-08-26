@@ -1,5 +1,4 @@
-/* $Id: ttkDefaultTheme.c,v 1.17 2010/02/05 21:33:14 jenglish Exp $
- *
+/*
  * Copyright (c) 2003, Joe English
  *
  * Tk alternate theme, intended to match the MSUE and Gtk's (old) default theme

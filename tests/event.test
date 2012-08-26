@@ -5,8 +5,6 @@
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: event.test,v 1.17 2008/08/13 23:58:21 aniap Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv

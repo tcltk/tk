@@ -4,8 +4,6 @@
 # Copyright (c) 1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: grid.test,v 1.35 2009/08/19 23:02:00 pspjuth Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv

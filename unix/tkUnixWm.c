@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixWm.c,v 1.84 2010/12/06 10:30:50 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -5419,7 +5417,7 @@ SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr)
  * GetNetWmType --
  *
  *	Read the extended window manager type hint from a window
- *	and return as a list of names suitable for use with 
+ *	and return as a list of names suitable for use with
  *	SetNetWmType.
  *
  *----------------------------------------------------------------------
@@ -6355,7 +6353,7 @@ TkWmStackorderToplevel(
 		*window_ptr++ = childWinPtr;
 	    }
 	}
-	/* ASSERT: window_ptr - windows == table.numEntries 
+	/* ASSERT: window_ptr - windows == table.numEntries
 	 * (#matched toplevel windows == #children) [Bug 1789819]
 	 */
 	*window_ptr = NULL;
@@ -6759,7 +6757,14 @@ TkSetTransientFor(Tk_Window tkwin, Tk_Window parent)
     if (parent == None) {
 	parent = Tk_Parent(tkwin);
 	while (!Tk_IsTopLevel(parent))
-	    parent = Tk_Parent(tkwin);
+	    parent = Tk_Parent(parent);
+    }
+    /*
+     * Prevent crash due to incomplete initialization, or other problems.
+     * [Bugs 3554026, 3561016]
+     */
+    if (((TkWindow *)parent)->wmInfoPtr->wrapperPtr == NULL) {
+	CreateWrapper(((TkWindow *)parent)->wmInfoPtr);
     }
     XSetTransientForHint(Tk_Display(tkwin),
 	((TkWindow *)tkwin)->wmInfoPtr->wrapperPtr->window,

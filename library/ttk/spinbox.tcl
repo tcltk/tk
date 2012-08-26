@@ -1,6 +1,4 @@
 #
-# $Id: spinbox.tcl,v 1.3 2008/12/07 21:24:12 jenglish Exp $
-#
 # ttk::spinbox bindings
 #
 

@@ -12,8 +12,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkText.c,v 1.101 2010/08/27 00:33:12 hobbs Exp $
  */
 
 #include "default.h"
@@ -127,12 +125,12 @@ static const Tk_OptionSpec optionSpecs[] = {
 	Tk_Offset(TkText, autoSeparators), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_TEXT_BG_COLOR, -1, Tk_Offset(TkText, border),
-	0, (ClientData) DEF_TEXT_BG_MONO, 0},
+	0, DEF_TEXT_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-borderwidth",
+	NULL, 0, -1, 0, "-borderwidth",
 	TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-background", 0},
+	NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_BOOLEAN, "-blockcursor", "blockCursor",
 	"BlockCursor", DEF_TEXT_BLOCK_CURSOR, -1,
 	Tk_Offset(TkText, insertCursorType), 0, 0, 0},
@@ -144,12 +142,12 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_CUSTOM, "-endline", NULL, NULL,
 	 NULL, -1, Tk_Offset(TkText, end), TK_OPTION_NULL_OK,
-	 (ClientData) &lineOption, TK_TEXT_LINE_RANGE},
+	 &lineOption, TK_TEXT_LINE_RANGE},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_TEXT_EXPORT_SELECTION, -1,
 	Tk_Offset(TkText, exportSelection), 0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
-	NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+	NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_TEXT_FONT, -1, Tk_Offset(TkText, tkfont), 0, 0,
 	TK_TEXT_LINE_GEOMETRY},
@@ -172,7 +170,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"Foreground",
 	DEF_TEXT_INACTIVE_SELECT_COLOR,
 	-1, Tk_Offset(TkText, inactiveSelBorder),
-	TK_OPTION_NULL_OK, (ClientData) DEF_TEXT_SELECT_MONO, 0},
+	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_MONO, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_TEXT_INSERT_BG,
 	-1, Tk_Offset(TkText, insertBorder),
@@ -190,7 +188,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE,
 	"-insertunfocussed", "insertUnfocussed", "InsertUnfocussed",
 	DEF_TEXT_INSERT_UNFOCUSSED, -1, Tk_Offset(TkText, insertUnfocussed),
-	0, (ClientData) insertUnfocussedStrings, 0},
+	0, insertUnfocussedStrings, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
 	DEF_TEXT_INSERT_WIDTH, -1, Tk_Offset(TkText, insertWidth),
 	0, 0, 0},
@@ -205,15 +203,15 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_RELIEF, -1, Tk_Offset(TkText, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
 	DEF_TEXT_SELECT_COLOR, -1, Tk_Offset(TkText, selBorder),
-	0, (ClientData) DEF_TEXT_SELECT_MONO, 0},
+	0, DEF_TEXT_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	"BorderWidth", DEF_TEXT_SELECT_BD_COLOR,
 	Tk_Offset(TkText, selBorderWidthPtr),
 	Tk_Offset(TkText, selBorderWidth),
-	TK_OPTION_NULL_OK, (ClientData) DEF_TEXT_SELECT_BD_MONO, 0},
+	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_TEXT_SELECT_FG_COLOR, -1, Tk_Offset(TkText, selFgColorPtr),
-	TK_CONFIG_NULL_OK, (ClientData) DEF_TEXT_SELECT_FG_MONO, 0},
+	TK_CONFIG_NULL_OK, DEF_TEXT_SELECT_FG_MONO, 0},
     {TK_OPTION_BOOLEAN, "-setgrid", "setGrid", "SetGrid",
 	DEF_TEXT_SET_GRID, -1, Tk_Offset(TkText, setGrid), 0, 0, 0},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",
@@ -227,16 +225,16 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_DONT_SET_DEFAULT, 0 , TK_TEXT_LINE_GEOMETRY },
     {TK_OPTION_CUSTOM, "-startline", NULL, NULL,
 	 NULL, -1, Tk_Offset(TkText, start), TK_OPTION_NULL_OK,
-	 (ClientData) &lineOption, TK_TEXT_LINE_RANGE},
+	 &lineOption, TK_TEXT_LINE_RANGE},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_TEXT_STATE, -1, Tk_Offset(TkText, state),
-	0, (ClientData) stateStrings, 0},
+	0, stateStrings, 0},
     {TK_OPTION_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, Tk_Offset(TkText, tabOptionPtr), -1,
 	TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tabstyle", "tabStyle", "TabStyle",
 	DEF_TEXT_TABSTYLE, -1, Tk_Offset(TkText, tabStyle),
-	0, (ClientData) tabStyleStrings, TK_TEXT_LINE_GEOMETRY},
+	0, tabStyleStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_TEXT_TAKE_FOCUS, -1, Tk_Offset(TkText, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -247,7 +245,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-wrap", "wrap", "Wrap",
 	DEF_TEXT_WRAP, -1, Tk_Offset(TkText, wrapMode),
-	0, (ClientData) wrapStrings, TK_TEXT_LINE_GEOMETRY},
+	0, wrapStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_TEXT_XSCROLL_COMMAND, -1, Tk_Offset(TkText, xScrollCmd),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -922,7 +920,7 @@ TextWidgetObjCmd(
 		 * We're going to count up all display lines in the logical
 		 * line of 'indexFromPtr' up to, but not including the logical
 		 * line of 'indexToPtr', and then subtract off what we didn't
-		 * what from 'from' and add on what we didn't count from 'to.
+		 * want from 'from' and add on what we didn't count from 'to.
 		 */
 
 		while (index.linePtr != indexToPtr->linePtr) {
@@ -931,17 +929,9 @@ TextWidgetObjCmd(
 		    /*
 		     * We might have skipped past indexToPtr, if we have
 		     * multiple logical lines in a single display line.
-		     * Therefore we iterate through each intermediate logical
-		     * line, just to check. Another approach would be just to
-		     * use TkTextIndexCmp on every while() iteration, but that
-		     * would be less efficient.
 		     */
-
-		    while (fromPtr != index.linePtr) {
-			fromPtr = TkBTreeNextLine(textPtr, fromPtr);
-			if (fromPtr == indexToPtr->linePtr) {
-			    break;
-			}
+		    if (TkTextIndexCmp(&index,indexToPtr) > 0) {
+			break;
 		    }
 		}
 
@@ -2044,6 +2034,7 @@ ConfigureText(
 
     if (mask & TK_TEXT_LINE_RANGE) {
 	int start, end, current;
+	TkTextIndex index1, index2, index3;
 
 	/*
 	 * Line start and/or end have been adjusted. We need to validate the
@@ -2070,13 +2061,15 @@ ConfigureText(
 	    return TCL_ERROR;
 	}
 	current = TkBTreeLinesTo(NULL, textPtr->topIndex.linePtr);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
+		    &index1);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, end, 0,
+		    &index2);
 	if (current < start || current > end) {
 	    TkTextSearch search;
-	    TkTextIndex index1, first, last;
+	    TkTextIndex first, last;
 	    int selChanged = 0;
 
-	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, start, 0,
-		    &index1);
 	    TkTextSetYView(textPtr, &index1, 0);
 
 	    /*
@@ -2119,6 +2112,33 @@ ConfigureText(
 		TkTextSelectionEvent(textPtr);
 		textPtr->abortSelections = 1;
 	    }
+	}
+
+	/* Indices are potentially obsolete after changing -startline and/or
+	 * -endline, therefore increase the epoch.
+	 * Also, clamp the insert and current (unshared) marks to the new
+	 * -startline/-endline range limits of the widget. All other (shared)
+	 * marks are unchanged.
+         * The return value of TkTextMarkNameToIndex does not need to be
+         * checked: "insert" and "current" marks always exist, and the
+         * purpose of the code below precisely is to move them inside the
+         * -startline/-endline range.
+	 */
+
+	textPtr->sharedTextPtr->stateEpoch++;
+	TkTextMarkNameToIndex(textPtr, "insert", &index3);
+	if (TkTextIndexCmp(&index3, &index1) < 0) {
+	    textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &index1);
+	}
+	if (TkTextIndexCmp(&index3, &index2) > 0) {
+	    textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &index2);
+	}
+	TkTextMarkNameToIndex(textPtr, "current", &index3);
+	if (TkTextIndexCmp(&index3, &index1) < 0) {
+	    textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &index1);
+	}
+	if (TkTextIndexCmp(&index3, &index2) > 0) {
+	    textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &index2);
 	}
     }
 
@@ -3089,6 +3109,11 @@ DeleteIndexRange(
 		resetView = 1;
 		line = line1;
 		byteIndex = tPtr->topIndex.byteIndex;
+            } else {
+                /*
+                 * Deletion range starts after the top line. This peers's view
+                 * will not need to be reset. Nothing to do.
+                 */
 	    }
 	} else if (index2.linePtr == tPtr->topIndex.linePtr) {
 	    /*
@@ -3105,6 +3130,11 @@ DeleteIndexRange(
 	    } else {
 		byteIndex -= (index2.byteIndex - index1.byteIndex);
 	    }
+        } else {
+            /*
+             * Deletion range ends before the top line. This peers's view
+             * will not need to be reset. Nothing to do.
+             */
 	}
 	if (resetView) {
 	    lineAndByteIndex[resetViewCount] = line;
@@ -3149,14 +3179,43 @@ DeleteIndexRange(
 	    TkTextIndex indexTmp;
 
 	    if (tPtr == textPtr) {
-		if (viewUpdate) {
+                if (viewUpdate) {
+                    /*
+                     * line cannot be before -startline of textPtr because
+                     * this line corresponds to an index which is necessarily
+                     * between "1.0" and "end" relative to textPtr.
+                     * Therefore no need to clamp line to the -start/-end
+                     * range.
+                     */
+
 		    TkTextMakeByteIndex(sharedTextPtr->tree, textPtr, line,
 			    byteIndex, &indexTmp);
 		    TkTextSetYView(tPtr, &indexTmp, 0);
 		}
 	    } else {
-		TkTextMakeByteIndex(sharedTextPtr->tree, NULL, line,
+                TkTextMakeByteIndex(sharedTextPtr->tree, tPtr, line,
 			byteIndex, &indexTmp);
+                /*
+                 * line may be before -startline of tPtr and must be
+                 * clamped to -startline before providing it to
+                 * TkTextSetYView otherwise lines before -startline
+                 * would be displayed.
+                 * There is no need to worry about -endline however,
+                 * because the view will only be reset if the deletion
+                 * involves the TOP line of the screen
+                 */
+
+                if (tPtr->start != NULL) {
+                    int start;
+                    TkTextIndex indexStart;
+
+                    start = TkBTreeLinesTo(NULL, tPtr->start);
+                    TkTextMakeByteIndex(sharedTextPtr->tree, NULL, start,
+			    0, &indexStart);
+                    if (TkTextIndexCmp(&indexTmp, &indexStart) < 0) {
+                        indexTmp = indexStart;
+                    }
+                }
 		TkTextSetYView(tPtr, &indexTmp, 0);
 	    }
 	}

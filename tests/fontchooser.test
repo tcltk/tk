@@ -1,9 +1,6 @@
 # Test the "tk::fontchooser" command
 #
 # Copyright (c) 2008 Pat Thoyts
-#
-# RCS: @(#) $Id: fontchooser.test,v 1.2 2008/12/10 13:41:19 patthoyts Exp $
-#
 
 package require tcltest 2.1
 eval tcltest::configure $argv

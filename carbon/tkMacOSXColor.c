@@ -12,8 +12,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.2 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -593,7 +591,7 @@ TkpGetColor(
 	}
     }
 
-    if (XParseColor(display, colormap, name, &color) == 0) {
+    if (TkParseColor(display, colormap, name, &color) == 0) {
 	return NULL;
     }
 
@@ -715,14 +713,15 @@ XCreateColormap(
     return index++;
 }
 
-void
+int
 XFreeColormap(
     Display* display,		/* Display. */
     Colormap colormap)		/* Colormap. */
 {
+    return Success;
 }
 
-void
+int
 XFreeColors(
     Display* display,		/* Display. */
     Colormap colormap,		/* Colormap. */
@@ -735,4 +734,5 @@ XFreeColors(
      * needs to be done to release colors as there really is
      * no colormap in the Tk sense.
      */
+    return Success;
 }

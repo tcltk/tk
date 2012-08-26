@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinInt.h,v 1.37 2010/09/09 14:59:24 nijtmans Exp $
  */
 
 #ifndef _TKWININT
@@ -127,8 +125,8 @@ typedef struct {
  * Win32 raster and BitBlt op modes.
  */
 
-MODULE_SCOPE int tkpWinRopModes[];
-MODULE_SCOPE int tkpWinBltModes[];
+MODULE_SCOPE const int tkpWinRopModes[];
+MODULE_SCOPE const int tkpWinBltModes[];
 
 /*
  * The following defines are used with TkWinGetBorderPixels to get the extra 2
@@ -171,32 +169,6 @@ MODULE_SCOPE void TkWinCleanupContainerList(void);
 
 MODULE_SCOPE HWND Tk_GetMenuHWND(Tk_Window tkwin);
 MODULE_SCOPE HWND Tk_GetEmbeddedMenuHWND(Tk_Window tkwin);
-
-/*
- * The following structure keeps track of whether we are using the multi-byte
- * or the wide-character interfaces to the operating system. System calls
- * should be made through the following function table.
- *
- * While some system calls need to use this A/W jump-table, it is not
- * necessary for all calls to do it, which is why you won't see this used
- * throughout the Tk code, but only in key areas. -- hobbs
- */
-
-typedef struct TkWinProcs {
-    int useWide;
-    LRESULT (WINAPI *callWindowProc)(WNDPROC, HWND, UINT, WPARAM, LPARAM);
-    LRESULT (WINAPI *defWindowProc)(HWND, UINT, WPARAM, LPARAM);
-    ATOM (WINAPI *registerClass)(const WNDCLASS *);
-    BOOL (WINAPI *setWindowText)(HWND, LPCTSTR);
-    HWND (WINAPI *createWindowEx)(DWORD, LPCTSTR, LPCTSTR, DWORD, int, int,
-	    int, int, HWND, HMENU, HINSTANCE, LPVOID);
-    BOOL (WINAPI *insertMenu)(HMENU, UINT, UINT, UINT, LPCTSTR);
-    int (WINAPI *getWindowText)(HWND, LPCTSTR, int);
-    HWND (WINAPI *findWindow)(LPCTSTR, LPCTSTR);
-    int (WINAPI *getClassName)(HWND, LPTSTR, int);
-} TkWinProcs;
-
-MODULE_SCOPE const TkWinProcs *const tkWinProcs;
 
 /*
  * The following allows us to cache these encoding for multiple functions.

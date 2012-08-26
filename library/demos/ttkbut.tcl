@@ -3,8 +3,6 @@
 # This demonstration script creates a toplevel window containing several
 # simple Ttk widgets, such as labels, labelframes, buttons, checkbuttons and
 # radiobuttons.
-#
-# RCS: @(#) $Id: ttkbut.tcl,v 1.5 2008/12/11 18:13:08 jenglish Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

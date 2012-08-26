@@ -1,6 +1,4 @@
 /*
- * $Id: ttkClamTheme.c,v 1.11 2010/01/22 14:17:53 nijtmans Exp $
- *
  * Copyright (C) 2004 Joe English
  *
  * "clam" theme; inspired by the XFCE family of Gnome themes.

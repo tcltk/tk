@@ -1,6 +1,4 @@
 #
-# $Id: ttk.tcl,v 1.11 2010/06/15 16:59:16 jenglish Exp $
-#
 # Ttk widget set initialization script.
 #
 

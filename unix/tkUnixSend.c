@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixSend.c,v 1.27 2010/05/11 12:12:50 nijtmans Exp $
  */
 
 #include "tkUnixInt.h"
@@ -1351,11 +1349,8 @@ SendInit(
      * for it.
      */
 
-    dispPtr->commTkwin = Tk_CreateWindow(interp, (Tk_Window) NULL,
-	    "_comm", DisplayString(dispPtr->display));
-    if (dispPtr->commTkwin == NULL) {
-	Tcl_Panic("Tk_CreateWindow failed in SendInit!");
-    }
+    dispPtr->commTkwin = (Tk_Window) TkAllocWindow(dispPtr,
+    	DefaultScreen(dispPtr->display), NULL);
     Tcl_Preserve(dispPtr->commTkwin);
     atts.override_redirect = True;
     Tk_ChangeWindowAttributes(dispPtr->commTkwin,

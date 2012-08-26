@@ -1,5 +1,4 @@
-/* $Id: ttkManager.h,v 1.9 2007/12/13 15:26:26 dgp Exp $
- *
+/*
  * Copyright (c) 2005, Joe English.  Freely redistributable.
  *
  * Geometry manager utilities.

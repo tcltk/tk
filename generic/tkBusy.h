@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkBusy.h,v 1.1 2008/10/20 10:50:20 dkf Exp $
  */
 
 typedef struct Busy {

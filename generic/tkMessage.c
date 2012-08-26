@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMessage.c,v 1.25 2010/01/18 20:43:38 nijtmans Exp $
  */
 
 #include "default.h"
@@ -116,11 +114,11 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 -1, Tk_Offset(Message, aspect), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	 DEF_MESSAGE_BG_COLOR, -1, Tk_Offset(Message, border), 0,
-	 (ClientData) DEF_MESSAGE_BG_MONO, 0},
+	 DEF_MESSAGE_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL,
-	 0, -1, 0, (ClientData) "-borderwidth", 0},
+	 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL,
-	 0, -1, 0, (ClientData) "-background", 0},
+	 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	 DEF_MESSAGE_BORDER_WIDTH, -1,
 	 Tk_Offset(Message, borderWidth), 0, 0, 0},
@@ -128,7 +126,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_MESSAGE_CURSOR, -1, Tk_Offset(Message, cursor),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL,
-	 0, -1, 0, (ClientData) "-foreground", 0},
+	 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_MESSAGE_FONT, -1, Tk_Offset(Message, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",

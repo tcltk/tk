@@ -1,6 +1,3 @@
-/* $Id: ttkWinMonitor.c,v 1.18 2010/11/29 09:07:13 nijtmans Exp $
- */
-
 #ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
 #endif

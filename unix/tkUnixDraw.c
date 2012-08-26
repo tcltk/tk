@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnixDraw.c,v 1.12 2010/05/11 12:12:49 nijtmans Exp $
  */
 
 #include "tkInt.h"

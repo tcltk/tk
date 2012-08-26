@@ -13,8 +13,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkEntry.c,v 1.60 2010/01/13 23:08:10 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -66,11 +64,11 @@ enum validateType {
 static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_ENTRY_BG_COLOR, -1, Tk_Offset(Entry, normalBorder),
-	0, (ClientData) DEF_ENTRY_BG_MONO, 0},
+	0, DEF_ENTRY_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
+	NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-background", 0},
+	NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_ENTRY_BORDER_WIDTH, -1, Tk_Offset(Entry, borderWidth), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
@@ -87,7 +85,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, -1,
 	Tk_Offset(Entry, exportSelection), 0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
-	NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+	NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_ENTRY_FONT, -1, Tk_Offset(Entry, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
@@ -117,7 +115,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	DEF_ENTRY_INVALIDCMD, -1, Tk_Offset(Entry, invalidCmd),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-invcmd", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-invalidcommand", 0},
+	NULL, 0, -1, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
@@ -128,20 +126,20 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	DEF_ENTRY_RELIEF, -1, Tk_Offset(Entry, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
 	DEF_ENTRY_SELECT_COLOR, -1, Tk_Offset(Entry, selBorder),
-	0, (ClientData) DEF_ENTRY_SELECT_MONO, 0},
+	0, DEF_ENTRY_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, -1,
 	Tk_Offset(Entry, selBorderWidth),
-	0, (ClientData) DEF_ENTRY_SELECT_BD_MONO, 0},
+	0, DEF_ENTRY_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_ENTRY_SELECT_FG_COLOR, -1, Tk_Offset(Entry, selFgColorPtr),
-	TK_CONFIG_NULL_OK, (ClientData) DEF_ENTRY_SELECT_FG_MONO, 0},
+	TK_CONFIG_NULL_OK, DEF_ENTRY_SELECT_FG_MONO, 0},
     {TK_OPTION_STRING, "-show", "show", "Show",
 	DEF_ENTRY_SHOW, -1, Tk_Offset(Entry, showChar),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_ENTRY_STATE, -1, Tk_Offset(Entry, state),
-	0, (ClientData) stateStrings, 0},
+	0, stateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_ENTRY_TAKE_FOCUS, -1, Tk_Offset(Entry, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -150,11 +148,11 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
 	DEF_ENTRY_VALIDATE, -1, Tk_Offset(Entry, validate),
-	0, (ClientData) validateStrings, 0},
+	0, validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand","ValidateCommand",
 	NULL, -1, Tk_Offset(Entry, validateCmd), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-vcmd", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-validatecommand", 0},
+	NULL, 0, -1, 0, "-validatecommand", 0},
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, -1, Tk_Offset(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
@@ -183,19 +181,19 @@ static const Tk_OptionSpec entryOptSpec[] = {
 static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Background",
 	DEF_BUTTON_ACTIVE_BG_COLOR, -1, Tk_Offset(Spinbox, activeBorder),
-	0, (ClientData) DEF_BUTTON_ACTIVE_BG_MONO, 0},
+	0, DEF_BUTTON_ACTIVE_BG_MONO, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_ENTRY_BG_COLOR, -1, Tk_Offset(Entry, normalBorder),
-	0, (ClientData) DEF_ENTRY_BG_MONO, 0},
+	0, DEF_ENTRY_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
+	NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-background", 0},
+	NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_ENTRY_BORDER_WIDTH, -1, Tk_Offset(Entry, borderWidth), 0, 0, 0},
     {TK_OPTION_BORDER, "-buttonbackground", "Button.background", "Background",
 	DEF_BUTTON_BG_COLOR, -1, Tk_Offset(Spinbox, buttonBorder),
-	0, (ClientData) DEF_BUTTON_BG_MONO, 0},
+	0, DEF_BUTTON_BG_MONO, 0},
     {TK_OPTION_CURSOR, "-buttoncursor", "Button.cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(Spinbox, bCursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -220,7 +218,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, -1,
 	Tk_Offset(Entry, exportSelection), 0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
-	NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+	NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_ENTRY_FONT, -1, Tk_Offset(Entry, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
@@ -257,7 +255,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	DEF_ENTRY_INVALIDCMD, -1, Tk_Offset(Entry, invalidCmd),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-invcmd", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-invalidcommand", 0},
+	NULL, 0, -1, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
@@ -274,17 +272,17 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
 	DEF_ENTRY_SELECT_COLOR, -1, Tk_Offset(Entry, selBorder),
-	0, (ClientData) DEF_ENTRY_SELECT_MONO, 0},
+	0, DEF_ENTRY_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, -1,
 	Tk_Offset(Entry, selBorderWidth),
-	0, (ClientData) DEF_ENTRY_SELECT_BD_MONO, 0},
+	0, DEF_ENTRY_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_ENTRY_SELECT_FG_COLOR, -1, Tk_Offset(Entry, selFgColorPtr),
-	TK_CONFIG_NULL_OK, (ClientData) DEF_ENTRY_SELECT_FG_MONO, 0},
+	TK_CONFIG_NULL_OK, DEF_ENTRY_SELECT_FG_MONO, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_ENTRY_STATE, -1, Tk_Offset(Entry, state),
-	0, (ClientData) stateStrings, 0},
+	0, stateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_ENTRY_TAKE_FOCUS, -1, Tk_Offset(Entry, takeFocus),
 	TK_CONFIG_NULL_OK, 0, 0},
@@ -295,14 +293,14 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	DEF_SPINBOX_TO, -1, Tk_Offset(Spinbox, toValue), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
 	DEF_ENTRY_VALIDATE, -1, Tk_Offset(Entry, validate),
-	0, (ClientData) validateStrings, 0},
+	0, validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand","ValidateCommand",
 	NULL, -1, Tk_Offset(Entry, validateCmd), TK_CONFIG_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-values", "values", "Values",
 	DEF_SPINBOX_VALUES, -1, Tk_Offset(Spinbox, valueStr),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-vcmd", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-validatecommand", 0},
+	NULL, 0, -1, 0, "-validatecommand", 0},
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, -1, Tk_Offset(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-wrap", "wrap", "Wrap",
@@ -1327,11 +1325,10 @@ ConfigureEntry(
 	     * isn't a double value, we set it to -from.
 	     */
 
-	    int code;
 	    double dvalue;
 
-	    code = Tcl_GetDouble(NULL, entryPtr->string, &dvalue);
-	    if (code != TCL_OK) {
+	    if (sscanf(entryPtr->string, "%lf", &dvalue) == 0) {
+		/* Scan failure */
 		dvalue = sbPtr->fromValue;
 	    } else if (dvalue > sbPtr->toValue) {
 		dvalue = sbPtr->toValue;
@@ -3272,17 +3269,19 @@ EntryValidateChange(
 	if (varValidate) {
 	    entryPtr->validate = VALIDATE_NONE;
 	} else if (entryPtr->invalidCmd != NULL) {
+	    int result;
+
 	    Tcl_DStringInit(&script);
 	    ExpandPercents(entryPtr, entryPtr->invalidCmd,
 		    change, newValue, index, type, &script);
 	    Tcl_DStringAppend(&script, "", 1);
 	    p = Tcl_DStringValue(&script);
-	    code = Tcl_EvalEx(entryPtr->interp, p, -1,
+	    result = Tcl_EvalEx(entryPtr->interp, p, -1,
 		    TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
-	    if (code != TCL_OK) {
+	    if (result != TCL_OK) {
 		Tcl_AddErrorInfo(entryPtr->interp,
 			"\n\t(in invalidcommand executed by entry)");
-		Tcl_BackgroundException(entryPtr->interp, code);
+		Tcl_BackgroundException(entryPtr->interp, result);
 		code = TCL_ERROR;
 		entryPtr->validate = VALIDATE_NONE;
 	    }
@@ -4227,9 +4226,9 @@ SpinboxInvoke(
 	} else if (!DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)) {
 	    double dvalue;
 
-	    if (Tcl_GetDouble(NULL, entryPtr->string, &dvalue) != TCL_OK) {
+	    if (sscanf(entryPtr->string, "%lf", &dvalue) == 0) {
 		/*
-		 * If the string is empty, or isn't a valid double value, just
+		 * If the string doesn't scan as a double value, just
 		 * use the -from value
 		 */
 

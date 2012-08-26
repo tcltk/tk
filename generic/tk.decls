@@ -10,8 +10,6 @@
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: tk.decls,v 1.55 2010/09/28 10:42:05 nijtmans Exp $
 
 library tk
 
@@ -209,8 +207,8 @@ declare 43 {
 	    const char *pathName, const char *screenName)
 }
 declare 44 {
-    int Tk_OldDefineBitmap(Tcl_Interp *interp, const char *name,
-	    const char *source, int width, int height)
+    int Tk_DefineBitmap(Tcl_Interp *interp, const char *name,
+	    const void *source, int width, int height)
 }
 declare 45 {
     void Tk_DefineCursor(Tk_Window window, Tk_Cursor cursor)
@@ -361,8 +359,8 @@ declare 85 {
     Pixmap Tk_GetBitmap(Tcl_Interp *interp, Tk_Window tkwin, const char *str)
 }
 declare 86 {
-    Pixmap Tk_OldGetBitmapFromData(Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *source, int width, int height)
+    Pixmap Tk_GetBitmapFromData(Tcl_Interp *interp,
+	    Tk_Window tkwin, const void *source, int width, int height)
 }
 declare 87 {
     int Tk_GetCapStyle(Tcl_Interp *interp, const char *str, int *capPtr)
@@ -748,7 +746,6 @@ declare 194 {
 declare 195 {
     void  Tk_FreeConfigOptions(char *recordPtr, Tk_OptionTable optionToken,
 	    Tk_Window tkwin)
-
 }
 declare 196 {
     void  Tk_FreeSavedOptions(Tk_SavedOptions *savePtr)
@@ -830,15 +827,12 @@ declare 216 {
 declare 217 {
     void Tk_CreateSmoothMethod(Tcl_Interp *interp, const Tk_SmoothMethod *method)
 }
-
 #declare 218 {
 #    void Tk_CreateCanvasVisitor(Tcl_Interp *interp, void *typePtr)
 #}
-
 #declare 219 {
 #    void *Tk_GetCanvasVisitor(Tcl_Interp *interp, const char *name)
 #}
-
 declare 220 {
     int Tk_GetDash(Tcl_Interp *interp, const char *value, Tk_Dash *dash)
 }
@@ -1075,25 +1069,17 @@ declare 273 {
     void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
 
-# See [Enhancement request 2636558] Tk_DefineBitmap and
-# Tk_GetBitmapFromData signature problem
 declare 274 {
-    int Tk_DefineBitmap(Tcl_Interp *interp, const char *name,
-	    const void *source, int width, int height)
+    void reserved274(void)
 }
 declare 275 {
-    Pixmap Tk_GetBitmapFromData(Tcl_Interp *interp,
-	    Tk_Window tkwin, const void *source, int width, int height)
+    void reserved275(void)
 }
 
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.
 
 interface tkPlat
-
-################################
-# Unix specific functions
-#   (none)
 
 ################################
 # Windows specific functions
@@ -1169,3 +1155,7 @@ export {
     const char *Tk_PkgInitStubsCheck(Tcl_Interp *interp, const char *version,
 	    int exact)
 }
+
+# Local Variables:
+# mode: tcl
+# End:

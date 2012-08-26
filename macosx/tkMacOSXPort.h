@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXPort.h,v 1.16 2009/06/29 14:35:01 das Exp $
  */
 
 #ifndef _TKMACPORT
@@ -114,7 +112,7 @@
  */
 
 #define XFlush(display)
-#define XFree(data) {if ((data) != NULL) ckfree((char *) (data));}
+#define XFree(data) {if ((data) != NULL) ckfree(data);}
 #define XGrabServer(display)
 #define XNoOp(display) {display->request++;}
 #define XUngrabServer(display)

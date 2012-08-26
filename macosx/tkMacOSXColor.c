@@ -12,8 +12,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXColor.c,v 1.17 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -268,13 +266,15 @@ GetThemeColor(
 	    break;
 	}
 
-	*c = CGColorCreateGenericRGB(rgba[0], rgba[1], rgba[2], rgba[3]);
+        // this attempts to find something roughly fitting for any display
+//	*c = CGColorCreateGenericRGB(rgba[0], rgba[1], rgba[2], rgba[3]);
 
-	/*static CGColorSpaceRef deviceRGBSpace = NULL;
+        // may be off for non-main display but in most cases better than prev
+	static CGColorSpaceRef deviceRGBSpace = NULL;
 	if (!deviceRGBSpace) {
 	    deviceRGBSpace = CGDisplayCopyColorSpace(CGMainDisplayID());
 	}
-	*c = CGColorCreate(deviceRGBSpace, rgba );*/
+	*c = CGColorCreate(deviceRGBSpace, rgba );
     }
     return err;
 }
@@ -608,7 +608,7 @@ TkpGetColor(
 	}
     }
 
-    if (XParseColor(display, colormap, name, &color) == 0) {
+    if (TkParseColor(display, colormap, name, &color) == 0) {
 	return NULL;
     }
 
@@ -699,14 +699,15 @@ XCreateColormap(
     return index++;
 }
 
-void
+int
 XFreeColormap(
     Display* display,		/* Display. */
     Colormap colormap)		/* Colormap. */
 {
+    return Success;
 }
 
-void
+int
 XFreeColors(
     Display* display,		/* Display. */
     Colormap colormap,		/* Colormap. */
@@ -719,6 +720,7 @@ XFreeColors(
      * needs to be done to release colors as there really is
      * no colormap in the Tk sense.
      */
+    return Success;
 }
 
 /*

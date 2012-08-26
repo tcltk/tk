@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkMacOSXPrivate.h,v 1.12 2009/07/07 08:08:18 dkf Exp $
+ * RCS: @(#) $Id$
  */
 
 #ifndef _TKMACPRIV
@@ -18,7 +18,7 @@
 #if !__OBJC__
 #error Objective-C compiler required
 #endif
-
+
 #define TextStyle MacTextStyle
 #import <ApplicationServices/ApplicationServices.h>
 #import <Cocoa/Cocoa.h>
@@ -34,11 +34,8 @@
 #ifndef _TKMACDEFAULT
 #include "tkMacOSXDefault.h"
 #endif
-
-/*
- * Macros for Mac OS X API availability checking.
- */
 
+/* Macros for Mac OS X API availability checking */
 #define TK_IF_MAC_OS_X_API(vers, symbol, ...) \
 	tk_if_mac_os_x_10_##vers(symbol != NULL, 1, __VA_ARGS__)
 #define TK_ELSE_MAC_OS_X(vers, ...) \
@@ -49,11 +46,7 @@
 	} else { __VA_ARGS__
 #define TK_ENDIF \
 	}
-
-/*
- * Private macros that implement the checking macros above.
- */
-
+/* Private macros that implement the checking macros above */
 #define tk_if_mac_os_x_yes(chk, cond, ...) \
 	if (cond) { __VA_ARGS__
 #define tk_else_mac_os_x_yes(...) \
@@ -66,11 +59,7 @@
 	if (0) {
 #define tk_else_mac_os_x_no(...) \
 	} else { __VA_ARGS__
-
-/*
- * Private mapping macros defined according to Mac OS X version requirements.
- */
-
+/* Private mapping macros defined according to Mac OS X version requirements */
 /* 10.5 Leopard */
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 #define tk_if_mac_os_x_min_10_5		tk_if_mac_os_x_yes
@@ -91,7 +80,7 @@
 #define tk_if_mac_os_x_10_5		tk_if_mac_os_x_no
 #define tk_else_mac_os_x_10_5		tk_else_mac_os_x_no
 #endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
-
+
 /*
  * Macros for DEBUG_ASSERT_MESSAGE et al from Debugging.h.
  */
@@ -111,7 +100,6 @@
 /*
  * Macro to do debug message output.
  */
-
 #define TkMacOSXDbgMsg(m, ...) \
     do { \
 	TKLog(@"%s:%d: %s(): " m, strrchr(__FILE__, '/')+1, \
@@ -121,7 +109,6 @@
 /*
  * Macro to do debug API failure message output.
  */
-
 #define TkMacOSXDbgOSErr(f, err) \
     do { \
 	TkMacOSXDbgMsg("%s failed: %d", #f, (int)(err)); \
@@ -131,7 +118,6 @@
  * Macro to do very common check for noErr return from given API and output
  * debug message in case of failure.
  */
-
 #define ChkErr(f, ...) ({ \
 	OSStatus err = f(__VA_ARGS__); \
 	if (err != noErr) { \
@@ -158,7 +144,7 @@
     }
 
 /*
- * Macros for GC.
+ * Macros for GC
  */
 
 #define TkMacOSXMakeUncollectable(x) ({ id o = (id)(x); \
@@ -173,7 +159,7 @@
 #define TkMacOSXMakeCollectableAndAutorelease(x) ({ id o = (id)(x); \
     if (o) {  x = nil; if (tkMacOSXGCEnabled) CFRelease(o); \
     else [o autorelease]; } o; })
-
+
 /*
  * Structure encapsulating current drawing environment.
  */
@@ -255,23 +241,23 @@ MODULE_SCOPE int	TkMacOSXMakeFullscreen(TkWindow *winPtr,
 			    Tcl_Interp *interp);
 MODULE_SCOPE void	TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
 			    int active);
-MODULE_SCOPE NSWindow *	TkMacOSXDrawableWindow(Drawable drawable);
-MODULE_SCOPE NSView *	TkMacOSXDrawableView(MacDrawable *macWin);
+MODULE_SCOPE NSWindow*	TkMacOSXDrawableWindow(Drawable drawable);
+MODULE_SCOPE NSView*	TkMacOSXDrawableView(MacDrawable *macWin);
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
 			    HIShapeRef rgn);
 MODULE_SCOPE CGImageRef	TkMacOSXCreateCGImageWithDrawable(Drawable drawable);
-MODULE_SCOPE NSImage *	TkMacOSXGetNSImageWithTkImage(Display *display,
+MODULE_SCOPE NSImage*	TkMacOSXGetNSImageWithTkImage(Display *display,
 			    Tk_Image image, int width, int height);
-MODULE_SCOPE NSImage *	TkMacOSXGetNSImageWithBitmap(Display *display,
+MODULE_SCOPE NSImage*	TkMacOSXGetNSImageWithBitmap(Display *display,
 			    Pixmap bitmap, GC gc, int width, int height);
 MODULE_SCOPE CGColorRef	TkMacOSXCreateCGColor(GC gc, unsigned long pixel);
-MODULE_SCOPE NSColor *	TkMacOSXGetNSColor(GC gc, unsigned long pixel);
+MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(GC gc, unsigned long pixel);
 MODULE_SCOPE Tcl_Obj *	TkMacOSXGetStringObjFromCFString(CFStringRef str);
-MODULE_SCOPE TkWindow *	TkMacOSXGetTkWindow(NSWindow *w);
-MODULE_SCOPE NSFont *	TkMacOSXNSFontForFont(Tk_Font tkfont);
-MODULE_SCOPE NSDictionary *TkMacOSXNSFontAttributesForFont(Tk_Font tkfont);
+MODULE_SCOPE TkWindow*	TkMacOSXGetTkWindow(NSWindow *w);
+MODULE_SCOPE NSFont*	TkMacOSXNSFontForFont(Tk_Font tkfont);
+MODULE_SCOPE NSDictionary* TkMacOSXNSFontAttributesForFont(Tk_Font tkfont);
 MODULE_SCOPE NSModalSession TkMacOSXGetModalSession(void);
 MODULE_SCOPE void	TkMacOSXSelDeadWindow(TkWindow *winPtr);
 MODULE_SCOPE void	TkMacOSXApplyWindowAttributes(TkWindow *winPtr,
@@ -282,7 +268,7 @@ MODULE_SCOPE int	TkMacOSXStandardAboutPanelObjCmd(ClientData clientData,
 MODULE_SCOPE int	TkMacOSXIconBitmapObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-
+
 #pragma mark Private Objective-C Classes
 
 #define VISIBILITY_HIDDEN __attribute__((visibility("hidden")))
@@ -295,8 +281,8 @@ VISIBILITY_HIDDEN
     void *_tkMenu;
     NSUInteger _tkOffset, _tkItemCount, _tkSpecial;
 }
-- (void) setSpecial: (NSUInteger) special;
-- (BOOL) isSpecial: (NSUInteger) special;
+- (void)setSpecial:(NSUInteger)special;
+- (BOOL)isSpecial:(NSUInteger)special;
 @end
 
 VISIBILITY_HIDDEN
@@ -309,33 +295,37 @@ VISIBILITY_HIDDEN
     NSArray *_defaultHelpMenuItems;
 }
 @end
-
 @interface TKApplication(TKInit)
-- (NSString *) tkFrameworkImagePath: (NSString *) image;
+- (NSString *)tkFrameworkImagePath:(NSString*)image;
 @end
 @interface TKApplication(TKEvent)
-- (NSEvent *) tkProcessEvent: (NSEvent *) theEvent;
+- (NSEvent *)tkProcessEvent:(NSEvent *)theEvent;
 @end
 @interface TKApplication(TKMouseEvent)
-- (NSEvent *) tkProcessMouseEvent: (NSEvent *) theEvent;
+- (NSEvent *)tkProcessMouseEvent:(NSEvent *)theEvent;
 @end
 @interface TKApplication(TKKeyEvent)
-- (NSEvent *) tkProcessKeyEvent: (NSEvent *) theEvent;
+- (NSEvent *)tkProcessKeyEvent:(NSEvent *)theEvent;
 @end
 @interface TKApplication(TKMenu)
-- (void) tkSetMainMenu: (TKMenu *) menu;
+- (void)tkSetMainMenu:(TKMenu *)menu;
 @end
 @interface TKApplication(TKClipboard)
-- (void) tkProvidePasteboard: (TkDisplay *) dispPtr;
-- (void) tkCheckPasteboard;
+- (void)tkProvidePasteboard:(TkDisplay *)dispPtr;
+- (void)tkCheckPasteboard;
 @end
 
 VISIBILITY_HIDDEN
-@interface TKContentView : NSView {
+@interface TKContentView : NSView <NSTextInput> {
 @private
     id _savedSubviews;
     BOOL _subviewsSetAside;
+    NSString *_workingText;
 }
+@end
+
+@interface TKContentView(TKKeyEvent)
+- (void) deleteWorkingText;
 @end
 
 VISIBILITY_HIDDEN
@@ -345,43 +335,34 @@ VISIBILITY_HIDDEN
 #pragma mark NSMenu & NSMenuItem Utilities
 
 @interface NSMenu(TKUtils)
-+ (id) menuWithTitle: (NSString *) title;
-+ (id) menuWithTitle: (NSString *) title menuItems: (NSArray *) items;
-+ (id) menuWithTitle: (NSString *) title submenus: (NSArray *) submenus;
-- (NSMenuItem *) itemWithSubmenu: (NSMenu *) submenu;
-- (NSMenuItem *) itemInSupermenu;
++ (id)menuWithTitle:(NSString *)title;
++ (id)menuWithTitle:(NSString *)title menuItems:(NSArray *)items;
++ (id)menuWithTitle:(NSString *)title submenus:(NSArray *)submenus;
+- (NSMenuItem *)itemWithSubmenu:(NSMenu *)submenu;
+- (NSMenuItem *)itemInSupermenu;
 @end
 
 @interface NSMenuItem(TKUtils)
-+ (id) itemWithSubmenu: (NSMenu *) submenu;
-+ (id) itemWithTitle: (NSString *) title submenu: (NSMenu *) submenu;
-+ (id) itemWithTitle: (NSString *) title action: (SEL) action;
-+ (id) itemWithTitle: (NSString *) title action: (SEL) action
-	target: (id) target;
-+ (id) itemWithTitle: (NSString *) title action: (SEL) action
-	keyEquivalent: (NSString *) keyEquivalent;
-+ (id) itemWithTitle: (NSString *) title action: (SEL) action
-	target: (id) target keyEquivalent: (NSString *) keyEquivalent;
-+ (id) itemWithTitle: (NSString *) title action: (SEL) action
-	keyEquivalent: (NSString *) keyEquivalent
-	keyEquivalentModifierMask: (NSUInteger) keyEquivalentModifierMask;
-+ (id) itemWithTitle: (NSString *) title action: (SEL) action
-	target: (id) target keyEquivalent: (NSString *) keyEquivalent
-	keyEquivalentModifierMask: (NSUInteger) keyEquivalentModifierMask;
++ (id)itemWithSubmenu:(NSMenu *)submenu;
++ (id)itemWithTitle:(NSString *)title submenu:(NSMenu *)submenu;
++ (id)itemWithTitle:(NSString *)title action:(SEL)action;
++ (id)itemWithTitle:(NSString *)title action:(SEL)action
+	target:(id)target;
++ (id)itemWithTitle:(NSString *)title action:(SEL)action
+	keyEquivalent:(NSString *)keyEquivalent;
++ (id)itemWithTitle:(NSString *)title action:(SEL)action
+	target:(id)target keyEquivalent:(NSString *)keyEquivalent;
++ (id)itemWithTitle:(NSString *)title action:(SEL)action
+	keyEquivalent:(NSString *)keyEquivalent
+	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
++ (id)itemWithTitle:(NSString *)title action:(SEL)action
+	target:(id)target keyEquivalent:(NSString *)keyEquivalent
+	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
 @end
 
 /* From WebKit/WebKit/mac/WebCoreSupport/WebChromeClient.mm: */
 @interface NSWindow(TKGrowBoxRect)
-- (NSRect) _growBoxRect;
+- (NSRect)_growBoxRect;
 @end
 
 #endif /* _TKMACPRIV */
-
-/*
- * Local Variables:
- * mode: objc
- * c-basic-offset: 4
- * fill-column: 79
- * coding: utf-8
- * End:
- */

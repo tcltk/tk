@@ -1,6 +1,4 @@
 /*
- * $Id: ttkBlink.c,v 1.2 2006/11/03 03:06:21 das Exp $
- *
  * Copyright 2004, Joe English.
  *
  * Usage:

@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: winMain.c,v 1.41 2010/12/16 09:03:07 nijtmans Exp $
  */
 
 #include "tk.h"
@@ -230,7 +228,7 @@ Tcl_AppInit(
     return TCL_OK;
 }
 
-#if defined(__CYGWIN__) || defined(TK_TEST)
+#if defined(TK_TEST)
 /*
  *----------------------------------------------------------------------
  *

@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXTest.c,v 1.2 2009/11/29 22:10:36 nijtmans Exp $
  */
 
 #include "tkMacOSXInt.h"

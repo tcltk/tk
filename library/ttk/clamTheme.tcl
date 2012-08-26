@@ -1,6 +1,4 @@
 #
-# $Id: clamTheme.tcl,v 1.10 2008/12/07 18:42:55 jenglish Exp $
-#
 # "Clam" theme.
 #
 # Inspired by the XFCE family of Gnome themes.

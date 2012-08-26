@@ -2,8 +2,6 @@
 '\" Copyright (c) 1998-2000 by Scriptics Corporation.
 '\" All rights reserved.
 '\" 
-'\" RCS: @(#) $Id: chooseDirectory.n,v 1.13 2008/09/23 13:36:37 dkf Exp $
-'\" 
 .so man.macros
 .TH tk_chooseDirectory n 8.3 Tk "Tk Built-In Commands"
 .BS

@@ -4,8 +4,6 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: ttk_treeview.n,v 1.22 2010/03/28 21:43:25 jenglish Exp $
-'\" 
 .so man.macros
 .TH ttk::treeview n 8.5 Tk "Tk Themed Widget"
 .BS
@@ -382,16 +380,16 @@ the specified tag.
 \fIpathName \fBtag names\fR
 Returns a list of all tags used by the widget.
 .TP
-\fIpathName \fBtag add\fR \fItag\fR \fIitems\fR
+\fIpathName \fBtag add \fItag items\fR
 Adds the specified \fItag\fR to each of the listed \fIitems\fR.
 If \fItag\fR is already present for a particular item,
-then the \fB-tags\fR for that item are unchanged.
+then the \fB\-tags\fR for that item are unchanged.
 .TP
-\fIpathName \fBtag remove\fR \fItag\fR ?\fIitems\fR?
+\fIpathName \fBtag remove \fItag\fR ?\fIitems\fR?
 Removes the specified \fItag\fR from each of the listed \fIitems\fR.
 If \fIitems\fR is omitted, removes \fItag\fR from each item in the tree.
 If \fItag\fR is not present for a particular item,
-then the \fB-tags\fR for that item are unchanged.
+then the \fB\-tags\fR for that item are unchanged.
 .RE
 .TP
 \fIpathName \fBxview \fIargs\fR

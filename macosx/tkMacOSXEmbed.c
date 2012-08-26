@@ -13,8 +13,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- *  RCS: @(#) $Id: tkMacOSXEmbed.c,v 1.20 2009/06/29 14:35:01 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -159,7 +157,7 @@ TkpMakeWindow(
 	    macWin->xOff = 0;
 	    macWin->yOff = 0;
 	    macWin->toplevel = macWin;
-	} else {
+	} else if (winPtr->parentPtr) {
 	    macWin->xOff = winPtr->parentPtr->privatePtr->xOff +
 		    winPtr->parentPtr->changes.border_width +
 		    winPtr->changes.x;

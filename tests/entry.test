@@ -5,8 +5,6 @@
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: entry.test,v 1.26 2008/10/09 17:20:00 dgp Exp $
 
 package require tcltest 2.2
 namespace import ::tcltest::*

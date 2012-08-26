@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkClipboard.c,v 1.24 2010/01/02 22:52:38 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -647,11 +645,8 @@ TkClipInit(
      * and set up an event handler for it.
      */
 
-    dispPtr->clipWindow = Tk_CreateWindow(interp, NULL, "_clip",
-	    DisplayString(dispPtr->display));
-    if (dispPtr->clipWindow == NULL) {
-	return TCL_ERROR;
-    }
+    dispPtr->clipWindow = (Tk_Window) TkAllocWindow(dispPtr,
+	DefaultScreen(dispPtr->display), NULL);
     Tcl_Preserve(dispPtr->clipWindow);
     atts.override_redirect = True;
     Tk_ChangeWindowAttributes(dispPtr->clipWindow, CWOverrideRedirect, &atts);

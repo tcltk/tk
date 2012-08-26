@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMenubutton.c,v 1.29 2010/02/21 12:14:16 dkf Exp $
  */
 
 #include "tkInt.h"
@@ -68,13 +66,13 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_COLOR, "-activeforeground", "activeForeground", "Background",
 	DEF_MENUBUTTON_ACTIVE_FG_COLOR, -1,
 	 Tk_Offset(TkMenuButton, activeFg),
-	 0, (ClientData) DEF_MENUBUTTON_ACTIVE_FG_MONO, 0},
+	 0, DEF_MENUBUTTON_ACTIVE_FG_MONO, 0},
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	DEF_MENUBUTTON_ANCHOR, -1,
 	Tk_Offset(TkMenuButton, anchor), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENUBUTTON_BG_COLOR, -1, Tk_Offset(TkMenuButton, normalBorder),
-	0, (ClientData) DEF_MENUBUTTON_BG_MONO, 0},
+	0, DEF_MENUBUTTON_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, -1, 0,
 	(ClientData) "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, -1, 0,
@@ -90,7 +88,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
 	DEF_MENUBUTTON_DIRECTION, -1, Tk_Offset(TkMenuButton, direction),
-	0, (ClientData) directionStrings, 0},
+	0, directionStrings, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_MENUBUTTON_DISABLED_FG_COLOR,
 	-1, Tk_Offset(TkMenuButton, disabledFg), TK_OPTION_NULL_OK,
@@ -135,10 +133,10 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkMenuButton, compound), 0,
-	 (ClientData) compoundStrings, 0},
+	 compoundStrings, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_MENUBUTTON_STATE, -1, Tk_Offset(TkMenuButton, state),
-	0, (ClientData) stateStrings, 0},
+	0, stateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_MENUBUTTON_TAKE_FOCUS, -1,
 	Tk_Offset(TkMenuButton, takeFocus), TK_OPTION_NULL_OK, 0, 0},

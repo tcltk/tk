@@ -1,4 +1,4 @@
-/* $Id: ttkFrame.c,v 1.15 2010/01/31 22:50:55 jenglish Exp $
+/*
  * Copyright (c) 2004, Joe English
  *
  * ttk::frame and ttk::labelframe widgets.
@@ -44,6 +44,7 @@ static Tk_OptionSpec FrameOptionSpecs[] = {
 	Tk_Offset(Frame,frame.heightObj), -1,
 	0,0,GEOMETRY_CHANGED },
 
+    WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 

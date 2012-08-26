@@ -47,8 +47,6 @@
  *	authors grant the U.S. Government and others acting in its behalf
  *	permission to use and distribute the software in accordance with the
  *	terms specified in this license.
- *
- * RCS: @(#) $Id: tkMacOSXKeyEvent.c,v 1.2 2010/01/02 11:07:55 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"

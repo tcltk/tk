@@ -1,6 +1,4 @@
 #
-# $Id: sizegrip.tcl,v 1.4 2009/12/23 04:26:59 jenglish Exp $
-#
 # Sizegrip widget bindings.
 #
 # Dragging a sizegrip widget resizes the containing toplevel.

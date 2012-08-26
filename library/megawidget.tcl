@@ -4,8 +4,6 @@
 #	the ::tk::IconList megawdget, which is itself only designed for use in
 #	the Unix file dialogs.
 #
-# CVS: @(#) $Id: megawidget.tcl,v 1.1 2010/03/12 13:53:43 dkf Exp $
-#
 # Copyright (c) 2009-2010 Donal K. Fellows
 #
 # See the file "license.terms" for information on usage and redistribution of

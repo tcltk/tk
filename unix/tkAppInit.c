@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkAppInit.c,v 1.12 2010/09/23 21:45:14 nijtmans Exp $
  */
 
 #undef BUILD_tk
@@ -30,6 +28,9 @@ extern Tcl_PackageInitProc Tktest_Init;
 
 #ifndef TK_LOCAL_APPINIT
 #define TK_LOCAL_APPINIT Tcl_AppInit
+#endif
+#ifndef MODULE_SCOPE
+#   define MODULE_SCOPE extern
 #endif
 MODULE_SCOPE int TK_LOCAL_APPINIT(Tcl_Interp *);
 MODULE_SCOPE int main(int, char **);

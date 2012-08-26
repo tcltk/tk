@@ -13,8 +13,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXWm.c,v 1.78 2011/01/04 22:36:58 wordtech Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -562,6 +560,7 @@ TkWmNewWindow(
     winPtr->wmInfoPtr = wmPtr;
 
     UpdateVRootGeometry(wmPtr);
+
 
     /*
      * Tk must monitor structure events for top-level windows, in order to
@@ -1637,41 +1636,28 @@ WmForgetCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-#if 1
-    Tcl_AppendResult(interp, "wm forget is not yet supported", NULL);
-    return TCL_ERROR;
-#else
+
     register Tk_Window frameWin = (Tk_Window)winPtr;
-    char *oldClass = (char*)Tk_Class(frameWin);
 
     if (Tk_IsTopLevel(frameWin)) {
-	MacDrawable *macWin = (MacDrawable *) winPtr->window;
-	CGrafPtr destPort = TkMacOSXGetDrawablePort(winPtr->window);
 
-	TkFocusJoin(winPtr);
-	Tk_UnmapWindow(frameWin);
-
-	if (destPort != NULL) {
-	    WindowRef winRef = GetWindowFromPort(destPort);
-
-	    TkMacOSXUnregisterMacWindow(winRef);
-	    DisposeWindow(winRef);
-	}
-	macWin->grafPtr = NULL;
-	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
-	macWin->flags &= ~TK_HOST_EXISTS;
-
+	MacDrawable *macWin = (MacDrawable *) winPtr->parentPtr->window;
+    	TkFocusJoin(winPtr);
+    	Tk_UnmapWindow(frameWin); 
+	TkWmDeadWindow(macWin);
 	RemapWindows(winPtr, macWin);
-	TkWmDeadWindow(winPtr);
-	winPtr->flags &=
-		~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
+       
+	winPtr->flags &=~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
+
+	/*
+         * Flags (above) must be cleared before calling TkMapTopFrame (below).
+         */
 
 	TkMapTopFrame(frameWin);
     } else {
-	/* Already not managed by wm - ignore it */
+    	/* Already not managed by wm - ignore it */
     }
     return TCL_OK;
-#endif
 }
 
 /*
@@ -2393,10 +2379,7 @@ WmManageCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-#if 1
-    Tcl_AppendResult(interp, "wm manage is not yet supported", NULL);
-    return TCL_ERROR;
-#else
+
     register Tk_Window frameWin = (Tk_Window)winPtr;
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *oldClass = (char*)Tk_Class(frameWin);
@@ -2423,7 +2406,6 @@ WmManageCmd(
 	}
 	wmPtr = winPtr->wmInfoPtr;
 	winPtr->flags &= ~TK_MAPPED;
-	macWin->grafPtr = NULL;
 	macWin->toplevel = macWin;
 	RemapWindows(winPtr, macWin);
 	winPtr->flags |=
@@ -2433,7 +2415,6 @@ WmManageCmd(
 	/* Already managed by wm - ignore it */
     }
     return TCL_OK;
-#endif
 }
 
 /*
@@ -6287,6 +6268,7 @@ TkMacOSXMakeFullscreen(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int result = TCL_OK, wasFullscreen = (wmPtr->flags & WM_FULLSCREEN);
+    static unsigned long prevMask = 0, prevPres = 0;
 
     if (fullscreen) {
 	int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
@@ -6324,10 +6306,20 @@ TkMacOSXMakeFullscreen(
 	    }
 	    wmPtr->flags |= WM_FULLSCREEN;
 	}
+
+	prevMask = [window styleMask];
+	prevPres = [NSApp presentationOptions];
+	[window setStyleMask: NSBorderlessWindowMask];
+	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
+	                          | NSApplicationPresentationAutoHideMenuBar];
+
     } else {
-	wmPtr->flags &= ~WM_FULLSCREEN;
+	wmPtr->flags &= ~WM_FULLSCREEN; 
+
+	[NSApp setPresentationOptions: prevPres];
+	[window setStyleMask: prevMask];
     }
-    TkMacOSXEnterExitFullscreen(winPtr, [window isKeyWindow]);
+
     if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {
 	UInt64 oldAttributes = wmPtr->attributes;
 	NSRect bounds = NSMakeRect(wmPtr->configX, tkMacOSXZeroScreenHeight -
@@ -6344,55 +6336,6 @@ TkMacOSXMakeFullscreen(
 	wmPtr->flags &= ~WM_SYNC_PENDING;
     }
     return result;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXEnterExitFullscreen --
- *
- *	This procedure enters or exits fullscreen mode if required.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXEnterExitFullscreen(
-    TkWindow *winPtr,
-    int active)
-{
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
-    NSWindow *window = TkMacOSXDrawableWindow(winPtr->window);
-    SystemUIMode mode;
-    SystemUIOptions options;
-
-    GetSystemUIMode(&mode, &options);
-    if (window && wmPtr && (wmPtr->flags & WM_FULLSCREEN) && active) {
-	static SystemUIMode fullscreenMode = 0;
-	static SystemUIOptions fullscreenOptions = 0;
-
-	if (!fullscreenMode) {
-	    fullscreenMode = kUIModeAllSuppressed;
-	}
-	if (mode != fullscreenMode) {
-	    ChkErr(SetSystemUIMode, fullscreenMode, fullscreenOptions);
-	    wmPtr->flags |= WM_SYNC_PENDING;
-	    [window setFrame:[window frameRectForContentRect:NSMakeRect(0, 0,
-		    WidthOfScreen(Tk_Screen(winPtr)),
-		    HeightOfScreen(Tk_Screen(winPtr)))] display:YES];
-	    wmPtr->flags &= ~WM_SYNC_PENDING;
-	}
-    } else {
-	if (mode != kUIModeNormal) {
-	    ChkErr(SetSystemUIMode, kUIModeNormal, 0);
-	}
-    }
 }
 
 /*

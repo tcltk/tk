@@ -1,6 +1,4 @@
 #
-# $Id: classicTheme.tcl,v 1.9 2008/11/29 00:43:48 patthoyts Exp $
-#
 # "classic" Tk theme.
 #
 # Implements Tk's traditional Motif-like look and feel.

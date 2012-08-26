@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXWindowEvent.c,v 1.40 2011/01/06 00:15:24 wordtech Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -274,7 +272,7 @@ extern NSString *opaqueTag;
 	int code = Tcl_EvalEx(_eventInterp, cmd, -1, TCL_EVAL_GLOBAL);
 
 	if (code != TCL_OK) {
-	    Tcl_BackgroundException(_eventInterp, code);
+	    Tcl_BackgroundError(_eventInterp);
 	}
 	Tcl_ResetResult(_eventInterp);
     }
@@ -419,7 +417,6 @@ GenerateActivateEvents(
 {
     TkGenerateActivateEvents(winPtr, activeFlag);
     TkMacOSXGenerateFocusEvent(winPtr, activeFlag);
-    TkMacOSXEnterExitFullscreen(winPtr, activeFlag);
     return true;
 }
 
@@ -710,7 +707,7 @@ TkWmProtocolEventProc(
 		Tcl_AddErrorInfo(interp,
 			Tk_GetAtomName((Tk_Window) winPtr, protocol));
 		Tcl_AddErrorInfo(interp, "\" window manager protocol)");
-		Tcl_BackgroundException(interp, result);
+		Tcl_BackgroundError(interp);
 	    }
 	    Tcl_Release(interp);
 	    Tcl_Release(protPtr);
