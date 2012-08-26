@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinKey.c,v 1.22 2010/02/16 21:12:56 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -691,12 +689,13 @@ XGetModifierMapping(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFreeModifiermap(
     XModifierKeymap *modmap)
 {
     ckfree(modmap->modifiermap);
     ckfree(modmap);
+    return Success;
 }
 
 /*

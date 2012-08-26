@@ -4,8 +4,6 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-'\" RCS: @(#) $Id: grid.n,v 1.23 2009/07/11 07:25:32 dkf Exp $
-'\" 
 .so man.macros
 .TH grid n 8.5 Tk "Tk Built-In Commands"
 .BS
@@ -184,7 +182,7 @@ east, or west) that the slave will
 .QW stick
 to.  If both \fBn\fR and \fBs\fR (or \fBe\fR and \fBw\fR) are
 specified, the slave will be stretched to fill the entire
-height (or width) of its cavity.  The \fBsticky\fR option subsumes the
+height (or width) of its cavity.  The \fB\-sticky\fR option subsumes the
 combination of \fB\-anchor\fR and \fB\-fill\fR that is used by \fBpack\fR.
 The default is
 .QW "" ,
@@ -284,8 +282,8 @@ values are retained.
 .
 Returns the size of the grid (in columns then rows) for \fImaster\fR.
 The size is determined either by the \fIslave\fR occupying the largest
-row or column, or the largest column or row with a \fBminsize\fR,
-\fBweight\fR, or \fBpad\fR that is non-zero.
+row or column, or the largest column or row with a \fB\-minsize\fR,
+\fB\-weight\fR, or \fB\-pad\fR that is non-zero.
 .TP
 \fBgrid slaves \fImaster\fR ?\fI\-option value\fR?
 .
@@ -303,7 +301,7 @@ added, or removed without the need to explicitly specify row and
 column information.
 When no column or row information is specified for a \fIslave\fR,
 default values are chosen for
-\fBcolumn\fR, \fBrow\fR, \fBcolumnspan\fR and \fBrowspan\fR
+\fB\-column\fR, \fB\-row\fR, \fB\-columnspan\fR and \fB\-rowspan\fR
 at the time the \fIslave\fR is managed. The values are chosen
 based upon the current layout of the grid, the position of the \fIslave\fR
 relative to other \fIslave\fRs in the same grid command, and the presence
@@ -313,8 +311,8 @@ command where \fIslave\fR names are normally expected.
 .TP
 \fB\-\fR
 .
-This increases the columnspan of the \fIslave\fR to the left.  Several
-\fB\-\fR's in a row will successively increase the columnspan. A \fB\-\fR
+This increases the \fB\-columnspan\fR of the \fIslave\fR to the left.  Several
+\fB\-\fR's in a row will successively increase the number of columns spanned. A \fB\-\fR
 may not follow a \fB^\fR or a \fBx\fR, nor may it be the first \fIslave\fR
 argument to \fBgrid configure\fR.
 .TP
@@ -325,7 +323,7 @@ the \fIslave\fR on the right.
 .TP
 \fB^\fR
 .
-This extends the \fBrowspan\fR of the \fIslave\fR above the \fB^\fR's
+This extends the \fB\-rowspan\fR of the \fIslave\fR above the \fB^\fR's
 in the grid.  The number of \fB^\fR's in a row must match the number of
 columns spanned by the \fIslave\fR above it.
 .RE
@@ -342,12 +340,12 @@ For the final step, each slave is positioned in its row(s) and column(s)
 based on the setting of its \fIsticky\fR flag.
 .PP
 To compute the minimum size of a layout, the grid geometry manager
-first looks at all slaves whose columnspan and rowspan values are one,
+first looks at all slaves whose \fB\-columnspan\fR and \fB\-rowspan\fR values are one,
 and computes the nominal size of each row or column to be either the
 \fIminsize\fR for that row or column, or the sum of the \fIpad\fRding
 plus the size of the largest slave, whichever is greater.  After that
 the rows or columns in each uniform group adapt to each other.  Then
-the slaves whose rowspans or columnspans are greater than one are
+the slaves whose row-spans or column-spans are greater than one are
 examined.  If a group of rows or columns need to be increased in size
 in order to accommodate these slaves, then extra space is added to each
 row or column in the group according to its \fIweight\fR.  For each

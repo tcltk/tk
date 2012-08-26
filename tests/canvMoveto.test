@@ -5,8 +5,6 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2004 Neil McKay.
 # All rights reserved.
-#
-# RCS: @(#) $Id: canvMoveto.test,v 1.2 2008/10/01 00:09:23 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

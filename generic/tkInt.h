@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: $Id: tkInt.h,v 1.124 2010/12/02 11:38:29 dkf Exp $
  */
 
 #ifndef _TKINT
@@ -826,6 +824,8 @@ typedef struct {
 				 * allocated with ckalloc(). */
     int charValueLen;		/* Length of string in charValuePtr when that
 				 * is non-NULL. */
+    KeySym keysym;		/* Key symbol computed after input methods
+				 * have been invoked */
 } TkKeyEvent;
 
 /*
@@ -943,6 +943,8 @@ MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPPM;
 MODULE_SCOPE TkMainInfo		*tkMainWindowList;
 MODULE_SCOPE Tk_ImageType	tkPhotoImageType;
 MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
+
+MODULE_SCOPE const char *const tkWebColors[20];
 
 /*
  * The definition of pi, at least from the perspective of double-precision
@@ -1210,6 +1212,17 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
+
+#ifdef __WIN32__
+#define TkParseColor XParseColor
+#else
+MODULE_SCOPE Status TkParseColor (Display * display,
+				Colormap map, const char* spec,
+				XColor * colorPtr);
+#endif
+#ifdef HAVE_XFT
+MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
+#endif
 
 /*
  * Unsupported commands.

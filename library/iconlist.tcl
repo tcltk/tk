@@ -3,8 +3,6 @@
 #	Implements the icon-list megawidget used in the "Tk" standard file
 #	selection dialog boxes.
 #
-# RCS: @(#) $Id: iconlist.tcl,v 1.4 2010/03/12 13:53:43 dkf Exp $
-#
 # Copyright (c) 1994-1998 Sun Microsystems, Inc.
 # Copyright (c) 2009 Donal K. Fellows
 #
@@ -446,10 +444,10 @@ package require Tk 8.6
 	bind $canvas <Control-B1-Motion> {;}
 	bind $canvas <Shift-B1-Motion>	[namespace code {my ShiftMotion1 %x %y}]
 
-	bind $canvas <Up>		[namespace code {my UpDown -1}]
-	bind $canvas <Down>		[namespace code {my UpDown  1}]
-	bind $canvas <Left>		[namespace code {my LeftRight -1}]
-	bind $canvas <Right>		[namespace code {my LeftRight  1}]
+	bind $canvas <<PrevLine>>	[namespace code {my UpDown -1}]
+	bind $canvas <<NextLine>>	[namespace code {my UpDown  1}]
+	bind $canvas <<PrevChar>>	[namespace code {my LeftRight -1}]
+	bind $canvas <<NextChar>>	[namespace code {my LeftRight  1}]
 	bind $canvas <Return>		[namespace code {my ReturnKey}]
 	bind $canvas <KeyPress>		[namespace code {my KeyPress %A}]
 	bind $canvas <Control-KeyPress> ";"

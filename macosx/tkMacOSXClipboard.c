@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXClipboard.c,v 1.16 2009/07/06 20:29:21 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -163,7 +161,7 @@ TkSelGetSelection(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XSetSelectionOwner(
     Display *display,		/* X Display. */
     Atom selection,		/* What selection to own. */
@@ -180,6 +178,7 @@ XSetSelectionOwner(
 	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
 	}
     }
+    return Success;
 }
 
 /*

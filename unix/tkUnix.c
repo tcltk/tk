@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUnix.c,v 1.16 2008/04/27 22:39:13 dkf Exp $
  */
 
 #include "tkInt.h"

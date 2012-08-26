@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkPlatDecls.h,v 1.25 2010/08/19 05:05:55 nijtmans Exp $
  */
 
 #ifndef _TKPLATDECLS
@@ -35,7 +33,7 @@ extern "C" {
  * Exported function declarations:
  */
 
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN Window		Tk_AttachHWND(Tk_Window tkwin, HWND hwnd);
 /* 1 */
@@ -86,7 +84,7 @@ typedef struct TkPlatStubs {
     int magic;
     const struct TkPlatStubHooks *hooks;
 
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     Window (*tk_AttachHWND) (Tk_Window tkwin, HWND hwnd); /* 0 */
     HINSTANCE (*tk_GetHINSTANCE) (void); /* 1 */
     HWND (*tk_GetHWND) (Window window); /* 2 */
@@ -123,7 +121,7 @@ extern const TkPlatStubs *tkPlatStubsPtr;
  * Inline function declarations:
  */
 
-#ifdef __WIN32__ /* WIN */
+#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
 #define Tk_AttachHWND \
 	(tkPlatStubsPtr->tk_AttachHWND) /* 0 */
 #define Tk_GetHINSTANCE \

@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkUndo.c,v 1.16 2009/06/30 00:56:29 das Exp $
  */
 
 #include "tkInt.h"

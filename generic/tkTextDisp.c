@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkTextDisp.c,v 1.78 2010/12/06 10:30:49 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -20,6 +18,8 @@
 
 #ifdef __WIN32__
 #include "tkWinInt.h"
+#elif defined(__CYGWIN__)
+#include "tkUnixInt.h"
 #endif
 
 #ifdef MAC_OSX_TK
@@ -1974,7 +1974,7 @@ UpdateDisplayInfo(
 
 	if (spaceLeft <= dInfoPtr->newTopPixelOffset) {
 	    /*
-	     * We can full up all the needed space just by showing more of the
+	     * We can fill up all the needed space just by showing more of the
 	     * current top line.
 	     */
 
@@ -2008,8 +2008,9 @@ UpdateDisplayInfo(
 		 * widget.
 		 */
 
-		lineNum = -1;
-		bytesToCount = 0;	/* Stop compiler warning. */
+                lineNum = TkBTreeNumLines(textPtr->sharedTextPtr->tree,
+                        textPtr) - 1;
+                bytesToCount = INT_MAX;
 	    } else {
 		lineNum = TkBTreeLinesTo(textPtr,
 			dInfoPtr->dLinePtr->index.linePtr);
@@ -3233,7 +3234,7 @@ TextInvalidateLineMetrics(
 	 */
 
 	TkBTreeLinePixelEpoch(textPtr, linePtr) = 0;
-	while (counter > 0 && linePtr != 0) {
+	while (counter > 0 && linePtr != NULL) {
 	    linePtr = TkBTreeNextLine(textPtr, linePtr);
 	    if (linePtr != NULL) {
 		TkBTreeLinePixelEpoch(textPtr, linePtr) = 0;
@@ -3248,7 +3249,7 @@ TextInvalidateLineMetrics(
 	 * more lines than is strictly necessary (but the examination of the
 	 * extra lines should be quick, since their pixelCalculationEpoch will
 	 * be up to date). However, to keep track of that would require more
-	 * complex record-keeping that what we have.
+	 * complex record-keeping than what we have.
 	 */
 
 	if (dInfoPtr->lineUpdateTimer == NULL) {
@@ -6852,6 +6853,9 @@ TkTextIndexBbox(
 
 	if (charWidthPtr != NULL) {
 	    *charWidthPtr = dInfoPtr->maxX - *xPtr;
+            if (*charWidthPtr > textPtr->charWidth) {
+                *charWidthPtr = textPtr->charWidth;
+            }
 	}
 	if (*xPtr > dInfoPtr->maxX) {
 	    *xPtr = dInfoPtr->maxX;

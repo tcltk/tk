@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXButton.c,v 1.37 2010/02/18 22:31:31 nijtmans Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -576,6 +574,15 @@ ComputeNativeButtonGeometry(
 	    }
 	}
 	[button setImagePosition:pos];
+    }
+
+    // if font is too tall, we can't use the fixed-height rounded bezel
+    if (!haveImage && haveText && style == NSRoundedBezelStyle) {
+      Tk_FontMetrics fm;
+      Tk_GetFontMetrics(butPtr->tkfont, &fm);
+      if (fm.linespace > 18) {
+        [button setBezelStyle:(style = NSShadowlessSquareBezelStyle)];
+      }
     }
 
     bounds.size = [cell cellSize];

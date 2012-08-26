@@ -6,11 +6,10 @@
  * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright (c) 2012 Adrian Robert.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXMenu.c,v 1.56 2011/01/06 08:05:05 wordtech Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -253,6 +252,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
+	    /*Add time for errors to fire if necessary. This is sub-optimal but avoids issues with Tcl/Cocoa event loop integration.*/
+	    Tcl_Sleep(100);
 
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
@@ -282,13 +283,20 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (BOOL) menuHasKeyEquivalent: (NSMenu *) menu forEvent: (NSEvent *) event
 	target: (id *) target action: (SEL *) action
 {
-    NSString *key = [event charactersIgnoringModifiers];
+    /*Use lowercaseString to keep "shift" from firing twice if bound to different procedure.*/
+    NSString *key = [[event charactersIgnoringModifiers] lowercaseString];
     NSUInteger modifiers = [event modifierFlags] &
 	    NSDeviceIndependentModifierFlagsMask;
 
     if (modifiers == (NSCommandKeyMask | NSShiftKeyMask) &&
 	    [key compare:@"?"] == NSOrderedSame) {
 	return NO;
+    }
+
+    // For command key, take input manager's word so things
+    // like dvorak / qwerty layout work.
+    if (([event modifierFlags] & NSCommandKeyMask) == NSCommandKeyMask) {
+      key = [event characters];
     }
 
     NSArray *itemArray = [self itemArray];
@@ -344,8 +352,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	int result = TkPostCommand(_tkMenu);
 
 	if (result!=TCL_OK && result!=TCL_CONTINUE && result!=TCL_BREAK) {
-	    Tcl_AddErrorInfo(interp, "\n    (menu preprocess)");
-	    Tcl_BackgroundException(interp, result);
+	      Tcl_AddErrorInfo(interp, "\n    (menu preprocess)");
+	      Tcl_BackgroundException(interp, result);
 	}
 	Tcl_Release(menuPtr);
 	Tcl_Release(interp);
@@ -661,19 +669,24 @@ TkpConfigureMenuEntry(
 		submenu = nil;
 	    } else {
 		[submenu setTitle:title];
+
+    		if ([menuItem isEnabled]) {
+		  /* This menuItem might have been previously disabled (XXX:
+		     track this), which would have disabled entries; we must
+		     re-enable the entries here. */
+		  int i = 0;
+		  NSArray *itemArray = [submenu itemArray];
+		  for (NSMenuItem *item in itemArray) {
+		    TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
+		    [item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
+		    i++;
+		  }
+		}
+
 	    }
 	}
     }
     [menuItem setSubmenu:submenu];
-
-    /*Disabling parent menu disables entries; we must re-enable the entries here.*/
-    NSArray *itemArray = [submenu itemArray];
-    
-    if ([menuItem isEnabled]) {
-	    for (NSMenuItem *item in itemArray) {
-		    [item setEnabled:YES];
-	    }
-	}
 
     return TCL_OK;
 }

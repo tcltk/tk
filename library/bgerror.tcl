@@ -10,9 +10,6 @@
 # Copyright (c) 2007 by ActiveState Software Inc.
 # Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
 # Copyright (c) 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
-# 
-# RCS: @(#) $Id: bgerror.tcl,v 1.42 2010/09/05 14:43:11 dkf Exp $
-#
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
@@ -223,7 +220,9 @@ proc ::tk::dialog::error::bgerror err {
     bind $dlg.function <Return>	[namespace code {ReturnInDetails %W}]
     $dlg.function configure -command [namespace code Details]
 
-    # 6. Place the window (centered in the display) and deiconify it.
+    # 6. Withdraw the window, then update all the geometry information
+    # so we know how big it wants to be, then center the window in the
+    # display (Motif style) and de-iconify it.
 
     ::tk::PlaceWindow $dlg
 
@@ -234,7 +233,7 @@ proc ::tk::dialog::error::bgerror err {
     # 8. Ensure that we are topmost.
 
     raise $dlg
-    if {$tcl_platform(platform) eq "windows"} {
+    if {[tk windowingsystem] eq "win32"} {
 	# Place it topmost if we aren't at the top of the stacking
 	# order to ensure that it's seen
 	if {[lindex [wm stackorder .] end] ne "$dlg"} {

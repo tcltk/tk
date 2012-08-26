@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinMenu.c,v 1.79 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 #define OEMRESOURCE
@@ -215,30 +213,36 @@ GetNewID(
     TkMenuEntry *mePtr,		/* The menu we are working with. */
     WORD *menuIDPtr)		/* The resulting id. */
 {
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *) 
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    WORD curID = tsdPtr->lastCommandID + 1;
+    WORD curID = tsdPtr->lastCommandID;
 
-    /*
-     * The following code relies on WORD wrapping when the highest value is
-     * incremented.
-     */
-
-    while (curID != tsdPtr->lastCommandID) {
+    while (1) {
 	Tcl_HashEntry *commandEntryPtr;
-	int newEntry;
+	int new;
 
-    	commandEntryPtr = Tcl_CreateHashEntry(&tsdPtr->commandTable,
-		((char *) NULL) + curID, &newEntry);
-    	if (newEntry == 1) {
+	/*
+	 * Try the next ID number, taking care to wrap rather than stray
+	 * into the system menu IDs.  [Bug 3235256]
+	 */
+	if (++curID >= 0xF000) {
+	    curID = 1;
+	}
+
+	/* Return error when we've checked all IDs without success. */
+	if (curID == tsdPtr->lastCommandID) {
+	    return TCL_ERROR;
+	}
+
+	commandEntryPtr = Tcl_CreateHashEntry(&tsdPtr->commandTable,
+		INT2PTR(curID), &new);
+	if (new) {
 	    Tcl_SetHashValue(commandEntryPtr, mePtr);
 	    *menuIDPtr = curID;
 	    tsdPtr->lastCommandID = curID;
 	    return TCL_OK;
-    	}
-    	curID++;
+	}
     }
-    return TCL_ERROR;
 }
 
 /*
@@ -438,7 +442,7 @@ TkpDestroyMenuEntry(
 	    Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
 	}
     }
-    FreeID((WORD) (UINT) mePtr->platformEntryData);
+    FreeID((WORD) PTR2INT(mePtr->platformEntryData));
     mePtr->platformEntryData = NULL;
 }
 
@@ -627,7 +631,7 @@ ReconfigureWindowsMenu(
 	    flags |= MF_MENUBREAK;
 	}
 
-	itemID = (UINT) mePtr->platformEntryData;
+	itemID = PTR2INT(mePtr->platformEntryData);
 	if ((mePtr->type == CASCADE_ENTRY)
 		&& (mePtr->childMenuRefPtr != NULL)
 		&& (mePtr->childMenuRefPtr->menuPtr != NULL)) {
@@ -647,7 +651,7 @@ ReconfigureWindowsMenu(
 		     * If the MF_POPUP flag is set, then the id is interpreted
 		     * as the handle of a submenu.
 		     */
-		    itemID = (UINT) childMenuHdl;
+		    itemID = PTR2INT(childMenuHdl);
 		}
 	    }
 	    if ((menuPtr->menuType == MENUBAR)
@@ -857,7 +861,7 @@ TkpMenuNewEntry(
     	Tcl_DoWhenIdle(ReconfigureWindowsMenu, (ClientData) menuPtr);
     }
 
-    mePtr->platformEntryData = (TkMenuPlatformEntryData) (UINT) commandID;
+    mePtr->platformEntryData = (TkMenuPlatformEntryData) INT2PTR(commandID);
 
     return TCL_OK;
 }

@@ -4,8 +4,6 @@
 # can be used by non-unix systems that do not have built-in support
 # for shells.
 #
-# RCS: @(#) $Id: console.tcl,v 1.45 2010/01/04 14:30:50 patthoyts Exp $
-#
 # Copyright (c) 1995-1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # Copyright (c) 2007-2008 Daniel A. Steffen <das@users.sourceforge.net>
@@ -501,18 +499,16 @@ proc ::tk::ConsoleBind {w} {
     }
     bind Console <Control-h> [bind Console <BackSpace>]
 
-    bind Console <Home> {
+    bind Console <<LineStart>> {
 	if {[%W compare insert < promptEnd]} {
 	    tk::TextSetCursor %W {insert linestart}
 	} else {
 	    tk::TextSetCursor %W promptEnd
 	}
     }
-    bind Console <Control-a> [bind Console <Home>]
-    bind Console <End> {
+    bind Console <<LineEnd>> {
 	tk::TextSetCursor %W {insert lineend}
     }
-    bind Console <Control-e> [bind Console <End>]
     bind Console <Control-d> {
 	if {[%W compare insert < promptEnd]} {
 	    break
@@ -677,7 +673,7 @@ proc ::tk::ConsoleInsert {w s} {
 
 proc ::tk::ConsoleOutput {dest string} {
     set w .console
-    $w insert output [string map {\0 \u25a1} $string] $dest
+    $w insert output $string $dest
     ::tk::console::ConstrainBuffer $w $::tk::console::maxLines
     $w see insert
 }

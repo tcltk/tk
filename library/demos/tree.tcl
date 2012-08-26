@@ -2,8 +2,6 @@
 #
 # This demonstration script creates a toplevel window containing a Ttk
 # tree widget.
-#
-# RCS: @(#) $Id: tree.tcl,v 1.5 2008/12/11 18:13:08 jenglish Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

@@ -5,8 +5,6 @@
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: text.test,v 1.56 2010/03/11 09:24:09 dkf Exp $
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -2617,6 +2615,24 @@ test text-10.38 {TextWidgetCmd procedure, "count" option} -setup {
 } -cleanup {
     destroy .t
 } -result {3 903 903 45}
+test text-10.39 {TextWidgetCmd procedure, "count" option} -setup {
+    text .t
+    pack .t
+    update
+    set res {}
+} -body {
+    .t insert end "Line 1 - This is Line 1\n"
+    .t insert end "Line 2 - This is Line 2\n"
+    .t insert end "Line 3 - This is Line 3\n"
+    .t insert end "Line 4 - This is Line 4\n"
+    .t insert end "Line 5 - This is Line 5\n"
+    lappend res [.t count -displaylines 1.19 3.24] [.t count -displaylines 1.0 end]
+    .t tag add hidden 2.9 3.17
+    .t tag configure hidden -elide true
+    lappend res [.t count -displaylines 1.19 3.24] [.t count -displaylines 1.0 end]
+} -cleanup {
+    destroy .t
+} -result {2 6 2 5}
 
 
 test text-11.1 {counting with tag priority eliding} -setup {
@@ -6633,6 +6649,100 @@ test text-34.1 {peer widget -start, -end and selection} -setup {
 } -cleanup {
     destroy .t
 } -result {{10.0 20.0} {6.0 16.0} {6.0 11.0} {1.0 6.0} {1.0 2.0} {} {10.0 20.0}}
+
+test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+    destroy .t .pt
+    set res {}
+} -body {
+    text .t
+    .t peer create .pt
+    for {set i 1} {$i < 100} {incr i} {
+      .t insert end "Line $i\n"
+    }
+    .t configure -startline 5
+    # none of the following delete shall crash
+    # (all did before fixing bug 1630262)
+    # 1. delete on the same line: line1 == line2 in DeleteIndexRange,
+    #    and resetView is true neither for .t not for .pt
+    .pt delete 2.0 2.2
+    # 2. delete just one line: line1 < line2 in DeleteIndexRange,
+    #    and resetView is true only for .t, not for .pt
+    .pt delete 2.0 3.0
+    # 3. delete several lines: line1 < line2 in DeleteIndexRange,
+    #    and resetView is true only for .t, not for .pt
+    .pt delete 2.0 5.0
+    # 4. delete to the end line: line1 < line2 in DeleteIndexRange,
+    #    and resetView is true only for .t, not for .pt
+    .pt delete 2.0 end
+    # this test succeeds provided there is no crash
+    set res 1
+} -cleanup {
+    destroy .pt
+} -result {1}
+
+test text-32.3 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+    destroy .t .pt
+    set res {}
+} -body {
+    text .t
+    .t peer create .pt
+    for {set i 1} {$i < 100} {incr i} {
+      .t insert end "Line $i\n"
+    }
+    .t configure -startline 5
+    .pt configure -startline 3
+    # the following delete shall not crash
+    # (it did before fixing bug 1630262)
+    .pt delete 2.0 3.0
+    # moreover -startline shall be correct
+    # (was wrong before fixing bug 1630262)
+    lappend res [.t cget -start] [.pt cget -start]
+} -cleanup {
+    destroy .pt
+} -result {4 3}
+
+test text-32.4 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+    destroy .t .pt
+    set res {}
+} -body {
+    text .t
+    .t peer create .pt
+    for {set i 1} {$i < 100} {incr i} {
+      .t insert end "Line $i\n"
+    }
+    .t configure -startline 5 -endline 15
+    .pt configure -startline 8 -endline 12
+    # .pt now shows a range entirely inside the range of .pt
+    # from .t, delete lines located after [.pt cget -end]
+    .t delete 9.0 10.0
+    # from .t, delete lines straddling [.pt cget -end]
+    .t delete 6.0 9.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+    .t configure -startline 5 -endline 12
+    .pt configure -startline 8 -endline 12
+    # .pt now shows again a range entirely inside the range of .pt
+    # from .t, delete lines located before [.pt cget -start]
+    .t delete 2.0 3.0
+    # from .t, delete lines straddling [.pt cget -start]
+    .t delete 2.0 5.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+    .t configure -startline 22 -endline 31
+    .pt configure -startline 42 -endline 51
+    # .t now shows a range entirely before the range of .pt
+    # from .t, delete some lines, then do it from .pt
+    .t delete 2.0 3.0
+    .t delete 2.0 5.0
+    .pt delete 2.0 5.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+    .t configure -startline 55 -endline 75
+    .pt configure -startline 60 -endline 70
+    # .pt now shows a range entirely inside the range of .t
+    # from .t, delete a range straddling the entire range of .pt
+    .t delete 3.0 18.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+} -cleanup {
+    destroy .pt .t
+} -result {5 11 8 10 5 8 6 8 22 27 38 44 55 60 57 57}
 
 test text-35.1 {widget dump -command alters tags} -setup {
      proc Dumpy {key value index} {

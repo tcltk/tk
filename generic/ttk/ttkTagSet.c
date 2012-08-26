@@ -1,5 +1,4 @@
-/* $Id: ttkTagSet.c,v 1.5 2010/03/28 21:43:25 jenglish Exp $
- *
+/*
  * Tag tables.  3/4-baked, work in progress.
  *
  * Copyright (C) 2005, Joe English.  Freely redistributable.
