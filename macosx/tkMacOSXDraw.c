@@ -11,13 +11,12 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXDraw.c,v 1.37 2009/08/24 00:55:31 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXDebug.h"
 #include "xbytes.h"
+
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -312,7 +311,7 @@ XCopyPlane(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkPutImage(
     unsigned long *colors,	/* Unused on Macintosh. */
     int ncolors,		/* Unused on Macintosh. */
@@ -331,7 +330,7 @@ TkPutImage(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGImageRef img = CreateCGImageWithXImage(image);
@@ -349,6 +348,7 @@ TkPutImage(
 	TkMacOSXDbgMsg("Invalid destination drawable");
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
@@ -732,7 +732,8 @@ DrawCGImage(
 		dstBounds.size.width, dstBounds.size.height);
 #else /* TK_MAC_DEBUG_IMAGE_DRAWING */
 	CGContextSaveGState(context);
-	CGContextTranslateCTM(context, 0, dstBounds.origin.y + CGRectGetMaxY(dstBounds));
+	CGContextTranslateCTM(context,
+		0, dstBounds.origin.y + CGRectGetMaxY(dstBounds));
 	CGContextScaleCTM(context, 1, -1);
 	CGContextDrawImage(context, dstBounds, image);
 	CGContextRestoreGState(context);
@@ -764,7 +765,7 @@ DrawCGImage(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawLines(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -778,16 +779,12 @@ XDrawLines(
     int i, lw = gc->line_width;
 
     if (npoints < 2) {
-	/*
-	 * TODO: generate BadValue error.
-	 */
-
-	return;
+	return BadValue;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	double prevx, prevy;
@@ -811,6 +808,7 @@ XDrawLines(
 	CGContextStrokePath(dc.context);
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
@@ -1049,7 +1047,7 @@ XDrawRectangles(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillRectangles(
     Display* display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -1064,7 +1062,7 @@ XFillRectangles(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1081,6 +1079,7 @@ XFillRectangles(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*

@@ -28,8 +28,6 @@
  *	The QuickDraw/Carbon coordinate system is relative to the
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
- *
- * RCS: @(#) $Id: ttkMacOSXTheme.c,v 1.29 2009/10/22 08:32:23 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"

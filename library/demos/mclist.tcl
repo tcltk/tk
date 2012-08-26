@@ -2,8 +2,6 @@
 #
 # This demonstration script creates a toplevel window containing a Ttk
 # tree widget configured as a multi-column listbox.
-#
-# RCS: @(#) $Id: mclist.tcl,v 1.6 2009/07/15 21:50:52 das Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

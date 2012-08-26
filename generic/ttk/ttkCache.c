@@ -1,5 +1,4 @@
 /*
- * $Id: ttkCache.c,v 1.3 2009/02/08 19:35:35 jenglish Exp $
  *      Theme engine resource cache.
  *
  * Copyright (c) 2004, Joe English

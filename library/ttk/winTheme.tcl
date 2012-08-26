@@ -1,6 +1,4 @@
 #
-# $Id: winTheme.tcl,v 1.10 2010/09/02 17:47:06 jenglish Exp $
-#
 # Settings for 'winnative' theme.
 #
 

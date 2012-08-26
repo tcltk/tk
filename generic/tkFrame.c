@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkFrame.c,v 1.41 2010/02/05 22:45:03 nijtmans Exp $
  */
 
 #include "default.h"
@@ -177,9 +175,9 @@ static const char *const labelAnchorStrings[] = {
 static const Tk_OptionSpec commonOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_FRAME_BG_COLOR, -1, Tk_Offset(Frame, border),
-	TK_OPTION_NULL_OK, (ClientData) DEF_FRAME_BG_MONO, 0},
+	TK_OPTION_NULL_OK, DEF_FRAME_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-background", 0},
+	NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_STRING, "-colormap", "colormap", "Colormap",
 	DEF_FRAME_COLORMAP, -1, Tk_Offset(Frame, colormapName),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -222,7 +220,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
 
 static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
+	NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_FRAME_BORDER_WIDTH, -1, Tk_Offset(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
@@ -230,12 +228,12 @@ static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_FRAME_RELIEF, -1, Tk_Offset(Frame, relief), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
-	NULL, 0, 0, 0, (ClientData) commonOptSpec, 0}
+	NULL, 0, 0, 0, commonOptSpec, 0}
 };
 
 static const Tk_OptionSpec toplevelOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
+	NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_FRAME_BORDER_WIDTH, -1, Tk_Offset(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
@@ -252,26 +250,26 @@ static const Tk_OptionSpec toplevelOptSpec[] = {
 	DEF_TOPLEVEL_USE, -1, Tk_Offset(Frame, useThis),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
-	NULL, 0, 0, 0, (ClientData) commonOptSpec, 0}
+	NULL, 0, 0, 0, commonOptSpec, 0}
 };
 
 static const Tk_OptionSpec labelframeOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	NULL, 0, -1, 0, (ClientData) "-borderwidth", 0},
+	NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_LABELFRAME_BORDER_WIDTH, -1, Tk_Offset(Frame, borderWidth),
 	0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
 	DEF_LABELFRAME_CLASS, -1, Tk_Offset(Frame, className), 0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
-	NULL, 0, -1, 0, (ClientData) "-foreground", 0},
+	NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_LABELFRAME_FONT, -1, Tk_Offset(Labelframe, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
 	DEF_LABELFRAME_FG, -1, Tk_Offset(Labelframe, textColorPtr), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-labelanchor", "labelAnchor", "LabelAnchor",
 	DEF_LABELFRAME_LABELANCHOR, -1, Tk_Offset(Labelframe, labelAnchor),
-	0, (ClientData) labelAnchorStrings, 0},
+	0, labelAnchorStrings, 0},
     {TK_OPTION_WINDOW, "-labelwidget", "labelWidget", "LabelWidget",
 	NULL, -1, Tk_Offset(Labelframe, labelWin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
@@ -280,7 +278,7 @@ static const Tk_OptionSpec labelframeOptSpec[] = {
 	DEF_LABELFRAME_TEXT, Tk_Offset(Labelframe, textPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
-	NULL, 0, 0, 0, (ClientData) commonOptSpec, 0}
+	NULL, 0, 0, 0, commonOptSpec, 0}
 };
 
 /*

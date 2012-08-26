@@ -16,8 +16,6 @@
  * Author: Paul Mackerras (paulus@cs.anu.edu.au),
  *	   Department of Computer Science,
  *	   Australian National University.
- *
- * RCS: @(#) $Id: tkImgPhInstance.c,v 1.4 2010/11/19 14:48:00 nijtmans Exp $
  */
 
 #include "tkImgPhoto.h"
@@ -637,7 +635,8 @@ TkImgPhotoDisplay(
 		(unsigned int)width, (unsigned int)height, AllPlanes, ZPixmap);
 	if (bgImg == NULL) {
 	    Tk_DeleteErrorHandler(handler);
-	    return;
+	    /* We failed to get the image so draw without blending alpha. It's the best we can do */
+	    goto fallBack;
 	}
 
 	BlendComplexAlpha(bgImg, instancePtr, imageX, imageY, width, height);
@@ -659,6 +658,7 @@ TkImgPhotoDisplay(
 	 * origin appropriately, and use it when drawing the image.
 	 */
 
+    fallBack:
 	TkSetRegion(display, instancePtr->gc,
 		instancePtr->masterPtr->validRegion);
 	XSetClipOrigin(display, instancePtr->gc, drawableX - imageX,

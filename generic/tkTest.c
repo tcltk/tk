@@ -12,8 +12,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkTest.c,v 1.49 2010/06/19 16:18:41 jenglish Exp $
  */
 
 #undef STATIC_BUILD
@@ -593,10 +591,10 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable", "StringTable", "stringTable",
 		"one", Tk_Offset(TypesRecord, stringTablePtr), -1,
-		TK_CONFIG_NULL_OK, (ClientData) stringTable, 0x10},
+		TK_CONFIG_NULL_OK, stringTable, 0x10},
 	    {TK_OPTION_COLOR, "-color", "color", "Color",
 		"red", Tk_Offset(TypesRecord, colorPtr), -1,
-		TK_CONFIG_NULL_OK, (ClientData) "black", 0x20},
+		TK_CONFIG_NULL_OK, "black", 0x20},
 	    {TK_OPTION_FONT, "-font", "font", "Font", "Helvetica 12",
 		Tk_Offset(TypesRecord, fontPtr), -1,
 		TK_CONFIG_NULL_OK, 0, 0x40},
@@ -605,7 +603,7 @@ TestobjconfigObjCmd(
 		TK_CONFIG_NULL_OK, 0, 0x80},
 	    {TK_OPTION_BORDER, "-border", "border", "Border",
 		"blue", Tk_Offset(TypesRecord, borderPtr), -1,
-		TK_CONFIG_NULL_OK, (ClientData) "white", 0x100},
+		TK_CONFIG_NULL_OK, "white", 0x100},
 	    {TK_OPTION_RELIEF, "-relief", "relief", "Relief", "raised",
 		Tk_Offset(TypesRecord, reliefPtr), -1,
 		TK_CONFIG_NULL_OK, 0, 0x200},
@@ -623,9 +621,9 @@ TestobjconfigObjCmd(
 		TK_CONFIG_NULL_OK, 0, 0x2000},
 	    {TK_OPTION_CUSTOM, "-custom", NULL, NULL,
 		"", Tk_Offset(TypesRecord, customPtr), -1,
-		TK_CONFIG_NULL_OK, (ClientData)&CustomOption, 0x4000},
+		TK_CONFIG_NULL_OK, &CustomOption, 0x4000},
 	    {TK_OPTION_SYNONYM, "-synonym", NULL, NULL,
-		NULL, 0, -1, 0, (ClientData) "-color", 0x8000},
+		NULL, 0, -1, 0, "-color", 0x8000},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;
@@ -864,10 +862,10 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable", "StringTable", "stringTable", "one",
 		-1, Tk_Offset(InternalRecord, index),
-		TK_CONFIG_NULL_OK, (ClientData) internalStringTable, 0x10},
+		TK_CONFIG_NULL_OK, internalStringTable, 0x10},
 	    {TK_OPTION_COLOR, "-color", "color", "Color", "red",
 		-1, Tk_Offset(InternalRecord, colorPtr),
-		TK_CONFIG_NULL_OK, (ClientData) "black", 0x20},
+		TK_CONFIG_NULL_OK, "black", 0x20},
 	    {TK_OPTION_FONT, "-font", "font", "Font", "Helvetica 12",
 		-1, Tk_Offset(InternalRecord, tkfont),
 		TK_CONFIG_NULL_OK, 0, 0x40},
@@ -876,7 +874,7 @@ TestobjconfigObjCmd(
 		TK_CONFIG_NULL_OK, 0, 0x80},
 	    {TK_OPTION_BORDER, "-border", "border", "Border", "blue",
 		-1, Tk_Offset(InternalRecord, border),
-		TK_CONFIG_NULL_OK, (ClientData) "white", 0x100},
+		TK_CONFIG_NULL_OK, "white", 0x100},
 	    {TK_OPTION_RELIEF, "-relief", "relief", "Relief", "raised",
 		-1, Tk_Offset(InternalRecord, relief),
 		TK_CONFIG_NULL_OK, 0, 0x200},
@@ -897,9 +895,9 @@ TestobjconfigObjCmd(
 		TK_CONFIG_NULL_OK, 0, 0},
 	    {TK_OPTION_CUSTOM, "-custom", NULL, NULL, "",
 		-1, Tk_Offset(InternalRecord, custom),
-		TK_CONFIG_NULL_OK, (ClientData)&CustomOption, 0x4000},
+		TK_CONFIG_NULL_OK, &CustomOption, 0x4000},
 	    {TK_OPTION_SYNONYM, "-synonym", NULL, NULL,
-		NULL, -1, -1, 0, (ClientData) "-color", 0x8000},
+		NULL, -1, -1, 0, "-color", 0x8000},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;

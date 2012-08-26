@@ -12,8 +12,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMacOSXXStubs.c,v 1.1 2009/06/26 01:42:47 das Exp $
  */
 
 #include "tkMacOSXPrivate.h"
@@ -444,12 +442,13 @@ XSelectInput(
     Debugger();
 }
 
-void
+int
 XBell(
     Display* display,
     int percent)
 {
     SysBeep(percent);
+    return Success;
 }
 
 #if 0
@@ -529,7 +528,7 @@ XDrawPoints(
 }
 */
 
-void
+int
 XWarpPointer(
     Display* display,
     Window src_w,
@@ -541,6 +540,7 @@ XWarpPointer(
     int dest_x,
     int dest_y)
 {
+    return Success;
 }
 
 void

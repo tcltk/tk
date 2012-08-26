@@ -6,8 +6,6 @@
 # Copyright (c) 1998-2000 Ajuba Solutions.
 # Copyright (c) 2008 Donal K. Fellows
 # All rights reserved.
-#
-# RCS: @(#) $Id: canvas.test,v 1.30 2010/01/19 22:10:03 dkf Exp $
 
 package require tcltest 2.1
 eval tcltest::configure $argv

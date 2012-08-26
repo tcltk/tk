@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkFocus.c,v 1.23 2009/09/07 07:29:03 das Exp $
  */
 
 #include "tkInt.h"
@@ -717,7 +715,7 @@ TkFocusKeyEvent(
 {
     DisplayFocusInfo *displayFocusPtr;
     TkWindow *focusWinPtr;
-    int focusX, focusY, vRootX, vRootY, vRootWidth, vRootHeight;
+    int focusX, focusY;
 
     displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
     focusWinPtr = displayFocusPtr->focusWinPtr;
@@ -750,11 +748,9 @@ TkFocusKeyEvent(
 	    eventPtr->xkey.x = -1;
 	    eventPtr->xkey.y = -1;
 	} else {
-	    Tk_GetVRootGeometry((Tk_Window) focusWinPtr, &vRootX, &vRootY,
-		    &vRootWidth, &vRootHeight);
 	    Tk_GetRootCoords((Tk_Window) focusWinPtr, &focusX, &focusY);
-	    eventPtr->xkey.x = eventPtr->xkey.x_root - vRootX - focusX;
-	    eventPtr->xkey.y = eventPtr->xkey.y_root - vRootY - focusY;
+	    eventPtr->xkey.x = eventPtr->xkey.x_root - focusX;
+	    eventPtr->xkey.y = eventPtr->xkey.y_root - focusY;
 	}
 	eventPtr->xkey.window = focusWinPtr->window;
 	return focusWinPtr;

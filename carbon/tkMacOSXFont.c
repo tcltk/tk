@@ -34,8 +34,6 @@
  *   be that at least some of them do not contain any Latin characters. Note
  *   that such fonts can not be used for controls, because controls
  *   definitely require a family id (this assertion needs testing).
- *
- * RCS: @(#) $Id: tkMacOSXFont.c,v 1.2 2010/12/02 11:38:29 dkf Exp $
  */
 
 #include "tkMacOSXPrivate.h"

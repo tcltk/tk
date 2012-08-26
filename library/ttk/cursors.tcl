@@ -1,6 +1,4 @@
 #
-# $Id: cursors.tcl,v 1.2 2008/10/28 20:02:03 jenglish Exp $
-#
 # Map symbolic cursor names to platform-appropriate cursors.
 #
 # The following cursors are defined:

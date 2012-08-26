@@ -11,8 +11,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinWm.c,v 1.147 2010/12/06 10:30:50 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -2438,7 +2436,7 @@ TkWmUnmapWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkpWmSetState(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
     int state)			/* One of IconicState, ZoomState, NormalState,
@@ -2449,7 +2447,7 @@ TkpWmSetState(
 
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	wmPtr->hints.initial_state = state;
-	return;
+	goto setStateEnd;
     }
 
     wmPtr->flags |= WM_SYNC_PENDING;
@@ -2462,11 +2460,13 @@ TkpWmSetState(
     } else if (state == ZoomState) {
 	cmd = SW_SHOWMAXIMIZED;
     } else {
-	return;
+    	goto setStateEnd;
     }
 
     ShowWindow(wmPtr->wrapper, cmd);
     wmPtr->flags &= ~WM_SYNC_PENDING;
+setStateEnd:
+    return 1;
 }
 
 /*
@@ -3503,7 +3503,7 @@ WmCommandCmd(
     wmPtr->cmdArgc = cmdArgc;
     wmPtr->cmdArgv = cmdArgv;
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
-	XSetCommand(winPtr->display, winPtr->window, cmdArgv, cmdArgc);
+	XSetCommand(winPtr->display, winPtr->window, (char **) cmdArgv, cmdArgc);
     }
     return TCL_OK;
 }
@@ -3693,7 +3693,7 @@ WmFrameCmd(
     if (hwnd == NULL) {
 	hwnd = Tk_GetHWND(Tk_WindowId((Tk_Window) winPtr));
     }
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("0x%x", (unsigned) hwnd));
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("0x%x", PTR2INT(hwnd)));
     return TCL_OK;
 }
 
@@ -6403,20 +6403,10 @@ Tk_GetVRootGeometry(
     int *widthPtr, int *heightPtr)
 				/* Store dimensions of virtual root here. */
 {
-    TkWindow *winPtr = (TkWindow *) tkwin;
-
-    /*
-     * XXX: This is not correct for multiple monitors. There may be many
-     * changes required to get this right, and it may effect existing
-     * applications that don't consider possible <0 vroot. See
-     * http://msdn.microsoft.com/library/en-us/gdi/monitor_3lrn.asp for more
-     * info.
-     */
-
-    *xPtr = 0;
-    *yPtr = 0;
-    *widthPtr = DisplayWidth(winPtr->display, winPtr->screenNum);
-    *heightPtr = DisplayHeight(winPtr->display, winPtr->screenNum);
+    *xPtr = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    *yPtr = GetSystemMetrics(SM_YVIRTUALSCREEN);
+    *widthPtr = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    *heightPtr = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 }
 
 /*
@@ -7941,6 +7931,10 @@ WmProc(
     case WM_SYSCOMMAND:
 	/*
 	 * If there is a grab in effect then ignore the minimize command
+	 * unless the grab is on the main window (.). This is to permit
+	 * applications that leave a grab on . to work normally.
+	 * All other toplevels are deemed non-minimizable when a grab is
+	 * present.
 	 * If there is a grab in effect and this window is outside the
 	 * grab tree then ignore all system commands. [Bug 1847002]
 	 */
@@ -7948,8 +7942,11 @@ WmProc(
 	if (winPtr) {
 	    int cmd = wParam & 0xfff0;
 	    int grab = TkGrabState(winPtr);
-	    if (grab != TK_GRAB_NONE && SC_MINIMIZE == cmd)
+	    if ((SC_MINIMIZE == cmd)
+		&& (grab == TK_GRAB_IN_TREE || grab == TK_GRAB_ANCESTOR)
+		&& (winPtr != winPtr->mainPtr->winPtr)) {
 		goto done;
+	    }
 	    if (grab == TK_GRAB_EXCLUDED
 		&& !(SC_MOVE == cmd || SC_SIZE == cmd)) {
 		goto done;

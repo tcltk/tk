@@ -5,8 +5,6 @@
 # Copyright (c) 1994 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
-#
-# RCS: @(#) $Id: select.test,v 1.20 2009/07/23 22:21:35 dkf Exp $
 
 #
 # Note: Multiple display selection handling will only be tested if the
@@ -630,7 +628,7 @@ test select-5.15 {Tk_GetSelection procedure} -setup {
     set ::bgerrors {}
 } -body {
     proc ::bgerror msg {lappend ::bgerrors $msg}
-    selection handle .f1 ERROR errHandler
+    selection handle -type ERROR .f1 errHandler
     list [catch {selection get ERROR} msg] $msg [update] {*}$::bgerrors
 } -cleanup {
     rename ::bgerror {}

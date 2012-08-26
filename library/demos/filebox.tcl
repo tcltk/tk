@@ -1,8 +1,6 @@
 # filebox.tcl --
 #
 # This demonstration script prompts the user to select a file.
-#
-# RCS: @(#) $Id: filebox.tcl,v 1.11 2010/01/04 12:11:48 patthoyts Exp $
 
 if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."

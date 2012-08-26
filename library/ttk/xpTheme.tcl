@@ -1,6 +1,4 @@
 #
-# $Id: xpTheme.tcl,v 1.13 2010/09/02 17:47:06 jenglish Exp $
-#
 # Settings for 'xpnative' theme
 #
 

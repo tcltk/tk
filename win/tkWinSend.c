@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinSend.c,v 1.25 2010/09/28 08:22:30 nijtmans Exp $
  */
 
 #include "tkInt.h"
@@ -994,12 +992,11 @@ SendEventProc(
     Tcl_Event *eventPtr,
     int flags)
 {
-    int result = TCL_OK;
     SendEvent *evPtr = (SendEvent *)eventPtr;
 
     TRACE("SendEventProc\n");
 
-    result = Tcl_EvalObjEx(evPtr->interp, evPtr->cmdPtr,
+    Tcl_EvalObjEx(evPtr->interp, evPtr->cmdPtr,
 	    TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
 
     Tcl_DecrRefCount(evPtr->cmdPtr);

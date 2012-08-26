@@ -3,8 +3,6 @@
 #	Implements messageboxes for platforms that do not have native
 #	messagebox support.
 #
-# RCS: @(#) $Id: msgbox.tcl,v 1.41 2011/01/13 07:39:12 nijtmans Exp $
-#
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
@@ -397,7 +395,7 @@ proc ::tk::MessageBox {args} {
 
     # 7. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
-    # display and de-iconify it.
+    # display (Motif style) and de-iconify it.
 
     ::tk::PlaceWindow $w widget $data(-parent)
 

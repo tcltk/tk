@@ -8,8 +8,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkWinColor.c,v 1.19 2010/11/29 09:07:13 nijtmans Exp $
  */
 
 #include "tkWinInt.h"
@@ -182,7 +180,7 @@ TkpGetColor(
 
     if (((strncasecmp(name, "system", 6) == 0)
 	    && FindSystemColor(name+6, &color, &index))
-	    || XParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), name,
+	    || TkParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin), name,
 		    &color)) {
 	winColPtr = ckalloc(sizeof(WinColor));
 	winColPtr->info.color = color;
@@ -408,7 +406,7 @@ XAllocColor(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFreeColors(
     Display *display,
     Colormap colormap,
@@ -460,6 +458,7 @@ XFreeColors(
 	}
     }
     ReleaseDC(NULL, dc);
+    return Success;
 }
 
 /*
@@ -541,7 +540,7 @@ XCreateColormap(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFreeColormap(
     Display *display,
     Colormap colormap)
@@ -553,6 +552,7 @@ XFreeColormap(
     }
     Tcl_DeleteHashTable(&cmap->refCounts);
     ckfree(cmap);
+    return Success;
 }
 
 /*

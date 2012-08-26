@@ -1,4 +1,4 @@
-/* $Id: ttkScrollbar.c,v 1.11 2010/01/31 22:50:56 jenglish Exp $
+/*
  * Copyright (c) 2003, Joe English
  *
  * ttk::scrollbar widget.
@@ -42,6 +42,7 @@ static Tk_OptionSpec ScrollbarOptionSpecs[] =
 	Tk_Offset(Scrollbar,scrollbar.orient),
 	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
 
+    WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 

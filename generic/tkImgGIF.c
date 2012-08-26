@@ -28,8 +28,6 @@
  * |   notice appear in supporting documentation. This software is	|
  * |   provided "as is" without express or implied warranty.		|
  * +--------------------------------------------------------------------+
- *
- * RCS: @(#) $Id: tkImgGIF.c,v 1.48 2010/07/18 23:58:17 dkf Exp $
  */
 
 #include "tkInt.h"

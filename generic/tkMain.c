@@ -12,8 +12,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkMain.c,v 1.41 2010/12/17 15:14:22 nijtmans Exp $
  */
 
 /**
@@ -31,15 +29,17 @@
 #   endif
 #endif
 
+#include "tkInt.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include "tkInt.h"
 #ifdef NO_STDLIB_H
 #   include "../compat/stdlib.h"
 #else
 #   include <stdlib.h>
 #endif
+
+extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
 /*
  * The default prompt used when the user has not overridden it.
@@ -55,6 +55,7 @@
  * to strcmp here.
  */
 #ifdef __WIN32__
+#   include "tclInt.h"
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char
@@ -94,16 +95,24 @@
  * it will conflict with a declaration elsewhere on some systems.
  */
 
-#if defined(_WIN32)
+#if defined(__WIN32__) || defined(_WIN32)
 #define isatty WinIsTty
 static int WinIsTty(int fd) {
     HANDLE handle;
+
     /*
      * For now, under Windows, we assume we are not running as a console mode
      * app, so we need to use the GUI console. In order to enable this, we
      * always claim to be running on a tty. This probably isn't the right way
      * to do it.
      */
+
+#if !defined(STATIC_BUILD)
+	if (tclStubsPtr->reserved9 && TclpIsAtty) {
+	    /* We are running on Cygwin */
+	    return TclpIsAtty(fd);
+	}
+#endif
     handle = GetStdHandle(STD_INPUT_HANDLE + fd);
 	/*
 	 * If it's a bad or closed handle, then it's been connected to a wish
@@ -183,13 +192,38 @@ Tk_MainEx(
 	abort();
     }
 
+#if defined(__WIN32__) && !defined(__WIN64__) && !defined(UNICODE) && !defined(STATIC_BUILD)
+
+    if (tclStubsPtr->reserved9) {
+	/* We are running win32 Tk under Cygwin, so let's check
+	 * whether the env("DISPLAY") variable or the -display
+	 * argument is set. If so, we really want to run the
+	 * Tk_MainEx function of libtk8.?.dll, not this one. */
+	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
+	loadCygwinTk:
+	    if (TkCygwinMainEx(argc, argv, appInitProc, interp)) {
+		/* Should never reach here. */
+		return;
+	    }
+	} else {
+	    int i;
+
+	    for (i = 1; i < argc; ++i) {
+		if (!_tcscmp(argv[i], TEXT("-display"))) {
+		    goto loadCygwinTk;
+		}
+	    }
+	}
+    }
+#endif
+
     Tcl_InitMemory(interp);
 
     is.interp = interp;
     is.gotPartial = 0;
     Tcl_Preserve(interp);
 
-#if defined(__WIN32__)
+#if defined(__WIN32__) && !defined(__CYGWIN__)
     Tk_InitConsoleChannels(interp);
 #endif
 
