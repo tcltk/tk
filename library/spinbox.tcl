@@ -376,7 +376,8 @@ proc ::tk::spinbox::ButtonDown {w x y} {
 	    $w selection clear
 	}
 	default {
-	    return -code error "unknown spinbox element \"$Priv(element)\""
+	    return -code error -errorcode {TK SPINBOX UNKNOWN_ELEMENT} \
+		"unknown spinbox element \"$Priv(element)\""
 	}
     }
 }

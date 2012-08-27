@@ -321,7 +321,8 @@ Tk_SetMinimumRequestSize(
 int
 TkSetGeometryMaster(
     Tcl_Interp *interp,		/* Current interpreter, for error. */
-    Tk_Window tkwin,		/* Window that will have geometry master set. */
+    Tk_Window tkwin,		/* Window that will have geometry master
+				 * set. */
     const char *master)		/* The master identity. */
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
@@ -332,10 +333,11 @@ TkSetGeometryMaster(
     }
     if (winPtr->geometryMaster != NULL) {
 	if (interp != NULL) {
-	    Tcl_AppendResult(interp, "cannot use geometry manager ", master,
-		    " inside ", Tk_PathName(tkwin),
-  	            " which already has slaves managed by ",
-		    winPtr->geometryMaster, NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "cannot use geometry manager %s inside %s which already"
+		    " has slaves managed by %s",
+		    master, Tk_PathName(tkwin), winPtr->geometryMaster));
+	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", NULL);
 	}
 	return TCL_ERROR;
     }
@@ -364,8 +366,9 @@ TkSetGeometryMaster(
 
 void
 TkFreeGeometryMaster(
-    Tk_Window tkwin,	/* Window that will have geometry master cleared. */
-    const char *master)	/* The master identity. */
+    Tk_Window tkwin,		/* Window that will have geometry master
+				 * cleared. */
+    const char *master)		/* The master identity. */
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
 

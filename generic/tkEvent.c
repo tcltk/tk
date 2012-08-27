@@ -1336,7 +1336,7 @@ Tk_HandleEvent(
 	}
     } else {
 	for (handlerPtr = winPtr->handlerList; handlerPtr != NULL; ) {
-	    if ((handlerPtr->mask & mask) != 0) {
+	    if (handlerPtr->mask & mask) {
 		ip.nextHandler = handlerPtr->nextPtr;
 		handlerPtr->proc(handlerPtr->clientData, eventPtr);
 		handlerPtr = ip.nextHandler;

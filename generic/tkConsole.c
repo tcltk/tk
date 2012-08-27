@@ -747,7 +747,9 @@ ConsoleObjCmd(
 	Tcl_SetObjResult(interp, Tcl_GetObjResult(consoleInterp));
 	Tcl_Release(consoleInterp);
     } else {
-	Tcl_AppendResult(interp, "no active console interp", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"no active console interp", -1));
+	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NONE", NULL);
 	result = TCL_ERROR;
     }
     Tcl_DecrRefCount(cmd);
@@ -796,7 +798,9 @@ InterpreterObjCmd(
     }
 
     if ((otherInterp == NULL) || Tcl_InterpDeleted(otherInterp)) {
-	Tcl_AppendResult(interp, "no active master interp", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"no active master interp", -1));
+	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NO_INTERP", NULL);
 	return TCL_ERROR;
     }
 

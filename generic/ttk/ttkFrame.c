@@ -206,10 +206,9 @@ int TtkGetLabelAnchorFromObj(
 
 error:
     if (interp) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp,
-	    "Bad label anchor specification ", Tcl_GetString(objPtr),
-	    NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Bad label anchor specification %s", Tcl_GetString(objPtr)));
+	Tcl_SetErrorCode(interp, "TTK", "LABEL", "ANCHOR", NULL);
     }
     return TCL_ERROR;
 }

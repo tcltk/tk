@@ -190,11 +190,13 @@ proc ::tk::dialog::color::Config {dataName argList} {
 	set data(-title) " "
     }
     if {[catch {winfo rgb . $data(-initialcolor)} err]} {
-	error $err
+	return -code error -errorcode [list TK LOOKUP COLOR $data(-initialcolor)] \
+	    $err
     }
 
     if {![winfo exists $data(-parent)]} {
-	error "bad window path name \"$data(-parent)\""
+	return -code error -errorcode [list TK LOOKUP WINDOW $data(-parent)] \
+	    "bad window path name \"$data(-parent)\""
     }
 }
 

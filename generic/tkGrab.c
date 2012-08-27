@@ -211,10 +211,15 @@ Tk_GrabObjCmd(
 	 * is "grab", but if it has been aliased, the message will be
 	 * incorrect.
 	 */
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		Tcl_GetString(objv[0]), " ?-global? window\" or \"",
-		Tcl_GetString(objv[0]), " option ?arg ...?\"", NULL);
+
+	Tcl_WrongNumArgs(interp, 1, objv, "?-global? window");
+	Tcl_AppendResult(interp, " or \"", Tcl_GetString(objv[0]),
+		" option ?arg ...?\"", NULL);
+	/* This API not exposed:
+	 *
+	((Interp *) interp)->flags |= INTERP_ALTERNATE_WRONG_ARGS;
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
+	 */
 	return TCL_ERROR;
     }
 
@@ -277,17 +282,20 @@ Tk_GrabObjCmd(
 	    }
 	    dispPtr = ((TkWindow *) tkwin)->dispPtr;
 	    if (dispPtr->eventualGrabWinPtr != NULL) {
-		Tcl_SetResult(interp, dispPtr->eventualGrabWinPtr->pathName,
-			TCL_STATIC);
+		Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window)
+			dispPtr->eventualGrabWinPtr));
 	    }
 	} else {
+	    Tcl_Obj *resultObj = Tcl_NewObj();
+
 	    for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 		    dispPtr = dispPtr->nextPtr) {
 		if (dispPtr->eventualGrabWinPtr != NULL) {
-		    Tcl_AppendElement(interp,
-			    dispPtr->eventualGrabWinPtr->pathName);
+		    Tcl_ListObjAppendElement(NULL, resultObj, TkNewWindowObj(
+			    (Tk_Window) dispPtr->eventualGrabWinPtr));
 		}
 	    }
+	    Tcl_SetObjResult(interp, resultObj);
 	}
 	return TCL_OK;
 
@@ -340,6 +348,7 @@ Tk_GrabObjCmd(
     case GRABCMD_STATUS: {
 	/* [grab status window] */
 	TkWindow *winPtr;
+	const char *statusString;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 1, objv, "status window");
@@ -352,12 +361,13 @@ Tk_GrabObjCmd(
 	}
 	dispPtr = winPtr->dispPtr;
 	if (dispPtr->eventualGrabWinPtr != winPtr) {
-	    Tcl_SetResult(interp, "none", TCL_STATIC);
+	    statusString = "none";
 	} else if (dispPtr->grabFlags & GRAB_GLOBAL) {
-	    Tcl_SetResult(interp, "global", TCL_STATIC);
+	    statusString = "global";
 	} else {
-	    Tcl_SetResult(interp, "local", TCL_STATIC);
+	    statusString = "local";
 	}
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(statusString, -1));
 	break;
     }
     }
@@ -410,10 +420,7 @@ Tk_Grab(
 	    return TCL_OK;
 	}
 	if (dispPtr->eventualGrabWinPtr->mainPtr != winPtr->mainPtr) {
-	alreadyGrabbed:
-	    Tcl_SetResult(interp, "grab failed: another application has grab",
-		    TCL_STATIC);
-	    return TCL_ERROR;
+	    goto alreadyGrabbed;
 	}
 	Tk_Ungrab((Tk_Window) dispPtr->eventualGrabWinPtr);
     }
@@ -423,7 +430,7 @@ Tk_Grab(
     if (!grabGlobal)
 #else
     if (0)
-#endif
+#endif /* MAC_OSX_TK */
     {
 	Window dummy1, dummy2;
 	int dummy3, dummy4, dummy5, dummy6;
@@ -440,7 +447,7 @@ Tk_Grab(
 	dispPtr->grabFlags &= ~(GRAB_GLOBAL|GRAB_TEMP_GLOBAL);
 	XQueryPointer(dispPtr->display, winPtr->window, &dummy1,
 		&dummy2, &dummy3, &dummy4, &dummy5, &dummy6, &state);
-	if ((state & ALL_BUTTONS) != 0) {
+	if (state & ALL_BUTTONS) {
 	    dispPtr->grabFlags |= GRAB_TEMP_GLOBAL;
 	    goto setGlobalGrab;
 	}
@@ -479,26 +486,7 @@ Tk_Grab(
 	    Tcl_Sleep(100);
 	}
 	if (grabResult != 0) {
-	grabError:
-	    if (grabResult == GrabNotViewable) {
-		Tcl_SetResult(interp, "grab failed: window not viewable",
-			TCL_STATIC);
-	    } else if (grabResult == AlreadyGrabbed) {
-		goto alreadyGrabbed;
-	    } else if (grabResult == GrabFrozen) {
-		Tcl_SetResult(interp,
-			"grab failed: keyboard or pointer frozen", TCL_STATIC);
-	    } else if (grabResult == GrabInvalidTime) {
-		Tcl_SetResult(interp, "grab failed: invalid time",
-			TCL_STATIC);
-	    } else {
-		char msg[64 + TCL_INTEGER_SPACE];
-
-		sprintf(msg, "grab failed for unknown reason (code %d)",
-			grabResult);
-		Tcl_AppendResult(interp, msg, NULL);
-	    }
-	    return TCL_ERROR;
+	    goto grabError;
 	}
 	grabResult = XGrabKeyboard(dispPtr->display, Tk_WindowId(tkwin),
 		False, GrabModeAsync, GrabModeAsync, CurrentTime);
@@ -546,6 +534,31 @@ Tk_Grab(
     }
     QueueGrabWindowChange(dispPtr, winPtr);
     return TCL_OK;
+
+  grabError:
+    if (grabResult == GrabNotViewable) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"grab failed: window not viewable", -1));
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNVIEWABLE", NULL);
+    } else if (grabResult == AlreadyGrabbed) {
+    alreadyGrabbed:
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"grab failed: another application has grab", -1));
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "GRABBED", NULL);
+    } else if (grabResult == GrabFrozen) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"grab failed: keyboard or pointer frozen", -1));
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "FROZEN", NULL);
+    } else if (grabResult == GrabInvalidTime) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"grab failed: invalid time", -1));
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "BAD_TIME", NULL);
+    } else {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"grab failed for unknown reason (code %d)", grabResult));
+	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNKNOWN", NULL);
+    }
+    return TCL_ERROR;
 }
 
 /*
@@ -846,7 +859,7 @@ TkPointerEvent(
 	    }
 	}
 	if (eventPtr->type == ButtonPress) {
-	    if ((eventPtr->xbutton.state & ALL_BUTTONS) == 0) {
+	    if (!(eventPtr->xbutton.state & ALL_BUTTONS)) {
 		if (outsideGrabTree) {
 		    TkChangeEventWindow(eventPtr, dispPtr->grabWinPtr);
 		    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_HEAD);

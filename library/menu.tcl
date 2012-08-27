@@ -253,7 +253,8 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     set tearoff [expr {[tk windowingsystem] eq "x11" \
 	    || [$menu cget -type] eq "tearoff"}]
     if {[string first $w $menu] != 0} {
-	error "can't post $menu:  it isn't a descendant of $w (this is a new requirement in Tk versions 3.0 and later)"
+	return -code error -errorcode {TK MENUBUTTON POST_NONCHILD} \
+	    "can't post $menu: it isn't a descendant of $w"
     }
     set cur $Priv(postedMb)
     if {$cur ne ""} {
@@ -320,7 +321,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 		    $menu activate $entry
 		    GenerateMenuSelect $menu
 		}
-	}
+	    }
 	    right {
 		set x [expr {[winfo rootx $w] + [winfo width $w]}]
 		set y [expr {(2 * [winfo rooty $w] + [winfo height $w]) / 2}]
@@ -353,14 +354,12 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 		}
 	    }
 	}
-    } msg]} {
+    } msg opt]} {
 	# Error posting menu (e.g. bogus -postcommand). Unpost it and
 	# reflect the error.
 
-	set savedInfo $errorInfo
 	MenuUnpost {}
-	error $msg $savedInfo
-
+	return -options $opt $msg
     }
 
     set Priv(tearoff) $tearoff

@@ -191,8 +191,8 @@ static void		DisplayMessage(ClientData clientData);
 static const Tk_ClassProcs messageClass = {
     sizeof(Tk_ClassProcs),	/* size */
     MessageWorldChanged,	/* worldChangedProc */
-    NULL,					/* createProc */
-    NULL					/* modalProc */
+    NULL,			/* createProc */
+    NULL			/* modalProc */
 };
 
 /*
@@ -277,7 +277,7 @@ Tk_MessageObjCmd(
 	return TCL_ERROR;
     }
 
-    Tcl_SetResult(interp, Tk_PathName(msgPtr->tkwin), TCL_STATIC);
+    Tcl_SetObjResult(interp, TkNewWindowObj(msgPtr->tkwin));
     return TCL_OK;
 }
 

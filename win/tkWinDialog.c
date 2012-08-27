@@ -361,9 +361,9 @@ Tk_ChooseColorObjCmd(
 	    return TCL_ERROR;
 	}
 	if (i + 1 == objc) {
-	    string = Tcl_GetString(optionPtr);
-	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(optionPtr)));
+	    Tcl_SetErrorCode(interp, "TK", "COLORDIALOG", "VALUE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -424,13 +424,11 @@ Tk_ChooseColorObjCmd(
 	/*
 	 * User has selected a color
 	 */
-	char color[100];
 
-	sprintf(color, "#%02x%02x%02x",
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%02x%02x%02x",
 		GetRValue(chooseColor.rgbResult),
 		GetGValue(chooseColor.rgbResult),
-		GetBValue(chooseColor.rgbResult));
-	Tcl_AppendResult(interp, color, NULL);
+		GetBValue(chooseColor.rgbResult)));
 	oldColor = chooseColor.rgbResult;
 	result = TCL_OK;
     }
@@ -583,7 +581,7 @@ GetFileName(
     Tcl_Obj *filterObj = NULL, *initialTypeObj = NULL, *typeVariableObj = NULL;
     Tcl_DString utfFilterString, utfDirString, ds;
     Tcl_DString extString, filterString, dirString, titleString;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+    ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     static const char *const saveOptionStrings[] = {
 	"-confirmoverwrite", "-defaultextension", "-filetypes", "-initialdir",
@@ -594,8 +592,8 @@ GetFileName(
 	"-multiple", "-parent", "-title", "-typevariable", NULL
     };
     enum options {
-	FILE_CONFIRMOW,	FILE_DEFAULT,	FILE_TYPES,	FILE_INITDIR, FILE_INITFILE,
-	FILE_MULTIPLE,	FILE_PARENT,	FILE_TITLE, FILE_TYPEVARIABLE
+	FILE_CONFIRMOW,	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE,
+	FILE_MULTIPLE,	FILE_PARENT,  FILE_TITLE, FILE_TYPEVARIABLE
     };
 
     file[0] = '\0';
@@ -619,9 +617,9 @@ GetFileName(
 	}
 
 	if (i + 1 == objc) {
-	    string = Tcl_GetString(objv[i]);
-	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
 	    goto end;
 	}
 
@@ -647,9 +645,9 @@ GetFileName(
 	    if (Tcl_TranslateFileName(interp, string, &ds) == NULL) {
 		goto end;
 	    }
-	    Tcl_UtfToExternal(NULL, TkWinGetUnicodeEncoding(), Tcl_DStringValue(&ds),
-		    Tcl_DStringLength(&ds), 0, NULL, (char *) file,
-		    sizeof(file), NULL, NULL, NULL);
+	    Tcl_UtfToExternal(NULL, TkWinGetUnicodeEncoding(),
+		    Tcl_DStringValue(&ds), Tcl_DStringLength(&ds), 0, NULL,
+		    (char *) file, sizeof(file), NULL, NULL, NULL);
 	    Tcl_DStringFree(&ds);
 	    break;
 	case FILE_PARENT:
@@ -870,8 +868,8 @@ GetFileName(
 	    Tcl_SetObjResult(interp, returnList);
 	    Tcl_DStringFree(&ds);
 	} else {
-	    Tcl_AppendResult(interp, ConvertExternalFilename(ofn.lpstrFile,
-		    &ds), NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    ConvertExternalFilename(ofn.lpstrFile, &ds), -1));
 	    gotFilename = (Tcl_DStringLength(&ds) > 0);
 	    Tcl_DStringFree(&ds);
 	}
@@ -895,9 +893,11 @@ GetFileName(
 	    }
 	}
     } else if (cdlgerr == FNERR_INVALIDFILENAME) {
-	Tcl_SetResult(interp, "invalid filename \"", TCL_STATIC);
-	Tcl_AppendResult(interp, ConvertExternalFilename(ofn.lpstrFile,
-		&ds), "\"", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"invalid filename \"%s\"",
+		ConvertExternalFilename(ofn.lpstrFile, &ds)));
+	Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "INVALID_FILENAME",
+		NULL);
 	Tcl_DStringFree(&ds);
     } else {
 	result = TCL_OK;
@@ -962,14 +962,16 @@ OFNHookProc(
 	OFNOTIFY *notifyPtr = (OFNOTIFY *) lParam;
 
 	/*
-	 * This is weird... or not. The CDN_FILEOK is NOT sent when the selection
-	 * exceeds declared buffer size (the nMaxFile member of the OPENFILENAME
-	 * struct passed to GetOpenFileName function). So, we have to rely on
-	 * the most recent CDN_SELCHANGE then. Unfortunately this means, that
-	 * gathering the selected filenames happens twice when they fit into the
-	 * declared buffer. Luckily, it's not frequent operation so it should
-	 * not incur any noticeable delay. See [tktoolkit-Bugs-2987995]
+	 * This is weird... or not. The CDN_FILEOK is NOT sent when the
+	 * selection exceeds declared buffer size (the nMaxFile member of the
+	 * OPENFILENAME struct passed to GetOpenFileName function). So, we
+	 * have to rely on the most recent CDN_SELCHANGE then. Unfortunately
+	 * this means, that gathering the selected filenames happens twice
+	 * when they fit into the declared buffer. Luckily, it's not frequent
+	 * operation so it should not incur any noticeable delay. See [Bug
+	 * 2987995]
 	 */
+
 	if (notifyPtr->hdr.code == CDN_FILEOK ||
 		notifyPtr->hdr.code == CDN_SELCHANGE) {
 	    int dirsize, selsize;
@@ -991,8 +993,10 @@ OFNHookProc(
 	    buffersize = (selsize + dirsize + 1);
 
 	    /*
-	     * Just empty the buffer if dirsize indicates an error [Bug 3071836]
+	     * Just empty the buffer if dirsize indicates an error. [Bug
+	     * 3071836]
 	     */
+
 	    if ((selsize > 1) && (dirsize > 0)) {
 		if (ofnData->dynFileBufferSize < buffersize) {
 		    buffer = ckrealloc(buffer, buffersize * sizeof(TCHAR));
@@ -1357,9 +1361,9 @@ Tk_ChooseDirectoryObjCmd(
 	    goto cleanup;
 	}
 	if (i + 1 == objc) {
-	    string = Tcl_GetString(optionPtr);
-	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(optionPtr)));
+	    Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "VALUE", NULL);
 	    goto cleanup;
 	}
 
@@ -1369,7 +1373,8 @@ Tk_ChooseDirectoryObjCmd(
 	    if (Tcl_TranslateFileName(interp,string,&initDirString) == NULL) {
 		goto cleanup;
 	    }
-	    Tcl_WinUtfToTChar(Tcl_DStringValue(&initDirString), -1, &tempString);
+	    Tcl_WinUtfToTChar(Tcl_DStringValue(&initDirString), -1,
+		    &tempString);
 	    uniStr = (TCHAR *) Tcl_DStringValue(&tempString);
 
 	    /*
@@ -1461,10 +1466,11 @@ Tk_ChooseDirectoryObjCmd(
 	pidl = SHBrowseForFolder(&bInfo);
 
 	/*
-	 * This is a fix for Windows 2000, which seems to modify the folder name
-	 * buffer even when the dialog is canceled (in this case the buffer
-	 * contains garbage). See [Bug #3002230]
+	 * This is a fix for Windows 2000, which seems to modify the folder
+	 * name buffer even when the dialog is canceled (in this case the
+	 * buffer contains garbage). See [Bug #3002230]
 	 */
+
 	path[0] = '\0';
 
 	/*
@@ -1473,9 +1479,10 @@ Tk_ChooseDirectoryObjCmd(
 
 	if (pidl != NULL) {
 	    if (!SHGetPathFromIDList(pidl, path)) {
-		Tcl_SetResult(interp, "Error: Not a file system folder\n",
-			TCL_VOLATILE);
-	    };
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"error: not a file system folder", -1));
+		Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "PSEUDO", NULL);
+	    }
 	    pMalloc->lpVtbl->Free(pMalloc, (void *) pidl);
 	} else if (_tcslen(cdCBData.retDir) > 0) {
 	    _tcscpy(path, cdCBData.retDir);
@@ -1502,8 +1509,8 @@ Tk_ChooseDirectoryObjCmd(
     if (*path) {
 	Tcl_DString ds;
 
-	Tcl_AppendResult(interp, ConvertExternalFilename(path, &ds),
-		NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		ConvertExternalFilename(path, &ds), -1));
 	Tcl_DStringFree(&ds);
     }
 
@@ -1578,7 +1585,8 @@ ChooseDirectoryValidateProc(
 	Tcl_DStringFree(&initDirString);
 	Tcl_WinUtfToTChar(Tcl_DStringValue(&tempString), -1, &initDirString);
 	Tcl_DStringFree(&tempString);
-	_tcsncpy(string, (TCHAR *) Tcl_DStringValue(&initDirString), MAX_PATH);
+	_tcsncpy(string, (TCHAR *) Tcl_DStringValue(&initDirString),
+		MAX_PATH);
 	Tcl_DStringFree(&initDirString);
 
 	if (SetCurrentDirectory(string) == 0) {
@@ -1596,7 +1604,9 @@ ChooseDirectoryValidateProc(
 		 * User HAS to select a valid directory.
 		 */
 
-		wsprintf(selDir, TEXT("Directory '%s' does not exist,\nplease select or enter an existing directory."), chooseDirSharedData->retDir);
+		wsprintf(selDir, TEXT("Directory '%s' does not exist,\n"
+			"please select or enter an existing directory."),
+			chooseDirSharedData->retDir);
 		MessageBox(NULL, selDir, NULL, MB_ICONEXCLAMATION|MB_OK);
 		chooseDirSharedData->retDir[0] = '\0';
 		return 1;
@@ -1732,7 +1742,6 @@ Tk_MessageBoxObjCmd(
 
     for (i = 1; i < objc; i += 2) {
 	int index;
-	const char *string;
 	Tcl_Obj *optionPtr, *valuePtr;
 
 	optionPtr = objv[i];
@@ -1743,9 +1752,9 @@ Tk_MessageBoxObjCmd(
 	    return TCL_ERROR;
 	}
 	if (i + 1 == objc) {
-	    string = Tcl_GetString(optionPtr);
-	    Tcl_AppendResult(interp, "value for \"", string, "\" missing",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(optionPtr)));
+	    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "VALUE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1814,9 +1823,10 @@ Tk_MessageBoxObjCmd(
 		    }
 		}
 		if (defaultBtnIdx < 0) {
-		    Tcl_AppendResult(interp, "invalid default button \"",
-			    TkFindStateString(buttonMap, defaultBtn),
-			    "\"", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "invalid default button \"%s\"",
+			    TkFindStateString(buttonMap, defaultBtn)));
+		    Tcl_SetErrorCode(interp, "TK", "MSGBOX", "DEFAULT", NULL);
 		    return TCL_ERROR;
 		}
 		break;
@@ -1864,9 +1874,8 @@ Tk_MessageBoxObjCmd(
     EnableWindow(hWnd, 1);
 
     Tcl_DecrRefCount(tmpObj);
-
-    Tcl_SetResult(interp,
-	    (char *)TkFindStateString(buttonMap, winCode), TCL_STATIC);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    TkFindStateString(buttonMap, winCode), -1));
     return TCL_OK;
 }
 
@@ -1934,6 +1943,7 @@ SetTkDialog(
 /*
  * Factored out a common pattern in use in this file.
  */
+
 static const char *
 ConvertExternalFilename(
     TCHAR *filename,
@@ -1969,7 +1979,9 @@ ConvertExternalFilename(
  */
 
 static Tcl_Obj *
-GetFontObj(HDC hdc, LOGFONT *plf)
+GetFontObj(
+    HDC hdc,
+    LOGFONT *plf)
 {
     Tcl_DString ds;
     Tcl_Obj *resObj;
@@ -2001,7 +2013,11 @@ GetFontObj(HDC hdc, LOGFONT *plf)
 }
 
 static void
-ApplyLogfont(Tcl_Interp *interp, Tcl_Obj *cmdObj, HDC hdc, LOGFONT *logfontPtr)
+ApplyLogfont(
+    Tcl_Interp *interp,
+    Tcl_Obj *cmdObj,
+    HDC hdc,
+    LOGFONT *logfontPtr)
 {
     int objc;
     Tcl_Obj **objv, **tmpv;
@@ -2036,7 +2052,11 @@ typedef struct HookData {
 } HookData;
 
 static UINT_PTR CALLBACK
-HookProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+HookProc(
+    HWND hwndDlg,
+    UINT msg,
+    WPARAM wParam,
+    LPARAM lParam)
 {
     CHOOSEFONT *pcf = (CHOOSEFONT *) lParam;
     HWND hwndCtrl;
@@ -2048,7 +2068,7 @@ HookProc(HWND hwndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 	phd = (HookData *) pcf->lCustData;
 	phd->hwnd = hwndDlg;
 	if (tsdPtr->debugFlag) {
-	    tsdPtr->debugInterp = (Tcl_Interp *) phd->interp;
+	    tsdPtr->debugInterp = phd->interp;
 	    Tcl_DoWhenIdle(SetTkDialog, hwndDlg);
 	}
 	if (phd->titleObj != NULL) {
@@ -2115,7 +2135,9 @@ enum FontchooserOption {
 };
 
 static Tcl_Obj *
-FontchooserCget(HookData *hdPtr, int optionIndex)
+FontchooserCget(
+    HookData *hdPtr,
+    int optionIndex)
 {
     Tcl_Obj *resObj = NULL;
 
@@ -2225,16 +2247,18 @@ FontchooserConfigureCmd(
 	    return TCL_OK;
 	}
 	if (i + 1 == objc) {
-	    Tcl_AppendResult(interp, "value for \"",
-		    Tcl_GetString(objv[i]), "\" missing", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "VALUE", NULL);
 	    return TCL_ERROR;
 	}
 	switch (optionIndex) {
 	case FontchooserVisible: {
-	    const char *msg = "cannot change read-only option "
+	    static const char *msg = "cannot change read-only option "
 		    "\"-visible\": use the show or hide command";
 
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, -1));
+	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "READONLY", NULL);
 	    return TCL_ERROR;
 	}
 	case FontchooserParent: {
@@ -2367,9 +2391,10 @@ FontchooserShowCmd(
 	}
 	fontPtr = (TkFont *) f;
 	cf.Flags |= CF_INITTOLOGFONTSTRUCT;
-    Tcl_WinUtfToTChar(fontPtr->fa.family, -1, &ds);
-    _tcsncpy(lf.lfFaceName, (TCHAR *)Tcl_DStringValue(&ds), LF_FACESIZE-1);
-    Tcl_DStringFree(&ds);
+	Tcl_WinUtfToTChar(fontPtr->fa.family, -1, &ds);
+	_tcsncpy(lf.lfFaceName, (TCHAR *)Tcl_DStringValue(&ds),
+		LF_FACESIZE-1);
+	Tcl_DStringFree(&ds);
 	lf.lfFaceName[LF_FACESIZE-1] = 0;
 	lf.lfHeight = -MulDiv(TkFontGetPoints(tkwin, fontPtr->fa.size),
 	    GetDeviceCaps(hdc, LOGPIXELSY), 72);

@@ -976,8 +976,8 @@ proc ::tk::console::Expand {w {type ""}} {
  
 proc ::tk::console::ExpandPathname str {
     set pwd [EvalAttached pwd]
-    if {[catch {EvalAttached [list cd [file dirname $str]]} err]} {
-	return -code error $err
+    if {[catch {EvalAttached [list cd [file dirname $str]]} err opt]} {
+	return -options $opt $err
     }
     set dir [file tail $str]
     ## Check to see if it was known to be a directory and keep the trailing
