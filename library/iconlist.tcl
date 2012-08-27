@@ -98,8 +98,9 @@ package require Tk 8.6
 			set first [set last [lindex $args 0]]
 		    }
 		    default {
-			return -code error "wrong # args: should be\
-			     \"[lrange [info level 0] 0 1] first ?last?\""
+			return -code error -errorcode {TCL WRONGARGS} \
+			    "wrong # args: should be\
+			    \"[lrange [info level 0] 0 1] first ?last?\""
 		    }
 		}
 
@@ -149,8 +150,9 @@ package require Tk 8.6
 			set first [set last [lindex $args 0]]
 		    }
 		    default {
-			return -code error "wrong # args: should be\
-			     \"[lrange [info level 0] 0 1] first ?last?\""
+			return -code error -errorcode {TCL WRONGARGS} \
+			    "wrong # args: should be\
+			    \"[lrange [info level 0] 0 1] first ?last?\""
 		    }
 		}
 

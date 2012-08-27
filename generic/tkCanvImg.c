@@ -232,37 +232,35 @@ ImageCoords(
     ImageItem *imgPtr = (ImageItem *) itemPtr;
 
     if (objc == 0) {
-	Tcl_Obj *obj = Tcl_NewObj();
+	Tcl_Obj *objs[2];
 
-	Tcl_Obj *subobj = Tcl_NewDoubleObj(imgPtr->x);
-	Tcl_ListObjAppendElement(interp, obj, subobj);
-	subobj = Tcl_NewDoubleObj(imgPtr->y);
-	Tcl_ListObjAppendElement(interp, obj, subobj);
-	Tcl_SetObjResult(interp, obj);
+	objs[0] = Tcl_NewDoubleObj(imgPtr->x);
+	objs[1] = Tcl_NewDoubleObj(imgPtr->y);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, objs));
     } else if (objc < 3) {
 	if (objc==1) {
 	    if (Tcl_ListObjGetElements(interp, objv[0], &objc,
 		    (Tcl_Obj ***) &objv) != TCL_OK) {
 		return TCL_ERROR;
 	    } else if (objc != 2) {
-		char buf[64];
-
-		sprintf(buf, "wrong # coordinates: expected 2, got %d", objc);
-		Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"wrong # coordinates: expected 2, got %d", objc));
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "IMAGE",
+			NULL);
 		return TCL_ERROR;
 	    }
 	}
-	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0], &imgPtr->x) != TCL_OK)
+	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
+		    &imgPtr->x) != TCL_OK)
 		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
   		    &imgPtr->y) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
 	ComputeImageBbox(canvas, imgPtr);
     } else {
-	char buf[64];
-
-	sprintf(buf, "wrong # coordinates: expected 0 or 2, got %d", objc);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"wrong # coordinates: expected 0 or 2, got %d", objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "IMAGE", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -697,14 +695,12 @@ ImageToPostscript(
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
     Tk_Window canvasWin = Tk_CanvasTkwin(canvas);
-
-    char buffer[256];
     double x, y;
     int width, height;
     Tk_Image image;
     Tk_State state = itemPtr->state;
 
-    if(state == TK_STATE_NULL) {
+    if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
     }
 
@@ -748,8 +744,14 @@ ImageToPostscript(
     }
 
     if (!prepass) {
-	sprintf(buffer, "%.15g %.15g", x, y);
-	Tcl_AppendResult(interp, buffer, " translate\n", NULL);
+	Tcl_Obj *psObj = Tcl_GetObjResult(interp);
+
+	if (Tcl_IsShared(psObj)) {
+	    psObj = Tcl_DuplicateObj(psObj);
+	    Tcl_SetObjResult(interp, psObj);
+	}
+
+	Tcl_AppendPrintfToObj(psObj, "%.15g %.15g translate\n", x, y);
     }
 
     return Tk_PostscriptImage(image, interp, canvasWin,

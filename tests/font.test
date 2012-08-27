@@ -76,7 +76,7 @@ test font-2.1 {TkFontPkgFree} -setup {
     lappend x [foo eval {catch {font families} msg; set msg}]
 } -cleanup {
         interp delete foo
-} -result {{named font "wiggles" doesn't exist} {can't invoke "font" command:  application has been destroyed}}
+} -result {{named font "wiggles" doesn't exist} {can't invoke "font" command: application has been destroyed}}
 
 
 test font-3.1 {font command: general} -body {

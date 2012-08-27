@@ -286,7 +286,7 @@ Tk_UpdatePointer(
 			tsdPtr->restrictWinPtr = winPtr;
 			TkpSetCapture(tsdPtr->restrictWinPtr);
 
-		    } else if ((tsdPtr->lastState & ALL_BUTTONS) == 0) {
+		    } else if (!(tsdPtr->lastState & ALL_BUTTONS)) {
 			/*
 			 * Mouse is in a non-button grab, so ensure the button
 			 * grab is inside the grab tree.

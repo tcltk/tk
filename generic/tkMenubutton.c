@@ -23,8 +23,8 @@
 static const Tk_ClassProcs menubuttonClass = {
     sizeof(Tk_ClassProcs),	/* size */
     TkMenuButtonWorldChanged,	/* worldChangedProc */
-    NULL,					/* createProc */
-    NULL					/* modalProc */
+    NULL,			/* createProc */
+    NULL			/* modalProc */
 };
 
 /*

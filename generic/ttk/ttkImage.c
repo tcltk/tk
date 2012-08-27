@@ -59,9 +59,10 @@ TtkGetImageSpec(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr)
 
     if ((objc % 2) != 1) {
 	if (interp) {
-	    Tcl_SetResult(interp,
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"image specification must contain an odd number of elements",
-		TCL_STATIC);
+		-1));
+	    Tcl_SetErrorCode(interp, "TTK", "IMAGE", "SPEC", NULL);
 	}
 	goto error;
     }
@@ -324,7 +325,9 @@ Ttk_CreateImageElement(
     int i;
 
     if (objc <= 0) {
-	Tcl_AppendResult(interp, "Must supply a base image", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"Must supply a base image", -1));
+	Tcl_SetErrorCode(interp, "TTK", "IMAGE", "BASE", NULL);
 	return TCL_ERROR;
     }
 
@@ -347,9 +350,9 @@ Ttk_CreateImageElement(
 	int option;
 
 	if (i == objc - 1) {
-	    Tcl_AppendResult(interp,
-		"Value for ", Tcl_GetString(objv[i]), " missing",
-		NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "Value for %s missing", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TTK", "IMAGE", "VALUE", NULL);
 	    goto error;
 	}
 
@@ -362,12 +365,16 @@ Ttk_CreateImageElement(
 #endif
 
 	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
-		    "option", 0, &option) != TCL_OK) { goto error; }
+		"option", 0, &option) != TCL_OK) {
+	    goto error;
+	}
 
 	switch (option) {
 	    case O_BORDER:
 		if (Ttk_GetBorderFromObj(interp, objv[i+1], &imageData->border)
-			!= TCL_OK) { goto error; }
+			!= TCL_OK) {
+		    goto error;
+		}
 		if (!padding_specified) {
 		    imageData->padding = imageData->border;
 		}

@@ -36,7 +36,8 @@ proc ::tk_setPalette {args} {
 	array set new $args
     }
     if {![info exists new(background)]} {
-	error "must specify a background color"
+	return -code error -errorcode {TK SET_PALETTE BACKGROUND} \
+	    "must specify a background color"
     }
     set bg [winfo rgb . $new(background)]
     if {![info exists new(foreground)]} {

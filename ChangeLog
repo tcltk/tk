@@ -1,3 +1,13 @@
+2012-08-27  Donal K. Fellows  <dkf@users.sf.net>
+
+	* (very many files): Reworked the generation of error messages and
+	postscript so that they no longer made nearly as much use of the Tcl
+	interpreter's string result code, in the process substantially
+	reducing the amount of ad-hoc stack buffers used for message
+	generation. There should be no observable changes from this except
+	that Tk now causes the ::errorCode variable to be set meaningfully in
+	virtually all places where errors are generated.
+
 2012-08-24  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/tkfbox.tcl (GlobFiltered): [Bug 3558535]: Factor out the
