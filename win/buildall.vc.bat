@@ -63,7 +63,6 @@ if "%TCLDIR%" == "" set TCLDIR=..\..\tcl
 
 :: Build the normal stuff along with the help file.
 ::
-<<<<<<< BEGIN MERGE CONFLICT: local copy shown first <<<<<<<<<<<<<<<
 set OPTS=none
 if not %SYMBOLS%.==. set OPTS=symbols
 nmake -nologo -f makefile.vc release htmlhelp OPTS=%OPTS% %1
@@ -85,30 +84,6 @@ if errorlevel 1 goto error
 
 :: Build the core and shell for thread support.
 ::
-======= COMMON ANCESTOR content follows ============================
-set OPTS=none
-if not %SYMBOLS%.==. set OPTS=symbols
-nmake -nologo -f makefile.vc release winhelp OPTS=%OPTS% %1
-if errorlevel 1 goto error
-
-:: Build the static core, dlls and shell.
-::
-set OPTS=static
-if not %SYMBOLS%.==. set OPTS=symbols,static
-nmake -nologo -f makefile.vc release OPTS=%OPTS% %1
-if errorlevel 1 goto error
-
-:: Build the special static libraries that use the dynamic runtime.
-::
-set OPTS=static,msvcrt
-if not %SYMBOLS%.==. set OPTS=symbols,static,msvcrt
-nmake -nologo -f makefile.vc core OPTS=%OPTS% %1
-if errorlevel 1 goto error
-
-:: Build the core and shell for thread support.
-::
-======= MERGED IN content follows ==================================
->>>>>>> END MERGE CONFLICT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 set OPTS=threads
 if not %SYMBOLS%.==. set OPTS=symbols,threads
 nmake -nologo -f makefile.vc release OPTS=%OPTS% %1
