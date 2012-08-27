@@ -75,7 +75,7 @@ typedef struct LineItem {
 
 static int		ArrowheadPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, LineItem *linePtr,
-			    double *arrowPtr);
+			    double *arrowPtr, Tcl_Obj *psObj);
 static void		ComputeLineBbox(Tk_Canvas canvas, LineItem *linePtr);
 static int		ConfigureLine(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
@@ -391,54 +391,52 @@ LineCoords(
 	}
     }
     if (objc & 1) {
-	char buf[64 + TCL_INTEGER_SPACE];
-
-	sprintf(buf, "wrong # coordinates: expected an even number, got %d",
-		objc);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"wrong # coordinates: expected an even number, got %d",
+		objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     } else if (objc < 4) {
-	char buf[64 + TCL_INTEGER_SPACE];
-
-	sprintf(buf, "wrong # coordinates: expected at least 4, got %d", objc);
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"wrong # coordinates: expected at least 4, got %d", objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
-    } else {
-	numPoints = objc/2;
-	if (linePtr->numPoints != numPoints) {
-	    coordPtr = ckalloc(sizeof(double) * objc);
-	    if (linePtr->coordPtr != NULL) {
-		ckfree(linePtr->coordPtr);
-	    }
-	    linePtr->coordPtr = coordPtr;
-	    linePtr->numPoints = numPoints;
-	}
-	coordPtr = linePtr->coordPtr;
-	for (i = 0; i < objc ; i++) {
-	    if (Tk_CanvasGetCoordFromObj(interp, canvas, objv[i],
-		    coordPtr++) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	}
-
-	/*
-	 * Update arrowheads by throwing away any existing arrow-head
-	 * information and calling ConfigureArrows to recompute it.
-	 */
-
-	if (linePtr->firstArrowPtr != NULL) {
-	    ckfree(linePtr->firstArrowPtr);
-	    linePtr->firstArrowPtr = NULL;
-	}
-	if (linePtr->lastArrowPtr != NULL) {
-	    ckfree(linePtr->lastArrowPtr);
-	    linePtr->lastArrowPtr = NULL;
-	}
-	if (linePtr->arrow != ARROWS_NONE) {
-	    ConfigureArrows(canvas, linePtr);
-	}
-	ComputeLineBbox(canvas, linePtr);
     }
+
+    numPoints = objc/2;
+    if (linePtr->numPoints != numPoints) {
+	coordPtr = ckalloc(sizeof(double) * objc);
+	if (linePtr->coordPtr != NULL) {
+	    ckfree(linePtr->coordPtr);
+	}
+	linePtr->coordPtr = coordPtr;
+	linePtr->numPoints = numPoints;
+    }
+    coordPtr = linePtr->coordPtr;
+    for (i = 0; i < objc ; i++) {
+	if (Tk_CanvasGetCoordFromObj(interp, canvas, objv[i],
+		coordPtr++) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+    }
+
+    /*
+     * Update arrowheads by throwing away any existing arrow-head information
+     * and calling ConfigureArrows to recompute it.
+     */
+
+    if (linePtr->firstArrowPtr != NULL) {
+	ckfree(linePtr->firstArrowPtr);
+	linePtr->firstArrowPtr = NULL;
+    }
+    if (linePtr->lastArrowPtr != NULL) {
+	ckfree(linePtr->lastArrowPtr);
+	linePtr->lastArrowPtr = NULL;
+    }
+    if (linePtr->arrow != ARROWS_NONE) {
+	ConfigureArrows(canvas, linePtr);
+    }
+    ComputeLineBbox(canvas, linePtr);
     return TCL_OK;
 }
 
@@ -1752,15 +1750,7 @@ GetLineIndex(
 	if (strncmp(string, "end", (unsigned) length) == 0) {
 	    *indexPtr = 2*linePtr->numPoints;
 	} else {
-	    /*
-	     * Some of the paths here leave messages in interp->result, so we
-	     * have to clear it out before storing our own message.
-	     */
-
-	badIndex:
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "bad index \"", string, "\"", NULL);
-	    return TCL_ERROR;
+	    goto badIndex;
 	}
     } else if (string[0] == '@') {
 	int i;
@@ -1801,6 +1791,17 @@ GetLineIndex(
 	}
     }
     return TCL_OK;
+
+    /*
+     * Some of the paths here leave messages in interp->result, so we have to
+     * clear it out before storing our own message.
+     */
+
+  badIndex:
+    Tcl_ResetResult(interp);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);
+    return TCL_ERROR;
 }
 
 /*
@@ -1894,16 +1895,8 @@ ParseArrowShape(
     }
 
     if (Tcl_SplitList(interp, (char *) value, &argc, &argv) != TCL_OK) {
-	syntaxError:
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "bad arrow shape \"", value,
-		"\": must be list with three numbers", NULL);
-	if (argv != NULL) {
-	    ckfree(argv);
-	}
-	return TCL_ERROR;
-    }
-    if (argc != 3) {
+	goto syntaxError;
+    } else if (argc != 3) {
 	goto syntaxError;
     }
     if ((Tk_CanvasGetCoord(interp, linePtr->canvas, argv[0], &a) != TCL_OK)
@@ -1913,11 +1906,23 @@ ParseArrowShape(
 		!= TCL_OK)) {
 	goto syntaxError;
     }
+
     linePtr->arrowShapeA = (float) a;
     linePtr->arrowShapeB = (float) b;
     linePtr->arrowShapeC = (float) c;
     ckfree(argv);
     return TCL_OK;
+
+  syntaxError:
+    Tcl_ResetResult(interp);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad arrow shape \"%s\": must be list with three numbers",
+	    value));
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW_SHAPE", NULL);
+    if (argv != NULL) {
+	ckfree(argv);
+    }
+    return TCL_ERROR;
 }
 
 /*
@@ -2014,8 +2019,10 @@ ArrowParseProc(
 	return TCL_OK;
     }
 
-    Tcl_AppendResult(interp, "bad arrow spec \"", value,
-	    "\": must be none, first, last, or both", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad arrow spec \"%s\": must be none, first, last, or both",
+	    value));
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW", NULL);
     *arrowPtr = ARROWS_NONE;
     return TCL_ERROR;
 }
@@ -2252,13 +2259,13 @@ LineToPostscript(
 				 * being created. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    char buffer[64 + TCL_INTEGER_SPACE];
-    const char *style;
-
+    int style;
     double width;
     XColor *color;
     Pixmap stipple;
     Tk_State state = itemPtr->state;
+    Tcl_Obj *psObj;
+    Tcl_InterpState interpState;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -2293,30 +2300,50 @@ LineToPostscript(
 	return TCL_OK;
     }
 
+    /*
+     * Make our working space.
+     */
+
+    psObj = Tcl_NewObj();
+    interpState = Tcl_SaveInterpState(interp, TCL_OK);
+
+    /*
+     * Check if we're just doing a "pixel".
+     */
+
     if (linePtr->numPoints == 1) {
-	sprintf(buffer, "%.15g %.15g translate %.15g %.15g",
+	Tcl_AppendToObj(psObj, "matrix currentmatrix\n", -1);
+	Tcl_AppendPrintfToObj(psObj, "%.15g %.15g translate %.15g %.15g",
 		linePtr->coordPtr[0], Tk_CanvasPsY(canvas, linePtr->coordPtr[1]),
 		width/2.0, width/2.0);
-	Tcl_AppendResult(interp, "matrix currentmatrix\n", buffer,
-		" scale 1 0 moveto 0 0 1 0 360 arc\nsetmatrix\n", NULL);
+	Tcl_AppendToObj(psObj,
+		" scale 1 0 moveto 0 0 1 0 360 arc\nsetmatrix\n", -1);
+
+	Tcl_ResetResult(interp);
 	if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	    return TCL_ERROR;
+	    goto error;
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
 	if (stipple != None) {
-	    Tcl_AppendResult(interp, "clip ", NULL);
+	    Tcl_AppendToObj(psObj, "clip ", -1);
+	    Tcl_ResetResult(interp);
 	    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-		return TCL_ERROR;
+		goto error;
 	    }
+	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	} else {
-	    Tcl_AppendResult(interp, "fill\n", NULL);
+	    Tcl_AppendToObj(psObj, "fill\n", -1);
 	}
-	return TCL_OK;
+	goto done;
     }
+
     /*
      * Generate a path for the line's center-line (do this differently for
      * straight lines and smoothed lines).
      */
 
+    Tcl_ResetResult(interp);
     if ((!linePtr->smooth) || (linePtr->numPoints < 3)) {
 	Tk_CanvasPsPath(interp, canvas, linePtr->coordPtr, linePtr->numPoints);
     } else if ((stipple == None) && linePtr->smooth->postscriptProc) {
@@ -2348,29 +2375,34 @@ LineToPostscript(
 	    ckfree(pointPtr);
 	}
     }
+    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
     /*
      * Set other line-drawing parameters and stroke out the line.
      */
 
-    style = "0 setlinecap\n";
     if (linePtr->capStyle == CapRound) {
-	style = "1 setlinecap\n";
+	style = 1;
     } else if (linePtr->capStyle == CapProjecting) {
-	style = "2 setlinecap\n";
+	style = 2;
+    } else {
+	style = 0;
     }
-    Tcl_AppendResult(interp, style, NULL);
-    style = "0 setlinejoin\n";
+    Tcl_AppendPrintfToObj(psObj, "%d setlinecap\n", style);
     if (linePtr->joinStyle == JoinRound) {
-	style = "1 setlinejoin\n";
+	style = 1;
     } else if (linePtr->joinStyle == JoinBevel) {
-	style = "2 setlinejoin\n";
+	style = 2;
+    } else {
+	style = 0;
     }
-    Tcl_AppendResult(interp, style, NULL);
+    Tcl_AppendPrintfToObj(psObj, "%d setlinejoin\n", style);
 
+    Tcl_ResetResult(interp);
     if (Tk_CanvasPsOutline(canvas, itemPtr, &linePtr->outline) != TCL_OK) {
-	return TCL_ERROR;
+	goto error;
     }
+    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
     /*
      * Output polygons for the arrowheads, if there are any.
@@ -2378,23 +2410,37 @@ LineToPostscript(
 
     if (linePtr->firstArrowPtr != NULL) {
 	if (stipple != None) {
-	    Tcl_AppendResult(interp, "grestore gsave\n", NULL);
+	    Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
 	}
 	if (ArrowheadPostscript(interp, canvas, linePtr,
-		linePtr->firstArrowPtr) != TCL_OK) {
-	    return TCL_ERROR;
+		linePtr->firstArrowPtr, psObj) != TCL_OK) {
+	    goto error;
 	}
     }
     if (linePtr->lastArrowPtr != NULL) {
 	if (stipple != None) {
-	    Tcl_AppendResult(interp, "grestore gsave\n", NULL);
+	    Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
 	}
 	if (ArrowheadPostscript(interp, canvas, linePtr,
-		linePtr->lastArrowPtr) != TCL_OK) {
-	    return TCL_ERROR;
+		linePtr->lastArrowPtr, psObj) != TCL_OK) {
+	    goto error;
 	}
     }
+
+    /*
+     * Plug the accumulated postscript back into the result.
+     */
+
+  done:
+    (void) Tcl_RestoreInterpState(interp, interpState);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
+    Tcl_DecrRefCount(psObj);
     return TCL_OK;
+
+  error:
+    Tcl_DiscardInterpState(interpState);
+    Tcl_DecrRefCount(psObj);
+    return TCL_ERROR;
 }
 
 /*
@@ -2409,7 +2455,7 @@ LineToPostscript(
  *	The return value is a standard Tcl result. If an error occurs in
  *	generating Postscript then an error message is left in the interp's
  *	result, replacing whatever used to be there. If no error occurs, then
- *	Postscript for the arrowhead is appended to the result.
+ *	Postscript for the arrowhead is appended to the given object.
  *
  * Side effects:
  *	None.
@@ -2419,12 +2465,14 @@ LineToPostscript(
 
 static int
 ArrowheadPostscript(
-    Tcl_Interp *interp,		/* Leave Postscript or error message here. */
+    Tcl_Interp *interp,		/* Leave error message here; non-error results
+				 * will be discarded by caller. */
     Tk_Canvas canvas,		/* Information about overall canvas. */
     LineItem *linePtr,		/* Line item for which Postscript is being
 				 * generated. */
-    double *arrowPtr)		/* Pointer to first of five points describing
+    double *arrowPtr,		/* Pointer to first of five points describing
 				 * arrowhead polygon. */
+    Tcl_Obj *psObj)		/* Append postscript to this object. */
 {
     Pixmap stipple;
     Tk_State state = linePtr->header.state;
@@ -2444,14 +2492,20 @@ ArrowheadPostscript(
 	}
     }
 
+    Tcl_ResetResult(interp);
     Tk_CanvasPsPath(interp, canvas, arrowPtr, PTS_IN_ARROW);
+    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
     if (stipple != None) {
-	Tcl_AppendResult(interp, "clip ", NULL);
+	Tcl_AppendToObj(psObj, "clip ", -1);
+
+	Tcl_ResetResult(interp);
 	if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
     } else {
-	Tcl_AppendResult(interp, "fill\n", NULL);
+	Tcl_AppendToObj(psObj, "fill\n", -1);
     }
     return TCL_OK;
 }

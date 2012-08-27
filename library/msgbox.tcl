@@ -111,7 +111,7 @@ static unsigned char w3_bits[] = {
    0x00, 0xc0, 0x03, 0x00, 0x00, 0x80, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};"
-
+
 # ::tk::MessageBox --
 #
 #	Pops up a messagebox with an application-supplied message with
@@ -153,8 +153,9 @@ proc ::tk::MessageBox {args} {
 
     tclParseConfigSpec $w $specs "" $args
 
-    if {[lsearch -exact {info warning error question} $data(-icon)] == -1} {
-	error "bad -icon value \"$data(-icon)\": must be error, info, question, or warning"
+    if {$data(-icon) ni {info warning error question}} {
+	return -code error -errorcode [list TK LOOKUP ICON $data(-icon)] \
+	    "bad -icon value \"$data(-icon)\": must be error, info, question, or warning"
     }
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "aqua"} {
@@ -169,7 +170,8 @@ proc ::tk::MessageBox {args} {
     }
 
     if {![winfo exists $data(-parent)]} {
-	error "bad window path name \"$data(-parent)\""
+	return -code error -errorcode [list TK LOOKUP WINDOW $data(-parent)] \
+	    "bad window path name \"$data(-parent)\""
     }
 
     switch -- $data(-type) {
@@ -204,9 +206,10 @@ proc ::tk::MessageBox {args} {
 	    set cancel cancel
 	}
 	default {
-	    error "bad -type value \"$data(-type)\": must be\
-		    abortretryignore, ok, okcancel, retrycancel,\
-		    yesno, or yesnocancel"
+	    return -code error -errorcode [list TK LOOKUP DLG_TYPE $data(-type)] \
+		"bad -type value \"$data(-type)\": must be\
+		abortretryignore, ok, okcancel, retrycancel,\
+		yesno, or yesnocancel"
 	}
     }
 
@@ -230,7 +233,8 @@ proc ::tk::MessageBox {args} {
 	}
     }
     if {!$valid} {
-	error "invalid default button \"$data(-default)\""
+	return -code error -errorcode {TK MSGBOX DEFAULT} \
+	    "invalid default button \"$data(-default)\""
     }
 
     # 2. Set the dialog to be a child window of $parent

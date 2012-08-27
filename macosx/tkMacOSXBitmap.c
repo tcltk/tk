@@ -394,7 +394,8 @@ TkMacOSXIconBitmapObjCmd(
     }
     name = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
-	Tcl_AppendResult(interp, "empty bitmap name", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap name", -1));
+	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "BAD", NULL);
 	goto end;
     }
     if (Tcl_GetIntFromObj(interp, objv[i++], &ib.width) != TCL_OK) {
@@ -409,19 +410,23 @@ TkMacOSXIconBitmapObjCmd(
     }
     value = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
-	Tcl_AppendResult(interp, "empty bitmap value", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap value", -1));
+	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "EMPTY", NULL);
 	goto end;
     }
 #if 0
     if ((kind == ICON_TYPE || kind == ICON_SYSTEM)) {
 	Tcl_DString ds;
  	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
+
 	Tcl_UtfToExternalDString(encoding, value, -1, &ds);
 	len = Tcl_DStringLength(&ds);
 	Tcl_DStringFree(&ds);
 	Tcl_FreeEncoding(encoding);
 	if (len > 4) {
-	    Tcl_AppendResult(interp, "invalid bitmap value", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "invalid bitmap value", -1));
+	    Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "INVALID", NULL);
 	    goto end;
 	}
     }
@@ -441,7 +446,7 @@ TkMacOSXIconBitmapObjCmd(
     }
     *iconBitmap = ib;
     result = TCL_OK;
-end:
+  end:
     return result;
 }
 
