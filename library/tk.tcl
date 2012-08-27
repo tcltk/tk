@@ -213,7 +213,8 @@ if {[tk windowingsystem] ne "win32"} {
 	} txt] && [catch {
 	    selection get -displayof $w -selection $sel
 	} txt]} then {
-	    return -code error "could not find default selection"
+	    return -code error -errorcode {TK SELECTION NONE} \
+		"could not find default selection"
 	} else {
 	    return $txt
 	}
@@ -223,7 +224,8 @@ if {[tk windowingsystem] ne "win32"} {
 	if {[catch {
 	    selection get -displayof $w -selection $sel
 	} txt]} then {
-	    return -code error "could not find default selection"
+	    return -code error -errorcode {TK SELECTION NONE} \
+		"could not find default selection"
 	} else {
 	    return $txt
 	}

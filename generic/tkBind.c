@@ -620,7 +620,7 @@ static PatSeq *		FindSequence(Tcl_Interp *interp,
 static void		GetAllVirtualEvents(Tcl_Interp *interp,
 			    VirtualEventTable *vetPtr);
 static char *		GetField(char *p, char *copy, int size);
-static void		GetPatternString(PatSeq *psPtr, Tcl_DString *dsPtr);
+static Tcl_Obj *	GetPatternObj(PatSeq *psPtr);
 static int		GetVirtualEvent(Tcl_Interp *interp,
 			    VirtualEventTable *vetPtr, Tcl_Obj *virtName);
 static Tk_Uid		GetVirtualEventUid(Tcl_Interp *interp,
@@ -1094,13 +1094,14 @@ Tk_GetAllBindings(
 {
     PatSeq *psPtr;
     Tcl_HashEntry *hPtr;
-    Tcl_DString ds;
+    Tcl_Obj *resultObj;
 
     hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object);
     if (hPtr == NULL) {
 	return;
     }
-    Tcl_DStringInit(&ds);
+
+    resultObj = Tcl_NewObj();
     for (psPtr = Tcl_GetHashValue(hPtr); psPtr != NULL;
 	    psPtr = psPtr->nextObjPtr) {
 	/*
@@ -1108,11 +1109,9 @@ Tk_GetAllBindings(
 	 * its sequence.
 	 */
 
-	Tcl_DStringSetLength(&ds, 0);
-	GetPatternString(psPtr, &ds);
-	Tcl_AppendElement(interp, Tcl_DStringValue(&ds));
+	Tcl_ListObjAppendElement(NULL, resultObj, GetPatternObj(psPtr));
     }
-    Tcl_DStringFree(&ds);
+    Tcl_SetObjResult(interp, resultObj);
 }
 
 /*
@@ -1223,7 +1222,8 @@ Tk_BindEvent(
     PatSeq *vMatchDetailList, *vMatchNoDetailList;
     int flags, oldScreen;
     Tcl_Interp *interp;
-    Tcl_DString scripts, savedResult;
+    Tcl_DString scripts;
+    Tcl_InterpState interpState;
     Detail detail;
     char *p, *end;
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -1453,14 +1453,13 @@ Tk_BindEvent(
      */
 
     interp = bindPtr->interp;
-    Tcl_DStringInit(&savedResult);
 
     /*
      * Save information about the current screen, then invoke a script if the
      * screen has changed.
      */
 
-    Tcl_DStringGetResult(interp, &savedResult);
+    interpState = Tcl_SaveInterpState(interp, TCL_OK);
     screenPtr = &bindInfoPtr->screenInfo;
     oldDispPtr = screenPtr->curDispPtr;
     oldScreen = screenPtr->curScreenIndex;
@@ -1475,7 +1474,7 @@ Tk_BindEvent(
     end = p + Tcl_DStringLength(&scripts);
 
     /*
-     * Be carefule when dereferencing screenPtr or bindInfoPtr. If we evaluate
+     * Be careful when dereferencing screenPtr or bindInfoPtr. If we evaluate
      * something that destroys ".", bindInfoPtr would have been freed, but we
      * can tell that by first checking to see if winPtr->mainPtr == NULL.
      */
@@ -1523,7 +1522,7 @@ Tk_BindEvent(
 	screenPtr->curScreenIndex = oldScreen;
 	ChangeScreen(interp, oldDispPtr->name, oldScreen);
     }
-    Tcl_DStringResult(interp, &savedResult);
+    (void) Tcl_RestoreInterpState(interp, interpState);
     Tcl_DStringFree(&scripts);
 
     Tcl_Release(bindInfoPtr);
@@ -2771,10 +2770,10 @@ GetVirtualEvent(
     Tcl_Obj *virtName)		/* String describing virtual event. */
 {
     Tcl_HashEntry *vhPtr;
-    Tcl_DString ds;
     int iPhys;
     PhysicalsOwned *poPtr;
     Tk_Uid virtUid;
+    Tcl_Obj *resultObj;
 
     virtUid = GetVirtualEventUid(interp, Tcl_GetString(virtName));
     if (virtUid == NULL) {
@@ -2786,15 +2785,13 @@ GetVirtualEvent(
 	return TCL_OK;
     }
 
-    Tcl_DStringInit(&ds);
-
+    resultObj = Tcl_NewObj();
     poPtr = Tcl_GetHashValue(vhPtr);
     for (iPhys = 0; iPhys < poPtr->numOwned; iPhys++) {
-	Tcl_DStringSetLength(&ds, 0);
-	GetPatternString(poPtr->patSeqs[iPhys], &ds);
-	Tcl_AppendElement(interp, Tcl_DStringValue(&ds));
+	Tcl_ListObjAppendElement(NULL, resultObj,
+		GetPatternObj(poPtr->patSeqs[iPhys]));
     }
-    Tcl_DStringFree(&ds);
+    Tcl_SetObjResult(interp, resultObj);
 
     return TCL_OK;
 }
@@ -2824,20 +2821,15 @@ GetAllVirtualEvents(
 {
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
-    Tcl_DString ds;
+    Tcl_Obj *resultObj;
 
-    Tcl_DStringInit(&ds);
-
+    resultObj = Tcl_NewObj();
     hPtr = Tcl_FirstHashEntry(&vetPtr->nameTable, &search);
     for ( ; hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	Tcl_DStringSetLength(&ds, 0);
-	Tcl_DStringAppend(&ds, "<<", 2);
-	Tcl_DStringAppend(&ds, Tcl_GetHashKey(hPtr->tablePtr, hPtr), -1);
-	Tcl_DStringAppend(&ds, ">>", 2);
-	Tcl_AppendElement(interp, Tcl_DStringValue(&ds));
+	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_ObjPrintf(
+		"<<%s>>", (char *) Tcl_GetHashKey(hPtr->tablePtr, hPtr)));
     }
-
-    Tcl_DStringFree(&ds);
+    Tcl_SetObjResult(interp, resultObj);
 }
 
 /*
@@ -2924,8 +2916,11 @@ HandleEventGenerate(
     mainPtr = (TkWindow *) mainWin;
     if ((tkwin == NULL)
 	    || (mainPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr)) {
-	Tcl_AppendResult(interp, "window id \"", Tcl_GetString(objv[0]),
-		"\" doesn't exist in this application", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"window id \"%s\" doesn't exist in this application",
+		Tcl_GetString(objv[0])));
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW",
+		Tcl_GetString(objv[0]), NULL);
 	return TCL_ERROR;
     }
 
@@ -2939,13 +2934,15 @@ HandleEventGenerate(
 	return TCL_ERROR;
     }
     if (count != 1) {
-	Tcl_SetResult(interp, "Double or Triple modifier not allowed",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"Double or Triple modifier not allowed", -1));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", NULL);
 	return TCL_ERROR;
     }
     if (*p != '\0') {
-	Tcl_SetResult(interp, "only one event specification allowed",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"only one event specification allowed", -1));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "MULTIPLE", NULL);
 	return TCL_ERROR;
     }
 
@@ -3021,8 +3018,9 @@ HandleEventGenerate(
 	     * is missing.
 	     */
 
-	    Tcl_AppendResult(interp, "value for \"", Tcl_GetString(optionPtr),
-		    "\" missing", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", Tcl_GetString(optionPtr)));
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "MISSING_VALUE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3163,15 +3161,19 @@ HandleEventGenerate(
 	    value = Tcl_GetString(valuePtr);
 	    keysym = TkStringToKeysym(value);
 	    if (keysym == NoSymbol) {
-		Tcl_AppendResult(interp, "unknown keysym \"", value, "\"",
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"unknown keysym \"%s\"", value));
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", value,
 			NULL);
 		return TCL_ERROR;
 	    }
 
 	    TkpSetKeycodeAndState(tkwin, keysym, &event.general);
 	    if (event.general.xkey.keycode == 0) {
-		Tcl_AppendResult(interp, "no keycode for keysym \"", value,
-			"\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"no keycode for keysym \"%s\"", value));
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", value,
+			NULL);
 		return TCL_ERROR;
 	    }
 	    if (!(flags & KEY)
@@ -3400,8 +3402,10 @@ HandleEventGenerate(
 	continue;
 
     badopt:
-	Tcl_AppendResult(interp, name, " event doesn't accept \"",
-		Tcl_GetString(optionPtr), "\" option", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"%s event doesn't accept \"%s\" option",
+		name, Tcl_GetString(optionPtr)));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", NULL);
 	return TCL_ERROR;
     }
 
@@ -3495,7 +3499,9 @@ NameToWindow(
     return TCL_OK;
 
   badWindow:
-    Tcl_AppendResult(interp, "bad window name/identifier \"",name,"\"", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad window name/identifier \"%s\"", name));
+    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", name, NULL);
     return TCL_ERROR;
 }
 
@@ -3558,8 +3564,9 @@ GetVirtualEventUid(
 
     if (length < 5 || virtString[0] != '<' || virtString[1] != '<' ||
 	    virtString[length - 2] != '>' || virtString[length - 1] != '>') {
-	Tcl_AppendResult(interp, "virtual event \"", virtString,
-		"\" is badly formed", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"virtual event \"%s\" is badly formed", virtString));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED", NULL);
 	return NULL;
     }
     virtString[length - 2] = '\0';
@@ -3651,9 +3658,11 @@ FindSequence(
 
 	if (eventMask & VirtualEventMask) {
 	    if (allowVirtual == 0) {
-		Tcl_SetResult(interp,
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"virtual event not allowed in definition of another virtual event",
-			TCL_STATIC);
+			-1));
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "INNER",
+			NULL);
 		return NULL;
 	    }
 	    virtualFound = 1;
@@ -3679,12 +3688,16 @@ FindSequence(
      */
 
     if (numPats == 0) {
-	Tcl_SetResult(interp, "no events specified in binding", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"no events specified in binding", -1));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "NO_EVENTS", NULL);
 	return NULL;
     }
     if ((numPats > 1) && (virtualFound != 0)) {
-	Tcl_SetResult(interp, "virtual events may not be composed",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"virtual events may not be composed", -1));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION",
+		NULL);
 	return NULL;
     }
 
@@ -3804,6 +3817,7 @@ ParseEventDescription(
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad ASCII character 0x%x", UCHAR(*p)));
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_CHAR", NULL);
 		count = 0;
 		goto done;
 	    }
@@ -3844,14 +3858,18 @@ ParseEventDescription(
 
 	p = strchr(field, '>');
 	if (p == field) {
-	    Tcl_SetResult(interp, "virtual event \"<<>>\" is badly formed",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "virtual event \"<<>>\" is badly formed", -1));
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED",
+		    NULL);
 	    count = 0;
 	    goto done;
 	}
 	if ((p == NULL) || (p[1] != '>')) {
-	    Tcl_SetResult(interp, "missing \">\" in virtual binding",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "missing \">\" in virtual binding", -1));
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED",
+		    NULL);
 	    count = 0;
 	    goto done;
 	}
@@ -3917,9 +3935,11 @@ ParseEventDescription(
 		eventMask = ButtonPressMask;
 	    } else if (eventFlags & KEY) {
 		goto getKeysym;
-	    } else if ((eventFlags & BUTTON) == 0) {
-		Tcl_AppendResult(interp, "specified button \"", field,
-			"\" for non-button event", NULL);
+	    } else if (!(eventFlags & BUTTON)) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"specified button \"%s\" for non-button event",
+			field));
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "NON_BUTTON", NULL);
 		count = 0;
 		goto done;
 	    }
@@ -3929,24 +3949,28 @@ ParseEventDescription(
 	getKeysym:
 	    patPtr->detail.keySym = TkStringToKeysym(field);
 	    if (patPtr->detail.keySym == NoSymbol) {
-		Tcl_AppendResult(interp, "bad event type or keysym \"",
-			field, "\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad event type or keysym \"%s\"", field));
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", field,
+			NULL);
 		count = 0;
 		goto done;
 	    }
 	    if (eventFlags == 0) {
 		patPtr->eventType = KeyPress;
 		eventMask = KeyPressMask;
-	    } else if ((eventFlags & KEY) == 0) {
-		Tcl_AppendResult(interp, "specified keysym \"", field,
-			"\" for non-key event", NULL);
+	    } else if (!(eventFlags & KEY)) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"specified keysym \"%s\" for non-key event", field));
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "NON_KEY", NULL);
 		count = 0;
 		goto done;
 	    }
 	}
     } else if (eventFlags == 0) {
-	Tcl_SetResult(interp, "no event type or button # or keysym",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"no event type or button # or keysym", -1));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "UNMODIFIABLE", NULL);
 	count = 0;
 	goto done;
     }
@@ -3958,14 +3982,16 @@ ParseEventDescription(
 	while (*p != '\0') {
 	    p++;
 	    if (*p == '>') {
-		Tcl_SetResult(interp,
-			"extra characters after detail in binding",
-			TCL_STATIC);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"extra characters after detail in binding", -1));
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "PAST_DETAIL", NULL);
 		count = 0;
 		goto done;
 	    }
 	}
-	Tcl_SetResult(interp, "missing \">\" in binding", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"missing \">\" in binding", -1));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "MALFORMED", NULL);
 	count = 0;
 	goto done;
     }
@@ -4020,31 +4046,30 @@ GetField(
 /*
  *---------------------------------------------------------------------------
  *
- * GetPatternString --
+ * GetPatternObj --
  *
  *	Produce a string version of the given event, for displaying to the
  *	user.
  *
  * Results:
- *	The string is left in dsPtr.
+ *	The string is returned as a Tcl_Obj.
  *
  * Side effects:
- *	It is the caller's responsibility to initialize the DString before and
- *	to free it after calling this function.
+ *	It is the caller's responsibility to arrange for the object to be
+ *	released; it starts with a refCount of zero.
  *
  *---------------------------------------------------------------------------
  */
 
-static void
-GetPatternString(
-    PatSeq *psPtr,
-    Tcl_DString *dsPtr)
+static Tcl_Obj *
+GetPatternObj(
+    PatSeq *psPtr)
 {
     Pattern *patPtr;
-    char c, buffer[TCL_INTEGER_SPACE];
     int patsLeft, needMods;
     const ModInfo *modPtr;
     const EventInfo *eiPtr;
+    Tcl_Obj *patternObj = Tcl_NewObj();
 
     /*
      * The order of the patterns in the sequence is backwards from the order
@@ -4058,14 +4083,15 @@ GetPatternString(
 	 */
 
 	if ((patPtr->eventType == KeyPress)
-		&& ((psPtr->flags & PAT_NEARBY) == 0)
+		&& !(psPtr->flags & PAT_NEARBY)
 		&& (patPtr->needMods == 0)
 		&& (patPtr->detail.keySym < 128)
 		&& isprint(UCHAR(patPtr->detail.keySym))
 		&& (patPtr->detail.keySym != '<')
 		&& (patPtr->detail.keySym != ' ')) {
-	    c = (char) patPtr->detail.keySym;
-	    Tcl_DStringAppend(dsPtr, &c, 1);
+	    char c = (char) patPtr->detail.keySym;
+
+	    Tcl_AppendToObj(patternObj, &c, 1);
 	    continue;
 	}
 
@@ -4074,9 +4100,7 @@ GetPatternString(
 	 */
 
 	if (patPtr->eventType == VirtualEvent) {
-	    Tcl_DStringAppend(dsPtr, "<<", 2);
-	    Tcl_DStringAppend(dsPtr, patPtr->detail.name, -1);
-	    Tcl_DStringAppend(dsPtr, ">>", 2);
+	    Tcl_AppendPrintfToObj(patternObj, "<<%s>>", patPtr->detail.name);
 	    continue;
 	}
 
@@ -4086,7 +4110,7 @@ GetPatternString(
 	 * or button detail.
 	 */
 
-	Tcl_DStringAppend(dsPtr, "<", 1);
+	Tcl_AppendToObj(patternObj, "<", 1);
 
 	if ((psPtr->flags & PAT_NEARBY) && (patsLeft > 1)
 		&& (memcmp(patPtr, patPtr-1, sizeof(Pattern)) == 0)) {
@@ -4100,12 +4124,12 @@ GetPatternString(
 			(memcmp(patPtr, patPtr-1, sizeof(Pattern)) == 0)) {
 		    patsLeft--;
 		    patPtr--;
-		    Tcl_DStringAppend(dsPtr, "Quadruple-", 10);
+		    Tcl_AppendToObj(patternObj, "Quadruple-", 10);
 		} else {
-		    Tcl_DStringAppend(dsPtr, "Triple-", 7);
+		    Tcl_AppendToObj(patternObj, "Triple-", 7);
 		}
 	    } else {
-		Tcl_DStringAppend(dsPtr, "Double-", 7);
+		Tcl_AppendToObj(patternObj, "Double-", 7);
 	    }
 	}
 
@@ -4113,16 +4137,15 @@ GetPatternString(
 		needMods != 0; modPtr++) {
 	    if (modPtr->mask & needMods) {
 		needMods &= ~modPtr->mask;
-		Tcl_DStringAppend(dsPtr, modPtr->name, -1);
-		Tcl_DStringAppend(dsPtr, "-", 1);
+		Tcl_AppendPrintfToObj(patternObj, "%s-", modPtr->name);
 	    }
 	}
 
 	for (eiPtr = eventArray; eiPtr->name != NULL; eiPtr++) {
 	    if (eiPtr->type == patPtr->eventType) {
-		Tcl_DStringAppend(dsPtr, eiPtr->name, -1);
+		Tcl_AppendToObj(patternObj, eiPtr->name, -1);
 		if (patPtr->detail.clientData != 0) {
-		    Tcl_DStringAppend(dsPtr, "-", 1);
+		    Tcl_AppendToObj(patternObj, "-", 1);
 		}
 		break;
 	    }
@@ -4134,16 +4157,17 @@ GetPatternString(
 		const char *string = TkKeysymToString(patPtr->detail.keySym);
 
 		if (string != NULL) {
-		    Tcl_DStringAppend(dsPtr, string, -1);
+		    Tcl_AppendToObj(patternObj, string, -1);
 		}
 	    } else {
-		sprintf(buffer, "%d", patPtr->detail.button);
-		Tcl_DStringAppend(dsPtr, buffer, -1);
+		Tcl_AppendPrintfToObj(patternObj, "%d", patPtr->detail.button);
 	    }
 	}
 
-	Tcl_DStringAppend(dsPtr, ">", 1);
+	Tcl_AppendToObj(patternObj, ">", 1);
     }
+
+    return patternObj;
 }
 
 /*
