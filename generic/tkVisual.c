@@ -20,7 +20,7 @@
  */
 
 typedef struct VisualDictionary {
-    const char *name;			/* Textual name of class. */
+    const char *name;		/* Textual name of class. */
     int minLength;		/* Minimum # characters that must be specified
 				 * for an unambiguous match. */
     int class;			/* X symbol for class. */
@@ -173,9 +173,9 @@ Tk_GetVisual(
 	 */
 
 	if (Tcl_GetInt(interp, string, &visualId) == TCL_ERROR) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "bad X identifier for visual: \"",
-		    string, "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad X identifier for visual: \"%s\"", string));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "VISUALID", NULL);
 	    return NULL;
 	}
 	template.visualid = visualId;
@@ -202,12 +202,16 @@ Tk_GetVisual(
 	    }
 	}
 	if (template.class == -1) {
-	    Tcl_AppendResult(interp, "unknown or ambiguous visual name \"",
-		    string, "\": class must be ", NULL);
+	    Tcl_Obj *msgObj = Tcl_ObjPrintf(
+		    "unknown or ambiguous visual name \"%s\": class must be ",
+		    string);
+
 	    for (dictPtr = visualNames; dictPtr->name != NULL; dictPtr++) {
-		Tcl_AppendResult(interp, dictPtr->name, ", ", NULL);
+		Tcl_AppendPrintfToObj(msgObj, "%s, ", dictPtr->name);
 	    }
-	    Tcl_AppendResult(interp, "or default", NULL);
+	    Tcl_AppendToObj(msgObj, "or default", -1);
+	    Tcl_SetObjResult(interp, msgObj);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "VISUAL", string, NULL);
 	    return NULL;
 	}
 	while (isspace(UCHAR(*p))) {
@@ -215,10 +219,8 @@ Tk_GetVisual(
 	}
 	if (*p == 0) {
 	    template.depth = 10000;
-	} else {
-	    if (Tcl_GetInt(interp, p, &template.depth) != TCL_OK) {
-		return NULL;
-	    }
+	} else if (Tcl_GetInt(interp, p, &template.depth) != TCL_OK) {
+	    return NULL;
 	}
 	if (c == 'b') {
 	    mask = 0;
@@ -237,8 +239,9 @@ Tk_GetVisual(
     visInfoList = XGetVisualInfo(Tk_Display(tkwin), mask, &template,
 	    &numVisuals);
     if (visInfoList == NULL) {
-	Tcl_SetResult(interp, "couldn't find an appropriate visual",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"couldn't find an appropriate visual", -1));
+	Tcl_SetErrorCode(interp, "TK", "VISUAL", "INAPPROPRIATE", NULL);
 	return NULL;
     }
 
@@ -403,13 +406,15 @@ Tk_GetColormap(
 	return None;
     }
     if (Tk_Screen(other) != Tk_Screen(tkwin)) {
-	Tcl_AppendResult(interp, "can't use colormap for ", string,
-		": not on same screen", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't use colormap for %s: not on same screen", string));
+	Tcl_SetErrorCode(interp, "TK", "COLORMAP", "SCREEN", NULL);
 	return None;
     }
     if (Tk_Visual(other) != Tk_Visual(tkwin)) {
-	Tcl_AppendResult(interp, "can't use colormap for ", string,
-		": incompatible visuals", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't use colormap for %s: incompatible visuals", string));
+	Tcl_SetErrorCode(interp, "TK", "COLORMAP", "INCOMPATIBLE", NULL);
 	return None;
     }
     colormap = Tk_Colormap(other);

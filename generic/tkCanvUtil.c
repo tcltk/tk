@@ -49,8 +49,22 @@ static int		DashConvert(char *l, const char *p, int n,
 			    double width);
 static void		TranslateAndAppendCoords(TkCanvas *canvPtr,
 			    double x, double y, XPoint *outArr, int numOut);
+static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
 
 #define ABS(a) ((a>=0)?(a):(-(a)))
+
+static inline Tcl_Obj *
+GetPostscriptBuffer(
+    Tcl_Interp *interp)
+{
+    Tcl_Obj *psObj = Tcl_GetObjResult(interp);
+
+    if (Tcl_IsShared(psObj)) {
+	psObj = Tcl_DuplicateObj(psObj);
+	Tcl_SetObjResult(interp, psObj);
+    }
+    return psObj;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -756,8 +770,10 @@ TkSmoothParseProc(
     while (methods != NULL) {
 	if (strncmp(value, methods->smooth.name, length) == 0) {
 	    if (smooth != NULL) {
-		Tcl_AppendResult(interp, "ambiguous smooth method \"", value,
-			"\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"ambiguous smooth method \"%s\"", value));
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "SMOOTH", value,
+			NULL);
 		return TCL_ERROR;
 	    }
 	    smooth = &methods->smooth;
@@ -878,7 +894,7 @@ Tk_GetDash(
     if ((unsigned) ABS(dash->number) > sizeof(char *)) {
 	ckfree(dash->pattern.pt);
     }
-    if (argc > (int)sizeof(char *)) {
+    if (argc > (int) sizeof(char *)) {
 	dash->pattern.pt = pt = ckalloc(argc);
     } else {
 	pt = dash->pattern.array;
@@ -886,12 +902,12 @@ Tk_GetDash(
     dash->number = argc;
 
     largv = argv;
-    while (argc>0) {
+    while (argc > 0) {
 	if (Tcl_GetInt(interp, *largv, &i) != TCL_OK || i < 1 || i>255) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp,
-		    "expected integer in the range 1..255 but got \"",
-		    *largv, "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "expected integer in the range 1..255 but got \"%s\"",
+		    *largv));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "DASH", NULL);
 	    goto syntaxError;
 	}
 	*pt++ = i;
@@ -909,8 +925,10 @@ Tk_GetDash(
      */
 
   badDashList:
-    Tcl_AppendResult(interp, "bad dash list \"", value,
-	    "\": must be a list of integers or a format like \"-..\"", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad dash list \"%s\": must be a list of integers or a format like \"-..\"",
+	    value));
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "DASH", NULL);
   syntaxError:
     if (argv != NULL) {
 	ckfree(argv);
@@ -1252,9 +1270,9 @@ Tk_ChangeOutlineGC(
  *
  * Tk_ResetOutlineGC
  *
- *	Restores the GC to the situation before Tk_ChangeOutlineGC() was called.
- *	This function should be called just after the dashed item is drawn,
- *	because the GC is supposed to be read-only.
+ *	Restores the GC to the situation before Tk_ChangeOutlineGC() was
+ *	called. This function should be called just after the dashed item is
+ *	drawn, because the GC is supposed to be read-only.
  *
  * Results:
  *	1 if there is a stipple pattern, and 0 otherwise.
@@ -1361,15 +1379,16 @@ Tk_CanvasPsOutline(
     Tk_Item *item,
     Tk_Outline *outline)
 {
-    char string[41], pattern[11];
+    char pattern[11];
     int i;
-    char *ptr, *str = string, *lptr = pattern;
+    char *ptr, *lptr = pattern;
     Tcl_Interp *interp = Canvas(canvas)->interp;
     double width = outline->width;
     Tk_Dash *dash = &outline->dash;
     XColor *color = outline->color;
     Pixmap stipple = outline->stipple;
     Tk_State state = item->state;
+    Tcl_Obj *psObj = GetPostscriptBuffer(interp);
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -1380,7 +1399,7 @@ Tk_CanvasPsOutline(
 	    width = outline->activeWidth;
 	}
 	if (outline->activeDash.number > 0) {
-	    dash = &(outline->activeDash);
+	    dash = &outline->activeDash;
 	}
 	if (outline->activeColor != NULL) {
 	    color = outline->activeColor;
@@ -1393,7 +1412,7 @@ Tk_CanvasPsOutline(
 	    width = outline->disabledWidth;
 	}
 	if (outline->disabledDash.number > 0) {
-	    dash = &(outline->disabledDash);
+	    dash = &outline->disabledDash;
 	}
 	if (outline->disabledColor != NULL) {
 	    color = outline->disabledColor;
@@ -1402,66 +1421,65 @@ Tk_CanvasPsOutline(
 	    stipple = outline->disabledStipple;
 	}
     }
-    sprintf(string, "%.15g setlinewidth\n", width);
-    Tcl_AppendResult(interp, string, NULL);
 
-    if (dash->number > 10) {
-	str = ckalloc(1 + 4*dash->number);
-    } else if (dash->number < -5) {
-	str = ckalloc(1 - 8*dash->number);
-	lptr = ckalloc(1 - 2*dash->number);
-    }
+    Tcl_AppendPrintfToObj(psObj, "%.15g setlinewidth\n", width);
+
     ptr = ((unsigned) ABS(dash->number) > sizeof(char *)) ?
 	    dash->pattern.pt : dash->pattern.array;
+    Tcl_AppendToObj(psObj, "[", -1);
     if (dash->number > 0) {
-	char *ptr0 = ptr;
+	Tcl_Obj *converted;
+	char *p = ptr;
 
-	sprintf(str, "[%d", *ptr++ & 0xff);
-	i = dash->number-1;
-	while (i--) {
-	    sprintf(str+strlen(str), " %d", *ptr++ & 0xff);
+	converted = Tcl_ObjPrintf("%d", *p++ & 0xff);
+	for (i = dash->number-1 ; i>=0 ; i--) {
+	    Tcl_AppendPrintfToObj(converted, " %d", *p++ & 0xff);
 	}
-	Tcl_AppendResult(interp, str, NULL);
-	if (dash->number&1) {
-	    Tcl_AppendResult(interp, " ", str+1, NULL);
+	Tcl_AppendObjToObj(psObj, converted);
+	if (dash->number & 1) {
+	    Tcl_AppendToObj(psObj, " ", -1);
+	    Tcl_AppendObjToObj(psObj, converted);
 	}
-	sprintf(str, "] %d setdash\n", outline->offset);
-	Tcl_AppendResult(interp, str, NULL);
-	ptr = ptr0;
+	Tcl_DecrRefCount(converted);
+	Tcl_AppendPrintfToObj(psObj, "] %d setdash\n", outline->offset);
     } else if (dash->number < 0) {
-	if ((i = DashConvert(lptr, ptr, -dash->number, width)) != 0) {
-	    char *lptr0 = lptr;
+	if (dash->number < -5) {
+	    lptr = ckalloc(1 - 2*dash->number);
+	}
+	i = DashConvert(lptr, ptr, -dash->number, width);
+	if (i > 0) {
+	    char *p = lptr;
 
-	    sprintf(str, "[%d", *lptr++ & 0xff);
-	    while (--i) {
-		sprintf(str+strlen(str), " %d", *lptr++ & 0xff);
+	    Tcl_AppendPrintfToObj(psObj, "%d", *p++ & 0xff);
+	    for (; --i>0 ;) {
+		Tcl_AppendPrintfToObj(psObj, " %d", *p++ & 0xff);
 	    }
-	    Tcl_AppendResult(interp, str, NULL);
-	    sprintf(str, "] %d setdash\n", outline->offset);
-	    Tcl_AppendResult(interp, str, NULL);
-	    lptr = lptr0;
+	    Tcl_AppendPrintfToObj(psObj, "] %d setdash\n", outline->offset);
 	} else {
-	    Tcl_AppendResult(interp, "[] 0 setdash\n", NULL);
+	    Tcl_AppendToObj(psObj, "] 0 setdash\n", -1);
+	}
+	if (lptr != pattern) {
+	    ckfree(lptr);
 	}
     } else {
-	Tcl_AppendResult(interp, "[] 0 setdash\n", NULL);
+	Tcl_AppendToObj(psObj, "] 0 setdash\n", -1);
     }
-    if (str != string) {
-	ckfree(str);
-    }
-    if (lptr != pattern) {
-	ckfree(lptr);
-    }
+
     if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
 	return TCL_ERROR;
     }
+
+    /*
+     * Note that psObj might hold an invalid reference now.
+     */
+
     if (stipple != None) {
-	Tcl_AppendResult(interp, "StrokeClip ", NULL);
+	Tcl_AppendToObj(GetPostscriptBuffer(interp), "StrokeClip ", -1);
 	if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     } else {
-	Tcl_AppendResult(interp, "stroke\n", NULL);
+	Tcl_AppendToObj(GetPostscriptBuffer(interp), "stroke\n", -1);
     }
 
     return TCL_OK;
@@ -1731,7 +1749,7 @@ TkCanvTranslatePath(
      * This is the loop that makes the four passes through the data.
      */
 
-    for (j=0; j<4; j++){
+    for (j=0; j<4; j++) {
 	double xClip = limit[j];
 	int inside = a[0] < xClip;
 	double priorY = a[1];
@@ -1742,7 +1760,7 @@ TkCanvTranslatePath(
 	 * rotated by 90 degrees clockwise.
 	 */
 
-	for (i=0; i<numVertex; i++){
+	for (i=0; i<numVertex; i++) {
 	    double x = a[i*2];
 	    double y = a[i*2 + 1];
 
@@ -1833,7 +1851,7 @@ TkCanvTranslatePath(
      * XPoints and translate the origin for the drawable.
      */
 
-    for (i=0; i<numVertex; i++){
+    for (i=0; i<numVertex; i++) {
 	TranslateAndAppendCoords(canvPtr, a[i*2], a[i*2+1], outArr, i);
     }
     if (tempArr != staticSpace) {

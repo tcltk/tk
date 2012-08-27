@@ -115,7 +115,7 @@ Tk_FocusObjCmd(
     };
     Tk_Window tkwin = clientData;
     TkWindow *winPtr = clientData;
-    TkWindow *newPtr, *focusWinPtr, *topLevelPtr;
+    TkWindow *newPtr, *topLevelPtr;
     ToplevelFocusInfo *tlFocusPtr;
     const char *windowName;
     int index;
@@ -125,9 +125,10 @@ Tk_FocusObjCmd(
      */
 
     if (objc == 1) {
-	focusWinPtr = TkGetFocusWin(winPtr);
-	if (focusWinPtr != NULL) {
-	    Tcl_SetResult(interp, focusWinPtr->pathName, TCL_STATIC);
+	Tk_Window focusWin = (Tk_Window) TkGetFocusWin(winPtr);
+
+	if (focusWin != NULL) {
+	    Tcl_SetObjResult(interp, TkNewWindowObj(focusWin));
 	}
 	return TCL_OK;
     }
@@ -180,7 +181,7 @@ Tk_FocusObjCmd(
 	}
 	newPtr = TkGetFocusWin(newPtr);
 	if (newPtr != NULL) {
-	    Tcl_SetResult(interp, newPtr->pathName, TCL_STATIC);
+	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) newPtr));
 	}
 	break;
     case 1:			/* -force */
@@ -213,12 +214,12 @@ Tk_FocusObjCmd(
 	    for (tlFocusPtr = newPtr->mainPtr->tlFocusPtr; tlFocusPtr != NULL;
 		    tlFocusPtr = tlFocusPtr->nextPtr) {
 		if (tlFocusPtr->topLevelPtr == topLevelPtr) {
-		    Tcl_SetResult(interp,
-			    tlFocusPtr->focusWinPtr->pathName, TCL_STATIC);
+		    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window)
+			    tlFocusPtr->focusWinPtr));
 		    return TCL_OK;
 		}
 	    }
-	    Tcl_SetResult(interp, topLevelPtr->pathName, TCL_STATIC);
+	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) topLevelPtr));
 	    return TCL_OK;
 	}
 	break;
