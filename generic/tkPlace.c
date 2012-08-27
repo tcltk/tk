@@ -343,7 +343,7 @@ Tk_PlaceObjCmd(
 
 	    for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 		    slavePtr = slavePtr->nextPtr) {
-		Tcl_ListObjAppendElement(interp, listPtr,
+		Tcl_ListObjAppendElement(NULL, listPtr,
 			TkNewWindowObj(slavePtr->tkwin));
 	    }
 	    Tcl_SetObjResult(interp, listPtr);
@@ -619,8 +619,10 @@ ConfigureSlave(
     Tk_Window masterWin = (Tk_Window) NULL;
 
     if (Tk_TopWinHierarchy(tkwin)) {
-	Tcl_AppendResult(interp, "can't use placer on top-level window \"",
-		Tk_PathName(tkwin), "\"; use wm command instead", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"can't use placer on top-level window \"%s\"; use "
+		"wm command instead", Tk_PathName(tkwin)));
+	Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
 	return TCL_ERROR;
     }
 
@@ -652,7 +654,7 @@ ConfigureSlave(
 	slavePtr->flags |= CHILD_WIDTH;
     }
 
-    if (((mask & IN_MASK) == 0) && (slavePtr->masterPtr != NULL)) {
+    if (!(mask & IN_MASK) && (slavePtr->masterPtr != NULL)) {
 	/*
 	 * If no -in option was passed and the slave is already placed then
 	 * just recompute the placement.
@@ -678,16 +680,18 @@ ConfigureSlave(
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
-		Tcl_AppendResult(interp, "can't place ",
-			Tk_PathName(slavePtr->tkwin), " relative to ",
-			Tk_PathName(tkwin), NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"can't place %s relative to %s",
+			Tk_PathName(slavePtr->tkwin), Tk_PathName(tkwin)));
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		goto error;
 	    }
 	}
 	if (slavePtr->tkwin == tkwin) {
-	    Tcl_AppendResult(interp, "can't place ",
-		    Tk_PathName(slavePtr->tkwin), " relative to itself",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't place %s relative to itself",
+		    Tk_PathName(slavePtr->tkwin)));
+	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 	    goto error;
 	}
 	if ((slavePtr->masterPtr != NULL)
@@ -771,54 +775,50 @@ PlaceInfoCommand(
     Tcl_Interp *interp,		/* Interp into which to place result. */
     Tk_Window tkwin)		/* Token for the window to get info on. */
 {
-    char buffer[32 + TCL_INTEGER_SPACE];
     Slave *slavePtr;
+    Tcl_Obj *infoObj;
 
     slavePtr = FindSlave(tkwin);
     if (slavePtr == NULL) {
 	return TCL_OK;
     }
+    infoObj = Tcl_NewObj();
     if (slavePtr->masterPtr != NULL) {
-	Tcl_AppendElement(interp, "-in");
-	Tcl_AppendElement(interp, Tk_PathName(slavePtr->masterPtr->tkwin));
+	Tcl_AppendToObj(infoObj, "-in", -1);
+	Tcl_ListObjAppendElement(NULL, infoObj,
+		TkNewWindowObj(slavePtr->masterPtr->tkwin));
+	Tcl_AppendToObj(infoObj, " ", -1);
     }
-    sprintf(buffer, " -x %d", slavePtr->x);
-    Tcl_AppendResult(interp, buffer, NULL);
-    sprintf(buffer, " -relx %.4g", slavePtr->relX);
-    Tcl_AppendResult(interp, buffer, NULL);
-    sprintf(buffer, " -y %d", slavePtr->y);
-    Tcl_AppendResult(interp, buffer, NULL);
-    sprintf(buffer, " -rely %.4g", slavePtr->relY);
-    Tcl_AppendResult(interp, buffer, NULL);
+    Tcl_AppendPrintfToObj(infoObj,
+	    "-x %d -relx %.4g -y %d -rely %.4g",
+	    slavePtr->x, slavePtr->relX, slavePtr->y, slavePtr->relY);
     if (slavePtr->flags & CHILD_WIDTH) {
-	sprintf(buffer, " -width %d", slavePtr->width);
-	Tcl_AppendResult(interp, buffer, NULL);
+	Tcl_AppendPrintfToObj(infoObj, " -width %d", slavePtr->width);
     } else {
-	Tcl_AppendResult(interp, " -width {}", NULL);
+	Tcl_AppendToObj(infoObj, " -width {}", -1);
     }
     if (slavePtr->flags & CHILD_REL_WIDTH) {
-	sprintf(buffer, " -relwidth %.4g", slavePtr->relWidth);
-	Tcl_AppendResult(interp, buffer, NULL);
+	Tcl_AppendPrintfToObj(infoObj,
+		" -relwidth %.4g", slavePtr->relWidth);
     } else {
-	Tcl_AppendResult(interp, " -relwidth {}", NULL);
+	Tcl_AppendToObj(infoObj, " -relwidth {}", -1);
     }
     if (slavePtr->flags & CHILD_HEIGHT) {
-	sprintf(buffer, " -height %d", slavePtr->height);
-	Tcl_AppendResult(interp, buffer, NULL);
+	Tcl_AppendPrintfToObj(infoObj, " -height %d", slavePtr->height);
     } else {
-	Tcl_AppendResult(interp, " -height {}", NULL);
+	Tcl_AppendToObj(infoObj, " -height {}", -1);
     }
     if (slavePtr->flags & CHILD_REL_HEIGHT) {
-	sprintf(buffer, " -relheight %.4g", slavePtr->relHeight);
-	Tcl_AppendResult(interp, buffer, NULL);
+	Tcl_AppendPrintfToObj(infoObj,
+		" -relheight %.4g", slavePtr->relHeight);
     } else {
-	Tcl_AppendResult(interp, " -relheight {}", NULL);
+	Tcl_AppendToObj(infoObj, " -relheight {}", -1);
     }
 
-    Tcl_AppendElement(interp, "-anchor");
-    Tcl_AppendElement(interp, Tk_NameOfAnchor(slavePtr->anchor));
-    Tcl_AppendElement(interp, "-bordermode");
-    Tcl_AppendElement(interp, borderModeStrings[slavePtr->borderMode]);
+    Tcl_AppendPrintfToObj(infoObj, " -anchor %s -bordermode %s",
+	    Tk_NameOfAnchor(slavePtr->anchor),
+	    borderModeStrings[slavePtr->borderMode]);
+    Tcl_SetObjResult(interp, infoObj);
     return TCL_OK;
 }
 
@@ -1183,8 +1183,8 @@ PlaceRequestProc(
     Slave *slavePtr = clientData;
     Master *masterPtr;
 
-    if (((slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH)) != 0)
-	    && ((slavePtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT)) != 0)) {
+    if ((slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH))
+	    && (slavePtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT))) {
 	return;
     }
     masterPtr = slavePtr->masterPtr;

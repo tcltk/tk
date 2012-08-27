@@ -541,7 +541,7 @@ Tk_GetOption(
 
 	winClassId = Tk_GetUid(masqClass);
 	ckfree(masqClass);
-	winNameId = ((TkWindow *)tkwin)->nameUid;
+	winNameId = ((TkWindow *) tkwin)->nameUid;
 
 	levelPtr = &tsdPtr->levels[tsdPtr->curLevel];
 
@@ -619,11 +619,9 @@ Tk_OptionObjCmd(
     int index, result;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
     static const char *const optionCmds[] = {
 	"add", "clear", "get", "readfile", NULL
     };
-
     enum optionVals {
 	OPTION_ADD, OPTION_CLEAR, OPTION_GET, OPTION_READFILE
     };
@@ -663,13 +661,12 @@ Tk_OptionObjCmd(
     }
 
     case OPTION_CLEAR: {
-	TkMainInfo *mainPtr;
+	TkMainInfo *mainPtr = ((TkWindow *) tkwin)->mainPtr;
 
 	if (objc != 2) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "");
 	    return TCL_ERROR;
 	}
-	mainPtr = ((TkWindow *) tkwin)->mainPtr;
 	if (mainPtr->optionRootPtr != NULL) {
 	    ClearOptionTree(mainPtr->optionRootPtr);
 	    mainPtr->optionRootPtr = NULL;
@@ -693,7 +690,7 @@ Tk_OptionObjCmd(
 	value = Tk_GetOption(window, Tcl_GetString(objv[3]),
 		Tcl_GetString(objv[4]));
 	if (value != NULL) {
-	    Tcl_SetResult(interp, (char *) value, TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(value, -1));
 	}
 	break;
     }
@@ -880,9 +877,11 @@ ParsePriority(
 	priority = strtoul(string, &end, 0);
 	if ((end == string) || (*end != 0) || (priority < 0)
 		|| (priority > 100)) {
-	    Tcl_AppendResult(interp, "bad priority level \"", string,
-		    "\": must be widgetDefault, startupFile, userDefault, ",
-		    "interactive, or a number between 0 and 100", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad priority level \"%s\": must be "
+		    "widgetDefault, startupFile, userDefault, "
+		    "interactive, or a number between 0 and 100", string));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PRIORITY", NULL);
 	    return -1;
 	}
     }
@@ -964,10 +963,9 @@ AddFromString(
 	dst = name = src;
 	while (*src != ':') {
 	    if ((*src == '\0') || (*src == '\n')) {
-		char buf[32 + TCL_INTEGER_SPACE];
-
-		sprintf(buf, "missing colon on line %d", lineNum);
-		Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"missing colon on line %d", lineNum));
+		Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "COLON", NULL);
 		return TCL_ERROR;
 	    }
 	    if ((src[0] == '\\') && (src[1] == '\n')) {
@@ -999,10 +997,9 @@ AddFromString(
 	    src++;
 	}
 	if (*src == '\0') {
-	    char buf[32 + TCL_INTEGER_SPACE];
-
-	    sprintf(buf, "missing value on line %d", lineNum);
-	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "missing value on line %d", lineNum));
+	    Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "VALUE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1014,10 +1011,9 @@ AddFromString(
 	dst = value = src;
 	while (*src != '\n') {
 	    if (*src == '\0') {
-		char buf[32 + TCL_INTEGER_SPACE];
-
-		sprintf(buf, "missing newline on line %d", lineNum);
-		Tcl_SetResult(interp, buf, TCL_VOLATILE);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"missing newline on line %d", lineNum));
+		Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "NEWLINE", NULL);
 		return TCL_ERROR;
 	    }
 	    if ((src[0] == '\\') && (src[1] == '\n')) {
@@ -1066,7 +1062,7 @@ ReadOptionFile(
     Tcl_Interp *interp,		/* Interpreter to use for reporting results. */
     Tk_Window tkwin,		/* Token for window: options are entered for
 				 * this window's main window. */
-    const char *fileName,		/* Name of file containing options. */
+    const char *fileName,	/* Name of file containing options. */
     int priority)		/* Priority level to use for options in this
 				 * file, such as TK_USER_DEFAULT_PRIO or
 				 * TK_INTERACTIVE_PRIO. Must be between 0 and
@@ -1083,8 +1079,9 @@ ReadOptionFile(
      */
 
     if (Tcl_IsSafe(interp)) {
-	Tcl_AppendResult(interp, "can't read options from a file in a",
-		" safe interpreter", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"can't read options from a file in a safe interpreter", -1));
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "OPTION_FILE", NULL);
 	return TCL_ERROR;
     }
 
@@ -1095,9 +1092,8 @@ ReadOptionFile(
     chan = Tcl_OpenFileChannel(interp, realName, "r", 0);
     Tcl_DStringFree(&newName);
     if (chan == NULL) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "couldn't open \"", fileName,
-		"\": ", Tcl_PosixError(interp), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("couldn't open \"%s\": %s",
+		fileName, Tcl_PosixError(interp)));
 	return TCL_ERROR;
     }
 
@@ -1110,8 +1106,9 @@ ReadOptionFile(
     Tcl_Seek(chan, (Tcl_WideInt) 0, SEEK_SET);
 
     if (bufferSize < 0) {
-	Tcl_AppendResult(interp, "error seeking to end of file \"",
-		fileName, "\":", Tcl_PosixError(interp), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"error seeking to end of file \"%s\": %s",
+		fileName, Tcl_PosixError(interp)));
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
@@ -1119,8 +1116,9 @@ ReadOptionFile(
     buffer = ckalloc(bufferSize + 1);
     bufferSize = Tcl_Read(chan, buffer, bufferSize);
     if (bufferSize < 0) {
-	Tcl_AppendResult(interp, "error reading file \"", fileName, "\":",
-		Tcl_PosixError(interp), NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"error reading file \"%s\": %s",
+		fileName, Tcl_PosixError(interp)));
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
@@ -1309,6 +1307,7 @@ SetupStacks(
     if (tsdPtr->curLevel >= tsdPtr->numLevels) {
 	StackLevel *newLevels =
 		ckalloc(tsdPtr->numLevels * 2 * sizeof(StackLevel));
+
 	memcpy(newLevels, tsdPtr->levels,
 		tsdPtr->numLevels * sizeof(StackLevel));
 	ckfree(tsdPtr->levels);

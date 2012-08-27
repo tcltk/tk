@@ -76,8 +76,14 @@ package require Tk 8.6
 	}
     }
 
-    method CreateHull {} {error "method must be overridden"}
-    method Create {}	 {error "method must be overridden"}
+    method CreateHull {} {
+	return -code error -errorcode {TCL OO ABSTRACT_METHOD} \
+	    "method must be overridden"
+    }
+    method Create {} {
+	return -code error -errorcode {TCL OO ABSTRACT_METHOD} \
+	    "method must be overridden"
+    }
 
     method WhenIdle {method args} {
 	if {![info exists IdleCallbacks($method)]} {
