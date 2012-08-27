@@ -114,8 +114,8 @@ proc ::safe::loadTk {} {}
 	}
 	if {$nDisplay ne $display} {
 	    if {$displayGiven} {
-		error "conflicting -display $display and -use\
-			$use -> $nDisplay"
+		return -code error -errorcode {TK DISPLAY SAFE} \
+		    "conflicting -display $display and -use $use -> $nDisplay"
 	    } else {
 		set display $nDisplay
 	    }
@@ -139,7 +139,7 @@ proc ::safe::TkInit {interpPath} {
     } else {
 	Log $interpPath "TkInit called for interp with clearance:\
 		preventing Tk init" ERROR
-	error "not allowed"
+	return -code error -errorcode {TK SAFE PERMISSION} "not allowed"
     }
 }
 
@@ -219,8 +219,8 @@ proc ::safe::tkTopLevel {slave display} {
     incr tkSafeId
     set w ".safe$tkSafeId"
     if {[catch {toplevel $w -screen $display -class SafeTk} msg]} {
-	return -code error "Unable to create toplevel for\
-		safe slave \"$slave\" ($msg)"
+	return -code error -errorcode {TK TOPLEVEL SAFE} \
+	    "Unable to create toplevel for safe slave \"$slave\" ($msg)"
     }
     Log $slave "New toplevel $w" NOTICE
 
