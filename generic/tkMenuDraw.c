@@ -896,12 +896,14 @@ TkPostTearoffMenu(interp, menuPtr, x, y)
 
     Tk_GetVRootGeometry(Tk_Parent(menuPtr->tkwin), &vRootX, &vRootY,
 	&vRootWidth, &vRootHeight);
+    vRootWidth -= Tk_ReqWidth(menuPtr->tkwin);
     if (x > vRootX + vRootWidth) {
 	x = vRootX + vRootWidth;
     }
     if (x < vRootX) {
 	x = vRootX;
     }
+    vRootHeight -= Tk_ReqHeight(menuPtr->tkwin);
     if (y > vRootY + vRootHeight) {
 	y = vRootY + vRootHeight;
     }
