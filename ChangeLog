@@ -1,3 +1,8 @@
+2012-08-28  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkMenuDraw.c: [Bug 3562426]: Context menu goes out of edge of
+	screen.
+
 2012-08-24  Donal K. Fellows  <dkf@users.sf.net>
 
 	* library/tkfbox.tcl (GlobFiltered): [Bug 3558535]: Factor out the
