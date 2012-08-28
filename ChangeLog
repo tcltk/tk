@@ -1,3 +1,32 @@
+2012-08-28  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkMenuDraw.c: [Bug 3562426]: Context menu goes out of edge of
+	screen.
+
+2012-08-24  Donal K. Fellows  <dkf@users.sf.net>
+
+	* library/tkfbox.tcl (GlobFiltered): [Bug 3558535]: Factor out the
+	filtered-sorted globbing code into one procedure that knows how to
+	avoid nasty problems when non-list filters are used. This allows the
+	rest of the [tk_getOpenFile] implementation to be ignorant of the
+	considerable complexities of globbing.
+
+2012-08-23  Don Porter  <dgp@users.sourceforge.net>
+
+	* unix/tkUnixWm.c: [Bugs 3554026,3561016]: Stop crash with tearoff
+	menus.
+
+2012-08-17  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/nmakehlp.c: Add "-V<num>" option, in order to be able
+	to detect partial version numbers.
+
+2012-08-15  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/buildall.vc.bat: Only build the threaded builds by default
+	* win/rules.vc:        Backport some improvements from Tcl 8.6
+	* win/makefile.vc:
+
 2012-08-11  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextTag.c:  [Bug 3554273]: Test textDisp-32.2 failed
