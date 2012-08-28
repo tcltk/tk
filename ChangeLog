@@ -1,3 +1,12 @@
+2012-08-28  Andreas Kupries  <andreask@activestate.com>
+
+	Cherrypick Merge, Backport of [6223d9e067].
+	See trunk 2012-05-29 Donal K. Fellows
+
+	* generic/tkInt.decls (TkMacOSXDrawable): Added OSX-specific mechanism
+	to allow retrieval of the drawing surface. Allows Canvas3d to be
+	adapted to 8.6.
+
 2012-08-11  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextTag.c:  [Bug 3554273]: Test textDisp-32.2 failed
