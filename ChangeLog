@@ -2,6 +2,9 @@
 
 	* generic/tkCanvWind.c (CanvasPsWindow): Unbreak AIX, replaced use
 	of C99 comments in commit [961ae24a3f] (2012-08-27) with C89-style.
+	* win/tkWinDialog.c: Unbreak windows problems with commit [961ae24a3f]
+	* win/tkWinMenu.c: as well.
+	* win/tkWinSend.c:
 
 2012-08-28  Jan Nijtmans  <nijtmans@users.sf.net>
 

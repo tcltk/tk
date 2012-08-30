@@ -1604,8 +1604,8 @@ ChooseDirectoryValidateProc(
 		 * User HAS to select a valid directory.
 		 */
 
-		wsprintf(selDir, TEXT("Directory '%s' does not exist,\n"
-			"please select or enter an existing directory."),
+		wsprintf(selDir, TEXT("Directory '%s' does not exist,\n")
+		        TEXT("please select or enter an existing directory."),
 			chooseDirSharedData->retDir);
 		MessageBox(NULL, selDir, NULL, MB_ICONEXCLAMATION|MB_OK);
 		chooseDirSharedData->retDir[0] = '\0';
