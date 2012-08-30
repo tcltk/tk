@@ -839,8 +839,8 @@ CanvasPsWindow(
      */
 
     psObj = Tcl_ObjPrintf(
-	    "\n%%%% %s item (%s, %d x %d)\n"	// Comment
-	    "%.15g %.15g translate\n",		// Position
+	    "\n%%%% %s item (%s, %d x %d)\n"	/* Comment */
+	    "%.15g %.15g translate\n",		/* Position */
 	    Tk_Class(tkwin), Tk_PathName(tkwin), width, height, x, y);
 
     /*

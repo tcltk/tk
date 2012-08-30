@@ -1,3 +1,8 @@
+2012-08-30  Andreas Kupries  <andreask@activestate.com>
+
+	* generic/tkCanvWind.c (CanvasPsWindow): Unbreak AIX, replaced use
+	of C99 comments in commit [961ae24a3f] (2012-08-27) with C89-style.
+
 2012-08-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkMenuDraw.c: [Bug 3562426]: Context menu goes out of edge of
