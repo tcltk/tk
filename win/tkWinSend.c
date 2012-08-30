@@ -1,4 +1,4 @@
-`/*
+/*
  * tkWinSend.c --
  *
  *	This file provides functions that implement the "send" command,
@@ -147,7 +147,7 @@ Tk_SetAppName(
 	if (FAILED(hr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "failed to initialize the COM library", -1));
-	    Tcl_SetErrorcode(interp, "TK", "SEND", "COM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", NULL);
 	    return "";
 	}
 	tsdPtr->initialized = 1;
@@ -365,7 +365,7 @@ Tk_SendObjCmd(
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"option not implemented: \"displayof\" is not available"
 		" for this platform.", -1));
-	Tcl_SetErrorcode(interp, "TK", "SEND", "DISPLAYOF_WIN", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SEND", "DISPLAYOF_WIN", NULL);
 	result = TCL_ERROR;
     }
 
@@ -439,7 +439,7 @@ FindInterpreterObject(
 		} else {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "no application named \"%s\"", name));
-		    Tcl_SetErrorcode(interp, "TK", "LOOKUP", "APPLICATION",
+		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION",
 			    NULL);
 		    result = TCL_ERROR;
 		}
