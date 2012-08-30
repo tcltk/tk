@@ -6945,8 +6945,6 @@ and -to (porter)
 
 2011-10-25 (bug fix)[3410609] AltGr keysyms on Swiss keyboard (tasser,kenny)
 
---- Released 8.6b3, November 20, 2011 --- See ChangeLog for details ---
-
 2011-11-17 (bug fix)[3437816] return code of [canvas lower] (hirner,ferrieux)
 
 2011-12-22 (bug fix)[3235256] correct menu failure on Windows (mcdonald)
@@ -6993,6 +6991,21 @@ and -to (porter)
 
 2012-07-23 (bug fix)[3546073] DisplayString() -> DefaultDisplay() (english)
 
+2012-08-11 (bug fix)[3554273] text elide and tags (vogel)
+
+2012-08-15 (enhancement)[3555324] Win:Ctrl-A now means Select-All (nijtmans)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+2012-08-22 (new feature)[TIP 403] Use Web color definitions (nijtmans)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+2012-08-23 (enhancement)[3555644] better use of virtual events (nijtmans)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+2012-08-24 (bug fix)[3558535] file dialog filtering (fellows)
+
+2012-08-25 (bug fix)[3554026,3561016] crash with tearoff menus (gavilan)
+
 Many revisions to better support a Cygwin environment (nijtmans)
 
---- Released 8.5.12, July 27, 2012 --- See ChangeLog for details ---
+--- Released 8.6b3, September 7, 2012 --- See ChangeLog for details ---
