@@ -225,6 +225,7 @@ Tk_ImageObjCmd(
     char idString[16 + TCL_INTEGER_SPACE];
     TkDisplay *dispPtr = winPtr->dispPtr;
     const char *arg, *name;
+    Tcl_Obj *resultObj;
     ThreadSpecificData *tsdPtr =
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -271,8 +272,9 @@ Tk_ImageObjCmd(
 	    }
 	}
 	if (typePtr == NULL) {
-	    Tcl_AppendResult(interp, "image type \"", arg, "\" doesn't exist",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "image type \"%s\" doesn't exist", arg));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", arg, NULL);
 	    return TCL_ERROR;
 	}
 
@@ -304,8 +306,10 @@ Tk_ImageObjCmd(
 
 	    topWin = (TkWindow *) TkToplevelWindowForCommand(interp, name);
 	    if (topWin != NULL && winPtr->mainPtr->winPtr == topWin) {
-		Tcl_AppendResult(interp, "images may not be named the ",
-			"same as the main window", NULL);
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"images may not be named the same as the main window",
+			-1));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SMASH_MAIN", NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -387,9 +391,8 @@ Tk_ImageObjCmd(
 	    imagePtr->instanceData = typePtr->getProc(imagePtr->tkwin,
 		    masterPtr->masterData);
 	}
-	Tcl_SetResult(interp,
-		Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr),
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr), -1));
 	break;
     }
     case IMAGE_DELETE:
@@ -412,28 +415,34 @@ Tk_ImageObjCmd(
 	    return TCL_ERROR;
 	}
 	hPtr = Tcl_FirstHashEntry(&winPtr->mainPtr->imageTable, &search);
+	resultObj = Tcl_NewObj();
 	for ( ; hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	    masterPtr = Tcl_GetHashValue(hPtr);
 	    if (masterPtr->deleted) {
 		continue;
 	    }
-	    Tcl_AppendElement(interp, Tcl_GetHashKey(
-		    &winPtr->mainPtr->imageTable, hPtr));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
+		    Tcl_GetHashKey(&winPtr->mainPtr->imageTable, hPtr), -1));
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	break;
     case IMAGE_TYPES:
 	if (objc != 2) {
 	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
 	    return TCL_ERROR;
 	}
+	resultObj = Tcl_NewObj();
 	for (typePtr = tsdPtr->imageTypeList; typePtr != NULL;
 		typePtr = typePtr->nextPtr) {
-	    Tcl_AppendElement(interp, typePtr->name);
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
+		    typePtr->name, -1));
 	}
 	for (typePtr = tsdPtr->oldImageTypeList; typePtr != NULL;
 		typePtr = typePtr->nextPtr) {
-	    Tcl_AppendElement(interp, typePtr->name);
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
+		    typePtr->name, -1));
 	}
+	Tcl_SetObjResult(interp, resultObj);
 	break;
 
     case IMAGE_HEIGHT:
@@ -490,7 +499,8 @@ Tk_ImageObjCmd(
     return TCL_OK;
 
   alreadyDeleted:
-    Tcl_AppendResult(interp, "image \"", arg, "\" doesn't exist", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("image \"%s\" doesn't exist",arg));
+    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", arg, NULL);
     return TCL_ERROR;
 }
 
@@ -630,7 +640,9 @@ Tk_GetImage(
 
   noSuchImage:
     if (interp) {
-	Tcl_AppendResult(interp, "image \"", name, "\" doesn't exist", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"image \"%s\" doesn't exist", name));
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", name, NULL);
     }
     return NULL;
 }

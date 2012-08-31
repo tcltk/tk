@@ -944,6 +944,8 @@ MODULE_SCOPE TkMainInfo		*tkMainWindowList;
 MODULE_SCOPE Tk_ImageType	tkPhotoImageType;
 MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
 
+MODULE_SCOPE const char *const tkWebColors[20];
+
 /*
  * The definition of pi, at least from the perspective of double-precision
  * floats.
@@ -1168,7 +1170,7 @@ MODULE_SCOPE void	TkpBuildRegionFromAlphaData(TkRegion region,
 			    unsigned x, unsigned y, unsigned width,
 			    unsigned height, unsigned char *dataPtr,
 			    unsigned pixelStride, unsigned lineStride);
-MODULE_SCOPE void	TkPrintPadAmount(Tcl_Interp *interp,
+MODULE_SCOPE void	TkAppendPadAmount(Tcl_Obj *bufferObj,
 			    const char *buffer, int pad1, int pad2);
 MODULE_SCOPE int	TkParsePadAmount(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj *objPtr,

@@ -374,8 +374,8 @@ static void		TkMenuCleanup(ClientData unused);
 static const Tk_ClassProcs menuClass = {
     sizeof(Tk_ClassProcs),	/* size */
     MenuWorldChanged,		/* worldChangedProc */
-    NULL,					/* createProc */
-    NULL					/* modalProc */
+    NULL,			/* createProc */
+    NULL			/* modalProc */
 };
 
 /*
@@ -889,7 +889,7 @@ MenuWidgetObjCmd(
 	    goto error;
 	}
 	if (index < 0) {
-	    Tcl_SetResult(interp, "none", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
 	}
@@ -966,6 +966,7 @@ MenuWidgetObjCmd(
     }
     case MENU_TYPE: {
 	int index;
+	const char *typeStr;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -978,11 +979,11 @@ MenuWidgetObjCmd(
 	    goto done;
 	}
 	if (menuPtr->entries[index]->type == TEAROFF_ENTRY) {
-	    Tcl_SetResult(interp, "tearoff", TCL_STATIC);
+	    typeStr = "tearoff";
 	} else {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    menuEntryTypeStrings[menuPtr->entries[index]->type], -1));
+	    typeStr = menuEntryTypeStrings[menuPtr->entries[index]->type];
 	}
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, -1));
 	break;
     }
     case MENU_UNPOST:
@@ -2206,7 +2207,9 @@ TkGetMenuIndex(
 	}
     }
 
-    Tcl_AppendResult(interp, "bad menu entry index \"", string, "\"", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad menu entry index \"%s\"", string));
+    Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
     return TCL_ERROR;
 
   success:
@@ -2390,9 +2393,9 @@ MenuAddOrInsert(
 	index = menuPtr->numEntries;
     }
     if (index < 0) {
-	const char *indexString = Tcl_GetString(indexPtr);
-
-	Tcl_AppendResult(interp, "bad index \"", indexString, "\"", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad index \"%s\"", Tcl_GetString(indexPtr)));
+	Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
 	return TCL_ERROR;
     }
     if (menuPtr->tearoff && (index == 0)) {
@@ -3265,6 +3268,7 @@ TkSetWindowMenuBar(
 		    && (cloneMenuRefPtr->menuPtr != NULL)) {
 		Tcl_Obj *cursorPtr = Tcl_NewStringObj("-cursor", -1);
 		Tcl_Obj *nullPtr = Tcl_NewObj();
+
 		cloneMenuRefPtr->menuPtr->parentTopLevelPtr = tkwin;
 		menuBarPtr = cloneMenuRefPtr->menuPtr;
 		newObjv[0] = cursorPtr;
@@ -3468,6 +3472,7 @@ TkFindMenuReferencesObj(
     Tcl_Obj *objPtr)		/* The path of the menu widget. */
 {
     const char *pathName = Tcl_GetString(objPtr);
+
     return TkFindMenuReferences(interp, pathName);
 }
 

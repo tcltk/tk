@@ -301,7 +301,7 @@ static int		SetSlaveColumn(Tcl_Interp *interp, Gridder *slavePtr,
 			    int column, int numCols);
 static int		SetSlaveRow(Tcl_Interp *interp, Gridder *slavePtr,
 			    int row, int numRows);
-static void		StickyToString(int flags, char *result);
+static Tcl_Obj *	StickyToObj(int flags);
 static int		StringToSticky(const char *string);
 static void		Unlink(Gridder *gridPtr);
 
@@ -402,7 +402,8 @@ Tk_GridObjCmd(
     }
 
     /* This should not happen */
-    Tcl_SetResult(interp, "Internal error in grid.", TCL_STATIC);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj("internal error in grid", -1));
+    Tcl_SetErrorCode(interp, "TK", "API_ABUSE", NULL);
     return TCL_ERROR;
 }
 
@@ -447,8 +448,9 @@ GridAnchorCommand(
 
     if (objc == 3) {
 	gridPtr = masterPtr->masterDataPtr;
-	Tcl_SetResult(interp, (char *) Tk_NameOfAnchor(gridPtr == NULL ?
-		GRID_DEFAULT_ANCHOR : gridPtr->anchor), TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		Tk_NameOfAnchor(gridPtr?gridPtr->anchor:GRID_DEFAULT_ANCHOR),
+		-1));
 	return TCL_OK;
     }
 
@@ -720,7 +722,7 @@ GridInfoCommand(
 {
     register Gridder *slavePtr;
     Tk_Window slave;
-    char buffer[64 + TCL_INTEGER_SPACE * 4];
+    Tcl_Obj *infoObj;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -735,18 +737,24 @@ GridInfoCommand(
 	return TCL_OK;
     }
 
-    Tcl_AppendElement(interp, "-in");
-    Tcl_AppendElement(interp, Tk_PathName(slavePtr->masterPtr->tkwin));
-    sprintf(buffer, " -column %d -row %d -columnspan %d -rowspan %d",
-	    slavePtr->column, slavePtr->row,
-	    slavePtr->numCols, slavePtr->numRows);
-    Tcl_AppendResult(interp, buffer, NULL);
-    TkPrintPadAmount(interp, "ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
-    TkPrintPadAmount(interp, "ipady", slavePtr->iPadY/2, slavePtr->iPadY);
-    TkPrintPadAmount(interp, "padx", slavePtr->padLeft, slavePtr->padX);
-    TkPrintPadAmount(interp, "pady", slavePtr->padTop, slavePtr->padY);
-    StickyToString(slavePtr->sticky, buffer);
-    Tcl_AppendResult(interp, " -sticky ", buffer, NULL);
+    infoObj = Tcl_NewObj();
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", -1),
+	    TkNewWindowObj(slavePtr->masterPtr->tkwin));
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-column", -1),
+	    Tcl_NewIntObj(slavePtr->column));
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-row", -1),
+	    Tcl_NewIntObj(slavePtr->row));
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-columnspan", -1),
+	    Tcl_NewIntObj(slavePtr->numCols));
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-rowspan", -1),
+	    Tcl_NewIntObj(slavePtr->numRows));
+    TkAppendPadAmount(infoObj, "-ipadx", slavePtr->iPadX/2, slavePtr->iPadX);
+    TkAppendPadAmount(infoObj, "-ipady", slavePtr->iPadY/2, slavePtr->iPadY);
+    TkAppendPadAmount(infoObj, "-padx", slavePtr->padLeft, slavePtr->padX);
+    TkAppendPadAmount(infoObj, "-pady", slavePtr->padTop, slavePtr->padY);
+    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-sticky", -1),
+	    StickyToObj(slavePtr->sticky));
+    Tcl_SetObjResult(interp, infoObj);
     return TCL_OK;
 }
 
@@ -994,9 +1002,9 @@ GridRowColumnConfigureCommand(
     string = Tcl_GetString(objv[1]);
     slotType = (*string == 'c') ? COLUMN : ROW;
     if (lObjc == 0) {
-	Tcl_AppendResult(interp, "no ",
-		(slotType == COLUMN) ? "column" : "row",
-		" indices specified", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("no %s indices specified",
+		(slotType == COLUMN) ? "column" : "row"));
+	Tcl_SetErrorCode(interp, "TK", "GRID", "NO_INDEX", NULL);
 	Tcl_DecrRefCount(listCopy);
 	return TCL_ERROR;
     }
@@ -1007,16 +1015,17 @@ GridRowColumnConfigureCommand(
 
     if ((objc == 4) || (objc == 5)) {
 	if (lObjc != 1) {
-	    Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
-		    Tcl_GetString(objv[1]),
-		    ": must specify a single element on retrieval", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "must specify a single element on retrieval", -1));
+	    Tcl_SetErrorCode(interp, "TK", "GRID", "USAGE", NULL);
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, lObjv[0], &slot) != TCL_OK) {
 	    Tcl_AppendResult(interp,
-		    " (when retreiving options only integer indices are "
+		    " (when retrieving options only integer indices are "
 		    "allowed)", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "GRID", "INDEX_FORMAT", NULL);
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
 	}
@@ -1073,19 +1082,19 @@ GridRowColumnConfigureCommand(
 	    return TCL_ERROR;
 	}
 	if (index == ROWCOL_MINSIZE) {
-	    Tcl_SetObjResult(interp,
-		    Tcl_NewIntObj((ok == TCL_OK) ? slotPtr[slot].minSize : 0));
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(
+		    (ok == TCL_OK) ? slotPtr[slot].minSize : 0));
 	} else if (index == ROWCOL_WEIGHT) {
-	    Tcl_SetObjResult(interp,
-		    Tcl_NewIntObj((ok == TCL_OK) ? slotPtr[slot].weight : 0));
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(
+		    (ok == TCL_OK) ? slotPtr[slot].weight : 0));
 	} else if (index == ROWCOL_UNIFORM) {
 	    Tk_Uid value = (ok == TCL_OK) ? slotPtr[slot].uniform : "";
 
-	    Tcl_SetObjResult(interp,
-		    Tcl_NewStringObj(value == NULL ? "" : value, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    (value == NULL) ? "" : value, -1));
 	} else if (index == ROWCOL_PAD) {
-	    Tcl_SetObjResult(interp,
-		    Tcl_NewIntObj((ok == TCL_OK) ? slotPtr[slot].pad : 0));
+	    Tcl_SetObjResult(interp, Tcl_NewIntObj(
+		    (ok == TCL_OK) ? slotPtr[slot].pad : 0));
 	}
 	Tcl_DecrRefCount(listCopy);
 	return TCL_OK;
@@ -1118,17 +1127,17 @@ GridRowColumnConfigureCommand(
 
 	    slavePtr = GetGrid(slave);
 	    if (slavePtr->masterPtr != masterPtr) {
-		Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
-			Tcl_GetString(objv[1]), ": the window \"",
-			Tcl_GetString(lObjv[j]), "\" is not managed by \"",
-		 	Tcl_GetString(objv[2]), "\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"the window \"%s\" is not managed by \"%s\"",
+			Tcl_GetString(lObjv[j]), Tcl_GetString(objv[2])));
+		Tcl_SetErrorCode(interp, "TK", "GRID", "NOT_MASTER", NULL);
 		Tcl_DecrRefCount(listCopy);
 		return TCL_ERROR;
 	    }
 	} else {
-	    Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
-		    Tcl_GetString(objv[1]), ": illegal index \"",
-		    Tcl_GetString(lObjv[j]), "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "illegal index \"%s\"", Tcl_GetString(lObjv[j])));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID_INDEX", NULL);
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
 	}
@@ -1148,10 +1157,11 @@ GridRowColumnConfigureCommand(
 	    for (slot = first; slot <= last; slot++) {
 		ok = CheckSlotData(masterPtr, slot, slotType, /*checkOnly*/ 0);
 		if (ok != TCL_OK) {
-		    Tcl_AppendResult(interp, Tcl_GetString(objv[0]), " ",
-			    Tcl_GetString(objv[1]), ": \"",
-			    Tcl_GetString(lObjv[j]),
-			    "\" is out of range", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "\"%s\" is out of range",
+			    Tcl_GetString(lObjv[j])));
+		    Tcl_SetErrorCode(interp, "TK", "GRID", "INDEX_RANGE",
+			    NULL);
 		    Tcl_DecrRefCount(listCopy);
 		    return TCL_ERROR;
 		}
@@ -1185,11 +1195,8 @@ GridRowColumnConfigureCommand(
 			    Tcl_DecrRefCount(listCopy);
 			    return TCL_ERROR;
 			} else if (wt < 0) {
-			    Tcl_AppendResult(interp, "invalid arg \"",
-				    Tcl_GetString(objv[i]),
-				    "\": should be non-negative", NULL);
 			    Tcl_DecrRefCount(listCopy);
-			    return TCL_ERROR;
+			    goto negativeIndex;
 			} else {
 			    slotPtr[slot].weight = wt;
 			}
@@ -1206,11 +1213,8 @@ GridRowColumnConfigureCommand(
 			    Tcl_DecrRefCount(listCopy);
 			    return TCL_ERROR;
 			} else if (size < 0) {
-			    Tcl_AppendResult(interp, "invalid arg \"",
-				    Tcl_GetString(objv[i]),
-				    "\": should be non-negative", NULL);
 			    Tcl_DecrRefCount(listCopy);
-			    return TCL_ERROR;
+			    goto negativeIndex;
 			} else {
 			    slotPtr[slot].pad = size;
 			}
@@ -1259,6 +1263,13 @@ GridRowColumnConfigureCommand(
 	Tcl_DoWhenIdle(ArrangeGrid, masterPtr);
     }
     return TCL_OK;
+
+  negativeIndex:
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "invalid arg \"%s\": should be non-negative",
+	    Tcl_GetString(objv[i])));
+    Tcl_SetErrorCode(interp, "TK", "GRID", "NEG_INDEX", NULL);
+    return TCL_ERROR;
 }
 
 /*
@@ -1361,8 +1372,9 @@ GridSlavesCommand(
 	    return TCL_ERROR;
 	}
 	if (value < 0) {
-	    Tcl_AppendResult(interp, Tcl_GetString(objv[i]),
-		    " is an invalid value: should NOT be < 0", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "%d is an invalid value: should NOT be < 0", value));
+	    Tcl_SetErrorCode(interp, "TK", "GRID", "NEG_INDEX", NULL);
 	    return TCL_ERROR;
 	}
 	if (index == SLAVES_COLUMN) {
@@ -1380,11 +1392,11 @@ GridSlavesCommand(
     res = Tcl_NewListObj(0, NULL);
     for (slavePtr = masterPtr->slavePtr; slavePtr != NULL;
 	    slavePtr = slavePtr->nextPtr) {
-	if (column>=0 && (slavePtr->column > column
+	if ((column >= 0) && (slavePtr->column > column
 		|| slavePtr->column+slavePtr->numCols-1 < column)) {
 	    continue;
 	}
-	if (row>=0 && (slavePtr->row > row ||
+	if ((row >= 0) && (slavePtr->row > row ||
 		slavePtr->row+slavePtr->numRows-1 < row)) {
 	    continue;
 	}
@@ -2528,7 +2540,8 @@ SetSlaveColumn(
 
     lastCol = ((newColumn >= 0) ? newColumn : 0) + newNumCols;
     if (lastCol >= MAX_ELEMENT) {
-	Tcl_SetResult(interp, "Column out of bounds", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("column out of bounds",-1));
+	Tcl_SetErrorCode(interp, "TK", "GRID", "BAD_COLUMN", NULL);
 	return TCL_ERROR;
     }
 
@@ -2568,7 +2581,8 @@ SetSlaveRow(
 
     lastRow = ((newRow >= 0) ? newRow : 0) + newNumRows;
     if (lastRow >= MAX_ELEMENT) {
-	Tcl_SetResult(interp, "Row out of bounds", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("row out of bounds", -1));
+	Tcl_SetErrorCode(interp, "TK", "GRID", "BAD_ROW", NULL);
 	return TCL_ERROR;
     }
 
@@ -2992,24 +3006,27 @@ ConfigureSlaves(
 	    continue;
     	}
 	if (length > 1 && i == 0) {
-	    Tcl_AppendResult(interp, "bad argument \"", string,
-		    "\": must be name of window", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad argument \"%s\": must be name of window", string));
+	    Tcl_SetErrorCode(interp, "TK", "GRID", "BAD_PARAMETER", NULL);
 	    return TCL_ERROR;
 	}
     	if (length > 1 && firstChar == '-') {
 	    break;
 	}
 	if (length > 1) {
-	    Tcl_AppendResult(interp, "unexpected parameter, \"",
-		    string, "\", in configure list. ",
-		    "Should be window name or option", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "unexpected parameter \"%s\" in configure list:"
+		    " should be window name or option", string));
+	    Tcl_SetErrorCode(interp, "TK", "GRID", "BAD_PARAMETER", NULL);
 	    return TCL_ERROR;
 	}
 
 	if ((firstChar == REL_HORIZ) && ((numWindows == 0) ||
 		(prevChar == REL_SKIP) || (prevChar == REL_VERT))) {
-	    Tcl_AppendResult(interp,
-		    "Must specify window before shortcut '-'.", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "must specify window before shortcut '-'", -1));
+	    Tcl_SetErrorCode(interp, "TK", "GRID", "SHORTCUT_USAGE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3018,14 +3035,18 @@ ConfigureSlaves(
 	    continue;
 	}
 
-	Tcl_AppendResult(interp, "invalid window shortcut, \"",
-		string, "\" should be '-', 'x', or '^'", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"invalid window shortcut, \"%s\" should be '-', 'x', or '^'",
+		string));
+	Tcl_SetErrorCode(interp, "TK", "GRID", "SHORTCUT_USAGE", NULL);
 	return TCL_ERROR;
     }
     numWindows = i;
 
     if ((objc - numWindows) & 1) {
-	Tcl_AppendResult(interp, "extra option or option with no value", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"extra option or option with no value", -1));
+	Tcl_SetErrorCode(interp, "TK", "GRID", "BAD_PARAMETER", NULL);
 	return TCL_ERROR;
     }
 
@@ -3051,10 +3072,10 @@ ConfigureSlaves(
 	} else if (index == CONF_ROW) {
 	    if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK
 		    || tmp < 0) {
-		Tcl_ResetResult(interp);
-		Tcl_AppendResult(interp, "bad row value \"",
-			Tcl_GetString(objv[i+1]), "\": must be ",
-			"a non-negative integer", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad row value \"%s\": must be a non-negative integer",
+			Tcl_GetString(objv[i+1])));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "POSITIVE_INT", NULL);
 		return TCL_ERROR;
 	    }
 	    defaultRow = tmp;
@@ -3116,8 +3137,10 @@ ConfigureSlaves(
 	}
 
 	if (Tk_TopWinHierarchy(slave)) {
-	    Tcl_AppendResult(interp, "can't manage \"", Tcl_GetString(objv[j]),
-		    "\": it's a top-level window", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't manage \"%s\": it's a top-level window",
+		    Tcl_GetString(objv[j])));
+	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
 	    return TCL_ERROR;
 	}
 	slavePtr = GetGrid(slave);
@@ -3144,9 +3167,10 @@ ConfigureSlaves(
 	    case CONF_COLUMN:
 		if (Tcl_GetIntFromObj(NULL, objv[i+1], &tmp) != TCL_OK
 			|| tmp < 0) {
-		    Tcl_AppendResult(interp, "bad column value \"",
-			    Tcl_GetString(objv[i+1]), "\": must be ",
-			    "a non-negative integer", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bad column value \"%s\": must be a non-negative integer",
+			    Tcl_GetString(objv[i+1])));
+		    Tcl_SetErrorCode(interp, "TK", "VALUE", "COLUMN", NULL);
 		    return TCL_ERROR;
 		}
 		if (SetSlaveColumn(interp, slavePtr, tmp, -1) != TCL_OK) {
@@ -3156,9 +3180,10 @@ ConfigureSlaves(
 	    case CONF_COLUMNSPAN:
 		if (Tcl_GetIntFromObj(NULL, objv[i+1], &tmp) != TCL_OK
 			|| tmp <= 0) {
-		    Tcl_AppendResult(interp, "bad columnspan value \"",
-			    Tcl_GetString(objv[i+1]), "\": must be ",
-			    "a positive integer", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bad columnspan value \"%s\": must be a positive integer",
+			    Tcl_GetString(objv[i+1])));
+		    Tcl_SetErrorCode(interp, "TK", "VALUE", "SPAN", NULL);
 		    return TCL_ERROR;
 		}
 		if (SetSlaveColumn(interp, slavePtr, -1, tmp) != TCL_OK) {
@@ -3171,8 +3196,9 @@ ConfigureSlaves(
 		    return TCL_ERROR;
 		}
 		if (other == slave) {
-		    Tcl_SetResult(interp, "Window can't be managed in itself",
-			    TCL_STATIC);
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			    "window can't be managed in itself", -1));
+		    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", NULL);
 		    return TCL_ERROR;
 		}
 		positionGiven = 1;
@@ -3183,9 +3209,11 @@ ConfigureSlaves(
 		int sticky = StringToSticky(Tcl_GetString(objv[i+1]));
 
 		if (sticky == -1) {
-		    Tcl_AppendResult(interp, "bad stickyness value \"",
-			    Tcl_GetString(objv[i+1]), "\": must be ",
-			    "a string containing n, e, s, and/or w", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bad stickyness value \"%s\": must be"
+			    " a string containing n, e, s, and/or w",
+			    Tcl_GetString(objv[i+1])));
+		    Tcl_SetErrorCode(interp, "TK", "VALUE", "STICKY", NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->sticky = sticky;
@@ -3194,9 +3222,10 @@ ConfigureSlaves(
 	    case CONF_IPADX:
 		if ((Tk_GetPixelsFromObj(NULL, slave, objv[i+1],
 			&tmp) != TCL_OK) || (tmp < 0)) {
-		    Tcl_AppendResult(interp, "bad ipadx value \"",
-			    Tcl_GetString(objv[i+1]), "\": must be ",
-			    "positive screen distance", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bad ipadx value \"%s\": must be positive screen distance",
+			    Tcl_GetString(objv[i+1])));
+		    Tcl_SetErrorCode(interp, "TK", "VALUE", "INT_PAD", NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->iPadX = tmp * 2;
@@ -3204,9 +3233,10 @@ ConfigureSlaves(
 	    case CONF_IPADY:
 		if ((Tk_GetPixelsFromObj(NULL, slave, objv[i+1],
 			&tmp) != TCL_OK) || (tmp < 0)) {
-		    Tcl_AppendResult(interp, "bad ipady value \"",
-			    Tcl_GetString(objv[i+1]), "\": must be ",
-			    "positive screen distance", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bad ipady value \"%s\": must be positive screen distance",
+			    Tcl_GetString(objv[i+1])));
+		    Tcl_SetErrorCode(interp, "TK", "VALUE", "INT_PAD", NULL);
 		    return TCL_ERROR;
 		}
 		slavePtr->iPadY = tmp * 2;
@@ -3226,9 +3256,10 @@ ConfigureSlaves(
 	    case CONF_ROW:
 		if (Tcl_GetIntFromObj(NULL, objv[i+1], &tmp) != TCL_OK
 			|| tmp < 0) {
-		    Tcl_AppendResult(interp, "bad row value \"",
-			    Tcl_GetString(objv[i+1]),
-			    "\": must be a non-negative integer", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bad row value \"%s\": must be a non-negative integer",
+			    Tcl_GetString(objv[i+1])));
+		    Tcl_SetErrorCode(interp, "TK", "VALUE", "COLUMN", NULL);
 		    return TCL_ERROR;
 		}
 		if (SetSlaveRow(interp, slavePtr, tmp, -1) != TCL_OK) {
@@ -3238,9 +3269,10 @@ ConfigureSlaves(
 	    case CONF_ROWSPAN:
 		if ((Tcl_GetIntFromObj(NULL, objv[i+1], &tmp) != TCL_OK)
 			|| tmp <= 0) {
-		    Tcl_AppendResult(interp, "bad rowspan value \"",
-			    Tcl_GetString(objv[i+1]),
-			    "\": must be a positive integer", NULL);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "bad rowspan value \"%s\": must be a positive integer",
+			    Tcl_GetString(objv[i+1])));
+		    Tcl_SetErrorCode(interp, "TK", "VALUE", "SPAN", NULL);
 		    return TCL_ERROR;
 		}
 		if (SetSlaveRow(interp, slavePtr, -1, tmp) != TCL_OK) {
@@ -3305,8 +3337,10 @@ ConfigureSlaves(
 		break;
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
-		Tcl_AppendResult(interp, "can't put ", Tcl_GetString(objv[j]),
-			" inside ", Tk_PathName(masterPtr->tkwin), NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"can't put %s inside %s", Tcl_GetString(objv[j]),
+			Tk_PathName(masterPtr->tkwin)));
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		Unlink(slavePtr);
 		return TCL_ERROR;
 	    }
@@ -3317,9 +3351,10 @@ ConfigureSlaves(
 	 */
 
      	if (masterPtr->masterPtr == slavePtr) {
-	    Tcl_AppendResult(interp, "can't put ", Tcl_GetString(objv[j]),
-		    " inside ", Tk_PathName(masterPtr->tkwin),
-		    ", would cause management loop.", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't put %s inside %s, would cause management loop",
+		    Tcl_GetString(objv[j]), Tk_PathName(masterPtr->tkwin)));
+	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 	    Unlink(slavePtr);
 	    return TCL_ERROR;
      	}
@@ -3379,8 +3414,8 @@ ConfigureSlaves(
     numSkip = 0;
     for (j = 0; j < numWindows; j++) {
 	struct Gridder *otherPtr;
-	int match;		 /* Found a match for the ^ */
-	int lastRow, lastColumn; /* Implied end of table. */
+	int match;			/* Found a match for the ^ */
+	int lastRow, lastColumn;	/* Implied end of table. */
 
 	string = Tcl_GetString(objv[j]);
     	firstChar = string[0];
@@ -3397,7 +3432,9 @@ ConfigureSlaves(
 	}
 
 	if (masterPtr == NULL) {
-	    Tcl_AppendResult(interp, "can't use '^', cant find master", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "can't use '^', cant find master", -1));
+	    Tcl_SetErrorCode(interp, "TK", "GRID", "SHORTCUT_USAGE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -3449,14 +3486,17 @@ ConfigureSlaves(
 	    }
 	}
 	if (!match) {
-	    Tcl_AppendResult(interp, "can't find slave to extend with \"^\".",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "can't find slave to extend with \"^\"", -1));
+	    Tcl_SetErrorCode(interp, "TK", "GRID", "SHORTCUT_USAGE", NULL);
 	    return TCL_ERROR;
 	}
     }
 
     if (masterPtr == NULL) {
-	Tcl_AppendResult(interp, "can't determine master window", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"can't determine master window", -1));
+	Tcl_SetErrorCode(interp, "TK", "GRID", "SHORTCUT_USAGE", NULL);
 	return TCL_ERROR;
     }
     SetGridSize(masterPtr);
@@ -3477,13 +3517,13 @@ ConfigureSlaves(
 /*
  *----------------------------------------------------------------------
  *
- * StickyToString
+ * StickyToObj
  *
  *	Converts the internal boolean combination of "sticky" bits onto a Tcl
  *	list element containing zero or more of n, s, e, or w.
  *
  * Results:
- *	A string is placed into the "result" pointer.
+ *	A new object is returned that holds the sticky representation.
  *
  * Side effects:
  *	none.
@@ -3491,29 +3531,26 @@ ConfigureSlaves(
  *----------------------------------------------------------------------
  */
 
-static void
-StickyToString(
-    int flags,			/* The sticky flags. */
-    char *result)		/* Where to put the result. */
+static Tcl_Obj *
+StickyToObj(
+    int flags)			/* The sticky flags. */
 {
     int count = 0;
-    if (flags&STICK_NORTH) {
-    	result[count++] = 'n';
+    char buffer[4];
+
+    if (flags & STICK_NORTH) {
+    	buffer[count++] = 'n';
     }
-    if (flags&STICK_EAST) {
-    	result[count++] = 'e';
+    if (flags & STICK_EAST) {
+    	buffer[count++] = 'e';
     }
-    if (flags&STICK_SOUTH) {
-    	result[count++] = 's';
+    if (flags & STICK_SOUTH) {
+    	buffer[count++] = 's';
     }
-    if (flags&STICK_WEST) {
-    	result[count++] = 'w';
+    if (flags & STICK_WEST) {
+    	buffer[count++] = 'w';
     }
-    if (count) {
-	result[count] = '\0';
-    } else {
-	sprintf(result, "{}");
-    }
+    return Tcl_NewStringObj(buffer, count);
 }
 
 /*

@@ -137,9 +137,11 @@ TkSelGetSelection(
 	}
 	result = proc(clientData, interp, string ? [string UTF8String] : "");
     } else {
-	Tcl_AppendResult(interp, Tk_GetAtomName(tkwin, selection),
-		" selection doesn't exist or form \"",
-		Tk_GetAtomName(tkwin, target), "\" not defined", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"%s selection doesn't exist or form \"%s\" not defined",
+		Tk_GetAtomName(tkwin, selection),
+		Tk_GetAtomName(tkwin, target)));
+	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
     }
     return result;
 }

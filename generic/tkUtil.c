@@ -56,6 +56,7 @@ TkStateParseProc(
     int c;
     int flags = PTR2INT(clientData);
     size_t length;
+    Tcl_Obj *msgObj;
 
     register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
 
@@ -84,18 +85,20 @@ TkStateParseProc(
 	return TCL_OK;
     }
 
-    Tcl_AppendResult(interp, "bad ", (flags&4)?"-default" : "state",
-	    " value \"", value, "\": must be normal", NULL);
-    if (flags&1) {
-	Tcl_AppendResult(interp, ", active", NULL);
+    msgObj = Tcl_ObjPrintf("bad %s value \"%s\": must be normal",
+	    ((flags & 4) ? "-default" : "state"), value);
+    if (flags & 1) {
+	Tcl_AppendToObj(msgObj, ", active", -1);
     }
-    if (flags&2) {
-	Tcl_AppendResult(interp, ", hidden", NULL);
+    if (flags & 2) {
+	Tcl_AppendToObj(msgObj, ", hidden", -1);
     }
-    if (flags&3) {
-	Tcl_AppendResult(interp, ",", NULL);
+    if (flags & 3) {
+	Tcl_AppendToObj(msgObj, ",", -1);
     }
-    Tcl_AppendResult(interp, " or disabled", NULL);
+    Tcl_AppendToObj(msgObj, " or disabled", -1);
+    Tcl_SetObjResult(interp, msgObj);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "STATE", NULL);
     *statePtr = TK_STATE_NORMAL;
     return TCL_ERROR;
 }
@@ -195,8 +198,10 @@ TkOrientParseProc(
 	*orientPtr = 1;
 	return TCL_OK;
     }
-    Tcl_AppendResult(interp, "bad orientation \"", value,
-	    "\": must be vertical or horizontal", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad orientation \"%s\": must be vertical or horizontal",
+	    value));
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "ORIENTATION", NULL);
     *orientPtr = 0;
     return TCL_ERROR;
 }
@@ -265,6 +270,7 @@ TkOffsetParseProc(
     Tk_TSOffset tsoffset;
     const char *q, *p;
     int result;
+    Tcl_Obj *msgObj;
 
     if ((value == NULL) || (*value == 0)) {
 	tsoffset.flags = TK_OFFSET_CENTER|TK_OFFSET_MIDDLE;
@@ -376,15 +382,16 @@ TkOffsetParseProc(
     return TCL_OK;
 
   badTSOffset:
-    Tcl_AppendResult(interp, "bad offset \"", value,
-	    "\": expected \"x,y\"", NULL);
+    msgObj = Tcl_ObjPrintf("bad offset \"%s\": expected \"x,y\"", value);
     if (PTR2INT(clientData) & TK_OFFSET_RELATIVE) {
-	Tcl_AppendResult(interp, ", \"#x,y\"", NULL);
+	Tcl_AppendToObj(msgObj, ", \"#x,y\"", -1);
     }
     if (PTR2INT(clientData) & TK_OFFSET_INDEX) {
-	Tcl_AppendResult(interp, ", <index>", NULL);
+	Tcl_AppendToObj(msgObj, ", <index>", -1);
     }
-    Tcl_AppendResult(interp, ", n, ne, e, se, s, sw, w, nw, or center", NULL);
+    Tcl_AppendToObj(msgObj, ", n, ne, e, se, s, sw, w, nw, or center", -1);
+    Tcl_SetObjResult(interp, msgObj);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "OFFSET", NULL);
     return TCL_ERROR;
 }
 
@@ -481,7 +488,9 @@ TkPixelParseProc(
     result = TkGetDoublePixels(interp, tkwin, value, doublePtr);
 
     if ((result == TCL_OK) && (clientData == NULL) && (*doublePtr < 0.0)) {
-	Tcl_AppendResult(interp, "bad screen distance \"", value, "\"", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad screen distance \"%s\"", value));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
 	return TCL_ERROR;
     }
     return result;
@@ -644,8 +653,10 @@ Tk_GetScrollInfo(
 
     if ((c == 'm') && (strncmp(argv[2], "moveto", length) == 0)) {
 	if (argc != 4) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		    " ", argv[1], " moveto fraction\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "wrong # args: should be \"%s %s %s\"",
+		    argv[0], argv[1], "moveto fraction"));
+	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetDouble(interp, argv[3], dblPtr) != TCL_OK) {
@@ -655,8 +666,10 @@ Tk_GetScrollInfo(
     } else if ((c == 's')
 	    && (strncmp(argv[2], "scroll", length) == 0)) {
 	if (argc != 5) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		    " ", argv[1], " scroll number units|pages\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "wrong # args: should be \"%s %s %s\"",
+		    argv[0], argv[1], "scroll number units|pages"));
+	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetInt(interp, argv[3], intPtr) != TCL_OK) {
@@ -670,12 +683,15 @@ Tk_GetScrollInfo(
 	    return TK_SCROLL_UNITS;
 	}
 
-	Tcl_AppendResult(interp, "bad argument \"", argv[4],
-		"\": must be units or pages", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad argument \"%s\": must be units or pages", argv[4]));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
 	return TK_SCROLL_ERROR;
     }
-    Tcl_AppendResult(interp, "unknown option \"", argv[2],
-	    "\": must be moveto or scroll", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "unknown option \"%s\": must be moveto or scroll", argv[2]));
+    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", argv[2],
+	    NULL);
     return TK_SCROLL_ERROR;
 }
 
@@ -744,12 +760,14 @@ Tk_GetScrollInfoObj(
 	    return TK_SCROLL_UNITS;
 	}
 
-	Tcl_AppendResult(interp, "bad argument \"", arg,
-		"\": must be units or pages", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad argument \"%s\": must be units or pages", arg));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
 	return TK_SCROLL_ERROR;
     }
-    Tcl_AppendResult(interp, "unknown option \"", arg,
-	    "\": must be moveto or scroll", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "unknown option \"%s\": must be moveto or scroll", arg));
+    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", arg, NULL);
     return TK_SCROLL_ERROR;
 }
 
@@ -913,14 +931,17 @@ TkFindStateNum(
      */
 
     if (interp != NULL) {
+	Tcl_Obj *msgObj;
+
 	mPtr = mapPtr;
-	Tcl_AppendResult(interp, "bad ", option, " value \"", strKey,
-		"\": must be ", mPtr->strKey, NULL);
+	msgObj = Tcl_ObjPrintf("bad %s value \"%s\": must be %s",
+		option, strKey, mPtr->strKey);
 	for (mPtr++; mPtr->strKey != NULL; mPtr++) {
-	    Tcl_AppendResult(interp,
-		    ((mPtr[1].strKey != NULL) ? ", " : ", or "),
-		    mPtr->strKey, NULL);
+	    Tcl_AppendPrintfToObj(msgObj, ",%s %s",
+		    ((mPtr[1].strKey != NULL) ? "" : "or "), mPtr->strKey);
 	}
+	Tcl_SetObjResult(interp, msgObj);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", option, strKey, NULL);
     }
     return mPtr->numKey;
 }
@@ -969,14 +990,19 @@ TkFindStateNumObj(
      */
 
     if (interp != NULL) {
+	Tcl_Obj *msgObj;
+
 	mPtr = mapPtr;
-	Tcl_AppendResult(interp, "bad ", Tcl_GetString(optionPtr),
-		" value \"", key, "\": must be ", mPtr->strKey, NULL);
+	msgObj = Tcl_ObjPrintf(
+		"bad %s value \"%s\": must be %s",
+		Tcl_GetString(optionPtr), key, mPtr->strKey);
 	for (mPtr++; mPtr->strKey != NULL; mPtr++) {
-	    Tcl_AppendResult(interp,
-		((mPtr[1].strKey != NULL) ? ", " : ", or "),
-		mPtr->strKey, NULL);
+	    Tcl_AppendPrintfToObj(msgObj, ",%s %s",
+		    ((mPtr[1].strKey != NULL) ? "" : " or"), mPtr->strKey);
 	}
+	Tcl_SetObjResult(interp, msgObj);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", Tcl_GetString(optionPtr),
+		key, NULL);
     }
     return mPtr->numKey;
 }
@@ -1007,24 +1033,15 @@ TkBackgroundEvalObjv(
     Tcl_Obj *const *objv,
     int flags)
 {
-    Tcl_DString errorInfo, errorCode;
-    Tcl_SavedResult state;
+    Tcl_InterpState state;
     int n, r = TCL_OK;
 
-    Tcl_DStringInit(&errorInfo);
-    Tcl_DStringInit(&errorCode);
-
-    Tcl_Preserve(interp);
-
     /*
-     * Record the state of the interpreter
+     * Record the state of the interpreter.
      */
 
-    Tcl_SaveResult(interp, &state);
-    Tcl_DStringAppend(&errorInfo,
-	Tcl_GetVar(interp, "errorInfo", TCL_GLOBAL_ONLY), -1);
-    Tcl_DStringAppend(&errorCode,
-	Tcl_GetVar(interp, "errorCode", TCL_GLOBAL_ONLY), -1);
+    Tcl_Preserve(interp);
+    state = Tcl_SaveInterpState(interp, TCL_OK);
 
     /*
      * Evaluate the command and handle any error.
@@ -1042,24 +1059,12 @@ TkBackgroundEvalObjv(
 	Tcl_BackgroundException(interp, r);
     }
 
+    /*
+     * Restore the state of the interpreter.
+     */
+
+    (void) Tcl_RestoreInterpState(interp, state);
     Tcl_Release(interp);
-
-    /*
-     * Restore the state of the interpreter
-     */
-
-    Tcl_SetVar(interp, "errorInfo",
-	Tcl_DStringValue(&errorInfo), TCL_GLOBAL_ONLY);
-    Tcl_SetVar(interp, "errorCode",
-	Tcl_DStringValue(&errorCode), TCL_GLOBAL_ONLY);
-    Tcl_RestoreResult(interp, &state);
-
-    /*
-     * Clean up references.
-     */
-
-    Tcl_DStringFree(&errorInfo);
-    Tcl_DStringFree(&errorCode);
 
     return r;
 }

@@ -224,11 +224,13 @@ Tk_GetColor(
     if (tkColPtr == NULL) {
 	if (interp != NULL) {
 	    if (*name == '#') {
-		Tcl_AppendResult(interp, "invalid color name \"", name,
-			"\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"invalid color name \"%s\"", name));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "COLOR", NULL);
 	    } else {
-		Tcl_AppendResult(interp, "unknown color name \"", name,
-			"\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"unknown color name \"%s\"", name));
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "COLOR", name, NULL);
 	    }
 	}
 	if (isNew) {
@@ -372,10 +374,12 @@ Tk_NameOfColor(
 	sprintf(tsdPtr->rgbString, "#%04x%04x%04x", colorPtr->red,
 		colorPtr->green, colorPtr->blue);
 
-	/* If the string has the form #RSRSTUTUVWVW (where equal
-	 * letters denote equal hexdigits) then this is
-	 * equivalent to #RSTUVW. Then output the shorter form.
+	/*
+	 * If the string has the form #RSRSTUTUVWVW (where equal letters
+	 * denote equal hexdigits) then this is equivalent to #RSTUVW. Then
+	 * output the shorter form.
 	 */
+
 	if ((tsdPtr->rgbString[1] == tsdPtr->rgbString[3])
 		&& (tsdPtr->rgbString[2] == tsdPtr->rgbString[4])
 		&& (tsdPtr->rgbString[5] == tsdPtr->rgbString[7])
@@ -826,8 +830,35 @@ TkDebugColor(
 }
 
 #ifndef __WIN32__
+
 /* This function is not necessary for Win32,
  * since XParseColor already does the right thing */
+
+#undef XParseColor
+
+const char *const tkWebColors[20] = {
+    /* 'a' */ "qua\0#0000ffffffff",
+    /* 'b' */ NULL,
+    /* 'c' */ "rimson\0#dcdc14143c3c",
+    /* 'd' */ NULL,
+    /* 'e' */ NULL,
+    /* 'f' */ "uchsia\0#ffff0000ffff",
+    /* 'g' */ "reen\0#000080800000",
+    /* 'h' */ NULL,
+    /* 'i' */ "ndigo\0#4b4b00008282",
+    /* 'j' */ NULL,
+    /* 'k' */ NULL,
+    /* 'l' */ "ime\0#0000ffff0000",
+    /* 'm' */ "aroon\0#808000000000",
+    /* 'n' */ NULL,
+    /* 'o' */ "live\0#808080800000",
+    /* 'p' */ "urple\0#808000008080",
+    /* 'q' */ NULL,
+    /* 'r' */ NULL,
+    /* 's' */ "ilver\0#c0c0c0c0c0c0",
+    /* 't' */ "eal\0#000080808080"
+};
+
 Status
 TkParseColor(
     Display *display,		/* The display */
@@ -880,12 +911,30 @@ TkParseColor(
 	} else {
 	    name -= 13;
 	}
-    } else {
-	if (strlen(name) > 99) {
-	    /* Don't bother to parse this. [Bug 2809525]*/
-	    return 0;
+	goto done;
+    } else if (((*name - 'A') & 0xdf) < sizeof(tkWebColors)/sizeof(tkWebColors[0])) {
+	if (!((name[0] - 'G') & 0xdf) && !((name[1] - 'R') & 0xdf)
+		&& !((name[2] - 'A') & 0xdb) && !((name[3] - 'Y') & 0xdf)
+		&& !name[4]) {
+	    name = "#808080808080";
+	    goto done;
+	} else {
+	    const char *p = tkWebColors[((*name - 'A') & 0x1f)];
+	    if (p) {
+		const char *q = name;
+		while (!((*p - *(++q)) & 0xdf)) {
+		    if (!*p++) {
+			name = p;
+			goto done;
+		    }
+		}
+	    }
 	}
     }
+    if (strlen(name) > 99) {
+	return 0;
+    }
+done:
     return XParseColor(display, map, name, color);
 }
 #endif /* __WIN32__ */

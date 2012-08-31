@@ -123,7 +123,7 @@ GetFont(
 		    FC_FAMILY, FcTypeString, "sans",
 		    FC_SIZE, FcTypeDouble, 12.0,
 		    FC_MATRIX, FcTypeMatrix, &mat,
-		    (void *) NULL);
+		    NULL);
 	}
 	if (!ftFont) {
 	    /*
@@ -936,7 +936,7 @@ TkDrawAngledChars(
     nglyph = 0;
     currentFtFont = NULL;
     originX = originY = 0;		/* lint */
-    
+
     while (numBytes > 0 && x <= maxCoord && x >= minCoord && y <= maxCoord
 	    && y >= minCoord) {
 	XftFont *ftFont;

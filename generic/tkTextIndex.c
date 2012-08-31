@@ -84,6 +84,7 @@ FreeTextIndexInternalRep(
 				 * free. */
 {
     TkTextIndex *indexPtr = GET_TEXTINDEX(indexObjPtr);
+
     if (indexPtr->textPtr != NULL) {
 	if (--indexPtr->textPtr->refCount == 0) {
 	    /*
@@ -133,7 +134,6 @@ UpdateStringOfTextIndex(
 {
     char buffer[TK_POS_CHARS];
     register int len;
-
     const TkTextIndex *indexPtr = GET_TEXTINDEX(objPtr);
 
     len = TkTextPrintIndex(indexPtr->textPtr, indexPtr, buffer);
@@ -148,8 +148,10 @@ SetTextIndexFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    Tcl_AppendResult(interp, "can't convert value to textindex except "
-	    "via TkTextGetIndexFromObj API", -1);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    "can't convert value to textindex except via"
+	    " TkTextGetIndexFromObj API", -1));
+    Tcl_SetErrorCode(interp, "TK", "API_ABUSE", NULL);
     return TCL_ERROR;
 }
 
@@ -830,15 +832,14 @@ GetIndex(
 	if (!TkBTreeCharTagged(&first, tagPtr) && !TkBTreeNextTag(&search)) {
 	    if (tagPtr == textPtr->selTagPtr) {
 		tagName = "sel";
-	    } else {
-		if (hPtr != NULL) {
-		    tagName = Tcl_GetHashKey(&sharedPtr->tagTable, hPtr);
-		}
+	    } else if (hPtr != NULL) {
+		tagName = Tcl_GetHashKey(&sharedPtr->tagTable, hPtr);
 	    }
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp,
-		    "text doesn't contain any characters tagged with \"",
-		    tagName, "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "text doesn't contain any characters tagged with \"%s\"",
+		    tagName));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", tagName,
+		    NULL);
 	    Tcl_DStringFree(&copy);
 	    return TCL_ERROR;
 	}
@@ -1001,8 +1002,8 @@ GetIndex(
 
   error:
     Tcl_DStringFree(&copy);
-    Tcl_ResetResult(interp);
-    Tcl_AppendResult(interp, "bad text index \"", string, "\"", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad text index \"%s\"", string));
+    Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_INDEX", NULL);
     return TCL_ERROR;
 }
 

@@ -1062,7 +1062,8 @@ GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
     if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK)
 	return TCL_ERROR;
     if (objc != 2) {
-	Tcl_SetResult(interp, "wrong # args", TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # args", -1));
+	Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	return TCL_ERROR;
     }
     for (i = 0; i < objc; ++i) {
@@ -1116,8 +1117,9 @@ Ttk_CreateVsapiElement(
 	   O_HALFHEIGHT, O_HALFWIDTH };
 
     if (objc < 2) {
-	Tcl_AppendResult(interp,
-	    "missing required arguments 'class' and/or 'partId'", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    "missing required arguments 'class' and/or 'partId'", -1));
+	Tcl_SetErrorCode(interp, "TTK", "VSAPI", "REQUIRED", NULL);
 	return TCL_ERROR;
     }
 
@@ -1132,8 +1134,10 @@ Ttk_CreateVsapiElement(
 	for (i = 3; i < objc; i += 2) {
 	    int tmp = 0;
 	    if (i == objc -1) {
-		Tcl_AppendResult(interp, "Missing value for \"",
-			Tcl_GetString(objv[i]), "\".", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"Missing value for \"%s\".",
+			Tcl_GetString(objv[i])));
+		Tcl_SetErrorCode(interp, "TTK", "VSAPI", "MISSING", NULL);
 		return TCL_ERROR;
 	    }
 	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,

@@ -120,10 +120,12 @@ TkGetFileFilters(
 	}
 
 	if (count != 2 && count != 3) {
-	    Tcl_AppendResult(interp, "bad file type \"",
-		    Tcl_GetString(listObjv[i]), "\", ",
-		    "should be \"typeName {extension ?extensions ...?} ",
-		    "?{macType ?macTypes ...?}?\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad file type \"%s\", should be "
+		    "\"typeName {extension ?extensions ...?} "
+		    "?{macType ?macTypes ...?}?\"",
+		    Tcl_GetString(listObjv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "FILE_TYPE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -289,8 +291,10 @@ AddClause(
 		Tcl_DStringFree(&osTypeDS);
 	    }
 	    if (len != 4) {
-		Tcl_AppendResult(interp, "bad Macintosh file type \"",
-			Tcl_GetString(ostypeList[i]), "\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad Macintosh file type \"%s\"",
+			Tcl_GetString(ostypeList[i])));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "MAC_TYPE", NULL);
 		code = TCL_ERROR;
 		goto done;
 	    }

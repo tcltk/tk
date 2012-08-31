@@ -72,8 +72,7 @@ static struct CursorName {
  */
 
 #define TK_DEFAULT_CURSOR	IDC_ARROW
-
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -131,8 +130,9 @@ TkGetCursorByName(
 	 */
 
 	if (Tcl_IsSafe(interp)) {
-	    Tcl_AppendResult(interp, "can't get cursor from a file in",
-		    " a safe interpreter", NULL);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "can't get cursor from a file in a safe interpreter",-1));
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "CURSOR_FILE", NULL);
 	    ckfree(argv);
 	    ckfree(cursorPtr);
 	    return NULL;
@@ -166,13 +166,15 @@ TkGetCursorByName(
 	ckfree(cursorPtr);
     badCursorSpec:
 	ckfree(argv);
-	Tcl_AppendResult(interp, "bad cursor spec \"", string, "\"", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad cursor spec \"%s\"", string));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "CURSOR", NULL);
 	return NULL;
     }
     ckfree(argv);
     return (TkCursor *) cursorPtr;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -201,7 +203,7 @@ TkCreateCursorFromData(
 {
     return NULL;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -225,7 +227,7 @@ TkpFreeCursor(
 {
     /* TkWinCursor *winCursorPtr = (TkWinCursor *) cursorPtr; */
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -260,7 +262,7 @@ TkpSetCursor(
 	SetCursor(hcursor);
     }
 }
-
+
 /*
  * Local Variables:
  * mode: c

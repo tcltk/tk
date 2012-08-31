@@ -98,8 +98,9 @@ package require Tk 8.6
 			set first [set last [lindex $args 0]]
 		    }
 		    default {
-			return -code error "wrong # args: should be\
-			     \"[lrange [info level 0] 0 1] first ?last?\""
+			return -code error -errorcode {TCL WRONGARGS} \
+			    "wrong # args: should be\
+			    \"[lrange [info level 0] 0 1] first ?last?\""
 		    }
 		}
 
@@ -149,8 +150,9 @@ package require Tk 8.6
 			set first [set last [lindex $args 0]]
 		    }
 		    default {
-			return -code error "wrong # args: should be\
-			     \"[lrange [info level 0] 0 1] first ?last?\""
+			return -code error -errorcode {TCL WRONGARGS} \
+			    "wrong # args: should be\
+			    \"[lrange [info level 0] 0 1] first ?last?\""
 		    }
 		}
 
@@ -444,10 +446,10 @@ package require Tk 8.6
 	bind $canvas <Control-B1-Motion> {;}
 	bind $canvas <Shift-B1-Motion>	[namespace code {my ShiftMotion1 %x %y}]
 
-	bind $canvas <Up>		[namespace code {my UpDown -1}]
-	bind $canvas <Down>		[namespace code {my UpDown  1}]
-	bind $canvas <Left>		[namespace code {my LeftRight -1}]
-	bind $canvas <Right>		[namespace code {my LeftRight  1}]
+	bind $canvas <<PrevLine>>	[namespace code {my UpDown -1}]
+	bind $canvas <<NextLine>>	[namespace code {my UpDown  1}]
+	bind $canvas <<PrevChar>>	[namespace code {my LeftRight -1}]
+	bind $canvas <<NextChar>>	[namespace code {my LeftRight  1}]
 	bind $canvas <Return>		[namespace code {my ReturnKey}]
 	bind $canvas <KeyPress>		[namespace code {my KeyPress %A}]
 	bind $canvas <Control-KeyPress> ";"

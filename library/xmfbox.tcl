@@ -305,7 +305,8 @@ proc ::tk::MotifFDialog_Config {dataName type argList} {
 	set data(filter) *
     }
     if {![winfo exists $data(-parent)]} {
-	error "bad window path name \"$data(-parent)\""
+	return -code error -errorcode [list TK LOOKUP WINDOW $data(-parent)] \
+	    "bad window path name \"$data(-parent)\""
     }
 }
 

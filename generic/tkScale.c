@@ -376,6 +376,7 @@ ScaleWidgetObjCmd(
     case COMMAND_COORDS: {
 	int x, y;
 	double value;
+	Tcl_Obj *coords[2];
 
 	if ((objc != 2) && (objc != 3)) {
 	    Tcl_WrongNumArgs(interp, 1, objv, "coords ?value?");
@@ -397,7 +398,9 @@ ScaleWidgetObjCmd(
 	    y = scalePtr->horizTroughY + scalePtr->width/2
 		    + scalePtr->borderWidth;
 	}
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%d %d", x, y));
+	coords[0] = Tcl_NewIntObj(x);
+	coords[1] = Tcl_NewIntObj(y);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	break;
     }
     case COMMAND_GET: {
@@ -421,7 +424,8 @@ ScaleWidgetObjCmd(
 	break;
     }
     case COMMAND_IDENTIFY: {
-	int x, y, thing;
+	int x, y;
+	const char *zone = "";
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 1, objv, "identify x y");
@@ -431,18 +435,12 @@ ScaleWidgetObjCmd(
 		|| (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)) {
 	    goto error;
 	}
-	thing = TkpScaleElement(scalePtr, x,y);
-	switch (thing) {
-	case TROUGH1:
-	    Tcl_SetResult(interp, "trough1", TCL_STATIC);
-	    break;
-	case SLIDER:
-	    Tcl_SetResult(interp, "slider", TCL_STATIC);
-	    break;
-	case TROUGH2:
-	    Tcl_SetResult(interp, "trough2", TCL_STATIC);
-	    break;
+	switch (TkpScaleElement(scalePtr, x, y)) {
+	case TROUGH1:	zone = "trough1"; break;
+	case SLIDER:	zone = "slider";  break;
+	case TROUGH2:	zone = "trough2"; break;
 	}
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, -1));
 	break;
     }
     case COMMAND_SET: {

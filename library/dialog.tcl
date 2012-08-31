@@ -34,8 +34,9 @@ proc ::tk_dialog {w title text bitmap default args} {
     # Check that $default was properly given
     if {[string is integer -strict $default]} {
 	if {$default >= [llength $args]} {
-	    return -code error "default button index greater than number of\
-		    buttons specified for tk_dialog"
+	    return -code error -errorcode {TK DIALOG BAD_DEFAULT} \
+		"default button index greater than number of buttons\
+		specified for tk_dialog"
 	}
     } elseif {"" eq $default} {
 	set default -1

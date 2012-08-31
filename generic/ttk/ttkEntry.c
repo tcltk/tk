@@ -1177,13 +1177,13 @@ static void EntryDisplay(void *clientData, Drawable d)
 
     textarea = Ttk_ClientRegion(entryPtr->core.layout, "textarea");
     showCursor =
-	   (entryPtr->core.flags & CURSOR_ON) != 0
+	   (entryPtr->core.flags & CURSOR_ON)
 	&& EntryEditable(entryPtr)
 	&& entryPtr->entry.insertPos >= leftIndex
 	&& entryPtr->entry.insertPos <= rightIndex
 	;
     showSelection =
-	   (entryPtr->core.state & TTK_STATE_DISABLED) == 0
+	   !(entryPtr->core.state & TTK_STATE_DISABLED)
 	&& selFirst > -1
 	&& selLast > leftIndex
 	&& selFirst <= rightIndex
@@ -1225,10 +1225,10 @@ static void EntryDisplay(void *clientData, Drawable d)
      * clipping area from the GC, so we have to supply that by other means.
      */
 
-    rect.x = entryPtr->entry.layoutX;
-    rect.y = entryPtr->entry.layoutY;
+    rect.x = textarea.x;
+    rect.y = textarea.y;
     rect.width = textarea.width;
-    rect.height = entryPtr->entry.layoutHeight;
+    rect.height = textarea.height;
     clipRegion = TkCreateRegion();
     TkUnionRectWithRegion(&rect, clipRegion, clipRegion);
 #ifdef HAVE_XFT
@@ -1322,9 +1322,10 @@ EntryIndex(
 	*indexPtr = entryPtr->entry.xscroll.last;
     } else if (strncmp(string, "sel.", 4) == 0) {
 	if (entryPtr->entry.selectFirst < 0) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "selection isn't in widget ",
-		    Tk_PathName(entryPtr->core.tkwin), NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "selection isn't in widget %s",
+		    Tk_PathName(entryPtr->core.tkwin)));
+	    Tcl_SetErrorCode(interp, "TTK", "ENTRY", "NO_SELECTION", NULL);
 	    return TCL_ERROR;
 	}
 	if (strncmp(string, "sel.first", length) == 0) {
@@ -1376,8 +1377,9 @@ EntryIndex(
     return TCL_OK;
 
 badIndex:
-    Tcl_ResetResult(interp);
-    Tcl_AppendResult(interp, "bad entry index \"", string, "\"", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad entry index \"%s\"", string));
+    Tcl_SetErrorCode(interp, "TTK", "ENTRY", "INDEX", NULL);
     return TCL_ERROR;
 }
 
@@ -1452,7 +1454,7 @@ EntryGetCommand(
 	Tcl_WrongNumArgs(interp, 2, objv, NULL);
 	return TCL_ERROR;
     }
-    Tcl_SetResult(interp, entryPtr->entry.string, TCL_VOLATILE);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(entryPtr->entry.string, -1));
     return TCL_OK;
 }
 
@@ -1782,9 +1784,9 @@ static int ComboboxCurrentCommand(
 	    return TCL_ERROR;
 	}
 	if (currentIndex < 0 || currentIndex >= nValues) {
-	    Tcl_AppendResult(interp,
-		    "Index ", Tcl_GetString(objv[2]), " out of range",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "Index %s out of range", Tcl_GetString(objv[2])));
+	    Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
 	    return TCL_ERROR;
 	}
 

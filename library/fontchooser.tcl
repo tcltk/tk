@@ -96,7 +96,8 @@ proc ::tk::fontchooser::Configure {args} {
         } elseif {[info exists S($option)]} {
             return $S($option)
         }
-        return -code error "bad option \"$option\": must be\
+        return -code error -errorcode [list TK LOOKUP OPTION $option] \
+	    "bad option \"$option\": must be\
             -command, -font, -parent, -title or -visible"
     }
     
@@ -104,9 +105,10 @@ proc ::tk::fontchooser::Configure {args} {
                    -font $S(-font) -command $S(-command)]
     set r [tclParseConfigSpec [namespace which -variable S] $specs "" $args]
     if {![winfo exists $S(-parent)]} {
+	set code [list TK LOOKUP WINDOW $S(-parent)]
         set err "bad window path name \"$S(-parent)\""
         array set S $cache
-        return -code error $err
+        return -code error -errorcode $code $err
     }
     if {[string trim $S(-title)] eq ""} {
         set S(-title) [::msgcat::mc "Font"]
@@ -434,9 +436,9 @@ proc ::tk::fontchooser::ttk_slistbox {w args} {
         grid columnconfigure $f 0 -weight 1
         interp hide {} $w
         interp alias {} $w {} $f.list
-    } err]} {
+    } err opt]} {
         destroy $f
-        return -code error $err
+        return -options $opt $err
     }
     return $w
 }
