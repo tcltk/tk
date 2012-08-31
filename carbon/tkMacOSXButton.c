@@ -978,7 +978,7 @@ TkMacOSXDrawControl(
 	SetControlValue(mbPtr->control, 0);
     }
 
-    active = ((mbPtr->flags & ACTIVE) != 0);
+    active = !!(mbPtr->flags & ACTIVE);
     if (active != IsControlActive(mbPtr->control)) {
 	if (active) {
 	    ChkErr(ActivateControl, mbPtr->control);
@@ -1395,7 +1395,7 @@ ButtonEventProc(
 	} else {
 	    mbPtr->flags &= ~ACTIVE;
 	}
-	if ((buttonPtr->flags & REDRAW_PENDING) == 0) {
+	if (!(buttonPtr->flags & REDRAW_PENDING)) {
 	    Tcl_DoWhenIdle(TkpDisplayButton, (ClientData) buttonPtr);
 	    buttonPtr->flags |= REDRAW_PENDING;
 	}

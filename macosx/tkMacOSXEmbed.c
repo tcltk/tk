@@ -157,7 +157,7 @@ TkpMakeWindow(
 	    macWin->xOff = 0;
 	    macWin->yOff = 0;
 	    macWin->toplevel = macWin;
-	} else {
+	} else if (winPtr->parentPtr) {
 	    macWin->xOff = winPtr->parentPtr->privatePtr->xOff +
 		    winPtr->parentPtr->changes.border_width +
 		    winPtr->changes.x;
@@ -208,8 +208,9 @@ TkpUseWindow(
     Container *containerPtr;
 
     if (winPtr->window != None) {
-	Tcl_AppendResult(interp, "can't modify container after widget is "
-		"created", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"can't modify container after widget is created", -1));
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
 	return TCL_ERROR;
     }
 
@@ -227,12 +228,12 @@ TkpUseWindow(
     }
 
     usePtr = (TkWindow *) Tk_IdToWindow(winPtr->display, (Window) parent);
-    if (usePtr != NULL) {
-	if (!(usePtr->flags & TK_CONTAINER)) {
-	    Tcl_AppendResult(interp, "window \"", usePtr->pathName,
-		    "\" doesn't have -container option set", NULL);
-	    return TCL_ERROR;
-	}
+    if (usePtr != NULL && !(usePtr->flags & TK_CONTAINER)) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"window \"%s\" doesn't have -container option set",
+		usePtr->pathName));
+	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", NULL);
+	return TCL_ERROR;
     }
 
     /*
@@ -305,15 +306,17 @@ TkpUseWindow(
 
     if (containerPtr == NULL) {
 	/*
-	 * If someone has registered an in process embedding handler, then
+	 * If someone has registered an in-process embedding handler, then
 	 * see if it can handle this window...
 	 */
 
 	if (tkMacOSXEmbedHandler == NULL ||
 		tkMacOSXEmbedHandler->registerWinProc((long) parent,
 		(Tk_Window) winPtr) != TCL_OK) {
-	    Tcl_AppendResult(interp, "The window ID ", string,
-		    " does not correspond to a valid Tk Window.", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "The window ID %s does not correspond to a valid Tk Window",
+		    string));
+	    Tcl_SetErrorCode(interp, "TK", "EMBED", "HANDLE", NULL);
 	    return TCL_ERROR;
 	}
 

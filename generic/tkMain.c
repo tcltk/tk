@@ -29,10 +29,10 @@
 #   endif
 #endif
 
+#include "tkInt.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-#include "tkInt.h"
 #ifdef NO_STDLIB_H
 #   include "../compat/stdlib.h"
 #else
