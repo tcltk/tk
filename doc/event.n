@@ -373,6 +373,16 @@ selected contents.
 Move to the next item (i.e., visible character) in the current widget while
 deselecting any selected contents.
 .TP
+\fB<<NextLine>>\fR
+.
+Move to the next line in the current widget while deselecting any selected
+contents.
+.TP
+\fB<<NextPara>>\fR
+.
+Move to the next paragraph in the current widget while deselecting any
+selected contents.
+.TP
 \fB<<NextWord>>\fR
 .
 Move to the next group of items (i.e., visible word) in the current widget
@@ -391,6 +401,16 @@ event has meaningful \fB%x\fR and \fB%y\fR substitutions).
 Move to the previous item (i.e., visible character) in the current widget
 while deselecting any selected contents.
 .TP
+\fB<<PrevLine>>\fR
+.
+Move to the previous line in the current widget while deselecting any selected
+contents.
+.TP
+\fB<<PrevPara>>\fR
+.
+Move to the previous paragraph in the current widget while deselecting any
+selected contents.
+.TP
 \fB<<PrevWindow>>\fR
 Traverse to the previous window.
 .TP
@@ -401,6 +421,10 @@ while deselecting any selected contents.
 .TP
 \fB<<Redo>>\fR
 Redo one undone action.
+.TP
+\fB<<SelectAll>>\fR
+.
+Set the range of selected contents to the complete widget.
 .TP
 \fB<<SelectLineEnd>>\fR
 .
@@ -417,22 +441,51 @@ of selected contents.
 Move to the next item (i.e., visible character) in the current widget while
 extending the range of selected contents.
 .TP
+\fB<<SelectNextLine>>\fR
+.
+Move to the next line in the current widget while extending the range of
+selected contents.
+.TP
+\fB<<SelectNextPara>>\fR
+.
+Move to the next paragraph in the current widget while extending the range
+of selected contents.
+.TP
 \fB<<SelectNextWord>>\fR
 .
 Move to the next group of items (i.e., visible word) in the current widget
 while extending the range of selected contents.
+.TP
+\fB<<SelectNone>>\fR
+.
+Reset the range of selected contents to be empty.
 .TP
 \fB<<SelectPrevChar>>\fR
 .
 Move to the previous item (i.e., visible character) in the current widget
 while extending the range of selected contents.
 .TP
+\fB<<SelectPrevLine>>\fR
+.
+Move to the previous line in the current widget while extending the range of
+selected contents.
+.TP
+\fB<<SelectPrevPara>>\fR
+.
+Move to the previous paragraph in the current widget while extending the
+range of selected contents.
+.TP
 \fB<<SelectPrevWord>>\fR
 .
 Move to the previous group of items (i.e., visible word) in the current widget
 while extending the range of selected contents.
 .TP
+\fB<<ToggleSelection>>\fR
+.
+Toggle the selection.
+.TP
 \fB<<Undo>>\fR
+.
 Undo the last action.
 .SH EXAMPLES
 .SS "MAPPING KEYS TO VIRTUAL EVENTS"

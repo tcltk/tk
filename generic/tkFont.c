@@ -439,7 +439,7 @@ TkFontPkgFree(
 	hPtr = Tcl_NextHashEntry(&search);
     }
     Tcl_DeleteHashTable(&fiPtr->namedTable);
-    if (fiPtr->updatePending != 0) {
+    if (fiPtr->updatePending) {
 	Tcl_CancelIdleCall(TheWorldHasChanged, fiPtr);
     }
     ckfree(fiPtr);
@@ -569,6 +569,7 @@ Tk_FontObjCmd(
 			-1, 40, "...");
 		Tcl_AppendToObj(resultPtr, "\"", -1);
 		Tcl_SetObjResult(interp, resultPtr);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "FONT_SAMPLE", NULL);
 		return TCL_ERROR;
 	    }
 	    uniChar = Tcl_GetUniChar(charPtr, 0);
@@ -615,9 +616,10 @@ Tk_FontObjCmd(
 	if (namedHashPtr != NULL) {
 	    nfPtr = Tcl_GetHashValue(namedHashPtr);
 	}
-	if ((namedHashPtr == NULL) || (nfPtr->deletePending != 0)) {
-	    Tcl_AppendResult(interp, "named font \"", string,
-		    "\" doesn't exist", NULL);
+	if ((namedHashPtr == NULL) || nfPtr->deletePending) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "named font \"%s\" doesn't exist", string));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
 	    return TCL_ERROR;
 	}
 	if (objc == 3) {
@@ -670,7 +672,7 @@ Tk_FontObjCmd(
 	if (TkCreateNamedFont(interp, tkwin, name, &fa) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tcl_AppendResult(interp, name, NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
 	break;
     }
     case FONT_DELETE: {
@@ -686,7 +688,7 @@ Tk_FontObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "fontname ?fontname ...?");
 	    return TCL_ERROR;
 	}
-	for (i = 2; i < objc && result == TCL_OK; i++) {
+	for (i = 2; (i < objc) && (result == TCL_OK); i++) {
 	    string = Tcl_GetString(objv[i]);
 	    result = TkDeleteNamedFont(interp, tkwin, string);
 	}
@@ -726,8 +728,8 @@ Tk_FontObjCmd(
 	    return TCL_ERROR;
 	}
 	string = Tcl_GetStringFromObj(objv[3 + skip], &length);
-	Tcl_SetObjResult(interp,
-		Tcl_NewIntObj(Tk_TextWidth(tkfont, string, length)));
+	Tcl_SetObjResult(interp, Tcl_NewIntObj(
+		Tk_TextWidth(tkfont, string, length)));
 	Tk_FreeFont(tkfont);
 	break;
     }
@@ -792,7 +794,7 @@ Tk_FontObjCmd(
 	while (namedHashPtr != NULL) {
 	    NamedFont *nfPtr = Tcl_GetHashValue(namedHashPtr);
 
-	    if (nfPtr->deletePending == 0) {
+	    if (!nfPtr->deletePending) {
 		char *string = Tcl_GetHashKey(&fiPtr->namedTable,
 			namedHashPtr);
 
@@ -853,7 +855,7 @@ UpdateDependentFonts(
 		fontPtr != NULL; fontPtr = fontPtr->nextPtr) {
 	    if (fontPtr->namedHashPtr == namedHashPtr) {
 		TkpGetFontFromAttributes(fontPtr, tkwin, &nfPtr->fa);
-		if (fiPtr->updatePending == 0) {
+		if (!fiPtr->updatePending) {
 		    fiPtr->updatePending = 1;
 		    Tcl_DoWhenIdle(TheWorldHasChanged, fiPtr);
 		}
@@ -947,10 +949,11 @@ TkCreateNamedFont(
     namedHashPtr = Tcl_CreateHashEntry(&fiPtr->namedTable, name, &isNew);
     if (!isNew) {
 	nfPtr = Tcl_GetHashValue(namedHashPtr);
-	if (nfPtr->deletePending == 0) {
+	if (!nfPtr->deletePending) {
 	    if (interp) {
-		Tcl_AppendResult(interp, "named font \"", name,
-			"\" already exists", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"named font \"%s\" already exists", name));
+		Tcl_SetErrorCode(interp, "TK", "FONT", "EXISTS", NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -1000,8 +1003,9 @@ TkDeleteNamedFont(
     namedHashPtr = Tcl_FindHashEntry(&fiPtr->namedTable, name);
     if (namedHashPtr == NULL) {
 	if (interp) {
-	    Tcl_AppendResult(interp, "named font \"", name,
-		    "\" doesn't exist", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "named font \"%s\" doesn't exist", name));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", name, NULL);
 	}
 	return TCL_ERROR;
     }
@@ -1183,8 +1187,10 @@ Tk_AllocFontFromObj(
 	if (isNew) {
 	    Tcl_DeleteHashEntry(cacheHashPtr);
 	}
-	Tcl_AppendResult(interp, "failed to allocate font due to ",
-		"internal system font engine problem", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"failed to allocate font due to internal system font engine"
+		" problem", -1));
+	Tcl_SetErrorCode(interp, "TK", "FONT", "INTERNAL_PROBLEM", NULL);
 	return NULL;
     }
 
@@ -1421,7 +1427,7 @@ Tk_FreeFont(
 
 	nfPtr = Tcl_GetHashValue(fontPtr->namedHashPtr);
 	nfPtr->refCount--;
-	if ((nfPtr->refCount == 0) && (nfPtr->deletePending != 0)) {
+	if ((nfPtr->refCount == 0) && nfPtr->deletePending) {
 	    Tcl_DeleteHashEntry(fontPtr->namedHashPtr);
 	    ckfree(nfPtr);
 	}
@@ -1749,7 +1755,7 @@ Tk_PostscriptFontName(
 
     slantString = NULL;
     if (fontPtr->fa.slant == TK_FS_ROMAN) {
-	;
+	/* Do nothing */
     } else if ((strcmp(family, "Helvetica") == 0)
 	    || (strcmp(family, "Courier") == 0)
 	    || (strcmp(family, "AvantGarde") == 0)) {
@@ -2137,7 +2143,7 @@ Tk_ComputeTextLayout(
      * on the next line. Otherwise "Hello" and "Hello\n" are the same height.
      */
 
-    if ((layoutPtr->numChunks > 0) && ((flags & TK_IGNORE_NEWLINES) == 0)) {
+    if ((layoutPtr->numChunks > 0) && !(flags & TK_IGNORE_NEWLINES)) {
 	if (layoutPtr->chunks[layoutPtr->numChunks - 1].start[0] == '\n') {
 	    chunkPtr = NewChunk(&layoutPtr, &maxChunks, start, 0, curX,
 		    curX, baseline);
@@ -2899,7 +2905,7 @@ Tk_IntersectTextLayout(
 
     result = 0;
     for (i = 0; i < layoutPtr->numChunks; i++) {
-	if ((chunkPtr->start[0] == '\n') || (chunkPtr->numBytes==0)) {
+	if ((chunkPtr->start[0] == '\n') || (chunkPtr->numBytes == 0)) {
 	    /*
 	     * Newline characters and empty chunks are not counted when
 	     * computing area intersection (but tab characters would still be
@@ -3235,121 +3241,92 @@ Tk_TextLayoutToPostscript(
     Tk_TextLayout layout)	/* The layout to be rendered. */
 {
     TextLayout *layoutPtr = (TextLayout *) layout;
-#define MAXUSE 128
-    char buf[MAXUSE+30];
-    LayoutChunk *chunkPtr;
-    int i, j, used, baseline, charsize;
-    Tcl_UniChar ch;
+    LayoutChunk *chunkPtr = layoutPtr->chunks;
+    int baseline = chunkPtr->y;
+    Tcl_Obj *psObj = Tcl_NewObj();
+    int i, j, len;
     const char *p, *glyphname;
+    char uindex[5], c, *ps;
+    Tcl_UniChar ch;
 
-    chunkPtr = layoutPtr->chunks;
-    baseline = chunkPtr->y;
-    used = 0;
-    buf[used++] = '[';
-    buf[used++] = '(';
-    for (i = 0; i < layoutPtr->numChunks; i++) {
+    Tcl_AppendToObj(psObj, "[(", -1);
+    for (i = 0; i < layoutPtr->numChunks; i++, chunkPtr++) {
 	if (baseline != chunkPtr->y) {
-	    buf[used++] = ')';
-	    buf[used++] = ']';
-	    buf[used++] = '\n';
-	    buf[used++] = '[';
-	    buf[used++] = '(';
+	    Tcl_AppendToObj(psObj, ")]\n[(", -1);
 	    baseline = chunkPtr->y;
 	}
 	if (chunkPtr->numDisplayChars <= 0) {
 	    if (chunkPtr->start[0] == '\t') {
-		buf[used++] = '\\';
-		buf[used++] = 't';
+		Tcl_AppendToObj(psObj, "\\t", -1);
 	    }
-	} else {
-	    p = chunkPtr->start;
-	    for (j = 0; j < chunkPtr->numDisplayChars; j++) {
-		/*
-		 * INTL: We only handle symbols that have an encoding as a
-		 * flyph from the standard set defined by Adobe. The rest get
-		 * punted. Eventually this should be revised to handle more
-		 * sophsticiated international postscript fonts.
-		 */
-
-		charsize = Tcl_UtfToUniChar(p, &ch);
-		p += charsize;
-
-		if ((ch == '(') || (ch == ')') || (ch == '\\')
-			|| (ch < 0x20)) {
-		    /*
-		     * Tricky point: the "03" is necessary in the sprintf
-		     * below, so that a full three digits of octal are always
-		     * generated. Without the "03", a number following this
-		     * sequence could be interpreted by Postscript as part of
-		     * this sequence.
-		     */
-
-		    sprintf(buf + used, "\\%03o", ch);
-		    used += 4;
-		} else if (ch <= 0x7f) {
-		    /*
-		     * Normal ASCII character.
-		     */
-
-		    buf[used++] = (char) ch;
-		} else {
-		    char uindex[5];
-
-		    /*
-		     * This character doesn't belong to the ASCII character
-		     * set, so we use the full glyph name.
-		     */
-
-		    sprintf(uindex, "%04X", ch);	/* endianness? */
-		    glyphname = Tcl_GetVar2(interp, "::tk::psglyphs", uindex,
-			    0);
-		    if (glyphname) {
-			if (used > 0 && buf[used-1] == '(') {
-			    used--;
-			} else {
-			    buf[used++] = ')';
-			}
-			buf[used++] = '/';
-			while ((*glyphname) && (used < MAXUSE+27)) {
-			    buf[used++] = *glyphname++;
-			}
-			buf[used++] = '(';
-		    } else {
-			/*
-			 * No known mapping for the character into the space
-			 * of PostScript glyphs. Ignore it. :-(
-			 */
-
-#ifdef TK_DEBUG_POSTSCRIPT_OUTPUT
-			fprintf(stderr, "Warning: no mapping to PostScript "
-				"glyphs for \\u%04x\n", ch);
-#endif
-		    }
-		}
-		if (used >= MAXUSE) {
-		    buf[used] = '\0';
-		    Tcl_AppendResult(interp, buf, NULL);
-		    used = 0;
-		}
-	    }
+	    continue;
 	}
-	if (used >= MAXUSE) {
+
+	for (p=chunkPtr->start, j=0; j<chunkPtr->numDisplayChars; j++) {
 	    /*
-	     * If there are a whole bunch of returns or tabs in a row, then
-	     * buf[] could get filled up.
+	     * INTL: We only handle symbols that have an encoding as a glyph
+	     * from the standard set defined by Adobe. The rest get punted.
+	     * Eventually this should be revised to handle more sophsticiated
+	     * international postscript fonts.
 	     */
 
-	    buf[used] = '\0';
-	    Tcl_AppendResult(interp, buf, NULL);
-	    used = 0;
+	    p += Tcl_UtfToUniChar(p, &ch);
+	    if ((ch == '(') || (ch == ')') || (ch == '\\') || (ch < 0x20)) {
+		/*
+		 * Tricky point: the "03" is necessary in the sprintf below,
+		 * so that a full three digits of octal are always generated.
+		 * Without the "03", a number following this sequence could be
+		 * interpreted by Postscript as part of this sequence.
+		 */
+
+		Tcl_AppendPrintfToObj(psObj, "\\%03o", ch);
+		continue;
+	    } else if (ch <= 0x7f) {
+		/*
+		 * Normal ASCII character.
+		 */
+
+		c = (char) ch;
+		Tcl_AppendToObj(psObj, &c, 1);
+		continue;
+	    }
+
+	    /*
+	     * This character doesn't belong to the ASCII character set, so we
+	     * use the full glyph name.
+	     */
+
+	    sprintf(uindex, "%04X", ch);		/* endianness? */
+	    glyphname = Tcl_GetVar2(interp, "::tk::psglyphs", uindex, 0);
+	    if (glyphname) {
+		ps = Tcl_GetStringFromObj(psObj, &len);
+		if (ps[len-1] == '(') {
+		    /*
+		     * In-place edit. Ewww!
+		     */
+
+		    ps[len-1] = '/';
+		} else {
+		    Tcl_AppendToObj(psObj, ")/", -1);
+		}
+		Tcl_AppendToObj(psObj, glyphname, -1);
+		Tcl_AppendToObj(psObj, "(", -1);
+	    } else {
+		/*
+		 * No known mapping for the character into the space of
+		 * PostScript glyphs. Ignore it. :-(
+		 */
+
+#ifdef TK_DEBUG_POSTSCRIPT_OUTPUT
+		fprintf(stderr, "Warning: no mapping to PostScript "
+			"glyphs for \\u%04x\n", ch);
+#endif
+	    }
 	}
-	chunkPtr++;
     }
-    buf[used++] = ')';
-    buf[used++] = ']';
-    buf[used++] = '\n';
-    buf[used] = '\0';
-    Tcl_AppendResult(interp, buf, NULL);
+    Tcl_AppendToObj(psObj, ")]\n", -1);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
+    Tcl_DecrRefCount(psObj);
 }
 
 /*
@@ -3403,8 +3380,10 @@ ConfigAttributesObj(
 	     */
 
 	    if (interp != NULL) {
-		Tcl_AppendResult(interp, "value for \"",
-			Tcl_GetString(optionPtr), "\" option missing", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"value for \"%s\" option missing",
+			Tcl_GetString(optionPtr)));
+		Tcl_SetErrorCode(interp, "TK", "FONT", "NO_ATTRIBUTE", NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -3598,7 +3577,7 @@ ParseFontNameObj(
 	}
 	dash = strchr(string + 1, '-');
 	if ((dash != NULL)
-		&& (!isspace(UCHAR(dash[-1])))) { /* INTL: ISO space */
+		&& !isspace(UCHAR(dash[-1]))) {	/* INTL: ISO space */
 	    goto xlfd;
 	}
 
@@ -3646,8 +3625,9 @@ ParseFontNameObj(
     if ((Tcl_ListObjGetElements(NULL, objPtr, &objc, &objv) != TCL_OK)
 	    || (objc < 1)) {
 	if (interp != NULL) {
-	    Tcl_AppendResult(interp, "font \"", string, "\" doesn't exist",
-		    NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "font \"%s\" doesn't exist", string));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
 	}
 	return TCL_ERROR;
     }
@@ -3694,8 +3674,10 @@ ParseFontNameObj(
 	 */
 
 	if (interp != NULL) {
-	    Tcl_AppendResult(interp, "unknown font style \"",
-		    Tcl_GetString(objv[i]), "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "unknown font style \"%s\"", Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT_STYLE",
+		    Tcl_GetString(objv[i]), NULL);
 	}
 	return TCL_ERROR;
     }
@@ -3848,7 +3830,7 @@ TkFontParseXLFD(
      * parsed set of attributes)".
      */
 
-    if ((i > XLFD_ADD_STYLE) && (FieldSpecified(field[XLFD_ADD_STYLE]))) {
+    if ((i > XLFD_ADD_STYLE) && FieldSpecified(field[XLFD_ADD_STYLE])) {
 	if (atoi(field[XLFD_ADD_STYLE]) != 0) {
 	    for (j = XLFD_NUMFIELDS - 1; j >= XLFD_ADD_STYLE; j--) {
 		field[j + 1] = field[j];
@@ -4077,7 +4059,6 @@ TkFontGetPoints(
  *	platform expects when asking for the font.
  *
  * Results:
-
  *	As above. The return value is NULL if the font name has no aliases.
  *
  * Side effects:
@@ -4247,12 +4228,11 @@ TkFontGetFirstTextLayout(
     Tk_Font *font,
     char *dst)
 {
-    TextLayout *layoutPtr;
+    TextLayout *layoutPtr = (TextLayout *) layout;
     LayoutChunk *chunkPtr;
     int numBytesInChunk;
 
-    layoutPtr = (TextLayout *) layout;
-    if ((layoutPtr==NULL) || (layoutPtr->numChunks==0)
+    if ((layoutPtr == NULL) || (layoutPtr->numChunks == 0)
 	    || (layoutPtr->chunks->numDisplayChars <= 0)) {
 	dst[0] = '\0';
 	return 0;

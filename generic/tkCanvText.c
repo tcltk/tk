@@ -338,29 +338,32 @@ TextCoords(
 	subobj = Tcl_NewDoubleObj(textPtr->y);
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	Tcl_SetObjResult(interp, obj);
-    } else if (objc < 3) {
-	if (objc == 1) {
-	    if (Tcl_ListObjGetElements(interp, objv[0], &objc,
-		    (Tcl_Obj ***) &objv) != TCL_OK) {
-		return TCL_ERROR;
-	    } else if (objc != 2) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"wrong # coordinates: expected 2, got %d", objc));
-		return TCL_ERROR;
-	    }
-	}
-	if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
-		    &textPtr->x) != TCL_OK)
-		|| (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
-		    &textPtr->y) != TCL_OK)) {
-	    return TCL_ERROR;
-	}
-	ComputeTextBbox(canvas, textPtr);
-    } else {
+	return TCL_OK;
+    } else if (objc > 2) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 2, got %d", objc));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
 	return TCL_ERROR;
     }
+
+    if (objc == 1) {
+	if (Tcl_ListObjGetElements(interp, objv[0], &objc,
+		(Tcl_Obj ***) &objv) != TCL_OK) {
+	    return TCL_ERROR;
+	} else if (objc != 2) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "wrong # coordinates: expected 2, got %d", objc));
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
+	    return TCL_ERROR;
+	}
+    }
+    if ((Tk_CanvasGetCoordFromObj(interp, canvas, objv[0],
+		&textPtr->x) != TCL_OK)
+	    || (Tk_CanvasGetCoordFromObj(interp, canvas, objv[1],
+		&textPtr->y) != TCL_OK)) {
+	return TCL_ERROR;
+    }
+    ComputeTextBbox(canvas, textPtr);
     return TCL_OK;
 }
 
@@ -1356,14 +1359,18 @@ GetTextIndex(
     } else if ((c == 's') && (length >= 5)
 	    && (strncmp(string, "sel.first", (unsigned) length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
-	    Tcl_SetResult(interp, "selection isn't in item", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "selection isn't in item", -1));
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = textInfoPtr->selectFirst;
     } else if ((c == 's') && (length >= 5)
 	    && (strncmp(string, "sel.last", (unsigned) length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
-	    Tcl_SetResult(interp, "selection isn't in item", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "selection isn't in item", -1));
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = textInfoPtr->selectLast;
@@ -1403,6 +1410,7 @@ GetTextIndex(
 
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "TEXT", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -1536,6 +1544,8 @@ TextToPostscript(
     XColor *color;
     Pixmap stipple;
     Tk_State state = itemPtr->state;
+    Tcl_Obj *psObj;
+    Tcl_InterpState interpState;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -1561,25 +1571,39 @@ TextToPostscript(
 	}
     }
 
+    /*
+     * Make our working space.
+     */
+
+    psObj = Tcl_NewObj();
+    interpState = Tcl_SaveInterpState(interp, TCL_OK);
+
+    /*
+     * Generate postscript.
+     */
+
+    Tcl_ResetResult(interp);
     if (Tk_CanvasPsFont(interp, canvas, textPtr->tkfont) != TCL_OK) {
-	return TCL_ERROR;
+	goto error;
     }
+    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
     if (prepass != 0) {
-	return TCL_OK;
+	goto done;
     }
+
+    Tcl_ResetResult(interp);
     if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	return TCL_ERROR;
+	goto error;
     }
+    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+
     if (stipple != None) {
-	Tcl_AppendResult(interp, "/StippleText {\n    ", NULL);
+	Tcl_ResetResult(interp);
 	Tk_CanvasPsStipple(interp, canvas, stipple);
-	Tcl_AppendResult(interp, "} bind def\n", NULL);
+	Tcl_AppendPrintfToObj(psObj, "/StippleText {\n    %s} bind def\n",
+		Tcl_GetString(Tcl_GetObjResult(interp)));
     }
-
-    Tcl_AppendPrintfToObj(Tcl_GetObjResult(interp), "%.15g %.15g %.15g [\n",
-	    textPtr->angle, textPtr->x, Tk_CanvasPsY(canvas, textPtr->y));
-
-    Tk_TextLayoutToPostscript(interp, textPtr->textLayout);
 
     x = 0;  y = 0;  justify = NULL;	/* lint. */
     switch (textPtr->anchor) {
@@ -1600,12 +1624,31 @@ TextToPostscript(
     }
 
     Tk_GetFontMetrics(textPtr->tkfont, &fm);
-    Tcl_AppendPrintfToObj(Tcl_GetObjResult(interp),
+
+    Tcl_AppendPrintfToObj(psObj, "%.15g %.15g %.15g [\n",
+	    textPtr->angle, textPtr->x, Tk_CanvasPsY(canvas, textPtr->y));
+    Tcl_ResetResult(interp);
+    Tk_TextLayoutToPostscript(interp, textPtr->textLayout);
+    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
+    Tcl_AppendPrintfToObj(psObj,
 	    "] %d %g %g %s %s DrawText\n",
 	    fm.linespace, x / -2.0, y / 2.0, justify,
 	    ((stipple == None) ? "false" : "true"));
 
+    /*
+     * Plug the accumulated postscript back into the result.
+     */
+
+  done:
+    (void) Tcl_RestoreInterpState(interp, interpState);
+    Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
+    Tcl_DecrRefCount(psObj);
     return TCL_OK;
+
+  error:
+    Tcl_DiscardInterpState(interpState);
+    Tcl_DecrRefCount(psObj);
+    return TCL_ERROR;
 }
 
 /*

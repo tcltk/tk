@@ -78,7 +78,7 @@ bind TEntry <B1-Leave> 		{ ttk::Repeatedly ttk::entry::AutoScroll %W }
 bind TEntry <B1-Enter>		{ ttk::CancelRepeat }
 bind TEntry <ButtonRelease-1>	{ ttk::CancelRepeat }
 
-bind TEntry <Control-ButtonPress-1> {
+bind TEntry <<ToggleSelection>> {
     %W instate {!readonly !disabled} { %W icursor @%x ; focus %W }
 }
 
@@ -107,8 +107,8 @@ bind TEntry <<SelectNextWord>>		{ ttk::entry::Extend %W nextword }
 bind TEntry <<SelectLineStart>>		{ ttk::entry::Extend %W home }
 bind TEntry <<SelectLineEnd>>		{ ttk::entry::Extend %W end }
 
-bind TEntry <Control-Key-slash> 	{ %W selection range 0 end }
-bind TEntry <Control-Key-backslash> 	{ %W selection clear }
+bind TEntry <<SelectAll>> 		{ %W selection range 0 end }
+bind TEntry <<SelectNone>> 		{ %W selection clear }
 
 bind TEntry <<TraverseIn>> 	{ %W selection range 0 end; %W icursor end }
 
@@ -136,15 +136,13 @@ if {[tk windowingsystem] eq "aqua"} {
     bind TEntry <Command-KeyPress>	{# nothing}
 }
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
-bind TEntry <Down>			{# nothing}
-bind TEntry <Up>			{# nothing}
+bind TEntry <<PrevLine>>		{# nothing}
+bind TEntry <<NextLine>>		{# nothing}
 
 ## Additional emacs-like bindings:
 #
-bind TEntry <Control-Key-a>		{ ttk::entry::Move %W home }
 bind TEntry <Control-Key-b>		{ ttk::entry::Move %W prevchar }
 bind TEntry <Control-Key-d> 		{ ttk::entry::Delete %W }
-bind TEntry <Control-Key-e> 		{ ttk::entry::Move %W end }
 bind TEntry <Control-Key-f> 		{ ttk::entry::Move %W nextchar }
 bind TEntry <Control-Key-h>		{ ttk::entry::Backspace %W }
 bind TEntry <Control-Key-k>		{ %W delete insert end }

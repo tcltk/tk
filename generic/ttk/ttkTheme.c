@@ -548,8 +548,9 @@ Ttk_CreateTheme(
 
     entryPtr = Tcl_CreateHashEntry(&pkgPtr->themeTable, name, &newEntry);
     if (!newEntry) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "Theme ", name, " already exists", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Theme %s already exists", name));
+	Tcl_SetErrorCode(interp, "TTK", "THEME", "EXISTS", NULL);
 	return NULL;
     }
 
@@ -591,8 +592,9 @@ static Ttk_Theme LookupTheme(
 
     entryPtr = Tcl_FindHashEntry(&pkgPtr->themeTable, name);
     if (!entryPtr) {
-	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "theme \"", name, "\" doesn't exist", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"theme \"%s\" doesn't exist", name));
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "THEME", name, NULL);
 	return NULL;
     }
 
@@ -875,9 +877,10 @@ Ttk_ElementClass *Ttk_RegisterElement(
     if (specPtr->version != TK_STYLE_VERSION_2) {
 	/* Version mismatch */
 	if (interp) {
-	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "Internal error: Ttk_RegisterElement (",
-		name, "): invalid version",
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Internal error: Ttk_RegisterElement (%s): invalid version",
+		name));
+	    Tcl_SetErrorCode(interp, "TTK", "REGISTER_ELEMENT", "VERSION",
 		NULL);
 	}
 	return 0;
@@ -887,7 +890,9 @@ Ttk_ElementClass *Ttk_RegisterElement(
     if (!newEntry) {
 	if (interp) {
 	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "Duplicate element ", name, NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Duplicate element %s", name));
+	    Tcl_SetErrorCode(interp, "TTK", "REGISTER_ELEMENT", "DUPE", NULL);
 	}
 	return 0;
     }
@@ -1355,8 +1360,9 @@ static int StyleThemeCurrentCmd(
     }
 
     if (name == NULL) {
-	Tcl_SetObjResult(interp,
-	    Tcl_NewStringObj("error: failed to get theme name", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"error: failed to get theme name", -1));
+	Tcl_SetErrorCode(interp, "TTK", "THEME", "NAMELESS", NULL);
 	return TCL_ERROR;
     }
 
@@ -1491,7 +1497,10 @@ static int StyleElementCreateCmd(
 
     entryPtr = Tcl_FindHashEntry(&pkgPtr->factoryTable, factoryName);
     if (!entryPtr) {
-	Tcl_AppendResult(interp, "No such element type ", factoryName, NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"No such element type %s", factoryName));
+	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "ELEMENT_TYPE", factoryName,
+		NULL);
 	return TCL_ERROR;
     }
 
@@ -1550,7 +1559,9 @@ static int StyleElementOptionsCmd(
 	return TCL_OK;
     }
 
-    Tcl_AppendResult(interp, "element ", elementName, " not found", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	"element %s not found", elementName));
+    Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "ELEMENT", elementName, NULL);
     return TCL_ERROR;
 }
 
@@ -1574,7 +1585,10 @@ static int StyleLayoutCmd(
     if (objc == 3) {
 	layoutTemplate = Ttk_FindLayoutTemplate(theme, layoutName);
 	if (!layoutTemplate) {
-	    Tcl_AppendResult(interp, "Layout ", layoutName, " not found", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"Layout %s not found", layoutName));
+	    Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "LAYOUT", layoutName,
+		NULL);
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, Ttk_UnparseLayoutTemplate(layoutTemplate));

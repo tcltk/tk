@@ -233,7 +233,7 @@ Tk_BindObjCmd(
 	    Tcl_ResetResult(interp);
 	    return TCL_OK;
 	}
-	Tcl_SetResult(interp, (char *) command, TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(command, -1));
     } else {
 	Tk_GetAllBindings(interp, winPtr->mainPtr->bindingTable, object);
     }
@@ -361,30 +361,28 @@ Tk_BindtagsObjCmd(
     }
     if (objc == 2) {
 	listPtr = Tcl_NewObj();
-	Tcl_IncrRefCount(listPtr);
 	if (winPtr->numTags == 0) {
-	    Tcl_ListObjAppendElement(interp, listPtr,
+	    Tcl_ListObjAppendElement(NULL, listPtr,
 		    Tcl_NewStringObj(winPtr->pathName, -1));
-	    Tcl_ListObjAppendElement(interp, listPtr,
+	    Tcl_ListObjAppendElement(NULL, listPtr,
 		    Tcl_NewStringObj(winPtr->classUid, -1));
 	    winPtr2 = winPtr;
 	    while ((winPtr2 != NULL) && !(Tk_TopWinHierarchy(winPtr2))) {
 		winPtr2 = winPtr2->parentPtr;
 	    }
 	    if ((winPtr != winPtr2) && (winPtr2 != NULL)) {
-		Tcl_ListObjAppendElement(interp, listPtr,
+		Tcl_ListObjAppendElement(NULL, listPtr,
 			Tcl_NewStringObj(winPtr2->pathName, -1));
 	    }
-	    Tcl_ListObjAppendElement(interp, listPtr,
+	    Tcl_ListObjAppendElement(NULL, listPtr,
 		    Tcl_NewStringObj("all", -1));
 	} else {
 	    for (i = 0; i < winPtr->numTags; i++) {
-		Tcl_ListObjAppendElement(interp, listPtr,
-			Tcl_NewStringObj((char *)winPtr->tagPtr[i], -1));
+		Tcl_ListObjAppendElement(NULL, listPtr,
+			Tcl_NewStringObj((char *) winPtr->tagPtr[i], -1));
 	    }
 	}
 	Tcl_SetObjResult(interp, listPtr);
-	Tcl_DecrRefCount(listPtr);
 	return TCL_OK;
     }
     if (winPtr->tagPtr != NULL) {
@@ -555,9 +553,15 @@ Tk_LowerObjCmd(
 	}
     }
     if (Tk_RestackWindow(tkwin, Below, other) != TCL_OK) {
-	Tcl_AppendResult(interp, "can't lower \"", Tcl_GetString(objv[1]),
-		"\" below \"", (other ? Tcl_GetString(objv[2]) : ""),
-		"\"", NULL);
+	if (other) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't lower \"%s\" below \"%s\"",
+		    Tcl_GetString(objv[1]), Tcl_GetString(objv[2])));
+	} else {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't lower \"%s\" to bottom", Tcl_GetString(objv[1])));
+	}
+	Tcl_SetErrorCode(interp, "TK", "RESTACK", "LOWER", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -609,9 +613,15 @@ Tk_RaiseObjCmd(
 	}
     }
     if (Tk_RestackWindow(tkwin, Above, other) != TCL_OK) {
-	Tcl_AppendResult(interp, "can't raise \"", Tcl_GetString(objv[1]),
-		"\" above \"", (other ? Tcl_GetString(objv[2]) : ""),
-		"\"", NULL);
+	if (other) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't raise \"%s\" above \"%s\"",
+		    Tcl_GetString(objv[1]), Tcl_GetString(objv[2])));
+	} else {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't raise \"%s\" to top", Tcl_GetString(objv[1])));
+	}
+	Tcl_SetErrorCode(interp, "TK", "RESTACK", "RAISE", NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -675,9 +685,9 @@ AppnameCmd(
     const char *string;
 
     if (Tcl_IsSafe(interp)) {
-	Tcl_SetResult(interp,
-		"appname not accessible in a safe interpreter",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"appname not accessible in a safe interpreter", -1));
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "APPLICATION", NULL);
 	return TCL_ERROR;
     }
 
@@ -691,7 +701,7 @@ AppnameCmd(
 	string = Tcl_GetString(objv[1]);
 	winPtr->nameUid = Tk_GetUid(Tk_SetAppName(tkwin, string));
     }
-    Tcl_AppendResult(interp, winPtr->nameUid, NULL);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(winPtr->nameUid, -1));
     return TCL_OK;
 }
 
@@ -800,8 +810,9 @@ ScalingCmd(
     double d;
 
     if (Tcl_IsSafe(interp)) {
-	Tcl_SetResult(interp, "scaling not accessible in a safe interpreter",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"scaling not accessible in a safe interpreter", -1));
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "SCALING", NULL);
 	return TCL_ERROR;
     }
 
@@ -849,9 +860,9 @@ UseinputmethodsCmd(
     int skip;
 
     if (Tcl_IsSafe(interp)) {
-	Tcl_SetResult(interp,
-		"useinputmethods not accessible in a safe interpreter",
-		TCL_STATIC);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"useinputmethods not accessible in a safe interpreter", -1));
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "INPUT_METHODS", NULL);
 	return TCL_ERROR;
     }
 
@@ -933,22 +944,22 @@ InactiveCmd(
 	inactive = (Tcl_IsSafe(interp) ? -1 :
 		Tk_GetUserInactiveTime(Tk_Display(tkwin)));
 	Tcl_SetObjResult(interp, Tcl_NewLongObj(inactive));
-
     } else if (objc - skip == 2) {
 	const char *string;
 
 	string = Tcl_GetString(objv[objc-1]);
 	if (strcmp(string, "reset") != 0) {
-	    Tcl_Obj *msg = Tcl_NewStringObj("bad option \"", -1);
-
-	    Tcl_AppendStringsToObj(msg, string, "\": must be reset", NULL);
-	    Tcl_SetObjResult(interp, msg);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "bad option \"%s\": must be reset", string));
+	    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option",
+		    string, NULL);
 	    return TCL_ERROR;
 	}
 	if (Tcl_IsSafe(interp)) {
-	    Tcl_SetResult(interp,
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "resetting the user inactivity timer "
-		    "is not allowed in a safe interpreter", TCL_STATIC);
+		    "is not allowed in a safe interpreter", -1));
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "INACTIVITY_TIMER", NULL);
 	    return TCL_ERROR;
 	}
 	Tk_ResetUserInactiveTime(Tk_Display(tkwin));
@@ -1050,8 +1061,10 @@ Tk_TkwaitObjCmd(
 	     */
 
 	    Tcl_ResetResult(interp);
-	    Tcl_AppendResult(interp, "window \"", Tcl_GetString(objv[2]),
-		    "\" was deleted before its visibility changed", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window \"%s\" was deleted before its visibility changed",
+		    Tcl_GetString(objv[2])));
+	    Tcl_SetErrorCode(interp, "TK", "WAIT", "PREMATURE", NULL);
 	    return TCL_ERROR;
 	}
 	Tk_DeleteEventHandler(window,
@@ -1129,8 +1142,7 @@ WaitVisibilityProc(
 
     if (eventPtr->type == VisibilityNotify) {
 	*donePtr = 1;
-    }
-    if (eventPtr->type == DestroyNotify) {
+    } else if (eventPtr->type == DestroyNotify) {
 	*donePtr = 2;
     }
 }
@@ -1584,8 +1596,10 @@ Tk_WinfoObjCmd(
 	}
 	name = Tk_GetAtomName(tkwin, (Atom) id);
 	if (strcmp(name, "?bad atom?") == 0) {
-	    Tcl_AppendResult(interp, "no atom exists with id \"",
-		    Tcl_GetString(objv[2]), "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "no atom exists with id \"%s\"", Tcl_GetString(objv[2])));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "ATOM",
+		    Tcl_GetString(objv[2]), NULL);
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
@@ -1643,8 +1657,10 @@ Tk_WinfoObjCmd(
 	winPtr = (TkWindow *) Tk_IdToWindow(Tk_Display(tkwin), id);
 	if ((winPtr == NULL) ||
 		(winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr)) {
-	    Tcl_AppendResult(interp, "window id \"", string,
-		    "\" doesn't exist in this application", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "window id \"%s\" doesn't exist in this application",
+		    string));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", string, NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1764,8 +1780,9 @@ Tk_WinfoObjCmd(
 	visInfoPtr = XGetVisualInfo(Tk_Display(tkwin), VisualScreenMask,
 		&template, &count);
 	if (visInfoPtr == NULL) {
-	    Tcl_SetResult(interp, "can't find any visuals for screen",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "can't find any visuals for screen", -1));
+	    Tcl_SetErrorCode(interp, "TK", "VISUAL", "NONE", NULL);
 	    return TCL_ERROR;
 	}
 	resultPtr = Tcl_NewObj();
@@ -1860,8 +1877,8 @@ Tk_WmObjCmd(
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
-	    Tcl_SetObjResult(interp,
-		    Tcl_NewBooleanObj(dispPtr->flags & TK_DISPLAY_WM_TRACING));
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+		    dispPtr->flags & TK_DISPLAY_WM_TRACING));
 	    return TCL_OK;
 	}
 	if (Tcl_GetBooleanFromObj(interp, objv[2], &wmTracing) != TCL_OK) {
@@ -1886,8 +1903,10 @@ Tk_WmObjCmd(
 	return TCL_ERROR;
     }
     if (!(winPtr->flags & TK_TOP_LEVEL)) {
-	Tcl_AppendResult(interp, "window \"", winPtr->pathName,
-		"\" isn't a top-level window", NULL);
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"window \"%s\" isn't a top-level window", winPtr->pathName));
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
+		NULL);
 	return TCL_ERROR;
     }
 
@@ -2058,8 +2077,9 @@ TkGetDisplayOf(
     if ((length >= 2) &&
 	    (strncmp(string, "-displayof", (unsigned) length) == 0)) {
         if (objc < 2) {
-	    Tcl_SetResult(interp, "value for \"-displayof\" missing",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "value for \"-displayof\" missing", -1));
+	    Tcl_SetErrorCode(interp, "TK", "NO_VALUE", "DISPLAYOF", NULL);
 	    return -1;
 	}
 	*tkwinPtr = Tk_NameToWindow(interp, Tcl_GetString(objv[1]), *tkwinPtr);
@@ -2097,8 +2117,9 @@ TkDeadAppCmd(
     int argc,			/* Number of arguments. */
     const char **argv)		/* Argument strings. */
 {
-    Tcl_AppendResult(interp, "can't invoke \"", argv[0],
-	    "\" command:  application has been destroyed", NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "can't invoke \"%s\" command: application has been destroyed", 
+	    argv[0]));
     return TCL_ERROR;
 }
 

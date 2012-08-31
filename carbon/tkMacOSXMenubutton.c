@@ -934,7 +934,7 @@ MenuButtonEventProc(
 
     if (eventPtr->type == ActivateNotify
 	    || eventPtr->type == DeactivateNotify) {
-	if ((buttonPtr->tkwin == NULL) || (!Tk_IsMapped(buttonPtr->tkwin))) {
+	if ((buttonPtr->tkwin == NULL) || !Tk_IsMapped(buttonPtr->tkwin)) {
 	    return;
 	}
 	if (eventPtr->type == ActivateNotify) {
@@ -942,8 +942,8 @@ MenuButtonEventProc(
 	} else {
 	    mbPtr->flags &= ~ACTIVE;
 	}
-	if ((buttonPtr->flags & REDRAW_PENDING) == 0) {
-	    Tcl_DoWhenIdle(TkpDisplayMenuButton, (ClientData) buttonPtr);
+	if (!(buttonPtr->flags & REDRAW_PENDING)) {
+	    Tcl_DoWhenIdle(TkpDisplayMenuButton, buttonPtr);
 	    buttonPtr->flags |= REDRAW_PENDING;
 	}
     }

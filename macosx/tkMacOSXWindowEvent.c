@@ -417,7 +417,6 @@ GenerateActivateEvents(
 {
     TkGenerateActivateEvents(winPtr, activeFlag);
     TkMacOSXGenerateFocusEvent(winPtr, activeFlag);
-    TkMacOSXEnterExitFullscreen(winPtr, activeFlag);
     return true;
 }
 
@@ -704,10 +703,9 @@ TkWmProtocolEventProc(
 	    Tcl_Preserve(interp);
 	    result = Tcl_GlobalEval(interp, protPtr->command);
 	    if (result != TCL_OK) {
-		Tcl_AddErrorInfo(interp, "\n    (command for \"");
-		Tcl_AddErrorInfo(interp,
-			Tk_GetAtomName((Tk_Window) winPtr, protocol));
-		Tcl_AddErrorInfo(interp, "\" window manager protocol)");
+		Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
+			"\n    (command for \"%s\" window manager protocol)",
+			Tk_GetAtomName((Tk_Window) winPtr, protocol)));
 		Tcl_BackgroundError(interp);
 	    }
 	    Tcl_Release(interp);
