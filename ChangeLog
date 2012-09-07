@@ -1,3 +1,15 @@
+2012-09-07  Don Porter  <dgp@users.sourceforge.net>
+
+	* README:		Bump version number to 8.6b3
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 2012-08-30  Andreas Kupries  <andreask@activestate.com>
 
 	* generic/tkCanvWind.c (CanvasPsWindow): Unbreak AIX, replaced use
