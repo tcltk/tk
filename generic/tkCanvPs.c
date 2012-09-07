@@ -170,7 +170,6 @@ TkCanvPostscriptCmd(
     TkPostscriptInfo psInfo, *psInfoPtr = &psInfo;
     Tk_PostscriptInfo oldInfoPtr;
     int result;
-    int written;
     Tk_Item *itemPtr;
 #define STRING_LENGTH 400
     const char *p;
@@ -492,8 +491,7 @@ TkCanvPostscriptCmd(
 	Tcl_AppendObjToObj(psObj, preambleObj);
 
 	if (psInfo.chan != NULL) {
-	    written = Tcl_WriteObj(psInfo.chan, psObj);
-	    if (written == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
 	    channelWriteFailed:
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"problem writing postscript data to channel: %s",
@@ -547,8 +545,7 @@ TkCanvPostscriptCmd(
 		psInfo.x, Tk_PostscriptY((double)psInfo.y2,
 			(Tk_PostscriptInfo)psInfoPtr));
 	if (psInfo.chan != NULL) {
-	    written = Tcl_WriteObj(psInfo.chan, psObj);
-	    if (written == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
 		goto channelWriteFailed;
 	    }
 	    Tcl_DecrRefCount(psObj);
@@ -590,8 +587,7 @@ TkCanvPostscriptCmd(
 	Tcl_AppendToObj(psObj, "grestore\n", -1);
 
 	if (psInfo.chan != NULL) {
-	    written = Tcl_WriteObj(psInfo.chan, psObj);
-	    if (written == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
 		goto channelWriteFailed;
 	    }
 	    Tcl_DecrRefCount(psObj);
@@ -612,8 +608,7 @@ TkCanvPostscriptCmd(
 		"%%EOF\n", -1);
 
 	if (psInfo.chan != NULL) {
-	    Tcl_WriteObj(psInfo.chan, psObj);
-	    if (written == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
 		goto channelWriteFailed;
 	    }
 	}
