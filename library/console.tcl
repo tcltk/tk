@@ -412,8 +412,6 @@ proc ::tk::ConsoleBind {w} {
     bind Console <Control-KeyPress> {# nothing}
 
     foreach {ev key} {
-	<<Console_Prev>>		<Key-Up>
-	<<Console_Next>>		<Key-Down>
 	<<Console_NextImmediate>>	<Control-Key-n>
 	<<Console_PrevImmediate>>	<Control-Key-p>
 	<<Console_PrevSearch>>		<Control-Key-r>
@@ -558,10 +556,10 @@ proc ::tk::ConsoleBind {w} {
 	    %W delete insert {insert wordend}
 	}
     }
-    bind Console <<Console_Prev>> {
+    bind Console <<PrevLine>> {
 	tk::ConsoleHistory prev
     }
-    bind Console <<Console_Next>> {
+    bind Console <<NextLine>> {
 	tk::ConsoleHistory next
     }
     bind Console <Insert> {
