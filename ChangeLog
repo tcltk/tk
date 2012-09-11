@@ -1,3 +1,11 @@
+2012-09-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/ttk/ttkEntry.c (EntryDisplay): [Bug 3566594]: Must manually
+	* generic/ttk/ttkLabel.c (TextDraw):     reset the clip region of GCs
+	when not using the Xft font renderer (well, especially on classic X11)
+	because the GC sharing code doesn't take into account clip handling.
+	Thanks to Christian Nassau for identifying the problem.
+
 2012-08-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkMenuDraw.c: [Bug 3562426]: Context menu goes out of edge of
