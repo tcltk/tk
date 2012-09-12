@@ -7006,6 +7006,8 @@ and -to (porter)
 
 2012-08-25 (bug fix)[3554026,3561016] crash with tearoff menus (gavilan)
 
+2012-09-11 (bug fix)[3566594] stop clip region leaks (fellows)
+
 Many revisions to better support a Cygwin environment (nijtmans)
 
 --- Released 8.6b3, September 7, 2012 --- See ChangeLog for details ---
