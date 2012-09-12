@@ -1961,7 +1961,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		    ], [
 			do64bit_ok=yes
 			case $system in
-# Non functional check, m64/xarch depends on compiler not os version
 			    SunOS-5.1[[1-9]]*|SunOS-5.[[2-9]][[0-9]]*)
 				CFLAGS="$CFLAGS -m64"
 				LDFLAGS="$LDFLAGS -m64";;
@@ -2019,7 +2018,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 			SHLIB_LD="/usr/ccs/bin/ld -G -z $textmode";;
 		esac
 		CC_SEARCH_FLAGS='-Wl,-R,${LIB_RUNTIME_DIR}'
-		LD_SEARCH_FLAGS='-L${LIB_RUNTIME_DIR} -R${LIB_RUNTIME_DIR}'
+		LD_SEARCH_FLAGS='-R ${LIB_RUNTIME_DIR}'
 	    ])
 	    ;;
 	UNIX_SV* | UnixWare-5*)
@@ -2104,7 +2103,7 @@ dnl # preprocessing tests use only CPPFLAGS.
 
     AS_IF([test "${SHARED_BUILD}" = 1 -a "${SHLIB_SUFFIX}" != ""], [
         LIB_SUFFIX=${SHARED_LIB_SUFFIX}
-        MAKE_LIB='${SHLIB_LD} -o [$]@ ${OBJS} ${LD_SEARCH_FLAGS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS}'
+        MAKE_LIB='${SHLIB_LD} -o [$]@ ${OBJS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
         AS_IF([test "${SHLIB_SUFFIX}" = ".dll"], [
             INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)"'
             DLL_INSTALL_DIR="\$(BIN_INSTALL_DIR)"
