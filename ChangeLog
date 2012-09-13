@@ -1,3 +1,7 @@
+2012-09-13  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinWm.c (WmTransientCmd): [Bug 3567283]: Added missing cast.
+
 2012-09-11  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/ttk/ttkEntry.c (EntryDisplay): [Bug 3566594]: Must manually
