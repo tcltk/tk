@@ -5526,7 +5526,7 @@ WmTransientCmd(
     }
     if (objc == 3) {
 	if (masterPtr != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj(masterPtr));
+	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) masterPtr));
 	}
 	return TCL_OK;
     }
