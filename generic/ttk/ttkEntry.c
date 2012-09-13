@@ -1151,7 +1151,9 @@ static GC EntryGetGC(Entry *entryPtr, Tcl_Obj *colorObj, TkRegion clip)
 	mask |= GCForeground;
     }
     gc = Tk_GetGC(entryPtr->core.tkwin, mask, &gcValues);
-    TkSetRegion(Tk_Display(entryPtr->core.tkwin), gc, clip);
+    if (clip != None) {
+	TkSetRegion(Tk_Display(entryPtr->core.tkwin), gc, clip);
+    }
     return gc;
 }
 
@@ -1254,7 +1256,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	gc = EntryGetGC(entryPtr, es.insertColorObj, clipRegion);
 	XFillRectangle(Tk_Display(tkwin), d, gc,
 	    cursorX-cursorWidth/2, cursorY, cursorWidth, cursorHeight);
-	TkSetRegion(Tk_Display(tkwin), gc, None);
+	XSetClipMask(Tk_Display(tkwin), gc, None);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     }
 
@@ -1265,7 +1267,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
 	entryPtr->entry.layoutX, entryPtr->entry.layoutY,
 	leftIndex, rightIndex);
-    TkSetRegion(Tk_Display(tkwin), gc, None);
+    XSetClipMask(Tk_Display(tkwin), gc, None);
     Tk_FreeGC(Tk_Display(tkwin), gc);
 
     /* Overwrite the selected portion (if any) in the -selectforeground color:
@@ -1276,7 +1278,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	    Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
 	    entryPtr->entry.layoutX, entryPtr->entry.layoutY,
 	    selFirst, selLast);
-	TkSetRegion(Tk_Display(tkwin), gc, None);
+	XSetClipMask(Tk_Display(tkwin), gc, None);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     }
 

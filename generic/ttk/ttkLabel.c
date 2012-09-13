@@ -185,8 +185,8 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 #ifdef HAVE_XFT
 	TkUnixSetXftClipRegion(None);
 #endif
-	TkSetRegion(Tk_Display(tkwin), gc1, None);
-	TkSetRegion(Tk_Display(tkwin), gc2, None);
+	XSetClipMask(Tk_Display(tkwin), gc1, None);
+	XSetClipMask(Tk_Display(tkwin), gc2, None);
 	TkDestroyRegion(clipRegion);
     }
     Tk_FreeGC(Tk_Display(tkwin), gc1);

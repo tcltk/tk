@@ -1,5 +1,14 @@
 2012-09-13  Donal K. Fellows  <dkf@users.sf.net>
 
+	* generic/ttk/ttkEntry.c (EntryDisplay): [Bug 3567453]: Clip regions
+	* generic/ttk/ttkLabel.c (TextDraw): must be cleared with XSetClipMask
+	* xlib/xgc.c (TkSetRegion): and not TkSetRegion, or crashes will ensue
+	on X11-based builds, which can't handle None for a region argument.
+	Added a clean panic to the non-X11 TkSetRegion to catch this case and
+	stop such confusion from happening again.
+
+2012-09-13  Donal K. Fellows  <dkf@users.sf.net>
+
 	* win/tkWinWm.c (WmTransientCmd): [Bug 3567283]: Added missing cast.
 
 2012-09-11  Donal K. Fellows  <dkf@users.sf.net>
