@@ -541,7 +541,7 @@ test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -setup 
 } -body {
     pack .t.f.x
     pack .t.f
-    set aid [after 1000 {set ::winwm92 timeout}]
+    set aid [after 2000 {set ::winwm92 timeout}]
     after 100 {
         wm manage .t.f
         wm iconify .t
