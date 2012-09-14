@@ -726,6 +726,8 @@ TkWmDeadWindow(
     if (wmPtr == NULL) {
 	return;
     }
+    Tk_DeleteEventHandler((Tk_Window) winPtr, StructureNotifyMask,
+	    TopLevelEventProc, winPtr);
     if (wmPtr->hints.flags & IconPixmapHint) {
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
     }
@@ -1650,7 +1652,7 @@ WmForgetCmd(
 
     	TkFocusJoin(winPtr);
     	Tk_UnmapWindow(frameWin); 
-	TkWmDeadWindow((TkWindow *) macWin);
+	TkWmDeadWindow(winPtr);
 	RemapWindows(winPtr, macWin);
        
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
