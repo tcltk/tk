@@ -1,3 +1,8 @@
+2012-09-15  Don Porter  <dgp@users.sourceforge.net>
+
+	* macosx/tkMacOSXFont.c: [Bug 3567778] Make Tk_MeasureChars() honor
+	the TK_AT_LEAST_ONE flag properly.
+
 2012-09-13  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/ttk/ttkEntry.c (EntryDisplay): [Bug 3567453]: Clip regions
