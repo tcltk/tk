@@ -1649,12 +1649,16 @@ WmForgetCmd(
     register Tk_Window frameWin = (Tk_Window) winPtr;
 
     if (Tk_IsTopLevel(frameWin)) {
-	MacDrawable *macWin = (MacDrawable *) winPtr->parentPtr->window;
+	MacDrawable *macWin = (MacDrawable *) winPtr->window;
 
     	TkFocusJoin(winPtr);
     	Tk_UnmapWindow(frameWin); 
+
+	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
+	macWin->flags &= ~TK_HOST_EXISTS;
+
 	TkWmDeadWindow(winPtr);
-	RemapWindows(winPtr, macWin);
+	RemapWindows(winPtr, (MacDrawable *) winPtr->parentPtr->window);
        
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 
