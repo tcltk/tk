@@ -1,3 +1,9 @@
+2012-09-17  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.6b2 TAGGED FOR RELEASE ***
+	
+	* macosx/tkMacOSXWm.c: [Bug 3567786] Stop segfault in [wm forget].
+
 2012-09-15  Don Porter  <dgp@users.sourceforge.net>
 
 	* macosx/tkMacOSXFont.c: [Bug 3567778] Make Tk_MeasureChars() honor
