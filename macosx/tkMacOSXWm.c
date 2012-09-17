@@ -726,6 +726,9 @@ TkWmDeadWindow(
     if (wmPtr == NULL) {
 	return;
     }
+    Tk_ManageGeometry((Tk_Window) winPtr, NULL, NULL);
+    Tk_DeleteEventHandler((Tk_Window) winPtr, StructureNotifyMask,
+	    TopLevelEventProc, winPtr);
     if (wmPtr->hints.flags & IconPixmapHint) {
 	Tk_FreeBitmap(winPtr->display, wmPtr->hints.icon_pixmap);
     }
@@ -1646,12 +1649,21 @@ WmForgetCmd(
     register Tk_Window frameWin = (Tk_Window) winPtr;
 
     if (Tk_IsTopLevel(frameWin)) {
-	MacDrawable *macWin = (MacDrawable *) winPtr->parentPtr->window;
+	MacDrawable *macWin;
+
+	Tk_MakeWindowExist(winPtr);
+	Tk_MakeWindowExist(winPtr->parentPtr);
+
+	macWin = (MacDrawable *) winPtr->window;
 
     	TkFocusJoin(winPtr);
     	Tk_UnmapWindow(frameWin); 
-	TkWmDeadWindow((TkWindow *) macWin);
-	RemapWindows(winPtr, macWin);
+
+	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
+	macWin->flags &= ~TK_HOST_EXISTS;
+
+	TkWmDeadWindow(winPtr);
+	RemapWindows(winPtr, (MacDrawable *) winPtr->parentPtr->window);
        
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 

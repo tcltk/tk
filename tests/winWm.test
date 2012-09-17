@@ -541,25 +541,28 @@ test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -setup 
 } -body {
     pack .t.f.x
     pack .t.f
-    set aid [after 1000 {set ::winwm92 timeout}]
-    after 100 {
+    lappend aid [after 2000 {set ::winwm92 timeout}] [after 100 {
         wm manage .t.f
         wm iconify .t
-        after 100 {
+        lappend aid [after 100 {
             wm forget .t.f
             wm deiconify .t
-            after 100 {
+            lappend aid [after 100 {
                 pack .t.f
-                after 100 {set ::winwm92 [expr {[winfo rooty .t.f.x] == 0 ? "failed" : "ok"}]}
-            }
-        }
-    }
+                lappend aid [after 100 {
+		    set ::winwm92 [expr {
+			    [winfo rooty .t.f.x] == 0 ? "failed" : "ok"}]}]
+            }]
+        }]
+    }]
     vwait ::winwm92
-    after cancel $aid
+    foreach id $aid {
+	after cancel $id
+    }
     set winwm92
 } -cleanup {
     destroy .t.f.x .t.f .t
-    unset -nocomplain winwm92 aid
+    unset -nocomplain winwm92 aid id
 } -result ok
 
 destroy .t
