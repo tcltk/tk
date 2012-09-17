@@ -7008,6 +7008,10 @@ and -to (porter)
 
 2012-09-11 (bug fix)[3566594] stop clip region leaks (fellows)
 
+2012-09-15 (bug fix)[3567778] stop hang in wrapped label (porter)
+
+2012-09-17 (bug fix)[3567786] stop segfault in [wm forget] (porter)
+
 Many revisions to better support a Cygwin environment (nijtmans)
 
 --- Released 8.6b3, September 18, 2012 --- See ChangeLog for details ---
