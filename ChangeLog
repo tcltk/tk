@@ -1,3 +1,9 @@
+2012-09-17  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.6b2 TAGGED FOR RELEASE ***
+	
+	* macosx/tkMacOSXWm.c: [Bug 3567786] Stop segfault in [wm forget].
+
 2012-09-15  Don Porter  <dgp@users.sourceforge.net>
 
 	* macosx/tkMacOSXFont.c: [Bug 3567778] Make Tk_MeasureChars() honor
@@ -29,6 +35,18 @@
 	* generic/tkCanvPs.c (TkCanvPostscriptCmd): [Bug 3565533]: Purge use
 	of variable that was only ever checked once immediately afterwards,
 	except for one (buggy) case where it was checked without assignment.
+
+2012-09-07  Don Porter  <dgp@users.sourceforge.net>
+
+	* README:		Bump version number to 8.6b3
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
 
 2012-08-30  Andreas Kupries  <andreask@activestate.com>
 
