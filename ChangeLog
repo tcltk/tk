@@ -1,3 +1,8 @@
+2012-09-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/Makefile.in:    Compile win32 binaries with -DTCL_NO_DEPRECATED
+	* win/tkiWinWm.c:     Fix gcc compiler warning.
+
 2012-09-17  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.6b2 TAGGED FOR RELEASE ***
