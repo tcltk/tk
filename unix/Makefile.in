@@ -284,12 +284,6 @@ LD_SEARCH_FLAGS	= @LD_SEARCH_FLAGS@
 # support for embedded libraries on Darwin / Mac OS X
 DYLIB_INSTALL_DIR	= ${LIB_RUNTIME_DIR}
 
-# support for building the Aqua resource file
-TK_RSRC_FILE		= @TK_RSRC_FILE@
-WISH_RSRC_FILE		= @WISH_RSRC_FILE@
-REZ			= @REZ@
-REZ_SWITCHES = @REZ_FLAGS@ -i $(GENERIC_DIR) -i $(TCL_GENERIC_DIR)
-
 # support for Xft:
 XFT_CFLAGS		= @XFT_CFLAGS@
 XFT_LIBS		= @XFT_LIBS@
@@ -396,7 +390,7 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
 	tkMacOSXNotify.o tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o \
 	tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
-	tkMacOSXWm.o tkMacOSXXStubs.o tkMacOSXCarbonEvents.o \
+	tkMacOSXWm.o tkMacOSXXStubs.o \
 	tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o tkUnixScale.o \
 	xcolors.o xdraw.o xgc.o ximage.o xutil.o \
 	ttkMacOSXTheme.o
@@ -522,7 +516,6 @@ AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXSend.c $(MAC_OSX_DIR)/tkMacOSXSubwindows.c \
 	$(MAC_OSX_DIR)/tkMacOSXTest.c $(MAC_OSX_DIR)/tkMacOSXWindowEvent.c \
 	$(MAC_OSX_DIR)/tkMacOSXWm.c $(MAC_OSX_DIR)/tkMacOSXXStubs.c \
-	$(MAC_OSX_DIR)/tkMacOSXCarbonEvents.c \
 	$(GENERIC_DIR)/tkFileFilter.c $(GENERIC_DIR)/tkMacWinMenu.c \
 	$(GENERIC_DIR)/tkPointer.c $(UNIX_DIR)/tkUnix3d.c \
 	$(UNIX_DIR)/tkUnixScale.c $(XLIB_DIR)/xcolors.c $(XLIB_DIR)/xdraw.c \
@@ -530,12 +523,6 @@ AQUA_SRCS = \
 	$(TTK_DIR)/ttkMacOSXTheme.c
 
 SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
-
-AQUA_RESOURCES = \
-	$(MAC_OSX_DIR)/tkAboutDlg.r $(MAC_OSX_DIR)/tkMacOSXCursors.r \
-	$(MAC_OSX_DIR)/tkMacOSXXCursors.r
-
-AQUA_WISH_RESOURCES = $(MAC_OSX_DIR)/tkMacOSXAETE.r
 
 AQUA_HDRS = $(MAC_OSX_DIR)/tkMacOSX.h $(GENERIC_DIR)/tkIntXlibDecls.h
 
@@ -584,17 +571,6 @@ ${LIB_FILE}: ${OBJS} ${STUB_LIB_FILE} @LIB_RSRC_FILE@
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
 	rm -f $@
 	@MAKE_STUB_LIB@
-
-# Build Aqua resource files
-${TK_RSRC_FILE}: $(AQUA_RESOURCES)
-	rm -f $@
-	if test "$(REZ)" != ""; then \
-	    $(REZ) -o $@ $(REZ_SWITCHES) $(AQUA_RESOURCES); fi
-
-${WISH_RSRC_FILE}: $(AQUA_WISH_RESOURCES)
-	rm -f $@
-	if test "$(REZ)" != ""; then \
-	    $(REZ) -o $@ $(REZ_SWITCHES) $(AQUA_WISH_RESOURCES); fi
 
 # Make target which outputs the list of the .o contained in the Tk lib
 # usefull to build a single big shared library containing Tcl/Tk and other
@@ -1207,9 +1183,6 @@ tkMacOSXBitmap.o: $(MAC_OSX_DIR)/tkMacOSXBitmap.c
 tkMacOSXButton.o: $(MAC_OSX_DIR)/tkMacOSXButton.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXButton.c
 
-tkMacOSXCarbonEvents.o: $(MAC_OSX_DIR)/tkMacOSXCarbonEvents.c
-	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXCarbonEvents.c
-
 tkMacOSXClipboard.o: $(MAC_OSX_DIR)/tkMacOSXClipboard.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXClipboard.c
 
@@ -1562,17 +1535,18 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(MAC_OSX_DIR)/configure
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/wish.exe.manifest.in
 	mkdir $(DISTDIR)/macosx
 	cp -p $(MAC_OSX_DIR)/GNUmakefile $(MAC_OSX_DIR)/README \
-		$(MAC_OSX_DIR)/Wish.icns $(MAC_OSX_DIR)/*.[chr] \
+		$(MAC_OSX_DIR)/Tk.* $(MAC_OSX_DIR)/*.[ch] \
 		$(MAC_OSX_DIR)/*.in $(MAC_OSX_DIR)/*.ac \
-		$(MAC_OSX_DIR)/*.xcconfig $(MAC_OSX_DIR)/configure \
-		$(DISTDIR)/macosx
+		$(MAC_OSX_DIR)/*.xcconfig $(MAC_OSX_DIR)/*.sdef \
+		$(MAC_OSX_DIR)/configure $(DISTDIR)/macosx
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/macosx
-	mkdir $(DISTDIR)/macosx/Wish.pbproj
-	cp -p $(MAC_OSX_DIR)/Wish.pbproj/*.pbx* $(DISTDIR)/macosx/Wish.pbproj
 	mkdir $(DISTDIR)/macosx/Wish.xcode
-	cp -p $(MAC_OSX_DIR)/Wish.xcode/*.pbx* $(DISTDIR)/macosx/Wish.xcode
+	cp -p $(MAC_OSX_DIR)/Wish.xcode/project.pbxproj \
+		$(MAC_OSX_DIR)/Wish.xcode/default.pbxuser \
+		$(DISTDIR)/macosx/Wish.xcode
 	mkdir $(DISTDIR)/macosx/Wish.xcodeproj
-	cp -p $(MAC_OSX_DIR)/Wish.xcodeproj/*.pbx* \
+	cp -p $(MAC_OSX_DIR)/Wish.xcodeproj/project.pbxproj \
+		$(MAC_OSX_DIR)/Wish.xcodeproj/default.pbxuser \
 		$(DISTDIR)/macosx/Wish.xcodeproj
 	mkdir $(DISTDIR)/compat
 	cp -p $(TOP_DIR)/license.terms $(TCLDIR)/compat/unistd.h \
