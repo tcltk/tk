@@ -162,12 +162,18 @@ CFLAGS_OPTIMIZE	= @CFLAGS_OPTIMIZE@
 LDFLAGS_DEBUG    = @LDFLAGS_DEBUG@
 LDFLAGS_OPTIMIZE = @LDFLAGS_OPTIMIZE@
 
+# Tk does not used deprecated Tcl constructs so it should
+# compile fine with -DTCL_NO_DEPRECATED. To remove its own
+# set of deprecated code uncomment the second line.
+NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
+#NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
+
 # To change the compiler switches, for example to change from optimization to
 # debugging symbols, change the following line:
 #CFLAGS		= $(CFLAGS_DEBUG)
 #CFLAGS		= $(CFLAGS_OPTIMIZE)
 #CFLAGS		= $(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
-CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@
+CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@ $(NO_DEPRECATED_FLAGS)
 
 # Special compiler flags to use when building man2tcl on Windows.
 MAN2TCLFLAGS	= @MAN2TCLFLAGS@
@@ -187,12 +193,12 @@ EXEEXT		= @EXEEXT@
 OBJEXT		= @OBJEXT@
 STLIB_LD	= @STLIB_LD@
 SHLIB_LD	= @SHLIB_LD@
-SHLIB_LD_LIBS	= @SHLIB_LD_LIBS@ $(TCL_STUB_LIB_FILE) $(LIBS)
+SHLIB_LD_LIBS	= @SHLIB_LD_LIBS@
 SHLIB_CFLAGS	= @SHLIB_CFLAGS@
 SHLIB_SUFFIX	= @SHLIB_SUFFIX@
 VER		= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER		= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
-LIBS		= @LIBS@ @LIBS_GUI@
+LIBS		= $(TCL_STUB_LIB_FILE) @LIBS@ @LIBS_GUI@
 RMDIR		= rm -rf
 MKDIR		= mkdir -p
 SHELL		= @SHELL@
@@ -386,7 +392,8 @@ TTK_OBJS = \
 	ttkStubInit.$(OBJEXT)
 
 STUB_OBJS = \
-	tkStubLib.$(OBJEXT) ttkStubLib.$(OBJEXT)
+	tkStubLib.$(OBJEXT) \
+	ttkStubLib.$(OBJEXT)
 
 TCL_DOCS = "$(TCL_SRC_DIR_NATIVE)/doc/*.[13n]"
 TK_DOCS = "$(ROOT_DIR_NATIVE)/doc/*.[13n]"
@@ -428,11 +435,11 @@ $(MAN2TCL): $(TCL_SRC_DIR)/tools/man2tcl.c
 
 test: test-classic test-ttk
 
-test-classic: binaries $(TKTEST)
+test-classic: binaries $(TKTEST) $(CAT32)
 	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" \
 	$(TESTFLAGS) | ./$(CAT32)
 
-test-ttk: binaries $(TKTEST)
+test-ttk: binaries $(TKTEST) $(CAT32)
 	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/ttk/all.tcl" \
 	$(TESTFLAGS) | ./$(CAT32)
 
@@ -477,7 +484,7 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)"; 
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[catch {package present Tcl 8.5.0}]} { return }";\
+	echo "if {[catch {package present Tcl $(TCLVERSION).0}]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
 	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file join \$$dir .. .. bin libtk$(VERSION).dll] Tk]";\
@@ -517,8 +524,8 @@ install-libraries: libraries
 	    $(INSTALL_DATA) $$i $(INCLUDE_INSTALL_DIR)/X11; \
 	    done;
 	@echo "Installing library files to $(SCRIPT_INSTALL_DIR)";
-	@for i in $(ROOT_DIR)/library/*.tcl \
-	        $(ROOT_DIR)/library/tclIndex $(UNIX_DIR)/tkAppInit.c; \
+	@for i in $(ROOT_DIR)/library/*.tcl $(ROOT_DIR)/library/tclIndex \
+		$(UNIX_DIR)/tkAppInit.c; \
 	    do \
 	    $(INSTALL_DATA) $$i $(SCRIPT_INSTALL_DIR); \
 	    done;
@@ -601,14 +608,14 @@ install-private-headers: libraries
 	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
 	    done;
 
-$(WISH): $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(WISH_OBJS) wish.$(RES)
+$(WISH): $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) wish.$(RES)
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TCL_LIB_FILE) $(TK_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 	@VC_MANIFEST_EMBED_EXE@
 
 tktest: $(TKTEST)
 
-$(TKTEST): $(TK_LIB_FILE) $(TKTEST_OBJS) wish.$(RES) $(CAT32)
+$(TKTEST): $(TKTEST_OBJS) $(TK_LIB_FILE) wish.$(RES)
 	$(CC) $(CFLAGS) $(TKTEST_OBJS) $(TCL_LIB_FILE) \
 	$(TK_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
@@ -713,6 +720,10 @@ genstubs:
 	    "$(GENERIC_DIR_NATIVE)" \
 	    "$(GENERIC_DIR_NATIVE)/tk.decls" \
 	    "$(GENERIC_DIR_NATIVE)/tkInt.decls"
+	$(TCL_EXE) "$(TTK_DIR)/ttkGenStubs.tcl" \
+	    "$(TTK_DIR)" \
+	    "$(TTK_DIR)/ttk.decls"
+
 #
 # The list of all the targets that do not correspond to real files. This stops
 # 'make' from getting confused when someone makes an error in a rule.
