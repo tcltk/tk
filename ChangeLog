@@ -1,3 +1,7 @@
+2012-09-26  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/Makefile.in:    Compile win32 binaries with -DTCL_NO_DEPRECATED
+
 2012-08-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkMenuDraw.c: [Bug 3562426]: Context menu goes out of edge of
