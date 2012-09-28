@@ -1,3 +1,11 @@
+2012-09-27  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkInt.h:     Add 8 colors to the supported color list
+	* generic/tkColor.c:   (aqua, crimson, fuchsia, indigo, lime,
+	* unix/tkUnixColor.c:  olive, silver and teal), part of TIP #403
+	* xlib/rgb.txt
+	* xlib/xcolors.c
+
 2012-09-26  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/Makefile.in:    Compile win32 binaries with -DTCL_NO_DEPRECATED
