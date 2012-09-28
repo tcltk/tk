@@ -971,6 +971,8 @@ MODULE_SCOPE TkMainInfo		*tkMainWindowList;
 MODULE_SCOPE Tk_ImageType	tkPhotoImageType;
 MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
 
+MODULE_SCOPE CONST char *const tkWebColors[20];
+
 #include "tkIntDecls.h"
 
 #ifdef BUILD_tk
