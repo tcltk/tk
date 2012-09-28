@@ -136,6 +136,18 @@ TkpGetColor(
     if (*name != '#') {
 	XColor screen;
 
+	if (((*name - 'A') & 0xdf) < sizeof(tkWebColors)/sizeof(tkWebColors[0])) {
+	    const char *p = tkWebColors[((*name - 'A') & 0x1f)];
+	    if (p) {
+		const char *q = name;
+		while (!((*p - *(++q)) & 0xdf)) {
+		    if (!*p++) {
+			name = p;
+			goto gotWebColor;
+		    }
+		}
+	    }
+	}
 	if (strlen(name) > 99) {
 	/* Don't bother to parse this. [Bug 2809525]*/
 	return (TkColor *) NULL;
@@ -155,6 +167,7 @@ TkpGetColor(
 	    FindClosestColor(tkwin, &screen, &color);
 	}
     } else {
+    gotWebColor:
 	if (TkParseColor(display, colormap, name, &color) == 0) {
 	    return NULL;
 	}
