@@ -970,6 +970,8 @@ extern Tk_ImageType		tkPhotoImageType;
 extern Tcl_HashTable		tkPredefBitmapTable;
 extern int			tkSendSerial;
 
+extern CONST char *const tkWebColors[20];
+
 #include "tkIntDecls.h"
 
 #ifdef BUILD_tk
