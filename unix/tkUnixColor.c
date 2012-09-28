@@ -1,46 +1,45 @@
-/* 
+/*
  * tkUnixColor.c --
  *
- *	This file contains the platform specific color routines
- *	needed for X support.
+ *	This file contains the platform specific color routines needed for X
+ *	support.
  *
  * Copyright (c) 1996 by Sun Microsystems, Inc.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include <tkColor.h>
 
 /*
- * If a colormap fills up, attempts to allocate new colors from that
- * colormap will fail.  When that happens, we'll just choose the
- * closest color from those that are available in the colormap.
- * One of the following structures will be created for each "stressed"
- * colormap to keep track of the colors that are available in the
- * colormap (otherwise we would have to re-query from the server on
- * each allocation, which would be very slow).  These entries are
- * flushed after a few seconds, since other clients may release or
+ * If a colormap fills up, attempts to allocate new colors from that colormap
+ * will fail. When that happens, we'll just choose the closest color from
+ * those that are available in the colormap. One of the following structures
+ * will be created for each "stressed" colormap to keep track of the colors
+ * that are available in the colormap (otherwise we would have to re-query
+ * from the server on each allocation, which would be very slow). These
+ * entries are flushed after a few seconds, since other clients may release or
  * reallocate colors over time.
  */
 
 struct TkStressedCmap {
-    Colormap colormap;			/* X's token for the colormap. */
-    int numColors;			/* Number of entries currently active
-					 * at *colorPtr. */
-    XColor *colorPtr;			/* Pointer to malloc'ed array of all
-					 * colors that seem to be available in
-					 * the colormap.  Some may not actually
-					 * be available, e.g. because they are
-					 * read-write for another client;  when
-					 * we find this out, we remove them
-					 * from the array. */
-    struct TkStressedCmap *nextPtr;	/* Next in list of all stressed
-					 * colormaps for the display. */
+    Colormap colormap;		/* X's token for the colormap. */
+    int numColors;		/* Number of entries currently active at
+				 * *colorPtr. */
+    XColor *colorPtr;		/* Pointer to malloc'ed array of all colors
+				 * that seem to be available in the colormap.
+				 * Some may not actually be available, e.g.
+				 * because they are read-write for another
+				 * client; when we find this out, we remove
+				 * them from the array. */
+    struct TkStressedCmap *nextPtr;
+				/* Next in list of all stressed colormaps for
+				 * the display. */
 };
 
 /*
- * Forward declarations for procedures defined in this file:
+ * Forward declarations for functions defined in this file:
  */
 
 static void		DeleteStressedCmap _ANSI_ARGS_((Display *display,
@@ -59,8 +58,8 @@ static void		FindClosestColor _ANSI_ARGS_((Tk_Window tkwin,
  *	None
  *
  * Side effects:
- *	Invalidates the colormap cache for the colormap associated with
- *	the given color.
+ *	Invalidates the colormap cache for the colormap associated with the
+ *	given color.
  *
  *----------------------------------------------------------------------
  */
@@ -75,14 +74,13 @@ TkpFreeColor(tkColPtr)
     Screen *screen = tkColPtr->screen;
 
     /*
-     * Careful!  Don't free black or white, since this will
-     * make some servers very unhappy.  Also, there is a bug in
-     * some servers (such Sun's X11/NeWS server) where reference
-     * counting is performed incorrectly, so that if a color is
-     * allocated twice in different places and then freed twice,
-     * the second free generates an error (this bug existed as of
-     * 10/1/92).  To get around this problem, ignore errors that
-     * occur during the free operation.
+     * Careful! Don't free black or white, since this will make some servers
+     * very unhappy. Also, there is a bug in some servers (such Sun's X11/NeWS
+     * server) where reference counting is performed incorrectly, so that if a
+     * color is allocated twice in different places and then freed twice, the
+     * second free generates an error (this bug existed as of 10/1/92). To get
+     * around this problem, ignore errors that occur during the free
+     * operation.
      */
 
     visual = tkColPtr->visual;
@@ -112,8 +110,7 @@ TkpFreeColor(tkColPtr)
  *
  * Side effects:
  *	May invalidate the colormap cache associated with tkwin upon
- *	allocating a new colormap entry.  Allocates a new TkColor
- *	structure.
+ *	allocating a new colormap entry. Allocates a new TkColor structure.
  *
  *----------------------------------------------------------------------
  */
@@ -130,7 +127,7 @@ TkpGetColor(tkwin, name)
     TkColor *tkColPtr;
 
     /*
-     * Map from the name to a pixel value.  Call XAllocNamedColor rather than
+     * Map from the name to a pixel value. Call XAllocNamedColor rather than
      * XParseColor for non-# names: this saves a server round-trip for those
      * names.
      */
@@ -138,6 +135,18 @@ TkpGetColor(tkwin, name)
     if (*name != '#') {
 	XColor screen;
 
+	if (((*name - 'A') & 0xdf) < sizeof(tkWebColors)/sizeof(tkWebColors[0])) {
+	    const char *p = tkWebColors[((*name - 'A') & 0x1f)];
+	    if (p) {
+		const char *q = name;
+		while (!((*p - *(++q)) & 0xdf)) {
+		    if (!*p++) {
+			name = p;
+			goto gotWebColor;
+		    }
+		}
+	    }
+	}
 	if (strlen(name) > 99) {
 	/* Don't bother to parse this. [Bug 2809525]*/
 	return (TkColor *) NULL;
@@ -145,10 +154,10 @@ TkpGetColor(tkwin, name)
 	    DeleteStressedCmap(display, colormap);
 	} else {
 	    /*
-	     * Couldn't allocate the color.  Try translating the name to
-	     * a color value, to see whether the problem is a bad color
-	     * name or a full colormap.  If the colormap is full, then
-	     * pick an approximation to the desired color.
+	     * Couldn't allocate the color. Try translating the name to a
+	     * color value, to see whether the problem is a bad color name or
+	     * a full colormap. If the colormap is full, then pick an
+	     * approximation to the desired color.
 	     */
 
 	    if (XLookupColor(display, colormap, name, &color, &screen) == 0) {
@@ -157,6 +166,7 @@ TkpGetColor(tkwin, name)
 	    FindClosestColor(tkwin, &screen, &color);
 	}
     } else {
+    gotWebColor:
 	if (TkParseColor(display, colormap, name, &color) == 0) {
 	    return (TkColor *) NULL;
 	}
@@ -178,19 +188,18 @@ TkpGetColor(tkwin, name)
  *
  * TkpGetColorByValue --
  *
- *	Given a desired set of red-green-blue intensities for a color,
- *	locate a pixel value to use to draw that color in a given
- *	window.
+ *	Given a desired set of red-green-blue intensities for a color, locate
+ *	a pixel value to use to draw that color in a given window.
  *
  * Results:
- *	The return value is a pointer to an TkColor structure that
- *	indicates the closest red, blue, and green intensities available
- *	to those specified in colorPtr, and also specifies a pixel
- *	value to use to draw in that color.
+ *	The return value is a pointer to an TkColor structure that indicates
+ *	the closest red, blue, and green intensities available to those
+ *	specified in colorPtr, and also specifies a pixel value to use to draw
+ *	in that color.
  *
  * Side effects:
- *	May invalidate the colormap cache for the specified window.
- *	Allocates a new TkColor structure.
+ *	May invalidate the colormap cache for the specified window. Allocates
+ *	a new TkColor structure.
  *
  *----------------------------------------------------------------------
  */
@@ -222,15 +231,15 @@ TkpGetColorByValue(tkwin, colorPtr)
  *
  * FindClosestColor --
  *
- *	When Tk can't allocate a color because a colormap has filled
- *	up, this procedure is called to find and allocate the closest
- *	available color in the colormap.
+ *	When Tk can't allocate a color because a colormap has filled up, this
+ *	function is called to find and allocate the closest available color in
+ *	the colormap.
  *
  * Results:
- *	There is no return value, but *actualColorPtr is filled in
- *	with information about the closest available color in tkwin's
- *	colormap.  This color has been allocated via X, so it must
- *	be released by the caller when the caller is done with it.
+ *	There is no return value, but *actualColorPtr is filled in with
+ *	information about the closest available color in tkwin's colormap.
+ *	This color has been allocated via X, so it must be released by the
+ *	caller when the caller is done with it.
  *
  * Side effects:
  *	A color is allocated.
@@ -256,8 +265,8 @@ FindClosestColor(tkwin, desiredColorPtr, actualColorPtr)
     XVisualInfo template, *visInfoPtr;
 
     /*
-     * Find the TkStressedCmap structure for this colormap, or create
-     * a new one if needed.
+     * Find the TkStressedCmap structure for this colormap, or create a new
+     * one if needed.
      */
 
     for (stressPtr = dispPtr->stressPtr; ; stressPtr = stressPtr->nextPtr) {
@@ -265,20 +274,24 @@ FindClosestColor(tkwin, desiredColorPtr, actualColorPtr)
 	    stressPtr = (TkStressedCmap *) ckalloc(sizeof(TkStressedCmap));
 	    stressPtr->colormap = colormap;
 	    template.visualid = XVisualIDFromVisual(Tk_Visual(tkwin));
+
 	    visInfoPtr = XGetVisualInfo(Tk_Display(tkwin),
 		    VisualIDMask, &template, &numFound);
 	    if (numFound < 1) {
-		panic("FindClosestColor couldn't lookup visual");
+		Tcl_Panic("FindClosestColor couldn't lookup visual");
 	    }
+
 	    stressPtr->numColors = visInfoPtr->colormap_size;
 	    XFree((char *) visInfoPtr);
 	    stressPtr->colorPtr = (XColor *) ckalloc((unsigned)
 		    (stressPtr->numColors * sizeof(XColor)));
-	    for (i = 0; i  < stressPtr->numColors; i++) {
+	    for (i = 0; i < stressPtr->numColors; i++) {
 		stressPtr->colorPtr[i].pixel = (unsigned long) i;
 	    }
+
 	    XQueryColors(dispPtr->display, colormap, stressPtr->colorPtr,
 		    stressPtr->numColors);
+
 	    stressPtr->nextPtr = dispPtr->stressPtr;
 	    dispPtr->stressPtr = stressPtr;
 	    break;
@@ -289,27 +302,27 @@ FindClosestColor(tkwin, desiredColorPtr, actualColorPtr)
     }
 
     /*
-     * Find the color that best approximates the desired one, then
-     * try to allocate that color.  If that fails, it must mean that
-     * the color was read-write (so we can't use it, since it's owner
-     * might change it) or else it was already freed.  Try again,
-     * over and over again, until something succeeds.
+     * Find the color that best approximates the desired one, then try to
+     * allocate that color. If that fails, it must mean that the color was
+     * read-write (so we can't use it, since it's owner might change it) or
+     * else it was already freed. Try again, over and over again, until
+     * something succeeds.
      */
 
-    while (1)  {
+    while (1) {
 	if (stressPtr->numColors == 0) {
-	    panic("FindClosestColor ran out of colors");
+	    Tcl_Panic("FindClosestColor ran out of colors");
 	}
 	closestDistance = 1e30;
 	closest = 0;
 	for (colorPtr = stressPtr->colorPtr, i = 0; i < stressPtr->numColors;
 		colorPtr++, i++) {
 	    /*
-	     * Use Euclidean distance in RGB space, weighted by Y (of YIQ)
-	     * as the objective function;  this accounts for differences
-	     * in the color sensitivity of the eye.
+	     * Use Euclidean distance in RGB space, weighted by Y (of YIQ) as
+	     * the objective function; this accounts for differences in the
+	     * color sensitivity of the eye.
 	     */
-    
+
 	    tmp = .30*(((int) desiredColorPtr->red) - (int) colorPtr->red);
 	    distance = tmp*tmp;
 	    tmp = .61*(((int) desiredColorPtr->green) - (int) colorPtr->green);
@@ -328,8 +341,8 @@ FindClosestColor(tkwin, desiredColorPtr, actualColorPtr)
 	}
 
 	/*
-	 * Couldn't allocate the color.  Remove it from the table and
-	 * go back to look for the next best color.
+	 * Couldn't allocate the color. Remove it from the table and go back
+	 * to look for the next best color.
 	 */
 
 	stressPtr->colorPtr[closest] =
@@ -343,30 +356,29 @@ FindClosestColor(tkwin, desiredColorPtr, actualColorPtr)
  *
  * DeleteStressedCmap --
  *
- *	This procedure releases the information cached for "colormap"
- *	so that it will be refetched from the X server the next time
- *	it is needed.
+ *	This function releases the information cached for "colormap" so that
+ *	it will be refetched from the X server the next time it is needed.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The TkStressedCmap structure for colormap is deleted;  the
- *	colormap is no longer considered to be "stressed".
+ *	The TkStressedCmap structure for colormap is deleted; the colormap is
+ *	no longer considered to be "stressed".
  *
  * Note:
- *	This procedure is invoked whenever a color in a colormap is
- *	freed, and whenever a color allocation in a colormap succeeds.
- *	This guarantees that TkStressedCmap structures are always
- *	deleted before the corresponding Colormap is freed.
+ *	This function is invoked whenever a color in a colormap is freed, and
+ *	whenever a color allocation in a colormap succeeds. This guarantees
+ *	that TkStressedCmap structures are always deleted before the
+ *	corresponding Colormap is freed.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 DeleteStressedCmap(display, colormap)
-    Display *display;		/* Xlib's handle for the display
-				 * containing the colormap. */
+    Display *display;		/* Xlib's handle for the display containing
+				 * the colormap. */
     Colormap colormap;		/* Colormap to flush. */
 {
     TkStressedCmap *prevPtr, *stressPtr;
@@ -392,12 +404,11 @@ DeleteStressedCmap(display, colormap)
  *
  * TkpCmapStressed --
  *
- *	Check to see whether a given colormap is known to be out
- *	of entries.
+ *	Check to see whether a given colormap is known to be out of entries.
  *
  * Results:
- *	1 is returned if "colormap" is stressed (i.e. it has run out
- *	of entries recently), 0 otherwise.
+ *	1 is returned if "colormap" is stressed (i.e. it has run out of
+ *	entries recently), 0 otherwise.
  *
  * Side effects:
  *	None.
@@ -421,3 +432,11 @@ TkpCmapStressed(tkwin, colormap)
     }
     return 0;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
