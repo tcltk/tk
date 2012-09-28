@@ -1,3 +1,13 @@
+!      Changes compared to Xorg:rgb.txt
+!      name       old value       new value
+!      aqua           -            0 255 255
+!      crimson        -          220  20  60
+!      fuchsia        -          255   0 255
+!      indigo         -           75   0 130
+!      lime           -            0 255   0
+!      olive          -          128 128   0
+!      silver         -          192 192 192
+!      teal           -            0 128 128
 !
 240 248 255		aliceBlue
 250 235 215		antiqueWhite
@@ -5,6 +15,7 @@
 238 223 204		antiqueWhite2
 205 192 176		antiqueWhite3
 139 131 120		antiqueWhite4
+  0 255 255		aqua
 127 255 212		aquamarine
 127 255 212		aquamarine1
 118 238 198		aquamarine2
@@ -65,6 +76,7 @@
 238 232 205		cornsilk2
 205 200 177		cornsilk3
 139 136 120		cornsilk4
+220  20  60		crimson
   0 255 255		cyan
   0 255 255		cyan1
   0 238 238		cyan2
@@ -137,6 +149,7 @@
 139  26  26		firebrick4
 255 250 240		floralWhite
  34 139  34		forestGreen
+255   0 255		fuchsia
 220 220 220		gainsboro
 248 248 255		ghostWhite
 255 215   0		gold
@@ -374,6 +387,7 @@
 238  99  99		indianRed2
 205  85  85		indianRed3
 139  58  58		indianRed4
+ 75   0 130		indigo
 255 255 240		ivory
 255 255 240		ivory1
 238 238 224		ivory2
@@ -445,6 +459,7 @@
 238 238 209		lightYellow2
 205 205 180		lightYellow3
 139 139 122		lightYellow4
+  0 255   0		lime
  50 205  50		limeGreen
 250 240 230		linen
 255   0 255		magenta
@@ -490,6 +505,7 @@
   0   0 128		navy
   0   0 128		navyBlue
 253 245 230		oldLace
+128 128   0		olive
 107 142  35		oliveDrab
 192 255  62		oliveDrab1
 179 238  58		oliveDrab2
@@ -586,6 +602,7 @@
 238 121  66		sienna2
 205 104  57		sienna3
 139  71  38		sienna4
+192 192 192		silver
 135 206 235		skyBlue
 135 206 255		skyBlue1
 126 192 238		skyBlue2
@@ -622,6 +639,7 @@
 238 154  73		tan2
 205 133  63		tan3
 139  90  43		tan4
+  0 128 128		teal
 216 191 216		thistle
 255 225 255		thistle1
 238 210 238		thistle2
