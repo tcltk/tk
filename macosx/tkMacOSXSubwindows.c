@@ -65,7 +65,7 @@ XDestroyWindow(
     TkMacOSXSelDeadWindow(macWin->winPtr);
     macWin->toplevel->referenceCount--;
 
-    if (!Tk_IsTopLevel(macWin->winPtr)) {
+    if (!Tk_IsTopLevel(macWin->winPtr) ) {
 	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	if (macWin->winPtr->parentPtr != NULL) {
 	    TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);

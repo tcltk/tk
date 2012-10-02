@@ -236,6 +236,12 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     return [menuItem isEnabled];
 }
 
+// Workaround for bug 3572016; leaves menu items enabled during modal dialog.
+- (BOOL)worksWhenModal
+{
+    return YES;
+}
+
 - (void) tkMenuItemInvoke: (id) sender
 {
     /*
