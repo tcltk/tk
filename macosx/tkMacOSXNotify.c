@@ -274,7 +274,7 @@ TkMacOSXEventsCheckProc(
 	TSD_INIT();
 	if (tsdPtr->currentEvent) {
 	    currentEvent = TkMacOSXMakeCollectableAndAutorelease(
-		    tsdPtr->currentEvent);
+	    	    tsdPtr->currentEvent);
 	}
 	do {
 	    modalSession = TkMacOSXGetModalSession();
