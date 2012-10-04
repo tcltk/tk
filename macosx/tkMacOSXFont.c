@@ -885,7 +885,7 @@ TkpMeasureCharsInContext(
         /* The call to CTTypesetterSuggestClusterBreak above will always
            return at least one character regardless of whether it exceeded
            it or not.  Clean that up now. */
-	while (width > maxWidth && !(flags & TK_PARTIAL_OK) && index > start(flags & TK_AT_LEAST_ONE)) {
+	  while (width > maxWidth && !(flags & TK_PARTIAL_OK) && index > start+(flags & TK_AT_LEAST_ONE)) {
 	    range.length = --index;
 	    line = CTTypesetterCreateLine(typesetter, range);
 	    width = CTLineGetTypographicBounds(line, NULL, NULL, NULL);
