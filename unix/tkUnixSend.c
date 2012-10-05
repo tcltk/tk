@@ -1354,7 +1354,7 @@ SendInit(
     	DefaultScreen(dispPtr->display), NULL);
     Tcl_Preserve((ClientData) dispPtr->commTkwin);
     ((TkWindow *) dispPtr->commTkwin)->flags |=TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED;
-    TkWmNewWindow((TkWindow *) dispPtr->commTkWin);
+    TkWmNewWindow((TkWindow *) dispPtr->commTkwin);
     atts.override_redirect = True;
     Tk_ChangeWindowAttributes(dispPtr->commTkwin,
 	    CWOverrideRedirect, &atts);
