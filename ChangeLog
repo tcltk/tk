@@ -1,3 +1,13 @@
+2012-10-09  Andreas Kupries  <andreask@activestate.com>
+
+	Cherrypick Merge, Backport of [6223d9e067]. Restored from
+	tk-cocoa-8-5-bacport-branch, did not survive the merge.
+	See trunk 2012-05-29 Donal K. Fellows
+
+	* generic/tkInt.decls (TkMacOSXDrawable): Added OSX-specific mechanism
+	to allow retrieval of the drawing surface. Allows Canvas3d to be
+	adapted to 8.6.
+
 2012-09-28  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.h:     Add 8 colors to the supported color list
