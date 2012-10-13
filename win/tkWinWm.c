@@ -1681,7 +1681,7 @@ ReadIconOrCursorFromFile(
 		(int) lpIDE[i].dwBytesInRes);
 	if (dwBytesRead != lpIDE[i].dwBytesInRes) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "error reading file: ", Tcl_PosixError(interp)));
+		    "error reading file: %s", Tcl_PosixError(interp)));
 	    goto readError;
 	}
 
@@ -5526,7 +5526,7 @@ WmTransientCmd(
     }
     if (objc == 3) {
 	if (masterPtr != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj(masterPtr));
+	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) masterPtr));
 	}
 	return TCL_OK;
     }
