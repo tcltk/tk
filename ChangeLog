@@ -1,3 +1,58 @@
+2012-09-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/Makefile.in:    Compile win32 binaries with -DTCL_NO_DEPRECATED
+	* win/tkiWinWm.c:     Fix gcc compiler warning.
+
+2012-09-17  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.6b2 TAGGED FOR RELEASE ***
+	
+	* macosx/tkMacOSXWm.c: [Bug 3567786] Stop segfault in [wm forget].
+
+2012-09-15  Don Porter  <dgp@users.sourceforge.net>
+
+	* macosx/tkMacOSXFont.c: [Bug 3567778] Make Tk_MeasureChars() honor
+	the TK_AT_LEAST_ONE flag properly.
+
+2012-09-13  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/ttk/ttkEntry.c (EntryDisplay): [Bug 3567453]: Clip regions
+	* generic/ttk/ttkLabel.c (TextDraw): must be cleared with XSetClipMask
+	* xlib/xgc.c (TkSetRegion): and not TkSetRegion, or crashes will ensue
+	on X11-based builds, which can't handle None for a region argument.
+	Added a clean panic to the non-X11 TkSetRegion to catch this case and
+	stop such confusion from happening again.
+
+2012-09-13  Donal K. Fellows  <dkf@users.sf.net>
+
+	* win/tkWinWm.c (WmTransientCmd): [Bug 3567283]: Added missing cast.
+
+2012-09-11  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/ttk/ttkEntry.c (EntryDisplay): [Bug 3566594]: Must manually
+	* generic/ttk/ttkLabel.c (TextDraw):     reset the clip region of GCs
+	when not using the Xft font renderer (well, especially on classic X11)
+	because the GC sharing code doesn't take into account clip handling.
+	Thanks to Christian Nassau for identifying the problem.
+
+2012-09-07  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkCanvPs.c (TkCanvPostscriptCmd): [Bug 3565533]: Purge use
+	of variable that was only ever checked once immediately afterwards,
+	except for one (buggy) case where it was checked without assignment.
+
+2012-09-07  Don Porter  <dgp@users.sourceforge.net>
+
+	* README:		Bump version number to 8.6b3
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 2012-08-30  Andreas Kupries  <andreask@activestate.com>
 
 	* generic/tkCanvWind.c (CanvasPsWindow): Unbreak AIX, replaced use

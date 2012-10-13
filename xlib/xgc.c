@@ -465,7 +465,7 @@ TkSetRegion(
     TkRegion r)
 {
     if (r == None) {
-	FreeClipMask(gc);
+	Tcl_Panic("must not pass None to TkSetRegion for compatibility with X11; use XSetClipMask instead");
     } else {
 	TkpClipMask *clip_mask = AllocClipMask(gc);
 
