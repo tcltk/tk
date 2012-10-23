@@ -343,7 +343,7 @@ GenerateUpdates(
 	return 0;
     }
     HIShapeGetBounds(damageRgn, &damageBounds);
-   
+
     CFRelease(damageRgn);
     CFRelease(boundsRgn);
 
