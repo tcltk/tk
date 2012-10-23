@@ -32,7 +32,7 @@ available as an optional or default install on recent Mac OS X).
 TkAqua and TkX11 can be distinguished at runtime via [tk windowingsystem].
 
 - At a minimum, Mac OS X 10.3 is required to run Tcl and TkX11.
-TkAqua requires Mac OS X 10.5 or later (starting with Tk 8.6b2).
+TkAqua requires Mac OS X 10.5 or later (starting with the Cocoa-based Tk 8.5.7).
 
 - Unless weak-linking is used, Tcl/Tk built on Mac OS X 10.x will not run on
 10.y with y < x; on the other hand Tcl/Tk built on 10.y will always run on 10.x
@@ -105,7 +105,7 @@ normal scrollbar has a small dimension of 15, the small variant 11.
 Access to the small variant was added in Tk 8.4.2.
 
 - The default metrics of native buttons, radiobuttons, checkboxes and
-menubuttons in the Cocoa-based Tk 8.6b2 and later preserve compatibility with
+menubuttons in the Cocoa-based Tk 8.5.7 and later preserve compatibility with
 the older Carbon-based implementation, you can turn off the compatibility
 metrics to get more native-looking spacing by setting:
 	set tk::mac::useCompatibilityMetrics 0
@@ -127,13 +127,13 @@ where -kind is one of
     -systemType	    icon for given IconServices 4-char OSType
     -namedImage	    named NSImage for given name
     -imageFile	    image at given path
-This support was added with the Cocoa-based Tk 8.6b2.
+This support was added with the Cocoa-based Tk 8.5.7.
 
 - TkAqua cursor names are interpred as follows (in order):
     - standard or platform-specific Tk cursor name (c.f. cursors.n)
     - @path to any image file readable by NSImage
     - NSImage named image name
-Support for the latter two was added with the Cocoa-based Tk 8.6b2.
+Support for the latter two was added with the Cocoa-based Tk 8.5.7.
 
 - The standard Tk dialog commands [tk_getOpenFile], [tk_chooseDirectory],
 [tk_getSaveFile] and [tk_messageBox] all take an additional optional -command
@@ -142,7 +142,7 @@ the global level when the dialog closes, with the dialog command's result
 appended (the dialog command itself returning an emtpy result). If the -parent
 option is also present, the dialog is configured as a modeless (window-modal)
 sheet attached to the parent window and the dialog command returns immediately.
-Support for -command was added with the Cocoa-based Tk 8.6b2.
+Support for -command was added with the Cocoa-based Tk 8.5.7.
 
 - The TkAqua-specific [tk::mac::standardAboutPanel] command brings the standard
 Cocoa about panel to the front, with all its information filled in from your
@@ -150,7 +150,7 @@ application bundle files (i.e. standard about panel with no options specified).
 See Apple Technote TN2179 and the AppKit documentation for -[NSApplication
 orderFrontStandardAboutPanelWithOptions:] for details on the Info.plist keys and
 app bundle files used by the about panel.
-This support was added with the Cocoa-based Tk 8.6b2.
+This support was added with the Cocoa-based Tk 8.5.7.
 
 - TkAqua has three special menu names that give access to the standard
 Application, Window and Help menus, see menu.n for details.
@@ -160,7 +160,7 @@ application's Info.plist (or displaying an alert if no Help Book is set). This
 action can be customized by defining a procedure named [tk::mac::ShowHelp], if
 present, this procedure is invoked instead by the standard Help menu item.
 Support for the Window menu and [tk::mac::ShowHelp] was added with the
-Cocoa-based Tk 8.6b2.
+Cocoa-based Tk 8.5.7.
 
 - The TkAqua-specific command [tk::unsupported::MacWindowStyle style] is used to
 get and set Mac OS X-specific toplevel window class and attributes. Note that
@@ -179,12 +179,12 @@ Window attribute names:
     verticalZoom, closeBox, collapseBox, toolbarButton, sideTitlebar,
     noTitleBar, unifiedTitleAndToolbar, metal, hud, noShadow, doesNotCycle,
     noActivates, hideOnSuspend, inWindowMenu, ignoreClicks, doesNotHide,
-    canJoinAllSpaces, moveToActiveSpace, nonActivating, black, dark, light,   
+    canJoinAllSpaces, moveToActiveSpace, nonActivating, black, dark, light,
     gray, red, green, blue, cyan, yellow, magenta, orange, purple,
     brown, clear, opacity
 
 Note that not all attributes are valid for all window classes.
-Support for the 3 argument form was added with the Cocoa-based Tk 8.6b2, at the
+Support for the 3 argument form was added with the Cocoa-based Tk 8.5.7, at the
 same time support for some legacy Carbon-specific classes and attributes was
 removed (they are still accepted by the command but no longer have any effect).
 
@@ -195,7 +195,7 @@ tk::unsupported::MacWindowStyle style .f document {metal light opaque closeBox c
 
 pack [label .f.f -bg  #ababab -text "This is a textured window\nwith opacity and a gray background\nsimilar to other Mac applications"] -fill both -expand yes
 
-The color attributes correspond to system-defined NSColor constants (e.g., red is [NSColor redColor]. The "light" and "dark" attributes correspond to lightGrayColor and darkGrayColor, respectively (because of the way the attributes are parsed, using "lightgray" and "darkgray" would cause a conflict with the core "gray" attribute). 
+The color attributes correspond to system-defined NSColor constants (e.g., red is [NSColor redColor]. The "light" and "dark" attributes correspond to lightGrayColor and darkGrayColor, respectively (because of the way the attributes are parsed, using "lightgray" and "darkgray" would cause a conflict with the core "gray" attribute).
 
 Below are the corresponding hex and/or Tk-defined colors that can be used from Tk widgets to match the NSColor-based attributes:
 
