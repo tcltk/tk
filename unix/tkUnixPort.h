@@ -184,7 +184,7 @@
  * These functions do nothing under Unix, so we just eliminate calls to them.
  */
 
-#define TkpButtonSetDefaults(specPtr) {}
+#define TkpButtonSetDefaults() {}
 #define TkpDestroyButton(butPtr) {}
 #define TkSelUpdateClipboard(a,b) {}
 #ifndef __CYGWIN__
