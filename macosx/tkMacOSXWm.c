@@ -1657,14 +1657,14 @@ WmForgetCmd(
 	macWin = (MacDrawable *) winPtr->window;
 
     	TkFocusJoin(winPtr);
-    	Tk_UnmapWindow(frameWin); 
+    	Tk_UnmapWindow(frameWin);
 
 	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
 	macWin->flags &= ~TK_HOST_EXISTS;
 
 	TkWmDeadWindow(winPtr);
 	RemapWindows(winPtr, (MacDrawable *) winPtr->parentPtr->window);
-       
+
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 
 	/*
@@ -5328,7 +5328,7 @@ WmWinStyle(
 
 	ApplyWindowAttributeFlagChanges(winPtr, NULL, oldAttributes, oldFlags,
 		0, 1);
- 
+
 	return TCL_OK;
 
     badClassAttrs:
@@ -5492,8 +5492,8 @@ TkMacOSXMakeRealWindowExist(
 	 */
 	[window setMovableByWindowBackground:NO];
     }
-   
-    
+
+
     /* Set background color and opacity of window if those flags are set.  */
     if (colorName != NULL) {
     	[window setBackgroundColor: colorName];
@@ -5502,7 +5502,7 @@ TkMacOSXMakeRealWindowExist(
     if (opaqueTag != NULL) {
     	[window setOpaque: opaqueTag];
     }
-	   
+
     [window setDocumentEdited:NO];
     wmPtr->window = window;
     macWin->view = contentView;
@@ -6391,7 +6391,7 @@ TkMacOSXMakeFullscreen(
 	                          | NSApplicationPresentationAutoHideMenuBar];
 
     } else {
-	wmPtr->flags &= ~WM_FULLSCREEN; 
+	wmPtr->flags &= ~WM_FULLSCREEN;
 
 	[NSApp setPresentationOptions: prevPres];
 	[window setStyleMask: prevMask];

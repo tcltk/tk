@@ -6,7 +6,7 @@
 2012-09-17  Don Porter  <dgp@users.sourceforge.net>
 
 	*** 8.6b2 TAGGED FOR RELEASE ***
-	
+
 	* macosx/tkMacOSXWm.c: [Bug 3567786] Stop segfault in [wm forget].
 
 2012-09-15  Don Porter  <dgp@users.sourceforge.net>
@@ -479,7 +479,7 @@
 2011-12-22  Don Porter  <dgp@users.sourceforge.net>
 
 	* win/tkWinMenu.c: [Bug 3235256] Keep menu entry IDs out of system
-	values. Thanks Colin McDonald. 
+	values. Thanks Colin McDonald.
 
 2011-12-13  Donal K. Fellows  <dkf@users.sf.net>
 
