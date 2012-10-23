@@ -134,9 +134,9 @@ XCreateGC(
 
     InitField(function,		  GCFunction,		GXcopy);
     InitField(plane_mask,	  GCPlaneMask,		(unsigned long)(~0));
-    InitField(foreground,	  GCForeground,		
+    InitField(foreground,	  GCForeground,
 	    BlackPixelOfScreen(DefaultScreenOfDisplay(display)));
-    InitField(background,	  GCBackground,		
+    InitField(background,	  GCBackground,
 	    WhitePixelOfScreen(DefaultScreenOfDisplay(display)));
     InitField(line_width,	  GCLineWidth,		1);
     InitField(line_style,	  GCLineStyle,		LineSolid);
