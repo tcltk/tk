@@ -90,7 +90,7 @@ Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
     CreateProc,			/* createProc */
-    NULL
+    NULL					/* modalProc */
 };
 
 
@@ -181,10 +181,7 @@ InitBoxes(void)
  */
 
 void
-TkpButtonSetDefaults(
-    Tk_OptionSpec *specPtr)	/* Points to an array of option specs,
-				 * terminated by one with type
-				 * TK_OPTION_END. */
+TkpButtonSetDefaults()
 {
     int width = GetSystemMetrics(SM_CXEDGE);
     if (width > 0) {
