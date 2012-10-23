@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
- 
+
 #include "tkMacOSXPrivate.h"
 #include "tkScrollbar.h"
 #include "tkMacOSXWm.h"
@@ -1651,20 +1651,20 @@ WmForgetCmd(
 
 	macWin = (MacDrawable *) winPtr->window;
 
-    	TkFocusJoin(winPtr);
-    	Tk_UnmapWindow(frameWin); 
+	TkFocusJoin(winPtr);
+	Tk_UnmapWindow(frameWin);
 
 	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
 	macWin->flags &= ~TK_HOST_EXISTS;
 
 	TkWmDeadWindow(winPtr);
 	RemapWindows(winPtr, (MacDrawable *) winPtr->parentPtr->window);
-  
+
 	winPtr->flags &=~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 
 	/*
-         * Flags (above) must be cleared before calling TkMapTopFrame (below).
-         */
+	 * Flags (above) must be cleared before calling TkMapTopFrame (below).
+	 */
 
 	TkMapTopFrame(frameWin);
     } else {
@@ -5049,7 +5049,7 @@ TkUnsupported1ObjCmd(
     	}
     }
 
-  
+
     winPtr = (TkWindow *)
 	    Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
     if (winPtr == NULL) {
@@ -5264,7 +5264,7 @@ WmWinStyle(
 
 	ApplyWindowAttributeFlagChanges(winPtr, NULL, oldAttributes, oldFlags,
 		0, 1);
- 
+
 	return TCL_OK;
 
     badClassAttrs:
@@ -5429,8 +5429,8 @@ TkMacOSXMakeRealWindowExist(
 	 */
 	[window setMovableByWindowBackground:NO];
     }
-   
-    
+
+
     /* Set background color and opacity of window if those flags are set.  */
     if (colorName != NULL) {
     	[window setBackgroundColor: colorName];
@@ -5439,7 +5439,7 @@ TkMacOSXMakeRealWindowExist(
     if (opaqueTag != NULL) {
     	[window setOpaque: opaqueTag];
     }
-	   
+
     [window setDocumentEdited:NO];
     wmPtr->window = window;
     macWin->view = contentView;
@@ -6331,7 +6331,7 @@ TkMacOSXMakeFullscreen(
 	[NSApp setPresentationOptions: prevPres];
 	[window setStyleMask: prevMask];
     }
- 
+
     if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {
 	UInt64 oldAttributes = wmPtr->attributes;
 	NSRect bounds = NSMakeRect(wmPtr->configX, tkMacOSXZeroScreenHeight -
