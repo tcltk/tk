@@ -17,11 +17,6 @@
 #include "tkInt.h"
 #endif
 
-#ifdef BUILD_tk
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLEXPORT
-#endif
-
 /*
  * Legal values for the "compound" field of TkButton records.
  */
@@ -293,18 +288,25 @@ typedef struct {
 #define TRISTATED		(1 << 4)
 
 /*
- * Declaration of variables shared between the files in the button module.
+ * Declaration of button class functions structure
+ * and button/label defaults, for use in optionSpecs.
  */
 
 MODULE_SCOPE Tk_ClassProcs tkpButtonProcs;
+MODULE_SCOPE char tkDefButtonHighlightWidth[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefButtonPadx[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefButtonPady[TCL_INTEGER_SPACE];
 MODULE_SCOPE char tkDefButtonBorderWidth[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefLabelHighlightWidth[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefLabelPadx[TCL_INTEGER_SPACE];
+MODULE_SCOPE char tkDefLabelPady[TCL_INTEGER_SPACE];
 
 /*
  * Declaration of functions used in the implementation of the button widget.
  */
 
 #ifndef TkpButtonSetDefaults
-MODULE_SCOPE void	TkpButtonSetDefaults(Tk_OptionSpec *specPtr);
+MODULE_SCOPE void	TkpButtonSetDefaults();
 #endif
 MODULE_SCOPE void	TkButtonWorldChanged(ClientData instanceData);
 MODULE_SCOPE void	TkpComputeButtonGeometry(TkButton *butPtr);
@@ -316,8 +318,5 @@ MODULE_SCOPE void 	TkpDestroyButton(TkButton *butPtr);
 MODULE_SCOPE void	TkpDisplayButton(ClientData clientData);
 #endif
 MODULE_SCOPE int	TkInvokeButton(TkButton *butPtr);
-
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKBUTTON */
