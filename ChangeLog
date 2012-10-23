@@ -426,7 +426,7 @@
 2011-12-22  Don Porter  <dgp@users.sourceforge.net>
 
 	* win/tkWinMenu.c: [Bug 3235256] Keep menu entry IDs out of system
-	values. Thanks Colin McDonald. 
+	values. Thanks Colin McDonald.
 
 2011-11-22  Jan Nijtmans  <nijtmans@users.sf.net>
 

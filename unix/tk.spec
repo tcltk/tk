@@ -32,7 +32,7 @@ CFLAGS="%optflags" ./configure \
 	--prefix=%{directory} \
 	--exec-prefix=%{directory} \
 	--libdir=%{directory}/%{_lib}
-make 
+make
 
 %install
 cd unix

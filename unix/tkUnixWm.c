@@ -382,7 +382,7 @@ static int		WmDeiconifyCmd(Tk_Window tkwin, TkWindow *winPtr,
 static int		WmFocusmodelCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
-static int		WmForgetCmd(Tk_Window tkwin, TkWindow *winPtr, 
+static int		WmForgetCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
 static int		WmFrameCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -418,7 +418,7 @@ static int		WmIconpositionCmd(Tk_Window tkwin, TkWindow *winPtr,
 static int		WmIconwindowCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
-static int		WmManageCmd(Tk_Window tkwin, TkWindow *winPtr, 
+static int		WmManageCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *CONST objv[]);
 static int		WmMaxsizeCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -988,7 +988,7 @@ TkWmSetClass(
  *
  * Tk_WmObjCmd --
  *
- *	This function is invoked to process the "wm" Tcl command. 
+ *	This function is invoked to process the "wm" Tcl command.
  *
  *----------------------------------------------------------------------
  */
@@ -5411,7 +5411,7 @@ SetNetWmType(TkWindow *winPtr, Tcl_Obj *typePtr)
  * GetNetWmType --
  *
  *	Read the extended window manager type hint from a window
- *	and return as a list of names suitable for use with 
+ *	and return as a list of names suitable for use with
  *	SetNetWmType.
  *
  *----------------------------------------------------------------------
@@ -6349,7 +6349,7 @@ TkWmStackorderToplevel(
 		*window_ptr++ = childWinPtr;
 	    }
 	}
-	/* ASSERT: window_ptr - windows == table.numEntries 
+	/* ASSERT: window_ptr - windows == table.numEntries
 	 * (#matched toplevel windows == #children) [Bug 1789819]
 	 */
 	*window_ptr = NULL;
@@ -7306,7 +7306,7 @@ TkpWmSetState(
  *----------------------------------------------------------------------
  */
 
-static void 
+static void
 RemapWindows(winPtr, parentPtr)
      TkWindow *winPtr;
      TkWindow *parentPtr;
