@@ -1,8 +1,6 @@
 Tcl/Tk Mac OS X README
 ----------------------
 
-RCS: @(#) $Id$
-
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
 
@@ -185,7 +183,7 @@ Window class names:
     verticalZoom, closeBox, collapseBox, toolbarButton, sideTitlebar,
     noTitleBar, unifiedTitleAndToolbar, metal, hud, noShadow, doesNotCycle,
     noActivates, hideOnSuspend, inWindowMenu, ignoreClicks, doesNotHide,
-    canJoinAllSpaces, moveToActiveSpace, nonActivating, black, dark, light,   
+    canJoinAllSpaces, moveToActiveSpace, nonActivating, black, dark, light,
     gray, red, green, blue, cyan, yellow, magenta, orange, purple,
     brown, clear, opacity
 Note that not all attributes are valid for all window classes.
@@ -200,7 +198,7 @@ tk::unsupported::MacWindowStyle style .f document {metal light opaque closeBox c
 
 pack [label .f.f -bg  #ababab -text "This is a textured window\nwith opacity and a gray background\nsimilar to other Mac applications"] -fill both -expand yes
 
-The color attributes correspond to system-defined NSColor constants (e.g., red is [NSColor redColor]. The "light" and "dark" attributes correspond to lightGrayColor and darkGrayColor, respectively (because of the way the attributes are parsed, using "lightgray" and "darkgray" would cause a conflict with the core "gray" attribute). 
+The color attributes correspond to system-defined NSColor constants (e.g., red is [NSColor redColor]. The "light" and "dark" attributes correspond to lightGrayColor and darkGrayColor, respectively (because of the way the attributes are parsed, using "lightgray" and "darkgray" would cause a conflict with the core "gray" attribute).
 
 Below are the corresponding hex and/or Tk-defined colors that can be used from Tk widgets to match the NSColor-based attributes:
 

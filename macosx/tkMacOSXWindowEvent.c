@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
- 
+
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
@@ -343,7 +343,7 @@ GenerateUpdates(
 	return 0;
     }
     HIShapeGetBounds(damageRgn, &damageBounds);
-   
+
     CFRelease(damageRgn);
     CFRelease(boundsRgn);
 

@@ -10,8 +10,6 @@
 // See the file "license.terms" for information on usage and redistribution
 // of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 //
-// RCS: @(#) $Id$
-//
 
 HEADER_SEARCH_PATHS = $(TK_SRCROOT)/generic $(TK_SRCROOT)/xlib "$(DERIVED_FILE_DIR)/tcl" "$(DERIVED_FILE_DIR)/tk" $(HEADER_SEARCH_PATHS)
 REZ_SEARCH_PATHS = $(TK_SRCROOT)/generic $(TCL_SRCROOT)/generic $(REZ_SEARCH_PATHS)

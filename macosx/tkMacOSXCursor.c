@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id$
  */
 
 #include "tkMacOSXPrivate.h"
@@ -286,7 +284,7 @@ FindCursorByName(
 			    kCGRenderingIntentDefault);
 		    CFRelease(provider);
 		}
-		provider = CGDataProviderCreateWithData(NULL, bitmap + 
+		provider = CGDataProviderCreateWithData(NULL, bitmap +
 			pix*pix/8, pix*pix/8, NULL);
 		if (provider) {
 		    mask = CGImageMaskCreate(pix, pix, 1, 1, pix/8, provider,
@@ -586,7 +584,7 @@ Tk_MacOSXTkOwnsCursor(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8
