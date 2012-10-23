@@ -17,11 +17,6 @@
 #include "tkInt.h"
 #endif
 
-#ifdef BUILD_tk
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLEXPORT
-#endif
-
 /*
  * A data structure of the following type is kept for each scrollbar widget.
  */
@@ -162,16 +157,12 @@ typedef struct TkScrollbar {
 #define GOT_FOCUS		4
 
 /*
- * Declaration of scrollbar class functions structure.
+ * Declaration of scrollbar class functions structure
+ * and default scrollbar width, for use in configSpec.
  */
 
 MODULE_SCOPE Tk_ClassProcs tkpScrollbarProcs;
-
-/*
- * Declaration of scrollbar configuration options.
- */
-
-MODULE_SCOPE Tk_ConfigSpec tkpScrollbarConfigSpecs[];
+MODULE_SCOPE char tkDefScrollbarWidth[TCL_INTEGER_SPACE];
 
 /*
  * Declaration of functions used in the implementation of the scrollbar
@@ -188,8 +179,5 @@ MODULE_SCOPE void	TkpDisplayScrollbar(ClientData clientData);
 MODULE_SCOPE void	TkpConfigureScrollbar(TkScrollbar *scrollPtr);
 MODULE_SCOPE int	TkpScrollbarPosition(TkScrollbar *scrollPtr,
 			    int x, int y);
-
-# undef TCL_STORAGE_CLASS
-# define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKSCROLLBAR */
