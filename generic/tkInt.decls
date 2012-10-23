@@ -872,7 +872,7 @@ declare 23 aqua {
     void TkMacOSXMakeRealWindowExist(TkWindow *winPtr)
 }
 declare 24 aqua {
-    void *    TkMacOSXMakeStippleMap(Drawable d1, Drawable d2)
+    void *TkMacOSXMakeStippleMap(Drawable d1, Drawable d2)
 }
 declare 25 aqua {
     void TkMacOSXMenuClick(void)

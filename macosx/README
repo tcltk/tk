@@ -3,7 +3,6 @@ Tcl/Tk Mac OS X README
 
 This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
 
-
 1. Where to go for support
 --------------------------
 
@@ -17,16 +16,11 @@ before asking on the list, many questions have already been answered).
 	http://groups.google.com/group/comp.lang.tcl/
 
 - The Tcl'ers Wiki also has many pages dealing with Tcl & Tk on Mac OS X, see
-	http://wiki.tcl.tk/references/3753!
-	http://wiki.tcl.tk/references/8361!
+	http://wiki.tcl.tk/_/ref?N=3753
+	http://wiki.tcl.tk/_/ref?N=8361
 
 - Please report bugs with Tcl or Tk on Mac OS X to the sourceforge bug trackers:
-	Tcl: http://sf.net/tracker/?func=add&group_id=10894&atid=110894
-	Tk:  http://sf.net/tracker/?func=add&group_id=12997&atid=112997
-please make sure that your report Tk specific bugs to the tktoolkit project bug
-tracker rather than the tcl project bug tracker.
-Mac OS X specific bugs should in general be assigned to user 'das'.
-
+	http://tcl.sourceforge.net/
 
 2. Using Tcl/Tk on Mac OS X
 ---------------------------
@@ -179,13 +173,16 @@ given window. The 3 argument form sets the class for the given window using the
 default attributes for that class. The 4 argument form sets the class and the
 list of attributes for the given window.
 Window class names:
-      standardDocument, standardFloating, resizable, fullZoom, horizontalZoom,
+    document, modal, floating, utility, toolbar, simple, help, overlay
+Window attribute names:
+    standardDocument, standardFloating, resizable, fullZoom, horizontalZoom,
     verticalZoom, closeBox, collapseBox, toolbarButton, sideTitlebar,
     noTitleBar, unifiedTitleAndToolbar, metal, hud, noShadow, doesNotCycle,
     noActivates, hideOnSuspend, inWindowMenu, ignoreClicks, doesNotHide,
     canJoinAllSpaces, moveToActiveSpace, nonActivating, black, dark, light,
     gray, red, green, blue, cyan, yellow, magenta, orange, purple,
     brown, clear, opacity
+
 Note that not all attributes are valid for all window classes.
 Support for the 3 argument form was added with the Cocoa-based Tk 8.5.7, at the
 same time support for some legacy Carbon-specific classes and attributes was
@@ -286,7 +283,7 @@ The following build configurations are available:
 The Xcode projects refer to the toplevel tcl and tk source directories via the
 the TCL_SRCROOT and TK_SRCROOT user build settings, by default these are set to
 the project-relative paths '../../tcl' and '../../tk', if your source
-directories are named differently, e.g. '../../tcl8.6' and '../../tk8.6', you
+directories are named differently, e.g. '../../tcl8.5' and '../../tk8.5', you
 need to manually change the TCL_SRCROOT and TK_SRCROOT settings by editing your
 ${USER}.pbxuser file (located inside the Tk.xcodeproj bundle directory) with a
 text editor.
@@ -322,9 +319,9 @@ trees in a common parent directory.
 
 - The following instructions assume the Tcl and Tk source trees are named
 "tcl${ver}" and "tk${ver}" (where ${ver} is a shell variable containing the
-Tcl/Tk version number, e.g. '8.6').
+Tcl/Tk version number, e.g. '8.5').
 Setup this shell variable as follows:
-	ver="8.6"
+	ver="8.5"
 If you are building from CVS, omit this step (CVS source tree names usually do
 not contain a version number).
 
