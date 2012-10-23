@@ -10,8 +10,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id$
  */
 
 #include "tkMacOSXPrivate.h"
@@ -45,13 +43,6 @@ static ScrollbarMetrics metrics[2] = {
 };
 
 /*
- * This variable holds the default width for a scrollbar in string form for
- * use in a Tk_ConfigSpec.
- */
-
-static char defWidth[TCL_INTEGER_SPACE];
-
-/*
  * Declarations for functions defined in this file.
  */
 
@@ -64,15 +55,19 @@ static void		ScrollbarEventProc(ClientData clientData,
  */
 
 Tk_ClassProcs tkpScrollbarProcs = {
-    sizeof(Tk_ClassProcs)	/* size */
+    sizeof(Tk_ClassProcs),	/* size */
+    NULL,					/* worldChangedProc */
+    NULL,					/* createProc */
+    NULL					/* modalProc */
 };
-
+
 #pragma mark TKApplication(TKScrlbr)
 
 #define NSAppleAquaScrollBarVariantChanged @"AppleAquaScrollBarVariantChanged"
 
 @implementation TKApplication(TKScrlbr)
-- (void)tkScroller:(NSScroller *)scroller {
+- (void) tkScroller: (NSScroller *) scroller
+{
     NSScrollerPart hitPart = [scroller hitPart];
     TkScrollbar *scrollPtr = (TkScrollbar *)[scroller tag];
     Tcl_DString cmdString;
@@ -131,14 +126,19 @@ Tk_ClassProcs tkpScrollbarProcs = {
 	    [scroller knobProportion]);
 #endif
 }
-- (void)scrollBarVariantChanged:(NSNotification *)notification {
+
+- (void) scrollBarVariantChanged: (NSNotification *) notification
+{
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
     UpdateScrollbarMetrics();
 }
-- (void)_setupScrollBarNotifications {
+
+- (void) _setupScrollBarNotifications
+{
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+
 #define observe(n, s) [nc addObserver:self selector:@selector(s) name:(n) object:nil]
     observe(NSAppleAquaScrollBarVariantChanged, scrollBarVariantChanged:);
 #undef observe
@@ -180,7 +180,6 @@ UpdateScrollbarMetrics(void)
 	.trackInfo.scrollbar = {.viewsize = 1, .pressState = 0},
     };
     CGRect bounds;
-    Tk_ConfigSpec *specPtr;
 
     ChkErr(GetThemeMetric, kThemeMetricScrollBarWidth, &metrics[0].width);
     ChkErr(GetThemeMetric, kThemeMetricScrollBarMinThumbHeight,
@@ -203,13 +202,7 @@ UpdateScrollbarMetrics(void)
     metrics[1].minHeight = metrics[1].minThumbHeight +
 	    metrics[1].topArrowHeight + metrics[1].bottomArrowHeight;
 
-    sprintf(defWidth, "%d", (int)(metrics[0].width));
-    for (specPtr = tkpScrollbarConfigSpecs; specPtr->type != TK_CONFIG_END;
-	    specPtr++) {
-	if (specPtr->offset == Tk_Offset(TkScrollbar, width)) {
-	    specPtr->defValue = defWidth;
-	}
-    }
+    sprintf(tkDefScrollbarWidth, "%d", (int)(metrics[0].width));
 }
 
 /*
@@ -235,11 +228,8 @@ TkpCreateScrollbar(
     MacScrollbar *scrollPtr = (MacScrollbar *) ckalloc(sizeof(MacScrollbar));
 
     scrollPtr->scroller = nil;
-
-    Tk_CreateEventHandler(tkwin, ActivateMask|ExposureMask|
-	    StructureNotifyMask|FocusChangeMask,
-	    ScrollbarEventProc, (ClientData) scrollPtr);
-
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask|FocusChangeMask|
+	    ActivateMask|ExposureMask, ScrollbarEventProc, (ClientData) scrollPtr);
     return (TkScrollbar *) scrollPtr;
 }
 
@@ -274,8 +264,8 @@ TkpDestroyScrollbar(
  * TkpDisplayScrollbar --
  *
  *	This procedure redraws the contents of a scrollbar window. It is
- *	invoked as a do-when-idle handler, so it only runs when there's
- *	nothing else for the application to do.
+ *	invoked as a do-when-idle handler, so it only runs when there's nothing
+ *	else for the application to do.
  *
  * Results:
  *	None.
@@ -338,12 +328,16 @@ TkpDisplayScrollbar(
 	    Tk_Height(tkwin));
     frame = NSInsetRect(frame, scrollPtr->inset, scrollPtr->inset);
     frame.origin.y = viewHeight - (frame.origin.y + frame.size.height);
+
     NSWindow *w = [view window];
+
     if ([w showsResizeIndicator]) {
 	NSRect growBox = [view convertRect:[w _growBoxRect] fromView:nil];
+
 	if (NSIntersectsRect(growBox, frame)) {
 	    if (scrollPtr->vertical) {
 		CGFloat y = frame.origin.y;
+
 		frame.origin.y = growBox.origin.y + growBox.size.height;
 		frame.size.height -= frame.origin.y - y;
  	    } else {
@@ -408,8 +402,12 @@ TkpComputeScrollbarGeometry(
     macScrollPtr->variant = variant;
     if (scroller) {
 	NSSize size = [scroller frame].size;
+
 	if ((size.width > size.height) ^ !scrollPtr->vertical) {
-	    /* Orientation changed, need new scroller */
+	    /*
+	     * Orientation changed, need new scroller.
+	     */
+
 	    if ([scroller superview]) {
 		[scroller removeFromSuperviewWithoutNeedingDisplay];
 	    }
@@ -614,7 +612,7 @@ ScrollbarEventProc(
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8
