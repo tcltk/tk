@@ -42,7 +42,7 @@ Tk_SetCaretPos(
     if (   dispPtr->caret.winPtr == winPtr
 	&& dispPtr->caret.x == x
 	&& dispPtr->caret.y == y
-	&& dispPtr->caret.height == height) 
+	&& dispPtr->caret.height == height)
     {
 	return;
     }
@@ -116,7 +116,7 @@ TkpGetString(
 #ifdef TK_USE_INPUT_METHODS
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
 	    && (winPtr->inputContext != NULL)
-	    && (eventPtr->type == KeyPress)) 
+	    && (eventPtr->type == KeyPress))
     {
 	Status status;
 
@@ -129,7 +129,7 @@ TkpGetString(
 	if (status == XBufferOverflow) { /* Expand buffer and try again */
 	    Tcl_DStringSetLength(dsPtr, len);
 	    len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
-		    Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr), 
+		    Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
 		    &kePtr->keysym, &status);
 	}
 	if ((status != XLookupChars) && (status != XLookupBoth)) {
@@ -145,7 +145,7 @@ TkpGetString(
 	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
 
 	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
-		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf), 
+		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf),
                 &kePtr->keysym, &status);
 
 	/*
@@ -281,7 +281,7 @@ TkpGetKeySym(
     TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
 
 #ifdef TK_USE_INPUT_METHODS
-    /* 
+    /*
      * If input methods are active, we may already have determined a keysym.
      * Return it.
      */
