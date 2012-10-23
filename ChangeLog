@@ -1,3 +1,15 @@
+2012-10-23  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkButton.h: Backport of ::tk::mac::useCompatibilityMetrics
+	* generic/tkButton.c  handling and scrollbar metrics handling from trunk.
+	* generic/tkScrollbar.h
+	* generic/tkScrollbar.c
+	* macosx/tkMacOSXButton.c
+	* macosx/tkMacOSXScrlbr.c
+	* unix/tkUnixPort.h
+	* win/tkWinButton.c
+	* win/tkWinScrlbr.c
+
 2012-10-09  Andreas Kupries  <andreask@activestate.com>
 
 	Cherrypick Merge, Backport of [6223d9e067]. Restored from
