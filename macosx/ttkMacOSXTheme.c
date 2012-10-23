@@ -7,7 +7,7 @@
  * Copyright (c) 2005 Neil Madden
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright 2008-2009, Apple Inc.
- * Copyright 2009 Kevin Walzer/WordTech Communications LLC. 
+ * Copyright 2009 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -28,8 +28,6 @@
  *	The QuickDraw/Carbon coordinate system is relative to the
  *	top-level window, not to the Tk_Window.  BoxToRect()
  *	accounts for this.
- *
- * RCS: @(#) $Id$
  */
 
 #include "tkMacOSXPrivate.h"
@@ -318,7 +316,7 @@ static void TabElementDraw(
 	.size = kHIThemeTabSizeNormal,
 	.adornment = Ttk_StateTableLookup(TabAdornmentTable, state),
 	.kind = kHIThemeTabKindNormal,
-	.position = Ttk_StateTableLookup(TabPositionTable, state), 
+	.position = Ttk_StateTableLookup(TabPositionTable, state),
     };
 
     bounds.size.height += TAB_OVERLAP;
@@ -1196,7 +1194,7 @@ int Ttk_MacOSXPlatformInit(Tcl_Interp *interp)
 
 /*
  * Local Variables:
- * mode: c
+ * mode: objc
  * c-basic-offset: 4
  * fill-column: 79
  * coding: utf-8
