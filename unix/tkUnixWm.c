@@ -6418,7 +6418,7 @@ TkWmStackorderToplevel(
 	}
 
 	/*
-	 * ASSERT: window_ptr - windows == table.numEntries 
+	 * ASSERT: window_ptr - windows == table.numEntries
 	 * (#matched toplevel windows == #children) [Bug 1789819]
 	 */
 
