@@ -1,3 +1,9 @@
+2012-10-24  Don Porter  <dgp@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c:	[Bug 3574893] Add overlooked toplevel ref
+	count maintenance in the [wm manage|forget] operations that could
+	cause segfaults due to premature free of structs.
+
 2012-09-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/Makefile.in:    Compile win32 binaries with -DTCL_NO_DEPRECATED
