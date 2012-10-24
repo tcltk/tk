@@ -1659,7 +1659,9 @@ WmForgetCmd(
     	TkFocusJoin(winPtr);
     	Tk_UnmapWindow(frameWin);
 
+	macWin->toplevel->referenceCount--;
 	macWin->toplevel = winPtr->parentPtr->privatePtr->toplevel;
+	macWin->toplevel->referenceCount++;
 	macWin->flags &= ~TK_HOST_EXISTS;
 
 	TkWmDeadWindow(winPtr);
@@ -2448,7 +2450,9 @@ WmManageCmd(
 	}
 	wmPtr = winPtr->wmInfoPtr;
 	winPtr->flags &= ~TK_MAPPED;
+	macWin->toplevel->referenceCount--;
 	macWin->toplevel = macWin;
+	macWin->toplevel->referenceCount++;
 	RemapWindows(winPtr, macWin);
 	winPtr->flags |=
 		(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
@@ -6599,7 +6603,9 @@ RemapWindows(
     if (winPtr->window != None) {
 	MacDrawable *macWin = (MacDrawable *) winPtr->window;
 
+	macWin->toplevel->referenceCount--;
 	macWin->toplevel = parentWin->toplevel;
+	macWin->toplevel->referenceCount++;
 	winPtr->flags &= ~TK_MAPPED;
 #ifdef TK_REBUILD_TOPLEVEL
 	winPtr->flags |= TK_REBUILD_TOPLEVEL;
