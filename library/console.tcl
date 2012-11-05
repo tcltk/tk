@@ -412,26 +412,14 @@ proc ::tk::ConsoleBind {w} {
     bind Console <Control-KeyPress> {# nothing}
 
     foreach {ev key} {
-	<<Console_NextImmediate>>	<Control-Key-n>
-	<<Console_PrevImmediate>>	<Control-Key-p>
-	<<Console_PrevSearch>>		<Control-Key-r>
-	<<Console_NextSearch>>		<Control-Key-s>
-
 	<<Console_Expand>>		<Key-Tab>
 	<<Console_Expand>>		<Key-Escape>
-	<<Console_ExpandFile>>		<Control-Shift-Key-F>
-	<<Console_ExpandProc>>		<Control-Shift-Key-P>
-	<<Console_ExpandVar>>		<Control-Shift-Key-V>
 	<<Console_Tab>>			<Control-Key-i>
 	<<Console_Tab>>			<Meta-Key-i>
 	<<Console_Eval>>		<Key-Return>
 	<<Console_Eval>>		<Key-KP_Enter>
 
-	<<Console_Clear>>		<Control-Key-l>
-	<<Console_KillLine>>		<Control-Key-k>
 	<<Console_Transpose>>		<Control-Key-t>
-	<<Console_ClearLine>>		<Control-Key-u>
-	<<Console_SaveCommand>>		<Control-Key-z>
         <<Console_FontSizeIncr>>	<Control-Key-plus>
         <<Console_FontSizeDecr>>	<Control-Key-minus>
     } {
@@ -455,17 +443,17 @@ proc ::tk::ConsoleBind {w} {
 	    ::tk::console::Expand %W
 	}
     }
-    bind Console <<Console_ExpandFile>> {
+    bind Console <Control-Shift-Key-F> {
 	if {[%W compare insert > promptEnd]} {
 	    ::tk::console::Expand %W path
 	}
     }
-    bind Console <<Console_ExpandProc>> {
+    bind Console <Control-Shift-Key-P> {
 	if {[%W compare insert > promptEnd]} {
 	    ::tk::console::Expand %W proc
 	}
     }
-    bind Console <<Console_ExpandVar>> {
+    bind Console <Control-Shift-Key-V> {
 	if {[%W compare insert > promptEnd]} {
 	    ::tk::console::Expand %W var
 	}
@@ -513,7 +501,7 @@ proc ::tk::ConsoleBind {w} {
 	}
 	%W delete insert
     }
-    bind Console <<Console_KillLine>> {
+    bind Console <Control-Key-k> {
 	if {[%W compare insert < promptEnd]} {
 	    break
 	}
@@ -523,11 +511,11 @@ proc ::tk::ConsoleBind {w} {
 	    %W delete insert {insert lineend}
 	}
     }
-    bind Console <<Console_Clear>> {
+    bind Console <Control-Key-l> {
 	## Clear console display
 	%W delete 1.0 "promptEnd linestart"
     }
-    bind Console <<Console_ClearLine>> {
+    bind Console <Control-Key-u> {
 	## Clear command line (Unix shell staple)
 	%W delete promptEnd end
     }
