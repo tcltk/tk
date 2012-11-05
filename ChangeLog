@@ -11,7 +11,7 @@
 
 2012-09-17  Don Porter  <dgp@users.sourceforge.net>
 
-	*** 8.6b2 TAGGED FOR RELEASE ***
+	*** 8.6b3 TAGGED FOR RELEASE ***
 
 	* macosx/tkMacOSXWm.c: [Bug 3567786] Stop segfault in [wm forget].
 
