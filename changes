@@ -6845,3 +6845,23 @@ and -to (porter)
 Many revisions to better support a Cygwin environment (nijtmans)
 
 --- Released 8.5.12, July 27, 2012 --- See ChangeLog for details ---
+
+2012-07-31 (update)[3551802] XKeycodeToKeysym deprecation (fellows)
+
+2012-08-11 (bug fix)[3554273] text elide and tags (vogel)
+
+2012-08-24 (bug fix)[3558535] file dialog filtering (fellows)
+
+2012-08-25 (bug fix)[3554026,3561016] crash with tearoff menus (gavilan)
+
+2012-08-28 (bug fix)[3562426] Context menu goes off screen (nijtmans)
+
+2012-09-11 (bug fix)[3566594] stop clip region leaks (fellows)
+
+2012-09-28 New colors: aqua crimson fuchsia indigo lime olive silver teal
+
+2012-10-02 (bug fix)[3572016] menu enable after modal dialog (berg,walzer)
+
+2012-10-24 (bug fix)[3574893] crash in [wm forget] (porter)
+
+--- Released 8.5.13, November 12, 2012 --- See ChangeLog for details ---
