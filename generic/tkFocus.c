@@ -160,9 +160,7 @@ Tk_FocusObjCmd(
 	    if (newPtr == NULL) {
 		return TCL_ERROR;
 	    }
-	    if (!(newPtr->flags & TK_ALREADY_DEAD)) {
-		TkSetFocusWin(newPtr, 0);
-	    }
+	    TkSetFocusWin(newPtr, 0);
 	    return TCL_OK;
 	}
     }
@@ -551,6 +549,14 @@ TkSetFocusWin(
     DisplayFocusInfo *displayFocusPtr;
     TkWindow *topLevelPtr;
     int allMapped, serial;
+
+    /*
+     * Don't set focus if window is already dead. [Bug 3574708]
+     */
+
+    if (winPtr->flags & TK_ALREADY_DEAD) {
+	return;
+    }
 
     displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
 
