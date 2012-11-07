@@ -1,3 +1,10 @@
+2012-11-07  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkFocus.c (TkSetFocusWin): [Bug 3574708]: Move window
+	liveness into this function from caller sites to ensure that there are
+	no paths where things can trip up on setting the focus to a partially
+	dead window.
+
 2012-10-24  Don Porter  <dgp@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c:	[Bug 3574893] Add overlooked toplevel ref
