@@ -1464,7 +1464,7 @@
 
 	* unix/tkUnixSelect.c (SelCvtFromX32, SelCvtFromX8): Make the
 	incremental transfer of binary selections work get deserialized
-	correctly. Thanks to Emiliano Gavilan for detecting.
+	correctly. Thanks to Emiliano Gavilán for detecting.
 
 2009-07-15  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -2172,7 +2172,7 @@
 	* changes:	Updates for 8.5.2 release.
 
 	* unix/tkUnixCursor.c:	Stop crash in [. configure -cursor] on X11.
-	Thanks to emiliano gavilán.  [Bug 1922466]
+	Thanks to Emiliano Gavilán.  [Bug 1922466]
 
 2008-03-26  Joe English  <jenglish@users.sourceforge.net>
 
