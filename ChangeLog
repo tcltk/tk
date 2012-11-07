@@ -1,3 +1,9 @@
+2012-10-24  Don Porter  <dgp@users.sourceforge.net>
+
+	* macosx/tkMacOSXWm.c:	[Bug 3574893] Add overlooked toplevel ref
+	count maintenance in the [wm manage|forget] operations that could
+	cause segfaults due to premature free of structs.
+
 2012-09-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/Makefile.in:    Compile win32 binaries with -DTCL_NO_DEPRECATED
@@ -5,8 +11,8 @@
 
 2012-09-17  Don Porter  <dgp@users.sourceforge.net>
 
-	*** 8.6b2 TAGGED FOR RELEASE ***
-	
+	*** 8.6b3 TAGGED FOR RELEASE ***
+
 	* macosx/tkMacOSXWm.c: [Bug 3567786] Stop segfault in [wm forget].
 
 2012-09-15  Don Porter  <dgp@users.sourceforge.net>
@@ -479,7 +485,7 @@
 2011-12-22  Don Porter  <dgp@users.sourceforge.net>
 
 	* win/tkWinMenu.c: [Bug 3235256] Keep menu entry IDs out of system
-	values. Thanks Colin McDonald. 
+	values. Thanks Colin McDonald.
 
 2011-12-13  Donal K. Fellows  <dkf@users.sf.net>
 
