@@ -33,7 +33,7 @@ enum openOptions {
 };
 static const char *const saveOptionStrings[] = {
     "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-    "-message", "-parent", "-title", "-typevariable", "-command", 
+    "-message", "-parent", "-title", "-typevariable", "-command",
     "-confirmoverwrite", NULL
 };
 enum saveOptions {
