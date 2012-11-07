@@ -284,7 +284,7 @@ FindCursorByName(
 			    kCGRenderingIntentDefault);
 		    CFRelease(provider);
 		}
-		provider = CGDataProviderCreateWithData(NULL, bitmap + 
+		provider = CGDataProviderCreateWithData(NULL, bitmap +
 			pix*pix/8, pix*pix/8, NULL);
 		if (provider) {
 		    mask = CGImageMaskCreate(pix, pix, 1, 1, pix/8, provider,
