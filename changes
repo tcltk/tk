@@ -6678,7 +6678,7 @@ in screen distances, reducing precision loss (ferrieux)
 
 2009-12-06 (bug fix)[2548661] crash in GetFontFamilyName (riefenstahl)
 
-2009-12-06 (bug fix)[2864685] Compiz menu item animation (gavilan,thoyts)
+2009-12-06 (bug fix)[2864685] Compiz menu item animation (gavilán,thoyts)
 
 2009-12-09 (bug fix)[2902573] Update Safe Tk to new Safe Base (kurpies)
 
@@ -6852,7 +6852,7 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2012-08-24 (bug fix)[3558535] file dialog filtering (fellows)
 
-2012-08-25 (bug fix)[3554026,3561016] crash with tearoff menus (gavilan)
+2012-08-25 (bug fix)[3554026,3561016] crash with tearoff menus (gavilán)
 
 2012-08-28 (bug fix)[3562426] Context menu goes off screen (nijtmans)
 
