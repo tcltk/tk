@@ -6864,4 +6864,6 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2012-10-24 (bug fix)[3574893] crash in [wm forget] (porter)
 
+2012-11-07 (bug fix)[3574708] TkSetFocusWin() crash on XP (mcdonald)
+
 --- Released 8.5.13, November 12, 2012 --- See ChangeLog for details ---
