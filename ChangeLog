@@ -490,7 +490,7 @@
 2011-12-13  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/getOpenFile.n: Make example follow best practices. Issue spotted
-	by Emiliano Gavilan.
+	by Emiliano Gavilán.
 
 2011-11-29  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -899,7 +899,7 @@
 2010-12-02  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkInt.decls (TkDrawAngledTextLayout,TkDrawAngledChars,...):
-	Expose angled text API for Emiliano Gavilan. Still only in internal
+	Expose angled text API for Emiliano Gavilán. Still only in internal
 	stub table.
 
 2010-11-29  Jan Nijtmans  <nijtmans@users.sf.net>
@@ -2542,7 +2542,7 @@
 2009-07-26  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/canvas.n: Corrected description of acceptable join styles.
-	Spotted by Emiliano Gavilan.
+	Spotted by Emiliano Gavilán.
 
 2009-07-23  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -2579,7 +2579,7 @@
 
 	* unix/tkUnixSelect.c (SelCvtFromX32, SelCvtFromX8): Make the
 	incremental transfer of binary selections work get deserialized
-	correctly. Thanks to Emiliano Gavilan for detecting.
+	correctly. Thanks to Emiliano Gavilán for detecting.
 
 2009-07-18  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -4853,7 +4853,7 @@
 	* changes:	Updates for 8.5.2 release.
 
 	* unix/tkUnixCursor.c:	[Bug 1922466]: Stop crash in [. configure
-	-cursor] on X11. Thanks to emiliano gavilan.
+	-cursor] on X11. Thanks to Emiliano Gavilán.
 
 2008-03-26  Joe English  <jenglish@users.sourceforge.net>
 

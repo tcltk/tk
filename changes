@@ -6691,7 +6691,7 @@ in screen distances, reducing precision loss (ferrieux)
 
 2009-04-30 (bug fix)[2504402] iconphoto on non-32-bit displays (mcdonald,thoyts)
 
-2009-05-01 (bug fix)[2777019] anchor for text rotation (gavilan,fellows)
+2009-05-01 (bug fix)[2777019] anchor for text rotation (gavilán,fellows)
 
 2009-05-03 (bug fix)[2785744] broken flag twiddling (baker,fellows)
 
@@ -6783,7 +6783,7 @@ deletion (walzer,steffen)
 
 2009-11-24 (bug fix)[2902814] fix [wm iconphoto] on LP64 systems (fellows)
 
-2009-12-08 (bug fix)[2864685] Compiz menu item animation (gavilan,thoyts)
+2009-12-08 (bug fix)[2864685] Compiz menu item animation (gavilán,thoyts)
 
 2009-12-11 (bug fix)[2912473] accept :: in DISPLAY name (fellows)
 
@@ -7004,7 +7004,7 @@ and -to (porter)
 
 2012-08-24 (bug fix)[3558535] file dialog filtering (fellows)
 
-2012-08-25 (bug fix)[3554026,3561016] crash with tearoff menus (gavilan)
+2012-08-25 (bug fix)[3554026,3561016] crash with tearoff menus (gavilán)
 
 2012-09-11 (bug fix)[3566594] stop clip region leaks (fellows)
 

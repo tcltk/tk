@@ -614,7 +614,7 @@ declare 180 {
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 
-# Angled text API, exposed for Emiliano Gavilan's RBC work.
+# Angled text API, exposed for Emiliano Gavilán's RBC work.
 declare 181 {
     void TkDrawAngledTextLayout(Display *display, Drawable drawable, GC gc,
 	    Tk_TextLayout layout, int x, int y, double angle, int firstChar,
