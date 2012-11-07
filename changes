@@ -3731,7 +3731,7 @@ broken on the Mac and Windows. Added the ability to set the title of a
 menu when it gets torn off and override Tk's automatic generation of
 the title.  On the Macintosh, whenever a menu
 label contains three dots in a row "...", the menu will instead
-display the elipses character '…'.  (SRP)
+display the elipses character '‚Ä¶'.  (SRP)
 
 3/27/97 (bug fixes) When a menu had an error executing a postcommand,
 the error information was getting lost. On Windows, a set of
@@ -6492,7 +6492,7 @@ Several documentation and release notes improvements
 
 2008-03-21 (bug fix)[1863007,1920030] Export Ttk stubs table (english)
 
-2008-03-26 (bug fix)[1922466] crash  in [. configure -cursor] (gavil·n)
+2008-03-26 (bug fix)[1922466] crash  in [. configure -cursor] (gavil√°n)
 
 2008-03-27 (platform support)[1921166] Solaris 64bit build fixes (steffen)
 
