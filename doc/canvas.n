@@ -1314,8 +1314,8 @@ arc's region.
 .PP
 Items of type \fBarc\fR appear on the display as arc-shaped regions.
 An arc is a section of an oval delimited by two angles (specified
-by the \fB\-start\fR and \fB\-extent\fR options) and displayed in
-one of several ways (specified by the \fB\-style\fR option).
+by either the \fB\-start\fR and \fB\-extent\fR options or the \fB\-height\fR option)
+and displayed in one of several ways (specified by the \fB\-style\fR option).
 Arcs are created with widget commands of the following form:
 .CS
 \fIpathName \fBcreate arc \fIx1 y1 x2 y2 \fR?\fIoption value ...\fR?
@@ -1323,7 +1323,9 @@ Arcs are created with widget commands of the following form:
 .CE
 The arguments \fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR or \fIcoordList\fR give
 the coordinates of two diagonally opposite corners of a
-rectangular region enclosing the oval that defines the arc.
+rectangular region enclosing the oval that defines the arc (except when
+\fB\-height\fR is specified - see below).
+.
 After the coordinates there may be any number of \fIoption\fR\-\fIvalue\fR
 pairs, each of which sets one of the configuration options
 for the item. These same \fIoption\fR\-\fIvalue\fR pairs may be
@@ -1363,6 +1365,27 @@ Specifies the beginning of the angular range occupied by the
 arc.
 \fIDegrees\fR is given in units of degrees measured counter-clockwise
 from the 3-o'clock position; it may be either positive or negative.
+.TP
+\fB\-height \fIdistance\fR
+Provides a shortcut for creating a circular arc segment by defining the
+distance of the mid-point of the arc from its chord. When this option
+is used the coordinates are interpreted as the start and end coordinates
+of the chord, and the options \fB\-start\fR and \fB-extent\fR are ignored.
+The value of \fIdistance\fR has the following meaning:
+.CS
+
+\fIdistance\fR > 0 creates a clockwise arc
+\fIdistance\fR < 0 creates an counter-clockwise arc
+\fIdistance\fR = 0 creates an arc as if this option had not been specified
+
+If you want the arc to have a specific radius, r, use the formula
+
+\fIdistance\fR = r +- sqrt(r**2 - (chordLength/2)**2)
+
+choosing the minus sign for the minor arc and the plus sign for the major arc.
+
+Note that \fBitemcget -height\fR always returns 0 so that introspection code can be kept simple.
+.CE
 .TP
 \fB\-style \fItype\fR
 Specifies how to draw the arc. If \fItype\fR is \fBpieslice\fR
