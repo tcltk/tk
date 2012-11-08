@@ -67,8 +67,8 @@ colormap space is exhausted.
 .PP
 Given a textual description of a color, \fBTk_AllocColorFromObj\fR
 locates a pixel value that may be used to render the color
-in a particular window.  The desired color is specified with an
-object whose string value must have one of the following forms:
+in a particular window.  The desired color is specified with a
+value whose string value must have one of the following forms:
 .TP 20
 \fIcolorname\fR
 Any of the valid textual names for a color defined in the
@@ -106,7 +106,7 @@ such as \fBTk_AllocColorFromObj\fR and \fBTk_GetColorFromObj\fR.
 .PP
 \fBTk_GetColor\fR is identical to \fBTk_AllocColorFromObj\fR except
 that the description of the color is specified with a string instead
-of an object.  This prevents \fBTk_GetColor\fR from caching the
+of a value.  This prevents \fBTk_GetColor\fR from caching the
 return value, so \fBTk_GetColor\fR is less efficient than
 \fBTk_AllocColorFromObj\fR.
 .PP
@@ -173,4 +173,4 @@ There should be exactly one call to \fBTk_FreeColorFromObj\fR
 or \fBTk_FreeColor\fR for each call to \fBTk_AllocColorFromObj\fR,
 \fBTk_GetColor\fR, or \fBTk_GetColorByValue\fR.
 .SH KEYWORDS
-color, intensity, object, pixel value
+color, intensity, value, pixel value
