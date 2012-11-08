@@ -62,6 +62,10 @@ typedef struct ArcItem {
 				 * start (see ComputeArcOutline). */
     double center2[2];		/* Coordinates of center of arc outline at
 				 * start+extent (see ComputeArcOutline). */
+
+    double height;              /* Distance from the arc's chord to its mid-point */
+    double startPoint[2];       /* Start point of arc used when specifying height */
+    double endPoint[2];         /* End point of arc used when specifying height */
 } ArcItem;
 
 /*
@@ -140,6 +144,8 @@ static const Tk_ConfigSpec configSpecs[] = {
 	"90", Tk_Offset(ArcItem, extent), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
 	NULL, Tk_Offset(ArcItem, fillColor), TK_CONFIG_NULL_OK, NULL},
+    {TK_CONFIG_DOUBLE, "-height", NULL, NULL,
+	0, Tk_Offset(ArcItem, height), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
 	"0,0", Tk_Offset(ArcItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
@@ -175,6 +181,7 @@ static void		ComputeArcBbox(Tk_Canvas canvas, ArcItem *arcPtr);
 static int		ConfigureArc(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
 			    Tcl_Obj *const objv[], int flags);
+static void		ComputeArcFromHeight(ArcItem *arcPtr);
 static int		CreateArc(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
@@ -291,7 +298,9 @@ CreateArc(
     arcPtr->disabledFillStipple = None;
     arcPtr->style = PIESLICE_STYLE;
     arcPtr->fillGC = None;
+    arcPtr->height = 0;
 
+	
     /*
      * Process the arguments to fill in the item record.
      */
@@ -374,6 +383,16 @@ ArcCoords(
 			&arcPtr->bbox[3]) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
+
+	/*
+	* Store bbox as start and end points so they can be used
+	* if either radius or height is specified.
+	*/
+	arcPtr->startPoint[0] = arcPtr->bbox[0];
+	arcPtr->startPoint[1] = arcPtr->bbox[1];
+	arcPtr->endPoint[0] = arcPtr->bbox[2];
+	arcPtr->endPoint[1] = arcPtr->bbox[3];
+	
 	ComputeArcBbox(canvas, arcPtr);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -447,6 +466,23 @@ ConfigureArc(
 	itemPtr->redraw_flags &= ~TK_ITEM_STATE_DEPENDANT;
     }
 
+    /*
+     * If either the height is provided then the start and extent will be
+     * overridden.
+     */
+    if (arcPtr->height != 0) {
+	ComputeArcFromHeight(arcPtr);
+	ComputeArcBbox(canvas, arcPtr);
+    }
+    
+    i = (int) (arcPtr->start/360.0);
+    arcPtr->start -= i*360.0;
+    if (arcPtr->start < 0) {
+	arcPtr->start += 360.0;
+    }
+    i = (int) (arcPtr->extent/360.0);
+    arcPtr->extent -= i*360.0;
+
     tsoffset = &arcPtr->outline.tsoffset;
     flags = tsoffset->flags;
     if (flags & TK_OFFSET_LEFT) {
@@ -463,15 +499,7 @@ ConfigureArc(
     } else if (flags & TK_OFFSET_BOTTOM) {
 	tsoffset->yoffset = (int) (arcPtr->bbox[2] + 0.5);
     }
-
-    i = (int) (arcPtr->start/360.0);
-    arcPtr->start -= i*360.0;
-    if (arcPtr->start < 0) {
-	arcPtr->start += 360.0;
-    }
-    i = (int) (arcPtr->extent/360.0);
-    arcPtr->extent -= i*360.0;
-
+	
     mask = Tk_ConfigOutlineGC(&gcValues, canvas, itemPtr, &(arcPtr->outline));
     if (mask) {
 	gcValues.cap_style = CapButt;
@@ -509,7 +537,7 @@ ConfigureArc(
 	if (arcPtr->disabledFillStipple!=None) {
 	    stipple = arcPtr->disabledFillStipple;
 	}
-      }
+    }
 
     if (arcPtr->style == ARC_STYLE) {
 	newGC = None;
@@ -554,6 +582,65 @@ ConfigureArc(
 
     ComputeArcBbox(canvas, arcPtr);
     return TCL_OK;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ComputeArcFromHeight --
+ *
+ *	This function calculates the arc parameters given
+ *	start-point, end-point and height (!= 0).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The height parameter is set to 0 on exit.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+ComputeArcFromHeight(
+		     ArcItem* arcPtr)
+{
+    double chordLen, chordDir[2], chordCen[2], arcCen[2], d, radToDeg, radius;
+	
+    /* The chord */
+    chordLen = hypot(arcPtr->endPoint[1]-arcPtr->startPoint[1], arcPtr->startPoint[0]-arcPtr->endPoint[0]);
+    chordDir[0] = (arcPtr->endPoint[0]-arcPtr->startPoint[0])/chordLen;
+    chordDir[1] = (arcPtr->endPoint[1]-arcPtr->startPoint[1])/chordLen;
+    chordCen[0] = (arcPtr->startPoint[0]+arcPtr->endPoint[0])/2;
+    chordCen[1] = (arcPtr->startPoint[1]+arcPtr->endPoint[1])/2;
+    
+    /* Calculate the radius (assumes height != 0) */
+    radius = (4*pow(arcPtr->height,2) + pow(chordLen,2))/(8*arcPtr->height);
+
+    /* The arc centre */
+    d = radius - arcPtr->height;
+    arcCen[0] = chordCen[0] - d*chordDir[1];
+    arcCen[1] = chordCen[1] + d*chordDir[0];
+
+    /* The arc start and span. Angles are negated because the coordinate system is left-handed */
+    radToDeg = 45/atan(1);
+    arcPtr->start = atan2(arcCen[1]-arcPtr->startPoint[1],arcPtr->startPoint[0]-arcCen[0])*radToDeg;
+    arcPtr->extent = -2*asin(chordLen/(2*radius))*radToDeg;
+
+    /* Handle spans > 180 */
+    if (fabs(2*arcPtr->height) > chordLen) {
+	arcPtr->extent = arcPtr->extent > 0 ? (360 - arcPtr->extent) : -(360+arcPtr->extent);
+    }
+
+    /* Create the bounding box */
+    arcPtr->bbox[0] = arcCen[0]-radius;
+    arcPtr->bbox[1] = arcCen[1]-radius;
+    arcPtr->bbox[2] = arcCen[0]+radius;
+    arcPtr->bbox[3] = arcCen[1]+radius;
+
+    /* Set the height to 0 so that itemcget -height returns 0 */
+    arcPtr->height = 0;
+   
 }
 
 /*

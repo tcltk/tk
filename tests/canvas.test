@@ -340,8 +340,10 @@ test canvas-8.1 {canvas arc bbox} -setup {
     set coordBox [.c bbox arc2]
     .c create arc 300 10 500 210 -start 10 -extent 50 -style pieslice -tags arc3
     set pieBox [.c bbox arc3]
-    list $arcBox $coordBox $pieBox
-} -result {{48 21 100 94} {248 21 300 94} {398 21 500 112}}
+    .c create arc 100 200 300 200 -height [expr {(1-0.5*sqrt(3))*200}] -style arc -tags arc4
+    set arcSegBox [.c bbox arc4]
+    list $arcBox $coordBox $pieBox $arcSegBox
+} -result {{48 21 100 94} {248 21 300 94} {398 21 500 112} {98 171 302 202}}
 
 test canvas-9.1 {canvas id creation and deletion} -setup {
     catch {destroy .c}
