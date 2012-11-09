@@ -1,3 +1,17 @@
+2012-11-09  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5.13 TAGGED FOR RELEASE ***
+
+	* generic/tk.h:		Bump to 8.5.13 for release.
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 2012-11-07  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkFocus.c (TkSetFocusWin): [Bug 3574708]: Move window
