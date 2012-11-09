@@ -213,8 +213,8 @@ TTK_SQUARE_WIDGET   = 0
 STUBPREFIX = $(PROJECT)stub
 WISHNAMEPREFIX = wish
 
-BINROOT		= .
-ROOT		= ..
+BINROOT		= $(MAKEDIR)	# originally .
+ROOT		= $(MAKEDIR)\..	# originally ..
 
 TK_LIBRARY	= $(ROOT)\library
 
