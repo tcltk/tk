@@ -243,7 +243,7 @@ test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
     string totitle $x
 } -result [string totitle [file join [pwd] bar.foo]]
 test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
-    nt testwinevent
+    nt testwinevent knownBug
 } -body {
     start {set x [tk_getSaveFile -defaultextension foo -title Save]}
     then {
@@ -253,7 +253,7 @@ test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
     string totitle $x
 } -result [string totitle [file join [pwd] bar.foo]]
 test winDialog-5.9 {GetFileName: file types} -constraints {
-    nt testwinevent
+    nt testwinevent knownBug
 } -body {
 #        case FILE_TYPES:
 
@@ -409,7 +409,7 @@ test winDialog-5.22 {GetFileName: call GetSaveFileName} -constraints {
 } -result {&Save}
 if {[info exists ::env(TEMP)]} {
 test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
-    nt testwinevent
+    nt testwinevent knownBug
 } -body {
     start {set x [tk_getSaveFile -title Back]}
     then {
