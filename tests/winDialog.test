@@ -237,7 +237,7 @@ test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
 
     start {set x [tk_getSaveFile -defaultextension .foo -title Save]}
     then {
-        SetText 0x480 bar
+        SetText 0x47C bar
         Click ok
     }
     string totitle $x
@@ -247,7 +247,7 @@ test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
 } -body {
     start {set x [tk_getSaveFile -defaultextension foo -title Save]}
     then {
-        SetText 0x480 bar
+        SetText 0x47C bar
         Click ok
     }
     string totitle $x
@@ -413,7 +413,7 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
 } -body {
     start {set x [tk_getSaveFile -title Back]}
     then {
-        SetText 0x480 [file nativename \
+        SetText 0x47C [file nativename \
                            [file join [file normalize $::env(TEMP)] "12x 457"]]
         Click ok
     }
