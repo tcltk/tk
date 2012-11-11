@@ -229,7 +229,7 @@ test winDialog-5.6 {GetFileName: valid option, but missing value} -constraints {
     tk_getOpenFile -initialdir bar -title
 } -returnCodes error -result {value for "-title" missing}
 test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
-    nt testwinevent
+    nt testwinevent knownBug
 } -body {
 #    if (string[0] == '.') {
 #    string++;
@@ -253,7 +253,7 @@ test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
     string totitle $x
 } -result [string totitle [file join [pwd] bar.foo]]
 test winDialog-5.9 {GetFileName: file types} -constraints {
-    nt testwinevent knownBug
+    nt testwinevent
 } -body {
 #        case FILE_TYPES:
 
