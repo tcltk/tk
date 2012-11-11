@@ -335,10 +335,16 @@ TestwineventCmd(
     }
     case WM_SETTEXT: {
 	Tcl_DString ds;
+	BOOL result;
 
 	Tcl_UtfToExternalDString(NULL, argv[4], -1, &ds);
-	SetDlgItemTextA(hwnd, id, Tcl_DStringValue(&ds));
+	result = SetDlgItemTextA(hwnd, id, Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
+	if (result == 0) {
+    	Tcl_SetResult(interp, "failed to send text to dialog: ", TCL_STATIC);
+    	AppendSystemError(interp, GetLastError());
+		return TCL_ERROR;
+	}
 	break;
     }
     case WM_COMMAND: {
