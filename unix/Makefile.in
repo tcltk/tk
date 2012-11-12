@@ -1551,10 +1551,11 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(MAC_OSX_DIR)/configure
 	$(TCL_EXE) $(TOOL_DIR)/eolFix.tcl -crlf $(DISTDIR)/win/wish.exe.manifest.in
 	mkdir $(DISTDIR)/macosx
 	cp -p $(MAC_OSX_DIR)/GNUmakefile $(MAC_OSX_DIR)/README \
-		$(MAC_OSX_DIR)/Tk.* $(MAC_OSX_DIR)/*.[ch] \
-		$(MAC_OSX_DIR)/*.in $(MAC_OSX_DIR)/*.ac \
-		$(MAC_OSX_DIR)/*.xcconfig $(MAC_OSX_DIR)/*.sdef \
-		$(MAC_OSX_DIR)/configure $(DISTDIR)/macosx
+		$(MAC_OSX_DIR)/*.icns $(MAC_OSX_DIR)/*.tiff \
+		$(MAC_OSX_DIR)/*.[ch] $(MAC_OSX_DIR)/*.in \
+		$(MAC_OSX_DIR)/*.ac $(MAC_OSX_DIR)/*.xcconfig \
+		$(MAC_OSX_DIR)/*.sdef $(MAC_OSX_DIR)/configure \
+		$(DISTDIR)/macosx
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/macosx
 	mkdir $(DISTDIR)/macosx/Wish.xcode
 	cp -p $(MAC_OSX_DIR)/Wish.xcode/project.pbxproj \
