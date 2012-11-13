@@ -1,3 +1,9 @@
+2012-11-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinTest.c: [Bug 3585396]: winDialog.test requires user
+	* tests/winDialog.test: interaction. Renumber test-cases as in
+	Tk 8.6, and convert various to tcltest-2 style.
+
 2012-09-27  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/tkInt.h:     Add 8 colors to the supported color list

@@ -1,40 +1,39 @@
-/* 
+/*
  * tkWinTest.c --
  *
- *	Contains commands for platform specific tests for
- *	the Windows platform.
+ *	Contains commands for platform specific tests for the Windows
+ *	platform.
  *
  * Copyright (c) 1997 Sun Microsystems, Inc.
  * Copyright (c) 2000 by Scriptics Corporation.
  * Copyright (c) 2001 by ActiveState Corporation.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkWinInt.h"
 
 HWND tkWinCurrentDialog;
- 
+
 /*
- * Forward declarations of procedures defined later in this file:
+ * Forward declarations of functions defined later in this file:
  */
 
-int			TkplatformtestInit(Tcl_Interp *interp);
 static int		TestclipboardObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *CONST objv[]);
-static int		TestwineventCmd(ClientData clientData, 
-			    Tcl_Interp *interp, int argc, CONST char **argv);
-
+			    Tcl_Obj *const objv[]);
+static int		TestwineventCmd(ClientData clientData,
+			    Tcl_Interp *interp, int argc, const char **argv);
+int			TkplatformtestInit(Tcl_Interp *interp);
 
 /*
  *----------------------------------------------------------------------
  *
  * TkplatformtestInit --
  *
- *	Defines commands that test platform specific functionality for
- *	Unix platforms.
+ *	Defines commands that test platform specific functionality for Windows
+ *	platforms.
  *
  * Results:
  *	A standard Tcl result.
@@ -52,12 +51,11 @@ TkplatformtestInit(
     /*
      * Add commands for platform specific tests on MacOS here.
      */
-    
+
     Tcl_CreateObjCommand(interp, "testclipboard", TestclipboardObjCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateCommand(interp, "testwinevent", TestwineventCmd,
-            (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
-
+	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 
@@ -66,8 +64,8 @@ TkplatformtestInit(
  *
  * AppendSystemError --
  *
- *	This routine formats a Windows system error message and places
- *	it into the interpreter result.  Originally from tclWinReg.c.
+ *	This routine formats a Windows system error message and places it into
+ *	the interpreter result. Originally from tclWinReg.c.
  *
  * Results:
  *	None.
@@ -85,11 +83,14 @@ AppendSystemError(
 {
     int length;
     WCHAR *wMsgPtr;
-    char *msg;
+    const char *msg;
     char id[TCL_INTEGER_SPACE], msgBuf[24 + TCL_INTEGER_SPACE];
     Tcl_DString ds;
     Tcl_Obj *resultPtr = Tcl_GetObjResult(interp);
 
+    if (Tcl_IsShared(resultPtr)) {
+	resultPtr = Tcl_DuplicateObj(resultPtr);
+    }
     length = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error,
 	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (WCHAR *) &wMsgPtr,
@@ -110,35 +111,41 @@ AppendSystemError(
     }
     if (length == 0) {
 	if (error == ERROR_CALL_NOT_IMPLEMENTED) {
-	    msg = "function not supported under Win32s";
+	    strcpy(msgBuf, "function not supported under Win32s");
 	} else {
 	    sprintf(msgBuf, "unknown error: %ld", error);
-	    msg = msgBuf;
 	}
+	msg = msgBuf;
     } else {
 	Tcl_Encoding encoding;
+	char *msgPtr;
 
 	encoding = Tcl_GetEncoding(NULL, "unicode");
-	msg = Tcl_ExternalToUtfDString(encoding, (char *) wMsgPtr, -1, &ds);
+	Tcl_ExternalToUtfDString(encoding, (char *) wMsgPtr, -1, &ds);
 	Tcl_FreeEncoding(encoding);
 	LocalFree(wMsgPtr);
 
+	msgPtr = Tcl_DStringValue(&ds);
 	length = Tcl_DStringLength(&ds);
 
 	/*
 	 * Trim the trailing CR/LF from the system message.
 	 */
-	if (msg[length-1] == '\n') {
-	    msg[--length] = 0;
+
+	if (msgPtr[length-1] == '\n') {
+	    --length;
 	}
-	if (msg[length-1] == '\r') {
-	    msg[--length] = 0;
+	if (msgPtr[length-1] == '\r') {
+	    --length;
 	}
+	msgPtr[length] = 0;
+	msg = msgPtr;
     }
 
     sprintf(id, "%ld", error);
     Tcl_SetErrorCode(interp, "WINDOWS", id, msg, (char *) NULL);
     Tcl_AppendToObj(resultPtr, msg, length);
+    Tcl_SetObjResult(interp, resultPtr);
 
     if (length != 0) {
 	Tcl_DStringFree(&ds);
@@ -150,8 +157,8 @@ AppendSystemError(
  *
  * TestclipboardObjCmd --
  *
- *	This procedure implements the testclipboard command. It provides
- *	a way to determine the actual contents of the Windows clipboard.
+ *	This function implements the testclipboard command. It provides a way
+ *	to determine the actual contents of the Windows clipboard.
  *
  * Results:
  *	A standard Tcl result.
@@ -163,11 +170,11 @@ AppendSystemError(
  */
 
 static int
-TestclipboardObjCmd(clientData, interp, objc, objv)
-    ClientData clientData;		/* Main window for application. */
-    Tcl_Interp *interp;			/* Current interpreter. */
-    int objc;				/* Number of arguments. */
-    Tcl_Obj *CONST objv[];		/* Argument values. */
+TestclipboardObjCmd(
+    ClientData clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument values. */
 {
     HGLOBAL handle;
     char *data;
@@ -208,8 +215,8 @@ TestclipboardObjCmd(clientData, interp, objc, objv)
  *
  * TestwineventCmd --
  *
- *	This procedure implements the testwinevent command. It provides
- *	a way to send messages to windows dialogs.
+ *	This function implements the testwinevent command. It provides a way
+ *	to send messages to windows dialogs.
  *
  * Results:
  *	A standard Tcl result.
@@ -221,24 +228,26 @@ TestclipboardObjCmd(clientData, interp, objc, objv)
  */
 
 static int
-TestwineventCmd(clientData, interp, argc, argv)
-    ClientData clientData;		/* Main window for application. */
-    Tcl_Interp *interp;			/* Current interpreter. */
-    int argc;				/* Number of arguments. */
-    CONST char **argv;			/* Argument strings. */
+TestwineventCmd(
+    ClientData clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int argc,			/* Number of arguments. */
+    const char **argv)		/* Argument strings. */
 {
     HWND hwnd = 0;
+    HWND child = 0;
     int id;
     char *rest;
     UINT message;
     WPARAM wParam;
     LPARAM lParam;
-    static TkStateMap messageMap[] = {
+    static const TkStateMap messageMap[] = {
 	{WM_LBUTTONDOWN,	"WM_LBUTTONDOWN"},
 	{WM_LBUTTONUP,		"WM_LBUTTONUP"},
 	{WM_CHAR,		"WM_CHAR"},
 	{WM_GETTEXT,		"WM_GETTEXT"},
 	{WM_SETTEXT,		"WM_SETTEXT"},
+	{WM_COMMAND,            "WM_COMMAND"},
 	{-1,			NULL}
     };
 
@@ -256,16 +265,6 @@ TestwineventCmd(clientData, interp, argc, argv)
 	return TCL_ERROR;
     }
 
-#if 0
-    TkpScanWindowId(interp, argv[1], &id);
-    if (
-#ifdef _WIN64
-	(sscanf(string, "0x%p", &number) != 1) &&
-#endif
-	Tcl_GetInt(interp, string, (int *)&number) != TCL_OK) {
-	return TCL_ERROR;
-    }
-#endif
     hwnd = (HWND) strtol(argv[1], &rest, 0);
     if (rest == argv[1]) {
 	hwnd = FindWindow(NULL, argv[1]);
@@ -278,7 +277,6 @@ TestwineventCmd(clientData, interp, argc, argv)
 
     id = strtol(argv[2], &rest, 0);
     if (rest == argv[2]) {
-	HWND child;
 	char buf[256];
 
 	child = GetWindow(hwnd, GW_CHILD);
@@ -291,6 +289,8 @@ TestwineventCmd(clientData, interp, argc, argv)
 	    child = GetWindow(child, GW_HWNDNEXT);
 	}
 	if (child == NULL) {
+	    Tcl_AppendResult(interp, "could not find a control matching \"",
+		argv[2], "\"", NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -321,16 +321,32 @@ TestwineventCmd(clientData, interp, argc, argv)
 	}
 	case WM_SETTEXT: {
 	    Tcl_DString ds;
+	    BOOL result;
 
 	    Tcl_UtfToExternalDString(NULL, argv[4], -1, &ds);
-	    SetDlgItemText(hwnd, id, Tcl_DStringValue(&ds));
+	    result = SetDlgItemText(hwnd, id, Tcl_DStringValue(&ds));
 	    Tcl_DStringFree(&ds);
+	    if (result == 0) {
+		Tcl_SetResult(interp, "failed to send text to dialog: ", TCL_STATIC);
+		AppendSystemError(interp, GetLastError());
+		return TCL_ERROR;
+	    }
+	    break;
+	}
+	case WM_COMMAND: {
+	    char buf[TCL_INTEGER_SPACE];
+	    if (argc < 5) {
+		wParam = MAKEWPARAM(id, 0);
+		lParam = (LPARAM)child;
+	    }
+	    sprintf(buf, "%d", (int) SendMessageA(hwnd, message, wParam, lParam));
+	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    break;
 	}
 	default: {
 	    char buf[TCL_INTEGER_SPACE];
-	    
-	    sprintf(buf, "%d", 
+
+	    sprintf(buf, "%d",
 		    (int) SendDlgItemMessage(hwnd, id, message, wParam, lParam));
 	    Tcl_SetResult(interp, buf, TCL_VOLATILE);
 	    break;
@@ -338,6 +354,11 @@ TestwineventCmd(clientData, interp, argc, argv)
     }
     return TCL_OK;
 }
-    
-
-
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
