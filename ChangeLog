@@ -1,3 +1,8 @@
+2012-11-14  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 3500545]: tk_getOpenFile -multiple 1 wrong
+	on windows
+
 2012-11-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinTest.c: [Bug 3585396]: winDialog.test requires user
