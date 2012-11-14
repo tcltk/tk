@@ -697,7 +697,6 @@ foreach p {
     {"symbol" Symbol Symbol Symbol Symbol}
     {"times" Times-Roman Times-Bold Times-Italic Times-BoldItalic}
     {"zapfchancery" ZapfChancery-MediumItalic ZapfChancery-MediumItalic ZapfChancery-MediumItalic ZapfChancery-MediumItalic}
-    {"zapfdingbats" ZapfDingbats ZapfDingbats ZapfDingbats ZapfDingbats}
 } {
     test font-21.$i {Tk_PostscriptFontName procedure: exhaustive} {unixOnly} {
 	set family [lindex $p 0]
