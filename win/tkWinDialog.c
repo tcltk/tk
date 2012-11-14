@@ -1034,14 +1034,24 @@ OFNHookProc(
 		    }
 		    *tmp = '\0';		/* Second NULL terminator. */
 		} else {
-		    buffer[selsize] = '\0';	/* Second NULL terminator. */
 
-		    /*
-		     * Replace directory terminating NULL with a backslash.
+			/*
+		     * Replace directory terminating NULL with a with a backslash,
+		     * but only if not an absolute path.
 		     */
 
-		    buffer--;
-		    *buffer = '\\';
+		    Tcl_DString tmpfile;
+		    ConvertExternalFilename(buffer, &tmpfile);
+		    if (TCL_PATH_ABSOLUTE ==
+			    Tcl_GetPathType(Tcl_DStringValue(&tmpfile))) {
+			/* re-get the full path to the start of the buffer */
+			buffer = (TCHAR *) ofnData->dynFileBuffer;
+			SendMessage(hdlg, CDM_GETSPEC, selsize, (LPARAM) buffer);
+		    } else {
+			*(buffer-1) = '\\';
+		    }
+		    buffer[selsize] = '\0'; /* Second NULL terminator. */
+		    Tcl_DStringFree(&tmpfile);
 		}
 	    } else {
 		/*
