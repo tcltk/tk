@@ -18,7 +18,7 @@
 
 #ifdef __WIN32__
 #include "tkWinInt.h"
-#elif !(defined(MAC_TCL) ||  defined(MAC_OSX_TK))
+#elif !(defined(MAC_OSX_TK))
 #include "tkUnixInt.h"
 #endif
 
@@ -136,7 +136,7 @@ static CONST TkCmd commands[] = {
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
     {"tk",		Tk_TkObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
-#if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(__WIN32__) || defined(MAC_OSX_TK)
     {"tk_chooseColor",  Tk_ChooseColorObjCmd,	PASSMAINWINDOW},
     {"tk_chooseDirectory", Tk_ChooseDirectoryObjCmd, WINMACONLY|PASSMAINWINDOW},
     {"tk_getOpenFile",  Tk_GetOpenFileObjCmd,	WINMACONLY|PASSMAINWINDOW},
@@ -175,7 +175,7 @@ static CONST TkCmd commands[] = {
      * Misc.
      */
 
-#if defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(MAC_OSX_TK)
     {"::tk::unsupported::MacWindowStyle",
 	    		TkUnsupported1ObjCmd,			PASSMAINWINDOW|ISSAFE},
 #endif
@@ -1461,7 +1461,7 @@ Tk_DestroyWindow(tkwin)
 	TkWmRemoveFromColormapWindows(winPtr);
     }
     if (winPtr->window != None) {
-#if defined(MAC_TCL) || defined(MAC_OSX_TK) || defined(__WIN32__)
+#if defined(MAC_OSX_TK) || defined(__WIN32__)
 	XDestroyWindow(winPtr->display, winPtr->window);
 #else
 	if ((winPtr->flags & TK_TOP_HIERARCHY)
@@ -1571,7 +1571,7 @@ Tk_DestroyWindow(tkwin)
              * display now and relinquish its data structures.
              */
 
-#if !defined(WIN32) && !defined(MAC_TCL) && defined(NOT_YET)
+#if !defined(WIN32) && defined(NOT_YET)
             if (dispPtr->refCount <= 0) {
                 /*
                  * I have disabled this code because on Windows there are
@@ -2113,7 +2113,7 @@ Tk_DefineCursor(tkwin, cursor)
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
-#if defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(MAC_OSX_TK)
     winPtr->atts.cursor = (XCursor) cursor;
 #else
     winPtr->atts.cursor = (Cursor) cursor;
