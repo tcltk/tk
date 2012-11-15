@@ -1047,58 +1047,6 @@ declare 5 win {
 	    UINT message, WPARAM wParam, LPARAM lParam, LRESULT *result)
 }
 
-# Mac specific functions
-
-declare 0 mac {
-    void Tk_MacSetEmbedHandler(
-	    Tk_MacEmbedRegisterWinProc *registerWinProcPtr,
-	    Tk_MacEmbedGetGrafPortProc *getPortProcPtr,
-	    Tk_MacEmbedMakeContainerExistProc *containerExistProcPtr,
-	    Tk_MacEmbedGetClipProc *getClipProc,
-	    Tk_MacEmbedGetOffsetInParentProc *getOffsetProc)
-}
-
-declare 1 mac {
-    void Tk_MacTurnOffMenus(void)
-}
-
-declare 2 mac {
-    void Tk_MacTkOwnsCursor(int tkOwnsIt)
-}
-
-declare 3 mac {
-    void TkMacInitMenus(Tcl_Interp *interp)
-}
-
-declare 4 mac {
-    void TkMacInitAppleEvents(Tcl_Interp *interp)
-}
-
-declare 5 mac {
-    int TkMacConvertEvent(EventRecord *eventPtr)
-}
-
-declare 6 mac {
-    int TkMacConvertTkEvent(EventRecord *eventPtr, Window window)
-}
-
-declare 7 mac {
-    void TkGenWMConfigureEvent(Tk_Window tkwin,
-	    int x, int y, int width, int height, int flags)
-}
-
-declare 8 mac {
-    void TkMacInvalClipRgns(TkWindow *winPtr)
-}
-
-declare 9 mac {
-    int TkMacHaveAppearance(void)
-}
-
-declare 10 mac {
-    GWorldPtr TkMacGetDrawablePort(Drawable drawable)
-}
-
 # Mac OS X specific functions
 
 declare 0 aqua {
