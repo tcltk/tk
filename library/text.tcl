@@ -275,7 +275,7 @@ bind Text <Control-KeyPress> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
 
-if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     bind Text <Command-KeyPress> {# nothing}
 }
 
@@ -391,7 +391,7 @@ bind Text <Meta-Delete> {
 
 # Macintosh only bindings:
 
-if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
 bind Text <FocusIn> {
     %W configure -selectbackground systemHighlight -selectforeground systemHighlightText
 }
@@ -452,7 +452,7 @@ set ::tk::Priv(prevPos) {}
 # However, someone could use the "event generate" command to produce
 # one on other platforms.
 
-if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     bind Text <MouseWheel> {
         %W yview scroll [expr {- (%D)}] units
     }
