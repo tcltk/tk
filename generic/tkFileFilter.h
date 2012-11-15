@@ -13,11 +13,7 @@
 #ifndef _TK_FILE_FILTER
 #define _TK_FILE_FILTER
 
-#ifdef MAC_TCL
-#include <StandardFile.h>
-#else
 #define OSType long
-#endif
 
 #ifdef BUILD_tk
 # undef TCL_STORAGE_CLASS

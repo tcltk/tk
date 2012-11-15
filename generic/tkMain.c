@@ -96,11 +96,7 @@ static int WinIsTty(int fd) {
     }
 }
 #else
-#if !defined(MAC_TCL)
 extern int		isatty _ANSI_ARGS_((int fd));
-#else
-#include <unistd.h>
-#endif
 extern char *		strrchr _ANSI_ARGS_((CONST char *string, int c));
 #endif
 
@@ -193,7 +189,7 @@ Tk_MainEx(argc, argv, appInitProc, interp)
 	/* Only initialize console when not running under cygwin */
 	Tk_InitConsoleChannels(interp);
     }
-#elif  defined(__WIN32__) || defined(MAC_TCL)
+#elif  defined(__WIN32__)
     Tk_InitConsoleChannels(interp);
 #endif
 

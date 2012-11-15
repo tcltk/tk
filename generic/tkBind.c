@@ -19,7 +19,7 @@
 #include "tkWinInt.h"
 #endif
 
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)) /* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* UNIX */
 #include "tkUnixInt.h"
 #endif
 

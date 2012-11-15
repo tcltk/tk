@@ -203,7 +203,7 @@ bind Entry <Escape> {# nothing}
 bind Entry <Return> {# nothing}
 bind Entry <KP_Enter> {# nothing}
 bind Entry <Tab> {# nothing}
-if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
 	bind Entry <Command-KeyPress> {# nothing}
 }
 

@@ -32,9 +32,7 @@
  * cascades labelled "File" and "Edit", the cascade menus might have
  * the pathnames .m.file and .m.edit. Another constraint is that the menus
  * used for menubars must be children of the toplevel widget that they
- * are attached to. And on the Macintosh, the platform specific menu handle
- * for cascades attached to a menu bar must have a title that matches the
- * label for the cascade menu.
+ * are attached to. 
  *
  * To handle all of the constraints, Tk menubars and tearoff menus are
  * implemented using menu clones. Menu clones are full menus in their own

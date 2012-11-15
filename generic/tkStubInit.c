@@ -12,18 +12,13 @@
 #include "tkInt.h"
 #include "tkPort.h"
 
-#if !(defined(__WIN32__) && defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) && defined(MAC_OSX_TK))
 /* UNIX */
 #define UNIX_TK
 #endif
 
 #ifdef __WIN32__
 #include "tkWinInt.h"
-#endif
-#if defined(MAC_TCL)
-/* set this locally .. we could have used _TKMACINT */
-#define MAC_TK
-#include "tkMacInt.h"
 #endif
 
 #if defined(MAC_OSX_TK)
@@ -241,7 +236,7 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 
 #	define TkBindDeadWindow 0 /* On purpose not in Cygwin's stub table */
 
-#   elif !defined(MAC_TCL) && !defined(MAC_OSX_TK) /* UNIX */
+#   elif !defined(MAC_OSX_TK) /* UNIX */
 
 #	undef TkClipBox
 #	undef TkCreateRegion

@@ -45,7 +45,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     }
 
     set windowingsystem [tk windowingsystem]
-    if {$tcl_platform(platform) eq "macintosh" || $windowingsystem eq "aqua"} {
+    if {$windowingsystem eq "aqua"} {
 	option add *Dialog*background systemDialogBackgroundActive widgetDefault
 	option add *Dialog*Button.highlightBackground \
 		systemDialogBackgroundActive widgetDefault
@@ -71,7 +71,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 	wm transient $w [winfo toplevel [winfo parent $w]]
     }
 
-    if {$tcl_platform(platform) eq "macintosh" || $windowingsystem eq "aqua"} {
+    if {$windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w moveableModal {}
     } elseif {$windowingsystem eq "x11"} {
 	wm attributes $w -type dialog
@@ -91,7 +91,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     # overridden by the caller).
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
-    if {$tcl_platform(platform) eq "macintosh" || $windowingsystem eq "aqua"} {
+    if {$windowingsystem eq "aqua"} {
 	option add *Dialog.msg.font system widgetDefault
     } else {
 	option add *Dialog.msg.font {Times 12} widgetDefault
@@ -100,8 +100,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     label $w.msg -justify left -text $text
     pack $w.msg -in $w.top -side right -expand 1 -fill both -padx 3m -pady 3m
     if {$bitmap ne ""} {
-	if {($tcl_platform(platform) eq "macintosh"
-	     || $windowingsystem eq "aqua") && ($bitmap eq "error")} {
+	if {$windowingsystem eq "aqua" && $bitmap eq "error"} {
 	    set bitmap "stop"
 	}
 	label $w.bitmap -bitmap $bitmap
@@ -122,7 +121,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 		-padx 10 -pady 4
 	grid columnconfigure $w.bot $i
 	# We boost the size of some Mac buttons for l&f
-	if {$tcl_platform(platform) eq "macintosh" || $windowingsystem eq "aqua"} {
+	if {$windowingsystem eq "aqua"} {
 	    set tmp [string tolower $but]
 	    if {$tmp eq "ok" || $tmp eq "cancel"} {
 		grid columnconfigure $w.bot $i -minsize 90
