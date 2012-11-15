@@ -1,7 +1,5 @@
 # This file is a Tcl script to test menus in Tk.  It is
-# organized in the standard fashion for Tcl tests. This
-# file tests the Macintosh-specific features of the menu
-# system.
+# organized in the standard fashion for Tcl tests.
 #
 # Copyright (c) 1995-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
