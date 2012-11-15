@@ -12,7 +12,7 @@
 #include "tkPort.h"
 #include "tkInt.h"
 
-#if !defined(__WIN32__) && !defined(MAC_TCL)
+#if !defined(__WIN32__)
 #include "tkUnixInt.h"
 #endif
 
