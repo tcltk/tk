@@ -572,8 +572,8 @@ proc genStubs::makeSlot {name decl index} {
 	append text $rtype " *" $lfname "; /* $index */\n"
 	return $text
     }
-    if {[string range $rtype end-7 end] eq "CALLBACK"} {
-	append text [string trim [string range $rtype 0 end-8]] " (CALLBACK *" $lfname ") "
+    if {[string range $rtype end-8 end] eq "__stdcall"} {
+	append text [string trim [string range $rtype 0 end-9]] " (__stdcall *" $lfname ") "
     } else {
 	append text $rtype " (*" $lfname ") "
     }
@@ -772,7 +772,7 @@ proc genStubs::emitHeader {name} {
     emitDeclarations $name text
 
     if {[info exists hooks($name)]} {
-	append text "\ntypedef struct ${capName}StubHooks {\n"
+	append text "\ntypedef struct {\n"
 	foreach hook $hooks($name) {
 	    set capHook [string toupper [string index $hook 0]]
 	    append capHook [string range $hook 1 end]
@@ -786,7 +786,11 @@ proc genStubs::emitHeader {name} {
 	append text "    int epoch;\n"
 	append text "    int revision;\n"
     }
-    append text "    const struct ${capName}StubHooks *hooks;\n\n"
+    if {[info exists hooks($name)]} {
+	append text "    const ${capName}StubHooks *hooks;\n\n"
+    } else {
+	append text "    void *hooks;\n\n"
+    }
 
     emitSlots $name text
 

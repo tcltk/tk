@@ -285,7 +285,7 @@ EXTERN int		TkpTestsendCmd(ClientData clientData,
 
 typedef struct TkIntPlatStubs {
     int magic;
-    const struct TkIntPlatStubHooks *hooks;
+    void *hooks;
 
 #if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     char * (*tkAlignImageData) (XImage *image, int alignment, int bitOrder); /* 0 */

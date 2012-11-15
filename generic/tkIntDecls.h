@@ -549,7 +549,7 @@ EXTERN void		TkDrawAngledChars(Display *display,
 
 typedef struct TkIntStubs {
     int magic;
-    const struct TkIntStubHooks *hooks;
+    void *hooks;
 
     TkWindow * (*tkAllocWindow) (TkDisplay *dispPtr, int screenNum, TkWindow *parentPtr); /* 0 */
     void (*tkBezierPoints) (double control[], int numSteps, double *coordPtr); /* 1 */
