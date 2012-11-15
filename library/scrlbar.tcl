@@ -128,7 +128,7 @@ bind Scrollbar <End> {
     tk::ScrollToPos %W 1
 }
 }
-if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     bind Scrollbar <MouseWheel> {
         tk::ScrollByUnits %W v [expr {- (%D)}]
     }

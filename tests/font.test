@@ -52,7 +52,6 @@ setup
 case $tcl_platform(platform) {
     unix	{set fixed "fixed"}
     windows	{set fixed "courier 12"}
-    macintosh	{set fixed "monaco 9"}
 }
 set times [font actual {times 0} -family]
 
