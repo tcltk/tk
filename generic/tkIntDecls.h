@@ -383,30 +383,16 @@ EXTERN void		TkSetRegion _ANSI_ARGS_((Display *display, GC gc,
 EXTERN void		TkUnionRectWithRegion _ANSI_ARGS_((XRectangle *rect,
 				TkRegion src, TkRegion dr_return));
 /* Slot 120 is reserved */
-#ifdef MAC_TCL
-/* 121 */
-EXTERN Pixmap		TkpCreateNativeBitmap _ANSI_ARGS_((Display *display,
-				CONST char *source));
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 121 */
 EXTERN Pixmap		TkpCreateNativeBitmap _ANSI_ARGS_((Display *display,
 				CONST char *source));
 #endif /* AQUA */
-#ifdef MAC_TCL
-/* 122 */
-EXTERN void		TkpDefineNativeBitmaps _ANSI_ARGS_((void));
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 122 */
 EXTERN void		TkpDefineNativeBitmaps _ANSI_ARGS_((void));
 #endif /* AQUA */
 /* Slot 123 is reserved */
-#ifdef MAC_TCL
-/* 124 */
-EXTERN Pixmap		TkpGetNativeAppBitmap _ANSI_ARGS_((Display *display,
-				CONST char *name, int *width, int *height));
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 124 */
 EXTERN Pixmap		TkpGetNativeAppBitmap _ANSI_ARGS_((Display *display,
@@ -594,41 +580,35 @@ typedef struct TkIntStubs {
     void (*tkSetRegion) _ANSI_ARGS_((Display *display, GC gc, TkRegion rgn)); /* 118 */
     void (*tkUnionRectWithRegion) _ANSI_ARGS_((XRectangle *rect, TkRegion src, TkRegion dr_return)); /* 119 */
     VOID *reserved120;
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     VOID *reserved121;
-#endif /* UNIX */
+#endif /* X11 */
 #if defined(__WIN32__) /* WIN */
     VOID *reserved121;
 #endif /* WIN */
-#ifdef MAC_TCL
-    Pixmap (*tkpCreateNativeBitmap) _ANSI_ARGS_((Display *display, CONST char *source)); /* 121 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK /* AQUA */
+    VOID *reserved121; /* Dummy entry for stubs table backwards compatibility */
     Pixmap (*tkpCreateNativeBitmap) _ANSI_ARGS_((Display *display, CONST char *source)); /* 121 */
 #endif /* AQUA */
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     VOID *reserved122;
-#endif /* UNIX */
+#endif /* X11 */
 #if defined(__WIN32__) /* WIN */
     VOID *reserved122;
 #endif /* WIN */
-#ifdef MAC_TCL
-    void (*tkpDefineNativeBitmaps) _ANSI_ARGS_((void)); /* 122 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK /* AQUA */
+    VOID *reserved122; /* Dummy entry for stubs table backwards compatibility */
     void (*tkpDefineNativeBitmaps) _ANSI_ARGS_((void)); /* 122 */
 #endif /* AQUA */
     VOID *reserved123;
-#if !defined(__WIN32__) && !defined(MAC_TCL) /* UNIX */
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
     VOID *reserved124;
-#endif /* UNIX */
+#endif /* X11 */
 #if defined(__WIN32__) /* WIN */
     VOID *reserved124;
 #endif /* WIN */
-#ifdef MAC_TCL
-    Pixmap (*tkpGetNativeAppBitmap) _ANSI_ARGS_((Display *display, CONST char *name, int *width, int *height)); /* 124 */
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK /* AQUA */
+    VOID *reserved124; /* Dummy entry for stubs table backwards compatibility */
     Pixmap (*tkpGetNativeAppBitmap) _ANSI_ARGS_((Display *display, CONST char *name, int *width, int *height)); /* 124 */
 #endif /* AQUA */
     VOID *reserved125;
@@ -1153,24 +1133,12 @@ extern TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkUnionRectWithRegion) /* 119 */
 #endif
 /* Slot 120 is reserved */
-#ifdef MAC_TCL
-#ifndef TkpCreateNativeBitmap
-#define TkpCreateNativeBitmap \
-	(tkIntStubsPtr->tkpCreateNativeBitmap) /* 121 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK /* AQUA */
 #ifndef TkpCreateNativeBitmap
 #define TkpCreateNativeBitmap \
 	(tkIntStubsPtr->tkpCreateNativeBitmap) /* 121 */
 #endif
 #endif /* AQUA */
-#ifdef MAC_TCL
-#ifndef TkpDefineNativeBitmaps
-#define TkpDefineNativeBitmaps \
-	(tkIntStubsPtr->tkpDefineNativeBitmaps) /* 122 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK /* AQUA */
 #ifndef TkpDefineNativeBitmaps
 #define TkpDefineNativeBitmaps \
@@ -1178,12 +1146,6 @@ extern TkIntStubs *tkIntStubsPtr;
 #endif
 #endif /* AQUA */
 /* Slot 123 is reserved */
-#ifdef MAC_TCL
-#ifndef TkpGetNativeAppBitmap
-#define TkpGetNativeAppBitmap \
-	(tkIntStubsPtr->tkpGetNativeAppBitmap) /* 124 */
-#endif
-#endif /* MAC_TCL */
 #ifdef MAC_OSX_TK /* AQUA */
 #ifndef TkpGetNativeAppBitmap
 #define TkpGetNativeAppBitmap \
