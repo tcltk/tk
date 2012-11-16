@@ -1,3 +1,9 @@
+2012-11-16  Joe Mistachkin  <joe@mistachkin.com>
+
+	* generic/tkBind.c: Add support for an 'M' binding substitution
+	that is replaced with the number of script-based binding patterns
+	matched so far for the event.
+
 2012-11-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinTest.c: [Bug 3585396]: winDialog.test requires user
