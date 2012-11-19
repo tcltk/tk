@@ -82,7 +82,7 @@ EXTERN int		Tk_MacOSXIsAppInFront(void);
 
 typedef struct TkPlatStubs {
     int magic;
-    const struct TkPlatStubHooks *hooks;
+    void *hooks;
 
 #if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     Window (*tk_AttachHWND) (Tk_Window tkwin, HWND hwnd); /* 0 */

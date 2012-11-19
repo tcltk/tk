@@ -620,7 +620,7 @@ EXTERN int		XSync(Display *display, Bool flag);
 
 typedef struct TkIntXlibStubs {
     int magic;
-    const struct TkIntXlibStubHooks *hooks;
+    void *hooks;
 
 #if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
