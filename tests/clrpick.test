@@ -172,11 +172,7 @@ test clrpick-2.1 {tk_chooseColor command} \
 set color #808040
 test clrpick-2.2 {tk_chooseColor command} \
 	{nonUnixUserInteraction colorsLeftover} {
-    if {$tcl_platform(platform) == "macintosh"} {
-	set colors "32768 32768 16384"
-    } else {
-	set colors "128 128 64"
-    }
+    set colors "128 128 64"
     ToChooseColorByKey $parent 128 128 64
     tk_chooseColor -parent $parent -title "choose $colors"
 } "$color"

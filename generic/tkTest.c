@@ -22,7 +22,7 @@
 #include "tkWinInt.h"
 #endif
 
-#if defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(MAC_OSX_TK)
 #include "tkScrollbar.h"
 #endif
 
@@ -177,11 +177,11 @@ static int		TestfontObjCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Obj *CONST objv[]));
 static int		TestmakeexistCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv));
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 static int		TestmenubarCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv));
 #endif
-#if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(__WIN32__) || defined(MAC_OSX_TK)
 static int		TestmetricsCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv));
 #endif
@@ -201,13 +201,13 @@ static void	CustomOptionFree _ANSI_ARGS_((ClientData clientData,
 			Tk_Window tkwin, char *internalPtr));
 static int		TestpropCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv));
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 static int		TestsendCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv));
 #endif
 static int		TesttextCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv));
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 static int		TestwrapperCmd _ANSI_ARGS_((ClientData dummy,
 			    Tcl_Interp *interp, int argc, CONST char **argv));
 #endif
@@ -225,7 +225,7 @@ static void		TrivialEventProc _ANSI_ARGS_((ClientData clientData,
 
 extern int		TkplatformtestInit _ANSI_ARGS_((Tcl_Interp *interp));
 
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
 #endif
 
@@ -283,23 +283,23 @@ Tktest_Init(interp)
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateCommand(interp, "testmakeexist", TestmakeexistCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
     Tcl_CreateCommand(interp, "testmenubar", TestmenubarCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #endif
-#if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(__WIN32__) || defined(MAC_OSX_TK)
     Tcl_CreateCommand(interp, "testmetrics", TestmetricsCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #endif
     Tcl_CreateCommand(interp, "testprop", TestpropCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
     Tcl_CreateCommand(interp, "testsend", TestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #endif
     Tcl_CreateCommand(interp, "testtext", TesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
     Tcl_CreateCommand(interp, "testwrapper", TestwrapperCmd,
 	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
 #endif
@@ -1961,7 +1961,7 @@ TestmakeexistCmd(clientData, interp, argc, argv)
  */
 
 	/* ARGSUSED */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 static int
 TestmenubarCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
@@ -2030,7 +2030,7 @@ TestmenubarCmd(clientData, interp, argc, argv)
  *----------------------------------------------------------------------
  */
 
-#if defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK)
+#if defined(__WIN32__) || defined(MAC_OSX_TK)
 static int
 TestmetricsCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
@@ -2182,7 +2182,7 @@ TestpropCmd(clientData, interp, argc, argv)
  */
 
 	/* ARGSUSED */
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 static int
 TestsendCmd(clientData, interp, argc, argv)
     ClientData clientData;		/* Main window for application. */
@@ -2357,7 +2357,7 @@ TesttextCmd(clientData, interp, argc, argv)
     return TCL_OK;
 }
 
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
 /*
  *----------------------------------------------------------------------
  *

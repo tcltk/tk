@@ -2770,15 +2770,7 @@ ImgPhotoDisplay(clientData, display, drawable, imageX, imageY, width,
 	return;
     }
 
-    if (
-#if defined(MAC_TCL)
-	/*
-	 * The retrieval of bgImg is currently not functional on OS9
-	 * so skip attempts to alpha blend.
-	 */
-	0 &&
-#endif
-	(instancePtr->masterPtr->flags & COMPLEX_ALPHA)
+    if ((instancePtr->masterPtr->flags & COMPLEX_ALPHA)
 	    && visInfo.depth >= 15
 	    && (visInfo.class == DirectColor || visInfo.class == TrueColor)) {
 	Tk_ErrorHandler handler;

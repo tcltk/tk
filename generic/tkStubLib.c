@@ -36,10 +36,6 @@
 #include "tkWinInt.h"
 #endif
 
-#ifdef MAC_TCL
-#include "tkMacInt.h"
-#endif
-
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
 #endif

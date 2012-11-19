@@ -156,7 +156,7 @@ proc ::tk::MessageBox {args} {
 	error "bad -icon value \"$data(-icon)\": must be error, info, question, or warning"
     }
     set windowingsystem [tk windowingsystem]
-    if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
+    if {$windowingsystem eq "aqua"} {
 	switch -- $data(-icon) {
 	    "error"     {set data(-icon) "stop"}
 	    "warning"   {set data(-icon) "caution"}
@@ -263,7 +263,7 @@ proc ::tk::MessageBox {args} {
 	wm transient $w $data(-parent)
     }
 
-    if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
+    if {$windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style $w moveableModal {}
     } elseif {$windowingsystem eq "x11"} {
         wm attributes $w -type dialog
@@ -273,7 +273,7 @@ proc ::tk::MessageBox {args} {
     pack $w.bot -side bottom -fill both
     frame $w.top -background $bg
     pack $w.top -side top -fill both -expand 1
-    if {$windowingsystem ne "classic" && $windowingsystem ne "aqua"} {
+    if {$windowingsystem ne "aqua"} {
 	$w.bot configure -relief raised -bd 1
 	$w.top configure -relief raised -bd 1
     }
@@ -283,7 +283,7 @@ proc ::tk::MessageBox {args} {
     # overridden by the caller).
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
-    if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
+    if {$windowingsystem eq "aqua"} {
 	option add *Dialog.msg.font system widgetDefault
     } else {
 	option add *Dialog.msg.font {Times 14} widgetDefault
@@ -292,7 +292,7 @@ proc ::tk::MessageBox {args} {
     label $w.msg -anchor nw -justify left -text $data(-message) \
 	    -background $bg
     if {$data(-icon) ne ""} {
-	if {($windowingsystem eq "classic" || $windowingsystem eq "aqua")
+	if {($windowingsystem eq "aqua")
 		|| ([winfo depth $w] < 4) || $tk_strictMotif} {
 	    label $w.bitmap -bitmap $data(-icon) -background $bg
 	} else {
@@ -358,7 +358,7 @@ proc ::tk::MessageBox {args} {
 	grid $w.$name -in $w.bot -row 0 -column $i -padx 3m -pady 2m -sticky ew
 	grid columnconfigure $w.bot $i -uniform buttons
 	# We boost the size of some Mac buttons for l&f
-	if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
+	if {$windowingsystem eq "aqua"} {
 	    set tmp [string tolower $name]
 	    if {$tmp eq "ok" || $tmp eq "cancel" || $tmp eq "yes" ||
 		    $tmp eq "no" || $tmp eq "abort" || $tmp eq "retry" ||

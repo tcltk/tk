@@ -17,8 +17,6 @@
 
 #if defined(WIN32)
 #include "tkWinInt.h"
-#elif defined(MAC_TCL)
-#include "tkMacInt.h"
 #elif defined(MAC_OSX_TK) 
 #include "tkMacOSXInt.h"
 #else
@@ -837,8 +835,6 @@ Tk_TkObjCmd(clientData, interp, objc, objv)
 	    }
 #if defined(WIN32)
 	    windowingsystem = "win32";
-#elif defined(MAC_TCL)
-	    windowingsystem = "classic";
 #elif defined(MAC_OSX_TK)
 	    windowingsystem = "aqua";
 #else

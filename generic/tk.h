@@ -60,9 +60,8 @@ extern "C" {
 
 /* 
  * A special definition used to allow this header file to be included
- * from windows or mac resource files so that they can obtain version
- * information.  RC_INVOKED is defined by default by the windows RC tool
- * and manually set for macintosh.
+ * from windows resource files so that they can obtain version
+ * information.  RC_INVOKED is defined by default by the windows RC tool.
  *
  * Resource compilers don't like all the C stuff, like typedefs and
  * procedure declarations, that occur below, so block them out.
@@ -71,10 +70,7 @@ extern "C" {
 #ifndef RC_INVOKED
     
 #ifndef _XLIB_H
-#   if defined (MAC_TCL)
-#	include <Xlib.h>
-#	include <X.h>
-#   elif defined(MAC_OSX_TK)
+#   if defined(MAC_OSX_TK)
 #	include <X11/Xlib.h>
 #	include <X11/X.h>
 #   else

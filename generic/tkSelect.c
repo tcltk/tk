@@ -1198,7 +1198,7 @@ TkSelInit(tkwin)
      *    http://www.cl.cam.ac.uk/~mgk25/unicode.html#x11
      */
 
-#if !(defined(__WIN32__) || defined(MAC_TCL) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
     dispPtr->utf8Atom		= Tk_InternAtom(tkwin, "UTF8_STRING");
 #else
     dispPtr->utf8Atom		= (Atom) NULL;
