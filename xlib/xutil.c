@@ -12,13 +12,8 @@
 #include <stdlib.h>
 #include <tk.h>
 
-#ifdef MAC_TCL
-#       include <Xutil.h>
-#       include <Xatom.h>
-#else
-#       include <X11/Xutil.h>
-#       include <X11/Xatom.h>
-#endif
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
 
 /*
  *----------------------------------------------------------------------

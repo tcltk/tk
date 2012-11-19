@@ -94,8 +94,7 @@ proc ::tk::dialog::error::bgerror err {
     # we use the default dialog then :
     set windowingsystem [tk windowingsystem]
 
-    if {($windowingsystem eq "classic")
-             || ($windowingsystem eq "aqua")} {
+    if {$windowingsystem eq "aqua"} {
 	set ok		[mc Ok]
 	set messageFont	system
 	set textRelief	flat
@@ -143,8 +142,7 @@ proc ::tk::dialog::error::bgerror err {
     wm iconname .bgerrorDialog ErrorDialog
     wm protocol .bgerrorDialog WM_DELETE_WINDOW { }
 
-    if {($windowingsystem eq "classic")
-            || ($windowingsystem eq "aqua")} {
+    if {$windowingsystem eq "aqua"} {
 	::tk::unsupported::MacWindowStyle style .bgerrorDialog moveableAlert {}
     } elseif {$windowingsystem eq "x11"} {
 	wm attributes .bgerrorDialog -type dialog
@@ -190,17 +188,10 @@ proc ::tk::dialog::error::bgerror err {
     set wrapwidth [expr {$wrapwidth-60-[winfo pixels .bgerrorDialog 9m]}]
     label .bgerrorDialog.msg -justify left -text $text -font $messageFont \
 	    -wraplength $wrapwidth
-    if {($windowingsystem eq "classic")
-            || ($windowingsystem eq "aqua")} {
-	# On the Macintosh, use the stop bitmap
-	label .bgerrorDialog.bitmap -bitmap stop
-    } else {
-	# On other platforms, make the error icon
 	canvas .bgerrorDialog.bitmap -width 32 -height 32 -highlightthickness 0
 	.bgerrorDialog.bitmap create oval 0 0 31 31 -fill red -outline black
 	.bgerrorDialog.bitmap create line 9 9 23 23 -fill white -width 4
 	.bgerrorDialog.bitmap create line 9 23 23 9 -fill white -width 4
-    }
     grid .bgerrorDialog.bitmap .bgerrorDialog.msg \
 	    -in .bgerrorDialog.top	\
 	    -row 0			\
@@ -226,8 +217,7 @@ proc ::tk::dialog::error::bgerror err {
 		-padx 10
 	grid columnconfigure .bgerrorDialog.bot $i -weight 1
 	# We boost the size of some Mac buttons for l&f
-	if {($windowingsystem eq "classic")
-	    || ($windowingsystem eq "aqua")} {
+	if {$windowingsystem eq "aqua"} {
 	    if {($name eq "ok") || ($name eq "dismiss")} {
 		grid columnconfigure .bgerrorDialog.bot $i -minsize 90
 	    }
