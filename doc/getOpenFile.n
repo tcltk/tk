@@ -39,7 +39,7 @@ arguments to these two commands:
 Specifies a string that will be appended to the filename if the user
 enters a filename without an extension. The default value is the empty
 string, which means no extension will be appended to the filename in
-any case. This option is ignored on the Macintosh platform, which
+any case. This option is ignored on Mac OS X, which
 does not require extensions to filenames,
 .VS 8.4
 and the UNIX implementation guesses reasonable values for this from
@@ -61,24 +61,17 @@ Specifies that the files in \fIdirectory\fR should be displayed
 when the dialog pops up. If this parameter is not specified, then
 the files in the current working directory are displayed. If the
 parameter specifies a relative path, the return value will convert the
-relative path to an absolute path.  This option may not always work on
-the Macintosh.  This is not a bug. Rather, the \fIGeneral Controls\fR
-control panel on the Mac allows the end user to override the
-application default directory.
+relative path to an absolute path.
 .TP
 \fB\-initialfile\fR \fIfilename\fR
-Specifies a filename to be displayed in the dialog when it pops up.  This
-option is ignored on the Macintosh platform.
+Specifies a filename to be displayed in the dialog when it pops up.
 .TP
 \fB\-multiple\fR \fIboolean\fR
 Allows the user to choose multiple files from the Open dialog.
-On the Macintosh, this is only available when Navigation Services are
-installed.
 .TP
 \fB\-message\fR \fIstring\fR
 Specifies a message to include in the client area of the dialog.
-This is only available on the Macintosh, and only when Navigation
-Services are installed.
+This is only available on the Mac OS X.
 .TP
 \fB\-parent\fR \fIwindow\fR
 Makes \fIwindow\fR the logical parent of the file dialog. The file
