@@ -176,7 +176,7 @@ bind Listbox <B2-Motion> {
 # The MouseWheel will typically only fire on Windows and Mac OS X.
 # However, someone could use the "event generate" command to produce
 # one on other platforms.
-if {[tk windowingsystem] eq "classic" || [tk windowingsystem] eq "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     bind Listbox <MouseWheel> {
         %W yview scroll [expr {- (%D)}] units
     }
