@@ -117,7 +117,7 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 	} elseif {$y > ([winfo vrooty $w]+[winfo vrootheight $w]-[winfo reqheight $w])} {
 	    set y [expr {[winfo vrooty $w]+[winfo vrootheight $w]-[winfo reqheight $w]}]
 	}
-	if {$windowingsystem eq "classic" || $windowingsystem eq "aqua"} {
+	if {$windowingsystem eq "aqua"} {
 	    # Avoid the native menu bar which sits on top of everything.
 	    if {$y < 22} { set y 22 }
 	}
@@ -390,35 +390,15 @@ switch [tk windowingsystem] {
   	event add <<Undo>> <Command-Key-z>
 	event add <<Redo>> <Command-Key-y>
     }
-    "classic" {
-	event add <<Cut>> <Control-Key-x> <Key-F2> 
-	event add <<Copy>> <Control-Key-c> <Key-F3>
-	event add <<Paste>> <Control-Key-v> <Key-F4>
-	event add <<PasteSelection>> <ButtonRelease-2>
-	event add <<Clear>> <Clear>
-	event add <<Undo>> <Control-Key-z> <Key-F1>
-	event add <<Redo>> <Control-Key-Z>
-    }
 }
 # ----------------------------------------------------------------------
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
 
 if {$::tk_library ne ""} {
-    if {[tk windowingsystem] eq "classic"} {
-	proc ::tk::SourceLibFile {file} {
-	    if {[catch {
-		namespace eval :: \
-			[list source [file join $::tk_library $file.tcl]]
-	    }]} {
-		namespace eval :: [list source -rsrc $file]
-	    }
-	}
-    } else {
 	proc ::tk::SourceLibFile {file} {
 	    namespace eval :: [list source [file join $::tk_library $file.tcl]]
 	}	
-    }
     namespace eval ::tk {
 	SourceLibFile button
 	SourceLibFile entry

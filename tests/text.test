@@ -130,9 +130,7 @@ test text-2.4 {Tk_TextCmd procedure} {
     list [catch {text .t2 -bd 2 -fg red} msg] $msg \
 	[lindex [.t2 config -bd] 4] [lindex [.t2 config -fg] 4]
 } {0 .t2 2 red}
-if {$tcl_platform(platform) == "macintosh"} {
-    set relief solid
-} elseif {$tcl_platform(platform) == "windows"} {
+if {$tcl_platform(platform) == "windows"} {
     set relief flat
 } else {
     set relief raised
