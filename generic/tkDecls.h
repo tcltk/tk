@@ -865,7 +865,7 @@ EXTERN void		reserved274(void);
 /* 275 */
 EXTERN void		reserved275(void);
 
-typedef struct TkStubHooks {
+typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
     const struct TkIntStubs *tkIntStubs;
     const struct TkIntPlatStubs *tkIntPlatStubs;
@@ -874,7 +874,7 @@ typedef struct TkStubHooks {
 
 typedef struct TkStubs {
     int magic;
-    const struct TkStubHooks *hooks;
+    const TkStubHooks *hooks;
 
     void (*tk_MainLoop) (void); /* 0 */
     XColor * (*tk_3DBorderColor) (Tk_3DBorder border); /* 1 */
