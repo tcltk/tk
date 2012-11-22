@@ -1,3 +1,8 @@
+2012-11-??  Francois Vogel  <fvogelnew1@free.fr>
+
+   * generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
+   * tests/textIndex.test:  for weird image names
+
 2012-11-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinTest.c: [Bug 3585396]: winDialog.test requires user
