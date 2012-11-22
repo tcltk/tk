@@ -583,18 +583,37 @@ GetFileName(
     Tcl_DString extString, filterString, dirString, titleString;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    static const char *const saveOptionStrings[] = {
-	"-confirmoverwrite", "-defaultextension", "-filetypes", "-initialdir",
-	"-initialfile", "", "-parent", "-title", "-typevariable", NULL
-    };
-    static const char *const openOptionStrings[] = {
-	"", "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-	"-multiple", "-parent", "-title", "-typevariable", NULL
-    };
     enum options {
-	FILE_CONFIRMOW,	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE,
-	FILE_MULTIPLE,	FILE_PARENT,  FILE_TITLE, FILE_TYPEVARIABLE
+	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE, FILE_PARENT,
+	FILE_TITLE, FILE_TYPEVARIABLE, FILE_MULTIPLE, FILE_CONFIRMOW
     };
+    struct Options {
+	const char *name;
+	enum options value;
+    };
+    static const struct Options saveOptions[] = {
+	{"-confirmoverwrite",	FILE_CONFIRMOW},
+	{"-defaultextension",	FILE_DEFAULT},
+	{"-filetypes",		FILE_TYPES},
+	{"-initialdir",		FILE_INITDIR},
+	{"-initialfile",	FILE_INITFILE},
+	{"-parent",		FILE_PARENT},
+	{"-title",		FILE_TITLE},
+	{"-typevariable",	FILE_TYPEVARIABLE},
+	{NULL,			FILE_DEFAULT/*ignored*/ }
+    };
+    static const struct Options openOptions[] = {
+	{"-defaultextension",	FILE_DEFAULT},
+	{"-filetypes",		FILE_TYPES},
+	{"-initialdir",		FILE_INITDIR},
+	{"-initialfile",	FILE_INITFILE},
+	{"-multiple",		FILE_MULTIPLE},
+	{"-parent",		FILE_PARENT},
+	{"-title",		FILE_TITLE},
+	{"-typevariable",	FILE_TYPEVARIABLE},
+	{NULL,			FILE_DEFAULT/*ignored*/ }
+    };
+    const struct Options *const options = open ? openOptions : saveOptions;
 
     file[0] = '\0';
     ZeroMemory(&ofnData, sizeof(OFNData));
@@ -610,21 +629,18 @@ GetFileName(
 	const char *string;
 	Tcl_Obj *valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, objv[i],
-		open ? openOptionStrings : saveOptionStrings,
-		"option", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], options,
+		sizeof(struct Options), "option", 0, &index) != TCL_OK) {
 	    goto end;
-	}
-
-	if (i + 1 == objc) {
+	} else if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "value for \"%s\" missing", Tcl_GetString(objv[i])));
+		    "value for \"%s\" missing", options[index].name));
 	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
 	    goto end;
 	}
 
 	string = Tcl_GetString(valuePtr);
-	switch ((enum options) index) {
+	switch (options[index].value) {
 	case FILE_DEFAULT:
 	    if (string[0] == '.') {
 		string++;
