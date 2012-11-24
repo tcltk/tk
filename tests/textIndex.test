@@ -220,20 +220,30 @@ set weirdMark "asdf \n{-+ 66.2\t"
 .t mark set $weirdMark 4.0
 .t tag config y -relief raised
 set weirdImage "foo-1"
-.t image create 2.0 -image [image create photo $weirdImage]
+.t image create 2.1 -image [image create photo $weirdImage]
+set weirdEmbWin ".t.bar-1"
+entry $weirdEmbWin
+.t window create 3.1 -window $weirdEmbWin
 test textIndex-3.1 {TkTextGetIndex, weird mark names} {
     list [catch {.t index $weirdMark} msg] $msg
 } {0 4.0}
 test textIndex-3.2 {TkTextGetIndex, weird mark names} knownBug {
     list [catch {.t index "$weirdMark -1char"} msg] $msg
 } {0 4.0}
-test textIndex-3.3 {TkTextGetIndex, weird image names} {
+test textIndex-3.3 {TkTextGetIndex, weird embedded window names} {
+    list [catch {.t index $weirdEmbWin} msg] $msg
+} {0 3.1}
+test textIndex-3.4 {TkTextGetIndex, weird embedded window names} knownBug {
+    list [catch {.t index "$weirdEmbWin -1char"} msg] $msg
+} {0 3.0}
+test textIndex-3.5 {TkTextGetIndex, weird image names} {
     list [catch {.t index $weirdImage} msg] $msg
-} {0 2.0}
-test textIndex-3.4 {TkTextGetIndex, weird image names} knownBug {
+} {0 2.1}
+test textIndex-3.6 {TkTextGetIndex, weird image names} knownBug {
     list [catch {.t index "$weirdImage -1char"} msg] $msg
 } {0 2.0}
-.t delete 2.0  ; # remove the weirdImage
+.t delete 3.1  ; # remove the weirdEmbWin
+.t delete 2.1  ; # remove the weirdImage
 
 test textIndex-4.1 {TkTextGetIndex, tags} {
     list [catch {.t index x.first} msg] $msg
