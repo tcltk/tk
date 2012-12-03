@@ -1,4 +1,4 @@
-2012-11-??  Francois Vogel  <fvogelnew1@free.fr>
+2012-12-03  Francois Vogel  <fvogelnew1@free.fr>
 
    * generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
    * tests/textIndex.test:  for weird image names
