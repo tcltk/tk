@@ -1340,6 +1340,10 @@ TkTextWindowIndex(
     Tcl_HashEntry *hPtr;
     TkTextSegment *ewPtr;
 
+    if (textPtr == NULL) {
+	return 0;
+    }
+
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->windowTable, name);
     if (hPtr == NULL) {
 	return 0;
