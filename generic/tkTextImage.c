@@ -786,6 +786,10 @@ TkTextImageIndex(
     Tcl_HashEntry *hPtr;
     TkTextSegment *eiPtr;
 
+    if (textPtr == NULL) {
+	return 0;
+    }
+
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name);
     if (hPtr == NULL) {
 	return 0;
