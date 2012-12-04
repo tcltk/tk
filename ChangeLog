@@ -1,3 +1,8 @@
+2012-12-04  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
+	* tests/textIndex.test:  for weird image names
+
 2012-11-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [Bug 3500545]: tk_getOpenFile -multiple 1 wrong
