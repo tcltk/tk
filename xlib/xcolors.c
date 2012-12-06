@@ -252,8 +252,7 @@ static const elem xColors[] = {
 static Tcl_WideInt
 parseHex64bit(
     const char *spec,
-    char **p,
-    int base)
+    char **p)
 {
     Tcl_WideInt result = 0;
     char c;
@@ -344,7 +343,7 @@ XParseColor(
 {
     if (spec[0] == '#') {
 	char *p;
-	Tcl_WideInt value = parseHex64bit(++spec, &p, 16);
+	Tcl_WideInt value = parseHex64bit(++spec, &p);
 
 	switch ((int)(p-spec)) {
 	case 3:
