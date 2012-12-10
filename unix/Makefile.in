@@ -373,7 +373,7 @@ TTK_OBJS = \
 	ttkTagSet.o ttkTheme.o ttkTrace.o ttkTrack.o ttkTreeview.o \
 	ttkWidget.o ttkStubInit.o
 
-STUB_OBJS = tkStubInit.o tkStubLib.o
+STUB_OBJS = tkStubInit.o
 
 STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
 
