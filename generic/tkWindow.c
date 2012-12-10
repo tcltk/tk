@@ -3281,9 +3281,11 @@ Initialize(
 
     Tcl_SetMainLoop(Tk_MainLoop);
 
+/*
 #undef Tk_InitStubs
 
     Tk_InitStubs(interp, TK_VERSION, 1);
+*/
 
     /*
      * Initialized the themed widget set
