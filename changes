@@ -7022,4 +7022,12 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2012-10-24 (bug fix)[3574893] crash in [wm forget] (porter)
 
---- Released 8.6.0, ??? ??, 2012 --- See ChangeLog for details ---
+2012-11-07 (bug fix)[3574708] crash in focus handling (fellows)
+
+2012-11-14 (bug fix)[3500545] fix [tk_getOpenFile -multiple] (bruederlin)
+
+2012-12-04 (bug fix)[3588824] Support weird image names in [text] (vogel)
+
+2012-12-06 (bug fix)[3592736] stop pink greys from buggy mingw builds (fellows)
+
+--- Released 8.6.0, December 20, 2012 --- See ChangeLog for details ---
