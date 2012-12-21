@@ -1,3 +1,17 @@
+2012-12-11  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.6.0 TAGGED FOR RELEASE ***
+
+	* README:		Bump version number to 8.6.0
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 2012-12-04  Francois Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
