@@ -2,6 +2,8 @@
 
 	* library/text.tcl: [Bug 3600251]: Inappropriate replacement of Mac
 	binding.
+	* library/tk.tcl: [Bug 3600260]: Errors in new virtual event
+	definitions
 
 2012-12-11  Don Porter  <dgp@users.sourceforge.net>
 
