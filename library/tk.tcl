@@ -392,7 +392,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<PrevPara>>		<Control-Up>
 	event add <<NextPara>>		<Control-Down>
 	event add <<SelectPrevPara>>	<Control-Shift-Up>
-	event add <<SelectPrevPara>>	<Control-Shift-Down>
+	event add <<SelectNextPara>>	<Control-Shift-Down>
 	event add <<ToggleSelection>>	<Control-ButtonPress-1>
 
 	# Some OS's define a goofy (as in, not <Shift-Tab>) keysym that is
@@ -441,7 +441,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<PrevPara>>		<Control-Up>
 	event add <<NextPara>>		<Control-Down>
 	event add <<SelectPrevPara>>	<Control-Shift-Up>
-	event add <<SelectPrevPara>>	<Control-Shift-Down>
+	event add <<SelectNextPara>>	<Control-Shift-Down>
 	event add <<ToggleSelection>>	<Control-ButtonPress-1>
     }
     "aqua" {
@@ -479,7 +479,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<PrevPara>>		<Option-Up>
 	event add <<NextPara>>		<Option-Down>
 	event add <<SelectPrevPara>>	<Shift-Option-Up>
-	event add <<SelectPrevPara>>	<Shift-Option-Down>
+	event add <<SelectNextPara>>	<Shift-Option-Down>
 	event add <<ToggleSelection>>	<Command-ButtonPress-1>
     }
 }
