@@ -360,7 +360,7 @@ bind Text <Meta-Delete> {
 # Macintosh only bindings:
 
 if {[tk windowingsystem] eq "aqua"} {
-bind Text <<Paste>> {
+bind Text <Control-v> {
     tk::TextScrollPages %W 1
 }
 
