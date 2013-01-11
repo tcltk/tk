@@ -2297,7 +2297,7 @@ ChangeScreen(
     int code;
 
     Tcl_IncrRefCount(cmdObj);
-    code = Tcl_GlobalEvalObj(interp, cmdObj);
+    code = Tcl_EvalObjEx(interp, cmdObj, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (changing screen in event binding)");
