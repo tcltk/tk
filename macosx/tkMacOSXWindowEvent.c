@@ -125,7 +125,7 @@ TkMacOSXProcessApplicationEvent(
 		toggleHide = 1;
 		if (eventPtr->interp && Tcl_GetCommandInfo(eventPtr->interp,
 			"::tk::mac::OnHide", &dummy)) {
-		    Tcl_GlobalEval(eventPtr->interp, "::tk::mac::OnHide");
+		    Tcl_EvalEx(eventPtr->interp, "::tk::mac::OnHide", -1, TCL_EVAL_GLOBAL);
 		}
 	    }
 	    statusPtr->stopProcessing = 1;
@@ -135,7 +135,7 @@ TkMacOSXProcessApplicationEvent(
 		toggleHide = 0;
 		if (eventPtr->interp && Tcl_GetCommandInfo(eventPtr->interp,
 			"::tk::mac::OnShow", &dummy)) {
-		    Tcl_GlobalEval(eventPtr->interp, "::tk::mac::OnShow");
+		    Tcl_EvalEx(eventPtr->interp, "::tk::mac::OnShow", -1, TCL_EVAL_GLOBAL);
 		}
 	    }
 	    statusPtr->stopProcessing = 1;
@@ -896,7 +896,7 @@ TkWmProtocolEventProc(
 	    Tcl_Preserve((ClientData) protPtr);
 	    interp = protPtr->interp;
 	    Tcl_Preserve((ClientData) interp);
-	    result = Tcl_GlobalEval(interp, protPtr->command);
+	    result = Tcl_EvalEx(interp, protPtr->command, -1, TCL_EVAL_GLOBAL);
 	    if (result != TCL_OK) {
 		Tcl_AddErrorInfo(interp, "\n    (command for \"");
 		Tcl_AddErrorInfo(interp,
