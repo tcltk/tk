@@ -3051,7 +3051,7 @@ Initialize(
      * only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3287,7 +3287,7 @@ Initialize(
 	geometry = NULL;
     }
 
-    if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 0) == NULL) {
+    if (Tcl_PkgRequire(interp, "Tcl", "8.6", 0) == NULL) {
 	code = TCL_ERROR;
 	goto done;
     }
