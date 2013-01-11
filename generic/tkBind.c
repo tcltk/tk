@@ -4595,7 +4595,7 @@ TkKeysymToString(
  *
  * TkCopyAndGlobalEval --
  *
- *	This function makes a copy of a script then calls Tcl_GlobalEval to
+ *	This function makes a copy of a script then calls Tcl_EvalEx to
  *	evaluate it. It's used in situations where the execution of a command
  *	may cause the original command string to be reallocated.
  *
