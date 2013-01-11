@@ -444,7 +444,7 @@ Tk_CreateConsoleWindow(interp)
     }
 
     Tcl_Preserve((ClientData) consoleInterp);
-    result = Tcl_GlobalEval(consoleInterp, initCmd);
+    result = Tcl_EvalEx(consoleInterp, initCmd, -1, TCL_EVAL_GLOBAL);
     if (result == TCL_ERROR) {
 	Tcl_Obj *objPtr = Tcl_GetVar2Ex(consoleInterp, "errorCode", NULL,
 		TCL_GLOBAL_ONLY);
@@ -548,7 +548,7 @@ ConsoleOutput(instanceData, buf, toWrite, errorCode)
 
 	    Tcl_DStringFree(&ds);
 	    Tcl_IncrRefCount(cmd);
-	    Tcl_GlobalEvalObj(consoleInterp, cmd);
+	    Tcl_EvalObjEx(consoleInterp, cmd, TCL_EVAL_GLOBAL);
 	    Tcl_DecrRefCount(cmd);
 	}
     }
@@ -754,7 +754,7 @@ ConsoleObjCmd(clientData, interp, objc, objv)
     Tcl_IncrRefCount(cmd);
     if (consoleInterp && !Tcl_InterpDeleted(consoleInterp)) {
 	Tcl_Preserve((ClientData) consoleInterp);
-	result = Tcl_GlobalEvalObj(consoleInterp, cmd);
+	result = Tcl_EvalObjEx(consoleInterp, cmd, TCL_EVAL_GLOBAL);
 	if (result == TCL_ERROR) {
 	    Tcl_Obj *objPtr = Tcl_GetVar2Ex(consoleInterp, "errorCode",
 		    NULL, TCL_GLOBAL_ONLY);
@@ -830,7 +830,7 @@ InterpreterObjCmd(clientData, interp, objc, objv)
     Tcl_Preserve((ClientData) otherInterp);
     switch ((enum option) index) {
     case OTHER_EVAL:
-	result = Tcl_GlobalEvalObj(otherInterp, objv[2]);
+	result = Tcl_EvalObjEx(otherInterp, objv[2], TCL_EVAL_GLOBAL);
 	/*
 	 * TODO: Should exceptions be filtered here?
 	 */
@@ -973,7 +973,7 @@ ConsoleEventProc(clientData, eventPtr)
 	Tcl_Interp *consoleInterp = info->consoleInterp;
 
 	if (consoleInterp && !Tcl_InterpDeleted(consoleInterp)) {
-	    Tcl_GlobalEval(consoleInterp, "tk::ConsoleExit");
+	    Tcl_EvalEx(consoleInterp, "tk::ConsoleExit", -1, TCL_EVAL_GLOBAL);
 	}
 
 	if (--info->refCount <= 0) {
