@@ -17,8 +17,16 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION != 5)
+#if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION < 5)
 #	error Tk 8.5 must be compiled with tcl.h from Tcl 8.5
+#endif
+
+#ifndef _ANSI_ARGS_
+#   ifndef NO_PROTOTYPES
+#	define _ANSI_ARGS_(x)	x
+#   else
+#	define _ANSI_ARGS_(x)	()
+#   endif
 #endif
 
 /*
