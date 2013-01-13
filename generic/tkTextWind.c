@@ -911,10 +911,10 @@ EmbWinLayoutProc(
 
 	if (dsPtr != NULL) {
 	    Tcl_DStringAppend(dsPtr, before, (int) (string-before));
-	    code = Tcl_GlobalEval(textPtr->interp, Tcl_DStringValue(dsPtr));
+	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), -1, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(dsPtr);
 	} else {
-	    code = Tcl_GlobalEval(textPtr->interp, ewPtr->body.ew.create);
+	    code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, -1, TCL_EVAL_GLOBAL);
 	}
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(textPtr->interp, code);
@@ -1339,6 +1339,10 @@ TkTextWindowIndex(
 {
     Tcl_HashEntry *hPtr;
     TkTextSegment *ewPtr;
+
+    if (textPtr == NULL) {
+	return 0;
+    }
 
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->windowTable, name);
     if (hPtr == NULL) {

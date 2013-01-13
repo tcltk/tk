@@ -1,3 +1,52 @@
+2013-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/tk.tcl: [Bug 3600390]: tk_strictMotif not tested for.
+	* library/ttk/entry.tcl: Now all key-bindings for Control-
+	a,b,e,f,n,p (and its shift variant) respect tk_strictMotif.
+
+2013-01-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/text.tcl: [Bug 3600251]: Inappropriate replacement of Mac
+	binding.
+	* library/tk.tcl: [Bug 3600260]: Errors in new virtual event
+	definitions
+
+2012-12-11  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.6.0 TAGGED FOR RELEASE ***
+
+	* README:		Bump version number to 8.6.0
+	* generic/tk.h:
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
+2012-12-04  Francois Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
+	* tests/textIndex.test:  for weird image names
+
+2012-11-14  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 3500545]: tk_getOpenFile -multiple 1 wrong
+	on windows
+
+2012-11-11  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinTest.c: [Bug 3585396]: winDialog.test requires user
+	* tests/winDialog.test: interaction.
+
+2012-11-07  Donal K. Fellows  <dkf@users.sf.net>
+
+	* generic/tkFocus.c (TkSetFocusWin): [Bug 3574708]: Move window
+	liveness into this function from caller sites to ensure that there are
+	no paths where things can trip up on setting the focus to a partially
+	dead window.
+
 2012-10-24  Don Porter  <dgp@users.sourceforge.net>
 
 	* macosx/tkMacOSXWm.c:	[Bug 3574893] Add overlooked toplevel ref
@@ -490,7 +539,7 @@
 2011-12-13  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/getOpenFile.n: Make example follow best practices. Issue spotted
-	by Emiliano Gavilan.
+	by Emiliano Gavilán.
 
 2011-11-29  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -899,7 +948,7 @@
 2010-12-02  Donal K. Fellows  <dkf@users.sf.net>
 
 	* generic/tkInt.decls (TkDrawAngledTextLayout,TkDrawAngledChars,...):
-	Expose angled text API for Emiliano Gavilan. Still only in internal
+	Expose angled text API for Emiliano Gavilán. Still only in internal
 	stub table.
 
 2010-11-29  Jan Nijtmans  <nijtmans@users.sf.net>
@@ -2542,7 +2591,7 @@
 2009-07-26  Donal K. Fellows  <dkf@users.sf.net>
 
 	* doc/canvas.n: Corrected description of acceptable join styles.
-	Spotted by Emiliano Gavilan.
+	Spotted by Emiliano Gavilán.
 
 2009-07-23  Donal K. Fellows  <dkf@users.sf.net>
 
@@ -2579,7 +2628,7 @@
 
 	* unix/tkUnixSelect.c (SelCvtFromX32, SelCvtFromX8): Make the
 	incremental transfer of binary selections work get deserialized
-	correctly. Thanks to Emiliano Gavilan for detecting.
+	correctly. Thanks to Emiliano Gavilán for detecting.
 
 2009-07-18  Daniel Steffen  <das@users.sourceforge.net>
 
@@ -4853,7 +4902,7 @@
 	* changes:	Updates for 8.5.2 release.
 
 	* unix/tkUnixCursor.c:	[Bug 1922466]: Stop crash in [. configure
-	-cursor] on X11. Thanks to emiliano gavilan.
+	-cursor] on X11. Thanks to Emiliano Gavilán.
 
 2008-03-26  Joe English  <jenglish@users.sourceforge.net>
 

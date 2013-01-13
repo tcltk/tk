@@ -141,9 +141,6 @@ bind TEntry <<NextLine>>		{# nothing}
 
 ## Additional emacs-like bindings:
 #
-bind TEntry <Control-Key-b>		{ ttk::entry::Move %W prevchar }
-bind TEntry <Control-Key-d> 		{ ttk::entry::Delete %W }
-bind TEntry <Control-Key-f> 		{ ttk::entry::Move %W nextchar }
 bind TEntry <Control-Key-h>		{ ttk::entry::Backspace %W }
 bind TEntry <Control-Key-k>		{ %W delete insert end }
 
