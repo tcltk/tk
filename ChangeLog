@@ -1,3 +1,9 @@
+2013-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/tk.tcl: [Bug 3600390]: tk_strictMotif not tested for.
+	* library/ttk/entry.tcl: Now all key-bindings for Control-
+	a,b,e,f,n,p (and its shift variant) respect tk_strictMotif.
+
 2013-01-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/text.tcl: [Bug 3600251]: Inappropriate replacement of Mac
