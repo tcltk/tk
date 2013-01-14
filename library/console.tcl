@@ -389,7 +389,7 @@ proc ::tk::console::Paste {w} {
 proc ::tk::ConsoleBind {w} {
     bindtags $w [list $w Console PostConsole [winfo toplevel $w] all]
 
-    event add <<NewLine>> <Key-Return> <Key-KP_Enter> <Control-Key-o>
+    event add <<NewLine>> <Return> <KP_Enter> <Control-o>
 
     ## Get all Text bindings into Console
     foreach ev [bind Text] {
