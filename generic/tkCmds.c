@@ -1018,8 +1018,8 @@ Tk_TkwaitObjCmd(
 
     switch ((enum options) index) {
     case TKWAIT_VARIABLE:
-	if (Tcl_TraceVar(interp, Tcl_GetString(objv[2]),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	if (Tcl_TraceVar2(interp, Tcl_GetString(objv[2]),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		WaitVariableProc, &done) != TCL_OK) {
 	    return TCL_ERROR;
 	}

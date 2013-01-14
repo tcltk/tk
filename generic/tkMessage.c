@@ -470,9 +470,9 @@ ConfigureMessage(
     if (msgPtr->textVarName != NULL) {
 	const char *value;
 
-	value = Tcl_GetVar(interp, msgPtr->textVarName, TCL_GLOBAL_ONLY);
+	value = Tcl_GetVar2(interp, msgPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
-	    Tcl_SetVar(interp, msgPtr->textVarName, msgPtr->string,
+	    Tcl_SetVar2(interp, msgPtr->textVarName, NULL, msgPtr->string,
 		    TCL_GLOBAL_ONLY);
 	} else {
 	    if (msgPtr->string != NULL) {
@@ -480,7 +480,7 @@ ConfigureMessage(
 	    }
 	    msgPtr->string = strcpy(ckalloc(strlen(value) + 1), value);
 	}
-	Tcl_TraceVar(interp, msgPtr->textVarName,
+	Tcl_TraceVar2(interp, msgPtr->textVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, msgPtr);
     }
@@ -845,16 +845,16 @@ MessageTextVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_SetVar(interp, msgPtr->textVarName, msgPtr->string,
+	    Tcl_SetVar2(interp, msgPtr->textVarName, NULL, msgPtr->string,
 		    TCL_GLOBAL_ONLY);
-	    Tcl_TraceVar(interp, msgPtr->textVarName,
+	    Tcl_TraceVar2(interp, msgPtr->textVarName, NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    MessageTextVarProc, clientData);
 	}
 	return NULL;
     }
 
-    value = Tcl_GetVar(interp, msgPtr->textVarName, TCL_GLOBAL_ONLY);
+    value = Tcl_GetVar2(interp, msgPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
     if (value == NULL) {
 	value = "";
     }
