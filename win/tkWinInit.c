@@ -70,7 +70,7 @@ TkpGetAppName(
     int argc, namelength;
     const char **argv = NULL, *name, *p;
 
-    name = Tcl_GetVar(interp, "argv0", TCL_GLOBAL_ONLY);
+    name = Tcl_GetVar2(interp, "argv0", NULL, TCL_GLOBAL_ONLY);
     namelength = -1;
     if (name != NULL) {
 	Tcl_SplitPath(name, &argc, &argv);
