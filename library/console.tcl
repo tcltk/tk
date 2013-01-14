@@ -389,7 +389,8 @@ proc ::tk::console::Paste {w} {
 proc ::tk::ConsoleBind {w} {
     bindtags $w [list $w Console PostConsole [winfo toplevel $w] all]
 
-    event add <<NewLine>> <Return> <KP_Enter> <Control-o>
+    event add <<NewLine>> <Return> <KP_Enter>
+    event add <<NewPage>> <Control-o> <Control-Return> <Control-KP_Enter>
 
     ## Get all Text bindings into Console
     foreach ev [bind Text] {
@@ -441,6 +442,10 @@ proc ::tk::ConsoleBind {w} {
 	%W mark set insert {end - 1c}
 	tk::ConsoleInsert %W "\n"
 	tk::ConsoleInvoke
+	break
+    }
+    bind Console <<NewPage>> {
+	tk::ConsoleInsert %W "\n"
 	break
     }
     bind Console <Delete> {
