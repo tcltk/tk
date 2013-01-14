@@ -270,7 +270,7 @@ static Tcl_Obj *Ttk_Use(
     } else {
 	Tcl_DecrRefCount(cacheObj);
 	Tcl_SetHashValue(entryPtr, NULL);
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, TCL_ERROR);
 	return NULL;
     }
 }
@@ -341,7 +341,7 @@ Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
     Tcl_SetHashValue(entryPtr, image);
 
     if (!image) {
-	Tcl_BackgroundError(cache->interp);
+	Tcl_BackgroundException(cache->interp, TCL_ERROR);
     }
 
     return image;

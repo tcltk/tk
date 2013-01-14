@@ -363,11 +363,11 @@ TkpInit(
 	     */
 
 	    if (Tcl_GetStartupScript(NULL) == NULL) {
-		const char *intvar = Tcl_GetVar(interp,
-			"tcl_interactive", TCL_GLOBAL_ONLY);
+		const char *intvar = Tcl_GetVar2(interp,
+			"tcl_interactive", NULL, TCL_GLOBAL_ONLY);
 
 		if (intvar == NULL) {
-		    Tcl_SetVar(interp, "tcl_interactive", "1",
+		    Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
 			    TCL_GLOBAL_ONLY);
 		}
 	    }
@@ -380,11 +380,11 @@ TkpInit(
     Tk_MacOSXSetupTkNotifier();
 
     if (tkLibPath[0] != '\0') {
-	Tcl_SetVar(interp, "tk_library", tkLibPath, TCL_GLOBAL_ONLY);
+	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
 
     if (scriptPath[0] != '\0') {
-	Tcl_SetVar(interp, "auto_path", scriptPath,
+	Tcl_SetVar2(interp, "auto_path", NULL, scriptPath,
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
 
@@ -421,7 +421,7 @@ TkpGetAppName(
 {
     const char *p, *name;
 
-    name = Tcl_GetVar(interp, "argv0", TCL_GLOBAL_ONLY);
+    name = Tcl_GetVar2(interp, "argv0", NULL, TCL_GLOBAL_ONLY);
     if ((name == NULL) || (*name == 0)) {
 	name = "tk";
     } else {
