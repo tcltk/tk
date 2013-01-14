@@ -389,16 +389,20 @@ proc ::tk::console::Paste {w} {
 proc ::tk::ConsoleBind {w} {
     bindtags $w [list $w Console PostConsole [winfo toplevel $w] all]
 
+    event add <<NewLine>> <Key-Return> <Key-KP_Enter> <Control-Key-o>
+
     ## Get all Text bindings into Console
     foreach ev [bind Text] {
 	bind Console $ev [bind Text $ev]
     }
     ## We really didn't want the newline insertion...
-    bind Console <Control-Key-o> {}
+    bind Console <Return> {}
+    bind Console <KP_Enter> {}
+    bind Console <Control-o> {}
 
     # For the moment, transpose isn't enabled until the console
     # gets and overhaul of how it handles input -- hobbs
-    bind Console <Control-Key-t> {# nothing}
+    bind Console <Control-t> {# nothing}
 
     # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
     # Otherwise, if a widget binding for one of these is defined, the
@@ -433,13 +437,12 @@ proc ::tk::ConsoleBind {w} {
 	    ::tk::console::Expand %W var
 	}
     }
-    bind Console <Key-Return> {
+    bind Console <<NewLine>> {
 	%W mark set insert {end - 1c}
 	tk::ConsoleInsert %W "\n"
 	tk::ConsoleInvoke
 	break
     }
-    bind Console <Key-KP_Enter> [bind Console <Key-Return>]
     bind Console <Delete> {
 	if {{} ne [%W tag nextrange sel 1.0 end] \
 		&& [%W compare sel.first >= promptEnd]} {
