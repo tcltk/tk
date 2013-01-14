@@ -625,9 +625,9 @@ ConfigureMenuButton(
 	 */
 	const char *value;
 
-	value = Tcl_GetVar(interp, mbPtr->textVarName, TCL_GLOBAL_ONLY);
+	value = Tcl_GetVar2(interp, mbPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
-	    Tcl_SetVar(interp, mbPtr->textVarName, mbPtr->text,
+	    Tcl_SetVar2(interp, mbPtr->textVarName, NULL, mbPtr->text,
 		    TCL_GLOBAL_ONLY);
 	} else {
 	    if (mbPtr->text != NULL) {
@@ -636,7 +636,7 @@ ConfigureMenuButton(
 	    mbPtr->text = ckalloc(strlen(value) + 1);
 	    strcpy(mbPtr->text, value);
 	}
-	Tcl_TraceVar(interp, mbPtr->textVarName,
+	Tcl_TraceVar2(interp, mbPtr->textVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuButtonTextVarProc, mbPtr);
     }
@@ -888,16 +888,16 @@ MenuButtonTextVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_SetVar(interp, mbPtr->textVarName, mbPtr->text,
+	    Tcl_SetVar2(interp, mbPtr->textVarName, NULL, mbPtr->text,
 		    TCL_GLOBAL_ONLY);
-	    Tcl_TraceVar(interp, mbPtr->textVarName,
+	    Tcl_TraceVar2(interp, mbPtr->textVarName, NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    MenuButtonTextVarProc, clientData);
 	}
 	return NULL;
     }
 
-    value = Tcl_GetVar(interp, mbPtr->textVarName, TCL_GLOBAL_ONLY);
+    value = Tcl_GetVar2(interp, mbPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
     if (value == NULL) {
 	value = "";
     }

@@ -1906,8 +1906,8 @@ PostProcessEntry(
 	}
 	if (mePtr->namePtr != NULL) {
 	    name = Tcl_GetString(mePtr->namePtr);
-	    Tcl_TraceVar(menuPtr->interp, name,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	    Tcl_TraceVar2(menuPtr->interp, name,
+		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    MenuVarProc, mePtr);
 	}
     }
@@ -2558,7 +2558,7 @@ MenuVarProc(
      * entry.
      */
 
-    value = Tcl_GetVar(interp, name, TCL_GLOBAL_ONLY);
+    value = Tcl_GetVar2(interp, name, NULL, TCL_GLOBAL_ONLY);
     if (value == NULL) {
 	value = "";
     }

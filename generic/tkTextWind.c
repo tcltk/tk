@@ -927,7 +927,7 @@ EmbWinLayoutProc(
 		Tcl_GetString(nameObj), textPtr->tkwin);
 	Tcl_DecrRefCount(nameObj);
 	if (ewPtr->body.ew.tkwin == NULL) {
-	    Tcl_BackgroundError(textPtr->interp);
+	    Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
 	    goto gotWindow;
 	}
 
@@ -948,7 +948,7 @@ EmbWinLayoutProc(
 		    Tk_PathName(textPtr->tkwin)));
 	    Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY", "HIERARCHY",
 		    NULL);
-	    Tcl_BackgroundError(textPtr->interp);
+	    Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
 	    ewPtr->body.ew.tkwin = NULL;
 	    goto gotWindow;
 	}

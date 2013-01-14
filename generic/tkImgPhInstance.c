@@ -64,7 +64,7 @@ static int imgPhotoColorHashInitialized;
  *	None.
  *
  * Side effects:
- *	Generates errors via Tcl_BackgroundError if there are problems in
+ *	Generates errors via Tcl_BackgroundException if there are problems in
  *	setting up the instance.
  *
  *----------------------------------------------------------------------

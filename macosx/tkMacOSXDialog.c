@@ -502,8 +502,8 @@ Tk_GetOpenFileObjCmd(
 	 * The -typevariable option is not really supported.
 	 */
 
-	Tcl_SetVar(interp, Tcl_GetString(typeVariablePtr), "",
-		TCL_GLOBAL_ONLY);
+	Tcl_SetVar2(interp, Tcl_GetString(typeVariablePtr), NULL,
+		"", TCL_GLOBAL_ONLY);
     }
 
   end:

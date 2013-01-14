@@ -993,8 +993,8 @@ TkCreateMainWindow(
      * Set variables for the intepreter.
      */
 
-    Tcl_SetVar(interp, "tk_patchLevel", TK_PATCH_LEVEL, TCL_GLOBAL_ONLY);
-    Tcl_SetVar(interp, "tk_version",    TK_VERSION,     TCL_GLOBAL_ONLY);
+    Tcl_SetVar2(interp, "tk_patchLevel", NULL, TK_PATCH_LEVEL, TCL_GLOBAL_ONLY);
+    Tcl_SetVar2(interp, "tk_version",    NULL, TK_VERSION,     TCL_GLOBAL_ONLY);
 
     tsdPtr->numMainWindows++;
     return tkwin;
@@ -3279,7 +3279,7 @@ Initialize(
      */
 
     if (geometry != NULL) {
-	Tcl_SetVar(interp, "geometry", geometry, TCL_GLOBAL_ONLY);
+	Tcl_SetVar2(interp, "geometry", NULL, geometry, TCL_GLOBAL_ONLY);
 	code = Tcl_VarEval(interp, "wm geometry . ", geometry, NULL);
 	if (code != TCL_OK) {
 	    goto done;

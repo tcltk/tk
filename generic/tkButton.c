@@ -1297,13 +1297,13 @@ ConfigureButton(
      */
 
     if (butPtr->textVarNamePtr != NULL) {
-	Tcl_TraceVar(interp, Tcl_GetString(butPtr->textVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_TraceVar2(interp, Tcl_GetString(butPtr->textVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonTextVarProc, butPtr);
     }
     if (butPtr->selVarNamePtr != NULL) {
-	Tcl_TraceVar(interp, Tcl_GetString(butPtr->selVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_TraceVar2(interp, Tcl_GetString(butPtr->selVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonVarProc, butPtr);
     }
 
@@ -1618,8 +1618,8 @@ ButtonVarProc(
     if (flags & TCL_TRACE_UNSETS) {
 	butPtr->flags &= ~(SELECTED | TRISTATED);
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_TraceVar(interp, Tcl_GetString(butPtr->selVarNamePtr),
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	    Tcl_TraceVar2(interp, Tcl_GetString(butPtr->selVarNamePtr),
+		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ButtonVarProc, clientData);
 	}
 	goto redisplay;
@@ -1712,8 +1712,8 @@ ButtonTextVarProc(
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
 	    Tcl_ObjSetVar2(interp, butPtr->textVarNamePtr, NULL,
 		    butPtr->textPtr, TCL_GLOBAL_ONLY);
-	    Tcl_TraceVar(interp, Tcl_GetString(butPtr->textVarNamePtr),
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	    Tcl_TraceVar2(interp, Tcl_GetString(butPtr->textVarNamePtr),
+		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ButtonTextVarProc, clientData);
 	}
 	return NULL;
