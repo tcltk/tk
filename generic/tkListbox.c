@@ -1648,8 +1648,8 @@ ConfigureListbox(
 	    }
 
 	    listPtr->listObj = listVarObj;
-	    Tcl_TraceVar(listPtr->interp, listPtr->listVarName,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	    Tcl_TraceVar2(listPtr->interp, listPtr->listVarName,
+		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ListboxListVarProc, listPtr);
 	} else if (listPtr->listObj == NULL) {
 	    listPtr->listObj = Tcl_NewObj();
@@ -3381,8 +3381,8 @@ ListboxListVarProc(
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
 	    Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
 		    listPtr->listObj, TCL_GLOBAL_ONLY);
-	    Tcl_TraceVar(interp, listPtr->listVarName,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	    Tcl_TraceVar2(interp, listPtr->listVarName,
+		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ListboxListVarProc, clientData);
 	    return NULL;
 	}
