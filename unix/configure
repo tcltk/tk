@@ -1585,7 +1585,8 @@ echo "${ECHO_T}$BUILD_TCLSH" >&6
 
 
 
-if test "${TCL_VERSION}" != "${TK_VERSION}"; then
+if test "${TCL_MAJOR_VERSION}" == "${TK_MAJOR_VERSION}"; then
+if test "${TCL_MINOR_VERSION}" -lt "${TK_MINOR_VERSION}"; then
     { { echo "$as_me:$LINENO: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
 Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
 Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&5
@@ -1593,6 +1594,7 @@ echo "$as_me: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
 Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
 Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&2;}
    { (exit 1); exit 1; }; }
+fi
 fi
 
 #------------------------------------------------------------------------

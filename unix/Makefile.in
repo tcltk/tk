@@ -699,7 +699,7 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) ${WISH_EXE}
 	    echo "Creating package index $(PKG_INDEX)"; \
 	    rm -f "$(PKG_INDEX)"; \
 	    (\
-	    echo "if {[catch {package present Tcl 8.5.0}]} return";\
+	    echo "if {[catch {package present Tcl 8.5.0-}]} return";\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
 	    if test "x$(DLL_INSTALL_DIR)" != "x$(BIN_INSTALL_DIR)"; then \
 	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE)]] Tk]";\
