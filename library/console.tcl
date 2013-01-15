@@ -393,12 +393,13 @@ proc ::tk::ConsoleBind {w} {
     event add <<NewLine>> <Shift-Return> <Shift-KP_Enter>
     event add <<NewPage>> <Control-Return> <Control-KP_Enter> <Control-Key-o> <Control-Lock-Key-O>
     event add <<Transpose>> <Control-Key-t> <Control-Lock-Key-T>
+    event add <<KillLine>> <Control-Key-k> <Control-Lock-Key-K>
 
     ## Get all Text bindings into Console
     foreach ev [bind Text] {
 	bind Console $ev [bind Text $ev]
     }
-    ## We really didn't want the newline insertion nor Transpose ...
+    ## We really didn't want the newline insertion/Transpose ...
     bind Console <Return> {}
     bind Console <KP_Enter> {}
     bind Console <Control-o> {}
@@ -485,7 +486,7 @@ proc ::tk::ConsoleBind {w} {
 	}
 	%W delete insert
     }
-    bind Console <Control-Key-k> {
+    bind Console <<KillLine>> {
 	if {[%W compare insert < promptEnd]} {
 	    break
 	}
