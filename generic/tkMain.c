@@ -26,8 +26,12 @@
 
 extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
-#if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION > 5
-#   define Tcl_FindExecutable(argv0) /* not needed for Tcl > 8.5 */
+#if TCL_MAJOR_VERSION > 8
+#   define Tcl_FindExecutable(argv0) /* not needed for Tcl >= 9.0 */
+#elif defined(USE_TCL_STUBS) /* Only call if non-NULL */
+#   undef Tcl_FindExecutable
+#   define Tcl_FindExecutable(argv0) if (tclStubsPtr->tcl_FindExecutable) \
+	tclStubsPtr->tcl_FindExecutable(argv0)
 #endif
 
 typedef struct ThreadSpecificData {
