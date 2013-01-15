@@ -1,3 +1,8 @@
+2013-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tcl.m4: More flexible search for win32 tclConfig.sh,
+	* win/configure: backported from TEA.
+
 2013-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/tk.tcl: [Bug 3600390]: tk_strictMotif not tested for.
