@@ -39,10 +39,12 @@ SC_LOAD_TCLCONFIG
 SC_PROG_TCLSH
 SC_BUILD_TCLSH
 
-if test "${TCL_VERSION}" != "${TK_VERSION}"; then
+if test "${TCL_MAJOR_VERSION}" == "${TK_MAJOR_VERSION}"; then
+if test "${TCL_MINOR_VERSION}" -lt "${TK_MINOR_VERSION}"; then
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
 Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
 Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
+fi
 fi
 
 #------------------------------------------------------------------------
