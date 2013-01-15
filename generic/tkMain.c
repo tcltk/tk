@@ -26,6 +26,10 @@
 
 extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
+#if TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION > 5
+#   define Tcl_FindExecutable(argv0) /* not needed for Tcl > 8.5 */
+#endif
+
 typedef struct ThreadSpecificData {
     Tcl_Interp *interp;		/* Interpreter for this thread. */
     Tcl_DString command;	/* Used to assemble lines of terminal input

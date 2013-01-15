@@ -17,8 +17,8 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION < 5)
-#	error Tk 8.5 must be compiled with tcl.h from Tcl 8.5
+#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 5)
+#	error Tk 8.5 must be compiled with tcl.h from Tcl 8.5 or better
 #endif
 
 #ifndef _ANSI_ARGS_
@@ -27,6 +27,36 @@
 #   else
 #	define _ANSI_ARGS_(x)	()
 #   endif
+#endif
+
+#ifndef CONST84
+#   define CONST const
+#   define CONST84 const
+#   define CONST84_RETURN const
+#   define EXTERN extern
+#endif
+
+#if defined(__WIN32__) && !defined(HAVE_WINNT_IGNORE_VOID)
+#ifndef VOID
+#define VOID void
+typedef char CHAR;
+typedef short SHORT;
+typedef long LONG;
+#endif
+#endif /* __WIN32__ && !HAVE_WINNT_IGNORE_VOID */
+
+/*
+ * Utility macros: STRINGIFY takes an argument and wraps it in "" (double
+ * quotation marks), JOIN joins two arguments.
+ */
+
+#ifndef STRINGIFY
+#  define STRINGIFY(x) STRINGIFY1(x)
+#  define STRINGIFY1(x) #x
+#endif
+#ifndef JOIN
+#  define JOIN(a,b) JOIN1(a,b)
+#  define JOIN1(a,b) a##b
 #endif
 
 /*
@@ -1489,9 +1519,19 @@ typedef struct Tk_ElementSpec {
 #define Tk_Preserve		Tcl_Preserve
 #define Tk_Release		Tcl_Release
 
-/* Removed Tk_Main, use macro instead */
+/* Removed Tk_Main, use macro instead
+ * Starting with Tcl 8.6, Tcl_FindExecutable must be called first.
+ */
+#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
 #define Tk_Main(argc, argv, proc) \
     Tk_MainEx(argc, argv, proc, Tcl_CreateInterp())
+#elif defined(__WIN32__) || defined(__CYGWIN__)
+#define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
+	(Tcl_FindExecutable(0), (Tcl_CreateInterp)()))
+#else
+#define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
+	(Tcl_FindExecutable(argv[0]), (Tcl_CreateInterp)()))
+#endif
 
 const char *		Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
 			    const char *version, int exact));
