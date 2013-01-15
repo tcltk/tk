@@ -49,10 +49,13 @@ proc csetup {{str ""}} {
 
 setup
 
-case $tcl_platform(platform) {
-    unix	{set fixed "fixed"}
-    windows	{set fixed "courier 12"}
+switch [tk windowingsystem] {
+    x11	 	{set fixed "fixed"}
+    win32	{set fixed "courier 12"}
+    aqua	{set fixed "monaco 9"}
 }
+
+
 set times [font actual {times 0} -family]
 
 test font-1.1 {TkFontPkgInit} {
