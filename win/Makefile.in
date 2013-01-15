@@ -482,7 +482,7 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[catch {package present Tcl 8.5.0}]} return";\
+	echo "if {[catch {package present Tcl 8.5.0-}]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
 	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]] Tk]";\
