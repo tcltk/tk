@@ -136,7 +136,7 @@ Tk_MainEx(
      * only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, "8.5", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.5.0", 0) == NULL) {
 	abort();
     }
 
