@@ -1963,7 +1963,7 @@ SetTkDialog(
     char buf[32];
 
     sprintf(buf, "0x%p", (HWND) clientData);
-    Tcl_SetVar(tsdPtr->debugInterp, "tk_dialog", buf, TCL_GLOBAL_ONLY);
+    Tcl_SetVar2(tsdPtr->debugInterp, "tk_dialog", NULL, buf, TCL_GLOBAL_ONLY);
 }
 
 /*
