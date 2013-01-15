@@ -1203,6 +1203,11 @@ MODULE_SCOPE int	TkUnsupported1ObjCmd(ClientData clientData,
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+MODULE_SCOPE int		Tk_VarEval(Tcl_Interp *interp, ...);
+
+#undef Tcl_VarEval
+#define Tcl_VarEval Tk_VarEval
+
 #endif /* _TKINT */
 
 /*
