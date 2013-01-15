@@ -1520,7 +1520,7 @@ typedef struct Tk_ElementSpec {
 #define Tk_Release		Tcl_Release
 
 /* Removed Tk_Main, use macro instead
- * Starting with Tcl 8.6, Tcl_FindExecutable must be called first.
+ * Preferably, Tcl_FindExecutable is called first (mandatory for Tcl >= 8.6).
  */
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
 #define Tk_Main(argc, argv, proc) \
