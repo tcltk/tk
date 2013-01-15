@@ -389,21 +389,20 @@ proc ::tk::console::Paste {w} {
 proc ::tk::ConsoleBind {w} {
     bindtags $w [list $w Console PostConsole [winfo toplevel $w] all]
 
-    event add <<NewLine>> <Return> <KP_Enter>
-    event add <<NewPage>> <Control-o> <Control-Return> <Control-KP_Enter>
+    event add <<Enter>> <Return> <KP_Enter>
+    event add <<NewLine>> <Shift-Return> <Shift-KP_Enter>
+    event add <<NewPage>> <Control-Return> <Control-KP_Enter> <Control-Key-o> <Control-Lock-Key-O>
+    event add <<Transpose>> <Control-Key-t> <Control-Lock-Key-T>
 
     ## Get all Text bindings into Console
     foreach ev [bind Text] {
 	bind Console $ev [bind Text $ev]
     }
-    ## We really didn't want the newline insertion...
+    ## We really didn't want the newline insertion nor Transpose ...
     bind Console <Return> {}
     bind Console <KP_Enter> {}
     bind Console <Control-o> {}
-
-    # For the moment, transpose isn't enabled until the console
-    # gets and overhaul of how it handles input -- hobbs
-    bind Console <Control-t> {# nothing}
+    bind Console <Control-t> {}
 
     # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
     # Otherwise, if a widget binding for one of these is defined, the
@@ -438,16 +437,17 @@ proc ::tk::ConsoleBind {w} {
 	    ::tk::console::Expand %W var
 	}
     }
-    bind Console <<NewLine>> {
+    bind Console <<Enter>> {
 	%W mark set insert {end - 1c}
 	tk::ConsoleInsert %W "\n"
 	tk::ConsoleInvoke
 	break
     }
-    bind Console <<NewPage>> {
+    bind Console <<NewLine>> {
 	tk::ConsoleInsert %W "\n"
 	break
     }
+    bind Console <<NewPage>> [bind Console <<NewLine>>]
     bind Console <Delete> {
 	if {{} ne [%W tag nextrange sel 1.0 end] \
 		&& [%W compare sel.first >= promptEnd]} {
@@ -576,7 +576,7 @@ proc ::tk::ConsoleBind {w} {
 	bind Console <Command-Key-plus> [bind Console <Control-Key-plus>]
 	bind Console <Command-Key-minus> [bind Console <Control-Key-minus>]
 	if {$::tk::console::useFontchooser} {
-	    bind Console <Command-Key-t> [list ::tk::console::FontchooserToggle]
+	    bind Console <<Transpose>> [list ::tk::console::FontchooserToggle]
 	}
     }
 

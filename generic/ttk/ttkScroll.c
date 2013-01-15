@@ -124,7 +124,7 @@ static void UpdateScrollbarBG(ClientData clientData)
     Tcl_Preserve((ClientData) interp);
     code = UpdateScrollbar(interp, h);
     if (code == TCL_ERROR && !Tcl_InterpDeleted(interp)) {
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, code);
     }
     Tcl_Release((ClientData) interp);
 }

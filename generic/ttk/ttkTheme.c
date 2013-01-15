@@ -508,8 +508,9 @@ static void ThemeChangedProc(ClientData clientData)
     static char ThemeChangedScript[] = "ttk::ThemeChanged";
     StylePackageData *pkgPtr = clientData;
 
-    if (Tcl_EvalEx(pkgPtr->interp, ThemeChangedScript, -1, TCL_EVAL_GLOBAL) != TCL_OK) {
-	Tcl_BackgroundError(pkgPtr->interp);
+    int code = Tcl_EvalEx(pkgPtr->interp, ThemeChangedScript, -1, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(pkgPtr->interp, code);
     }
     pkgPtr->themeChangePending = 0;
 }
