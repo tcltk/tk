@@ -3021,7 +3021,7 @@ Initialize(
     ThreadSpecificData *tsdPtr;
 
     /*
-     * Ensure that we are getting the matching version of Tcl.
+     * Ensure that we are getting a compatible version of Tcl.
      */
 
     if (Tcl_InitStubs(interp, "8.5.0", 0) == NULL) {
