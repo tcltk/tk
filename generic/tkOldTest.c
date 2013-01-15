@@ -268,7 +268,7 @@ ImageGet(
     XGCValues gcValues;
 
     sprintf(buffer, "%s get", timPtr->imageName);
-    Tcl_SetVar(timPtr->interp, timPtr->varName, buffer,
+    Tcl_SetVar2(timPtr->interp, timPtr->varName, NULL, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 
     instPtr = ckalloc(sizeof(TImageInstance));
@@ -315,8 +315,8 @@ ImageDisplay(
     sprintf(buffer, "%s display %d %d %d %d %d %d",
 	    instPtr->masterPtr->imageName, imageX, imageY, width, height,
 	    drawableX, drawableY);
-    Tcl_SetVar(instPtr->masterPtr->interp, instPtr->masterPtr->varName, buffer,
-	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+    Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
+	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     if (width > (instPtr->masterPtr->width - imageX)) {
 	width = instPtr->masterPtr->width - imageX;
     }
@@ -358,8 +358,8 @@ ImageFree(
     char buffer[200];
 
     sprintf(buffer, "%s free", instPtr->masterPtr->imageName);
-    Tcl_SetVar(instPtr->masterPtr->interp, instPtr->masterPtr->varName, buffer,
-	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+    Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
+	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     Tk_FreeColor(instPtr->fg);
     Tk_FreeGC(display, instPtr->gc);
     ckfree(instPtr);
@@ -392,7 +392,7 @@ ImageDelete(
     char buffer[100];
 
     sprintf(buffer, "%s delete", timPtr->imageName);
-    Tcl_SetVar(timPtr->interp, timPtr->varName, buffer,
+    Tcl_SetVar2(timPtr->interp, timPtr->varName, NULL, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 
     Tcl_DeleteCommand(timPtr->interp, timPtr->imageName);
