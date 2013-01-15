@@ -132,7 +132,7 @@ Tk_MainEx(
     Tcl_DString appName;
 
     /*
-     * Ensure that we are getting the matching version of Tcl. This is really
+     * Ensure that we are getting a compatible version of Tcl. This is really
      * only an issue when Tk is loaded dynamically.
      */
 
