@@ -189,7 +189,7 @@ KEYSYM_FLAGS		=
 # Tk does not used deprecated Tcl constructs so it should
 # compile fine with -DTCL_NO_DEPRECATED. To remove its own
 # set of deprecated code uncomment the second line.
-NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
+NO_DEPRECATED_FLAGS	=
 #NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
 
 # Some versions of make, like SGI's, use the following variable to
@@ -329,7 +329,7 @@ CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
 ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
 
-CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) ${TCL_STUB_FLAGS} 
+CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) ${TCL_STUB_FLAGS}
 
 APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
 
@@ -1500,7 +1500,7 @@ BUILD_HTML = \
 #
 # Targets to build Solaris package of the distribution for the current
 # architecture.  To build stream packages for both sun4 and i86pc
-# architectures: 
+# architectures:
 #
 #   On the sun4 machine, execute the following:
 #     make distclean; ./configure
@@ -1556,7 +1556,7 @@ package-common:
 # Build and install the architecture specific files in the dist directory.
 #
 
-package-binaries: 
+package-binaries:
 	cd $(DISTDIR)/unix/`arch`; \
 	$(MAKE); \
 	$(MAKE) install-binaries prefix=$(DISTDIR)/SUNWtcl/$(TCLVERSION) \
