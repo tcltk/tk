@@ -1,9 +1,17 @@
+2013-01-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/Makefile.in: Don't compile Tk with -DTCL_NO_DEPRECATED by default
+	* unix/Makefile.in: any more, it might hurt when we compile Tk 8.x
+	against Tcl 8.y with y > x, because new deprecated constructs might be
+	added in higher Tcl versions (except for Tk 8.6, for now, because there
+	is no higher 8.x yet)
+
 2013-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tcl.m4: More flexible search for win32 tclConfig.sh,
 	* win/configure: backported from TEA.
 
-2012-12-04  Francois Vogel  <fvogelnew1@free.fr>
+2012-12-03  François Vogel  <fvogelnew1@free.fr>
 
    * generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
    * tests/textIndex.test:  for weird image names
@@ -125,7 +133,7 @@
 	* win/rules.vc:        Backport some improvements from Tcl 8.6
 	* win/makefile.vc:
 
-2012-08-11  Francois Vogel  <fvogelnew1@free.fr>
+2012-08-11  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextTag.c:  [Bug 3554273]: Test textDisp-32.2 failed
 
@@ -136,11 +144,11 @@
 	* unix/tkUnixKey.c:	The warnings were false flags from a
 	* unix/tkUnixRFont.c:	faulty OpenBSD C compiler.
 
-2012-08-03  Francois Vogel  <fvogelnew1@free.fr>
+2012-08-03  François Vogel  <fvogelnew1@free.fr>
 
 	* tests/bind.test:  [Bug 3554081]: Test bind-22.10 failed
 
-2012-08-02  Francois Vogel  <fvogelnew1@free.fr>
+2012-08-02  François Vogel  <fvogelnew1@free.fr>
 
 	* tests/spinbox.test:  [Bug 3553311]: Test spinbox-3.70 failed
 
@@ -271,11 +279,11 @@
 	* generic/tk*Decls.h:    re-generated
 	* win/Makefile.in:       "make genstubs" when cross-compiling on UNIX
 
-2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
+2012-05-28  François Vogel  <fvogelnew1@free.fr>
 
 	* doc/text.n:  [Bug 1630251]: Doc for -endline option was wrong
 
-2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
+2012-05-28  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextDisp.c: [Bug 1630254]: missing scrolling of text widget
 	when from a -startline == -endline initial state it is configured to
@@ -385,7 +393,7 @@
 	* unix/tcl.m4:    Patch from the cygwin folks
 	* unix/configure: (re-generated)
 
-2012-02-28  Francois Vogel  <fvogelnew1@free.fr>
+2012-02-28  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c:      [Bug 1630262, Bug 1615425]: segfault
 	* generic/tkTextBTree.c  when deleting lines or tagging outside of
@@ -431,7 +439,7 @@
 
 	* win/tkWinDialog.c: [Bug 3480471]: tk_getOpenFile crashes on Win64
 
-2012-01-26  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-26  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextDisp.c: [Bug-1754043] and [Bug-2321450]: When
 	-blockcursor is true, the cursor appears as a blinking bar which
@@ -442,26 +450,26 @@
 	* generic/tkImgPhoto.c: [Bug 2433260]: non-critical error in
 	Tk_PhotoPutBlock
 
-2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-25  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c: Don't increase the epoch twice
 
-2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-25  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c:      [Bug-1630271]: segfault/infinite loop
 	* generic/tkTextMark.c:  when a mark is before -startline
 	* tests/textMark.test:
 
-2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-25  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c: [Bug-3475627]: Test text-31.11 fails
 
-2012-01-22  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-22  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextMark.c: [Bug-3288113,3288121]: Missing marks/endless
 	* tests/textMark.test:  loop in text mark prev/next
 
-2012-01-19  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-19  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c: [Bug-3021557]: Moving the cursor in
 	* tests/text.test:  elided text freezes Tk
