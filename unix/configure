@@ -1542,20 +1542,18 @@ echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
 
 
 
-if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
-    { { echo "$as_me:$LINENO: error: ${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
-Found config for Tcl ${TCL_VERSION}" >&5
-echo "$as_me: error: ${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
-Found config for Tcl ${TCL_VERSION}" >&2;}
+if test "${TCL_MAJOR_VERSION}" == "${TK_MAJOR_VERSION}"; then
+if test "${TCL_MINOR_VERSION}" -lt "${TK_MINOR_VERSION}"; then
+    { { echo "$as_me:$LINENO: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&5
+echo "$as_me: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&2;}
    { (exit 1); exit 1; }; }
 fi
-if test "${TCL_MINOR_VERSION}" -lt 6 ; then
-    { { echo "$as_me:$LINENO: error: ${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
-Found config for Tcl ${TCL_VERSION}" >&5
-echo "$as_me: error: ${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
-Found config for Tcl ${TCL_VERSION}" >&2;}
-   { (exit 1); exit 1; }; }
 fi
+
 
 
     echo "$as_me:$LINENO: checking for tclsh" >&5
@@ -9949,7 +9947,7 @@ ac_x_header_dirs='
 /usr/openwin/share/include'
 
 if test "$ac_x_includes" = no; then
-  # Guess where to find include files, by looking for Xlib.h.
+  # Guess where to find include files, by looking for Intrinsic.h.
   # First, try using that file with no special directory specified.
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -9957,7 +9955,7 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
 _ACEOF
 if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
@@ -9984,7 +9982,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
   for ac_dir in $ac_x_header_dirs; do
-  if test -r "$ac_dir/X11/Xlib.h"; then
+  if test -r "$ac_dir/X11/Intrinsic.h"; then
     ac_x_includes=$ac_dir
     break
   fi
@@ -9998,18 +9996,18 @@ if test "$ac_x_libraries" = no; then
   # See if we find them without any special options.
   # Don't add to $LIBS permanently.
   ac_save_LIBS=$LIBS
-  LIBS="-lX11 $LIBS"
+  LIBS="-lXt $LIBS"
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
 int
 main ()
 {
-XrmInitialize ()
+XtMalloc (0)
   ;
   return 0;
 }

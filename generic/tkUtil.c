@@ -1186,6 +1186,40 @@ TkSendVirtualEvent(
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
+
+int
+Tk_VarEval(
+    Tcl_Interp *interp,
+    ...)
+{
+    Tcl_DString buf;
+    char *string;
+    int result;
+    va_list argList;
+
+    va_start(argList, interp);
+
+    /*
+     * Copy the strings one after the other into a single larger string. Use
+     * stack-allocated space for small commands, but if the command gets too
+     * large than call ckalloc to create the space.
+     */
+
+    Tcl_DStringInit(&buf);
+    while (1) {
+	string = va_arg(argList, char *);
+	if (string == NULL) {
+	    break;
+	}
+	Tcl_DStringAppend(&buf, string, -1);
+    }
+
+    result = Tcl_Eval(interp, Tcl_DStringValue(&buf));
+    Tcl_DStringFree(&buf);
+    va_end(argList);
+
+    return result;
+}
 /*
  * Local Variables:
  * mode: c
