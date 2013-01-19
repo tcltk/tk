@@ -69,7 +69,7 @@ TkpGetAppName(
 {
     const char *p, *name;
 
-    name = Tcl_GetVar(interp, "argv0", TCL_GLOBAL_ONLY);
+    name = Tcl_GetVar2(interp, "argv0", NULL, TCL_GLOBAL_ONLY);
     if ((name == NULL) || (*name == 0)) {
 	name = "tk";
     } else {
@@ -144,7 +144,7 @@ GetLibraryPath(
 	    "com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX,
 	    tkLibPath);
     if (tkLibPath[0] != '\0') {
-        Tcl_SetVar(interp, "tk_library", tkLibPath, TCL_GLOBAL_ONLY);
+        Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
     return foundInFramework;
 #else
