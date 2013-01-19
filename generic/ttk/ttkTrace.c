@@ -54,7 +54,7 @@ VarTraceProc(
 	    ckfree((ClientData)tracePtr);
 	    return NULL;
 	}
-	Tcl_TraceVar(interp, name,
+	Tcl_TraceVar2(interp, name, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		VarTraceProc, clientData);
 	tracePtr->callback(tracePtr->clientData, NULL);
@@ -94,8 +94,8 @@ Ttk_TraceHandle *Ttk_TraceVariable(
     h->clientData = clientData;
     h->callback = callback;
 
-    status = Tcl_TraceVar(interp, Tcl_GetString(varnameObj),
-	    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+    status = Tcl_TraceVar2(interp, Tcl_GetString(varnameObj),
+	    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 	    VarTraceProc, (ClientData)h);
 
     if (status != TCL_OK) {

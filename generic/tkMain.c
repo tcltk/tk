@@ -188,7 +188,7 @@ Tk_MainEx(
      * only an issue when Tk is loaded dynamically.
      */
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6.0", 0) == NULL) {
 	abort();
     }
 
@@ -335,7 +335,7 @@ Tk_MainEx(
 	     */
 
 	    Tcl_AddErrorInfo(interp, "");
-	    TkpDisplayWarning(Tcl_GetVar(interp, "errorInfo",
+	    TkpDisplayWarning(Tcl_GetVar2(interp, "errorInfo", NULL,
 		    TCL_GLOBAL_ONLY), "Error in startup script");
 	    Tcl_DeleteInterp(interp);
 	    Tcl_Exit(1);

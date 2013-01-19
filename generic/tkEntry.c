@@ -1303,7 +1303,7 @@ ConfigureEntry(
     if (entryPtr->textVarName != NULL) {
 	const char *value;
 
-	value = Tcl_GetVar(interp, entryPtr->textVarName, TCL_GLOBAL_ONLY);
+	value = Tcl_GetVar2(interp, entryPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
 	    EntryValueChanged(entryPtr, NULL);
 	} else {
@@ -1357,8 +1357,8 @@ ConfigureEntry(
 
     if ((entryPtr->textVarName != NULL)
 	    && !(entryPtr->flags & ENTRY_VAR_TRACED)) {
-	Tcl_TraceVar(interp, entryPtr->textVarName,
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_TraceVar2(interp, entryPtr->textVarName,
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, entryPtr);
 	entryPtr->flags |= ENTRY_VAR_TRACED;
     }
@@ -2231,8 +2231,8 @@ EntryValueChanged(
     if (entryPtr->textVarName == NULL) {
 	newValue = NULL;
     } else {
-	newValue = Tcl_SetVar(entryPtr->interp, entryPtr->textVarName,
-		entryPtr->string, TCL_GLOBAL_ONLY);
+	newValue = Tcl_SetVar2(entryPtr->interp, entryPtr->textVarName,
+		NULL, entryPtr->string, TCL_GLOBAL_ONLY);
     }
 
     if ((newValue != NULL) && (strcmp(newValue, entryPtr->string) != 0)) {
@@ -3095,9 +3095,9 @@ EntryTextVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_SetVar(interp, entryPtr->textVarName, entryPtr->string,
-		    TCL_GLOBAL_ONLY);
-	    Tcl_TraceVar(interp, entryPtr->textVarName,
+	    Tcl_SetVar2(interp, entryPtr->textVarName, NULL,
+		    entryPtr->string, TCL_GLOBAL_ONLY);
+	    Tcl_TraceVar2(interp, entryPtr->textVarName, NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    EntryTextVarProc, clientData);
 	    entryPtr->flags |= ENTRY_VAR_TRACED;
@@ -3111,7 +3111,7 @@ EntryTextVarProc(
      * value because we changed it because someone typed in the entry).
      */
 
-    value = Tcl_GetVar(interp, entryPtr->textVarName, TCL_GLOBAL_ONLY);
+    value = Tcl_GetVar2(interp, entryPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
     if (value == NULL) {
 	value = "";
     }
@@ -3171,7 +3171,7 @@ EntryValidate(
 	    &bool) != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		 "\n    (invalid boolean result from validation command)");
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, TCL_ERROR);
 	Tcl_ResetResult(interp);
 	return TCL_ERROR;
     }
