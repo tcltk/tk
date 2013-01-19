@@ -34,7 +34,7 @@
  * TtkScrollbarUpdateRequired, which will invoke step (5) (@@@ Fix this)
  */
 
-#include <tk.h>
+#include <tkInt.h>
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
