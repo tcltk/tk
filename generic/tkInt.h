@@ -1245,6 +1245,11 @@ MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 #endif
 
+MODULE_SCOPE int		Tk_VarEval(Tcl_Interp *interp, ...);
+
+#undef Tcl_VarEval
+#define Tcl_VarEval Tk_VarEval
+
 #endif /* _TKINT */
 
 /*
