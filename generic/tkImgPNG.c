@@ -334,9 +334,11 @@ InitPNGImage(
 
     if (Tcl_ZlibStreamInit(NULL, dir, TCL_ZLIB_FORMAT_ZLIB,
 	    TCL_ZLIB_COMPRESS_DEFAULT, NULL, &pngPtr->stream) != TCL_OK) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"zlib initialization failed", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "ZLIB_INIT", NULL);
+    if (interp) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "zlib initialization failed", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "ZLIB_INIT", NULL);
+	}
 	if (objPtr) {
 	    Tcl_DecrRefCount(objPtr);
 	}
@@ -2667,11 +2669,8 @@ FileMatchPNG(
 {
     PNGImage png;
     int match = 0;
-    Tcl_SavedResult sya;
 
-    Tcl_SaveResult(interp, &sya);
-
-    InitPNGImage(interp, &png, chan, NULL, TCL_ZLIB_STREAM_INFLATE);
+    InitPNGImage(NULL, &png, chan, NULL, TCL_ZLIB_STREAM_INFLATE);
 
     if (ReadIHDR(interp, &png) == TCL_OK) {
 	*widthPtr = png.block.width;
@@ -2680,7 +2679,6 @@ FileMatchPNG(
     }
 
     CleanupPNGImage(&png);
-    Tcl_RestoreResult(interp, &sya);
 
     return match;
 }
@@ -2759,10 +2757,8 @@ StringMatchPNG(
 {
     PNGImage png;
     int match = 0;
-    Tcl_SavedResult sya;
 
-    Tcl_SaveResult(interp, &sya);
-    InitPNGImage(interp, &png, NULL, pObjData, TCL_ZLIB_STREAM_INFLATE);
+    InitPNGImage(NULL, &png, NULL, pObjData, TCL_ZLIB_STREAM_INFLATE);
 
     png.strDataBuf = Tcl_GetByteArrayFromObj(pObjData, &png.strDataLen);
 
@@ -2773,7 +2769,6 @@ StringMatchPNG(
     }
 
     CleanupPNGImage(&png);
-    Tcl_RestoreResult(interp, &sya);
     return match;
 }
 
