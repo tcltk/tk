@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .msgbox
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Message Box Demonstration"
 wm iconname $w "messagebox"

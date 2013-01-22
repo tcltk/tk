@@ -11,7 +11,6 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
-
 set auto_path ". $auto_path"
 wm title . "Visual Tests for Tk"
 
@@ -95,7 +94,7 @@ test 1.1 {running visual tests} -constraints userInteraction -body {
     # Set up for keyboard-based menu traversal
    
     bind . <Any-FocusIn> {
-    if {("%d" == "NotifyVirtual") && ("%m" == "NotifyNormal")} {
+    if {("%d" eq "NotifyVirtual") && ("%m" eq "NotifyNormal")} {
         focus .menu
     }
     }

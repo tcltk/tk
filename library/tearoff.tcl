@@ -44,14 +44,14 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
     }
 
     set parent [winfo parent $w]
-    while {[winfo toplevel $parent] ne $parent \
-	    || [winfo class $parent] eq "Menu"} {
+    while {([winfo toplevel $parent] ne $parent) || 
+	   ([winfo class $parent] eq "Menu")} {
 	set parent [winfo parent $parent]
     }
     if {$parent eq "."} {
 	set parent ""
     }
-    for {set i 1} 1 {incr i} {
+    for {set i 1} {1} {incr i} {
 	set menu $parent.tearoff$i
 	if {![winfo exists $menu]} {
 	    break
@@ -75,6 +75,7 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
 	    Menu {
 	    	wm title $menu [$parent entrycget active -label]
 	    }
+	    default {}
 	}
     }
 
@@ -90,7 +91,7 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
 
     $menu post $x $y
 
-    if {[winfo exists $menu] == 0} {
+    if {![winfo exists $menu]} {
 	return ""
     }
 

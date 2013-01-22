@@ -10,7 +10,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-
 test msgbox-1.1 {tk_messageBox command} -body {
     tk_messageBox -foo
 } -returnCodes error -result {bad option "-foo": must be -default, -detail, -icon, -message, -parent, -title, or -type}
@@ -76,9 +75,8 @@ test msgbox-1.19 {tk_messageBox command} -body {
     tk_messageBox -parent foo.bar
 } -returnCodes error -result {bad window path name "foo.bar"}
 
-
 catch {tk_messageBox -foo bar}
-set isNative [expr {[info commands tk::MessageBox] == ""}]
+set isNative [expr {[info commands tk::MessageBox] eq ""}]
 
 proc ChooseMsg {parent btn} {
     global isNative
@@ -101,15 +99,15 @@ proc PressButton {btn} {
 }
 
 proc SendEventToMsg {parent btn type} {
-    if {$parent != "."} {
+    if {$parent ne "."} {
 	set w $parent.__tk__messagebox
     } else {
 	set w .__tk__messagebox
     }
-    if ![winfo ismapped $w.$btn] {
+    if {![winfo ismapped $w.$btn]} {
 	update
     }
-    if {$type == "mouse"} {
+    if {$type eq "mouse"} {
 	PressButton $w.$btn
     } else {
 	event generate $w <Enter>
@@ -417,7 +415,6 @@ test msgbox-2.43 {tk_messageBox command} -constraints {
     tk_messageBox -title Hi -message "Please press cancel" \
         -type yesnocancel -default cancel
 } -result {cancel}
-
 
 # These tests will hang your test suite if they fail.
 test msgbox-3.1 {tk_messageBox handles withdrawn parent} -constraints {

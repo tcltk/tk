@@ -26,7 +26,6 @@ test winMenu-1.2 {GetNewID} -constraints win -setup {
     destroy .m1
 } -result {}
 
-
 # Basically impossible to test menu IDs wrapping.
 
 test winMenu-2.1 {FreeID} -constraints win -setup {
@@ -35,7 +34,6 @@ test winMenu-2.1 {FreeID} -constraints win -setup {
     menu .m1
     destroy .m1
 } -returnCodes ok
-
 
 test winMenu-3.1 {TkpNewMenu} -constraints win -setup {
     destroy .m1
@@ -50,7 +48,6 @@ test winMenu-3.2 {TkpNewMenu} -constraints win -setup {
     .m1 add command -label "foo"
     list [catch {. configure -menu .m1} msg] $msg [. configure -menu ""] [catch {destroy .m1} msg2] $msg2
 } -result {0 {} {} 0 {}}
-
 
 test winMenu-4.1 {TkpDestroyMenu} -constraints win -setup {
     destroy .m1
@@ -67,7 +64,6 @@ test winMenu-4.2 {TkpDestroyMenu - help menu} -constraints win -setup {
     list [catch {destroy .m1.system} msg] $msg [. configure -menu ""] [destroy .m1]
 } -result {0 {} {} {}}
 
-
 test winMenu-5.1 {TkpDestroyMenuEntry} -constraints win -setup {
     destroy .m1
 } -body {
@@ -77,7 +73,6 @@ test winMenu-5.1 {TkpDestroyMenuEntry} -constraints win -setup {
     update idletasks
     list [catch {.m1 delete 1} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-
 
 test winMenu-6.1 {GetEntryText} -constraints win -setup {
     destroy .m1
@@ -303,7 +298,7 @@ test winMenu-7.13 {ReconfigureWindowsMenu - cascade missing} -constraints {
 test winMenu-7.14 {ReconfigureWindowsMenu - cascade} -constraints win -setup {
     destroy .m1
 } -body {
-    catch {destroy .m2}
+    destroy .m2
     menu .m1 -tearoff 0
     menu .m2
     .m1 add cascade -menu .m2 -label Hello
@@ -421,14 +416,12 @@ test winMenu-8.6 {TkpPostMenu - update not pending} -constraints {
     list [catch {.m1 post 40 40} msg] $msg [destroy .m1]
 } -result {0 {} {}}
 
-
 test winMenu-9.1 {TkpMenuNewEntry} -constraints win -setup {
     destroy .m1
 } -body {
     menu .m1
     list [catch {.m1 add command} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-
 
 test winMenu-10.1 {TkwinMenuProc} -constraints {
     win userInteraction
@@ -448,7 +441,7 @@ test winMenu-11.1 {TkWinHandleMenuEvent - WM_INITMENU} -constraints {
 } -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1 -postcommand "set foo test"
     .m1 add command -label "winMenu-11.1: Hit ESCAPE."
     list [.m1 post 40 40] [set foo] [unset foo] [destroy .m1]
@@ -458,7 +451,7 @@ test winMenu-11.2 {TkWinHandleMenuEvent - WM_COMMAND} -constraints {
 } -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add checkbutton -variable foo -label "winMenu-11.2: Please select this menu item."
     list [.m1 post 40 40] [update] [set foo] [unset foo] [destroy .m1]
@@ -468,7 +461,7 @@ test winMenu-11.3 {TkWinHandleMenuEvent - WM_COMMAND} -constraints {
 } -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     proc bgerror {args} {
         global foo errorInfo
         set foo [list $args $errorInfo]
@@ -531,7 +524,6 @@ test winMenu-11.8 {TkWinHandleMenuEvent - WM_INITMENU - not pending} -constraint
     list [catch {.m1 post 40 40} msg] $msg [destroy .m1]
 } -result {0 {} {}}
 
-
 test winMenu-12.1 {TkpSetWindowMenuBar} -constraints win -setup {
     destroy .m1
 } -body {
@@ -561,11 +553,9 @@ test winMenu-12.3 {TkpSetWindowMenuBar - no update pending} -constraints {
     list [catch {. configure -menu .m1} msg] $msg [. configure -menu ""] [destroy .m1]
 } -result {0 {} {} {}}
 
-
 test winMenu-13.1 {TkpSetMainMenubar - nothing to do} -constraints {
     emptyTest win
 } -body {}
-
 
 test winMenu-14.1 {GetMenuIndicatorGeometry} -constraints win -setup {
     destroy .m1
@@ -583,7 +573,6 @@ test winMenu-14.2 {GetMenuIndicatorGeometry} -constraints win -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-
 
 test winMenu-15.1 {GetMenuAccelGeometry} -constraints win -setup {
     destroy .m1
@@ -610,7 +599,6 @@ test winMenu-15.3 {GetMenuAccelGeometry} -constraints win -setup {
     destroy .m1
 } -returnCodes ok
 
-
 test winMenu-16.1 {GetTearoffEntryGeometry} -constraints {
     win userInteraction
 } -setup {
@@ -620,7 +608,6 @@ test winMenu-16.1 {GetTearoffEntryGeometry} -constraints {
     .m1 add command -label "winMenu-19.1: Hit ESCAPE."
     list [.m1 post 40 40] [destroy .m1]
 } -result {{} {}}
-
 
 test winMenu-17.1 {GetMenuSeparatorGeometry} -constraints win -setup {
     destroy .m1
@@ -655,7 +642,6 @@ test winMenu-18.2 {DrawWindowsSystemBitmap - right aligned} -constraints {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-
 
 test winMenu-19.1 {DrawMenuEntryIndicator - not checkbutton or radiobutton} -constraints {
     win
@@ -721,7 +707,6 @@ test winMenu-19.6 {DrawMenuEntryIndicator - indicator not on} -constraints {
     list [update] [destroy .m1]
 } -result {{} {}}
 
-
 test winMenu-20.1 {DrawMenuEntryAccelerator - disabled} -constraints win -setup {
     destroy .m1
 } -body {
@@ -770,7 +755,6 @@ test winMenu-20.5 {DrawMenuEntryAccelerator - cascade, drawArrow false} -constra
     list [.m1 post 40 40] [destroy .m1]
 } -result {{} {}}
 
-
 test winMenu-21.1 {DrawMenuSeparator} -constraints win -setup {
     destroy .m1
 } -body {
@@ -779,7 +763,6 @@ test winMenu-21.1 {DrawMenuSeparator} -constraints win -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-
 
 test winMenu-22.1 {DrawMenuUnderline} -constraints win -setup {
     destroy .m1
@@ -790,16 +773,13 @@ test winMenu-22.1 {DrawMenuUnderline} -constraints win -setup {
     list [update] [destroy .m1]
 } -result {{} {}}  
 
-
 test winMenu-23.1 {Don't know how to test MenuKeyBindProc} -constraints {
     win emptyTest
 } -body {}
 
-
 test winMenu-24.1 {TkpInitializeMenuBindings called at boot time} -constraints {
     win emptyTest
 } -body {}
-
 
 test winMenu-25.1 {DrawMenuEntryLabel - normal} -constraints win -setup {
     destroy .m1
@@ -830,7 +810,6 @@ test winMenu-25.3 {DrawMenuEntryLabel - disabled with no fg} -constraints {
     list [update] [destroy .m1]
 } -result {{} {}}
 
-
 test winMenu-26.1 {TkpComputeMenubarGeometry} -constraints win -setup {
     destroy .m1
 } -body {
@@ -838,7 +817,6 @@ test winMenu-26.1 {TkpComputeMenubarGeometry} -constraints win -setup {
     .m1 add cascade -label File
     list [. configure -menu .m1] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
-
 
 test winMenu-27.1 {DrawTearoffEntry} -constraints {
     win userInteraction
@@ -849,7 +827,6 @@ test winMenu-27.1 {DrawTearoffEntry} -constraints {
     .m1 add command -label "winMenu-24.4: Hit ESCAPE."
     list [.m1 post 40 40] [destroy .m1]
 } -result {{} {}}
-
 
 test winMenu-28.1 {TkpConfigureMenuEntry - update pending} -constraints {
     win
@@ -870,7 +847,6 @@ test winMenu-28.2 {TkpConfigureMenuEntry - update not pending} -constraints {
     update idletasks
     list [catch {.m1 add command -label Two} msg] $msg [destroy .m1]
 } -result {0 {} {}}
-
 
 test winMenu-29.1 {TkpDrawMenuEntry - gc for active and not strict motif} -constraints {
     win
@@ -1094,7 +1070,6 @@ test winMenu-29.22 {TkpDrawMenuEntry - indicator} -constraints win -setup {
     list [update] [destroy .m1]
 } -result {{} {}}
 
-
 test winMenu-30.1 {GetMenuLabelGeometry - image} -constraints {
     testImageType win
 } -setup {
@@ -1128,7 +1103,6 @@ test winMenu-30.4 {GetMenuLabelGeometry - text} -constraints win -setup {
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
 
-
 test winMenu-31.1 {DrawMenuEntryBackground} -constraints win -setup {
     destroy .m1
 } -body {
@@ -1146,7 +1120,6 @@ test winMenu-31.2 {DrawMenuEntryBackground} -constraints win -setup {
     $tearoff activate 0
     list [update] [destroy .m1]
 } -result {{} {}}
-
 
 test winMenu-32.1 {TkpComputeStandardMenuGeometry - no entries} -constraints {
     win
@@ -1346,7 +1319,6 @@ test winMenu-32.19 {TkpComputeStandardMenuGeometry - three columns} -constraints
     list [update idletasks] [destroy .m1]   
 } -result {{} {}}
 
-
 test winMenu-33.1 {TkpNotifyTopLevelCreate - no menu yet} -constraints {
     win
 } -setup {
@@ -1368,7 +1340,6 @@ test winMenu-33.2 {TkpNotifyTopLevelCreate - menu} -constraints win -setup {
     wm geometry .t2 +0+0
     list [update idletasks] [destroy .m1] [destroy .t2]
 } -result {{} {} {}}
-
 
 test winMenu-34.1 {TkpMenuInit called at boot time} -constraints {
     emptyTest win

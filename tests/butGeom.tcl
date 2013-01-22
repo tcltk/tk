@@ -1,7 +1,7 @@
 # This file creates a visual test for button layout.  It is part of
 # the Tk visual test suite, which is invoked via the "visual" script.
 
-catch {destroy .t}
+destroy .t
 toplevel .t
 wm title .t "Visual Tests for Button Geometry"
 wm iconname .t "Button Geometry"
@@ -17,7 +17,7 @@ pack .t.quit -side bottom -pady 2m
 set sepId 1
 proc sep {} {
     global sepId
-    frame .t.sep$sepId -height 2 -bd 1 -relief sunken
+    frame .t.sep$sepId -height 2 -borderwidth 1 -relief sunken
     pack .t.sep$sepId -side top -padx 2m -pady 2m -fill x
     incr sepId
 }
@@ -81,9 +81,9 @@ frame .t.f4
 pack .t.f4 -side top -expand 1 -fill both
 sep
 
-label .t.l1 -text Label -bd 2 -relief sunken
-label .t.l2 -text "Explicit\nnewlines\n\nin the text" -bd 2 -relief sunken
-label .t.l3 -text "This text is quite long, so it must be wrapped automatically by Tk" -wraplength 2i -bd 2 -relief sunken -underline 50
+label .t.l1 -text Label -borderwidth 2 -relief sunken
+label .t.l2 -text "Explicit\nnewlines\n\nin the text" -borderwidth 2 -relief sunken
+label .t.l3 -text "This text is quite long, so it must be wrapped automatically by Tk" -wraplength 2i -borderwidth 2 -relief sunken -underline 50
 pack .t.l1 .t.l2 .t.l3 -in .t.f1 -side left -padx 5m -pady 3m \
 	-expand y -fill both
 

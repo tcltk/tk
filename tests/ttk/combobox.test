@@ -3,8 +3,9 @@
 #
 
 package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
-loadTestedCommands
+package require tcltest
+namespace import -force tcltest::*
+::tcltest::loadTestedCommands
 
 test combobox-1.0 "Combobox tests -- setup" -body {
     ttk::combobox .cb
@@ -45,7 +46,6 @@ test combobox-2.4 "current -- value not in list" -body {
 
 test combobox-2.end "Cleanup" -body { destroy .cb }
 
-
 test combobox-1890211 "ComboboxSelected event after listbox unposted" -body {
     # whitebox test...
     pack [ttk::combobox .cb -values [list a b c]]
@@ -61,7 +61,7 @@ test combobox-1890211 "ComboboxSelected event after listbox unposted" -body {
     lappend result Select [winfo ismapped .cb.popdown] [.cb get]
     update
     set result
-} -result [list Start 0 {} Post 1 {} Select 0 b Event 0 b] -cleanup {
+} -result [list Start 0 "" Post 1 "" Select 0 b Event 0 b] -cleanup {
     destroy .cb
 }
 

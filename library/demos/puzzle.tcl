@@ -16,14 +16,14 @@ package require Tk
 
 proc puzzleSwitch {w num} {
     global xpos ypos
-    if {(($ypos($num) >= ($ypos(space) - .01))
-	    && ($ypos($num) <= ($ypos(space) + .01))
-	    && ($xpos($num) >= ($xpos(space) - .26))
-	    && ($xpos($num) <= ($xpos(space) + .26)))
-	    || (($xpos($num) >= ($xpos(space) - .01))
-	    && ($xpos($num) <= ($xpos(space) + .01))
-	    && ($ypos($num) >= ($ypos(space) - .26))
-	    && ($ypos($num) <= ($ypos(space) + .26)))} {
+    if {(($ypos($num) >= ($ypos(space) - .01)) && 
+	 ($ypos($num) <= ($ypos(space) + .01)) && 
+	 ($xpos($num) >= ($xpos(space) - .26)) && 
+	 ($xpos($num) <= ($xpos(space) + .26))) || 
+	(($xpos($num) >= ($xpos(space) - .01)) && 
+	 ($xpos($num) <= ($xpos(space) + .01)) && 
+	 ($ypos($num) >= ($ypos(space) - .26)) && 
+	 ($ypos($num) <= ($ypos(space) + .26)))} {
 	set tmp $xpos(space)
 	set xpos(space) $xpos($num)
 	set xpos($num) $tmp
@@ -35,7 +35,7 @@ proc puzzleSwitch {w num} {
 }
 
 set w .puzzle
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "15-Puzzle Demonstration"
 wm iconname $w "15-Puzzle"
@@ -68,11 +68,11 @@ frame $w.frame -width $frameSize -height $frameSize -borderwidth 2\
 pack $w.frame -side top -pady 1c -padx 1c
 destroy $w.s
 
-set order {3 1 6 2 5 7 15 13 4 11 8 9 14 10 12}
-for {set i 0} {$i < 15} {set i [expr {$i+1}]} {
+set order [list 3 1 6 2 5 7 15 13 4 11 8 9 14 10 12]
+for {set i 0} {$i < 15} {set i [expr {$i + 1}]} {
     set num [lindex $order $i]
-    set xpos($num) [expr {($i%4)*.25}]
-    set ypos($num) [expr {($i/4)*.25}]
+    set xpos($num) [expr {($i % 4) * .25}]
+    set ypos($num) [expr {($i / 4) * .25}]
     button $w.frame.$num -relief raised -text $num -highlightthickness 0 \
 	    -command "puzzleSwitch $w $num"
     place $w.frame.$num -relx $xpos($num) -rely $ypos($num) \

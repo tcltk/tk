@@ -11,11 +11,10 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-
 # Tests 2.3 and 2.4 need a helper file with a very specific name and
 # controlled format.
 proc setWincur {wincurName} {
-	upvar $wincurName wincur
+	upvar 1 $wincurName wincur
 	set wincur(data_octal) {
 	    000 000 002 000 001 000 040 040 000 000 007 000 007 000 060 001
 	    000 000 026 000 000 000 050 000 000 000 040 000 000 000 100 000
@@ -39,14 +38,13 @@ proc setWincur {wincurName} {
 	    377 377 200 001 377 377 001 200 377 377 003 300 377 377 007 340
 	    377 377 017 360 377 377
 	}
-	set wincur(data_binary) {}
+	set wincur(data_binary) ""
 	foreach wincur(num) $wincur(data_octal) {
 	    append wincur(data_binary) [binary format c [scan $wincur(num) %o]]
 	}
 	set wincur(dir) [makeDirectory {dir with spaces}]
 	set wincur(file) [makeFile $wincur(data_binary) "test file.cur" $wincur(dir)]
 }
-
 
 test cursor-1.1 {Tk_AllocCursorFromObj - converting internal reps} -constraints {
     testcursor

@@ -99,7 +99,6 @@ test get-1.11 {Tk_GetAnchorFromObj - error} -setup {
     destroy .b
 } -returnCodes {error} -result {bad anchor "unknown": must be n, ne, e, se, s, sw, w, nw, or center}
 
-
 test get-2.1 {Tk_GetJustifyFromObj} -setup {
     button .b
 } -body {

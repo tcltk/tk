@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .anilabel
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Animated Label Demonstration"
 wm iconname $w "anilabel"
@@ -77,7 +77,7 @@ proc SelectNextImageFrame {w interval} {
     if {[catch {
 	# Note that we get an error if the index is out of range
 	$image configure -format "GIF -index [incr idx]"
-    }]} then {
+    }]} {
 	$image configure -format "GIF -index 0"
     }
 }

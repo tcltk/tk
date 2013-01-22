@@ -116,7 +116,7 @@ proc tk::TextInsert {w s} {
     catch {
 	if {
 	    [$w compare sel.first <= insert] && [$w compare sel.last >= insert]
-	} then {
+	} {
 	    $w tag remove sel sel.first promptEnd
 	    $w delete sel.first sel.last
 	}
@@ -125,8 +125,8 @@ proc tk::TextInsert {w s} {
     $w see insert
 }
 
-.t configure -font {Courier 12}
-.t tag configure bold -font {Courier 12 bold}
+.t configure -font "Courier 12"
+.t tag configure bold -font "Courier 12 bold"
 
 # The procedure below is used to print out a prompt at the
 # insertion point (which should be at the beginning of a line
@@ -177,7 +177,7 @@ proc invoke {} {
 # the text item (in which case a new prompt is about to be output
 # so there's no need to change the old one).
 
-proc newApp appName {
+proc newApp {appName} {
     global app executing
     set app $appName
     if {!$executing} {

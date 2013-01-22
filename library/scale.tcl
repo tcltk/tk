@@ -148,12 +148,13 @@ proc ::tk::ScaleButtonDown {w x y} {
     } elseif {$el eq "slider"} {
 	set Priv(dragging) 1
 	set Priv(initValue) [$w get]
-	set coords [$w coords]
-	set Priv(deltaX) [expr {$x - [lindex $coords 0]}]
-	set Priv(deltaY) [expr {$y - [lindex $coords 1]}]
+	lassign [$w coords] x_c y_c
+	set Priv(deltaX) [expr {$x - $x_c}]
+	set Priv(deltaY) [expr {$y - $y_c}]
         switch -exact -- $Priv($w,relief) {
             "raised" { $w configure -sliderrelief sunken }
             "ridge"  { $w configure -sliderrelief groove }
+  	    default {}
         }
     }
 }
@@ -173,7 +174,7 @@ proc ::tk::ScaleDrag {w x y} {
     if {!$Priv(dragging)} {
 	return
     }
-    $w set [$w get [expr {$x-$Priv(deltaX)}] [expr {$y-$Priv(deltaY)}]]
+    $w set [$w get [expr {$x - $Priv(deltaX)}] [expr {$y - $Priv(deltaY)}]]
 }
 
 # ::tk::ScaleEndDrag --
@@ -214,7 +215,7 @@ proc ::tk::ScaleIncrement {w dir big repeat} {
     if {$big eq "big"} {
 	set inc [$w cget -bigincrement]
 	if {$inc == 0} {
-	    set inc [expr {abs([$w cget -to] - [$w cget -from])/10.0}]
+	    set inc [expr { ( abs ([$w cget -to] - [$w cget -from])) / 10.0}]
 	}
 	if {$inc < [$w cget -resolution]} {
 	    set inc [$w cget -resolution]

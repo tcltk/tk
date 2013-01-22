@@ -14,7 +14,7 @@ tcltest::loadTestedCommands
 # Compute a script that will load Tk into a child interpreter.
 
 foreach pkg [info loaded] {
-    if {[lindex $pkg 1] == "Tk"} {
+    if {[lindex $pkg 1] eq "Tk"} {
 	set loadTk "load $pkg"
 	break
     }
@@ -22,12 +22,12 @@ foreach pkg [info loaded] {
 
 # Procedure to create a new application with a given name and class.
 
-proc newApp {name {safe {}}} {
+proc newApp {name {safe ""}} {
     global loadTk
-    if {[string compare $safe "-safe"] == 0} {
-	interp create -safe $name
+    if {$safe eq "-safe"} {
+	interp create -safe -- $name
     } else {
-	interp create $name
+	interp create -- $name
     }
     $name eval [list set argv [list -name $name]]
     catch {eval $loadTk $name}
@@ -35,17 +35,17 @@ proc newApp {name {safe {}}} {
 
 set currentInterps [winfo interps]
 if {
-    [testConstraint win] &&
-    [llength [info commands send]] &&
-    [catch {exec [interpreter] &}] == 0
-} then {
+    [testConstraint win] && 
+    [llength [info commands send]] && 
+    (![catch {exec -- [interpreter] &}])
+} {
     # Wait until the child application has launched.
     while {[llength [winfo interps]] == [llength $currentInterps]} {}
 
     # Now find an interp to send to
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch -exact $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -123,7 +123,7 @@ test winSend-2.4 {Tk_SendObjCmd - sending to ourselves in a different interp wit
 test winSend-2.5 {Tk_SendObjCmd - sending to another app async} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -132,7 +132,7 @@ test winSend-2.5 {Tk_SendObjCmd - sending to another app async} winSend {
 test winSend-2.6 {Tk_SendObjCmd - sending to another app sync - no error} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -141,7 +141,7 @@ test winSend-2.6 {Tk_SendObjCmd - sending to another app sync - no error} winSen
 test winSend-2.7 {Tk_SendObjCmd - sending to another app - error} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -166,7 +166,7 @@ test winSend-4.2 {DeleteProc - normal} winSend {
 test winSend-5.1 {ExecuteRemoteObject - no error} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -175,7 +175,7 @@ test winSend-5.1 {ExecuteRemoteObject - no error} winSend {
 test winSend-5.2 {ExecuteRemoteObject - error} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -186,7 +186,7 @@ test winSend-6.1 {SendDDEServer - XTYP_CONNECT} winSend {
     set foo "Hello, World"
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -197,7 +197,7 @@ test winSend-6.2 {SendDDEServer - XTYP_CONNECT_CONFIRM} winSend {
     set foo "Hello, World"
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -208,7 +208,7 @@ test winSend-6.3 {SendDDEServer - XTYP_DISCONNECT} winSend {
     set foo "Hello, World"
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -219,7 +219,7 @@ test winSend-6.4 {SendDDEServer - XTYP_REQUEST variable} winSend {
     set foo "Hello, World"
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -227,22 +227,22 @@ test winSend-6.4 {SendDDEServer - XTYP_REQUEST variable} winSend {
     list [catch "send \{$interp\} \{$command\}" msg] $msg
 } {0 {Hello, World}}
 test winSend-6.5 {SendDDEServer - XTYP_REQUEST array} winSend {
-    catch {unset foo}
+    unset -nocomplain foo
     set foo(test) "Hello, World"
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
     set command "dde request Tk [tk appname] foo(test)"
-    list [catch "send \{$interp\} \{$command\}" msg] $msg [catch {unset foo}]
+    list [catch "send \{$interp\} \{$command\}" msg] $msg [unset -nocomplain foo]
 } {0 {Hello, World} 0}
 test winSend-6.6 {SendDDEServer - XTYP_REQUEST return results} winSend {
     set foo 3
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -252,7 +252,7 @@ test winSend-6.6 {SendDDEServer - XTYP_REQUEST return results} winSend {
 test winSend-6.7 {SendDDEServer - XTYP_EXECUTE} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -262,7 +262,7 @@ test winSend-6.7 {SendDDEServer - XTYP_EXECUTE} winSend {
 test winSend-6.8 {SendDDEServer - XTYP_WILDCONNECT} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -278,7 +278,7 @@ test winSend-7.1 {DDEExitProc} winSend {
 test winSend-8.1 {SendDdeConnect} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -319,7 +319,7 @@ test winSend-10.9 {Tk_DDEObjCmd - null topic name} winSend {
 test winSend-10.10 {Tk_DDEObjCmd - execute - nothing to execute} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -331,7 +331,7 @@ test winSend-10.11 {Tk_DDEObjCmd - execute - no such conversation} winSend {
 test winSend-10.12 {Tk_DDEObjCmd - execute - async} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -340,7 +340,7 @@ test winSend-10.12 {Tk_DDEObjCmd - execute - async} winSend {
 test winSend-10.13 {Tk_DDEObjCmd - execute} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -349,7 +349,7 @@ test winSend-10.13 {Tk_DDEObjCmd - execute} winSend {
 test winSend-10.14 {Tk_DDEObjCmd - request - nothing to request} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -358,7 +358,7 @@ test winSend-10.14 {Tk_DDEObjCmd - request - nothing to request} winSend {
 test winSend-10.15 {Tk_DDEObjCmd - request - invalid interp} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -367,7 +367,7 @@ test winSend-10.15 {Tk_DDEObjCmd - request - invalid interp} winSend {
 test winSend-10.16 {Tk_DDEObjCmd - invalid variable} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -377,7 +377,7 @@ test winSend-10.16 {Tk_DDEObjCmd - invalid variable} winSend {
 test winSend-10.17 {Tk_DDEObjCmd - valid variable} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    break
 	}
     }
@@ -394,7 +394,7 @@ test winSend-10.18 {Tk_DDEObjCmd - services} winSend {
 set newInterps [winfo interps]
 while {[llength $newInterps] != [llength $currentInterps]} {
     foreach interp $newInterps {
-	if {[lsearch -exact $currentInterps $interp] < 0} {
+	if {$interp ni $currentInterps} {
 	    catch {send $interp exit}
 	    set newInterps [winfo interps]
 	    break

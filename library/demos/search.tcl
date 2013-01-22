@@ -41,13 +41,14 @@ proc textLoadFile {w file} {
 
 proc textSearch {w string tag} {
     $w tag remove search 0.0 end
-    if {$string == ""} {
+    if {$string eq ""} {
 	return
     }
     set cur 1.0
-    while 1 {
+    while {1} {
+        set length 0
 	set cur [$w search -count length $string $cur end]
-	if {$cur == ""} {
+	if {$cur eq ""} {
 	    break
 	}
 	$w tag add $tag $cur "$cur + $length char"
@@ -76,7 +77,7 @@ proc textToggle {cmd1 sleep1 cmd2 sleep2} {
 }
 
 set w .search
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Text Demonstration - Search and Highlight"
 wm iconname $w "search"

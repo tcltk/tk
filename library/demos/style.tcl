@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .style
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Text Demonstration - Display Styles"
 wm iconname $w "style"
@@ -37,7 +37,7 @@ $w.text tag configure big -font "$family 14 bold"
 $w.text tag configure verybig -font "Helvetica 24 bold"
 $w.text tag configure tiny -font "Times 8 bold"
 if {[winfo depth $w] > 1} {
-    $w.text tag configure color1 -background #a0b7ce
+    $w.text tag configure color1 -background "#a0b7ce"
     $w.text tag configure color2 -foreground red
     $w.text tag configure raised -relief raised -borderwidth 1
     $w.text tag configure sunken -relief sunken -borderwidth 1

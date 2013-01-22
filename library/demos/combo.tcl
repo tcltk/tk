@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .combo
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Combobox Demonstration"
 wm iconname $w "combo"
@@ -45,10 +45,13 @@ set ozCity Sydney
 ttk::labelframe $w.c1 -text "Fully Editable"
 ttk::combobox $w.c1.c -textvariable firstValue
 ttk::labelframe $w.c2 -text Disabled
-ttk::combobox $w.c2.c -textvariable secondValue -state disabled
+ttk::combobox $w.c2.c -textvariable secondValue
 ttk::labelframe $w.c3 -text "Defined List Only"
-ttk::combobox $w.c3.c -textvariable ozCity -state readonly \
-	-values $australianCities
+ttk::combobox $w.c3.c -textvariable ozCity -values $australianCities
+
+$w.c2.c state disabled
+$w.c3.c state readonly
+
 bind $w.c1.c <Return> {
     if {[%W get] ni [%W cget -values]} {
 	%W configure -values [concat [%W cget -values] [list [%W get]]]

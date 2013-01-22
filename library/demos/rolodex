@@ -10,9 +10,7 @@ exec wish "$0" ${1+"$@"}
 
 package require Tk
 
-foreach i [winfo child .] {
-    catch {destroy $i}
-}
+destroy {*}[winfo children .]
 
 set version 1.2
 
@@ -23,7 +21,7 @@ set version 1.2
 frame .frame -relief flat
 pack .frame -side top -fill y -anchor center
 
-set names {{} Name: Address: {} {} {Home Phone:} {Work Phone:} Fax:}
+set names {"" Name: Address: "" "" {Home Phone:} {Work Phone:} Fax:}
 foreach i {1 2 3 4 5 6 7} {
     label .frame.label$i -text [lindex $names $i] -anchor e
     entry .frame.entry$i -width 35
@@ -61,7 +59,7 @@ menu .menu.help.m
 pack .menu.help -side right
 
 proc deleteAction {} {
-    if {[tk_dialog .delete {Confirm Action} {Are you sure?} {} 0  Cancel]
+    if {[tk_dialog .delete "Confirm Action" "Are you sure?" "" 0  Cancel]
 	    == 0} {
 	clearAction
     }
@@ -69,8 +67,8 @@ proc deleteAction {} {
 .buttons.delete config -command deleteAction
 
 proc fileAction {} {
-    tk_dialog .fileSelection {File Selection} {This is a dummy file selection dialog box, which is used because there isn't a good file selection dialog built into Tk yet.} {} 0 OK
-    puts stderr {dummy file name}
+    tk_dialog .fileSelection "File Selection" "This is a dummy file selection dialog box, which is used because there isn't a good file selection dialog built into Tk yet." "" 0 OK
+    puts stderr "dummy file name"
 }
 
 #------------------------------------------
@@ -113,13 +111,13 @@ proc fillCard {} {
 #----------------------------------------------------
 
 .buttons.clear config -text "Clear    Ctrl+C"
-bind . <Control-c> clearAction
+bind . <Control-c> "clearAction "
 .buttons.add config -text "Add    Ctrl+A"
-bind . <Control-a> addAction
+bind . <Control-a> "addAction "
 .buttons.search config -text "Search    Ctrl+S"
-bind . <Control-s> "addAction; fillCard"
+bind . <Control-s> "addAction ; fillCard "
 .buttons.delete config -text "Delete...    Ctrl+D"
-bind . <Control-d> deleteAction
+bind . <Control-d> "deleteAction "
 
 .menu.file.m entryconfig 1 -accel Ctrl+F
 bind . <Control-f> fileAction
@@ -134,21 +132,21 @@ focus .frame.entry1
 
 proc Help {topic {x 0} {y 0}} {
     global helpTopics helpCmds
-    if {$topic == ""} return
+    if {$topic eq ""} return
     while {[info exists helpCmds($topic)]} {
 	set topic [eval $helpCmds($topic)]
     }
-    if [info exists helpTopics($topic)] {
+    if {[info exists helpTopics($topic)]} {
 	set msg $helpTopics($topic)
     } else {
 	set msg "Sorry, but no help is available for this topic"
     }
-    tk_dialog .help {Rolodex Help} "Information on $topic:\n\n$msg" \
-	    {} 0 OK
+    tk_dialog .help "Rolodex Help" "Information on $topic:\n\n$msg" \
+	    "" 0 OK
 }
 
 proc getMenuTopic {w x y} {
-    return $w.[$w index @[expr {$y-[winfo rooty $w]}]]
+    return $w.[$w index @[expr {$y - [winfo rooty $w]}]]
 }
 
 event add <<Help>> <F1> <Help>
@@ -172,13 +170,9 @@ set helpTopics(.frame.entry5) {In this field of the rolodex entry you should typ
 set helpTopics(.frame.entry6) {In this field of the rolodex entry you should type the person's work phone number}
 set helpTopics(.frame.entry7) {In this field of the rolodex entry you should type the phone number for the person's FAX machine}
 
-set helpCmds(.frame.label1) {set topic .frame.entry1}
-set helpCmds(.frame.label2) {set topic .frame.entry2}
-set helpCmds(.frame.label3) {set topic .frame.entry3}
-set helpCmds(.frame.label4) {set topic .frame.entry4}
-set helpCmds(.frame.label5) {set topic .frame.entry5}
-set helpCmds(.frame.label6) {set topic .frame.entry6}
-set helpCmds(.frame.label7) {set topic .frame.entry7}
+foreach id [list 1 2 3 4 5 6 7] {
+  set helpCmds(.frame.label$id) "set topic .frame.entry$id"
+}
 
 set helpTopics(context) {Unfortunately, this application doesn't support context-sensitive help in the usual way, because when this demo was written Tk didn't have a grab mechanism and this is needed for context-sensitive help.  Instead, you can achieve much the same effect by simply moving the mouse over the window you're curious about and pressing the Help or F1 keys.  You can do this anytime.}
 set helpTopics(help) {This application provides only very crude help.  Besides the entries in this menu, you can get help on individual windows by moving the mouse cursor over the window and pressing the Help or F1 keys.}

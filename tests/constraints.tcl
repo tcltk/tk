@@ -26,9 +26,9 @@ namespace eval tk {
 
 	namespace export loadTkCommand
 	proc loadTkCommand {} {
-	    set tklib {}
+	    set tklib ""
 	    foreach pair [info loaded {}] {
-		foreach {lib pfx} $pair break
+		lassign $pair lib pfx
 		if {$pfx eq "Tk"} {
 		    set tklib $lib
 		    break
@@ -47,37 +47,37 @@ namespace eval tk {
 	    proc cleanup {} {
 		variable fd
 		# catch in case the background process has closed $fd
-		catch {puts $fd exit}
-		catch {close $fd}
+		catch {chan puts $fd exit}
+		catch {chan close $fd}
 		set fd ""
 	    }
-	    proc setup args {
+	    proc setup {args} {
 		variable fd
 		if {[info exists fd] && [string length $fd]} {
 		    cleanup
 		}
 		set fd [open "|[list [interpreter] \
 			-geometry +0+0 -name tktest] $args" r+]
-		puts $fd "puts foo; flush stdout"
-		flush $fd
-		if {[gets $fd data] < 0} {
+		chan puts $fd "puts foo; flush stdout"
+		chan flush $fd
+		if {[chan gets $fd data] < 0} {
 		    error "unexpected EOF from \"[interpreter]\""
 		}
 		if {$data ne "foo"} {
 		    error "unexpected output from\
 			    background process: \"$data\""
 		}
-		puts $fd [loadTkCommand]
-		flush $fd
-		fileevent $fd readable [namespace code Ready]
+		chan puts $fd [loadTkCommand]
+		chan flush $fd
+		chan event $fd readable [namespace code Ready]
 	    }
 	    proc Ready {} {
 		variable fd
 		variable Data
 		variable Done
-		set x [gets $fd]
-		if {[eof $fd]} {
-		    fileevent $fd readable {}
+		set x [chan gets $fd]
+		if {[chan eof $fd]} {
+		    chan event $fd readable {}
 		    set Done 1
 		} elseif {$x eq "**DONE**"} {
 		    set Done 1
@@ -90,15 +90,15 @@ namespace eval tk {
 		variable Data
 		variable Done
 		if {$block} {
-		    fileevent $fd readable {}
+		    chan event $fd readable {}
 		}
-		puts $fd "[list catch $cmd msg]; update; puts \$msg;\
+		chan puts $fd "[list catch $cmd msg]; update; puts \$msg;\
 			puts **DONE**; flush stdout"
-		flush $fd
+		chan flush $fd
 		set Data {}
 		if {$block} {
-		    while {![eof $fd]} {
-			set line [gets $fd]
+		    while {![chan eof $fd]} {
+			set line [chan gets $fd]
 			if {$line eq "**DONE**"} {
 			    break
 			}
@@ -123,12 +123,12 @@ namespace eval tk {
 
 	namespace export deleteWindows
 	proc deleteWindows {} {
-	    eval destroy [winfo children .]
+	    destroy {*}[winfo children .]
 	}
 
 	namespace export fixfocus 
 	proc fixfocus {} {
-            catch {destroy .focus}
+            destroy .focus
             toplevel .focus
             wm geometry .focus +0+0
             entry .focus.e
@@ -191,12 +191,12 @@ testConstraint nonUnixUserInteraction [expr {
 testConstraint haveDISPLAY [info exists env(DISPLAY)]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {
-    ![testConstraint unix] || [catch {font actual "\{xyz"}]
+    (![testConstraint unix]) || [catch {font actual "\{xyz"}]
 }]
 
 # constraints for testing facilities defined in the tktest executable...
-testConstraint testImageType [expr {[lsearch [image types] test] >= 0}]
-testConstraint testOldImageType [expr {[lsearch [image types] oldtest] >= 0}]
+testConstraint testImageType [expr {"test" in [image types]}]
+testConstraint testOldImageType [expr {"oldtest" in [image types]}]
 testConstraint testbitmap    [llength [info commands testbitmap]]
 testConstraint testborder    [llength [info commands testborder]]
 testConstraint testcbind     [llength [info commands testcbind]]
@@ -218,14 +218,14 @@ testConstraint testwrapper   [llength [info commands testwrapper]]
 # constraint to see what sort of fonts are available
 testConstraint fonts 1
 destroy .e
-entry .e -width 0 -font {Helvetica -12} -bd 1 -highlightthickness 1
+entry .e -width 0 -font "Helvetica -12" -borderwidth 1 -highlightthickness 1
 .e insert end a.bcd
 if {([winfo reqwidth .e] != 37) || ([winfo reqheight .e] != 20)} {
     testConstraint fonts 0
 }
 destroy .e
 destroy .t
-text .t -width 80 -height 20 -font {Times -14} -bd 1
+text .t -width 80 -height 20 -font {Times -14} -borderwidth 1
 pack .t
 .t insert end "This is\na dot."
 update
@@ -235,7 +235,7 @@ if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
 testConstraint textfonts [expr {
-    [testConstraint fonts] || [tk windowingsystem] eq "win32"
+    [testConstraint fonts] || ([tk windowingsystem] eq "win32")
 }]
 
 # constraints for the visuals available..
@@ -246,10 +246,10 @@ testConstraint pseudocolor8 [expr {
 }]
 destroy .t
 testConstraint haveTruecolor24 [expr {
-    [lsearch -exact [winfo visualsavailable .] {truecolor 24}] >= 0
+    "truecolor 24" in [winfo visualsavailable .]
 }]
 testConstraint haveGrayscale8 [expr {
-    [lsearch -exact [winfo visualsavailable .] {grayscale 8}] >= 0
+    "grayscale 8" in [winfo visualsavailable .]
 }]
 testConstraint defaultPseudocolor8 [expr {
     ([winfo visual .] eq "pseudocolor") && ([winfo depth .] == 8)

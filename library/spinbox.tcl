@@ -67,8 +67,9 @@ bind Spinbox <<Clear>> {
     %W delete sel.first sel.last
 }
 bind Spinbox <<PasteSelection>> {
-    if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
-	|| !$tk::Priv(mouseMoved)} {
+    if {$tk_strictMotif || 
+	(![info exists tk::Priv(mouseMoved)]) || 
+	(!$tk::Priv(mouseMoved))} {
 	::tk::spinbox::Paste %W %x
     }
 }
@@ -322,8 +323,8 @@ proc ::tk::spinbox::Invoke {w elem} {
 
 proc ::tk::spinbox::ClosestGap {w x} {
     set pos [$w index @$x]
-    set bbox [$w bbox $pos]
-    if {($x - [lindex $bbox 0]) < ([lindex $bbox 2]/2)} {
+    lassign [$w bbox $pos] x1 ___ x2
+    if {($x - $x1) < ($x2 / 2)} {
 	return $pos
     }
     incr pos
@@ -349,7 +350,7 @@ proc ::tk::spinbox::ButtonDown {w x y} {
 	set Priv(element) "entry"
     }
 
-    switch -exact $Priv(element) {
+    switch -exact -- $Priv(element) {
 	"buttonup" - "buttondown" {
 	    if {"disabled" ne [$w cget -state]} {
 		$w selection element $Priv(element)
@@ -419,7 +420,7 @@ proc ::tk::spinbox::ButtonUp {w x y} {
 # x -		The x-coordinate of the mouse.
 # cursor -	optional place to set cursor.
 
-proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
+proc ::tk::spinbox::MouseSelect {w x {cursor ""}} {
     variable ::tk::Priv
 
     if {$Priv(element) ne "entry"} {
@@ -429,10 +430,10 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
     }
     set cur [::tk::spinbox::ClosestGap $w $x]
     set anchor [$w index anchor]
-    if {($cur ne $anchor) || (abs($Priv(pressX) - $x) >= 3)} {
+    if {($cur ne $anchor) || ( abs ($Priv(pressX) - $x) >= 3)} {
 	set Priv(mouseMoved) 1
     }
-    switch $Priv(selectMode) {
+    switch -- $Priv(selectMode) {
 	char {
 	    if {$Priv(mouseMoved)} {
 		if {$cur < $anchor} {
@@ -447,7 +448,7 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
 	word {
 	    if {$cur < [$w index anchor]} {
 		set before [tcl_wordBreakBefore [$w get] $cur]
-		set after [tcl_wordBreakAfter [$w get] [expr {$anchor-1}]]
+		set after [tcl_wordBreakAfter [$w get] [expr {$anchor - 1}]]
 	    } else {
 		set before [tcl_wordBreakBefore [$w get] $anchor]
 		set after [tcl_wordBreakAfter [$w get] [expr {$cur - 1}]]
@@ -463,8 +464,9 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
 	line {
 	    $w selection range 0 end
 	}
+        default {}
     }
-    if {$cursor ne {} && $cursor ne "ignore"} {
+    if {$cursor ni "{} ignore"} {
 	catch {$w icursor $cursor}
     }
     update idletasks

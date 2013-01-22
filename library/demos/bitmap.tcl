@@ -33,7 +33,7 @@ proc bitmapRow {w args} {
 }
 
 set w .bitmap
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Bitmap Demonstration"
 wm iconname $w "bitmap"

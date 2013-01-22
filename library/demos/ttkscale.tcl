@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .ttkscale
-catch {destroy $w}
+destroy $w
 toplevel $w -bg [ttk::style lookup TLabel -background]
 wm title $w "Themed Scale Demonstration"
 wm iconname $w "ttkscale"
@@ -28,7 +28,7 @@ ttk::frame $w.frame -borderwidth 10
 pack $w.frame -side top -fill x
 
 # List of colors from rainbox; "Indigo" is not a standard color
-set colorList {Red Orange Yellow Green Blue Violet}
+set colorList [list Red Orange Yellow Green Blue Violet]
 ttk::label $w.frame.label
 ttk::scale $w.frame.scale -from 0 -to 5 -command [list apply {{w idx} {
     set c [lindex $::colorList [tcl::mathfunc::int $idx]]

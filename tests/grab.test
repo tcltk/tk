@@ -94,7 +94,6 @@ test grab-1.20 {Tk_GrabObjCmd, "grab status window"} -body {
     grab status .foo
 } -returnCodes error -result {bad window path name ".foo"}
 
-
 test grab-2.1 {Tk_GrabObjCmd, grab status gives correct status} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
@@ -125,7 +124,6 @@ test grab-2.3 {Tk_GrabObjCmd, grab status gives correct status} -body {
     grab release .
 } -result {global}
 
-
 test grab-3.1 {Tk_GrabObjCmd, grab current gives correct information} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
@@ -144,7 +142,6 @@ test grab-3.2 {Tk_GrabObjCmd, grab current gives correct information} -body {
     grab release .
 } -result {.}
 
-
 test grab-4.1 {Tk_GrabObjCmd, grab release releases grab} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
@@ -159,7 +156,6 @@ test grab-4.1 {Tk_GrabObjCmd, grab release releases grab} -body {
     grab release .
     lappend result [grab status .]
 } -result {local none global none}
-
 
 test grab-5.1 {Tk_GrabObjCmd, grab set} -body {
     set curr [grab current .]
@@ -181,7 +177,6 @@ test grab-5.2 {Tk_GrabObjCmd, grab set} -body {
 } -cleanup {
     grab release .
 } -result {. global}
-
 
 cleanupTests
 return

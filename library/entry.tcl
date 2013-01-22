@@ -62,8 +62,9 @@ bind Entry <<Clear>> {
     catch { %W delete sel.first sel.last }
 }
 bind Entry <<PasteSelection>> {
-    if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
-	|| !$tk::Priv(mouseMoved)} {
+    if {$tk_strictMotif || 
+	(![info exists tk::Priv(mouseMoved)]) || 
+	(!$tk::Priv(mouseMoved))} {
 	tk::EntryPaste %W %x
     }
 }
@@ -298,7 +299,7 @@ bind Entry <B2-Motion> {
 proc ::tk::EntryClosestGap {w x} {
     set pos [$w index @$x]
     set bbox [$w bbox $pos]
-    if {($x - [lindex $bbox 0]) < ([lindex $bbox 2]/2)} {
+    if {($x - [lindex $bbox 0]) < ([lindex $bbox 2] / 2)} {
 	return $pos
     }
     incr pos
@@ -342,10 +343,10 @@ proc ::tk::EntryMouseSelect {w x} {
 
     set cur [EntryClosestGap $w $x]
     set anchor [$w index anchor]
-    if {($cur != $anchor) || (abs($Priv(pressX) - $x) >= 3)} {
+    if {($cur != $anchor) || ( abs ($Priv(pressX) - $x) >= 3)} {
 	set Priv(mouseMoved) 1
     }
-    switch $Priv(selectMode) {
+    switch -- $Priv(selectMode) {
 	char {
 	    if {$Priv(mouseMoved)} {
 		if {$cur < $anchor} {
@@ -360,7 +361,7 @@ proc ::tk::EntryMouseSelect {w x} {
 	word {
 	    if {$cur < [$w index anchor]} {
 		set before [tcl_wordBreakBefore [$w get] $cur]
-		set after [tcl_wordBreakAfter [$w get] [expr {$anchor-1}]]
+		set after [tcl_wordBreakAfter [$w get] [expr {$anchor - 1}]]
 	    } else {
 		set before [tcl_wordBreakBefore [$w get] $anchor]
 		set after [tcl_wordBreakAfter [$w get] [expr {$cur - 1}]]
@@ -376,6 +377,7 @@ proc ::tk::EntryMouseSelect {w x} {
 	line {
 	    $w selection range 0 end
 	}
+        default {}
     }
     if {$Priv(mouseMoved)} {
         $w icursor $cur
@@ -477,7 +479,7 @@ proc ::tk::EntryInsert {w s} {
 # Arguments:
 # w -		The entry window in which to backspace.
 
-proc ::tk::EntryBackspace w {
+proc ::tk::EntryBackspace {w} {
     if {[$w selection present]} {
 	$w delete sel.first sel.last
     } else {
@@ -486,10 +488,8 @@ proc ::tk::EntryBackspace w {
 	    $w delete $x
 	}
 	if {[$w index @0] >= [$w index insert]} {
-	    set range [$w xview]
-	    set left [lindex $range 0]
-	    set right [lindex $range 1]
-	    $w xview moveto [expr {$left - ($right - $left)/2.0}]
+	    lassign [$w xview] left right
+	    $w xview moveto [expr {$left - (($right - $left) / 2.0)}]
 	}
     }
 }
@@ -501,7 +501,7 @@ proc ::tk::EntryBackspace w {
 # Arguments:
 # w -		The entry window.
 
-proc ::tk::EntrySeeInsert w {
+proc ::tk::EntrySeeInsert {w} {
     set c [$w index insert]
     if {($c < [$w index @0]) || ($c > [$w index @[winfo width $w]])} {
 	$w xview $c
@@ -533,17 +533,17 @@ proc ::tk::EntrySetCursor {w pos} {
 # Arguments:
 # w -		The entry window.
 
-proc ::tk::EntryTranspose w {
+proc ::tk::EntryTranspose {w} {
     set i [$w index insert]
     if {$i < [$w index end]} {
 	incr i
     }
-    set first [expr {$i-2}]
+    set first [expr {$i - 2}]
     if {$first < 0} {
 	return
     }
     set data [$w get]
-    set new [string index $data [expr {$i-1}]][string index $data $first]
+    set new [string index $data [expr {$i - 1}]][string index $data $first]
     $w delete $first $i
     $w insert insert $new
     EntrySeeInsert $w
@@ -625,7 +625,7 @@ proc ::tk::EntryScanDrag {w x} {
     # motion binding without the initial press.  [Bug #220269]
     if {![info exists ::tk::Priv(x)]} { set ::tk::Priv(x) $x }
     # allow for a delta
-    if {abs($x-$::tk::Priv(x)) > 2} {
+    if { abs ($x - $::tk::Priv(x)) > 2} {
 	set ::tk::Priv(mouseMoved) 1
     }
     $w scan dragto $x

@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .check
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Checkbutton Demonstration"
 wm iconname $w "check"
@@ -54,9 +54,9 @@ proc tristate_check {n1 n2 op} {
 	    set sober 1
 	}
     } else {
-	if {$wipers == 1 && $brakes == 1 && $sober == 1} {
+	if {($wipers == 1) && ($brakes == 1) && ($sober == 1)} {
 	    set safety all
-	} elseif {$wipers == 1 || $brakes == 1 || $sober == 1} {
+	} elseif {($wipers == 1) || ($brakes == 1) || ($sober == 1)} {
 	    set safety partial
 	} else {
 	    set safety none
@@ -65,7 +65,7 @@ proc tristate_check {n1 n2 op} {
     set in_check 0
 }
 
-trace variable wipers w tristate_check
-trace variable brakes w tristate_check
-trace variable sober  w tristate_check
-trace variable safety w tristate_check
+trace add variable wipers write tristate_check
+trace add variable brakes write tristate_check
+trace add variable sober  write tristate_check
+trace add variable safety write tristate_check

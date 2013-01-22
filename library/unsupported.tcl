@@ -230,12 +230,12 @@ namespace eval ::tk::unsupported {
 proc ::tk::unsupported::ExposePrivateCommand {cmd} {
     variable PrivateCommands
     set cmds [array get PrivateCommands $cmd]
-    if {[llength $cmds] == 0} {
+    if {![llength $cmds]} {
 	return -code error -errorcode {TK EXPOSE_PRIVATE_COMMAND} \
-	    "No compatibility support for \[$cmd]"
+	    "No compatibility support for \[$cmd\]"
     }
     foreach {old new} $cmds {
-	namespace eval :: [list interp alias {} $old {}] $new
+	namespace eval :: [list interp alias "" $old ""] $new
     }
 }
 
@@ -258,7 +258,7 @@ proc ::tk::unsupported::ExposePrivateCommand {cmd} {
 proc ::tk::unsupported::ExposePrivateVariable {var} {
     variable PrivateVariables
     set vars [array get PrivateVariables $var]
-    if {[llength $vars] == 0} {
+    if {![llength $vars]} {
 	return -code error -errorcode {TK EXPOSE_PRIVATE_VARIABLE} \
 	    "No compatibility support for \$$var"
     }

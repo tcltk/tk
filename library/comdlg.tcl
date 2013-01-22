@@ -45,10 +45,8 @@ proc tclParseConfigSpec {w specs flags argList} {
 	}
 	set cmdsw [lindex $spec 0]
 	set cmd($cmdsw) ""
-	set rname($cmdsw)   [lindex $spec 1]
-	set rclass($cmdsw)  [lindex $spec 2]
-	set def($cmdsw)     [lindex $spec 3]
-	set verproc($cmdsw) [lindex $spec 4]
+
+        lassign $spec _cmdsw_ rname($cmdsw) rclass($cmdsw) def($cmdsw) verproc($cmdsw)
     }
 
     if {[llength $argList] & 1} {
@@ -81,7 +79,7 @@ proc tclParseConfigSpec {w specs flags argList} {
 }
 
 proc tclListValidFlags {v} {
-    upvar $v cmd
+    upvar 1 $v cmd
 
     set len [llength [array names cmd]]
     set i 1
@@ -205,7 +203,7 @@ proc ::tk::FocusGroup_In {t w detail} {
     variable FocusIn
     variable ::tk::Priv
 
-    if {$detail ne "NotifyNonlinear" && $detail ne "NotifyNonlinearVirtual"} {
+    if {$detail ni "NotifyNonlinear NotifyNonlinearVirtual"} {
 	# This is caused by mouse moving out&in of the window *or*
 	# ordinary keypresses some window managers (ie: CDE [Bug: 2960]).
 	return
@@ -238,7 +236,7 @@ proc ::tk::FocusGroup_Out {t w detail} {
     variable FocusOut
     variable ::tk::Priv
 
-    if {$detail ne "NotifyNonlinear" && $detail ne "NotifyNonlinearVirtual"} {
+    if {$detail ni "NotifyNonlinear NotifyNonlinearVirtual"} {
 	# This is caused by mouse moving out of the window
 	return
     }
@@ -260,18 +258,19 @@ proc ::tk::FocusGroup_Out {t w detail} {
 #	and Windows platform.
 #
 proc ::tk::FDGetFileTypes {string} {
+    array set fileTypes {}
     foreach t $string {
-	if {[llength $t] < 2 || [llength $t] > 3} {
+	if {[llength $t] ni "2 3"} {
 	    return -code error -errorcode {TK VALUE FILE_TYPE} \
 		"bad file type \"$t\", should be \"typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?\""
 	}
 	lappend fileTypes([lindex $t 0]) {*}[lindex $t 1]
     }
 
-    set types {}
+    set types [list]
     foreach t $string {
 	set label [lindex $t 0]
-	set exts {}
+	set exts [list]
 
 	if {[info exists hasDoneType($label)]} {
 	    continue
@@ -297,7 +296,7 @@ proc ::tk::FDGetFileTypes {string} {
 	    regsub {^[.]} $ext "*." ext
 	    if {![info exists hasGotExt($label,$ext)]} {
 		if {$doAppend} {
-		    if {[string length $sep] && [string length $name]>40} {
+		    if {[string length $sep] && ([string length $name] > 40)} {
 			set doAppend 0
 			append name $sep...
 		    } else {

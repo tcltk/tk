@@ -36,7 +36,7 @@ namespace eval ::tk::dialog::file {}
 proc ::tk::MotifFDialog {type args} {
     variable ::tk::Priv
     set dataName __tk_filedialog
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
 
     set w [MotifFDialog_Create $dataName $type $args]
 
@@ -78,7 +78,7 @@ proc ::tk::MotifFDialog {type args} {
 #	Pathname of the file dialog.
 
 proc ::tk::MotifFDialog_Create {dataName type argList} {
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
 
     MotifFDialog_Config $dataName $type $argList
 
@@ -142,7 +142,7 @@ proc ::tk::MotifFDialog_Create {dataName type argList} {
 #	none
 
 proc ::tk::MotifFDialog_FileTypes {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     set f $w.top.f3.types
     destroy $f
@@ -177,16 +177,16 @@ proc ::tk::MotifFDialog_FileTypes {w} {
     MotifFDialog_SetFilter $w [lindex $data(-filetypes) $data(fileType)]
 
     #don't produce radiobuttons for only one filetype
-    if {[llength $data(-filetypes)] == 1} {
+    if {![llength $data(-filetypes)]} {
 	return
     }
 
     frame $f
     set cnt 0
-    if {$data(-filetypes) ne {}} {
+    if {$data(-filetypes) ne ""} {
 	foreach type $data(-filetypes) {
 	    set title  [lindex [lindex $type 0] 0]
-	    set filter [lindex $type 1]
+	    set filter [lindex $type 1]; # NOT USED ?!
 	    radiobutton $f.b$cnt \
 		-text $title \
 		-variable ::tk::dialog::file::[winfo name $w](fileType) \
@@ -206,7 +206,7 @@ proc ::tk::MotifFDialog_FileTypes {w} {
 # This proc gets called whenever data(filter) is set
 #
 proc ::tk::MotifFDialog_SetFilter {w type} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
     set data(filter) [lindex $type 1]
@@ -228,7 +228,7 @@ proc ::tk::MotifFDialog_SetFilter {w type} {
 #	argList		Options parsed by the procedure.
 
 proc ::tk::MotifFDialog_Config {dataName type argList} {
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
 
     set data(type) $type
 
@@ -267,7 +267,7 @@ proc ::tk::MotifFDialog_Config {dataName type argList} {
     if {$data(-title) eq ""} {
 	if {$type eq "open"} {
 	    if {$data(-multiple) != 0} {
-		set data(-title) "[mc {Open Multiple Files}]"
+		set data(-title) [mc "Open Multiple Files"]
 	    } else {
 		set data(-title) [mc "Open"]
 	    }
@@ -281,7 +281,7 @@ proc ::tk::MotifFDialog_Config {dataName type argList} {
     #
     if {$data(-initialdir) ne ""} {
 	if {[file isdirectory $data(-initialdir)]} {
-	    set data(selectPath) [lindex [glob $data(-initialdir)] 0]
+	    set data(selectPath) [lindex [glob -- $data(-initialdir)] 0]
 	} else {
 	    set data(selectPath) [pwd]
 	}
@@ -322,13 +322,13 @@ proc ::tk::MotifFDialog_Config {dataName type argList} {
 
 proc ::tk::MotifFDialog_BuildUI {w} {
     set dataName [lindex [split $w .] end]
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
 
     # Create the dialog toplevel and internal frames.
     #
     toplevel $w -class TkMotifFDialog
-    set top [frame $w.top -relief raised -bd 1]
-    set bot [frame $w.bot -relief raised -bd 1]
+    set top [frame $w.top -relief raised -borderwidth 1]
+    set bot [frame $w.bot -relief raised -borderwidth 1]
 
     pack $w.bot -side bottom -fill x
     pack $w.top -side top -expand yes -fill both
@@ -380,7 +380,7 @@ proc ::tk::MotifFDialog_BuildUI {w} {
     # The buttons
     #
     set maxWidth [::tk::mcmaxamp &OK &Filter &Cancel]
-    set maxWidth [expr {$maxWidth<6?6:$maxWidth}]
+    set maxWidth [expr {($maxWidth < 6) ? 6 : $maxWidth}]
     set data(okBtn) [::tk::AmpWidget button $bot.ok -text [mc "&OK"] \
 	    -width $maxWidth \
 	    -command [list tk::MotifFDialog_OkCmd $w]]
@@ -401,13 +401,13 @@ proc ::tk::MotifFDialog_BuildUI {w} {
     bind $data(fEnt) <Return> [list tk::MotifFDialog_ActivateFEnt $w]
     bind $data(sEnt) <Return> [list tk::MotifFDialog_ActivateSEnt $w]
     bind $w <Escape> [list tk::MotifFDialog_CancelCmd $w]
-    bind $w.bot <Destroy> {set ::tk::Priv(selectFilePath) {}}
+    bind $w.bot <Destroy> {set ::tk::Priv(selectFilePath) ""}
 
     wm protocol $w WM_DELETE_WINDOW [list tk::MotifFDialog_CancelCmd $w]
 }
 
 proc ::tk::MotifFDialog_SetListMode {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     if {$data(-multiple) != 0} {
 	set selectmode extended
@@ -481,7 +481,7 @@ proc ::tk::MotifFDialog_MakeSList {w f label cmdPrefix} {
 # 	pattern itself.
 
 proc ::tk::MotifFDialog_InterpFilter {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     set text [string trim [$data(fEnt) get]]
 
@@ -491,7 +491,7 @@ proc ::tk::MotifFDialog_InterpFilter {w} {
     if {[string index $text 0] eq "~"} {
 	set list [file split $text]
 	set tilde [lindex $list 0]
-	if {[catch {set tilde [glob $tilde]}]} {
+	if {[catch {set tilde [glob -- $tilde]}]} {
 	    set badTilde 1
 	} else {
 	    set text [eval file join [concat $tilde [lrange $list 1 end]]]
@@ -544,7 +544,7 @@ proc ::tk::MotifFDialog_InterpFilter {w} {
 #	None.
 
 proc ::tk::MotifFDialog_Update {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     $data(fEnt) delete 0 end
     $data(fEnt) insert 0 \
@@ -568,7 +568,7 @@ proc ::tk::MotifFDialog_Update {w} {
 #	None.
 
 proc ::tk::MotifFDialog_LoadFiles {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     $data(dList) delete 0 end
     $data(fList) delete 0 end
@@ -598,7 +598,7 @@ proc ::tk::MotifFDialog_LoadFiles {w} {
 	} else {
             foreach pat $data(filter) {
                 if {[string match $pat $f]} {
-		    if {[string match .* $f]} {
+		    if {[string match ".*" $f]} {
 			incr top
 		    }
 		    lappend flist $f
@@ -629,7 +629,7 @@ proc ::tk::MotifFDialog_LoadFiles {w} {
 #	None.	
 
 proc ::tk::MotifFDialog_BrowseDList {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     focus $data(dList)
     if {[$data(dList) curselection] eq ""} {
@@ -675,7 +675,7 @@ proc ::tk::MotifFDialog_BrowseDList {w} {
 #	None.	
 
 proc ::tk::MotifFDialog_ActivateDList {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     if {[$data(dList) curselection] eq ""} {
 	return
@@ -723,14 +723,14 @@ proc ::tk::MotifFDialog_ActivateDList {w} {
 #	None.	
 
 proc ::tk::MotifFDialog_BrowseFList {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     focus $data(fList)
     set data(selectFile) ""
     foreach item [$data(fList) curselection] {
 	lappend data(selectFile) [$data(fList) get $item]
     }
-    if {[llength $data(selectFile)] == 0} {
+    if {![llength $data(selectFile)]} {
 	return
     }
 
@@ -765,7 +765,7 @@ proc ::tk::MotifFDialog_BrowseFList {w} {
 #	None.	
 
 proc ::tk::MotifFDialog_ActivateFList {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     if {[$data(fList) curselection] eq ""} {
 	return
@@ -791,11 +791,9 @@ proc ::tk::MotifFDialog_ActivateFList {w} {
 #	None.	
 
 proc ::tk::MotifFDialog_ActivateFEnt {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
-    set list [MotifFDialog_InterpFilter $w]
-    set data(selectPath) [lindex $list 0]
-    set data(filter)    [lindex $list 1]
+    lassign [MotifFDialog_InterpFilter $w] data(selectPath) data(filter)
 
     MotifFDialog_Update $w
 }
@@ -815,7 +813,7 @@ proc ::tk::MotifFDialog_ActivateFEnt {w} {
 
 proc ::tk::MotifFDialog_ActivateSEnt {w} {
     variable ::tk::Priv
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     set selectFilePath [string trim [$data(sEnt) get]]
 
@@ -829,7 +827,7 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
     }
 
     if {[file isdirectory [lindex $selectFilePath 0]]} {
-	set data(selectPath) [lindex [glob $selectFilePath] 0]
+	set data(selectPath) [lindex [glob -- $selectFilePath] 0]
 	set data(selectFile) ""
 	MotifFDialog_Update $w
 	return
@@ -841,7 +839,7 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
 	    set item [file join $data(selectPath) $item]
 	} elseif {![file exists [file dirname $item]]} {
 	    tk_messageBox -icon warning -type ok \
-		    -message [mc {Directory "%1$s" does not exist.} \
+		    -message [mc "Directory \"%1$s\" does not exist." \
 		    [file dirname $item]]
 	    return
 	}
@@ -849,13 +847,13 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
 	if {![file exists $item]} {
 	    if {$data(type) eq "open"} {
 		tk_messageBox -icon warning -type ok \
-			-message [mc {File "%1$s" does not exist.} $item]
+			-message [mc "File \"%1$s\" does not exist." $item]
 		return
 	    }
-	} elseif {$data(type) eq "save" && $data(-confirmoverwrite)} {
+	} elseif {($data(type) eq "save") && $data(-confirmoverwrite)} {
 	    set message [format %s%s \
 		    [mc "File \"%1\$s\" already exists.\n\n" $selectFilePath] \
-		    [mc {Replace existing file?}]]
+		    [mc "Replace existing file?"]]
 	    set answer [tk_messageBox -icon warning -type yesno \
 		    -message $message]
 	    if {$answer eq "no"} {
@@ -867,8 +865,10 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
     }
 
     # Return selected filter
-    if {[info exists data(-typevariable)] && $data(-typevariable) ne ""
-	    && [info exists data(-filetypes)] && $data(-filetypes) ne ""} {
+    if {[info exists data(-typevariable)] && 
+	($data(-typevariable) ne "")      && 
+	[info exists data(-filetypes)]   && 
+	($data(-filetypes) ne "")} {
 	upvar #0 $data(-typevariable) typeVariable
 	set typeVariable [lindex $data(-filetypes) $data(fileType) 0]
     }
@@ -884,15 +884,14 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
     set Priv(selectPath)     [file dirname [lindex $newFileList 0]]
 }
 
-
 proc ::tk::MotifFDialog_OkCmd {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     MotifFDialog_ActivateSEnt $w
 }
 
 proc ::tk::MotifFDialog_FilterCmd {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     MotifFDialog_ActivateFEnt $w
 }
@@ -947,10 +946,10 @@ proc ::tk::ListBoxKeyAccel_Key {w key} {
 	    [list tk::ListBoxKeyAccel_Reset $w]]
 }
 
-proc ::tk::ListBoxKeyAccel_Goto {w string} {
+proc ::tk::ListBoxKeyAccel_Goto {w a_string} {
     variable ::tk::Priv
 
-    set string [string tolower $string]
+    set string [string tolower $a_string]
     set end [$w index end]
     set theIndex -1
 

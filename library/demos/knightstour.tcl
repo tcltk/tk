@@ -25,12 +25,13 @@ package require Tk 8.5
 
 # Return a list of accessible squares from a given square
 proc ValidMoves {square} {
-    set moves {}
+    set moves [list]
     foreach pair {{-1 -2} {-2 -1} {-2 1} {-1 2} {1 2} {2 1} {2 -1} {1 -2}} {
-        set col [expr {($square % 8) + [lindex $pair 0]}]
-        set row [expr {($square / 8) + [lindex $pair 1]}]
-        if {$row > -1 && $row < 8 && $col > -1 && $col < 8} {
-            lappend moves [expr {$row * 8 + $col}]
+        lassign $pair i_col i_row
+        set col [expr {($square % 8) + $i_col}]
+        set row [expr {($square / 8) + $i_row}]
+        if {($row > -1) && ($row < 8) && ($col > -1) && ($col < 8)} {
+            lappend moves [expr {($row * 8) + $col}]
         }
     }
     return $moves
@@ -72,17 +73,17 @@ proc Next {square} {
 
 # Select the square nearest the edge of the board
 proc Edgemost {a b} {
-    set colA [expr {3-int(abs(3.5-($a%8)))}]
-    set colB [expr {3-int(abs(3.5-($b%8)))}]
-    set rowA [expr {3-int(abs(3.5-($a/8)))}]
-    set rowB [expr {3-int(abs(3.5-($b/8)))}]
-    return [expr {($colA * $rowA) < ($colB * $rowB) ? $a : $b}]
+    set colA [expr {3 - ( int ( abs (3.5 - ($a % 8))))}]
+    set colB [expr {3 - ( int ( abs (3.5 - ($b % 8))))}]
+    set rowA [expr {3 - ( int ( abs (3.5 - ($a / 8))))}]
+    set rowB [expr {3 - ( int ( abs (3.5 - ($b / 8))))}]
+    return [expr {(($colA * $rowA) < ($colB * $rowB)) ? $a : $b}]
 }
 
 # Display a square number as a standard chess square notation.
 proc N {square} {
-    return [format %c%d [expr {97 + $square % 8}] \
-                [expr {$square / 8 + 1}]]
+    return [format %c%d [expr {97 + ($square % 8)}] \
+                [expr {($square / 8) + 1}]]
 }
 
 # Perform a Knight's move and schedule the next move.
@@ -92,12 +93,12 @@ proc MovePiece {dlg last square} {
     variable continuous
     $dlg.f.txt insert end "[llength $visited]. [N $last] .. [N $square]\n" {}
     $dlg.f.txt see end
-    $dlg.f.c itemconfigure [expr {1+$last}] -state normal -outline black
-    $dlg.f.c itemconfigure [expr {1+$square}] -state normal -outline red
-    $dlg.f.c moveto knight {*}[lrange [$dlg.f.c coords [expr {1+$square}]] 0 1]
+    $dlg.f.c itemconfigure [expr {1 + $last}] -state normal -outline black
+    $dlg.f.c itemconfigure [expr {1 + $square}] -state normal -outline red
+    $dlg.f.c moveto knight {*}[lrange [$dlg.f.c coords [expr {1 + $square}]] 0 1]
     lappend visited $square
     set next [Next $square]
-    if {$next ne -1} {
+    if {$next ne "-1"} {
         variable aid [after $delay [list MovePiece $dlg $square $next]]
     } else {
         $dlg.tf.b1 configure -state normal
@@ -109,7 +110,7 @@ proc MovePiece {dlg last square} {
                 $dlg.f.txt insert end "Success\n" {}
                 if {$continuous} {
                     after [expr {$delay * 2}] [namespace code \
-                        [list Tour $dlg [expr {int(rand() * 64)}]]]
+                        [list Tour $dlg [expr { ( int ( ( rand ()) * 64))}]]]
                 }
             }
         } else {
@@ -119,16 +120,16 @@ proc MovePiece {dlg last square} {
 }
 
 # Begin a new tour of the board given a random start position
-proc Tour {dlg {square {}}} {
-    variable visited {}
+proc Tour {dlg {square ""}} {
+    variable visited ""
     $dlg.f.txt delete 1.0 end
     $dlg.tf.b1 configure -state disabled
     for {set n 0} {$n < 64} {incr n} {
         $dlg.f.c itemconfigure $n -state disabled -outline black
     }
-    if {$square eq {}} {
+    if {$square eq ""} {
         set coords [lrange [$dlg.f.c coords knight] 0 1]
-        set square [expr {[$dlg.f.c find closest {*}$coords 0 65]-1}]
+        set square [expr {[$dlg.f.c find closest {*}$coords 0 65] - 1}]
     }
     variable initial $square
     after idle [list MovePiece $dlg $initial $initial]
@@ -140,12 +141,12 @@ proc Stop {} {
 }
 
 proc Exit {dlg} {
-    Stop
+    Stop 
     destroy $dlg
 }
 
 proc SetDelay {new} {
-    variable delay [expr {int($new)}]
+    variable delay [expr { int ($new)}]
 }
 
 proc DragStart {w x y} {
@@ -156,20 +157,21 @@ proc DragStart {w x y} {
 proc DragMotion {w x y} {
     variable dragging
     if {[info exists dragging]} {
-        $w move selected [expr {$x - [lindex $dragging 0]}] \
-            [expr {$y - [lindex $dragging 1]}]
-        variable dragging [list $x $y]
+        lassign $dragging x_d y_d
+        $w move selected [expr {$x - $x_d}] [expr {$y - $y_d}]
+        set dragging [list $x $y]
     }
 }
 proc DragEnd {w x y} {
     set square [$w find closest $x $y 0 65]
     $w moveto selected {*}[lrange [$w coords $square] 0 1]
     $w dtag selected
-    variable dragging ; unset dragging
+    variable dragging
+    unset dragging
 }
 
 proc CreateGUI {} {
-    catch {destroy .knightstour}
+    destroy .knightstour
     set dlg [toplevel .knightstour]
     wm title $dlg "Knights tour"
     wm withdraw $dlg
@@ -193,12 +195,14 @@ proc CreateGUI {} {
     for {set row 7} {$row != -1} {incr row -1} {
         for {set col 0} {$col < 8} {incr col} {
             if {(($col & 1) ^ ($row & 1))} {
-                set fill tan3 ; set dfill tan4
+                set fill tan3
+	        set dfill tan4
             } else {
-                set fill bisque ; set dfill bisque3
+                set fill bisque
+	        set dfill bisque3
             }
-            set coords [list [expr {$col * 30 + 4}] [expr {$row * 30 + 4}] \
-                            [expr {$col * 30 + 30}] [expr {$row * 30 + 30}]]
+            set coords [list [expr {($col * 30) + 4}] [expr {($row * 30) + 4}] \
+                            [expr {($col * 30) + 30}] [expr {($row * 30) + 30}]]
             $c create rectangle $coords -fill $fill -disabledfill $dfill \
                 -width 2 -state disabled
         }
@@ -228,7 +232,9 @@ proc CreateGUI {} {
 
     grid $f - - - - - -sticky news
     set things [list $dlg.tf.ls $dlg.tf.sc $dlg.tf.cc $dlg.tf.b1]
-    if {![info exists ::widgetDemo]} {
+
+    global widgetDemo
+    if {![info exists widgetDemo]} {
 	lappend things $dlg.tf.b2
 	if {[tk windowingsystem] ne "aqua"} {
 	    set things [linsert $things 0 [ttk::sizegrip $dlg.tf.sg]]
@@ -241,7 +247,7 @@ proc CreateGUI {} {
 	pack configure [lindex $things end] -padx {16 4}
     }
     grid $dlg.tf  - - - - - -sticky ew
-    if {[info exists ::widgetDemo]} {
+    if {[info exists widgetDemo]} {
         grid [addSeeDismiss $dlg.buttons $dlg] - - - - - -sticky ew
     }
     

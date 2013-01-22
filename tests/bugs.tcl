@@ -8,7 +8,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-if {[info procs test] != "test"} {
+if {[info procs test] ne "test"} {
     source defs
 }
 
@@ -23,7 +23,7 @@ test crash-1.0 {imgPhoto} {
 } {}
 
 test crash-1.1 {color} {
-    . configure -bg rgb:345
+    . configure -background rgb:345
     set foo ""
 } {}
 

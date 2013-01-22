@@ -15,7 +15,7 @@ test border-1.1 {Tk_AllocBorderFromObj - converting internal reps} -constraints 
 } -body {
     set x orange
     lindex $x 0
-    button .b1 -bg $x -text .b1
+    button .b1 -background $x -text .b1
     lindex $x 0
     testborder orange
 } -cleanup {
@@ -27,10 +27,10 @@ test border-1.2 {Tk_AllocBorderFromObj - discard stale border} -constraints {
     set result {}
 } -body {
     set x orange
-    button .b1 -bg $x -text First
+    button .b1 -background $x -text First
     destroy .b1
     lappend result [testborder orange]
-    button .b2 -bg $x -text Second
+    button .b2 -background $x -text Second
     lappend result [testborder orange]
 } -cleanup {
     destroy .b1 .b2
@@ -41,9 +41,9 @@ test border-1.3 {Tk_AllocBorderFromObj - reuse existing border} -constraints {
     set result {}
 } -body {
     set x orange
-    button .b1 -bg $x -text First
+    button .b1 -background $x -text First
     lappend result [testborder orange]
-    button .b2 -bg $x -text Second
+    button .b2 -background $x -text Second
     pack .b1 .b2 -side top
     lappend result [testborder orange]
 } -cleanup {
@@ -57,13 +57,13 @@ test border-1.4 {Tk_AllocBorderFromObj - try other borders in list} -constraints
     set result {}
 } -body {
     set x purple
-    button .b1 -bg $x -text First
+    button .b1 -background $x -text First
     pack .b1 -side top
     lappend result [testborder purple]
-    button .t.b -bg $x -text Second
+    button .t.b -background $x -text Second
     pack .t.b -side top
     lappend result [testborder purple]
-    button .b2 -bg $x -text Third
+    button .b2 -background $x -text Third
     pack .b2 -side top
     lappend result [testborder purple]
 } -cleanup {
@@ -78,11 +78,11 @@ test border-2.1 {Tk_Free3DBorder - reference counts} -constraints {
     set result {}
 } -body {
     set x purple
-    button .b1 -bg $x -text First
+    button .b1 -background $x -text First
     pack .b1 -side top
-    button .t.b -bg $x -text Second
+    button .t.b -background $x -text Second
     pack .t.b -side top
-    button .b2 -bg $x -text Third
+    button .b2 -background $x -text Third
     pack .b2 -side top
     lappend result [testborder purple]
     destroy .b1
@@ -104,16 +104,16 @@ test border-2.2 {Tk_Free3DBorder - unlinking from list} -constraints {
     set result {}
 } -body {
     set x purple
-    button .b -bg $x -text .b1
-    button .t.b1 -bg $x -text .t.b1
-    button .t.b2 -bg $x -text .t.b2
-    button .t2.b1 -bg $x -text .t2.b1
-    button .t2.b2 -bg $x -text .t2.b2
-    button .t2.b3 -bg $x -text .t2.b3
-    button .t3.b1 -bg $x -text .t3.b1
-    button .t3.b2 -bg $x -text .t3.b2
-    button .t3.b3 -bg $x -text .t3.b3
-    button .t3.b4 -bg $x -text .t3.b4
+    button .b -background $x -text .b1
+    button .t.b1 -background $x -text .t.b1
+    button .t.b2 -background $x -text .t.b2
+    button .t2.b1 -background $x -text .t2.b1
+    button .t2.b2 -background $x -text .t2.b2
+    button .t2.b3 -background $x -text .t2.b3
+    button .t3.b1 -background $x -text .t3.b1
+    button .t3.b2 -background $x -text .t3.b2
+    button .t3.b3 -background $x -text .t3.b3
+    button .t3.b4 -background $x -text .t3.b4
     lappend result [testborder purple]
     destroy .t2
     lappend result [testborder purple]
@@ -133,11 +133,11 @@ test border-3.1 {FreeBorderObjProc} -constraints {
     set result {}
 } -body {
     set x [format purple]
-    button .b -bg $x -text .b1
+    button .b -background $x -text .b1
     set y [format purple]
-    .b configure -bg $y
+    .b configure -background $y
     set z [format purple]
-    .b configure -bg $z
+    .b configure -background $z
     lappend result [testborder purple]
     set x red
     lappend result [testborder purple]

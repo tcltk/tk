@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .ttknote
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Ttk Notebook Widget"
 wm iconname $w "ttknote"
@@ -33,7 +33,7 @@ ttk::frame $w.note.msg
 ttk::label $w.note.msg.m -font $font -wraplength 4i -justify left -anchor n -text "Ttk is the new Tk themed widget set. One of the widgets it includes is the notebook widget, which provides a set of tabs that allow the selection of a group of panels, each with distinct content. They are a feature of many modern user interfaces. Not only can the tabs be selected with the mouse, but they can also be switched between using Ctrl+Tab when the notebook page heading itself is selected. Note that the second tab is disabled, and cannot be selected."
 ttk::button $w.note.msg.b -text "Neat!" -underline 0 -command {
     set neat "Yeah, I know..."
-    after 500 {set neat {}}
+    after 500 {set neat ""}
 }
 bind $w <Alt-n> "focus $w.note.msg.b; $w.note.msg.b invoke"
 ttk::label $w.note.msg.l -textvariable neat

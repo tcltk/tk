@@ -38,8 +38,8 @@ proc ::tk::dialog::error::Return {which code} {
 
 proc ::tk::dialog::error::Details {} {
     set w .bgerrorDialog
-    set caption [option get $w.function text {}]
-    set command [option get $w.function command {}]
+    set caption [option get $w.function text ""]
+    set command [option get $w.function command ""]
     if { ($caption eq "") || ($command eq "") } {
 	grid forget $w.function
     }
@@ -61,7 +61,7 @@ proc ::tk::dialog::error::SaveToLog {text} {
 	    ]
     set filename [tk_getSaveFile -title [mc "Select Log File"] \
 	    -filetypes $types -defaultextension .log -parent .bgerrorDialog]
-    if {$filename ne {}} {
+    if {$filename ne ""} {
         set f [open $filename w]
         puts -nonewline $f $text
         close $f
@@ -81,7 +81,7 @@ proc ::tk::dialog::error::DeleteByProtocol {} {
     set button 1
 }
 
-proc ::tk::dialog::error::ReturnInDetails w {
+proc ::tk::dialog::error::ReturnInDetails {w} {
     bind $w <Return> {}; # Remove this binding
     $w invoke
     return -code break
@@ -97,7 +97,7 @@ proc ::tk::dialog::error::ReturnInDetails w {
 # Arguments:
 #	err - The error message.
 #
-proc ::tk::dialog::error::bgerror err {
+proc ::tk::dialog::error::bgerror {err} {
     global errorInfo tcl_platform
     variable button
 
@@ -121,9 +121,9 @@ proc ::tk::dialog::error::bgerror err {
     set displayedErr ""
     set lines 0
     set maxLine 45
-    foreach line [split $err \n] {
+    foreach line [split $err "\n"] {
 	if { [string length $line] > $maxLine } {
-	    append displayedErr "[string range $line 0 [expr {$maxLine-3}]]..."
+	    append displayedErr "[string range $line 0 [expr {$maxLine - 3}]]..."
 	    break
 	}
 	if { $lines > 4 } {
@@ -153,7 +153,7 @@ proc ::tk::dialog::error::bgerror err {
     wm protocol $dlg WM_DELETE_WINDOW [namespace code DeleteByProtocol]
 
     if {$windowingsystem eq "aqua"} {
-	::tk::unsupported::MacWindowStyle style $dlg moveableAlert {}
+	::tk::unsupported::MacWindowStyle style $dlg moveableAlert ""
     } elseif {$windowingsystem eq "x11"} {
 	wm attributes $dlg -type dialog
     }
@@ -184,7 +184,7 @@ proc ::tk::dialog::error::bgerror err {
     set wrapwidth [winfo screenwidth $dlg]
     # ...minus the width of the icon, padding and a fudge factor for
     # the window manager decorations and aesthetics.
-    set wrapwidth [expr {$wrapwidth-60-[winfo pixels $dlg 9m]}]
+    set wrapwidth [expr {$wrapwidth - 60 - [winfo pixels $dlg 9m]}]
     ttk::label $dlg.msg -justify left -text $text -wraplength $wrapwidth
     ttk::label $dlg.bitmap -image ::tk::icons::error
 
@@ -259,7 +259,7 @@ proc ::tk::dialog::error::bgerror err {
 
 namespace eval :: {
     # Fool the indexer
-    proc bgerror err {}
-    rename bgerror {}
+    proc bgerror {err} {}
+    rename bgerror ""
     namespace import ::tk::dialog::error::bgerror
 }

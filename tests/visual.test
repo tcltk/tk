@@ -22,16 +22,16 @@ update
 # w -        Name of toplevel window to create.
 
 proc eatColors {w} {
-    catch {destroy $w}
+    destroy $w
     toplevel $w
     wm geom $w +0+0
-    canvas $w.c -width 400 -height 200 -bd 0
+    canvas $w.c -width 400 -height 200 -borderwidth 0
     pack $w.c
     for {set y 0} {$y < 8} {incr y} {
         for {set x 0} {$x < 40} {incr x} {
-            set color [format #%02x%02x%02x [expr $x*6] [expr $y*30] 0]
-            $w.c create rectangle [expr 10*$x] [expr 20*$y] \
-                [expr 10*$x + 10] [expr 20*$y + 20] -outline {} \
+	    set color [format "#%02x%02x%02x" [expr {$x * 6}] [expr {$y * 30}] 0]
+	    $w.c create rectangle [expr {10 * $x}] [expr {20 * $y}] \
+	        [expr {(10 * $x) + 10}] [expr {(20 * $y) + 20}] -outline "" \
                 -fill $color
         }
     }
@@ -49,9 +49,8 @@ proc eatColors {w} {
 #            to see if there are colormap entries free.
 
 proc colorsFree {w {red 31} {green 245} {blue 192}} {
-    set vals [winfo rgb $w [format #%02x%02x%02x $red $green $blue]]
-    expr ([lindex $vals 0]/256 == $red) && ([lindex $vals 1]/256 == $green) \
-        && ([lindex $vals 2]/256 == $blue)
+    lassign [winfo rgb $w [format "#%02x%02x%02x" $red $green $blue]] w_red w_green w_blue
+    expr {(($w_red / 256) == $red) && (($w_green / 256) == $green) && (($w_blue / 256) == $blue)}
 }
 
 # If more than one visual type is available for the screen, pick one
@@ -129,7 +128,6 @@ test visual-1.5 {Tk_GetVisual, default colormap} -setup {
 } -cleanup {
     deleteWindows
 } -result $default
-
 
 test visual-2.1 {Tk_GetVisual, different visual types} -constraints {
     nonPortable
@@ -336,7 +334,6 @@ test visual-2.17 {Tk_GetVisual, different visual types} -constraints {
     deleteWindows
 } -result {truecolor 32}
 
-
 test visual-3.1 {Tk_GetVisual, parsing visual string} -setup {
     deleteWindows
 } -body {
@@ -381,7 +378,6 @@ test visual-3.5 {Tk_GetVisual, parsing visual string} -setup {
     deleteWindows
 } -returnCodes error -result {expected integer but got "48x"}
 
-
 test visual-4.1 {Tk_GetVisual, numerical visual id}  -constraints {
     haveOtherVisual nonPortable
 } -setup {
@@ -414,7 +410,6 @@ test visual-4.3 {Tk_GetVisual, numerical visual id} -setup {
     deleteWindows
 } -returnCodes error -result {couldn't find an appropriate visual}
 
-
 test visual-5.1 {Tk_GetVisual, no matching visual} -constraints {
     !havePseudocolorVisual
 } -setup {
@@ -425,7 +420,6 @@ test visual-5.1 {Tk_GetVisual, no matching visual} -constraints {
 } -cleanup {
     deleteWindows
 } -returnCodes error -result {couldn't find an appropriate visual}
-
 
 test visual-6.1 {Tk_GetVisual, no matching visual} -constraints {
     havePseudocolorVisual haveMultipleVisuals nonPortable
@@ -522,7 +516,6 @@ test visual-7.6 {Tk_GetColormap, copy from other window} -constraints {
     deleteWindows
 } -returnCodes error -result {can't use colormap for .t1: incompatible visuals}
 
-
 test visual-8.1 {Tk_FreeColormap procedure} -setup {
     deleteWindows
 } -body {
@@ -555,7 +548,6 @@ test visual-8.2 {Tk_FreeColormap procedure} -constraints haveOtherVisual -setup 
 } -cleanup {
     deleteWindows
 } -result {}
-
 
 deleteWindows
 rename eatColors {}

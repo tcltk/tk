@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .radio
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Radiobutton Demonstration"
 wm iconname $w "radio"
@@ -25,7 +25,7 @@ grid $btns -row 3 -column 0 -columnspan 3 -sticky ew
 labelframe $w.left -pady 2 -text "Point Size" -padx 2
 labelframe $w.mid -pady 2 -text "Color" -padx 2
 labelframe $w.right -pady 2 -text "Alignment" -padx 2
-button $w.tristate -text Tristate -command "set size multi; set color multi" \
+button $w.tristate -text Tristate -command "lassign [list multi multi] size color" \
     -pady 2 -padx 2
 if {[tk windowingsystem] eq "aqua"} {
     $w.tristate configure -padx 10
@@ -49,7 +49,6 @@ foreach c {Red Green Blue Yellow Orange Purple} {
 	-tristatevalue "multi"
     pack $w.mid.$lower -side top -pady 2 -fill x
 }
-
 
 label $w.right.l -text "Label" -bitmap questhead -compound left
 $w.right.l configure -width [winfo reqwidth $w.right.l] -compound top

@@ -23,7 +23,8 @@ proc GetWindowInfo {title button} {
     set hwnd [testfindwindow $title "#32770"]
     set windowInfo [testgetwindowinfo $hwnd]
     array set a $windowInfo
-    set childinfo {} ; set childtext ""
+    set childinfo [list]
+    set childtext ""
     foreach child $a(children) {
         lappend childinfo $child [set info [testgetwindowinfo $child]]
         array set ca $info

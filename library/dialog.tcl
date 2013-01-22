@@ -27,21 +27,22 @@
 # args -	One or more strings to display in buttons across the
 #		bottom of the dialog box.
 
-proc ::tk_dialog {w title text bitmap default args} {
+proc ::tk_dialog {w title text bitmap a_default args} {
     global tcl_platform
     variable ::tk::Priv
 
     # Check that $default was properly given
-    if {[string is integer -strict $default]} {
-	if {$default >= [llength $args]} {
+    if {[string is integer -strict $a_default]} {
+	if {$a_default >= [llength $args]} {
 	    return -code error -errorcode {TK DIALOG BAD_DEFAULT} \
 		"default button index greater than number of buttons\
 		specified for tk_dialog"
 	}
-    } elseif {"" eq $default} {
+        set default $a_default
+    } elseif {"" eq $a_default} {
 	set default -1
     } else {
-	set default [lsearch -exact $args $default]
+	set default [lsearch -exact $args $a_default]
     }
 
     set windowingsystem [tk windowingsystem]
@@ -72,7 +73,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     }
 
     if {$windowingsystem eq "aqua"} {
-	::tk::unsupported::MacWindowStyle style $w moveableModal {}
+	::tk::unsupported::MacWindowStyle style $w moveableModal ""
     } elseif {$windowingsystem eq "x11"} {
 	wm attributes $w -type dialog
     }
@@ -80,8 +81,8 @@ proc ::tk_dialog {w title text bitmap default args} {
     frame $w.bot
     frame $w.top
     if {$windowingsystem eq "x11"} {
-	$w.bot configure -relief raised -bd 1
-	$w.top configure -relief raised -bd 1
+	$w.bot configure -relief raised -borderwidth 1
+	$w.top configure -relief raised -borderwidth 1
     }
     pack $w.bot -side bottom -fill both
     pack $w.top -side top -fill both -expand 1
@@ -97,7 +98,7 @@ proc ::tk_dialog {w title text bitmap default args} {
     label $w.msg -justify left -text $text
     pack $w.msg -in $w.top -side right -expand 1 -fill both -padx 3m -pady 3m
     if {$bitmap ne ""} {
-	if {$windowingsystem eq "aqua" && $bitmap eq "error"} {
+	if {($windowingsystem eq "aqua") && ($bitmap eq "error")} {
 	    set bitmap "stop"
 	}
 	label $w.bitmap -bitmap $bitmap
@@ -120,7 +121,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 	# We boost the size of some Mac buttons for l&f
 	if {$windowingsystem eq "aqua"} {
 	    set tmp [string tolower $but]
-	    if {$tmp eq "ok" || $tmp eq "cancel"} {
+	    if {$tmp in "ok cancel"} {
 		grid columnconfigure $w.bot $i -minsize 90
 	    }
 	    grid configure $w.button$i -pady 7

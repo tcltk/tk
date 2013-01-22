@@ -3,11 +3,12 @@
 #
 
 package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require tcltest
+namespace import -force tcltest::*
 loadTestedCommands
 
 variable scrollInfo
-proc scroll args {
+proc scroll {args} {
     global scrollInfo
     set scrollInfo $args
 }
@@ -17,9 +18,10 @@ proc scroll args {
 #
 variable bgerror ""
 proc bgerror {error} {
+    global errorInfo errorCode
     variable bgerror $error
-    variable bgerrorInfo $::errorInfo
-    variable bgerrorCode $::errorCode
+    variable bgerrorInfo $errorInfo
+    variable bgerrorCode $errorCode
 }
 
 #
@@ -96,6 +98,7 @@ test entry-3.0 "Series 3 setup" -body {
 }
 
 test entry-3.1 "bbox widget command" -body {
+    variable bd ch
     .e delete 0 end
     .e bbox 0
 } -result [list $bd $bd 0 $ch]
@@ -190,7 +193,7 @@ test entry-6.1 {Update linked variable in write trace} -body {
 	global x
 	set x "Overridden!"
     }
-    catch {destroy .e}
+    destroy .e
     set x ""
     trace variable x w override
     ttk::entry .e -textvariable x

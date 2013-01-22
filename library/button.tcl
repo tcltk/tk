@@ -145,7 +145,7 @@ if {"win32" eq [tk windowingsystem]} {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonEnter w {
+proc ::tk::ButtonEnter {w} {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
 
@@ -172,7 +172,7 @@ proc ::tk::ButtonEnter w {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonLeave w {
+proc ::tk::ButtonLeave {w} {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
 	$w configure -state normal
@@ -182,8 +182,8 @@ proc ::tk::ButtonLeave w {
     # That is signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	if {[info exists Priv($w,prelief)] && \
-		$Priv($w,prelief) eq [$w cget -relief]} {
+	if {[info exists Priv($w,prelief)] && 
+	    ($Priv($w,prelief) eq [$w cget -relief])} {
 	    $w configure -relief $Priv($w,relief)
 	}
 	unset -nocomplain Priv($w,relief) Priv($w,prelief)
@@ -201,7 +201,7 @@ proc ::tk::ButtonLeave w {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonDown w {
+proc ::tk::ButtonDown {w} {
     variable ::tk::Priv
 
     # Only save the button's relief if it does not yet exist.  If there
@@ -235,7 +235,7 @@ proc ::tk::ButtonDown w {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonUp w {
+proc ::tk::ButtonUp {w} {
     variable ::tk::Priv
     if {$Priv(buttonWindow) eq $w} {
 	set Priv(buttonWindow) ""
@@ -243,8 +243,8 @@ proc ::tk::ButtonUp w {
 	# Restore the button's relief if it was cached.
 
 	if {[info exists Priv($w,relief)]} {
-	    if {[info exists Priv($w,prelief)] && \
-		    $Priv($w,prelief) eq [$w cget -relief]} {
+	    if {[info exists Priv($w,prelief)] && 
+		($Priv($w,prelief) eq [$w cget -relief])} {
 		$w configure -relief $Priv($w,relief)
 	    }
 	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
@@ -253,7 +253,7 @@ proc ::tk::ButtonUp w {
 	# Clean up the after event from the auto-repeater
 	after cancel $Priv(afterId)
 
-	if {$Priv(window) eq $w && [$w cget -state] ne "disabled"} {
+	if {($Priv(window) eq $w) && ([$w cget -state] ne "disabled")} {
 	    $w configure -state normal
 
 	    # Only invoke the command if it wasn't already invoked by the
@@ -274,7 +274,7 @@ proc ::tk::ButtonUp w {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::CheckRadioEnter w {
+proc ::tk::CheckRadioEnter {w} {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
 	if {$Priv(buttonWindow) eq $w} {
@@ -298,7 +298,7 @@ proc ::tk::CheckRadioEnter w {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::CheckRadioDown w {
+proc ::tk::CheckRadioDown {w} {
     variable ::tk::Priv
     if {![info exists Priv($w,relief)]} {
 	set Priv($w,relief) [$w cget -relief]
@@ -355,7 +355,7 @@ proc ::tk::ButtonEnter {w} {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonLeave w {
+proc ::tk::ButtonLeave {w} {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
 	$w configure -state normal
@@ -365,8 +365,8 @@ proc ::tk::ButtonLeave w {
     # That is signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	if {[info exists Priv($w,prelief)] && \
-		$Priv($w,prelief) eq [$w cget -relief]} {
+	if {[info exists Priv($w,prelief)] && 
+	    ($Priv($w,prelief) eq [$w cget -relief])} {
 	    $w configure -relief $Priv($w,relief)
 	}
 	unset -nocomplain Priv($w,relief) Priv($w,prelief)
@@ -384,7 +384,7 @@ proc ::tk::ButtonLeave w {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonDown w {
+proc ::tk::ButtonDown {w} {
     variable ::tk::Priv
 
     # Only save the button's relief if it does not yet exist.  If there
@@ -418,7 +418,7 @@ proc ::tk::ButtonDown w {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonUp w {
+proc ::tk::ButtonUp {w} {
     variable ::tk::Priv
     if {$w eq $Priv(buttonWindow)} {
 	set Priv(buttonWindow) ""
@@ -426,8 +426,8 @@ proc ::tk::ButtonUp w {
 	# Restore the button's relief if it was cached.
 
 	if {[info exists Priv($w,relief)]} {
-	    if {[info exists Priv($w,prelief)] && \
-		    $Priv($w,prelief) eq [$w cget -relief]} {
+	    if {[info exists Priv($w,prelief)] && 
+		($Priv($w,prelief) eq [$w cget -relief])} {
 		$w configure -relief $Priv($w,relief)
 	    }
 	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
@@ -436,7 +436,7 @@ proc ::tk::ButtonUp w {
 	# Clean up the after event from the auto-repeater
 	after cancel $Priv(afterId)
 
-	if {$Priv(window) eq $w && [$w cget -state] ne "disabled"} {
+	if {($Priv(window) eq $w) && ([$w cget -state] ne "disabled")} {
 	    # Only invoke the command if it wasn't already invoked by the
 	    # auto-repeater functionality
 	    if { $Priv(repeated) == 0 } {
@@ -489,7 +489,7 @@ proc ::tk::ButtonEnter {w} {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonLeave w {
+proc ::tk::ButtonLeave {w} {
     variable ::tk::Priv
     if {$w eq $Priv(buttonWindow)} {
 	$w configure -state normal
@@ -499,8 +499,8 @@ proc ::tk::ButtonLeave w {
     # That is signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	if {[info exists Priv($w,prelief)] && \
-		$Priv($w,prelief) eq [$w cget -relief]} {
+	if {[info exists Priv($w,prelief)] && 
+	    ($Priv($w,prelief) eq [$w cget -relief])} {
 	    $w configure -relief $Priv($w,relief)
 	}
 	unset -nocomplain Priv($w,relief) Priv($w,prelief)
@@ -518,7 +518,7 @@ proc ::tk::ButtonLeave w {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonDown w {
+proc ::tk::ButtonDown {w} {
     variable ::tk::Priv
 
     if {[$w cget -state] ne "disabled"} {
@@ -544,7 +544,7 @@ proc ::tk::ButtonDown w {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonUp w {
+proc ::tk::ButtonUp {w} {
     variable ::tk::Priv
     if {$Priv(buttonWindow) eq $w} {
 	set Priv(buttonWindow) ""
@@ -553,8 +553,8 @@ proc ::tk::ButtonUp w {
 	# Restore the button's relief if it was cached.
 
 	if {[info exists Priv($w,relief)]} {
-	    if {[info exists Priv($w,prelief)] && \
-		    $Priv($w,prelief) eq [$w cget -relief]} {
+	    if {[info exists Priv($w,prelief)] && 
+		($Priv($w,prelief) eq [$w cget -relief])} {
 		$w configure -relief $Priv($w,relief)
 	    }
 	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
@@ -563,7 +563,7 @@ proc ::tk::ButtonUp w {
 	# Clean up the after event from the auto-repeater
 	after cancel $Priv(afterId)
 
-	if {$Priv(window) eq $w && [$w cget -state] ne "disabled"} {
+	if {($Priv(window) eq $w) && ([$w cget -state] ne "disabled")} {
 	    # Only invoke the command if it wasn't already invoked by the
 	    # auto-repeater functionality
 	    if { $Priv(repeated) == 0 } {
@@ -586,7 +586,7 @@ proc ::tk::ButtonUp w {
 # Arguments:
 # w -		The name of the widget.
 
-proc ::tk::ButtonInvoke w {
+proc ::tk::ButtonInvoke {w} {
     if {[$w cget -state] ne "disabled"} {
 	set oldRelief [$w cget -relief]
 	set oldState [$w cget -state]
@@ -657,7 +657,7 @@ proc ::tk::CheckInvoke {w} {
 	# Additional logic to switch the "selected" colors around if necessary
 	# (when we're indicator-less).
 
-	if {![$w cget -indicatoron] && [info exist Priv($w,selectcolor)]} {
+	if {(![$w cget -indicatoron]) && [info exist Priv($w,selectcolor)]} {
 	    if {[$w cget -selectcolor] eq $Priv($w,aselectcolor)} {
 		$w configure -selectcolor $Priv($w,selectcolor)
 	    } else {
@@ -695,13 +695,13 @@ proc ::tk::CheckEnter {w} {
 
 	# Compute what the "selected and active" color should be.
 
-	if {![$w cget -indicatoron] && [$w cget -selectcolor] ne ""} {
+	if {(![$w cget -indicatoron]) && ([$w cget -selectcolor] ne "")} {
 	    set Priv($w,selectcolor) [$w cget -selectcolor]
 	    lassign [winfo rgb $w [$w cget -selectcolor]]      r1 g1 b1
 	    lassign [winfo rgb $w [$w cget -activebackground]] r2 g2 b2
 	    set Priv($w,aselectcolor) \
-		[format "#%04x%04x%04x" [expr {($r1+$r2)/2}] \
-		     [expr {($g1+$g2)/2}] [expr {($b1+$b2)/2}]]
+		[format "#%04x%04x%04x" [expr {($r1 + $r2) / 2}] \
+		     [expr {($g1 + $g2) / 2}] [expr {($b1 + $b2) / 2}]]
 	    # use uplevel to work with other var resolvers
 	    if {[uplevel #0 [list set [$w cget -variable]]]
 		 eq [$w cget -onvalue]} {
@@ -728,7 +728,7 @@ proc ::tk::CheckLeave {w} {
     # Restore the original button "selected" color; assume that the user
     # wasn't monkeying around with things too much.
 
-    if {![$w cget -indicatoron] && [info exist Priv($w,selectcolor)]} {
+    if {(![$w cget -indicatoron]) && [info exist Priv($w,selectcolor)]} {
 	$w configure -selectcolor $Priv($w,selectcolor)
     }
     unset -nocomplain Priv($w,selectcolor) Priv($w,aselectcolor)
@@ -737,8 +737,8 @@ proc ::tk::CheckLeave {w} {
     # signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	if {[info exists Priv($w,prelief)] && \
-		$Priv($w,prelief) eq [$w cget -relief]} {
+	if {[info exists Priv($w,prelief)] && 
+	    ($Priv($w,prelief) eq [$w cget -relief])} {
 	    $w configure -relief $Priv($w,relief)
 	}
 	unset -nocomplain Priv($w,relief) Priv($w,prelief)

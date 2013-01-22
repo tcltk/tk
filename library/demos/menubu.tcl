@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .menubu
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Menu Button Demonstration"
 wm iconname $w "menubutton"
@@ -18,7 +18,12 @@ positionWindow $w
 
 frame $w.body
 pack $w.body -expand 1 -fill both
-if {[tk windowingsystem] eq "aqua"} {catch {set origUseCustomMDEF $::tk::mac::useCustomMDEF; set ::tk::mac::useCustomMDEF 1}}
+if {[tk windowingsystem] eq "aqua"} {
+    catch {
+        set origUseCustomMDEF $::tk::mac::useCustomMDEF
+        set ::tk::mac::useCustomMDEF 1
+    }
+}
 
 menubutton $w.body.below -text "Below" -underline 0 -direction below -menu $w.body.below.m -relief raised
 menu $w.body.below.m -tearoff 0 

@@ -12,7 +12,7 @@ label .counter -text 0.00 -relief raised -width 10 -padx 2m -pady 1m
 button .start -text Start -command {
     if {$stopped} {
 	set stopped 0
-	set startMoment [clock clicks -milliseconds]
+	set startMoment [clock milliseconds]
 	tick
 	.stop configure -state normal
 	.start configure -state disabled
@@ -27,7 +27,7 @@ pack .counter -side bottom -fill both
 pack .start -side left -fill both -expand yes
 pack .stop -side right -fill both -expand yes
 
-set startMoment {}
+set startMoment ""
 
 set stopped 1
 
@@ -35,8 +35,8 @@ proc tick {} {
     global startMoment stopped
     if {$stopped} {return}
     after 50 tick
-    set elapsedMS [expr {[clock clicks -milliseconds] - $startMoment}]
-    .counter config -text [format "%.2f" [expr {double($elapsedMS)/1000}]]
+    set elapsedMS [expr {[clock milliseconds] - $startMoment}]
+    .counter config -text [format "%.2f" [expr {$elapsedMS * 1e-3}]]
 }
 
 bind . <Control-c> {destroy .}

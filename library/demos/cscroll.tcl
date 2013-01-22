@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .cscroll
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Scrollable Canvas Demonstration"
 wm iconname $w "cscroll"
@@ -41,14 +41,13 @@ grid $w.vscroll -in $w.grid -padx 1 -pady 1 \
 grid $w.hscroll -in $w.grid -padx 1 -pady 1 \
     -row 1 -column 0 -rowspan 1 -columnspan 1 -sticky news
 
-
-set bg [lindex [$c config -bg] 4]
+set bg [lindex [$c configure -background] 4]
 for {set i 0} {$i < 20} {incr i} {
-    set x [expr {-10 + 3*$i}]
+    set x [expr {-10 + (3 * $i)}]
     for {set j 0; set y -10} {$j < 10} {incr j; incr y 3} {
-	$c create rect ${x}c ${y}c [expr {$x+2}]c [expr {$y+2}]c \
+	$c create rect ${x}c ${y}c [expr {$x + 2}]c [expr {$y + 2}]c \
 		-outline black -fill $bg -tags rect
-	$c create text [expr {$x+1}]c [expr {$y+1}]c -text "$i,$j" \
+	$c create text [expr {$x + 1}]c [expr {$y + 1}]c -text "$i,$j" \
 	    -anchor center -tags text
     }
 }
@@ -73,36 +72,36 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
-proc scrollEnter canvas {
+proc scrollEnter {canvas} {
     global oldFill
     set id [$canvas find withtag current]
-    if {[lsearch [$canvas gettags current] text] >= 0} {
-	set id [expr {$id-1}]
+    if {"text" in [$canvas gettags current]} {
+	set id [expr {$id - 1}]
     }
     set oldFill [lindex [$canvas itemconfig $id -fill] 4]
     if {[winfo depth $canvas] > 1} {
 	$canvas itemconfigure $id -fill SeaGreen1
     } else {
 	$canvas itemconfigure $id -fill black
-	$canvas itemconfigure [expr {$id+1}] -fill white
+	$canvas itemconfigure [expr {$id + 1}] -fill white
     }
 }
 
-proc scrollLeave canvas {
+proc scrollLeave {canvas} {
     global oldFill
     set id [$canvas find withtag current]
-    if {[lsearch [$canvas gettags current] text] >= 0} {
-	set id [expr {$id-1}]
+    if {"text" in [$canvas gettags current]} {
+	set id [expr {$id - 1}]
     }
     $canvas itemconfigure $id -fill $oldFill
-    $canvas itemconfigure [expr {$id+1}] -fill black
+    $canvas itemconfigure [expr {$id + 1}] -fill black
 }
 
-proc scrollButton canvas {
+proc scrollButton {canvas} {
     global oldFill
     set id [$canvas find withtag current]
-    if {[lsearch [$canvas gettags current] text] < 0} {
-	set id [expr {$id+1}]
+    if {"text" ni [$canvas gettags current]} {
+	set id [expr {$id + 1}]
     }
     puts stdout "You buttoned at [lindex [$canvas itemconf $id -text] 4]"
 }

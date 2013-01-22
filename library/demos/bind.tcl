@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .bind
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Text Demonstration - Tag Bindings"
 wm iconname $w "bind"
@@ -43,22 +43,22 @@ The same tag mechanism that controls display styles in text widgets can also be 
 
 }
 $w.text insert end \
-{1. Samples of all the different types of items that can be created in canvas widgets.} d1
+"1. Samples of all the different types of items that can be created in canvas widgets." d1
 $w.text insert end \n\n
 $w.text insert end \
-{2. A simple two-dimensional plot that allows you to adjust the positions of the data points.} d2
+"2. A simple two-dimensional plot that allows you to adjust the positions of the data points." d2
 $w.text insert end \n\n
 $w.text insert end \
-{3. Anchoring and justification modes for text items.} d3
+"3. Anchoring and justification modes for text items." d3
 $w.text insert end \n\n
 $w.text insert end \
-{4. An editor for arrow-head shapes for line items.} d4
+"4. An editor for arrow-head shapes for line items." d4
 $w.text insert end \n\n
 $w.text insert end \
-{5. A ruler with facilities for editing tab stops.} d5
+"5. A ruler with facilities for editing tab stops." d5
 $w.text insert end \n\n
 $w.text insert end \
-{6. A grid that demonstrates how canvases can be scrolled.} d6
+"6. A grid that demonstrates how canvases can be scrolled." d6
 
 # Create bindings for tags.
 

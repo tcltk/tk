@@ -3,8 +3,9 @@
 #
 
 package require Tk
-package require tcltest ; namespace import -force tcltest::*
-loadTestedCommands
+package require tcltest
+namespace import -force tcltest::*
+tcltest::loadTestedCommands 
 
 test checkbutton-1.1 "Checkbutton check" -body {
     pack [ttk::checkbutton .cb -text "TCheckbutton" -variable cb]
@@ -43,6 +44,6 @@ test checkbutton-1.6 "Checkbutton default variable" -body {
     lappend result [info exists .cb] [set .cb] [.cb state]
     .cb invoke
     lappend result [info exists .cb] [set .cb] [.cb state]
-} -result [list .cb 0 alternate   1 on selected  1 off {}]
+} -result [list .cb 0 alternate   1 on selected  1 off ""]
 
 tcltest::cleanupTests

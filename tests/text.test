@@ -62,8 +62,8 @@ test text-1.5 {configuration option: "bd"} -setup {
     pack .t
     update
 } -body {
-    .t configure -bd 4
-    .t cget -bd
+    .t configure -borderwidth 4
+    .t cget -borderwidth
 } -cleanup {
     destroy .t
 } -result {4}
@@ -72,7 +72,7 @@ test text-1.6 {configuration option: "bd"} -setup {
     pack .t
     update
 } -body {
-    .t configure -bd foo
+    .t configure -borderwidth foo
 } -cleanup {
     destroy .t
 } -match glob -returnCodes {error} -result {*}
@@ -81,8 +81,8 @@ test text-1.7 {configuration option: "bg"} -setup {
     pack .t
     update
 } -body {
-    .t configure -bg blue
-    .t cget -bg
+    .t configure -background blue
+    .t cget -background
 } -cleanup {
     destroy .t
 } -result {blue}
@@ -91,7 +91,7 @@ test text-1.8 {configuration option: "bg"} -setup {
     pack .t
     update
 } -body {
-    .t configure -bg #xx
+    .t configure -background #xx
 } -cleanup {
     destroy .t
 } -match glob -returnCodes {error} -result {*}
@@ -176,8 +176,8 @@ test text-1.17 {configuration option: "fg"} -setup {
     pack .t
     update
 } -body {
-    .t configure -fg red
-    .t cget -fg
+    .t configure -foreground red
+    .t cget -foreground
 } -cleanup {
     destroy .t
 } -result {red}
@@ -186,7 +186,7 @@ test text-1.18 {configuration option: "fg"} -setup {
     pack .t
     update
 } -body {
-    .t configure -fg stupid
+    .t configure -foreground stupid
 } -cleanup {
     destroy .t
 } -match glob -returnCodes {error} -result {*}
@@ -849,7 +849,6 @@ test text-1.86 {configuration option: "insertunfocussed"} -setup {
     destroy .t
 } -result {bad insertunfocussed "gorp": must be hollow, none, or solid}
 
-
 test text-2.1 {Tk_TextCmd procedure} -body {
     text
 } -returnCodes {error} -result {wrong # args: should be "text pathName ?-option value ...?"}
@@ -868,20 +867,20 @@ test text-2.4 {Tk_TextCmd procedure} -body {
     destroy .t
 } -result 0
 test text-2.5 {Tk_TextCmd procedure} -body {
-    text .t -bd 2 -fg red
+    text .t -borderwidth 2 -foreground red
 } -cleanup {
     destroy .t
 } -returnCodes ok -result {.t}
 test text-2.6 {Tk_TextCmd procedure} -body {
-    text .t -bd 2 -fg red
-	list [lindex [.t config -bd] 4] [lindex [.t config -fg] 4]
+    text .t -borderwidth 2 -foreground red
+	list [lindex [.t config -borderwidth] 4] [lindex [.t config -foreground] 4]
 } -cleanup {
     destroy .t
 } -result {2 red}
 test text-2.7 {Tk_TextCmd procedure} -constraints {
     win
 } -body {
-    catch {destroy .t}
+    destroy .t
     text .t
     .t tag cget sel -relief 
 } -cleanup {
@@ -890,7 +889,7 @@ test text-2.7 {Tk_TextCmd procedure} -constraints {
 test text-2.8 {Tk_TextCmd procedure} -constraints {
     aqua
 } -body {
-    catch {destroy .t}
+    destroy .t
     text .t
     .t tag cget sel -relief 
 } -cleanup {
@@ -899,7 +898,7 @@ test text-2.8 {Tk_TextCmd procedure} -constraints {
 test text-2.9 {Tk_TextCmd procedure} -constraints {
     unix
 } -body {
-    catch {destroy .t}
+    destroy .t
     text .t
     .t tag cget sel -relief 
 } -cleanup {
@@ -910,7 +909,6 @@ test text-2.10 {Tk_TextCmd procedure} -body {
 } -cleanup {
     destroy .t
 } -result {.t Text}
-
 
 test text-3.1 {TextWidgetCmd procedure, basics} -setup {
     text .t
@@ -973,12 +971,11 @@ test text-5.3 {TextWidgetCmd procedure, "cget" option} -setup {
 test text-5.4 {TextWidgetCmd procedure, "cget" option} -setup {
     text .t
 } -body {
-    .t configure -bd 17
-    .t cget -bd
+    .t configure -borderwidth 17
+    .t cget -borderwidth
 } -cleanup {
     destroy .t
 } -result {17}
-
 
 test text-6.1 {TextWidgetCmd procedure, "compare" option} -setup {
     text .t
@@ -1180,7 +1177,6 @@ test text-7.4 {TextWidgetCmd procedure, "debug" option} -setup {
 } -cleanup {
     destroy .t
 } -result {0}
-
 
 test text-8.1 {TextWidgetCmd procedure, "delete" option} -setup {
     text .t
@@ -1550,7 +1546,6 @@ test text-8.26 {TextWidgetCmd procedure, "replace" option crash} -setup {
 } -cleanup {
     destroy .tt
 } -result {}
-
 
 test text-9.1 {TextWidgetCmd procedure, "get" option} -setup {
     text .t
@@ -1995,7 +1990,6 @@ Line 7"
 } -cleanup {
     destroy .t
 } -result {Grl}
-
 
 test text-10.1 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
@@ -2634,7 +2628,6 @@ test text-10.39 {TextWidgetCmd procedure, "count" option} -setup {
     destroy .t
 } -result {2 6 2 5}
 
-
 test text-11.1 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack append . .t {top expand fill}
@@ -2819,7 +2812,6 @@ test text-11.9 {counting with tag priority eliding} -setup {
     destroy .t
 } -result {1 0 0 1 0 2.0 4.0 4.0 4.0 3.0 3.0 3.0 2.0 1.0 1.0}
 
-
 test text-12.1 {TextWidgetCmd procedure, "index" option} -setup {
     text .t
 } -body {
@@ -2861,7 +2853,6 @@ Line 7"
 } -cleanup {
     destroy .t
 } -result 1.2
-
 
 test text-13.1 {TextWidgetCmd procedure, "insert" option} -setup {
     [text .t] insert 1.0 "Line 1
@@ -3201,7 +3192,6 @@ test text-14.20 {ConfigureText procedure} -setup {
     destroy .top
 } -result {20x10+0+0 15x8+0+0 15x8+0+0}
 
-
 test text-15.1 {TextWorldChanged procedure, spacing options} -constraints {
     fonts
 } -body {
@@ -3217,19 +3207,17 @@ test text-15.1 {TextWorldChanged procedure, spacing options} -constraints {
     destroy .t
 } -result {140 160 170 150}
 
-
 test text-16.1 {TextEventProc procedure} -body {
-    text .tx1 -bg #543210
+    text .tx1 -background #543210
     rename .tx1 .tx2
     set x {}
     lappend x [winfo exists .tx1]
-    lappend x [.tx2 cget -bg]
+    lappend x [.tx2 cget -background]
     destroy .tx1
     lappend x [info command .tx*] [winfo exists .tx1] [winfo exists .tx2]
 } -cleanup {
     destroy .txt1
 } -result {1 #543210 {} 0 0}
-
 
 test text-17.1 {TextCmdDeletedProc procedure} -body {
     text .tx1
@@ -3256,7 +3244,6 @@ test text-17.2 {TextCmdDeletedProc procedure, disabling -setgrid} -constraints {
 } -cleanup {
     destroy .top
 } -result {20x10+ 150x140+}
-
 
 test text-18.1 {InsertChars procedure} -body {
     text .t
@@ -3348,7 +3335,6 @@ test text-18.7 {InsertChars procedure, inserting on top visible line} -setup {
 } -cleanup {
     destroy .t
 } -result {1.56}
-
 
 test text-19.1 {DeleteChars procedure} -body {
     text .t
@@ -3544,7 +3530,7 @@ test text-19.15 {DeleteChars procedure, updates affecting topIndex} -setup {
 test text-19.16 {DeleteChars procedure, updates affecting topIndex} -setup {
     toplevel .top
     text .top.t -width 6 -height 10 -wrap word
-    frame .top.f -width 200 -height 20 -relief raised -bd 2
+    frame .top.f -width 200 -height 20 -relief raised -borderwidth 2
     pack .top.f .top.t -side left
     wm geometry .top +0+0
     update
@@ -3558,7 +3544,6 @@ test text-19.16 {DeleteChars procedure, updates affecting topIndex} -setup {
 } -cleanup {
     destroy .top
 } -result {2.3 2.0}
-
 
 test text-20.1 {TextFetchSelection procedure} -setup {
     text .t -width 20 -height 10
@@ -3645,7 +3630,6 @@ test text-20.5 {TextFetchSelection procedure, long selections} -setup {
     destroy .t
 } -result {1}
 
-
 test text-21.1 {TkTextLostSelection procedure} -constraints unix -setup {
     text .t
     .t insert 1.0 "Line 1"
@@ -3698,7 +3682,6 @@ test text-21.4 {TkTextLostSelection procedure} -body {
 } -cleanup {
     destroy .t
 } -result {abc abc}
-
 
 test text-22.1 {TextSearchCmd procedure, argument parsing} -body {
     text .t
@@ -3850,7 +3833,7 @@ test text-22.21 {TextSearchCmd procedure, pattern case conversion} -body {
 test text-22.22 {TextSearchCmd procedure, bad regular expression pattern} -body {
     text .t
     .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
-    .t search -regexp a( 1.0
+    .t search -regexp "a\(" 1.0
 } -cleanup {
     destroy .t
 } -returnCodes {error} -result {couldn't compile regular expression pattern: parentheses () not balanced}
@@ -3993,7 +3976,7 @@ test text-22.41 {TextSearchCmd procedure, firstChar and lastChar} -setup {
 } -body {
     .top.t insert 1.0 "This is a line\nand this is another"
     .top.t insert end "\nand this is yet another"
-    frame .top.f -width 20 -height 20 -bd 2 -relief raised
+    frame .top.f -width 20 -height 20 -borderwidth 2 -relief raised
     .top.t window create 2.5 -window .top.f
     .top.t search his 2.6
 } -cleanup {
@@ -4006,7 +3989,7 @@ test text-22.42 {TextSearchCmd procedure, firstChar and lastChar} -setup {
 } -body {
     .top.t insert 1.0 "This is a line\nand this is another"
     .top.t insert end "\nand this is yet another"
-    frame .top.f -width 20 -height 20 -bd 2 -relief raised
+    frame .top.f -width 20 -height 20 -borderwidth 2 -relief raised
     .top.t window create 2.5 -window .top.f
     .top.t search this 2.6
 } -cleanup {
@@ -4019,7 +4002,7 @@ test text-22.43 {TextSearchCmd procedure, firstChar and lastChar} -setup {
 } -body {
     .top.t insert 1.0 "This is a line\nand this is another"
     .top.t insert end "\nand this is yet another"
-    frame .top.f -width 20 -height 20 -bd 2 -relief raised
+    frame .top.f -width 20 -height 20 -borderwidth 2 -relief raised
     .top.t window create 2.5 -window .top.f
     .top.t search is 2.6
 } -cleanup {
@@ -4032,7 +4015,7 @@ test text-22.44 {TextSearchCmd procedure, firstChar and lastChar} -setup {
 } -body {
     .top.t insert 1.0 "This is a line\nand this is another"
     .top.t insert end "\nand this is yet another"
-    frame .top.f -width 20 -height 20 -bd 2 -relief raised
+    frame .top.f -width 20 -height 20 -borderwidth 2 -relief raised
     .top.t window create 2.5 -window .top.f
     .top.t search his 2.7
 } -cleanup {
@@ -4045,7 +4028,7 @@ test text-22.45 {TextSearchCmd procedure, firstChar and lastChar} -setup {
 } -body {
     .top.t insert 1.0 "This is a line\nand this is another"
     .top.t insert end "\nand this is yet another"
-    frame .top.f -width 20 -height 20 -bd 2 -relief raised
+    frame .top.f -width 20 -height 20 -borderwidth 2 -relief raised
     .top.t window create 2.5 -window .top.f
     .top.t search -backwards "his is another" 2.6
 } -cleanup {
@@ -4058,7 +4041,7 @@ test text-22.46 {TextSearchCmd procedure, firstChar and lastChar} -setup {
 } -body {
     .top.t insert 1.0 "This is a line\nand this is another"
     .top.t insert end "\nand this is yet another"
-    frame .top.f -width 20 -height 20 -bd 2 -relief raised
+    frame .top.f -width 20 -height 20 -borderwidth 2 -relief raised
     .top.t window create 2.5 -window .top.f
     .top.t search -backwards "his is" 2.6
 } -cleanup {
@@ -4081,7 +4064,7 @@ test text-22.48 {TextSearchCmd procedure, firstChar and lastChar} -body {
 test text-22.49 {TextSearchCmd procedure, firstChar and lastChar} -body {
     text .t
     .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
-    catch {destroy .t}
+    destroy .t
     text .t2
     list [.t2 search a 1.0] [.t2 search -backward a 1.0]
 } -cleanup {
@@ -4133,10 +4116,10 @@ test text-22.54 {TextSearchCmd procedure, checking stopIndex} -body {
 } -result {2.13 {} {} {}}
 test text-22.55 {TextSearchCmd procedure, embedded windows and index/count} -setup {
     text .t
-    frame .t.f1 -width 20 -height 20 -relief raised -bd 2
-    frame .t.f2 -width 20 -height 20 -relief raised -bd 2
-    frame .t.f3 -width 20 -height 20 -relief raised -bd 2
-    frame .t.f4 -width 20 -height 20 -relief raised -bd 2
+    frame .t.f1 -width 20 -height 20 -relief raised -borderwidth 2
+    frame .t.f2 -width 20 -height 20 -relief raised -borderwidth 2
+    frame .t.f3 -width 20 -height 20 -relief raised -borderwidth 2
+    frame .t.f4 -width 20 -height 20 -relief raised -borderwidth 2
     set result ""
 } -body {
     .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
@@ -5555,9 +5538,8 @@ test text-22.225 {TextSearchCmd, strict limits} -body {
     destroy .t
 } -result {}
 
-
 test text-23.1 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -borderwidth 0 -relief flat -padx 0 -width 100
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -5566,7 +5548,7 @@ test text-23.1 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -returnCodes {error} -result {unmatched open brace in list}
 test text-23.2 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -borderwidth 0 -relief flat -padx 0 -width 100
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -5575,7 +5557,7 @@ test text-23.2 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -returnCodes {error} -result {bad screen distance "xyz"}
 test text-23.3 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -borderwidth 0 -relief flat -padx 0 -width 100
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -5586,7 +5568,7 @@ test text-23.3 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -result {100 200}
 test text-23.4 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -borderwidth 0 -relief flat -padx 0 -width 100
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -5600,7 +5582,7 @@ test text-23.4 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -result {100 200 300 400}
 test text-23.5 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -borderwidth 0 -relief flat -padx 0 -width 100
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -5614,7 +5596,7 @@ test text-23.5 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -result {105 205 305 405}
 test text-23.6 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -borderwidth 0 -relief flat -padx 0 -width 100
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -5623,7 +5605,7 @@ test text-23.6 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -returnCodes {error} -result {bad tab alignment "lork": must be left, right, center, or numeric}
 test text-23.7 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -borderwidth 0 -relief flat -padx 0 -width 100
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -5631,7 +5613,6 @@ test text-23.7 {TkTextGetTabs procedure} -setup {
 } -cleanup {
     destroy .t
 } -returnCodes {error} -result {bad screen distance "!44"}
-
 
 test text-24.1 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
@@ -5908,7 +5889,6 @@ test text-25.1 {text widget vs hidden commands} -body {
     expr {$x eq $y}
 } -result {1}
 
-
 test text-26.1 {bug fix - 1642} -body {
     pack [text .t]
     .t insert end "line 1\n"
@@ -5921,7 +5901,6 @@ test text-26.1 {bug fix - 1642} -body {
 } -cleanup {
     destroy .t
 } -result {2.6}
-
 
 test text-27.1 {TextEditCmd procedure, argument parsing} -body {
     pack [text .t]
@@ -6121,7 +6100,6 @@ test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
     destroy .t
 } -result {}
 
-
 test text-29.1 {tabs - must be positive and must be increasing} -body {
     pack [text .t -wrap none]
     .t configure -tabs {0}
@@ -6154,7 +6132,6 @@ test text-29.4 {tabs - must be positive and must be increasing} -body {
 } -cleanup {
     destroy .t
 } -result {1}
-
 
 test text-30.1 {repeated insert and scroll} -body {
     pack [text .t]
@@ -6200,7 +6177,6 @@ test text-30.4 {repeated insert and scroll} -body {
 } -cleanup {
     destroy .t
 } -result {1}
-
 
 test text-31.1 {peer widgets} -body {
     toplevel .top
@@ -6480,7 +6456,6 @@ test text-31.19 {peer widgets} -body {
     destroy .t
 } -returnCodes {error} -result {text doesn't contain any characters tagged with "sel"}
 
-
 test text-32.1 {line heights on creation} -setup {
     text .t
     proc makeText {} {
@@ -6517,7 +6492,6 @@ test text-32.1 {line heights on creation} -setup {
 } -cleanup {
     destroy .t
 } -result {1}
-
 
 test text-33.1 {TextWidgetCmd procedure, "peer" option} -setup {
     text .t
@@ -6786,7 +6760,6 @@ test text-35.3 {widget dump -command destroys widget} -setup {
 } -cleanup {
     destroy .t
 } -result {ok}
-
 
 test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
     proc bgerror {m} {set ::my_error $m}

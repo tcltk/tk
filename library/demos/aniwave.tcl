@@ -11,7 +11,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .aniwave
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Animated Wave Demonstration"
 wm iconname $w "aniwave"
@@ -33,8 +33,8 @@ array set animationCallbacks {}
 
 # Creates a coordinates list of a wave. This code does a very sketchy
 # job and relies on Tk's line smoothing to make things look better.
-set waveCoords {}
-for {set x -10} {$x<=300} {incr x 5} {
+set waveCoords [list]
+for {set x -10} {$x <= 300} {incr x 5} {
     lappend waveCoords $x 100
 }
 lappend waveCoords $x 0 [incr x 5] 200
@@ -56,13 +56,13 @@ trace add variable waveCoords write [list waveCoordsTracer $w]
 proc basicMotion {} {
     global waveCoords direction
     set oc $waveCoords
-    for {set i 1} {$i<[llength $oc]} {incr i 2} {
+    for {set i 1} {$i < [llength $oc]} {incr i 2} {
 	if {$direction eq "left"} {
 	    lset waveCoords $i [lindex $oc \
-		    [expr {$i+2>[llength $oc] ? 1 : $i+2}]]
+		    [expr {(($i + 2) > [llength $oc]) ? 1 : ($i + 2)}]]
 	} else {
 	    lset waveCoords $i \
-		    [lindex $oc [expr {$i-2<0 ? "end" : $i-2}]]
+		    [lindex $oc [expr {(($i - 2) < 0) ? "end" : ($i - 2)}]]
 	}
     }
 }
@@ -84,8 +84,8 @@ proc reverser {} {
 # using the [after] command. This procedure is the fundamental basis
 # for all animated effect handling in Tk.
 proc move {} {
-    basicMotion
-    reverser
+    basicMotion 
+    reverser 
 
     # Theoretically 100 frames-per-second (==10ms between frames)
     global animationCallbacks
@@ -94,7 +94,7 @@ proc move {} {
 
 # Initialise our remaining animation variables
 set direction "left"
-set animateAfterCallback {}
+set animateAfterCallback ""
 # Arrange for the animation loop to stop when the canvas is deleted
 bind $w.c <Destroy> {
     after cancel $animationCallbacks(simpleWave)

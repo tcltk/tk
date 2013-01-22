@@ -14,7 +14,7 @@ package require Tcl	8.5
 package require Tk	8.5
 package require msgcat
 
-eval destroy [winfo child .]
+destroy {*}[winfo children .]
 set tk_demoDirectory [file join [pwd] [file dirname [info script]]]
 ::msgcat::mcload $tk_demoDirectory
 namespace import ::msgcat::mc
@@ -31,7 +31,7 @@ if {[tk windowingsystem] eq "x11"} {
 
 if {"defaultFont" ni [font names]} {
     # TIP #145 defines some standard named fonts
-    if {"TkDefaultFont" in [font names] && "TkFixedFont" in [font names]} {
+    if {("TkDefaultFont" in [font names]) && ("TkFixedFont" in [font names])} {
         # FIX ME: the following technique of cloning the font to copy it works
         #         fine but means that if the system font is changed by Tk
         #         cannot update the copied font. font alias might be useful
@@ -109,7 +109,7 @@ if {[tk windowingsystem] ne "aqua"} {
 	    -command {tkAboutDialog} -accelerator [mc "<F1>"]
     bind . <F1> {tkAboutDialog}
     .menuBar.file add sep
-    if {[string match win* [tk windowingsystem]]} {
+    if {[string match "win*" [tk windowingsystem]]} {
 	# Windows doesn't usually have a Meta key
 	::tk::AmpMenuArgs .menuBar.file add command -label [mc "&Quit"] \
 		-command {exit} -accelerator [mc "Ctrl+Q"]
@@ -139,7 +139,7 @@ pack .statusBar -side bottom -fill x -pady 2
 set textheight 30
 catch {
     set textheight [expr {
-	([winfo screenheight .] * 0.7) /
+	([winfo screenheight .] * 0.7) / 
 	[font metrics mainFont -displayof . -linespace]
     }]
 }
@@ -242,7 +242,7 @@ proc addFormattedText {formattedText} {
 	if {$line eq ""} {
 	    continue
 	}
-	if {[string match @@* $line]} {
+	if {[string match "@@*" $line]} {
 	    set data [string range $line 2 end]
 	    set key [lindex $data 0]
 	    set values [lrange $data 1 end]
@@ -441,7 +441,7 @@ proc addSeeDismiss {w show {vars {}} {extra {}}} {
 # Arguments:
 # w -		The name of the window to position.
 
-proc positionWindow w {
+proc positionWindow {w} {
     wm geometry $w +300+300
 }
 
@@ -454,7 +454,7 @@ proc positionWindow w {
 # args -	Any number of names of variables.
 
 proc showVars {w args} {
-    catch {destroy $w}
+    destroy $w
     toplevel $w
     if {[tk windowingsystem] eq "x11"} {wm attributes $w -type dialog}
     wm title $w [mc "Variable values"]
@@ -464,7 +464,7 @@ proc showVars {w args} {
     set f [ttk::labelframe $b.title -text [mc "Variable values:"]]
     foreach var $args {
 	ttk::label $f.n$var -text "$var:" -anchor w
-	ttk::label $f.v$var -textvariable $var -anchor w
+        ttk::label $f.v$var -textvariable [set var] -anchor w
 	grid $f.n$var $f.v$var -padx 2 -pady 2 -sticky w
     }
     ttk::button $b.ok -text [mc "OK"] \
@@ -494,7 +494,7 @@ proc showVars {w args} {
 # Arguments:
 # index -	The index of the character that the user clicked on.
 
-proc invoke index {
+proc invoke {index} {
     global tk_demoDirectory
     set tags [.t tag names $index]
     set i [lsearch -glob $tags demo-*]
@@ -517,7 +517,7 @@ proc invoke index {
 #	Show the name of the demo program in the status bar. This procedure is
 #	called when the user moves the cursor over a demo description.
 #
-proc showStatus index {
+proc showStatus {index} {
     set tags [.t tag names $index]
     set i [lsearch -glob $tags demo-*]
     set cursor [.t cget -cursor]
@@ -552,7 +552,7 @@ proc evalShowCode {w} {
 # w -		The name of the demonstration's window, which can be used to
 #		derive the name of the file containing its code.
 
-proc showCode w {
+proc showCode {w} {
     global tk_demoDirectory
     set file [string range $w 1 end].tcl
     set top .code
@@ -626,17 +626,18 @@ proc showCode w {
 # file -		Name of the original file (implicitly for title)
 
 proc printCode {w file} {
+    global env tcl_platform
     set code [$w get 1.0 end-1c]
 
     set dir "."
-    if {[info exists ::env(HOME)]} {
-	set dir "$::env(HOME)"
+    if {[info exists env(HOME)]} {
+	set dir $env(HOME)
     }
-    if {[info exists ::env(TMP)]} {
-	set dir $::env(TMP)
+    if {[info exists env(TMP)]} {
+	set dir $env(TMP)
     }
-    if {[info exists ::env(TEMP)]} {
-	set dir $::env(TEMP)
+    if {[info exists env(TEMP)]} {
+	set dir $env(TEMP)
     }
 
     set filename [file join $dir "tkdemo-$file"]
@@ -644,7 +645,7 @@ proc printCode {w file} {
     puts $outfile $code
     close $outfile
 
-    switch -- $::tcl_platform(platform) {
+    switch -- $tcl_platform(platform) {
 	unix {
 	    if {[catch {exec lp -c $filename} msg]} {
 		tk_messageBox -title "Print spooling failure" \
@@ -659,7 +660,7 @@ proc printCode {w file} {
 	}
 	default {
 	    tk_messageBox -title "Operation not Implemented" \
-		    -message "Wow! Unknown platform: $::tcl_platform(platform)"
+		    -message "Wow! Unknown platform: $tcl_platform(platform)"
 	}
     }
 
@@ -667,7 +668,7 @@ proc printCode {w file} {
     # Be careful to throw away the temporary file in a gentle manner ...
     #
     if {[file exists $filename]} {
-	catch {file delete $filename}
+	catch {file delete -- $filename}
     }
 }
 

@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .ttkpane
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Themed Nested Panes"
 wm iconname $w "ttkpane"
@@ -64,7 +64,7 @@ set testzones {
 }
 # Force a pre-load of all the timezones needed; otherwise can end up
 # poor-looking synch problems!
-set zones {}
+set zones [list]
 foreach zone $testzones {
     if {![catch {clock format 0 -timezone $zone}]} {
         lappend zones $zone

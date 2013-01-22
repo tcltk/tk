@@ -37,7 +37,7 @@ bind Scrollbar <Leave> {
     if {$tk_strictMotif && [info exists tk::Priv(activeBg)]} {
 	%W configure -activebackground $tk::Priv(activeBg)
     }
-    %W activate {}
+    %W activate ""
 }
 bind Scrollbar <1> {
     tk::ScrollButtonDown %W %x %y
@@ -128,7 +128,7 @@ bind Scrollbar <<LineEnd>> {
     tk::ScrollToPos %W 1
 }
 }
-switch [tk windowingsystem] {
+switch -- [tk windowingsystem] {
     "aqua" {
 	bind Scrollbar <MouseWheel> {
 	    tk::ScrollByUnits %W v [expr {- (%D)}]
@@ -157,6 +157,7 @@ switch [tk windowingsystem] {
 	bind Scrollbar <Shift-4> {tk::ScrollByUnits %W h -5}
 	bind Scrollbar <Shift-5> {tk::ScrollByUnits %W h 5}
     }
+    default {}
 }
 # tk::ScrollButtonDown --
 # This procedure is invoked when a button is pressed in a scrollbar.
@@ -258,8 +259,8 @@ proc ::tk::ScrollStartDrag {w x y} {
     } elseif {$iv0 == 0} {
 	set Priv(initPos) 0.0
     } else {
-	set Priv(initPos) [expr {(double([lindex $Priv(initValues) 2])) \
-		/ [lindex $Priv(initValues) 0]}]
+	set Priv(initPos) \
+	  [expr {([lindex $Priv(initValues) 2] * 1.0) / [lindex $Priv(initValues) 0]}]
     }
 }
 
@@ -285,7 +286,7 @@ proc ::tk::ScrollDrag {w x y} {
 	    $w set [expr {[lindex $Priv(initValues) 0] + $delta}] \
 		    [expr {[lindex $Priv(initValues) 1] + $delta}]
 	} else {
-	    set delta [expr {round($delta * [lindex $Priv(initValues) 0])}]
+	    set delta [expr { round ($delta * [lindex $Priv(initValues) 0])}]
 	    eval [list $w] set [lreplace $Priv(initValues) 2 3 \
 		    [expr {[lindex $Priv(initValues) 2] + $delta}] \
 		    [expr {[lindex $Priv(initValues) 3] + $delta}]]
@@ -330,8 +331,8 @@ proc ::tk::ScrollEndDrag {w x y} {
 
 proc ::tk::ScrollByUnits {w orient amount} {
     set cmd [$w cget -command]
-    if {$cmd eq "" || ([string first \
-	    [string index [$w cget -orient] 0] $orient] < 0)} {
+    if {($cmd eq "") || 
+	([string first [string index [$w cget -orient] 0] $orient] < 0)} {
 	return
     }
     set info [$w get]
@@ -355,15 +356,15 @@ proc ::tk::ScrollByUnits {w orient amount} {
 
 proc ::tk::ScrollByPages {w orient amount} {
     set cmd [$w cget -command]
-    if {$cmd eq "" || ([string first \
-	    [string index [$w cget -orient] 0] $orient] < 0)} {
+    if {($cmd eq "") || 
+	([string first [string index [$w cget -orient] 0] $orient] < 0)} {
 	return
     }
     set info [$w get]
     if {[llength $info] == 2} {
 	uplevel #0 $cmd scroll $amount pages
     } else {
-	uplevel #0 $cmd [expr {[lindex $info 2] + $amount*([lindex $info 1] - 1)}]
+	uplevel #0 $cmd [expr {[lindex $info 2] + ($amount * ([lindex $info 1] - 1))}]
     }
 }
 
@@ -386,7 +387,7 @@ proc ::tk::ScrollToPos {w pos} {
     if {[llength $info] == 2} {
 	uplevel #0 $cmd moveto $pos
     } else {
-	uplevel #0 $cmd [expr {round([lindex $info 0]*$pos)}]
+	uplevel #0 $cmd [expr { round ([lindex $info 0] * $pos)}]
     }
 }
 
@@ -401,9 +402,9 @@ proc ::tk::ScrollToPos {w pos} {
 proc ::tk::ScrollTopBottom {w x y} {
     variable ::tk::Priv
     set element [$w identify $x $y]
-    if {[string match *1 $element]} {
+    if {[string match "*1" $element]} {
 	ScrollToPos $w 0
-    } elseif {[string match *2 $element]} {
+    } elseif {[string match "*2" $element]} {
 	ScrollToPos $w 1
     }
 

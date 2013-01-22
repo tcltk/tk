@@ -10,7 +10,7 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 testConstraint unthreaded [expr {
-    (![info exist tcl_platform(threaded)] || !$tcl_platform(threaded))
+    (![info exist tcl_platform(threaded)]) || (!$tcl_platform(threaded))
 }]
 namespace import ::tk::test::loadTkCommand
 update
@@ -52,9 +52,9 @@ test window-2.1 {Tk_DestroyWindow procedure, destroy handler deletes parent} -se
 } -body {
     toplevel .t -width 300 -height 200
     wm geometry .t +0+0
-    frame .t.f  -width 200 -height 200 -relief raised -bd 2
+    frame .t.f  -width 200 -height 200 -relief raised -borderwidth 2
     place .t.f -x 0 -y 0
-    frame .t.f.f -width 100 -height 100 -relief raised -bd 2
+    frame .t.f.f -width 100 -height 100 -relief raised -borderwidth 2
     place .t.f.f -relx 1 -rely 1 -anchor se
     bind .t.f <Destroy> {destroy .t}
     update
@@ -65,9 +65,9 @@ test window-2.2 {Tk_DestroyWindow procedure, destroy handler deletes parent} -se
 } -body {
     toplevel .t -width 300 -height 200
     wm geometry .t +0+0
-    frame .t.f  -width 200 -height 200 -relief raised -bd 2
+    frame .t.f  -width 200 -height 200 -relief raised -borderwidth 2
     place .t.f -x 0 -y 0
-    frame .t.f.f -width 100 -height 100 -relief raised -bd 2
+    frame .t.f.f -width 100 -height 100 -relief raised -borderwidth 2
     place .t.f.f -relx 1 -rely 1 -anchor se
     bind .t.f.f <Destroy> {destroy .t}
     update
@@ -76,13 +76,13 @@ test window-2.2 {Tk_DestroyWindow procedure, destroy handler deletes parent} -se
 test window-2.3 {Tk_DestroyWindow procedure, destroy handler deletes parent} -setup {
     destroy .f
 } -body {
-    frame .f -width 80 -height 120 -relief raised -bd 2
+    frame .f -width 80 -height 120 -relief raised -borderwidth 2
     place .f -relx 0.5 -rely 0.5 -anchor center
     toplevel .f.t -width 300 -height 200
     wm geometry .f.t +0+0
-    frame .f.t.f  -width 200 -height 200 -relief raised -bd 2
+    frame .f.t.f  -width 200 -height 200 -relief raised -borderwidth 2
     place .f.t.f -x 0 -y 0
-    frame .f.t.f.f -width 100 -height 100 -relief raised -bd 2
+    frame .f.t.f.f -width 100 -height 100 -relief raised -borderwidth 2
     place .f.t.f.f -relx 1 -rely 1 -anchor se
     update
     destroy .f
@@ -267,7 +267,6 @@ test window-2.11 {Tk_DestroyWindow, don't reanimate a half-dead window} -constra
     list $error $msg
 } -result {0 YES}
 
-
 test window-3.1 {Tk_MakeWindowExist procedure, stacking order and menubars} -constraints {
     unix testmenubar
 } -setup {
@@ -276,7 +275,7 @@ test window-3.1 {Tk_MakeWindowExist procedure, stacking order and menubars} -con
     toplevel .t -width 300 -height 200
     wm geometry .t +0+0
     pack [entry .t.e]
-    frame .t.f -bd 2 -relief raised
+    frame .t.f -borderwidth 2 -relief raised
     testmenubar window .t .t.f
     update
     # If stacking order isn't handle properly, generates an X error.
@@ -293,7 +292,7 @@ test window-3.2 {Tk_MakeWindowExist procedure, stacking order and menubars} -con
     pack [entry .t.e]
     pack [entry .t.e2]
     update
-    frame .t.f -bd 2 -relief raised
+    frame .t.f -borderwidth 2 -relief raised
     raise .t.f .t.e
     testmenubar window .t .t.f
     update
@@ -301,7 +300,6 @@ test window-3.2 {Tk_MakeWindowExist procedure, stacking order and menubars} -con
 } -cleanup {
     destroy .t
 } -result {}
-
 
 test window-4.1 {Tk_NameToWindow procedure} -constraints {
     testmenubar
@@ -325,7 +323,6 @@ test window-4.2 {Tk_NameToWindow procedure} -constraints {
     destroy .t
 } -returnCodes ok -result {100x50+10+10}
 
-
 test window-5.1 {Tk_MakeWindowExist procedure, stacking order and menubars} -constraints {
     unix testmenubar
 } -setup {
@@ -335,7 +332,7 @@ test window-5.1 {Tk_MakeWindowExist procedure, stacking order and menubars} -con
     wm geometry .t +0+0
     pack [entry .t.e]
     pack [entry .t.e2]
-    frame .t.f -bd 2 -relief raised
+    frame .t.f -borderwidth 2 -relief raised
     testmenubar window .t .t.f
     update
     lower .t.e2 .t.f

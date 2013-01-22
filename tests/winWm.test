@@ -14,7 +14,6 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
-
 test winWm-1.1 {TkWmMapWindow} -constraints win -setup {
     destroy .t
 } -body {
@@ -72,7 +71,6 @@ test winWm-1.5 {TkWmMapWindow} -constraints win -setup {
     update
     wm state .t
 } -result {iconic}
-
 
 test winWm-2.1 {TkpWmSetState} -constraints win -setup {
     destroy .t
@@ -149,7 +147,6 @@ test winWm-2.4 {TkpWmSetState} -constraints win -setup {
     destroy .t
 } -result {{normal 150x50+10+10} {iconic 150x50+10+10} {iconic 150x50+10+10} {normal 200x50+10+10}}
 
-
 test winWm-3.1 {ConfigureTopLevel: window geometry propagation} -constraints {
     win
 } -setup {
@@ -172,7 +169,6 @@ test winWm-3.1 {ConfigureTopLevel: window geometry propagation} -constraints {
 } -cleanup {
     destroy .t
 } -result 1
-
 
 test winWm-4.1 {ConfigureTopLevel: menu resizing} -constraints win -setup {
     destroy .t
@@ -363,7 +359,6 @@ test winWm-6.8 {wm attributes -transparentcolor} -constraints win -setup {
     destroy .t
 } -returnCodes error -result {unknown color name "foo"}
 
-
 test winWm-7.1 {deiconify on an unmapped toplevel will raise \
         the window and set the focus} -constraints {
     win
@@ -425,7 +420,6 @@ test winWm-7.4 {UpdateWrapper must maintain focus} -constraints win -setup {
 } -cleanup {
     destroy .t
 } -result {.t .t}
-
 
 test winWm-8.1 {Tk_WmCmd procedure, "iconphoto" option} -constraints win -body {
     wm iconph .
@@ -551,7 +545,7 @@ test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -setup 
                 pack .t.f
                 lappend aid [after 100 {
 		    set ::winwm92 [expr {
-			    [winfo rooty .t.f.x] == 0 ? "failed" : "ok"}]}]
+			    ([winfo rooty .t.f.x] == 0) ? "failed" : "ok"}]}]
             }]
         }]
     }]

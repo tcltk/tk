@@ -24,7 +24,7 @@ namespace eval ::tk::dialog::file::chooseDir {
 proc ::tk::dialog::file::chooseDir:: {args} {
     variable ::tk::Priv
     set dataName __tk_choosedir
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
     Config $dataName $args
 
     if {$data(-parent) eq "."} {
@@ -118,7 +118,7 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     foreach trace [trace info variable data(selectPath)] {
 	trace remove variable data(selectPath) [lindex $trace 0] [lindex $trace 1]
     }
-    $data(dirMenuBtn) configure -textvariable {}
+    $data(dirMenuBtn) configure -textvariable ""
 
     # Return value to user
     #
@@ -131,7 +131,7 @@ proc ::tk::dialog::file::chooseDir:: {args} {
 #	Configures the Tk choosedir dialog according to the argument list
 #
 proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
 
     # 0: Delete all variable that were set on data(selectPath) the
     # last time the file dialog is used. The traces may cause troubles
@@ -194,7 +194,7 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
 # Gets called when user presses Return in the "Selection" entry or presses OK.
 #
 proc ::tk::dialog::file::chooseDir::OkCmd {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     # This is the brains behind selecting non-existant directories.  Here's
     # the flowchart:
@@ -221,7 +221,7 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
 	    return
 	}
 	set text [file join {*}[file split [string trim $text]]]
-	if {![file exists $text] || ![file isdirectory $text]} {
+	if {(![file exists $text]) || (![file isdirectory $text])} {
 	    # Entry contains an invalid directory.  If it's the same as the
 	    # last time they came through here, reset the saved value and end
 	    # the dialog.  Otherwise, save the value (so we can do this test
@@ -249,7 +249,7 @@ proc ::tk::dialog::file::chooseDir::OkCmd {w} {
 # Change state of OK button to match -mustexist correctness of entry
 #
 proc ::tk::dialog::file::chooseDir::IsOK? {w text} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     set ok [file isdirectory $text]
     $data(okBtn) configure -state [expr {$ok ? "normal" : "disabled"}]
@@ -259,7 +259,7 @@ proc ::tk::dialog::file::chooseDir::IsOK? {w text} {
 }
 
 proc ::tk::dialog::file::chooseDir::DblClick {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
     set selection [$data(icons) selection get]
     if {[llength $selection] != 0} {
 	set filenameFragment [$data(icons) get [lindex $selection 0]]
@@ -275,7 +275,7 @@ proc ::tk::dialog::file::chooseDir::DblClick {w} {
 # keys, etc)
 #
 proc ::tk::dialog::file::chooseDir::ListBrowse {w text} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     if {$text eq ""} {
 	return
@@ -295,13 +295,13 @@ proc ::tk::dialog::file::chooseDir::ListBrowse {w text} {
 #	script that calls tk_getOpenFile or tk_getSaveFile
 #
 proc ::tk::dialog::file::chooseDir::Done {w {selectFilePath ""}} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
     if {$selectFilePath eq ""} {
 	set selectFilePath $data(selectPath)
     }
-    if {$data(-mustexist) && ![file isdirectory $selectFilePath]} {
+    if {$data(-mustexist) && (![file isdirectory $selectFilePath])} {
 	return
     }
     set Priv(selectFilePath) $selectFilePath

@@ -7,8 +7,8 @@ namespace eval ttk::treeview {
 
     # Enter/Leave/Motion
     #
-    set State(activeWidget) 	{}
-    set State(activeHeading) 	{}
+    set State(activeWidget) 	""
+    set State(activeHeading) 	""
 
     # Press/drag/release:
     #
@@ -19,7 +19,7 @@ namespace eval ttk::treeview {
     set State(resizeColumn)	#0
 
     # For pressmode == "heading"
-    set State(heading)  	{}
+    set State(heading)  	""
 }
 
 ### Widget bindings.
@@ -75,7 +75,7 @@ proc ttk::treeview::Keynav {w dir} {
 	        set focus [lindex [$w children $focus] 0]
 	    } else {
 		set up $focus
-		while {$up ne "" && [set down [$w next $up]] eq ""} {
+		while {($up ne "") && ([set down [$w next $up]] eq "")} {
 		    set up [$w parent $up]
 		}
 		set focus $down
@@ -91,9 +91,10 @@ proc ttk::treeview::Keynav {w dir} {
 	right {
 	    OpenItem $w $focus
 	}
+        default {}
     }
 
-    if {$focus != {}} {
+    if {$focus ne ""} {
 	SelectOp $w $focus choose
     }
 }
@@ -102,12 +103,13 @@ proc ttk::treeview::Keynav {w dir} {
 #	Sets cursor, active element ...
 #
 proc ttk::treeview::Motion {w x y} {
-    set cursor {}
-    set activeHeading {}
+    set cursor ""
+    set activeHeading ""
 
     switch -- [$w identify region $x $y] {
 	separator { set cursor hresize }
 	heading { set activeHeading [$w identify column $x $y] }
+        default {}
     }
 
     ttk::setCursor $w $cursor
@@ -119,11 +121,11 @@ proc ttk::treeview::Motion {w x y} {
 proc ttk::treeview::ActivateHeading {w heading} {
     variable State
 
-    if {$w != $State(activeWidget) || $heading != $State(activeHeading)} {
-	if {$State(activeHeading) != {}} {
+    if {($w ne $State(activeWidget)) || ($heading ne $State(activeHeading))} {
+	if {$State(activeHeading) ne ""} {
 	    $State(activeWidget) heading $State(activeHeading) state !active
 	}
-	if {$heading != {}} {
+	if {$heading ne ""} {
 	    $w heading $heading state active
 	}
 	set State(activeHeading) $heading
@@ -166,8 +168,10 @@ proc ttk::treeview::Press {w x y} {
 	    switch -glob -- [$w identify element $x $y] {
 		*indicator -
 		*disclosure { Toggle $w $item }
+	        default {}
 	    }
 	}
+        default {}
     }
 }
 
@@ -175,17 +179,19 @@ proc ttk::treeview::Press {w x y} {
 #
 proc ttk::treeview::Drag {w x y} {
     variable State
-    switch $State(pressMode) {
+    switch -- $State(pressMode) {
 	resize	{ resize.drag $w $x }
 	heading	{ heading.drag $w $x $y }
+        default {}
     }
 }
 
 proc ttk::treeview::Release {w x y} {
     variable State
-    switch $State(pressMode) {
+    switch -- $State(pressMode) {
 	resize	{ resize.release $w $x }
 	heading	{ heading.release $w }
+        default {}
     }
     set State(pressMode) none
     Motion $w $x $y
@@ -221,8 +227,8 @@ proc ttk::treeview::heading.press {w x y} {
 
 proc ttk::treeview::heading.drag {w x y} {
     variable State
-    if {   [$w identify region $x $y] eq "heading"
-        && [$w identify column $x $y] eq $State(heading)
+    if { ([$w identify region $x $y] eq "heading") && 
+	 ([$w identify column $x $y] eq $State(heading))
     } {
     	$w heading $State(heading) state pressed
     } else {
@@ -232,7 +238,7 @@ proc ttk::treeview::heading.drag {w x y} {
 
 proc ttk::treeview::heading.release {w} {
     variable State
-    if {[lsearch -exact [$w heading $State(heading) state] pressed] >= 0} {
+    if {"pressed" in [$w heading $State(heading) state]} {
 	after 0 [$w heading $State(heading) -command]
     }
     $w heading $State(heading) state !pressed
@@ -304,7 +310,7 @@ proc ttk::treeview::ScanBetween {tv item1 item2 item} {
     variable between
     variable selectingBetween
 
-    if {$item eq $item1 || $item eq $item2} {
+    if {$item in "$item1 $item2"} {
     	lappend between $item
 	set selectingBetween [expr {!$selectingBetween}]
     } elseif {$selectingBetween} {

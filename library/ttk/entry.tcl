@@ -192,7 +192,8 @@ proc ttk::entry::Clear {w} {
 ## Cut -- Copy selection to clipboard then delete it.
 #
 proc ttk::entry::Cut {w} {
-    Copy $w; Clear $w
+    Copy $w
+    Clear $w
 }
 
 ### Navigation procedures.
@@ -204,7 +205,7 @@ proc ttk::entry::Cut {w} {
 proc ttk::entry::ClosestGap {w x} {
     set pos [$w index @$x]
     set bbox [$w bbox $pos]
-    if {$x - [lindex $bbox 0] > [lindex $bbox 2]/2} {
+    if {($x - [lindex $bbox 0]) > ([lindex $bbox 2] / 2)} {
 	incr pos
     }
     return $pos
@@ -216,7 +217,7 @@ proc ttk::entry::See {w {index insert}} {
     update idletasks	;# ensure scroll data up-to-date
     set c [$w index $index]
     # @@@ OR: check [$w index left] / [$w index right]
-    if {$c < [$w index @0] || $c >= [$w index @[winfo width $w]]} {
+    if {($c < [$w index @0]) || ($c >= [$w index @[winfo width $w]])} {
 	$w xview $c
     }
 }
@@ -232,7 +233,7 @@ set ::ttk::entry::State(startNext) \
 proc ttk::entry::NextWord {w start} {
     variable State
     set pos [tcl_endOfWord [$w get] [$w index $start]]
-    if {$pos >= 0 && $State(startNext)} {
+    if {($pos >= 0) && $State(startNext)} {
 	set pos [tcl_startOfNextWord [$w get] $pos]
     }
     if {$pos < 0} {
@@ -291,8 +292,8 @@ proc ttk::entry::Move {w where} {
 #
 # Returns: selection anchor.
 #
-proc ttk::entry::ExtendTo {w index} {
-    set index [$w index $index]
+proc ttk::entry::ExtendTo {w a_index} {
+    set index [$w index $a_index]
     set insert [$w index insert]
 
     # Figure out selection anchor:
@@ -302,8 +303,8 @@ proc ttk::entry::ExtendTo {w index} {
     	set selfirst [$w index sel.first]
 	set sellast  [$w index sel.last]
 
-	if {   ($index < $selfirst)
-	    || ($insert == $selfirst && $index <= $sellast)
+	if { ($index < $selfirst) || 
+	     (($insert == $selfirst) && ($index <= $sellast))
 	} {
 	    set anchor $sellast
 	} else {
@@ -377,7 +378,10 @@ proc ttk::entry::Select {w x mode} {
     switch -- $mode {
     	word	{ WordSelect $w $cur $cur }
     	line	{ LineSelect $w $cur $cur }
-	char	{ # no-op }
+	char	{ 
+	    # no-op
+	}
+        default {}
     }
 
     set State(anchor) $cur
@@ -398,10 +402,11 @@ proc ttk::entry::DragTo {w x} {
     variable State
 
     set cur [ClosestGap $w $x]
-    switch $State(selectMode) {
+    switch --  $State(selectMode) {
 	char { CharSelect $w $State(anchor) $cur }
 	word { WordSelect $w $State(anchor) $cur }
 	line { LineSelect $w $State(anchor) $cur }
+        default {}
     }
 }
 
@@ -491,10 +496,10 @@ proc ttk::entry::ScanDrag {w x} {
     variable State
 
     set dx [expr {$State(scanX) - $x}]
-    if {abs($dx) > $State(deadband)} {
+    if { ( abs ($dx) ) > $State(deadband)} {
 	set State(scanMoved) 1
     }
-    set left [expr {$State(scanIndex) + ($dx*$State(scanNum))/$State(scanDen)}]
+    set left [expr {$State(scanIndex) + (($dx * $State(scanNum)) / $State(scanDen))}]
     $w xview $left
 
     if {$left != [set newLeft [$w index @0]]} {
@@ -564,10 +569,8 @@ proc ttk::entry::Backspace {w} {
     $w delete $x
 
     if {[$w index @0] >= [$w index insert]} {
-	set range [$w xview]
-	set left [lindex $range 0]
-	set right [lindex $range 1]
-	$w xview moveto [expr {$left - ($right - $left)/2.0}]
+	lassign [$w xview] left right
+	$w xview moveto [expr {$left - (($right - $left) / 2.0)}]
     }
 }
 

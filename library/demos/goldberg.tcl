@@ -43,7 +43,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .goldberg
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Tk Goldberg (demonstration)"
 wm iconname $w "goldberg"
@@ -72,26 +72,54 @@ set S(cnt) 0
 set S(message) "\\nWelcome\\nto\\nTcl/Tk"
 array set speed {1 10 2 20 3 50 4 80 5 100 6 150 7 200 8 300 9 400 10 500}
 
-set MSTART 0; set MGO 1; set MPAUSE 2; set MSSTEP 3; set MBSTEP 4; set MDONE 5
-set S(mode) $::MSTART
+set MSTART 0
+set MGO 1
+set MPAUSE 2
+set MSSTEP 3
+set MBSTEP 4
+set MDONE 5
+set S(mode) $MSTART
 
 # Colors for everything
 set C(fg) black
 set C(bg) gray75
 set C(bg) cornflowerblue
 
-set C(0) white;		set C(1a) darkgreen;	set C(1b) yellow
-set C(2) red;		set C(3a) green;	set C(3b) darkblue
-set C(4) $C(fg);	set C(5a) brown;	set C(5b) white
-set C(6) magenta;	set C(7) green;		set C(8) $C(fg)
-set C(9) blue4;		set C(10a) white;	set C(10b) cyan
-set C(11a) yellow;	set C(11b) mediumblue;	set C(12) tan2
-set C(13a) yellow;	set C(13b) red;		set C(14) white
-set C(15a) green;	set C(15b) yellow;	set C(16) gray65
-set C(17) \#A65353;	set C(18) $C(fg);	set C(19) gray50
-set C(20) cyan;		set C(21) gray65;	set C(22) $C(20)
-set C(23a) blue;	set C(23b) red;		set C(23c) yellow
-set C(24a) red;		set C(24b) white;
+set C(0) white
+set C(1a) darkgreen
+set C(1b) yellow
+set C(2) red
+set C(3a) green
+set C(3b) darkblue
+set C(4) $C(fg)
+set C(5a) brown
+set C(5b) white
+set C(6) magenta
+set C(7) green
+set C(8) $C(fg)
+set C(9) blue4
+set C(10a) white
+set C(10b) cyan
+set C(11a) yellow
+set C(11b) mediumblue
+set C(12) tan2
+set C(13a) yellow
+set C(13b) red
+set C(14) white
+set C(15a) green
+set C(15b) yellow
+set C(16) gray65
+set C(17) "#A65353"
+set C(18) $C(fg)
+set C(19) gray50
+set C(20) cyan
+set C(21) gray65
+set C(22) $C(20)
+set C(23a) blue
+set C(23b) red
+set C(23c) yellow
+set C(24a) red
+set C(24b) white
 
 proc DoDisplay {w} {
     global S C
@@ -107,6 +135,7 @@ proc DoDisplay {w} {
 
     bind $w.c <3> [list $w.pause invoke]
     bind $w.c <Destroy> {
+        global animationCallbacks
 	after cancel $animationCallbacks(goldberg)
 	unset animationCallbacks(goldberg)
     }
@@ -153,9 +182,9 @@ proc DoCtrlFrame {w} {
     raise $w.details
     raise $w.details.cb
     grid rowconfigure $w.ctrl 50 -weight 1
-    trace variable ::S(mode) w	  [list ActiveGUI $w]
-    trace variable ::S(details) w [list ActiveGUI $w]
-    trace variable ::S(speed) w	  [list ActiveGUI $w]
+    trace add variable ::S(mode)    write [list ActiveGUI $w]
+    trace add variable ::S(details) write [list ActiveGUI $w]
+    trace add variable ::S(speed)   write [list ActiveGUI $w]
 
     grid $w.message -in $w.ctrl -row 98 -sticky ew -pady 5
     grid $w.message.e -sticky nsew
@@ -228,9 +257,9 @@ proc ActiveGUI {w var1 var2 op} {
     set m $S(mode)
     set S(pause) [expr {$m == 2}]
     $w.start  config -state $z([expr {$m != $MGO}])
-    $w.pause  config -state $z([expr {$m != $MSTART && $m != $MDONE}])
-    $w.step   config -state $z([expr {$m != $MGO && $m != $MDONE}])
-    $w.bstep  config -state $z([expr {$m != $MGO && $m != $MDONE}])
+    $w.pause  config -state $z([expr {($m != $MSTART) && ($m != $MDONE)}])
+    $w.step   config -state $z([expr {($m != $MGO)    && ($m != $MDONE)}])
+    $w.bstep  config -state $z([expr {($m != $MGO)    && ($m != $MDONE)}])
     $w.reset  config -state $z([expr {$m != $MSTART}])
 
     if {$S(details)} {
@@ -238,7 +267,7 @@ proc ActiveGUI {w var1 var2 op} {
     } else {
 	grid forget $w.details.f
     }
-    set S(speed) [expr {round($S(speed))}]
+    set S(speed) [expr { round ($S(speed))}]
     $w.speed config -text "Speed: $S(speed)"
 }
 
@@ -266,10 +295,10 @@ proc DoButton {w what} {
     }
 }
 
-proc Go {w {who {}}} {
+proc Go {w {who ""}} {
     global S speed animationCallbacks MGO MPAUSE MSSTEP MBSTEP
 
-    set now [clock clicks -milliseconds]
+    set now [clock milliseconds]
     catch {after cancel $animationCallbacks(goldberg)}
     if {$who ne ""} {				;# Start here for debugging
 	set S(active) $who;
@@ -283,11 +312,11 @@ proc Go {w {who {}}} {
     if {$S(mode) == $MSSTEP} {			;# Single step
 	set S(mode) $MPAUSE
     }
-    if {$S(mode) == $MBSTEP && $n} {		;# Big step
+    if {($S(mode) == $MBSTEP) && $n} {		;# Big step
 	set S(mode) $MSSTEP
     }
 
-    set elapsed [expr {[clock click -milliseconds] - $now}]
+    set elapsed [expr {[clock milliseconds] - $now}]
     set delay [expr {$speed($S(speed)) - $elapsed}]
     if {$delay <= 0} {
 	set delay 1
@@ -300,11 +329,11 @@ proc NextStep {w} {
     global S MSTART MDONE
     set rval 0					;# Return value
 
-    if {$S(mode) != $MSTART && $S(mode) != $MDONE} {
+    if {($S(mode) != $MSTART) && ($S(mode) != $MDONE)} {
 	incr S(cnt)
     }
-    set alive {}
-    foreach {who} $S(active) {
+    set alive [list]
+    foreach who $S(active) {
 	set n ["Move$who" $w]
 	if {$n & 1} {				;# This guy still alive
 	    lappend alive $who
@@ -315,7 +344,7 @@ proc NextStep {w} {
 	}
 	if {$n & 4} {				;# End of puzzle flag
 	    set S(mode) $MDONE			;# Done mode
-	    set S(active) {}			;# No more animation
+	    set S(active) ""			;# No more animation
 	    return 1
 	}
     }
@@ -323,7 +352,8 @@ proc NextStep {w} {
     return $rval
 }
 proc About {w} {
-    set msg "$::S(title)\nby Keith Vetter, March 2003\n(Reproduced by kind\
+    global S
+    set msg "$S(title)\nby Keith Vetter, March 2003\n(Reproduced by kind\
 	    permission of the author)\n\n\"Man will always find a difficult\
 	    means to perform a simple task.\"\nRube Goldberg"
     tk_messageBox -parent $w -message $msg -title About
@@ -335,7 +365,8 @@ proc About {w} {
 
 # START HERE! banner
 proc Draw0 {w} {
-    set color $::C(0)
+    global C
+    set color $C(0)
     set xy {579 119}
     $w.c create text $xy -text "START HERE!" -fill $color -anchor w \
 	    -tag I0 -font {{Times Roman} 12 italic bold}
@@ -344,11 +375,12 @@ proc Draw0 {w} {
 	    -arrowshape {18 18 5}
     $w.c bind I0 <1> Start
 }
-proc Move0 {w {step {}}} {
-    set step [GetStep 0 $step]
+proc Move0 {w {a_step ""}} {
+    global S MSTART
+    set step [GetStep 0 $a_step]
 
-    if {$::S(mode) > $::MSTART} {		;# Start the ball rolling
-	MoveAbs $w I0 {-100 -100}		;# Hide the banner
+    if {$S(mode) > $MSTART} {		;# Start the ball rolling
+	MoveAbs $w I0 {-100 -100}	;# Hide the banner
 	return 2
     }
 
@@ -363,19 +395,20 @@ proc Move0 {w {step {}}} {
 
 # Dropping ball
 proc Draw1 {w} {
-    set color $::C(1a)
-    set color2 $::C(1b)
+    global C
+    set color $C(1a)
+    set color2 $C(1b)
     set xy {844 133 800 133 800 346 820 346 820 168 844 168 844 133}
-    $w.c create poly $xy -width 3 -fill $color -outline {}
+    $w.c create poly $xy -width 3 -fill $color -outline ""
     set xy {771 133 685 133 685 168 751 168 751 346 771 346 771 133}
-    $w.c create poly $xy -width 3 -fill $color -outline {}
+    $w.c create poly $xy -width 3 -fill $color -outline ""
 
     set xy [box 812 122 9]
-    $w.c create oval $xy -tag I1 -fill $color2 -outline {}
+    $w.c create oval $xy -tag I1 -fill $color2 -outline ""
     $w.c bind I1 <1> Start
 }
-proc Move1 {w {step {}}} {
-    set step [GetStep 1 $step]
+proc Move1 {w {a_step ""}} {
+    set step [GetStep 1 $a_step]
     set pos {
 	{807 122} {802 122} {797 123} {793 124} {789 129} {785 153}
 	{785 203} {785 278 x} {785 367} {810 392} {816 438} {821 503}
@@ -398,28 +431,29 @@ proc Move1 {w {step {}}} {
 
 # Lighting the match
 proc Draw2 {w} {
+    global C
     set color red
-    set color $::C(2)
+    set color $C(2)
     set xy  {750 369 740 392 760 392}		;# Fulcrum
-    $w.c create poly $xy -fill $::C(fg) -outline $::C(fg)
+    $w.c create poly $xy -fill $C(fg) -outline $C(fg)
     set xy {628 335 660 383}			;# Strike box
-    $w.c create rect $xy -fill {} -outline $::C(fg)
+    $w.c create rect $xy -fill "" -outline $C(fg)
     for {set y 0} {$y < 3} {incr y} {
-	set yy [expr {335+$y*16}]
+	set yy [expr {335 + ($y * 16)}]
 	$w.c create bitmap 628 $yy -bitmap gray25 -anchor nw \
-		-foreground $::C(fg)
+		-foreground $C(fg)
 	$w.c create bitmap 644 $yy -bitmap gray25 -anchor nw \
-		-foreground $::C(fg)
+		-foreground $C(fg)
     }
 
     set xy {702 366 798 366}			;# Lever
-    $w.c create line $xy -fill $::C(fg) -width 6 -tag I2_0
+    $w.c create line $xy -fill $C(fg) -width 6 -tag I2_0
     set xy {712 363 712 355}			;# R strap
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I2_1
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I2_1
     set xy {705 363 705 355}			;# L strap
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I2_2
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I2_2
     set xy {679 356 679 360 717 360 717 356 679 356}	;# Match stick
-    $w.c create line $xy -fill $::C(fg) -tag I2_3
+    $w.c create line $xy -fill $C(fg) -tag I2_3
 
     #set xy {662 352 680 365}			;# Match head
     set xy {
@@ -428,8 +462,9 @@ proc Draw2 {w} {
     }
     $w.c create poly $xy -fill $color -outline $color -tag I2_4
 }
-proc Move2 {w {step {}}} {
-    set step [GetStep 2 $step]
+proc Move2 {w {a_step ""}} {
+    global C
+    set step [GetStep 2 $a_step]
 
     set stages {0 0 1 2 0 2 1 0 1 2 0 2 1}
     set xy(0) {
@@ -453,39 +488,40 @@ proc Move2 {w {step {}}} {
 	for {set i 0} {[$w.c find withtag I2_$i] ne ""} {incr i} {
 	    RotateItem $w I2_$i $Ox $Oy $beta
 	}
-	$w.c create poly -tag I2 -smooth 1 -fill $::C(2) ;# For the flame
+	$w.c create poly -tag I2 -smooth 1 -fill $C(2) ;# For the flame
 	return 1
     }
     $w.c coords I2 $xy([lindex $stages $step])
-    return [expr {$step == 7 ? 3 : 1}]
+    return [expr {($step == 7) ? 3 : 1}]
 }
 
 # Weight and pulleys
 proc Draw3 {w} {
-    set color $::C(3a)
-    set color2 $::C(3b)
+    global C
+    set color $C(3a)
+    set color2 $C(3b)
 
     set xy {602 296 577 174 518 174}
     foreach {x y} $xy {				;# 3 Pulleys
-	$w.c create oval [box $x $y 13] -fill $color -outline $::C(fg) \
+	$w.c create oval [box $x $y 13] -fill $color -outline $C(fg) \
 		-width 3
-	$w.c create oval [box $x $y 2] -fill $::C(fg) -outline $::C(fg)
+	$w.c create oval [box $x $y 2] -fill $C(fg) -outline $C(fg)
     }
 
     set xy {750 309 670 309}			;# Wall to flame
-    $w.c create line $xy -tag I3_s -width 3 -fill $::C(fg) -smooth 1
+    $w.c create line $xy -tag I3_s -width 3 -fill $C(fg) -smooth 1
     set xy {670 309 650 309}			;# Flame to pulley 1
-    $w.c create line $xy -tag I3_0 -width 3 -fill $::C(fg)
+    $w.c create line $xy -tag I3_0 -width 3 -fill $C(fg)
     set xy {650 309 600 309}			;# Flame to pulley 1
-    $w.c create line $xy -tag I3_1 -width 3 -fill $::C(fg)
+    $w.c create line $xy -tag I3_1 -width 3 -fill $C(fg)
     set xy {589 296 589 235}			;# Pulley 1 half way to 2
-    $w.c create line $xy -tag I3_2 -width 3 -fill $::C(fg)
+    $w.c create line $xy -tag I3_2 -width 3 -fill $C(fg)
     set xy {589 235 589 174}			;# Pulley 1 other half to 2
-    $w.c create line $xy -width 3 -fill $::C(fg)
+    $w.c create line $xy -width 3 -fill $C(fg)
     set xy {577 161 518 161}			;# Across the top
-    $w.c create line $xy -width 3 -fill $::C(fg)
+    $w.c create line $xy -width 3 -fill $C(fg)
     set xy {505 174 505 205}			;# Down to weight
-    $w.c create line $xy -tag I3_w -width 3 -fill $::C(fg)
+    $w.c create line $xy -tag I3_w -width 3 -fill $C(fg)
 
     # Draw the weight as 2 circles, two rectangles and 1 rounded rectangle
     set xy {515 207 495 207}
@@ -494,7 +530,8 @@ proc Draw3 {w} {
 		-outline $color2
 	$w.c create oval [box $x2 $y2 6] -tag I3_ -fill $color2 \
 		-outline $color2
-	incr y1 -6; incr y2 6
+	incr y1 -6
+        incr y2 6
 	$w.c create rect $x1 $y1 $x2 $y2 -tag I3_ -fill $color2 \
 		-outline $color2
     }
@@ -505,10 +542,10 @@ proc Draw3 {w} {
     $w.c create line $xy -tag I3_ -fill $color2 -width 10
 
     set xy {502 393 522 393 522 465}		;# Bottom weight target
-    $w.c create line $xy -tag I3__ -fill $::C(fg) -join miter -width 10
+    $w.c create line $xy -tag I3__ -fill $C(fg) -join miter -width 10
 }
-proc Move3 {w {step {}}} {
-    set step [GetStep 3 $step]
+proc Move3 {w {a_step ""}} {
+    set step [GetStep 3 $a_step]
 
     set pos {{505 247} {505 297} {505 386.5} {505 386.5}}
     set rope(0) {750 309 729 301 711 324 690 300}
@@ -533,7 +570,8 @@ proc Move3 {w {step {}}} {
 
 # Cage and door
 proc Draw4 {w} {
-    set color $::C(4)
+    global C
+    set color $C(4)
     lassign {527 356 611 464} x0 y0 x1 y1
 
     for {set y $y0} {$y <= $y1} {incr y 12} {	;# Horizontal bars
@@ -546,8 +584,8 @@ proc Draw4 {w} {
     set xy {518 464 518 428}			;# Swing gate
     $w.c create line $xy -tag I4 -fill $color -width 3
 }
-proc Move4 {w {step {}}} {
-    set step [GetStep 4 $step]
+proc Move4 {w {a_step ""}} {
+    set step [GetStep 4 $a_step]
 
     set angles {-10 -20 -30 -30}
     if {$step >= [llength $angles]} {
@@ -555,16 +593,17 @@ proc Move4 {w {step {}}} {
     }
     RotateItem $w I4 518 464 [lindex $angles $step]
     $w.c raise I4
-    return [expr {$step == 3 ? 3 : 1}]
+    return [expr {($step == 3) ? 3 : 1}]
 }
 
 # Mouse
 proc Draw5 {w} {
-    set color $::C(5a)
-    set color2 $::C(5b)
+    global C
+    set color $C(5a)
+    set color2 $C(5b)
     set xy {377 248 410 248 410 465 518 465}	;# Mouse course
     lappend xy 518 428 451 428 451 212 377 212
-    $w.c create poly $xy -fill $color2 -outline $::C(fg) -width 3
+    $w.c create poly $xy -fill $color2 -outline $C(fg) -width 3
 
     set xy {
 	534.5 445.5 541 440 552 436 560 436 569 440 574 446 575 452 574 454
@@ -575,8 +614,8 @@ proc Draw5 {w} {
     $w.c create line $xy -tag {I5 I5_1} -fill $color -smooth 1 -width 3
     set xy [box 540 446 2]			;# Eye
     set xy {540 444 541 445 541 447 540 448 538 447 538 445}
-    #.c create oval $xy -tag {I5 I5_2} -fill $::C(bg) -outline {}
-    $w.c create poly $xy -tag {I5 I5_2} -fill $::C(bg) -outline {} -smooth 1
+    #.c create oval $xy -tag {I5 I5_2} -fill $C(bg) -outline ""
+    $w.c create poly $xy -tag {I5 I5_2} -fill $C(bg) -outline "" -smooth 1
     set xy {538 454 535 461}			;# Front leg
     $w.c create line $xy -tag {I5 I5_3} -fill $color -width 2
     set xy {566 455 569 462}			;# Back leg
@@ -586,8 +625,8 @@ proc Draw5 {w} {
     set xy {560 455 558 460}			;# 2nd back leg
     $w.c create line $xy -tag {I5 I5_6}	 -fill $color -width 2
 }
-proc Move5 {w {step {}}} {
-    set step [GetStep 5 $step]
+proc Move5 {w {a_step ""}} {
+    set step [GetStep 5 $a_step]
 
     set pos {
 	{553 452} {533 452} {513 452} {493 452} {473 452}
@@ -628,47 +667,48 @@ array set XY6 {
     13,16 {360 403}
 }
 proc Draw6 {w} {
-    set color $::C(6)
+    global C XY6
+    set color $C(6)
     set xy {324 130 391 204}			;# Ball holder
     set xy [RoundRect $w $xy 10]
-    $w.c create poly $xy -smooth 1 -outline $::C(fg) -width 3 -fill $color
+    $w.c create poly $xy -smooth 1 -outline $C(fg) -width 3 -fill $color
     set xy {339 204 376 253}			;# Below the ball holder
-    $w.c create rect $xy -fill {} -outline $::C(fg) -width 3 -fill $color \
+    $w.c create rect $xy -fill "" -outline $C(fg) -width 3 -fill $color \
 	    -tag I6c
     set xy [box 346 339 28]
-    $w.c create oval $xy -fill $color -outline {}	;# Rotor
-    $w.c create arc $xy -outline $::C(fg) -width 2 -style arc \
+    $w.c create oval $xy -fill $color -outline ""	;# Rotor
+    $w.c create arc $xy -outline $C(fg) -width 2 -style arc \
 	    -start 80 -extent 205
-    $w.c create arc $xy -outline $::C(fg) -width 2 -style arc \
+    $w.c create arc $xy -outline $C(fg) -width 2 -style arc \
 	    -start -41 -extent 85
 
     set xy [box 346 339 15]			;# Center of rotor
-    $w.c create oval $xy -outline $::C(fg) -fill $::C(fg) -tag I6m
+    $w.c create oval $xy -outline $C(fg) -fill $C(fg) -tag I6m
     set xy {352 312 352 254 368 254 368 322}	;# Top drop to rotor
-    $w.c create poly $xy -fill $color -outline {}
-    $w.c create line $xy -fill $::C(fg) -width 2
+    $w.c create poly $xy -fill $color -outline ""
+    $w.c create line $xy -fill $C(fg) -width 2
 
     set xy {353 240 367 300}			;# Poke bottom hole
-    $w.c create rect $xy -fill $color -outline {}
+    $w.c create rect $xy -fill $color -outline ""
     set xy {341 190 375 210}			;# Poke another hole
-    $w.c create rect $xy -fill $color -outline {}
+    $w.c create rect $xy -fill $color -outline ""
 
     set xy {368 356 368 403 389 403 389 464 320 464 320 403 352 403 352 366}
-    $w.c create poly $xy -fill $color -outline {} -width 2	;# Below rotor
-    $w.c create line $xy -fill $::C(fg) -width 2
+    $w.c create poly $xy -fill $color -outline "" -width 2	;# Below rotor
+    $w.c create line $xy -fill $C(fg) -width 2
     set xy [box 275 342 7]			;# On/off rotor
-    $w.c create oval $xy -outline $::C(fg) -fill $::C(fg)
+    $w.c create oval $xy -outline $C(fg) -fill $C(fg)
     set xy {276 334 342 325}			;# Fan belt top
-    $w.c create line $xy -fill $::C(fg) -width 3
+    $w.c create line $xy -fill $C(fg) -width 3
     set xy {276 349 342 353}			;# Fan belt bottom
-    $w.c create line $xy -fill $::C(fg) -width 3
+    $w.c create line $xy -fill $C(fg) -width 3
 
     set xy {337 212 337 247}			;# What the mouse pushes
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I6_
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I6_
     set xy {392 212 392 247}
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I6_
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I6_
     set xy {337 230 392 230}
-    $w.c create line $xy -fill $::C(fg) -width 7 -tag I6_
+    $w.c create line $xy -fill $C(fg) -width 7 -tag I6_
 
     set who -1					;# All the balls
     set colors {red cyan orange green blue darkblue}
@@ -677,24 +717,26 @@ proc Draw6 {w} {
     for {set i 0} {$i < 17} {incr i} {
 	set loc [expr {-1 * $i}]
 	set color [lindex $colors $i]
-	$w.c create oval [box {*}$::XY6($loc) 5] -fill $color \
+	$w.c create oval [box {*}$XY6($loc) 5] -fill $color \
 		-outline $color -tag I6_b$i
     }
     Draw6a $w 12				;# The wheel
 }
 proc Draw6a {w beta} {
+    global C
     $w.c delete I6_0
     lassign {346 339} Ox Oy
     for {set i 0} {$i < 4} {incr i} {
-	set b [expr {$beta + $i * 45}]
+	set b [expr {$beta + ($i * 45)}]
 	lassign [RotateC 28 0 0 0 $b] x y
-	set xy [list [expr {$Ox+$x}] [expr {$Oy+$y}] \
-		[expr {$Ox-$x}] [expr {$Oy-$y}]]
-	$w.c create line $xy -tag I6_0 -fill $::C(fg) -width 2
+	set xy [list [expr {$Ox + $x}] [expr {$Oy + $y}] \
+		[expr {$Ox - $x}] [expr {$Oy - $y}]]
+	$w.c create line $xy -tag I6_0 -fill $C(fg) -width 2
     }
 }
-proc Move6 {w {step {}}} {
-    set step [GetStep 6 $step]
+proc Move6 {w {a_step ""}} {
+    global XY6
+    set step [GetStep 6 $a_step]
     if {$step > 62} {
 	return 0
     }
@@ -703,21 +745,21 @@ proc Move6 {w {step {}}} {
 	$w.c move I6_ -7 0
 	if {$step == 1} {			;# Poke a hole
 	    set xy {348 226 365 240}
-	    $w.c create rect $xy -fill [$w.c itemcget I6c -fill] -outline {}
+	    $w.c create rect $xy -fill [$w.c itemcget I6c -fill] -outline ""
 	}
 	return 1
     }
 
     set s [expr {$step - 1}]			;# Do the gumball drop dance
-    for {set i 0} {$i <= int(($s-1) / 3)} {incr i} {
+    for {set i 0} {$i <= ( int (($s - 1) / 3))} {incr i} {
 	set tag "I6_b$i"
 	if {[$w.c find withtag $tag] eq ""} break
-	set loc [expr {$s - 3 * $i}]
+	set loc [expr {$s - (3 * $i)}]
 
 	if {[info exists ::XY6($loc,$i)]} {
-	    MoveAbs $w $tag $::XY6($loc,$i)
+	    MoveAbs $w $tag $XY6($loc,$i)
 	} elseif {[info exists ::XY6($loc)]} {
-	    MoveAbs $w $tag $::XY6($loc)
+	    MoveAbs $w $tag $XY6($loc)
 	}
     }
     if {($s % 3) == 1} {
@@ -726,38 +768,39 @@ proc Move6 {w {step {}}} {
 	    set tag "I6_b$i"
 	    if {[$w.c find withtag $tag] eq ""} break
 	    set loc [expr {$first - $i}]
-	    MoveAbs $w $tag $::XY6($loc)
+	    MoveAbs $w $tag $XY6($loc)
 	}
     }
     if {$s >= 3} {				;# Rotate the motor
 	set idx [expr {$s % 3}]
 	#Draw6a $w [lindex {12 35 64} $idx]
-	Draw6a $w [expr {12 + $s * 15}]
+	Draw6a $w [expr {12 + ($s * 15)}]
     }
-    return [expr {$s == 3 ? 3 : 1}]
+    return [expr {($s == 3) ? 3 : 1}]
 }
 
 # On/off switch
 proc Draw7 {w} {
-    set color $::C(7)
+    global C
+    set color $C(7)
     set xy {198 306 277 374}			;# Box
-    $w.c create rect $xy -outline $::C(fg) -width 2 -fill $color -tag I7z
+    $w.c create rect $xy -outline $C(fg) -width 2 -fill $color -tag I7z
     $w.c lower I7z
     set xy {275 343 230 349}
-    $w.c create line $xy -tag I7 -fill $::C(fg) -arrow last \
+    $w.c create line $xy -tag I7 -fill $C(fg) -arrow last \
 	    -arrowshape {23 23 8} -width 6
     set xy {225 324}				;# On button
-    $w.c create oval [box {*}$xy 3] -fill $::C(fg) -outline $::C(fg)
+    $w.c create oval [box {*}$xy 3] -fill $C(fg) -outline $C(fg)
     set xy {218 323}				;# On text
     set font {{Times Roman} 8}
-    $w.c create text $xy -text "on" -anchor e -fill $::C(fg) -font $font
+    $w.c create text $xy -text "on" -anchor e -fill $C(fg) -font $font
     set xy {225 350}				;# Off button
-    $w.c create oval [box {*}$xy 3] -fill $::C(fg) -outline $::C(fg)
+    $w.c create oval [box {*}$xy 3] -fill $C(fg) -outline $C(fg)
     set xy {218 349}				;# Off button
-    $w.c create text $xy -text "off" -anchor e -fill $::C(fg) -font $font
+    $w.c create text $xy -text "off" -anchor e -fill $C(fg) -font $font
 }
-proc Move7 {w {step {}}} {
-    set step [GetStep 7 $step]
+proc Move7 {w {a_step ""}} {
+    set step [GetStep 7 $a_step]
     set numsteps 30
     if {$step > $numsteps} {
 	return 0
@@ -765,15 +808,16 @@ proc Move7 {w {step {}}} {
     set beta [expr {30.0 / $numsteps}]
     RotateItem $w I7 275 343 $beta
 
-    return [expr {$step == $numsteps ? 3 : 1}]
+    return [expr {($step == $numsteps) ? 3 : 1}]
 }
 
 # Electricity to the fan
 proc Draw8 {w} {
-    Sine $w 271 248 271 306 5 8 -tag I8_s -fill $::C(8) -width 3
+    global C
+    Sine $w 271 248 271 306 5 8 -tag I8_s -fill $C(8) -width 3
 }
-proc Move8 {w {step {}}} {
-    set step [GetStep 8 $step]
+proc Move8 {w {a_step ""}} {
+    set step [GetStep 8 $a_step]
 
     if {$step > 3} {
 	return 0
@@ -789,12 +833,13 @@ proc Move8 {w {step {}}} {
     } else {
 	$w.c delete I8
     }
-    return [expr {$step == 2 ? 3 : 1}]
+    return [expr {($step == 2) ? 3 : 1}]
 }
 
 # Fan
 proc Draw9 {w} {
-    set color $::C(9)
+    global C
+    set color $C(9)
     set xy {266 194 310 220}
     $w.c create oval $xy -outline $color -fill $color
     set xy {280 209 296 248}
@@ -806,16 +851,16 @@ proc Draw9 {w} {
     $w.c create poly $xy -fill $color
 
     set xy {255 206 265 234}			;# Fan blades
-    $w.c create oval $xy -fill {} -outline $::C(fg) -width 3 -tag I9_0
+    $w.c create oval $xy -fill "" -outline $C(fg) -width 3 -tag I9_0
     set xy {255 176 265 204}
-    $w.c create oval $xy -fill {} -outline $::C(fg) -width 3 -tag I9_0
+    $w.c create oval $xy -fill "" -outline $C(fg) -width 3 -tag I9_0
     set xy {255 206 265 220}
-    $w.c create oval $xy -fill {} -outline $::C(fg) -width 1 -tag I9_1
+    $w.c create oval $xy -fill "" -outline $C(fg) -width 1 -tag I9_1
     set xy {255 190 265 204}
-    $w.c create oval $xy -fill {} -outline $::C(fg) -width 1 -tag I9_1
+    $w.c create oval $xy -fill "" -outline $C(fg) -width 1 -tag I9_1
 }
-proc Move9 {w {step {}}} {
-    set step [GetStep 9 $step]
+proc Move9 {w {a_step ""}} {
+    set step [GetStep 9 $a_step]
 
     if {$step & 1} {
 	$w.c itemconfig I9_0 -width 4
@@ -834,27 +879,28 @@ proc Move9 {w {step {}}} {
 
 # Boat
 proc Draw10 {w} {
-    set color $::C(10a)
-    set color2 $::C(10b)
+    global C
+    set color $C(10a)
+    set color2 $C(10b)
     set xy {191 230 233 230 233 178 191 178}	;# Sail
-    $w.c create poly $xy -fill $color -width 3 -outline $::C(fg) -tag I10
+    $w.c create poly $xy -fill $color -width 3 -outline $C(fg) -tag I10
     set xy [box 209 204 31]			;# Front
-    $w.c create arc $xy -outline {} -fill $color -style pie \
+    $w.c create arc $xy -outline "" -fill $color -style pie \
 	    -start 120 -extent 120 -tag I10
-    $w.c create arc $xy -outline $::C(fg) -width 3 -style arc \
+    $w.c create arc $xy -outline $C(fg) -width 3 -style arc \
 	    -start 120 -extent 120 -tag I10
     set xy [box 249 204 31]			;# Back
-    $w.c create arc $xy -outline {} -fill $::C(bg) -width 3 -style pie \
+    $w.c create arc $xy -outline "" -fill $C(bg) -width 3 -style pie \
 	    -start 120 -extent 120 -tag I10
-    $w.c create arc $xy -outline $::C(fg) -width 3 -style arc \
+    $w.c create arc $xy -outline $C(fg) -width 3 -style arc \
 	    -start 120 -extent 120 -tag I10
 
     set xy {200 171 200 249}			;# Mast
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I10
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I10
     set xy {159 234 182 234}			;# Bow sprit
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I10
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I10
     set xy {180 234 180 251 220 251}		;# Hull
-    $w.c create line $xy -fill $::C(fg) -width 6 -tag I10
+    $w.c create line $xy -fill $C(fg) -width 6 -tag I10
 
     set xy {92 255 221 255}			;# Waves
     Sine $w {*}$xy 2 25 -fill $color2 -width 1 -tag I10w
@@ -863,16 +909,16 @@ proc Draw10 {w} {
     set xy [concat $xy 222 266 222 277 99 277]
     $w.c create poly $xy -fill $color2 -outline $color2
     set xy {222 266 222 277 97 277 97 266}	;# Water bottom
-    $w.c create line $xy -fill $::C(fg) -width 3
+    $w.c create line $xy -fill $C(fg) -width 3
 
     set xy [box 239 262 17]
-    $w.c create arc $xy -outline $::C(fg) -width 3 -style arc \
+    $w.c create arc $xy -outline $C(fg) -width 3 -style arc \
 	    -start 95 -extent 103
     set xy [box 76 266 21]
-    $w.c create arc $xy -outline $::C(fg) -width 3 -style arc -extent 190
+    $w.c create arc $xy -outline $C(fg) -width 3 -style arc -extent 190
 }
-proc Move10 {w {step {}}} {
-    set step [GetStep 10 $step]
+proc Move10 {w {a_step ""}} {
+    set step [GetStep 10 $a_step]
     set pos {
 	{195 212} {193 212} {190 212} {186 212} {181 212} {176 212}
 	{171 212} {166 212} {161 212} {156 212} {151 212} {147 212} {142 212}
@@ -893,34 +939,35 @@ proc Move10 {w {step {}}} {
 
 # 2nd ball drop
 proc Draw11 {w} {
-    set color $::C(11a)
-    set color2 $::C(11b)
+    global C
+    set color $C(11a)
+    set color2 $C(11b)
     set xy {23 264 55 591}			;# Color the down tube
-    $w.c create rect $xy -fill $color -outline {}
+    $w.c create rect $xy -fill $color -outline ""
     set xy [box 71 460 48]			;# Color the outer loop
-    $w.c create oval $xy -fill $color -outline {}
+    $w.c create oval $xy -fill $color -outline ""
 
     set xy {55 264 55 458}			;# Top right side
-    $w.c create line $xy -fill $::C(fg) -width 3
+    $w.c create line $xy -fill $C(fg) -width 3
     set xy {55 504 55 591}			;# Bottom right side
-    $w.c create line $xy -fill $::C(fg) -width 3
+    $w.c create line $xy -fill $C(fg) -width 3
     set xy [box 71 460 48]			;# Outer loop
-    $w.c create arc $xy -outline $::C(fg) -width 3 -style arc \
+    $w.c create arc $xy -outline $C(fg) -width 3 -style arc \
 	    -start 110 -extent -290 -tag I11i
     set xy [box 71 460 16]			;# Inner loop
-    $w.c create oval $xy -outline $::C(fg) -fill {} -width 3 -tag I11i
-    $w.c create oval $xy -outline $::C(fg) -fill $::C(bg) -width 3
+    $w.c create oval $xy -outline $C(fg) -fill "" -width 3 -tag I11i
+    $w.c create oval $xy -outline $C(fg) -fill $C(bg) -width 3
 
     set xy {23 264 23 591}			;# Left side
-    $w.c create line $xy -fill $::C(fg) -width 3
+    $w.c create line $xy -fill $C(fg) -width 3
     set xy [box 1 266 23]			;# Top left curve
-    $w.c create arc $xy -outline $::C(fg) -width 3 -style arc -extent 90
+    $w.c create arc $xy -outline $C(fg) -width 3 -style arc -extent 90
 
     set xy [box 75 235 9]			;# The ball
-    $w.c create oval $xy -fill $color2 -outline {} -width 3 -tag I11
+    $w.c create oval $xy -fill $color2 -outline "" -width 3 -tag I11
 }
-proc Move11 {w {step {}}} {
-    set step [GetStep 11 $step]
+proc Move11 {w {a_step ""}} {
+    set step [GetStep 11 $a_step]
     set pos {
 	{75 235} {70 235} {65 237} {56 240} {46 247} {38 266} {38 296}
 	{38 333} {38 399} {38 475} {74 496} {105 472} {100 437} {65 423}
@@ -940,6 +987,7 @@ proc Move11 {w {step {}}} {
 
 # Hand
 proc Draw12 {w} {
+    global C
     set xy {20 637 20 617 20 610 20 590 40 590 40 590 60 590 60 610 60 610}
     lappend xy 60 610 65 620 60 631		;# Thumb
     lappend xy 60 631 60 637 60 662 60 669 52 669 56 669 50 669 50 662 50 637
@@ -951,11 +999,11 @@ proc Draw12 {w} {
 	set x2 [expr {$x - 10}]
 	lappend xy $x $y0 $x1 $y1 $x2 $y0
     }
-    $w.c create poly $xy -fill $::C(12) -outline $::C(fg) -smooth 1 -tag I12 \
+    $w.c create poly $xy -fill $C(12) -outline $C(fg) -smooth 1 -tag I12 \
 	    -width 3
 }
-proc Move12 {w {step {}}} {
-    set step [GetStep 12 $step]
+proc Move12 {w {a_step ""}} {
+    set step [GetStep 12 $a_step]
     set pos {{42.5 641 x}}
     if {$step >= [llength $pos]} {
 	return 0
@@ -971,42 +1019,44 @@ proc Move12 {w {step {}}} {
 
 # Fax
 proc Draw13 {w} {
-    set color $::C(13a)
+    global C
+    set color $C(13a)
     set xy {86 663 149 663 149 704 50 704 50 681 64 681 86 671}
     set xy2 {784 663 721 663 721 704 820 704 820 681 806 681 784 671}
     set radii {2 9 9 8 5 5 2}
 
-    RoundPoly $w.c $xy $radii -width 3 -outline $::C(fg) -fill $color
-    RoundPoly $w.c $xy2 $radii -width 3 -outline $::C(fg) -fill $color
+    RoundPoly $w.c $xy $radii -width 3 -outline $C(fg) -fill $color
+    RoundPoly $w.c $xy2 $radii -width 3 -outline $C(fg) -fill $color
 
     set xy {56 677}
-    $w.c create rect [box {*}$xy 4] -fill {} -outline $::C(fg) -width 3 \
+    $w.c create rect [box {*}$xy 4] -fill "" -outline $C(fg) -width 3 \
 	    -tag I13
     set xy {809 677}
-    $w.c create rect [box {*}$xy 4] -fill {} -outline $::C(fg) -width 3 \
+    $w.c create rect [box {*}$xy 4] -fill "" -outline $C(fg) -width 3 \
 	    -tag I13R
 
     set xy {112 687}				;# Label
-    $w.c create text $xy -text "FAX" -fill $::C(fg) \
-	    -font {{Times Roman} 12 bold}
+    $w.c create text $xy -text "FAX" -fill $C(fg) \
+	    -font "{Times Roman} 12 bold"
     set xy {762 687}
-    $w.c create text $xy -text "FAX" -fill $::C(fg) \
-	    -font {{Times Roman} 12 bold}
+    $w.c create text $xy -text "FAX" -fill $C(fg) \
+	    -font "{Times Roman} 12 bold"
 
     set xy {138 663 148 636 178 636}		;# Paper guide
-    $w.c create line $xy -smooth 1 -fill $::C(fg) -width 3
+    $w.c create line $xy -smooth 1 -fill $C(fg) -width 3
     set xy {732 663 722 636 692 636}
-    $w.c create line $xy -smooth 1 -fill $::C(fg) -width 3
+    $w.c create line $xy -smooth 1 -fill $C(fg) -width 3
 
-    Sine $w 149 688 720 688 5 15 -tag I13_s -fill $::C(fg) -width 3
+    Sine $w 149 688 720 688 5 15 -tag I13_s -fill $C(fg) -width 3
 }
-proc Move13 {w {step {}}} {
-    set step [GetStep 13 $step]
+proc Move13 {w {a_step ""}} {
+    global C
+    set step [GetStep 13 $a_step]
     set numsteps 7
 
-    if {$step == $numsteps+2} {
+    if {$step == ($numsteps + 2)} {
 	MoveAbs $w I13_star {-100 -100}
-	$w.c itemconfig I13R -fill $::C(13b) -width 2
+	$w.c itemconfig I13R -fill $C(13b) -width 2
 	return 2
     }
     if {$step == 0} {				;# Button down
@@ -1016,14 +1066,15 @@ proc Move13 {w {step {}}} {
     }
     lassign [Anchor $w I13_s w] x0 y0
     lassign [Anchor $w I13_s e] x1 y1
-    set x [expr {$x0 + ($x1-$x0) * ($step - 1) / double($numsteps)}]
+    set x [expr {$x0 + ((($x1 - $x0) * ($step - 1)) / (1.0 * $numsteps))}]
     MoveAbs $w I13_star [list $x $y0]
     return 1
 }
 
 # Paper in fax
 proc Draw14 {w} {
-    set color $::C(14)
+    global C
+    set color $C(14)
     set xy {102 661 113 632 130 618}		;# Left paper edge
     $w.c create line $xy -smooth 1 -fill $color -width 3 -tag I14L_0
     set xy {148 629 125 640 124 662}		;# Right paper edge
@@ -1044,7 +1095,8 @@ proc Draw14 {w} {
     $w.c lower I14R_1
 }
 proc Draw14a {w side} {
-    set color $::C(14)
+    global C
+    set color $C(14)
     set xy [$w.c coords I14${side}_0]
     set xy2 [$w.c coords I14${side}_1]
     lassign $xy x0 y0 x1 y1 x2 y2
@@ -1057,12 +1109,12 @@ proc Draw14a {w side} {
 	    -width 3
     $w.c lower I14$side
 }
-proc Move14 {w {step {}}} {
-    set step [GetStep 14 $step]
+proc Move14 {w {a_step ""}} {
+    set step [GetStep 14 $a_step]
 
     # Paper going down
-    set sc [expr {.9 - .05*$step}]
-    if {$sc < .3} {
+    set sc [expr {0.9 - (0.05 * $step)}]
+    if {$sc < 0.3} {
 	$w.c delete I14L
 	return 0
     }
@@ -1074,7 +1126,7 @@ proc Move14 {w {step {}}} {
     Draw14a $w L
 
     # Paper going up
-    set sc [expr {.35 + .05*$step}]
+    set sc [expr {0.35 + (0.05 * $step)}]
     set sc [expr {1 / $sc}]
 
     lassign [$w.c coords I14R_0] Ox Oy
@@ -1083,41 +1135,43 @@ proc Move14 {w {step {}}} {
     $w.c scale I14R_1 $Ox $Oy $sc $sc
     Draw14a $w R
 
-    return [expr {$step == 10 ? 3 : 1}]
+    return [expr {($step == 10) ? 3 : 1}]
 }
 
 # Light beam
 proc Draw15 {w} {
-    set color $::C(15a)
+    global C
+    set color $C(15a)
     set xy {824 599 824 585 820 585 829 585}
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I15a
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I15a
     set xy {789 599 836 643}
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 3
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 3
     set xy {778 610 788 632}
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 3
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 3
     set xy {766 617 776 625}
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 3
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 3
 
     set xy {633 600 681 640}
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 3
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 3
     set xy {635 567 657 599}
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 2
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 2
     set xy {765 557 784 583}
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 2
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 2
 
-    Sine $w 658 580 765 580 3 15 -tag I15_s -fill $::C(fg) -width 3
+    Sine $w 658 580 765 580 3 15 -tag I15_s -fill $C(fg) -width 3
 }
 proc Move15a {w} {
-    set color $::C(15b)
+    global C
+    set color $C(15b)
     $w.c scale I15a 824 599 1 .3		;# Button down
     set xy {765 621 681 621}
     $w.c create line $xy -dash "-" -width 3 -fill $color -tag I15
 }
-proc Move15 {w {step {}}} {
-    set step [GetStep 15 $step]
+proc Move15 {w {a_step ""}} {
+    set step [GetStep 15 $a_step]
     set numsteps 6
 
-    if {$step == $numsteps+2} {
+    if {$step == ($numsteps + 2)} {
 	MoveAbs $w I15_star {-100 -100}
 	return 2
     }
@@ -1129,28 +1183,29 @@ proc Move15 {w {step {}}} {
     }
     lassign [Anchor $w I15_s w] x0 y0
     lassign [Anchor $w I15_s e] x1 y1
-    set x [expr {$x0 + ($x1-$x0) * ($step - 1) / double($numsteps)}]
+    set x [expr {$x0 + ((($x1 - $x0) * ($step - 1)) / (1.0 * $numsteps))}]
     MoveAbs $w I15_star [list $x $y0]
     return 1
 }
 
 # Bell
 proc Draw16 {w} {
-    set color $::C(16)
+    global C
+    set color $C(16)
     set xy {722 485 791 556}
-    $w.c create rect $xy -fill {} -outline $::C(fg) -width 3
+    $w.c create rect $xy -fill "" -outline $C(fg) -width 3
     set xy [box 752 515 25]			;# Bell
     $w.c create oval $xy -fill $color -outline black -tag I16b -width 2
     set xy [box 752 515 5]			;# Bell button
     $w.c create oval $xy -fill black -outline black -tag I16b
 
     set xy {784 523 764 549}			;# Clapper
-    $w.c create line $xy -width 3 -tag I16c -fill $::C(fg)
+    $w.c create line $xy -width 3 -tag I16c -fill $C(fg)
     set xy [box 784 523 4]
-    $w.c create oval $xy -fill $::C(fg) -outline $::C(fg) -tag I16d
+    $w.c create oval $xy -fill $C(fg) -outline $C(fg) -tag I16d
 }
-proc Move16 {w {step {}}} {
-    set step [GetStep 16 $step]
+proc Move16 {w {a_step ""}} {
+    set step [GetStep 16 $a_step]
 
     # Note: we never stop
     lassign {760 553} Ox Oy
@@ -1164,73 +1219,75 @@ proc Move16 {w {step {}}} {
     RotateItem $w I16c $Ox $Oy $beta
     RotateItem $w I16d $Ox $Oy $beta
 
-    return [expr {$step == 1 ? 3 : 1}]
+    return [expr {($step == 1) ? 3 : 1}]
 }
 
 # Cat
 proc Draw17 {w} {
-    set color $::C(17)
+    global C
+    set color $C(17)
 
     set xy {584 556 722 556}
-    $w.c create line $xy -fill $::C(fg) -width 3
+    $w.c create line $xy -fill $C(fg) -width 3
     set xy {584 485 722 485}
-    $w.c create line $xy -fill $::C(fg) -width 3
+    $w.c create line $xy -fill $C(fg) -width 3
 
     set xy {664 523 717 549}			;# Body
-    $w.c create arc $xy -outline $::C(fg) -fill $color -width 3 \
+    $w.c create arc $xy -outline $C(fg) -fill $color -width 3 \
 	    -style chord -start 128 -extent -260 -tag I17
 
     set xy {709 554 690 543}			;# Paw
-    $w.c create oval $xy -outline $::C(fg) -fill $color -width 3 -tag I17
+    $w.c create oval $xy -outline $C(fg) -fill $color -width 3 -tag I17
     set xy {657 544 676 555}
-    $w.c create oval $xy -outline $::C(fg) -fill $color -width 3 -tag I17
+    $w.c create oval $xy -outline $C(fg) -fill $color -width 3 -tag I17
 
     set xy [box 660 535 15]			;# Lower face
-    $w.c create arc $xy -outline $::C(fg) -width 3 -style arc \
+    $w.c create arc $xy -outline $C(fg) -width 3 -style arc \
 	    -start 150 -extent 240 -tag I17_
-    $w.c create arc $xy -outline {} -fill $color -width 1 -style chord \
+    $w.c create arc $xy -outline "" -fill $color -width 1 -style chord \
 	    -start 150 -extent 240 -tag I17_
     set xy {674 529 670 513 662 521 658 521 650 513 647 529}	;# Ears
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I17_
-    $w.c create poly $xy -fill $color -outline {} -width 1 -tag {I17_ I17_c}
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I17_
+    $w.c create poly $xy -fill $color -outline "" -width 1 -tag {I17_ I17_c}
     set xy {652 542 628 539}			;# Whiskers
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I17_
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I17_
     set xy {652 543 632 545}
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I17_
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I17_
     set xy {652 546 632 552}
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I17_
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I17_
 
     set xy {668 543 687 538}
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag {I17_ I17w}
+    $w.c create line $xy -fill $C(fg) -width 3 -tag {I17_ I17w}
     set xy {668 544 688 546}
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag {I17_ I17w}
+    $w.c create line $xy -fill $C(fg) -width 3 -tag {I17_ I17w}
     set xy {668 547 688 553}
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag {I17_ I17w}
+    $w.c create line $xy -fill $C(fg) -width 3 -tag {I17_ I17w}
 
     set xy {649 530 654 538 659 530}		;# Left eye
-    $w.c create line $xy -fill $::C(fg) -width 2 -smooth 1 -tag I17
+    $w.c create line $xy -fill $C(fg) -width 2 -smooth 1 -tag I17
     set xy {671 530 666 538 661 530}		;# Right eye
-    $w.c create line $xy -fill $::C(fg) -width 2 -smooth 1 -tag I17
+    $w.c create line $xy -fill $C(fg) -width 2 -smooth 1 -tag I17
     set xy {655 543 660 551 665 543}		;# Mouth
-    $w.c create line $xy -fill $::C(fg) -width 2 -smooth 1 -tag I17
+    $w.c create line $xy -fill $C(fg) -width 2 -smooth 1 -tag I17
 }
-proc Move17 {w {step {}}} {
-    set step [GetStep 17 $step]
+proc Move17 {w {a_step ""}} {
+    global C
+    set step [GetStep 17 $a_step]
 
     if {$step == 0} {
 	$w.c delete I17				;# Delete most of the cat
 	set xy {655 543 660 535 665 543}	;# Mouth
-	$w.c create line $xy -fill $::C(fg) -width 3 -smooth 1 -tag I17_
+	$w.c create line $xy -fill $C(fg) -width 3 -smooth 1 -tag I17_
 	set xy [box 654 530 4]			;# Left eye
-	$w.c create oval $xy -outline $::C(fg) -width 3 -fill {} -tag I17_
+	$w.c create oval $xy -outline $C(fg) -width 3 -fill "" -tag I17_
 	set xy [box 666 530 4]			;# Right eye
-	$w.c create oval $xy -outline $::C(fg) -width 3 -fill {} -tag I17_
+	$w.c create oval $xy -outline $C(fg) -width 3 -fill "" -tag I17_
 
 	$w.c move I17_ 0 -20			;# Move face up
 	set xy {652 528 652 554}		;# Front leg
-	$w.c create line $xy -fill $::C(fg) -width 3 -tag I17_
+	$w.c create line $xy -fill $C(fg) -width 3 -tag I17_
 	set xy {670 528 670 554}		;# 2nd front leg
-	$w.c create line $xy -fill $::C(fg) -width 3 -tag I17_
+	$w.c create line $xy -fill $C(fg) -width 3 -tag I17_
 
 	set xy {
 	    675 506 694 489 715 513 715 513 715 513 716 525 716 525 716 525
@@ -1238,13 +1295,13 @@ proc Move17 {w {step {}}} {
 	    677 512
 	}					;# Body
 	$w.c create poly $xy -fill [$w.c itemcget I17_c -fill] \
-		-outline $::C(fg) -width 3 -smooth 1 -tag I17_
+		-outline $C(fg) -width 3 -smooth 1 -tag I17_
 	set xy {716 514 716 554}		;# Back leg
-	$w.c create line $xy -fill $::C(fg) -width 3 -tag I17_
+	$w.c create line $xy -fill $C(fg) -width 3 -tag I17_
 	set xy {694 532 694 554}		;# 2nd back leg
-	$w.c create line $xy -fill $::C(fg) -width 3 -tag I17_
+	$w.c create line $xy -fill $C(fg) -width 3 -tag I17_
 	set xy {715 514 718 506 719 495 716 488};# Tail
-	$w.c create line $xy -fill $::C(fg) -width 3 -smooth 1 -tag I17_
+	$w.c create line $xy -fill $C(fg) -width 3 -smooth 1 -tag I17_
 
 	$w.c raise I17w				;# Make whiskers visible
 	$w.c move I17_ -5 0			;# Move away from wall a bit
@@ -1255,20 +1312,21 @@ proc Move17 {w {step {}}} {
 
 # Sling shot
 proc Draw18 {w} {
-    set color $::C(18)
+    global C
+    set color $C(18)
     set xy {721 506 627 506}			;# Sling hold
-    $w.c create line $xy -width 4 -fill $::C(fg) -tag I18
+    $w.c create line $xy -width 4 -fill $C(fg) -tag I18
 
     set xy {607 500 628 513}			;# Sling rock
-    $w.c create oval $xy -fill $color -outline {} -tag I18a
+    $w.c create oval $xy -fill $color -outline "" -tag I18a
 
     set xy {526 513 606 507 494 502}		;# Sling band
-    $w.c create line $xy -fill $::C(fg) -width 4 -tag I18b
+    $w.c create line $xy -fill $C(fg) -width 4 -tag I18b
     set xy { 485 490 510 540 510 575 510 540 535 491 }	;# Sling
-    $w.c create line $xy -fill $::C(fg) -width 6
+    $w.c create line $xy -fill $C(fg) -width 6
 }
-proc Move18 {w {step {}}} {
-    set step [GetStep 18 $step]
+proc Move18 {w {a_step ""}} {
+    set step [GetStep 18 $a_step]
 
     set pos {
 	{587 506} {537 506} {466 506} {376 506} {266 506 x} {136 506}
@@ -1305,74 +1363,75 @@ proc Move18 {w {step {}}} {
 
 # Water pipe
 proc Draw19 {w} {
-    set color $::C(19)
+    global C
+    set color $C(19)
     set xx {249 181 155 118  86 55 22 0}
     foreach {x1 x2} $xx {
-	$w.c create rect $x1 453 $x2 467 -fill $color -outline {} -tag I19
-	$w.c create line $x1 453 $x2 453 -fill $::C(fg) -width 1;# Pipe top
-	$w.c create line $x1 467 $x2 467 -fill $::C(fg) -width 1;# Pipe bottom
+	$w.c create rect $x1 453 $x2 467 -fill $color -outline "" -tag I19
+	$w.c create line $x1 453 $x2 453 -fill $C(fg) -width 1;# Pipe top
+	$w.c create line $x1 467 $x2 467 -fill $C(fg) -width 1;# Pipe bottom
     }
     $w.c raise I11i
 
     set xy [box 168 460 16]			;# Bulge by the joint
-    $w.c create oval $xy -fill $color -outline {}
-    $w.c create arc $xy -outline $::C(fg) -width 1 -style arc \
+    $w.c create oval $xy -fill $color -outline ""
+    $w.c create arc $xy -outline $C(fg) -width 1 -style arc \
 	    -start 21 -extent 136
-    $w.c create arc $xy -outline $::C(fg) -width 1 -style arc \
+    $w.c create arc $xy -outline $C(fg) -width 1 -style arc \
 	    -start -21 -extent -130
 
     set xy {249 447 255 473}			;# First joint 26x6
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 1
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 1
 
     set xy [box 257 433 34]			;# Bend up
-    $w.c create arc $xy -outline {} -fill $color -width 1 \
+    $w.c create arc $xy -outline "" -fill $color -width 1 \
 	    -style pie -start 0 -extent -91
-    $w.c create arc $xy -outline $::C(fg) -width 1 \
+    $w.c create arc $xy -outline $C(fg) -width 1 \
 	    -style arc -start 0 -extent -90
     set xy [box 257 433 20]
-    $w.c create arc $xy -outline {} -fill $::C(bg) -width 1 \
+    $w.c create arc $xy -outline "" -fill $C(bg) -width 1 \
 	    -style pie -start 0 -extent -92
-    $w.c create arc $xy -outline $::C(fg) -width 1 \
+    $w.c create arc $xy -outline $C(fg) -width 1 \
 	    -style arc -start 0 -extent -90
     set xy [box 257 421 34]			;# Bend left
-    $w.c create arc $xy -outline {} -fill $color -width 1 \
+    $w.c create arc $xy -outline "" -fill $color -width 1 \
 	    -style pie -start 1 -extent 91
-    $w.c create arc $xy -outline $::C(fg) -width 1 \
+    $w.c create arc $xy -outline $C(fg) -width 1 \
 	    -style arc -start 0 -extent 90
     set xy [box 257 421 20]
-    $w.c create arc $xy -outline {} -fill $::C(bg) -width 1 \
+    $w.c create arc $xy -outline "" -fill $C(bg) -width 1 \
 	    -style pie -start 0 -extent 90
-    $w.c create arc $xy -outline $::C(fg) -width 1 \
+    $w.c create arc $xy -outline $C(fg) -width 1 \
 	    -style arc -start 0 -extent 90
     set xy [box 243 421 34]			;# Bend down
-    $w.c create arc $xy -outline {} -fill $color -width 1 \
+    $w.c create arc $xy -outline "" -fill $color -width 1 \
 	    -style pie -start 90 -extent 90
-    $w.c create arc $xy -outline $::C(fg) -width 1 \
+    $w.c create arc $xy -outline $C(fg) -width 1 \
 	    -style arc -start 90 -extent 90
     set xy [box 243 421 20]
-    $w.c create arc $xy -outline {} -fill $::C(bg) -width 1 \
+    $w.c create arc $xy -outline "" -fill $C(bg) -width 1 \
 	    -style pie -start 90 -extent 90
-    $w.c create arc $xy -outline $::C(fg) -width 1 \
+    $w.c create arc $xy -outline $C(fg) -width 1 \
 	    -style arc -start 90 -extent 90
 
     set xy {270 427 296 433}			;# 2nd joint bottom
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 1
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 1
     set xy {270 421 296 427}			;# 2nd joint top
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 1
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 1
     set xy {249 382 255 408}			;# Third joint right
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 1
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 1
     set xy {243 382 249 408}			;# Third joint left
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 1
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 1
     set xy {203 420 229 426}			;# Last joint
-    $w.c create rect $xy -fill $color -outline $::C(fg) -width 1
+    $w.c create rect $xy -fill $color -outline $C(fg) -width 1
 
     set xy [box 168 460 6]			;# Handle joint
-    $w.c create oval $xy -fill $::C(fg) -outline {} -tag I19a
+    $w.c create oval $xy -fill $C(fg) -outline "" -tag I19a
     set xy {168 460 168 512}			;# Handle bar
-    $w.c create line $xy -fill $::C(fg) -width 5 -tag I19b
+    $w.c create line $xy -fill $C(fg) -width 5 -tag I19b
 }
-proc Move19 {w {step {}}} {
-    set step [GetStep 19 $step]
+proc Move19 {w {a_step ""}} {
+    set step [GetStep 19 $a_step]
 
     set angles {30 30 30}
     if {$step == [llength $angles]} {
@@ -1384,10 +1443,9 @@ proc Move19 {w {step {}}} {
 }
 
 # Water pouring
-proc Draw20 {w} {
-}
-proc Move20 {w {step {}}} {
-    set step [GetStep 20 $step]
+proc Draw20 {args} {}
+proc Move20 {w {a_step ""}} {
+    set step [GetStep 20 $a_step]
 
     set pos {451 462 473 484 496 504 513 523 532}
     set freq {20 40   40  40  40  40  40  40  40}
@@ -1409,7 +1467,8 @@ proc Move20 {w {step {}}} {
     return 1
 }
 proc H2O {w y f} {
-    set color $::C(20)
+    global C
+    set color $C(20)
     $w.c delete I20
 
     Sine $w 208 428 208 $y 4 $f -tag {I20 I20s} -width 3 -fill $color \
@@ -1424,28 +1483,30 @@ proc H2O {w y f} {
 
 # Bucket
 proc Draw21 {w} {
-    set color $::C(21)
+    global C
+    set color $C(21)
     set xy {217 451 244 490}			;# Right handle
-    $w.c create line $xy -fill $::C(fg) -width 2 -tag I21_a
+    $w.c create line $xy -fill $C(fg) -width 2 -tag I21_a
     set xy {201 467 182 490}			;# Left handle
-    $w.c create line $xy -fill $::C(fg) -width 2 -tag I21_a
+    $w.c create line $xy -fill $C(fg) -width 2 -tag I21_a
 
     set xy {245 490 237 535}			;# Right side
     set xy2 {189 535 181 490}			;# Left side
-    $w.c create poly [concat $xy $xy2] -fill $color -outline {} \
+    $w.c create poly [concat $xy $xy2] -fill $color -outline "" \
 	    -tag {I21 I21f}
-    $w.c create line $xy -fill $::C(fg) -width 2 -tag I21
-    $w.c create line $xy2 -fill $::C(fg) -width 2 -tag I21
+    $w.c create line $xy -fill $C(fg) -width 2 -tag I21
+    $w.c create line $xy2 -fill $C(fg) -width 2 -tag I21
 
     set xy {182 486 244 498}			;# Top
-    $w.c create oval $xy -fill $color -outline {} -width 2 -tag {I21 I21f}
-    $w.c create oval $xy -fill {} -outline $::C(fg) -width 2 -tag {I21 I21t}
+    $w.c create oval $xy -fill $color -outline "" -width 2 -tag {I21 I21f}
+    $w.c create oval $xy -fill "" -outline $C(fg) -width 2 -tag {I21 I21t}
     set xy {189 532 237 540}			;# Bottom
-    $w.c create oval $xy -fill $color -outline $::C(fg) -width 2 \
+    $w.c create oval $xy -fill $color -outline $C(fg) -width 2 \
 	    -tag {I21 I21b}
 }
-proc Move21 {w {step {}}} {
-    set step [GetStep 21 $step]
+proc Move21 {w {a_step ""}} {
+    global C
+    set step [GetStep 21 $a_step]
 
     set numsteps 30
     if {$step  >= $numsteps} {
@@ -1456,33 +1517,33 @@ proc Move21 {w {step {}}} {
     #lassign [$w.c coords I21t] X1 Y1 X2 Y2
     lassign {183 492 243 504} X1 Y1 X2 Y2
 
-    set f [expr {$step / double($numsteps)}]
+    set f [expr {$step / (1.0 * $numsteps)}]
     set y2 [expr {$y2 - 3}]
-    set xx1 [expr {$x1 + ($X1 - $x1) * $f}]
-    set yy1 [expr {$y1 + ($Y1 - $y1) * $f}]
-    set xx2 [expr {$x2 + ($X2 - $x2) * $f}]
-    set yy2 [expr {$y2 + ($Y2 - $y2) * $f}]
+    set xx1 [expr {$x1 + (($X1 - $x1) * $f)}]
+    set yy1 [expr {$y1 + (($Y1 - $y1) * $f)}]
+    set xx2 [expr {$x2 + (($X2 - $x2) * $f)}]
+    set yy2 [expr {$y2 + (($Y2 - $y2) * $f)}]
     #H2O $w $yy1 40
 
-    $w.c itemconfig I21b -fill $::C(20)
+    $w.c itemconfig I21b -fill $C(20)
     $w.c delete I21w
     $w.c create poly $x2 $y2 $x1 $y1 $xx1 $yy1 $xx2 $yy1 -tag {I21 I21w} \
-	    -outline {} -fill $::C(20)
+	    -outline "" -fill $C(20)
     $w.c lower I21w I21
     $w.c raise I21b
     $w.c lower I21f
 
-    return [expr {$step == $numsteps-1 ? 3 : 1}]
+    return [expr {($step == ($numsteps - 1)) ? 3 : 1}]
 }
 
 # Bucket drop
-proc Draw22 {w} {
-}
-proc Move22 {w {step {}}} {
-    set step [GetStep 22 $step]
+proc Draw22 {args} {}
+proc Move22 {w {a_step ""}} {
+    global C
+    set step [GetStep 22 $a_step]
     set pos {{213 513} {213 523} {213 543 x} {213 583} {213 593}}
 
-    if {$step == 0} {$w.c itemconfig I21f -fill $::C(22)}
+    if {$step == 0} {$w.c itemconfig I21f -fill $C(22)}
     if {$step >= [llength $pos]} {
 	return 0
     }
@@ -1499,31 +1560,32 @@ proc Move22 {w {step {}}} {
 
 # Blow dart
 proc Draw23 {w} {
-    set color  $::C(23a)
-    set color2 $::C(23b)
-    set color3 $::C(23c)
+    global C
+    set color  $C(23a)
+    set color2 $C(23b)
+    set color3 $C(23c)
 
     set xy {185 623 253 650}			;# Block
-    $w.c create rect $xy -fill black -outline $::C(fg) -width 2 -tag I23a
+    $w.c create rect $xy -fill black -outline $C(fg) -width 2 -tag I23a
     set xy {187 592 241 623}			;# Balloon
-    $w.c create oval $xy -outline {} -fill $color -tag I23b
-    $w.c create arc $xy -outline $::C(fg) -width 3 -tag I23b \
+    $w.c create oval $xy -outline "" -fill $color -tag I23b
+    $w.c create arc $xy -outline $C(fg) -width 3 -tag I23b \
 	    -style arc -start 12 -extent 336
     set xy {239 604  258 589 258 625 239 610}	;# Balloon nozzle
-    $w.c create poly $xy -outline {} -fill $color -tag I23b
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I23b
+    $w.c create poly $xy -outline "" -fill $color -tag I23b
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I23b
 
     set xy {285 611 250 603}			;# Dart body
-    $w.c create oval $xy -fill $color2 -outline $::C(fg) -width 3 -tag I23d
+    $w.c create oval $xy -fill $color2 -outline $C(fg) -width 3 -tag I23d
     set xy {249 596 249 618 264 607 249 596}	;# Dart tail
-    $w.c create poly $xy -fill $color3 -outline $::C(fg) -width 3 -tag I23d
+    $w.c create poly $xy -fill $color3 -outline $C(fg) -width 3 -tag I23d
     set xy {249 607 268 607}			;# Dart detail
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I23d
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I23d
     set xy {285 607 305 607}			;# Dart needle
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I23d
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I23d
 }
-proc Move23 {w {step {}}} {
-    set step [GetStep 23 $step]
+proc Move23 {w {a_step ""}} {
+    set step [GetStep 23 $a_step]
 
     set pos {
 	{277 607} {287 607} {307 607 x} {347 607} {407 607} {487 607}
@@ -1547,26 +1609,27 @@ proc Move23 {w {step {}}} {
 
 # Balloon
 proc Draw24 {w} {
-    set color $::C(24a)
+    global C
+    set color $C(24a)
     set xy {366 518 462 665}			;# Balloon
-    $w.c create oval $xy -fill $color -outline $::C(fg) -width 3 -tag I24
+    $w.c create oval $xy -fill $color -outline $C(fg) -width 3 -tag I24
     set xy {414 666 414 729}			;# String
-    $w.c create line $xy -fill $::C(fg) -width 3 -tag I24
+    $w.c create line $xy -fill $C(fg) -width 3 -tag I24
     set xy {410 666 404 673 422 673 418 666}	;# Nozzle
-    $w.c create poly $xy -fill $color -outline $::C(fg) -width 3 -tag I24
+    $w.c create poly $xy -fill $color -outline $C(fg) -width 3 -tag I24
 
     set xy {387 567 390 549 404 542}		;# Reflections
-    $w.c create line $xy -fill $::C(fg) -smooth 1 -width 2 -tag I24
+    $w.c create line $xy -fill $C(fg) -smooth 1 -width 2 -tag I24
     set xy {395 568 399 554 413 547}
-    $w.c create line $xy -fill $::C(fg) -smooth 1 -width 2 -tag I24
+    $w.c create line $xy -fill $C(fg) -smooth 1 -width 2 -tag I24
     set xy {403 570 396 555 381 553}
-    $w.c create line $xy -fill $::C(fg) -smooth 1 -width 2 -tag I24
+    $w.c create line $xy -fill $C(fg) -smooth 1 -width 2 -tag I24
     set xy {408 564 402 547 386 545}
-    $w.c create line $xy -fill $::C(fg) -smooth 1 -width 2 -tag I24
+    $w.c create line $xy -fill $C(fg) -smooth 1 -width 2 -tag I24
 }
-proc Move24 {w {step {}}} {
-    global S
-    set step [GetStep 24 $step]
+proc Move24 {w {a_step ""}} {
+    global S C
+    set step [GetStep 24 $a_step]
 
     if {$step > 4} {
 	return 0
@@ -1582,7 +1645,7 @@ proc Move24 {w {step {}}} {
 	    494 627 548 613 548 613 480 574 577 473 577 473 474 538 445 508
 	    431 441 431 440 400 502 347 465 347 465
 	}
-	$w.c create poly $xy -tag I24 -fill $::C(24b) -outline $::C(24a) \
+	$w.c create poly $xy -tag I24 -fill $C(24b) -outline $C(24a) \
 		-width 10 -smooth 1
 	set msg [subst $S(message)]
 	$w.c create text [Centroid $w I24] -text $msg -tag {I24 I24t} \
@@ -1590,21 +1653,21 @@ proc Move24 {w {step {}}} {
 	return 1
     }
 
-    $w.c itemconfig I24t -font [list {Times Roman} [expr {18 + 6*$step}] bold]
+    $w.c itemconfig I24t -font [list {Times Roman} [expr {18 + (6 * $step)}] bold]
     $w.c move I24 0 -60
     $w.c scale I24 {*}[Centroid $w I24] 1.25 1.25
     return 1
 }
 
 # Displaying the message
-proc Move25 {w {step {}}} {
-    global S
-    set step [GetStep 25 $step]
+proc Move25 {w {a_step ""}} {
+    global S XY
+    set step [GetStep 25 $a_step]
     if {$step == 0} {
-	set ::XY(25) [clock clicks -milliseconds]
+	set XY(25) [clock milliseconds]
 	return 1
     }
-    set elapsed [expr {[clock clicks -milliseconds] - $::XY(25)}]
+    set elapsed [expr {[clock milliseconds] - $XY(25)}]
     if {$elapsed < 5000} {
 	return 1
     }
@@ -1612,21 +1675,21 @@ proc Move25 {w {step {}}} {
 }
 
 # Collapsing balloon
-proc Move26 {w {step {}}} {
+proc Move26 {w {a_step ""}} {
     global S
-    set step [GetStep 26 $step]
+    set step [GetStep 26 $a_step]
 
     if {$step >= 3} {
 	$w.c delete I24 I26
 	$w.c create text 430 755 -anchor s -tag I26 \
-		-text "click to continue" -font {{Times Roman} 24 bold}
+		-text "click to continue" -font "{Times Roman} 24 bold"
 	bind $w.c <1> [list Reset $w]
 	return 4
     }
 
     $w.c scale I24 {*}[Centroid $w I24] .8 .8
     $w.c move I24 0 60
-    $w.c itemconfig I24t -font [list {Times Roman} [expr {30 - 6*$step}] bold]
+    $w.c itemconfig I24t -font [list "Times Roman" [expr {30 - (6 * $step)}] bold]
     return 1
 }
 
@@ -1636,7 +1699,7 @@ proc Move26 {w {step {}}} {
 #
 
 proc box {x y r} {
-    return [list [expr {$x-$r}] [expr {$y-$r}] [expr {$x+$r}] [expr {$y+$r}]]
+    return [list [expr {$x - $r}] [expr {$y - $r}] [expr {$x + $r}] [expr {$y + $r}]]
 }
 
 proc MoveAbs {w item xy} {
@@ -1649,22 +1712,22 @@ proc MoveAbs {w item xy} {
 
 proc RotateItem {w item Ox Oy beta} {
     set xy [$w.c coords $item]
-    set xy2 {}
+    set xy2 [list]
     foreach {x y} $xy {
 	lappend xy2 {*}[RotateC $x $y $Ox $Oy $beta]
     }
     $w.c coords $item $xy2
 }
 
-proc RotateC {x y Ox Oy beta} {
+proc RotateC {a_x a_y Ox Oy a_beta} {
     # rotates vector (Ox,Oy)->(x,y) by beta degrees clockwise
 
-    set x [expr {$x - $Ox}]			;# Shift to origin
-    set y [expr {$y - $Oy}]
+    set x [expr {$a_x - $Ox}]			;# Shift to origin
+    set y [expr {$a_y - $Oy}]
 
-    set beta [expr {$beta * atan(1) * 4 / 180.0}]	;# Radians
-    set xx [expr {$x * cos($beta) - $y * sin($beta)}]	;# Rotate
-    set yy [expr {$x * sin($beta) + $y * cos($beta)}]
+    set beta [expr {($a_beta * ( atan (1)) * 4) / 180.0}]		;# Radians
+    set xx [expr {($x * ( cos ($beta))) - ($y * ( sin ($beta)))}]	;# Rotate
+    set yy [expr {($x * ( sin ($beta))) + ($y * ( cos ($beta)))}]
 
     set xx [expr {$xx + $Ox}]			;# Shift back
     set yy [expr {$yy + $Oy}]
@@ -1673,10 +1736,10 @@ proc RotateC {x y Ox Oy beta} {
 }
 
 proc Reset {w} {
-    global S
+    global S MSTART
     DrawAll $w
     bind $w.c <1> {}
-    set S(mode) $::MSTART
+    set S(mode) $MSTART
     set S(active) 0
 }
 
@@ -1685,7 +1748,7 @@ proc GetStep {who step} {
     global STEP
     if {$step ne ""} {
 	set STEP($who) $step
-    } elseif {![info exists STEP($who)] || $STEP($who) eq ""} {
+    } elseif {(![info exists STEP($who)]) || ($STEP($who) eq "")} {
 	set STEP($who) 0
     } else {
 	incr STEP($who)
@@ -1694,27 +1757,27 @@ proc GetStep {who step} {
 }
 
 proc ResetStep {} {
-    global STEP
-    set ::S(cnt) 0
+    global STEP S
+    set S(cnt) 0
     foreach a [array names STEP] {
 	set STEP($a) ""
     }
 }
 
 proc Sine {w x0 y0 x1 y1 amp freq args} {
-    set PI [expr {4 * atan(1)}]
+    set PI [expr {4 * ( atan (1) )}]
     set step 2
-    set xy {}
+    set xy [list]
     if {$y0 == $y1} {				;# Horizontal
 	for {set x $x0} {$x <= $x1} {incr x $step} {
-	    set beta [expr {($x - $x0) * 2 * $PI / $freq}]
-	    set y [expr {$y0 + $amp * sin($beta)}]
+	    set beta [expr {(($x - $x0) * 2 * $PI) / $freq}]
+	    set y [expr {$y0 + ($amp * ( sin ($beta) ))}]
 	    lappend xy $x $y
 	}
     } else {
 	for {set y $y0} {$y <= $y1} {incr y $step} {
-	    set beta [expr {($y - $y0) * 2 * $PI / $freq}]
-	    set x [expr {$x0 + $amp * sin($beta)}]
+	    set beta [expr {(($y - $y0) * 2 * $PI) / $freq}]
+	    set x [expr {$x0 + ($amp * ( sin ($beta) ))}]
 	    lappend xy $x $y
 	}
     }
@@ -1728,10 +1791,10 @@ proc RoundRect {w xy radius args} {
 
     # Make sure that the radius of the curve is less than 3/8 size of the box!
     set maxr 0.75
-    if {$d > $maxr * ($x3 - $x0)} {
+    if {$d > ($maxr * ($x3 - $x0))} {
 	set d [expr {$maxr * ($x3 - $x0)}]
     }
-    if {$d > $maxr * ($y3 - $y0)} {
+    if {$d > ($maxr * ($y3 - $y0))} {
 	set d [expr {$maxr * ($y3 - $y0)}]
     }
 
@@ -1740,25 +1803,25 @@ proc RoundRect {w xy radius args} {
     set y1 [expr { $y0 + $d }]
     set y2 [expr { $y3 - $d }]
 
-    set xy [list $x0 $y0 $x1 $y0 $x2 $y0 $x3 $y0 $x3 $y1 $x3 $y2]
-    lappend xy $x3 $y3 $x2 $y3 $x1 $y3 $x0 $y3 $x0 $y2 $x0 $y1
-    return $xy
+    set new_xy [list $x0 $y0 $x1 $y0 $x2 $y0 $x3 $y0 $x3 $y1 $x3 $y2]
+    lappend new_xy $x3 $y3 $x2 $y3 $x1 $y3 $x0 $y3 $x0 $y2 $x0 $y1
+    return $new_xy
 }
 
 proc RoundPoly {canv xy radii args} {
     set lenXY [llength $xy]
     set lenR [llength $radii]
-    if {$lenXY != 2*$lenR} {
+    if {$lenXY != (2 * $lenR)} {
 	error "wrong number of vertices and radii"
     }
 
-    set knots {}
+    set knots [list]
     lassign [lrange $xy end-1 end] x0 y0
     lassign $xy x1 y1
     lappend xy {*}[lrange $xy 0 1]
 
     for {set i 0} {$i < $lenXY} {incr i 2} {
-	set radius [lindex $radii [expr {$i/2}]]
+	set radius [lindex $radii [expr {$i / 2}]]
 	set r [winfo pixels $canv $radius]
 
 	lassign [lrange $xy [expr {$i + 2}] [expr {$i + 3}]] x2 y2
@@ -1781,18 +1844,18 @@ proc _RoundPoly2 {x0 y0 x1 y1 x2 y2 radius} {
     set v2x [expr {$x2 - $x1}]
     set v2y [expr {$y2 - $y1}]
 
-    set vlen1 [expr {sqrt($v1x*$v1x + $v1y*$v1y)}]
-    set vlen2 [expr {sqrt($v2x*$v2x + $v2y*$v2y)}]
-    if {$d > $maxr * $vlen1} {
+    set vlen1 [expr { sqrt (($v1x * $v1x) + ($v1y * $v1y))}]
+    set vlen2 [expr { sqrt (($v2x * $v2x) + ($v2y * $v2y))}]
+    if {$d > ($maxr * $vlen1)} {
 	set d [expr {$maxr * $vlen1}]
     }
-    if {$d > $maxr * $vlen2} {
+    if {$d > ($maxr * $vlen2)} {
 	set d [expr {$maxr * $vlen2}]
     }
 
-    lappend xy [expr {$x1 + $d * $v1x/$vlen1}] [expr {$y1 + $d * $v1y/$vlen1}]
+    lappend xy [expr {$x1 + (($d * $v1x) / $vlen1)}] [expr {$y1 + (($d * $v1y) / $vlen1)}]
     lappend xy $x1 $y1
-    lappend xy [expr {$x1 + $d * $v2x/$vlen2}] [expr {$y1 + $d * $v2y/$vlen2}]
+    lappend xy [expr {$x1 + (($d * $v2x) / $vlen2)}] [expr {$y1 + (($d * $v2y) / $vlen2)}]
 
     return $xy
 }
@@ -1813,14 +1876,14 @@ proc Anchor {w item where} {
     lassign [$w.c bbox $item] x1 y1 x2 y2
     if {[string match *n* $where]} {
 	set y $y1
-    } elseif {[string match *s* $where]} {
+    } elseif {[string match "*s*" $where]} {
 	set y $y2
     } else {
 	set y [expr {($y1 + $y2) / 2.0}]
     }
-    if {[string match *w* $where]} {
+    if {[string match "*w*" $where]} {
 	set x $x1
-    } elseif {[string match *e* $where]} {
+    } elseif {[string match "*e*" $where]} {
 	set x $x2
     } else {
 	set x [expr {($x1 + $x2) / 2.0}]

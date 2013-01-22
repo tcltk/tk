@@ -11,14 +11,14 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-set fixed {Courier -12}
+set fixed "Courier -12"
 
 proc record {name args} {
     global log
     lappend log [format {%s %.6g %.6g} $name {*}$args]
 }
 
-proc getsize w {
+proc getsize {w} {
     regexp {(^[^+-]*)} [wm geometry $w] foo x
     return $x
 }
@@ -49,7 +49,7 @@ proc mkPartial {{w .partial}} {
 	    eleven twelve thirteen fourteen fifteen
     update
     scan [wm geometry $w] "%dx%d" width height
-    wm geometry $w ${width}x[expr $height-3]
+    wm geometry $w ${width}x[expr {$height - 3}]
     update
 }
 
@@ -84,22 +84,22 @@ test listbox-1.4 {configuration options} -body {
     .l configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test listbox-1.5 {configuration options} -body {
-    .l configure -bd 4
-    list [lindex [.l configure -bd] 4] [.l cget -bd]
+    .l configure -borderwidth 4
+    list [lindex [.l configure -borderwidth] 4] [.l cget -borderwidth]
 } -cleanup {
-    .l configure -bd [lindex [.l configure -bd] 3]
+    .l configure -borderwidth [lindex [.l configure -borderwidth] 3]
 } -result {4 4}
 test listbox-1.6 {configuration options} -body {
-    .l configure -bd badValue
+    .l configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test listbox-1.7 {configuration options} -body {
-    .l configure -bg #ff0000
-    list [lindex [.l configure -bg] 4] [.l cget -bg]
+    .l configure -background #ff0000
+    list [lindex [.l configure -background] 4] [.l cget -background]
 } -cleanup {
-    .l configure -bg [lindex [.l configure -bg] 3]
+    .l configure -background [lindex [.l configure -background] 3]
 } -result {{#ff0000} #ff0000}
 test listbox-1.8 {configuration options} -body {
-    .l configure -bg non-existent
+    .l configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test listbox-1.9 {configuration options} -body {
     .l configure -borderwidth 1.3
@@ -138,13 +138,13 @@ test listbox-1.16 {configuration options} -body {
     .l configure -exportselection xyzzy
 } -returnCodes error -result {expected boolean value but got "xyzzy"}
 test listbox-1.17 {configuration options} -body {
-    .l configure -fg #110022
-    list [lindex [.l configure -fg] 4] [.l cget -fg]
+    .l configure -foreground #110022
+    list [lindex [.l configure -foreground] 4] [.l cget -foreground]
 } -cleanup {
-    .l configure -fg [lindex [.l configure -fg] 3]
+    .l configure -foreground [lindex [.l configure -foreground] 3]
 } -result {{#110022} #110022}
 test listbox-1.18 {configuration options} -body {
-    .l configure -fg bogus
+    .l configure -foreground bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test listbox-1.19 {configuration options} -body {
     .l configure -font {Helvetica 12}
@@ -291,12 +291,11 @@ test listbox-1.53 {configuration options} -body {
     .l configure -yscrollcommand [lindex [.l configure -yscrollcommand] 3]
 } -result {{Another command} {Another command}}
 test listbox-1.55 {configuration options} -body {
-    .l configure -listvar testVariable
-    list [lindex [.l configure -listvar] 4] [.l cget -listvar]
+    .l configure -listvariable testVariable
+    list [lindex [.l configure -listvariable] 4] [.l cget -listvariable]
 } -cleanup {
-    .l configure -listvar [lindex [.l configure -listvar] 3]
+    .l configure -listvariable [lindex [.l configure -listvariable] 3]
 } -result {testVariable testVariable}
-
 
 test listbox-2.1 {Tk_ListboxCmd procedure} -body {
     listbox
@@ -336,7 +335,7 @@ test listbox-2.5 {Tk_ListboxCmd procedure} -setup {
 
 # Listbox used in 3.1 -3.115 tests
 destroy .l
-listbox .l -width 20 -height 5 -bd 4 -highlightthickness 1 -selectborderwidth 2
+listbox .l -width 20 -height 5 -borderwidth 4 -highlightthickness 1 -selectborderwidth 2
 pack .l
 .l insert 0 el0 el1 el2 el3 el4 el5 el6 el7 el8 el9 el10 el11 el12 el13 el14 \
 	el15 el16 el17
@@ -466,11 +465,11 @@ test listbox-3.26 {ListboxWidgetCmd procedure, "configure" option} -body {
     .l configure -gorp is_messy
 } -returnCodes error -result {unknown option "-gorp"}
 test listbox-3.27 {ListboxWidgetCmd procedure, "configure" option} -body {
-    set oldbd [.l cget -bd]
+    set oldbd [.l cget -borderwidth]
     set oldht [.l cget -highlightthickness]
-    .l configure -bd 3 -highlightthickness 0
-    set x "[.l cget -bd] [.l cget -highlightthickness]"
-    .l configure -bd $oldbd -highlightthickness $oldht
+    .l configure -borderwidth 3 -highlightthickness 0
+    set x "[.l cget -borderwidth] [.l cget -highlightthickness]"
+    .l configure -borderwidth $oldbd -highlightthickness $oldht
     set x
 } -result {3 0}
 test listbox-3.28 {ListboxWidgetCmd procedure, "curselection" option} -body {
@@ -1060,7 +1059,7 @@ test listbox-3.126 {ListboxWidgetCmd procedure, "yview" option, partial last lin
 
 # Listbox used in 3.127 -3.137 tests
 destroy .l
-listbox .l -width 20 -height 5 -bd 4 -highlightthickness 1 -selectborderwidth 2
+listbox .l -width 20 -height 5 -borderwidth 4 -highlightthickness 1 -selectborderwidth 2
 pack .l
 .l insert 0 el0 el1 el2 el3 el4 el5 el6 el7 el8 el9 el10 el11 el12 el13 el14 \
 	el15 el16 el17
@@ -1292,18 +1291,18 @@ test listbox-4.8 {ConfigureListbox procedure} -setup {
 	    -yscrollcommand "record y"
     pack .l2
     update
-    .l2 configure -fg black
+    .l2 configure -foreground black
     set log {}
     update
     set log
 } -cleanup {
     destroy .l2
 } -result {{y 0 1} {x 0 1}}
-test listbox-4.9 {ConfigureListbox procedure, -listvar} -setup {
+test listbox-4.9 {ConfigureListbox procedure, -listvariable} -setup {
     destroy .l2
 } -body {
     set x [list a b c d]
-    listbox .l2 -listvar x
+    listbox .l2 -listvariable x
     .l2 get 0 end
 } -cleanup {
     destroy .l2
@@ -1314,7 +1313,7 @@ test listbox-4.10 {ConfigureListbox, no listvar -> existing listvar} -setup {
     set x [list a b c d]
     listbox .l2
     .l2 insert end 1 2 3 4
-    .l2 configure -listvar x
+    .l2 configure -listvariable x
     .l2 get 0 end
 } -cleanup {
     destroy .l2
@@ -1323,8 +1322,8 @@ test listbox-4.11 {ConfigureListbox procedure, listvar -> no listvar} -setup {
     destroy .l2
 } -body {
     set x [list a b c d]
-    listbox .l2 -listvar x
-    .l2 configure -listvar {}
+    listbox .l2 -listvariable x
+    .l2 configure -listvariable {}
     .l2 insert end 1 2 3 4
     list $x [.l2 get 0 end]
 } -cleanup {
@@ -1336,8 +1335,8 @@ test listbox-4.12 {ConfigureListbox procedure, listvar -> different listvar} -se
     set x [list a b c d]
     set y [list 1 2 3 4]
     listbox .l2 
-    .l2 configure -listvar x
-    .l2 configure -listvar y
+    .l2 configure -listvariable x
+    .l2 configure -listvariable y
     .l2 insert end 5 6 7 8
     list $x $y
 } -cleanup {
@@ -1346,10 +1345,10 @@ test listbox-4.12 {ConfigureListbox procedure, listvar -> different listvar} -se
 test listbox-4.13 {ConfigureListbox, no listvar -> non-existant listvar} -setup {
     destroy .l2
 } -body {
-    catch {unset x}
+    unset -nocomplain x
     listbox .l2
     .l2 insert end a b c d
-    .l2 configure -listvar x
+    .l2 configure -listvariable x
     set x
 } -cleanup {
     destroy .l2
@@ -1357,8 +1356,8 @@ test listbox-4.13 {ConfigureListbox, no listvar -> non-existant listvar} -setup 
 test listbox-4.14 {ConfigureListbox, non-existant listvar} -setup {
     destroy .l2
 } -body {
-    catch {unset x}
-    listbox .l2 -listvar x
+    unset -nocomplain x
+    listbox .l2 -listvariable x
     list [info exists x] $x
 } -cleanup {
     destroy .l2
@@ -1366,20 +1365,20 @@ test listbox-4.14 {ConfigureListbox, non-existant listvar} -setup {
 test listbox-4.15 {ConfigureListbox, listvar -> non-existant listvar} -setup {
     destroy .l2
 } -body {
-    catch {unset y}
+    unset -nocomplain x y
     set x [list a b c d]
-    listbox .l2 -listvar x
-    .l2 configure -listvar y
+    listbox .l2 -listvariable x
+    .l2 configure -listvariable y
     list [info exists y] $y
 } -cleanup {
     destroy .l2
-} -result [list 1 [list a b c d]]
+} -result [list 0 [list a b c d]]
 test listbox-4.16 {ConfigureListbox, listvar -> same listvar} -setup {
     destroy .l2
 } -body {
     set x [list a b c d]
-    listbox .l2 -listvar x
-    .l2 configure -listvar x
+    listbox .l2 -listvariable x
+    .l2 configure -listvariable x
     set x
 } -cleanup {
     destroy .l2
@@ -1389,7 +1388,7 @@ test listbox-4.17 {ConfigureListbox, no listvar -> no listvar} -setup {
 } -body {
     listbox .l2
     .l2 insert end a b c d
-    .l2 configure -listvar {}
+    .l2 configure -listvariable {}
     .l2 get 0 end
 } -cleanup {
     destroy .l2
@@ -1400,8 +1399,8 @@ test listbox-4.18 {ConfigureListbox, no listvar -> bad listvar} -setup {
     listbox .l2
     .l2 insert end a b c d
     set x "this is a \" bad list"
-    catch {.l2 configure -listvar x} result
-    list [.l2 get 0 end] [.l2 cget -listvar] $result
+    catch {.l2 configure -listvariable x} result
+    list [.l2 get 0 end] [.l2 cget -listvariable] $result
 } -cleanup {
     destroy .l2
 } -result [list [list a b c d] {} \
@@ -1410,10 +1409,10 @@ test listbox-4.19 {ConfigureListbox, no listvar -> bad non-existent listvar} -se
     destroy .l2
 } -body {
     unset -nocomplain ::foo
-    listbox .l2 -listvar foo
+    listbox .l2 -listvariable foo
     .l2 insert end a b c d
-    catch {.l2 configure -listvar ::zoo::bar::foo} result
-    list [.l2 get 0 end] [.l2 cget -listvar] $foo $result
+    catch {.l2 configure -listvariable ::zoo::bar::foo} result
+    list [.l2 get 0 end] [.l2 cget -listvariable] $foo $result
 } -cleanup {
     destroy .l2
 } -result [list [list a b c d] foo [list a b c d] \
@@ -1446,7 +1445,7 @@ test listbox-5.3 {ListboxComputeGeometry procedure} -constraints {
 } -setup {
     destroy .l
 } -body {
-    listbox .l -font $fixed -width 0 -height 10 -bd 3
+    listbox .l -font $fixed -width 0 -height 10 -borderwidth 3
     .l insert 0 Short "Really much longer" Longer
     pack .l
     update
@@ -1585,11 +1584,11 @@ test listbox-6.12 {InsertEls procedure} -constraints {
 } -cleanup {
     destroy .l2
 } -result {80 93 122 110}
-test listbox-6.13 {InsertEls procedure, check -listvar update} -setup {
+test listbox-6.13 {InsertEls procedure, check -listvariable update} -setup {
     destroy .l2
 } -body {
     set x [list a b c d]
-    listbox .l2 -listvar x
+    listbox .l2 -listvariable x
     .l2 insert 0 1 2 3 4
     set x
 } -cleanup {
@@ -1609,18 +1608,17 @@ test listbox-6.14 {InsertEls procedure, check selection update} -setup {
 test listbox-6.15 {InsertEls procedure, lost namespaced listvar} -body {
     destroy .l2
     namespace eval test { variable foo {a b} }
-    listbox .l2 -listvar ::test::foo
+    listbox .l2 -listvariable ::test::foo
     namespace delete test
     .l2 insert end c d
     .l2 delete end
     .l2 insert end e f
     catch {set ::test::foo} result
-    list [.l2 get 0 end] [.l2 cget -listvar] $result
+    list [.l2 get 0 end] [.l2 cget -listvariable] $result
 } -cleanup {
     destroy .l2
 } -result [list [list a b c e f] ::test::foo \
 	{can't read "::test::foo": no such variable}]
-
 
 test listbox-7.1 {DeleteEls procedure} -body {
     .l delete 0 end
@@ -1779,15 +1777,14 @@ test listbox-7.20 {DeleteEls procedure} -constraints {
     .l2 delete 2 4
     lappend x [winfo reqwidth .l2] [winfo reqheight .l2]
 } -result {80 144 17 93}
-test listbox-7.21 {DeleteEls procedure, check -listvar update} -setup {
+test listbox-7.21 {DeleteEls procedure, check -listvariable update} -setup {
     destroy .l2
 } -body {
     set x [list a b c d]
-    listbox .l2 -listvar x
+    listbox .l2 -listvariable x
     .l2 delete 0 1
     set x
 } -result [list c d]
-
 
 test listbox-8.1 {ListboxEventProc procedure} -constraints {
 	fonts
@@ -1822,17 +1819,16 @@ test listbox-8.2 {ListboxEventProc procedure} -constraints {
 test listbox-8.3 {ListboxEventProc procedure} -setup {
     deleteWindows
 } -body {
-    listbox .l1 -bg #543210
+    listbox .l1 -background #543210
     rename .l1 .l2
     set x {}
     lappend x [winfo children .]
-    lappend x [.l2 cget -bg]
+    lappend x [.l2 cget -background]
     destroy .l1
     lappend x [info command .l*] [winfo children .]
 } -cleanup {
     deleteWindows
 } -result {.l1 #543210 {} {}}
-
 
 test listbox-9.1 {ListboxCmdDeletedProc procedure} -setup {
     deleteWindows
@@ -2076,7 +2072,6 @@ test listbox-10.20 {GetListboxIndex procedure} -setup {
     destroy .l
 } -result 1
 
-
 test listbox-11.1 {ChangeListboxView procedure, boundary conditions for index} -setup {
     destroy .l
 } -body {
@@ -2201,8 +2196,8 @@ pack .l
 .l insert 0 a bb c d e f g h i j k l m n o p q r s
 .l insert 0 0123456789a123456789b123456789c123456789d123456789
 update
-set width [expr [lindex [.l bbox 2] 2] - [lindex [.l bbox 1] 2]]
-set height [expr [lindex [.l bbox 2] 1] - [lindex [.l bbox 1] 1]]
+set width [expr {[lindex [.l bbox 2] 2] - [lindex [.l bbox 1] 2]}]
+set height [expr {[lindex [.l bbox 2] 1] - [lindex [.l bbox 1] 1]}]
 test listbox-13.1 {ListboxScanTo procedure} -constraints {
 	fonts
 } -body {
@@ -2239,7 +2234,6 @@ test listbox-13.3 {ListboxScanTo procedure} -constraints {
     update
     lappend x [format {%.6g %.6g} {*}[.l xview]] [format {%.6g %.6g} {*}[.l yview]]
 } -result {{0.8 1} {0.75 1} {0.64 0.84} {0.25 0.5}}
-
 
 test listbox-14.1 {NearestListboxElement procedure, partial last line} -body {
     mkPartial
@@ -2354,7 +2348,6 @@ test listbox-15.10 {ListboxSelect procedure, boundary conditions for indices} -b
     .l curselection
 } -result {}
 
-
 test listbox-16.1 {ListboxFetchSelection procedure} -body {
     .l delete 0 end
     .l insert 0 a b c "two words" e f g h i \\ k l m n o p
@@ -2380,9 +2373,8 @@ test listbox-16.3 {ListboxFetchSelection procedure, retrieve in several parts} -
     set sel [selection get]
     string compare 1$long\n2$long\n3$long\n4$long\n5$long $sel
 } -cleanup {
-    catch {unset long sel}
+    unset -nocomplain long sel
 } -result {0}
-
 
 test listbox-17.1 {ListboxLostSelection procedure} -setup {
     destroy .e
@@ -2488,7 +2480,6 @@ test listbox-19.2 {ListboxUpdateVScrollbar procedure} -body {
 "bogus 0.0 1.0"
     (horizontal scrolling command executed by listbox)}}
 
-
 test listbox-20.1 {listbox vs hidden commands} -setup {
     deleteWindows
 } -body {
@@ -2506,8 +2497,8 @@ test listbox-20.1 {listbox vs hidden commands} -setup {
 test listbox-21.1 {ListboxListVarProc} -setup {
     destroy .l
 } -body {
-    catch {unset x}
-    listbox .l -listvar x
+    unset -nocomplain x
+    listbox .l -listvariable x
     set x [list a b c d]
     .l get 0 end
 } -cleanup {
@@ -2517,7 +2508,7 @@ test listbox-21.2 {ListboxListVarProc} -setup {
     destroy .l
 } -body {
     set x [list a b c d]
-    listbox .l -listvar x
+    listbox .l -listvariable x
     unset x
     set x
 } -cleanup {
@@ -2527,8 +2518,8 @@ test listbox-21.3 {ListboxListVarProc} -setup {
     destroy .l
 } -body {
     set x [list a b c d]
-    listbox .l -listvar x
-    .l configure -listvar {}
+    listbox .l -listvariable x
+    .l configure -listvariable {}
     unset x
     info exists x
 } -cleanup {
@@ -2538,7 +2529,7 @@ test listbox-21.4 {ListboxListVarProc} -setup {
     destroy .l
 } -body {
     set x [list a b c d]
-    listbox .l -listvar x
+    listbox .l -listvariable x
     lappend x e f g
     .l size
 } -cleanup {
@@ -2548,7 +2539,7 @@ test listbox-21.5 {ListboxListVarProc, test selection after listvar mod} -setup 
     destroy .l
 } -body {
     set x [list a b c d e f g]
-    listbox .l -listvar x
+    listbox .l -listvariable x
     .l selection set end
     set x [list a b c d]
     set x [list 0 1 2 3 4 5 6]
@@ -2560,7 +2551,7 @@ test listbox-21.6 {ListboxListVarProc, test selection after listvar mod} -setup 
     destroy .l
 } -body {
     set x [list a b c d]
-    listbox .l -listvar x
+    listbox .l -listvariable x
     .l selection set 3
     lappend x e f g
     .l curselection
@@ -2571,7 +2562,7 @@ test listbox-21.7 {ListboxListVarProc, test selection after listvar mod} -setup 
     destroy .l
 } -body {
     set x [list a b c d]
-    listbox .l -listvar x
+    listbox .l -listvariable x
     .l selection set 0
     set x [linsert $x 0 1 2 3 4]
     .l curselection
@@ -2582,7 +2573,7 @@ test listbox-21.8 {ListboxListVarProc, test selection after listvar mod} -setup 
     destroy .l
 } -body {
     set x [list a b c d]
-    listbox .l -listvar x
+    listbox .l -listvariable x
     .l selection set 2
     set x [list a b c]
     .l curselection
@@ -2592,9 +2583,9 @@ test listbox-21.8 {ListboxListVarProc, test selection after listvar mod} -setup 
 test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup {
     destroy .l
 } -body {
-    catch {unset x}
+    unset -nocomplain x
     set log {}
-    listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
+    listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvariable x
     pack .l
     update
     lappend x "0000000000"
@@ -2608,9 +2599,9 @@ test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup
 test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setup {
     destroy .l
 } -body {
-    catch {unset x}
+    unset -nocomplain x
     set log {}
-    listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
+    listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvariable x
     pack .l
     update
     lappend x "0000000000"
@@ -2626,8 +2617,8 @@ test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setu
 test listbox-21.11 {ListboxListVarProc, bad list} -setup {
     destroy .l
 } -body {
-    catch {unset x}
-    listbox .l -listvar x
+    unset -nocomplain x
+    listbox .l -listvariable x
     set x [list a b c d]
     catch {set x "this is a \" bad list"} result
     set result
@@ -2638,11 +2629,11 @@ test listbox-21.12 {ListboxListVarProc, cleanup item attributes} -setup {
     destroy .l
 } -body {
     set x [list a b c d e f g]
-    listbox .l -listvar x
-    .l itemconfigure end -fg red
+    listbox .l -listvariable x
+    .l itemconfigure end -foreground red
     set x [list a b c d]
     set x [list 0 1 2 3 4 5 6]
-    .l itemcget end -fg
+    .l itemcget end -foreground
 } -cleanup {
     destroy .l
 } -result {}
@@ -2650,44 +2641,44 @@ test listbox-21.12a {ListboxListVarProc, cleanup item attributes} -setup {
     destroy .l
 } -body {
     set x [list a b c d e f g]
-    listbox .l -listvar x
-    .l itemconfigure end -fg red
+    listbox .l -listvariable x
+    .l itemconfigure end -foreground red
     set x [list a b c d]
     set x [list 0 1 2 3 4 5 6]
-    .l itemcget end -fg
+    .l itemcget end -foreground
 } -cleanup {
     destroy .l
 } -result {}
 test listbox-21.13 {listbox item configurations and listvar based deletions} -setup {
     destroy .l
 } -body {
-    catch {unset x}
-    listbox .l -listvar x
+    unset -nocomplain x
+    listbox .l -listvariable x
     .l insert end a b c
-    .l itemconfigure 1 -fg red
+    .l itemconfigure 1 -foreground red
     set x [list b c]
-    .l itemcget 1 -fg
+    .l itemcget 1 -foreground
 } -cleanup {
     destroy .l
 } -result red
 test listbox-21.14 {listbox item configurations and listvar based inserts} -setup {
     destroy .l
 } -body {
-    catch {unset x}
-    listbox .l -listvar x
+    unset -nocomplain x
+    listbox .l -listvariable x
     .l insert end a b c
-    .l itemconfigure 0 -fg red
+    .l itemconfigure 0 -foreground red
     set x [list 1 2 3 4 a b c]
-    .l itemcget 0 -fg
+    .l itemcget 0 -foreground
 } -cleanup {
     destroy .l
 } -result red
 test listbox-21.15 {ListboxListVarProc, update vertical scrollbar} -setup {
     destroy .l
 } -body {
-    catch {unset x}
+    unset -nocomplain x
     set log {}
-    listbox .l -listvar x -yscrollcommand "record y" -font fixed -height 3
+    listbox .l -listvariable x -yscrollcommand "record y" -font fixed -height 3
     pack .l
     update
     lappend x a b c d e f
@@ -2699,8 +2690,8 @@ test listbox-21.15 {ListboxListVarProc, update vertical scrollbar} -setup {
 test listbox-21.16 {ListboxListVarProc, update vertical scrollbar} -setup {
     destroy .l
 } -body {
-    catch {unset x}
-    listbox .l -listvar x -height 3
+    unset -nocomplain x
+    listbox .l -listvariable x -height 3
     pack .l
     update
     set x [list 0 1 2 3 4 5]
@@ -2787,14 +2778,14 @@ test listbox-23.5 {ConfigureListboxItem, multiple calls} -setup {
     set i 0
     foreach color {red orange yellow green blue white violet} {
 	.l insert end $color
-	.l itemconfigure $i -bg $color
+	.l itemconfigure $i -background $color
 	incr i
     }
     pack .l
     update
-    list [.l itemcget 0 -bg] [.l itemcget 1 -bg] [.l itemcget 2 -bg] \
-	    [.l itemcget 3 -bg] [.l itemcget 4 -bg] [.l itemcget 5 -bg] \
-	    [.l itemcget 6 -bg]
+    list [.l itemcget 0 -background] [.l itemcget 1 -background] [.l itemcget 2 -background] \
+	    [.l itemcget 3 -background] [.l itemcget 4 -background] [.l itemcget 5 -background] \
+	    [.l itemcget 6 -background]
 } -cleanup {
     destroy .l
 } -result {red orange yellow green blue white violet}
@@ -2813,22 +2804,22 @@ test listbox-23.7 {configuration options} -body {
     .l configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test listbox-23.8 {configuration options} -body {
-    .l itemconfigure 0 -bg #ff0000
-    list [lindex [.l itemconfigure 0 -bg] 4] [.l itemcget 0 -bg]
+    .l itemconfigure 0 -background #ff0000
+    list [lindex [.l itemconfigure 0 -background] 4] [.l itemcget 0 -background]
 } -cleanup {
-    .l configure -bg #ffffff
+    .l configure -background #ffffff
 } -result {{#ff0000} #ff0000}
 test listbox-23.9 {configuration options} -body {
-    .l configure -bg non-existent
+    .l configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test listbox-23.10 {configuration options} -body {
-    .l itemconfigure 0 -fg #110022
-    list [lindex [.l itemconfigure 0 -fg] 4] [.l itemcget 0 -fg]
+    .l itemconfigure 0 -foreground #110022
+    list [lindex [.l itemconfigure 0 -foreground] 4] [.l itemcget 0 -foreground]
 } -cleanup {
-    .l configure -fg #000000
+    .l configure -foreground #000000
 } -result {{#110022} #110022}
 test listbox-23.11 {configuration options} -body {
-    .l configure -fg bogus
+    .l configure -foreground bogus
 } -returnCodes error -result {unknown color name "bogus"}
 test listbox-23.12 {configuration options} -body {
     .l itemconfigure 0 -foreground #110022
@@ -2865,7 +2856,7 @@ test listbox-24.1 {itemcget} -setup {
 } -body {
     listbox .l
     .l insert end a b c d
-    .l itemcget 0 -fg
+    .l itemcget 0 -foreground
 } -cleanup {
     destroy .l
 } -result {}
@@ -2874,8 +2865,8 @@ test listbox-24.2 {itemcget} -setup {
 } -body {
     listbox .l
     .l insert end a b c d
-    .l itemconfigure 0 -fg red
-    .l itemcget 0 -fg
+    .l itemconfigure 0 -foreground red
+    .l itemcget 0 -foreground
 } -cleanup {
     destroy .l
 } -result red
@@ -2907,10 +2898,10 @@ test listbox-25.1 {listbox item configurations and widget based deletions} -setu
 } -body {
     listbox .l
     .l insert end a
-    .l itemconfigure 0 -fg red
+    .l itemconfigure 0 -foreground red
     .l delete 0 end
     .l insert end a
-    .l itemcget 0 -fg
+    .l itemcget 0 -foreground
 } -cleanup {
     destroy .l
 } -result {}
@@ -2919,9 +2910,9 @@ test listbox-25.2 {listbox item configurations and widget based inserts} -setup 
 } -body {
     listbox .l
     .l insert end a b c
-    .l itemconfigure 0 -fg red
+    .l itemconfigure 0 -foreground red
     .l insert 0 1 2 3 4
-    list [.l itemcget 0 -fg] [.l itemcget 4 -fg]
+    list [.l itemcget 0 -foreground] [.l itemcget 4 -foreground]
 } -cleanup {
     destroy .l
 } -result {{} red}
@@ -2989,7 +2980,6 @@ test listbox-26.5 {listbox disabled state disallows active modification} -setup 
     destroy .l
 } -result 0
 
-
 test listbox-27.1 {widget deletion while active} -setup {
     destroy .l
 } -body {
@@ -3001,7 +2991,6 @@ test listbox-27.1 {widget deletion while active} -setup {
 } -cleanup {
     destroy .l
 } -result 0
-
 
 test listbox-28.1 {listbox -activestyle} -setup {
     destroy .l
@@ -3039,7 +3028,6 @@ test listbox-28.4 {listbox -activestyle} -setup {
 } -cleanup {
     destroy .l
 } -result underline
-
 
 test listbox-29.1 {listbox selection behavior, -state disabled}  -setup {
     destroy .l

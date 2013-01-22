@@ -54,12 +54,12 @@ proc PressButton {btn} {
 
 proc EnterFileByKey {parent fileName fileDir} {
     global tk_strictMotif
-    if {$parent == "."} {
+    if {$parent eq "."} {
 	set w .__tk_filedialog
     } else {
 	set w $parent.__tk_filedialog
     }
-    upvar ::tk::dialog::file::__tk_filedialog data
+    upvar 1 ::tk::dialog::file::__tk_filedialog data
 
     if {$tk_strictMotif} {
 	$data(sEnt) delete 0 end
@@ -75,19 +75,19 @@ proc EnterFileByKey {parent fileName fileDir} {
 
 proc SendButtonPress {parent btn type} {
     global tk_strictMotif
-    if {$parent == "."} {
+    if {$parent eq "."} {
 	set w .__tk_filedialog
     } else {
 	set w $parent.__tk_filedialog
     }
-    upvar ::tk::dialog::file::__tk_filedialog data
+    upvar 1 ::tk::dialog::file::__tk_filedialog data
 
     set button $data($btn\Btn)
-    if ![winfo ismapped $button] {
+    if {![winfo ismapped $button]} {
 	update
     }
 
-    if {$type == "mouse"} {
+    if {$type eq "mouse"} {
 	PressButton $button
     } else {
 	event generate $w <Enter>
@@ -104,7 +104,7 @@ proc SendButtonPress {parent btn type} {
 #
 #----------------------------------------------------------------------
 
-if {$tcl_platform(platform) == "unix"} {
+if {$tcl_platform(platform) eq "unix"} {
     set modes "0 1"
 } else {
     set modes 1
@@ -146,7 +146,7 @@ foreach mode $modes {
     #
 
     set addedExtensions {}
-    if {$tcl_platform(platform) == "unix"} {
+    if {$tcl_platform(platform) eq "unix"} {
 	set tk_strictMotif $mode
 	# Extension adding is only done when using the non-motif file
 	# box with an extension-less filename
@@ -185,8 +185,8 @@ foreach mode $modes {
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
 
     set isNative [expr {
-	[info commands ::tk::MotifFDialog] eq ""   &&
-	[info commands ::tk::dialog::file::] eq ""
+	([info commands ::tk::MotifFDialog] eq "")   && 
+	([info commands ::tk::dialog::file::] eq "")
     }]
 
     set parent .
@@ -270,8 +270,7 @@ foreach mode $modes {
     foreach {x res} [list 1 "-unset-" 2 "Text files"] {
 	set t [expr {$x + [llength [array names filters]]}]
         test filebox-3.$t-$mode "tk_getOpenFile command" nonUnixUserInteraction {
-	    catch {unset tv}
-	    catch {unset typeName}
+	    unset -nocomplain tv typeName
 	    ToPressButton $parent ok
 	    if {[info exists tv]} {
 	    } else {
@@ -319,8 +318,8 @@ foreach mode $modes {
     } -returnCodes error -result {bad file type "Foo", should be "typeName {extension ?extensions ...?} ?{macType ?macTypes ...?}?"}
 
     set isNative [expr {
-	[info commands ::tk::MotifFDialog] eq "" &&
-	[info commands ::tk::dialog::file::] eq ""
+	([info commands ::tk::MotifFDialog] eq "") && 
+	([info commands ::tk::dialog::file::] eq "")
     }]
 
     set parent .

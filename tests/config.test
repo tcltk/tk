@@ -18,12 +18,11 @@ proc killTables {} {
     deleteWindows
     foreach t {alltypes chain2 chain1 configerror internal new notenoughparams
 	    twowindows} {
-	    while {[testobjconfig info $t] != ""} {
+	    while {[testobjconfig info $t] ne ""} {
 	        testobjconfig delete $t
 	    }
     }
 }
-
 
 option clear
 deleteWindows
@@ -118,7 +117,6 @@ test config-1.9 {Tk_CreateOptionTable - chained tables} -constraints {
 } -cleanup {
     killTables
 } -result {one four one}
-
 
 test config-2.1 {Tk_DeleteOptionTable - reference counts} -constraints {
     testobjconfig
@@ -1110,7 +1108,6 @@ test config-4.115 {DoObjConfig - custom internal value} -constraints {
     killTables
 }  -result {THIS IS A TEST}
 
-
 test config-5.1 {ObjectIsEmpty - object is already string} -constraints {
     testobjconfig
 } -body {
@@ -1134,7 +1131,6 @@ test config-5.3 {ObjectIsEmpty - must convert back to string} -constraints {
 } -cleanup {
     killTables
 } -result {}
-
 
 test config-6.1 {GetOptionFromObj - cached answer} -constraints {
     testobjconfig
@@ -1184,7 +1180,6 @@ test config-6.6 {GetOptionFromObj - synonym} -constraints testobjconfig -body {
 } -cleanup {
     killTables
 } -result {red}
-
 
 if {[testConstraint testobjconfig]} {
     testobjconfig alltypes .a
@@ -1276,7 +1271,6 @@ test config-7.14 {Tk_SetOptions - error in DoObjConfig with custom option} -cons
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-8.1 {Tk_RestoreSavedOptions - restore in proper order} -constraints {
     testobjconfig
@@ -1548,7 +1542,7 @@ test config-9.12 {Tk_FreeConfigOptions/FreeResources - not special} -constraints
 test config-9.13 {Tk_FreeConfigOptions/FreeResources - custom internal form} -constraints {
     testobjconfig
 } -body {
-    catch {destroy .fpp}
+    destroy .fpp
     testobjconfig internal .foo
     .foo configure -custom "foobar"
     destroy .foo
@@ -1556,7 +1550,6 @@ test config-9.13 {Tk_FreeConfigOptions/FreeResources - custom internal form} -co
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-10.1 {Tk_GetOptionInfo - one item} -constraints testobjconfig -body {
     testobjconfig alltypes .foo
@@ -1592,7 +1585,6 @@ if {[testConstraint testobjconfig]} {
     killTables
 }
 
-
 if {[testConstraint testobjconfig]} {
     testobjconfig alltypes .a
 }
@@ -1612,7 +1604,6 @@ test config-11.3 {GetConfigList - null default and current value} -constraints {
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 if {[testConstraint testobjconfig]} {
     testobjconfig internal .a
@@ -1701,7 +1692,6 @@ test config-12.17 {GetObjectForOption - null values} -constraints {
 if {[testConstraint testobjconfig]} {
     killTables
 }
-
 
 test config-13.1 {proper cleanup of options with widget destroy} -body {
     button .w -cursor crosshair

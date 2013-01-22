@@ -11,7 +11,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .textpeer
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Text Widget Peering Demonstration"
 wm iconname $w "textpeer"

@@ -9,7 +9,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-
 test embed-1.1 {TkpUseWindow procedure, bad window identifier} -setup {
     deleteWindows
 } -body {
@@ -80,7 +79,6 @@ test embed-1.5.nonwin {TkpUseWindow procedure, -container must be set} -constrai
 } -cleanup {
     deleteWindows
 } -returnCodes error -result {window ".container" doesn't have -container option set}
-
 
 cleanupTests
 return

@@ -17,7 +17,7 @@ namespace import -force tcltest::test
 proc grid_reset {{test ?} {top .}} {
     global GRID_VERBOSE
     if {[info exists GRID_VERBOSE]} {
-	if {$GRID_VERBOSE eq "" || $GRID_VERBOSE eq $test} {
+        if {$GRID_VERBOSE in "{} $test"} {
 	    puts -nonewline "grid test $test: "
 	    flush stdout
 	    gets stdin
@@ -25,7 +25,7 @@ proc grid_reset {{test ?} {top .}} {
     }
     eval destroy [winfo children $top]
     update
-    foreach {cols rows} [grid size .] {}
+    lassign [grid size .] cols rows
     for {set i 0} {$i <= $cols} {incr i} {
 	grid columnconfigure . $i -weight 0 -minsize 0 -pad 0 -uniform ""
     }
@@ -109,8 +109,8 @@ test grid-2.8 {bbox} -body {
     grid bbox . 0 0 0 x
 } -returnCodes error -result {expected integer but got "x"}
 test grid-2.9 {bbox} -body {
-    frame .1 -width 75 -height 75 -bg red
-    frame .2 -width 90 -height 90 -bg red
+    frame .1 -width 75 -height 75 -background red
+    frame .2 -width 90 -height 90 -background red
     grid .1 -row 0 -column 0
     grid .2 -row 1 -column 1
     update
@@ -124,8 +124,8 @@ test grid-2.9 {bbox} -body {
     grid_reset 2.9
 } -result {{0 0 165 165} {0 0 75 75} {0 0 165 165} {75 75 90 90}}
 test grid-2.10 {bbox} -body {
-    frame .1 -width 75 -height 75 -bg red
-    frame .2 -width 90 -height 90 -bg red
+    frame .1 -width 75 -height 75 -background red
+    frame .2 -width 90 -height 90 -background red
     grid .1 -row 0 -column 0
     grid .2 -row 1 -column 1
     update
@@ -225,9 +225,9 @@ test grid-4.4 {forget} -body {
     grid_reset 4.3.1
 } -result {-in . -column 0 -row 0 -columnspan 1 -rowspan 1 -ipadx 0 -ipady 0 -padx 0 -pady 0 -sticky {}}
 test grid-4.5 {forget, calling Tk_UnmaintainGeometry} -body {
-    frame .f -bd 2 -relief raised
+    frame .f -borderwidth 2 -relief raised
     place .f -x 10 -y 20 -width 200 -height 100
-    frame .f2 -width 50 -height 30 -bg red
+    frame .f2 -width 50 -height 30 -background red
     grid .f2 -in .f
     update
     set x [winfo ismapped .f2]
@@ -243,7 +243,7 @@ test grid-5.1 {info: basic argument checking} -body {
     grid info a b
 } -returnCodes error -result {wrong # args: should be "grid info window"}
 test grid-5.2 {info} -body {
-    frame .1 -width 75 -height 75 -bg red
+    frame .1 -width 75 -height 75 -background red
     grid .1 -row 0 -column 0
     update
     grid info .x
@@ -251,7 +251,7 @@ test grid-5.2 {info} -body {
     grid_reset 5.2
 } -returnCodes error -result {bad window path name ".x"}
 test grid-5.3 {info} -body {
-    frame .1 -width 75 -height 75 -bg red
+    frame .1 -width 75 -height 75 -background red
     grid .1 -row 0 -column 0
     update
     grid info .1
@@ -259,7 +259,7 @@ test grid-5.3 {info} -body {
     grid_reset 5.3
 } -result {-in . -column 0 -row 0 -columnspan 1 -rowspan 1 -ipadx 0 -ipady 0 -padx 0 -pady 0 -sticky {}}
 test grid-5.4 {info} -body {
-    frame .1 -width 75 -height 75 -bg red
+    frame .1 -width 75 -height 75 -background red
     update
     grid info .1
 } -cleanup {
@@ -285,7 +285,7 @@ test grid-6.5 {location: basic argument checking} -body {
     grid_reset 6.5
 } -result {-1 -1}
 test grid-6.6 {location (x)} -body {
-    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    frame .f -width 200 -height 100 -highlightthickness 0 -background red
     grid .f
     update
     set got ""
@@ -302,7 +302,7 @@ test grid-6.6 {location (x)} -body {
     grid_reset 6.6
 } -result {{-10->-1 0} {0->0 0} {201->1 0}}
 test grid-6.7 {location (y)} -body {
-    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    frame .f -width 200 -height 100 -highlightthickness 0 -background red
     grid .f
     update
     set got ""
@@ -319,7 +319,7 @@ test grid-6.7 {location (y)} -body {
     grid_reset 6.7
 } -result {{-10->0 -1} {0->0 0} {101->0 1}}
 test grid-6.8 {location (weights)} -body {
-    frame .f -width 300 -height 100 -highlightthickness 0 -bg red
+    frame .f -width 300 -height 100 -highlightthickness 0 -background red
     frame .a
     grid .a
     grid .f -in .a
@@ -346,7 +346,7 @@ test grid-6.9 {location: check updates pending} -constraints {
 } -body {
     set a ""
     foreach i {0 1 2} {
-	frame .$i -width 120 -height 75 -bg red
+	frame .$i -width 120 -height 75 -background red
 	lappend a [grid location . 150 90]
 	grid .$i -row $i -column $i
     }
@@ -381,12 +381,12 @@ test grid-7.5 {propagate} -body {
     grid_reset 7.5
 } -returnCodes error -result {expected boolean value but got "x"}
 test grid-7.6 {propagate} -body {
-    frame .f -width 100 -height 100 -bg red
+    frame .f -width 100 -height 100 -background red
     grid .f -row 0 -column 0
     update
     set a [winfo width .f]x[winfo height .f]
     grid propagate .f 0
-    frame .g -width 75 -height 85 -bg green
+    frame .g -width 75 -height 85 -background green
     grid .g -in .f -row 0 -column 0
     update
     lappend a [winfo width .f]x[winfo height .f]
@@ -426,7 +426,7 @@ test grid-8.3 {size} -body {
     grid_reset 8.3
 } -result {0 0}
 test grid-8.4 {size} -body {
-    catch {unset a}
+    unset -nocomplain a
     scale .f
     grid .f -row 0 -column 0
     update
@@ -445,7 +445,7 @@ test grid-8.4 {size} -body {
     grid_reset 8.4
 } -result {{1 1} {6 5} {664 948} {1 1}}
 test grid-8.5 {size} -body {
-    catch {unset a}
+    unset -nocomplain a
     scale .f
     grid .f -row 0 -column 0
     update
@@ -465,7 +465,7 @@ test grid-8.5 {size} -body {
     grid_reset 8.5
 } -result {{1 1} {1 18} {64 18} {1 1}}
 test grid-8.6 {size} -body {
-    catch {unset a}
+    unset -nocomplain a
     scale .f
     grid .f -row 10 -column 50
     update
@@ -528,7 +528,7 @@ test grid-9.10 {slaves} -body {
     grid_reset 9.10
 } -result {.2 .1 .0}
 test grid-9.11 {slaves} -body {
-    catch {unset a}
+    unset -nocomplain a
     foreach i {0 1 2} {
 	label .$i -text $i
 	label .$i-x -text $i-x
@@ -858,7 +858,7 @@ test grid-11.5 {default widget placement} -body {
 } -returnCodes error -result {must specify window before shortcut '-'}
 test grid-11.6 {default widget placement} -body {
     foreach i {1 2 3 4 5 6} {
-	frame .f$i -width 50 -height 50 -highlightthickness 0 -bg red
+	frame .f$i -width 50 -height 50 -highlightthickness 0 -background red
     }
     grid .f1 .f2 .f3 .f4
     grid .f5   -  x  .f6 -sticky nsew
@@ -873,21 +873,21 @@ test grid-11.6 {default widget placement} -body {
     grid_reset 11.6
 } -result {{0,50  100,50} {150,50  50,50}}
 test grid-11.7 {default widget placement} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -row 5 -column 5
     grid .f x -
 } -cleanup {
     grid_reset 11.7
 } -returnCodes error -result {must specify window before shortcut '-'}
 test grid-11.8 {default widget placement} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -row 5 -column 5
     grid .f ^ -
 } -cleanup {
     grid_reset 11.8
 } -returnCodes error -result {must specify window before shortcut '-'}
 test grid-11.9 {default widget placement} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -row 5 -column 5
     grid .f x ^
 } -cleanup {
@@ -895,7 +895,7 @@ test grid-11.9 {default widget placement} -body {
 } -returnCodes error -result {can't find slave to extend with "^"}
 test grid-11.10 {default widget placement} -body {
     foreach i {1 2 3} {
-	frame .f$i -width 100 -height 50 -highlightthickness 0 -bg red
+	frame .f$i -width 100 -height 50 -highlightthickness 0 -background red
     }
     grid .f1 .f2  -sticky nsew
     grid .f3   ^  -sticky nsew
@@ -968,7 +968,7 @@ test grid-11.13 {default widget placement} -body {
 } -result {{0,50  120,50} {120,50  80,50}}
 test grid-11.14 {default widget placement} -body {
     foreach i {1 2 3} {
-	frame .f$i -width 60 -height 60 -highlightthickness 0 -bg red
+	frame .f$i -width 60 -height 60 -highlightthickness 0 -background red
     }
     grid .f1 .f2
     grid  ^  .f3
@@ -984,7 +984,7 @@ test grid-11.14 {default widget placement} -body {
 } -result {{0,30  60,60} {60,0  60,60} {60,60  60,60}}
 test grid-11.15 {^ ^ test with multiple windows} -body {
     foreach i {1 2 3 4} {
-	frame .f$i -width 50 -height 50 -bd 1 -relief solid
+	frame .f$i -width 50 -height 50 -borderwidth 1 -relief solid
     }
     grid .f1 .f2 .f3 -sticky ns
     grid .f4 ^ ^
@@ -1062,8 +1062,8 @@ test grid-11.19 {default widget placement} -body {
 } -result {50 100 100 50}
 
 test grid-12.1 {-sticky} -body {
-    catch {unset data}
-    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    unset -nocomplain data
+    frame .f -width 200 -height 100 -highlightthickness 0 -background red
     set a ""
     grid .f
     grid rowconfigure . 0 -weight 1
@@ -1097,13 +1097,13 @@ test grid-12.1 {-sticky} -body {
 (nesw) 0 0 250 150
 }
 test grid-12.2 {-sticky} -body {
-    frame .f -bg red
+    frame .f -background red
     grid .f -sticky glue
 } -cleanup {
     grid_reset 12.2
 } -returnCodes error -result {bad stickyness value "glue": must be a string containing n, e, s, and/or w}
 test grid-12.3 {-sticky} -body {
-    frame .f -bg red
+    frame .f -background red
     grid .f -sticky {n,s,e,w}
     array set A [grid info .f]
     set A(-sticky)
@@ -1112,13 +1112,13 @@ test grid-12.3 {-sticky} -body {
 } -result {nesw}
 
 test grid-13.1 {-in} -body {
-    frame .f -bg red
+    frame .f -background red
     grid .f -in .f
 } -cleanup {
     grid_reset 13.1
 } -returnCodes error -result {window can't be managed in itself}
 test grid-13.2 {-in} -body {
-    frame .f -bg red
+    frame .f -background red
     list [winfo manager .f] \
          [catch {grid .f -in .f} err] $err \
          [winfo manager .f]
@@ -1126,13 +1126,13 @@ test grid-13.2 {-in} -body {
     grid_reset 13.1.1
 } -result {{} 1 {window can't be managed in itself} {}}
 test grid-13.3 {-in} -body {
-    frame .f -bg red
+    frame .f -background red
     grid .f -in .bad
 } -cleanup {
     grid_reset 13.2
 } -returnCodes error -result {bad window path name ".bad"}
 test grid-13.4 {-in} -body {
-    frame .f -bg red
+    frame .f -background red
     toplevel .top
     grid .f -in .top
 } -cleanup {
@@ -1140,19 +1140,19 @@ test grid-13.4 {-in} -body {
 } -returnCodes error -result {can't put .f inside .top}
 destroy .top
 test grid-13.5 {-ipadx} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -ipadx x
 } -cleanup {
     grid_reset 13.4
 } -returnCodes error -result {bad ipadx value "x": must be positive screen distance}
 test grid-13.6 {-ipadx} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -ipadx {5 5}
 } -cleanup {
     grid_reset 13.4.1
 } -returnCodes error -result {bad ipadx value "5 5": must be positive screen distance}
 test grid-13.7 {-ipadx} -body {
-    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    frame .f -width 200 -height 100 -highlightthickness 0 -background red
     grid .f
     update
     set a [winfo width .f]
@@ -1163,19 +1163,19 @@ test grid-13.7 {-ipadx} -body {
     grid_reset 13.5
 } -result {200 202}
 test grid-13.8 {-ipady} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -ipady x
 } -cleanup {
     grid_reset 13.6
 } -returnCodes error -result {bad ipady value "x": must be positive screen distance}
 test grid-13.9 {-ipady} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -ipady {5 5}
 } -cleanup {
     grid_reset 13.6.1
 } -returnCodes error -result {bad ipady value "5 5": must be positive screen distance}
 test grid-13.10 {-ipady} -body {
-    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    frame .f -width 200 -height 100 -highlightthickness 0 -background red
     grid .f
     update
     set a [winfo height .f]
@@ -1186,19 +1186,19 @@ test grid-13.10 {-ipady} -body {
     grid_reset 13.7
 } -result {100 102}
 test grid-13.11 {-padx} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -padx x
 } -cleanup {
     grid_reset 13.8
 } -returnCodes error -result {bad pad value "x": must be positive screen distance}
 test grid-13.12 {-padx} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -padx {10 x}
 } -cleanup {
     grid_reset 13.8.1
 } -returnCodes error -result {bad 2nd pad value "x": must be positive screen distance}
 test grid-13.13 {-padx} -body {
-    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    frame .f -width 200 -height 100 -highlightthickness 0 -background red
     grid .f
     update
     set a "[winfo width .f] [winfo width .]"
@@ -1209,7 +1209,7 @@ test grid-13.13 {-padx} -body {
     grid_reset 13.9
 } -result {{200 200} {200 202 1}}
 test grid-13.14 {-padx} -body {
-    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    frame .f -width 200 -height 100 -highlightthickness 0 -background red
     grid .f
     update
     set a "[winfo width .f] [winfo width .]"
@@ -1220,19 +1220,19 @@ test grid-13.14 {-padx} -body {
     grid_reset 13.9.1
 } -result {{200 200} {200 215 10}}
 test grid-13.15 {-pady} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -pady x
 } -cleanup {
     grid_reset 13.10
 } -returnCodes error -result {bad pad value "x": must be positive screen distance}
 test grid-13.16 {-pady} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid .f -pady {10 x}
 } -cleanup {
     grid_reset 13.10.1
 } -returnCodes error -result {bad 2nd pad value "x": must be positive screen distance}
 test grid-13.17 {-pady} -body {
-    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    frame .f -width 200 -height 100 -highlightthickness 0 -background red
     grid .f
     update
     set a "[winfo height .f] [winfo height .]"
@@ -1243,7 +1243,7 @@ test grid-13.17 {-pady} -body {
     grid_reset 13.11
 } -result {{100 100} {100 102 1}}
 test grid-13.18 {-pady} -body {
-    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
+    frame .f -width 200 -height 100 -highlightthickness 0 -background red
     grid .f
     update
     set a "[winfo height .f] [winfo height .]"
@@ -1254,7 +1254,7 @@ test grid-13.18 {-pady} -body {
     grid_reset 13.11.1
 } -result {{100 100} {100 120 4}}
 test grid-13.19 {-ipad x and y} -body {
-    frame .f -width 20 -height 20 -highlightthickness 0 -bg red
+    frame .f -width 20 -height 20 -highlightthickness 0 -background red
     grid columnconfigure . 0 -minsize 150
     grid rowconfigure . 0 -minsize 100
     set a ""
@@ -1279,10 +1279,12 @@ test grid-13.20 {reparenting} -body {
     grid .1 .2
     grid .b -in .1
     set a ""
-    catch {unset info}; array set info [grid info .b]
+    unset -nocomplain info
+    array set info [grid info .b]
     lappend a [grid slaves .1],[grid slaves .2],$info(-in)
     grid .b -in .2
-    catch {unset info}; array set info [grid info .b]
+    unset -nocomplain info
+    array set info [grid info .b]
     lappend a [grid slaves .1],[grid slaves .2],$info(-in)
     unset info
     return $a
@@ -1291,15 +1293,15 @@ test grid-13.20 {reparenting} -body {
 } -result {.b,,.1 ,.b,.2}
 
 test grid-14.1 {structure notify} -body {
-    frame .f -width 200 -height 100 -highlightthickness 0 -bg red
-    frame .g -width 200 -height 100 -highlightthickness 0 -bg red
+    frame .f -width 200 -height 100 -highlightthickness 0 -background red
+    frame .g -width 200 -height 100 -highlightthickness 0 -background red
     grid .f
     grid .g -in .f
     update
     set a ""
     lappend a "[winfo x .g],[winfo y .g] \
         [winfo width .g],[winfo height .g]"
-    .f configure -bd 5 -relief raised
+    .f configure -borderwidth 5 -relief raised
     update
     lappend a "[winfo x .g],[winfo y .g] \
         [winfo width .g],[winfo height .g]"
@@ -1315,7 +1317,7 @@ test grid-14.2 {structure notify} -body {
     update
     set a ""
     lappend a [grid bbox .],[grid bbox .f]
-    .f config -bd 20
+    .f config -borderwidth 20
     update
     lappend a [grid bbox .],[grid bbox .f]
 } -cleanup {
@@ -1326,7 +1328,7 @@ test grid-14.3 {map notify: bug 1648} -constraints {nonPortable} -body {
     # A(.) will be incremented is unspecified--the behavior
     # is different accross window managers.
     global A
-    catch {unset A}
+    unset -nocomplain A
     bind . <Configure> {incr A(%W)}
     set A(.) 0
     foreach i {0 1 2} {
@@ -1336,7 +1338,7 @@ test grid-14.3 {map notify: bug 1648} -constraints {nonPortable} -body {
     grid .0 .1 .2
     update
     bind <Configure> .1 {destroy .0}
-    .2 configure -bd 10
+    .2 configure -borderwidth 10
     update
     bind . <Configure> {}
     array get A
@@ -1371,7 +1373,7 @@ test grid-15.2 {lost slave} -body {
 
 test grid-16.1 {layout centering} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
+	frame .$i -background gray  -width 75 -height 50 -borderwidth 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
     }
     grid propagate . 0
@@ -1384,7 +1386,7 @@ test grid-16.1 {layout centering} -body {
 } -result {37 50 225 150}
 test grid-16.2 {layout weights (expanding)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
+	frame .$i -background gray  -width 75 -height 50 -borderwidth 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
 	grid rowconfigure . $i -weight [expr $i + 1]
 	grid columnconfigure . $i -weight [expr $i + 1]
@@ -1402,7 +1404,7 @@ test grid-16.2 {layout weights (expanding)} -body {
 } -result {120-75 167-100 213-125}
 test grid-16.3 {layout weights (shrinking)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray -width 100 -height 75 -bd 2 -relief ridge
+	frame .$i -background gray -width 100 -height 75 -borderwidth 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
 	grid rowconfigure . $i -weight [expr $i + 1]
 	grid columnconfigure . $i -weight [expr $i + 1]
@@ -1420,7 +1422,7 @@ test grid-16.3 {layout weights (shrinking)} -body {
 } -result {84-63 66-50 50-37}
 test grid-16.4 {layout weights (shrinking with minsize)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
+	frame .$i -background gray  -width 100 -height 75 -borderwidth 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
 	grid rowconfigure . $i -weight [expr $i + 1] -minsize 45
 	grid columnconfigure . $i -weight [expr $i + 1] -minsize 65
@@ -1438,7 +1440,7 @@ test grid-16.4 {layout weights (shrinking with minsize)} -body {
 } -result {70-60 65-45 65-45}
 test grid-16.5 {layout weights (shrinking at minsize)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
+	frame .$i -background gray  -width 100 -height 75 -borderwidth 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
 	grid rowconfigure . $i -weight 0 -minsize 70
 	grid columnconfigure . $i -weight 0 -minsize 90
@@ -1456,7 +1458,7 @@ test grid-16.5 {layout weights (shrinking at minsize)} -body {
 } -result {100-75 100-75 100-75}
 test grid-16.6 {layout weights (shrinking at minsize)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
+	frame .$i -background gray  -width 100 -height 75 -borderwidth 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
 	grid rowconfigure . $i -weight [expr $i + 1] -minsize 52
 	grid columnconfigure . $i -weight [expr $i + 1] -minsize 69
@@ -1480,7 +1482,7 @@ test grid-16.6 {layout weights (shrinking at minsize)} -body {
 # That doesn't happen if previous tests run
 test grid-16.7 {layout weights (shrinking at minsize)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
+	frame .$i -background gray  -width 100 -height 75 -borderwidth 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
     }
     grid propagate . 0
@@ -1498,11 +1500,11 @@ test grid-16.7 {layout weights (shrinking at minsize)} -body {
 } -result {100-75-1 1-1-0 100-75-1}
 test grid-16.8 {layout internal constraints} -body {
     foreach i {0 1 2 3 4} {
-	frame .$i -bg gray  -width 30 -height 25 -bd 2 -relief ridge
+	frame .$i -background gray  -width 30 -height 25 -borderwidth 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
     }
-    frame .f -bg red -width 250 -height 200
-    frame .g -bg green -width 200 -height 180
+    frame .f -background red -width 250 -height 200
+    frame .g -background green -width 200 -height 180
     lower .f
     raise .g .f
     grid .f -row 1 -column 1 -rowspan 3 -columnspan 3 -sticky nswe
@@ -1712,7 +1714,7 @@ test grid-16.16 {layout span} -body {
            [list 25 39 29 57 0] [list 30 34 22 64 0]]
 test grid-16.17 {layout weights (shrinking at minsize)} -body {
     foreach i {0 1 2 3} {
-	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
+	frame .$i -background gray  -width 100 -height 75 -borderwidth 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
     }
     grid propagate . 0
@@ -1799,7 +1801,6 @@ test grid-17.1 {forget and pending idle handlers} -body {
     destroy .t
     set result ok
 } -result ok
-
 
 test grid-18.1 {test respect for internalborder} -body {
     toplevel .pack
@@ -1898,7 +1899,7 @@ test grid-21.5 {anchor} -body {
 } -returnCodes error -result {bad anchor "x": must be n, ne, e, se, s, sw, w, nw, or center}
 test grid-21.6 {anchor} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
+	frame .$i -background gray  -width 75 -height 50 -borderwidth 2 -relief ridge
 	grid .$i -row $i -column $i -sticky nswe
     }
     grid propagate . 0
@@ -1919,12 +1920,12 @@ test grid-21.7 {anchor} -body {
     # Test with a non-symmetric internal border.
     # This only tests vertically, there is currently no way to get
     # it assymetric horizontally.
-    labelframe .f -bd 0
+    labelframe .f -borderwidth 0
     frame .f.x -width 20 -height 20
     .f configure -labelwidget .f.x
     pack .f -fill both -expand 1
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
+	frame .$i -background gray  -width 75 -height 50 -borderwidth 2 -relief ridge
 	grid .$i -in .f -row $i -column $i -sticky nswe
     }
     pack propagate . 0
@@ -1974,9 +1975,9 @@ test grid-22.3.1 {remove} {
 } {-in .a -column 0 -row 0 -columnspan 2 -rowspan 2 -ipadx 0 -ipady 0 -padx {3 5} -pady {4 7} -sticky ns}
 grid_reset 22.3.1
 test grid-22.4 {remove, calling Tk_UnmaintainGeometry} {
-    frame .f -bd 2 -relief raised
+    frame .f -borderwidth 2 -relief raised
     place .f -x 10 -y 20 -width 200 -height 100
-    frame .f2 -width 50 -height 30 -bg red
+    frame .f2 -width 50 -height 30 -background red
     grid .f2 -in .f
     update
     set x [winfo ismapped .f2]

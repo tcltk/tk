@@ -15,7 +15,6 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
-
 test winfont-1.1 {TkpGetNativeFont procedure: not native} -constraints {
     win
 } -body {
@@ -31,7 +30,6 @@ test winfont-1.2 {TkpGetNativeFont procedure: native} -constraints win -body {
     font measure system 0
     set x {}
 } -result {}
-
 
 test winfont-2.1 {TkpGetFontFromAttributes procedure: pointsize} -constraints {
     win
@@ -96,13 +94,11 @@ test winfont-2.10 {TkpGetFontFromAttributes procedure: fallback} -constraints {
     # No way to get it to fail! Any font name is acceptable.
 } -result {}
 
-
 test winfont-3.1 {TkpDeleteFont procedure} -constraints win -body {
     catch {font delete xyz}
     font actual {-family xyz}
     set x {}
 } -result {}
-
 
 test winfont-4.1 {TkpGetFontFamilies procedure} -constraints win -body {
     font families
@@ -113,7 +109,7 @@ destroy .t
 toplevel .t
 wm geometry .t +0+0
 update idletasks
-label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font systemfixed
+label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left -text "0" -font systemfixed
 pack .t.l
 canvas .t.c -closeenough 0
 
@@ -135,7 +131,7 @@ test winfont-5.1 {Tk_MeasureChars procedure: unbounded right margin} -constraint
 } -setup {
     destroy .t.l
 } -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -154,7 +150,7 @@ test winfont-5.2 {Tk_MeasureChars procedure: static width buffer exceeded} -cons
 } -setup {
     destroy .t.l
 }  -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -173,7 +169,7 @@ test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -constraints {
 } -setup {
     destroy .t.l
 }  -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -192,7 +188,7 @@ test winfont-5.4 {Tk_MeasureChars procedure: not all chars fit} -constraints {
 } -setup {
     destroy .t.l
 }  -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -228,7 +224,7 @@ test winfont-5.6 {Tk_MeasureChars procedure: at least one char on line} -constra
 } -setup {
     destroy .t.l
 }  -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -247,7 +243,7 @@ test winfont-5.7 {Tk_MeasureChars procedure: whole words} -constraints {
 } -setup {
     destroy .t.l
 }  -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -266,7 +262,7 @@ test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -constra
 } -setup {
     destroy .t.l
 }  -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -285,7 +281,7 @@ test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -const
 } -setup {
     destroy .t.l
 }  -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -304,7 +300,7 @@ test winfont-5.10 {Tk_MeasureChars procedure: make first part of word fit} -cons
 } -setup {
     destroy .t.l
 }  -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -323,7 +319,7 @@ test winfont-5.11 {Tk_MeasureChars procedure: check for kerning} -constraints {
 } -setup {
     destroy .t.l
 }  -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -339,11 +335,10 @@ test winfont-5.11 {Tk_MeasureChars procedure: check for kerning} -constraints {
     destroy .t.l
 } -result {1}
 
-
 test winfont-6.1 {Tk_DrawChars procedure: loop test} -constraints win -setup {
     destroy .t.l
 }  -body {
-    label .t.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left \
+    label .t.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left \
         -text "0" -font systemfixed
     pack .t.l
     update
@@ -352,7 +347,6 @@ test winfont-6.1 {Tk_DrawChars procedure: loop test} -constraints win -setup {
 } -cleanup {
     destroy .t.l
 } -result {}
-
 
 test winfont-7.1 {AllocFont procedure: use old font} -constraints win -setup {
     destroy .c

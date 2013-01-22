@@ -19,7 +19,6 @@ canvas .c -highlightthickness 2
 pack .c
 update
 
-
 test image-1.1 {Tk_ImageCmd procedure, "create" option} -body {
     image
 } -returnCodes error -result {wrong # args: should be "image option ?args?"}
@@ -179,7 +178,6 @@ test image-2.4 {Tk_ImageCmd procedure, "delete" option} -constraints {
     imageCleanup
 } -result {img2}
 
-
 test image-3.1 {Tk_ImageCmd procedure, "height" option} -body {
     image height
 } -returnCodes error -result {wrong # args: should be "image height name"}
@@ -201,7 +199,6 @@ test image-3.4 {Tk_ImageCmd procedure, "height" option} -constraints {
 } -cleanup {
     imageCleanup
 } -result {15 50}
-
 
 test image-4.1 {Tk_ImageCmd procedure, "names" option} -body {
     image names x
@@ -236,7 +233,6 @@ test image-4.3 {Tk_ImageCmd procedure, "names" option} -setup {
 } -cleanup {
     interp delete testinterp
 } -result {}
-
 
 test image-5.1 {Tk_ImageCmd procedure, "type" option} -body {
     image type
@@ -295,7 +291,6 @@ test image-5.7 {Tk_ImageCmd procedure, "type" option} -constraints {
     imageCleanup
 } -returnCodes error -result {image "myimage" doesn't exist}
 
-
 test image-6.1 {Tk_ImageCmd procedure, "types" option} -body {
     image types x
 } -returnCodes error -result {wrong # args: should be "image types"}
@@ -304,7 +299,6 @@ test image-6.2 {Tk_ImageCmd procedure, "types" option} -constraints {
 } -body {
     lsort [image types]
 } -result {bitmap oldtest photo test}
-
 
 test image-7.1 {Tk_ImageCmd procedure, "width" option} -body {
     image width
@@ -328,7 +322,6 @@ test image-7.4 {Tk_ImageCmd procedure, "width" option} -constraints {
     imageCleanup
 } -result {30 60}
 
-
 test image-8.1 {Tk_ImageCmd procedure, "inuse" option} -constraints {
     testImageType 
 } -setup {
@@ -342,10 +335,9 @@ test image-8.1 {Tk_ImageCmd procedure, "inuse" option} -constraints {
     lappend res [image inuse myimage2]
 } -cleanup {
     imageCleanup
-    catch {destroy .b}
+    destroy .b
 } -result [list 0 1]
     
-
 test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     .c delete all
     imageCleanup
@@ -378,7 +370,6 @@ test image-9.2 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     imageCleanup
 } -result {{foo display 5 6 25 9 30 30} {foo display 0 0 12 14 65 74}}
 
-
 test image-10.1 {Tk_GetImage procedure} -setup {
     imageCleanup
 } -body {
@@ -398,7 +389,6 @@ test image-10.2 {Tk_GetImage procedure} -constraints testImageType -setup {
     destroy .l
     imageCleanup
 } -returnCodes error -result {image "mytest" doesn't exist}
-
 
 test image-11.1 {Tk_FreeImage procedure} -constraints testImageType -setup {
     .c delete all
@@ -449,7 +439,7 @@ test image-12.1 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
     update
-    .c create rectangle 30 40 55 65 -width 0 -fill black -outline {}
+    .c create rectangle 30 40 55 65 -width 0 -fill black -outline ""
     set x {}
     update
     return $x
@@ -464,7 +454,7 @@ test image-12.2 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
     update
-    .c create rectangle 60 40 100 65 -width 0 -fill black -outline {}
+    .c create rectangle 60 40 100 65 -width 0 -fill black -outline ""
     set x {}
     update
     return $x
@@ -479,7 +469,7 @@ test image-12.3 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
     update
-    .c create rectangle 60 70 100 200 -width 0 -fill black -outline {}
+    .c create rectangle 60 70 100 200 -width 0 -fill black -outline ""
     set x {}
     update
     return $x
@@ -494,7 +484,7 @@ test image-12.4 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
     update
-    .c create rectangle 30 70 55 200 -width 0 -fill black -outline {}
+    .c create rectangle 30 70 55 200 -width 0 -fill black -outline ""
     set x {}
     update
     return $x
@@ -509,7 +499,7 @@ test image-12.5 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
     update
-    .c create rectangle 10 20 120 130 -width 0 -fill black -outline {}
+    .c create rectangle 10 20 120 130 -width 0 -fill black -outline ""
     set x {}
     update
     return $x
@@ -524,14 +514,13 @@ test image-12.6 {Tk_RedrawImage procedure, redisplay area clipping} -constraints
     image create test foo -variable x
     .c create image 50 60 -image foo -tags i1 -anchor nw
     update
-    .c create rectangle 55 65 75 70 -width 0 -fill black -outline {}
+    .c create rectangle 55 65 75 70 -width 0 -fill black -outline ""
     set x {}
     update
     return $x
 } -cleanup {
     imageCleanup
 } -result {{foo display 5 5 20 5 30 30}}
-
 
 test image-13.1 {Tk_SizeOfImage procedure} -constraints testImageType -setup {
     imageCleanup

@@ -12,7 +12,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-
 test unixMenu-1.1 {TkpNewMenu - normal menu} -constraints unix -setup {
     destroy .m1
 } -body {
@@ -27,12 +26,9 @@ test unixMenu-1.2 {TkpNewMenu - help menu} -constraints unix -setup {
     list [menu .m1.help] [. configure -menu ""] [destroy .m1]
 } -returnCodes ok -result {.m1.help {} {}}
 
-
 test unixMenu-2.1 {TkpDestroyMenu - nothing to do} -constraints unix -body {}
 
-
 test unixMenu-3.1 {TkpDestroymenuEntry - nothing to do} -constraints unix -body {}
-
 
 test unixMenu-4.1 {TkpConfigureMenuEntry - non-cascade entry} -constraints {
     unix 
@@ -54,9 +50,7 @@ test unixMenu-4.2 {TkpConfigureMenuEntry - cascade entry} -constraints {
     list [.m1 entryconfigure test -menu .m1.foo] [destroy .m1]
 } -returnCodes ok -result {{} {}}
 
-
 test unixMenu-5.1 {TkpMenuNewEntry - nothing to do} -constraints unix -body {}
-
 
 test unixMenu-6.1 {TkpSetWindowMenuBar - null menu} -constraints unix -setup {
     destroy .m1
@@ -74,9 +68,7 @@ test unixMenu-6.2 {TkpSetWindowMenuBar - menu} -constraints unix -setup {
     list [. configure -menu .m1] [. configure -menu ""] [destroy .m1]
 } -returnCodes ok -result {{} {} {}}
 
-
 test unixMenu-7.1 {TkpSetMainMenubar - nothing to do} -constraints unix -body {}
-
 
 test unixMenu-8.1 {GetMenuIndicatorGeometry - indicator off} -constraints {
     unix 
@@ -183,7 +175,6 @@ test unixMenu-8.9 {GetMenuIndicatorGeometry - hideMargin} -constraints {
     destroy .m1
 } -returnCodes ok 
 
-
 test unixMenu-9.1 {GetMenuAccelGeometry - cascade entry} -constraints {
     unix 
 } -setup {
@@ -212,7 +203,6 @@ test unixMenu-9.3 {GetMenuAccelGeometry - null label} -constraints unix -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-
 
 test unixMenu-10.1 {DrawMenuEntryBackground - active menubar} -constraints {
     unix 
@@ -244,7 +234,6 @@ test unixMenu-10.3 {DrawMenuEntryBackground - non-active} -constraints {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -returnCodes ok -result {{} {}}
-
 
 test unixMenu-11.1 {DrawMenuEntryAccelerator - menubar} -constraints {
     unix 
@@ -287,7 +276,6 @@ test unixMenu-11.4 {DrawMenuEntryAccelerator - null entry} -constraints {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-
 
 test unixMenu-12.1 {DrawMenuEntryIndicator - non-check or radio} -constraints {
     unix 
@@ -362,7 +350,6 @@ test unixMenu-12.7 {DrawMenuEntryIndicator - radiobutton - selected} -constraint
     list [update] [destroy .m1]
 } -result {{} {}}
 
-
 test unixMenu-13.1 {DrawMenuSeparator - menubar case} -constraints unix -setup {
     destroy .m1
 } -body {
@@ -380,7 +367,6 @@ test unixMenu-13.2 {DrawMenuSepartor - normal menu} -constraints unix -setup {
     list [update] [destroy .m1]
 } -result {{} {}}
 
-
 test unixMenu-14.1 {DrawMenuEntryLabel} -constraints unix -setup {
     destroy .m1
 } -body {
@@ -389,7 +375,6 @@ test unixMenu-14.1 {DrawMenuEntryLabel} -constraints unix -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [update] [destroy .m1]
 } -result {{} {}}
-
 
 test unixMenu-15.1 {DrawMenuUnderline - menubar} -constraints unix -setup {
     destroy .m1
@@ -408,7 +393,6 @@ test unixMenu-15.2 {DrawMenuUnderline - no menubar} -constraints unix -setup {
     list [update] [destroy .m1]
 } -result {{} {}}
 
-
 test unixMenu-16.1 {TkpPostMenu} -constraints unix -setup {
     destroy .m1
 } -body {
@@ -418,7 +402,6 @@ test unixMenu-16.1 {TkpPostMenu} -constraints unix -setup {
     destroy .m1
 } -returnCodes ok
 
-
 test unixMenu-17.1 {GetMenuSeparatorGeometry} -constraints unix -setup {
     destroy .m1
 } -body {
@@ -427,7 +410,6 @@ test unixMenu-17.1 {GetMenuSeparatorGeometry} -constraints unix -setup {
     tk::TearOffMenu .m1 40 40
     destroy .m1
 } -returnCodes ok
-
 
 test unixMenu-18.1 {GetTearoffEntryGeometry} -constraints {
     unix nonUnixUserInteraction
@@ -733,7 +715,6 @@ test unixMenu-19.24 {TkpComputeMenubarGeometry - help item only one} -constraint
     list [update] [. configure -menu ""] [destroy .m1]
 } -result {{} {} {}}
 
-
 test unixMenu-20.1 {DrawTearoffEntry - menubar} -constraints unix -setup {
     destroy .m1
 } -body {
@@ -753,9 +734,7 @@ test unixMenu-20.2 {DrawTearoffEntry - non-menubar} -constraints {
     list [update] [destroy .m1]
 } -result {{} {}}
 
-
 test unixMenu-21.1 {TkpInitializeMenuBindings - nothing to do} -constraints unix -body {}
-
 
 test unixMenu-22.1 {SetHelpMenu - no menubars} -constraints unix -setup {
     destroy .m1
@@ -798,7 +777,6 @@ test unixMenu-22.4 {SetHelpMenu - multiple menubars with same help menu} -constr
     .m1 add cascade -label .m1.help
     list [menu .m1.help] [. configure -menu ""] [destroy .m1] [destroy .t2]
 } -result {.m1.help {} {} {}}
-
 
 test unixMenu-23.1 {TkpDrawMenuEntry - gc for active and not strict motif} -constraints {
     unix 
@@ -1022,7 +1000,6 @@ test unixMenu-23.22 {TkpDrawMenuEntry - hide margin} -constraints unix -setup {
     list [update] [destroy .m1]
 } -result {{} {}}
 
-
 test unixMenu-24.1 {GetMenuLabelGeometry - image} -constraints {
     testImageType unix
 } -setup {
@@ -1055,7 +1032,6 @@ test unixMenu-24.4 {GetMenuLabelGeometry - text} -constraints unix -setup {
     .m1 add command -label "This is a test."
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
-
 
 test unixMenu-25.1 {TkpComputeStandardMenuGeometry - no entries} -constraints {
     unix 
@@ -1264,10 +1240,7 @@ test unixMenu-25.20 {TkpComputeStandardMenuGeometry - hide margin} -constraints 
     list [update idletasks] [destroy .m1]
 } -result {{} {}}
 
-
 test unixMenu-26.1 {TkpMenuInit - nothing to do} -constraints unix -body {}
-
-
 
 # cleanup
 deleteWindows

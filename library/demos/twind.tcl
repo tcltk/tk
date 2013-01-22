@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .twind
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Text Demonstration - Embedded Windows and Other Features"
 wm iconname $w "Embedded Windows"
@@ -164,47 +164,48 @@ $t insert end "\n\nFinally, images fit comfortably in text widgets too:"
 $t image create end -image \
     [image create photo -file [file join $tk_demoDirectory images ouster.png]]
 
-
-proc textWindBigB w {
+proc textWindBigB {w} {
     $w configure -borderwidth 15 
 }
 
-proc textWindBigH w {
+proc textWindBigH {w} {
     $w configure -highlightthickness 15
 }
 
-proc textWindBigP w {
+proc textWindBigP {w} {
     $w configure -padx 15 -pady 15
 }
 
-proc textWindSmallB w {
-    $w configure -borderwidth $::text_normal(border)
+proc textWindSmallB {w} {
+    global text_normal
+    $w configure -borderwidth $text_normal(border)
 }
 
-proc textWindSmallH w {
-    $w configure -highlightthickness $::text_normal(highlight)
+proc textWindSmallH {w} {
+    global text_normal
+    $w configure -highlightthickness $text_normal(highlight)
 }
 
-proc textWindSmallP w {
-    $w configure -padx $::text_normal(pad) -pady $::text_normal(pad)
+proc textWindSmallP {w} {
+    global text_normal
+    $w configure -padx $text_normal(pad) -pady $text_normal(pad)
 }
 
-
-proc textWindOn w {
-    catch {destroy $w.scroll2}
+proc textWindOn {w} {
+    destroy $w.scroll2
     set t $w.f.text
     scrollbar $w.scroll2 -orient horizontal -command "$t xview"
     pack $w.scroll2 -after $w.buttons -side bottom -fill x
     $t configure -xscrollcommand "$w.scroll2 set" -wrap none
 }
 
-proc textWindOff w {
-    catch {destroy $w.scroll2}
+proc textWindOff {w} {
+    destroy $w.scroll2
     set t $w.f.text
-    $t configure -xscrollcommand {} -wrap word
+    $t configure -xscrollcommand "" -wrap word
 }
 
-proc textWindPlot t {
+proc textWindPlot {t} {
     set c $t.c
     if {[winfo exists $c]} {
 	return
@@ -225,30 +226,31 @@ proc createPlot {t} {
 
     canvas $c -relief sunken -width 450 -height 300 -cursor top_left_arrow
 
-    set font {Helvetica 18}
+    set font "Helvetica 18"
 
     $c create line 100 250 400 250 -width 2
     $c create line 100 250 100 50 -width 2
     $c create text 225 20 -text "A Simple Plot" -font $font -fill brown
     
     for {set i 0} {$i <= 10} {incr i} {
-	set x [expr {100 + ($i*30)}]
+	set x [expr {100 + ($i * 30)}]
 	$c create line $x 250 $x 245 -width 2
-	$c create text $x 254 -text [expr {10*$i}] -anchor n -font $font
+	$c create text $x 254 -text [expr {10 * $i}] -anchor n -font $font
     }
     for {set i 0} {$i <= 5} {incr i} {
-	set y [expr {250 - ($i*40)}]
+	set y [expr {250 - ($i * 40)}]
 	$c create line 100 $y 105 $y -width 2
-	$c create text 96 $y -text [expr {$i*50}].0 -anchor e -font $font
+	$c create text 96 $y -text [expr {$i * 50}].0 -anchor e -font $font
     }
     
     foreach point {
 	{12 56} {20 94} {33 98} {32 120} {61 180} {75 160} {98 223}
     } {
-	set x [expr {100 + (3*[lindex $point 0])}]
-	set y [expr {250 - (4*[lindex $point 1])/5}]
-	set item [$c create oval [expr {$x-6}] [expr {$y-6}] \
-		[expr {$x+6}] [expr {$y+6}] -width 1 -outline black \
+        lassign $point p_x p_y
+	set x [expr {100 + (3 * $p_x)}]
+	set y [expr {250 - ((4 * $p_y) / 5)}]
+	set item [$c create oval [expr {$x - 6}] [expr {$y - 6}] \
+		[expr {$x + 6}] [expr {$y + 6}] -width 1 -outline black \
 		-fill SkyBlue2]
 	$c addtag point withtag $item
     }
@@ -275,12 +277,12 @@ proc embPlotDown {w x y} {
 
 proc embPlotMove {w x y} {
     global embPlot
-    $w move selected [expr {$x-$embPlot(lastX)}] [expr {$y-$embPlot(lastY)}]
+    $w move selected [expr {$x - $embPlot(lastX)}] [expr {$y - $embPlot(lastY)}]
     set embPlot(lastX) $x
     set embPlot(lastY) $y
 }
 
-proc textWindDel t {
+proc textWindDel {t} {
     if {[winfo exists $t.c]} {
 	$t delete $t.c
 	while {[string first [$t get plot] " \t\n"] >= 0} {
@@ -290,7 +292,7 @@ proc textWindDel t {
     }
 }
 
-proc embDefBg t {
+proc embDefBg {t} {
     $t configure -background [lindex [$t configure -background] 3]
 }
 

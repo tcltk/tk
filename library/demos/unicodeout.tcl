@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .unicodeout
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Unicode Label Demonstration"
 wm iconname $w "unicodeout"
@@ -47,7 +47,7 @@ proc addSample {w language args} {
 ## A helper procedure that determines what form to use to express languages
 ## that have complex rendering rules...
 proc usePresentationFormsFor {language} {
-    switch [tk windowingsystem] {
+    switch -- [tk windowingsystem] {
 	aqua {
 	    # OSX wants natural character order; the renderer knows how to
 	    # compose things for display for all languages.
@@ -90,7 +90,7 @@ proc usePresentationFormsFor {language} {
 ## engine might take a while, so make sure we're displaying something in the
 ## meantime...
 pack [label $w.wait -text "Please wait while loading fonts..." \
-	-font {Helvetica 12 italic}]
+	-font "Helvetica 12 italic"]
 set oldCursor [$w cget -cursor]
 $w conf -cursor watch
 update

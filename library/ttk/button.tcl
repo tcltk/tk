@@ -52,7 +52,8 @@ bind TRadiobutton <KeyPress-Down> 	{ ttk::button::RadioTraverse %W +1 }
 proc ttk::button::activate {w} {
     $w instate disabled { return }
     set oldState [$w state pressed]
-    update idletasks; after 100	;# block event loop to avoid reentrancy
+    update idletasks
+    after 100	;# block event loop to avoid reentrancy
     $w state $oldState
     $w invoke
 }
@@ -66,9 +67,9 @@ proc ttk::button::activate {w} {
 proc ttk::button::RadioTraverse {w dir} {
     set group [list]
     foreach sibling [winfo children [winfo parent $w]] {
-    	if {   [winfo class $sibling] eq "TRadiobutton"
-	    && [$sibling cget -variable] eq [$w cget -variable]
-	    && ![$sibling instate disabled]
+    	if { ([winfo class $sibling] eq "TRadiobutton")         && 
+	     ([$sibling cget -variable] eq [$w cget -variable]) && 
+	     (![$sibling instate disabled])
 	} {
 	   lappend group $sibling
 	}

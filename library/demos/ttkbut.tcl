@@ -11,7 +11,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .ttkbut
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Simple Ttk Widgets"
 wm iconname $w "ttkbut"
@@ -26,7 +26,7 @@ pack [addSeeDismiss $w.seeDismiss $w {enabled cheese tomato basil oregano happyn
 
 ## Add buttons for setting the theme
 ttk::labelframe $w.buttons -text "Buttons"
-foreach theme [ttk::themes] {
+foreach theme [ttk::style theme names] {
     ttk::button $w.buttons.$theme -text $theme \
 	    -command [list ttk::setTheme $theme]
     pack $w.buttons.$theme -pady 2

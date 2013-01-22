@@ -1,5 +1,6 @@
 package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require tcltest
+namespace import -force tcltest::*
 loadTestedCommands
 
 test notebook-1.0 "Setup" -body {
@@ -405,7 +406,7 @@ test notebook-7.8a "move tabs - current tab undisturbed - exhaustive" -body {
 	    foreach k {0 1 2 3 4} {
 		.nb insert $j $k
 		set current [lindex [.nb tabs] [.nb index current]]
-		if {$current != ".nb.f$i"} {
+		if {$current ne ".nb.f$i"} {
 		    error "($i,$j,$k) current = $current"
 		}
 		.nb insert $k $j
@@ -425,7 +426,7 @@ test notebook-7.8b "insert new - current tab undisturbed - exhaustive" -body {
 .nb select .nb.f$i
 	    .nb insert $j [frame .nb.newf]
 	    set current [lindex [.nb tabs] [.nb index current]]
-	    if {$current != ".nb.f$i"} {
+	    if {$current ne ".nb.f$i"} {
 		puts stderr "new tab at $j, current = $current, expect .nb.f$i"
 	    }
 	    destroy .nb.newf

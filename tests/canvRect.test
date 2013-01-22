@@ -12,21 +12,21 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Canvas used in every test case of the whole file
-canvas .c -width 400 -height 300 -bd 2 -relief sunken
+canvas .c -width 400 -height 300 -borderwidth 2 -relief sunken
 pack .c
 update
 
 # Rectangle used in canvRect-1.* tests
 .c create rectangle 20 20 80 80 -tag test
 test canvRect-1.1 {configuration options: good value for -fill} -body {
-    .c itemconfigure test -fill #ff0000
+    .c itemconfigure test -fill "#ff0000"
     list [.c itemcget test -fill] [lindex [.c itemconfigure test -fill] 4]
 } -result {{#ff0000} #ff0000}
 test canvRect-1.2 {configuration options: bad value for -fill} -body {
     .c itemconfigure test -fill non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test canvRect-1.3 {configuration options: good value for -outline} -body {
-    .c itemconfigure test -outline #123456
+    .c itemconfigure test -outline "#123456"
     list [.c itemcget test -outline] [lindex [.c itemconfigure test -outline] 4]
 } -result {{#123456} #123456}
 test canvRect-1.4 {configuration options: bad value for -outline} -body {
@@ -55,7 +55,6 @@ test canvRect-1.10 {configuration options: bad value for -width} -body {
     .c itemconfigure test -width abc
 } -returnCodes error -result {bad screen distance "abc"}
 .c delete withtag all
-
 
 test canvRect-2.1 {CreateRectOval procedure} -body {
     .c create rect
@@ -87,7 +86,6 @@ test canvRect-2.8 {CreateRectOval procedure} -body {
     .c create rectangle 1 2 3 4 -gorp foo
 } -returnCodes error -result {unknown option "-gorp"}
 .c delete withtag all
-
 
 test canvRect-3.1 {RectOvalCoords procedure} -body {
     .c create rectangle 10 20 30 40 -tags x
@@ -140,7 +138,6 @@ test canvRect-3.7 {RectOvalCoords procedure} -body {
     .c delete withtag all
 } -returnCodes error -result {wrong # coordinates: expected 0 or 4, got 5}
 
-
 test canvRect-4.1 {ConfigureRectOval procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1
     .c itemconfigure x -width abc
@@ -173,7 +170,7 @@ test canvRect-4.4 {ConfigureRectOval procedure} -constraints nonPortable -body {
 
 test canvRect-5.1 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
     # Non-portable due to rounding differences:
-    .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
+    .c create rectangle 10 20 30 40 -tags x -width 1 -outline ""
     .c coords x 20 15 10 5
     .c bbox x
 } -cleanup {
@@ -181,7 +178,7 @@ test canvRect-5.1 {ComputeRectOvalBbox procedure} -constraints nonPortable -body
 } -result {10 5 20 15}
 test canvRect-5.2 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
     # Non-portable due to rounding differences:
-    .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
+    .c create rectangle 10 20 30 40 -tags x -width 1 -outline ""
     .c coords x 10 20 30 10
     .c itemconfigure x -width 1 -outline red
     .c bbox x
@@ -190,7 +187,7 @@ test canvRect-5.2 {ComputeRectOvalBbox procedure} -constraints nonPortable -body
 } -result {9 9 31 21}
 test canvRect-5.3 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
     # Non-portable due to rounding differences:
-    .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
+    .c create rectangle 10 20 30 40 -tags x -width 1 -outline ""
     .c coords x 10 20 30 10
     .c itemconfigure x -width 2 -outline red
     .c bbox x
@@ -199,7 +196,7 @@ test canvRect-5.3 {ComputeRectOvalBbox procedure} -constraints nonPortable -body
 } -result {9 9 31 21}
 test canvRect-5.4 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
     # Non-portable due to rounding differences:
-    .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
+    .c create rectangle 10 20 30 40 -tags x -width 1 -outline ""
     .c coords x 10 20 30 10
     .c itemconfigure x -width 3 -outline red
     .c bbox x
@@ -212,7 +209,7 @@ test canvRect-5.4 {ComputeRectOvalBbox procedure} -constraints nonPortable -body
 test canvRect-6.1 {RectToPoint procedure} -body {
 	set xId  [.c create rectangle 10 20 30 35 -tags x -fill green]
 	set yId [.c create rectangle 15 25 25 30  -tags y -fill red]
-    .c itemconfigure y -outline {}
+    .c itemconfigure y -outline ""
     list [expr {[.c find closest 14.9 28] eq $xId}] \
 		[expr {[.c find closest 15.1 28] eq $yId}] \
 		[expr {[.c find closest 24.9 28] eq $yId}] \
@@ -223,7 +220,7 @@ test canvRect-6.1 {RectToPoint procedure} -body {
 test canvRect-6.2 {RectToPoint procedure} -body {
 	set xId  [.c create rectangle 10 20 30 35 -tags x -fill green]
 	set yId [.c create rectangle 15 25 25 30  -tags y -fill red]
-    .c itemconfigure y -outline {}
+    .c itemconfigure y -outline ""
     list [expr {[.c find closest 20 24.9] eq $xId}] \
 		 [expr {[.c find closest 20 25.1] eq $yId}] \
 	    [expr {[.c find closest 20 29.9] eq $yId}] \
@@ -258,8 +255,8 @@ test canvRect-6.4 {RectToPoint procedure} -body {
 test canvRect-6.5 {RectToPoint procedure} -body {
 	set xId  [.c create rectangle 10 20 30 35 -tags x -fill green]
 	set yId [.c create rectangle 15 25 25 30  -tags y -fill red]
-	.c itemconfigure x -fill {} -outline black -width 3
-	.c itemconfigure y -outline {}
+	.c itemconfigure x -fill "" -outline black -width 3
+	.c itemconfigure y -outline ""
     list [expr {[.c find closest 13.2 28] eq $xId}] \
 		 [expr {[.c find closest 13.3 28] eq $yId}] \
 	    [expr {[.c find closest 26.7 28] eq $yId}] \
@@ -270,8 +267,8 @@ test canvRect-6.5 {RectToPoint procedure} -body {
 test canvRect-6.6 {RectToPoint procedure} -body {
 	set xId  [.c create rectangle 10 20 30 35 -tags x -fill green]
 	set yId [.c create rectangle 15 25 25 30  -tags y -fill red]
-	.c itemconfigure x -fill {} -outline black -width 3
-	.c itemconfigure y -outline {}
+	.c itemconfigure x -fill "" -outline black -width 3
+	.c itemconfigure y -outline ""
     list [expr {[.c find closest 20 23.2] eq $xId}] \
 		 [expr {[.c find closest 20 23.3] eq $yId}] \
 	    [expr {[.c find closest 20 31.7] eq $yId}] \
@@ -281,8 +278,8 @@ test canvRect-6.6 {RectToPoint procedure} -body {
 } -result {1 1 1 1}
 		
 test canvRect-6.7 {RectToPoint procedure} -body {
-	set xId [.c create rectangle 10 20 30 40 -outline {} -fill black]		
-	set yId [.c create rectangle 40 40 50 50 -outline {} -fill black]
+	set xId [.c create rectangle 10 20 30 40 -outline "" -fill black]		
+	set yId [.c create rectangle 40 40 50 50 -outline "" -fill black]
     list [expr {[.c find closest 35 35] eq $xId}] \
 		 [expr {[.c find closest 36 36] eq $yId}] \
 	    [expr {[.c find closest 37 37] eq $yId}] \
@@ -291,11 +288,10 @@ test canvRect-6.7 {RectToPoint procedure} -body {
 	.c delete all
 } -result {1 1 1 1}
 
-
 test canvRect-7.1 {RectToArea procedure} -body {
-	set xId  [.c create rectangle 10 20 30 35 -fill green -outline {}]
+	set xId  [.c create rectangle 10 20 30 35 -fill green -outline ""]
 	set yId [.c create rectangle 40 45 60 70 -fill red -outline black -width 3]
-	set zId [.c create rectangle 100 150 120 170 -fill {} -outline black -width 3]
+	set zId [.c create rectangle 100 150 120 170 -fill "" -outline black -width 3]
     list [expr {[.c find overlapping 20 50 38 60] eq {}}] \
 	    [expr {[.c find overlapping 20 50 39 60] eq $yId}] \
 	    [expr {[.c find overlapping 20 50 70 60] eq $yId}] \
@@ -305,9 +301,9 @@ test canvRect-7.1 {RectToArea procedure} -body {
 	.c delete all
 } -result {1 1 1 1 1}
 test canvRect-7.2 {RectToArea procedure} -body {
-	set xId  [.c create rectangle 10 20 30 35 -fill green -outline {}]
+	set xId  [.c create rectangle 10 20 30 35 -fill green -outline ""]
 	set yId [.c create rectangle 40 45 60 70 -fill red -outline black -width 3]
-	set zId [.c create rectangle 100 150 120 170 -fill {} -outline black -width 3]
+	set zId [.c create rectangle 100 150 120 170 -fill "" -outline black -width 3]
     list [expr {[.c find overlapping 45 20 55 43] eq {}}] \
 	    [expr {[.c find overlapping 45 20 55 44] eq $yId}] \
 	    [expr {[.c find overlapping 45 20 55 80] eq $yId}] \
@@ -317,18 +313,18 @@ test canvRect-7.2 {RectToArea procedure} -body {
 	.c delete all
 } -result {1 1 1 1 1}
 test canvRect-7.3 {RectToArea procedure} -body {
-	set xId  [.c create rectangle 10 20 30 35 -fill green -outline {}]
+	set xId  [.c create rectangle 10 20 30 35 -fill green -outline ""]
 	set yId [.c create rectangle 40 45 60 70 -fill red -outline black -width 3]
-	set zId [.c create rectangle 100 150 120 170 -fill {} -outline black -width 3]
+	set zId [.c create rectangle 100 150 120 170 -fill "" -outline black -width 3]
     list [expr {[.c find overlapping 5 25 9.9 30] eq {}}] \
 		[expr {[.c find overlapping 5 25 10.1 30] eq $xId}]
 } -cleanup {
 	.c delete all
 } -result {1 1}
 test canvRect-7.4 {RectToArea procedure} -body {
-	set xId  [.c create rectangle 10 20 30 35 -fill green -outline {}]
+	set xId  [.c create rectangle 10 20 30 35 -fill green -outline ""]
 	set yId [.c create rectangle 40 45 60 70 -fill red -outline black -width 3]
-	set zId [.c create rectangle 100 150 120 170 -fill {} -outline black -width 3]
+	set zId [.c create rectangle 100 150 120 170 -fill "" -outline black -width 3]
     list [expr {[.c find overlapping 102 152 118 168]  eq {}}]\
 	    [expr {[.c find overlapping 101 152 118 168] eq $zId}] \
 	    [expr {[.c find overlapping 102 151 118 168] eq $zId}] \
@@ -338,9 +334,9 @@ test canvRect-7.4 {RectToArea procedure} -body {
 	.c delete all
 } -result {1 1 1 1 1}
 test canvRect-7.5 {RectToArea procedure} -body {
-	set xId  [.c create rectangle 10 20 30 35 -fill green -outline {}]
+	set xId  [.c create rectangle 10 20 30 35 -fill green -outline ""]
 	set yId [.c create rectangle 40 45 60 70 -fill red -outline black -width 3]
-	set zId [.c create rectangle 100 150 120 170 -fill {} -outline black -width 3]
+	set zId [.c create rectangle 100 150 120 170 -fill "" -outline black -width 3]
     list [expr {[.c find enclosed 20 40 38 80] eq {}}] \
 	    [expr {[.c find enclosed 20 40 39 80] eq {}}] \
 	    [expr {[.c find enclosed 20 40 70 80] eq $yId}] \
@@ -350,9 +346,9 @@ test canvRect-7.5 {RectToArea procedure} -body {
 	.c delete all
 } -result {1 1 1 1 1}
 test canvRect-7.6 {RectToArea procedure} -body {
-	set xId  [.c create rectangle 10 20 30 35 -fill green -outline {}]
+	set xId  [.c create rectangle 10 20 30 35 -fill green -outline ""]
 	set yId [.c create rectangle 40 45 60 70 -fill red -outline black -width 3]
-	set zId [.c create rectangle 100 150 120 170 -fill {} -outline black -width 3]
+	set zId [.c create rectangle 100 150 120 170 -fill "" -outline black -width 3]
     list [expr {[.c find enclosed 20 20 65 43] eq {}}] \
 	    [expr {[.c find enclosed 20 20 65 44] eq {}}] \
 	    [expr {[.c find enclosed 20 20 65 80] eq $yId}] \
@@ -362,11 +358,10 @@ test canvRect-7.6 {RectToArea procedure} -body {
 	.c delete all
 } -result {1 1 1 1 1}
 
-
 test canvRect-8.1 {OvalToArea procedure} -body {
-	set xId  [.c create oval 50 100 200 150 -fill green -outline {}]
+	set xId  [.c create oval 50 100 200 150 -fill green -outline ""]
 	set yId [.c create oval 50 100 200 150 -fill red -outline black -width 3]
-	set zId [.c create oval 50 100 200 150 -fill {} -outline black -width 3]
+	set zId [.c create oval 50 100 200 150 -fill "" -outline black -width 3]
     list [expr {[.c find overlapping 20 120 48 130] eq {}}] \
 	    [expr {[.c find overlapping 20 120 49 130] eq "$yId $zId"}] \
 	    [expr {[.c find overlapping 20 120 50.2 130] eq "$xId $yId $zId"}] \
@@ -379,9 +374,9 @@ test canvRect-8.1 {OvalToArea procedure} -body {
 	.c delete all
 } -result {1 1 1 1 1 1 1 1}
 test canvRect-8.2 {OvalToArea procedure} -body {
-	set xId  [.c create oval 50 100 200 150 -fill green -outline {}]
+	set xId  [.c create oval 50 100 200 150 -fill green -outline ""]
 	set yId [.c create oval 50 100 200 150 -fill red -outline black -width 3]
-	set zId [.c create oval 50 100 200 150 -fill {} -outline black -width 3]
+	set zId [.c create oval 50 100 200 150 -fill "" -outline black -width 3]
     list [expr {[.c find overlapping 100 50 150 98] eq {}}] \
 	    [expr {[.c find overlapping 100 50 150 99] eq "$yId $zId"}] \
 	    [expr {[.c find overlapping 100 50 150 100.1] eq "$xId $yId $zId"}] \
@@ -394,9 +389,9 @@ test canvRect-8.2 {OvalToArea procedure} -body {
 	.c delete all
 } -result {1 1 1 1 1 1 1 1}
 test canvRect-8.3 {OvalToArea procedure} -body {
-	set xId  [.c create oval 50 100 200 150 -fill green -outline {}]
+	set xId  [.c create oval 50 100 200 150 -fill green -outline ""]
 	set yId [.c create oval 50 100 200 150 -fill red -outline black -width 3]
-	set zId [.c create oval 50 100 200 150 -fill {} -outline black -width 3]
+	set zId [.c create oval 50 100 200 150 -fill "" -outline black -width 3]
     list [expr {[.c find overlapping 176 104 177 105] eq {}}] \
 	    [expr {[.c find overlapping 187 116 188 117] eq "$xId $yId"}] \
 	    [expr {[.c find overlapping 192 142 193 143] eq {}}] \
@@ -408,7 +403,6 @@ test canvRect-8.3 {OvalToArea procedure} -body {
 } -cleanup {
 	.c delete all
 } -result {1 1 1 1 1 1 1 1}
-
 
 test canvRect-9.1 {ScaleRectOval procedure} -setup {
     .c delete withtag all
@@ -426,7 +420,6 @@ test canvRect-10.1 {TranslateRectOval procedure} -setup {
     format {%.6g %.6g %.6g %.6g} {*}[.c coords x]
 } -result {200 290 300 340}
 
-
 test canvRect-11.1 {RectOvalToPostscript procedure} -constraints {
      nonPortable macCrash
 } -setup {
@@ -437,9 +430,9 @@ test canvRect-11.1 {RectOvalToPostscript procedure} -constraints {
     # This test is non-portable because different color information
 	# will get generated on different displays (e.g. mono displays
 	# vs. color).
-    .c configure -bd 0 -highlightthickness 0
-    .c create rect 50 60 90 80 -fill black -stipple gray50 -outline {}
-    .c create oval 100 150 200 200 -fill {} -outline #ff0000 -width 5
+    .c configure -borderwidth 0 -highlightthickness 0
+    .c create rect 50 60 90 80 -fill black -stipple gray50 -outline ""
+    .c create oval 100 150 200 200 -fill "" -outline "#ff0000" -width 5
     update
     set x [.c postscript]
     string range $x [string first "-200 -150 translate" $x] end
