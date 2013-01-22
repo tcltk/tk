@@ -20,7 +20,7 @@ namespace eval ::tk::fontchooser {
                        [::msgcat::mc "Bold Italic"] \
                       ]
 
-    set S(sizes) {8 9 10 11 12 14 16 18 20 22 24 26 28 36 48 72}
+    set S(sizes) [list 8 9 10 11 12 14 16 18 20 22 24 26 28 36 48 72]
     set S(strike) 0
     set S(under) 0
     set S(first) 1
@@ -31,9 +31,9 @@ namespace eval ::tk::fontchooser {
     set S(-font) TkDefaultFont
 
     # Canonical versions of font families, styles, etc. for easier searching
-    set S(fonts,lcase) {}
+    set S(fonts,lcase) [list]
     foreach font $S(fonts) { lappend S(fonts,lcase) [string tolower $font]}
-    set S(styles,lcase) {}
+    set S(styles,lcase) [list]
     foreach style $S(styles) { lappend S(styles,lcase) [string tolower $style]}
     set S(sizes,lcase) $S(sizes)
 
@@ -56,7 +56,7 @@ namespace eval ::tk::fontchooser {
 proc ::tk::fontchooser::Show {} {
     variable S
     if {![winfo exists $S(W)]} {
-        Create
+        Create 
         wm transient $S(W) [winfo toplevel $S(-parent)]
         tk::PlaceWindow $S(W) widget $S(-parent)
     }
@@ -78,10 +78,10 @@ proc ::tk::fontchooser::Configure {args} {
         {-command "" "" ""}
     }
 
-    if {[llength $args] == 0} {
-        set result {}
+    if {![llength $args]} {
+        set result [list]
         foreach spec $specs {
-            foreach {name xx yy default} $spec break
+            lassign $spec name xx yy default
             lappend result $name \
                 [expr {[info exists S($name)] ? $S($name) : $default}]
         }
@@ -91,7 +91,7 @@ proc ::tk::fontchooser::Configure {args} {
     }
     if {[llength $args] == 1} {
         set option [lindex $args 0]
-        if {[string equal $option "-visible"]} {
+        if {$option eq "-visible"} {
             return [expr {[winfo exists $S(W)] && [winfo ismapped $S(W)]}]
         } elseif {[info exists S($option)]} {
             return $S($option)
@@ -113,7 +113,7 @@ proc ::tk::fontchooser::Configure {args} {
     if {[string trim $S(-title)] eq ""} {
         set S(-title) [::msgcat::mc "Font"]
     }
-    if {[winfo exists $S(W)] && [lsearch $args -font] != -1} {
+    if {[winfo exists $S(W)] && ("-font" in $args)} {
 	Init $S(-font)
 	event generate $S(-parent) <<TkFontchooserFontChanged>>
     }
@@ -132,7 +132,7 @@ proc ::tk::fontchooser::Create {} {
     # Now build the dialog
     if {![winfo exists $S(W)]} {
         toplevel $S(W) -class TkFontDialog
-        if {[package provide tcltest] ne {}} {set ::tk_dialog $S(W)}
+        if {[package provide tcltest] ne ""} {set ::tk_dialog $S(W)}
         wm withdraw $S(W)
         wm title $S(W) $S(-title)
         wm transient $S(W) [winfo toplevel $S(-parent)]
@@ -275,11 +275,11 @@ proc ::tk::::fontchooser::Done {ok} {
     if {! $ok} {
         set S(result) ""
     }
-    trace vdelete S(size) w [namespace code [list Tracer]]
-    trace vdelete S(style) w [namespace code [list Tracer]]
-    trace vdelete S(font) w [namespace code [list Tracer]]
+    trace remove variable S(size)  write [namespace code [list Tracer]]
+    trace remove variable S(style) write [namespace code [list Tracer]]
+    trace remove variable S(font)  write [namespace code [list Tracer]]
     destroy $S(W)
-    if {$ok && $S(-command) ne ""} {
+    if {$ok && ($S(-command) ne "")} {
         uplevel #0 $S(-command) [list $S(result)]
     }
 }
@@ -309,7 +309,7 @@ proc ::tk::fontchooser::Apply {} {
 proc ::tk::fontchooser::Init {{defaultFont ""}} {
     variable S
 
-    if {$S(first) || $defaultFont ne ""} {
+    if {$S(first) || ($defaultFont ne "")} {
         if {$defaultFont eq ""} {
             set defaultFont [[entry .___e] cget -font]
             destroy .___e
@@ -320,7 +320,7 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
         set S(strike) $F(-overstrike)
         set S(under) $F(-underline)
         set S(style) "Regular"
-        if {$F(-weight) eq "bold" && $F(-slant) eq "italic"} {
+        if {($F(-weight) eq "bold") && ($F(-slant) eq "italic")} {
             set S(style) "Bold Italic"
         } elseif {$F(-weight) eq "bold"} {
             set S(style) "Bold"
@@ -382,7 +382,7 @@ proc ::tk::fontchooser::Tracer {var1 var2 op} {
             # unless in the font size list
             set n [lsearch -glob $S(${var}s,lcase) "$value*"]
             set bad 1
-            if {$var ne "size" || ! [string is double -strict $value]} {
+            if {($var ne "size") || (![string is double -strict $value])} {
                 set nstate disabled
             }
         }
@@ -434,8 +434,8 @@ proc ::tk::fontchooser::ttk_slistbox {w args} {
         grid $f.list $f.vs -sticky news
         grid rowconfigure $f 0 -weight 1
         grid columnconfigure $f 0 -weight 1
-        interp hide {} $w
-        interp alias {} $w {} $f.list
+        interp hide "" $w
+        interp alias "" $w "" $f.list
     } err opt]} {
         destroy $f
         return -options $opt $err

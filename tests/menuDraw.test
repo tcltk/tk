@@ -19,7 +19,6 @@ test menuDraw-1.1 {TkMenuInitializeDrawingFields} -setup {
     deleteWindows
 } -result {.m1}
 
-
 test menuDraw-2.1 {TkIntializeMenuEntryDrawingFields} -setup {
     deleteWindows
 } -body {
@@ -29,14 +28,12 @@ test menuDraw-2.1 {TkIntializeMenuEntryDrawingFields} -setup {
     deleteWindows
 } -result {}
 
-
 test menuDraw-3.1 {TkMenuFreeDrawOptions} -setup {
     deleteWindows
 } -body {
     menu .m1
     destroy .m1
 } -result {}
-
 
 test menuDraw-4.1 {TkMenuEntryFreeDrawOptions} -setup {
     deleteWindows
@@ -54,7 +51,6 @@ test menuDraw-4.2 {TkMenuEntryFreeDrawOptions} -setup {
     destroy .m1
 } -result {}
 
-
 test menuDraw-5.1 {TkMenuConfigureDrawOptions - new menu} -setup {
     deleteWindows
 } -body {
@@ -66,7 +62,7 @@ test menuDraw-5.2 {TkMenuConfigureDrawOptions - old menu} -setup {
     deleteWindows
 } -body {
     menu .m1
-    .m1 configure -fg red
+    .m1 configure -foreground red
 } -cleanup {
     deleteWindows
 } -result {}
@@ -77,7 +73,6 @@ test menuDraw-5.3 {TkMenuConfigureDrawOptions - no disabledFg} -setup {
 } -cleanup {
     deleteWindows
 } -result {.m1}  
-
 
 test menuDraw-6.1 {TkMenuConfigureEntryDrawOptions - no tkfont specified} -setup {
     deleteWindows
@@ -218,7 +213,6 @@ test menuDraw-6.16 {TkMenuConfigureEntryDrawOptions - indicatorGC disposal} -set
     deleteWindows
 } -result {}
 
-
 test menuDraw-7.1 {TkEventuallyRecomputeMenu} -setup {
     deleteWindows
 } -body {
@@ -241,7 +235,6 @@ test menuDraw-7.2 {TkEventuallyRecomputeMenu - update pending} -setup {
     deleteWindows
 } -result {}
 
-
 test menuDraw-8.1 {TkRecomputeMenu} -constraints {
     win userInteraction
 } -setup {
@@ -255,11 +248,10 @@ test menuDraw-8.1 {TkRecomputeMenu} -constraints {
     deleteWindows
 } -result {}
 
-
 test menuDraw-9.1 {TkEventuallyRedrawMenu - entry test} -setup {
     deleteWindows
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     set foo 0
     .m1 add radiobutton -variable foo -label test
@@ -318,7 +310,6 @@ test menuDraw-10.4 {ComputeMenuGeometry - resize not necessary} -setup {
 } -cleanup {
     deleteWindows
 } -result {}
-
 
 test menuDraw-11.1 {TkMenuSelectImageProc - entry selected; redraw not pending} -constraints {
     testImageType 
@@ -475,7 +466,6 @@ test menuDraw-12.7 {Display menu - extra space at end of menu} -setup {
     deleteWindows
 } -result {}
 
-
 test menuDraw-13.1 {TkMenuEventProc - Expose} -setup {
     deleteWindows
 } -body {
@@ -517,7 +507,6 @@ test menuDraw-13.5 {TkMenuEventProc - nothing pending} -setup {
     destroy .m1
 } -result {}
 
-
 test menuDraw-14.1 {TkMenuImageProc} -constraints testImageType -setup {
     deleteWindows
 } -body {
@@ -542,7 +531,6 @@ test menuDraw-14.2 {TkMenuImageProc} -constraints testImageType -setup {
     deleteWindows
 } -result {}
 
-
 test menuDraw-15.1 {TkPostTearoffMenu - Basic posting} -setup {
     deleteWindows
 } -body {
@@ -565,7 +553,7 @@ test menuDraw-15.2 {TkPostTearoffMenu - Deactivation} -setup {
 test menuDraw-15.3 {TkPostTearoffMenu - post command} -setup {
     deleteWindows
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1 -postcommand "set foo .m1"
     .m1 add command -label "foo"
     list [catch {tk::TearOffMenu .m1 40 40}] [set foo] [unset foo] [destroy .m1]
@@ -597,7 +585,6 @@ test menuDraw-15.6 {TkPostTearoffMenu - tearoff off right} -setup {
 } -cleanup {
     deleteWindows
 } -returnCodes ok -match glob -result *
-
 
 test menuDraw-16.1 {TkPostSubmenu} -constraints nonUnixUserInteraction -setup {
     deleteWindows
@@ -673,7 +660,6 @@ test menuDraw-16.6 {TkPostSubMenu} -constraints {
     deleteWindows
 } -result {}
 
-
 test menuDraw-17.1 {AdjustMenuCoords - menubar} -constraints unix -setup {
     deleteWindows
 } -body {
@@ -683,7 +669,7 @@ test menuDraw-17.1 {AdjustMenuCoords - menubar} -constraints unix -setup {
     .m2 add command -label foo
     . configure -menu .m1
     foreach w [winfo children .] {
-        if {[$w cget -type] == "menubar"} {
+        if {[$w cget -type] eq "menubar"} {
             break
         }
     }

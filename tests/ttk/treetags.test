@@ -1,6 +1,7 @@
 
 package require Tk
-package require tcltest ; namespace import -force tcltest::*
+package require tcltest
+namespace import -force tcltest::*
 loadTestedCommands
 
 ### treeview tag invariants:

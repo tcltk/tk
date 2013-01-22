@@ -1,5 +1,6 @@
 package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require tcltest
+namespace import -force tcltest::*
 loadTestedCommands
 
 proc propagate-geometry {} { update idletasks }
@@ -88,7 +89,7 @@ test panedwindow-2.2 "..., cont'd" -body {
     set w3 [winfo width .]
     set rw3 [winfo reqwidth .pw]
 
-    expr {$w3 == $w2 && $rw3 < $rw2}
+    expr {($w3 == $w2) && ($rw3 < $rw2)}
     # problem: [winfo reqwidth] shrinks, but sashes haven't moved
     # since we haven't gotten a ConfigureNotify.
     # How to (a) check for this, and (b) fix it?
@@ -124,9 +125,7 @@ test panedwindow-3.2 "add pane -- errors" -body {
     .pw add [ttk::label .pw.l] -weight -1
 } -returnCodes 1 -match glob -result "-weight must be nonnegative"
 
-
 test panedwindow-3.end "cleanup" -body { destroy .pw }
-
 
 test panedwindow-4.1 "forget" -body {
     pack [ttk::panedwindow .pw -orient vertical] -expand true -fill both
@@ -201,7 +200,7 @@ test panedwindow-5.1 "Propagate Map/Unmap state to children" -body {
 proc sashpositions {pw} {
     set positions [list]
     set npanes [llength [winfo children $pw]]
-    for {set i 0} {$i < $npanes - 1} {incr i} {
+    for {set i 0} {$i < ($npanes - 1)} {incr i} {
     	lappend positions [$pw sashpos $i]
     }
     return $positions
@@ -219,7 +218,7 @@ test paned-sashpos-setup "Setup for sash position test" -body {
 
     propagate-geometry
     list [winfo reqwidth .pw] [winfo reqheight .pw]
-} -result [list 20 [expr {20*4 + 5*3}]]
+} -result [list 20 [expr {(20 * 4) + (5 * 3)}]]
 
 test paned-sashpos-attempt-restore "Attempt to set sash positions" -body {
     # This is not expected to succeed, since .pw isn't large enough yet.

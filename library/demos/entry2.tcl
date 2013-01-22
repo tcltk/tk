@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .entry2
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Entry Demonstration (with scrollbars)"
 wm iconname $w "entry2"

@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .tree
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Directory Browser"
 wm iconname $w "tree"
@@ -51,12 +51,12 @@ proc populateTree {tree node} {
 	} elseif {$type eq "file"} {
 	    set size [file size $f]
 	    ## Format the file size nicely
-	    if {$size >= 1024*1024*1024} {
-		set size [format %.1f\ GB [expr {$size/1024/1024/1024.}]]
-	    } elseif {$size >= 1024*1024} {
-		set size [format %.1f\ MB [expr {$size/1024/1024.}]]
+	    if {$size >= (1024 ** 3)} {
+		set size [format %.1f\ GB [expr {$size / (1024.0 ** 3)}]]
+	    } elseif {$size >= (1024 ** 2)} {
+		set size [format %.1f\ MB [expr {$size / (1024.0 ** 2)}]]
 	    } elseif {$size >= 1024} {
-		set size [format %.1f\ kB [expr {$size/1024.}]]
+		set size [format %.1f\ kB [expr {$size / 1024.0}]]
 	    } else {
 		append size " bytes"
 	    }

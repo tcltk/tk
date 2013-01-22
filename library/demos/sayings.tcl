@@ -11,7 +11,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .sayings
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Listbox Demonstration (well-known sayings)"
 wm iconname $w "sayings"
@@ -27,7 +27,6 @@ pack $btns -side bottom -fill x
 frame $w.frame -borderwidth 10
 pack $w.frame -side top -expand yes -fill both -padx 1c
 
-
 scrollbar $w.frame.yscroll -command "$w.frame.list yview"
 scrollbar $w.frame.xscroll -orient horizontal \
     -command "$w.frame.list xview"
@@ -39,6 +38,5 @@ grid $w.frame.yscroll -row 0 -column 1 -rowspan 1 -columnspan 1 -sticky news
 grid $w.frame.xscroll -row 1 -column 0 -rowspan 1 -columnspan 1 -sticky news
 grid rowconfig    $w.frame 0 -weight 1 -minsize 0
 grid columnconfig $w.frame 0 -weight 1 -minsize 0
-
 
 $w.frame.list insert 0 "Don't speculate, measure" "Waste not, want not" "Early to bed and early to rise makes a man healthy, wealthy, and wise" "Ask not what your country can do for you, ask what you can do for your country" "I shall return" "NOT" "A picture is worth a thousand words" "User interfaces are hard to build" "Thou shalt not steal" "A penny for your thoughts" "Fool me once, shame on you;  fool me twice, shame on me" "Every cloud has a silver lining" "Where there's smoke there's fire" "It takes one to know one" "Curiosity killed the cat" "Take this job and shove it" "Up a creek without a paddle" "I'm mad as hell and I'm not going to take it any more" "An apple a day keeps the doctor away" "Don't look a gift horse in the mouth" "Measure twice, cut once"

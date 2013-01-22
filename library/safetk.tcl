@@ -63,8 +63,8 @@ proc ::safe::loadTk {} {}
 
 ::tcl::OptProc ::safe::loadTk {
     {slave -interp "name of the slave interpreter"}
-    {-use  -windowId {} "window Id to use (new toplevel otherwise)"}
-    {-display -displayName {} "display name to use (current one otherwise)"}
+    {-use  -windowId "" "window Id to use (new toplevel otherwise)"}
+    {-display -displayName "" "display name to use (current one otherwise)"}
 } {
     set displayGiven [::tcl::OptProcArgGiven "-display"]
     if {!$displayGiven} {
@@ -89,7 +89,7 @@ proc ::safe::loadTk {} {}
 
 	# set our delete hook (slave arg is added by interpDelete)
 	# to clean up both window related code and tkInit(slave)
-	set state(cleanupHook) [list tkDelete {} $w]
+	set state(cleanupHook) [list tkDelete "" $w]
     } else {
 	# set our delete hook (slave arg is added by interpDelete)
 	# to clean up tkInit(slave)
@@ -125,7 +125,7 @@ proc ::safe::loadTk {} {}
     # Prepares the slave for tk with those parameters
     tkInterpInit $slave [list "-use" $use "-display" $display]
 
-    load {} Tk $slave
+    load "" Tk $slave
 
     return $slave
 }

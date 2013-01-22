@@ -14,7 +14,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 imageInit
 
-proc bogusTrace args {
+proc bogusTrace {args} {
     error "trace aborted"
 }
 option clear
@@ -28,11 +28,11 @@ test winbutton-1.1 {TkpComputeButtonGeometry procedure} -constraints {
 } -body {
     image create test image1
     image1 changed 0 0 0 0 60 40
-    label .b1 -image image1 -bd 4 -padx 0 -pady 2
-    button .b2 -image image1 -bd 4 -padx 0 -pady 2
-    checkbutton .b3 -image image1 -bd 4 -padx 1 -pady 1 \
+    label .b1 -image image1 -borderwidth 4 -padx 0 -pady 2
+    button .b2 -image image1 -borderwidth 4 -padx 0 -pady 2
+    checkbutton .b3 -image image1 -borderwidth 4 -padx 1 -pady 1 \
         -font {{MS Sans Serif} 8}
-    radiobutton .b4 -image image1 -bd 4 -padx 2 -pady 0 \
+    radiobutton .b4 -image image1 -borderwidth 4 -padx 2 -pady 0 \
         -font {{MS Sans Serif} 8}
     pack .b1 .b2 .b3 .b4
     update
@@ -50,11 +50,11 @@ test winbutton-1.1 {TkpComputeButtonGeometry procedure} -constraints {
 test winbutton-1.2 {TkpComputeButtonGeometry procedure} -constraints win -setup {
     deleteWindows
 } -body {
-    label .b1 -bitmap question -bd 3 -padx 0 -pady 2
-    button .b2 -bitmap question -bd 3 -padx 0 -pady 2
-    checkbutton .b3 -bitmap question -bd 3 -padx 1 -pady 1 \
+    label .b1 -bitmap question -borderwidth 3 -padx 0 -pady 2
+    button .b2 -bitmap question -borderwidth 3 -padx 0 -pady 2
+    checkbutton .b3 -bitmap question -borderwidth 3 -padx 1 -pady 1 \
         -font {{MS Sans Serif} 8}
-    radiobutton .b4 -bitmap question -bd 3 -padx 2 -pady 0 \
+    radiobutton .b4 -bitmap question -borderwidth 3 -padx 2 -pady 0 \
         -font {{MS Sans Serif} 8}
     pack .b1 .b2 .b3 .b4
     update
@@ -71,11 +71,11 @@ test winbutton-1.2 {TkpComputeButtonGeometry procedure} -constraints win -setup 
 test winbutton-1.3 {TkpComputeButtonGeometry procedure} -constraints win -setup {
     deleteWindows
 } -body {
-    label .b1 -bitmap question -bd 3 -highlightthickness 4
-    button .b2 -bitmap question -bd 3 -highlightthickness 0
-    checkbutton .b3 -bitmap question -bd 3 -highlightthickness 1 \
+    label .b1 -bitmap question -borderwidth 3 -highlightthickness 4
+    button .b2 -bitmap question -borderwidth 3 -highlightthickness 0
+    checkbutton .b3 -bitmap question -borderwidth 3 -highlightthickness 1 \
         -indicatoron 0
-    radiobutton .b4 -bitmap question -bd 3 -indicatoron false
+    radiobutton .b4 -bitmap question -borderwidth 3 -indicatoron false
     pack .b1 .b2 .b3 .b4
     update
     # with patch 463234 with native L&F enabled, this returns:
@@ -93,10 +93,10 @@ test winbutton-1.4 {TkpComputeButtonGeometry procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 -font {{MS Sans Serif} 8}
-    button .b2 -text Xagqpim -bd 2 -padx 0 -pady 2 -font {{MS Sans Serif} 8}
-    checkbutton .b3 -text Xagqpim -bd 2 -padx 1 -pady 1 -font {{MS Sans Serif} 8}
-    radiobutton .b4 -text Xagqpim -bd 2 -padx 2 -pady 0 -font {{MS Sans Serif} 8}
+    label .b1 -text Xagqpim -borderwidth 2 -padx 0 -pady 2 -font {{MS Sans Serif} 8}
+    button .b2 -text Xagqpim -borderwidth 2 -padx 0 -pady 2 -font {{MS Sans Serif} 8}
+    checkbutton .b3 -text Xagqpim -borderwidth 2 -padx 1 -pady 1 -font {{MS Sans Serif} 8}
+    radiobutton .b4 -text Xagqpim -borderwidth 2 -padx 2 -pady 0 -font {{MS Sans Serif} 8}
     pack .b1 .b2 .b3 .b4
     update
     list [winfo reqwidth .b1] [winfo reqheight .b1] \
@@ -140,10 +140,10 @@ test winbutton-1.7 {TkpComputeButtonGeometry procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 -width 10
-    button .b2 -text Xagqpim -bd 2 -padx 0 -pady 2 -height 5
-    checkbutton .b3 -text Xagqpim -bd 2 -padx 1 -pady 1 -width 20 -height 2
-    radiobutton .b4 -text Xagqpim -bd 2 -padx 2 -pady 0 -width 4
+    label .b1 -text Xagqpim -borderwidth 2 -padx 0 -pady 2 -width 10
+    button .b2 -text Xagqpim -borderwidth 2 -padx 0 -pady 2 -height 5
+    checkbutton .b3 -text Xagqpim -borderwidth 2 -padx 1 -pady 1 -width 20 -height 2
+    radiobutton .b4 -text Xagqpim -borderwidth 2 -padx 2 -pady 0 -width 4
     pack .b1 .b2 .b3 .b4
     update
     list [winfo reqwidth .b1] [winfo reqheight .b1] \
@@ -159,13 +159,13 @@ test winbutton-1.8 {TkpComputeButtonGeometry procedure} -constraints {
 } -setup {
     deleteWindows
 } -body {
-    label .b1 -text Xagqpim -bd 2 -padx 0 -pady 2 \
+    label .b1 -text Xagqpim -borderwidth 2 -padx 0 -pady 2 \
     -highlightthickness 4
-    button .b2 -text Xagqpim -bd 2 -padx 0 -pady 2 \
+    button .b2 -text Xagqpim -borderwidth 2 -padx 0 -pady 2 \
     -highlightthickness 0
-    checkbutton .b3 -text Xagqpim -bd 2 -padx 1 -pady 1  \
+    checkbutton .b3 -text Xagqpim -borderwidth 2 -padx 1 -pady 1  \
     -highlightthickness 1 -indicatoron no
-    radiobutton .b4 -text Xagqpim -bd 2 -padx 2 -pady 0 -indicatoron 0
+    radiobutton .b4 -text Xagqpim -borderwidth 2 -padx 2 -pady 0 -indicatoron 0
     pack .b1 .b2 .b3 .b4
     update
     list [winfo reqwidth .b1] [winfo reqheight .b1] \

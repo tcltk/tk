@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .menu
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Menu Demonstration"
 wm iconname $w "menu"
@@ -18,7 +18,10 @@ positionWindow $w
 
 label $w.msg -font $font -wraplength 4i -justify left 
 if {[tk windowingsystem] eq "aqua"} {
-    catch {set origUseCustomMDEF $::tk::mac::useCustomMDEF; set ::tk::mac::useCustomMDEF 1}
+    catch {
+        set origUseCustomMDEF $::tk::mac::useCustomMDEF
+        set ::tk::mac::useCustomMDEF 1
+    }
     $w.msg configure -text "This window has a menubar with cascaded menus.  You can invoke entries with an accelerator by typing Command+x, where \"x\" is the character next to the command key symbol. The rightmost menu can be torn off into a palette by selecting the first item in the menu."
 } else {
     $w.msg configure -text "This window contains a menubar with cascaded menus.  You can post a menu from the keyboard by typing Alt+x, where \"x\" is the character underlined on the menu.  You can then traverse among the menus using the arrow keys.  When a menu is posted, you can invoke the current entry by typing space, or you can invoke any entry by typing its underlined character.  If a menu entry has an accelerator, you can invoke the entry without posting the menu just by typing the accelerator. The rightmost menu can be torn off into a palette by selecting the first item in the menu."
@@ -129,7 +132,7 @@ $m entryconfigure 2 -columnbreak 1
 set m $w.menu.more
 $w.menu add cascade -label "More" -menu $m -underline 0
 menu $m -tearoff 0
-foreach i {{An entry} {Another entry} {Does nothing} {Does almost nothing} {Make life meaningful}} {
+foreach i {"An entry" "Another entry" "Does nothing" "Does almost nothing" "Make life meaningful"} {
     $m add command -label $i -command [list puts "You invoked \"$i\""]
 }
 $m entryconfigure "Does almost nothing" -bitmap questhead -compound left \
@@ -150,7 +153,7 @@ foreach i {red orange yellow green blue} {
 $w configure -menu $w.menu
 
 bind Menu <<MenuSelect>> {
-    global $menustatus
+    global [set menustatus]
     if {[catch {%W entrycget active -label} label]} {
 	set label "    "
     }

@@ -12,7 +12,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 # Canvas used in 1.* - 17.* tests
-canvas .c -width 400 -height 300 -bd 2 -relief sunken
+canvas .c -width 400 -height 300 -borderwidth 2 -relief sunken
 pack .c
 update
 
@@ -92,7 +92,6 @@ test canvasText-1.19 {configuration options: bounding of "angle"} -body {
 } -result {30.0 330.0 0.0}
 .c delete test
 
-
 test canvText-2.1 {CreateText procedure: args} -body {
     .c create text
 } -returnCodes {error} -result {wrong # args: should be ".c create text coords ?arg ...?"}
@@ -117,7 +116,6 @@ test canvText-2.5 {CreateText procedure} -body {
 } -cleanup {
     .c delete x
 } -result {0.0 0.0}
-
 
 test canvText-3.1 {TextCoords procedure} -body {
     .c create text 20 20 -tag test
@@ -167,7 +165,6 @@ test canvText-3.6 {TextCoords procedure} -setup {
 } -cleanup {
     .c delete test
 } -returnCodes {error} -result {wrong # coordinates: expected 0 or 2, got 3}
-
 
 test canvText-4.1 {ConfigureText procedure} -setup {
     .c create text 20 20 -tag test
@@ -252,13 +249,11 @@ test canvText-4.6 {ConfigureText procedure: adjust cursor} -setup {
 	.c delete test
 } -result {4}
 
-
 test canvText-5.1 {ConfigureText procedure: adjust cursor} -body {
     .c create text 10 10 -tag x -fill blue -font "times 40" -stipple gray50 \
 	-text "xyz"
     .c delete x
 } -result {}
-
 
 test canvText-6.1 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c delete test
@@ -491,7 +486,7 @@ test canvText-7.9 {DisplayText procedure: select end} -setup {
     .t.c select from $id 0
     .t.c select to $id end
     update
-    #catch {destroy .t}
+    #destroy .t
     update
 } -cleanup {
     destroy .t
@@ -688,7 +683,6 @@ test canvText-9.15 {TextInsert procedure: cursor doesn't move} -body {
 } -result {5}
 .c delete test
 
-
 test canvText-10.1 {TextToPoint procedure} -body {
     .c create text 0 0 -tag test
     .c itemconfig test -text 0 -anchor center
@@ -696,7 +690,6 @@ test canvText-10.1 {TextToPoint procedure} -body {
 } -cleanup {
 	.c delete test
 } -result {0}
-
 
 test canvText-11.1 {TextToArea procedure} -setup {
     .c create text 0 0 -tag test
@@ -721,7 +714,6 @@ test canvText-11.2 {TextToArea procedure} -setup {
 	.c delete test
 } -result {}
 
-
 test canvText-12.1 {ScaleText procedure} -body {
     .c create text 100 100 -tag test
     .c scale all 50 50 2 2
@@ -730,7 +722,6 @@ test canvText-12.1 {ScaleText procedure} -body {
 	.c delete test
 } -result {150 150}
 
-
 test canvText-13.1 {TranslateText procedure} -body {
 	.c create text 100 100 -tag test
     .c move all 10 10
@@ -738,7 +729,6 @@ test canvText-13.1 {TranslateText procedure} -body {
 } -cleanup {
 	.c delete test
 } -result {110 110}
-
 
 test canvText-14.1 {GetTextIndex procedure} -setup {
     .c create text 0 0 -tag test
@@ -850,7 +840,7 @@ end
     set font {Courier 12 italic}
     set ax [font measure $font 0]
     set ay [font metrics $font -linespace]
-    .c config -height 300 -highlightthickness 0 -bd 0
+    .c config -height 300 -highlightthickness 0 -borderwidth 0
     update
     .c create text 100 100 -tags test
     .c itemconfig test -font $font -text "00000000" -width [expr 3*$ax]
@@ -877,7 +867,7 @@ test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} -setup {
 
 test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup {
     destroy .c
-    set c [canvas .c -bg black -width 964]
+    set c [canvas .c -background black -width 964]
     pack $c
     $c delete all
     after 100 "set done 1"; vwait done

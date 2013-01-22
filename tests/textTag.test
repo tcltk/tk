@@ -304,7 +304,6 @@ test textTag-1.35 {configuration options} -constraints {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
 } -returnCodes error -result {expected boolean value but got "stupid"}
 
-
 test textTag-2.1 {TkTextTagCmd - "add" option} -constraints {
 	haveCourier12 
 } -body {
@@ -418,7 +417,6 @@ test textTag-2.14 {tag add before -startline - Bug 1615425} haveCourier12 {
     set res 1
 } {1}
 
-
 test textTag-3.1 {TkTextTagCmd - "bind" option} -constraints {
 	haveCourier12 
 } -body {
@@ -500,7 +498,6 @@ test textTag-3.10 {TkTextTagCmd - "bind" option} -constraints {
     .t tag delete x
 } -returnCodes error -result {no event type or button # or keysym}
 
-
 test textTag-4.1 {TkTextTagCmd - "cget" option} -constraints {
 	haveCourier12 
 } -body {
@@ -531,7 +528,6 @@ test textTag-4.5 {TkTextTagCmd - "cget" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {red}
-
 
 test textTag-5.1 {TkTextTagCmd - "configure" option} -constraints {
 	haveCourier12 
@@ -714,7 +710,6 @@ test textTag-5.22 {TkTextTagCmd - "configure" option} -constraints {
     .t cget -selectborderwidth
 } -result {}
 
-
 test textTag-6.1 {TkTextTagCmd - "delete" option} -constraints {
     haveCourier12 
 } -body {
@@ -759,7 +754,6 @@ test textTag-6.5 {TkTextTagCmd - "delete" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {}
-
 
 test textTag-7.1 {TkTextTagCmd - "lower" option} -constraints {
     haveCourier12 
@@ -819,7 +813,6 @@ test textTag-7.6 {TkTextTagCmd - "lower" option} -constraints {
     .t tag delete {*}[.t tag names]
 } -result {sel b a c d}
 
-
 test textTag-8.1 {TkTextTagCmd - "names" option} -constraints {
     haveCourier12 
 } -body {
@@ -855,7 +848,6 @@ test textTag-8.3 {TkTextTagCmd - "names" option} -constraints {
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -result {c {a b}}
-
 
 test textTag-9.1 {TkTextTagCmd - "nextrange" option} -constraints {
     haveCourier12 
@@ -1002,7 +994,6 @@ test textTag-9.14 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {}
-
 
 test textTag-10.1 {TkTextTagCmd - "prevrange" option} -constraints {
     haveCourier12 
@@ -1156,7 +1147,6 @@ test textTag-10.14 {TkTextTagCmd - "prevrange" option} -constraints {
     .t tag delete x
 } -result {}
 
-
 test textTag-11.1 {TkTextTagCmd - "raise" option} -constraints {
     haveCourier12 
 } -body {
@@ -1215,7 +1205,6 @@ test textTag-11.6 {TkTextTagCmd - "raise" option} -constraints {
     .t tag delete {*}[.t tag names]
 } -result {sel b c a d}
 
-
 test textTag-12.1 {TkTextTagCmd - "ranges" option} -constraints {
     haveCourier12 
 } -body {
@@ -1251,7 +1240,6 @@ test textTag-12.4 {TkTextTagCmd - "ranges" option} -constraints {
     .t tag delete x
 } -result {1.0 3.0 4.0 8.0}
 
-
 test textTag-13.1 {TkTextTagCmd - "remove" option} -constraints {
     haveCourier12 
 } -body {
@@ -1284,7 +1272,6 @@ test textTag-13.3 {TkTextTagCmd - "remove" option} -constraints {
 } -cleanup {
     destroy .t.e
 } -result {Text}
-
 
 test textTag-14.1 {SortTags} -constraints haveCourier12 -setup {
     .t tag delete a b c d
@@ -1334,17 +1321,15 @@ test textTag-14.4 {SortTags} -constraints haveCourier12 -setup {
     .t tag delete {*}[.t tag names]
 } -result {x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 x21 x22 x23 x24 x25 x26 x27 x28 x29}
 
-
-
 set c [.t bbox 2.1]
-set x1 [expr [lindex $c 0] + [lindex $c 2]/2]
-set y1 [expr [lindex $c 1] + [lindex $c 3]/2]
+set x1 [expr {[lindex $c 0] + ([lindex $c 2] / 2)}]
+set y1 [expr {[lindex $c 1] + ([lindex $c 3] / 2)}]
 set c [.t bbox 3.2]
-set x2 [expr [lindex $c 0] + [lindex $c 2]/2]
-set y2 [expr [lindex $c 1] + [lindex $c 3]/2]
+set x2 [expr {[lindex $c 0] + ([lindex $c 2] / 2)}]
+set y2 [expr {[lindex $c 1] + ([lindex $c 3] / 2)}]
 set c [.t bbox 4.3]
-set x3 [expr [lindex $c 0] + [lindex $c 2]/2]
-set y3 [expr [lindex $c 1] + [lindex $c 3]/2]
+set x3 [expr {[lindex $c 0] + ([lindex $c 2] / 2)}]
+set y3 [expr {[lindex $c 1] + ([lindex $c 3] / 2)}]
 
 test textTag-15.1 {TkTextBindProc} -constraints haveCourier12 -setup {
     .t tag delete x y
@@ -1430,7 +1415,6 @@ test textTag-15.3 {TkTextBindProc} -constraints haveCourier12 -setup {
 } -cleanup {
     .t tag delete x y
 } -result {x-enter | x-down | | | x-up | x-leave y-enter}
-
 
 test textTag-16.1 {TkTextPickCurrent procedure} -constraints {
     haveCourier12 
@@ -1587,7 +1571,6 @@ test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
     .t tag delete a big
 } -result {3.1}
 
-
 test textTag-17.1 {insert procedure inserts tags} -setup {
     .t delete 1.0 end
 } -body {
@@ -1597,7 +1580,6 @@ test textTag-17.1 {insert procedure inserts tags} -setup {
     .t insert end abcd {x} \n {} efgh {y} \n {}
     .t dump -tag 1.0 end
 } -result {tagon x 1.0 tagoff x 1.4 tagon y 2.0 tagoff y 2.4}
-
 
 test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     destroy .t

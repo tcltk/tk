@@ -16,13 +16,13 @@ option add *takeFocus 1
 option add *highlightThickness 2
 . configure -takefocus 1 -highlightthickness 2
 
-proc setup1 w {
-    if {$w == "."} {
+proc setup1 {w} {
+    if {$w eq "."} {
         set w ""
     }
     foreach i {a b c d} {
         destroy $w.$i
-        frame  $w.$i -width 200 -height 50 -bd 2 -relief raised
+        frame  $w.$i -width 200 -height 50 -borderwidth 2 -relief raised
         pack $w.$i
     }
     .b configure -width 0 -height 0
@@ -36,8 +36,8 @@ proc setup1 w {
     }
 }
 
-proc cleanup1 w {
-    if {$w == "."} {
+proc cleanup1 {w} {
+    if {$w eq "."} {
         set w ""
     }
     foreach i {a b c d} {
@@ -47,7 +47,6 @@ proc cleanup1 w {
         destroy $w.b.$i
     }
 }
-
 
 test focusTcl-1.1 {tk_focusNext procedure, no children} -body {
     tk_focusNext .
@@ -133,7 +132,6 @@ test focusTcl-1.12 {tk_focusNext procedure, basic tree traversal} -body {
     cleanup1 .
 } -result {.a}
 
-
 test focusTcl-2.1 {tk_focusNext procedure, toplevels} -setup {
     deleteWindows
 } -body {
@@ -209,7 +207,6 @@ test focusTcl-2.5 {tk_focusNext procedure, toplevels} -setup {
     deleteWindows
 } -result {.t}
 
-
 test focusTcl-3.1 {tk_focusPrev procedure, no children} -body {
     tk_focusPrev .
 } -result {.}
@@ -262,7 +259,6 @@ test focusTcl-3.9 {tk_focusPrev procedure, basic tree traversal} -body {
 } -cleanup {
     cleanup1 .
 } -result {.}
-
 
 deleteWindows
 setup1 .
@@ -351,7 +347,6 @@ test focusTcl-4.5 {tk_focusPrev procedure, toplevels} -setup {
     deleteWindows
 } -result {.t.b.z}
 
-
 test focusTcl-5.1 {tkFocusOK procedure, -takefocus 0} -body {
     setup1 .
     .b.x configure -takefocus 0
@@ -372,9 +367,9 @@ test focusTcl-5.2 {tkFocusOK procedure, -takefocus 1} -body {
 } -result {.c .c}
 test focusTcl-5.3 {tkFocusOK procedure, -takefocus procedure} -body {
     proc t w {
-    if {$w == ".b.x"} {
+    if {$w eq ".b.x"} {
         return 1
-    } elseif {$w == ".b.y"} {
+    } elseif {$w eq ".b.y"} {
         return ""
     }
     return 0
@@ -472,7 +467,6 @@ test focusTcl-5.11 {tkFocusOK procedure, -takefocus "", check for bindings} -bod
     cleanup1 .
     bind Frame <Key> {}
 } -result {.a .b}
-
 
 . configure -takefocus 0 -highlightthickness 0
 option clear

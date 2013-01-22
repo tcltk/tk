@@ -20,7 +20,7 @@
 # Arguments:
 # w -		Name of a window.
 
-proc ::tk_focusNext w {
+proc ::tk_focusNext {w} {
     set cur $w
     while {1} {
 
@@ -55,7 +55,7 @@ proc ::tk_focusNext w {
 	    set children [winfo children $parent]
 	    set i [lsearch -exact $children $cur]
 	}
-	if {$w eq $cur || [tk::FocusOK $cur]} {
+	if {($w eq $cur) || [tk::FocusOK $cur]} {
 	    return $cur
 	}
     }
@@ -72,7 +72,7 @@ proc ::tk_focusNext w {
 # Arguments:
 # w -		Name of a window.
 
-proc ::tk_focusPrev w {
+proc ::tk_focusPrev {w} {
     set cur $w
     while {1} {
 
@@ -106,7 +106,7 @@ proc ::tk_focusPrev w {
 	    set i [llength $children]
 	}
 	set cur $parent
-	if {$w eq $cur || [tk::FocusOK $cur]} {
+	if {($w eq $cur) || [tk::FocusOK $cur]} {
 	    return $cur
 	}
     }
@@ -126,7 +126,7 @@ proc ::tk_focusPrev w {
 # Arguments:
 # w -		Name of a window.
 
-proc ::tk::FocusOK w {
+proc ::tk::FocusOK {w} {
     set code [catch {$w cget -takefocus} value]
     if {($code == 0) && ($value ne "")} {
 	if {$value == 0} {
@@ -144,7 +144,7 @@ proc ::tk::FocusOK w {
 	return 0
     }
     set code [catch {$w cget -state} value]
-    if {($code == 0) && $value eq "disabled"} {
+    if {($code == 0) && ($value eq "disabled")} {
 	return 0
     }
     regexp Key|Focus "[bind $w] [bind [winfo class $w]]"

@@ -12,12 +12,12 @@ namespace eval ::tk {
 	# Now check for known. Even if it is known, it can be other than we
 	# need. GhostScript seems to be happy with such approach
 	set result "\[\n"
-	for {set i 0} {$i<256} {incr i 8} {
-	    for {set j 0} {$j<8} {incr j} {
+	for {set i 0} {$i < 256} {incr i 8} {
+	    for {set j 0} {$j < 8} {incr j} {
 		set enc [encoding convertfrom "iso8859-1" \
-			[format %c [expr {$i+$j}]]]
+			[format %c [expr {$i + $j}]]]
 		catch {
-		    set hexcode {}
+		    set hexcode ""
 		    set hexcode [format %04X [scan $enc %c]]
 		}
 		if {[info exists psglyphs($hexcode)]} {
@@ -1090,7 +1090,7 @@ namespace eval ::tk {
 	FB4B afii57700
     }
 
-    variable ps_preamble {}
+    variable ps_preamble ""
 
     namespace eval ps {
 	namespace ensemble create

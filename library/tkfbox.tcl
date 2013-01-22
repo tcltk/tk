@@ -24,7 +24,7 @@ namespace eval ::tk::dialog::file {
 
     # Create the images if they did not already exist.
     if {![info exists ::tk::Priv(updirImage)]} {
-	set ::tk::Priv(updirImage) [image create photo -data {
+	set ::tk::Priv(updirImage) [image create photo -data "
 	    iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAABmJLR0QA/gD+AP7rGN
 	    SCAAAACXBIWXMAAA3WAAAN1gGQb3mcAAAACXZwQWcAAAAWAAAAFgDcxelYAAAENUlE
 	    QVQ4y7WUbWiVZRjHf/f9POcc9+Kc5bC2aIq5sGG0XnTzNU13zAIlFMNc9CEhTCKwCC
@@ -52,10 +52,10 @@ namespace eval ::tk::dialog::file {
 	    WHRjcmVhdGUtZGF0ZQAyMDA5LTA0LTA2VDIxOjI1OjQxLTAzOjAw8s+uCAAAACV0RV
 	    h0bW9kaWZ5LWRhdGUAMjAwOC0wMS0wM1QxNTowODoyMS0wMjowMJEc/44AAAAZdEVY
 	    dFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAAAElFTkSuQmCC
-	}]
+	"]
     }
     if {![info exists ::tk::Priv(folderImage)]} {
-	set ::tk::Priv(folderImage) [image create photo -data {
+	set ::tk::Priv(folderImage) [image create photo -data "
 	    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiA
 	    AAAAlwSFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBl
 	    Lm9yZ5vuPBoAAAHCSURBVDiNpZAxa5NRFIafc+9XLCni4BC6FBycMnbrLpkcgtDVX6
@@ -68,10 +68,10 @@ namespace eval ::tk::dialog::file {
 	    K5uGPmmDtZF3VpoUm2ArhqQaRiUjcMf81p1G60UEVhcjZfAFTVUkrgkS+jc06mDX9n
 	    vq4YhJ9nlxZExMwMEaHJRutOdWuIIsJFUoBSuTvHJ4YIfP46unV4qdlsjsBRZRtb/X
 	    fHd5+C8+P7+J8BIoxFwovfRxYhnhxjpzEAAAAASUVORK5CYII=
-	}]
+	"]
     }
     if {![info exists ::tk::Priv(fileImage)]} {
-	set ::tk::Priv(fileImage)   [image create photo -data {
+	set ::tk::Priv(fileImage)   [image create photo -data "
 	    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gva
 	    eTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQWFA84umAmQgAAANpJREFU
 	    OMutkj1uhDAQhb8HSLtbISGfgZ+zbJkix0HmFhwhUdocBnMBGvqtTIqIFSReWKK8ai
@@ -79,7 +79,7 @@ namespace eval ::tk::dialog::file {
 	    A+89zrlVwlKSqKrqVy/J8lAUxSZBSMny4ZLgp54iyPM8UPHGNJ2IomibAKDv+9VlWZ
 	    bABbgB5/0WQgSSkC4PF2JF4JzbHN430c4vhAm0TyCJruuClefph4yCBCGT3T3Isoy/
 	    KDHGfDZNcz2SZIx547/0BVRRX7n8uT/sAAAAAElFTkSuQmCC
-	}]
+	"]
     }
 }
 
@@ -94,13 +94,13 @@ namespace eval ::tk::dialog::file {
 #	args		Options parsed by the procedure.
 #
 
-proc ::tk::dialog::file:: {type args} {
+proc ::tk::dialog::file:: {a_type args} {
     variable ::tk::Priv
     variable showHiddenBtn
     set dataName __tk_filedialog
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
 
-    Config $dataName $type $args
+    Config $dataName $a_type $args
 
     if {$data(-parent) eq "."} {
 	set w .$dataName
@@ -177,8 +177,7 @@ proc ::tk::dialog::file:: {type args} {
 	    }
 	}
 	foreach type $data(-filetypes) {
-	    set title  [lindex $type 0]
-	    set filter [lindex $type 1]
+	    lassign $type title filter
 	    $data(typeMenu) add command -label $title \
 		-command [list ::tk::dialog::file::SetFilter $w $type]
 	    # [string first] avoids glob-pattern char issues
@@ -226,7 +225,7 @@ proc ::tk::dialog::file:: {type args} {
     foreach trace [trace info variable data(selectPath)] {
 	trace remove variable data(selectPath) {*}$trace
     }
-    $data(dirMenuBtn) configure -textvariable {}
+    $data(dirMenuBtn) configure -textvariable ""
 
     return $Priv(selectFilePath)
 }
@@ -236,7 +235,7 @@ proc ::tk::dialog::file:: {type args} {
 #	Configures the TK filedialog according to the argument list
 #
 proc ::tk::dialog::file::Config {dataName type argList} {
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
 
     set data(type) $type
 
@@ -330,7 +329,7 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 
 proc ::tk::dialog::file::Create {w class} {
     set dataName [lindex [split $w .] end]
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
     variable ::tk::Priv
     global tk_library
 
@@ -431,10 +430,10 @@ proc ::tk::dialog::file::Create {w class} {
     # once will do). [Bug 987169]
 
     set data(okBtn)     [::tk::AmpWidget ttk::button $f2.ok \
-	    -text [mc "&OK"]     -default active];# -pady 3]
+	    -text [mc "&OK"]     -default active];# -pady 3
     bind $data(okBtn) <Destroy> [list ::tk::dialog::file::Destroyed $w]
     set data(cancelBtn) [::tk::AmpWidget ttk::button $f2.cancel \
-	    -text [mc "&Cancel"] -default normal];# -pady 3]
+	    -text [mc "&Cancel"] -default normal];# -pady 3
 
     # grid the widgets in f2
     #
@@ -507,7 +506,7 @@ proc ::tk::dialog::file::Create {w class} {
 
 proc ::tk::dialog::file::SetSelectMode {w multi} {
     set dataName __tk_filedialog
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
     if { $multi } {
 	set fNameCaption [mc "File &names:"]
     } else {
@@ -527,7 +526,7 @@ proc ::tk::dialog::file::SetSelectMode {w multi} {
 #	multiple concurrent events.
 #
 proc ::tk::dialog::file::UpdateWhenIdle {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     if {[info exists data(updateId)]} {
 	return
@@ -552,7 +551,7 @@ proc ::tk::dialog::file::Update {w} {
     }
 
     set dataName [winfo name $w]
-    upvar ::tk::dialog::file::$dataName data
+    upvar 1 ::tk::dialog::file::$dataName data
     variable ::tk::Priv
     variable showHiddenVar
     global tk_library
@@ -564,7 +563,7 @@ proc ::tk::dialog::file::Update {w} {
     set appPWD [pwd]
     if {[catch {
 	cd $data(selectPath)
-    }]} then {
+    }]} {
 	# We cannot change directory to $data(selectPath). $data(selectPath)
 	# should have been checked before ::tk::dialog::file::Update is
 	# called, so we normally won't come to here. Anyways, give an error
@@ -640,7 +639,7 @@ proc ::tk::dialog::file::Update {w} {
 # 	Sets data(selectPath) without invoking the trace procedure
 #
 proc ::tk::dialog::file::SetPathSilently {w path} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     set cb [list ::tk::dialog::file::SetPath $w]
     trace remove variable data(selectPath) write $cb
@@ -653,7 +652,7 @@ proc ::tk::dialog::file::SetPathSilently {w path} {
 #
 proc ::tk::dialog::file::SetPath {w name1 name2 op} {
     if {[winfo exists $w]} {
-	upvar ::tk::dialog::file::[winfo name $w] data
+	upvar 1 ::tk::dialog::file::[winfo name $w] data
 	UpdateWhenIdle $w
 	# On directory dialogs, we keep the entry in sync with the currentdir.
 	if {[winfo class $w] eq "TkChooseDir"} {
@@ -666,7 +665,7 @@ proc ::tk::dialog::file::SetPath {w name1 name2 op} {
 # This proc gets called whenever data(filter) is set
 #
 proc ::tk::dialog::file::SetFilter {w type} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     set data(filterType) $type
     set data(filter) [lindex $type 1]
@@ -734,17 +733,19 @@ proc ::tk::dialog::file::SetFilter {w type} {
 #	subdirectory name
 #
 proc ::tk::dialog::file::ResolveFile {context text defaultext {expandEnv 1}} {
-    set appPWD [pwd]
+    global env
 
+    set appPWD [pwd]
     set path [JoinFile $context $text]
 
     # If the file has no extension, append the default.  Be careful not to do
     # this for directories, otherwise typing a dirname in the box will give
     # back "dirname.extension" instead of trying to change dir.
     if {
-	![file isdirectory $path] && ([file ext $path] eq "") &&
-	![string match {$*} [file tail $path]]
-    } then {
+	(![file isdirectory $path]) && 
+	([file ext $path] eq "")    && 
+	(![string match {$*} [file tail $path]])
+    } {
 	set path "$path$defaultext"
     }
 
@@ -787,8 +788,8 @@ proc ::tk::dialog::file::ResolveFile {context text defaultext {expandEnv 1}} {
 	    # It's nothing else, so check to see if it is an env-reference
 	    if {$expandEnv && [string match {$*} $file]} {
 		set var [string range $file 1 end]
-		if {[info exist ::env($var)]} {
-		    return [ResolveFile $context $::env($var) $defaultext 0]
+		if {[info exist env($var)]} {
+		    return [ResolveFile $context $env($var) $defaultext 0]
 		}
 	    }
 	    if {[regexp {[*?]} $file]} {
@@ -803,8 +804,8 @@ proc ::tk::dialog::file::ResolveFile {context text defaultext {expandEnv 1}} {
 	    # It's nothing else, so check to see if it is an env-reference
 	    if {$expandEnv && [string match {$*} $file]} {
 		set var [string range $file 1 end]
-		if {[info exist ::env($var)]} {
-		    return [ResolveFile $context $::env($var) $defaultext 0]
+		if {[info exist env($var)]} {
+		    return [ResolveFile $context $env($var) $defaultext 0]
 		}
 	    }
 	}
@@ -819,7 +820,7 @@ proc ::tk::dialog::file::ResolveFile {context text defaultext {expandEnv 1}} {
 # entry box is the selection.
 #
 proc ::tk::dialog::file::EntFocusIn {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     if {[$data(ent) get] ne ""} {
 	$data(ent) selection range 0 end
@@ -839,7 +840,7 @@ proc ::tk::dialog::file::EntFocusIn {w} {
 }
 
 proc ::tk::dialog::file::EntFocusOut {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     $data(ent) selection clear
 }
@@ -848,7 +849,7 @@ proc ::tk::dialog::file::EntFocusOut {w} {
 # Gets called when user presses Return in the "File name" entry.
 #
 proc ::tk::dialog::file::ActivateEnt {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     set text [$data(ent) get]
     if {$data(-multiple)} {
@@ -863,7 +864,7 @@ proc ::tk::dialog::file::ActivateEnt {w} {
 # Verification procedure
 #
 proc ::tk::dialog::file::VerifyFileName {w filename} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     set list [ResolveFile $data(selectPath) $filename $data(-defaultextension)]
     foreach {flag path file} $list {
@@ -926,13 +927,14 @@ proc ::tk::dialog::file::VerifyFileName {w filename} {
 	    $data(ent) selection range 0 end
 	    $data(ent) icursor end
 	}
+        default {}
     }
 }
 
 # Gets called when user presses the Alt-s or Alt-o keys.
 #
 proc ::tk::dialog::file::InvokeBtn {w key} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     if {[$data(okBtn) cget -text] eq $key} {
 	$data(okBtn) invoke
@@ -942,7 +944,7 @@ proc ::tk::dialog::file::InvokeBtn {w key} {
 # Gets called when user presses the "parent directory" button
 #
 proc ::tk::dialog::file::UpDirCmd {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
     if {$data(selectPath) ne "/"} {
 	set data(selectPath) [file dirname $data(selectPath)]
@@ -953,7 +955,7 @@ proc ::tk::dialog::file::UpDirCmd {w} {
 # filename begins with ~
 #
 proc ::tk::dialog::file::JoinFile {path file} {
-    if {[string match {~*} $file] && [file exists $path/$file]} {
+  if {[string match "~*" $file] && [file exists [file join $path $file]]} {
 	return [file join $path ./$file]
     } else {
 	return [file join $path $file]
@@ -963,17 +965,17 @@ proc ::tk::dialog::file::JoinFile {path file} {
 # Gets called when user presses the "OK" button
 #
 proc ::tk::dialog::file::OkCmd {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
-    set filenames {}
+    set filenames [list]
     foreach item [$data(icons) selection get] {
 	lappend filenames [$data(icons) get $item]
     }
 
     if {
-	([llength $filenames] && !$data(-multiple)) ||
+	([llength $filenames] && (!$data(-multiple))) || 
 	($data(-multiple) && ([llength $filenames] == 1))
-    } then {
+    } {
 	set filename [lindex $filenames 0]
 	set file [JoinFile $data(selectPath) $filename]
 	if {[file isdirectory $file]} {
@@ -988,7 +990,7 @@ proc ::tk::dialog::file::OkCmd {w} {
 # Gets called when user presses the "Cancel" button
 #
 proc ::tk::dialog::file::CancelCmd {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
     bind $data(okBtn) <Destroy> {}
@@ -998,7 +1000,7 @@ proc ::tk::dialog::file::CancelCmd {w} {
 # Gets called when user destroys the dialog directly [Bug 987169]
 #
 proc ::tk::dialog::file::Destroyed {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
     set Priv(selectFilePath) ""
@@ -1008,17 +1010,17 @@ proc ::tk::dialog::file::Destroyed {w} {
 # keys, etc)
 #
 proc ::tk::dialog::file::ListBrowse {w} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
-    set text {}
+    set text [list]
     foreach item [$data(icons) selection get] {
 	lappend text [$data(icons) get $item]
     }
-    if {[llength $text] == 0} {
+    if {![llength $text]} {
 	return
     }
     if {$data(-multiple)} {
-	set newtext {}
+	set newtext [list]
 	foreach file $text {
 	    set fullfile [JoinFile $data(selectPath) $file]
 	    if { ![file isdirectory $fullfile] } {
@@ -1052,16 +1054,16 @@ proc ::tk::dialog::file::ListBrowse {w} {
 # etc)
 #
 proc ::tk::dialog::file::ListInvoke {w filenames} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
 
-    if {[llength $filenames] == 0} {
+    if {![llength $filenames]} {
 	return
     }
 
     set file [JoinFile $data(selectPath) [lindex $filenames 0]]
 
     set class [winfo class $w]
-    if {$class eq "TkChooseDir" || [file isdirectory $file]} {
+    if {($class eq "TkChooseDir") || [file isdirectory $file]} {
 	set appPWD [pwd]
 	if {[catch {cd $file}]} {
 	    tk_messageBox -type ok -parent $w -icon warning -message \
@@ -1089,12 +1091,12 @@ proc ::tk::dialog::file::ListInvoke {w filenames} {
 #	that calls tk_getOpenFile or tk_getSaveFile
 #
 proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
     variable ::tk::Priv
 
     if {$selectFilePath eq ""} {
 	if {$data(-multiple)} {
-	    set selectFilePath {}
+	    set selectFilePath ""
 	    foreach f $data(selectFile) {
 		lappend selectFilePath [JoinFile $data(selectPath) $f]
 	    }
@@ -1114,10 +1116,13 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 	    }
 	}
 	if {
-	    [info exists data(-typevariable)] && $data(-typevariable) ne ""
-	    && [info exists data(-filetypes)] && [llength $data(-filetypes)]
-	    && [info exists data(filterType)] && $data(filterType) ne ""
-	} then {
+	    [info exists data(-typevariable)] && 
+	    ($data(-typevariable) ne "")      && 
+	    [info exists data(-filetypes)]    && 
+	    [llength $data(-filetypes)]       && 
+	    [info exists data(filterType)]    && 
+	    ($data(filterType) ne "")
+	} {
 	    upvar #0 $data(-typevariable) typeVariable
 	    set typeVariable [lindex $data(filterType) 0]
 	}
@@ -1145,7 +1150,7 @@ proc ::tk::dialog::file::GlobFiltered {dir type {overrideFilter 0}} {
     variable showHiddenVar
     upvar 1 data(filter) filter
 
-    if {$filter eq "*" || $overrideFilter} {
+    if {($filter eq "*") || $overrideFilter} {
 	set patterns [list *]
 	if {$showHiddenVar} {
 	    lappend patterns .*
@@ -1159,14 +1164,14 @@ proc ::tk::dialog::file::GlobFiltered {dir type {overrideFilter 0}} {
 
     set opts [list -tails -directory $dir -type $type -nocomplain]
 
-    set result {}
+    set result [list]
     catch {
 	# We have a catch because we might have a really bad pattern (e.g.,
 	# with an unbalanced brace); even [glob -nocomplain] doesn't like it.
 	# Using a catch ensures that it just means we match nothing instead of
 	# throwing a nasty error at the user...
 	foreach f [glob {*}$opts -- {*}$patterns] {
-	    if {$f eq "." || $f eq ".."} {
+	    if {$f in ". .."} {
 		continue
 	    }
 	    lappend result $f
@@ -1177,10 +1182,10 @@ proc ::tk::dialog::file::GlobFiltered {dir type {overrideFilter 0}} {
 
 proc ::tk::dialog::file::CompleteEnt {w} {
     variable showHiddenVar
-    upvar ::tk::dialog::file::[winfo name $w] data
+    upvar 1 ::tk::dialog::file::[winfo name $w] data
     set f [$data(ent) get]
     if {$data(-multiple)} {
-	if {![string is list $f] || [llength $f] != 1} {
+	if {(![string is list $f]) || ([llength $f] != 1)} {
 	    return -code break
 	}
 	set f [lindex $f 0]
@@ -1190,7 +1195,7 @@ proc ::tk::dialog::file::CompleteEnt {w} {
     set files [if {[winfo class $w] eq "TkFDialog"} {
 	GlobFiltered $data(selectPath) {f b c l p s}
     }]
-    set dirs2 {}
+    set dirs2 [list]
     foreach d [GlobFiltered $data(selectPath) d] {lappend dirs2 $d/}
 
     set targets [concat \
@@ -1200,7 +1205,7 @@ proc ::tk::dialog::file::CompleteEnt {w} {
     if {[llength $targets] == 1} {
 	# We have a winner!
 	set f [lindex $targets 0]
-    } elseif {$f in $targets || [llength $targets] == 0} {
+    } elseif {($f in $targets) || (![llength $targets])} {
 	if {[string length $f] > 0} {
 	    bell
 	}
@@ -1211,7 +1216,7 @@ proc ::tk::dialog::file::CompleteEnt {w} {
 	    return
 	}
 	set t0 [lindex $targets 0]
-	for {set len [string length $t0]} {$len>0} {} {
+	for {set len [string length $t0]} {$len > 0} {} {
 	    set allmatch 1
 	    foreach s $targets {
 		if {![string equal -length $len $s $t0]} {

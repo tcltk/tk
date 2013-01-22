@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .hscale
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Horizontal Scale Demonstration"
 wm iconname $w "hscale"
@@ -34,9 +34,9 @@ pack $w.frame.canvas -side top -expand yes -anchor s -fill x  -padx 15
 pack $w.frame.scale -side bottom -expand yes -anchor n
 $w.frame.scale set 75
 
-proc setWidth {w width} {
-    incr width 21
-    set x2 [expr {$width - 30}]
+proc setWidth {w a_width} {
+    set width [expr {$a_width + 21}]
+    set x2    [expr {$width - 30}]
     if {$x2 < 21} {
 	set x2 21
     }

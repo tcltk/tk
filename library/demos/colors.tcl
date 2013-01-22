@@ -11,7 +11,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .colors
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Listbox Demonstration (colors)"
 wm iconname $w "Listbox"

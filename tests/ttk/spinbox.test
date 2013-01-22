@@ -3,7 +3,8 @@
 #
 
 package require Tk
-package require tcltest ; namespace import -force tcltest::*
+package require tcltest
+namespace import -force tcltest::*
 loadTestedCommands
 
 test spinbox-1.0 "Spinbox tests -- setup" -body {
@@ -53,7 +54,6 @@ test spinbox-1.4.2 "set changes value" -setup {
 } -cleanup {
     destroy .sb
 } -result 33
-
 
 test spinbox-1.6.1 "insert start" -setup {
     ttk::spinbox .sb -from 0 -to 100
@@ -149,7 +149,6 @@ test spinbox-1.8.4 "-validate option: " -setup {
 } -cleanup {
     destroy .sb
 } -result {50}
-
 
 test spinbox-2.0 "current command -- unset should be 0" -constraints nyi -setup {
     ttk::spinbox .sb -values [list a b c d e a]

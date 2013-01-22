@@ -15,7 +15,7 @@ package require Tk 8.6
 ::oo::class create ::tk::Megawidget {
     superclass ::oo::class
     method unknown {w args} {
-	if {[string match .* $w]} {
+	if {[string match ".*" $w]} {
 	    [self] create $w {*}$args
 	    return $w
 	}
@@ -30,7 +30,7 @@ package require Tk 8.6
 
 ::oo::class create ::tk::MegawidgetClass {
     variable w hull OptionSpecification options IdleCallbacks
-    constructor args {
+    constructor {args} {
 	# Extract the "widget name" from the object name
 	set w [namespace tail [self]]
 
@@ -63,10 +63,10 @@ package require Tk 8.6
 	}
     }
 
-    method configure args {
+    method configure {args} {
 	tclParseConfigSpec [my varname options] $OptionSpecification "" $args
     }
-    method cget option {
+    method cget {option} {
 	return $options($option)
     }
 

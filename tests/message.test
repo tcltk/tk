@@ -11,7 +11,6 @@ namespace import ::tcltest::*
 tcltest::loadTestedCommands
 eval tcltest::configure $argv
 
-
 test message-1.1 {configuration option: "anchor"} -setup { 
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold} 
     pack .m
@@ -77,8 +76,8 @@ test message-1.7 {configuration option: "bd"} -setup {
     pack .m
     update 
 } -body {
-    .m configure -bd 4
-    .m cget -bd
+    .m configure -borderwidth 4
+    .m cget -borderwidth
 } -cleanup {
     destroy .m
 } -result {4}
@@ -87,7 +86,7 @@ test message-1.8 {configuration option: "bd"} -setup {
     pack .m
     update
 } -body {
-    .m configure -bd badValue
+    .m configure -borderwidth badValue
 } -cleanup {
     destroy .m
 } -returnCodes {error} -result {bad screen distance "badValue"}
@@ -97,8 +96,8 @@ test message-1.9 {configuration option: "bg"} -setup {
     pack .m
     update 
 } -body {
-    .m configure -bg #ff0000 
-    .m cget -bg
+    .m configure -background #ff0000 
+    .m cget -background
 } -cleanup {
     destroy .m
 } -result {#ff0000}
@@ -107,7 +106,7 @@ test message-1.10 {configuration option: "bg"} -setup {
     pack .m
     update
 } -body {
-    .m configure -bg non-existent
+    .m configure -background non-existent
 } -cleanup {
     destroy .m
 } -returnCodes {error} -result {unknown color name "non-existent"}
@@ -157,8 +156,8 @@ test message-1.15 {configuration option: "fg"} -setup {
     pack .m
     update 
 } -body {
-    .m configure -fg #00ff00
-    .m cget -fg
+    .m configure -foreground #00ff00
+    .m cget -foreground
 } -cleanup {
     destroy .m
 } -result {#00ff00}
@@ -167,7 +166,7 @@ test message-1.16 {configuration option: "fg"} -setup {
     pack .m
     update
 } -body {
-    .m configure -fg badValue
+    .m configure -foreground badValue
 } -cleanup {
     destroy .m
 } -returnCodes {error} -result {unknown color name "badValue"}
@@ -394,7 +393,6 @@ test message-1.38 {configuration option: "width"} -setup {
     destroy .m
 } -returnCodes {error} -result {bad screen distance "badValue"}
 
-
 test message-2.1 {Tk_MessageObjCmd procedure} -body {
     message
 } -returnCodes {error} -result {wrong # args: should be "message pathName ?-option value ...?"}
@@ -414,7 +412,6 @@ test message-2.5 {Tk_MessageObjCmd procedure} -body {
     catch {message .s -gorp dump}  
     winfo child .
 } -result {} 
-
 
 test message-3.1 {MessageWidgetObjCmd procedure} -setup {
     message .m
@@ -463,9 +460,9 @@ test message-3.6 {MessageWidgetObjCmd procedure, "configure"} -setup {
 test message-3.7 {MessageWidgetObjCmd procedure, "configure"} -setup {
     message .m
 } -body {
-    .m configure -bd 4
-    .m configure -bg #ffffff
-    lindex [.m configure -bd] 4
+    .m configure -borderwidth 4
+    .m configure -background #ffffff
+    lindex [.m configure -borderwidth] 4
 } -cleanup {
     destroy .m
 } -result {4}

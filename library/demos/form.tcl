@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .form
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Form Demonstration"
 wm iconname $w "form"

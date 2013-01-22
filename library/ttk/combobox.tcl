@@ -76,6 +76,7 @@ switch -- [tk windowingsystem] {
 	# NB: *only* do this on Windows (see #1814778)
 	bind ComboboxListbox <FocusOut>		{ ttk::combobox::LBCancel %W }
     }
+    default {}
 }
 
 ### Combobox popdown window bindings.
@@ -101,6 +102,7 @@ switch -- [tk windowingsystem] {
     aqua {
 	option add *TCombobox*Listbox.borderWidth 0
     }
+    default {}
 }
 
 ### Binding procedures.
@@ -149,8 +151,8 @@ proc ttk::combobox::Drag {w x}  {
 #	Set cursor.
 #
 proc ttk::combobox::Motion {w x y} {
-    if {   [$w identify $x $y] eq "textarea"
-        && [$w instate {!readonly !disabled}]
+    if { ([$w identify $x $y] eq "textarea") && 
+	 [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
@@ -185,7 +187,7 @@ proc ttk::combobox::Scroll {cb dir} {
     set max [llength [$cb cget -values]]
     set current [$cb current]
     incr current $dir
-    if {$max != 0 && $current == $current % $max} {
+    if {($max != 0) && ($current == ($current % $max))} {
 	SelectEntry $cb $current
     }
 }
@@ -216,6 +218,7 @@ proc ttk::combobox::LBTab {lb dir} {
     switch -- $dir {
 	next	{ set newFocus [tk_focusNext $cb] }
 	prev	{ set newFocus [tk_focusPrev $cb] }
+        default {}
     }
 
     if {$newFocus ne ""} {
@@ -307,12 +310,6 @@ proc ttk::combobox::PopdownToplevel {w} {
     toplevel $w -class ComboboxPopdown
     wm withdraw $w
     switch -- [tk windowingsystem] {
-	default -
-	x11 {
-	    $w configure -relief flat -borderwidth 0
-	    wm attributes $w -type combo
-	    wm overrideredirect $w true
-	}
 	win32 {
 	    $w configure -relief flat -borderwidth 0
 	    wm overrideredirect $w true
@@ -323,6 +320,11 @@ proc ttk::combobox::PopdownToplevel {w} {
 	    tk::unsupported::MacWindowStyle style $w \
 	    	help {noActivates hideOnSuspend}
 	    wm resizable $w 0 0
+	}
+	default {
+	    $w configure -relief flat -borderwidth 0
+	    wm attributes $w -type combo
+	    wm overrideredirect $w true
 	}
     }
     return $w
@@ -370,11 +372,11 @@ proc ttk::combobox::PlacePopdown {cb popdown} {
     set h [winfo height $cb]
     set postoffset [ttk::style lookup TCombobox -postoffset {} {0 0 0 0}]
     foreach var {x y w h} delta $postoffset {
-    	incr $var $delta
+        incr [set var] $delta
     }
 
     set H [winfo reqheight $popdown]
-    if {$y + $h + $H > [winfo screenheight $popdown]} {
+    if {($y + $h + $H) > [winfo screenheight $popdown]} {
 	set Y [expr {$y - $H}]
     } else {
 	set Y [expr {$y + $h}]
@@ -403,6 +405,7 @@ proc ttk::combobox::Post {cb} {
     # See <<NOTE-WM-TRANSIENT>>
     switch -- [tk windowingsystem] {
 	x11 - win32 { wm transient $popdown [winfo toplevel $cb] }
+        default {}
     }
 
     # Post the listbox:

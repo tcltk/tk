@@ -130,7 +130,6 @@ test btree-1.11 {insertion past end of last line} -body {
     .t get 1.0 1000000.0
 } -result "Line 1\nLine 2\nLine 3ABC\n"
 
-
 test btree-2.1 {basic deletions} -body {
     .t delete 1.0 100000.0
     .t insert 1.0 "Line 1\nLine 2\nLine 3"
@@ -258,7 +257,6 @@ test btree-2.21 {deleting with negative range} -body {
     .t get 1.0 1000000.0
 } -result "Line 1\nLine 2\nLine 3\n"
 
-
 test btree-3.1 {inserting with tags} -body {
     setup
     .t insert 1.0 XXX
@@ -289,7 +287,6 @@ test btree-3.6 {inserting with tags} -body {
     .t insert 1.13 A\n
     list [.t tag ranges x] [.t tag ranges y]
 } -result {{1.1 1.2 1.5 1.13 3.2 3.6} {1.5 1.6}}
-
 
 test btree-4.1 {deleting with tags} -body {
     setup
@@ -332,7 +329,6 @@ test btree-4.8 {deleting with tags} -body {
     list [.t tag ranges x] [.t tag ranges y]
 } -result {{1.1 1.2 2.2 2.6} {}}
 
-
 test btree-5.1 {very large inserts, with tags} -setup {
     set bigText1 {}
     for {set i 0} {$i < 10} {incr i} {
@@ -361,7 +357,6 @@ test btree-5.3 {very large inserts, with tags} -body {
     list [.t tag ranges x] [.t tag ranges y] [.t get 1.0 1.100] \
         [.t get 198.0 198.100]
 } -result {{1.1 1.2 1.5 201.5 202.2 202.6} {1.5 1.6} {Text forlonger line 199} {longer line 2}}
-
 
 test btree-6.1 {very large deletes, with tags}  -setup {
     set bigText2 {}
@@ -449,7 +444,6 @@ test btree-6.6 {very large deletes, with tags} -setup {
     }
     list [.t tag ranges x] [.t tag ranges y]
 } -result {{3.0 3.1 3.4 3.12 4.2 4.6} {1.1 1.6 3.4 3.5}}
-
 
 test btree-7.1 {tag addition and removal} -setup {
     .t delete 1.0 end
@@ -584,7 +578,6 @@ test btree-7.11 {tag addition and removal} -setup {
     .t tag ranges x
 } -result {1.2 4.0}
 
-
 test btree-8.1 {tag addition and removal, weird ranges} -body {
     .t delete 1.0 100000.0
     .t tag delete x
@@ -642,7 +635,6 @@ test btree-8.8 {tag addition and removal, weird ranges} -body {
     .t tag ranges x
 } -result {}
 
-
 test btree-9.1 {tag names} -body {
     setup
     .t tag names
@@ -690,7 +682,6 @@ test btree-9.4 {lots of tag names} -setup {
     .t tag names 150.2
 } -result {foo ThisOne {x space} s t}
 
-
 test btree-10.1 {basic mark facilities} -body {
     msetup
     list [lsort [.t mark names]] [.t index m1] [.t index m2] [.t index m3]
@@ -705,7 +696,6 @@ test btree-10.3 {basic mark facilities} -body {
     .t mark set m2 1.8
     list [lsort [.t mark names]] [.t index m1] [.t index m2] [.t index m3]
 } -result {{current insert l1 m1 m2 m3 next x} 1.2 1.8 2.11}
-
 
 test btree-11.1 {marks and inserts} -body {
     msetup
@@ -737,7 +727,6 @@ test btree-11.6 {marks and inserts} -body {
     .t insert 1.7 ab\n\ncde
     list [.t index l1] [.t index m1] [.t index next] [.t index x] [.t index m2] [.t index m3]
 } -result {1.2 1.2 1.6 1.6 4.0 4.11}
-
 
 test btree-12.1 {marks and deletes} -body {
     msetup
@@ -778,7 +767,6 @@ test btree-12.7 {marks and deletes} -body {
     .t delete 1.5 4.1
     list [.t index l1] [.t index m1] [.t index next] [.t index x] [.t index m2] [.t index m3]
 } -result {1.2 1.11 1.5 1.5 1.9 1.9}
-
 
 test btree-13.1 {tag searching} -setup {
     .t delete 1.0 100000.0
@@ -841,7 +829,6 @@ test btree-13.8 {tag searching} -setup {
 } -result {190.3 191.2}
 destroy .t
 
-
 test btree-14.1 {check tag presence} -setup {
     destroy .t
     text .t
@@ -873,7 +860,6 @@ test btree-14.1 {check tag presence} -setup {
     destroy .t
 } -result {x y z}
 
-
 test btree-15.1 {rebalance with empty node} -setup {
     destroy .t
 } -body {
@@ -885,7 +871,6 @@ test btree-15.1 {rebalance with empty node} -setup {
 } -cleanup {
     destroy .t
 } -result "1\n2\n3\n4\n5\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n"
-
 
 test btree-16.1 {add tag does not push root above level 0} -setup {
     destroy .t
@@ -1053,7 +1038,6 @@ test btree-16.13 {StartSearchBack boundary case} -setup {
     destroy .t
 } -result {1.0 1.4}
 
-
 test btree-17.1 {remove tag does not push root down} -setup {
     destroy .t
     text .t
@@ -1123,7 +1107,6 @@ test btree-17.6 {text deletion pushes root from level 3 to level 0} -setup {
 } -cleanup {
     destroy .t
 } -result {1000.1 1000.10}
-
 
 test btree-18.1 {tag search back, no tag} -setup {
     destroy .t

@@ -21,7 +21,7 @@ proc raise_setup {} {
 	        destroy $i
         }
     foreach i {a b c d e} {
-	    label .raise.$i -text $i -relief raised -bd 2
+	    label .raise.$i -text $i -relief raised -borderwidth 2
     }
     place .raise.a -x 20 -y 60 -width 60 -height 80
     place .raise.b -x 60 -y 60 -width 60 -height 80
@@ -36,14 +36,14 @@ proc raise_setup {} {
 proc raise_getOrder {} {
     set x [winfo rootx .raise]
     set y [winfo rooty .raise]
-    list [winfo name [winfo containing [expr $x+50] [expr $y+70]]] \
-	    [winfo name [winfo containing [expr $x+90] [expr $y+70]]] \
-	    [winfo name [winfo containing [expr $x+130] [expr $y+70]]] \
-	    [winfo name [winfo containing [expr $x+70] [expr $y+100]]] \
-	    [winfo name [winfo containing [expr $x+110] [expr $y+100]]] \
-	    [winfo name [winfo containing [expr $x+50] [expr $y+130]]] \
-	    [winfo name [winfo containing [expr $x+90] [expr $y+130]]] \
-	    [winfo name [winfo containing [expr $x+130] [expr $y+130]]]
+    list [winfo name [winfo containing [expr {$x + 50}] [expr {$y + 70}]]] \
+         [winfo name [winfo containing [expr {$x + 90}] [expr {$y + 70}]]] \
+         [winfo name [winfo containing [expr {$x + 130}] [expr {$y + 70}]]] \
+         [winfo name [winfo containing [expr {$x + 70}] [expr {$y + 100}]]] \
+         [winfo name [winfo containing [expr {$x + 110}] [expr {$y + 100}]]] \
+         [winfo name [winfo containing [expr {$x + 50}] [expr {$y + 130}]]] \
+         [winfo name [winfo containing [expr {$x + 90}] [expr {$y + 130}]]] \
+         [winfo name [winfo containing [expr {$x + 130}] [expr {$y + 130}]]]
 }
 
 # Procedure to set up a collection of top-level windows
@@ -59,7 +59,6 @@ proc raise_makeToplevels {} {
 
 toplevel .raise
 wm geom .raise 250x200+0+0
-
 
 test raise-1.1 {preserve creation order} -body {
     raise_setup
@@ -91,7 +90,6 @@ test raise-1.5 {preserve creation order} -constraints testmakeexist -body {
     raise_getOrder
 } -result {d d d b c e e e}
 
-
 test raise-2.1 {raise internal windows before creation} -body {
     raise_setup
     raise .raise.a
@@ -122,7 +120,6 @@ test raise-2.5 {raise internal windows before creation} -body {
     update
     raise_getOrder
 } -result {a d d a c e e e}
-
 
 test raise-3.1 {raise internal windows after creation} -body {
     raise_setup
@@ -158,7 +155,6 @@ test raise-3.4 {raise internal windows after creation} -constraints {
     raise_getOrder
 } -result {d d d a c e e e}
 
-
 test raise-4.1 {raise relative to nephews} -body {
     raise_setup
     update
@@ -176,7 +172,6 @@ test raise-4.2 {raise relative to nephews} -setup {
 } -cleanup {
     destroy .raise2
 } -returnCodes error -result {can't raise ".raise.a" above ".raise2"}
-
 
 test raise-5.1 {lower internal windows} -body {
     raise_setup
@@ -206,7 +201,6 @@ test raise-5.4 {lower internal windows} -setup {
 } -cleanup {
     destroy .raise2
 } -returnCodes error -result {can't lower ".raise.a" below ".raise2"}
-
 
 test raise-6.1 {raise/lower toplevel windows} -constraints {
 	nonPortable
@@ -285,7 +279,6 @@ test raise-6.6 {raise/lower toplevel windows} -constraints {
     list $result [winfo containing [winfo rootx .raise2] \
 	    [winfo rooty .raise2]]
 } -result {.raise1 .raise3}
-
 
 test raise-7.1 {errors in raise/lower commands} -body {
     raise

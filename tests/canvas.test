@@ -28,18 +28,18 @@ test canvas-1.2 {configuration options: bad value for "background"} -body {
     .c configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test canvas-1.3 {configuration options: good value for "bg"} -body {
-    .c configure -bg #ff0000
-    .c cget -bg
+    .c configure -background #ff0000
+    .c cget -background
 } -result {#ff0000}
 test canvas-1.4 {configuration options: bad value for "bg"} -body {
-    .c configure -bg non-existent
+    .c configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 test canvas-1.5 {configuration options: good value for "bd"} -body {
-    .c configure -bd 4
-    .c cget -bd
+    .c configure -borderwidth 4
+    .c cget -borderwidth
 } -result {4}
 test canvas-1.6 {configuration options: bad value for "bd"} -body {
-    .c configure -bd badValue
+    .c configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test canvas-1.7 {configuration options: good value for "borderwidth"} -body {
     .c configure -borderwidth 1.3
@@ -190,7 +190,7 @@ test canvas-1.47 {configure throws error on bad option} -body {
 catch {destroy .c}
 
 # Canvas used in 2.* test cases
-canvas .c -width 60 -height 40 -scrollregion {0 0 200 150} -bd 0 \
+canvas .c -width 60 -height 40 -scrollregion {0 0 200 150} -borderwidth 0 \
 	-highlightthickness 0
 pack .c
 update
@@ -259,10 +259,10 @@ test canvas-4.1 {ButtonEventProc procedure} -setup {
     deleteWindows
     set x {}
 } -body {
-    canvas .c1 -bg #543210
+    canvas .c1 -background #543210
     rename .c1 .c2
     lappend x [winfo children .]
-    lappend x [.c2 cget -bg]
+    lappend x [.c2 cget -background]
     destroy .c1
     lappend x [info command .c*] [winfo children .]
 } -result {.c1 #543210 {} {}}
@@ -502,7 +502,7 @@ test canvas-11.1 {canvas poly fill check, bug 5783} -setup {
 } -body {
     # This would crash in 8.3.0 and 8.3.1
     .c create polygon 0 0 100 100 200 50 \
-	    -fill {} -stipple gray50 -outline black
+	    -fill "" -stipple gray50 -outline black
 } -result 1
 test canvas-11.2 {canvas poly overlap fill check, bug 226357} -setup {
     destroy .c
@@ -730,7 +730,7 @@ test canvas-15.19 "basic coords check: centimeters are larger than pixels" -setu
     set id [.c create rect 0 0 1cm 1cm] 
     expr {[lindex [.c coords $id] 2]>1}
 } -result {1}
-destroy .c
+catch {destroy .c}
 
 test canvas-16.1 {arc coords check} -setup {
     canvas .c

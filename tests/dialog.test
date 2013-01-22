@@ -8,7 +8,7 @@ namespace import -force tcltest::test
 
 test dialog-1.1 {tk_dialog command} -body {
     tk_dialog
-} -match glob -returnCodes error -result {wrong # args: should be "tk_dialog w title text bitmap default *"}
+} -match glob -returnCodes error -result {wrong # args: should be "tk_dialog w title text bitmap a_default *"}
 test dialog-1.2 {tk_dialog command} -body {
     tk_dialog foo foo foo foo foo
 } -returnCodes error -result {bad window path name "foo"}
@@ -17,7 +17,6 @@ test dialog-1.3 {tk_dialog command} -body {
 } -cleanup {
     destroy .d
 } -returnCodes error -result {bitmap "fooBitmap" not defined}
-
 
 test dialog-2.1 {tk_dialog operation} -setup {
     proc PressButton {btn} {

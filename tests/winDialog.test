@@ -31,8 +31,8 @@ proc start {arg} {
 
 proc then {cmd} {
     set ::command $cmd
-    set ::dialogresult {}
-    set ::testfont {}
+    set ::dialogresult ""
+    set ::testfont ""
 
     afterbody
     vwait ::dialogresult
@@ -45,25 +45,27 @@ proc afterbody {} {
             set ::dialogresult ">30 iterations waiting on tk_dialog"
             return
         }
-        after 150 {afterbody}
+        after 150 {afterbody }
         return
     }
     uplevel #0 {set dialogresult [eval $command]}
 }
 
-proc Click {button} {
-    switch -exact -- $button {
-        ok     { set button 1 }
-        cancel { set button 2 }
+proc Click {a_button} {
+    switch -exact -- $a_button {
+        ok      { set button 1 }
+        cancel  { set button 2 }
+        default { set button 2 }
     }
     testwinevent $::tk_dialog $button WM_LBUTTONDOWN 1 0x000a000b
     testwinevent $::tk_dialog $button WM_LBUTTONUP 0 0x000a000b
 }
 
-proc GetText {id} {
-    switch -exact -- $id {
+proc GetText {a_id} {
+    switch -exact -- $a_id {
         ok     { set id 1 }
         cancel { set id 2 }
+        default { set id 2 }
     }
     return [testwinevent $::tk_dialog $id WM_GETTEXT]
 }
@@ -107,7 +109,7 @@ test winDialog-1.3 {Tk_ChooseColorObjCmd} -constraints {
 test winDialog-1.4 {Tk_ChooseColorObjCmd: -title} -constraints {
     testwinevent
 } -setup {
-    catch {unset a x}
+    unset -nocomplain a x
 } -body {
     set x {}
     start {set clr [tk_chooseColor -initialcolor "#ff9933" -title "Hello"]}
@@ -123,7 +125,7 @@ test winDialog-1.4 {Tk_ChooseColorObjCmd: -title} -constraints {
 test winDialog-1.5 {Tk_ChooseColorObjCmd: -title} -constraints {
     testwinevent
 } -setup {
-    catch {unset a x}
+    unset -nocomplain a x
 } -body {
     set x {}
     start {
@@ -142,7 +144,7 @@ test winDialog-1.5 {Tk_ChooseColorObjCmd: -title} -constraints {
 test winDialog-1.6 {Tk_ChooseColorObjCmd: -parent} -constraints {
     testwinevent
 } -setup {
-    catch {unset a x}
+    unset -nocomplain a x
 } -body {
     start {set clr [tk_chooseColor -initialcolor "#ff9933" -parent .]}
     set x {}
@@ -150,7 +152,7 @@ test winDialog-1.6 {Tk_ChooseColorObjCmd: -parent} -constraints {
         if {[catch {
             array set a [testgetwindowinfo $::tk_dialog]
             if {[info exists a(parent)]} {
-                append x [expr {$a(parent) == [wm frame .]}]
+                append x [expr {$a(parent) eq [wm frame .]}]
             }
         } err]} {lappend x $err}
         Click ok
@@ -162,7 +164,6 @@ test winDialog-1.7 {Tk_ChooseColorObjCmd: -parent} -constraints {
 } -body {
     tk_chooseColor -initialcolor "#ff9933" -parent .xyzzy12
 } -returnCodes error -match glob -result {bad window path name*}
-
 
 test winDialog-2.1 {ColorDlgHookProc} -constraints {emptyTest nt} -body {}
 
@@ -176,7 +177,6 @@ test winDialog-3.1 {Tk_GetOpenFileObjCmd} -constraints {
     }
     return $x
 } -result {Cancel}
-
 
 test winDialog-4.1 {Tk_GetSaveFileObjCmd} -constraints {
     nt testwinevent english
@@ -461,15 +461,11 @@ test winDialog-5.25 {GetFileName: file types: MakeFilter() succeeds} -constraint
     return $x
 } -result {0}
 
-
 test winDialog-6.1 {MakeFilter} -constraints {emptyTest nt} -body {}
-
 
 test winDialog-7.1 {Tk_MessageBoxObjCmd} -constraints {emptyTest nt} -body {}
 
-
 test winDialog-8.1 {OFNHookProc} -constraints {emptyTest nt} -body {}
-
 
 ## The Tk_ChooseDirectoryObjCmd hang on the static build of Windows
 ## because somehow the GetOpenFileName ends up a noop in the static
@@ -536,7 +532,6 @@ test winDialog-9.8 {Tk_ChooseDirectoryObjCmd: initial directory: Tcl_TranslateFi
     tk_chooseDirectory -initialdir ~12x/455
 } -returnCodes error -result {user "12x" doesn't exist}
 
-
 test winDialog-10.1 {Tk_FontchooserObjCmd: no arguments} -constraints {
     nt testwinevent
 } -body {
@@ -581,7 +576,7 @@ test winDialog-10.4 {Tk_FontchooserObjCmd: -title} -constraints {
 test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
     nt testwinevent
 } -setup {
-    array set a {parent {}}
+    array set a {parent ""}
 } -body {
     start {
         tk fontchooser configure -command ApplyFont -parent .
@@ -591,7 +586,7 @@ test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
         array set a [testgetwindowinfo $::tk_dialog]
 	Click cancel
     }
-    list [expr {$a(parent) == [wm frame .]}] $::testfont
+    list [expr {$a(parent) eq [wm frame .]}] $::testfont
 } -result {1 {}}
 test winDialog-10.6 {Tk_FontchooserObjCmd: -apply} -constraints {
     nt testwinevent

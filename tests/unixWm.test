@@ -13,7 +13,7 @@ tcltest::loadTestedCommands
 
 namespace import -force ::tk::test:loadTkCommand
 
-proc sleep ms {
+proc sleep {ms} {
     global x
     after $ms {set x 1}
     vwait x
@@ -55,8 +55,8 @@ update
 wm geom .t +150+150
 update
 scan [wm geom .t] %dx%d+%d+%d width height x y
-set xerr [expr 150-$x]
-set yerr [expr 150-$y]
+set xerr [expr {150 - $x}]
+set yerr [expr {150 - $y}]
 foreach geom {+20+80 +80+20 +0+0 -0-0 +0-0 -0+0 -10-5 -10+5 +10-5} {
     test unixWm-2.$i {moving window while mapped} unix {
 	wm geom .t $geom
@@ -233,12 +233,12 @@ wm overrideredirect .m 1
 foreach i {{Test label} Another {Yet another} {Last label}} j {1 2 3} {
     label .m.$j -text $i
 }
-wm geometry .m +[expr 100 - [winfo vrootx .]]+[expr 200 - [winfo vrooty .]]
+wm geometry .m +[expr {100 - [winfo vrootx .]}]+[expr {200 - [winfo vrooty .]}]
 update
 test unixWm-7.1 {override_redirect and Tk_MoveTopLevelWindow} unix {
     list [winfo ismapped .m] [wm state .m] [winfo x .m] [winfo y .m]
 } {1 normal 100 200}
-wm geometry .m +[expr 150 - [winfo vrootx .]]+[expr 210 - [winfo vrooty .]]
+wm geometry .m +[expr {150 - [winfo vrootx .]}]+[expr {210 - [winfo vrooty .]}]
 update
 test unixWm-7.2 {override_redirect and Tk_MoveTopLevelWindow} unix {
     list [winfo ismapped .m] [wm state .m] [winfo x .m] [winfo y .m]
@@ -255,7 +255,7 @@ test unixWm-8.1 {icon windows} unix {
     destroy .icon
     toplevel .t -width 100 -height 30
     wm geometry .t +0+0
-    toplevel .icon -width 50 -height 50 -bg red
+    toplevel .icon -width 50 -height 50 -background red
     wm iconwindow .t .icon
     list [catch {wm withdraw .icon} msg] $msg
 } {1 {can't withdraw .icon: it is an icon for .t}}
@@ -275,7 +275,7 @@ test unixWm-8.4 {icon windows} unix {
     toplevel .t -width 100 -height 30
     wm geom .t +0+0
     set result [wm iconwindow .t]
-    toplevel .icon -width 50 -height 50 -bg red
+    toplevel .icon -width 50 -height 50 -background red
     wm iconwindow .t .icon
     lappend result [wm iconwindow .t] [wm state .icon]
     wm iconwindow .t {}
@@ -294,7 +294,7 @@ test unixWm-8.5 {icon windows} unix {
 test unixWm-8.6 {icon windows} unix {
     destroy .t
     toplevel .t -width 100 -height 30
-    frame .t.icon -width 50 -height 50 -bg red
+    frame .t.icon -width 50 -height 50 -background red
     list [catch {wm iconwindow .t .t.icon} msg] $msg
 } {1 {can't use .t.icon as icon window: not at top level}}
 test unixWm-8.7 {icon windows} unix {
@@ -302,8 +302,8 @@ test unixWm-8.7 {icon windows} unix {
     destroy .icon
     toplevel .t -width 100 -height 30
     wm geom .t +0+0
-    toplevel .icon -width 50 -height 50 -bg red
-    toplevel .icon2 -width 50 -height 50 -bg green
+    toplevel .icon -width 50 -height 50 -background red
+    toplevel .icon2 -width 50 -height 50 -background green
     wm iconwindow .t .icon
     set result "[wm iconwindow .t] [wm state .icon] [wm state .icon2]"
     wm iconwindow .t .icon2
@@ -313,7 +313,7 @@ destroy .icon2
 test unixWm-8.8 {icon windows} unix {
     destroy .t
     destroy .icon
-    toplevel .icon -width 50 -height 50 -bg red
+    toplevel .icon -width 50 -height 50 -background red
     wm geom .icon +0+0
     update
     set result [winfo ismapped .icon]
@@ -331,7 +331,7 @@ test unixWm-8.9 {icon windows} {unix nonPortable} {
     destroy .t
     destroy .icon
     toplevel .t -width 100 -height 30
-    toplevel .icon -width 50 -height 50 -bg red
+    toplevel .icon -width 50 -height 50 -background red
     wm geom .t +0+0
     wm iconwindow .t .icon
     update
@@ -390,7 +390,7 @@ command
 }
 test unixWm-9.3 {TkWmMapWindow procedure, iconic windows} unix {
     destroy .t
-    toplevel .t -width 100 -height 300 -bg blue
+    toplevel .t -width 100 -height 300 -background blue
     wm geom .t +0+0
     wm iconify .t
     sleep 500
@@ -399,7 +399,7 @@ test unixWm-9.3 {TkWmMapWindow procedure, iconic windows} unix {
 test unixWm-9.4 {TkWmMapWindow procedure, icon windows} unix {
     destroy .t
     sleep 500
-    toplevel .t -width 100 -height 50 -bg blue
+    toplevel .t -width 100 -height 50 -background blue
     wm iconwindow . .t
     update
     set result [winfo ismapped .t]
@@ -423,10 +423,10 @@ test unixWm-10.1 {TkWmDeadWindow procedure, canceling UpdateGeometry idle handle
 test unixWm-10.2 {TkWmDeadWindow procedure, destroying menubar} {unix testmenubar} {
     destroy .t
     destroy .f
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
     wm geom .t +0+0
     update
-    frame .f -width 400 -height 30 -bd 2 -relief raised -bg green
+    frame .f -width 400 -height 30 -borderwidth 2 -relief raised -background green
     bind .f <Destroy> {lappend result destroyed}
     testmenubar window .t .f
     update
@@ -609,7 +609,7 @@ test unixWm-16.1 {Tk_WmCmd procedure, "deiconify" option} unix {
 } {1 {wrong # args: should be "wm deiconify window"}}
 test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     destroy .icon
-    toplevel .icon -width 50 -height 50 -bg red
+    toplevel .icon -width 50 -height 50 -background red
     wm iconwindow .t .icon
     set result [list [catch {wm deiconify .icon} msg] $msg]
     destroy .icon
@@ -775,7 +775,7 @@ test unixWm-21.5 {Tk_WmCmd procedure, "group" option, create leader wrapper} {un
     wm geometry .t2 +0+0
     set result [list [testwrapper .t2]]
     wm group .t3 .t2
-    lappend result [expr {[testwrapper .t2] == ""}]
+    lappend result [expr {[testwrapper .t2] eq ""}]
     destroy .t2 .t3
     set result
 } {{} 0}
@@ -916,7 +916,7 @@ test unixWm-27.1 {Tk_WmCmd procedure, "iconwindow" option} unix {
 } {1 {wrong # args: should be "wm iconwindow window ?pathName?"}}
 test unixWm-27.2 {Tk_WmCmd procedure, "iconwindow" option} {unix testwrapper} {
     destroy .icon
-    toplevel .icon -width 50 -height 50 -bg green
+    toplevel .icon -width 50 -height 50 -background green
     set result {}
     lappend result [wm iconwindow .t]
     wm iconwindow .t .icon
@@ -943,7 +943,7 @@ test unixWm-27.4 {Tk_WmCmd procedure, "iconwindow" option} unix {
 } {1 {can't use .b as icon window: not at top level}}
 test unixWm-27.5 {Tk_WmCmd procedure, "iconwindow" option} unix {
     destroy .icon
-    toplevel .icon -width 50 -height 50 -bg green
+    toplevel .icon -width 50 -height 50 -background green
     destroy .t2
     toplevel .t2
     wm geom .t2 -0+0
@@ -956,8 +956,8 @@ test unixWm-27.5 {Tk_WmCmd procedure, "iconwindow" option} unix {
 test unixWm-27.6 {Tk_WmCmd procedure, "iconwindow" option, changing icons} unix {
     destroy .icon
     destroy .icon2
-    toplevel .icon -width 50 -height 50 -bg green
-    toplevel .icon2 -width 50 -height 50 -bg red
+    toplevel .icon -width 50 -height 50 -background green
+    toplevel .icon2 -width 50 -height 50 -background red
     set result {}
     wm iconwindow .t .icon
     lappend result [wm state .icon] [wm state .icon2]
@@ -968,7 +968,7 @@ test unixWm-27.6 {Tk_WmCmd procedure, "iconwindow" option, changing icons} unix 
 } {icon normal withdrawn icon}
 test unixWm-27.7 {Tk_WmCmd procedure, "iconwindow" option, withdrawing icon} unix {
     destroy .icon
-    toplevel .icon -width 50 -height 50 -bg green
+    toplevel .icon -width 50 -height 50 -background green
     wm geometry .icon +0+0
     update
     set result {}
@@ -1291,7 +1291,7 @@ test unixWm-37.5 {Tk_WmCmd procedure, "transient" option, create master wrapper}
     wm geometry .t2 +0+0
     set result [list [testwrapper .t2]]
     wm transient .t3 .t2
-    lappend result [expr {[testwrapper .t2] == ""}]
+    lappend result [expr {[testwrapper .t2] eq ""}]
     destroy .t2 .t3
     set result
 } {{} 0}
@@ -1356,17 +1356,17 @@ test unixWm-41.1 {ConfigureEvent procedure, internally generated size changes} u
 } {400 150 200 300}
 test unixWm-41.2 {ConfigureEvent procedure, menubars} {nonPortable testmenubar} {
     destroy .t
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
     wm geom .t +0+0
     update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    frame .t.m -bd 2 -relief raised -height 20
+    frame .t.m -borderwidth 2 -relief raised -height 20
     testmenubar window .t .t.m
     update
     set result {}
     bind .t <Configure> {
-	if {"%W" == ".t"} {
+	if {"%W" eq ".t"} {
 	    lappend result "%W: %wx%h"
 	}
     }
@@ -1425,10 +1425,10 @@ test unixWm-43.1 {TopLevelReqProc procedure, embedded in same process} unix {
     destroy .t
     toplevel .t -width 200 -height 200
     wm geom .t +0+0
-    frame .t.f -container 1 -bd 2 -relief raised
+    frame .t.f -container 1 -borderwidth 2 -relief raised
     place .t.f -x 20 -y 10
     tkwait visibility .t.f
-    toplevel .t2 -use [winfo id .t.f] -width 30 -height 20 -bg blue
+    toplevel .t2 -use [winfo id .t.f] -width 30 -height 20 -background blue
     tkwait visibility .t2
     set result {}
     .t2 configure -width 70 -height 120
@@ -1526,7 +1526,7 @@ test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} unix {
     wm overrideredirect .t 1
     tkwait visibility .t
     list [winfo x .t] [winfo y .t]
-} [list 5 [expr [winfo screenheight .t] - 70]]
+} [list 5 [expr {[winfo screenheight .t] - 70}]]
 
 destroy .t
 toplevel .t -width 80 -height 60
@@ -1535,7 +1535,7 @@ test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} unix {
     wm overrideredirect .t 1
     tkwait visibility .t
     list [winfo x .t] [winfo y .t]
-} [list [expr [winfo screenwidth .t] - 110] 2]
+} [list [expr {[winfo screenwidth .t] - 110}] 2]
 destroy .t
 
 test unixWm-44.9 {UpdateGeometryInfo procedure, updating fixed dimensions} {unix testwrapper} {
@@ -1557,7 +1557,7 @@ test unixWm-44.10 {UpdateGeometryInfo procedure, menubar changing} testmenubar {
     wm geometry .t +0+0
     tkwait visibility .t
     .t configure -width 180 -height 50
-    frame .t.m -bd 2 -relief raised -width 100 -height 50
+    frame .t.m -borderwidth 2 -relief raised -width 100 -height 50
     testmenubar window .t .t.m
     update
     .t configure -height 70
@@ -1640,7 +1640,7 @@ test unixWm-46.1 {WaitForEvent procedure, use of modal timeout} unix {
 test unixWm-47.1 {WaitRestrictProc procedure} {unix nonPortable} {
     destroy .t
     toplevel .t -width 300 -height 200
-    frame .t.f -bd 2 -relief raised
+    frame .t.f -borderwidth 2 -relief raised
     place .t.f -x 20 -y 30 -width 100 -height 20
     wm geometry .t +0+0
     tkwait visibility .t
@@ -1724,9 +1724,9 @@ test unixWm-48.13 {ParseGeometry procedure, resize causes window to move} unix {
 test unixWm-49.1 {Tk_GetRootCoords procedure} unix {
     destroy .t
     toplevel .t -width 300 -height 200
-    frame .t.f -width 150 -height 100 -bd 2 -relief raised
+    frame .t.f -width 150 -height 100 -borderwidth 2 -relief raised
     place .t.f -x 150 -y 120
-    frame .t.f.f -width 20 -height 20 -bd 2 -relief raised
+    frame .t.f.f -width 20 -height 20 -borderwidth 2 -relief raised
     place .t.f.f -x 10 -y 20
     wm overrideredirect .t 1
     wm geometry .t +40+50
@@ -1735,15 +1735,15 @@ test unixWm-49.1 {Tk_GetRootCoords procedure} unix {
 } {202 192}
 test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
     destroy .t
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
     wm geom .t +0+0
     update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    frame .t.m -bd 2 -relief raised -width 100 -height 30
-    frame .t.m.f -width 20 -height 10 -bd 2 -relief raised
+    frame .t.m -borderwidth 2 -relief raised -width 100 -height 30
+    frame .t.m.f -width 20 -height 10 -borderwidth 2 -relief raised
     place .t.m.f -x 50 -y 5
-    frame .t.f -width 20 -height 30 -bd 2 -relief raised
+    frame .t.f -width 20 -height 30 -borderwidth 2 -relief raised
     place .t.f -x 10 -y 30
     testmenubar window .t .t.m
     update
@@ -1755,10 +1755,10 @@ deleteWindows
 wm iconify .
 test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords} unix {
     deleteWindows
-    toplevel .t -width 300 -height 400 -bg green
+    toplevel .t -width 300 -height 400 -background green
     wm geom .t +40+0
     tkwait visibility .t
-    toplevel .t2 -width 100 -height 80 -bg red
+    toplevel .t2 -width 100 -height 80 -background red
     wm geom .t2 +140+200
     tkwait visibility .t2
     raise .t2
@@ -1775,10 +1775,10 @@ test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords} uni
 } {{} {} .t {} .t2 .t2 {} .t}
 test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and overrideredirect} unix {
     deleteWindows
-    toplevel .t -width 300 -height 400 -bg yellow
+    toplevel .t -width 300 -height 400 -background yellow
     wm geom .t +0+50
     tkwait visibility .t
-    toplevel .t2 -width 100 -height 80 -bg blue
+    toplevel .t2 -width 100 -height 80 -background blue
     wm overrideredirect .t2 1
     wm geom .t2 +100+200
     tkwait visibility .t2
@@ -1799,7 +1799,7 @@ test unixWm-50.3 {
 	Tk_CoordsToWindow procedure, finding a toplevel with embedding
 } -constraints tempNotWin -setup {
     deleteWindows
-    toplevel .t -width 300 -height 400 -bg blue
+    toplevel .t -width 300 -height 400 -background blue
     wm geom .t +0+50
     frame .t.f -container 1
     place .t.f -x 150 -y 50
@@ -1808,7 +1808,7 @@ test unixWm-50.3 {
 } -body {
     dobg "
 	wm withdraw .
-	toplevel .x -width 100 -height 80 -use [winfo id .t.f] -bg yellow
+	toplevel .x -width 100 -height 80 -use [winfo id .t.f] -background yellow
 	tkwait visibility .x"
     set result [dobg {
 	set x [winfo rootx .x]
@@ -1826,7 +1826,7 @@ test unixWm-50.3 {
 test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix {
     destroy .t
     catch {interp delete slave}
-    toplevel .t -width 200 -height 200 -bg green
+    toplevel .t -width 200 -height 200 -background green
     wm geometry .t +0+0
     tkwait visibility .t
     interp create slave
@@ -1839,12 +1839,12 @@ test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix
 } {{} .}
 test unixWm-50.5 {Tk_CoordsToWindow procedure, handling menubars} {unix testmenubar} {
     deleteWindows
-    toplevel .t -width 300 -height 400 -bd 2 -relief raised
-    frame .t.f -width 150 -height 120 -bg green
+    toplevel .t -width 300 -height 400 -borderwidth 2 -relief raised
+    frame .t.f -width 150 -height 120 -background green
     place .t.f -x 10 -y 150
     wm geom .t +0+50
-    frame .t.menu -width 100 -height 30 -bd 2 -relief raised
-    frame .t.menu.f -width 40 -height 20 -bg purple
+    frame .t.menu -width 100 -height 30 -borderwidth 2 -relief raised
+    frame .t.menu.f -width 40 -height 20 -background purple
     place .t.menu.f -x 30 -y 10
     testmenubar window .t .t.menu
     tkwait visibility .t.menu
@@ -1861,12 +1861,12 @@ test unixWm-50.5 {Tk_CoordsToWindow procedure, handling menubars} {unix testmenu
 } {{} .t.menu .t.menu .t.menu.f .t .t .t.f}
 test unixWm-50.6 {Tk_CoordsToWindow procedure, embedding within one app.} unix {
     deleteWindows
-    toplevel .t -width 300 -height 400 -bg orange
+    toplevel .t -width 300 -height 400 -background orange
     wm geom .t +0+50
     frame .t.f -container 1
     place .t.f -x 150 -y 50
     tkwait visibility .t.f
-    toplevel .t2 -width 100 -height 80 -bg green -use [winfo id .t.f]
+    toplevel .t2 -width 100 -height 80 -background green -use [winfo id .t.f]
     tkwait visibility .t2
     update
     set x [winfo rootx .t]
@@ -1878,11 +1878,11 @@ test unixWm-50.6 {Tk_CoordsToWindow procedure, embedding within one app.} unix {
 } {.t .t2 .t2 .t}
 test unixWm-50.7 {Tk_CoordsToWindow procedure, more basics} unix {
     destroy .t
-    toplevel .t -width 300 -height 400 -bg green
+    toplevel .t -width 300 -height 400 -background green
     wm geom .t +0+0
-    frame .t.f -width 100 -height 200 -bd 2 -relief raised
+    frame .t.f -width 100 -height 200 -borderwidth 2 -relief raised
     place .t.f -x 100 -y 100
-    frame .t.f.f -width 100 -height 200 -bd 2 -relief raised
+    frame .t.f.f -width 100 -height 200 -borderwidth 2 -relief raised
     place .t.f.f -x 0 -y 100
     tkwait visibility .t.f.f
     set x [expr [winfo rootx .t] + 150]
@@ -1895,11 +1895,11 @@ test unixWm-50.7 {Tk_CoordsToWindow procedure, more basics} unix {
 } {.t .t.f .t.f.f .t {}}
 test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
     destroy .t
-    toplevel .t -width 400 -height 300 -bg green
+    toplevel .t -width 400 -height 300 -background green
     wm geom .t +0+0
-    frame .t.f -width 200 -height 100 -bd 2 -relief raised
+    frame .t.f -width 200 -height 100 -borderwidth 2 -relief raised
     place .t.f -x 100 -y 100
-    frame .t.f.f -width 200 -height 100 -bd 2 -relief raised
+    frame .t.f.f -width 200 -height 100 -borderwidth 2 -relief raised
     place .t.f.f -x 100 -y 0
     update
     set x [winfo rooty .t]
@@ -1914,10 +1914,10 @@ test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     destroy .t
     destroy .t2
     sleep 500		;# Give window manager time to catch up.
-    toplevel .t -width 200 -height 200 -bg green
+    toplevel .t -width 200 -height 200 -background green
     wm geometry .t +0+0
     tkwait visibility .t
-    toplevel .t2 -width 200 -height 200 -bg red
+    toplevel .t2 -width 200 -height 200 -background red
     wm geometry .t2 +0+0
     tkwait visibility .t2
     set result [list [winfo containing 100 100]]
@@ -1926,9 +1926,9 @@ test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} unix {
 } {.t2 .t}
 test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     destroy .t
-    toplevel .t -width 200 -height 200 -bg green
+    toplevel .t -width 200 -height 200 -background green
     wm geometry .t +0+0
-    frame .t.f -width 150 -height 150 -bd 2 -relief raised
+    frame .t.f -width 150 -height 150 -borderwidth 2 -relief raised
     place .t.f -x 25 -y 25
     tkwait visibility .t.f
     set result [list [winfo containing 100 100]]
@@ -1996,18 +1996,18 @@ test unixWm-51.5 {TkWmRestackToplevel procedure, basic tests} {unix nonPortable}
 deleteWindows
 test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapped} unix {
     destroy .t
-    toplevel .t -width 200 -height 200 -bg green
+    toplevel .t -width 200 -height 200 -background green
     wm geometry .t +0+0
     tkwait visibility .t
     destroy .t2
-    toplevel .t2 -width 200 -height 200 -bg red
+    toplevel .t2 -width 200 -height 200 -background red
     wm geometry .t2 +0+0
     winfo containing 100 100
 } {.t}
 test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} unix {
     foreach w {.t .t2 .t3} {
 	destroy $w
-	toplevel $w -width 200 -height 200 -bg green
+	toplevel $w -width 200 -height 200 -background green
 	wm geometry $w +0+0
     }
     raise .t .t2
@@ -2020,12 +2020,12 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} unix
 } {.t3 .t}
 test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix {
     destroy .t
-    toplevel .t -width 200 -height 200 -bg green
+    toplevel .t -width 200 -height 200 -background green
     wm overrideredirect .t 1
     wm geometry .t +0+0
     tkwait visibility .t
     destroy .t2
-    toplevel .t2 -width 200 -height 200 -bg red
+    toplevel .t2 -width 200 -height 200 -background red
     wm overrideredirect .t2 1
     wm geometry .t2 +0+0
     tkwait visibility .t2
@@ -2046,7 +2046,7 @@ test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix 
 test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} unix {
     foreach w {.t .t2 .t3} {
 	destroy $w
-	toplevel $w -width 200 -height 200 -bg green
+	toplevel $w -width 200 -height 200 -background green
 	wm overrideredirect $w 1
 	wm geometry $w +0+0
 	tkwait visibility $w
@@ -2089,16 +2089,16 @@ test unixWm-51.13 {TkWmRestackToplevel procedure, don't move window that's alrea
 
 test unixWm-52.1 {TkWmAddToColormapWindows procedure} unix {
     destroy .t
-    toplevel .t -width 200 -height 200 -colormap new -relief raised -bd 2
+    toplevel .t -width 200 -height 200 -colormap new -relief raised -borderwidth 2
     wm geom .t +0+0
     update
     wm colormap .t
 } {}
 test unixWm-52.2 {TkWmAddToColormapWindows procedure} unix {
     destroy .t
-    toplevel .t -colormap new -relief raised -bd 2
+    toplevel .t -colormap new -relief raised -borderwidth 2
     wm geom .t +0+0
-    frame .t.f -width 100 -height 100 -colormap new -relief sunken -bd 2
+    frame .t.f -width 100 -height 100 -colormap new -relief sunken -borderwidth 2
     pack .t.f
     update
     wm colormap .t
@@ -2107,9 +2107,9 @@ test unixWm-52.3 {TkWmAddToColormapWindows procedure} unix {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
-    frame .t.f -width 100 -height 100 -colormap new -relief sunken -bd 2
+    frame .t.f -width 100 -height 100 -colormap new -relief sunken -borderwidth 2
     pack .t.f
-    frame .t.f2 -width 100 -height 100 -colormap new -relief sunken -bd 2
+    frame .t.f2 -width 100 -height 100 -colormap new -relief sunken -borderwidth 2
     pack .t.f2
     update
     wm colormap .t
@@ -2118,11 +2118,11 @@ test unixWm-52.4 {TkWmAddToColormapWindows procedure} unix {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
-    frame .t.f -width 100 -height 100 -colormap new -relief sunken -bd 2
+    frame .t.f -width 100 -height 100 -colormap new -relief sunken -borderwidth 2
     pack .t.f
     update
     wm colormapwindows .t .t.f
-    frame .t.f2 -width 100 -height 100 -colormap new -relief sunken -bd 2
+    frame .t.f2 -width 100 -height 100 -colormap new -relief sunken -borderwidth 2
     pack .t.f2
     update
     wm colormapwindows .t
@@ -2132,9 +2132,9 @@ test unixWm-53.1 {TkWmRemoveFromColormapWindows procedure} unix {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
-    frame .t.f -width 100 -height 100 -colormap new -relief sunken -bd 2
+    frame .t.f -width 100 -height 100 -colormap new -relief sunken -borderwidth 2
     pack .t.f
-    frame .t.f2 -width 100 -height 100 -colormap new -relief sunken -bd 2
+    frame .t.f2 -width 100 -height 100 -colormap new -relief sunken -borderwidth 2
     pack .t.f2
     update
     destroy .t.f2
@@ -2144,9 +2144,9 @@ test unixWm-53.2 {TkWmRemoveFromColormapWindows procedure} unix {
     destroy .t
     toplevel .t -colormap new
     wm geom .t +0+0
-    frame .t.f -width 100 -height 100 -colormap new -relief sunken -bd 2
+    frame .t.f -width 100 -height 100 -colormap new -relief sunken -borderwidth 2
     pack .t.f
-    frame .t.f2 -width 100 -height 100 -colormap new -relief sunken -bd 2
+    frame .t.f2 -width 100 -height 100 -colormap new -relief sunken -borderwidth 2
     pack .t.f2
     update
     wm colormapwindows .t .t.f2
@@ -2157,7 +2157,7 @@ test unixWm-53.2 {TkWmRemoveFromColormapWindows procedure} unix {
 test unixWm-54.1 {TkpMakeMenuWindow procedure, setting save_under} {unix nonUnixUserInteraction} {
     destroy .t
     destroy .m
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
     bind .t <Expose> {set x exposed}
     wm geom .t +0+0
     update
@@ -2188,10 +2188,10 @@ test unixWm-54.2 {TkpMakeMenuWindow procedure, setting override_redirect} {unix 
 
 test unixWm-55.1 {TkUnixSetMenubar procedure} {unix testmenubar} {
     destroy .t
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
     wm geom .t +0+0
     update
-    frame .t.f -width 400 -height 30 -bd 2 -relief raised -bg green
+    frame .t.f -width 400 -height 30 -borderwidth 2 -relief raised -background green
     testmenubar window .t .t.f
     update
     list [winfo ismapped .t.f] [winfo geometry .t.f] \
@@ -2201,12 +2201,12 @@ test unixWm-55.1 {TkUnixSetMenubar procedure} {unix testmenubar} {
 test unixWm-55.2 {TkUnixSetMenubar procedure, removing menubar} {unix testmenubar} {
     destroy .t
     destroy .f
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
     wm geom .t +0+0
     update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    frame .f -width 400 -height 30 -bd 2 -relief raised -bg green
+    frame .f -width 400 -height 30 -borderwidth 2 -relief raised -background green
     testmenubar window .t .f
     update
     testmenubar window .t {}
@@ -2219,12 +2219,12 @@ test unixWm-55.2 {TkUnixSetMenubar procedure, removing menubar} {unix testmenuba
 } {0 300x30+0+0 0 0 0 0}
 test unixWm-55.3 {TkUnixSetMenubar procedure, removing geometry manager} {unix testmenubar} {
     destroy .t
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
     wm geom .t +0+0
     update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    frame .t.f -width 400 -height 30 -bd 2 -relief raised -bg green
+    frame .t.f -width 400 -height 30 -borderwidth 2 -relief raised -background green
     testmenubar window .t .t.f
     update
     testmenubar window .t {}
@@ -2236,8 +2236,8 @@ test unixWm-55.3 {TkUnixSetMenubar procedure, removing geometry manager} {unix t
 } {0 0 0 0}
 test unixWm-55.4 {TkUnixSetMenubar procedure, toplevel not yet created} {unix testmenubar} {
     destroy .t
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
-    frame .t.f -width 400 -height 30 -bd 2 -relief raised -bg green
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
+    frame .t.f -width 400 -height 30 -borderwidth 2 -relief raised -background green
     testmenubar window .t .t.f
     wm geom .t +0+0
     update
@@ -2248,12 +2248,12 @@ test unixWm-55.4 {TkUnixSetMenubar procedure, toplevel not yet created} {unix te
 test unixWm-55.5 {TkUnixSetMenubar procedure, changing menubar} {unix testmenubar} {
     destroy .t
     destroy .f
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
-    frame .t.f -width 400 -height 30 -bd 2 -relief raised -bg green
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
+    frame .t.f -width 400 -height 30 -borderwidth 2 -relief raised -background green
     wm geom .t +0+0
     update
     set y [winfo rooty .t]
-    frame .f -width 400 -height 50 -bd 2 -relief raised -bg green
+    frame .f -width 400 -height 50 -borderwidth 2 -relief raised -background green
     testmenubar window .t .t.f
     update
     set result {}
@@ -2266,8 +2266,8 @@ test unixWm-55.5 {TkUnixSetMenubar procedure, changing menubar} {unix testmenuba
 } {0 1 0 1 0 0}
 test unixWm-55.6 {TkUnixSetMenubar procedure, changing menubar to self} {unix testmenubar} {
     destroy .t
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
-    frame .t.f -width 400 -height 30 -bd 2 -relief raised -bg green
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
+    frame .t.f -width 400 -height 30 -borderwidth 2 -relief raised -background green
     testmenubar window .t .t.f
     wm geom .t +0+0
     update
@@ -2280,9 +2280,9 @@ test unixWm-55.6 {TkUnixSetMenubar procedure, changing menubar to self} {unix te
 test unixWm-55.7 {TkUnixSetMenubar procedure, unsetting event handler} {unix testmenubar} {
     destroy .t
     destroy .f
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
-    frame .t.f -width 400 -height 30 -bd 2 -relief raised -bg green
-    frame .f -width 400 -height 40 -bd 2 -relief raised -bg blue
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
+    frame .t.f -width 400 -height 30 -borderwidth 2 -relief raised -background green
+    frame .f -width 400 -height 40 -borderwidth 2 -relief raised -background blue
     wm geom .t +0+0
     update
     set y [winfo rooty .t]
@@ -2299,11 +2299,11 @@ test unixWm-55.7 {TkUnixSetMenubar procedure, unsetting event handler} {unix tes
 
 test unixWm-56.1 {MenubarDestroyProc procedure} {unix testmenubar} {
     destroy .t
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
     wm geom .t +0+0
     update
     set y [winfo rooty .t]
-    frame .t.f -width 400 -height 30 -bd 2 -relief raised -bg green
+    frame .t.f -width 400 -height 30 -borderwidth 2 -relief raised -background green
     testmenubar window .t .t.f
     update
     set result [expr [winfo rooty .t] - $y]
@@ -2314,12 +2314,12 @@ test unixWm-56.1 {MenubarDestroyProc procedure} {unix testmenubar} {
 
 test unixWm-57.1 {MenubarReqProc procedure} {unix testmenubar} {
     destroy .t
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
     wm geom .t +0+0
     update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    frame .t.f -width 400 -height 10 -bd 2 -relief raised -bg green
+    frame .t.f -width 400 -height 10 -borderwidth 2 -relief raised -background green
     testmenubar window .t .t.f
     update
     set result "[expr [winfo rootx .t] - $x] [expr [winfo rooty .t] - $y]"
@@ -2329,12 +2329,12 @@ test unixWm-57.1 {MenubarReqProc procedure} {unix testmenubar} {
 } {0 10 0 100}
 test unixWm-57.2 {MenubarReqProc procedure} {unix testmenubar} {
     destroy .t
-    toplevel .t -width 300 -height 200 -bd 2 -relief raised
+    toplevel .t -width 300 -height 200 -borderwidth 2 -relief raised
     wm geom .t +0+0
     update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    frame .t.f -width 400 -height 20 -bd 2 -relief raised -bg green
+    frame .t.f -width 400 -height 20 -borderwidth 2 -relief raised -background green
     testmenubar window .t .t.f
     update
     set result "[expr [winfo rootx .t] - $x] [expr [winfo rooty .t] - $y]"

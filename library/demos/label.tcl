@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .label
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Label Demonstration"
 wm iconname $w "label"

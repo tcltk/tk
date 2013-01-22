@@ -5,14 +5,14 @@
 # Build a test image in a canvas
 proc BuildTestImage {} {
     global BitmapImage PhotoImage visual level
-    catch {destroy .t.f}
+    destroy .t.f
     frame .t.f -visual $visual -colormap new
     pack .t.f -side top -after .t.top
     bind .t.f <Enter> {wm colormapwindows .t {.t.f .t}}
     bind .t.f <Leave> {wm colormapwindows .t {.t .t.f}}
     canvas .t.f.c -width 550 -height 350 -borderwidth 2 -relief raised
     pack .t.f.c
-    .t.f.c create rectangle 25 25 525 325 -fill {} -outline black
+    .t.f.c create rectangle 25 25 525 325 -fill "" -outline black
     .t.f.c create image 50 50 -anchor nw -image $BitmapImage
     .t.f.c create image 250 50 -anchor nw -image $PhotoImage
 }
@@ -30,7 +30,7 @@ proc PrintPostcript { canvas } {
     exec lpr tmp.ps
 }
 
-catch {destroy .t}
+destroy .t
 toplevel .t
 wm title .t "Postscript Tests for Canvases: Images"
 wm iconname .t "Postscript"

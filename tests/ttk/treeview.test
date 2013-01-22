@@ -4,7 +4,8 @@
 #
 
 package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require tcltest
+namespace import -force tcltest::*
 loadTestedCommands
 
 # consistencyCheck --
@@ -14,7 +15,7 @@ loadTestedCommands
 #	Since [$tv children] follows ->next links and [$tv index]
 #	follows ->prev links, this should cover all invariants.
 #
-proc consistencyCheck {tv {item {}}} {
+proc consistencyCheck {tv {item ""}} {
     set i 0;
     foreach child [$tv children $item] {
 	assert {[$tv parent $child] == $item} "parent $child = $item"
@@ -334,7 +335,6 @@ test treeview-5.13 "get, no value" -body {
     set result
 } -result {}
 
-
 test treeview-6.1 "deletion - setup" -body {
     .tv insert {} end -id dtest
     foreach id [list a b c d e] {
@@ -462,13 +462,15 @@ test treeview-8.5 "Selection - bad operation" -body {
 ### NEED: more tests for see/yview/scrolling
 
 proc scrollcallback {args} {
-    set ::scrolldata $args
+    global scrolldata
+    set scrolldata $args
 }
 test treeview-9.0 "scroll callback - empty tree" -body {
+    global scrolldata
     .tv configure -yscrollcommand scrollcallback
     .tv delete [.tv children {}]
     update
-    set ::scrolldata
+    set scrolldata
 } -result [list 0.0 1.0]
 
 ### identify tests:

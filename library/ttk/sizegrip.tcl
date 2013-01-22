@@ -14,6 +14,7 @@ switch -- [tk windowingsystem] {
     aqua {
     	# Aqua sizegrips use default Arrow cursor.
     }
+    default {}
 }
 
 namespace eval ttk::sizegrip {
@@ -83,14 +84,15 @@ proc ttk::sizegrip::Drag {W X Y} {
     set w $State(width)
     set h $State(height)
     if {$State(resizeX)} {
-        set w [expr {$w + ($X - $State(pressX))/$State(widthInc)}]
+        set w [expr {$w + (($X - $State(pressX)) / $State(widthInc))}]
     }
     if {$State(resizeY)} {
-        set h [expr {$h + ($Y - $State(pressY))/$State(heightInc)}]
+        set h [expr {$h + (($Y - $State(pressY)) / $State(heightInc))}]
     }
     if {$w <= 0} { set w 1 }
     if {$h <= 0} { set h 1 }
-    set x $State(x) ; set y $State(y)
+    set x $State(x)
+    set y $State(y)
     wm geometry $State(toplevel) ${w}x${h}+${x}+${y}
 }
 

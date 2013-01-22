@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .vscale
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Vertical Scale Demonstration"
 wm iconname $w "vscale"
@@ -35,8 +35,8 @@ pack $w.frame.scale -side left -anchor ne
 pack $w.frame.canvas -side left -anchor nw -fill y
 $w.frame.scale set 75
 
-proc setHeight {w height} {
-    incr height 21
+proc setHeight {w a_height} {
+    set height [expr {$a_height + 21}]
     set y2 [expr {$height - 30}]
     if {$y2 < 21} {
 	set y2 21

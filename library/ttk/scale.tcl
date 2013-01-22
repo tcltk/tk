@@ -49,6 +49,7 @@ proc ttk::scale::Press {w x y} {
             set State(dragging) 1
             set State(initial) [$w get]
         }
+        default {}
     }
 }
 
@@ -69,6 +70,7 @@ proc ttk::scale::Jump {w x y} {
         *slider {
             Press $w $x $y
         }
+        default {}
     }
 }
 

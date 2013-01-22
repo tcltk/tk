@@ -183,12 +183,12 @@ test menu-2.8 {configuration options -background non-existent} -body {
     .m1 configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
-test menu-2.9 {configuration options -bg #110022} -body {
-    .m1 configure -bg #110022
-    .m1 cget -bg
+test menu-2.9 {configuration options -background #110022} -body {
+    .m1 configure -background #110022
+    .m1 cget -background
 } -result {#110022}
-test menu-2.10 {configuration options -bg bogus} -body {
-    .m1 configure -bg bogus
+test menu-2.10 {configuration options -background bogus} -body {
+    .m1 configure -background bogus
 } -returnCodes error -result {unknown color name "bogus"}
 
 test menu-2.11 {configuration options -borderwidth 1.3} -body {
@@ -215,12 +215,12 @@ test menu-2.16 {configuration options -disabledforeground xyzzy} -body {
     .m1 configure -disabledforeground xyzzy
 } -returnCodes error -result {unknown color name "xyzzy"}
 
-test menu-2.17 {configuration options -fg #110022} -body {
-    .m1 configure -fg #110022
-    .m1 cget -fg
+test menu-2.17 {configuration options -foreground #110022} -body {
+    .m1 configure -foreground #110022
+    .m1 cget -foreground
 } -result {#110022}
-test menu-2.18 {configuration options -fg bogus} -body {
-    .m1 configure -fg bogus
+test menu-2.18 {configuration options -foreground bogus} -body {
+    .m1 configure -foreground bogus
 } -returnCodes error -result {unknown color name "bogus"}
 
 test menu-2.19 {configuration options -font -Adobe-Helvetica-Medium-R-Normal--*-120-*-*-*-*-*-*} -body {
@@ -1214,8 +1214,6 @@ if {[testConstraint hasEarthPhoto]} {
     image delete image1
 }
 
-
-
 test menu-3.1 {MenuWidgetCmd procedure} -setup {
     destroy .m1
 } -body {
@@ -1586,7 +1584,7 @@ test menu-3.45 {MenuWidgetCmd procedure, "invoke" option} -setup {
 test menu-3.46 {MenuWidgetCmd procedure, "invoke" option} -setup {
 	destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add command -label "set foo" -command "set foo hello"
     list [.m1 invoke 1] [set foo] [unset foo]
@@ -1822,11 +1820,10 @@ test menu-3.70 {MenuWidgetCmd procedure, "xposition" option} -setup {
     destroy .m1
 } -result {}
 
-
 test menu-4.1 {TkInvokeMenu: disabled} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add checkbutton -label "test" -variable foo -onvalue on -offvalue off \
 	-state disabled
@@ -1845,7 +1842,7 @@ test menu-4.2 {TkInvokeMenu: tearoff} -setup {
 test menu-4.3 {TkInvokeMenu: checkbutton -on} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add checkbutton -label "test" -variable foo -onvalue on -offvalue off
     list [catch {.m1 invoke 1} msg] $msg [catch {set foo} msg2] $msg2 \
@@ -1856,7 +1853,7 @@ test menu-4.3 {TkInvokeMenu: checkbutton -on} -setup {
 test menu-4.4 {TkInvokeMenu: checkbutton -off} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add checkbutton -label "test" -variable foo -onvalue on -offvalue off
     .m1 invoke 1
@@ -1867,7 +1864,7 @@ test menu-4.4 {TkInvokeMenu: checkbutton -off} -setup {
 test menu-4.5 {TkInvokeMenu: checkbutton array element} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add checkbutton -label "test" -variable foo(1) -onvalue on 
     list [catch {.m1 invoke 1} msg] $msg [catch {set foo(1)} msg2] $msg2 [catch {unset foo} msg3] $msg3
@@ -1877,7 +1874,7 @@ test menu-4.5 {TkInvokeMenu: checkbutton array element} -setup {
 test menu-4.6 {TkInvokeMenu: radiobutton} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add radiobutton -label "1" -variable foo -value one
     .m1 add radiobutton -label "2" -variable foo -value two
@@ -1889,7 +1886,7 @@ test menu-4.6 {TkInvokeMenu: radiobutton} -setup {
 test menu-4.7 {TkInvokeMenu: radiobutton} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add radiobutton -label "1" -variable foo -value one
     .m1 add radiobutton -label "2" -variable foo -value two
@@ -1901,7 +1898,7 @@ test menu-4.7 {TkInvokeMenu: radiobutton} -setup {
 test menu-4.8 {TkInvokeMenu: radiobutton} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add radiobutton -label "1" -variable foo -value one
     .m1 add radiobutton -label "2" -variable foo -value two
@@ -1913,7 +1910,7 @@ test menu-4.8 {TkInvokeMenu: radiobutton} -setup {
 test menu-4.9 {TkInvokeMenu: radiobutton array element} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add radiobutton -label "1" -variable foo(2) -value one
     .m1 add radiobutton -label "2" -variable foo(2) -value two
@@ -1925,7 +1922,7 @@ test menu-4.9 {TkInvokeMenu: radiobutton array element} -setup {
 test menu-4.10 {TkInvokeMenu} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add command -label "test" -command "set menu_test menu-4.8"
     list [catch {.m1 invoke 1} msg] $msg [catch {set menu_test} msg2] $msg2 [catch {unset menu_test} msg3] $msg3
@@ -2059,7 +2056,6 @@ test menu-5.13 {DestroyMenuInstance - clones when mismatched tearoffs} -setup {
     set tearoff [tk::TearOffMenu .m1 40 40]
     list [destroy .m2] [destroy .m1]
 } -result {{} {}}
-
 
 test menu-6.1 {TkDestroyMenu} -setup {
     destroy .m1
@@ -2379,7 +2375,7 @@ test menu-9.4 {ConfigureMenu}  -setup {
 } -body {
     menu .m1
     .m1 add command -label "test"
-    .m1 configure -fg red
+    .m1 configure -foreground red
 } -cleanup {
 	deleteWindows
 } -result {}
@@ -2389,7 +2385,7 @@ test menu-9.5 {ConfigureMenu}  -setup {
     menu .m1
     .m1 add command -label "test"
     .m1 add command -label "two"
-    .m1 configure -fg red
+    .m1 configure -foreground red
 } -cleanup {
 	deleteWindows
 } -result {}
@@ -2400,7 +2396,7 @@ test menu-9.6 {ConfigureMenu}  -setup {
     .m1 add command -label "test"
     .m1 add command -label "two"
     .m1 add command -label "three"
-    .m1 configure -fg red
+    .m1 configure -foreground red
 } -cleanup {
 	deleteWindows
 } -result {}
@@ -2409,7 +2405,7 @@ test menu-9.7 {ConfigureMenu} -setup {
 } -body {
     menu .m1
     .m1 clone .m2 tearoff
-    list [.m1 configure -fg red] [.m2 cget -fg]
+    list [.m1 configure -foreground red] [.m2 cget -foreground]
 } -cleanup {
 	deleteWindows
 } -result {{} red}
@@ -2418,7 +2414,7 @@ test menu-9.8 {ConfigureMenu} -setup {
 } -body {
     menu .m1
     .m1 clone .m2 tearoff
-    list [.m2 configure -fg red] [.m1 cget -fg]
+    list [.m2 configure -foreground red] [.m1 cget -foreground]
 } -cleanup {
 	deleteWindows
 } -result {{} red}
@@ -2431,11 +2427,10 @@ test menu-9.9 {ConfigureMenu}  -setup {
 	deleteWindows
 } -result {{} {}}
 
-
 test menu-10.1 {PostProcessEntry: array variable} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     set foo(1) on
     .m1 add checkbutton -variable foo(1) -onvalue on -offvalue off -label "Nonsense"
@@ -2446,7 +2441,7 @@ test menu-10.1 {PostProcessEntry: array variable} -setup {
 test menu-10.2 {PostProcessEntry: array variable} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add checkbutton -variable foo(1) -onvalue on -offvalue off -label "Nonsense"
     set foo(1)
@@ -2454,11 +2449,10 @@ test menu-10.2 {PostProcessEntry: array variable} -setup {
 	deleteWindows
 } -result {off}
 
-
 test menu-11.1 {ConfigureMenuEntry} -setup {
     destroy .m1
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     .m1 add checkbutton -variable foo -onvalue on -offvalue off -label "Nonsense"
     list [.m1 entryconfigure 1 -variable bar] [.m1 entrycget 1 -variable]
@@ -2679,7 +2673,6 @@ test menu-11.21 {ConfigureMenuEntry} -constraints {
     imageCleanup
 } -result {}
 
-
 test menu-12.1 {ConfigureMenuCloneEntries} -setup {
     deleteWindows
 } -body {
@@ -2727,7 +2720,6 @@ test menu-12.4 {ConfigureMenuCloneEntries} -setup {
 } -cleanup {
     deleteWindows
 } -result {}
-
 
 test menu-13.1 {TkGetMenuIndex} -setup {
     deleteWindows
@@ -3079,11 +3071,10 @@ test menu-16.19 {MenuAddOrInsert - Insert a cascade deep into the tree} -setup {
 	deleteWindows
 } -result {0 .#menubar.#menubar#test.#menubar#test#cascade {}}
 
-
 test menu-17.1 {MenuVarProc} -setup {
 	deleteWindows
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     set foo "hello"
     list [.m1 add checkbutton -variable foo -onvalue hello -offvalue goodbye] \
@@ -3095,7 +3086,7 @@ test menu-17.1 {MenuVarProc} -setup {
 test menu-17.2 {MenuVarProc} -setup {
 	deleteWindows
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     list [.m1 add checkbutton -variable foo -onvalue hello -offvalue goodbye] \
 		[set foo ""]
@@ -3105,7 +3096,7 @@ test menu-17.2 {MenuVarProc} -setup {
 test menu-17.3 {MenuVarProc} -setup {
 	deleteWindows
 } -body {
-    catch {unset foo}
+    unset -nocomplain foo
     menu .m1
     set foo "hello"
     list [.m1 add checkbutton -variable foo -onvalue hello -offvalue goodbye] \
@@ -3133,7 +3124,6 @@ test menu-17.5 {MenuVarProc} -setup {
 } -cleanup {
 	deleteWindows
 } -result {{} goodbye {}}
-
 
 test menu-18.1 {TkActivateMenuEntry} -setup {
 	deleteWindows
@@ -3176,7 +3166,6 @@ test menu-18.4 {TkActivateMenuEntry} -setup {
 	deleteWindows
 } -result {}
 
-
 test menu-19.1 {TkPostCommand} -constraints nonUnixUserInteraction -setup {
 	deleteWindows
 } -body { 
@@ -3200,7 +3189,7 @@ test menu-20.1 {CloneMenu} -setup {
 	deleteWindows
 } -body {
     menu .m1
-    .m1 clone .m2]
+    .m1 clone .m2
 } -cleanup {
 	deleteWindows
 } -result {}
@@ -3411,7 +3400,6 @@ test menu-24.3 {TkNewMenuName} -setup {
 		[destroy .m] [destroy hideme]
 } -result {0 {} {} {} {}}
 
-
 test menu-25.1 {TkSetWindowMenuBar} -setup {
 	deleteWindows
 } -body {
@@ -3590,7 +3578,6 @@ test menu-25.16 {TkSetWindowMenuBar} -setup {
 	deleteWindows
 } -result {.t2 {}}
 
-
 test menu-26.1 {DestroyMenuHashTable} -setup {
     catch {interp delete testinterp}
 	deleteWindows
@@ -3600,7 +3587,6 @@ test menu-26.1 {DestroyMenuHashTable} -setup {
     interp eval testinterp {menu .m1}
     interp delete testinterp
 } -returnCodes ok -result {}
-
 
 test menu-27.1 {GetMenuHashTable} -setup {
     catch {interp delete testinterp}
@@ -3612,7 +3598,6 @@ test menu-27.1 {GetMenuHashTable} -setup {
 } -cleanup {
 	deleteWindows
 } -result {0 .m1 {}}
-
 
 test menu-28.1 {TkCreateMenuReferences - not there before} -setup {
 	deleteWindows
@@ -3631,7 +3616,6 @@ test menu-28.2 {TkCreateMenuReferences - there already} -setup {
 	deleteWindows
 } -result {.m2}
 
-
 test menu-29.1 {TkFindMenuReferences - not there} -setup {
 	deleteWindows
 } -body {
@@ -3642,7 +3626,6 @@ test menu-29.1 {TkFindMenuReferences - not there} -setup {
 } -cleanup {
 	deleteWindows
 } -result {{} {}}
-
 
 test menu-30.1 {TkFindMenuReferences - there already} -setup {
 	deleteWindows
@@ -3655,7 +3638,6 @@ test menu-30.1 {TkFindMenuReferences - there already} -setup {
 } -cleanup {
 	deleteWindows
 } -result {{} {}}
-
 
 test menu-31.1 {TkFreeMenuReferences - menuPtr} -setup {
 	deleteWindows
@@ -3694,7 +3676,6 @@ test menu-31.4 {TkFreeMenuReferences - not empty} -setup {
 } -cleanup {
 	deleteWindows
 } -result {}
-
 
 test menu-32.1 {DeleteMenuCloneEntries} -setup {
 	deleteWindows
@@ -3818,7 +3799,6 @@ test menu-32.9 {Ensure deleting of clones doesn't corrupt menu refs} -setup {
 } -cleanup {
 	deleteWindows
 } -result {.menubar.cascade .#menubar.#menubar#test.#menubar#cascade .menubar.cascade .#menubar.#menubar#test.#menubar#cascade}
-
 
 test menu-33.1 {menu vs command hiding} -setup {
 	deleteWindows

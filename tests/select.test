@@ -19,8 +19,8 @@ tcltest::loadTestedCommands
 
 global longValue selValue selInfo
 
-set selValue {}
-set selInfo {}
+set selValue ""
+set selInfo ""
 
 proc handler {type offset count} {
     global selValue selInfo
@@ -29,7 +29,7 @@ proc handler {type offset count} {
     if {$numBytes <= 0} {
 	return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes + $offset}]
 }
 
 proc errIncrHandler {type offset count} {
@@ -48,10 +48,10 @@ proc errIncrHandler {type offset count} {
     if {$numBytes <= 0} {
 	return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes + $offset}]
 }
 
-proc errHandler args {
+proc errHandler {args} {
     error "selection handler aborted"
 }
 
@@ -63,7 +63,7 @@ proc badHandler {path type offset count} {
     if {$numBytes <= 0} {
 	return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes + $offset}]
 }
 proc reallyBadHandler {path type offset count} {
     global selValue selInfo pass
@@ -79,20 +79,20 @@ proc reallyBadHandler {path type offset count} {
     if {$numBytes <= 0} {
 	return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes + $offset}]
 }
 
 # Eliminate any existing selection on the screen.  This is needed in case
 # there is a selection in some other application, in order to prevent races
 # from causing false errors in the tests below.
 
-selection clear .
+selection clear -displayof .
 after 1500
 
 # common setup code
-proc setup {{path .f1} {display {}}} {
-    catch {destroy $path}
-    if {$display == {}} {
+proc setup {{path .f1} {display ""}} {
+    destroy $path
+    if {$display eq ""} {
 	frame $path
     } else {
 	toplevel $path -screen $display
@@ -743,7 +743,7 @@ test select-6.18 {Tk_SelectionCmd procedure} -returnCodes error -body {
     selection get -selectionfoo foo
 } -result {bad option "-selectionfoo": must be -displayof, -selection, or -type}
 test select-6.19 {Tk_SelectionCmd procedure} -body {
-    catch { destroy .f2 }
+    destroy .f2
     selection get -displayof .f2
 } -returnCodes error -result {bad window path name ".f2"}
 test select-6.20 {Tk_SelectionCmd procedure} -returnCodes error -body {
@@ -788,7 +788,7 @@ test select-6.28 {Tk_SelectionCmd procedure} -returnCodes error -body {
     selection handle . foo bar baz blat
 } -result {wrong # args: should be "selection handle ?-option value ...? window command"}
 test select-6.29 {Tk_SelectionCmd procedure} -body {
-    catch { destroy .f2 }
+    destroy .f2
     selection handle .f2 dummy
 } -returnCodes error -result {bad window path name ".f2"}
 # selection own
@@ -953,25 +953,25 @@ test select-10.1 {ConvertSelection procedure, race with selection clear} -constr
 	lappend x [gets $fd]
     }
     set fd [open "|[list [interpreter] -geometry +0+0 -name tktest]" r+]
-    puts $fd "puts foo; [loadTkCommand]; flush stdout"
-    flush $fd
-    gets $fd
-    fileevent $fd readable [list Ready $fd]
+    chan puts $fd "puts foo; [loadTkCommand]; flush stdout"
+    chan flush $fd
+    chan gets $fd
+    chan event $fd readable [list Ready $fd]
     set selValue "Just a simple test"
     set selInfo ""
     selection handle .f1 {handler STRING}
     update
-    puts $fd {puts "[catch {selection get} msg]:$msg"; puts **DONE**; flush stdout}
-    flush $fd
+    chan puts $fd {puts "[catch {selection get} msg]:$msg"; puts **DONE**; flush stdout}
+    chan flush $fd
     after 200
     selection own .
-    set x {}
+    set x ""
     vwait [namespace which -variable x]
-    puts $fd {exit}
-    flush $fd
+    chan puts $fd {exit}
+    chan flush $fd
     # Don't understand why, but the [loadTkCommand] above causes
     # a "broken pipe" error when Tk was actually [load]ed in the child.
-    catch {close $fd}
+    catch {chan close $fd}
     lappend x $selInfo
 } -result {{1:PRIMARY selection doesn't exist or form "STRING" not defined} {}}
 test select-10.2 {ConvertSelection procedure} -constraints unix -setup {

@@ -16,7 +16,7 @@ package require Tk
 # Arguments:
 # w -			Name of the toplevel window of the demo.
 
-proc loadDir w {
+proc loadDir {w} {
     global dirName
 
     $w.f.list delete 0 end
@@ -33,7 +33,7 @@ proc loadDir w {
 # Arguments:
 # w -			Name of the toplevel window of the demo.
 
-proc selectAndLoadDir w {
+proc selectAndLoadDir {w} {
     global dirName
     set dir [tk_chooseDirectory -initialdir $dirName -parent $w -mustexist 1]
     if {$dir ne ""} {
@@ -57,14 +57,14 @@ proc loadImage {w x y} {
     set file [file join $dirName [$w.f.list get @$x,$y]]
     if {[catch {
 	image2a configure -file $file
-    }]} then {
+    }]} {
 	# Mark the file as not loadable
-	$w.f.list itemconfigure @$x,$y -bg \#c00000 -selectbackground \#ff0000
+	$w.f.list itemconfigure @$x,$y -background "#c00000" -selectbackground "#ff0000"
     }
 }
 
 set w .image2
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Image Demonstration #2"
 wm iconname $w "Image2"

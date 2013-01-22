@@ -32,7 +32,10 @@ proc ttk::notebook::ActivateTab {w tab} {
     set newtab [$w select] ;# NOTE: might not be $tab, if $tab is disabled
 
     if {[focus] eq $w} { return }
-    if {$newtab eq $oldtab} { focus $w ; return }
+    if {$newtab eq $oldtab} {
+        focus $w
+        return
+    }
 
     update idletasks ;# needed so focus logic sees correct mapped states
     if {[set f [ttk::focusFirst $newtab]] ne ""} {
@@ -60,7 +63,7 @@ proc ttk::notebook::CycleTab {w dir} {
     if {[$w index end] != 0} {
 	set current [$w index current]
 	set select [expr {($current + $dir) % [$w index end]}]
-	while {[$w tab $select -state] != "normal" && ($select != $current)} {
+	while {([$w tab $select -state] ne "normal") && ($select != $current)} {
 	    set select [expr {($select + $dir) % [$w index end]}]
 	}
 	if {$select != $current} {
@@ -74,13 +77,13 @@ proc ttk::notebook::CycleTab {w dir} {
 #	specified mnemonic. If found, returns path name of tab;
 #	otherwise returns ""
 #
-proc ttk::notebook::MnemonicTab {nb key} {
-    set key [string toupper $key]
+proc ttk::notebook::MnemonicTab {nb a_key} {
+    set key [string toupper $a_key]
     foreach tab [$nb tabs] {
 	set label [$nb tab $tab -text]
 	set underline [$nb tab $tab -underline]
 	set mnemonic [string toupper [string index $label $underline]]
-	if {$mnemonic ne "" && $mnemonic eq $key} {
+	if {($mnemonic ne "") && ($mnemonic eq $key)} {
 	    return $tab
 	}
     }
@@ -160,8 +163,8 @@ proc ttk::notebook::EnclosingNotebook {w} {
     set top [winfo toplevel $w]
     if {![info exists TLNotebooks($top)]} { return }
 
-    while {$w ne $top  && $w ne ""} {
-	if {[lsearch -exact $TLNotebooks($top) $w] >= 0} {
+  while {$w ni "$top {}"} {
+	if {$w in $TLNotebooks($top)} {
 	    return $w
 	}
 	set w [winfo parent $w]

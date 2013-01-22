@@ -70,7 +70,7 @@ namespace eval ttk {
 
     # Platform-specific overrides for Windows and OSX.
     #
-    switch [tk windowingsystem] {
+    switch -- [tk windowingsystem] {
 	"win32" {
 	    array set Cursors {
 		none		{}
@@ -118,6 +118,7 @@ namespace eval ttk {
 		}
 	    }
 	}
+        default {}
     }
 }
 
@@ -176,7 +177,7 @@ proc ttk::CursorSampler {f} {
     return $f
 }
 
-if {[info exists argv0] && $argv0 eq [info script]} {
+if {[info exists argv0] && ($argv0 eq [info script])} {
     wm title . "[array size ::ttk::Cursors] cursors"
     pack [ttk::CursorSampler .f] -expand true -fill both
     bind . <KeyPress-Escape> [list destroy .]

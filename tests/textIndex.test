@@ -11,8 +11,8 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-catch {destroy .t}
-text .t -font {Courier -12} -width 20 -height 10
+destroy .t
+text .t -font "Courier -12" -width 20 -height 10
 pack append . .t {top expand fill}
 update
 .t debug on
@@ -209,9 +209,9 @@ test textIndex-2.14 {TkTextMakeCharIndex: verify index is in range} {
 .t mark set foo 3.2
 .t tag add x 2.8 2.11
 .t tag add x 6.0 6.2
-set weirdTag "funny . +- 22.1\n\t{"
+set weirdTag "funny . +- 22.1\n\t\{"
 .t tag add $weirdTag 2.1  2.6
-set weirdMark "asdf \n{-+ 66.2\t"
+set weirdMark "asdf \n\{-+ 66.2\t"
 .t mark set $weirdMark 4.0
 .t tag config y -relief raised
 set weirdImage "foo-1"
@@ -613,7 +613,7 @@ test textIndex-14.17 {TkTextIndexBackChars: UTF} {
     .t get {5.3 - 3 chars}
 } b
 
-proc getword index {
+proc getword {index} {
     .t get [.t index "$index wordstart"] [.t index "$index wordend"]
 }
 test textIndex-15.1 {StartEnd} {
@@ -669,7 +669,7 @@ test textIndex-16.1 {TkTextPrintIndex} {
     $t window create end -window [button $t.b]
     set result [$t index end-2c]
     pack $t
-    catch {destroy $t}
+    destroy $t
 } 0
 
 test textIndex-16.2 {TkTextPrintIndex} {
@@ -678,7 +678,7 @@ test textIndex-16.2 {TkTextPrintIndex} {
     $t window create end -window [button $t.b]
     set result [$t tag add {} end-2c]
     pack $t
-    catch {destroy $t}
+    destroy $t
 } 0
 
 test textIndex-17.1 {Object indices} {
@@ -693,7 +693,7 @@ test textIndex-17.1 {Object indices} {
     lappend res $idx [$t index $idx]
     $t yview scroll 2 pages
     lappend res $idx [$t index $idx]
-    catch {destroy $t}
+    destroy $t
     unset i
     unset idx
     list $res
@@ -709,7 +709,7 @@ test textIndex-18.1 {Object indices don't cache mark names} {
     lappend res [.t2 index $pos]
     .t2 mark set $pos 1.0
     lappend res [.t2 index $pos]
-    catch {destroy .t2}
+    destroy .t2
     set res
 } {3.4 3.0 1.0}
 
@@ -826,14 +826,14 @@ test textIndex-19.13 {Display lines} {
     destroy .txt .sbar
 } {}
 
-proc text_test_word {startend chars start} {
+proc text_test_word {startend chars a_start} {
     destroy .t
     text .t
     .t insert end $chars
-    if {[regexp {end} $start]} {
-	set start [.t index "${start}chars -2c"]
+    if {[regexp "end" $a_start]} {
+	set start [.t index "${a_start}chars -2c"]
     } else {
-	set start [.t index "1.0 + ${start}chars"]
+	set start [.t index "1.0 + ${a_start}chars"]
     }
     if {[.t compare $start >= "end-1c"]} {
 	set start "end-2c"
@@ -929,7 +929,7 @@ test textIndex-24.1 {text mark prev} {
 } {1.0}
 
 # cleanup
-rename textimage {}
-catch {destroy .t}
+rename textimage ""
+destroy .t
 cleanupTests
 return

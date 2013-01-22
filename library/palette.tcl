@@ -44,8 +44,8 @@ proc ::tk_setPalette {args} {
 	# Note that the range of each value in the triple returned by
 	# [winfo rgb] is 0-65535, and your eyes are more sensitive to
 	# green than to red, and more to red than to blue.
-	foreach {r g b} $bg {break}
-	if {$r+1.5*$g+0.5*$b > 100000} {
+	lassign $bg r g b
+	if {($r + (1.5 * $g) + (0.5 * $b)) > 100000} {
 	    set new(foreground) black
 	} else {
 	    set new(foreground) white
@@ -53,8 +53,8 @@ proc ::tk_setPalette {args} {
     }
     lassign [winfo rgb . $new(foreground)] fg_r fg_g fg_b
     lassign $bg bg_r bg_g bg_b
-    set darkerBg [format #%02x%02x%02x [expr {(9*$bg_r)/2560}] \
-	    [expr {(9*$bg_g)/2560}] [expr {(9*$bg_b)/2560}]]
+    set darkerBg [format #%02x%02x%02x [expr {(9 * $bg_r) / 2560}] \
+	    [expr {(9 * $bg_g) / 2560}] [expr {(9 * $bg_b) / 2560}]]
 
     foreach i {activeForeground insertBackground selectForeground \
 	    highlightColor} {
@@ -64,9 +64,9 @@ proc ::tk_setPalette {args} {
     }
     if {![info exists new(disabledForeground)]} {
 	set new(disabledForeground) [format #%02x%02x%02x \
-		[expr {(3*$bg_r + $fg_r)/1024}] \
-		[expr {(3*$bg_g + $fg_g)/1024}] \
-		[expr {(3*$bg_b + $fg_b)/1024}]]
+		[expr {((3 * $bg_r) + $fg_r) / 1024}] \
+		[expr {((3 * $bg_g) + $fg_g) / 1024}] \
+		[expr {((3 * $bg_b) + $fg_b) / 1024}]]
     }
     if {![info exists new(highlightBackground)]} {
 	set new(highlightBackground) $new(background)
@@ -78,9 +78,9 @@ proc ::tk_setPalette {args} {
 	# greater.
 
 	foreach i {0 1 2} color $bg {
-	    set light($i) [expr {$color/256}]
-	    set inc1 [expr {($light($i)*15)/100}]
-	    set inc2 [expr {(255-$light($i))/3}]
+	    set light($i) [expr {$color / 256}]
+	    set inc1 [expr {($light($i) * 15) / 100}]
+	    set inc2 [expr {(255 - $light($i)) / 3}]
 	    if {$inc1 > $inc2} {
 		incr light($i) $inc1
 	    } else {
@@ -157,8 +157,8 @@ proc ::tk_setPalette {args} {
 #			each value is the value for that option.
 
 proc ::tk::RecolorTree {w colors} {
-    upvar $colors c
-    set result {}
+    upvar 1 $colors c
+    set result ""
     set prototype .___tk_set_palette.[string tolower [winfo class $w]]
     if {![winfo exists $prototype]} {
 	unset prototype
@@ -172,9 +172,9 @@ proc ::tk::RecolorTree {w colors} {
 	    # dbOption, then use it, otherwise use the defaults
 	    # for the widget.
 	    set defaultcolor [option get $w $dbOption $class]
-	    if {$defaultcolor eq "" || \
-		    ([info exists prototype] && \
-		    [$prototype cget $option] ne "$defaultcolor")} {
+	    if {($defaultcolor eq "") || 
+		([info exists prototype] && 
+		 ([$prototype cget $option] ne "$defaultcolor"))} {
 		set defaultcolor [lindex $value 3]
 	    }
 	    if {$defaultcolor ne ""} {
@@ -211,9 +211,9 @@ proc ::tk::RecolorTree {w colors} {
 
 proc ::tk::Darken {color percent} {
     foreach {red green blue} [winfo rgb . $color] {
-	set red [expr {($red/256)*$percent/100}]
-	set green [expr {($green/256)*$percent/100}]
-	set blue [expr {($blue/256)*$percent/100}]
+	set red   [expr {(($red   / 256) * $percent) / 100}]
+	set green [expr {(($green / 256) * $percent) / 100}]
+	set blue  [expr {(($blue  / 256) * $percent) / 100}]
 	break
     }
     if {$red > 255} {

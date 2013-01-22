@@ -19,20 +19,20 @@ if {[testConstraint defaultPseudocolor8]} {
     set i 0
     canvas .c
     pack .c -expand 1 -fill both
-    while {$i<$numcolors} {
-	set color \#[format "%02x%02x%02x" $i [expr $i+1] [expr $i+3]]
-	.c create rectangle [expr 10+$i] [expr 10+$i] [expr 50+$i] [expr 50+$i] -fill $color -outline $color
+    while {$i < $numcolors} {
+        set color [format "#%02x%02x%02x" $i [expr {$i + 1}] [expr {$i + 3}]]
+        .c create rectangle [expr {10 + $i}] [expr {10 + $i}] [expr {50 + $i}] [expr {50 + $i}] -fill $color -outline $color
 	incr i
     }
     set i 0
-    while {$i<$numcolors} {
+    while {$i < $numcolors} {
 	set color [.c itemcget $i -fill]
-	if {$color != ""} {
-	    foreach {r g b} [winfo rgb . $color] {}
-	    set r [expr $r/256]
-	    set g [expr $g/256]
-	    set b [expr $b/256]
-	    if {"$color" != "#[format %02x%02x%02x $r $g $b]"} {
+	if {$color ne ""} {
+	    lassign [winfo rgb . $color] r g b
+	    set r [expr {$r / 256}]
+	    set g [expr {$g / 256}]
+	    set b [expr {$b / 256}]
+	    if {"$color" ne [format "#%02x%02x%02x" $r $g $b]} {
 		testConstraint colorsLeftover 0
 	    }
 	}
@@ -103,7 +103,7 @@ proc PressButton {btn} {
 
 proc ChooseColorByKey {parent r g b} {
     set w .__tk__color
-    upvar ::tk::dialog::color::[winfo name $w] data
+    upvar 1 ::tk::dialog::color::[winfo name $w] data
 
     update
     $data(red,entry)   delete 0 end
@@ -124,14 +124,14 @@ proc ChooseColorByKey {parent r g b} {
 
 proc SendButtonPress {parent btn type} {
     set w .__tk__color
-    upvar ::tk::dialog::color::[winfo name $w] data
+    upvar 1 ::tk::dialog::color::[winfo name $w] data
 
     set button $data($btn\Btn)
-    if ![winfo ismapped $button] {
+    if {![winfo ismapped $button]} {
 	update
     }
 
-    if {$type == "mouse"} {
+    if {$type eq "mouse"} {
 	PressButton $button
     } else {
 	event generate $w <Enter>
@@ -140,8 +140,6 @@ proc SendButtonPress {parent btn type} {
 	event generate $w <KeyPress> -keysym Return
     }
 }
-
-
 
 test clrpick-2.1 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover
@@ -163,20 +161,20 @@ test clrpick-2.1 {tk_chooseColor command} -constraints {
     ToPressButton . ok
     tk_chooseColor -title "Press Ok $verylongstring" -initialcolor #404040 \
         -parent .
-} -result {#404040}
+} -result "#404040"
 test clrpick-2.2 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover
 } -body {
     set colors "128 128 64"
     ToChooseColorByKey . 128 128 64
     tk_chooseColor -parent . -title "choose #808040"
-} -result {#808040}
+} -result "#808040"
 test clrpick-2.3 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover
 } -body {
     ToPressButton . ok
     tk_chooseColor -parent . -title "Press OK"
-} -result {#808040}
+} -result "#808040"
 test clrpick-2.4 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover
 } -body {
@@ -184,14 +182,13 @@ test clrpick-2.4 {tk_chooseColor command} -constraints {
     tk_chooseColor -parent . -title "Press Cancel"
 } -result {}
 
-
 test clrpick-3.1 {tk_chooseColor: background events} -constraints {
 	nonUnixUserInteraction
 } -body {
     after 1 {set x 53}
     ToPressButton . ok
     tk_chooseColor -parent . -title "Press OK" -initialcolor #000000
-} -result {#000000}
+} -result "#000000"
 test clrpick-3.2 {tk_chooseColor: background events} -constraints {
 	nonUnixUserInteraction
 } -body {
@@ -199,7 +196,6 @@ test clrpick-3.2 {tk_chooseColor: background events} -constraints {
     ToPressButton . cancel
     tk_chooseColor -parent . -title "Press Cancel"
 } -result {}
-
 
 test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} -constraints {
 	unix notAqua

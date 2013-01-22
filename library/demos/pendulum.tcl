@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .pendulum
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Pendulum Animation Demonstration"
 wm iconname $w "pendulum"
@@ -34,7 +34,7 @@ canvas $w.c -width 320 -height 200 -background white -bd 2 -relief sunken
 $w.c create text 5 5 -anchor nw -text "Click to Adjust Bob Start Position"
 # Coordinates of these items don't matter; they will be set properly below
 $w.c create line 0 25 320 25   -tags plate -fill grey50 -width 2
-$w.c create oval 155 20 165 30 -tags pivot -fill grey50 -outline {}
+$w.c create oval 155 20 165 30 -tags pivot -fill grey50 -outline ""
 $w.c create line 1 1 1 1       -tags rod   -fill black  -width 3
 $w.c create oval 1 1 2 2       -tags bob   -fill yellow -outline black
 pack $w.c -in $w.p.l1 -fill both -expand true
@@ -45,7 +45,7 @@ pack $w.c -in $w.p.l1 -fill both -expand true
 canvas $w.k -width 320 -height 200 -background white -bd 2 -relief sunken
 $w.k create line 160 200 160 0 -fill grey75 -arrow last -tags y_axis
 $w.k create line 0 100 320 100 -fill grey75 -arrow last -tags x_axis
-for {set i 90} {$i>=0} {incr i -10} {
+for {set i 90} {$i >= 0} {incr i -10} {
     # Coordinates of these items don't matter; they will be set properly below
     $w.k create line 0 0 1 1 -smooth true -tags graph$i -fill grey$i
 }
@@ -55,7 +55,7 @@ $w.k create text 0 0 -anchor ne -text "\u03b4\u03b8" -tags label_dtheta
 pack $w.k -in $w.p.l2 -fill both -expand true
 
 # Initialize some variables
-set points {}
+set points [list]
 set Theta   45.0
 set dTheta   0.0
 set pi       3.1415926535897933
@@ -68,22 +68,22 @@ set home   160
 # the pendulum from the length of the pendulum rod and its angle, the
 # length and angle are computed in reverse from the given location
 # (which is taken to be the centre of the pendulum bob.)
-proc showPendulum {canvas {at {}} {x {}} {y {}}} {
+proc showPendulum {canvas {at ""} {x ""} {y ""}} {
     global Theta dTheta pi length home
-    if {$at eq "at" && ($x!=$home || $y!=25)} {
+    if {($at eq "at") && (($x != $home) || ($y != 25))} {
 	set dTheta 0.0
 	set x2 [expr {$x - $home}]
 	set y2 [expr {$y - 25}]
-	set length [expr {hypot($x2, $y2)}]
-	set Theta  [expr {atan2($x2, $y2) * 180/$pi}]
+	set length [expr { hypot ($x2, $y2)}]
+	set Theta  [expr { ( ( atan2 ($x2, $y2) ) * 180) / $pi}]
     } else {
-	set angle [expr {$Theta * $pi/180}]
-	set x [expr {$home + $length*sin($angle)}]
-	set y [expr {25    + $length*cos($angle)}]
+	set angle [expr {($Theta * $pi) / 180}]
+	set x [expr {$home + ($length * ( sin ($angle)))}]
+	set y [expr {25    + ($length * ( cos ($angle)))}]
     }
     $canvas coords rod $home 25 $x $y
     $canvas coords bob \
-	    [expr {$x-15}] [expr {$y-15}] [expr {$x+15}] [expr {$y+15}]
+	    [expr {$x - 15}] [expr {$y - 15}] [expr {$x + 15}] [expr {$y + 15}]
 }
 showPendulum $w.c
 
@@ -92,12 +92,12 @@ showPendulum $w.c
 # respect to time.)
 proc showPhase {canvas} {
     global Theta dTheta points psw psh
-    lappend points [expr {$Theta+$psw}] [expr {-20*$dTheta+$psh}]
+    lappend points [expr {$Theta + $psw}] [expr {(-20 * $dTheta) + $psh}]
     if {[llength $points] > 100} {
     	 set points [lrange $points end-99 end]
     }
-    for {set i 0} {$i<100} {incr i 10} {
-	set list [lrange $points end-[expr {$i-1}] end-[expr {$i-12}]]
+    for {set i 0} {$i < 100} {incr i 10} {
+	set list [lrange $points end-[expr {$i - 1}] end-[expr {$i - 12}]]
 	if {[llength $list] >= 4} {
 	    $canvas coords graph$i $list
 	}
@@ -126,16 +126,16 @@ bind $w.c <ButtonRelease-1> {
 }
 bind $w.c <Configure> {
     %W coords plate 0 25 %w 25
-    set home [expr %w/2]
-    %W coords pivot [expr $home-5] 20 [expr $home+5] 30
+    set home [expr {%w / 2}]
+    %W coords pivot [expr {$home - 5}] 20 [expr {$home + 5}] 30
 }
 bind $w.k <Configure> {
-    set psh [expr %h/2]
-    set psw [expr %w/2]
-    %W coords x_axis 2 $psh [expr %w-2] $psh
-    %W coords y_axis $psw [expr %h-2] $psw 2
-    %W coords label_dtheta [expr $psw-4] 6
-    %W coords label_theta [expr %w-6] [expr $psh+4]
+    set psh [expr {%h / 2}]
+    set psw [expr {%w / 2}]
+    %W coords x_axis 2 $psh [expr {%w - 2}] $psh
+    %W coords y_axis $psw [expr {%h - 2}] $psw 2
+    %W coords label_dtheta [expr {$psw - 4}] 6
+    %W coords label_theta [expr {%w - 6}] [expr {$psh + 4}]
 }
 
 # This procedure is the "business" part of the simulation that does
@@ -143,7 +143,7 @@ bind $w.k <Configure> {
 # pendulum.
 proc recomputeAngle {} {
     global Theta dTheta pi length
-    set scaling [expr {3000.0/$length/$length}]
+    set scaling [expr {(3000.0 / $length) / $length}]
 
     # To estimate the integration accurately, we really need to
     # compute the end-point of our time-step.  But to do *that*, we
@@ -157,22 +157,22 @@ proc recomputeAngle {} {
     # But my math skills are not good enough to solve this!
 
     # first estimate
-    set firstDDTheta [expr {-sin($Theta * $pi/180)*$scaling}]
+    set firstDDTheta [expr {- ( sin (($Theta * $pi) / 180) ) * $scaling}]
     set midDTheta [expr {$dTheta + $firstDDTheta}]
-    set midTheta [expr {$Theta + ($dTheta + $midDTheta)/2}]
+    set midTheta [expr {$Theta + (($dTheta + $midDTheta) / 2)}]
     # second estimate
-    set midDDTheta [expr {-sin($midTheta * $pi/180)*$scaling}]
-    set midDTheta [expr {$dTheta + ($firstDDTheta + $midDDTheta)/2}]
-    set midTheta [expr {$Theta + ($dTheta + $midDTheta)/2}]
+    set midDDTheta [expr {- ( sin (($midTheta * $pi) / 180) ) * $scaling}]
+    set midDTheta [expr {$dTheta + (($firstDDTheta + $midDDTheta) / 2)}]
+    set midTheta [expr {$Theta + (($dTheta + $midDTheta) / 2)}]
     # Now we do a double-estimate approach for getting the final value
     # first estimate
-    set midDDTheta [expr {-sin($midTheta * $pi/180)*$scaling}]
+    set midDDTheta [expr {- ( sin (($midTheta * $pi) / 180) ) * $scaling}]
     set lastDTheta [expr {$midDTheta + $midDDTheta}]
-    set lastTheta [expr {$midTheta + ($midDTheta + $lastDTheta)/2}]
+    set lastTheta [expr {$midTheta + (($midDTheta + $lastDTheta) / 2)}]
     # second estimate
-    set lastDDTheta [expr {-sin($lastTheta * $pi/180)*$scaling}]
-    set lastDTheta [expr {$midDTheta + ($midDDTheta + $lastDDTheta)/2}]
-    set lastTheta [expr {$midTheta + ($midDTheta + $lastDTheta)/2}]
+    set lastDDTheta [expr {- ( sin ( ($lastTheta * $pi) / 180) ) * $scaling}]
+    set lastDTheta [expr {$midDTheta + (($midDDTheta + $lastDDTheta) / 2)}]
+    set lastTheta [expr {$midTheta + (($midDTheta + $lastDTheta) / 2)}]
     # Now put the values back in our globals
     set dTheta $lastDTheta
     set Theta $lastTheta
@@ -180,11 +180,11 @@ proc recomputeAngle {} {
 
 # This method ties together the simulation engine and the graphical
 # display code that visualizes it.
-proc repeat w {
+proc repeat {w} {
     global animationCallbacks
 
     # Simulate
-    recomputeAngle
+    recomputeAngle 
 
     # Update the display
     showPendulum $w.c

@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .clrpick
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Color Selection Dialog"
 wm iconname $w "colors"
@@ -36,7 +36,7 @@ proc setColor {w button name options} {
     set initialColor [$button cget -$name]
     set color [tk_chooseColor -title "Choose a $name color" -parent $w \
 	-initialcolor $initialColor]
-    if {[string compare $color ""]} {
+    if {$color ne ""} {
 	setColor_helper $w $options $color
     }
     grab release $w

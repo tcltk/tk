@@ -133,7 +133,7 @@ proc ::tk::MessageBox {args} {
     variable ::tk::Priv
 
     set w ::tk::PrivMsgBox
-    upvar $w data
+    upvar 1 $w data
 
     #
     # The default value of the title is space (" ") not the empty string
@@ -163,6 +163,7 @@ proc ::tk::MessageBox {args} {
 	    "error"     {set data(-icon) "stop"}
 	    "warning"   {set data(-icon) "caution"}
 	    "info"      {set data(-icon) "note"}
+	    default {}
 	}
 	option add *Dialog*background systemDialogBackgroundActive widgetDefault
 	option add *Dialog*Button.highlightBackground \
@@ -182,7 +183,7 @@ proc ::tk::MessageBox {args} {
 	}
 	ok {
 	    set names [list ok]
-	    set labels {&OK}
+	    set labels [list &OK]
 	    set cancel ok
 	}
 	okcancel {
@@ -213,7 +214,7 @@ proc ::tk::MessageBox {args} {
 	}
     }
 
-    set buttons {}
+    set buttons [list]
     foreach name $names lab $labels {
 	lappend buttons [list $name -text [mc $lab]]
     }
@@ -252,8 +253,8 @@ proc ::tk::MessageBox {args} {
     # 3. Create the top-level window and divide it into top
     # and bottom parts.
 
-    catch {destroy $w}
-    toplevel $w -class Dialog -bg $bg
+    destroy $w
+    toplevel $w -class Dialog -background $bg
     wm title $w $data(-title)
     wm iconname $w Dialog
     wm protocol $w WM_DELETE_WINDOW [list $w.$cancel invoke]
@@ -270,7 +271,7 @@ proc ::tk::MessageBox {args} {
     }
 
     if {$windowingsystem eq "aqua"} {
-	::tk::unsupported::MacWindowStyle style $w moveableModal {}
+	::tk::unsupported::MacWindowStyle style $w moveableModal ""
     } elseif {$windowingsystem eq "x11"} {
         wm attributes $w -type dialog
     }
@@ -299,7 +300,7 @@ proc ::tk::MessageBox {args} {
 	    # ttk::label has no -bitmap option
 	    label $w.bitmap -bitmap $data(-icon) -background $bg
 	} else {
-	    switch $data(-icon) {
+	    switch -- $data(-icon) {
                 error {
                     ttk::label $w.bitmap -image ::tk::icons::error
                 }
@@ -350,9 +351,7 @@ proc ::tk::MessageBox {args} {
 	# We boost the size of some Mac buttons for l&f
 	if {$windowingsystem eq "aqua"} {
 	    set tmp [string tolower $name]
-	    if {$tmp eq "ok" || $tmp eq "cancel" || $tmp eq "yes" ||
-		    $tmp eq "no" || $tmp eq "abort" || $tmp eq "retry" ||
-		    $tmp eq "ignore"} {
+	    if {$tmp in "ok cancel yes no abort retry ignore"} {
 		grid columnconfigure $w.bot $i -minsize 90
 	    }
 	    grid configure $w.$name -pady 7

@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .button
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Button Demonstration"
 wm iconname $w "button"

@@ -27,7 +27,7 @@ focus .s
 
 proc center {x y} {
     set a [.s size]
-    .s position [expr $x-($a/2)] [expr $y-($a/2)]
+    .s position [expr {$x - ($a / 2)}] [expr {$y - ($a / 2)}]
 }
 
 # The procedures below provide a simple form of animation where
@@ -51,7 +51,7 @@ proc timer {} {
     if {$inc == 0} return
     if {$s >= 40} {set inc -3}
     if {$s <= 10} {set inc 3}
-    .s size [expr {$s+$inc}]
+    .s size [expr {$s + $inc}]
     after 30 timer
 }
 

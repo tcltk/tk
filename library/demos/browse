@@ -27,16 +27,16 @@ wm minsize . 1 1
 set browseScript [file join [pwd] $argv0]
 proc browse {dir file} {
     global env browseScript
-    if {[string compare $dir "."] != 0} {set file $dir/$file}
-    switch [file type $file] {
+    if {$dir ne "."} {set file [file join $dir $file]}
+    switch -- [file type $file] {
 	directory {
-	    exec [info nameofexecutable] $browseScript $file &
+	    exec -- [info nameofexecutable] $browseScript $file &
 	}
 	file {
 	    if {[info exists env(EDITOR)]} {
-		eval exec $env(EDITOR) $file &
+		eval exec -- $env(EDITOR) $file &
 	    } else {
-		exec xedit $file &
+		exec -- xedit $file &
 	    }
 	}
 	default {
@@ -47,7 +47,7 @@ proc browse {dir file} {
 
 # Fill the listbox with a list of all the files in the directory.
 
-if {$argc>0} {set dir [lindex $argv 0]} else {set dir "."}
+if {$argc > 0} {set dir [lindex $argv 0]} else {set dir "."}
 foreach i [lsort [glob * .* *.*]] {
     if {[file type $i] eq "directory"} {
 	# Safe to do since it is still a directory.

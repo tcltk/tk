@@ -1,7 +1,7 @@
 # This file creates a visual test for button layout.  It is part of
 # the Tk visual test suite, which is invoked via the "visual" script.
 
-catch {destroy .t}
+destroy .t
 toplevel .t
 wm title .t "Visual Tests for Button Geometry"
 wm iconname .t "Button Geometry"
@@ -17,7 +17,7 @@ pack .t.quit -side bottom -pady 2m
 set sepId 1
 proc sep {} {
     global sepId
-    frame .t.sep$sepId -height 2 -bd 1 -relief sunken
+    frame .t.sep$sepId -height 2 -borderwidth 1 -relief sunken
     pack .t.sep$sepId -side top -padx 2m -pady 2m -fill x
     incr sepId
 }
@@ -33,15 +33,15 @@ label .t.anchorLabel -text "Color:"
 frame .t.control.left.f -width 6c -height 3c
 pack .t.anchorLabel .t.control.left.f -in .t.control.left -side top -anchor w
 foreach opt {activebackground activeforeground background disabledforeground foreground highlightbackground highlightcolor } {
-    #button .t.color-$opt -text $opt -command "config -$opt \[tk_chooseColor]"
+    #button .t.color-$opt -text $opt -command "config -$opt \[tk_chooseColor\]"
     menubutton .t.color-$opt -text $opt -menu .t.color-$opt.m -indicatoron 1 \
-        -relief raised -bd 2 
+        -relief raised -borderwidth 2 
     menu .t.color-$opt.m -tearoff 0
     .t.color-$opt.m add command -label Red -command "config -$opt red"
     .t.color-$opt.m add command -label Green -command "config -$opt green"
     .t.color-$opt.m add command -label Blue -command "config -$opt blue"
     .t.color-$opt.m add command -label Other... \
-          -command "config -$opt \[tk_chooseColor]"
+          -command "config -$opt \[tk_chooseColor\]"
     pack .t.color-$opt -in .t.control.left.f -fill x
 }
 
@@ -73,9 +73,9 @@ frame .t.f4
 pack .t.f4 -side top -expand 1 -fill both
 sep
 
-label .t.l1 -text Label -bd 2 -relief sunken
-label .t.l2 -text "Explicit\nnewlines\n\nin the text" -bd 2 -relief sunken
-label .t.l3 -text "This text is quite long, so it must be wrapped automatically by Tk" -wraplength 2i -bd 2 -relief sunken -underline 50
+label .t.l1 -text Label -borderwidth 2 -relief sunken
+label .t.l2 -text "Explicit\nnewlines\n\nin the text" -borderwidth 2 -relief sunken
+label .t.l3 -text "This text is quite long, so it must be wrapped automatically by Tk" -wraplength 2i -borderwidth 2 -relief sunken -underline 50
 pack .t.l1 .t.l2 .t.l3 -in .t.f1 -side left -padx 5m -pady 3m \
 	-expand y -fill both
 
