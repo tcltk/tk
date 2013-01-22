@@ -1,7 +1,7 @@
 # This file creates a visual test for arcs.  It is part of the Tk
 # visual test suite, which is invoked via the "visual" script.
 
-catch {destroy .t}
+destroy .t
 toplevel .t
 wm title .t "Visual Tests for Canvas Arcs"
 wm iconname .t "Arcs"
@@ -42,23 +42,23 @@ set outline black
 .t.c create arc 500 260 620 460 -start 30 -extent 150 -fill {} -width 14 \
 	-style chord -outline $outline
 .t.c create arc 20 450 140 570 -start 135 -extent 270 -fill $fill1 -width 14 \
-	-style pieslice -outline {}
+	-style pieslice -outline ""
 .t.c create arc 180 450 300 570 -start 30 -extent -90 -fill $fill1 -width 14 \
-	-style pieslice -outline {}
+	-style pieslice -outline ""
 .t.c create arc 340 450 460 570 -start 320 -extent 270 -fill $fill1 -width 14 \
-	-style chord -outline {}
+	-style chord -outline ""
 .t.c create arc 500 450 620 570 -start 350 -extent -110 -fill $fill1 -width 14 \
-	-style chord -outline {}
+	-style chord -outline ""
 .t.c addtag arc withtag all
 .t.c addtag circle withtag [.t.c create oval 320 200 340 220 -fill MistyRose3]
 
 .t.c bind arc <Any-Enter> {
     set prevFill [lindex [.t.c itemconf current -fill] 4]
     set prevOutline [lindex [.t.c itemconf current -outline] 4]
-    if {($prevFill != "") || ($prevOutline == "")} {
+    if {($prevFill ne "") || ($prevOutline eq "")} {
 	.t.c itemconf current -fill $fill3
     }
-    if {$prevOutline != ""} {
+    if {$prevOutline ne ""} {
 	.t.c itemconf current -outline $outline2
     }
 }
@@ -99,7 +99,7 @@ bind .t.c <Shift-1> {
 }
 
 bind .t.c <Shift-B1-Motion> {
-    .t.c move circle [expr %x-$curx] [expr %y-$cury]
+    .t.c move circle [expr {%x - $curx}] [expr {%y - $cury}]
     set curx %x
     set cury %y
 }
@@ -127,7 +127,7 @@ bind .t.c a {
 	}
 	incr i $delta
 	c -start $i
-	c -extent [expr 360-2*$i]
+        c -extent [expr {360 - (2 * $i)}]
 	after 20
 	update
     }

@@ -22,8 +22,7 @@ test validate-0.0 "Setup" -constraints ttkEntry -body {
 
 test validate-0.1 "More setup" -body {
     destroy .e
-    catch {unset ::e}
-    catch {unset ::vVals}
+    unset -nocomplain ::e ::vVals
     entry .e -validate all \
 	    -validatecommand [list doval %W %d %i %P %s %S %v %V] \
 	    -invalidcommand bell \
@@ -209,7 +208,7 @@ test validate-2.1 "Validation script changes value" -body {
 # DIFFERENCE: core entry disables validation, ttk entry does not.
 
 destroy .e
-catch {unset ::e ::vVals}
+unset -nocomplain ::e ::vVals
 
 # See bug #1236979
 

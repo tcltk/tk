@@ -250,12 +250,12 @@ proc ::tk::ListboxBeginSelect {w el {focus 1}} {
 	$w selection clear 0 end
 	$w selection set $el
 	$w selection anchor $el
-	set Priv(listboxSelection) {}
+	set Priv(listboxSelection) ""
 	set Priv(listboxPrev) $el
     }
     event generate $w <<ListboxSelect>>
     # check existence as ListboxSelect may destroy us
-    if {$focus && [winfo exists $w] && [$w cget -state] eq "normal"} {
+    if {$focus && [winfo exists $w] && ([$w cget -state] eq "normal")} {
 	focus $w
     }
 }
@@ -276,7 +276,7 @@ proc ::tk::ListboxMotion {w el} {
 	return
     }
     set anchor [$w index anchor]
-    switch [$w cget -selectmode] {
+    switch -- [$w cget -selectmode] {
 	browse {
 	    $w selection clear 0 end
 	    $w selection set $el
@@ -314,6 +314,7 @@ proc ::tk::ListboxMotion {w el} {
 	    set Priv(listboxPrev) $el
 	    event generate $w <<ListboxSelect>>
 	}
+        default {}
     }
 }
 
@@ -411,7 +412,7 @@ proc ::tk::ListboxUpDown {w amount} {
     variable ::tk::Priv
     $w activate [expr {[$w index active] + $amount}]
     $w see active
-    switch [$w cget -selectmode] {
+    switch -- [$w cget -selectmode] {
 	browse {
 	    $w selection clear 0 end
 	    $w selection set active
@@ -422,9 +423,10 @@ proc ::tk::ListboxUpDown {w amount} {
 	    $w selection set active
 	    $w selection anchor active
 	    set Priv(listboxPrev) [$w index active]
-	    set Priv(listboxSelection) {}
+	    set Priv(listboxSelection) ""
 	    event generate $w <<ListboxSelect>>
 	}
+        default {}
     }
 }
 
@@ -488,7 +490,7 @@ proc ::tk::ListboxDataExtend {w el} {
 # Arguments:
 # w -		The listbox widget.
 
-proc ::tk::ListboxCancel w {
+proc ::tk::ListboxCancel {w} {
     variable ::tk::Priv
     if {[$w cget -selectmode] ne "extended"} {
 	return
@@ -523,9 +525,9 @@ proc ::tk::ListboxCancel w {
 # Arguments:
 # w -		The listbox widget.
 
-proc ::tk::ListboxSelectAll w {
+proc ::tk::ListboxSelectAll {w} {
     set mode [$w cget -selectmode]
-    if {$mode eq "single" || $mode eq "browse"} {
+    if {$mode in "single browse"} {
 	$w selection clear 0 end
 	$w selection set active
     } else {

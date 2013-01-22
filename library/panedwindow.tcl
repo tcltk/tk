@@ -31,22 +31,24 @@ namespace eval ::tk::panedwindow {}
 # Results:
 #   None
 #
-proc ::tk::panedwindow::MarkSash {w x y proxy} {
+proc ::tk::panedwindow::MarkSash {w x y a_proxy} {
     variable ::tk::Priv
     if {[$w cget -opaqueresize]} {
 	set proxy 0
+    } else {
+	set proxy $a_proxy
     }
     set what [$w identify $x $y]
     if { [llength $what] == 2 } {
 	lassign $what index which
-	if {!$::tk_strictMotif || $which eq "handle"} {
+	if {(!$::tk_strictMotif) || ($which eq "handle")} {
 	    if {!$proxy} {
 		$w sash mark $index $x $y
 	    }
 	    set Priv(sash) $index
 	    lassign [$w sash coord $index] sx sy
-	    set Priv(dx) [expr {$sx-$x}]
-	    set Priv(dy) [expr {$sy-$y}]
+	    set Priv(dx) [expr {$sx - $x}]
+	    set Priv(dy) [expr {$sy - $y}]
 	    # Do this to init the proxy location
 	    DragSash $w $x $y $proxy
 	}
@@ -65,17 +67,19 @@ proc ::tk::panedwindow::MarkSash {w x y proxy} {
 # Results:
 #   Moves sash
 #
-proc ::tk::panedwindow::DragSash {w x y proxy} {
+proc ::tk::panedwindow::DragSash {w x y a_proxy} {
     variable ::tk::Priv
     if {[$w cget -opaqueresize]} {
 	set proxy 0
+    } else {
+	set proxy $a_proxy
     }
     if {[info exists Priv(sash)]} {
 	if {$proxy} {
-	    $w proxy place [expr {$x+$Priv(dx)}] [expr {$y+$Priv(dy)}]
+	    $w proxy place [expr {$x + $Priv(dx)}] [expr {$y + $Priv(dy)}]
 	} else {
 	    $w sash place $Priv(sash) \
-		    [expr {$x+$Priv(dx)}] [expr {$y+$Priv(dy)}]
+		    [expr {$x + $Priv(dx)}] [expr {$y + $Priv(dy)}]
 	}
     }
 }
@@ -90,10 +94,12 @@ proc ::tk::panedwindow::DragSash {w x y proxy} {
 # Results:
 #   Returns ...
 #
-proc ::tk::panedwindow::ReleaseSash {w proxy} {
+proc ::tk::panedwindow::ReleaseSash {w a_proxy} {
     variable ::tk::Priv
     if {[$w cget -opaqueresize]} {
 	set proxy 0
+    } else {
+	set proxy $a_proxy
     }
     if {[info exists Priv(sash)]} {
 	if {$proxy} {
@@ -121,8 +127,8 @@ proc ::tk::panedwindow::ReleaseSash {w proxy} {
 proc ::tk::panedwindow::Motion {w x y} {
     variable ::tk::Priv
     set id [$w identify $x $y]
-    if {([llength $id] == 2) && \
-	    (!$::tk_strictMotif || [lindex $id 1] eq "handle")} {
+    if {([llength $id] == 2) && 
+	((!$::tk_strictMotif) || ([lindex $id 1] eq "handle"))} {
 	if {![info exists Priv($w,panecursor)]} {
 	    set Priv($w,panecursor) [$w cget -cursor]
 	    if {[$w cget -sashcursor] ne ""} {

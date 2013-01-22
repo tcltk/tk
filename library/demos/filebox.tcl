@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .filebox
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "File Selection Dialogs"
 wm iconname $w "filebox"
@@ -61,7 +61,7 @@ proc fileDialog {w ent operation} {
 	{"Image Files"		""		{GIFF JPEG}}
 	{"All files"		*}
     }
-    if {$operation == "open"} {
+    if {$operation eq "open"} {
 	global selected_type
 	if {![info exists selected_type]} {
 	    set selected_type "Tcl Scripts"
@@ -73,7 +73,7 @@ proc fileDialog {w ent operation} {
 	set file [tk_getSaveFile -filetypes $types -parent $w \
 		-initialfile Untitled -defaultextension .txt]
     }
-    if {[string compare $file ""]} {
+    if {$file ne ""} {
 	$ent delete 0 end
 	$ent insert 0 $file
 	$ent xview end

@@ -58,7 +58,6 @@ test option-1.6 {basic option retrieval} -body {
     option get . z Color2
 } -result {}
 
-
 test option-2.1 {basic option retrieval} -body {
     option get .op1 x Color1
 } -result green
@@ -77,7 +76,6 @@ test option-2.5 {basic option retrieval} -body {
 test option-2.6 {basic option retrieval} -body {
     option get .op1 z Color2
 } -result {}
-
 
 test option-3.1 {basic option retrieval} -body {
     option get .op1.op3 x Color1
@@ -98,7 +96,6 @@ test option-3.6 {basic option retrieval} -body {
     option get .op1.op3 z Color2
 } -result {}
 
-
 test option-4.1 {basic option retrieval} -body {
     option get .op1.op3.op6 x Color1
 } -result blue
@@ -117,7 +114,6 @@ test option-4.5 {basic option retrieval} -body {
 test option-4.6 {basic option retrieval} -body {
     option get .op1.op3.op6 z Color2
 } -result black
-
 
 test option-5.1 {basic option retrieval} -body {
     option get .op1.op4 x Color1
@@ -138,7 +134,6 @@ test option-5.6 {basic option retrieval} -body {
     option get .op1.op4 z Color2
 } -result {}
 
-
 test option-6.1 {basic option retrieval} -body {
     option get .op2 x Color1
 } -result orange
@@ -157,7 +152,6 @@ test option-6.5 {basic option retrieval} -body {
 test option-6.6 {basic option retrieval} -body {
     option get .op2 z Color2
 } -result {}
-
 
 test option-7.1 {basic option retrieval} -body {
     option get .op2.op5 x Color1
@@ -203,7 +197,6 @@ test option-8.6 {stack pushing/popping} -body {
     option get .op2.op5 z Color2
 } -result purple
 
-
 test option-9.1 {stack pushing/popping} -body {
     option get . x Color1
 } -result blue
@@ -222,7 +215,6 @@ test option-9.5 {stack pushing/popping} -body {
 test option-9.6 {stack pushing/popping} -body {
     option get . z Color2
 } -result {}
-
 
 test option-10.1 {stack pushing/popping} -body {
     option get .op1.op3.op6 x Color1
@@ -243,7 +235,6 @@ test option-10.6 {stack pushing/popping} -body {
     option get .op1.op3.op6 z Color2
 } -result black
 
-
 test option-11.1 {stack pushing/popping} -body {
     option get .op1.op3 x Color1
 } -result yellow
@@ -262,7 +253,6 @@ test option-11.5 {stack pushing/popping} -body {
 test option-11.6 {stack pushing/popping} -body {
     option get .op1.op3 z Color2
 } -result {}
-
 
 test option-12.1 {stack pushing/popping} -body {
     option get .op1 x Color1
@@ -358,7 +348,6 @@ test option-14.12 {error conditions} -body {
     option get .gorp.gorp a A
 } -returnCodes error -result {bad window path name ".gorp.gorp"}
 
-
 set option1 [file join [testsDirectory] option.file1]
 test option-15.1 {database files} -body {
     option read non-existent
@@ -397,13 +386,12 @@ test option-15.9 {database files} -body {
     option read $option2
 } -returnCodes error -result {missing colon on line 2}
 
-
 test option-16.1 {ReadOptionFile} -body {
     set option3 [makeFile {} option.file3]
     set file [open $option3 w]
-    fconfigure $file -translation crlf
-    puts $file "*x7: true\n*x8: false"
-    close $file
+    chan configure $file -translation crlf
+    chan puts $file "*x7: true\n*x8: false"
+    chan close $file
     option read $option3 userDefault
     list [option get . x7 color] [option get . x8 color]
 } -cleanup {

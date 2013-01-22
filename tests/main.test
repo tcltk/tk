@@ -25,16 +25,16 @@ test main-2.1 {Tk_MainEx: -encoding option} -constraints stdio -setup {
 	set script [makeFile {} script]
 	file delete $script
 	set f [open $script w]
-	fconfigure $f -encoding utf-8
-	puts $f {puts [list $argv0 $argv $tcl_interactive]}
-	puts -nonewline $f {puts [string equal \u20ac }
-	puts $f "\u20ac]; exit"
-	close $f
+	chan configure $f -encoding utf-8
+	chan puts $f {puts [list $argv0 $argv $tcl_interactive]}
+	chan puts -nonewline $f {puts [string equal \u20ac }
+	chan puts $f "\u20ac]; exit"
+	chan close $f
 	catch {set f [open "|[list [interpreter] -encoding utf-8 script]" r]}
 } -body {
-	read $f
+	chan read $f
 } -cleanup {
-	close $f
+	chan close $f
 	removeFile script
 } -result "script {} 0\n1\n"
 
@@ -42,16 +42,16 @@ test main-2.2 {Tk_MainEx: -encoding option} -constraints stdio -setup {
 	set script [makeFile {} script]
 	file delete $script
 	set f [open $script w]
-	fconfigure $f -encoding utf-8
-	puts $f {puts [list $argv0 $argv $tcl_interactive]}
-	puts -nonewline $f {puts [string equal \u20ac }
-	puts $f "\u20ac]; exit"
-	close $f
+	chan configure $f -encoding utf-8
+	chan puts $f {puts [list $argv0 $argv $tcl_interactive]}
+	chan puts -nonewline $f {puts [string equal \u20ac }
+	chan puts $f "\u20ac]; exit"
+	chan close $f
 	catch {set f [open "|[list [interpreter] -encoding ascii script]" r]}
 } -body {
-	read $f
+	chan read $f
 } -cleanup {
-	close $f
+	chan close $f
 	removeFile script
 } -result "script {} 0\n0\n"
 
@@ -60,8 +60,8 @@ test main-2.2 {Tk_MainEx: -encoding option} -constraints stdio -setup {
     proc type {chan script} {
         foreach line [split $script \n] {
             if {[catch {
-                puts $chan $line
-                flush $chan
+                chan puts $chan $line
+                chan flush $chan
             }]} {
                 return
             }
@@ -74,20 +74,20 @@ test main-2.3 {Tk_MainEx: -encoding option} -constraints stdio -setup {
 	set script [makeFile {} script]
 	file delete $script
 	set f [open $script w]
-	fconfigure $f -encoding utf-8
-	puts $f {puts [list $argv0 $argv $tcl_interactive]}
-	puts -nonewline $f {puts [string equal \u20ac }
-	puts $f "\u20ac]"
-	close $f
+	chan configure $f -encoding utf-8
+	chan puts $f {puts [list $argv0 $argv $tcl_interactive]}
+	chan puts -nonewline $f {puts [string equal \u20ac }
+	chan puts $f "\u20ac]"
+	chan close $f
 	catch {set f [open "|[list [interpreter] -enc utf-8 script]" r+]}
 } -body {
 	type $f {
-		puts $argv
+		chan puts $argv
 		exit
 	}
-	gets $f
+	chan gets $f
 } -cleanup {
-	close $f
+	chan close $f
 	removeFile script
 } -returnCodes ok -result {-enc utf-8 script}
 

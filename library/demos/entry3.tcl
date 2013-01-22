@@ -11,7 +11,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .entry3
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Constrained Entry Demonstration"
 wm iconname $w "entry3"
@@ -49,15 +49,15 @@ pack $btns -side bottom -fill x
 
 proc focusAndFlash {W fg bg {count 9}} {
     focus -force $W
-    if {$count<1} {
+    if {$count < 1} {
 	$W configure -foreground $fg -background $bg
     } else {
-	if {$count%2} {
+	if {$count % 2} {
 	    $W configure -foreground $bg -background $fg
 	} else {
 	    $W configure -foreground $fg -background $bg
 	}
-	after 200 [list focusAndFlash $W $fg $bg [expr {$count-1}]]
+	after 200 [list focusAndFlash $W $fg $bg [expr {$count - 1}]]
     }
 }
 
@@ -70,7 +70,7 @@ $w.l1.e configure -invalidcommand \
 pack $w.l1.e -fill x -expand 1 -padx 1m -pady 1m
 
 labelframe $w.l2 -text "Length-Constrained Entry"
-entry $w.l2.e -validate key -invcmd bell -vcmd {expr {[string length %P]<10}}
+entry $w.l2.e -validate key -invcmd bell -vcmd {expr {[string length %P] < 10}}
 pack $w.l2.e -fill x -expand 1 -padx 1m -pady 1m
 
 ### PHONE NUMBER ENTRY ###
@@ -82,7 +82,7 @@ set entry3content "1-(000)-000-0000"
 # Mapping from alphabetic characters to numbers.  This is probably
 # wrong, but it is the only mapping I have; the UK doesn't really go
 # for associating letters with digits for some reason.
-set phoneNumberMap {}
+set phoneNumberMap ""
 foreach {chars digit} {abc 2 def 3 ghi 4 jkl 5 mno 6 pqrs 7 tuv 8 wxyz 9} {
     foreach char [split $chars ""] {
 	lappend phoneNumberMap $char $digit [string toupper $char] $digit
@@ -105,9 +105,9 @@ proc validatePhoneChange {W vmode idx char} {
     if {$idx == -1} {return 1}
     after idle [list $W configure -validate $vmode -invcmd bell]
     if {
-	!($idx<3 || $idx==6 || $idx==7 || $idx==11 || $idx>15) &&
+	(!(($idx < 3) || ($idx in "6 7 11") || ($idx > 15))) && 
 	[string match {[0-9A-Za-z]} $char]
-    } then {
+    } {
 	$W delete $idx
 	$W insert $idx [string map $phoneNumberMap $char]
 	after idle [list phoneSkipRight $W -1]
@@ -127,7 +127,7 @@ proc phoneSkipLeft {W} {
     if {$idx == 8} {
 	# Skip back two extra characters
 	$W icursor [incr idx -2]
-    } elseif {$idx == 7 || $idx == 12} {
+    } elseif {$idx in "7 12"} {
 	# Skip back one extra character
 	$W icursor [incr idx -1]
     } elseif {$idx <= 3} {
@@ -146,13 +146,13 @@ proc phoneSkipLeft {W} {
 
 proc phoneSkipRight {W {add 0}} {
     set idx [$W index insert]
-    if {$idx+$add == 5} {
+    if {($idx + $add) == 5} {
 	# Skip forward two extra characters
 	$W icursor [incr idx 2]
-    } elseif {$idx+$add == 6 || $idx+$add == 10} {
+    } elseif {(($idx + $add) == 6) || (($idx + $add) == 10)} {
 	# Skip forward one extra character
 	$W icursor [incr idx]
-    } elseif {$idx+$add == 15 && !$add} {
+    } elseif {(($idx + $add) == 15) && (!$add)} {
 	# Can't move any further
 	bell
 	return -code break
@@ -174,7 +174,7 @@ bind $w.l3.e <<NextChar>> {phoneSkipRight %W}
 pack $w.l3.e -fill x -expand 1 -padx 1m -pady 1m
 
 labelframe $w.l4 -text "Password Entry"
-entry $w.l4.e -validate key -show "*" -vcmd {expr {[string length %P]<=8}}
+entry $w.l4.e -validate key -show "*" -vcmd {expr {[string length %P] <= 8}}
 pack $w.l4.e -fill x -expand 1 -padx 1m -pady 1m
 
 lower [frame $w.mid]

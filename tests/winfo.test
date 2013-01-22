@@ -23,13 +23,13 @@ proc eatColors {w {options ""}} {
     destroy $w
     eval toplevel $w $options
     wm geom $w +0+0
-    canvas $w.c -width 400 -height 200 -bd 0
+    canvas $w.c -width 400 -height 200 -borderwidth 0
     pack $w.c
     for {set y 0} {$y < 8} {incr y} {
         for {set x 0} {$x < 40} {incr x} {
-            set color [format #%02x%02x%02x [expr $x*6] [expr $y*30] 0]
-            $w.c create rectangle [expr 10*$x] [expr 20*$y] \
-                [expr 10*$x + 10] [expr 20*$y + 20] -outline {} \
+	    set color [format "#%02x%02x%02x" [expr {$x * 6}] [expr {$y * 30}] 0]
+ 	    $w.c create rectangle [expr {10 * $x}] [expr {20 * $y}] \
+	        [expr {(10 * $x) + 10}] [expr {(20 * $y) + 20}] -outline "" \
                 -fill $color
         }
     }
@@ -60,7 +60,6 @@ test winfo-1.6 {"winfo atom" command} -body {
     winfo atom -displayof . PRIMARY
 } -result 1
 
-
 test winfo-2.1 {"winfo atomname" command} -body {
     winfo atomname
 } -returnCodes error -result {wrong # args: should be "winfo atomname ?-displayof window? id"}
@@ -82,7 +81,6 @@ test winfo-2.6 {"winfo atomname" command} -body {
 test winfo-2.7 {"winfo atom" command} -body {
     winfo atomname -displayof . 2
 } -result SECONDARY
-
 
 test winfo-3.1 {"winfo colormapfull" command} -constraints {
     defaultPseudocolor8
@@ -116,8 +114,6 @@ test winfo-3.4 {"winfo colormapfull" command} -constraints {
     destroy .t
 } -result {0 1 0 0 1 0}
 
-
-
 test winfo-4.1 {"winfo containing" command} -body {
     winfo containing 22
 } -returnCodes error -result {wrong # args: should be "winfo containing ?-displayof window? rootX rootY"}
@@ -135,7 +131,7 @@ test winfo-4.5 {"winfo containing" command} -body {
     destroy .t
 } -body {
     toplevel .t -width 550 -height 400
-    frame .t.f -width 80 -height 60 -bd 2 -relief raised
+    frame .t.f -width 80 -height 60 -borderwidth 2 -relief raised
     place .t.f -x 50 -y 50
     wm geom .t +0+0
     update
@@ -151,7 +147,7 @@ test winfo-4.6 {"winfo containing" command} -constraints {
     destroy .t
 } -body {
     toplevel .t -width 550 -height 400
-    frame .t.f -width 80 -height 60 -bd 2 -relief raised
+    frame .t.f -width 80 -height 60 -borderwidth 2 -relief raised
     place .t.f -x 50 -y 50
     wm geom .t +0+0
     update
@@ -164,18 +160,17 @@ test winfo-4.7 {"winfo containing" command} -setup {
     destroy .t
 } -body {
     toplevel .t -width 550 -height 400
-    frame .t.f -width 80 -height 60 -bd 2 -relief raised
+    frame .t.f -width 80 -height 60 -borderwidth 2 -relief raised
     place .t.f -x 50 -y 50
     wm geom .t +0+0
     update
 
     set x [winfo containing -display .t.f [expr [winfo rootx .t]+600] \
         [expr [winfo rooty .t.f]+450]]
-    expr {($x == ".") || ($x == "")}
+    expr {($x eq ".") || ($x eq "")}
 } -cleanup {
     destroy .t
 } -result {1}
-
 
 test winfo-5.1 {"winfo interps" command} -body {
     winfo interps a
@@ -192,7 +187,6 @@ test winfo-5.4 {"winfo interps" command} -constraints unix -body {
 test winfo-5.5 {"winfo interps" command} -constraints unix -body {
     expr {[lsearch -exact [winfo interps -displayof .] [tk appname]] >= 0}
 } -result {1}
-
 
 test winfo-6.1 {"winfo exists" command} -body {
     winfo exists
@@ -217,7 +211,6 @@ test winfo-6.5 {"winfo exists" command} -setup {
     destroy .b
     lappend x [winfo exists .x]
 } -result {1 0 0}
-
 
 test winfo-7.1 {"winfo pathname" command} -body {
     winfo pathname
@@ -252,7 +245,6 @@ test winfo-7.8 {"winfo pathname" command} -constraints {
     winfo pathname [testwrapper .]
 } -result {}
 
-
 test winfo-8.1 {"winfo pointerx" command} -setup {
     destroy .b
     button .b -text "Help"
@@ -281,7 +273,6 @@ test winfo-8.3 {"winfo pointerxy" command} -setup {
     catch [winfo pointerx .b]
 } -result 1
 
-
 test winfo-9.1 {"winfo viewable" command} -body {
     winfo viewable
 } -returnCodes error -result {wrong # args: should be "winfo viewable window"}
@@ -300,9 +291,9 @@ test winfo-9.4 {"winfo viewable" command} -body {
 test winfo-9.5 {"winfo viewable" command} -setup {
     deleteWindows
 } -body {
-    frame .f1 -width 100 -height 100 -relief raised -bd 2
+    frame .f1 -width 100 -height 100 -relief raised -borderwidth 2
     place .f1 -x 0 -y 0
-    frame .f1.f2 -width 50 -height 50 -relief raised -bd 2
+    frame .f1.f2 -width 50 -height 50 -relief raised -borderwidth 2
     place .f1.f2 -x 0 -y 0
     update
     list [winfo viewable .f1] [winfo viewable .f1.f2]
@@ -312,8 +303,8 @@ test winfo-9.5 {"winfo viewable" command} -setup {
 test winfo-9.6 {"winfo viewable" command} -setup {
     deleteWindows
 } -body {
-    frame .f1 -width 100 -height 100 -relief raised -bd 2
-    frame .f1.f2 -width 50 -height 50 -relief raised -bd 2
+    frame .f1 -width 100 -height 100 -relief raised -borderwidth 2
+    frame .f1.f2 -width 50 -height 50 -relief raised -borderwidth 2
     place .f1.f2 -x 0 -y 0
     update
     list [winfo viewable .f1] [winfo viewable .f1.f2]
@@ -323,9 +314,9 @@ test winfo-9.6 {"winfo viewable" command} -setup {
 test winfo-9.7 {"winfo viewable" command} -setup {
     deleteWindows
 } -body {
-    frame .f1 -width 100 -height 100 -relief raised -bd 2
+    frame .f1 -width 100 -height 100 -relief raised -borderwidth 2
     place .f1 -x 0 -y 0
-    frame .f1.f2 -width 50 -height 50 -relief raised -bd 2
+    frame .f1.f2 -width 50 -height 50 -relief raised -borderwidth 2
     place .f1.f2 -x 0 -y 0
     update
     wm iconify .
@@ -334,7 +325,6 @@ test winfo-9.7 {"winfo viewable" command} -setup {
     wm deiconify .
     deleteWindows
 } -result {0 0}
-
 
 test winfo-10.1 {"winfo visualid" command} -body {
     winfo visualid
@@ -345,7 +335,6 @@ test winfo-10.2 {"winfo visualid" command} -body {
 test winfo-10.3 {"winfo visualid" command} -body {
     expr {2 + [winfo visualid .] - [winfo visualid .]}
 } -result {2}
-
 
 test winfo-11.1 {"winfo visualid" command} -body {
     winfo visualsavailable
@@ -367,14 +356,12 @@ test winfo-11.6 {"winfo visualid" command} -body {
     expr $x + 2 - $x
 } -result {2}
 
-
 test winfo-12.1 {GetDisplayOf procedure} -body {
     winfo atom - foo x
 } -returnCodes error -result {wrong # args: should be "winfo atom ?-displayof window? name"}
 test winfo-12.2 {GetDisplayOf procedure} -body {
     winfo atom -d bad_window x
 } -returnCodes error -result {bad window path name "bad_window"}
-
 
 # Some embedding tests
 #
@@ -383,7 +370,7 @@ test winfo-13.1 {root coordinates of embedded toplevel} -setup {
 } -body {
     frame .con -container 1
     pack .con -expand yes -fill both
-    toplevel .emb -use [winfo id .con] -bd 0 -highlightthickness 0
+    toplevel .emb -use [winfo id .con] -borderwidth 0 -highlightthickness 0
     button .emb.b
     pack .emb.b -expand yes -fill both
     update
@@ -399,7 +386,7 @@ test winfo-13.2 {destroying embedded toplevel} -setup {
 } -body {
     frame .con -container 1
     pack .con -expand yes -fill both
-    toplevel .emb -use [winfo id .con] -bd 0 -highlightthickness 0
+    toplevel .emb -use [winfo id .con] -borderwidth 0 -highlightthickness 0
     button .emb.b
     pack .emb.b -expand yes -fill both
     update
@@ -416,7 +403,7 @@ test winfo-13.3 {destroying container window} -setup {
 } -body {
     frame .con -container 1
     pack .con -expand yes -fill both
-    toplevel .emb -use [winfo id .con] -bd 0 -highlightthickness 0
+    toplevel .emb -use [winfo id .con] -borderwidth 0 -highlightthickness 0
     button .emb.b
     pack .emb.b -expand yes -fill both
     update
@@ -433,7 +420,7 @@ test winfo-13.4 {[winfo containing] with embedded windows} -setup {
 } -body {
     frame .con -container 1
     pack .con -expand yes -fill both
-    toplevel .emb -use [winfo id .con] -bd 0 -highlightthickness 0
+    toplevel .emb -use [winfo id .con] -borderwidth 0 -highlightthickness 0
     button .emb.b
     pack .emb.b -expand yes -fill both
     update
@@ -446,7 +433,6 @@ test winfo-13.4 {[winfo containing] with embedded windows} -setup {
 } -cleanup {
     deleteWindows
 } -result 0
-
 
 test winfo-14.1 {usage} -body {
     winfo ismapped

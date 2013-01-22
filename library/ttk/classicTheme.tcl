@@ -6,7 +6,8 @@
 
 namespace eval ttk::theme::classic {
 
-    variable colors; array set colors {
+    variable colors
+    array set colors {
 	-frame		"#d9d9d9"
 	-window		"#ffffff"
 	-activebg	"#ececec"

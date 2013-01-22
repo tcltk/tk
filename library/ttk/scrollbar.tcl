@@ -11,7 +11,7 @@ if {[tk windowingsystem] eq "aqua"} {
     proc ttk::scrollbar {w args} {
 	set constructor ::tk::scrollbar
 	foreach {option _} $args {
-	    if {$option eq "-class" || $option eq "-style"} {
+	    if {$option in "-class -style"} {
 		set constructor ::ttk::_scrollbar
 		break
 	    }
@@ -80,6 +80,7 @@ proc ttk::scrollbar::Press {w x y} {
 		set State(first) [lindex [$w get] 0]
 	    }
 	}
+        default {}
     }
 }
 

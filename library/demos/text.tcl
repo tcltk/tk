@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .text
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Text Demonstration - Basic Facilities"
 wm iconname $w "text"
@@ -29,11 +29,11 @@ pack $w.text -expand yes -fill both
 
 # TIP 324 Demo: [tk fontchooser]
 proc fontchooserToggle {} {
-    tk fontchooser [expr {[tk fontchooser configure -visible] ?
+    tk fontchooser [expr {[tk fontchooser configure -visible] ? 
             "hide" : "show"}]
 }
 proc fontchooserVisibility {w} {
-    $w configure -text [expr {[tk fontchooser configure -visible] ?
+    $w configure -text [expr {[tk fontchooser configure -visible] ? 
             "Hide Font Dialog" : "Show Font Dialog"}]
 }
 proc fontchooserFocus {w} {
@@ -92,13 +92,14 @@ cursor.  Control-t transposes the two characters on either side of the
 insertion cursor.  Control-z undoes the last editing action performed,
 and }
 
-switch [tk windowingsystem] {
+switch -- [tk windowingsystem] {
     "aqua" - "x11" {
 	$w.text insert end "Control-Shift-z"
     }
     "win32" {
 	$w.text insert end "Control-y"
     }
+    default {}
 }
 
 $w.text insert end { redoes undone edits.

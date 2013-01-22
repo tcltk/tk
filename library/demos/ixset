@@ -21,19 +21,19 @@ proc quit {} {
 }
 
 proc ok {} {
-    writesettings
+    writesettings 
     quit
 }
 
 proc cancel {} {
-    readsettings
-    dispsettings
+    readsettings 
+    dispsettings 
     .buttons.apply configure -state disabled
     .buttons.cancel configure -state disabled
 }
 
 proc apply {} {
-    writesettings
+    writesettings 
     .buttons.apply configure -state disabled
     .buttons.cancel configure -state disabled
 }
@@ -43,16 +43,27 @@ proc apply {} {
 #
 
 proc readsettings {} {
-    global kbdrep ;	set kbdrep	"on"
-    global kbdcli ;	set kbdcli	0
-    global bellvol ;	set bellvol	100
-    global bellpit ;	set bellpit	440
-    global belldur ;	set belldur	100
-    global mouseacc ;	set mouseacc	"3/1"
-    global mousethr ;	set mousethr	4
-    global screenbla ;	set screenbla	"blank"
-    global screentim ;	set screentim	600
-    global screencyc ;	set screencyc	600
+    global belldur
+    global bellpit
+    global bellvol
+    global kbdcli
+    global kbdrep
+    global mouseacc
+    global mousethr
+    global screenbla
+    global screencyc
+    global screentim
+
+    set belldur		100
+    set bellpit		440
+    set bellvol		100
+    set kbdcli		0
+    set kbdrep		"on"
+    set mouseacc	"3/1"
+    set mousethr	4
+    set screenbla	"blank"
+    set screencyc	600
+    set screentim	600
 
     set xfd [open "|xset q" r]
     while {[gets $xfd line] > -1} {
@@ -75,12 +86,13 @@ proc readsettings {} {
 	    }
 	    prefer {
 		set bla [lindex $line 2]
-		set screenbla [expr {$bla eq "yes" ? "blank" : "noblank"}]
+		set screenbla [expr {($bla eq "yes") ? "blank" : "noblank"}]
 	    }
 	    timeout: {
 		set screentim [lindex $line 1]
 		set screencyc [lindex $line 3]
 	    }
+	    default {}
 	}
     }
     close $xfd
@@ -146,7 +158,7 @@ proc dispsettings {} {
     .bell.val.dur.entry delete 0 end
     .bell.val.dur.entry insert 0 $belldur
 
-    .kbd.val.onoff [expr {$kbdrep eq "on" ? "select" : "deselect"}]
+    .kbd.val.onoff [expr {($kbdrep eq "on") ? "select" : "deselect"}]
     .kbd.val.cli set $kbdcli
 
     .mouse.hor.acc.entry delete 0 end
@@ -154,20 +166,19 @@ proc dispsettings {} {
     .mouse.hor.thr.entry delete 0 end
     .mouse.hor.thr.entry insert 0 $mousethr
 
-    .screen.blank [expr {$screenbla eq "blank" ? "select" : "deselect"}]
-    .screen.pat   [expr {$screenbla ne "blank" ? "select" : "deselect"}]
+    .screen.blank [expr {($screenbla eq "blank") ? "select" : "deselect"}]
+    .screen.pat   [expr {($screenbla ne "blank") ? "select" : "deselect"}]
     .screen.tim.entry delete 0 end
     .screen.tim.entry insert 0 $screentim
     .screen.cyc.entry delete 0 end
     .screen.cyc.entry insert 0 $screencyc
 }
 
-
 #
 # Create all windows, and pack them
 #
 
-proc labelentry {path text length {range {}}} {
+proc labelentry {path text length {range ""}} {
     frame $path
     label $path.label -text $text
     if {[llength $range]} {
@@ -196,8 +207,14 @@ proc createwindows {} {
     pack .buttons.ok .buttons.apply .buttons.cancel .buttons.quit \
 	    -side left -expand yes -pady 5
 
-    bind . <Return> {.buttons.ok   flash; .buttons.ok   invoke}
-    bind . <Escape> {.buttons.quit flash; .buttons.quit invoke}
+    bind . <Return> {
+        .buttons.ok   flash
+        .buttons.ok   invoke
+    }
+    bind . <Escape> {
+        .buttons.quit flash
+        .buttons.quit invoke
+    }
     bind . <1> {
 	if {![string match .buttons* %W]} {
 	    .buttons.apply  configure -state normal
@@ -206,7 +223,7 @@ proc createwindows {} {
     }
     bind . <Key> {
 	if {![string match .buttons* %W]} {
-	    switch -glob %K {
+	    switch -glob -- %K {
 		Return - Escape - Tab - *Shift* {}
 		default {
 		    .buttons.apply  configure -state normal

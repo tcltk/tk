@@ -1,9 +1,10 @@
 
 package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require tcltest
+namespace import -force tcltest::*
 loadTestedCommands
 
-proc skip args {}
+proc skip {args} {}
 proc ok {} { return }
 
 variable widgetClasses {
@@ -15,9 +16,10 @@ variable widgetClasses {
 }
 
 proc bgerror {error} {
+    global errorInfo errorCode
     variable bgerror $error
-    variable bgerrorInfo $::errorInfo
-    variable bgerrorCode $::errorCode
+    variable bgerrorInfo $errorInfo
+    variable bgerrorCode $errorCode
 }
 
 # Self-destruct tests.
@@ -226,7 +228,7 @@ foreach wc $widgetClasses {
 	    .w cget $option
 	}
     } -cleanup {
-	catch {destroy .w}
+	destroy .w
     }
 }
 
@@ -245,7 +247,8 @@ test ttk-3.2 "Propagate errors from variable traces" -body {
     ttk::checkbutton .cb -variable A
     .cb invoke
 } -cleanup {
-    unset ::A ; destroy .cb
+    unset ::A
+    destroy .cb
 } -returnCodes error -result {can't set "A": failure}
 
 test ttk-3.3 "Constructor failure with cursor" -body {
@@ -267,7 +270,7 @@ test ttk-3.4 "SF#2009213" -body {
 #
 
 test ttk-4.0 "Setup" -body {
-    catch { destroy .t }
+    destroy .t
     pack [ttk::label .t -text "Button 1"]
     testConstraint fontOption [expr ![catch { set prevFont [.t cget -font] }]]
     ok
@@ -317,17 +320,28 @@ zCDoBooud2PMDIKuRqDocgtGzMwg6O4Eii5z4Kgi6DIMhqLoagQGjiqCLvPgYOgqji6CLrfi
 variable compoundStrings {text image center top bottom left right none}
 
 if {0} {
-    proc now {} { set ::now [clock clicks -milliseconds] }
-    proc tick {} { puts -nonewline stderr "+" ; flush stderr }
+    proc now {} {
+        global now
+        set now [clock milliseconds]
+    }
+    proc tick {} {
+        puts -nonewline stderr "+"
+        flush stderr
+    }
     proc tock {} {
-	set then $::now; set ::now [clock clicks -milliseconds]
-	puts stderr " [expr {$::now - $then}] ms"
+        global now
+	set then $now
+        set now [clock milliseconds]
+	puts stderr " [expr {$now - $then}] ms"
     }
 } else {
-    proc now {} {} ; proc tick {} {} ; proc tock {} {}
+    proc now {} {}
+    proc tick {} {}
+    proc tock {} {}
 }
 
-now ; tick
+now 
+tick 
 test ttk-8.0 "Setup for 8.X" -body {
     ttk::button .ctb
     image create photo icon -data $::iconData;
@@ -335,7 +349,7 @@ test ttk-8.0 "Setup for 8.X" -body {
 }
 tock
 
-now
+now 
 test ttk-8.1 "Test -compound options" -body {
     # Exhaustively test each combination.
     # Main goal is to make sure no code paths crash.
@@ -343,12 +357,13 @@ test ttk-8.1 "Test -compound options" -body {
         foreach text {"Hi!" ""} {
 	    foreach compound $::compoundStrings {
 		.ctb configure -image $image -text $text -compound $compound
-		update; tick
+		update
+	        tick 
 	    }
 	}
     }
 }
-tock
+tock 
 
 test ttk-8.2 "Test -compound options with regular button" -body {
     button .rtb
@@ -358,24 +373,26 @@ test ttk-8.2 "Test -compound options with regular button" -body {
         foreach text {"Hi!" ""} {
 	    foreach compound [lrange $::compoundStrings 2 end] {
 		.rtb configure -image $image -text $text -compound $compound
-		update; tick
+		update
+	        tick 
 	    }
 	}
     }
 }
-tock
+tock 
 
 test ttk-8.3 "Rerun test 8.1" -body {
     foreach image {icon ""} {
         foreach text {"Hi!" ""} {
 	    foreach compound $::compoundStrings {
 		.ctb configure -image $image -text $text -compound $compound
-		update; tick
+		update
+	        tick 
 	    }
 	}
     }
 }
-tock
+tock 
 
 test ttk-8.4 "ImageChanged" -body {
     ttk::button .b -image icon
@@ -425,9 +442,11 @@ test ttk-9.7 "Unset textvariable, comparison" -body {
 # NB: this is on purpose: I believe the standard behaviour is the Wrong Thing
 #
     unset -nocomplain V1  V2
-    label .l -text Foo ; ttk::label .tl -text Foo
+    label .l -text Foo
+    ttk::label .tl -text Foo
 
-    .l configure -textvariable V1 ; .tl configure -textvariable V2
+    .l configure -textvariable V1
+    .tl configure -textvariable V2
     list [set V1] [info exists V2]
 } -cleanup { destroy .l .tl } -result [list Foo 0]
 

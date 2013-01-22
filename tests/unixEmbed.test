@@ -22,17 +22,17 @@ dobg {wm withdraw .}
 # w -		Name of toplevel window to create.
 
 proc eatColors {w} {
-    catch {destroy $w}
+    destroy $w
     toplevel $w
     wm geom $w +0+0
-    canvas $w.c -width 400 -height 200 -bd 0
+    canvas $w.c -width 400 -height 200 -borderwidth 0
     pack $w.c
     for {set y 0} {$y < 8} {incr y} {
 	for {set x 0} {$x < 40} {incr x} {
-	    set color [format #%02x%02x%02x [expr $x*6] [expr $y*30] 0]
-	    $w.c create rectangle [expr 10*$x] [expr 20*$y] \
-		    [expr 10*$x + 10] [expr 20*$y + 20] -outline {} \
-		    -fill $color
+	    set color [format "#%02x%02x%02x" [expr {$x * 6}] [expr {$y * 30}] 0]
+	    $w.c create rectangle [expr {10 * $x}] [expr {20 * $y}] \
+	        [expr {(10 * $x) + 10}] [expr {(20 * $y) + 20}] -outline "" \
+	        -fill $color
 	}
     }
     update
@@ -49,9 +49,9 @@ proc eatColors {w} {
 #			to see if there are colormap entries free.
 
 proc colorsFree {w {red 31} {green 245} {blue 192}} {
-    set vals [winfo rgb $w [format #%02x%02x%02x $red $green $blue]]
-    expr ([lindex $vals 0]/256 == $red) && ([lindex $vals 1]/256 == $green) \
-	    && ([lindex $vals 2]/256 == $blue)
+    lassign [winfo rgb $w [format "#%02x%02x%02x" $red $green $blue]] v_r v_g v_b
+    expr {(($v_r / 256) == $red) && (($v_g / 256) == $green) \
+  	  && (($v_b / 256) == $blue)}
 }
 
 test unixEmbed-1.1 {TkpUseWindow procedure, bad window identifier} -constraints {
@@ -219,7 +219,6 @@ test unixEmbed-2.4 {EmbeddedEventProc procedure} -constraints {
 	deleteWindows
 } -result {{{XXX .f1 {} {}}} {}}
 
-
 test unixEmbed-3.1 {ContainerEventProc procedure, detect creation} -constraints {
     unix testembed nonPortable
 } -body {
@@ -243,7 +242,7 @@ test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} -constra
 } -body {
     toplevel .t1 -container 1
     wm geometry .t1 +0+0
-    toplevel .t2 -use [winfo id .t1] -bg red
+    toplevel .t2 -use [winfo id .t1] -background red
     update
     wm geometry .t2
 } -cleanup {
@@ -259,7 +258,7 @@ test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} -co
     dobg "set w1 [winfo id .f1]"
     dobg {
 	    eval destroy [winfo child .]
-	    toplevel .t1 -use $w1 -bd 2 -relief raised
+	    toplevel .t1 -use $w1 -borderwidth 2 -relief raised
 	    update
 	    wm geometry .t1 +30+40
     }
@@ -359,7 +358,6 @@ test unixEmbed-3.7 {ContainerEventProc procedure, destroy events} -constraints {
 	deleteWindows
 } -result {dead 0}
 
-
 test unixEmbed-4.1 {EmbedStructureProc procedure, configure events} -constraints {
 	unix 
 } -setup {
@@ -402,7 +400,6 @@ test unixEmbed-4.2 {EmbedStructureProc procedure, destroy events} -constraints {
 } -cleanup {
 	deleteWindows
 } -result {{{XXX .f1 XXX {}}} {}}
-
 
 test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} -constraints {
 	unix 
@@ -471,7 +468,6 @@ test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} -constraints {
 } -cleanup {
 	deleteWindows
 } -result {{{focus in .t1}} {{focus in .t1} {focus out .t1}}}
-
 
 test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} -constraints {
 	unix 
@@ -584,7 +580,6 @@ test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width
     bind . <KeyPress> {}
 } -result {{} {{key b}}}
 
-
 test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints unix -setup {
 	deleteWindows
 } -body {
@@ -594,7 +589,7 @@ test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints unix -setup {
     dobg "set w1 [winfo id .f1]"
     dobg {
 	    eval destroy [winfo child .]
-	    toplevel .t1 -use $w1 -highlightthickness 2 -bd 2 -relief sunken
+	    toplevel .t1 -use $w1 -highlightthickness 2 -borderwidth 2 -relief sunken
     }
     focus -force .f2
     update
@@ -621,7 +616,7 @@ test unixEmbed-8.2 {TkpClaimFocus procedure} -constraints unix -setup {
     child eval "set argv {-use [winfo id .f1]}"
     load {} Tk child
     child eval {
-	    . configure -bd 2 -highlightthickness 2 -relief sunken
+	    . configure -borderwidth 2 -highlightthickness 2 -relief sunken
     }
     focus -force .f2
     update
@@ -635,7 +630,6 @@ test unixEmbed-8.2 {TkpClaimFocus procedure} -constraints unix -setup {
 	deleteWindows
 } -result {{{} .} .f1}
 catch {interp delete child}
-
 
 test unixEmbed-9.1 {EmbedWindowDeleted procedure, check parentPtr} -constraints {
 	unix testembed
@@ -667,7 +661,7 @@ test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} -constraint
     dobg "set w1 [winfo id .f1]"
     dobg {
 	    eval destroy [winfo child .]
-	    toplevel .t1 -use $w1 -highlightthickness 2 -bd 2 -relief sunken
+	    toplevel .t1 -use $w1 -highlightthickness 2 -borderwidth 2 -relief sunken
 	    set x {}
 	    lappend x [testembed]
 	    destroy .t1
@@ -676,7 +670,6 @@ test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} -constraint
 } -cleanup {
 	deleteWindows
 } -result {{{XXX {} {} .t1}} {}}
-
 
 test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
 	unix 

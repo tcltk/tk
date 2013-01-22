@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .ttkprogress
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Progress Bar Demonstration"
 wm iconname $w "ttkprogress"

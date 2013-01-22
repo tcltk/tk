@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .states
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Listbox Demonstration (50 states)"
 wm iconname $w "states"

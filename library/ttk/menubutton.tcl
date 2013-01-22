@@ -81,10 +81,10 @@ proc ttk::menubutton::PostPosition {mb menu} {
     set sh [expr {[winfo screenheight $menu] - $bh - $mh}]
 
     switch -- $dir {
-	above { if {$y >= $mh} { incr y -$mh } { incr y  $bh } }
-	below { if {$y <= $sh} { incr y  $bh } { incr y -$mh } }
-	left  { if {$x >= $mw} { incr x -$mw } { incr x  $bw } }
-	right { if {$x <= $sw} { incr x  $bw } { incr x -$mw } }
+	above { if {$y >= $mh} { incr y -$mh } else { incr y  $bh } }
+	below { if {$y <= $sh} { incr y  $bh } else { incr y -$mh } }
+	left  { if {$x >= $mw} { incr x -$mw } else { incr x  $bw } }
+	right { if {$x <= $sw} { incr x  $bw } else { incr x -$mw } }
 	flush { 
 	    # post menu atop menubutton.
 	    # If there's a menu entry whose label matches the
@@ -95,6 +95,7 @@ proc ttk::menubutton::PostPosition {mb menu} {
 		incr y -[$menu yposition $index]
 	    }
 	}
+        default {}
     }
 
     return [list $x $y]
@@ -104,10 +105,10 @@ proc ttk::menubutton::PostPosition {mb menu} {
 #	Post the menu and set a grab on the menu.
 #
 proc ttk::menubutton::Popdown {mb} {
-    if {[$mb instate disabled] || [set menu [$mb cget -menu]] eq ""} {
+    if {[$mb instate disabled] || ([set menu [$mb cget -menu]] eq "")} {
 	return
     }
-    foreach {x y} [PostPosition $mb $menu] { break }
+    lassign [PostPosition $mb $menu] x y
     tk_popup $menu $x $y
 }
 
@@ -118,10 +119,10 @@ proc ttk::menubutton::Popdown {mb} {
 #
 proc ttk::menubutton::Pulldown {mb} {
     variable State
-    if {[$mb instate disabled] || [set menu [$mb cget -menu]] eq ""} {
+    if {[$mb instate disabled] || ([set menu [$mb cget -menu]] eq "")} {
 	return
     }
-    foreach {x y} [PostPosition $mb $menu] { break }
+    lassign [PostPosition $mb $menu] x y
     set State(pulldown) 1
     set State(oldcursor) [$mb cget -cursor]
 
@@ -158,8 +159,8 @@ proc ttk::menubutton::FindMenuEntry {menu s} {
 	return ""
     }
     for {set i 0} {$i <= $last} {incr i} {
-	if {![catch {$menu entrycget $i -label} label]
-	    && ($label eq $s)} {
+	if {(![catch {$menu entrycget $i -label} label]) && 
+	    ($label eq $s)} {
 	    return $i
 	}
     }

@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .fontchoose
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Font Selection Dialog"
 wm iconname $w "fontchooser"
@@ -38,7 +38,6 @@ bind $w <<TkFontchooserVisibility>> {
         %W.f.font state !disabled
     }
 }
-
 
 set f [ttk::frame $w.f -relief sunken -padding 2]
 

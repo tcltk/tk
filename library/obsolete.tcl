@@ -15,8 +15,8 @@
 # they are no-ops.  You should not use these procedures anymore, since
 # they may be removed in some future release.
 
-proc tk_menuBar args {}
-proc tk_bindForTraversal args {}
+proc tk_menuBar {args} {}
+proc tk_bindForTraversal {args} {}
 
 # ::tk::classic::restore --
 #
@@ -61,9 +61,9 @@ proc ::tk::classic::restore_font {args} {
 	option add *Dialog.dtl.font system 21; # TkCaptionFont
 	option add *ErrorDialog*Label.font system 21; # TkCaptionFont
     } else {
-	option add *Dialog.msg.font {Times 12} 21; # TkCaptionFont
-	option add *Dialog.dtl.font {Times 10} 21; # TkCaptionFont
-	option add *ErrorDialog*Label.font {Times -18} 21; # TkCaptionFont
+	option add *Dialog.msg.font "Times 12" 21; # TkCaptionFont
+	option add *Dialog.dtl.font "Times 10" 21; # TkCaptionFont
+	option add *ErrorDialog*Label.font "Times -18" 21; # TkCaptionFont
     }
 }
 

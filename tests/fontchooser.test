@@ -11,25 +11,25 @@ tcltest::loadTestedCommands
 # dialog (hence the wierdness).
 
 proc start {cmd} {
-    set ::tk_dialog {}
+    set ::tk_dialog ""
     set ::iter_after 0
     after 1 $cmd
 }
 proc then {cmd} {
     set ::command $cmd
-    set ::dialogresult {}
-    set ::testfont {}
+    set ::dialogresult ""
+    set ::testfont ""
     afterbody
     vwait ::dialogresult
     return $::dialogresult
 }
 proc afterbody {} {
-    if {$::tk_dialog == {}} {
+    if {$::tk_dialog eq ""} {
         if {[incr ::iter_after] > 30} {
             set ::dialogresult ">30 iterations waiting for tk_dialog"
             return
         }
-        after 150 {afterbody}
+        after 150 {afterbody }
         return
     }
     uplevel #0 {set dialogresult [eval $command]}

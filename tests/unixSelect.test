@@ -26,7 +26,7 @@ proc handler {type offset count} {
     if {$numBytes <= 0} {
     return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes + $offset}]
 }
 
 proc errIncrHandler {type offset count} {
@@ -45,10 +45,10 @@ proc errIncrHandler {type offset count} {
     if {$numBytes <= 0} {
     return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes + $offset}]
 }
 
-proc errHandler args {
+proc errHandler {args} {
     error "selection handler aborted"
 }
 
@@ -60,7 +60,7 @@ proc badHandler {path type offset count} {
     if {$numBytes <= 0} {
     return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes + $offset}]
 }
 proc reallyBadHandler {path type offset count} {
     global selValue selInfo pass
@@ -76,20 +76,20 @@ proc reallyBadHandler {path type offset count} {
     if {$numBytes <= 0} {
     return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes + $offset}]
 }
 
 # Eliminate any existing selection on the screen.  This is needed in case
 # there is a selection in some other application, in order to prevent races
 # from causing false errors in the tests below.
 
-selection clear .
+selection clear -displayof .
 after 1500
 
 # common setup code
 proc setup {{path .f1} {display {}}} {
-    catch {destroy $path}
-    if {$display == {}} {
+    destroy $path
+    if {$display eq ""} {
     frame $path
     } else {
     toplevel $path -screen $display

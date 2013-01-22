@@ -34,7 +34,7 @@ package require Tk 8.6
 	numItems oldX oldY options rect selected selection textList
     constructor args {
 	next {*}$args
-	set accelCB {}
+	set accelCB ""
     }
     destructor {
 	my Reset
@@ -53,7 +53,7 @@ package require Tk 8.6
 
     method index i {
 	if {![info exist list]} {
-	    set list {}
+	    set list [list]
 	}
 	switch -regexp -- $i {
 	    "^-?[0-9]+$" {
@@ -192,7 +192,7 @@ package require Tk 8.6
 	set maxTH 1
 	set numItems 0
 	set noScroll 1
-	set selection {}
+	set selection ""
 	set index(anchor) ""
 	$sbar set 0.0 1.0
 	$canvas xview moveto 0
@@ -244,7 +244,7 @@ package require Tk 8.6
     #	double-clicking or pressing the Return key).
     #
     method invoke {} {
-	if {$options(-command) ne "" && [llength $selection]} {
+	if {($options(-command) ne "") && [llength $selection]} {
 	    uplevel #0 $options(-command)
 	}
     }
@@ -261,22 +261,20 @@ package require Tk 8.6
 	    return
 	}
 
-	if {$rTag < 0 || $rTag >= [llength $list]} {
+	if {($rTag < 0) || ($rTag >= [llength $list])} {
 	    return
 	}
 
-	set bbox [$canvas bbox item$rTag]
-	set pad [expr {[$canvas cget -highlightthickness]+[$canvas cget -bd]}]
+        lassign [$canvas bbox item$rTag] x1 ___ x2
+	set pad [expr {[$canvas cget -highlightthickness] + [$canvas cget -borderwidth]}]
 
-	set x1 [lindex $bbox 0]
-	set x2 [lindex $bbox 2]
 	incr x1 [expr {$pad * -2}]
 	incr x2 [expr {$pad * -1}]
 
-	set cW [expr {[winfo width $canvas] - $pad*2}]
+	set cW [expr {[winfo width $canvas] - ($pad * 2)}]
 
-	set scrollW [expr {[lindex $sRegion 2]-[lindex $sRegion 0]+1}]
-	set dispX [expr {int([lindex [$canvas xview] 0]*$scrollW)}]
+	set scrollW [expr {([lindex $sRegion 2] - [lindex $sRegion 0]) + 1}]
+	set dispX [expr { int ([lindex [$canvas xview] 0] * $scrollW)}]
 	set oldDispX $dispX
 
 	# check if out of the right edge
@@ -291,7 +289,7 @@ package require Tk 8.6
 	}
 
 	if {$oldDispX ne $dispX} {
-	    set fraction [expr {double($dispX) / double($scrollW)}]
+	    set fraction [expr {($dispX * 1.0) / $scrollW}]
 	    $canvas xview moveto $fraction
 	}
     }
@@ -311,13 +309,13 @@ package require Tk 8.6
 
 	set W [winfo width  $canvas]
 	set H [winfo height $canvas]
-	set pad [expr {[$canvas cget -highlightthickness]+[$canvas cget -bd]}]
+	set pad [expr {[$canvas cget -highlightthickness] + [$canvas cget -borderwidth]}]
 	if {$pad < 2} {
 	    set pad 2
 	}
 
-	incr W [expr {$pad*-2}]
-	incr H [expr {$pad*-2}]
+	incr W [expr {$pad * -2}]
+	incr H [expr {$pad * -2}]
 
 	set dx [expr {$maxIW + $maxTW + 8}]
 	if {$maxTH > $maxIH} {
@@ -335,12 +333,12 @@ package require Tk 8.6
 	    set usedColumn 1
 	    lassign $sublist iTag tTag rTag iW iH tW tH
 
-	    set i_dy [expr {($dy - $iH)/2}]
-	    set t_dy [expr {($dy - $tH)/2}]
+	    set i_dy [expr {($dy - $iH) / 2}]
+	    set t_dy [expr {($dy - $tH) / 2}]
 
 	    $canvas coords $iTag $x                    [expr {$y + $i_dy}]
 	    $canvas coords $tTag [expr {$x + $shift}]  [expr {$y + $t_dy}]
-	    $canvas coords $rTag $x $y [expr {$x+$dx}] [expr {$y+$dy}]
+	    $canvas coords $rTag $x $y [expr {$x + $dx}] [expr {$y + $dy}]
 
 	    incr y $dy
 	    if {($y + $dy) > $H} {
@@ -367,7 +365,7 @@ package require Tk 8.6
 	    set noScroll 0
 	}
 
-	set itemsPerColumn [expr {($H-$pad) / $dy}]
+	set itemsPerColumn [expr {($H - $pad) / $dy}]
 	if {$itemsPerColumn < 1} {
 	    set itemsPerColumn 1
 	}
@@ -420,7 +418,7 @@ package require Tk 8.6
 	set maxTH 1
 	set numItems 0
 	set noScroll 1
-	set selection {}
+	set selection ""
 	set index(anchor) ""
 	set fg [option get $canvas foreground Foreground]
 	if {$fg eq ""} {
@@ -591,7 +589,7 @@ package require Tk 8.6
 	    return
 	}
 	set curr [$w selection get]
-	if {[llength $curr] == 0} {
+	if {![llength $curr]} {
 	    set i 0
 	} else {
 	    set i [$w index anchor]
@@ -617,7 +615,7 @@ package require Tk 8.6
 	    return
 	}
 	set curr [$w selection get]
-	if {[llength $curr] == 0} {
+	if {![llength $curr]} {
 	    set i 0
 	} else {
 	    set i [$w index anchor]
@@ -645,7 +643,7 @@ package require Tk 8.6
 	if {![info exists list]} {
 	    return
 	}
-	if {$text eq "" || $numItems == 0} {
+	if {($text eq "") || ($numItems == 0)} {
 	    return
 	}
 

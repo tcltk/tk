@@ -30,14 +30,14 @@ proc ttk::takefocus {w} {
 proc ttk::GuessTakeFocus {w} {
     # Don't traverse to widgets with '-state disabled':
     #
-    if {![catch {$w cget -state} state] && $state eq "disabled"} {
+    if {(![catch {$w cget -state} state]) && ($state eq "disabled")} {
 	return 0
     }
 
     # Allow traversal to widgets with explicit key or focus bindings:
     #
-    if {[regexp {Key|Focus} [concat [bind $w] [bind [winfo class $w]]]]} {
-	return 1;
+    if {[regexp "Key|Focus" [concat [bind $w] [bind [winfo class $w]]]]} {
+	return 1
     }
 
     # Default is nontraversable:
@@ -144,10 +144,13 @@ proc ttk::SaveGrab {w} {
 
     set grabbed [grab current $w]
     if {[winfo exists $grabbed]} {
-    	switch [grab status $grabbed] {
+    	switch -- [grab status $grabbed] {
 	    global { set restoreGrab [list grab -global $grabbed] }
 	    local  { set restoreGrab [list grab $grabbed] }
-	    none   { ;# grab window is really in a different interp }
+	    none   {
+	        # grab window is really in a different interp
+	    }
+	    default {}
 	}
     }
 
@@ -306,11 +309,12 @@ proc ttk::bindMouseWheel {bindtag callback} {
 	    bind $bindtag <ButtonPress-5> "$callback +1"
 	}
 	win32 {
-	    bind $bindtag <MouseWheel> [append callback { [expr {-(%D/120)}]}]
+	    bind $bindtag <MouseWheel> [append callback { [expr {-(%D / 120)}]}]
 	}
 	aqua {
 	    bind $bindtag <MouseWheel> [append callback { [expr {-(%D)}]} ]
 	}
+        default {}
     }
 }
 
@@ -345,6 +349,7 @@ switch -- [tk windowingsystem] {
 	bind TtkScrollable <Shift-Option-MouseWheel> \
 	    { %W xview scroll [expr {-10*(%D)}] units }
     }
+    default {}
 }
 
 #*EOF*

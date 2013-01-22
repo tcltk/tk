@@ -19,7 +19,7 @@ testConstraint xhost [llength [auto_execok xhost]]
 # Compute a script that will load Tk into a child interpreter.
 
 foreach pkg [info loaded] {
-    if {[lindex $pkg 1] == "Tk"} {
+    if {[lindex $pkg 1] eq "Tk"} {
 	set loadTk "load $pkg"
 	break
     }
@@ -29,7 +29,7 @@ foreach pkg [info loaded] {
 
 proc newApp {screen name class} {
     global loadTk
-    interp create $name
+    interp create -- $name
     $name eval [list set argv [list -display $screen -name $name -class $class]]
     eval $loadTk $name
 }
@@ -312,7 +312,7 @@ test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortabl
     setupbg
     set app [dobg {tk appname}]
     raise .		; # Don't want new app obscuring .f
-    catch {destroy .f}
+    destroy .f
     frame .f
     place .f -x 0 -y 0
     bind .f <Expose> {set a exposed}
@@ -350,7 +350,7 @@ test send-8.19 {Tk_SendCmd, using modal timeouts} {secureserver} {
 } {{x y z} no yes}
 
 tk appname tktest
-catch {destroy .f}
+destroy .f
 frame .f
 set id [string range [winfo id .f] 2 end]
 
@@ -531,7 +531,7 @@ test send-11.2 {AppendPropCarefully and AppendErrorProc procedures} {secureserve
 
 winfo interps
 tk appname tktest
-catch {destroy .f}
+destroy .f
 frame .f
 set id [string range [winfo id .f] 2 end]
 

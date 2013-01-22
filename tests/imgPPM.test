@@ -17,9 +17,9 @@ imageInit
 # only suitable for text files
 proc put {file data} {
     set f [open $file w]
-    fconfigure $f -translation lf
-    puts -nonewline $f $data
-    close $f
+    chan configure $f -translation lf
+    chan puts -nonewline $f $data
+    chan close $f
 }
 
 test imgPPM-1.1 {FileReadPPM procedure} -body {
@@ -60,7 +60,6 @@ test imgPPM-1.9 {FileReadPPM procedure} -body {
         [image width p1] [image height p1]
 } -returnCodes ok -result {p1 5 4}
 
-
 test imgPPM-2.1 {FileWritePPM procedure} -setup {
     catch {image delete p1}
 } -body {
@@ -74,7 +73,7 @@ test imgPPM-2.1 {FileWritePPM procedure} -setup {
 
 test imgPPM-2.2 {FileWritePPM procedure} -setup {
     catch {image delete p1}
-    catch {unset data}
+    unset -nocomplain data
 } -body {
     put test.ppm "P6\n5 4\n255\n012345678901234567890123456789012345678901234567890123456789"
     image create photo p1 -file test.ppm
@@ -89,7 +88,6 @@ test imgPPM-2.2 {FileWritePPM procedure} -setup {
 5 4
 255
 012345678901234567890123456789012345678901234567890123456789}
-
 
 test imgPPM-3.1 {ReadPPMFileHeader procedure} -body {
     put test.ppm "#   \n#\n#\nP6\n#\n##\n5 4\n255\n012345678901234567890123456789012345678901234567890123456789"
@@ -153,7 +151,6 @@ test imgPPM-3.13 {ReadPPMFileHeader procedure, file ends too soon} -body {
     put test.ppm "P6\n566\n#asdf"
     image create photo p1 -file test.ppm
 } -returnCodes error -result {couldn't recognize data in image file "test.ppm"}
-
 
 test imgPPM-4.1 {StringReadPPM procedure, data too short [Bug 1822391]} -body {
     image create photo I -width 1103 -height 997

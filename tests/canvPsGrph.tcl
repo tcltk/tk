@@ -2,7 +2,7 @@
 # for some of the graphical objects in canvases.  It is part of the Tk
 # visual test suite, which is invoked via the "visual" script.
 
-catch {destroy .t}
+destroy .t
 toplevel .t
 wm title .t "Postscript Tests for Canvases"
 wm iconname .t "Postscript"
@@ -34,15 +34,15 @@ button .t.bot.quit -text Quit -command {destroy .t}
 button .t.bot.print -text Print -command "lpr $c"
 pack .t.bot.print .t.bot.quit -side left -pady 1m -expand 1
 
-frame .t.mid -relief sunken -bd 2
+frame .t.mid -relief sunken -borderwidth 2
 pack .t.mid -side top -expand yes -fill both -padx 2m -pady 2m
-canvas $c -width 400 -height 350 -bd 0 -relief sunken
+canvas $c -width 400 -height 350 -borderwidth 0 -relief sunken
 pack $c -expand yes -fill both -padx 1 -pady 1
 
-proc mkObjs c {
+proc mkObjs {c} {
     global what
     $c delete all
-    if {$what == "rect"} {
+    if {$what eq "rect"} {
 	$c create rect 0 0 400 350 -outline black
 	$c create rect 2 2 100 50 -fill black -stipple gray25
 	$c create rect -20 180 80 320 -fill black -stipple gray50 -width .5c
@@ -51,13 +51,13 @@ proc mkObjs c {
 	$c create rect 200 330 240 370 -fill black
     }
     
-    if {$what == "oval"} {
-	$c create oval 50 10 150 80 -fill black -stipple gray25 -outline {}
-	$c create oval 100 100 200 150 -outline {} -fill black -stipple gray50
+    if {$what eq "oval"} {
+	$c create oval 50 10 150 80 -fill black -stipple gray25 -outline ""
+	$c create oval 100 100 200 150 -outline "" -fill black -stipple gray50
 	$c create oval 250 100 400 300 -width .5c
     }
     
-    if {$what == "poly"} {
+    if {$what eq "poly"} {
 	$c create poly 100 200 200 50 300 200 -smooth yes -stipple gray25 \
 		-outline black -width 4
 	$c create poly 100 300 100 250 350 250 350 300 350 300 100 300 100 300 \
@@ -66,10 +66,10 @@ proc mkObjs c {
 		35 50 35 50 45 20 45
 	$c create poly 300 20 300 120 380 80 320 100 -fill blue -outline black
 	$c create poly 20 200 100 220 90 100 40 250 \
-		-fill {} -outline brown -width 3
+		-fill "" -outline brown -width 3
     }
     
-    if {$what == "line"} {
+    if {$what eq "line"} {
 	$c create line 20 20 120 20 -arrow both -width 5
 	$c create line 20 80 150 80 20 200 150 200 -smooth yes
 	$c create line 150 20 150 150 250 150 -width .5c -smooth yes \

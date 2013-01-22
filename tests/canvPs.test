@@ -13,7 +13,7 @@ tcltest::loadTestedCommands
 imageInit
 
 # canvas used in 1.* and 2.* test cases
-canvas .c -width 400 -height 300 -bd 2 -relief sunken
+canvas .c -width 400 -height 300 -borderwidth 2 -relief sunken
 .c create rectangle 20 20 80 80 -fill red
 pack .c
 update
@@ -46,7 +46,6 @@ test canvPs-1.2 {test writing to a file, idempotency} -constraints {
     removeFile bar.ps
 } -result ok
 
-
 test canvPs-2.1 {test writing to a channel} -constraints {
     unixOrPc
 } -setup {
@@ -54,9 +53,9 @@ test canvPs-2.1 {test writing to a channel} -constraints {
     file delete $foo
 } -body {
     set chan [open $foo w]
-    fconfigure $chan -translation lf
+    chan configure $chan -translation lf
     .c postscript -channel $chan
-    close $chan
+    chan close $chan
     file exists $foo
 } -cleanup {
     removeFile foo.ps
@@ -71,12 +70,12 @@ test canvPs-2.2 {test writing to channel, idempotency} -constraints {
 } -body {
     set c1 [open $foo w]
     set c2 [open $bar w]
-    fconfigure $c1 -translation lf
-    fconfigure $c2 -translation lf
+    chan configure $c1 -translation lf
+    chan configure $c2 -translation lf
     .c postscript -channel $c1
     .c postscript -channel $c2
-    close $c1
-    close $c2
+    chan close $c1
+    chan close $c2
     set status ok
     if {[file size $bar] != [file size $foo]} {
 	    set status broken
@@ -95,9 +94,9 @@ test canvPs-2.3 {test writing to channel and file, same output} -constraints {
     file delete $bar
 } -body {
     set c1 [open $foo w]
-    fconfigure $c1 -translation lf
+    chan configure $c1 -translation lf
     .c postscript -channel $c1
-    close $c1
+    chan close $c1
     .c postscript -file $bar
     set status ok
     if {[file size $foo] != [file size $bar]} {
@@ -117,9 +116,9 @@ test canvPs-2.4 {test writing to channel and file, same output} -constraints {
     file delete $bar
 } -body {
     set c1 [open $foo w]
-    fconfigure $c1 -translation crlf
+    chan configure $c1 -translation crlf
     .c postscript -channel $c1
-    close $c1
+    chan close $c1
     .c postscript -file $bar
     set status ok
     if {[file size $foo] != [file size $bar]} {
@@ -131,7 +130,6 @@ test canvPs-2.4 {test writing to channel and file, same output} -constraints {
     removeFile bar.ps
 } -result ok
 destroy .c
-
 
 test canvPs-3.1 {test ps generation with an embedded window} -constraints {
     notAqua
@@ -173,7 +171,6 @@ test canvPs-3.2 {test ps generation with an embedded window not mapped} -setup {
     destroy .c
     removeFile bar.ps
 } -result {1}
-
 
 test canvPs-4.1 {test ps generation with single-point uncolored poly, bug 734498} -body {
     pack [canvas .c]

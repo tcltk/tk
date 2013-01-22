@@ -21,7 +21,7 @@ source [file join $::ttk::library utils.tcl]
 #	$old and $new must be fully namespace-qualified.
 #
 proc ttk::deprecated {old new} {
-    interp alias {} $old {} ttk::do'deprecate $old $new
+    interp alias "" $old "" ttk::do'deprecate $old $new
 }
 ## do'deprecate --
 #	Implementation procedure for deprecated commands --
@@ -29,7 +29,7 @@ proc ttk::deprecated {old new} {
 #
 proc ttk::do'deprecate {old new args} {
     deprecated'warning $old $new
-    interp alias {} $old {} $new
+    interp alias "" $old "" $new
     uplevel 1 [linsert $args 0 $new]
 }
 
@@ -133,7 +133,7 @@ proc ttk::LoadThemes {} {
 	xpnative	{xpTheme.tcl vistaTheme.tcl}
 	aqua 		aquaTheme.tcl
     } {
-	if {[lsearch -exact $builtinThemes $theme] >= 0} {
+	if {$theme in $builtinThemes} {
             foreach script $scripts {
                 uplevel #0 [list source [file join $library $script]]
             }
@@ -141,7 +141,8 @@ proc ttk::LoadThemes {} {
     }
 }
 
-ttk::LoadThemes; rename ::ttk::LoadThemes {}
+ttk::LoadThemes
+rename ::ttk::LoadThemes ""
 
 ### Select platform-specific default theme:
 #
@@ -157,9 +158,9 @@ proc ttk::DefaultTheme {} {
     set preferred [list aqua vista xpnative winnative]
 
     set userTheme [option get . tkTheme TkTheme]
-    if {$userTheme ne {} && ![catch {
+    if {($userTheme ne "") && (![catch {
 	uplevel #0 [list package require ttk::theme::$userTheme]
-    }]} {
+    }])} {
 	return $userTheme
     }
 
@@ -171,6 +172,7 @@ proc ttk::DefaultTheme {} {
     return "default"
 }
 
-ttk::setTheme [ttk::DefaultTheme] ; rename ttk::DefaultTheme {}
+ttk::setTheme [ttk::DefaultTheme]
+rename ttk::DefaultTheme ""
 
 #*EOF*

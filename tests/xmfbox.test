@@ -16,7 +16,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 set testPWD [pwd]
-catch {unset data foo}
+unset -nocomplain data foo
 
 proc cleanup {} {
     global testPWD
@@ -26,25 +26,25 @@ proc cleanup {} {
     } msg0]
 
     set err1 [catch {
-	    if [file exists ./~nosuchuser1] {
+            if {[file exists ./~nosuchuser1]} {
 	        file delete ./~nosuchuser1
 	    }
     } msg1]
 
     set err2 [catch {
-	    if [file exists ./~nosuchuser2] {
+            if {[file exists ./~nosuchuser2]} {
 	        file delete ./~nosuchuser2
 	    }
     } msg2]
 
     set err3 [catch {
-	    if [file exists ./~nosuchuser3] {
+            if {[file exists ./~nosuchuser3]} {
 	        file delete ./~nosuchuser3
 	    }
     } msg3]
 
     set err4 [catch {
-	    if [file exists ./~nosuchuser4] {
+            if {[file exists ./~nosuchuser4]} {
 	        file delete ./~nosuchuser4
 	    }
     } msg4]
@@ -52,7 +52,7 @@ proc cleanup {} {
     if {$err0 || $err1 || $err2 || $err3 || $err4} {
 	    error [list $msg0 $msg1 $msg2 $msg3 $msg4]
     }
-    catch {unset foo}
+    unset -nocomplain foo
     destroy .foo
 }
 
@@ -61,7 +61,7 @@ proc cleanup {} {
 test xmfbox-1.1 {tk::MotifFDialog_Create, -parent switch} -constraints {
     unix
 } -setup {
-    catch {unset foo}
+    unset -nocomplain foo
 } -body {
     set x [tk::MotifFDialog_Create foo open {-parent .}]
 } -cleanup {
@@ -71,7 +71,7 @@ test xmfbox-1.1 {tk::MotifFDialog_Create, -parent switch} -constraints {
 test xmfbox-1.2 {tk::MotifFDialog_Create, -parent switch} -constraints {
     unix
 } -setup {
-    catch {unset foo}
+    unset -nocomplain foo
     deleteWindows
 } -body {
     toplevel .bar
@@ -81,7 +81,6 @@ test xmfbox-1.2 {tk::MotifFDialog_Create, -parent switch} -constraints {
     destroy $x
     destroy .bar
 }  -result {.bar.foo}
-
 
 test xmfbox-2.1 {tk::MotifFDialog_InterpFilter, ~ in dir names} -constraints {
     unix

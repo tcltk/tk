@@ -27,8 +27,8 @@ foreach {constraint font} {
     if {[tk windowingsystem] eq "x11"} {
 	testConstraint $constraint 1
 	if {[llength $xlsf]} {
-	    if {![catch {eval exec $xlsf [list *-$font-*]} res]
-		    && ![string match *unmatched* $res]} {
+	    if {(![catch {eval exec $xlsf [list *-$font-*]} res]) && 
+		(![string match "*unmatched*" $res])} {
 		# Newer Unix systems have more default fonts installed,
 		# so we can't rely on fallbacks for fonts to need to
 		# fall back on anything.
@@ -48,10 +48,10 @@ update idletasks
 # Font should be fixed width and have chars missing below char 32, so can
 # test control char expansion and missing character code.
 
-set courier {Courier -10}
+set courier "Courier -10"
 set cx [font measure $courier 0]
 
-label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font fixed
+label .b.l -padx 0 -pady 0 -borderwidth 0 -highlightthickness 0 -justify left -text "0" -font fixed
 pack .b.l
 canvas .b.c -closeenough 0
 
@@ -149,47 +149,47 @@ test unixfont-5.3 {Tk_MeasureChars procedure: loop over chars} unix {
     .b.l config -text "0\3770\377"
     .b.l config -text "000000000000000"
 } {}
-.b.l config -wrap [expr $ax*10]
+.b.l config -wrap [expr {$ax * 10}]
 test unixfont-5.4 {Tk_MeasureChars procedure: reached right edge} unix {
     .b.l config -text "0000000000000"
     getsize
-} "[expr $ax*10] [expr $ay*2]"
+} "[expr {$ax * 10}] [expr {$ay * 2}]"
 test unixfont-5.5 {Tk_MeasureChars procedure: ran out of chars} unix {
     .b.l config -text "000000"
     getsize
-} "[expr $ax*6] $ay"
+} "[expr {$ax * 6}] $ay"
 test unixfont-5.6 {Tk_MeasureChars procedure: find last word} unix {
     .b.l config -text "000000 00000"
     getsize
-} "[expr $ax*6] [expr $ay*2]"
+} "[expr {$ax * 6}] [expr {$ay * 2}]"
 test unixfont-5.7 {Tk_MeasureChars procedure: already saw space in line} unix {
     .b.l config -text "000000     00000"
     getsize
-} "[expr $ax*6] [expr $ay*2]"
+} "[expr {$ax * 6}] [expr {$ay * 2}]"
 test unixfont-5.8 {Tk_MeasureChars procedure: internal spaces significant} unix {
     .b.l config -text "00  000     00000"
     getsize
-} "[expr $ax*7] [expr $ay*2]"
+} "[expr {$ax * 7}] [expr {$ay * 2}]"
 test unixfont-5.9 {Tk_MeasureChars procedure: TK_PARTIAL_OK} unix {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0000"
-    .b.c index $t @[expr int($ax*2.5)],1
+    .b.c index $t @[expr { int ($ax * 2.5)}],1
 } {2}
 test unixfont-5.10 {Tk_MeasureChars procedure: TK_AT_LEAST_ONE} unix {
     .b.l config -text "000000000000"
     getsize
-} "[expr $ax*10] [expr $ay*2]"
+} "[expr {$ax * 10}] [expr {$ay * 2}]"
 test unixfont-5.11 {Tk_MeasureChars: TK_AT_LEAST_ONE + not even one char fit!} unix {
     set a [.b.l cget -wrap]
     .b.l config -text "000000" -wrap 1
     set x [getsize]
     .b.l config -wrap $a
     set x
-} "$ax [expr $ay*6]"
+} "$ax [expr {$ay * 6}]"
 test unixfont-5.12 {Tk_MeasureChars procedure: include eol spaces} unix {
     .b.l config -text "000   \n000"
     getsize
-} "[expr $ax*6] [expr $ay*2]"
+} "[expr {$ax * 6}] [expr {$ay * 2}]"
 
 test unixfont-6.1 {Tk_DrawChars procedure: loop test} unix {
     .b.l config -text "a"
@@ -245,12 +245,12 @@ test unixfont-8.2 {AllocFont procedure: parse information from XLFD} unix {
     expr {[lindex [font actual {-family times -size 0}] 3] == 0}
 } {0}
 test unixfont-8.3 {AllocFont procedure: can't parse info from name} unix {
-    catch {unset fontArray}
+    unset -nocomplain fontArray
     # check that font actual returns the correct attributes.
     # the values of those attributes are system dependent.
     array set fontArray [font actual a12biluc]
     set result [lsort [array names fontArray]]
-    catch {unset fontArray}
+    unset -nocomplain fontArray
     set result
 } {-family -overstrike -size -slant -underline -weight}
 test unixfont-8.4 {AllocFont procedure: classify characters} unix {
@@ -260,7 +260,7 @@ test unixfont-8.4 {AllocFont procedure: classify characters} unix {
     incr x [font measure $courier "\012"]   ;# 2
     incr x [font measure $courier "\101"]   ;# 1
     set x
-} [expr $cx*13]
+} [expr {$cx * 13}]
 test unixfont-8.5 {AllocFont procedure: setup widths of normal chars} unix {
     font metrics $courier -fixed
 } {1}
@@ -270,7 +270,7 @@ test unixfont-8.6 {AllocFont procedure: setup widths of special chars} unix {
     incr x [font measure $courier "\002"]   ;# 4
     incr x [font measure $courier "\012"]   ;# 2
     set x
-} [expr $cx*10]
+} [expr {$cx * 10}]
 test unixfont-8.7 {AllocFont procedure: XA_UNDERLINE_POSITION} unix {
     catch {font actual -adobe-courier-bold-i-normal--0-0-0-0-m-0-iso8859-1}
     set x {}
@@ -295,22 +295,18 @@ test unixfont-8.11 {AllocFont procedure: XA_UNDERLINE_POSITION was 0} unix {
 test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} unix {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\a0"
-    set x {}
-    lappend x [.b.c index $t @[expr $ax*0],0]
-    lappend x [.b.c index $t @[expr $ax*1],0]
-    lappend x [.b.c index $t @[expr $ax*2],0]
-    lappend x [.b.c index $t @[expr $ax*3],0]
+    set x [list]
+    foreach i_ax {0 1 2 3} {
+        lappend x [.b.c index $t @[expr {$ax * $i_ax}],0]
+    }
 } {0 1 1 2}
 test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} unix {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\0010"
-    set x {}
-    lappend x [.b.c index $t @[expr $ax*0],0]
-    lappend x [.b.c index $t @[expr $ax*1],0]
-    lappend x [.b.c index $t @[expr $ax*2],0]
-    lappend x [.b.c index $t @[expr $ax*3],0]
-    lappend x [.b.c index $t @[expr $ax*4],0]
-    lappend x [.b.c index $t @[expr $ax*5],0]
+    set x [list]
+    foreach i_ax {0 1 2 3 4 5} {
+        lappend x [.b.c index $t @[expr {$ax * $i_ax}],0]
+    }
 } {0 1 1 1 1 2}
 
 # cleanup

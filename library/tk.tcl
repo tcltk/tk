@@ -30,7 +30,7 @@ namespace eval ::tk {
                 set max 0
                 foreach string $args {
                     set len [string length $string]
-                    if {$len>$max} {
+                    if {$len > $max} {
                         set max $len
                     }
                 }
@@ -56,9 +56,10 @@ namespace eval ::ttk {
 # Add Ttk & Tk's directory to the end of the auto-load search path, if it
 # isn't already on the path:
 
-if {[info exists ::auto_path] && ($::tk_library ne "")
-    && ($::tk_library ni $::auto_path)
-} then {
+if {[info exists ::auto_path] && 
+    ($::tk_library ne "")     && 
+    ($::tk_library ni $::auto_path)
+} {
     lappend ::auto_path $::tk_library $::ttk::library
 }
 
@@ -87,40 +88,40 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
     update idletasks
     set checkBounds 1
     if {$place eq ""} {
-	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
-	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
+	set x [expr {([winfo screenwidth $w]  - [winfo reqwidth $w])  / 2}]
+	set y [expr {([winfo screenheight $w] - [winfo reqheight $w]) / 2}]
 	set checkBounds 0
     } elseif {[string equal -length [string length $place] $place "pointer"]} {
 	## place at POINTER (centered if $anchor == center)
 	if {[string equal -length [string length $anchor] $anchor "center"]} {
-	    set x [expr {[winfo pointerx $w]-[winfo reqwidth $w]/2}]
-	    set y [expr {[winfo pointery $w]-[winfo reqheight $w]/2}]
+	    set x [expr {[winfo pointerx $w] - ([winfo reqwidth $w]  / 2)}]
+	    set y [expr {[winfo pointery $w] - ([winfo reqheight $w] / 2)}]
 	} else {
 	    set x [winfo pointerx $w]
 	    set y [winfo pointery $w]
 	}
-    } elseif {[string equal -length [string length $place] $place "widget"] && \
-	    [winfo exists $anchor] && [winfo ismapped $anchor]} {
+    } elseif {[string equal -length [string length $place] $place "widget"] && 
+	      [winfo exists $anchor] && [winfo ismapped $anchor]} {
 	## center about WIDGET $anchor, widget must be mapped
 	set x [expr {[winfo rootx $anchor] + \
-		([winfo width $anchor]-[winfo reqwidth $w])/2}]
+		(([winfo width $anchor] -  [winfo reqwidth $w])  / 2)}]
 	set y [expr {[winfo rooty $anchor] + \
-		([winfo height $anchor]-[winfo reqheight $w])/2}]
+		(([winfo height $anchor] - [winfo reqheight $w]) / 2)}]
     } else {
-	set x [expr {([winfo screenwidth $w]-[winfo reqwidth $w])/2}]
-	set y [expr {([winfo screenheight $w]-[winfo reqheight $w])/2}]
+	set x [expr {([winfo screenwidth $w]  - [winfo reqwidth $w])  / 2}]
+	set y [expr {([winfo screenheight $w] - [winfo reqheight $w]) / 2}]
 	set checkBounds 0
     }
     if {$checkBounds} {
 	if {$x < [winfo vrootx $w]} {
 	    set x [winfo vrootx $w]
-	} elseif {$x > ([winfo vrootx $w]+[winfo vrootwidth $w]-[winfo reqwidth $w])} {
-	    set x [expr {[winfo vrootx $w]+[winfo vrootwidth $w]-[winfo reqwidth $w]}]
+	} elseif {$x > (([winfo vrootx $w] + [winfo vrootwidth $w]) - [winfo reqwidth $w])} {
+	    set x [expr {([winfo vrootx $w] + [winfo vrootwidth $w]) - [winfo reqwidth $w]}]
 	}
 	if {$y < [winfo vrooty $w]} {
 	    set y [winfo vrooty $w]
-	} elseif {$y > ([winfo vrooty $w]+[winfo vrootheight $w]-[winfo reqheight $w])} {
-	    set y [expr {[winfo vrooty $w]+[winfo vrootheight $w]-[winfo reqheight $w]}]
+	} elseif {$y > (([winfo vrooty $w] + [winfo vrootheight $w]) - [winfo reqheight $w])} {
+	    set y [expr {([winfo vrooty $w] + [winfo vrootheight $w]) - [winfo reqheight $w]}]
 	}
 	if {[tk windowingsystem] eq "aqua"} {
 	    # Avoid the native menu bar which sits on top of everything.
@@ -142,9 +143,9 @@ proc ::tk::PlaceWindow {w {place ""} {anchor ""}} {
 # Results:
 #   Returns nothing
 #
-proc ::tk::SetFocusGrab {grab {focus {}}} {
+proc ::tk::SetFocusGrab {grab {focus ""}} {
     set index "$grab,$focus"
-    upvar ::tk::FocusGrab($index) data
+    upvar 1 ::tk::FocusGrab($index) data
 
     lappend data [focus]
     set oldGrab [grab current $grab]
@@ -172,7 +173,7 @@ proc ::tk::SetFocusGrab {grab {focus {}}} {
 proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
     set index "$grab,$focus"
     if {[info exists ::tk::FocusGrab($index)]} {
-	foreach {oldFocus oldGrab oldStatus} $::tk::FocusGrab($index) { break }
+	lassign $::tk::FocusGrab($index) oldFocus oldGrab oldStatus
 	unset ::tk::FocusGrab($index)
     } else {
 	set oldGrab ""
@@ -212,7 +213,7 @@ if {[tk windowingsystem] ne "win32"} {
 	    selection get -displayof $w -selection $sel -type UTF8_STRING
 	} txt] && [catch {
 	    selection get -displayof $w -selection $sel
-	} txt]} then {
+	} txt]} {
 	    return -code error -errorcode {TK SELECTION NONE} \
 		"could not find default selection"
 	} else {
@@ -223,7 +224,7 @@ if {[tk windowingsystem] ne "win32"} {
     proc ::tk::GetSelection {w {sel PRIMARY}} {
 	if {[catch {
 	    selection get -displayof $w -selection $sel
-	} txt]} then {
+	} txt]} {
 	    return -code error -errorcode {TK SELECTION NONE} \
 		"could not find default selection"
 	} else {
@@ -242,7 +243,7 @@ if {[tk windowingsystem] ne "win32"} {
 # Arguments:
 # screen -		The name of the new screen.
 
-proc ::tk::ScreenChanged screen {
+proc ::tk::ScreenChanged {screen} {
     # Extract the display name.
     set disp [string range $screen 0 [string last . $screen]-1]
 
@@ -283,7 +284,7 @@ proc ::tk::ScreenChanged screen {
     }
     set Priv(screen) $screen
     set Priv(tearoff) [string equal [tk windowingsystem] "x11"]
-    set Priv(window) {}
+    set Priv(window) ""
 }
 
 # Do initial setup for Priv, so that it is always bound to something
@@ -301,7 +302,7 @@ tk::ScreenChanged [winfo screen .]
 # n1 - the name of the variable being changed ("::tk_strictMotif").
 
 proc ::tk::EventMotifBindings {n1 dummy dummy} {
-    upvar $n1 name
+    upvar 1 $n1 name
     
     if {$name} {
 	set op delete
@@ -367,7 +368,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z>
 	event add <<Redo>>		<Control-Key-Z> <Control-Lock-Key-z>
 	event add <<ContextMenu>>	<Button-3>
-	if {[info exists tcl_platform(os)] && $tcl_platform(os) eq "Darwin"} {
+	if {[info exists tcl_platform(os)] && ($tcl_platform(os) eq "Darwin")} {
 	    event add <<ContextMenu>>	<Button-2>
 	}
 
@@ -482,6 +483,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectPrevPara>>	<Shift-Option-Down>
 	event add <<ToggleSelection>>	<Command-ButtonPress-1>
     }
+    default {}
 }
 
 # ----------------------------------------------------------------------
@@ -527,7 +529,7 @@ bind all <<PrevWindow>> {tk::TabToWindow [tk_focusPrev %W]}
 proc ::tk::CancelRepeat {} {
     variable ::tk::Priv
     after cancel $Priv(afterId)
-    set Priv(afterId) {}
+    set Priv(afterId) ""
 }
 
 # ::tk::TabToWindow --
@@ -557,7 +559,7 @@ proc ::tk::TabToWindow {w} {
 proc ::tk::UnderlineAmpersand {text} {
     set s [string map {&& & & \ufeff} $text]
     set idx [string first \ufeff $s]
-    return [list [string map {\ufeff {}} $s] $idx]
+    return [list [string map {\ufeff ""} $s] $idx]
 }
 
 # ::tk::SetAmpText -- 
@@ -574,7 +576,7 @@ proc ::tk::SetAmpText {widget text} {
 #	options, returned by ::tk::UnderlineAmpersand.
 #
 proc ::tk::AmpWidget {class path args} {
-    set options {}
+    set options [list]
     foreach {opt val} $args {
 	if {$opt eq "-text"} {
 	    lassign [UnderlineAmpersand $val] newtext under
@@ -595,7 +597,7 @@ proc ::tk::AmpWidget {class path args} {
 #	-label and -underline options, returned by ::tk::UnderlineAmpersand.
 #
 proc ::tk::AmpMenuArgs {widget add type args} {
-    set options {}
+    set options [list]
     foreach {opt val} $args {
 	if {$opt eq "-label"} {
 	    lassign [UnderlineAmpersand $val] newlabel under
@@ -613,11 +615,8 @@ proc ::tk::AmpMenuArgs {widget add type args} {
 #
 proc ::tk::FindAltKeyTarget {path char} {
     set class [winfo class $path]
-    if {$class in {
-	Button Checkbutton Label Radiobutton
-	TButton TCheckbutton TLabel TRadiobutton
-    } && [string equal -nocase $char \
-	    [string index [$path cget -text] [$path cget -underline]]]} {
+    if {($class in "Button Checkbutton Label Radiobutton TButton TCheckbutton TLabel TRadiobutton") && 
+	[string equal -nocase $char [string index [$path cget -text] [$path cget -underline]]]} {
 	return $path
     }
     set subwins [concat [grid slaves $path] [pack slaves $path] \

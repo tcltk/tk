@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .paned2
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Vertical Paned Window Demonstration"
 wm iconname $w "paned2"

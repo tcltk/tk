@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .spin
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Spinbox Demonstration"
 wm iconname $w "spin"
@@ -38,7 +38,7 @@ set australianCities {
 }
 
 spinbox $w.s1 -from 1 -to 10 -width 10 -validate key \
-	-vcmd {string is integer %P}
+	-validatecommand {string is integer %P}
 spinbox $w.s2 -from 0 -to 3 -increment .5 -format %05.2f -width 10
 spinbox $w.s3 -values $australianCities -width 10
 

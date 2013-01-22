@@ -32,12 +32,12 @@ proc PressButton {btn} {
 
 proc EnterDirsByKey {parent dirs} {
     global tk_strictMotif
-    if {$parent == "."} {
+    if {$parent eq "."} {
 	set w .__tk_choosedir
     } else {
 	set w $parent.__tk_choosedir
     }
-    upvar ::tk::dialog::file::__tk_choosedir data
+    upvar 1 ::tk::dialog::file::__tk_choosedir data
 
     foreach dir $dirs {
 	$data(ent) delete 0 end
@@ -50,19 +50,19 @@ proc EnterDirsByKey {parent dirs} {
 
 proc SendButtonPress {parent btn type} {
     global tk_strictMotif
-    if {$parent == "."} {
+    if {$parent eq "."} {
 	set w .__tk_choosedir
     } else {
 	set w $parent.__tk_choosedir
     }
-    upvar ::tk::dialog::file::__tk_choosedir data
+    upvar 1 ::tk::dialog::file::__tk_choosedir data
 
     set button $data($btn\Btn)
-    if ![winfo ismapped $button] {
+    if {![winfo ismapped $button]} {
 	update
     }
 
-    if {$type == "mouse"} {
+    if {$type eq "mouse"} {
 	PressButton $button
     } else {
 	event generate $w <Enter>
@@ -105,14 +105,12 @@ test choosedir-1.6 {tk_chooseDirectory command} -constraints unix -body {
     tk_chooseDirectory -parent foo.bar
 } -returnCodes error -result {bad window path name "foo.bar"}
 
-
 test choosedir-2.1 {tk_chooseDirectory command, cancel gives null} -constraints {
 	unix notAqua
 } -body {
     ToPressButton $parent cancel
     tk_chooseDirectory -title "Press Cancel" -parent $parent
 } -result {}
-
 
 test choosedir-3.1 {tk_chooseDirectory -mustexist 1} -constraints {
 	unix notAqua
@@ -132,7 +130,6 @@ test choosedir-3.2 {tk_chooseDirectory -mustexist 0} -constraints {
 	    -parent $parent -mustexist 0
 } -result $fake
 
-
 test choosedir-4.1 {tk_chooseDirectory command, initialdir} -constraints {
 	unix notAqua
 } -body {
@@ -150,13 +147,12 @@ test choosedir-4.2 {tk_chooseDirectory command, initialdir} -constraints {
 test choosedir-4.3 {tk_chooseDirectory command, {} initialdir} -constraints {
 	unix notAqua
 } -body {
-    catch {unset ::tk::dialog::file::__tk_choosedir}
+    unset -nocomplain ::tk::dialog::file::__tk_choosedir
     ToPressButton $parent ok
     tk_chooseDirectory \
 	    -title "Press OK" \
 	    -parent $parent -initialdir ""
 } -result [pwd]
-
 
 test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
 	unix notAqua

@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .image1
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Image Demonstration #1"
 wm iconname $w "Image1"

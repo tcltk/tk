@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .labelframe
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Labelframe Demonstration"
 wm iconname $w "labelframe"
@@ -46,11 +46,12 @@ foreach value {1 2 3 4} {
 
 
 # Using a label window to control a group of options.
-
+set lfdummy2 0
 proc lfEnableButtons {w} {
+    global lfdummy2
     foreach child [winfo children $w] {
-        if {$child == "$w.cb"} continue
-        if {$::lfdummy2} {
+        if {$child eq "$w.cb"} continue
+        if {$lfdummy2} {
             $child configure -state normal
         } else {
             $child configure -state disabled
@@ -71,6 +72,5 @@ foreach str {Option1 Option2 Option3} {
     incr t
 }
 lfEnableButtons $w.f2
-
 
 grid columnconfigure $w {0 1} -weight 1

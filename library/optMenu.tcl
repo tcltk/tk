@@ -31,7 +31,7 @@ proc ::tk_optionMenu {w varName firstValue args} {
     if {![info exists var]} {
 	set var $firstValue
     }
-    menubutton $w -textvariable $varName -indicatoron 1 -menu $w.menu \
+    menubutton $w -textvariable [set varName] -indicatoron 1 -menu $w.menu \
 	    -relief raised -highlightthickness 1 -anchor c \
 	    -direction flush
     menu $w.menu -tearoff 0

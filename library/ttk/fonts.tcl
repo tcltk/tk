@@ -82,7 +82,7 @@ switch -- [tk windowingsystem] {
                 set F(family) "MS Sans Serif"
             }
         } else {
-            if {[lsearch -exact [font families] Tahoma] != -1} {
+            if {"Tahoma" in [font families]} {
                 set F(family) "Tahoma"
             } else {
                 set F(family) "MS Sans Serif"
@@ -122,9 +122,8 @@ switch -- [tk windowingsystem] {
 	font configure TkMenuFont    -family $F(family) -size $F(menusize)
 	font configure TkSmallCaptionFont -family $F(family) -size $F(labelsize)
     }
-    default -
-    x11 {
-	if {![catch {tk::pkgconfig get fontsystem} F(fs)] && $F(fs) eq "xft"} {
+    default {
+	if {(![catch {tk::pkgconfig get fontsystem} F(fs)]) && ($F(fs) eq "xft")} {
 	    set F(family) "sans-serif"
 	    set F(fixed)  "monospace"
 	} else {

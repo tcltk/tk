@@ -7,7 +7,7 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
-proc getsize w {
+proc getsize {w} {
     regexp {(^[^+-]*)} [wm geometry $w] foo x
     return $x
 }
@@ -17,14 +17,13 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-
 wm geometry . 300x300
 raise .
 update
 
-frame .f -bd 2 -relief raised
-frame .f.f -bd 2 -relief sunken
-frame .f.f.f -bd 2 -relief raised
+frame .f -borderwidth 2 -relief raised
+frame .f.f -borderwidth 2 -relief sunken
+frame .f.f.f -borderwidth 2 -relief raised
 button .b1 -text .b1
 button .b2 -text .b2
 button .b3 -text .b3
@@ -53,7 +52,6 @@ test geometry-1.2 {Tk_ManageGeometry procedure} -setup {
     list [winfo x .b1] [winfo y .b1]
 } -result {0 0}
 
-
 test geometry-2.1 {Tk_GeometryRequest procedure} -setup {
 	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
@@ -76,7 +74,6 @@ test geometry-2.1 {Tk_GeometryRequest procedure} -setup {
     destroy .f2
 } -result {1 1 150 300 1x1+0+0 150x300+10+20 100x80+10+20}
 
-
 test geometry-3.1 {Tk_SetInternalBorder procedure} -setup {
 	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
@@ -86,13 +83,12 @@ test geometry-3.1 {Tk_SetInternalBorder procedure} -setup {
     place .b1 -in .f -x 50 -y 5
     update
     set x [list [winfo x .b1] [winfo y .b1]]
-    .f configure -bd 5
+    .f configure -borderwidth 5
     update
     lappend x [winfo x .b1] [winfo y .b1]
 } -cleanup {
-    .f configure -bd 2
+    .f configure -borderwidth 2
 } -result {72 37 75 40}
-
 
 test geometry-4.1 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
 	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
@@ -234,8 +230,8 @@ test geometry-4.8 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
     place .b3 -in .f.f.f -x 50 -y 25
     update
     destroy .f.f
-    frame .f.f -bd 2 -relief raised
-    frame .f.f.f -bd 2 -relief raised
+    frame .f.f -borderwidth 2 -relief raised
+    frame .f.f.f -borderwidth 2 -relief raised
     place .f -x 30 -y 25
     update
     list [winfo x .b1] [winfo y .b1] [winfo ismapped .b1] \

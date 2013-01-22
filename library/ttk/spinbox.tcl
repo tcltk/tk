@@ -29,8 +29,8 @@ ttk::bindMouseWheel TSpinbox 		[list ttk::spinbox::MouseWheel %W]
 #	Sets cursor.
 #
 proc ttk::spinbox::Motion {w x y} {
-    if {   [$w identify $x $y] eq "textarea"
-        && [$w instate {!readonly !disabled}]
+    if { ([$w identify $x $y] eq "textarea") && 
+	 [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
@@ -50,13 +50,14 @@ proc ttk::spinbox::Press {w x y} {
 	*leftarrow	-
         *downarrow	{ ttk::Repeatedly event generate $w <<Decrement>> }
 	*spinbutton {
-	    if {$y * 2 >= [winfo height $w]} {
+	    if {($y * 2) >= [winfo height $w]} {
 	    	set event <<Decrement>>
 	    } else {
 	    	set event <<Increment>>
 	    }
 	    ttk::Repeatedly event generate $w $event
 	}
+        default {}
     }
 }
 
@@ -69,6 +70,7 @@ proc ttk::spinbox::DoubleClick {w x y} {
     switch -glob -- [$w identify $x $y] {
         *textarea	{ SelectAll $w }
 	*		{ Press $w $x $y }
+        default {}
     }
 }
 
@@ -140,7 +142,7 @@ proc ttk::spinbox::Spin {w dir} {
 	$w set [lindex $values $index]
     } else {
         if {[catch {
-    	    set v [expr {[scan [$w get] %f] + $dir * [$w cget -increment]}]
+    	    set v [expr {[scan [$w get] %f] + ($dir * [$w cget -increment])}]
 	}]} {
 	    set v [$w cget -from]
 	}
@@ -157,11 +159,11 @@ proc ttk::spinbox::FormatValue {w val} {
     set fmt [$w cget -format]
     if {$fmt eq ""} {
 	# Try to guess a suitable -format based on -increment.
-	set delta [expr {abs([$w cget -increment])}]
-        if {0 < $delta && $delta < 1} {
+	set delta [expr { abs ([$w cget -increment])}]
+        if {(0 < $delta) && ($delta < 1)} {
 	    # NB: This guesses wrong if -increment has more than 1
 	    # significant digit itself, e.g., -increment 0.25
-	    set nsd [expr {int(ceil(-log10($delta)))}]
+	    set nsd [expr { int ( ceil (- ( log10 ($delta))))}]
 	    set fmt "%.${nsd}f"
 	} else {
 	    set fmt "%.0f"

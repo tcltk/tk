@@ -100,7 +100,7 @@ proc _keypress_lookup {char} {
         _init_keypress_lookup
     }
 
-    if {$char == ""} {
+    if {$char eq ""} {
         error "empty char"
     }
 
@@ -121,12 +121,12 @@ proc _keypress {win key} {
     # a focus follows mouse will not steal away
     # the focus if the mouse is moved around.
 
-    if {[focus] != $win} {
+    if {[focus] ne $win} {
         focus -force $win
     }
     event generate $win <KeyPress-$keysym>
     _pause 50
-    if {[focus] != $win} {
+    if {[focus] ne $win} {
         focus -force $win
     }
     event generate $win <KeyRelease-$keysym>
@@ -165,7 +165,7 @@ proc _text_ind_to_x_y {text ind} {
     if {[llength $bbox] != 4} {
         error "got bbox \{$bbox\} from $text, index $ind"
     }
-    foreach {x1 y1 width height} $bbox break
+    lassign $bbox x1 y1 width height
     set middle_y [expr {$y1 + ($height / 2)}]
     return [list $x1 $middle_y]
 }
@@ -173,7 +173,7 @@ proc _text_ind_to_x_y {text ind} {
 # Return selection only if owned by the given widget
 
 proc _get_selection {widget} {
-    if {[string compare $widget [selection own]] != 0} {
+    if {$widget ne [selection own]} {
         return ""
     }
     if {[catch {selection get} sel]} {
@@ -208,7 +208,7 @@ test event-1.1 {Tk_HandleEvent procedure, filter events for dead windows} -setup
 } -result {destroy}
 test event-1.2 {event generate <Alt-z>} -setup {
 	deleteWindows
-    catch {unset ::event12result}
+    unset -nocomplain ::event12result
 } -body {
 	set ::event12result 0
 	pack [entry .e]
@@ -222,7 +222,6 @@ test event-1.2 {event generate <Alt-z>} -setup {
 } -cleanup {
     deleteWindows
 } -result 1
-
 
 test event-2.1(keypress) {type into entry widget and hit Return} -setup {
 	deleteWindows
@@ -349,7 +348,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
     lappend result [$e get 1.0 1.end]
 
     # Get the x,y coords of the second T in "Tcl/Tk"
-    foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
+    lassign [_text_ind_to_x_y $e $anchor] anchor_x anchor_y
 
     # Click down to set the insert cursor position
     event generate $e <Enter>
@@ -362,7 +361,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 
     set current $anchor
     while {[$e compare $current <= $selend]} {
-        foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+        lassign [_text_ind_to_x_y $e $current] current_x current_y
         event generate $e <B1-Motion> -x $current_x -y $current_y
         set current [$e index [list $current + 1 char]]
         _pause 50
@@ -382,7 +381,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
     event generate $e <ButtonPress-1> -x $current_x -y $current_y
 
     while {[$e compare $current >= [list $anchor - 4 char]]} {
-        foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+        lassign [_text_ind_to_x_y $e $current] current_x current_y
         event generate $e <B1-Motion> -x $current_x -y $current_y
         set current [$e index [list $current - 1 char]]
         _pause 50
@@ -416,7 +415,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
     lappend result [$e get]
 
     # Get the x,y coords of the second T in "Tcl/Tk"
-    foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
+    lassign [_text_ind_to_x_y $e $anchor] anchor_x anchor_y
 
     # Click down to set the insert cursor position
     event generate $e <Enter>
@@ -429,7 +428,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 
     set current $anchor
     while {$current <= $selend} {
-        foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+        lassign [_text_ind_to_x_y $e $current] current_x current_y
         event generate $e <B1-Motion> -x $current_x -y $current_y
         incr current
         _pause 50
@@ -449,7 +448,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
     event generate $e <ButtonPress-1> -x $current_x -y $current_y
 
     while {$current >= ($anchor - 4)} {
-        foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+        lassign [_text_ind_to_x_y $e $current] current_x current_y
         event generate $e <B1-Motion> -x $current_x -y $current_y
         incr current -1
         _pause 50
@@ -468,7 +467,6 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
     deleteWindows
 } -result {{A Tcl/Tk selection!} 6 18 {Tk selection} 2 {Tcl/Tk selection}}
 
-
 test event-4.1(double-click-drag) {click down, click up, click down again,
     then drag in a text widget} -setup {
 	deleteWindows
@@ -481,7 +479,7 @@ test event-4.1(double-click-drag) {click down, click up, click down again,
     set anchor 1.8
 
     # Get the x,y coords of the second e in "select"
-    foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
+    lassign [_text_ind_to_x_y $e $anchor] anchor_x anchor_y
 
     # Click down, release, then click down again
     event generate $e <Enter>
@@ -501,7 +499,7 @@ test event-4.1(double-click-drag) {click down, click up, click down again,
 
     # Move mouse one character to the left
     set current [$e index [list $anchor - 1 char]]
-    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+    lassign [_text_ind_to_x_y $e $current] current_x current_y
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
     _pause 50
@@ -515,7 +513,7 @@ test event-4.1(double-click-drag) {click down, click up, click down again,
     # Move mouse to the space before the word "select"
     set current [$e index [list $current - 3 char]]
 
-    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+    lassign [_text_ind_to_x_y $e $current] current_x current_y
     event generate $e <B1-Motion> -x $current_x -y $current_y
     _pause 200
 
@@ -524,7 +522,7 @@ test event-4.1(double-click-drag) {click down, click up, click down again,
 
     # Move mouse to the r in "Word"
     set current 1.2
-    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+    lassign [_text_ind_to_x_y $e $current] current_x current_y
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
     _pause 50
@@ -552,7 +550,7 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
     set anchor 8
 
     # Get the x,y coords of the second e in "select"
-    foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
+    lassign [_text_ind_to_x_y $e $anchor] anchor_x anchor_y
 
     # Click down, release, then click down again
     event generate $e <Enter>
@@ -571,7 +569,7 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
 
     # Move mouse one character to the left
     set current [expr {$anchor - 1}]
-    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+    lassign [_text_ind_to_x_y $e $current] current_x current_y
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
     _pause 50
@@ -584,7 +582,7 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
 
     # Move mouse to the space before the word "select"
     set current [expr {$current - 3}]
-    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+    lassign [_text_ind_to_x_y $e $current] current_x current_y
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
     _pause 50
@@ -594,7 +592,7 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
 
     # Move mouse to the r in "Word"
     set current [expr {$current - 2}]
-    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+    lassign [_text_ind_to_x_y $e $current] current_x current_y
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
     _pause 50
@@ -624,7 +622,7 @@ test event-5.1(triple-click-drag) {Triple click and drag across lines in a
 
     # Triple click one third line leaving mouse down
 
-    foreach {anchor_x anchor_y} [_text_ind_to_x_y $e $anchor] break
+    lassign [_text_ind_to_x_y $e $anchor] anchor_x anchor_y
 
     event generate $e <Enter>
 
@@ -647,7 +645,7 @@ test event-5.1(triple-click-drag) {Triple click and drag across lines in a
     # Drag up to second line
 
     set current [$e index [list $anchor - 1 line]]
-    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+    lassign [_text_ind_to_x_y $e $current] current_x current_y
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
     _pause 50
@@ -657,7 +655,7 @@ test event-5.1(triple-click-drag) {Triple click and drag across lines in a
     # Drag up to first line
 
     set current [$e index [list $current - 1 line]]
-    foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+    lassign [_text_ind_to_x_y $e $current] current_x current_y
 
     event generate $e <B1-Motion> -x $current_x -y $current_y
     _pause 50
@@ -704,7 +702,7 @@ test event-7.1(double-click) {A double click on a lone character
 
     # Get x,y coords just inside the left
     # and right hand side of the letter A
-    foreach {x1 y1 width height} [$e bbox $anchor] break
+    lassign [$e bbox $anchor] x1 y1 width height
 
     set middle_y [expr {$y1 + ($height / 2)}]
 
@@ -772,7 +770,7 @@ test event-7.2(double-click) {A double click on a lone character
 
     # Get x,y coords just inside the left
     # and right hand side of the letter A
-    foreach {x1 y1 width height} [$e bbox $anchor] break
+    lassign [$e bbox $anchor] x1 y1 width height
 
     set middle_y [expr {$y1 + ($height / 2)}]
 

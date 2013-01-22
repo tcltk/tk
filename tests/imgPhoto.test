@@ -22,8 +22,8 @@ proc foreachPixel {img xVar yVar script} {
     upvar 1 $xVar x $yVar y
     set width [image width $img]
     set height [image height $img]
-    for {set x 0} {$x<$width} {incr x} {
-	for {set y 0} {$y<$height} {incr y} {
+    for {set x 0} {$x < $width} {incr x} {
+	for {set y 0} {$y < $height} {incr y} {
 	    uplevel 1 $script
 	}
     }

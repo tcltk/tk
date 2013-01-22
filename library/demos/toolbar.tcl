@@ -63,7 +63,10 @@ ttk::button $t.button -text "Button" -style Toolbutton -command [list \
 ttk::checkbutton $t.check -text "Check" -variable check -style Toolbutton \
 	-command [concat [list $w.txt insert end] {"check is $check\n"}]
 ttk::menubutton $t.menu -text "Menu" -menu $t.menu.m
-ttk::combobox $t.combo -value [lsort [font families]] -state readonly
+ttk::combobox $t.combo -value [lsort [font families]]
+
+$t.combo state readonly
+
 menu $t.menu.m
 $t.menu.m add command -label "Just" -command [list $w.txt insert end Just\n]
 $t.menu.m add command -label "An" -command [list $w.txt insert end An\n]
@@ -76,7 +79,7 @@ proc changeFont {txt combo} {
 
 ## Some content for the rest of the toplevel
 text $w.txt -width 40 -height 10
-interp alias {} doInsert {} $w.txt insert end	;# Make bindings easy to write
+interp alias "" doInsert "" $w.txt insert end	;# Make bindings easy to write
 
 ## Arrange contents
 grid $t.button $t.check $t.menu $t.combo -in $t.contents -padx 2 -sticky ns

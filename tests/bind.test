@@ -25,7 +25,6 @@ foreach event [bind all] {
    bind all $event {}
 }
 
-
 proc unsetBindings {} {
     bind all <Enter> {}
     bind Test <Enter> {}
@@ -34,7 +33,6 @@ proc unsetBindings {} {
     bind {a b} <Enter> {}
     bind .t <Enter> {}
 }
-
 
 test bind-1.1 {bind command} -body {
     bind
@@ -162,7 +160,6 @@ test bind-2.12 {bindtags command} -body {
     destroy .t.f
 } -result {a .gorp b}
 
-
 test bind-3.1 {TkFreeBindingTags procedure} -body {
     frame .t.f
     bindtags .t.f "a b c d"
@@ -177,7 +174,6 @@ test bind-3.2 {TkFreeBindingTags procedure} -body {
 } -cleanup {
     destroy .t.f
 } -result {}
-
 
 test bind-4.1 {TkBindEventProc procedure} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -279,14 +275,12 @@ test bind-4.5 {TkBindEventProc procedure} -setup {
     unsetBindings
 } -result {}
 
-
 test bind-5.1 {Tk_CreateBindingTable procedure} -body {
     canvas .t.c
     .t.c bind foo
 } -cleanup {
     destroy .t.c
 } -result {}
-
 
 test bind-6.1 {Tk_DeleteBindTable procedure} -body {
     canvas .t.c
@@ -402,7 +396,6 @@ test bind-11.3 {Tk_GetAllBindings procedure} -body {
 } -cleanup {
     destroy .t.f
 } -result {<Triple-Button-1> a<Leave>b abcd}
-
 
 test bind-12.1 {Tk_DeleteAllBindings procedure} -body {
     frame .t.f -class Test -width 150 -height 100
@@ -1569,7 +1562,6 @@ test bind-15.33 {MatchPatterns procedure, conflict resolution} -setup {
     bind Test <Double-1> {}
 } -result {single single(Test) single double(Test) single double(Test)}
 
-
 test bind-16.1 {ExpandPercents procedure} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -2172,7 +2164,6 @@ test bind-16.44 {ExpandPercents procedure} -setup {
     destroy .t.f
 } -result {?? ??}
 
-
 test bind-17.1 {event command} -body {
     event
 } -returnCodes error -result {wrong # args: should be "event option ?arg?"}
@@ -2287,7 +2278,6 @@ test bind-17.18 {event command} -body {
     event foo
 } -returnCodes error -result {bad option "foo": must be add, delete, generate, or info}
 
-
 test bind-18.1 {CreateVirtualEvent procedure: GetVirtualEventUid} -body {
     event add asd <Ctrl-v>
 } -returnCodes error -result {virtual event "asd" is badly formed}
@@ -2333,7 +2323,6 @@ test bind-18.7 {CreateVirtualEvent procedure: existing virtual} -body {
 } -cleanup {
     event delete <<xyz>>
 } -result {<<xyz>> {<Button-2> <Control-Key-v>}}
-
 
 test bind-19.1 {DeleteVirtualEvent procedure: GetVirtualEventUid} -body {
     event add xyz {}
@@ -2621,7 +2610,6 @@ test bind-19.17 {DeleteVirtualEvent procedure: owned by many, last} -setup {
     event delete <<abc>>
 } -result {{xyz abc def xyz abc} <Button-2> <Button-2> {}}
 
-
 test bind-20.1 {GetVirtualEvent procedure: GetVirtualEventUid} -body {
     event info asd
 } -returnCodes error -result {virtual event "asd" is badly formed}
@@ -2645,7 +2633,6 @@ test bind-20.4 {GetVirtualEvent procedure: owns many} -setup {
 } -cleanup {
     event delete <<xyz>>
 } -result {<Control-Key-v> <Button-2> spack}
-
 
 test bind-21.1 {GetAllVirtualEvents procedure: no events} -body {
     foreach p [event info] {event delete $p}
@@ -4849,7 +4836,6 @@ test bind-23.4 {GetVirtualEventUid procedure} -setup {
     event info <<asd>>
 } -result {}
 
-
 test bind-24.1 {FindSequence procedure: no event} -body {
     bind .t {} test
 } -returnCodes error -result {no events specified in binding}
@@ -5383,8 +5369,6 @@ test bind-25.49 {modifier names} -setup {
 	destroy .t.f
 } -result <Extended-Key-Return>
 
-
-
 test bind-26.1 {event names} -setup {
 	frame .t.f -class Test -width 150 -height 100
 } -body {
@@ -5711,7 +5695,6 @@ test bind-26.24 {event names: Unmap} -setup {
 	destroy .t.f
 } -result {{event Unmap} <Unmap>}
 
-
 test bind-27.1 {button names} -body {
     bind .t <Expose-1> foo
 } -returnCodes error -result {specified button "1" for non-button event}
@@ -5863,7 +5846,6 @@ test bind-28.8 {keysym names} -setup {
     destroy .t.f
 } -result {X x {keysym X}}
 
-
 test bind-29.1 {Tk_BackgroundError procedure} -setup {
     proc bgerror msg {
         global x errorInfo
@@ -5916,7 +5898,6 @@ test bind-29.2 {Tk_BackgroundError procedure} -setup {
 "error Message2"
     (command bound to event)}}
 
-
 test bind-30.1 {MouseWheel events} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -5956,7 +5937,6 @@ test bind-30.3 {MouseWheel events} -setup {
 } -cleanup {
     destroy .t.f
 } -result {240 10 30}
-
 
 test bind-31.1 {virtual event user_data field - bad generation} -setup {
     frame .t.f -class Test -width 150 -height 100

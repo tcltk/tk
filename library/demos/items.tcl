@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .items
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Canvas Item Demonstration"
 wm iconname $w "Items"
@@ -106,14 +106,14 @@ $c create polygon 22c 4.5c 25c 4.5c 25c 6.75c 28c 6.75c \
 $c create text 5c 8.2c -text Rectangles -anchor n
 $c create rectangle 1c 9.5c 4c 12.5c -outline $red -width 3m -tags item
 $c create rectangle 0.5c 13.5c 4.5c 15.5c -fill $green -tags item
-$c create rectangle 6c 10c 9c 15c -outline {} \
+$c create rectangle 6c 10c 9c 15c -outline "" \
 	-stipple @[file join $tk_demoDirectory images gray25.xbm] \
 	-fill $blue -tags item
 
 $c create text 15c 8.2c -text Ovals -anchor n
 $c create oval 11c 9.5c 14c 12.5c -outline $red -width 3m -tags item
 $c create oval 10.5c 13.5c 14.5c 15.5c -fill $green -tags item
-$c create oval 16c 10c 19c 15c -outline {} \
+$c create oval 16c 10c 19c 15c -outline "" \
 	-stipple @[file join $tk_demoDirectory images gray25.xbm] \
 	-fill $blue -tags item
 
@@ -136,9 +136,9 @@ $c create arc 6.5c 17c 9.5c 20c -width 4m -style arc \
 	-outline $blue -start -135 -extent 270 -tags item \
 	-outlinestipple @[file join $tk_demoDirectory images gray25.xbm]
 $c create arc 0.5c 20c 9.5c 24c -width 4m -style pieslice \
-	-fill {} -outline $red -start 225 -extent -90 -tags item
+	-fill "" -outline $red -start 225 -extent -90 -tags item
 $c create arc 5.5c 20.5c 9.5c 23.5c -width 4m -style chord \
-	-fill $blue -outline {} -start 45 -extent 270  -tags item
+	-fill $blue -outline "" -start 45 -extent 270  -tags item
 
 image create photo items.ousterhout \
     -file [file join $tk_demoDirectory images ouster.png]
@@ -183,26 +183,25 @@ proc itemEnter {c} {
     global restoreCmd
 
     if {[winfo depth $c] == 1} {
-	set restoreCmd {}
+	set restoreCmd ""
 	return
     }
     set type [$c type current]
-    if {$type == "window" || $type == "image"} {
-	set restoreCmd {}
+    if {$type in "window image"} {
+	set restoreCmd ""
 	return
-    } elseif {$type == "bitmap"} {
+    } elseif {$type eq "bitmap"} {
 	set bg [lindex [$c itemconf current -background] 4]
 	set restoreCmd [list $c itemconfig current -background $bg]
 	$c itemconfig current -background SteelBlue2
 	return
-    } elseif {$type == "image"} {
+    } elseif {$type eq "image"} {
 	set restoreCmd [list $c itemconfig current -state normal]
 	$c itemconfig current -state active
 	return
     }
     set fill [lindex [$c itemconfig current -fill] 4]
-    if {(($type == "rectangle") || ($type == "oval") || ($type == "arc"))
-	    && ($fill == "")} {
+    if {($type in "rectangle oval arc") && ($fill eq "")} {
 	set outline [lindex [$c itemconfig current -outline] 4]
 	set restoreCmd "$c itemconfig current -outline $outline"
 	$c itemconfig current -outline SteelBlue2
@@ -228,10 +227,10 @@ proc itemMark {c x y} {
     $c delete area
 }
 
-proc itemStroke {c x y} {
+proc itemStroke {c a_x a_y} {
     global areaX1 areaY1 areaX2 areaY2
-    set x [$c canvasx $x]
-    set y [$c canvasy $y]
+    set x [$c canvasx $a_x]
+    set y [$c canvasy $a_y]
     if {($areaX1 != $x) && ($areaY1 != $y)} {
 	$c delete area
 	$c addtag area withtag [$c create rect $areaX1 $areaY1 $x $y \
@@ -273,11 +272,11 @@ proc itemStartDrag {c x y} {
     set lastY [$c canvasy $y]
 }
 
-proc itemDrag {c x y} {
+proc itemDrag {c a_x a_y} {
     global lastX lastY
-    set x [$c canvasx $x]
-    set y [$c canvasy $y]
-    $c move current [expr {$x-$lastX}] [expr {$y-$lastY}]
+    set x [$c canvasx $a_x]
+    set y [$c canvasy $a_y]
+    $c move current [expr {$x - $lastX}] [expr {$y - $lastY}]
     set lastX $x
     set lastY $y
 }

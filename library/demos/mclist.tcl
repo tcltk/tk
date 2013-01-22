@@ -10,7 +10,7 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 set w .mclist
-catch {destroy $w}
+destroy $w
 toplevel $w
 wm title $w "Multi-Column List"
 wm iconname $w "mclist"
@@ -74,7 +74,7 @@ set font [ttk::style lookup Treeview -font]
 foreach {country capital currency} $data {
     $w.tree insert {} end -values [list $country $capital $currency]
     foreach col {country capital currency} {
-	set len [font measure $font "[set $col]  "]
+        set len [font measure $font "[set [set col]]  "]
 	if {[$w.tree column $col -width] < $len} {
 	    $w.tree column $col -width $len
 	}
@@ -86,7 +86,7 @@ proc SortBy {tree col direction} {
     # Determine currently sorted column and its sort direction
     foreach c {country capital currency} {
 	set s [$tree heading $c state]
-	if {("selected" in $s || "alternate" in $s) && $col ne $c} {
+	if {(("selected" in $s) || ("alternate" in $s)) && ($col ne $c)} {
 	    # Sorted column has changed
 	    $tree heading $c -image noArrow state {!selected !alternate !user1}
 	    set direction [expr {"alternate" in $s}]
@@ -94,7 +94,7 @@ proc SortBy {tree col direction} {
     }
 
     # Build something we can sort
-    set data {}
+    set data [list]
     foreach row [$tree children {}] {
 	lappend data [list [$tree set $row $col] $row]
     }
@@ -109,11 +109,11 @@ proc SortBy {tree col direction} {
 
     # Switch the heading so that it will sort in the opposite direction
     $tree heading $col -command [list SortBy $tree $col [expr {!$direction}]] \
-	state [expr {$direction?"!selected alternate":"selected !alternate"}]
+	state [expr {$direction ? "!selected alternate" : "selected !alternate"}]
     if {[ttk::style theme use] eq "aqua"} {
 	# Aqua theme displays native sort arrows when user1 state is set
 	$tree heading $col state "user1"
     } else {
-	$tree heading $col -image [expr {$direction?"upArrow":"downArrow"}]
+	$tree heading $col -image [expr {$direction ? "upArrow" : "downArrow"}]
     }
 }
