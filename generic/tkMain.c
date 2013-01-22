@@ -132,12 +132,15 @@ Tk_MainEx(
     Tcl_DString appName;
 
     /*
-     * Ensure that we are getting a compatible version of Tcl. This is really
-     * only an issue when Tk is loaded dynamically.
+     * Ensure that we are getting a compatible version of Tcl.
      */
 
     if (Tcl_InitStubs(interp, "8.5.0", 0) == NULL) {
-	abort();
+	if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
+	    abort();
+	} else {
+	    Tcl_Panic("%s", Tcl_GetStringResult(interp));
+	}
     }
 
 #if defined(__WIN32__) && !defined(__WIN64__) && !defined(STATIC_BUILD)
