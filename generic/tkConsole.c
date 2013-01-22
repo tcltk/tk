@@ -226,8 +226,7 @@ Tk_InitConsoleChannels(interp)
     Tcl_Channel consoleChannel;
 
     /*
-     * Ensure that we are getting the matching version of Tcl.  This is
-     * really only an issue when Tk is loaded dynamically.
+     * Ensure that we are getting the matching version of Tcl.
      */
 
     if (Tcl_InitStubs(interp, TCL_VERSION, 1) == NULL) {
