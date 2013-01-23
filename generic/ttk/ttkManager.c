@@ -237,7 +237,7 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
 	ckfree((ClientData)mgr->slaves);
     }
 
-    Tk_CancelIdleCall(ManagerIdleProc, mgr);
+    Tcl_CancelIdleCall(ManagerIdleProc, mgr);
 
     ckfree((ClientData)mgr);
 }
