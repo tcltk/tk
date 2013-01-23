@@ -14,6 +14,9 @@
 #include "tkMacOSXPrivate.h"
 #include "tkFileFilter.h"
 
+static int TkBackgroundEvalObjv(Tcl_Interp *interp, int objc,
+    Tcl_Obj *const *objv, int flags);
+
 static const char *colorOptionStrings[] = {
     "-initialcolor", "-parent", "-title", NULL
 };
@@ -1056,6 +1059,68 @@ end:
     return result;
 }
 
+/*
+ * ----------------------------------------------------------------------
+ *
+ * TkBackgroundEvalObjv --
+ *
+ *	Evaluate a command while ensuring that we do not affect the
+ *	interpreters state. This is important when evaluating script
+ *	during background tasks.
+ *
+ * Results:
+ *	A standard Tcl result code.
+ *
+ * Side Effects:
+ *	The interpreters variables and code may be modified by the script
+ *	but the result will not be modified.
+ *
+ * ----------------------------------------------------------------------
+ */
+
+int
+TkBackgroundEvalObjv(
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const *objv,
+    int flags)
+{
+    Tcl_InterpState state;
+    int n, r = TCL_OK;
+
+    /*
+     * Record the state of the interpreter.
+     */
+
+    Tcl_Preserve(interp);
+    state = Tcl_SaveInterpState(interp, TCL_OK);
+
+    /*
+     * Evaluate the command and handle any error.
+     */
+
+    for (n = 0; n < objc; ++n) {
+	Tcl_IncrRefCount(objv[n]);
+    }
+    r = Tcl_EvalObjv(interp, objc, objv, flags);
+    for (n = 0; n < objc; ++n) {
+	Tcl_DecrRefCount(objv[n]);
+    }
+    if (r == TCL_ERROR) {
+	Tcl_AddErrorInfo(interp, "\n    (background event handler)");
+	Tcl_BackgroundError(interp);
+    }
+
+    /*
+     * Restore the state of the interpreter.
+     */
+
+    (void) Tcl_RestoreInterpState(interp, state);
+    Tcl_Release(interp);
+
+    return r;
+}
+
 /*
  * Local Variables:
  * mode: objc
