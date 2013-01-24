@@ -356,8 +356,8 @@ Tk_ChooseColorObjCmd(
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, optionPtr, optionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (i + 1 == objc) {
@@ -1382,8 +1382,8 @@ Tk_ChooseDirectoryObjCmd(
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, optionPtr, optionStrings,
+		sizeof(char *), "option", 0, &index) != TCL_OK) {
 	    goto cleanup;
 	}
 	if (i + 1 == objc) {
@@ -1773,8 +1773,8 @@ Tk_MessageBoxObjCmd(
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, optionPtr, optionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (i + 1 == objc) {
@@ -2260,8 +2260,8 @@ FontchooserConfigureCmd(
     for (i = 1; i < objc; i += 2) {
 	int optionIndex, len;
 
-	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
-		"option", 0, &optionIndex) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
+		sizeof(char *),  "option", 0, &optionIndex) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
