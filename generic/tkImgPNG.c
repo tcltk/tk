@@ -2302,7 +2302,7 @@ ParseFormat(
     	int optIndex;
 
         if (Tcl_GetIndexFromObjStruct(interp, objv[0], fmtOptions,
-		sizeof(char), "option", 0, &optIndex) == TCL_ERROR) {
+		sizeof(char *), "option", 0, &optIndex) == TCL_ERROR) {
             return TCL_ERROR;
 	}
 
