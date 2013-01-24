@@ -5309,11 +5309,6 @@ WmStateCmd(
 	    return TCL_ERROR;
 	}
 
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
-		&index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-
 	if (winPtr->flags & TK_EMBEDDED) {
 	    int state = 0;
 
