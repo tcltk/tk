@@ -738,7 +738,7 @@ DoObjConfig(
 	int newValue;
 
 	if (Tcl_GetIndexFromObjStruct(interp, valuePtr,
-		optionPtr->specPtr->clientData, sizeof(char),
+		optionPtr->specPtr->clientData, sizeof(char *),
 		optionPtr->specPtr->optionName+1, 0, &newValue) != TCL_OK) {
 	    return TCL_ERROR;
 	}
