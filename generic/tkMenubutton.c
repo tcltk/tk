@@ -355,8 +355,8 @@ MenuButtonWidgetObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    result = Tcl_GetIndexFromObj(interp, objv[1], commandNames, "option", 0,
-	    &index);
+    result = Tcl_GetIndexFromObjStruct(interp, objv[1], commandNames,
+	    sizeof(char), "option", 0, &index);
     if (result != TCL_OK) {
 	return result;
     }
