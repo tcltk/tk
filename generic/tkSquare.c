@@ -237,8 +237,8 @@ SquareWidgetObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], squareOptions, "command",
-	    0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], squareOptions,
+	    sizeof(char *), "command", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 

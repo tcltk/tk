@@ -728,7 +728,7 @@ FrameWidgetObjCmd(
 	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], frameOptions,
-	    sizeof(char), "option", 0, &index) != TCL_OK) {
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_Preserve(framePtr);
