@@ -333,8 +333,8 @@ Tk_SendObjCmd(
      */
 
     for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], sendOptions,
-		"option", 0, &optind) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
+		sizeof(char *), "option", 0, &optind) != TCL_OK) {
 	    break;
 	}
 	if (optind == SEND_ASYNC) {
