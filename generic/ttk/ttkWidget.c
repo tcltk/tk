@@ -766,8 +766,8 @@ int TtkWidgetIdentifyCommand(
     }
     if (objc == 5) {
 	/* $w identify element $x $y */
-	if (Tcl_GetIndexFromObj(interp,objv[2],whatTable,"option",0,&what)
-		!= TCL_OK)
+	if (Tcl_GetIndexFromObjStruct(interp, objv[2], whatTable,
+		sizeof(char *), "option", 0, &what) != TCL_OK)
 	{
 	    return TCL_ERROR;
 	}

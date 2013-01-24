@@ -1058,9 +1058,8 @@ static int NotebookIdentifyCommand(
 
     if (   Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
 	|| Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
-	|| (objc == 5 &&
-	    Tcl_GetIndexFromObj(interp, objv[2], whatTable, "option", 0, &what)
-		!= TCL_OK)
+	|| (objc == 5 && Tcl_GetIndexFromObjStruct(interp, objv[2], whatTable,
+		sizeof(char *), "option", 0, &what) != TCL_OK)
     ) {
 	return TCL_ERROR;
     }

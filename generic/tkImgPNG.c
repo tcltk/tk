@@ -801,7 +801,7 @@ SkipChunk(
 /*
  * 4.3. Summary of standard chunks
  *
- * This table summarizes some properties of the standard chunk types. 
+ * This table summarizes some properties of the standard chunk types.
  *
  *	Critical chunks (must appear in this order, except PLTE is optional):
  *
@@ -2301,8 +2301,8 @@ ParseFormat(
     for (; objc>0 ; objc--, objv++) {
     	int optIndex;
 
-        if (Tcl_GetIndexFromObj(interp, objv[0], fmtOptions, "option", 0,
-		&optIndex) == TCL_ERROR) {
+        if (Tcl_GetIndexFromObjStruct(interp, objv[0], fmtOptions,
+		sizeof(char), "option", 0, &optIndex) == TCL_ERROR) {
             return TCL_ERROR;
 	}
 
@@ -3158,7 +3158,7 @@ WriteIDAT(
 
 	    *destPtr++ = srcPtr[blockPtr->offset[0]];
 
-	    /* 
+	    /*
 	     * If not grayscale, copy the green and blue channels.
 	     */
 

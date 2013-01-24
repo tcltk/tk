@@ -816,8 +816,8 @@ Tk_BusyObjCmd(
 	return HoldBusy(busyTablePtr, interp, objv[1], objc-2, objv+2);
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+	    sizeof(char), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch ((enum options) index) {

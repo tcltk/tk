@@ -631,8 +631,8 @@ Tk_OptionObjCmd(
 	return TCL_ERROR;
     }
 
-    result = Tcl_GetIndexFromObj(interp, objv[1], optionCmds, "option", 0,
-	    &index);
+    result = Tcl_GetIndexFromObjStruct(interp, objv[1], optionCmds,
+	    sizeof(char), "option", 0, &index);
     if (result != TCL_OK) {
 	return result;
     }
