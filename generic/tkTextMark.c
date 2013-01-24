@@ -118,8 +118,8 @@ TkTextMarkCmd(
 	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[2], markOptionStrings, "mark option",
-	    0, &optionIndex) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], markOptionStrings,
+	    sizeof(char *), "mark option", 0, &optionIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
 

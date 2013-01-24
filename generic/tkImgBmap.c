@@ -765,7 +765,7 @@ ImgBmapCmd(
 	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], bmapOptions,
-	    sizeof(char), "option", 0, &index) != TCL_OK) {
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch (index) {

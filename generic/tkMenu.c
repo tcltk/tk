@@ -476,10 +476,10 @@ MenuCmd(
 
     toplevel = 1;
     for (i = 2; i < (objc - 1); i++) {
-	if (Tcl_GetIndexFromObj(NULL, objv[i], typeStringList, NULL, 0,
-		&index) != TCL_ERROR) {
-	    if ((Tcl_GetIndexFromObj(NULL, objv[i + 1], menuTypeStrings, NULL,
-		    0, &index) == TCL_OK) && (index == MENUBAR)) {
+	if (Tcl_GetIndexFromObjStruct(NULL, objv[i], typeStringList,
+		sizeof(char *), NULL, 0, &index) != TCL_ERROR) {
+	    if ((Tcl_GetIndexFromObjStruct(NULL, objv[i + 1], menuTypeStrings,
+		    sizeof(char *), NULL, 0, &index) == TCL_OK) && (index == MENUBAR)) {
 		toplevel = 0;
 	    }
 	    break;
@@ -680,8 +680,8 @@ MenuWidgetObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], menuOptions, "option", 0,
-	    &option) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], menuOptions,
+	    sizeof(char *), "option", 0, &option) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_Preserve(menuPtr);
@@ -1597,8 +1597,8 @@ ConfigureMenu(
 	 */
 
 	if (menuListPtr->menuType == UNKNOWN_TYPE) {
-	    Tcl_GetIndexFromObj(NULL, menuListPtr->menuTypePtr,
-		    menuTypeStrings, NULL, 0, &menuListPtr->menuType);
+	    Tcl_GetIndexFromObjStruct(NULL, menuListPtr->menuTypePtr,
+		    menuTypeStrings, sizeof(char *), NULL, 0, &menuListPtr->menuType);
 
 	    /*
 	     * Configure the new window to be either a pop-up menu or a
@@ -2406,8 +2406,8 @@ MenuAddOrInsert(
      * Figure out the type of the new entry.
      */
 
-    if (Tcl_GetIndexFromObj(interp, objv[0], menuEntryTypeStrings,
-	    "menu entry type", 0, &type) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[0], menuEntryTypeStrings,
+	    sizeof(char *), "menu entry type", 0, &type) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -2711,8 +2711,8 @@ CloneMenu(
     if (newMenuTypePtr == NULL) {
 	menuType = MASTER_MENU;
     } else {
-	if (Tcl_GetIndexFromObj(menuPtr->interp, newMenuTypePtr,
-		menuTypeStrings, "menu type", 0, &menuType) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(menuPtr->interp, newMenuTypePtr,
+		menuTypeStrings, sizeof(char *), "menu type", 0, &menuType) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     }
@@ -2987,10 +2987,10 @@ GetIndexFromCoords(
 
     *indexPtr = -1;
 
-    /* set the width of the final column to the remainder of the window 
+    /* set the width of the final column to the remainder of the window
      * being aware of windows that may not be mapped yet.
      */
-    max = Tk_IsMapped(menuPtr->tkwin) 
+    max = Tk_IsMapped(menuPtr->tkwin)
       ? Tk_Width(menuPtr->tkwin) : Tk_ReqWidth(menuPtr->tkwin);
     max -= borderwidth;
 

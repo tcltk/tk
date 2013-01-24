@@ -88,7 +88,7 @@ typedef struct Packer {
  *				Tk will set its requested size to fit the
  *				needs of its slaves.
  * ALLOCED_MASTER               1 means that Pack has allocated itself as
- *                              geometry master for this window.   
+ *                              geometry master for this window.
  */
 
 #define REQUESTED_REPACK	1
@@ -217,8 +217,8 @@ Tk_PackObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	/*
 	 * Call it again without the deprecated ones to get a proper error
 	 * message. This works well since there can't be any ambiguity between
@@ -226,8 +226,8 @@ Tk_PackObjCmd(
 	 */
 
 	Tcl_ResetResult(interp);
-	Tcl_GetIndexFromObj(interp, objv[1], &optionStrings[4], "option", 0,
-		&index);
+	Tcl_GetIndexFromObjStruct(interp, objv[1], &optionStrings[4],
+		sizeof(char *), "option", 0, &index);
 	return TCL_ERROR;
     }
 
@@ -409,7 +409,7 @@ Tk_PackObjCmd(
 
 	    if (masterPtr->slavePtr != NULL) {
 		if (TkSetGeometryMaster(interp, master, "pack") != TCL_OK) {
-		    return TCL_ERROR;	
+		    return TCL_ERROR;
 		}
 		masterPtr->flags |= ALLOCED_MASTER;
 	    }
@@ -1287,7 +1287,7 @@ PackAfter(
 			!= TCL_OK) {
 		    Tk_ManageGeometry(tkwin, NULL, NULL);
 		    Unlink(packPtr);
-		    return TCL_ERROR;	
+		    return TCL_ERROR;
 		}
 		masterPtr->flags |= ALLOCED_MASTER;
 	    }
@@ -1593,8 +1593,8 @@ ConfigureSlaves(
 		Tcl_SetErrorCode(interp, "TK", "PACK", "BAD_PARAMETER", NULL);
 		return TCL_ERROR;
 	    }
-	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option",
-		    0, &index) != TCL_OK) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
+		    sizeof(char *), "option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 
@@ -1725,8 +1725,8 @@ ConfigureSlaves(
 		}
 		break;
 	    case CONF_SIDE:
-		if (Tcl_GetIndexFromObj(interp, objv[i+1], sideNames, "side",
-			TCL_EXACT, &side) != TCL_OK) {
+		if (Tcl_GetIndexFromObjStruct(interp, objv[i+1], sideNames,
+			sizeof(char *), "side", TCL_EXACT, &side) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		slavePtr->side = (Side) side;
@@ -1829,7 +1829,7 @@ ConfigureSlaves(
 		    != TCL_OK) {
 		Tk_ManageGeometry(slave, NULL, NULL);
 		Unlink(slavePtr);
-		return TCL_ERROR;	
+		return TCL_ERROR;
 	    }
 	    masterPtr->flags |= ALLOCED_MASTER;
 	}

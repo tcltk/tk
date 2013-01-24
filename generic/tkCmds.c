@@ -109,8 +109,8 @@ Tk_BellObjCmd(
     }
 
     for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], bellOptions, "option", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], bellOptions,
+		sizeof(char *), "option", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	switch ((enum options) index) {
@@ -2118,7 +2118,7 @@ TkDeadAppCmd(
     const char **argv)		/* Argument strings. */
 {
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "can't invoke \"%s\" command: application has been destroyed", 
+	    "can't invoke \"%s\" command: application has been destroyed",
 	    argv[0]));
     return TCL_ERROR;
 }

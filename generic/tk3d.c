@@ -625,7 +625,7 @@ Tk_GetReliefFromObj(
     int *resultPtr)		/* Where to place the answer. */
 {
     return Tcl_GetIndexFromObjStruct(interp, objPtr, reliefStrings,
-	    sizeof(char), "relief", 0, resultPtr);
+	    sizeof(char *), "relief", 0, resultPtr);
 }
 
 /*

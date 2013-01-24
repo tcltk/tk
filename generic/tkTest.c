@@ -547,8 +547,8 @@ TestobjconfigObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], options, "command", 0, &index)
-	    != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "command", 0, &index)!= TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -797,8 +797,8 @@ TestobjconfigObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "tableName");
 	    return TCL_ERROR;
 	}
-	if (Tcl_GetIndexFromObj(interp, objv[2], options, "table", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[2], options,
+		sizeof(char *), "table", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (tables[index] != NULL) {
@@ -811,8 +811,8 @@ TestobjconfigObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "tableName");
 	    return TCL_ERROR;
 	}
-	if (Tcl_GetIndexFromObj(interp, objv[2], options, "table", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[2], options,
+		sizeof(char *), "table", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, TkDebugConfig(interp, tables[index]));
@@ -1143,8 +1143,8 @@ TrivialConfigObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], options, "command", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "command", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1321,8 +1321,8 @@ TestfontObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], options, "command", 0, &index)
-	    != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "command", 0, &index)!= TCL_OK) {
 	return TCL_ERROR;
     }
 

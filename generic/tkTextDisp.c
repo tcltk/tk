@@ -8196,8 +8196,8 @@ TextGetScrollInfoObj(
     };
     int index;
 
-    if (Tcl_GetIndexFromObj(interp, objv[2], subcommands, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], subcommands,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TKTEXT_SCROLL_ERROR;
     }
 
@@ -8216,8 +8216,8 @@ TextGetScrollInfoObj(
 	    Tcl_WrongNumArgs(interp, 3, objv, "number units|pages|pixels");
 	    return TKTEXT_SCROLL_ERROR;
 	}
-	if (Tcl_GetIndexFromObj(interp, objv[4], units, "argument", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[4], units,
+		sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	    return TKTEXT_SCROLL_ERROR;
 	}
 	switch ((enum viewUnits) index) {

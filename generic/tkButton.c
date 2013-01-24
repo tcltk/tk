@@ -798,7 +798,7 @@ ButtonWidgetObjCmd(
 	return TCL_ERROR;
     }
     result = Tcl_GetIndexFromObjStruct(interp, objv[1], commandNames[butPtr->type],
-	    sizeof(char), "option", 0, &index);
+	    sizeof(char *), "option", 0, &index);
     if (result != TCL_OK) {
 	return result;
     }
