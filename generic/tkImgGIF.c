@@ -425,8 +425,8 @@ FileReadGIF(
 	return TCL_ERROR;
     }
     for (i = 1; i < argc; i++) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option name",
-		0, &nBytes) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
+		sizeof(char), "option name", 0, &nBytes) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (i == (argc-1)) {
