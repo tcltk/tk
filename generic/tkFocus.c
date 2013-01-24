@@ -162,8 +162,8 @@ Tk_FocusObjCmd(
      * We have a subcommand to parse and act upon.
      */
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], focusOptions, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], focusOptions,
+	    sizeof(char), "option", 0, &index) != TCL_OK) {
     	return TCL_ERROR;
     }
     if (objc != 3) {

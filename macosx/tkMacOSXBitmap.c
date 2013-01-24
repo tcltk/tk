@@ -404,8 +404,8 @@ TkMacOSXIconBitmapObjCmd(
     if (Tcl_GetIntFromObj(interp, objv[i++], &ib.height) != TCL_OK) {
 	goto end;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[i++], iconBitmapOptionStrings,
-	    "kind", TCL_EXACT, &ib.kind) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[i++], iconBitmapOptionStrings,
+	    sizeof(char *), "kind", TCL_EXACT, &ib.kind) != TCL_OK) {
 	goto end;
     }
     value = Tcl_GetStringFromObj(objv[i++], &len);
