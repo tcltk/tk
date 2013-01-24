@@ -148,8 +148,8 @@ TkTextTagCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[2], tagOptionStrings,
-	    "tag option", 0, &optionIndex) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], tagOptionStrings,
+	    sizeof(char *), "tag option", 0, &optionIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
 
