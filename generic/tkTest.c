@@ -2003,7 +2003,7 @@ CustomOptionSet(
     } else if ((*value)->bytes != NULL) {
 	objEmpty = ((*value)->length == 0);
     } else {
-	Tcl_GetStringFromObj((*value), &length);
+	(void)Tcl_GetStringFromObj((*value), &length);
 	objEmpty = (length == 0);
     }
 

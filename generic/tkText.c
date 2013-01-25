@@ -4093,7 +4093,7 @@ TextSearchAddNextLine(
 
     if (lenPtr != NULL) {
 	if (searchSpecPtr->exact) {
-	    Tcl_GetStringFromObj(theLine, lenPtr);
+	    (void)Tcl_GetStringFromObj(theLine, lenPtr);
 	} else {
 	    *lenPtr = Tcl_GetCharLength(theLine);
 	}
@@ -6617,7 +6617,7 @@ ObjectIsEmpty(
     if (objPtr->bytes != NULL) {
 	return (objPtr->length == 0);
     }
-    Tcl_GetStringFromObj(objPtr, &length);
+    (void)Tcl_GetStringFromObj(objPtr, &length);
     return (length == 0);
 }
 
