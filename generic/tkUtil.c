@@ -970,7 +970,7 @@ TkFindStateNumObj(
      * Not there. Look in the state map.
      */
 
-    key = Tcl_GetStringFromObj(keyPtr, NULL);
+    key = Tcl_GetString(keyPtr);
     for (mPtr = mapPtr; mPtr->strKey != NULL; mPtr++) {
 	if (strcmp(key, mPtr->strKey) == 0) {
 	    typePtr = keyPtr->typePtr;

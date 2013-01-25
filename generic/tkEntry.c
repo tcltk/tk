@@ -1019,7 +1019,7 @@ DestroyEntry(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
-    ckfree(entryPtr->string);
+    ckfree((char *)entryPtr->string);
     if (entryPtr->textVarName != NULL) {
 	Tcl_UntraceVar(entryPtr->interp, entryPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -1034,7 +1034,7 @@ DestroyEntry(
     }
     Tcl_DeleteTimerHandler(entryPtr->insertBlinkHandler);
     if (entryPtr->displayString != entryPtr->string) {
-	ckfree(entryPtr->displayString);
+	ckfree((char *)entryPtr->displayString);
     }
     if (entryPtr->type == TK_SPINBOX) {
 	Spinbox *sbPtr = (Spinbox *) entryPtr;
@@ -1881,7 +1881,7 @@ EntryComputeGeometry(
     char *p;
 
     if (entryPtr->displayString != entryPtr->string) {
-	ckfree(entryPtr->displayString);
+	ckfree((char *)entryPtr->displayString);
 	entryPtr->displayString = entryPtr->string;
 	entryPtr->numDisplayBytes = entryPtr->numBytes;
     }
@@ -2037,7 +2037,7 @@ InsertChars(
 	return;
     }
 
-    ckfree(string);
+    ckfree((char *)string);
     entryPtr->string = newStr;
 
     /*
@@ -2142,7 +2142,7 @@ DeleteChars(
     }
 
     ckfree(toDelete);
-    ckfree(entryPtr->string);
+    ckfree((char *)entryPtr->string);
     entryPtr->string = newStr;
     entryPtr->numChars -= count;
     entryPtr->numBytes -= byteCount;
@@ -2318,13 +2318,13 @@ EntrySetValue(
 
 	if (entryPtr->flags & VALIDATE_ABORT) {
 	    entryPtr->flags &= ~VALIDATE_ABORT;
-	    ckfree(value);
+	    ckfree((char *)value);
 	    return;
 	}
     }
 
     oldSource = entryPtr->string;
-    ckfree(entryPtr->string);
+    ckfree((char *)entryPtr->string);
 
     if (malloced) {
 	entryPtr->string = value;

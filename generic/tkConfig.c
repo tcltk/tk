@@ -1004,7 +1004,7 @@ ObjectIsEmpty(
     if (objPtr->bytes != NULL) {
 	return (objPtr->length == 0);
     }
-    Tcl_GetStringFromObj(objPtr, &length);
+    (void)Tcl_GetStringFromObj(objPtr, &length);
     return (length == 0);
 }
 
@@ -1347,7 +1347,7 @@ Tk_SetOptions(
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"value for \"%s\" missing",
-			Tcl_GetStringFromObj(*objv, NULL)));
+			Tcl_GetString(*objv)));
 		Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", NULL);
 		goto error;
 	    }
@@ -1372,7 +1372,7 @@ Tk_SetOptions(
 		: NULL) != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 		    "\n    (processing \"%.40s\" option)",
-		    Tcl_GetStringFromObj(*objv, NULL)));
+		    Tcl_GetString(*objv)));
 	    goto error;
 	}
 	if (savePtr != NULL) {

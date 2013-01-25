@@ -452,7 +452,7 @@ TkFreeBindingTags(
 	     * have to be freed.
 	     */
 
-	    ckfree(p);
+	    ckfree((char *)p);
 	}
     }
     ckfree(winPtr->tagPtr);

@@ -122,7 +122,7 @@ Tk_ConfigureWidget(
 	const char *arg;
 
 	if (flags & TK_CONFIG_OBJS) {
-	    arg = Tcl_GetStringFromObj((Tcl_Obj *) *argv, NULL);
+	    arg = Tcl_GetString((Tcl_Obj *) *argv);
 	} else {
 	    arg = *argv;
 	}
@@ -718,7 +718,7 @@ FormatConfigInfo(
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree(argv[4]);
+	    ckfree((char *) argv[4]);
 	} else {
 	    freeProc((char *) argv[4]);
 	}
@@ -939,7 +939,7 @@ Tk_ConfigureValue(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(result, -1));
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree(result);
+	    ckfree((char *) result);
 	} else {
 	    freeProc((char *) result);
 	}
