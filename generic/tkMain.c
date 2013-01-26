@@ -318,7 +318,7 @@ Tk_MainEx(
      */
 
     if (appInitProc(interp) != TCL_OK) {
-	TkpDisplayWarning(Tcl_GetStringResult(interp),
+	TkpDisplayWarning(Tcl_GetString(Tcl_GetObjResult(interp)),
 		"application-specific initialization failed");
     }
 
@@ -451,7 +451,7 @@ StdinProc(
 	Tcl_CreateChannelHandler(isPtr->input, TCL_READABLE, StdinProc, isPtr);
     }
     Tcl_DStringFree(&isPtr->command);
-    if (Tcl_GetStringResult(interp)[0] != '\0') {
+    if (Tcl_GetString(Tcl_GetObjResult(interp))[0] != '\0') {
 	if ((code != TCL_OK) || (isPtr->tty)) {
 	    chan = Tcl_GetStdChannel((code != TCL_OK) ? TCL_STDERR : TCL_STDOUT);
 	    if (chan) {
@@ -514,7 +514,7 @@ Prompt(
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (script that generates prompt)");
-	    if (Tcl_GetStringResult(interp)[0] != '\0') {
+	    if (Tcl_GetString(Tcl_GetObjResult(interp))[0] != '\0') {
 		chan = Tcl_GetStdChannel(TCL_STDERR);
 		if (chan != NULL) {
 		    Tcl_WriteObj(chan, Tcl_GetObjResult(interp));

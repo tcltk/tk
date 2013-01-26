@@ -43,7 +43,7 @@ static void		BusyCustodyProc(ClientData clientData,
 static int		ConfigureBusy(Tcl_Interp *interp, Busy *busyPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static Busy *		CreateBusy(Tcl_Interp *interp, Tk_Window tkRef);
-static void		DestroyBusy(char *dataPtr);
+static void		DestroyBusy(void *dataPtr);
 static void		DoConfigureNotify(Tk_FakeWin *winPtr);
 static inline Tk_Window	FirstChild(Tk_Window parent);
 static Busy *		GetBusy(Tcl_Interp *interp,
@@ -136,7 +136,7 @@ BusyCustodyProc(
 	    busyPtr);
     TkpHideBusyWindow(busyPtr);
     busyPtr->tkBusy = NULL;
-    Tcl_EventuallyFree(busyPtr, DestroyBusy);
+    Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
 }
 
 /*
@@ -262,7 +262,7 @@ RefWinEventProc(
 	 * Arrange for the busy structure to be removed at a proper time.
 	 */
 
-	Tcl_EventuallyFree(busyPtr, DestroyBusy);
+	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
 	break;
 
     case ConfigureNotify:
@@ -333,9 +333,9 @@ RefWinEventProc(
 
 static void
 DestroyBusy(
-    char *data)			/* Busy window structure record */
+    void *data)			/* Busy window structure record */
 {
-    register Busy *busyPtr = (Busy *) data;
+    register Busy *busyPtr = data;
 
     if (busyPtr->hashPtr != NULL) {
 	Tcl_DeleteHashEntry(busyPtr->hashPtr);
@@ -383,7 +383,7 @@ BusyEventProc(
 
     if (eventPtr->type == DestroyNotify) {
 	busyPtr->tkBusy = NULL;
-	Tcl_EventuallyFree(busyPtr, DestroyBusy);
+	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
     }
 }
 
@@ -895,7 +895,7 @@ Tk_BusyObjCmd(
 	    return TCL_ERROR;
 	}
 	TkpHideBusyWindow(busyPtr);
-	Tcl_EventuallyFree(busyPtr, DestroyBusy);
+	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
 	return TCL_OK;
 
     case BUSY_HOLD:

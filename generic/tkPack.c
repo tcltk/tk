@@ -120,7 +120,7 @@ static const Tk_GeomMgr packerType = {
 static void		ArrangePacking(ClientData clientData);
 static int		ConfigureSlaves(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
-static void		DestroyPacker(char *memPtr);
+static void		DestroyPacker(void *memPtr);
 static Packer *		GetPacker(Tk_Window tkwin);
 static int		PackAfter(Tcl_Interp *interp, Packer *prevPtr,
 			    Packer *masterPtr, int objc,Tcl_Obj *const objv[]);
@@ -1389,10 +1389,10 @@ Unlink(
 
 static void
 DestroyPacker(
-    char *memPtr)		/* Info about packed window that is now
+    void *memPtr)		/* Info about packed window that is now
 				 * dead. */
 {
-    register Packer *packPtr = (Packer *) memPtr;
+    register Packer *packPtr = memPtr;
 
     ckfree(packPtr);
 }
@@ -1463,7 +1463,7 @@ PackStructureProc(
 	    Tcl_CancelIdleCall(ArrangePacking, packPtr);
 	}
 	packPtr->tkwin = NULL;
-	Tcl_EventuallyFree(packPtr, DestroyPacker);
+	Tcl_EventuallyFree(packPtr, (Tcl_FreeProc *) DestroyPacker);
     } else if (eventPtr->type == MapNotify) {
 	/*
 	 * When a master gets mapped, must redo the geometry computation so

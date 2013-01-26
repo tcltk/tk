@@ -262,7 +262,7 @@ static int		CheckSlotData(Gridder *masterPtr, int slot,
 			    int slotType, int checkOnly);
 static int		ConfigureSlaves(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
-static void		DestroyGrid(char *memPtr);
+static void		DestroyGrid(void *memPtr);
 static Gridder *	GetGrid(Tk_Window tkwin);
 static int		GridAnchorCommand(Tk_Window tkwin, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
@@ -2807,9 +2807,9 @@ Unlink(
 
 static void
 DestroyGrid(
-    char *memPtr)		/* Info about window that is now dead. */
+    void *memPtr)		/* Info about window that is now dead. */
 {
-    register Gridder *gridPtr = (Gridder *) memPtr;
+    register Gridder *gridPtr = memPtr;
 
     if (gridPtr->masterDataPtr != NULL) {
 	if (gridPtr->masterDataPtr->rowPtr != NULL) {
@@ -2886,7 +2886,7 @@ GridStructureProc(
 	    Tcl_CancelIdleCall(ArrangeGrid, gridPtr);
 	}
 	gridPtr->tkwin = NULL;
-	Tcl_EventuallyFree(gridPtr, DestroyGrid);
+	Tcl_EventuallyFree(gridPtr, (Tcl_FreeProc *)DestroyGrid);
     } else if (eventPtr->type == MapNotify) {
 	if ((gridPtr->slavePtr != NULL)
 		&& !(gridPtr->flags & REQUESTED_RELAYOUT)) {
