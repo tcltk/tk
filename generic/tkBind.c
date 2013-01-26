@@ -2643,7 +2643,7 @@ DeleteVirtualEvent(
 	eventPSPtr = FindSequence(interp, &vetPtr->patternTable, NULL,
 		eventString, 0, 0, &eventMask);
 	if (eventPSPtr == NULL) {
-	    const char *string = Tcl_GetStringResult(interp);
+	    const char *string = Tcl_GetString(Tcl_GetObjResult(interp));
 
 	    return (string[0] != '\0') ? TCL_ERROR : TCL_OK;
 	}
