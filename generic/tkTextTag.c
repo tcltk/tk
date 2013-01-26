@@ -289,7 +289,7 @@ TkTextTagCmd(
 		    textPtr->sharedTextPtr->bindingTable,
 		    (ClientData) tagPtr->name, Tcl_GetString(objv[4]));
 	    if (command == NULL) {
-		const char *string = Tcl_GetStringResult(interp);
+		const char *string = Tcl_GetString(Tcl_GetObjResult(interp));
 
 		/*
 		 * Ignore missing binding errors. This is a special hack that

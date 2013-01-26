@@ -1047,7 +1047,7 @@ CanvasWidgetCmd(
 	    command = Tk_GetBinding(interp, canvasPtr->bindingTable,
 		    object, Tcl_GetString(objv[3]));
 	    if (command == NULL) {
-		const char *string = Tcl_GetStringResult(interp);
+		const char *string = Tcl_GetString(Tcl_GetObjResult(interp));
 
 		/*
 		 * Ignore missing binding errors. This is a special hack that

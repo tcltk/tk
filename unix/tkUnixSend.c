@@ -1575,7 +1575,7 @@ SendEventProc(
 	     */
 
 	    if (commWindow != None) {
-		Tcl_DStringAppend(&reply, Tcl_GetStringResult(remoteInterp),
+		Tcl_DStringAppend(&reply, Tcl_GetString(Tcl_GetObjResult(remoteInterp)),
 			-1);
 		if (result == TCL_ERROR) {
 		    const char *varValue;
