@@ -392,7 +392,7 @@ static const char *const selElementNames[] = {
 static int		ConfigureEntry(Tcl_Interp *interp, Entry *entryPtr,
 			    int objc, Tcl_Obj *const objv[], int flags);
 static void		DeleteChars(Entry *entryPtr, int index, int count);
-static void		DestroyEntry(char *memPtr);
+static void		DestroyEntry(void *memPtr);
 static void		DisplayEntry(ClientData clientData);
 static void		EntryBlinkProc(ClientData clientData);
 static void		EntryCmdDeletedProc(ClientData clientData);
@@ -1010,9 +1010,9 @@ EntryWidgetObjCmd(
 
 static void
 DestroyEntry(
-    char *memPtr)		/* Info about entry widget. */
+    void *memPtr)		/* Info about entry widget. */
 {
-    Entry *entryPtr = (Entry *) memPtr;
+    Entry *entryPtr = memPtr;
 
     /*
      * Free up all the stuff that requires special handling, then let
@@ -2429,7 +2429,7 @@ EntryEventProc(
 	    if (entryPtr->flags & REDRAW_PENDING) {
 		Tcl_CancelIdleCall(DisplayEntry, clientData);
 	    }
-	    Tcl_EventuallyFree(clientData, DestroyEntry);
+	    Tcl_EventuallyFree(clientData, (Tcl_FreeProc *) DestroyEntry);
 	}
 	break;
     case ConfigureNotify:
