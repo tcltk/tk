@@ -259,8 +259,8 @@ Tk_ChooseColorObjCmd(
 	int index;
 	const char *value;
 
-	if (Tcl_GetIndexFromObj(interp, objv[i], colorOptionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], colorOptionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -373,8 +373,8 @@ Tk_GetOpenFileObjCmd(
 
     TkInitFileFilters(&fl);
     for (i = 1; i < objc; i += 2) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], openOptionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], openOptionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -552,8 +552,8 @@ Tk_GetSaveFileObjCmd(
 
     TkInitFileFilters(&fl);
     for (i = 1; i < objc; i += 2) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], saveOptionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], saveOptionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -722,8 +722,8 @@ Tk_ChooseDirectoryObjCmd(
     NSInteger returnCode = NSAlertErrorReturn;
 
     for (i = 1; i < objc; i += 2) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], chooseOptionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], chooseOptionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -939,8 +939,8 @@ Tk_MessageBoxObjCmd(
     iconIndex = ICON_INFO;
     typeIndex = TYPE_OK;
     for (i = 1; i < objc; i += 2) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], alertOptionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], alertOptionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -967,8 +967,8 @@ Tk_MessageBoxObjCmd(
 	    break;
 
 	case ALERT_ICON:
-	    if (Tcl_GetIndexFromObj(interp, objv[i + 1], alertIconStrings,
-		    "value", TCL_EXACT, &iconIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertIconStrings,
+		    sizeof(char *), "value", TCL_EXACT, &iconIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -997,8 +997,8 @@ Tk_MessageBoxObjCmd(
 	    break;
 
 	case ALERT_TYPE:
-	    if (Tcl_GetIndexFromObj(interp, objv[i + 1], alertTypeStrings,
-		    "value", TCL_EXACT, &typeIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertTypeStrings,
+		    sizeof(char *), "value", TCL_EXACT, &typeIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -1013,8 +1013,8 @@ Tk_MessageBoxObjCmd(
 	 * why we do this here.
 	 */
 
-	if (Tcl_GetIndexFromObj(interp, objv[indexDefaultOption + 1],
-		alertButtonStrings, "value", TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[indexDefaultOption + 1],
+		alertButtonStrings, sizeof(char *), "value", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 
@@ -1357,8 +1357,8 @@ FontchooserConfigureCmd(
     for (i = 1; i < objc; i += 2) {
 	int optionIndex, len;
 
-	if (Tcl_GetIndexFromObj(interp, objv[i], fontchooserOptionStrings,
-		"option", 0, &optionIndex) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], fontchooserOptionStrings,
+		sizeof(char *), "option", 0, &optionIndex) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {

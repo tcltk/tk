@@ -340,8 +340,8 @@ static int GetEnumSetFromObj(
 
     for (i = 0; i < objc; ++i) {
 	int index;
-	if (TCL_OK != Tcl_GetIndexFromObj(
-		    interp, objv[i], table, "value", TCL_EXACT, &index))
+	if (TCL_OK != Tcl_GetIndexFromObjStruct(interp, objv[i], table,
+		sizeof(char *), "value", TCL_EXACT, &index))
 	{
 	    return TCL_ERROR;
 	}
@@ -2287,8 +2287,8 @@ static int TreeviewIdentifyCommand(
 	return TCL_ERROR;
     }
 
-    if (   Tcl_GetIndexFromObj(interp, objv[2],
-		submethodStrings, "command", TCL_EXACT, &submethod) != TCL_OK
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], submethodStrings,
+		sizeof(char *), "command", TCL_EXACT, &submethod) != TCL_OK
         || Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK
 	|| Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK
     ) {
@@ -2955,8 +2955,8 @@ static int TreeviewSelectionCommand(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[2], selopStrings,
-	    "selection operation", 0, &selop) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], selopStrings,
+	    sizeof(char *), "selection operation", 0, &selop) != TCL_OK) {
 	return TCL_ERROR;
     }
 

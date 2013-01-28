@@ -338,7 +338,7 @@ static void		DeleteMenuCloneEntries(TkMenu *menuPtr,
 static void		DestroyMenuHashTable(ClientData clientData,
 			    Tcl_Interp *interp);
 static void		DestroyMenuInstance(TkMenu *menuPtr);
-static void		DestroyMenuEntry(char *memPtr);
+static void		DestroyMenuEntry(void *memPtr);
 static int		GetIndexFromCoords(Tcl_Interp *interp,
 			    TkMenu *menuPtr, const char *string,
 			    int *indexPtr);
@@ -476,10 +476,10 @@ MenuCmd(
 
     toplevel = 1;
     for (i = 2; i < (objc - 1); i++) {
-	if (Tcl_GetIndexFromObj(NULL, objv[i], typeStringList, NULL, 0,
-		&index) != TCL_ERROR) {
-	    if ((Tcl_GetIndexFromObj(NULL, objv[i + 1], menuTypeStrings, NULL,
-		    0, &index) == TCL_OK) && (index == MENUBAR)) {
+	if (Tcl_GetIndexFromObjStruct(NULL, objv[i], typeStringList,
+		sizeof(char *), NULL, 0, &index) != TCL_ERROR) {
+	    if ((Tcl_GetIndexFromObjStruct(NULL, objv[i + 1], menuTypeStrings,
+		    sizeof(char *), NULL, 0, &index) == TCL_OK) && (index == MENUBAR)) {
 		toplevel = 0;
 	    }
 	    break;
@@ -680,8 +680,8 @@ MenuWidgetObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], menuOptions, "option", 0,
-	    &option) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], menuOptions,
+	    sizeof(char *), "option", 0, &option) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_Preserve(menuPtr);
@@ -1225,7 +1225,7 @@ DestroyMenuInstance(
 	 * for menu entries (i+1)...numEntries.
 	 */
 
-	DestroyMenuEntry((char *) menuPtr->entries[i]);
+	DestroyMenuEntry(menuPtr->entries[i]);
 	menuPtr->numEntries = i;
     }
     if (menuPtr->entries != NULL) {
@@ -1423,9 +1423,9 @@ UnhookCascadeEntry(
 
 static void
 DestroyMenuEntry(
-    char *memPtr)		/* Pointer to entry to be freed. */
+    void *memPtr)		/* Pointer to entry to be freed. */
 {
-    register TkMenuEntry *mePtr = (TkMenuEntry *) memPtr;
+    register TkMenuEntry *mePtr = memPtr;
     TkMenu *menuPtr = mePtr->menuPtr;
 
     if (menuPtr->postedCascade == mePtr) {
@@ -1597,8 +1597,8 @@ ConfigureMenu(
 	 */
 
 	if (menuListPtr->menuType == UNKNOWN_TYPE) {
-	    Tcl_GetIndexFromObj(NULL, menuListPtr->menuTypePtr,
-		    menuTypeStrings, NULL, 0, &menuListPtr->menuType);
+	    Tcl_GetIndexFromObjStruct(NULL, menuListPtr->menuTypePtr,
+		    menuTypeStrings, sizeof(char *), NULL, 0, &menuListPtr->menuType);
 
 	    /*
 	     * Configure the new window to be either a pop-up menu or a
@@ -1662,7 +1662,7 @@ ConfigureMenu(
 		&& (menuListPtr->entries[0]->type == TEAROFF_ENTRY)) {
 	    int i;
 
-	    Tcl_EventuallyFree(menuListPtr->entries[0], DestroyMenuEntry);
+	    Tcl_EventuallyFree(menuListPtr->entries[0], (Tcl_FreeProc *) DestroyMenuEntry);
 
 	    for (i = 0; i < menuListPtr->numEntries - 1; i++) {
 		menuListPtr->entries[i] = menuListPtr->entries[i + 1];
@@ -2406,8 +2406,8 @@ MenuAddOrInsert(
      * Figure out the type of the new entry.
      */
 
-    if (Tcl_GetIndexFromObj(interp, objv[0], menuEntryTypeStrings,
-	    "menu entry type", 0, &type) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[0], menuEntryTypeStrings,
+	    sizeof(char *), "menu entry type", 0, &type) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -2430,7 +2430,7 @@ MenuAddOrInsert(
 		    errorMenuPtr != NULL;
 		    errorMenuPtr = errorMenuPtr->nextInstancePtr) {
     		Tcl_EventuallyFree(errorMenuPtr->entries[index],
-    	    		DestroyMenuEntry);
+    	    		(Tcl_FreeProc *) DestroyMenuEntry);
 		for (i = index; i < errorMenuPtr->numEntries - 1; i++) {
 		    errorMenuPtr->entries[i] = errorMenuPtr->entries[i + 1];
 		    errorMenuPtr->entries[i]->index = i;
@@ -2711,8 +2711,8 @@ CloneMenu(
     if (newMenuTypePtr == NULL) {
 	menuType = MASTER_MENU;
     } else {
-	if (Tcl_GetIndexFromObj(menuPtr->interp, newMenuTypePtr,
-		menuTypeStrings, "menu type", 0, &menuType) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(menuPtr->interp, newMenuTypePtr,
+		menuTypeStrings, sizeof(char *), "menu type", 0, &menuType) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     }
@@ -2987,10 +2987,10 @@ GetIndexFromCoords(
 
     *indexPtr = -1;
 
-    /* set the width of the final column to the remainder of the window 
+    /* set the width of the final column to the remainder of the window
      * being aware of windows that may not be mapped yet.
      */
-    max = Tk_IsMapped(menuPtr->tkwin) 
+    max = Tk_IsMapped(menuPtr->tkwin)
       ? Tk_Width(menuPtr->tkwin) : Tk_ReqWidth(menuPtr->tkwin);
     max -= borderwidth;
 
@@ -3540,7 +3540,7 @@ DeleteMenuCloneEntries(
     for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
 	for (i = last; i >= first; i--) {
-	    Tcl_EventuallyFree(menuListPtr->entries[i], DestroyMenuEntry);
+	    Tcl_EventuallyFree(menuListPtr->entries[i], (Tcl_FreeProc *) DestroyMenuEntry);
 	}
 	for (i = last + 1; i < menuListPtr->numEntries; i++) {
 	    j = i - numDeleted;

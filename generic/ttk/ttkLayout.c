@@ -636,8 +636,8 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	    if (optName[0] != '-')
 		break;
 
-	    if (Tcl_GetIndexFromObj(
-		    interp, objv[i], optStrings, "option", 0, &option)
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
+		    sizeof(char *), "option", 0, &option)
 		!= TCL_OK)
 	    {
 		goto error;
@@ -653,8 +653,8 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 
 	    switch (option) {
 		case OP_SIDE:	/* <<NOTE-PACKSIDE>> */
-		    if (Tcl_GetIndexFromObj(interp, objv[i], packSideStrings,
-				"side", 0, &value) != TCL_OK)
+		    if (Tcl_GetIndexFromObjStruct(interp, objv[i], packSideStrings,
+				sizeof(char *), "side", 0, &value) != TCL_OK)
 		    {
 			goto error;
 		    }

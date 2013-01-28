@@ -2349,8 +2349,8 @@ Tk_EventObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -2643,7 +2643,7 @@ DeleteVirtualEvent(
 	eventPSPtr = FindSequence(interp, &vetPtr->patternTable, NULL,
 		eventString, 0, 0, &eventMask);
 	if (eventPSPtr == NULL) {
-	    const char *string = Tcl_GetStringResult(interp);
+	    const char *string = Tcl_GetString(Tcl_GetObjResult(interp));
 
 	    return (string[0] != '\0') ? TCL_ERROR : TCL_OK;
 	}
@@ -3006,8 +3006,8 @@ HandleEventGenerate(
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObj(interp, optionPtr, fieldStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, optionPtr, fieldStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (objc & 1) {

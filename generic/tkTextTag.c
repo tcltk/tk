@@ -148,8 +148,8 @@ TkTextTagCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[2], tagOptionStrings,
-	    "tag option", 0, &optionIndex) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], tagOptionStrings,
+	    sizeof(char *), "tag option", 0, &optionIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -289,7 +289,7 @@ TkTextTagCmd(
 		    textPtr->sharedTextPtr->bindingTable,
 		    (ClientData) tagPtr->name, Tcl_GetString(objv[4]));
 	    if (command == NULL) {
-		const char *string = Tcl_GetStringResult(interp);
+		const char *string = Tcl_GetString(Tcl_GetObjResult(interp));
 
 		/*
 		 * Ignore missing binding errors. This is a special hack that

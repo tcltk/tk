@@ -1070,8 +1070,8 @@ Tk_WmObjCmd(
 	return TCL_OK;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1405,8 +1405,8 @@ WmAttributesCmd(
 	Tcl_SetObjResult(interp, result);
 	return TCL_OK;
     } else if (objc == 4) {	/* wm attributes $win -attribute */
-	if (Tcl_GetIndexFromObj(interp, objv[3], WmAttributeNames,
-		"attribute", 0, &attribute) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], WmAttributeNames,
+		sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, attribute));
@@ -1415,8 +1415,8 @@ WmAttributesCmd(
 	int i;
 
 	for (i = 3; i < objc; i += 2) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], WmAttributeNames,
-		    "attribute", 0, &attribute) != TCL_OK) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], WmAttributeNames,
+		    sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (WmSetAttribute(winPtr,interp,attribute,objv[i+1]) != TCL_OK) {
@@ -1778,8 +1778,8 @@ WmFocusmodelCmd(
 	return TCL_OK;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
+	    sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     if (index == OPT_ACTIVE) {
@@ -2957,8 +2957,8 @@ WmPositionfromCmd(
     if (*Tcl_GetString(objv[3]) == '\0') {
 	wmPtr->sizeHintsFlags &= ~(USPosition|PPosition);
     } else {
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
+		sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_USER) {
@@ -3194,8 +3194,8 @@ WmSizefromCmd(
     if (*Tcl_GetString(objv[3]) == '\0') {
 	wmPtr->sizeHintsFlags &= ~(USSize|PSize);
     } else {
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
+		sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_USER) {
@@ -3318,8 +3318,8 @@ WmStackorderCmd(
 	/* ASSERT: index1 != -1 && index2 != -2 [Bug 1789819] */
 	ckfree(windows);
 
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
+		sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_ISABOVE) {
@@ -3378,8 +3378,8 @@ WmStateCmd(
 	    return TCL_ERROR;
 	}
 
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings, "argument", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
+		sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
