@@ -1134,7 +1134,7 @@ MakeFilter(
     FileFilter *filterPtr;
 
     if (initialPtr) {
-	initial = Tcl_GetStringFromObj(initialPtr, NULL);
+	initial = Tcl_GetString(initialPtr);
     }
     TkInitFileFilters(&flist);
     if (TkGetFileFilters(interp, &flist, valuePtr, 1) != TCL_OK) {
