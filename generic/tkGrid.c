@@ -242,7 +242,7 @@ typedef struct UniformGroup {
  *				Tk will set its requested size to fit the
  *				needs of its slaves.
  * ALLOCED_MASTER               1 means that Grid has allocated itself as
- *                              geometry master for this window.   
+ *                              geometry master for this window.
  */
 
 #define REQUESTED_RELAYOUT	1
@@ -262,7 +262,7 @@ static int		CheckSlotData(Gridder *masterPtr, int slot,
 			    int slotType, int checkOnly);
 static int		ConfigureSlaves(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
-static void		DestroyGrid(char *memPtr);
+static void		DestroyGrid(void *memPtr);
 static Gridder *	GetGrid(Tk_Window tkwin);
 static int		GridAnchorCommand(Tk_Window tkwin, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
@@ -361,8 +361,8 @@ Tk_GridObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -910,7 +910,7 @@ GridPropagateCommand(
 
 	    if (masterPtr->slavePtr != NULL) {
 		if (TkSetGeometryMaster(interp, master, "grid")	!= TCL_OK) {
-		    return TCL_ERROR;	
+		    return TCL_ERROR;
 		}
 		masterPtr->flags |= ALLOCED_MASTER;
 	    }
@@ -1076,8 +1076,8 @@ GridRowColumnConfigureCommand(
 	 * returned.
 	 */
 
-	if (Tcl_GetIndexFromObj(interp, objv[4], optionStrings, "option", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[4], optionStrings,
+		sizeof(char *), "option", 0, &index) != TCL_OK) {
 	    Tcl_DecrRefCount(listCopy);
 	    return TCL_ERROR;
 	}
@@ -1175,8 +1175,8 @@ GridRowColumnConfigureCommand(
 		 */
 
 		for (i = 4; i < objc; i += 2) {
-		    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
-			    "option", 0, &index) != TCL_OK) {
+		    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
+			    sizeof(char *), "option", 0, &index) != TCL_OK) {
 			Tcl_DecrRefCount(listCopy);
 			return TCL_ERROR;
 		    }
@@ -1364,8 +1364,8 @@ GridSlavesCommand(
     }
 
     for (i = 3; i < objc; i += 2) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
+		sizeof(char *), "option", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, objv[i+1], &value) != TCL_OK) {
@@ -2807,9 +2807,9 @@ Unlink(
 
 static void
 DestroyGrid(
-    char *memPtr)		/* Info about window that is now dead. */
+    void *memPtr)		/* Info about window that is now dead. */
 {
-    register Gridder *gridPtr = (Gridder *) memPtr;
+    register Gridder *gridPtr = memPtr;
 
     if (gridPtr->masterDataPtr != NULL) {
 	if (gridPtr->masterDataPtr->rowPtr != NULL) {
@@ -2886,7 +2886,7 @@ GridStructureProc(
 	    Tcl_CancelIdleCall(ArrangeGrid, gridPtr);
 	}
 	gridPtr->tkwin = NULL;
-	Tcl_EventuallyFree(gridPtr, DestroyGrid);
+	Tcl_EventuallyFree(gridPtr, (Tcl_FreeProc *)DestroyGrid);
     } else if (eventPtr->type == MapNotify) {
 	if ((gridPtr->slavePtr != NULL)
 		&& !(gridPtr->flags & REQUESTED_RELAYOUT)) {
@@ -3058,8 +3058,8 @@ ConfigureSlaves(
      */
 
     for (i = numWindows; i < objc; i += 2) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
+		sizeof(char *), "option", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == CONF_IN) {
@@ -3161,8 +3161,8 @@ ConfigureSlaves(
 	 */
 
 	for (i = numWindows; i < objc; i += 2) {
-	    Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
-		    &index);
+	    Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
+		    sizeof(char *), "option", 0, &index);
 	    switch ((enum options) index) {
 	    case CONF_COLUMN:
 		if (Tcl_GetIntFromObj(NULL, objv[i+1], &tmp) != TCL_OK

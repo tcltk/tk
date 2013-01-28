@@ -153,8 +153,8 @@ TkTextWindowCmd(
 	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[2], windOptionStrings,
-	    "window option", 0, &optionIndex) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], windOptionStrings,
+	    sizeof(char *), "window option", 0, &optionIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch ((enum windOptions) optionIndex) {

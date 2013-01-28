@@ -718,8 +718,8 @@ TextWidgetObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     textPtr->refCount++;
@@ -1559,8 +1559,8 @@ SharedTextObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1664,8 +1664,8 @@ TextPeerCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[2], peerOptionStrings,
-	    "peer option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], peerOptionStrings,
+	    sizeof(char *), "peer option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3713,15 +3713,15 @@ TextSearchCmd(
 	    break;
 	}
 
-	if (Tcl_GetIndexFromObj(NULL, objv[i], switchStrings, "switch", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(NULL, objv[i], switchStrings,
+		sizeof(char *), "switch", 0, &index) != TCL_OK) {
 	    /*
 	     * Hide the -hidden option, generating the error description with
 	     * the side effects of T_GIFO.
 	     */
 
-	    (void) Tcl_GetIndexFromObj(interp, objv[i], switchStrings+1,
-		    "switch", 0, &index);
+	    (void) Tcl_GetIndexFromObjStruct(interp, objv[i], switchStrings+1,
+		    sizeof(char *), "switch", 0, &index);
 	    return TCL_ERROR;
 	}
 
@@ -4482,8 +4482,8 @@ TkTextGetTabs(
 	}
 	i += 1;
 
-	if (Tcl_GetIndexFromObj(interp, objv[i], tabOptionStrings,
-		"tab alignment", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], tabOptionStrings,
+		sizeof(char *), "tab alignment", 0, &index) != TCL_OK) {
 	    goto error;
 	}
 	tabPtr->alignment = (TkTextTabAlign) index;
@@ -4560,8 +4560,8 @@ TextDumpCmd(
 	if (Tcl_GetString(objv[arg])[0] != '-') {
 	    break;
 	}
-	if (Tcl_GetIndexFromObj(interp, objv[arg], optStrings, "option", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[arg], optStrings,
+		sizeof(char *), "option", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	switch ((enum opts) index) {
@@ -5077,8 +5077,8 @@ TextEditCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[2], editOptionStrings,
-	    "edit option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], editOptionStrings,
+	    sizeof(char *), "edit option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 

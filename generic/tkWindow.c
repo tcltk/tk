@@ -3050,7 +3050,7 @@ Initialize(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6.0-", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3135,7 +3135,7 @@ Initialize(
 
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppendElement(&ds, "::safe::TkInit");
-	Tcl_DStringAppendElement(&ds, Tcl_GetStringResult(master));
+	Tcl_DStringAppendElement(&ds, Tcl_GetString(Tcl_GetObjResult(master)));
 
 	/*
 	 * Step 2 : Eval in the master. The argument is the *reversed* interp
@@ -3163,7 +3163,7 @@ Initialize(
 	 * changing the code below.
 	 */
 
-	argString = Tcl_GetStringResult(master);
+	argString = Tcl_GetString(Tcl_GetObjResult(master));
     } else {
 	/*
 	 * If there is an "argv" variable, get its value, extract out relevant
