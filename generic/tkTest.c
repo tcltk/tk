@@ -547,8 +547,8 @@ TestobjconfigObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], options, "command", 0, &index)
-	    != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "command", 0, &index)!= TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -797,8 +797,8 @@ TestobjconfigObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "tableName");
 	    return TCL_ERROR;
 	}
-	if (Tcl_GetIndexFromObj(interp, objv[2], options, "table", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[2], options,
+		sizeof(char *), "table", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (tables[index] != NULL) {
@@ -811,8 +811,8 @@ TestobjconfigObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "tableName");
 	    return TCL_ERROR;
 	}
-	if (Tcl_GetIndexFromObj(interp, objv[2], options, "table", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[2], options,
+		sizeof(char *), "table", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, TkDebugConfig(interp, tables[index]));
@@ -1143,8 +1143,8 @@ TrivialConfigObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], options, "command", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "command", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1321,8 +1321,8 @@ TestfontObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], options, "command", 0, &index)
-	    != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "command", 0, &index)!= TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1734,8 +1734,7 @@ TestmenubarCmd(
 
     return TCL_OK;
 #else
-    Tcl_SetResult(interp, "testmenubar is supported only under Unix",
-	    TCL_STATIC);
+    Tcl_AppendResult(interp, "testmenubar is supported only under Unix", NULL);
     return TCL_ERROR;
 #endif
 }
@@ -1868,7 +1867,7 @@ TestpropCmd(
 		    *p = '\n';
 		}
 	    }
-	    Tcl_SetResult(interp, (/*!unsigned*/char*)property, TCL_VOLATILE);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj((/*!unsigned*/char*)property, -1));
 	} else {
 	    for (p = property; length > 0; length--) {
 		if (actualFormat == 32) {
@@ -1939,7 +1938,7 @@ TestwrapperCmd(
 	char buf[TCL_INTEGER_SPACE];
 
 	TkpPrintWindowId(buf, Tk_WindowId(wrapperPtr));
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
     }
     return TCL_OK;
 }
@@ -2013,8 +2012,7 @@ CustomOptionSet(
 	string = Tcl_GetStringFromObj((*value), &length);
 	Tcl_UtfToUpper(string);
 	if (strcmp(string, "BAD") == 0) {
-	    Tcl_SetResult(interp, "expected good value, got \"BAD\"",
-		    TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("expected good value, got \"BAD\"", -1));
 	    return TCL_ERROR;
 	}
     }
