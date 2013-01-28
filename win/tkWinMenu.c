@@ -1948,7 +1948,7 @@ DrawMenuUnderline(
 	if (mePtr->underline < len) {
 	    const char *label, *start, *end;
 
-	    label = Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
+	    label = Tcl_GetString(mePtr->labelPtr);
 	    start = Tcl_UtfAtIndex(label, mePtr->underline);
 	    end = Tcl_UtfNext(start);
 	    Tk_UnderlineChars(menuPtr->display, d,

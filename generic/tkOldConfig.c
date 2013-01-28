@@ -122,7 +122,7 @@ Tk_ConfigureWidget(
 	const char *arg;
 
 	if (flags & TK_CONFIG_OBJS) {
-	    arg = Tcl_GetStringFromObj((Tcl_Obj *) *argv, NULL);
+	    arg = Tcl_GetString((Tcl_Obj *) *argv);
 	} else {
 	    arg = *argv;
 	}

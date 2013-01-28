@@ -384,7 +384,7 @@ Tk_PanedWindowObjCmd(
     }
 
     tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
-	    Tcl_GetStringFromObj(objv[1], NULL), NULL);
+	    Tcl_GetString(objv[1]), NULL);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }

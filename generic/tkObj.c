@@ -447,7 +447,7 @@ SetPixelFromAny(
     double d;
     int i, units;
 
-    string = Tcl_GetStringFromObj(objPtr, NULL);
+    string = Tcl_GetString(objPtr);
 
     d = strtod(string, &rest);
     if (rest == string) {
@@ -719,13 +719,13 @@ SetMMFromAny(
 	 * ints again from mm obj types.
 	 */
 
-	(void) Tcl_GetStringFromObj(objPtr, NULL);
+	(void) Tcl_GetString(objPtr);
     } else {
 	/*
 	 * It wasn't a known int or double, so parse it.
 	 */
 
-	string = Tcl_GetStringFromObj(objPtr, NULL);
+	string = Tcl_GetString(objPtr);
 
 	d = strtod(string, &rest);
 	if (rest == string) {
@@ -834,7 +834,7 @@ TkGetWindowFromObj(
 	 */
 
 	winPtr->tkwin = Tk_NameToWindow(interp,
-		Tcl_GetStringFromObj(objPtr, NULL), tkwin);
+		Tcl_GetString(objPtr), tkwin);
 	if (winPtr->tkwin == NULL) {
 	    /* ASSERT: Tk_NameToWindow has left error message in interp */
 	    return TCL_ERROR;
@@ -880,7 +880,7 @@ SetWindowFromAny(
      * Free the old internalRep before setting the new one.
      */
 
-    Tcl_GetStringFromObj(objPtr, NULL);
+    Tcl_GetString(objPtr);
     typePtr = objPtr->typePtr;
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
