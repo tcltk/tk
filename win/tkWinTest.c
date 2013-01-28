@@ -286,7 +286,7 @@ TestwineventCmd(
     if (rest == argv[1]) {
 	hwnd = FindWindowA(NULL, argv[1]);
 	if (hwnd == NULL) {
-	    Tcl_SetResult(interp, "no such window", TCL_STATIC);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("no such window", -1));
 	    return TCL_ERROR;
 	}
     }
@@ -341,7 +341,7 @@ TestwineventCmd(
 	result = SetDlgItemTextA(hwnd, id, Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
 	if (result == 0) {
-    	Tcl_SetResult(interp, "failed to send text to dialog: ", TCL_STATIC);
+    	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to send text to dialog: ", -1));
     	AppendSystemError(interp, GetLastError());
 		return TCL_ERROR;
 	}
@@ -354,7 +354,7 @@ TestwineventCmd(
 	    lParam = (LPARAM)child;
 	}
 	sprintf(buf, "%d", (int) SendMessageA(hwnd, message, wParam, lParam));
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
 	break;
     }
     default: {
@@ -362,7 +362,7 @@ TestwineventCmd(
 
 	sprintf(buf, "%d",
 		(int) SendDlgItemMessageA(hwnd, id, message, wParam, lParam));
-	Tcl_SetResult(interp, buf, TCL_VOLATILE);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
 	break;
     }
     }
@@ -455,7 +455,7 @@ TestgetwindowinfoObjCmd(
 
     cch = GetClassName(INT2PTR(hwnd), buf, cchBuf);
     if (cch == 0) {
-    	Tcl_SetResult(interp, "failed to get class name: ", TCL_STATIC);
+    	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to get class name: ", -1));
     	AppendSystemError(interp, GetLastError());
     	return TCL_ERROR;
     } else {
