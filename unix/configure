@@ -862,8 +862,8 @@ Optional Features:
                           on)
   --enable-symbols        build with debugging symbols (default: off)
   --enable-aqua           use Aqua windowingsystem on Mac OS X (default: off)
-  --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-xft            use freetype/fontconfig/xft (default: on)
+  --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
                           (default: off)
 
@@ -10106,7 +10106,7 @@ ac_x_header_dirs='
 /usr/openwin/share/include'
 
 if test "$ac_x_includes" = no; then
-  # Guess where to find include files, by looking for Xlib.h.
+  # Guess where to find include files, by looking for Intrinsic.h.
   # First, try using that file with no special directory specified.
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -10114,7 +10114,7 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
 _ACEOF
 if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
@@ -10141,7 +10141,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
   for ac_dir in $ac_x_header_dirs; do
-  if test -r "$ac_dir/X11/Xlib.h"; then
+  if test -r "$ac_dir/X11/Intrinsic.h"; then
     ac_x_includes=$ac_dir
     break
   fi
@@ -10155,18 +10155,18 @@ if test "$ac_x_libraries" = no; then
   # See if we find them without any special options.
   # Don't add to $LIBS permanently.
   ac_save_LIBS=$LIBS
-  LIBS="-lX11 $LIBS"
+  LIBS="-lXt $LIBS"
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
 int
 main ()
 {
-XrmInitialize ()
+XtMalloc (0)
   ;
   return 0;
 }
@@ -10632,6 +10632,217 @@ rm -f conftest.err conftest.$ac_objext \
 fi
 
 #--------------------------------------------------------------------
+#	Check for freetype / fontconfig / Xft support.
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    echo "$as_me:$LINENO: checking whether to use xft" >&5
+echo $ECHO_N "checking whether to use xft... $ECHO_C" >&6
+    # Check whether --enable-xft or --disable-xft was given.
+if test "${enable_xft+set}" = set; then
+  enableval="$enable_xft"
+  enable_xft=$enableval
+else
+  enable_xft="default"
+fi;
+    XFT_CFLAGS=""
+    XFT_LIBS=""
+    if test "$enable_xft" = "no" ; then
+	echo "$as_me:$LINENO: result: $enable_xft" >&5
+echo "${ECHO_T}$enable_xft" >&6
+    else
+	found_xft="yes"
+			XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
+	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
+	if test "$found_xft" = "no" ; then
+	    found_xft=yes
+	    XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || found_xft="no"
+	    XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || found_xft="no"
+	fi
+	echo "$as_me:$LINENO: result: $found_xft" >&5
+echo "${ECHO_T}$found_xft" >&6
+		if test "$found_xft" = "yes" ; then
+	    tk_oldCFlags=$CFLAGS
+	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
+	    tk_oldLibs=$LIBS
+	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+	    echo "$as_me:$LINENO: checking for X11/Xft/Xft.h" >&5
+echo $ECHO_N "checking for X11/Xft/Xft.h... $ECHO_C" >&6
+if test "${ac_cv_header_X11_Xft_Xft_h+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <X11/Xlib.h>
+
+#include <X11/Xft/Xft.h>
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_header_X11_Xft_Xft_h=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_header_X11_Xft_Xft_h=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: $ac_cv_header_X11_Xft_Xft_h" >&5
+echo "${ECHO_T}$ac_cv_header_X11_Xft_Xft_h" >&6
+if test $ac_cv_header_X11_Xft_Xft_h = yes; then
+  :
+else
+
+		found_xft=no
+
+fi
+
+
+	    CFLAGS=$tk_oldCFlags
+	    LIBS=$tk_oldLibs
+	fi
+		if test "$found_xft" = "yes" ; then
+	    tk_oldCFlags=$CFLAGS
+	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
+	    tk_oldLibs=$LIBS
+	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+
+echo "$as_me:$LINENO: checking for XftFontOpen in -lXft" >&5
+echo $ECHO_N "checking for XftFontOpen in -lXft... $ECHO_C" >&6
+if test "${ac_cv_lib_Xft_XftFontOpen+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lXft  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char XftFontOpen ();
+int
+main ()
+{
+XftFontOpen ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_Xft_XftFontOpen=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_Xft_XftFontOpen=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_Xft_XftFontOpen" >&5
+echo "${ECHO_T}$ac_cv_lib_Xft_XftFontOpen" >&6
+if test $ac_cv_lib_Xft_XftFontOpen = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBXFT 1
+_ACEOF
+
+  LIBS="-lXft $LIBS"
+
+else
+
+		found_xft=no
+
+fi
+
+	    CFLAGS=$tk_oldCFlags
+	    LIBS=$tk_oldLibs
+	fi
+		if test "$found_xft" = "no" ; then
+	    if test "$enable_xft" = "yes" ; then
+		{ echo "$as_me:$LINENO: WARNING: Can't find xft configuration, or xft is unusable" >&5
+echo "$as_me: WARNING: Can't find xft configuration, or xft is unusable" >&2;}
+	    fi
+	    enable_xft=no
+	    XFT_CFLAGS=""
+	    XFT_LIBS=""
+	else
+            enable_xft=yes
+	fi
+    fi
+    if test $enable_xft = "yes" ; then
+	UNIX_FONT_OBJS=tkUnixRFont.o
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_XFT 1
+_ACEOF
+
+    else
+	UNIX_FONT_OBJS=tkUnixFont.o
+    fi
+
+
+
+fi
+
+#--------------------------------------------------------------------
+# XXX Do this last.
+# It might modify XLIBSW which could affect other tests.
+#
 # Check whether the header and library for the XScreenSaver
 # extension are available, and set HAVE_XSS if so.
 # XScreenSaver is needed for Tk_GetUserInactiveTime().
@@ -10972,214 +11183,6 @@ _ACEOF
     fi
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
-fi
-
-#--------------------------------------------------------------------
-#	Check for freetype / fontconfig / Xft support.
-#--------------------------------------------------------------------
-
-if test $tk_aqua = no; then
-    echo "$as_me:$LINENO: checking whether to use xft" >&5
-echo $ECHO_N "checking whether to use xft... $ECHO_C" >&6
-    # Check whether --enable-xft or --disable-xft was given.
-if test "${enable_xft+set}" = set; then
-  enableval="$enable_xft"
-  enable_xft=$enableval
-else
-  enable_xft="default"
-fi;
-    XFT_CFLAGS=""
-    XFT_LIBS=""
-    if test "$enable_xft" = "no" ; then
-	echo "$as_me:$LINENO: result: $enable_xft" >&5
-echo "${ECHO_T}$enable_xft" >&6
-    else
-	found_xft="yes"
-			XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
-	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
-	if test "$found_xft" = "no" ; then
-	    found_xft=yes
-	    XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || found_xft="no"
-	    XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || found_xft="no"
-	fi
-	echo "$as_me:$LINENO: result: $found_xft" >&5
-echo "${ECHO_T}$found_xft" >&6
-		if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
-	    echo "$as_me:$LINENO: checking for X11/Xft/Xft.h" >&5
-echo $ECHO_N "checking for X11/Xft/Xft.h... $ECHO_C" >&6
-if test "${ac_cv_header_X11_Xft_Xft_h+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <X11/Xlib.h>
-
-#include <X11/Xft/Xft.h>
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_header_X11_Xft_Xft_h=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_header_X11_Xft_Xft_h=no
-fi
-rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-echo "$as_me:$LINENO: result: $ac_cv_header_X11_Xft_Xft_h" >&5
-echo "${ECHO_T}$ac_cv_header_X11_Xft_Xft_h" >&6
-if test $ac_cv_header_X11_Xft_Xft_h = yes; then
-  :
-else
-
-		found_xft=no
-
-fi
-
-
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-		if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
-
-echo "$as_me:$LINENO: checking for XftFontOpen in -lXft" >&5
-echo $ECHO_N "checking for XftFontOpen in -lXft... $ECHO_C" >&6
-if test "${ac_cv_lib_Xft_XftFontOpen+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lXft  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char XftFontOpen ();
-int
-main ()
-{
-XftFontOpen ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_Xft_XftFontOpen=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_Xft_XftFontOpen=no
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_Xft_XftFontOpen" >&5
-echo "${ECHO_T}$ac_cv_lib_Xft_XftFontOpen" >&6
-if test $ac_cv_lib_Xft_XftFontOpen = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBXFT 1
-_ACEOF
-
-  LIBS="-lXft $LIBS"
-
-else
-
-		found_xft=no
-
-fi
-
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-		if test "$found_xft" = "no" ; then
-	    if test "$enable_xft" = "yes" ; then
-		{ echo "$as_me:$LINENO: WARNING: Can't find xft configuration, or xft is unusable" >&5
-echo "$as_me: WARNING: Can't find xft configuration, or xft is unusable" >&2;}
-	    fi
-	    enable_xft=no
-	    XFT_CFLAGS=""
-	    XFT_LIBS=""
-	else
-            enable_xft=yes
-	fi
-    fi
-    if test $enable_xft = "yes" ; then
-	UNIX_FONT_OBJS=tkUnixRFont.o
-
-cat >>confdefs.h <<\_ACEOF
-#define HAVE_XFT 1
-_ACEOF
-
-    else
-	UNIX_FONT_OBJS=tkUnixFont.o
-    fi
-
-
-
 fi
 
 #--------------------------------------------------------------------
