@@ -20,7 +20,32 @@
 #if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION < 6)
 #	error Tk 8.6 must be compiled with tcl.h from Tcl 8.6 or better
 #endif
-
+
+#ifndef CONST84
+#   define CONST84 const
+#   define CONST84_RETURN const
+#endif
+#ifndef CONST86
+#   define CONST86 CONST84
+#endif
+#ifndef EXTERN
+#   define EXTERN extern TCL_STORAGE_CLASS
+#endif
+
+/*
+ * Utility macros: STRINGIFY takes an argument and wraps it in "" (double
+ * quotation marks), JOIN joins two arguments.
+ */
+
+#ifndef STRINGIFY
+#  define STRINGIFY(x) STRINGIFY1(x)
+#  define STRINGIFY1(x) #x
+#endif
+#ifndef JOIN
+#  define JOIN(a,b) JOIN1(a,b)
+#  define JOIN1(a,b) a##b
+#endif
+
 /*
  * For C++ compilers, use extern "C"
  */
