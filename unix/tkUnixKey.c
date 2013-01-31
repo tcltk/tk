@@ -18,8 +18,6 @@
 #  define XkbKeycodeToKeysym(D,K,G,L) XKeycodeToKeysym(D,K,L)
 #endif
 
-#include <X11/XKBlib.h>
-
 /*
  * Prototypes for local functions defined in this file:
  */
