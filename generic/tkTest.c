@@ -21,6 +21,7 @@
 #ifndef USE_TK_STUBS
 #   define USE_TK_STUBS
 #endif
+#include "tk.h"
 #include "tkInt.h"
 #include "tkText.h"
 
@@ -220,10 +221,10 @@ Tktest_Init(
 {
     static int initialized = 0;
 
-    if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	return TCL_ERROR;
     }
-    if (Tk_InitStubs(interp, "8.1", 0) == NULL) {
+    if (Tk_InitStubs(interp, TK_VERSION, 0) == NULL) {
 	return TCL_ERROR;
     }
 
