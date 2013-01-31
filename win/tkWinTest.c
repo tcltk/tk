@@ -16,6 +16,7 @@
 #define USE_TCL_STUBS
 #undef USE_TK_STUBS
 #define USE_TK_STUBS
+#include "tk.h"
 #include "tkWinInt.h"
 
 HWND tkWinCurrentDialog;
