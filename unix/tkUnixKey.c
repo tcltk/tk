@@ -11,6 +11,13 @@
  */
 
 #include "tkInt.h"
+
+#ifdef HAVE_XKBKEYCODETOKEYSYM
+#  include <X11/XKBlib.h>
+#else
+#  define XkbKeycodeToKeysym(D,K,G,L) XKeycodeToKeysym(D,K,L)
+#endif
+
 #include <X11/XKBlib.h>
 
 /*
