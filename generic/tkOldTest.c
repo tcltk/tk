@@ -22,6 +22,7 @@
 #ifndef USE_TK_STUBS
 #   define USE_TK_STUBS
 #endif
+#include "tk.h"
 #include "tkInt.h"
 
 /*
