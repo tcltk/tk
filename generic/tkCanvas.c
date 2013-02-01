@@ -1242,14 +1242,15 @@ CanvasWidgetCmd(
 	int isNew = 0;
 	Tcl_HashEntry *entryPtr;
 	const char *arg;
-	int length;
+	size_t length;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "type coords ?arg ...?");
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	arg = Tcl_GetStringFromObj(objv[2], &length);
+	arg = Tcl_GetString(objv[2]);
+	length = objv[2]->length;
 	c = arg[0];
 
 	/*
@@ -1261,7 +1262,7 @@ CanvasWidgetCmd(
 	Tcl_MutexLock(&typeListMutex);
 	for (typePtr = typeList; typePtr != NULL; typePtr = typePtr->nextPtr){
 	    if ((c == typePtr->name[0])
-		    && (!strncmp(arg, typePtr->name, (unsigned)length))) {
+		    && (!strncmp(arg, typePtr->name, length))) {
 		if (matchPtr != NULL) {
 		    Tcl_MutexUnlock(&typeListMutex);
 		    goto badType;
