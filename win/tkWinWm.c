@@ -2816,7 +2816,7 @@ Tk_WmObjCmd(
 
     argv1 = Tcl_GetString(objv[1]);
     length = objv[1]->length;
-    if ((argv1[0] == 't') && !strncmp(argv1, "tracing", objv[1]->length)
+    if ((argv1[0] == 't') && !strncmp(argv1, "tracing", length)
 	    && (length >= 3)) {
 	int wmTracing;
 
