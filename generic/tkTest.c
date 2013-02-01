@@ -223,7 +223,7 @@ Tktest_Init(
     if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
 	return TCL_ERROR;
     }
-    if (Tk_InitStubs(interp, "8.1", 0) == NULL) {
+    if (Tk_InitStubs(interp, TK_VERSION, 0) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -2002,14 +2002,14 @@ CustomOptionSet(
     } else if ((*value)->bytes != NULL) {
 	objEmpty = ((*value)->length == 0);
     } else {
-	Tcl_GetStringFromObj((*value), &length);
+	(void)Tcl_GetStringFromObj(*value, &length);
 	objEmpty = (length == 0);
     }
 
     if ((flags & TK_OPTION_NULL_OK) && objEmpty) {
 	*value = NULL;
     } else {
-	string = Tcl_GetStringFromObj((*value), &length);
+	string = Tcl_GetStringFromObj(*value, &length);
 	Tcl_UtfToUpper(string);
 	if (strcmp(string, "BAD") == 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("expected good value, got \"BAD\"", -1));
@@ -2017,8 +2017,8 @@ CustomOptionSet(
 	}
     }
     if (internalPtr != NULL) {
-	if ((*value) != NULL) {
-	    string = Tcl_GetStringFromObj((*value), &length);
+	if (*valu) != NULL) {
+	    string = Tcl_GetStringFromObj(*value, &length);
 	    newStr = ckalloc(length + 1);
 	    strcpy(newStr, string);
 	} else {

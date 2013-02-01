@@ -33,7 +33,7 @@ typedef struct PixelRep {
     (PTR2INT((objPtr)->internalRep.twoPtrValue.ptr1))
 
 #define SET_COMPLEXPIXEL(objPtr, repPtr)		\
-    (objPtr)->internalRep.twoPtrValue.ptr1 = 0;		\
+    (objPtr)->internalRep.twoPtrValue.ptr1 = NULL;		\
     (objPtr)->internalRep.twoPtrValue.ptr2 = repPtr
 
 #define GET_COMPLEXPIXEL(objPtr)			\
@@ -553,7 +553,7 @@ Tk_GetMMFromObj(
 	}
     }
 
-    mmPtr = objPtr->internalRep.otherValuePtr;
+    mmPtr = objPtr->internalRep.twoPtrValue.ptr1;
     if (mmPtr->tkwin != tkwin) {
 	d = mmPtr->value;
 	if (mmPtr->units == -1) {
@@ -592,8 +592,8 @@ static void
 FreeMMInternalRep(
     Tcl_Obj *objPtr)		/* MM object with internal rep to free. */
 {
-    ckfree(objPtr->internalRep.otherValuePtr);
-    objPtr->internalRep.otherValuePtr = NULL;
+    ckfree(objPtr->internalRep.twoPtrValue.ptr1);
+    objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     objPtr->typePtr = NULL;
 }
 
@@ -623,13 +623,13 @@ DupMMInternalRep(
     MMRep *oldPtr, *newPtr;
 
     copyPtr->typePtr = srcPtr->typePtr;
-    oldPtr = srcPtr->internalRep.otherValuePtr;
+    oldPtr = srcPtr->internalRep.twoPtrValue.ptr1;
     newPtr = ckalloc(sizeof(MMRep));
     newPtr->value = oldPtr->value;
     newPtr->units = oldPtr->units;
     newPtr->tkwin = oldPtr->tkwin;
     newPtr->returnValue = oldPtr->returnValue;
-    copyPtr->internalRep.otherValuePtr = newPtr;
+    copyPtr->internalRep.twoPtrValue.ptr1 = newPtr;
 }
 
 /*
@@ -659,7 +659,7 @@ UpdateStringOfMM(
     char buffer[TCL_DOUBLE_SPACE];
     register int len;
 
-    mmPtr = objPtr->internalRep.otherValuePtr;
+    mmPtr = objPtr->internalRep.twoPtrValue.ptr1;
     /* assert( mmPtr->units == -1 && objPtr->bytes == NULL ); */
     if ((mmPtr->units != -1) || (objPtr->bytes != NULL)) {
 	Tcl_Panic("UpdateStringOfMM: false precondition");
@@ -782,7 +782,7 @@ SetMMFromAny(
     mmPtr->tkwin = NULL;
     mmPtr->returnValue	= d;
 
-    objPtr->internalRep.otherValuePtr = mmPtr;
+    objPtr->internalRep.twoPtrValue.ptr1 = mmPtr;
 
     return TCL_OK;
 }
@@ -824,7 +824,7 @@ TkGetWindowFromObj(
 	return result;
     }
 
-    winPtr = objPtr->internalRep.otherValuePtr;
+    winPtr = objPtr->internalRep.twoPtrValue.ptr1;
     if (winPtr->tkwin == NULL
 	    || winPtr->mainPtr == NULL
 	    || winPtr->mainPtr != mainPtr
@@ -880,7 +880,7 @@ SetWindowFromAny(
      * Free the old internalRep before setting the new one.
      */
 
-    Tcl_GetString(objPtr);
+    (void)Tcl_GetString(objPtr);
     typePtr = objPtr->typePtr;
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
@@ -891,7 +891,7 @@ SetWindowFromAny(
     winPtr->mainPtr = NULL;
     winPtr->epoch = 0;
 
-    objPtr->internalRep.otherValuePtr = winPtr;
+    objPtr->internalRep.twoPtrValue.ptr1 = winPtr;
     objPtr->typePtr = &windowObjType;
 
     return TCL_OK;
@@ -922,12 +922,12 @@ DupWindowInternalRep(
 {
     register WindowRep *oldPtr, *newPtr;
 
-    oldPtr = srcPtr->internalRep.otherValuePtr;
+    oldPtr = srcPtr->internalRep.twoPtrValue.ptr1;
     newPtr = ckalloc(sizeof(WindowRep));
     newPtr->tkwin = oldPtr->tkwin;
     newPtr->mainPtr = oldPtr->mainPtr;
     newPtr->epoch = oldPtr->epoch;
-    copyPtr->internalRep.otherValuePtr = newPtr;
+    copyPtr->internalRep.twoPtrValue.ptr1 = newPtr;
     copyPtr->typePtr = srcPtr->typePtr;
 }
 
@@ -953,8 +953,8 @@ static void
 FreeWindowInternalRep(
     Tcl_Obj *objPtr)		/* Window object with internal rep to free. */
 {
-    ckfree(objPtr->internalRep.otherValuePtr);
-    objPtr->internalRep.otherValuePtr = NULL;
+    ckfree(objPtr->internalRep.twoPtrValue.ptr1);
+    objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     objPtr->typePtr = NULL;
 }
 
@@ -985,7 +985,7 @@ TkNewWindowObj(
 
     SetWindowFromAny(NULL, objPtr);
 
-    winPtr = objPtr->internalRep.otherValuePtr;
+    winPtr = objPtr->internalRep.twoPtrValue.ptr1;
     winPtr->tkwin = tkwin;
     winPtr->mainPtr = mainPtr;
     winPtr->epoch = mainPtr->deletionEpoch;

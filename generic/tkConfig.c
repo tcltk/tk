@@ -1004,7 +1004,7 @@ ObjectIsEmpty(
     if (objPtr->bytes != NULL) {
 	return (objPtr->length == 0);
     }
-    Tcl_GetStringFromObj(objPtr, &length);
+    (void)Tcl_GetStringFromObj(objPtr, &length);
     return (length == 0);
 }
 
