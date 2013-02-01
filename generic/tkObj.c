@@ -817,11 +817,12 @@ TkGetWindowFromObj(
 {
     TkMainInfo *mainPtr = ((TkWindow *) tkwin)->mainPtr;
     register WindowRep *winPtr;
-    int result;
 
-    result = Tcl_ConvertToType(interp, objPtr, &windowObjType);
-    if (result != TCL_OK) {
-	return result;
+    if (objPtr->typePtr != &windowObjType) {
+	int result = SetWindowFromAny(interp, objPtr);
+	if (result != TCL_OK) {
+	    return result;
+	}
     }
 
     winPtr = objPtr->internalRep.twoPtrValue.ptr1;
