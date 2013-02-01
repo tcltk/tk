@@ -718,7 +718,7 @@ FormatConfigInfo(
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree(argv[4]);
+	    ckfree((char *) argv[4]);
 	} else {
 	    freeProc((char *) argv[4]);
 	}
