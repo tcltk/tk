@@ -1161,12 +1161,13 @@ MakeFilter(
 	*p = '\0';
 
     } else {
-	int len;
+	size_t len;
 
 	if (valuePtr == NULL) {
 	    len = 0;
 	} else {
-	    (void) Tcl_GetStringFromObj(valuePtr, &len);
+	    (void) Tcl_GetString(valuePtr);
+	    len = valuePtr->length;
 	}
 
 	/*
@@ -2258,7 +2259,7 @@ FontchooserConfigureCmd(
     }
 
     for (i = 1; i < objc; i += 2) {
-	int optionIndex, len;
+	int optionIndex;
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
 		sizeof(char *),  "option", 0, &optionIndex) != TCL_OK) {
@@ -2318,8 +2319,8 @@ FontchooserConfigureCmd(
 	    if (hdPtr->fontObj) {
 		Tcl_DecrRefCount(hdPtr->fontObj);
 	    }
-	    (void)Tcl_GetStringFromObj(objv[i+1], &len);
-	    if (len) {
+	    (void)Tcl_GetString(objv[i+1]);
+	    if (objv[i+1]->length) {
 		hdPtr->fontObj = objv[i+1];
 		if (Tcl_IsShared(hdPtr->fontObj)) {
 		    hdPtr->fontObj = Tcl_DuplicateObj(hdPtr->fontObj);
@@ -2333,8 +2334,8 @@ FontchooserConfigureCmd(
 	    if (hdPtr->cmdObj) {
 		Tcl_DecrRefCount(hdPtr->cmdObj);
 	    }
-	    (void)Tcl_GetStringFromObj(objv[i+1], &len);
-	    if (len) {
+	    (void)Tcl_GetString(objv[i+1]);
+	    if (objv[i+1]->length) {
 		hdPtr->cmdObj = objv[i+1];
 		if (Tcl_IsShared(hdPtr->cmdObj)) {
 		    hdPtr->cmdObj = Tcl_DuplicateObj(hdPtr->cmdObj);
