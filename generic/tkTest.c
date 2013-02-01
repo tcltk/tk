@@ -2017,7 +2017,7 @@ CustomOptionSet(
 	}
     }
     if (internalPtr != NULL) {
-	if (*valu) != NULL) {
+	if (*value != NULL) {
 	    string = Tcl_GetStringFromObj(*value, &length);
 	    newStr = ckalloc(length + 1);
 	    strcpy(newStr, string);
