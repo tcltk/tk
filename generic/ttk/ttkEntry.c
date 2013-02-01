@@ -1314,8 +1314,8 @@ EntryIndex(
     int *indexPtr)		/* Return value */
 {
 #   define EntryWidth(e) (Tk_Width(entryPtr->core.tkwin)) /* Not Right */
-    int length;
-    const char *string = Tcl_GetStringFromObj(indexObj, &length);
+    const char *string = Tcl_GetString(indexObj);
+    size_t length = indexObj->length;
 
     if (strncmp(string, "end", length) == 0) {
 	*indexPtr = entryPtr->entry.numChars;

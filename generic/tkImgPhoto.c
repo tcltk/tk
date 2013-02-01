@@ -230,7 +230,7 @@ PhotoFormatThreadExitProc(
     while (tsdPtr->formatList != NULL) {
 	freePtr = tsdPtr->formatList;
 	tsdPtr->formatList = tsdPtr->formatList->nextPtr;
-	ckfree(freePtr->name);
+	ckfree((char *)freePtr->name);
 	ckfree(freePtr);
     }
 }
