@@ -859,9 +859,10 @@ TextWidgetObjCmd(
 
 	for (i = 2; i < objc-2; i++) {
 	    int value, length;
-	    const char *option = Tcl_GetStringFromObj(objv[i], &length);
+	    const char *option = Tcl_GetString(objv[i]);
 	    char c;
 
+	    length = objv[i]->length;
 	    if (length < 2 || option[0] != '-') {
 		goto badOption;
 	    }
@@ -1260,12 +1261,14 @@ TextWidgetObjCmd(
 
 	i = 2;
 	if (objc > 3) {
-	    name = Tcl_GetStringFromObj(objv[i], &length);
+	    name = Tcl_GetString(objv[i]);
+	    length = objv[i]->length;
 	    if (length > 1 && name[0] == '-') {
 		if (strncmp("-displaychars", name, (unsigned) length) == 0) {
 		    i++;
 		    visible = 1;
-		    name = Tcl_GetStringFromObj(objv[i], &length);
+		    name = Tcl_GetString(objv[i]);
+		    length = objv[i]->length;
 		}
 		if ((i < objc-1) && (length == 2) && !strcmp("--", name)) {
 		    i++;
@@ -2552,9 +2555,9 @@ InsertChars(
     int *lineAndByteIndex;
     int resetViewCount;
     int pixels[2*PIXEL_CLIENTS];
+    const char *string = Tcl_GetString(stringPtr);
 
-    const char *string = Tcl_GetStringFromObj(stringPtr, &length);
-
+    length = stringPtr->length;
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
     }
@@ -4093,7 +4096,8 @@ TextSearchAddNextLine(
 
     if (lenPtr != NULL) {
 	if (searchSpecPtr->exact) {
-	    (void)Tcl_GetStringFromObj(theLine, lenPtr);
+	    (void)Tcl_GetString(theLine);
+	    *lenPtr = theLine->length;
 	} else {
 	    *lenPtr = Tcl_GetCharLength(theLine);
 	}
@@ -4619,7 +4623,8 @@ TextDumpCmd(
 	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	str = Tcl_GetStringFromObj(objv[arg], &length);
+	str = Tcl_GetString(objv[arg]);
+	length = objv[arg]->length;
 	if (strncmp(str, "end", (unsigned) length) == 0) {
 	    atEnd = 1;
 	}
@@ -5541,7 +5546,8 @@ SearchCore(
 	 * it has dual purpose.
 	 */
 
-	pattern = Tcl_GetStringFromObj(patObj, &matchLength);
+	pattern = Tcl_GetString(patObj);
+	matchLength = patObj->length;
 	nl = strchr(pattern, '\n');
 
 	/*
@@ -6609,16 +6615,14 @@ static int
 ObjectIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
-    int length;
-
     if (objPtr == NULL) {
 	return 1;
     }
     if (objPtr->bytes != NULL) {
 	return (objPtr->length == 0);
     }
-    (void)Tcl_GetStringFromObj(objPtr, &length);
-    return (length == 0);
+    (void)Tcl_GetString(objPtr);
+    return (objPtr->length == 0);
 }
 
 /*

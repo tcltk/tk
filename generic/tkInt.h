@@ -925,9 +925,9 @@ MODULE_SCOPE const Tcl_ObjType tkBorderObjType;
 MODULE_SCOPE const Tcl_ObjType tkBitmapObjType;
 MODULE_SCOPE const Tcl_ObjType tkColorObjType;
 MODULE_SCOPE const Tcl_ObjType tkCursorObjType;
-MODULE_SCOPE const Tcl_ObjType tkFontObjType;
+MODULE_SCOPE Tcl_ObjType tkFontObjType;
 MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
-MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
+MODULE_SCOPE Tcl_ObjType tkTextIndexType;
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported to the

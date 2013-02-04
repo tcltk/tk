@@ -1101,7 +1101,6 @@ PackAfter(
 {
     register Packer *packPtr;
     Tk_Window tkwin, ancestor, parent;
-    int length;
     Tcl_Obj **options;
     int index, optionCount, c;
 
@@ -1170,24 +1169,25 @@ PackAfter(
 	packPtr->flags |= OLD_STYLE;
 	for (index = 0 ; index < optionCount; index++) {
 	    Tcl_Obj *curOptPtr = options[index];
-	    const char *curOpt = Tcl_GetStringFromObj(curOptPtr, &length);
+	    const char *curOpt = Tcl_GetString(curOptPtr);
+	    size_t length = curOptPtr->length;
 
 	    c = curOpt[0];
 
 	    if ((c == 't')
-		    && (strncmp(curOpt, "top", (size_t) length)) == 0) {
+		    && (strncmp(curOpt, "top", length)) == 0) {
 		packPtr->side = TOP;
 	    } else if ((c == 'b')
-		    && (strncmp(curOpt, "bottom", (size_t) length)) == 0) {
+		    && (strncmp(curOpt, "bottom", length)) == 0) {
 		packPtr->side = BOTTOM;
 	    } else if ((c == 'l')
-		    && (strncmp(curOpt, "left", (size_t) length)) == 0) {
+		    && (strncmp(curOpt, "left", length)) == 0) {
 		packPtr->side = LEFT;
 	    } else if ((c == 'r')
-		    && (strncmp(curOpt, "right", (size_t) length)) == 0) {
+		    && (strncmp(curOpt, "right", length)) == 0) {
 		packPtr->side = RIGHT;
 	    } else if ((c == 'e')
-		    && (strncmp(curOpt, "expand", (size_t) length)) == 0) {
+		    && (strncmp(curOpt, "expand", length)) == 0) {
 		packPtr->flags |= EXPAND;
 	    } else if ((c == 'f')
 		    && (strcmp(curOpt, "fill")) == 0) {

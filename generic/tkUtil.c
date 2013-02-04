@@ -729,8 +729,8 @@ Tk_GetScrollInfoObj(
     int *intPtr)		/* Filled in with number of pages or lines to
 				 * scroll, if any. */
 {
-    int length;
-    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
+    const char *arg = Tcl_GetString(objv[2]);
+    size_t length = objv[2]->length;
 
 #define ArgPfxEq(str) \
 	((arg[0] == str[0]) && !strncmp(arg, str, (unsigned)length))
@@ -753,7 +753,8 @@ Tk_GetScrollInfoObj(
 	    return TK_SCROLL_ERROR;
 	}
 
-	arg = Tcl_GetStringFromObj(objv[4], &length);
+	arg = Tcl_GetString(objv[4]);
+	length = objv[4]->length;
 	if (ArgPfxEq("pages")) {
 	    return TK_SCROLL_PAGES;
 	} else if (ArgPfxEq("units")) {
