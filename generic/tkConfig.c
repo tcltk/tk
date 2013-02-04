@@ -142,7 +142,7 @@ static const Tcl_ObjType optionObjType = {
     FreeOptionInternalRep,	/* freeIntRepProc */
     NULL,			/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetOptionFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
