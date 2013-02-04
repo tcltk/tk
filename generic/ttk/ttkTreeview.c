@@ -3169,6 +3169,8 @@ static int TreeviewTagAddCommand(
 	AddTag(items[i], tag);
     }
 
+    TtkRedisplayWidget(&tv->core);
+
     return TCL_OK;
 }
 
@@ -3213,6 +3215,9 @@ static int TreeviewTagRemoveCommand(
 	    item=NextPreorder(item);
 	}
     }
+
+    TtkRedisplayWidget(&tv->core);
+
     return TCL_OK;
 }
 
