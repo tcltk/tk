@@ -6,7 +6,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <tk.h>
+#include <tkInt.h>
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -3170,6 +3170,8 @@ static int TreeviewTagAddCommand(
 	AddTag(items[i], tag);
     }
 
+    TtkRedisplayWidget(&tv->core);
+
     return TCL_OK;
 }
 
@@ -3214,6 +3216,9 @@ static int TreeviewTagRemoveCommand(
 	    item=NextPreorder(item);
 	}
     }
+
+    TtkRedisplayWidget(&tv->core);
+
     return TCL_OK;
 }
 

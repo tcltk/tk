@@ -3104,7 +3104,8 @@ echo "${ECHO_T}shared" >&6
 	echo "$as_me:$LINENO: result: static" >&5
 echo "${ECHO_T}static" >&6
 	SHARED_BUILD=0
-	cat >>confdefs.h <<\_ACEOF
+
+cat >>confdefs.h <<\_ACEOF
 #define STATIC_BUILD 1
 _ACEOF
 
@@ -3184,6 +3185,10 @@ echo "$as_me: error: ${with_tclconfig} directory doesn't contain tclConfig.sh" >
 		for i in `ls -d ${libdir} 2>/dev/null` \
 			`ls -d ${exec_prefix}/lib 2>/dev/null` \
 			`ls -d ${prefix}/lib 2>/dev/null` \
+			`ls -d /cygdrive/c/Tcl/lib 2>/dev/null` \
+			`ls -d /cygdrive/c/Progra~1/Tcl/lib 2>/dev/null` \
+			`ls -d /c/Tcl/lib 2>/dev/null` \
+			`ls -d /c/Progra~1/Tcl/lib 2>/dev/null` \
 			`ls -d C:/Tcl/lib 2>/dev/null` \
 			`ls -d C:/Progra~1/Tcl/lib 2>/dev/null` \
 			; do
@@ -3225,16 +3230,16 @@ echo "${ECHO_T}found ${TCL_BIN_DIR}/tclConfig.sh" >&6
     fi
 
 
-    echo "$as_me:$LINENO: checking for existence of $TCL_BIN_DIR/tclConfig.sh" >&5
-echo $ECHO_N "checking for existence of $TCL_BIN_DIR/tclConfig.sh... $ECHO_C" >&6
+    echo "$as_me:$LINENO: checking for existence of ${TCL_BIN_DIR}/tclConfig.sh" >&5
+echo $ECHO_N "checking for existence of ${TCL_BIN_DIR}/tclConfig.sh... $ECHO_C" >&6
 
-    if test -f "$TCL_BIN_DIR/tclConfig.sh" ; then
+    if test -f "${TCL_BIN_DIR}/tclConfig.sh" ; then
         echo "$as_me:$LINENO: result: loading" >&5
 echo "${ECHO_T}loading" >&6
-	. $TCL_BIN_DIR/tclConfig.sh
+	. "${TCL_BIN_DIR}/tclConfig.sh"
     else
-        echo "$as_me:$LINENO: result: file not found" >&5
-echo "${ECHO_T}file not found" >&6
+        echo "$as_me:$LINENO: result: could not find ${TCL_BIN_DIR}/tclConfig.sh" >&5
+echo "${ECHO_T}could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6
     fi
 
     #

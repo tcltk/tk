@@ -164,12 +164,6 @@ CFLAGS_OPTIMIZE	= @CFLAGS_OPTIMIZE@
 LDFLAGS_DEBUG    = @LDFLAGS_DEBUG@
 LDFLAGS_OPTIMIZE = @LDFLAGS_OPTIMIZE@
 
-# Tk does not used deprecated Tcl constructs so it should
-# compile fine with -DTCL_NO_DEPRECATED. To remove its own
-# set of deprecated code uncomment the second line.
-NO_DEPRECATED_FLAGS	=
-#NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
-
 # To change the compiler switches, for example to change from optimization to
 # debugging symbols, change the following line:
 #CFLAGS		= $(CFLAGS_DEBUG)
