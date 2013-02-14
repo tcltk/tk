@@ -798,11 +798,11 @@ test font-18.1 {FreeFontObjProc} -constraints testfont -setup {
     destroy .b1
     set result {}
 } -body {
-    set x [format {Courier 12}]
+    set x [join {Courier 12} { }]
     button .b1 -font $x
-    set y [format {Courier 12}]
+    set y [join {Courier 12} { }]
     .b1 configure -font $y
-    set z [format {Courier 12}]
+    set z [join {Courier 12} { }]
     .b1 configure -font $z
     lappend result [testfont counts {Courier 12}]
     set x red
