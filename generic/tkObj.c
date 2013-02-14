@@ -156,7 +156,7 @@ GetTypeCache(void)
 	Tcl_Obj *obj = Tcl_NewDoubleObj(0.0);
 	tsdPtr->doubleTypePtr = obj->typePtr;
 	Tcl_DecrRefCount(obj);
-	obj = Tcl_NewIntObj(0);
+	obj = Tcl_NewLongObj(0);
 	tsdPtr->intTypePtr = obj->typePtr;
 	Tcl_DecrRefCount(obj);
     }

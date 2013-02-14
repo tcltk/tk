@@ -1245,11 +1245,52 @@ MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 #endif
 
+/* For compatibility between Tcl 8.6 vs 9.0 */
 MODULE_SCOPE int		Tk_VarEval(Tcl_Interp *interp, ...);
 
+#undef Tcl_SetVar
+#define Tcl_SetVar(interp, varName, newValue, flags) \
+    (tclStubsPtr->tcl_SetVar2((interp), (varName), NULL, (newValue), (flags)))
 #undef Tcl_VarEval
 #define Tcl_VarEval Tk_VarEval
-
+#undef Tcl_PkgPresent
+#define Tcl_PkgPresent(interp, name, version, exact) \
+	Tcl_PkgPresentEx(interp, name, version, exact, NULL)
+#undef Tcl_PkgProvide
+#define Tcl_PkgProvide(interp, name, version) \
+	Tcl_PkgProvideEx(interp, name, version, NULL)
+#undef Tcl_PkgRequire
+#define Tcl_PkgRequire(interp, name, version, exact) \
+	Tcl_PkgRequireEx(interp, name, version, exact, NULL)
+#undef Tcl_Eval
+#define Tcl_Eval(interp,objPtr) \
+	Tcl_EvalEx((interp),(objPtr),-1,0)
+#undef Tcl_GlobalEval
+#define Tcl_GlobalEval(interp,objPtr) \
+	Tcl_EvalEx((interp),(objPtr),-1,TCL_EVAL_GLOBAL)
+#undef Tcl_GetIndexFromObj
+#define Tcl_GetIndexFromObj(interp, objPtr, tablePtr, msg, flags, indexPtr) \
+	Tcl_GetIndexFromObjStruct((interp), (objPtr), (tablePtr), \
+	sizeof(char *), (msg), (flags), (indexPtr))
+#undef Tcl_NewIntObj
+#define Tcl_NewIntObj Tcl_NewLongObj
+#undef Tcl_SetIntObj
+#define Tcl_SetIntObj Tcl_SetLongObj
+#undef Tcl_NewBooleanObj
+#define Tcl_NewBooleanObj(boolValue) \
+	Tcl_NewLongObj((boolValue)!=0)
+#undef Tcl_DbNewBooleanObj
+#define Tcl_DbNewBooleanObj(boolValue, file, line) \
+	Tcl_DbNewLongObj((boolValue)!=0, file, line)
+#undef Tcl_SetBooleanObj
+#define Tcl_SetBooleanObj(objPtr, boolValue) \
+	Tcl_SetLongObj((objPtr), (boolValue)!=0)
+#undef Tcl_AddErrorInfo
+#define Tcl_AddErrorInfo(interp, message) \
+	Tcl_AppendObjToErrorInfo((interp), Tcl_NewStringObj((message), -1))
+#undef Tcl_AddObjErrorInfo
+#define Tcl_AddObjErrorInfo(interp, message, length) \
+	Tcl_AppendObjToErrorInfo((interp), Tcl_NewStringObj((message), length))
 #endif /* _TKINT */
 
 /*

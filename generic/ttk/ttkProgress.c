@@ -5,7 +5,7 @@
  */
 
 #include <math.h>
-#include <tk.h>
+#include <tkInt.h>
 
 #include "ttkTheme.h"
 #include "ttkWidget.h"
