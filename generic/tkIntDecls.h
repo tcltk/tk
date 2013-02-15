@@ -454,6 +454,39 @@ EXTERN CONST Tk_OptionSpec * TkGetOptionSpec _ANSI_ARGS_((CONST char *name,
 EXTERN void		TkpDrawFrame _ANSI_ARGS_((Tk_Window tkwin,
 				Tk_3DBorder border, int highlightWidth,
 				int borderWidth, int relief));
+/* Slot 153 is reserved */
+/* Slot 154 is reserved */
+/* Slot 155 is reserved */
+/* Slot 156 is reserved */
+/* Slot 157 is reserved */
+/* Slot 158 is reserved */
+/* Slot 159 is reserved */
+/* Slot 160 is reserved */
+/* Slot 161 is reserved */
+/* Slot 162 is reserved */
+/* Slot 163 is reserved */
+/* Slot 164 is reserved */
+/* Slot 165 is reserved */
+/* Slot 166 is reserved */
+/* Slot 167 is reserved */
+/* Slot 168 is reserved */
+/* Slot 169 is reserved */
+/* Slot 170 is reserved */
+/* Slot 171 is reserved */
+/* Slot 172 is reserved */
+/* Slot 173 is reserved */
+/* Slot 174 is reserved */
+/* Slot 175 is reserved */
+/* Slot 176 is reserved */
+/* Slot 177 is reserved */
+/* Slot 178 is reserved */
+/* Slot 179 is reserved */
+/* Slot 180 is reserved */
+/* Slot 181 is reserved */
+/* Slot 182 is reserved */
+/* Slot 183 is reserved */
+/* 184 */
+EXTERN void		TkUnusedStubEntry _ANSI_ARGS_((void));
 
 typedef struct TkIntStubs {
     int magic;
@@ -639,6 +672,38 @@ typedef struct TkIntStubs {
     VOID *reserved150;
     VOID *reserved151;
     void (*tkpDrawFrame) _ANSI_ARGS_((Tk_Window tkwin, Tk_3DBorder border, int highlightWidth, int borderWidth, int relief)); /* 152 */
+    VOID *reserved153;
+    VOID *reserved154;
+    VOID *reserved155;
+    VOID *reserved156;
+    VOID *reserved157;
+    VOID *reserved158;
+    VOID *reserved159;
+    VOID *reserved160;
+    VOID *reserved161;
+    VOID *reserved162;
+    VOID *reserved163;
+    VOID *reserved164;
+    VOID *reserved165;
+    VOID *reserved166;
+    VOID *reserved167;
+    VOID *reserved168;
+    VOID *reserved169;
+    VOID *reserved170;
+    VOID *reserved171;
+    VOID *reserved172;
+    VOID *reserved173;
+    VOID *reserved174;
+    VOID *reserved175;
+    VOID *reserved176;
+    VOID *reserved177;
+    VOID *reserved178;
+    VOID *reserved179;
+    VOID *reserved180;
+    VOID *reserved181;
+    VOID *reserved182;
+    VOID *reserved183;
+    void (*tkUnusedStubEntry) _ANSI_ARGS_((void)); /* 184 */
 } TkIntStubs;
 
 #ifdef __cplusplus
@@ -1228,6 +1293,41 @@ extern TkIntStubs *tkIntStubsPtr;
 #define TkpDrawFrame \
 	(tkIntStubsPtr->tkpDrawFrame) /* 152 */
 #endif
+/* Slot 153 is reserved */
+/* Slot 154 is reserved */
+/* Slot 155 is reserved */
+/* Slot 156 is reserved */
+/* Slot 157 is reserved */
+/* Slot 158 is reserved */
+/* Slot 159 is reserved */
+/* Slot 160 is reserved */
+/* Slot 161 is reserved */
+/* Slot 162 is reserved */
+/* Slot 163 is reserved */
+/* Slot 164 is reserved */
+/* Slot 165 is reserved */
+/* Slot 166 is reserved */
+/* Slot 167 is reserved */
+/* Slot 168 is reserved */
+/* Slot 169 is reserved */
+/* Slot 170 is reserved */
+/* Slot 171 is reserved */
+/* Slot 172 is reserved */
+/* Slot 173 is reserved */
+/* Slot 174 is reserved */
+/* Slot 175 is reserved */
+/* Slot 176 is reserved */
+/* Slot 177 is reserved */
+/* Slot 178 is reserved */
+/* Slot 179 is reserved */
+/* Slot 180 is reserved */
+/* Slot 181 is reserved */
+/* Slot 182 is reserved */
+/* Slot 183 is reserved */
+#ifndef TkUnusedStubEntry
+#define TkUnusedStubEntry \
+	(tkIntStubsPtr->tkUnusedStubEntry) /* 184 */
+#endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
@@ -1236,6 +1336,7 @@ extern TkIntStubs *tkIntStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+#undef TkUnusedStubEntry
 #if defined(__CYGWIN__) && defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS)
 #   undef TkBindDeadWindow
 #   define TkBindDeadWindow(winPtr) /* Removed from Cygwins stub table, just do nothing */

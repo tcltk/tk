@@ -32,6 +32,8 @@
 #include "tkIntPlatDecls.h"
 #include "tkIntXlibDecls.h"
 
+#define TkUnusedStubEntry NULL
+
 #ifdef __WIN32__
 
 static int
@@ -449,6 +451,38 @@ TkIntStubs tkIntStubs = {
     NULL, /* 150 */
     NULL, /* 151 */
     TkpDrawFrame, /* 152 */
+    NULL, /* 153 */
+    NULL, /* 154 */
+    NULL, /* 155 */
+    NULL, /* 156 */
+    NULL, /* 157 */
+    NULL, /* 158 */
+    NULL, /* 159 */
+    NULL, /* 160 */
+    NULL, /* 161 */
+    NULL, /* 162 */
+    NULL, /* 163 */
+    NULL, /* 164 */
+    NULL, /* 165 */
+    NULL, /* 166 */
+    NULL, /* 167 */
+    NULL, /* 168 */
+    NULL, /* 169 */
+    NULL, /* 170 */
+    NULL, /* 171 */
+    NULL, /* 172 */
+    NULL, /* 173 */
+    NULL, /* 174 */
+    NULL, /* 175 */
+    NULL, /* 176 */
+    NULL, /* 177 */
+    NULL, /* 178 */
+    NULL, /* 179 */
+    NULL, /* 180 */
+    NULL, /* 181 */
+    NULL, /* 182 */
+    NULL, /* 183 */
+    TkUnusedStubEntry, /* 184 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {
@@ -500,6 +534,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkUnixSetMenubar, /* 42 */
     TkWmCleanup, /* 43 */
     TkSendCleanup, /* 44 */
+    TkUnusedStubEntry, /* 45 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     TkGenerateActivateEvents, /* 0 */
@@ -556,6 +591,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkGenWMDestroyEvent, /* 51 */
     NULL, /* 52 */
     TkpGetMS, /* 53 */
+    TkUnusedStubEntry, /* 54 */
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
@@ -571,6 +607,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     TkSendCleanup, /* 10 */
     TkFreeXId, /* 11 */
     TkpWmSetState, /* 12 */
+    TkUnusedStubEntry, /* 13 */
 #endif /* X11 */
 };
 
@@ -1091,6 +1128,17 @@ TkStubs tkStubs = {
     Tk_GetElementBox, /* 262 */
     Tk_GetElementBorderWidth, /* 263 */
     Tk_DrawElement, /* 264 */
+    NULL, /* 265 */
+    NULL, /* 266 */
+    NULL, /* 267 */
+    NULL, /* 268 */
+    NULL, /* 269 */
+    NULL, /* 270 */
+    NULL, /* 271 */
+    NULL, /* 272 */
+    NULL, /* 273 */
+    NULL, /* 274 */
+    TkUnusedStubEntry, /* 275 */
 };
 
 /* !END!: Do not edit above this line. */

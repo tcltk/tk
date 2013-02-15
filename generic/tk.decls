@@ -1017,7 +1017,9 @@ declare 264 {
 	    char *recordPtr, Tk_Window tkwin, Drawable d, int x, int y,
 	    int width, int height, int state)
 }
-
+declare 275 {
+    void TkUnusedStubEntry(void)
+}
 
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.
