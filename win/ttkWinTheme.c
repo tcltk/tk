@@ -727,7 +727,7 @@ int TtkWinTheme_Init(Tcl_Interp *interp, HWND hwnd)
 
     Ttk_RegisterLayouts(themePtr, LayoutTable);
 
-    Tcl_PkgProvideEx(interp, "ttk::theme::winnative", TTK_VERSION, NULL);
+    Tcl_PkgProvide(interp, "ttk::theme::winnative", TTK_VERSION);
     return TCL_OK;
 }
 

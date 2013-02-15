@@ -965,7 +965,7 @@ TtkClamTheme_Init(Tcl_Interp *interp)
 
     Ttk_RegisterLayouts(theme, LayoutTable);
 
-    Tcl_PkgProvideEx(interp, "ttk::theme::clam", TTK_VERSION, NULL);
+    Tcl_PkgProvide(interp, "ttk::theme::clam", TTK_VERSION);
 
     return TCL_OK;
 }
