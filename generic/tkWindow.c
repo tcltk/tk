@@ -3391,7 +3391,7 @@ Tk_PkgInitStubsCheck(
     const char * version,
     int exact)
 {
-    const char *actualVersion = Tcl_PkgRequire(interp, "Tk", version, 0);
+    const char *actualVersion = Tcl_PkgRequireEx(interp, "Tk", version, 0, NULL);
 
     if (exact && actualVersion) {
 	const char *p = version;
@@ -3403,11 +3403,11 @@ Tk_PkgInitStubsCheck(
 	if (count == 1) {
 	    if (0 != strncmp(version, actualVersion, strlen(version))) {
 		/* Construct error message */
-		Tcl_PkgPresent(interp, "Tk", version, 1);
+		Tcl_PkgPresentEx(interp, "Tk", version, 1, NULL);
 		return NULL;
 	    }
 	} else {
-	    return Tcl_PkgPresent(interp, "Tk", version, 1);
+	    return Tcl_PkgPresentEx(interp, "Tk", version, 1, NULL);
 	}
     }
     return actualVersion;
