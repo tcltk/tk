@@ -1253,15 +1253,6 @@ MODULE_SCOPE int		Tk_VarEval(Tcl_Interp *interp, ...);
     (tclStubsPtr->tcl_SetVar2((interp), (varName), NULL, (newValue), (flags)))
 #undef Tcl_VarEval
 #define Tcl_VarEval Tk_VarEval
-#undef Tcl_PkgPresent
-#define Tcl_PkgPresent(interp, name, version, exact) \
-	Tcl_PkgPresentEx(interp, name, version, exact, NULL)
-#undef Tcl_PkgProvide
-#define Tcl_PkgProvide(interp, name, version) \
-	Tcl_PkgProvideEx(interp, name, version, NULL)
-#undef Tcl_PkgRequire
-#define Tcl_PkgRequire(interp, name, version, exact) \
-	Tcl_PkgRequireEx(interp, name, version, exact, NULL)
 #undef Tcl_Eval
 #define Tcl_Eval(interp,objPtr) \
 	Tcl_EvalEx((interp),(objPtr),-1,0)
