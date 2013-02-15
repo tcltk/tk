@@ -1182,7 +1182,7 @@ static int AquaTheme_Init(Tcl_Interp *interp)
      */
     Ttk_RegisterLayouts(themePtr, LayoutTable);
 
-    Tcl_PkgProvideEx(interp, "ttk::theme::aqua", TTK_VERSION, NULL);
+    Tcl_PkgProvide(interp, "ttk::theme::aqua", TTK_VERSION);
     return TCL_OK;
 }
 
