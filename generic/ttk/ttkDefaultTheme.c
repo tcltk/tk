@@ -1122,7 +1122,7 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "Treeitem.indicator",
 	    &TreeitemIndicatorElementSpec, 0);
 
-    Tcl_PkgProvide(interp, "ttk::theme::alt", TTK_VERSION);
+    Tcl_PkgProvideEx(interp, "ttk::theme::alt", TTK_VERSION, NULL);
 
     return TCL_OK;
 }

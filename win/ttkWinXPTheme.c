@@ -1319,7 +1319,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      */
     Ttk_RegisterLayouts(themePtr, LayoutTable);
 
-    Tcl_PkgProvide(interp, "ttk::theme::xpnative", TTK_VERSION);
+    Tcl_PkgProvideEx(interp, "ttk::theme::xpnative", TTK_VERSION, NULL);
 
     return TCL_OK;
 }
