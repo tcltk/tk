@@ -505,7 +505,7 @@ MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
      */
     Ttk_RegisterLayouts(theme, LayoutTable);
 
-    Tcl_PkgProvide(interp, "ttk::theme::classic", TTK_VERSION);
+    Tcl_PkgProvideEx(interp, "ttk::theme::classic", TTK_VERSION, NULL);
 
     return TCL_OK;
 }
