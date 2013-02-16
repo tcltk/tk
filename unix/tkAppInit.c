@@ -14,7 +14,7 @@
 
 #undef BUILD_tk
 #undef STATIC_BUILD
-#include "tk.h"
+#include "tkInt.h"
 
 #ifdef TK_TEST
 extern Tcl_PackageInitProc Tktest_Init;
@@ -138,7 +138,7 @@ Tcl_AppInit(
      * specific startup file will be run under any conditions.
      */
 
-    (Tcl_SetVar)(interp, "tcl_rcFileName", "~/.wishrc", TCL_GLOBAL_ONLY);
+    (Tcl_SetVar2)(interp, "tcl_rcFileName", NULL, "~/.wishrc", TCL_GLOBAL_ONLY);
     return TCL_OK;
 }
 
