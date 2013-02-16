@@ -12,7 +12,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tk.h"
+#include "tkInt.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
@@ -224,7 +224,7 @@ Tcl_AppInit(
      * specific startup file will be run under any conditions.
      */
 
-    (Tcl_SetVar)(interp, "tcl_rcFileName", "~/wishrc.tcl", TCL_GLOBAL_ONLY);
+    (Tcl_SetVar2)(interp, "tcl_rcFileName", NULL, "~/wishrc.tcl", TCL_GLOBAL_ONLY);
     return TCL_OK;
 }
 
