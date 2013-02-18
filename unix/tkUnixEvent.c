@@ -116,8 +116,20 @@ TkpOpenDisplay(
     const char *displayNameStr)
 {
     TkDisplay *dispPtr;
-    Display *display = XOpenDisplay(displayNameStr);
+    Display *display;
+#ifdef TCL_THREADS
+    static int xinited = 0;
 
+    if (!xinited) {
+	/* Necessary for threaded apps, of no consequence otherwise  */
+	/* need only be called once, but must be called before *any* */
+	/* Xlib call is made.                                        */
+	XInitThreads();
+	xinited = 1;
+    }
+#endif
+
+    display = XOpenDisplay(displayNameStr);
     if (display == NULL) {
 	return NULL;
     }
