@@ -12,7 +12,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkInt.h"
+#include "tk.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
@@ -49,7 +49,10 @@ static BOOL consoleRequired = TRUE;
 #ifndef TK_LOCAL_APPINIT
 #define TK_LOCAL_APPINIT Tcl_AppInit
 #endif
-extern int TK_LOCAL_APPINIT(Tcl_Interp *interp);
+#ifndef MODULE_SCOPE
+#   define MODULE_SCOPE extern
+#endif
+MODULE_SCOPE int TK_LOCAL_APPINIT(Tcl_Interp *interp);
 
 /*
  * The following #if block allows you to change how Tcl finds the startup
@@ -58,7 +61,7 @@ extern int TK_LOCAL_APPINIT(Tcl_Interp *interp);
  */
 
 #ifdef TK_LOCAL_MAIN_HOOK
-extern int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
+MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
 #endif
 
 /*
@@ -126,9 +129,9 @@ _tWinMain(
      * Forward slashes substituted for backslashes.
      */
 
-    for (p = argv[0]; *p != TEXT('\0'); p++) {
-	if (*p == TEXT('\\')) {
-	    *p = TEXT('/');
+    for (p = argv[0]; *p != '\0'; p++) {
+	if (*p == '\\') {
+	    *p = '/';
 	}
     }
 
@@ -224,7 +227,8 @@ Tcl_AppInit(
      * specific startup file will be run under any conditions.
      */
 
-    (Tcl_SetVar2)(interp, "tcl_rcFileName", NULL, "~/wishrc.tcl", TCL_GLOBAL_ONLY);
+    (Tcl_ObjSetVar2)(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
+	    Tcl_NewStringObj("~/wishrc.tcl", -1), TCL_GLOBAL_ONLY);
     return TCL_OK;
 }
 
@@ -336,13 +340,13 @@ setargv(
      */
 
     size = 2;
-    for (p = cmdLine; *p != TEXT('\0'); p++) {
-	if ((*p == TEXT(' ')) || (*p == TEXT('\t'))) {	/* INTL: ISO space. */
+    for (p = cmdLine; *p != '\0'; p++) {
+	if ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
 	    size++;
-	    while ((*p == TEXT(' ')) || (*p == TEXT('\t'))) { /* INTL: ISO space. */
+	    while ((*p == ' ') || (*p == '\t')) { /* INTL: ISO space. */
 		p++;
 	    }
-	    if (*p == TEXT('\0')) {
+	    if (*p == '\0') {
 		break;
 	    }
 	}
@@ -352,8 +356,8 @@ setargv(
     #undef Tcl_Alloc
     #undef Tcl_DbCkalloc
 
-    argSpace = ckalloc(size*sizeof(char *)
-	    + (_tcslen(cmdLine)+1) * sizeof(TCHAR));
+    argSpace = ckalloc(size * sizeof(char *)
+	    + (_tcslen(cmdLine) * sizeof(TCHAR)) + sizeof(TCHAR));
     argv = (TCHAR **) argSpace;
     argSpace += size * (sizeof(char *)/sizeof(TCHAR));
     size--;
@@ -361,10 +365,10 @@ setargv(
     p = cmdLine;
     for (argc = 0; argc < size; argc++) {
 	argv[argc] = arg = argSpace;
-	while ((*p == TEXT(' ')) || (*p == TEXT('\t'))) {	/* INTL: ISO space. */
+	while ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
 	    p++;
 	}
-	if (*p == TEXT('\0')) {
+	if (*p == '\0') {
 	    break;
 	}
 
@@ -372,14 +376,14 @@ setargv(
 	slashes = 0;
 	while (1) {
 	    copy = 1;
-	    while (*p == TEXT('\\')) {
+	    while (*p == '\\') {
 		slashes++;
 		p++;
 	    }
-	    if (*p == TEXT('"')) {
+	    if (*p == '"') {
 		if ((slashes & 1) == 0) {
 		    copy = 0;
-		    if ((inquote) && (p[1] == TEXT('"'))) {
+		    if ((inquote) && (p[1] == '"')) {
 			p++;
 			copy = 1;
 		    } else {
@@ -390,13 +394,13 @@ setargv(
 	    }
 
 	    while (slashes) {
-		*arg = TEXT('\\');
+		*arg = '\\';
 		arg++;
 		slashes--;
 	    }
 
-	    if ((*p == TEXT('\0')) || (!inquote &&
-		    ((*p == TEXT(' ')) || (*p == TEXT('\t'))))) {	/* INTL: ISO space. */
+	    if ((*p == '\0') || (!inquote &&
+		    ((*p == ' ') || (*p == '\t')))) {	/* INTL: ISO space. */
 		break;
 	    }
 	    if (copy != 0) {
@@ -408,7 +412,7 @@ setargv(
 	*arg = '\0';
 	argSpace = arg + 1;
     }
-    argv[argc] = 0;
+    argv[argc] = NULL;
 
     *argcPtr = argc;
     *argvPtr = argv;
