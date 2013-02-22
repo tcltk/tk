@@ -1021,8 +1021,8 @@ DestroyEntry(
 
     ckfree((char *)entryPtr->string);
     if (entryPtr->textVarName != NULL) {
-	Tcl_UntraceVar(entryPtr->interp, entryPtr->textVarName,
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(entryPtr->interp, entryPtr->textVarName,
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, entryPtr);
 	entryPtr->flags &= ~ENTRY_VAR_TRACED;
     }
@@ -1105,7 +1105,7 @@ ConfigureEntry(
 
     if ((entryPtr->textVarName != NULL)
 	    && (entryPtr->flags & ENTRY_VAR_TRACED)) {
-	Tcl_UntraceVar(interp, entryPtr->textVarName,
+	Tcl_UntraceVar2(interp, entryPtr->textVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, entryPtr);
 	entryPtr->flags &= ~ENTRY_VAR_TRACED;

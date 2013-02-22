@@ -1,3 +1,8 @@
+2013-02-18  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tkUnixEvent.c: Call XInitThreads once before the
+	first Xlib call. Suggested by Brian Griffin.
+
 2013-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tcl.m4: More flexible search for win32 tclConfig.sh,
