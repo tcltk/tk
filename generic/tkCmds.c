@@ -1031,8 +1031,8 @@ Tk_TkwaitObjCmd(
 	    }
 	    Tcl_DoOneEvent(0);
 	}
-	Tcl_UntraceVar(interp, Tcl_GetString(objv[2]),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(interp, Tcl_GetString(objv[2]),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		WaitVariableProc, &done);
 	break;
 

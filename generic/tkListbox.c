@@ -1444,7 +1444,7 @@ DestroyListbox(
     }
 
     if (listPtr->listVarName != NULL) {
-	Tcl_UntraceVar(listPtr->interp, listPtr->listVarName,
+	Tcl_UntraceVar2(listPtr->interp, listPtr->listVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ListboxListVarProc, listPtr);
     }
@@ -1552,7 +1552,7 @@ ConfigureListbox(
 
     oldExport = listPtr->exportSelection;
     if (listPtr->listVarName != NULL) {
-	Tcl_UntraceVar(interp, listPtr->listVarName,
+	Tcl_UntraceVar2(interp, listPtr->listVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ListboxListVarProc, listPtr);
     }

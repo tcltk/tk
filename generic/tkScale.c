@@ -504,8 +504,8 @@ DestroyScale(
      */
 
     if (scalePtr->varNamePtr != NULL) {
-	Tcl_UntraceVar(scalePtr->interp, Tcl_GetString(scalePtr->varNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(scalePtr->interp, Tcl_GetString(scalePtr->varNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ScaleVarProc, scalePtr);
     }
     if (scalePtr->troughGC != None) {
@@ -561,8 +561,8 @@ ConfigureScale(
      */
 
     if (scalePtr->varNamePtr != NULL) {
-	Tcl_UntraceVar(interp, Tcl_GetString(scalePtr->varNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(interp, Tcl_GetString(scalePtr->varNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ScaleVarProc, scalePtr);
     }
 
