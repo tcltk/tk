@@ -436,7 +436,7 @@ DestroyMenuButton(
 
     Tcl_DeleteCommandFromToken(mbPtr->interp, mbPtr->widgetCmd);
     if (mbPtr->textVarName != NULL) {
-	Tcl_UntraceVar(mbPtr->interp, mbPtr->textVarName,
+	Tcl_UntraceVar2(mbPtr->interp, mbPtr->textVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuButtonTextVarProc, mbPtr);
     }
@@ -506,7 +506,7 @@ ConfigureMenuButton(
      */
 
     if (mbPtr->textVarName != NULL) {
-	Tcl_UntraceVar(interp, mbPtr->textVarName,
+	Tcl_UntraceVar2(interp, mbPtr->textVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuButtonTextVarProc, mbPtr);
     }
