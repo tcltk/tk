@@ -962,8 +962,8 @@ DestroyButton(
 
     Tcl_DeleteCommandFromToken(butPtr->interp, butPtr->widgetCmd);
     if (butPtr->textVarNamePtr != NULL) {
-	Tcl_UntraceVar(butPtr->interp, Tcl_GetString(butPtr->textVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(butPtr->interp, Tcl_GetString(butPtr->textVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonTextVarProc, butPtr);
     }
     if (butPtr->image != NULL) {
@@ -997,8 +997,8 @@ DestroyButton(
 	Tk_FreeTextLayout(butPtr->textLayout);
     }
     if (butPtr->selVarNamePtr != NULL) {
-	Tcl_UntraceVar(butPtr->interp, Tcl_GetString(butPtr->selVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(butPtr->interp, Tcl_GetString(butPtr->selVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonVarProc, butPtr);
     }
     Tk_FreeConfigOptions((char *) butPtr, butPtr->optionTable,
@@ -1045,13 +1045,13 @@ ConfigureButton(
      */
 
     if (butPtr->textVarNamePtr != NULL) {
-	Tcl_UntraceVar(interp, Tcl_GetString(butPtr->textVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(interp, Tcl_GetString(butPtr->textVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonTextVarProc, butPtr);
     }
     if (butPtr->selVarNamePtr != NULL) {
-	Tcl_UntraceVar(interp, Tcl_GetString(butPtr->selVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(interp, Tcl_GetString(butPtr->selVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonVarProc, butPtr);
     }
 
