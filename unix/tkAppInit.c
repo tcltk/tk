@@ -44,6 +44,10 @@ MODULE_SCOPE int main(int, char **);
 #ifdef TK_LOCAL_MAIN_HOOK
 MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, char ***argv);
 #endif
+
+/* Make sure the stubbed variants of those are never used. */
+#undef Tcl_ObjSetVar2
+#undef Tcl_NewStringObj
 
 /*
  *----------------------------------------------------------------------
@@ -138,7 +142,7 @@ Tcl_AppInit(
      * specific startup file will be run under any conditions.
      */
 
-    (Tcl_ObjSetVar2)(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
+    Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
 	    Tcl_NewStringObj("~/.wishrc", -1), TCL_GLOBAL_ONLY);
     return TCL_OK;
 }
