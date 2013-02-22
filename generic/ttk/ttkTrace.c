@@ -150,8 +150,8 @@ void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 	    h->interp = NULL;
 	    return;
 	}
-	Tcl_UntraceVar(h->interp, Tcl_GetString(h->varnameObj),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(h->interp, Tcl_GetString(h->varnameObj),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		VarTraceProc, (ClientData)h);
 	Tcl_DecrRefCount(h->varnameObj);
 	ckfree(h);
