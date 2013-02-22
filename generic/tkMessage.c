@@ -405,7 +405,7 @@ DestroyMessage(
 	Tk_FreeTextLayout(msgPtr->textLayout);
     }
     if (msgPtr->textVarName != NULL) {
-	Tcl_UntraceVar(msgPtr->interp, msgPtr->textVarName,
+	Tcl_UntraceVar2(msgPtr->interp, msgPtr->textVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, msgPtr);
     }
@@ -450,7 +450,7 @@ ConfigureMessage(
      */
 
     if (msgPtr->textVarName != NULL) {
-	Tcl_UntraceVar(interp, msgPtr->textVarName,
+	Tcl_UntraceVar2(interp, msgPtr->textVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, msgPtr);
     }
