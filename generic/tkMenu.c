@@ -1492,7 +1492,7 @@ DestroyMenuEntry(
 	    && (mePtr->namePtr != NULL)) {
 	const char *varName = Tcl_GetString(mePtr->namePtr);
 
-	Tcl_UntraceVar(menuPtr->interp, varName,
+	Tcl_UntraceVar2(menuPtr->interp, varName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuVarProc, mePtr);
     }
@@ -1959,7 +1959,7 @@ ConfigureMenuEntry(
 	    || (mePtr->type == RADIO_BUTTON_ENTRY))) {
 	const char *name = Tcl_GetString(mePtr->namePtr);
 
-	Tcl_UntraceVar(menuPtr->interp, name,
+	Tcl_UntraceVar2(menuPtr->interp, name, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuVarProc, mePtr);
     }
@@ -2544,7 +2544,7 @@ MenuVarProc(
     if (flags & TCL_TRACE_UNSETS) {
 	mePtr->entryFlags &= ~ENTRY_SELECTED;
 	if (flags & TCL_TRACE_DESTROYED) {
-	    Tcl_TraceVar(interp, name,
+	    Tcl_TraceVar2(interp, name, NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    MenuVarProc, clientData);
 	}
