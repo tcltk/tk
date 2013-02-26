@@ -119,13 +119,18 @@ TkpOpenDisplay(
     Display *display;
 #ifdef TCL_THREADS
     static int xinited = 0;
+    TCL_DECLARE_MUTEX(xinitMutex);
 
     if (!xinited) {
-	/* Necessary for threaded apps, of no consequence otherwise  */
-	/* need only be called once, but must be called before *any* */
-	/* Xlib call is made.                                        */
-	XInitThreads();
-	xinited = 1;
+	Tcl_MutexLock(&xinitMutex);
+	if (!xinited) {
+	    /* Necessary for threaded apps, of no consequence otherwise  */
+	    /* need only be called once, but must be called before *any* */
+	    /* Xlib call is made.                                        */
+	    XInitThreads();
+	    xinited = 1;
+	}
+	Tcl_MutexUnlock(&xinitMutex);
     }
 #endif
 
