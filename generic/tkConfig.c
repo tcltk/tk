@@ -128,7 +128,6 @@ static Option *		GetOptionFromObj(Tcl_Interp *interp,
 			    Tcl_Obj *objPtr, OptionTable *tablePtr);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
 static void		FreeOptionInternalRep(Tcl_Obj *objPtr);
-static int		SetOptionFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 
 /*
  * The structure below defines an object type that is used to cache the result
@@ -142,7 +141,7 @@ static const Tcl_ObjType optionObjType = {
     FreeOptionInternalRep,	/* freeIntRepProc */
     NULL,			/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetOptionFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -1199,38 +1198,6 @@ TkGetOptionSpec(
 	return NULL;
     }
     return optionPtr->specPtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * SetOptionFromAny --
- *
- *	This function is called to convert a Tcl object to option internal
- *	form. However, this doesn't make sense (need to have a table of
- *	options in order to do the conversion) so the function always
- *	generates an error.
- *
- * Results:
- *	The return value is always TCL_ERROR, and an error message is left in
- *	interp's result if interp isn't NULL.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-SetOptionFromAny(
-    Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
-    register Tcl_Obj *objPtr)	/* The object to convert. */
-{
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    "can't convert value to option except via GetOptionFromObj API",
-	    -1));
-    Tcl_SetErrorCode(interp, "TK", "API_ABUSE", NULL);
-    return TCL_ERROR;
 }
 
 /*

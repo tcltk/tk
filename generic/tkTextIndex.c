@@ -48,8 +48,6 @@ static int		GetIndex(Tcl_Interp *interp, TkSharedText *sharedPtr,
 static void		DupTextIndexInternalRep(Tcl_Obj *srcPtr,
 			    Tcl_Obj *copyPtr);
 static void		FreeTextIndexInternalRep(Tcl_Obj *listPtr);
-static int		SetTextIndexFromAny(Tcl_Interp *interp,
-			    Tcl_Obj *objPtr);
 static void		UpdateStringOfTextIndex(Tcl_Obj *objPtr);
 
 /*
@@ -75,7 +73,7 @@ const Tcl_ObjType tkTextIndexType = {
     FreeTextIndexInternalRep,	/* freeIntRepProc */
     DupTextIndexInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetTextIndexFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 static void
@@ -141,18 +139,6 @@ UpdateStringOfTextIndex(
     objPtr->bytes = ckalloc(len + 1);
     strcpy(objPtr->bytes, buffer);
     objPtr->length = len;
-}
-
-static int
-SetTextIndexFromAny(
-    Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
-    Tcl_Obj *objPtr)		/* The object to convert. */
-{
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    "can't convert value to textindex except via"
-	    " TkTextGetIndexFromObj API", -1));
-    Tcl_SetErrorCode(interp, "TK", "API_ABUSE", NULL);
-    return TCL_ERROR;
 }
 
 /*
