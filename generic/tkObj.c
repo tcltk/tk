@@ -1135,7 +1135,6 @@ TkRegisterObjTypes(void)
 	mmObjType.setFromAnyProc = NULL;
 	pixelObjType.setFromAnyProc = NULL;
 	windowObjType.setFromAnyProc = NULL;
-	tkTextIndexType.setFromAnyProc = NULL;
 	return;
     }
     registerObjType(tkBorderObjType);

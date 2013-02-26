@@ -20,29 +20,17 @@
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
 #	error Tk 8.6 must be compiled with tcl.h from Tcl 8.6 or better
 #endif
-
-#ifndef CONST86
-#   define CONST86 const
+
+#ifndef CONST84
 #   define CONST84 const
 #   define CONST84_RETURN const
 #endif
-
+#ifndef CONST86
+#   define CONST86 CONST84
+#endif
 #ifndef EXTERN
 #   define EXTERN extern TCL_STORAGE_CLASS
 #endif
-
-#ifndef TCL_STORAGE_CLASS
-#   define TCL_STORAGE_CLASS
-#endif
-
-#if defined(__WIN32__) && !defined(HAVE_WINNT_IGNORE_VOID)
-#ifndef VOID
-#define VOID void
-typedef char CHAR;
-typedef short SHORT;
-typedef long LONG;
-#endif
-#endif /* __WIN32__ && !HAVE_WINNT_IGNORE_VOID */
 
 /*
  * Utility macros: STRINGIFY takes an argument and wraps it in "" (double
@@ -1515,9 +1503,9 @@ typedef struct Tk_ElementSpec {
 #define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
 	(Tcl_FindExecutable(argv[0]), (Tcl_CreateInterp)()))
 #endif
-const char *		Tk_InitStubs(Tcl_Interp *interp, const char *version,
-				int exact);
-EXTERN const char *	Tk_PkgInitStubsCheck(Tcl_Interp *interp,
+const char *	Tk_InitStubs(Tcl_Interp *interp,
+				const char *version, int exact);
+const char *	Tk_PkgInitStubsCheck(Tcl_Interp *interp,
 				const char *version, int exact);
 
 #ifndef USE_TK_STUBS
