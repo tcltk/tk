@@ -486,8 +486,8 @@ Tk_FontObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -763,8 +763,8 @@ Tk_FontObjCmd(
 		    fmPtr->ascent, fmPtr->descent,
 		    fmPtr->ascent + fmPtr->descent, fmPtr->fixed));
 	} else {
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[3], switches,
-		    sizeof(char *), "metric", 0, &index) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objv[3], switches, "metric", 0,
+		    &index) != TCL_OK) {
 		Tk_FreeFont(tkfont);
 		return TCL_ERROR;
 	    }
@@ -3368,8 +3368,8 @@ ConfigAttributesObj(
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObjStruct(interp, optionPtr, fontOpt,
-		sizeof(char *), "option", 1, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, optionPtr, fontOpt, "option", 1,
+		&index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if ((i+2 >= objc) && (objc & 1)) {
@@ -3468,8 +3468,8 @@ GetAttributeInfoObj(
     start = 0;
     end = FONT_NUMFIELDS;
     if (objPtr != NULL) {
-	if (Tcl_GetIndexFromObjStruct(interp, objPtr, fontOpt,
-		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objPtr, fontOpt, "option", TCL_EXACT,
+		&index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	start = index;
