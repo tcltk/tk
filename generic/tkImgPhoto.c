@@ -420,8 +420,8 @@ ImgPhotoCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], photoOptions,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], photoOptions, "option", 0,
+	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1145,8 +1145,8 @@ ImgPhotoCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	    return TCL_ERROR;
 	}
-	if (Tcl_GetIndexFromObjStruct(interp, objv[2], photoTransOptions,
-		sizeof(char *) , "option", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[2], photoTransOptions, "option",
+		0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -1565,8 +1565,8 @@ ParseSubcommandOptions(
 		goto oneValueRequired;
 	    }
 	    index++;
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[index], compositingRules,
-		    sizeof(char *), "compositing rule", 0, &optPtr->compositingRule)
+	    if (Tcl_GetIndexFromObj(interp, objv[index], compositingRules,
+		    "compositing rule", 0, &optPtr->compositingRule)
 		    != TCL_OK) {
 		return TCL_ERROR;
 	    }
