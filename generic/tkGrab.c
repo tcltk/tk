@@ -240,8 +240,8 @@ Tk_GrabObjCmd(
 	}
 	return Tk_Grab(interp, tkwin, 0);
     } else if (arg[0] == '-' && len > 1) {
-	if (Tcl_GetIndexFromObj(interp, objv[1], flagStrings, "option", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[1], flagStrings,
+		sizeof(char *), "option", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -262,8 +262,8 @@ Tk_GrabObjCmd(
      * option it is.
      */
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -333,8 +333,8 @@ Tk_GrabObjCmd(
 	     * consistant with the rest of Tcl.
 	     */
 
-	    if (Tcl_GetIndexFromObj(interp, objv[2], flagStrings, "option",
-		    0, &index) != TCL_OK) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[2], flagStrings,
+		    sizeof(char *), "option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[3]),
