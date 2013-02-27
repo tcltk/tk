@@ -615,8 +615,8 @@ ListboxWidgetObjCmd(
      * valid subcommand names
      */
 
-    result = Tcl_GetIndexFromObj(interp, objv[1], commandNames,
-	    "option", 0, &cmdIndex);
+    result = Tcl_GetIndexFromObjStruct(interp, objv[1], commandNames,
+	    sizeof(char *), "option", 0, &cmdIndex);
     if (result != TCL_OK) {
 	return result;
     }
@@ -969,8 +969,8 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 
-	result = Tcl_GetIndexFromObj(interp, objv[2], scanCommandNames,
-		"option", 0, &scanCmdIndex);
+	result = Tcl_GetIndexFromObjStruct(interp, objv[2], scanCommandNames,
+		sizeof(char *), "option", 0, &scanCmdIndex);
 	if (result != TCL_OK) {
 	    break;
 	}
@@ -1164,8 +1164,8 @@ ListboxSelectionSubCmd(
 	    return result;
 	}
     }
-    result = Tcl_GetIndexFromObj(interp, objv[2], selCommandNames,
-	    "option", 0, &selCmdIndex);
+    result = Tcl_GetIndexFromObjStruct(interp, objv[2], selCommandNames,
+	    sizeof(char *), "option", 0, &selCmdIndex);
     if (result != TCL_OK) {
 	return result;
     }
@@ -2709,7 +2709,8 @@ GetListboxIndex(
      * First see if the index is one of the named indices.
      */
 
-    result = Tcl_GetIndexFromObj(NULL, indexObj, indexNames, "", 0, &index);
+    result = Tcl_GetIndexFromObjStruct(NULL, indexObj, indexNames,
+	    sizeof(char *), "", 0, &index);
     if (result == TCL_OK) {
 	switch (index) {
 	case INDEX_ACTIVE:
