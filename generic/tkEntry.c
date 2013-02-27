@@ -602,8 +602,8 @@ EntryWidgetObjCmd(
      * valid command names.
      */
 
-    result = Tcl_GetIndexFromObjStruct(interp, objv[1], entryCmdNames,
-	    sizeof(char *), "option", 0, &cmdIndex);
+    result = Tcl_GetIndexFromObj(interp, objv[1], entryCmdNames, "option", 0,
+	    &cmdIndex);
     if (result != TCL_OK) {
 	return result;
     }
@@ -782,8 +782,8 @@ EntryWidgetObjCmd(
 	 * "selCmdNames" defined above.
 	 */
 
-	result = Tcl_GetIndexFromObjStruct(interp, objv[2], selCmdNames,
-		sizeof(char *), "selection option", 0, &selIndex);
+	result = Tcl_GetIndexFromObj(interp, objv[2], selCmdNames,
+		"selection option", 0, &selIndex);
 	if (result != TCL_OK) {
 	    goto error;
 	}
@@ -3656,8 +3656,8 @@ SpinboxWidgetObjCmd(
      * valid command names.
      */
 
-    result = Tcl_GetIndexFromObjStruct(interp, objv[1], sbCmdNames,
-	    sizeof(char *), "option", 0, &cmdIndex);
+    result = Tcl_GetIndexFromObj(interp, objv[1], sbCmdNames,
+	    "option", 0, &cmdIndex);
     if (result != TCL_OK) {
 	return result;
     }
@@ -3817,8 +3817,8 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "elemName");
 	    goto error;
 	}
-	result = Tcl_GetIndexFromObjStruct(interp, objv[2], selElementNames,
-		sizeof(char *), "element", 0, &cmdIndex);
+	result = Tcl_GetIndexFromObj(interp, objv[2],
+		selElementNames, "element", 0, &cmdIndex);
 	if (result != TCL_OK) {
 	    goto error;
 	}
@@ -3873,8 +3873,8 @@ SpinboxWidgetObjCmd(
 	 * "sbSelCmdNames" defined above.
 	 */
 
-	result = Tcl_GetIndexFromObjStruct(interp, objv[2], sbSelCmdNames,
-		sizeof(char *), "selection option", 0, &selIndex);
+	result = Tcl_GetIndexFromObj(interp, objv[2], sbSelCmdNames,
+		"selection option", 0, &selIndex);
 	if (result != TCL_OK) {
 	    goto error;
 	}
@@ -4003,8 +4003,8 @@ SpinboxWidgetObjCmd(
 	    } else {
 		int lastElement = sbPtr->selElement;
 
-		result = Tcl_GetIndexFromObjStruct(interp, objv[3], selElementNames,
-			sizeof(char *), "selection element", 0, &(sbPtr->selElement));
+		result = Tcl_GetIndexFromObj(interp, objv[3], selElementNames,
+			"selection element", 0, &(sbPtr->selElement));
 		if (result != TCL_OK) {
 		    goto error;
 		}
