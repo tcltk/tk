@@ -828,8 +828,8 @@ CanvasWidgetCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_Preserve(canvasPtr);
@@ -1887,8 +1887,8 @@ CanvasWidgetCmd(
 	if (objc < 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "mark|dragto x y ?dragGain?");
 	    result = TCL_ERROR;
-	} else if (Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
-		sizeof(char *), "scan option", 0, &index) != TCL_OK) {
+	} else if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings,
+		"scan option", 0, &index) != TCL_OK) {
 	    result = TCL_ERROR;
 	} else if ((objc != 5) && (objc != 5+index)) {
 	    Tcl_WrongNumArgs(interp, 3, objv, index?"x y ?gain?":"x y");
@@ -1959,8 +1959,8 @@ CanvasWidgetCmd(
 		goto done;
 	    }
 	}
-	if (Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
-		sizeof(char *), "select option", 0, &optionindex) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings,
+		"select option", 0, &optionindex) != TCL_OK) {
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -4301,8 +4301,8 @@ FindItems(
     } else {
 	uid = NULL;
     }
-    if (Tcl_GetIndexFromObjStruct(interp, objv[first], optionStrings,
-	    sizeof(char *), "search command", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[first], optionStrings,
+	    "search command", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch ((enum options) index) {

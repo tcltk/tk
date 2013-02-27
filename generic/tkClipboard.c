@@ -434,8 +434,8 @@ Tk_ClipboardObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -464,8 +464,8 @@ Tk_ClipboardObjCmd(
 		i++;
 		break;
 	    }
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], appendOptionStrings,
-		    sizeof(char *), "option", 0, &subIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objv[i], appendOptionStrings,
+		    "option", 0, &subIndex) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 
@@ -527,8 +527,8 @@ Tk_ClipboardObjCmd(
 	}
 
 	if (objc == 4) {
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[2], clearOptionStrings,
-		    sizeof(char *), "option", 0, &subIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objv[2], clearOptionStrings,
+		    "option", 0, &subIndex) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if ((enum clearOptions) subIndex == CLEAR_DISPLAYOF) {
@@ -560,8 +560,8 @@ Tk_ClipboardObjCmd(
 	    if (string[0] != '-') {
 		break;
 	    }
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], getOptionStrings,
-		    sizeof(char *), "option", 0, &subIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objv[i], getOptionStrings,
+		    "option", 0, &subIndex) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    i++;

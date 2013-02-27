@@ -760,8 +760,8 @@ CaretCmd(
 	 * Return the current value of the selected option
 	 */
 
-	if (Tcl_GetIndexFromObjStruct(interp, objv[2], caretStrings,
-		sizeof(char *), "caret option", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[2], caretStrings,
+		"caret option", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == TK_CARET_X) {
@@ -776,8 +776,8 @@ CaretCmd(
 	int i, value, x = 0, y = 0, height = -1;
 
 	for (i = 2; i < objc; i += 2) {
-	    if ((Tcl_GetIndexFromObjStruct(interp, objv[i], caretStrings,
-		    sizeof(char *), "caret option", 0, &index) != TCL_OK) ||
+	    if ((Tcl_GetIndexFromObj(interp, objv[i], caretStrings,
+		    "caret option", 0, &index) != TCL_OK) ||
 		    Tcl_GetIntFromObj(interp,objv[i+1],&value) != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -1011,8 +1011,8 @@ Tk_TkwaitObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1192,8 +1192,8 @@ Tk_UpdateObjCmd(
     if (objc == 1) {
 	flags = TCL_DONT_WAIT;
     } else if (objc == 2) {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[1], updateOptions,
-		sizeof(char *), "option", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[1], updateOptions, "option", 0,
+		&index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	flags = TCL_IDLE_EVENTS;
@@ -1339,8 +1339,8 @@ Tk_WinfoObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1863,8 +1863,8 @@ Tk_WmObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option window ?arg?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
