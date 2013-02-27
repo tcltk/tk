@@ -689,8 +689,8 @@ Tk_SelectionObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
+	    &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -715,8 +715,8 @@ Tk_SelectionObjCmd(
 		return TCL_ERROR;
 	    }
 
-	    if (Tcl_GetIndexFromObjStruct(interp, objs[0], clearOptionStrings,
-		    sizeof(char *), "option", 0, &clearIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objs[0], clearOptionStrings,
+		    "option", 0, &clearIndex) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    switch ((enum clearOptions) clearIndex) {
@@ -775,8 +775,8 @@ Tk_SelectionObjCmd(
 		return TCL_ERROR;
 	    }
 
-	    if (Tcl_GetIndexFromObjStruct(interp, objs[0], getOptionStrings,
-		    sizeof(char *), "option", 0, &getIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objs[0], getOptionStrings,
+		    "option", 0, &getIndex) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 
@@ -853,8 +853,8 @@ Tk_SelectionObjCmd(
 		return TCL_ERROR;
 	    }
 
-	    if (Tcl_GetIndexFromObjStruct(interp, objs[0],handleOptionStrings,
-		    sizeof(char *), "option", 0, &handleIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objs[0],handleOptionStrings,
+		    "option", 0, &handleIndex) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 
@@ -940,8 +940,8 @@ Tk_SelectionObjCmd(
 		return TCL_ERROR;
 	    }
 
-	    if (Tcl_GetIndexFromObjStruct(interp, objs[0], ownOptionStrings,
-		    sizeof(char *), "option", 0, &ownIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objs[0], ownOptionStrings,
+		    "option", 0, &ownIndex) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 
