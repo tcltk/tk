@@ -71,8 +71,8 @@ Tk_GetAnchorFromObj(
 {
     int index, code;
 
-    code = Tcl_GetIndexFromObjStruct(interp, objPtr, anchorStrings,
-	    sizeof(char *), "anchor", 0, &index);
+    code = Tcl_GetIndexFromObj(interp, objPtr, anchorStrings, "anchor", 0,
+	    &index);
     if (code == TCL_OK) {
 	*anchorPtr = (Tk_Anchor) index;
     }
@@ -385,8 +385,8 @@ Tk_GetJustifyFromObj(
 {
     int index, code;
 
-    code = Tcl_GetIndexFromObjStruct(interp, objPtr, justifyStrings,
-	    sizeof(char *), "justification", 0, &index);
+    code = Tcl_GetIndexFromObj(interp, objPtr, justifyStrings,
+	    "justification", 0, &index);
     if (code == TCL_OK) {
 	*justifyPtr = (Tk_Justify) index;
     }
