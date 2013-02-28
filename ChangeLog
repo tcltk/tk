@@ -1,33 +1,33 @@
 2013-02-28  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixKey.c (TkpGetKeySym): [Bug 3599312]: Put the
-	initialization of the key mapping before the input method handling
-	so that Alt key handling is correct on non-OSX Unix. Thanks to
-	Colin McDonald for developing the fix.
+	initialization of the key mapping before the input method handling so
+	that Alt key handling is correct on non-OSX Unix. Thanks to Colin
+	McDonald for developing the fix.
 
 2013-01-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/Makefile.in: Don't compile Tk with -DTCL_NO_DEPRECATED by default
-	* unix/Makefile.in: any more, it might hurt when we compile Tk 8.x
-	against Tcl 8.y with y > x, because new deprecated constructs might be
-	added in higher Tcl versions (except for Tk 8.6, for now, because there
-	is no higher 8.x yet)
+	* win/Makefile.in:  Don't compile Tk with -DTCL_NO_DEPRECATED by
+	* unix/Makefile.in: default any more, it might hurt when we compile Tk
+	8.x against Tcl 8.y with y > x, because new deprecated constructs
+	might be added in higher Tcl versions (except for Tk 8.6, for now,
+	because there is no higher 8.x yet).
 
 2013-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tcl.m4: More flexible search for win32 tclConfig.sh,
+	* win/tcl.m4:	 More flexible search for win32 tclConfig.sh,
 	* win/configure: backported from TEA.
 
 2012-12-03  François Vogel  <fvogelnew1@free.fr>
 
-   * generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
-   * tests/textIndex.test:  for weird image names
+	* generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
+	* tests/textIndex.test:  for weird image names
 
 2012-11-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinTest.c: [Bug 3585396]: winDialog.test requires user
-	* tests/winDialog.test: interaction. Renumber test-cases as in
-	Tk 8.6, and convert various to tcltest-2 style.
+	* tests/winDialog.test: interaction. Renumber test-cases as in Tk 8.6,
+	and convert various to tcltest-2 style.
 
 2012-11-09  Don Porter  <dgp@users.sourceforge.net>
 
