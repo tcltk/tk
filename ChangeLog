@@ -1,3 +1,10 @@
+2013-02-28  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixKey.c (TkpGetKeySym): [Bug 3599312]: Put the
+	initialization of the key mapping before the input method handling
+	so that Alt key handling is correct on non-OSX Unix. Thanks to
+	Colin McDonald for developing the fix.
+
 2013-01-16  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/Makefile.in: Don't compile Tk with -DTCL_NO_DEPRECATED by default
