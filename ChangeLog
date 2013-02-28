@@ -1,25 +1,25 @@
 2013-02-28  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixKey.c (TkpGetKeySym): [Bug 3599312]: Put the
-	initialization of the key mapping before the input method handling
-	so that Alt key handling is correct on non-OSX Unix. Thanks to
-	Colin McDonald for developing the fix.
+	initialization of the key mapping before the input method handling so
+	that Alt key handling is correct on non-OSX Unix. Thanks to Colin
+	McDonald for developing the fix.
 
 2013-02-18  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* unix/tkUnixEvent.c: Call XInitThreads once before the
-	first Xlib call. Suggested by Brian Griffin.
+	* unix/tkUnixEvent.c: Call XInitThreads once before the first Xlib
+	call. Suggested by Brian Griffin.
 
 2013-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* win/tcl.m4: More flexible search for win32 tclConfig.sh,
+	* win/tcl.m4:	 More flexible search for win32 tclConfig.sh,
 	* win/configure: backported from TEA.
 
 2013-01-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
-	* library/tk.tcl: [Bug 3600390]: tk_strictMotif not tested for.
-	* library/ttk/entry.tcl: Now all key-bindings for Control-
-	a,b,e,f,n,p (and its shift variant) respect tk_strictMotif.
+	* library/tk.tcl: [Bug 3600390]: tk_strictMotif not tested for. Now
+	* library/ttk/entry.tcl: all key-bindings for Control-a,b,e,f,n,p and
+	their shift variants respect tk_strictMotif.
 
 2013-01-10  Jan Nijtmans  <nijtmans@users.sf.net>
 
