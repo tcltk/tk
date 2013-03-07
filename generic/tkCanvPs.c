@@ -193,7 +193,8 @@ TkCanvPostscriptCmd(
      * such.
      */
 
-    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, 0);
+    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1,
+	    TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
 	return result;
     }
