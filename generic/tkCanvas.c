@@ -5540,6 +5540,7 @@ CanvasUpdateScrollbars(
     int xOrigin, yOrigin, inset, width, height;
     int scrollX1, scrollX2, scrollY1, scrollY2;
     char *xScrollCmd, *yScrollCmd;
+    Tcl_DString buf;
 
     /*
      * Save all the relevant values from the canvasPtr, because it might be
@@ -5570,8 +5571,12 @@ CanvasUpdateScrollbars(
 	Tcl_Obj *fractions = ScrollFractions(xOrigin + inset,
 		xOrigin + width - inset, scrollX1, scrollX2);
 
-	result = Tcl_VarEval(interp, xScrollCmd," ",Tcl_GetString(fractions),
-		NULL);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, xScrollCmd, -1);
+	Tcl_DStringAppend(&buf, " ", -1);
+	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
 	    Tcl_BackgroundException(interp, result);
@@ -5584,8 +5589,12 @@ CanvasUpdateScrollbars(
 	Tcl_Obj *fractions = ScrollFractions(yOrigin + inset,
 		yOrigin + height - inset, scrollY1, scrollY2);
 
-	result = Tcl_VarEval(interp, yScrollCmd," ",Tcl_GetString(fractions),
-		NULL);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, yScrollCmd, -1);
+	Tcl_DStringAppend(&buf, " ", -1);
+	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
 	    Tcl_BackgroundException(interp, result);
