@@ -3297,7 +3297,7 @@ Tk_TextLayoutToPostscript(
 	     */
 
 	    sprintf(uindex, "%04X", ch);		/* endianness? */
-	    glyphname = Tcl_GetVar2(interp, "::tk::psglyphs", uindex, 0);
+	    glyphname = Tcl_GetVar2(interp, "tk::psglyphs", uindex, TCL_GLOBAL_ONLY);
 	    if (glyphname) {
 		ps = Tcl_GetStringFromObj(psObj, &len);
 		if (ps[len-1] == '(') {
