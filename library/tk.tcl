@@ -379,9 +379,8 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z>
 	event add <<Redo>>		<Control-Key-Z> <Control-Lock-Key-z>
 	event add <<ContextMenu>>	<Button-3>
-	if {[info exists tcl_platform(os)] && $tcl_platform(os) eq "Darwin"} {
-	    event add <<ContextMenu>>	<Button-2>
-	}
+	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
+	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
 
 	event add <<SelectAll>>		<Control-Key-slash>
 	event add <<SelectNone>>	<Control-Key-backslash>
@@ -457,10 +456,10 @@ switch -exact -- [tk windowingsystem] {
 	event add <<ToggleSelection>>	<Control-ButtonPress-1>
     }
     "aqua" {
-	event add <<Cut>>		<Command-Key-x> <Key-F2> <Control-Lock-Key-X>
-	event add <<Copy>>		<Command-Key-c> <Key-F3> <Control-Lock-Key-C>
-	event add <<Paste>>		<Command-Key-v> <Key-F4> <Control-Lock-Key-V>
-	event add <<PasteSelection>>	<ButtonRelease-2>
+	event add <<Cut>>		<Command-Key-x> <Key-F2> <Command-Lock-Key-X>
+	event add <<Copy>>		<Command-Key-c> <Key-F3> <Command-Lock-Key-C>
+	event add <<Paste>>		<Command-Key-v> <Key-F4> <Command-Lock-Key-V>
+	event add <<PasteSelection>>	<ButtonRelease-3>
 	event add <<Clear>>		<Clear>
 	event add <<ContextMenu>>	<Button-2>
 
@@ -468,24 +467,24 @@ switch -exact -- [tk windowingsystem] {
 	# See http://support.apple.com/kb/HT1343
 	event add <<SelectAll>>		<Command-Key-a>
 	event add <<SelectNone>>	<Option-Command-Key-a>
-	event add <<Undo>>		<Command-Key-z> <Control-Lock-Key-Z>
-	event add <<Redo>>		<Command-Key-Z> <Control-Lock-Key-z>
+	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z>
+	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z>
 	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
-	event add <<SelectNextChar>>	<Shift-Right> <Control-Key-F> <Control-Lock-Key-f>
+	event add <<SelectNextChar>>	<Shift-Right> <Shift-Control-Key-F> <Shift-Control-Lock-Key-F>
 	event add <<PrevChar>>		<Left> <Control-Key-b> <Control-Lock-Key-B>
-	event add <<SelectPrevChar>>	<Shift-Left> <Control-Key-B> <Control-Lock-Key-b>
+	event add <<SelectPrevChar>>	<Shift-Left> <Shift-Control-Key-B> <Shift-Control-Lock-Key-B>
 	event add <<NextWord>>		<Option-Right>
 	event add <<SelectNextWord>>	<Shift-Option-Right>
 	event add <<PrevWord>>		<Option-Left>
 	event add <<SelectPrevWord>>	<Shift-Option-Left>
 	event add <<LineStart>>		<Home> <Command-Left> <Control-Key-a> <Control-Lock-Key-A>
-	event add <<SelectLineStart>>	<Shift-Home> <Shift-Command-Left> <Control-Key-A> <Control-Lock-Key-a>
+	event add <<SelectLineStart>>	<Shift-Home> <Shift-Command-Left> <Shift-Control-Key-A> <Shift-Control-Lock-Key-A>
 	event add <<LineEnd>>		<End> <Command-Right> <Control-Key-e> <Control-Lock-Key-E>
-	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right> <Control-Key-E> <Control-Lock-Key-e>
+	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right> <Shift-Control-Key-E> <Shift-Control-Lock-Key-E>
 	event add <<PrevLine>>		<Up> <Control-Key-p> <Control-Lock-Key-P>
-	event add <<SelectPrevLine>>	<Shift-Up> <Control-Key-P> <Control-Lock-Key-p>
+	event add <<SelectPrevLine>>	<Shift-Up> <Shift-Control-Key-P> <Shift-Control-Lock-Key-P>
 	event add <<NextLine>>		<Down> <Control-Key-n> <Control-Lock-Key-N>
-	event add <<SelectNextLine>>	<Shift-Down> <Control-Key-N> <Control-Lock-Key-n>
+	event add <<SelectNextLine>>	<Shift-Down> <Shift-Control-Key-N> <Shift-Control-Lock-Key-N>
 	# Not official, but logical extensions of above. Also derived from
 	# bindings present in MS Word on OSX.
 	event add <<PrevPara>>		<Option-Up>
