@@ -1467,7 +1467,7 @@ Tk_ChooseDirectoryObjCmd(
 
     bInfo.ulFlags = BIF_EDITBOX | BIF_STATUSTEXT | BIF_RETURNFSANCESTORS
 	| BIF_VALIDATE | BIF_NEWDIALOGSTYLE;
-    objPtr = Tcl_GetVar2Ex(interp, "::tk::winChooseDirFlags", NULL,
+    objPtr = Tcl_GetVar2Ex(interp, "tk::winChooseDirFlags", NULL,
 	    TCL_GLOBAL_ONLY);
     if (objPtr != NULL) {
 	int flags;
