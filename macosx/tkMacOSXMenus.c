@@ -193,7 +193,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    "::tk::mac::ShowHelp", &dummy)) {
 	[super showHelp:sender];
     } else {
-	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowHelp", -1,
+	int code = Tcl_EvalEx(_eventInterp, "tk::mac::ShowHelp", -1,
 		TCL_EVAL_GLOBAL);
 
 	if (code != TCL_OK) {

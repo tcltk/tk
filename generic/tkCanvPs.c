@@ -193,13 +193,13 @@ TkCanvPostscriptCmd(
      * such.
      */
 
-    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1,
+    result = Tcl_EvalEx(interp, "tk::ensure_psenc_is_loaded", -1,
 	    TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
 	return result;
     }
     preambleObj = Tcl_GetVar2Ex(interp, "::tk::ps_preamble", NULL,
-	    TCL_LEAVE_ERR_MSG);
+	    TCL_LEAVE_ERR_MSG | TCL_EVAL_GLOBAL);
     if (preambleObj == NULL) {
 	return TCL_ERROR;
     }
