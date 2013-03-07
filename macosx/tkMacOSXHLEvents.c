@@ -222,7 +222,7 @@ OappHandler(
 
     if (interp &&
 	    Tcl_GetCommandInfo(interp, "::tk::mac::OpenApplication", &dummy)){
-	int code = Tcl_EvalEx(interp, "::tk::mac::OpenApplication", -1, TCL_EVAL_GLOBAL);
+	int code = Tcl_EvalEx(interp, "tk::mac::OpenApplication", -1, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(interp, code);
 	}
@@ -259,7 +259,7 @@ RappHandler(
 
     if (interp && Tcl_GetCommandInfo(interp,
 	    "::tk::mac::ReopenApplication", &dummy)) {
-	int code = Tcl_EvalEx(interp, "::tk::mac::ReopenApplication", -1, TCL_EVAL_GLOBAL);
+	int code = Tcl_EvalEx(interp, "tk::mac::ReopenApplication", -1, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK){
 	    Tcl_BackgroundException(interp, code);
 	}
@@ -295,7 +295,7 @@ PrefsHandler(
 
     if (interp &&
 	    Tcl_GetCommandInfo(interp, "::tk::mac::ShowPreferences", &dummy)){
-	int code = Tcl_EvalEx(interp, "::tk::mac::ShowPreferences", -1, TCL_EVAL_GLOBAL);
+	int code = Tcl_EvalEx(interp, "tk::mac::ShowPreferences", -1, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(interp, code);
 	}
@@ -625,7 +625,7 @@ ReallyKillMe(
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
     Tcl_CmdInfo dummy;
     int quit = Tcl_GetCommandInfo(interp, "::tk::mac::Quit", &dummy);
-    int code = Tcl_EvalEx(interp, quit ? "::tk::mac::Quit" : "exit", -1, TCL_EVAL_GLOBAL);
+    int code = Tcl_EvalEx(interp, quit ? "tk::mac::Quit" : "exit", -1, TCL_EVAL_GLOBAL);
 
     if (code != TCL_OK) {
 	/*
