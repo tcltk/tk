@@ -198,8 +198,8 @@ TkCanvPostscriptCmd(
     if (result != TCL_OK) {
 	return result;
     }
-    preambleObj = Tcl_GetVar2Ex(interp, "::tk::ps_preamble", NULL,
-	    TCL_LEAVE_ERR_MSG | TCL_EVAL_GLOBAL);
+    preambleObj = Tcl_GetVar2Ex(interp, "tk::ps_preamble", NULL,
+	    TCL_LEAVE_ERR_MSG | TCL_GLOBAL_ONLY);
     if (preambleObj == NULL) {
 	return TCL_ERROR;
     }
