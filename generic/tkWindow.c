@@ -3142,7 +3142,7 @@ Initialize(
 	 * path of the slave.
 	 */
 
-	code = Tcl_Eval(master, Tcl_DStringValue(&ds));
+	code = Tcl_EvalEx(master, Tcl_DStringValue(&ds), -1, 0);
 	if (code != TCL_OK) {
 	    /*
 	     * We might want to transfer the error message or not. We don't.
@@ -3278,8 +3278,14 @@ Initialize(
      */
 
     if (geometry != NULL) {
+	Tcl_DString buf;
+
 	Tcl_SetVar2(interp, "geometry", NULL, geometry, TCL_GLOBAL_ONLY);
-	code = Tcl_VarEval(interp, "wm geometry . ", geometry, NULL);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, "wm geometry . ", -1);
+	Tcl_DStringAppend(&buf, geometry, -1);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    goto done;
 	}
@@ -3337,7 +3343,7 @@ Initialize(
 	 * an alternate [tkInit] command before calling Tk_Init().
 	 */
 
-	code = Tcl_Eval(interp,
+	code = Tcl_EvalEx(interp,
 "if {[namespace which -command tkInit] eq \"\"} {\n\
   proc tkInit {} {\n\
     global tk_library tk_version tk_patchLevel\n\
@@ -3345,7 +3351,7 @@ Initialize(
     tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
   }\n\
 }\n\
-tkInit");
+tkInit", -1, 0);
     }
     if (code == TCL_OK) {
 	/*

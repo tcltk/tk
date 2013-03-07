@@ -545,7 +545,7 @@ ScriptHandler(
 
 	    theErr = FSRefToDString(&file, &scriptName);
 	    if (theErr == noErr) {
-		tclErr = Tcl_EvalFile(interp, Tcl_DStringValue(&scriptName));
+		tclErr = Tcl_FSEvalFileEx(interp, Tcl_DStringValue(&scriptName), NULL);
 		Tcl_DStringFree(&scriptName);
 	    } else {
 		sprintf(errString, "AEDoScriptHandler: file not found");
