@@ -2956,7 +2956,7 @@ EntryUpdateScrollbar(
     Tcl_DStringAppend(&buf, firstStr, -1);
     Tcl_DStringAppend(&buf, " ", -1);
     Tcl_DStringAppend(&buf, lastStr, -1);
-    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
     Tcl_DStringFree(&buf);
     if (code != TCL_OK) {
 	Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(

@@ -3142,7 +3142,7 @@ Initialize(
 	 * path of the slave.
 	 */
 
-	code = Tcl_EvalEx(master, Tcl_DStringValue(&ds), -1, 0);
+	code = Tcl_EvalEx(master, Tcl_DStringValue(&ds), -1, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK) {
 	    /*
 	     * We might want to transfer the error message or not. We don't.
@@ -3284,7 +3284,7 @@ Initialize(
 	Tcl_DStringInit(&buf);
 	Tcl_DStringAppend(&buf, "wm geometry . ", -1);
 	Tcl_DStringAppend(&buf, geometry, -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    goto done;
@@ -3351,7 +3351,7 @@ Initialize(
     tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
   }\n\
 }\n\
-tkInit", -1, 0);
+tkInit", -1, TCL_EVAL_GLOBAL);
     }
     if (code == TCL_OK) {
 	/*

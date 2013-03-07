@@ -1061,7 +1061,7 @@ TkInvokeMenu(
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppend(&ds, "tk::TearOffMenu ", -1);
 	Tcl_DStringAppend(&ds, Tk_PathName(menuPtr->tkwin), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&ds), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&ds), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&ds);
     } else if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    && (mePtr->namePtr != NULL)) {

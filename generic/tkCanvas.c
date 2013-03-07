@@ -5575,7 +5575,7 @@ CanvasUpdateScrollbars(
 	Tcl_DStringAppend(&buf, xScrollCmd, -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
@@ -5593,7 +5593,7 @@ CanvasUpdateScrollbars(
 	Tcl_DStringAppend(&buf, yScrollCmd, -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
