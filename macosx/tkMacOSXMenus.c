@@ -84,7 +84,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    [NSMenuItem itemWithTitle:@"Undo" action:@selector(undo:)
 		   target:nil keyEquivalent:@"z"],
 	    [NSMenuItem itemWithTitle:@"Redo" action:@selector(redo:)
-		   target:nil keyEquivalent:@"y"],
+		   target:nil keyEquivalent:@"Z"],
 	    [NSMenuItem separatorItem],
 	    [NSMenuItem itemWithTitle:@"Cut" action:@selector(cut:)
 		   target:nil keyEquivalent:@"x"],
