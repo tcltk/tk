@@ -1,3 +1,8 @@
+2013-03-11  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkListbox.c:	[Bug 3607326] Stop segfault from
+	* tests/listbox.test:	[listbox .l -listvariable $array].
+
 2013-02-28  Donal K. Fellows  <dkf@users.sf.net>
 
 	* unix/tkUnixKey.c (TkpGetKeySym): [Bug 3599312]: Put the
