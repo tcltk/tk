@@ -1630,9 +1630,6 @@ ConfigureListbox(
 		if (Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
 			listVarObj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 			== NULL) {
-		    if (oldListObj == NULL) {
-			Tcl_DecrRefCount(listVarObj);
-		    }
 		    continue;
 		}
 	    }
