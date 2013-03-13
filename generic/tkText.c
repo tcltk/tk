@@ -4941,9 +4941,20 @@ DumpSegment(
 	return 0;
     } else {
 	int oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
+	Tcl_DString buf;
+	int code;
 
-	Tcl_VarEval(interp, Tcl_GetString(command), " ", Tcl_GetString(tuple),
-		NULL);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, Tcl_GetString(command), -1);
+	Tcl_DStringAppend(&buf, " ", -1);
+	Tcl_DStringAppend(&buf, Tcl_GetString(tuple), -1);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
+	if (code != TCL_OK) {
+	    Tcl_AddErrorInfo(interp,
+		    "\n    (segment dumping command executed by text)");
+	    Tcl_BackgroundException(interp, code);
+	}
 	Tcl_DecrRefCount(tuple);
 	return ((textPtr->flags & DESTROYED) ||
 		TkBTreeEpoch(textPtr->sharedTextPtr->tree) != oldStateEpoch);

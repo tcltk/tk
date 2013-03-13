@@ -1629,9 +1629,6 @@ ConfigureListbox(
 		if (Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
 			listVarObj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 			== NULL) {
-		    if (oldListObj == NULL) {
-			Tcl_DecrRefCount(listVarObj);
-		    }
 		    continue;
 		}
 	    }
@@ -3244,6 +3241,7 @@ ListboxUpdateVScrollbar(
     double first, last;
     int result;
     Tcl_Interp *interp;
+    Tcl_DString buf;
 
     if (listPtr->yScrollCmd == NULL) {
 	return;
@@ -3269,8 +3267,14 @@ ListboxUpdateVScrollbar(
 
     interp = listPtr->interp;
     Tcl_Preserve(interp);
-    result = Tcl_VarEval(interp, listPtr->yScrollCmd, " ", firstStr, " ",
-	    lastStr, NULL);
+    Tcl_DStringInit(&buf);
+    Tcl_DStringAppend(&buf, listPtr->yScrollCmd, -1);
+    Tcl_DStringAppend(&buf, " ", -1);
+    Tcl_DStringAppend(&buf, firstStr, -1);
+    Tcl_DStringAppend(&buf, " ", -1);
+    Tcl_DStringAppend(&buf, lastStr, -1);
+    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    Tcl_DStringFree(&buf);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (vertical scrolling command executed by listbox)");
@@ -3307,6 +3311,7 @@ ListboxUpdateHScrollbar(
     int result, windowWidth;
     double first, last;
     Tcl_Interp *interp;
+    Tcl_DString buf;
 
     if (listPtr->xScrollCmd == NULL) {
 	return;
@@ -3334,8 +3339,14 @@ ListboxUpdateHScrollbar(
 
     interp = listPtr->interp;
     Tcl_Preserve(interp);
-    result = Tcl_VarEval(interp, listPtr->xScrollCmd, " ", firstStr, " ",
-	    lastStr, NULL);
+    Tcl_DStringInit(&buf);
+    Tcl_DStringAppend(&buf, listPtr->xScrollCmd, -1);
+    Tcl_DStringAppend(&buf, " ", -1);
+    Tcl_DStringAppend(&buf, firstStr, -1);
+    Tcl_DStringAppend(&buf, " ", -1);
+    Tcl_DStringAppend(&buf, lastStr, -1);
+    result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+    Tcl_DStringFree(&buf);
     if (result != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		"\n    (horizontal scrolling command executed by listbox)");

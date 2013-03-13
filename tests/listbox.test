@@ -3057,6 +3057,17 @@ test listbox-29.1 {listbox selection behavior, -state disabled}  -setup {
     destroy .l
 } -result {1 1 2}
 
+test listbox-30.1 {Bug 3607326} -setup {
+    destroy .l
+    unset -nocomplain a
+} -body {
+    array set a {}
+    listbox .l -listvariable a
+} -cleanup {
+    destroy .l
+    unset -nocomplain a
+} -result * -match glob -returnCodes error
+
 resetGridInfo
 deleteWindows
 option clear
