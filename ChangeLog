@@ -1,3 +1,8 @@
+2013-03-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4: Patch by Andrew Shadura, providing better support for
+	three architectures they have in Debian.
+
 2013-03-11  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkListbox.c:	[Bug 3607326] Stop segfault from
