@@ -154,6 +154,7 @@ TkpDisplayScale(
     MacDrawable *macDraw;
     SInt32 initialValue, minValue, maxValue;
     UInt16 numTicks;
+    Tcl_DString buf;
 
 #ifdef TK_MAC_DEBUG_SCALE
     TkMacOSXDbgMsg("TkpDisplayScale");
@@ -171,7 +172,12 @@ TkpDisplayScale(
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
 	Tcl_Preserve((ClientData) interp);
 	sprintf(string, scalePtr->format, scalePtr->value);
-	result = Tcl_VarEval(interp, scalePtr->command, " ", string, NULL);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, scalePtr->command, -1);
+	Tcl_DStringAppend(&buf, " ", -1);
+	Tcl_DStringAppend(&buf, string, -1);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");
 	    Tcl_BackgroundException(interp, result);

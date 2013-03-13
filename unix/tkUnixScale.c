@@ -537,6 +537,7 @@ TkpDisplayScale(
     int result;
     char string[PRINT_CHARS];
     XRectangle drawnArea;
+    Tcl_DString buf;
 
     scalePtr->flags &= ~REDRAW_PENDING;
     if ((scalePtr->tkwin == NULL) || !Tk_IsMapped(scalePtr->tkwin)) {
@@ -551,8 +552,12 @@ TkpDisplayScale(
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
 	Tcl_Preserve(interp);
 	sprintf(string, scalePtr->format, scalePtr->value);
-	result = Tcl_VarEval(interp, scalePtr->command, " ", string,
-		(char *) NULL);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, scalePtr->command, -1);
+	Tcl_DStringAppend(&buf, " ", -1);
+	Tcl_DStringAppend(&buf, string, -1);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");
 	    Tcl_BackgroundException(interp, result);

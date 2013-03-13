@@ -6064,12 +6064,18 @@ GetXView(
     if (textPtr->xScrollCmd != NULL) {
 	char buf1[TCL_DOUBLE_SPACE+1];
 	char buf2[TCL_DOUBLE_SPACE+1];
+	Tcl_DString buf;
 
 	buf1[0] = ' ';
 	buf2[0] = ' ';
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
-	code = Tcl_VarEval(interp, textPtr->xScrollCmd, buf1, buf2, NULL);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, -1);
+	Tcl_DStringAppend(&buf, buf1, -1);
+	Tcl_DStringAppend(&buf, buf2, -1);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (horizontal scrolling command executed by text)");
@@ -6346,12 +6352,18 @@ GetYView(
     if (textPtr->yScrollCmd != NULL) {
 	char buf1[TCL_DOUBLE_SPACE+1];
 	char buf2[TCL_DOUBLE_SPACE+1];
+	Tcl_DString buf;
 
 	buf1[0] = ' ';
 	buf2[0] = ' ';
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
-	code = Tcl_VarEval(interp, textPtr->yScrollCmd, buf1, buf2, NULL);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, textPtr->yScrollCmd, -1);
+	Tcl_DStringAppend(&buf, buf1, -1);
+	Tcl_DStringAppend(&buf, buf2, -1);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (vertical scrolling command executed by text)");
