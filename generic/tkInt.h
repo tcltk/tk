@@ -1245,17 +1245,9 @@ MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 #endif
 
-/* For compatibility between Tcl 8.6 vs 9.0 */
-MODULE_SCOPE int		Tk_VarEval(Tcl_Interp *interp, ...);
-
-#undef Tcl_SetVar2
-#define Tcl_SetVar2(interp, part1, part2, newValue, flags) \
-    (tclStubsPtr->tcl_SetVar2((interp), (part1), (part2), (newValue), (flags)))
-#undef Tcl_VarEval
-#define Tcl_VarEval Tk_VarEval
 #undef Tcl_Eval
 #define Tcl_Eval(interp,objPtr) \
-	Tcl_EvalEx((interp),(objPtr),-1,0)
+	xxxxxxxxxxxxxxxxx xxxxxxx((interp),(objPtr),-1,0)
 #undef Tcl_GetIndexFromObj
 #define Tcl_GetIndexFromObj(interp, objPtr, tablePtr, msg, flags, indexPtr) \
 	Tcl_GetIndexFromObjStruct((interp), (objPtr), (tablePtr), \

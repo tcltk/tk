@@ -216,7 +216,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    if (len) {
 		Tcl_IncrRefCount(path);
 
-		int code = Tcl_FSEvalFile(_eventInterp, path);
+		int code = Tcl_FSEvalFileEx(_eventInterp, path, NULL);
 
 		if (code != TCL_OK) {
 		    Tcl_BackgroundException(_eventInterp, code);
@@ -236,7 +236,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	if (path) {
 	    Tcl_IncrRefCount(path);
 
-	    int code = Tcl_FSEvalFile(_eventInterp, path);
+	    int code = Tcl_FSEvalFileEx(_eventInterp, path, NULL);
 
 	    if (code != TCL_OK) {
 		Tcl_BackgroundException(_eventInterp, code);
