@@ -109,6 +109,15 @@ bind Checkbutton <space> {
 bind Radiobutton <space> {
     tk::CheckRadioInvoke %W
 }
+bind Button <<Invoke>> {
+    tk::ButtonInvoke %W
+}
+bind Checkbutton <<Invoke>> {
+    tk::CheckRadioInvoke %W
+}
+bind Radiobutton <<Invoke>> {
+    tk::CheckRadioInvoke %W
+}
 
 bind Button <FocusIn> {}
 bind Button <Enter> {
