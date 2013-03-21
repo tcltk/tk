@@ -318,6 +318,10 @@ been pressed in combination with the Alt key. The usual response to
 this is to either focus into the widget (or some related widget) or to
 invoke the widget.
 .TP
+\fB<<Invoke>>\fR
+This can be sent to some widgets (e.g. button, listbox, menu) as an
+alternative to <space>.
+.TP
 \fB<<ListboxSelect>>\fR
 This is sent to a listbox when the set of selected item(s) in the
 listbox is updated.
