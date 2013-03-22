@@ -462,56 +462,6 @@ if test -d /usr/include/mit -a $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-# Check whether the header and library for the XScreenSaver
-# extension are available, and set HAVE_XSS if so.
-# XScreenSaver is needed for Tk_GetUserInactiveTime().
-#--------------------------------------------------------------------
-
-if test $tk_aqua = no; then
-    tk_oldCFlags=$CFLAGS
-    CFLAGS="$CFLAGS $XINCLUDES"
-    tk_oldLibs=$LIBS
-    LIBS="$tk_oldLibs $XLIBSW"
-    xss_header_found=no
-    xss_lib_found=no
-    AC_MSG_CHECKING([whether to try to use XScreenSaver])
-    AC_ARG_ENABLE(xss,
-	AC_HELP_STRING([--enable-xss],
-	    [use XScreenSaver for activity timer (default: on)]),
-	[enable_xss=$enableval], [enable_xss=yes])
-    if test "$enable_xss" = "no" ; then
-	AC_MSG_RESULT([$enable_xss])
-    else
-	AC_MSG_RESULT([$enable_xss])
-	AC_CHECK_HEADER(X11/extensions/scrnsaver.h, [
-	    xss_header_found=yes
-	],,[#include <X11/Xlib.h>])
-	AC_CHECK_FUNC(XScreenSaverQueryInfo,,[
-	    AC_CHECK_LIB(Xext, XScreenSaverQueryInfo, [
-		XLIBSW="$XLIBSW -lXext"
-		xss_lib_found=yes
-	    ], [
-		AC_CHECK_LIB(Xss, XScreenSaverQueryInfo, [
-		    if test "$tcl_cv_ld_weak_l" = yes; then
-			# On Darwin, weak link libXss if possible,
-			# as it is only available on Tiger or later.
-			XLIBSW="$XLIBSW -Wl,-weak-lXss -lXext"
-		    else
-			XLIBSW="$XLIBSW -lXss -lXext"
-		    fi
-		    xss_lib_found=yes
-		],, -lXext)
-	    ])
-	])
-    fi
-    if test $enable_xss = yes -a $xss_lib_found = yes -a $xss_header_found = yes; then
-	AC_DEFINE(HAVE_XSS, 1, [Is XScreenSaver available?])
-    fi
-    CFLAGS=$tk_oldCFlags
-    LIBS=$tk_oldLibs
-fi
-
-#--------------------------------------------------------------------
 #	Check for freetype / fontconfig / Xft support.
 #--------------------------------------------------------------------
 
@@ -582,6 +532,89 @@ if test $tk_aqua = no; then
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
     AC_SUBST(UNIX_FONT_OBJS)
+fi
+
+#--------------------------------------------------------------------
+#	Check for XkbKeycodeToKeysym.
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    tk_oldCFlags=$CFLAGS
+    tk_oldLibs=$LIBS
+    CFLAGS="$CFLAGS $XINCLUDES"
+    LIBS="$LIBS $XLIBSW"
+    AC_CHECK_HEADER(X11/XKBlib.h, [
+	xkblib_header_found=yes
+    ], [
+	xkblib_header_found=no
+    ], [#include <X11/Xlib.h>])
+    if test $xkblib_header_found = "yes" ; then
+	AC_CHECK_LIB(X11, XkbKeycodeToKeysym, [
+	    xkbkeycodetokeysym_found=yes
+	], [
+	    xkbkeycodetokeysym_found=no
+	])
+    else
+	xkbkeycodetokeysym_found=no
+    fi
+    if test $xkbkeycodetokeysym_found = "yes" ; then
+	AC_DEFINE(HAVE_XKBKEYCODETOKEYSYM, 1, [Do we have XkbKeycodeToKeysym?])
+    fi
+    CFLAGS=$tk_oldCFlags
+    LIBS=$tk_oldLibs
+fi
+
+#--------------------------------------------------------------------
+# XXX Do this last.
+# It might modify XLIBSW which could affect other tests.
+#
+# Check whether the header and library for the XScreenSaver
+# extension are available, and set HAVE_XSS if so.
+# XScreenSaver is needed for Tk_GetUserInactiveTime().
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    tk_oldCFlags=$CFLAGS
+    CFLAGS="$CFLAGS $XINCLUDES"
+    tk_oldLibs=$LIBS
+    LIBS="$tk_oldLibs $XLIBSW"
+    xss_header_found=no
+    xss_lib_found=no
+    AC_MSG_CHECKING([whether to try to use XScreenSaver])
+    AC_ARG_ENABLE(xss,
+	AC_HELP_STRING([--enable-xss],
+	    [use XScreenSaver for activity timer (default: on)]),
+	[enable_xss=$enableval], [enable_xss=yes])
+    if test "$enable_xss" = "no" ; then
+	AC_MSG_RESULT([$enable_xss])
+    else
+	AC_MSG_RESULT([$enable_xss])
+	AC_CHECK_HEADER(X11/extensions/scrnsaver.h, [
+	    xss_header_found=yes
+	],,[#include <X11/Xlib.h>])
+	AC_CHECK_FUNC(XScreenSaverQueryInfo,,[
+	    AC_CHECK_LIB(Xext, XScreenSaverQueryInfo, [
+		XLIBSW="$XLIBSW -lXext"
+		xss_lib_found=yes
+	    ], [
+		AC_CHECK_LIB(Xss, XScreenSaverQueryInfo, [
+		    if test "$tcl_cv_ld_weak_l" = yes; then
+			# On Darwin, weak link libXss if possible,
+			# as it is only available on Tiger or later.
+			XLIBSW="$XLIBSW -Wl,-weak-lXss -lXext"
+		    else
+			XLIBSW="$XLIBSW -lXss -lXext"
+		    fi
+		    xss_lib_found=yes
+		],, -lXext)
+	    ])
+	])
+    fi
+    if test $enable_xss = yes -a $xss_lib_found = yes -a $xss_header_found = yes; then
+	AC_DEFINE(HAVE_XSS, 1, [Is XScreenSaver available?])
+    fi
+    CFLAGS=$tk_oldCFlags
+    LIBS=$tk_oldLibs
 fi
 
 #--------------------------------------------------------------------
