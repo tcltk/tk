@@ -410,7 +410,7 @@ CBindingEvalProc(clientData, interp, eventPtr, tkwin, keySym)
 
     cbindPtr = (CBinding *) clientData;
     
-    return Tcl_GlobalEval(interp, cbindPtr->command);
+    return Tcl_EvalEx(interp, cbindPtr->command, -1, TCL_EVAL_GLOBAL);
 }
 
 static void
@@ -420,7 +420,7 @@ CBindingFreeProc(clientData)
     CBinding *cbindPtr = (CBinding *) clientData;
     
     if (cbindPtr->delete != NULL) {
-	Tcl_GlobalEval(cbindPtr->interp, cbindPtr->delete);
+	Tcl_EvalEx(cbindPtr->interp, cbindPtr->delete, -1, TCL_EVAL_GLOBAL);
 	ckfree((char *) cbindPtr->delete);
     }
     ckfree((char *) cbindPtr->command);

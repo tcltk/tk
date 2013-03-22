@@ -489,6 +489,9 @@ declare 152 {
     void TkpDrawFrame(Tk_Window tkwin, Tk_3DBorder border,
 	    int highlightWidth, int borderWidth, int relief)
 }
+declare 184 {
+    void TkUnusedStubEntry(void)
+}
 
 ##############################################################################
 
@@ -538,6 +541,9 @@ declare 11 x11 {
 }
 declare 12 x11 {
     int TkpWmSetState(TkWindow *winPtr, int state)
+}
+declare 13 x11 {
+    void TkUnusedStubEntry(void)
 }
 
 ################################
@@ -691,6 +697,10 @@ declare 43 win {
 declare 44 win {
     void TkSendCleanup(TkDisplay *dispPtr)
 }
+declare 45 win {
+    void TkUnusedStubEntry(void)
+}
+
 ################################
 # Aqua specific functions
 
@@ -872,6 +882,9 @@ declare 51 aqua {
 
 declare 53 aqua {
     unsigned long TkpGetMS(void)
+}
+declare 54 aqua {
+    void TkUnusedStubEntry(void)
 }
 
 ##############################################################################

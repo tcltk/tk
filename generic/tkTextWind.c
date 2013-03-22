@@ -769,7 +769,7 @@ EmbWinLayoutProc(textPtr, indexPtr, ewPtr, offset, maxX, maxChars,
 	 * the window.
 	 */
 
-	code = Tcl_GlobalEval(textPtr->interp, ewPtr->body.ew.create);
+	code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, -1, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK) {
 	    createError:
 	    Tcl_BackgroundError(textPtr->interp);

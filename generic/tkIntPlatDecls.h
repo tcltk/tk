@@ -144,6 +144,8 @@ EXTERN void		TkUnixSetMenubar _ANSI_ARGS_((Tk_Window tkwin,
 EXTERN void		TkWmCleanup _ANSI_ARGS_((TkDisplay *dispPtr));
 /* 44 */
 EXTERN void		TkSendCleanup _ANSI_ARGS_((TkDisplay *dispPtr));
+/* 45 */
+EXTERN void		TkUnusedStubEntry _ANSI_ARGS_((void));
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -269,6 +271,8 @@ EXTERN void		TkGenWMDestroyEvent _ANSI_ARGS_((Tk_Window tkwin));
 /* Slot 52 is reserved */
 /* 53 */
 EXTERN unsigned long	TkpGetMS _ANSI_ARGS_((void));
+/* 54 */
+EXTERN void		TkUnusedStubEntry _ANSI_ARGS_((void));
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 /* 0 */
@@ -302,6 +306,8 @@ EXTERN void		TkFreeXId _ANSI_ARGS_((TkDisplay *dispPtr));
 /* 12 */
 EXTERN int		TkpWmSetState _ANSI_ARGS_((TkWindow *winPtr,
 				int state));
+/* 13 */
+EXTERN void		TkUnusedStubEntry _ANSI_ARGS_((void));
 #endif /* X11 */
 
 typedef struct TkIntPlatStubs {
@@ -354,6 +360,7 @@ typedef struct TkIntPlatStubs {
     void (*tkUnixSetMenubar) _ANSI_ARGS_((Tk_Window tkwin, Tk_Window menubar)); /* 42 */
     void (*tkWmCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 43 */
     void (*tkSendCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 44 */
+    void (*tkUnusedStubEntry) _ANSI_ARGS_((void)); /* 45 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     void (*tkGenerateActivateEvents) _ANSI_ARGS_((TkWindow *winPtr, int active)); /* 0 */
@@ -410,6 +417,7 @@ typedef struct TkIntPlatStubs {
     void (*tkGenWMDestroyEvent) _ANSI_ARGS_((Tk_Window tkwin)); /* 51 */
     VOID *reserved52;
     unsigned long (*tkpGetMS) _ANSI_ARGS_((void)); /* 53 */
+    void (*tkUnusedStubEntry) _ANSI_ARGS_((void)); /* 54 */
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) _ANSI_ARGS_((void)); /* 0 */
@@ -425,6 +433,7 @@ typedef struct TkIntPlatStubs {
     void (*tkSendCleanup) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 10 */
     void (*tkFreeXId) _ANSI_ARGS_((TkDisplay *dispPtr)); /* 11 */
     int (*tkpWmSetState) _ANSI_ARGS_((TkWindow *winPtr, int state)); /* 12 */
+    void (*tkUnusedStubEntry) _ANSI_ARGS_((void)); /* 13 */
 #endif /* X11 */
 } TkIntPlatStubs;
 
@@ -620,6 +629,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkSendCleanup \
 	(tkIntPlatStubsPtr->tkSendCleanup) /* 44 */
 #endif
+#ifndef TkUnusedStubEntry
+#define TkUnusedStubEntry \
+	(tkIntPlatStubsPtr->tkUnusedStubEntry) /* 45 */
+#endif
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #ifndef TkGenerateActivateEvents
@@ -814,6 +827,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkpGetMS \
 	(tkIntPlatStubsPtr->tkpGetMS) /* 53 */
 #endif
+#ifndef TkUnusedStubEntry
+#define TkUnusedStubEntry \
+	(tkIntPlatStubsPtr->tkUnusedStubEntry) /* 54 */
+#endif
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 #ifndef TkCreateXEventSource
@@ -868,6 +885,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkpWmSetState \
 	(tkIntPlatStubsPtr->tkpWmSetState) /* 12 */
 #endif
+#ifndef TkUnusedStubEntry
+#define TkUnusedStubEntry \
+	(tkIntPlatStubsPtr->tkUnusedStubEntry) /* 13 */
+#endif
 #endif /* X11 */
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
@@ -877,6 +898,7 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
+#undef TkUnusedStubEntry
 #ifdef __CYGWIN__
     void TkFreeXId(TkDisplay *dispPtr);
     void TkFreeWindowId(TkDisplay *dispPtr, Window w);

@@ -328,13 +328,22 @@ TkTextGetIndex(interp, textPtr, string, indexPtr)
     /*
      *---------------------------------------------------------------------
      * Stage 1: check to see if the index consists of nothing but a mark
-     * name.  We do this check now even though it's also done later, in
-     * order to allow mark names that include funny characters such as
-     * spaces or "+1c".
+     * name, an embedded window or an embedded image.  We do this check
+     * now even though it's also done later, in order to allow mark names,
+     * embedded window names or image names that include funny characters
+     * such as spaces or "+1c".
      *---------------------------------------------------------------------
      */
 
     if (TkTextMarkNameToIndex(textPtr, string, indexPtr) == TCL_OK) {
+	return TCL_OK;
+    }
+
+    if (TkTextWindowIndex(textPtr, string, indexPtr) != 0) {
+	return TCL_OK;
+    }
+
+    if (TkTextImageIndex(textPtr, string, indexPtr) != 0) {
 	return TCL_OK;
     }
 

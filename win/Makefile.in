@@ -5,7 +5,6 @@
 # actual Makefile.
 
 TCLVERSION		= @TCL_VERSION@
-TCLPATCHL		= @TCL_PATCH_LEVEL@
 VERSION			= @TK_VERSION@
 
 #----------------------------------------------------------------
@@ -143,7 +142,7 @@ MAN2TCL			= man2tcl$(EXEEXT)
 
 @SET_MAKE@
 
-# Setting the VPATH variable to a list of paths will cause the 
+# Setting the VPATH variable to a list of paths will cause the
 # makefile to look into these paths when resolving .c to .obj
 # dependencies.
 
@@ -163,7 +162,7 @@ LDFLAGS_OPTIMIZE = @LDFLAGS_OPTIMIZE@
 # Tk does not used deprecated Tcl constructs so it should
 # compile fine with -DTCL_NO_DEPRECATED. To remove its own
 # set of deprecated code uncomment the second line.
-NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
+NO_DEPRECATED_FLAGS	=
 #NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
 
 # To change the compiler switches, for example to change from optimization to
@@ -366,7 +365,7 @@ SHELL_ENV = \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
 	PATH="$(TCL_BIN_DIR):$(PATH)"; export PATH;
 
-# Main targets.  The default target -- all -- builds the binaries, 
+# Main targets.  The default target -- all -- builds the binaries,
 # performs any post processing on libraries or documents.
 
 all: binaries libraries doc
@@ -437,15 +436,15 @@ install-binaries: binaries
 		$(COPY) $$i "$(BIN_INSTALL_DIR)"; \
 	    fi; \
 	    done
-	@echo "Creating package index $(PKG_INDEX)"; 
+	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[package vcompare [package provide Tcl] $(TCLVERSION)] != 0} { return }";\
+	echo "if {[package vcompare [package provide Tcl] 8.4] != 0} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && [lsearch -exact \$$::argv -display] > -1))} {";\
-	echo "    package ifneeded Tk $(VERSION) [list load [file join \$$dir .. .. bin libtk$(VERSION).dll] Tk]";\
+	echo "    package ifneeded Tk $(VERSION) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]] Tk]";\
 	echo "} else {";\
-	echo "    package ifneeded Tk $(VERSION) [list load [file join \$$dir .. .. bin $(TK_DLL_FILE)] Tk]";\
+	echo "    package ifneeded Tk $(VERSION) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE)]] Tk]";\
 	echo "}";\
 	) > $(PKG_INDEX);
 	@for i in tkConfig.sh $(TK_LIB_FILE) $(TK_STUB_LIB_FILE); \

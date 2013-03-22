@@ -8,7 +8,6 @@
 # Current Tk version;  used in various names.
 
 TCLVERSION		= @TCL_VERSION@
-TCLPATCHL		= @TCL_PATCH_LEVEL@
 VERSION 		= @TK_VERSION@
 MAJOR_VERSION		= @TK_MAJOR_VERSION@
 MINOR_VERSION		= @TK_MINOR_VERSION@
@@ -190,7 +189,7 @@ KEYSYM_FLAGS		=
 # Tk does not used deprecated Tcl constructs so it should
 # compile fine with -DTCL_NO_DEPRECATED. To remove its own
 # set of deprecated code uncomment the second line.
-NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
+NO_DEPRECATED_FLAGS	=
 #NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
 
 # Some versions of make, like SGI's, use the following variable to
@@ -330,7 +329,7 @@ CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
 ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} ${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
 
-CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) ${TCL_STUB_FLAGS} 
+CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) ${TCL_STUB_FLAGS}
 
 APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
 
@@ -662,15 +661,15 @@ install-binaries: $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) $(TK_BUILD_EXP_FILE) ${WISH
 	    rm -f "$(PKG_INDEX)"; \
 	    (\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
-	    echo "if {[package vcompare [package provide Tcl] $(TCLVERSION)] != 0} { return }";\
+	    echo "if {[package vcompare [package provide Tcl] 8.4] != 0} return";\
 	    if test "x$(DLL_INSTALL_DIR)" != "x$(BIN_INSTALL_DIR)"; then \
-	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION) [list load [file join \$$dir $${relative}$(TK_LIB_FILE)] Tk]";\
+	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE)]] Tk]";\
 	    else \
 	    echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	    echo "	|| ([info exists ::argv] && [lsearch -exact \$$::argv -display] > -1))} {";\
-	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION) [list load [file join \$$dir $${relative}.. bin $(TK_LIB_FILE)] Tk]";\
+	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION) [list load [file normalize [file join \$$dir $${relative}.. bin $(TK_LIB_FILE)]] Tk]";\
 	    echo "} else {";\
-	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION) [list load [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll] Tk]";\
+	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION) [list load [file normalize [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll]] Tk]";\
 	    echo "}";\
 	    fi \
 	    ) > "$(PKG_INDEX)"; \
@@ -1501,7 +1500,7 @@ BUILD_HTML = \
 #
 # Targets to build Solaris package of the distribution for the current
 # architecture.  To build stream packages for both sun4 and i86pc
-# architectures: 
+# architectures:
 #
 #   On the sun4 machine, execute the following:
 #     make distclean; ./configure
@@ -1557,7 +1556,7 @@ package-common:
 # Build and install the architecture specific files in the dist directory.
 #
 
-package-binaries: 
+package-binaries:
 	cd $(DISTDIR)/unix/`arch`; \
 	$(MAKE); \
 	$(MAKE) install-binaries prefix=$(DISTDIR)/SUNWtcl/$(TCLVERSION) \

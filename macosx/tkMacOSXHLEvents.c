@@ -204,7 +204,7 @@ OappHandler(
 
     if (interp &&
 	    Tcl_GetCommandInfo(interp, "::tk::mac::OpenApplication", &dummy)) {
-	Tcl_GlobalEval(interp, "::tk::mac::OpenApplication");
+	Tcl_EvalEx(interp, "::tk::mac::OpenApplication", -1, TCL_EVAL_GLOBAL);
     }
     return noErr;
 }
@@ -238,7 +238,7 @@ RappHandler(
 
     if (interp &&
 	    Tcl_GetCommandInfo(interp, "::tk::mac::ReopenApplication", &dummy)) {
-	Tcl_GlobalEval(interp, "::tk::mac::ReopenApplication");
+	Tcl_EvalEx(interp, "::tk::mac::ReopenApplication", -1, TCL_EVAL_GLOBAL);
     }
     return err;
 }
@@ -271,7 +271,7 @@ PrefsHandler(
 
     if (interp &&
 	    Tcl_GetCommandInfo(interp, "::tk::mac::ShowPreferences", &dummy)) {
-	Tcl_GlobalEval(interp, "::tk::mac::ShowPreferences");
+	Tcl_EvalEx(interp, "::tk::mac::ShowPreferences", -1, TCL_EVAL_GLOBAL);
     }
     return noErr;
 }
@@ -590,9 +590,9 @@ ReallyKillMe(
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
     Tcl_CmdInfo dummy;
     if (Tcl_GetCommandInfo(interp, "::tk::mac::Quit", &dummy)) {
-	 Tcl_GlobalEval(interp, "::tk::mac::Quit");
+	 Tcl_EvalEx(interp, "::tk::mac::Quit", -1, TCL_EVAL_GLOBAL);
     } else {
-	Tcl_GlobalEval(interp, "exit");
+	Tcl_EvalEx(interp, "exit", -1, TCL_EVAL_GLOBAL);
     }
     return 1;
 }
