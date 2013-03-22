@@ -30,6 +30,8 @@
 #include "tkPlatDecls.h"
 #include "tkIntXlibDecls.h"
 
+#define TkUnusedStubEntry NULL
+
 #ifdef __WIN32__
 
 static int
@@ -476,6 +478,10 @@ TkIntStubs tkIntStubs = {
     TkOrientPrintProc, /* 178 */
     TkSmoothParseProc, /* 179 */
     TkSmoothPrintProc, /* 180 */
+    NULL, /* 181 */
+    NULL, /* 182 */
+    NULL, /* 183 */
+    TkUnusedStubEntry, /* 184 */
 };
 
 TkIntPlatStubs tkIntPlatStubs = {
@@ -1130,6 +1136,8 @@ TkStubs tkStubs = {
     Tk_Interp, /* 271 */
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
+    NULL, /* 274 */
+    TkUnusedStubEntry, /* 275 */
 };
 
 /* !END!: Do not edit above this line. */
