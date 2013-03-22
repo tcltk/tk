@@ -11,7 +11,12 @@
  */
 
 #include "tkInt.h"
-#include <X11/XKBlib.h>
+
+#ifdef HAVE_XKBKEYCODETOKEYSYM
+#  include <X11/XKBlib.h>
+#else
+#  define XkbKeycodeToKeysym(D,K,G,L) XKeycodeToKeysym(D,K,L)
+#endif
 
 /*
  * Prototypes for local functions defined in this file:
@@ -280,6 +285,15 @@ TkpGetKeySym(
     int index;
     TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
 
+    /*
+     * Refresh the mapping information if it's stale. This must happen before
+     * we do any input method processing. [Bug 3599312]
+     */
+
+    if (dispPtr->bindInfoStale) {
+	TkpInitKeymapInfo(dispPtr);
+    }
+
 #ifdef TK_USE_INPUT_METHODS
     /*
      * If input methods are active, we may already have determined a keysym.
@@ -292,6 +306,7 @@ TkpGetKeySym(
 	    Tcl_DString ds;
 	    TkWindow *winPtr = (TkWindow *)
 		Tk_IdToWindow(eventPtr->xany.display, eventPtr->xany.window);
+
 	    Tcl_DStringInit(&ds);
 	    (void) TkpGetString(winPtr, eventPtr, &ds);
 	    Tcl_DStringFree(&ds);
@@ -301,14 +316,6 @@ TkpGetKeySym(
 	}
     }
 #endif
-
-    /*
-     * Refresh the mapping information if it's stale
-     */
-
-    if (dispPtr->bindInfoStale) {
-	TkpInitKeymapInfo(dispPtr);
-    }
 
     /*
      * Figure out which of the four slots in the keymap vector to use for this
