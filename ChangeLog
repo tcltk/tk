@@ -1,10 +1,20 @@
 2013-03-22  Don Porter  <dgp@users.sourceforge.net>
 
+	*** 8.5.14 TAGGED FOR RELEASE ***
+
+	* generic/tk.h:		Bump to 8.5.14 for release.
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
 	* generic/tkWindow.c:	Updates so that Tk 8.5.14+ will be able to
 	* unix/Makefile.in:	configure and build against Tcl 8.6+
 	* unix/configure.in:	header files.
 
 	* unix/configure:	autoconf-2.59
+	* win/configure:
 
 2013-03-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
