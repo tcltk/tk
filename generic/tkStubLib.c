@@ -1,33 +1,15 @@
-/* 
+/*
  * tkStubLib.c --
  *
- *	Stub object that will be statically linked into extensions that wish
+ *	Stub object that will be statically linked into extensions that want
  *	to access Tk.
  *
- * Copyright (c) 1998 Paul Duffin.
  * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998 Paul Duffin.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * See the file "license.terms" for information on usage and redistribution of
+ * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
-
-
-/*
- * We need to ensure that we use the stub macros so that this file contains
- * no references to any of the stub functions.  This will make it possible
- * to build an extension that references Tk_InitStubs but doesn't end up
- * including the rest of the stub functions.
- */
-
-#ifndef USE_TCL_STUBS
-#define USE_TCL_STUBS
-#endif
-#undef USE_TCL_STUB_PROCS
-
-#ifndef USE_TK_STUBS
-#define USE_TK_STUBS
-#endif
-#undef USE_TK_STUB_PROCS
 
 #include "tkPort.h"
 #include "tkInt.h"
@@ -46,68 +28,113 @@
 #include "tkIntPlatDecls.h"
 #include "tkIntXlibDecls.h"
 
+TkStubs *tkStubsPtr = NULL;
+TkPlatStubs *tkPlatStubsPtr = NULL;
+TkIntStubs *tkIntStubsPtr = NULL;
+TkIntPlatStubs *tkIntPlatStubsPtr = NULL;
+TkIntXlibStubs *tkIntXlibStubsPtr = NULL;
+
 /*
- * Ensure that Tk_InitStubs is built as an exported symbol.  The other stub
- * functions should be built as non-exported symbols.
+ * Use our own isdigit to avoid linking to libc on windows
  */
 
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLEXPORT
-
-TkStubs *tkStubsPtr;
-TkPlatStubs *tkPlatStubsPtr;
-TkIntStubs *tkIntStubsPtr;
-TkIntPlatStubs *tkIntPlatStubsPtr;
-TkIntXlibStubs *tkIntXlibStubsPtr;
-
+static int
+isDigit(c)
+    CONST int c;
+{
+    return (c >= '0' && c <= '9');
+}
 
 /*
  *----------------------------------------------------------------------
  *
  * Tk_InitStubs --
  *
- *	Checks that the correct version of Tk is loaded and that it
- *	supports stubs. It then initialises the stub table pointers.
+ *	Checks that the correct version of Tk is loaded and that it supports
+ *	stubs. It then initialises the stub table pointers.
  *
  * Results:
- *	The actual version of Tk that satisfies the request, or
- *	NULL to indicate that an error occurred.
+ *	The actual version of Tk that satisfies the request, or NULL to
+ *	indicate that an error occurred.
  *
  * Side effects:
  *	Sets the stub table pointers.
  *
  *----------------------------------------------------------------------
  */
-
-#ifdef Tk_InitStubs
 #undef Tk_InitStubs
-#endif
-
 CONST char *
 Tk_InitStubs(interp, version, exact)
     Tcl_Interp *interp;
     char *version;
     int exact;
 {
-    CONST char *actualVersion;
+    CONST char *packageName = "Tk";
+    CONST char *errMsg = NULL;
+    ClientData clientData = NULL;
+    CONST char *actualVersion = tclStubsPtr->tcl_PkgRequireEx(interp,
+	    packageName, version, 0, &clientData);
+    TkStubs *stubsPtr = (TkStubs *)clientData;
 
-    actualVersion = Tcl_PkgRequireEx(interp, "Tk", version, exact,
-		(ClientData *) &tkStubsPtr);
-    if (!actualVersion) {
+    if (actualVersion == NULL) {
 	return NULL;
     }
 
-    if (!tkStubsPtr) {
-	Tcl_SetResult(interp,
-		"This implementation of Tk does not support stubs",
-		TCL_STATIC);
-	return NULL;
+    if (exact) {
+	CONST char *p = version;
+	int count = 0;
+
+	while (*p) {
+	    count += !isDigit(*p++);
+	}
+	if (count == 1) {
+	    CONST char *q = actualVersion;
+
+	    p = version;
+	    while (*p && (*p == *q)) {
+		p++; q++;
+	    }
+	    if (*p || isDigit(*q)) {
+		/* Construct error message */
+		tclStubsPtr->tcl_PkgRequireEx(interp, packageName, version, 1, NULL);
+		return NULL;
+	    }
+	} else {
+	    actualVersion = tclStubsPtr->tcl_PkgRequireEx(interp, packageName,
+		    version, 1, NULL);
+	    if (actualVersion == NULL) {
+		return NULL;
+	    }
+	}
     }
-    
-    tkPlatStubsPtr = tkStubsPtr->hooks->tkPlatStubs;
-    tkIntStubsPtr = tkStubsPtr->hooks->tkIntStubs;
-    tkIntPlatStubsPtr = tkStubsPtr->hooks->tkIntPlatStubs;
-    tkIntXlibStubsPtr = tkStubsPtr->hooks->tkIntXlibStubs;
-    
-    return actualVersion;
+    if (stubsPtr == NULL) {
+	errMsg = "missing stub table pointer";
+    } else {
+	tkStubsPtr = stubsPtr;
+	if (stubsPtr->hooks) {
+	    tkPlatStubsPtr = stubsPtr->hooks->tkPlatStubs;
+	    tkIntStubsPtr = stubsPtr->hooks->tkIntStubs;
+	    tkIntPlatStubsPtr = stubsPtr->hooks->tkIntPlatStubs;
+	    tkIntXlibStubsPtr = stubsPtr->hooks->tkIntXlibStubs;
+	} else {
+	    tkPlatStubsPtr = NULL;
+	    tkIntStubsPtr = NULL;
+	    tkIntPlatStubsPtr = NULL;
+	    tkIntXlibStubsPtr = NULL;
+	}
+	return actualVersion;
+    }
+    tclStubsPtr->tcl_ResetResult(interp);
+    tclStubsPtr->tcl_AppendResult(interp, "Error loading ", packageName,
+	    " (requested version ", version, ", actual version ",
+	    actualVersion, "): ", errMsg, NULL);
+    return NULL;
 }
+
+/*
+ * Local Variables:
+ * mode: c
+ * c-basic-offset: 4
+ * fill-column: 78
+ * End:
+ */
