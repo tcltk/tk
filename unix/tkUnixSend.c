@@ -982,7 +982,7 @@ Tk_SendCmd(clientData, interp, argc, argv)
         localInterp = riPtr->interp;
         Tcl_Preserve((ClientData) localInterp);
 	if (firstArg == (argc-1)) {
-	    result = Tcl_GlobalEval(localInterp, argv[firstArg]);
+	    result = Tcl_EvalEx(localInterp, argv[firstArg], -1, TCL_EVAL_GLOBAL);
 	} else {
 	    Tcl_DStringInit(&request);
 	    Tcl_DStringAppend(&request, argv[firstArg], -1);
@@ -990,7 +990,7 @@ Tk_SendCmd(clientData, interp, argc, argv)
 		Tcl_DStringAppend(&request, " ", 1);
 		Tcl_DStringAppend(&request, argv[i], -1);
 	    }
-	    result = Tcl_GlobalEval(localInterp, Tcl_DStringValue(&request));
+	    result = Tcl_EvalEx(localInterp, Tcl_DStringValue(&request), -1, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(&request);
 	}
 	if (interp != localInterp) {
@@ -1523,7 +1523,7 @@ SendEventProc(clientData, eventPtr)
             remoteInterp = riPtr->interp;
             Tcl_Preserve((ClientData) remoteInterp);
 
-            result = Tcl_GlobalEval(remoteInterp, script);
+            result = Tcl_EvalEx(remoteInterp, script, -1, TCL_EVAL_GLOBAL);
 
             /*
              * The call to Tcl_Release may have released the interpreter
