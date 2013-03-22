@@ -6867,3 +6867,21 @@ Many revisions to better support a Cygwin environment (nijtmans)
 2012-11-07 (bug fix)[3574708] TkSetFocusWin() crash on XP (mcdonald)
 
 --- Released 8.5.13, November 12, 2012 --- See ChangeLog for details ---
+
+2012-12-04 (bug fix)[3588824] text index of images with weird names (gavilan)
+
+2012-12-06 (bug fix) avoid buggy syscall to parse hex color values (fellows)
+
+2013-01-22 (bug fix)[3601782] Tcl_InitStubs failure message (nijtmans)
+
+2013-01-31 (bug fix)[3599928] use XKeycodeToKeysym on old systems (cassoff)
+
+2013-02-04 (bug fix)[3603077] treeview update on tag add/remove (english)
+
+2013-02-28 (bug fix)[3599312] First Alt key event is lost (mcdonald)
+
+2013-03-11 (bug fix)[3607326] Crash [listbox .l -listvariable $array] (porter)
+
+2013-03-13 (enhancement) better build support for Debian arch (shadura)
+
+--- Released 8.5.14, March 27, 2013 --- See ChangeLog for details ---
