@@ -6159,4 +6159,82 @@ use (hobbs)
 
 2008-04-07 (bug fix)[1937135] Fix double-free with argv error (hobbs)
 
+2008-04-17 (bug fix)[1327482] canvas item <Enter> events (wangnick)
+
 --- Released 8.4.19, April 18, 2008 --- See ChangeLog for details ---
+
+2008-06-12 (bug fix)[1991932] global grab segfault (steffen)
+
+2008-06-12 (platform support) Solaris/amd64 gcc 64bit support (steffen)
+
+2008-06-18 (bug fix) Aqua: missing focus on first map (steffen)
+
+2008-08-05 (bug fix)[2010422] Tk header files revised to accommodate
+incompatible changes in recent X.org releases of X11 headers. (jenglish)
+
+2009-02-27 (bug fix)[2645457] crash in Tk_MakeWindowExist() (thoyts)
+
+2009-04-30 (bug fix)[2080533] panedwindow sash draw crash (fellows)
+
+2009-07-22 (bug fix)[2496114] focus in dead window crash (griffin,fellows)
+
+2009-09-14 (bug fix)[873608] win tearoff menu, no submenu arrows (traum,hobbs)
+
+2009-09-14 (bug fix)[873613] win tearoff menu repeat select (traum,hobbs)
+
+2009-10-07 (bug fix)[2088597] min scrollbar slider size (danckaert,fellows)
+
+2009-10-22 (bug fix)[1469210] [text] modified error (danckaert)
+
+2009-10-25 (bug fix)[2809525] prevent X crash on overlong color name (goth)
+
+2009-12-11 (bug fix)[2912473] accept :: in DISPLAY name (fellows)
+
+2010-01-19 (new feature)[TIP 359] Extended Window Manager Hint Support (thoyts)
+
+2010-02-17 (bug fix)[2952745] crash in menu deletion (english)
+
+2011-01-13 (bug fix)[3154705] tk_messageBox close button disabled (skylera)
+
+2011-03-24 (bug fix)[3239768] Win menu font support (wehle)
+
+2011-03-28 (bug fix)[3129527] stop buffer overflows (dirtyepic,nijtmans)
+
+2011-04-22 (bug fix)[3291543] mem corrupt when [$canvas dchars] removes all
+coords of a polygon (rogers,spjuth)
+
+2011-06-06 (bug fix)[2546087] [console] treatment of '\0' (porter)
+
+2011-06-10 (bug fix)[3175610] incomplete line item refresh (ferrieux)
+
+2011-11-17 (bug fix)[3437816] return code of [canvas lower] (hirner,ferrieux)
+
+2011-12-22 (bug fix)[3235256] correct menu failure on Windows (mcdonald)
+
+2012-02-15 (bug fix)[3486474] Correct color scaling (goth,nijtmans)
+
+2012-04-07 (bug fix)[3176239] control-Mousewheel crash (couch,nijtmans)
+
+2012-04-22 (bug fix)[3520202] <MouseWheel> %k,%K,%N for Python (deily,fellows)
+
+2012-05-02 (bug fix)[533519] multiscreen window placement (nijtmans)
+
+2012-05-04 (bug fix)[2768586] multiscreen menu posting (nijtmans)
+
+2012-07-23 (bug fix)[3546073] DisplayString() -> DefaultDisplay() (english)
+
+2012-07-31 (update)[3551802] XKeycodeToKeysym deprecation (fellows)
+
+2012-08-25 (bug fix)[3554026,3561016] crash with tearoff menus (gavilán)
+
+2012-08-28 (bug fix)[3562426] Context menu goes off screen (nijtmans)
+
+2012-12-04 (bug fix)[3588824] text index of images with weird names (gavilan)
+
+2012-12-06 (bug fix) avoid buggy syscall to parse hex color values (fellows)
+
+2013-01-22 (bug fix)[3601782] Tcl_InitStubs failure message (nijtmans)
+
+2013-03-13 (enhancement) better build support for Debian arch (shadura)
+
+--- Released 8.4.20, 2013 --- See ChangeLog for details ---
