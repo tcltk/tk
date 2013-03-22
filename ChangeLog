@@ -1,3 +1,21 @@
+2013-03-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4: Patch by Andrew Shadura, providing better support for
+	three architectures they have in Debian.
+
+2013-01-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/Makefile.in: Don't compile Tk with -DTCL_NO_DEPRECATED by default
+	* unix/Makefile.in: any more, it might hurt when we compile Tk 8.x
+	against Tcl 8.y with y > x, because new deprecated constructs might be
+	added in higher Tcl versions (except for Tk 8.6, for now, because there
+	is no higher 8.x yet)
+
+2012-12-03  François Vogel  <fvogelnew1@free.fr>
+
+   * generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
+   * tests/textIndex.test:  for weird image names
+
 2012-11-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinTest.c: [Bug 3585396]: winDialog.test requires user
@@ -39,7 +57,7 @@
 	* win/nmakehlp.c: Add "-V<num>" option, in order to be able
 	to detect partial version numbers.
 
-2012-08-03  Francois Vogel  <fvogelnew1@free.fr>
+2012-08-03  François Vogel  <fvogelnew1@free.fr>
 
 	* tests/bind.test:  [Bug 3554081]: Test bind-22.10 failed
 
@@ -54,7 +72,7 @@
 	* win/nmakehlp.c: Backport from Tcl 8.6, but add -Q option from
 	sampleextension.
 
-2012-07-19  Francois Vogel  <fvogelnew1@free.fr>
+2012-07-19  François Vogel  <fvogelnew1@free.fr>
 
 	* unix/tkUnixMenuBu.c: [Bug 3545457]: Crash on packing a menubutton
 

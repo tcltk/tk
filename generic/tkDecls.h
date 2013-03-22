@@ -905,6 +905,18 @@ EXTERN void		Tk_DrawElement _ANSI_ARGS_((Tk_Style style,
 				Tk_StyledElement element, char *recordPtr,
 				Tk_Window tkwin, Drawable d, int x, int y,
 				int width, int height, int state));
+/* Slot 265 is reserved */
+/* Slot 266 is reserved */
+/* Slot 267 is reserved */
+/* Slot 268 is reserved */
+/* Slot 269 is reserved */
+/* Slot 270 is reserved */
+/* Slot 271 is reserved */
+/* Slot 272 is reserved */
+/* Slot 273 is reserved */
+/* Slot 274 is reserved */
+/* 275 */
+EXTERN void		TkUnusedStubEntry _ANSI_ARGS_((void));
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -1182,6 +1194,17 @@ typedef struct TkStubs {
     void (*tk_GetElementBox) _ANSI_ARGS_((Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin, int x, int y, int width, int height, int inner, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr)); /* 262 */
     int (*tk_GetElementBorderWidth) _ANSI_ARGS_((Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin)); /* 263 */
     void (*tk_DrawElement) _ANSI_ARGS_((Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin, Drawable d, int x, int y, int width, int height, int state)); /* 264 */
+    VOID *reserved265;
+    VOID *reserved266;
+    VOID *reserved267;
+    VOID *reserved268;
+    VOID *reserved269;
+    VOID *reserved270;
+    VOID *reserved271;
+    VOID *reserved272;
+    VOID *reserved273;
+    VOID *reserved274;
+    void (*tkUnusedStubEntry) _ANSI_ARGS_((void)); /* 275 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -2252,6 +2275,20 @@ extern TkStubs *tkStubsPtr;
 #define Tk_DrawElement \
 	(tkStubsPtr->tk_DrawElement) /* 264 */
 #endif
+/* Slot 265 is reserved */
+/* Slot 266 is reserved */
+/* Slot 267 is reserved */
+/* Slot 268 is reserved */
+/* Slot 269 is reserved */
+/* Slot 270 is reserved */
+/* Slot 271 is reserved */
+/* Slot 272 is reserved */
+/* Slot 273 is reserved */
+/* Slot 274 is reserved */
+#ifndef TkUnusedStubEntry
+#define TkUnusedStubEntry \
+	(tkStubsPtr->tkUnusedStubEntry) /* 275 */
+#endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
@@ -2259,6 +2296,8 @@ extern TkStubs *tkStubsPtr;
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#undef TkUnusedStubEntry
 
 #endif /* _TKDECLS */
 
