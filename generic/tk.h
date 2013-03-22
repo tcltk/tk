@@ -22,14 +22,6 @@
 #endif
 
 #ifndef _ANSI_ARGS_
-#  ifndef NO_PROTOTYPES
-#    define _ANSI_ARGS_(x)	x
-#  else
-#    define _ANSI_ARGS_(x)	()
-#  endif
-#endif
-
-#ifndef _ANSI_ARGS_
 #   ifndef NO_PROTOTYPES
 #	define _ANSI_ARGS_(x)	x
 #   else
