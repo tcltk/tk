@@ -3021,11 +3021,10 @@ Initialize(
     ThreadSpecificData *tsdPtr;
 
     /*
-     * Ensure that we are getting the matching version of Tcl. This is really
-     * only an issue when Tk is loaded dynamically.
+     * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.5.0", 0) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3255,11 +3254,6 @@ Initialize(
 	    goto done;
 	}
 	geometry = NULL;
-    }
-
-    if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 0) == NULL) {
-	code = TCL_ERROR;
-	goto done;
     }
 
     /*
