@@ -171,6 +171,12 @@ Tk_MainEx(
     tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+#if !defined(STATIC_BUILD)
+#   undef Tcl_FindExecutable
+#   define Tcl_FindExecutable \
+	(tclStubsPtr->tcl_FindExecutable) /* 144 */
+#endif
+
     Tcl_FindExecutable(argv[0]);
     tsdPtr->interp = interp;
     Tcl_Preserve((ClientData) interp);
