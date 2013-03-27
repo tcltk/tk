@@ -81,6 +81,17 @@ SC_ENABLE_SHARED
 SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
 SC_LOAD_TCLCONFIG
 
+if test "${TCL_MAJOR_VERSION}" != "${TK_MAJOR_VERSION}"; then
+    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
+fi
+if test "${TCL_MINOR_VERSION}" -lt "${TK_MINOR_VERSION}"; then
+    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
+fi
+
 #--------------------------------------------------------------------
 # The statements below define a collection of compile flags.  This
 # macro depends on the value of SHARED_BUILD, and should be called

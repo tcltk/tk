@@ -77,6 +77,11 @@ Set the spinbox string to \fIvalue\fR. If a \fB\-format\fR option has
 been configured then this format will be applied. If formatting fails
 or is not set or the \fB\-values\fR option has been used then the value
 is set directly.
+.SH "VIRTUAL EVENTS"
+.PP
+The spinbox widget generates a \fB<<Increment>>\fR virtual event when
+the user presses <Up>, and a \fB<<Decrement>>\fR virtual event when the
+user presses <Down>.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::entry(n), spinbox(n)
 .SH KEYWORDS
