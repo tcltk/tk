@@ -22,6 +22,15 @@
 #include "tkUnixInt.h"
 #endif
 
+#if (TCL_MAJOR_VERSION==8) && (TCL_MINOR_VERSION<6)
+#   if defined(STATIC_BUILD)
+#	define Tcl_Canceled(interp, flags) (TCL_OK)
+#   else
+#	define Tcl_Canceled \
+		(tclStubsPtr->tclCanceled) /* 581 */
+#   endif
+#endif
+
 /*
  * Forward declarations for functions defined later in this file:
  */
@@ -913,6 +922,7 @@ Tk_TkwaitObjCmd(
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     int done, index;
+    int code = TCL_OK;
     static const char *optionStrings[] = {
 	"variable", "visibility", "window", NULL
     };
@@ -939,6 +949,10 @@ Tk_TkwaitObjCmd(
 	}
 	done = 0;
 	while (!done) {
+	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
+		code = TCL_ERROR;
+		break;
+	    }
 	    Tcl_DoOneEvent(0);
 	}
 	Tcl_UntraceVar(interp, Tcl_GetString(objv[2]),
@@ -958,9 +972,13 @@ Tk_TkwaitObjCmd(
 		WaitVisibilityProc, (ClientData) &done);
 	done = 0;
 	while (!done) {
+	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
+		code = TCL_ERROR;
+		break;
+	    }
 	    Tcl_DoOneEvent(0);
 	}
-	if (done != 1) {
+	if ((done != 0) && (done != 1)) {
 	    /*
 	     * Note that we do not delete the event handler because it was
 	     * deleted automatically when the window was destroyed.
@@ -988,25 +1006,37 @@ Tk_TkwaitObjCmd(
 		WaitWindowProc, (ClientData) &done);
 	done = 0;
 	while (!done) {
+	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
+		code = TCL_ERROR;
+		break;
+	    }
 	    Tcl_DoOneEvent(0);
 	}
 
 	/*
-	 * Note: there's no need to delete the event handler. It was deleted
-	 * automatically when the window was destroyed.
+	 * Note: normally there's no need to delete the event handler. It was
+	 * deleted automatically when the window was destroyed; however, if
+	 * the wait operation was canceled, we need to delete it.
 	 */
 
+	if (done == 0) {
+	    Tk_DeleteEventHandler(window, StructureNotifyMask,
+		    WaitWindowProc, &done);
+	}
 	break;
     }
     }
 
     /*
      * Clear out the interpreter's result, since it may have been set by event
-     * handlers.
+     * handlers. This is skipped if an error occurred above, such as the wait
+     * operation being canceled.
      */
 
+    if (code == TCL_OK)
     Tcl_ResetResult(interp);
-    return TCL_OK;
+
+    return code;
 }
 
 	/* ARGSUSED */
@@ -1080,6 +1110,7 @@ Tk_UpdateObjCmd(
     static const char *updateOptions[] = {"idletasks", NULL};
     int flags, index;
     TkDisplay *dispPtr;
+    int code = TCL_OK;
 
     if (objc == 1) {
 	flags = TCL_DONT_WAIT;
@@ -1104,12 +1135,35 @@ Tk_UpdateObjCmd(
 
     while (1) {
 	while (Tcl_DoOneEvent(flags) != 0) {
-	    /* Empty loop body */
+	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
+		code = TCL_ERROR;
+		break;
+	    }
 	}
+
+	/*
+	 * If event processing was canceled proceed no further.
+	 */
+
+	if (code == TCL_ERROR)
+	    break;
+
 	for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 		dispPtr = dispPtr->nextPtr) {
 	    XSync(dispPtr->display, False);
 	}
+
+	/*
+	 * Check again if event processing has been canceled because the inner
+	 * loop (above) may not have checked (i.e. no events were processed and
+	 * the loop body was skipped).
+	 */
+
+	if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
+	    code = TCL_ERROR;
+	    break;
+	}
+
 	if (Tcl_DoOneEvent(flags) == 0) {
 	    break;
 	}
@@ -1117,11 +1171,14 @@ Tk_UpdateObjCmd(
 
     /*
      * Must clear the interpreter's result because event handlers could have
-     * executed commands.
+     * executed commands. This is skipped if an error occurred above, such as
+     * the wait operation being canceled.
      */
 
+    if (code == TCL_OK)
     Tcl_ResetResult(interp);
-    return TCL_OK;
+
+    return code;
 }
 
 /*
