@@ -1,3 +1,12 @@
+2013-03-27  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/button.tcl:    [Bug 3608074]: Add <<Invoke>> bindings to
+	* library/listbox.tcl:   Button's, Listbox and Menu.
+	* library/menu.tcl:
+	* doc/event.n:           Document <<Invoke>>, <<ThemeChanged>>,
+	* doc/ttk_panedwindow.n: <<EnteredChild>> (ttk_pandedwindow only) and
+	* doc/ttk_spinbox.n:     <<Increment/Decrement>> (ttk_spinbox only)
+
 2013-03-22  Don Porter  <dgp@users.sourceforge.net>
 
 	* generic/tkWindow.c:	Updates so that Tk 8.5.14+ will be able to
