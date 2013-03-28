@@ -1498,10 +1498,10 @@ typedef struct Tk_ElementSpec {
 /* Removed Tk_Main, use macro instead */
 #if defined(__WIN32__) || defined(__CYGWIN__)
 #define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
-	(Tcl_FindExecutable(0), (Tcl_CreateInterp)()))
+	(Tcl_InitSubsystems(TCL_INIT_CREATE, 0, NULL)))
 #else
 #define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
-	(Tcl_FindExecutable(argv[0]), (Tcl_CreateInterp)()))
+	(Tcl_InitSubsystems(TCL_INIT_CREATE, 0, argv)))
 #endif
 const char *		Tk_InitStubs(Tcl_Interp *interp, const char *version,
 				int exact);
