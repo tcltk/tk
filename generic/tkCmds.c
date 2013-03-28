@@ -23,12 +23,7 @@
 #endif
 
 #if (TCL_MAJOR_VERSION==8) && (TCL_MINOR_VERSION<6)
-#   if defined(STATIC_BUILD)
-#	define Tcl_Canceled(interp, flags) (TCL_OK)
-#   else
-#	define Tcl_Canceled \
-		(tclStubsPtr->tclCanceled) /* 581 */
-#   endif
+#   define Tcl_Canceled(interp, flags) (TCL_OK)
 #endif
 
 /*
