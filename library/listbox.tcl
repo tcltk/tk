@@ -142,6 +142,9 @@ bind Listbox <<Copy>> {
 bind Listbox <space> {
     tk::ListboxBeginSelect %W [%W index active]
 }
+bind Listbox <<Invoke>> {
+    tk::ListboxBeginSelect %W [%W index active]
+}
 bind Listbox <Select> {
     tk::ListboxBeginSelect %W [%W index active]
 }
