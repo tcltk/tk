@@ -6884,6 +6884,4 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2013-03-13 (enhancement) better build support for Debian arch (shadura)
 
-2013-03-22 (enhancement) support builds against Tcl 8.6+ (nijtmans,porter)
-
 --- Released 8.5.14, March 27, 2013 --- See ChangeLog for details ---
