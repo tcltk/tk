@@ -568,6 +568,9 @@ declare 180 {
     char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
+declare 184 {
+    void TkUnusedStubEntry(void)
+}
 
 ##############################################################################
 
