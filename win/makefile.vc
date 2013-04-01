@@ -360,7 +360,6 @@ TKOBJS = \
 	$(TMP_DIR)\tkUtil.obj \
 	$(TMP_DIR)\tkVisual.obj \
 	$(TMP_DIR)\tkStubInit.obj \
-	$(TMP_DIR)\tkStubLib.obj \
 	$(TMP_DIR)\tkWindow.obj \
 	$(TTK_OBJS) \
 !if !$(STATIC_BUILD)

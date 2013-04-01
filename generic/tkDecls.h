@@ -1674,6 +1674,12 @@ EXTERN void		Tk_CreateOldImageType(Tk_ImageType *typePtr);
 EXTERN void		Tk_CreateOldPhotoImageFormat(
 				Tk_PhotoImageFormat *formatPtr);
 #endif
+/* Slot 274 is reserved */
+#ifndef TkUnusedStubEntry_TCL_DECLARED
+#define TkUnusedStubEntry_TCL_DECLARED
+/* 275 */
+EXTERN void		TkUnusedStubEntry(void);
+#endif
 
 typedef struct TkStubHooks {
     struct TkPlatStubs *tkPlatStubs;
@@ -1960,6 +1966,8 @@ typedef struct TkStubs {
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
     void (*tk_CreateOldImageType) (Tk_ImageType *typePtr); /* 272 */
     void (*tk_CreateOldPhotoImageFormat) (Tk_PhotoImageFormat *formatPtr); /* 273 */
+    VOID *reserved274;
+    void (*tkUnusedStubEntry) (void); /* 275 */
 } TkStubs;
 
 #ifdef __cplusplus
@@ -3066,6 +3074,11 @@ extern TkStubs *tkStubsPtr;
 #define Tk_CreateOldPhotoImageFormat \
 	(tkStubsPtr->tk_CreateOldPhotoImageFormat) /* 273 */
 #endif
+/* Slot 274 is reserved */
+#ifndef TkUnusedStubEntry
+#define TkUnusedStubEntry \
+	(tkStubsPtr->tkUnusedStubEntry) /* 275 */
+#endif
 
 #endif /* defined(USE_TK_STUBS) && !defined(USE_TK_STUB_PROCS) */
 
@@ -3073,6 +3086,8 @@ extern TkStubs *tkStubsPtr;
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
+
+#undef TkUnusedStubEntry
 
 #endif /* _TKDECLS */
 

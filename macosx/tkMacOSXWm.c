@@ -321,6 +321,10 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+#define TK_GOT_AT_LEAST_SNOW_LEOPARD 1
+#endif
+
 #pragma mark TKWindow(TKWm)
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
@@ -665,7 +669,7 @@ TkWmMapWindow(
 
     wmPtr->flags |= WM_ABOUT_TO_MAP;
     if (wmPtr->flags & WM_UPDATE_PENDING) {
-	Tk_CancelIdleCall(UpdateGeometryInfo, winPtr);
+	Tcl_CancelIdleCall(UpdateGeometryInfo, winPtr);
     }
     UpdateGeometryInfo(winPtr);
     wmPtr->flags &= ~WM_ABOUT_TO_MAP;
@@ -769,7 +773,7 @@ TkWmDeadWindow(
 	ckfree(wmPtr->clientMachine);
     }
     if (wmPtr->flags & WM_UPDATE_PENDING) {
-	Tk_CancelIdleCall(UpdateGeometryInfo, winPtr);
+	Tcl_CancelIdleCall(UpdateGeometryInfo, winPtr);
     }
 
     /*
@@ -4396,7 +4400,7 @@ Tk_MoveToplevelWindow(
 
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	if (wmPtr->flags & WM_UPDATE_PENDING) {
-	    Tk_CancelIdleCall(UpdateGeometryInfo, winPtr);
+	    Tcl_CancelIdleCall(UpdateGeometryInfo, winPtr);
 	}
 	UpdateGeometryInfo(winPtr);
     }
@@ -4539,7 +4543,7 @@ TkWmAddToColormapWindows(
      * add the toplevel itself as the last element of the list.
      */
 
-    newPtr = ckalloc((count+2) * sizeof(TkWindow *));
+    newPtr = (TkWindow**)ckalloc((count+2) * sizeof(TkWindow *));
     if (count > 0) {
 	memcpy(newPtr, oldPtr, count * sizeof(TkWindow *));
     }
@@ -5438,10 +5442,14 @@ TkMacOSXMakeRealWindowExist(
     /* Set background color and opacity of window if those flags are set.  */
     if (colorName != NULL) {
     	[window setBackgroundColor: colorName];
-    	 }
+    }
 
     if (opaqueTag != NULL) {
+#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
     	[window setOpaque: opaqueTag];
+#else
+	[window setOpaque: YES];
+#endif
     }
 
     [window setDocumentEdited:NO];
@@ -5942,7 +5950,7 @@ TkWmStackorderToplevel(
     Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
     WmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
-    windows = ckalloc((table.numEntries+1) * sizeof(TkWindow *));
+    windows = (TkWindow**)ckalloc((table.numEntries+1) * sizeof(TkWindow *));
 
     /*
      * Special cases: If zero or one toplevels were mapped there is no need to
@@ -5967,7 +5975,7 @@ TkWmStackorderToplevel(
     } else {
 	window_ptr = windows + table.numEntries;
 	*window_ptr-- = NULL;
-	windowNumbers = ckalloc(windowCount * sizeof(NSInteger));
+	windowNumbers = (NSInteger*)ckalloc(windowCount * sizeof(NSInteger));
 	NSWindowList(windowCount, windowNumbers);
 	for (NSInteger index = 0; index < windowCount; index++) {
 	    NSWindow *w = [NSApp windowWithWindowNumber:windowNumbers[index]];
@@ -6286,7 +6294,9 @@ TkMacOSXMakeFullscreen(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int result = TCL_OK, wasFullscreen = (wmPtr->flags & WM_FULLSCREEN);
 
+#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
     static unsigned long prevMask = 0, prevPres = 0;
+#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
 
     if (fullscreen) {
 	int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
@@ -6325,15 +6335,26 @@ TkMacOSXMakeFullscreen(
 	    wmPtr->flags |= WM_FULLSCREEN;
 	}
 
+#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
+	/*
+	 * We can't set these features on Leopard or earlier, as they don't
+	 * exist (neither options nor API that uses them). This formally means
+	 * that there's a bug with full-screen windows with Tk on old OSX, but
+	 * it isn't worth blocking a build just for this.
+	 */
+
 	prevMask = [window styleMask];
 	prevPres = [NSApp presentationOptions];
 	[window setStyleMask: NSBorderlessWindowMask];
 	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
 	                          | NSApplicationPresentationAutoHideMenuBar];
+#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;
+#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
 	[NSApp setPresentationOptions: prevPres];
 	[window setStyleMask: prevMask];
+#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     }
 
     if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {
