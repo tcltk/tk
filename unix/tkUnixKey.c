@@ -17,7 +17,11 @@
 **                does this and sets the USE_XKB flag if xkb is supported.
 **                (should this be function ptr?)
 */
-#include <X11/XKBlib.h>
+#ifdef HAVE_XKBKEYCODETOKEYSYM
+#  include <X11/XKBlib.h>
+#else
+#  define XkbKeycodeToKeysym(D,K,G,L) XKeycodeToKeysym(D,K,L)
+#endif
 #define TkKeycodeToKeysym(D,K,G,L)		\
     ((D)->flags & TK_DISPLAY_USE_XKB) ?		\
       XkbKeycodeToKeysym((D)->display,K,G,L) :	\
@@ -286,6 +290,15 @@ TkpGetKeySym(
     int index;
     TkKeyEvent* kePtr = (TkKeyEvent*) eventPtr;
 
+    /*
+     * Refresh the mapping information if it's stale. This must happen before
+     * we do any input method processing. [Bug 3599312]
+     */
+
+    if (dispPtr->bindInfoStale) {
+	TkpInitKeymapInfo(dispPtr);
+    }
+
 #ifdef TK_USE_INPUT_METHODS
     /*
      * If input methods are active, we may already have determined a keysym.
@@ -298,6 +311,7 @@ TkpGetKeySym(
 	    Tcl_DString ds;
 	    TkWindow *winPtr = (TkWindow *)
 		Tk_IdToWindow(eventPtr->xany.display, eventPtr->xany.window);
+
 	    Tcl_DStringInit(&ds);
 	    (void) TkpGetString(winPtr, eventPtr, &ds);
 	    Tcl_DStringFree(&ds);
@@ -307,14 +321,6 @@ TkpGetKeySym(
 	}
     }
 #endif
-
-    /*
-     * Refresh the mapping information if it's stale
-     */
-
-    if (dispPtr->bindInfoStale) {
-	TkpInitKeymapInfo(dispPtr);
-    }
 
     /*
      * Figure out which of the four slots in the keymap vector to use for this

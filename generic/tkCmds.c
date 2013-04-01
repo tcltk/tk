@@ -22,6 +22,10 @@
 #include "tkUnixInt.h"
 #endif
 
+#if (TCL_MAJOR_VERSION==8) && (TCL_MINOR_VERSION<6)
+#   define Tcl_Canceled(interp, flags) (TCL_OK)
+#endif
+
 /*
  * Forward declarations for functions defined later in this file:
  */
@@ -232,7 +236,7 @@ TkBindEventProc(
     ClientData objects[MAX_OBJS], *objPtr;
     TkWindow *topLevPtr;
     int i, count;
-    char *p;
+    const char *p;
     Tcl_HashEntry *hPtr;
 
     if ((winPtr->mainPtr == NULL) || (winPtr->mainPtr->bindingTable == NULL)) {
@@ -251,7 +255,7 @@ TkBindEventProc(
 		    (winPtr->numTags * sizeof(ClientData)));
 	}
 	for (i = 0; i < winPtr->numTags; i++) {
-	    p = (char *) winPtr->tagPtr[i];
+	    p = winPtr->tagPtr[i];
 	    if (*p == '.') {
 		hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->nameTable, p);
 		if (hPtr != NULL) {
@@ -327,7 +331,6 @@ Tk_BindtagsObjCmd(
     }
     if (objc == 2) {
 	listPtr = Tcl_NewObj();
-	Tcl_IncrRefCount(listPtr);
 	if (winPtr->numTags == 0) {
 	    Tcl_ListObjAppendElement(interp, listPtr,
 		    Tcl_NewStringObj(winPtr->pathName, -1));
@@ -350,7 +353,6 @@ Tk_BindtagsObjCmd(
 	    }
 	}
 	Tcl_SetObjResult(interp, listPtr);
-	Tcl_DecrRefCount(listPtr);
 	return TCL_OK;
     }
     if (winPtr->tagPtr != NULL) {
@@ -411,17 +413,17 @@ TkFreeBindingTags(
     TkWindow *winPtr)		/* Window whose tags are to be released. */
 {
     int i;
-    char *p;
+    const char *p;
 
     for (i = 0; i < winPtr->numTags; i++) {
-	p = (char *) (winPtr->tagPtr[i]);
+	p = winPtr->tagPtr[i];
 	if (*p == '.') {
 	    /*
 	     * Names starting with "." are malloced rather than Uids, so they
 	     * have to be freed.
 	     */
 
-	    ckfree(p);
+	    ckfree((char *)p);
 	}
     }
     ckfree((char *) winPtr->tagPtr);
@@ -913,6 +915,7 @@ Tk_TkwaitObjCmd(
 {
     Tk_Window tkwin = (Tk_Window) clientData;
     int done, index;
+    int code = TCL_OK;
     static const char *optionStrings[] = {
 	"variable", "visibility", "window", NULL
     };
@@ -939,6 +942,10 @@ Tk_TkwaitObjCmd(
 	}
 	done = 0;
 	while (!done) {
+	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
+		code = TCL_ERROR;
+		break;
+	    }
 	    Tcl_DoOneEvent(0);
 	}
 	Tcl_UntraceVar(interp, Tcl_GetString(objv[2]),
@@ -958,9 +965,13 @@ Tk_TkwaitObjCmd(
 		WaitVisibilityProc, (ClientData) &done);
 	done = 0;
 	while (!done) {
+	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
+		code = TCL_ERROR;
+		break;
+	    }
 	    Tcl_DoOneEvent(0);
 	}
-	if (done != 1) {
+	if ((done != 0) && (done != 1)) {
 	    /*
 	     * Note that we do not delete the event handler because it was
 	     * deleted automatically when the window was destroyed.
@@ -988,25 +999,37 @@ Tk_TkwaitObjCmd(
 		WaitWindowProc, (ClientData) &done);
 	done = 0;
 	while (!done) {
+	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
+		code = TCL_ERROR;
+		break;
+	    }
 	    Tcl_DoOneEvent(0);
 	}
 
 	/*
-	 * Note: there's no need to delete the event handler. It was deleted
-	 * automatically when the window was destroyed.
+	 * Note: normally there's no need to delete the event handler. It was
+	 * deleted automatically when the window was destroyed; however, if
+	 * the wait operation was canceled, we need to delete it.
 	 */
 
+	if (done == 0) {
+	    Tk_DeleteEventHandler(window, StructureNotifyMask,
+		    WaitWindowProc, &done);
+	}
 	break;
     }
     }
 
     /*
      * Clear out the interpreter's result, since it may have been set by event
-     * handlers.
+     * handlers. This is skipped if an error occurred above, such as the wait
+     * operation being canceled.
      */
 
+    if (code == TCL_OK)
     Tcl_ResetResult(interp);
-    return TCL_OK;
+
+    return code;
 }
 
 	/* ARGSUSED */
@@ -1034,8 +1057,7 @@ WaitVisibilityProc(
 
     if (eventPtr->type == VisibilityNotify) {
 	*donePtr = 1;
-    }
-    if (eventPtr->type == DestroyNotify) {
+    } else if (eventPtr->type == DestroyNotify) {
 	*donePtr = 2;
     }
 }
@@ -1080,6 +1102,7 @@ Tk_UpdateObjCmd(
     static const char *updateOptions[] = {"idletasks", NULL};
     int flags, index;
     TkDisplay *dispPtr;
+    int code = TCL_OK;
 
     if (objc == 1) {
 	flags = TCL_DONT_WAIT;
@@ -1104,12 +1127,35 @@ Tk_UpdateObjCmd(
 
     while (1) {
 	while (Tcl_DoOneEvent(flags) != 0) {
-	    /* Empty loop body */
+	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
+		code = TCL_ERROR;
+		break;
+	    }
 	}
+
+	/*
+	 * If event processing was canceled proceed no further.
+	 */
+
+	if (code == TCL_ERROR)
+	    break;
+
 	for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 		dispPtr = dispPtr->nextPtr) {
 	    XSync(dispPtr->display, False);
 	}
+
+	/*
+	 * Check again if event processing has been canceled because the inner
+	 * loop (above) may not have checked (i.e. no events were processed and
+	 * the loop body was skipped).
+	 */
+
+	if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
+	    code = TCL_ERROR;
+	    break;
+	}
+
 	if (Tcl_DoOneEvent(flags) == 0) {
 	    break;
 	}
@@ -1117,11 +1163,14 @@ Tk_UpdateObjCmd(
 
     /*
      * Must clear the interpreter's result because event handlers could have
-     * executed commands.
+     * executed commands. This is skipped if an error occurred above, such as
+     * the wait operation being canceled.
      */
 
+    if (code == TCL_OK)
     Tcl_ResetResult(interp);
-    return TCL_OK;
+
+    return code;
 }
 
 /*
@@ -1503,9 +1552,7 @@ Tk_WinfoObjCmd(
 	    Tcl_SetStringObj(resultPtr, Tk_PathName(tkwin), -1);
 	}
 	break;
-    case WIN_INTERPS: {
-	int result;
-
+    case WIN_INTERPS:
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
 	if (skip < 0) {
 	    return TCL_ERROR;
@@ -1514,9 +1561,7 @@ Tk_WinfoObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "?-displayof window?");
 	    return TCL_ERROR;
 	}
-	result = TkGetInterpNames(interp, tkwin);
-	return result;
-    }
+	return TkGetInterpNames(interp, tkwin);
     case WIN_PATHNAME: {
 	Window id;
 
