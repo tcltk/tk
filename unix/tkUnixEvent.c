@@ -18,7 +18,7 @@
 #  define XkbOpenDisplay(D,V,E,M,m,R) \
 	(XkbOpenDisplay)((char *)(D),(V),(E),(M),(m),(R))
 #else
-#  define XkbOpenDisplay(D,V,E,M,m,R) (NULL)
+#  define XkbOpenDisplay(D,V,E,M,m,R) (V),(E),(M),(m),(R),(NULL)
 #endif
 
 /*
