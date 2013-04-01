@@ -2,6 +2,10 @@
 
 	* tests/window.test: Bring back test window-2.9. No longer hangs.
 
+	* generic/tkInt.h:	[Bug 3607830] Runtime checks that Xkb is
+	* unix/tkUnixEvent.c:	available in the X server before trying to
+	* unix/tkUnixKey.c:	use.  Adapted from patch from Brian Griffin.
+
 2013-03-27  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/button.tcl:    [Bug 3608074]: Add <<Invoke>> bindings to
