@@ -12,7 +12,14 @@
 
 #include "tkUnixInt.h"
 #include <signal.h>
-#include <X11/XKBlib.h>
+#ifdef HAVE_XKBKEYCODETOKEYSYM
+#  include <X11/XKBlib.h>
+/* Work around stupid un-const-ified Xkb headers.  Grrrrr.... */
+#  define XkbOpenDisplay(D,V,E,M,m,R) \
+	(XkbOpenDisplay)((char *)(D),(V),(E),(M),(m),(R))
+#else
+#  define XkbOpenDisplay(D,V,E,M,m,R) (NULL)
+#endif
 
 /*
  * The following static indicates whether this module has been initialized in

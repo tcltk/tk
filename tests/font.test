@@ -46,10 +46,9 @@ proc csetup {{str ""}} {
 
 setup
 
-case [tk windowingsystem] {
+switch [tk windowingsystem] {
     x11	 	{set fixed "fixed"}
     win32	{set fixed "courier 12"}
-    classic -
     aqua	{set fixed "monaco 9"}
 }
 
