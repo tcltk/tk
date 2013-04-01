@@ -12,6 +12,14 @@
 
 #include "tkUnixInt.h"
 #include <signal.h>
+#ifdef HAVE_XKBKEYCODETOKEYSYM
+#  include <X11/XKBlib.h>
+/* Work around stupid un-const-ified Xkb headers.  Grrrrr.... */
+#  define XkbOpenDisplay(D,V,E,M,m,R) \
+	(XkbOpenDisplay)((char *)(D),(V),(E),(M),(m),(R))
+#else
+#  define XkbOpenDisplay(D,V,E,M,m,R) (NULL)
+#endif
 
 /*
  * The following static indicates whether this module has been initialized in
@@ -117,6 +125,12 @@ TkpOpenDisplay(
 {
     TkDisplay *dispPtr;
     Display *display;
+    int event = 0;
+    int error = 0;
+    int major = 1;
+    int minor = 0;
+    int reason = 0;
+    unsigned int use_xkb = 0;
 #ifdef TCL_THREADS
     static int xinited = 0;
     TCL_DECLARE_MUTEX(xinitMutex);
@@ -134,13 +148,30 @@ TkpOpenDisplay(
     }
 #endif
 
-    display = XOpenDisplay(displayNameStr);
+    /*
+    ** Bug [3607830]: Before using Xkb, it must be initialized and confirmed
+    **                that the serve supports it.  The XkbOpenDisplay call
+    **                will perform this check and return NULL if the extension
+    **                is not supported.
+    */
+    display = XkbOpenDisplay(displayNameStr, &event, &error, &major, &minor, &reason);
+
+    if (display == NULL) {
+	/*fprintf(stderr,"event=%d error=%d major=%d minor=%d reason=%d\nDisabling xkb\n",
+	event, error, major, minor, reason);*/
+	display  = XOpenDisplay(displayNameStr);
+    } else {
+	use_xkb = TK_DISPLAY_USE_XKB;
+	/*fprintf(stderr, "Using xkb %d.%d\n", major, minor);*/
+    }
+
     if (display == NULL) {
 	return NULL;
     }
     dispPtr = ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
+    dispPtr->flags |= use_xkb;
 #ifdef TK_USE_INPUT_METHODS
     OpenIM(dispPtr);
 #endif
