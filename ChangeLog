@@ -1,3 +1,7 @@
+2013-04-01  Don Porter  <dgp@users.sourceforge.net>
+
+	* tests/window.test: Bring back test window-2.9. No longer hangs.
+
 2013-03-27  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* library/button.tcl:    [Bug 3608074]: Add <<Invoke>> bindings to
