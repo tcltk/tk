@@ -1338,7 +1338,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 TK_VERSION=8.5
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=5
-TK_PATCH_LEVEL=".13"
+TK_PATCH_LEVEL=".14"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -1585,7 +1585,7 @@ echo "${ECHO_T}$BUILD_TCLSH" >&6
 
 
 
-if test "${TCL_MAJOR_VERSION}" != "${TK_MAJOR_VERSION}"; then
+if test "${TCL_VERSION}" != "${TK_VERSION}"; then
     { { echo "$as_me:$LINENO: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
 Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
 Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&5
@@ -1593,21 +1593,6 @@ echo "$as_me: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
 Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
 Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&2;}
    { (exit 1); exit 1; }; }
-fi
-if test "${TCL_MINOR_VERSION}" -lt "${TK_MINOR_VERSION}"; then
-    { { echo "$as_me:$LINENO: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&5
-echo "$as_me: error: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test "${TCL_MINOR_VERSION}" != "${TK_MINOR_VERSION}"; then
-    { echo "$as_me:$LINENO: WARNING: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Building Tk ${TK_VERSION} this way results in a binary which is no longer loadable in Tcl ${TK_VERSION}" >&5
-echo "$as_me: WARNING: ${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Building Tk ${TK_VERSION} this way results in a binary which is no longer loadable in Tcl ${TK_VERSION}" >&2;}
 fi
 
 #------------------------------------------------------------------------
@@ -10106,7 +10091,7 @@ ac_x_header_dirs='
 /usr/openwin/share/include'
 
 if test "$ac_x_includes" = no; then
-  # Guess where to find include files, by looking for Intrinsic.h.
+  # Guess where to find include files, by looking for Xlib.h.
   # First, try using that file with no special directory specified.
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -10114,7 +10099,7 @@ _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <X11/Intrinsic.h>
+#include <X11/Xlib.h>
 _ACEOF
 if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
   (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
@@ -10141,7 +10126,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
   for ac_dir in $ac_x_header_dirs; do
-  if test -r "$ac_dir/X11/Intrinsic.h"; then
+  if test -r "$ac_dir/X11/Xlib.h"; then
     ac_x_includes=$ac_dir
     break
   fi
@@ -10155,18 +10140,18 @@ if test "$ac_x_libraries" = no; then
   # See if we find them without any special options.
   # Don't add to $LIBS permanently.
   ac_save_LIBS=$LIBS
-  LIBS="-lXt $LIBS"
+  LIBS="-lX11 $LIBS"
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
-#include <X11/Intrinsic.h>
+#include <X11/Xlib.h>
 int
 main ()
 {
-XtMalloc (0)
+XrmInitialize ()
   ;
   return 0;
 }

@@ -350,6 +350,7 @@ TK_OBJS = \
 	tkUtil.$(OBJEXT) \
 	tkVisual.$(OBJEXT) \
 	tkStubInit.$(OBJEXT) \
+	tkStubLib.$(OBJEXT) \
 	tkWindow.$(OBJEXT) \
 	$(TTK_OBJS)
 
