@@ -25,7 +25,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=8.5
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=5
-TK_PATCH_LEVEL=".13"
+TK_PATCH_LEVEL=".14"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -39,19 +39,10 @@ SC_LOAD_TCLCONFIG
 SC_PROG_TCLSH
 SC_BUILD_TCLSH
 
-if test "${TCL_MAJOR_VERSION}" != "${TK_MAJOR_VERSION}"; then
+if test "${TCL_VERSION}" != "${TK_VERSION}"; then
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
 Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
 Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
-fi
-if test "${TCL_MINOR_VERSION}" -lt "${TK_MINOR_VERSION}"; then
-    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
-fi
-if test "${TCL_MINOR_VERSION}" != "${TK_MINOR_VERSION}"; then
-    AC_MSG_WARN([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Building Tk ${TK_VERSION} this way results in a binary which is no longer loadable in Tcl ${TK_VERSION}])
 fi
 
 #------------------------------------------------------------------------

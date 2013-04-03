@@ -135,7 +135,7 @@ Tk_MainEx(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION ".0", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.5.0", 0) == NULL) {
 	if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
 	    abort();
 	} else {
@@ -170,12 +170,6 @@ Tk_MainEx(
 
     tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-#if !defined(STATIC_BUILD)
-#   undef Tcl_FindExecutable
-#   define Tcl_FindExecutable \
-	(tclStubsPtr->tcl_FindExecutable) /* 144 */
-#endif
 
     Tcl_FindExecutable(argv[0]);
     tsdPtr->interp = interp;

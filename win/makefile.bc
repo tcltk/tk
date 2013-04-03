@@ -225,6 +225,7 @@ TKOBJS = \
 	$(TMPDIR)\tkUtil.obj \
 	$(TMPDIR)\tkVisual.obj \
 	$(TMPDIR)\tkStubInit.obj \
+	$(TMPDIR)\tkStubLib.obj \
 	$(TMPDIR)\tkWindow.obj
 
 # Maintenance hint: Please have multiple members of TKSTUBOBJS be separated
