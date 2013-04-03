@@ -103,6 +103,9 @@
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
 
+/* Do we have XkbKeycodeToKeysym? */
+#undef HAVE_XKBKEYCODETOKEYSYM
+
 /* Is XScreenSaver available? */
 #undef HAVE_XSS
 
