@@ -232,7 +232,7 @@ TkBindEventProc(
     ClientData objects[MAX_OBJS], *objPtr;
     TkWindow *topLevPtr;
     int i, count;
-    char *p;
+    const char *p;
     Tcl_HashEntry *hPtr;
 
     if ((winPtr->mainPtr == NULL) || (winPtr->mainPtr->bindingTable == NULL)) {
@@ -251,7 +251,7 @@ TkBindEventProc(
 		    (winPtr->numTags * sizeof(ClientData)));
 	}
 	for (i = 0; i < winPtr->numTags; i++) {
-	    p = (char *) winPtr->tagPtr[i];
+	    p = winPtr->tagPtr[i];
 	    if (*p == '.') {
 		hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->nameTable, p);
 		if (hPtr != NULL) {
@@ -327,7 +327,6 @@ Tk_BindtagsObjCmd(
     }
     if (objc == 2) {
 	listPtr = Tcl_NewObj();
-	Tcl_IncrRefCount(listPtr);
 	if (winPtr->numTags == 0) {
 	    Tcl_ListObjAppendElement(interp, listPtr,
 		    Tcl_NewStringObj(winPtr->pathName, -1));
@@ -350,7 +349,6 @@ Tk_BindtagsObjCmd(
 	    }
 	}
 	Tcl_SetObjResult(interp, listPtr);
-	Tcl_DecrRefCount(listPtr);
 	return TCL_OK;
     }
     if (winPtr->tagPtr != NULL) {
@@ -411,10 +409,10 @@ TkFreeBindingTags(
     TkWindow *winPtr)		/* Window whose tags are to be released. */
 {
     int i;
-    char *p;
+    const char *p;
 
     for (i = 0; i < winPtr->numTags; i++) {
-	p = (char *) (winPtr->tagPtr[i]);
+	p = winPtr->tagPtr[i];
 	if (*p == '.') {
 	    /*
 	     * Names starting with "." are malloced rather than Uids, so they
@@ -1503,9 +1501,7 @@ Tk_WinfoObjCmd(
 	    Tcl_SetStringObj(resultPtr, Tk_PathName(tkwin), -1);
 	}
 	break;
-    case WIN_INTERPS: {
-	int result;
-
+    case WIN_INTERPS:
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
 	if (skip < 0) {
 	    return TCL_ERROR;
@@ -1514,9 +1510,7 @@ Tk_WinfoObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "?-displayof window?");
 	    return TCL_ERROR;
 	}
-	result = TkGetInterpNames(interp, tkwin);
-	return result;
-    }
+	return TkGetInterpNames(interp, tkwin);
     case WIN_PATHNAME: {
 	Window id;
 
