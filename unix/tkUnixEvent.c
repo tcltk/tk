@@ -14,9 +14,6 @@
 #include <signal.h>
 #ifdef HAVE_XKBKEYCODETOKEYSYM
 #  include <X11/XKBlib.h>
-/* Work around stupid un-const-ified Xkb headers.  Grrrrr.... */
-#  define XkbOpenDisplay(D,V,E,M,m,R) \
-	(XkbOpenDisplay)((char *)(D),(V),(E),(M),(m),(R))
 #else
 #  define XkbOpenDisplay(D,V,E,M,m,R) (V),(E),(M),(m),(R),(NULL)
 #endif
@@ -137,8 +134,11 @@ TkpOpenDisplay(
     **                that the serve supports it.  The XkbOpenDisplay call
     **                will perform this check and return NULL if the extension
     **                is not supported.
+    **
+    ** Work around un-const-ified Xkb headers using (char *) cast.
     */
-    display = XkbOpenDisplay(displayNameStr, &event, &error, &major, &minor, &reason);
+    display = XkbOpenDisplay((char *)displayNameStr, &event, &error, &major,
+	    &minor, &reason);
 
     if (display == NULL) {
 	/*fprintf(stderr,"event=%d error=%d major=%d minor=%d reason=%d\nDisabling xkb\n",
