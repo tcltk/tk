@@ -1,3 +1,7 @@
+2013-04-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/makefile.vc: [Bug 3568760]: Tk documentation fails to build
+
 2013-04-01  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/window.test: Bring back test window-2.9. No longer hangs.
