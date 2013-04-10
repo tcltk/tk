@@ -701,7 +701,7 @@ CHMFILE=$(HTMLDIR)\$(HTMLBASE).chm
 htmlhelp: chmsetup $(CHMFILE)
 
 $(CHMFILE): $(DOCDIR)\*
-	@$(TCLSH) $(TOOLSDIR)\tcltk-man2html.tcl
+	@$(TCLSH) $(TCLTOOLSDIR)\tcltk-man2html.tcl
 	@echo Compiling HTML help project
 	@$(HHC) <<$(HHPFILE) >NUL
 [OPTIONS]
