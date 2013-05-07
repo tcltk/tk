@@ -926,7 +926,7 @@ MODULE_SCOPE const Tcl_ObjType tkBorderObjType;
 MODULE_SCOPE const Tcl_ObjType tkBitmapObjType;
 MODULE_SCOPE const Tcl_ObjType tkColorObjType;
 MODULE_SCOPE const Tcl_ObjType tkCursorObjType;
-MODULE_SCOPE const Tcl_ObjType tkFontObjType;
+MODULE_SCOPE Tcl_ObjType tkFontObjType;
 MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
 MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
 
@@ -1246,6 +1246,9 @@ MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 #endif
 
+#undef Tcl_AddErrorInfo
+#define Tcl_AddErrorInfo(interp, message) \
+	Tcl_AppendObjToErrorInfo((interp), Tcl_NewStringObj((message), -1))
 #endif /* _TKINT */
 
 /*
