@@ -17,7 +17,7 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION < 6)
+#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
 #	error Tk 8.6 must be compiled with tcl.h from Tcl 8.6 or better
 #endif
 
@@ -1503,9 +1503,9 @@ typedef struct Tk_ElementSpec {
 #define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
 	(Tcl_FindExecutable(argv[0]), (Tcl_CreateInterp)()))
 #endif
-const char *		Tk_InitStubs(Tcl_Interp *interp, const char *version,
-				int exact);
-EXTERN const char *	Tk_PkgInitStubsCheck(Tcl_Interp *interp,
+const char *	Tk_InitStubs(Tcl_Interp *interp,
+				const char *version, int exact);
+const char *	Tk_PkgInitStubsCheck(Tcl_Interp *interp,
 				const char *version, int exact);
 
 #ifndef USE_TK_STUBS
