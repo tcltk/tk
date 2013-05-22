@@ -128,7 +128,7 @@ TkpOpenDisplay(
     int minor = 0;
     int reason = 0;
     unsigned int use_xkb = 0;
-#ifdef TCL_THREADS
+#if defined(XKEYCODETOKEYSYM_IS_DEPRECATED) && defined(TCL_THREADS)
     static int xinited = 0;
     TCL_DECLARE_MUTEX(xinitMutex);
 

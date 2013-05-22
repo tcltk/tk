@@ -589,6 +589,25 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
+# Check whether XKeycodeToKeysym is deprecated in X11 headers.
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    AC_MSG_CHECKING([whether XKeycodeToKeysym is deprecated])
+    tk_oldCFlags=$CFLAGS
+    CFLAGS="$CFLAGS -Werror"
+    AC_TRY_LINK([
+	#include <X11/Xlib.h>
+    ], [
+	XKeycodeToKeysym(0,0,0);
+    ], [
+	AC_MSG_RESULT([yes])
+	AC_DEFINE(XKEYCODETOKEYSYM_IS_DEPRECATED, 1, [Is XKeycodeToKeysym deprecated?])
+    ], AC_MSG_RESULT([no]))
+    CFLAGS=$tk_oldCFlags
+fi
+
+#--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.
 #
