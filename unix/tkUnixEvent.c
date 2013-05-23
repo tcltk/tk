@@ -130,7 +130,7 @@ TkpOpenDisplay(
     unsigned int use_xkb = 0;
 #if defined(XKEYCODETOKEYSYM_IS_DEPRECATED) && defined(TCL_THREADS)
     static int xinited = 0;
-    TCL_DECLARE_MUTEX(xinitMutex);
+    static Tcl_Mutex xinitMutex = NULL;
 
     if (!xinited) {
 	Tcl_MutexLock(&xinitMutex);
