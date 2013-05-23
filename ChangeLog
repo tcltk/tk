@@ -1,3 +1,9 @@
+2013-05-23  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4:     [Bug 3613668]: XFilterEvent() hangs.
+	* unix/configure:
+	* unix/tkUnixEvent.c:
+
 2013-05-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4:     Fix for FreeBSD, and remove support for older
