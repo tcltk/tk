@@ -1,5 +1,4 @@
-2013-03-26  Don Porter  <dgp@users.sourceforge.net>
-
+2013-06-01  Don Porter  <dgp@users.sourceforge.net>
 	*** 8.4.20 TAGGED FOR RELEASE ***
 
 	* README:		Bump version number to 8.4.20
@@ -12,6 +11,13 @@
 	* win/configure:
 
 	* changes:		updates for 8.4.20 release.
+
+2013-05-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4:     Fix for FreeBSD, and remove support for older
+	* unix/configure:  FreeBSD versions. Patch by Pietro Cerutti.
+
+2013-03-26  Don Porter  <dgp@users.sourceforge.net>
 
 	* tests/window.test:	[Bug 1715716] Constrain window-2.9 no threads.
 
