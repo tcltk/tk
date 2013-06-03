@@ -11,9 +11,13 @@ namespace import -force tcltest::testsDirectory
 namespace import -force tcltest::interpreter
 namespace import -force tcltest::makeFile
 namespace import -force tcltest::removeFile
+namespace import -force tcltest::testConstraint
 configure -testdir [file join [pwd] [file dirname [info script]]]
 configure -loadfile [file join [testsDirectory] constraints.tcl]
 tcltest::loadTestedCommands
+testConstraint unthreaded [expr {
+    (![info exists tcl_platform(threaded)] || !$tcl_platform(threaded))
+}]
 
 update
 
@@ -148,7 +152,7 @@ test window-2.8 {Tk_DestroyWindow, cleanup half dead windows at exit} \
 } {0 {}}
 
 test window-2.9 {Tk_DestroyWindow, Destroy bindings evaluated after exit} \
-    unixOrWin {
+    {unixOrWin unthreaded} {
     set script [makeFile {
         toplevel .t1
         toplevel .t2
