@@ -739,7 +739,7 @@ proc ::tk::MotifFDialog_BrowseFList {w} {
     $data(fEnt) delete 0 end
     $data(fEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
 	    $data(filter)]
-    $data(fEnt) xview end
+    $data(fEnt) xview moveto 1.0
  
     # if it's a multiple selection box, just put in the filenames 
     # otherwise put in the full path as usual 
@@ -750,7 +750,7 @@ proc ::tk::MotifFDialog_BrowseFList {w} {
 	$data(sEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
 		[lindex $data(selectFile) 0]]
     }
-    $data(sEnt) xview end
+    $data(sEnt) xview moveto 1.0
 }
 
 # ::tk::MotifFDialog_ActivateFList --
