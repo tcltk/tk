@@ -16,6 +16,9 @@
 /* Do we have access to Darwin CoreFoundation.framework? */
 #undef HAVE_COREFOUNDATION
 
+/* Compiler support for module scope symbols */
+#undef HAVE_HIDDEN
+
 /* Do we have the intptr_t type? */
 #undef HAVE_INTPTR_T
 
@@ -117,9 +120,6 @@
 
 /* Do we have <stdlib.h>? */
 #undef NO_STDLIB_H
-
-/* No visibility attribute */
-#undef NO_VIZ
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
