@@ -111,9 +111,9 @@ proc ::tk::ConsoleInit {} {
 	bind Console <FocusOut> [list ::tk::console::FontchooserFocus %W 0]
     }
     AmpMenuArgs .menubar.edit add command -label [mc "&Increase Font Size"] \
-        -accel "$mod++" -command {event generate .console <<Console_FontSizeIncr>>}
+        -accel "$mod++" -command {event generate .console <Control-Key-plus>}
     AmpMenuArgs .menubar.edit add command -label [mc "&Decrease Font Size"] \
-        -accel "$mod+-" -command {event generate .console <<Console_FontSizeDecr>>}
+        -accel "$mod+-" -command {event generate .console <Control-Key-minus>}
 
     if {[tk windowingsystem] eq "aqua"} {
 	.menubar add cascade -label [mc Window] -menu [menu .menubar.window]
@@ -389,93 +389,66 @@ proc ::tk::console::Paste {w} {
 proc ::tk::ConsoleBind {w} {
     bindtags $w [list $w Console PostConsole [winfo toplevel $w] all]
 
+    event add <<Enter>> <Return> <KP_Enter>
+    event add <<NewLine>> <Shift-Return> <Shift-KP_Enter>
+    event add <<NewPage>> <Control-Return> <Control-KP_Enter> <Control-Key-o> <Control-Lock-Key-O>
+    event add <<Transpose>> <Control-Key-t> <Control-Lock-Key-T>
+    event add <<KillLine>> <Control-Key-k> <Control-Lock-Key-K>
+
     ## Get all Text bindings into Console
     foreach ev [bind Text] {
 	bind Console $ev [bind Text $ev]
     }
-    ## We really didn't want the newline insertion...
-    bind Console <Control-Key-o> {}
-    ## ...or any Control-v binding (would block <<Paste>>)
-    bind Console <Control-Key-v> {}
-
-    # For the moment, transpose isn't enabled until the console
-    # gets and overhaul of how it handles input -- hobbs
-    bind Console <Control-Key-t> {}
+    ## We really didn't want the newline insertion/Transpose ...
+    bind Console <Return> {}
+    bind Console <KP_Enter> {}
+    bind Console <Control-o> {}
+    bind Console <Control-t> {}
 
     # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
     # Otherwise, if a widget binding for one of these is defined, the
     # <Keypress> class binding will also fire and insert the character
     # which is wrong.
 
-    bind Console <Alt-KeyPress> {# nothing }
+    bind Console <Alt-KeyPress> {# nothing}
     bind Console <Meta-KeyPress> {# nothing}
     bind Console <Control-KeyPress> {# nothing}
 
-    foreach {ev key} {
-	<<Console_NextImmediate>>	<Control-Key-n>
-	<<Console_PrevImmediate>>	<Control-Key-p>
-	<<Console_PrevSearch>>		<Control-Key-r>
-	<<Console_NextSearch>>		<Control-Key-s>
+    bind Console <Control-Key-i> {# nothing}
+    bind Console <Meta-Key-i> {# nothing}
 
-	<<Console_Expand>>		<Key-Tab>
-	<<Console_Expand>>		<Key-Escape>
-	<<Console_ExpandFile>>		<Control-Shift-Key-F>
-	<<Console_ExpandProc>>		<Control-Shift-Key-P>
-	<<Console_ExpandVar>>		<Control-Shift-Key-V>
-	<<Console_Tab>>			<Control-Key-i>
-	<<Console_Tab>>			<Meta-Key-i>
-	<<Console_Eval>>		<Key-Return>
-	<<Console_Eval>>		<Key-KP_Enter>
-
-	<<Console_Clear>>		<Control-Key-l>
-	<<Console_KillLine>>		<Control-Key-k>
-	<<Console_Transpose>>		<Control-Key-t>
-	<<Console_ClearLine>>		<Control-Key-u>
-	<<Console_SaveCommand>>		<Control-Key-z>
-        <<Console_FontSizeIncr>>	<Control-Key-plus>
-        <<Console_FontSizeDecr>>	<Control-Key-minus>
-    } {
-	event add $ev $key
-	bind Console $key {}
-    }
-    if {[tk windowingsystem] eq "aqua"} {
-	foreach {ev key} {
-	    <<Console_FontSizeIncr>>	<Command-Key-plus>
-	    <<Console_FontSizeDecr>>	<Command-Key-minus>
-	} {
-	    event add $ev $key
-	    bind Console $key {}
-	}
-	if {$::tk::console::useFontchooser} {
-	    bind Console <Command-Key-t> [list ::tk::console::FontchooserToggle]
-	}
-    }
-    bind Console <<Console_Expand>> {
+    bind Console <Key-Tab> {
 	if {[%W compare insert > promptEnd]} {
 	    ::tk::console::Expand %W
 	}
     }
-    bind Console <<Console_ExpandFile>> {
+    bind Console <Key-Escape> [bind Console <Key-Tab>]
+    bind Console <Control-Shift-Key-F> {
 	if {[%W compare insert > promptEnd]} {
 	    ::tk::console::Expand %W path
 	}
     }
-    bind Console <<Console_ExpandProc>> {
+    bind Console <Control-Shift-Key-P> {
 	if {[%W compare insert > promptEnd]} {
 	    ::tk::console::Expand %W proc
 	}
     }
-    bind Console <<Console_ExpandVar>> {
+    bind Console <Control-Shift-Key-V> {
 	if {[%W compare insert > promptEnd]} {
 	    ::tk::console::Expand %W var
 	}
     }
-    bind Console <<Console_Eval>> {
+    bind Console <<Enter>> {
 	%W mark set insert {end - 1c}
 	tk::ConsoleInsert %W "\n"
 	tk::ConsoleInvoke
 	break
     }
+    bind Console <<NewLine>> {
+	tk::ConsoleInsert %W "\n"
+	break
+    }
+    bind Console <<NewPage>> [bind Console <<NewLine>>]
     bind Console <Delete> {
 	if {{} ne [%W tag nextrange sel 1.0 end] \
 		&& [%W compare sel.first >= promptEnd]} {
@@ -513,7 +486,7 @@ proc ::tk::ConsoleBind {w} {
 	}
 	%W delete insert
     }
-    bind Console <<Console_KillLine>> {
+    bind Console <<KillLine>> {
 	if {[%W compare insert < promptEnd]} {
 	    break
 	}
@@ -523,11 +496,11 @@ proc ::tk::ConsoleBind {w} {
 	    %W delete insert {insert lineend}
 	}
     }
-    bind Console <<Console_Clear>> {
+    bind Console <Control-Key-l> {
 	## Clear console display
 	%W delete 1.0 "promptEnd linestart"
     }
-    bind Console <<Console_ClearLine>> {
+    bind Console <Control-Key-u> {
 	## Clear command line (Unix shell staple)
 	%W delete promptEnd end
     }
@@ -581,7 +554,7 @@ proc ::tk::ConsoleBind {w} {
     bind Console <<Copy>> { ::tk::console::Copy %W }
     bind Console <<Paste>> { ::tk::console::Paste %W }
 
-    bind Console <<Console_FontSizeIncr>> {
+    bind Console <Control-Key-plus> {
         set size [font configure TkConsoleFont -size]
         if {$size < 0} {set sign -1} else {set sign 1}
         set size [expr {(abs($size) + 1) * $sign}]
@@ -590,7 +563,7 @@ proc ::tk::ConsoleBind {w} {
 	    tk fontchooser configure -font TkConsoleFont
 	}
     }
-    bind Console <<Console_FontSizeDecr>> {
+    bind Console <Control-Key-minus> {
         set size [font configure TkConsoleFont -size]
         if {abs($size) < 2} { return }
         if {$size < 0} {set sign -1} else {set sign 1}
@@ -598,6 +571,13 @@ proc ::tk::ConsoleBind {w} {
         font configure TkConsoleFont -size $size
 	if {$::tk::console::useFontchooser} {
 	    tk fontchooser configure -font TkConsoleFont
+	}
+    }
+    if {[tk windowingsystem] eq "aqua"} {
+	bind Console <Command-Key-plus> [bind Console <Control-Key-plus>]
+	bind Console <Command-Key-minus> [bind Console <Control-Key-minus>]
+	if {$::tk::console::useFontchooser} {
+	    bind Console <<Transpose>> [list ::tk::console::FontchooserToggle]
 	}
     }
 
