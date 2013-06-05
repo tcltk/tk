@@ -1644,6 +1644,14 @@ static int EntryXViewCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
+    if (objc == 3) {
+	int newFirst;
+	if (EntryIndex(interp, entryPtr, objv[2], &newFirst) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	TtkScrollTo(entryPtr->entry.xscrollHandle, newFirst);
+	return TCL_OK;
+    }
     return TtkScrollviewCommand(interp, objc, objv, entryPtr->entry.xscrollHandle);
 }
 
