@@ -2,6 +2,10 @@
 
 	* generic/ttk/ttkScroll.c: [Bug 3613759]: ttk::entry and symbolic
 	index names.
+	* generic/ttk/ttkEntry.c: [Bug 2100430]: ttk::entry widget index
+	must be integer
+	* generic/tkEntry.c: Don't set interp result when it will be
+	overwritten later.
 
 2013-05-19  Jan Nijtmans  <nijtmans@users.sf.net>
 
