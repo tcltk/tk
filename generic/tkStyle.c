@@ -155,7 +155,7 @@ static const Tcl_ObjType styleObjType = {
     FreeStyleObjProc,		/* freeIntRepProc */
     DupStyleObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetStyleFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
