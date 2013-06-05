@@ -34,7 +34,7 @@
  * TtkScrollbarUpdateRequired, which will invoke step (5) (@@@ Fix this)
  */
 
-#include <tk.h>
+#include <tkInt.h>
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -202,7 +202,10 @@ int TtkScrollviewCommand(
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, result));
 	return TCL_OK;
     } else if (objc == 3) {
-	if (Tcl_GetIntFromObj(interp, objv[2], &newFirst) != TCL_OK) {
+	const char *string = Tcl_GetString(objv[2]);
+	if (strcmp(string, "end") == 0) {
+	    newFirst = s->total;
+	} else if (Tcl_GetIntFromObj(interp, objv[2], &newFirst) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     } else {
