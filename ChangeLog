@@ -1,3 +1,8 @@
+2013-06-05  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/ttk/ttkScroll.c: [Bug 3613759]: ttk::entry and symbolic
+	index names.
+
 2013-06-04  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4: Eliminate NO_VIZ macro as current
