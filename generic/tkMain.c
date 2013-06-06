@@ -143,7 +143,7 @@ Tk_MainEx(
 	}
     }
 
-#if defined(__WIN32__) && !defined(__WIN64__) && !defined(STATIC_BUILD)
+#if defined(__WIN32__) && !defined(STATIC_BUILD)
 
     if (tclStubsPtr->reserved9) {
 	/* We are running win32 Tk under Cygwin, so let's check
