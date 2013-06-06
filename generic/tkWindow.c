@@ -2852,7 +2852,7 @@ DeleteWindowsExitProc(
     tsdPtr->initialized = 0;
 }
 
-#if defined(__WIN32__) && !defined(__WIN64__)
+#if defined(__WIN32__)
 
 static HMODULE tkcygwindll = NULL;
 
@@ -2898,7 +2898,7 @@ TkCygwinMainEx(
     tkmainex(argc, argv, appInitProc, interp);
     return 1;
 }
-#endif /* __WIN32__ && !__WIN64__ */
+#endif /* __WIN32__ */
 
 /*
  *----------------------------------------------------------------------
@@ -2927,7 +2927,7 @@ int
 Tk_Init(
     Tcl_Interp *interp)		/* Interpreter to initialize. */
 {
-#if defined(__WIN32__) && !defined(__WIN64__)
+#if defined(__WIN32__)
     if (tkcygwindll) {
 	int (*tkinit)(Tcl_Interp *);
 
@@ -2936,7 +2936,7 @@ Tk_Init(
 	    return tkinit(interp);
 	}
     }
-#endif /* __WIN32__ && !__WIN64__ */
+#endif /* __WIN32__ */
     return Initialize(interp);
 }
 
@@ -3000,7 +3000,7 @@ Tk_SafeInit(
      * checked at several places to differentiate the two initialisations.
      */
 
-#if defined(__WIN32__) && !defined(__WIN64__)
+#if defined(__WIN32__)
     if (tkcygwindll) {
 	int (*tksafeinit)(Tcl_Interp *);
 
@@ -3010,7 +3010,7 @@ Tk_SafeInit(
 	    return tksafeinit(interp);
 	}
     }
-#endif /* __WIN32__ && !__WIN64__ */
+#endif /* __WIN32__ */
     return Initialize(interp);
 }
 
