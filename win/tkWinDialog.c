@@ -50,19 +50,6 @@
 #define OPENFILENAME_SIZE_VERSION_400 76
 #endif
 
-/*
- * The following structure is used by the new Tk_ChooseDirectoryObjCmd to pass
- * data between it and its callback. Unique to Windows platform.
- */
-
-typedef struct ChooseDirData {
-   TCHAR initDir[MAX_PATH];	/* Initial folder to use */
-   TCHAR retDir[MAX_PATH];	/* Returned folder to use */
-   Tcl_Interp *interp;
-   int mustExist;		/* True if file must exist to return from
-				 * callback */
-} CHOOSEDIRDATA;
-
 typedef struct ThreadSpecificData {
     int debugFlag;		/* Flags whether we should output debugging
 				 * information while displaying a builtin
@@ -153,22 +140,12 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
  * chooser function, Tk_ChooseDirectoryObjCmd(), and its dialog hook proc.
  */
 
-typedef struct ChooseDir {
-    Tcl_Interp *interp;		/* Interp, used only if debug is turned on,
-				 * for setting the "tk_dialog" variable. */
-    int lastCtrl;		/* Used by hook proc to keep track of last
-				 * control that had input focus, so when OK is
-				 * pressed we know whether to browse a new
-				 * directory or return. */
-    int lastIdx;		/* Last item that was selected in directory
-				 * browser listbox. */
-    char path[MAX_PATH];	/* On return from choose directory dialog,
-				 * holds the selected path. Cannot return
-				 * selected path in ofnPtr->lpstrFile because
-				 * the default dialog proc stores a '\0' in
-				 * it, since, of course, no _file_ was
-				 * selected. */
-    OPENFILENAME *ofnPtr;	/* pointer to the OFN structure */
+typedef struct {
+   TCHAR initDir[MAX_PATH];	/* Initial folder to use */
+   TCHAR retDir[MAX_PATH];	/* Returned folder to use */
+   Tcl_Interp *interp;
+   int mustExist;		/* True if file must exist to return from
+				 * callback */
 } ChooseDir;
 
 /*
@@ -1326,10 +1303,6 @@ MakeFilter(
  * - Not sure how to implement localization of message prompts.
  *
  * - -title is really -message.
- * ToDo:
- * - Fix bugs.
- * - test to see what platforms this really works on. May require v4.71 of
- *   shell32.dll everywhere (what is standard?).
  *
  *----------------------------------------------------------------------
  */
@@ -1345,7 +1318,7 @@ Tk_ChooseDirectoryObjCmd(
     int oldMode, result = TCL_ERROR, i;
     LPCITEMIDLIST pidl;		/* Returned by browser */
     BROWSEINFO bInfo;		/* Used by browser */
-    CHOOSEDIRDATA cdCBData;	/* Structure to pass back and forth */
+    ChooseDir cdCBData;	    /* Structure to pass back and forth */
     LPMALLOC pMalloc;		/* Used by shell */
     Tk_Window tkwin = clientData;
     HWND hWnd;
@@ -1367,7 +1340,7 @@ Tk_ChooseDirectoryObjCmd(
      */
 
     path[0] = '\0';
-    ZeroMemory(&cdCBData, sizeof(CHOOSEDIRDATA));
+    ZeroMemory(&cdCBData, sizeof(ChooseDir));
     cdCBData.interp = interp;
 
     /*
@@ -1575,7 +1548,7 @@ ChooseDirectoryValidateProc(
     LPARAM lpData)
 {
     TCHAR selDir[MAX_PATH];
-    CHOOSEDIRDATA *chooseDirSharedData = (CHOOSEDIRDATA *) lpData;
+    ChooseDir *chooseDirSharedData = (ChooseDir *) lpData;
     Tcl_DString tempString;
     Tcl_DString initDirString;
     TCHAR string[MAX_PATH];
@@ -1593,7 +1566,7 @@ ChooseDirectoryValidateProc(
 	 * First save and check to see if it is a valid path name, if so then
 	 * make that path the one shown in the window. Otherwise, it failed
 	 * the check and should be treated as such. Use
-	 * Set/GetCurrentDirectoryA which allows relative path names and names
+	 * Set/GetCurrentDirectory which allows relative path names and names
 	 * with forward slashes. Use Tcl_TranslateFileName to make sure names
 	 * like ~ are converted correctly.
 	 */
