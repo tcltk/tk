@@ -1,3 +1,8 @@
+2012-06-07  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 1913750]: tk_chooseDirectory -initialdir
+	internationalization problem. (backported from Tk 8.6)
+
 2013-06-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkScroll.c: [Bug 3613759]: ttk::entry and symbolic
