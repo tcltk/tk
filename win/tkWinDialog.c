@@ -50,19 +50,6 @@
 #define OPENFILENAME_SIZE_VERSION_400 76
 #endif
 
-/*
- * The following structure is used by the new Tk_ChooseDirectoryObjCmd to pass
- * data between it and its callback. Unique to Windows platform.
- */
-
-typedef struct ChooseDirData {
-   WCHAR initDir[MAX_PATH];	/* Initial folder to use */
-   WCHAR retDir[MAX_PATH];	/* Returned folder to use */
-   Tcl_Interp *interp;
-   int mustExist;		/* True if file must exist to return from
-				 * callback */
-} CHOOSEDIRDATA;
-
 typedef struct ThreadSpecificData {
     int debugFlag;		/* Flags whether we should output debugging
 				 * information while displaying a builtin
@@ -153,16 +140,12 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
  * chooser function, Tk_ChooseDirectoryObjCmd(), and its dialog hook proc.
  */
 
-typedef struct ChooseDir {
-    Tcl_Interp *interp;		/* Interp, used only if debug is turned on,
-				 * for setting the "tk_dialog" variable. */
-    int lastCtrl;		/* Used by hook proc to keep track of last
-				 * control that had input focus, so when OK is
-				 * pressed we know whether to browse a new
-				 * directory or return. */
-    int lastIdx;		/* Last item that was selected in directory
-				 * browser listbox. */
-    OPENFILENAMEW *ofnPtr;	/* pointer to the OFN structure */
+typedef struct {
+   WCHAR initDir[MAX_PATH];	/* Initial folder to use */
+   WCHAR retDir[MAX_PATH];	/* Returned folder to use */
+   Tcl_Interp *interp;
+   int mustExist;		/* True if file must exist to return from
+				 * callback */
 } ChooseDir;
 
 /*
@@ -1333,7 +1316,7 @@ Tk_ChooseDirectoryObjCmd(
     int oldMode, result = TCL_ERROR, i;
     LPCITEMIDLIST pidl;		/* Returned by browser */
     BROWSEINFOW bInfo;		/* Used by browser */
-    CHOOSEDIRDATA cdCBData;	/* Structure to pass back and forth */
+    ChooseDir cdCBData;	    /* Structure to pass back and forth */
     LPMALLOC pMalloc;		/* Used by shell */
     Tk_Window tkwin = (Tk_Window) clientData;
     HWND hWnd;
@@ -1355,7 +1338,7 @@ Tk_ChooseDirectoryObjCmd(
      */
 
     path[0] = '\0';
-    ZeroMemory(&cdCBData, sizeof(CHOOSEDIRDATA));
+    ZeroMemory(&cdCBData, sizeof(ChooseDir));
     cdCBData.interp = interp;
 
     /*
@@ -1562,7 +1545,7 @@ ChooseDirectoryValidateProc(
     LPARAM lpData)
 {
     WCHAR selDir[MAX_PATH];
-    CHOOSEDIRDATA *chooseDirSharedData = (CHOOSEDIRDATA *) lpData;
+    ChooseDir *chooseDirSharedData = (ChooseDir *) lpData;
     Tcl_DString tempString;
     Tcl_DString initDirString;
     WCHAR string[MAX_PATH];
