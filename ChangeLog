@@ -1,7 +1,11 @@
 2012-06-07  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [Bug 1913750]: tk_chooseDirectory -initialdir
-	internationalization problem. (backported from Tk 8.6)
+	internationalization problem.
+	[Bug 3500545]: tk_getOpenFile -multiple 1 wrong	on windows.
+	[Bug 3416492]: Crash in open/save file dialog in Windows 7 libraries.
+	[Bug 3095112]: crash when selecting file from Win7 Library.
+	(All of those backported from Tk 8.6)
 
 2013-06-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
