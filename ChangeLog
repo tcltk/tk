@@ -107,7 +107,9 @@
 2012-11-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [Bug 3500545]: tk_getOpenFile -multiple 1 wrong
-	on windows
+	on windows.
+	[Bug 3416492]: Crash in open/save file dialog in Windows 7 libraries.
+	[Bug 3095112]: crash when selecting file from Win7 Library.
 
 2012-11-11  Jan Nijtmans  <nijtmans@users.sf.net>
 
