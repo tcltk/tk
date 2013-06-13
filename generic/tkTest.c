@@ -160,7 +160,7 @@ static int		TestfontObjCmd(ClientData dummy,
 			    Tcl_Obj *const objv[]);
 static int		TestmakeexistCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, const char **argv);
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int		TestmenubarCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, const char **argv);
 #endif
@@ -186,7 +186,7 @@ static void		CustomOptionFree(ClientData clientData,
 			    Tk_Window tkwin, char *internalPtr);
 static int		TestpropCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, const char **argv);
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int		TestwrapperCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, const char **argv);
 #endif
@@ -262,7 +262,7 @@ Tktest_Init(
 #if defined(__WIN32__) || defined(MAC_OSX_TK)
     Tcl_CreateCommand(interp, "testmetrics", TestmetricsCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-#else
+#elif !defined(__CYGWIN__)
     Tcl_CreateCommand(interp, "testmenubar", TestmenubarCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateCommand(interp, "testsend", TkpTestsendCmd,
@@ -1689,7 +1689,7 @@ TestmakeexistCmd(
  */
 
 	/* ARGSUSED */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int
 TestmenubarCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1891,7 +1891,7 @@ TestpropCmd(
     return TCL_OK;
 }
 
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
+#if !(defined(__WIN32__) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 /*
  *----------------------------------------------------------------------
  *

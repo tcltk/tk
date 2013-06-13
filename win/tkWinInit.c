@@ -121,6 +121,20 @@ TkpDisplayWarning(
     WCHAR *msgString; /* points to titleString, just after title, leaving space for ": " */
     int len; /* size of title, including terminating NULL */
 
+    /* If running on Cygwin and we have a stderr channel, use it. */
+#if !defined(STATIC_BUILD)
+	if (tclStubsPtr->reserved9) {
+	Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
+	if (errChannel) {
+	    Tcl_WriteChars(errChannel, title, -1);
+	    Tcl_WriteChars(errChannel, ": ", 2);
+	    Tcl_WriteChars(errChannel, msg, -1);
+	    Tcl_WriteChars(errChannel, "\n", 1);
+	    return;
+	}
+    }
+#endif /* !STATIC_BUILD */
+
     len = MultiByteToWideChar(CP_UTF8, 0, title, -1, titleString, TK_MAX_WARN_LEN);
     msgString = &titleString[len + 1];
     titleString[TK_MAX_WARN_LEN - 1] = L'\0';
