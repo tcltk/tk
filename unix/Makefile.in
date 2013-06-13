@@ -616,8 +616,8 @@ ${WISH_EXE}: $(WISH_OBJS) $(TK_LIB_FILE) $(TK_STUB_LIB_FILE) @APP_RSRC_FILE@
 		-f "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
 	    cp "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll" .; \
 	fi
-	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @WISH_BUILD_LIB_SPEC@ \
-		$(CC_SEARCH_FLAGS) -o ${WISH_EXE}
+	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ \
+		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o ${WISH_EXE}
 
 # Resetting the LIB_RUNTIME_DIR below is required so that
 # the generated tktest executable gets the build directory
