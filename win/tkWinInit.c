@@ -120,6 +120,20 @@ TkpDisplayWarning(
     WCHAR msgString[TK_MAX_WARN_LEN + 5];
     WCHAR titleString[TK_MAX_WARN_LEN + 1];
 
+    /* If running on Cygwin and we have a stderr channel, use it. */
+#if !defined(STATIC_BUILD)
+	if (tclStubsPtr->reserved9) {
+	Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
+	if (errChannel) {
+	    Tcl_WriteChars(errChannel, title, -1);
+	    Tcl_WriteChars(errChannel, ": ", 2);
+	    Tcl_WriteChars(errChannel, msg, -1);
+	    Tcl_WriteChars(errChannel, "\n", 1);
+	    return;
+	}
+    }
+#endif /* !STATIC_BUILD */
+
     MultiByteToWideChar(CP_UTF8, 0, msg, -1, msgString, TK_MAX_WARN_LEN);
     MultiByteToWideChar(CP_UTF8, 0, title, -1, titleString, TK_MAX_WARN_LEN);
     /*
