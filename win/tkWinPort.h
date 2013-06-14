@@ -63,8 +63,8 @@
 
 
 #ifndef __GNUC__
-#    define strncasecmp strnicmp
-#    define strcasecmp stricmp
+#    define strncasecmp _strnicmp
+#    define strcasecmp _stricmp
 #endif
 
 #define NBBY 8
