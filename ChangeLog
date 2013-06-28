@@ -1,3 +1,8 @@
+2012-06-28  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/ttk/scale.tcl: [Bug 2501278]: ttk::scale keyboard binding
+	problem.
+
 2013-06-05  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* generic/ttk/ttkScroll.c: [Bug 3613759]: ttk::entry and symbolic
