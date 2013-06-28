@@ -133,11 +133,11 @@ DllMain(
 
 	    "leaq	%[registration], %%rdx"		"\n\t"
 	    "movq	%%gs:0,		%%rax"		"\n\t"
-	    "movq	%%rax,		0x0(%%edx)"	"\n\t" /* link */
+	    "movq	%%rax,		0x0(%%rdx)"	"\n\t" /* link */
 	    "leaq	1f,		%%rax"		"\n\t"
 	    "movq	%%rax,		0x8(%%rdx)"	"\n\t" /* handler */
-	    "movq	%%rbp,		0x10(%%rdx)"	"\n\t" /* ebp */
-	    "movq	%%rsp,		0x18(%%rdx)"	"\n\t" /* esp */
+	    "movq	%%rbp,		0x10(%%rdx)"	"\n\t" /* rbp */
+	    "movq	%%rsp,		0x18(%%rdx)"	"\n\t" /* rsp */
 	    "movl	%[error],	0x20(%%rdx)"	"\n\t" /* status */
 
 	    /*
