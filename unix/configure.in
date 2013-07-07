@@ -36,14 +36,14 @@ LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
 
-if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
-    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
-Found config for Tcl ${TCL_VERSION}])
+if test "${TCL_MAJOR_VERSION}" == "${TK_MAJOR_VERSION}"; then
+if test "${TCL_MINOR_VERSION}" -lt "${TK_MINOR_VERSION}"; then
+    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
 fi
-if test "${TCL_MINOR_VERSION}" -lt 6 ; then
-    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
-Found config for Tcl ${TCL_VERSION}])
 fi
+
 
 SC_PROG_TCLSH
 SC_BUILD_TCLSH
