@@ -99,7 +99,7 @@ static int		SetWindowFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
  * initial display-independant settings.
  */
 
-static const Tcl_ObjType pixelObjType = {
+static Tcl_ObjType pixelObjType = {
     "pixel",			/* name */
     FreePixelInternalRep,	/* freeIntRepProc */
     DupPixelInternalRep,	/* dupIntRepProc */
@@ -113,7 +113,7 @@ static const Tcl_ObjType pixelObjType = {
  * initial display-independant settings.
  */
 
-static const Tcl_ObjType mmObjType = {
+static Tcl_ObjType mmObjType = {
     "mm",			/* name */
     FreeMMInternalRep,		/* freeIntRepProc */
     DupMMInternalRep,		/* dupIntRepProc */
@@ -126,7 +126,7 @@ static const Tcl_ObjType mmObjType = {
  * Tcl object.
  */
 
-static const Tcl_ObjType windowObjType = {
+static Tcl_ObjType windowObjType = {
     "window",			/* name */
     FreeWindowInternalRep,	/* freeIntRepProc */
     DupWindowInternalRep,	/* dupIntRepProc */
@@ -153,8 +153,12 @@ GetTypeCache(void)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->doubleTypePtr == NULL) {
-	tsdPtr->doubleTypePtr = Tcl_GetObjType("double");
-	tsdPtr->intTypePtr = Tcl_GetObjType("int");
+	Tcl_Obj *obj = Tcl_NewDoubleObj(0.0);
+	tsdPtr->doubleTypePtr = obj->typePtr;
+	Tcl_DecrRefCount(obj);
+	obj = Tcl_NewLongObj(0);
+	tsdPtr->intTypePtr = obj->typePtr;
+	Tcl_DecrRefCount(obj);
     }
     return tsdPtr;
 }
@@ -207,14 +211,14 @@ GetPixelsFromObjEx(
 	ThreadSpecificData *typeCache = GetTypeCache();
 
 	if (objPtr->typePtr == typeCache->doubleTypePtr) {
-	    (void) Tcl_GetDoubleFromObj(interp, objPtr, &d);
+	    Tcl_GetDoubleFromObj(interp, objPtr, &d);
 	    if (dblPtr != NULL) {
 		*dblPtr = d;
 	    }
 	    *intPtr = (int) (d<0 ? d-0.5 : d+0.5);
 	    return TCL_OK;
 	} else if (objPtr->typePtr == typeCache->intTypePtr) {
-	    (void) Tcl_GetIntFromObj(interp, objPtr, intPtr);
+	    Tcl_GetIntFromObj(interp, objPtr, intPtr);
 	    if (dblPtr) {
 		*dblPtr = (double) (*intPtr);
 	    }
@@ -1118,19 +1122,31 @@ TkParsePadAmount(
  *----------------------------------------------------------------------
  */
 
+#define registerObjType(type) \
+    ((void (*)(const Tcl_ObjType *))((&(tclStubsPtr->tcl_PkgProvideEx))[211]))(&type)
+
 void
 TkRegisterObjTypes(void)
 {
-    Tcl_RegisterObjType(&tkBorderObjType);
-    Tcl_RegisterObjType(&tkBitmapObjType);
-    Tcl_RegisterObjType(&tkColorObjType);
-    Tcl_RegisterObjType(&tkCursorObjType);
-    Tcl_RegisterObjType(&tkFontObjType);
-    Tcl_RegisterObjType(&mmObjType);
-    Tcl_RegisterObjType(&pixelObjType);
-    Tcl_RegisterObjType(&tkStateKeyObjType);
-    Tcl_RegisterObjType(&windowObjType);
-    Tcl_RegisterObjType(&tkTextIndexType);
+    /* When running in Tcl 9, no need to Register the objTypes, and
+     * no need to provide fromAnyProc's. */
+    if ((*((&(tclStubsPtr->tcl_PkgProvideEx))[77])) == NULL) {
+	tkFontObjType.setFromAnyProc = NULL;
+	mmObjType.setFromAnyProc = NULL;
+	pixelObjType.setFromAnyProc = NULL;
+	windowObjType.setFromAnyProc = NULL;
+	return;
+    }
+    registerObjType(tkBorderObjType);
+    registerObjType(tkBitmapObjType);
+    registerObjType(tkColorObjType);
+    registerObjType(tkCursorObjType);
+    registerObjType(tkFontObjType);
+    registerObjType(mmObjType);
+    registerObjType(pixelObjType);
+    registerObjType(tkStateKeyObjType);
+    registerObjType(windowObjType);
+    registerObjType(tkTextIndexType);
 }
 
 /*
