@@ -114,6 +114,7 @@
 #endif
 
 #ifdef __CYGWIN__
+#   include "tkIntXlibDecls.h"
 #   define UINT unsigned int
 #   define HWND void *
 #   define HDC void *
@@ -126,9 +127,6 @@
 #   define WPARAM void *
 #   define LPARAM void *
 #   define LRESULT void *
-
-EXTERN int TkPutImage (unsigned long *, int, Display *, Drawable, GC,
-	XImage *, int, int, int, int, unsigned int, unsigned int);
 
 #else /* !__CYGWIN__ */
     /*
