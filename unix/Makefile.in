@@ -530,7 +530,7 @@ AQUA_XLIB_HDRS = $(XLIB_DIR)/X11/*.h $(XLIB_DIR)/xbytes.h
 
 AQUA_PRIVATE_HDRS = $(MAC_OSX_DIR)/tkMacOSXPort.h $(MAC_OSX_DIR)/tkMacOSXInt.h
 
-X11_PRIVATE_HDRS = $(UNIX_DIR)/tkUnixPort.h $(UNIX_DIR)/tkUnixInt.h
+X11_PRIVATE_HDRS = $(UNIX_DIR)/tkUnixPort.h $(UNIX_DIR)/tkUnixInt.h $(GENERIC_DIR)/tkIntXlibDecls.h
 
 # Currently private, eventually public
 TTK_HDRS = $(TTK_DIR)/ttkTheme.h $(TTK_DIR)/ttkDecls.h
