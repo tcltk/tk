@@ -98,7 +98,7 @@ test config-1.7 {Tk_CreateOptionTable - chained tables} -constraints {
     testobjconfig info chain2
 } -cleanup {
     killTables
-} -result {1 4 -three 2 2 -one}
+} -result {2 4 -three 2 2 -one}
 test config-1.8 {Tk_CreateOptionTable - chained tables} -constraints {
     testobjconfig
 } -body {
@@ -134,7 +134,7 @@ test config-2.1 {Tk_DeleteOptionTable - reference counts} -constraints {
     lappend x [testobjconfig info chain2] [testobjconfig info chain1]
 } -cleanup {
     killTables
-} -result {{1 4 -three 2 2 -one} {2 2 -one} {} {1 2 -one}}
+} -result {{} {2 2 -one} {} {2 2 -one}}
 
 # No tests for DestroyOptionHashTable; couldn't figure out how to test.
 
