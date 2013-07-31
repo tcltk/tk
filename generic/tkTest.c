@@ -803,6 +803,7 @@ TestobjconfigObjCmd(
 	}
 	if (tables[index] != NULL) {
 	    Tk_DeleteOptionTable(tables[index]);
+	    tables[index] = NULL;
 	}
 	break;
 
