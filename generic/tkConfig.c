@@ -27,8 +27,8 @@
 #include "tkFont.h"
 
 /*
- * The following definition is an AssocData key used to keep track of all of
- * the option tables that have been created for an interpreter.
+ * The following definition keeps track of all of
+ * the option tables that have been created for a thread.
  */
 
 typedef struct ThreadSpecificData {
@@ -332,7 +332,7 @@ Tk_DeleteOptionTable(
     int count;
 
     tablePtr->refCount--;
-    if (tablePtr->refCount!=0) {
+    if (tablePtr->refCount > 0) {
 	return;
     }
 
