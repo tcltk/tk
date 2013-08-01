@@ -497,11 +497,11 @@ TestobjconfigObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const options[] = {
-	"alltypes", "chain1", "chain2", "configerror", "delete", "info",
+	"alltypes", "chain1", "chain2", "chain3", "configerror", "delete", "info",
 	"internal", "new", "notenoughparams", "twowindows", NULL
     };
     enum {
-	ALL_TYPES, CHAIN1, CHAIN2, CONFIG_ERROR,
+	ALL_TYPES, CHAIN1, CHAIN2, CHAIN3, CONFIG_ERROR,
 	DEL,			/* Can't use DELETE: VC++ compiler barfs. */
 	INFO, INTERNAL, NEW, NOT_ENOUGH_PARAMS, TWO_WINDOWS
     };
@@ -720,7 +720,8 @@ TestobjconfigObjCmd(
 	break;
     }
 
-    case CHAIN2: {
+    case CHAIN2:
+    case CHAIN3: {
 	ExtensionWidgetRecord *recordPtr;
 	static const Tk_OptionSpec extensionSpecs[] = {
 	    {TK_OPTION_STRING, "-three", "three", "Three", "three",
@@ -803,6 +804,9 @@ TestobjconfigObjCmd(
 	}
 	if (tables[index] != NULL) {
 	    Tk_DeleteOptionTable(tables[index]);
+	    /* Make sure that Tk_DeleteOptionTable() is never done
+	     * twice for the same table. */
+	    tables[index] = NULL;
 	}
 	break;
 
