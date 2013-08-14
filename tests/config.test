@@ -134,7 +134,7 @@ test config-2.1 {Tk_DeleteOptionTable - reference counts} -constraints {
     lappend x [testobjconfig info chain2] [testobjconfig info chain1]
 } -cleanup {
     killTables
-} -result {{1 4 -three 2 2 -one} {2 2 -one} {} {1 2 -one}}
+} -result {{3 4 -three 2 2 -one} {2 2 -one} {} {2 2 -one}}
 
 # No tests for DestroyOptionHashTable; couldn't figure out how to test.
 
