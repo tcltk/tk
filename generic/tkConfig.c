@@ -129,6 +129,7 @@ static Option *		GetOptionFromObj(Tcl_Interp *interp,
 			    Tcl_Obj *objPtr, OptionTable *tablePtr);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
 static void		FreeOptionInternalRep(Tcl_Obj *objPtr);
+static void 	DupOptionInternalRep(Tcl_Obj *, Tcl_Obj *);
 
 /*
  * The structure below defines an object type that is used to cache the result
@@ -140,7 +141,7 @@ static void		FreeOptionInternalRep(Tcl_Obj *objPtr);
 static const Tcl_ObjType optionObjType = {
     "option",			/* name */
     FreeOptionInternalRep,	/* freeIntRepProc */
-    NULL,			/* dupIntRepProc */
+    DupOptionInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL			/* setFromAnyProc */
 };
@@ -1171,6 +1172,28 @@ FreeOptionInternalRep(
     objPtr->typePtr = NULL;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     objPtr->internalRep.twoPtrValue.ptr2 = NULL;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * DupOptionInternalRep --
+ *
+ *	When a cached style object is duplicated, this is called to update the
+ *	internal reps.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static void
+DupOptionInternalRep(
+    Tcl_Obj *srcObjPtr,		/* The object we are copying from. */
+    Tcl_Obj *dupObjPtr)		/* The object we are copying to. */
+{
+    register OptionTable *tablePtr = (OptionTable *) srcObjPtr->internalRep.twoPtrValue.ptr1;
+    tablePtr->refCount++;
+    dupObjPtr->typePtr = srcObjPtr->typePtr;
+    dupObjPtr->internalRep = srcObjPtr->internalRep;
 }
 
 /*
