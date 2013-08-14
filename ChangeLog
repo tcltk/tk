@@ -1,3 +1,8 @@
+2013-08-14  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/tkConfig.c:  Bug [069c9e43c4]: FreeOptionInternalRep() breaks
+	* tests/config.test:   Tk_CreateOptionTable()
+
 2013-07-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4:  Bug [32afa6e256]: dirent64 check is incorrect in tcl.m4
