@@ -20,6 +20,7 @@
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
+#include <Carbon/Carbon.h>
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -351,6 +352,7 @@ static void		RemapWindows(TkWindow *winPtr,
 	    kHelpWindowClass || winPtr->wmInfoPtr->attributes &
 	    kWindowNoActivatesAttribute)) ? NO : YES;
 }
+
 @end
 
 #pragma mark -
@@ -5187,6 +5189,7 @@ WmWinStyle(
 	{ "brown",		NULL			                     },
 	{ "clear",		NULL			                     },
 	{ "opacity",		NULL			                     },
+	{ "fullscreen",         NULL                                         },
 	{ NULL }
     };
 
@@ -6320,7 +6323,7 @@ TkMacOSXMakeFullscreen(
 	    NSRect bounds = [window contentRectForFrameRect:[window frame]];
 	    NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
 
-	    if (!NSEqualRects(bounds, screenBounds) && !wasFullscreen) {
+    	    if (!NSEqualRects(bounds, screenBounds) && !wasFullscreen) {
 		wmPtr->configX = wmPtr->x;
 		wmPtr->configY = wmPtr->y;
 		wmPtr->configAttributes = wmPtr->attributes;
@@ -6329,7 +6332,8 @@ TkMacOSXMakeFullscreen(
 			wmPtr->configAttributes, wmPtr->flags, 1, 0);
 		wmPtr->flags |= WM_SYNC_PENDING;
 		[window setFrame:[window frameRectForContentRect:
-			screenBounds] display:YES];
+					   screenBounds] display:YES];
+
 		wmPtr->flags &= ~WM_SYNC_PENDING;
 	    }
 	    wmPtr->flags |= WM_FULLSCREEN;
@@ -6347,7 +6351,8 @@ TkMacOSXMakeFullscreen(
 	prevPres = [NSApp presentationOptions];
 	[window setStyleMask: NSBorderlessWindowMask];
 	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
-	                          | NSApplicationPresentationAutoHideMenuBar];
+	     | NSApplicationPresentationAutoHideMenuBar];
+        
 #endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;

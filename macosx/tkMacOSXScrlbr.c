@@ -254,6 +254,8 @@ TkpDestroyScrollbar(
     TkScrollbar *scrollPtr)
 {
     MacScrollbar *macScrollPtr = (MacScrollbar *) scrollPtr;
+    NSScroller *scroller = macScrollPtr->scroller;
+    [scroller setTag:(NSInteger)0];
 
     TkMacOSXMakeCollectableAndRelease(macScrollPtr->scroller);
 }

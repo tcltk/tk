@@ -429,7 +429,7 @@ ComputeNativeButtonGeometry(
 	}
 	break;
     case TYPE_RADIO_BUTTON:
-    case TYPE_CHECK_BUTTON:
+    case TYPE_CHECK_BUTTON: 
 	if (!haveImage /*|| butPtr->indicatorOn*/) { // TODO: indicatorOn
 	    type = butPtr->type == TYPE_RADIO_BUTTON ?
 		    NSRadioButton : NSSwitchButton;
@@ -454,7 +454,7 @@ ComputeNativeButtonGeometry(
     }
     [button setButtonType:type];
     if (style) {
-	[button setBezelStyle:style];
+       	[button setBezelStyle:style];
     }
     if (highlightsBy) {
 	[cell setHighlightsBy:highlightsBy|[cell highlightsBy]];
