@@ -827,7 +827,7 @@ TkpSetWindowMenuBar(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 void
 TkpSetMainMenubar(
     Tcl_Interp *interp,		/* The interpreter of the application */
