@@ -1,3 +1,17 @@
+2013-08-25   Kevin Walzer <wordtech@users.sourceforge.net>
+
+	* macosx/tkMacOSXButton.c:  Bug [3016181]: Crash after scrollbar
+	* macosx/tkMacOSXMenu.c:	destroyed, Tk Cocoa.
+	* macosx/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXWm.c:
+
+2012-08-15  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/progress.tcl: Bug [c597acdab3]: Call [$pb step]
+	in tail position in ttk::progressbar::Autoincrement, so that
+	the widget is in a consistent state when any write traces on
+	the linked -variable are fired. 
+
 2013-07-02  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* unix/tcl.m4:  Bug [32afa6e256]: dirent64 check is incorrect in tcl.m4
