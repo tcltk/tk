@@ -1,3 +1,15 @@
+2013-08-30  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h:		Bump to 8.5.15 for release.
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
 2013-08-25   Kevin Walzer <wordtech@users.sourceforge.net>
 
 	* macosx/tkMacOSXButton.c:  Bug [3016181]: Crash after scrollbar
