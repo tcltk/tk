@@ -1,13 +1,13 @@
 README:  Tk
-    This is the Tk 8.5.14 source distribution.
+    This is the Tk 8.5.15 source distribution.
 	http://sourceforge.net/projects/tcl/files/Tcl/
     You can get any source release of Tk from the URL above.
 
 1. Introduction
 ---------------
 
-This directory contains the sources and documentation for Tk, an X11
-toolkit implemented with the Tcl scripting language.
+This directory contains the sources and documentation for Tk, a
+cross-platform GUI toolkit implemented with the Tcl scripting language.
 
 For details on features, incompatibilities, and potential problems with
 this release, see the Tcl/Tk 8.5 Web page at
