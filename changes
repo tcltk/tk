@@ -6908,4 +6908,4 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2013-08-26 (bug fix)[c597acd] [$pb step] work with traces (english)
 
---- Released 8.5.15, September 16, 2013 --- See ChangeLog for details ---
+--- Released 8.5.15, September 16, 2013 --- http://core.tcl.tk/tk/ for details
