@@ -7031,3 +7031,45 @@ Many revisions to better support a Cygwin environment (nijtmans)
 2012-12-06 (bug fix)[3592736] stop pink greys from buggy mingw builds (fellows)
 
 --- Released 8.6.0, December 20, 2012 --- See ChangeLog for details ---
+
+2013-01-04 (bug fix) Tk_InitStubs("8.6") rejected in 8.60 interp (nijtmans)
+
+2013-01-10 (bug fix)[3600251] Mac <Control-v> binding (kjnash,nijtmans)
+
+2013-01-10 (bug fix)[3600260] <<SelectNextPara>> binding (kjnash,nijtmans)
+
+2013-01-13 (bug fix)[3600290] restore $tk_strictMotif respect (kjnash,nijtmans)
+
+2013-01-22 (bug fix)[3601782] Tcl_InitStubs failure message (nijtmans)
+
+2013-01-31 (bug fix)[3599928] use XKeycodeToKeysym on old systems (cassoff)
+
+2013-02-04 (bug fix)[3603077] treeview update on tag add/remove (english)
+
+2013-02-28 (bug fix)[3599312] First Alt key event is lost (mcdonald)
+
+2013-03-11 (bug fix)[3607326] Crash [listbox .l -listvariable $array] (porter)
+
+2013-03-13 (enhancement) better build support for Debian arch (shadura)
+
+2013-03-27 (bug fix)[3608074] button, listbox, menu <<Invoke>> (nijtmans)
+
+2013-04-01 (bug fix)[3607830] Xkb runtime checks (griffin)
+
+2013-05-19 (platform support) FreeBSD updates (cerutti)
+
+2013-06-05 (bug fix)[3613759] [ttk::entry .e; .e xview end] (nijtmans)
+
+2013-06-05 (bug fix)[2100430] [ttk::entry .e; .e xview insert] (nijtmans)
+
+2013-06-28 (bug fix)[2501278] reverse ttk::scale key bindings {mcdonald)
+
+2013-07-02 (bug fix)[32afa6] corrected dirent64 check (griffin)
+
+2013-08-14 (bug fix)[069c9e] "option" value refcount crash (tim,nijtmans)
+
+2013-08-15 (bug fix)[c597acd] [$pb step] work with traces (english)
+
+2013-08-25 (bug fix)[3016181] Cocoa: [destroy $scrollbar] => crash (goddard)
+
+--- Released 8.6.1, September 18, 2013 --- http://core.tcl.tk/tk/ for details
