@@ -168,6 +168,7 @@ XSetSelectionOwner(
 	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
 	}
     }
+    return Success;
 }
 
 /*
@@ -194,7 +195,6 @@ TkMacOSXSelDeadWindow(
     if (winPtr && winPtr == (TkWindow *)clipboardOwner) {
 	clipboardOwner = NULL;
     }
-    return Success;
 }
 
 /*
