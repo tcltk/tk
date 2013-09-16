@@ -347,6 +347,7 @@ TkPutImage(
 	TkMacOSXDbgMsg("Invalid destination drawable");
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
@@ -744,7 +745,6 @@ DrawCGImage(
     } else {
 	TkMacOSXDbgMsg("Drawing of empty CGImage requested");
     }
-    return Success;
 }
 
 /*
