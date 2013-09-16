@@ -1,4 +1,15 @@
+A NOTE ON THE CHANGELOG:
+Starting in early 2011, Tk source code has been under the management of
+fossil, hosted at http://core.tcl.tk/tk/ .  Fossil presents a "Timeline"
+view of changes made that is superior in every way to a hand edited log file.
+Because of this, many Tk developers are now out of the habit of maintaining
+this log file.  You may still find useful things in it, but the Timeline is
+a better first place to look now.
+============================================================================
+
 2013-08-30  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.6.1 TAGGED FOR RELEASE ***
 
 	* README:		Bump version number to 8.6.1
 	* generic/tk.h:
