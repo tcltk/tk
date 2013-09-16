@@ -6908,4 +6908,6 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2013-08-26 (bug fix)[c597acd] [$pb step] work with traces (english)
 
---- Released 8.5.15, September 16, 2013 --- http://core.tcl.tk/tk/ for details
+2013-09-15 (bug fix)[8eb5671] macosx Tk compile errors w/clang (deily)
+
+--- Released 8.5.15, September 18, 2013 --- http://core.tcl.tk/tk/ for details
