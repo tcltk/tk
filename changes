@@ -7072,4 +7072,4 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2013-08-25 (bug fix)[3016181] Cocoa: [destroy $scrollbar] => crash (goddard)
 
---- Released 8.6.1, September 18, 2013 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.1, September 19, 2013 --- http://core.tcl.tk/tk/ for details
