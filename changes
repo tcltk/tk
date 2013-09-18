@@ -6889,3 +6889,25 @@ Many revisions to better support a Cygwin environment (nijtmans)
 2013-04-01 (bug fix)[3607830] Xkb runtime checks (griffin)
 
 --- Released 8.5.14, April 3, 2013 --- See ChangeLog for details ---
+
+2013-05-19 (platform support) FreeBSD updates (cerutti)
+
+2013-06-05 (bug fix)[3613759] [ttk::entry .e; .e xview end] (nijtmans)
+
+2013-06-05 (bug fix)[2100430] [ttk::entry .e; .e xview insert] (nijtmans)
+
+2013-06-07 (bug fix)[1913750,3500545,3416492,3095112] file dialogs (nijtmans)
+
+2013-06-28 (bug fix)[2501278] reverse ttk::scale key bindings {mcdonald)
+
+2013-06-28 (bug fix)[3588364] crash loading Tk 64-bit windows (nijtmans)
+
+2013-07-02 (bug fix)[32afa6] corrected dirent64 check (griffin)
+
+2013-08-25 (bug fix)[3016181] Cocoa: [destroy $scrollbar] => crash (goddard)
+
+2013-08-26 (bug fix)[c597acd] [$pb step] work with traces (english)
+
+2013-09-15 (bug fix)[8eb5671] macosx Tk compile errors w/clang (deily)
+
+--- Released 8.5.15, September 18, 2013 --- http://core.tcl.tk/tk/ for details
