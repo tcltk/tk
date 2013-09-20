@@ -40,6 +40,9 @@
 /* Define to 1 if you have the `open64' function. */
 #undef HAVE_OPEN64
 
+/* Define to 1 if you have the `pthread_atfork' function. */
+#undef HAVE_PTHREAD_ATFORK
+
 /* Define to 1 if you have the `pthread_attr_setstacksize' function. */
 #undef HAVE_PTHREAD_ATTR_SETSTACKSIZE
 
@@ -195,6 +198,9 @@
 #  undef WORDS_BIGENDIAN
 # endif
 #endif
+
+/* Is XKeycodeToKeysym deprecated? */
+#undef XKEYCODETOKEYSYM_IS_DEPRECATED
 
 /* Are Darwin SUSv3 extensions available? */
 #undef _DARWIN_C_SOURCE
