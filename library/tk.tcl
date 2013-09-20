@@ -13,7 +13,7 @@
 # Insist on running with compatible version of Tcl
 package require Tcl 8.6
 # Verify that we have Tk binary and script components from the same release
-package require -exact Tk  8.6.0
+package require -exact Tk  8.6.1
 
 # Create a ::tk namespace
 namespace eval ::tk {
