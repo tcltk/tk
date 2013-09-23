@@ -25,9 +25,15 @@
 
 #include "X11/Xutil.h"
 
-#ifdef BUILD_tk
+#ifndef EXTERN
+#   define EXTERN extern TCL_STORAGE_CLASS
+#endif
+
 #undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLEXPORT
+#ifdef BUILD_tk
+#   define TCL_STORAGE_CLASS DLLEXPORT
+#else
+#   define TCL_STORAGE_CLASS DLLIMPORT
 #endif
 
 typedef int (*XAfterFunction) (	    /* WARNING, this type not in Xlib spec */
