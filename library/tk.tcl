@@ -10,11 +10,8 @@
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-# Insist on running with compatible version of Tcl
-package require Tcl 8.6
 # Verify that we have Tk binary and script components from the same release
 package require -exact Tk  8.6.1
-
 # Create a ::tk namespace
 namespace eval ::tk {
     # Set up the msgcat commands
