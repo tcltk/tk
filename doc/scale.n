@@ -10,7 +10,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-scale \- Create and manipulate scale widgets
+scale \- Create and manipulate 'scale' value-controlled slider widgets
 .SH SYNOPSIS
 \fBscale\fR \fIpathName \fR?\fIoptions\fR?
 .SO
