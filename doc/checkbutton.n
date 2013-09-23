@@ -10,7 +10,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-checkbutton \- Create and manipulate checkbutton widgets
+checkbutton \- Create and manipulate 'checkbutton' boolean selection widgets
 .SH SYNOPSIS
 \fBcheckbutton\fI pathName \fR?\fIoptions\fR?
 .SO
