@@ -11,7 +11,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-entry \- Create and manipulate entry widgets
+entry \- Create and manipulate 'entry' one-line text entry widgets
 .SH SYNOPSIS
 \fBentry\fR \fIpathName \fR?\fIoptions\fR?
 .SO

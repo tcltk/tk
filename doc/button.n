@@ -10,7 +10,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-button \- Create and manipulate button widgets
+button \- Create and manipulate 'button' action widgets
 .SH SYNOPSIS
 \fBbutton\fR \fIpathName \fR?\fIoptions\fR?
 .SO

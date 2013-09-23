@@ -17,6 +17,7 @@ tk_dialog \- Create modal dialog and wait for response
 .SH DESCRIPTION
 .PP
 This procedure is part of the Tk script library.
+It is largely \fIdeprecated\fR by the \fBtk_messageBox\fR.
 Its arguments describe a dialog box:
 .TP
 \fIwindow\fR

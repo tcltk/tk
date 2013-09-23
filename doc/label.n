@@ -10,7 +10,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-label \- Create and manipulate label widgets
+label \- Create and manipulate 'label' non-interactive text or image widgets
 .SH SYNOPSIS
 \fBlabel\fR \fIpathName \fR?\fIoptions\fR?
 .SO
