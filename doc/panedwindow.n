@@ -10,7 +10,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-panedwindow \- Create and manipulate panedwindow widgets
+panedwindow \- Create and manipulate 'panedwindow' split container widgets
 .SH SYNOPSIS
 \fBpanedwindow\fR \fIpathName \fR?\fIoptions\fR?
 .SO
