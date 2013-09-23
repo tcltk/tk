@@ -10,7 +10,7 @@
 .BS
 '\" Note: do not modify the .SH NAME line immediately below!
 .SH NAME
-text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate text widgets
+text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate 'text' hypertext editing widgets
 .SH SYNOPSIS
 .nf
 \fBtext\fR \fIpathName \fR?\fIoptions\fR?
