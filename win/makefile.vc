@@ -456,9 +456,16 @@ cdebug	= -Zi -Od $(DEBUGFLAGS)
 cdebug	= -Zi -WX $(DEBUGFLAGS)
 !endif
 
+### Common compiler options that are architecture specific
+!if "$(MACHINE)" == "ARM"
+carch = -D_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE
+!else
+carch =
+!endif
+
 ### Declarations common to all compiler options
 cwarn = $(WARNINGS) -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
-cflags = -nologo -c $(COMPILERFLAGS) $(cwarn) -Fp$(TMP_DIR)^\
+cflags = -nologo -c $(COMPILERFLAGS) $(carch) $(cwarn) -Fp$(TMP_DIR)^\
 
 !if $(MSVCRT)
 !if $(DEBUG) && !$(UNCHECKED)
@@ -527,6 +534,8 @@ baselibs   = $(baselibs) bufferoverflowU.lib
 !endif
 !endif
 guilibs	  = $(baselibs) gdi32.lib
+guilibs	  = $(guilibs) comdlg32.lib imm32.lib comctl32.lib shell32.lib
+guilibs	  = $(guilibs) uuid.lib ole32.lib oleaut32.lib
 
 
 #---------------------------------------------------------------------
