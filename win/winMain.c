@@ -16,6 +16,10 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <locale.h>
 
+#if defined(__GNUC__)
+int _CRT_glob = 0;
+#endif /* __GNUC__ */
+
 /*
  * The following declarations refer to internal Tk routines. These interfaces
  * are available for use, but are not supported.
