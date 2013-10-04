@@ -648,7 +648,7 @@ $**
 
 
 $(TKSTUBLIB): $(TKSTUBOBJS)
-	$(lib32) -nologo -out:$@ $**
+	$(lib32) -nologo -nodefaultlib -out:$@ $**
 
 
 $(WISH): $(WISHOBJS) $(TKIMPLIB)
