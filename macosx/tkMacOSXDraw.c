@@ -1688,6 +1688,7 @@ TkMacOSXRestoreDrawingContext(
 {
     if (dcPtr->context) {
 	CGContextSynchronize(dcPtr->context);
+	[[dcPtr->view window] setViewsNeedDisplay:YES];
 	[[dcPtr->view window] enableFlushWindow];
 	if (dcPtr->focusLocked) {
 	    [dcPtr->view unlockFocus];
