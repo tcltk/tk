@@ -81,6 +81,10 @@ typedef struct ThreadSpecificData {
     int menusInitialized;	/* Flag indicates whether thread-specific
 				 * elements of the Windows Menu module have
 				 * been initialized. */
+    Tk_OptionTable menuOptionTable;
+				/* The option table for menus. */
+    Tk_OptionTable entryOptionTables[6];
+				/* The tables for menu entries. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -394,38 +398,12 @@ static const Tk_ClassProcs menuClass = {
  *--------------------------------------------------------------
  */
 
-static void
-FreeOptionTables(
-    ClientData clientData,
-    Tcl_Interp *interp)
-{
-    ckfree(clientData);
-}
-
 int
 TkCreateMenuCmd(
     Tcl_Interp *interp)		/* Interpreter we are creating the command
 				 * in. */
 {
-    TkMenuOptionTables *optionTablesPtr = ckalloc(sizeof(TkMenuOptionTables));
-
-    optionTablesPtr->menuOptionTable =
-	    Tk_CreateOptionTable(interp, tkMenuConfigSpecs);
-    optionTablesPtr->entryOptionTables[TEAROFF_ENTRY] =
-	    Tk_CreateOptionTable(interp, specsArray[TEAROFF_ENTRY]);
-    optionTablesPtr->entryOptionTables[COMMAND_ENTRY] =
-	    Tk_CreateOptionTable(interp, specsArray[COMMAND_ENTRY]);
-    optionTablesPtr->entryOptionTables[CASCADE_ENTRY] =
-	    Tk_CreateOptionTable(interp, specsArray[CASCADE_ENTRY]);
-    optionTablesPtr->entryOptionTables[SEPARATOR_ENTRY] =
-	    Tk_CreateOptionTable(interp, specsArray[SEPARATOR_ENTRY]);
-    optionTablesPtr->entryOptionTables[RADIO_BUTTON_ENTRY] =
-	    Tk_CreateOptionTable(interp, specsArray[RADIO_BUTTON_ENTRY]);
-    optionTablesPtr->entryOptionTables[CHECK_BUTTON_ENTRY] =
-	    Tk_CreateOptionTable(interp, specsArray[CHECK_BUTTON_ENTRY]);
-
-    Tcl_CreateObjCommand(interp, "menu", MenuCmd, optionTablesPtr, 0);
-    Tcl_CallWhenDeleted(interp, FreeOptionTables, optionTablesPtr);
+    Tcl_CreateObjCommand(interp, "menu", MenuCmd, NULL, 0);
 
     if (Tcl_IsSafe(interp)) {
 	Tcl_HideCommand(interp, "menu", "menu");
@@ -453,7 +431,7 @@ TkCreateMenuCmd(
 
 static int
 MenuCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    ClientData clientData,	/* Not used */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
@@ -465,7 +443,8 @@ MenuCmd(
     int i, index, toplevel;
     const char *windowName;
     static const char *const typeStringList[] = {"-type", NULL};
-    TkMenuOptionTables *optionTablesPtr = clientData;
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -511,7 +490,6 @@ MenuCmd(
     menuPtr->cursorPtr = None;
     menuPtr->masterMenuPtr = menuPtr;
     menuPtr->menuType = UNKNOWN_TYPE;
-    menuPtr->optionTablesPtr = optionTablesPtr;
     TkMenuInitializeDrawingFields(menuPtr);
 
     Tk_SetClass(menuPtr->tkwin, "Menu");
@@ -520,7 +498,7 @@ MenuCmd(
 	    ExposureMask|StructureNotifyMask|ActivateMask,
 	    TkMenuEventProc, menuPtr);
     if (Tk_InitOptions(interp, (char *) menuPtr,
-	    menuPtr->optionTablesPtr->menuOptionTable, menuPtr->tkwin)
+	    tsdPtr->menuOptionTable, menuPtr->tkwin)
 	    != TCL_OK) {
     	Tk_DestroyWindow(menuPtr->tkwin);
     	return TCL_ERROR;
@@ -675,6 +653,8 @@ MenuWidgetObjCmd(
     register TkMenuEntry *mePtr;
     int result = TCL_OK;
     int option;
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
@@ -725,7 +705,7 @@ MenuWidgetObjCmd(
 	    goto error;
 	}
 	resultPtr = Tk_GetOptionValue(interp, (char *) menuPtr,
-		menuPtr->optionTablesPtr->menuOptionTable, objv[2],
+		tsdPtr->menuOptionTable, objv[2],
 		menuPtr->tkwin);
 	if (resultPtr == NULL) {
 	    goto error;
@@ -745,7 +725,7 @@ MenuWidgetObjCmd(
 
 	if (objc == 2) {
 	    resultPtr = Tk_GetOptionInfo(interp, (char *) menuPtr,
-		    menuPtr->optionTablesPtr->menuOptionTable, NULL,
+		    tsdPtr->menuOptionTable, NULL,
 		    menuPtr->tkwin);
 	    if (resultPtr == NULL) {
 		result = TCL_ERROR;
@@ -755,7 +735,7 @@ MenuWidgetObjCmd(
 	    }
 	} else if (objc == 3) {
 	    resultPtr = Tk_GetOptionInfo(interp, (char *) menuPtr,
-		    menuPtr->optionTablesPtr->menuOptionTable, objv[2],
+		    tsdPtr->menuOptionTable, objv[2],
 		    menuPtr->tkwin);
 	    if (resultPtr == NULL) {
 		result = TCL_ERROR;
@@ -1144,6 +1124,8 @@ DestroyMenuInstance(
     Tcl_Obj *newObjv[2];
     TkMenu *parentMasterMenuPtr;
     TkMenuEntry *parentMasterEntryPtr;
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * If the menu has any cascade menu entries pointing to it, the cascade
@@ -1233,7 +1215,7 @@ DestroyMenuInstance(
     }
     TkMenuFreeDrawOptions(menuPtr);
     Tk_FreeConfigOptions((char *) menuPtr,
-	    menuPtr->optionTablesPtr->menuOptionTable, menuPtr->tkwin);
+	    tsdPtr->menuOptionTable, menuPtr->tkwin);
     if (menuPtr->tkwin != NULL) {
 	Tk_Window tkwin = menuPtr->tkwin;
 
@@ -1566,12 +1548,14 @@ ConfigureMenu(
     int i;
     TkMenu *menuListPtr, *cleanupPtr;
     int result;
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
 	menuListPtr->errorStructPtr = ckalloc(sizeof(Tk_SavedOptions));
 	result = Tk_SetOptions(interp, (char *) menuListPtr,
-		menuListPtr->optionTablesPtr->menuOptionTable, objc, objv,
+		tsdPtr->menuOptionTable, objc, objv,
 		menuListPtr->tkwin, menuListPtr->errorStructPtr, NULL);
 	if (result != TCL_OK) {
 	    for (cleanupPtr = menuPtr->masterMenuPtr;
@@ -2287,6 +2271,8 @@ MenuNewEntry(
     TkMenuEntry *mePtr;
     TkMenuEntry **newEntries;
     int i;
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Create a new array of entries with an empty slot for the new entry.
@@ -2308,7 +2294,7 @@ MenuNewEntry(
     mePtr = ckalloc(sizeof(TkMenuEntry));
     menuPtr->entries[index] = mePtr;
     mePtr->type = type;
-    mePtr->optionTable = menuPtr->optionTablesPtr->entryOptionTables[type];
+    mePtr->optionTable = tsdPtr->entryOptionTables[type];
     mePtr->menuPtr = menuPtr;
     mePtr->labelPtr = NULL;
     mePtr->labelLength = 0;
@@ -3625,6 +3611,20 @@ TkMenuInit(void)
     }
     if (!tsdPtr->menusInitialized) {
 	TkpMenuThreadInit();
+	tsdPtr->menuOptionTable =
+		Tk_CreateOptionTable(NULL, tkMenuConfigSpecs);
+	tsdPtr->entryOptionTables[TEAROFF_ENTRY] =
+		Tk_CreateOptionTable(NULL, specsArray[TEAROFF_ENTRY]);
+	tsdPtr->entryOptionTables[COMMAND_ENTRY] =
+		Tk_CreateOptionTable(NULL, specsArray[COMMAND_ENTRY]);
+	tsdPtr->entryOptionTables[CASCADE_ENTRY] =
+		Tk_CreateOptionTable(NULL, specsArray[CASCADE_ENTRY]);
+	tsdPtr->entryOptionTables[SEPARATOR_ENTRY] =
+		Tk_CreateOptionTable(NULL, specsArray[SEPARATOR_ENTRY]);
+	tsdPtr->entryOptionTables[RADIO_BUTTON_ENTRY] =
+		Tk_CreateOptionTable(NULL, specsArray[RADIO_BUTTON_ENTRY]);
+	tsdPtr->entryOptionTables[CHECK_BUTTON_ENTRY] =
+		Tk_CreateOptionTable(NULL, specsArray[CHECK_BUTTON_ENTRY]);
 	tsdPtr->menusInitialized = 1;
     }
 }
