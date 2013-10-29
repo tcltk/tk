@@ -149,6 +149,7 @@ static const TkCmd commands[] = {
     {"label",		Tk_LabelObjCmd,		ISSAFE},
     {"labelframe",	Tk_LabelframeObjCmd,	ISSAFE},
     {"listbox",		Tk_ListboxObjCmd,	ISSAFE},
+    {"menu",		Tk_MenuObjCmd,	PASSMAINWINDOW},
     {"menubutton",	Tk_MenubuttonObjCmd,	ISSAFE},
     {"message",		Tk_MessageObjCmd,	ISSAFE},
     {"panedwindow",	Tk_PanedWindowObjCmd,	ISSAFE},
@@ -986,8 +987,6 @@ TkCreateMainWindow(
 	    Tcl_HideCommand(interp, cmdPtr->name, cmdPtr->name);
 	}
     }
-
-    TkCreateMenuCmd(interp);
 
     /*
      * Set variables for the intepreter.
