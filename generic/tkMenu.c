@@ -353,8 +353,6 @@ static int		MenuDoXPosition(Tcl_Interp *interp,
 static int		MenuAddOrInsert(Tcl_Interp *interp,
 			    TkMenu *menuPtr, Tcl_Obj *indexPtr, int objc,
 			    Tcl_Obj *const objv[]);
-static int		MenuCmd(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
 static void		MenuCmdDeletedProc(ClientData clientData);
 static TkMenuEntry *	MenuNewEntry(TkMenu *menuPtr, int index, int type);
 static char *		MenuVarProc(ClientData clientData,
@@ -385,37 +383,7 @@ static const Tk_ClassProcs menuClass = {
 /*
  *--------------------------------------------------------------
  *
- * TkCreateMenuCmd --
- *
- *	Called by Tk at initialization time to create the menu command.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	See the user documentation.
- *
- *--------------------------------------------------------------
- */
-
-int
-TkCreateMenuCmd(
-    Tcl_Interp *interp)		/* Interpreter we are creating the command
-				 * in. */
-{
-    Tcl_CreateObjCommand(interp, "menu", MenuCmd, NULL, 0);
-
-    if (Tcl_IsSafe(interp)) {
-	Tcl_HideCommand(interp, "menu", "menu");
-    }
-
-    return TCL_OK;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * MenuCmd --
+ * Tk_MenuObjCmd --
  *
  *	This function is invoked to process the "menu" Tcl command. See the
  *	user documentation for details on what it does.
@@ -429,14 +397,14 @@ TkCreateMenuCmd(
  *--------------------------------------------------------------
  */
 
-static int
-MenuCmd(
-    ClientData clientData,	/* Not used */
+int
+Tk_MenuObjCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    Tk_Window tkwin = Tk_MainWindow(interp);
+    Tk_Window tkwin = clientData;
     Tk_Window newWin;
     register TkMenu *menuPtr;
     TkMenuReferences *menuRefPtr;
