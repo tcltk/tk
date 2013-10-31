@@ -976,11 +976,6 @@ MODULE_SCOPE CONST char *const tkWebColors[20];
 
 #include "tkIntDecls.h"
 
-#ifdef BUILD_tk
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLEXPORT
-#endif
-
 /*
  * Themed widget set init function:
  */
@@ -1200,9 +1195,6 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 MODULE_SCOPE int	TkUnsupported1ObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLIMPORT
 
 #endif /* _TKINT */
 
