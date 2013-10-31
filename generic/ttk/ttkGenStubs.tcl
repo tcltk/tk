@@ -187,7 +187,6 @@ proc genStubs::declare {args} {
     variable revision
 
     incr revision
-
     if {[llength $args] == 2} {
 	lassign $args index decl
 	set status current
@@ -214,7 +213,25 @@ proc genStubs::declare {args} {
     if {$index > $stubs($curName,lastNum)} {
 	set stubs($curName,lastNum) $index
     }
+    return
+}
 
+# genStubs::export --
+#
+#	This function is used in the declarations file to declare a symbol
+#	that is exported from the library but is not in the stubs table.
+#
+# Arguments:
+#	decl		The C function declaration, or {} for an undefined
+#			entry.
+#
+# Results:
+#	None.
+
+proc genStubs::export {args} {
+    if {[llength $args] != 1} {
+	puts stderr "wrong # args: export $args"
+    }
     return
 }
 
@@ -410,7 +427,6 @@ proc genStubs::parseArg {arg} {
 
 proc genStubs::makeDecl {name decl index} {
     variable scspec
-
     lassign $decl rtype fname args
 
     append text "/* $index */\n"
@@ -731,6 +747,8 @@ proc genStubs::emitHeader {name} {
     append text "#define ${CAPName}_STUBS_EPOCH $epoch\n"
     append text "#define ${CAPName}_STUBS_REVISION $revision\n"
 
+    append text "\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n"
+
     emitDeclarations $name text
 
     if {[info exists hooks($name)]} {
@@ -752,8 +770,7 @@ proc genStubs::emitHeader {name} {
 
     append text "} ${capName}Stubs;\n\n"
 
-    append text "#ifdef __cplusplus\nextern \"C\" {\n#endif\n"
-    append text "extern const ${capName}Stubs *${name}StubsPtr;\n"
+    append text "extern const ${capName}Stubs *${name}StubsPtr;\n\n"
     append text "#ifdef __cplusplus\n}\n#endif\n"
 
     emitMacros $name text
@@ -778,10 +795,9 @@ proc genStubs::emitInit {name textVar} {
     variable interfaces
     variable epoch
     variable revision
-
     upvar $textVar text
-    set root 1
 
+    set root 1
     set capName [string toupper [string index $name 0]]
     append capName [string range $name 1 end]
     set CAPName [string toupper $name]
