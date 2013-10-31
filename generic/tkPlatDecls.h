@@ -29,6 +29,10 @@ extern "C" {
 
 /* !BEGIN!: Do not edit below this line. */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Exported function declarations:
  */
@@ -107,10 +111,8 @@ typedef struct TkPlatStubs {
 #endif /* AQUA */
 } TkPlatStubs;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 extern const TkPlatStubs *tkPlatStubsPtr;
+
 #ifdef __cplusplus
 }
 #endif

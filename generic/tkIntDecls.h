@@ -35,6 +35,10 @@ struct TkSharedText;
 
 /* !BEGIN!: Do not edit below this line. */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Exported function declarations:
  */
@@ -765,10 +769,8 @@ typedef struct TkIntStubs {
     void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, double x, double y, double angle); /* 184 */
 } TkIntStubs;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 extern const TkIntStubs *tkIntStubsPtr;
+
 #ifdef __cplusplus
 }
 #endif
