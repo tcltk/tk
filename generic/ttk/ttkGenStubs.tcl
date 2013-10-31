@@ -769,6 +769,8 @@ proc genStubs::emitHeader {name} {
 	append text "#define ${CAPName}_STUBS_REVISION $revision\n"
     }
 
+    append text "\n#ifdef __cplusplus\nextern \"C\" {\n#endif\n"
+
     emitDeclarations $name text
 
     if {[info exists hooks($name)]} {
@@ -796,8 +798,7 @@ proc genStubs::emitHeader {name} {
 
     append text "} ${capName}Stubs;\n\n"
 
-    append text "#ifdef __cplusplus\nextern \"C\" {\n#endif\n"
-    append text "extern const ${capName}Stubs *${name}StubsPtr;\n"
+    append text "extern const ${capName}Stubs *${name}StubsPtr;\n\n"
     append text "#ifdef __cplusplus\n}\n#endif\n"
 
     emitMacros $name text
@@ -821,9 +822,10 @@ proc genStubs::emitInit {name textVar} {
     variable hooks
     variable interfaces
     variable epoch
+    variable revision
     upvar $textVar text
-    set root 1
 
+    set root 1
     set capName [string toupper [string index $name 0]]
     append capName [string range $name 1 end]
 
