@@ -1522,8 +1522,8 @@ FreeFontObjProc(
 	fontPtr->objRefCount--;
 	if ((fontPtr->resourceRefCount == 0) && (fontPtr->objRefCount == 0)) {
 	    ckfree((char *) fontPtr);
-	    objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 	}
+	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     }
 }
 
