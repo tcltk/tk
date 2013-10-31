@@ -26,6 +26,10 @@
 
 /* !BEGIN!: Do not edit below this line. */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Exported function declarations:
  */
@@ -410,10 +414,8 @@ typedef struct TkIntPlatStubs {
 #endif /* X11 */
 } TkIntPlatStubs;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 extern const TkIntPlatStubs *tkIntPlatStubsPtr;
+
 #ifdef __cplusplus
 }
 #endif
