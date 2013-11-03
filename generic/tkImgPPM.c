@@ -489,7 +489,7 @@ StringReadPPM(
 				 * image being read. */
 {
     int fileWidth, fileHeight, maxIntensity;
-    int nLines, nBytes, h, type, count, dataSize, bytesPerChannel = 2;
+    int nLines, nBytes, h, type, count, dataSize, bytesPerChannel = 1;
     unsigned char *pixelPtr, *dataBuffer;
     Tk_PhotoImageBlock block;
 
