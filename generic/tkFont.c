@@ -1094,7 +1094,7 @@ Tk_AllocFontFromObj(
     NamedFont *nfPtr;
 
     if (objPtr->typePtr != &tkFontObjType
-	    || objPtr->internalRep.twoPtrValue.ptr2 != &fiPtr->fontCache) {
+	    || objPtr->internalRep.twoPtrValue.ptr2 != fiPtr) {
 	SetFontFromAny(interp, objPtr);
     }
 
@@ -1134,7 +1134,7 @@ Tk_AllocFontFromObj(
 	    fontPtr->resourceRefCount++;
 	    fontPtr->objRefCount++;
 	    objPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
-	    objPtr->internalRep.twoPtrValue.ptr2 = &fiPtr->fontCache;
+	    objPtr->internalRep.twoPtrValue.ptr2 = fiPtr;
 	    return (Tk_Font) fontPtr;
 	}
     }
@@ -1245,7 +1245,7 @@ Tk_AllocFontFromObj(
     }
 
     objPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
-    objPtr->internalRep.twoPtrValue.ptr2 = &fiPtr->fontCache;
+    objPtr->internalRep.twoPtrValue.ptr2 = fiPtr;
     return (Tk_Font) fontPtr;
 }
 
@@ -1279,7 +1279,7 @@ Tk_GetFontFromObj(
     Tcl_HashEntry *hashPtr;
 
     if (objPtr->typePtr != &tkFontObjType
-	    || objPtr->internalRep.twoPtrValue.ptr2 != &fiPtr->fontCache) {
+	    || objPtr->internalRep.twoPtrValue.ptr2 != fiPtr) {
 	SetFontFromAny(NULL, objPtr);
     }
 
@@ -1315,7 +1315,7 @@ Tk_GetFontFromObj(
 	    if (Tk_Screen(tkwin) == fontPtr->screen) {
 		fontPtr->objRefCount++;
 		objPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
-		objPtr->internalRep.twoPtrValue.ptr2 = &fiPtr->fontCache;
+		objPtr->internalRep.twoPtrValue.ptr2 = fiPtr;
 		return (Tk_Font) fontPtr;
 	    }
 	}
