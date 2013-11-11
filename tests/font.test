@@ -1380,6 +1380,17 @@ setup
 
 destroy .b
 
+test font-47.1 {Bug f214b8ad5b} -body {
+    interp create one
+    interp create two
+    load {} Tk one
+    load {} Tk two
+    one eval menu .menubar
+    two eval menu .menubar
+    interp delete one
+    interp delete two
+} -result {}
+
 # cleanup
 cleanupTests
 return
