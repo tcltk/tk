@@ -595,7 +595,7 @@ StringReadPPM(
 	    unsigned char *p;
 	    unsigned int value;
 
-	    for (p = pixelPtr; count > 0; count--, p += 2) {
+	    for (p = pixelPtr,count=nBytes; count > 1; count-=2, p += 2) {
 		value = ((unsigned int) p[0]) * 256 + ((unsigned int) p[1]);
 		value = value * 255 / maxIntensity;
 		p[0] = p[1] = (unsigned char) value;
