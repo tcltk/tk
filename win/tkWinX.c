@@ -120,10 +120,10 @@ TkGetServerInfo(
     Tk_Window tkwin)		/* Token for window; this selects a particular
 				 * display and server. */
 {
-    OSVERSIONINFO os;
+    OSVERSIONINFOW os;
 
-    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&os);
+    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+    GetVersionExW(&os);
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("Windows %d.%d %d %s",
 	    (int) os.dwMajorVersion, (int) os.dwMinorVersion,
 	    (int) os.dwBuildNumber,
@@ -326,10 +326,10 @@ int
 TkWinGetPlatformId(void)
 {
     if (tkPlatformId == 0) {
-	OSVERSIONINFO os;
+	OSVERSIONINFOW os;
 
-	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx(&os);
+	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+	GetVersionExW(&os);
 	tkPlatformId = os.dwPlatformId;
 
 	/*
