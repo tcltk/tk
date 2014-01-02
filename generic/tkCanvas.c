@@ -97,8 +97,14 @@ typedef struct TagSearch {
 #endif /* USE_OLD_TAG_SEARCH */
 
 /*
- * Custom option for handling "-state" and "-offset"
+ * Custom option for handling "-state", "-offset" and "-suppresssmallitems"
  */
+static int		SuppressSmallItemsParseProc(ClientData clientData,
+			    Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec,
+			    int offset);
+
+static const char *	SuppressSmallItemsPrintProc(ClientData clientData,
+			    Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
 
 static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc,
@@ -107,6 +113,10 @@ static const Tk_CustomOption stateOption = {
 
 static const Tk_CustomOption offsetOption = {
     TkOffsetParseProc, TkOffsetPrintProc, INT2PTR(TK_OFFSET_RELATIVE)
+};
+
+static const Tk_CustomOption suppressSmallItemsOption = {
+    SuppressSmallItemsParseProc, SuppressSmallItemsPrintProc, NULL
 };
 
 /*
@@ -183,6 +193,9 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-state", "state", "State",
 	"normal", Tk_Offset(TkCanvas, canvas_state), TK_CONFIG_DONT_SET_DEFAULT,
 	&stateOption},
+    {TK_CONFIG_CUSTOM, "-suppresssmallitems", "SuppressSmallItems",
+	"SuppressSmallItems", "0", 0, TK_CONFIG_DONT_SET_DEFAULT,
+	&suppressSmallItemsOption},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_CANVAS_TAKE_FOCUS, Tk_Offset(TkCanvas, takeFocus),
 	TK_CONFIG_NULL_OK, NULL},
@@ -311,8 +324,8 @@ static int		TagSearchScanExpr(Tcl_Interp *interp,
 			    TagSearch *searchPtr, TagSearchExpr *expr);
 static int		TagSearchEvalExpr(TagSearchExpr *expr,
 			    Tk_Item *itemPtr);
-static Tk_Item *	TagSearchFirst(TagSearch *searchPtr);
-static Tk_Item *	TagSearchNext(TagSearch *searchPtr);
+static Tk_Item *	TagSearchFirst(TagSearch *searchPtr, int suppressSmallItems);
+static Tk_Item *	TagSearchNext(TagSearch *searchPtr, int suppressSmallItems);
 #endif /* USE_OLD_TAG_SEARCH */
 
 /*
@@ -342,17 +355,17 @@ static const Tk_ClassProcs canvasClass = {
 #define RELINK_ITEMS(objPtr, itemPtr) \
     RelinkItems(canvasPtr, (objPtr), (itemPtr))
 #else /* USE_OLD_TAG_SEARCH */
-#define FIRST_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
+#define FIRST_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,suppressSmallItems,errorExitClause) \
     if ((result=TagSearchScan(canvasPtr,(objPtr),(searchPtrPtr))) != TCL_OK){ \
 	errorExitClause; \
     } \
-    itemPtr = TagSearchFirst(*(searchPtrPtr));
-#define FOR_EVERY_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
+    itemPtr = TagSearchFirst(*(searchPtrPtr),suppressSmallItems);
+#define FOR_EVERY_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,suppressSmallIitems,errorExitClause) \
     if ((result=TagSearchScan(canvasPtr,(objPtr),(searchPtrPtr))) != TCL_OK){ \
 	errorExitClause; \
     } \
-    for (itemPtr = TagSearchFirst(*(searchPtrPtr)); \
-	    itemPtr != NULL; itemPtr = TagSearchNext(*(searchPtrPtr)))
+    for (itemPtr = TagSearchFirst(*(searchPtrPtr),suppressSmallItems); \
+	    itemPtr != NULL; itemPtr = TagSearchNext(*(searchPtrPtr),suppressSmallItems))
 #define FIND_ITEMS(objPtr, n) \
     FindItems(interp, canvasPtr, objc, objv, (objPtr), (n), &searchPtr)
 #define RELINK_ITEMS(objPtr, itemPtr) \
@@ -799,6 +812,7 @@ CanvasWidgetCmd(
 				 * TagSearchDestroy */
 #endif /* USE_OLD_TAG_SEARCH */
 
+    int suppressSmallItems;
     int index;
     static const char *const optionStrings[] = {
 	"addtag",	"bbox",		"bind",		"canvasx",
@@ -834,6 +848,8 @@ CanvasWidgetCmd(
     }
     Tcl_Preserve(canvasPtr);
 
+    suppressSmallItems = ((canvasPtr->flags & SUPPRESS_SMALL_ITEMS) != 0);
+
     result = TCL_OK;
     switch ((enum options) index) {
     case CANV_ADDTAG:
@@ -858,7 +874,7 @@ CanvasWidgetCmd(
 	}
 	gotAny = 0;
 	for (i = 2; i < objc; i++) {
-	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], &searchPtr, goto done) {
+	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], &searchPtr, suppressSmallItems, goto done) {
 		if ((itemPtr->x1 >= itemPtr->x2)
 			|| (itemPtr->y1 >= itemPtr->y2)) {
 		    continue;
@@ -1149,7 +1165,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
+	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done);
 	if (itemPtr != NULL) {
 	    if (objc != 3) {
 		EventuallyRedrawItem(canvasPtr, itemPtr);
@@ -1184,7 +1200,7 @@ CanvasWidgetCmd(
 
 	tmpObj = Tcl_NewListObj(2, objv+4);
 
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto doneImove) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto doneImove) {
 	    int index;
 	    int x1,x2,y1,y2;
 	    int dontRedraw1,dontRedraw2;
@@ -1341,7 +1357,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 	    if ((itemPtr->typePtr->indexProc == NULL)
 		    || (itemPtr->typePtr->dCharsProc == NULL)) {
 		continue;
@@ -1384,7 +1400,7 @@ CanvasWidgetCmd(
 	Tcl_HashEntry *entryPtr;
 
 	for (i = 2; i < objc; i++) {
-	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], &searchPtr, goto done) {
+	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[i], &searchPtr, suppressSmallItems, goto done) {
 		EventuallyRedrawItem(canvasPtr, itemPtr);
 		if (canvasPtr->bindingTable != NULL) {
 		    Tk_DeleteAllBindings(canvasPtr->bindingTable, itemPtr);
@@ -1448,7 +1464,7 @@ CanvasWidgetCmd(
 	} else {
 	    tag = Tk_GetUid(Tcl_GetString(objv[2]));
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 	    for (i = itemPtr->numTags-1; i >= 0; i--) {
 		if (itemPtr->tagPtr[i] == tag) {
 		    itemPtr->tagPtr[i] = itemPtr->tagPtr[itemPtr->numTags-1];
@@ -1486,7 +1502,7 @@ CanvasWidgetCmd(
 	    canvasPtr->textInfo.focusItemPtr = NULL;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 	    if (itemPtr->typePtr->icursorProc != NULL) {
 		break;
 	    }
@@ -1505,7 +1521,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
+	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done);
 	if (itemPtr != NULL) {
 	    int i;
 	    Tcl_Obj *resultObj = Tcl_NewObj();
@@ -1525,7 +1541,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 	    if ((itemPtr->typePtr->indexProc == NULL)
 		    || (itemPtr->typePtr->icursorProc == NULL)) {
 		goto done;
@@ -1550,7 +1566,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 	    if (itemPtr->typePtr->indexProc != NULL) {
 		break;
 	    }
@@ -1579,7 +1595,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 	    if ((itemPtr->typePtr->indexProc == NULL)
 		    || (itemPtr->typePtr->insertProc == NULL)) {
 		continue;
@@ -1615,7 +1631,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
+	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done);
 	if (itemPtr != NULL) {
 	    result = ItemConfigValue(canvasPtr, itemPtr, objv[3]);
 	}
@@ -1626,7 +1642,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 	    if (objc == 3) {
 		result = ItemConfigInfo(canvasPtr, itemPtr, NULL);
 	    } else if (objc == 4) {
@@ -1658,7 +1674,7 @@ CanvasWidgetCmd(
 	if (objc == 3) {
 	    itemPtr = NULL;
 	} else {
-	    FIRST_CANVAS_ITEM_MATCHING(objv[3], &searchPtr, goto done);
+	    FIRST_CANVAS_ITEM_MATCHING(objv[3], &searchPtr,suppressSmallItems, goto done);
 	    if (itemPtr == NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"tagOrId \"%s\" doesn't match any items",
@@ -1686,7 +1702,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 	    EventuallyRedrawItem(canvasPtr, itemPtr);
 	    ItemTranslate(canvasPtr, itemPtr, xAmount, yAmount);
 	    EventuallyRedrawItem(canvasPtr, itemPtr);
@@ -1723,7 +1739,7 @@ CanvasWidgetCmd(
 	    goto done;
 	}
 
-	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
+	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done);
 	if (itemPtr != NULL) {
 	    oldX = itemPtr->x1;
 	    oldY = itemPtr->y1;
@@ -1748,7 +1764,7 @@ CanvasWidgetCmd(
 	     * Move the object(s).
 	     */
 
-	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 		EventuallyRedrawItem(canvasPtr, itemPtr);
 		ItemTranslate(canvasPtr, itemPtr, xAmount, yAmount);
 		EventuallyRedrawItem(canvasPtr, itemPtr);
@@ -1783,7 +1799,7 @@ CanvasWidgetCmd(
 	    prevPtr = canvasPtr->lastItemPtr;
 	} else {
 	    prevPtr = NULL;
-	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[3], &searchPtr, goto done) {
+	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[3], &searchPtr, suppressSmallItems, goto done) {
 		prevPtr = itemPtr;
 	    }
 	    if (prevPtr == NULL) {
@@ -1807,7 +1823,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 	    if ((itemPtr->typePtr->indexProc == NULL)
 		    || (itemPtr->typePtr->dCharsProc == NULL)
 		    || (itemPtr->typePtr->insertProc == NULL)) {
@@ -1870,7 +1886,8 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	suppressSmallItems = 0; /* All items must be considered when scaling */
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done) {
 	    EventuallyRedrawItem(canvasPtr, itemPtr);
 	    ItemScale(canvasPtr, itemPtr, xOrigin, yOrigin, xScale, yScale);
 	    EventuallyRedrawItem(canvasPtr, itemPtr);
@@ -1937,7 +1954,7 @@ CanvasWidgetCmd(
 	    goto done;
 	}
 	if (objc >= 4) {
-	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[3], &searchPtr, goto done) {
+	    FOR_EVERY_CANVAS_ITEM_MATCHING(objv[3], &searchPtr, suppressSmallItems, goto done) {
 		if ((itemPtr->typePtr->indexProc != NULL)
 			&& (itemPtr->typePtr->selectionProc != NULL)){
 		    break;
@@ -2029,7 +2046,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
+	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, suppressSmallItems, goto done);
 	if (itemPtr != NULL) {
 	    Tcl_SetObjResult(interp,
 		    Tcl_NewStringObj(itemPtr->typePtr->name, -1));
@@ -2437,7 +2454,7 @@ DisplayCanvas(
     Tk_Window tkwin = canvasPtr->tkwin;
     Tk_Item *itemPtr;
     Pixmap pixmap;
-    int screenX1, screenX2, screenY1, screenY2, width, height;
+    int screenX1, screenX2, screenY1, screenY2, width, height, suppressSmallItems;
 
     if (canvasPtr->tkwin == NULL) {
 	return;
@@ -2569,8 +2586,13 @@ DisplayCanvas(
 	 * unmapped when they move off-screen).
 	 */
 
+	suppressSmallItems = ((canvasPtr->flags & SUPPRESS_SMALL_ITEMS) != 0);
+
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 		itemPtr = itemPtr->nextPtr) {
+	    if (suppressSmallItems && ((itemPtr->redraw_flags & TK_ITEM_SMALL_ITEM) != 0)) {
+		    continue;
+	    }
 	    if ((itemPtr->x1 >= screenX2)
 		    || (itemPtr->y1 >= screenY2)
 		    || (itemPtr->x2 < screenX1)
@@ -3071,6 +3093,7 @@ StartTagSearch(
     int count;
     TkWindow *tkwin = (TkWindow *) canvasPtr->tkwin;
     TkDisplay *dispPtr = tkwin->dispPtr;
+    int suppressSmallItems = ((canvasPtr->flags & SUPPRESS_SMALL_ITEMS) != 0);
 
     /*
      * Initialize the search.
@@ -3084,6 +3107,8 @@ StartTagSearch(
      * number then it selects the single item with the matching identifier.
      * In this case see if the item being requested is the hot item, in which
      * case the search can be skipped.
+     *
+     * TODO: should we accept a numerical ID/tag even if the item is too small?
      */
 
     if (isdigit(UCHAR(*tag))) {
@@ -3118,6 +3143,7 @@ StartTagSearch(
     if (uid == Tk_GetUid("all")) {
 	/*
 	 * All items match.
+	 * TODO: how to implement the suppression?
 	 */
 
 	searchPtr->tag = NULL;
@@ -3132,14 +3158,16 @@ StartTagSearch(
 
     for (lastPtr = NULL, itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 	    lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
-	for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
-		count > 0; tagPtr++, count--) {
-	    if (*tagPtr == uid) {
-		searchPtr->lastPtr = lastPtr;
-		searchPtr->currentPtr = itemPtr;
-		return itemPtr;
-	    }
-	}
+	    if (!(suppressSmallItems && ((itemPtr->redraw_flags & TK_ITEM_SMALL_ITEM) != 0))) {
+		for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
+			count > 0; tagPtr++, count--) {
+		    if (*tagPtr == uid) {
+			searchPtr->lastPtr = lastPtr;
+			searchPtr->currentPtr = itemPtr;
+			return itemPtr;
+		    }
+		}
+	   }
     }
     searchPtr->lastPtr = lastPtr;
     searchPtr->searchOver = 1;
@@ -3205,6 +3233,7 @@ NextItem(
 
     /*
      * Handle special case of "all" search by returning next item.
+     * TODO: how to implement the suppression?
      */
 
     uid = searchPtr->tag;
@@ -3219,12 +3248,14 @@ NextItem(
      */
 
     for ( ; itemPtr != NULL; lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
-	for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
-		count > 0; tagPtr++, count--) {
-	    if (*tagPtr == uid) {
-		searchPtr->lastPtr = lastPtr;
-		searchPtr->currentPtr = itemPtr;
-		return itemPtr;
+	if (!(suppressSmallItems && (entryPtr->redraw_flags & TK_ITEM_SMALL_ITEM) != 0)) {
+	   for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
+		   count > 0; tagPtr++, count--) {
+		if (*tagPtr == uid) {
+		    searchPtr->lastPtr = lastPtr;
+		    searchPtr->currentPtr = itemPtr;
+		   return itemPtr;
+		}
 	    }
 	}
     }
@@ -3968,7 +3999,8 @@ TagSearchEvalExpr(
 
 static Tk_Item *
 TagSearchFirst(
-    TagSearch *searchPtr)	/* Record describing tag search */
+    TagSearch *searchPtr, 	/* Record describing tag search */
+    int suppressSmallItems)	/* Suppress items tagged as small? */
 {
     Tk_Item *itemPtr, *lastPtr;
     Tk_Uid uid, *tagPtr;
@@ -3987,6 +4019,8 @@ TagSearchFirst(
      * number then it selects the single item with the matching identifier.
      * In this case see if the item being requested is the hot item, in which
      * case the search can be skipped.
+     *
+     * TODO: Accept an item given by its numerical ID, even if it is too small?
      */
 
     if (searchPtr->type == SEARCH_TYPE_ID) {
@@ -4030,12 +4064,14 @@ TagSearchFirst(
 	uid = searchPtr->expr->uid;
 	for (lastPtr = NULL, itemPtr = searchPtr->canvasPtr->firstItemPtr;
 		itemPtr != NULL; lastPtr=itemPtr, itemPtr=itemPtr->nextPtr) {
-	    for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
+	    if (!(suppressSmallItems && (itemPtr->redraw_flags & TK_ITEM_SMALL_ITEM) != 0)) {
+		for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
 		    count > 0; tagPtr++, count--) {
-		if (*tagPtr == uid) {
-		    searchPtr->lastPtr = lastPtr;
-		    searchPtr->currentPtr = itemPtr;
-		    return itemPtr;
+		    if (*tagPtr == uid) {
+			searchPtr->lastPtr = lastPtr;
+			searchPtr->currentPtr = itemPtr;
+			return itemPtr;
+		    }
 		}
 	    }
 	}
@@ -4046,11 +4082,13 @@ TagSearchFirst(
 
 	for (lastPtr = NULL, itemPtr = searchPtr->canvasPtr->firstItemPtr;
 		itemPtr != NULL; lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
-	    searchPtr->expr->index = 0;
-	    if (TagSearchEvalExpr(searchPtr->expr, itemPtr)) {
-		searchPtr->lastPtr = lastPtr;
-		searchPtr->currentPtr = itemPtr;
-		return itemPtr;
+	    if (!(suppressSmallItems && (itemPtr->redraw_flags & TK_ITEM_SMALL_ITEM) != 0)) {
+		searchPtr->expr->index = 0;
+		if (TagSearchEvalExpr(searchPtr->expr, itemPtr)) {
+		    searchPtr->lastPtr = lastPtr;
+		    searchPtr->currentPtr = itemPtr;
+		    return itemPtr;
+		}
 	    }
 	}
     }
@@ -4082,7 +4120,8 @@ TagSearchFirst(
 
 static Tk_Item *
 TagSearchNext(
-    TagSearch *searchPtr)	/* Record describing search in progress. */
+    TagSearch *searchPtr,	/* Record describing search in progress. */
+    int suppressSmallItems)	/* Suppress items tagged as small? */
 {
     Tk_Item *itemPtr, *lastPtr;
     Tk_Uid uid, *tagPtr;
@@ -4132,12 +4171,14 @@ TagSearchNext(
 
 	uid = searchPtr->expr->uid;
 	for (; itemPtr != NULL; lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
-	    for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
-		    count > 0; tagPtr++, count--) {
-		if (*tagPtr == uid) {
-		    searchPtr->lastPtr = lastPtr;
-		    searchPtr->currentPtr = itemPtr;
-		    return itemPtr;
+	    if (!(suppressSmallItems && (itemPtr->redraw_flags & TK_ITEM_SMALL_ITEM) != 0)) {
+		for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
+			count > 0; tagPtr++, count--) {
+		    if (*tagPtr == uid) {
+			searchPtr->lastPtr = lastPtr;
+			searchPtr->currentPtr = itemPtr;
+			return itemPtr;
+		    }
 		}
 	    }
 	}
@@ -4152,10 +4193,12 @@ TagSearchNext(
 
     for ( ; itemPtr != NULL; lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
 	searchPtr->expr->index = 0;
-	if (TagSearchEvalExpr(searchPtr->expr, itemPtr)) {
-	    searchPtr->lastPtr = lastPtr;
-	    searchPtr->currentPtr = itemPtr;
-	    return itemPtr;
+	if (!(suppressSmallItems && (itemPtr->redraw_flags & TK_ITEM_SMALL_ITEM) != 0)) {
+	    if (TagSearchEvalExpr(searchPtr->expr, itemPtr)) {
+		searchPtr->lastPtr = lastPtr;
+		searchPtr->currentPtr = itemPtr;
+		return itemPtr;
+	   }
 	}
     }
     searchPtr->lastPtr = lastPtr;
@@ -4285,7 +4328,7 @@ FindItems(
 #endif /* USE_OLD_TAG_SEARCH */
     Tk_Item *itemPtr;
     Tk_Uid uid;
-    int index, result;
+    int index, result, suppressSmallItems;
     Tcl_Obj *resultObj;
     static const char *const optionStrings[] = {
 	"above", "all", "below", "closest",
@@ -4305,6 +4348,9 @@ FindItems(
 	    "search command", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
+
+    suppressSmallItems = ((canvasPtr->flags & SUPPRESS_SMALL_ITEMS) != 0);
+
     switch ((enum options) index) {
     case CANV_ABOVE: {
 	Tk_Item *lastPtr = NULL;
@@ -4313,7 +4359,7 @@ FindItems(
 	    Tcl_WrongNumArgs(interp, first+1, objv, "tagOrId");
 	    return TCL_ERROR;
 	}
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr,
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr, suppressSmallItems,
 		return TCL_ERROR) {
 	    lastPtr = itemPtr;
 	}
@@ -4343,7 +4389,7 @@ FindItems(
 	    Tcl_WrongNumArgs(interp, first+1, objv, "tagOrId");
 	    return TCL_ERROR;
 	}
-	FIRST_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr,
+	FIRST_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr, suppressSmallItems,
 		return TCL_ERROR);
 	if ((itemPtr != NULL) && (itemPtr->prevPtr != NULL)) {
 	    resultObj = Tcl_NewObj();
@@ -4387,7 +4433,7 @@ FindItems(
 
 	startPtr = canvasPtr->firstItemPtr;
 	if (objc == first+5) {
-	    FIRST_CANVAS_ITEM_MATCHING(objv[first+4], searchPtrPtr,
+	    FIRST_CANVAS_ITEM_MATCHING(objv[first+4], searchPtrPtr, suppressSmallItems,
 		    return TCL_ERROR);
 	    if (itemPtr != NULL) {
 		startPtr = itemPtr;
@@ -4479,7 +4525,7 @@ FindItems(
 	    return TCL_ERROR;
 	}
 	resultObj = Tcl_NewObj();
-	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr,
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[first+1], searchPtrPtr, suppressSmallItems,
 		goto badWithTagSearch) {
 	    DoItem(resultObj, itemPtr, uid);
 	}
@@ -4626,15 +4672,17 @@ RelinkItems(
 #endif /* USE_OLD_TAG_SEARCH */
     Tk_Item *firstMovePtr, *lastMovePtr;
     int result;
+    int suppressSmallItems;
 
     /*
      * Find all of the items to be moved and remove them from the list, making
      * an auxiliary list running from firstMovePtr to lastMovePtr. Record
      * their areas for redisplay.
      */
+    suppressSmallItems = ((canvasPtr->flags & SUPPRESS_SMALL_ITEMS) != 0);
 
     firstMovePtr = lastMovePtr = NULL;
-    FOR_EVERY_CANVAS_ITEM_MATCHING(tag, searchPtrPtr, return TCL_ERROR) {
+    FOR_EVERY_CANVAS_ITEM_MATCHING(tag, searchPtrPtr, suppressSmallItems, return TCL_ERROR) {
 	if (itemPtr == prevPtr) {
 	    /*
 	     * Item after which insertion is to occur is being moved! Switch
@@ -5955,6 +6003,90 @@ Tk_CanvasPsPath(
     int numPoints)		/* Number of points at *coordPtr. */
 {
     Tk_PostscriptPath(interp, Canvas(canvas)->psInfo, coordPtr, numPoints);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * SuppressSmallItemsParseProc --
+ *
+ *	Parse the -suppresssmallitems option
+ *
+ * Results:
+ *	A standard Tcl return value
+ *
+ * Side effects:
+ *	The flag for suppressing the drawing of small items is set
+ *	or cleared
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+SuppressSmallItemsParseProc(
+    ClientData clientData,	/* Not used.*/
+    Tcl_Interp *interp,		/* Used for reporting errors. */
+    Tk_Window tkwin,		/* Window containing canvas widget. */
+    const char *value,		/* Value of option (boolean value). */
+    char *widgRec,		/* Pointer to record in canvas. */
+    int offset)		/* Not used */
+{
+    int optionValue;
+    TkCanvas *canvasPtr = (TkCanvas *) widgRec;
+
+    /*
+     * Parse the given string as a boolean value and store the
+     * result as a bit flag
+     */
+
+    if (Tcl_GetBoolean(interp, value, &optionValue) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    if (optionValue) {
+	canvasPtr->flags |= SUPPRESS_SMALL_ITEMS;
+    } else {
+	canvasPtr->flags &= ~SUPPRESS_SMALL_ITEMS;
+    }
+    return TCL_OK;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * SuppressSmallItemsPrintProc --
+ *
+ *      This function is invoked by the Tk configuration code to produce a
+ *      printable string for the "-suppresssmallitems" configuration option
+ *      for the canvas itself.
+ *
+ * Results:
+ *      The return value is a string "1" or "0", depending on the value.
+ *
+ * Side effects:
+ *      None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static const char *
+SuppressSmallItemsPrintProc(
+    ClientData clientData,	/* Ignored. */
+    Tk_Window tkwin,		/* Window containing canvas widget. */
+    char *widgRec,		/* Pointer to record for item. */
+    int offset,		/* Not used */
+    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+				 * information about how to reclaim storage
+				 * for return string. */
+{
+    TkCanvas *canvasPtr = (TkCanvas *) widgRec;
+    *freeProcPtr = TCL_STATIC;
+
+    if (canvasPtr->flags & SUPPRESS_SMALL_ITEMS) {
+	return "1";
+    } else {
+	return "0";
+    }
 }
 
 /*
