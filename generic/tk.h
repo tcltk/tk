@@ -977,10 +977,13 @@ typedef struct Tk_Item {
  * TK_ITEM_DONT_REDRAW - 	1 means that the object redraw is already been
  *				prepared, so the general canvas code doesn't
  *				need to do that any more.
+ * TK_ITEM_SMALL_ITEM - 	1 means that the object should not be drawn if
+ *				the option "suppress small items" is in effect.
  */
 
 #define TK_ITEM_STATE_DEPENDANT		1
 #define TK_ITEM_DONT_REDRAW		2
+#define TK_ITEM_SMALL_ITEM		4
 
 /*
  * Records of the following type are used to describe a type of item (e.g.

@@ -627,6 +627,12 @@ ComputeRectOvalBbox(
     double dtmp, width;
     Tk_State state = rectOvalPtr->header.state;
 
+    if ( (rectOvalPtr->bbox[2] - rectOvalPtr->bbox[0] ) < 2  || (rectOvalPtr->bbox[3] - rectOvalPtr->bbox[1] ) < 2  ) {
+	rectOvalPtr->header.redraw_flags |= TK_ITEM_SMALL_ITEM;
+    } else {
+	rectOvalPtr->header.redraw_flags &= ~TK_ITEM_SMALL_ITEM;
+    }
+
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
     }
