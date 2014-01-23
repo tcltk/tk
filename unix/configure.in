@@ -520,7 +520,7 @@ if test $tk_aqua = no; then
 	    tk_oldLibs=$LIBS
 	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW -lfontconfig"
 	    AC_CHECK_LIB(fontconfig, FcFontSort, [
-		XLIBSW="$XLIBSW -lfontconfig"
+		XFT_LIBS="$XFT_LIBS -lfontconfig"
 	    ], [])
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
