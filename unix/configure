@@ -10784,7 +10784,7 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_fontconfig_FcFontSort" >&5
 echo "${ECHO_T}$ac_cv_lib_fontconfig_FcFontSort" >&6
 if test $ac_cv_lib_fontconfig_FcFontSort = yes; then
 
-		XLIBSW="$XLIBSW -lfontconfig"
+		XFT_LIBS="$XFT_LIBS -lfontconfig"
 
 fi
 
