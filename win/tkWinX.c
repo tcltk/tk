@@ -120,19 +120,31 @@ TkGetServerInfo(
     Tk_Window tkwin)		/* Token for window; this selects a particular
 				 * display and server. */
 {
+    static char buffer[32]; /* Empty string means not initialized yet. */
     OSVERSIONINFOW os;
 
-    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-    GetVersionExW(&os);
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Windows %d.%d %d %s",
-	    (int) os.dwMajorVersion, (int) os.dwMinorVersion,
-	    (int) os.dwBuildNumber,
+    if (!buffer[0]) {
+	HANDLE handle = LoadLibraryW(L"NTDLL");
+	int(*getversion)(void *) = (int(*)(void *))GetProcAddress(handle, "RtlGetVersion");
+	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+	if (!getversion || getversion(&os)) {
+	    GetVersionExW(&os);
+	}
+	if (handle) {
+	    FreeLibrary(handle);
+	}
+	/* Write the first character last, preventing multi-thread issues. */
+	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
+		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
 #ifdef _WIN64
-	    "Win64"
+		"Win64"
 #else
-	    "Win32"
+		"Win32"
 #endif
-	    ));
+	);
+	buffer[0] = 'W';
+    }
+    Tcl_AppendResult(interp, buffer, NULL);
 }
 
 /*
@@ -313,7 +325,7 @@ TkWinXCleanup(
  *	The return value is one of:
  *		VER_PLATFORM_WIN32s	   Win32s on Windows 3.1 (not supported)
  *		VER_PLATFORM_WIN32_WINDOWS Win32 on Windows 95, 98, ME (not supported)
- *		VER_PLATFORM_WIN32_NT	Win32 on Windows NT, 2000, XP
+ *		VER_PLATFORM_WIN32_NT	Win32 on Windows XP, Vista, Windows 7, Windows 8
  *		VER_PLATFORM_WIN32_CE	Win32 on Windows CE
  *
  * Side effects:
