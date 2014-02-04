@@ -171,7 +171,8 @@ TkGetServerInfo(
 
     if (!buffer[0]) {
 	HANDLE handle = LoadLibraryW(L"NTDLL");
-	int(*getversion)(void *) = (int(*)(void *))GetProcAddress(handle, "RtlGetVersion");
+	__stdcall int(*getversion)(void *) =
+		(__stdcall int(*)(void *))GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	if (!getversion || getversion(&os)) {
 	    GetVersionExW(&os);
