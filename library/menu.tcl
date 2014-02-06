@@ -1344,6 +1344,7 @@ proc ::tk_popup {menu x y {entry {}}} {
         tk::SaveGrabInfo $menu
 	grab -global $menu
 	set Priv(popup) $menu
+	set Priv(window) $menu
 	set Priv(menuActivated) 1
 	tk_menuSetFocus $menu
     }
