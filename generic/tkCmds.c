@@ -14,7 +14,7 @@
 
 #include "tkInt.h"
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #include "tkWinInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
@@ -914,7 +914,7 @@ WindowingsystemCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-#if defined(WIN32)
+#if defined(_WIN32)
     windowingsystem = "win32";
 #elif defined(MAC_OSX_TK)
     windowingsystem = "aqua";
