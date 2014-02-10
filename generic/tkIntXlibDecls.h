@@ -44,7 +44,7 @@ extern "C" {
  * Exported function declarations:
  */
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN int		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);
@@ -626,7 +626,7 @@ typedef struct TkIntXlibStubs {
     int magic;
     void *hooks;
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
@@ -851,7 +851,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
  * Inline function declarations:
  */
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
 #define XGetModifierMapping \
