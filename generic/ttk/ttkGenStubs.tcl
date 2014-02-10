@@ -290,14 +290,14 @@ proc genStubs::addPlatformGuard {plat iftxt {eltxt {}}} {
     set text ""
     switch $plat {
 	win {
-	    append text "#ifdef __WIN32__ /* WIN */\n${iftxt}"
+	    append text "#ifdef _WIN32 /* WIN */\n${iftxt}"
 	    if {$eltxt ne ""} {
 		append text "#else /* WIN */\n${eltxt}"
 	    }
 	    append text "#endif /* WIN */\n"
 	}
 	unix {
-	    append text "#if !defined(__WIN32__) && !defined(MAC_OSX_TCL)\
+	    append text "#if !defined(_WIN32) && !defined(MAC_OSX_TCL)\
 		    /* UNIX */\n${iftxt}"
 	    if {$eltxt ne ""} {
 		append text "#else /* UNIX */\n${eltxt}"
@@ -319,7 +319,7 @@ proc genStubs::addPlatformGuard {plat iftxt {eltxt {}}} {
 	    append text "#endif /* AQUA */\n"
 	}
 	x11 {
-	    append text "#if !(defined(__WIN32__) || defined(MAC_OSX_TK))\
+	    append text "#if !(defined(_WIN32) || defined(MAC_OSX_TK))\
 		    /* X11 */\n${iftxt}"
 	    if {$eltxt ne ""} {
 		append text "#else /* X11 */\n${eltxt}"
@@ -822,10 +822,9 @@ proc genStubs::emitInit {name textVar} {
     variable hooks
     variable interfaces
     variable epoch
-    variable revision
     upvar $textVar text
-
     set root 1
+
     set capName [string toupper [string index $name 0]]
     append capName [string range $name 1 end]
 

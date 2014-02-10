@@ -34,7 +34,7 @@ extern "C" {
  * Exported function declarations:
  */
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 /* 0 */
 EXTERN char *		TkAlignImageData(XImage *image, int alignment,
 				int bitOrder);
@@ -256,7 +256,7 @@ EXTERN unsigned long	TkpGetMS(void);
 /* 54 */
 EXTERN void *		TkMacOSXDrawable(Drawable drawable);
 #endif /* AQUA */
-#if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 /* 0 */
 EXTERN void		TkCreateXEventSource(void);
 /* Slot 1 is reserved */
@@ -291,7 +291,7 @@ typedef struct TkIntPlatStubs {
     int magic;
     void *hooks;
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     char * (*tkAlignImageData) (XImage *image, int alignment, int bitOrder); /* 0 */
     void (*reserved1)(void);
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 2 */
@@ -396,7 +396,7 @@ typedef struct TkIntPlatStubs {
     unsigned long (*tkpGetMS) (void); /* 53 */
     void * (*tkMacOSXDrawable) (Drawable drawable); /* 54 */
 #endif /* AQUA */
-#if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) (void); /* 0 */
     void (*reserved1)(void);
     void (*reserved2)(void);
@@ -426,7 +426,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
  * Inline function declarations:
  */
 
-#if defined(__WIN32__) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
 #define TkAlignImageData \
 	(tkIntPlatStubsPtr->tkAlignImageData) /* 0 */
 /* Slot 1 is reserved */
@@ -623,7 +623,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #define TkMacOSXDrawable \
 	(tkIntPlatStubsPtr->tkMacOSXDrawable) /* 54 */
 #endif /* AQUA */
-#if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 #define TkCreateXEventSource \
 	(tkIntPlatStubsPtr->tkCreateXEventSource) /* 0 */
 /* Slot 1 is reserved */
