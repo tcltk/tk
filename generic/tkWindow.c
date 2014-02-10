@@ -1578,7 +1578,7 @@ Tk_DestroyWindow(
 	     * display now and relinquish its data structures.
 	     */
 
-#if !defined(WIN32) && defined(NOT_YET)
+#if !defined(_WIN32) && defined(NOT_YET)
 	    if (dispPtr->refCount <= 0) {
 		/*
 		 * I have disabled this code because on Windows there are
@@ -1626,7 +1626,7 @@ Tk_DestroyWindow(
 
 		TkCloseDisplay(dispPtr);
 	    }
-#endif /* !WIN32 && NOT_YET */
+#endif /* !_WIN32 && NOT_YET */
 	}
     }
     Tcl_EventuallyFree(winPtr, TCL_DYNAMIC);
