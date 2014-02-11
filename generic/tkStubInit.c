@@ -31,6 +31,7 @@
 #include "tkIntXlibDecls.h"
 
 static const TkIntStubs tkIntStubs;
+MODULE_SCOPE const TkStubs tkStubs;
 
 /*
  * Remove macro that might interfere with the definition below.
