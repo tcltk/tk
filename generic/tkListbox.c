@@ -165,6 +165,8 @@ typedef struct {
     Pixmap gray;		/* Pixmap for displaying disabled text. */
     int flags;			/* Various flag bits: see below for
 				 * definitions. */
+    Tk_Justify justify;         /* Justification */
+    int oldMaxOffset;           /* Used in scrolling for right/center justification */
 } Listbox;
 
 /*
@@ -308,6 +310,8 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-listvariable", "listVariable", "Variable",
 	 DEF_LISTBOX_LIST_VARIABLE, -1, Tk_Offset(Listbox, listVarName),
 	 TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
+	DEF_LISTBOX_JUSTIFY, -1, Tk_Offset(Listbox, justify), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
 };
 
@@ -435,6 +439,7 @@ static char *		ListboxListVarProc(ClientData clientData,
 			    const char *name2, int flags);
 static void		MigrateHashEntries(Tcl_HashTable *table,
 			    int first, int last, int offset);
+static int      GetMaxOffset(Listbox *listPtr);
 
 /*
  * The structure below defines button class behavior by means of procedures
@@ -545,6 +550,8 @@ Tk_ListboxObjCmd(
     listPtr->cursor		 = None;
     listPtr->state		 = STATE_NORMAL;
     listPtr->gray		 = None;
+    listPtr->justify             = TK_JUSTIFY_LEFT;
+    listPtr->oldMaxOffset        = 0;
 
     /*
      * Keep a hold of the associated tkwin until we destroy the listbox,
@@ -569,6 +576,13 @@ Tk_ListboxObjCmd(
     if (ConfigureListbox(interp, listPtr, objc-2, objv+2, 0) != TCL_OK) {
 	Tk_DestroyWindow(listPtr->tkwin);
 	return TCL_ERROR;
+    }
+
+    if (listPtr->justify == TK_JUSTIFY_RIGHT) {
+        listPtr->xOffset = GetMaxOffset(listPtr);
+    } else if (listPtr->justify == TK_JUSTIFY_CENTER) {
+        listPtr->xOffset = GetMaxOffset(listPtr) / 2;
+        listPtr->xOffset -= listPtr->xOffset % listPtr->xScrollUnit;
     }
 
     Tcl_SetObjResult(interp, TkNewWindowObj(listPtr->tkwin));
@@ -1110,7 +1124,7 @@ ListboxBboxSubCmd(
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
-	x = listPtr->inset + listPtr->selBorderWidth - listPtr->xOffset;
+    x = listPtr->inset + listPtr->selBorderWidth - listPtr->xOffset;
 	y = ((index - listPtr->topIndex)*listPtr->lineHeight)
 		+ listPtr->inset + listPtr->selBorderWidth;
 	results[0] = Tcl_NewIntObj(x);
@@ -1837,6 +1851,7 @@ DisplayListbox(
 				 * or right edge of the listbox is
 				 * off-screen. */
     Pixmap pixmap;
+    int totalLength, height;
 
     listPtr->flags &= ~REDRAW_PENDING;
     if (listPtr->flags & LISTBOX_DELETED) {
@@ -2055,12 +2070,22 @@ DisplayListbox(
 	/*
 	 * Draw the actual text of this item.
 	 */
+    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
+    stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+    Tk_ComputeTextLayout(listPtr->tkfont,
+            stringRep, stringLen, 0,
+            listPtr->justify, TK_IGNORE_NEWLINES, &totalLength, &height);
 
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	y += fm.ascent + listPtr->selBorderWidth;
-	x = listPtr->inset + listPtr->selBorderWidth - listPtr->xOffset;
-	Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
-	stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+
+    if (listPtr->justify == TK_JUSTIFY_LEFT) {
+        x = listPtr->inset + listPtr->selBorderWidth - listPtr->xOffset;
+    } else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
+        x = width - totalLength - listPtr->inset - listPtr->selBorderWidth - listPtr->xOffset + GetMaxOffset(listPtr) - 1;
+    } else {
+        x = (width + GetMaxOffset(listPtr))/2 - totalLength/2 - listPtr->xOffset;
+    }
 	Tk_DrawChars(listPtr->display, pixmap, gc, listPtr->tkfont,
 		stringRep, stringLen, x, y);
 
@@ -2581,6 +2606,7 @@ ListboxEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
+    int tmpOffset, tmpOffset2, maxOffset;
     Listbox *listPtr = clientData;
 
     if (eventPtr->type == Expose) {
@@ -2612,6 +2638,53 @@ ListboxEventProc(
 	}
 	listPtr->flags |= UPDATE_V_SCROLLBAR|UPDATE_H_SCROLLBAR;
 	ChangeListboxView(listPtr, listPtr->topIndex);
+        if (listPtr->justify == TK_JUSTIFY_RIGHT) {
+            maxOffset = GetMaxOffset(listPtr);
+            if (maxOffset != listPtr->oldMaxOffset && listPtr->oldMaxOffset > 0) {  // window has shrunk
+                if (maxOffset > listPtr->oldMaxOffset) {
+                    tmpOffset = maxOffset - listPtr->oldMaxOffset;
+                } else {
+                    tmpOffset = listPtr->oldMaxOffset - maxOffset;
+                }
+                tmpOffset -= tmpOffset % listPtr->xScrollUnit;
+                if ((tmpOffset + listPtr->xOffset) > maxOffset) {
+                    tmpOffset = maxOffset - listPtr->xOffset;
+                }
+                if (tmpOffset < 0) {
+                    tmpOffset = 0;
+                }
+                listPtr->xOffset += tmpOffset;
+            } else {
+                listPtr->xOffset = maxOffset;
+            }
+            listPtr->oldMaxOffset = maxOffset;
+        } else if (listPtr->justify == TK_JUSTIFY_CENTER) {
+            maxOffset = GetMaxOffset(listPtr);
+            if (maxOffset != listPtr->oldMaxOffset && listPtr->oldMaxOffset > 0) {  // window has shrunk
+                tmpOffset2 = maxOffset / 2;
+                if (maxOffset > listPtr->oldMaxOffset) {
+                    tmpOffset = maxOffset/2 - listPtr->oldMaxOffset/2;
+                } else {
+                    tmpOffset = listPtr->oldMaxOffset/2 - maxOffset/2;
+                }
+                tmpOffset -= tmpOffset % listPtr->xScrollUnit;
+                if ((tmpOffset + listPtr->xOffset) > maxOffset) {
+                    tmpOffset = maxOffset - listPtr->xOffset;
+                }
+                if (tmpOffset < 0) {
+                    tmpOffset = 0;
+                }
+                if (listPtr->xOffset < tmpOffset2) {
+                    listPtr->xOffset += tmpOffset;
+                } else {
+                    listPtr->xOffset -= tmpOffset;
+                }
+            } else {
+                listPtr->xOffset = maxOffset/2;
+                listPtr->xOffset -= listPtr->xOffset % listPtr->xScrollUnit;
+            }
+            listPtr->oldMaxOffset = maxOffset;
+        }
 	ChangeListboxOffset(listPtr, listPtr->xOffset);
 
 	/*
@@ -3548,6 +3621,33 @@ MigrateHashEntries(
     return;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetMaxOffset --
+ *
+ * Passing in a listbox pointer, returns the maximum offset for the box
+ *
+ * Results:
+ *       Listbox's maxOffset
+ *
+ * Side effects:
+ *       None
+ *
+ *----------------------------------------------------------------------
+*/
+static int GetMaxOffset(register Listbox *listPtr)
+{
+    int maxOffset;
+
+    maxOffset = listPtr->maxWidth - (Tk_Width(listPtr->tkwin) - 2*listPtr->inset - 2*listPtr->selBorderWidth) + listPtr->xScrollUnit - 1;
+    if (maxOffset < 0) {
+        maxOffset = 0;
+    }
+    maxOffset -= maxOffset % listPtr->xScrollUnit;
+
+    return maxOffset;
+}
 /*
  * Local Variables:
  * mode: c
