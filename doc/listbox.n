@@ -17,9 +17,10 @@ listbox \- Create and manipulate 'listbox' item list widgets
 \-background	\-borderwidth	\-cursor
 \-disabledforeground	\-exportselection	\-font
 \-foreground	\-highlightbackground	\-highlightcolor
-\-highlightthickness	\-relief	\-selectbackground
-\-selectborderwidth	\-selectforeground	\-setgrid
-\-takefocus	\-xscrollcommand	\-yscrollcommand
+\-highlightthickness	\-justify	\-relief
+\-selectbackground	\-selectborderwidth	\-selectforeground
+\-setgrid	\-takefocus	\-xscrollcommand
+\-yscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-activestyle activeStyle ActiveStyle
