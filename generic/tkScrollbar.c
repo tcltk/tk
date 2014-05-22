@@ -12,10 +12,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/*
- * TODO: Convert scrollbars to the Tcl_Obj API.
- */
-
 #include "tkInt.h"
 #include "tkScrollbar.h"
 #include "default.h"
