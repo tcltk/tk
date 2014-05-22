@@ -6675,11 +6675,7 @@ TkpTesttextCmd(
     if (Tcl_GetCommandInfo(interp, argv[1], &info) == 0) {
 	return TCL_ERROR;
     }
-    if (info.isNativeObjectProc) {
-	textPtr = info.objClientData;
-    } else {
-	textPtr = info.clientData;
-    }
+    textPtr = info.objClientData;
     len = strlen(argv[2]);
     if (strncmp(argv[2], "byteindex", len) == 0) {
 	if (argc != 5) {
