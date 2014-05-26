@@ -267,7 +267,7 @@ Tktest_Init(
 #elif !defined(__CYGWIN__)
     Tcl_CreateCommand(interp, "testmenubar", TestmenubarCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateCommand(interp, "testsend", TkpTestsendCmd,
+    Tcl_CreateObjCommand(interp, "testsend", TkpTestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateCommand(interp, "testwrapper", TestwrapperCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);

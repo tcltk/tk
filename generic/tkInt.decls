@@ -684,8 +684,8 @@ declare 12 x11 {
 }
 # only needed by tktest:
 declare 13 x11 {
-    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int argc,
-	    const char **argv)
+    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+	    Tcl_Obj *const objv[])
 }
 
 ################################
@@ -841,8 +841,8 @@ declare 44 win {
 }
 # only needed by tktest:
 declare 45 win {
-    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int argc,
-	    const char **argv)
+    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+	    Tcl_Obj *const objv[])
 }
 
 ################################
