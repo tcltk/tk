@@ -27,8 +27,9 @@ HWND tkWinCurrentDialog;
 static int		TestclipboardObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static int		TestwineventCmd(ClientData clientData,
-			    Tcl_Interp *interp, int argc, const char **argv);
+static int		TestwineventObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 static int		TestfindwindowObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -67,7 +68,7 @@ TkplatformtestInit(
 
     Tcl_CreateObjCommand(interp, "testclipboard", TestclipboardObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateCommand(interp, "testwinevent", TestwineventCmd,
+    Tcl_CreateObjCommand(interp, "testwinevent", TestwineventObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testfindwindow", TestfindwindowObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
@@ -220,7 +221,7 @@ TestclipboardObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TestwineventCmd --
+ * TestwineventObjCmd --
  *
  *	This function implements the testwinevent command. It provides a way
  *	to send messages to windows dialogs.
@@ -235,11 +236,11 @@ TestclipboardObjCmd(
  */
 
 static int
-TestwineventCmd(
+TestwineventObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
 {
     HWND hwnd = 0;
     HWND child = 0;
@@ -258,33 +259,23 @@ TestwineventCmd(
 	{-1,			NULL}
     };
 
-    if ((argc == 3) && (strcmp(argv[1], "debug") == 0)) {
+    if ((objc == 3) && (strcmp(Tcl_GetString(objv[1]), "debug") == 0)) {
 	int b;
 
-	if (Tcl_GetBoolean(interp, argv[2], &b) != TCL_OK) {
+	if (Tcl_GetBoolean(interp, Tcl_GetString(objv[2]), &b) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	TkWinDialogDebug(b);
 	return TCL_OK;
     }
 
-    if (argc < 4) {
+    if (objc < 4) {
 	return TCL_ERROR;
     }
 
-#if 0
-    TkpScanWindowId(interp, argv[1], &id);
-    if (
-#ifdef _WIN64
-	    (sscanf(string, "0x%p", &number) != 1) &&
-#endif /* _WIN64 */
-	    Tcl_GetInt(interp, string, (int *)&number) != TCL_OK) {
-	return TCL_ERROR;
-    }
-#endif
-    hwnd = INT2PTR(strtol(argv[1], &rest, 0));
-    if (rest == argv[1]) {
-	hwnd = FindWindowA(NULL, argv[1]);
+    hwnd = INT2PTR(strtol(Tcl_GetString(objv[1]), &rest, 0));
+    if (rest == Tcl_GetString(objv[1])) {
+	hwnd = FindWindowA(NULL, Tcl_GetString(objv[1]));
 	if (hwnd == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("no such window", -1));
 	    return TCL_ERROR;
@@ -292,14 +283,14 @@ TestwineventCmd(
     }
     UpdateWindow(hwnd);
 
-    id = strtol(argv[2], &rest, 0);
-    if (rest == argv[2]) {
+    id = strtol(Tcl_GetString(objv[2]), &rest, 0);
+    if (rest == Tcl_GetString(objv[2])) {
 	char buf[256];
 
 	child = GetWindow(hwnd, GW_CHILD);
 	while (child != NULL) {
 	    SendMessageA(child, WM_GETTEXT, (WPARAM) sizeof(buf), (LPARAM) buf);
-	    if (strcasecmp(buf, argv[2]) == 0) {
+	    if (strcasecmp(buf, Tcl_GetString(objv[2])) == 0) {
 		id = GetDlgCtrlID(child);
 		break;
 	    }
@@ -307,19 +298,19 @@ TestwineventCmd(
 	}
 	if (child == NULL) {
 	    Tcl_AppendResult(interp, "could not find a control matching \"",
-		argv[2], "\"", NULL);
+		Tcl_GetString(objv[2]), "\"", NULL);
 	    return TCL_ERROR;
 	}
     }
-    message = TkFindStateNum(NULL, NULL, messageMap, argv[3]);
+    message = TkFindStateNum(NULL, NULL, messageMap, Tcl_GetString(objv[3]));
     wParam = 0;
     lParam = 0;
 
-    if (argc > 4) {
-	wParam = strtol(argv[4], NULL, 0);
+    if (objc > 4) {
+	wParam = strtol(Tcl_GetString(objv[4]), NULL, 0);
     }
-    if (argc > 5) {
-	lParam = strtol(argv[5], NULL, 0);
+    if (objc > 5) {
+	lParam = strtol(Tcl_GetString(objv[5]), NULL, 0);
     }
 
     switch (message) {
@@ -337,7 +328,7 @@ TestwineventCmd(
 	Tcl_DString ds;
 	BOOL result;
 
-	Tcl_UtfToExternalDString(NULL, argv[4], -1, &ds);
+	Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), -1, &ds);
 	result = SetDlgItemTextA(hwnd, id, Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
 	if (result == 0) {
@@ -349,7 +340,7 @@ TestwineventCmd(
     }
     case WM_COMMAND: {
 	char buf[TCL_INTEGER_SPACE];
-	if (argc < 5) {
+	if (objc < 5) {
 	    wParam = MAKEWPARAM(id, 0);
 	    lParam = (LPARAM)child;
 	}

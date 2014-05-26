@@ -153,8 +153,9 @@ static int		TestcolorObjCmd(ClientData dummy,
 static int		TestcursorObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
-static int		TestdeleteappsCmd(ClientData dummy,
-			    Tcl_Interp *interp, int argc, const char **argv);
+static int		TestdeleteappsObjCmd(ClientData dummy,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj * const objv[]);
 static int		TestfontObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -165,8 +166,9 @@ static int		TestmenubarCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, const char **argv);
 #endif
 #if defined(_WIN32) || defined(MAC_OSX_TK)
-static int		TestmetricsCmd(ClientData dummy,
-			    Tcl_Interp *interp, int argc, const char **argv);
+static int		TestmetricsObjCmd(ClientData dummy,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj * const objv[]);
 #endif
 static int		TestobjconfigObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
@@ -244,7 +246,7 @@ Tktest_Init(
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testcursor", TestcursorObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateCommand(interp, "testdeleteapps", TestdeleteappsCmd,
+    Tcl_CreateObjCommand(interp, "testdeleteapps", TestdeleteappsObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateCommand(interp, "testembed", TkpTestembedCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
@@ -260,7 +262,7 @@ Tktest_Init(
 	    (ClientData) Tk_MainWindow(interp), NULL);
 
 #if defined(_WIN32) || defined(MAC_OSX_TK)
-    Tcl_CreateCommand(interp, "testmetrics", TestmetricsCmd,
+    Tcl_CreateObjCommand(interp, "testmetrics", TestmetricsObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 #elif !defined(__CYGWIN__)
     Tcl_CreateCommand(interp, "testmenubar", TestmenubarCmd,
@@ -436,7 +438,7 @@ TestcursorObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TestdeleteappsCmd --
+ * TestdeleteappsObjCmd --
  *
  *	This function implements the "testdeleteapps" command. It cleans up
  *	all the interpreters left behind by the "testnewapp" command.
@@ -453,11 +455,11 @@ TestcursorObjCmd(
 
 	/* ARGSUSED */
 static int
-TestdeleteappsCmd(
+TestdeleteappsObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
 {
     NewApp *nextPtr;
 
@@ -1747,7 +1749,7 @@ TestmenubarCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TestmetricsCmd --
+ * TestmetricsObjCmd --
  *
  *	This function implements the testmetrics command. It provides a way to
  *	determine the size of various widget components.
@@ -1763,51 +1765,49 @@ TestmenubarCmd(
 
 #if defined(_WIN32) || defined(MAC_OSX_TK)
 static int
-TestmetricsCmd(
+TestmetricsObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
 {
     char buf[TCL_INTEGER_SPACE];
     int val;
 
 #ifdef _WIN32
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
-		" option ?arg ...?\"", NULL);
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 #else
     Tk_Window tkwin = (Tk_Window) clientData;
     TkWindow *winPtr;
 
-    if (argc != 3) {
-	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
-		" option window\"", NULL);
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option window");
 	return TCL_ERROR;
     }
 
-    winPtr = (TkWindow *) Tk_NameToWindow(interp, argv[2], tkwin);
+    winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
     if (winPtr == NULL) {
 	return TCL_ERROR;
     }
 #endif
 
-    if (strcmp(argv[1], "cyvscroll") == 0) {
+    if (strcmp(Tcl_GetString(objv[1]), "cyvscroll") == 0) {
 #ifdef _WIN32
 	val = GetSystemMetrics(SM_CYVSCROLL);
 #else
 	val = ((TkScrollbar *) winPtr->instanceData)->width;
 #endif
-    } else  if (strcmp(argv[1], "cxhscroll") == 0) {
+    } else  if (strcmp(Tcl_GetString(objv[1]), "cxhscroll") == 0) {
 #ifdef _WIN32
 	val = GetSystemMetrics(SM_CXHSCROLL);
 #else
 	val = ((TkScrollbar *) winPtr->instanceData)->width;
 #endif
     } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
+	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
 		"\": must be cxhscroll or cyvscroll", NULL);
 	return TCL_ERROR;
     }
