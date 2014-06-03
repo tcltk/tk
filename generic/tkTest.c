@@ -159,8 +159,9 @@ static int		TestdeleteappsObjCmd(ClientData dummy,
 static int		TestfontObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static int		TestmakeexistCmd(ClientData dummy,
-			    Tcl_Interp *interp, int argc, const char **argv);
+static int		TestmakeexistObjCmd(ClientData dummy,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int		TestmenubarCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, const char **argv);
@@ -186,8 +187,9 @@ static void		CustomOptionRestore(ClientData clientData,
 			    char *saveInternalPtr);
 static void		CustomOptionFree(ClientData clientData,
 			    Tk_Window tkwin, char *internalPtr);
-static int		TestpropCmd(ClientData dummy,
-			    Tcl_Interp *interp, int argc, const char **argv);
+static int		TestpropObjCmd(ClientData dummy,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj * const objv[]);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int		TestwrapperCmd(ClientData dummy,
 			    Tcl_Interp *interp, int argc, const char **argv);
@@ -233,7 +235,7 @@ Tktest_Init(
      * Create additional commands for testing Tk.
      */
 
-    if (Tcl_PkgProvideEx(interp, "Tktest", TK_VERSION, NULL) == TCL_ERROR) {
+    if (Tcl_PkgProvideEx(interp, "Tktest", TK_PATCH_LEVEL, NULL) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
@@ -248,17 +250,17 @@ Tktest_Init(
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testdeleteapps", TestdeleteappsObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateCommand(interp, "testembed", TkpTestembedCmd,
+    Tcl_CreateObjCommand(interp, "testembed", TkpTestembedCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testobjconfig", TestobjconfigObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testfont", TestfontObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateCommand(interp, "testmakeexist", TestmakeexistCmd,
+    Tcl_CreateObjCommand(interp, "testmakeexist", TestmakeexistObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateCommand(interp, "testprop", TestpropCmd,
+    Tcl_CreateObjCommand(interp, "testprop", TestpropObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateCommand(interp, "testtext", TkpTesttextCmd,
+    Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 
 #if defined(_WIN32) || defined(MAC_OSX_TK)
@@ -1638,7 +1640,7 @@ ImageDelete(
 /*
  *----------------------------------------------------------------------
  *
- * TestmakeexistCmd --
+ * TestmakeexistObjCmd --
  *
  *	This function implements the "testmakeexist" command. It calls
  *	Tk_MakeWindowExist on each of its arguments to force the windows to be
@@ -1655,18 +1657,18 @@ ImageDelete(
 
 	/* ARGSUSED */
 static int
-TestmakeexistCmd(
+TestmakeexistObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
 {
     Tk_Window mainWin = (Tk_Window) clientData;
     int i;
     Tk_Window tkwin;
 
-    for (i = 1; i < argc; i++) {
-	tkwin = Tk_NameToWindow(interp, argv[i], mainWin);
+    for (i = 1; i < objc; i++) {
+	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[i]), mainWin);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
@@ -1820,7 +1822,7 @@ TestmetricsObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TestpropCmd --
+ * TestpropObjCmd --
  *
  *	This function implements the "testprop" command. It fetches and prints
  *	the value of a property on a window.
@@ -1836,11 +1838,11 @@ TestmetricsObjCmd(
 
 	/* ARGSUSED */
 static int
-TestpropCmd(
+TestpropObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
 {
     Tk_Window mainWin = (Tk_Window) clientData;
     int result, actualFormat;
@@ -1851,14 +1853,13 @@ TestpropCmd(
     Window w;
     char buffer[30];
 
-    if (argc != 3) {
-	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
-		" window property\"", NULL);
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window property");
 	return TCL_ERROR;
     }
 
-    w = strtoul(argv[1], &end, 0);
-    propName = Tk_InternAtom(mainWin, argv[2]);
+    w = strtoul(Tcl_GetString(objv[1]), &end, 0);
+    propName = Tk_InternAtom(mainWin, Tcl_GetString(objv[2]));
     property = NULL;
     result = XGetWindowProperty(Tk_Display(mainWin),
 	    w, propName, 0, 100000, False, AnyPropertyType,
