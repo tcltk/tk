@@ -506,12 +506,12 @@ declare 154 {
 
 # entries needed only by tktest:
 declare 156 {
-    int TkpTestembedCmd(ClientData clientData, Tcl_Interp *interp, int argc,
-	    const char **argv)
+    int TkpTestembedCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+	    Tcl_Obj *const objv[])
 }
 declare 157 {
-    int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int argc,
-	    const char **argv)
+    int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int objc,
+	    Tcl_Obj *const objv[])
 }
 declare 158 {
     int TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
