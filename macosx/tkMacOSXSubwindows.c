@@ -1277,7 +1277,7 @@ UpdateOffsets(
  *	Returns a handle to a new pixmap.
  *
  * Side effects:
- *	Allocates a new CGBitmapContext.
+ *	Allocates a new Macintosh GWorld.
  *
  *----------------------------------------------------------------------
  */
@@ -1323,7 +1323,7 @@ Tk_GetPixmap(
  *	None.
  *
  * Side effects:
- *	Deletes the CGBitmapContext created by Tk_GetPixmap.
+ *	Deletes the Macintosh GWorld created by Tk_GetPixmap.
  *
  *----------------------------------------------------------------------
  */
