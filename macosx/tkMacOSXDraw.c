@@ -114,70 +114,6 @@ TkMacOSXInitCGDrawing(
 /*
  *----------------------------------------------------------------------
  *
- * BitmapRepFromDrawableRect
- *
- *	Extract bitmap data from a MacOSX drawable as an NSBitmapImageRep.
- *
- * Results:
- *	Returns an NSBitmapRep representing the image of the given rectangle of
- *      the given drawable.
- *
- *      NOTE: The x,y coordinates should be relative to a coordinate system with
- *      origin at the top left, as used by XImage and CGImage, not bottom
- *      left as used by NSView.
- *
- * Side effects:
- *     Allocates an NSBitmapImageRep, which must be released.
- *
- *----------------------------------------------------------------------
- */
-NSBitmapImageRep*
-BitmapRepFromDrawableRect(
-        MacDrawable *drawable,
-	int x,
-	int y,
-	unsigned int width,
-	unsigned int height)
-{
-    CGImageRef cg_image=NULL, sub_cg_image=NULL;
-    NSBitmapImageRep *bitmap_rep=NULL;
-    NSView *view=NULL;
-
-    if ( drawable->flags & TK_IS_PIXMAP  && drawable->context) {
-	/* This means that the MacDrawable is functioning as a Tk Pixmap, so its view
-	   field is NULL and its context field points to a CGBitmapContext.
-	*/
-	CGRect image_rect = CGRectMake(x, y, width, height);
-	cg_image = CGBitmapContextCreateImage( (CGContextRef) drawable->context);
-	sub_cg_image = CGImageCreateWithImageInRect(cg_image, image_rect);
-	if ( sub_cg_image ) {
-	    bitmap_rep = [NSBitmapImageRep alloc];
-	    [bitmap_rep initWithCGImage:sub_cg_image];
-	    CGImageRelease(sub_cg_image);
-	}
-	if ( cg_image ) {
-	    CGImageRelease(cg_image);
-	}
-    } else if ( (view = TkMacOSXDrawableView(drawable)) ) {
-	/* convert top-left coordinates to NSView coordinates */
-	int view_height = [view bounds].size.height;
-	NSRect view_rect = NSMakeRect(x + drawable->xOff,
-				      view_height - height - y - drawable->yOff,
-				      width,height);
-	bitmap_rep = [NSBitmapImageRep alloc];
-	[view lockFocus];
-	[bitmap_rep initWithFocusedViewRect:view_rect];
-	[view unlockFocus];
-    } else {
-	TkMacOSXDbgMsg("Invalid source drawable");
-    }
-    
-    return bitmap_rep;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * XCopyArea --
  *
  *	Copies data from one drawable to another using block transfer
@@ -198,45 +134,86 @@ XCopyArea(
     Display *display,		/* Display. */
     Drawable src,		/* Source drawable. */
     Drawable dst,		/* Destination drawable. */
-    GC gc,		                /* GC to use. */
+    GC gc,			/* GC to use. */
     int src_x,			/* X & Y, width & height */
     int src_y,			/* define the source rectangle */
-    unsigned int width,	/* that will be copied. */
+    unsigned int width,		/* that will be copied. */
     unsigned int height,
     int dest_x,			/* Dest X & Y on dest rect. */
     int dest_y)
 {
     TkMacOSXDrawingContext dc;
     MacDrawable *srcDraw = (MacDrawable *) src;
-    NSBitmapImageRep *bitmap_rep = NULL;
 
     display->request++;
     if (!width || !height) {
-	/* TkMacOSXDbgMsg("Drawing of empty area requested"); */
+	/* TkMacOSXDbgMsg("Drawing of emtpy area requested"); */
 	return;
     }
-    if (!TkMacOSXSetupDrawingContext(dst, gc, 1, &dc)) {
-	TkMacOSXDbgMsg("Invalid destination drawable");
-    }
-    if (dc.context) {
-	bitmap_rep =  BitmapRepFromDrawableRect(srcDraw, src_x, src_y, width, height);
-	if ( bitmap_rep ) {
-		CGImageRef img = [bitmap_rep CGImage];
-		CGRect image_rect = CGRectMake(0, 0,
-					       srcDraw->size.width, srcDraw->size.height);
-		if (img) {
-		    DrawCGImage(dst, gc, dc.context, img, gc->foreground,
-				gc->background, image_rect,
-				CGRectMake(src_x, src_y, width, height),
-				CGRectMake(dest_x, dest_y, width, height));
-		    CFRelease(img);
-		}
-		[bitmap_rep release];
-	    } else {
-	    TkMacOSXDbgMsg("Invalid source drawable");
+    if (srcDraw->flags & TK_IS_PIXMAP) {
+	if (!TkMacOSXSetupDrawingContext(dst, gc, 1, &dc)) {
+	    return;
 	}
+	if (dc.context) {
+	    CGImageRef img = TkMacOSXCreateCGImageWithDrawable(src);
+
+	    if (img) {
+		DrawCGImage(dst, gc, dc.context, img, gc->foreground,
+			gc->background, CGRectMake(0, 0,
+			srcDraw->size.width, srcDraw->size.height),
+			CGRectMake(src_x, src_y, width, height),
+			CGRectMake(dest_x, dest_y, width, height));
+		CFRelease(img);
+	    } else {
+		TkMacOSXDbgMsg("Invalid source drawable");
+	    }
+	} else {
+	    TkMacOSXDbgMsg("Invalid destination drawable");
+	}
+	TkMacOSXRestoreDrawingContext(&dc);
+    } else if (TkMacOSXDrawableWindow(src)) {
+	NSView *view = TkMacOSXDrawableView(srcDraw);
+	NSWindow *w = [view window];
+	NSInteger gs = [w windowNumber] > 0 ? [w gState] : 0;
+	/* // alternative using per-view gState:
+	NSInteger gs = [view gState];
+	if (!gs) {
+	    [view allocateGState];
+	    if ([view lockFocusIfCanDraw]) {
+		[view unlockFocus];
+	    }
+	    gs = [view gState];
+	}
+	*/
+	if (!gs || !TkMacOSXSetupDrawingContext(dst, gc, 1, &dc)) {
+	    return;
+	}
+	if (dc.context) {
+	    NSGraphicsContext *gc = nil;
+	    CGFloat boundsH = [view bounds].size.height;
+	    NSRect srcRect = NSMakeRect(srcDraw->xOff + src_x, boundsH -
+		    height - (srcDraw->yOff + src_y), width, height);
+
+	    if (((MacDrawable *) dst)->flags & TK_IS_PIXMAP) {
+		gc = [NSGraphicsContext graphicsContextWithGraphicsPort:
+			dc.context flipped:NO];
+		if (gc) {
+		    [NSGraphicsContext saveGraphicsState];
+		    [NSGraphicsContext setCurrentContext:gc];
+		}
+	    }
+	    NSCopyBits(gs, srcRect, NSMakePoint(dest_x,
+		    dc.portBounds.size.height - dest_y));
+	    if (gc) {
+		[NSGraphicsContext restoreGraphicsState];
+	    }
+	} else {
+	    TkMacOSXDbgMsg("Invalid destination drawable");
+	}
+	TkMacOSXRestoreDrawingContext(&dc);
+    } else {
+	TkMacOSXDbgMsg("Invalid source drawable");
     }
-    TkMacOSXRestoreDrawingContext(&dc);
 }
 
 /*
@@ -277,7 +254,7 @@ XCopyPlane(
 
     display->request++;
     if (!width || !height) {
-	/* TkMacOSXDbgMsg("Drawing of empty area requested"); */
+	/* TkMacOSXDbgMsg("Drawing of emtpy area requested"); */
 	return;
     }
     if (plane != 1) {
