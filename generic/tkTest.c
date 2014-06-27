@@ -163,8 +163,9 @@ static int		TestmakeexistObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
-static int		TestmenubarCmd(ClientData dummy,
-			    Tcl_Interp *interp, int argc, const char **argv);
+static int		TestmenubarObjCmd(ClientData dummy,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 #endif
 #if defined(_WIN32) || defined(MAC_OSX_TK)
 static int		TestmetricsObjCmd(ClientData dummy,
@@ -191,8 +192,9 @@ static int		TestpropObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
-static int		TestwrapperCmd(ClientData dummy,
-			    Tcl_Interp *interp, int argc, const char **argv);
+static int		TestwrapperObjCmd(ClientData dummy,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj * const objv[]);
 #endif
 static void		TrivialCmdDeletedProc(ClientData clientData);
 static int		TrivialConfigObjCmd(ClientData dummy,
@@ -267,11 +269,11 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testmetrics", TestmetricsObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 #elif !defined(__CYGWIN__)
-    Tcl_CreateCommand(interp, "testmenubar", TestmenubarCmd,
+    Tcl_CreateObjCommand(interp, "testmenubar", TestmenubarObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testsend", TkpTestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateCommand(interp, "testwrapper", TestwrapperCmd,
+    Tcl_CreateObjCommand(interp, "testwrapper", TestwrapperObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 #endif /* _WIN32 || MAC_OSX_TK */
 
@@ -1681,7 +1683,7 @@ TestmakeexistObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TestmenubarCmd --
+ * TestmenubarObjCmd --
  *
  *	This function implements the "testmenubar" command. It is used to test
  *	the Unix facilities for creating space above a toplevel window for a
@@ -1699,43 +1701,41 @@ TestmakeexistObjCmd(
 	/* ARGSUSED */
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int
-TestmenubarCmd(
+TestmenubarObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
 {
 #ifdef __UNIX__
     Tk_Window mainWin = (Tk_Window) clientData;
     Tk_Window tkwin, menubar;
 
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
-		" option ?arg ...?\"", NULL);
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 
-    if (strcmp(argv[1], "window") == 0) {
-	if (argc != 4) {
-	    Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
-		    "window toplevel menubar\"", NULL);
+    if (strcmp(Tcl_GetString(objv[1]), "window") == 0) {
+	if (objc != 4) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "windows toplevel menubar");
 	    return TCL_ERROR;
 	}
-	tkwin = Tk_NameToWindow(interp, argv[2], mainWin);
+	tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), mainWin);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
 	}
-	if (argv[3][0] == 0) {
+	if (Tcl_GetString(objv[3])[0] == 0) {
 	    TkUnixSetMenubar(tkwin, NULL);
 	} else {
-	    menubar = Tk_NameToWindow(interp, argv[3], mainWin);
+	    menubar = Tk_NameToWindow(interp, Tcl_GetString(objv[3]), mainWin);
 	    if (menubar == NULL) {
 		return TCL_ERROR;
 	    }
 	    TkUnixSetMenubar(tkwin, menubar);
 	}
     } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
+	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
 		"\": must be  window", NULL);
 	return TCL_ERROR;
     }
@@ -1900,7 +1900,7 @@ TestpropObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TestwrapperCmd --
+ * TestwrapperObjCmd --
  *
  *	This function implements the "testwrapper" command. It provides a way
  *	from Tcl to determine the extra window Tk adds in between the toplevel
@@ -1917,23 +1917,22 @@ TestpropObjCmd(
 
 	/* ARGSUSED */
 static int
-TestwrapperCmd(
+TestwrapperObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
 {
     TkWindow *winPtr, *wrapperPtr;
     Tk_Window tkwin;
 
-    if (argc != 2) {
-	Tcl_AppendResult(interp, "wrong # args;  must be \"", argv[0],
-		" window\"", NULL);
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window");
 	return TCL_ERROR;
     }
 
     tkwin = (Tk_Window) clientData;
-    winPtr = (TkWindow *) Tk_NameToWindow(interp, argv[1], tkwin);
+    winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[1]), tkwin);
     if (winPtr == NULL) {
 	return TCL_ERROR;
     }
