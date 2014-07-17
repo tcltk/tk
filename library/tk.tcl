@@ -21,7 +21,7 @@ namespace eval ::tk {
             # The msgcat package is not available.  Supply our own
             # minimal replacement.
             proc mc {src args} {
-                tailcall format $src {*}$args
+                return [format $src {*}$args]
             }
             proc mcmax {args} {
                 set max 0
@@ -331,35 +331,35 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
 
 if {![llength [info commands tk_chooseColor]]} {
     proc ::tk_chooseColor {args} {
-	tailcall ::tk::dialog::color:: {*}$args
+	return [::tk::dialog::color:: {*}$args]
     }
 }
 if {![llength [info commands tk_getOpenFile]]} {
     proc ::tk_getOpenFile {args} {
 	if {$::tk_strictMotif} {
-	    tailcall ::tk::MotifFDialog open {*}$args
+	    return [::tk::MotifFDialog open {*}$args]
 	} else {
-	    tailcall ::tk::dialog::file:: open {*}$args
+	    return [::tk::dialog::file:: open {*}$args]
 	}
     }
 }
 if {![llength [info commands tk_getSaveFile]]} {
     proc ::tk_getSaveFile {args} {
 	if {$::tk_strictMotif} {
-	    tailcall ::tk::MotifFDialog save {*}$args
+	    return [::tk::MotifFDialog save {*}$args]
 	} else {
-	    tailcall ::tk::dialog::file:: save {*}$args
+	    return [::tk::dialog::file:: save {*}$args]
 	}
     }
 }
 if {![llength [info commands tk_messageBox]]} {
     proc ::tk_messageBox {args} {
-	tailcall ::tk::MessageBox {*}$args
+	return [::tk::MessageBox {*}$args]
     }
 }
 if {![llength [info command tk_chooseDirectory]]} {
     proc ::tk_chooseDirectory {args} {
-	tailcall ::tk::dialog::file::chooseDir:: {*}$args
+	return [::tk::dialog::file::chooseDir:: {*}$args]
     }
 }
 

@@ -266,9 +266,8 @@ extern NSString *opaqueTag;
     const char *cmd = ([[notification name] isEqualToString:
 	    NSApplicationDidUnhideNotification] ?
 	    "::tk::mac::OnShow" : "::tk::mac::OnHide");
-    Tcl_CmdInfo dummy;
 
-    if (_eventInterp && Tcl_GetCommandInfo(_eventInterp, cmd, &dummy)) {
+    if (_eventInterp && Tcl_FindCommand(_eventInterp, cmd, NULL, 0)) {
 	int code = Tcl_EvalEx(_eventInterp, cmd, -1, TCL_EVAL_GLOBAL);
 
 	if (code != TCL_OK) {
