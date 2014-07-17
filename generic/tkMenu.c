@@ -3044,7 +3044,6 @@ TkNewMenuName(
     char *destString;
     int i;
     int doDot;
-    Tcl_CmdInfo cmdInfo;
     Tcl_HashTable *nameTablePtr = NULL;
     TkWindow *winPtr = (TkWindow *) menuPtr->tkwin;
     const char *parentName = Tcl_GetString(parentPtr);
@@ -3084,7 +3083,7 @@ TkNewMenuName(
 	    Tcl_DecrRefCount(intPtr);
     	}
 	destString = Tcl_GetString(resultPtr);
-    	if ((Tcl_GetCommandInfo(interp, destString, &cmdInfo) == 0)
+    	if ((Tcl_FindCommand(interp, destString, NULL, 0) == NULL)
 		&& ((nameTablePtr == NULL)
 		|| (Tcl_FindHashEntry(nameTablePtr, destString) == NULL))) {
     	    break;
