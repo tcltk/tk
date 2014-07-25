@@ -333,6 +333,8 @@ TkpDisplayScrollbar(
 
     NSWindow *w = [view window];
 
+    //This uses a private API call that is no longer needed on systems >= 10.7.
+    #if 0
     if ([w showsResizeIndicator]) {
 	NSRect growBox = [view convertRect:[w _growBoxRect] fromView:nil];
 
@@ -348,6 +350,7 @@ TkpDisplayScrollbar(
 	    TkMacOSXSetScrollbarGrow(winPtr, true);
 	}
     }
+    #endif
     if (!NSEqualRects(frame, [scroller frame])) {
 	[scroller setFrame:frame];
     }
