@@ -808,6 +808,8 @@ ExposeRestrictProc(
 
     NSWindow *w = [self window];
 
+    //remove private API calls here: not needed on systems >= 10.7
+    #if 0
     if ([self isOpaque] && [w showsResizeIndicator]) {
 	NSRect bounds = [self convertRect:[w _growBoxRect] fromView:nil];
 
@@ -815,6 +817,7 @@ ExposeRestrictProc(
 	    NSEraseRect(bounds);
 	}
     }
+    #endif
 
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
@@ -948,6 +951,9 @@ ExposeRestrictProc(
 
 @end
 
+/*Remove private/non-documented API calls. This is strongly discouraged by Apple and may lead to breakage in the future.*/
+
+#if 0
 #pragma mark TKContentViewPrivate
 
 /*
@@ -955,6 +961,7 @@ ExposeRestrictProc(
  * normal AppKit subview drawing and make all drawing go through us.
  * Overrides NSView internals.
  */
+
 
 @interface TKContentView(TKContentViewPrivate)
 - (id) initWithFrame: (NSRect) frame;
@@ -1094,6 +1101,9 @@ ExposeRestrictProc(
 }
 
 @end
+#endif
+
+
 
 /*
  * Local Variables:
