@@ -743,11 +743,12 @@ TkMacOSXUpdateClipRgn(
 		NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
 
 		if (w) {
-		    bounds = NSRectToCGRect([w _growBoxRect]);
-		    bounds.origin.y = [w contentRectForFrameRect:
-			    [w frame]].size.height - bounds.size.height -
-			    bounds.origin.y;
-		    ChkErr(TkMacOSHIShapeDifferenceWithRect, rgn, &bounds);
+		    // This call to private API not needed on systems >= 10.7
+		    // bounds = NSRectToCGRect([w _growBoxRect]);
+		    // bounds.origin.y = [w contentRectForFrameRect:
+		    // 	    [w frame]].size.height - bounds.size.height -
+		    // 	    bounds.origin.y;
+		    // ChkErr(TkMacOSHIShapeDifferenceWithRect, rgn, &bounds);
 		}
 	    }
 	    macWin->aboveVisRgn = HIShapeCreateCopy(rgn);
