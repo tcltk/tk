@@ -320,9 +320,12 @@ VISIBILITY_HIDDEN
 VISIBILITY_HIDDEN
 @interface TKContentView : NSView <NSTextInput> {
 @private
+  /*Remove private API calls.*/
+   #if 0
     id _savedSubviews;
     BOOL _subviewsSetAside;
-    NSString *_workingText;
+    #endif
+    NSString *privateWorkingText;
 }
 @end
 
@@ -362,9 +365,12 @@ VISIBILITY_HIDDEN
 	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
 @end
 
+//Remove private API calls here: not necessary for systems >= 10.7
+#if 0
 /* From WebKit/WebKit/mac/WebCoreSupport/WebChromeClient.mm: */
 @interface NSWindow(TKGrowBoxRect)
 - (NSRect)_growBoxRect;
 @end
+#endif
 
 #endif /* _TKMACPRIV */
