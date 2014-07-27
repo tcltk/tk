@@ -8,6 +8,7 @@
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright 2014 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -218,8 +219,6 @@ XCopyArea(
 
     display->request++;
 
-    TkMacOSXDbgMsg("XCopyArea");
-
     if (!width || !height) {
 	/* This happens all the time.
 	TkMacOSXDbgMsg("Drawing of empty area requested");
@@ -240,7 +239,7 @@ XCopyArea(
 		img = [bitmap_rep CGImage];
 	    }
 	} else {
-	    TkMacOSXDbgMsg("Invalid source drawable");
+	    TkMacOSXDbgMsg("Invalid source drawable - neither window nor pixmap.");
 	}
 
 	if (img) {
@@ -250,11 +249,11 @@ XCopyArea(
 			CGRectMake(dest_x, dest_y, width, height));
 	    CFRelease(img);
 	} else {
-	    TkMacOSXDbgMsg("Invalid source drawable");
+	    TkMacOSXDbgMsg("Failed to construct CGImage.");
 	}
 
     } else {
-	TkMacOSXDbgMsg("Invalid destination drawable");
+	TkMacOSXDbgMsg("Invalid destination drawable - no context.");
 	return;
     }
 
@@ -1480,43 +1479,97 @@ TkScrollWindow(
     int dx, int dy,		/* Distance rectangle should be moved. */
     TkRegion damageRgn)		/* Region to accumulate damage in. */
 {
-    MacDrawable *macDraw = (MacDrawable *) Tk_WindowId(tkwin);
+    Drawable drawable = Tk_WindowId(tkwin);
+    MacDrawable *macDraw = (MacDrawable *) drawable; 
     NSView *view = TkMacOSXDrawableView(macDraw);
-    CGRect visRect, srcRect, dstRect;
-    CGFloat boundsH;
-    HIShapeRef dmgRgn, dstRgn;
+    CGRect visRect, srcRect, dstRect, scroll_src, scroll_dst;
+    HIShapeRef dmgRgn = NULL;
+    NSRect bounds;
     int result;
 
-    if (view && !CGRectIsEmpty(visRect = NSRectToCGRect([view visibleRect]))) {
-	boundsH = [view bounds].size.height;
-	srcRect = CGRectMake(macDraw->xOff + x, boundsH - height -
-		(macDraw->yOff + y), width, height);
-	dstRect = CGRectIntersection(CGRectOffset(srcRect, dx, -dy), visRect);
-	srcRect = CGRectIntersection(srcRect, visRect);
-	if (!CGRectIsEmpty(srcRect) && !CGRectIsEmpty(dstRect)) {
+    if ( view ) {
+	/*  Get the scroll area in NSView coordinates (origin at bottom left). */
+	bounds = [view bounds];
+	scroll_src = CGRectMake(
+				macDraw->xOff + x, 
+				bounds.size.height - height - (macDraw->yOff + y),
+				width, height);
+	scroll_dst = CGRectOffset(scroll_src, dx, -dy);
+	/* Limit scrolling to the window content area. */
+	visRect = NSRectToCGRect([view visibleRect]);
+	scroll_src = CGRectIntersection(scroll_src, visRect);
+	scroll_dst = CGRectIntersection(scroll_dst, visRect);
+
+	if ( !CGRectIsEmpty(scroll_src) && !CGRectIsEmpty(scroll_dst) ) {
+
 	    /*
-	    CGRect sRect = CGRectIntersection(CGRectOffset(dstRect, -dx, dy),
-		    srcRect);
-	    NSCopyBits(0, NSRectFromCGRect(sRect),
-		    NSPointFromCGPoint(CGRectOffset(sRect, dx, -dy).origin));
-	    */
-	    [view scrollRect:NSRectFromCGRect(srcRect) by:NSMakeSize(dx, -dy)];
+	     * Mark the difference between source and destination as damaged.
+	     * This region is described in the Tk coordinate system, after shifting by dy.
+	     */
+
+	    srcRect = CGRectMake(x - macDraw->xOff, y - macDraw->yOff,
+				 width, height);
+	    dstRect = CGRectOffset(srcRect, dx, dy);
+	    dmgRgn = HIShapeCreateMutableWithRect(&srcRect);
+	    HIShapeRef dstRgn = HIShapeCreateWithRect(&dstRect);
+	    ChkErr(HIShapeDifference, dmgRgn, dstRgn, (HIMutableShapeRef) dmgRgn);
+	    CFRelease(dstRgn);
+
+	    /* Scroll the rectangle. */
+	    [view scrollRect:NSRectFromCGRect(scroll_src) by:NSMakeSize(dx, -dy)];
+	    [view displayRect:NSRectFromCGRect(scroll_dst)];
+	    
+	    /*
+	     * When a Text widget contains embedded images, scrolling generates
+	     * lots of artifacts involving multiple copies of the images
+	     * displayed on top of each other.  Extensive experimentation, with
+	     * very little help from the Apple documentation, indicates that
+	     * whenever an image is displayed it gets added as a subview, which
+	     * then gets automatically redisplayed in its original location.
+	     *
+	     * We do two things to combat this.  First, each subview that meets
+	     * the scroll area is added as a damage rectangle.  Second, we
+	     * redisplay the subviews after the scroll.
+	     */
+
+	    /*
+	     * Step 1: Find any subviews that meet the scroll area and mark
+	     * them as damaged.  Use Tk coordinates, shifted to account for the
+	     * future scrolling.
+	     */
+	    
+	    for (NSView *subview in [view subviews] ) {
+		NSRect frame = [subview frame];
+		CGRect subviewRect = CGRectMake(
+			frame.origin.x - macDraw->xOff + dx,
+			(bounds.size.height - frame.origin.y - frame.size.height) - macDraw->yOff + dy,
+			frame.size.width, frame.size.height);
+		/* Rectangles with negative coordinates seem to cause trouble. */
+		if (subviewRect.origin.y < 0 && subviewRect.origin.y + subviewRect.size.height > 0) {
+		    subviewRect.origin.y = 0;
+		}
+		CGRect intersection = CGRectIntersection(srcRect, subviewRect);
+		if (! CGRectIsEmpty(intersection) ){
+		    dstRgn = HIShapeCreateWithRect(&subviewRect);
+		    ChkErr(HIShapeUnion, dmgRgn, dstRgn, (HIMutableShapeRef) dmgRgn);
+		    CFRelease(dstRgn);
+		}
+	    }
+
+	    /* Step 2: Redisplay all subviews */
+	    for (NSView *subview in [view subviews] ) {
+		[subview display];
+	    }
 	}
-	srcRect.origin.y = boundsH - srcRect.size.height - srcRect.origin.y;
-	dstRect.origin.y = boundsH - dstRect.size.height - dstRect.origin.y;
-	srcRect = CGRectUnion(srcRect, dstRect);
-	dmgRgn = HIShapeCreateMutableWithRect(&srcRect);
-	dstRgn = HIShapeCreateWithRect(&dstRect);
-	ChkErr(HIShapeDifference, dmgRgn, dstRgn, (HIMutableShapeRef) dmgRgn);
-	CFRelease(dstRgn);
-	TkMacOSXInvalidateViewRegion(view, dmgRgn);
-    } else {
+    }
+
+    if ( dmgRgn == NULL ) {
 	dmgRgn = HIShapeCreateEmpty();
     }
+    //TkMacOSXInvalidateViewRegion(view, dmgRgn);
     TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
     result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
     CFRelease(dmgRgn);
-
     return result;
 }
 
