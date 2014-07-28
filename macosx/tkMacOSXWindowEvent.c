@@ -762,10 +762,7 @@ Tk_MacOSXIsAppInFront(void)
  * Custom content view for Tk NSWindows, containing standard NSView subviews.
  * The goal is to emulate X11-style drawing in response to Expose events:
  * during the normal AppKit drawing cycle, we supress drawing of all subviews
- * (using a technique adapted from WebKit's WebHTMLView) and instead send
- * Expose events about the subviews that would be redrawn. Tk Expose event
- * handling and drawing handlers then draw the subviews manually via their
- * -displayRectIgnoringOpacity:
+ * and instead send Expose events about the subviews that would be redrawn.
  */
 
 @interface TKContentView(TKWindowEvent)
@@ -803,17 +800,6 @@ ExposeRestrictProc(
     NSRectFillListUsingOperation(rectsBeingDrawn, rectsBeingDrawnCount,
 	    NSCompositeSourceOver);
 #endif
-
-    NSWindow *w = [self window];
-
-    //remove private API calls here: not needed on systems >= 10.7
-    // if ([self isOpaque] && [w showsResizeIndicator]) {
-    // 	NSRect bounds = [self convertRect:[w _growBoxRect] fromView:nil];
-
-    // 	if ([self needsToDrawRect:bounds]) {
-    // 	    NSEraseRect(bounds);
-    // 	}
-    // }
 
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
@@ -946,157 +932,6 @@ ExposeRestrictProc(
 }
 
 @end
-
-/*Remove private/non-documented API calls. This is strongly discouraged by Apple and may lead to breakage in the future.*/
-
-
-// #pragma mark TKContentViewPrivate
-
-// /*
-//  * Technique adapted from WebKit/WebKit/mac/WebView/WebHTMLView.mm to supress
-//  * normal AppKit subview drawing and make all drawing go through us.
-//  * Overrides NSView internals.
-//  */
-
-// @interface TKContentView(TKContentViewPrivate)
-// - (id) initWithFrame: (NSRect) frame;
-// - (void) _setAsideSubviews;
-// - (void) _restoreSubviews;
-// @end
-
-// @interface NSView(TKContentViewPrivate)
-// - (void) _recursiveDisplayRectIfNeededIgnoringOpacity: (NSRect) rect
-// 	isVisibleRect: (BOOL) isVisibleRect
-// 	rectIsVisibleRectForView: (NSView *) visibleView
-// 	topView: (BOOL) topView;
-// - (void) _recursiveDisplayAllDirtyWithLockFocus: (BOOL) needsLockFocus
-// 	visRect: (NSRect) visRect;
-// - (void) _recursive: (BOOL) recurse
-// 	displayRectIgnoringOpacity: (NSRect) displayRect
-// 	inContext: (NSGraphicsContext *) context topView: (BOOL) topView;
-// - (void) _lightWeightRecursiveDisplayInRect: (NSRect) visRect;
-// - (BOOL) _drawRectIfEmpty;
-// - (void) _drawRect: (NSRect) inRect clip: (BOOL) clip;
-// - (void) _setDrawsOwnDescendants: (BOOL) drawsOwnDescendants;
-// @end
-// #endif
-
-// @implementation TKContentView(TKContentViewPrivate)
-
-// - (id) initWithFrame: (NSRect) frame
-// {
-//     self = [super initWithFrame:frame];
-//     if (self) {
-// 	_savedSubviews = nil;
-// 	_subviewsSetAside = NO;
-// 	[self _setDrawsOwnDescendants:YES];
-//     }
-//     return self;
-// }
-
-// - (void) _setAsideSubviews
-// {
-// #ifdef TK_MAC_DEBUG
-//     if (_subviewsSetAside || _savedSubviews) {
-// 	Tcl_Panic("TKContentView _setAsideSubviews called incorrectly");
-//     }
-// #endif
-//     _savedSubviews = _subviews;
-//     _subviews = nil;
-//     _subviewsSetAside = YES;
-// }
-
-// - (void) _restoreSubviews
-// {
-// #ifdef TK_MAC_DEBUG
-//     if (!_subviewsSetAside || _subviews) {
-// 	Tcl_Panic("TKContentView _restoreSubviews called incorrectly");
-//     }
-// #endif
-//     _subviews = _savedSubviews;
-//     _savedSubviews = nil;
-//     _subviewsSetAside = NO;
-// }
-
-// - (void) _recursiveDisplayRectIfNeededIgnoringOpacity: (NSRect) rect
-// 	isVisibleRect: (BOOL) isVisibleRect
-// 	rectIsVisibleRectForView: (NSView *) visibleView
-// 	topView: (BOOL) topView
-// {
-//     [self _setAsideSubviews];
-//     [super _recursiveDisplayRectIfNeededIgnoringOpacity:rect
-// 	    isVisibleRect:isVisibleRect rectIsVisibleRectForView:visibleView
-// 	    topView:topView];
-//     [self _restoreSubviews];
-// }
-
-// - (void) _recursiveDisplayAllDirtyWithLockFocus: (BOOL) needsLockFocus
-// 	visRect: (NSRect) visRect
-// {
-//     BOOL needToSetAsideSubviews = !_subviewsSetAside;
-
-//     if (needToSetAsideSubviews) {
-//         [self _setAsideSubviews];
-//     }
-//     [super _recursiveDisplayAllDirtyWithLockFocus:needsLockFocus
-// 	    visRect:visRect];
-//     if (needToSetAsideSubviews) {
-//         [self _restoreSubviews];
-//     }
-// }
-
-// - (void) _recursive: (BOOL) recurse
-// 	displayRectIgnoringOpacity: (NSRect) displayRect
-// 	inContext: (NSGraphicsContext *) context topView: (BOOL) topView
-// {
-//     [self _setAsideSubviews];
-//     [super _recursive:recurse
-// 	    displayRectIgnoringOpacity:displayRect inContext:context
-// 	    topView:topView];
-//     [self _restoreSubviews];
-// }
-
-// - (void) _lightWeightRecursiveDisplayInRect: (NSRect) visRect
-// {
-//     BOOL needToSetAsideSubviews = !_subviewsSetAside;
-
-//     if (needToSetAsideSubviews) {
-//         [self _setAsideSubviews];
-//     }
-//     [super _lightWeightRecursiveDisplayInRect:visRect];
-//     if (needToSetAsideSubviews) {
-//         [self _restoreSubviews];
-//     }
-// }
-
-// - (BOOL) _drawRectIfEmpty
-// {
-//     /*
-//      * Our -drawRect manages subview drawing directly, so it needs to be called
-//      * even if the area to be redrawn is completely obscured by subviews.
-//      */
-
-//     return YES;
-// }
-
-// - (void) _drawRect: (NSRect) inRect clip: (BOOL) clip
-// {
-// #ifdef TK_MAC_DEBUG_DRAWING
-//     TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd,
-// 	    NSStringFromRect(inRect));
-// #endif
-//     BOOL subviewsWereSetAside = _subviewsSetAside;
-
-//     if (subviewsWereSetAside) {
-//         [self _restoreSubviews];
-//     }
-//     [super _drawRect:inRect clip:clip];
-//     if (subviewsWereSetAside) {
-//         [self _setAsideSubviews];
-//     }
-// }
-
-// @end
 
 /*
  * Local Variables:

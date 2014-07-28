@@ -365,12 +365,4 @@ VISIBILITY_HIDDEN
 	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
 @end
 
-//Remove private API calls here: not necessary for systems >= 10.7
-#if 0
-/* From WebKit/WebKit/mac/WebCoreSupport/WebChromeClient.mm: */
-@interface NSWindow(TKGrowBoxRect)
-- (NSRect)_growBoxRect;
-@end
-#endif
-
 #endif /* _TKMACPRIV */
