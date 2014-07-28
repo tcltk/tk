@@ -1554,10 +1554,6 @@ TkScrollWindow(
 		}
 	    }
 
-	    /* Step 2: Redisplay all subviews */
-	    for (NSView *subview in [view subviews] ) {
-		[subview display];
-	    }
 	}
     }
 

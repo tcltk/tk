@@ -741,15 +741,6 @@ TkMacOSXUpdateClipRgn(
 	    } else if (winPtr->wmInfoPtr->attributes &
 		    kWindowResizableAttribute) {
 		NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
-
-		if (w) {
-		    // This call to private API not needed on systems >= 10.7
-		    // bounds = NSRectToCGRect([w _growBoxRect]);
-		    // bounds.origin.y = [w contentRectForFrameRect:
-		    // 	    [w frame]].size.height - bounds.size.height -
-		    // 	    bounds.origin.y;
-		    // ChkErr(TkMacOSHIShapeDifferenceWithRect, rgn, &bounds);
-		}
 	    }
 	    macWin->aboveVisRgn = HIShapeCreateCopy(rgn);
 
