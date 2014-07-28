@@ -741,14 +741,6 @@ TkMacOSXUpdateClipRgn(
 	    } else if (winPtr->wmInfoPtr->attributes &
 		    kWindowResizableAttribute) {
 		NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
-
-		if (w) {
-		    bounds = NSRectToCGRect([w _growBoxRect]);
-		    bounds.origin.y = [w contentRectForFrameRect:
-			    [w frame]].size.height - bounds.size.height -
-			    bounds.origin.y;
-		    ChkErr(TkMacOSHIShapeDifferenceWithRect, rgn, &bounds);
-		}
 	    }
 	    macWin->aboveVisRgn = HIShapeCreateCopy(rgn);
 
