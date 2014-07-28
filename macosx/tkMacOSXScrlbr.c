@@ -331,23 +331,6 @@ TkpDisplayScrollbar(
     frame = NSInsetRect(frame, scrollPtr->inset, scrollPtr->inset);
     frame.origin.y = viewHeight - (frame.origin.y + frame.size.height);
 
-    NSWindow *w = [view window];
-
-    if ([w showsResizeIndicator]) {
-	NSRect growBox = [view convertRect:[w _growBoxRect] fromView:nil];
-
-	if (NSIntersectsRect(growBox, frame)) {
-	    if (scrollPtr->vertical) {
-		CGFloat y = frame.origin.y;
-
-		frame.origin.y = growBox.origin.y + growBox.size.height;
-		frame.size.height -= frame.origin.y - y;
- 	    } else {
-		frame.size.width = growBox.origin.x - frame.origin.x;
-	    }
-	    TkMacOSXSetScrollbarGrow(winPtr, true);
-	}
-    }
     if (!NSEqualRects(frame, [scroller frame])) {
 	[scroller setFrame:frame];
     }
