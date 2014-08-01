@@ -1542,7 +1542,7 @@ TkScrollWindow(
 			frame.origin.x - macDraw->xOff + dx,
 			(bounds.size.height - frame.origin.y - frame.size.height) - macDraw->yOff + dy,
 			frame.size.width, frame.size.height);
-		/* Rectangles with negative coordinates seem to cause trouble. */
+		// /* Rectangles with negative coordinates seem to cause trouble. */
 		if (subviewRect.origin.y < 0 && subviewRect.origin.y + subviewRect.size.height > 0) {
 		    subviewRect.origin.y = 0;
 		}
@@ -1553,7 +1553,6 @@ TkScrollWindow(
 		    CFRelease(dstRgn);
 		}
 	    }
-
 	}
     }
 
