@@ -1458,12 +1458,12 @@ XMaxRequestSize(
  *	a damage region.
  *
  * Results:
- *	Returns 0 if the scroll genereated no additional damage.
+ *	Returns 0 if the scroll generated no additional damage.
  *	Otherwise, sets the region that needs to be repainted after
  *	scrolling and returns 1.
  *
  * Side effects:
- *	Scrolls the bits in the window.
+ *	Scrolls the rectangle in the window.
  *
  *----------------------------------------------------------------------
  */
@@ -1480,86 +1480,59 @@ TkScrollWindow(
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable; 
     NSView *view = TkMacOSXDrawableView(macDraw);
-    CGRect visRect, srcRect, dstRect, scroll_src, scroll_dst;
-    HIShapeRef dmgRgn = NULL;
-    NSRect bounds;
+    CGRect dmgRect, dstRect, visRectBL, srcRectBL, dstRectBL;
+    NSRect visible, frame;
+    HIShapeRef dmgRgn = NULL, dstRgn;
     int result;
 
     if ( view ) {
-	/*  Get the scroll area in NSView coordinates (origin at bottom left). */
-	bounds = [view bounds];
-	scroll_src = CGRectMake(
-				macDraw->xOff + x, 
-				bounds.size.height - height - (macDraw->yOff + y),
-				width, height);
-	scroll_dst = CGRectOffset(scroll_src, dx, -dy);
-	/* Limit scrolling to the window content area. */
-	visRect = NSRectToCGRect([view visibleRect]);
-	scroll_src = CGRectIntersection(scroll_src, visRect);
-	scroll_dst = CGRectIntersection(scroll_dst, visRect);
+	visible = [view visibleRect];
 
-	if ( !CGRectIsEmpty(scroll_src) && !CGRectIsEmpty(scroll_dst) ) {
+	/* Find the frame for the Tk window within its NSview. */
+	frame = NSMakeRect(Tk_X(tkwin),
+			   Tk_Y(tkwin) + visible.size.height - Tk_Height(tkwin),
+			   Tk_Width(tkwin),
+			   Tk_Height(tkwin));
+
+	/*  Get the scroll area in NSView coordinates (origin at bottom left). */
+	srcRectBL = CGRectMake(frame.origin.x + x,
+			       frame.origin.y + frame.size.height - height - y,
+				width, height);
+	dstRectBL = CGRectOffset(srcRectBL, dx, -dy);
+	
+	/* Limit scrolling to the window content area. */
+	visRectBL = NSRectToCGRect(frame);
+	srcRectBL = CGRectIntersection(srcRectBL, visRectBL);
+	dstRectBL = CGRectIntersection(dstRectBL, visRectBL);
+
+	if ( !CGRectIsEmpty(srcRectBL) && !CGRectIsEmpty(dstRectBL) ) {
 
 	    /*
-	     * Mark the difference between source and destination as damaged.
-	     * This region is described in the Tk coordinate system, after shifting by dy.
+	     * Construct the damage region.  We extend it to the top
+	     * or bottom of the window, in order to avoid artifacts when
+	     * scrolling.
 	     */
 
-	    srcRect = CGRectMake(x - macDraw->xOff, y - macDraw->yOff,
-				 width, height);
-	    dstRect = CGRectOffset(srcRect, dx, dy);
-	    dmgRgn = HIShapeCreateMutableWithRect(&srcRect);
-	    HIShapeRef dstRgn = HIShapeCreateWithRect(&dstRect);
+	    if ( dy < 0 ) { /* extend to bottom */
+	    	dmgRect = CGRectMake(x, y, Tk_Width(tkwin), Tk_Height(tkwin) - y);
+	    } else {         /* extend to top */
+	    	dmgRect = CGRectMake(x , 0, Tk_Width(tkwin), Tk_Height(tkwin) + y);
+	    }
+	    dstRect = CGRectMake(x+dx, y+dy, width, height);
+
+	    dmgRgn = HIShapeCreateMutableWithRect(&dmgRect);
+	    dstRgn = HIShapeCreateWithRect(&dstRect);
 	    ChkErr(HIShapeDifference, dmgRgn, dstRgn, (HIMutableShapeRef) dmgRgn);
 	    CFRelease(dstRgn);
 
 	    /* Scroll the rectangle. */
-	    [view scrollRect:NSRectFromCGRect(scroll_src) by:NSMakeSize(dx, -dy)];
-	    [view displayRect:NSRectFromCGRect(scroll_dst)];
-	    
-	    /*
-	     * When a Text widget contains embedded images, scrolling generates
-	     * lots of artifacts involving multiple copies of the images
-	     * displayed on top of each other.  Extensive experimentation, with
-	     * very little help from the Apple documentation, indicates that
-	     * whenever an image is displayed it gets added as a subview, which
-	     * then gets automatically redisplayed in its original location.
-	     *
-	     * We do two things to combat this.  First, each subview that meets
-	     * the scroll area is added as a damage rectangle.  Second, we
-	     * redisplay the subviews after the scroll.
-	     */
-
-	    /*
-	     * Step 1: Find any subviews that meet the scroll area and mark
-	     * them as damaged.  Use Tk coordinates, shifted to account for the
-	     * future scrolling.
-	     */
-	    
-	    for (NSView *subview in [view subviews] ) {
-		NSRect frame = [subview frame];
-		CGRect subviewRect = CGRectMake(
-			frame.origin.x - macDraw->xOff + dx,
-			(bounds.size.height - frame.origin.y - frame.size.height) - macDraw->yOff + dy,
-			frame.size.width, frame.size.height);
-		// /* Rectangles with negative coordinates seem to cause trouble. */
-		if (subviewRect.origin.y < 0 && subviewRect.origin.y + subviewRect.size.height > 0) {
-		    subviewRect.origin.y = 0;
-		}
-		CGRect intersection = CGRectIntersection(srcRect, subviewRect);
-		if (! CGRectIsEmpty(intersection) ){
-		    dstRgn = HIShapeCreateWithRect(&subviewRect);
-		    ChkErr(HIShapeUnion, dmgRgn, dstRgn, (HIMutableShapeRef) dmgRgn);
-		    CFRelease(dstRgn);
-		}
-	    }
+	    [view scrollRect:NSRectFromCGRect(srcRectBL) by:NSMakeSize(dx, -dy)];
 	}
     }
 
     if ( dmgRgn == NULL ) {
 	dmgRgn = HIShapeCreateEmpty();
     }
-    //TkMacOSXInvalidateViewRegion(view, dmgRgn);
     TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
     result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
     CFRelease(dmgRgn);
