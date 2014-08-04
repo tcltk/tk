@@ -651,7 +651,7 @@ XConfigureWindow(
  *
  * TkMacOSXUpdateClipRgn --
  *
- *	This function updates the cliping regions for a given window and all of
+ *	This function updates the clipping regions for a given window and all of
  *	its children. Once updated the TK_CLIP_INVALID flag in the subwindow
  *	data structure is unset. The TK_CLIP_INVALID flag should always be
  *	unset before any drawing is attempted.
@@ -677,7 +677,7 @@ TkMacOSXUpdateClipRgn(
     macWin = winPtr->privatePtr;
     if (macWin && macWin->flags & TK_CLIP_INVALID) {
 	TkWindow *win2Ptr;
-
+	
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
 	TkMacOSXDbgMsg("%s", winPtr->pathName);
 #endif
@@ -817,7 +817,7 @@ TkMacOSXUpdateClipRgn(
  *
  * TkMacOSXVisableClipRgn --
  *
- *	This function returns the Macintosh cliping region for the given
+ *	This function returns the Macintosh clipping region for the given
  *	window. The caller is responsible for disposing of the returned
  *	region via TkDestroyRegion().
  *
@@ -912,7 +912,7 @@ TkMacOSXInvalidateWindow(
 				 * TK_PARENT_WINDOW */
 {
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
-    TkMacOSXDbgMsg("%s", winPtr->pathName);
+    TkMacOSXDbgMsg("%s", macWin->winPtr->pathName);
 #endif
     if (macWin->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(macWin->winPtr);
@@ -1070,7 +1070,7 @@ TkMacOSXGetRootControl(
  *	None.
  *
  * Side effects:
- *	The cliping regions for the window and its children are mark invalid.
+ *	The clipping regions for the window and its children are marked invalid.
  *	(Make sure they are valid before drawing.)
  *
  *----------------------------------------------------------------------
@@ -1088,6 +1088,10 @@ TkMacOSXInvalClipRgns(
      * If already marked we can stop because all descendants will also already
      * be marked.
      */
+
+#ifdef TK_MAC_DEBUG_CLIP_REGIONS
+	TkMacOSXDbgMsg("%s", winPtr->pathName);
+#endif
 
     if (!macWin || macWin->flags & TK_CLIP_INVALID) {
 	return;
