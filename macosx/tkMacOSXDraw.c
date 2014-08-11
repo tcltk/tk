@@ -1460,12 +1460,12 @@ XMaxRequestSize(
  *	a damage region.
  *
  * Results:
- *	Returns 0 if the scroll generated no additional damage.
+ *	Returns 0 if the scroll genereated no additional damage.
  *	Otherwise, sets the region that needs to be repainted after
  *	scrolling and returns 1.
  *
  * Side effects:
- *	Scrolls the rectangle in the window.
+ *	Scrolls the bits in the window.
  *
  *----------------------------------------------------------------------
  */
@@ -1518,9 +1518,46 @@ TkScrollWindow(
 	    /* Scroll the rectangle. */
 	    [view scrollRect:NSRectFromCGRect(scroll_src) by:NSMakeSize(dx, -dy)];
 	    [view displayRect:NSRectFromCGRect(scroll_dst)];
+
+	    /*
+	     * When a Text widget contains embedded images, scrolling generates
+	     * lots of artifacts involving multiple copies of the images
+	     * displayed on top of each other.  Extensive experimentation, with
+	     * very little help from the Apple documentation, indicates that
+	     * whenever an image is displayed it gets added as a subview, which
+	     * then gets automatically redisplayed in its original location.
+	     *
+	     * We do two things to combat this.  First, each subview that meets
+	     * the scroll area is added as a damage rectangle.  Second, we
+	     * redisplay the subviews after the scroll.
+	     */
+
+	    /*
+	     * Step 1: Find any subviews that meet the scroll area and mark
+	     * them as damaged.  Use Tk coordinates, shifted to account for the
+	     * future scrolling.
+	     */
+	    
+	    for (NSView *subview in [view subviews] ) {
+		NSRect frame = [subview frame];
+		CGRect subviewRect = CGRectMake(
+			frame.origin.x - macDraw->xOff + dx,
+			(bounds.size.height - frame.origin.y - frame.size.height) - macDraw->yOff + dy,
+			frame.size.width, frame.size.height);
+		/* Rectangles with negative coordinates seem to cause trouble. */
+		if (subviewRect.origin.y < 0 && subviewRect.origin.y + subviewRect.size.height > 0) {
+		    subviewRect.origin.y = 0;
+		}
+		CGRect intersection = CGRectIntersection(srcRect, subviewRect);
+		if (! CGRectIsEmpty(intersection) ){
+		    dstRgn = HIShapeCreateWithRect(&subviewRect);
+		    ChkErr(HIShapeUnion, dmgRgn, dstRgn, (HIMutableShapeRef) dmgRgn);
+		    CFRelease(dstRgn);
+		}
+	    }
+
 	}
     }
-	    
 
 
     if ( dmgRgn == NULL ) {
