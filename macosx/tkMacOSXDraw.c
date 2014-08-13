@@ -145,7 +145,7 @@ BitmapRepFromDrawableRect(
     NSBitmapImageRep *bitmap_rep=NULL;
     NSView *view=NULL;
     if ( mac_drawable->flags & TK_IS_PIXMAP ) {
-	/* 
+	/*
 	   This means that the MacDrawable is functioning as a Tk Pixmap, so its view
 	   field is NULL.  It's context field should point to a CGImage.
 	*/
@@ -1478,7 +1478,7 @@ TkScrollWindow(
     TkRegion damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
-    MacDrawable *macDraw = (MacDrawable *) drawable; 
+    MacDrawable *macDraw = (MacDrawable *) drawable;
     NSView *view = TkMacOSXDrawableView(macDraw);
     CGRect visRect, srcRect, dstRect, scroll_src, scroll_dst;
     HIShapeRef dmgRgn = NULL;
@@ -1489,7 +1489,7 @@ TkScrollWindow(
 	/*  Get the scroll area in NSView coordinates (origin at bottom left). */
 	bounds = [view bounds];
 	scroll_src = CGRectMake(
-				macDraw->xOff + x, 
+				macDraw->xOff + x,
 				bounds.size.height - height - (macDraw->yOff + y),
 				width, height);
 	scroll_dst = CGRectOffset(scroll_src, dx, -dy);
@@ -1516,7 +1516,7 @@ TkScrollWindow(
 	    /* Scroll the rectangle. */
 	    [view scrollRect:NSRectFromCGRect(scroll_src) by:NSMakeSize(dx, -dy)];
 	    [view displayRect:NSRectFromCGRect(scroll_dst)];
-	    
+
 	    /*
 	     * When a Text widget contains embedded images, scrolling generates
 	     * lots of artifacts involving multiple copies of the images
@@ -1535,7 +1535,7 @@ TkScrollWindow(
 	     * them as damaged.  Use Tk coordinates, shifted to account for the
 	     * future scrolling.
 	     */
-	    
+
 	    for (NSView *subview in [view subviews] ) {
 		NSRect frame = [subview frame];
 		CGRect subviewRect = CGRectMake(
@@ -1553,14 +1553,12 @@ TkScrollWindow(
 		    CFRelease(dstRgn);
 		}
 	    }
-
 	}
     }
 
     if ( dmgRgn == NULL ) {
 	dmgRgn = HIShapeCreateEmpty();
     }
-    //TkMacOSXInvalidateViewRegion(view, dmgRgn);
     TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
     result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
     CFRelease(dmgRgn);
