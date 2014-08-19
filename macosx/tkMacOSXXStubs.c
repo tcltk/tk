@@ -884,7 +884,7 @@ XGetImage(
 	bitmap_rep =  BitmapRepFromDrawableRect(d, x, y,width, height);
 
 	if ( bitmap_rep == Nil                        ||
-	     [bitmap_rep bitmapFormat] != 0    || 
+	     [bitmap_rep bitmapFormat] != 0    ||
 	     [bitmap_rep samplesPerPixel] != 4 ||
 	     [bitmap_rep isPlanar] != 0               ) {
 	    TkMacOSXDbgMsg("XGetImage: Failed to construct NSBitmapRep");
@@ -894,7 +894,7 @@ XGetImage(
 	NSSize image_size = NSMakeSize(width, height);
 	NSImage* ns_image = [[NSImage alloc]initWithSize:image_size];
 	[ns_image addRepresentation:bitmap_rep];
- 
+
 	/* Assume premultiplied nonplanar data with 4 bytes per pixel and alpha last.*/
 	if ( [bitmap_rep bitmapFormat] == 0 &&
 	     [bitmap_rep isPlanar ] == 0 &&
