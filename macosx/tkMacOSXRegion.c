@@ -207,7 +207,7 @@ TkRectInRegion(
     if ( TkMacOSXIsEmptyRegion(region) ) {
 	    return RectangleOut;
 	}
-    else {    
+    else {
 	const CGRect r = CGRectMake(x, y, width, height);
 	return HIShapeIntersectsRect((HIShapeRef) region, &r) ?
 	    RectanglePart : RectangleOut;
