@@ -1217,7 +1217,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    LD_SEARCH_FLAGS=""
 	    TCL_NEEDS_EXP_FILE=1
 	    TCL_EXPORT_FILE_SUFFIX='${VERSION}\$\{DBGX\}.dll.a'
-	    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} -Wl,--out-implib,$[@].a"
+	    TCL_SHLIB_LD_EXTRAS='-Wl,--out-implib,$[@].a'
 	    TK_SHLIB_LD_EXTRAS='-Wl,--out-implib,$[@].a'
 	    AC_CACHE_CHECK(for Cygwin version of gcc,
 		ac_cv_cygwin,
