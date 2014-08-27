@@ -379,6 +379,9 @@ NSRect TkMacOSXGetButtonFrame(
     if (tkwin) {
 	MacDrawable *macWin =  (MacDrawable *) winPtr->window;
 	NSView *view = TkMacOSXDrawableView(macWin);
+        if(view==nil) {
+            return NSZeroRect;
+        }
 	CGFloat viewHeight = [view bounds].size.height;
 	NSRect frame = NSMakeRect(macWin->xOff, macWin->yOff,
 				  Tk_Width(tkwin), Tk_Height(tkwin));
