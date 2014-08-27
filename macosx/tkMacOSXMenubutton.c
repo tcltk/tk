@@ -127,6 +127,7 @@ TkpDestroyMenuButton(
     TkMenuButton *mbPtr)
 {
     MacMenuButton *macButtonPtr = (MacMenuButton *) mbPtr;
+    [macButtonPtr->button setTag:(NSInteger)-1];
 
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->button);
 }
