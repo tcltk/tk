@@ -186,6 +186,7 @@ TkpDestroyButton(
     TkButton *butPtr)
 {
     MacButton *macButtonPtr = (MacButton *) butPtr;
+    [macButtonPtr->button setTag:(NSInteger)-1];
 
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->button);
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->selectImage);
