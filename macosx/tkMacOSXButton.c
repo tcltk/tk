@@ -376,6 +376,9 @@ NSRect TkMacOSXGetButtonFrame(
     MacButton *macButtonPtr = (MacButton *) butPtr;
     Tk_Window tkwin = butPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
+    if(tkwin==0xffffffff || tkwin==0xffffffff00000000) {
+	return NSZeroRect;
+    }
     if (tkwin) {
 	MacDrawable *macWin =  (MacDrawable *) winPtr->window;
 	NSView *view = TkMacOSXDrawableView(macWin);
