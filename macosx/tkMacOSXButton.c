@@ -186,6 +186,7 @@ TkpDestroyButton(
     TkButton *butPtr)
 {
     MacButton *macButtonPtr = (MacButton *) butPtr;
+    [macButtonPtr->button setTag:(NSInteger)-1];
 
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->button);
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->selectImage);
@@ -375,17 +376,10 @@ NSRect TkMacOSXGetButtonFrame(
 {
     MacButton *macButtonPtr = (MacButton *) butPtr;
     Tk_Window tkwin = butPtr->tkwin;
-    unsigned short tkwint=(unsigned int)tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
-    if(tkwint==0xffffffff || tkwint==0) {
-	return NSZeroRect;
-    }
     if (tkwin) {
 	MacDrawable *macWin =  (MacDrawable *) winPtr->window;
 	NSView *view = TkMacOSXDrawableView(macWin);
-        if(view==nil) {
-            return NSZeroRect;
-        }
 	CGFloat viewHeight = [view bounds].size.height;
 	NSRect frame = NSMakeRect(macWin->xOff, macWin->yOff,
 				  Tk_Width(tkwin), Tk_Height(tkwin));
