@@ -375,8 +375,9 @@ NSRect TkMacOSXGetButtonFrame(
 {
     MacButton *macButtonPtr = (MacButton *) butPtr;
     Tk_Window tkwin = butPtr->tkwin;
+    unsigned short tkwint=(unsigned int)tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
-    if(tkwin==0xffffffff || tkwin==0xffffffff00000000) {
+    if(tkwint==0xffffffff || tkwint==0) {
 	return NSZeroRect;
     }
     if (tkwin) {
