@@ -145,6 +145,29 @@ typedef struct {
 } ChooseDir;
 
 /*
+ * The following structure is used to gather options used by various
+ * file dialogs
+ */
+typedef struct OFNOpts {
+    Tk_Window tkwin;            /* Owner window for dialog */
+    char *extension;            /* Default extension */
+    char *title;                /* Title for dialog */
+    Tcl_Obj *filterObj;         /* File type filter list */
+    Tcl_Obj *typeVariableObj;   /* Variable in which to store type selected */
+    Tcl_Obj *initialTypeObj;    /* Initial value of above, or NULL */
+    Tcl_DString utfDirString;   /* Initial dir */
+    int multi;                  /* Multiple selection enabled */
+    int confirmOverwrite;                  /* Multiple selection enabled */
+    TCHAR file[TK_MULTI_MAX_PATH]; /* File name
+                                      XXX - fixed size because it was so
+                                      historically. Why not malloc'ed ?
+                                      XXX - also, TCHAR should really be WCHAR
+                                      because TkWinGetUnicodeEncoding is always
+                                      UCS2.
+                                   */
+} OFNOpts;
+
+/*
  * The following structure is used to pass information between GetFileName
  * function and OFN dialog hook procedures. [Bug 2896501, Patch 2898255]
  */
@@ -516,6 +539,178 @@ Tk_GetSaveFileObjCmd(
 {
     return GetFileName(clientData, interp, objc, objv, 0);
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CleanupOFNOptions --
+ *
+ *	Cleans up any storage allocated by ParseOFNOptions
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Releases resources held by *optsPtr
+ *----------------------------------------------------------------------
+ */
+static void CleanupOFNOptions(OFNOpts *optsPtr)
+{
+    Tcl_DStringFree(&optsPtr->utfDirString);
+}
+
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ParseOFNOptions --
+ *
+ *	Option parsing for tk_get{Open,Save}File
+ *
+ * Results:
+ *	TCL_OK on success, TCL_ERROR otherwise
+ *
+ * Side effects:
+ *	Returns option values in *optsPtr. Note these may include string
+ *      pointers into objv[]
+ *----------------------------------------------------------------------
+ */
+
+static int
+ParseOFNOptions(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[],	/* Argument objects. */
+    int open,			/* 1 for Open, 0 for Save */
+    OFNOpts *optsPtr)           /* Output, uninitialized on entry */
+{
+    int i;
+    Tcl_DString ds;
+    enum options {
+	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE, FILE_PARENT,
+	FILE_TITLE, FILE_TYPEVARIABLE, FILE_MULTIPLE, FILE_CONFIRMOW
+    };
+    struct Options {
+	const char *name;
+	enum options value;
+    };
+    static const struct Options saveOptions[] = {
+	{"-confirmoverwrite",	FILE_CONFIRMOW},
+	{"-defaultextension",	FILE_DEFAULT},
+	{"-filetypes",		FILE_TYPES},
+	{"-initialdir",		FILE_INITDIR},
+	{"-initialfile",	FILE_INITFILE},
+	{"-parent",		FILE_PARENT},
+	{"-title",		FILE_TITLE},
+	{"-typevariable",	FILE_TYPEVARIABLE},
+	{NULL,			FILE_DEFAULT/*ignored*/ }
+    };
+    static const struct Options openOptions[] = {
+	{"-defaultextension",	FILE_DEFAULT},
+	{"-filetypes",		FILE_TYPES},
+	{"-initialdir",		FILE_INITDIR},
+	{"-initialfile",	FILE_INITFILE},
+	{"-multiple",		FILE_MULTIPLE},
+	{"-parent",		FILE_PARENT},
+	{"-title",		FILE_TITLE},
+	{"-typevariable",	FILE_TYPEVARIABLE},
+	{NULL,			FILE_DEFAULT/*ignored*/ }
+    };
+    const struct Options *const options = open ? openOptions : saveOptions;
+
+    optsPtr->tkwin = clientData;
+    optsPtr->extension = NULL;
+    optsPtr->title = NULL;
+    optsPtr->filterObj = NULL;
+    optsPtr->typeVariableObj = NULL;
+    optsPtr->initialTypeObj = NULL;
+    optsPtr->multi = 0;
+    optsPtr->confirmOverwrite = 1; /* By default we ask for confirmation */
+    Tcl_DStringInit(&optsPtr->utfDirString);
+    optsPtr->file[0] = 0;
+
+    for (i = 1; i < objc; i += 2) {
+	int index;
+	const char *string;
+	Tcl_Obj *valuePtr = objv[i + 1];
+
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], options,
+		sizeof(struct Options), "option", 0, &index) != TCL_OK) {
+	    goto end;
+	} else if (i + 1 == objc) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "value for \"%s\" missing", options[index].name));
+	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
+	    goto end;
+	}
+
+	string = Tcl_GetString(valuePtr);
+	switch (options[index].value) {
+	case FILE_DEFAULT:
+	    if (string[0] == '.') {
+		string++;
+	    }
+	    optsPtr->extension = string;
+	    break;
+	case FILE_TYPES:
+	    optsPtr->filterObj = valuePtr;
+	    break;
+	case FILE_INITDIR:
+	    Tcl_DStringFree(&optsPtr->utfDirString);
+	    if (Tcl_TranslateFileName(interp, string,
+                                      &optsPtr->utfDirString) == NULL) {
+		goto end;
+	    }
+	    break;
+	case FILE_INITFILE:
+	    if (Tcl_TranslateFileName(interp, string, &ds) == NULL) {
+		goto end;
+	    }
+	    Tcl_UtfToExternal(NULL, TkWinGetUnicodeEncoding(),
+                              Tcl_DStringValue(&ds), Tcl_DStringLength(&ds), 0, NULL,
+                              (char *) &optsPtr->file[0], sizeof(optsPtr->file),
+                              NULL, NULL, NULL);
+	    Tcl_DStringFree(&ds);
+	    break;
+	case FILE_PARENT:
+            /* XXX - check */
+	    optsPtr->tkwin = Tk_NameToWindow(interp, string, clientData);
+	    if (optsPtr->tkwin == NULL) {
+		goto end;
+	    }
+	    break;
+	case FILE_TITLE:
+	    optsPtr->title = string;
+	    break;
+	case FILE_TYPEVARIABLE:
+	    optsPtr->typeVariableObj = valuePtr;
+	    optsPtr->initialTypeObj = Tcl_ObjGetVar2(interp, valuePtr,
+                                                     NULL, TCL_GLOBAL_ONLY);
+	    break;
+	case FILE_MULTIPLE:
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &optsPtr->multi) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    break;
+	case FILE_CONFIRMOW:
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
+                                      &optsPtr->confirmOverwrite) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    break;
+	}
+    }
+
+    return TCL_OK;
+
+end:                   /* interp should already hold error */
+    CleanupOFNOptions(optsPtr);
+    return TCL_ERROR;
+}
+
+
 
 /*
  *----------------------------------------------------------------------
