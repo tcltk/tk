@@ -59,7 +59,7 @@ typedef struct ThreadSpecificData {
     HHOOK hMsgBoxHook;		/* Hook proc for tk_messageBox and the */
     HICON hSmallIcon;		/* icons used by a parent to be used in */
     HICON hBigIcon;		/* the message box */
-    int   useNewFileDialogs;
+    int   newFileDialogsAvailable;
 #define FDLG_STATE_INIT 0       /* Uninitialized */
 #define FDLG_STATE_USE_NEW 1    /* Use the new dialogs */
 #define FDLG_STATE_USE_OLD 2    /* Use the old dialogs */
@@ -170,14 +170,15 @@ typedef struct OFNData {
  */
 typedef struct OFNOpts {
     Tk_Window tkwin;            /* Owner window for dialog */
-    const char *extension;            /* Default extension */
-    const char *title;                /* Title for dialog */
+    Tcl_Obj *extObj;            /* Default extension */
+    Tcl_Obj *titleObj;          /* Title for dialog */
     Tcl_Obj *filterObj;         /* File type filter list */
     Tcl_Obj *typeVariableObj;   /* Variable in which to store type selected */
     Tcl_Obj *initialTypeObj;    /* Initial value of above, or NULL */
     Tcl_DString utfDirString;   /* Initial dir */
     int multi;                  /* Multiple selection enabled */
-    int confirmOverwrite;                  /* Multiple selection enabled */
+    int confirmOverwrite;       /* Multiple selection enabled */
+    int forceXPStyle;          /* XXX - Force XP style even on newer systems */
     TCHAR file[TK_MULTI_MAX_PATH]; /* File name
                                       XXX - fixed size because it was so
                                       historically. Why not malloc'ed ?
@@ -776,6 +777,69 @@ static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 static void		SetTkDialog(ClientData clientData);
 static const char *ConvertExternalFilename(TCHAR *filename,
 			    Tcl_DString *dsPtr);
+static void             LoadShellProcs(void);
+
+
+/* Definitions of dynamically loaded Win32 calls */
+typedef HRESULT (STDAPICALLTYPE SHCreateItemFromParsingNameProc)(
+    PCWSTR pszPath, IBindCtx *pbc, REFIID riid, void **ppv);
+struct ShellProcPointers {
+    SHCreateItemFromParsingNameProc *SHCreateItemFromParsingName;
+} ShellProcs;
+
+
+
+
+
+/*
+ *-------------------------------------------------------------------------
+ *
+ * LoadShellProcs --
+ *
+ *     Some shell functions are not available on older versions of
+ *     Windows. This function dynamically loads them and stores pointers
+ *     to them in ShellProcs. Any function that is not available has
+ *     the corresponding pointer set to NULL.
+ *
+ *     Note this call never fails. Unavailability of a function is not
+ *     a reason for failure. Caller should check whether a particular
+ *     function pointer is NULL or not. Once loaded a function stays
+ *     forever loaded.
+ *
+ *     XXX - we load the function pointers into global memory. This implies
+ *     there is a potential (however small) for race conditions between
+ *     threads. However, Tk is in any case meant to be loaded in exactly
+ *     one thread so this should not be an issue and saves us from
+ *     unnecessary bookkeeping.
+ *
+ * Return value:
+ *     None. 
+ *
+ * Side effects:
+ *     ShellProcs is populated.
+ *-------------------------------------------------------------------------
+ */
+static void LoadShellProcs()
+{
+    static HMODULE shell32_handle = NULL;
+
+    if (shell32_handle != NULL)
+        return; /* We have already been through here. */
+
+    /*
+     * XXX - Note we never call FreeLibrary. There is no point because
+     * shell32.dll is loaded at startup anyways and stays for the duration
+     * of the process so why bother with keeping track of when to unload
+     */
+    shell32_handle = LoadLibrary(TEXT("shell32.dll"));
+    if (shell32_handle == NULL) /* Should never happen but check anyways. */
+        return;
+
+    ShellProcs.SHCreateItemFromParsingName =
+        (SHCreateItemFromParsingNameProc*) GetProcAddress(shell32_handle,
+                                                         "SHCreateItemFromParsingName");
+}
+
 
 /*
  *-------------------------------------------------------------------------
@@ -1165,7 +1229,8 @@ ParseOFNOptions(
     Tcl_DString ds;
     enum options {
 	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE, FILE_PARENT,
-	FILE_TITLE, FILE_TYPEVARIABLE, FILE_MULTIPLE, FILE_CONFIRMOW
+	FILE_TITLE, FILE_TYPEVARIABLE, FILE_MULTIPLE, FILE_CONFIRMOW,
+        FILE_UNDOCUMENTED_XP_STYLE /* XXX - force XP - style dialogs */
     };
     struct Options {
 	const char *name;
@@ -1180,6 +1245,7 @@ ParseOFNOptions(
 	{"-parent",		FILE_PARENT},
 	{"-title",		FILE_TITLE},
 	{"-typevariable",	FILE_TYPEVARIABLE},
+        {"-xpstyle",            FILE_UNDOCUMENTED_XP_STYLE}, /* XXX */
 	{NULL,			FILE_DEFAULT/*ignored*/ }
     };
     static const struct Options openOptions[] = {
@@ -1191,17 +1257,13 @@ ParseOFNOptions(
 	{"-parent",		FILE_PARENT},
 	{"-title",		FILE_TITLE},
 	{"-typevariable",	FILE_TYPEVARIABLE},
+        {"-xpstyle",            FILE_UNDOCUMENTED_XP_STYLE}, /* XXX */
 	{NULL,			FILE_DEFAULT/*ignored*/ }
     };
     const struct Options *const options = open ? openOptions : saveOptions;
 
+    ZeroMemory(optsPtr, sizeof(*optsPtr));
     optsPtr->tkwin = clientData;
-    optsPtr->extension = NULL;
-    optsPtr->title = NULL;
-    optsPtr->filterObj = NULL;
-    optsPtr->typeVariableObj = NULL;
-    optsPtr->initialTypeObj = NULL;
-    optsPtr->multi = 0;
     optsPtr->confirmOverwrite = 1; /* By default we ask for confirmation */
     Tcl_DStringInit(&optsPtr->utfDirString);
     optsPtr->file[0] = 0;
@@ -1224,10 +1286,7 @@ ParseOFNOptions(
 	string = Tcl_GetString(valuePtr);
 	switch (options[index].value) {
 	case FILE_DEFAULT:
-	    if (string[0] == '.') {
-		string++;
-	    }
-	    optsPtr->extension = string;
+	    optsPtr->extObj = valuePtr;
 	    break;
 	case FILE_TYPES:
 	    optsPtr->filterObj = valuePtr;
@@ -1257,7 +1316,7 @@ ParseOFNOptions(
 	    }
 	    break;
 	case FILE_TITLE:
-	    optsPtr->title = string;
+	    optsPtr->titleObj = valuePtr;
 	    break;
 	case FILE_TYPEVARIABLE:
 	    optsPtr->typeVariableObj = valuePtr;
@@ -1275,6 +1334,12 @@ ParseOFNOptions(
 		return TCL_ERROR;
 	    }
 	    break;
+        case FILE_UNDOCUMENTED_XP_STYLE:
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
+                                      &optsPtr->forceXPStyle) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+            break;
 	}
     }
 
@@ -1288,143 +1353,209 @@ end:                   /* interp should already hold error */
 
 /*
  *----------------------------------------------------------------------
+ * VistaFileDialogsAvailable
+ *
+ *      Checks whether the new (Vista) file dialogs can be used on
+ *      the system.
+ * 
+ * Returns:
+ *      1 if new dialogs are available, 0 otherwise
+ *
+ * Side effects:
+ *      Loads required procedures dynamically if available.
+ *      If new dialogs are available, COM is also initialized.
+ *----------------------------------------------------------------------
+ */
+static int VistaFileDialogsAvailable()
+{
+    HRESULT hr;
+    IFileDialog *fdlgPtr = NULL;
+    ThreadSpecificData *tsdPtr =
+        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (tsdPtr->newFileDialogsAvailable == FDLG_STATE_INIT) {
+        tsdPtr->newFileDialogsAvailable = FDLG_STATE_USE_OLD;
+        LoadShellProcs();
+        if (ShellProcs.SHCreateItemFromParsingName != NULL) {
+            hr = CoInitialize(0);
+            /* XXX - need we schedule CoUninitialize at thread shutdown ? */
+
+            /* Ensure all COM interfaces we use are available */
+            if (SUCCEEDED(hr)) {
+                hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL,
+                         CLSCTX_INPROC_SERVER, &IID_IFileOpenDialog, &fdlgPtr);
+                if (SUCCEEDED(hr)) {
+                    fdlgPtr->lpVtbl->Release(fdlgPtr);
+                    hr = CoCreateInstance(&CLSID_FileSaveDialog, NULL,
+                             CLSCTX_INPROC_SERVER, &IID_IFileSaveDialog,
+                             &fdlgPtr);
+                    if (SUCCEEDED(hr)) {
+                        fdlgPtr->lpVtbl->Release(fdlgPtr);
+
+                        /* Looks like we have all we need */
+                        tsdPtr->newFileDialogsAvailable = FDLG_STATE_USE_NEW;
+                    }
+                }
+            }
+        }        
+    }
+
+    return (tsdPtr->newFileDialogsAvailable == FDLG_STATE_USE_NEW);
+}
+
+/*
+ *----------------------------------------------------------------------
  *
  * GetFileNameVista --
  *
  *	Displays the new file dialogs on Vista and later.
  *
  * Results:
- *	TCL_OK - if dialog was successfully displayed
+ *	TCL_OK - dialog was successfully displayed, results returned in interp
  *      TCL_ERROR - error return
- *      TCL_CONTINUE - new dialogs not available. Caller should go
- *               on to display the old style dialogs.
  *
  * Side effects:
- *      Dialogs is displayed and results returned in interpreter on success.
- *      COM subsystem is initialized if not already done.
+ *      Dialogs is displayed
  *----------------------------------------------------------------------
  */
 static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
 {
     HRESULT hr;
+    HWND hWnd;
+    DWORD flags;
     IFileDialog *fdlgPtr = NULL;
+    LPWSTR wstr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (tsdPtr->useNewFileDialogs == FDLG_STATE_USE_OLD)
-        return TCL_CONTINUE;    /* Not an error, go try old style dialogs */
-    
-    if (tsdPtr->useNewFileDialogs == FDLG_STATE_INIT) {
-        tsdPtr->useNewFileDialogs = FDLG_STATE_USE_OLD;
-        
-        hr = CoInitialize(0);
-        /* On failures we do not error. Instead we fall back to old method */
+    if (open)
+        hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL,
+                 CLSCTX_INPROC_SERVER, &IID_IFileOpenDialog, &fdlgPtr);
+    else
+        hr = CoCreateInstance(&CLSID_FileSaveDialog, NULL,
+                 CLSCTX_INPROC_SERVER, &IID_IFileSaveDialog, &fdlgPtr);
+
+    /*
+     * At this point new interfaces are supposed to be available.
+     * fdlgPtr is actually a IFileOpenDialog or IFileSaveDialog
+     * both of which inherit from IFileDialog. We use the common
+     * IFileDialog interface for the most part, casting only for
+     * type-specific calls.
+     */
+    Tk_MakeWindowExist(optsPtr->tkwin);
+    hWnd = Tk_GetHWND(Tk_WindowId(optsPtr->tkwin));
+
+    /*
+     * Get current settings first because we want to preserve existing
+     * settings like whether to show hidden files etc. based on the
+     * user's existing preference
+     */
+    hr = fdlgPtr->lpVtbl->GetOptions(fdlgPtr, &flags);
+    if (FAILED(hr))
+        goto error_return;
+
+    /* Flags are equivalent to those we used in the older API */
+
+    /*
+     * Following flags must be set irrespective of original setting
+     * XXX - should FOS_NOVALIDATE be there ? Note FOS_NOVALIDATE has different
+     * semantics than OFN_NOVALIDATE in the old API.
+     */
+    flags |=
+        FOS_FORCEFILESYSTEM | /* Only want files, not other shell items */
+        FOS_NOVALIDATE |           /* Don't check for access denied etc. */
+        FOS_PATHMUSTEXIST;           /* The *directory* path must exist */
+
+
+    if (optsPtr->multi)
+        flags |= FOS_ALLOWMULTISELECT;
+    else
+        flags &= ~FOS_ALLOWMULTISELECT;
+
+    if (optsPtr->confirmOverwrite)
+        flags |= FOS_OVERWRITEPROMPT;
+    else
+        flags &= ~FOS_OVERWRITEPROMPT;
+
+    if (optsPtr->extObj != NULL) {
+        wstr = Tcl_GetUnicode(optsPtr->extObj);
+        if (wstr[0] == L'.')
+            ++wstr;
+        hr = fdlgPtr->lpVtbl->SetDefaultExtension(fdlgPtr, wstr);
         if (FAILED(hr))
-            return TCL_CONTINUE;
-
-        /* Verify interfaces are available */
-        if (open) {
-            hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL,
-                        CLSCTX_INPROC_SERVER, &IID_IFileOpenDialog, &fdlgPtr);
-        } else {
-            hr = CoCreateInstance(&CLSID_FileSaveDialog, NULL,
-                        CLSCTX_INPROC_SERVER, &IID_IFileSaveDialog, &fdlgPtr);
-        }
-
-        if (FAILED(hr)) {
-            CoUninitialize();
-            return TCL_CONTINUE;
-        }        
-
-        tsdPtr->useNewFileDialogs = FDLG_STATE_USE_NEW;
-        /*
-         * XXX - need to arrange for CoUninitialize to be called on thread
-         * exit if useNewFileDialogs is FDLG_STATE_USE_NEW.
-         */
-    } else {
-        /* FDLG_STATE_USE_NEW */
-        if (open) {
-            hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL,
-                        CLSCTX_INPROC_SERVER, &IID_IFileOpenDialog, &fdlgPtr);
-        } else {
-            hr = CoCreateInstance(&CLSID_FileSaveDialog, NULL,
-                        CLSCTX_INPROC_SERVER, &IID_IFileSaveDialog, &fdlgPtr);
-        }
+            goto error_return;
     }
 
-    /* At this point new interfaces are supposed to be available */
-    fdlgPtr->lpVtbl->Show(fdlgPtr, NULL);
+    if (optsPtr->titleObj != NULL) {
+        hr = fdlgPtr->lpVtbl->SetTitle(fdlgPtr,
+                                       Tcl_GetUnicode(optsPtr->titleObj));
+        if (FAILED(hr))
+            goto error_return;
+    }        
+
+    if (optsPtr->file[0]) {
+        hr = fdlgPtr->lpVtbl->SetFileName(fdlgPtr, optsPtr->file);
+        if (FAILED(hr))
+            goto error_return;
+    }
+
+
+    fdlgPtr->lpVtbl->Show(fdlgPtr, hWnd);
     fdlgPtr->lpVtbl->Release(fdlgPtr);
     return TCL_OK;
+
+error_return:
+    if (fdlgPtr)
+        fdlgPtr->lpVtbl->Release(fdlgPtr);
+    Tcl_SetObjResult(interp, TkWin32ErrorObj(hr));
+    return TCL_ERROR;
 }
-
-
 
 
 /*
  *----------------------------------------------------------------------
  *
- * GetFileName --
+ * GetFileNameXP --
  *
- *	Calls GetOpenFileName() or GetSaveFileName().
+ *	Displays the old pre-Vista file dialogs.
  *
  * Results:
- *	See user documentation.
+ *	TCL_OK - if dialog was successfully displayed
+ *      TCL_ERROR - error return
  *
  * Side effects:
- *	See user documentation.
- *
+ *      See user documentation.
  *----------------------------------------------------------------------
  */
-
-static int
-GetFileName(
-    ClientData clientData,	/* Main window associated with interpreter. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[],	/* Argument objects. */
-    int open)			/* 1 to call GetOpenFileName(), 0 to call
-				 * GetSaveFileName(). */
+static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
 {
     OPENFILENAME ofn;
     OFNData ofnData;
-    OFNOpts ofnOpts;
     int cdlgerr;
     int filterIndex = 0, result = TCL_ERROR, winCode, oldMode;
     HWND hWnd;
     Tcl_DString utfFilterString, ds;
     Tcl_DString extString, filterString, dirString, titleString;
+    const char *str;
     ThreadSpecificData *tsdPtr =
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     ZeroMemory(&ofnData, sizeof(OFNData));
     Tcl_DStringInit(&utfFilterString);
 
-    /* Parse the arguments. */
-
-    result = ParseOFNOptions(clientData, interp, objc, objv, open, &ofnOpts);
-    if (result != TCL_OK)
-        return result;
-
-    result = GetFileNameVista(interp, &ofnOpts, open);
-    if (result != TCL_CONTINUE) {
-        CleanupOFNOptions(&ofnOpts);
-        return result;
-    }
-
-    if (MakeFilter(interp, ofnOpts.filterObj, &utfFilterString,
-                   ofnOpts.initialTypeObj, &filterIndex) != TCL_OK) {
+    if (MakeFilter(interp, optsPtr->filterObj, &utfFilterString,
+                   optsPtr->initialTypeObj, &filterIndex) != TCL_OK) {
 	goto end;
     }
 
-    Tk_MakeWindowExist(ofnOpts.tkwin);
-    hWnd = Tk_GetHWND(Tk_WindowId(ofnOpts.tkwin));
+    Tk_MakeWindowExist(optsPtr->tkwin);
+    hWnd = Tk_GetHWND(Tk_WindowId(optsPtr->tkwin));
 
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
     ofn.lStructSize = sizeof(OPENFILENAME);
     ofn.hwndOwner = hWnd;
     ofn.hInstance = TkWinGetHInstance(ofn.hwndOwner);
-    ofn.lpstrFile = ofnOpts.file;
+    ofn.lpstrFile = optsPtr->file;
     ofn.nMaxFile = TK_MULTI_MAX_PATH;
     ofn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR
 	    | OFN_EXPLORER | OFN_ENABLEHOOK| OFN_ENABLESIZING;
@@ -1433,13 +1564,13 @@ GetFileName(
 
     if (open != 0) {
 	ofn.Flags |= OFN_FILEMUSTEXIST;
-    } else if (ofnOpts.confirmOverwrite) {
+    } else if (optsPtr->confirmOverwrite) {
 	ofn.Flags |= OFN_OVERWRITEPROMPT;
     }
     if (tsdPtr->debugFlag != 0) {
 	ofnData.interp = interp;
     }
-    if (ofnOpts.multi != 0) {
+    if (optsPtr->multi != 0) {
 	ofn.Flags |= OFN_ALLOWMULTISELECT;
 
 	/*
@@ -1451,8 +1582,11 @@ GetFileName(
 	ofnData.dynFileBuffer = ckalloc(512 * sizeof(TCHAR));
     }
 
-    if (ofnOpts.extension != NULL) {
-	Tcl_WinUtfToTChar(ofnOpts.extension, -1, &extString);
+    if (optsPtr->extObj != NULL) {
+        str = Tcl_GetString(optsPtr->extObj);
+        if (str[0] == '.')
+            ++str;
+	Tcl_WinUtfToTChar(str, -1, &extString);
 	ofn.lpstrDefExt = (TCHAR *) Tcl_DStringValue(&extString);
     }
 
@@ -1461,9 +1595,9 @@ GetFileName(
     ofn.lpstrFilter = (TCHAR *) Tcl_DStringValue(&filterString);
     ofn.nFilterIndex = filterIndex;
 
-    if (Tcl_DStringValue(&ofnOpts.utfDirString)[0] != '\0') {
-	Tcl_WinUtfToTChar(Tcl_DStringValue(&ofnOpts.utfDirString),
-		Tcl_DStringLength(&ofnOpts.utfDirString), &dirString);
+    if (Tcl_DStringValue(&optsPtr->utfDirString)[0] != '\0') {
+	Tcl_WinUtfToTChar(Tcl_DStringValue(&optsPtr->utfDirString),
+		Tcl_DStringLength(&optsPtr->utfDirString), &dirString);
     } else {
 	/*
 	 * NT 5.0 changed the meaning of lpstrInitialDir, so we have to ensure
@@ -1472,10 +1606,10 @@ GetFileName(
 
 	Tcl_DString cwd;
 
-	Tcl_DStringFree(&ofnOpts.utfDirString);
-	if ((Tcl_GetCwd(interp, &ofnOpts.utfDirString) == NULL) ||
+	Tcl_DStringFree(&optsPtr->utfDirString);
+	if ((Tcl_GetCwd(interp, &optsPtr->utfDirString) == NULL) ||
 		(Tcl_TranslateFileName(interp,
-                     Tcl_DStringValue(&ofnOpts.utfDirString), &cwd) == NULL)) {
+                     Tcl_DStringValue(&optsPtr->utfDirString), &cwd) == NULL)) {
 	    Tcl_ResetResult(interp);
 	} else {
 	    Tcl_WinUtfToTChar(Tcl_DStringValue(&cwd),
@@ -1485,8 +1619,8 @@ GetFileName(
     }
     ofn.lpstrInitialDir = (TCHAR *) Tcl_DStringValue(&dirString);
 
-    if (ofnOpts.title != NULL) {
-	Tcl_WinUtfToTChar(ofnOpts.title, -1, &titleString);
+    if (optsPtr->titleObj != NULL) {
+	Tcl_WinUtfToTChar(Tcl_GetString(optsPtr->titleObj), -1, &titleString);
 	ofn.lpstrTitle = (TCHAR *) Tcl_DStringValue(&titleString);
     }
 
@@ -1604,20 +1738,20 @@ GetFileName(
 	    Tcl_DStringFree(&ds);
 	}
 	result = TCL_OK;
-	if ((ofn.nFilterIndex > 0) && gotFilename && ofnOpts.typeVariableObj
-		&& ofnOpts.filterObj) {
+	if ((ofn.nFilterIndex > 0) && gotFilename && optsPtr->typeVariableObj
+		&& optsPtr->filterObj) {
 	    int listObjc, count;
 	    Tcl_Obj **listObjv = NULL;
 	    Tcl_Obj **typeInfo = NULL;
 
-	    if (Tcl_ListObjGetElements(interp, ofnOpts.filterObj,
+	    if (Tcl_ListObjGetElements(interp, optsPtr->filterObj,
 		    &listObjc, &listObjv) != TCL_OK) {
 		result = TCL_ERROR;
 	    } else if (Tcl_ListObjGetElements(interp,
 		    listObjv[ofn.nFilterIndex - 1], &count,
 		    &typeInfo) != TCL_OK) {
 		result = TCL_ERROR;
-	    } else if (Tcl_ObjSetVar2(interp, ofnOpts.typeVariableObj, NULL,
+	    } else if (Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
                    typeInfo[0], TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
 		result = TCL_ERROR;
 	    }
@@ -1644,16 +1778,59 @@ GetFileName(
 	Tcl_DStringFree(&extString);
     }
 
-  end:
+end:
     Tcl_DStringFree(&utfFilterString);
     if (ofnData.dynFileBuffer != NULL) {
 	ckfree(ofnData.dynFileBuffer);
 	ofnData.dynFileBuffer = NULL;
     }
-    CleanupOFNOptions(&ofnOpts);
 
     return result;
 }
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetFileName --
+ *
+ *	Calls GetOpenFileName() or GetSaveFileName().
+ *
+ * Results:
+ *	See user documentation.
+ *
+ * Side effects:
+ *	See user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GetFileName(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[],	/* Argument objects. */
+    int open)			/* 1 to call GetOpenFileName(), 0 to call
+				 * GetSaveFileName(). */
+{
+    OFNOpts ofnOpts;
+    int result;
+
+    /* Parse the arguments. */
+    result = ParseOFNOptions(clientData, interp, objc, objv, open, &ofnOpts);
+    if (result != TCL_OK)
+        return result;
+
+    if (VistaFileDialogsAvailable() && ! ofnOpts.forceXPStyle)
+        result = GetFileNameVista(interp, &ofnOpts, open);
+    else
+        result = GetFileNameXP(interp, &ofnOpts, open);
+
+    CleanupOFNOptions(&ofnOpts);
+    return result;
+}
+
 
 /*
  *-------------------------------------------------------------------------
