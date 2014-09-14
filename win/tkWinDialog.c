@@ -780,8 +780,13 @@ static void		SetTkDialog(ClientData clientData);
 static const char *ConvertExternalFilename(TCHAR *filename,
 			    Tcl_DString *dsPtr);
 static void             LoadShellProcs(void);
+
 static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, int open);
 static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open);
+static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
+               DWORD *countPtr, COMDLG_FILTERSPEC **dlgFilterPtrPtr,
+               DWORD *defaultFilterIndexPtr);
+static void FreeFilterVista(DWORD count, COMDLG_FILTERSPEC *dlgFilterPtr);
 
 /* Definitions of dynamically loaded Win32 calls */
 typedef HRESULT (STDAPICALLTYPE SHCreateItemFromParsingNameProc)(
@@ -1428,10 +1433,12 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
 {
     HRESULT hr;
     HWND hWnd;
-    DWORD flags;
+    DWORD flags, nfilters, defaultFilterIndex;
+    COMDLG_FILTERSPEC *filterPtr = NULL;
     IFileDialog *fdlgIf = NULL;
     IShellItem *dirIf = NULL;
     LPWSTR wstr;
+    Tcl_Obj *resultObj = NULL;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -1439,13 +1446,6 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
         /* Should not be called in this condition but be nice about it */
         return GetFileNameXP(interp, optsPtr, open);
     }
-
-    if (open)
-        hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL,
-                 CLSCTX_INPROC_SERVER, &IID_IFileOpenDialog, &fdlgIf);
-    else
-        hr = CoCreateInstance(&CLSID_FileSaveDialog, NULL,
-                 CLSCTX_INPROC_SERVER, &IID_IFileSaveDialog, &fdlgIf);
 
     /*
      * At this point new interfaces are supposed to be available.
@@ -1457,6 +1457,38 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
     Tk_MakeWindowExist(optsPtr->tkwin);
     hWnd = Tk_GetHWND(Tk_WindowId(optsPtr->tkwin));
 
+    /*
+     * The only validation we need to do w.r.t caller supplied data
+     * is the filter specification so do that before creating 
+     */
+    if (MakeFilterVista(interp, optsPtr, &nfilters, &filterPtr,
+                        &defaultFilterIndex) != TCL_OK)
+        return TCL_ERROR;
+
+    /*
+     * Beyond this point, do not just return on error as there will be
+     * resources that need to be released/freed.
+     */
+
+    if (open)
+        hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL,
+                 CLSCTX_INPROC_SERVER, &IID_IFileOpenDialog, &fdlgIf);
+    else
+        hr = CoCreateInstance(&CLSID_FileSaveDialog, NULL,
+                 CLSCTX_INPROC_SERVER, &IID_IFileSaveDialog, &fdlgIf);
+
+    if (FAILED(hr))
+        goto vamoose;
+
+    if (filterPtr) {
+        hr = fdlgIf->lpVtbl->SetFileTypes(fdlgIf, nfilters, filterPtr);
+        if (FAILED(hr))
+            goto vamoose;
+        hr = fdlgIf->lpVtbl->SetFileTypeIndex(fdlgIf, defaultFilterIndex);
+        if (FAILED(hr))
+            goto vamoose;
+    }        
+        
     /*
      * Get current settings first because we want to preserve existing
      * settings like whether to show hidden files etc. based on the
@@ -1538,8 +1570,9 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
             IFileOpenDialog *fodIf = (IFileOpenDialog *) fdlgIf;
             hr = fodIf->lpVtbl->GetResults(fodIf, &multiIf);
             if (SUCCEEDED(hr)) {
-                Tcl_Obj *multiObj = Tcl_NewListObj(count, NULL);
+                Tcl_Obj *multiObj;
                 hr = multiIf->lpVtbl->GetCount(multiIf, &count);
+                multiObj = Tcl_NewListObj(count, NULL);
                 if (SUCCEEDED(hr)) {
                     IShellItem *itemIf;
                     for (dw = 0; dw < count; ++dw) {
@@ -1559,7 +1592,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
                 }
                 multiIf->lpVtbl->Release(multiIf);
                 if (SUCCEEDED(hr))
-                    Tcl_SetObjResult(interp, multiObj);
+                    resultObj = multiObj;
                 else
                     Tcl_DecrRefCount(multiObj);
             }
@@ -1570,10 +1603,24 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
                 hr = resultIf->lpVtbl->GetDisplayName(resultIf, SIGDN_FILESYSPATH,
                                                       &wstr);
                 if (SUCCEEDED(hr)) {
-                    Tcl_SetObjResult(interp, Tcl_NewUnicodeObj(wstr, -1));
+                    resultObj = Tcl_NewUnicodeObj(wstr, -1);
                     CoTaskMemFree(wstr);
                 }
                 resultIf->lpVtbl->Release(resultIf);
+            }
+        }
+        if (SUCCEEDED(hr)) {
+            if (filterPtr && optsPtr->typeVariableObj) {
+                UINT ftix;
+                hr = fdlgIf->lpVtbl->GetFileTypeIndex(fdlgIf, &ftix);
+                if (SUCCEEDED(hr)) {
+                    /* Note ftix is a 1-based index */
+                    if (ftix > 0 && ftix <= nfilters) {
+                        Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
+                               Tcl_NewUnicodeObj(filterPtr[ftix-1].pszName, -1),
+                               TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
+                    }
+                }
             }
         }
     } else {
@@ -1586,9 +1633,17 @@ vamoose: /* (hr != 0) => error */
         dirIf->lpVtbl->Release(dirIf);
     if (fdlgIf)
         fdlgIf->lpVtbl->Release(fdlgIf);
-    if (hr == 0)
+
+    if (filterPtr)
+        FreeFilterVista(nfilters, filterPtr);
+
+    if (hr == 0) {
+        if (resultObj)          /* May be NULL if user cancelled */
+            Tcl_SetObjResult(interp, resultObj);
         return TCL_OK;
-    else {
+    } else {
+        if (resultObj)
+            Tcl_DecrRefCount(resultObj);
         Tcl_SetObjResult(interp, TkWin32ErrorObj(hr));
         return TCL_ERROR;
     }
@@ -2238,6 +2293,145 @@ MakeFilter(
     TkFreeFileFilters(&flist);
     return TCL_OK;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FreeFilterVista
+ *
+ *      Frees storage previously allocated by MakeFilterVista.
+ *      count is the number of elements in dlgFilterPtr[]
+ */
+static void FreeFilterVista(DWORD count, COMDLG_FILTERSPEC *dlgFilterPtr)
+{
+    if (dlgFilterPtr != NULL) {
+        DWORD dw;
+        for (dw = 0; dw < count; ++dw) {
+            if (dlgFilterPtr[dw].pszName != NULL)
+                ckfree(dlgFilterPtr[dw].pszName);
+            if (dlgFilterPtr[dw].pszSpec != NULL)
+                ckfree(dlgFilterPtr[dw].pszSpec);
+        }
+        ckfree(dlgFilterPtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MakeFilterVista --
+ *
+ *	Returns file type filters in a format required
+ *	by the Vista file dialogs.
+ *
+ * Results:
+ *	A standard TCL return value.
+ *
+ * Side effects:
+ *      Various values are returned through the parameters as
+ *      described in the comments below.
+ *----------------------------------------------------------------------
+ */
+static int MakeFilterVista(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    OFNOpts *optsPtr,           /* Caller specified options */
+    DWORD *countPtr,            /* Will hold number of filters */
+    COMDLG_FILTERSPEC **dlgFilterPtrPtr, /* Will hold pointer to filter array.
+                                         Set to NULL if no filters specified.
+                                         Must be freed by calling
+                                         FreeFilterVista */
+    DWORD *initialIndexPtr)     /* Will hold index of default type */
+{
+    COMDLG_FILTERSPEC *dlgFilterPtr;
+    const char *initial = NULL;
+    FileFilterList flist;
+    FileFilter *filterPtr;
+    DWORD initialIndex = 0;
+    Tcl_DString ds, patterns;
+    int       i;
+
+    if (optsPtr->filterObj == NULL) {
+        *dlgFilterPtrPtr = NULL;
+        *countPtr = 0;
+        return TCL_OK;
+    }
+
+    if (optsPtr->initialTypeObj)
+	initial = Tcl_GetString(optsPtr->initialTypeObj);
+
+    TkInitFileFilters(&flist);
+    if (TkGetFileFilters(interp, &flist, optsPtr->filterObj, 1) != TCL_OK)
+	return TCL_ERROR;
+
+    if (flist.filters == NULL) {
+        *dlgFilterPtrPtr = NULL;
+        *countPtr = 0;
+        return TCL_OK;
+    }
+
+    Tcl_DStringInit(&ds);
+    Tcl_DStringInit(&patterns);
+    dlgFilterPtr = ckalloc(flist.numFilters * sizeof(*dlgFilterPtr));
+
+    for (i = 0, filterPtr = flist.filters;
+         filterPtr;
+         filterPtr = filterPtr->next, ++i) {
+        const char *sep;
+        FileFilterClause *clausePtr;
+        int nbytes;
+    
+        /* Check if this entry should be shown as the default */
+        if (initial && strcmp(initial, filterPtr->name) == 0)
+            initialIndex = i+1; /* Windows filter indices are 1-based */
+
+        /* First stash away the text description of the pattern */
+	Tcl_WinUtfToTChar(filterPtr->name, -1, &ds);
+        nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
+        nbytes += sizeof(WCHAR);         /* Terminating \0 */
+        dlgFilterPtr[i].pszName = ckalloc(nbytes);
+        memmove(dlgFilterPtr[i].pszName, Tcl_DStringValue(&ds), nbytes);
+        Tcl_DStringFree(&ds);
+
+        /*
+         * Loop through and join patterns with a ";" Each "clause"
+         * corresponds to a single textual description (called typename)
+         * in the tk_getOpenFile docs. Each such typename may occur
+         * multiple times and all these form a single filter entry
+         * with one clause per occurence. Further each clause may specify
+         * multiple patterns. Hence the nested loop here.
+         */
+        sep = "";
+        for (clausePtr=filterPtr->clauses ; clausePtr;
+             clausePtr=clausePtr->next) {
+            GlobPattern *globPtr;
+            for (globPtr = clausePtr->patterns; globPtr;
+                 globPtr = globPtr->next) {
+                Tcl_DStringAppend(&patterns, sep, -1);
+                Tcl_DStringAppend(&patterns, globPtr->pattern, -1);
+                sep = ";";
+            }
+        }
+        
+        /* Again we need a Unicode form of the string */
+	Tcl_WinUtfToTChar(Tcl_DStringValue(&patterns), -1, &ds);
+        nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
+        nbytes += sizeof(WCHAR);         /* Terminating \0 */
+        dlgFilterPtr[i].pszSpec = ckalloc(nbytes);
+        memmove(dlgFilterPtr[i].pszSpec, Tcl_DStringValue(&ds), nbytes);
+        Tcl_DStringFree(&ds);
+        Tcl_DStringFree(&patterns);
+    }
+
+    if (initialIndex == 0)
+        initialIndex = 1;       /* If no default, show first entry */
+    *initialIndexPtr = initialIndex;
+    *dlgFilterPtrPtr = dlgFilterPtr;
+    *countPtr = flist.numFilters;
+
+    TkFreeFileFilters(&flist);
+    return TCL_OK;
+}
+
 
 /*
  *----------------------------------------------------------------------
