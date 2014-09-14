@@ -28,6 +28,7 @@
 #endif
 
 /* These needed for compilation with VC++ 5.2 */
+/* XXX - remove these since need at least VC 6 */
 #ifndef BIF_EDITBOX
 #define BIF_EDITBOX 0x10
 #endif
@@ -36,6 +37,7 @@
 #define BIF_VALIDATE 0x0020
 #endif
 
+/* This "new" dialog style is now actually the "old" dialog style post-Vista */
 #ifndef BIF_NEWDIALOGSTYLE
 #define BIF_NEWDIALOGSTYLE 0x0040
 #endif
@@ -59,7 +61,7 @@ typedef struct ThreadSpecificData {
     HHOOK hMsgBoxHook;		/* Hook proc for tk_messageBox and the */
     HICON hSmallIcon;		/* icons used by a parent to be used in */
     HICON hBigIcon;		/* the message box */
-    int   newFileDialogsAvailable;
+    int   newFileDialogsState;
 #define FDLG_STATE_INIT 0       /* Uninitialized */
 #define FDLG_STATE_USE_NEW 1    /* Use the new dialogs */
 #define FDLG_STATE_USE_OLD 2    /* Use the old dialogs */
@@ -778,7 +780,8 @@ static void		SetTkDialog(ClientData clientData);
 static const char *ConvertExternalFilename(TCHAR *filename,
 			    Tcl_DString *dsPtr);
 static void             LoadShellProcs(void);
-
+static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, int open);
+static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open);
 
 /* Definitions of dynamically loaded Win32 calls */
 typedef HRESULT (STDAPICALLTYPE SHCreateItemFromParsingNameProc)(
@@ -1373,8 +1376,8 @@ static int VistaFileDialogsAvailable()
     ThreadSpecificData *tsdPtr =
         Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (tsdPtr->newFileDialogsAvailable == FDLG_STATE_INIT) {
-        tsdPtr->newFileDialogsAvailable = FDLG_STATE_USE_OLD;
+    if (tsdPtr->newFileDialogsState == FDLG_STATE_INIT) {
+        tsdPtr->newFileDialogsState = FDLG_STATE_USE_OLD;
         LoadShellProcs();
         if (ShellProcs.SHCreateItemFromParsingName != NULL) {
             hr = CoInitialize(0);
@@ -1393,14 +1396,14 @@ static int VistaFileDialogsAvailable()
                         fdlgPtr->lpVtbl->Release(fdlgPtr);
 
                         /* Looks like we have all we need */
-                        tsdPtr->newFileDialogsAvailable = FDLG_STATE_USE_NEW;
+                        tsdPtr->newFileDialogsState = FDLG_STATE_USE_NEW;
                     }
                 }
             }
         }        
     }
 
-    return (tsdPtr->newFileDialogsAvailable == FDLG_STATE_USE_NEW);
+    return (tsdPtr->newFileDialogsState == FDLG_STATE_USE_NEW);
 }
 
 /*
@@ -1409,6 +1412,9 @@ static int VistaFileDialogsAvailable()
  * GetFileNameVista --
  *
  *	Displays the new file dialogs on Vista and later.
+ *      This function must generally not be called unless the 
+ *      tsdPtr->newFileDialogsState is FDLG_STATE_USE_NEW but if
+ *      it is, it will just pass the call to the older GetFileNameXP
  *
  * Results:
  *	TCL_OK - dialog was successfully displayed, results returned in interp
@@ -1423,21 +1429,27 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
     HRESULT hr;
     HWND hWnd;
     DWORD flags;
-    IFileDialog *fdlgPtr = NULL;
+    IFileDialog *fdlgIf = NULL;
+    IShellItem *dirIf = NULL;
     LPWSTR wstr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+    if (tsdPtr->newFileDialogsState != FDLG_STATE_USE_NEW) {
+        /* Should not be called in this condition but be nice about it */
+        return GetFileNameXP(interp, optsPtr, open);
+    }
+
     if (open)
         hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL,
-                 CLSCTX_INPROC_SERVER, &IID_IFileOpenDialog, &fdlgPtr);
+                 CLSCTX_INPROC_SERVER, &IID_IFileOpenDialog, &fdlgIf);
     else
         hr = CoCreateInstance(&CLSID_FileSaveDialog, NULL,
-                 CLSCTX_INPROC_SERVER, &IID_IFileSaveDialog, &fdlgPtr);
+                 CLSCTX_INPROC_SERVER, &IID_IFileSaveDialog, &fdlgIf);
 
     /*
      * At this point new interfaces are supposed to be available.
-     * fdlgPtr is actually a IFileOpenDialog or IFileSaveDialog
+     * fdlgIf is actually a IFileOpenDialog or IFileSaveDialog
      * both of which inherit from IFileDialog. We use the common
      * IFileDialog interface for the most part, casting only for
      * type-specific calls.
@@ -1450,9 +1462,9 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
      * settings like whether to show hidden files etc. based on the
      * user's existing preference
      */
-    hr = fdlgPtr->lpVtbl->GetOptions(fdlgPtr, &flags);
+    hr = fdlgIf->lpVtbl->GetOptions(fdlgIf, &flags);
     if (FAILED(hr))
-        goto error_return;
+        goto vamoose;
 
     /* Flags are equivalent to those we used in the older API */
 
@@ -1477,38 +1489,109 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
     else
         flags &= ~FOS_OVERWRITEPROMPT;
 
+    hr = fdlgIf->lpVtbl->SetOptions(fdlgIf, flags);
+    if (FAILED(hr))
+        goto vamoose;
+
     if (optsPtr->extObj != NULL) {
         wstr = Tcl_GetUnicode(optsPtr->extObj);
         if (wstr[0] == L'.')
             ++wstr;
-        hr = fdlgPtr->lpVtbl->SetDefaultExtension(fdlgPtr, wstr);
+        hr = fdlgIf->lpVtbl->SetDefaultExtension(fdlgIf, wstr);
         if (FAILED(hr))
-            goto error_return;
+            goto vamoose;
     }
 
     if (optsPtr->titleObj != NULL) {
-        hr = fdlgPtr->lpVtbl->SetTitle(fdlgPtr,
+        hr = fdlgIf->lpVtbl->SetTitle(fdlgIf,
                                        Tcl_GetUnicode(optsPtr->titleObj));
         if (FAILED(hr))
-            goto error_return;
+            goto vamoose;
     }        
 
     if (optsPtr->file[0]) {
-        hr = fdlgPtr->lpVtbl->SetFileName(fdlgPtr, optsPtr->file);
+        hr = fdlgIf->lpVtbl->SetFileName(fdlgIf, optsPtr->file);
         if (FAILED(hr))
-            goto error_return;
+            goto vamoose;
     }
 
+    if (Tcl_DStringValue(&optsPtr->utfDirString)[0] != '\0') {
+        Tcl_DString dirString;
+	Tcl_WinUtfToTChar(Tcl_DStringValue(&optsPtr->utfDirString),
+               Tcl_DStringLength(&optsPtr->utfDirString), &dirString);
+        hr = ShellProcs.SHCreateItemFromParsingName(
+            (TCHAR *) Tcl_DStringValue(&dirString), NULL,
+            &IID_IShellItem, &dirIf);
+        /* XXX - Note on failure we do not raise error, simply ignore ini dir */
+        if (SUCCEEDED(hr)) {
+            /* Note we use SetFolder, not SetDefaultFolder - see MSDN docs */
+            fdlgIf->lpVtbl->SetFolder(fdlgIf, dirIf); /* Ignore errors */
+        }
+        Tcl_DStringFree(&dirString);
+    }    
 
-    fdlgPtr->lpVtbl->Show(fdlgPtr, hWnd);
-    fdlgPtr->lpVtbl->Release(fdlgPtr);
-    return TCL_OK;
+    hr = fdlgIf->lpVtbl->Show(fdlgIf, hWnd);
+    if (SUCCEEDED(hr)) {
+        if (open && optsPtr->multi) {
+            IShellItemArray *multiIf;
+            DWORD dw, count;
+            IFileOpenDialog *fodIf = (IFileOpenDialog *) fdlgIf;
+            hr = fodIf->lpVtbl->GetResults(fodIf, &multiIf);
+            if (SUCCEEDED(hr)) {
+                Tcl_Obj *multiObj = Tcl_NewListObj(count, NULL);
+                hr = multiIf->lpVtbl->GetCount(multiIf, &count);
+                if (SUCCEEDED(hr)) {
+                    IShellItem *itemIf;
+                    for (dw = 0; dw < count; ++dw) {
+                        hr = multiIf->lpVtbl->GetItemAt(multiIf, dw, &itemIf);
+                        if (FAILED(hr))
+                            break;
+                        hr = itemIf->lpVtbl->GetDisplayName(itemIf,
+                                        SIGDN_FILESYSPATH, &wstr);
+                        if (SUCCEEDED(hr)) {
+                            Tcl_ListObjAppendElement(interp, multiObj,
+                                      Tcl_NewUnicodeObj(wstr, -1));
+                        }
+                        itemIf->lpVtbl->Release(itemIf);
+                        if (FAILED(hr))
+                            break;
+                    }
+                }
+                multiIf->lpVtbl->Release(multiIf);
+                if (SUCCEEDED(hr))
+                    Tcl_SetObjResult(interp, multiObj);
+                else
+                    Tcl_DecrRefCount(multiObj);
+            }
+        } else {
+            IShellItem *resultIf;
+            hr = fdlgIf->lpVtbl->GetResult(fdlgIf, &resultIf);
+            if (SUCCEEDED(hr)) {
+                hr = resultIf->lpVtbl->GetDisplayName(resultIf, SIGDN_FILESYSPATH,
+                                                      &wstr);
+                if (SUCCEEDED(hr)) {
+                    Tcl_SetObjResult(interp, Tcl_NewUnicodeObj(wstr, -1));
+                    CoTaskMemFree(wstr);
+                }
+                resultIf->lpVtbl->Release(resultIf);
+            }
+        }
+    } else {
+        if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED))
+            hr = 0;             /* User cancelled, return empty string */
+    }
 
-error_return:
-    if (fdlgPtr)
-        fdlgPtr->lpVtbl->Release(fdlgPtr);
-    Tcl_SetObjResult(interp, TkWin32ErrorObj(hr));
-    return TCL_ERROR;
+vamoose: /* (hr != 0) => error */
+    if (dirIf)
+        dirIf->lpVtbl->Release(dirIf);
+    if (fdlgIf)
+        fdlgIf->lpVtbl->Release(fdlgIf);
+    if (hr == 0)
+        return TCL_OK;
+    else {
+        Tcl_SetObjResult(interp, TkWin32ErrorObj(hr));
+        return TCL_ERROR;
+    }
 }
 
 
@@ -1542,6 +1625,9 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
 
     ZeroMemory(&ofnData, sizeof(OFNData));
     Tcl_DStringInit(&utfFilterString);
+    Tcl_DStringInit(&dirString); /* XXX - original code was missing this
+                                    leaving dirString uninitialized for
+                                    the unlikely code path where cwd failed */
 
     if (MakeFilter(interp, optsPtr->filterObj, &utfFilterString,
                    optsPtr->initialTypeObj, &filterIndex) != TCL_OK) {
@@ -1558,7 +1644,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
     ofn.lpstrFile = optsPtr->file;
     ofn.nMaxFile = TK_MULTI_MAX_PATH;
     ofn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR
-	    | OFN_EXPLORER | OFN_ENABLEHOOK| OFN_ENABLESIZING;
+	    | OFN_EXPLORER| OFN_ENABLEHOOK| OFN_ENABLESIZING;
     ofn.lpfnHook = (LPOFNHOOKPROC) OFNHookProc;
     ofn.lCustData = (LPARAM) &ofnData;
 
@@ -1771,6 +1857,8 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, int open)
 	Tcl_DStringFree(&titleString);
     }
     if (ofn.lpstrInitialDir != NULL) {
+        /* XXX - huh? lpstrInitialDir is set from Tcl_DStringValue which
+           can never return NULL */
 	Tcl_DStringFree(&dirString);
     }
     Tcl_DStringFree(&filterString);
