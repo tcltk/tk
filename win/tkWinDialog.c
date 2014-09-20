@@ -1387,8 +1387,13 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                         hr = itemIf->lpVtbl->GetDisplayName(itemIf,
                                         SIGDN_FILESYSPATH, &wstr);
                         if (SUCCEEDED(hr)) {
-                            Tcl_ListObjAppendElement(interp, multiObj,
-                                      Tcl_NewUnicodeObj(wstr, -1));
+                            Tcl_DString fnds;
+                            ConvertExternalFilename(wstr, &fnds);
+                            CoTaskMemFree(wstr);
+                            Tcl_ListObjAppendElement(
+                                interp, multiObj,
+                                Tcl_NewStringObj(Tcl_DStringValue(&fnds),
+                                                 Tcl_DStringLength(&fnds)));
                         }
                         itemIf->lpVtbl->Release(itemIf);
                         if (FAILED(hr))
@@ -1408,7 +1413,10 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                 hr = resultIf->lpVtbl->GetDisplayName(resultIf, SIGDN_FILESYSPATH,
                                                       &wstr);
                 if (SUCCEEDED(hr)) {
-                    resultObj = Tcl_NewUnicodeObj(wstr, -1);
+                    Tcl_DString fnds;
+                    ConvertExternalFilename(wstr, &fnds);
+                    resultObj = Tcl_NewStringObj(Tcl_DStringValue(&fnds),
+                                                 Tcl_DStringLength(&fnds));
                     CoTaskMemFree(wstr);
                 }
                 resultIf->lpVtbl->Release(resultIf);
