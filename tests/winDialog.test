@@ -22,11 +22,30 @@ testConstraint english [expr {
     && (([testwinlocale] & 0xff) == 9)
 }]
 
-proc start {arg} {
+proc start {widgetcommand args} {
     set ::tk_dialog 0
     set ::iter_after 0
 
-    after 1 $arg
+    # On newer versions of Windows, we need to find the dialog window
+    # based on the title
+    if {[llength $args]} {
+        set ::dialogtitle [lindex $args 0]
+        set ::dialogclass "#32770"
+        if {$::dialogtitle eq ""} {
+            switch $widgetcommand {
+                tk_getOpenFile {
+                    set ::dialogtitle Open
+                }
+                tk_getSaveFile {
+                    set ::dialogtitle "Save As"
+                }
+                tk_chooseDirectory {
+                    set ::dialogtitle "Select Folder"
+                }
+            }
+        }
+    }
+    after 1 $widgetcommand
 }
 
 proc then {cmd} {
@@ -34,19 +53,32 @@ proc then {cmd} {
     set ::dialogresult {}
     set ::testfont {}
 
-    afterbody
+    after 100 afterbody
     vwait ::dialogresult
     return $::dialogresult
 }
 
 proc afterbody {} {
-    if {$::tk_dialog == 0} {
-        if {[incr ::iter_after] > 30} {
-            set ::dialogresult ">30 iterations waiting on tk_dialog"
+    # On Vista and later, using the new file dialogs we have to find
+    # the window using its title as tk_dialog will not be set at the C level
+    if {$::dialogtitle ne "" && [string match 6.* $::tcl_platform(osVersion)]} {
+        if {[catch {testfindwindow "" $::dialogclass} ::tk_dialog]} {
+            if {[incr ::iter_after] > 10} {
+                set ::dialogresult ">30 iterations waiting on tk_dialog"
+                return
+            }
+            after 150 {afterbody}
             return
         }
-        after 150 {afterbody}
-        return
+    } else {
+        if {$::tk_dialog == 0} {
+            if {[incr ::iter_after] > 30} {
+                set ::dialogresult ">30 iterations waiting on tk_dialog"
+                return
+            }
+            after 150 {afterbody}
+            return
+        }
     }
     uplevel #0 {set dialogresult [eval $command]}
 }
@@ -205,7 +237,7 @@ test winDialog-5.2 {GetFileName: one argument} -constraints {
 test winDialog-5.3 {GetFileName: many arguments} -constraints {
     nt testwinevent
 } -body {
-    start {tk_getOpenFile -initialdir c:/ -parent . -title test -initialfile foo}
+    start {tk_getOpenFile -initialdir c:/ -parent . -title test -initialfile foo} test
     then {
         Click cancel
     }
@@ -218,7 +250,7 @@ test winDialog-5.4 {GetFileName: Tcl_GetIndexFromObj() != TCL_OK} -constraints {
 test winDialog-5.5 {GetFileName: Tcl_GetIndexFromObj() == TCL_OK} -constraints {
     nt testwinevent
 } -body {
-    start {tk_getOpenFile -title bar}
+    start {tk_getOpenFile -title bar} bar
     then {
         Click cancel
     }
@@ -235,10 +267,10 @@ test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
 #    string++;
 #    }
 
-    start {set x [tk_getSaveFile -defaultextension .foo -title Save]}
+    start {set x [tk_getSaveFile -defaultextension .foo -title Save]} Save
     set msg {}
     then {
-	if {[catch {SetText 0x47C bar} msg]} {
+	if {[catch {SetText 0x3e9 bar} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
