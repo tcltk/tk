@@ -22,30 +22,17 @@ testConstraint english [expr {
     && (([testwinlocale] & 0xff) == 9)
 }]
 
-proc start {widgetcommand args} {
+proc vista? {{prevista 0} {postvista 1}} {
+    lassign [split $::tcl_platform(osVersion) .] major
+    return [expr {$major >= 6 ? $postvista : $prevista}]
+}
+
+proc start {arg} {
     set ::tk_dialog 0
     set ::iter_after 0
+    set ::dialogclass "#32770"
 
-    # On newer versions of Windows, we need to find the dialog window
-    # based on the title
-    if {[llength $args]} {
-        set ::dialogtitle [lindex $args 0]
-        set ::dialogclass "#32770"
-        if {$::dialogtitle eq ""} {
-            switch $widgetcommand {
-                tk_getOpenFile {
-                    set ::dialogtitle Open
-                }
-                tk_getSaveFile {
-                    set ::dialogtitle "Save As"
-                }
-                tk_chooseDirectory {
-                    set ::dialogtitle "Select Folder"
-                }
-            }
-        }
-    }
-    after 1 $widgetcommand
+    after 1 $arg
 }
 
 proc then {cmd} {
@@ -53,7 +40,10 @@ proc then {cmd} {
     set ::dialogresult {}
     set ::testfont {}
 
-    after 100 afterbody
+    # Do not make the delay too short. The newer Vista dialogs take
+    # time to come up. Even if the testforwindow returns true, the
+    # controls are not ready to accept messages
+    after 500 afterbody
     vwait ::dialogresult
     return $::dialogresult
 }
@@ -61,9 +51,9 @@ proc then {cmd} {
 proc afterbody {} {
     # On Vista and later, using the new file dialogs we have to find
     # the window using its title as tk_dialog will not be set at the C level
-    if {$::dialogtitle ne "" && [string match 6.* $::tcl_platform(osVersion)]} {
+    if {[vista?]} {
         if {[catch {testfindwindow "" $::dialogclass} ::tk_dialog]} {
-            if {[incr ::iter_after] > 10} {
+            if {[incr ::iter_after] > 30} {
                 set ::dialogresult ">30 iterations waiting on tk_dialog"
                 return
             }
@@ -237,7 +227,7 @@ test winDialog-5.2 {GetFileName: one argument} -constraints {
 test winDialog-5.3 {GetFileName: many arguments} -constraints {
     nt testwinevent
 } -body {
-    start {tk_getOpenFile -initialdir c:/ -parent . -title test -initialfile foo} test
+    start {tk_getOpenFile -initialdir c:/ -parent . -title test -initialfile foo}
     then {
         Click cancel
     }
@@ -250,7 +240,7 @@ test winDialog-5.4 {GetFileName: Tcl_GetIndexFromObj() != TCL_OK} -constraints {
 test winDialog-5.5 {GetFileName: Tcl_GetIndexFromObj() == TCL_OK} -constraints {
     nt testwinevent
 } -body {
-    start {tk_getOpenFile -title bar} bar
+    start {tk_getOpenFile -title bar}
     then {
         Click cancel
     }
@@ -267,10 +257,10 @@ test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
 #    string++;
 #    }
 
-    start {set x [tk_getSaveFile -defaultextension .foo -title Save]} Save
+    start {set x [tk_getSaveFile -defaultextension .foo -title Save]}
     set msg {}
     then {
-	if {[catch {SetText 0x3e9 bar} msg]} {
+	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -286,7 +276,7 @@ test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
     start {set x [tk_getSaveFile -defaultextension foo -title Save]}
     set msg {}
     then {
-	if {[catch {SetText 0x47C bar} msg]} {
+	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -296,18 +286,23 @@ test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
 } -cleanup {
     unset msg
 } -result [string totitle [file join [pwd] bar.foo]]
-test winDialog-5.9 {GetFileName: file types} -constraints {
-    nt testwinevent
-} -body {
-#        case FILE_TYPES:
-
-    start {tk_getSaveFile -filetypes {{"foo files" .foo FOOF}} -title Foo}
-    then {
-        set x [GetText 0x470]
-        Click cancel
-    }
-    return $x
-} -result {foo files (*.foo)}
+if {![vista?]} {
+    # XXX - currently disabled for vista style dialogs because the file
+    # types control has no control ID and we don't have a mechanism to
+    # locate it.
+    test winDialog-5.9 {GetFileName: file types} -constraints {
+        nt testwinevent
+    } -body {
+        #        case FILE_TYPES:
+        
+        start {tk_getSaveFile -filetypes {{"foo files" .foo FOOF}} -title Foo}
+        then {
+            set x [GetText 0x470]
+            Click cancel
+        }
+        return $x
+    } -result {foo files (*.foo)}
+}
 test winDialog-5.10 {GetFileName: file types: MakeFilter() fails} -constraints {
     nt
 } -body {
@@ -320,7 +315,7 @@ test winDialog-5.11 {GetFileName: initial directory} -constraints {
     nt testwinevent
 } -body {
 #        case FILE_INITDIR:
-
+    unset -nocomplain x
     start {set x [tk_getSaveFile \
                       -initialdir [file normalize $::env(TEMP)] \
                       -initialfile "12x 455" -title Foo]}
@@ -354,19 +349,23 @@ test winDialog-5.14 {GetFileName: initial file: Tcl_TranslateFileName()} -constr
 #        if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
     tk_getOpenFile -initialfile ~12x/455
 } -returnCodes error -result {user "12x" doesn't exist}
-test winDialog-5.15 {GetFileName: initial file: long name} -constraints {
-    nt testwinevent
-} -body {
-    start {
-        set dialogresult [catch {
-            tk_getSaveFile -initialfile [string repeat a 1024] -title Long
-        } x]
-    }
-    then {
-        Click ok
-    }
-    list $dialogresult [string match "invalid filename *" $x]
-} -result {1 1}
+if {![vista?]} {
+    # XXX - disabled for Vista because the new dialogs allow long file
+    # names to be specified but force the user to change it.
+    test winDialog-5.15 {GetFileName: initial file: long name} -constraints {
+        nt testwinevent
+    } -body {
+        start {
+            set dialogresult [catch {
+                tk_getSaveFile -initialfile [string repeat a 1024] -title Long
+            } x]
+        }
+        then {
+            Click ok
+        }
+        list $dialogresult [string match "invalid filename *" $x]
+    } -result {1 1}
+}
 test winDialog-5.16 {GetFileName: parent} -constraints {
     nt
 } -body {
@@ -390,18 +389,34 @@ test winDialog-5.17 {GetFileName: title} -constraints {
         Click cancel
     }
 } -result {0}
-test winDialog-5.18 {GetFileName: no filter specified} -constraints {
-    nt testwinevent
-} -body {
-#    if (ofn.lpstrFilter == NULL)
+if {[vista?]} {
+    # In the newer file dialogs, the file type widget does not even exist
+    # if no file types specified
+    test winDialog-5.18 {GetFileName: no filter specified} -constraints {
+        nt testwinevent
+    } -body {
+        #    if (ofn.lpstrFilter == NULL)
+        start {tk_getOpenFile -title Filter}
+        then {
+            catch {set x [GetText 0x470]} y
+            Click cancel
+        }
+        return $y
+    } -result {Could not find control with id 1136}
+} else {
+    test winDialog-5.18 {GetFileName: no filter specified} -constraints {
+        nt testwinevent
+    } -body {
+        #    if (ofn.lpstrFilter == NULL)
 
-    start {tk_getOpenFile -title Filter}
-    then {
-    set x [GetText 0x470]
-        Click cancel
-    }
-    return $x
-} -result {All Files (*.*)}
+        start {tk_getOpenFile -title Filter}
+        then {
+            set x [GetText 0x470]
+            Click cancel
+        }
+        return $x
+    } -result {All Files (*.*)}
+}
 test winDialog-5.19 {GetFileName: parent HWND doesn't yet exist} -constraints {
     nt
 } -setup {
@@ -458,7 +473,7 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     set msg {}
     start {set x [tk_getSaveFile -title Back]}
     then {
-	if {[catch {SetText 0x47C [file nativename \
+	if {[catch {SetText [vista? 0x47C 0x3e9] [file nativename \
 		[file join [file normalize $::env(TEMP)] "12x 457"]]} msg]} {
 	    Click cancel
 	} else {
