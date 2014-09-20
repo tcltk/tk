@@ -1024,7 +1024,6 @@ ParseOFNOptions(
 	{"-parent",		FILE_PARENT},
 	{"-title",		FILE_TITLE},
 	{"-typevariable",	FILE_TYPEVARIABLE},
-        {"-xpstyle",            FILE_UNDOCUMENTED_XP_STYLE}, /* XXX */
 	{NULL,			FILE_DEFAULT/*ignored*/ }
     };
     static const struct Options openOptions[] = {
@@ -1036,7 +1035,6 @@ ParseOFNOptions(
 	{"-parent",		FILE_PARENT},
 	{"-title",		FILE_TITLE},
 	{"-typevariable",	FILE_TYPEVARIABLE},
-        {"-xpstyle",            FILE_UNDOCUMENTED_XP_STYLE}, /* XXX */
 	{NULL,			FILE_DEFAULT/*ignored*/ }
     };
     static const struct Options dirOptions[] = {
@@ -1044,7 +1042,6 @@ ParseOFNOptions(
         {"-mustexist",  FILE_MUSTEXIST},
 	{"-parent",	FILE_PARENT},
 	{"-title",	FILE_TITLE},
-        {"-xpstyle",    FILE_UNDOCUMENTED_XP_STYLE}, /* XXX */
 	{NULL,		FILE_DEFAULT/*ignored*/ }
     };
 
@@ -1057,6 +1054,7 @@ ParseOFNOptions(
     }        
         
     ZeroMemory(optsPtr, sizeof(*optsPtr));
+    // optsPtr->forceXPStyle = 1;
     optsPtr->tkwin = clientData;
     optsPtr->confirmOverwrite = 1; /* By default we ask for confirmation */
     Tcl_DStringInit(&optsPtr->utfDirString);
@@ -1069,12 +1067,23 @@ ParseOFNOptions(
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], options,
 		sizeof(struct Options), "option", 0, &index) != TCL_OK) {
-	    goto end;
+            /*
+             * XXX -xpstyle is explicitly checked for as it is undocumented
+             * and we do not want it to show in option error messages.
+             */
+            if (strcmp(Tcl_GetString(objv[i]), "-xpstyle"))
+                goto error_return;
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
+                                      &optsPtr->forceXPStyle) != TCL_OK)
+                goto error_return;
+
+            continue;
+
 	} else if (i + 1 == objc) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", options[index].name));
 	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
-	    goto end;
+	    goto error_return;
 	}
 
 	string = Tcl_GetString(valuePtr);
@@ -1088,14 +1097,12 @@ ParseOFNOptions(
 	case FILE_INITDIR:
 	    Tcl_DStringFree(&optsPtr->utfDirString);
 	    if (Tcl_TranslateFileName(interp, string,
-                                      &optsPtr->utfDirString) == NULL) {
-		goto end;
-	    }
+                                      &optsPtr->utfDirString) == NULL)
+		goto error_return;
 	    break;
 	case FILE_INITFILE:
-	    if (Tcl_TranslateFileName(interp, string, &ds) == NULL) {
-		goto end;
-	    }
+	    if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
+		goto error_return;
 	    Tcl_UtfToExternal(NULL, TkWinGetUnicodeEncoding(),
                               Tcl_DStringValue(&ds), Tcl_DStringLength(&ds), 0, NULL,
                               (char *) &optsPtr->file[0], sizeof(optsPtr->file),
@@ -1105,9 +1112,8 @@ ParseOFNOptions(
 	case FILE_PARENT:
             /* XXX - check */
 	    optsPtr->tkwin = Tk_NameToWindow(interp, string, clientData);
-	    if (optsPtr->tkwin == NULL) {
-		goto end;
-	    }
+	    if (optsPtr->tkwin == NULL)
+		goto error_return;
 	    break;
 	case FILE_TITLE:
 	    optsPtr->titleObj = valuePtr;
@@ -1118,34 +1124,27 @@ ParseOFNOptions(
                                                      NULL, TCL_GLOBAL_ONLY);
 	    break;
 	case FILE_MULTIPLE:
-	    if (Tcl_GetBooleanFromObj(interp, valuePtr, &optsPtr->multi) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
+                                      &optsPtr->multi) != TCL_OK)
+                goto error_return;
 	    break;
 	case FILE_CONFIRMOW:
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
-                                      &optsPtr->confirmOverwrite) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+                                      &optsPtr->confirmOverwrite) != TCL_OK)
+                goto error_return;
 	    break;
         case FILE_MUSTEXIST:
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
-                                      &optsPtr->mustExist) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-            break;
-        case FILE_UNDOCUMENTED_XP_STYLE:
-	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
-                                      &optsPtr->forceXPStyle) != TCL_OK) {
-		return TCL_ERROR;
-	    }
+                                      &optsPtr->mustExist) != TCL_OK)
+                goto error_return;
             break;
 	}
     }
 
     return TCL_OK;
 
-end:                   /* interp should already hold error */
+error_return:                   /* interp should already hold error */
+    /* On error, we need to clean up anything we might have allocated */
     CleanupOFNOptions(optsPtr);
     return TCL_ERROR;
 }
