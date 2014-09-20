@@ -439,6 +439,7 @@ TestfindwindowObjCmd(
     Tcl_DString titleString, classString;
     HWND hwnd = NULL;
     int r = TCL_OK;
+    DWORD myPid;
 
     Tcl_DStringInit(&classString);
     Tcl_DStringInit(&titleString);
@@ -454,7 +455,28 @@ TestfindwindowObjCmd(
     }
     if (title[0] == 0)
         title = NULL;
+#if 0
     hwnd  = FindWindow(class, title);
+#else
+    /* We want find a window the belongs to us and not some other process */
+    hwnd = NULL;
+    myPid = GetCurrentProcessId();
+    while (1) {
+        DWORD pid, tid;
+        hwnd = FindWindowEx(NULL, hwnd, class, title);
+        if (hwnd == NULL)
+            break;
+        tid = GetWindowThreadProcessId(hwnd, &pid);
+        if (tid == 0) {
+            /* Window has gone */
+            hwnd = NULL;
+            break;
+        }
+        if (pid == myPid)
+            break;              /* Found it */
+    }
+
+#endif
 
     if (hwnd == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to find window: ", -1));
