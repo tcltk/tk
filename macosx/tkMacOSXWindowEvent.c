@@ -837,28 +837,29 @@ ExposeRestrictProc(
     HIShapeGetBounds(shape, &updateBounds);
     serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     if (GenerateUpdates(shape, &updateBounds, winPtr) &&
-	    ![[NSRunLoop currentRunLoop] currentMode] &&
-	    Tcl_GetServiceMode() != TCL_SERVICE_NONE) {
-	/*
-	 * Ensure there are no pending idle-time redraws that could prevent the
-	 * just posted Expose events from generating new redraws.
-	 */
+    	    ![[NSRunLoop currentRunLoop] currentMode] &&
+    	    Tcl_GetServiceMode() != TCL_SERVICE_NONE) {
+    	/*
+    	 * Ensure there are no pending idle-time redraws that could prevent the
+    	 * just posted Expose events from generating new redraws.
+    	 */
 
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
+       	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 
-	/*
-	 * For smoother drawing, process Expose events and resulting redraws
-	 * immediately instead of at idle time.
-	 */
+    	/*
+    	 * For smoother drawing, process Expose events and resulting redraws
+    	 * immediately instead of at idle time.
+    	 */
 
-	ClientData oldArg;
-	Tk_RestrictProc *oldProc = Tk_RestrictEvents(ExposeRestrictProc,
-		UINT2PTR(serial), &oldArg);
+    	ClientData oldArg;
+    	Tk_RestrictProc *oldProc = Tk_RestrictEvents(ExposeRestrictProc,
+    		UINT2PTR(serial), &oldArg);
 
-	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
-	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
+    	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
+    	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+    	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
     }
+
 }
 
 - (void) tkToolbarButton: (id) sender
