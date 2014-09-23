@@ -67,6 +67,13 @@ static NSRect TkMacOSXGetButtonFrame(TkButton *butPtr);
 		    return;
 		}
 
+		int parent_width = Tk_Width(Tk_Parent(tkwin));
+		int widget_width = Tk_Width(tkwin);
+		int x = Tk_X(tkwin);
+		if (x > parent_width - 30  || x + widget_width < 0) {
+		    return;
+		}
+
 	    }
 	}
 	[super drawRect:dirtyRect];

@@ -455,6 +455,7 @@ MoveResizeWindow(
 
 	macParent = macWin->winPtr->parentPtr->privatePtr;
 	parentBorderwidth = macWin->winPtr->parentPtr->changes.border_width;
+	UpdateOffsets(macWin->winPtr, deltaX, deltaY);//todo?
     }
 
     if (macParent) {
