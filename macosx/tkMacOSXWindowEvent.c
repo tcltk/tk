@@ -779,8 +779,6 @@ Tk_MacOSXIsAppInFront(void)
 @implementation TKContentView
 @end
 
-#define TK_MAC_DEBUG_DRAWING
-
 static Tk_RestrictAction
 ExposeRestrictProc(
     ClientData arg,
