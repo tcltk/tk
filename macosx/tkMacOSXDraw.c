@@ -463,7 +463,7 @@ CreateCGImageWithXImage(
 	 * Color image
 	 */
 
-	CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+	CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
