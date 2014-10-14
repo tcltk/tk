@@ -7132,4 +7132,6 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2014-10-11 (bug)[810c43] [text] elide changes advance epoch (vogel)
 
+2014-10-14 (bug)[fb35eb] fix PNG transparency appearance (walton,culler)
+
 --- Released 8.6.3, October 25, 2014 --- http://core.tcl.tk/tk/ for details
