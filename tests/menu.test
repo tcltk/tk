@@ -3327,11 +3327,8 @@ test menu-22.3 {GetIndexFromCoords: mapped window, y only} -setup {
     menu .m1
     .m1 add command -label "test"
     .m1 configure -tearoff 0
-puts A
     tk_popup .m1 0 0
-puts B
     tkwait visibility .m1
-puts C
     .m1 index @5
 } -cleanup {
 	deleteWindows
