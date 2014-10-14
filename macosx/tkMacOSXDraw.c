@@ -463,13 +463,13 @@ CreateCGImageWithXImage(
 	 * Color image
 	 */
 
-	CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+	CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
 	bitmapInfo = (image->byte_order == MSBFirst ?
 		kCGBitmapByteOrder32Big : kCGBitmapByteOrder32Little) |
-		kCGImageAlphaNoneSkipFirst;
+	    kCGImageAlphaNoneSkipFirst;
 	data = memcpy(ckalloc(len), image->data + image->xoffset, len);
 	if (data) {
 	    provider = CGDataProviderCreateWithData(data, data, len, releaseData);
