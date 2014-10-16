@@ -256,6 +256,24 @@ struct IShellItemArray {
 
 #endif /* __IShellItemArray_INTERFACE_DEFINED__ */
 
+/* 
+ * Older compilers do not define these CLSIDs so we do so here under
+ * a slightly different name so as to not clash with the definitions
+ * in new compilers
+ */
+static const CLSID ClsidFileOpenDialog = {
+    0xDC1C5A9C, 0xE88A, 0X4DDE, {0xA5, 0xA1, 0x60, 0xF8, 0x2A, 0x20, 0xAE, 0xF7}
+};
+static const CLSID ClsidFileSaveDialog = {
+    0xC0B4E2F3, 0xBA21, 0x4773, {0x8D, 0xBA, 0x33, 0x5E, 0xC9, 0x46, 0xEB, 0x8B}
+};
+static const IID IIDIFileOpenDialog = {
+    0xD57C7288, 0xD4AD, 0x4768, {0xBE, 0x02, 0x9D, 0x96, 0x95, 0x32, 0xD9, 0x60}
+};
+static const IID IIDIFileSaveDialog = {
+    0x84BCCD23, 0x5FDE, 0x4CDB, {0xAE, 0xA4, 0xAF, 0x64, 0xB8, 0x3D, 0x78, 0xAB}
+};
+
 #ifndef __IFileDialog_INTERFACE_DEFINED__
 
 /* Forward declarations for structs that are referenced but not used */
@@ -271,24 +289,6 @@ typedef struct _COMDLG_FILTERSPEC {
     LPCWSTR pszName;
     LPCWSTR pszSpec;
 } COMDLG_FILTERSPEC;
-
-/* 
- * Older compilers do not define these CLSIDs so we do so here under
- * a slightly different name so as to not clash with the definitions
- * in new compilers
- */
-static const CLSID ClsidFileOpenDialog = {
-    0xDC1C5A9C, 0xE88A, 0X4DDE, 0xA5, 0xA1, 0x60, 0xF8, 0x2A, 0x20, 0xAE, 0xF7
-};
-static const CLSID ClsidFileSaveDialog = {
-    0xC0B4E2F3, 0xBA21, 0x4773, 0x8D, 0xBA, 0x33, 0x5E, 0xC9, 0x46, 0xEB, 0x8B
-};
-static const IID IIDIFileOpenDialog = {
-    0xD57C7288, 0xD4AD, 0x4768, 0xBE, 0x02, 0x9D, 0x96, 0x95, 0x32, 0xD9, 0x60
-};
-static const IID IIDIFileSaveDialog = {
-    0x84BCCD23, 0x5FDE, 0x4CDB, 0xAE, 0xA4, 0xAF, 0x64, 0xB8, 0x3D, 0x78, 0xAB
-};
 
 enum _FILEOPENDIALOGOPTIONS {
     FOS_OVERWRITEPROMPT	= 0x2,
@@ -538,10 +538,18 @@ static UINT CALLBACK	ColorDlgHookProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 static void             CleanupOFNOptions(OFNOpts *optsPtr);
 static int              ParseOFNOptions(ClientData clientData,
                             Tcl_Interp *interp, int objc,
-                            Tcl_Obj *const objv[], int open, OFNOpts *optsPtr);
+                            Tcl_Obj *const objv[], enum OFNOper oper, OFNOpts *optsPtr);
+static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr,
+                         enum OFNOper oper);
+static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, 
+                            enum OFNOper oper);
 static int 		GetFileName(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[], int isOpen);
+                                    Tcl_Interp *interp, int objc,
+                                    Tcl_Obj *const objv[], enum OFNOper oper);
+static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
+               DWORD *countPtr, COMDLG_FILTERSPEC **dlgFilterPtrPtr,
+               DWORD *defaultFilterIndexPtr);
+static void FreeFilterVista(DWORD count, COMDLG_FILTERSPEC *dlgFilterPtr);
 static int 		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
 			    Tcl_DString *dsPtr, Tcl_Obj *initialPtr,
 			    int *indexPtr);
@@ -553,12 +561,6 @@ static const char *ConvertExternalFilename(TCHAR *filename,
 			    Tcl_DString *dsPtr);
 static void             LoadShellProcs(void);
 
-static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, int open);
-static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, int open);
-static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
-               DWORD *countPtr, COMDLG_FILTERSPEC **dlgFilterPtrPtr,
-               DWORD *defaultFilterIndexPtr);
-static void FreeFilterVista(DWORD count, COMDLG_FILTERSPEC *dlgFilterPtr);
 
 /* Definitions of dynamically loaded Win32 calls */
 typedef HRESULT (STDAPICALLTYPE SHCreateItemFromParsingNameProc)(
@@ -566,9 +568,6 @@ typedef HRESULT (STDAPICALLTYPE SHCreateItemFromParsingNameProc)(
 struct ShellProcPointers {
     SHCreateItemFromParsingNameProc *SHCreateItemFromParsingName;
 } ShellProcs;
-
-
-
 
 
 /*
@@ -1011,7 +1010,6 @@ ParseOFNOptions(
 	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE, FILE_PARENT,
 	FILE_TITLE, FILE_TYPEVARIABLE, FILE_MULTIPLE, FILE_CONFIRMOW,
         FILE_MUSTEXIST,
-        FILE_UNDOCUMENTED_XP_STYLE /* XXX - force XP - style dialogs */
     };
     struct Options {
 	const char *name;
@@ -1183,12 +1181,12 @@ static int VistaFileDialogsAvailable()
             /* Ensure all COM interfaces we use are available */
             if (SUCCEEDED(hr)) {
                 hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
-                         CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, &fdlgPtr);
+                                      CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, (void **) &fdlgPtr);
                 if (SUCCEEDED(hr)) {
                     fdlgPtr->lpVtbl->Release(fdlgPtr);
                     hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
                              CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog,
-                             &fdlgPtr);
+                                          (void **) &fdlgPtr);
                     if (SUCCEEDED(hr)) {
                         fdlgPtr->lpVtbl->Release(fdlgPtr);
 
@@ -1267,10 +1265,10 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 
     if (oper == OFN_FILE_OPEN || oper == OFN_DIR_CHOOSE)
         hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
-                 CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, &fdlgIf);
+                              CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, (void **) &fdlgIf);
     else
         hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
-                 CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog, &fdlgIf);
+                              CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog, (void **) &fdlgIf);
 
     if (FAILED(hr))
         goto vamoose;
@@ -1356,7 +1354,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                Tcl_DStringLength(&optsPtr->utfDirString), &dirString);
         hr = ShellProcs.SHCreateItemFromParsingName(
             (TCHAR *) Tcl_DStringValue(&dirString), NULL,
-            &IID_IShellItem, &dirIf);
+            &IID_IShellItem, (void **) &dirIf);
         /* XXX - Note on failure we do not raise error, simply ignore ini dir */
         if (SUCCEEDED(hr)) {
             /* Note we use SetFolder, not SetDefaultFolder - see MSDN docs */
@@ -1851,8 +1849,8 @@ OFNHookProc(
 	    buffer = ofnData->dynFileBuffer;
 	    hdlg = GetParent(hdlg);
 
-	    selsize = SendMessage(hdlg, CDM_GETSPEC, 0, 0);
-	    dirsize = SendMessage(hdlg, CDM_GETFOLDERPATH, 0, 0);
+	    selsize = (int) SendMessage(hdlg, CDM_GETSPEC, 0, 0);
+	    dirsize = (int) SendMessage(hdlg, CDM_GETFOLDERPATH, 0, 0);
 	    buffersize = (selsize + dirsize + 1);
 
 	    /*
@@ -2202,7 +2200,7 @@ static int MakeFilterVista(
         nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
         nbytes += sizeof(WCHAR);         /* Terminating \0 */
         dlgFilterPtr[i].pszName = ckalloc(nbytes);
-        memmove(dlgFilterPtr[i].pszName, Tcl_DStringValue(&ds), nbytes);
+        memmove((void *) dlgFilterPtr[i].pszName, Tcl_DStringValue(&ds), nbytes);
         Tcl_DStringFree(&ds);
 
         /*
@@ -2230,7 +2228,7 @@ static int MakeFilterVista(
         nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
         nbytes += sizeof(WCHAR);         /* Terminating \0 */
         dlgFilterPtr[i].pszSpec = ckalloc(nbytes);
-        memmove(dlgFilterPtr[i].pszSpec, Tcl_DStringValue(&ds), nbytes);
+        memmove((void *)dlgFilterPtr[i].pszSpec, Tcl_DStringValue(&ds), nbytes);
         Tcl_DStringFree(&ds);
         Tcl_DStringFree(&patterns);
     }
