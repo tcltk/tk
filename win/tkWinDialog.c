@@ -272,19 +272,21 @@ typedef struct _COMDLG_FILTERSPEC {
     LPCWSTR pszSpec;
 } COMDLG_FILTERSPEC;
 
-static CLSID CLSID_FileOpenDialog = {
+/* 
+ * Older compilers do not define these CLSIDs so we do so here under
+ * a slightly different name so as to not clash with the definitions
+ * in new compilers
+ */
+static const CLSID ClsidFileOpenDialog = {
     0xDC1C5A9C, 0xE88A, 0X4DDE, 0xA5, 0xA1, 0x60, 0xF8, 0x2A, 0x20, 0xAE, 0xF7
 };
-
-static IID IID_IFileOpenDialog = {
-    0xD57C7288, 0xD4AD, 0x4768, 0xBE, 0x02, 0x9D, 0x96, 0x95, 0x32, 0xD9, 0x60
-};
-
-static CLSID CLSID_FileSaveDialog = {
+static const CLSID ClsidFileSaveDialog = {
     0xC0B4E2F3, 0xBA21, 0x4773, 0x8D, 0xBA, 0x33, 0x5E, 0xC9, 0x46, 0xEB, 0x8B
 };
-
-static IID IID_IFileSaveDialog = {
+static const IID IIDIFileOpenDialog = {
+    0xD57C7288, 0xD4AD, 0x4768, 0xBE, 0x02, 0x9D, 0x96, 0x95, 0x32, 0xD9, 0x60
+};
+static const IID IIDIFileSaveDialog = {
     0x84BCCD23, 0x5FDE, 0x4CDB, 0xAE, 0xA4, 0xAF, 0x64, 0xB8, 0x3D, 0x78, 0xAB
 };
 
@@ -1110,7 +1112,6 @@ ParseOFNOptions(
 	    Tcl_DStringFree(&ds);
 	    break;
 	case FILE_PARENT:
-            /* XXX - check */
 	    optsPtr->tkwin = Tk_NameToWindow(interp, string, clientData);
 	    if (optsPtr->tkwin == NULL)
 		goto error_return;
@@ -1181,12 +1182,12 @@ static int VistaFileDialogsAvailable()
 
             /* Ensure all COM interfaces we use are available */
             if (SUCCEEDED(hr)) {
-                hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL,
-                         CLSCTX_INPROC_SERVER, &IID_IFileOpenDialog, &fdlgPtr);
+                hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
+                         CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, &fdlgPtr);
                 if (SUCCEEDED(hr)) {
                     fdlgPtr->lpVtbl->Release(fdlgPtr);
-                    hr = CoCreateInstance(&CLSID_FileSaveDialog, NULL,
-                             CLSCTX_INPROC_SERVER, &IID_IFileSaveDialog,
+                    hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
+                             CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog,
                              &fdlgPtr);
                     if (SUCCEEDED(hr)) {
                         fdlgPtr->lpVtbl->Release(fdlgPtr);
@@ -1265,11 +1266,11 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
      */
 
     if (oper == OFN_FILE_OPEN || oper == OFN_DIR_CHOOSE)
-        hr = CoCreateInstance(&CLSID_FileOpenDialog, NULL,
-                 CLSCTX_INPROC_SERVER, &IID_IFileOpenDialog, &fdlgIf);
+        hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
+                 CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, &fdlgIf);
     else
-        hr = CoCreateInstance(&CLSID_FileSaveDialog, NULL,
-                 CLSCTX_INPROC_SERVER, &IID_IFileSaveDialog, &fdlgIf);
+        hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
+                 CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog, &fdlgIf);
 
     if (FAILED(hr))
         goto vamoose;
@@ -1284,7 +1285,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
         goto vamoose;
 
     if (filterPtr) {
-        flags |= FOS_STRICTFILETYPES; /* XXX - does this match old behaviour? */
+        flags |= FOS_STRICTFILETYPES;
         hr = fdlgIf->lpVtbl->SetFileTypes(fdlgIf, nfilters, filterPtr);
         if (FAILED(hr))
             goto vamoose;
