@@ -27,6 +27,16 @@ proc vista? {{prevista 0} {postvista 1}} {
     return [expr {$major >= 6 ? $postvista : $prevista}]
 }
 
+# What directory to use in initialdir tests. Old code used to use
+# c:/. However, on Vista/later that is a protected directory if you
+# are not running privileged. Moreover, not everyone has a drive c:
+# but not having a TEMP would break a lot Windows programs
+proc initialdir {} {
+    # file join to return in Tcl canonical format (/ separator, not \)
+    return [file join $::env(TEMP)]
+}
+
+
 proc start {arg} {
     set ::tk_dialog 0
     set ::iter_after 0
@@ -227,7 +237,7 @@ test winDialog-5.2 {GetFileName: one argument} -constraints {
 test winDialog-5.3 {GetFileName: many arguments} -constraints {
     nt testwinevent
 } -body {
-    start {tk_getOpenFile -initialdir c:/ -parent . -title test -initialfile foo}
+    start {tk_getOpenFile -initialdir [initialdir] -parent . -title test -initialfile foo}
     then {
         Click cancel
     }
@@ -539,7 +549,7 @@ test winDialog-9.3 {Tk_ChooseDirectoryObjCmd: many arguments} -constraints {
     nt testwinevent
 } -body {
     start {
-    tk_chooseDirectory -initialdir c:/ -mustexist 1 -parent . -title test
+        tk_chooseDirectory -initialdir [initialdir] -mustexist 1 -parent . -title test
     }
     then {
         Click cancel
@@ -568,12 +578,12 @@ test winDialog-9.7 {Tk_ChooseDirectoryObjCmd: -initialdir} -constraints {
 } -body {
 #        case DIR_INITIAL:
 
-    start {set x [tk_chooseDirectory -initialdir c:/ -title Foo]}
+    start {set x [tk_chooseDirectory -initialdir [initialdir] -title Foo]}
     then {
         Click ok
     }
     string tolower [set x]
-} -result {c:/}
+} -result [initialdir]
 test winDialog-9.8 {Tk_ChooseDirectoryObjCmd: initial directory: Tcl_TranslateFilename()} -constraints {
     nt
 } -body {
