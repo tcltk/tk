@@ -69,8 +69,7 @@ when the dialog pops up. If this parameter is not specified,
 the initial directory defaults to the current working directory 
 on non-Windows systems and on Windows systems prior to Vista.
 On Vista and later systems, the initial directory defaults to the last
-user-selected directory for the application.
-If the
+user-selected directory for the application. If the
 parameter specifies a relative path, the return value will convert the
 relative path to an absolute path.
 .TP
