@@ -274,7 +274,9 @@ static const IID IIDIFileSaveDialog = {
     0x84BCCD23, 0x5FDE, 0x4CDB, {0xAE, 0xA4, 0xAF, 0x64, 0xB8, 0x3D, 0x78, 0xAB}
 };
 
-#ifndef __IFileDialog_INTERFACE_DEFINED__
+#ifdef __IFileDialog_INTERFACE_DEFINED__
+# define TCLCOMDLG_FILTERSPEC COMDLG_FILTERSPEC
+#else
 
 /* Forward declarations for structs that are referenced but not used */
 typedef struct IPropertyStore IPropertyStore;
