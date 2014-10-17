@@ -285,10 +285,10 @@ typedef enum FDAP {
     FDAP_TOP	= 1
 } FDAP;
 
-typedef struct _COMDLG_FILTERSPEC {
+typedef struct {
     LPCWSTR pszName;
     LPCWSTR pszSpec;
-} COMDLG_FILTERSPEC;
+} TCLCOMDLG_FILTERSPEC;
 
 enum _FILEOPENDIALOGOPTIONS {
     FOS_OVERWRITEPROMPT	= 0x2,
@@ -326,7 +326,7 @@ typedef struct IFileDialogVtbl
     ULONG ( STDMETHODCALLTYPE *Release )( IFileDialog * this);
     HRESULT ( STDMETHODCALLTYPE *Show )( IFileDialog * this, HWND hwndOwner);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileDialog * this,
-        UINT cFileTypes, const COMDLG_FILTERSPEC *rgFilterSpec);
+        UINT cFileTypes, const TCLCOMDLG_FILTERSPEC *rgFilterSpec);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )(IFileDialog * this, UINT);
     HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )(IFileDialog * this, UINT *);
     /* XXX - Actually pfde is IFileDialogEvents* but we do not use
@@ -391,7 +391,7 @@ typedef struct IFileSaveDialogVtbl {
     HRESULT ( STDMETHODCALLTYPE *Show )( 
         IFileSaveDialog * this, HWND hwndOwner);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileSaveDialog * this,
-        UINT cFileTypes, const COMDLG_FILTERSPEC *rgFilterSpec);
+        UINT cFileTypes, const TCLCOMDLG_FILTERSPEC *rgFilterSpec);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )(
         IFileSaveDialog * this, UINT iFileType);
     HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )( 
@@ -466,7 +466,7 @@ typedef struct IFileOpenDialogVtbl {
     ULONG ( STDMETHODCALLTYPE *Release )( IFileOpenDialog * this);
     HRESULT ( STDMETHODCALLTYPE *Show )( IFileOpenDialog * this, HWND);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileOpenDialog * this,
-        UINT cFileTypes, const COMDLG_FILTERSPEC *rgFilterSpec);
+        UINT cFileTypes, const TCLCOMDLG_FILTERSPEC *rgFilterSpec);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )( 
         IFileOpenDialog * this, UINT iFileType);
     HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )( 
@@ -547,9 +547,9 @@ static int 		GetFileName(ClientData clientData,
                                     Tcl_Interp *interp, int objc,
                                     Tcl_Obj *const objv[], enum OFNOper oper);
 static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
-               DWORD *countPtr, COMDLG_FILTERSPEC **dlgFilterPtrPtr,
+               DWORD *countPtr, TCLCOMDLG_FILTERSPEC **dlgFilterPtrPtr,
                DWORD *defaultFilterIndexPtr);
-static void FreeFilterVista(DWORD count, COMDLG_FILTERSPEC *dlgFilterPtr);
+static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr);
 static int 		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
 			    Tcl_DString *dsPtr, Tcl_Obj *initialPtr,
 			    int *indexPtr);
@@ -1225,7 +1225,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     HRESULT hr;
     HWND hWnd;
     DWORD flags, nfilters, defaultFilterIndex;
-    COMDLG_FILTERSPEC *filterPtr = NULL;
+    TCLCOMDLG_FILTERSPEC *filterPtr = NULL;
     IFileDialog *fdlgIf = NULL;
     IShellItem *dirIf = NULL;
     LPWSTR wstr;
@@ -2113,7 +2113,7 @@ MakeFilter(
  *      Frees storage previously allocated by MakeFilterVista.
  *      count is the number of elements in dlgFilterPtr[]
  */
-static void FreeFilterVista(DWORD count, COMDLG_FILTERSPEC *dlgFilterPtr)
+static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr)
 {
     if (dlgFilterPtr != NULL) {
         DWORD dw;
@@ -2147,13 +2147,13 @@ static int MakeFilterVista(
     Tcl_Interp *interp,		/* Current interpreter. */
     OFNOpts *optsPtr,           /* Caller specified options */
     DWORD *countPtr,            /* Will hold number of filters */
-    COMDLG_FILTERSPEC **dlgFilterPtrPtr, /* Will hold pointer to filter array.
+    TCLCOMDLG_FILTERSPEC **dlgFilterPtrPtr, /* Will hold pointer to filter array.
                                          Set to NULL if no filters specified.
                                          Must be freed by calling
                                          FreeFilterVista */
     DWORD *initialIndexPtr)     /* Will hold index of default type */
 {
-    COMDLG_FILTERSPEC *dlgFilterPtr;
+    TCLCOMDLG_FILTERSPEC *dlgFilterPtr;
     const char *initial = NULL;
     FileFilterList flist;
     FileFilter *filterPtr;
