@@ -264,10 +264,6 @@ test winDialog-5.6 {GetFileName: valid option, but missing value} -constraints {
 test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
     nt testwinevent
 } -body {
-#    if (string[0] == '.') {
-#    string++;
-#    }
-
     start {set x [tk_getSaveFile -defaultextension .foo -title Save]}
     set msg {}
     then {
@@ -580,7 +576,7 @@ test winDialog-9.7 {Tk_ChooseDirectoryObjCmd: -initialdir} -constraints {
         Click ok
     }
     string tolower [set x]
-} -result [initialdir]
+} -result [string tolower [initialdir]]
 test winDialog-9.8 {Tk_ChooseDirectoryObjCmd: initial directory: Tcl_TranslateFilename()} -constraints {
     nt
 } -body {
