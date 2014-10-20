@@ -33,7 +33,8 @@ proc vista? {{prevista 0} {postvista 1}} {
 # but not having a TEMP would break a lot Windows programs
 proc initialdir {} {
     # file join to return in Tcl canonical format (/ separator, not \)
-    return [file join $::env(TEMP)]
+    #return [file join $::env(TEMP)]
+    return [tcltest::temporaryDirectory]
 }
 
 
@@ -320,21 +321,19 @@ test winDialog-5.10 {GetFileName: file types: MakeFilter() fails} -constraints {
 
     tk_getSaveFile -filetypes {{"foo" .foo FOO}}
 } -returnCodes error -result {bad Macintosh file type "FOO"}
-if {[info exists ::env(TEMP)]} {
 test winDialog-5.11 {GetFileName: initial directory} -constraints {
     nt testwinevent
 } -body {
 #        case FILE_INITDIR:
     unset -nocomplain x
     start {set x [tk_getSaveFile \
-                      -initialdir [file normalize $::env(TEMP)] \
+                      -initialdir [initialdir] \
                       -initialfile "12x 455" -title Foo]}
     then {
         Click ok
     }
     return $x
-} -result [file join [file normalize $::env(TEMP)] "12x 455"]
-}
+} -result [file join [initialdir] "12x 455"]
 test winDialog-5.12 {GetFileName: initial directory: Tcl_TranslateFilename()} -constraints {
     nt
 } -body {
@@ -476,7 +475,6 @@ test winDialog-5.22 {GetFileName: call GetSaveFileName} -constraints {
     }
     return $x
 } -result {&Save}
-if {[info exists ::env(TEMP)]} {
 test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     nt testwinevent
 } -body {
@@ -484,7 +482,7 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     start {set x [tk_getSaveFile -title Back]}
     then {
 	if {[catch {SetText [vista? 0x47C 0x3e9] [file nativename \
-		[file join [file normalize $::env(TEMP)] "12x 457"]]} msg]} {
+		[file join [initialdir] "12x 457"]]} msg]} {
 	    Click cancel
 	} else {
 	    Click ok
@@ -493,8 +491,7 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     return $x$msg
 } -cleanup {
     unset msg
-} -result [file join [file normalize $::env(TEMP)] "12x 457"]
-}
+} -result [file join [initialdir] "12x 457"]
 test winDialog-5.24 {GetFileName: file types: MakeFilter() succeeds} -constraints {
     nt
 } -body {
