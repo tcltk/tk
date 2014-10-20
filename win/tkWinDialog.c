@@ -219,33 +219,63 @@ typedef enum SIATTRIBFLAGS {
     SIATTRIBFLAGS_MASK	= 0x3,
     SIATTRIBFLAGS_ALLITEMS	= 0x4000
 } SIATTRIBFLAGS;
+typedef ULONG SFGAOF;
+
+typedef struct IShellItem IShellItem;
+
+typedef enum __MIDL_IShellItem_0001 {
+    SIGDN_NORMALDISPLAY = 0,SIGDN_PARENTRELATIVEPARSING = 0x80018001,SIGDN_PARENTRELATIVEFORADDRESSBAR = 0x8001c001,
+    SIGDN_DESKTOPABSOLUTEPARSING = 0x80028000,SIGDN_PARENTRELATIVEEDITING = 0x80031001,SIGDN_DESKTOPABSOLUTEEDITING = 0x8004c000,
+    SIGDN_FILESYSPATH = 0x80058000,SIGDN_URL = 0x80068000
+} SIGDN;
+
+typedef DWORD SICHINTF;
+
+typedef struct IShellItemVtbl
+{
+    BEGIN_INTERFACE
+
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(IShellItem *, REFIID, void **);
+    ULONG (STDMETHODCALLTYPE *AddRef)(IShellItem *);
+    ULONG (STDMETHODCALLTYPE *Release)(IShellItem *);
+    HRESULT (STDMETHODCALLTYPE *BindToHandler)(IShellItem *, IBindCtx *, REFGUID, REFIID, void **);
+    HRESULT (STDMETHODCALLTYPE *GetParent)(IShellItem *, IShellItem **);
+    HRESULT (STDMETHODCALLTYPE *GetDisplayName)(IShellItem *, SIGDN, LPOLESTR *);
+    HRESULT (STDMETHODCALLTYPE *GetAttributes)(IShellItem *, SFGAOF, SFGAOF *);
+    HRESULT (STDMETHODCALLTYPE *Compare)(IShellItem *, IShellItem *, SICHINTF, int *);
+
+    END_INTERFACE
+} IShellItemVtbl;
+struct IShellItem {
+    CONST_VTBL struct IShellItemVtbl *lpVtbl;
+};
 typedef struct IShellItemArray IShellItemArray;
 typedef struct IShellItemArrayVtbl
 {
     BEGIN_INTERFACE
-        
-    HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-        IShellItemArray * this, REFIID riid,void **ppvObject);
-    ULONG ( STDMETHODCALLTYPE *AddRef )(IShellItemArray * this);
-    ULONG ( STDMETHODCALLTYPE *Release )(IShellItemArray * this);
-    HRESULT ( STDMETHODCALLTYPE *BindToHandler )(IShellItemArray * this,
-        IBindCtx *pbc, REFGUID bhid, REFIID riid, void **ppvOut);
+
+    HRESULT ( STDMETHODCALLTYPE *QueryInterface )(
+        IShellItemArray *, REFIID riid,void **ppvObject);
+    ULONG ( STDMETHODCALLTYPE *AddRef )(IShellItemArray *);
+    ULONG ( STDMETHODCALLTYPE *Release )(IShellItemArray *);
+    HRESULT ( STDMETHODCALLTYPE *BindToHandler )(IShellItemArray *,
+        IBindCtx *, REFGUID, REFIID, void **);
     /* flags is actually is enum GETPROPERTYSTOREFLAGS */
     HRESULT ( STDMETHODCALLTYPE *GetPropertyStore )(
-        IShellItemArray * this, int flags,  REFIID riid, void **ppv);
+        IShellItemArray *, int,  REFIID, void **);
     /* keyType actually REFPROPERTYKEY */
-    HRESULT ( STDMETHODCALLTYPE *GetPropertyDescriptionList )( 
-         IShellItemArray * this, void* keyType, REFIID riid, void **ppv);
-    HRESULT ( STDMETHODCALLTYPE *GetAttributes )(IShellItemArray * this,
-        SIATTRIBFLAGS AttribFlags, SFGAOF sfgaoMask, SFGAOF *psfgaoAttribs);
+    HRESULT ( STDMETHODCALLTYPE *GetPropertyDescriptionList )(
+         IShellItemArray *, void *, REFIID, void **);
+    HRESULT ( STDMETHODCALLTYPE *GetAttributes )(IShellItemArray *,
+        SIATTRIBFLAGS, SFGAOF, SFGAOF *);
     HRESULT ( STDMETHODCALLTYPE *GetCount )(
-        IShellItemArray * this, DWORD *pdwNumItems);
-    HRESULT ( STDMETHODCALLTYPE *GetItemAt )( 
-        IShellItemArray * this, DWORD dwIndex, IShellItem **ppsi);
+        IShellItemArray *, DWORD *);
+    HRESULT ( STDMETHODCALLTYPE *GetItemAt )(
+        IShellItemArray *, DWORD, IShellItem **);
     /* ppenumShellItems actually (IEnumShellItems **) */
     HRESULT ( STDMETHODCALLTYPE *EnumItems )(
-        IShellItemArray * this, void **ppenumShellItems);
-        
+        IShellItemArray *, void **);
+
     END_INTERFACE
 } IShellItemArrayVtbl;
 
@@ -255,7 +285,7 @@ struct IShellItemArray {
 
 #endif /* __IShellItemArray_INTERFACE_DEFINED__ */
 
-/* 
+/*
  * Older compilers do not define these CLSIDs so we do so here under
  * a slightly different name so as to not clash with the definitions
  * in new compilers
@@ -271,6 +301,9 @@ static const IID IIDIFileOpenDialog = {
 };
 static const IID IIDIFileSaveDialog = {
     0x84BCCD23, 0x5FDE, 0x4CDB, {0xAE, 0xA4, 0xAF, 0x64, 0xB8, 0x3D, 0x78, 0xAB}
+};
+static const IID IIDIShellItem = {
+	0x43826D1E, 0xE718, 0x42EE, {0xBC, 0x55, 0xA1, 0xE2, 0x61, 0xC3, 0x7B, 0xFE}
 };
 
 #ifdef __IFileDialog_INTERFACE_DEFINED__
@@ -320,59 +353,59 @@ typedef struct IFileDialog IFileDialog;
 typedef struct IFileDialogVtbl
 {
     BEGIN_INTERFACE
-        
-    HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-         IFileDialog * this, REFIID riid, void **ppvObject);
-    ULONG ( STDMETHODCALLTYPE *AddRef )( IFileDialog * this);
-    ULONG ( STDMETHODCALLTYPE *Release )( IFileDialog * this);
-    HRESULT ( STDMETHODCALLTYPE *Show )( IFileDialog * this, HWND hwndOwner);
-    HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileDialog * this,
-        UINT cFileTypes, const TCLCOMDLG_FILTERSPEC *rgFilterSpec);
-    HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )(IFileDialog * this, UINT);
-    HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )(IFileDialog * this, UINT *);
+
+    HRESULT ( STDMETHODCALLTYPE *QueryInterface )(
+         IFileDialog *, REFIID, void **);
+    ULONG ( STDMETHODCALLTYPE *AddRef )( IFileDialog *);
+    ULONG ( STDMETHODCALLTYPE *Release )( IFileDialog *);
+    HRESULT ( STDMETHODCALLTYPE *Show )( IFileDialog *, HWND);
+    HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileDialog *,
+        UINT, const TCLCOMDLG_FILTERSPEC *);
+    HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )(IFileDialog *, UINT);
+    HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )(IFileDialog *, UINT *);
     /* XXX - Actually pfde is IFileDialogEvents* but we do not use
        this call and do not want to define IFileDialogEvents as that
        pulls in a whole bunch of other stuff. */
-    HRESULT ( STDMETHODCALLTYPE *Advise )( 
-        IFileDialog * this, void *pfde, DWORD *pdwCookie);
-    HRESULT ( STDMETHODCALLTYPE *Unadvise )(IFileDialog * this, DWORD dwCookie);
-    HRESULT ( STDMETHODCALLTYPE *SetOptions )( 
-        IFileDialog * this, FILEOPENDIALOGOPTIONS fos);
-    HRESULT ( STDMETHODCALLTYPE *GetOptions )( 
-        IFileDialog * this, FILEOPENDIALOGOPTIONS *pfos);
+    HRESULT ( STDMETHODCALLTYPE *Advise )(
+        IFileDialog *, void *, DWORD *);
+    HRESULT ( STDMETHODCALLTYPE *Unadvise )(IFileDialog *, DWORD);
+    HRESULT ( STDMETHODCALLTYPE *SetOptions )(
+        IFileDialog *, FILEOPENDIALOGOPTIONS);
+    HRESULT ( STDMETHODCALLTYPE *GetOptions )(
+        IFileDialog *, FILEOPENDIALOGOPTIONS *);
     HRESULT ( STDMETHODCALLTYPE *SetDefaultFolder )(
-        IFileDialog * this, IShellItem *psi);
+        IFileDialog *, IShellItem *);
     HRESULT ( STDMETHODCALLTYPE *SetFolder )(
-        IFileDialog * this, IShellItem *psi);
-    HRESULT ( STDMETHODCALLTYPE *GetFolder )( 
-        IFileDialog * this, IShellItem **ppsi);
-    HRESULT ( STDMETHODCALLTYPE *GetCurrentSelection )( 
-        IFileDialog * this, IShellItem **ppsi);
-    HRESULT ( STDMETHODCALLTYPE *SetFileName )( 
-        IFileDialog * this,  LPCWSTR pszName);
-    HRESULT ( STDMETHODCALLTYPE *GetFileName )( 
-        IFileDialog * this,  LPWSTR *pszName);
+        IFileDialog *, IShellItem *);
+    HRESULT ( STDMETHODCALLTYPE *GetFolder )(
+        IFileDialog *, IShellItem **);
+    HRESULT ( STDMETHODCALLTYPE *GetCurrentSelection )(
+        IFileDialog *, IShellItem **);
+    HRESULT ( STDMETHODCALLTYPE *SetFileName )(
+        IFileDialog *,  LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *GetFileName )(
+        IFileDialog *,  LPWSTR *);
     HRESULT ( STDMETHODCALLTYPE *SetTitle )(
-        IFileDialog * this, LPCWSTR pszTitle);
-    HRESULT ( STDMETHODCALLTYPE *SetOkButtonLabel )( 
-        IFileDialog * this, LPCWSTR pszText);
-    HRESULT ( STDMETHODCALLTYPE *SetFileNameLabel )( 
-        IFileDialog * this,  LPCWSTR pszLabel);
+        IFileDialog *, LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *SetOkButtonLabel )(
+        IFileDialog *, LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *SetFileNameLabel )(
+        IFileDialog *,  LPCWSTR);
     HRESULT ( STDMETHODCALLTYPE *GetResult )(
-        IFileDialog * this, IShellItem **ppsi);
-    HRESULT ( STDMETHODCALLTYPE *AddPlace )( 
-        IFileDialog * this, IShellItem *psi, FDAP fdap);
-    HRESULT ( STDMETHODCALLTYPE *SetDefaultExtension )( 
-         IFileDialog * this, LPCWSTR pszDefaultExtension);
-    HRESULT ( STDMETHODCALLTYPE *Close )( IFileDialog * this, HRESULT hr);
+        IFileDialog *, IShellItem **);
+    HRESULT ( STDMETHODCALLTYPE *AddPlace )(
+        IFileDialog *, IShellItem *, FDAP);
+    HRESULT ( STDMETHODCALLTYPE *SetDefaultExtension )(
+         IFileDialog *, LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *Close )( IFileDialog *, HRESULT);
     HRESULT ( STDMETHODCALLTYPE *SetClientGuid )(
-        IFileDialog * this, REFGUID guid);
-    HRESULT ( STDMETHODCALLTYPE *ClearClientData )( IFileDialog * this);
+        IFileDialog *, REFGUID);
+    HRESULT ( STDMETHODCALLTYPE *ClearClientData )( IFileDialog *);
     /* pFilter actually IShellItemFilter. But deprecated in Win7 AND we do
        not use it anyways. So define as void* */
-    HRESULT ( STDMETHODCALLTYPE *SetFilter )( 
-         IFileDialog * this, void *pFilter);
-        
+    HRESULT ( STDMETHODCALLTYPE *SetFilter )(
+         IFileDialog *, void *);
+
     END_INTERFACE
 } IFileDialogVtbl;
 
@@ -384,70 +417,69 @@ struct IFileDialog {
 typedef struct IFileSaveDialog IFileSaveDialog;
 typedef struct IFileSaveDialogVtbl {
     BEGIN_INTERFACE
-        
-    HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-        IFileSaveDialog * this, REFIID riid, void **ppvObject);
-    ULONG ( STDMETHODCALLTYPE *AddRef )( IFileSaveDialog * this);
-    ULONG ( STDMETHODCALLTYPE *Release )( IFileSaveDialog * this);
-    HRESULT ( STDMETHODCALLTYPE *Show )( 
-        IFileSaveDialog * this, HWND hwndOwner);
+
+    HRESULT ( STDMETHODCALLTYPE *QueryInterface )(
+        IFileSaveDialog *, REFIID, void **);
+    ULONG ( STDMETHODCALLTYPE *AddRef )( IFileSaveDialog *);
+    ULONG ( STDMETHODCALLTYPE *Release )( IFileSaveDialog *);
+    HRESULT ( STDMETHODCALLTYPE *Show )(
+        IFileSaveDialog *, HWND);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileSaveDialog * this,
-        UINT cFileTypes, const TCLCOMDLG_FILTERSPEC *rgFilterSpec);
+        UINT, const TCLCOMDLG_FILTERSPEC *);
     HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )(
-        IFileSaveDialog * this, UINT iFileType);
-    HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )( 
-         IFileSaveDialog * this, UINT *piFileType);
+        IFileSaveDialog *, UINT);
+    HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )(
+         IFileSaveDialog *, UINT *);
     /* Actually pfde is IFileSaveDialogEvents* */
-    HRESULT ( STDMETHODCALLTYPE *Advise )( 
-         IFileSaveDialog * this, void *pfde, DWORD *pdwCookie);
-    HRESULT ( STDMETHODCALLTYPE *Unadvise )( IFileSaveDialog * this, DWORD);
-    HRESULT ( STDMETHODCALLTYPE *SetOptions )( 
-         IFileSaveDialog * this, FILEOPENDIALOGOPTIONS fos);
-    HRESULT ( STDMETHODCALLTYPE *GetOptions )( 
-         IFileSaveDialog * this, FILEOPENDIALOGOPTIONS *pfos);
-    HRESULT ( STDMETHODCALLTYPE *SetDefaultFolder )( 
-         IFileSaveDialog * this, IShellItem *psi);
+    HRESULT ( STDMETHODCALLTYPE *Advise )(
+         IFileSaveDialog *, void *, DWORD *);
+    HRESULT ( STDMETHODCALLTYPE *Unadvise )( IFileSaveDialog *, DWORD);
+    HRESULT ( STDMETHODCALLTYPE *SetOptions )(
+         IFileSaveDialog *, FILEOPENDIALOGOPTIONS);
+    HRESULT ( STDMETHODCALLTYPE *GetOptions )(
+         IFileSaveDialog *, FILEOPENDIALOGOPTIONS *);
+    HRESULT ( STDMETHODCALLTYPE *SetDefaultFolder )(
+         IFileSaveDialog *, IShellItem *);
     HRESULT ( STDMETHODCALLTYPE *SetFolder )(
-        IFileSaveDialog * this, IShellItem *psi);
-    HRESULT ( STDMETHODCALLTYPE *GetFolder )( 
-         IFileSaveDialog * this, IShellItem **ppsi);
-    HRESULT ( STDMETHODCALLTYPE *GetCurrentSelection )( 
-         IFileSaveDialog * this, IShellItem **ppsi);
-    HRESULT ( STDMETHODCALLTYPE *SetFileName )( 
-         IFileSaveDialog * this,  LPCWSTR pszName);
-    HRESULT ( STDMETHODCALLTYPE *GetFileName )( 
-         IFileSaveDialog * this,  LPWSTR *pszName);
-    HRESULT ( STDMETHODCALLTYPE *SetTitle )( 
-         IFileSaveDialog * this, LPCWSTR pszTitle);
-    HRESULT ( STDMETHODCALLTYPE *SetOkButtonLabel )( 
-         IFileSaveDialog * this,  LPCWSTR pszText);
-    HRESULT ( STDMETHODCALLTYPE *SetFileNameLabel )( 
-         IFileSaveDialog * this,  LPCWSTR pszLabel);
-    HRESULT ( STDMETHODCALLTYPE *GetResult )( 
-         IFileSaveDialog * this, IShellItem **ppsi);
-    HRESULT ( STDMETHODCALLTYPE *AddPlace )( 
-         IFileSaveDialog * this, IShellItem *psi, FDAP fdap);
-    HRESULT ( STDMETHODCALLTYPE *SetDefaultExtension )( 
-         IFileSaveDialog * this, LPCWSTR pszDefaultExtension);
-    HRESULT ( STDMETHODCALLTYPE *Close )( IFileSaveDialog * this, HRESULT hr);
+        IFileSaveDialog *, IShellItem *);
+    HRESULT ( STDMETHODCALLTYPE *GetFolder )(
+         IFileSaveDialog *, IShellItem **);
+    HRESULT ( STDMETHODCALLTYPE *GetCurrentSelection )(
+         IFileSaveDialog *, IShellItem **);
+    HRESULT ( STDMETHODCALLTYPE *SetFileName )(
+         IFileSaveDialog *,  LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *GetFileName )(
+         IFileSaveDialog *,  LPWSTR *);
+    HRESULT ( STDMETHODCALLTYPE *SetTitle )(
+         IFileSaveDialog *, LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *SetOkButtonLabel )(
+         IFileSaveDialog *,  LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *SetFileNameLabel )(
+         IFileSaveDialog *,  LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *GetResult )(
+         IFileSaveDialog *, IShellItem **);
+    HRESULT ( STDMETHODCALLTYPE *AddPlace )(
+         IFileSaveDialog *, IShellItem *, FDAP);
+    HRESULT ( STDMETHODCALLTYPE *SetDefaultExtension )(
+         IFileSaveDialog *, LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *Close )( IFileSaveDialog *, HRESULT);
     HRESULT ( STDMETHODCALLTYPE *SetClientGuid )(
-        IFileSaveDialog * this, REFGUID guid);
-    HRESULT ( STDMETHODCALLTYPE *ClearClientData )( IFileSaveDialog * this);
+        IFileSaveDialog *, REFGUID);
+    HRESULT ( STDMETHODCALLTYPE *ClearClientData )( IFileSaveDialog *);
     /* pFilter Actually IShellItemFilter* */
-    HRESULT ( STDMETHODCALLTYPE *SetFilter )( 
-        IFileSaveDialog * this, void *pFilter);
-    HRESULT ( STDMETHODCALLTYPE *SetSaveAsItem )( 
-        IFileSaveDialog * this, IShellItem *psi);
-    HRESULT ( STDMETHODCALLTYPE *SetProperties )( 
-        IFileSaveDialog * this, IPropertyStore *pStore);
-    HRESULT ( STDMETHODCALLTYPE *SetCollectedProperties )( 
-        IFileSaveDialog * this, IPropertyDescriptionList *pList,
-        BOOL fAppendDefault);
-    HRESULT ( STDMETHODCALLTYPE *GetProperties )( 
-        IFileSaveDialog * this, IPropertyStore **ppStore);
-    HRESULT ( STDMETHODCALLTYPE *ApplyProperties )( 
-        IFileSaveDialog * this, IShellItem *psi, IPropertyStore *pStore,
-        HWND hwnd, IFileOperationProgressSink *pSink);
+    HRESULT ( STDMETHODCALLTYPE *SetFilter )(
+        IFileSaveDialog *, void *);
+    HRESULT ( STDMETHODCALLTYPE *SetSaveAsItem )(
+        IFileSaveDialog *, IShellItem *);
+    HRESULT ( STDMETHODCALLTYPE *SetProperties )(
+        IFileSaveDialog *, IPropertyStore *);
+    HRESULT ( STDMETHODCALLTYPE *SetCollectedProperties )(
+        IFileSaveDialog *, IPropertyDescriptionList *, BOOL);
+    HRESULT ( STDMETHODCALLTYPE *GetProperties )(
+        IFileSaveDialog *, IPropertyStore **);
+    HRESULT ( STDMETHODCALLTYPE *ApplyProperties )(
+        IFileSaveDialog *, IShellItem *, IPropertyStore *,
+        HWND, IFileOperationProgressSink *);
 
     END_INTERFACE
 
@@ -460,63 +492,63 @@ struct IFileSaveDialog {
 typedef struct IFileOpenDialog IFileOpenDialog;
 typedef struct IFileOpenDialogVtbl {
     BEGIN_INTERFACE
-        
-    HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-        IFileOpenDialog * this, REFIID riid, void **ppvObject);
-    ULONG ( STDMETHODCALLTYPE *AddRef )( IFileOpenDialog * this);
-    ULONG ( STDMETHODCALLTYPE *Release )( IFileOpenDialog * this);
-    HRESULT ( STDMETHODCALLTYPE *Show )( IFileOpenDialog * this, HWND);
-    HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileOpenDialog * this,
-        UINT cFileTypes, const TCLCOMDLG_FILTERSPEC *rgFilterSpec);
-    HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )( 
-        IFileOpenDialog * this, UINT iFileType);
-    HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )( 
-        IFileOpenDialog * this, UINT *piFileType);
+
+    HRESULT ( STDMETHODCALLTYPE *QueryInterface )(
+        IFileOpenDialog *, REFIID, void **);
+    ULONG ( STDMETHODCALLTYPE *AddRef )( IFileOpenDialog *);
+    ULONG ( STDMETHODCALLTYPE *Release )( IFileOpenDialog *);
+    HRESULT ( STDMETHODCALLTYPE *Show )( IFileOpenDialog *, HWND);
+    HRESULT ( STDMETHODCALLTYPE *SetFileTypes )( IFileOpenDialog *,
+        UINT, const TCLCOMDLG_FILTERSPEC *);
+    HRESULT ( STDMETHODCALLTYPE *SetFileTypeIndex )(
+        IFileOpenDialog *, UINT);
+    HRESULT ( STDMETHODCALLTYPE *GetFileTypeIndex )(
+        IFileOpenDialog *, UINT *);
     /* Actually pfde is IFileDialogEvents* */
-    HRESULT ( STDMETHODCALLTYPE *Advise )( 
-        IFileOpenDialog * this, void *pfde, DWORD *pdwCookie);
-    HRESULT ( STDMETHODCALLTYPE *Unadvise )( IFileOpenDialog * this, DWORD);
-    HRESULT ( STDMETHODCALLTYPE *SetOptions )( 
-        IFileOpenDialog * this, FILEOPENDIALOGOPTIONS fos);
-    HRESULT ( STDMETHODCALLTYPE *GetOptions )( 
-        IFileOpenDialog * this, FILEOPENDIALOGOPTIONS *pfos);
-    HRESULT ( STDMETHODCALLTYPE *SetDefaultFolder )( 
-        IFileOpenDialog * this, IShellItem *psi);
-    HRESULT ( STDMETHODCALLTYPE *SetFolder )( 
-        IFileOpenDialog * this, IShellItem *psi);
-    HRESULT ( STDMETHODCALLTYPE *GetFolder )( 
-        IFileOpenDialog * this, IShellItem **ppsi);
-    HRESULT ( STDMETHODCALLTYPE *GetCurrentSelection )( 
-        IFileOpenDialog * this, IShellItem **ppsi);
-    HRESULT ( STDMETHODCALLTYPE *SetFileName )( 
-        IFileOpenDialog * this,  LPCWSTR pszName);
-    HRESULT ( STDMETHODCALLTYPE *GetFileName )( 
-        IFileOpenDialog * this, LPWSTR *pszName);
-    HRESULT ( STDMETHODCALLTYPE *SetTitle )( 
-        IFileOpenDialog * this, LPCWSTR pszTitle);
-    HRESULT ( STDMETHODCALLTYPE *SetOkButtonLabel )( 
-        IFileOpenDialog * this, LPCWSTR pszText);
-    HRESULT ( STDMETHODCALLTYPE *SetFileNameLabel )( 
-        IFileOpenDialog * this, LPCWSTR pszLabel);
-    HRESULT ( STDMETHODCALLTYPE *GetResult )( 
-        IFileOpenDialog * this, IShellItem **ppsi);
-    HRESULT ( STDMETHODCALLTYPE *AddPlace )( 
-        IFileOpenDialog * this, IShellItem *psi, FDAP fdap);
-    HRESULT ( STDMETHODCALLTYPE *SetDefaultExtension )( 
-        IFileOpenDialog * this, LPCWSTR pszDefaultExtension);
-    HRESULT ( STDMETHODCALLTYPE *Close )( IFileOpenDialog * this, HRESULT hr);
-    HRESULT ( STDMETHODCALLTYPE *SetClientGuid )( 
-        IFileOpenDialog * this, REFGUID guid);
-    HRESULT ( STDMETHODCALLTYPE *ClearClientData )( 
-        IFileOpenDialog * this);
-    HRESULT ( STDMETHODCALLTYPE *SetFilter )( 
-        IFileOpenDialog * this,
+    HRESULT ( STDMETHODCALLTYPE *Advise )(
+        IFileOpenDialog *, void *, DWORD *);
+    HRESULT ( STDMETHODCALLTYPE *Unadvise )( IFileOpenDialog *, DWORD);
+    HRESULT ( STDMETHODCALLTYPE *SetOptions )(
+        IFileOpenDialog *, FILEOPENDIALOGOPTIONS);
+    HRESULT ( STDMETHODCALLTYPE *GetOptions )(
+        IFileOpenDialog *, FILEOPENDIALOGOPTIONS *);
+    HRESULT ( STDMETHODCALLTYPE *SetDefaultFolder )(
+        IFileOpenDialog *, IShellItem *);
+    HRESULT ( STDMETHODCALLTYPE *SetFolder )(
+        IFileOpenDialog *, IShellItem *);
+    HRESULT ( STDMETHODCALLTYPE *GetFolder )(
+        IFileOpenDialog *, IShellItem **);
+    HRESULT ( STDMETHODCALLTYPE *GetCurrentSelection )(
+        IFileOpenDialog *, IShellItem **);
+    HRESULT ( STDMETHODCALLTYPE *SetFileName )(
+        IFileOpenDialog *,  LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *GetFileName )(
+        IFileOpenDialog *, LPWSTR *);
+    HRESULT ( STDMETHODCALLTYPE *SetTitle )(
+        IFileOpenDialog *, LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *SetOkButtonLabel )(
+        IFileOpenDialog *, LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *SetFileNameLabel )(
+        IFileOpenDialog *, LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *GetResult )(
+        IFileOpenDialog *, IShellItem **);
+    HRESULT ( STDMETHODCALLTYPE *AddPlace )(
+        IFileOpenDialog *, IShellItem *, FDAP);
+    HRESULT ( STDMETHODCALLTYPE *SetDefaultExtension )(
+        IFileOpenDialog *, LPCWSTR);
+    HRESULT ( STDMETHODCALLTYPE *Close )( IFileOpenDialog *, HRESULT);
+    HRESULT ( STDMETHODCALLTYPE *SetClientGuid )(
+        IFileOpenDialog *, REFGUID);
+    HRESULT ( STDMETHODCALLTYPE *ClearClientData )(
+        IFileOpenDialog *);
+    HRESULT ( STDMETHODCALLTYPE *SetFilter )(
+        IFileOpenDialog *,
         /* pFilter is actually IShellItemFilter */
-        void *pFilter);
-    HRESULT ( STDMETHODCALLTYPE *GetResults )( 
-        IFileOpenDialog * this, IShellItemArray **ppenum);
-    HRESULT ( STDMETHODCALLTYPE *GetSelectedItems )( 
-        IFileOpenDialog * this, IShellItemArray **ppsai);
+        void *);
+    HRESULT ( STDMETHODCALLTYPE *GetResults )(
+        IFileOpenDialog *, IShellItemArray **);
+    HRESULT ( STDMETHODCALLTYPE *GetSelectedItems )(
+        IFileOpenDialog *, IShellItemArray **);
 
     END_INTERFACE
 } IFileOpenDialogVtbl;
@@ -528,13 +560,6 @@ struct IFileOpenDialog
 
 #endif /* __IFileDialog_INTERFACE_DEFINED__ */
 
-/* Define this GUID in any case, even when __IShellItem_INTERFACE_DEFINED__ is 
- * defined in the headers we might still not have it in the actual uuid.lib, 
- * this happens with at least VC7 used with its original (i.e. not updated) SDK 
- * and there is no harm in defining the GUID unconditionally. */
-DEFINE_GUID(IID_IShellItem, 
-	0x43826D1E, 0xE718, 0x42EE, 0xBC, 0x55, 0xA1, 0xE2, 0x61, 0xC3, 0x7B, 0xFE);
- 
 /*
  * Definitions of functions used only in this file.
  */
@@ -549,7 +574,7 @@ static int              ParseOFNOptions(ClientData clientData,
                             Tcl_Obj *const objv[], enum OFNOper oper, OFNOpts *optsPtr);
 static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr,
                          enum OFNOper oper);
-static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr, 
+static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                             enum OFNOper oper);
 static int 		GetFileName(ClientData clientData,
                                     Tcl_Interp *interp, int objc,
@@ -600,7 +625,7 @@ struct ShellProcPointers {
  *     unnecessary bookkeeping.
  *
  * Return value:
- *     None. 
+ *     None.
  *
  * Side effects:
  *     ShellProcs is populated.
@@ -1059,8 +1084,8 @@ ParseOFNOptions(
     case OFN_FILE_SAVE: options = saveOptions; break;
     case OFN_DIR_CHOOSE: options = dirOptions; break;
     case OFN_FILE_OPEN: options = openOptions; break;
-    }        
-        
+    }
+
     ZeroMemory(optsPtr, sizeof(*optsPtr));
     // optsPtr->forceXPStyle = 1;
     optsPtr->tkwin = clientData;
@@ -1163,7 +1188,7 @@ error_return:                   /* interp should already hold error */
  *
  *      Checks whether the new (Vista) file dialogs can be used on
  *      the system.
- * 
+ *
  * Returns:
  *      1 if new dialogs are available, 0 otherwise
  *
@@ -1203,7 +1228,7 @@ static int VistaFileDialogsAvailable()
                     }
                 }
             }
-        }        
+        }
     }
 
     return (tsdPtr->newFileDialogsState == FDLG_STATE_USE_NEW);
@@ -1215,7 +1240,7 @@ static int VistaFileDialogsAvailable()
  * GetFileNameVista --
  *
  *	Displays the new file dialogs on Vista and later.
- *      This function must generally not be called unless the 
+ *      This function must generally not be called unless the
  *      tsdPtr->newFileDialogsState is FDLG_STATE_USE_NEW but if
  *      it is, it will just pass the call to the older GetFileNameXP
  *
@@ -1260,7 +1285,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 
     /*
      * The only validation we need to do w.r.t caller supplied data
-     * is the filter specification so do that before creating 
+     * is the filter specification so do that before creating
      */
     if (MakeFilterVista(interp, optsPtr, &nfilters, &filterPtr,
                         &defaultFilterIndex) != TCL_OK)
@@ -1298,8 +1323,8 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
         hr = fdlgIf->lpVtbl->SetFileTypeIndex(fdlgIf, defaultFilterIndex);
         if (FAILED(hr))
             goto vamoose;
-    }        
-        
+    }
+
     /* Flags are equivalent to those we used in the older API */
 
     /*
@@ -1348,7 +1373,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                                        Tcl_GetUnicode(optsPtr->titleObj));
         if (FAILED(hr))
             goto vamoose;
-    }        
+    }
 
     if (optsPtr->file[0]) {
         hr = fdlgIf->lpVtbl->SetFileName(fdlgIf, optsPtr->file);
@@ -1362,14 +1387,14 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                Tcl_DStringLength(&optsPtr->utfDirString), &dirString);
         hr = ShellProcs.SHCreateItemFromParsingName(
             (TCHAR *) Tcl_DStringValue(&dirString), NULL,
-            &IID_IShellItem, (void **) &dirIf);
+            &IIDIShellItem, (void **) &dirIf);
         /* XXX - Note on failure we do not raise error, simply ignore ini dir */
         if (SUCCEEDED(hr)) {
             /* Note we use SetFolder, not SetDefaultFolder - see MSDN docs */
             fdlgIf->lpVtbl->SetFolder(fdlgIf, dirIf); /* Ignore errors */
         }
         Tcl_DStringFree(&dirString);
-    }    
+    }
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
     hr = fdlgIf->lpVtbl->Show(fdlgIf, hWnd);
@@ -2198,7 +2223,7 @@ static int MakeFilterVista(
         const char *sep;
         FileFilterClause *clausePtr;
         int nbytes;
-    
+
         /* Check if this entry should be shown as the default */
         if (initial && strcmp(initial, filterPtr->name) == 0)
             initialIndex = i+1; /* Windows filter indices are 1-based */
@@ -2230,7 +2255,7 @@ static int MakeFilterVista(
                 sep = ";";
             }
         }
-        
+
         /* Again we need a Unicode form of the string */
 	Tcl_WinUtfToTChar(Tcl_DStringValue(&patterns), -1, &ds);
         nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
@@ -2343,7 +2368,7 @@ Tk_ChooseDirectoryObjCmd(
     OFNOpts ofnOpts;
     const char *utfDir;
 
-    result = ParseOFNOptions(clientData, interp, objc, objv, 
+    result = ParseOFNOptions(clientData, interp, objc, objv,
                  OFN_DIR_CHOOSE, &ofnOpts);
     if (result != TCL_OK)
         return result;
