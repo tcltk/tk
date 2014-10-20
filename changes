@@ -7134,4 +7134,6 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2014-10-14 (bug)[fb35eb] fix PNG transparency appearance (walton,culler)
 
+2014-10-18 (feature)[TIP 432] Win: updated file dialogs (nadkarni)
+
 --- Released 8.6.3, October 25, 2014 --- http://core.tcl.tk/tk/ for details
