@@ -14,9 +14,6 @@
 #include "tkFont.h"
 
 #include <commdlg.h>		/* includes common dialog functionality */
-#ifdef _MSC_VER
-#   pragma comment (lib, "comdlg32.lib")
-#endif
 #include <dlgs.h>		/* includes common dialog template defines */
 #include <cderr.h>		/* includes the common dialog error codes */
 
@@ -25,6 +22,8 @@
 
 #ifdef _MSC_VER
 #   pragma comment (lib, "shell32.lib")
+#   pragma comment (lib, "comdlg32.lib")
+#   pragma comment (lib, "uuid.lib")
 #endif
 
 /* These needed for compilation with VC++ 5.2 */
