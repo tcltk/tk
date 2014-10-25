@@ -219,6 +219,7 @@ typedef enum SIATTRIBFLAGS {
     SIATTRIBFLAGS_MASK	= 0x3,
     SIATTRIBFLAGS_ALLITEMS	= 0x4000
 } SIATTRIBFLAGS;
+#ifdef __MSVCRT__
 typedef ULONG SFGAOF;
 
 typedef struct IShellItem IShellItem;
@@ -249,6 +250,7 @@ typedef struct IShellItemVtbl
 struct IShellItem {
     CONST_VTBL struct IShellItemVtbl *lpVtbl;
 };
+#endif /* __MSVCRT__ */
 typedef struct IShellItemArray IShellItemArray;
 typedef struct IShellItemArrayVtbl
 {
