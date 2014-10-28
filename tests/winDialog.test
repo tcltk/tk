@@ -273,10 +273,10 @@ test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
 	    Click ok
 	}
     }
-    string totitle $x$msg
+    set x "[file tail $x]$msg"
 } -cleanup {
     unset msg
-} -result [string totitle [file join [pwd] bar.foo]]
+} -result bar.foo
 test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
     nt testwinevent
 } -body {
@@ -289,27 +289,32 @@ test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
 	    Click ok
 	}
     }
-    string totitle $x$msg
+    set x "[file tail $x]$msg"
 } -cleanup {
     unset msg
-} -result [string totitle [file join [pwd] bar.foo]]
-if {![vista?]} {
+} -result bar.foo
+test winDialog-5.9 {GetFileName: file types} -constraints {
+    nt testwinevent
+} -body {
+    #        case FILE_TYPES:
+    
+    start {tk_getSaveFile -filetypes {{"foo files" .foo FOOF}} -title Foo}
     # XXX - currently disabled for vista style dialogs because the file
     # types control has no control ID and we don't have a mechanism to
     # locate it.
-    test winDialog-5.9 {GetFileName: file types} -constraints {
-        nt testwinevent
-    } -body {
-        #        case FILE_TYPES:
-        
-        start {tk_getSaveFile -filetypes {{"foo files" .foo FOOF}} -title Foo}
+    if {[vista?]} {
+        then {
+            Click cancel
+        }
+        return 1
+    } else {
         then {
             set x [GetText 0x470]
             Click cancel
         }
-        return $x
-    } -result {foo files (*.foo)}
-}
+        return [string equal $x {foo files (*.foo)}]
+    }
+} -result 1
 test winDialog-5.10 {GetFileName: file types: MakeFilter() fails} -constraints {
     nt
 } -body {
@@ -346,8 +351,8 @@ test winDialog-5.13 {GetFileName: initial file} -constraints {
     then {
         Click ok
     }
-    string totitle $x
-} -result [string totitle [file join [pwd] "12x 456"]]
+    file tail $x
+} -result "12x 456"
 test winDialog-5.14 {GetFileName: initial file: Tcl_TranslateFileName()} -constraints {
     nt
 } -body {
