@@ -632,7 +632,12 @@ ConfigureScale(
 	    scalePtr->tickInterval = -scalePtr->tickInterval;
 	}
 
-	ComputeFormat(scalePtr);
+	if (scalePtr->digits > TCL_MAX_PREC) {
+		Tcl_AppendResult(interp, "too large -digits value", NULL);
+		continue;
+	} else {
+		ComputeFormat(scalePtr);
+	}
 
 	scalePtr->labelLength = scalePtr->label ? (int)strlen(scalePtr->label) : 0;
 
@@ -888,7 +893,7 @@ static void
 ComputeScaleGeometry(
     register TkScale *scalePtr)	/* Information about widget. */
 {
-    char valueString[PRINT_CHARS];
+    char valueString[TCL_DOUBLE_SPACE];
     int tmp, valuePixels, x, y, extraSpace;
     Tk_FontMetrics fm;
 
@@ -1304,7 +1309,7 @@ ScaleSetVariable(
     register TkScale *scalePtr)	/* Info about widget. */
 {
     if (scalePtr->varNamePtr != NULL) {
-	char string[PRINT_CHARS];
+	char string[TCL_DOUBLE_SPACE];
 
 	sprintf(string, scalePtr->format, scalePtr->value);
 	scalePtr->flags |= SETTING_VAR;
