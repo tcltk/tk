@@ -35,7 +35,6 @@ foreach test {
     {-command "set x" {set x} {} {}}
     {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
     {-digits 5 5 badValue {expected integer but got "badValue"}}
-    {-digits 17 17 18 {too large -digits value}}
     {-fg #00ff00 #00ff00 badValue {unknown color name "badValue"}}
     {-font fixed fixed {} {font "" doesn't exist}}
     {-foreground green green badValue {unknown color name "badValue"}}
