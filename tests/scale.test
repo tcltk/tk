@@ -387,6 +387,11 @@ test scale-6.20 {ComputeFormat procedure} {
     .s set 1001.23456789
     .s get
 } {1001.235}
+test scale-6.21 {ComputeFormat procedure} {
+    .s configure -length 200 -from 1000 -to 1001.8 -resolution 0 -digits 200
+    .s set 1001.23456789
+    .s get
+} {1001.235}
 
 test scale-7.1 {ComputeScaleGeometry procedure} {nonPortable fonts} {
     catch {destroy .s}
