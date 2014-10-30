@@ -688,6 +688,11 @@ test scale-6.20 {ComputeFormat procedure} -body {
     .s set 1001.23456789
     .s get
 } -result {1001.235}
+test scale-6.21 {ComputeFormat procedure} -body {
+    .s configure -length 200 -from 1000 -to 1001.8 -resolution 0 -digits 200
+    .s set 1001.23456789
+    .s get
+} -result {1001.235}
 destroy .s
 
 
