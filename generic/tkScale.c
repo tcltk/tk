@@ -632,12 +632,7 @@ ConfigureScale(
 	    scalePtr->tickInterval = -scalePtr->tickInterval;
 	}
 
-	if (scalePtr->digits > TCL_MAX_PREC) {
-		Tcl_AppendResult(interp, "too large -digits value", NULL);
-		continue;
-	} else {
-		ComputeFormat(scalePtr);
-	}
+	ComputeFormat(scalePtr);
 
 	scalePtr->labelLength = scalePtr->label ? (int)strlen(scalePtr->label) : 0;
 
@@ -813,6 +808,9 @@ ComputeFormat(
      */
 
     numDigits = scalePtr->digits;
+    if (numDigits > TCL_MAX_PREC) {
+	numDigits = 0;
+    }
     if (numDigits <= 0) {
 	if (scalePtr->resolution > 0) {
 	    /*
