@@ -501,7 +501,7 @@ end
 %%EOF
 "
 
-test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} {
+test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} -body {
     catch {destroy .c}
     canvas .c
     pack .c
@@ -513,7 +513,9 @@ test canvText-18.1 {bug fix 2525, find enclosed on text with newlines} {
     incr y2
     update
     .c find enclosed 99 99 [expr $x2 + $i] [expr $y2 + 1]
-} 1
+} -cleanup {
+    unset -nocomplain bbox x2 y2
+} -result 1
 
 test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} {
     catch {destroy .c}
