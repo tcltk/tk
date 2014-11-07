@@ -7136,4 +7136,12 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2014-10-18 (feature)[TIP 432] Win: updated file dialogs (nadkarni)
 
---- Released 8.6.3, October 25, 2014 --- http://core.tcl.tk/tk/ for details
+2014-10-26 Support for Windows 10 (nijtmans)
+
+2014-10-28 (bug) OSX: Improved ttk notebook tab metrics for Yosemite (walzer)
+
+2014-10-30 (bug)[3417012] [scale -digits $bigValue] segfault (vogel)
+
+2014-11-07 (bug)[3529885] [scale] handling of negative resolution (vogel)
+
+--- Released 8.6.3, November 12, 2014 --- http://core.tcl.tk/tk/ for details
