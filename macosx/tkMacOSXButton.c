@@ -197,7 +197,7 @@ TkpDestroyButton(
     [macButtonPtr->button setTag:(NSInteger)-1];
 
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->button);
-    TkMacOSXMakeCollectableAndRelease(macButtonPtr->selectImage);
+    TkMacOSXMakeCollectableAndRelease(macButtonPtr->image);
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->selectImage);
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->tristateImage);
 }
