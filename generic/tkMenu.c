@@ -1419,6 +1419,7 @@ DestroyMenuEntry(
 		}
 	    }
 	    UnhookCascadeEntry(mePtr);
+	    menuRefPtr = mePtr->childMenuRefPtr;
 	    if (menuRefPtr != NULL) {
 		if (menuRefPtr->menuPtr == destroyThis) {
 		    menuRefPtr->menuPtr = NULL;
