@@ -36,6 +36,10 @@ typedef int (*XAfterFunction) (	    /* WARNING, this type not in Xlib spec */
 
 /* !BEGIN!: Do not edit below this line. */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Exported function declarations:
  */
@@ -1453,10 +1457,8 @@ typedef struct TkIntXlibStubs {
 #endif /* AQUA */
 } TkIntXlibStubs;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 extern TkIntXlibStubs *tkIntXlibStubsPtr;
+
 #ifdef __cplusplus
 }
 #endif
