@@ -1256,10 +1256,10 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     HINSTANCE hlibrary;
     Ttk_Theme themePtr, parentPtr, vistaPtr;
     ElementInfo *infoPtr;
-    OSVERSIONINFO os;
+    OSVERSIONINFOW os;
 
-    os.dwOSVersionInfoSize = sizeof(os);
-    GetVersionEx(&os);
+    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+    GetVersionExW(&os);
 
     procs = LoadXPThemeProcs(&hlibrary);
     if (!procs)

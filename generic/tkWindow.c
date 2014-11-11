@@ -2831,7 +2831,7 @@ DeleteWindowsExitProc(
     tsdPtr->initialized = 0;
 }
 
-#if defined(__WIN32__) && !defined(__WIN64__)
+#if defined(__WIN32__)
 
 static HMODULE tkcygwindll = NULL;
 
@@ -2903,7 +2903,7 @@ int
 Tk_Init(
     Tcl_Interp *interp)		/* Interpreter to initialize. */
 {
-#if defined(__WIN32__) && !defined(__WIN64__)
+#if defined(__WIN32__)
     if (tkcygwindll) {
 	int (*sym)(Tcl_Interp *);
 
@@ -2976,7 +2976,7 @@ Tk_SafeInit(
      * checked at several places to differentiate the two initialisations.
      */
 
-#if defined(__WIN32__) && !defined(__WIN64__)
+#if defined(__WIN32__)
     if (tkcygwindll) {
 	int (*sym)(Tcl_Interp *);
 
@@ -3021,11 +3021,10 @@ Initialize(
     ThreadSpecificData *tsdPtr;
 
     /*
-     * Ensure that we are getting the matching version of Tcl. This is really
-     * only an issue when Tk is loaded dynamically.
+     * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.5.0", 0) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3257,11 +3256,6 @@ Initialize(
 	geometry = NULL;
     }
 
-    if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 0) == NULL) {
-	code = TCL_ERROR;
-	goto done;
-    }
-
     /*
      * Provide Tk and its stub table.
      */
@@ -3281,9 +3275,11 @@ Initialize(
 
     Tcl_SetMainLoop(Tk_MainLoop);
 
-#undef Tk_InitStubs
-
+#ifndef _WIN32
+    /* On Windows, this has no added value. */
+#   undef Tk_InitStubs
     Tk_InitStubs(interp, TK_VERSION, 1);
+#endif
 
     /*
      * Initialized the themed widget set

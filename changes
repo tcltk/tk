@@ -6867,3 +6867,101 @@ Many revisions to better support a Cygwin environment (nijtmans)
 2012-11-07 (bug fix)[3574708] TkSetFocusWin() crash on XP (mcdonald)
 
 --- Released 8.5.13, November 12, 2012 --- See ChangeLog for details ---
+
+2012-12-04 (bug fix)[3588824] text index of images with weird names (gavilan)
+
+2012-12-06 (bug fix) avoid buggy syscall to parse hex color values (fellows)
+
+2013-01-22 (bug fix)[3601782] Tcl_InitStubs failure message (nijtmans)
+
+2013-01-31 (bug fix)[3599928] use XKeycodeToKeysym on old systems (cassoff)
+
+2013-02-04 (bug fix)[3603077] treeview update on tag add/remove (english)
+
+2013-02-28 (bug fix)[3599312] First Alt key event is lost (mcdonald)
+
+2013-03-11 (bug fix)[3607326] Crash [listbox .l -listvariable $array] (porter)
+
+2013-03-13 (enhancement) better build support for Debian arch (shadura)
+
+2013-03-27 (bug fix)[3608074] button, listbox, menu <<Invoke>> (nijtmans)
+
+2013-04-01 (bug fix)[3607830] Xkb runtime checks (griffin)
+
+--- Released 8.5.14, April 3, 2013 --- See ChangeLog for details ---
+
+2013-05-19 (platform support) FreeBSD updates (cerutti)
+
+2013-06-05 (bug fix)[3613759] [ttk::entry .e; .e xview end] (nijtmans)
+
+2013-06-05 (bug fix)[2100430] [ttk::entry .e; .e xview insert] (nijtmans)
+
+2013-06-07 (bug fix)[1913750,3500545,3416492,3095112] file dialogs (nijtmans)
+
+2013-06-28 (bug fix)[2501278] reverse ttk::scale key bindings {mcdonald)
+
+2013-06-28 (bug fix)[3588364] crash loading Tk 64-bit windows (nijtmans)
+
+2013-07-02 (bug fix)[32afa6] corrected dirent64 check (griffin)
+
+2013-08-25 (bug fix)[3016181] Cocoa: [destroy $scrollbar] => crash (goddard)
+
+2013-08-26 (bug fix)[c597acd] [$pb step] work with traces (english)
+
+2013-09-15 (bug fix)[8eb5671] macosx Tk compile errors w/clang (deily)
+
+--- Released 8.5.15, September 18, 2013 --- http://core.tcl.tk/tk/ for details
+
+2013-10-27 (bug fix) OSX drawing lags (deily,steffen,walzer)
+
+2013-10-28 (bug fix)[3603436] png wrong component indices (nijtmans)
+
+2013-10-31 (bug fix) C++ friendly stubs struct declarations (nijtmans)
+
+2013-10-31 (bug fix) double free of a TkFont (nijtmans)
+
+2013-11-03 (bug fix)[1632447] support PPM maxval up to 65535 (fellows)
+
+2013-11-05 (bug fix)[426679e] OpenBSD man page rendering (nijtmans)
+
+2013-11-11 (bug fix)[0aa5e85] option file \n syntax support (nijtmans)
+
+2013-11-20 (platforms) Support for Windows 8.1 (nijtmans)
+
+2014-01-23 (bug fix)[3606644] X: correct fontconfig dependence (venable)
+
+2014-01-23 (bug fix) FreeBSD build fixes (cerutti)
+
+2014-02-06 (bug fix)[3279221] [menu] event race (danckaert,kupries)
+
+2014-02-11 (bug fix)[52ca3e7] XkbOpenDisplay macro correction (nijtmans)
+
+2014-03-16 (bug fix) Xcode 5.1 update; Retina displays (walzer)
+
+2014-03-20 (bug fix)[2f7cbd0] FreeBSD 10.0 build failure (nijtmans)
+
+2014-04-01 (bug fix)[5bcb502] @TK_LIBS@ in pkgconfig (badshah400,nijtmans)
+
+2014-05-27 (bug fix)[a80f5d7] autoscroll initiation (crogers,english)
+
+2014-07-07 (bug fix) OSX alpha channel rendering (culler,walzer)
+
+2014-07-24 (bug fix) OSX [text] image display & scrolling (culler,walzer)
+
+2014-08-01 (bug fix) OSX font config crash (rob@bitkeeper)
+
+--- Released 8.5.16, August 25, 2014 --- http://core.tcl.tk/tk/ for details
+
+2014-08-27 (bug) Cocoa: Crash after [$button destroy] (walzer)
+
+2014-09-23 (bug) Cocoa: button and scroll display fixes (walzer)
+
+2014-09-24 (bug) Cocoa: improved drawing performance (walzer)
+
+2014-10-11 (bug)[9e487e] Phony button clicks from browsers to plugin (nijtmans)
+
+2014-10-11 (bug)[810c43] [text] elide changes advance epoch (vogel)
+
+2014-10-14 (bug)[fb35eb] fix PNG transparency appearance (walton,culler)
+
+--- Released 8.5.17, October 25, 2014 --- http://core.tcl.tk/tk/ for details
