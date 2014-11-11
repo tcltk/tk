@@ -1,3 +1,137 @@
+A NOTE ON THE CHANGELOG:
+Starting in early 2011, Tk source code has been under the management of
+fossil, hosted at http://core.tcl.tk/tk/ .  Fossil presents a "Timeline"
+view of changes made that is superior in every way to a hand edited log file.
+Because of this, many Tcl developers are now out of the habit of maintaining
+this log file.  You may still find useful things in it, but the Timeline is
+a better first place to look now.
+============================================================================
+
+2013-08-30  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tk.h:		Bump to 8.5.15 for release.
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
+2013-08-25   Kevin Walzer <wordtech@users.sourceforge.net>
+
+	* macosx/tkMacOSXButton.c:  Bug [3016181]: Crash after scrollbar
+	* macosx/tkMacOSXMenu.c:	destroyed, Tk Cocoa.
+	* macosx/tkMacOSXScrlbr.c:
+	* macosx/tkMacOSXWm.c:
+
+2012-08-15  Joe English  <jenglish@users.sourceforge.net>
+
+	* library/ttk/progress.tcl: Bug [c597acdab3]: Call [$pb step]
+	in tail position in ttk::progressbar::Autoincrement, so that
+	the widget is in a consistent state when any write traces on
+	the linked -variable are fired. 
+
+2013-07-02  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4:  Bug [32afa6e256]: dirent64 check is incorrect in tcl.m4
+	* unix/configure: (thanks to Brian Griffin)
+
+2012-06-28  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/ttk/scale.tcl: [Bug 2501278]: ttk::scale keyboard binding
+	problem.
+
+2012-06-07  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tkWinDialog.c: [Bug 1913750]: tk_chooseDirectory -initialdir
+	internationalization problem.
+	[Bug 3500545]: tk_getOpenFile -multiple 1 wrong	on windows.
+	[Bug 3416492]: Crash in open/save file dialog in Windows 7 libraries.
+	[Bug 3095112]: crash when selecting file from Win7 Library.
+	(All of those backported from Tk 8.6)
+
+2013-06-05  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* generic/ttk/ttkScroll.c: [Bug 3613759]: ttk::entry and symbolic
+	index names.
+	* generic/ttk/ttkEntry.c: [Bug 2100430]: ttk::entry widget index
+	must be integer
+	* generic/tkEntry.c: Don't set interp result when it will be
+	overwritten later.
+
+2013-05-19  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4:     Fix for FreeBSD, and remove support for older
+	* unix/configure:  FreeBSD versions. Patch by Pietro Cerutti.
+
+2013-04-10  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/makefile.vc: [Bug 3568760]: Tk documentation fails to build
+
+2013-04-01  Don Porter  <dgp@users.sourceforge.net>
+
+	*** 8.5.14 TAGGED FOR RELEASE ***
+
+	* generic/tk.h:		Bump to 8.5.14 for release.
+	* library/tk.tcl:
+	* unix/configure.in:
+	* unix/tk.spec:
+	* win/configure.in:
+	* README:
+
+	* unix/configure:	autoconf-2.59
+	* win/configure:
+
+	* generic/tkInt.h:	[Bug 3607830] Runtime checks that Xkb is
+	* unix/tkUnixEvent.c:	available in the X server before trying to
+	* unix/tkUnixKey.c:	use.  Adapted from patch from Brian Griffin.
+
+2013-03-27  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* library/button.tcl:    [Bug 3608074]: Add <<Invoke>> bindings to
+	* library/listbox.tcl:   Button's, Listbox and Menu.
+	* library/menu.tcl:
+	* doc/event.n:           Document <<Invoke>>, <<ThemeChanged>>,
+	* doc/ttk_panedwindow.n: <<EnteredChild>> (ttk_pandedwindow only) and
+	* doc/ttk_spinbox.n:     <<Increment/Decrement>> (ttk_spinbox only)
+
+2013-03-13  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* unix/tcl.m4: Patch by Andrew Shadura, providing better support for
+	three architectures they have in Debian.
+
+2013-03-11  Don Porter  <dgp@users.sourceforge.net>
+
+	* generic/tkListbox.c:	[Bug 3607326] Stop segfault from
+	* tests/listbox.test:	[listbox .l -listvariable $array].
+
+2013-02-28  Donal K. Fellows  <dkf@users.sf.net>
+
+	* unix/tkUnixKey.c (TkpGetKeySym): [Bug 3599312]: Put the
+	initialization of the key mapping before the input method handling so
+	that Alt key handling is correct on non-OSX Unix. Thanks to Colin
+	McDonald for developing the fix.
+
+2013-01-16  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/Makefile.in:  Don't compile Tk with -DTCL_NO_DEPRECATED by
+	* unix/Makefile.in: default any more, it might hurt when we compile Tk
+	8.x against Tcl 8.y with y > x, because new deprecated constructs
+	might be added in higher Tcl versions (except for Tk 8.6, for now,
+	because there is no higher 8.x yet).
+
+2013-01-14  Jan Nijtmans  <nijtmans@users.sf.net>
+
+	* win/tcl.m4:	 More flexible search for win32 tclConfig.sh,
+	* win/configure: backported from TEA.
+
+2012-12-03  François Vogel  <fvogelnew1@free.fr>
+
+	* generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
+	* tests/textIndex.test:  for weird image names
+
 2012-11-16  Joe Mistachkin  <joe@mistachkin.com>
 
 	* generic/tkBind.c: Add support for an 'M' binding substitution
@@ -7,8 +141,8 @@
 2012-11-13  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinTest.c: [Bug 3585396]: winDialog.test requires user
-	* tests/winDialog.test: interaction. Renumber test-cases as in
-	Tk 8.6, and convert various to tcltest-2 style.
+	* tests/winDialog.test: interaction. Renumber test-cases as in Tk 8.6,
+	and convert various to tcltest-2 style.
 
 2012-11-09  Don Porter  <dgp@users.sourceforge.net>
 
@@ -121,7 +255,7 @@
 	* win/rules.vc:        Backport some improvements from Tcl 8.6
 	* win/makefile.vc:
 
-2012-08-11  Francois Vogel  <fvogelnew1@free.fr>
+2012-08-11  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextTag.c:  [Bug 3554273]: Test textDisp-32.2 failed
 
@@ -132,11 +266,11 @@
 	* unix/tkUnixKey.c:	The warnings were false flags from a
 	* unix/tkUnixRFont.c:	faulty OpenBSD C compiler.
 
-2012-08-03  Francois Vogel  <fvogelnew1@free.fr>
+2012-08-03  François Vogel  <fvogelnew1@free.fr>
 
 	* tests/bind.test:  [Bug 3554081]: Test bind-22.10 failed
 
-2012-08-02  Francois Vogel  <fvogelnew1@free.fr>
+2012-08-02  François Vogel  <fvogelnew1@free.fr>
 
 	* tests/spinbox.test:  [Bug 3553311]: Test spinbox-3.70 failed
 
@@ -267,11 +401,11 @@
 	* generic/tk*Decls.h:    re-generated
 	* win/Makefile.in:       "make genstubs" when cross-compiling on UNIX
 
-2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
+2012-05-28  François Vogel  <fvogelnew1@free.fr>
 
 	* doc/text.n:  [Bug 1630251]: Doc for -endline option was wrong
 
-2012-05-28  Francois Vogel  <fvogelnew1@free.fr>
+2012-05-28  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextDisp.c: [Bug 1630254]: missing scrolling of text widget
 	when from a -startline == -endline initial state it is configured to
@@ -381,7 +515,7 @@
 	* unix/tcl.m4:    Patch from the cygwin folks
 	* unix/configure: (re-generated)
 
-2012-02-28  Francois Vogel  <fvogelnew1@free.fr>
+2012-02-28  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c:      [Bug 1630262, Bug 1615425]: segfault
 	* generic/tkTextBTree.c  when deleting lines or tagging outside of
@@ -427,7 +561,7 @@
 
 	* win/tkWinDialog.c: [Bug 3480471]: tk_getOpenFile crashes on Win64
 
-2012-01-26  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-26  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextDisp.c: [Bug-1754043] and [Bug-2321450]: When
 	-blockcursor is true, the cursor appears as a blinking bar which
@@ -438,26 +572,26 @@
 	* generic/tkImgPhoto.c: [Bug 2433260]: non-critical error in
 	Tk_PhotoPutBlock
 
-2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-25  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c: Don't increase the epoch twice
 
-2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-25  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c:      [Bug-1630271]: segfault/infinite loop
 	* generic/tkTextMark.c:  when a mark is before -startline
 	* tests/textMark.test:
 
-2012-01-25  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-25  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c: [Bug-3475627]: Test text-31.11 fails
 
-2012-01-22  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-22  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkTextMark.c: [Bug-3288113,3288121]: Missing marks/endless
 	* tests/textMark.test:  loop in text mark prev/next
 
-2012-01-19  Francois Vogel  <fvogelnew1@free.fr>
+2012-01-19  François Vogel  <fvogelnew1@free.fr>
 
 	* generic/tkText.c: [Bug-3021557]: Moving the cursor in
 	* tests/text.test:  elided text freezes Tk

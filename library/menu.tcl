@@ -106,6 +106,10 @@ bind Menubutton <space> {
     tk::MbPost %W
     tk::MenuFirstEntry [%W cget -menu]
 }
+bind Menubutton <<Invoke>> {
+    tk::MbPost %W
+    tk::MenuFirstEntry [%W cget -menu]
+}
 
 # Must set focus when mouse enters a menu, in order to allow
 # mixed-mode processing using both the mouse and the keyboard.
@@ -141,6 +145,9 @@ bind Menu <ButtonRelease> {
    tk::MenuInvoke %W 1
 }
 bind Menu <space> {
+    tk::MenuInvoke %W 0
+}
+bind Menu <<Invoke>> {
     tk::MenuInvoke %W 0
 }
 bind Menu <Return> {
@@ -1337,6 +1344,7 @@ proc ::tk_popup {menu x y {entry {}}} {
         tk::SaveGrabInfo $menu
 	grab -global $menu
 	set Priv(popup) $menu
+	set Priv(window) $menu
 	set Priv(menuActivated) 1
 	tk_menuSetFocus $menu
     }
