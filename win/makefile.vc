@@ -360,7 +360,6 @@ TKOBJS = \
 	$(TMP_DIR)\tkUtil.obj \
 	$(TMP_DIR)\tkVisual.obj \
 	$(TMP_DIR)\tkStubInit.obj \
-	$(TMP_DIR)\tkStubLib.obj \
 	$(TMP_DIR)\tkWindow.obj \
 	$(TTK_OBJS) \
 !if !$(STATIC_BUILD)
@@ -649,7 +648,7 @@ $**
 
 
 $(TKSTUBLIB): $(TKSTUBOBJS)
-	$(lib32) -nologo -out:$@ $**
+	$(lib32) -nologo -nodefaultlib -out:$@ $**
 
 
 $(WISH): $(WISHOBJS) $(TKIMPLIB)
@@ -702,7 +701,7 @@ CHMFILE=$(HTMLDIR)\$(HTMLBASE).chm
 htmlhelp: chmsetup $(CHMFILE)
 
 $(CHMFILE): $(DOCDIR)\*
-	@$(TCLSH) $(TOOLSDIR)\tcltk-man2html.tcl
+	@$(TCLSH) $(TCLTOOLSDIR)\tcltk-man2html.tcl
 	@echo Compiling HTML help project
 	@$(HHC) <<$(HHPFILE) >NUL
 [OPTIONS]
