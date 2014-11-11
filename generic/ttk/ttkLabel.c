@@ -347,6 +347,8 @@ static void ImageDraw(
      * Do not stipple at all under Aqua, just draw the image: it shows up 
      * as a white rectangle otherwise.
      */
+
+    
     if (state & TTK_STATE_DISABLED) {
 	if (TtkSelectImage(image->imageSpec, 0ul) == image->tkimg) {
 #ifndef MAC_OSX_TK
@@ -484,6 +486,7 @@ static Ttk_ElementOptionSpec LabelElementOptions[] = {
  * 	Calculate the text, image, and total width and height.
  */
 
+#undef  MAX
 #define MAX(a,b) ((a) > (b) ? a : b);
 static void LabelSetup(
     LabelElement *c, Tk_Window tkwin, Ttk_State state)

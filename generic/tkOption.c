@@ -1019,14 +1019,25 @@ AddFromString(
 		Tcl_SetResult(interp, buf, TCL_VOLATILE);
 		return TCL_ERROR;
 	    }
-	    if ((src[0] == '\\') && (src[1] == '\n')) {
-		src += 2;
-		lineNum++;
-	    } else {
-		*dst = *src;
-		dst++;
-		src++;
+	    if (*src == '\\'){
+		if (src[1] == '\n') {
+		    src += 2;
+		    lineNum++;
+		    continue;
+		} else if (src[1] == 'n') {
+		    src += 2;
+		    *dst++ = '\n';
+		    continue;
+		} else if (src[1] == '\t' || src[1] == ' ' || src[1] == '\\') {
+		    ++src;
+		} else if (src[1] >= '0' && src[1] <= '3' && src[2] >= '0' &&
+			src[2] <= '9' && src[3] >= '0' && src[3] <= '9') {
+		    *dst++ = ((src[1]&7)<<6) | ((src[2]&7)<<3) | (src[3]&7);
+		    src += 4;
+		    continue;
+		}
 	    }
+	    *dst++ = *src++;
 	}
 	*dst = 0;
 

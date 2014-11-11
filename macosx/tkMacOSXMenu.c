@@ -683,15 +683,18 @@ TkpConfigureMenuEntry(
 		  int i = 0;
 		  NSArray *itemArray = [submenu itemArray];
 		  for (NSMenuItem *item in itemArray) {
-		    TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
-		    [item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
-		    i++;
+		      TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
+		        /* Work around an apparent bug where itemArray can have
+                      more items than the menu's entries[] array. */
+                    if (i >= menuRefPtr->menuPtr->numEntries) break;
+		      [item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
+		    i++;		      
 		  }
 		}
-
 	    }
 	}
     }
+ 
     [menuItem setSubmenu:submenu];
 
     return TCL_OK;
@@ -754,11 +757,19 @@ TkpPostMenu(
 				 * to be posted. */
     int y)			/* The global y-coordinate */
 {
-    NSWindow *win = [NSApp keyWindow];
-    if (!win) {
+ 
+
+    /* Get the object that holds this Tk Window.*/
+    Tk_Window root;
+    root = Tk_MainWindow(interp);
+    if (root == NULL) {
 	return TCL_ERROR;
     }
-
+ 
+    Drawable d = Tk_WindowId(root);
+    NSView *rootview = TkMacOSXGetRootControl(d);
+    NSWindow *win = [rootview window];
+ 
     inPostMenu = 1;
 
     int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
@@ -827,7 +838,7 @@ TkpSetWindowMenuBar(
  *
  *----------------------------------------------------------------------
  */
-
+ 
 void
 TkpSetMainMenubar(
     Tcl_Interp *interp,		/* The interpreter of the application */

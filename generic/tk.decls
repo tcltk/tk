@@ -1067,6 +1067,9 @@ declare 272 {
 declare 273 {
     void Tk_CreateOldPhotoImageFormat(Tk_PhotoImageFormat *formatPtr)
 }
+declare 275 {
+    void TkUnusedStubEntry(void)
+}
 
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.

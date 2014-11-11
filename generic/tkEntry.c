@@ -2519,12 +2519,6 @@ GetEntryIndex(
 	} else {
 	badIndex:
 
-	    /*
-	     * Some of the paths here leave messages in the interp's result,
-	     * so we have to clear it out before storing our own message.
-	     */
-
-	    Tcl_SetResult(interp, NULL, TCL_STATIC);
 	    Tcl_AppendResult(interp, "bad ",
 		    (entryPtr->type == TK_ENTRY) ? "entry" : "spinbox",
 		    " index \"", string, "\"", NULL);
@@ -2544,7 +2538,6 @@ GetEntryIndex(
 	}
     } else if (string[0] == 's') {
 	if (entryPtr->selectFirst < 0) {
-	    Tcl_SetResult(interp, NULL, TCL_STATIC);
 	    Tcl_AppendResult(interp, "selection isn't in widget ",
 		    Tk_PathName(entryPtr->tkwin), NULL);
 	    return TCL_ERROR;
@@ -2562,7 +2555,7 @@ GetEntryIndex(
     } else if (string[0] == '@') {
 	int x, roundUp, maxWidth;
 
-	if (Tcl_GetInt(interp, string + 1, &x) != TCL_OK) {
+	if (Tcl_GetInt(NULL, string + 1, &x) != TCL_OK) {
 	    goto badIndex;
 	}
 	if (x < entryPtr->inset) {
@@ -2589,7 +2582,7 @@ GetEntryIndex(
 	    *indexPtr += 1;
 	}
     } else {
-	if (Tcl_GetInt(interp, string, indexPtr) != TCL_OK) {
+	if (Tcl_GetInt(NULL, string, indexPtr) != TCL_OK) {
 	    goto badIndex;
 	}
 	if (*indexPtr < 0){

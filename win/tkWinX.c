@@ -166,20 +166,32 @@ TkGetServerInfo(
     Tk_Window tkwin)		/* Token for window; this selects a particular
 				 * display and server. */
 {
-    char buffer[60];
-    OSVERSIONINFO os;
+    static char buffer[32]; /* Empty string means not initialized yet. */
+    OSVERSIONINFOW os;
 
-    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&os);
-    sprintf(buffer, "Windows %d.%d %d %s", (int)os.dwMajorVersion,
-	    (int)os.dwMinorVersion, (int)os.dwBuildNumber,
+    if (!buffer[0]) {
+	HANDLE handle = LoadLibraryW(L"NTDLL");
+	int(__stdcall *getversion)(void *) =
+		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
+	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+	if (!getversion || getversion(&os)) {
+	    GetVersionExW(&os);
+	}
+	if (handle) {
+	    FreeLibrary(handle);
+	}
+	/* Write the first character last, preventing multi-thread issues. */
+	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
+		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
 #ifdef _WIN64
-	    "Win64"
+		"Win64"
 #else
-	    "Win32"
+		"Win32"
 #endif
-	    );
-    Tcl_SetResult(interp, buffer, TCL_VOLATILE);
+	);
+	buffer[0] = 'W';
+    }
+    Tcl_SetResult(interp, buffer, TCL_STATIC);
 }
 
 /*
@@ -378,10 +390,10 @@ int
 TkWinGetPlatformId(void)
 {
     if (tkPlatformId == 0) {
-	OSVERSIONINFO os;
+	OSVERSIONINFOW os;
 
-	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx(&os);
+	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+	GetVersionExW(&os);
 	tkPlatformId = os.dwPlatformId;
 
 	/*
