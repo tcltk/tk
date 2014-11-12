@@ -7121,3 +7121,27 @@ Many revisions to better support a Cygwin environment (nijtmans)
 2014-08-01 (bug fix) OSX font config crash (rob@bitkeeper)
 
 --- Released 8.6.2, August 27, 2014 --- http://core.tcl.tk/tk/ for details
+
+2014-08-27 (bug) Cocoa: Crash after [$button destroy] (walzer)
+
+2014-09-23 (bug) Cocoa: button and scroll display fixes (walzer)
+
+2014-09-24 (bug) Cocoa: improved drawing performance (walzer)
+
+2014-10-11 (bug)[9e487e] Phony button clicks from browsers to plugin (nijtmans)
+
+2014-10-11 (bug)[810c43] [text] elide changes advance epoch (vogel)
+
+2014-10-14 (bug)[fb35eb] fix PNG transparency appearance (walton,culler)
+
+2014-10-18 (feature)[TIP 432] Win: updated file dialogs (nadkarni)
+
+2014-10-26 Support for Windows 10 (nijtmans)
+
+2014-10-28 (bug) OSX: Improved ttk notebook tab metrics for Yosemite (walzer)
+
+2014-10-30 (bug)[3417012] [scale -digits $bigValue] segfault (vogel)
+
+2014-11-07 (bug)[3529885] [scale] handling of negative resolution (vogel)
+
+--- Released 8.6.3, November 12, 2014 --- http://core.tcl.tk/tk/ for details
