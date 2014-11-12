@@ -79,6 +79,42 @@ TkplatformtestInit(
     return TCL_OK;
 }
 
+struct TestFindControlState {
+    int  id;
+    HWND control;
+};    
+
+/* Callback for window enumeration - used for TestFindControl */
+BOOL CALLBACK TestFindControlCallback(
+    HWND hwnd,
+    LPARAM lParam
+)
+{
+    struct TestFindControlState *fcsPtr = (struct TestFindControlState *)lParam;
+    fcsPtr->control = GetDlgItem(hwnd, fcsPtr->id);
+    /* If we have found the control, return FALSE to stop the enumeration */
+    return fcsPtr->control == NULL ? TRUE : FALSE;
+}
+
+/*
+ * Finds the descendent control window with the specified ID and returns
+ * its HWND.
+ */
+HWND TestFindControl(HWND root, int id)
+{
+    struct TestFindControlState fcs;
+
+    fcs.control = GetDlgItem(root, id);
+    if (fcs.control == NULL) {
+        /* Control is not a direct child. Look in descendents */
+        fcs.id = id;
+        fcs.control = NULL;
+        EnumChildWindows(root, TestFindControlCallback, (LPARAM) &fcs);
+    }
+    return fcs.control;
+}
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -244,11 +280,13 @@ TestwineventObjCmd(
 {
     HWND hwnd = 0;
     HWND child = 0;
+    HWND control;
     int id;
     char *rest;
     UINT message;
     WPARAM wParam;
     LPARAM lParam;
+    LRESULT result;
     static const TkStateMap messageMap[] = {
 	{WM_LBUTTONDOWN,	"WM_LBUTTONDOWN"},
 	{WM_LBUTTONUP,		"WM_LBUTTONUP"},
@@ -302,6 +340,7 @@ TestwineventObjCmd(
 	    return TCL_ERROR;
 	}
     }
+
     message = TkFindStateNum(NULL, NULL, messageMap, Tcl_GetString(objv[3]));
     wParam = 0;
     lParam = 0;
@@ -318,7 +357,19 @@ TestwineventObjCmd(
 	Tcl_DString ds;
 	char buf[256];
 
+#if 0
 	GetDlgItemTextA(hwnd, id, buf, 256);
+#else
+        control = TestFindControl(hwnd, id);
+        if (control == NULL) {
+            Tcl_SetObjResult(interp,
+                             Tcl_ObjPrintf("Could not find control with id %d", id));
+            return TCL_ERROR;
+        }
+        buf[0] = 0;
+        SendMessageA(control, WM_GETTEXT, (WPARAM)sizeof(buf),
+                     (LPARAM) buf);
+#endif
 	Tcl_ExternalToUtfDString(NULL, buf, -1, &ds);
 	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
 	Tcl_DStringFree(&ds);
@@ -326,15 +377,21 @@ TestwineventObjCmd(
     }
     case WM_SETTEXT: {
 	Tcl_DString ds;
-	BOOL result;
 
+        control = TestFindControl(hwnd, id);
+        if (control == NULL) {
+            Tcl_SetObjResult(interp,
+                             Tcl_ObjPrintf("Could not find control with id %d", id));
+            return TCL_ERROR;
+        }
 	Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), -1, &ds);
-	result = SetDlgItemTextA(hwnd, id, Tcl_DStringValue(&ds));
+        result = SendMessageA(control, WM_SETTEXT, 0,
+                                  (LPARAM) Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
 	if (result == 0) {
-    	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to send text to dialog: ", -1));
-    	AppendSystemError(interp, GetLastError());
-		return TCL_ERROR;
+            Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to send text to dialog: ", -1));
+            AppendSystemError(interp, GetLastError());
+            return TCL_ERROR;
 	}
 	break;
     }
@@ -382,6 +439,7 @@ TestfindwindowObjCmd(
     Tcl_DString titleString, classString;
     HWND hwnd = NULL;
     int r = TCL_OK;
+    DWORD myPid;
 
     Tcl_DStringInit(&classString);
     Tcl_DStringInit(&titleString);
@@ -395,8 +453,30 @@ TestfindwindowObjCmd(
     if (objc == 3) {
         class = Tcl_WinUtfToTChar(Tcl_GetString(objv[2]), -1, &classString);
     }
-
+    if (title[0] == 0)
+        title = NULL;
+#if 0
     hwnd  = FindWindow(class, title);
+#else
+    /* We want find a window the belongs to us and not some other process */
+    hwnd = NULL;
+    myPid = GetCurrentProcessId();
+    while (1) {
+        DWORD pid, tid;
+        hwnd = FindWindowEx(NULL, hwnd, class, title);
+        if (hwnd == NULL)
+            break;
+        tid = GetWindowThreadProcessId(hwnd, &pid);
+        if (tid == 0) {
+            /* Window has gone */
+            hwnd = NULL;
+            break;
+        }
+        if (pid == myPid)
+            break;              /* Found it */
+    }
+
+#endif
 
     if (hwnd == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to find window: ", -1));
