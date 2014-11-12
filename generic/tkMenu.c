@@ -1419,13 +1419,14 @@ DestroyMenuEntry(
 		}
 	    }
 	    UnhookCascadeEntry(mePtr);
+	    menuRefPtr = mePtr->childMenuRefPtr;
 	    if (menuRefPtr != NULL) {
 		if (menuRefPtr->menuPtr == destroyThis) {
 		    menuRefPtr->menuPtr = NULL;
 		}
-		if (destroyThis != NULL) {
-		    TkDestroyMenu(destroyThis);
-		}
+	    }
+	    if (destroyThis != NULL) {
+		TkDestroyMenu(destroyThis);
 	    }
 	} else {
 	    UnhookCascadeEntry(mePtr);
