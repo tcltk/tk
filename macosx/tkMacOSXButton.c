@@ -66,6 +66,14 @@ static NSRect TkMacOSXGetButtonFrame(TkButton *butPtr);
 		if ( y > parent_height - 20 || y + widget_height < 0 ) {
 		    return;
 		}
+
+	    /* Do not draw if the widget is completely outside of its parent, or within 50 pixels of the right border; this prevents buttons from being drawn on peer widgets as scrolling occurs. */
+		int parent_width = Tk_Width(Tk_Parent(tkwin));
+		int widget_width = Tk_Width(tkwin);
+		int x = Tk_X(tkwin);
+		if (x > parent_width - 50 || x < 0) { 
+		    return;
+		}
 	    }
 	[super drawRect:dirtyRect];
     }
@@ -189,7 +197,7 @@ TkpDestroyButton(
     [macButtonPtr->button setTag:(NSInteger)-1];
 
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->button);
-    TkMacOSXMakeCollectableAndRelease(macButtonPtr->selectImage);
+    TkMacOSXMakeCollectableAndRelease(macButtonPtr->image);
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->selectImage);
     TkMacOSXMakeCollectableAndRelease(macButtonPtr->tristateImage);
 }
