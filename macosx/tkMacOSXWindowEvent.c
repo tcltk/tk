@@ -356,11 +356,12 @@ GenerateUpdates(
     event.xexpose.width = damageBounds.size.width;
     event.xexpose.height = damageBounds.size.height;
     event.xexpose.count = 0;
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-#ifdef TK_MAC_DEBUG_DRAWING
-    TKLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
+    Tk_HandleEvent(&event);
+
+    #ifdef TK_MAC_DEBUG_DRAWING
+    NSLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
 	event.xexpose.y, event.xexpose.width, event.xexpose.height);
-#endif
+    #endif
 
     /*
      * Generate updates for the children of this window
@@ -387,7 +388,7 @@ GenerateUpdates(
 	/*
 	 * TODO: Here we should handle out of process embedding.
 	 */
-    }
+    }    
 
     return 1;
 }
@@ -768,6 +769,8 @@ Tk_MacOSXIsAppInFront(void)
 @interface TKContentView(TKWindowEvent)
 - (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIMutableShapeRef) shape;
+- (void) viewDidEndLiveResize;
+- (void) viewWillDraw;
 - (BOOL) isOpaque;
 - (BOOL) wantsDefaultClipping;
 - (BOOL) acceptsFirstResponder;
@@ -777,6 +780,17 @@ Tk_MacOSXIsAppInFront(void)
 @implementation TKContentView
 @end
 
+double drawTime;
+
+/*
+ * Set a minimum time for drawing to render. With removal of private NSView API's, default drawing
+ * is slower and less responsive. This number, which seems feasible after some experimentatation, skips
+ * some drawing to avoid lag. 
+ */
+
+#define MAX_DYNAMIC_TIME .000000001
+
+/*Restrict event processing to Expose events.*/
 static Tk_RestrictAction
 ExposeRestrictProc(
     ClientData arg,
@@ -785,6 +799,7 @@ ExposeRestrictProc(
     return (eventPtr->type==Expose && eventPtr->xany.serial==PTR2UINT(arg)
 	    ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
 }
+
 
 @implementation TKContentView(TKWindowEvent)
 
@@ -800,6 +815,11 @@ ExposeRestrictProc(
     NSRectFillListUsingOperation(rectsBeingDrawn, rectsBeingDrawnCount,
 	    NSCompositeSourceOver);
 #endif
+
+    NSDate *beginTime=[NSDate date];
+
+    /*Skip drawing during live resize if redraw is too slow.*/
+    if([self inLiveResize] && drawTime>MAX_DYNAMIC_TIME) return;
 
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
@@ -820,44 +840,64 @@ ExposeRestrictProc(
 			nil]];
     }
     CFRelease(drawShape);
+    drawTime=-[beginTime timeIntervalSinceNow];
 }
+
+/*At conclusion of resize event, send notification and set view for redraw if earlier drawing was skipped because of lagginess.*/
+- (void)viewDidEndLiveResize
+{
+    if(drawTime>MAX_DYNAMIC_TIME) {
+    [self setNeedsDisplay:YES];
+    [super viewDidEndLiveResize];
+    }
+}
+
+-(void) viewWillDraw  {
+	[self setNeedsDisplay:YES];
+    } 
 
 - (void) generateExposeEvents: (HIMutableShapeRef) shape
 {
+
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     unsigned long serial;
     CGRect updateBounds;
 
     if (!winPtr) {
-	return;
+		return;
     }
+
     HIShapeGetBounds(shape, &updateBounds);
     serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     if (GenerateUpdates(shape, &updateBounds, winPtr) &&
-	    ![[NSRunLoop currentRunLoop] currentMode] &&
-	    Tcl_GetServiceMode() != TCL_SERVICE_NONE) {
-	/*
-	 * Ensure there are no pending idle-time redraws that could prevent the
-	 * just posted Expose events from generating new redraws.
-	 */
+	![[NSRunLoop currentRunLoop] currentMode] &&
+	Tcl_GetServiceMode() != TCL_SERVICE_NONE) {
+    	/*
+    	 * Ensure there are no pending idle-time redraws that could prevent the
+    	 * just posted Expose events from generating new redraws.
+    	 */
 
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
+    	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 
-	/*
-	 * For smoother drawing, process Expose events and resulting redraws
-	 * immediately instead of at idle time.
-	 */
+    	/*
+    	 * For smoother drawing, process Expose events and resulting redraws
+    	 * immediately instead of at idle time.
+    	 */
 
-	ClientData oldArg;
-	Tk_RestrictProc *oldProc = Tk_RestrictEvents(ExposeRestrictProc,
-		UINT2PTR(serial), &oldArg);
+    	ClientData oldArg;
+    	Tk_RestrictProc *oldProc = Tk_RestrictEvents(ExposeRestrictProc,
+						     UINT2PTR(serial), &oldArg);
 
-	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
-	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
-    }
+    	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
+ 
+    	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+    	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
+
+    } 
+   
 }
 
+/*This is no-op on 10.7 and up because Apple has removed this widget, but leaving here for backwards compatibility.*/
 - (void) tkToolbarButton: (id) sender
 {
 #ifdef TK_MAC_DEBUG_EVENTS
@@ -885,21 +925,15 @@ ExposeRestrictProc(
     Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 }
 
-#ifdef TK_MAC_DEBUG_DRAWING
 - (void) setFrameSize: (NSSize) newSize
 {
-    TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd,
-	    NSStringFromSize(newSize));
     [super setFrameSize:newSize];
 }
 
 - (void) setNeedsDisplayInRect: (NSRect) invalidRect
 {
-    TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd,
-	    NSStringFromRect(invalidRect));
     [super setNeedsDisplayInRect:invalidRect];
 }
-#endif
 
 - (BOOL) isOpaque
 {
