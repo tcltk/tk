@@ -1009,10 +1009,28 @@ Tk_GetSaveFileObjCmd(
  */
 static void CleanupOFNOptions(OFNOpts *optsPtr)
 {
+    if (optsPtr->extObj) {
+	Tcl_DecrRefCount(optsPtr->extObj);
+	optsPtr->extObj = NULL;
+    }
+    if (optsPtr->titleObj) {
+	Tcl_DecrRefCount(optsPtr->titleObj);
+	optsPtr->titleObj = NULL;
+    }
+    if (optsPtr->filterObj) {
+	Tcl_DecrRefCount(optsPtr->filterObj);
+	optsPtr->filterObj = NULL;
+    }
+    if (optsPtr->typeVariableObj) {
+	Tcl_DecrRefCount(optsPtr->typeVariableObj);
+	optsPtr->typeVariableObj = NULL;
+    }
+    if (optsPtr->initialTypeObj) {
+	Tcl_DecrRefCount(optsPtr->initialTypeObj);
+	optsPtr->initialTypeObj = NULL;
+	}
     Tcl_DStringFree(&optsPtr->utfDirString);
 }
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -1124,9 +1142,21 @@ ParseOFNOptions(
 	string = Tcl_GetString(valuePtr);
 	switch (options[index].value) {
 	case FILE_DEFAULT:
+        if (valuePtr) {
+    	Tcl_IncrRefCount(valuePtr);
+        }
+	    if (optsPtr->extObj) {
+		Tcl_DecrRefCount(optsPtr->extObj);
+	    }
 	    optsPtr->extObj = valuePtr;
 	    break;
 	case FILE_TYPES:
+        if (valuePtr) {
+    	Tcl_IncrRefCount(valuePtr);
+        }
+	    if (optsPtr->filterObj) {
+		Tcl_DecrRefCount(optsPtr->filterObj);
+	    }
 	    optsPtr->filterObj = valuePtr;
 	    break;
 	case FILE_INITDIR:
@@ -1150,12 +1180,30 @@ ParseOFNOptions(
 		goto error_return;
 	    break;
 	case FILE_TITLE:
+        if (valuePtr) {
+    	Tcl_IncrRefCount(valuePtr);
+        }
+	    if (optsPtr->titleObj) {
+		Tcl_DecrRefCount(optsPtr->titleObj);
+	    }
 	    optsPtr->titleObj = valuePtr;
 	    break;
 	case FILE_TYPEVARIABLE:
+        if (valuePtr) {
+    	Tcl_IncrRefCount(valuePtr);
+        }
+	    if (optsPtr->typeVariableObj) {
+		Tcl_DecrRefCount(optsPtr->typeVariableObj);
+	    }
 	    optsPtr->typeVariableObj = valuePtr;
+	    if (optsPtr->initialTypeObj) {
+		Tcl_DecrRefCount(optsPtr->initialTypeObj);
+	    }
 	    optsPtr->initialTypeObj = Tcl_ObjGetVar2(interp, valuePtr,
                                                      NULL, TCL_GLOBAL_ONLY);
+        if (optsPtr->initialTypeObj) {
+    	Tcl_IncrRefCount(optsPtr->initialTypeObj);
+        }
 	    break;
 	case FILE_MULTIPLE:
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
