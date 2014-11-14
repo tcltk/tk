@@ -1739,9 +1739,24 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 		    listObjv[ofn.nFilterIndex - 1], &count,
 		    &typeInfo) != TCL_OK) {
 		result = TCL_ERROR;
-	    } else if (Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
-                   typeInfo[0], TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
-		result = TCL_ERROR;
+	    } else {
+                /*
+                 * BUGFIX for d43a10ce2fed950e00890049f3c273f2cdd12583
+                 * The original code was broken because it passed typeinfo[0]
+                 * directly into Tcl_ObjSetVar2. In the case of typeInfo[0]
+                 * pointing into a list which is also referenced by 
+                 * typeVariableObj, TOSV2 shimmers the object into
+                 * variable intrep which loses the list representation.
+                 * This invalidates typeInfo[0] which is freed but
+                 * nevertheless stored as the value of the variable. 
+                 */
+                Tcl_Obj *selFilterObj = typeInfo[0];
+                Tcl_IncrRefCount(selFilterObj);
+                if (Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
+                                   selFilterObj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG) == NULL) {
+                    result = TCL_ERROR;
+                }
+                Tcl_DecrRefCount(selFilterObj);
 	    }
 	}
     } else if (cdlgerr == FNERR_INVALIDFILENAME) {
