@@ -50,10 +50,14 @@ NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
 	    NSRect Tkframe = TkMacOSXGetScrollFrame(scrollPtr);
 	    /* Do not draw if the widget is misplaced or unmapped. */
 	    if ( NSIsEmptyRect(Tkframe) || 
-		 ! macWin->winPtr->flags & TK_MAPPED ||
-		 ! NSEqualRects(Tkframe, [self frame]) 
+		 ! (macWin->winPtr->flags & TK_MAPPED)
 		 ) {
 		return;
+	    }
+	    for (Tk_Window parent_win = tkwin; parent_win != NULL;parent_win = Tk_Parent(parent_win)) {
+		if (!Tk_IsMapped(parent_win)) {
+		    return;
+		}
 	    }
 
 	    /*
