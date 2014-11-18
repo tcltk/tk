@@ -24,12 +24,12 @@ enum colorOptions {
 static const char *const openOptionStrings[] = {
     "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
     "-message", "-multiple", "-parent", "-title", "-typevariable",
-    "-command", NULL
+    "-command", "-allbutton", "-allbuttontip", NULL
 };
 enum openOptions {
     OPEN_DEFAULT, OPEN_FILETYPES, OPEN_INITDIR, OPEN_INITFILE,
     OPEN_MESSAGE, OPEN_MULTIPLE, OPEN_PARENT, OPEN_TITLE,
-    OPEN_TYPEVARIABLE, OPEN_COMMAND,
+    OPEN_TYPEVARIABLE, OPEN_COMMAND, OPEN_ALLBUTTON, OPEN_ALLBUTTONTIP
 };
 static const char *const saveOptionStrings[] = {
     "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
@@ -221,6 +221,35 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
 }
 @end
 
+ @interface TKOpenDialog : NSControl 
+ @property(assign) NSOpenPanel *openPanel;
+ @property(assign) NSMutableArray *openFileTypes;
+ - (void)openUnrecognizedFiles:(id)sender;
+ @end
+ 
+ @implementation TKOpenDialog
+ - (id)init {
+     self = [super init];
+     if (self) {
+ 	_openPanel = nil;
+ 	_openFileTypes = nil;
+     }
+     return self;
+ }
+ 
+ - (void)openUnrecognizedFiles:(id)sender
+ {
+     if ([sender state]) {
+ 	self.openPanel.allowedFileTypes = [NSArray arrayWithObjects:@"public.data", nil];
+     } else {
+ 	self.openPanel.allowedFileTypes = self.openFileTypes;
+     }
+     [self.openPanel setDirectoryURL:self.openPanel.directoryURL];
+     [self.openPanel validateVisibleColumns];
+ }
+ 
+ @end
+
 #pragma mark -
 
 /*
@@ -366,11 +395,14 @@ Tk_GetOpenFileObjCmd(
     FilePanelCallbackInfo *callbackInfo = &callbackInfoStruct;
     NSString *directory = nil, *filename = nil;
     NSString *message, *title, *type;
+    NSString *allbutton, *allbuttontip;
     NSWindow *parent;
     NSMutableArray *fileTypes = nil;
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     NSInteger returnCode = NSAlertErrorReturn;
 
+    allbutton = nil;
+    allbuttontip = nil;
     TkInitFileFilters(&fl);
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], openOptionStrings,
@@ -437,6 +469,14 @@ Tk_GetOpenFileObjCmd(
 	case OPEN_COMMAND:
 	    cmdObj = objv[i+1];
 	    break;
+	case OPEN_ALLBUTTON:
+	    allbutton = [[NSString alloc] initWithUTF8String:
+		    Tcl_GetString(objv[i + 1])];
+	    break;
+	case OPEN_ALLBUTTONTIP:
+	    allbuttontip = [[NSString alloc] initWithUTF8String:
+		    Tcl_GetString(objv[i + 1])];
+	    break;
 	}
     }
     if (fl.filters) {
@@ -472,6 +512,24 @@ Tk_GetOpenFileObjCmd(
 	}
     }
     [panel setAllowsMultipleSelection:multiple];
+
+    if (allbutton) {
+	TKOpenDialog *tkDialog = [TKOpenDialog alloc];
+	tkDialog.openPanel = panel;
+	tkDialog.openFileTypes = fileTypes;
+	
+	NSButton *openPanelAccessoryView = [[[NSButton alloc] initWithFrame:NSMakeRect(0.0, 0.0, 224.0, 22.0)] autorelease];
+	if (allbuttontip) {
+	    [openPanelAccessoryView setToolTip:allbuttontip];
+	}
+	[openPanelAccessoryView setButtonType:NSSwitchButton];
+	[openPanelAccessoryView setBezelStyle:0];
+	[openPanelAccessoryView setTitle:allbutton];
+	[openPanelAccessoryView setAction:@selector(openUnrecognizedFiles:)];
+	[openPanelAccessoryView setTarget:tkDialog];
+	[panel setAccessoryView:openPanelAccessoryView];
+    }
+
     if (cmdObj) {
 	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
