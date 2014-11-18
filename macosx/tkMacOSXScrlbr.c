@@ -20,7 +20,7 @@
 #define TK_MAC_DEBUG_SCROLLBAR
 #endif
 */
-
+ 
 NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
 
 /*

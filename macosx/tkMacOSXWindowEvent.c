@@ -15,7 +15,7 @@
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
-
+ 
 /*
 #ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_EVENTS
