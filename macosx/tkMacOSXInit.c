@@ -87,11 +87,9 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 #endif
 }
 - (void)_setupEventLoop {
-    _running = 1;
-    if (!_appFlags._hasBeenRun) {
-        _appFlags._hasBeenRun = YES;
-	[self finishLaunching];
-    }
+
+    /*Remove private API calls here.*/
+    [self finishLaunching];
     [self setWindowsNeedUpdate:YES];
 }
 - (void)_setup:(Tcl_Interp *)interp {
