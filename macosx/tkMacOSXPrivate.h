@@ -326,6 +326,7 @@ VISIBILITY_HIDDEN
     BOOL _subviewsSetAside;
     #endif
     NSString *privateWorkingText;
+    BOOL _in_event;
 }
 @end
 

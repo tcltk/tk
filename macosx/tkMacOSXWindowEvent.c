@@ -831,7 +831,11 @@ ExposeRestrictProc(
 	HIShapeUnionWithRect(drawShape, &r);
     }
     if (CFRunLoopGetMain() == CFRunLoopGetCurrent()) {
-	[self generateExposeEvents:drawShape];
+	if (!_in_event) {
+	    _in_event = true;
+	    [self generateExposeEvents:drawShape];
+	    _in_event = false;
+	}
     } else {
 	[self performSelectorOnMainThread:@selector(generateExposeEvents:)
 		withObject:(id)drawShape waitUntilDone:NO
