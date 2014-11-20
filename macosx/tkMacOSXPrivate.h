@@ -1,5 +1,5 @@
 /*
- * tkMacOSXPrivate.h --
+ * tkMacOSXPrivate.h -- 
  *
  *	Macros and declarations that are purely internal & private to TkAqua.
  *
@@ -326,7 +326,6 @@ VISIBILITY_HIDDEN
     BOOL _subviewsSetAside;
     #endif
     NSString *privateWorkingText;
-    BOOL _in_event;
 }
 @end
 

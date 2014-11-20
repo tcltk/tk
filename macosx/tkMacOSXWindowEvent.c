@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
-
+ 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
@@ -831,11 +831,7 @@ ExposeRestrictProc(
 	HIShapeUnionWithRect(drawShape, &r);
     }
     if (CFRunLoopGetMain() == CFRunLoopGetCurrent()) {
-	if (!_in_event) {
-	    _in_event = true;
-	    [self generateExposeEvents:drawShape];
-	    _in_event = false;
-	}
+	[self generateExposeEvents:drawShape];
     } else {
 	[self performSelectorOnMainThread:@selector(generateExposeEvents:)
 		withObject:(id)drawShape waitUntilDone:NO
