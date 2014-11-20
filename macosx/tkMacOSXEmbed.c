@@ -14,7 +14,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
-
+ 
 #include "tkMacOSXPrivate.h"
 #include "tkBusy.h"
 
@@ -207,7 +207,6 @@ TkpUseWindow(
     MacDrawable *parent, *macWin;
     Container *containerPtr;
 
-
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't modify container after widget is created", -1));
@@ -248,14 +247,14 @@ TkpUseWindow(
      * Container structure, since we only allow the case where both container
      * and embedded app. are in the same process.
      */
-    
+
     for (containerPtr = firstContainerPtr; containerPtr != NULL;
-    	    containerPtr = containerPtr->nextPtr) {
-    	if (containerPtr->parent == (Window) parent) {
-    	    winPtr->flags |= TK_BOTH_HALVES;
-    	    containerPtr->parentPtr->flags |= TK_BOTH_HALVES;	  
-    	    break;
-    	}
+	    containerPtr = containerPtr->nextPtr) {
+	if (containerPtr->parent == (Window) parent) {
+	    winPtr->flags |= TK_BOTH_HALVES;
+	    containerPtr->parentPtr->flags |= TK_BOTH_HALVES;
+	    break;
+	}
     }
 
     /*
@@ -314,10 +313,9 @@ TkpUseWindow(
 	if (tkMacOSXEmbedHandler == NULL ||
 		tkMacOSXEmbedHandler->registerWinProc((long) parent,
 		(Tk_Window) winPtr) != TCL_OK) {
-	   
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    	    "The window ID %s does not correspond to a valid Tk Window",
-	    	    string));
+		    "The window ID %s does not correspond to a valid Tk Window",
+		    string));
 	    Tcl_SetErrorCode(interp, "TK", "EMBED", "HANDLE", NULL);
 	    return TCL_ERROR;
 	}
@@ -393,6 +391,7 @@ TkpMakeContainer(
      * sure the argument to -use is valid.
      */
 
+    Tk_MakeWindowExist(tkwin);
     containerPtr = ckalloc(sizeof(Container));
     containerPtr->parent = Tk_WindowId(tkwin);
     containerPtr->parentPtr = winPtr;
