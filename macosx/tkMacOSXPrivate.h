@@ -1,5 +1,5 @@
 /*
- * tkMacOSXPrivate.h -- 
+ * tkMacOSXPrivate.h --
  *
  *	Macros and declarations that are purely internal & private to TkAqua.
  *

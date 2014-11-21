@@ -52,9 +52,9 @@ static NSRect TkMacOSXGetButtonFrame(TkButton *butPtr);
 	    NSRect Tkframe = TkMacOSXGetButtonFrame(butPtr);
 	    Tk_Window tkwin = butPtr->tkwin;
 	    /* Do not draw if the widget is misplaced or unmapped. */
-	    if ( NSIsEmptyRect(Tkframe) || 
+	    if ( NSIsEmptyRect(Tkframe) ||
 		 ! macWin->winPtr->flags & TK_MAPPED ||
-		 ! NSEqualRects(Tkframe, [self frame]) 
+		 ! NSEqualRects(Tkframe, [self frame])
 		 ) {
 		return;
 	    }
@@ -71,7 +71,7 @@ static NSRect TkMacOSXGetButtonFrame(TkButton *butPtr);
 		int parent_width = Tk_Width(Tk_Parent(tkwin));
 		int widget_width = Tk_Width(tkwin);
 		int x = Tk_X(tkwin);
-		if (x > parent_width - 50 || x < 0) { 
+		if (x > parent_width - 50 || x < 0) {
 		    return;
 		}
 	    }
