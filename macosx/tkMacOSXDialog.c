@@ -1,4 +1,4 @@
-/* 
+/*
  * tkMacOSXDialog.c --
  *
  *	Contains the Mac implementation of the common dialog boxes.
