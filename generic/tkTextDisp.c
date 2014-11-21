@@ -1019,7 +1019,7 @@ FreeStyle(
  *	whose leftmost character is given by indexPtr.
  *
  * Results:
- *	The return value is a pointer to a DLine structure desribing the
+ *	The return value is a pointer to a DLine structure describing the
  *	display line. All fields are filled in and correct except for y and
  *	nextPtr.
  *
@@ -1908,7 +1908,7 @@ UpdateDisplayInfo(
 		    prevPtr->index.linePtr) != lineHeight)) {
 		/*
 		 * The logical line height we just calculated is actually
-		 * differnt to the currently cached height of the text line.
+		 * different to the currently cached height of the text line.
 		 * That is fine (the text line heights are only calculated
 		 * asynchronously), but we must update the cached height so
 		 * that any counts made with DLine pointers are the same as
