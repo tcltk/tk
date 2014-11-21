@@ -1480,19 +1480,19 @@ TkScrollWindow(
     TkRegion damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
-    MacDrawable *macDraw = (MacDrawable *) drawable; 
+    MacDrawable *macDraw = (MacDrawable *) drawable;
     NSView *view = TkMacOSXDrawableView(macDraw);
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn;
     NSRect bounds, visRect, scrollSrc, scrollDst;
     NSPoint delta = NSMakePoint(dx, dy);
     int result;
-  
+
     if ( view ) {
   	/*  Get the scroll area in NSView coordinates (origin at bottom left). */
   	bounds = [view bounds];
  	scrollSrc = NSMakeRect(
-			       macDraw->xOff + x, 
+			       macDraw->xOff + x,
 			       bounds.size.height - height - (macDraw->yOff + y),
 			       width, height);
  	scrollDst = NSOffsetRect(scrollSrc, dx, -dy);
@@ -1500,45 +1500,45 @@ TkScrollWindow(
  	visRect = [view visibleRect];
  	scrollSrc = NSIntersectionRect(scrollSrc, visRect);
  	scrollDst = NSIntersectionRect(scrollDst, visRect);
-  
+
  	if ( !NSIsEmptyRect(scrollSrc) && !NSIsEmptyRect(scrollDst) ) {
-  
+
   	    /*
   	     * Mark the difference between source and destination as damaged.
  	     * This region is described in the Tk coordinate system.
   	     */
-  
+
  	    srcRect = CGRectMake(x, y, width, height);
   	    dstRect = CGRectOffset(srcRect, dx, dy);
   	    dmgRgn = HIShapeCreateMutableWithRect(&srcRect);
  	    extraRgn = HIShapeCreateWithRect(&dstRect);
  	    ChkErr(HIShapeDifference, dmgRgn, extraRgn, (HIMutableShapeRef) dmgRgn);
  	    CFRelease(extraRgn);
-  	    
+
  	    /* Scroll the rectangle. */
  	    [view scrollRect:scrollSrc by:NSMakeSize(dx, -dy)];
-  
- 	    /* 
+
+ 	    /*
  	     * Adjust the positions of the button subwindows that meet the scroll
  	     * area.
   	     */
- 
+
   	    for (NSView *subview in [view subviews] ) {
  	    	if ( [subview isKindOfClass:[NSButton class]] == YES ) {
  		    NSRect subframe = [subview frame];
  		    if  ( NSIntersectsRect(scrollSrc, subframe) ||
- 			  NSIntersectsRect(scrollDst, subframe) ) { 
+ 			  NSIntersectsRect(scrollDst, subframe) ) {
  			TkpShiftButton((NSButton *)subview, delta );
  		    }
  	    	}
   	    }
- 
+
  	    /* Redisplay the scrolled area. */
  	    [view displayRect:scrollDst];
- 
+
   	}
     }
-  
+
     if ( dmgRgn == NULL ) {
   	dmgRgn = HIShapeCreateEmpty();
     }
