@@ -1,5 +1,5 @@
 /*
- * tkMacOSXScrollbar.c -- 
+ * tkMacOSXScrollbar.c --
  *
  *	This file implements the Macintosh specific portion of the scrollbar
  *	widget.
@@ -49,9 +49,9 @@ NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
 	    Tk_Window tkwin = scrollPtr->tkwin;
 	    NSRect Tkframe = TkMacOSXGetScrollFrame(scrollPtr);
 	    /* Do not draw if the widget is misplaced or unmapped. */
-	    if ( NSIsEmptyRect(Tkframe) || 
+	    if ( NSIsEmptyRect(Tkframe) ||
 		 ! macWin->winPtr->flags & TK_MAPPED ||
-		 ! NSEqualRects(Tkframe, [self frame]) 
+		 ! NSEqualRects(Tkframe, [self frame])
 		 ) {
 		return;
 	    }
