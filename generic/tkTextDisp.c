@@ -3703,9 +3703,11 @@ TkTextUpdateOneLine(
 
     /*
      * Iterate through all display-lines corresponding to the single logical
-     * line 'linePtr', adding up the pixel height of each such display line as
-     * we go along. The final total is, therefore, the height of the logical
-     * line.
+     * line 'linePtr' (and lines merged into this line due to eol elision),
+     * adding up the pixel height of each such display line as we go along.
+     * The final total is, therefore, the total height of all display lines
+     * made up by the logical line 'linePtr' and subsequent logical lines
+     * merged into this line.
      */
 
     displayLines = 0;
@@ -3736,7 +3738,7 @@ TkTextUpdateOneLine(
 	    break;
 	}
 
-	if (logicalLines == 0) {
+	if (mergedLines == 0) {
 	    if (indexPtr->linePtr != linePtr) {
 		/*
 		 * If we reached the end of the logical line, then either way
@@ -3746,9 +3748,11 @@ TkTextUpdateOneLine(
 		partialCalc = 0;
 		break;
 	    }
-	} else if (indexPtr->byteIndex != 0) {
+        } else {
+            if (indexPtr->byteIndex != 0) {
 	    /*
-	     * We must still be on the same wrapped line.
+                * We must still be on the same wrapped line, on a new logical
+                * line merged with the logical line 'linePtr'.
 	     */
 	} else {
 	    /*
@@ -3771,9 +3775,11 @@ TkTextUpdateOneLine(
 	    }
 
 	    /*
-	     * We must still be on the same wrapped line.
+                * We must still be on the same wrapped line, on a new logical
+                * line merged with the logical line 'linePtr'.
 	     */
 	}
+        }
 	if (partialCalc && displayLines > 50 && mergedLines == 0) {
 	    /*
 	     * Only calculate 50 display lines at a time, to avoid huge
