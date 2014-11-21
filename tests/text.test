@@ -698,7 +698,7 @@ test text-9.2.44 {TextWidgetCmd procedure, "count" option} -setup {
     .t tag add hidden 2.9 3.17
     .t tag configure hidden -elide true
     lappend res [.t count -displaylines 1.19 3.24] [.t count -displaylines 1.0 end]
-} -result {2 6 2 5}
+} -result {2 6 1 5}
 
 # Newer tags are higher priority
 .t tag configure elide1 -elide 0
