@@ -1262,6 +1262,19 @@ test textDisp-9.11 {TkTextRedrawTag} {
     update
     set tk_textRedraw
 } {}
+test textDisp-9.12 {TkTextRedrawTag} {
+    .t configure -wrap char
+    .t delete 1.0 end
+    for {set i 1} {$i < 5} {incr i} {
+      .t insert end "Line $i+++Line $i\n"
+    }
+    .t tag configure hidden -elide true
+    .t tag add hidden 2.6 3.6
+    update
+    .t tag add hidden 3.11 4.6
+    update
+    list $tk_textRelayout $tk_textRedraw
+} {2.0 {2.0 eof}}
 
 test textDisp-10.1 {TkTextRelayoutWindow} {
     .t configure -wrap char
