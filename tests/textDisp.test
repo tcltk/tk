@@ -1173,40 +1173,44 @@ test textDisp-9.3 {TkTextRedrawTag} {
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
     update
     .t tag add big 2.2 2.4
+    update
     .t tag remove big 1.0 end
     update
     list $tk_textRelayout $tk_textRedraw
-} {2.0 2.0}
+} {{2.0 2.20} {2.0 2.20 eof}}
 test textDisp-9.4 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
     update
     .t tag add big 2.2 2.20
+    update
     .t tag remove big 1.0 end
     update
     list $tk_textRelayout $tk_textRedraw
-} {2.0 2.0}
+} {{2.0 2.20} {2.0 2.20 eof}}
 test textDisp-9.5 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
     update
     .t tag add big 2.2 2.end
+    update
     .t tag remove big 1.0 end
     update
     list $tk_textRelayout $tk_textRedraw
-} {{2.0 2.20} {2.0 2.20}}
+} {{2.0 2.20} {2.0 2.20 eof}}
 test textDisp-9.6 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
     update
     .t tag add big 2.2 3.5
+    update
     .t tag remove big 1.0 end
     update
     list $tk_textRelayout $tk_textRedraw
-} {{2.0 2.20 3.0} {2.0 2.20 3.0}}
+} {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 4.0 eof}}
 test textDisp-9.7 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1258,6 +1262,19 @@ test textDisp-9.11 {TkTextRedrawTag} {
     update
     set tk_textRedraw
 } {}
+test textDisp-9.12 {TkTextRedrawTag} {
+    .t configure -wrap char
+    .t delete 1.0 end
+    for {set i 1} {$i < 5} {incr i} {
+      .t insert end "Line $i+++Line $i\n"
+    }
+    .t tag configure hidden -elide true
+    .t tag add hidden 2.6 3.6
+    update
+    .t tag add hidden 3.11 4.6
+    update
+    list $tk_textRelayout $tk_textRedraw
+} {2.0 {2.0 eof}}
 
 test textDisp-10.1 {TkTextRelayoutWindow} {
     .t configure -wrap char
