@@ -6429,6 +6429,7 @@ FindDLine(
     CONST TkTextIndex *indexPtr)/* Index of desired character. */
 {
     TkTextLine *linePtr;
+    DLine *dlPtrPrev;
 
     if (dlPtr == NULL) {
 	return NULL;
@@ -6449,6 +6450,7 @@ FindDLine(
     linePtr = dlPtr->index.linePtr;
     while (linePtr != indexPtr->linePtr) {
 	while (dlPtr->index.linePtr == linePtr) {
+	    dlPtrPrev = dlPtr;
 	    dlPtr = dlPtr->nextPtr;
 	    if (dlPtr == NULL) {
 		return NULL;
@@ -6466,7 +6468,7 @@ FindDLine(
 	}
     }
     if (indexPtr->linePtr != dlPtr->index.linePtr) {
-	return dlPtr;
+	return dlPtrPrev;
     }
 
     /*
