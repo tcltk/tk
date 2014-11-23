@@ -4798,8 +4798,8 @@ TextRedrawTag(
 	    endIndexPtr = curIndexPtr;
 	}
 	endPtr = FindDLine(dlPtr, endIndexPtr);
-	if ((endPtr != NULL) && (endPtr->index.linePtr == endIndexPtr->linePtr)
-		&& (endPtr->index.byteIndex < endIndexPtr->byteIndex)) {
+	if ((endPtr != NULL)
+                && (TkTextIndexCmp(&endPtr->index,endIndexPtr) < 0)) {
 	    endPtr = endPtr->nextPtr;
 	}
 
