@@ -2777,6 +2777,19 @@ test textDisp-22.10 {TkTextCharBbox, handling of elided lines} {textfonts} {
         [expr {[lindex [.t bbox 7.1]  0] - [lindex [.t bbox 6.8] 0]}] \
         [expr {[lindex [.t bbox 7.12] 0] - [lindex [.t bbox 6.8] 0]}]
 } [list 0 0 0 0 0 0 0 0 0 0 0]
+test textDisp-22.11 {TkTextCharBbox, handling of wrapped elided lines} {textfonts} {
+    .t configure -wrap char
+    .t delete 1.0 end
+    for {set i 1} {$i < 10} {incr i} {
+        .t insert end "Line $i - Line _$i - Lines .$i - Line [format %c [expr 64+$i]]\n"
+    }
+    .t tag add hidden 1.30 2.5
+    .t tag configure hidden -elide true
+    update
+    list \
+        [expr {[lindex [.t bbox 1.30] 0] - [lindex [.t bbox 2.4]  0]}] \
+        [expr {[lindex [.t bbox 1.30] 0] - [lindex [.t bbox 2.5]  0]}]
+} [list 0 0]
 
 .t delete 1.0 end
 .t insert end "Line 1"
