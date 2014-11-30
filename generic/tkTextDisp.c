@@ -542,7 +542,8 @@ static void		DisplayDLine(TkText *textPtr, DLine *dlPtr,
 static void		DisplayLineBackground(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
 static void		DisplayText(ClientData clientData);
-static DLine *		FindDLine(DLine *dlPtr, CONST TkTextIndex *indexPtr);
+static DLine *		FindDLine(TkText *textPtr, DLine *dlPtr,
+                            CONST TkTextIndex *indexPtr);
 static void		FreeDLines(TkText *textPtr, DLine *firstPtr,
 			    DLine *lastPtr, int action);
 static void		FreeStyle(TkText *textPtr, TextStyle *stylePtr);
@@ -1758,7 +1759,7 @@ UpdateDisplayInfo(
      */
 
     index = textPtr->topIndex;
-    dlPtr = FindDLine(dInfoPtr->dLinePtr, &index);
+    dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &index);
     if ((dlPtr != NULL) && (dlPtr != dInfoPtr->dLinePtr)) {
 	FreeDLines(textPtr, dInfoPtr->dLinePtr, dlPtr, DLINE_UNLINK);
     }
@@ -3703,9 +3704,11 @@ TkTextUpdateOneLine(
 
     /*
      * Iterate through all display-lines corresponding to the single logical
-     * line 'linePtr', adding up the pixel height of each such display line as
-     * we go along. The final total is, therefore, the height of the logical
-     * line.
+     * line 'linePtr' (and lines merged into this line due to eol elision),
+     * adding up the pixel height of each such display line as we go along.
+     * The final total is, therefore, the total height of all display lines
+     * made up by the logical line 'linePtr' and subsequent logical lines
+     * merged into this line.
      */
 
     displayLines = 0;
@@ -3736,7 +3739,7 @@ TkTextUpdateOneLine(
 	    break;
 	}
 
-	if (logicalLines == 0) {
+	if (mergedLines == 0) {
 	    if (indexPtr->linePtr != linePtr) {
 		/*
 		 * If we reached the end of the logical line, then either way
@@ -3746,9 +3749,11 @@ TkTextUpdateOneLine(
 		partialCalc = 0;
 		break;
 	    }
-	} else if (indexPtr->byteIndex != 0) {
+        } else {
+            if (indexPtr->byteIndex != 0) {
 	    /*
-	     * We must still be on the same wrapped line.
+                * We must still be on the same wrapped line, on a new logical
+                * line merged with the logical line 'linePtr'.
 	     */
 	} else {
 	    /*
@@ -3771,9 +3776,11 @@ TkTextUpdateOneLine(
 	    }
 
 	    /*
-	     * We must still be on the same wrapped line.
+                * We must still be on the same wrapped line, on a new logical
+                * line merged with the logical line 'linePtr'.
 	     */
 	}
+        }
 	if (partialCalc && displayLines > 50 && mergedLines == 0) {
 	    /*
 	     * Only calculate 50 display lines at a time, to avoid huge
@@ -4581,11 +4588,11 @@ TextChanged(
 
     rounded = *index1Ptr;
     rounded.byteIndex = 0;
-    firstPtr = FindDLine(dInfoPtr->dLinePtr, &rounded);
+    firstPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &rounded);
     if (firstPtr == NULL) {
 	return;
     }
-    lastPtr = FindDLine(dInfoPtr->dLinePtr, index2Ptr);
+    lastPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, index2Ptr);
     while ((lastPtr != NULL)
 	    && (lastPtr->index.linePtr == index2Ptr->linePtr)) {
 	lastPtr = lastPtr->nextPtr;
@@ -4769,13 +4776,13 @@ TextRedrawTag(
 	 */
 
 	if (curIndexPtr->byteIndex == 0) {
-	    dlPtr = FindDLine(dlPtr, curIndexPtr);
+	    dlPtr = FindDLine(textPtr, dlPtr, curIndexPtr);
 	} else {
 	    TkTextIndex tmp;
 
 	    tmp = *curIndexPtr;
 	    tmp.byteIndex -= 1;
-	    dlPtr = FindDLine(dlPtr, &tmp);
+	    dlPtr = FindDLine(textPtr, dlPtr, &tmp);
 	}
 	if (dlPtr == NULL) {
 	    break;
@@ -4791,7 +4798,7 @@ TextRedrawTag(
 	    curIndexPtr = &search.curIndex;
 	    endIndexPtr = curIndexPtr;
 	}
-	endPtr = FindDLine(dlPtr, endIndexPtr);
+	endPtr = FindDLine(textPtr, dlPtr, endIndexPtr);
 	if ((endPtr != NULL)
                 && (TkTextIndexCmp(&endPtr->index,endIndexPtr) < 0)) {
 	    endPtr = endPtr->nextPtr;
@@ -5040,7 +5047,7 @@ TkTextSetYView(
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
     }
-    dlPtr = FindDLine(dInfoPtr->dLinePtr, indexPtr);
+    dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr);
     if (dlPtr != NULL) {
 	if ((dlPtr->y + dlPtr->height) > dInfoPtr->maxY) {
 	    /*
@@ -5113,7 +5120,7 @@ TkTextSetYView(
 
 	MeasureUp(textPtr, indexPtr, close + lineHeight
 		- textPtr->charHeight/2, &tmpIndex, &overlap);
-	if (FindDLine(dInfoPtr->dLinePtr, &tmpIndex) != NULL) {
+	if (FindDLine(textPtr, dInfoPtr->dLinePtr, &tmpIndex) != NULL) {
 	    bottomY = dInfoPtr->maxY - dInfoPtr->y;
 	}
     }
@@ -5376,7 +5383,7 @@ TkTextSeeCmd(
      * the widget is not mapped. [Bug #641778]
      */
 
-    dlPtr = FindDLine(dInfoPtr->dLinePtr, &index);
+    dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &index);
     if (dlPtr == NULL) {
 	return TCL_OK;
     }
@@ -6424,12 +6431,13 @@ AsyncUpdateYScrollbar(
 
 static DLine *
 FindDLine(
+    TkText *textPtr,		/* Widget record for text widget. */
     register DLine *dlPtr,	/* Pointer to first in list of DLines to
 				 * search. */
     CONST TkTextIndex *indexPtr)/* Index of desired character. */
 {
-    TkTextLine *linePtr;
     DLine *dlPtrPrev;
+    TkTextIndex indexPtr2;
 
     if (dlPtr == NULL) {
 	return NULL;
@@ -6438,49 +6446,44 @@ FindDLine(
 	    < TkBTreeLinesTo(NULL, dlPtr->index.linePtr)) {
 	/*
 	 * The first display line is already past the desired line.
+         * FV: Some concern here as to whether we should rather return
+         *     NULL here.
 	 */
 
 	return dlPtr;
     }
 
     /*
-     * Find the first display line that covers the desired text line.
+     * The display line containing the desired index is such that the index
+     * of the first character of this display line is at or before the
+     * desired index, and the index onf the first character of the next
+     * display line is after the desired index.
      */
 
-    linePtr = dlPtr->index.linePtr;
-    while (linePtr != indexPtr->linePtr) {
-	while (dlPtr->index.linePtr == linePtr) {
+    while (TkTextIndexCmp(&dlPtr->index,indexPtr) < 0) {
 	    dlPtrPrev = dlPtr;
 	    dlPtr = dlPtr->nextPtr;
 	    if (dlPtr == NULL) {
-		return NULL;
-	    }
-	}
-
 	/*
-	 * VMD: some concern here as to whether this logic, or the caller's
-	 * logic will work well with partial peer widgets.
-	 */
-
-	linePtr = TkBTreeNextLine(NULL, linePtr);
-	if (linePtr == NULL) {
-	    Tcl_Panic("FindDLine reached end of text");
-	}
+             * We're past the last display line, either because the desired
+             * index lies past the visible text, or because the desired index
+             * is on the last display line showing the last logical line.
+             */
+            indexPtr2 = dlPtrPrev->index;
+            TkTextFindDisplayLineEnd(textPtr, &indexPtr2, 1, NULL);
+            if (TkTextIndexCmp(&indexPtr2,indexPtr) >= 0) {
+                dlPtr = dlPtrPrev;
+                break;
+            } else {
+                return NULL;
     }
-    if (indexPtr->linePtr != dlPtr->index.linePtr) {
-	return dlPtrPrev;
     }
-
-    /*
-     * Now get to the right position within the text line.
-     */
-
-    while (indexPtr->byteIndex >= (dlPtr->index.byteIndex+dlPtr->byteCount)) {
-	dlPtr = dlPtr->nextPtr;
-	if ((dlPtr == NULL) || (dlPtr->index.linePtr != indexPtr->linePtr)) {
+        if (TkTextIndexCmp(&dlPtr->index,indexPtr) > 0) {
+            dlPtr = dlPtrPrev;
 	    break;
 	}
     }
+
     return dlPtr;
 }
 
@@ -6825,7 +6828,7 @@ TkTextIndexBbox(
      * Find the display line containing the desired index.
      */
 
-    dlPtr = FindDLine(dInfoPtr->dLinePtr, indexPtr);
+    dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr);
 
     /* 
      * Two cases shall be trapped here because the logic later really
@@ -6970,7 +6973,7 @@ TkTextDLineInfo(
      * Find the display line containing the desired index.
      */
 
-    dlPtr = FindDLine(dInfoPtr->dLinePtr, indexPtr);
+    dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr);
     if ((dlPtr == NULL) || (TkTextIndexCmp(&dlPtr->index, indexPtr) > 0)) {
 	return -1;
     }
