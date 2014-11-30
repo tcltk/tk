@@ -6826,15 +6826,29 @@ TkTextIndexBbox(
      */
 
     dlPtr = FindDLine(dInfoPtr->dLinePtr, indexPtr);
+
+    /* 
+     * Two cases shall be trapped here because the logic later really
+     * needs dlPtr to be the display line containing indexPtr:
+     *   1. if no display line contains the desired index (NULL dlPtr)
+     *   2. if indexPtr is before the first display line, in which case
+     *      dlPtr currently points to the first display line
+     */
+
     if ((dlPtr == NULL) || (TkTextIndexCmp(&dlPtr->index, indexPtr) > 0)) {
 	return -1;
     }
 
     /*
-     * Find the chunk within the line that contains the desired index.
+     * Find the chunk within the display line that contains the desired
+     * index. The chunks making the display line are skipped up to but not
+     * including the one crossing indexPtr. Skipping is done based on
+     * a byteIndex offset possibly spanning several logical lines in case
+     * they are elided.
      */
 
-    byteIndex = indexPtr->byteIndex - dlPtr->index.byteIndex;
+    byteIndex = TkTextIndexCount(textPtr, &dlPtr->index, indexPtr,
+            COUNT_INDICES);
     for (chunkPtr = dlPtr->chunkPtr; ; chunkPtr = chunkPtr->nextPtr) {
 	if (chunkPtr == NULL) {
 	    return -1;
