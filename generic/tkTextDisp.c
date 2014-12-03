@@ -6446,8 +6446,6 @@ FindDLine(
 	    < TkBTreeLinesTo(NULL, dlPtr->index.linePtr)) {
 	/*
 	 * The first display line is already past the desired line.
-         * FV: Some concern here as to whether we should rather return
-         *     NULL here.
 	 */
 
 	return dlPtr;
@@ -6456,7 +6454,7 @@ FindDLine(
     /*
      * The display line containing the desired index is such that the index
      * of the first character of this display line is at or before the
-     * desired index, and the index onf the first character of the next
+     * desired index, and the index of the first character of the next
      * display line is after the desired index.
      */
 
@@ -6464,24 +6462,24 @@ FindDLine(
 	    dlPtrPrev = dlPtr;
 	    dlPtr = dlPtr->nextPtr;
 	    if (dlPtr == NULL) {
-	/*
-             * We're past the last display line, either because the desired
-             * index lies past the visible text, or because the desired index
-             * is on the last display line showing the last logical line.
-             */
-            indexPtr2 = dlPtrPrev->index;
-            TkTextFindDisplayLineEnd(textPtr, &indexPtr2, 1, NULL);
-            if (TkTextIndexCmp(&indexPtr2,indexPtr) >= 0) {
-                dlPtr = dlPtrPrev;
-                break;
-            } else {
-                return NULL;
-    }
-    }
+                /*
+                 * We're past the last display line, either because the desired
+                 * index lies past the visible text, or because the desired index
+                 * is on the last display line showing the last logical line.
+                 */
+                indexPtr2 = dlPtrPrev->index;
+                TkTextFindDisplayLineEnd(textPtr, &indexPtr2, 1, NULL);
+                if (TkTextIndexCmp(&indexPtr2,indexPtr) >= 0) {
+                    dlPtr = dlPtrPrev;
+                    break;
+                } else {
+                    return NULL;
+                }
+        }
         if (TkTextIndexCmp(&dlPtr->index,indexPtr) > 0) {
             dlPtr = dlPtrPrev;
 	    break;
-	}
+        }
     }
 
     return dlPtr;
