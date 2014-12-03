@@ -1458,7 +1458,7 @@ test textDisp-11.15 {TkTextSetYView, only a few lines visible} {
     update
     .top.t see 11.0
     .top.t index @0,0
-    # Thie index 9.0 should be just visible by a couple of pixels
+    # The index 9.0 should be just visible by a couple of pixels
 } {9.0}
 test textDisp-11.16 {TkTextSetYView, only a few lines visible} {
     .top.t yview 8.0
@@ -1471,7 +1471,7 @@ test textDisp-11.17 {TkTextSetYView, only a few lines visible} {
     update
     .top.t see 4.0
     .top.t index @0,0
-    # Thie index 2.0 should be just visible by a couple of pixels
+    # The index 2.0 should be just visible by a couple of pixels
 } {2.0}
 destroy .top
 
