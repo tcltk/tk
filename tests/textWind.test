@@ -444,6 +444,7 @@ test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} {textf
     .t delete 1.0 end
     .t insert 1.0 "Some sample text"
     catch {destroy .t.f}
+    update
     set msg {}
     after idle {
         .t window create 1.5 -create {
