@@ -1203,14 +1203,14 @@ test textDisp-9.5 {TkTextRedrawTag} {
 test textDisp-9.6 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
-    .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
+    .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap"
     update
     .t tag add big 2.2 3.5
     update
     .t tag remove big 1.0 end
     update
     list $tk_textRelayout $tk_textRedraw
-} {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 4.0 eof}}
+} {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 eof}}
 test textDisp-9.7 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
