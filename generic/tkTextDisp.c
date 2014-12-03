@@ -6812,7 +6812,7 @@ TkTextIndexBbox(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     DLine *dlPtr;
     register TkTextDispChunk *chunkPtr;
-    int byteIndex;
+    int byteCount;
 
     /*
      * Make sure that all of the screen layout information is up to date.
@@ -6844,20 +6844,20 @@ TkTextIndexBbox(
      * Find the chunk within the display line that contains the desired
      * index. The chunks making the display line are skipped up to but not
      * including the one crossing indexPtr. Skipping is done based on
-     * a byteIndex offset possibly spanning several logical lines in case
+     * a byteCount offset possibly spanning several logical lines in case
      * they are elided.
      */
 
-    byteIndex = TkTextIndexCount(textPtr, &dlPtr->index, indexPtr,
+    byteCount = TkTextIndexCount(textPtr, &dlPtr->index, indexPtr,
             COUNT_INDICES);
     for (chunkPtr = dlPtr->chunkPtr; ; chunkPtr = chunkPtr->nextPtr) {
 	if (chunkPtr == NULL) {
 	    return -1;
 	}
-	if (byteIndex < chunkPtr->numBytes) {
+	if (byteCount < chunkPtr->numBytes) {
 	    break;
 	}
-	byteIndex -= chunkPtr->numBytes;
+	byteCount -= chunkPtr->numBytes;
     }
 
     /*
@@ -6867,13 +6867,13 @@ TkTextIndexBbox(
      * coordinate on the screen. Translate it to reflect horizontal scrolling.
      */
 
-    (*chunkPtr->bboxProc)(textPtr, chunkPtr, byteIndex,
+    (*chunkPtr->bboxProc)(textPtr, chunkPtr, byteCount,
 	    dlPtr->y + dlPtr->spaceAbove,
 	    dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
 	    dlPtr->baseline - dlPtr->spaceAbove, xPtr, yPtr, widthPtr,
 	    heightPtr);
     *xPtr = *xPtr + dInfoPtr->x - dInfoPtr->curXPixelOffset;
-    if ((byteIndex == chunkPtr->numBytes-1) && (chunkPtr->nextPtr == NULL)) {
+    if ((byteCount == chunkPtr->numBytes-1) && (chunkPtr->nextPtr == NULL)) {
 	/*
 	 * Last character in display line. Give it all the space up to the
 	 * line.
