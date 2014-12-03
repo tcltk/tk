@@ -1458,7 +1458,7 @@ test textDisp-11.15 {TkTextSetYView, only a few lines visible} {
     update
     .top.t see 11.0
     .top.t index @0,0
-    # Thie index 9.0 should be just visible by a couple of pixels
+    # The index 9.0 should be just visible by a couple of pixels
 } {9.0}
 test textDisp-11.16 {TkTextSetYView, only a few lines visible} {
     .top.t yview 8.0
@@ -1471,9 +1471,23 @@ test textDisp-11.17 {TkTextSetYView, only a few lines visible} {
     update
     .top.t see 4.0
     .top.t index @0,0
-    # Thie index 2.0 should be just visible by a couple of pixels
+    # The index 2.0 should be just visible by a couple of pixels
 } {2.0}
-destroy .top
+test textDisp-11.18 {TkTextSetYView, see in elided lines} {
+    .top.t delete 1.0 end
+    for {set i 1} {$i < 20} {incr i} {
+        .top.t insert end [string repeat "Line $i" 10]
+        .top.t insert end "\n"
+    }
+    .top.t yview 4.0
+    .top.t tag add hidden 4.10 "4.10 lineend"
+    .top.t tag add hidden 5.15 10.3
+    .top.t tag configure hidden -elide true
+    update
+    .top.t see "8.0 lineend"
+    # The index "8.0 lineend" is on screen despite elided -> no scroll
+    .top.t index @0,0
+} {4.0}
 
 .t configure -wrap word
 .t delete 50.0 51.0
