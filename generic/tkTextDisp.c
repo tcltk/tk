@@ -5056,19 +5056,20 @@ TkTextSetYView(
 	     */
 
 	    dlPtr = NULL;
-	} else if ((dlPtr->index.linePtr == indexPtr->linePtr)
-		&& (dlPtr->index.byteIndex <= indexPtr->byteIndex)) {
-	    if (dInfoPtr->dLinePtr == dlPtr && dInfoPtr->topPixelOffset != 0) {
-		/*
-		 * It is on the top line, but that line is hanging off the top
-		 * of the screen. Change the top overlap to zero and update.
-		 */
+        } else {
+            if (TkTextIndexCmp(&dlPtr->index, indexPtr) <= 0) {
+                if (dInfoPtr->dLinePtr == dlPtr && dInfoPtr->topPixelOffset != 0) {
+                    /*
+                     * It is on the top line, but that line is hanging off the top
+                     * of the screen. Change the top overlap to zero and update.
+                     */
 
-		dInfoPtr->newTopPixelOffset = 0;
-		goto scheduleUpdate;
-	    }
-	    return;
-	}
+                    dInfoPtr->newTopPixelOffset = 0;
+                    goto scheduleUpdate;
+	            }
+                return;
+            }
+        }
     }
 
     /*
@@ -5379,8 +5380,8 @@ TkTextSeeCmd(
     }
 
     /*
-     * Find the chunk that contains the desired index. dlPtr may be NULL if
-     * the widget is not mapped. [Bug #641778]
+     * Find the display line containing the desired index. dlPtr may be NULL
+     * if the widget is not mapped. [Bug #641778]
      */
 
     dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &index);
@@ -5388,7 +5389,16 @@ TkTextSeeCmd(
 	return TCL_OK;
     }
 
-    byteCount = index.byteIndex - dlPtr->index.byteIndex;
+    /*
+     * Find the chunk within the display line that contains the desired
+     * index. The chunks making the display line are skipped up to but not
+     * including the one crossing index. Skipping is done based on a
+     * byteCount offset possibly spanning several logical lines in case
+     * they are elided.
+     */
+
+    byteCount = TkTextIndexCount(textPtr, &dlPtr->index, &index,
+            COUNT_INDICES);
     for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL ;
 	    chunkPtr = chunkPtr->nextPtr) {
 	if (byteCount < chunkPtr->numBytes) {
@@ -5399,36 +5409,33 @@ TkTextSeeCmd(
 
     /*
      * Call a chunk-specific function to find the horizontal range of the
-     * character within the chunk. chunkPtr is NULL if trying to see in elided
-     * region.
+     * character within the chunk.
      */
 
-    if (chunkPtr != NULL) {
-	(*chunkPtr->bboxProc)(textPtr, chunkPtr, byteCount,
-		dlPtr->y + dlPtr->spaceAbove,
-		dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
-		dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width,
-		&height);
-	delta = x - dInfoPtr->curXPixelOffset;
-	oneThird = lineWidth/3;
-	if (delta < 0) {
-	    if (delta < -oneThird) {
-		dInfoPtr->newXPixelOffset = (x - lineWidth/2);
-	    } else {
-		dInfoPtr->newXPixelOffset -= ((-delta) );
-	    }
-	} else {
-	    delta -= (lineWidth - width);
-	    if (delta > 0) {
-		if (delta > oneThird) {
-		    dInfoPtr->newXPixelOffset = (x - lineWidth/2);
-		} else {
-		    dInfoPtr->newXPixelOffset += (delta );
-		}
-	    } else {
-		return TCL_OK;
-	    }
-	}
+    (*chunkPtr->bboxProc)(textPtr, chunkPtr, byteCount,
+            dlPtr->y + dlPtr->spaceAbove,
+            dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
+            dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width,
+            &height);
+    delta = x - dInfoPtr->curXPixelOffset;
+    oneThird = lineWidth/3;
+    if (delta < 0) {
+        if (delta < -oneThird) {
+            dInfoPtr->newXPixelOffset = (x - lineWidth/2);
+        } else {
+            dInfoPtr->newXPixelOffset -= ((-delta) );
+        }
+    } else {
+        delta -= (lineWidth - width);
+        if (delta > 0) {
+            if (delta > oneThird) {
+                dInfoPtr->newXPixelOffset = (x - lineWidth/2);
+            } else {
+                dInfoPtr->newXPixelOffset += (delta );
+            }
+        } else {
+            return TCL_OK;
+        }
     }
     dInfoPtr->flags |= DINFO_OUT_OF_DATE;
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {
