@@ -1210,7 +1210,7 @@ test textDisp-9.6 {TkTextRedrawTag} {
     .t tag remove big 1.0 end
     update
     list $tk_textRelayout $tk_textRedraw
-} {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 4.0 eof}}
+} {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 eof}}
 test textDisp-9.7 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
