@@ -1407,6 +1407,21 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     hr = fdlgIf->lpVtbl->Show(fdlgIf, hWnd);
     Tcl_SetServiceMode(oldMode);
 
+    /*
+     * Ensure that hWnd is enabled, because it can happen that we have updated
+     * the wrapper of the parent, which causes us to leave this child disabled
+     * (Windows loses sync).
+     */
+
+    if (hWnd)
+        EnableWindow(hWnd, 1);
+
+    /*
+     * Clear interp result since it might have been set during the modal loop.
+     * http://core.tcl.tk/tk/tktview/4a0451f5291b3c9168cc560747dae9264e1d2ef6
+     */
+    Tcl_ResetResult(interp);
+
     if (SUCCEEDED(hr)) {
         if ((oper == OFN_FILE_OPEN) && optsPtr->multi) {
             IShellItemArray *multiIf;
