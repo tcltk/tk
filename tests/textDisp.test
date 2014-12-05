@@ -2065,6 +2065,27 @@ test textDisp-16.40 {text count -xpixels} {
       [.t count -xpixels 1.0 "1.0 displaylineend"] \
       [.t count -xpixels 1.0 end]
 } {35 -35 0 42 42 42 0}
+test textDisp-16.41 {text count -xpixels with indices in elided lines} {
+    set res {}
+    .t delete 1.0 end
+    for {set i 1} {$i < 40} {incr i} {
+        .t insert end [string repeat "Line $i" 20]
+        .t insert end "\n"
+    }
+    .t configure -wrap none
+    .t tag add hidden 5.15 20.15
+    .t tag configure hidden -elide true
+    lappend res [.t count -xpixels 5.15 6.0] \
+      [.t count -xpixels 5.15 6.1] \
+      [.t count -xpixels 6.0 6.1] \
+      [.t count -xpixels 6.1 6.2] \
+      [.t count -xpixels 6.1 6.0] \
+      [.t count -xpixels 6.0 7.0] \
+      [.t count -xpixels 6.1 7.1] \
+      [.t count -xpixels 15.0 20.15] \
+      [.t count -xpixels 20.15 20.16] \
+      [.t count -xpixels 20.16 20.15]
+} [list 0 0 0 0 0 0 0 0 $fixedWidth -$fixedWidth]
 
 .t delete 1.0 end
 foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
