@@ -3601,15 +3601,18 @@ TkTextIndexYPixels(
     int pixelHeight;
     TkTextIndex index;
 
-    pixelHeight = TkBTreePixelsTo(textPtr, indexPtr->linePtr);
+    index = *indexPtr;
+    TkTextFindDisplayLineEnd(textPtr, &index, 0, NULL);
+
+    pixelHeight = TkBTreePixelsTo(textPtr, index.linePtr);
 
     /*
      * Iterate through all display-lines corresponding to the single logical
-     * line belonging to indexPtr, adding up the pixel height of each such
+     * line belonging to index, adding up the pixel height of each such
      * display line as we go along, until we go past 'indexPtr'.
      */
 
-    if (indexPtr->byteIndex == 0) {
+    if (index.byteIndex == 0) {
 	return pixelHeight;
     }
 
