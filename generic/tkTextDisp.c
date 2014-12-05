@@ -3382,7 +3382,8 @@ TkTextFindDisplayLineEnd(
 				 * of the original index within its display
 				 * line. */
 {
-    if (!end && indexPtr->byteIndex == 0) {
+    if (!end && indexPtr->byteIndex == 0
+            && !TkTextIsElided(textPtr, indexPtr, NULL)) {
 	/*
 	 * Nothing to do.
 	 */
@@ -3461,8 +3462,9 @@ TkTextFindDisplayLineEnd(
 		     * this now.
 		     */
 
-		    *xOffset = DlineXOfIndex(textPtr, dlPtr,
-			    indexPtr->byteIndex - dlPtr->index.byteIndex);
+                    *xOffset = DlineXOfIndex(textPtr, dlPtr,
+                            TkTextIndexCount(textPtr, &dlPtr->index, indexPtr,
+                            COUNT_INDICES));
 		}
 		if (end) {
 		    /*
