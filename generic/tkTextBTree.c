@@ -1882,8 +1882,7 @@ TkBTreePreviousLine(
  *	number of pixels in the widget.
  *
  * Results:
- *	The result is the index of linePtr within the tree, where 0
- *	corresponds to the first line in the tree.
+ *	The result is the pixel height of the top of the given line.
  *
  * Side effects:
  *	None.
