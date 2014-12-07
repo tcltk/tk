@@ -5285,6 +5285,18 @@ MeasureUp(
 	    distance -= dlPtr->height;
 	    if (distance <= 0) {
 		*dstPtr = dlPtr->index;
+
+                /*
+                 * Adjust index to the start of the display line. This is
+                 * needed because the start of a logical line is not always
+                 * the start of a display line (this is however true if the
+                 * eol is not elided).
+                 */
+
+                if (TkTextIsElided(textPtr, dstPtr, NULL)) {
+                    TkTextFindDisplayLineEnd(textPtr, dstPtr, 0,
+                            NULL);
+                }
 		if (overlap != NULL) {
 		    *overlap = -distance;
 		}
@@ -5677,6 +5689,18 @@ YScrollByLines(
 		offset++;
 		if (offset == 0) {
 		    textPtr->topIndex = dlPtr->index;
+
+                    /*
+                     * Adjust index to the start of the display line. This is
+                     * needed because the start of a logical line is not
+                     * always the start of a display line (this is however
+                     * true if the eol is not elided).
+                     */
+
+                    if (TkTextIsElided(textPtr, &textPtr->topIndex, NULL)) {
+                        TkTextFindDisplayLineEnd(textPtr, &textPtr->topIndex, 0,
+                                NULL);
+                    }
 		    break;
 		}
 	    }
