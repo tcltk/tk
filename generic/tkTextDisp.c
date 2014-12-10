@@ -6495,26 +6495,26 @@ FindDLine(
      */
 
     while (TkTextIndexCmp(&dlPtr->index,indexPtr) < 0) {
-	    dlPtrPrev = dlPtr;
-	    dlPtr = dlPtr->nextPtr;
-	    if (dlPtr == NULL) {
-                /*
-                 * We're past the last display line, either because the desired
-                 * index lies past the visible text, or because the desired index
-                 * is on the last display line showing the last logical line.
-                 */
-                indexPtr2 = dlPtrPrev->index;
-                TkTextFindDisplayLineEnd(textPtr, &indexPtr2, 1, NULL);
-                if (TkTextIndexCmp(&indexPtr2,indexPtr) >= 0) {
-                    dlPtr = dlPtrPrev;
-                    break;
-                } else {
-                    return NULL;
-                }
+        dlPtrPrev = dlPtr;
+        dlPtr = dlPtr->nextPtr;
+        if (dlPtr == NULL) {
+            /*
+             * We're past the last display line, either because the desired
+             * index lies past the visible text, or because the desired index
+             * is on the last display line showing the last logical line.
+             */
+            indexPtr2 = dlPtrPrev->index;
+            TkTextFindDisplayLineEnd(textPtr, &indexPtr2, 1, NULL);
+            if (TkTextIndexCmp(&indexPtr2,indexPtr) >= 0) {
+                dlPtr = dlPtrPrev;
+                break;
+            } else {
+                return NULL;
+            }
         }
         if (TkTextIndexCmp(&dlPtr->index,indexPtr) > 0) {
             dlPtr = dlPtrPrev;
-	    break;
+            break;
         }
     }
 
