@@ -243,7 +243,8 @@ typedef struct DLine {
 				 * top to bottom. Note: the next DLine doesn't
 				 * always correspond to the next line of text:
 				 * (a) can have multiple DLines for one text
-				 * line, and (b) can have gaps where DLine's
+				 * line (wrapping), (b) can have elided newlines,
+				 * and (c) can have gaps where DLine's
 				 * have been deleted because they're out of
 				 * date. */
     int flags;			/* Various flag bits: see below for values. */
