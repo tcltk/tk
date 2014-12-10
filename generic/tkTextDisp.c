@@ -4559,6 +4559,8 @@ TextChanged(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     DLine *firstPtr, *lastPtr;
     TkTextIndex rounded;
+    TkTextLine *linePtr;
+    int notBegin;
 
     /*
      * Schedule both a redisplay and a recomputation of display information.
@@ -4584,23 +4586,69 @@ TextChanged(
     /*
      * Find the DLines corresponding to index1Ptr and index2Ptr. There is one
      * tricky thing here, which is that we have to relayout in units of whole
-     * text lines: round index1Ptr back to the beginning of its text line, and
-     * include all the display lines after index2, up to the end of its text
-     * line. This is necessary because the indices stored in the display lines
-     * will no longer be valid. It's also needed because any edit could change
-     * the way lines wrap.
+     * text lines: This is necessary because the indices stored in the display
+     * lines will no longer be valid. It's also needed because any edit could
+     * change the way lines wrap.
+     * To relayout in units of whole text (logical) lines, round index1Ptr
+     * back to the beginning of its text line (or, if this line start is
+     * elided, to the beginning of the text line that starts the display line
+     * it is included in), and include all the display lines after index2Ptr,
+     * up to the end of its text line (or, if this line end is elided, up to
+     * the end of the first non elided text line after this line end).
      */
 
     rounded = *index1Ptr;
-    rounded.byteIndex = 0;
+    do {
+        rounded.byteIndex = 0;
+        notBegin = !TkTextIndexBackBytes(textPtr, &rounded, 1, &rounded);
+    } while (TkTextIsElided(textPtr, &rounded, NULL) && notBegin);
+    if (notBegin) {
+        TkTextIndexForwBytes(textPtr, &rounded, 1, &rounded);
+    }
+
+    /*
+     * 'rounded' now points to the start of a display line as well as the
+     * real (non elided) start of a logical line, and this index is the
+     * closest before index1Ptr.
+     */
+
     firstPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &rounded);
+
     if (firstPtr == NULL) {
+
+        /*
+         * index1Ptr pertains to no display line, i.e this index is after
+         * the last display line. Since index2Ptr is after index1Ptr, there
+         * are no display line to free/redisplay and we can return early.
+         */
+
 	return;
     }
-    lastPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, index2Ptr);
-    while ((lastPtr != NULL)
-	    && (lastPtr->index.linePtr == index2Ptr->linePtr)) {
-	lastPtr = lastPtr->nextPtr;
+
+    rounded = *index2Ptr;
+    linePtr = index2Ptr->linePtr;
+    do {
+        linePtr = TkBTreeNextLine(textPtr, linePtr);
+        if (linePtr == NULL) {
+            break;
+        }
+        rounded.linePtr = linePtr;
+        rounded.byteIndex = 0;
+        TkTextIndexBackBytes(textPtr, &rounded, 1, &rounded);
+    } while (TkTextIsElided(textPtr, &rounded, NULL));
+
+    if (linePtr == NULL) {
+        lastPtr = NULL;
+    } else {
+        TkTextIndexForwBytes(textPtr, &rounded, 1, &rounded);
+
+        /*
+         * 'rounded' now points to the start of a display line as well as the
+         * real (non elided) start of a logical line, and this index is the
+         * closest after index2Ptr.
+         */
+
+        lastPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &rounded);
     }
 
     /*
