@@ -537,20 +537,24 @@ test textDisp-4.1 {UpdateDisplayInfo, basic} {textfonts} {
     .t insert end "Line 1\nLine 2\nLine 3\n"
     update
     .t delete 2.0 2.end
+    update
+    set res $tk_textRelayout
     .t insert 2.0 "New Line 2"
     update
-    list [.t bbox 1.0] [.t bbox 2.0] [.t bbox 3.0] $tk_textRelayout
-} [list [list 5 5 7 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 5 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] 2.0]
+    lappend res [.t bbox 1.0] [.t bbox 2.0] [.t bbox 3.0] $tk_textRelayout
+} [list 2.0 [list 5 5 7 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 5 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] 2.0]
 test textDisp-4.2 {UpdateDisplayInfo, re-use tail of text line} {textfonts} {
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
     update
     .t mark set x 2.21
     .t delete 2.2
+    update
+    set res $tk_textRelayout
     .t insert 2.0 X
     update
-    list [.t bbox 2.0] [.t bbox x] [.t bbox 3.0] $tk_textRelayout
-} [list [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 12 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight] {2.0 2.20}]
+    lappend res [.t bbox 2.0] [.t bbox x] [.t bbox 3.0] $tk_textRelayout
+} [list 2.0 2.20 [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 12 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight] {2.0 2.20}]
 test textDisp-4.3 {UpdateDisplayInfo, tail of text line shifts} {textfonts} {
     .t delete 1.0 end
     .t insert end "Line 1\nLine 2 is so long that it wraps around\nLine 3"
