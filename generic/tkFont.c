@@ -633,7 +633,7 @@ Tk_FontObjCmd(
     	    return result;
     	}
     	return GetAttributeInfoObj(interp, &nfPtr->fa, objPtr);
-     } 
+     }
     case FONT_CREATE: {
 	int skip = 3, i;
 	const char *name;

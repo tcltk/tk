@@ -1989,7 +1989,7 @@ TkBTreeLinesTo(
 	}
     }
     if (textPtr != NULL) {
-        /* 
+        /*
          * The index to return must be relative to textPtr, not to the entire
          * tree. Take care to never return a negative index when linePtr
          * denotes a line before -startline, or an index larger than the

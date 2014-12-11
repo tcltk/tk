@@ -33,7 +33,7 @@ a better first place to look now.
 	* library/ttk/progress.tcl: Bug [c597acdab3]: Call [$pb step]
 	in tail position in ttk::progressbar::Autoincrement, so that
 	the widget is in a consistent state when any write traces on
-	the linked -variable are fired. 
+	the linked -variable are fired.
 
 2013-08-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
