@@ -388,7 +388,7 @@ GenerateUpdates(
 	/*
 	 * TODO: Here we should handle out of process embedding.
 	 */
-    }    
+    }
 
     return 1;
 }
@@ -785,7 +785,7 @@ double drawTime;
 /*
  * Set a minimum time for drawing to render. With removal of private NSView API's, default drawing
  * is slower and less responsive. This number, which seems feasible after some experimentatation, skips
- * some drawing to avoid lag. 
+ * some drawing to avoid lag.
  */
 
 #define MAX_DYNAMIC_TIME .000000001
@@ -854,7 +854,7 @@ ExposeRestrictProc(
 
 -(void) viewWillDraw  {
 	[self setNeedsDisplay:YES];
-    } 
+    }
 
 - (void) generateExposeEvents: (HIMutableShapeRef) shape
 {
@@ -889,12 +889,12 @@ ExposeRestrictProc(
 						     UINT2PTR(serial), &oldArg);
 
     	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
- 
+
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
     	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 
-    } 
-   
+    }
+
 }
 
 /*This is no-op on 10.7 and up because Apple has removed this widget, but leaving here for backwards compatibility.*/
