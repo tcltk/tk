@@ -4650,6 +4650,19 @@ TextChanged(
          */
 
         lastPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &rounded);
+
+        /*
+         * At least one display line is supposed to change. This makes the
+         * redisplay OK in case the display line we expect to get here was
+         * unlinked by a previous call to TkTextChanged and the text widget
+         * did not update before reaching this point. This happens for
+         * instance when moving the cursor up one line.
+         * Note that lastPtr != NULL here, otherwise we would have returned
+         * earlier when we tested for firstPtr being NULL.
+         */
+        if (lastPtr == firstPtr) {
+            lastPtr = lastPtr->nextPtr;
+        }
     }
 
     /*
