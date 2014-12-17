@@ -2100,7 +2100,6 @@ test textDisp-16.42 {TkTextYviewCmd procedure with indices in elided lines} {
     .t tag add hidden 5.15 20.15
     .t tag configure hidden -elide true
     .t yview 35.0
-    set res {}
     .t yview scroll [expr {- 15 * $fixedHeight}] pixels
     update
     .t index @0,0
@@ -2115,7 +2114,6 @@ test textDisp-16.43 {TkTextYviewCmd procedure with indices in elided lines} {
     .t tag add hidden 5.15 20.15
     .t tag configure hidden -elide true
     .t yview 35.0
-    set res {}
     .t yview scroll -15 units
     update
     .t index @0,0
