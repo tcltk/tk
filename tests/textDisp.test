@@ -2118,6 +2118,19 @@ test textDisp-16.43 {TkTextYviewCmd procedure with indices in elided lines} {
     update
     .t index @0,0
 } {5.0}
+test textDisp-16.44 {TkTextYviewCmd procedure, scroll down, with elided lines} {
+    .t configure -wrap none
+    .t delete 1.0 end
+    foreach x [list 0 1 2 3 4 5 6 7 8 9 0] {
+      .t insert end "$x aaa1\n$x bbb2\n$x ccc3\n$x ddd4\n$x eee5\n$x fff6"
+      .t insert end "$x 1111\n$x 2222\n$x 3333\n$x 4444\n$x 5555\n$x 6666" hidden
+    }
+    .t tag configure hidden -elide true ; # 5 hidden lines
+    update
+    .t see [expr {5 + [winfo height .t] / $fixedHeight} + 1].0
+    update
+    .t index @0,0
+} {2.0}
 
 .t delete 1.0 end
 foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
