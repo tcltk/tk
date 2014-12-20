@@ -908,8 +908,8 @@ TextWidgetObjCmd(
 		 * line of 'indexFromPtr' up to, but not including the logical
 		 * line of 'indexToPtr' (except if this line is elided), and
                  * then subtract off what came in too much from elided lines,
-                 * also subtract off we didn't want from 'from' and add on
-		 * what we didn't count from 'to'.
+                 * also subtract off what we didn't want from 'from' and add
+		 * on what we didn't count from 'to'.
 		 */
 
                 while (TkTextIndexCmp(&index,indexToPtr) < 0) {
