@@ -1657,13 +1657,13 @@ TkMacOSXSetupDrawingContext(
 	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
 	CGContextConcatCTM(dc.context, t);
 	if (dc.clipRgn) {
-#ifdef TK_MAC_DEBUG_DRAWING
+	    #ifdef TK_MAC_DEBUG_DRAWING
 	    CGContextSaveGState(dc.context);
 	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
 	    CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
 	    CGContextEOFillPath(dc.context);
 	    CGContextRestoreGState(dc.context);
-#endif /* TK_MAC_DEBUG_DRAWING */
+	    #endif /* TK_MAC_DEBUG_DRAWING */
 	    CGRect r;
 	    if (!HIShapeIsRectangular(dc.clipRgn) || !CGRectContainsRect(
 		    *HIShapeGetBounds(dc.clipRgn, &r),
