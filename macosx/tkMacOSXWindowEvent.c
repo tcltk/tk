@@ -839,8 +839,11 @@ ExposeRestrictProc(
 			NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode,
 			nil]];
     }
+   
     CFRelease(drawShape);
     drawTime=-[beginTime timeIntervalSinceNow];
+    [super setNeedsDisplayInRect:rect];
+  
 }
 
 /*At conclusion of resize event, send notification and set view for redraw if earlier drawing was skipped because of lagginess.*/
@@ -877,7 +880,7 @@ ExposeRestrictProc(
     	 * just posted Expose events from generating new redraws.
     	 */
 
-    	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 
     	/*
     	 * For smoother drawing, process Expose events and resulting redraws
