@@ -2089,7 +2089,9 @@ test textDisp-16.41 {text count -xpixels with indices in elided lines} {
       [.t count -xpixels 15.0 20.15] \
       [.t count -xpixels 20.15 20.16] \
       [.t count -xpixels 20.16 20.15]
-} [list 0 0 0 0 0 0 0 0 $fixedWidth -$fixedWidth]
+    .t tag remove hidden 20.0 20.15
+    lappend res [expr {[.t count -xpixels 5.0 20.0] != 0}]
+} [list 0 0 0 0 0 0 0 0 $fixedWidth -$fixedWidth 1]
 test textDisp-16.42 {TkTextYviewCmd procedure with indices in elided lines} {
     .t configure -wrap none
     .t delete 1.0 end
