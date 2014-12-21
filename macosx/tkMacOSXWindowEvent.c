@@ -843,6 +843,7 @@ ExposeRestrictProc(
     }
     CFRelease(drawShape);
     drawTime=-[beginTime timeIntervalSinceNow];
+    [super setNeedsDisplayInRect:rect];
 }
 
 /*At conclusion of resize event, send notification and set view for redraw if earlier drawing was skipped because of lagginess.*/
