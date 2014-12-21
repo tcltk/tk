@@ -60,12 +60,23 @@ static const BoundsFix boundsFixes[] = {
 
 #endif
 
+
+
 /*
  * Forward declarations for procedures defined later in this file:
  */
 
 static void MenuButtonEventProc(ClientData clientData, XEvent *eventPtr);
 
+/*
+ * The structure below defines menubutton class behavior by means of functions
+ * that can be invoked from generic window code.
+ */
+
+Tk_ClassProcs tkpMenubuttonClass = {
+    sizeof(Tk_ClassProcs),	/* size */
+    TkMenuButtonWorldChanged,	/* worldChangedProc */
+};
 
 /*
  *----------------------------------------------------------------------
@@ -87,9 +98,11 @@ TkMenuButton *
 TkpCreateMenuButton(
     Tk_Window tkwin)
 {
-    MacMenuButton *macButtonPtr = ckalloc(sizeof(MacMenuButton));
+    MacMenuButton *macButtonPtr =
+	    (MacMenuButton *) ckalloc(sizeof(MacMenuButton));
 
     macButtonPtr->button = nil;
+
     Tk_CreateEventHandler(tkwin, ActivateMask,
 	    MenuButtonEventProc, (ClientData) macButtonPtr);
     return (TkMenuButton *) macButtonPtr;
@@ -160,7 +173,7 @@ TkpDisplayMenuButton(
     if (!tkwin || !Tk_IsMapped(tkwin) || !view ||
 	    !TkMacOSXSetupDrawingContext((Drawable) macWin, NULL, 1, &dc)) {
 	return;
-    }
+    } 
     CGContextConcatCTM(dc.context, t);
     Tk_Fill3DRectangle(tkwin, (Pixmap) macWin, mbPtr->normalBorder, 0, 0,
 	    Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
