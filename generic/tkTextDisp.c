@@ -3383,8 +3383,10 @@ TkTextFindDisplayLineEnd(
 				 * of the original index within its display
 				 * line. */
 {
+    TkTextIndex indexPtr2;
+    TkTextIndexBackBytes(textPtr, indexPtr, 1, &indexPtr2);
     if (!end && indexPtr->byteIndex == 0
-            && !TkTextIsElided(textPtr, indexPtr, NULL)) {
+            && !TkTextIsElided(textPtr, &indexPtr2, NULL)) {
 	/*
 	 * Nothing to do.
 	 */
