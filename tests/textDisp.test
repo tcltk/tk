@@ -2558,7 +2558,7 @@ test textDisp-19.11.23 {TextWidgetCmd procedure, "index +displaylines"} {
       [.t index "12.0 +2d lines"] [.t index "11.0 +2d lines"] \
       [.t index "13.0 +2d lines"] [.t index "13.0 +3d lines"] \
       [.t index "13.0 +4d lines"]
-} {16.17 16.33 16.28 16.46 16.28 16.49 16.65 17.0}
+} {16.17 16.33 16.28 16.46 16.28 16.49 16.65 16.72}
 .t tag remove elide 1.0 end
 test textDisp-19.11.24 {TextWidgetCmd procedure, "index +/-displaylines"} {
     list [.t index "11.5 + -1 display lines"] \
