@@ -53,46 +53,47 @@ NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
 
 @implementation TkNSScroller
 
-    - (void)drawRect:(NSRect)dirtyRect
-    {
-	NSInteger tag = [self tag];
-	if ( tag != -1) {
-	    TkScrollbar *scrollPtr = (TkScrollbar *)tag;
-	    MacDrawable* macWin = (MacDrawable *)scrollPtr;
-	    Tk_Window tkwin = scrollPtr->tkwin;
-	    NSRect Tkframe = TkMacOSXGetScrollFrame(scrollPtr);
-	    /* Do not draw if the widget is misplaced or unmapped. */
-	    if ( NSIsEmptyRect(Tkframe) || 
-		 ! macWin->winPtr->flags & TK_MAPPED ||
-		 ! NSEqualRects(Tkframe, [self frame]) 
-		 ) {
+
+- (void)drawRect:(NSRect)dirtyRect
+{
+    NSInteger tag = [self tag];
+    if ( tag != -1) {
+	TkScrollbar *scrollPtr = (TkScrollbar *)tag;
+	MacDrawable* macWin = (MacDrawable *)scrollPtr;
+	Tk_Window tkwin = scrollPtr->tkwin;
+	NSRect Tkframe = TkMacOSXGetScrollFrame(scrollPtr);
+	/* Do not draw if the widget is misplaced or unmapped. */
+	if ( NSIsEmptyRect(Tkframe) ||
+	     ! macWin->winPtr->flags & TK_MAPPED ||
+	     ! NSEqualRects(Tkframe, [self frame])
+	     ) {
+	    return;
+	}
+
+	/*
+	 * Do not draw if the widget is completely outside of its parent.
+	 */
+	if (tkwin) {
+	    int parent_height = Tk_Height(Tk_Parent(tkwin));
+	    int widget_height = Tk_Height(tkwin);
+	    int y = Tk_Y(tkwin);
+	    if ( y > parent_height || y + widget_height < 0 ) {
 		return;
 	    }
 
-	    /*
-	     * Do not draw if the widget is completely outside of its parent.
-	     */
-	    if (tkwin) {
-		int parent_height = Tk_Height(Tk_Parent(tkwin));
-		int widget_height = Tk_Height(tkwin);
-		int y = Tk_Y(tkwin);
-		if ( y > parent_height || y + widget_height < 0 ) {
-		    return;
-		}
-
-		int parent_width = Tk_Width(Tk_Parent(tkwin));
-		int widget_width = Tk_Width(tkwin);
-		int x = Tk_X(tkwin);
-		if (x > parent_width || x + widget_width < 0) {
-		    return;
-		}
+	    int parent_width = Tk_Width(Tk_Parent(tkwin));
+	    int widget_width = Tk_Width(tkwin);
+	    int x = Tk_X(tkwin);
+	    if (x > parent_width || x + widget_width < 0) {
+		return;
 	    }
 	}
-	[super drawRect:dirtyRect];
     }
-    
- #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
-- (BOOL)isHorizontal {
+    [super drawRect:dirtyRect];
+}
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+- (BOOL)isVertical {
     NSRect bounds = [self bounds];
     return NSWidth(bounds) < NSHeight (bounds);
 }
@@ -102,18 +103,18 @@ NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
 {
     NSRect knobRect = [self rectForPart:NSScrollerKnob];
     
-    if ([self isHorizontal]) {
-	NSRect newRect = NSMakeRect(knobRect.origin.x, knobRect.origin.y, knobRect.size.width - 5, knobRect.size.height);
-	NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:newRect xRadius:7 yRadius:7];
- 
-        [[NSColor lightGrayColor] set];
-	[path fill];
-    } else {
-	NSRect newRect = NSMakeRect(knobRect.origin.x, knobRect.origin.y, knobRect.size.width, knobRect.size.height - 5);
-	NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:newRect xRadius:7 yRadius:7];
+    if ([self isVertical]) {
+	NSRect newRect = NSMakeRect(knobRect.origin.x + 3, knobRect.origin.y, knobRect.size.width - 6, knobRect.size.height);
+    NSBezierPath  *scrollerPath = [NSBezierPath bezierPathWithRoundedRect:newRect xRadius:4 yRadius:4];
  
     [[NSColor lightGrayColor] set];
-	[path fill];
+	[scrollerPath fill];
+    } else {
+	NSRect newRect = NSMakeRect(knobRect.origin.x, knobRect.origin.y + 3, knobRect.size.width, knobRect.size.height - 6);
+	NSBezierPath  *scrollerPath = [NSBezierPath bezierPathWithRoundedRect:newRect xRadius:4 yRadius:4];
+ 
+        [[NSColor lightGrayColor] set];
+	[scrollerPath fill];
     }
        
 }
@@ -125,9 +126,10 @@ NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
 
 - (void)drawKnobSlotInRect:(NSRect)rect highlight:(BOOL)highlight
 {
-
+  
 }
-#endif   
+
+#endif
 
 @end
 
