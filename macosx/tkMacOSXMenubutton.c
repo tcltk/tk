@@ -15,7 +15,7 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMenubutton.h"
 #include "tkMacOSXFont.h"
-#include "tkMacOSXDebug.h"
+#include "tkMacOSXDebug.h" 
 
 /*
 #ifdef TK_MAC_DEBUG

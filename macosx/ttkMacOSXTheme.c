@@ -528,6 +528,10 @@ static Ttk_ElementSpec ComboboxElementSpec = {
     ComboboxElementDraw
 };
 
+
+
+
+
 /*----------------------------------------------------------------------
  * +++ Spinbuttons.
  *
@@ -600,6 +604,11 @@ static TrackElementData ScaleData = {
     kThemeSlider, kThemeMetricHSliderHeight
 };
 
+static TrackElementData ScrollData = {
+    kThemeScrollBarMedium
+};
+
+
 typedef struct {
     Tcl_Obj *fromObj;		/* minimum value */
     Tcl_Obj *toObj;		/* maximum value */
@@ -660,6 +669,7 @@ static void TrackElementDraw(
 		kThemeThumbPressed : 0;
 	info.trackInfo.slider.thumbDir = kThemeThumbPlain;
     }
+
 
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);

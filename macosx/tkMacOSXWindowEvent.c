@@ -769,6 +769,8 @@ Tk_MacOSXIsAppInFront(void)
 @interface TKContentView(TKWindowEvent)
 - (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIMutableShapeRef) shape;
+- (BOOL) preservesContentDuringLiveResize;
+- (void) viewWillStartLiveResize;
 - (void) viewDidEndLiveResize;
 - (void) viewWillDraw;
 - (BOOL) isOpaque;
@@ -780,15 +782,6 @@ Tk_MacOSXIsAppInFront(void)
 @implementation TKContentView
 @end
 
-double drawTime;
-
-/*
- * Set a minimum time for drawing to render. With removal of private NSView API's, default drawing
- * is slower and less responsive. This number, which seems feasible after some experimentatation, skips
- * some drawing to avoid lag.
- */
-
-#define MAX_DYNAMIC_TIME .000000001
 
 /*Restrict event processing to Expose events.*/
 static Tk_RestrictAction
@@ -805,10 +798,12 @@ ExposeRestrictProc(
 
 - (void) drawRect: (NSRect) rect
 {
+
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
 
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
+
 #ifdef TK_MAC_DEBUG_DRAWING
     TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd, NSStringFromRect(rect));
     [[NSColor colorWithDeviceRed:0.0 green:1.0 blue:0.0 alpha:.1] setFill];
@@ -816,11 +811,7 @@ ExposeRestrictProc(
 	    NSCompositeSourceOver);
 #endif
 
-    NSDate *beginTime=[NSDate date];
-
-    /*Skip drawing during live resize if redraw is too slow.*/
-    if([self inLiveResize] && drawTime>MAX_DYNAMIC_TIME) return;
-
+ 	    
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
 
@@ -841,24 +832,35 @@ ExposeRestrictProc(
     }
    
     CFRelease(drawShape);
-    drawTime=-[beginTime timeIntervalSinceNow];
-    [super setNeedsDisplayInRect:rect];
   
 }
 
-/*At conclusion of resize event, send notification and set view for redraw if earlier drawing was skipped because of lagginess.*/
-- (void)viewDidEndLiveResize
+
+/*Provide more fine-grained control over resizing of content to reduce flicker after removal of private API's.*/
+
+- (BOOL) preservesContentDuringLiveResize
 {
-    if(drawTime>MAX_DYNAMIC_TIME) {
-    [self setNeedsDisplay:YES];
-    [super viewDidEndLiveResize];
-    }
+    return YES;
 }
 
--(void) viewWillDraw  {
-	[self setNeedsDisplay:YES];
-    }
+- (void)viewWillStartLiveResize
+{
+  [super viewWillStartLiveResize];
+  [self setNeedsDisplay:NO];
+}
 
+
+- (void)viewDidEndLiveResize
+{
+
+    [self setNeedsDisplay:YES];
+    [super setNeedsDisplay:YES];
+    [super viewDidEndLiveResize];
+     
+}
+
+
+/*Core function of this class, generates expose events for redrawing.*/
 - (void) generateExposeEvents: (HIMutableShapeRef) shape
 {
 
