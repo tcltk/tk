@@ -604,10 +604,6 @@ static TrackElementData ScaleData = {
     kThemeSlider, kThemeMetricHSliderHeight
 };
 
-static TrackElementData ScrollData = {
-    kThemeScrollBarMedium
-};
-
 
 typedef struct {
     Tcl_Obj *fromObj;		/* minimum value */
