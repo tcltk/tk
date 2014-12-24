@@ -38,7 +38,7 @@ static NSRect TkMacOSXGetButtonFrame(TkButton *butPtr);
  */
 
 @interface TkNSButton: NSButton
-
+- (void)drawRect:(NSRect)dirtyRect;
 @end
 
 @implementation TkNSButton
