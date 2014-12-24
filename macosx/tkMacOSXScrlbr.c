@@ -39,6 +39,7 @@ NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
  * graphical-glitches-lag. Only supported on 10.7 and above.
  */
 
+
 @interface TkNSScroller: NSScroller
 -(void) drawRect:(NSRect)dirtyRect;
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
@@ -91,7 +92,7 @@ NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
 }
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
-- (BOOL)isHorizontal {
+- (BOOL)isVertical {
     NSRect bounds = [self bounds];
     return NSWidth(bounds) < NSHeight (bounds);
 }
@@ -101,18 +102,18 @@ NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
 {
     NSRect knobRect = [self rectForPart:NSScrollerKnob];
     
-    if ([self isHorizontal]) {
-	NSRect newRect = NSMakeRect(knobRect.origin.x, knobRect.origin.y, knobRect.size.width - 5, knobRect.size.height);
-	NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:newRect xRadius:7 yRadius:7];
+    if ([self isVertical]) {
+	NSRect newRect = NSMakeRect(knobRect.origin.x + 3, knobRect.origin.y, knobRect.size.width - 6, knobRect.size.height);
+       NSBezierPath  *scrollerPath = [NSBezierPath bezierPathWithRoundedRect:newRect xRadius:4 yRadius:4];
  
         [[NSColor lightGrayColor] set];
-	[path fill];
+	[scrollerPath fill];
     } else {
-	NSRect newRect = NSMakeRect(knobRect.origin.x, knobRect.origin.y, knobRect.size.width, knobRect.size.height - 5);
-	NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect:newRect xRadius:7 yRadius:7];
+	NSRect newRect = NSMakeRect(knobRect.origin.x, knobRect.origin.y + 3, knobRect.size.width, knobRect.size.height - 6);
+	NSBezierPath  *scrollerPath = [NSBezierPath bezierPathWithRoundedRect:newRect xRadius:4 yRadius:4];
  
         [[NSColor lightGrayColor] set];
-	[path fill];
+	[scrollerPath fill];
     }
        
 }
@@ -124,8 +125,9 @@ NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
 
 - (void)drawKnobSlotInRect:(NSRect)rect highlight:(BOOL)highlight
 {
-
+  
 }
+
 #endif
 
 @end
