@@ -3603,29 +3603,44 @@ TkTextIndexYPixels(
 {
     int pixelHeight;
     TkTextIndex index;
+    int alreadyStartOfLine = 1;
+
+    /*
+     * Find the index denoting the closest position being at the same time
+     * the start of a logical line above indexPtr and the start of a display
+     * line.
+     */
 
     index = *indexPtr;
-    TkTextFindDisplayLineEnd(textPtr, &index, 0, NULL);
+    while (1) {
+        TkTextFindDisplayLineEnd(textPtr, &index, 0, NULL);
+        if (index.byteIndex == 0) {
+            break;
+        }
+        TkTextIndexBackBytes(textPtr, &index, 1, &index);
+        alreadyStartOfLine = 0;
+    }
 
     pixelHeight = TkBTreePixelsTo(textPtr, index.linePtr);
 
     /*
-     * Iterate through all display-lines corresponding to the single logical
-     * line belonging to index, adding up the pixel height of each such
-     * display line as we go along, until we go past 'indexPtr'.
+     * Shortcut to avoid layout of a superfluous display line. We know there
+     * is nothing more to add up to the height since the index we were given
+     * was already the start of a logical line.
      */
 
-    if (index.byteIndex == 0) {
-	return pixelHeight;
+    if (alreadyStartOfLine) {
+        return pixelHeight;
     }
 
-    index.tree = textPtr->sharedTextPtr->tree;
-    index.linePtr = indexPtr->linePtr;
-    index.byteIndex = 0;
-    index.textPtr = NULL;
+    /*
+     * Iterate through display lines, starting at the logical line belonging
+     * to index, adding up the pixel height of each such display line as we
+     * go along, until we go past 'indexPtr'.
+     */
 
     while (1) {
-	int bytes, height;
+	int bytes, height, compare;
 
 	/*
 	 * Currently this call doesn't have many side-effects. However, if in
@@ -3637,9 +3652,10 @@ TkTextIndexYPixels(
 
 	height = CalculateDisplayLineHeight(textPtr, &index, &bytes, NULL);
 
-	index.byteIndex += bytes;
+        TkTextIndexForwBytes(textPtr, &index, bytes, &index);
 
-	if (index.byteIndex > indexPtr->byteIndex) {
+        compare = TkTextIndexCmp(&index,indexPtr);
+        if (compare > 0) {
 	    return pixelHeight;
 	}
 
@@ -3647,7 +3663,7 @@ TkTextIndexYPixels(
 	    pixelHeight += height;
 	}
 
-	if (index.byteIndex == indexPtr->byteIndex) {
+        if (compare == 0) {
 	    return pixelHeight;
 	}
     }
