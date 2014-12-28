@@ -733,6 +733,24 @@ test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
 } -cleanup {
     destroy .mytop
 } -result {1 3}
+test text-9.2.47 {TextWidgetCmd procedure, "count" option} -setup {
+    .t delete 1.0 end
+    update
+    set res {}
+} -body {
+    for {set i 1} {$i < 25} {incr i} {
+        .t insert end "Line $i\n"
+    }
+    .t tag configure hidden -elide true
+    .t tag add hidden 5.7 11.0
+    update
+    set y1 [lindex [.t yview] 1]
+    .t count -displaylines 5.0 11.0
+    set y2 [lindex [.t yview] 1]
+    .t count -displaylines 5.0 12.0
+    set y3 [lindex [.t yview] 1]
+    list [expr {$y1 == $y2}] [expr {$y1 == $y3}]
+} -result {1 1}
 
 # Newer tags are higher priority
 .t tag configure elide1 -elide 0
