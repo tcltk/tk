@@ -800,10 +800,12 @@ ExposeRestrictProc(
 
 - (void) drawRect: (NSRect) rect
 {
+
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
 
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
+
 #ifdef TK_MAC_DEBUG_DRAWING
     TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd, NSStringFromRect(rect));
     [[NSColor colorWithDeviceRed:0.0 green:1.0 blue:0.0 alpha:.1] setFill];
@@ -811,12 +813,12 @@ ExposeRestrictProc(
 	    NSCompositeSourceOver);
 #endif
 
+ 	    
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
 
     while (rectsBeingDrawnCount--) {
 	CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
-
 	r.origin.y = height - (r.origin.y + r.size.height);
 	HIShapeUnionWithRect(drawShape, &r);
     }
@@ -829,10 +831,20 @@ ExposeRestrictProc(
 			NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode,
 			nil]];
     }
+   
     CFRelease(drawShape);
+  
 }
 
+
 /*Provide more fine-grained control over resizing of content to reduce flicker after removal of private API's.*/
+
+-(void) viewWillDraw
+{
+
+        [super viewWillDraw];
+}
+
 
 - (BOOL) preservesContentDuringLiveResize
 {
@@ -841,19 +853,25 @@ ExposeRestrictProc(
 
 - (void)viewWillStartLiveResize
 {
+  NSDisableScreenUpdates();
   [super viewWillStartLiveResize];
+  [self setNeedsDisplay:NO];
+  [self setHidden:YES];
 }
 
 
 - (void)viewDidEndLiveResize
 {
 
+    NSEnableScreenUpdates();
+    [self setHidden:NO];
     [self setNeedsDisplay:YES];
     [super setNeedsDisplay:YES];
     [super viewDidEndLiveResize];
      
 }
 
+/*Core function of this class, generates expose events for redrawing.*/
 - (void) generateExposeEvents: (HIMutableShapeRef) shape
 {
 
@@ -865,6 +883,7 @@ ExposeRestrictProc(
 		return;
     }
 
+
     HIShapeGetBounds(shape, &updateBounds);
     serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     if (GenerateUpdates(shape, &updateBounds, winPtr) &&
@@ -875,7 +894,7 @@ ExposeRestrictProc(
     	 * just posted Expose events from generating new redraws.
     	 */
 
-    	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 
     	/*
     	 * For smoother drawing, process Expose events and resulting redraws
@@ -887,12 +906,13 @@ ExposeRestrictProc(
 						     UINT2PTR(serial), &oldArg);
 
     	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
- 
+
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+
     	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 
-    } 
-   
+    }
+
 }
 
 /*This is no-op on 10.7 and up because Apple has removed this widget, but leaving here for backwards compatibility.*/
@@ -964,7 +984,6 @@ ExposeRestrictProc(
 }
 
 @end
-
 
 /*
  * Local Variables:
