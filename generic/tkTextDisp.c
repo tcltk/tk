@@ -3733,7 +3733,7 @@ TkTextUpdateOneLine(
 	 * test below this while loop.
 	 */
 
-	height = CalculateDisplayLineHeight(textPtr, indexPtr, &bytes,
+        height = CalculateDisplayLineHeight(textPtr, indexPtr, &bytes,
 		&logicalLines);
 
 	if (height > 0) {
@@ -3747,47 +3747,47 @@ TkTextUpdateOneLine(
 	    break;
 	}
 
-	if (mergedLines == 0) {
-	    if (indexPtr->linePtr != linePtr) {
-		/*
-		 * If we reached the end of the logical line, then either way
-		 * we don't have a partial calculation.
-		 */
+        if (mergedLines == 0) {
+            if (indexPtr->linePtr != linePtr) {
+                /*
+                 * If we reached the end of the logical line, then either way
+                 * we don't have a partial calculation.
+                 */
 
-		partialCalc = 0;
-		break;
-	    }
+                partialCalc = 0;
+                break;
+            }
         } else {
             if (indexPtr->byteIndex != 0) {
-	    /*
-                * We must still be on the same wrapped line, on a new logical
-                * line merged with the logical line 'linePtr'.
-	     */
-	} else {
-	    /*
-	     * Must check if indexPtr is really a new logical line which is
-	     * not merged with the previous line. The only code that would
-	     * really know this is LayoutDLine, which doesn't pass the
-	     * information on, so we have to check manually here.
-	     */
+                /*
+                 * We must still be on the same wrapped line, on a new logical
+                 * line merged with the logical line 'linePtr'.
+                 */
+            } else {
+                /*
+                 * Must check if indexPtr is really a new logical line which is
+                 * not merged with the previous line. The only code that would
+                 * really know this is LayoutDLine, which doesn't pass the
+                 * information on, so we have to check manually here.
+                 */
 
-	    TkTextIndex idx;
+                TkTextIndex idx;
 
-	    TkTextIndexBackChars(textPtr, indexPtr, 1, &idx, COUNT_INDICES);
-	    if (!TkTextIsElided(textPtr, &idx, NULL)) {
-		/*
-		 * We've ended a logical line.
-		 */
+                TkTextIndexBackChars(textPtr, indexPtr, 1, &idx, COUNT_INDICES);
+                if (!TkTextIsElided(textPtr, &idx, NULL)) {
+                    /*
+                     * We've ended a logical line.
+                     */
 
-		partialCalc = 0;
-		break;
-	    }
+                    partialCalc = 0;
+                    break;
+                }
 
-	    /*
-                * We must still be on the same wrapped line, on a new logical
-                * line merged with the logical line 'linePtr'.
-	     */
-	}
+                /*
+                 * We must still be on the same wrapped line, on a new logical
+                 * line merged with the logical line 'linePtr'.
+                 */
+            }
         }
 	if (partialCalc && displayLines > 50 && mergedLines == 0) {
 	    /*
