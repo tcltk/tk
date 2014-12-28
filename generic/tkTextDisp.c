@@ -3711,6 +3711,20 @@ TkTextUpdateOneLine(
     }
 
     /*
+     * CalculateDisplayLineHeight _must_ be called (below) with an index at
+     * the beginning of a display line. Force this to happen. This is needed
+     * when TkTextUpdateOneLine is called with a line that is merged with its
+     * previous line: the number of merged logical lines in a display line is
+     * calculated correctly only when CalculateDisplayLineHeight receives
+     * an index at the beginning of a display line. In turn this causes the
+     * merged lines to receive their correct zero pixel height in
+     * TkBTreeAdjustPixelHeight.
+     */
+
+    TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
+    linePtr = indexPtr->linePtr;
+
+    /*
      * Iterate through all display-lines corresponding to the single logical
      * line 'linePtr' (and lines merged into this line due to eol elision),
      * adding up the pixel height of each such display line as we go along.
