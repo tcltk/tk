@@ -1492,6 +1492,37 @@ test textDisp-11.18 {TkTextSetYView, see in elided lines} {
     # The index "8.0 lineend" is on screen despite elided -> no scroll
     .top.t index @0,0
 } {4.0}
+test textDisp-11.19 {TkTextSetYView, see in elided lines} {
+    .top.t delete 1.0 end
+    for {set i 1} {$i < 50} {incr i} {
+        .top.t insert end "Line $i\n"
+    }
+    # button just for having a line with a larger height
+    button .top.t.b -text "Test" -bd 2 -highlightthickness 2
+    .top.t window create 21.0 -window .top.t.b
+    .top.t tag add hidden 15.36 21.0
+    .top.t tag configure hidden -elide true
+    .top.t configure -height 15
+    wm geometry .top 300x200+0+0
+    # Indices 21.0, 17.0 and 15.0 are all on the same display line
+    # therefore index @0,0 shall be the same for all of them
+    .top.t see end
+    update
+    .top.t see 21.0
+    update
+    set ind1 [.top.t index @0,0]
+    .top.t see end
+    update
+    .top.t see 17.0
+    update
+    set ind2 [.top.t index @0,0]
+    .top.t see end
+    update
+    .top.t see 15.0
+    update
+    set ind3 [.top.t index @0,0]
+    list [expr {$ind1 == $ind2}] [expr {$ind1 == $ind3}]
+} {1 1}
 
 .t configure -wrap word
 .t delete 50.0 51.0

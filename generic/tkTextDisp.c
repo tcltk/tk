@@ -5181,7 +5181,9 @@ TkTextSetYView(
      * If the line is not close, place it in the center of the window.
      */
 
-    lineHeight = CalculateDisplayLineHeight(textPtr, indexPtr, NULL, NULL);
+    tmpIndex = *indexPtr;
+    TkTextFindDisplayLineEnd(textPtr, &tmpIndex, 0, NULL);
+    lineHeight = CalculateDisplayLineHeight(textPtr, &tmpIndex, NULL, NULL);
 
     /*
      * It would be better if 'bottomY' were calculated using the actual height
