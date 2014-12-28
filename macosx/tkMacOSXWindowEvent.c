@@ -817,7 +817,6 @@ ExposeRestrictProc(
 
     while (rectsBeingDrawnCount--) {
 	CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
-
 	r.origin.y = height - (r.origin.y + r.size.height);
 	HIShapeUnionWithRect(drawShape, &r);
     }
@@ -838,6 +837,13 @@ ExposeRestrictProc(
 
 /*Provide more fine-grained control over resizing of content to reduce flicker after removal of private API's.*/
 
+-(void) viewWillDraw
+{
+
+        [super viewWillDraw];
+}
+
+
 - (BOOL) preservesContentDuringLiveResize
 {
     return YES;
@@ -845,20 +851,23 @@ ExposeRestrictProc(
 
 - (void)viewWillStartLiveResize
 {
+  NSDisableScreenUpdates();
   [super viewWillStartLiveResize];
   [self setNeedsDisplay:NO];
+  [self setHidden:YES];
 }
 
 
 - (void)viewDidEndLiveResize
 {
 
+    NSEnableScreenUpdates();
+    [self setHidden:NO];
     [self setNeedsDisplay:YES];
     [super setNeedsDisplay:YES];
     [super viewDidEndLiveResize];
      
 }
-
 
 /*Core function of this class, generates expose events for redrawing.*/
 - (void) generateExposeEvents: (HIMutableShapeRef) shape
@@ -871,6 +880,7 @@ ExposeRestrictProc(
     if (!winPtr) {
 		return;
     }
+
 
     HIShapeGetBounds(shape, &updateBounds);
     serial = LastKnownRequestProcessed(Tk_Display(winPtr));
@@ -896,6 +906,7 @@ ExposeRestrictProc(
     	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
 
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+
     	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 
     }
