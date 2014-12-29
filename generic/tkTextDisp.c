@@ -3537,6 +3537,27 @@ CalculateDisplayLineHeight(
     DLine *dlPtr;
     int pixelHeight;
 
+    if (tkTextDebug) {
+        int oldtkTextDebug = tkTextDebug;
+        /*
+         * Check that the indexPtr we are given really is at the start of a
+         * display line. The gymnastics with tkTextDebug is to prevent
+         * failure of a test suite test, that checks that lines are rendered
+         * exactly once. TkTextFindDisplayLineEnd is used here for checking
+         * indexPtr but it calls LayoutDLine/FreeDLine which makes the
+         * counting wrong. The debug mode shall threfore be switched off when
+         * calling TkTextFindDisplayLineEnd.
+         */
+
+        TkTextIndex indexPtr2 = *indexPtr;
+        tkTextDebug = 0;
+        TkTextFindDisplayLineEnd(textPtr, &indexPtr2, 0, NULL);
+        tkTextDebug = oldtkTextDebug;
+        if (TkTextIndexCmp(&indexPtr2,indexPtr) != 0) {
+            Tcl_Panic("CalculateDisplayLineHeight called with bad indexPtr");
+        }
+    }
+
     /*
      * Special case for artificial last line. May be better to move this
      * inside LayoutDLine.
