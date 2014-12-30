@@ -4895,8 +4895,7 @@ TextRedrawTag(
 	 * the line containing the previous character.
 	 */
 
-	if ((curIndexPtr->byteIndex == 0)
-                && !TkTextIsElided(textPtr, curIndexPtr, NULL)) {
+	if (curIndexPtr->byteIndex == 0) {
 	    dlPtr = FindDLine(textPtr, dlPtr, curIndexPtr);
 	} else {
 	    TkTextIndex tmp;
