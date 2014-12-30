@@ -4669,11 +4669,10 @@ TextChanged(
     firstPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &rounded);
 
     if (firstPtr == NULL) {
-
         /*
          * index1Ptr pertains to no display line, i.e this index is after
          * the last display line. Since index2Ptr is after index1Ptr, there
-         * are no display line to free/redisplay and we can return early.
+         * is no display line to free/redisplay and we can return early.
          */
 
 	return;
@@ -4698,8 +4697,8 @@ TextChanged(
 
         /*
          * 'rounded' now points to the start of a display line as well as the
-         * real (non elided) start of a logical line, and this index is the
-         * closest after index2Ptr.
+         * start of a logical line not merged with its previous line, and
+         * this index is the closest after index2Ptr.
          */
 
         lastPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &rounded);
@@ -4713,6 +4712,7 @@ TextChanged(
          * Note that lastPtr != NULL here, otherwise we would have returned
          * earlier when we tested for firstPtr being NULL.
          */
+
         if (lastPtr == firstPtr) {
             lastPtr = lastPtr->nextPtr;
         }
