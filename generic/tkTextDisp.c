@@ -5151,8 +5151,7 @@ TkTextSetYView(
 	 */
 
 	textPtr->topIndex = *indexPtr;
-        if (!(indexPtr->byteIndex == 0
-                && !TkTextIsElided(textPtr, indexPtr, NULL))) {
+	if (indexPtr->byteIndex != 0) {
 	    TkTextFindDisplayLineEnd(textPtr, &textPtr->topIndex, 0, NULL);
 	}
 	dInfoPtr->newTopPixelOffset = pickPlace;
