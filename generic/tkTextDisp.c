@@ -5401,7 +5401,8 @@ MeasureUp(
 	for (dlPtr = lowestPtr; dlPtr != NULL; dlPtr = dlPtr->nextPtr) {
 	    distance -= dlPtr->height;
 	    if (distance <= 0) {
-		*dstPtr = dlPtr->index;
+		TkTextIndex tmpIndex = dlPtr->index;
+                *dstPtr = dlPtr->index;
 
                 /*
                  * Adjust index to the start of the display line. This is
@@ -5410,9 +5411,9 @@ MeasureUp(
                  * eol is not elided).
                  */
 
-                if (TkTextIsElided(textPtr, dstPtr, NULL)) {
-                    TkTextFindDisplayLineEnd(textPtr, dstPtr, 0,
-                            NULL);
+                TkTextIndexBackBytes(textPtr, &tmpIndex, 1, &tmpIndex);
+                if (TkTextIsElided(textPtr, &tmpIndex, NULL)) {
+                    TkTextFindDisplayLineEnd(textPtr, dstPtr, 0, NULL);
                 }
 		if (overlap != NULL) {
 		    *overlap = -distance;
@@ -5805,6 +5806,7 @@ YScrollByLines(
 	    for (dlPtr = lowestPtr; dlPtr != NULL; dlPtr = dlPtr->nextPtr) {
 		offset++;
 		if (offset == 0) {
+		    TkTextIndex tmpIndex = dlPtr->index;
 		    textPtr->topIndex = dlPtr->index;
 
                     /*
@@ -5814,7 +5816,8 @@ YScrollByLines(
                      * true if the eol is not elided).
                      */
 
-                    if (TkTextIsElided(textPtr, &textPtr->topIndex, NULL)) {
+                    TkTextIndexBackBytes(textPtr, &tmpIndex, 1, &tmpIndex);
+                    if (TkTextIsElided(textPtr, &tmpIndex, NULL)) {
                         TkTextFindDisplayLineEnd(textPtr, &textPtr->topIndex, 0,
                                 NULL);
                     }
