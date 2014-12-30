@@ -6299,11 +6299,13 @@ GetYPixelCount(
 
     /*
      * For the common case where this dlPtr is also the start of the logical
-     * line, we can return right away.
+     * line, we can return right away. Note the implicit assumption here that
+     * the start of a logical line is always the start of a display line (if
+     * the 'elide won't elide first newline' bug is fixed, this will no longer
+     * necessarily be true).
      */
 
-    if ((dlPtr->index.byteIndex == 0)
-            && !TkTextIsElided(textPtr, &dlPtr->index, NULL)) {
+    if (dlPtr->index.byteIndex == 0) {
 	return count;
     }
 
