@@ -6592,7 +6592,6 @@ FindDLine(
     CONST TkTextIndex *indexPtr)/* Index of desired character. */
 {
     DLine *dlPtrPrev;
-    TkTextIndex indexPtr2;
 
     if (dlPtr == NULL) {
 	return NULL;
@@ -6617,14 +6616,16 @@ FindDLine(
         dlPtrPrev = dlPtr;
         dlPtr = dlPtr->nextPtr;
         if (dlPtr == NULL) {
+            TkTextIndex indexPtr2;
             /*
              * We're past the last display line, either because the desired
              * index lies past the visible text, or because the desired index
              * is on the last display line showing the last logical line.
              */
             indexPtr2 = dlPtrPrev->index;
-            TkTextFindDisplayLineEnd(textPtr, &indexPtr2, 1, NULL);
-            if (TkTextIndexCmp(&indexPtr2,indexPtr) >= 0) {
+            TkTextIndexForwBytes(textPtr, &indexPtr2, dlPtrPrev->byteCount,
+                    &indexPtr2);
+            if (TkTextIndexCmp(&indexPtr2,indexPtr) > 0) {
                 dlPtr = dlPtrPrev;
                 break;
             } else {
