@@ -3646,8 +3646,8 @@ TkTextIndexYPixels(
 
     /*
      * Shortcut to avoid layout of a superfluous display line. We know there
-     * is nothing more to add up to the height since the index we were given
-     * was already the start of a logical line.
+     * is nothing more to add up to the height if the index we were given was
+     * already the start of a logical line.
      */
 
     if (alreadyStartOfLine) {
