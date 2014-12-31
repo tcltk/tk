@@ -80,6 +80,10 @@ extern NSString *opaqueTag;
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
+    /*Disable drawing until window is resized removes flicker and drawing artifacts;necessary after removal of private API.*/
+    NSDisableScreenUpdates();
+    [ [w contentView] setHidden:YES];
+
     if (winPtr) {
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	NSRect bounds = [w frame];
@@ -107,6 +111,8 @@ extern NSString *opaqueTag;
 	}
 	TkGenWMConfigureEvent((Tk_Window) winPtr, x, y, width, height, flags);
     }
+    [[w contentView] setHidden:NO];
+    NSEnableScreenUpdates();
 }
 
 - (void) windowExpanded: (NSNotification *) notification
