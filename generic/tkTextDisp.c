@@ -591,6 +591,8 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    int *intPtr);
 static void		AsyncUpdateLineMetrics(ClientData clientData);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
+static int              IsStartOfNotMergedLine(TkText *textPtr,
+                            CONST TkTextIndex *indexPtr);
 
 /*
  * Result values returned by TextGetScrollInfoObj:
@@ -3383,10 +3385,7 @@ TkTextFindDisplayLineEnd(
 				 * of the original index within its display
 				 * line. */
 {
-    TkTextIndex indexPtr2;
-    TkTextIndexBackBytes(textPtr, indexPtr, 1, &indexPtr2);
-    if (!end && indexPtr->byteIndex == 0
-            && !TkTextIsElided(textPtr, &indexPtr2, NULL)) {
+    if (!end && IsStartOfNotMergedLine(textPtr, indexPtr)) {
 	/*
 	 * Nothing to do.
 	 */
@@ -3809,36 +3808,19 @@ TkTextUpdateOneLine(
                 break;
             }
         } else {
-            if (indexPtr->byteIndex != 0) {
+            if (IsStartOfNotMergedLine(textPtr, indexPtr)) {
                 /*
-                 * We must still be on the same wrapped line, on a new logical
-                 * line merged with the logical line 'linePtr'.
-                 */
-            } else {
-                /*
-                 * Must check if indexPtr is really a new logical line which is
-                 * not merged with the previous line. The only code that would
-                 * really know this is LayoutDLine, which doesn't pass the
-                 * information on, so we have to check manually here.
+                 * We've ended a logical line.
                  */
 
-                TkTextIndex idx;
-
-                TkTextIndexBackChars(textPtr, indexPtr, 1, &idx, COUNT_INDICES);
-                if (!TkTextIsElided(textPtr, &idx, NULL)) {
-                    /*
-                     * We've ended a logical line.
-                     */
-
-                    partialCalc = 0;
-                    break;
-                }
-
-                /*
-                 * We must still be on the same wrapped line, on a new logical
-                 * line merged with the logical line 'linePtr'.
-                 */
+                partialCalc = 0;
+                break;
             }
+
+            /*
+             * We must still be on the same wrapped line, on a new logical
+             * line merged with the logical line 'linePtr'.
+             */
         }
 	if (partialCalc && displayLines > 50 && mergedLines == 0) {
 	    /*
@@ -4895,13 +4877,12 @@ TextRedrawTag(
 	 * the line containing the previous character.
 	 */
 
-	if (curIndexPtr->byteIndex == 0) {
+	if (IsStartOfNotMergedLine(textPtr, curIndexPtr)) {
 	    dlPtr = FindDLine(textPtr, dlPtr, curIndexPtr);
 	} else {
-	    TkTextIndex tmp;
+	    TkTextIndex tmp = *curIndexPtr;
 
-	    tmp = *curIndexPtr;
-	    tmp.byteIndex -= 1;
+            TkTextIndexBackBytes(textPtr, &tmp, 1, &tmp);
 	    dlPtr = FindDLine(textPtr, dlPtr, &tmp);
 	}
 	if (dlPtr == NULL) {
@@ -5038,7 +5019,7 @@ TkTextRelayoutWindow(
      * could change the way lines wrap.
      */
 
-    if (textPtr->topIndex.byteIndex != 0) {
+    if (!IsStartOfNotMergedLine(textPtr, &textPtr->topIndex)) {
 	TkTextFindDisplayLineEnd(textPtr, &textPtr->topIndex, 0, NULL);
     }
 
@@ -5151,7 +5132,9 @@ TkTextSetYView(
 	 */
 
 	textPtr->topIndex = *indexPtr;
-        TkTextFindDisplayLineEnd(textPtr, &textPtr->topIndex, 0, NULL);
+        if (!IsStartOfNotMergedLine(textPtr, indexPtr)) {
+            TkTextFindDisplayLineEnd(textPtr, &textPtr->topIndex, 0, NULL);
+        }
 	dInfoPtr->newTopPixelOffset = pickPlace;
 	goto scheduleUpdate;
     }
@@ -6287,7 +6270,6 @@ GetYPixelCount(
 				 * index. */
 {
     TkTextLine *linePtr = dlPtr->index.linePtr;
-    TkTextIndex tmpIndex = dlPtr->index;
     int count;
 
     /*
@@ -6303,9 +6285,7 @@ GetYPixelCount(
      * line, we can return right away.
      */
 
-    TkTextIndexBackBytes(textPtr, &tmpIndex, 1, &tmpIndex);
-    if ((dlPtr->index.byteIndex == 0)
-            && !TkTextIsElided(textPtr, &tmpIndex, NULL)) {
+    if (IsStartOfNotMergedLine(textPtr, &dlPtr->index)) {
 	return count;
     }
 
@@ -6640,6 +6620,56 @@ FindDLine(
     }
 
     return dlPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * IsStartOfNotMergedLine --
+ *
+ *	This function checks whether the given index is the start of a
+ *      logical line that is not merged with the previous logical line
+ *      (due to elision of the eol of the previous line).
+ *
+ * Results:
+ *	Returns whether the given index denotes the first index of a
+*       logical line not merged with its previous line.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+IsStartOfNotMergedLine(
+      TkText *textPtr,              /* Widget record for text widget. */
+      CONST TkTextIndex *indexPtr)  /* Index to check. */
+{
+    TkTextIndex indexPtr2;
+
+    if (indexPtr->byteIndex != 0) {
+        /*
+         * Not the start of a logical line.
+         */
+        return 0;
+    }
+
+    if (TkTextIndexBackBytes(textPtr, indexPtr, 1, &indexPtr2)) {
+        /*
+         * indexPtr is the first index of the text widget.
+         */
+        return 1;
+    }
+
+    if (!TkTextIsElided(textPtr, &indexPtr2, NULL)) {
+        /*
+         * The eol of the line just before indexPtr is elided.
+         */
+        return 1;
+    }
+
+    return 0;
 }
 
 /*
