@@ -1870,7 +1870,7 @@ This command returns an empty string.
 \fIpathName \fBwindow \fIoption \fR?\fIarg arg ...\fR?
 This command is used to manipulate embedded windows.
 The behavior of the command depends on the \fIoption\fR argument
-that follows the \fBtag\fR argument.
+that follows the \fBwindow\fR argument.
 The following forms of the command are currently supported:
 .RS
 .TP
