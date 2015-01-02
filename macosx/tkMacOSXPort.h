@@ -158,7 +158,6 @@
 
 /*
  * This macro stores a representation of the window handle in a string.
- * This should perhaps use the real size of an XID.
  */
 
 #define TkpPrintWindowId(buf,w) \
