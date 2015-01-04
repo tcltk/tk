@@ -1488,6 +1488,7 @@ TkScrollWindow(
     NSPoint delta = NSMakePoint(dx, dy);
     int result;
 
+
     if ( view ) {
   	/*  Get the scroll area in NSView coordinates (origin at bottom left). */
   	bounds = [view bounds];
@@ -1533,8 +1534,12 @@ TkScrollWindow(
  	    	}
   	    }
 
- 	    /* Redisplay the scrolled area. */
- 	    [view displayRect:scrollDst];
+ 	    /* Redisplay the scrolled area; hide to reduce flicker after removal of private API calls. */
+	    [view setHidden:YES];
+	    [view displayRect:scrollDst];
+	    [view setHidden:NO];
+
+       	    
 
   	}
     }
