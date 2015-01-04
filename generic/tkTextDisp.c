@@ -3883,6 +3883,21 @@ TkTextUpdateOneLine(
  *
  *----------------------------------------------------------------------
  */
+#ifdef MAC_OSX_TK
+static void
+RedisplayText(
+    ClientData clientData )
+{
+    register TkText *textPtr = (TkText *) clientData;
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+    TkRegion damageRegion = TkCreateRegion();
+    XRectangle rectangle = {0, 0, dInfoPtr->maxX, dInfoPtr->maxY};
+    TkUnionRectWithRegion(&rectangle, damageRegion, damageRegion);
+    
+    TextInvalidateRegion(textPtr, damageRegion);
+    DisplayText(clientData);
+}
+#endif
 
 static void
 DisplayText(
@@ -3897,6 +3912,9 @@ DisplayText(
     int bottomY = 0;		/* Initialization needed only to stop compiler
 				 * warnings. */
     Tcl_Interp *interp;
+#ifdef MAC_OSX_TK
+    Tcl_TimerToken macRefreshTimer = NULL;
+#endif
 
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 	/*
@@ -4099,6 +4117,22 @@ DisplayText(
 		oldY, dInfoPtr->maxX-dInfoPtr->x, height, 0, y-oldY,
 		damageRgn)) {
 	    TextInvalidateRegion(textPtr, damageRgn);
+
+#ifdef MAC_OSX_TK
+
+	    /*
+	     * On OS X large scrolls sometimes leave garbage on the screen.
+	     * This attempts to clean it up by redisplaying the Text window
+	     * after 200 milliseconds.
+	     */
+	    if ( abs(y-oldY) > 14 ) {
+		Tcl_DeleteTimerHandler(macRefreshTimer);
+		macRefreshTimer = Tcl_CreateTimerHandler(200,
+							 RedisplayText,
+							 clientData);
+	    }
+#endif
+
 	}
 	numCopies++;
 	TkDestroyRegion(damageRgn);
