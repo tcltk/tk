@@ -80,6 +80,10 @@ extern NSString *opaqueTag;
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
+    /*Disable drawing until window is resized removes flicker and drawing artifacts;necessary after removal of private API.*/
+    NSDisableScreenUpdates();
+    [ [w contentView] setHidden:YES];
+
     if (winPtr) {
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	NSRect bounds = [w frame];
@@ -107,6 +111,8 @@ extern NSString *opaqueTag;
 	}
 	TkGenWMConfigureEvent((Tk_Window) winPtr, x, y, width, height, flags);
     }
+    [[w contentView] setHidden:NO];
+    NSEnableScreenUpdates();
 }
 
 - (void) windowExpanded: (NSNotification *) notification
@@ -769,6 +775,8 @@ Tk_MacOSXIsAppInFront(void)
 @interface TKContentView(TKWindowEvent)
 - (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIMutableShapeRef) shape;
+- (BOOL) preservesContentDuringLiveResize;
+- (void) viewWillStartLiveResize;
 - (void) viewDidEndLiveResize;
 - (void) viewWillDraw;
 - (BOOL) isOpaque;
@@ -780,15 +788,6 @@ Tk_MacOSXIsAppInFront(void)
 @implementation TKContentView
 @end
 
-double drawTime;
-
-/*
- * Set a minimum time for drawing to render. With removal of private NSView API's, default drawing
- * is slower and less responsive. This number, which seems feasible after some experimentatation, skips
- * some drawing to avoid lag.
- */
-
-#define MAX_DYNAMIC_TIME .000000001
 
 /*Restrict event processing to Expose events.*/
 static Tk_RestrictAction
@@ -805,10 +804,12 @@ ExposeRestrictProc(
 
 - (void) drawRect: (NSRect) rect
 {
+
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
 
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
+
 #ifdef TK_MAC_DEBUG_DRAWING
     TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd, NSStringFromRect(rect));
     [[NSColor colorWithDeviceRed:0.0 green:1.0 blue:0.0 alpha:.1] setFill];
@@ -816,17 +817,12 @@ ExposeRestrictProc(
 	    NSCompositeSourceOver);
 #endif
 
-    NSDate *beginTime=[NSDate date];
-
-    /*Skip drawing during live resize if redraw is too slow.*/
-    if([self inLiveResize] && drawTime>MAX_DYNAMIC_TIME) return;
-
+ 	    
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
 
     while (rectsBeingDrawnCount--) {
 	CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
-
 	r.origin.y = height - (r.origin.y + r.size.height);
 	HIShapeUnionWithRect(drawShape, &r);
     }
@@ -839,23 +835,47 @@ ExposeRestrictProc(
 			NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode,
 			nil]];
     }
+   
     CFRelease(drawShape);
-    drawTime=-[beginTime timeIntervalSinceNow];
+  
 }
 
-/*At conclusion of resize event, send notification and set view for redraw if earlier drawing was skipped because of lagginess.*/
+
+/*Provide more fine-grained control over resizing of content to reduce flicker after removal of private API's.*/
+
+-(void) viewWillDraw
+{
+
+        [super viewWillDraw];
+}
+
+
+- (BOOL) preservesContentDuringLiveResize
+{
+    return YES;
+}
+
+- (void)viewWillStartLiveResize
+{
+  NSDisableScreenUpdates();
+  [super viewWillStartLiveResize];
+  [self setNeedsDisplay:NO];
+  [self setHidden:YES];
+}
+
+
 - (void)viewDidEndLiveResize
 {
-    if(drawTime>MAX_DYNAMIC_TIME) {
+
+    NSEnableScreenUpdates();
+    [self setHidden:NO];
     [self setNeedsDisplay:YES];
+    [super setNeedsDisplay:YES];
     [super viewDidEndLiveResize];
-    }
+     
 }
 
--(void) viewWillDraw  {
-	[self setNeedsDisplay:YES];
-    }
-
+/*Core function of this class, generates expose events for redrawing.*/
 - (void) generateExposeEvents: (HIMutableShapeRef) shape
 {
 
@@ -867,6 +887,7 @@ ExposeRestrictProc(
 		return;
     }
 
+
     HIShapeGetBounds(shape, &updateBounds);
     serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     if (GenerateUpdates(shape, &updateBounds, winPtr) &&
@@ -877,7 +898,7 @@ ExposeRestrictProc(
     	 * just posted Expose events from generating new redraws.
     	 */
 
-    	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 
     	/*
     	 * For smoother drawing, process Expose events and resulting redraws
@@ -891,6 +912,7 @@ ExposeRestrictProc(
     	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
 
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+
     	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 
     }
