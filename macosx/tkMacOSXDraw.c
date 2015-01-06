@@ -1488,6 +1488,7 @@ TkScrollWindow(
     NSPoint delta = NSMakePoint(dx, dy);
     int result;
 
+
     if ( view ) {
   	/*  Get the scroll area in NSView coordinates (origin at bottom left). */
   	bounds = [view bounds];
@@ -1533,8 +1534,12 @@ TkScrollWindow(
  	    	}
   	    }
 
- 	    /* Redisplay the scrolled area. */
- 	    [view displayRect:scrollDst];
+ 	    /* Redisplay the scrolled area; hide to reduce flicker after removal of private API calls. */
+	    [view setHidden:YES];
+	    [view displayRect:scrollDst];
+	    [view setHidden:NO];
+
+       	    
 
   	}
     }
@@ -1657,13 +1662,13 @@ TkMacOSXSetupDrawingContext(
 	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
 	CGContextConcatCTM(dc.context, t);
 	if (dc.clipRgn) {
-#ifdef TK_MAC_DEBUG_DRAWING
+	    #ifdef TK_MAC_DEBUG_DRAWING
 	    CGContextSaveGState(dc.context);
 	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
 	    CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
 	    CGContextEOFillPath(dc.context);
 	    CGContextRestoreGState(dc.context);
-#endif /* TK_MAC_DEBUG_DRAWING */
+	    #endif /* TK_MAC_DEBUG_DRAWING */
 	    CGRect r;
 	    if (!HIShapeIsRectangular(dc.clipRgn) || !CGRectContainsRect(
 		    *HIShapeGetBounds(dc.clipRgn, &r),
