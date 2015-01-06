@@ -38,7 +38,7 @@ static NSRect TkMacOSXGetButtonFrame(TkButton *butPtr);
  */
 
 @interface TkNSButton: NSButton
-
+- (void)drawRect:(NSRect)dirtyRect;
 @end
 
 @implementation TkNSButton
@@ -67,14 +67,15 @@ static NSRect TkMacOSXGetButtonFrame(TkButton *butPtr);
 		    return;
 		}
 
-	    /* Do not draw if the widget is completely outside of its parent, or within 50 pixels of the right border; this prevents buttons from being drawn on peer widgets as scrolling occurs. */
+	    /* Do not draw if the widget is completely outside of its parent, or within 20 pixels of the right border; this prevents buttons from being drawn on peer widgets as scrolling occurs. */
 		int parent_width = Tk_Width(Tk_Parent(tkwin));
 		int widget_width = Tk_Width(tkwin);
 		int x = Tk_X(tkwin);
-		if (x > parent_width - 50 || x < 0) {
+		if (x > parent_width - 20 || x < 0) {
 		    return;
 		}
 	    }
+	    
 	[super drawRect:dirtyRect];
     }
  }
