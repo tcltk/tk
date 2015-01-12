@@ -116,7 +116,7 @@ static void		ScrollbarEventProc(ClientData clientData,
  * The class procedure table for the scrollbar widget.
  */
 
-const Tk_ClassProcs tkpScrollbarProcs = {
+Tk_ClassProcs tkpScrollbarProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     NULL,					/* worldChangedProc */
     NULL,					/* createProc */
@@ -177,7 +177,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
 	    Tcl_DStringLength(&cmdString), TCL_EVAL_GLOBAL);
     if (result != TCL_OK && result != TCL_CONTINUE && result != TCL_BREAK) {
 	Tcl_AddErrorInfo(interp, "\n    (scrollbar command)");
-	Tcl_BackgroundException(interp, result);
+	Tcl_BackgroundError(interp);
     }
     Tcl_Release(scrollPtr);
     Tcl_Release(interp);
@@ -287,11 +287,11 @@ TkScrollbar *
 TkpCreateScrollbar(
     Tk_Window tkwin)
 {
-    MacScrollbar *scrollPtr = ckalloc(sizeof(MacScrollbar));
+    MacScrollbar *scrollPtr = (MacScrollbar *) ckalloc(sizeof(MacScrollbar));
 
     scrollPtr->scroller = nil;
     Tk_CreateEventHandler(tkwin, StructureNotifyMask|FocusChangeMask|
-	    ActivateMask|ExposureMask, ScrollbarEventProc, scrollPtr);
+			  ActivateMask|ExposureMask, ScrollbarEventProc, (ClientData) scrollPtr);
     return (TkScrollbar *) scrollPtr;
 }
 
@@ -344,8 +344,8 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    TkScrollbar *scrollPtr = clientData;
-    MacScrollbar *macScrollPtr = clientData;
+    TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
+    MacScrollbar *macScrollPtr = (MacScrollbar *) clientData;
     TkNSScroller *scroller = macScrollPtr->scroller;
     Tk_Window tkwin = scrollPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -393,26 +393,6 @@ TkpDisplayScrollbar(
     frame = NSInsetRect(frame, scrollPtr->inset, scrollPtr->inset);
     frame.origin.y = viewHeight - (frame.origin.y + frame.size.height);
 
-    NSWindow *w = [view window];
-
-    //This uses a private API call that is no longer needed on systems >= 10.7.
-    #if 0
-    if ([w showsResizeIndicator]) {
-	NSRect growBox = [view convertRect:[w _growBoxRect] fromView:nil];
-
-	if (NSIntersectsRect(growBox, frame)) {
-	    if (scrollPtr->vertical) {
-		CGFloat y = frame.origin.y;
-
-		frame.origin.y = growBox.origin.y + growBox.size.height;
-		frame.size.height -= frame.origin.y - y;
- 	    } else {
-		frame.size.width = growBox.origin.x - frame.origin.x;
-	    }
-	    TkMacOSXSetScrollbarGrow(winPtr, true);
-	}
-    }
-    #endif
     if (!NSEqualRects(frame, [scroller frame])) {
 	[scroller setFrame:frame];
     }
@@ -663,7 +643,7 @@ ScrollbarEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkScrollbar *scrollPtr = clientData;
+    TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
 
     switch (eventPtr->type) {
     case UnmapNotify:
@@ -671,7 +651,7 @@ ScrollbarEventProc(
 	break;
     case ActivateNotify:
     case DeactivateNotify:
-	TkScrollbarEventuallyRedraw(scrollPtr);
+	TkScrollbarEventuallyRedraw((ClientData) scrollPtr);
 	break;
     default:
 	TkScrollbarEventProc(clientData, eventPtr);
