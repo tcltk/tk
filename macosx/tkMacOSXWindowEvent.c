@@ -954,11 +954,6 @@ ExposeRestrictProc(
     [super setFrameSize:newSize];
 }
 
-- (void) setNeedsDisplayInRect: (NSRect) invalidRect
-{
-    [super setNeedsDisplayInRect:invalidRect];
-}
-
 - (BOOL) isOpaque
 {
     NSWindow *w = [self window];
