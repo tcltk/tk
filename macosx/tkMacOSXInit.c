@@ -54,7 +54,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 @end
 
 @interface TKApplication(TKScrlbr)
-//- (void) _setupScrollBarNotifications;
+- (void) _setupScrollBarNotifications;
 @end
 
 @interface TKApplication(TKMenus)
@@ -108,7 +108,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 	    selector:@selector(_postedNotification:) name:nil object:nil];
 #endif
     [self _setupWindowNotifications];
-    // [self _setupScrollBarNotifications];
+    [self _setupScrollBarNotifications];
     [self _setupApplicationNotifications];
 }
 
