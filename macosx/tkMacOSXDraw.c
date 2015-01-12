@@ -1531,10 +1531,11 @@ TkScrollWindow(
  		    }
  	    	}
   	    }
- 
- 	    /* Redisplay the scrolled area. */
- 	    [view displayRect:scrollDst];
- 
+
+	     /* Redisplay the scrolled area; hide to reduce flicker after removal of private API calls. */
+ 	    [view setHidden:YES];
+	    [view displayRect:scrollDst];
+	    [view setHidden:NO]; 
   	}
     }
   
