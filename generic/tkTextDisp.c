@@ -3544,8 +3544,8 @@ CalculateDisplayLineHeight(
          * failure of a test suite test, that checks that lines are rendered
          * exactly once. TkTextFindDisplayLineEnd is used here for checking
          * indexPtr but it calls LayoutDLine/FreeDLine which makes the
-         * counting wrong. The debug mode shall threfore be switched off when
-         * calling TkTextFindDisplayLineEnd.
+         * counting wrong. The debug mode shall therefore be switched off
+         * when calling TkTextFindDisplayLineEnd.
          */
 
         TkTextIndex indexPtr2 = *indexPtr;
