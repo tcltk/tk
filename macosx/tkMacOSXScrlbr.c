@@ -7,8 +7,6 @@
  * Copyright (c) 1996 by Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
-*  Copyright (c) 2014 Marc Culler.
- * Copyright (c) 2014 Kevin Walzer/WordTech Commununications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -22,7 +20,7 @@
 #define TK_MAC_DEBUG_SCROLLBAR
 #endif
 */
- 
+
 NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
 
 /*
@@ -33,103 +31,52 @@ NSRect                  TkMacOSXGetScrollFrame(TkScrollbar *scrlPtr);
  * aware of the state of its Tk parent.  This subclass overrides the drawRect
  * method so that it will not draw itself if the widget is completely outside
  * of its container.
- *
- * Custom drawing of the knob seems to work around the flickering visible after  
- * private API's were removed. Based on technique outlined at 
- * http://stackoverflow.com/questions/1604682/nsscroller-
- * graphical-glitches-lag. Only supported on 10.7 and above.
  */
- 
 
 @interface TkNSScroller: NSScroller
 -(void) drawRect:(NSRect)dirtyRect;
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
--(BOOL) isHorizontal;
--(void) drawKnob;
-- (void)drawArrow:(NSScrollerArrow)arrow highlightPart:(int)flag;
-- (void)drawKnobSlotInRect:(NSRect)rect highlight:(BOOL)highlight;
-#endif
+
 @end
 
 @implementation TkNSScroller
 
-
-- (void)drawRect:(NSRect)dirtyRect
-{
-    NSInteger tag = [self tag];
-    if ( tag != -1) {
-	TkScrollbar *scrollPtr = (TkScrollbar *)tag;
-	MacDrawable* macWin = (MacDrawable *)scrollPtr;
-	Tk_Window tkwin = scrollPtr->tkwin;
-	NSRect Tkframe = TkMacOSXGetScrollFrame(scrollPtr);
-	/* Do not draw if the widget is misplaced or unmapped. */
-	if ( NSIsEmptyRect(Tkframe) ||
-	     ! macWin->winPtr->flags & TK_MAPPED ||
-	     ! NSEqualRects(Tkframe, [self frame])
-	     ) {
-	    return;
-	}
-
-	/*
-	 * Do not draw if the widget is completely outside of its parent.
-	 */
-	if (tkwin) {
-	    int parent_height = Tk_Height(Tk_Parent(tkwin));
-	    int widget_height = Tk_Height(tkwin);
-	    int y = Tk_Y(tkwin);
-	    if ( y > parent_height || y + widget_height < 0 ) {
+    - (void)drawRect:(NSRect)dirtyRect
+    {
+	NSInteger tag = [self tag];
+	if ( tag != -1) {
+	    TkScrollbar *scrollPtr = (TkScrollbar *)tag;
+	    MacDrawable* macWin = (MacDrawable *)scrollPtr;
+	    Tk_Window tkwin = scrollPtr->tkwin;
+	    NSRect Tkframe = TkMacOSXGetScrollFrame(scrollPtr);
+	    /* Do not draw if the widget is misplaced or unmapped. */
+	    if ( NSIsEmptyRect(Tkframe) || 
+		 ! macWin->winPtr->flags & TK_MAPPED ||
+		 ! NSEqualRects(Tkframe, [self frame]) 
+		 ) {
 		return;
 	    }
 
-	    int parent_width = Tk_Width(Tk_Parent(tkwin));
-	    int widget_width = Tk_Width(tkwin);
-	    int x = Tk_X(tkwin);
-	    if (x > parent_width || x + widget_width < 0) {
-		return;
+	    /*
+	     * Do not draw if the widget is completely outside of its parent.
+	     */
+	    if (tkwin) {
+		int parent_height = Tk_Height(Tk_Parent(tkwin));
+		int widget_height = Tk_Height(tkwin);
+		int y = Tk_Y(tkwin);
+		if ( y > parent_height || y + widget_height < 0 ) {
+		    return;
+		}
+
+		int parent_width = Tk_Width(Tk_Parent(tkwin));
+		int widget_width = Tk_Width(tkwin);
+		int x = Tk_X(tkwin);
+		if (x > parent_width || x + widget_width < 0) {
+		    return;
+		}
 	    }
 	}
+	[super drawRect:dirtyRect];
     }
-    [super drawRect:dirtyRect];
-}
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
-- (BOOL)isVertical {
-    NSRect bounds = [self bounds];
-    return NSWidth(bounds) < NSHeight (bounds);
-}
-
-
-- (void)drawKnob
-{
-    NSRect knobRect = [self rectForPart:NSScrollerKnob];
-    
-    if ([self isVertical]) {
-	NSRect newRect = NSMakeRect(knobRect.origin.x + 3, knobRect.origin.y, knobRect.size.width - 6, knobRect.size.height);
-    NSBezierPath  *scrollerPath = [NSBezierPath bezierPathWithRoundedRect:newRect xRadius:4 yRadius:4];
- 
-    [[NSColor lightGrayColor] set];
-	[scrollerPath fill];
-    } else {
-	NSRect newRect = NSMakeRect(knobRect.origin.x, knobRect.origin.y + 3, knobRect.size.width, knobRect.size.height - 6);
-	NSBezierPath  *scrollerPath = [NSBezierPath bezierPathWithRoundedRect:newRect xRadius:4 yRadius:4];
- 
-        [[NSColor lightGrayColor] set];
-	[scrollerPath fill];
-    }
-       
-}
-
-- (void)drawArrow:(NSScrollerArrow)arrow highlightPart:(int)flag
-{
-    // We don't want arrows
-}
-
-- (void)drawKnobSlotInRect:(NSRect)rect highlight:(BOOL)highlight
-{
-  
-}
-
-#endif
 
 @end
 
@@ -169,7 +116,7 @@ static void		ScrollbarEventProc(ClientData clientData,
  * The class procedure table for the scrollbar widget.
  */
 
-Tk_ClassProcs tkpScrollbarProcs = {
+const Tk_ClassProcs tkpScrollbarProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     NULL,					/* worldChangedProc */
     NULL,					/* createProc */
@@ -230,7 +177,7 @@ Tk_ClassProcs tkpScrollbarProcs = {
 	    Tcl_DStringLength(&cmdString), TCL_EVAL_GLOBAL);
     if (result != TCL_OK && result != TCL_CONTINUE && result != TCL_BREAK) {
 	Tcl_AddErrorInfo(interp, "\n    (scrollbar command)");
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, result);
     }
     Tcl_Release(scrollPtr);
     Tcl_Release(interp);
@@ -340,11 +287,11 @@ TkScrollbar *
 TkpCreateScrollbar(
     Tk_Window tkwin)
 {
-    MacScrollbar *scrollPtr = (MacScrollbar *) ckalloc(sizeof(MacScrollbar));
+    MacScrollbar *scrollPtr = ckalloc(sizeof(MacScrollbar));
 
     scrollPtr->scroller = nil;
     Tk_CreateEventHandler(tkwin, StructureNotifyMask|FocusChangeMask|
-	    ActivateMask|ExposureMask, ScrollbarEventProc, (ClientData) scrollPtr);
+	    ActivateMask|ExposureMask, ScrollbarEventProc, scrollPtr);
     return (TkScrollbar *) scrollPtr;
 }
 
@@ -397,8 +344,8 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
-    MacScrollbar *macScrollPtr = (MacScrollbar *) clientData;
+    TkScrollbar *scrollPtr = clientData;
+    MacScrollbar *macScrollPtr = clientData;
     TkNSScroller *scroller = macScrollPtr->scroller;
     Tk_Window tkwin = scrollPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -446,6 +393,26 @@ TkpDisplayScrollbar(
     frame = NSInsetRect(frame, scrollPtr->inset, scrollPtr->inset);
     frame.origin.y = viewHeight - (frame.origin.y + frame.size.height);
 
+    NSWindow *w = [view window];
+
+    //This uses a private API call that is no longer needed on systems >= 10.7.
+    #if 0
+    if ([w showsResizeIndicator]) {
+	NSRect growBox = [view convertRect:[w _growBoxRect] fromView:nil];
+
+	if (NSIntersectsRect(growBox, frame)) {
+	    if (scrollPtr->vertical) {
+		CGFloat y = frame.origin.y;
+
+		frame.origin.y = growBox.origin.y + growBox.size.height;
+		frame.size.height -= frame.origin.y - y;
+ 	    } else {
+		frame.size.width = growBox.origin.x - frame.origin.x;
+	    }
+	    TkMacOSXSetScrollbarGrow(winPtr, true);
+	}
+    }
+    #endif
     if (!NSEqualRects(frame, [scroller frame])) {
 	[scroller setFrame:frame];
     }
@@ -696,7 +663,7 @@ ScrollbarEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
+    TkScrollbar *scrollPtr = clientData;
 
     switch (eventPtr->type) {
     case UnmapNotify:
@@ -704,7 +671,7 @@ ScrollbarEventProc(
 	break;
     case ActivateNotify:
     case DeactivateNotify:
-	TkScrollbarEventuallyRedraw((ClientData) scrollPtr);
+	TkScrollbarEventuallyRedraw(scrollPtr);
 	break;
     default:
 	TkScrollbarEventProc(clientData, eventPtr);
