@@ -1539,7 +1539,7 @@ TkScrollWindow(
 	    [view displayRect:scrollDst];
 	    [view setHidden:NO];
 
-       	    
+
 
   	}
     }
