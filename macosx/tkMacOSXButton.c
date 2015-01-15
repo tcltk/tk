@@ -75,7 +75,7 @@ static NSRect TkMacOSXGetButtonFrame(TkButton *butPtr);
 		    return;
 		}
 	    }
-	    
+
 	[super drawRect:dirtyRect];
     }
  }
