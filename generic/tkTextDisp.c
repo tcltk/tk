@@ -3895,7 +3895,7 @@ RedisplayText(
     TkRegion damageRegion = TkCreateRegion();
     XRectangle rectangle = {0, 0, dInfoPtr->maxX, dInfoPtr->maxY};
     TkUnionRectWithRegion(&rectangle, damageRegion, damageRegion);
-    
+
     TextInvalidateRegion(textPtr, damageRegion);
     DisplayText(clientData);
 }
@@ -3915,7 +3915,7 @@ DisplayText(
 				 * warnings. */
     Tcl_Interp *interp;
 #ifdef MAC_OSX_TK
-    Tcl_TimerToken macRefreshTimer = NULL; 
+    Tcl_TimerToken macRefreshTimer = NULL;
 #endif
 
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
