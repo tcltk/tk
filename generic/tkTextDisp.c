@@ -5418,21 +5418,21 @@ MeasureUp(
 	for (dlPtr = lowestPtr; dlPtr != NULL; dlPtr = dlPtr->nextPtr) {
 	    distance -= dlPtr->height;
 	    if (distance <= 0) {
-		TkTextIndex tmpIndex = dlPtr->index;
                 *dstPtr = dlPtr->index;
 
                 /*
-                 * Adjust index to the start of the display line. This is
-                 * needed because the start of a logical line is not always
-                 * the start of a display line (this is however true if the
-                 * eol is not elided).
+                 * dstPtr is the start of a display line that is or is not
+                 * the start of a logical line. If it is the start of a
+                 * logical line, we must check whether this line is merged
+                 * with the previous logical line, and if so we must adjust
+                 * dstPtr to the start of the display line since a display
+                 * line start needs to be returned.
                  */
-
-                TkTextIndexBackBytes(textPtr, &tmpIndex, 1, &tmpIndex);
-                if (TkTextIsElided(textPtr, &tmpIndex, NULL)) {
+                if (!IsStartOfNotMergedLine(textPtr, dstPtr)) {
                     TkTextFindDisplayLineEnd(textPtr, dstPtr, 0, NULL);
                 }
-		if (overlap != NULL) {
+
+                if (overlap != NULL) {
 		    *overlap = -distance;
 		}
 		break;
@@ -5823,22 +5823,26 @@ YScrollByLines(
 	    for (dlPtr = lowestPtr; dlPtr != NULL; dlPtr = dlPtr->nextPtr) {
 		offset++;
 		if (offset == 0) {
-		    TkTextIndex tmpIndex = dlPtr->index;
 		    textPtr->topIndex = dlPtr->index;
 
                     /*
-                     * Adjust index to the start of the display line. This is
-                     * needed because the start of a logical line is not
-                     * always the start of a display line (this is however
-                     * true if the eol is not elided).
+                     * topIndex is the start of a logical line. However, if
+                     * the eol of the previous logical line is elided, then
+                     * topIndex may be elsewhere than the first character of
+                     * a display line, which is unwanted. Adjust to the start
+                     * of the display line, if needed.
+                     * topIndex is the start of a display line that is or is
+                     * not the start of a logical line. If it is the start of
+                     * a logical line, we must check whether this line is
+                     * merged with the previous logical line, and if so we
+                     * must adjust topIndex to the start of the display line.
                      */
-
-                    TkTextIndexBackBytes(textPtr, &tmpIndex, 1, &tmpIndex);
-                    if (TkTextIsElided(textPtr, &tmpIndex, NULL)) {
-                        TkTextFindDisplayLineEnd(textPtr, &textPtr->topIndex, 0,
-                                NULL);
+                    if (!IsStartOfNotMergedLine(textPtr, &textPtr->topIndex)) {
+                        TkTextFindDisplayLineEnd(textPtr, &textPtr->topIndex,
+                                0, NULL);
                     }
-		    break;
+
+                    break;
 		}
 	    }
 
