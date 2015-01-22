@@ -3892,8 +3892,17 @@ RedisplayText(
 {
     register TkText *textPtr = (TkText *) clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
-    TkRegion damageRegion = TkCreateRegion();
-    XRectangle rectangle = {0, 0, dInfoPtr->maxX, dInfoPtr->maxY};
+    TkRegion damageRegion;
+    XRectangle rectangle;
+
+    if (dInfoPtr == NULL) {
+	return;
+    }
+    damageRegion = TkCreateRegion();
+    rectangle.x = 0;
+    rectangle.y = 0;
+    rectangle.width = dInfoPtr->maxX;
+    rectangle.height = dInfoPtr->maxY;
     TkUnionRectWithRegion(&rectangle, damageRegion, damageRegion);
 
     TextInvalidateRegion(textPtr, damageRegion);
