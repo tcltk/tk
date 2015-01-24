@@ -1664,6 +1664,29 @@ test textDisp-13.10 {TkTextSeeCmd procedure} {} {
     destroy $w
     set res
 } {}
+test textDisp-13.11 {TkTextSeeCmd procedure} {} {
+    # insertion of a character at end of a line containing multi-byte
+    # characters and calling see at the line end shall actually show
+    # this character
+    toplevel .top2
+    pack [text .top2.t2 -wrap none]
+    for {set i 1} {$i < 5} {incr i} {
+        .top2.t2 insert end [string repeat "Line $i: éèàçù" 5]\n
+
+    }
+    wm geometry .top2 300x200+0+0
+    update
+    .top2.t2 see "1.0 lineend"
+    update
+    set ref [.top2.t2 index @0,0]
+    .top2.t2 insert "1.0 lineend" ç
+    .top2.t2 see "1.0 lineend"
+    update
+    set new [.top2.t2 index @0,0]
+    set res [.top2.t2 compare $ref == $new]
+    destroy .top2
+    set res
+} {0}
 wm geom . {}
 
 .t configure -wrap none
