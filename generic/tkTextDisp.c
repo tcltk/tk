@@ -3465,8 +3465,8 @@ TkTextFindDisplayLineEnd(
 		     */
 
                     *xOffset = DlineXOfIndex(textPtr, dlPtr,
-                            TkTextIndexCount(textPtr, &dlPtr->index, indexPtr,
-                            COUNT_INDICES));
+                            TkTextIndexCountBytes(textPtr, &dlPtr->index,
+                            indexPtr));
 		}
 		if (end) {
 		    /*
@@ -5549,8 +5549,7 @@ TkTextSeeCmd(
      * they are elided.
      */
 
-    byteCount = TkTextIndexCount(textPtr, &dlPtr->index, &index,
-            COUNT_INDICES);
+    byteCount = TkTextIndexCountBytes(textPtr, &dlPtr->index, &index);
     for (chunkPtr = dlPtr->chunkPtr; chunkPtr != NULL ;
 	    chunkPtr = chunkPtr->nextPtr) {
 	if (byteCount < chunkPtr->numBytes) {
@@ -7078,8 +7077,7 @@ TkTextIndexBbox(
      * they are elided.
      */
 
-    byteCount = TkTextIndexCount(textPtr, &dlPtr->index, indexPtr,
-            COUNT_INDICES);
+    byteCount = TkTextIndexCountBytes(textPtr, &dlPtr->index, indexPtr);
     for (chunkPtr = dlPtr->chunkPtr; ; chunkPtr = chunkPtr->nextPtr) {
 	if (chunkPtr == NULL) {
 	    return -1;
