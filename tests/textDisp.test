@@ -1152,6 +1152,41 @@ test textDisp-8.11 {TkTextChanged, scrollbar notification when changes are off-s
     .t configure -yscrollcommand ""
     set scrollInfo
 } {0.0 0.625}
+test textDisp-8.12 {TkTextChanged, moving the insert cursor redraws only past and new lines} {
+    .t delete 1.0 end
+    .t configure -wrap none
+    for {set i 1} {$i < 25} {incr i} {
+        .t insert end "Line $i Line $i\n"
+    }
+    .t tag add hidden 5.0 8.0
+    .t tag configure hidden -elide true
+    .t mark set insert 9.0
+    update
+    .t mark set insert 8.0        ; # up one line
+    update
+    set res [list $tk_textRedraw]
+    .t mark set insert 12.2       ; # in the visible text
+    update
+    lappend res $tk_textRedraw
+    .t mark set insert 6.5        ; # in the hidden text
+    update
+    lappend res $tk_textRedraw
+    .t mark set insert 3.5        ; # in the visible text again
+    update
+    lappend res $tk_textRedraw
+    .t mark set insert 3.8        ; # within the same line
+    update
+    lappend res $tk_textRedraw
+    # This last one is tricky: correct result really is {2.0 3.0} when
+    # calling .t mark set insert, two calls to TkTextChanged are done:
+    # (a) to redraw the line of the past position of the cursor
+    # (b) to redraw the line of the new position of the cursor
+    # During (a) the display line showing the cursor gets unlinked,
+    # which leads TkTextChanged in (b) to schedule a redraw starting
+    # one line _before_ the line containing the insert cursor. This is
+    # because during (b) findDLine cannot return the display line the
+    # cursor is in since this display line was just unlinked in (a).
+} {{8.0 9.0} {8.0 12.0} {8.0 12.0} {3.0 8.0} {2.0 3.0}}
 
 test textDisp-9.1 {TkTextRedrawTag} {
     .t configure -wrap char
