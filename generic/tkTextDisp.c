@@ -4668,12 +4668,11 @@ TextChanged(
      */
 
     rounded = *index1Ptr;
-    do {
-        rounded.byteIndex = 0;
+    rounded.byteIndex = 0;
+    notBegin = 0;
+    while (!IsStartOfNotMergedLine(textPtr, &rounded) && notBegin) {
         notBegin = !TkTextIndexBackBytes(textPtr, &rounded, 1, &rounded);
-    } while (TkTextIsElided(textPtr, &rounded, NULL) && notBegin);
-    if (notBegin) {
-        TkTextIndexForwBytes(textPtr, &rounded, 1, &rounded);
+        rounded.byteIndex = 0;
     }
 
     /*
@@ -4703,14 +4702,11 @@ TextChanged(
         }
         rounded.linePtr = linePtr;
         rounded.byteIndex = 0;
-        TkTextIndexBackBytes(textPtr, &rounded, 1, &rounded);
-    } while (TkTextIsElided(textPtr, &rounded, NULL));
+    } while (!IsStartOfNotMergedLine(textPtr, &rounded));
 
     if (linePtr == NULL) {
         lastPtr = NULL;
     } else {
-        TkTextIndexForwBytes(textPtr, &rounded, 1, &rounded);
-
         /*
          * 'rounded' now points to the start of a display line as well as the
          * start of a logical line not merged with its previous line, and
