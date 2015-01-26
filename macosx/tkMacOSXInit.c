@@ -31,7 +31,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 int tkMacOSXGCEnabled = 0;
 long tkMacOSXMacOSXVersion = 0;
 
-#pragma mark TKApplication(TKInit)
+#pragma mark TKApplication(TKInit) 
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 #define NSTextInputContextKeyboardSelectionDidChangeNotification @"NSTextInputContextKeyboardSelectionDidChangeNotification"
@@ -51,10 +51,6 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 #endif
 @interface TKApplication(TKWindowEvent) TKApplication_NSApplicationDelegate
 - (void) _setupWindowNotifications;
-@end
-
-@interface TKApplication(TKScrlbr)
-- (void) _setupScrollBarNotifications;
 @end
 
 @interface TKApplication(TKMenus)
@@ -108,7 +104,6 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 	    selector:@selector(_postedNotification:) name:nil object:nil];
 #endif
     [self _setupWindowNotifications];
-    [self _setupScrollBarNotifications];
     [self _setupApplicationNotifications];
 }
 
