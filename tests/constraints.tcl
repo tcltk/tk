@@ -36,7 +36,7 @@ namespace eval tk {
 	}
 
 	namespace eval bg {
-	    # Manage a background process.  
+	    # Manage a background process.
 	    # Replace with slave interp or thread?
 	    namespace import ::tcltest::interpreter
 	    namespace import ::tk::test::loadTkCommand
@@ -124,7 +124,7 @@ namespace eval tk {
 	    eval destroy [winfo children .]
 	}
 
-	namespace export fixfocus 
+	namespace export fixfocus
 	proc fixfocus {} {
             catch {destroy .focus}
             toplevel .focus
@@ -183,7 +183,7 @@ testConstraint aqua [expr {[tk windowingsystem] eq "aqua"}]
 testConstraint nonwin [expr {[tk windowingsystem] ne "win32"}]
 testConstraint userInteraction 0
 testConstraint nonUnixUserInteraction [expr {
-    [testConstraint userInteraction] || 
+    [testConstraint userInteraction] ||
     ([testConstraint unix] && [testConstraint notAqua])
 }]
 testConstraint haveDISPLAY [info exists env(DISPLAY)]

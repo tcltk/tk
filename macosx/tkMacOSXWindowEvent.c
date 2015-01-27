@@ -817,7 +817,7 @@ ExposeRestrictProc(
 	    NSCompositeSourceOver);
 #endif
 
- 	    
+
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
 
@@ -835,9 +835,9 @@ ExposeRestrictProc(
 			NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode,
 			nil]];
     }
-   
+
     CFRelease(drawShape);
-  
+
 }
 
 
@@ -872,7 +872,7 @@ ExposeRestrictProc(
     [self setNeedsDisplay:YES];
     [super setNeedsDisplay:YES];
     [super viewDidEndLiveResize];
-     
+
 }
 
 /*Core function of this class, generates expose events for redrawing.*/
