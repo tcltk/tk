@@ -101,13 +101,6 @@ TkMacOSXInitCGDrawing(
 		(char *) &useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
-#if TK_MAC_BUTTON_USE_COMPATIBILITY_METRICS
-	if (Tcl_LinkVar(interp, "::tk::mac::useCompatibilityMetrics",
-		(char *) &tkMacOSXUseCompatibilityMetrics, TCL_LINK_BOOLEAN)
-		!= TCL_OK) {
-	    Tcl_ResetResult(interp);
-	}
-#endif
     }
     return TCL_OK;
 }
@@ -1519,27 +1512,12 @@ TkScrollWindow(
  	    /* Scroll the rectangle. */
  	    [view scrollRect:scrollSrc by:NSMakeSize(dx, -dy)];
 
- 	    /*
- 	     * Adjust the positions of the button subwindows that meet the scroll
- 	     * area.
-  	     */
-
-  	    for (NSView *subview in [view subviews] ) {
- 	    	if ( [subview isKindOfClass:[NSButton class]] == YES ) {
- 		    NSRect subframe = [subview frame];
- 		    if  ( NSIntersectsRect(scrollSrc, subframe) ||
- 			  NSIntersectsRect(scrollDst, subframe) ) {
- 			TkpShiftButton((NSButton *)subview, delta );
- 		    }
- 	    	}
-  	    }
-
  	    /* Redisplay the scrolled area; hide to reduce flicker after removal of private API calls. */
 	    [view setHidden:YES];
 	    [view displayRect:scrollDst];
 	    [view setHidden:NO];
 
-       	    
+
 
   	}
     }
