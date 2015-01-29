@@ -20,7 +20,11 @@
 
 #define MIN_SCROLLBAR_VALUE		0
 #define SCROLLBAR_SCALING_VALUE		((double)(LONG_MAX>>1))
-#define MIN_SLIDER_LENGTH	5
+#ifdef __LP64__
+#define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
+#else
+#define RangeToFactor(maximum) (((double) (LONG_MAX >> 1)) / (maximum))
+#endif /* __LP64__ */
 
 
 /*
@@ -61,18 +65,11 @@ static ScrollbarMetrics metrics[2] = {
 HIThemeTrackDrawInfo info = {
     .version = 0,
     .min = 0.0,
-    .max = 1.0,
+    .max = 100.0,
     .attributes = kThemeTrackShowThumb,
     .kind = kThemeScrollBarMedium,
 };
 
-
-/*
- * This variable holds the default width for a scrollbar in string form for
- * use in a Tk_ConfigSpec.
- */
-
-static char defWidth[TCL_INTEGER_SPACE];
 
 /*
  * Forward declarations for procedures defined later in this file:
@@ -192,7 +189,7 @@ TkpDisplayScrollbar(
     		       Tk_Width(tkwin) - 2*scrollPtr->inset,
     		       Tk_Height(tkwin) - 2*scrollPtr->inset, 0, TK_RELIEF_FLAT);
 
-    /*Update values and draw in native rect.*/
+    /*Update values and draw in native rect.*/ 
    
     UpdateControlValues(scrollPtr);
     HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
@@ -406,7 +403,7 @@ TkpScrollbarPosition(
   
    ControlPartCode partCode;
    ChkErr(HIThemeHitTestTrack, &info, &where, &partCode);
-
+   
       switch (partCode) {
     case kAppearancePartUpButton:
 	return TOP_ARROW;
@@ -463,7 +460,7 @@ UpdateControlValues(
 
     contrlRect = NSRectToCGRect(frame);
     info.bounds = contrlRect;
-
+    
     width = contrlRect.size.width;
     height = contrlRect.size.height;
 
@@ -472,7 +469,7 @@ UpdateControlValues(
     /*
      * Ensure we set scrollbar control bounds only once all size adjustments
      * have been computed.
-     */
+     */ 
 
     info.bounds = contrlRect;
     if (!scrollPtr->vertical) {
@@ -489,23 +486,46 @@ UpdateControlValues(
      * the view area.
      */
 
-      dViewSize = scrollPtr->lastFraction - scrollPtr->firstFraction;
-  
-      if (!scrollPtr->vertical) {
-	  info.trackInfo.scrollbar.viewsize = dViewSize * width;
-	  info.value = scrollPtr->firstFraction * width;
-      } else {
-	  info.trackInfo.scrollbar.viewsize = dViewSize * height;
-	  info.value = scrollPtr->firstFraction * height;
-      }
-      NSLog(@"firstfraction = %f, lastFraction = %f, value = %f, viewSize=%f", scrollPtr->firstFraction, scrollPtr->lastFraction, info.value, info.trackInfo.scrollbar.viewsize);
+    double maximum = 100,  factor;
+    factor = RangeToFactor(maximum);
+
+         dViewSize = scrollPtr->lastFraction - scrollPtr->firstFraction;
+         info.trackInfo.scrollbar.viewsize = dViewSize;
+    
+    CGFloat thumbPosition;
+    ChkErr(HIThemeGetTrackThumbPositionFromBounds, &info, &info.bounds, &thumbPosition);
+
+
+
+    dViewSize = (scrollPtr->lastFraction - scrollPtr->firstFraction)
+	    * factor;
+    //  SetControl32BitMinimum(macScrollPtr->sbHandle, MIN_SCROLLBAR_VALUE);
+    info.max =  MIN_SCROLLBAR_VALUE +
+	    factor - dViewSize;
+    info.trackInfo.scrollbar.viewsize = dViewSize;
+    info.value =  MIN_SCROLLBAR_VALUE + factor * scrollPtr->firstFraction;
+    
+    /* info.value = info.max; */
+    /* //    info.value = thumbPosition; */
+    /*   if (!scrollPtr->vertical) { */
+    /* 	   info.value = thumbPosition / (double) width; */
+    /* 	   //  info.value = (dViewSize * 100 * width) / info.max - info.min + (dViewSize); */
+    /*   } else { */
+    /* 	  //	  info.value = (dViewSize * 100 * height) / info.max - info.min + (dViewSize * 100); */
+    /* 	  info.value = thumbPosition / (double) height; */
+    /* 	  NSLog(@"fucking value is %f", info.value); */
+    /* 	  //  ( viewSize * scrollBarDragAreaSize ) / ( max - min + viewSize ) */
+    /*   } */
+   
+	   NSLog(@"firstfraction = %f, lastFraction = %f, value = %f, viewsize=%f, max=%f", scrollPtr->firstFraction, scrollPtr->lastFraction, info.value, info.trackInfo.scrollbar.viewsize, info.max);
   
     if((scrollPtr->firstFraction <= 0.0 && scrollPtr->lastFraction >= 1.0)
        || height <= metrics[variant].minHeight) {
+	NSLog(@"gone!");
     	info.enableState = kThemeTrackHideTrack;
     } else {
     	info.enableState = kThemeTrackActive;
-    	info.attributes = kThemeTrackShowThumb |  kThemeTrackThumbRgnIsNotGhost;;
+    	info.attributes = kThemeTrackShowThumb |  kThemeTrackThumbRgnIsNotGhost;
     }
 
 }
@@ -548,6 +568,7 @@ ScrollbarActionProc(
     HIPoint where = {point.x, tk_Y};
   
     ChkErr(HIThemeHitTestTrack, &info, &where, &partCode);
+    NSLog(@"hit it and quit it");
     Tcl_Interp *interp;
     interp = scrollPtr->interp;
 
@@ -560,6 +581,7 @@ ScrollbarActionProc(
 	Tcl_DStringAppendElement(&cmdString, "scroll");
 	Tcl_DStringAppendElement(&cmdString,
 				 (partCode == kAppearancePartUpButton) ? "-1" : "1");
+	NSLog(@"scrollin");
 	Tcl_DStringAppendElement(&cmdString, "unit");
     } else if (partCode == kAppearancePartPageUpArea ||
 	       partCode == kAppearancePartPageDownArea ) {
@@ -567,12 +589,14 @@ ScrollbarActionProc(
 	Tcl_DStringAppendElement(&cmdString,
 				 (partCode == kAppearancePartPageUpArea) ? "-1" : "1");
 	Tcl_DStringAppendElement(&cmdString, "page");
+	NSLog(@"jumpin");
     } else if (partCode == kAppearancePartIndicator) {
 	char valueString[TCL_DOUBLE_SPACE];
-	Tcl_PrintDouble(NULL, info.value -
-			MIN_SCROLLBAR_VALUE / SCROLLBAR_SCALING_VALUE, valueString);
+	Tcl_PrintDouble(NULL, info.value, valueString);
+		NSLog(@"printing double");
 	Tcl_DStringAppendElement(&cmdString, "moveto");
 	Tcl_DStringAppendElement(&cmdString, valueString);
+	NSLog(@"movin");
     } 
     Tcl_Preserve(scrollPtr->interp);
     Tcl_EvalEx(scrollPtr->interp, Tcl_DStringValue(&cmdString),
@@ -610,6 +634,7 @@ ScrollbarPress(TkScrollbar *scrollPtr, XEvent *eventPtr)
   
 	ControlPartCode partCode;
 	ChkErr(HIThemeHitTestTrack, &info, &where, &partCode);
+	   NSLog(@"you hit %d", partCode);
 
 	ScrollbarActionProc(scrollPtr, partCode);
     	/*
