@@ -51,6 +51,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
 };
 
 
+/*Information on scrollbar layout, metrics, and draw info.*/
 typedef struct ScrollbarMetrics {
     SInt32 width, minThumbHeight;
     int minHeight, topArrowHeight, bottomArrowHeight;
@@ -76,7 +77,6 @@ HIThemeTrackDrawInfo info = {
  */
 
 static void ScrollbarEventProc(ClientData clientData, XEvent *eventPtr);
-static void ScrollbarActionProc(ClientData clientData, ControlPartCode partCode);
 static int ScrollbarPress(TkScrollbar *scrollPtr, XEvent *eventPtr);
 static void UpdateControlValues(TkScrollbar  *scrollPtr);
 
@@ -273,15 +273,9 @@ TkpComputeScrollbarGeometry(
      */
 
     if (scrollPtr->vertical) {
-    	Tk_GeometryRequest(scrollPtr->tkwin, scrollPtr->width +
-			   2 * scrollPtr->inset, 2 * (scrollPtr->arrowLength +
-						      scrollPtr->borderWidth + scrollPtr->inset) +
-			   metrics[variant].minThumbHeight);
+    	Tk_GeometryRequest(scrollPtr->tkwin, scrollPtr->width + 2 * scrollPtr->inset, 2 * (scrollPtr->arrowLength + scrollPtr->borderWidth + scrollPtr->inset) +  metrics[variant].minThumbHeight);
     } else {
-    	Tk_GeometryRequest(scrollPtr->tkwin, 2 * (scrollPtr->arrowLength +
-						  scrollPtr->borderWidth + scrollPtr->inset) +
-			   metrics[variant].minThumbHeight, scrollPtr->width +
-			   2 * scrollPtr->inset);
+    	Tk_GeometryRequest(scrollPtr->tkwin, 2 * (scrollPtr->arrowLength + scrollPtr->borderWidth + scrollPtr->inset) + metrics[variant].minThumbHeight, scrollPtr->width + 2 * scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
     
@@ -346,7 +340,6 @@ TkpConfigureScrollbar(
 
 }
 
-
 /*
  *--------------------------------------------------------------
  *
@@ -367,46 +360,49 @@ TkpConfigureScrollbar(
 
 int
 TkpScrollbarPosition(
-		     register TkScrollbar *scrollPtr,
-		     /* Scrollbar widget record. */
-		     int x, int y)		/* Coordinates within scrollPtr's window. */
+    register TkScrollbar *scrollPtr,
+				/* Scrollbar widget record. */
+    int x, int y)		/* Coordinates within scrollPtr's window. */
 {
 
-    int length, width, tmp, inset;
-    inset = scrollPtr->inset;
-    
-    UpdateControlValues(scrollPtr);
+  /*Using code from tkUnixScrlbr.c because Unix scroll bindings are driving the display at the script level. All the Mac scrollbar has to do is re-draw itself.*/
   
+    int length, width, tmp;
+    register const int inset = scrollPtr->inset;
 
-    if ((x < scrollPtr->inset) || (x >= (Tk_Width(scrollPtr->tkwin) -scrollPtr->inset)) || (y < scrollPtr->inset) |  (y >= (Tk_Height(scrollPtr->tkwin) - scrollPtr->inset))) {
+    if (scrollPtr->vertical) {
+	length = Tk_Height(scrollPtr->tkwin);
+	width = Tk_Width(scrollPtr->tkwin);
+    } else {
+	tmp = x;
+	x = y;
+	y = tmp;
+	length = Tk_Width(scrollPtr->tkwin);
+	width = Tk_Height(scrollPtr->tkwin);
+    }
+
+    if (x<inset || x>=width-inset || y<inset || y>=length-inset) {
 	return OUTSIDE;
     }
 
-    /* Get the coordinates of the cursor and convered from Cocoa screen coordinates to Tk coordinates.*/
-    NSPoint point = [NSEvent mouseLocation];
-    float rootX = point.x;
-    float rootY = point.y;
-    float screenheight = [[[NSScreen screens] objectAtIndex:0] frame].size.height;
-    float tk_Y  = screenheight - rootY;
-    HIPoint where = {point.x, tk_Y};
-  
-    ControlPartCode partCode;
-    ChkErr(HIThemeHitTestTrack, &info, &where, &partCode);
-    switch (partCode) {
-    case kAppearancePartUpButton:
+    /*
+     * All of the calculations in this procedure mirror those in
+     * TkpDisplayScrollbar. Be sure to keep the two consistent.
+     */
+
+    if (y < inset + scrollPtr->arrowLength) {
 	return TOP_ARROW;
-    case kAppearancePartPageUpArea:
-	return TOP_GAP;
-    case kAppearancePartIndicator:
-	return SLIDER;
-    case kAppearancePartPageDownArea:
-	return BOTTOM_GAP;
-    case kAppearancePartDownButton:
-	return BOTTOM_ARROW;
-    default:
-	return OUTSIDE;
     }
-
+    if (y < scrollPtr->sliderFirst) {
+	return TOP_GAP;
+    }
+    if (y < scrollPtr->sliderLast) {
+	return SLIDER;
+    }
+    if (y >= length - (scrollPtr->arrowLength + inset)) {
+	return BOTTOM_ARROW;
+    }
+    return BOTTOM_GAP;
 }
 
 /*
@@ -415,7 +411,8 @@ TkpScrollbarPosition(
  * UpdateControlValues --
  *
  *	This procedure updates the Macintosh scrollbar control to display the
- *	values defined by the Tk scrollbar.
+ *	values defined by the Tk scrollbar. This is the key interface to the Mac-native *      scrollbar; the Unix bindings drive scrolling in the Tk window and all the Mac 
+ *      scrollbar has to do is redraw itself. 
  *
  * Results:
  *	None.
@@ -497,76 +494,6 @@ UpdateControlValues(
 
 }
 
-
-/*
- *--------------------------------------------------------------
- *
- * ScrollbarActionProc --
- *
- *	Callback procedure to update the display while the
- *	scrollbar is being manipulated by the user.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	May change the display.
- *
- *--------------------------------------------------------------
- */
-
-static void
-ScrollbarActionProc(
-		    ClientData clientData,
-		    ControlPartCode partCode
-		    )
-{
-    TkScrollbar *scrollPtr = clientData;
- 
-    Tcl_DString cmdString;
-
-    /* Get the coordinates of the cursor and convered from Cocoa screen coordinates to Tk coordinates.*/
-    NSPoint point = [NSEvent mouseLocation];
-    float rootX = point.x;
-    float rootY = point.y;
-    float screenheight = [[[NSScreen screens] objectAtIndex:0] frame].size.height;
-    float tk_Y  = screenheight - rootY;
-    HIPoint where = {point.x, tk_Y};
-  
-    ChkErr(HIThemeHitTestTrack, &info, &where, &partCode);
-    Tcl_Interp *interp;
-    interp = scrollPtr->interp;
-
-    Tcl_DStringInit(&cmdString);
-    Tcl_DStringAppend(&cmdString, scrollPtr->command,
-		      scrollPtr->commandSize);
-
-    if ( partCode == kAppearancePartUpButton ||
-	 partCode == kAppearancePartDownButton ) {
-	Tcl_DStringAppendElement(&cmdString, "scroll");
-	Tcl_DStringAppendElement(&cmdString,
-				 (partCode == kAppearancePartUpButton) ? "-1" : "1");
-	Tcl_DStringAppendElement(&cmdString, "unit");
-    } else if (partCode == kAppearancePartPageUpArea ||
-	       partCode == kAppearancePartPageDownArea ) {
-	Tcl_DStringAppendElement(&cmdString, "scroll");
-	Tcl_DStringAppendElement(&cmdString,
-				 (partCode == kAppearancePartPageUpArea) ? "-1" : "1");
-	Tcl_DStringAppendElement(&cmdString, "page");
-    } else if (partCode == kAppearancePartIndicator) {
-	char valueString[TCL_DOUBLE_SPACE];
-	Tcl_PrintDouble(NULL, info.value, valueString);
-	Tcl_DStringAppendElement(&cmdString, "moveto");
-	Tcl_DStringAppendElement(&cmdString, valueString);
-    } 
-    Tcl_Preserve(scrollPtr->interp);
-    Tcl_EvalEx(scrollPtr->interp, Tcl_DStringValue(&cmdString),
-	       Tcl_DStringLength(&cmdString), TCL_EVAL_GLOBAL);
-    Tcl_Release(scrollPtr->interp);
-    Tcl_DStringFree(&cmdString);
-    	
-}
-
 /*
  *--------------------------------------------------------------
  *
@@ -581,36 +508,11 @@ ScrollbarActionProc(
 static int
 ScrollbarPress(TkScrollbar *scrollPtr, XEvent *eventPtr)
 {
-  
-    Window window;
 
-    if (eventPtr->type == ButtonPress) {
-
-	/* Get the coordinates of the cursor and convered from Cocoa screen coordinates to Tk coordinates.*/
-	NSPoint point = [NSEvent mouseLocation];
-	float rootX = point.x;
-	float rootY = point.y;
-	float screenheight = [[[NSScreen screens] objectAtIndex:0] frame].size.height;
-	float tk_Y  = screenheight - rootY;
-	HIPoint where = {point.x, tk_Y};
-  
-	ControlPartCode partCode;
-	ChkErr(HIThemeHitTestTrack, &info, &where, &partCode);
-
-	ScrollbarActionProc(scrollPtr, partCode);
-    	/*
-    	 * This call will "eat" the ButtonUp event. We now
-    	 * generate a ButtonUp event so Tk will unset implicit grabs etc.
-    	 */
-
-    	if (scrollPtr->tkwin) {
-    	    window = Tk_WindowId(scrollPtr->tkwin);
-    	    TkGenerateButtonEventForXPointer(window);
-    	}
-
-	return TCL_OK;
-
-    }
+  if (eventPtr->type == ButtonPress) {
+    UpdateControlValues(scrollPtr); 
+    return TCL_OK;
+  }
 }
 
 
@@ -655,13 +557,3 @@ ScrollbarEventProc(
 	TkScrollbarEventProc(clientData, eventPtr);
     }
 }
-
-
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 4
- * fill-column: 78
- * End:
- */
