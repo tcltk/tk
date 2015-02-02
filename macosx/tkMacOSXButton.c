@@ -7,8 +7,8 @@
  * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
  * Copyright (c) 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2007 Revar Desmera. 
- * Copyright 2015 Kevin Walzer/WordTech Communications LLC.  
+ * Copyright 2007 Revar Desmera.
+ * Copyright 2015 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -230,7 +230,7 @@ TkpDisplayButton(
     } else {
         /* Draw the native portion of the buttons. */
         TkMacOSXDrawButton(macButtonPtr, dpPtr->gc, pixmap);
-	
+
         /* Draw highlight border, if needed. */
         if (butPtr->highlightWidth < 3) {
             needhighlight = 1;
@@ -264,7 +264,7 @@ TkpDisplayButton(
  *
  *----------------------------------------------------------------------
  */
-  
+
 void
 TkpComputeButtonGeometry(
     TkButton *butPtr)		/* Button whose geometry may have changed. */
@@ -311,7 +311,7 @@ TkpComputeButtonGeometry(
 	width = butPtr->width;
 	width += 0;
 	break;
-      } 
+      }
     }
 
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
@@ -384,7 +384,7 @@ TkpComputeButtonGeometry(
     } else {
 	width = txtWidth;
 	height = txtHeight;
-	
+
 	if (butPtr->width > 0) {
 	   width = butPtr->width * avgWidth;
 	}
@@ -396,7 +396,7 @@ TkpComputeButtonGeometry(
     width  += 2 * butPtr->padX;
     height += 2 * butPtr->padY;
 
-    
+
     /* Need special handling for radiobuttons and checkbuttons: the text is drawn right on top of the button unless we expand the width. This is not perfect; some radiobuttons may render on top anyway. Need to find a better solution to calculate average text width.*/
     switch (butPtr->type) {
     case TYPE_RADIO_BUTTON:
@@ -406,7 +406,7 @@ TkpComputeButtonGeometry(
       width += 50;
       break;
     }
-   
+
     /*
      * Now figure out the size of the border decorations for the button.
      */
@@ -490,7 +490,7 @@ static void
 DrawButtonImageAndText(
     TkButton* butPtr)
 {
-  
+
     MacButton *mbPtr = (MacButton*)butPtr;
     Tk_Window  tkwin  = butPtr->tkwin;
     Pixmap     pixmap;
@@ -515,7 +515,7 @@ DrawButtonImageAndText(
 
     DrawParams* dpPtr = &mbPtr->drawParams;
     pixmap = (Pixmap)Tk_WindowId(tkwin);
- 
+
     if (butPtr->image != None) {
         Tk_SizeOfImage(butPtr->image, &width, &height);
         haveImage = 1;
@@ -531,7 +531,7 @@ DrawButtonImageAndText(
         /* Offset bitmaps by a bit when the button is pressed. */
         pressed = 1;
     }
-    
+
   haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
    if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
         int x;
@@ -542,7 +542,7 @@ DrawButtonImageAndText(
         fullHeight = 0;
 
         switch ((enum compound) butPtr->compound) {
-            case COMPOUND_TOP: 
+            case COMPOUND_TOP:
             case COMPOUND_BOTTOM: {
                 /* Image is above or below text */
                 if (butPtr->compound == COMPOUND_TOP) {
@@ -559,10 +559,10 @@ DrawButtonImageAndText(
             }
             case COMPOUND_LEFT:
             case COMPOUND_RIGHT: {
-                /* 
-                 * Image is left or right of text 
+                /*
+                 * Image is left or right of text
                  */
-                 
+
                 if (butPtr->compound == COMPOUND_LEFT) {
                     textXOffset = width + butPtr->padX;
                 } else {
@@ -576,10 +576,10 @@ DrawButtonImageAndText(
                 break;
             }
             case COMPOUND_CENTER: {
-                /* 
-                 * Image and text are superimposed 
+                /*
+                 * Image and text are superimposed
                  */
-                 
+
                 fullWidth = (width > butPtr->textWidth ? width :
                         butPtr->textWidth);
                 fullHeight = (height > butPtr->textHeight ? height :
@@ -633,11 +633,11 @@ DrawButtonImageAndText(
             XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
         }
 
-        Tk_DrawTextLayout(butPtr->display, pixmap, 
+        Tk_DrawTextLayout(butPtr->display, pixmap,
                 dpPtr->gc, butPtr->textLayout,
                 x + textXOffset, y + textYOffset, 0, -1);
         Tk_UnderlineTextLayout(butPtr->display, pixmap, dpPtr->gc,
-                butPtr->textLayout, 
+                butPtr->textLayout,
                 x + textXOffset, y + textYOffset,
                 butPtr->underline);
     } else {
@@ -647,7 +647,7 @@ DrawButtonImageAndText(
             TkComputeAnchor(butPtr->anchor, tkwin,
                     butPtr->padX + butPtr->borderWidth,
                     butPtr->padY + butPtr->borderWidth,
-                    width, height, &x, &y);      
+                    width, height, &x, &y);
             if (dpPtr->relief == TK_RELIEF_SUNKEN) {
                 x += dpPtr->offset;
                 y += dpPtr->offset;
@@ -661,9 +661,9 @@ DrawButtonImageAndText(
             }
 	        imageXOffset += x;
 	    	imageYOffset += y;
-	 
+
                if (butPtr->image != NULL) {
-	
+
                 if ((butPtr->selectImage != NULL) &&
                         (butPtr->flags & SELECTED)) {
                     Tk_RedrawImage(butPtr->selectImage, 0, 0, width,
@@ -702,7 +702,7 @@ DrawButtonImageAndText(
 			    butPtr->textWidth, butPtr->textHeight, &x, &y);
 	    Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
 			      butPtr->textLayout, x, y, 0, -1);
-	    } 
+	    }
 	    break;
 	  case TYPE_BUTTON:
 	  case TYPE_LABEL:
@@ -757,7 +757,7 @@ DrawButtonImageAndText(
          * Draw the border and traversal highlight last.  This way, if the
          * button's contents overflow they'll be covered up by the border.
          */
-         
+
         if (dpPtr->relief != TK_RELIEF_FLAT) {
             int inset = butPtr->highlightWidth;
             Tk_Draw3DRectangle(tkwin, pixmap, dpPtr->border, inset, inset,
@@ -765,7 +765,7 @@ DrawButtonImageAndText(
                 butPtr->borderWidth, dpPtr->relief);
         }
     }
- 
+
    }
 
 
@@ -803,7 +803,7 @@ TkpDestroyButton(
  * TkMacOSXDrawButton --
  *
  *        This function draws the tk button using Mac controls
- *        In addition, this code may apply custom colors passed 
+ *        In addition, this code may apply custom colors passed
  *        in the TkButton.
  *
  * Results:
@@ -829,13 +829,13 @@ TkMacOSXDrawButton(
     TkMacOSXDrawingContext dc;
     DrawParams* dpPtr = &mbPtr->drawParams;
     int useNewerHITools = 1;
-			 
+
     winPtr = (TkWindow *)butPtr->tkwin;
 
     TkMacOSXComputeButtonParams(butPtr, &mbPtr->btnkind, &mbPtr->drawinfo);
 
     cntrRect = CGRectMake(winPtr->privatePtr->xOff, winPtr->privatePtr->yOff, Tk_Width(butPtr->tkwin),Tk_Height(butPtr->tkwin));
-  
+
      cntrRect = CGRectInset(cntrRect,  butPtr->inset, butPtr->inset);
 
     if (useNewerHITools == 1) {
@@ -847,7 +847,7 @@ TkMacOSXDrawButton(
 	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
 	    return;
 	}
-       
+
 
 	if (mbPtr->btnkind == kThemePushButton) {
 	    /*
@@ -874,14 +874,14 @@ TkMacOSXDrawButton(
         HIThemeDrawButton(&cntrRect, &hiinfo, dc.context, kHIThemeOrientationNormal, &contHIRec);
 
 	TkMacOSXRestoreDrawingContext(&dc);
-	
+
         ButtonContentDrawCB(&contHIRec, mbPtr->btnkind, &mbPtr->drawinfo, (MacButton *)mbPtr, 32, true);
 
     } else {
 	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
 	    return;
 	}
-      
+
 	TkMacOSXRestoreDrawingContext(&dc);
     }
     mbPtr->lastdrawinfo = mbPtr->drawinfo;
@@ -1111,7 +1111,7 @@ TkMacOSXComputeButtonParams(
     } else {
         drawinfo->value = kThemeButtonOff;
     }
-    
+
     if ((mbPtr->flags & FIRST_DRAW) != 0) {
 	mbPtr->flags &= ~FIRST_DRAW;
 	if (Tk_MacOSXIsAppInFront()) {

@@ -1,5 +1,5 @@
 /*
- * tkMacOSXScrollbar.c -- 
+ * tkMacOSXScrollbar.c --
  *
  *	This file implements the Macintosh specific portion of the scrollbar
  *	widget.
@@ -34,7 +34,7 @@
 typedef struct MacScrollbar {
     TkScrollbar information;	 /* Generic scrollbar info. */
     GC troughGC;		/* For drawing trough. */
-    GC copyGC;			/* Used for copying from pixmap onto screen. */ 
+    GC copyGC;			/* Used for copying from pixmap onto screen. */
 } MacScrollbar;
 
 /*
@@ -110,7 +110,7 @@ TkpCreateScrollbar(
     TkWindow *winPtr = (TkWindow *)tkwin;
 
     Tk_CreateEventHandler(tkwin,ExposureMask|StructureNotifyMask|FocusChangeMask|ButtonPressMask|VisibilityChangeMask, ScrollbarEventProc, scrollPtr);
-    
+
     return (TkScrollbar *) scrollPtr;
 }
 
@@ -153,7 +153,7 @@ TkpDisplayScrollbar(
     CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
 			    .ty = viewHeight};
 
-    
+
     scrollPtr->flags &= ~REDRAW_PENDING;
     if (!scrollPtr->tkwin || !Tk_IsMapped(tkwin) || !view ||
     	!TkMacOSXSetupDrawingContext((Drawable) macWin, NULL, 1, &dc)) {
@@ -187,11 +187,11 @@ TkpDisplayScrollbar(
     		       Tk_Width(tkwin) - 2*scrollPtr->inset,
     		       Tk_Height(tkwin) - 2*scrollPtr->inset, 0, TK_RELIEF_FLAT);
 
-    /*Update values and draw in native rect.*/ 
+    /*Update values and draw in native rect.*/
     UpdateControlValues(scrollPtr);
     HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
     TkMacOSXRestoreDrawingContext(&dc);
-    
+
     scrollPtr->flags &= ~REDRAW_PENDING;
 }
 
@@ -278,7 +278,7 @@ TkpComputeScrollbarGeometry(
     	Tk_GeometryRequest(scrollPtr->tkwin, 2 * (scrollPtr->arrowLength + scrollPtr->borderWidth + scrollPtr->inset) + metrics[variant].minThumbHeight, scrollPtr->width + 2 * scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
-    
+
 }
 
 /*
@@ -366,7 +366,7 @@ TkpScrollbarPosition(
 {
 
   /*Using code from tkUnixScrlbr.c because Unix scroll bindings are driving the display at the script level. All the Mac scrollbar has to do is re-draw itself.*/
-  
+
     int length, width, tmp;
     register const int inset = scrollPtr->inset;
 
@@ -411,8 +411,8 @@ TkpScrollbarPosition(
  * UpdateControlValues --
  *
  *	This procedure updates the Macintosh scrollbar control to display the
- *	values defined by the Tk scrollbar. This is the key interface to the Mac-native *      scrollbar; the Unix bindings drive scrolling in the Tk window and all the Mac 
- *      scrollbar has to do is redraw itself. 
+ *	values defined by the Tk scrollbar. This is the key interface to the Mac-native *      scrollbar; the Unix bindings drive scrolling in the Tk window and all the Mac
+ *      scrollbar has to do is redraw itself.
  *
  * Results:
  *	None.
@@ -427,12 +427,12 @@ static void
 UpdateControlValues(
 		    TkScrollbar *scrollPtr)		/* Scrollbar data struct. */
 {
- 
+
     Tk_Window tkwin = scrollPtr->tkwin;
     MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
     double dViewSize;
     HIRect  contrlRect;
-    int variant, active; 
+    int variant, active;
     short width, height;
 
     NSView *view = TkMacOSXDrawableView(macWin);
@@ -445,22 +445,22 @@ UpdateControlValues(
 
     contrlRect = NSRectToCGRect(frame);
     info.bounds = contrlRect;
-    
+
     width = contrlRect.size.width;
     height = contrlRect.size.height;
 
     variant = contrlRect.size.width < metrics[0].width ? 1 : 0;
-   
+
     /*
      * Ensure we set scrollbar control bounds only once all size adjustments
      * have been computed.
-     */ 
+     */
 
     info.bounds = contrlRect;
     if (!scrollPtr->vertical) {
     	info.attributes |= kThemeTrackHorizontal;
     }
- 
+
     /*
      * Given the Tk parameters for the fractions of the start and end of the
      * thumb, the following calculation determines the location for the
@@ -483,7 +483,7 @@ UpdateControlValues(
     } else {
 	 info.value =  MIN_SCROLLBAR_VALUE + factor * scrollPtr->firstFraction;
     }
-	
+
     if((scrollPtr->firstFraction <= 0.0 && scrollPtr->lastFraction >= 1.0)
        || height <= metrics[variant].minHeight) {
     	info.enableState = kThemeTrackHideTrack;
@@ -510,7 +510,7 @@ ScrollbarPress(TkScrollbar *scrollPtr, XEvent *eventPtr)
 {
 
   if (eventPtr->type == ButtonPress) {
-    UpdateControlValues(scrollPtr); 
+    UpdateControlValues(scrollPtr);
     return TCL_OK;
   }
 }

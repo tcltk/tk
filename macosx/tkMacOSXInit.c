@@ -1,5 +1,5 @@
 /*
- * tkMacOSXInit.c -- 
+ * tkMacOSXInit.c --
  *
  *	This file contains Mac OS X -specific interpreter initialization
  *	functions.
@@ -31,7 +31,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 int tkMacOSXGCEnabled = 0;
 long tkMacOSXMacOSXVersion = 0;
 
-#pragma mark TKApplication(TKInit) 
+#pragma mark TKApplication(TKInit)
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 #define NSTextInputContextKeyboardSelectionDidChangeNotification @"NSTextInputContextKeyboardSelectionDidChangeNotification"
