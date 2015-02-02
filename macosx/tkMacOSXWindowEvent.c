@@ -849,7 +849,6 @@ ExposeRestrictProc(
         [super viewWillDraw];
 }
 
-
 - (BOOL) preservesContentDuringLiveResize
 {
     return YES;
