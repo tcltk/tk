@@ -299,7 +299,7 @@ tk::ScreenChanged [winfo screen .]
 
 proc ::tk::EventMotifBindings {n1 dummy dummy} {
     upvar $n1 name
-    
+
     if {$name} {
 	set op delete
     } else {
@@ -325,7 +325,7 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
 }
 
 #----------------------------------------------------------------------
-# Define common dialogs on platforms where they are not implemented 
+# Define common dialogs on platforms where they are not implemented
 # using compiled code.
 #----------------------------------------------------------------------
 
@@ -540,7 +540,7 @@ proc ::tk::CancelRepeat {} {
 
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
-# It sends a <<TraverseOut>> virtual event to the previous focus window, 
+# It sends a <<TraverseOut>> virtual event to the previous focus window,
 # if any, before changing the focus, and a <<TraverseIn>> event
 # to the new focus window afterwards.
 #
@@ -568,7 +568,7 @@ proc ::tk::UnderlineAmpersand {text} {
     return [list [string map {\ufeff {}} $s] $idx]
 }
 
-# ::tk::SetAmpText -- 
+# ::tk::SetAmpText --
 #	Given widget path and text with "magic ampersands", sets -text and
 #	-underline options for the widget
 #
