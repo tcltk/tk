@@ -485,8 +485,8 @@ test canvText-17.1 {TextToPostscript procedure} {
     .c itemconfig test -font $font -text "00000000" -width [expr 3*$ax]
     .c itemconfig test -anchor n -fill black
     set x [.c postscript]
-    set x [string range $x [string first "/Courier-Oblique" $x] end]
-} "/Courier-Oblique findfont [font actual $font -size] scalefont ISOEncode setfont
+    set x [string range $x [string first "findfont " $x] end]
+} "findfont [font actual $font -size] scalefont ISOEncode setfont
 0.000 0.000 0.000 setrgbcolor AdjustColor
 100 200 \[
 \[(000)\]
