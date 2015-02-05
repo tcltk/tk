@@ -13,7 +13,7 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- */
+ */ 
 
 #include "tkMacOSXPrivate.h"
 
@@ -174,6 +174,50 @@ TkpMakeWindow(
 /*
  *----------------------------------------------------------------------
  *
+ * TkpScanWindowId --
+ *
+ *	Given a string, produce the corresponding Window Id.
+ *
+ * Results:
+ *      The return value is normally TCL_OK; in this case *idPtr will be set
+ *      to the Window value equivalent to string. If string is improperly
+ *      formed then TCL_ERROR is returned and an error message will be left in
+ *      the interp's result.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpScanWindowId(
+    Tcl_Interp *interp,
+    CONST char * string,
+    Window *idPtr)
+{
+    int code;
+    Tcl_Obj obj;
+
+    obj.refCount = 1;
+    obj.bytes = string;
+    obj.length = strlen(string);
+    obj.typePtr = NULL;
+
+    code = Tcl_GetLongFromObj(interp, &obj, (long *)idPtr);
+
+    if (obj.refCount > 1) {
+	Tcl_Panic("invalid sharing of Tcl_Obj on C stack");
+    }
+    if (obj.typePtr && obj.typePtr->freeIntRepProc) {
+	obj.typePtr->freeIntRepProc(&obj);
+    }
+    return code;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpUseWindow --
  *
  *	This procedure causes a Tk window to use a given X window as its
@@ -214,7 +258,7 @@ TkpUseWindow(
     }
 
     /*
-     * Decode the container pointer, and look for it among the list of
+     * Decode the container window ID, and look for it among the list of
      * available containers.
      *
      * N.B. For now, we are limiting the containers to be in the same Tk
@@ -222,7 +266,7 @@ TkpUseWindow(
      * containers.
      */
 
-    if (Tcl_GetInt(interp, string, (int*) &parent) != TCL_OK) {
+    if (TkpScanWindowId(interp, string, (Window *)&parent) != TCL_OK) {
 	return TCL_ERROR;
     }
 

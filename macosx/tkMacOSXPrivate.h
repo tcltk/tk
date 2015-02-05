@@ -9,7 +9,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
-
+ 
 #ifndef _TKMACPRIV
 #define _TKMACPRIV
 
@@ -178,9 +178,6 @@ MODULE_SCOPE CGFloat tkMacOSXZeroScreenHeight;
 MODULE_SCOPE CGFloat tkMacOSXZeroScreenTop;
 MODULE_SCOPE int tkMacOSXGCEnabled;
 MODULE_SCOPE long tkMacOSXMacOSXVersion;
-#if TK_MAC_BUTTON_USE_COMPATIBILITY_METRICS
-MODULE_SCOPE int tkMacOSXUseCompatibilityMetrics;
-#endif
 
 /*
  * Prototypes for TkMacOSXRegion.c.
