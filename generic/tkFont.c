@@ -3375,7 +3375,6 @@ ConfigAttributesObj(
 
     for (i = 0; i < objc; i += 2) {
 	optionPtr = objv[i];
-	valuePtr = objv[i + 1];
 
 	if (Tcl_GetIndexFromObj(interp, optionPtr, fontOpt, "option", 1,
 		&index) != TCL_OK) {
@@ -3396,6 +3395,7 @@ ConfigAttributesObj(
 	    }
 	    return TCL_ERROR;
 	}
+	valuePtr = objv[i + 1];
 
 	switch (index) {
 	case FONT_FAMILY:
