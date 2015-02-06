@@ -774,11 +774,11 @@ GetIndex(
     }
 
     if (TkTextWindowIndex(textPtr, string, indexPtr) != 0) {
-	return TCL_OK;
+	goto done;
     }
 
     if (TkTextImageIndex(textPtr, string, indexPtr) != 0) {
-	return TCL_OK;
+	goto done;
     }
 
     /*
