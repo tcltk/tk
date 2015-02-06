@@ -25,6 +25,14 @@ proc setup {} {
     foreach p [event info] {event delete $p}    
     update
 }
+proc setup2 {} {
+    catch {destroy .b.e}
+    entry .b.e
+    pack .b.e
+    focus -force .b.e
+    foreach p [event info] {event delete $p}
+    update
+}
 setup
 
 foreach i [bind Test] {
@@ -1565,6 +1573,24 @@ test bind-16.44 {ExpandPercents procedure} {
     event gen .b.f <Gravity>
     set x
 } {?? ??}
+test bind-16.45 {ExpandPercents procedure} {
+    setup2
+    bind .b.e <Key> {set x "%M"}
+    bind Entry <Key> {set y "%M"}
+    bind all <Key> {set z "%M"}
+    set x none; set y none; set z none
+    event gen .b.e <Key-a>
+    list $x $y $z
+} {0 1 2}
+test bind-16.46 {ExpandPercents procedure} {
+    setup2
+    bind all <Key> {set z "%M"}
+    bind Entry <Key> {set y "%M"}
+    bind .b.e <Key> {set x "%M"}
+    set x none; set y none; set z none
+    event gen .b.e <Key-a>
+    list $x $y $z
+} {0 1 2}
 
 
 test bind-17.1 {event command} {
