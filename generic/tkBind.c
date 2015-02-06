@@ -612,7 +612,8 @@ static int		DeleteVirtualEvent(Tcl_Interp *interp,
 			    const char *eventString);
 static void		DeleteVirtualEventTable(VirtualEventTable *vetPtr);
 static void		ExpandPercents(TkWindow *winPtr, const char *before,
-			    XEvent *eventPtr,KeySym keySym,Tcl_DString *dsPtr);
+			    XEvent *eventPtr,KeySym keySym,
+			    unsigned int scriptCount, Tcl_DString *dsPtr);
 static PatSeq *		FindSequence(Tcl_Interp *interp,
 			    Tcl_HashTable *patternTablePtr, ClientData object,
 			    const char *eventString, int create,
@@ -1221,6 +1222,7 @@ Tk_BindEvent(
     XEvent *ringPtr;
     PatSeq *vMatchDetailList, *vMatchNoDetailList;
     int flags, oldScreen;
+    unsigned int scriptCount;
     Tcl_Interp *interp;
     Tcl_DString scripts;
     Tcl_InterpState interpState;
@@ -1372,6 +1374,7 @@ Tk_BindEvent(
      * each object.
      */
 
+    scriptCount = 0;
     Tcl_DStringInit(&scripts);
 
     for ( ; numObjects > 0; numObjects--, objectPtr++) {
@@ -1421,7 +1424,7 @@ Tk_BindEvent(
 
 	if (matchPtr != NULL) {
 	    ExpandPercents(winPtr, sourcePtr->script, eventPtr,
-		    detail.keySym, &scripts);
+		    detail.keySym, scriptCount++, &scripts);
 
 	    /*
 	     * A "" is added to the scripts string to separate the various
@@ -1903,6 +1906,8 @@ ExpandPercents(
 				 * in % replacements. */
     KeySym keySym,		/* KeySym: only relevant for KeyPress and
 				 * KeyRelease events). */
+    unsigned int scriptCount,	/* The number of script-based binding patterns
+				 * matched so far for this event. */
     Tcl_DString *dsPtr)		/* Dynamic string in which to append new
 				 * command. */
 {
@@ -2184,6 +2189,9 @@ ExpandPercents(
 		}
 	    }
 	    goto doString;
+	case 'M':
+	    number = scriptCount;
+	    goto doNumber;
 	case 'N':
 	    if ((flags & KEY) && (eventPtr->type != MouseWheelEvent)) {
 		number = (int) keySym;
