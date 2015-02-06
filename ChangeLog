@@ -156,6 +156,12 @@ a better first place to look now.
 	* generic/tkTextIndex.c: [Bug 3588824]: bug in image index handling
 	* tests/textIndex.test:  for weird image names
 
+2012-11-16  Joe Mistachkin  <joe@mistachkin.com>
+
+	* generic/tkBind.c: Add support for an 'M' binding substitution
+	that is replaced with the number of script-based binding patterns
+	matched so far for the event.
+
 2012-11-14  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* win/tkWinDialog.c: [Bug 3500545]: tk_getOpenFile -multiple 1 wrong
