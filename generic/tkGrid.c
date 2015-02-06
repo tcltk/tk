@@ -1991,7 +1991,7 @@ ResolveConstraints(
 	    if (slavePtr->numCols > 1) {
 		slavePtr->binNextPtr = layoutPtr[rightEdge].binNextPtr;
 		layoutPtr[rightEdge].binNextPtr = slavePtr;
-	    } else {
+	    } else if (rightEdge >= 0) {
 		int size = slavePtr->size + layoutPtr[rightEdge].pad;
 
 		if (size > layoutPtr[rightEdge].minSize) {
@@ -2010,7 +2010,7 @@ ResolveConstraints(
 	    if (slavePtr->numRows > 1) {
 		slavePtr->binNextPtr = layoutPtr[rightEdge].binNextPtr;
 		layoutPtr[rightEdge].binNextPtr = slavePtr;
-	    } else {
+	    } else if (rightEdge >= 0) {
 		int size = slavePtr->size + layoutPtr[rightEdge].pad;
 
 		if (size > layoutPtr[rightEdge].minSize) {
