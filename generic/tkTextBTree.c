@@ -3615,20 +3615,6 @@ TkTextIsElided(
     infoPtr->elidePriority = -1;
     for (i = infoPtr->numTags-1; i >=0; i--) {
 	if (infoPtr->tagCnts[i] & 1) {
-	    /*
-	     * Who would make the selection elided?
-	     */
-
-	    if ((tagPtr == textPtr->selTagPtr)
-		    && !(textPtr->flags & GOT_FOCUS)
-		    && (textPtr->inactiveSelBorder == NULL
-#ifdef MAC_OSX_TK
-		    /* Don't show inactive selection in disabled widgets. */
-		    || textPtr->state == TK_TEXT_STATE_DISABLED
-#endif
-	    )) {
-		continue;
-	    }
 	    infoPtr->elide = infoPtr->tagPtrs[i]->elide;
 
 	    /*
