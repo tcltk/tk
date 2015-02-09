@@ -5557,31 +5557,34 @@ TkTextSeeCmd(
 
     /*
      * Call a chunk-specific function to find the horizontal range of the
-     * character within the chunk.
+     * character within the chunk. chunkPtr is NULL if trying to see in elided
+     * region.
      */
 
-    chunkPtr->bboxProc(textPtr, chunkPtr, byteCount,
-            dlPtr->y + dlPtr->spaceAbove,
-            dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
-            dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width,
-            &height);
-    delta = x - dInfoPtr->curXPixelOffset;
-    oneThird = lineWidth/3;
-    if (delta < 0) {
-        if (delta < -oneThird) {
-            dInfoPtr->newXPixelOffset = x - lineWidth/2;
+    if (chunkPtr != NULL) {
+        chunkPtr->bboxProc(textPtr, chunkPtr, byteCount,
+                dlPtr->y + dlPtr->spaceAbove,
+                dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
+                dlPtr->baseline - dlPtr->spaceAbove, &x, &y, &width,
+                &height);
+        delta = x - dInfoPtr->curXPixelOffset;
+        oneThird = lineWidth/3;
+        if (delta < 0) {
+            if (delta < -oneThird) {
+                dInfoPtr->newXPixelOffset = x - lineWidth/2;
+            } else {
+                dInfoPtr->newXPixelOffset += delta;
+            }
         } else {
-            dInfoPtr->newXPixelOffset += delta;
-        }
-    } else {
-        delta -= lineWidth - width;
-	if (delta <= 0) {
-            return TCL_OK;
-	}
-        if (delta > oneThird) {
-	    dInfoPtr->newXPixelOffset = x - lineWidth/2;
-        } else {
-            dInfoPtr->newXPixelOffset += delta;
+            delta -= lineWidth - width;
+            if (delta <= 0) {
+                return TCL_OK;
+            }
+            if (delta > oneThird) {
+                dInfoPtr->newXPixelOffset = x - lineWidth/2;
+            } else {
+                dInfoPtr->newXPixelOffset += delta;
+            }
         }
     }
     dInfoPtr->flags |= DINFO_OUT_OF_DATE;
