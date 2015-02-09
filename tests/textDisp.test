@@ -1558,6 +1558,18 @@ test textDisp-11.19 {TkTextSetYView, see in elided lines} {
     set ind3 [.top.t index @0,0]
     list [expr {$ind1 == $ind2}] [expr {$ind1 == $ind3}]
 } {1 1}
+test textDisp-11.20 {TkTextSetYView, see in elided lines} {
+    .top.t delete 1.0 end
+    .top.t configure -wrap none
+    for {set i 1} {$i < 5} {incr i} {
+        .top.t insert end [string repeat "Line $i " 50]
+        .top.t insert end "\n"
+    }
+    .top.t delete 3.11 3.14
+    .top.t tag add hidden 3.0 4.0
+    # this shall not crash (null chunkPtr in TkTextSeeCmd is tested)
+    .top.t see 3.0
+} {}
 
 .t configure -wrap word
 .t delete 50.0 51.0
