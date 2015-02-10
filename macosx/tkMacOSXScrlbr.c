@@ -43,7 +43,7 @@ typedef struct MacScrollbar {
  * variable is declared at this scope.
  */
 
-const Tk_ClassProcs tkpScrollbarProcs = {
+Tk_ClassProcs tkpScrollbarProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     NULL,					/* worldChangedProc */
     NULL,					/* createProc */
