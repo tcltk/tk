@@ -305,7 +305,7 @@ TkpComputeButtonGeometry(
 	break;
       case TYPE_CHECK_BUTTON:
 	width = butPtr->width;
-	width += 50;
+	width +=0;
 	break;
        case TYPE_BUTTON:
 	width = butPtr->width;
