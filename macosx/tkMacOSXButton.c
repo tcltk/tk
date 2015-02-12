@@ -405,11 +405,20 @@ TkpComputeButtonGeometry(
       }
       break;
     case TYPE_CHECK_BUTTON:
-      /*No padding required here.*/
+    /*Pad checkbutton by 50 if indicatorOn to ensure image does not draw 
+	right over radiobutton on left.*/
       if (butPtr->image != None) {
-	width += 0;
+	if (butPtr->indicatorOn) {
+	  width += 50;
+	} else {
+	  width += 0;
+	}
       } else if (butPtr->bitmap != None) {
-	width +=0;
+	if (butPtr->indicatorOn) {
+	  width += 50;
+	} else {
+	  width += 0;
+	}
       } else {
 	/*If just text, just add width of string.*/
 	width += txtWidth;
