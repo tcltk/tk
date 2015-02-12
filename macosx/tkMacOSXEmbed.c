@@ -200,7 +200,7 @@ TkpScanWindowId(
     Tcl_Obj obj;
 
     obj.refCount = 1;
-    obj.bytes = string;
+    obj.bytes = (char *) string;	/* DANGER?! */
     obj.length = strlen(string);
     obj.typePtr = NULL;
 

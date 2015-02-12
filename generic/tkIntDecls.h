@@ -966,7 +966,12 @@ EXTERN char *		TkSmoothPrintProc(ClientData clientData,
 				Tk_Window tkwin, char *widgRec, int offset,
 				Tcl_FreeProc **freeProcPtr);
 #endif
-/* Slot 181 is reserved */
+#ifndef TkpScanWindowId_TCL_DECLARED
+#define TkpScanWindowId_TCL_DECLARED
+/* 181 */
+EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
+				CONST char *string, Window *idPtr);
+#endif
 /* Slot 182 is reserved */
 /* Slot 183 is reserved */
 #ifndef TkUnusedStubEntry_TCL_DECLARED
@@ -1187,7 +1192,7 @@ typedef struct TkIntStubs {
     char * (*tkOrientPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr); /* 178 */
     int (*tkSmoothParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, CONST char *value, char *widgRec, int offset); /* 179 */
     char * (*tkSmoothPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr); /* 180 */
-    VOID *reserved181;
+    int (*tkpScanWindowId) (Tcl_Interp *interp, CONST char *string, Window *idPtr); /* 181 */
     VOID *reserved182;
     VOID *reserved183;
     void (*tkUnusedStubEntry) (void); /* 184 */
@@ -1860,7 +1865,10 @@ extern TkIntStubs *tkIntStubsPtr;
 #define TkSmoothPrintProc \
 	(tkIntStubsPtr->tkSmoothPrintProc) /* 180 */
 #endif
-/* Slot 181 is reserved */
+#ifndef TkpScanWindowId
+#define TkpScanWindowId \
+	(tkIntStubsPtr->tkpScanWindowId) /* 181 */
+#endif
 /* Slot 182 is reserved */
 /* Slot 183 is reserved */
 #ifndef TkUnusedStubEntry
