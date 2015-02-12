@@ -1655,8 +1655,8 @@ WmForgetCmd(
     if (Tk_IsTopLevel(frameWin)) {
 	MacDrawable *macWin;
 
-	Tk_MakeWindowExist(winPtr);
-	Tk_MakeWindowExist(winPtr->parentPtr);
+	Tk_MakeWindowExist(frameWin);
+	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
 
 	macWin = (MacDrawable *) winPtr->window;
 

@@ -471,7 +471,6 @@ TkpComputeButtonGeometry(
 }
 
 /*
-/*
  *----------------------------------------------------------------------
  *
  * DrawButtonImageAndText --
@@ -966,12 +965,10 @@ ButtonContentDrawCB (
 {
     TkButton  *butPtr = (TkButton *)ptr;
     Tk_Window  tkwin  = butPtr->tkwin;
-    HIRect * bounds;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
         return;
     }
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
 
     /*Overlay Tk elements over button native region: drawing elements within button boundaries/native region causes unpredictable metrics.*/
     DrawButtonImageAndText( butPtr);

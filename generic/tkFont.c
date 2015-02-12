@@ -2994,13 +2994,6 @@ PointInQuadrilateral(
 }
 
 static inline int
-sign(
-    double value)
-{
-    return (value < 0.0) ? -1 : (value > 0.0) ? 1 : 0;
-}
-
-static inline int
 SidesIntersect(
     double ax1, double ay1, double ax2, double ay2,
     double bx1, double by1, double bx2, double by2)
