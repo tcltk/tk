@@ -386,12 +386,20 @@ TkpComputeButtonGeometry(
     */
     switch (butPtr->type) {
     case TYPE_RADIO_BUTTON:
-      /*Pad radiobutton by 50 to ensure image does not draw right over 
-	radiobutton on left.*/
+      /*Pad radiobutton by 50 if indicatorOn to ensure image does not draw 
+	right over radiobutton on left.*/
       if (butPtr->image != None) {
-	width += 50;
+	if (butPtr->indicatorOn) {
+	  width += 50;
+	} else {
+	  width += 0;
+	}
       } else if (butPtr->bitmap != None) {
-	width +=50;
+	if (butPtr->indicatorOn) {
+	  width += 50;
+	} else {
+	  width += 0;
+	}
       } else {
 	/*If just text, just add width of string.*/
 	width += txtWidth;
