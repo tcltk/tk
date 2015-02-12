@@ -597,10 +597,8 @@ TkMacOSXDrawMenuButton(
 
 
     if (useNewerHITools == 1) {
-        HIRect hirec;
         HIRect contHIRec;
         static HIThemeButtonDrawInfo hiinfo;
-        Rect contRect;
 
         MenuButtonBackgroundDrawCB((MacMenuButton*) mbPtr, 32, true);
 
@@ -694,12 +692,10 @@ MenuButtonContentDrawCB (
 {
     TkMenuButton  *butPtr = (TkMenuButton *)ptr;
     Tk_Window  tkwin  = butPtr->tkwin;
-    Rect bounds;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
         return;
     }
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
 
     DrawMenuButtonImageAndText( butPtr);
 }
