@@ -971,6 +971,9 @@ declare 53 aqua {
 declare 54 aqua {
     void *TkMacOSXDrawable(Drawable drawable)
 }
+declare 55 aqua {
+    int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
+}
 
 ##############################################################################
 

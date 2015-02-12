@@ -531,6 +531,12 @@ EXTERN unsigned long	TkpGetMS(void);
 /* 54 */
 EXTERN VOID *		TkMacOSXDrawable(Drawable drawable);
 #endif
+#ifndef TkpScanWindowId_TCL_DECLARED
+#define TkpScanWindowId_TCL_DECLARED
+/* 55 */
+EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
+				CONST char *string, Window *idPtr);
+#endif
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 #ifndef TkCreateXEventSource_TCL_DECLARED
@@ -716,6 +722,7 @@ typedef struct TkIntPlatStubs {
     VOID *reserved52;
     unsigned long (*tkpGetMS) (void); /* 53 */
     VOID * (*tkMacOSXDrawable) (Drawable drawable); /* 54 */
+    int (*tkpScanWindowId) (Tcl_Interp *interp, CONST char *string, Window *idPtr); /* 55 */
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) (void); /* 0 */
@@ -1126,6 +1133,10 @@ extern TkIntPlatStubs *tkIntPlatStubsPtr;
 #ifndef TkMacOSXDrawable
 #define TkMacOSXDrawable \
 	(tkIntPlatStubsPtr->tkMacOSXDrawable) /* 54 */
+#endif
+#ifndef TkpScanWindowId
+#define TkpScanWindowId \
+	(tkIntPlatStubsPtr->tkpScanWindowId) /* 55 */
 #endif
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
