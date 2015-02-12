@@ -296,24 +296,6 @@ TkpComputeButtonGeometry(
 	haveImage = 1;
     }
 
-    /*Tk Aqua can't handle metrics for radiobuttons and checkbuttons with images unless they are set first. These are derived from experimentation.*/
-    if (haveImage && !haveText) {
-      switch (butPtr->type) {
-      case TYPE_RADIO_BUTTON:
-	width = butPtr->width;
-	width +=50;
-	break;
-      case TYPE_CHECK_BUTTON:
-	width = butPtr->width;
-	width +=50;
-	break;
-       case TYPE_BUTTON:
-	width = butPtr->width;
-	width += 0;
-	break;
-      } 
-    }
-
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
@@ -396,16 +378,37 @@ TkpComputeButtonGeometry(
     width  += 2 * butPtr->padX;
     height += 2 * butPtr->padY;
 
-    
-    /* Need special handling for radiobuttons and checkbuttons: the text is drawn right on top of the button unless we expand the width. This is not perfect; some radiobuttons may render on top anyway. Need to find a better solution to calculate average text width.*/
+   /*  Need special handling for radiobuttons and checkbuttons: 
+	the text and images is drawn right on top of the button unless 
+	we expand the width. This is not perfect; some radiobuttons may render 
+	on top anyway. 
+    */
     switch (butPtr->type) {
     case TYPE_RADIO_BUTTON:
-      width += 50;
+      /*Pad radiobutton by 50 to ensure image does not draw right over 
+	radiobutton on left.*/
+      if (butPtr->image != None) {
+	width += 50;
+      } else if (butPtr->bitmap != None) {
+	width +=50;
+      } else {
+	/*If just text, just add width of string.*/
+	width += txtWidth;
+      }
       break;
     case TYPE_CHECK_BUTTON:
-      width += 50;
+      /*No padding required here.*/
+      if (butPtr->image != None) {
+	width += 0;
+      } else if (butPtr->bitmap != None) {
+	width +=0;
+      } else {
+	/*If just text, just add width of string.*/
+	width += txtWidth;
+      }
       break;
     }
+
    
     /*
      * Now figure out the size of the border decorations for the button.
