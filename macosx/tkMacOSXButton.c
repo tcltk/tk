@@ -378,19 +378,27 @@ TkpComputeButtonGeometry(
     width  += 2 * butPtr->padX;
     height += 2 * butPtr->padY;
 
-   /*  Need special handling for radiobuttons and checkbuttons: 
+    /*  Need special handling for radiobuttons and checkbuttons: 
 	the text and images is drawn right on top of the button unless 
 	we expand the width. This is not perfect; some radiobuttons may render 
 	on top anyway. 
     */
     switch (butPtr->type) {
     case TYPE_RADIO_BUTTON:
-      /*Pad radiobutton by 50 to ensure image does not draw right over 
-	radiobutton on left.*/
+      /*Pad radiobutton by 50 if indicatorOn to ensure image does not draw 
+	right over radiobutton on left.*/
       if (butPtr->image != None) {
-	width += 50;
+	if (butPtr->indicatorOn) {
+	  width += 50;
+	} else {
+	  width += 0;
+	}
       } else if (butPtr->bitmap != None) {
-	width +=50;
+	if (butPtr->indicatorOn) {
+	  width += 50;
+	} else {
+	  width += 0;
+	}
       } else {
 	/*If just text, just add width of string.*/
 	width += txtWidth;
@@ -408,7 +416,6 @@ TkpComputeButtonGeometry(
       }
       break;
     }
-
    
     /*
      * Now figure out the size of the border decorations for the button.
