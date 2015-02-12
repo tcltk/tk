@@ -478,7 +478,7 @@ TkIntStubs tkIntStubs = {
     TkOrientPrintProc, /* 178 */
     TkSmoothParseProc, /* 179 */
     TkSmoothPrintProc, /* 180 */
-    TkpScanWindowId, /* 181 */
+    NULL, /* 181 */
     NULL, /* 182 */
     NULL, /* 183 */
     TkUnusedStubEntry, /* 184 */
@@ -591,6 +591,7 @@ TkIntPlatStubs tkIntPlatStubs = {
     NULL, /* 52 */
     TkpGetMS, /* 53 */
     TkMacOSXDrawable, /* 54 */
+    TkpScanWindowId, /* 55 */
 #endif /* AQUA */
 #if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
