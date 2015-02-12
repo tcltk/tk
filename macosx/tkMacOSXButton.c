@@ -305,7 +305,7 @@ TkpComputeButtonGeometry(
 	break;
       case TYPE_CHECK_BUTTON:
 	width = butPtr->width;
-	width += 50;
+	width +=50;
 	break;
        case TYPE_BUTTON:
 	width = butPtr->width;
@@ -470,7 +470,6 @@ TkpComputeButtonGeometry(
 
 }
 
-/*
 /*
  *----------------------------------------------------------------------
  *
@@ -966,12 +965,10 @@ ButtonContentDrawCB (
 {
     TkButton  *butPtr = (TkButton *)ptr;
     Tk_Window  tkwin  = butPtr->tkwin;
-    HIRect * bounds;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
         return;
     }
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
 
     /*Overlay Tk elements over button native region: drawing elements within button boundaries/native region causes unpredictable metrics.*/
     DrawButtonImageAndText( butPtr);
