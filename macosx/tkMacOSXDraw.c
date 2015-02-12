@@ -1477,7 +1477,6 @@ TkScrollWindow(
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn;
     NSRect bounds, visRect, scrollSrc, scrollDst;
-    NSPoint delta = NSMakePoint(dx, dy);
     int result;
   
     if ( view ) {
