@@ -568,9 +568,6 @@ declare 180 {
     char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
-declare 181 {
-    int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
-}
 declare 184 {
     void TkUnusedStubEntry(void)
 }
@@ -973,6 +970,9 @@ declare 53 aqua {
 # For Canvas3d, requested by Sean Woods
 declare 54 aqua {
     void *TkMacOSXDrawable(Drawable drawable)
+}
+declare 55 aqua {
+    int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
 
 ##############################################################################
