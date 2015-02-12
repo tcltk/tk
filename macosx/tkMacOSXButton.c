@@ -309,7 +309,7 @@ TkpComputeButtonGeometry(
 	break;
        case TYPE_BUTTON:
 	width = butPtr->width;
-	width += 30;
+	width += 0;
 	break;
       } 
     }
