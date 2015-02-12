@@ -478,7 +478,7 @@ TkIntStubs tkIntStubs = {
     TkOrientPrintProc, /* 178 */
     TkSmoothParseProc, /* 179 */
     TkSmoothPrintProc, /* 180 */
-    NULL, /* 181 */
+    TkpScanWindowId, /* 181 */
     NULL, /* 182 */
     NULL, /* 183 */
     TkUnusedStubEntry, /* 184 */
