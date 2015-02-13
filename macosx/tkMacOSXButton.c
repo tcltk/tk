@@ -420,8 +420,8 @@ TkpComputeButtonGeometry(
 	  width += 0;
 	}
       } else {
-	/*If just text, just add width of string.*/
-	width += txtWidth;
+	/*If just text, hard-code width of 30. Text renders unevenly otherwise.*/
+	width += 30;
       }
       break;
     }
