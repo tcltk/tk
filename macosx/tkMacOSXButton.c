@@ -410,12 +410,6 @@ TkpComputeButtonGeometry(
         /* Pad to fill difference between content bounds and button bounds. */
     	paddingx = contBounds.origin.x;
     	paddingy = contBounds.origin.y;
-        if (paddingx > 0) {
-    	  //width += paddingx;
-        }
-        if (paddingy > 0) {
-    	  //height += paddingy;
-        }
 
         if (height < paddingx - 4) {
             /* can't have buttons much shorter than button side diameter. */
