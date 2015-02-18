@@ -848,12 +848,11 @@ ExposeRestrictProc(
 
 - (BOOL) preservesContentDuringLiveResize
 {
-    return YES;
+    return NO;
 }
 
 - (void)viewWillStartLiveResize
 {
-  NSDisableScreenUpdates();
   [super viewWillStartLiveResize];
   [self setNeedsDisplay:NO];
   [self setHidden:YES];
@@ -863,7 +862,6 @@ ExposeRestrictProc(
 - (void)viewDidEndLiveResize
 {
 
-    NSEnableScreenUpdates();
     [self setHidden:NO];
     [self setNeedsDisplay:YES];
     [super setNeedsDisplay:YES];
