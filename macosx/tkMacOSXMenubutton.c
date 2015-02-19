@@ -539,10 +539,10 @@ DrawMenuButtonImageAndText(
                 XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
             }
         } else {
-	  /*Move x back by six pixels to give the menubutton arrows room.*/
+	  /*Move x back by eight pixels to give the menubutton arrows room.*/
 	  int x = 0;
 	  int y;
-	  textXOffset = 6;
+	  textXOffset = 8;
 	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
 			    butPtr->textWidth, butPtr->textHeight, &x, &y);
 	    Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
