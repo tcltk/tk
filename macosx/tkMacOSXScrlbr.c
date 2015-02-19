@@ -186,7 +186,15 @@ TkpDisplayScrollbar(
 
     /*Update values and draw in native rect.*/
     UpdateControlValues(scrollPtr);
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+    if (scrollPtr->vertical) {
+      HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
+    } else {
+      HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationInverted);
+    }
+#else
     HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
+#endif
     TkMacOSXRestoreDrawingContext(&dc);
 
     scrollPtr->flags &= ~REDRAW_PENDING;
