@@ -1510,14 +1510,6 @@ TkScrollWindow(
 
  	    /* Scroll the rectangle. */
  	    [view scrollRect:scrollSrc by:NSMakeSize(dx, -dy)];
-
- 	    /* Redisplay the scrolled area; hide to reduce flicker after removal of private API calls. */
-	    [view setHidden:YES];
-	    [view displayRect:scrollDst];
-	    [view setHidden:NO];
-
-
-
   	}
     }
 
@@ -1862,9 +1854,9 @@ TkpClipDrawableToRect(
 	macDraw->drawRgn = NULL;
     }
     if (width >= 0 && height >= 0) {
-	CGRect drawRect = CGRectMake(x + macDraw->xOff, y + macDraw->yOff,
+	CGRect clipRect = CGRectMake(x + macDraw->xOff, y + macDraw->yOff,
 		width, height);
-	HIShapeRef drawRgn = HIShapeCreateWithRect(&drawRect);
+	HIShapeRef drawRgn = HIShapeCreateWithRect(&clipRect);
 
 	if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
 	    TkMacOSXUpdateClipRgn(macDraw->winPtr);
@@ -1877,9 +1869,9 @@ TkpClipDrawableToRect(
 	    macDraw->drawRgn = drawRgn;
 	}
 	if (view && view != [NSView focusView] && [view lockFocusIfCanDraw]) {
-	    drawRect.origin.y = [view bounds].size.height -
-		    (drawRect.origin.y + drawRect.size.height);
-	    NSRectClip(NSRectFromCGRect(drawRect));
+	    clipRect.origin.y = [view bounds].size.height -
+		    (clipRect.origin.y + clipRect.size.height);
+	    NSRectClip(NSRectFromCGRect(clipRect));
 	    macDraw->flags |= TK_FOCUSED_VIEW;
 	}
     } else {
