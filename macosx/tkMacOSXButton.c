@@ -102,7 +102,7 @@ static void PulseDefaultButtonProc(ClientData clientData);
  * The class procedure table for the button widgets.
  */
 
-const Tk_ClassProcs tkpButtonProcs = {
+Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
 };
