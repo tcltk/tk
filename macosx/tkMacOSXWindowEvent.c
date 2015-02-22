@@ -853,7 +853,7 @@ ExposeRestrictProc(
 
 - (void)viewDidEndLiveResize
 {
-    NSRect bounds = NSRectFromCGRect([self bounds]);
+    HIRect bounds = NSRectToCGRect([self bounds]);
     HIShapeRef shape = HIShapeCreateWithRect(&bounds);
     [self generateExposeEvents: shape];
 
