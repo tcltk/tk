@@ -7,8 +7,9 @@
  * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
  * Copyright 2001, Apple Computer, Inc.
  * Copyright (c) 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2007 Revar Desmera. 
- * Copyright 2015 Kevin Walzer/WordTech Communications LLC.  
+ * Copyright 2007 Revar Desmera.
+ * Copyright 2015 Kevin Walzer/WordTech Communications LLC.
+ * Copyright 2015 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -89,10 +90,10 @@ static void ButtonContentDrawCB (const HIRect *bounds, ThemeButtonKind kind,
         const HIThemeButtonDrawInfo *info, MacButton *ptr, SInt16 depth,
 	Boolean isColorDev);
 static void ButtonEventProc(ClientData clientData, XEvent *eventPtr);
-static void TkMacOSXComputeButtonParams (TkButton * butPtr, ThemeButtonKind* btnkind, HIThemeButtonDrawInfo* drawinfo);
+static void TkMacOSXComputeButtonParams (TkButton * butPtr, ThemeButtonKind* btnkind,
+	HIThemeButtonDrawInfo* drawinfo);
 static int TkMacOSXComputeButtonDrawParams (TkButton * butPtr, DrawParams * dpPtr);
-static void TkMacOSXDrawButton (MacButton *butPtr,
-          GC gc, Pixmap pixmap);
+static void TkMacOSXDrawButton (MacButton *butPtr, GC gc, Pixmap pixmap);
 static void DrawButtonImageAndText(TkButton* butPtr);
 static void PulseDefaultButtonProc(ClientData clientData);
 
@@ -230,7 +231,7 @@ TkpDisplayButton(
     } else {
         /* Draw the native portion of the buttons. */
         TkMacOSXDrawButton(macButtonPtr, dpPtr->gc, pixmap);
-	
+
         /* Draw highlight border, if needed. */
         if (butPtr->highlightWidth < 3) {
             needhighlight = 1;
@@ -264,13 +265,13 @@ TkpDisplayButton(
  *
  *----------------------------------------------------------------------
  */
-  
+
 void
 TkpComputeButtonGeometry(
     TkButton *butPtr)		/* Button whose geometry may have changed. */
 {
-    int width, height, avgWidth, haveImage = 0, haveText = 0;
-    int txtWidth, txtHeight;
+    int width = 0, height = 0, charWidth = 1, haveImage = 0, haveText = 0;
+    int txtWidth = 0, txtHeight = 0;
     MacButton *mbPtr = (MacButton*)butPtr;
     Tk_FontMetrics fm;
     DrawParams drawParams;
@@ -279,15 +280,30 @@ TkpComputeButtonGeometry(
      * First figure out the size of the contents of the button.
      */
 
-    width = 0;
-    height = 0;
-    txtWidth = 0;
-    txtHeight = 0;
-    avgWidth = 0;
-
     TkMacOSXComputeButtonParams(butPtr, &mbPtr->btnkind, &mbPtr->drawinfo);
 
-    butPtr->indicatorSpace = 0;
+    /*
+     * If the indicator is on, get its size.
+     */
+
+    if ( butPtr->indicatorOn ) {
+      switch (butPtr->type) {
+      case TYPE_RADIO_BUTTON:
+	GetThemeMetric(kThemeMetricRadioButtonWidth, &butPtr->indicatorDiameter);
+	  break;
+      case TYPE_CHECK_BUTTON:
+	GetThemeMetric(kThemeMetricCheckBoxWidth, &butPtr->indicatorDiameter);
+	  break;
+      default:
+	break;
+      }
+      /* Allow 2px extra space next to the indicator. */
+      butPtr->indicatorSpace = butPtr->indicatorDiameter + 2;
+    } else {
+      butPtr->indicatorSpace = 0;
+      butPtr->indicatorDiameter = 0;
+    }
+
     if (butPtr->image != NULL) {
 	Tk_SizeOfImage(butPtr->image, &width, &height);
 	haveImage = 1;
@@ -304,19 +320,12 @@ TkpComputeButtonGeometry(
 
 	txtWidth = butPtr->textWidth;
 	txtHeight = butPtr->textHeight;
-	avgWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
+	charWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
 	Tk_GetFontMetrics(butPtr->tkfont, &fm);
 	haveText = (txtWidth != 0 && txtHeight != 0);
     }
 
-    /*
-     * If the button is compound (ie, it shows both an image and text),
-     * the new geometry is a combination of the image and text geometry.
-     * We only honor the compound bit if the button has both text and an
-     * image, because otherwise it is not really a compound button.
-     */
-
-    if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
+    if (haveImage && haveText) { /* Image and Text */
 	switch ((enum compound) butPtr->compound) {
 	    case COMPOUND_TOP:
 	    case COMPOUND_BOTTOM:
@@ -344,88 +353,30 @@ TkpComputeButtonGeometry(
 		width = (width > txtWidth ? width : txtWidth);
 		height = (height > txtHeight ? height : txtHeight);
 		break;
-	    case COMPOUND_NONE:
+	    default:
 		break;
 	}
-	if (butPtr->width > 0) {
-	    width = butPtr->width;
-	}
-	if (butPtr->height > 0) {
-	    height = butPtr->height;
-	}
+	width += butPtr->indicatorSpace;
 
-    } else if (haveImage) {
+    } else if (haveImage) { /* Image only */
+      width = butPtr->width > 0 ? butPtr->width : width + butPtr->indicatorSpace;
+      height = butPtr->height > 0 ? butPtr->height : height;
 
-      if (butPtr->width > 0) {
-	width = butPtr->width;
-	}
-      if (butPtr->height > 0) {
-	height = butPtr->height;
-      }
-
-    } else {
-	width = txtWidth;
+    } else { /* Text only */
+        width = txtWidth + butPtr->indicatorSpace;
 	height = txtHeight;
-	
 	if (butPtr->width > 0) {
-	   width = butPtr->width * avgWidth;
+	   width = butPtr->width * charWidth;
 	}
 	if (butPtr->height > 0) {
 	  height = butPtr->height * fm.linespace;
 	}
     }
 
+    /* Add padding */
     width  += 2 * butPtr->padX;
     height += 2 * butPtr->padY;
 
-    /*  Need special handling for radiobuttons and checkbuttons: 
-	the text and images is drawn right on top of the button unless 
-	we expand the width. This is not perfect; some radiobuttons may render 
-	on top anyway. 
-    */
-    switch (butPtr->type) {
-    case TYPE_RADIO_BUTTON:
-      /*Pad radiobutton by 50 if indicatorOn to ensure image does not draw 
-	right over radiobutton on left.*/
-      if (butPtr->image != None) {
-	if (butPtr->indicatorOn) {
-	  width += 50;
-	} else {
-	  width += 0;
-	}
-      } else if (butPtr->bitmap != None) {
-	if (butPtr->indicatorOn) {
-	  width += 50;
-	} else {
-	  width += 0;
-	}
-      } else {
-	/*If just text, just add width of string.*/
-	width += txtWidth;
-      }
-      break;
-    case TYPE_CHECK_BUTTON:
-    /*Pad checkbutton by 50 if indicatorOn to ensure image does not draw 
-	right over radiobutton on left.*/
-      if (butPtr->image != None) {
-	if (butPtr->indicatorOn) {
-	  width += 50;
-	} else {
-	  width += 0;
-	}
-      } else if (butPtr->bitmap != None) {
-	if (butPtr->indicatorOn) {
-	  width += 50;
-	} else {
-	  width += 0;
-	}
-      } else {
-	/*If just text, just add width of string.*/
-	width += txtWidth;
-      }
-      break;
-    }
-   
     /*
      * Now figure out the size of the border decorations for the button.
      */
@@ -436,45 +387,34 @@ TkpComputeButtonGeometry(
 
     butPtr->inset = 0;
     butPtr->inset += butPtr->highlightWidth;
-
+    
     if (TkMacOSXComputeButtonDrawParams(butPtr,&drawParams)) {
-
-
         HIRect tmpRect;
-	HIRect contBounds;
+    	HIRect contBounds;
         int paddingx = 0;
         int paddingy = 0;
 
-	tmpRect = CGRectMake(0, 0, width, height);
+    	tmpRect = CGRectMake(0, 0, width, height);
 
-
-        HIThemeGetButtonContentBounds(&tmpRect,  &mbPtr->drawinfo, &contBounds);
-
-
+        HIThemeGetButtonContentBounds(&tmpRect, &mbPtr->drawinfo, &contBounds);
         /* If the content region has a minimum height, match it. */
         if (height < contBounds.size.height) {
-	  height = contBounds.size.height;
+    	  height = contBounds.size.height;
         }
 
         /* If the content region has a minimum width, match it. */
         if (width < contBounds.size.width) {
-	  width = contBounds.size.width;
+    	  width = contBounds.size.width;
         }
 
         /* Pad to fill difference between content bounds and button bounds. */
-        paddingx = tmpRect.origin.x - contBounds.origin.x;
-        paddingy = tmpRect.origin.y - contBounds.origin.y;
-        if (paddingx > 0) {
-            width += paddingx;
-        }
-        if (paddingy > 0) {
-            height += paddingy;
-        }
+    	paddingx = contBounds.origin.x;
+    	paddingy = contBounds.origin.y;
 
         if (height < paddingx - 4) {
             /* can't have buttons much shorter than button side diameter. */
             height = paddingx - 4;
-	}
+    	}
 
     } else {
         height += butPtr->borderWidth*2;
@@ -486,7 +426,6 @@ TkpComputeButtonGeometry(
 
     Tk_GeometryRequest(butPtr->tkwin, width, height);
     Tk_SetInternalBorder(butPtr->tkwin, butPtr->inset);
-
 }
 
 /*
@@ -508,7 +447,7 @@ static void
 DrawButtonImageAndText(
     TkButton* butPtr)
 {
-  
+
     MacButton *mbPtr = (MacButton*)butPtr;
     Tk_Window  tkwin  = butPtr->tkwin;
     Pixmap     pixmap;
@@ -533,7 +472,7 @@ DrawButtonImageAndText(
 
     DrawParams* dpPtr = &mbPtr->drawParams;
     pixmap = (Pixmap)Tk_WindowId(tkwin);
- 
+
     if (butPtr->image != None) {
         Tk_SizeOfImage(butPtr->image, &width, &height);
         haveImage = 1;
@@ -549,9 +488,9 @@ DrawButtonImageAndText(
         /* Offset bitmaps by a bit when the button is pressed. */
         pressed = 1;
     }
-    
-  haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
-   if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
+
+    haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
+    if (haveImage && haveText) { /* Image and Text */
         int x;
         int y;
         textXOffset = 0;
@@ -560,60 +499,64 @@ DrawButtonImageAndText(
         fullHeight = 0;
 
         switch ((enum compound) butPtr->compound) {
-            case COMPOUND_TOP: 
-            case COMPOUND_BOTTOM: {
-                /* Image is above or below text */
-                if (butPtr->compound == COMPOUND_TOP) {
-                    textYOffset = height + butPtr->padY;
-                } else {
-                    imageYOffset = butPtr->textHeight + butPtr->padY;
-                }
-                fullHeight = height + butPtr->textHeight + butPtr->padY;
-                fullWidth = (width > butPtr->textWidth ? width :
-                        butPtr->textWidth);
-                textXOffset = (fullWidth - butPtr->textWidth)/2;
-                imageXOffset = (fullWidth - width)/2;
-                break;
-            }
-            case COMPOUND_LEFT:
-            case COMPOUND_RIGHT: {
-                /* 
-                 * Image is left or right of text 
-                 */
-                 
-                if (butPtr->compound == COMPOUND_LEFT) {
-                    textXOffset = width + butPtr->padX;
-                } else {
-                    imageXOffset = butPtr->textWidth + butPtr->padX;
-                }
-                fullWidth = butPtr->textWidth + butPtr->padX + width;
-                fullHeight = (height > butPtr->textHeight ? height :
+	case COMPOUND_TOP:
+	case COMPOUND_BOTTOM: {
+	  /* Image is above or below text */
+	  if (butPtr->compound == COMPOUND_TOP) {
+	    textYOffset = height + butPtr->padY;
+	  } else {
+	    imageYOffset = butPtr->textHeight + butPtr->padY;
+	  }
+	  fullHeight = height + butPtr->textHeight + butPtr->padY;
+	  fullWidth = (width > butPtr->textWidth ? width :
+		       butPtr->textWidth);
+	  textXOffset = (fullWidth - butPtr->textWidth)/2;
+	  imageXOffset = (fullWidth - width)/2;
+	  break;
+	}
+	case COMPOUND_LEFT:
+	case COMPOUND_RIGHT: {
+	  /*
+	   * Image is left or right of text
+	   */
+	  
+	  if (butPtr->compound == COMPOUND_LEFT) {
+	    textXOffset = width + butPtr->padX;
+	  } else {
+	    imageXOffset = butPtr->textWidth + butPtr->padX;
+	  }
+	  fullWidth = butPtr->textWidth + butPtr->padX + width;
+	  fullHeight = (height > butPtr->textHeight ? height :
                         butPtr->textHeight);
-                textYOffset = (fullHeight - butPtr->textHeight)/2;
-                imageYOffset = (fullHeight - height)/2;
-                break;
-            }
-            case COMPOUND_CENTER: {
-                /* 
-                 * Image and text are superimposed 
-                 */
-                 
-                fullWidth = (width > butPtr->textWidth ? width :
-                        butPtr->textWidth);
-                fullHeight = (height > butPtr->textHeight ? height :
+	  textYOffset = (fullHeight - butPtr->textHeight)/2;
+	  imageYOffset = (fullHeight - height)/2;
+	  break;
+	}
+	case COMPOUND_CENTER: {
+	  /*
+	   * Image and text are superimposed
+	   */
+	  
+	  fullWidth = (width > butPtr->textWidth ? width :
+		       butPtr->textWidth);
+	  fullHeight = (height > butPtr->textHeight ? height :
                         butPtr->textHeight);
-                textXOffset = (fullWidth - butPtr->textWidth)/2;
-                imageXOffset = (fullWidth - width)/2;
-                textYOffset = (fullHeight - butPtr->textHeight)/2;
-                imageYOffset = (fullHeight - height)/2;
-                break;
-            }
-            case COMPOUND_NONE: {break;}
-        }
+	  textXOffset = (fullWidth - butPtr->textWidth)/2;
+	  imageXOffset = (fullWidth - width)/2;
+	  textYOffset = (fullHeight - butPtr->textHeight)/2;
+	  imageYOffset = (fullHeight - height)/2;
+	  break;
+	}
+	default:
+	  break;
+	}
+
         TkComputeAnchor(butPtr->anchor, tkwin,
                 butPtr->padX + butPtr->borderWidth,
                 butPtr->padY + butPtr->borderWidth,
-                fullWidth, fullHeight, &x, &y);
+                fullWidth + butPtr->indicatorSpace, fullHeight, &x, &y);
+	x += butPtr->indicatorSpace;
+
         if (dpPtr->relief == TK_RELIEF_SUNKEN) {
             x += dpPtr->offset;
             y += dpPtr->offset;
@@ -630,110 +573,89 @@ DrawButtonImageAndText(
         textYOffset -= 1;
 
         if (butPtr->image != NULL) {
-            if ((butPtr->selectImage != NULL) &&
-                    (butPtr->flags & SELECTED)) {
-                Tk_RedrawImage(butPtr->selectImage, 0, 0,
-                        width, height, pixmap, imageXOffset, imageYOffset);
-            } else if ((butPtr->tristateImage != NULL) &&
-                    (butPtr->flags & TRISTATED)) {
-                Tk_RedrawImage(butPtr->tristateImage, 0, 0,
-                        width, height, pixmap, imageXOffset, imageYOffset);
-            } else {
-                Tk_RedrawImage(butPtr->image, 0, 0, width,
-                        height, pixmap, imageXOffset, imageYOffset);
-            }
+	  if ((butPtr->selectImage != NULL) &&
+	      (butPtr->flags & SELECTED)) {
+	    Tk_RedrawImage(butPtr->selectImage, 0, 0,
+			   width, height, pixmap, imageXOffset, imageYOffset);
+	  } else if ((butPtr->tristateImage != NULL) &&
+		     (butPtr->flags & TRISTATED)) {
+	    Tk_RedrawImage(butPtr->tristateImage, 0, 0,
+			   width, height, pixmap, imageXOffset, imageYOffset);
+	  } else {
+	    Tk_RedrawImage(butPtr->image, 0, 0, width,
+			   height, pixmap, imageXOffset, imageYOffset);
+	  }
         } else {
-            XSetClipOrigin(butPtr->display, dpPtr->gc,
-                    imageXOffset, imageYOffset);
-            XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, dpPtr->gc,
-                    0, 0, (unsigned int) width, (unsigned int) height,
-                    imageXOffset, imageYOffset, 1);
-            XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
+	  XSetClipOrigin(butPtr->display, dpPtr->gc,
+			 imageXOffset, imageYOffset);
+	  XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, dpPtr->gc,
+		     0, 0, (unsigned int) width, (unsigned int) height,
+		     imageXOffset, imageYOffset, 1);
+	  XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
         }
-
-        Tk_DrawTextLayout(butPtr->display, pixmap, 
+	
+        Tk_DrawTextLayout(butPtr->display, pixmap,
                 dpPtr->gc, butPtr->textLayout,
                 x + textXOffset, y + textYOffset, 0, -1);
         Tk_UnderlineTextLayout(butPtr->display, pixmap, dpPtr->gc,
-                butPtr->textLayout, 
+                butPtr->textLayout,
                 x + textXOffset, y + textYOffset,
                 butPtr->underline);
-    } else {
-        if (haveImage) {
-            int x = 0;
-            int y;
-            TkComputeAnchor(butPtr->anchor, tkwin,
-                    butPtr->padX + butPtr->borderWidth,
-                    butPtr->padY + butPtr->borderWidth,
-                    width, height, &x, &y);      
-            if (dpPtr->relief == TK_RELIEF_SUNKEN) {
-                x += dpPtr->offset;
-                y += dpPtr->offset;
-            } else if (dpPtr->relief == TK_RELIEF_RAISED) {
-                x -= dpPtr->offset;
-                y -= dpPtr->offset;
-            }
-            if (pressed) {
-                x += dpPtr->offset;
-                y += dpPtr->offset;
-            }
-	        imageXOffset += x;
-	    	imageYOffset += y;
-	 
-               if (butPtr->image != NULL) {
-	
-                if ((butPtr->selectImage != NULL) &&
-                        (butPtr->flags & SELECTED)) {
-                    Tk_RedrawImage(butPtr->selectImage, 0, 0, width,
-                            height, pixmap, imageXOffset, imageYOffset);
-                } else if ((butPtr->tristateImage != NULL) &&
-                        (butPtr->flags & TRISTATED)) {
-                    Tk_RedrawImage(butPtr->tristateImage, 0, 0, width,
-                            height, pixmap, imageXOffset, imageYOffset);
-                } else {
-		     Tk_RedrawImage(butPtr->image, 0, 0, width, height,
-		         pixmap, imageXOffset, imageYOffset);
-                }
-            } else {
-                XSetClipOrigin(butPtr->display, dpPtr->gc, x, y);
-                XCopyPlane(butPtr->display, butPtr->bitmap,
-                        pixmap, dpPtr->gc,
-                        0, 0, (unsigned int) width,
-                        (unsigned int) height,
-                        imageXOffset, imageYOffset, 1);
-                XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
-            }
-        } else {
-	  /*Adequate padding / offset for text in various buttons.*/
-	  int x = 0;
-	  int y;
-	  switch (butPtr->type) {
-	  case TYPE_RADIO_BUTTON:
-	  case TYPE_CHECK_BUTTON:
-	    if (butPtr->indicatorOn) {
-	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
-			    butPtr->textWidth, butPtr->textHeight, &x, &y);
-	    Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
-			      butPtr->textLayout, x + 20, y, 0, -1);
-	    } else {
-	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
-			    butPtr->textWidth, butPtr->textHeight, &x, &y);
-	    Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
-			      butPtr->textLayout, x, y, 0, -1);
-	    } 
-	    break;
-	  case TYPE_BUTTON:
-	  case TYPE_LABEL:
-	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
-			    butPtr->textWidth, butPtr->textHeight, &x, &y);
-	    Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
-			      butPtr->textLayout, x, y, 0, -1);
-	    y += butPtr->textHeight/2;
-	    break;
-	  }
+    } else if (haveImage) { /* Image only */
+        int x = 0;
+	int y;
+	TkComputeAnchor(butPtr->anchor, tkwin,
+			butPtr->padX + butPtr->borderWidth,
+			butPtr->padY + butPtr->borderWidth,
+			width + butPtr->indicatorSpace,
+			height, &x, &y);
+        x += butPtr->indicatorSpace;
+	if (dpPtr->relief == TK_RELIEF_SUNKEN) {
+	  x += dpPtr->offset;
+	  y += dpPtr->offset;
+	} else if (dpPtr->relief == TK_RELIEF_RAISED) {
+	  x -= dpPtr->offset;
+	  y -= dpPtr->offset;
 	}
-   }
+	if (pressed) {
+	  x += dpPtr->offset;
+	  y += dpPtr->offset;
+	}
+	imageXOffset += x;
+	imageYOffset += y;
 
+	if (butPtr->image != NULL) {
+	  
+	  if ((butPtr->selectImage != NULL) &&
+	      (butPtr->flags & SELECTED)) {
+	    Tk_RedrawImage(butPtr->selectImage, 0, 0, width,
+			   height, pixmap, imageXOffset, imageYOffset);
+	  } else if ((butPtr->tristateImage != NULL) &&
+		     (butPtr->flags & TRISTATED)) {
+	    Tk_RedrawImage(butPtr->tristateImage, 0, 0, width,
+			   height, pixmap, imageXOffset, imageYOffset);
+	  } else {
+	    Tk_RedrawImage(butPtr->image, 0, 0, width, height,
+			   pixmap, imageXOffset, imageYOffset);
+	  }
+	} else {
+	  XSetClipOrigin(butPtr->display, dpPtr->gc, x, y);
+	  XCopyPlane(butPtr->display, butPtr->bitmap,
+		     pixmap, dpPtr->gc,
+		     0, 0, (unsigned int) width,
+		     (unsigned int) height,
+		     imageXOffset, imageYOffset, 1);
+	  XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
+	}
+    } else { /* Text only */
+        int x, y;
+	TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+			butPtr->textWidth + butPtr->indicatorSpace,
+			  butPtr->textHeight, &x, &y);
+	x += butPtr->indicatorSpace;
+	Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
+			  x, y, 0, -1);
+    }
 
     /*
      * If the button is disabled with a stipple rather than a special
@@ -775,7 +697,7 @@ DrawButtonImageAndText(
          * Draw the border and traversal highlight last.  This way, if the
          * button's contents overflow they'll be covered up by the border.
          */
-         
+
         if (dpPtr->relief != TK_RELIEF_FLAT) {
             int inset = butPtr->highlightWidth;
             Tk_Draw3DRectangle(tkwin, pixmap, dpPtr->border, inset, inset,
@@ -783,7 +705,7 @@ DrawButtonImageAndText(
                 butPtr->borderWidth, dpPtr->relief);
         }
     }
- 
+
    }
 
 
@@ -821,7 +743,7 @@ TkpDestroyButton(
  * TkMacOSXDrawButton --
  *
  *        This function draws the tk button using Mac controls
- *        In addition, this code may apply custom colors passed 
+ *        In addition, this code may apply custom colors passed
  *        in the TkButton.
  *
  * Results:
@@ -847,13 +769,16 @@ TkMacOSXDrawButton(
     TkMacOSXDrawingContext dc;
     DrawParams* dpPtr = &mbPtr->drawParams;
     int useNewerHITools = 1;
-			 
+
     winPtr = (TkWindow *)butPtr->tkwin;
 
     TkMacOSXComputeButtonParams(butPtr, &mbPtr->btnkind, &mbPtr->drawinfo);
 
-    cntrRect = CGRectMake(winPtr->privatePtr->xOff, winPtr->privatePtr->yOff, Tk_Width(butPtr->tkwin),Tk_Height(butPtr->tkwin));
-  
+    cntrRect = CGRectMake(winPtr->privatePtr->xOff,
+			  winPtr->privatePtr->yOff,
+			  Tk_Width(butPtr->tkwin),
+			  Tk_Height(butPtr->tkwin));
+
      cntrRect = CGRectInset(cntrRect,  butPtr->inset, butPtr->inset);
 
     if (useNewerHITools == 1) {
@@ -865,7 +790,7 @@ TkMacOSXDrawButton(
 	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
 	    return;
 	}
-       
+
 
 	if (mbPtr->btnkind == kThemePushButton) {
 	    /*
@@ -889,17 +814,15 @@ TkMacOSXDrawButton(
             hiinfo.animation.time.start = hiinfo.animation.time.current;
         }
 
-        HIThemeDrawButton(&cntrRect, &hiinfo, dc.context, kHIThemeOrientationNormal, &contHIRec);
-
+	HIThemeDrawButton(&cntrRect, &hiinfo, dc.context, kHIThemeOrientationNormal, &contHIRec);
 	TkMacOSXRestoreDrawingContext(&dc);
-	
         ButtonContentDrawCB(&contHIRec, mbPtr->btnkind, &mbPtr->drawinfo, (MacButton *)mbPtr, 32, true);
 
     } else {
 	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
 	    return;
 	}
-      
+
 	TkMacOSXRestoreDrawingContext(&dc);
     }
     mbPtr->lastdrawinfo = mbPtr->drawinfo;
@@ -1127,7 +1050,7 @@ TkMacOSXComputeButtonParams(
     } else {
         drawinfo->value = kThemeButtonOff;
     }
-    
+
     if ((mbPtr->flags & FIRST_DRAW) != 0) {
 	mbPtr->flags &= ~FIRST_DRAW;
 	if (Tk_MacOSXIsAppInFront()) {
@@ -1229,8 +1152,6 @@ TkMacOSXComputeButtonDrawParams(
     /*
      * Override the relief specified for the button if this is a
      * checkbutton or radiobutton and there's no indicator.
-     * However, don't do this in the presence of Appearance, since
-     * then the bevel button will take care of the relief.
      */
 
     dpPtr->relief = butPtr->relief;
