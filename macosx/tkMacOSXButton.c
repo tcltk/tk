@@ -610,13 +610,6 @@ DrawButtonImageAndText(
 			width + butPtr->indicatorSpace,
 			height, &x, &y);
         x += butPtr->indicatorSpace;
-	if (dpPtr->relief == TK_RELIEF_SUNKEN) {
-	  x += dpPtr->offset;
-	  y += dpPtr->offset;
-	} else if (dpPtr->relief == TK_RELIEF_RAISED) {
-	  x -= dpPtr->offset;
-	  y -= dpPtr->offset;
-	}
 	if (pressed) {
 	  x += dpPtr->offset;
 	  y += dpPtr->offset;
