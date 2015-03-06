@@ -784,6 +784,7 @@ TkWmDeadWindow(
 
     if (window && !Tk_IsEmbedded(winPtr) ) {
 	[[window parentWindow] removeChildWindow:window];
+	[window setExcludedFromWindowsMenu:YES];
 	[window close];
 	TkMacOSXUnregisterMacWindow(window);
 	if (winPtr->window) {
