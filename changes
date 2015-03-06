@@ -6965,3 +6965,25 @@ Many revisions to better support a Cygwin environment (nijtmans)
 2014-10-14 (bug)[fb35eb] fix PNG transparency appearance (walton,culler)
 
 --- Released 8.5.17, October 25, 2014 --- http://core.tcl.tk/tk/ for details
+
+2014-10-26 Support for Windows 10 (nijtmans)
+
+2014-10-28 (bug) OSX: Improved ttk notebook tab metrics for Yosemite (walzer)
+
+2014-10-30 (bug)[3417012] [scale -digits $bigValue] segfault (vogel)
+
+2014-11-06 (bug)[9d72dc] memleak in Cocoa buttons (revol)
+
+2014-11-07 (bug)[3529885] [scale] handling of negative resolution (vogel)
+
+2015-01-02 (bug) Stop bit loss in [winfo id] on 64-bit Cocoa (porter)
+
+2015-02-06 (bug) several fixes to elided context in [text] (vogel)
+
+2015-02-06 (new feature)[TIP 433] %M binding substitution (mistachkin)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
+	*** POTENTIAL INCOMPATIBILITY ***
+
+--- Released 8.5.18, March 6, 2015 --- http://core.tcl.tk/tk/ for details
