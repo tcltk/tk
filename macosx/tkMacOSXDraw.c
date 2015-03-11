@@ -148,7 +148,8 @@ BitmapRepFromDrawableRect(
 	cg_image = CGBitmapContextCreateImage( (CGContextRef) cg_context);
 	sub_cg_image = CGImageCreateWithImageInRect(cg_image, image_rect);
 	if ( sub_cg_image ) {
-	    bitmap_rep = [[NSBitmapImageRep alloc] autorelease];
+	    /*This can be dealloc'ed prematurely if set for autorelease, causing crashes.*/
+	    bitmap_rep = [NSBitmapImageRep alloc];
 	    [bitmap_rep initWithCGImage:sub_cg_image];
 	}
 	if ( cg_image ) {
@@ -162,7 +163,8 @@ BitmapRepFromDrawableRect(
 				      width,height);
 
 	if ( [view lockFocusIfCanDraw] ) {
-	    bitmap_rep = [[NSBitmapImageRep alloc] autorelease];
+	    /*This can be dealloc'ed prematurely if set for autorelease, causing crashes.*/
+	    bitmap_rep = [NSBitmapImageRep alloc];
 	    bitmap_rep = [bitmap_rep initWithFocusedViewRect:view_rect];
 	    [view unlockFocus];
 	} else {
