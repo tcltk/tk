@@ -736,6 +736,7 @@ and any widget may be used as an embedded window (subject to the
 usual rules for geometry management, which require the text window
 to be the parent of the embedded window or a descendant of its
 parent).
+.PP
 The embedded window's position on the screen will be updated as the
 text is modified or scrolled, and it will be mapped and unmapped as
 it moves into and out of the visible area of the text widget.
@@ -753,6 +754,7 @@ the window is destroyed.
 Similarly if the text widget as a whole is deleted, then the window is
 destroyed.
 .VE 8.5
+.PP
 .VS 8.5
 Eliding an embedded window immediately after scheduling it for creation
 via \fIpathName \fBwindow create \fIindex \fB-create\fR will prevent it
@@ -834,6 +836,7 @@ at a particular point in  the text.
 There may be any number of embedded images in a text widget,
 and a particular image may be embedded in multiple places in the same
 text widget.
+.PP
 The embedded image's position on the screen will be updated as the
 text is modified or scrolled.
 Each embedded image occupies one
@@ -846,6 +849,7 @@ its position in the widget's index space, or the name it is assigned
 when the image is inserted into the text widget with \fIpathName \fBimage create\fR.
 If the range of text containing the embedded image is deleted then
 that copy of the image is removed from the screen.
+.PP
 .VS 8.5
 Eliding an embedded image immediately after scheduling it for creation
 via \fIpathName \fBimage create \fIindex \fB-create\fR will prevent it
