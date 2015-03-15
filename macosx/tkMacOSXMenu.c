@@ -830,11 +830,16 @@ TkpSetWindowMenuBar(
  *	Puts the menu associated with a window into the menubar. Should only
  *	be called when the window is in front.
  *
+ *      This is a no-op on all other platforms.  On OS X it is a no-op when
+ *      passed a NULL menuName or a nonexistent menuName, with an exception
+ *      for the first call in a new interpreter.  In that special case, passing a
+ *      NULL menuName installs the default menu.
+ *
  * Results:
  *	None.
  *
  * Side effects:
- *	The menubar is changed.
+ *	The menubar may be changed.
  *
  *----------------------------------------------------------------------
  */
@@ -843,8 +848,7 @@ void
 TkpSetMainMenubar(
     Tcl_Interp *interp,		/* The interpreter of the application */
     Tk_Window tkwin,		/* The frame we are setting up */
-    const char *menuName)	/* The name of the menu to put in front. If
-				 * NULL, use the default menu bar. */
+    const char *menuName)	/* The name of the menu to put in front. */
 {
     static Tcl_Interp *currentInterp = NULL;
     TKMenu *menu = nil;
