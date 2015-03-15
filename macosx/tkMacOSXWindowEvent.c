@@ -48,7 +48,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
 #endif
 
-extern NSString *opaqueTag;
+extern BOOL opaqueTag;
 
 @implementation TKApplication(TKWindowEvent)
 
@@ -935,7 +935,7 @@ ExposeRestrictProc(
 {
     NSWindow *w = [self window];
 
-    if (opaqueTag != NULL) {
+    if (opaqueTag) {
       return YES;
 	} else {
 
