@@ -5935,7 +5935,7 @@ TkpChangeFocus(
 	    [win makeKeyAndOrderFront:NSApp];
 	}
     }
-	
+
     /*
      * Remember the current serial number for the X server and issue a dummy
      * server request. This marks the position at which we changed the focus,

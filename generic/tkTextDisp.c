@@ -7029,7 +7029,7 @@ TkTextIndexBbox(
 
     dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr);
 
-    /* 
+    /*
      * Two cases shall be trapped here because the logic later really
      * needs dlPtr to be the display line containing indexPtr:
      *   1. if no display line contains the desired index (NULL dlPtr)
@@ -7173,7 +7173,7 @@ TkTextDLineInfo(
 
     dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr);
 
-    /* 
+    /*
      * Two cases shall be trapped here because the logic later really
      * needs dlPtr to be the display line containing indexPtr:
      *   1. if no display line contains the desired index (NULL dlPtr)
