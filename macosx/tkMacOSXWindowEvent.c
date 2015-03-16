@@ -763,7 +763,7 @@ Tk_MacOSXIsAppInFront(void)
 
 /*
  * Custom content view for use in Tk NSWindows.
- * 
+ *
  * Since Tk handles all drawing of widgets, we only use the AppKit event loop
  * as a source of input events.  To do this, we overload the NSView drawRect
  * method with a method which generates Expose events for Tk but does no

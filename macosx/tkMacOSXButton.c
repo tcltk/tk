@@ -387,7 +387,7 @@ TkpComputeButtonGeometry(
 
     butPtr->inset = 0;
     butPtr->inset += butPtr->highlightWidth;
-    
+
     if (TkMacOSXComputeButtonDrawParams(butPtr,&drawParams)) {
         HIRect tmpRect;
     	HIRect contBounds;
@@ -519,7 +519,7 @@ DrawButtonImageAndText(
 	  /*
 	   * Image is left or right of text
 	   */
-	  
+
 	  if (butPtr->compound == COMPOUND_LEFT) {
 	    textXOffset = width + butPtr->padX;
 	  } else {
@@ -536,7 +536,7 @@ DrawButtonImageAndText(
 	  /*
 	   * Image and text are superimposed
 	   */
-	  
+
 	  fullWidth = (width > butPtr->textWidth ? width :
 		       butPtr->textWidth);
 	  fullHeight = (height > butPtr->textHeight ? height :
@@ -593,7 +593,7 @@ DrawButtonImageAndText(
 		     imageXOffset, imageYOffset, 1);
 	  XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
         }
-	
+
         Tk_DrawTextLayout(butPtr->display, pixmap,
                 dpPtr->gc, butPtr->textLayout,
                 x + textXOffset, y + textYOffset, 0, -1);
@@ -618,7 +618,7 @@ DrawButtonImageAndText(
 	imageYOffset += y;
 
 	if (butPtr->image != NULL) {
-	  
+
 	  if ((butPtr->selectImage != NULL) &&
 	      (butPtr->flags & SELECTED)) {
 	    Tk_RedrawImage(butPtr->selectImage, 0, 0, width,
