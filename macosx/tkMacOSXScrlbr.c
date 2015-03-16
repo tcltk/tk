@@ -437,7 +437,7 @@ UpdateControlValues(
     MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
     double dViewSize;
     HIRect  contrlRect;
-    int variant; 
+    int variant;
     short width, height;
 
     NSView *view = TkMacOSXDrawableView(macWin);

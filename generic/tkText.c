@@ -931,7 +931,7 @@ TextWidgetObjCmd(
 
                 /*
                  * Now we need to adjust the count to:
-                 *   - subtract off the number of display lines between 
+                 *   - subtract off the number of display lines between
                  *     indexToPtr and index2, since we might have skipped past
                  *     indexToPtr, if we have several logical lines in a
                  *     single display line
