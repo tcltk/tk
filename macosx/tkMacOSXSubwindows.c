@@ -149,8 +149,10 @@ XMapWindow(
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
 	    NSWindow *win = TkMacOSXDrawableWindow(window);
-
-	    [win makeKeyAndOrderFront:NSApp];
+	    [NSApp activateIgnoringOtherApps:YES];
+	    if ( [win canBecomeKeyWindow] ) {
+		[win makeKeyAndOrderFront:NSApp];
+	    }
 	    [win windowRef];
 	    TkMacOSXApplyWindowAttributes(macWin->winPtr, win);
 	}

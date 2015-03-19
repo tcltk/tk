@@ -102,12 +102,10 @@ TkpCreateScrollbar(
 		   Tk_Window tkwin)
 {
 
-    static int initialized = 0;
-    MacScrollbar *scrollPtr = ckalloc(sizeof(MacScrollbar));
+    MacScrollbar *scrollPtr = (MacScrollbar *)ckalloc(sizeof(MacScrollbar));
 
     scrollPtr->troughGC = None;
     scrollPtr->copyGC = None;
-    TkWindow *winPtr = (TkWindow *)tkwin;
 
     Tk_CreateEventHandler(tkwin,ExposureMask|StructureNotifyMask|FocusChangeMask|ButtonPressMask|VisibilityChangeMask, ScrollbarEventProc, scrollPtr);
 
@@ -144,7 +142,6 @@ TkpDisplayScrollbar(
   	return;
     }
 
-    MacScrollbar *macScrollPtr = clientData;
     TkWindow *winPtr = (TkWindow *) tkwin;
     MacDrawable *macWin =  (MacDrawable *) winPtr->window;
     TkMacOSXDrawingContext dc;
@@ -189,7 +186,15 @@ TkpDisplayScrollbar(
 
     /*Update values and draw in native rect.*/
     UpdateControlValues(scrollPtr);
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+    if (scrollPtr->vertical) {
+      HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
+    } else {
+      HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationInverted);
+    }
+#else
     HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
+#endif
     TkMacOSXRestoreDrawingContext(&dc);
 
     scrollPtr->flags &= ~REDRAW_PENDING;
@@ -220,7 +225,7 @@ TkpComputeScrollbarGeometry(
  * changed. */
 {
 
-    int width, height, variant, fieldLength;
+    int variant, fieldLength;
 
     if (scrollPtr->highlightWidth < 0) {
     	scrollPtr->highlightWidth = 0;
@@ -432,7 +437,7 @@ UpdateControlValues(
     MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
     double dViewSize;
     HIRect  contrlRect;
-    int variant, active;
+    int variant;
     short width, height;
 
     NSView *view = TkMacOSXDrawableView(macWin);
@@ -511,8 +516,8 @@ ScrollbarPress(TkScrollbar *scrollPtr, XEvent *eventPtr)
 
   if (eventPtr->type == ButtonPress) {
     UpdateControlValues(scrollPtr);
-    return TCL_OK;
   }
+  return TCL_OK;
 }
 
 

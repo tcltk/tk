@@ -539,10 +539,10 @@ DrawMenuButtonImageAndText(
                 XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
             }
         } else {
-	  /*Move x back by six pixels to give the menubutton arrows room.*/
+	  /*Move x back by eight pixels to give the menubutton arrows room.*/
 	  int x = 0;
 	  int y;
-	  textXOffset = 6;
+	  textXOffset = 8;
 	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
 			    butPtr->textWidth, butPtr->textHeight, &x, &y);
 	    Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
@@ -597,10 +597,8 @@ TkMacOSXDrawMenuButton(
 
 
     if (useNewerHITools == 1) {
-        HIRect hirec;
         HIRect contHIRec;
         static HIThemeButtonDrawInfo hiinfo;
-        Rect contRect;
 
         MenuButtonBackgroundDrawCB((MacMenuButton*) mbPtr, 32, true);
 
@@ -694,12 +692,10 @@ MenuButtonContentDrawCB (
 {
     TkMenuButton  *butPtr = (TkMenuButton *)ptr;
     Tk_Window  tkwin  = butPtr->tkwin;
-    Rect bounds;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
         return;
     }
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
 
     DrawMenuButtonImageAndText( butPtr);
 }

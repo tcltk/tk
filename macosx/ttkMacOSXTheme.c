@@ -294,21 +294,12 @@ static Ttk_StateTable TabPositionTable[] = {
  *       TP30000359-TPXREF116>
  */
 
-
-int TAB_HEIGHT = 0;
-int TAB_OVERLAP = 0;
-
 static void TabElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-       TAB_HEIGHT = 10;
-       TAB_OVERLAP = 10;
-       /*Different metrics on 10.10/Yosemite.*/
-    if (MAC_OS_X_VERSION_MIN_REQUIRED > 100000) {
-       TAB_OVERLAP = 5;
-      }
-     *heightPtr = TAB_HEIGHT + TAB_OVERLAP - 1;
+    *heightPtr = GetThemeMetric(kThemeMetricLargeTabHeight, heightPtr);
+    *paddingPtr = Ttk_MakePadding(0, 0, 0, 2);
 
 }
 
@@ -327,7 +318,6 @@ static void TabElementDraw(
 	.position = Ttk_StateTableLookup(TabPositionTable, state),
     };
 
-    bounds.size.height += TAB_OVERLAP;
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawTab, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
@@ -365,8 +355,8 @@ static void PaneElementDraw(
 	.adornment = kHIThemeTabPaneAdornmentNormal,
     };
 
-    bounds.origin.y -= TAB_OVERLAP;
-    bounds.size.height += TAB_OVERLAP;
+    bounds.origin.y -= kThemeMetricTabFrameOverlap;
+    bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
     END_DRAWING
