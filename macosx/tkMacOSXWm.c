@@ -53,7 +53,7 @@
 
 /*Objects for use in setting background color and opacity of window.*/
 NSColor *colorName = NULL;
-NSString *opaqueTag = NULL;
+BOOL opaqueTag = FALSE;
 
 static const struct {
     const UInt64 validAttrs, defaultAttrs, forceOnAttrs, forceOffAttrs;
@@ -784,14 +784,20 @@ TkWmDeadWindow(
 
     if (window && !Tk_IsEmbedded(winPtr) ) {
 	[[window parentWindow] removeChildWindow:window];
+	[window setExcludedFromWindowsMenu:YES];
 	[window close];
-	TkMacOSXUnregisterMacWindow(window);
-	if (winPtr->window) {
-	    ((MacDrawable *) winPtr->window)->view = nil;
-	}
-	TkMacOSXMakeCollectableAndRelease(wmPtr->window);
+       TkMacOSXUnregisterMacWindow(window);
+        if (winPtr->window) {
+            ((MacDrawable *) winPtr->window)->view = nil;
+        }
+        TkMacOSXMakeCollectableAndRelease(wmPtr->window);
+       /* Activate the highest window left on the screen. */
+       NSArray *windows = [NSApp orderedWindows];
+       NSWindow *front = [windows objectAtIndex:0];
+       if ( front && [front canBecomeKeyWindow] ) {
+               [front makeKeyAndOrderFront:NSApp];
+           }
     }
-
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
@@ -1655,8 +1661,8 @@ WmForgetCmd(
     if (Tk_IsTopLevel(frameWin)) {
 	MacDrawable *macWin;
 
-	Tk_MakeWindowExist(winPtr);
-	Tk_MakeWindowExist(winPtr->parentPtr);
+	Tk_MakeWindowExist(frameWin);
+	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
 
 	macWin = (MacDrawable *) winPtr->window;
 
@@ -5116,7 +5122,7 @@ TkUnsupported1ObjCmd(
     	    colorName = [NSColor clearColor];	//use systemTransparent in Tk scripts to match
     	}
     	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*opacity*")) {
-    	    opaqueTag = @"YES";
+    	    opaqueTag = YES;
     	}
     }
 
@@ -5507,7 +5513,7 @@ TkMacOSXMakeRealWindowExist(
     	[window setBackgroundColor: colorName];
     }
 
-    if (opaqueTag != NULL) {
+    if (opaqueTag) {
 #ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
     	[window setOpaque: opaqueTag];
 #else
@@ -5915,13 +5921,19 @@ TkpChangeFocus(
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {
-    /*
-     * We don't really need to do anything on the Mac. Tk will keep all this
-     * state for us.
-     */
-
     if (winPtr->atts.override_redirect) {
 	return 0;
+    }
+
+    if (Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr) ){
+    	NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    	TkWmRestackToplevel(winPtr, Above, NULL);
+    	if (force ) {
+    	    [NSApp activateIgnoringOtherApps:YES];
+    	}
+	if ( win && [win canBecomeKeyWindow] ) {
+	    [win makeKeyAndOrderFront:NSApp];
+	}
     }
 
     /*
