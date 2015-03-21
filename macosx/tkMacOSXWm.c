@@ -786,17 +786,18 @@ TkWmDeadWindow(
 	[[window parentWindow] removeChildWindow:window];
 	[window setExcludedFromWindowsMenu:YES];
 	[window close];
-       TkMacOSXUnregisterMacWindow(window);
-        if (winPtr->window) {
-            ((MacDrawable *) winPtr->window)->view = nil;
+	TkMacOSXUnregisterMacWindow(window);
+	if (winPtr->window) {
+	    ((MacDrawable *) winPtr->window)->view = nil;
         }
-        TkMacOSXMakeCollectableAndRelease(wmPtr->window);
-       /* Activate the highest window left on the screen. */
-       NSArray *windows = [NSApp orderedWindows];
-       NSWindow *front = [windows objectAtIndex:0];
-       if ( front && [front canBecomeKeyWindow] ) {
-               [front makeKeyAndOrderFront:NSApp];
-           }
+	[window release];
+	wmPtr->window = NULL;
+	/* Activate the highest window left on the screen. */
+	NSArray *windows = [NSApp orderedWindows];
+	NSWindow *front = [windows objectAtIndex:0];
+	if ( front && [front canBecomeKeyWindow] ) {
+	    [front makeKeyAndOrderFront:NSApp];
+	}
     }
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
@@ -5486,7 +5487,6 @@ TkMacOSXMakeRealWindowExist(
     if (!window) {
 	Tcl_Panic("couldn't allocate new Mac window");
     }
-    TkMacOSXMakeUncollectable(window);
     TKContentView *contentView = [[TKContentView alloc]
 	    initWithFrame:NSZeroRect];
     [window setContentView:contentView];

@@ -496,8 +496,7 @@ TkpNewMenu(
 				 * platform structure for. */
 {
     TKMenu *menu = [[TKMenu alloc] initWithTkMenu:menuPtr];
-    menuPtr->platformData = (TkMenuPlatformData)
-	    TkMacOSXMakeUncollectable(menu);
+    menuPtr->platformData = (TkMenuPlatformData) menu;
     CheckForSpecialMenu(menuPtr);
     return TCL_OK;
 }
@@ -522,7 +521,10 @@ void
 TkpDestroyMenu(
     TkMenu *menuPtr)		/* The common menu structure */
 {
-    TkMacOSXMakeCollectableAndRelease(menuPtr->platformData);
+    NSMenu* nsmenu = (NSMenu*)(menuPtr->platformData);
+
+    [nsmenu release];
+    menuPtr->platformData = NULL;
 }
 
 /*
@@ -555,8 +557,7 @@ TkpMenuNewEntry(
     } else {
 	menuItem = [menu newTkMenuItem:mePtr];
     }
-    mePtr->platformEntryData = (TkMenuPlatformEntryData)
-	    TkMacOSXMakeUncollectable(menuItem);
+    mePtr->platformEntryData = (TkMenuPlatformEntryData) menuItem;
 
     /*
      * Caller TkMenuEntry() already did this same insertion into the generic
@@ -720,16 +721,21 @@ void
 TkpDestroyMenuEntry(
     TkMenuEntry *mePtr)
 {
+    NSMenuItem *menuItem;
+    TKMenu *menu;
+    NSInteger index;
+
     if (mePtr->platformEntryData && mePtr->menuPtr->platformData) {
-	TKMenu *menu = (TKMenu *) mePtr->menuPtr->platformData;
-	NSMenuItem *menuItem = (NSMenuItem *) mePtr->platformEntryData;
-	NSInteger index = [menu indexOfItem:menuItem];
+	menu = (TKMenu *) mePtr->menuPtr->platformData;
+	menuItem = (NSMenuItem *) mePtr->platformEntryData;
+	index = [menu indexOfItem:menuItem];
 
 	if (index > -1) {
 	    [menu removeItemAtIndex:index];
 	}
+	[menuItem release];
+	mePtr->platformEntryData = NULL;
     }
-    TkMacOSXMakeCollectableAndRelease(mePtr->platformEntryData);
 }
 
 /*
