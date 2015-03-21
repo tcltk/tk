@@ -234,8 +234,7 @@ TkMacOSXEventsSetupProc(
 		    dequeue:YES];
 
 	    if (currentEvent) {
-		tsdPtr->currentEvent =
-			TkMacOSXMakeUncollectableAndRetain(currentEvent);
+		tsdPtr->currentEvent = [currentEvent retain];
 	    }
 	}
 	if (tsdPtr->currentEvent) {
@@ -273,8 +272,8 @@ TkMacOSXEventsCheckProc(
 
 	TSD_INIT();
 	if (tsdPtr->currentEvent) {
-	    currentEvent = TkMacOSXMakeCollectableAndAutorelease(
-	    	    tsdPtr->currentEvent);
+	    currentEvent = tsdPtr->currentEvent;
+	    [currentEvent autorelease];
 	}
 	do {
 	    modalSession = TkMacOSXGetModalSession();
@@ -288,9 +287,6 @@ TkMacOSXEventsCheckProc(
 	    }
 	    [currentEvent retain];
 	    pool = [NSAutoreleasePool new];
-	    if (tkMacOSXGCEnabled) {
-		objc_clear_stack(0);
-	    }
 	    if (![NSApp tkProcessEvent:currentEvent]) {
 		[currentEvent release];
 		currentEvent = nil;
