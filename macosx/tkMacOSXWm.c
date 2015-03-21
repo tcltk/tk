@@ -21,6 +21,8 @@
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
 
+#define DEBUG_ZOMBIES 0
+
 /*
 #ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_WINDOWS
@@ -349,6 +351,17 @@ static void		RemapWindows(TkWindow *winPtr,
     return (winPtr && winPtr->wmInfoPtr && (winPtr->wmInfoPtr->macClass ==
 	    kHelpWindowClass || winPtr->wmInfoPtr->attributes &
 	    kWindowNoActivatesAttribute)) ? NO : YES;
+}
+
+- (id) retain
+{
+#if DEBUG_ZOMBIES
+    const char *title = [[self title] UTF8String];
+    if (title != NULL) {
+	printf("Retaining %s with count %lu\n", title, [self retainCount]);
+    }
+#endif
+    return [super retain];
 }
 @end
 
@@ -781,7 +794,6 @@ TkWmDeadWindow(
 	if (parent) {
 	    [parent removeChildWindow:window];
 	}
-	[window setExcludedFromWindowsMenu:YES];
 	[window close];
 	TkMacOSXUnregisterMacWindow(window);
         if (winPtr->window) {

@@ -794,7 +794,6 @@ Tk_MacOSXIsAppInFront(void)
 @implementation TKContentView
 @end
 
-
 /*Restrict event processing to Expose events.*/
 static Tk_RestrictAction
 ExposeRestrictProc(
@@ -842,9 +841,37 @@ ExposeRestrictProc(
     CFRelease(drawShape);
 }
 
+-(void) setFrameSize: (NSSize)newsize
+{
+    if ( [self inLiveResize] ) {
+	NSWindow *window = [self window];
+	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+	Tk_Window tkwin = (Tk_Window) winPtr;
+	unsigned int width = (unsigned int)newsize.width;
+	unsigned int height=(unsigned int)newsize.height;
+
+	/* Resize the Tk Window to the requested size.*/
+	TkGenWMConfigureEvent(tkwin, Tk_X(tkwin), Tk_Y(tkwin), width, height,
+			      TK_SIZE_CHANGED | TK_MACOSX_HANDLE_EVENT_IMMEDIATELY);
+
+	/* Then resize the NSView to the actual window size*/
+	newsize.width = (CGFloat)Tk_Width(tkwin);
+	newsize.height = (CGFloat)Tk_Height(tkwin);
+	[super setFrameSize: newsize];
+
+	/* Process all pending events to update the window. */
+	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
+
+    } else {
+        [super setFrameSize: newsize];
+    }
+}
+
 /*
  * As insurance against bugs that might cause layout glitches during a live
- * resize, we redraw the window at the end of the resize operation.
+ * resize, we redraw the window one more time at the end of the resize
+ * operation.
  */
 
 - (void)viewDidEndLiveResize
@@ -852,13 +879,11 @@ ExposeRestrictProc(
     HIRect bounds = NSRectToCGRect([self bounds]);
     HIShapeRef shape = HIShapeCreateWithRect(&bounds);
     [self generateExposeEvents: shape];
-
 }
 
 /*Core function of this class, generates expose events for redrawing.*/
 - (void) generateExposeEvents: (HIMutableShapeRef) shape
 {
-
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     unsigned long serial;
     CGRect updateBounds;
@@ -866,7 +891,6 @@ ExposeRestrictProc(
     if (!winPtr) {
 		return;
     }
-
 
     HIShapeGetBounds(shape, &updateBounds);
     serial = LastKnownRequestProcessed(Tk_Display(winPtr));
@@ -895,7 +919,6 @@ ExposeRestrictProc(
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
     	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
-
     }
 
 }
