@@ -342,28 +342,6 @@ static void		RemapWindows(TkWindow *winPtr,
 {
     id _i1, _i2;
 }
-
-- (id) retain
-{
-#if DEBUG_ZOMBIES
-    const char *title = [[self title] UTF8String];
-    if (title != NULL) {
-	printf("Retaining %s with count %lu\n", title, [self retainCount]);
-    }
-#endif
-    return [super retain];
-}
-
-- (id) retain
-{
-#if DEBUG_ZOMBIES
-    const char *title = [[self title] UTF8String];
-    if (title != NULL) {
-	printf("Retaining %s with count %lu\n", title, [self retainCount]);
-    }
-#endif
-    return [super retain];
-}
 @end
 
 @implementation TKWindow
@@ -379,6 +357,16 @@ static void		RemapWindows(TkWindow *winPtr,
 	    kWindowNoActivatesAttribute)) ? NO : YES;
 }
 
+- (id) retain
+{
+#if DEBUG_ZOMBIES
+    const char *title = [[self title] UTF8String];
+    if (title != NULL) {
+	printf("Retaining %s with count %lu\n", title, [self retainCount]);
+    }
+#endif
+    return [super retain];
+}
 @end
 
 #pragma mark -
@@ -6012,7 +6000,7 @@ TkWmStackorderToplevel(
     NSInteger windowCount = [macWindows count];
 
     if (!windowCount) {
-	ckfree(windows);
+	ckfree((char *)windows);
 	windows = NULL;
     } else {
 	windowPtr = windows + table.numEntries;
