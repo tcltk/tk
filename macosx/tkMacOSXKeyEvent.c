@@ -78,16 +78,18 @@ static unsigned isFunctionKey(unsigned int code);
     case NSFlagsChanged:
 	modifiers = [theEvent modifierFlags];
 	keyCode = [theEvent keyCode];
-	w = [self windowWithWindowNumber:[theEvent windowNumber]];
+	//	w = [self windowWithWindowNumber:[theEvent windowNumber]];
+	w = [theEvent window];
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
 	NSLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d", [self class], self, _cmd, repeat, modifiers, characters, charactersIgnoringModifiers, keyCode,([charactersIgnoringModifiers length] == 0) ? 0 : [charactersIgnoringModifiers characterAtIndex: 0], w, type);
 #endif
 	break;
 
     default:
-	return theEvent;
+	return theEvent; /* Unrecognized key event. */
     }
 
+    /* Create an Xevent to add to the Tk queue. */
     if (!processingCompose) {
         unsigned int state = 0;
 
@@ -128,7 +130,7 @@ static unsigned isFunctionKey(unsigned int code);
         tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
         if (!tkwin) {
           TkMacOSXDbgMsg("tkwin == NULL");
-          return theEvent;
+          return theEvent;  /* Give up. No window for this event. */
         }
 
         /*
