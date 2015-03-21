@@ -133,13 +133,10 @@ TkMacOSXFlushWindows(void)
      */
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
     NSArray *macWindows = [NSApp orderedWindows];
-    NSInteger windowCount = [macWindows count];
 
-    if(windowCount) {
-	for (NSWindow *w in macWindows) {
-	    if (TkMacOSXGetXWindow(w)) {
-		[w flushWindow];
-	    }
+    for (NSWindow *w in macWindows) {
+	if (TkMacOSXGetXWindow(w)) {
+	    [w flushWindow];
 	}
     }
     [pool drain];
