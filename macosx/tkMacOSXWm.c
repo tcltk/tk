@@ -807,6 +807,7 @@ TkWmDeadWindow(
     NSWindow *window = wmPtr->window;
 
     if (window && !Tk_IsEmbedded(winPtr) ) {
+	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	NSWindow *parent = [window parentWindow];
 	if (parent) {
 	    [parent removeChildWindow:window];
@@ -826,6 +827,7 @@ TkWmDeadWindow(
                [front makeKeyAndOrderFront:NSApp];
            }
        }
+       [pool drain];
     }
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
