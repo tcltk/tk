@@ -27,7 +27,9 @@ static Tk_Window grabWinPtr = NULL;
 				/* Current grab window, NULL if no grab. */
 static Tk_Window keyboardGrabWinPtr = NULL;
 				/* Current keyboard grab window. */
-static NSModalSession modalSession = NULL;
+static NSWindow *keyboardGrabNSWindow = nil;
+                               /* NSWindow for the current keyboard grab window. */
+static NSModalSession modalSession = nil;
 
 static BOOL processingCompose = NO;
 static BOOL finishedCompose = NO;
@@ -476,7 +478,9 @@ XGrabKeyboard(
 	    if (modalSession) {
 		Tcl_Panic("XGrabKeyboard: already grabbed");
 	    }
-	    modalSession = [NSApp beginModalSessionForWindow:[w retain]];
+	    keyboardGrabNSWindow = w;
+	    [w retain];
+	    modalSession = [NSApp beginModalSessionForWindow:w];
 	}
     }
     return GrabSuccess;
@@ -504,11 +508,12 @@ XUngrabKeyboard(
     Time time)
 {
     if (modalSession) {
-	NSWindow *w = keyboardGrabWinPtr ? TkMacOSXDrawableWindow(
-		((TkWindow *) keyboardGrabWinPtr)->window) : nil;
 	[NSApp endModalSession:modalSession];
-	[w release];
-	modalSession = NULL;
+	modalSession = nil;
+    }
+    if (keyboardGrabNSWindow) {
+	[keyboardGrabNSWindow release];
+	keyboardGrabNSWindow = nil;
     }
     keyboardGrabWinPtr = NULL;
 }
