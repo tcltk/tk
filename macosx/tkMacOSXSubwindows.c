@@ -131,6 +131,11 @@ XMapWindow(
 {
     MacDrawable *macWin = (MacDrawable *) window;
     XEvent event;
+    /*
+     * This function can be called from outside the AppKit event
+     * loop, so it needs its own AutoreleasePool.
+     */
+    NSAutoreleasePool* pool = [NSAutoreleasePool new];
 
     /*
      * Under certain situations it's possible for this function to be called
@@ -189,6 +194,7 @@ XMapWindow(
     event.xvisibility.type = VisibilityNotify;
     event.xvisibility.state = VisibilityUnobscured;
     NotifyVisibility(macWin->winPtr, &event);
+    [pool drain];
 }
 
 /*
