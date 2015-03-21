@@ -52,19 +52,17 @@ enum {
     case NSCursorUpdate:
 #if 0
 	trackingArea = [theEvent trackingArea];
-#endif
 	/* fall through */
+#endif
     case NSLeftMouseDown:
     case NSLeftMouseUp:
     case NSRightMouseDown:
     case NSRightMouseUp:
     case NSOtherMouseDown:
     case NSOtherMouseUp:
-
     case NSLeftMouseDragged:
     case NSRightMouseDragged:
     case NSOtherMouseDragged:
-
     case NSMouseMoved:
 #if 0
 	eventNumber = [theEvent eventNumber];
@@ -73,19 +71,17 @@ enum {
 	    buttonNumber = [theEvent buttonNumber];
 	}
 #endif
-
     case NSTabletPoint:
     case NSTabletProximity:
-
     case NSScrollWheel:
-	win = [self windowWithWindowNumber:[theEvent windowNumber]];
         break;
 
-    default:
+    default: /* Unrecognized mouse event. */
 	return theEvent;
-	break;
     }
 
+    /* Create an Xevent to add to the Tk queue. */
+    win = [theEvent window];
     NSPoint global, local = [theEvent locationInWindow];
     if (win) {
 	global = [win convertBaseToScreen:local];
@@ -103,7 +99,7 @@ enum {
 	tkwin = TkMacOSXGetCapture();
     }
     if (!tkwin) {
-	return theEvent;
+	return theEvent; /* Give up.  No window for this event. */
     }
 
     /*
@@ -203,7 +199,6 @@ enum {
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
     }
-
     return theEvent;
 }
 @end
