@@ -384,13 +384,6 @@ static int	ModifierCharWidth(Tk_Font tkfont);
     [pool drain];
 }
 
-- (void) safeSetMainMenu: (NSMenu *) menu
-{
-    NSAutoreleasePool* pool = [NSAutoreleasePool new];
-    [self setMainMenu: menu];
-    [pool drain];
-}
-
 - (void) menuBeginTracking: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
