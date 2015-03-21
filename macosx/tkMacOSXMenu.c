@@ -261,6 +261,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	    /*Add time for errors to fire if necessary. This is sub-optimal but avoids issues with Tcl/Cocoa event loop integration.*/
 	    Tcl_Sleep(100);
 
+	    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
 
@@ -273,6 +274,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	    }
 	    Tcl_Release(menuPtr);
 	    Tcl_Release(interp);
+	    [pool drain];
 	}
     }
 }
@@ -374,6 +376,13 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 @end
 
 @implementation TKApplication(TKMenu)
+
+- (void) safeSetMainMenu: (NSMenu *) menu
+{
+    NSAutoreleasePool* pool = [NSAutoreleasePool new];
+    [self setMainMenu: menu];
+    [pool drain];
+}
 
 - (void) safeSetMainMenu: (NSMenu *) menu
 {

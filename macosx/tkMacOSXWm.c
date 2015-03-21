@@ -24,6 +24,8 @@
 
 #define DEBUG_ZOMBIES 0
 
+#define DEBUG_ZOMBIES 0
+
 /*
 #ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_WINDOWS
@@ -339,6 +341,17 @@ static void		RemapWindows(TkWindow *winPtr,
 @interface NSDrawerWindow : NSWindow
 {
     id _i1, _i2;
+}
+
+- (id) retain
+{
+#if DEBUG_ZOMBIES
+    const char *title = [[self title] UTF8String];
+    if (title != NULL) {
+	printf("Retaining %s with count %lu\n", title, [self retainCount]);
+    }
+#endif
+    return [super retain];
 }
 
 - (id) retain
