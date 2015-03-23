@@ -7,7 +7,7 @@
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2015 Marc Culler. 
+ * Copyright 2015 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -196,7 +196,7 @@ TkMacOSXNotifyExitHandler(
  * TkMacOSXEventsSetupProc --
  *
  *	This procedure implements the setup part of the MacOSX event
- *	source. It is invoked by Tcl_DoOneEvent before calling 
+ *	source. It is invoked by Tcl_DoOneEvent before calling
  *      TkMacOSXEventsProc to process all queued NSEvents.  In our
  *      case, all we need to do is to set the Tcl MaxBlockTime to
  *      0 before starting the loop to process all queued NSEvents.
@@ -205,7 +205,7 @@ TkMacOSXNotifyExitHandler(
  *	None.
  *
  * Side effects:
- *      
+ *
  *	If NSEvents are queued, then the maximum block time will be set
  *	to 0 to ensure that control returns immediately to Tcl.
  *
@@ -221,7 +221,7 @@ TkMacOSXEventsSetupProc(
 	    ![[NSRunLoop currentRunLoop] currentMode]) {
 	static const Tcl_Time zeroBlockTime = { 0, 0 };
 
-	/* Call this with dequeue=NO -- just checking if the queue is empty. */ 
+	/* Call this with dequeue=NO -- just checking if the queue is empty. */
 	NSEvent *currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 						   untilDate:[NSDate distantPast]
 						      inMode:GetRunLoopMode(TkMacOSXGetModalSession())
