@@ -1608,7 +1608,7 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 		$(DISTDIR)/macosx/Tk.xcodeproj
 	mkdir $(DISTDIR)/compat
 	cp -p $(TOP_DIR)/license.terms $(TCLDIR)/compat/unistd.h \
-		$(TCLDIR)/compat/stdlib.h $(TCLDIR)/compat/limits.h \
+		$(TCLDIR)/compat/stdlib.h \
 		$(DISTDIR)/compat
 	mkdir $(DISTDIR)/xlib
 	cp -p $(XLIB_DIR)/*.[ch] $(DISTDIR)/xlib
