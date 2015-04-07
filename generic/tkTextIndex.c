@@ -2218,7 +2218,7 @@ StartEnd(
     TkText *textPtr,		/* Information about text widget. */
     CONST char *string,		/* String to parse for additional info about
 				 * modifier (count and units). Points to first
-				 * character of modifer word. */
+				 * character of modifier word. */
     TkTextIndex *indexPtr)	/* Index to modify based on string. */
 {
     CONST char *p;
