@@ -520,7 +520,11 @@ EXTERN int		TkGenerateButtonEvent(int x, int y, Window window,
 /* 51 */
 EXTERN void		TkGenWMDestroyEvent(Tk_Window tkwin);
 #endif
-/* Slot 52 is reserved */
+#ifndef TkMacOSXSetDrawingEnabled_TCL_DECLARED
+#define TkMacOSXSetDrawingEnabled_TCL_DECLARED
+/* 52 */
+EXTERN void		TkMacOSXSetDrawingEnabled(TkWindow *winPtr, int flag);
+#endif
 #ifndef TkpGetMS_TCL_DECLARED
 #define TkpGetMS_TCL_DECLARED
 /* 53 */
