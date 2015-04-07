@@ -222,8 +222,7 @@ XCopyArea(
     }
 
     if (!TkMacOSXSetupDrawingContext(dst, gc, 1, &dc)) {
-	return;
-	/*TkMacOSXDbgMsg("Failed to setup drawing context.");*/
+	TkMacOSXDbgMsg("Failed to setup drawing context.");
     }
 
     if ( dc.context ) {
@@ -244,8 +243,6 @@ XCopyArea(
 			CGRectMake(src_x, src_y, width, height),
 			CGRectMake(dest_x, dest_y, width, height));
 	    CFRelease(img);
-
-
 	} else {
 	    TkMacOSXDbgMsg("Failed to construct CGImage.");
 	}
@@ -655,9 +652,9 @@ GetCGContextForDrawable(
 	CGColorSpaceRef colorspace = NULL;
 	CGBitmapInfo bitmapInfo =
 #ifdef __LITTLE_ENDIAN__
-	kCGBitmapByteOrder32Host;
+		kCGBitmapByteOrder32Host;
 #else
-	kCGBitmapByteOrderDefault;
+		kCGBitmapByteOrderDefault;
 #endif
 	char *data;
 	CGRect bounds = CGRectMake(0, 0, macDraw->size.width,
@@ -734,7 +731,6 @@ DrawCGImage(
 	    }
 	}
 	dstBounds = CGRectOffset(dstBounds, macDraw->xOff, macDraw->yOff);
-
 	if (CGImageIsMask(image)) {
 	    /*CGContextSaveGState(context);*/
 	    if (macDraw->flags & TK_IS_BW_PIXMAP) {
@@ -1478,94 +1474,51 @@ TkScrollWindow(
     TkRegion damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
-    MacDrawable *macDraw = (MacDrawable *) drawable;
+    MacDrawable *macDraw = (MacDrawable *) drawable; 
     NSView *view = TkMacOSXDrawableView(macDraw);
     CGRect srcRect, dstRect;
-    HIShapeRef dmgRgn = NULL, extraRgn = NULL;
+    HIShapeRef dmgRgn = NULL, extraRgn;
     NSRect bounds, visRect, scrollSrc, scrollDst;
-    int result = 0;
-
+    int result;
+  
     if ( view ) {
   	/*  Get the scroll area in NSView coordinates (origin at bottom left). */
   	bounds = [view bounds];
  	scrollSrc = NSMakeRect(
-			       macDraw->xOff + x,
+			       macDraw->xOff + x, 
 			       bounds.size.height - height - (macDraw->yOff + y),
 			       width, height);
  	scrollDst = NSOffsetRect(scrollSrc, dx, -dy);
-
   	/* Limit scrolling to the window content area. */
  	visRect = [view visibleRect];
  	scrollSrc = NSIntersectionRect(scrollSrc, visRect);
  	scrollDst = NSIntersectionRect(scrollDst, visRect);
+  
  	if ( !NSIsEmptyRect(scrollSrc) && !NSIsEmptyRect(scrollDst) ) {
-
+  
   	    /*
   	     * Mark the difference between source and destination as damaged.
-	     * This region is described in NSView coordinates (y=0 at the bottom)
-	     * and converted to Tk coordinates later.
+ 	     * This region is described in the Tk coordinate system.
   	     */
-
-	    srcRect = CGRectMake(x, y, width, height);
-	    dstRect = CGRectOffset(srcRect, dx, dy);
-
-	    /* Expand the rectangles slightly to avoid degeneracies. */
-	    srcRect.origin.y -= 1;
-	    srcRect.size.height += 2;
-	    dstRect.origin.y += 1;
-	    dstRect.size.height -= 2;
-
-	    /* Compute the damage. */
+  
+ 	    srcRect = CGRectMake(x, y, width, height);
+  	    dstRect = CGRectOffset(srcRect, dx, dy);
   	    dmgRgn = HIShapeCreateMutableWithRect(&srcRect);
  	    extraRgn = HIShapeCreateWithRect(&dstRect);
  	    ChkErr(HIShapeDifference, dmgRgn, extraRgn, (HIMutableShapeRef) dmgRgn);
-	    result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
-
-	    /* Convert to Tk coordinates. */
-	    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
-	    if (extraRgn) {
-		CFRelease(extraRgn);
-	    }
-
+ 	    CFRelease(extraRgn);
+  	    
  	    /* Scroll the rectangle. */
  	    [view scrollRect:scrollSrc by:NSMakeSize(dx, -dy)];
-
-	    /* Shift the Tk children which meet the source rectangle. */
-	    TkWindow *winPtr = (TkWindow *)tkwin;
-	    TkWindow *childPtr;
-	    CGRect childBounds;
-	    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-		if (Tk_IsMapped(childPtr) && !Tk_IsTopLevel(childPtr)) {
-		    TkMacOSXWinCGBounds(childPtr, &childBounds);
-		    if (CGRectIntersectsRect(srcRect, childBounds)) {
-			MacDrawable *macChild = childPtr->privatePtr;
-			if (macChild) {
-			    macChild->yOff += dy;
-			    macChild->xOff += dx;
-			    childPtr->changes.y = macChild->yOff;
-			    childPtr->changes.x = macChild->xOff;
-			}
-		    }
-		}
-	    }
-
-	    /* Queue up Expose events for the damage region. */
-	    int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
-	    [view generateExposeEvents:dmgRgn childrenOnly:1];
-	    Tcl_SetServiceMode(oldMode);
-
-	    /* Belt and suspenders: make the AppKit request a redraw
-	       when it gets control again. */
-	    [view setNeedsDisplay:YES];
   	}
-    } else {
-	dmgRgn = HIShapeCreateEmpty();
-	TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
     }
-
-    if (dmgRgn) {
-	CFRelease(dmgRgn);
+  
+    if ( dmgRgn == NULL ) {
+  	dmgRgn = HIShapeCreateEmpty();
     }
+    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
+    result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
+    CFRelease(dmgRgn);
     return result;
 }
 
@@ -1900,7 +1853,6 @@ TkpClipDrawableToRect(
 	CFRelease(macDraw->drawRgn);
 	macDraw->drawRgn = NULL;
     }
-
     if (width >= 0 && height >= 0) {
 	CGRect clipRect = CGRectMake(x + macDraw->xOff, y + macDraw->yOff,
 		width, height);
@@ -2048,7 +2000,7 @@ TkpDrawHighlightBorder (
  * TkpDrawFrame --
  *
  *	This procedure draws the rectangular frame area. If the user
- *	has requested themeing, it draws with the background theme.
+ *	has request themeing, it draws with a the background theme.
  *
  * Results:
  *	None.
@@ -2078,7 +2030,6 @@ TkpDrawFrame(
 	    border = themedBorder;
 	}
     }
-
     Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
 	    border, highlightWidth, highlightWidth,
 	    Tk_Width(tkwin) - 2 * highlightWidth,

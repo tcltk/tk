@@ -26,7 +26,6 @@
 #define RangeToFactor(maximum) (((double) (LONG_MAX >> 1)) / (maximum))
 #endif /* __LP64__ */
 
-#define MOUNTAIN_LION_STYLE (NSAppKitVersionNumber < 1138)
 
 /*
  * Declaration of Mac specific scrollbar structure.
@@ -80,6 +79,7 @@ HIThemeTrackDrawInfo info = {
 static void ScrollbarEventProc(ClientData clientData, XEvent *eventPtr);
 static int ScrollbarPress(TkScrollbar *scrollPtr, XEvent *eventPtr);
 static void UpdateControlValues(TkScrollbar  *scrollPtr);
+
 
 /*
  *----------------------------------------------------------------------
@@ -137,6 +137,7 @@ TkpDisplayScrollbar(
     register TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
     register Tk_Window tkwin = scrollPtr->tkwin;
 
+
     if ((scrollPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
   	return;
     }
@@ -172,6 +173,7 @@ TkpDisplayScrollbar(
     			       (Pixmap) macWin);
     }
 
+
     Tk_Draw3DRectangle(tkwin, (Pixmap) macWin, scrollPtr->bgBorder,
     		       scrollPtr->highlightWidth, scrollPtr->highlightWidth,
     		       Tk_Width(tkwin) - 2*scrollPtr->highlightWidth,
@@ -184,11 +186,15 @@ TkpDisplayScrollbar(
 
     /*Update values and draw in native rect.*/ 
     UpdateControlValues(scrollPtr);
-    if (MOUNTAIN_LION_STYLE) {
-      HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationInverted);
-    } else {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+    if (scrollPtr->vertical) {
       HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
+    } else {
+      HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationInverted);
     }
+#else
+    HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
+#endif
     TkMacOSXRestoreDrawingContext(&dc);
     
     scrollPtr->flags &= ~REDRAW_PENDING;
@@ -259,12 +265,11 @@ TkpComputeScrollbarGeometry(
     if (scrollPtr->sliderLast > fieldLength) {
     	scrollPtr->sliderLast = fieldLength;
     }
-    if (!(MOUNTAIN_LION_STYLE)) {
-      scrollPtr->sliderFirst += scrollPtr->inset +
+    scrollPtr->sliderFirst += scrollPtr->inset +
 	metrics[variant].topArrowHeight;
-      scrollPtr->sliderLast += scrollPtr->inset +
+    scrollPtr->sliderLast += scrollPtr->inset +
 	metrics[variant].bottomArrowHeight;
-    }
+
     /*
      * Register the desired geometry for the window (leave enough space
      * for the two arrows plus a minimum-size slider, plus border around
@@ -365,29 +370,21 @@ TkpScrollbarPosition(
     int x, int y)		/* Coordinates within scrollPtr's window. */
 {
 
-  /*
-   * Using code from tkUnixScrlbr.c because Unix scroll bindings are
-   * driving the display at the script level. All the Mac scrollbar
-   * has to do is re-draw itself.
-   */
-
-    int length, fieldlength, width, tmp;
+  /*Using code from tkUnixScrlbr.c because Unix scroll bindings are driving the display at the script level. All the Mac scrollbar has to do is re-draw itself.*/
+  
+    int length, width, tmp;
     register const int inset = scrollPtr->inset;
-    register const int arrowSize = scrollPtr->arrowLength + inset;
 
     if (scrollPtr->vertical) {
 	length = Tk_Height(scrollPtr->tkwin);
-	fieldlength = length - 2 * arrowSize;
 	width = Tk_Width(scrollPtr->tkwin);
     } else {
 	tmp = x;
 	x = y;
 	y = tmp;
 	length = Tk_Width(scrollPtr->tkwin);
-	fieldlength = length - 2 * arrowSize; 
 	width = Tk_Height(scrollPtr->tkwin);
     }
-    fieldlength = fieldlength < 0 ? 0 : fieldlength;
 
     if (x<inset || x>=width-inset || y<inset || y>=length-inset) {
 	return OUTSIDE;
@@ -398,19 +395,19 @@ TkpScrollbarPosition(
      * TkpDisplayScrollbar. Be sure to keep the two consistent.
      */
 
+    if (y < inset + scrollPtr->arrowLength) {
+	return TOP_ARROW;
+    }
     if (y < scrollPtr->sliderFirst) {
 	return TOP_GAP;
     }
     if (y < scrollPtr->sliderLast) {
 	return SLIDER;
     }
-    if (y < fieldlength){
-	return BOTTOM_GAP;
+    if (y >= length - (scrollPtr->arrowLength + inset)) {
+	return BOTTOM_ARROW;
     }
-    if (y < fieldlength + arrowSize) {
-	return TOP_ARROW;
-    }
-    return BOTTOM_ARROW;
+    return BOTTOM_GAP;
 }
 
 /*
@@ -418,11 +415,9 @@ TkpScrollbarPosition(
  *
  * UpdateControlValues --
  *
- *	This procedure updates the Macintosh scrollbar control to
- *	display the values defined by the Tk scrollbar. This is the
- *	key interface to the Mac-native * scrollbar; the Unix bindings
- *	drive scrolling in the Tk window and all the Mac scrollbar has
- *	to do is redraw itself.
+ *	This procedure updates the Macintosh scrollbar control to display the
+ *	values defined by the Tk scrollbar. This is the key interface to the Mac-native *      scrollbar; the Unix bindings drive scrolling in the Tk window and all the Mac 
+ *      scrollbar has to do is redraw itself. 
  *
  * Results:
  *	None.
@@ -489,11 +484,7 @@ UpdateControlValues(
 	factor - dViewSize;
     info.trackInfo.scrollbar.viewsize = dViewSize;
     if (scrollPtr->vertical) {
-      if (MOUNTAIN_LION_STYLE) {
-	info.value = factor * scrollPtr->firstFraction;
-      } else {
 	info.value = info.max - factor * scrollPtr->firstFraction;
-      }
     } else {
 	 info.value =  MIN_SCROLLBAR_VALUE + factor * scrollPtr->firstFraction;
     }
