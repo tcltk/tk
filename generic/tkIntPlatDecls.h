@@ -250,8 +250,7 @@ EXTERN int		TkGenerateButtonEvent(int x, int y, Window window,
 				unsigned int state);
 /* 51 */
 EXTERN void		TkGenWMDestroyEvent(Tk_Window tkwin);
-/* 52 */
-EXTERN void		TkMacOSXSetDrawingEnabled(TkWindow *winPtr, int flag);
+/* Slot 52 is reserved */
 /* 53 */
 EXTERN unsigned long	TkpGetMS(void);
 /* 54 */
@@ -396,7 +395,7 @@ typedef struct TkIntPlatStubs {
     Window (*tkGetTransientMaster) (TkWindow *winPtr); /* 49 */
     int (*tkGenerateButtonEvent) (int x, int y, Window window, unsigned int state); /* 50 */
     void (*tkGenWMDestroyEvent) (Tk_Window tkwin); /* 51 */
-    void (*tkMacOSXSetDrawingEnabled) (TkWindow *winPtr, int flag); /* 52 */
+    void (*reserved52)(void);
     unsigned long (*tkpGetMS) (void); /* 53 */
     void * (*tkMacOSXDrawable) (Drawable drawable); /* 54 */
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 55 */
