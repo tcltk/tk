@@ -3948,7 +3948,6 @@ DisplayText(
 				 * warnings. */
     Tcl_Interp *interp;
 
-
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
 	/*
 	 * The widget has been deleted.	 Don't do anything.
@@ -3957,19 +3956,24 @@ DisplayText(
 	return;
     }
 
+#ifdef MAC_OSX_TK
+    /*
+     * If drawing is disabled, all we need to do is
+     * clear the REDRAW_PENDING flag.
+     */
+    TkWindow *winPtr = (TkWindow *)(textPtr->tkwin);
+    MacDrawable *macWin = winPtr->privatePtr;
+    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
+	dInfoPtr->flags &= ~REDRAW_PENDING;
+	return;
+    }
+#endif
+
     interp = textPtr->interp;
     Tcl_Preserve(interp);
 
     if (tkTextDebug) {
 	Tcl_SetVar2(interp, "tk_textRelayout", NULL, "", TCL_GLOBAL_ONLY);
-    }
-
-    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
-	/*
-	 * The widget has been deleted.	 Don't do anything.
-	 */
-
-	goto end;
     }
 
     if (!Tk_IsMapped(textPtr->tkwin) || (dInfoPtr->maxX <= dInfoPtr->x)
@@ -3981,14 +3985,6 @@ DisplayText(
     numRedisplays++;
     if (tkTextDebug) {
 	Tcl_SetVar2(interp, "tk_textRedraw", NULL, "", TCL_GLOBAL_ONLY);
-    }
-
-    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
-	/*
-	 * The widget has been deleted. Don't do anything.
-	 */
-
-	goto end;
     }
 
     /*
