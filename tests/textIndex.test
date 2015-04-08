@@ -905,6 +905,11 @@ test textIndex-22.12 {text index wordstart, unicode} {
 test textIndex-22.13 {text index wordstart, unicode} {
     text_test_word wordstart "\uc700\uc700 abc" 8
 } 3
+test textIndex-22.15 {text index display wordstart} {
+    catch {destroy .t}
+    text .t
+    .t index "1.0 display wordstart"  ; # used to crash
+} 1.0
 
 test textIndex-23.1 {text paragraph start} {
     pack [text .t2]
