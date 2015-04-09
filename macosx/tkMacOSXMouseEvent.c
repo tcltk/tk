@@ -104,12 +104,6 @@ enum {
 	return theEvent; /* Give up.  No window for this event. */
     }
 
-    /*
-    MacDrawable *macWin = (MacDrawable *) window;
-    NSView *view = TkMacOSXDrawableView(macWin);
-    local = [view convertPoint:local fromView:nil];
-    local.y = NSHeight([view bounds]) - local.y;
-    */
     TkWindow  *winPtr = (TkWindow *) tkwin;
     local.x -= winPtr->wmInfoPtr->xInParent;
     local.y -= winPtr->wmInfoPtr->yInParent;
