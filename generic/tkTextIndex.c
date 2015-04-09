@@ -2218,7 +2218,7 @@ StartEnd(
     TkText *textPtr,		/* Information about text widget. */
     CONST char *string,		/* String to parse for additional info about
 				 * modifier (count and units). Points to first
-				 * character of modifer word. */
+				 * character of modifier word. */
     TkTextIndex *indexPtr)	/* Index to modify based on string. */
 {
     CONST char *p;
@@ -2369,11 +2369,20 @@ StartEnd(
 		}
 		firstChar = 0;
 	    }
-	    offset -= chSize;
-	    indexPtr->byteIndex -= chSize;
+            if (offset == 0) {
+                if (modifier == TKINDEX_DISPLAY) {
+                    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr,
+                        COUNT_DISPLAY_INDICES);
+                } else {
+                    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr,
+                        COUNT_INDICES);
+                }
+            } else {
+                indexPtr->byteIndex -= chSize;
+            }
+            offset -= chSize;
 	    if (offset < 0) {
-		if (indexPtr->byteIndex < 0) {
-		    indexPtr->byteIndex = 0;
+		if (indexPtr->byteIndex == 0) {
 		    goto done;
 		}
 		segPtr = TkTextIndexToSeg(indexPtr, &offset);
