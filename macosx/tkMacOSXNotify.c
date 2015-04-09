@@ -49,17 +49,17 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 @end
 
 @implementation TKApplication(TKNotify)
-/* Redisplay all of our windows, then call super. */
+/* Call super then redisplay all of our windows. */
 - (NSEvent *)nextEventMatchingMask:(NSUInteger)mask
 	untilDate:(NSDate *)expiration inMode:(NSString *)mode
 	dequeue:(BOOL)deqFlag {
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    [NSApp makeWindowsPerform:@selector(tkDisplayIfNeeded) inOrder:NO];
-    [pool drain];
     NSEvent *event = [super nextEventMatchingMask:mask
 					untilDate:expiration
 					   inMode:mode
 					  dequeue:deqFlag];
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+    [NSApp makeWindowsPerform:@selector(tkDisplayIfNeeded) inOrder:NO];
+    [pool drain];
     return event;
 }
 
@@ -220,7 +220,7 @@ TkMacOSXEventsSetupProc(
  						   untilDate:[NSDate distantPast]
  						      inMode:GetRunLoopMode(TkMacOSXGetModalSession())
  						     dequeue:NO];
-	if (currentEvent) {
+	if (currentEvent && currentEvent.type > 0) {
 	    Tcl_SetMaxBlockTime(&zeroBlockTime);
 	}
     }
@@ -248,19 +248,30 @@ TkMacOSXEventsCheckProc(
     ClientData clientData,
     int flags)
 {
-    if (flags & TCL_WINDOW_EVENTS &&
-	    ![[NSRunLoop currentRunLoop] currentMode]) {
+    NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
+    if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
+
 	NSEvent *currentEvent = nil;
+	NSEvent *testEvent = nil;
 	NSModalSession modalSession;
 
 	do {
 	    modalSession = TkMacOSXGetModalSession();
+	    testEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+					      untilDate:[NSDate distantPast]
+						 inMode:GetRunLoopMode(modalSession)
+						dequeue:NO];
+	    /* We must not steal any events during LiveResize. */
+	    if (testEvent && [[testEvent window] inLiveResize]) {
+		break;
+	    }
+
 	    currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 					      untilDate:[NSDate distantPast]
 						 inMode:GetRunLoopMode(modalSession)
 						dequeue:YES];
 	    if (!currentEvent) {
-		break; /* No more events. */
+		break; /* No events are available. */
 	    }
 	    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	    /* Generate Xevents. */
