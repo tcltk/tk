@@ -2327,7 +2327,7 @@ StartEnd(
 	int offset;
 
 	if (modifier == TKINDEX_DISPLAY) {
-	    TkTextIndexForwChars(NULL, indexPtr, 0, indexPtr,
+	    TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr,
 		    COUNT_DISPLAY_INDICES);
 	}
 
