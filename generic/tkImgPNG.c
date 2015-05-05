@@ -3345,7 +3345,7 @@ EncodePNG(
 	    pngPtr->colorType = PNG_COLOR_RGBA;
 	    pngPtr->bytesPerPixel = 4;
 	} else {
-	    pngPtr->colorType = PNG_COLOR_RGBA;
+	    pngPtr->colorType = PNG_COLOR_RGB;
 	    pngPtr->bytesPerPixel = 3;
 	}
     } else {
