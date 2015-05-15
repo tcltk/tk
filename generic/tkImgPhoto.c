@@ -2051,8 +2051,8 @@ static int
 ToggleComplexAlphaIfNeeded(
     PhotoMaster *mPtr)
 {
-    size_t len = MAX(mPtr->userWidth, mPtr->width) *
-	    MAX(mPtr->userHeight, mPtr->height) * 4;
+    size_t len = (size_t)MAX(mPtr->userWidth, mPtr->width) *
+	    (size_t)MAX(mPtr->userHeight, mPtr->height) * 4;
     unsigned char *c = mPtr->pix32;
     unsigned char *end = c + len;
 
@@ -2257,14 +2257,14 @@ ImgPhotoSetSize(
 	if ((masterPtr->pix32 != NULL)
 	    && ((width == masterPtr->width) || (width == validBox.width))) {
 	    if (validBox.y > 0) {
-		memset(newPix32, 0, (size_t) (validBox.y * pitch));
+		memset(newPix32, 0, ((size_t) validBox.y * pitch));
 	    }
 	    h = validBox.y + validBox.height;
 	    if (h < height) {
-		memset(newPix32 + h*pitch, 0, (size_t) ((height - h) * pitch));
+		memset(newPix32 + h*pitch, 0, ((size_t) (height - h) * pitch));
 	    }
 	} else {
-	    memset(newPix32, 0, (size_t) (height * pitch));
+	    memset(newPix32, 0, ((size_t)height * pitch));
 	}
 
 	if (masterPtr->pix32 != NULL) {
@@ -2281,7 +2281,7 @@ ImgPhotoSetSize(
 
 		offset = validBox.y * pitch;
 		memcpy(newPix32 + offset, masterPtr->pix32 + offset,
-			(size_t) (validBox.height * pitch));
+			((size_t)validBox.height * pitch));
 
 	    } else if ((validBox.width > 0) && (validBox.height > 0)) {
 		/*
@@ -2292,7 +2292,7 @@ ImgPhotoSetSize(
 		srcPtr = masterPtr->pix32 + (validBox.y * masterPtr->width
 			+ validBox.x) * 4;
 		for (h = validBox.height; h > 0; h--) {
-		    memcpy(destPtr, srcPtr, (size_t) (validBox.width * 4));
+		    memcpy(destPtr, srcPtr, ((size_t)validBox.width * 4));
 		    destPtr += width * 4;
 		    srcPtr += masterPtr->width * 4;
 		}
@@ -2772,7 +2772,7 @@ Tk_PhotoPutBlock(
 		&& (blockPtr->pitch == pitch)))
 	    && (compRule == TK_PHOTO_COMPOSITE_SET)) {
 	memmove(destLinePtr, blockPtr->pixelPtr + blockPtr->offset[0],
-		(size_t) (height * width * 4));
+		((size_t)height * width * 4));
 
 	/*
 	 * We know there's an alpha offset and we're setting the data, so skip
@@ -2804,7 +2804,7 @@ Tk_PhotoPutBlock(
 		    && (blueOffset == 2) && (alphaOffset == 3)
 		    && (width <= blockPtr->width)
 		    && compRuleSet) {
-		memcpy(destLinePtr, srcLinePtr, (size_t) (width * 4));
+		memcpy(destLinePtr, srcLinePtr, ((size_t)width * 4));
 		srcLinePtr += blockPtr->pitch;
 		destLinePtr += pitch;
 		continue;
@@ -3454,7 +3454,7 @@ Tk_PhotoBlank(
      */
 
     memset(masterPtr->pix32, 0,
-	    (size_t) (masterPtr->width * masterPtr->height * 4));
+	    ((size_t)masterPtr->width * masterPtr->height * 4));
     for (instancePtr = masterPtr->instancePtr; instancePtr != NULL;
 	    instancePtr = instancePtr->nextPtr) {
 	TkImgResetDither(instancePtr);
