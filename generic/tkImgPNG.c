@@ -10,6 +10,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "assert.h"
 #include "tkInt.h"
 
 #define	PNG_INT32(a,b,c,d)	\
@@ -1879,6 +1880,8 @@ DecodeLine(
     /*
      * Calculate offset into pixelPtr for the first pixel of the line.
      */
+
+    assert(pngPtr->currentLine < pngPtr->block.height);
 
     offset = pngPtr->currentLine * pngPtr->block.pitch;
 
