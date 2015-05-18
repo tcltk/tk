@@ -886,6 +886,19 @@ ImgPhotoCmd(
 		    break;
 		}
 		dataWidth = listObjc;
+		/*
+ 		 * Memory allocation overflow protection.
+ 		 * May not be able to trigger/ demo / test this.
+ 		 */
+
+		if (dataWidth > (UINT_MAX/3) / dataHeight) {
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"photo image dimensions exceed Tcl memory limits", -1));
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			"OVERFLOW", NULL);
+		    break;
+		}
+
 		pixelPtr = ckalloc(dataWidth * dataHeight * 3);
 		block.pixelPtr = pixelPtr;
 	    } else if (listObjc != dataWidth) {
@@ -2192,6 +2205,10 @@ ImgPhotoSetSize(
 	height = masterPtr->userHeight;
     }
 
+    if (width > INT_MAX / 4) {
+	/* Pitch overflows int */
+	return TCL_ERROR;
+    }
     pitch = width * 4;
 
     /*
@@ -2201,11 +2218,12 @@ ImgPhotoSetSize(
 
     if ((width != masterPtr->width) || (height != masterPtr->height)
 	    || (masterPtr->pix32 == NULL)) {
-	/*
-	 * Not a u-long, but should be one.
-	 */
+	unsigned newPixSize;
 
-	unsigned /*long*/ newPixSize = (unsigned /*long*/) (height * pitch);
+	if (pitch && height > UINT_MAX / pitch) {
+	    return TCL_ERROR;
+	}
+	newPixSize = height * pitch;
 
 	/*
 	 * Some mallocs() really hate allocating zero bytes. [Bug 619544]
@@ -3699,6 +3717,10 @@ ImgGetPhoto(
 	if ((greenOffset||blueOffset) && !(optPtr->options & OPT_GRAYSCALE)) {
 	    newPixelSize += 2;
 	}
+
+	if (blockPtr->height > (UINT_MAX/newPixelSize)/blockPtr->width) {
+	    return NULL;
+	}
 	data = attemptckalloc(newPixelSize*blockPtr->width*blockPtr->height);
 	if (data == NULL) {
 	    return NULL;
@@ -3835,32 +3857,32 @@ ImgStringWrite(
     Tk_PhotoImageBlock *blockPtr)
 {
     int greenOffset, blueOffset;
-    Tcl_DString data;
+    Tcl_Obj *data;
+    Tcl_Obj *line = Tcl_NewObj();
 
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
     blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
 
-    Tcl_DStringInit(&data);
+    data = Tcl_NewListObj(blockPtr->height, NULL);
     if ((blockPtr->width > 0) && (blockPtr->height > 0)) {
-	char *line = ckalloc((8 * blockPtr->width) + 2);
 	int row, col;
 
 	for (row=0; row<blockPtr->height; row++) {
 	    unsigned char *pixelPtr = blockPtr->pixelPtr + blockPtr->offset[0]
 		    + row * blockPtr->pitch;
-	    char *linePtr = line;
 
 	    for (col=0; col<blockPtr->width; col++) {
-		sprintf(linePtr, " #%02x%02x%02x", *pixelPtr,
+		Tcl_AppendPrintfToObj(line, "%s#%02x%02x%02x",
+			col ? " " : "", *pixelPtr,
 			pixelPtr[greenOffset], pixelPtr[blueOffset]);
 		pixelPtr += blockPtr->pixelSize;
-		linePtr += 8;
 	    }
-	    Tcl_DStringAppendElement(&data, line+1);
+	    Tcl_ListObjAppendElement(NULL, data, line);
+	    Tcl_SetObjLength(line, 0);
 	}
-	ckfree(line);
     }
-    Tcl_DStringResult(interp, &data);
+    Tcl_DecrRefCount(line);
+    Tcl_SetObjResult(interp, data);
     return TCL_OK;
 }
 
