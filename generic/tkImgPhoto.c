@@ -3858,7 +3858,6 @@ ImgStringWrite(
 {
     int greenOffset, blueOffset;
     Tcl_Obj *data;
-    Tcl_Obj *line = Tcl_NewObj();
 
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
     blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
@@ -3868,20 +3867,19 @@ ImgStringWrite(
 	int row, col;
 
 	for (row=0; row<blockPtr->height; row++) {
+	    Tcl_Obj *line = Tcl_NewListObj(blockPtr->width, NULL);
 	    unsigned char *pixelPtr = blockPtr->pixelPtr + blockPtr->offset[0]
 		    + row * blockPtr->pitch;
 
 	    for (col=0; col<blockPtr->width; col++) {
-		Tcl_AppendPrintfToObj(line, "%s#%02x%02x%02x",
-			col ? " " : "", *pixelPtr,
-			pixelPtr[greenOffset], pixelPtr[blueOffset]);
+		Tcl_ListObjAppendElement(NULL, line, Tcl_ObjPrintf(
+			"%s#%02x%02x%02x", col ? " " : "", *pixelPtr,
+			pixelPtr[greenOffset], pixelPtr[blueOffset]));
 		pixelPtr += blockPtr->pixelSize;
 	    }
 	    Tcl_ListObjAppendElement(NULL, data, line);
-	    Tcl_SetObjLength(line, 0);
 	}
     }
-    Tcl_DecrRefCount(line);
     Tcl_SetObjResult(interp, data);
     return TCL_OK;
 }
