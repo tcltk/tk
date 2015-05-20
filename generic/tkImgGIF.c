@@ -410,6 +410,7 @@ FileReadGIF(
      * source and not a file.
      */
 
+    memset(colorMap, 0, MAXCOLORMAPSIZE*4);
     memset(gifConfPtr, 0, sizeof(GIFImageConfig));
     if (fileName == INLINE_DATA_BINARY || fileName == INLINE_DATA_BASE64) {
 	gifConfPtr->fromData = fileName;
@@ -592,6 +593,9 @@ FileReadGIF(
 	    if (trashBuffer == NULL) {
 		nBytes = fileWidth * fileHeight * 3;
 		trashBuffer = ckalloc(nBytes);
+		if (trashBuffer) {
+		    memset(trashBuffer, 0, nBytes);
+		}
 	    }
 
 	    /*
@@ -678,6 +682,9 @@ FileReadGIF(
 	block.pitch = block.pixelSize * imageWidth;
 	nBytes = block.pitch * imageHeight;
 	block.pixelPtr = ckalloc(nBytes);
+	if (block.pixelPtr) {
+	    memset(block.pixelPtr, 0, nBytes);
+	}
 
 	if (ReadImage(gifConfPtr, interp, block.pixelPtr, chan, imageWidth,
 		imageHeight, colorMap, srcX, srcY, BitSet(buf[8], INTERLACE),
