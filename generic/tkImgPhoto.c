@@ -2075,6 +2075,9 @@ ToggleComplexAlphaIfNeeded(
      */
 
     mPtr->flags &= ~COMPLEX_ALPHA;
+    if (c == NULL) {
+	return 0;
+    }
     c += 3;			/* Start at first alpha byte. */
     for (; c < end; c += 4) {
 	if (*c && *c != 255) {
