@@ -2553,7 +2553,7 @@ MoveSash(
 	    slavePtr->paneWidth = slavePtr->width = slavePtr->sashx
 		    - sashOffset - slavePtr->x - (2 * slavePtr->padx);
 	} else {
-	    slavePtr->paneWidth = slavePtr->height = slavePtr->sashy
+	    slavePtr->paneHeight = slavePtr->height = slavePtr->sashy
 		    - sashOffset - slavePtr->y - (2 * slavePtr->pady);
 	}
     }
