@@ -678,6 +678,15 @@ PanedWindowWidgetObjCmd(
 	if (objc <= 4) {
 	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
 		    pwPtr->tkwin);
+            if (tkwin == NULL) {
+                /*
+                 * Just a plain old bad window; Tk_NameToWindow filled in an
+                 * error message for us.
+                 */
+
+                result = TCL_ERROR;
+                break;
+            }
 	    for (i = 0; i < pwPtr->numSlaves; i++) {
 		if (pwPtr->slaves[i]->tkwin == tkwin) {
 		    resultObj = Tk_GetOptionInfo(interp,
