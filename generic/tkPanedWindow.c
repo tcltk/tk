@@ -203,6 +203,8 @@ static void		PanedWindowReqProc(ClientData clientData,
 static void		ArrangePanes(ClientData clientData);
 static void		Unlink(Slave *slavePtr);
 static Slave *		GetPane(PanedWindow *pwPtr, Tk_Window tkwin);
+static void		GetFirstLastVisiblePane(PanedWindow *pwPtr,
+			    int *firstPtr, int *lastPtr);
 static void		SlaveStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static int		PanedWindowSashCommand(PanedWindow *pwPtr,
@@ -1406,6 +1408,7 @@ DisplayPanedWindow(
     Tk_Window tkwin = pwPtr->tkwin;
     int i, sashWidth, sashHeight;
     const int horizontal = (pwPtr->orient == ORIENT_HORIZONTAL);
+    int first, last;
 
     pwPtr->flags &= ~REDRAW_PENDING;
     if ((pwPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -1452,9 +1455,10 @@ DisplayPanedWindow(
      * Draw the sashes.
      */
 
+    GetFirstLastVisiblePane(pwPtr, &first, &last);
     for (i = 0; i < pwPtr->numSlaves - 1; i++) {
 	slavePtr = pwPtr->slaves[i];
-	if (slavePtr->hide) {
+	if (slavePtr->hide || i == last) {
 	    continue;
 	}
 	if (sashWidth > 0 && sashHeight > 0) {
@@ -1699,17 +1703,10 @@ ArrangePanes(
     Tcl_Preserve((ClientData) pwPtr);
 
     /*
-     * Find index of last visible pane.
+     * Find index of first and last visible panes.
      */
 
-    for (i = 0, last = 0, first = -1; i < pwPtr->numSlaves; i++) {
-	if (pwPtr->slaves[i]->hide == 0) {
-	    if (first < 0) {
-		first = i;
-	    }
-	    last = i;
-	}
-    }
+    GetFirstLastVisiblePane(pwPtr, &first, &last);
 
     /*
      * First pass; compute sizes
@@ -2044,6 +2041,41 @@ GetPane(
 	}
     }
     return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetFirstLastVisiblePane --
+ *
+ *	Given panedwindow, find the index of the first and last visible panes
+ *	of that paned window.
+ *
+ * Results:
+ *	Index of the first and last visible panes.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GetFirstLastVisiblePane(
+    PanedWindow *pwPtr,		/* Pointer to the paned window info. */
+    int *firstPtr, 		/* Returned index for first. */
+    int *lastPtr)  		/* Returned index for last. */
+{
+    int i;
+
+    for (i = 0, *lastPtr = 0, *firstPtr = -1; i < pwPtr->numSlaves; i++) {
+	if (pwPtr->slaves[i]->hide == 0) {
+	    if (*firstPtr < 0) {
+		*firstPtr = i;
+	    }
+	    *lastPtr = i;
+	}
+    }
 }
 
 /*
