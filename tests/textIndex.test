@@ -905,6 +905,21 @@ test textIndex-22.12 {text index wordstart, unicode} {
 test textIndex-22.13 {text index wordstart, unicode} {
     text_test_word wordstart "\uc700\uc700 abc" 8
 } 3
+test textIndex-22.14 {text index wordstart, unicode, start index at internal segment start} {
+    catch {destroy .t}
+    text .t
+    .t insert end "C'est du texte en fran\u00e7ais\n"
+    .t insert end "\u042D\u0442\u043E\u0020\u0442\u0435\u043A\u0441\u0442\u0020\u043D\u0430\u0020\u0440\u0443\u0441\u0441\u043A\u043E\u043C"
+    .t mark set insert 1.23
+    set res [.t index "1.23 wordstart"]
+    .t mark set insert 2.16
+    lappend res [.t index "2.16 wordstart"] [.t index "2.15 wordstart"]
+} {1.18 2.13 2.13}
+test textIndex-22.15 {text index display wordstart} {
+    catch {destroy .t}
+    text .t
+    .t index "1.0 display wordstart"  ; # used to crash
+} 1.0
 
 test textIndex-23.1 {text paragraph start} {
     pack [text .t2]

@@ -131,6 +131,11 @@ XMapWindow(
 {
     MacDrawable *macWin = (MacDrawable *) window;
     XEvent event;
+    /*
+     * This function can be called from outside the AppKit event
+     * loop, so it needs its own AutoreleasePool.
+     */
+    NSAutoreleasePool* pool = [NSAutoreleasePool new];
 
     /*
      * Under certain situations it's possible for this function to be called
@@ -189,6 +194,7 @@ XMapWindow(
     event.xvisibility.type = VisibilityNotify;
     event.xvisibility.state = VisibilityUnobscured;
     NotifyVisibility(macWin->winPtr, &event);
+    [pool drain];
 }
 
 /*
@@ -646,6 +652,65 @@ XConfigureWindow(
 
     /* TkGenWMMoveRequestEvent(macWin->winPtr,
 	    macWin->winPtr->changes.x, macWin->winPtr->changes.y); */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXSetDrawingEnabled --
+ *
+ *	This function sets the TK_DO_NOT_DRAW flag for a given window and
+ *	all of its children.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The clipping regions for the window and its children are cleared.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkMacOSXSetDrawingEnabled(
+	TkWindow *winPtr,
+	int flag)
+{
+    TkWindow *childPtr;
+    MacDrawable *macWin = winPtr->privatePtr;
+
+    if (macWin) {
+	if (flag ) {
+	    macWin->flags &= ~TK_DO_NOT_DRAW;
+	} else {
+	    macWin->flags |= TK_DO_NOT_DRAW;
+	}
+    }
+
+    /*
+     * Set the flag for all children & their descendants, excluding
+     * Toplevels. (??? Do we need to exclude Toplevels?)
+     */
+
+    childPtr = winPtr->childList;
+    while (childPtr) {
+	if (!Tk_IsTopLevel(childPtr)) {
+	    TkMacOSXSetDrawingEnabled(childPtr, flag);
+	}
+	childPtr = childPtr->nextPtr;
+    }
+
+    /*
+     * If the window is a container, set the flag for its embedded window.
+     */
+
+    if (Tk_IsContainer(winPtr)) {
+	childPtr = TkpGetOtherWindow(winPtr);
+
+	if (childPtr) {
+	    TkMacOSXSetDrawingEnabled(childPtr, flag);
+	}
+    }
 }
 
 /*
