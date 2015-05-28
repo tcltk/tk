@@ -313,6 +313,9 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 		set x [expr {[winfo rootx $w] - [winfo reqwidth $menu]}]
 		set y [expr {(2 * [winfo rooty $w] + [winfo height $w]) / 2}]
 		set entry [MenuFindName $menu [$w cget -text]]
+		if {$entry eq ""} {
+                    set entry 0
+		}
 		if {[$w cget -indicatoron]} {
 		    if {$entry == [$menu index last]} {
 			incr y [expr {-([$menu yposition $entry] \
@@ -333,6 +336,9 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 		set x [expr {[winfo rootx $w] + [winfo width $w]}]
 		set y [expr {(2 * [winfo rooty $w] + [winfo height $w]) / 2}]
 		set entry [MenuFindName $menu [$w cget -text]]
+		if {$entry eq ""} {
+                    set entry 0
+		}
 		if {[$w cget -indicatoron]} {
 		    if {$entry == [$menu index last]} {
 			incr y [expr {-([$menu yposition $entry] \

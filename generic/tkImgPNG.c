@@ -10,6 +10,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "assert.h"
 #include "tkInt.h"
 
 #define	PNG_INT32(a,b,c,d)	\
@@ -1880,6 +1881,8 @@ DecodeLine(
      * Calculate offset into pixelPtr for the first pixel of the line.
      */
 
+    assert(pngPtr->currentLine < pngPtr->block.height);
+
     offset = pngPtr->currentLine * pngPtr->block.pitch;
 
     /*
@@ -2089,7 +2092,8 @@ ReadIDAT(
      * Process IDAT contents until there is no more in this chunk.
      */
 
-    while (chunkSz && !Tcl_ZlibStreamEof(pngPtr->stream)) {
+    while (chunkSz && !Tcl_ZlibStreamEof(pngPtr->stream)
+	    && pngPtr->currentLine < pngPtr->block.height) {
 	int len1, len2;
 
 	/*
@@ -2175,10 +2179,13 @@ ReadIDAT(
 
 	    /*
 	     * Try to read another line of pixels out of the buffer
-	     * immediately.
+	     * immediately, but don't allow write past end of block.
 	     */
 
-	    goto getNextLine;
+	    if (pngPtr->currentLine < pngPtr->block.height) {
+		goto getNextLine;
+	    }
+
 	}
 
 	/*
@@ -3345,7 +3352,7 @@ EncodePNG(
 	    pngPtr->colorType = PNG_COLOR_RGBA;
 	    pngPtr->bytesPerPixel = 4;
 	} else {
-	    pngPtr->colorType = PNG_COLOR_RGBA;
+	    pngPtr->colorType = PNG_COLOR_RGB;
 	    pngPtr->bytesPerPixel = 3;
 	}
     } else {
