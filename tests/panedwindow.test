@@ -2460,6 +2460,17 @@ test panedwindow-26.1 {DestroyPanedWindow} {
     }
     set result {}
 } {}
+test panedwindow-26.2 {DestroyPanedWindow, UnmapNotify event is propagated to slaves} {
+    panedwindow .pw
+    .pw add [button .pw.b]
+    pack .pw
+    update
+    set result [winfo ismapped .pw.b]
+    pack forget .pw
+    update
+    lappend result [winfo ismapped .pw.b]
+    lappend result [winfo ismapped .pw]
+} {1 0 0}
 
 test panedwindow-27.1 {PanedWindowIdentifyCoords} {
     panedwindow .p -bd 0 -sashwidth 2 -sashpad 2
