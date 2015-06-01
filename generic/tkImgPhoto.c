@@ -891,7 +891,7 @@ ImgPhotoCmd(
  		 * May not be able to trigger/ demo / test this.
  		 */
 
-		if (dataWidth > (UINT_MAX/3) / dataHeight) {
+		if (dataWidth > (int)((UINT_MAX/3) / dataHeight)) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"photo image dimensions exceed Tcl memory limits", -1));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
@@ -2223,7 +2223,7 @@ ImgPhotoSetSize(
 	    || (masterPtr->pix32 == NULL)) {
 	unsigned newPixSize;
 
-	if (pitch && height > UINT_MAX / pitch) {
+	if (pitch && height > (int)(UINT_MAX / pitch)) {
 	    return TCL_ERROR;
 	}
 	newPixSize = height * pitch;
@@ -3721,7 +3721,7 @@ ImgGetPhoto(
 	    newPixelSize += 2;
 	}
 
-	if (blockPtr->height > (UINT_MAX/newPixelSize)/blockPtr->width) {
+	if (blockPtr->height > (int)((UINT_MAX/newPixelSize)/blockPtr->width)) {
 	    return NULL;
 	}
 	data = attemptckalloc(newPixelSize*blockPtr->width*blockPtr->height);
