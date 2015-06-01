@@ -3026,6 +3026,7 @@ PanedWindowIdentifyCoords(
 {
     int i, sashHeight, sashWidth, thisx, thisy;
     int found, isHandle, lpad, rpad, tpad, bpad;
+    int first, last;
 
     if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	if (Tk_IsMapped(pwPtr->tkwin)) {
@@ -3065,10 +3066,11 @@ PanedWindowIdentifyCoords(
 	lpad = rpad = 0;
     }
 
+    GetFirstLastVisiblePane(pwPtr, &first, &last);
     isHandle = 0;
     found = -1;
     for (i = 0; i < pwPtr->numSlaves - 1; i++) {
-	if (pwPtr->slaves[i]->hide) {
+	if (pwPtr->slaves[i]->hide || i == last) {
 	    continue;
 	}
 	thisx = pwPtr->slaves[i]->sashx;
