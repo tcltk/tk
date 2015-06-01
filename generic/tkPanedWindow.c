@@ -1335,6 +1335,7 @@ PanedWindowEventProc(
     XEvent *eventPtr)		/* Information about event. */
 {
     PanedWindow *pwPtr = (PanedWindow *) clientData;
+    int i;
 
     if (eventPtr->type == Expose) {
 	if (pwPtr->tkwin != NULL && !(pwPtr->flags & REDRAW_PENDING)) {
@@ -1349,6 +1350,14 @@ PanedWindowEventProc(
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	DestroyPanedWindow(pwPtr);
+    } else if (eventPtr->type == UnmapNotify) {
+        for (i = 0; i < pwPtr->numSlaves; i++) {
+            Tk_UnmapWindow(pwPtr->slaves[i]->tkwin);
+        }
+    } else if (eventPtr->type == MapNotify) {
+        for (i = 0; i < pwPtr->numSlaves; i++) {
+            Tk_MapWindow(pwPtr->slaves[i]->tkwin);
+        }
     }
 }
 
