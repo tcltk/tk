@@ -2771,6 +2771,7 @@ PanedWindowProxyCommand(
 	PROXY_COORD, PROXY_FORGET, PROXY_PLACE
     };
     int index, x, y, sashWidth, sashHeight;
+    int internalBW, pwWidth, pwHeight;
     Tcl_Obj *coords[2];
 
     if (objc < 3) {
@@ -2820,11 +2821,16 @@ PanedWindowProxyCommand(
 	    return TCL_ERROR;
 	}
 
+        internalBW = Tk_InternalBorderWidth(pwPtr->tkwin);
 	if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	    if (x < 0) {
 		x = 0;
 	    }
-	    y = Tk_InternalBorderWidth(pwPtr->tkwin);
+            pwWidth = Tk_Width(pwPtr->tkwin) - (2 * internalBW);
+            if (x > pwWidth) {
+                x = pwWidth;
+            }
+            y = Tk_InternalBorderWidth(pwPtr->tkwin);
 	    sashWidth = pwPtr->sashWidth;
 	    sashHeight = Tk_Height(pwPtr->tkwin) -
 		    (2 * Tk_InternalBorderWidth(pwPtr->tkwin));
@@ -2832,6 +2838,10 @@ PanedWindowProxyCommand(
 	    if (y < 0) {
 		y = 0;
 	    }
+            pwHeight = Tk_Height(pwPtr->tkwin) - (2 * internalBW);
+            if (y > pwHeight) {
+                y = pwHeight;
+            }
 	    x = Tk_InternalBorderWidth(pwPtr->tkwin);
 	    sashHeight = pwPtr->sashWidth;
 	    sashWidth = Tk_Width(pwPtr->tkwin) -
