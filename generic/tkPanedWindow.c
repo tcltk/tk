@@ -3020,6 +3020,7 @@ PanedWindowIdentifyCoords(
     Tcl_Obj *list;
     int i, sashHeight, sashWidth, thisx, thisy;
     int found, isHandle, lpad, rpad, tpad, bpad;
+    int first, last;
     list = Tcl_NewObj();
 
     if (pwPtr->orient == ORIENT_HORIZONTAL) {
@@ -3060,10 +3061,11 @@ PanedWindowIdentifyCoords(
 	lpad = rpad = 0;
     }
 
+    GetFirstLastVisiblePane(pwPtr, &first, &last);
     isHandle = 0;
     found = -1;
     for (i = 0; i < pwPtr->numSlaves - 1; i++) {
-	if (pwPtr->slaves[i]->hide) {
+	if (pwPtr->slaves[i]->hide || i == last) {
 	    continue;
 	}
 	thisx = pwPtr->slaves[i]->sashx;
