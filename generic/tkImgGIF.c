@@ -593,7 +593,7 @@ FileReadGIF(
 	     */
 
 	    if (trashBuffer == NULL) {
-		if (fileWidth > (UINT_MAX/3)/fileHeight) {
+		if (fileWidth > (int)((UINT_MAX/3)/fileHeight)) {
 		    goto error;
 		}
 		nBytes = fileWidth * fileHeight * 3;
@@ -688,7 +688,7 @@ FileReadGIF(
 	    goto error;
 	}
 	block.pitch = block.pixelSize * imageWidth;
-	if (imageHeight > UINT_MAX/block.pitch) {
+	if (imageHeight > (int)(UINT_MAX/block.pitch)) {
 	    goto error;
 	}
 	nBytes = block.pitch * imageHeight;

@@ -1573,7 +1573,7 @@ times) so that it also becomes a knot point.
 \fB\-splinesteps \fInumber\fR
 Specifies the degree of smoothness desired for curves: each spline
 will be approximated with \fInumber\fR line segments. This
-option is ignored unless the \fB\-smooth\fR option is true or \fBraw\fR.
+option is ignored unless the \fB\-smooth\fR option is \fBtrue\fR or \fBraw\fR.
 .SS "OVAL ITEMS"
 .PP
 Items of type \fBoval\fR appear as circular or oval regions on
