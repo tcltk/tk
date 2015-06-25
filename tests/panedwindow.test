@@ -5087,6 +5087,27 @@ test panedwindow-25.1 {DestroyPanedWindow} -setup {
     }
     set result {}
 } -result {}
+test panedwindow-25.2 {UnmapNotify and MapNotify events are propagated to slaves} -setup {
+    deleteWindows
+} -body {
+    panedwindow .pw
+    .pw add [button .pw.b]
+    pack .pw
+    update
+    set result [winfo ismapped .pw.b]
+    pack forget .pw
+    update
+    lappend result [winfo ismapped .pw.b]
+    lappend result [winfo ismapped .pw]
+    pack .pw
+    update
+    lappend result [winfo ismapped .pw]
+    lappend result [winfo ismapped .pw.b]
+    destroy .pw .pw.b
+    set result
+} -cleanup {
+	deleteWindows
+} -result {1 0 0 1 1}
 
 
 test panedwindow-26.1 {PanedWindowIdentifyCoords} -setup {
