@@ -1088,8 +1088,8 @@ including \fIindex2\fR, including the text and information about marks, tags,
 and embedded windows. If \fIindex2\fR is not specified, then it defaults to
 one character past \fIindex1\fR. The information is returned in the following
 format:
-.LP
 .RS
+.LP
 \fIkey1 value1 index1 key2 value2 index2\fR ...
 .LP
 The possible \fIkey\fR values are \fBtext\fR, \fBmark\fR, \fBtagon\fR,
