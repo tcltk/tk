@@ -943,6 +943,19 @@ test textIndex-24.1 {text mark prev} {
     set res
 } {1.0}
 
+test textIndex-25.1 {IndexCountBytesOrdered, bug [3f1f79abcf]} {
+    pack [text .t2]
+    .t2 tag configure elided -elide 1
+    .t2 insert end "01\n02\n03\n04\n05\n06\n07\n08\n09\n10\n"
+    .t2 insert end "11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n"
+    .t2 insert end "21\n22\n23\n25\n26\n27\n28\n29\n30\n31"
+    .t2 insert end "32\n33\n34\n36\n37\n38\n39" elided
+    # then this used to crash Tk:
+    .t2 see end
+    focus -force .t2   ; # to see the cursor blink
+    destroy .t2
+} {}
+
 # cleanup
 rename textimage {}
 catch {destroy .t}
