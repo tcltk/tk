@@ -30,7 +30,7 @@ Specifies a desired height for the overall panedwindow widget. May be any
 value accepted by \fBTk_GetPixels\fR. If an empty string, the widget will be
 made high enough to allow all contained widgets to have their natural height.
 .OP \-proxyrelief proxyRelief ProxyRelief
-Relief to use when drawing the proxy.  May be any of the standard Tk
+Relief to use when drawing the proxy. May be any of the standard Tk
 relief values.
 .OP \-opaqueresize opaqueResize OpaqueResize
 Specifies whether panes should be resized as a sash is moved (true),
