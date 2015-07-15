@@ -622,7 +622,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkGenerateButtonEvent) /* 50 */
 #define TkGenWMDestroyEvent \
 	(tkIntPlatStubsPtr->tkGenWMDestroyEvent) /* 51 */
-/* Slot 52 is reserved */
+#define TkMacOSXSetDrawingEnabled \
+	(tkIntPlatStubsPtr->tkMacOSXSetDrawingEnabled) /* 52 */
 #define TkpGetMS \
 	(tkIntPlatStubsPtr->tkpGetMS) /* 53 */
 #define TkMacOSXDrawable \
