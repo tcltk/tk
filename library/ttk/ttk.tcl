@@ -122,7 +122,7 @@ proc ttk::LoadThemes {} {
     variable library
 
     # "default" always present:
-    uplevel #0 [list source [file join $library defaults.tcl]] 
+    uplevel #0 [list source [file join $library defaults.tcl]]
 
     set builtinThemes [style theme names]
     foreach {theme scripts} {
@@ -132,6 +132,7 @@ proc ttk::LoadThemes {} {
 	winnative	winTheme.tcl
 	xpnative	{xpTheme.tcl vistaTheme.tcl}
 	aqua 		aquaTheme.tcl
+	droid 		droidTheme.tcl
     } {
 	if {[lsearch -exact $builtinThemes $theme] >= 0} {
             foreach script $scripts {
@@ -154,7 +155,7 @@ ttk::LoadThemes; rename ::ttk::LoadThemes {}
 #
 
 proc ttk::DefaultTheme {} {
-    set preferred [list aqua vista xpnative winnative]
+    set preferred [list aqua vista xpnative winnative droid]
 
     set userTheme [option get . tkTheme TkTheme]
     if {$userTheme ne {} && ![catch {

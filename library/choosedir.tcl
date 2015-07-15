@@ -148,6 +148,7 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
 	{-initialdir "" "" ""}
 	{-parent "" "" "."}
 	{-title "" "" ""}
+	{-nativeonly "" "" 0}
     }
 
     # 2: default values depending on the type of the dialog
@@ -177,7 +178,7 @@ proc ::tk::dialog::file::chooseDir::Config {dataName argList} {
 	# Ensure that initialdir is an absolute path name.
 	if {[file isdirectory $data(-initialdir)]} {
 	    set old [pwd]
-	    cd $data(-initialdir)
+	    catch {cd $data(-initialdir)}
 	    set data(selectPath) [pwd]
 	    cd $old
 	} else {

@@ -57,7 +57,11 @@ typedef XID KeySym;
 
 typedef unsigned long Mask;
 
+#ifdef PLATFORM_SDL
+typedef XID Atom;
+#else
 typedef unsigned long Atom;
+#endif
 
 typedef unsigned long VisualID;
 

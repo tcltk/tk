@@ -242,6 +242,7 @@ proc ::tk::MotifFDialog_Config {dataName type argList} {
 	{-parent "" "" "."}
 	{-title "" "" ""}
 	{-typevariable "" "" ""}
+	{-nativeonly "" "" 0}
     }
     if {$type eq "open"} {
 	lappend specs {-multiple "" "" "0"}
@@ -580,6 +581,12 @@ proc ::tk::MotifFDialog_LoadFiles {w} {
 	$data(dList) insert end ".."
 	return
     }
+    if {$data(-nativeonly) && [file system $data(selectPath)] ne "native"} {
+	cd $appPWD
+
+	$data(dList) insert end ".."
+	return
+    }
 
     # Make the dir and file lists
     #
@@ -594,6 +601,9 @@ proc ::tk::MotifFDialog_LoadFiles {w} {
     set flist ""
     foreach f [glob -nocomplain .* *] {
 	if {[file isdir ./$f]} {
+	    if {$data(-nativeonly) && [file system ./$f] ne "native"} {
+		continue
+	    }
 	    lappend dlist $f
 	} else {
             foreach pat $data(filter) {

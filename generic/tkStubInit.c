@@ -14,7 +14,13 @@
 #if !(defined(_WIN32) || defined(MAC_OSX_TK))
 /* UNIX */
 #define UNIX_TK
+#ifndef PLATFORM_SDL
 #include "tkUnixInt.h"
+#endif
+#endif
+
+#ifdef PLATFORM_SDL
+#include "tkSDLInt.h"
 #endif
 
 #ifdef _WIN32
@@ -72,6 +78,7 @@ TkCreateXEventSource(void)
  * Make sure that extensions which call XParseColor through the stub
  * table, call TkParseColor instead. [Bug 3486474]
  */
+#   undef  XParseColor
 #   define XParseColor	TkParseColor
 
 #   ifdef __CYGWIN__
@@ -556,7 +563,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkGetTransientMaster, /* 49 */
     TkGenerateButtonEvent, /* 50 */
     TkGenWMDestroyEvent, /* 51 */
-    0, /* 52 */
+    TkMacOSXSetDrawingEnabled, /* 52 */
     TkpGetMS, /* 53 */
     TkMacOSXDrawable, /* 54 */
     TkpScanWindowId, /* 55 */

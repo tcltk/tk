@@ -27,7 +27,7 @@ pack $btns -side bottom -fill x
 canvas $c -relief raised -width 450 -height 300
 pack $w.c -side top -fill x
 
-set plotFont {Helvetica 18}
+set plotFont {Helvetica -18}
 
 $c create line 100 250 400 250 -width 2
 $c create line 100 250 100 50 -width 2

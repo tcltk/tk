@@ -19,8 +19,17 @@ static const int WIN32_XDRAWLINE_HACK = 0;
 #endif
 
 #define BORDERWIDTH     2
-#define SCROLLBAR_WIDTH 14
+#ifdef ANDROID
+char ttkDefScrollbarWidth[TCL_INTEGER_SPACE] = "19";
+#define SCROLLBAR_WIDTH ttkDefScrollbarWidth
+#define FALLBACK_SCROLLBAR_WIDTH 19
+int ttkMinThumbSize = 14;
+#define MIN_THUMB_SIZE  ttkMinThumbSize
+#else
+#define SCROLLBAR_WIDTH "14"
+#define FALLBACK_SCROLLBAR_WIDTH 14
 #define MIN_THUMB_SIZE  8
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -377,7 +386,11 @@ typedef struct {
 /*XPM*/
 static const char *const button_images[] = {
     /* width height ncolors chars_per_pixel */
+#ifdef ANDROID
+    "92 23 8 1",
+#else
     "52 13 8 1",
+#endif
     /* colors */
     "A c #808000000000 s shadow",
     "B c #000080800000 s highlight",
@@ -398,7 +411,33 @@ static Ttk_StateTable checkbutton_states[] = {
     { 0, 0, 0 }
 };
 
-static const char *const checkbutton_pixels[] = {
+static const char *const checkbutton_pixels_large[] = {
+    "AAAAAAAAAAAAAAAAAAAAABBAAAAAAAAAAAAAAAAAAAAABBAAAAAAAAAAAAAAAAAAAAABBAAAAAAAAAAAAAAAAAAAAABB",
+    "AAAAAAAAAAAAAAAAAAAAABBAAAAAAAAAAAAAAAAAAAAABBAAAAAAAAAAAAAAAAAAAAABBAAAAAAAAAAAAAAAAAAAAABB",
+    "AAEEEEEEEEEEEEEEEEEECBBAAEEEEEEEEEEEEEEEEEECBBAAEEEEEEEEEEEEEEEEEECBBAAEEEEEEEEEEEEEEEEEECBB",
+    "AAEEEEEEEEEEEEEEEEECCBBAAEEEEEEEEEEEEEEEEECCBBAAEEEEEEEEEEEEEEEEECCBBAAEEEEEEEEEEEEEEEEECCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDDDDDDDDDDDDDDDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFFFFFFFFFFFFFFFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDDDDDDDDDDDDDGDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFFFFFFFFFFFFFHFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDDDDDDDDDDDDGGDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFFFFFFFFFFFFHHFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDDDDDDDDDDDGGGDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFFFFFFFFFFFHHHFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDDDDDDDDDDGGGGDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFFFFFFFFFFHHHHFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDGGDDDDDDGGGGGDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFHHFFFFFFHHHHHFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDGGDDDDDGGGGGDDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFHHFFFFFHHHHHFFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDGGGGDDGGGGGDDDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFHHHHFFHHHHHFFFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDGGGGGGGGGGDDDDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFHHHHHHHHHHFFFFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDGGGGGGGGGDDDDDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFHHHHHHHHHFFFFFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDDGGGGGGGDDDDDDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFFHHHHHHHFFFFFFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDDDGGGGGDDDDDDDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFFFHHHHHFFFFFFFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDDDDGGGDDDDDDDDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFFFFHHHFFFFFFFFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDDDDDGDDDDDDDDDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFFFFFHFFFFFFFFFCCBB",
+    "AAEEDDDDDDDDDDDDDDDCCBBAAEEDDDDDDDDDDDDDDDCCBBAAEEFFFFFFFFFFFFFFFCCBBAAEEFFFFFFFFFFFFFFFCCBB",
+    "AAECCCCCCCCCCCCCCCCCCBBAAECCCCCCCCCCCCCCCCCCBBAAECCCCCCCCCCCCCCCCCCBBAAECCCCCCCCCCCCCCCCCCBB",
+    "AACCCCCCCCCCCCCCCCCCCBBAACCCCCCCCCCCCCCCCCCCBBAACCCCCCCCCCCCCCCCCCCBBAACCCCCCCCCCCCCCCCCCCBB",
+    "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+    "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+};
+
+static const char *const checkbutton_pixels_small[] = {
     "AAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAAB",
     "AEEEEEEEEEECBAEEEEEEEEEECBAEEEEEEEEEECBAEEEEEEEEEECB",
     "AEDDDDDDDDDCBAEDDDDDDDDDCBAEFFFFFFFFFCBAEFFFFFFFFFCB",
@@ -414,9 +453,15 @@ static const char *const checkbutton_pixels[] = {
     "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 };
 
-static IndicatorSpec checkbutton_spec = {
+static IndicatorSpec checkbutton_spec_large = {
+    23, 23, 4,		/* width, height, nimages */
+    checkbutton_pixels_large,
+    checkbutton_states
+};
+
+static IndicatorSpec checkbutton_spec_small = {
     13, 13, 4,		/* width, height, nimages */
-    checkbutton_pixels,
+    checkbutton_pixels_small,
     checkbutton_states
 };
 
@@ -428,7 +473,33 @@ static Ttk_StateTable radiobutton_states[] = {
     { 0, 0, 0 }
 };
 
-static const char *const radiobutton_pixels[] = {
+static const char *const radiobutton_pixels_large[] = {
+    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+    "FFFFFFFFAAAAAFFFFFFFFFFFFFFFFFFAAAAAFFFFFFFFFFFFFFFFFFAAAAAFFFFFFFFFFFFFFFFFFAAAAAFFFFFFFFFF",
+    "FFFFFFFAAAAAAAFFFFFFFFFFFFFFFFAAAAAAAFFFFFFFFFFFFFFFFAAAAAAAFFFFFFFFFFFFFFFFAAAAAAAFFFFFFFFF",
+    "FFFFFAAEEEEEEEAAFFFFFFFFFFFFAAEEEEEEEAAFFFFFFFFFFFFAAEEEEEEEAAFFFFFFFFFFFFAAEEEEEEEAAFFFFFFF",
+    "FFFFAAEEDDDDDEEAAAFFFFFFFFFAAEEDDDDDEEAAAFFFFFFFFFAAEEFFFFFEEAAAFFFFFFFFFAAEEFFFFFEEAAAFFFFF",
+    "FFFAEEEDDDDDDDEEEABFFFFFFFAEEEDDDDDDDEEEABFFFFFFFAEEEFFFFFFFEEEABFFFFFFFAEEEFFFFFFFEEEABFFFF",
+    "FFAAEDDDDDDDDDDDCEBFFFFFFAAEDDDDDDDDDDDCEBFFFFFFAAEFFFFFFFFFFFCEBFFFFFFAAEFFFFFFFFFFFCEBFFFF",
+    "FFAEEDDDDDDDDDDDCCBBFFFFFAEEDDDDDDDDDDDCCBBFFFFFAEEFFFFFFFFFFFCCBBFFFFFAEEFFFFFFFFFFFCCBBFFF",
+    "FAAEDDDDDDDDDDDDDCCBFFFFAAEDDDDDGGGDDDDDCCBFFFFAAEFFFFFFFFFFFFFCCBFFFFAAEFFFFFHHHFFFFFCCBFFF",
+    "FAEDDDDDDDDDDDDDDDCBBFFFAEDDDDDGGGGGDDDDDCBBFFFAEFFFFFFFFFFFFFFFCBBFFFAEFFFFFHHHHHFFFFFCBBFF",
+    "AAEDDDDDDDDDDDDDDDCBBFFAAEDDDDGGGGGGGDDDDCBBFFAAEFFFFFFFFFFFFFFFCBBFFAAEFFFFHHHHHHHFFFFCBBFF",
+    "AAEDDDDDDDDDDDDDDDCBBFFAAEDDDDGGGGGGGDDDDCBBFFAAEFFFFFFFFFFFFFFFCBBFFAAEFFFFHHHHHHHFFFFCBBFF",
+    "AAEDDDDDDDDDDDDDDDCBBFFAAEDDDDGGGGGGGDDDDCBBFFAAEFFFFFFFFFFFFFFFCBBFFAAEFFFFHHHHHHHFFFFCBBFF",
+    "AAEDDDDDDDDDDDDDDDCBBFFAAEDDDDDGGGGGDDDDDCBBFFAAEFFFFFFFFFFFFFFFCBBFFAAEFFFFFHHHHHFFFFFCBBFF",
+    "FAEEDDDDDDDDDDDDDCCBFFFFAEEDDDDDGGGDDDDDCCBFFFFAEEFFFFFFFFFFFFFCCBFFFFAEEFFFFFHHHFFFFFCCBFFF",
+    "FAAEEDDDDDDDDDDDCCBBFFFFAAEEDDDDDDDDDDDCCBBFFFFAAEEFFFFFFFFFFFCCBBFFFFAAEEFFFFFFFFFFFCCBBFFF",
+    "FFAAEDDDDDDDDDDDCCBFFFFFFAAEDDDDDDDDDDDCCBFFFFFFAAEFFFFFFFFFFFCCBFFFFFFAAEFFFFFFFFFFFCCBFFFF",
+    "FFAACCDDDDDDDDDCCBBFFFFFFAACCDDDDDDDDDCCBBFFFFFFAACCFFFFFFFFFCCBBFFFFFFAACCFFFFFFFFFCCBBFFFF",
+    "FFFAACCCDDDDDCCCBBFFFFFFFFAACCCDDDDDCCCBBFFFFFFFFAACCCFFFFFCCCBBFFFFFFFFAACCCFFFFFCCCBBFFFFF",
+    "FFFFBBBCCCCCCCBBBFFFFFFFFFFBBBCCCCCCCBBBFFFFFFFFFFBBBCCCCCCCBBBFFFFFFFFFFBBBCCCCCCCBBBFFFFFF",
+    "FFFFFFBBBBBBBBBFFFFFFFFFFFFFFBBBBBBBBBFFFFFFFFFFFFFFBBBBBBBBBFFFFFFFFFFFFFFBBBBBBBBBFFFFFFFF",
+    "FFFFFFFFBBBBBFFFFFFFFFFFFFFFFFFBBBBBFFFFFFFFFFFFFFFFFFBBBBBFFFFFFFFFFFFFFFFFFBBBBBFFFFFFFFFF",
+    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+};
+
+static const char *const radiobutton_pixels_small[] = {
     "FFFFAAAAFFFFFFFFFAAAAFFFFFFFFFAAAAFFFFFFFFFAAAAFFFFF",
     "FFAAEEEEAAFFFFFAAEEEEAAFFFFFAAEEEEAAFFFFFAAEEEEAAFFF",
     "FAEEDDDDEEBFFFAEEDDDDEEBFFFAEEFFFFEEBFFFAEEFFFFEEBFF",
@@ -444,9 +515,15 @@ static const char *const radiobutton_pixels[] = {
     "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
 };
 
-static IndicatorSpec radiobutton_spec = {
+static IndicatorSpec radiobutton_spec_large = {
+    23, 23, 4,		/* width, height, nimages */
+    radiobutton_pixels_large,
+    radiobutton_states
+};
+
+static IndicatorSpec radiobutton_spec_small = {
     13, 13, 4,		/* width, height, nimages */
-    radiobutton_pixels,
+    radiobutton_pixels_small,
     radiobutton_states
 };
 
@@ -485,9 +562,34 @@ static void IndicatorElementSize(
     IndicatorSpec *spec = clientData;
     IndicatorElement *indicator = elementRecord;
     Ttk_Padding margins;
+    Display *display = Tk_Display(tkwin);
+    int dim;
+#ifdef PLATFORM_SDL
+    int wM, wS;
+
+    ScreenGetMMWidth(display, DefaultScreenOfDisplay(display), &wM, &wS);
+    dim = 2 * wS;
+    dim /= wM;
+#else
+    dim = 2 * WidthOfScreen(DefaultScreenOfDisplay(display));
+    dim /= WidthMMOfScreen(DefaultScreenOfDisplay(display));
+#endif
+    if (dim >= 11) {
+	/* more than 140 DPI */
+	if (spec == &checkbutton_spec_small) {
+	    spec = &checkbutton_spec_large;
+	} else if (spec == &radiobutton_spec_small) {
+	    spec = &radiobutton_spec_large;
+	}
+    }
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     *widthPtr = spec->width + Ttk_PaddingWidth(margins);
     *heightPtr = spec->height + Ttk_PaddingHeight(margins);
+    if (dim >= 22) {
+	/* more than 280 DPI */
+	*widthPtr += spec->width;
+	*heightPtr += spec->height;
+    }
 }
 
 static void IndicatorElementDraw(
@@ -499,20 +601,47 @@ static void IndicatorElementDraw(
     Display *display = Tk_Display(tkwin);
     Ttk_Padding padding;
     XColor *fgColor, *frameColor, *shadeColor, *indicatorColor, *borderColor;
-
-    int index, ix, iy;
+    int index, ix, iy, w, h, dim;
     XGCValues gcValues;
     GC copyGC;
     unsigned long imgColors[8];
     XImage *img;
+#ifdef PLATFORM_SDL
+    int wM, wS;
+#endif
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
+#ifdef PLATFORM_SDL
+    ScreenGetMMWidth(display, DefaultScreenOfDisplay(display), &wM, &wS);
+    dim = 2 * wS;
+    dim /= wM;
+#else
+    dim = 2 * WidthOfScreen(DefaultScreenOfDisplay(display));
+    dim /= WidthMMOfScreen(DefaultScreenOfDisplay(display));
+#endif
+    if (dim >= 11) {
+	/* more than 140 DPI */
+	if (spec == &checkbutton_spec_small) {
+	    spec = &checkbutton_spec_large;
+	} else if (spec == &radiobutton_spec_small) {
+	    spec = &radiobutton_spec_large;
+	}
+    }
+
+    w = spec->width;
+    h = spec->height;
+    if (dim >= 22) {
+	/* more than 280 DPI */
+	w += spec->width;
+	h += spec->height;
+    }
+
     if (   b.x < 0
 	|| b.y < 0
-	|| Tk_Width(tkwin) < b.x + spec->width
-	|| Tk_Height(tkwin) < b.y + spec->height)
+	|| Tk_Width(tkwin) < b.x + w
+	|| Tk_Height(tkwin) < b.y + h)
     {
 	/* Oops!  not enough room to display the image.
 	 * Don't draw anything.
@@ -545,7 +674,7 @@ static void IndicatorElementDraw(
      * Create a scratch buffer to store the image:
      */
     img = XGetImage(display,d, 0, 0,
-	    (unsigned int)spec->width, (unsigned int)spec->height,
+	    (unsigned int)w, (unsigned int)h,
 	    AllPlanes, ZPixmap);
     if (img == NULL)
 	return;
@@ -554,10 +683,26 @@ static void IndicatorElementDraw(
      * Create the image, painting it into an XImage one pixel at a time.
      */
     index = Ttk_StateTableLookup(spec->map, state);
-    for (iy=0 ; iy<spec->height ; iy++) {
-	for (ix=0 ; ix<spec->width ; ix++) {
-	    XPutPixel(img, ix, iy,
-		imgColors[spec->pixels[iy][index*spec->width+ix] - 'A'] );
+    dim = w;
+    w = spec->width;
+    h = spec->height;
+    for (iy=0 ; iy<h ; iy++) {
+	if (dim > w) {
+	    for (ix=0 ; ix<w ; ix++) {
+		XPutPixel(img, ix*2, iy*2,
+		    imgColors[spec->pixels[iy][index*dim+ix] - 'A'] );
+		XPutPixel(img, ix*2+1, iy*2,
+		    imgColors[spec->pixels[iy][index*dim+ix] - 'A'] );
+		XPutPixel(img, ix*2, iy*2+1,
+		    imgColors[spec->pixels[iy][index*dim+ix] - 'A'] );
+		XPutPixel(img, ix*2+1, iy*2+1,
+		    imgColors[spec->pixels[iy][index*dim+ix] - 'A'] );
+	    }
+	} else {
+	    for (ix=0 ; ix<w ; ix++) {
+		XPutPixel(img, ix, iy,
+		    imgColors[spec->pixels[iy][index*dim+ix] - 'A'] );
+	    }
 	}
     }
 
@@ -603,7 +748,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowsize", TK_OPTION_PIXELS,
-	Tk_Offset(ArrowElement,sizeObj), STRINGIFY(SCROLLBAR_WIDTH) },
+	Tk_Offset(ArrowElement,sizeObj), SCROLLBAR_WIDTH },
     { "-background", TK_OPTION_BORDER,
 	Tk_Offset(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR,
@@ -628,8 +773,9 @@ static void ArrowElementSize(
 {
     ArrowElement *arrow = elementRecord;
     int direction = *(int *)clientData;
-    int width = SCROLLBAR_WIDTH;
+    int width = FALLBACK_SCROLLBAR_WIDTH;
 
+    Tcl_GetInt(NULL, SCROLLBAR_WIDTH, &width);
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &width);
     width -= Ttk_PaddingWidth(ArrowPadding);
     TtkArrowSize(width/2, direction, widthPtr, heightPtr);
@@ -672,7 +818,11 @@ static Ttk_ElementSpec ArrowElementSpec = {
  * 	Draw an arrow in the direction where the menu will be posted.
  */
 
+#ifdef ANDROID
+#define MENUBUTTON_ARROW_SIZE 10
+#else
 #define MENUBUTTON_ARROW_SIZE 5
+#endif
 
 typedef struct {
     Tcl_Obj *directionObj;
@@ -695,7 +845,11 @@ static Ttk_ElementOptionSpec MenubuttonArrowElementOptions[] = {
     { NULL, 0, 0, NULL }
 };
 
+#ifdef ANDROID
+static Ttk_Padding MenubuttonArrowPadding = { 5, 0, 5, 0 };
+#else
 static Ttk_Padding MenubuttonArrowPadding = { 3, 0, 3, 0 };
+#endif
 
 static void MenubuttonArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -788,7 +942,8 @@ static void TroughElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     TroughElement *troughPtr = elementRecord;
-    int borderWidth = 2, grooveWidth = 0;
+    int borderWidth = 2;
+    int grooveWidth = 0;
 
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->grooveWidthObj, &grooveWidth);
@@ -804,7 +959,8 @@ static void TroughElementDraw(
 {
     TroughElement *troughPtr = elementRecord;
     Tk_3DBorder border = NULL;
-    int borderWidth = 2, relief = TK_RELIEF_SUNKEN, groove = -1, orient;
+    int borderWidth = 2;
+    int relief = TK_RELIEF_SUNKEN, groove = -1, orient;
 
     border = Tk_Get3DBorderFromObj(tkwin, troughPtr->colorObj);
     Ttk_GetOrientFromObj(NULL, troughPtr->orientObj, &orient);
@@ -851,7 +1007,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec ThumbElementOptions[] = {
     { "-width", TK_OPTION_PIXELS, Tk_Offset(ThumbElement,sizeObj),
-        STRINGIFY(SCROLLBAR_WIDTH) },
+        SCROLLBAR_WIDTH },
     { "-background", TK_OPTION_BORDER, Tk_Offset(ThumbElement,borderObj),
 	DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR, Tk_Offset(ThumbElement,borderColorObj),
@@ -933,10 +1089,17 @@ typedef struct {
 } SliderElement;
 
 static Ttk_ElementOptionSpec SliderElementOptions[] = {
+#ifdef ANDROID
+    { "-sliderlength", TK_OPTION_PIXELS, Tk_Offset(SliderElement,lengthObj),
+	"25" },
+    { "-sliderthickness",TK_OPTION_PIXELS,Tk_Offset(SliderElement,thicknessObj),
+	"25" },
+#else
     { "-sliderlength", TK_OPTION_PIXELS, Tk_Offset(SliderElement,lengthObj),
 	"15" },
     { "-sliderthickness",TK_OPTION_PIXELS,Tk_Offset(SliderElement,thicknessObj),
 	"15" },
+#endif
     { "-sliderrelief", TK_OPTION_RELIEF, Tk_Offset(SliderElement,reliefObj),
 	"raised" },
     { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SliderElement,borderWidthObj),
@@ -982,7 +1145,8 @@ static void SliderElementDraw(
     SliderElement *slider = elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, slider->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, slider->borderColorObj);
-    int relief = TK_RELIEF_RAISED, borderWidth = 2;
+    int relief = TK_RELIEF_RAISED;
+    int borderWidth = 2;
 
     Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, slider->reliefObj, &relief);
@@ -1017,10 +1181,17 @@ typedef struct {
 static Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	Tk_Offset(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
+#ifdef ANDROID
+    { "-diameter", TK_OPTION_PIXELS,
+	Tk_Offset(TreeitemIndicator,diameterObj), "15" },
+    { "-indicatormargins", TK_OPTION_STRING,
+	Tk_Offset(TreeitemIndicator,marginObj), "4 4 8 4" },
+#else
     { "-diameter", TK_OPTION_PIXELS,
 	Tk_Offset(TreeitemIndicator,diameterObj), "9" },
     { "-indicatormargins", TK_OPTION_STRING,
 	Tk_Offset(TreeitemIndicator,marginObj), "2 2 4 2" },
+#endif
     { NULL, 0, 0, NULL }
 };
 
@@ -1093,9 +1264,9 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "border", &BorderElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
-	    &IndicatorElementSpec, &checkbutton_spec);
+	    &IndicatorElementSpec, &checkbutton_spec_small);
     Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
-	    &IndicatorElementSpec, &radiobutton_spec);
+	    &IndicatorElementSpec, &radiobutton_spec_small);
     Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
 	    &MenubuttonArrowElementSpec, NULL);
 
@@ -1126,5 +1297,46 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
 
     return TCL_OK;
 }
+
+#ifdef ANDROID
+/*------------------------------------------------------------------------
+ * TtkDroidTheme_Init --
+ * 	Install droid theme.
+ */
+MODULE_SCOPE int TtkDroidTheme_Init(Tcl_Interp *interp)
+{
+    Ttk_Theme theme =  Ttk_CreateTheme(interp, "droid", NULL);
+
+    if (!theme) {
+	return TCL_ERROR;
+    }
+
+    Ttk_RegisterElement(interp, theme, "border", &BorderElementSpec, NULL);
+
+    Ttk_RegisterElement(interp, theme, "field", &FieldElementSpec, NULL);
+
+    Ttk_RegisterElement(interp, theme, "trough", &TroughElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "thumb", &ThumbElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "slider", &SliderElementSpec, NULL);
+
+    Ttk_RegisterElement(interp, theme, "uparrow",
+	    &ArrowElementSpec, &ArrowElements[0]);
+    Ttk_RegisterElement(interp, theme, "downarrow",
+	    &ArrowElementSpec, &ArrowElements[1]);
+    Ttk_RegisterElement(interp, theme, "leftarrow",
+	    &ArrowElementSpec, &ArrowElements[2]);
+    Ttk_RegisterElement(interp, theme, "rightarrow",
+	    &ArrowElementSpec, &ArrowElements[3]);
+    Ttk_RegisterElement(interp, theme, "arrow",
+	    &ArrowElementSpec, &ArrowElements[0]);
+
+    Ttk_RegisterElement(interp, theme, "arrow",
+	    &ArrowElementSpec, &ArrowElements[0]);
+
+    Tcl_PkgProvide(interp, "ttk::theme::droid", TTK_VERSION);
+
+    return TCL_OK;
+}
+#endif
 
 /*EOF*/

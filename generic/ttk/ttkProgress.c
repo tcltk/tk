@@ -14,7 +14,11 @@
  * +++ Widget record:
  */
 
+#ifdef ANDROID
+#define DEF_PROGRESSBAR_LENGTH "160"
+#else
 #define DEF_PROGRESSBAR_LENGTH "100"
+#endif
 enum {
     TTK_PROGRESSBAR_DETERMINATE, TTK_PROGRESSBAR_INDETERMINATE
 };

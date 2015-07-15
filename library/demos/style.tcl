@@ -25,17 +25,17 @@ pack $btns -side bottom -fill x
 set family Courier
 
 text $w.text -yscrollcommand "$w.scroll set" -setgrid true \
-	-width 70 -height 32 -wrap word -font "$family 12"
-scrollbar $w.scroll -command "$w.text yview"
+	-width 70 -height 32 -wrap word -font "$family 8"
+ttk::scrollbar $w.scroll -command "$w.text yview"
 pack $w.scroll -side right -fill y
 pack $w.text -expand yes -fill both
 
 # Set up display styles
 
-$w.text tag configure bold -font "$family 12 bold italic"
-$w.text tag configure big -font "$family 14 bold"
-$w.text tag configure verybig -font "Helvetica 24 bold"
-$w.text tag configure tiny -font "Times 8 bold"
+$w.text tag configure bold -font "$family 8 bold italic"
+$w.text tag configure big -font "$family 11 bold"
+$w.text tag configure verybig -font "Helvetica 18 bold"
+$w.text tag configure tiny -font "Times 6 bold"
 if {[winfo depth $w] > 1} {
     $w.text tag configure color1 -background #a0b7ce
     $w.text tag configure color2 -foreground red
@@ -56,8 +56,8 @@ $w.text tag configure underline -underline on
 $w.text tag configure overstrike -overstrike on
 $w.text tag configure right -justify right
 $w.text tag configure center -justify center
-$w.text tag configure super -offset 4p -font "$family 10"
-$w.text tag configure sub -offset -2p -font "$family 10"
+$w.text tag configure super -offset 4p -font "$family 8"
+$w.text tag configure sub -offset -2p -font "$family 8"
 $w.text tag configure margins -lmargin1 12m -lmargin2 6m -rmargin 10m
 $w.text tag configure spacing -spacing1 10p -spacing2 2p \
 	-lmargin1 12m -lmargin2 6m -rmargin 10m

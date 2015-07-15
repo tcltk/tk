@@ -250,8 +250,16 @@ GetPixelsFromObjEx(
 	if ((pixelPtr->tkwin != tkwin) || dblPtr) {
 	    d = pixelPtr->value;
 	    if (pixelPtr->units >= 0) {
-		d *= bias[pixelPtr->units] * WidthOfScreen(Tk_Screen(tkwin));
-		d /= WidthMMOfScreen(Tk_Screen(tkwin));
+		int widthM, widthS;
+#ifdef PLATFORM_SDL
+		ScreenGetMMWidth(Tk_Display(tkwin), Tk_Screen(tkwin),
+		    &widthM, &widthS);
+#else
+		widthS = WidthOfScreen(Tk_Screen(tkwin));
+		widthM = WidthMMOfScreen(Tk_Screen(tkwin));
+#endif
+		d *= bias[pixelPtr->units] * widthS;
+		d /= widthM;
 	    }
 	    pixelPtr->returnValue = (int) (d<0 ? d-0.5 : d+0.5);
 	    pixelPtr->tkwin = tkwin;
@@ -557,8 +565,16 @@ Tk_GetMMFromObj(
     if (mmPtr->tkwin != tkwin) {
 	d = mmPtr->value;
 	if (mmPtr->units == -1) {
+#ifdef PLATFORM_SDL
+	    int wM, wS;
+
+	    ScreenGetMMWidth(Tk_Display(tkwin), Tk_Screen(tkwin), &wM, &wS);
+	    d /= wS;
+	    d *= wM;
+#else
 	    d /= WidthOfScreen(Tk_Screen(tkwin));
 	    d *= WidthMMOfScreen(Tk_Screen(tkwin));
+#endif
 	} else {
 	    d *= bias[mmPtr->units];
 	}

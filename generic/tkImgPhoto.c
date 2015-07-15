@@ -16,6 +16,9 @@
  * Author: Paul Mackerras (paulus@cs.anu.edu.au),
  *	   Department of Computer Science,
  *	   Australian National University.
+ *
+ * ImgPhotoPutResizedRotatedBlock() described in http://wiki.tcl.tk/11924
+ *    Copyright (c) 2001 Jo'zsef (Joe) Ne'meth (joe.nemeth@cpluscsystems.axelero.net)
  */
 
 #include "tkImgPhoto.h"
@@ -35,6 +38,15 @@ struct SubcommandOptions {
     int toX2, toY2;		/* Second coordinate pair for -to option. */
     int zoomX, zoomY;		/* Values specified for -zoom option. */
     int subsampleX, subsampleY;	/* Values specified for -subsample option. */
+    double rotate;		/* Degrees to rotate the image with */
+    double scaleX, scaleY;	/* Resize factors in the X and Y directions */
+    int mirrorX, mirrorY;	/* 1 if mirroring the resp. axis requested */
+    char *filtername;		/* Name of the interpolating lowpass filter */
+    int smoothedge;		/* Pixel width of frame used in edge smoothing:
+                                 * default value is 0 (means no smoothing)
+                                 * and 1 may be specified in the Tcl command. */
+    double blur;		/* Defines the effect of blurring the image,
+				 * must be > 1.0 */
     Tcl_Obj *format;		/* Value specified for -format option. */
     XColor *background;		/* Value specified for -background option. */
     int compositingRule;	/* Value specified for -compositingrule
@@ -57,6 +69,12 @@ struct SubcommandOptions {
  * OPT_SUBSAMPLE:		Set if -subsample option allowed/spec'd.
  * OPT_TO:			Set if -to option allowed/specified.
  * OPT_ZOOM:			Set if -zoom option allowed/specified.
+ * OPT_ROTATE:			Set if -rotate option allowed/specified.
+ * OPT_SCALE:			Set if -scale option allowed/specified.
+ * OPT_MIRROR:			Set if -mirror option allowed/specified.
+ * OPT_FILTER:			Set if -filter option allowed/specified.
+ * OPT_SMOOTHEDGE:		Set if -smoothedge option allowed/specified.
+ * OPT_BLUR:			Set if -blur option allowed/specified.
  */
 
 #define OPT_BACKGROUND	1
@@ -68,6 +86,12 @@ struct SubcommandOptions {
 #define OPT_SUBSAMPLE	0x40
 #define OPT_TO		0x80
 #define OPT_ZOOM	0x100
+#define OPT_ROTATE	0x200
+#define OPT_SCALE	0x400
+#define OPT_MIRROR	0x800
+#define OPT_FILTER	0x1000
+#define OPT_SMOOTHEDGE	0x2000
+#define OPT_BLUR	0x4000
 
 /*
  * List of option names. The order here must match the order of declarations
@@ -84,6 +108,12 @@ static const char *const optionNames[] = {
     "-subsample",
     "-to",
     "-zoom",
+    "-rotate",
+    "-scale",
+    "-mirror",
+    "-filter",
+    "-smoothedge",
+    "-blur",
     NULL
 };
 
@@ -197,6 +227,19 @@ static int		MatchStringFormat(Tcl_Interp *interp, Tcl_Obj *data,
 			    Tk_PhotoImageFormat **imageFormatPtr,
 			    int *widthPtr, int *heightPtr, int *oldformat);
 static const char *	GetExtension(const char *path);
+static int		ImgPhotoPutResizedRotatedBlock(Tcl_Interp *interp,
+			    Tk_PhotoHandle destHandle,
+			    Tk_PhotoImageBlock *srcBlkPtr,
+			    int toX, int toY, int toXend, int toYend,
+			    int startX, int startY,
+			    int endX, int endY, double scaleX, double scaleY,
+			    double rotate,
+			    int mirrorX, int mirrorY, char *filtername,
+			    int smoothedge, double blur,
+			    XColor *background, int compRule);
+static double		Mitchell(double x);
+static double		Lanczos(double x);
+static double		BlackmanSinc(double x);
 
 /*
  *----------------------------------------------------------------------
@@ -542,12 +585,33 @@ ImgPhotoCmd(
 	memset(&options, 0, sizeof(options));
 	options.zoomX = options.zoomY = 1;
 	options.subsampleX = options.subsampleY = 1;
+	options.scaleX = options.scaleY = 1;
+	options.rotate = 0;
+	options.mirrorX = options.mirrorY = 0;
+	options.filtername = NULL;
+	options.smoothedge = 0;
+	options.blur = 0;
 	options.name = NULL;
 	options.compositingRule = TK_PHOTO_COMPOSITE_OVERLAY;
 	if (ParseSubcommandOptions(&options, interp,
 		OPT_FROM | OPT_TO | OPT_ZOOM | OPT_SUBSAMPLE | OPT_SHRINK |
-		OPT_COMPOSITE, &index, objc, objv) != TCL_OK) {
+		OPT_COMPOSITE | OPT_BACKGROUND |
+		OPT_ROTATE | OPT_SCALE | OPT_MIRROR | OPT_FILTER | OPT_BLUR,
+		&index, objc, objv) != TCL_OK) {
 	    return TCL_ERROR;
+	}
+	if ((options.filtername == NULL) && (options.smoothedge != 0)) {
+	    options.filtername = "Mitchell";
+	}
+	if (options.blur != 0) {
+	    if (options.filtername == NULL) {
+		options.filtername = "Mitchell";
+	    }
+	    if (options.blur < 1.0) {
+		options.blur = 1.0;
+	    }
+	} else {
+	    options.blur = 1.0;
 	}
 	if (options.name == NULL || index < objc) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
@@ -570,9 +634,71 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 	Tk_PhotoGetImage(srcHandle, &block);
+
+        if ((options.options & OPT_ROTATE) || (options.options & OPT_SCALE) ||
+	    (options.options & OPT_MIRROR) || (options.options & OPT_FILTER)) {
+	    int sameSrc = (block.pixelPtr == masterPtr->pix32);
+	    PhotoMaster savedMaster;
+
+	    savedMaster = *masterPtr;
+	    if (options.background == NULL) {
+		options.background =
+#if defined(_WIN32)
+		    Tk_GetColor(interp,
+			Tk_MainWindow(interp), Tk_GetUid("SystemButtonFace"));
+#else
+		    Tk_GetColor(interp,
+			Tk_MainWindow(interp), Tk_GetUid("black"));
+#endif
+	    }
+	    if (sameSrc) {
+		masterPtr->pix32 = NULL;
+		masterPtr->width = masterPtr->height = 0;
+		masterPtr->ditherX = masterPtr->ditherY = 0;
+		masterPtr->validRegion = TkCreateRegion();
+	    }
+	    result = ImgPhotoPutResizedRotatedBlock(interp,
+			 (Tk_PhotoHandle) masterPtr, &block,
+			 options.toX, options.toY,
+			 options.toX2, options.toY2,
+			 options.fromX, options.fromY,
+			 options.fromX2, options.fromY2,
+			 options.scaleX, options.scaleY,
+			 options.rotate,
+			 options.mirrorX, options.mirrorY,
+			 options.filtername,
+			 options.smoothedge,
+			 options.blur, options.background,
+			 TK_PHOTO_COMPOSITE_OVERLAY);
+	    if (sameSrc) {
+		if (result != TCL_OK) {
+		    if (masterPtr->pix32 != NULL) {
+			ckfree(masterPtr->pix32);
+		    }
+		    masterPtr->pix32 = block.pixelPtr;
+		    masterPtr->width = block.width;
+		    masterPtr->height = block.height;
+		    TkDestroyRegion(masterPtr->validRegion);
+		    masterPtr->ditherX = savedMaster.ditherX;
+		    masterPtr->ditherY = savedMaster.ditherY;
+		    masterPtr->validRegion = savedMaster.validRegion;
+		} else if (block.pixelPtr != NULL) {
+		    ckfree(block.pixelPtr);
+		    TkDestroyRegion(savedMaster.validRegion);
+		}
+	    }
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
+	    return result;
+        }
+
 	if ((options.fromX2 > block.width) || (options.fromY2 > block.height)
 		|| (options.fromX2 > block.width)
 		|| (options.fromY2 > block.height)) {
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside source image",
 		    -1));
@@ -643,11 +769,16 @@ ImgPhotoCmd(
 		+ options.fromY * block.pitch;
 	block.width = options.fromX2 - options.fromX;
 	block.height = options.fromY2 - options.fromY;
-	return Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) masterPtr,
-		&block, options.toX, options.toY, options.toX2 - options.toX,
-		options.toY2 - options.toY, options.zoomX, options.zoomY,
-		options.subsampleX, options.subsampleY,
-		options.compositingRule);
+	result = Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) masterPtr,
+		    &block, options.toX, options.toY,
+		    options.toX2 - options.toX,
+		    options.toY2 - options.toY, options.zoomX, options.zoomY,
+		    options.subsampleX, options.subsampleY,
+		    options.compositingRule);
+	if (options.background) {
+	    Tk_FreeColor(options.background);
+	}
+	return result;
 
     case PHOTO_DATA: {
 	char *data;
@@ -1539,8 +1670,10 @@ ParseSubcommandOptions(
 	}
 
 	/*
-	 * For the -from, -to, -zoom and -subsample options, parse the values
-	 * given. Report an error if too few or too many values are given.
+	 * For the -from, -to, -zoom, -subsample, -background, -rotate,
+	 * -scale, -filter, -mirror, -smoothedge options, parse the
+	 * values given.  Report an error if too few or too many values
+	 * are given.
 	 */
 
 	if (bit == OPT_BACKGROUND) {
@@ -1584,6 +1717,112 @@ ParseSubcommandOptions(
 		return TCL_ERROR;
 	    }
 	    *optIndexPtr = index;
+	} else if (bit == OPT_ROTATE) {
+	    if (index + 1 < objc) {
+		*optIndexPtr = ++index;
+		if (Tcl_GetDoubleFromObj(interp, objv[index], &optPtr->rotate)
+		    != TCL_OK) {
+		    Tcl_AppendResult(interp,
+			"the -rotate value is invalid", (char *) NULL);
+		    return TCL_ERROR;
+		}
+	    } else {
+		Tcl_AppendResult(interp, "the \"-rotate\" option ",
+		    "requires a value", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	} else if (bit == OPT_SCALE) {
+	    if (index + 1 < objc) {
+		*optIndexPtr = ++index;
+		if (Tcl_GetDoubleFromObj(interp, objv[index], &optPtr->scaleX)
+		    != TCL_OK) {
+		    Tcl_AppendResult(interp,
+			 "the -scale X value is invalid", (char *) NULL);
+		    return TCL_ERROR;
+		}
+		optPtr->scaleY = optPtr->scaleX;
+		if (index + 1 < objc) {
+		    if (*(Tcl_GetString(objv[index+1])) != '-') {
+			*optIndexPtr = ++index;
+			if (Tcl_GetDoubleFromObj(interp, objv[index],
+				&optPtr->scaleY) != TCL_OK) {
+			    Tcl_AppendResult(interp,
+				"the -scale Y value is invalid",
+				(char *) NULL);
+			    return TCL_ERROR;
+			}
+		    }
+		} 
+	    } else {
+		Tcl_AppendResult(interp, "the \"-scale\" option ",
+			"requires one or two values", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	} else if (bit == OPT_MIRROR) {
+	    if (index + 1 < objc) {
+		char *temp;
+
+		*optIndexPtr = ++index;
+                temp = Tcl_GetString(objv[index]);
+                if (temp[0] == '-') {
+                   optPtr->mirrorX = optPtr->mirrorY = 1;
+                   *optIndexPtr = --index;
+                } else if ((temp[0] == 'x') && (temp[1] == '\0')) {
+                   optPtr->mirrorX = 1;
+                } else if ((temp[0] == 'y') && (temp[1] == '\0')) {
+                   optPtr->mirrorY = 1;
+                } else {
+		   Tcl_AppendResult(interp,
+			"wrong value for the \"-mirror\" option",
+			(char *) NULL);
+		   return TCL_ERROR;
+                }
+	    } else {
+               optPtr->mirrorX = optPtr->mirrorY = 1;
+	    }
+	} else if (bit == OPT_FILTER) {
+	    if (index + 1 < objc) {
+		*optIndexPtr = ++index;
+		optPtr->filtername = Tcl_GetString(objv[index]);
+		if (optPtr->filtername[0] == '-') {
+		    optPtr->filtername = "Mitchell";
+		    *optIndexPtr = --index;
+		}
+	    } else {
+		optPtr->filtername = "Mitchell";
+	    } 
+	} else if (bit == OPT_SMOOTHEDGE) {
+	    if (index + 1 < objc) {
+		char *temp;
+
+		*optIndexPtr = ++index;
+		temp = Tcl_GetString(objv[index]);
+		if (((temp[0] == '0') || (temp[0] == '1') || (temp[0] == '2'))
+		    && (temp[1] == '\0')) {
+		    optPtr->smoothedge = temp[0] - '0';
+		} else {
+		    Tcl_AppendResult(interp,
+			"wrong value for the -smoothedge option",
+			(char *) NULL);
+		    return TCL_ERROR;
+		}
+	    } else {
+		optPtr->smoothedge = 2;
+	    }
+	} else if (bit == OPT_BLUR) {
+	    if (index + 1 < objc) {
+		*optIndexPtr = ++index;
+		if (Tcl_GetDoubleFromObj(interp, objv[index], &optPtr->blur)
+		    != TCL_OK) {
+		    Tcl_AppendResult(interp,
+			"the -blur value is invalid", (char *) NULL);
+		    return TCL_ERROR;
+		}
+	    } else {
+		Tcl_AppendResult(interp, "the -blur option requires a value",
+		    (char *) NULL);
+		return TCL_ERROR;
+	    }
 	} else if ((bit != OPT_SHRINK) && (bit != OPT_GRAYSCALE)) {
 	    const char *val;
 
@@ -4062,6 +4301,1049 @@ Tk_PhotoSetSize_Panic(
     if (Tk_PhotoSetSize(NULL, handle, width, height) != TCL_OK) {
 	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Structure defining filter function for Tk_PhotoResizedRotatedBlock
+ *
+ *----------------------------------------------------------------------
+ */
+
+typedef struct {
+    char *name;
+    double (*proc)(double);
+    double span;
+} RRFilter;
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Mitchell filter function.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static double
+Mitchell(
+    double x)
+{
+    if (x < -2.0) {
+	return 0.0;
+    }
+    if (x < -1.0) {
+	return 1.77777777778 - (-3.33333333333 -
+		(2.0 + 0.388888888889 * x) * x) * x;
+    }
+    if (x < 0.0) {
+	return 0.888888888889 + (-2.0 - 1.16666666667 * x) * x * x;
+    }
+    if (x < 1.0) {
+	return 0.888888888889 + (-2.0 + 1.16666666667 * x) * x * x;
+    }
+    if (x < 2.0) {
+	return 1.77777777778 + (-3.33333333333 + 
+		(2.0 - 0.388888888889 * x) * x) * x;
+    }
+    return 0.0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Lanczos filter function.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static double
+Lanczos(
+    double x)
+{
+    static const double PIdbl = 3.14159265358979323846;
+    double piX, pi033X;
+
+    if (x == 0.0) {
+	return 1.0;
+    }
+    if ((x >= -3.0) && (x < 3.0)) {
+	if (x < 0) {
+	    x = -x;
+	}
+	piX = PIdbl * x;
+	pi033X = piX / 3.0;
+	return (sin(piX) / piX) * (sin(pi033X) / pi033X);
+    }
+    return 0.0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Blackman-Sinc filter function.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static double
+BlackmanSinc(
+    double x)
+{
+    static const double PIdbl = 3.14159265358979323846;
+    double piX;
+
+    piX = PIdbl * x;
+    if (x == 0.0) {
+	return 0.42 + 0.5 * cos(piX) + 0.08 * cos(2 * piX);
+    }
+    return (0.42 + 0.5 * cos(piX) + 0.08 * cos(2 * piX)) * (sin(piX) / piX);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ImgPhotoPutResizedRotatedBlock --
+ *
+ *       This procedure is called to put image data into a photo image,
+ *       with possible resizing and/or rotating of the source image.
+ *
+ * Results:
+ *       None.
+ *
+ * Side effects:
+ *       The image data is stored.  The image may be expanded.
+ *       The Tk image code is informed that the image has changed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ImgPhotoPutResizedRotatedBlock(
+    Tcl_Interp *interp,		    /* Interp used for error reporting. */
+    Tk_PhotoHandle destHandle,	    /* Opaque handle for the photo image
+				     * to be updated. */
+    Tk_PhotoImageBlock *srcBlkPtr,  /* Pointer to a structure describing the
+				     * pixels to be copied into the image. */
+    int toX, int toY,		    /* Area coordinates of the receiving
+				     * block */
+    int toXend, int toYend,	    /* in the target image. */
+    int startX, int startY,	    /* Area coords of the selected block */
+    int endX, int endY,		    /* in the source image. */
+    double scaleX, double scaleY,   /* Zoom factors for the X and Y axes. */
+    double rotate,		    /* Angle of rotation in degrees. */
+    int mirrorX, int mirrorY,	    /* 1 if mirroring the x resp. y axis,
+				     * 0 otherwise. */
+    char *filtername,		    /* If not NULL, the name of the
+				     * interpolating filter. */
+    int smoothedge,		    /* Pixel width of frame used in edge
+				     * smoothing: default value is 2,
+				     * 0 (means no smoothing), and 1 may
+				     * be specified in the Tcl command. */
+    double blur,		    /* Defines the effect of blurring the
+				     * image, must be > 1.0. */
+    XColor *background,		    /* Background color agains which edge
+				     * smoothing is done */
+    int compRule)		    /* Compositing rule to use when processing
+				     * transparent pixels. */
+{
+    PhotoMaster *masterPtr;
+    XRectangle rect;
+    static const double PIdbl = 3.14159265358979323846;
+    static const char sp[] = {
+	2, 3, 1, 4, 1, 4, 2, 3, 4, 1, 3, 2, 3, 2, 4, 1,
+	1, 4, 2, 3, 4, 1, 3, 2, 3, 2, 4, 1, 2, 3, 1, 4
+    };
+    static const int pxpx[] = {
+	1, -1, 1, -1, 0, 0, 0, 0, -1, 1, -1, 1, 0, 0, 0,
+	0, 1, -1, 1, -1, 0, 0, 0, 0, -1, 1, -1, 1, 0, 0, 0, 0
+    };
+    static const int pxpt[] = {
+	0, 0, 0, 0, 1, 1, -1, -1, 0, 0, 0, 0, -1, -1, 1, 1,
+	0, 0, 0, 0, 1, 1, -1, -1, 0, 0, 0, 0, -1, -1, 1, 1
+    };
+    static const int ptpx[] = {
+	0, 0, 0, 0, 1, -1, 1, -1, 0, 0, 0, 0, -1, 1, -1, 1,
+	0, 0, 0, 0, -1, 1, -1, 1, 0, 0, 0, 0, 1, -1, 1, -1
+    };
+    static const int ptpt[] = {
+	-1, -1, 1, 1, 0, 0, 0, 0, 1, 1, -1, -1, 0, 0, 0, 0,
+	1, 1, -1, -1, 0, 0, 0, 0, -1, -1, 1, 1, 0, 0, 0, 0
+    };
+    static const RRFilter filters[] = {
+	{ "Mitchell", Mitchell, 2.0 },
+	{ "Lanczos", Lanczos, 3.0 },
+	{ "BlackmanSinc", BlackmanSinc, 4.0 },
+	{ NULL, NULL, 0.0 }
+    };
+    int destWidth, destHeight;
+    int angle_, roll, dir, pixelSize, pitch, width, height;
+    int N, dir_n_roll_n_mirror, force, create;
+    int alphaOffset, resWidth, resHeight, resPixelSize, resPitch;
+    int resSizeX, resSizeY;
+    int ofs0, ofs1, ofs2, ofs3, ph, xn, yn, ssX, ssY, xEnd, yEnd;
+    double angle, zoomX, zoomY, widthZ, heightZ;
+    double FI, TAN, COTAN = 0.0, SIN, COS, SIN_X, COS_X, SIN_Y, COS_Y;
+    double xT1, xT2, xT3, xT4, yT1, yT2, yT3, yT4, xL1;
+    double dispX, dispY, xTi1, yTi4, xx, yy, sUi, to, bndX, bndU, bndL;
+    double sUmX, sUmY, sU, sL, sLb, dsU, dsL, sUx, sUy;
+    double sx, sx_, sy, sy_, alpha, alpha_, beta;
+    int columns, rows, left, right, run, ix, iy, idX, idY;
+    double spanX, spanY, normfact, mid, val0, val1, val2, val3;
+    unsigned char *newImg = NULL, *transImg = NULL;
+    unsigned char bg0, bg1, bg2, bg3;
+    double sxsy, sxsy_, sx_sy, sx_sy_, xfX, xfY;
+    int xf, xf2;
+    const RRFilter *filter;
+    unsigned char *fromPtr,  *fromPtr0, *fromPtr1, *fromPtr2, *fromPtr3;
+    unsigned char *toPtr, *srcPixelPtr;
+    unsigned char *destPtr, *destLinePtr, *resPixelPtr;
+    double weights[2048];
+
+     /* Do not work in vain. */
+    if ((compRule != TK_PHOTO_COMPOSITE_OVERLAY) &&
+	(compRule != TK_PHOTO_COMPOSITE_SET)) {
+	Tcl_Panic("unknown compositing rule");
+    }
+    masterPtr = (PhotoMaster *) destHandle;
+
+    /*
+     * First, we juggle around a bit in order to decompose the rotation
+     * into a tilt between -45 and 45 degrees (inclusive) and an integral
+     * number of 90 degree counter-clockwise flips. (Direction is as we
+     * see it on the screen, not relative to the canvas coordinate system!)
+     * Furthermore, we only consider positive tilt in the rotation algorithm,
+     * negative tilt is achieved by mirroring the source as well as
+     * (before inserting it into the target image) the result of the
+     * transformation over the x-axis.
+     */
+
+    create = (masterPtr->width == 0) || (masterPtr->height == 0);
+    force = create || (compRule == TK_PHOTO_COMPOSITE_SET);
+
+    rotate = rotate - (int) (rotate / 360) * 360;
+    angle = (rotate < 0) ? (rotate + 360) : rotate;
+    angle_ = (int) angle;
+
+    roll = angle_ / 90; if (angle_ - roll * 90 > 45) roll += 1;
+    angle -= (double) roll * 90;
+
+    dir = (angle < 0) ? -1 : 1; angle = dir * angle;
+
+    /* These are cumbersome but unavoidable. */
+    if ((startX >= srcBlkPtr->width) || (startY >= srcBlkPtr->height) ||
+	(scaleX <= 0) || (scaleY <= 0)) {
+	return TCL_OK;
+    }
+    if ((toX < 0) || (toY < 0)) {
+	return TCL_OK;
+    }
+    if (startX < 0) {
+	startX += srcBlkPtr->width;
+    }
+    if (endX <= 0) {
+	endX += srcBlkPtr->width;
+    }
+    if (endX > srcBlkPtr->width) {
+	endX = srcBlkPtr->width;
+    }
+    --endX;
+    if (startY < 0) {
+	startY += srcBlkPtr->height;
+    }
+    if (endY <= 0) {
+	endY += srcBlkPtr->height; 
+    }
+    if (endY > srcBlkPtr->height) {
+	endY = srcBlkPtr->height;
+    }
+    --endY;
+
+    xf = smoothedge;
+
+    if (background == (XColor *) NULL) {
+	bg0 = 0xFF;
+	bg1 = 0xFF;
+	bg2 = 0xFF;
+	bg3 = 0xFF;
+    } else {
+	bg0 = (unsigned char) ((background->red) >> 8);
+	bg1 = (unsigned char) ((background->green) >> 8);
+	bg2 = (unsigned char) ((background->blue) >> 8);
+	bg3 = 0xFF;
+    }
+
+    /*
+     * If filtering is specifed and resizing is requested we create the
+     * filtered/scaled image and use it as the source for further rotation.
+     */
+
+    width = endX - startX + 1;
+    height = endY - startY + 1;
+    zoomX = scaleX;
+    zoomY = scaleY;
+
+    if ((filtername == NULL) || ((scaleX >= 1) && (scaleY >= 1))) {
+	goto afterFiltering;
+    }
+    for (filter = filters; filter->name != NULL; filter++) {
+	if (strcmp(filter->name, filtername) == 0) {
+	    break;
+	}
+    }
+    if (filter->name == NULL) {
+	goto afterFiltering;
+    }
+
+    xf2 = 2 * xf;
+    xfX = blur * xf / scaleX;
+    xfY = blur * xf / scaleY;
+
+    srcPixelPtr = srcBlkPtr->pixelPtr + startX * srcBlkPtr->pixelSize +
+	startY * srcBlkPtr->pitch;
+    pixelSize = srcBlkPtr->pixelSize;
+    pitch = srcBlkPtr->pitch;
+
+    spanX = blur * filter->span / zoomX;
+    spanY = blur * filter->span / zoomY;
+    columns = (int) (width * zoomX + 0.5);
+    rows = (int) (height * zoomY + 0.5);
+
+    transImg = (unsigned char *)
+	attemptckalloc((unsigned) (4 * (columns + xf2) * height));
+    if (transImg == NULL) {
+	if (interp != NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
+	    Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+	}
+	return TCL_ERROR;
+    }
+
+    for (ix = - xf; ix < columns + xf; ix++) {
+	mid = (double) (ix + 0.5) / zoomX;
+	left = (int) MAX(mid - spanX + 0.5, - xfX);
+	right = (int) MIN(mid + spanX + 0.5, width + xfX);
+	normfact = 0.0;
+	run = right - left;
+	for (N = 0; N < run; N++) {
+	    normfact += weights[N] =
+		filter->proc(zoomX * (left + N - mid + 0.5) / blur);
+	}
+	normfact = 1 / normfact;
+	for (N = 0; N < run; N++) {
+	    weights[N] *= normfact;
+	}
+	for (iy = 0; iy < height; iy++) {
+	    val0 = val1 = val2 = val3 = 0.0;
+	    for (N = 0; N < run; N++) {
+		if (((left + N) < 0) || ((left + N) >= width)) {
+		    val0 += weights[N] * bg0; 
+		    val1 += weights[N] * bg1; 
+		    val2 += weights[N] * bg2; 
+		} else {
+		    idX = iy * pitch + (left + N) * pixelSize;
+		    val0 += weights[N] * srcPixelPtr[idX]; 
+		    val1 += weights[N] * srcPixelPtr[idX + 1]; 
+		    val2 += weights[N] * srcPixelPtr[idX + 2]; 
+		}
+	    }
+	    idY = 4 * (iy * (columns + xf2) + ix + xf);
+	    transImg[idY] = (unsigned char)
+		((val0 < 0) ? 0 : ((val0 > 255) ? 255 : val0));
+	    transImg[idY + 1] = (unsigned char)
+		((val1 < 0) ? 0 : ((val1 > 255) ? 255 : val1));
+	    transImg[idY + 2] = (unsigned char)
+		((val2 < 0) ? 0 : ((val2 > 255) ? 255 : val2));
+	    transImg[idY + 3] = 255;
+	}
+    } 
+
+    columns += xf2;
+
+    newImg = (unsigned char *)
+	attemptckalloc((unsigned) (4 * columns * (rows + xf2)));
+    if (newImg == NULL) {
+	ckfree((char*) transImg);
+	if (interp != NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
+	    Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+	}
+	return TCL_ERROR;
+    }
+
+    pixelSize = 4; pitch = 4 * columns;
+    srcPixelPtr = transImg;
+
+    for (iy = - xf; iy < rows + xf; iy++) {
+	mid = (double) (iy + 0.5) / zoomY;
+	left = (int) MAX(mid - spanY + 0.5, - xfY);
+	right = (int) MIN(mid + spanY + 0.5, height + xfY);
+	normfact = 0.0;
+	run = right - left;
+	for (N = 0; N < run; N++) {
+	    normfact += weights[N] =
+		filter->proc(zoomY * (left + N - mid + 0.5) / blur);
+	}
+	normfact = 1 / normfact;
+	for (N = 0; N < run; N++) {
+	    weights[N] *= normfact;
+	}
+	for (ix = 0; ix < columns; ix++) {
+	    val0 = val1 = val2 = val3 = 0.0;
+	    for (N = 0; N < run; N++) {
+		if (((left + N) < 0) || ((left + N) >= height)) {
+		    val0 += weights[N] * bg0; 
+		    val1 += weights[N] * bg1; 
+		    val2 += weights[N] * bg2; 
+		} else {
+		    idY = ix * pixelSize + (left + N) * pitch;
+		    val0 += weights[N] * srcPixelPtr[idY]; 
+		    val1 += weights[N] * srcPixelPtr[idY + 1]; 
+		    val2 += weights[N] * srcPixelPtr[idY + 2]; 
+		}
+	    }
+	    idX = 4 * ((iy + xf) * columns + ix);
+	    newImg[idX] = (unsigned char)
+		((val0 < 0) ? 0 : ((val0 > 255) ? 255 : val0));
+	    newImg[idX + 1] = (unsigned char)
+		((val1 < 0) ? 0 : ((val1 > 255) ? 255 : val1));
+	    newImg[idX + 2] = (unsigned char)
+		((val2 < 0) ? 0 : ((val2 > 255) ? 255 : val2));
+	    newImg[idX + 3] = 255;
+	}
+    } 
+
+    rows += xf2;
+
+    srcBlkPtr->pixelPtr = newImg;
+    scaleX = scaleY = 1.0;
+    startX = 0;
+    endX = columns - 1;
+    startY = 0;
+    endY = rows - 1;
+    srcBlkPtr->pixelSize = 4;
+    srcBlkPtr->pitch = 4 * columns;
+    ckfree((char*) transImg);
+    transImg = NULL;
+
+afterFiltering:
+    /*
+     * Next, we set up the parameters of the algorithm related to the
+     * 90 degree flips and the mirroring of the source image by
+     * computing the elements of the corresponding *Tk_PhotoImageBlock*
+     * structure.
+     */
+
+    dir_n_roll_n_mirror =
+	16 * ((dir < 0) ? 1 : 0) + 4 * (roll % 4) + 2 * mirrorY + mirrorX;
+
+    switch (sp[dir_n_roll_n_mirror] - 1) {
+    default:
+    case 0:
+	srcPixelPtr = srcBlkPtr->pixelPtr
+	    + startX * srcBlkPtr->pixelSize
+	    + startY * srcBlkPtr->pitch;
+	break;
+    case 1:
+	srcPixelPtr = srcBlkPtr->pixelPtr
+	    + startX * srcBlkPtr->pixelSize
+	    + endY * srcBlkPtr->pitch;
+	break;
+    case 2:
+	srcPixelPtr = srcBlkPtr->pixelPtr
+	    + endX * srcBlkPtr->pixelSize
+	    + endY * srcBlkPtr->pitch;
+	break;
+    case 3:
+	srcPixelPtr = srcBlkPtr->pixelPtr
+	    + endX * srcBlkPtr->pixelSize
+	    + startY * srcBlkPtr->pitch;
+	break;
+    }
+   
+    pixelSize = pxpx[dir_n_roll_n_mirror] * srcBlkPtr->pixelSize
+	+ pxpt[dir_n_roll_n_mirror] * srcBlkPtr->pitch;
+    pitch = ptpx[dir_n_roll_n_mirror] * srcBlkPtr->pixelSize
+	+ ptpt[dir_n_roll_n_mirror] * srcBlkPtr->pitch;
+
+    switch (roll % 2) {
+    case 0:
+	zoomX = scaleX;
+	zoomY = scaleY;
+	width = endX - startX;
+	height = endY - startY;
+	break;
+    case 1:
+	zoomX = scaleY;
+	zoomY = scaleX;
+	width = endY - startY;
+	height = endX - startX;
+	break;
+    }
+
+    /*
+     * Here we start preparations for the combined scale/rotate algorithm.
+     */
+
+    widthZ = (scaleX <= 1.0) ? width * zoomX : (width - 1) * zoomX;
+    heightZ = (scaleY <= 1.0) ? height * zoomY : (height - 1) * zoomY;
+
+    FI = angle * PIdbl / 180;
+    COS = cos(FI); SIN = sin(FI);
+    if (heightZ * SIN < 1) {
+	COS = 1;
+	SIN = 0;
+    }
+    TAN = SIN / COS;
+    if (TAN != 0) {
+	COTAN = 1 / TAN;
+    }
+
+    /*
+     * The source image is first centered around the origin of the
+     * coordinate system, then scaled and finally rotated. The
+     * coordinates of the resulting four corner vertices are
+     * computed below. (Again the y-axis is directed upwards
+     * and the x-axis to the right!)
+     */
+
+    xT4 = widthZ / 2.0 * COS - heightZ / 2.0 * SIN;
+    yT4 = widthZ / 2.0 * SIN + heightZ / 2.0 * COS;
+    xT1 = -widthZ / 2.0 * COS - heightZ / 2.0 * SIN;
+    yT1 = -widthZ / 2.0 * SIN + heightZ / 2.0 * COS;
+    xT3 = -xT1; yT3 = -yT1; xT2 = -xT4; yT2 = -yT4;
+
+    /*
+     * Depending on the parity of the heigth and width of the source
+     * in pixels the pixel grid coincides with the integer raster or
+     * is shifted by 0.5 in the y direction, x direction or both.
+     * This should be taken into account when rounding an arbitrary
+     * coordinate to a pixel position.
+     */
+
+    dispX = 0.5 * (width % 2);
+    dispY = 0.5 * (height % 2);
+
+    /*
+     * The leftmost pixel grid coordinate to the right of the leftmost
+     * vertex of the transformed image.
+     */
+
+    xTi1 = (int) (xT1 - dispX) + dispX;
+
+    /*
+     * The topmost pixel grid coordinate below the topmost vertex of the
+     * transformed image.
+     */
+
+    yTi4 = (int) (yT4 + dispY) - dispY;
+   
+    /*
+     * However, there may not be pixel grid points within the transformed
+     * area with either of the above coordinates.
+     */
+
+    if (TAN != 0) {
+	if ((int) (yT1 + (xTi1 - xT1) * TAN - dispX) ==
+	    (int) (yT1 - (xTi1 - xT1) * COTAN - dispX)) {
+	    xTi1 += 1;
+	}
+	if ((int) (xT4 - (yT4 - yTi4) * COTAN + dispY) ==
+	    (int) (xT4 + (yT4 - yTi4) * TAN + dispY)) {
+	    yTi4 -= 1;
+	}
+    }
+
+    /* Size and rows/columns of the transformed image. */
+    resSizeX = (int) (- 2 * xTi1);
+    resSizeY = (int) (2 * yTi4); 
+    resWidth = resSizeX + 1;
+    resHeight = resSizeY + 1;
+     
+    /*
+     * We have to steal a glance at the target image metrics before
+     * we can proceed. The task is to determine whether clipping by
+     * the target image should be applied.
+     * If yes bounds are set up which limit the cycles of the
+     * transformation only to those pixels that fall within the target.
+     * The width as well as the height and pitch of the resulting
+     * image is also computed.
+     */
+
+    destWidth = toXend - toX;
+    destHeight = toYend - toY;
+    if (destWidth <= 0 || toXend < 0 || destHeight <= 0 || toYend < 0) {
+	destWidth = resWidth;
+	destHeight = resHeight;
+    }
+    xEnd = toX + destWidth;
+    xEnd = (masterPtr->userWidth != 0) ?
+	MIN(xEnd, masterPtr->userWidth) : xEnd;
+    yEnd = toY + destHeight;
+    yEnd = (masterPtr->userHeight != 0) ?
+	MIN(yEnd, masterPtr->userHeight) : yEnd;
+    destWidth = xEnd - toX;
+    destHeight = yEnd -toY;
+
+    if ((xEnd > masterPtr->width) || (yEnd > masterPtr->height)) {
+	int sameSrc = (srcBlkPtr->pixelPtr == masterPtr->pix32);
+
+	if (ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
+	    MAX(yEnd, masterPtr->height)) != TCL_OK) {
+	    if (newImg != NULL) {
+		ckfree((char *) newImg);
+	    }
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
+		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+	    }
+	    return TCL_ERROR;
+	}
+	if (sameSrc) {
+	    srcBlkPtr->pixelPtr = masterPtr->pix32;
+	    srcBlkPtr->pitch = masterPtr->width * 4;
+
+	    switch (sp[dir_n_roll_n_mirror] - 1) {
+	    default:
+	    case 0:
+		srcPixelPtr = srcBlkPtr->pixelPtr
+		    + startX * srcBlkPtr->pixelSize
+		    + startY * srcBlkPtr->pitch;
+		break;
+	    case 1:
+		srcPixelPtr = srcBlkPtr->pixelPtr
+		    + startX * srcBlkPtr->pixelSize
+		    + endY * srcBlkPtr->pitch;
+		break;
+	    case 2:
+		srcPixelPtr = srcBlkPtr->pixelPtr
+		    + endX * srcBlkPtr->pixelSize
+		    + endY * srcBlkPtr->pitch;
+		break;
+	    case 3:
+		srcPixelPtr = srcBlkPtr->pixelPtr
+		    + endX * srcBlkPtr->pixelSize
+		    + startY * srcBlkPtr->pitch;
+		break;
+	    }
+   
+	    pixelSize = pxpx[dir_n_roll_n_mirror] * srcBlkPtr->pixelSize
+		+ pxpt[dir_n_roll_n_mirror] * srcBlkPtr->pitch;
+	    pitch = ptpx[dir_n_roll_n_mirror] * srcBlkPtr->pixelSize
+		+ ptpt[dir_n_roll_n_mirror] * srcBlkPtr->pitch;
+	}
+    }
+
+    if ((toY < masterPtr->ditherY) || ((toY == masterPtr->ditherY)
+         && (toX < masterPtr->ditherX))) {
+
+	/*
+	 * The dithering isn't correct past the start of this block.
+	 */
+	masterPtr->ditherX = toX;
+	masterPtr->ditherY = toY;
+    }
+
+    /*
+     * If this image block could have different red, green and blue
+     * components, mark it as a color image.
+     */
+
+    alphaOffset = srcBlkPtr->offset[3];
+    if ((alphaOffset >= srcBlkPtr->pixelSize) || (alphaOffset < 0)) {
+	alphaOffset = 0;
+    }
+
+    if (((srcBlkPtr->offset[1] - srcBlkPtr->offset[0]) != 0) ||
+	((srcBlkPtr->offset[2] - srcBlkPtr->offset[0]) != 0)) {
+	masterPtr->flags |= COLOR_IMAGE;
+    }
+ 
+    /*
+     * Now we have sufficient data to complete the *Tk_PhotoImageBlock*
+     * structure for the resulting transformed image.
+     */
+
+    resPixelSize = 4;
+    resPitch = masterPtr->width * resPixelSize;
+    resPixelPtr = masterPtr->pix32 + toX * resPixelSize + toY * resPitch;
+
+    /*
+     * If the rotation angle is negative the result of the transformation
+     * has to be mirrored over the x-axis. This is taken care by reversing
+     * the sign of the pitch and repositionig the start of the pixel array.
+     */
+
+    if (dir < 0) {
+	resPixelPtr += (resHeight - 1) * resPitch;
+    }
+    resPitch = dir * resPitch;
+
+    ofs0 = srcBlkPtr->offset[0];
+    ofs1 = srcBlkPtr->offset[1];
+    ofs2 = srcBlkPtr->offset[2];
+    ofs3 = srcBlkPtr->offset[3];
+
+    bndX = 4 * resSizeX;
+    if (resWidth > destWidth) {
+	bndX = 4 * (destWidth - 1);
+    }
+
+    bndL = - resSizeY / 2.0;
+    bndU = resSizeY / 2.0;
+    if (resHeight > destHeight) {
+	if (dir > 0) {
+	    bndL = resSizeY / 2.0 - destHeight + 1;
+	} else {
+	    bndU = - resSizeY / 2.0 + destHeight - 1;
+	}
+    }
+
+    /* Here we commence in earnest.  */
+
+    /*
+     * The principle of the algorithm is simple. We iterate over the pixels
+     * lying within or on the boundary of the area of the scaled and/or
+     * rotated the image. At each step the corresponding pixel position is
+     * rotated/scaled/translated back to its originating position within
+     * the source image. Then the pixel's color is computed as a weighted
+     * avarage of the colors of the four pixels that surround the resulting
+     * position. The transformation is executed incrementally in order to
+     * reduce the necessary computation in the internal, y direction,
+     * iteration to the necessary minimum.
+     */
+
+    /* This takes care of zooming. */
+
+    COS_X = COS / zoomX;
+    SIN_X = SIN / zoomX;
+    COS_Y = COS / zoomY;
+    SIN_Y = SIN / zoomY;
+
+    /* The starting position for the backward transformation. */
+    sUmX = width / 2.0 + (xTi1 - 1) * COS_X;
+    sUmY = height / 2.0 - (xTi1 - 1) * SIN_Y;
+
+    /*
+     * The interim of the area of the transformed image is scanned from
+     * left to write in the x direction and at each x coordinate from
+     * top to bottom in the y direction. The iteration is devided into
+     * four runs determined by the x coordinates of the four vertices.
+     */
+
+    xL1 = (xT2 < xT4) ? xT2 : xT4;
+    for (xx = xTi1, ph = 0; ph < 4; ++ph) {
+	to = xx;
+	sL = sU = dsL = dsU = 0;
+	switch (ph) {
+	case 0:
+	    if (TAN == 0) {
+		continue;
+	    }
+	    sU = yT1 + (xx - xT1) * TAN;
+	    sL = yT1 - (xx - xT1) * COTAN;
+	    to = xL1;
+	    dsU = TAN;
+	    dsL = -COTAN;
+	    break;
+	case 1:
+	    sU = yT1 + (xx - xT1) * TAN;
+	    sL = yT2 + (xx - xT2) * TAN;
+	    to = xT4;
+	    dsU = TAN;
+	    dsL = TAN;
+	    break;
+	case 2:
+	    if (TAN == 0) {
+		continue;
+	    }
+	    sU = yT4 - (xx - xT4) * COTAN;
+	    sL = yT1 - (xx - xT1) * COTAN;
+	    to = xT2;
+	    dsU = -COTAN;
+	    dsL = -COTAN;
+	    break;
+	case 3:
+	    if (TAN == 0) {
+		continue;
+	    }
+	    sU = yT4 - (xx - xT4) * COTAN;
+	    sL = yT2 + (xx - xT2) * TAN;
+	    to = xT3;
+	    dsU = -COTAN;
+	    dsL = TAN;
+	    break;
+	}
+
+	/*
+	 * For the record. Compiled with VC++6.0spk5 and run on win2k
+	 * the transformation of a 2M pixel 1168x1760 picture on a 550MHz
+	 * Celeron with SDRAM takes 1.98 to 2.02 sec; on a 2.4GHz Pentium
+	 * with DDR RAM it requires 0.48 sec.
+	 *
+	 * In comparison: on the former dithering takes 2.6 sec for 16 bit
+	 * HighColor and 1.26 sec for 24 bit TrueColor. For the faster
+	 * Pentium dithering requires 1.08 sec for 16 bit HighColor.
+	 * The faster notebook had only 32 bit TrueColor on which Tk
+	 * had paniced!
+	 */
+         
+	for (; xx < to; ++xx, sU = sU + dsU, sL = sL + dsL) {
+	    sUi = (int) (sU + dispY) - dispY - ((sU < 0) ? 1 : 0);
+	    if (sUi > bndU) {
+		sUi = bndU;
+	    }
+	    sLb = (sL < bndL) ? bndL : sL;
+
+	    sUmX = sUmX + COS_X;
+	    sUmY = sUmY - SIN_Y;
+
+	    sUx = sUmX + (sUi + 1) * SIN_X;
+	    sUy = sUmY + (sUi + 1) * COS_Y;
+
+	    xn = (int) (resSizeX / 2.0 + xx + 0.25) * 4;
+	    if (xn > bndX) {
+		break;
+	    }
+	    yn = (int) (resSizeY / 2.0 - sUi + 0.25) * resPitch; 
+
+	    for (yy = sUi; yy >= sLb; --yy) {
+		sUx = sUx - SIN_X;
+		sUy = sUy - COS_Y;
+		ssX = (int) sUx;
+		ssY = (int) sUy;
+
+		fromPtr = srcPixelPtr + pixelSize * ssX  + pitch * ssY;
+		toPtr = resPixelPtr + xn + yn;
+		yn += resPitch;
+
+		fromPtr0 = fromPtr + ofs0;
+		fromPtr1 = fromPtr + ofs1;
+		fromPtr2 = fromPtr + ofs2;
+		fromPtr3 = fromPtr + ofs3;
+
+		sx = sUx - ssX;
+		sx_ = 1 - sx;
+		sy = sUy - ssY;
+		sy_ = 1 - sy;
+		sxsy = sx * sy;
+		sx_sy = sx_ * sy;
+		sxsy_ = sx * sy_;
+		sx_sy_ = sx_ * sy_;
+		val0 = val1 = val2 = val3= 0;
+		if ((ssX < 0) || (ssX > width) ||
+		    (ssY < 0) || (ssY > height)) {
+		    val0 += bg0 * sx_sy_;
+		    val1 += bg1 * sx_sy_;
+		    val2 += bg2 * sx_sy_;
+		    val3 += bg3 * sx_sy_;
+		} else {
+		    val0 += *fromPtr0 * sx_sy_;
+		    val1 += *fromPtr1 * sx_sy_;
+		    val2 += *fromPtr2 * sx_sy_;
+		    val3 += *fromPtr3 * sx_sy_;
+		}
+		if ((ssX < -1) || (ssX > (width - 1)) ||
+		    (ssY < 0) || (ssY > height)) {
+		    val0 += bg0 * sxsy_;
+		    val1 += bg1 * sxsy_;
+		    val2 += bg2 * sxsy_;
+		    val3 += bg3 * sxsy_;
+		} else {
+		    val0 += *(fromPtr0 + pixelSize) * sxsy_;
+		    val1 += *(fromPtr1 + pixelSize) * sxsy_;
+		    val2 += *(fromPtr2 + pixelSize) * sxsy_;
+		    val3 += *(fromPtr3 + pixelSize) * sxsy_;
+		}
+		if ((ssX < 0) || (ssX > width) ||
+		    (ssY < -1) || (ssY > (height - 1))) {
+		    val0 += bg0 * sx_sy;
+		    val1 += bg1 * sx_sy;
+		    val2 += bg2 * sx_sy;
+		    val3 += bg3 * sx_sy;
+		} else {
+		    val0 += *(fromPtr0 + pitch) * sx_sy;
+		    val1 += *(fromPtr1 + pitch) * sx_sy;
+		    val2 += *(fromPtr2 + pitch) * sx_sy;
+		    val3 += *(fromPtr3 + pitch) * sx_sy;
+		}
+		if ((ssX < -1) || (ssX > (width - 1)) ||
+		    (ssY < -1) || (ssY > (height - 1))) {
+		    val0 += bg0 * sxsy;
+		    val1 += bg1 * sxsy;
+		    val2 += bg2 * sxsy;
+		    val3 += bg3 * sxsy;
+		} else {
+		    val0 += *(fromPtr0 + pitch + pixelSize) * sxsy;
+		    val1 += *(fromPtr1 + pitch + pixelSize) * sxsy;
+		    val2 += *(fromPtr2 + pitch + pixelSize) * sxsy;
+		    val3 += *(fromPtr3 + pitch + pixelSize) * sxsy;
+		}
+
+		if (force) {
+		    *toPtr++ = (unsigned char) val0;
+		    *toPtr++ = (unsigned char) val1;
+		    *toPtr++ = (unsigned char) val2;
+		    *toPtr   = (unsigned char) val3;
+		} else {
+		    alpha  = ((ssX < 0) || (ssX > width) ||
+			      (ssY < 0) || (ssY > height)) ?
+			0 : *fromPtr3 / 255.0;
+		    alpha_  = 1 - alpha;
+		    if (*(toPtr + 3) == 255) {
+			*toPtr += (unsigned char) ((val0 - *toPtr) * alpha);
+			toPtr++;
+			*toPtr += (unsigned char) ((val1 - *toPtr) * alpha);
+			toPtr++;
+			*toPtr += (unsigned char) ((val2 - *toPtr) * alpha);
+			toPtr++;
+			*toPtr += 255;
+		    } else {
+			beta = *(toPtr + 3) / 255.0;
+			*toPtr = (unsigned char)
+			    (val0 * alpha - alpha_ * beta * *toPtr);
+			toPtr++;
+			*toPtr = (unsigned char)
+			    (val1 * alpha - alpha_ * beta * *toPtr);
+			toPtr++;
+			*toPtr = (unsigned char)
+			    (val2 * alpha - alpha_ * beta * *toPtr);
+			toPtr++;
+			*toPtr = (unsigned char)
+			    (*fromPtr3 + (255 - *fromPtr3) * beta);
+		    }
+		}
+	    }
+	}
+    }
+
+    if (newImg != NULL) {
+	ckfree((char *) newImg);
+	newImg = NULL;
+    }
+
+    /*
+     * The finishing touches are from  *Tk_PhotoPutZoomedBlock*.
+     * Recompute the region of data for which we have valid pixels to plot.
+     */
+   if (alphaOffset) {
+	int x1, y1, end;
+
+	if (compRule != TK_PHOTO_COMPOSITE_OVERLAY) {
+	    /*
+	     * Don't need this when using the OVERLAY compositing rule, which
+	     * always strictly increases the valid region.
+	     */
+	    TkRegion workRgn = TkCreateRegion();
+
+	    rect.x = toX;
+	    rect.y = toY;
+	    rect.width = destWidth;
+	    rect.height = 1;
+	    TkUnionRectWithRegion(&rect, workRgn, workRgn);
+	    TkSubtractRegion(masterPtr->validRegion, workRgn,
+		masterPtr->validRegion);
+	    TkDestroyRegion(workRgn);
+	}
+
+	destLinePtr = masterPtr->pix32 +
+	    (toY * masterPtr->width + toX) * 4 + 3;
+	for (y1 = 0; y1 < destHeight; y1++) {
+	    x1 = 0;
+	    destPtr = destLinePtr;
+	    while (x1 < destWidth) {
+		/* Search for first non-transparent pixel. */
+		while ((x1 < destWidth) && !*destPtr) {
+		    x1++;
+		    destPtr += 4;
+		}
+		end = x1;
+		/* Search for first transparent pixel. */
+		while ((end < destWidth) && *destPtr) {
+		    end++;
+		    destPtr += 4;
+		}
+		if (end > x1) {
+		    rect.x = toX + x1;
+		    rect.y = toY + y1;
+		    rect.width = end - x1;
+		    rect.height = 1;
+		    TkUnionRectWithRegion(&rect, masterPtr->validRegion,
+			masterPtr->validRegion);
+		}
+		x1 = end;
+	    }
+	    destLinePtr += masterPtr->width * 4;
+	}
+    } else {
+	rect.x = toX;
+	rect.y = toY;
+	rect.width = destWidth;
+	rect.height = destHeight;
+	TkUnionRectWithRegion(&rect, masterPtr->validRegion,
+	    masterPtr->validRegion);
+    }
+
+    /*
+     * Update each instance.
+     */
+
+    Tk_DitherPhoto((Tk_PhotoHandle)masterPtr, toX, toY, destWidth, destHeight);
+
+    /*
+     * Tell the core image code that this image has changed.
+     */
+
+    Tk_ImageChanged(masterPtr->tkMaster, toX, toY, destWidth, destHeight,
+	masterPtr->width, masterPtr->height);
+
+    /*
+     * The image copy command now returns the coordinates of the vertices
+     * of the rotated/scaled image to help create a boundary rectangle
+     * (not the bounding box!)
+     */
+
+    yT1 = -yT1;
+    yT2 = -yT2;
+    yT3 = -yT3;
+    yT4 = -yT4;
+    xT1 += xT3;
+    yT1 += yT2;
+    xT2 += xT3;
+    yT3 += yT2;
+    xT4 += xT3;
+    yT4 += yT2;
+    yT2 += yT2;
+    xT3 += xT3;
+    if (dir < 0) {
+	yy = (yT1 + yT3) / 2.0;
+	yT1 = 2 * yy - yT1;
+	yT4 = 2 * yy - yT2;
+	yT3 = 2 * yy - yT3;
+	yT2 = 2 * yy - yT4;
+	xx = xT2;
+	xT2 = xT4;
+	xT4 = xx;
+    }
+    xT1 += toX;
+    yT1 += toY;
+    xT2 += toX;
+    yT2 += toY;
+    xT3 += toX;
+    yT3 += toY;
+    xT4 += toX;
+    yT4 += toY;
+
+    if (interp != NULL) {
+	sprintf((char *) weights, "%.1f% .1f% .1f% .1f% .1f% .1f% .1f% .1f",
+	    xT1, yT1, xT2, yT2, xT3, yT3, xT4, yT4);
+	Tcl_AppendResult(masterPtr->interp, (char *) weights, (char *) NULL);
+    }
+
+    return TCL_OK;
 }
 
 /*

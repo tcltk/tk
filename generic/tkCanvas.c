@@ -1879,7 +1879,12 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_SCAN: {
-	int x, y, gain = 10;
+	int x, y;
+#ifdef ANDROID
+	int gain = 2;
+#else
+	int gain = 10;
+#endif
 	static const char *const optionStrings[] = {
 	    "mark", "dragto", NULL
 	};

@@ -14,6 +14,9 @@
 #ifndef _TKPORT
 #define _TKPORT
 
+#if defined(PLATFORM_SDL)
+#   include "tkSDLPort.h"
+#endif
 #if defined(_WIN32)
 #   include "tkWinPort.h"
 #endif
@@ -24,7 +27,9 @@
 #   if defined(MAC_OSX_TK)
 #	include "tkMacOSXPort.h"
 #   else
-#	include "tkUnixPort.h"
+#       if !defined(PLATFORM_SDL)
+#	    include "tkUnixPort.h"
+#       endif
 #   endif
 #endif
 

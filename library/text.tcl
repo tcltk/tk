@@ -213,6 +213,7 @@ bind Text <Delete> {
 	    %W delete insert
 	}
 	%W see insert
+	tk::TextSetInput %W
     }
 }
 bind Text <BackSpace> {
@@ -223,6 +224,7 @@ bind Text <BackSpace> {
 	    %W delete insert-1c
 	}
 	%W see insert
+	tk::TextSetInput %W
     }
 }
 
@@ -373,6 +375,7 @@ bind Text <Control-h> {
     if {!$tk_strictMotif && [%W compare insert != 1.0]} {
 	%W delete insert-1c
 	%W see insert
+	tk::TextSetInput %W
     }
 }
 bind Text <2> {
@@ -455,6 +458,26 @@ if {"x11" eq [tk windowingsystem]} {
     }
 }
 
+# ::tk::TextSetInput
+# On Android set text input rectangle for on-screen keyboard
+#
+# Arguments:
+# w -		The text window.
+
+proc ::tk::TextSetInput {w} {
+    if {[focus] ne $w} {
+	return
+    }
+    set bbox [$w bbox insert]
+    set x [lindex $bbox 0]
+    set y [lindex $bbox 1]
+    catch {
+	incr x [winfo rootx $w]
+	incr y [winfo rooty $w]
+	sdltk textinput 1 $x $y
+    }
+}
+
 # ::tk::TextClosestGap --
 # Given x and y coordinates, this procedure finds the closest boundary
 # between characters to the given coordinates and returns the index
@@ -485,7 +508,7 @@ proc ::tk::TextClosestGap {w x y} {
 # Arguments:
 # w -		The text window in which the button was pressed.
 # x -		The x-coordinate of the button press.
-# y -		The x-coordinate of the button press.
+# y -		The y-coordinate of the button press.
 
 proc ::tk::TextButton1 {w x y} {
     variable ::tk::Priv
@@ -509,6 +532,7 @@ proc ::tk::TextButton1 {w x y} {
     if {[tk windowingsystem] eq "win32" \
 	    || [$w cget -state] eq "normal"} {
 	focus $w
+	TextSetInput $w
     }
     if {[$w cget -autoseparators]} {
 	$w edit separator
@@ -713,6 +737,7 @@ proc ::tk::TextSetCursor {w pos} {
     $w mark set insert $pos
     $w tag remove sel 1.0 end
     $w see insert
+    TextSetInput $w
     if {[$w cget -autoseparators]} {
 	$w edit separator
     }
@@ -751,6 +776,7 @@ proc ::tk::TextKeySelect {w new} {
     }
     $w mark set insert $new
     $w see insert
+    TextSetInput $w
     update idletasks
 }
 
@@ -850,6 +876,7 @@ proc ::tk::TextInsert {w s} {
     }
     $w insert insert $s
     $w see insert
+    TextSetInput $w
     if {$compound && $oldSeparator} {
 	$w edit separator
 	$w configure -autoseparators 1
@@ -992,6 +1019,7 @@ proc ::tk::TextTranspose w {
     $w delete "$pos - 2 char" $pos
     $w insert insert $new
     $w see insert
+    TextSetInput $w
     if {$autosep} {
 	$w edit separator
 	$w configure -autoseparators $autosep
