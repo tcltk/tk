@@ -25,7 +25,7 @@ set t $w.f.text
 text $t -yscrollcommand "$w.scroll set" -setgrid true -font $font -width 70 \
 	-height 35 -wrap word -highlightthickness 0 -borderwidth 0
 pack $t -expand  yes -fill both
-scrollbar $w.scroll -command "$t yview"
+ttk::scrollbar $w.scroll -command "$t yview"
 pack $w.scroll -side right -fill y
 panedwindow $w.pane
 pack $w.pane -expand yes -fill both
@@ -193,7 +193,7 @@ proc textWindSmallP w {
 proc textWindOn w {
     catch {destroy $w.scroll2}
     set t $w.f.text
-    scrollbar $w.scroll2 -orient horizontal -command "$t xview"
+    ttk::scrollbar $w.scroll2 -orient horizontal -command "$t xview"
     pack $w.scroll2 -after $w.buttons -side bottom -fill x
     $t configure -xscrollcommand "$w.scroll2 set" -wrap none
 }
@@ -225,7 +225,7 @@ proc createPlot {t} {
 
     canvas $c -relief sunken -width 450 -height 300 -cursor top_left_arrow
 
-    set font {Helvetica 18}
+    set font {Helvetica -18}
 
     $c create line 100 250 400 250 -width 2
     $c create line 100 250 100 50 -width 2
@@ -303,7 +303,7 @@ proc textMakePeer {parent} {
     set t [$parent peer create $w.f.text -yscrollcommand "$w.scroll set" \
 	       -borderwidth 0 -highlightthickness 0]
     pack $t -expand  yes -fill both
-    scrollbar $w.scroll -command "$t yview"
+    ttk::scrollbar $w.scroll -command "$t yview"
     pack $w.scroll -side right -fill y
     pack $w.f -expand yes -fill both
 }

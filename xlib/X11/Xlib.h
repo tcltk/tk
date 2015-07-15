@@ -156,7 +156,7 @@ typedef struct {
 /*
  * Data structure for setting graphics context.
  */
-typedef struct {
+typedef struct _XGCValues {
 	int function;		/* logical operation */
 	unsigned long plane_mask;/* plane mask */
 	unsigned long foreground;/* foreground pixel */
@@ -182,6 +182,10 @@ typedef struct {
 	Pixmap clip_mask;	/* bitmap clipping; other calls for rects */
 	int dash_offset;	/* patterned/dashed line information */
 	char dashes;
+#ifdef PLATFORM_SDL
+	char dash_array[16 - 1];
+	struct _XGCValues *next;
+#endif
 } XGCValues;
 
 /*
@@ -239,6 +243,9 @@ typedef struct {
 	int backing_store;	/* Never, WhenMapped, Always */
 	Bool save_unders;
 	long root_input_mask;	/* initial root input mask */
+#ifdef PLATFORM_SDL
+	int moverride;		/* when true, mwidth/mheight overriden */
+#endif
 } Screen;
 
 /*
@@ -520,6 +527,16 @@ typedef struct _XDisplay {
 	struct _XSQEvent *qfree; /* unallocated event queue elements */
 	unsigned long next_event_serial_num; /* inserted into next queue elt */
 	int (*savedsynchandler)(); /* user synchandler when Xlib usurps */
+#ifdef PLATFORM_SDL
+	struct _XDisplay *next_display; /* next Display in list */
+	struct _XGCValues *gcs; /* list of GCs on this display */
+	void  *pixmaps; /* list of Pixmaps on this display */
+	Window focus_window; /* last focus window for keyboard grabs */
+	void *gl_rend;
+	void *agg2d;
+	unsigned char agg2d_dummyfb[32];
+	void *qlock; /* Tcl_Mutex */
+#endif
 } Display;
 
 #if NeedFunctionPrototypes	/* prototypes require event type definitions */

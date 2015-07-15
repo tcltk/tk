@@ -338,7 +338,7 @@ proc Draw0 {w} {
     set color $::C(0)
     set xy {579 119}
     $w.c create text $xy -text "START HERE!" -fill $color -anchor w \
-	    -tag I0 -font {{Times Roman} 12 italic bold}
+	    -tag I0 -font {Arial 12 italic bold}
     set xy {719 119 763 119}
     $w.c create line $xy -tag I0 -fill $color -width 5 -arrow last \
 	    -arrowshape {18 18 5}
@@ -749,7 +749,7 @@ proc Draw7 {w} {
     set xy {225 324}				;# On button
     $w.c create oval [box {*}$xy 3] -fill $::C(fg) -outline $::C(fg)
     set xy {218 323}				;# On text
-    set font {{Times Roman} 8}
+    set font {Arial 8}
     $w.c create text $xy -text "on" -anchor e -fill $::C(fg) -font $font
     set xy {225 350}				;# Off button
     $w.c create oval [box {*}$xy 3] -fill $::C(fg) -outline $::C(fg)
@@ -988,10 +988,10 @@ proc Draw13 {w} {
 
     set xy {112 687}				;# Label
     $w.c create text $xy -text "FAX" -fill $::C(fg) \
-	    -font {{Times Roman} 12 bold}
+	    -font {Arial 12 bold}
     set xy {762 687}
     $w.c create text $xy -text "FAX" -fill $::C(fg) \
-	    -font {{Times Roman} 12 bold}
+	    -font {Arial 12 bold}
 
     set xy {138 663 148 636 178 636}		;# Paper guide
     $w.c create line $xy -smooth 1 -fill $::C(fg) -width 3
@@ -1586,11 +1586,11 @@ proc Move24 {w {step {}}} {
 		-width 10 -smooth 1
 	set msg [subst $S(message)]
 	$w.c create text [Centroid $w I24] -text $msg -tag {I24 I24t} \
-		-justify center -font {{Times Roman} 18 bold}
+		-justify center -font {Arial 18 bold}
 	return 1
     }
 
-    $w.c itemconfig I24t -font [list {Times Roman} [expr {18 + 6*$step}] bold]
+    $w.c itemconfig I24t -font [list Arial [expr {12 + 6*$step}] bold]
     $w.c move I24 0 -60
     $w.c scale I24 {*}[Centroid $w I24] 1.25 1.25
     return 1
@@ -1619,14 +1619,14 @@ proc Move26 {w {step {}}} {
     if {$step >= 3} {
 	$w.c delete I24 I26
 	$w.c create text 430 755 -anchor s -tag I26 \
-		-text "click to continue" -font {{Times Roman} 24 bold}
+		-text "click to continue" -font {Arial 24 bold}
 	bind $w.c <1> [list Reset $w]
 	return 4
     }
 
     $w.c scale I24 {*}[Centroid $w I24] .8 .8
     $w.c move I24 0 60
-    $w.c itemconfig I24t -font [list {Times Roman} [expr {30 - 6*$step}] bold]
+    $w.c itemconfig I24t -font [list Arial [expr {20 - 6*$step}] bold]
     return 1
 }
 

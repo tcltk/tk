@@ -14,12 +14,21 @@
 
 #include "tkInt.h"
 
+#ifdef PLATFORM_SDL
+#include "tkSDLInt.h"
+#ifdef ANDROID
+#include "SdlTkInt.h"
+#endif
+#endif
+
 #ifdef _WIN32
 #include "tkWinInt.h"
-#elif defined(MAC_OSX_TK)
-#include "tkMacOSXInt.h"
-#else
+#endif
+
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* UNIX */
+#ifndef PLATFORM_SDL
 #include "tkUnixInt.h"
+#endif
 #endif
 
 /*
@@ -233,7 +242,11 @@ typedef struct PatSeq {
  * or pixels to meet the PAT_NEARBY constraint:
  */
 
+#ifdef ANDROID
+#define NEARBY_PIXELS		SdlTkX.nearby_pixels
+#else
 #define NEARBY_PIXELS		5
+#endif
 #define NEARBY_MS		500
 
 /*
@@ -3937,6 +3950,25 @@ ParseEventDescription(
 	p = GetField(p, field, FIELD_SIZE);
     }
     if (*field != '\0') {
+#ifdef PLATFORM_SDL
+	if ((*field >= '1') && (*field <= '9') &&
+	    ((field[1] == '\0') ||
+	     ((field[1] >= '0') && (field[1] <= '9') && (field[2] == '\0')))) {
+	    if (eventFlags == 0) {
+		patPtr->eventType = ButtonPress;
+		eventMask = ButtonPressMask;
+	    } else if (eventFlags & KEY) {
+		goto getKeysym;
+	    } else if (!(eventFlags & BUTTON)) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"specified button \"%s\" for non-button event",
+			field));
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "NON_BUTTON", NULL);
+		count = 0;
+		goto done;
+	    }
+	    patPtr->detail.button = atoi(field);
+#else
 	if ((*field >= '1') && (*field <= '5') && (field[1] == '\0')) {
 	    if (eventFlags == 0) {
 		patPtr->eventType = ButtonPress;
@@ -3952,6 +3984,7 @@ ParseEventDescription(
 		goto done;
 	    }
 	    patPtr->detail.button = (*field - '0');
+#endif
 	} else {
 
 	getKeysym:

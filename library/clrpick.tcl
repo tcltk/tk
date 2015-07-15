@@ -228,7 +228,7 @@ proc ::tk::dialog::color::BuildDialog {w} {
 	# The box frame contains the label and entry widget for an [R|G|B]
 	set box [frame $f.box]
 
-	::tk::AmpWidget label $box.label -text "[mc $l]:" \
+	::tk::AmpWidget ::ttk::label $box.label -text "[mc $l]:" \
 		-width $maxWidth -anchor ne
 	bind $box.label <<AltUnderlined>> [list focus $box.entry]
 
@@ -278,7 +278,7 @@ proc ::tk::dialog::color::BuildDialog {w} {
     # selected color
     #
     set selFrame [frame $topFrame.sel]
-    set lab [::tk::AmpWidget label $selFrame.lab \
+    set lab [::tk::AmpWidget ::ttk::label $selFrame.lab \
 	    -text [mc "&Selection:"] -anchor sw]
     set ent [entry $selFrame.ent \
 	    -textvariable ::tk::dialog::color::[winfo name $w](selection) \
@@ -299,9 +299,9 @@ proc ::tk::dialog::color::BuildDialog {w} {
     #
     set botFrame [frame $w.bot -relief raised -bd 1]
 
-    ::tk::AmpWidget button $botFrame.ok     -text [mc "&OK"]		\
+    ::tk::AmpWidget ::ttk::button $botFrame.ok -text [mc "&OK"]		\
 	    -command [list tk::dialog::color::OkCmd $w]
-    ::tk::AmpWidget button $botFrame.cancel -text [mc "&Cancel"]	\
+    ::tk::AmpWidget ::ttk::button $botFrame.cancel -text [mc "&Cancel"]	\
 	    -command [list tk::dialog::color::CancelCmd $w]
 
     set data(okBtn)      $botFrame.ok

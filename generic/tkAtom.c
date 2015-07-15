@@ -93,11 +93,20 @@ Tk_InternAtom(
 	Atom atom;
 
 	atom = XInternAtom(dispPtr->display, name, False);
+#ifdef PLATFORM_SDL
+	Tcl_SetHashValue(hPtr, atom);
+	hPtr2 = Tcl_CreateHashEntry(&dispPtr->atomTable, atom, &isNew);
+#else
 	Tcl_SetHashValue(hPtr, INT2PTR(atom));
 	hPtr2 = Tcl_CreateHashEntry(&dispPtr->atomTable, INT2PTR(atom), &isNew);
+#endif
 	Tcl_SetHashValue(hPtr2, Tcl_GetHashKey(&dispPtr->nameTable, hPtr));
     }
+#ifdef PLATFORM_SDL
+    return (Atom)Tcl_GetHashValue(hPtr);
+#else
     return (Atom)PTR2INT(Tcl_GetHashValue(hPtr));
+#endif
 }
 
 /*

@@ -1,0 +1,25 @@
+CXXFLAGS= $(CFLAGS) @SHLIB_CFLAGS@ -I../include -I../font_freetype \
+	`freetype-config --cflags`
+
+SRC_CXX=\
+agg2d.cpp
+
+SRC_C=\
+
+
+OBJ=$(SRC_CXX:.cpp=.o) $(SRC_C:.c=.o)
+
+all:	$(OBJ)
+	$(AR) rv ../../libagg.a $(OBJ)
+
+clean:
+	rm -f *.o *.a *.o *~
+
+distclean:	clean
+	rm -f Makefile
+
+%.o: %.cpp
+	$(CXX) -c $(CXXFLAGS) $*.cpp -o $@
+
+%.o: %.c
+	$(CC) -c $(CXXFLAGS) $*.c -o $@

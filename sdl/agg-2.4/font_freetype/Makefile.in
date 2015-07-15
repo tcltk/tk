@@ -1,0 +1,22 @@
+CXXFLAGS= $(CFLAGS) @FT_CFLAGS@ @SHLIB_CFLAGS@ -I../include
+
+SRC_CXX=\
+agg_font_freetype.cpp
+
+
+OBJ=$(SRC_CXX:.cpp=.o) $(SRC_C:.c=.o)
+
+all:	$(OBJ)
+	$(AR) rv ../../libagg.a $(OBJ)
+
+clean:
+	rm -f *.o *.a *~
+
+distclean:	clean
+	rm -f Makefile
+
+%.o: %.cpp
+	$(CXX) -c $(CXXFLAGS) $*.cpp -o $@
+
+%.o: %.c
+	$(C) -c $(CXXFLAGS) $*.c -o $@

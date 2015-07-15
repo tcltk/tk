@@ -10,6 +10,8 @@
 
 namespace eval ::tk::fontchooser {
     variable S
+    variable font
+    variable style
 
     set S(W) .__tk__fontchooser
     set S(fonts) [lsort -dictionary [font families]]
@@ -29,10 +31,6 @@ namespace eval ::tk::fontchooser {
     set S(-title) [::msgcat::mc "Font"]
     set S(-command) ""
     set S(-font) TkDefaultFont
-}
-
-proc ::tk::fontchooser::Setup {} {
-    variable S
 
     # Canonical versions of font families, styles, etc. for easier searching
     set S(fonts,lcase) {}
@@ -55,8 +53,10 @@ proc ::tk::fontchooser::Setup {} {
         hide ::tk::fontchooser::Hide
         configure ::tk::fontchooser::Configure
     }
+
+    unset font
+    unset style
 }
-::tk::fontchooser::Setup
 
 proc ::tk::fontchooser::Show {} {
     variable S
@@ -191,10 +191,25 @@ proc ::tk::fontchooser::Create {} {
         set minsize(bbox) [winfo reqwidth $S(W).ok]
         set minsize(fonts) \
             [expr {[font measure TkDefaultFont "Helvetica"] + $scroll_width}]
+        set m2 [::msgcat::mc "&Font:"]
+        set m2 [expr {[font measure TkDefaultFont $m2] + $scroll_width}]
+        if {$m2 > $minsize(fonts)} {
+            set minsize(styles) $m2
+        }
         set minsize(styles) \
             [expr {[font measure TkDefaultFont "Bold Italic"] + $scroll_width}]
+        set m2 [::msgcat::mc "Font st&yle:"]
+        set m2 [expr {[font measure TkDefaultFont $m2] + $scroll_width}]
+        if {$m2 > $minsize(styles)} {
+            set minsize(styles) $m2
+        }
         set minsize(sizes) \
             [expr {[font measure TkDefaultFont "-99"] + $scroll_width}]
+        set m2 [::msgcat::mc "&Size:"]
+        set m2 [expr {[font measure TkDefaultFont $m2] + $scroll_width}]
+        if {$m2 > $minsize(sizes)} {
+            set minsize(sizes) $m2
+        }
         set min [expr {$minsize(gap) * 4}]
         foreach {what width} [array get minsize] { incr min $width }
         wm minsize $S(W) $min 260
@@ -324,13 +339,13 @@ proc ::tk::fontchooser::Init {{defaultFont ""}} {
         set S(size) $F(-size)
         set S(strike) $F(-overstrike)
         set S(under) $F(-underline)
-        set S(style) "Regular"
+        set S(style) [::msgcat::mc "Regular"]
         if {$F(-weight) eq "bold" && $F(-slant) eq "italic"} {
-            set S(style) "Bold Italic"
+            set S(style) [::msgcat::mc "Bold Italic"]
         } elseif {$F(-weight) eq "bold"} {
-            set S(style) "Bold"
+            set S(style) [::msgcat::mc "Bold"]
         } elseif {$F(-slant) eq "italic"} {
-            set S(style) "Italic"
+            set S(style) [::msgcat::mc "Italic"]
         }
 
         set S(first) 0
@@ -405,9 +420,15 @@ proc ::tk::fontchooser::Update {} {
     variable S
 
     set S(result) [list $S(font) $S(size)]
-    if {$S(style) eq "Bold"} { lappend S(result) bold }
-    if {$S(style) eq "Italic"} { lappend S(result) italic }
-    if {$S(style) eq "Bold Italic"} { lappend S(result) bold italic}
+    if {$S(style) eq [::msgcat::mc "Bold"]} {
+	lappend S(result) bold
+    }
+    if {$S(style) eq [::msgcat::mc "Italic"]} {
+	lappend S(result) italic
+    }
+    if {$S(style) eq [::msgcat::mc "Bold Italic"]} {
+	lappend S(result) bold italic
+    }
     if {$S(strike)} { lappend S(result) overstrike}
     if {$S(under)} { lappend S(result) underline}
 

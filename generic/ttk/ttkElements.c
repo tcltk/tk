@@ -12,8 +12,13 @@
 #include "ttkWidget.h"
 
 #define DEFAULT_BORDERWIDTH "2"
+#ifdef ANDROID
+#define DEFAULT_ARROW_SIZE "25"
+#define MIN_THUMB_SIZE 16
+#else
 #define DEFAULT_ARROW_SIZE "15"
 #define MIN_THUMB_SIZE 10
+#endif
 
 /*----------------------------------------------------------------------
  * +++ Null element.  Does nothing; used as a stub.
@@ -180,6 +185,7 @@ static void FieldElementSize(
 {
     FieldElement *field = elementRecord;
     int borderWidth = 2;
+
     Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
@@ -352,7 +358,11 @@ static void SeparatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
+#ifdef PLATFORM_SDL
+    *widthPtr = *heightPtr = 4;
+#else
     *widthPtr = *heightPtr = 2;
+#endif
 }
 
 static void HorizontalSeparatorElementDraw(
@@ -364,6 +374,9 @@ static void HorizontalSeparatorElementDraw(
     GC lightGC = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
     GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
 
+#ifdef PLATFORM_SDL
+    b.y++;
+#endif
     XDrawLine(Tk_Display(tkwin), d, darkGC, b.x, b.y, b.x + b.width, b.y);
     XDrawLine(Tk_Display(tkwin), d, lightGC, b.x, b.y+1, b.x + b.width, b.y+1);
 }
@@ -377,6 +390,9 @@ static void VerticalSeparatorElementDraw(
     GC lightGC = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
     GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
 
+#ifdef PLATFORM_SDL
+    b.x++;
+#endif
     XDrawLine(Tk_Display(tkwin), d, darkGC, b.x, b.y, b.x, b.y + b.height);
     XDrawLine(Tk_Display(tkwin), d, lightGC, b.x+1, b.y, b.x+1, b.y+b.height);
 }
@@ -442,7 +458,11 @@ static void SizegripSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
+#ifdef ANDROID
+    int gripCount = 3, gripSpace = 4, gripThickness = 5;
+#else
     int gripCount = 3, gripSpace = 2, gripThickness = 3;
+#endif
     *widthPtr = *heightPtr = gripCount * (gripSpace + gripThickness);
 }
 
@@ -451,7 +471,11 @@ static void SizegripDraw(
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     SizegripElement *grip = elementRecord;
+#ifdef ANDROID
+    int gripCount = 3, gripSpace = 4;
+#else
     int gripCount = 3, gripSpace = 2;
+#endif
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, grip->backgroundObj);
     GC lightGC = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
     GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
@@ -500,10 +524,17 @@ static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 	Tk_Offset(IndicatorElement,colorObj), DEFAULT_BACKGROUND },
     { "-indicatorrelief", TK_OPTION_RELIEF,
 	Tk_Offset(IndicatorElement,reliefObj), "raised" },
+#ifdef ANDROID
+    { "-indicatordiameter", TK_OPTION_PIXELS,
+	Tk_Offset(IndicatorElement,diameterObj), "20" },
+    { "-indicatormargin", TK_OPTION_STRING,
+	Tk_Offset(IndicatorElement,marginObj), "0 4 8 4" },
+#else
     { "-indicatordiameter", TK_OPTION_PIXELS,
 	Tk_Offset(IndicatorElement,diameterObj), "12" },
     { "-indicatormargin", TK_OPTION_STRING,
 	Tk_Offset(IndicatorElement,marginObj), "0 2 4 2" },
+#endif
     { "-borderwidth", TK_OPTION_PIXELS,
 	Tk_Offset(IndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { NULL, 0, 0, NULL }
@@ -650,8 +681,13 @@ static Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
 	Tk_Offset(MenuIndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-indicatorrelief", TK_OPTION_RELIEF,
 	Tk_Offset(MenuIndicatorElement,reliefObj),"raised" },
+#ifdef ANDROID
+    { "-indicatormargin", TK_OPTION_STRING,
+	    Tk_Offset(MenuIndicatorElement,marginObj), "10 0" },
+#else
     { "-indicatormargin", TK_OPTION_STRING,
 	    Tk_Offset(MenuIndicatorElement,marginObj), "5 0" },
+#endif
     { NULL, 0, 0, NULL }
 };
 
@@ -713,12 +749,22 @@ static Ttk_ElementOptionSpec ArrowElementOptions[] = {
 	Tk_Offset(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-relief",TK_OPTION_RELIEF,
 	Tk_Offset(ArrowElement,reliefObj),"raised"},
+#ifdef ANDROID
+    { "-borderwidth", TK_OPTION_PIXELS,
+	Tk_Offset(ArrowElement,borderWidthObj), "2" },
+#else
     { "-borderwidth", TK_OPTION_PIXELS,
 	Tk_Offset(ArrowElement,borderWidthObj), "1" },
+#endif
     { "-arrowcolor",TK_OPTION_COLOR,
 	Tk_Offset(ArrowElement,colorObj),"black"},
+#ifdef ANDROID
+    { "-arrowsize", TK_OPTION_PIXELS,
+	Tk_Offset(ArrowElement,sizeObj), "24" },
+#else
     { "-arrowsize", TK_OPTION_PIXELS,
 	Tk_Offset(ArrowElement,sizeObj), "14" },
+#endif
     { NULL, 0, 0, NULL }
 };
 
@@ -806,7 +852,11 @@ static void TroughElementDraw(
 {
     TroughElement *troughPtr = elementRecord;
     Tk_3DBorder border = NULL;
+#ifdef ANDROID
+    int borderWidth = 4, relief = TK_RELIEF_SUNKEN;
+#else
     int borderWidth = 2, relief = TK_RELIEF_SUNKEN;
+#endif
 
     border = Tk_Get3DBorderFromObj(tkwin, troughPtr->colorObj);
     Tk_GetReliefFromObj(NULL, troughPtr->reliefObj, &relief);
@@ -878,7 +928,11 @@ static void ThumbElementDraw(
 {
     ThumbElement *thumb = elementRecord;
     Tk_3DBorder  border = Tk_Get3DBorderFromObj(tkwin, thumb->borderObj);
+#ifdef ANDROID
+    int borderWidth = 4, relief = TK_RELIEF_RAISED;
+#else
     int borderWidth = 2, relief = TK_RELIEF_RAISED;
+#endif
 
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, thumb->reliefObj, &relief);
@@ -911,10 +965,17 @@ typedef struct {
 } SliderElement;
 
 static Ttk_ElementOptionSpec SliderElementOptions[] = {
+#ifdef ANDROID
+    { "-sliderlength", TK_OPTION_PIXELS, Tk_Offset(SliderElement,lengthObj),
+	"50" },
+    { "-sliderthickness",TK_OPTION_PIXELS,Tk_Offset(SliderElement,thicknessObj),
+	"25" },
+#else
     { "-sliderlength", TK_OPTION_PIXELS, Tk_Offset(SliderElement,lengthObj),
 	"30" },
     { "-sliderthickness",TK_OPTION_PIXELS,Tk_Offset(SliderElement,thicknessObj),
 	"15" },
+#endif
     { "-sliderrelief", TK_OPTION_RELIEF, Tk_Offset(SliderElement,reliefObj),
 	"raised" },
     { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SliderElement,borderWidthObj),
@@ -956,7 +1017,12 @@ static void SliderElementDraw(
 {
     SliderElement *slider = elementRecord;
     Tk_3DBorder border = NULL;
-    int relief = TK_RELIEF_RAISED, borderWidth = 2, orient;
+    int relief = TK_RELIEF_RAISED, orient;
+#ifdef ANDROID
+    int borderWidth = 4;
+#else
+    int borderWidth = 2;
+#endif
 
     border = Tk_Get3DBorderFromObj(tkwin, slider->borderObj);
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
@@ -1042,7 +1108,11 @@ static void PbarElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     PbarElement *pbar = elementRecord;
+#ifdef ANDROID
+    int orient, thickness = 25, length = 50, borderWidth = 4;
+#else
     int orient, thickness = 15, length = 30, borderWidth = 2;
+#endif
 
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->thicknessObj, &thickness);
@@ -1067,7 +1137,12 @@ static void PbarElementDraw(
 {
     PbarElement *pbar = elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, pbar->borderObj);
-    int relief = TK_RELIEF_RAISED, borderWidth = 2;
+    int relief = TK_RELIEF_RAISED;
+#ifdef ANDROID
+    int borderWidth = 4;
+#else
+    int borderWidth = 2;
+#endif
 
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, pbar->reliefObj, &relief);
@@ -1095,8 +1170,13 @@ typedef struct {
 } TabElement;
 
 static Ttk_ElementOptionSpec TabElementOptions[] = {
+#ifdef ANDROID
+    { "-borderwidth", TK_OPTION_PIXELS,
+	Tk_Offset(TabElement,borderWidthObj),"2" },
+#else
     { "-borderwidth", TK_OPTION_PIXELS,
 	Tk_Offset(TabElement,borderWidthObj),"1" },
+#endif
     { "-background", TK_OPTION_BORDER,
 	Tk_Offset(TabElement,backgroundObj), DEFAULT_BACKGROUND },
     {0,0,0,0}
@@ -1119,8 +1199,13 @@ static void TabElementDraw(
 {
     TabElement *tab = elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
+#ifdef ANDROID
+    int borderWidth = 2;
+    int cut = 4;
+#else
     int borderWidth = 1;
     int cut = 2;
+#endif
     XPoint pts[6];
     int n = 0;
 

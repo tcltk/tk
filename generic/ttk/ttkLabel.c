@@ -293,7 +293,6 @@ static void ImageCleanup(ImageElement *image)
     TtkFreeImageSpec(image->imageSpec);
 }
 
-#ifndef MAC_OSX_TK
 /*
  * StippleOver --
  * 	Draw a stipple over the image area, to make it look "grayed-out"
@@ -318,7 +317,6 @@ static void StippleOver(
 	Tk_FreeBitmapFromObj(tkwin, image->stippleObj);
     }
 }
-#endif
 
 static void ImageDraw(
     ImageElement *image, Tk_Window tkwin,Drawable d,Ttk_Box b,Ttk_State state)
@@ -444,8 +442,13 @@ typedef struct {
 static Ttk_ElementOptionSpec LabelElementOptions[] = {
     { "-compound", TK_OPTION_ANY,
 	Tk_Offset(LabelElement,compoundObj), "none" },
+#ifdef ANDROID
+    { "-space", TK_OPTION_PIXELS,
+	Tk_Offset(LabelElement,spaceObj), "6" },
+#else
     { "-space", TK_OPTION_PIXELS,
 	Tk_Offset(LabelElement,spaceObj), "4" },
+#endif
 
     /* Text element part:
      * NB: Keep in sync with TextElementOptions.

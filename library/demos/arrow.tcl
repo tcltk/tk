@@ -99,9 +99,9 @@ proc arrowSetup c {
 	    -text $v(b) -anchor n
 
     $c create text $v(x1) 310 -text "-width  $v(width)" \
-	    -anchor w -font {Helvetica 18}
+	    -anchor w -font {Helvetica -18}
     $c create text $v(x1) 330 -text "-arrowshape  {$v(a)  $v(b)  $v(c)}" \
-	    -anchor w -font {Helvetica 18}
+	    -anchor w -font {Helvetica -18}
 
     incr v(count)
 }

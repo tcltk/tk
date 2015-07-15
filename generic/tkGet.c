@@ -583,8 +583,18 @@ Tk_GetScreenMM(
     }
     switch (*end) {
     case 0:
+#ifdef PLATFORM_SDL
+    {
+	int wM, wS;
+
+	ScreenGetMMWidth(Tk_Display(tkwin), Tk_Screen(tkwin), &wM, &wS);
+	d /= wS;
+	d *= wM;
+    }
+#else
 	d /= WidthOfScreen(Tk_Screen(tkwin));
 	d *= WidthMMOfScreen(Tk_Screen(tkwin));
+#endif
 	break;
     case 'c':
 	d *= 10;
@@ -693,6 +703,7 @@ TkGetDoublePixels(
 {
     char *end;
     double d;
+    int widthM, widthS;
 
     d = strtod((char *) string, &end);
     if (end == string) {
@@ -701,27 +712,33 @@ TkGetDoublePixels(
     while ((*end != '\0') && isspace(UCHAR(*end))) {
 	end++;
     }
+#ifdef PLATFORM_SDL
+    ScreenGetMMWidth(Tk_Display(tkwin), Tk_Screen(tkwin), &widthM, &widthS);
+#else
+    widthS = WidthOfScreen(Tk_Screen(tkwin));
+    widthM = WidthMMOfScreen(Tk_Screen(tkwin));
+#endif
     switch (*end) {
     case 0:
 	break;
     case 'c':
-	d *= 10*WidthOfScreen(Tk_Screen(tkwin));
-	d /= WidthMMOfScreen(Tk_Screen(tkwin));
+	d *= 10*widthS;
+	d /= widthM;
 	end++;
 	break;
     case 'i':
-	d *= 25.4*WidthOfScreen(Tk_Screen(tkwin));
-	d /= WidthMMOfScreen(Tk_Screen(tkwin));
+	d *= 25.4*widthS;
+	d /= widthM;
 	end++;
 	break;
     case 'm':
-	d *= WidthOfScreen(Tk_Screen(tkwin));
-	d /= WidthMMOfScreen(Tk_Screen(tkwin));
+	d *= widthS;
+	d /= widthM;
 	end++;
 	break;
     case 'p':
-	d *= (25.4/72.0)*WidthOfScreen(Tk_Screen(tkwin));
-	d /= WidthMMOfScreen(Tk_Screen(tkwin));
+	d *= (25.4/72.0)*widthS;
+	d /= widthM;
 	end++;
 	break;
     default:

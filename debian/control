@@ -1,0 +1,40 @@
+Source: sdl2tk8.6
+Section: libs
+Priority: optional
+Maintainer: Christian Werner <chw@ch-werner.de>
+Build-Depends: debhelper (>= 5.0.0), sdltcl8.6-dev, quilt
+Standards-Version: 3.8.3
+Homepage: http://www.tcl.tk/
+
+Package: sdl2tk8.6
+Section: libs
+Priority: optional
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Tk toolkit for Tcl, v8.6 - run-time files
+ Tk is a cross-platform graphical toolkit which provides the Motif
+ look-and-feel and is implemented using the Tcl scripting language.
+ This package contains everything you need to run Tk (wish) scripts
+ and Tk-enabled apps.
+
+Package: sdl2tk8.6-dev
+Section: devel
+Priority: optional
+Architecture: any
+Depends: sdltcl8.6-dev, sdl2tk8.6 (= ${binary:Version})
+Suggests: sdl2tk8.6-doc
+Description: Tk toolkit for Tcl, v8.6 - development files
+ Tk is a cross-platform graphical toolkit which provides the Motif
+ look-and-feel and is implemented using the Tcl scripting language.
+ This package contains the headers and libraries needed to extend
+ or embed Tk.
+
+Package: sdl2tk8.6-doc
+Section: doc
+Priority: optional
+Architecture: all
+Suggests: sdl2tk8.6
+Description: Tk toolkit for Tcl, v8.6 - manual pages
+ Tk is a cross-platform graphical toolkit which provides the Motif
+ look-and-feel and is implemented using the Tcl scripting language.
+ This package contains the manual pages for the Tk commands.

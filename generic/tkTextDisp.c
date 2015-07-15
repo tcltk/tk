@@ -6061,7 +6061,12 @@ TkTextScanCmd(
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextIndex index;
-    int c, x, y, totalScroll, gain=10;
+    int c, x, y, totalScroll;
+#ifdef ANDROID
+    int gain = 2;
+#else
+    int gain = 10;
+#endif
     size_t length;
 
     if ((objc != 5) && (objc != 6)) {

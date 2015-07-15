@@ -14,6 +14,11 @@
 
 #include "tkInt.h"
 
+#ifdef PLATFORM_SDL
+#include "tkSDLInt.h"
+#include "SdlTk.h"
+#endif
+
 #ifdef _WIN32
 #include "tkWinInt.h"
 #endif
@@ -284,8 +289,12 @@ Tk_UpdatePointer(
 			 */
 
 			tsdPtr->restrictWinPtr = winPtr;
+#ifdef PLATFORM_SDL
+			TkpSetCaptureEx(Tk_Display(tkwin),
+			    tsdPtr->restrictWinPtr);
+#else
 			TkpSetCapture(tsdPtr->restrictWinPtr);
-
+#endif
 		    } else if (!(tsdPtr->lastState & ALL_BUTTONS)) {
 			/*
 			 * Mouse is in a non-button grab, so ensure the button
@@ -298,7 +307,12 @@ Tk_UpdatePointer(
 			} else {
 			    tsdPtr->restrictWinPtr = tsdPtr->grabWinPtr;
 			}
+#ifdef PLATFORM_SDL
+			TkpSetCaptureEx(Tk_Display(tkwin),
+			    tsdPtr->restrictWinPtr);
+#else
 			TkpSetCapture(tsdPtr->restrictWinPtr);
+#endif
 		    }
 		}
 
@@ -312,7 +326,11 @@ Tk_UpdatePointer(
 		 */
 
 		if ((tsdPtr->lastState & ALL_BUTTONS) == mask) {
+#ifdef PLATFORM_SDL
+		    TkpSetCaptureEx(Tk_Display(tkwin), tsdPtr->grabWinPtr);
+#else
 		    TkpSetCapture(tsdPtr->grabWinPtr);
+#endif
 		}
 
 		/*
@@ -438,7 +456,20 @@ XGrabPointer(
 {
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+#ifdef PLATFORM_SDL
+    int ret;
 
+    ret = TkpSetCaptureEx(display, tsdPtr->grabWinPtr);
+    if (ret == GrabSuccess) {
+	tsdPtr->grabWinPtr = (TkWindow *) Tk_IdToWindow(display, grab_window);
+	tsdPtr->restrictWinPtr = NULL;
+	if (TkPositionInTree(tsdPtr->lastWinPtr, tsdPtr->grabWinPtr)
+		!= TK_GRAB_IN_TREE) {
+	    UpdateCursor(tsdPtr->grabWinPtr);
+	}
+    }
+    return ret;
+#else
     display->request++;
     tsdPtr->grabWinPtr = (TkWindow *) Tk_IdToWindow(display, grab_window);
     tsdPtr->restrictWinPtr = NULL;
@@ -448,6 +479,7 @@ XGrabPointer(
 	UpdateCursor(tsdPtr->grabWinPtr);
     }
     return GrabSuccess;
+#endif
 }
 
 /*
@@ -474,11 +506,18 @@ XUngrabPointer(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+#ifdef PLATFORM_SDL
+    tsdPtr->grabWinPtr = NULL;
+    tsdPtr->restrictWinPtr = NULL;
+    TkpSetCaptureEx(display, NULL);
+    UpdateCursor(tsdPtr->lastWinPtr);
+#else
     display->request++;
     tsdPtr->grabWinPtr = NULL;
     tsdPtr->restrictWinPtr = NULL;
     TkpSetCapture(NULL);
     UpdateCursor(tsdPtr->lastWinPtr);
+#endif
     return Success;
 }
 
@@ -498,13 +537,10 @@ XUngrabPointer(
  *----------------------------------------------------------------------
  */
 
-void
-TkPointerDeadWindow(
-    TkWindow *winPtr)
+#ifdef PLATFORM_SDL
+static void
+PointerDeadSubWindow(ThreadSpecificData *tsdPtr, TkWindow *winPtr)
 {
-    ThreadSpecificData *tsdPtr =
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
     if (winPtr == tsdPtr->lastWinPtr) {
 	tsdPtr->lastWinPtr = NULL;
     }
@@ -514,8 +550,40 @@ TkPointerDeadWindow(
     if (winPtr == tsdPtr->restrictWinPtr) {
 	tsdPtr->restrictWinPtr = NULL;
     }
+    winPtr = winPtr->childList;
+    while (winPtr != NULL) {
+	PointerDeadSubWindow(tsdPtr, winPtr);
+	winPtr = winPtr->nextPtr;
+    }
+}
+#endif
+
+void
+TkPointerDeadWindow(
+    TkWindow *winPtr)
+{
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+#ifdef PLATFORM_SDL
+    PointerDeadSubWindow(tsdPtr, winPtr);
+#else
+    if (winPtr == tsdPtr->lastWinPtr) {
+	tsdPtr->lastWinPtr = NULL;
+    }
+    if (winPtr == tsdPtr->grabWinPtr) {
+	tsdPtr->grabWinPtr = NULL;
+    }
+    if (winPtr == tsdPtr->restrictWinPtr) {
+	tsdPtr->restrictWinPtr = NULL;
+    }
+#endif
     if (!(tsdPtr->restrictWinPtr || tsdPtr->grabWinPtr)) {
+#ifdef PLATFORM_SDL
+	TkpSetCaptureEx(winPtr->display, NULL);
+#else
 	TkpSetCapture(NULL);
+#endif
     }
 }
 

@@ -586,6 +586,11 @@ UpdateButtonEventState(
 
     switch (eventPtr->type) {
     case ButtonPress:
+#ifdef PLATFORM_SDL
+	if (eventPtr->xbutton.button > 5) {
+	    break;
+	}
+#endif
 	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
 	dispPtr->mouseButtonWindow = eventPtr->xbutton.window;
 	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
@@ -594,6 +599,11 @@ UpdateButtonEventState(
 	break;
 
     case ButtonRelease:
+#ifdef PLATFORM_SDL
+	if (eventPtr->xbutton.button > 5) {
+	    break;
+	}
+#endif
 	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
 	dispPtr->mouseButtonWindow = None;
 	dispPtr->mouseButtonState &= ~GetButtonMask(eventPtr->xbutton.button);

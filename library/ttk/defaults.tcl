@@ -16,6 +16,63 @@ namespace eval ttk::theme::default {
 	-disabledfg	"#a3a3a3"
 	-indicator	"#4a6984"
     }
+    variable android
+    set android 0
+    catch {set android [sdltk android]}
+    variable geom
+    if {$android} {
+	variable dpi
+	set dpi [expr int((25.4 * [winfo screenwidth .]) / [winfo screenmmwidth .])]
+	if {$dpi < 140} {
+	    array set geom {
+		scrollbar.width 18
+		scrollbar.arrowsize 18
+		combobox.arrowsize 18
+		spinbox.arrowsize 12
+		indicatordiameter 12
+	    }
+	} elseif {$dpi < 240} {
+	    array set geom {
+		combobox.arrowsize 24
+		spinbox.arrowsize 16
+		indicatordiameter 16
+	    }
+	} elseif {$dpi < 320} {
+	    array set geom {
+		combobox.arrowsize 36
+		spinbox.arrowsize 24
+		indicatordiameter 24
+	    }
+	} elseif {$dpi < 400} {
+	    array set geom {
+		combobox.arrowsize 48
+		spinbox.arrowsize 32
+		indicatordiameter 32
+	    }
+	} else {
+	    array set geom {
+		combobox.arrowsize 60
+		spinbox.arrowsize 40
+		indicatordiameter 40
+	    }
+	}
+	if {$dpi >= 140} {
+	    variable scrollw
+	    set scrollw [expr round(18.0 * $dpi / 140.0)]
+	    array set geom [list \
+		scrollbar.width $scrollw \
+		scrollbar.arrowsize $scrollw]
+	    unset scrollw
+	}
+    } else {
+	array set geom {
+	    scrollbar.width 12
+	    scrollbar.arrowsize 12
+	    combobox.arrowsize 12
+	    spinbox.arrowsize 10
+	    indicatordiameter 10
+	}
+    }
 
     ttk::style theme settings default {
 
@@ -29,7 +86,7 @@ namespace eval ttk::theme::default {
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
 	    -insertwidth 	1 \
-	    -indicatordiameter	10 \
+	    -indicatordiameter	$geom(indicatordiameter) \
 	    ;
 
 	ttk::style map "." -background \
@@ -60,11 +117,13 @@ namespace eval ttk::theme::default {
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -arrowsize 12 -padding 1
+	ttk::style configure TCombobox -arrowsize $geom(combobox.arrowsize) \
+	    -padding 1
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
+	ttk::style configure TSpinbox -arrowsize $geom(spinbox.arrowsize) \
+	    -padding {2 0 10 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -73,7 +132,7 @@ namespace eval ttk::theme::default {
 	    -relief groove -borderwidth 2
 
 	ttk::style configure TScrollbar \
-	    -width 12 -arrowsize 12
+	    -width $geom(scrollbar.width) -arrowsize $geom(scrollbar.arrowsize)
 	ttk::style map TScrollbar \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 

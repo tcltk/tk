@@ -22,6 +22,7 @@
 
 typedef struct {
     int red, green, blue;	/* Values for desired color. */
+    int pad;
     Colormap colormap;		/* Colormap from which color will be
 				 * allocated. */
     Display *display;		/* Display for colormap. */
@@ -834,7 +835,9 @@ TkDebugColor(
 /* This function is not necessary for Win32,
  * since XParseColor already does the right thing */
 
+#ifndef PLATFORM_SDL
 #undef XParseColor
+#endif
 
 const char *const tkWebColors[20] = {
     /* 'a' */ "qua\0#0000ffffffff",

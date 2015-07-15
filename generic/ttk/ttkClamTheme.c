@@ -21,7 +21,14 @@
 #define STR(x) StR(x)
 #define StR(x) #x
 
-#define SCROLLBAR_THICKNESS 14
+#ifdef ANDROID
+extern char ttkDefScrollbarWidth[TCL_INTEGER_SPACE];
+#define SCROLLBAR_THICKNESS ttkDefScrollbarWidth
+#define FALLBACK_SCROLLBAR_THICKNESS 19
+#else
+#define SCROLLBAR_THICKNESS "14"
+#define FALLBACK_SCROLLBAR_THICKNESS 14
+#endif
 
 #define FRAME_COLOR	"#dcdad5"
 #define LIGHT_COLOR  	"#ffffff"
@@ -134,6 +141,7 @@ static void BorderElementSize(
 {
     BorderElement *border = (BorderElement*)elementRecord;
     int borderWidth = 2;
+
     Tk_GetPixelsFromObj(NULL, tkwin, border->borderWidthObj, &borderWidth);
     if (borderWidth == 1) ++borderWidth;
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
@@ -279,10 +287,17 @@ typedef struct {
 } IndicatorElement;
 
 static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
+#ifdef ANDROID
+    { "-indicatorsize", TK_OPTION_PIXELS,
+	Tk_Offset(IndicatorElement,sizeObj), "20" },
+    { "-indicatormargin", TK_OPTION_STRING,
+	Tk_Offset(IndicatorElement,marginObj), "2" },
+#else
     { "-indicatorsize", TK_OPTION_PIXELS,
 	Tk_Offset(IndicatorElement,sizeObj), "10" },
     { "-indicatormargin", TK_OPTION_STRING,
 	Tk_Offset(IndicatorElement,marginObj), "1" },
+#endif
     { "-indicatorbackground", TK_OPTION_COLOR,
 	Tk_Offset(IndicatorElement,backgroundObj), "white" },
     { "-indicatorforeground", TK_OPTION_COLOR,
@@ -474,8 +489,13 @@ static Ttk_ElementOptionSpec GripElementOptions[] = {
 	Tk_Offset(GripElement,lightColorObj), LIGHT_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
 	Tk_Offset(GripElement,borderColorObj), DARKEST_COLOR },
+#ifdef ANDROID
+    { "-gripcount", TK_OPTION_INT,
+	Tk_Offset(GripElement,gripCountObj), "10" },
+#else
     { "-gripcount", TK_OPTION_INT,
 	Tk_Offset(GripElement,gripCountObj), "5" },
+#endif
     { NULL, 0, 0, NULL }
 };
 
@@ -570,11 +590,18 @@ static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     { "-arrowcolor", TK_OPTION_COLOR,
 	Tk_Offset(ScrollbarElement,arrowColorObj), "#000000" },
     { "-arrowsize", TK_OPTION_PIXELS,
-	Tk_Offset(ScrollbarElement,arrowSizeObj), STR(SCROLLBAR_THICKNESS) },
+	Tk_Offset(ScrollbarElement,arrowSizeObj), SCROLLBAR_THICKNESS },
+#ifdef ANDROID
+    { "-gripcount", TK_OPTION_INT,
+	Tk_Offset(ScrollbarElement,gripCountObj), "10" },
+    { "-sliderlength", TK_OPTION_INT,
+	Tk_Offset(ScrollbarElement,sliderlengthObj), "50" },
+#else
     { "-gripcount", TK_OPTION_INT,
 	Tk_Offset(ScrollbarElement,gripCountObj), "5" },
     { "-sliderlength", TK_OPTION_INT,
 	Tk_Offset(ScrollbarElement,sliderlengthObj), "30" },
+#endif
     { NULL, 0, 0, NULL }
 };
 
@@ -602,7 +629,9 @@ static void ThumbElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *sb = elementRecord;
-    int size = SCROLLBAR_THICKNESS;
+    int size = FALLBACK_SCROLLBAR_THICKNESS;
+
+    Tcl_GetInt(NULL, SCROLLBAR_THICKNESS, &size);
     Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
     *widthPtr = *heightPtr = size;
 }
@@ -669,7 +698,9 @@ static void SliderElementSize(
     ScrollbarElement *sb = elementRecord;
     int length, thickness, orient;
 
-    length = thickness = SCROLLBAR_THICKNESS;
+    length = FALLBACK_SCROLLBAR_THICKNESS;
+    Tcl_GetInt(NULL, SCROLLBAR_THICKNESS, &length);
+    thickness = length;
     Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
     Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &thickness);
     Tk_GetPixelsFromObj(NULL, tkwin, sb->sliderlengthObj, &length);
@@ -740,7 +771,9 @@ static void ArrowElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *sb = elementRecord;
-    int size = SCROLLBAR_THICKNESS;
+    int size = FALLBACK_SCROLLBAR_THICKNESS;
+
+    Tcl_GetInt(NULL, SCROLLBAR_THICKNESS, &size);
     Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
     *widthPtr = *heightPtr = size;
 }
@@ -809,6 +842,7 @@ static void TabElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     int borderWidth = 2;
+
     paddingPtr->top = paddingPtr->left = paddingPtr->right = borderWidth;
     paddingPtr->bottom = 0;
 }
@@ -864,6 +898,7 @@ static void ClientElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     int borderWidth = 2;
+
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 

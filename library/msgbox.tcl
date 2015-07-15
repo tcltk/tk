@@ -285,8 +285,8 @@ proc ::tk::MessageBox {args} {
     # option database for -wraplength and -font so that they can be
     # overridden by the caller).
 
-    option add *Dialog.msg.wrapLength 3i widgetDefault
-    option add *Dialog.dtl.wrapLength 3i widgetDefault
+    option add *Dialog.msg.wrapLength 5i widgetDefault
+    option add *Dialog.dtl.wrapLength 5i widgetDefault
     option add *Dialog.msg.font TkCaptionFont widgetDefault
     option add *Dialog.dtl.font TkDefaultFont widgetDefault
 

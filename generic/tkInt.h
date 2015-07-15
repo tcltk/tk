@@ -15,6 +15,10 @@
 #ifndef _TKINT
 #define _TKINT
 
+#ifdef PLATFORM_SDL
+#include "SdlTkX.h"
+#endif
+
 #ifndef _TKPORT
 #include "tkPort.h"
 #endif
@@ -1113,6 +1117,11 @@ MODULE_SCOPE int	Tk_ScaleObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_ScrollbarObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+#ifdef PLATFORM_SDL
+MODULE_SCOPE int	Tk_SdlTkObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+#endif
 MODULE_SCOPE int	Tk_SelectionObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);

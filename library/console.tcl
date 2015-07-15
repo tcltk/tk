@@ -114,6 +114,8 @@ proc ::tk::ConsoleInit {} {
         -accel "$mod++" -command {event generate .console <<Console_FontSizeIncr>>}
     AmpMenuArgs .menubar.edit add command -label [mc "&Decrease Font Size"] \
         -accel "$mod+-" -command {event generate .console <<Console_FontSizeDecr>>}
+    AmpMenuArgs .menubar.edit add command -label [mc "Fit To Screen Width"] \
+        -command {event generate .console <<Console_FitScreenWidth>>}
 
     if {[tk windowingsystem] eq "aqua"} {
 	.menubar add cascade -label [mc Window] -menu [menu .menubar.window]
@@ -193,12 +195,10 @@ proc ::tk::ConsoleInit {} {
     $w mark set promptEnd insert
     $w mark gravity promptEnd left
 
-    if {$tcl_platform(platform) eq "windows"} {
-	# Subtle work-around to erase the '% ' that tclMain.c prints out
-	after idle [subst -nocommand {
-	    if {[$con get 1.0 output] eq "% "} { $con delete 1.0 output }
-	}]
-    }
+    # Subtle work-around to erase the '% ' that tclMain.c prints out
+    after idle [subst -nocommand {
+	if {[$con get 1.0 output] eq "% "} { $con delete 1.0 output }
+    }]
 }
 
 # ::tk::ConsoleSource --
@@ -375,6 +375,26 @@ proc ::tk::console::Paste {w} {
             tk::ConsoleInvoke
             tk::ConsoleInsert $w $x
         }
+    }
+}
+
+# Fit TkConsoleFont to window width
+proc ::tk::console::FitScreenWidth {w} {
+    set width [winfo screenwidth $w]
+    set cwidth [$w cget -width] 
+    set s -50
+    set fit 0
+    array set fi [font configure TkConsoleFont]
+    while {$s < 0} {
+        set fi(-size) $s
+        set f [font create {*}[array get fi]]
+        set c [font measure $f "eM"]
+        font delete $f
+        if {$c * $cwidth < 1.667 * $width} {
+            font configure TkConsoleFont -size $s
+            break
+        }
+	incr s 2
     }
 }
 
@@ -600,6 +620,9 @@ proc ::tk::ConsoleBind {w} {
 	    tk fontchooser configure -font TkConsoleFont
 	}
     }
+    bind Console <<Console_FitScreenWidth>> {
+	::tk::console::FitScreenWidth %W
+    }
 
     ##
     ## Bindings for doing special things based on certain keys
@@ -673,7 +696,10 @@ proc ::tk::ConsoleOutput {dest string} {
     set w .console
     $w insert output $string $dest
     ::tk::console::ConstrainBuffer $w $::tk::console::maxLines
-    $w see insert
+    # the following speeds up output dramatically
+    after cancel [subst {catch {$w see insert}}]
+    after idle [subst {catch {$w see insert}}]
+    # was: $w see insert
 }
 
 # ::tk::ConsoleExit --
@@ -686,6 +712,8 @@ proc ::tk::ConsoleOutput {dest string} {
 # None.
 
 proc ::tk::ConsoleExit {} {
+    # remove idle handler if left from ::tk::ConsoleOutput
+    after cancel {catch {.console see insert}}
     destroy .
 }
 

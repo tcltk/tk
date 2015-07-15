@@ -124,17 +124,21 @@ switch -- [tk windowingsystem] {
     }
     default -
     x11 {
-	if {![catch {tk::pkgconfig get fontsystem} F(fs)] && $F(fs) eq "xft"} {
-	    set F(family) "sans-serif"
-	    set F(fixed)  "monospace"
+	set F(android) 0
+	catch {set F(android) [sdltk android]}
+	set F(family) "DejaVu Sans"
+	set F(fixed)  "DejaVu Sans Mono"
+	if {$F(android)} {
+	    set F(size) 8
+	    set F(ttsize) 8
+	    set F(capsize) 8
+	    set F(fixedsize) 7
 	} else {
-	    set F(family) "Helvetica"
-	    set F(fixed)  "courier"
+	    set F(size) -12
+	    set F(ttsize) -10
+	    set F(capsize) -14
+	    set F(fixedsize) -12
 	}
-	set F(size) -12
-	set F(ttsize) -10
-	set F(capsize) -14
-	set F(fixedsize) -12
 
 	font configure TkDefaultFont -family $F(family) -size $F(size)
 	font configure TkTextFont    -family $F(family) -size $F(size)

@@ -922,8 +922,13 @@ typedef struct {
 } SashElement;
 
 static Ttk_ElementOptionSpec SashElementOptions[] = {
+#ifdef ANDROID
+    { "-sashthickness", TK_OPTION_INT,
+	    Tk_Offset(SashElement,thicknessObj), "9" },
+#else
     { "-sashthickness", TK_OPTION_INT,
 	    Tk_Offset(SashElement,thicknessObj), "5" },
+#endif
     { NULL, 0, 0, NULL }
 };
 

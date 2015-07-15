@@ -245,6 +245,9 @@ static void RegisterWidgets(Tcl_Interp *interp)
 extern int TtkAltTheme_Init(Tcl_Interp *);
 extern int TtkClassicTheme_Init(Tcl_Interp *);
 extern int TtkClamTheme_Init(Tcl_Interp *);
+#ifdef ANDROID
+extern int TtkDroidTheme_Init(Tcl_Interp *);
+#endif
 
 static void RegisterThemes(Tcl_Interp *interp)
 {
@@ -252,13 +255,20 @@ static void RegisterThemes(Tcl_Interp *interp)
     TtkAltTheme_Init(interp);
     TtkClassicTheme_Init(interp);
     TtkClamTheme_Init(interp);
+#ifdef ANDROID
+    if (!Tcl_IsSafe(interp)) {
+	TtkDroidTheme_Init(interp);
+    }
+#endif
 }
 
 /*
  * Ttk initialization.
  */
 
+#ifndef ANDROID
 extern const TtkStubs ttkStubs;
+#endif
 
 MODULE_SCOPE int
 Ttk_Init(Tcl_Interp *interp)
@@ -275,7 +285,11 @@ Ttk_Init(Tcl_Interp *interp)
 
     Ttk_PlatformInit(interp);
 
+#ifdef ANDROID
+    Tcl_PkgProvide(interp, "Ttk", TTK_PATCH_LEVEL);
+#else
     Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (ClientData)&ttkStubs);
+#endif
 
     return TCL_OK;
 }

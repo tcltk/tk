@@ -237,9 +237,13 @@ Tk_InitConsoleChannels(
     }
     *consoleInitPtr = 1;
 
+#ifdef PLATFORM_SDL
+    doIn = doOut = doErr = 1;
+#else
     doIn = ShouldUseConsoleChannel(TCL_STDIN);
     doOut = ShouldUseConsoleChannel(TCL_STDOUT);
     doErr = ShouldUseConsoleChannel(TCL_STDERR);
+#endif
 
     if (!(doIn || doOut || doErr)) {
 	/*
@@ -340,12 +344,32 @@ Tk_CreateConsoleWindow(
     Tcl_Command token;
     int result = TCL_OK;
     int haveConsoleChannel = 1;
+    const char *value;
 
     /* Init an interp with Tcl and Tk */
     Tcl_Interp *consoleInterp = Tcl_CreateInterp();
     if (Tcl_Init(consoleInterp) != TCL_OK) {
 	goto error;
     }
+
+    /* Inherit paths from main interp */
+    value = Tcl_GetVar(interp, "tcl_libPath", TCL_GLOBAL_ONLY);
+    if (value != NULL) {
+	Tcl_SetVar(consoleInterp, "tcl_libPath", value, TCL_GLOBAL_ONLY);
+    }
+    value = Tcl_GetVar(interp, "tcl_library", TCL_GLOBAL_ONLY);
+    if (value != NULL) {
+	Tcl_SetVar(consoleInterp, "tcl_library", value, TCL_GLOBAL_ONLY);
+    }
+    value = Tcl_GetVar(interp, "auto_path", TCL_GLOBAL_ONLY);
+    if (value != NULL) {
+	Tcl_SetVar(consoleInterp, "auto_path", value, TCL_GLOBAL_ONLY);
+    }
+    value = Tcl_GetVar(interp, "tk_library", TCL_GLOBAL_ONLY);
+    if (value != NULL) {
+	Tcl_SetVar(consoleInterp, "tk_library", value, TCL_GLOBAL_ONLY);
+    }
+
     if (Tk_Init(consoleInterp) != TCL_OK) {
 	goto error;
     }

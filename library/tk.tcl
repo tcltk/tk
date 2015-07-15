@@ -504,7 +504,26 @@ if {$::tk_library ne ""} {
         namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
-	SourceLibFile icons
+	variable android
+	set android 0
+	catch {set android [sdltk android]}
+	variable dpi
+	set dpi [expr int((25.4 * [winfo screenwidth .]) / [winfo screenmmwidth .])]
+	if {$android} {
+	    if {$dpi < 140} {
+		SourceLibFile icons
+	    } elseif {$dpi < 240} {
+		SourceLibFile icons160
+	    } elseif {$dpi < 320} {
+		SourceLibFile icons240
+	    } elseif {$dpi < 400} {
+		SourceLibFile icons320
+	    } else {
+		SourceLibFile icons400
+	    }
+	} else {
+	    SourceLibFile icons
+	}
 	SourceLibFile button
 	SourceLibFile entry
 	SourceLibFile listbox
@@ -685,6 +704,26 @@ if {[tk windowingsystem] eq "aqua"} {
     namespace eval ::tk::mac {
 	set useCustomMDEF 0
     }
+}
+
+if {[info command sdltk] ne ""} {
+    # Android hardware keyboard handling
+    bind . <<KeyboardInfo>> ::tk::AndroidKBDInfo
+    bind Toplevel <<KeyboardInfo>> ::tk::AndroidKBDInfo
+
+    proc ::tk::AndroidKBDCheck {} {
+	catch {array set kbd [borg keyboardinfo]}
+	if {[info exists kbd(hard_hidden)] && !$kbd(hard_hidden)} {
+	    sdltk textinput 1
+	}
+    }
+
+    proc ::tk::AndroidKBDInfo {} {
+	after cancel ::tk::AndroidKBDCheck
+	after idle ::tk::AndroidKBDCheck
+    }
+
+    ::tk::AndroidKBDInfo
 }
 
 # Run the Ttk themed widget set initialization

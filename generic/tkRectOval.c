@@ -677,7 +677,7 @@ ComputeRectOvalBbox(
 	bloat = 0;
 #endif /* _WIN32 */
     } else {
-#ifdef MAC_OSX_TK
+#if defined(MAC_OSX_TK) || defined(PLATFORM_SDL)
 	/*
 	 * Mac OS X CoreGraphics needs correct rounding here otherwise it will
 	 * draw outside the bounding box. Probably correct on other platforms

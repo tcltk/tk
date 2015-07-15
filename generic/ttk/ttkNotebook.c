@@ -18,7 +18,11 @@
  * +++ Tab resources.
  */
 
+#ifdef ANDROID
+#define DEFAULT_MIN_TAB_WIDTH 40
+#else
 #define DEFAULT_MIN_TAB_WIDTH 24
+#endif
 
 static const char *const TabStateStrings[] = { "normal", "disabled", "hidden", 0 };
 typedef enum {
@@ -1390,8 +1394,14 @@ TTK_END_LAYOUT
 TTK_BEGIN_LAYOUT(TabLayout)
     TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
 	TTK_GROUP("Notebook.padding", TTK_PACK_TOP|TTK_FILL_BOTH,
+#ifndef ANDROID
 	    TTK_GROUP("Notebook.focus", TTK_PACK_TOP|TTK_FILL_BOTH,
-		TTK_NODE("Notebook.label", TTK_PACK_TOP))))
+#endif
+		TTK_NODE("Notebook.label", TTK_PACK_TOP)
+#ifndef ANDROID
+	    )
+#endif
+    ))
 TTK_END_LAYOUT
 
 /*------------------------------------------------------------------------

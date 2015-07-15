@@ -131,7 +131,7 @@ ElementStateEventProc(ClientData clientData, XEvent *ev)
 
     switch (ev->type)
     {
-	case MotionNotify :
+	case MotionNotify:
 	    element = Ttk_IdentifyElement(
 		layout, ev->xmotion.x, ev->xmotion.y);
 	    ActivateElement(es, element);
@@ -147,12 +147,22 @@ ElementStateEventProc(ClientData clientData, XEvent *ev)
 	    ActivateElement(es, element);
 	    break;
 	case ButtonPress:
+#ifdef PLATFORM_SDL
+	    if (ev->xbutton.button > 5) {
+		break;
+	    }
+#endif
 	    element = Ttk_IdentifyElement(
 		layout, ev->xbutton.x, ev->xbutton.y);
 	    if (element)
 		PressElement(es, element);
 	    break;
 	case ButtonRelease:
+#ifdef PLATFORM_SDL
+	    if (ev->xbutton.button > 5) {
+		break;
+	    }
+#endif
 	    ReleaseElement(es);
 	    break;
 	case DestroyNotify:

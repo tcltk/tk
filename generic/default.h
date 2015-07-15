@@ -14,6 +14,11 @@
 #ifndef _DEFAULT
 #define _DEFAULT
 
+#ifdef PLATFORM_SDL
+#   include "tkSDLDefault.h"
+#endif
+
+#ifndef PLATFORM_SDL
 #ifdef _WIN32
 #   include "tkWinDefault.h"
 #else
@@ -22,6 +27,7 @@
 #   else
 #	include "tkUnixDefault.h"
 #   endif
+#endif
 #endif
 
 #endif /* _DEFAULT */

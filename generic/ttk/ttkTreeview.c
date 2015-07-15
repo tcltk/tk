@@ -14,9 +14,15 @@
 #define DEF_COLWIDTH		"200"
 #define DEF_MINWIDTH		"20"
 
+#ifdef ANDROID
+static const int DEFAULT_ROWHEIGHT 	= 30;
+static const int DEFAULT_INDENT 	= 30;
+static const int HALO   		= 8;	/* separator */
+#else
 static const int DEFAULT_ROWHEIGHT 	= 20;
 static const int DEFAULT_INDENT 	= 20;
 static const int HALO   		= 4;	/* separator */
+#endif
 
 #define TTK_STATE_OPEN TTK_STATE_USER1
 #define TTK_STATE_LEAF TTK_STATE_USER2
@@ -244,7 +250,11 @@ typedef struct {
 static void InitColumn(TreeColumn *column)
 {
     column->width = 200;
+#ifdef ANDROID
+    column->minWidth = 30;
+#else
     column->minWidth = 20;
+#endif
     column->stretch = 1;
     column->idObj = 0;
     column->anchorObj = 0;
@@ -948,6 +958,11 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event)
 	    break;
 	case ButtonPress:
 	case ButtonRelease:
+#ifdef PLATFORM_SDL
+	    if (event->xbutton.button > 5) {
+		break;
+	    }
+#endif
 	    item = IdentifyItem(tv, event->xbutton.y);
 	    break;
 	case MotionNotify:
@@ -3332,10 +3347,17 @@ typedef struct {
 static Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	Tk_Offset(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
+#ifdef ANDROID
+    { "-indicatorsize", TK_OPTION_PIXELS,
+	Tk_Offset(TreeitemIndicator,sizeObj), "20" },
+    { "-indicatormargins", TK_OPTION_STRING,
+	Tk_Offset(TreeitemIndicator,marginsObj), "4 4 8 4" },
+#else
     { "-indicatorsize", TK_OPTION_PIXELS,
 	Tk_Offset(TreeitemIndicator,sizeObj), "12" },
     { "-indicatormargins", TK_OPTION_STRING,
 	Tk_Offset(TreeitemIndicator,marginsObj), "2 2 4 2" },
+#endif
     { NULL, 0, 0, NULL }
 };
 

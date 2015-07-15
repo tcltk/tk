@@ -1,0 +1,478 @@
+#! /bin/bash -norc
+dnl	This file is an input file used by the GNU "autoconf" program to
+dnl	generate the file "configure", which is run during Tk installation
+dnl	to configure the system for the local environment.
+
+AC_INIT([tk],[8.6])
+AC_PREREQ(2.59)
+
+dnl This is only used when included from macosx/configure.ac
+m4_ifdef([SC_USE_CONFIG_HEADERS], [
+    AC_CONFIG_HEADERS([tkConfig.h:../unix/tkConfig.h.in])
+    AC_CONFIG_COMMANDS_PRE([DEFS="-DHAVE_TK_CONFIG_H  -imacros tkConfig.h"])
+    AH_TOP([
+    #ifndef _TKCONFIG
+    #define _TKCONFIG])
+    AH_BOTTOM([
+    /* Undef unused package specific autoheader defines so that we can
+     * include both tclConfig.h and tkConfig.h at the same time: */
+    /* override */ #undef PACKAGE_NAME
+    /* override */ #undef PACKAGE_STRING
+    /* override */ #undef PACKAGE_TARNAME
+    #endif /* _TKCONFIG */])
+])
+
+TK_VERSION=8.6
+TK_MAJOR_VERSION=8
+TK_MINOR_VERSION=6
+TK_PATCH_LEVEL=".4"
+VERSION=${TK_VERSION}
+LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
+
+#--------------------------------------------------------------------
+# Find and load the tclConfig.sh file
+#--------------------------------------------------------------------
+
+SC_PATH_TCLCONFIG
+SC_LOAD_TCLCONFIG
+
+if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
+    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
+Found config for Tcl ${TCL_VERSION}])
+fi
+if test "${TCL_MINOR_VERSION}" -lt 6 ; then
+    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
+Found config for Tcl ${TCL_VERSION}])
+fi
+
+SC_PROG_TCLSH
+SC_BUILD_TCLSH
+
+#------------------------------------------------------------------------
+# Handle the --prefix=... option
+#------------------------------------------------------------------------
+
+if test "${prefix}" = "NONE"; then
+    prefix="$TCL_PREFIX"
+fi
+if test "${exec_prefix}" = "NONE"; then
+    exec_prefix=$prefix
+fi
+# Make sure srcdir is fully qualified!
+srcdir="`cd "$srcdir" ; pwd`"
+TK_SRC_DIR="`cd "$srcdir"/..; pwd`"
+
+#------------------------------------------------------------------------
+# Compress and/or soft link the manpages?
+#------------------------------------------------------------------------
+
+SC_CONFIG_MANPAGES
+
+#------------------------------------------------------------------------
+# Standard compiler checks
+#------------------------------------------------------------------------
+
+# If the user did not set CFLAGS, set it now to keep
+# the AC_PROG_CC macro from adding "-g -O2".
+if test "${CFLAGS+set}" != "set" ; then
+    CFLAGS=""
+fi
+
+AC_PROG_CC
+AC_C_INLINE
+
+# limits header checks must come early to prevent
+# an autoconf bug that throws errors on configure
+AC_CHECK_HEADER(limits.h,
+    [AC_DEFINE(HAVE_LIMITS_H, 1, [Do we have <limits.h>?])],
+    [AC_DEFINE(NO_LIMITS_H, 1, [Do we have <limits.h>?])])
+
+#--------------------------------------------------------------------
+# Supply a substitute for stdlib.h if it doesn't define strtol,
+# strtoul, or strtod (which it doesn't in some versions of SunOS).
+#--------------------------------------------------------------------
+
+AC_CHECK_HEADER(stdlib.h, tk_ok=1, tk_ok=0)
+AC_EGREP_HEADER(strtol, stdlib.h, , tk_ok=0)
+AC_EGREP_HEADER(strtoul, stdlib.h, , tk_ok=0)
+AC_EGREP_HEADER(strtod, stdlib.h, , tk_ok=0)
+if test $tk_ok = 0; then
+    AC_DEFINE(NO_STDLIB_H, 1, [Do we have <stdlib.h>?])
+fi
+
+#------------------------------------------------------------------------
+# If we're using GCC, see if the compiler understands -pipe.  If so, use it.
+# It makes compiling go faster.  (This is only a performance feature.)
+#------------------------------------------------------------------------
+
+if test -z "$no_pipe" && test -n "$GCC"; then
+    AC_CACHE_CHECK([if the compiler understands -pipe],
+	tcl_cv_cc_pipe, [
+	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -pipe"
+	AC_TRY_COMPILE(,, tcl_cv_cc_pipe=yes, tcl_cv_cc_pipe=no)
+	CFLAGS=$hold_cflags])
+    if test $tcl_cv_cc_pipe = yes; then
+	CFLAGS="$CFLAGS -pipe"
+    fi
+fi
+if test -n "$GCC" ; then
+    GCC_LIBS="-lstdc++"
+fi
+
+#------------------------------------------------------------------------
+# Threads support - this auto-enables if Tcl was compiled threaded
+#------------------------------------------------------------------------
+
+SC_ENABLE_THREADS
+
+# Add the threads support libraries
+LIBS="$LIBS$THREADS_LIBS"
+
+SC_ENABLE_SHARED
+
+#--------------------------------------------------------------------
+# The statements below define a collection of compile flags.  This
+# macro depends on the value of SHARED_BUILD, and should be called
+# after SC_ENABLE_SHARED checks the configure switches.
+#--------------------------------------------------------------------
+
+SC_CONFIG_CFLAGS
+
+SC_ENABLE_SYMBOLS
+
+#--------------------------------------------------------------------
+#	Detect what compiler flags to set for 64-bit support.
+#--------------------------------------------------------------------
+
+SC_TCL_EARLY_FLAGS
+
+SC_TCL_64BIT_FLAGS
+
+#--------------------------------------------------------------------
+#	Check endianness because we can optimize some operations
+#--------------------------------------------------------------------
+
+AC_C_BIGENDIAN
+
+#------------------------------------------------------------------------
+# If Tcl and Tk are installed in different places, adjust the library
+# search path to reflect this.
+#------------------------------------------------------------------------
+
+LIB_RUNTIME_DIR='$(libdir)'
+
+if test "$TCL_EXEC_PREFIX" != "$exec_prefix"; then
+    LIB_RUNTIME_DIR="${LIB_RUNTIME_DIR}:${TCL_EXEC_PREFIX}/lib"
+fi
+
+if test "$TCL_PREFIX" != "$prefix"; then
+    AC_MSG_WARN([
+        Different --prefix selected for Tk and Tcl!
+        [[package require Tk]] may not work correctly in tclsh.])
+fi
+
+#--------------------------------------------------------------------
+#	Include sys/select.h if it exists and if it supplies things
+#	that appear to be useful and aren't already in sys/types.h.
+#	This appears to be true only on the RS/6000 under AIX.  Some
+#	systems like OSF/1 have a sys/select.h that's of no use, and
+#	other systems like SCO UNIX have a sys/select.h that's
+#	pernicious.  If "fd_set" isn't defined anywhere then set a
+#	special flag.
+#--------------------------------------------------------------------
+
+AC_CACHE_CHECK([for fd_set in sys/types], tcl_cv_type_fd_set, [
+    AC_TRY_COMPILE([#include <sys/types.h>],[fd_set readMask, writeMask;],
+	tcl_cv_type_fd_set=yes, tcl_cv_type_fd_set=no)])
+tk_ok=$tcl_cv_type_fd_set
+if test $tk_ok = no; then
+    AC_CACHE_CHECK([for fd_mask in sys/select], tcl_cv_grep_fd_mask, [
+	AC_EGREP_HEADER(fd_mask, sys/select.h,
+	     tcl_cv_grep_fd_mask=present, tcl_cv_grep_fd_mask=missing)])
+    if test $tcl_cv_grep_fd_mask = present; then
+	AC_DEFINE(HAVE_SYS_SELECT_H, 1, [Should we include <sys/select.h>?])
+	tk_ok=yes
+    fi
+fi
+if test $tk_ok = no; then
+    AC_DEFINE(NO_FD_SET, 1, [Do we have fd_set?])
+fi
+
+#------------------------------------------------------------------------------
+#       Find out all about time handling differences.
+#------------------------------------------------------------------------------
+
+AC_CHECK_HEADERS(sys/time.h)
+AC_HEADER_TIME
+
+#--------------------------------------------------------------------
+#	Under Solaris 2.4, strtod returns the wrong value for the
+#	terminating character under some conditions.  Check for this
+#	and if the problem exists use a substitute procedure
+#	"fixstrtod" (provided by Tcl) that corrects the error.
+#--------------------------------------------------------------------
+
+SC_BUGGY_STRTOD
+
+#--------------------------------------------------------------------
+#	Check for various typedefs and provide substitutes if
+#	they don't exist.
+#--------------------------------------------------------------------
+
+AC_TYPE_MODE_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_UID_T
+
+AC_CHECK_TYPE([intptr_t], [
+    AC_DEFINE([HAVE_INTPTR_T], 1, [Do we have the intptr_t type?])], [
+    AC_CACHE_CHECK([for pointer-size signed integer type], tcl_cv_intptr_t, [
+    for tcl_cv_intptr_t in "int" "long" "long long" none; do
+	if test "$tcl_cv_intptr_t" != none; then
+	    AC_COMPILE_IFELSE([AC_LANG_BOOL_COMPILE_TRY([AC_INCLUDES_DEFAULT],
+		    [[sizeof (void *) <= sizeof ($tcl_cv_intptr_t)]])],
+		[tcl_ok=yes], [tcl_ok=no])
+	    test "$tcl_ok" = yes && break; fi
+    done])
+    if test "$tcl_cv_intptr_t" != none; then
+	AC_DEFINE_UNQUOTED([intptr_t], [$tcl_cv_intptr_t], [Signed integer
+	   type wide enough to hold a pointer.])
+    fi
+])
+AC_CHECK_TYPE([uintptr_t], [
+    AC_DEFINE([HAVE_UINTPTR_T], 1, [Do we have the uintptr_t type?])], [
+    AC_CACHE_CHECK([for pointer-size unsigned integer type], tcl_cv_uintptr_t, [
+    for tcl_cv_uintptr_t in "unsigned int" "unsigned long" "unsigned long long" \
+	    none; do
+	if test "$tcl_cv_uintptr_t" != none; then
+	    AC_COMPILE_IFELSE([AC_LANG_BOOL_COMPILE_TRY([AC_INCLUDES_DEFAULT],
+		    [[sizeof (void *) <= sizeof ($tcl_cv_uintptr_t)]])],
+		[tcl_ok=yes], [tcl_ok=no])
+	    test "$tcl_ok" = yes && break; fi
+    done])
+    if test "$tcl_cv_uintptr_t" != none; then
+	AC_DEFINE_UNQUOTED([uintptr_t], [$tcl_cv_uintptr_t], [Unsigned integer
+	   type wide enough to hold a pointer.])
+    fi
+])
+
+#-------------------------------------------
+#     In OS/390 struct pwd has no pw_gecos field
+#-------------------------------------------
+
+AC_CACHE_CHECK([pw_gecos in struct pwd], tcl_cv_pwd_pw_gecos, [
+    AC_TRY_COMPILE([#include <pwd.h>],
+	    [struct passwd pwd; pwd.pw_gecos;],
+	    tcl_cv_pwd_pw_gecos=yes, tcl_cv_pwd_pw_gecos=no)])
+if test $tcl_cv_pwd_pw_gecos = yes; then
+    AC_DEFINE(HAVE_PW_GECOS, 1, [Does struct password have a pw_gecos field?])
+fi
+
+TK_WINDOWINGSYSTEM=SDL
+EXTRA_CC_SWITCHES='-DPLATFORM_SDL=1'
+
+#--------------------------------------------------------------------
+#	Check for the existence of various libraries.  The order here
+#	is important, so that then end up in the right order in the
+#	command line generated by make.  The -lsocket and -lnsl libraries
+#	require a couple of special tricks:
+#	1. Use "connect" and "accept" to check for -lsocket, and
+#	   "gethostbyname" to check for -lnsl.
+#	2. Use each function name only once:  can't redo a check because
+#	   autoconf caches the results of the last check and won't redo it.
+#	3. Use -lnsl and -lsocket only if they supply procedures that
+#	   aren't already present in the normal libraries.  This is because
+#	   IRIX 5.2 has libraries, but they aren't needed and they're
+#	   bogus:  they goof up name resolution if used.
+#	4. On some SVR4 systems, can't use -lsocket without -lnsl too.
+#	   To get around this problem, check for both libraries together
+#	   if -lsocket doesn't work by itself.
+#--------------------------------------------------------------------
+
+AC_CHECK_LIB(Xbsd, main, [LIBS="$LIBS -lXbsd"])
+
+#--------------------------------------------------------------------
+#       Figure out where freetype/SDL are
+#--------------------------------------------------------------------
+
+AC_MSG_CHECKING([for freetype])
+found_ft=yes
+FT_CFLAGS=`freetype-config --cflags 2>/dev/null` || found_ft="no"
+FT_LIBS=`freetype-config --libs 2>/dev/null` || found_ft="no"
+if test "$found_xft" = "no" ; then
+    found_ft=yes
+    FT_CFLAGS=`pkg-config --cflags freetype2 2>/dev/null` || found_ft="no"
+    FT_LIBS=`pkg-config --libs freetype2 2>/dev/null` || found_ft="no"
+fi
+AC_MSG_RESULT([$found_ft])
+
+AC_MSG_CHECKING([for SDL])
+found_sdl2=yes
+if test -x "${prefix}/bin/sdl2tk-sdl2-config"; then
+    SDL_CFLAGS=`${prefix}/bin/sdl2tk-sdl2-config --cflags 2>/dev/null` || found_sdl2="no"
+    SDL_LIBS=`${prefix}/bin/sdl2tk-sdl2-config --libs 2>/dev/null` || found_sdl2="no"
+else
+    SDL_CFLAGS=`sdl2-config --cflags 2>/dev/null` || found_sdl2="no"
+    SDL_LIBS=`sdl2-config --libs 2>/dev/null` || found_sdl2="no"
+fi
+if test "$found_sdl2" = "no" ; then
+    found_sdl2=yes
+    SDL_CFLAGS=`pkg-config --cflags sdl2 2>/dev/null` || found_sdl2="no"
+    SDL_LIBS=`pkg-config --libs sdl2 2>/dev/null` || found_sdl2="no"
+fi
+AC_MSG_RESULT([$found_sdl2])
+if test "$found_sdl2" = "yes" ; then
+    dfb_cflags=`pkg-config --cflags directfb 2>/dev/null` || true
+    if test -n "$dfb_cflags" ; then
+	SDL_CFLAGS="$SDL_CFLAGS $dfb_cflags"
+    fi
+fi
+
+#--------------------------------------------------------------------
+#       Has Tcl ZIPFS_IN_TCL ?
+#--------------------------------------------------------------------
+
+case ${TCL_DEFS} in
+    *ZIPFS_IN_TCL=1*)
+        EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES -DZIPFS_IN_TCL=1"
+        ;;
+esac
+
+#--------------------------------------------------------------------
+#	Figure out whether "char" is unsigned.  If so, set a
+#	#define for __CHAR_UNSIGNED__.
+#--------------------------------------------------------------------
+
+AC_C_CHAR_UNSIGNED
+
+#--------------------------------------------------------------------
+#	The statements below define a collection of symbols related to
+#	building libsdl2tk as a shared library instead of a static library.
+#--------------------------------------------------------------------
+
+eval eval "TK_UNSHARED_LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}"
+eval eval "TK_SHARED_LIB_SUFFIX=${SHARED_LIB_SUFFIX}"
+eval "TK_LIB_FILE=libsdl2tk${LIB_SUFFIX}"
+
+# sdl2tkConfig.sh needs a version of the _LIB_SUFFIX that has been eval'ed
+# since on some platforms TK_LIB_FILE contains shell escapes.
+
+eval "TK_LIB_FILE=${TK_LIB_FILE}"
+
+if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
+    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \${TCL_STUB_LIB_SPEC}"
+    TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
+fi
+
+TK_LIBRARY='$(prefix)/lib/sdl2tk$(VERSION)'
+PRIVATE_INCLUDE_DIR='$(includedir)'
+HTML_DIR='$(DISTDIR)/html'
+TK_PKG_DIR='sdl2tk$(VERSION)'
+
+# libdir must be a fully qualified path and not ${exec_prefix}/lib
+eval libdir="$libdir"
+if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
+    TK_LIB_FLAG="-lsdl2tk`echo ${TK_VERSION} | tr -d .`"
+    TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
+else
+    if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
+	TK_LIB_FLAG="-lsdl2tk${TK_VERSION}"
+    else
+	TK_LIB_FLAG="-lsdl2tk`echo ${TK_VERSION} | tr -d .`"
+    fi
+    TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
+fi
+TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
+
+#--------------------------------------------------------------------
+#       The statements below define various symbols relating to Tk
+#       stub support.
+#--------------------------------------------------------------------
+
+# Replace ${VERSION} with contents of ${TK_VERSION}
+eval "TK_STUB_LIB_FILE=libsdl2tkstub${TK_UNSHARED_LIB_SUFFIX}"
+eval "TK_STUB_LIB_DIR=${libdir}"
+
+if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
+    TK_STUB_LIB_FLAG="-lsdl2tkstub${TK_VERSION}"
+else
+    TK_STUB_LIB_FLAG="-lsdl2tkstub`echo ${TK_VERSION} | tr -d .`"
+fi
+
+TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"
+TK_STUB_LIB_SPEC="-L${TK_STUB_LIB_DIR} ${TK_STUB_LIB_FLAG}"
+TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
+TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
+
+# Install time header dir can be set via --includedir
+eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
+
+#------------------------------------------------------------------------
+# sdl2tkConfig.sh refers to this by a different name
+#------------------------------------------------------------------------
+
+TK_SHARED_BUILD=${SHARED_BUILD}
+
+AC_SUBST(TK_VERSION)
+AC_SUBST(TK_MAJOR_VERSION)
+AC_SUBST(TK_MINOR_VERSION)
+AC_SUBST(TK_PATCH_LEVEL)
+AC_SUBST(TK_YEAR)
+
+AC_SUBST(TK_LIB_FILE)
+AC_SUBST(TK_LIB_FLAG)
+AC_SUBST(TK_LIB_SPEC)
+AC_SUBST(TK_STUB_LIB_FILE)
+AC_SUBST(TK_STUB_LIB_FLAG)
+AC_SUBST(TK_STUB_LIB_SPEC)
+AC_SUBST(TK_STUB_LIB_PATH)
+AC_SUBST(TK_INCLUDE_SPEC)
+AC_SUBST(TK_BUILD_STUB_LIB_SPEC)
+AC_SUBST(TK_BUILD_STUB_LIB_PATH)
+
+AC_SUBST(TK_SRC_DIR)
+
+AC_SUBST(TK_SHARED_BUILD)
+AC_SUBST(LD_LIBRARY_PATH_VAR)
+
+AC_SUBST(TK_BUILD_LIB_SPEC)
+
+AC_SUBST(TCL_STUB_FLAGS)
+AC_SUBST(XINCLUDES)
+AC_SUBST(XLIBSW)
+AC_SUBST(LOCALES)
+
+AC_SUBST(TK_WINDOWINGSYSTEM)
+AC_SUBST(TK_PKG_DIR)
+AC_SUBST(TK_LIBRARY)
+AC_SUBST(LIB_RUNTIME_DIR)
+AC_SUBST(PRIVATE_INCLUDE_DIR)
+AC_SUBST(HTML_DIR)
+
+AC_SUBST(EXTRA_CC_SWITCHES)
+AC_SUBST(EXTRA_APP_CC_SWITCHES)
+AC_SUBST(EXTRA_INSTALL)
+AC_SUBST(EXTRA_INSTALL_BINARIES)
+AC_SUBST(EXTRA_BUILD_HTML)
+AC_SUBST(EXTRA_WISH_LIBS)
+AC_SUBST(CFBUNDLELOCALIZATIONS)
+
+AC_SUBST(FT_CFLAGS)
+AC_SUBST(FT_LIBS)
+AC_SUBST(SDL_CFLAGS)
+AC_SUBST(SDL_LIBS)
+AC_SUBST(GCC_LIBS)
+
+AC_CONFIG_FILES([
+    Makefile:../sdl/Makefile.in
+    sdl2tkConfig.sh:../sdl/sdl2tkConfig.sh.in
+    sdl2tk.pc:../sdl/sdl2tk.pc.in
+    agg-2.4/src/Makefile:../sdl/agg-2.4/src/Makefile.in
+    agg-2.4/font_freetype/Makefile:../sdl/agg-2.4/font_freetype/Makefile.in
+    agg-2.4/agg2d/Makefile:../sdl/agg-2.4/agg2d/Makefile.in
+])
+AC_OUTPUT
+
+dnl Local Variables:
+dnl mode: autoconf
+dnl End:

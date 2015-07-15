@@ -19,7 +19,11 @@
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #else
+#ifdef PLATFORM_SDL
+#include "tkSDLInt.h"
+#else
 #include "tkUnixInt.h"
+#endif
 #endif
 
 /*
@@ -822,9 +826,18 @@ ScalingCmd(
     }
     screenPtr = Tk_Screen(tkwin);
     if (objc - skip == 1) {
+#ifdef PLATFORM_SDL
+	int widthM, widthS;
+
+	ScreenGetMMWidth(Tk_Display(tkwin), screenPtr, &widthM, &widthS);
+	d = 25.4 / 72;
+	d *= widthS;
+	d /= widthM;
+#else
 	d = 25.4 / 72;
 	d *= WidthOfScreen(screenPtr);
 	d /= WidthMMOfScreen(screenPtr);
+#endif
 	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(d));
     } else if (objc - skip == 2) {
 	if (Tcl_GetDoubleFromObj(interp, objv[1+skip], &d) != TCL_OK) {
@@ -839,8 +852,12 @@ ScalingCmd(
 	if (height <= 0) {
 	    height = 1;
 	}
+#ifdef PLATFORM_SDL
+	ScreenSetMMWidthHeight(Tk_Display(tkwin), screenPtr, width, height);
+#else
 	WidthMMOfScreen(screenPtr) = width;
 	HeightMMOfScreen(screenPtr) = height;
+#endif
     } else {
 	Tcl_WrongNumArgs(interp, 1, objv, "?-displayof window? ?factor?");
 	return TCL_ERROR;
@@ -1701,6 +1718,9 @@ Tk_WinfoObjCmd(
     }
     case WIN_FPIXELS: {
 	double mm, pixels;
+#ifdef PLATFORM_SDL
+	int widthM, widthS;
+#endif
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "window number");
@@ -1713,8 +1733,14 @@ Tk_WinfoObjCmd(
 	if (Tk_GetScreenMM(interp, tkwin, string, &mm) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+#ifdef PLATFORM_SDL
+	ScreenGetMMWidth(Tk_Display(tkwin), Tk_Screen(tkwin),
+	    &widthM, &widthS);
+	pixels = mm * widthS / widthM;
+#else
 	pixels = mm * WidthOfScreen(Tk_Screen(tkwin))
 		/ WidthMMOfScreen(Tk_Screen(tkwin));
+#endif
 	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(pixels));
 	break;
     }

@@ -342,7 +342,17 @@ proc ttk::entry::Press {w x} {
 
     $w icursor [ClosestGap $w $x]
     $w selection clear
-    $w instate !disabled { focus $w }
+    $w instate !disabled {
+	focus $w
+	$w instate !readonly {
+	    set bbox [$w bbox insert]
+	    set xx [lindex $bbox 0]
+	    set yy [lindex $bbox 1]
+	    incr xx [winfo rootx $w]
+	    incr yy [winfo rooty $w]
+	    catch {sdltk textinput 1 $xx $yy}
+	}
+    }
 
     # Set up for future drag, double-click, or triple-click.
     set State(x) $x

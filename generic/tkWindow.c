@@ -14,10 +14,17 @@
 
 #include "tkInt.h"
 
+#ifdef PLATFORM_SDL
+#include "tkSDLInt.h"
+#include "SdlTkInt.h"
+#endif
+
 #ifdef _WIN32
 #include "tkWinInt.h"
 #elif !defined(MAC_OSX_TK)
+#ifndef PLATFORM_SDL
 #include "tkUnixInt.h"
+#endif
 #endif
 
 /*
@@ -129,6 +136,9 @@ static const TkCmd commands[] = {
     {"pack",		Tk_PackObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"place",		Tk_PlaceObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"raise",		Tk_RaiseObjCmd,		PASSMAINWINDOW|ISSAFE},
+#ifdef PLATFORM_SDL
+    {"sdltk",		Tk_SdlTkObjCmd,		PASSMAINWINDOW|ISSAFE},
+#endif
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
     {"tk",		(Tcl_ObjCmdProc *) TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
@@ -228,6 +238,22 @@ static const Tk_ArgvInfo argTable[] = {
 	"Initial geometry for window"},
     {"-name", TK_ARGV_STRING, NULL, (char *) &name,
 	"Name to use for application"},
+#ifdef PLATFORM_SDL
+    {"-sdlfullscreen", TK_ARGV_CONSTANT, (char *) 1,
+	(char *) &SdlTkX.arg_fullscreen, "SDL fullscreen mode"},
+    {"-sdlresizable", TK_ARGV_CONSTANT, (char *) 1,
+	(char *) &SdlTkX.arg_resizable, "SDL window resizable"},
+    {"-sdlnoborder", TK_ARGV_CONSTANT, (char *) 1,
+	(char *) &SdlTkX.arg_noborder, "SDL borderless"},
+    {"-sdlheight", TK_ARGV_STRING, (char *) NULL, (char *) &SdlTkX.arg_height,
+	"Height of SDL desktop"},
+    {"-sdlwidth", TK_ARGV_STRING, (char *) NULL, (char *) &SdlTkX.arg_width,
+	"Width of SDL desktop"},
+    {"-sdlrootheight", TK_ARGV_STRING, (char *) NULL,
+	(char *) &SdlTkX.arg_rootheight, "Height of SDL root window"},
+    {"-sdlrootwidth", TK_ARGV_STRING, (char *) NULL,
+	(char *) &SdlTkX.arg_rootwidth, "Width of SDL root window"},
+#endif
     {"-sync", TK_ARGV_CONSTANT, (char *) 1, (char *) &synchronize,
 	"Use synchronous mode for display server"},
     {"-visual", TK_ARGV_STRING, NULL, (char *) &visual,
@@ -1275,6 +1301,9 @@ Tk_DestroyWindow(
     TkHalfdeadWindow *halfdeadPtr, *prev_halfdeadPtr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+#ifdef PLATFORM_SDL
+    extern void TkPointerDeadWindow(TkWindow *winPtr);
+#endif
 
     if (winPtr->flags & TK_ALREADY_DEAD) {
 	/*
@@ -1460,6 +1489,9 @@ Tk_DestroyWindow(
 	TkWmRemoveFromColormapWindows(winPtr);
     }
     if (winPtr->window != None) {
+#ifdef PLATFORM_SDL
+	TkPointerDeadWindow(winPtr);
+#endif
 #if defined(MAC_OSX_TK) || defined(_WIN32)
 	XDestroyWindow(winPtr->display, winPtr->window);
 #else
@@ -2172,6 +2204,7 @@ Tk_SetWindowVisual(
     int depth,			/* New depth for window. */
     Colormap colormap)		/* An appropriate colormap for the visual. */
 {
+#ifndef PLATFORM_SDL
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (winPtr->window != None) {
@@ -2193,6 +2226,7 @@ Tk_SetWindowVisual(
     if (!(winPtr->dirtyAtts & CWBorderPixmap)) {
 	winPtr->dirtyAtts |= CWBorderPixel;
     }
+#endif
     return 1;
 }
 
@@ -3007,7 +3041,9 @@ Tk_SafeInit(
     return Initialize(interp);
 }
 
+#ifndef ANDROID
 MODULE_SCOPE const TkStubs tkStubs;
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -3289,8 +3325,12 @@ Initialize(
      * Provide Tk and its stub table.
      */
 
+#ifdef ANDROID
+    code = Tcl_PkgProvide(interp, "Tk", TK_PATCH_LEVEL);
+#else
     code = Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
 	    (ClientData) &tkStubs);
+#endif
     if (code != TCL_OK) {
 	goto done;
     }
@@ -3337,6 +3377,16 @@ Initialize(
 	 */
 
 	code = Tcl_EvalEx(interp,
+#ifdef PLATFORM_SDL
+"if {[namespace which -command tkInit] eq \"\"} {\n\
+  proc tkInit {} {\n\
+    global tk_library tk_version tk_patchLevel\n\
+      rename tkInit {}\n\
+    tcl_findLibrary sdl2tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
+  }\n\
+}\n\
+tkInit",
+#else
 "if {[namespace which -command tkInit] eq \"\"} {\n\
   proc tkInit {} {\n\
     global tk_library tk_version tk_patchLevel\n\
@@ -3344,8 +3394,13 @@ Initialize(
     tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
   }\n\
 }\n\
-tkInit", -1, 0);
+tkInit",
+#endif
+		 -1, 0);
     }
+#ifdef PLATFORM_SDL
+    SdlTkFontInit(interp);
+#endif
     if (code == TCL_OK) {
 	/*
 	 * Create exit handlers to delete all windows when the application or

@@ -652,6 +652,9 @@ typedef struct Tk_GeomMgr {
 #define DeactivateNotify    (MappingNotify + 3)
 #define MouseWheelEvent     (MappingNotify + 4)
 #define TK_LASTEVENT	    (MappingNotify + 5)
+#ifdef PLATFORM_SDL
+#define PointerUpdate	    (MappingNotify + 6)
+#endif
 
 #define MouseWheelMask	    (1L << 28)
 #define ActivateMask	    (1L << 29)
@@ -701,6 +704,21 @@ typedef struct {
 } XActivateDeactivateEvent;
 typedef XActivateDeactivateEvent XActivateEvent;
 typedef XActivateDeactivateEvent XDeactivateEvent;
+
+#ifdef PLATFORM_SDL
+typedef struct {
+    int type;
+    unsigned long serial;	/* # of last request processed by server. */
+    Bool send_event;		/* True if this came from a SendEvent
+				 * request. */
+    Display *display;		/* Display the event was read from. */
+    Window window;		/* Window in which event occurred. */
+    int x, y;			/* Pointer x, y coordinates in event
+				 * window. */
+    unsigned int state;		/* Key or button mask */
+    Tk_Window tkwin;		/* Tk window in which event occurred. */
+} XUpdatePointerEvent;
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -879,6 +897,8 @@ typedef struct Tk_FakeWin {
  *				window.
  * TK_WM_MANAGEABLE		1 marks a window as capable of being converted
  *				into a toplevel using [wm manage].
+ * TK_APP_TOP_LEVEL		1 used for special APP specific virtual
+ *				events (SDL2 and Android platforms).
  */
 
 #define TK_MAPPED		1
@@ -900,6 +920,7 @@ typedef struct Tk_FakeWin {
 #define TK_TOP_HIERARCHY	0x20000
 #define TK_PROP_PROPCHANGE	0x40000
 #define TK_WM_MANAGEABLE	0x80000
+#define TK_APP_TOP_LEVEL	0x100000
 
 /*
  *----------------------------------------------------------------------
