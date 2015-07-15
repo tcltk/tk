@@ -12,10 +12,16 @@
 
 #include "tkInt.h"
 
+#ifdef PLATFORM_SDL
+#include "tkSDLInt.h"
+#endif
+
 #ifdef _WIN32
 #include "tkWinInt.h"
-#elif !defined(MAC_OSX_TK)
+#elif !(defined(_WIN32) || defined(MAC_OSX_TK))
+#ifndef PLATFORM_SDL
 #include "tkUnixInt.h"
+#endif
 #endif
 
 /*
@@ -850,6 +856,11 @@ TkPointerEvent(
      */
 
     if ((eventPtr->type == ButtonPress) || (eventPtr->type == ButtonRelease)) {
+#ifdef PLATFORM_SDL
+	if (eventPtr->xbutton.button > 5) {
+	    goto endButtonCheck;
+	}
+#endif
 	winPtr2 = dispPtr->buttonWinPtr;
 	if (winPtr2 == NULL) {
 	    if (outsideGrabTree) {
@@ -896,6 +907,10 @@ TkPointerEvent(
 	    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_HEAD);
 	    return 0;						/* Note 3. */
 	}
+#ifdef PLATFORM_SDL
+endButtonCheck:
+	;
+#endif
     }
 
     return 1;

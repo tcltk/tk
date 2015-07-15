@@ -13,6 +13,10 @@
 
 #include "tkInt.h"
 
+#ifdef PLATFORM_SDL
+#include "tkSDLInt.h"
+#endif
+
 #ifdef _WIN32
 #include "tkWinInt.h"
 #endif
@@ -22,7 +26,9 @@
 #endif
 
 #if !(defined(_WIN32) || defined(MAC_OSX_TK))
+#ifndef PLATFORM_SDL
 #include "tkUnixInt.h"
+#endif
 #endif
 
 /* TODO: These ought to come in some other way */

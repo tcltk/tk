@@ -753,10 +753,16 @@ EntryWidgetObjCmd(
 	minorCmd = Tcl_GetString(objv[2]);
 	if (minorCmd[0] == 'm'
 		&& (strncmp(minorCmd, "mark", strlen(minorCmd)) == 0)) {
+#ifdef ANDROID
+	    x = -x;
+#endif
 	    entryPtr->scanMarkX = x;
 	    entryPtr->scanMarkIndex = entryPtr->leftIndex;
 	} else if ((minorCmd[0] == 'd')
 		&& (strncmp(minorCmd, "dragto", strlen(minorCmd)) == 0)) {
+#ifdef ANDROID
+	    x = -x;
+#endif
 	    EntryScanTo(entryPtr, x);
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(

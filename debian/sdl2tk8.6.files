@@ -1,0 +1,6 @@
+opt/sdltk86/bin
+opt/sdltk86/lib/sdl2tk8.6
+opt/sdltk86/lib/sdl2tk8.6/*
+opt/sdltk86/lib/*.so
+opt/sdltk86/lib/*.sh
+opt/sdltk86/man/man1

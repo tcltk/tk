@@ -192,6 +192,16 @@ static const char *const timesAliases[] = {
     "Times",			/* Unix. */
     "Times New Roman",		/* Windows. */
     "New York",			/* Mac. */
+#ifdef PLATFORM_SDL
+    "DejaVu LGC Serif",
+    "DejaVu Serif",
+#ifdef ANDROID
+    "Droid Serif",
+    "Noto Serif",
+#else
+    "Liberation Serif",
+#endif
+#endif
     NULL
 };
 
@@ -199,12 +209,32 @@ static const char *const helveticaAliases[] = {
     "Helvetica",		/* Unix. */
     "Arial",			/* Windows. */
     "Geneva",			/* Mac. */
+#ifdef PLATFORM_SDL
+    "DejaVu LGC Sans",
+    "DejaVu Sans",
+#ifdef ANDROID
+    "Droid Sans Fallback",
+    "Droid Sans",
+    "Roboto",
+#else
+    "Liberation Sans",
+#endif
+#endif
     NULL
 };
 
 static const char *const courierAliases[] = {
     "Courier",			/* Unix and Mac. */
     "Courier New",		/* Windows. */
+#ifdef PLATFORM_SDL
+    "DejaVu LGC Sans Mono",
+    "DejaVu Sans Mono",
+#ifdef ANDROID
+    "Droid Sans Mono",
+#else
+    "Liberation Mono",
+#endif
+#endif
     NULL
 };
 
@@ -227,6 +257,9 @@ static const char *const gothicAliases[] = {
 };
 
 static const char *const dingbatsAliases[] = {
+#ifdef PLATFORM_SDL
+    "opensymbol",
+#endif
     "dingbats", "zapfdingbats", "itc zapfdingbats",
 				/* Unix. */
 				/* Windows. */
@@ -259,6 +292,12 @@ static const char *const systemClass[] = {
 };
 
 static const char *const serifClass[] = {
+#ifdef PLATFORM_SDL
+#ifdef ANDROID
+    "droid serif", "noto serif",
+#endif
+    "dejavu lgc serif", "dejavu serif", "liberation serif",
+#endif
     "times", "palatino", "mincho",
 				/* All platforms. */
     "song ti",			/* Unix. */
@@ -269,6 +308,17 @@ static const char *const serifClass[] = {
 };
 
 static const char *const sansClass[] = {
+#ifdef PLATFORM_SDL
+#ifdef ANDROID
+    "droid sans fallback", "droid sans",
+    "droid sans hebrew", "droid arabic kufi",
+    "droid arabic nashk",
+    "droid sans japanese", "droid sans thai",
+    "droid sans armenian", "droid sans ethiopic",
+    "droid sans georgian", "roboto", "roboto cn",
+#endif
+    "dejavu lgc sans", "dejavu sans", "liberation sans",
+#endif
     "helvetica", "gothic",	/* All platforms. */
 				/* Unix. */
     "ms sans serif", "traditional arabic",
@@ -278,6 +328,12 @@ static const char *const sansClass[] = {
 };
 
 static const char *const monoClass[] = {
+#ifdef PLATFORM_SDL
+#ifdef ANDROID
+    "droid sans mono",
+#endif
+    "dejavu lgc sans mono", "dejavu sans mono", "liberation mono",
+#endif
     "courier", "gothic",	/* All platforms. */
     "fangsong ti",		/* Unix. */
     "simplified arabic fixed",	/* Windows. */
@@ -286,6 +342,9 @@ static const char *const monoClass[] = {
 };
 
 static const char *const symbolClass[] = {
+#ifdef PLATFORM_SDL
+    "opensymbol",
+#endif
     "symbol", "dingbats", "wingdings", NULL
 };
 
@@ -305,6 +364,13 @@ static const char *const *const fontFallbacks[] = {
  */
 
 static const char *const globalFontClass[] = {
+#ifdef PLATFORM_SDL
+#ifdef ANDROID
+    "droid sans fallback", "droid arabic nashk",
+    "droid sans hebrew", "droid sans", "roboto",
+#endif
+    "dejavu lgc sans", "dejavu sans", "liberation sans",
+#endif
     "symbol",			/* All platforms. */
 				/* Unix. */
     "lucida sans unicode",	/* Windows. */
@@ -4006,14 +4072,22 @@ TkFontGetPixels(
     int size)			/* Font size. */
 {
     double d;
+    int widthM, widthS;
 
     if (size < 0) {
 	return -size;
     }
 
+#ifdef PLATFORM_SDL
+    ScreenGetMMWidth(Tk_Display(tkwin), Tk_Screen(tkwin), &widthM, &widthS);
+#else
+    widthS = WidthOfScreen(Tk_Screen(tkwin));
+    widthM = WidthMMOfScreen(Tk_Screen(tkwin));
+#endif
+
     d = size * 25.4 / 72.0;
-    d *= WidthOfScreen(Tk_Screen(tkwin));
-    d /= WidthMMOfScreen(Tk_Screen(tkwin));
+    d *= widthS;
+    d /= widthM;
     return (int) (d + 0.5);
 }
 
@@ -4040,14 +4114,22 @@ TkFontGetPoints(
     int size)			/* Font size. */
 {
     double d;
+    int widthM, widthS;
 
     if (size >= 0) {
 	return size;
     }
 
+#ifdef PLATFORM_SDL
+    ScreenGetMMWidth(Tk_Display(tkwin), Tk_Screen(tkwin), &widthM, &widthS);
+#else
+    widthS = WidthOfScreen(Tk_Screen(tkwin));
+    widthM = WidthMMOfScreen(Tk_Screen(tkwin));
+#endif
+
     d = -size * 72.0 / 25.4;
-    d *= WidthMMOfScreen(Tk_Screen(tkwin));
-    d /= WidthOfScreen(Tk_Screen(tkwin));
+    d *= widthM;
+    d /= widthS;
     return (int) (d + 0.5);
 }
 

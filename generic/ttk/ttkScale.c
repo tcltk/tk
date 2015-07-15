@@ -10,7 +10,11 @@
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
+#ifdef ANDROID
+#define DEF_SCALE_LENGTH "160"
+#else
 #define DEF_SCALE_LENGTH "100"
+#endif
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

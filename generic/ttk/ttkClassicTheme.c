@@ -11,7 +11,12 @@
 #include "ttkTheme.h"
 
 #define DEFAULT_BORDERWIDTH "2"
+#ifdef ANDROID
+extern char ttkDefScrollbarWidth[TCL_INTEGER_SPACE];
+#define DEFAULT_ARROW_SIZE ttkDefScrollbarWidth
+#else
 #define DEFAULT_ARROW_SIZE "15"
+#endif
 
 /*----------------------------------------------------------------------
  * +++ Highlight element implementation.
@@ -310,6 +315,16 @@ static Ttk_ElementOptionSpec SashOptions[] = {
 	Tk_Offset(SashElement,borderObj), DEFAULT_BACKGROUND },
     { "-sashrelief", TK_OPTION_RELIEF, 
 	Tk_Offset(SashElement,sashReliefObj), "sunken" },
+#ifdef ANDROID
+    { "-sashthickness", TK_OPTION_PIXELS,
+	Tk_Offset(SashElement,sashThicknessObj), "10" },
+    { "-sashpad", TK_OPTION_PIXELS, 
+	Tk_Offset(SashElement,sashPadObj), "4" },
+    { "-handlesize", TK_OPTION_PIXELS,
+	Tk_Offset(SashElement,handleSizeObj), "12" },
+    { "-handlepad", TK_OPTION_PIXELS,
+	Tk_Offset(SashElement,handlePadObj), "12" },
+#else
     { "-sashthickness", TK_OPTION_PIXELS,
 	Tk_Offset(SashElement,sashThicknessObj), "6" },
     { "-sashpad", TK_OPTION_PIXELS, 
@@ -318,6 +333,7 @@ static Ttk_ElementOptionSpec SashOptions[] = {
 	Tk_Offset(SashElement,handleSizeObj), "8" },
     { "-handlepad", TK_OPTION_PIXELS,
 	Tk_Offset(SashElement,handlePadObj), "8" },
+#endif
     { NULL, 0, 0, NULL }
 };
 

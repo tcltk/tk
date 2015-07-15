@@ -183,6 +183,13 @@ if {[tk windowingsystem] eq "x11"} {
     bind all <F10> {
 	tk::FirstMenu %W
     }
+
+    catch {
+	# menu key on some Android versions
+	bind all <App> {
+	    tk::FirstMenu %W
+	}
+    }
 } else {
     bind Menubutton <Alt-KeyPress> {
 	tk::TraverseToMenu %W %A

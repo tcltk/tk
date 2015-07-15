@@ -2098,6 +2098,10 @@ DisplayListbox(
 		/*
 		 * Draw a dotted box around the text.
 		 */
+#ifdef PLATFORM_SDL
+		char dashList[1];
+		XPoint rect[5];
+#endif
 
 		x = listPtr->inset;
 		y = ((i - listPtr->topIndex) * listPtr->lineHeight)
@@ -2116,15 +2120,29 @@ DisplayListbox(
 		 * You would think the XSetDashes was necessary, but it
 		 * appears that the default dotting for just saying we want
 		 * dashes appears to work correctly.
-		 static char dashList[] = { 1 };
-		 static int dashLen = sizeof(dashList);
-		 XSetDashes(listPtr->display, gc, 0, dashList, dashLen);
 		 */
-
 		mask = GCLineWidth | GCLineStyle | GCDashList | GCDashOffset;
 		XChangeGC(listPtr->display, gc, mask, &gcValues);
+#ifdef PLATFORM_SDL
+		dashList[0] = gcValues.line_width * 2;
+		XSetDashes(listPtr->display, gc, 0, dashList,
+			sizeof(dashList));
+		rect[0].x = x;
+		rect[0].y = y;
+		rect[1].x = x + width;
+		rect[1].y = y;
+		rect[2].x = x + width;
+		rect[2].y = y + listPtr->lineHeight - 1;
+		rect[3].x = x;
+		rect[3].y = y + listPtr->lineHeight - 1;
+		rect[4].x = x;
+		rect[4].y = y;
+		XDrawLines(listPtr->display, pixmap, gc, rect, 5,
+			CoordModeOrigin);
+#else
 		XDrawRectangle(listPtr->display, pixmap, gc, x, y,
 			(unsigned) width, (unsigned) listPtr->lineHeight - 1);
+#endif
 		if (!freeGC) {
 		    /*
 		     * Don't bother changing if it is about to be freed.

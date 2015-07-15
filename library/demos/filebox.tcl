@@ -70,7 +70,7 @@ proc fileDialog {w ent operation} {
 		-typevariable selected_type]
 	puts "You selected filetype \"$selected_type\""
     } else {
-	set file [tk_getSaveFile -filetypes $types -parent $w \
+	set file [tk_getSaveFile -filetypes $types -parent $w -nativeonly 1 \
 		-initialfile Untitled -defaultextension .txt]
     }
     if {[string compare $file ""]} {

@@ -1243,7 +1243,11 @@ static void EntryDisplay(void *clientData, Drawable d)
 	int cursorX = EntryCharPosition(entryPtr, entryPtr->entry.insertPos),
 	    cursorY = entryPtr->entry.layoutY,
 	    cursorHeight = entryPtr->entry.layoutHeight,
+#ifdef ANDROID
+	    cursorWidth = 2;
+#else
 	    cursorWidth = 1;
+#endif
 
 	Tcl_GetIntFromObj(NULL,es.insertWidthObj,&cursorWidth);
 	if (cursorWidth <= 0) {

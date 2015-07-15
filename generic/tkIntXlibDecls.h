@@ -24,6 +24,9 @@
 #endif
 
 #include "X11/Xutil.h"
+#ifdef PLATFORM_SDL
+#include "SdlTkX.h"
+#endif
 
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
