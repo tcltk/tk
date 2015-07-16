@@ -769,7 +769,7 @@ DrawCGImage(
 		dstBounds.size.width, dstBounds.size.height);
 #else /* TK_MAC_DEBUG_IMAGE_DRAWING */
 	CGContextSaveGState(context);
-	CGContextTranslateCTM(context, 0, 
+	CGContextTranslateCTM(context, 0,
 			      dstBounds.origin.y + CGRectGetMaxY(dstBounds));
 	CGContextScaleCTM(context, 1, -1);
 	CGContextDrawImage(context, dstBounds, image);
