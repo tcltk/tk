@@ -384,7 +384,7 @@ TkpScrollbarPosition(
 	x = y;
 	y = tmp;
 	length = Tk_Width(scrollPtr->tkwin);
-	fieldlength = length - 2 * arrowSize; 
+	fieldlength = length - 2 * arrowSize;
 	width = Tk_Height(scrollPtr->tkwin);
     }
     fieldlength = fieldlength < 0 ? 0 : fieldlength;

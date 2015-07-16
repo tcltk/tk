@@ -1683,7 +1683,7 @@ IndexCountBytesOrdered(
         byteCount += segPtr->size;
     }
 
-    linePtr = indexPtr1->linePtr->nextPtr;
+    linePtr = TkBTreeNextLine(textPtr, indexPtr1->linePtr);
     while (linePtr != indexPtr2->linePtr) {
 	for (segPtr = linePtr->segPtr; segPtr != NULL;
                 segPtr = segPtr->nextPtr) {
