@@ -3498,9 +3498,10 @@ Line 4"
     list [.t tag ranges sel] [.t get 1.0 end]
 } -cleanup {
     destroy .t
-} -result {{1.0 3.5} {Line 1
+} -result {{1.0 4.0} {Line 1
 abcde
 12345
+
 }}
 test text-19.9 {DeleteChars procedure} -body {
     text .t
