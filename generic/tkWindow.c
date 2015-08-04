@@ -3041,9 +3041,7 @@ Tk_SafeInit(
     return Initialize(interp);
 }
 
-#ifndef ANDROID
 MODULE_SCOPE const TkStubs tkStubs;
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -3325,12 +3323,8 @@ Initialize(
      * Provide Tk and its stub table.
      */
 
-#ifdef ANDROID
-    code = Tcl_PkgProvide(interp, "Tk", TK_PATCH_LEVEL);
-#else
     code = Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
 	    (ClientData) &tkStubs);
-#endif
     if (code != TCL_OK) {
 	goto done;
     }
