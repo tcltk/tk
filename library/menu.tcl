@@ -1043,7 +1043,7 @@ proc ::tk::MenuFind {w char} {
 
 proc ::tk::TraverseToMenu {w char} {
     variable ::tk::Priv
-    if {$char eq ""} {
+    if {![winfo exists $w] || $char eq ""} {
 	return
     }
     while {[winfo class $w] eq "Menu"} {

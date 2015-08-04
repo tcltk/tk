@@ -166,7 +166,7 @@ $t image create end -image \
 
 
 proc textWindBigB w {
-    $w configure -borderwidth 15 
+    $w configure -borderwidth 15
 }
 
 proc textWindBigH w {
@@ -230,7 +230,7 @@ proc createPlot {t} {
     $c create line 100 250 400 250 -width 2
     $c create line 100 250 100 50 -width 2
     $c create text 225 20 -text "A Simple Plot" -font $font -fill brown
-    
+
     for {set i 0} {$i <= 10} {incr i} {
 	set x [expr {100 + ($i*30)}]
 	$c create line $x 250 $x 245 -width 2
@@ -241,7 +241,7 @@ proc createPlot {t} {
 	$c create line 100 $y 105 $y -width 2
 	$c create text 96 $y -text [expr {$i*50}].0 -anchor e -font $font
     }
-    
+
     foreach point {
 	{12 56} {20 94} {33 98} {32 120} {61 180} {75 160} {98 223}
     } {
