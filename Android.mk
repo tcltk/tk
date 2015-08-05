@@ -59,7 +59,6 @@ LOCAL_SRC_FILES := \
 	generic/tkPack.c \
 	generic/tkPlace.c \
 	generic/tkSelect.c \
-	generic/tkStubInit.c \
 	generic/tkStyle.c \
 	generic/tkUndo.c \
 	generic/tkUtil.c \
@@ -107,6 +106,7 @@ LOCAL_SRC_FILES := \
 	generic/tkTextTag.c \
 	generic/tkTextWind.c \
 	generic/tkOldConfig.c \
+	generic/tkStubInit.c \
 	generic/ttk/ttkBlink.c \
 	generic/ttk/ttkButton.c \
 	generic/ttk/ttkCache.c \
@@ -135,8 +135,9 @@ LOCAL_SRC_FILES := \
 	generic/ttk/ttkTrack.c \
 	generic/ttk/ttkTreeview.c \
 	generic/ttk/ttkWidget.c \
+	generic/ttk/ttkStubInit.c \
 	xlib/xcolors.c \
-	sdl/tkSDL.c \
+        sdl/tkSDL.c \
 	sdl/tkSDL3d.c \
 	sdl/tkSDLButton.c \
 	sdl/tkSDLColor.c \

@@ -41,8 +41,6 @@ interp alias {} EvalAttached {} consoleinterp eval
 # 	None.
 
 proc ::tk::ConsoleInit {} {
-    global tcl_platform
-
     if {![consoleinterp eval {set tcl_interactive}]} {
 	wm withdraw .
     }
@@ -78,7 +76,7 @@ proc ::tk::ConsoleInit {} {
     AmpMenuArgs	.menubar.edit add command -label [mc P&aste] -accel "$mod+V"\
 	    -command {event generate .console <<Paste>>}
 
-    if {$tcl_platform(platform) ne "windows"} {
+    if {[tk windowingsystem] ne "win32"} {
 	AmpMenuArgs .menubar.edit add command -label [mc Cl&ear] \
 		-command {event generate .console <<Clear>>}
     } else {
@@ -195,10 +193,12 @@ proc ::tk::ConsoleInit {} {
     $w mark set promptEnd insert
     $w mark gravity promptEnd left
 
-    # Subtle work-around to erase the '% ' that tclMain.c prints out
-    after idle [subst -nocommand {
-	if {[$con get 1.0 output] eq "% "} { $con delete 1.0 output }
-    }]
+    if {[tk windowingsystem] ne "aqua"} {
+	# Subtle work-around to erase the '% ' that tclMain.c prints out
+	after idle [subst -nocommand {
+	    if {[$con get 1.0 output] eq "% "} { $con delete 1.0 output }
+	}]
+    }
 }
 
 # ::tk::ConsoleSource --
@@ -381,7 +381,7 @@ proc ::tk::console::Paste {w} {
 # Fit TkConsoleFont to window width
 proc ::tk::console::FitScreenWidth {w} {
     set width [winfo screenwidth $w]
-    set cwidth [$w cget -width] 
+    set cwidth [$w cget -width]
     set s -50
     set fit 0
     array set fi [font configure TkConsoleFont]
@@ -1015,8 +1015,7 @@ proc ::tk::console::ExpandPathname str {
 	set match {}
     } else {
 	if {[llength $m] > 1} {
-	    global tcl_platform
-	    if {[string match windows $tcl_platform(platform)]} {
+	    if { $::tcl_platform(platform) eq "windows" } {
 		## Windows is screwy because it's case insensitive
 		set tmp [ExpandBestMatch [string tolower $m] \
 			[string tolower $dir]]
