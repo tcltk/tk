@@ -266,9 +266,7 @@ static void RegisterThemes(Tcl_Interp *interp)
  * Ttk initialization.
  */
 
-#ifndef ANDROID
 extern const TtkStubs ttkStubs;
-#endif
 
 MODULE_SCOPE int
 Ttk_Init(Tcl_Interp *interp)
@@ -285,11 +283,7 @@ Ttk_Init(Tcl_Interp *interp)
 
     Ttk_PlatformInit(interp);
 
-#ifdef ANDROID
-    Tcl_PkgProvide(interp, "Ttk", TTK_PATCH_LEVEL);
-#else
     Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (ClientData)&ttkStubs);
-#endif
 
     return TCL_OK;
 }

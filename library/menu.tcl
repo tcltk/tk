@@ -255,7 +255,6 @@ proc ::tk::MbLeave w {
 proc ::tk::MbPost {w {x {}} {y {}}} {
     global errorInfo
     variable ::tk::Priv
-    global tcl_platform
 
     if {[$w cget -state] eq "disabled" || $w eq $Priv(postedMb)} {
 	return
@@ -409,7 +408,6 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 #			is a posted menubutton.
 
 proc ::tk::MenuUnpost menu {
-    global tcl_platform
     variable ::tk::Priv
     set mb $Priv(postedMb)
 
@@ -538,7 +536,6 @@ proc ::tk::MbMotion {w upDown rootx rooty} {
 
 proc ::tk::MbButtonUp w {
     variable ::tk::Priv
-    global tcl_platform
 
     set menu [$w cget -menu]
     set tearoff [expr {[tk windowingsystem] eq "x11" || \
@@ -613,7 +610,6 @@ proc ::tk::MenuMotion {menu x y state} {
 
 proc ::tk::MenuButtonDown menu {
     variable ::tk::Priv
-    global tcl_platform
 
     if {![winfo viewable $menu]} {
         return
@@ -1225,8 +1221,6 @@ proc ::tk::MenuFindName {menu s} {
 #			upper-left corner goes at (x,y).
 
 proc ::tk::PostOverPoint {menu x y {entry {}}}  {
-    global tcl_platform
-
     if {$entry ne ""} {
 	if {$entry == [$menu index last]} {
 	    incr y [expr {-([$menu yposition $entry] \
@@ -1241,8 +1235,8 @@ proc ::tk::PostOverPoint {menu x y {entry {}}}  {
     if {[tk windowingsystem] eq "win32"} {
 	# osVersion is not available in safe interps
 	set ver 5
-	if {[info exists tcl_platform(osVersion)]} {
-	    scan $tcl_platform(osVersion) %d ver
+	if {[info exists ::tcl_platform(osVersion)]} {
+	    scan $::tcl_platform(osVersion) %d ver
 	}
 
 	# We need to fix some problems with menu posting on Windows,
@@ -1347,7 +1341,6 @@ proc ::tk::GenerateMenuSelect {menu} {
 
 proc ::tk_popup {menu x y {entry {}}} {
     variable ::tk::Priv
-    global tcl_platform
     if {$Priv(popup) ne "" || $Priv(postedMb) ne ""} {
 	tk::MenuUnpost {}
     }
