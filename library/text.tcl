@@ -543,7 +543,6 @@ proc ::tk::TextAnchor {w} {
 }
 
 proc ::tk::TextSelectTo {w x y {extend 0}} {
-    global tcl_platform
     variable ::tk::Priv
 
     set anchorname [tk::TextAnchor $w]
@@ -1036,7 +1035,6 @@ proc ::tk_textCut w {
 # w -		Name of a text widget.
 
 proc ::tk_textPaste w {
-    global tcl_platform
     if {![catch {::tk::GetSelection $w CLIPBOARD} sel]} {
 	set oldSeparator [$w cget -autoseparators]
 	if {$oldSeparator} {
