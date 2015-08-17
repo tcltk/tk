@@ -5267,7 +5267,7 @@ WaitForEvent(
     timeout.sec += 2;
 
     while (!info.foundEvent) {
-	if (!TkSDLDoOneXEvent(&timeout)) {
+	if (!TkUnixDoOneXEvent(&timeout)) {
 	    break;
 	}
     }
@@ -6975,7 +6975,7 @@ CreateWrapper(
     wrapperPtr->atts.event_mask |= StructureNotifyMask|FocusChangeMask;
     wrapperPtr->atts.override_redirect = winPtr->atts.override_redirect;
     if (winPtr->flags & TK_EMBEDDED) {
-	parent = TkSDLContainerId(winPtr);
+	parent = TkUnixContainerId(winPtr);
     } else {
 	parent = XRootWindow(wrapperPtr->display, wrapperPtr->screenNum);
     }
@@ -7048,7 +7048,7 @@ TkWmFocusToplevel(
 /*
  *----------------------------------------------------------------------
  *
- * TkSDLSetMenubar --
+ * TkUnixSetMenubar --
  *
  *	This function is invoked by menu management code to specify the window
  *	to use as a menubar for a given toplevel window.
@@ -7059,7 +7059,7 @@ TkWmFocusToplevel(
  * Side effects:
  *	The window given by menubar will be mapped and positioned inside the
  *	wrapper for tkwin and above tkwin. Menubar will automatically be
- *	resized to maintain the height specified by TkSDLSetMenuHeight the
+ *	resized to maintain the height specified by TkUnixSetMenuHeight the
  *	same width as tkwin. Any previous menubar specified for tkwin will be
  *	unmapped and ignored from now on.
  *
@@ -7067,7 +7067,7 @@ TkWmFocusToplevel(
  */
 
 void
-TkSDLSetMenubar(
+TkUnixSetMenubar(
     Tk_Window tkwin,		/* Token for toplevel window. */
     Tk_Window menubar)		/* Token for window that is to serve as
 				 * menubar for tkwin. Must not be a toplevel
@@ -7117,7 +7117,7 @@ TkSDLSetMenubar(
     } else {
 	if ((menubarPtr->flags & TK_TOP_LEVEL)
 		|| (Tk_Screen(menubar) != Tk_Screen(tkwin))) {
-	    Tcl_Panic("TkSDLSetMenubar got bad menubar");
+	    Tcl_Panic("TkUnixSetMenubar got bad menubar");
 	}
 	wmPtr->menuHeight = Tk_ReqHeight(menubar);
 	if (wmPtr->menuHeight == 0) {

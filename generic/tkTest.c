@@ -1726,21 +1726,13 @@ TestmenubarObjCmd(
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetString(objv[3])[0] == 0) {
-#ifdef PLATFORM_SDL
-	    TkSDLSetMenubar(tkwin, NULL);
-#else
 	    TkUnixSetMenubar(tkwin, NULL);
-#endif
 	} else {
 	    menubar = Tk_NameToWindow(interp, Tcl_GetString(objv[3]), mainWin);
 	    if (menubar == NULL) {
 		return TCL_ERROR;
 	    }
-#ifdef PLATFORM_SDL
-	    TkSDLSetMenubar(tkwin, menubar);
-#else
 	    TkUnixSetMenubar(tkwin, menubar);
-#endif
 	}
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
