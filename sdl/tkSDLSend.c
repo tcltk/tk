@@ -1054,7 +1054,7 @@ Tk_SendObjCmd(
     Tcl_GetTime(&timeout);
     timeout.sec += 2;
     while (!pending.gotResponse) {
-	if (!TkSDLDoOneXEvent(&timeout)) {
+	if (!TkUnixDoOneXEvent(&timeout)) {
 	    /*
 	     * An unusually long amount of time has elapsed during the
 	     * processing of a sent command. Check to make sure that the
