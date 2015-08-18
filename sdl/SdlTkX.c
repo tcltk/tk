@@ -4758,7 +4758,11 @@ fatal:
 	SdlTkUnlock(NULL);
 	return NULL;
     }
+#ifdef ANDROID
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+#else
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+#endif
 
     /* preset some defaults */
     SdlTkX.dec_frame_width = 6;
@@ -6523,6 +6527,9 @@ SDL_GLContext
 SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
 {
     _Window *_w = (_Window *) w;
+#ifdef ANDROID
+    int depth;
+#endif
 
     SdlTkLock(display);
     display->request++;
@@ -6537,6 +6544,8 @@ SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
     while (SdlTkX.in_background) {
 	Tcl_ConditionWait(&time_cond, &xlib_lock, NULL);
     }
+    SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     if (display->gl_rend == NULL) {
 	display->gl_rend = SDL_CreateRendererGLES1(SdlTkX.sdlscreen);
     }
@@ -6552,6 +6561,7 @@ SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
 	    _w->gl_tex = tex;
 	}
     }
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depth);
 #else
     if (_w->gl_ctx != NULL) {
 	goto done;
@@ -6803,6 +6813,13 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 	    } while (wait_refr && SdlTkX.frame_count == frame_count);
 #endif
 	}
+    } else {
+	/* no texture: clear window */
+	XGCValues xgc;
+
+	memset(&xgc, 0, sizeof (xgc));
+	xgc.foreground = SdlTkX.screen->black_pixel;
+	SdlTkGfxFillRect(w, &xgc, 0, 0, _w->atts.width, _w->atts.height);
     }
 done:
     SdlTkUnlock(display);

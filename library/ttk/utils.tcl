@@ -269,6 +269,45 @@ proc ttk::copyBindings {from to} {
     }
 }
 
+### X11 dragging with middle mouse button.
+#
+# Emulates mouse wheel bindings
+
+namespace eval ttk {
+    variable ScanDrag
+    array set ScanDrag {
+	y 0
+	mouseMoved 0
+    }
+}
+
+## ttk::scanMark --
+#	Marks the start of a possible scan drag operation
+#
+
+proc ttk::scanMark {w y} {
+    variable ScanDrag
+    set ScanDrag(y) $y
+    set ScanDrag(mouseMoved) 0
+}
+
+## ttk::scanDrag {w y}
+#	Performs possible scan drag operation
+#
+
+proc ttk::scanDrag {w y} {
+    variable ScanDrag
+    set ScanDrag(mouseMoved) [expr {$y != $ScanDrag(y)}]
+    if {$ScanDrag(mouseMoved)} {
+	if {$y < $ScanDrag(y)} {
+	    $w yview scroll 1 units
+	} else {
+	    $w yview scroll -1 units
+	}
+	set ScanDrag(y) $y
+    }
+}
+
 ### Mousewheel bindings.
 #
 # Platform inconsistencies:
@@ -328,6 +367,16 @@ switch -- [tk windowingsystem] {
 	bind TtkScrollable <ButtonPress-5>       { %W yview scroll  5 units }
 	bind TtkScrollable <Shift-ButtonPress-4> { %W xview scroll -5 units }
 	bind TtkScrollable <Shift-ButtonPress-5> { %W xview scroll  5 units }
+	bind TtkScrollable <2> {
+	    if {!$::tk_strictMotif} {
+		ttk::scanMark %W %y
+	    }
+	}
+	bind TtkScrollable <B2-Motion> {
+	    if {!$::tk_strictMotif} {
+		ttk::scanDrag %W %y
+	    }
+	}
     }
     win32 {
 	bind TtkScrollable <MouseWheel> \
