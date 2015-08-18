@@ -114,7 +114,7 @@ Tk_ConfigureWidget(
     staticSpecs = GetCachedSpecs(interp, specs);
 
     for (specPtr = staticSpecs; specPtr->type != TK_CONFIG_END; specPtr++) {
-       specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
+	specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
     }
 
     /*
