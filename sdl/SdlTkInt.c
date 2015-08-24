@@ -764,7 +764,8 @@ MkTransChars(XKeyEvent *ev)
 static int
 ProcessTextInput(XEvent *event, int sdl_mod, const char *text, int len)
 {
-    int i, n, ulen = Tcl_NumUtfChars(text, len);
+    int i, n, n2, ulen = Tcl_NumUtfChars(text, len);
+    char buf[TCL_UTF_MAX];
 
     if (ulen <= 0) {
 	return 0;
@@ -776,18 +777,43 @@ ProcessTextInput(XEvent *event, int sdl_mod, const char *text, int len)
 	Tcl_UniChar ch;
 
 	n = Tcl_UtfToUniChar(text, &ch);
-	event->xkey.nbytes = n;
+	n2 = 0;
+	/* Deal with surrogate pairs */
+	if ((ch >= 0xd800) && (ch <= 0xdbff)) {
+	    Tcl_UniChar ch2;
+
+	    if (i + n < ulen) {
+		n2 = Tcl_UtfToUniChar(text + n, &ch2);
+		if ((ch2 >= 0xdc00) && (ch2 <= 0xdfff)) {
+#if TCL_UTF_MAX > 3
+		    ch = (ch & 0x3ff) | ((ch2 & 0x3ff) << 10);
+		    ch += 0x10000;
+#else
+		    ch = 0xfffd;
+#endif
+		} else {
+		    ch = 0xfffd;
+		    n2 = 0;
+		}
+	    } else {
+		ch = 0xfffd;
+	    }
+	} else if (((ch >= 0xdc00) && (ch <= 0xdfff)) ||
+		   (ch == 0xfffe) || (ch == 0xffff)) {
+	    ch = 0xfffd;
+	}
+	event->xkey.nbytes = Tcl_UniCharToUtf(ch, buf);
 	event->xkey.time = SdlTkX.time_count;
 	if (event->xkey.nbytes > sizeof (event->xkey.trans_chars)) {
 	    event->xkey.nbytes = sizeof (event->xkey.trans_chars);
 	}
-	memcpy(event->xkey.trans_chars, text, event->xkey.nbytes);
+	memcpy(event->xkey.trans_chars, buf, event->xkey.nbytes);
 	if (len == 1) {
 	    event->xkey.keycode = FixKeyCode(event->xkey.trans_chars[0]);
 	} else {
 	    event->xkey.keycode = -1;
 	}
-	text += n;
+	text += n + n2;
 
 	/* Queue the KeyPress */
 	EVLOG("   KEYPRESS:  CODE=0x%X  UC=0x%X", event->xkey.keycode, ch);
