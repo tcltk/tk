@@ -590,7 +590,6 @@ Ucs4ToUtfProc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 	}
 	ch = *wSrc++;
 	dst += Tcl_UniCharToUtf(ch, dst);
-	wSrc++;
     }
 
     *srcReadPtr = (char *) wSrc - (char *) wSrcStart;

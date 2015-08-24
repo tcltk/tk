@@ -219,6 +219,10 @@ static int		ControlUtfProc(ClientData clientData, const char *src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
 			    int *dstWrotePtr, int *dstCharsPtr);
+static int		ControlUtfErr(ClientData clientData,const char *src,
+			    int srcLen, int flags, Tcl_EncodingState*statePtr,
+			    char *dst, int dstLen, int *srcReadPtr,
+			    int *dstWrotePtr, int *dstCharsPtr);
 static XFontStruct *	CreateClosestFont(Tk_Window tkwin,
 			    const TkFontAttributes *faPtr,
 			    const TkXLFDAttributes *xaPtr);
@@ -330,7 +334,7 @@ TkpFontPkgInit(
 
     if (tsdPtr->controlFamily.encoding == NULL) {
 	type.encodingName = "X11ControlChars";
-	type.toUtfProc = ControlUtfProc;
+	type.toUtfProc = ControlUtfErr;
 	type.fromUtfProc = ControlUtfProc;
 	type.freeProc = NULL;
 	type.clientData = NULL;
@@ -370,6 +374,7 @@ TkpFontPkgInit(
  * ControlUtfProc --
  *
  *	Convert from UTF-8 into the ASCII expansion of a control character.
+ *	Output encoding is UCS-4 for AGG/freetype.
  *
  * Results:
  *	Returns TCL_OK if conversion was successful.
@@ -409,6 +414,7 @@ ControlUtfProc(
 {
     const char *srcStart, *srcEnd;
     char *dstStart, *dstEnd;
+    unsigned int *wDst;
     Tcl_UniChar ch;
     int result;
     static char hexChars[] = "0123456789abcdef";
@@ -423,36 +429,93 @@ ControlUtfProc(
     srcEnd = src + srcLen;
 
     dstStart = dst;
-    dstEnd = dst + dstLen - 6;
+#if TCL_UTF_MAX > 3
+    dstEnd = dst + dstLen - 8 * sizeof(unsigned int);
+#else
+    dstEnd = dst + dstLen - 6 * sizeof(unsigned int);
+#endif
+    wDst = (unsigned int *) dst;
 
     for ( ; src < srcEnd; ) {
-	if (dst > dstEnd) {
+	if ((char *) wDst > dstEnd) {
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
 	}
 	src += Tcl_UtfToUniChar(src, &ch);
-	dst[0] = '\\';
+	wDst[0] = '\\';
 	if ((ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
-	    dst[1] = mapChars[ch];
-	    dst += 2;
+	    wDst[1] = mapChars[ch];
+	    wDst += 2;
 	} else if (ch < 256) {
-	    dst[1] = 'x';
-	    dst[2] = hexChars[(ch >> 4) & 0xf];
-	    dst[3] = hexChars[ch & 0xf];
-	    dst += 4;
+	    wDst[1] = 'x';
+	    wDst[2] = hexChars[(ch >> 4) & 0xf];
+	    wDst[3] = hexChars[ch & 0xf];
+	    wDst += 4;
+#if TCL_UTF_MAX > 3
+	} else if (ch < 0x10000)  {
+	    wDst[1] = 'u';
+	    wDst[2] = hexChars[(ch >> 12) & 0xf];
+	    wDst[3] = hexChars[(ch >> 8) & 0xf];
+	    wDst[4] = hexChars[(ch >> 4) & 0xf];
+	    wDst[5] = hexChars[ch & 0xf];
+	    wDst += 6;
 	} else {
-	    dst[1] = 'u';
-	    dst[2] = hexChars[(ch >> 12) & 0xf];
-	    dst[3] = hexChars[(ch >> 8) & 0xf];
-	    dst[4] = hexChars[(ch >> 4) & 0xf];
-	    dst[5] = hexChars[ch & 0xf];
-	    dst += 6;
+	    wDst[1] = 'U';
+	    wDst[2] = hexChars[(ch >> 20) & 0xf];
+	    wDst[3] = hexChars[(ch >> 16) & 0xf];
+	    wDst[4] = hexChars[(ch >> 12) & 0xf];
+	    wDst[5] = hexChars[(ch >> 8) & 0xf];
+	    wDst[6] = hexChars[(ch >> 4) & 0xf];
+	    wDst[7] = hexChars[ch & 0xf];
+	    wDst += 8;
 	}
+#else
+	} else {
+	    wDst[1] = 'u';
+	    wDst[2] = hexChars[(ch >> 12) & 0xf];
+	    wDst[3] = hexChars[(ch >> 8) & 0xf];
+	    wDst[4] = hexChars[(ch >> 4) & 0xf];
+	    wDst[5] = hexChars[ch & 0xf];
+	    wDst += 6;
+	}
+#endif
     }
     *srcReadPtr = src - srcStart;
-    *dstWrotePtr = dst - dstStart;
-    *dstCharsPtr = dst - dstStart;
+    *dstWrotePtr = (char *) wDst - dstStart;
+    *dstCharsPtr = *dstWrotePtr / sizeof(unsigned int);
     return result;
+}
+
+static int
+ControlUtfErr(
+    ClientData clientData,	/* Not used. */
+    const char *src,		/* Source string in UTF-8. */
+    int srcLen,			/* Source string length in bytes. */
+    int flags,			/* Conversion control flags. */
+    Tcl_EncodingState *statePtr,/* Place for conversion routine to store state
+				 * information used during a piecewise
+				 * conversion. Contents of statePtr are
+				 * initialized and/or reset by conversion
+				 * routine under control of flags argument. */
+    char *dst,			/* Output buffer in which converted string is
+				 * stored. */
+    int dstLen,			/* The maximum length of output buffer in
+				 * bytes. */
+    int *srcReadPtr,		/* Filled with the number of bytes from the
+				 * source string that were converted. This may
+				 * be less than the original source length if
+				 * there was a problem converting some source
+				 * characters. */
+    int *dstWrotePtr,		/* Filled with the number of bytes that were
+				 * stored in the output buffer as a result of
+				 * the conversion. */
+    int *dstCharsPtr)		/* Filled with the number of characters that
+				 * correspond to the bytes stored in the
+				 * correspond to the bytes stored in the
+				 * output buffer. */
+{
+    Tcl_Panic("cannot convert to UTF in X11ControlChars encoding");
+    return TCL_CONVERT_UNKNOWN;
 }
 
 #ifndef WORDS_BIGENDIAN
@@ -1075,7 +1138,7 @@ Tk_MeasureChars(
 	int newX, termX, sawNonSpace, dstWrote;
 	Tcl_UniChar ch;
 	FontFamily *familyPtr;
-	char buf[16];
+	char buf[64];
 
 	/*
 	 * How many chars will fit in the space allotted? This first version
@@ -1104,7 +1167,8 @@ Tk_MeasureChars(
 		chWidth = XTextWidth(lastSubFontPtr->fontStructPtr, buf,
 				     dstWrote);
 		newX += chWidth;
-		if ((ch < BASE_CHARS) && (chWidth < 255)) {
+		if ((dstWrote <= sizeof(unsigned int)) &&
+		    (ch < BASE_CHARS) && (chWidth < 255)) {
 		    /* cache character width */
 		    fontPtr->widths[ch] = chWidth;
 		}
@@ -2192,7 +2256,7 @@ FontMapLoadPage(
     int row)			/* Index of the page to be loaded into the
 				 * cache. */
 {
-    char buf[16], src[TCL_UTF_MAX];
+    char buf[64], src[TCL_UTF_MAX*2];
     int i, end, bitOffset;
     Tcl_Encoding encoding = subFontPtr->familyPtr->encoding;
     ThreadSpecificData *tsdPtr =
