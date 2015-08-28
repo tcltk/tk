@@ -42,7 +42,7 @@ the build instructions.
 #     turn on the 64-bit compiler, if your SDK has it.
 #
 # 3)  Targets are:
-#	release  -- Builds the core, the shell. (default)
+#	release  -- Builds the core, the shell and the dlls. (default)
 #	dlls     -- Just builds the windows extensions.
 #	shell    -- Just builds the shell and the core.
 #	core     -- Only builds the core [tkXX.(dll|lib)].
@@ -76,7 +76,7 @@ the build instructions.
 #		Sets where to install Tcl from the built binaries.
 #		C:\Progra~1\Tcl is assumed when not specified.
 #
-#	OPTS=loimpact,msvcrt,nothreads,noxp,pdbs,profile,square,static,staticpkg,symbols,unchecked,ucrt,none
+#	OPTS=loimpact,msvcrt,nothreads,noxp,pdbs,profile,square,static,staticpkg,symbols,unchecked,none
 #		Sets special options for the core.  The default is for none.
 #		Any combination of the above may be used (comma separated).
 #		'none' will over-ride everything to nothing.
@@ -105,11 +105,6 @@ the build instructions.
 #		unchecked = Allows a symbols build to not use the debug
 #			   enabled runtime (msvcrt.dll not msvcrtd.dll
 #			   or libcmt.lib not libcmtd.lib).
-#		ucrt= Uses ucrt.lib and libvcruntime.lib, which
-#			   ensures Tcl will run on machines with only the subset
-#			   of the C runtime that is part of the operating system.
-#			   If omitted, builds with VC 14.0 or later will require
-#			   the full C runtime redistributable.
 #
 #	STATS=compdbg,memdbg,none
 #		Sets optional memory and bytecode compiler debugging code added
@@ -448,7 +443,7 @@ cdebug	= $(OPTIMIZATIONS)
 cdebug	=
 !endif
 !if $(SYMBOLS)
-cdebug = $(cdebug) -Zi
+cdebug	= $(cdebug) -Zi
 !endif
 !else if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
 ### Warnings are too many, can't support warnings into errors.
@@ -461,13 +456,7 @@ cdebug	= -Zi -WX $(DEBUGFLAGS)
 cwarn = $(WARNINGS) -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
 cflags = -nologo -c $(COMPILERFLAGS) $(cwarn) -Fp$(TMP_DIR)^\
 
-!if $(UCRT)
-!if $(DEBUG) && !$(UNCHECKED)
-crt = -MDd
-!else
-crt = -MT
-!endif
-!elseif $(MSVCRT)
+!if $(MSVCRT)
 !if $(DEBUG) && !$(UNCHECKED)
 crt = -MDd
 !else
@@ -486,6 +475,7 @@ TK_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
 CON_CFLAGS	= $(cdebug) $(cflags) $(crt) -DCONSOLE
 WISH_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES)
 STUB_CFLAGS     = $(cflags) $(cdebug) $(TK_DEFINES)
+
 
 #---------------------------------------------------------------------
 # Link flags
@@ -507,7 +497,7 @@ lflags	= -nologo -machine:$(MACHINE) $(LINKERFLAGS) $(ldebug)
 lflags	= $(lflags) -profile
 !endif
 
-!if $(UCRT) && !($(DEBUG) && !$(UNCHECKED))
+!if $(MSVCRT) && !($(DEBUG) && !$(UNCHECKED)) && $(VCVERSION) >= 1900
 lflags	= $(lflags) -nodefaultlib:libucrt.lib
 !endif
 
@@ -535,8 +525,7 @@ baselibs   = kernel32.lib user32.lib
 baselibs   = $(baselibs) bufferoverflowU.lib
 !endif
 !endif
-
-!if $(UCRT) && !($(DEBUG) && !$(UNCHECKED))
+!if $(MSVCRT) && !($(DEBUG) && !$(UNCHECKED)) && $(VCVERSION) >= 1900
 baselibs   = $(baselibs) ucrt.lib
 !endif
 
