@@ -41,9 +41,13 @@ static const char *const encodingList[] = {
  * family": the foundry, face name, and charset.
  */
 
+#if TCL_UTF_MAX > 3
+#define FONTMAP_SHIFT		12
+#define FONTMAP_PAGES		(1 << (21 - FONTMAP_SHIFT))
+#else
 #define FONTMAP_SHIFT		10
-
 #define FONTMAP_PAGES		(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
+#endif
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
 
 typedef struct FontFamily {
@@ -96,7 +100,11 @@ typedef struct SubFont {
  */
 
 #define SUBFONT_SPACE		3
+#if TCL_UTF_MAX > 3
+#define BASE_CHARS		4096
+#else
 #define BASE_CHARS		2048
+#endif
 
 typedef struct UnixFont {
     TkFont font;		/* Stuff used by generic font package. Must be
@@ -430,7 +438,7 @@ ControlUtfProc(
 
     dstStart = dst;
 #if TCL_UTF_MAX > 3
-    dstEnd = dst + dstLen - 8 * sizeof(unsigned int);
+    dstEnd = dst + dstLen - 10 * sizeof(unsigned int);
 #else
     dstEnd = dst + dstLen - 6 * sizeof(unsigned int);
 #endif
@@ -461,14 +469,15 @@ ControlUtfProc(
 	    wDst += 6;
 	} else {
 	    wDst[1] = 'U';
-	    wDst[2] = hexChars[(ch >> 20) & 0xf];
-	    wDst[3] = hexChars[(ch >> 16) & 0xf];
-	    wDst[4] = hexChars[(ch >> 12) & 0xf];
-	    wDst[5] = hexChars[(ch >> 8) & 0xf];
-	    wDst[6] = hexChars[(ch >> 4) & 0xf];
-	    wDst[7] = hexChars[ch & 0xf];
-	    wDst += 8;
-	}
+	    wDst[2] = hexChars[(ch >> 28) & 0xf];
+	    wDst[3] = hexChars[(ch >> 24) & 0xf];
+	    wDst[4] = hexChars[(ch >> 20) & 0xf];
+	    wDst[5] = hexChars[(ch >> 16) & 0xf];
+	    wDst[6] = hexChars[(ch >> 12) & 0xf];
+	    wDst[7] = hexChars[(ch >> 8) & 0xf];
+	    wDst[8] = hexChars[(ch >> 4) & 0xf];
+	    wDst[9] = hexChars[ch & 0xf];
+	    wDst += 10;
 #else
 	} else {
 	    wDst[1] = 'u';
@@ -477,8 +486,8 @@ ControlUtfProc(
 	    wDst[4] = hexChars[(ch >> 4) & 0xf];
 	    wDst[5] = hexChars[ch & 0xf];
 	    wDst += 6;
-	}
 #endif
+	}
     }
     *srcReadPtr = src - srcStart;
     *dstWrotePtr = (char *) wDst - dstStart;
@@ -2271,6 +2280,9 @@ FontMapLoadPage(
 
     end = (row + 1) << FONTMAP_SHIFT;
     for (i = row << FONTMAP_SHIFT; i < end; i++) {
+	if ((i >= 0xD800) && (i <= 0xDFFF)) {
+	    continue;
+	}
 	if (Tcl_UtfToExternal(NULL, encoding, src, Tcl_UniCharToUtf(i, src),
 		TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
