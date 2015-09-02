@@ -12,9 +12,13 @@ tcl_path := $(LOCAL_PATH)/../tcl
 
 include $(tcl_path)/tcl-config.mk
 
+LOCAL_ADDITIONAL_DEPENDENCIES += $(tcl_path)/tcl-config.mk
+
 tk_path := $(LOCAL_PATH)
 
 include $(tk_path)/tk-config.mk
+
+LOCAL_ADDITIONAL_DEPENDENCIES += $(tk_path)/tk-config.mk
 
 LOCAL_MODULE := tk
 

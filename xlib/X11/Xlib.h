@@ -544,7 +544,11 @@ typedef struct _XDisplay {
 #endif
 #ifndef _XEVENT_
 
+#ifdef PLATFORM_SDL
+#define XMaxTransChars 12
+#else
 #define XMaxTransChars 4
+#endif
 
 /*
  * Definitions of specific events.

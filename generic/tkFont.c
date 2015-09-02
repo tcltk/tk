@@ -258,7 +258,10 @@ static const char *const gothicAliases[] = {
 
 static const char *const dingbatsAliases[] = {
 #ifdef PLATFORM_SDL
-    "opensymbol",
+    "opensymbol", "symbola",
+#ifdef ANDROID
+    "android emoji",
+#endif
 #endif
     "dingbats", "zapfdingbats", "itc zapfdingbats",
 				/* Unix. */
@@ -343,7 +346,10 @@ static const char *const monoClass[] = {
 
 static const char *const symbolClass[] = {
 #ifdef PLATFORM_SDL
-    "opensymbol",
+    "opensymbol", "symbola",
+#ifdef ANDROID
+    "android emoji",
+#endif
 #endif
     "symbol", "dingbats", "wingdings", NULL
 };
