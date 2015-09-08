@@ -60,7 +60,11 @@ typedef unsigned int pixel;
  * XPutImage call.
  */
 
+#ifdef PLATFORM_SDL
+#define MAX_PIXELS (512*512)
+#else
 #define MAX_PIXELS 65536
+#endif
 
 /*
  * The set of colors required to display a photo image in a window depends on:
