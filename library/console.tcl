@@ -325,7 +325,8 @@ proc ::tk::ConsolePrompt {{partial normal}} {
     	if {[consoleinterp eval "info exists tcl_prompt1"]} {
     	    consoleinterp eval "eval \[set tcl_prompt1\]"
     	} else {
-    	    puts -nonewline [EvalAttached $::tk::console::defaultPrompt]
+    	    $w insert output [EvalAttached $::tk::console::defaultPrompt] \
+		stdout
     	}
     } else {
 	set temp [$w index output]
@@ -333,10 +334,11 @@ proc ::tk::ConsolePrompt {{partial normal}} {
     	if {[consoleinterp eval "info exists tcl_prompt2"]} {
     	    consoleinterp eval "eval \[set tcl_prompt2\]"
     	} else {
-	    puts -nonewline "> "
+	    $w insert output "> " stdout
     	}
     }
     flush stdout
+    consoleinterp flush
     $w mark set output $temp
     ::tk::TextSetCursor $w end
     $w mark set promptEnd insert
@@ -979,7 +981,8 @@ proc ::tk::console::Expand {w {type ""}} {
 	$w delete $tmp insert
 	$w insert $tmp $repl {input stdin}
 	if {($len > 1) && ($::tk::console::showMatches) && ($repl eq $str)} {
-	    puts stdout [lsort [lreplace $res 0 0]]
+	    $w insert output [lsort [lreplace $res 0 0]] stdout
+	    $w insert output "\n" stdout
 	}
     } else {
 	bell
