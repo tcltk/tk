@@ -37,6 +37,8 @@ typedef struct ConsoleInfo {
 typedef struct ChannelData {
     ConsoleInfo *info;
     int type;			/* TCL_STDOUT or TCL_STDERR */
+    int nBytes;			/* Number of bytes in buffer */
+    char buffer[2048];		/* Buffer to limit line length in text widget */
 } ChannelData;
 
 /*
@@ -48,6 +50,8 @@ static void	ConsoleDeleteProc(ClientData clientData);
 static void	ConsoleEventProc(ClientData clientData, XEvent *eventPtr);
 static int	ConsoleHandle(ClientData instanceData, int direction,
 		    ClientData *handlePtr);
+static int	ConsoleInput0(ClientData instanceData, char *buf, int toRead,
+		    int *errorCode);
 static int	ConsoleInput(ClientData instanceData, char *buf, int toRead,
 		    int *errorCode);
 static int	ConsoleObjCmd(ClientData clientData, Tcl_Interp *interp,
@@ -270,6 +274,7 @@ Tk_InitConsoleChannels(
 	data->info = info;
 	data->info->refCount++;
 	data->type = TCL_STDIN;
+	data->nBytes = 0;
 	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console0",
 		data, TCL_READABLE);
 	if (consoleChannel != NULL) {
@@ -287,6 +292,7 @@ Tk_InitConsoleChannels(
 	data->info = info;
 	data->info->refCount++;
 	data->type = TCL_STDOUT;
+	data->nBytes = 0;
 	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console1",
 		data, TCL_WRITABLE);
 	if (consoleChannel != NULL) {
@@ -304,6 +310,7 @@ Tk_InitConsoleChannels(
 	data->info = info;
 	data->info->refCount++;
 	data->type = TCL_STDERR;
+	data->nBytes = 0;
 	consoleChannel = Tcl_CreateChannel(&consoleChannelType, "console2",
 		data, TCL_WRITABLE);
 	if (consoleChannel != NULL) {
@@ -495,7 +502,7 @@ Tk_CreateConsoleWindow(
 /*
  *----------------------------------------------------------------------
  *
- * ConsoleOutput--
+ * ConsoleOutput0, ConsoleOutput --
  *
  *	Writes the given output on the IO channel. Returns count of how many
  *	characters were actually written, and an error indication.
@@ -510,8 +517,8 @@ Tk_CreateConsoleWindow(
  *----------------------------------------------------------------------
  */
 
-static int
-ConsoleOutput(
+INLINE static int
+ConsoleOutput0(
     ClientData instanceData,	/* Indicates which device to use. */
     const char *buf,		/* The data buffer. */
     int toWrite,		/* How many bytes to write? */
@@ -557,6 +564,57 @@ ConsoleOutput(
 	    Tcl_IncrRefCount(cmd);
 	    Tcl_EvalObjEx(consoleInterp, cmd, TCL_EVAL_GLOBAL);
 	    Tcl_DecrRefCount(cmd);
+	}
+    }
+    return toWrite;
+}
+
+static int
+ConsoleOutput(
+    ClientData instanceData,	/* Indicates which device to use. */
+    const char *buf,		/* The data buffer. */
+    int toWrite,		/* How many bytes to write? */
+    int *errorCode)		/* Where to store error code. */
+{
+    ChannelData *data = instanceData;
+    ConsoleInfo *info = data->info;
+    int i = 0;
+
+    *errorCode = 0;
+    Tcl_SetErrno(0);
+
+    if (info) {
+	if (buf == NULL) {
+	    /* flush */
+	    if (data->nBytes > 0) {
+		ConsoleOutput0(instanceData, data->buffer, data->nBytes,
+		    errorCode);
+		data->nBytes = 0;
+	    }
+	    return toWrite;
+	}
+	while (i < toWrite) {
+	    if (buf[i] == '\n') {
+		data->buffer[data->nBytes++] = buf[i];
+		ConsoleOutput0(instanceData, data->buffer, data->nBytes,
+		    errorCode);
+		data->nBytes = 0;
+	    } else if (data->nBytes < sizeof (data->buffer) - 5) {
+		data->buffer[data->nBytes++] = buf[i];
+		if (data->nBytes == sizeof (data->buffer) - 5) {
+#ifdef PLATFORM_SDL
+		    /* Unicode ellipsis \u2026 */
+		    data->buffer[data->nBytes++] = 0xe2;
+		    data->buffer[data->nBytes++] = 0x80;
+		    data->buffer[data->nBytes++] = 0xa6;
+#else
+		    data->buffer[data->nBytes++] = '.';
+		    data->buffer[data->nBytes++] = '.';
+		    data->buffer[data->nBytes++] = '.';
+#endif
+		}
+	    }
+	    ++i;
 	}
     }
     return toWrite;
@@ -802,21 +860,28 @@ InterpreterObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects */
 {
     int index, result = TCL_OK;
-    static const char *const options[] = {"eval", "record", NULL};
-    enum option {OTHER_EVAL, OTHER_RECORD};
+    static const char *const options[] = {"eval", "flush", "record", NULL};
+    enum option {OTHER_EVAL, OTHER_FLUSH, OTHER_RECORD};
     ConsoleInfo *info = clientData;
+    Tcl_Channel chan;
+    ChannelData *data;
     Tcl_Interp *otherInterp = info->interp;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option arg");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], options,
+	    "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
-    if (objc != 3) {
+    if ((enum option) index == OTHER_FLUSH) {
+	if (objc != 2) {
+	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
+	    return TCL_ERROR;
+	}
+    } else if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "script");
 	return TCL_ERROR;
     }
@@ -840,6 +905,22 @@ InterpreterObjCmd(
 	Tcl_SetReturnOptions(interp,
 		Tcl_GetReturnOptions(otherInterp, result));
 	Tcl_SetObjResult(interp, Tcl_GetObjResult(otherInterp));
+	break;
+    case OTHER_FLUSH:
+	if (Tcl_GetChannelType(chan = Tcl_GetStdChannel(TCL_STDOUT))
+	    == &consoleChannelType) {
+	    data = (ChannelData *) Tcl_GetChannelInstanceData(chan);
+	    if (data->info == info) {
+		ConsoleOutput((ClientData) data, NULL, 0, &index);
+	    }
+	}
+	if (Tcl_GetChannelType(chan = Tcl_GetStdChannel(TCL_STDERR))
+	    == &consoleChannelType) {
+	    data = (ChannelData *) Tcl_GetChannelInstanceData(chan);
+	    if (data->info == info) {
+		ConsoleOutput((ClientData) data, NULL, 0, &index);
+	    }
+	}
 	break;
     case OTHER_RECORD:
    	Tcl_RecordAndEvalObj(otherInterp, objv[2], TCL_EVAL_GLOBAL);
