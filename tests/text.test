@@ -726,7 +726,7 @@ test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
       .mytop.t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr 64+$i]]\n"
     }
     .mytop.t tag configure hidden -elide true
-    .mytop.t tag add hidden 2.15 3.10
+    .mytop.t tag add hidden 2.20 3.10
     .mytop.t configure -wrap char
     lappend res [.mytop.t count -displaylines 2.0 3.0]
     lappend res [.mytop.t count -displaylines 2.0 3.40]
@@ -1267,9 +1267,10 @@ test text-17.8 {DeleteChars procedure} {
     .t tag add sel 1.0 end
     .t delete 4.0 end
     list [.t tag ranges sel] [.t get 1.0 end]
-} {{1.0 3.5} {Line 1
+} {{1.0 4.0} {Line 1
 abcde
 12345
+
 }}
 test text-17.9 {DeleteChars procedure} {
     setup
