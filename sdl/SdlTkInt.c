@@ -782,15 +782,16 @@ ProcessTextInput(XEvent *event, int sdl_mod, const char *text, int len)
 	if ((ch >= 0xd800) && (ch <= 0xdbff)) {
 	    Tcl_UniChar ch2;
 
-	    if (i + n < ulen) {
+	    if (i + 1 < ulen) {
 		n2 = Tcl_UtfToUniChar(text + n, &ch2);
 		if ((ch2 >= 0xdc00) && (ch2 <= 0xdfff)) {
-#if TCL_UTF_MAX > 3
-		    ch = (ch & 0x3ff) | ((ch2 & 0x3ff) << 10);
+#if TCL_UTF_MAX > 4
+		    ch = ((ch & 0x3ff) << 10) | (ch2 & 0x3ff);
 		    ch += 0x10000;
 #else
 		    ch = 0xfffd;
 #endif
+		    ++i;
 		} else {
 		    ch = 0xfffd;
 		    n2 = 0;

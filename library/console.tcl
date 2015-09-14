@@ -702,6 +702,7 @@ proc ::tk::ConsoleOutput {dest string} {
     after cancel [subst {catch {$w see insert}}]
     after idle [subst {catch {$w see insert}}]
     # was: $w see insert
+    return ""
 }
 
 # ::tk::ConsoleExit --
