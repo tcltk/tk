@@ -675,6 +675,13 @@ UtfToUcs4Proc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 	    break;
         }
 	src += Tcl_UtfToUniChar(src, &ucs2);
+#ifdef USE_SYMBOLA_CTRL
+	if ((ucs2 >= 0x00) && (ucs2 < 0x20)) {
+	    ucs2 += 0x2400;
+	} else if (ucs2 == 0x7F) {
+	    ucs2 = 0x2421;
+	}
+#endif
 	*wDst++ = ucs2;
     }
     *srcReadPtr = src - srcStart;
@@ -1075,7 +1082,6 @@ nextface:
 	goto error;
     }
 
-success:
     Tcl_MutexUnlock(&fnt_mutex);
     hPtr = Tcl_FirstHashEntry(&famHash, &search);
     while (hPtr != NULL) {

@@ -184,6 +184,7 @@ LOCAL_SRC_FILES := \
 	sdl/agg-2.4/agg2d/agg2d.cpp
 
 LOCAL_CFLAGS := $(tcl_cflags) $(tk_cflags) \
+	-DUSE_SYMBOLA_CTRL=1 \
 	-DPACKAGE_NAME=\"tk\" \
 	-DPACKAGE_VERSION=\"8.6\" \
 	-DBUILD_tk=1 \

@@ -258,7 +258,7 @@ static const char *const gothicAliases[] = {
 
 static const char *const dingbatsAliases[] = {
 #ifdef PLATFORM_SDL
-    "opensymbol", "symbola",
+    "symbola",
 #ifdef ANDROID
     "android emoji",
 #endif
@@ -346,7 +346,7 @@ static const char *const monoClass[] = {
 
 static const char *const symbolClass[] = {
 #ifdef PLATFORM_SDL
-    "opensymbol", "symbola",
+    "symbola",
 #ifdef ANDROID
     "android emoji",
 #endif
@@ -376,6 +376,7 @@ static const char *const globalFontClass[] = {
     "droid sans hebrew", "droid sans", "roboto",
 #endif
     "dejavu lgc sans", "dejavu sans", "liberation sans",
+    "symbola",
 #endif
     "symbol",			/* All platforms. */
 				/* Unix. */
