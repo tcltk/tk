@@ -50,12 +50,12 @@ static void	ConsoleDeleteProc(ClientData clientData);
 static void	ConsoleEventProc(ClientData clientData, XEvent *eventPtr);
 static int	ConsoleHandle(ClientData instanceData, int direction,
 		    ClientData *handlePtr);
-static int	ConsoleInput0(ClientData instanceData, char *buf, int toRead,
-		    int *errorCode);
 static int	ConsoleInput(ClientData instanceData, char *buf, int toRead,
 		    int *errorCode);
 static int	ConsoleObjCmd(ClientData clientData, Tcl_Interp *interp,
 		    int objc, Tcl_Obj *const objv[]);
+static int	ConsoleOutput0(ClientData instanceData, const char *buf,
+		    int toWrite, int *errorCode);
 static int	ConsoleOutput(ClientData instanceData, const char *buf,
 		    int toWrite, int *errorCode);
 static void	ConsoleWatch(ClientData instanceData, int mask);
