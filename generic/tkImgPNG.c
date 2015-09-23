@@ -1847,6 +1847,13 @@ DecodeLine(
     if (UnfilterLine(interp, pngPtr) == TCL_ERROR) {
 	return TCL_ERROR;
     }
+    if (pngPtr->currentLine >= pngPtr->block.height) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"PNG image data overflow"));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "DATA_OVERFLOW", NULL);
+	return TCL_ERROR;
+    }
+
 
     if (pngPtr->interlace) {
 	switch (pngPtr->phase) {
@@ -1880,8 +1887,6 @@ DecodeLine(
     /*
      * Calculate offset into pixelPtr for the first pixel of the line.
      */
-
-    assert(pngPtr->currentLine < pngPtr->block.height);
 
     offset = pngPtr->currentLine * pngPtr->block.pitch;
 
@@ -2092,8 +2097,7 @@ ReadIDAT(
      * Process IDAT contents until there is no more in this chunk.
      */
 
-    while (chunkSz && !Tcl_ZlibStreamEof(pngPtr->stream)
-	    && pngPtr->currentLine < pngPtr->block.height) {
+    while (chunkSz && !Tcl_ZlibStreamEof(pngPtr->stream)) {
 	int len1, len2;
 
 	/*
