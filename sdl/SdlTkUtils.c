@@ -918,7 +918,8 @@ fonterr:
 				       &isNew);
 	    if (isNew) {
 	        GlyphIndexHash *ghash;
-		Tcl_DString ds;
+		Tcl_DString ds, ds2;
+		char *style;
 
 		ghash = (GlyphIndexHash *) ckalloc(sizeof (GlyphIndexHash));
 		Tcl_InitHashTable(&ghash->hash, TCL_ONE_WORD_KEYS);
@@ -928,9 +929,27 @@ fonterr:
 		ghash->faceFlags = face->face_flags;
 		ghash->styleFlags = face->style_flags;
 		Tcl_DStringInit(&ds);
+		Tcl_DStringInit(&ds2);
+		if (face->style_name != NULL) {
+		    Tcl_DStringAppend(&ds2, face->style_name, -1);
+		    style = Tcl_DStringValue(&ds2);
+		    while (*style) {
+			*style = tolower((UCHAR(*style)));
+			++style;
+		    }
+		}
+		style = Tcl_DStringValue(&ds2);
 		Tcl_DStringAppend(&ds, "-*-", -1);
 		Tcl_DStringAppend(&ds, ghash->familyName, -1);
-		if (ghash->styleFlags & FT_STYLE_FLAG_BOLD) {
+		if (strstr(style, "black")) {
+		    Tcl_DStringAppend(&ds, "-black", -1);
+		} else if (strstr(style, "light")) {
+		    Tcl_DStringAppend(&ds, "-light", -1);
+		} else if (strstr(style, "thin")) {
+		    Tcl_DStringAppend(&ds, "-thin", -1);
+		} else if (strstr(style, "medium")) {
+		    Tcl_DStringAppend(&ds, "-medium", -1);
+		} else if (ghash->styleFlags & FT_STYLE_FLAG_BOLD) {
 		    Tcl_DStringAppend(&ds, "-bold", -1);
 		} else {
 		    Tcl_DStringAppend(&ds, "-normal", -1);
@@ -944,6 +963,7 @@ fonterr:
 		ghash->xlfdPattern = ckalloc(Tcl_DStringLength(&ds) + 1);
 		strcpy(ghash->xlfdPattern, Tcl_DStringValue(&ds));
 		Tcl_DStringFree(&ds);
+		Tcl_DStringFree(&ds2);
 		ghash->hashLoaded = 0;
 		Tcl_SetHashValue(hPtr, (char *) ghash);
 		nfonts++;

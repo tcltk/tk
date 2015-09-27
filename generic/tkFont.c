@@ -213,9 +213,9 @@ static const char *const helveticaAliases[] = {
     "DejaVu LGC Sans",
     "DejaVu Sans",
 #ifdef ANDROID
+    "Roboto",
     "Droid Sans Fallback",
     "Droid Sans",
-    "Roboto",
 #else
     "Liberation Sans",
 #endif
