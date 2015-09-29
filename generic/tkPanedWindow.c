@@ -147,6 +147,7 @@ typedef struct PanedWindow {
     GC gc;			/* Graphics context for copying from
 				 * off-screen pixmap onto screen. */
     int proxyx, proxyy;		/* Proxy x,y coordinates. */
+    Tk_3DBorder proxyBackground;/* Background color used to draw proxy. */
     int proxyRelief;		/* Relief used to draw proxy. */
     Slave **slaves;		/* Pointer to array of Slaves. */
     int numSlaves;		/* Number of slaves. */
@@ -299,6 +300,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	 DEF_PANEDWINDOW_ORIENT, -1, Tk_Offset(PanedWindow, orient),
 	 0, (ClientData) orientStrings, GEOMETRY},
+    {TK_OPTION_BORDER, "-proxybackground", "proxyBackground", "ProxyBackground",
+	 DEF_PANEDWINDOW_BG_COLOR, -1, Tk_Offset(PanedWindow, proxyBackground), 0,
+	 (ClientData) DEF_PANEDWINDOW_BG_MONO},
     {TK_OPTION_RELIEF, "-proxyrelief", "proxyRelief", "Relief",
 	 DEF_PANEDWINDOW_PROXYRELIEF, -1, Tk_Offset(PanedWindow, proxyRelief),
 	 0, 0, 0},
@@ -2773,7 +2777,7 @@ DisplayProxyWindow(
      * Redraw the widget's background and border.
      */
 
-    Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->background, 0, 0,
+    Tk_Fill3DRectangle(tkwin, pixmap, pwPtr->proxyBackground, 0, 0,
 	    Tk_Width(tkwin), Tk_Height(tkwin), 2, pwPtr->proxyRelief);
 
 #ifndef TK_NO_DOUBLE_BUFFERING
