@@ -29,6 +29,8 @@ drawn as squares.  May be any value accepted by \fBTk_GetPixels\fR.
 Specifies a desired height for the overall panedwindow widget. May be any
 value accepted by \fBTk_GetPixels\fR. If an empty string, the widget will be
 made high enough to allow all contained widgets to have their natural height.
+.OP \-proxybackground proxyBackground ProxyBackground
+Background color to use when drawing the proxy.
 .OP \-proxyrelief proxyRelief ProxyRelief
 Relief to use when drawing the proxy. May be any of the standard Tk
 relief values.
