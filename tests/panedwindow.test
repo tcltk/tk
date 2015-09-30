@@ -29,13 +29,13 @@ foreach {testName testData} {
 	20 20 badValue {bad screen distance "badValue"}}
     panedwindow-1.8 {-opaqueresize
 	true 1 foo {expected boolean value but got "foo"}}
-    panedwindow-1.9 {-proxyrelief
+    panedwindow-1.9 {-proxybackground
+	"#f0a0a0" "#f0a0a0" non-existent {unknown color name "non-existent"}}
+    panedwindow-1.10 {-proxyborderwidth
+	1.3 1 badValue {bad screen distance "badValue"}}
+    panedwindow-1.11 {-proxyrelief
 	groove groove
 	1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
-    panedwindow-1.10 {-proxybackground
-	"#f0a0a0" "#f0a0a0" non-existent {unknown color name "non-existent"}}
-    panedwindow-1.11 {-proxyborderwidth
-	1.3 1 badValue {bad screen distance "badValue"}}
     panedwindow-1.12 {-orient
 	horizontal horizontal
 	badValue {bad orient "badValue": must be horizontal or vertical}}
