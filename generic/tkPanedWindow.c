@@ -148,7 +148,7 @@ typedef struct PanedWindow {
 				 * off-screen pixmap onto screen. */
     int proxyx, proxyy;		/* Proxy x,y coordinates. */
     Tk_3DBorder proxyBackground;/* Background color used to draw proxy. If NULL, use background. */
-    Tcl_Obj *proxyBorderWidthPtr; /* Tcl_Obj rep for proxyBorderWidth, if NULL then use borderWitdh */
+    Tcl_Obj *proxyBorderWidthPtr; /* Tcl_Obj rep for proxyBorderWidth */
     int proxyBorderWidth;	/* Borderwidth used to draw proxy. */
     int proxyRelief;		/* Relief used to draw proxy, if TK_RELIEF_NULL then use relief. */
     Slave **slaves;		/* Pointer to array of Slaves. */
@@ -306,8 +306,8 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 0, -1, Tk_Offset(PanedWindow, proxyBackground), TK_OPTION_NULL_OK,
 	 (ClientData) DEF_PANEDWINDOW_BG_MONO},
     {TK_OPTION_PIXELS, "-proxyborderwidth", "proxyBorderWidth", "ProxyBorderWidth",
-	 0, Tk_Offset(PanedWindow, proxyBorderWidthPtr), Tk_Offset(PanedWindow, proxyBorderWidth),
-	 TK_OPTION_NULL_OK, 0, GEOMETRY},
+	 DEF_PANEDWINDOW_PROXYBORDER, Tk_Offset(PanedWindow, proxyBorderWidthPtr),
+	 Tk_Offset(PanedWindow, proxyBorderWidth), 0, 0, GEOMETRY},
     {TK_OPTION_RELIEF, "-proxyrelief", "proxyRelief", "Relief",
 	 0, -1, Tk_Offset(PanedWindow, proxyRelief),
 	 TK_OPTION_NULL_OK, 0, 0},
@@ -2784,8 +2784,7 @@ DisplayProxyWindow(
 
     Tk_Fill3DRectangle(tkwin, pixmap,
 	    pwPtr->proxyBackground ? pwPtr->proxyBackground : pwPtr->background,
-	    0, 0, Tk_Width(tkwin), Tk_Height(tkwin),
-	    pwPtr->proxyBorderWidthPtr ? pwPtr->proxyBorderWidth : pwPtr->sashWidth,
+	    0, 0, Tk_Width(tkwin), Tk_Height(tkwin), pwPtr->proxyBorderWidth,
 	    (pwPtr->proxyRelief != TK_RELIEF_NULL) ? pwPtr->proxyRelief : pwPtr->sashRelief);
 
 #ifndef TK_NO_DOUBLE_BUFFERING
