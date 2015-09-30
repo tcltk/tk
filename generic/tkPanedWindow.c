@@ -2786,7 +2786,7 @@ DisplayProxyWindow(
 	    pwPtr->proxyBackground ? pwPtr->proxyBackground : pwPtr->background,
 	    0, 0, Tk_Width(tkwin), Tk_Height(tkwin),
 	    pwPtr->proxyBorderWidthPtr ? pwPtr->proxyBorderWidth : pwPtr->borderWidth,
-	    (pwPtr->proxyRelief != TK_RELIEF_NULL) ? pwPtr->proxyRelief : pwPtr->relief);
+	    (pwPtr->proxyRelief != TK_RELIEF_NULL) ? pwPtr->proxyRelief : pwPtr->sashRelief);
 
 #ifndef TK_NO_DOUBLE_BUFFERING
     /*
