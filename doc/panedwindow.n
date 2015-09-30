@@ -35,7 +35,7 @@ value of the \fB-background\fR option will be used.
 .OP \-proxyborderwidth proxyBorderWidth ProxyBorderWidth
 Specifies the borderwidth of the proxy. May be any value accepted by
 \fBTk_GetPixels\fR. If an empty string, the
-value of the \fB-borderwidth\fR option will be used.
+value of the \fB-sashwidth\fR option will be used.
 .OP \-proxyrelief proxyRelief ProxyRelief
 Relief to use when drawing the proxy. May be any of the standard Tk
 relief values. If an empty string, the value of the \fB-sashrelief\fR
