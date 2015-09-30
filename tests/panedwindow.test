@@ -34,24 +34,26 @@ foreach {testName testData} {
 	1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
     panedwindow-1.10 {-proxybackground
 	"#f0a0a0" "#f0a0a0" non-existent {unknown color name "non-existent"}}
-    panedwindow-1.11 {-orient
+    panedwindow-1.11 {-proxyborderwidth
+	1.3 1 badValue {bad screen distance "badValue"}}
+    panedwindow-1.12 {-orient
 	horizontal horizontal
 	badValue {bad orient "badValue": must be horizontal or vertical}}
-    panedwindow-1.12 {-relief
+    panedwindow-1.13 {-relief
 	groove groove
 	1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
-    panedwindow-1.13 {-sashcursor
+    panedwindow-1.14 {-sashcursor
 	arrow arrow badValue {bad cursor spec "badValue"}}
-    panedwindow-1.14 {-sashpad
+    panedwindow-1.15 {-sashpad
 	1.3 1 badValue {bad screen distance "badValue"}}
-    panedwindow-1.15 {-sashrelief
+    panedwindow-1.16 {-sashrelief
 	groove groove
 	1.5 {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}}
-    panedwindow-1.16 {-sashwidth
+    panedwindow-1.17 {-sashwidth
 	10 10 badValue {bad screen distance "badValue"}}
-    panedwindow-1.17 {-showhandle
+    panedwindow-1.18 {-showhandle
 	true 1 foo {expected boolean value but got "foo"}}
-    panedwindow-1.18 {-width
+    panedwindow-1.19 {-width
 	402 402 badValue {bad screen distance "badValue"}}
 } {
     lassign $testData optionName goodIn goodOut badIn badOut
