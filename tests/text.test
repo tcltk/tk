@@ -3205,7 +3205,7 @@ test text-25.18 {patch 1469210 - inserting after undo} -setup {
 } -cleanup {
     destroy .t
 } -result 1
-test text-25.19 {patch 1669632 (i) - undo after Control-1} -setup {
+test text-25.19 {patch 1669632 (i) - undo after <Control-1>} -setup {
     destroy .t
 } -body {
     text .t -undo 1
@@ -3219,6 +3219,25 @@ test text-25.19 {patch 1669632 (i) - undo after Control-1} -setup {
 } -cleanup {
     destroy .t
 } -result WORLD
+test text-25.20 {patch 1669632 (iv) - undo after <Control-backslash>} -setup {
+    destroy .t
+} -body {
+    toplevel .top
+    pack [text .top.t -undo 1]
+    .top.t insert end "This is an example text"
+    .top.t edit reset
+    .top.t mark set insert 1.5
+    .top.t insert 1.5 HELLO
+    .top.t tag add sel 1.10 1.12
+    update
+    focus -force .top.t
+    event generate .top.t <Control-backslash>
+    .top.t insert insert " WORLD "
+    .top.t edit undo
+    .top.t get 1.5 1.10
+} -cleanup {
+    destroy .top.t .top
+} -result HELLO
 
 test text-26.1 {bug fix - 624372, ControlUtfProc long lines} {
     destroy .t
