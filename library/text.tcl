@@ -244,6 +244,9 @@ bind Text <Control-slash> {
 }
 bind Text <Control-backslash> {
     %W tag remove sel 1.0 end
+    if {[%W cget -autoseparators]} {
+	%W edit separator
+    }
 }
 bind Text <<Cut>> {
     tk_textCut %W
