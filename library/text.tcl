@@ -85,6 +85,9 @@ bind Text <ButtonRelease-1> {
 }
 bind Text <Control-1> {
     %W mark set insert @%x,%y
+    if {[%W cget -autoseparators]} {
+	%W edit separator
+    }
 }
 bind Text <Left> {
     tk::TextSetCursor %W insert-1displayindices
