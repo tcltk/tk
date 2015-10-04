@@ -91,6 +91,10 @@ bind Text <Control-1> {
 	%W edit separator
     }
 }
+# stop an accidental double click triggering <Double-Button-1>
+bind Text <Double-Control-1> { # nothing }
+# stop an accidental movement triggering <B1-Motion>
+bind Text <Control-B1-Motion> { # nothing }
 bind Text <Left> {
     tk::TextSetCursor %W insert-1displayindices
 }
