@@ -246,6 +246,8 @@ bind Text <Control-slash> {
 }
 bind Text <Control-backslash> {
     %W tag remove sel 1.0 end
+    # An operation that clears the selection must insert an autoseparator,
+    # because the selection operation may have moved the insert mark
     if {[%W cget -autoseparators]} {
 	%W edit separator
     }
