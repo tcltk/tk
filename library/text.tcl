@@ -262,7 +262,15 @@ bind Text <<Paste>> {
     tk_textPaste %W
 }
 bind Text <<Clear>> {
+    # Make <<Clear>> an atomic operation on the Undo stack,
+    # i.e. separate it from other delete operations on either side
+    if {[%W cget -autoseparators]} {
+	%W edit separator
+    }
     catch {%W delete sel.first sel.last}
+    if {[%W cget -autoseparators]} {
+	%W edit separator
+    }
 }
 bind Text <<PasteSelection>> {
     if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
