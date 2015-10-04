@@ -3238,6 +3238,22 @@ test text-25.20 {patch 1669632 (iv) - undo after <Control-backslash>} -setup {
 } -cleanup {
     destroy .top.t .top
 } -result HELLO
+test text-25.21 {patch 1669632 (vii) - <<Undo>> shall not remove separators} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1
+    .t insert end "This is an example text"
+    .t edit reset
+    .t insert 1.5 "WORLD "
+    event generate .t <Control-1> -x 1 -y 1
+    .t insert insert HELLO
+    event generate .t <<Undo>>
+    .t insert insert E
+    event generate .t <<Undo>>
+    .t get 1.0 "1.0 lineend"
+} -cleanup {
+    destroy .t
+} -result "This WORLD is an example text"
 
 test text-26.1 {bug fix - 624372, ControlUtfProc long lines} {
     destroy .t
