@@ -3272,7 +3272,7 @@ test text-25.22 {patch 1669632 (v) - <<Clear>> is atomic} -setup {
     event generate .top.t <<Undo>>
     .top.t get 1.0 "1.0 lineend"
 } -cleanup {
-    destroy .t
+    destroy .top.t .top
 } -result "This A an example text"
 
 test text-26.1 {bug fix - 624372, ControlUtfProc long lines} {
