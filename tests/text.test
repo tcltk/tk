@@ -3254,6 +3254,26 @@ test text-25.21 {patch 1669632 (vii) - <<Undo>> shall not remove separators} -se
 } -cleanup {
     destroy .t
 } -result "This WORLD is an example text"
+test text-25.22 {patch 1669632 (v) - <<Clear>> is atomic} -setup {
+    destroy .t
+} -body {
+    toplevel .top
+    pack [text .top.t -undo 1]
+    .top.t insert end "This is an example text"
+    .top.t edit reset
+    .top.t mark set insert 1.5
+    .top.t insert 1.5 "A"
+    update
+    focus -force .top.t
+    event generate .top.t <Delete>
+    event generate .top.t <Shift-Right>
+    event generate .top.t <<Clear>>
+    event generate .top.t <Delete>
+    event generate .top.t <<Undo>>
+    .top.t get 1.0 "1.0 lineend"
+} -cleanup {
+    destroy .t
+} -result "This A an example text"
 
 test text-26.1 {bug fix - 624372, ControlUtfProc long lines} {
     destroy .t
