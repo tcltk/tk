@@ -1081,9 +1081,18 @@ proc ::tk_textCopy w {
 
 proc ::tk_textCut w {
     if {![catch {set data [$w get sel.first sel.last]}]} {
+        # make <<Cut>> an atomic operation on the Undo stack,
+        # i.e. separate it from other delete operations on either side
+	set oldSeparator [$w cget -autoseparators]
+	if {$oldSeparator} {
+	    $w edit separator
+	}
 	clipboard clear -displayof $w
 	clipboard append -displayof $w $data
 	$w delete sel.first sel.last
+	if {$oldSeparator} {
+	    $w edit separator
+	}
     }
 }
 
