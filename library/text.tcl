@@ -85,6 +85,8 @@ bind Text <ButtonRelease-1> {
 }
 bind Text <Control-1> {
     %W mark set insert @%x,%y
+    # An operation that moves the insert mark without making it
+    # one end of the selection must insert an autoseparator
     if {[%W cget -autoseparators]} {
 	%W edit separator
     }
