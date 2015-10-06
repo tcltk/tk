@@ -1388,18 +1388,27 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     }
 
     if (Tcl_DStringValue(&optsPtr->utfDirString)[0] != '\0') {
-        Tcl_DString dirString;
-	Tcl_WinUtfToTChar(Tcl_DStringValue(&optsPtr->utfDirString),
-               Tcl_DStringLength(&optsPtr->utfDirString), &dirString);
-        hr = ShellProcs.SHCreateItemFromParsingName(
-            (TCHAR *) Tcl_DStringValue(&dirString), NULL,
-            &IIDIShellItem, (void **) &dirIf);
-        /* XXX - Note on failure we do not raise error, simply ignore ini dir */
-        if (SUCCEEDED(hr)) {
-            /* Note we use SetFolder, not SetDefaultFolder - see MSDN docs */
-            fdlgIf->lpVtbl->SetFolder(fdlgIf, dirIf); /* Ignore errors */
+        Tcl_Obj *normPath, *iniDirPath;
+        iniDirPath = Tcl_NewStringObj(Tcl_DStringValue(&optsPtr->utfDirString), -1);
+        Tcl_IncrRefCount(iniDirPath);
+        normPath = Tcl_FSGetNormalizedPath(interp, iniDirPath);
+        /* XXX - Note on failures do not raise error, simply ignore ini dir */
+        if (normPath) {
+            const WCHAR *nativePath;
+            Tcl_IncrRefCount(normPath);
+            nativePath = Tcl_FSGetNativePath(normPath); /* Points INTO normPath*/
+            if (nativePath) {
+                hr = ShellProcs.SHCreateItemFromParsingName(
+                    nativePath, NULL,
+                    &IIDIShellItem, (void **) &dirIf);
+                if (SUCCEEDED(hr)) {
+                    /* Note we use SetFolder, not SetDefaultFolder - see MSDN */
+                    fdlgIf->lpVtbl->SetFolder(fdlgIf, dirIf); /* Ignore errors */
+                }
+            }
+            Tcl_DecrRefCount(normPath); /* ALSO INVALIDATES nativePath !! */
         }
-        Tcl_DStringFree(&dirString);
+        Tcl_DecrRefCount(iniDirPath);
     }
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
