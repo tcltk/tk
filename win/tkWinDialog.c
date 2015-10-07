@@ -1048,7 +1048,7 @@ ParseOFNOptions(
     enum options {
 	FILE_DEFAULT, FILE_TYPES, FILE_INITDIR, FILE_INITFILE, FILE_PARENT,
 	FILE_TITLE, FILE_TYPEVARIABLE, FILE_MULTIPLE, FILE_CONFIRMOW,
-        FILE_MUSTEXIST,
+        FILE_MUSTEXIST, FILE_NATIVEONLY,
     };
     struct Options {
 	const char *name;
@@ -1060,6 +1060,7 @@ ParseOFNOptions(
 	{"-filetypes",		FILE_TYPES},
 	{"-initialdir",		FILE_INITDIR},
 	{"-initialfile",	FILE_INITFILE},
+        {"-nativeonly",		FILE_NATIVEONLY},
 	{"-parent",		FILE_PARENT},
 	{"-title",		FILE_TITLE},
 	{"-typevariable",	FILE_TYPEVARIABLE},
@@ -1071,6 +1072,7 @@ ParseOFNOptions(
 	{"-initialdir",		FILE_INITDIR},
 	{"-initialfile",	FILE_INITFILE},
 	{"-multiple",		FILE_MULTIPLE},
+        {"-nativeonly",		FILE_NATIVEONLY},
 	{"-parent",		FILE_PARENT},
 	{"-title",		FILE_TITLE},
 	{"-typevariable",	FILE_TYPEVARIABLE},
@@ -1079,6 +1081,7 @@ ParseOFNOptions(
     static const struct Options dirOptions[] = {
 	{"-initialdir", FILE_INITDIR},
         {"-mustexist",  FILE_MUSTEXIST},
+        {"-nativeonly", FILE_NATIVEONLY},
 	{"-parent",	FILE_PARENT},
 	{"-title",	FILE_TITLE},
 	{NULL,		FILE_DEFAULT/*ignored*/ }
@@ -1100,7 +1103,7 @@ ParseOFNOptions(
     optsPtr->file[0] = 0;
 
     for (i = 1; i < objc; i += 2) {
-	int index;
+	int index, dummy;
 	const char *string;
 	Tcl_Obj *valuePtr = objv[i + 1];
 
@@ -1174,6 +1177,11 @@ ParseOFNOptions(
         case FILE_MUSTEXIST:
 	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
                                       &optsPtr->mustExist) != TCL_OK)
+                goto error_return;
+            break;
+        case FILE_NATIVEONLY:
+	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
+                                      &dummy) != TCL_OK)
                 goto error_return;
             break;
 	}
