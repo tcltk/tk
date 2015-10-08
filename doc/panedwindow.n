@@ -29,6 +29,16 @@ drawn as squares.  May be any value accepted by \fBTk_GetPixels\fR.
 Specifies a desired height for the overall panedwindow widget. May be any
 value accepted by \fBTk_GetPixels\fR. If an empty string, the widget will be
 made high enough to allow all contained widgets to have their natural height.
+.OP \-proxybackground proxyBackground ProxyBackground
+Background color to use when drawing the proxy. If an empty string, the
+value of the \fB-background\fR option will be used.
+.OP \-proxyborderwidth proxyBorderWidth ProxyBorderWidth
+Specifies the borderwidth of the proxy. May be any value accepted by
+\fBTk_GetPixels\fR.
+.OP \-proxyrelief proxyRelief ProxyRelief
+Relief to use when drawing the proxy. May be any of the standard Tk
+relief values. If an empty string, the value of the \fB-sashrelief\fR
+option will be used.
 .OP \-opaqueresize opaqueResize OpaqueResize
 Specifies whether panes should be resized as a sash is moved (true),
 or if resizing should be deferred until the sash is placed (false).
