@@ -391,6 +391,35 @@ test winDialog-5.7.6 {GetFileName: All/extension } -constraints {
     unset msg
 } -result bar.ext
 
+test winDialog-5.7.7 {tk_getOpenFile: -defaultextension} -constraints {
+    nt testwinevent
+} -body {
+    unset -nocomplain x
+    tcltest::makeFile "" "5 7 7.ext" [initialdir]
+    start {set x [tk_getOpenFile \
+                      -defaultextension ext \
+                      -initialdir [file nativename [initialdir]] \
+                      -initialfile "5 7 7" -title Foo]}
+    then {
+        Click ok
+    }
+    return $x
+} -result [file join [initialdir] "5 7 7.ext"]
+
+test winDialog-5.7.8 {tk_getOpenFile: -defaultextension} -constraints {
+    nt testwinevent
+} -body {
+    unset -nocomplain x
+    tcltest::makeFile "" "5 7 8.ext" [initialdir]
+    start {set x [tk_getOpenFile \
+                      -defaultextension ext \
+                      -initialdir [file nativename [initialdir]] \
+                      -initialfile "5 7 8.ext" -title Foo]}
+    then {
+        Click ok
+    }
+    return $x
+} -result [file join [initialdir] "5 7 8.ext"]
 
 test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
     nt testwinevent
