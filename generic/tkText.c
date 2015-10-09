@@ -4234,7 +4234,11 @@ TextSearchFoundMatch(
 		    matchOffset += Tcl_NumUtfChars(segPtr->body.chars, -1);
 		}
 	    } else {
-		leftToScan -= segPtr->size;
+		if (searchSpecPtr->exact) {
+		    leftToScan -= segPtr->size;
+		} else {
+		    leftToScan -= Tcl_NumUtfChars(segPtr->body.chars, -1);
+		}
 	    }
 	    curIndex.byteIndex += segPtr->size;
 	}
