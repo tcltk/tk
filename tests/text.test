@@ -2781,6 +2781,24 @@ test text-20.185 {TextSearchCmd, elide up to match} {
     lappend res [.t2 search -regexp bc 1.0]
     lappend res [.t2 search -regexp c 1.0]
 } {{} {} 1.0 2.1 2.0 3.1 2.0 3.0}
+test text-20.185.1 {TextSearchCmd, elide up to match, with UTF-8 chars before the match} {
+    deleteWindows
+    pack [text .t2]
+    .t2 tag configure e -elide 0
+    .t2 insert end A {} xyz e bb\n
+    .t2 insert end \u00c4 {} xyz e bb
+    set res {}
+    lappend res [.t2 search bb 1.0 "1.0 lineend"]
+    lappend res [.t2 search bb 2.0 "2.0 lineend"]
+    lappend res [.t2 search -regexp bb 1.0 "1.0 lineend"]
+    lappend res [.t2 search -regexp bb 2.0 "2.0 lineend"]
+    .t2 tag configure e -elide 1
+    lappend res [.t2 search bb 1.0 "1.0 lineend"]
+    lappend res [.t2 search bb 2.0 "2.0 lineend"]
+    lappend res [.t2 search -regexp bb 1.0 "1.0 lineend"]
+    lappend res [.t2 search -regexp -elide bb 2.0 "2.0 lineend"]
+    lappend res [.t2 search -regexp bb 2.0 "2.0 lineend"]
+} {1.4 2.4 1.4 2.4 1.4 2.4 1.4 2.4 2.4}
 test text-20.186 {TextSearchCmd, strict limits} {
     deleteWindows
     pack [text .t2]
