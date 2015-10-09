@@ -1500,7 +1500,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		;;
 	    *)
 		case "$arch" in
-		alpha|sparc64)
+		alpha|sparc|sparc64)
 		    SHLIB_CFLAGS="-fPIC"
 		    ;;
 		*)
