@@ -1102,7 +1102,7 @@ ParseOFNOptions(
     for (i = 1; i < objc; i += 2) {
 	int index;
 	const char *string;
-	Tcl_Obj *valuePtr = objv[i + 1];
+	Tcl_Obj *valuePtr;
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], options,
 		sizeof(struct Options), "option", 0, &index) != TCL_OK) {
@@ -1112,19 +1112,25 @@ ParseOFNOptions(
              */
             if (strcmp(Tcl_GetString(objv[i]), "-xpstyle"))
                 goto error_return;
-	    if (Tcl_GetBooleanFromObj(interp, valuePtr,
+            if (i + 1 == objc) {
+                Tcl_SetResult(interp, "value for \"-xpstyle\" missing", TCL_STATIC);
+                Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
+                goto error_return;
+            }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i+1],
                                       &optsPtr->forceXPStyle) != TCL_OK)
                 goto error_return;
 
             continue;
 
 	} else if (i + 1 == objc) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "value for \"%s\" missing", options[index].name));
-	    Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
-	    goto error_return;
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                                 "value for \"%s\" missing", options[index].name));
+            Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
+            goto error_return;
 	}
 
+        valuePtr = objv[i + 1];
 	string = Tcl_GetString(valuePtr);
 	switch (options[index].value) {
 	case FILE_DEFAULT:
@@ -1185,6 +1191,7 @@ error_return:                   /* interp should already hold error */
     /* On error, we need to clean up anything we might have allocated */
     CleanupOFNOptions(optsPtr);
     return TCL_ERROR;
+
 }
 
 
@@ -1322,7 +1329,11 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
         goto vamoose;
 
     if (filterPtr) {
-        flags |= FOS_STRICTFILETYPES;
+        /*
+         * Causes -filetypes {{All *}} -defaultextension ext to return
+         * foo.ext.ext when foo is typed into the entry box
+         *     flags |= FOS_STRICTFILETYPES;
+         */
         hr = fdlgIf->lpVtbl->SetFileTypes(fdlgIf, nfilters, filterPtr);
         if (FAILED(hr))
             goto vamoose;
