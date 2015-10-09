@@ -5557,6 +5557,27 @@ test text-22.217 {TextSearchCmd, elide up to match} -setup {
 } -cleanup {
     destroy .t
 } -result {{} {} 1.0 2.1 2.0 3.1 2.0 3.0}
+test text-22.217.1 {elide up to match, with UTF-8 chars before the match} -setup {
+    pack [text .t]
+    set res {}
+} -body {
+    .t tag configure e -elide 0
+    .t insert end A {} xyz e bb\n
+    .t insert end \u00c4 {} xyz e bb
+    set res {}
+    lappend res [.t search bb 1.0 "1.0 lineend"]
+    lappend res [.t search bb 2.0 "2.0 lineend"]
+    lappend res [.t search -regexp bb 1.0 "1.0 lineend"]
+    lappend res [.t search -regexp bb 2.0 "2.0 lineend"]
+    .t tag configure e -elide 1
+    lappend res [.t search bb 1.0 "1.0 lineend"]
+    lappend res [.t search bb 2.0 "2.0 lineend"]
+    lappend res [.t search -regexp bb 1.0 "1.0 lineend"]
+    lappend res [.t search -regexp -elide bb 2.0 "2.0 lineend"]
+    lappend res [.t search -regexp bb 2.0 "2.0 lineend"]
+} -cleanup {
+    destroy .t
+} -result {1.4 2.4 1.4 2.4 1.4 2.4 1.4 2.4 2.4}
 test text-22.218 {TextSearchCmd, strict limits} -body {
     pack [text .t]
     .t insert 1.0 "Hello world!\nThis is a test\n"
