@@ -518,7 +518,7 @@ test winDialog-5.12.2 {tk_getSaveFile: initial directory: ~user} -constraints {
         Click ok
     }
     return $x
-} -result [file normalize [file join $::env(USERPROFILE) "5 12 2"]]
+} -result [file normalize [file join ~$::env(USERNAME) "5 12 2"]]
 
 test winDialog-5.12.3 {tk_getSaveFile: initial directory: .} -constraints {
     nt testwinevent
