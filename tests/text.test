@@ -2651,22 +2651,23 @@ test text-9.2.45 {TextWidgetCmd procedure, "count" option} -setup {
 } -result {0}
 test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
     toplevel .mytop
-    pack [text .mytop.t]
-    wm geometry .mytop 100x300+0+0
+    pack [text .mytop.t -font TkFixedFont -bd 0 -padx 0 -wrap char]
+    set spec [font measure TkFixedFont "Line 1+++Line 1---Li"]  ; # 20 chars
+    append spec x300+0+0
+    wm geometry .mytop $spec
     .mytop.t delete 1.0 end
     update
     set res {}
 } -body {
     for {set i 1} {$i < 5} {incr i} {
-      #              0          1          2          3          4
-      #              012345 678901234 567890123 456789012 34567890123456789
+      #                    0          1          2          3          4
+      #                    012345 678901234 567890123 456789012 34567890123456789
       .mytop.t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr 64+$i]]\n"
     }
     .mytop.t tag configure hidden -elide true
-    .mytop.t tag add hidden 2.20 3.10
-    .mytop.t configure -wrap char
+    .mytop.t tag add hidden 2.30 3.10
     lappend res [.mytop.t count -displaylines 2.0 3.0]
-    lappend res [.mytop.t count -displaylines 2.0 3.40]
+    lappend res [.mytop.t count -displaylines 2.0 3.50]
 } -cleanup {
     destroy .mytop
 } -result {1 3}
