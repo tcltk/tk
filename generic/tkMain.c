@@ -55,6 +55,7 @@ extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
  * to strcmp here.
  */
 #ifdef _WIN32
+#   ifndef ZIPFS_IN_TCL
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntPlatStubs, just
     enough to make it work. See [600b72bfbc] */
@@ -65,6 +66,7 @@ typedef struct {
     int (*tclpIsAtty) (int fd); /* 16 */
 } TclIntPlatStubs;
 extern const TclIntPlatStubs *tclIntPlatStubsPtr;
+#   endif
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char

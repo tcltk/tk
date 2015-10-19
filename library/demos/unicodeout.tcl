@@ -74,7 +74,7 @@ proc usePresentationFormsFor {language} {
 		return [expr {
 		    [string toupper $language] ni [registry values $rkey]
 		}]
-	    } trap error {} {
+	    } on error {} {
 		# Cannot work it out, so use presentation forms.
 		return true
 	    }
