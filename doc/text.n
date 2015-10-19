@@ -976,11 +976,12 @@ each counting option given. Valid counting options are \fB\-chars\fR,
 \fB\-displaychars\fR, \fB\-displayindices\fR, \fB\-displaylines\fR,
 \fB\-indices\fR, \fB\-lines\fR, \fB\-xpixels\fR and \fB\-ypixels\fR. The
 default value, if no option is specified, is \fB\-indices\fR. There is an
-additional possible option \fB\-update\fR which is a modifier. If given, then
-all subsequent options ensure that any possible out of date information is
-recalculated. This currently only has any effect for the \fB\-ypixels\fR count
-(which, if \fB\-update\fR is not given, will use the text widget's current
-cached value for each line). The count options are interpreted as follows:
+additional possible option \fB\-update\fR which is a modifier. If given (and
+if the text widget is managed by a geometry manager), then all subsequent
+options ensure that any possible out of date information is recalculated.
+This currently only has any effect for the \fB\-ypixels\fR count (which, if
+\fB\-update\fR is not given, will use the text widget's current cached value
+for each line). The count options are interpreted as follows:
 .RS
 .IP \fB\-chars\fR
 count all characters, whether elided or not. Do not count embedded windows or
