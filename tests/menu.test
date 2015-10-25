@@ -2566,6 +2566,15 @@ test menu-36.1 {menu -underline string overruns Bug 1599877} {} {
     tk::TraverseToMenu . "e"
 } {}
 
+test menu-37.1 {menubar menues cannot be posted - bug 2160206} {} {
+    # On Linux the following used to panic
+    # It now returns an error (on all platforms)
+    catch {destroy .m}
+    menu .m -type menubar
+    list [catch ".m post 1 1" msg] $msg
+} {1 {a menubar menu cannot be posted}}
+
+
 # cleanup
 deleteWindows
 cleanupTests
