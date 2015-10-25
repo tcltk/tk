@@ -1135,11 +1135,16 @@ ReadOptionFile(
     }
     Tcl_Close(NULL, chan);
     buffer[bufferSize] = 0;
-    Tcl_DStringInit(&optString);
-    Tcl_ExternalToUtfDString(NULL, buffer, bufferSize, &optString);
-    result = AddFromString(interp, tkwin, Tcl_DStringValue(&optString),
+    if ((bufferSize>2) && !memcmp(buffer, "\357\273\277", 3)) {
+	/* File starts with UTF-8 BOM */
+	result = AddFromString(interp, tkwin, buffer+3, priority);
+    } else {
+	Tcl_DStringInit(&optString);
+	Tcl_ExternalToUtfDString(NULL, buffer, bufferSize, &optString);
+	result = AddFromString(interp, tkwin, Tcl_DStringValue(&optString),
 		priority);
-    Tcl_DStringFree(&optString);
+	Tcl_DStringFree(&optString);
+    }
     ckfree(buffer);
     return result;
 }
