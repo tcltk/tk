@@ -399,18 +399,20 @@ test option-15.10 {database files} -body {
     set option2 [file join [testsDirectory] option.file2]
     option read $option2
 } -returnCodes error -result {missing colon on line 2}
-
+set option3 [file join [testsDirectory] option.file3]
+option read $option3
+test option-15.11 {database files} {option get . {x 4} color} br\xf3wn
 
 test option-16.1 {ReadOptionFile} -body {
-    set option3 [makeFile {} option.file3]
-    set file [open $option3 w]
+    set option4 [makeFile {} option.file3]
+    set file [open $option4 w]
     fconfigure $file -translation crlf
     puts $file "*x7: true\n*x8: false"
     close $file
-    option read $option3 userDefault
+    option read $option4 userDefault
     list [option get . x7 color] [option get . x8 color]
 } -cleanup {
-    removeFile $option3
+    removeFile $option4
 } -result {true false}
 
 deleteWindows
