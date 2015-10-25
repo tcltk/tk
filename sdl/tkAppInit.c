@@ -17,6 +17,8 @@
 #include "tk.h"
 
 #ifdef ANDROID
+#include <time.h>
+#include <sys/system_properties.h>
 #include <jni.h>
 #endif
 
@@ -27,6 +29,7 @@ extern Tcl_PackageInitProc Tktest_Init;
 #ifdef PLATFORM_SDL
 #include <SDL2/SDL.h>
 #ifdef ANDROID
+#include <android/log.h>
 #undef  main
 #define main SDL_main
 #endif
@@ -60,6 +63,29 @@ MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, char ***argv);
 /* Make sure the stubbed variants of those are never used. */
 #undef Tcl_ObjSetVar2
 #undef Tcl_NewStringObj
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * AndroidPanic --
+ *
+ *	Panic proc when running on Android
+ *
+ *----------------------------------------------------------------------
+ */
+#ifdef ANDROID
+static void
+AndroidPanic(const char *fmt, ...)
+{
+    va_list args;
+
+    va_start(args, fmt);
+    __android_log_vprint(ANDROID_LOG_FATAL, "AndroWish", fmt, args);
+    va_end(args);
+    abort();
+}
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -277,6 +303,20 @@ main(
 #ifdef TK_LOCAL_MAIN_HOOK
     TK_LOCAL_MAIN_HOOK(&argc, &argv);
 #endif
+#ifdef ANDROID
+    Tcl_InitSubsystems(AndroidPanic);
+
+    /* workaround to fix mktime(3) issues at DST boundaries */
+    if (getenv("TZ") == NULL) {
+	static char tzbuf[PROP_VALUE_MAX + 8];
+
+	strcpy(tzbuf, "TZ=");
+	if (__system_property_get("persist.sys.timezone", tzbuf + 3) > 0) {
+	    putenv(tzbuf);
+	    tzset();
+	}
+    }
+#endif
 #if defined(ANDROID) && defined(PLATFORM_SDL)
     path = SDL_AndroidGetInternalStoragePath();
     temp = SDL_AndroidGetTempStoragePath();
@@ -363,9 +403,10 @@ main(
 
     /* On Android, argv[0] is not usable. */
     argv[0] = strdup("wish");
+#else
+    Tcl_FindExecutable(argv[0]);
 #endif
-
-    Tk_Main(argc, argv, TK_LOCAL_APPINIT);
+    Tk_MainEx(argc, argv, TK_LOCAL_APPINIT, Tcl_CreateInterp());
     return 0;			/* Needed only to prevent compiler warning. */
 }
 
