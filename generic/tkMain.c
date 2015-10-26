@@ -55,7 +55,6 @@ extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
  * to strcmp here.
  */
 #ifdef _WIN32
-#   ifndef ZIPFS_IN_TCL
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntPlatStubs, just
     enough to make it work. See [600b72bfbc] */
@@ -66,7 +65,6 @@ typedef struct {
     int (*tclpIsAtty) (int fd); /* 16 */
 } TclIntPlatStubs;
 extern const TclIntPlatStubs *tclIntPlatStubsPtr;
-#   endif
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char
@@ -82,10 +80,6 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 
 #ifdef PLATFORM_SDL
 #include <SDL2/SDL.h>
-#endif
-
-#ifdef ZIPFS_IN_TCL
-#include "tclInt.h"
 #endif
 
 /*
@@ -206,6 +200,7 @@ Tk_MainEx(
     int autoRun = 1;
 #ifdef ZIPFS_IN_TCL
     int zipOk = TCL_ERROR;
+    Tcl_DString systemEncodingName;
 #endif
 #ifdef ANDROID
     const char *zipFile2 = NULL;
@@ -516,11 +511,13 @@ Tk_MainEx(
         Tcl_SetVar(interp, "tcl_pkgPath", tcl_pkg, TCL_GLOBAL_ONLY);
 
 	/*
-	 * We need to re-init encoding (after initializing Tcl),
+	 * We need to set the system encoding (after initializing Tcl),
  	 * otherwise "encoding system" will return "identity"
  	 */
 
-	TclpSetInitialEncodings();
+	Tcl_SetSystemEncoding(NULL,
+		Tcl_GetEncodingNameFromEnvironment(&systemEncodingName));
+	Tcl_DStringFree(&systemEncodingName);
     }
 #endif
 
