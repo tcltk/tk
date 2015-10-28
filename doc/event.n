@@ -546,7 +546,7 @@ the physical event.
 .PP
 Bindings on a virtual event may be created before the virtual event exists.
 Indeed, the virtual event never actually needs to be defined, for instance,
-on platforms where the specific virtual event would meaningless or
+on platforms where the specific virtual event would be meaningless or
 ungeneratable.
 .PP
 When a definition of a virtual event changes at run time, all windows
