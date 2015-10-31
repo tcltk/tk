@@ -2683,6 +2683,10 @@ test text-9.2.47 {TextWidgetCmd procedure, "count" option} -setup {
     .t tag configure hidden -elide true
     .t tag add hidden 5.7 11.0
     update
+    # next line to be fully sure that asynchronous line heights calculation is
+    # up-to-date otherwise this test may fail (depending on the computer
+    # performance), especially when the . toplevel has small height
+    .t count -update -ypixels 1.0 end
     set y1 [lindex [.t yview] 1]
     .t count -displaylines 5.0 11.0
     set y2 [lindex [.t yview] 1]
