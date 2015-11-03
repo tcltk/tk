@@ -200,10 +200,11 @@ Tk_MainEx(
     int autoRun = 1;
 #ifdef ZIPFS_IN_TCL
     int zipOk = TCL_ERROR;
-    Tcl_DString systemEncodingName;
-#endif
 #ifdef ANDROID
     const char *zipFile2 = NULL;
+#else
+    Tcl_DString systemEncodingName;
+#endif
 #endif
 
     /*
@@ -515,9 +516,13 @@ Tk_MainEx(
  	 * otherwise "encoding system" will return "identity"
  	 */
 
+#ifdef ANDROID
+	Tcl_SetSystemEncoding(NULL, "utf-8");
+#else
 	Tcl_SetSystemEncoding(NULL,
 		Tcl_GetEncodingNameFromEnvironment(&systemEncodingName));
 	Tcl_DStringFree(&systemEncodingName);
+#endif
     }
 #endif
 
