@@ -827,12 +827,20 @@ ScalingCmd(
     screenPtr = Tk_Screen(tkwin);
     if (objc - skip == 1) {
 #ifdef PLATFORM_SDL
-	int widthM, widthS;
+	double d2;
+	int widthM, widthS, heightM, heightS;
 
-	ScreenGetMMWidth(Tk_Display(tkwin), screenPtr, &widthM, &widthS);
+	ScreenGetMMWidthHeight(Tk_Display(tkwin), screenPtr, &widthM, &widthS,
+	       &heightM, &heightS);
 	d = 25.4 / 72;
 	d *= widthS;
 	d /= widthM;
+	d2 = 25.4 / 72;
+	d2 *= heightS;
+	d2 /= heightM;
+	if (d2 > d) {
+	    d = d2;
+	}
 #else
 	d = 25.4 / 72;
 	d *= WidthOfScreen(screenPtr);
@@ -1719,7 +1727,8 @@ Tk_WinfoObjCmd(
     case WIN_FPIXELS: {
 	double mm, pixels;
 #ifdef PLATFORM_SDL
-	int widthM, widthS;
+	double pixels2;
+	int widthM, widthS, heightM, heightS;
 #endif
 
 	if (objc != 4) {
@@ -1734,9 +1743,13 @@ Tk_WinfoObjCmd(
 	    return TCL_ERROR;
 	}
 #ifdef PLATFORM_SDL
-	ScreenGetMMWidth(Tk_Display(tkwin), Tk_Screen(tkwin),
-	    &widthM, &widthS);
+	ScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
+		&widthM, &widthS, &heightM, &heightS);
 	pixels = mm * widthS / widthM;
+	pixels2 = mm * heightS / heightM;
+	if (pixels2 > pixels) {
+	    pixels = pixels2;
+	}
 #else
 	pixels = mm * WidthOfScreen(Tk_Screen(tkwin))
 		/ WidthMMOfScreen(Tk_Screen(tkwin));
