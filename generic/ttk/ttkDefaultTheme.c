@@ -565,16 +565,21 @@ static void IndicatorElementSize(
     Display *display = Tk_Display(tkwin);
     int dim;
 #ifdef PLATFORM_SDL
-    int wM, wS;
+    int wM, wS, hM, hS;
 
-    ScreenGetMMWidth(display, DefaultScreenOfDisplay(display), &wM, &wS);
+    ScreenGetMMWidthHeight(display, DefaultScreenOfDisplay(display),
+	    &wM, &wS, &hM, &hS);
+    if ((hS/hM) > (wS/wM)) {
+	wM = hM;
+	wS = hS;
+    }
     dim = 2 * wS;
     dim /= wM;
 #else
     dim = 2 * WidthOfScreen(DefaultScreenOfDisplay(display));
     dim /= WidthMMOfScreen(DefaultScreenOfDisplay(display));
 #endif
-    if (dim >= 11) {
+    if (((dim >= 11) && (dim < 22)) || (dim >= 33)) {
 	/* more than 140 DPI */
 	if (spec == &checkbutton_spec_small) {
 	    spec = &checkbutton_spec_large;
@@ -607,21 +612,26 @@ static void IndicatorElementDraw(
     unsigned long imgColors[8];
     XImage *img;
 #ifdef PLATFORM_SDL
-    int wM, wS;
+    int wM, wS, hM, hS;
 #endif
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
 #ifdef PLATFORM_SDL
-    ScreenGetMMWidth(display, DefaultScreenOfDisplay(display), &wM, &wS);
+    ScreenGetMMWidthHeight(display, DefaultScreenOfDisplay(display),
+	    &wM, &wS, &hM, &hS);
+    if ((hS/hM) > (wS/wM)) {
+	wM = hM;
+	wS = hS;
+    }
     dim = 2 * wS;
     dim /= wM;
 #else
     dim = 2 * WidthOfScreen(DefaultScreenOfDisplay(display));
     dim /= WidthMMOfScreen(DefaultScreenOfDisplay(display));
 #endif
-    if (dim >= 11) {
+    if (((dim >= 11) && (dim < 22)) || (dim >= 33)) {
 	/* more than 140 DPI */
 	if (spec == &checkbutton_spec_small) {
 	    spec = &checkbutton_spec_large;
@@ -690,20 +700,24 @@ static void IndicatorElementDraw(
 	if (dim > w) {
 	    for (ix=0 ; ix<w ; ix++) {
 		XPutPixel(img, ix*2, iy*2,
-		    imgColors[spec->pixels[iy][index*dim+ix] - 'A'] );
+		    imgColors[spec->pixels[iy][index*w+ix] - 'A'] );
 		XPutPixel(img, ix*2+1, iy*2,
-		    imgColors[spec->pixels[iy][index*dim+ix] - 'A'] );
+		    imgColors[spec->pixels[iy][index*w+ix] - 'A'] );
 		XPutPixel(img, ix*2, iy*2+1,
-		    imgColors[spec->pixels[iy][index*dim+ix] - 'A'] );
+		    imgColors[spec->pixels[iy][index*w+ix] - 'A'] );
 		XPutPixel(img, ix*2+1, iy*2+1,
-		    imgColors[spec->pixels[iy][index*dim+ix] - 'A'] );
+		    imgColors[spec->pixels[iy][index*w+ix] - 'A'] );
 	    }
 	} else {
 	    for (ix=0 ; ix<w ; ix++) {
 		XPutPixel(img, ix, iy,
-		    imgColors[spec->pixels[iy][index*dim+ix] - 'A'] );
+		    imgColors[spec->pixels[iy][index*w+ix] - 'A'] );
 	    }
 	}
+    }
+    if (dim > w) {
+	w += spec->width;
+	h += spec->height;
     }
 
     /*
@@ -712,8 +726,7 @@ static void IndicatorElementDraw(
     memset(&gcValues, 0, sizeof(gcValues));
     copyGC = Tk_GetGC(tkwin, 0, &gcValues);
 
-    TkPutImage(NULL, 0, display, d, copyGC, img, 0, 0, b.x, b.y,
-               spec->width, spec->height);
+    TkPutImage(NULL, 0, display, d, copyGC, img, 0, 0, b.x, b.y, w, h);
 
     /*
      * Tidy up.

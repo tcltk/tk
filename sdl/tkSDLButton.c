@@ -257,7 +257,7 @@ TkpDrawCheckIndicator(
     int mode)			/* kind of indicator to draw */
 {
     int ix, iy;
-    int dim, dimI;
+    int dimW, dimWI, dimH, dimHI;
     int imgsel, imgstart;
     TkBorder *bg_brdr = (TkBorder*)bgBorder;
     XGCValues gcValues;
@@ -288,10 +288,15 @@ TkpDrawCheckIndicator(
 
     depth = Tk_Depth(tkwin);
 
-    ScreenGetMMWidth(display, DefaultScreenOfDisplay(display), &dim, &dimI);
-    dimI *= 2;
-    dimI /= dim;
-    if (dimI < 11) {
+    ScreenGetMMWidthHeight(display, DefaultScreenOfDisplay(display),
+	    &dimW, &dimWI, &dimH, &dimHI);
+    if ((dimHI/dimH) > (dimWI/dimW)) {
+	dimW = dimH;
+	dimWI = dimHI;
+    }
+    dimWI *= 2;
+    dimWI /= dimW;
+    if (dimWI < 11) {
 	/* < 140 DPI */
 	button_images = button_images_small;
 	img_dim = &img_dim_small;
@@ -312,7 +317,7 @@ TkpDrawCheckIndicator(
 		on == 1 ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
 	imgsel += disabled && on != 2 ? CHECK_DISOFF_OFFSET : 0;
 	imgstart = CHECK_START;
-	dim = CHECK_BUTTON_DIM;
+	dimW = CHECK_BUTTON_DIM;
 	break;
 
     case CHECK_MENU:
@@ -321,7 +326,7 @@ TkpDrawCheckIndicator(
 	imgsel += disabled && on != 2 ? CHECK_DISOFF_OFFSET : 0;
 	imgstart = CHECK_START + CHECK_START_YOFFSET;
 	imgsel += CHECK_START_XOFFSET;
-	dim = CHECK_MENU_DIM;
+	dimW = CHECK_MENU_DIM;
 	break;
 
     case RADIO_BUTTON:
@@ -329,7 +334,7 @@ TkpDrawCheckIndicator(
 		on==1 ? RADIO_ON_OFFSET : RADIO_OFF_OFFSET;
 	imgsel += disabled && on != 2 ? RADIO_DISOFF_OFFSET : 0;
 	imgstart = RADIO_START;
-	dim = RADIO_BUTTON_DIM;
+	dimW = RADIO_BUTTON_DIM;
 	break;
 
     case RADIO_MENU:
@@ -338,7 +343,7 @@ TkpDrawCheckIndicator(
 	imgsel += disabled && on != 2 ? RADIO_DISOFF_OFFSET : 0;
 	imgstart = RADIO_START + RADIO_START_YOFFSET;
 	imgsel += RADIO_START_XOFFSET;
-	dim = RADIO_MENU_DIM;
+	dimW = RADIO_MENU_DIM;
 	break;
     }
 
@@ -351,22 +356,22 @@ TkpDrawCheckIndicator(
      * Double image when density above 280 DPI.
      */
 
-    if (dimI < 22) {
-	dimI = dim;
+    if (dimWI < 22) {
+	dimWI = dimW;
     } else {
-	dimI = dim * 2;
+	dimWI = dimW * 2;
     }
 
-    pixmap = Tk_GetPixmap(display, d, dimI, dimI, depth);
+    pixmap = Tk_GetPixmap(display, d, dimWI, dimWI, depth);
     if (pixmap == None) {
 	return;
     }
 
-    x -= dimI/2;
-    y -= dimI/2;
+    x -= dimWI/2;
+    y -= dimWI/2;
 
     img = XGetImage(display, pixmap, 0, 0,
-	    (unsigned int)dimI, (unsigned int)dimI, AllPlanes, ZPixmap);
+	    (unsigned int)dimWI, (unsigned int)dimWI, AllPlanes, ZPixmap);
     if (img == NULL) {
 	return;
     }
@@ -400,9 +405,9 @@ TkpDrawCheckIndicator(
      * Create the image, painting it into an XImage one pixel at a time.
      */
 
-    for (iy=0 ; iy<dim ; iy++) {
-	if (dimI > dim) {
-	    for (ix=0 ; ix<dim ; ix++) {
+    for (iy=0 ; iy<dimW ; iy++) {
+	if (dimWI > dimW) {
+	    for (ix=0 ; ix<dimW ; ix++) {
 		XPutPixel(img, ix * 2, iy * 2,
 		    imgColors[button_images[imgstart+iy][imgsel+ix] - 'A']);
 		XPutPixel(img, ix * 2 + 1, iy * 2,
@@ -413,7 +418,7 @@ TkpDrawCheckIndicator(
 		    imgColors[button_images[imgstart+iy][imgsel+ix] - 'A']);
 	    }
 	} else {
-	    for (ix=0 ; ix<dim ; ix++) {
+	    for (ix=0 ; ix<dimW ; ix++) {
 		XPutPixel(img, ix, iy,
 		    imgColors[button_images[imgstart+iy][imgsel+ix] - 'A']);
 	    }
@@ -430,9 +435,9 @@ TkpDrawCheckIndicator(
     copyGC = Tk_GetGC(tkwin, 0, &gcValues);
 
     XPutImage(display, pixmap, copyGC, img, 0, 0, 0, 0,
-	    (unsigned)dimI, (unsigned)dimI);
+	    (unsigned)dimWI, (unsigned)dimWI);
     XCopyArea(display, pixmap, d, copyGC, 0, 0,
-	    (unsigned)dimI, (unsigned)dimI, x, y);
+	    (unsigned)dimWI, (unsigned)dimWI, x, y);
 
     /*
      * Tidy up.
