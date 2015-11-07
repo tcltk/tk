@@ -34,6 +34,18 @@ enum {
     NSWindowWillMoveEventType = 20
 };
 
+/* 
+ * In OS X 10.6 an NSEvent of type NSMouseMoved would always have a non-Nil
+ * window attribute when the mouse was inside a window.  As of 10.8 this
+ * behavior had changed.  The new behavior was that if the mouse were ever
+ * moved outside of a window, all subsequent NSMouseMoved NSEvents would have a
+ * Nil window attribute.  To work around this we remember which window the
+ * mouse is in by saving the window attribute of each NSEvent of type
+ * NSMouseEntered.  If an NSEvent has a Nil window attribute we use our saved
+ * window.  It may be the case that the mouse has actually left the window, but
+ * this is harmless since Tk will ignore the event in that case.
+ */
+
 @implementation TKApplication(TKMouseEvent)
 - (NSEvent *)tkProcessMouseEvent:(NSEvent *)theEvent {
 #ifdef TK_MAC_DEBUG_EVENTS
@@ -48,12 +60,11 @@ enum {
 
     switch (type) {
     case NSMouseEntered:
+	/* Remember which window has the mouse. */
+	_windowWithMouse = [theEvent window];
+	break;
     case NSMouseExited:
     case NSCursorUpdate:
-#if 0
-	trackingArea = [theEvent trackingArea];
-	/* fall through */
-#endif
     case NSLeftMouseDown:
     case NSLeftMouseUp:
     case NSRightMouseDown:
@@ -83,13 +94,36 @@ enum {
     /* Create an Xevent to add to the Tk queue. */
     win = [theEvent window];
     NSPoint global, local = [theEvent locationInWindow];
-    if (win) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+     /* convertBaseToScreen and convertScreenToBase were deprecated in 10.7. */
+    NSRect pointrect;
+    pointrect.origin = local;
+    pointrect.size.width = 0;
+    pointrect.size.height = 0;
+#endif
+    if (win) { /* local will be in window coordinates. */
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+	global = [win convertRectToScreen:pointrect].origin;
+#else
 	global = [win convertBaseToScreen:local];
+#endif
 	local.y = [win frame].size.height - local.y;
 	global.y = tkMacOSXZeroScreenHeight - global.y;
-    } else {
-	local.y = tkMacOSXZeroScreenHeight - local.y;
-	global = local;
+    } else { /* local will be in screen coordinates. */
+	if (_windowWithMouse ) {
+	    win = _windowWithMouse;
+	    global = local;
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
+	    local = [win convertRectFromScreen:pointrect].origin;
+#else
+	    local = [win convertScreenToBase:local];
+#endif
+	    local.y = [win frame].size.height - local.y;
+	    global.y = tkMacOSXZeroScreenHeight - global.y;
+	} else { /* We have no window. Use the screen???*/
+	    local.y = tkMacOSXZeroScreenHeight - local.y;
+	    global = local;
+	}
     }
 
     Window window = TkMacOSXGetXWindow(win);
