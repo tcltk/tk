@@ -274,6 +274,7 @@ VISIBILITY_HIDDEN
     TKMenu *_defaultMainMenu, *_defaultApplicationMenu;
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems;
+    NSWindow *_windowWithMouse;
 }
 @end
 @interface TKApplication(TKInit)
