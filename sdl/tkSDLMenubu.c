@@ -345,7 +345,7 @@ void
 TkpComputeMenuButtonGeometry(
     TkMenuButton *mbPtr)	/* Widget record for menu button. */
 {
-    int width, height, mm, pixels;
+    int width, height;
     int	avgWidth, txtWidth, txtHeight;
     int haveImage = 0, haveText = 0;
     Tk_FontMetrics fm;
@@ -451,9 +451,16 @@ TkpComputeMenuButtonGeometry(
     }
 
     if (mbPtr->indicatorOn) {
-	ScreenGetMMWidth(mbPtr->display, Tk_Screen(mbPtr->tkwin), &mm, &pixels);
-	mbPtr->indicatorHeight= (INDICATOR_HEIGHT * pixels)/(10*mm);
-	mbPtr->indicatorWidth = (INDICATOR_WIDTH * pixels)/(10*mm)
+	int mmW, mmH, pixW, pixH;
+
+	ScreenGetMMWidthHeight(mbPtr->display, Tk_Screen(mbPtr->tkwin),
+		&mmW, &pixW, &mmH, &pixH);
+	if ((pixH/mmH) > (pixW/mmW)) {
+	    mmW = mmH;
+	    pixW = pixH;
+	}
+	mbPtr->indicatorHeight= (INDICATOR_HEIGHT * pixW)/(10*mmW);
+	mbPtr->indicatorWidth = (INDICATOR_WIDTH * pixW)/(10*mmW)
 		+ 2*mbPtr->indicatorHeight;
 	width += mbPtr->indicatorWidth;
     } else {
