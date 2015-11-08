@@ -805,10 +805,6 @@ TkMacOSXUpdateClipRgn(
 		/*
 		 * TODO: Here we should handle out of process embedding.
 		 */
-	    } else if (winPtr->wmInfoPtr->attributes &
-		    kWindowResizableAttribute) {
-		NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
-
 	    }
 	    macWin->aboveVisRgn = HIShapeCreateCopy(rgn);
 
