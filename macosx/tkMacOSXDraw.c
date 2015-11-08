@@ -1491,7 +1491,7 @@ TkScrollWindow(
 {
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable;
-    NSView *view = TkMacOSXDrawableView(macDraw);
+    TKContentView *view = (TKContentView *)TkMacOSXDrawableView(macDraw);
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
