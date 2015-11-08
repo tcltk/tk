@@ -452,7 +452,7 @@ it and deselects any other selected item.
 In \fBbrowse\fR mode it is also possible to drag the selection
 with button 1.
 On button 1, the listbox will also take focus if it has a \fBnormal\fR
-state and \fB\-takefocus\fR is true.
+state.
 .PP
 If the selection mode is \fBmultiple\fR or \fBextended\fR,
 any number of elements may be selected at once, including discontiguous
