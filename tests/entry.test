@@ -778,6 +778,14 @@ test entry-6.11 {EntryComputeGeometry procedure} win {
     [expr 8+5*[font measure {helvetica 12} .]] \
     [expr 8+5*[font measure {helvetica 12} X]] \
     [expr 8+[font measure {helvetica 12} 12345]]]
+test entry-6.12 {EntryComputeGeometry procedure} {fonts} {
+    catch {destroy .e}
+    entry .e -font $fixed -bd 2 -relief raised -width 20
+    pack .e
+    .e insert end "012\t456\t"
+    update
+    list [.e index @81] [.e index @82] [.e index @116] [.e index @117]
+} {6 7 7 8}
 
 catch {destroy .e}
 entry .e -width 10 -font $fixed -textvariable contents -xscrollcommand scroll

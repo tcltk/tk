@@ -829,7 +829,7 @@ test font-24.10 {Tk_ComputeTextLayout: tab caused break} {
     lappend x [getsize]
     .b.l config -wrap 0
     set x
-} "{[expr $ax*3] $ay} {[expr $ax*3] [expr $ay*2]}"
+} "{[expr $ax*8] $ay} {[expr $ax*8] [expr $ay*2]}"
 test font-24.11 {Tk_ComputeTextLayout: absorb spaces at eol} {
     set x {}
     .b.l config -text "000            000" -wrap [expr $ax*5]
