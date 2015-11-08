@@ -911,9 +911,9 @@ XGetImage(
 	bitmap_rep =  BitmapRepFromDrawableRect(d, x, y,width, height);
 	bitmap_fmt = [bitmap_rep bitmapFormat];
 
-	if ( bitmap_rep == Nil                        ||
-	      (bitmap_fmt != 0 && bitmap_fmt != 1)     ||
-	     [bitmap_rep samplesPerPixel] != 4 ||
+	if ( bitmap_rep == Nil                     ||
+	     (bitmap_fmt != 0 && bitmap_fmt != 1)  ||
+	     [bitmap_rep samplesPerPixel] != 4     ||
 	     [bitmap_rep isPlanar] != 0               ) {
 	    TkMacOSXDbgMsg("XGetImage: Failed to construct NSBitmapRep");
 	    return NULL;
@@ -922,8 +922,8 @@ XGetImage(
 	NSSize image_size = NSMakeSize(width, height);
 	NSImage* ns_image = [[NSImage alloc]initWithSize:image_size];
 	[ns_image addRepresentation:bitmap_rep];
- 
-/* Assume premultiplied nonplanar data with 4 bytes per pixel.*/
+
+	/* Assume premultiplied nonplanar data with 4 bytes per pixel.*/
 	if ( [bitmap_rep isPlanar ] == 0 &&
 	     [bitmap_rep samplesPerPixel] == 4 ) {
 	    bytes_per_row = [bitmap_rep bytesPerRow];
@@ -934,9 +934,9 @@ XGetImage(
 		bitmap = ckalloc(size);
 		/*
 		  Oddly enough, the bitmap has the top row at the beginning,
-		   and the pixels are in BGRA or ABGR format.
+		  and the pixels are in BGRA or ABGR format.
 		*/
-	if (bitmap_fmt == 0) {
+		if (bitmap_fmt == 0) {
 		    /* BGRA */
 		    for (row=0, n=0; row<height; row++, n+=bytes_per_row) {
 			for (m=n; m<n+bytes_per_row; m+=4) {
@@ -955,9 +955,10 @@ XGetImage(
 			    *(bitmap+m+2) = *(image_data+m+1);
 			    *(bitmap+m+3) = *(image_data+m);
 			}
- 		    }
- 		}
- 	    }
+		    }
+		}
+	    }
+	}
 	if (bitmap) {
 	    imagePtr = XCreateImage(display, NULL, depth, format, offset,
 				    (char*)bitmap, width, height, bitmap_pad, bytes_per_row);
