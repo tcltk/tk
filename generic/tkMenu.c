@@ -885,9 +885,14 @@ MenuWidgetObjCmd(
 	 * Tearoff menus are posted differently on Mac and Windows than
 	 * non-tearoffs. TkpPostMenu does not actually map the menu's window
 	 * on those platforms, and popup menus have to be handled specially.
+         * Also, menubar menues are not intended to be posted (bug 1567681,
+         * 2160206).
 	 */
 
-	if (menuPtr->menuType != TEAROFF_MENU) {
+	if (menuPtr->menuType == MENUBAR) {
+            Tcl_AppendResult(interp, "a menubar menu cannot be posted", NULL);
+            return TCL_ERROR;
+        } else if (menuPtr->menuType != TEAROFF_MENU) {
 	    result = TkpPostMenu(interp, menuPtr, x, y);
 	} else {
 	    result = TkPostTearoffMenu(interp, menuPtr, x, y);
