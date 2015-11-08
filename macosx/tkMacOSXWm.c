@@ -817,7 +817,7 @@ TkWmDeadWindow(
        }
        [pool drain];
     }
-    ckfree(wmPtr);
+    ckfree((char *)wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
 
@@ -5194,22 +5194,22 @@ WmWinStyle(
 	{ "moveToActiveSpace",	tkMoveToActiveSpaceAttribute		     },
 	{ "nonActivating",	tkNonactivatingPanelAttribute		     },
 	{ "hud",		tkHUDWindowAttribute			     },
-	{ "black",		NULL			                     },
-	{ "dark",		NULL			                     },
-	{ "light",		NULL			                     },
-	{ "gray",		NULL			                     },
-	{ "red",		NULL 			                     },
-	{ "green",		NULL                			     },
-	{ "blue",		NULL           			             },
-	{ "cyan",		NULL			                     },
-	{ "yellow",		NULL			                     },
-	{ "magenta",		NULL  			                     },
-	{ "orange",		NULL 			                     },
-	{ "purple",		NULL			                     },
-	{ "brown",		NULL			                     },
-	{ "clear",		NULL			                     },
-	{ "opacity",		NULL			                     },
-	{ "fullscreen",         NULL                                         },
+	{ "black",		0			                     },
+	{ "dark",		0			                     },
+	{ "light",		0			                     },
+	{ "gray",		0			                     },
+	{ "red",		0 			                     },
+	{ "green",		0                			     },
+	{ "blue",		0           			             },
+	{ "cyan",		0			                     },
+	{ "yellow",		0			                     },
+	{ "magenta",		0  			                     },
+	{ "orange",		0 			                     },
+	{ "purple",		0			                     },
+	{ "brown",		0			                     },
+	{ "clear",		0			                     },
+	{ "opacity",		0			                     },
+	{ "fullscreen",         0			                     },
 	{ NULL }
     };
 
