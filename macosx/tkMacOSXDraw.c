@@ -446,7 +446,7 @@ CreateCGImageWithXImage(
 	 * BW image
 	 */
 
-	/* Reverses the sense of the bits */ 
+	/* Reverses the sense of the bits */
 	static const CGFloat decodeWB[2] = {1, 0};
 	decode = decodeWB;
 
@@ -474,7 +474,7 @@ CreateCGImageWithXImage(
 	/*
 	 * Color image
 	 */
-	
+
 	CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 
 	bitsPerComponent = 8;
@@ -761,7 +761,7 @@ DrawCGImage(
 		TkMacOSXSetColorInContext(gc, imageForeground, context);
 	    }
 	}
-	
+
 #ifdef TK_MAC_DEBUG_IMAGE_DRAWING
 	CGContextSaveGState(context);
 	CGContextSetLineWidth(context, 1.0);
