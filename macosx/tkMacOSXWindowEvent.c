@@ -780,21 +780,6 @@ Tk_MacOSXIsAppInFront(void)
  *
  */
 
-@interface TKContentView(TKWindowEvent)
-- (void) drawRect: (NSRect) rect;
-- (void) generateExposeEvents: (HIShapeRef) shape;
-- (void) generateExposeEvents: (HIShapeRef) shape childrenOnly: (int) childrenOnly;
-- (void) viewDidEndLiveResize;
-- (void) tkToolbarButton: (id) sender;
-- (BOOL) isOpaque;
-- (BOOL) wantsDefaultClipping;
-- (BOOL) acceptsFirstResponder;
-- (void) keyDown: (NSEvent *) theEvent;
-@end
-
-@implementation TKContentView
-@end
-
 /*Restrict event processing to Expose events.*/
 static Tk_RestrictAction
 ExposeRestrictProc(
