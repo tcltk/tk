@@ -1892,6 +1892,19 @@ test entry-6.11 {EntryComputeGeometry procedure} -constraints {
 } -cleanup {
     destroy .e
 } -result {1 1 1}
+test entry-6.12 {EntryComputeGeometry procedure} -constraints {
+    fonts
+} -setup {
+    catch {destroy .e}
+    entry .e -font $fixed -bd 2 -relief raised -width 20
+    pack .e
+} -body {
+    .e insert end "012\t456\t"
+    update
+    list [.e index @81] [.e index @82] [.e index @116] [.e index @117]
+} -cleanup {
+    destroy .e
+} -result {6 7 7 8}
 
 
 test entry-7.1 {InsertChars procedure} -setup {

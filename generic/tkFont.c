@@ -2067,14 +2067,14 @@ Tk_ComputeTextLayout(
 		NewChunk(&layoutPtr, &maxChunks, start, 1, curX, newX,
 			baseline)->numDisplayChars = -1;
 		start++;
+		curX = newX;
+		flags &= ~TK_AT_LEAST_ONE;
 		if ((start < end) &&
 			((wrapLength <= 0) || (newX <= wrapLength))) {
 		    /*
 		     * More chars can still fit on this line.
 		     */
 
-		    curX = newX;
-		    flags &= ~TK_AT_LEAST_ONE;
 		    continue;
 		}
 	    } else {

@@ -1526,11 +1526,11 @@ test font-24.10 {Tk_ComputeTextLayout: tab caused break} -body {
     set x {}
     .t.l config -text "000\t"
 	update
-    lappend x [expr {[winfo reqwidth .t.l] eq [expr {$ax * 3}]}]
+    lappend x [expr {[winfo reqwidth .t.l] eq [expr {$ax * 8}]}]
 	lappend x [expr {[winfo reqheight .t.l] eq $ay}]
     .t.l config -text "000\t00" -wrap [expr $ax * 6]
 	update
-	lappend x [expr {[winfo reqwidth .t.l] eq [expr {$ax * 3}]}]
+	lappend x [expr {[winfo reqwidth .t.l] eq [expr {$ax * 8}]}]
 	lappend x [expr {[winfo reqheight .t.l] eq [expr {$ay * 2}]}]
     return $x
 } -cleanup {

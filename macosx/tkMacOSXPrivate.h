@@ -274,6 +274,7 @@ VISIBILITY_HIDDEN
     TKMenu *_defaultMainMenu, *_defaultApplicationMenu;
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems;
+    NSWindow *_windowWithMouse;
 }
 @end
 @interface TKApplication(TKInit)
@@ -300,16 +301,28 @@ VISIBILITY_HIDDEN
 @interface TKContentView : NSView <NSTextInput> {
 @private
   /*Remove private API calls.*/
-   #if 0
+#if 0
     id _savedSubviews;
     BOOL _subviewsSetAside;
-    #endif
+#endif
     NSString *privateWorkingText;
 }
 @end
 
 @interface TKContentView(TKKeyEvent)
 - (void) deleteWorkingText;
+@end
+
+@interface TKContentView(TKWindowEvent)
+- (void) drawRect: (NSRect) rect;
+- (void) generateExposeEvents: (HIShapeRef) shape;
+- (void) generateExposeEvents: (HIShapeRef) shape childrenOnly: (int) childrenOnly;
+- (void) viewDidEndLiveResize;
+- (void) tkToolbarButton: (id) sender;
+- (BOOL) isOpaque;
+- (BOOL) wantsDefaultClipping;
+- (BOOL) acceptsFirstResponder;
+- (void) keyDown: (NSEvent *) theEvent;
 @end
 
 VISIBILITY_HIDDEN
@@ -343,5 +356,9 @@ VISIBILITY_HIDDEN
 	target:(id)target keyEquivalent:(NSString *)keyEquivalent
 	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
 @end
+
+/* Helper functions from tkMacOSXDeprecations.c */
+
+extern NSPoint convertWindowToScreen( NSWindow *window, NSPoint point);
 
 #endif /* _TKMACPRIV */
