@@ -75,7 +75,7 @@ static unsigned int	ButtonModifiers2State(UInt32 buttonState,
 enum {
     NSWindowWillMoveEventType = 20
 };
-/* 
+/*
  * In OS X 10.6 an NSEvent of type NSMouseMoved would always have a non-Nil
  * window attribute when the mouse was inside a window.  As of 10.8 this
  * behavior had changed.  The new behavior was that if the mouse were ever

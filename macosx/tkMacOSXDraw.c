@@ -446,7 +446,7 @@ CreateCGImageWithXImage(
 	 * BW image
 	 */
 
-	/* Reverses the sense of the bits */ 
+	/* Reverses the sense of the bits */
 	static const CGFloat decodeWB[2] = {1, 0};
 	decode = decodeWB;
 
@@ -474,7 +474,7 @@ CreateCGImageWithXImage(
 	/*
 	 * Color image
 	 */
-	
+
 	CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 
 	bitsPerComponent = 8;
@@ -761,7 +761,7 @@ DrawCGImage(
 		TkMacOSXSetColorInContext(gc, imageForeground, context);
 	    }
 	}
-	
+
 #ifdef TK_MAC_DEBUG_IMAGE_DRAWING
 	CGContextSaveGState(context);
 	CGContextSetLineWidth(context, 1.0);
@@ -780,7 +780,6 @@ DrawCGImage(
 		dstBounds.origin.x, dstBounds.origin.y,
 		dstBounds.size.width, dstBounds.size.height);
 #else /* TK_MAC_DEBUG_IMAGE_DRAWING */
-	
 	CGContextSaveGState(context);
 	CGContextTranslateCTM(context, 0, dstBounds.origin.y + CGRectGetMaxY(dstBounds));
 	CGContextScaleCTM(context, 1, -1);
