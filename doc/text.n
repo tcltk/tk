@@ -1992,9 +1992,8 @@ the clipboard.
 Control-t reverses the order of the two characters to the right of the
 insertion cursor.
 .IP [32]
-Control-z (and Control-underscore on UNIX when \fBtk_strictMotif\fR is true)
-undoes the last edit action if the \fB\-undo\fR option is true. Does nothing
-otherwise.
+Control-z undoes the last edit action if the \fB\-undo\fR option is true.
+Does nothing otherwise.
 .IP [33]
 Control-Z (or Control-y on Windows) reapplies the last undone edit action if
 the \fB\-undo\fR option is true. Does nothing otherwise.
