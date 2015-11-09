@@ -308,7 +308,6 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
     event $op <<Cut>> <Control-Key-w> <Control-Lock-Key-W> <Shift-Key-Delete>
     event $op <<Copy>> <Meta-Key-w> <Meta-Lock-Key-W> <Control-Key-Insert>
     event $op <<Paste>> <Control-Key-y> <Control-Lock-Key-Y> <Shift-Key-Insert>
-    event $op <<Undo>> <Control-underscore>
     event $op <<PrevChar>> <Control-Key-b> <Control-Lock-Key-B>
     event $op <<NextChar>> <Control-Key-f> <Control-Lock-Key-F>
     event $op <<PrevLine>> <Control-Key-p> <Control-Lock-Key-P>
