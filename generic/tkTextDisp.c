@@ -590,6 +590,8 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    Tcl_Obj *CONST objv[], double *dblPtr,
 			    int *intPtr);
 static void		AsyncUpdateLineMetrics(ClientData clientData);
+static void		GenerateMetricsEvent(TkText *textPtr,
+                            CONST char *eventname);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
                             CONST TkTextIndex *indexPtr);
@@ -2944,6 +2946,7 @@ AsyncUpdateLineMetrics(
 	if (textPtr->refCount == 0) {
 	    ckfree((char *) textPtr);
 	}
+        GenerateMetricsEvent(textPtr, "MetricsDone");
 	return;
     }
     dInfoPtr->currentMetricUpdateLine = lineNum;
@@ -2955,6 +2958,51 @@ AsyncUpdateLineMetrics(
 
     dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 	    AsyncUpdateLineMetrics, (ClientData) textPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateMetricsEvent --
+ *
+ *      Send an event related to the text widget metrics asynchronous update
+ *      Two events are used:
+ *      - <<MetricsOutdated>>: the asynchronous update of line metrics is
+ *        currently running
+ *      - <<MetricsDone>>    : the asynchronous update of line metrics is
+ *        over
+ *      This is equivalent to:
+ *         event generate $textWidget <<MetricsOutdated>>
+ *      or
+ *         event generate $textWidget <<MetricsDone>>
+ *
+ * Results:
+ *      None
+ *
+ * Side effects:
+ *      May force the text window into existence.
+ *      If corresponding bindings are present, they will trigger.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GenerateMetricsEvent(
+    TkText *textPtr,		/* Information about text widget. */
+    CONST char *eventname)	/* Name of the virtual event to send. */
+{
+    union {XEvent general; XVirtualEvent virtual;} event;
+
+    Tk_MakeWindowExist(textPtr->tkwin);
+
+    memset(&event, 0, sizeof(event));
+    event.general.xany.type = VirtualEvent;
+    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+    event.general.xany.send_event = False;
+    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
+    event.general.xany.display = Tk_Display(textPtr->tkwin);
+    event.virtual.name = Tk_GetUid(eventname);
+    Tk_HandleEvent(&event.general);
 }
 
 /*
@@ -3336,6 +3384,7 @@ TextInvalidateLineMetrics(
 	textPtr->refCount++;
 	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		AsyncUpdateLineMetrics, (ClientData) textPtr);
+        GenerateMetricsEvent(textPtr, "MetricsOutdated");
     }
 }
 
@@ -5040,6 +5089,7 @@ TkTextRelayoutWindow(
 	    textPtr->refCount++;
 	    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		    AsyncUpdateLineMetrics, (ClientData) textPtr);
+            GenerateMetricsEvent(textPtr, "MetricsOutdated");
 	}
     }
 }
