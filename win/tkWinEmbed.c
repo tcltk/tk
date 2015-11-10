@@ -257,10 +257,13 @@ TkpUseWindow(
 	return TCL_OK;
     }
 
-    if (Tcl_GetInt(interp, string, &id) != TCL_OK) {
+    if (
+#ifdef _WIN64
+	    (sscanf(string, "0x%p", &hwnd) != 1) &&
+#endif
+	    Tcl_GetInt(interp, string, (int *) &hwnd) != TCL_OK) {
 	return TCL_ERROR;
     }
-    hwnd = (HWND) INT2PTR(id);
     if ((HWND)winPtr->privatePtr == hwnd) {
 	return TCL_OK;
     }
