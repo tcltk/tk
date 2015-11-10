@@ -2226,7 +2226,7 @@ UpdateDisplayInfo(
      * Here's a problem: see the tests textDisp-29.2.1-4
      *
      * If the widget is being created, but has not yet been configured it will
-     * have a maxY of 1 above, and we we won't have examined all the lines
+     * have a maxY of 1 above, and we won't have examined all the lines
      * (just the first line, in fact), and so maxOffset will not be a true
      * reflection of the widget's lines. Therefore we must not overwrite the
      * original newXPixelOffset in this case.
