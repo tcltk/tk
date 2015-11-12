@@ -572,8 +572,6 @@ CreateWidget(
      * start,end do not require a total recalculation.
      */
 
-    TkBTreeAddClient(sharedPtr->tree, textPtr, textPtr->charHeight);
-
     textPtr->state = TK_TEXT_STATE_NORMAL;
     textPtr->relief = TK_RELIEF_FLAT;
     textPtr->cursor = None;
@@ -582,6 +580,8 @@ CreateWidget(
     textPtr->wrapMode = TEXT_WRAPMODE_CHAR;
     textPtr->prevWidth = Tk_Width(newWin);
     textPtr->prevHeight = Tk_Height(newWin);
+
+    TkBTreeAddClient(sharedPtr->tree, textPtr, textPtr->charHeight);
 
     /*
      * This will add refCounts to textPtr.
@@ -2319,6 +2319,7 @@ TextWorldChanged(
 {
     Tk_FontMetrics fm;
     int border;
+    int oldCharHeight = textPtr->charHeight;
 
     textPtr->charWidth = Tk_TextWidth(textPtr->tkfont, "0", 1);
     if (textPtr->charWidth <= 0) {
@@ -2329,6 +2330,9 @@ TextWorldChanged(
     textPtr->charHeight = fm.linespace;
     if (textPtr->charHeight <= 0) {
 	textPtr->charHeight = 1;
+    }
+    if (textPtr->charHeight != oldCharHeight) {
+        TkBTreeClientRangeChanged(textPtr, textPtr->charHeight);
     }
     border = textPtr->borderWidth + textPtr->highlightWidth;
     Tk_GeometryRequest(textPtr->tkwin,
