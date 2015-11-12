@@ -566,12 +566,6 @@ CreateWidget(
 	textPtr->end = NULL;
     }
 
-    /*
-     * Register with the B-tree. In some sense it would be best if we could do
-     * this later (after configuration options), so that any changes to
-     * start,end do not require a total recalculation.
-     */
-
     textPtr->state = TK_TEXT_STATE_NORMAL;
     textPtr->relief = TK_RELIEF_FLAT;
     textPtr->cursor = None;
@@ -580,6 +574,12 @@ CreateWidget(
     textPtr->wrapMode = TEXT_WRAPMODE_CHAR;
     textPtr->prevWidth = Tk_Width(newWin);
     textPtr->prevHeight = Tk_Height(newWin);
+
+    /*
+     * Register with the B-tree. In some sense it would be best if we could do
+     * this later (after configuration options), so that any changes to
+     * start,end do not require a total recalculation.
+     */
 
     TkBTreeAddClient(sharedPtr->tree, textPtr, textPtr->charHeight);
 
