@@ -590,6 +590,7 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    Tcl_Obj *CONST objv[], double *dblPtr,
 			    int *intPtr);
 static void		AsyncUpdateLineMetrics(ClientData clientData);
+static void		GenerateTextLineHeightsInvalidEvent(TkText *textPtr);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
                             CONST TkTextIndex *indexPtr);
@@ -2929,6 +2930,8 @@ AsyncUpdateLineMetrics(
 	LOG("tk_textInvalidateLine", buffer);
     }
 
+    GenerateTextLineHeightsInvalidEvent(textPtr);
+
     /*
      * If we're not in the middle of a long-line calculation (metricEpoch==-1)
      * and we've reached the last line, then we're done.
@@ -2956,6 +2959,43 @@ AsyncUpdateLineMetrics(
 
     dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 	    AsyncUpdateLineMetrics, (ClientData) textPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateTextLineHeightsInvalidEvent --
+ *
+ *      Send the <<TextLineHeightsInvalid>> event related to the text widget
+ *      line metrics asynchronous update.
+ *      This is equivalent to:
+ *         event generate $textWidget <<TextLineHeightsInvalid>> -detail $N
+ *      where $N is the number of lines for which the height is outdated.
+ *
+ * Results:
+ *      None
+ *
+ * Side effects:
+ *      If corresponding bindings are present, they will trigger.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GenerateTextLineHeightsInvalidEvent(
+    TkText *textPtr)		/* Information about text widget. */
+{
+    union {XEvent general; XVirtualEvent virtual;} event;
+
+    memset(&event, 0, sizeof(event));
+    event.general.xany.type = VirtualEvent;
+    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+    event.general.xany.send_event = False;
+    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
+    event.general.xany.display = Tk_Display(textPtr->tkwin);
+    event.virtual.name = Tk_GetUid("TextLineHeightsInvalid");
+    event.virtual.user_data = Tcl_NewIntObj(TkTextPendingyupdate(textPtr));
+    Tk_HandleEvent(&event.general);
 }
 
 /*
