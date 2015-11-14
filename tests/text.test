@@ -153,7 +153,7 @@ test text-3.1 {TextWidgetCmd procedure, basics} {
 } {1 {wrong # args: should be ".t option ?arg arg ...?"}}
 test text-3.2 {TextWidgetCmd procedure} {
     list [catch {.t gorp 1.0 z 1.2} msg] $msg
-} {1 {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
+} {1 {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingyupdate, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
 
 test text-4.1 {TextWidgetCmd procedure, "bbox" option} {
     list [catch {.t bbox} msg] $msg
@@ -221,7 +221,7 @@ test text-6.13 {TextWidgetCmd procedure, "compare" option} {
 } {1 {bad comparison operator "z": must be <, <=, ==, >=, >, or !=}}
 test text-6.14 {TextWidgetCmd procedure, "compare" option} {
     list [catch {.t co 1.0 z 1.2} msg] $msg
-} {1 {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
+} {1 {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingyupdate, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
 
 # "configure" option is already covered above
 
@@ -230,7 +230,7 @@ test text-7.1 {TextWidgetCmd procedure, "debug" option} {
 } {1 {wrong # args: should be ".t debug boolean"}}
 test text-7.2 {TextWidgetCmd procedure, "debug" option} {
     list [catch {.t de 0 1} msg] $msg
-} {1 {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
+} {1 {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingyupdate, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
 test text-7.3 {TextWidgetCmd procedure, "debug" option} {
     .t debug true
     .t deb
@@ -901,7 +901,7 @@ test text-10.2 {TextWidgetCmd procedure, "index" option} {
 } {1 {wrong # args: should be ".t index index"}}
 test text-10.3 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t in a b} msg] $msg
-} {1 {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
+} {1 {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingyupdate, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
 test text-10.4 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t index @xyz} msg] $msg
 } {1 {bad text index "@xyz"}}
@@ -994,6 +994,37 @@ test text-11a.2 {TextWidgetCmd procedure, "yupdate" option} {
     set fraction2 [lindex [.top.yt yview] 0]
     lappend res [expr {$fraction1 == $fraction2}]
 } {1 0 1}
+test text-11a.11 {TextWidgetCmd procedure, "pendingyupdate" option} {
+    destroy .yt
+    text .yt
+    list [catch {.yt pendingyupdate mytext} msg] $msg
+} {1 {wrong # args: should be ".yt pendingyupdate"}}
+test text-11a.12 {TextWidgetCmd procedure, "pendingyupdate" option} {
+    destroy .top.yt .top
+    toplevel .top
+    pack [text .top.yt]
+    set content {}
+    for {set i 1} {$i < 300} {incr i} {
+        append content [string repeat "$i " 15] \n
+    }
+    .top.yt insert 1.0 $content
+    update
+    # wait for end of line metrics calculation to get correct $fraction1
+    # as a reference
+    while {[.top.yt pendingyupdate]} {update}
+    .top.yt yview moveto 1
+    set fraction1 [lindex [.top.yt yview] 0]
+    set res [expr {$fraction1 > 0}]
+    .top.yt delete 1.0 end
+    .top.yt insert 1.0 $content
+    # ensure the test is relevant
+    lappend res [expr {[.top.yt pendingyupdate] > 0}]
+    # asynchronously wait for completion of line metrics calculation
+    while {[.top.yt pendingyupdate]} {update}
+    .top.yt yview moveto $fraction1
+    set fraction2 [lindex [.top.yt yview] 0]
+    lappend res [expr {$fraction1 == $fraction2}]
+} {1 1 1}
 
 # edit, mark, scan, search, see, tag, window, xview and yview actions are tested elsewhere.
 
@@ -3733,7 +3764,7 @@ test text-31.2 {TextWidgetCmd procedure, "peer" option} {
     list [catch {.t peer names foo} msg] $msg
 } {1 {wrong # args: should be ".t peer names"}}
 test text-31.3 {TextWidgetCmd procedure, "peer" option} {
-    list [catch {.t p names} msg] $msg
+    list [catch {.t pee names} msg] $msg
 } {0 {}}
 test text-31.4 {TextWidgetCmd procedure, "peer" option} {
     .t peer names

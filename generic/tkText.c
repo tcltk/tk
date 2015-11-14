@@ -689,15 +689,16 @@ TextWidgetObjCmd(
     static const char *optionStrings[] = {
 	"bbox", "cget", "compare", "configure", "count", "debug", "delete",
 	"dlineinfo", "dump", "edit", "get", "image", "index", "insert",
-	"mark", "peer", "replace", "scan", "search", "see", "tag", "window",
-	"xview", "yupdate", "yview", NULL
+	"mark", "peer", "pendingyupdate", "replace", "scan", "search",
+	"see", "tag", "window", "xview", "yupdate", "yview", NULL
     };
     enum options {
 	TEXT_BBOX, TEXT_CGET, TEXT_COMPARE, TEXT_CONFIGURE, TEXT_COUNT,
 	TEXT_DEBUG, TEXT_DELETE, TEXT_DLINEINFO, TEXT_DUMP, TEXT_EDIT,
 	TEXT_GET, TEXT_IMAGE, TEXT_INDEX, TEXT_INSERT, TEXT_MARK,
-	TEXT_PEER, TEXT_REPLACE, TEXT_SCAN, TEXT_SEARCH, TEXT_SEE,
-	TEXT_TAG, TEXT_WINDOW, TEXT_XVIEW, TEXT_YUPDATE, TEXT_YVIEW
+	TEXT_PEER, TEXT_PENDINGYUPDATE, TEXT_REPLACE, TEXT_SCAN,
+	TEXT_SEARCH, TEXT_SEE, TEXT_TAG, TEXT_WINDOW, TEXT_XVIEW,
+	TEXT_YUPDATE, TEXT_YVIEW
     };
 
     if (objc < 2) {
@@ -1372,6 +1373,18 @@ TextWidgetObjCmd(
     case TEXT_PEER:
 	result = TextPeerCmd(textPtr, interp, objc, objv);
 	break;
+    case TEXT_PENDINGYUPDATE: {
+        int number;
+
+        if (objc != 2) {
+            Tcl_WrongNumArgs(interp, 2, objv, NULL);
+            result = TCL_ERROR;
+            goto done;
+        }
+        number = TkTextPendingyupdate(textPtr);
+        Tcl_SetObjResult(interp, Tcl_NewIntObj(number));
+        break;
+    }
     case TEXT_REPLACE: {
 	const TkTextIndex *indexFromPtr, *indexToPtr;
 
