@@ -690,14 +690,14 @@ TextWidgetObjCmd(
 	"bbox", "cget", "compare", "configure", "count", "debug", "delete",
 	"dlineinfo", "dump", "edit", "get", "image", "index", "insert",
 	"mark", "peer", "replace", "scan", "search", "see", "tag", "window",
-	"xview", "yview", NULL
+	"xview", "yupdate", "yview", NULL
     };
     enum options {
 	TEXT_BBOX, TEXT_CGET, TEXT_COMPARE, TEXT_CONFIGURE, TEXT_COUNT,
 	TEXT_DEBUG, TEXT_DELETE, TEXT_DLINEINFO, TEXT_DUMP, TEXT_EDIT,
 	TEXT_GET, TEXT_IMAGE, TEXT_INDEX, TEXT_INSERT, TEXT_MARK,
 	TEXT_PEER, TEXT_REPLACE, TEXT_SCAN, TEXT_SEARCH, TEXT_SEE,
-	TEXT_TAG, TEXT_WINDOW, TEXT_XVIEW, TEXT_YVIEW
+	TEXT_TAG, TEXT_WINDOW, TEXT_XVIEW, TEXT_YUPDATE, TEXT_YVIEW
     };
 
     if (objc < 2) {
@@ -1494,6 +1494,16 @@ TextWidgetObjCmd(
     case TEXT_XVIEW:
 	result = TkTextXviewCmd(textPtr, interp, objc, objv);
 	break;
+    case TEXT_YUPDATE: {
+        if (objc != 2) {
+            Tcl_WrongNumArgs(interp, 2, objv, NULL);
+            result = TCL_ERROR;
+            goto done;
+        }
+        TkTextUpdateLineMetrics(textPtr, 1,
+                TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), -1);
+        break;
+    }
     case TEXT_YVIEW:
 	result = TkTextYviewCmd(textPtr, interp, objc, objv);
 	break;
