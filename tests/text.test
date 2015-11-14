@@ -1025,6 +1025,34 @@ test text-11a.12 {TextWidgetCmd procedure, "pendingyupdate" option} {
     set fraction2 [lindex [.top.yt yview] 0]
     lappend res [expr {$fraction1 == $fraction2}]
 } {1 1 1}
+test text-11a.21 {"<<TextLineHeightsInvalid>>" event} {
+    destroy .top.yt .top
+    toplevel .top
+    pack [text .top.yt]
+    set content {}
+    for {set i 1} {$i < 300} {incr i} {
+        append content [string repeat "$i " 15] \n
+    }
+    .top.yt insert 1.0 $content
+    update
+    bind .top.yt <<TextLineHeightsInvalid>> { if {%d == 0} {set yud(%W) 1} }
+    # wait for end of line metrics calculation to get correct $fraction1
+    # as a reference
+    if {[.top.yt pendingyupdate]} {vwait yud(.top.yt)}
+    .top.yt yview moveto 1
+    set fraction1 [lindex [.top.yt yview] 0]
+    set res [expr {$fraction1 > 0}]
+    .top.yt delete 1.0 end
+    .top.yt insert 1.0 $content
+    # synchronously wait for completion of line metrics calculation
+    # and ensure the test is relevant
+    set waited 0
+    if {[.top.yt pendingyupdate]} {set waited 1 ; vwait yud(.top.yt)}
+    lappend res $waited
+    .top.yt yview moveto $fraction1
+    set fraction2 [lindex [.top.yt yview] 0]
+    lappend res [expr {$fraction1 == $fraction2}]
+} {1 1 1}
 
 # edit, mark, scan, search, see, tag, window, xview and yview actions are tested elsewhere.
 
