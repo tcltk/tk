@@ -2920,6 +2920,8 @@ AsyncUpdateLineMetrics(
     lineNum = TkTextUpdateLineMetrics(textPtr, lineNum,
 	    dInfoPtr->lastMetricUpdateLine, 256);
 
+    dInfoPtr->currentMetricUpdateLine = lineNum;
+
     if (tkTextDebug) {
 	char buffer[2 * TCL_INTEGER_SPACE + 1];
 
@@ -2946,7 +2948,6 @@ AsyncUpdateLineMetrics(
 	}
 	return;
     }
-    dInfoPtr->currentMetricUpdateLine = lineNum;
 
     /*
      * Re-arm the timer. We already have a refCount on the text widget so no
@@ -6029,6 +6030,33 @@ TkTextYviewCmd(
 	break;
     }
     return TCL_OK;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkTextPendingyupdate --
+ *
+ *	This function computes how many lines are not up-to-date regarding
+ *	asynchronous height calculations.
+ *
+ * Results:
+ *	Returns a positive integer corresponding to the number of lines for
+ *	which the height is outdated.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+TkTextPendingyupdate(
+    TkText *textPtr)		/* Information about text widget. */
+{
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+
+    return (dInfoPtr->lastMetricUpdateLine - dInfoPtr->currentMetricUpdateLine);
 }
 
 /*
