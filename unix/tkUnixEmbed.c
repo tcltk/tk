@@ -101,7 +101,7 @@ TkpUseWindow(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *usePtr;
-    int id, anyError;
+    int anyError;
     Window parent;
     Tk_ErrorHandler handler;
     Container *containerPtr;
@@ -115,10 +115,9 @@ TkpUseWindow(
 	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
 	return TCL_ERROR;
     }
-    if (Tcl_GetInt(interp, string, &id) != TCL_OK) {
+    if (TkpScanWindowId(interp, string, &parent) != TCL_OK) {
 	return TCL_ERROR;
     }
-    parent = (Window) id;
 
     usePtr = (TkWindow *) Tk_IdToWindow(winPtr->display, parent);
     if (usePtr != NULL && !(usePtr->flags & TK_CONTAINER)) {

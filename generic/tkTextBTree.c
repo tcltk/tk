@@ -1112,7 +1112,7 @@ TkBTreeInsertChars(
     /*
      * I don't believe it's possible for either of the two lines passed to
      * this function to be the last line of text, but the function is robust
-     * to that case anyway. (We must never re-calculated the line height of
+     * to that case anyway. (We must never re-calculate the line height of
      * the last line).
      */
 
