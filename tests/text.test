@@ -153,7 +153,7 @@ test text-3.1 {TextWidgetCmd procedure, basics} {
 } {1 {wrong # args: should be ".t option ?arg arg ...?"}}
 test text-3.2 {TextWidgetCmd procedure} {
     list [catch {.t gorp 1.0 z 1.2} msg] $msg
-} {1 {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}}
+} {1 {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
 
 test text-4.1 {TextWidgetCmd procedure, "bbox" option} {
     list [catch {.t bbox} msg] $msg
@@ -221,7 +221,7 @@ test text-6.13 {TextWidgetCmd procedure, "compare" option} {
 } {1 {bad comparison operator "z": must be <, <=, ==, >=, >, or !=}}
 test text-6.14 {TextWidgetCmd procedure, "compare" option} {
     list [catch {.t co 1.0 z 1.2} msg] $msg
-} {1 {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
 
 # "configure" option is already covered above
 
@@ -230,7 +230,7 @@ test text-7.1 {TextWidgetCmd procedure, "debug" option} {
 } {1 {wrong # args: should be ".t debug boolean"}}
 test text-7.2 {TextWidgetCmd procedure, "debug" option} {
     list [catch {.t de 0 1} msg] $msg
-} {1 {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
 test text-7.3 {TextWidgetCmd procedure, "debug" option} {
     .t debug true
     .t deb
@@ -901,7 +901,7 @@ test text-10.2 {TextWidgetCmd procedure, "index" option} {
 } {1 {wrong # args: should be ".t index index"}}
 test text-10.3 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t in a b} msg] $msg
-} {1 {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}}
+} {1 {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, yupdate, or yview}}
 test text-10.4 {TextWidgetCmd procedure, "index" option} {
     list [catch {.t index @xyz} msg] $msg
 } {1 {bad text index "@xyz"}}
@@ -960,7 +960,42 @@ test text-11.10 {TextWidgetCmd procedure, "insert" option} {
     list [.t get 1.0 1.end] [.t tag ranges bold] [.t tag ranges silly]
 } {{First second} {1.0 1.5} {1.5 1.12}}
 
-# Edit, mark, scan, search, see, tag, window, xview, and yview actions are tested elsewhere.
+test text-11a.1 {TextWidgetCmd procedure, "yupdate" option} {
+    destroy .yt
+    text .yt
+    list [catch {.yt yupdate mytext} msg] $msg
+} {1 {wrong # args: should be ".yt yupdate"}}
+test text-11a.2 {TextWidgetCmd procedure, "yupdate" option} {
+    destroy .top.yt .top
+    toplevel .top
+    pack [text .top.yt]
+    set content {}
+    for {set i 1} {$i < 30} {incr i} {
+        append content [string repeat "$i " 15] \n
+    }
+    .top.yt insert 1.0 $content
+    # wait for end of line metrics calculation to get correct $fraction1
+    # as a reference
+    .top.yt yupdate
+    .top.yt yview moveto 1
+    set fraction1 [lindex [.top.yt yview] 0]
+    set res [expr {$fraction1 > 0}]
+    # first case: do not wait for completion of line metrics calculation
+    .top.yt delete 1.0 end
+    .top.yt insert 1.0 $content
+    .top.yt yview moveto $fraction1
+    set fraction2 [lindex [.top.yt yview] 0]
+    lappend res [expr {$fraction1 == $fraction2}]
+    # second case: wait for completion of line metrics calculation
+    .top.yt delete 1.0 end
+    .top.yt insert 1.0 $content
+    .top.yt yupdate
+    .top.yt yview moveto $fraction1
+    set fraction2 [lindex [.top.yt yview] 0]
+    lappend res [expr {$fraction1 == $fraction2}]
+} {1 0 1}
+
+# edit, mark, scan, search, see, tag, window, xview and yview actions are tested elsewhere.
 
 test text-12.1 {ConfigureText procedure} {
     list [catch {.t2 configure -state foobar} msg] $msg
