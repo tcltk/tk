@@ -2726,22 +2726,29 @@ DisplayLineBackground(
 	matchRight = (nextPtr2 != NULL)
 		&& SAME_BACKGROUND(nextPtr2->stylePtr, chunkPtr->stylePtr);
 	if (matchLeft && !matchRight) {
+            bw = sValuePtr->borderWidth;
+            if (rightX2 - sValuePtr->borderWidth < leftX) {
+                bw = rightX2 - leftX;
+            }
 	    if (sValuePtr->relief != TK_RELIEF_FLAT) {
 		Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-			rightX2 - sValuePtr->borderWidth + xOffset, y,
-			sValuePtr->borderWidth, sValuePtr->borderWidth, 0,
-			sValuePtr->relief);
+			rightX2 - bw + xOffset, y, bw,
+			sValuePtr->borderWidth, 0, sValuePtr->relief);
 	    }
-	    leftX = rightX2 - sValuePtr->borderWidth;
+            leftX = rightX2 - bw;
 	    leftXIn = 0;
 	} else if (!matchLeft && matchRight
 		&& (sValuePtr->relief != TK_RELIEF_FLAT)) {
+            bw = sValuePtr->borderWidth;
+            if (rightX2 + sValuePtr->borderWidth > rightX) {
+                bw = rightX - rightX2;
+            }
 	    Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-		    rightX2 + xOffset, y, sValuePtr->borderWidth,
-		    sValuePtr->borderWidth, 1, sValuePtr->relief);
+		    rightX2 + xOffset, y, bw, sValuePtr->borderWidth,
+		    1, sValuePtr->relief);
 	    Tk_3DHorizontalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-		    leftX + xOffset, y, rightX2 + sValuePtr->borderWidth - 
-		    leftX, sValuePtr->borderWidth, leftXIn, 0, 1,
+		    leftX + xOffset, y, rightX2 + bw - leftX,
+		    sValuePtr->borderWidth, leftXIn, 0, 1,
 		    sValuePtr->relief);
 	}
 
@@ -2773,7 +2780,7 @@ DisplayLineBackground(
     chunkPtr2 = NULL;
     if (dlPtr->nextPtr != NULL && dlPtr->nextPtr->chunkPtr != NULL) {
 	/*
-	 * Find the chunk in the previous line that covers leftX.
+	 * Find the chunk in the next line that covers leftX.
 	 */
 
 	nextPtr2 = dlPtr->nextPtr->chunkPtr;
@@ -2829,26 +2836,33 @@ DisplayLineBackground(
 	matchRight = (nextPtr2 != NULL)
 		&& SAME_BACKGROUND(nextPtr2->stylePtr, chunkPtr->stylePtr);
 	if (matchLeft && !matchRight) {
+            bw = sValuePtr->borderWidth;
+            if (rightX2 - sValuePtr->borderWidth < leftX) {
+                bw = rightX2 - leftX;
+            }
 	    if (sValuePtr->relief != TK_RELIEF_FLAT) {
 		Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-			rightX2 - sValuePtr->borderWidth + xOffset,
+			rightX2 - bw + xOffset,
 			y + dlPtr->height - sValuePtr->borderWidth,
-			sValuePtr->borderWidth, sValuePtr->borderWidth, 0,
-			sValuePtr->relief);
+			bw, sValuePtr->borderWidth, 0, sValuePtr->relief);
 	    }
-	    leftX = rightX2 - sValuePtr->borderWidth;
+	    leftX = rightX2 - bw;
 	    leftXIn = 1;
 	} else if (!matchLeft && matchRight
 		&& (sValuePtr->relief != TK_RELIEF_FLAT)) {
+            bw = sValuePtr->borderWidth;
+            if (rightX2 + sValuePtr->borderWidth > rightX) {
+                bw = rightX - rightX2;
+            }
 	    Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-		    rightX2 + xOffset, y + dlPtr->height -
-		    sValuePtr->borderWidth, sValuePtr->borderWidth,
+		    rightX2 + xOffset,
+		    y + dlPtr->height - sValuePtr->borderWidth, bw,
 		    sValuePtr->borderWidth, 1, sValuePtr->relief);
 	    Tk_3DHorizontalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-		    leftX + xOffset, y + dlPtr->height -
-		    sValuePtr->borderWidth, rightX2 + sValuePtr->borderWidth -
-		    leftX, sValuePtr->borderWidth, leftXIn, 1, 0,
-		    sValuePtr->relief);
+		    leftX + xOffset,
+		    y + dlPtr->height - sValuePtr->borderWidth,
+		    rightX2 + bw - leftX, sValuePtr->borderWidth, leftXIn,
+		    1, 0, sValuePtr->relief);
 	}
 
     nextChunk2b:
