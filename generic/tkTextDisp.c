@@ -2540,7 +2540,7 @@ DisplayLineBackground(
 				 * current x coordinate? */
     int matchRight;		/* Does line's style match its neighbor just
 				 * to the right of the current x-coord? */
-    int minX, maxX, xOffset;
+    int minX, maxX, xOffset, bw;
     StyleValues *sValuePtr;
     Display *display;
 #ifndef TK_NO_DOUBLE_BUFFERING
@@ -2611,16 +2611,25 @@ DisplayLineBackground(
 		rightX = leftX + 32767;
 	    }
 
+            /*
+             * Prevent the borders from leaking on adjacent characters,
+             * which would happen for too large border width.
+             */
+
+            bw = sValuePtr->borderWidth;
+            if (leftX + sValuePtr->borderWidth > rightX) {
+                bw = rightX - leftX;
+            }
+
 	    XFillRectangle(display, pixmap, chunkPtr->stylePtr->bgGC,
 		    leftX + xOffset, y, (unsigned int) (rightX - leftX),
 		    (unsigned int) dlPtr->height);
 	    if (sValuePtr->relief != TK_RELIEF_FLAT) {
 		Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-			leftX + xOffset, y, sValuePtr->borderWidth,
-			dlPtr->height, 1, sValuePtr->relief);
+			leftX + xOffset, y, bw, dlPtr->height, 1,
+			sValuePtr->relief);
 		Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-			rightX - sValuePtr->borderWidth + xOffset,
-			y, sValuePtr->borderWidth, dlPtr->height, 0,
+			rightX - bw + xOffset, y, bw, dlPtr->height, 0,
 			sValuePtr->relief);
 	    }
 	}
