@@ -42,11 +42,11 @@ EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 
 EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
 
-EXTERN Window		TkUnixContainerId(TkWindow *winPtr);
+EXTERN Window		TkpContainerId(TkWindow *winPtr);
 
-EXTERN int		TkUnixDoOneXEvent(Tcl_Time *timePtr);
+EXTERN int		TkpDoOneXEvent(Tcl_Time *timePtr);
 
-EXTERN void		TkUnixSetMenubar(Tk_Window tkwin, 
+EXTERN void		TkpSetMenubar(Tk_Window tkwin, 
 				Tk_Window menubar);
 
 #endif

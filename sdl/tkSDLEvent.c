@@ -380,7 +380,7 @@ DisplayFileProc(
 /*
  *----------------------------------------------------------------------
  *
- * TkUnixDoOneXEvent --
+ * TkpDoOneXEvent --
  *
  *	This routine waits for an X event to be processed or for a timeout to
  *	occur. The timeout is specified as an absolute time. This routine is
@@ -399,7 +399,7 @@ DisplayFileProc(
  */
 
 int
-TkUnixDoOneXEvent(
+TkpDoOneXEvent(
     Tcl_Time *timePtr)		/* Specifies the absolute time when the call
 				 * should time out. */
 {

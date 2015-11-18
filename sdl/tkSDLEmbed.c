@@ -946,7 +946,7 @@ EmbedWindowDeleted(
 /*
  *----------------------------------------------------------------------
  *
- * TkUnixContainerId --
+ * TkpContainerId --
  *
  *	Given an embedded window, this function returns the X window
  *	identifier for the associated container window.
@@ -962,7 +962,7 @@ EmbedWindowDeleted(
  */
 
 Window
-TkUnixContainerId(
+TkpContainerId(
     TkWindow *winPtr)		/* Tk's structure for an embedded window. */
 {
     Container *containerPtr;
@@ -975,7 +975,7 @@ TkUnixContainerId(
 	    return containerPtr->parent;
 	}
     }
-    Tcl_Panic("TkUnixContainerId couldn't find window");
+    Tcl_Panic("TkpContainerId couldn't find window");
     return None;
 }
 
