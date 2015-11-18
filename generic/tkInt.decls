@@ -659,13 +659,13 @@ declare 4 x11 {
     void TkpSync(Display *display)
 }
 declare 5 x11 {
-    Window TkUnixContainerId(TkWindow *winPtr)
+    Window TkpContainerId(TkWindow *winPtr)
 }
 declare 6 x11 {
-    int TkUnixDoOneXEvent(Tcl_Time *timePtr)
+    int TkpDoOneXEvent(Tcl_Time *timePtr)
 }
 declare 7 x11 {
-    void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
+    void TkpSetMenubar(Tk_Window tkwin, Tk_Window menubar)
 }
 declare 8 x11 {
     int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
@@ -825,13 +825,13 @@ declare 39 win {
     void TkpSync(Display *display)
 }
 declare 40 win {
-    Window TkUnixContainerId(TkWindow *winPtr)
+    Window TkpContainerId(TkWindow *winPtr)
 }
 declare 41 win {
-    int TkUnixDoOneXEvent(Tcl_Time *timePtr)
+    int TkpDoOneXEvent(Tcl_Time *timePtr)
 }
 declare 42 win {
-    void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
+    void TkpSetMenubar(Tk_Window tkwin, Tk_Window menubar)
 }
 declare 43 win {
     void TkWmCleanup(TkDisplay *dispPtr)

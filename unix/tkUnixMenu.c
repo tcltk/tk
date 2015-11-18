@@ -266,9 +266,9 @@ TkpSetWindowMenuBar(
     TkMenu *menuPtr)		/* The menu we are setting */
 {
     if (menuPtr == NULL) {
-	TkUnixSetMenubar(tkwin, NULL);
+	TkpSetMenubar(tkwin, NULL);
     } else {
-	TkUnixSetMenubar(tkwin, menuPtr->tkwin);
+	TkpSetMenubar(tkwin, menuPtr->tkwin);
     }
 }
 
