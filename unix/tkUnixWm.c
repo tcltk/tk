@@ -5251,7 +5251,7 @@ WaitForEvent(
     timeout.sec += 2;
 
     while (!info.foundEvent) {
-	if (!TkUnixDoOneXEvent(&timeout)) {
+	if (!TkpDoOneXEvent(&timeout)) {
 	    break;
 	}
     }
@@ -6970,7 +6970,7 @@ CreateWrapper(
     wrapperPtr->atts.event_mask |= StructureNotifyMask|FocusChangeMask;
     wrapperPtr->atts.override_redirect = winPtr->atts.override_redirect;
     if (winPtr->flags & TK_EMBEDDED) {
-	parent = TkUnixContainerId(winPtr);
+	parent = TkpContainerId(winPtr);
     } else {
 	parent = XRootWindow(wrapperPtr->display, wrapperPtr->screenNum);
     }
@@ -7042,7 +7042,7 @@ TkWmFocusToplevel(
 /*
  *----------------------------------------------------------------------
  *
- * TkUnixSetMenubar --
+ * TkpSetMenubar --
  *
  *	This function is invoked by menu management code to specify the window
  *	to use as a menubar for a given toplevel window.
@@ -7061,7 +7061,7 @@ TkWmFocusToplevel(
  */
 
 void
-TkUnixSetMenubar(
+TkpSetMenubar(
     Tk_Window tkwin,		/* Token for toplevel window. */
     Tk_Window menubar)		/* Token for window that is to serve as
 				 * menubar for tkwin. Must not be a toplevel
@@ -7111,7 +7111,7 @@ TkUnixSetMenubar(
     } else {
 	if ((menubarPtr->flags & TK_TOP_LEVEL)
 		|| (Tk_Screen(menubar) != Tk_Screen(tkwin))) {
-	    Tcl_Panic("TkUnixSetMenubar got bad menubar");
+	    Tcl_Panic("TkpSetMenubar got bad menubar");
 	}
 	wmPtr->menuHeight = Tk_ReqHeight(menubar);
 	if (wmPtr->menuHeight == 0) {

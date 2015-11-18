@@ -65,9 +65,9 @@ TkCreateXEventSource(void)
     TkWinXInit(Tk_GetHINSTANCE());
 }
 
-#   define TkUnixContainerId 0
-#   define TkUnixDoOneXEvent 0
-#   define TkUnixSetMenubar 0
+#   define TkpContainerId 0
+#   define TkpDoOneXEvent 0
+#   define TkpSetMenubar 0
 #   define TkWmCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkSendCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkpTestsendCmd 0
@@ -503,9 +503,9 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkCreateXEventSource, /* 37 */
     TkpCmapStressed, /* 38 */
     TkpSync, /* 39 */
-    TkUnixContainerId, /* 40 */
-    TkUnixDoOneXEvent, /* 41 */
-    TkUnixSetMenubar, /* 42 */
+    TkpContainerId, /* 40 */
+    TkpDoOneXEvent, /* 41 */
+    TkpSetMenubar, /* 42 */
     TkWmCleanup, /* 43 */
     TkSendCleanup, /* 44 */
     TkpTestsendCmd, /* 45 */
@@ -574,9 +574,9 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 2 */
     TkpCmapStressed, /* 3 */
     TkpSync, /* 4 */
-    TkUnixContainerId, /* 5 */
-    TkUnixDoOneXEvent, /* 6 */
-    TkUnixSetMenubar, /* 7 */
+    TkpContainerId, /* 5 */
+    TkpDoOneXEvent, /* 6 */
+    TkpSetMenubar, /* 7 */
     TkpScanWindowId, /* 8 */
     TkWmCleanup, /* 9 */
     TkSendCleanup, /* 10 */

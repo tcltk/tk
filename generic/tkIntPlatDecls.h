@@ -129,11 +129,11 @@ EXTERN int		TkpCmapStressed(Tk_Window tkwin, Colormap colormap);
 /* 39 */
 EXTERN void		TkpSync(Display *display);
 /* 40 */
-EXTERN Window		TkUnixContainerId(TkWindow *winPtr);
+EXTERN Window		TkpContainerId(TkWindow *winPtr);
 /* 41 */
-EXTERN int		TkUnixDoOneXEvent(Tcl_Time *timePtr);
+EXTERN int		TkpDoOneXEvent(Tcl_Time *timePtr);
 /* 42 */
-EXTERN void		TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar);
+EXTERN void		TkpSetMenubar(Tk_Window tkwin, Tk_Window menubar);
 /* 43 */
 EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
 /* 44 */
@@ -270,11 +270,11 @@ EXTERN int		TkpCmapStressed(Tk_Window tkwin, Colormap colormap);
 /* 4 */
 EXTERN void		TkpSync(Display *display);
 /* 5 */
-EXTERN Window		TkUnixContainerId(TkWindow *winPtr);
+EXTERN Window		TkpContainerId(TkWindow *winPtr);
 /* 6 */
-EXTERN int		TkUnixDoOneXEvent(Tcl_Time *timePtr);
+EXTERN int		TkpDoOneXEvent(Tcl_Time *timePtr);
 /* 7 */
-EXTERN void		TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar);
+EXTERN void		TkpSetMenubar(Tk_Window tkwin, Tk_Window menubar);
 /* 8 */
 EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
 				const char *string, Window *idPtr);
@@ -336,9 +336,9 @@ typedef struct TkIntPlatStubs {
     void (*tkCreateXEventSource) (void); /* 37 */
     int (*tkpCmapStressed) (Tk_Window tkwin, Colormap colormap); /* 38 */
     void (*tkpSync) (Display *display); /* 39 */
-    Window (*tkUnixContainerId) (TkWindow *winPtr); /* 40 */
-    int (*tkUnixDoOneXEvent) (Tcl_Time *timePtr); /* 41 */
-    void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
+    Window (*tkpContainerId) (TkWindow *winPtr); /* 40 */
+    int (*tkpDoOneXEvent) (Tcl_Time *timePtr); /* 41 */
+    void (*tkpSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
     void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
     int (*tkpTestsendCmd) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 45 */
@@ -407,9 +407,9 @@ typedef struct TkIntPlatStubs {
     void (*reserved2)(void);
     int (*tkpCmapStressed) (Tk_Window tkwin, Colormap colormap); /* 3 */
     void (*tkpSync) (Display *display); /* 4 */
-    Window (*tkUnixContainerId) (TkWindow *winPtr); /* 5 */
-    int (*tkUnixDoOneXEvent) (Tcl_Time *timePtr); /* 6 */
-    void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 7 */
+    Window (*tkpContainerId) (TkWindow *winPtr); /* 5 */
+    int (*tkpDoOneXEvent) (Tcl_Time *timePtr); /* 6 */
+    void (*tkpSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 7 */
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 8 */
     void (*tkWmCleanup) (TkDisplay *dispPtr); /* 9 */
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 10 */
@@ -511,12 +511,12 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkpCmapStressed) /* 38 */
 #define TkpSync \
 	(tkIntPlatStubsPtr->tkpSync) /* 39 */
-#define TkUnixContainerId \
-	(tkIntPlatStubsPtr->tkUnixContainerId) /* 40 */
-#define TkUnixDoOneXEvent \
-	(tkIntPlatStubsPtr->tkUnixDoOneXEvent) /* 41 */
-#define TkUnixSetMenubar \
-	(tkIntPlatStubsPtr->tkUnixSetMenubar) /* 42 */
+#define TkpContainerId \
+	(tkIntPlatStubsPtr->tkpContainerId) /* 40 */
+#define TkpDoOneXEvent \
+	(tkIntPlatStubsPtr->tkpDoOneXEvent) /* 41 */
+#define TkpSetMenubar \
+	(tkIntPlatStubsPtr->tkpSetMenubar) /* 42 */
 #define TkWmCleanup \
 	(tkIntPlatStubsPtr->tkWmCleanup) /* 43 */
 #define TkSendCleanup \
@@ -640,12 +640,12 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkpCmapStressed) /* 3 */
 #define TkpSync \
 	(tkIntPlatStubsPtr->tkpSync) /* 4 */
-#define TkUnixContainerId \
-	(tkIntPlatStubsPtr->tkUnixContainerId) /* 5 */
-#define TkUnixDoOneXEvent \
-	(tkIntPlatStubsPtr->tkUnixDoOneXEvent) /* 6 */
-#define TkUnixSetMenubar \
-	(tkIntPlatStubsPtr->tkUnixSetMenubar) /* 7 */
+#define TkpContainerId \
+	(tkIntPlatStubsPtr->tkpContainerId) /* 5 */
+#define TkpDoOneXEvent \
+	(tkIntPlatStubsPtr->tkpDoOneXEvent) /* 6 */
+#define TkpSetMenubar \
+	(tkIntPlatStubsPtr->tkpSetMenubar) /* 7 */
 #define TkpScanWindowId \
 	(tkIntPlatStubsPtr->tkpScanWindowId) /* 8 */
 #define TkWmCleanup \
