@@ -4191,6 +4191,24 @@ test textDisp-34.1 {Line heights recalculation problem: bug 2677890} -setup {
     destroy .t1
 } -result {0}
 
+test textDisp-34.2 {text yupdate syntax} -body {
+} -body {
+    pack [text .t1] -expand 1 -fill both
+    .t1 yupdate foo
+} -cleanup {
+    destroy .t1
+} -returnCodes 1 -result {wrong # args: should be ".t1 yupdate ?-command command?"}
+
+test textDisp-34.3 {text yupdate syntax} -body {
+} -body {
+    set ::x 0
+    pack [text .t1] -expand 1 -fill both
+    .t1 yupdate -command [list set ::x 1]
+    set ::x
+} -cleanup {
+    destroy .t1
+} -result {1}
+
 deleteWindows
 option clear
 
