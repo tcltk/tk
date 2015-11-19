@@ -2942,8 +2942,19 @@ AsyncUpdateLineMetrics(
 	/*
 	 * We have looped over all lines, so we're done. We must release our
 	 * refCount on the widget (the timer token was already set to NULL
-	 * above).
+	 * above). If there is a registered command, run that first.
 	 */
+
+	if (textPtr->linesUpdatedCmd != NULL) {
+		Tcl_Preserve((ClientData)textPtr->interp);
+	    int code = Tcl_EvalObjEx(textPtr->interp, textPtr->linesUpdatedCmd, TCL_EVAL_GLOBAL);
+		if (code != TCL_OK && code != TCL_CONTINUE
+			&& code != TCL_BREAK) {
+		    Tcl_AddErrorInfo(textPtr->interp, "\n    (text yupdate)");
+		    Tcl_BackgroundError(textPtr->interp);
+		}
+		Tcl_Release((ClientData)textPtr->interp);
+	}
 
 	textPtr->refCount--;
 	if (textPtr->refCount == 0) {

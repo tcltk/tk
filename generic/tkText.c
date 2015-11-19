@@ -1508,14 +1508,31 @@ TextWidgetObjCmd(
 	result = TkTextXviewCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_YUPDATE: {
-        if (objc != 2) {
-            Tcl_WrongNumArgs(interp, 2, objv, NULL);
-            result = TCL_ERROR;
-            goto done;
-        }
-        TkTextUpdateLineMetrics(textPtr, 1,
-                TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), -1);
-        break;
+	    if ((objc == 4) && !strncmp(Tcl_GetString(objv[2]), "-command", objv[3]->length)) {
+		    Tcl_Obj *cmd = objv[3];
+		    Tcl_IncrRefCount(cmd);
+		    if (TkTextPendingyupdate(textPtr)) {
+			if (textPtr->linesUpdatedCmd) {
+			    Tcl_DecrRefCount(textPtr->linesUpdatedCmd);
+			}
+			textPtr->linesUpdatedCmd = cmd;
+		    } else {
+			result = Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
+			Tcl_DecrRefCount(cmd);
+		    }
+		    break;
+		} else if (objc != 2) {
+		    Tcl_WrongNumArgs(interp, 2, objv, "?-command command?");
+		    result = TCL_ERROR;
+		    goto done;
+		}
+		if (textPtr->linesUpdatedCmd) {
+		    Tcl_DecrRefCount(textPtr->linesUpdatedCmd);
+		}
+		textPtr->linesUpdatedCmd = NULL;
+		TkTextUpdateLineMetrics(textPtr, 1,
+			TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), -1);
+	break;
     }
     case TEXT_YVIEW:
 	result = TkTextYviewCmd(textPtr, interp, objc, objv);
@@ -1993,6 +2010,10 @@ DestroyText(
     textPtr->tkwin = NULL;
     textPtr->refCount--;
     Tcl_DeleteCommandFromToken(textPtr->interp, textPtr->widgetCmd);
+    if (textPtr->linesUpdatedCmd != 0){
+	Tcl_DecrRefCount(textPtr->linesUpdatedCmd);
+	textPtr->linesUpdatedCmd = 0;
+    }
     if (textPtr->refCount == 0) {
 	ckfree((char *) textPtr);
     }
