@@ -1508,8 +1508,14 @@ TextWidgetObjCmd(
 	result = TkTextXviewCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_YUPDATE: {
-	    if ((objc == 4) && !strncmp(Tcl_GetString(objv[2]), "-command", objv[3]->length)) {
+	    if (objc == 4) {
 		    Tcl_Obj *cmd = objv[3];
+		    const char *option = Tcl_GetString(objv[2]);
+		    if (strncmp(option, "-command", objv[2]->length)) {
+			Tcl_AppendResult(interp, "wrong option \"", option, "\": should be \"-command\"", NULL);
+		    result = TCL_ERROR;
+		    goto done;
+		    }
 		    Tcl_IncrRefCount(cmd);
 		    if (TkTextPendingyupdate(textPtr)) {
 			if (textPtr->linesUpdatedCmd) {
