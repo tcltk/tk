@@ -2946,8 +2946,9 @@ AsyncUpdateLineMetrics(
 	 */
 
 	if (textPtr->afterSyncCmd != NULL) {
-	    int code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
+	    int code;
 	    Tcl_Preserve((ClientData)textPtr->interp);
+	    code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
 	    if (code != TCL_OK && code != TCL_CONTINUE
 			&& code != TCL_BREAK) {
 		    Tcl_AddErrorInfo(textPtr->interp, "\n    (text yupdate)");
