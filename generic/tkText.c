@@ -1508,36 +1508,36 @@ TextWidgetObjCmd(
 	result = TkTextXviewCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_YUPDATE: {
-	    if (objc == 4) {
-		    Tcl_Obj *cmd = objv[3];
-		    const char *option = Tcl_GetString(objv[2]);
-		    if (strncmp(option, "-command", objv[2]->length)) {
-			Tcl_AppendResult(interp, "wrong option \"", option, "\": should be \"-command\"", NULL);
+	if (objc == 4) {
+		Tcl_Obj *cmd = objv[3];
+		const char *option = Tcl_GetString(objv[2]);
+		if (strncmp(option, "-command", objv[2]->length)) {
+		    Tcl_AppendResult(interp, "wrong option \"", option, "\": should be \"-command\"", NULL);
 		    result = TCL_ERROR;
 		    goto done;
+		}
+		Tcl_IncrRefCount(cmd);
+		if (TkTextPendingyupdate(textPtr)) {
+		    if (textPtr->afterSyncCmd) {
+			Tcl_DecrRefCount(textPtr->afterSyncCmd);
 		    }
-		    Tcl_IncrRefCount(cmd);
-		    if (TkTextPendingyupdate(textPtr)) {
-			if (textPtr->linesUpdatedCmd) {
-			    Tcl_DecrRefCount(textPtr->linesUpdatedCmd);
-			}
-			textPtr->linesUpdatedCmd = cmd;
-		    } else {
+			textPtr->afterSyncCmd = cmd;
+		} else {
 			result = Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
 			Tcl_DecrRefCount(cmd);
-		    }
-		    break;
-		} else if (objc != 2) {
-		    Tcl_WrongNumArgs(interp, 2, objv, "?-command command?");
-		    result = TCL_ERROR;
-		    goto done;
 		}
-		if (textPtr->linesUpdatedCmd) {
-		    Tcl_DecrRefCount(textPtr->linesUpdatedCmd);
-		}
-		textPtr->linesUpdatedCmd = NULL;
-		TkTextUpdateLineMetrics(textPtr, 1,
-			TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), -1);
+		break;
+	} else if (objc != 2) {
+		Tcl_WrongNumArgs(interp, 2, objv, "?-command command?");
+		result = TCL_ERROR;
+		goto done;
+	}
+	if (textPtr->afterSyncCmd) {
+		Tcl_DecrRefCount(textPtr->afterSyncCmd);
+	}
+	textPtr->afterSyncCmd = NULL;
+	TkTextUpdateLineMetrics(textPtr, 1,
+		TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), -1);
 	break;
     }
     case TEXT_YVIEW:
@@ -2016,9 +2016,9 @@ DestroyText(
     textPtr->tkwin = NULL;
     textPtr->refCount--;
     Tcl_DeleteCommandFromToken(textPtr->interp, textPtr->widgetCmd);
-    if (textPtr->linesUpdatedCmd != 0){
-	Tcl_DecrRefCount(textPtr->linesUpdatedCmd);
-	textPtr->linesUpdatedCmd = 0;
+    if (textPtr->afterSyncCmd != 0){
+	Tcl_DecrRefCount(textPtr->afterSyncCmd);
+	textPtr->afterSyncCmd = 0;
     }
     if (textPtr->refCount == 0) {
 	ckfree((char *) textPtr);
