@@ -1125,7 +1125,7 @@ MODULE_SCOPE int	TkTextMarkNameToIndex(TkText *textPtr,
 MODULE_SCOPE void	TkTextMarkSegToIndex(TkText *textPtr,
 			    TkTextSegment *markPtr, TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextEventuallyRepick(TkText *textPtr);
-MODULE_SCOPE int	TkTextPendingyupdate(TkText *textPtr);
+MODULE_SCOPE int	TkTextPendingsync(TkText *textPtr);
 MODULE_SCOPE void	TkTextPickCurrent(TkText *textPtr, XEvent *eventPtr);
 MODULE_SCOPE void	TkTextPixelIndex(TkText *textPtr, int x, int y,
 			    TkTextIndex *indexPtr, int *nearest);

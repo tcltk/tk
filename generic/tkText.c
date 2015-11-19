@@ -689,16 +689,16 @@ TextWidgetObjCmd(
     static const char *optionStrings[] = {
 	"bbox", "cget", "compare", "configure", "count", "debug", "delete",
 	"dlineinfo", "dump", "edit", "get", "image", "index", "insert",
-	"mark", "peer", "pendingyupdate", "replace", "scan", "search",
-	"see", "tag", "window", "xview", "yupdate", "yview", NULL
+	"mark", "peer", "pendingsync", "replace", "scan", "search",
+	"see", "sync", "tag", "window", "xview", "yview", NULL
     };
     enum options {
 	TEXT_BBOX, TEXT_CGET, TEXT_COMPARE, TEXT_CONFIGURE, TEXT_COUNT,
 	TEXT_DEBUG, TEXT_DELETE, TEXT_DLINEINFO, TEXT_DUMP, TEXT_EDIT,
 	TEXT_GET, TEXT_IMAGE, TEXT_INDEX, TEXT_INSERT, TEXT_MARK,
-	TEXT_PEER, TEXT_PENDINGYUPDATE, TEXT_REPLACE, TEXT_SCAN,
-	TEXT_SEARCH, TEXT_SEE, TEXT_TAG, TEXT_WINDOW, TEXT_XVIEW,
-	TEXT_YUPDATE, TEXT_YVIEW
+	TEXT_PEER, TEXT_PENDINGSYNC, TEXT_REPLACE, TEXT_SCAN,
+	TEXT_SEARCH, TEXT_SEE, TEXT_SYNC, TEXT_TAG, TEXT_WINDOW,
+	TEXT_XVIEW, TEXT_YVIEW
     };
 
     if (objc < 2) {
@@ -1373,7 +1373,7 @@ TextWidgetObjCmd(
     case TEXT_PEER:
 	result = TextPeerCmd(textPtr, interp, objc, objv);
 	break;
-    case TEXT_PENDINGYUPDATE: {
+    case TEXT_PENDINGSYNC: {
         int number;
 
         if (objc != 2) {
@@ -1381,7 +1381,7 @@ TextWidgetObjCmd(
             result = TCL_ERROR;
             goto done;
         }
-        number = TkTextPendingyupdate(textPtr);
+        number = TkTextPendingsync(textPtr);
         Tcl_SetObjResult(interp, Tcl_NewIntObj(number));
         break;
     }
@@ -1507,26 +1507,26 @@ TextWidgetObjCmd(
     case TEXT_XVIEW:
 	result = TkTextXviewCmd(textPtr, interp, objc, objv);
 	break;
-    case TEXT_YUPDATE: {
+    case TEXT_SYNC: {
 	if (objc == 4) {
-		Tcl_Obj *cmd = objv[3];
-		const char *option = Tcl_GetString(objv[2]);
-		if (strncmp(option, "-command", objv[2]->length)) {
-		    Tcl_AppendResult(interp, "wrong option \"", option, "\": should be \"-command\"", NULL);
-		    result = TCL_ERROR;
-		    goto done;
+	    Tcl_Obj *cmd = objv[3];
+	    const char *option = Tcl_GetString(objv[2]);
+	    if (strncmp(option, "-command", objv[2]->length)) {
+		Tcl_AppendResult(interp, "wrong option \"", option, "\": should be \"-command\"", NULL);
+		result = TCL_ERROR;
+		goto done;
+	    }
+	    Tcl_IncrRefCount(cmd);
+	    if (TkTextPendingsync(textPtr)) {
+		if (textPtr->afterSyncCmd) {
+		    Tcl_DecrRefCount(textPtr->afterSyncCmd);
 		}
-		Tcl_IncrRefCount(cmd);
-		if (TkTextPendingyupdate(textPtr)) {
-		    if (textPtr->afterSyncCmd) {
-			Tcl_DecrRefCount(textPtr->afterSyncCmd);
-		    }
-			textPtr->afterSyncCmd = cmd;
-		} else {
-			result = Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
-			Tcl_DecrRefCount(cmd);
-		}
-		break;
+		    textPtr->afterSyncCmd = cmd;
+	    } else {
+		    result = Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
+		    Tcl_DecrRefCount(cmd);
+	    }
+	break;
 	} else if (objc != 2) {
 		Tcl_WrongNumArgs(interp, 2, objv, "?-command command?");
 		result = TCL_ERROR;
