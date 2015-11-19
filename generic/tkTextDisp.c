@@ -590,7 +590,7 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    Tcl_Obj *CONST objv[], double *dblPtr,
 			    int *intPtr);
 static void		AsyncUpdateLineMetrics(ClientData clientData);
-static void		GenerateTextLineHeightsInvalidEvent(TkText *textPtr);
+static void		GenerateWidgetViewSyncEvent(TkText *textPtr);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
                             CONST TkTextIndex *indexPtr);
@@ -2930,7 +2930,7 @@ AsyncUpdateLineMetrics(
 	LOG("tk_textInvalidateLine", buffer);
     }
 
-    GenerateTextLineHeightsInvalidEvent(textPtr);
+    GenerateWidgetViewSyncEvent(textPtr);
 
     /*
      * If we're not in the middle of a long-line calculation (metricEpoch==-1)
@@ -2942,7 +2942,7 @@ AsyncUpdateLineMetrics(
 	/*
 	 * We have looped over all lines, so we're done. We must release our
 	 * refCount on the widget (the timer token was already set to NULL
-	 * above). If there is a registered command, run that first.
+	 * above). If there is a registered aftersync command, run that first.
 	 */
 
 	if (textPtr->afterSyncCmd != NULL) {
@@ -2951,7 +2951,7 @@ AsyncUpdateLineMetrics(
 	    code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
 	    if (code != TCL_OK && code != TCL_CONTINUE
 			&& code != TCL_BREAK) {
-		    Tcl_AddErrorInfo(textPtr->interp, "\n    (text yupdate)");
+		    Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
 		    Tcl_BackgroundError(textPtr->interp);
 	    }
 	    Tcl_Release((ClientData)textPtr->interp);
@@ -2978,12 +2978,12 @@ AsyncUpdateLineMetrics(
 /*
  *----------------------------------------------------------------------
  *
- * GenerateTextLineHeightsInvalidEvent --
+ * GenerateWidgetViewSyncEvent --
  *
- *      Send the <<TextLineHeightsInvalid>> event related to the text widget
+ *      Send the <<WidgetViewSync>> event related to the text widget
  *      line metrics asynchronous update.
  *      This is equivalent to:
- *         event generate $textWidget <<TextLineHeightsInvalid>> -detail $N
+ *         event generate $textWidget <<WidgetViewSync>> -detail $N
  *      where $N is the number of lines for which the height is outdated.
  *
  * Results:
@@ -2996,7 +2996,7 @@ AsyncUpdateLineMetrics(
  */
 
 static void
-GenerateTextLineHeightsInvalidEvent(
+GenerateWidgetViewSyncEvent(
     TkText *textPtr)		/* Information about text widget. */
 {
     union {XEvent general; XVirtualEvent virtual;} event;
@@ -3007,8 +3007,8 @@ GenerateTextLineHeightsInvalidEvent(
     event.general.xany.send_event = False;
     event.general.xany.window = Tk_WindowId(textPtr->tkwin);
     event.general.xany.display = Tk_Display(textPtr->tkwin);
-    event.virtual.name = Tk_GetUid("TextLineHeightsInvalid");
-    event.virtual.user_data = Tcl_NewIntObj(TkTextPendingyupdate(textPtr));
+    event.virtual.name = Tk_GetUid("WidgetViewSync");
+    event.virtual.user_data = Tcl_NewIntObj(TkTextPendingsync(textPtr));
     Tk_HandleEvent(&event.general);
 }
 
@@ -6089,7 +6089,7 @@ TkTextYviewCmd(
 /*
  *--------------------------------------------------------------
  *
- * TkTextPendingyupdate --
+ * TkTextPendingsync --
  *
  *	This function computes how many lines are not up-to-date regarding
  *	asynchronous height calculations.
@@ -6105,7 +6105,7 @@ TkTextYviewCmd(
  */
 
 int
-TkTextPendingyupdate(
+TkTextPendingsync(
     TkText *textPtr)		/* Information about text widget. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
