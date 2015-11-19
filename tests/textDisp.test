@@ -4201,9 +4201,17 @@ test textDisp-34.2 {text yupdate syntax} -body {
 
 test textDisp-34.3 {text yupdate syntax} -body {
 } -body {
+    pack [text .t1] -expand 1 -fill both
+    .t1 yupdate -comx foo
+} -cleanup {
+    destroy .t1
+} -returnCodes 1 -result {wrong option "-comx": should be "-command"}
+
+test textDisp-34.4 {text yupdate syntax} -body {
+} -body {
     set ::x 0
     pack [text .t1] -expand 1 -fill both
-    .t1 yupdate -command [list set ::x 1]
+    .t1 yupdate -comm [list set ::x 1]
     set ::x
 } -cleanup {
     destroy .t1
