@@ -1498,15 +1498,6 @@ TextWidgetObjCmd(
     case TEXT_SEE:
 	result = TkTextSeeCmd(textPtr, interp, objc, objv);
 	break;
-    case TEXT_TAG:
-	result = TkTextTagCmd(textPtr, interp, objc, objv);
-	break;
-    case TEXT_WINDOW:
-	result = TkTextWindowCmd(textPtr, interp, objc, objv);
-	break;
-    case TEXT_XVIEW:
-	result = TkTextXviewCmd(textPtr, interp, objc, objv);
-	break;
     case TEXT_SYNC: {
 	if (objc == 4) {
 	    Tcl_Obj *cmd = objv[3];
@@ -1540,6 +1531,15 @@ TextWidgetObjCmd(
 		TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), -1);
 	break;
     }
+    case TEXT_TAG:
+	result = TkTextTagCmd(textPtr, interp, objc, objv);
+	break;
+    case TEXT_WINDOW:
+	result = TkTextWindowCmd(textPtr, interp, objc, objv);
+	break;
+    case TEXT_XVIEW:
+	result = TkTextXviewCmd(textPtr, interp, objc, objv);
+	break;
     case TEXT_YVIEW:
 	result = TkTextYviewCmd(textPtr, interp, objc, objv);
 	break;
