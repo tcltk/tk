@@ -590,7 +590,7 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    Tcl_Obj *CONST objv[], double *dblPtr,
 			    int *intPtr);
 static void		AsyncUpdateLineMetrics(ClientData clientData);
-static void		GenerateWidgetViewSyncEvent(TkText *textPtr);
+static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
                             CONST TkTextIndex *indexPtr);
@@ -2930,8 +2930,6 @@ AsyncUpdateLineMetrics(
 	LOG("tk_textInvalidateLine", buffer);
     }
 
-    GenerateWidgetViewSyncEvent(textPtr);
-
     /*
      * If we're not in the middle of a long-line calculation (metricEpoch==-1)
      * and we've reached the last line, then we're done.
@@ -2959,6 +2957,14 @@ AsyncUpdateLineMetrics(
 	    textPtr->afterSyncCmd = 0;
 	}
 
+        /*
+         * Fire the <<WidgetViewSync>> event since the widget view is in sync
+         * with its internal data (actually it will be after the next trip
+         * through the event loop, because the widget redraws at idle-time).
+         */
+
+        GenerateWidgetViewSyncEvent(textPtr, 1);
+
 	textPtr->refCount--;
 	if (textPtr->refCount == 0) {
 	    ckfree((char *) textPtr);
@@ -2983,8 +2989,9 @@ AsyncUpdateLineMetrics(
  *      Send the <<WidgetViewSync>> event related to the text widget
  *      line metrics asynchronous update.
  *      This is equivalent to:
- *         event generate $textWidget <<WidgetViewSync>> -detail $N
- *      where $N is the number of lines for which the height is outdated.
+ *         event generate $textWidget <<WidgetViewSync>> -detail $s
+ *      where $s is the sync status: true (when the widget view is in
+ *      sync with its internal data) or false (when it is not).
  *
  * Results:
  *      None
@@ -2997,7 +3004,8 @@ AsyncUpdateLineMetrics(
 
 static void
 GenerateWidgetViewSyncEvent(
-    TkText *textPtr)		/* Information about text widget. */
+    TkText *textPtr,		/* Information about text widget. */
+    Bool InSync)                /* True if in sync, false otherwise */
 {
     union {XEvent general; XVirtualEvent virtual;} event;
 
@@ -3008,7 +3016,7 @@ GenerateWidgetViewSyncEvent(
     event.general.xany.window = Tk_WindowId(textPtr->tkwin);
     event.general.xany.display = Tk_Display(textPtr->tkwin);
     event.virtual.name = Tk_GetUid("WidgetViewSync");
-    event.virtual.user_data = Tcl_NewIntObj(TkTextPendingsync(textPtr));
+    event.virtual.user_data = Tcl_NewBooleanObj(InSync);
     Tk_HandleEvent(&event.general);
 }
 
@@ -3391,6 +3399,7 @@ TextInvalidateLineMetrics(
 	textPtr->refCount++;
 	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		AsyncUpdateLineMetrics, (ClientData) textPtr);
+        GenerateWidgetViewSyncEvent(textPtr, 0);
     }
 }
 
@@ -5095,6 +5104,7 @@ TkTextRelayoutWindow(
 	    textPtr->refCount++;
 	    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		    AsyncUpdateLineMetrics, (ClientData) textPtr);
+            GenerateWidgetViewSyncEvent(textPtr, 0);
 	}
     }
 }
