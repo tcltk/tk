@@ -1035,7 +1035,7 @@ test text-11a.21 {"<<WidgetViewSync>>" event} {
     }
     .top.yt insert 1.0 $content
     update
-    bind .top.yt <<WidgetViewSync>> { if {%d == 0} {set yud(%W) 1} }
+    bind .top.yt <<WidgetViewSync>> { if {%d} {set yud(%W) 1} }
     # wait for end of line metrics calculation to get correct $fraction1
     # as a reference
     if {[.top.yt pendingsync]} {vwait yud(.top.yt)}
