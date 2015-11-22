@@ -15,7 +15,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 //
-//	25 Jan 2007 - Ported to AGG 2.4 Jerry Evans (jerry@novadsp.com)
+//       25 Jan 2007 - Ported to AGG 2.4 Jerry Evans (jerry@novadsp.com)
 //
 //----------------------------------------------------------------------------
 
@@ -61,8 +61,48 @@
 #include "agg_pixfmt_rgba.h"
 #include "agg_image_accessors.h"
 
+
 class Agg2D
 {
+    class GradientF
+    {
+    public:
+        virtual int calculate(int x, int y, int d);
+    };
+
+    class GradientF_Pad : public GradientF
+    {
+    public:
+        virtual int calculate(int x, int y, int d)
+        {
+            return x;
+        }
+    };
+
+    class GradientF_Repeat : public GradientF
+    {
+    public:
+        virtual int calculate(int x, int y, int d)
+        {
+            int ret = x % d;
+            if (ret < 0) ret += d;
+            return ret;
+        }
+    };
+
+    class GradientF_Reflect : public GradientF
+    {
+    public:
+        virtual int calculate(int x, int y, int d)
+        {
+            int d2 = d << 1;
+            int ret = x % d2;
+            if (ret < 0) ret += d2;
+            if (ret >= d) ret = d2 - ret;
+            return ret;
+        }
+    };
+
 #ifdef AGG2D_USE_FLOAT_FORMAT
     typedef agg::rgba32 ColorType;
 #else
@@ -90,7 +130,7 @@ class Agg2D
     typedef agg::span_allocator<ColorType> SpanAllocator;
     typedef agg::pod_auto_array<ColorType, 256> GradientArray;
 
-    typedef agg::span_gradient<ColorType, agg::span_interpolator_linear<>, agg::gradient_x,      GradientArray> LinearGradientSpan;
+    typedef agg::span_gradient<ColorType, agg::span_interpolator_linear<>, GradientF,            GradientArray> LinearGradientSpan;
     typedef agg::span_gradient<ColorType, agg::span_interpolator_linear<>, agg::gradient_circle, GradientArray> RadialGradientSpan;
 
 #ifdef AGG2D_USE_FREETYPE
@@ -224,6 +264,13 @@ public:
         WrapRepeat
     };
 
+    enum GradientMode
+    {
+        GradientPad,
+        GradientRepeat,
+        GradientReflect
+    };
+
     enum FontCacheType
     {
         RasterFontCache,
@@ -323,7 +370,7 @@ public:
     Color lineColor() const;
 
     void fillLinearGradient(double x1, double y1, double x2, double y2, Color c1, Color c2, double profile=1.0);
-    void fillLinearGradient(double x1, double y1, double x2, double y2, int count, const double* offsets, const Color* colors);
+    void fillLinearGradient(double x1, double y1, double x2, double y2, int count, const double* offsets, const Color* colors, GradientMode mode = GradientPad);
     void lineLinearGradient(double x1, double y1, double x2, double y2, Color c1, Color c2, double profile=1.0);
 
     void fillRadialGradient(double x, double y, double r, Color c1, Color c2, double profile=1.0);
@@ -392,9 +439,9 @@ public:
                 FontCacheType ch = RasterFontCache,
                 double angle = 0.0
 #ifdef AGG2D_USE_FREETYPE
-	      , const char* fileMem = 0, long fileMemSize = 0
+              , const char* fileMem = 0, long fileMemSize = 0
 #endif
-		);
+               );
     double fontHeight() const;
     double fontAscent() const;
     double fontDescent() const;
@@ -586,7 +633,7 @@ private:
     agg::span_interpolator_linear<> m_fillGradientInterpolator;
     agg::span_interpolator_linear<> m_lineGradientInterpolator;
 
-    agg::gradient_x                 m_linearGradientFunction;
+    GradientF*                      m_linearGradientFunction;
     agg::gradient_circle            m_radialGradientFunction;
 
     double                          m_lineWidth;
@@ -606,6 +653,10 @@ private:
 #endif
     FontEngine                      m_fontEngine;
     FontCacheManager                m_fontCacheManager;
+
+    GradientF_Pad                   m_GradientF_Pad;
+    GradientF_Repeat                m_GradientF_Repeat;
+    GradientF_Reflect               m_GradientF_Reflect;
 };
 
 
