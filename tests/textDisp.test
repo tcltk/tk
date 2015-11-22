@@ -4186,6 +4186,22 @@ test textDisp-34.1 {Text widgets multi-scrolling problem: Bug 2677890} -setup {
     destroy .t1 .sy
 } -result {{0.0 0.24} {0.0 0.24} {0.0 0.24} {0.0 0.24}}
 
+test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -setup {
+    pack [text .t1] -fill both -expand y -side left
+    .t insert end "[string repeat a\nb\nc\n 500000]THE END\n"
+    set res {}
+} -body {
+    .t see 10000.0
+    after 300 {set fr1 [.t yview] ; set done 1}
+    vwait done
+    after 300 {set fr2 [.t yview] ; set done 1}
+    vwait done
+    lappend res [expr {[lindex $fr1 0] == [lindex $fr2 0]}]
+    lappend res [expr {[lindex $fr1 1] == [lindex $fr2 1]}]
+} -cleanup {
+    destroy .t1
+} -result {1 1}
+
 deleteWindows
 option clear
 
