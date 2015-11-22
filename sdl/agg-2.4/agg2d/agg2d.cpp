@@ -92,7 +92,6 @@ Agg2D::Agg2D() :
     m_fillGradientInterpolator(m_fillGradientMatrix),
     m_lineGradientInterpolator(m_lineGradientMatrix),
 
-    m_linearGradientFunction(),
     m_radialGradientFunction(),
 
     m_lineWidth(1),
@@ -113,10 +112,15 @@ Agg2D::Agg2D() :
     m_fontDC(::GetDC(0)),
     m_fontEngine(m_fontDC),
 #endif
-    m_fontCacheManager(m_fontEngine)
+    m_fontCacheManager(m_fontEngine),
+
+    m_GradientF_Pad(),
+    m_GradientF_Repeat(),
+    m_GradientF_Reflect()
 {
     lineCap(m_lineCap);
     lineJoin(m_lineJoin);
+    m_linearGradientFunction = &m_GradientF_Pad;
 }
 
 
@@ -489,6 +493,7 @@ void Agg2D::fillLinearGradient(double x1, double y1, double x2, double y2, Color
     {
         m_fillGradient[i] = c2;
     }
+    m_linearGradientFunction = &m_GradientF_Pad;
     double angle = atan2(y2-y1, x2-x1);
     m_fillGradientMatrix.reset();
     m_fillGradientMatrix *= agg::trans_affine_rotation(angle);
@@ -503,7 +508,7 @@ void Agg2D::fillLinearGradient(double x1, double y1, double x2, double y2, Color
 
 
 //------------------------------------------------------------------------
-void Agg2D::fillLinearGradient(double x1, double y1, double x2, double y2, int count, const double* offsets, const Color* colors)
+void Agg2D::fillLinearGradient(double x1, double y1, double x2, double y2, int count, const double* offsets, const Color* colors, GradientMode mode)
 {
     int i, j, lastOffset = 0;
     Color c(0, 0, 0);
@@ -529,6 +534,18 @@ void Agg2D::fillLinearGradient(double x1, double y1, double x2, double y2, int c
     for (; i < 256; i++)
     {
         m_fillGradient[i] = c;
+    }
+    if (mode == GradientRepeat)
+    {
+        m_linearGradientFunction = &m_GradientF_Repeat;
+    }
+    else if (mode == GradientReflect)
+    {
+        m_linearGradientFunction = &m_GradientF_Reflect;
+    }
+    else
+    {
+        m_linearGradientFunction = &m_GradientF_Pad;
     }
     double angle = atan2(y2-y1, x2-x1);
     m_fillGradientMatrix.reset();
@@ -951,7 +968,7 @@ void Agg2D::polyline(double* xy, int numPoints)
 {
     m_path.remove_all();
     //m_path.add_poly(xy, numPoints);
-	m_path.concat_poly(xy,0,true); // JME
+    m_path.concat_poly(xy,0,true); // JME
     drawPath(StrokeOnly);
 }
 
@@ -970,10 +987,10 @@ void Agg2D::font(const char* fontName,
                  FontCacheType ch,
                  double angle
 #ifdef AGG2D_USE_FREETYPE
-	       , const char* fontMem,
-		 long fontMemSize
+               , const char* fontMem,
+                 long fontMemSize
 #endif
-		 )
+                )
 {
     m_textAngle = angle;
     m_fontHeight = height;
@@ -983,9 +1000,8 @@ void Agg2D::font(const char* fontName,
     m_fontEngine.load_font(fontName,
                            0,
                            (ch == VectorFontCache) ?
-				agg::glyph_ren_outline :
-				agg::glyph_ren_agg_gray8,
-			   fontMem, fontMemSize);
+                           agg::glyph_ren_outline : agg::glyph_ren_agg_gray8,
+                           fontMem, fontMemSize);
     m_fontEngine.hinting(m_textHints);
     m_fontEngine.height((ch == VectorFontCache) ? height : worldToScreen(height));
 #else
@@ -1063,7 +1079,7 @@ double Agg2D::textWidthU(const unsigned* str, int len)
     if(len < 0)
     {
         len = 0;
-	while(str[len]) ++len;
+        while(str[len]) ++len;
     }
     while(len--)
     {
@@ -1166,7 +1182,7 @@ void Agg2D::text(double x, double y, const char* str, bool roundOff, double ddx,
             {
                 m_path.remove_all();
                 //m_path.add_path(tr, 0, false);
-				m_path.concat_path(tr,0); // JME
+                m_path.concat_path(tr,0); // JME
                 drawPath();
             }
 
@@ -1191,7 +1207,7 @@ void Agg2D::textU(double x, double y, const unsigned* str, int len, bool roundOf
     if(len < 0)
     {
         len = 0;
-	while (str[len]) len++;
+        while (str[len]) len++;
     }
 
     switch(m_textAlignX)
@@ -1259,7 +1275,7 @@ void Agg2D::textU(double x, double y, const unsigned* str, int len, bool roundOf
             {
                 m_path.remove_all();
                 //m_path.add_path(tr, 0, false);
-				m_path.concat_path(tr,0); // JME
+                m_path.concat_path(tr,0); // JME
                 drawPath();
             }
 
@@ -1632,16 +1648,16 @@ public:
     template<class BaseRenderer, class SolidRenderer>
     void static render(Agg2D& gr, BaseRenderer& renBase, SolidRenderer& renSolid, bool fillColor)
     {
-	// JME
-	typedef agg::span_allocator<Agg2D::ColorType> span_allocator_type;
+        // JME
+        typedef agg::span_allocator<Agg2D::ColorType> span_allocator_type;
         //- typedef agg::renderer_scanline_aa<BaseRenderer, Agg2D::LinearGradientSpan> RendererLinearGradient;
         typedef agg::renderer_scanline_aa<BaseRenderer,
-					  span_allocator_type,
-					  Agg2D::LinearGradientSpan> RendererLinearGradient;
+                                          span_allocator_type,
+                                          Agg2D::LinearGradientSpan> RendererLinearGradient;
         //- typedef agg::renderer_scanline_aa<BaseRenderer, Agg2D::RadialGradientSpan> RendererRadialGradient;
-	typedef agg::renderer_scanline_aa<BaseRenderer,
-					  span_allocator_type,
-					  Agg2D::RadialGradientSpan> RendererRadialGradient;
+        typedef agg::renderer_scanline_aa<BaseRenderer,
+                                          span_allocator_type,
+                                          Agg2D::RadialGradientSpan> RendererRadialGradient;
 
         if ((fillColor && gr.m_fillGradientFlag == Agg2D::Linear) ||
            (!fillColor && gr.m_lineGradientFlag == Agg2D::Linear))
@@ -1650,11 +1666,11 @@ public:
             {
                 Agg2D::LinearGradientSpan span(/*gr.m_allocator, */
                                                gr.m_fillGradientInterpolator,
-                                               gr.m_linearGradientFunction,
+                                               *gr.m_linearGradientFunction,
                                                gr.m_fillGradient,
                                                gr.m_fillGradientD1,
                                                gr.m_fillGradientD2);
-				//-RendererLinearGradient ren(renBase,span);
+                //-RendererLinearGradient ren(renBase,span);
                 RendererLinearGradient ren(renBase,gr.m_allocator,span);
                 agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ren);
             }
@@ -1662,7 +1678,7 @@ public:
             {
                 Agg2D::LinearGradientSpan span(/*gr.m_allocator,*/
                                                gr.m_lineGradientInterpolator,
-                                               gr.m_linearGradientFunction,
+                                               gr.m_GradientF_Pad,
                                                gr.m_lineGradient,
                                                gr.m_lineGradientD1,
                                                gr.m_lineGradientD2);
@@ -1768,8 +1784,8 @@ public:
     template<class BaseRenderer, class SolidRenderer, class Rasterizer, class Scanline>
     void static render(Agg2D& gr, BaseRenderer& renBase, SolidRenderer& renSolid, Rasterizer& ras, Scanline& sl)
     {
-		// JME
-		typedef agg::span_allocator<Agg2D::ColorType> span_allocator_type;
+        // JME
+        typedef agg::span_allocator<Agg2D::ColorType> span_allocator_type;
         typedef agg::renderer_scanline_aa<BaseRenderer,span_allocator_type,Agg2D::LinearGradientSpan> RendererLinearGradient;
         typedef agg::renderer_scanline_aa<BaseRenderer,span_allocator_type,Agg2D::RadialGradientSpan> RendererRadialGradient;
 
@@ -1777,7 +1793,7 @@ public:
         {
             Agg2D::LinearGradientSpan span(
                                            gr.m_fillGradientInterpolator,
-                                           gr.m_linearGradientFunction,
+                                           *gr.m_linearGradientFunction,
                                            gr.m_fillGradient,
                                            gr.m_fillGradientD1,
                                            gr.m_fillGradientD2);
@@ -1813,28 +1829,28 @@ public:
     static void renderImage(Agg2D& gr, const Agg2D::Image& img,
                             BaseRenderer& renBase, Interpolator& interpolator)
     {
-	//! JME - have not quite figured which part of this is not const-correct
-	// hence the cast.
-	Agg2D::Image& imgc = const_cast<Agg2D::Image&>(img);
-	Agg2D::PixFormat img_pixf(imgc.renBuf);
+        //! JME - have not quite figured which part of this is not const-correct
+        // hence the cast.
+        Agg2D::Image& imgc = const_cast<Agg2D::Image&>(img);
+        Agg2D::PixFormat img_pixf(imgc.renBuf);
 
-	if (gr.m_imageWrapMode == Agg2D::NoWrap)
+        if (gr.m_imageWrapMode == Agg2D::NoWrap)
         {
-	    typedef agg::image_accessor_clone<Agg2D::PixFormat> img_source_type;
+            typedef agg::image_accessor_clone<Agg2D::PixFormat> img_source_type;
             img_source_type source(img_pixf);
 
             SpanConvImageBlend blend(gr.m_imageBlendMode, gr.m_imageBlendColor);
             if (gr.m_imageFilter == Agg2D::NoFilter)
             {
 
-		typedef agg::span_image_filter_rgba_nn<img_source_type,Interpolator> SpanGenType;
-		typedef agg::span_converter<SpanGenType,SpanConvImageBlend> SpanConvType;
-		typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
+                typedef agg::span_image_filter_rgba_nn<img_source_type,Interpolator> SpanGenType;
+                typedef agg::span_converter<SpanGenType,SpanConvImageBlend> SpanConvType;
+                typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
 
-		SpanGenType sg(source,interpolator);
-		SpanConvType sc(sg, blend);
-		RendererType ri(renBase,gr.m_allocator,sg);
-		agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ri);
+                SpanGenType sg(source,interpolator);
+                SpanConvType sc(sg, blend);
+                RendererType ri(renBase,gr.m_allocator,sg);
+                agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ri);
             }
             else
             {
@@ -1845,7 +1861,7 @@ public:
                     interpolator.transformer().scaling_abs(&sx,&sy);
                     if (sx > 1.125 || sy > 1.125)
                     {
-			resample = true;
+                        resample = true;
                     }
                 }
 
@@ -1862,17 +1878,17 @@ public:
                 }
                 else
                 {
-				// this is the AGG2D default
+                    // this is the AGG2D default
                     if (gr.m_imageFilter == Agg2D::Bilinear)
                     {
                         typedef agg::span_image_filter_rgba_bilinear<img_source_type,Interpolator> SpanGenType;
                         typedef agg::span_converter<SpanGenType,SpanConvImageBlend> SpanConvType;
-			typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
+                        typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
 
-			SpanGenType sg(source,interpolator);
-			SpanConvType sc(sg, blend);
-			RendererType ri(renBase,gr.m_allocator,sg);
-			agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ri);
+                        SpanGenType sg(source,interpolator);
+                        SpanConvType sc(sg, blend);
+                        RendererType ri(renBase,gr.m_allocator,sg);
+                        agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ri);
                     }
                     else
                     {
@@ -1891,33 +1907,33 @@ public:
                         {
                             typedef agg::span_image_filter_rgba<img_source_type,Interpolator> SpanGenType;
                             typedef agg::span_converter<SpanGenType,SpanConvImageBlend> SpanConvType;
-			    typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
+                            typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
                             SpanGenType sg(source,interpolator,gr.m_imageFilterLut);
                             SpanConvType sc(sg, blend);
-			    RendererType ri(renBase,gr.m_allocator,sg);
+                            RendererType ri(renBase,gr.m_allocator,sg);
                             agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ri);
-			}
+                        }
                     }
                 }
             }
         }
-	else
-	{
-	    typedef agg::image_accessor_wrap<Agg2D::PixFormat, agg::wrap_mode_repeat, agg::wrap_mode_repeat> img_source_type_wrap;
-	    img_source_type_wrap source(img_pixf);
+        else
+        {
+            typedef agg::image_accessor_wrap<Agg2D::PixFormat, agg::wrap_mode_repeat, agg::wrap_mode_repeat> img_source_type_wrap;
+            img_source_type_wrap source(img_pixf);
 
             SpanConvImageBlend blend(gr.m_imageBlendMode, gr.m_imageBlendColor);
             if (gr.m_imageFilter == Agg2D::NoFilter)
             {
 
-		typedef agg::span_image_filter_rgba_nn<img_source_type_wrap,Interpolator> SpanGenType;
-		typedef agg::span_converter<SpanGenType,SpanConvImageBlend> SpanConvType;
-		typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
+                typedef agg::span_image_filter_rgba_nn<img_source_type_wrap,Interpolator> SpanGenType;
+                typedef agg::span_converter<SpanGenType,SpanConvImageBlend> SpanConvType;
+                typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
 
-		SpanGenType sg(source,interpolator);
-		SpanConvType sc(sg, blend);
-		RendererType ri(renBase,gr.m_allocator,sg);
-		agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ri);
+                SpanGenType sg(source,interpolator);
+                SpanConvType sc(sg, blend);
+                RendererType ri(renBase,gr.m_allocator,sg);
+                agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ri);
             }
             else
             {
@@ -1928,7 +1944,7 @@ public:
                     interpolator.transformer().scaling_abs(&sx,&sy);
                     if (sx > 1.125 || sy > 1.125)
                     {
-			resample = true;
+                        resample = true;
                     }
                 }
 
@@ -1945,17 +1961,17 @@ public:
                 }
                 else
                 {
-				// this is the AGG2D default
+                    // this is the AGG2D default
                     if (gr.m_imageFilter == Agg2D::Bilinear)
                     {
                         typedef agg::span_image_filter_rgba_bilinear<img_source_type_wrap,Interpolator> SpanGenType;
                         typedef agg::span_converter<SpanGenType,SpanConvImageBlend> SpanConvType;
-			typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
+                        typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
 
-			SpanGenType sg(source,interpolator);
-			SpanConvType sc(sg, blend);
-			RendererType ri(renBase,gr.m_allocator,sg);
-			agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ri);
+                        SpanGenType sg(source,interpolator);
+                        SpanConvType sc(sg, blend);
+                        RendererType ri(renBase,gr.m_allocator,sg);
+                        agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ri);
                     }
                     else
                     {
@@ -1974,16 +1990,16 @@ public:
                         {
                             typedef agg::span_image_filter_rgba<img_source_type_wrap,Interpolator> SpanGenType;
                             typedef agg::span_converter<SpanGenType,SpanConvImageBlend> SpanConvType;
-			    typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
+                            typedef agg::renderer_scanline_aa<BaseRenderer,Agg2D::SpanAllocator,SpanGenType> RendererType;
                             SpanGenType sg(source,interpolator,gr.m_imageFilterLut);
                             SpanConvType sc(sg, blend);
-			    RendererType ri(renBase,gr.m_allocator,sg);
+                            RendererType ri(renBase,gr.m_allocator,sg);
                             agg::render_scanlines(gr.m_rasterizer, gr.m_scanline, ri);
-			}
+                        }
                     }
                 }
             }
-	}
+        }
     }
 };
 
@@ -2034,7 +2050,7 @@ void Agg2D::renderImage(const Image& img, int x1, int y1, int x2, int y2,
 
     if(m_blendMode == BlendAlpha)
     {
-		// JME audit -
+        // JME audit -
         Agg2DRenderer::renderImage(*this,img, m_renBasePre, interpolator);
     }
     else
