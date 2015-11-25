@@ -675,7 +675,7 @@ GetCGContextForDrawable(
 
 	if (macDraw->flags & TK_IS_BW_PIXMAP) {
 	    bitsPerPixel = 8;
-	    bitmapInfo = kCGImageAlphaOnly;
+	    bitmapInfo = (CGBitmapInfo)kCGImageAlphaOnly;
 	} else {
 	    colorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
 	    bitsPerPixel = 32;
