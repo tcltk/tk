@@ -5088,12 +5088,14 @@ TkTextSetYView(
     int bottomY, close, lineIndex;
     TkTextIndex tmpIndex, rounded;
     int lineHeight;
+char buffer[3 * TCL_INTEGER_SPACE + 1];
 
     /*
      * If the specified position is the extra line at the end of the text,
      * round it back to the last real line.
      */
 
+LOG("debug", "\nENTERING  TkTextSetYView");
     lineIndex = TkBTreeLinesTo(textPtr, indexPtr->linePtr);
     if (lineIndex == TkBTreeNumLines(indexPtr->tree, textPtr)) {
 	TkTextIndexBackChars(textPtr, indexPtr, 1, &rounded, COUNT_INDICES);
@@ -5136,7 +5138,10 @@ TkTextSetYView(
     }
     dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr);
     if (dlPtr != NULL) {
-	if ((dlPtr->y + dlPtr->height) > dInfoPtr->maxY) {
+LOG("debug", "It's on screen");
+sprintf(buffer, "dlPtr->y: %d   dlPtr->height: %d   dInfoPtr->maxY: %d", dlPtr->y, dlPtr->height, dInfoPtr->maxY);
+LOG("debug", buffer);
+        if ((dlPtr->y + dlPtr->height) > dInfoPtr->maxY) {
 	    /*
 	     * Part of the line hangs off the bottom of the screen; pretend
 	     * the whole line is off-screen.
@@ -5144,6 +5149,10 @@ TkTextSetYView(
 
 	    dlPtr = NULL;
         } else {
+TkTextPrintIndex(textPtr, &dlPtr->index, buffer);
+LOG("debug", buffer);
+TkTextPrintIndex(textPtr, indexPtr, buffer);
+LOG("debug", buffer);
             if (TkTextIndexCmp(&dlPtr->index, indexPtr) <= 0) {
                 if (dInfoPtr->dLinePtr == dlPtr && dInfoPtr->topPixelOffset != 0) {
                     /*
@@ -5167,9 +5176,16 @@ TkTextSetYView(
      * If the line is not close, place it in the center of the window.
      */
 
+LOG("debug", "Not yet on screen");
     tmpIndex = *indexPtr;
+TkTextPrintIndex(textPtr, &tmpIndex, buffer);
+LOG("debug", buffer);
     TkTextFindDisplayLineEnd(textPtr, &tmpIndex, 0, NULL);
+TkTextPrintIndex(textPtr, &tmpIndex, buffer);
+LOG("debug", buffer);
     lineHeight = CalculateDisplayLineHeight(textPtr, &tmpIndex, NULL, NULL);
+    sprintf(buffer, "lineHeight: %d", lineHeight);
+LOG("debug", buffer);
 
     /*
      * It would be better if 'bottomY' were calculated using the actual height
@@ -5178,11 +5194,14 @@ TkTextSetYView(
 
     bottomY = (dInfoPtr->y + dInfoPtr->maxY + lineHeight)/2;
     close = (dInfoPtr->maxY - dInfoPtr->y)/3;
+sprintf(buffer, "bottomY: %d   close: %d", bottomY, close);
+LOG("debug", buffer);
     if (close < 3*textPtr->charHeight) {
 	close = 3*textPtr->charHeight;
     }
     if (dlPtr != NULL) {
 	int overlap;
+LOG("debug", "Above the top of the screen");
 
 	/*
 	 * The desired line is above the top of screen. If it is "close" to
@@ -5201,6 +5220,7 @@ TkTextSetYView(
 	}
     } else {
 	int overlap;
+LOG("debug", "Below the top of the screen");
 
 	/*
 	 * The desired line is below the bottom of the screen. If it is
@@ -5210,8 +5230,14 @@ TkTextSetYView(
 
 	MeasureUp(textPtr, indexPtr, close + lineHeight
 		- textPtr->charHeight/2, &tmpIndex, &overlap);
+TkTextPrintIndex(textPtr, &tmpIndex, buffer);
+LOG("debug", buffer);
+sprintf(buffer, "overlap: %d", overlap);
+LOG("debug", buffer);
 	if (FindDLine(textPtr, dInfoPtr->dLinePtr, &tmpIndex) != NULL) {
 	    bottomY = dInfoPtr->maxY - dInfoPtr->y;
+sprintf(buffer, "New bottomY: %d", bottomY);
+LOG("debug", buffer);
 	}
     }
 
@@ -5223,8 +5249,15 @@ TkTextSetYView(
      * of the window.
      */
 
+TkTextPrintIndex(textPtr, indexPtr, buffer);
+LOG("debug", buffer);
     MeasureUp(textPtr, indexPtr, bottomY, &textPtr->topIndex,
 	    &dInfoPtr->newTopPixelOffset);
+//dInfoPtr->newTopPixelOffset = 0;
+TkTextPrintIndex(textPtr, &textPtr->topIndex, buffer);
+LOG("debug", buffer);
+sprintf(buffer, "newTopPixelOffset: %d", dInfoPtr->newTopPixelOffset);
+LOG("debug", buffer);
 
   scheduleUpdate:
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {

@@ -35,6 +35,10 @@
 
 #include "tkText.h"
 
+#define LOG(toVar,what) \
+    Tcl_SetVar2(textPtr->interp, toVar, NULL, (what), \
+	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
+
 /*
  * Used to avoid having to allocate and deallocate arrays on the fly for
  * commonly used functions. Must be > 0.
@@ -604,7 +608,9 @@ CreateWidget(
     TkTextCreateDInfo(textPtr);
     TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, 0, 0,
 	    &startIndex);
+LOG("debug", "In createWidget, before");
     TkTextSetYView(textPtr, &startIndex, 0);
+LOG("debug", "In createWidget, after");
     textPtr->exportSelection = 1;
     textPtr->pickEvent.type = LeaveNotify;
     textPtr->undo = textPtr->sharedTextPtr->undo;
@@ -2652,7 +2658,9 @@ InsertChars(
 			lineAndByteIndex[resetViewCount], 0, &newTop);
 		TkTextIndexForwBytes(tPtr, &newTop,
 			lineAndByteIndex[resetViewCount+1], &newTop);
+LOG("debug", "In InsertChars, before");
 		TkTextSetYView(tPtr, &newTop, 0);
+LOG("debug", "In InsertChars, after");
 	    }
 	}
 	resetViewCount += 2;
