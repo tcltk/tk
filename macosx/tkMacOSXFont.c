@@ -15,6 +15,19 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXFont.h"
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+#define defaultOrientation kCTFontDefaultOrientation
+#define verticalOrientation kCTFontVerticalOrientation
+#else
+#define defaultOrientation kCTFontOrientationDefault
+#define verticalOrientation kCTFontOrientationVertical
+#endif
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101100
+#define fixedPitch kCTFontUserFixedPitchFontType
+#else
+#define fixedPitch kCTFontUIFontUserFixedPitch
+#endif
+
 /*
 #ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_FONTS
@@ -270,7 +283,7 @@ InitFont(
 	fmPtr->fixed = [nsFont advancementForGlyph:glyphs[0]].width ==
 		[nsFont advancementForGlyph:glyphs[1]].width;
 	bounds = NSRectFromCGRect(CTFontGetBoundingRectsForGlyphs((CTFontRef)
-		nsFont, kCTFontDefaultOrientation, ch, boundingRects, nCh));
+		nsFont, defaultOrientation, ch, boundingRects, nCh));
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }
@@ -382,8 +395,7 @@ TkpFontPkgInit(
 	systemFont++;
     }
     TkInitFontAttributes(&fa);
-    nsFont = (NSFont*) CTFontCreateUIFontForLanguage(
-	    kCTFontUserFixedPitchFontType, 11, NULL);
+    nsFont = (NSFont*) CTFontCreateUIFontForLanguage(fixedPitch, 11, NULL);
     if (nsFont) {
 	GetTkFontAttributesForNSFont(nsFont, &fa);
 	CFRelease(nsFont);
