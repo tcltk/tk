@@ -181,7 +181,21 @@ TkpOpenDisplay(
 		NSAppKitVersionNumber);
     }
     display->vendor = vendor;
-    Gestalt(gestaltSystemVersion, (SInt32 *) &display->release);
+    {
+	int major, minor, patch;
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+	Gestalt(gestaltSystemVersionMajor, (SInt32*)&major);
+	Gestalt(gestaltSystemVersionMinor, (SInt32*)&minor);
+	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
+#else
+	NSOperatingSystemVersion systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
+	major = systemVersion.majorVersion;
+	minor = systemVersion.minorVersion;
+	patch = systemVersion.patchVersion;
+#endif
+	display->release = major << 16 | minor << 8 | patch;
+    }
 
     /*
      * These screen bits never change

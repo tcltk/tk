@@ -745,15 +745,16 @@ TkWmProtocolEventProc(
 int
 Tk_MacOSXIsAppInFront(void)
 {
-    OSStatus err;
-    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
     Boolean isFrontProcess = true;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
 
-    err = ChkErr(GetFrontProcess, &frontPsn);
-    if (err == noErr) {
-	ChkErr(SameProcess, &frontPsn, &ourPsn, &isFrontProcess);
+    if (noErr == GetFrontProcess(&frontPsn)){
+	SameProcess(&frontPsn, &ourPsn, &isFrontProcess);
     }
-
+#else
+    isFrontProcess = [NSRunningApplication currentApplication].active;
+#endif
     return (isFrontProcess == true);
 }
 
