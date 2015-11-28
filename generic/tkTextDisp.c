@@ -6101,12 +6101,11 @@ TkTextYviewCmd(
  *
  * TkTextPendingsync --
  *
- *	This function computes how many lines are not up-to-date regarding
- *	asynchronous height calculations.
+ *	This function checks if any line heights are not up-to-date.
  *
  * Results:
- *	Returns a positive integer corresponding to the number of lines for
- *	which the height is outdated.
+ *	Returns a boolean true if it is the case, or false if all line
+ *      heights are up-to-date.
  *
  * Side effects:
  *	None.
@@ -6114,13 +6113,15 @@ TkTextYviewCmd(
  *--------------------------------------------------------------
  */
 
-int
+Bool
 TkTextPendingsync(
     TkText *textPtr)		/* Information about text widget. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
-    return (dInfoPtr->lastMetricUpdateLine - dInfoPtr->currentMetricUpdateLine);
+    return (
+        (dInfoPtr->lastMetricUpdateLine - dInfoPtr->currentMetricUpdateLine) ?
+        1 : 0);
 }
 
 /*
