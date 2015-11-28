@@ -1044,7 +1044,7 @@ test text-11a.12 {TextWidgetCmd procedure, "pendingsync" option} -setup {
     .top.yt delete 1.0 end
     .top.yt insert 1.0 $content
     # ensure the test is relevant
-    lappend res [expr {[.top.yt pendingsync] > 0}]
+    lappend res [.top.yt pendingsync]
     # asynchronously wait for completion of line metrics calculation
     while {[.top.yt pendingsync]} {update}
     .top.yt yview moveto $fraction1
