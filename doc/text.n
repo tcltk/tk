@@ -1783,14 +1783,21 @@ If \fIindex\fR is far out of view, then the command centers
 \fIindex\fR in the window.
 .TP
 \fIpathName \fBsync\fR ?\fB-command \fIcommand\fR?
+Control the synchronization of the view of text widget.
+.RS
+.TP
+\fIpathName \fBsync\fR
 Immediately brings the line metrics up-to-date by forcing computation of any
 outdated line heights. The command returns immediately if there is no such
 outdated line heights, otherwise it returns only at the end of the computation.
-The command returns an empty string. If \fB-command \fIcommand\fR is specified,
-schedule \fIcommand\fR to be executed exactly once as soon as all line
-calculations are up-to-date. If there are no pending line metrics calculations,
-\fIcommand\fR is executed immediately. \fIpathName \fBsync -command
-\fIcommand\fR returns the return value of \fIcommand\fR.
+The command returns an empty string.
+.TP
+\fIpathName \fBsync -command \fIcommand\fR
+Schedule \fIcommand\fR to be executed exactly once as soon as all line heights
+are up-to-date. If there are no pending line metrics calculations,
+\fIcommand\fR is executed immediately and the command returns the return value
+of \fIcommand\fR. Otherwise the command returns an empty string.
+.RE
 .TP
 \fIpathName \fBtag \fIoption \fR?\fIarg arg ...\fR?
 This command is used to manipulate tags.  The exact behavior of the
