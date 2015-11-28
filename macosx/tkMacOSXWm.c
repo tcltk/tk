@@ -200,6 +200,48 @@ static int tkMacOSXWmAttrNotifyVal = 0;
 static Tcl_HashTable windowTable;
 static int windowHashInit = false;
 
+
+
+#pragma mark NSWindow(TKWm)
+
+/*
+ * Conversion of coordinates between window and screen.
+ */
+
+@implementation NSWindow(TKWm)
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+- (NSPoint) convertPointToScreen: (NSPoint) point
+{
+    return [self convertBaseToScreen:point];
+}
+- (NSPoint) convertPointFromScreen: (NSPoint)point
+{
+    return [self convertScreenToBase:point];
+}
+@end
+#else
+- (NSPoint) convertPointToScreen: (NSPoint) point
+{
+    NSRect pointrect;
+    pointrect.origin = point;
+    pointrect.size.width = 0;
+    pointrect.size.height = 0;
+    return [self convertRectToScreen:pointrect].origin;
+}
+- (NSPoint) convertPointFromScreen: (NSPoint)point
+{
+    NSRect pointrect;
+    pointrect.origin = point;
+    pointrect.size.width = 0;
+    pointrect.size.height = 0;
+    return [self convertRectFromScreen:pointrect].origin;
+}
+@end
+#endif
+
+#pragma mark -
+
+
 /*
  * Forward declarations for procedures defined in this file:
  */
