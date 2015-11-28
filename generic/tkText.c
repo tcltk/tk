@@ -1510,19 +1510,19 @@ TextWidgetObjCmd(
 		if (textPtr->afterSyncCmd) {
 		    Tcl_DecrRefCount(textPtr->afterSyncCmd);
 		}
-		    textPtr->afterSyncCmd = cmd;
+		textPtr->afterSyncCmd = cmd;
 	    } else {
-		    result = Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
-		    Tcl_DecrRefCount(cmd);
+		result = Tcl_EvalObjEx(interp, cmd, TCL_EVAL_GLOBAL);
+		Tcl_DecrRefCount(cmd);
 	    }
-	break;
+	    break;
 	} else if (objc != 2) {
-		Tcl_WrongNumArgs(interp, 2, objv, "?-command command?");
-		result = TCL_ERROR;
-		goto done;
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-command command?");
+	    result = TCL_ERROR;
+	    goto done;
 	}
 	if (textPtr->afterSyncCmd) {
-		Tcl_DecrRefCount(textPtr->afterSyncCmd);
+	    Tcl_DecrRefCount(textPtr->afterSyncCmd);
 	}
 	textPtr->afterSyncCmd = NULL;
 	TkTextUpdateLineMetrics(textPtr, 1,
