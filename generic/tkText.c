@@ -1374,15 +1374,13 @@ TextWidgetObjCmd(
 	result = TextPeerCmd(textPtr, interp, objc, objv);
 	break;
     case TEXT_PENDINGSYNC: {
-        int number;
-
         if (objc != 2) {
             Tcl_WrongNumArgs(interp, 2, objv, NULL);
             result = TCL_ERROR;
             goto done;
         }
-        number = TkTextPendingsync(textPtr);
-        Tcl_SetObjResult(interp, Tcl_NewIntObj(number));
+        Tcl_SetObjResult(interp,
+                Tcl_NewBooleanObj(TkTextPendingsync(textPtr)));
         break;
     }
     case TEXT_REPLACE: {
