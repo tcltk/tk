@@ -98,7 +98,8 @@ XftGetInt(const char *ptr, int *val)
 	*val = -1;
 	ptr++;
     } else {
-	for (*val = 0; *ptr >= '0' && *ptr <= '9';) {
+	*val = '\0';
+	while ((*ptr >= '0') && (*ptr <= '9')) {
 	    *val = *val * 10 + *ptr++ - '0';
 	}
     }
@@ -124,7 +125,7 @@ SdlTkListFonts(const char *name, int *count)
         GlyphIndexHash *ghash;
         
 	ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);
-	if (name[0] == '*' || strcasecmp(ghash->familyName, name) == 0) {
+	if ((name[0] == '*') || (strcasecmp(ghash->familyName, name) == 0)) {
 	    Tcl_DStringAppend(&ds, "-unknown-", -1);
 	    Tcl_DStringAppend(&ds, ghash->familyName, -1);
 	    if (ghash->styleFlags & FT_STYLE_FLAG_BOLD) {
@@ -146,7 +147,7 @@ SdlTkListFonts(const char *name, int *count)
     Tcl_MutexUnlock(&fnt_mutex);
     *count = 0;
     /* fallback for "fixed" */
-    if (nmatch == 0 && strcmp(name, "fixed") == 0) {
+    if ((nmatch == 0) && (strcmp(name, "fixed") == 0)) {
 	const char *fbfont =
 	    "-unknown-dejavu sans mono-bold-r-normal-*-14-*-*-*-*-*-ucs-4";
 
@@ -212,7 +213,7 @@ MatchFont(const char *xlfd, _Font *_f)
     if (!(p = strchr (++p, '-'))) {
         return TCL_ERROR;
     }
-    if (!(p = XftGetInt (++p, &size)) || size < 0) {
+    if (!(p = XftGetInt (++p, &size)) || (size < 0)) {
         return TCL_ERROR;
     }
     hPtr = Tcl_FirstHashEntry(&file_face_hash, &search);
@@ -244,13 +245,13 @@ MatchFont(const char *xlfd, _Font *_f)
 		Tcl_DStringSetLength(&ds, 0);
 		Tcl_DStringAppend(&ds, "-unknown-", -1);
 		Tcl_DStringAppend(&ds, aliases[i], -1);
-		if (weight[0] == 'b' || weight[0] == 'B') {
+		if ((weight[0] == 'b') || (weight[0] == 'B')) {
 		    Tcl_DStringAppend(&ds, "-bold", -1);
 		} else {
 		    Tcl_DStringAppend(&ds, "-normal", -1);
 		}
-		if (slant[0] == 'i' || slant[0] == 'I' ||
-		    slant[0] == 'o' || slant[0] == 'O') {
+		if ((slant[0] == 'i') || (slant[0] == 'I') ||
+		    (slant[0] == 'o') || (slant[0] == 'O')) {
 		    Tcl_DStringAppend(&ds, "-o", -1);
 		} else {
 		    Tcl_DStringAppend(&ds, "-r", -1);
@@ -711,7 +712,7 @@ SdlTkReadFTStream(FT_Stream ftstr, unsigned long offs, unsigned char *buf,
 {
     unsigned long ret = 0;
 
-    if (!ftstr->descriptor.pointer) {
+    if (ftstr->descriptor.pointer == NULL) {
 	Tcl_Channel chan;
 
 	chan = Tcl_OpenFileChannel(NULL, (char *) ftstr->pathname.pointer,
@@ -722,7 +723,7 @@ SdlTkReadFTStream(FT_Stream ftstr, unsigned long offs, unsigned char *buf,
 	    ftstr->descriptor.pointer = (void *) chan;
 	}
     }
-    if (ftstr->descriptor.pointer && count) {
+    if ((ftstr->descriptor.pointer != NULL) && count) {
         Tcl_WideInt wOffs;
 	int n;
 
@@ -747,11 +748,11 @@ SdlTkCloseFTStream(FT_Stream ftstr)
     if (!ftstr) {
 	return;
     }
-    if (ftstr->descriptor.pointer) {
+    if (ftstr->descriptor.pointer != NULL) {
         Tcl_Close(NULL, (Tcl_Channel) ftstr->descriptor.pointer);
-	ftstr->descriptor.pointer = 0;
+	ftstr->descriptor.pointer = NULL;
     }
-    ftstr->pathname.pointer = 0;
+    ftstr->pathname.pointer = NULL;
     ckfree((char *) ftstr); 
 }
 
@@ -808,7 +809,7 @@ SdlTkGetFontFile(const char *family, int size, int isBold, int isItalic,
     if (nameRet != NULL) {
 	*nameRet = fileName;
     }
-    if (filesizeRet != NULL && fileName != NULL) {
+    if ((filesizeRet != NULL) && (fileName != NULL)) {
 	struct stat stbuf;
 
 	*filesizeRet = 0;
@@ -817,8 +818,11 @@ SdlTkGetFontFile(const char *family, int size, int isBold, int isItalic,
 	    *filesizeRet = stbuf.st_size;
 	}
     }
-    if (fileName != NULL && fstorage.file != fileName) {
+    if ((fileName != NULL) && (fstorage.file != fileName)) {
 	ckfree(fstorage.file);
+    }
+    if (fstorage.xlfd != NULL) {
+	ckfree(fstorage.xlfd);
     }
     return ret == TCL_OK;
 }
@@ -907,8 +911,8 @@ fonterr:
 	    if (!(face->face_flags & FT_FACE_FLAG_SCALABLE)) {
 	        goto nextface;
 	    }
-	    if (face->num_charmaps < 1 || !face->charmap ||
-		face->charmap->encoding != FT_ENCODING_UNICODE) {
+	    if ((face->num_charmaps < 1) || !face->charmap ||
+		(face->charmap->encoding != FT_ENCODING_UNICODE)) {
 		goto nextface;
 	    }
 	    memset(&ffKey, '\0', sizeof (ffKey));
@@ -919,12 +923,12 @@ fonterr:
 	    if (isNew) {
 	        GlyphIndexHash *ghash;
 		Tcl_DString ds, ds2;
-		char *style;
+		char *style, *weight;
 
 		ghash = (GlyphIndexHash *) ckalloc(sizeof (GlyphIndexHash));
 		Tcl_InitHashTable(&ghash->hash, TCL_ONE_WORD_KEYS);
 		ghash->refCnt = 1;
-		ghash->familyName = ckalloc(strlen(face->family_name) + 1);
+		ghash->familyName = ckalloc(strlen(face->family_name) + 24);
 		strcpy(ghash->familyName, face->family_name);
 		ghash->faceFlags = face->face_flags;
 		ghash->styleFlags = face->style_flags;
@@ -938,22 +942,23 @@ fonterr:
 			++style;
 		    }
 		}
+		weight = "-normal";
 		style = Tcl_DStringValue(&ds2);
+		if (strstr(style, "black")) {
+		    strcat(ghash->familyName, " Black");
+		} else if (strstr(style, "light")) {
+		    strcat(ghash->familyName, " Light");
+		} else if (strstr(style, "thin")) {
+		    strcat(ghash->familyName, " Thin");
+		} else if (strstr(style, "medium")) {
+		    strcat(ghash->familyName, " Medium");
+		}
+		if (ghash->styleFlags & FT_STYLE_FLAG_BOLD) {
+		    weight = "-bold";
+		}
 		Tcl_DStringAppend(&ds, "-*-", -1);
 		Tcl_DStringAppend(&ds, ghash->familyName, -1);
-		if (strstr(style, "black")) {
-		    Tcl_DStringAppend(&ds, "-black", -1);
-		} else if (strstr(style, "light")) {
-		    Tcl_DStringAppend(&ds, "-light", -1);
-		} else if (strstr(style, "thin")) {
-		    Tcl_DStringAppend(&ds, "-thin", -1);
-		} else if (strstr(style, "medium")) {
-		    Tcl_DStringAppend(&ds, "-medium", -1);
-		} else if (ghash->styleFlags & FT_STYLE_FLAG_BOLD) {
-		    Tcl_DStringAppend(&ds, "-bold", -1);
-		} else {
-		    Tcl_DStringAppend(&ds, "-normal", -1);
-		}
+		Tcl_DStringAppend(&ds, weight, -1);
 		if (ghash->styleFlags & FT_STYLE_FLAG_ITALIC) {
 		    Tcl_DStringAppend(&ds, "-o", -1);
 		} else {
@@ -1050,8 +1055,8 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fileName)
 	if (!(face->face_flags & FT_FACE_FLAG_SCALABLE)) {
 	    goto nextface;
 	}
-	if (face->num_charmaps < 1 || !face->charmap ||
-	    face->charmap->encoding != FT_ENCODING_UNICODE) {
+	if ((face->num_charmaps < 1) || !face->charmap ||
+	    (face->charmap->encoding != FT_ENCODING_UNICODE)) {
 	    goto nextface;
 	}
 	memset(&ffKey, '\0', sizeof (ffKey));
