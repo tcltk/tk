@@ -181,7 +181,21 @@ TkpOpenDisplay(
 		NSAppKitVersionNumber);
     }
     display->vendor = vendor;
-    Gestalt(gestaltSystemVersion, (SInt32 *) &display->release);
+    {
+	int major, minor, patch;
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+	Gestalt(gestaltSystemVersionMajor, (SInt32*)&major);
+	Gestalt(gestaltSystemVersionMinor, (SInt32*)&minor);
+	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
+#else
+	NSOperatingSystemVersion systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
+	major = systemVersion.majorVersion;
+	minor = systemVersion.minorVersion;
+	patch = systemVersion.patchVersion;
+#endif
+	display->release = major << 16 | minor << 8 | patch;
+    }
 
     /*
      * These screen bits never change
@@ -890,6 +904,7 @@ XGetImage(
     int format)
 {
     NSBitmapImageRep *bitmap_rep;
+    NSUInteger         bitmap_fmt;
     XImage *       imagePtr = NULL;
     char *           bitmap = NULL;
     char *           image_data=NULL;
@@ -908,10 +923,11 @@ XGetImage(
 	}
 
 	bitmap_rep =  BitmapRepFromDrawableRect(d, x, y,width, height);
+	bitmap_fmt = [bitmap_rep bitmapFormat];
 
-	if ( bitmap_rep == Nil                        ||
-	     [bitmap_rep bitmapFormat] != 0    || 
-	     [bitmap_rep samplesPerPixel] != 4 ||
+	if ( bitmap_rep == Nil                     ||
+	     (bitmap_fmt != 0 && bitmap_fmt != 1)  ||
+	     [bitmap_rep samplesPerPixel] != 4     ||
 	     [bitmap_rep isPlanar] != 0               ) {
 	    TkMacOSXDbgMsg("XGetImage: Failed to construct NSBitmapRep");
 	    return NULL;
@@ -920,10 +936,9 @@ XGetImage(
 	NSSize image_size = NSMakeSize(width, height);
 	NSImage* ns_image = [[NSImage alloc]initWithSize:image_size];
 	[ns_image addRepresentation:bitmap_rep];
- 
-	/* Assume premultiplied nonplanar data with 4 bytes per pixel and alpha last.*/
-	if ( [bitmap_rep bitmapFormat] == 0 &&
-	     [bitmap_rep isPlanar ] == 0 &&
+
+	/* Assume premultiplied nonplanar data with 4 bytes per pixel.*/
+	if ( [bitmap_rep isPlanar ] == 0 &&
 	     [bitmap_rep samplesPerPixel] == 4 ) {
 	    bytes_per_row = [bitmap_rep bytesPerRow];
 	    size = bytes_per_row*height;
@@ -933,14 +948,27 @@ XGetImage(
 		bitmap = ckalloc(size);
 		/*
 		  Oddly enough, the bitmap has the top row at the beginning,
-		  and the pixels are in BGRA format.
+		  and the pixels are in BGRA or ABGR format.
 		*/
-		for (row=0, n=0; row<height; row++, n+=bytes_per_row) {
-		    for (m=n; m<n+bytes_per_row; m+=4) {
-			*(bitmap+m)     = *(image_data+m+2);
-			*(bitmap+m+1) = *(image_data+m+1);
-			*(bitmap+m+2) = *(image_data+m);
-			*(bitmap+m+3) = *(image_data+m+3);
+		if (bitmap_fmt == 0) {
+		    /* BGRA */
+		    for (row=0, n=0; row<height; row++, n+=bytes_per_row) {
+			for (m=n; m<n+bytes_per_row; m+=4) {
+			    *(bitmap+m)   = *(image_data+m+2);
+			    *(bitmap+m+1) = *(image_data+m+1);
+			    *(bitmap+m+2) = *(image_data+m);
+			    *(bitmap+m+3) = *(image_data+m+3);
+			}
+		    }
+		} else {
+		    /* ABGR */
+		    for (row=0, n=0; row<height; row++, n+=bytes_per_row) {
+			for (m=n; m<n+bytes_per_row; m+=4) {
+			    *(bitmap+m)   = *(image_data+m+3);
+			    *(bitmap+m+1) = *(image_data+m+2);
+			    *(bitmap+m+2) = *(image_data+m+1);
+			    *(bitmap+m+3) = *(image_data+m);
+			}
 		    }
 		}
 	    }
