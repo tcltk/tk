@@ -414,7 +414,7 @@ In \fBbrowse\fR mode it is also possible to drag the selection
 with button 1.
 .VS 8.5
 On button 1, the listbox will also take focus if it has a \fBnormal\fR
-state and \fB\-takefocus\fR is true.
+state.
 .VE 8.5
 .PP
 If the selection mode is \fBmultiple\fR or \fBextended\fR,

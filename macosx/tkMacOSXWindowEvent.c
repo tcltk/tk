@@ -747,15 +747,16 @@ TkWmProtocolEventProc(
 int
 Tk_MacOSXIsAppInFront(void)
 {
-    OSStatus err;
-    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
     Boolean isFrontProcess = true;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
 
-    err = ChkErr(GetFrontProcess, &frontPsn);
-    if (err == noErr) {
-	ChkErr(SameProcess, &frontPsn, &ourPsn, &isFrontProcess);
+    if (noErr == GetFrontProcess(&frontPsn)){
+	SameProcess(&frontPsn, &ourPsn, &isFrontProcess);
     }
-
+#else
+    isFrontProcess = [NSRunningApplication currentApplication].active;
+#endif
     return (isFrontProcess == true);
 }
 
@@ -781,21 +782,6 @@ Tk_MacOSXIsAppInFront(void)
  * HITheme API.
  *
  */
-
-@interface TKContentView(TKWindowEvent)
-- (void) drawRect: (NSRect) rect;
-- (void) generateExposeEvents: (HIShapeRef) shape;
-- (void) generateExposeEvents: (HIShapeRef) shape childrenOnly: (int) childrenOnly;
-- (void) viewDidEndLiveResize;
-- (void) tkToolbarButton: (id) sender;
-- (BOOL) isOpaque;
-- (BOOL) wantsDefaultClipping;
-- (BOOL) acceptsFirstResponder;
-- (void) keyDown: (NSEvent *) theEvent;
-@end
-
-@implementation TKContentView
-@end
 
 /*Restrict event processing to Expose events.*/
 static Tk_RestrictAction

@@ -7029,6 +7029,24 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
 
 2015-10-22 (bug)[1414025] $entry insertion cursor visibility (vogel)
 
+2015-10-25 (bug)[477949] Unicode-enable [option readfile] (androwish,nijtmans)
+
+2015-10-26 (bug) PNG rendering on El Capitan (meier,walzer)
+
+2015-11-08 (bug)[2160206] menubutton panic (vogel)
+
+2015-11-08 (bug)[220854] Display trailing TAB in entry (vogel)
+
+2015-11-08 (bug)[542199] double click on lone char in entry (vogel)
+
+2015-11-08 (bug)[297442d] strict motif binding on <Control-underscore> (vogel)
+
+2015-11-08 (bug)[3601604] $listbox -takefocus (vogel)
+
+2015-11-09 (bug)[5ee8af] X, Win: 64-bit enable embedded windows (vogel)
+
+2015-11-29 (bug)[1997299] [text] tag borderwidth leak (vogel)
+
 Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 --- Released 8.5.19, December 1, 2015 --- http://core.tcl.tk/tk/ for details
