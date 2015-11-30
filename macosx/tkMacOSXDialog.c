@@ -34,31 +34,31 @@ enum colorOptions {
 
 static const char *const openOptionStrings[] = {
     "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-    "-message", "-multiple", "-nativeonly", "-parent", "-title",
-    "-typevariable", "-command", NULL
+    "-message", "-multiple", "-parent", "-title", "-typevariable",
+    "-command", NULL
 };
 enum openOptions {
     OPEN_DEFAULT, OPEN_FILETYPES, OPEN_INITDIR, OPEN_INITFILE,
-    OPEN_MESSAGE, OPEN_MULTIPLE, OPEN_NATIVEONLY, OPEN_PARENT, OPEN_TITLE,
+    OPEN_MESSAGE, OPEN_MULTIPLE, OPEN_PARENT, OPEN_TITLE,
     OPEN_TYPEVARIABLE, OPEN_COMMAND,
 };
 static const char *const saveOptionStrings[] = {
     "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-    "-message", "-nativeonly", "-parent", "-title", "-typevariable",
-    "-command", "-confirmoverwrite", NULL
+    "-message", "-parent", "-title", "-typevariable", "-command",
+    "-confirmoverwrite", NULL
 };
 enum saveOptions {
     SAVE_DEFAULT, SAVE_FILETYPES, SAVE_INITDIR, SAVE_INITFILE,
-    SAVE_MESSAGE, SAVE_NATIVEONLY, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE,
-    SAVE_COMMAND, SAVE_CONFIRMOW,
+    SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE, SAVE_COMMAND,
+    SAVE_CONFIRMOW
 };
 static const char *const chooseOptionStrings[] = {
-    "-initialdir", "-message", "-mustexist", "-nativeonly", "-parent",
-    "-title", "-command", NULL
+    "-initialdir", "-message", "-mustexist", "-parent", "-title", "-command",
+    NULL
 };
 enum chooseOptions {
-    CHOOSE_INITDIR, CHOOSE_MESSAGE, CHOOSE_MUSTEXIST, CHOOSE_NATIVEONLY,
-    CHOOSE_PARENT, CHOOSE_TITLE, CHOOSE_COMMAND,
+    CHOOSE_INITDIR, CHOOSE_MESSAGE, CHOOSE_MUSTEXIST, CHOOSE_PARENT,
+    CHOOSE_TITLE, CHOOSE_COMMAND,
 };
 typedef struct {
     Tcl_Interp *interp;
@@ -387,7 +387,7 @@ Tk_GetOpenFileObjCmd(
     Tk_Window tkwin = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
-    int index, len, multiple = 0, dummy;
+    int index, len, multiple = 0;
     FileFilterList fl;
     Tcl_Obj *cmdObj = NULL, *typeVariablePtr = NULL;
     FilePanelCallbackInfo callbackInfoStruct;
@@ -442,12 +442,6 @@ Tk_GetOpenFileObjCmd(
 	case OPEN_MULTIPLE:
 	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
 		    &multiple) != TCL_OK) {
-		goto end;
-	    }
-	    break;
-	case OPEN_NATIVEONLY:
-	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
-		    &dummy) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -590,7 +584,7 @@ Tk_GetSaveFileObjCmd(
     Tk_Window tkwin = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
-    int confirmOverwrite = 1, dummy;
+    int confirmOverwrite = 1;
     int index, len;
     FileFilterList fl;
     Tcl_Obj *cmdObj = NULL;
@@ -650,12 +644,6 @@ Tk_GetSaveFileObjCmd(
 		    Tcl_GetString(objv[i + 1])];
 	    [panel setMessage:message];
 	    [message release];
-	    break;
-	case SAVE_NATIVEONLY:
-	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
-		    &dummy) != TCL_OK) {
-		goto end;
-	    }
 	    break;
 	case SAVE_PARENT:
 	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
@@ -786,7 +774,7 @@ Tk_ChooseDirectoryObjCmd(
     Tk_Window tkwin = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
-    int index, len, mustexist = 0, dummy;
+    int index, len, mustexist = 0;
     Tcl_Obj *cmdObj = NULL;
     FilePanelCallbackInfo callbackInfoStruct;
     FilePanelCallbackInfo *callbackInfo = &callbackInfoStruct;
@@ -824,12 +812,6 @@ Tk_ChooseDirectoryObjCmd(
 	case CHOOSE_MUSTEXIST:
 	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
 		    &mustexist) != TCL_OK) {
-		goto end;
-	    }
-	    break;
-	case CHOOSE_NATIVEONLY:
-	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
-		    &dummy) != TCL_OK) {
 		goto end;
 	    }
 	    break;
