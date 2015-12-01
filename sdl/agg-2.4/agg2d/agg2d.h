@@ -67,12 +67,6 @@ class Agg2D
     class GradientF
     {
     public:
-        virtual int calculate(int x, int y, int d);
-    };
-
-    class GradientF_Pad : public GradientF
-    {
-    public:
         virtual int calculate(int x, int y, int d)
         {
             return x;
@@ -654,7 +648,7 @@ private:
     FontEngine                      m_fontEngine;
     FontCacheManager                m_fontCacheManager;
 
-    GradientF_Pad                   m_GradientF_Pad;
+    GradientF                       m_GradientF_Pad;
     GradientF_Repeat                m_GradientF_Repeat;
     GradientF_Reflect               m_GradientF_Reflect;
 };
