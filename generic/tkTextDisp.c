@@ -5237,6 +5237,15 @@ TkTextSetYView(
     }
 
     /*
+     * If the window height is smaller than the line height, prefer to make
+     * the top of the line visible.
+     */
+
+    if (dInfoPtr->maxY - dInfoPtr->y < lineHeight) {
+        bottomY = lineHeight;
+    }
+
+    /*
      * Our job now is to arrange the display so that indexPtr appears as low
      * on the screen as possible but with its bottom no lower than bottomY.
      * BottomY is the bottom of the window if the desired line is just below
