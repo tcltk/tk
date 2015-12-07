@@ -2923,8 +2923,7 @@ AsyncUpdateLineMetrics(
 	return;
     }
 
-    if ((dInfoPtr->flags & REDRAW_PENDING) || !Tk_IsMapped(textPtr->tkwin)
-        || dInfoPtr->maxX <= dInfoPtr->x || dInfoPtr->maxY <= dInfoPtr->y) {
+    if (dInfoPtr->flags & REDRAW_PENDING) {
 	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		AsyncUpdateLineMetrics, clientData);
 	return;
