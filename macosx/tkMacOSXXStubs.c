@@ -142,7 +142,7 @@ TkpOpenDisplay(
     static NSRect maxBounds = {{0, 0}, {0, 0}};
     static char vendor[25] = "";
     NSArray *cgVers;
-    NSAutoreleasePool *pool;
+
 
     if (gMacDisplay != NULL) {
 	if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
@@ -151,6 +151,8 @@ TkpOpenDisplay(
 	    return NULL;
 	}
     }
+
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     display = ckalloc(sizeof(Display));
     screen  = ckalloc(sizeof(Screen));
@@ -166,7 +168,6 @@ TkpOpenDisplay(
     display->default_screen = 0;
     display->display_name   = (char *) macScreenName;
 
-    pool = [NSAutoreleasePool new];
     cgVers = [[[NSBundle bundleWithIdentifier:@"com.apple.CoreGraphics"]
 	    objectForInfoDictionaryKey:@"CFBundleShortVersionString"]
 	    componentsSeparatedByString:@"."];
@@ -184,7 +185,7 @@ TkpOpenDisplay(
     {
 	int major, minor, patch;
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 10100
 	Gestalt(gestaltSystemVersionMajor, (SInt32*)&major);
 	Gestalt(gestaltSystemVersionMinor, (SInt32*)&minor);
 	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
