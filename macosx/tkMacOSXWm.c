@@ -386,6 +386,7 @@ static void		RemapWindows(TkWindow *winPtr,
 @end
 
 @implementation TKWindow(TKWm)
+
 - (BOOL) canBecomeKeyWindow
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
@@ -395,16 +396,38 @@ static void		RemapWindows(TkWindow *winPtr,
 	    kWindowNoActivatesAttribute)) ? NO : YES;
 }
 
+#if DEBUG_ZOMBIES
 - (id) retain
 {
-#if DEBUG_ZOMBIES
+    id result = [super retain];
     const char *title = [[self title] UTF8String];
-    if (title != NULL) {
-	printf("Retaining %s with count %lu\n", title, [self retainCount]);
+    if (title == nil) {
+	title = "unnamed window";
     }
-#endif
-    return [super retain];
+    printf("Retained <%s>. Count is: %lu\n", title, [self retainCount]);
+    return result;
 }
+
+- (id) autorelease
+{
+    id result = [super autorelease];
+    const char *title = [[self title] UTF8String];
+    if (title == nil) {
+	title = "unnamed window";
+    }
+    printf("Autoreleased <%s>. Count is %lu\n", title, [self retainCount]);
+    return result;
+}
+
+- (oneway void) release {
+    const char *title = [[self title] UTF8String];
+    if (title == nil) {
+	title = "unnamed window";
+    }
+    printf("Releasing <%s>. Count is %lu\n", title, [self retainCount]);
+    [super release];
+}
+#endif
 @end
 
 #pragma mark -
@@ -842,6 +865,15 @@ TkWmDeadWindow(
         if (winPtr->window) {
             ((MacDrawable *) winPtr->window)->view = nil;
         }
+#if DEBUG_ZOMBIES
+	{
+	    const char *title = [[window title] UTF8String];
+	    if (title == nil) {
+		title = "unnamed window";
+	    }
+	    printf("Closing <%s>. Count is: %lu\n", title, [window retainCount]);
+	}
+#endif
         [window release];
 	wmPtr->window = NULL;
        /* Activate the highest window left on the screen. */
@@ -5507,6 +5539,8 @@ TkMacOSXMakeRealWindowExist(
 	 */
     }
 
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+
     WindowClass macClass = wmPtr->macClass;
     wmPtr->attributes &= (tkAlwaysValidAttributes |
 	    macClassAttrs[macClass].validAttrs);
@@ -5590,6 +5624,8 @@ TkMacOSXMakeRealWindowExist(
 
     TkMacOSXRegisterOffScreenWindow((Window) macWin, window);
     macWin->flags |= TK_HOST_EXISTS;
+
+    [pool drain];
 }
 
 /*
