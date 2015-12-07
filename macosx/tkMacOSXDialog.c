@@ -519,7 +519,7 @@ Tk_GetOpenFileObjCmd(
 	       types:fileTypes
 	       modalForWindow:parent
 	       modalDelegate:NSApp
-	       didEndSelector: 
+	       didEndSelector:
 		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
 	       contextInfo:callbackInfo];
 #else
@@ -717,7 +717,7 @@ Tk_GetSaveFileObjCmd(
 	       file:filename
 	       modalForWindow:parent
 	       modalDelegate:NSApp
-	       didEndSelector: 
+	       didEndSelector:
 		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
 	       contextInfo:callbackInfo];
 #else
@@ -1154,7 +1154,7 @@ Tk_MessageBoxObjCmd(
 	       didEndSelector:@selector(tkAlertDidEnd:returnCode:contextInfo:)
 	       contextInfo:callbackInfo];
 #endif
-	modalReturnCode = cmdObj ? 0 : 
+	modalReturnCode = cmdObj ? 0 :
 	    [NSApp runModalForWindow:[alert window]];
     } else {
 	modalReturnCode = [alert runModal];

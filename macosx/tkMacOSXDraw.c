@@ -1835,7 +1835,7 @@ TkMacOSXGetClipRgn(
     MacDrawable *macDraw = (MacDrawable *) drawable;
     HIShapeRef clipRgn = NULL;
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    
+
     if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(macDraw->winPtr);
 #ifdef TK_MAC_DEBUG_DRAWING
@@ -1914,7 +1914,7 @@ TkpClipDrawableToRect(
     MacDrawable *macDraw = (MacDrawable *) d;
     NSView *view = TkMacOSXDrawableView(macDraw);
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    
+
     if (macDraw->drawRgn) {
 	CFRelease(macDraw->drawRgn);
 	macDraw->drawRgn = NULL;

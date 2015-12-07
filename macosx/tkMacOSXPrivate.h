@@ -299,19 +299,19 @@ VISIBILITY_HIDDEN
 @interface TKApplication(TKHLEvents)
 - (void) terminate: (id) sender;
 - (void) preferences: (id) sender;
-- (void) handleQuitApplicationEvent:   (NSAppleEventDescriptor *)event 
+- (void) handleQuitApplicationEvent:   (NSAppleEventDescriptor *)event
 		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
-- (void) handleOpenApplicationEvent:   (NSAppleEventDescriptor *)event 
+- (void) handleOpenApplicationEvent:   (NSAppleEventDescriptor *)event
 		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
-- (void) handleReopenApplicationEvent: (NSAppleEventDescriptor *)event 
+- (void) handleReopenApplicationEvent: (NSAppleEventDescriptor *)event
 		       withReplyEvent: (NSAppleEventDescriptor *)replyEvent;
 - (void) handleShowPreferencesEvent:   (NSAppleEventDescriptor *)event
 		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
-- (void) handleOpenDocumentsEvent:     (NSAppleEventDescriptor *)event 
+- (void) handleOpenDocumentsEvent:     (NSAppleEventDescriptor *)event
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
-- (void) handlePrintDocumentsEvent:    (NSAppleEventDescriptor *)event 
+- (void) handlePrintDocumentsEvent:    (NSAppleEventDescriptor *)event
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
-- (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event 
+- (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 @end
 

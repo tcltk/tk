@@ -33,7 +33,7 @@ typedef struct KillEvent {
  * Static functions used only in this file.
  */
 
-static void tkMacOSXProcessFiles(NSAppleEventDescriptor* event, 
+static void tkMacOSXProcessFiles(NSAppleEventDescriptor* event,
 				 NSAppleEventDescriptor* replyEvent,
 				 Tcl_Interp *interp,
 				 char* procedure);
@@ -53,7 +53,7 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
     [self handleShowPreferencesEvent:Nil withReplyEvent:Nil];
 }
 
-- (void) handleQuitApplicationEvent: (NSAppleEventDescriptor *)event 
+- (void) handleQuitApplicationEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
     KillEvent *eventPtr;
@@ -75,7 +75,7 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
     }
 }
 
-- (void) handleOpenApplicationEvent: (NSAppleEventDescriptor *)event 
+- (void) handleOpenApplicationEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
    Tcl_Interp *interp = _eventInterp;
@@ -90,7 +90,7 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
     }
 }
 
-- (void) handleReopenApplicationEvent: (NSAppleEventDescriptor *)event 
+- (void) handleReopenApplicationEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
@@ -109,7 +109,7 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
     }
 }
 
-- (void) handleShowPreferencesEvent: (NSAppleEventDescriptor *)event 
+- (void) handleShowPreferencesEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
     if (_eventInterp &&
@@ -122,19 +122,19 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
     }
 }
 
-- (void) handleOpenDocumentsEvent: (NSAppleEventDescriptor *)event 
+- (void) handleOpenDocumentsEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
     tkMacOSXProcessFiles(event, replyEvent, _eventInterp, "::tk::mac::OpenDocument");
 }
 
-- (void) handlePrintDocumentsEvent: (NSAppleEventDescriptor *)event 
+- (void) handlePrintDocumentsEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
     tkMacOSXProcessFiles(event, replyEvent, _eventInterp, "::tk::mac::PrintDocument");
 }
 
-- (void) handleDoScriptEvent: (NSAppleEventDescriptor *)event 
+- (void) handleDoScriptEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
     OSStatus err;
@@ -164,7 +164,7 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 		      errString, strlen(errString));
 	return;
     }
-    
+
     if (MissedAnyParameters((AppleEvent*)theDesc)) {
     	sprintf(errString, "AEDoScriptHandler: extra parameters");
     	AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString, typeChar,
@@ -202,7 +202,7 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 	     * The descriptor can be coerced to UTF8 text.  Evaluate as Tcl, or
 	     * or pass the text as a string argument to ::tk::mac::DoScriptText
 	     * if that procedure exists.
-	     */ 
+	     */
 	    char *data = ckalloc(actual + 1);
 	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject, typeUTF8Text, &type,
 			    data, actual, NULL)) {
@@ -274,7 +274,7 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 
 static void
 tkMacOSXProcessFiles(
-    NSAppleEventDescriptor* event, 
+    NSAppleEventDescriptor* event,
     NSAppleEventDescriptor* replyEvent,
     Tcl_Interp *interp,
     char* procedure)
@@ -298,12 +298,12 @@ tkMacOSXProcessFiles(
     if (!interp || !Tcl_FindCommand(interp, procedure, NULL, 0)) {
 	return;
     }
-    
+
     fileSpecDesc = [event aeDesc];
     if (fileSpecDesc == nil ) {
     	return;
     }
-    
+
     /*
      * The AppleEvent's descriptor should either contain a value of
      * typeObjectSpecifier or typeAEList.  In the first case, the descriptor
@@ -312,23 +312,23 @@ tkMacOSXProcessFiles(
      * itself.  Values in the list will be coerced into fileURL's if possible;
      * otherwise they will be ignored.
      */
-    
+
     /* Get a copy of the AppleEvent's descriptor. */
     AEGetParamDesc(fileSpecDesc, keyDirectObject, typeWildCard, &contents);
     if (contents.descriptorType == typeAEList) {
     	fileSpecDesc = &contents;
     }
-    
+
     if (AECountItems(fileSpecDesc, &count) != noErr) {
 	AEDisposeDesc(&contents);
     	return;
     }
-    
-    /*    
+
+    /*
      * Construct a Tcl command which calls the procedure, passing the
      * paths contained in the AppleEvent as arguments.
      */
-    
+
     Tcl_DStringInit(&command);
     Tcl_DStringAppend(&command, procedure, -1);
 
@@ -341,7 +341,7 @@ tkMacOSXProcessFiles(
 	    continue;
 	}
 	URLString[actual] = '\0';
-	fileURL = [NSURL URLWithString:[NSString stringWithUTF8String:(char*)URLString]]; 
+	fileURL = [NSURL URLWithString:[NSString stringWithUTF8String:(char*)URLString]];
 	if (fileURL == nil) {
 	    continue;
 	}
