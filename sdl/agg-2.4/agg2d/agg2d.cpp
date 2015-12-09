@@ -594,7 +594,7 @@ void Agg2D::lineLinearGradient(double x1, double y1, double x2, double y2, Color
 
 
 //------------------------------------------------------------------------
-void Agg2D::fillRadialGradient(double x, double y, double r, Color c1, Color c2, double profile)
+void Agg2D::fillRadialGradient(double x, double y, double xf, double yf, double r, Color c1, Color c2, double profile)
 {
     int i;
     int startGradient = 128 - int(profile * 127.0);
@@ -613,6 +613,7 @@ void Agg2D::fillRadialGradient(double x, double y, double r, Color c1, Color c2,
     {
         m_fillGradient[i] = c2;
     }
+    m_radialGradientFunction.init(r, xf - x, yf - y);
     m_fillGradientD2 = worldToScreen(r);
     worldToScreen(x, y);
     m_fillGradientMatrix.reset();
@@ -625,7 +626,7 @@ void Agg2D::fillRadialGradient(double x, double y, double r, Color c1, Color c2,
 
 
 //------------------------------------------------------------------------
-void Agg2D::lineRadialGradient(double x, double y, double r, Color c1, Color c2, double profile)
+void Agg2D::lineRadialGradient(double x, double y, double xf, double yf, double r, Color c1, Color c2, double profile)
 {
     int i;
     int startGradient = 128 - int(profile * 128.0);
@@ -644,6 +645,7 @@ void Agg2D::lineRadialGradient(double x, double y, double r, Color c1, Color c2,
     {
         m_lineGradient[i] = c2;
     }
+    m_radialGradientFunction.init(r, xf - x, yf - y);
     m_lineGradientD2 = worldToScreen(r);
     worldToScreen(x, y);
     m_lineGradientMatrix.reset();
@@ -656,7 +658,7 @@ void Agg2D::lineRadialGradient(double x, double y, double r, Color c1, Color c2,
 
 
 //------------------------------------------------------------------------
-void Agg2D::fillRadialGradient(double x, double y, double r, Color c1, Color c2, Color c3)
+void Agg2D::fillRadialGradient(double x, double y, double xf, double yf, double r, Color c1, Color c2, Color c3)
 {
     int i;
     for (i = 0; i < 128; i++)
@@ -667,6 +669,7 @@ void Agg2D::fillRadialGradient(double x, double y, double r, Color c1, Color c2,
     {
         m_fillGradient[i] = c2.gradient(c3, double(i - 128) / 127.0);
     }
+    m_radialGradientFunction.init(r, xf - x, yf - y);
     m_fillGradientD2 = worldToScreen(r);
     worldToScreen(x, y);
     m_fillGradientMatrix.reset();
@@ -679,7 +682,7 @@ void Agg2D::fillRadialGradient(double x, double y, double r, Color c1, Color c2,
 
 
 //------------------------------------------------------------------------
-void Agg2D::lineRadialGradient(double x, double y, double r, Color c1, Color c2, Color c3)
+void Agg2D::lineRadialGradient(double x, double y, double xf, double yf, double r, Color c1, Color c2, Color c3)
 {
     int i;
     for (i = 0; i < 128; i++)
@@ -690,6 +693,7 @@ void Agg2D::lineRadialGradient(double x, double y, double r, Color c1, Color c2,
     {
         m_lineGradient[i] = c2.gradient(c3, double(i - 128) / 127.0);
     }
+    m_radialGradientFunction.init(r, xf - x, yf - y);
     m_lineGradientD2 = worldToScreen(r);
     worldToScreen(x, y);
     m_lineGradientMatrix.reset();
@@ -701,8 +705,10 @@ void Agg2D::lineRadialGradient(double x, double y, double r, Color c1, Color c2,
 }
 
 
-void Agg2D::fillRadialGradient(double x, double y, double r)
+//------------------------------------------------------------------------
+void Agg2D::fillRadialGradient(double x, double y, double xf, double yf, double r)
 {
+    m_radialGradientFunction.init(r, xf - x, yf - y);
     m_fillGradientD2 = worldToScreen(r);
     worldToScreen(x, y);
     m_fillGradientMatrix.reset();
@@ -713,14 +719,56 @@ void Agg2D::fillRadialGradient(double x, double y, double r)
 
 
 //------------------------------------------------------------------------
-void Agg2D::lineRadialGradient(double x, double y, double r)
+void Agg2D::lineRadialGradient(double x, double y, double xf, double yf, double r)
 {
+    m_radialGradientFunction.init(r, xf - x, yf - y);
     m_lineGradientD2 = worldToScreen(r);
     worldToScreen(x, y);
     m_lineGradientMatrix.reset();
     m_lineGradientMatrix *= agg::trans_affine_translation(x, y);
     m_lineGradientMatrix.invert();
     m_lineGradientD1 = 0;
+}
+
+
+//------------------------------------------------------------------------
+void Agg2D::fillRadialGradient(double x, double y, double xf, double yf, double r, double xs, double ys, int count, const double* offsets, const Color* colors, GradientMode mode)
+{
+    int i, j, lastOffset = 0;
+    Color c(0, 0, 0);
+    for (i = j = 0; j < count; j++)
+    {
+        int currOffset = offsets[j] * 255;
+        if (currOffset < 0)
+        {
+            currOffset = 0;
+        }
+        else if (currOffset > 255)
+        {
+            currOffset = 255;
+        }
+        double k = 1.0 / double(currOffset - lastOffset);
+        for (i = lastOffset; i < currOffset; i++)
+        {
+            m_fillGradient[i] = c.gradient(colors[j], double(i - lastOffset) * k);
+        }
+        lastOffset = currOffset;
+        c = colors[j];
+    }
+    for (; i < 256; i++)
+    {
+        m_fillGradient[i] = c;
+    }
+    m_radialGradientFunction.init(r, xf - x, yf - y);
+    m_fillGradientD2 = worldToScreen(r);
+    worldToScreen(x, y);
+    m_fillGradientMatrix.reset();
+    m_fillGradientMatrix.scale(xs, ys);
+    m_fillGradientMatrix *= agg::trans_affine_translation(x, y);
+    m_fillGradientMatrix.invert();
+    m_fillGradientD1 = 0;
+    m_fillGradientFlag = Radial;
+    m_fillColor = Color(0,0,0);  // Set some real color
 }
 
 

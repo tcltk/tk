@@ -138,6 +138,7 @@ BitmapRepFromDrawableRect(
     CGImageRef cg_image=NULL, sub_cg_image=NULL;
     NSBitmapImageRep *bitmap_rep=NULL;
     NSView *view=NULL;
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     if ( mac_drawable->flags & TK_IS_PIXMAP ) {
 	/*
 	   This means that the MacDrawable is functioning as a Tk Pixmap, so its view
@@ -174,6 +175,7 @@ BitmapRepFromDrawableRect(
     } else {
 	TkMacOSXDbgMsg("Invalid source drawable");
     }
+    [pool drain];
     return bitmap_rep;
 }
 
@@ -1568,7 +1570,6 @@ TkScrollWindow(
 
 	    /* Belt and suspenders: make the AppKit request a redraw
 	       when it gets control again. */
-	    [view setNeedsDisplay:YES];
   	}
     } else {
 	dmgRgn = HIShapeCreateEmpty();
@@ -1635,6 +1636,7 @@ TkMacOSXSetupDrawingContext(
     int dontDraw = 0, isWin = 0;
     TkMacOSXDrawingContext dc = {};
     CGRect clipBounds;
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     dc.clipRgn = TkMacOSXGetClipRgn(d);
     if (!dontDraw) {
@@ -1765,6 +1767,7 @@ end:
 	dc.clipRgn = NULL;
     }
     *dcPtr = dc;
+    [pool drain];
     return !dontDraw;
 }
 
@@ -1788,6 +1791,7 @@ void
 TkMacOSXRestoreDrawingContext(
     TkMacOSXDrawingContext *dcPtr)
 {
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     if (dcPtr->context) {
 	CGContextSynchronize(dcPtr->context);
 	[[dcPtr->view window] setViewsNeedDisplay:YES];
@@ -1804,6 +1808,7 @@ TkMacOSXRestoreDrawingContext(
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));
 #endif /* TK_MAC_DEBUG */
+    [pool drain];
 }
 
 /*
@@ -1829,6 +1834,7 @@ TkMacOSXGetClipRgn(
 {
     MacDrawable *macDraw = (MacDrawable *) drawable;
     HIShapeRef clipRgn = NULL;
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(macDraw->winPtr);
@@ -1854,7 +1860,7 @@ TkMacOSXGetClipRgn(
     } else if (macDraw->visRgn) {
 	clipRgn = HIShapeCreateCopy(macDraw->visRgn);
     }
-
+    [pool drain];
     return clipRgn;
 }
 
@@ -1907,6 +1913,7 @@ TkpClipDrawableToRect(
 {
     MacDrawable *macDraw = (MacDrawable *) d;
     NSView *view = TkMacOSXDrawableView(macDraw);
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     if (macDraw->drawRgn) {
 	CFRelease(macDraw->drawRgn);
@@ -1940,6 +1947,7 @@ TkpClipDrawableToRect(
 	    macDraw->flags &= ~TK_FOCUSED_VIEW;
 	}
     }
+    [pool drain];
 }
 
 /*
