@@ -220,7 +220,7 @@ TkMacOSXEventsSetupProc(
     if (flags & TCL_WINDOW_EVENTS &&
 	    ![[NSRunLoop currentRunLoop] currentMode]) {
 	static const Tcl_Time zeroBlockTime = { 0, 0 };
-
+	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	/* Call this with dequeue=NO -- just checking if the queue is empty. */
 	NSEvent *currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 						   untilDate:[NSDate distantPast]
@@ -229,6 +229,7 @@ TkMacOSXEventsSetupProc(
 	if (currentEvent && currentEvent.type > 0) {
 	    Tcl_SetMaxBlockTime(&zeroBlockTime);
 	}
+	[pool drain];
     }
 }
 
