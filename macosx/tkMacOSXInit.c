@@ -253,10 +253,7 @@ TkpInit(
 	}
 #endif
 
-	static NSAutoreleasePool *pool = nil;
-	if (!pool) {
-	    pool = [NSAutoreleasePool new];
-	}
+	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	[[NSUserDefaults standardUserDefaults] registerDefaults:
 		[NSDictionary dictionaryWithObjectsAndKeys:
 		[NSNumber numberWithBool:YES],
@@ -327,7 +324,6 @@ TkpInit(
 	TkMacOSXUseAntialiasedText(interp, -1);
 	TkMacOSXInitCGDrawing(interp, TRUE, 0);
 	[pool drain];
-	pool = [NSAutoreleasePool new];
 
 	/*
 	 * FIXME: Close stdin & stdout for remote debugging otherwise we will

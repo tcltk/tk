@@ -124,8 +124,8 @@ class Agg2D
     typedef agg::span_allocator<ColorType> SpanAllocator;
     typedef agg::pod_auto_array<ColorType, 256> GradientArray;
 
-    typedef agg::span_gradient<ColorType, agg::span_interpolator_linear<>, GradientF,            GradientArray> LinearGradientSpan;
-    typedef agg::span_gradient<ColorType, agg::span_interpolator_linear<>, agg::gradient_circle, GradientArray> RadialGradientSpan;
+    typedef agg::span_gradient<ColorType, agg::span_interpolator_linear<>, GradientF,                  GradientArray> LinearGradientSpan;
+    typedef agg::span_gradient<ColorType, agg::span_interpolator_linear<>, agg::gradient_radial_focus, GradientArray> RadialGradientSpan;
 
 #ifdef AGG2D_USE_FREETYPE
     typedef agg::font_engine_freetype_int32       FontEngine;
@@ -367,14 +367,15 @@ public:
     void fillLinearGradient(double x1, double y1, double x2, double y2, int count, const double* offsets, const Color* colors, GradientMode mode = GradientPad);
     void lineLinearGradient(double x1, double y1, double x2, double y2, Color c1, Color c2, double profile=1.0);
 
-    void fillRadialGradient(double x, double y, double r, Color c1, Color c2, double profile=1.0);
-    void lineRadialGradient(double x, double y, double r, Color c1, Color c2, double profile=1.0);
+    void fillRadialGradient(double x, double y, double xf, double yf, double r, Color c1, Color c2, double profile=1.0);
+    void lineRadialGradient(double x, double y, double xf, double yf, double r, Color c1, Color c2, double profile=1.0);
 
-    void fillRadialGradient(double x, double y, double r, Color c1, Color c2, Color c3);
-    void lineRadialGradient(double x, double y, double r, Color c1, Color c2, Color c3);
+    void fillRadialGradient(double x, double y, double xf, double yf, double r, Color c1, Color c2, Color c3);
+    void lineRadialGradient(double x, double y, double xf, double yf, double r, Color c1, Color c2, Color c3);
 
-    void fillRadialGradient(double x, double y, double r);
-    void lineRadialGradient(double x, double y, double r);
+    void fillRadialGradient(double x, double y, double xf, double yf, double r);
+    void lineRadialGradient(double x, double y, double xf, double yf, double r);
+    void fillRadialGradient(double x, double y, double xf, double yf, double r, double xs, double ys, int count, const double* offsets, const Color* colors, GradientMode mode = GradientPad);
 
     void lineWidth(double w);
     double lineWidth() const;
@@ -628,7 +629,7 @@ private:
     agg::span_interpolator_linear<> m_lineGradientInterpolator;
 
     GradientF*                      m_linearGradientFunction;
-    agg::gradient_circle            m_radialGradientFunction;
+    agg::gradient_radial_focus      m_radialGradientFunction;
 
     double                          m_lineWidth;
     bool                            m_evenOddFlag;

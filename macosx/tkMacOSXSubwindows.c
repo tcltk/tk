@@ -318,7 +318,7 @@ XResizeWindow(
     unsigned int height)
 {
     MacDrawable *macWin = (MacDrawable *) window;
-
+    NSAutoreleasePool *pool= [NSAutoreleasePool new];
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
@@ -333,6 +333,7 @@ XResizeWindow(
     } else {
 	MoveResizeWindow(macWin);
     }
+    [pool drain];
 }
 
 /*
