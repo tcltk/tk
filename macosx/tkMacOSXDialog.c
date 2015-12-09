@@ -1158,7 +1158,7 @@ Tk_MessageBoxObjCmd(
 	[NSApp tkAlertDidEnd:alert returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
-    result = (modalReturnCode < 1) ? TCL_OK : TCL_ERROR;
+    result = (modalReturnCode >= NSAlertFirstButtonReturn) ? TCL_OK : TCL_ERROR;
  end:
     [alert release];
     return result;
