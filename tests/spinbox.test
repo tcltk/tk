@@ -1568,6 +1568,21 @@ test spinbox-22.3 {spinbox config, -from changes SF bug 559078} {
     set val
 } {6}
 
+test spinbox-23.1 {error in trace proc attached to the textvariable} {
+    destroy .s
+    trace variable myvar w traceit
+    proc traceit args {error "Intentional error here!"}
+    spinbox .s -textvariable myvar -from 1 -to 10
+    catch {.s set mystring} result1
+    catch {.s insert 0 mystring} result2
+    catch {.s delete 0} result3
+    catch {.s invoke buttonup} result4
+    list $result1 $result2 $result3 $result4
+} [list {can't set "myvar": Intentional error here!} \
+    {can't set "myvar": Intentional error here!} \
+    {can't set "myvar": Intentional error here!} \
+    {can't set "myvar": Intentional error here!}]
+
 destroy .e
 catch {unset ::e ::vVals}
 
