@@ -1568,20 +1568,6 @@ test spinbox-22.3 {spinbox config, -from changes SF bug 559078} {
     set val
 } {6}
 
-test entry-23.1 {selection present while disabled, bug 637828} {
-    destroy .e
-    entry .e
-    .e insert end 0123456789
-    .e select from 3
-    .e select to 6
-    set out [.e selection present]
-    .e configure -state disabled
-    # still return 1 when disabled, because 'selection get' will work,
-    # but selection cannot be changed (new behavior since 8.4)
-    .e select to 9
-    lappend out [.e selection present] [selection get]
-} {1 1 345}
-
 destroy .e
 catch {unset ::e ::vVals}
 
