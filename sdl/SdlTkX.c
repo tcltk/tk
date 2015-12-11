@@ -5131,7 +5131,7 @@ fatal:
     SdlTkX.display = display;
     SdlTkX.screen = screen;
 
-    /* See TkUnixDoOneEvent */
+    /* See TkpDoOneEvent */
     SDL_VERSION(&wminfo.version);
     display->fd = -1;
     SDL_EventState(SDL_JOYDEVICEADDED, SDL_ENABLE);

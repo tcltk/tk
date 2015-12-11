@@ -355,9 +355,6 @@ Tk_CreateConsoleWindow(
 
     /* Init an interp with Tcl and Tk */
     Tcl_Interp *consoleInterp = Tcl_CreateInterp();
-    if (Tcl_Init(consoleInterp) != TCL_OK) {
-	goto error;
-    }
 
     /* Inherit paths from main interp */
     value = Tcl_GetVar(interp, "tcl_libPath", TCL_GLOBAL_ONLY);
@@ -375,6 +372,10 @@ Tk_CreateConsoleWindow(
     value = Tcl_GetVar(interp, "tk_library", TCL_GLOBAL_ONLY);
     if (value != NULL) {
 	Tcl_SetVar(consoleInterp, "tk_library", value, TCL_GLOBAL_ONLY);
+    }
+
+    if (Tcl_Init(consoleInterp) != TCL_OK) {
+	goto error;
     }
 
     if (Tk_Init(consoleInterp) != TCL_OK) {
