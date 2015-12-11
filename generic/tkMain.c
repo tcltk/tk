@@ -82,6 +82,11 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #include <SDL2/SDL.h>
 #endif
 
+#ifdef ANDROID
+#undef  ZIPFS_BOOTDIR
+#define ZIPFS_BOOTDIR "/assets"
+#endif
+
 /*
  * Further on, in UNICODE mode, we need to use Tcl_NewUnicodeObj,
  * while otherwise NewNativeObj is needed (which provides proper
@@ -203,6 +208,7 @@ Tk_MainEx(
 #ifdef ANDROID
     const char *zipFile2 = NULL;
 #else
+    const char *exeName;
     Tcl_DString systemEncodingName;
 #endif
 #endif
@@ -242,6 +248,10 @@ Tk_MainEx(
 	    }
 	}
     }
+#endif
+
+#ifndef ANDROID
+    exeName = Tcl_GetNameOfExecutable();
 #endif
 
     Tcl_InitMemory(interp);
@@ -374,11 +384,15 @@ Tk_MainEx(
 		zipFile2 = NULL;
 	    }
 #else
-	    zipFile = Tcl_GetNameOfExecutable();
+	    zipFile = exeName;
 #endif
 	}
 	if (zipFile != NULL) {
+#ifdef ANDROID
 	    zipOk = Tclzipfs_Mount(interp, zipFile, "", NULL);
+#else
+	    zipOk = Tclzipfs_Mount(interp, zipFile, exeName, NULL);
+#endif
 	    if (!relax && (zipOk != TCL_OK)) {
 		Tcl_Exit(1);
 	    }
@@ -396,10 +410,21 @@ Tk_MainEx(
 	Tcl_ResetResult(interp);
     }
     if (zipOk == TCL_OK) {
-	char *tcl_lib = "/assets/tcl" TCL_VERSION;
-	char *tcl_pkg = "/assets";
-	char tk_lib[32];
+	char *tk_lib;
+	Tcl_DString dsTk;
+#ifdef ZIPFS_BOOTDIR
+	char *tcl_lib = ZIPFS_BOOTDIR "/tcl" TCL_VERSION;
+	char *tcl_pkg = ZIPFS_BOOTDIR;
+#else
+	char *tcl_lib;
+	char *tcl_pkg = (char *) exeName;
+	Tcl_DString dsTcl;
 
+	Tcl_DStringInit(&dsTcl);
+	Tcl_DStringAppend(&dsTcl, exeName, -1);
+	Tcl_DStringAppend(&dsTcl, "/tcl" TCL_VERSION, -1);
+	tcl_lib = Tcl_DStringValue(&dsTcl);
+#endif
 	Tcl_SetVar2(interp, "env", "TCL_LIBRARY", tcl_lib, TCL_GLOBAL_ONLY);
 	Tcl_SetVar(interp, "tcl_libPath", tcl_lib, TCL_GLOBAL_ONLY);
 	Tcl_SetVar(interp, "tcl_library", tcl_lib, TCL_GLOBAL_ONLY);
@@ -407,21 +432,53 @@ Tk_MainEx(
 	Tcl_SetVar(interp, "auto_path", tcl_lib,
 		   TCL_GLOBAL_ONLY | TCL_LIST_ELEMENT);
 
+	Tcl_DStringInit(&dsTk);
+#ifdef ZIPFS_BOOTDIR
+	Tcl_DStringSetLength(&dsTk, strlen(ZIPFS_BOOTDIR) + 32);
+	Tcl_DStringSetLength(&dsTk, 0);
+	tk_lib = Tcl_DStringValue(&dsTk);
 #ifdef PLATFORM_SDL
         if (SDL_MAJOR_VERSION > 1) {
-	    sprintf(tk_lib, "/assets/sdl%dtk" TK_VERSION, SDL_MAJOR_VERSION);
+	    sprintf(tk_lib, ZIPFS_BOOTDIR "/sdl%dtk" TK_VERSION,
+		    SDL_MAJOR_VERSION);
         } else {
-	    strcpy(tk_lib, "/assets/sdltk" TK_VERSION);
+	    strcpy(tk_lib, ZIPFS_BOOTDIR "/sdltk" TK_VERSION);
         }
 #else
-	strcpy(tk_lib, "/assets/tk" TK_VERSION);
+	strcpy(tk_lib, ZIPFS_BOOTDIR "/tk" TK_VERSION);
 #endif
+#else
+	Tcl_DStringSetLength(&dsTk, strlen(exeName) + 32);
+	Tcl_DStringSetLength(&dsTk, 0);
+	tk_lib = Tcl_DStringValue(&dsTk);
+#ifdef PLATFORM_SDL
+        if (SDL_MAJOR_VERSION > 1) {
+	    sprintf(tk_lib, "%s/sdl%dtk" TK_VERSION,
+		    exeName, SDL_MAJOR_VERSION);
+        } else {
+	    strcpy(tk_lib, "%s/sdltk" TK_VERSION, exeName);
+        }
+#else
+	sprintf(tk_lib, "%s/tk" TK_VERSION, exeName);
+#endif
+#endif
+	Tcl_DStringSetLength(&dsTk, strlen(tk_lib));
         Tcl_SetVar2(interp, "env", "TK_LIBRARY", tk_lib, TCL_GLOBAL_ONLY);
         Tcl_SetVar(interp, "tk_library", tk_lib, TCL_GLOBAL_ONLY);
+
+	Tcl_DStringFree(&dsTk);
+#ifndef ZIPFS_BOOTDIR
+	Tcl_DStringFree(&dsTcl);
+#endif
 
 	if (autoRun) {
 	    char *filename;
 	    Tcl_Channel chan;
+#ifndef ZIPFS_BOOTDIR
+	    Tcl_DString dsFilename;
+
+	    Tcl_DStringInit(&dsFilename);
+#endif
 
 	    /*
  	     * Reset tcl_interactive to false if we'll later
@@ -430,12 +487,18 @@ Tk_MainEx(
      	     */
 #ifdef ANDROID
 	    if (zipFile2 != NULL) {
-		filename = "/assets/assets/app/main.tcl";
+		filename = ZIPFS_BOOTDIR "/assets/app/main.tcl";
 		chan = Tcl_OpenFileChannel(NULL, filename, "r", 0);
 	    } else
 #endif
 	    {
-		filename = "/assets/app/main.tcl";
+#ifdef ZIPFS_BOOTDIR
+		filename = ZIPFS_BOOTDIR "/app/main.tcl";
+#else
+		Tcl_DStringAppend(&dsFilename, exeName, -1);
+		Tcl_DStringAppend(&dsFilename, "/app/main.tcl", -1);
+		filename = Tcl_DStringValue(&dsFilename);
+#endif
 		chan = Tcl_OpenFileChannel(NULL, filename, "r", 0);
 	    }
 	    if (chan != (Tcl_Channel) NULL) {
@@ -480,6 +543,9 @@ Tk_MainEx(
 	    } else {
 		autoRun = 0;
 	    }
+#ifndef ZIPFS_BOOTDIR
+	    Tcl_DStringFree(&dsFilename);
+#endif
 	}
     }
 #endif
@@ -504,12 +570,26 @@ Tk_MainEx(
      */
 
     if (zipOk == TCL_OK) {
-	const char *tcl_lib = "/assets/tcl" TCL_VERSION;
-	const char *tcl_pkg = "/assets";
+#ifdef ZIPFS_BOOTDIR
+	const char *tcl_lib = ZIPFS_BOOTDIR "/tcl" TCL_VERSION;
+	const char *tcl_pkg = ZIPFS_BOOTDIR;
+#else
+	char *tcl_lib;
+	char *tcl_pkg = (char *) exeName;
+	Tcl_DString dsLib;
+
+	Tcl_DStringInit(&dsLib);
+	Tcl_DStringAppend(&dsLib, exeName, -1);
+	Tcl_DStringAppend(&dsLib, "/tcl" TCL_VERSION, -1);
+	tcl_lib = Tcl_DStringValue(&dsLib);
+#endif
 
 	Tcl_SetVar(interp, "tcl_libPath", tcl_lib, TCL_GLOBAL_ONLY);
 	Tcl_SetVar(interp, "tcl_library", tcl_lib, TCL_GLOBAL_ONLY);
         Tcl_SetVar(interp, "tcl_pkgPath", tcl_pkg, TCL_GLOBAL_ONLY);
+#ifndef ZIPFS_BOOTDIR
+	Tcl_DStringFree(&dsLib);
+#endif
 
 	/*
 	 * We need to set the system encoding (after initializing Tcl),

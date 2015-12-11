@@ -2120,7 +2120,11 @@ DisplayListbox(
 		 * You would think the XSetDashes was necessary, but it
 		 * appears that the default dotting for just saying we want
 		 * dashes appears to work correctly.
+		 static char dashList[] = { 1 };
+		 static int dashLen = sizeof(dashList);
+		 XSetDashes(listPtr->display, gc, 0, dashList, dashLen);
 		 */
+
 		mask = GCLineWidth | GCLineStyle | GCDashList | GCDashOffset;
 		XChangeGC(listPtr->display, gc, mask, &gcValues);
 #ifdef PLATFORM_SDL
