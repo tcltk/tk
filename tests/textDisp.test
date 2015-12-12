@@ -1574,6 +1574,17 @@ test textDisp-11.20 {TkTextSetYView, see in elided lines} {
     # this shall not crash (null chunkPtr in TkTextSeeCmd is tested)
     .top.t see 3.0
 } {}
+test textDisp-11.21 {TkTextSetYView, window height smaller than the line height} {
+    .top.t delete 1.0 end
+    for {set i 1} {$i <= 10} {incr i} {
+        .top.t insert end "Line $i\n"
+    }
+    set lineheight [font metrics [.top.t cget -font] -linespace]
+    wm geometry .top 200x[expr {$lineheight / 2}]
+    update
+    .top.t see 1.0
+    .top.t index @0,[expr {$lineheight - 2}]
+} {1.0}
 
 .t configure -wrap word
 .t delete 50.0 51.0
