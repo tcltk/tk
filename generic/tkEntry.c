@@ -1999,7 +1999,8 @@ EntryComputeGeometry(
  *	Add new characters to an entry widget.
  *
  * Results:
- *	None.
+ *	A standard Tcl result. If an error occurred then an error message is
+ *	left in the interp's result.
  *
  * Side effects:
  *	New information gets added to entryPtr; it will be redisplayed soon,
@@ -2099,7 +2100,8 @@ InsertChars(
  *	Remove one or more characters from an entry widget.
  *
  * Results:
- *	None.
+ *	A standard Tcl result. If an error occurred then an error message is
+ *	left in the interp's result.
  *
  * Side effects:
  *	Memory gets freed, the entry gets modified and (eventually)
@@ -2216,7 +2218,8 @@ DeleteChars(
  *	is one, and does other bookkeeping such as arranging for redisplay.
  *
  * Results:
- *	None.
+ *	A standard Tcl result. If an error occurred then an error message is
+ *	left in the interp's result.
  *
  * Side effects:
  *	None.
