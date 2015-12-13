@@ -1794,9 +1794,9 @@ The command returns an empty string.
 .TP
 \fIpathName \fBsync -command \fIcommand\fR
 Schedule \fIcommand\fR to be executed exactly once as soon as all line heights
-are up-to-date. If there are no pending line metrics calculations,
-\fIcommand\fR is executed immediately and the command returns the return value
-of \fIcommand\fR. Otherwise the command returns an empty string.
+are up-to-date. If there are no pending line metrics calculations, the
+scheduling is immediate. The command returns the empty string. \fBbgerror\fR is
+called on \fIcommand\fR failure.
 .RE
 .TP
 \fIpathName \fBtag \fIoption \fR?\fIarg arg ...\fR?
