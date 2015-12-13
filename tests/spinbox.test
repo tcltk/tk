@@ -1568,9 +1568,9 @@ test spinbox-22.3 {spinbox config, -from changes SF bug 559078} {
     set val
 } {6}
 
-test entry-23.1 {selection present while disabled, bug 637828} {
+test spinbox-23.1 {selection present while disabled, bug 637828} {
     destroy .e
-    entry .e
+    spinbox .e
     .e insert end 0123456789
     .e select from 3
     .e select to 6
