@@ -658,17 +658,8 @@ TkTextCreateDInfo(
     dInfoPtr->metricEpoch = -1;
     dInfoPtr->metricIndex.textPtr = NULL;
     dInfoPtr->metricIndex.linePtr = NULL;
-
-    /*
-     * Add a refCount for each of the idle call-backs.
-     */
-
-    textPtr->refCount++;
-    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(0,
-	    AsyncUpdateLineMetrics, (ClientData) textPtr);
-    textPtr->refCount++;
-    dInfoPtr->scrollbarTimer = Tcl_CreateTimerHandler(200,
-	    AsyncUpdateYScrollbar, (ClientData) textPtr);
+    dInfoPtr->lineUpdateTimer = NULL;
+    dInfoPtr->scrollbarTimer = NULL;
 
     textPtr->dInfoPtr = dInfoPtr;
 }
@@ -2912,9 +2903,10 @@ AsyncUpdateLineMetrics(
 
     dInfoPtr->lineUpdateTimer = NULL;
 
-    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)
+            || !Tk_IsMapped(textPtr->tkwin)) {
 	/*
-	 * The widget has been deleted. Don't do anything.
+	 * The widget has been deleted, or is not mapped. Don't do anything.
 	 */
 
 	if (--textPtr->refCount == 0) {
