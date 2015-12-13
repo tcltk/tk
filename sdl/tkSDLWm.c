@@ -7059,7 +7059,7 @@ TkWmFocusToplevel(
  * Side effects:
  *	The window given by menubar will be mapped and positioned inside the
  *	wrapper for tkwin and above tkwin. Menubar will automatically be
- *	resized to maintain the height specified by TkUnixSetMenuHeight the
+ *	resized to maintain the height specified by TkSDLSetMenuHeight the
  *	same width as tkwin. Any previous menubar specified for tkwin will be
  *	unmapped and ignored from now on.
  *
