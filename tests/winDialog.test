@@ -594,7 +594,7 @@ test winDialog-5.12.6 {tk_getSaveFile: initial directory: relative} -constraints
 test winDialog-5.12.7 {tk_getOpenFile: initial directory: ~} -constraints {
     nt testwinevent
 } -body {
-    set fn [file tail [lindex [glob ~/*] 0]]
+    set fn [file tail [lindex [glob -types f ~/*] 0]]
     unset -nocomplain x
     start {set x [tk_getOpenFile \
                       -initialdir ~ \
