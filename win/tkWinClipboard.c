@@ -135,7 +135,7 @@ TkSelGetSelection(
 	}
     } else if (IsClipboardFormatAvailable(CF_HDROP)) {
 	DROPFILES *drop;
-	
+
 	handle = GetClipboardData(CF_HDROP);
 	if (!handle) {
 	    CloseClipboard();
@@ -147,7 +147,7 @@ TkSelGetSelection(
 	    WCHAR *fname = (WCHAR *) ((char *) drop + drop->pFiles);
 	    Tcl_DString dsTmp;
 	    int count = 0, len;
-	
+
 	    while (*fname != 0) {
 		if (count) {
 		    Tcl_DStringAppend(&ds, "\n", 1);
@@ -179,7 +179,8 @@ TkSelGetSelection(
 	    data++;
 	} else if (noBackslash && data[0] == '\\') {
 	    data++;
-	    *destPtr++ = '/';	} else {
+	    *destPtr++ = '/';
+	} else {
 	    *destPtr++ = *data++;
 	}
     }
