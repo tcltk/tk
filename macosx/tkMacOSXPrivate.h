@@ -275,10 +275,13 @@ VISIBILITY_HIDDEN
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems;
     NSWindow *_windowWithMouse;
+    NSAutoreleasePool *_mainPool;
 }
+@property BOOL poolProtected;
 @end
 @interface TKApplication(TKInit)
 - (NSString *)tkFrameworkImagePath:(NSString*)image;
+- (void)_resetAutoreleasePool;
 @end
 @interface TKApplication(TKEvent)
 - (NSEvent *)tkProcessEvent:(NSEvent *)theEvent;
