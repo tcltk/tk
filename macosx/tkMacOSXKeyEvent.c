@@ -328,7 +328,7 @@ static unsigned isFunctionKey(unsigned int code);
   pt.y = caret_y;
 
   pt = [self convertPoint: pt toView: nil];
-  pt = [[self window] convertBaseToScreen: pt];
+  pt = [[self window] convertPointToScreen: pt];
   pt.y -= caret_height;
 
   rect.origin = pt;
