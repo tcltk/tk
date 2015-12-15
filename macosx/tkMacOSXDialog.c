@@ -1733,9 +1733,7 @@ TkInitFontchooser(
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteFontchooserData,
 	    fcdPtr);
     if (!fontPanelFontAttributes) {
-	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	fontPanelFontAttributes = [NSMutableDictionary new];
-	[pool drain];
     }
     return TCL_OK;
 }
