@@ -15,6 +15,19 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXFont.h"
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+#define defaultOrientation kCTFontDefaultOrientation
+#define verticalOrientation kCTFontVerticalOrientation
+#else
+#define defaultOrientation kCTFontOrientationDefault
+#define verticalOrientation kCTFontOrientationVertical
+#endif
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101100
+#define fixedPitch kCTFontUserFixedPitchFontType
+#else
+#define fixedPitch kCTFontUIFontUserFixedPitch
+#endif
+
 /*
 #ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_FONTS
@@ -197,6 +210,7 @@ FindNSFont(
 	nsFont = [fm convertFont:nsFont toSize:size];
 	nsFont = [fm convertFont:nsFont toHaveTrait:traits];
     }
+    [nsFont retain];
     #undef defaultFont
     return nsFont;
 }
@@ -270,7 +284,7 @@ InitFont(
 	fmPtr->fixed = [nsFont advancementForGlyph:glyphs[0]].width ==
 		[nsFont advancementForGlyph:glyphs[1]].width;
 	bounds = NSRectFromCGRect(CTFontGetBoundingRectsForGlyphs((CTFontRef)
-		nsFont, kCTFontDefaultOrientation, ch, boundingRects, nCh));
+		nsFont, defaultOrientation, ch, boundingRects, nCh));
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }
@@ -293,7 +307,7 @@ InitFont(
 	    [NSNumber numberWithInt:fmPtr->fixed ? 0 : 1],
 		NSLigatureAttributeName,
 	    [NSNumber numberWithDouble:kern], NSKernAttributeName, nil];
-            fontPtr->nsAttributes = [nsAttributes retain];
+    fontPtr->nsAttributes = [nsAttributes retain];
     #undef nCh
 }
 
@@ -358,6 +372,7 @@ TkpFontPkgInit(
     NSFont *nsFont;
     TkFontAttributes fa;
     NSMutableCharacterSet *cs;
+    /* Since we called before TkpInit, we need our own autorelease pool. */
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     /* force this for now */
@@ -382,8 +397,7 @@ TkpFontPkgInit(
 	systemFont++;
     }
     TkInitFontAttributes(&fa);
-    nsFont = (NSFont*) CTFontCreateUIFontForLanguage(
-	    kCTFontUserFixedPitchFontType, 11, NULL);
+    nsFont = (NSFont*) CTFontCreateUIFontForLanguage(fixedPitch, 11, NULL);
     if (nsFont) {
 	GetTkFontAttributesForNSFont(nsFont, &fa);
 	CFRelease(nsFont);
@@ -518,7 +532,7 @@ TkpGetFontFromAttributes(
 	nsFont = FindNSFont(faPtr->family, traits, weight, points, 1);
     }
     if (!nsFont) {
-	Tcl_Panic("Could not deternmine NSFont from TkFontAttributes");
+	Tcl_Panic("Could not determine NSFont from TkFontAttributes");
     }
     if (tkFontPtr == NULL) {
 	fontPtr = ckalloc(sizeof(MacFont));
@@ -663,7 +677,6 @@ TkpGetFontAttrsForChar(
 {
     MacFont *fontPtr = (MacFont *) tkfont;
     NSFont *nsFont = fontPtr->nsFont;
-
     *faPtr = fontPtr->font.fa;
     if (nsFont && ![[nsFont coveredCharacterSet] characterIsMember:c]) {
 	UTF16Char ch = c;

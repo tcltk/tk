@@ -659,17 +659,8 @@ TkTextCreateDInfo(
     dInfoPtr->metricEpoch = -1;
     dInfoPtr->metricIndex.textPtr = NULL;
     dInfoPtr->metricIndex.linePtr = NULL;
-
-    /*
-     * Add a refCount for each of the idle call-backs.
-     */
-
-    textPtr->refCount++;
-    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(0,
-	    AsyncUpdateLineMetrics, textPtr);
-    textPtr->refCount++;
-    dInfoPtr->scrollbarTimer = Tcl_CreateTimerHandler(200,
-	    AsyncUpdateYScrollbar, textPtr);
+    dInfoPtr->lineUpdateTimer = NULL;
+    dInfoPtr->scrollbarTimer = NULL;
 
     textPtr->dInfoPtr = dInfoPtr;
 }
@@ -2226,7 +2217,7 @@ UpdateDisplayInfo(
      * Here's a problem: see the tests textDisp-29.2.1-4
      *
      * If the widget is being created, but has not yet been configured it will
-     * have a maxY of 1 above, and we we won't have examined all the lines
+     * have a maxY of 1 above, and we won't have examined all the lines
      * (just the first line, in fact), and so maxOffset will not be a true
      * reflection of the widget's lines. Therefore we must not overwrite the
      * original newXPixelOffset in this case.
@@ -2541,7 +2532,7 @@ DisplayLineBackground(
 				 * current x coordinate? */
     int matchRight;		/* Does line's style match its neighbor just
 				 * to the right of the current x-coord? */
-    int minX, maxX, xOffset;
+    int minX, maxX, xOffset, bw;
     StyleValues *sValuePtr;
     Display *display;
 #ifndef TK_NO_DOUBLE_BUFFERING
@@ -2612,16 +2603,25 @@ DisplayLineBackground(
 		rightX = leftX + 32767;
 	    }
 
+            /*
+             * Prevent the borders from leaking on adjacent characters,
+             * which would happen for too large border width.
+             */
+
+            bw = sValuePtr->borderWidth;
+            if (leftX + sValuePtr->borderWidth > rightX) {
+                bw = rightX - leftX;
+            }
+
 	    XFillRectangle(display, pixmap, chunkPtr->stylePtr->bgGC,
 		    leftX + xOffset, y, (unsigned int) (rightX - leftX),
 		    (unsigned int) dlPtr->height);
 	    if (sValuePtr->relief != TK_RELIEF_FLAT) {
 		Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-			leftX + xOffset, y, sValuePtr->borderWidth,
-			dlPtr->height, 1, sValuePtr->relief);
+			leftX + xOffset, y, bw, dlPtr->height, 1,
+			sValuePtr->relief);
 		Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-			rightX - sValuePtr->borderWidth + xOffset,
-			y, sValuePtr->borderWidth, dlPtr->height, 0,
+			rightX - bw + xOffset, y, bw, dlPtr->height, 0,
 			sValuePtr->relief);
 	    }
 	}
@@ -2718,22 +2718,29 @@ DisplayLineBackground(
 	matchRight = (nextPtr2 != NULL)
 		&& SAME_BACKGROUND(nextPtr2->stylePtr, chunkPtr->stylePtr);
 	if (matchLeft && !matchRight) {
+            bw = sValuePtr->borderWidth;
+            if (rightX2 - sValuePtr->borderWidth < leftX) {
+                bw = rightX2 - leftX;
+            }
 	    if (sValuePtr->relief != TK_RELIEF_FLAT) {
 		Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-			rightX2 - sValuePtr->borderWidth + xOffset, y,
-			sValuePtr->borderWidth, sValuePtr->borderWidth, 0,
-			sValuePtr->relief);
+			rightX2 - bw + xOffset, y, bw,
+			sValuePtr->borderWidth, 0, sValuePtr->relief);
 	    }
-	    leftX = rightX2 - sValuePtr->borderWidth;
+            leftX = rightX2 - bw;
 	    leftXIn = 0;
 	} else if (!matchLeft && matchRight
 		&& (sValuePtr->relief != TK_RELIEF_FLAT)) {
+            bw = sValuePtr->borderWidth;
+            if (rightX2 + sValuePtr->borderWidth > rightX) {
+                bw = rightX - rightX2;
+            }
 	    Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-		    rightX2 + xOffset, y, sValuePtr->borderWidth,
-		    sValuePtr->borderWidth, 1, sValuePtr->relief);
+		    rightX2 + xOffset, y, bw, sValuePtr->borderWidth,
+		    1, sValuePtr->relief);
 	    Tk_3DHorizontalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-		    leftX + xOffset, y, rightX2 + sValuePtr->borderWidth -
-		    leftX, sValuePtr->borderWidth, leftXIn, 0, 1,
+		    leftX + xOffset, y, rightX2 + bw - leftX,
+		    sValuePtr->borderWidth, leftXIn, 0, 1,
 		    sValuePtr->relief);
 	}
 
@@ -2765,7 +2772,7 @@ DisplayLineBackground(
     chunkPtr2 = NULL;
     if (dlPtr->nextPtr != NULL && dlPtr->nextPtr->chunkPtr != NULL) {
 	/*
-	 * Find the chunk in the previous line that covers leftX.
+	 * Find the chunk in the next line that covers leftX.
 	 */
 
 	nextPtr2 = dlPtr->nextPtr->chunkPtr;
@@ -2821,26 +2828,33 @@ DisplayLineBackground(
 	matchRight = (nextPtr2 != NULL)
 		&& SAME_BACKGROUND(nextPtr2->stylePtr, chunkPtr->stylePtr);
 	if (matchLeft && !matchRight) {
+            bw = sValuePtr->borderWidth;
+            if (rightX2 - sValuePtr->borderWidth < leftX) {
+                bw = rightX2 - leftX;
+            }
 	    if (sValuePtr->relief != TK_RELIEF_FLAT) {
 		Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-			rightX2 - sValuePtr->borderWidth + xOffset,
+			rightX2 - bw + xOffset,
 			y + dlPtr->height - sValuePtr->borderWidth,
-			sValuePtr->borderWidth, sValuePtr->borderWidth, 0,
-			sValuePtr->relief);
+			bw, sValuePtr->borderWidth, 0, sValuePtr->relief);
 	    }
-	    leftX = rightX2 - sValuePtr->borderWidth;
+	    leftX = rightX2 - bw;
 	    leftXIn = 1;
 	} else if (!matchLeft && matchRight
 		&& (sValuePtr->relief != TK_RELIEF_FLAT)) {
+            bw = sValuePtr->borderWidth;
+            if (rightX2 + sValuePtr->borderWidth > rightX) {
+                bw = rightX - rightX2;
+            }
 	    Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-		    rightX2 + xOffset, y + dlPtr->height -
-		    sValuePtr->borderWidth, sValuePtr->borderWidth,
+		    rightX2 + xOffset,
+		    y + dlPtr->height - sValuePtr->borderWidth, bw,
 		    sValuePtr->borderWidth, 1, sValuePtr->relief);
 	    Tk_3DHorizontalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
-		    leftX + xOffset, y + dlPtr->height -
-		    sValuePtr->borderWidth, rightX2 + sValuePtr->borderWidth -
-		    leftX, sValuePtr->borderWidth, leftXIn, 1, 0,
-		    sValuePtr->relief);
+		    leftX + xOffset,
+		    y + dlPtr->height - sValuePtr->borderWidth,
+		    rightX2 + bw - leftX, sValuePtr->borderWidth, leftXIn,
+		    1, 0, sValuePtr->relief);
 	}
 
     nextChunk2b:
@@ -2890,9 +2904,10 @@ AsyncUpdateLineMetrics(
 
     dInfoPtr->lineUpdateTimer = NULL;
 
-    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)
+            || !Tk_IsMapped(textPtr->tkwin)) {
 	/*
-	 * The widget has been deleted. Don't do anything.
+	 * The widget has been deleted, or is not mapped. Don't do anything.
 	 */
 
 	if (--textPtr->refCount == 0) {
@@ -5213,6 +5228,15 @@ TkTextSetYView(
 	if (FindDLine(textPtr, dInfoPtr->dLinePtr, &tmpIndex) != NULL) {
 	    bottomY = dInfoPtr->maxY - dInfoPtr->y;
 	}
+    }
+
+    /*
+     * If the window height is smaller than the line height, prefer to make
+     * the top of the line visible.
+     */
+
+    if (dInfoPtr->maxY - dInfoPtr->y < lineHeight) {
+        bottomY = lineHeight;
     }
 
     /*
