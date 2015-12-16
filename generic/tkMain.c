@@ -73,6 +73,9 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #   define _tcslen strlen
 #   define _tcsncmp strncmp
 #endif
+#ifdef ZIPFS_IN_TCL
+#   include "zipfs.h"
+#endif
 
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
