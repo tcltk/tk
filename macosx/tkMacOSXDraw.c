@@ -675,7 +675,7 @@ GetCGContextForDrawable(
 
 	if (macDraw->flags & TK_IS_BW_PIXMAP) {
 	    bitsPerPixel = 8;
-	    bitmapInfo = kCGImageAlphaOnly;
+	    bitmapInfo = (CGBitmapInfo)kCGImageAlphaOnly;
 	} else {
 	    colorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
 	    bitsPerPixel = 32;
@@ -1568,7 +1568,6 @@ TkScrollWindow(
 
 	    /* Belt and suspenders: make the AppKit request a redraw
 	       when it gets control again. */
-	    [view setNeedsDisplay:YES];
   	}
     } else {
 	dmgRgn = HIShapeCreateEmpty();
@@ -1854,7 +1853,6 @@ TkMacOSXGetClipRgn(
     } else if (macDraw->visRgn) {
 	clipRgn = HIShapeCreateCopy(macDraw->visRgn);
     }
-
     return clipRgn;
 }
 

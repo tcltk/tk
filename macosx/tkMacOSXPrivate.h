@@ -275,10 +275,13 @@ VISIBILITY_HIDDEN
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems;
     NSWindow *_windowWithMouse;
+    NSAutoreleasePool *_mainPool;
 }
+@property BOOL poolProtected;
 @end
 @interface TKApplication(TKInit)
 - (NSString *)tkFrameworkImagePath:(NSString*)image;
+- (void)_resetAutoreleasePool;
 @end
 @interface TKApplication(TKEvent)
 - (NSEvent *)tkProcessEvent:(NSEvent *)theEvent;
@@ -295,6 +298,24 @@ VISIBILITY_HIDDEN
 @interface TKApplication(TKClipboard)
 - (void)tkProvidePasteboard:(TkDisplay *)dispPtr;
 - (void)tkCheckPasteboard;
+@end
+@interface TKApplication(TKHLEvents)
+- (void) terminate: (id) sender;
+- (void) preferences: (id) sender;
+- (void) handleQuitApplicationEvent:   (NSAppleEventDescriptor *)event
+		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
+- (void) handleOpenApplicationEvent:   (NSAppleEventDescriptor *)event
+		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
+- (void) handleReopenApplicationEvent: (NSAppleEventDescriptor *)event
+		       withReplyEvent: (NSAppleEventDescriptor *)replyEvent;
+- (void) handleShowPreferencesEvent:   (NSAppleEventDescriptor *)event
+		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
+- (void) handleOpenDocumentsEvent:     (NSAppleEventDescriptor *)event
+		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+- (void) handlePrintDocumentsEvent:    (NSAppleEventDescriptor *)event
+		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+- (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
+		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 @end
 
 VISIBILITY_HIDDEN
@@ -329,6 +350,11 @@ VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
 @end
 
+@interface NSWindow(TKWm)
+- (NSPoint) convertPointToScreen:(NSPoint)point;
+- (NSPoint) convertPointFromScreen:(NSPoint)point;
+@end
+
 #pragma mark NSMenu & NSMenuItem Utilities
 
 @interface NSMenu(TKUtils)
@@ -356,9 +382,5 @@ VISIBILITY_HIDDEN
 	target:(id)target keyEquivalent:(NSString *)keyEquivalent
 	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
 @end
-
-/* Helper functions from tkMacOSXDeprecations.c */
-
-extern NSPoint convertWindowToScreen( NSWindow *window, NSPoint point);
 
 #endif /* _TKMACPRIV */

@@ -142,8 +142,8 @@ TkpOpenDisplay(
     static NSRect maxBounds = {{0, 0}, {0, 0}};
     static char vendor[25] = "";
     NSArray *cgVers;
-    NSAutoreleasePool *pool;
-
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+    
     if (gMacDisplay != NULL) {
 	if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
 	    return gMacDisplay;
@@ -166,7 +166,6 @@ TkpOpenDisplay(
     display->default_screen = 0;
     display->display_name   = (char *) macScreenName;
 
-    pool = [NSAutoreleasePool new];
     cgVers = [[[NSBundle bundleWithIdentifier:@"com.apple.CoreGraphics"]
 	    objectForInfoDictionaryKey:@"CFBundleShortVersionString"]
 	    componentsSeparatedByString:@"."];
@@ -181,7 +180,21 @@ TkpOpenDisplay(
 		NSAppKitVersionNumber);
     }
     display->vendor = vendor;
-    Gestalt(gestaltSystemVersion, (SInt32 *) &display->release);
+    {
+	int major, minor, patch;
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 10100
+	Gestalt(gestaltSystemVersionMajor, (SInt32*)&major);
+	Gestalt(gestaltSystemVersionMinor, (SInt32*)&minor);
+	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
+#else
+	NSOperatingSystemVersion systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
+	major = systemVersion.majorVersion;
+	minor = systemVersion.minorVersion;
+	patch = systemVersion.patchVersion;
+#endif
+	display->release = major << 16 | minor << 8 | patch;
+    }
 
     /*
      * These screen bits never change
