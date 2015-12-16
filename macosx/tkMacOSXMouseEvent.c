@@ -26,49 +26,7 @@ typedef struct {
 
 static int		GenerateButtonEvent(MouseEventData *medPtr);
 static unsigned int	ButtonModifiers2State(UInt32 buttonState,
-			    UInt32 keyModifiers);
-
-#pragma mark NSWindow(TKMouseEvent)
-
-/* Conversion of coordinates between window and screen */
-@interface NSWindow(TKWm)
-- (NSPoint) convertPointToScreen:(NSPoint)point;
-- (NSPoint) convertPointFromScreen:(NSPoint)point;
-@end
-
-@implementation NSWindow(TKMouseEvent)
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
-- (NSPoint) convertPointToScreen: (NSPoint) point
-{
-    return [self convertBaseToScreen:point];
-}
-- (NSPoint) convertPointFromScreen: (NSPoint)point
-{
-    return [self convertScreenToBase:point];
-}
-@end
-#else
-- (NSPoint) convertPointToScreen: (NSPoint) point
-{
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
-    return [self convertRectToScreen:pointrect].origin;
-}
-- (NSPoint) convertPointFromScreen: (NSPoint)point
-{
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
-    return [self convertRectFromScreen:pointrect].origin;
-}
-@end
-#endif
-
-#pragma mark -
-
+					      UInt32 keyModifiers);
 
 #pragma mark TKApplication(TKMouseEvent)
 
@@ -77,14 +35,12 @@ enum {
 };
 /*
  * In OS X 10.6 an NSEvent of type NSMouseMoved would always have a non-Nil
- * window attribute when the mouse was inside a window.  As of 10.8 this
- * behavior had changed.  The new behavior was that if the mouse were ever
- * moved outside of a window, all subsequent NSMouseMoved NSEvents would have a
- * Nil window attribute.  To work around this we remember which window the
- * mouse is in by saving the window attribute of each NSEvent of type
- * NSMouseEntered.  If an NSEvent has a Nil window attribute we use our saved
- * window.  It may be the case that the mouse has actually left the window, but
- * this is harmless since Tk will ignore the event in that case.
+ * window attribute pointing to the active window.  As of 10.8 this behavior
+ * had changed.  The new behavior was that if the mouse were ever moved outside
+ * of a window, all subsequent NSMouseMoved NSEvents would have a Nil window
+ * attribute.  To work around this the TKApplication remembers the last non-Nil
+ * window that it received in a mouse event. If it receives an NSEvent with a
+ * Nil window attribute then the saved window is used.
  */
 
 @implementation TKApplication(TKMouseEvent)
@@ -93,24 +49,14 @@ enum {
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
-    id          win;
-    NSEventType	type = [theEvent type];
+    NSWindow*    eventWindow = [theEvent window];
+    NSEventType	 eventType = [theEvent type];
 #if 0
     NSTrackingArea  *trackingArea = nil;
     NSInteger eventNumber, clickCount, buttonNumber;
 #endif
-
-    switch (type) {
+    switch (eventType) {
     case NSMouseEntered:
-	/* Remember which window has the mouse. */
-	if (_windowWithMouse) {
-	    [_windowWithMouse release];
-	}
-	_windowWithMouse = [theEvent window];
-	if (_windowWithMouse) {
-	    [_windowWithMouse retain];
-	}
-	break;
     case NSMouseExited:
     case NSCursorUpdate:
     case NSLeftMouseDown:
@@ -127,25 +73,31 @@ enum {
     case NSTabletProximity:
     case NSScrollWheel:
         break;
-
     default: /* Unrecognized mouse event. */
 	return theEvent;
     }
 
+    /* Remember the window in case we need it next time. */
+    if (eventWindow && eventWindow != _windowWithMouse) {
+	if (_windowWithMouse) {
+	    [_windowWithMouse release];
+	}
+	_windowWithMouse = eventWindow;
+	[_windowWithMouse retain];
+    }
+
     /* Create an Xevent to add to the Tk queue. */
-    win = [theEvent window];
-    NSWindow *nswindow = (NSWindow *)win;
     NSPoint global, local = [theEvent locationInWindow];
-    if (win) { /* local will be in window coordinates. */
-	global = [nswindow convertPointToScreen: local];
-	local.y = [win frame].size.height - local.y;
+    if (eventWindow) { /* local will be in window coordinates. */
+	global = [eventWindow convertPointToScreen: local];
+	local.y = [eventWindow frame].size.height - local.y;
 	global.y = tkMacOSXZeroScreenHeight - global.y;
     } else { /* local will be in screen coordinates. */
 	if (_windowWithMouse ) {
-	    win = _windowWithMouse;
+	    eventWindow = _windowWithMouse;
 	    global = local;
-	    local = [nswindow convertPointFromScreen: local];
-	    local.y = [win frame].size.height - local.y;
+	    local = [eventWindow convertPointFromScreen: local];
+	    local.y = [eventWindow frame].size.height - local.y;
 	    global.y = tkMacOSXZeroScreenHeight - global.y;
 	} else { /* We have no window. Use the screen???*/
 	    local.y = tkMacOSXZeroScreenHeight - local.y;
@@ -153,7 +105,7 @@ enum {
 	}
     }
 
-    Window window = TkMacOSXGetXWindow(win);
+    Window window = TkMacOSXGetXWindow(eventWindow);
     Tk_Window tkwin = window ? Tk_IdToWindow(TkGetDisplayList()->display,
 	    window) : NULL;
     if (!tkwin) {
@@ -181,7 +133,7 @@ enum {
     if (err == noErr) {
     	state |= (buttons & ((1<<5) - 1)) << 8;
     } else if (button < 5) {
-	switch (type) {
+	switch (eventType) {
 	case NSLeftMouseDown:
 	case NSRightMouseDown:
 	case NSLeftMouseDragged:
@@ -218,12 +170,12 @@ enum {
 	state |= Mod4Mask;
     }
 
-    if (type != NSScrollWheel) {
+    if (eventType != NSScrollWheel) {
 #ifdef TK_MAC_DEBUG_EVENTS
 	TKLog(@"UpdatePointer %p x %f.0 y %f.0 %d", tkwin, global.x, global.y, state);
 #endif
 	Tk_UpdatePointer(tkwin, global.x, global.y, state);
-    } else {
+    } else { /* handle scroll wheel event */
 	CGFloat delta;
 	int coarseDelta;
 	XEvent xEvent;
@@ -239,7 +191,8 @@ enum {
 
 	delta = [theEvent deltaY];
 	if (delta != 0.0) {
-	    coarseDelta = (delta > -1.0 && delta < 1.0) ? (signbit(delta) ? -1 : 1) : lround(delta);
+	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
+		(signbit(delta) ? -1 : 1) : lround(delta);
 	    xEvent.xbutton.state = state;
 	    xEvent.xkey.keycode = coarseDelta;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
@@ -247,7 +200,8 @@ enum {
 	}
 	delta = [theEvent deltaX];
 	if (delta != 0.0) {
-	    coarseDelta = (delta > -1.0 && delta < 1.0) ? (signbit(delta) ? -1 : 1) : lround(delta);
+	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
+		(signbit(delta) ? -1 : 1) : lround(delta);
 	    xEvent.xbutton.state = state | ShiftMask;
 	    xEvent.xkey.keycode = coarseDelta;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
@@ -418,7 +372,7 @@ XQueryPointer(
 	    if (win) {
 		NSPoint local;
 
-		local = [win convertScreenToBase:global];
+		local = [win convertPointFromScreen:global];
 		local.y = [win frame].size.height - local.y;
 		if (macWin->winPtr && macWin->winPtr->wmInfoPtr) {
 		    local.x -= macWin->winPtr->wmInfoPtr->xInParent;
@@ -516,7 +470,7 @@ TkGenerateButtonEvent(
     if (win) {
 	NSPoint local = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
 
-	local = [win convertScreenToBase:local];
+	local = [win convertPointFromScreen:local];
 	local.y = [win frame].size.height - local.y;
 	if (macWin->winPtr && macWin->winPtr->wmInfoPtr) {
 	    local.x -= macWin->winPtr->wmInfoPtr->xInParent;
