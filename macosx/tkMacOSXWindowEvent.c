@@ -806,7 +806,7 @@ ConfigureRestrictProc(
 {
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
-    
+   
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
 
 #ifdef TK_MAC_DEBUG_DRAWING
@@ -855,7 +855,7 @@ ConfigureRestrictProc(
 	 * don't clobber the AutoreleasePool set up by the caller.
 	 */
 	[NSApp setPoolProtected:YES];
-	
+
 	/*
 	 * Try to prevent flickers and flashes.
 	 *
@@ -864,7 +864,7 @@ ConfigureRestrictProc(
 	 * 768, ... :^(
 	 */
 	[w disableFlushWindow];
-	
+
 	/* Disable Tk drawing until the window has been completely configured.*/
 	TkMacOSXSetDrawingEnabled(winPtr, 0);
 
