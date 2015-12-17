@@ -143,7 +143,7 @@ TkpOpenDisplay(
     static char vendor[25] = "";
     NSArray *cgVers;
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    
+
     if (gMacDisplay != NULL) {
 	if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
 	    return gMacDisplay;

@@ -348,7 +348,7 @@ TkpInit(
 	    TkMacOSXInitCGDrawing(interp, TRUE, 0);
 	    [pool drain];
 	}
-	
+
 	/*
 	 * FIXME: Close stdin & stdout for remote debugging otherwise we will
 	 * fight with gdb for stdin & stdout

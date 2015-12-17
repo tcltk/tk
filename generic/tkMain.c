@@ -203,10 +203,10 @@ Tk_MainEx(
     int code, nullStdin = 0;
     Tcl_Channel chan;
     InteractiveState is;
+#ifdef ZIPFS_IN_TCL
     const char *zipFile = NULL;
     Tcl_Obj *zipval = NULL;
     int autoRun = 1;
-#ifdef ZIPFS_IN_TCL
     int zipOk = TCL_ERROR;
 #ifdef ANDROID
     const char *zipFile2 = NULL;
@@ -253,7 +253,7 @@ Tk_MainEx(
     }
 #endif
 
-#ifndef ANDROID
+#if defined(ZIPFS_IN_TCL) && !defined(ANDROID)
     exeName = Tcl_GetNameOfExecutable();
 #endif
 
@@ -304,6 +304,7 @@ Tk_MainEx(
 	    argv += 3;
         } else if (argc > 1) {
 	    length = strlen((char *) argv[1]);
+#ifdef ZIPFS_IN_TCL
 	    if ((length >= 2) &&
 		(0 == _tcsncmp(TEXT("-zip"), argv[1], length))) {
 		argc--;
@@ -315,7 +316,9 @@ Tk_MainEx(
 		    argc--;
 		    argv++;
 		}
-	    } else if (TEXT('-') != argv[1][0]) {
+	    } else
+#endif
+	    if (TEXT('-') != argv[1][0]) {
 		Tcl_SetStartupScript(NewNativeObj(argv[1], -1), NULL);
 		argc--;
 		argv++;
@@ -551,12 +554,12 @@ Tk_MainEx(
 #endif
 	}
     }
-#endif
 
     if (zipval != NULL) {
         Tcl_DecrRefCount(zipval);
         zipval = NULL;
     }
+#endif
 
     /*
      * Invoke application-specific initialization.
