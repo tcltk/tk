@@ -14,22 +14,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/**
- * On Windows, this file needs to be compiled twice, once with
- * TK_ASCII_MAIN defined. This way both Tk_MainEx and Tk_MainExW
- * can be implemented, sharing the same source code.
- */
-#if defined(TK_ASCII_MAIN)
-#   ifdef UNICODE
-#	undef UNICODE
-#	undef _UNICODE
-#   else
-#	define UNICODE
-#	define _UNICODE
-#   endif
-#endif
-#undef ZIPFS_IN_TCL
-
+#undef USE_TCL_STUBS
 #include "tkInt.h"
 #include <ctype.h>
 #include <stdio.h>
@@ -39,8 +24,6 @@
 #else
 #   include <stdlib.h>
 #endif
-
-extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
 /*
  * The default prompt used when the user has not overridden it.
@@ -56,16 +39,6 @@ extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
  * to strcmp here.
  */
 #ifdef _WIN32
-/*  Little hack to eliminate the need for "tclInt.h" here:
-    Just copy a small portion of TclIntPlatStubs, just
-    enough to make it work. See [600b72bfbc] */
-typedef struct {
-    int magic;
-    void *hooks;
-    void (*dummy[16]) (void); /* dummy entries 0-15, not used */
-    int (*tclpIsAtty) (int fd); /* 16 */
-} TclIntPlatStubs;
-extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char
@@ -74,9 +47,19 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #   define _tcslen strlen
 #   define _tcsncmp strncmp
 #endif
+#include "zipfs.h"
 
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
+#endif
+
+#ifdef PLATFORM_SDL
+#include <SDL2/SDL.h>
+#endif
+
+#ifdef ANDROID
+#undef  ZIPFS_BOOTDIR
+#define ZIPFS_BOOTDIR "/assets"
 #endif
 
 /*
@@ -117,12 +100,6 @@ static int WinIsTty(int fd) {
      * to do it.
      */
 
-#if !defined(STATIC_BUILD)
-	if (tclStubsPtr->reserved9 && tclIntPlatStubsPtr->tclpIsAtty) {
-	    /* We are running on Cygwin */
-	    return tclIntPlatStubsPtr->tclpIsAtty(fd);
-	}
-#endif
     handle = GetStdHandle(STD_INPUT_HANDLE + fd);
 	/*
 	 * If it's a bad or closed handle, then it's been connected to a wish
@@ -161,7 +138,7 @@ static void		StdinProc(ClientData clientData, int mask);
 /*
  *----------------------------------------------------------------------
  *
- * Tk_MainEx --
+ * Tk_ZipMain --
  *
  *	Main program for Wish and most other Tk-based applications.
  *
@@ -178,7 +155,7 @@ static void		StdinProc(ClientData clientData, int mask);
  */
 
 void
-Tk_MainEx(
+Tk_ZipMain(
     int argc,			/* Number of arguments. */
     TCHAR **argv,		/* Array of argument strings. */
     Tcl_AppInitProc *appInitProc,
@@ -192,42 +169,19 @@ Tk_MainEx(
     int code, nullStdin = 0;
     Tcl_Channel chan;
     InteractiveState is;
+    const char *zipFile = NULL;
+    Tcl_Obj *zipval = NULL;
+    int autoRun = 1;
+    int zipOk = TCL_ERROR;
+#ifdef ANDROID
+    const char *zipFile2 = NULL;
+#else
+    const char *exeName;
+    Tcl_DString systemEncodingName;
+#endif
 
-    /*
-     * Ensure that we are getting a compatible version of Tcl.
-     */
-
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
-	if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
-	    abort();
-	} else {
-	    Tcl_Panic("%s", Tcl_GetString(Tcl_GetObjResult(interp)));
-	}
-    }
-
-#if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
-
-    if (tclStubsPtr->reserved9) {
-	/* We are running win32 Tk under Cygwin, so let's check
-	 * whether the env("DISPLAY") variable or the -display
-	 * argument is set. If so, we really want to run the
-	 * Tk_MainEx function of libtk8.?.dll, not this one. */
-	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
-	loadCygwinTk:
-	    if (TkCygwinMainEx(argc, argv, appInitProc, interp)) {
-		/* Should never reach here. */
-		return;
-	    }
-	} else {
-	    int i;
-
-	    for (i = 1; i < argc; ++i) {
-		if (!_tcscmp(argv[i], TEXT("-display"))) {
-		    goto loadCygwinTk;
-		}
-	    }
-	}
-    }
+#if !defined(ANDROID)
+    exeName = Tcl_GetNameOfExecutable();
 #endif
 
     Tcl_InitMemory(interp);
@@ -235,6 +189,10 @@ Tk_MainEx(
     is.interp = interp;
     is.gotPartial = 0;
     Tcl_Preserve(interp);
+
+#ifdef PLATFORM_SDL
+    Tk_InitConsoleChannels(interp);
+#endif
 
 #if defined(_WIN32) && !defined(__CYGWIN__)
     Tk_InitConsoleChannels(interp);
@@ -271,10 +229,24 @@ Tk_MainEx(
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
 	    argv += 3;
-	} else if ((argc > 1) && (TEXT('-') != argv[1][0])) {
-	    Tcl_SetStartupScript(NewNativeObj(argv[1], -1), NULL);
-	    argc--;
-	    argv++;
+        } else if (argc > 1) {
+	    length = strlen((char *) argv[1]);
+	    if ((length >= 2) &&
+		(0 == _tcsncmp(TEXT("-zip"), argv[1], length))) {
+		argc--;
+		argv++;
+		if ((argc > 1) && (argv[1][0] != (TCHAR) '-')) {
+		    zipval = NewNativeObj(argv[1], -1);
+		    zipFile = Tcl_GetString(zipval);
+		    autoRun = 0;
+		    argc--;
+		    argv++;
+		}
+	    } else if (TEXT('-') != argv[1][0]) {
+		Tcl_SetStartupScript(NewNativeObj(argv[1], -1), NULL);
+		argc--;
+		argv++;
+	    }
 	} else if ((argc > 2) && (length = _tcslen(argv[1]))
 		&& (length > 1) && (0 == _tcsncmp(TEXT("-file"), argv[1], length))
 		&& (TEXT('-') != argv[2][0])) {
@@ -306,7 +278,11 @@ Tk_MainEx(
      * Set the "tcl_interactive" variable.
      */
 
+#ifdef PLATFORM_SDL
+    is.tty = 1;
+#else
     is.tty = isatty(0);
+#endif
 #if defined(MAC_OSX_TK)
     /*
      * On TkAqua, if we don't have a TTY and stdin is a special character file
@@ -323,6 +299,190 @@ Tk_MainEx(
     Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
 	    Tcl_NewIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
 
+    zipOk = Tclzipfs_Init(interp);
+    if (zipOk == TCL_OK) {
+	int relax = 0;
+
+	if (zipFile == NULL) {
+	    relax = 1;
+#ifdef ANDROID
+	    zipFile = getenv("TK_TCL_WISH_PACKAGE_CODE_PATH");
+	    zipFile2 = getenv("PACKAGE_CODE_PATH");
+	    if (zipFile == NULL) {
+		zipFile = zipFile2;
+		zipFile2 = NULL;
+	    }
+#else
+	    zipFile = exeName;
+#endif
+	}
+	if (zipFile != NULL) {
+#ifdef ANDROID
+	    zipOk = Tclzipfs_Mount(interp, zipFile, "", NULL);
+#else
+	    zipOk = Tclzipfs_Mount(interp, zipFile, exeName, NULL);
+#endif
+	    if (!relax && (zipOk != TCL_OK)) {
+		Tcl_Exit(1);
+	    }
+#ifdef ANDROID
+	    if (zipFile2 != NULL) {
+		zipOk = Tclzipfs_Mount(interp, zipFile2, "/assets", NULL);
+		if (zipOk != TCL_OK) {
+		    Tcl_Exit(1);
+		}
+	    }
+#endif
+	} else {
+	    zipOk = TCL_ERROR;
+	}
+	Tcl_ResetResult(interp);
+    }
+    if (zipOk == TCL_OK) {
+	char *tk_lib;
+	Tcl_DString dsTk;
+#ifdef ZIPFS_BOOTDIR
+	char *tcl_lib = ZIPFS_BOOTDIR "/tcl" TCL_VERSION;
+	char *tcl_pkg = ZIPFS_BOOTDIR;
+#else
+	char *tcl_lib;
+	char *tcl_pkg = (char *) exeName;
+	Tcl_DString dsTcl;
+
+	Tcl_DStringInit(&dsTcl);
+	Tcl_DStringAppend(&dsTcl, exeName, -1);
+	Tcl_DStringAppend(&dsTcl, "/tcl" TCL_VERSION, -1);
+	tcl_lib = Tcl_DStringValue(&dsTcl);
+#endif
+	Tcl_SetVar2(interp, "env", "TCL_LIBRARY", tcl_lib, TCL_GLOBAL_ONLY);
+	Tcl_SetVar(interp, "tcl_libPath", tcl_lib, TCL_GLOBAL_ONLY);
+	Tcl_SetVar(interp, "tcl_library", tcl_lib, TCL_GLOBAL_ONLY);
+	Tcl_SetVar(interp, "tcl_pkgPath", tcl_pkg, TCL_GLOBAL_ONLY);
+	Tcl_SetVar(interp, "auto_path", tcl_lib,
+		   TCL_GLOBAL_ONLY | TCL_LIST_ELEMENT);
+
+	Tcl_DStringInit(&dsTk);
+#ifdef ZIPFS_BOOTDIR
+	Tcl_DStringSetLength(&dsTk, strlen(ZIPFS_BOOTDIR) + 32);
+	Tcl_DStringSetLength(&dsTk, 0);
+	tk_lib = Tcl_DStringValue(&dsTk);
+#ifdef PLATFORM_SDL
+        if (SDL_MAJOR_VERSION > 1) {
+	    sprintf(tk_lib, ZIPFS_BOOTDIR "/sdl%dtk" TK_VERSION,
+		    SDL_MAJOR_VERSION);
+        } else {
+	    strcpy(tk_lib, ZIPFS_BOOTDIR "/sdltk" TK_VERSION);
+        }
+#else
+	strcpy(tk_lib, ZIPFS_BOOTDIR "/tk" TK_VERSION);
+#endif
+#else
+	Tcl_DStringSetLength(&dsTk, strlen(exeName) + 32);
+	Tcl_DStringSetLength(&dsTk, 0);
+	tk_lib = Tcl_DStringValue(&dsTk);
+#ifdef PLATFORM_SDL
+        if (SDL_MAJOR_VERSION > 1) {
+	    sprintf(tk_lib, "%s/sdl%dtk" TK_VERSION,
+		    exeName, SDL_MAJOR_VERSION);
+        } else {
+	    strcpy(tk_lib, "%s/sdltk" TK_VERSION, exeName);
+        }
+#else
+	sprintf(tk_lib, "%s/tk" TK_VERSION, exeName);
+#endif
+#endif
+	Tcl_DStringSetLength(&dsTk, strlen(tk_lib));
+        Tcl_SetVar2(interp, "env", "TK_LIBRARY", tk_lib, TCL_GLOBAL_ONLY);
+        Tcl_SetVar(interp, "tk_library", tk_lib, TCL_GLOBAL_ONLY);
+
+	Tcl_DStringFree(&dsTk);
+#ifndef ZIPFS_BOOTDIR
+	Tcl_DStringFree(&dsTcl);
+#endif
+
+	if (autoRun) {
+	    char *filename;
+	    Tcl_Channel chan;
+#ifndef ZIPFS_BOOTDIR
+	    Tcl_DString dsFilename;
+
+	    Tcl_DStringInit(&dsFilename);
+#endif
+
+	    /*
+ 	     * Reset tcl_interactive to false if we'll later
+     	     * source a file from ZIP, otherwise the console
+     	     * will be displayed.
+     	     */
+#ifdef ANDROID
+	    if (zipFile2 != NULL) {
+		filename = ZIPFS_BOOTDIR "/assets/app/main.tcl";
+		chan = Tcl_OpenFileChannel(NULL, filename, "r", 0);
+	    } else
+#endif
+	    {
+#ifdef ZIPFS_BOOTDIR
+		filename = ZIPFS_BOOTDIR "/app/main.tcl";
+#else
+		Tcl_DStringAppend(&dsFilename, exeName, -1);
+		Tcl_DStringAppend(&dsFilename, "/app/main.tcl", -1);
+		filename = Tcl_DStringValue(&dsFilename);
+#endif
+		chan = Tcl_OpenFileChannel(NULL, filename, "r", 0);
+	    }
+	    if (chan != (Tcl_Channel) NULL) {
+		const char *arg = NULL;
+
+		Tcl_Close(NULL, chan);
+
+		/*
+		 * Push back script file to argv, if any.
+ 		 */
+		if (path != NULL) {
+		    arg = Tcl_GetString(path);
+		}
+		if (arg != NULL) {
+		    Tcl_Obj *v, *no;
+
+		    no = Tcl_NewStringObj("argv", 4);
+		    v = Tcl_ObjGetVar2(interp, no, NULL, TCL_GLOBAL_ONLY);
+		    if (v != NULL) {
+			Tcl_Obj **objv, *n, *nv;
+			int objc, i;
+
+			objc = 0;
+			Tcl_ListObjGetElements(NULL, v, &objc, &objv);
+			n = Tcl_NewStringObj(arg, -1);
+			nv = Tcl_NewListObj(1, &n);
+			for (i = 0; i < objc; i++) {
+			    Tcl_ListObjAppendElement(NULL, nv, objv[i]);
+			}
+			Tcl_IncrRefCount(nv);
+			if (Tcl_ObjSetVar2(interp, no, NULL, nv,
+					   TCL_GLOBAL_ONLY) != NULL) {
+			    Tcl_GlobalEval(interp, "incr argc");
+			}
+			Tcl_DecrRefCount(nv);
+		    }
+		    Tcl_DecrRefCount(no);
+		}
+		Tcl_SetStartupScript(Tcl_NewStringObj(filename, -1), NULL);
+		Tcl_SetVar(interp, "argv0", filename, TCL_GLOBAL_ONLY);
+		Tcl_SetVar(interp, "tcl_interactive", "0", TCL_GLOBAL_ONLY);
+	    } else {
+		autoRun = 0;
+	    }
+#ifndef ZIPFS_BOOTDIR
+	    Tcl_DStringFree(&dsFilename);
+#endif
+	}
+    }
+
+    if (zipval != NULL) {
+        Tcl_DecrRefCount(zipval);
+        zipval = NULL;
+    }
+
     /*
      * Invoke application-specific initialization.
      */
@@ -333,12 +493,88 @@ Tk_MainEx(
     }
 
     /*
+     * Setup auto loading info to point to mounted ZIP file.
+     */
+
+    if (zipOk == TCL_OK) {
+#ifdef ZIPFS_BOOTDIR
+	const char *tcl_lib = ZIPFS_BOOTDIR "/tcl" TCL_VERSION;
+	const char *tcl_pkg = ZIPFS_BOOTDIR;
+#else
+	char *tcl_lib;
+	char *tcl_pkg = (char *) exeName;
+	Tcl_DString dsLib;
+
+	Tcl_DStringInit(&dsLib);
+	Tcl_DStringAppend(&dsLib, exeName, -1);
+	Tcl_DStringAppend(&dsLib, "/tcl" TCL_VERSION, -1);
+	tcl_lib = Tcl_DStringValue(&dsLib);
+#endif
+
+	Tcl_SetVar(interp, "tcl_libPath", tcl_lib, TCL_GLOBAL_ONLY);
+	Tcl_SetVar(interp, "tcl_library", tcl_lib, TCL_GLOBAL_ONLY);
+        Tcl_SetVar(interp, "tcl_pkgPath", tcl_pkg, TCL_GLOBAL_ONLY);
+#ifndef ZIPFS_BOOTDIR
+	Tcl_DStringFree(&dsLib);
+#endif
+
+	/*
+	 * We need to set the system encoding (after initializing Tcl),
+ 	 * otherwise "encoding system" will return "identity"
+ 	 */
+
+#ifdef ANDROID
+	Tcl_SetSystemEncoding(NULL, "utf-8");
+#else
+	Tcl_SetSystemEncoding(NULL,
+		Tcl_GetEncodingNameFromEnvironment(&systemEncodingName));
+	Tcl_DStringFree(&systemEncodingName);
+#endif
+    }
+
+    /*
      * Invoke the script specified on the command line, if any. Must fetch it
      * again, as the appInitProc might have reset it.
      */
 
     path = Tcl_GetStartupScript(&encodingName);
     if (path != NULL) {
+	const char *filename = Tcl_GetString(path);
+	int length = strlen(filename);
+
+	if ((length > 6) && (strncmp(filename, "zipfs:", 6) == 0)) {
+	    Tcl_Obj *newPath;
+
+	    zipOk = Tclzipfs_Mount(interp, filename + 6, "/app", NULL);
+	    if (zipOk == TCL_OK) {
+		newPath = Tcl_NewStringObj("/app/main.tcl", -1);
+		Tcl_IncrRefCount(newPath);
+		if (Tcl_FSAccess(newPath, R_OK) == 0) {
+		    Tcl_SetStartupScript(newPath, encodingName);
+		    path = newPath;
+		    goto doit;
+		}
+		Tcl_DecrRefCount(newPath);
+		newPath = Tcl_NewStringObj("/app/app/main.tcl", -1);
+		Tcl_IncrRefCount(newPath);
+		if (Tcl_FSAccess(newPath, R_OK) == 0) {
+		    Tcl_SetStartupScript(newPath, encodingName);
+		    path = newPath;
+		    goto doit;
+		}
+		Tcl_DecrRefCount(newPath);
+		newPath = Tcl_NewStringObj("/app/assets/app/main.tcl", -1);
+		Tcl_IncrRefCount(newPath);
+		if (Tcl_FSAccess(newPath, R_OK) == 0) {
+		    Tcl_SetStartupScript(newPath, encodingName);
+		    path = newPath;
+		    goto doit;
+		}
+		Tcl_DecrRefCount(newPath);
+		Tclzipfs_Unmount(interp, filename + 6);
+	    }
+	}
+doit:
 	Tcl_ResetResult(interp);
 	code = Tcl_FSEvalFileEx(interp, path, encodingName);
 	if (code != TCL_OK) {
