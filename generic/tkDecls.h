@@ -1721,7 +1721,16 @@ extern const TkStubs *tkStubsPtr;
 #undef Tk_SafeInit
 #undef Tk_CreateConsoleWindow
 
-#if defined(_WIN32) && defined(UNICODE)
+#if defined(ZIPFS_IN_TCL)
+#   define Tk_MainEx Tk_ZipMain
+#   ifdef _WIN32
+    extern void Tk_ZipMain(int argc, wchar_t **argv,
+	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
+#   else
+    extern void Tk_ZipMain(int argc, char **argv,
+	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
+#   endif
+#elif defined(_WIN32) && defined(UNICODE)
 #   define Tk_MainEx Tk_MainExW
     EXTERN void Tk_MainExW(int argc, wchar_t **argv,
 	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
