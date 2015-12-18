@@ -369,7 +369,7 @@ TTK_OBJS = \
 
 STUB_OBJS = tkStubInit.o
 
-STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
+STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o tkZipMain.o
 
 SDL_OBJS = tkSDL.o tkSDL3d.o tkSDLButton.o tkSDLColor.o tkSDLConfig.o \
 	tkSDLCursor.o tkSDLDraw.o tkSDLEmbed.o tkSDLEvent.o \
@@ -558,7 +558,7 @@ libagg.a:
 
 
 ${WISH_EXE}: $(TK_STUB_LIB_FILE) $(WISH_OBJS) $(TK_LIB_FILE)
-	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ \
+	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) $(TK_STUB_LIB_FILE) @TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o ${WISH_EXE}
 
 # Resetting the LIB_RUNTIME_DIR below is required so that
@@ -1154,6 +1154,9 @@ tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 
 # Stub library binaries, these must be compiled for use in a shared library
 # even though they will be placed in a static archive
+
+tkZipMain.o: $(GENERIC_DIR)/tkZipMain.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkZipMain.c
 
 tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
