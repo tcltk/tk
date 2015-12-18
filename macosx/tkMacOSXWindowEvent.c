@@ -806,7 +806,7 @@ ConfigureRestrictProc(
 {
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
-   
+
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
 
 #ifdef TK_MAC_DEBUG_DRAWING
