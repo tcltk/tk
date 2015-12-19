@@ -957,7 +957,44 @@ test text-11.10 {TextWidgetCmd procedure, "insert" option} {
     list [.t get 1.0 1.end] [.t tag ranges bold] [.t tag ranges silly]
 } {{First second} {1.0 1.5} {1.5 1.12}}
 
-test text-11a.1 {TextWidgetCmd procedure, "sync" option} -setup {
+test text-11a.1 {TextWidgetCmd procedure, "pendingsync" option} -setup {
+    destroy .yt
+} -body {
+    text .yt
+    list [catch {.yt pendingsync mytext} msg] $msg
+} -cleanup {
+    destroy .yt
+} -result {1 {wrong # args: should be ".yt pendingsync"}}
+test text-11a.2 {TextWidgetCmd procedure, "pendingsync" option} -setup {
+    destroy .top.yt .top
+} -body {
+    toplevel .top
+    pack [text .top.yt]
+    set content {}
+    for {set i 1} {$i < 300} {incr i} {
+        append content [string repeat "$i " 15] \n
+    }
+    .top.yt insert 1.0 $content
+    # wait for end of line metrics calculation to get correct $fraction1
+    # as a reference
+    while {[.top.yt pendingsync]} {update}
+    .top.yt yview moveto 1
+    set fraction1 [lindex [.top.yt yview] 0]
+    set res [expr {$fraction1 > 0}]
+    .top.yt delete 1.0 end
+    .top.yt insert 1.0 $content
+    # ensure the test is relevant
+    lappend res [.top.yt pendingsync]
+    # asynchronously wait for completion of line metrics calculation
+    while {[.top.yt pendingsync]} {update}
+    .top.yt yview moveto $fraction1
+    set fraction2 [lindex [.top.yt yview] 0]
+    lappend res [expr {$fraction1 == $fraction2}]
+} -cleanup {
+    destroy .top.yt .top
+} -result {1 1 1}
+
+test text-11a.11 {TextWidgetCmd procedure, "sync" option} -setup {
     destroy .yt
 } -body {
     text .yt
@@ -965,15 +1002,7 @@ test text-11a.1 {TextWidgetCmd procedure, "sync" option} -setup {
 } -cleanup {
     destroy .yt
 } -result {1 {wrong # args: should be ".yt sync ?-command command?"}}
-test text-11a.2 {TextWidgetCmd procedure, "sync" option with -command} -setup {
-    destroy .yt
-} -body {
-    text .yt
-    list [catch {.yt sync -comx foo} msg] $msg
-} -cleanup {
-    destroy .yt
-} -result {1 {wrong option "-comx": should be "-command"}}
-test text-11a.3 {TextWidgetCmd procedure, "sync" option} -setup {
+test text-11a.12 {TextWidgetCmd procedure, "sync" option} -setup {
     destroy .top.yt .top
 } -body {
     toplevel .top
@@ -1005,56 +1034,44 @@ test text-11a.3 {TextWidgetCmd procedure, "sync" option} -setup {
 } -cleanup {
     destroy .top.yt .top
 } -result {1 0 1}
-test text-11a.4 {TextWidgetCmd procedure, "sync" option with -command} -setup {
-    destroy .yt
-} -body {
-    set ::x 0
-    pack [text .yt] -expand 1 -fill both
-    .yt sync -command [list set ::x 1]
-    set ::x
-} -cleanup {
-    destroy .yt
-} -result {1}
 
-test text-11a.11 {TextWidgetCmd procedure, "pendingsync" option} -setup {
+test text-11a.21 {TextWidgetCmd procedure, "sync" option with -command} -setup {
     destroy .yt
 } -body {
     text .yt
-    list [catch {.yt pendingsync mytext} msg] $msg
+    list [catch {.yt sync -comx foo} msg] $msg
 } -cleanup {
     destroy .yt
-} -result {1 {wrong # args: should be ".yt pendingsync"}}
-test text-11a.12 {TextWidgetCmd procedure, "pendingsync" option} -setup {
+} -result {1 {wrong option "-comx": should be "-command"}}
+test text-11a.22 {TextWidgetCmd procedure, "sync" option with -command} -setup {
     destroy .top.yt .top
 } -body {
+    set res {}
+    set ::x 0
     toplevel .top
     pack [text .top.yt]
     set content {}
-    for {set i 1} {$i < 300} {incr i} {
+    for {set i 1} {$i < 30} {incr i} {
         append content [string repeat "$i " 15] \n
     }
     .top.yt insert 1.0 $content
-    update
-    # wait for end of line metrics calculation to get correct $fraction1
-    # as a reference
-    while {[.top.yt pendingsync]} {update}
-    .top.yt yview moveto 1
-    set fraction1 [lindex [.top.yt yview] 0]
-    set res [expr {$fraction1 > 0}]
-    .top.yt delete 1.0 end
-    .top.yt insert 1.0 $content
-    # ensure the test is relevant
+    # first case: line metrics calculation still running when launching 'sync -command'
     lappend res [.top.yt pendingsync]
-    # asynchronously wait for completion of line metrics calculation
+    .top.yt sync -command [list set ::x 1]
+    lappend res $::x
+    # now finish line metrics calculations
     while {[.top.yt pendingsync]} {update}
-    .top.yt yview moveto $fraction1
-    set fraction2 [lindex [.top.yt yview] 0]
-    lappend res [expr {$fraction1 == $fraction2}]
+    lappend res [.top.yt pendingsync] $::x
+    # second case: line metrics calculation completed when launching 'sync -command'
+    .top.yt sync -command [list set ::x 2]
+    lappend res $::x
+    vwait ::x
+    lappend res $::x
 } -cleanup {
     destroy .top.yt .top
-} -result {1 1 1}
+} -result {1 0 0 1 1 2}
 
-test text-11a.21 {"<<WidgetViewSync>>" event} -setup {
+test text-11a.31 {"<<WidgetViewSync>>" event} -setup {
     destroy .top.yt .top
 } -body {
     toplevel .top
@@ -1085,6 +1102,31 @@ test text-11a.21 {"<<WidgetViewSync>>" event} -setup {
 } -cleanup {
     destroy .top.yt .top
 } -result {1 1 1}
+
+test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
+    destroy .top.yt .top
+} -body {
+    set res {}
+    toplevel .top
+    pack [text .top.yt]
+    set content {}
+    for {set i 1} {$i < 300} {incr i} {
+        append content [string repeat "$i " 50] \n
+    }
+    bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
+    .top.yt insert 1.0 $content
+    update
+    # ensure the test is relevant
+    lappend res [.top.yt pendingsync]
+    # - there is no more any pending sync after running 'sync'
+    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs 
+    .top.yt sync
+    lappend res [.top.yt pendingsync]
+    update
+    set res
+} -cleanup {
+    destroy .top.yt .top
+} -result {Sync:0 1 0 Sync:1}
 
 # edit, mark, scan, search, see, tag, window, xview and yview actions are tested elsewhere.
 
