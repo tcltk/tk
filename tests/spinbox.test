@@ -1599,6 +1599,12 @@ test spinbox-24.1 {error in trace proc attached to the textvariable} {
     {can't set "myvar": Intentional error here!} \
     {can't set "myvar": Intentional error here!}]
 
+test spinbox-25.1 {textvariable lives in a non-existing namespace} {
+    destroy .s
+    catch {spinbox .s -textvariable thisnsdoesntexist::myvar} result1
+    set result1
+} {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
+
 catch {unset ::e ::vVals}
 
 ##

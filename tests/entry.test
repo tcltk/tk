@@ -1641,6 +1641,12 @@ test entry-23.1 {error in trace proc attached to the textvariable} {
 } [list {can't set "myvar": Intentional error here!} \
     {can't set "myvar": Intentional error here!}]
 
+test entry-24.1 {textvariable lives in a non-existing namespace} {
+    destroy .e
+    catch {entry .e -textvariable thisnsdoesntexist::myvar} result1
+    set result1
+} {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
+
 destroy .e
 
 # XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,
