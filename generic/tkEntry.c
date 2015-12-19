@@ -1104,6 +1104,7 @@ ConfigureEntry(
     int valuesChanged = 0;	/* lint initialization */
     double oldFrom = 0.0;	/* lint initialization */
     double oldTo = 0.0;		/* lint initialization */
+    int code;
 
     /*
      * Eliminate any existing trace on a variable monitored by the entry.
@@ -1304,9 +1305,6 @@ ConfigureEntry(
     /*
      * If the entry is tied to the value of a variable, create the variable if
      * it doesn't exist, and set the entry's value from the variable's value.
-     * No checking of the return value of EntryValueChanged is needed since it
-     * can only return TCL_ERROR if there is a trace on the textvariable and
-     * since any existing trace on it was eliminated above.
      */
 
     if (entryPtr->textVarName != NULL) {
@@ -1314,6 +1312,17 @@ ConfigureEntry(
 
 	value = Tcl_GetVar2(interp, entryPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
+
+            /*
+             * Since any trace on the textvariable was eliminated above,
+             * the only possible reason for EntryValueChanged to return
+             * an error is that the textvariable lives in a namespace
+             * that does not (yet) exist. Indeed, namespaces are not
+             * automatically created as needed. Don't trap this error
+             * here, better do it below when attempting to trace the
+             * variable.
+             */
+
 	    EntryValueChanged(entryPtr, NULL);
 	} else {
 	    EntrySetValue(entryPtr, value);
@@ -1332,7 +1341,13 @@ ConfigureEntry(
 	     */
 
 	    Tcl_ListObjIndex(interp, sbPtr->listObj, 0, &objPtr);
-	    EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
+
+            /*
+	     * No check for error return here as well, because any possible
+	     * error will be trapped below when attempting tracing.
+	     */
+
+            EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
 	} else if ((sbPtr->valueStr == NULL)
 		&& !DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)
 		&& (!DOUBLES_EQ(sbPtr->fromValue, oldFrom)
@@ -1355,6 +1370,12 @@ ConfigureEntry(
 		dvalue = sbPtr->fromValue;
 	    }
 	    sprintf(sbPtr->formatBuf, sbPtr->valueFormat, dvalue);
+
+            /*
+	     * No check for error return here as well, because any possible
+	     * error will be trapped below when attempting tracing.
+	     */
+
 	    EntryValueChanged(entryPtr, sbPtr->formatBuf);
 	}
     }
@@ -1366,10 +1387,13 @@ ConfigureEntry(
 
     if ((entryPtr->textVarName != NULL)
 	    && !(entryPtr->flags & ENTRY_VAR_TRACED)) {
-	Tcl_TraceVar2(interp, entryPtr->textVarName,
+	code = Tcl_TraceVar2(interp, entryPtr->textVarName,
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, entryPtr);
-	entryPtr->flags |= ENTRY_VAR_TRACED;
+        if (code != TCL_OK) {
+            return TCL_ERROR;
+        }
+        entryPtr->flags |= ENTRY_VAR_TRACED;
     }
 
     EntryWorldChanged(entryPtr);
@@ -2270,6 +2294,8 @@ EntryValueChanged(
     /*
      * An error may have happened when setting the textvariable in case there
      * is a trace on that variable and the trace proc triggered an error.
+     * Another possibility is that the textvariable is in a namespace that
+     * does not (yet) exist.
      * Signal this error.
      */
 
