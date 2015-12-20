@@ -6144,8 +6144,9 @@ TkTextPendingsync(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
     return (
-        (dInfoPtr->lastMetricUpdateLine - dInfoPtr->currentMetricUpdateLine) ?
-        1 : 0);
+        ((dInfoPtr->metricEpoch == -1) &&
+         (dInfoPtr->lastMetricUpdateLine == dInfoPtr->currentMetricUpdateLine)) ?
+        0 : 1);
 }
 
 /*
