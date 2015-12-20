@@ -1115,18 +1115,18 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     }
     bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
     .top.yt insert 1.0 $content
-    update
+    vwait res  ; # event dealt with by the event loop, with %d==0 i.e. we're out of sync
     # ensure the test is relevant
-    lappend res [.top.yt pendingsync]
-    # - there is no more any pending sync after running 'sync'
+    lappend res "Pending:[.top.yt pendingsync]"
     # - <<WidgetViewSync>> fires when sync returns if there was pending syncs 
+    # - there is no more any pending sync after running 'sync'
     .top.yt sync
-    lappend res [.top.yt pendingsync]
-    update
+    vwait res  ; # event dealt with by the event loop, with %d==1 i.e. we're in sync again
+    lappend res "Pending:[.top.yt pendingsync]"
     set res
 } -cleanup {
     destroy .top.yt .top
-} -result {Sync:0 1 0 Sync:1}
+} -result {Sync:0 Pending:1 Sync:1 Pending:0}
 
 # edit, mark, scan, search, see, tag, window, xview and yview actions are tested elsewhere.
 
