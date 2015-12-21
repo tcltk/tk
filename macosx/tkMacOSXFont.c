@@ -210,6 +210,7 @@ FindNSFont(
 	nsFont = [fm convertFont:nsFont toSize:size];
 	nsFont = [fm convertFont:nsFont toHaveTrait:traits];
     }
+    [nsFont retain];
     #undef defaultFont
     return nsFont;
 }
@@ -371,6 +372,7 @@ TkpFontPkgInit(
     NSFont *nsFont;
     TkFontAttributes fa;
     NSMutableCharacterSet *cs;
+    /* Since we called before TkpInit, we need our own autorelease pool. */
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     /* force this for now */
@@ -530,7 +532,7 @@ TkpGetFontFromAttributes(
 	nsFont = FindNSFont(faPtr->family, traits, weight, points, 1);
     }
     if (!nsFont) {
-	Tcl_Panic("Could not deternmine NSFont from TkFontAttributes");
+	Tcl_Panic("Could not determine NSFont from TkFontAttributes");
     }
     if (tkFontPtr == NULL) {
 	fontPtr = (MacFont *) ckalloc(sizeof(MacFont));
@@ -675,7 +677,6 @@ TkpGetFontAttrsForChar(
 {
     MacFont *fontPtr = (MacFont *) tkfont;
     NSFont *nsFont = fontPtr->nsFont;
-
     *faPtr = fontPtr->font.fa;
     if (nsFont && ![[nsFont coveredCharacterSet] characterIsMember:c]) {
 	UTF16Char ch = c;

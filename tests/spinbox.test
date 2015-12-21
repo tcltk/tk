@@ -1583,6 +1583,28 @@ test spinbox-23.1 {selection present while disabled, bug 637828} {
 } {1 1 345}
 
 destroy .e
+
+test spinbox-24.1 {error in trace proc attached to the textvariable} {
+    destroy .s
+    trace variable myvar w traceit
+    proc traceit args {error "Intentional error here!"}
+    spinbox .s -textvariable myvar -from 1 -to 10
+    catch {.s set mystring} result1
+    catch {.s insert 0 mystring} result2
+    catch {.s delete 0} result3
+    catch {.s invoke buttonup} result4
+    list $result1 $result2 $result3 $result4
+} [list {can't set "myvar": Intentional error here!} \
+    {can't set "myvar": Intentional error here!} \
+    {can't set "myvar": Intentional error here!} \
+    {can't set "myvar": Intentional error here!}]
+
+test spinbox-25.1 {textvariable lives in a non-existing namespace} {
+    destroy .s
+    catch {spinbox .s -textvariable thisnsdoesntexist::myvar} result1
+    set result1
+} {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
+
 catch {unset ::e ::vVals}
 
 ##
