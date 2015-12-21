@@ -126,10 +126,6 @@ enum {
 MODULE_SCOPE void
 TkMacOSXFlushWindows(void)
 {
-    /* This can be called from outside the Appkit event loop,
-     * so it needs its own AutoreleasePool.
-     */
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     NSArray *macWindows = [NSApp orderedWindows];
 
     for (NSWindow *w in macWindows) {
@@ -137,7 +133,6 @@ TkMacOSXFlushWindows(void)
 	    [w flushWindow];
 	}
     }
-    [pool drain];
 }
 
 /*

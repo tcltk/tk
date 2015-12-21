@@ -142,6 +142,7 @@ TkpOpenDisplay(
     static NSRect maxBounds = {{0, 0}, {0, 0}};
     static char vendor[25] = "";
     NSArray *cgVers;
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     if (gMacDisplay != NULL) {
 	if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
@@ -150,8 +151,6 @@ TkpOpenDisplay(
 	    return NULL;
 	}
     }
-
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     display = (Display *) ckalloc(sizeof(Display));
     screen  = (Screen *) ckalloc(sizeof(Screen));
