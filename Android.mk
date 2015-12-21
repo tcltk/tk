@@ -59,6 +59,7 @@ LOCAL_SRC_FILES := \
 	generic/tkGrid.c \
 	generic/tkConsole.c \
 	generic/tkMain.c \
+	generic/tkZipMain.c \
 	generic/tkOption.c \
 	generic/tkPack.c \
 	generic/tkPlace.c \

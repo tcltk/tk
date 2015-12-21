@@ -391,7 +391,7 @@ static const char *const selElementNames[] = {
 
 static int		ConfigureEntry(Tcl_Interp *interp, Entry *entryPtr,
 			    int objc, Tcl_Obj *const objv[], int flags);
-static void		DeleteChars(Entry *entryPtr, int index, int count);
+static int		DeleteChars(Entry *entryPtr, int index, int count);
 static void		DestroyEntry(void *memPtr);
 static void		DisplayEntry(ClientData clientData);
 static void		EntryBlinkProc(ClientData clientData);
@@ -417,7 +417,7 @@ static int		EntryValidateChange(Entry *entryPtr, const char *change,
 static void		ExpandPercents(Entry *entryPtr, const char *before,
 			    const char *change, const char *newStr, int index,
 			    int type, Tcl_DString *dsPtr);
-static void		EntryValueChanged(Entry *entryPtr,
+static int		EntryValueChanged(Entry *entryPtr,
 			    const char *newValue);
 static void		EntryVisibleRange(Entry *entryPtr,
 			    double *firstPtr, double *lastPtr);
@@ -427,7 +427,7 @@ static int		EntryWidgetObjCmd(ClientData clientData,
 static void		EntryWorldChanged(ClientData instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
 			    const char *string, int *indexPtr);
-static void		InsertChars(Entry *entryPtr, int index, const char *string);
+static int		InsertChars(Entry *entryPtr, int index, const char *string);
 
 /*
  * These forward declarations are the spinbox specific ones:
@@ -664,7 +664,7 @@ EntryWidgetObjCmd(
 	break;
 
     case COMMAND_DELETE: {
-	int first, last;
+	int first, last, code;
 
 	if ((objc < 3) || (objc > 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
@@ -681,7 +681,10 @@ EntryWidgetObjCmd(
 	    goto error;
 	}
 	if ((last >= first) && (entryPtr->state == STATE_NORMAL)) {
-	    DeleteChars(entryPtr, first, last - first);
+	    code = DeleteChars(entryPtr, first, last - first);
+            if (code != TCL_OK) {
+                goto error;
+            }
 	}
 	break;
     }
@@ -722,7 +725,7 @@ EntryWidgetObjCmd(
     }
 
     case COMMAND_INSERT: {
-	int index;
+	int index, code;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index text");
@@ -733,7 +736,10 @@ EntryWidgetObjCmd(
 	    goto error;
 	}
 	if (entryPtr->state == STATE_NORMAL) {
-	    InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
+	    code = InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
+            if (code != TCL_OK) {
+                goto error;
+            }
 	}
 	break;
     }
@@ -1104,6 +1110,7 @@ ConfigureEntry(
     int valuesChanged = 0;	/* lint initialization */
     double oldFrom = 0.0;	/* lint initialization */
     double oldTo = 0.0;		/* lint initialization */
+    int code;
 
     /*
      * Eliminate any existing trace on a variable monitored by the entry.
@@ -1311,6 +1318,17 @@ ConfigureEntry(
 
 	value = Tcl_GetVar2(interp, entryPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
+
+            /*
+             * Since any trace on the textvariable was eliminated above,
+             * the only possible reason for EntryValueChanged to return
+             * an error is that the textvariable lives in a namespace
+             * that does not (yet) exist. Indeed, namespaces are not
+             * automatically created as needed. Don't trap this error
+             * here, better do it below when attempting to trace the
+             * variable.
+             */
+
 	    EntryValueChanged(entryPtr, NULL);
 	} else {
 	    EntrySetValue(entryPtr, value);
@@ -1329,7 +1347,13 @@ ConfigureEntry(
 	     */
 
 	    Tcl_ListObjIndex(interp, sbPtr->listObj, 0, &objPtr);
-	    EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
+
+            /*
+	     * No check for error return here as well, because any possible
+	     * error will be trapped below when attempting tracing.
+	     */
+
+            EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
 	} else if ((sbPtr->valueStr == NULL)
 		&& !DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)
 		&& (!DOUBLES_EQ(sbPtr->fromValue, oldFrom)
@@ -1352,6 +1376,12 @@ ConfigureEntry(
 		dvalue = sbPtr->fromValue;
 	    }
 	    sprintf(sbPtr->formatBuf, sbPtr->valueFormat, dvalue);
+
+            /*
+	     * No check for error return here as well, because any possible
+	     * error will be trapped below when attempting tracing.
+	     */
+
 	    EntryValueChanged(entryPtr, sbPtr->formatBuf);
 	}
     }
@@ -1363,10 +1393,13 @@ ConfigureEntry(
 
     if ((entryPtr->textVarName != NULL)
 	    && !(entryPtr->flags & ENTRY_VAR_TRACED)) {
-	Tcl_TraceVar2(interp, entryPtr->textVarName,
+	code = Tcl_TraceVar2(interp, entryPtr->textVarName,
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, entryPtr);
-	entryPtr->flags |= ENTRY_VAR_TRACED;
+        if (code != TCL_OK) {
+            return TCL_ERROR;
+        }
+        entryPtr->flags |= ENTRY_VAR_TRACED;
     }
 
     EntryWorldChanged(entryPtr);
@@ -1999,7 +2032,8 @@ EntryComputeGeometry(
  *	Add new characters to an entry widget.
  *
  * Results:
- *	None.
+ *	A standard Tcl result. If an error occurred then an error message is
+ *	left in the interp's result.
  *
  * Side effects:
  *	New information gets added to entryPtr; it will be redisplayed soon,
@@ -2008,12 +2042,12 @@ EntryComputeGeometry(
  *----------------------------------------------------------------------
  */
 
-static void
+static int
 InsertChars(
     Entry *entryPtr,		/* Entry that is to get the new elements. */
     int index,			/* Add the new elements before this character
 				 * index. */
-    const char *value)	/* New characters to add (NULL-terminated
+    const char *value)		/* New characters to add (NULL-terminated
 				 * string). */
 {
     ptrdiff_t byteIndex;
@@ -2026,7 +2060,7 @@ InsertChars(
     byteIndex = Tcl_UtfAtIndex(string, index) - string;
     byteCount = strlen(value);
     if (byteCount == 0) {
-	return;
+	return TCL_OK;
     }
 
     newByteCount = entryPtr->numBytes + byteCount + 1;
@@ -2040,7 +2074,7 @@ InsertChars(
 	    EntryValidateChange(entryPtr, value, newStr, index,
 		    VALIDATE_INSERT) != TCL_OK) {
 	ckfree(newStr);
-	return;
+	return TCL_OK;
     }
 
     ckfree((char *)string);
@@ -2088,7 +2122,7 @@ InsertChars(
     if (entryPtr->insertPos >= index) {
 	entryPtr->insertPos += charsAdded;
     }
-    EntryValueChanged(entryPtr, NULL);
+    return EntryValueChanged(entryPtr, NULL);
 }
 
 /*
@@ -2099,7 +2133,8 @@ InsertChars(
  *	Remove one or more characters from an entry widget.
  *
  * Results:
- *	None.
+ *	A standard Tcl result. If an error occurred then an error message is
+ *	left in the interp's result.
  *
  * Side effects:
  *	Memory gets freed, the entry gets modified and (eventually)
@@ -2108,7 +2143,7 @@ InsertChars(
  *----------------------------------------------------------------------
  */
 
-static void
+static int
 DeleteChars(
     Entry *entryPtr,		/* Entry widget to modify. */
     int index,			/* Index of first character to delete. */
@@ -2122,7 +2157,7 @@ DeleteChars(
 	count = entryPtr->numChars - index;
     }
     if (count <= 0) {
-	return;
+	return TCL_OK;
     }
 
     string = entryPtr->string;
@@ -2144,7 +2179,7 @@ DeleteChars(
 		    VALIDATE_DELETE) != TCL_OK) {
 	ckfree(newStr);
 	ckfree(toDelete);
-	return;
+	return TCL_OK;
     }
 
     ckfree(toDelete);
@@ -2203,7 +2238,7 @@ DeleteChars(
 	    entryPtr->insertPos = index;
 	}
     }
-    EntryValueChanged(entryPtr, NULL);
+    return EntryValueChanged(entryPtr, NULL);
 }
 
 /*
@@ -2216,7 +2251,8 @@ DeleteChars(
  *	is one, and does other bookkeeping such as arranging for redisplay.
  *
  * Results:
- *	None.
+ *	A standard Tcl result. If an error occurred then an error message is
+ *	left in the interp's result.
  *
  * Side effects:
  *	None.
@@ -2224,7 +2260,7 @@ DeleteChars(
  *----------------------------------------------------------------------
  */
 
-static void
+static int
 EntryValueChanged(
     Entry *entryPtr,		/* Entry whose value just changed. */
     const char *newValue)	/* If this value is not NULL, we first force
@@ -2238,7 +2274,7 @@ EntryValueChanged(
 	newValue = NULL;
     } else {
 	newValue = Tcl_SetVar2(entryPtr->interp, entryPtr->textVarName,
-		NULL, entryPtr->string, TCL_GLOBAL_ONLY);
+		NULL, entryPtr->string, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
     }
 
     if ((newValue != NULL) && (strcmp(newValue, entryPtr->string) != 0)) {
@@ -2260,6 +2296,19 @@ EntryValueChanged(
 	EntryComputeGeometry(entryPtr);
 	EventuallyRedraw(entryPtr);
     }
+
+    /*
+     * An error may have happened when setting the textvariable in case there
+     * is a trace on that variable and the trace proc triggered an error.
+     * Another possibility is that the textvariable is in a namespace that
+     * does not (yet) exist.
+     * Signal this error.
+     */
+
+    if ((entryPtr->textVarName != NULL) && (newValue == NULL)) {
+        return TCL_ERROR;
+    }
+    return TCL_OK;
 }
 
 /*
@@ -3730,7 +3779,7 @@ SpinboxWidgetObjCmd(
 	break;
 
     case SB_CMD_DELETE: {
-	int first, last;
+	int first, last, code;
 
 	if ((objc < 3) || (objc > 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
@@ -3749,7 +3798,10 @@ SpinboxWidgetObjCmd(
 	    }
 	}
 	if ((last >= first) && (entryPtr->state == STATE_NORMAL)) {
-	    DeleteChars(entryPtr, first, last - first);
+	    code = DeleteChars(entryPtr, first, last - first);
+            if (code != TCL_OK) {
+                goto error;
+            }
 	}
 	break;
     }
@@ -3809,7 +3861,7 @@ SpinboxWidgetObjCmd(
     }
 
     case SB_CMD_INSERT: {
-	int index;
+	int index, code;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index text");
@@ -3820,7 +3872,10 @@ SpinboxWidgetObjCmd(
 	    goto error;
 	}
 	if (entryPtr->state == STATE_NORMAL) {
-	    InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
+	    code = InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
+            if (code != TCL_OK) {
+                goto error;
+            }
 	}
 	break;
     }
@@ -4030,16 +4085,22 @@ SpinboxWidgetObjCmd(
 	break;
     }
 
-    case SB_CMD_SET:
+    case SB_CMD_SET: {
+	int code = TCL_OK;
+
 	if (objc > 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?string?");
 	    goto error;
 	}
 	if (objc == 3) {
-	    EntryValueChanged(entryPtr, Tcl_GetString(objv[2]));
+	    code = EntryValueChanged(entryPtr, Tcl_GetString(objv[2]));
+            if (code != TCL_OK) {
+                goto error;
+            }
 	}
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(entryPtr->string, -1));
 	break;
+    }
 
     case SB_CMD_VALIDATE: {
 	int code;
@@ -4180,7 +4241,7 @@ GetSpinboxElement(
  *	TCL_OK.
  *
  * Side effects:
- *	An background error condition may arise when invoking the callback.
+ *	A background error condition may arise when invoking the callback.
  *	The widget value may change.
  *
  *--------------------------------------------------------------
@@ -4211,6 +4272,7 @@ SpinboxInvoke(
 	return TCL_OK;
     }
 
+    code = TCL_OK;
     if (fabs(sbPtr->increment) > MIN_DBL_VAL) {
 	if (sbPtr->listObj != NULL) {
 	    Tcl_Obj *objPtr;
@@ -4256,7 +4318,7 @@ SpinboxInvoke(
 		}
 	    }
 	    Tcl_ListObjIndex(interp, sbPtr->listObj, sbPtr->eIndex, &objPtr);
-	    EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
+	    code = EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
 	} else if (!DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)) {
 	    double dvalue;
 
@@ -4303,8 +4365,11 @@ SpinboxInvoke(
 		}
 	    }
 	    sprintf(sbPtr->formatBuf, sbPtr->valueFormat, dvalue);
-	    EntryValueChanged(entryPtr, sbPtr->formatBuf);
+	    code = EntryValueChanged(entryPtr, sbPtr->formatBuf);
 	}
+    }
+    if (code != TCL_OK) {
+        return TCL_ERROR;
     }
 
     if (sbPtr->command != NULL) {
