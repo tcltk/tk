@@ -385,7 +385,7 @@ Tk_ZipMain(
 	    sprintf(tk_lib, "%s/sdl%dtk" TK_VERSION,
 		    exeName, SDL_MAJOR_VERSION);
         } else {
-	    strcpy(tk_lib, "%s/sdltk" TK_VERSION, exeName);
+	    sprintf(tk_lib, "%s/sdltk" TK_VERSION, exeName);
         }
 #else
 	sprintf(tk_lib, "%s/tk" TK_VERSION, exeName);
