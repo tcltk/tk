@@ -7047,6 +7047,14 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
 
 2015-11-29 (bug)[1997299] [text] tag borderwidth leak (vogel)
 
+2015-12-12 (bug)[1739605] [text see] misbehavior (danckaert)
+
+2015-12-13 (bug)[ff8a1e] Never-mapped [text] performance (danckaert)
+
+2015-12-19 (bug)[1700065] Report errors from -textvariable write trace (vogel)
+
+2015-12-19 (bug)[793909] -textvariable handle undefined namespace (vogel)
+
 Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
---- Released 8.5.19, December 1, 2015 --- http://core.tcl.tk/tk/ for details
+--- Released 8.5.19, January 31, 2016 --- http://core.tcl.tk/tk/ for details
