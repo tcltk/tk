@@ -4805,8 +4805,9 @@ TextRedrawTag(
      * Round up the starting position if it's before the first line visible on
      * the screen (we only care about what's on the screen). Beware that the
      * display info structure might need update, for instance if we arrived
-     * here after a delete operation triggering a trace running a tag removal
-     * covering the whole contents of the text widget.
+     * here from an 'after idle' script removing tags in a range whose
+     * display lines (and dInfo) were partially invalidated by a previous
+     * delete operation in the text widget.
      */
 
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
