@@ -1333,6 +1333,30 @@ test textDisp-9.13 {TkTextRedrawTag} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 6.0 7.0} {2.0 6.0 7.0}}
+test textDisp-9.14 {TkTextRedrawTag} {
+    pack [text .tnocrash]
+    for {set i 1} {$i < 6} {incr i} {
+        .tnocrash insert end \nfoo$i
+    }
+    .tnocrash tag configure mytag1 -relief raised
+    .tnocrash tag configure mytag2 -relief solid
+    update
+    proc doit {} {
+        .tnocrash tag add mytag1 4.0 5.0
+        .tnocrash tag add mytag2 4.0 5.0
+        after idle {
+            .tnocrash tag remove mytag1 1.0 end
+            .tnocrash tag remove mytag2 1.0 end
+        }
+        .tnocrash delete 1.0 2.0
+    }
+    doit  ; # must not crash
+    after 500 {
+        destroy .tnocrash
+        set done 1
+    }
+    vwait done
+} {}
 
 test textDisp-10.1 {TkTextRelayoutWindow} {
     .t configure -wrap char
