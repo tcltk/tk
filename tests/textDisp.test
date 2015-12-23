@@ -2021,9 +2021,9 @@ test textDisp-16.18 {TkTextYviewCmd procedure, "moveto" roundoff} {textfonts} {
     wm geometry .top1 +0+0
     text .top1.t -height 3 -width 4 -wrap none -setgrid 1 -padx 6 \
 	-spacing3 6
-    .top1.t insert end "1\n2\n3\n4\n5\n6"
     pack .top1.t
     update
+    .top1.t insert end "1\n2\n3\n4\n5\n6"
     .top1.t yview moveto 0.3333
     set result [.top1.t yview]
     destroy .top1
