@@ -2958,18 +2958,18 @@ AsyncUpdateLineMetrics(
 	 * above). If there is a registered aftersync command, run that first.
 	 */
 
-	if (textPtr->afterSyncCmd != NULL) {
-	    int code;
-	    Tcl_Preserve((ClientData)textPtr->interp);
-	    code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
-	    if (code != TCL_OK && code != TCL_CONTINUE
-			&& code != TCL_BREAK) {
-		    Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
-		    Tcl_BackgroundError(textPtr->interp);
+        if (textPtr->afterSyncCmd) {
+            int code;
+            Tcl_Preserve((ClientData) textPtr->interp);
+            code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd,
+                    TCL_EVAL_GLOBAL);
+	    if (code == TCL_ERROR) {
+                Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
+                Tcl_BackgroundError(textPtr->interp);
 	    }
-	    Tcl_Release((ClientData)textPtr->interp);
-	    Tcl_DecrRefCount(textPtr->afterSyncCmd);
-	    textPtr->afterSyncCmd = 0;
+            Tcl_Release((ClientData) textPtr->interp);
+            Tcl_DecrRefCount(textPtr->afterSyncCmd);
+            textPtr->afterSyncCmd = NULL;
 	}
 
         /*
