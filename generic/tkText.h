@@ -782,7 +782,8 @@ typedef struct TkText {
 				 * statements. */
     int autoSeparators;		/* Non-zero means the separators will be
 				 * inserted automatically. */
-    Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to date */
+    Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
+                                 * date */
 } TkText;
 
 /*
