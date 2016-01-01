@@ -137,7 +137,7 @@ static const TkCmd commands[] = {
     {"place",		Tk_PlaceObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"raise",		Tk_RaiseObjCmd,		PASSMAINWINDOW|ISSAFE},
 #ifdef PLATFORM_SDL
-    {"sdltk",		Tk_SdlTkObjCmd,		PASSMAINWINDOW|ISSAFE},
+    {"sdltk",		(Tcl_ObjCmdProc *) TkInitSdltkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
 #endif
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
     {"tk",		(Tcl_ObjCmdProc *) TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
