@@ -39,7 +39,7 @@ SendAppEvent(XEvent *event, int *sentp, _Window *_w)
     _Window *result = NULL;
 
     while (_w != NULL) {
-	if (_w->tkwin != NULL && (_w->tkwin->flags & TK_APP_TOP_LEVEL)) {
+	if ((_w->tkwin != NULL) && (_w->tkwin->flags & TK_APP_TOP_LEVEL)) {
 	    *sentp += 1;
 	    if (*sentp == 1) {
 		result = _w;
@@ -53,7 +53,7 @@ SendAppEvent(XEvent *event, int *sentp, _Window *_w)
 	if (_w->child != NULL) {
 	    _Window *tmp = SendAppEvent(event, sentp, _w->child);
 
-	    if (result == NULL && tmp != NULL) {
+	    if ((result == NULL) && (tmp != NULL)) {
 		result = tmp;
 	    }
 	}
@@ -251,8 +251,8 @@ SdlTkScreenRefresh(void)
 	EVLOG("SdlTkScreenRefresh: GL context is NULL");
 	return;
     }
-    /* Detect that GL context has changed. */
-    if (SdlTkX.gl_context != NULL && currgl != SdlTkX.gl_context) {
+    /* Detect change of GL context. */
+    if ((SdlTkX.gl_context != NULL) && (currgl != SdlTkX.gl_context)) {
 	SDL_Texture *newtex;
 
 	EVLOG("SdlTkScreenRefresh: GL context switching %p -> %p",
@@ -311,7 +311,7 @@ SdlTkScreenRefresh(void)
     focus_window = (_Window *) SdlTkX.focus_window_not_override;
     if (focus_window != NULL) {
 	child = focus_window->parent;
-	while (child != NULL && child->dec == NULL) {
+	while ((child != NULL) && (child->dec == NULL)) {
 	    child = child->parent;
 	}
 	if (child != NULL) {
@@ -330,11 +330,11 @@ SdlTkScreenRefresh(void)
 	/* Keep track of which decframe was the "active" one. Redraw frames
 	 * when changes occur. */
 	if (child->dec != NULL) {
-	    if (child->child == (_Window *) focus_window &&
+	    if ((child->child == (_Window *) focus_window) &&
 		!SdlTkDecSetActive(child, -1) && SdlTkX.sdlfocus) {
 		SdlTkDecSetDraw(child, 1);
 		SdlTkDecSetActive(child, 1);
-	    } else if (child->child != (_Window *) focus_window &&
+	    } else if ((child->child != (_Window *) focus_window) &&
 		       SdlTkDecSetActive(child, -1)) {
 		SdlTkDecSetDraw(child, 1);
 		SdlTkDecSetActive(child, 0);
@@ -654,14 +654,14 @@ TranslateTimer2(ClientData clientData)
 	      info->mmb_event.motion.x, info->mmb_event.motion.y,
 	      info->mmb_event.motion.which, info->mmb_event.motion.state,
 	      info->mmb_event.motion.xrel, info->mmb_event.motion.yrel);
-	if (info->mmb_event.motion.xrel || info->mmb_event.motion.yrel) {
+	if ((info->mmb_event.motion.xrel) || (info->mmb_event.motion.yrel)) {
 	    SDL_PeepEvents(&info->mmb_event, 1, SDL_ADDEVENT, 0, 0);
 	} else {
 	    info->count = 0;
 	    info->state = 0;
 	}
     }
-    if (info->state) { 
+    if (info->state) {
 	info->function = TranslateTimer2;
 	info->when = info->now + 100;
 	EVLOG("                TIMER ON ST=%d", info->state);
@@ -683,9 +683,9 @@ TranslateTimer2(ClientData clientData)
 static int
 FixKeyCode(int ch)
 {
-    if (ch >= 'a' && ch <= 'z') {
+    if ((ch >= 'a') && (ch <= 'z')) {
 	return SDL_SCANCODE_A + ch - 'a';
-    } else if (ch >= 'A' && ch <= 'Z') {
+    } else if ((ch >= 'A') && (ch <= 'Z')) {
 	return SDL_SCANCODE_A + ch - 'A';
     }
     switch (ch) {
@@ -724,7 +724,7 @@ MkTransChars(XKeyEvent *ev)
 {
     int ch = 0;
 
-    if (ev->keycode >= SDL_SCANCODE_A && ev->keycode <= SDL_SCANCODE_Z) {
+    if ((ev->keycode >= SDL_SCANCODE_A) && (ev->keycode <= SDL_SCANCODE_Z)) {
 	ev->trans_chars[0] = ev->keycode - SDL_SCANCODE_A + 'a';
 	ev->nbytes = 1;
 	return 1;
@@ -943,16 +943,16 @@ SdlTkTranslateEvent(SDL_Event *sdl_event, XEvent *event, unsigned long now_ms)
      * Pinch-to-zoom two finger detection.
      */
 
-    if (sdl_event->type == SDL_FINGERDOWN &&
-	sdl_event->tfinger.fingerId >= 0 && 
-	sdl_event->tfinger.fingerId < 10) {
+    if ((sdl_event->type == SDL_FINGERDOWN) &&
+	(sdl_event->tfinger.fingerId >= 0) &&
+	(sdl_event->tfinger.fingerId < 10)) {
 	info->nFingers++;
 	info->fingerBits |= 1 << sdl_event->tfinger.fingerId;
 	info->finger[sdl_event->tfinger.fingerId] = sdl_event->tfinger;
 	doFinger = ((info->fingerBits & 3) == 3) ? 2 : 0;
-    } else if (sdl_event->type == SDL_FINGERUP &&
-	       sdl_event->tfinger.fingerId >= 0 &&
-	       sdl_event->tfinger.fingerId < 10) {
+    } else if ((sdl_event->type == SDL_FINGERUP) &&
+	       (sdl_event->tfinger.fingerId >= 0) &&
+	       (sdl_event->tfinger.fingerId < 10)) {
 	int oldBits = info->fingerBits;
 
 	info->nFingers--;
@@ -967,16 +967,16 @@ SdlTkTranslateEvent(SDL_Event *sdl_event, XEvent *event, unsigned long now_ms)
 	}
 	info->finger[sdl_event->tfinger.fingerId] = sdl_event->tfinger;
 	doFinger = sdl_event->tfinger.fingerId + 3;
-	if ((oldBits & 3) != 3 || doFinger > 4) {
+	if ((oldBits & 3) != 3 || (doFinger > 4)) {
 	    doFinger = 0;
 	}
-    } else if (sdl_event->type == SDL_FINGERMOTION &&
-	       sdl_event->tfinger.fingerId >= 0 &&
-	       sdl_event->tfinger.fingerId < 10) {
+    } else if ((sdl_event->type == SDL_FINGERMOTION) &&
+	       (sdl_event->tfinger.fingerId >= 0) &&
+	       (sdl_event->tfinger.fingerId < 10)) {
 	info->finger[sdl_event->tfinger.fingerId] = sdl_event->tfinger;
 	doFinger = ((info->fingerBits & 3) == 3 &&
-		    sdl_event->tfinger.fingerId >= 0 && 
-		    sdl_event->tfinger.fingerId < 2) ? 1 : 0;
+		    (sdl_event->tfinger.fingerId >= 0) &&
+		    (sdl_event->tfinger.fingerId < 2)) ? 1 : 0;
     }
     if (doFinger) {
 	float dx, dy, cx, cy;
@@ -1014,21 +1014,21 @@ SdlTkTranslateEvent(SDL_Event *sdl_event, XEvent *event, unsigned long now_ms)
 	info->pinchY = y;
 
 	if ((info->enabled & TRANSLATE_ZOOM) && info->pinchDelta &&
-	    info->nFingers >= needFingers) {
+	    (info->nFingers >= needFingers)) {
 	    float dir = 0;
 
-	    if (info->nFingers == needFingers &&
-		ddist <= -SdlTkX.nearby_pixels / 4) {
+	    if ((info->nFingers == needFingers) &&
+		(ddist <= -SdlTkX.nearby_pixels / 4)) {
 		dir = 0.99;
-	    } else if (info->nFingers == needFingers &&
-		       ddist >= SdlTkX.nearby_pixels / 4) {
+	    } else if ((info->nFingers == needFingers) &&
+		       (ddist >= SdlTkX.nearby_pixels / 4)) {
 		dir = 1 / 0.99;
 	    }
 	    if (dir) {
 		SdlTkZoomInt(x, y, dir);
-	    } else if (info->nFingers > needFingers &&
-		       (pdx <= -2 || pdx >= 2 ||
-		        pdy <= -2 || pdy >= 2)) {
+	    } else if ((info->nFingers > needFingers) &&
+		       ((pdx <= -2) || (pdx >= 2) ||
+		        (pdy <= -2) || (pdy >= 2))) {
 		SdlTkPanInt(-pdx, pdy);
 	    }
 	    goto skipTranslation;
@@ -1046,14 +1046,14 @@ SdlTkTranslateEvent(SDL_Event *sdl_event, XEvent *event, unsigned long now_ms)
 	    tkwin = (Tk_Window) SdlTkX.mouse_window->tkwin;
 	}
 	if (SdlTkX.capture_window != NULL) {
-	    if (tkwin != NULL &&
-		Tk_Display(tkwin) != SdlTkX.capture_window->display) {
+	    if ((tkwin != NULL) &&
+		(Tk_Display(tkwin) != SdlTkX.capture_window->display)) {
 		tkwin = (Tk_Window) SdlTkX.capture_window;
 	    }
 	}
 	if (SdlTkX.keyboard_window != NULL) {
-	    if (tkwin != NULL &&
-		Tk_Display(tkwin) != SdlTkX.keyboard_window->display) {
+	    if ((tkwin != NULL) &&
+		(Tk_Display(tkwin) != SdlTkX.keyboard_window->display)) {
 		tkwin = (Tk_Window) SdlTkX.keyboard_window->tkwin;
 	    }
 	}
@@ -1092,12 +1092,12 @@ skipPZ:
     }
 
     if ((info->state & 8) &&
-	!((sdl_event->type == SDL_MOUSEMOTION &&
-	   sdl_event->button.which == SDL_TOUCH_MOUSEID &&
-	   sdl_event->button.button == SDL_BUTTON_MIDDLE) ||
+	!(((sdl_event->type == SDL_MOUSEMOTION) &&
+	   (sdl_event->button.which == SDL_TOUCH_MOUSEID) &&
+	   (sdl_event->button.button == SDL_BUTTON_MIDDLE)) ||
 	  (sdl_event->type == SDL_FINGERUP) ||
-	  (sdl_event->type >= SDL_JOYAXISMOTION &&
-	   sdl_event->type <= SDL_JOYDEVICEREMOVED) ||
+	  ((sdl_event->type >= SDL_JOYAXISMOTION) &&
+	   (sdl_event->type <= SDL_JOYDEVICEREMOVED)) ||
 	  (sdl_event->type < SDL_KEYDOWN) ||
 	  (sdl_event->type > SDL_FINGERMOTION))) {
 	info->function = NULL;
@@ -1108,9 +1108,9 @@ skipPZ:
     if (sdl_event->type == SDL_MOUSEBUTTONDOWN) {
 	if (!(info->state & 1)) {
 	    info->function = NULL;
-	    if (info->state == 0 &&
-		sdl_event->button.which == SDL_TOUCH_MOUSEID &&
-		sdl_event->button.button == SDL_BUTTON_LEFT) {
+	    if ((info->state == 0) &&
+		(sdl_event->button.which == SDL_TOUCH_MOUSEID) &&
+		(sdl_event->button.button == SDL_BUTTON_LEFT)) {
 		info->state = 1;
 		info->sdl_event = *sdl_event;
 		info->function = TranslateTimer1;
@@ -1118,13 +1118,13 @@ skipPZ:
 		EVLOG("                TIMER ON ST=%d", info->state);
 		return 0;
 	    }
-	} else if (info->state == 0 &&
-		   sdl_event->button.which == SDL_TOUCH_MOUSEID &&
-		   sdl_event->button.button == SDL_BUTTON_LEFT) {
+	} else if ((info->state == 0) &&
+		   (sdl_event->button.which == SDL_TOUCH_MOUSEID) &&
+		   (sdl_event->button.button == SDL_BUTTON_LEFT)) {
 	    return 0;
 	}
-    } else if (sdl_event->type == SDL_MOUSEMOTION &&
-	       sdl_event->motion.which == SDL_TOUCH_MOUSEID) {
+    } else if ((sdl_event->type == SDL_MOUSEMOTION) &&
+	       (sdl_event->motion.which == SDL_TOUCH_MOUSEID)) {
 	int nearby = 21 * SdlTkX.nearby_pixels / 30;
 
 	if (nearby < 5) {
@@ -1133,10 +1133,10 @@ skipPZ:
 	info->sdl_event.button.x = sdl_event->motion.x;
 	info->sdl_event.button.y = sdl_event->motion.y;
 	if ((info->state == 1) &&
-	    (sdl_event->motion.xrel > nearby ||
-	     sdl_event->motion.xrel < -nearby ||
-	     sdl_event->motion.yrel > nearby ||
-	     sdl_event->motion.yrel < -nearby)) {
+	    ((sdl_event->motion.xrel > nearby) ||
+	     (sdl_event->motion.xrel < -nearby) ||
+	     (sdl_event->motion.yrel > nearby) ||
+	     (sdl_event->motion.yrel < -nearby))) {
 	    SDL_PeepEvents(sdl_event, 1, SDL_ADDEVENT, 0, 0);
 	    tmp_event = info->sdl_event;
 	    sdl_event = &tmp_event;
@@ -1157,8 +1157,8 @@ skipPZ:
 	info->sdl_event.button.x = sdl_event->button.x;
 	info->sdl_event.button.y = sdl_event->button.y;
 	if ((info->state & 2) &&
-	    sdl_event->button.which == SDL_TOUCH_MOUSEID &&
-	    sdl_event->button.button == SDL_BUTTON_LEFT) {
+	    (sdl_event->button.which == SDL_TOUCH_MOUSEID) &&
+	    (sdl_event->button.button == SDL_BUTTON_LEFT)) {
 	    info->state = 8;
 	    info->count = 7;
 	    info->function = TranslateTimer2;
@@ -1166,8 +1166,8 @@ skipPZ:
 	    EVLOG("                TIMER ON ST=%d", info->state);
 	    return 0;
 	} else if ((info->state & 1) &&
-		   sdl_event->button.which == SDL_TOUCH_MOUSEID &&
-		   sdl_event->button.button == SDL_BUTTON_LEFT) {
+		   (sdl_event->button.which == SDL_TOUCH_MOUSEID) &&
+		   (sdl_event->button.button == SDL_BUTTON_LEFT)) {
 	    if (info->state == 1) {
 		SDL_PeepEvents(sdl_event, 1, SDL_ADDEVENT, 0, 0);
 		sdl_event = &info->sdl_event;
@@ -1252,8 +1252,8 @@ skipTranslation:
 
 	event->xkey.keycode = -1;
 
-	if (sdl_event->type != SDL_TEXTINPUT &&
-	    sdl_event->type != SDL_TEXTEDITING) {
+	if ((sdl_event->type != SDL_TEXTINPUT) &&
+	    (sdl_event->type != SDL_TEXTEDITING)) {
 	    int scancode = sdl_event->key.keysym.scancode;
 
 	    if (sdl_event->key.keysym.mod & KMOD_LALT) {
@@ -1426,14 +1426,14 @@ doNormalKeyEvent:
 	    y = sdl_event->motion.y;
 	    dx = sdl_event->motion.xrel;
 	    dy = sdl_event->motion.yrel;
-	    if (x <= 0 && dx < 0) {
+	    if ((x <= 0) && (dx < 0)) {
 		dx = 0;
-	    } else if (x >= SdlTkX.sdlsurf->w - 1 && dx > 0) {
+	    } else if ((x >= SdlTkX.sdlsurf->w - 1) && (dx > 0)) {
 		dx = 0;
 	    }
-	    if (y <= 0 && dy < 0) {
+	    if ((y <= 0) && (dy < 0)) {
 		dy = 0;
-	    } else if (y >= SdlTkX.sdlsurf->h - 1 && dy > 0) {
+	    } else if ((y >= SdlTkX.sdlsurf->h - 1) && (dy > 0)) {
 		dy = 0;
 	    }
 	    sdl_event->motion.xrel = (int) (dx / SdlTkX.scale);
@@ -1485,8 +1485,8 @@ doNormalKeyEvent:
 	 */
 	if (!IS_ROOT(_w) && SdlTkGrabCheck(_w, &othergrab) &&
 	    (sdl_event->type == SDL_MOUSEBUTTONDOWN) &&
-	    (sdl_event->button.which == SDL_TOUCH_MOUSEID ||
-	     sdl_event->button.button == SDL_BUTTON_LEFT)) {
+	    ((sdl_event->button.which == SDL_TOUCH_MOUSEID) ||
+	     (sdl_event->button.button == SDL_BUTTON_LEFT))) {
 	    SdlTkBringToFrontIfNeeded(_w);
 	    if (SdlTkX.keyboard_window == NULL) {
 		SdlTkSetInputFocus(SdlTkX.display,
@@ -1516,7 +1516,7 @@ doNormalKeyEvent:
 	/* NULL for root and decorative frames */
 	tkwin = (Tk_Window) _w->tkwin;
 	SdlTkX.cursor_change = 1;
-	if (tkwin == NULL && _w->dec != NULL) {
+	if ((tkwin == NULL) && (_w->dec != NULL)) {
 	    SdlTkX.cursor_change = 0;
 	    _w = _w->child;
 	    tkwin = (Tk_Window) _w->tkwin;
@@ -1622,14 +1622,14 @@ doNormalKeyEvent:
 	    tkwin = (Tk_Window) SdlTkX.mouse_window->tkwin;
 	}
 	if (SdlTkX.capture_window != NULL) {
-	    if (tkwin == NULL ||
-		Tk_Display(tkwin) != SdlTkX.capture_window->display) {
+	    if ((tkwin == NULL) ||
+		(Tk_Display(tkwin) != SdlTkX.capture_window->display)) {
 		tkwin = (Tk_Window) SdlTkX.capture_window;
 	    }
 	}
 	if (SdlTkX.keyboard_window != NULL) {
-	    if (tkwin == NULL ||
-		Tk_Display(tkwin) != SdlTkX.keyboard_window->display) {
+	    if ((tkwin == NULL) ||
+		(Tk_Display(tkwin) != SdlTkX.keyboard_window->display)) {
 		tkwin = (Tk_Window) SdlTkX.keyboard_window->tkwin;
 	    }
 	}
@@ -1751,15 +1751,15 @@ doNormalKeyEvent:
 	    }
 	}
 	if (SdlTkX.capture_window != NULL) {
-	    if (_w == NULL ||
-		_w->display != SdlTkX.capture_window->display) {
+	    if ((_w == NULL) ||
+		(_w->display != SdlTkX.capture_window->display)) {
 		tkwin = (Tk_Window) SdlTkX.capture_window;
 		_w = (_Window *) Tk_WindowId(tkwin);
 	    }
 	}
 	if (SdlTkX.keyboard_window != NULL) {
-	    if (_w == NULL ||
-		_w->display != SdlTkX.keyboard_window->display) {
+	    if ((_w == NULL) ||
+		(_w->display != SdlTkX.keyboard_window->display)) {
 		tkwin = (Tk_Window) SdlTkX.keyboard_window->tkwin;
 		_w = SdlTkX.keyboard_window;
 	    }
@@ -2094,11 +2094,11 @@ doNormalKeyEvent:
 				  SDL_TEXTUREACCESS_STREAMING,
 				  width, height);
 #ifdef ANDROID
-	    if (newsurf != NULL && newtex != NULL) {
+	    if ((newsurf != NULL) && (newtex != NULL)) {
 		SDL_GL_SwapWindow(SdlTkX.sdlscreen);
 	    }
 #endif
-	    if (newsurf != NULL && newtex != NULL) {
+	    if ((newsurf != NULL) && (newtex != NULL)) {
 #ifdef ANDROID
 		int xdpi, ydpi;
 #endif
@@ -2116,7 +2116,9 @@ doNormalKeyEvent:
 		SdlTkX.screen->height = height;
 #ifdef ANDROID
 		xdpi = ydpi = 0;
+#ifdef SDL_HAS_GETWINDOWDPI
 		SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
+#endif
 		if (xdpi && ydpi) {
 		    SdlTkX.screen->mwidth = (254 * width) / xdpi;
 		    SdlTkX.screen->mwidth /= 10;
@@ -2174,7 +2176,7 @@ doNormalKeyEvent:
 		    SDL_FillRect(SdlTkX.sdlsurf, &sr, pixel);
 		}
 
-		if (width > oldw || height > oldh) {
+		if ((width > oldw) || (height > oldh)) {
 		    SdlTkVisRgnChanged(_w, VRC_CHANGED, 0, 0);
 		}
 
@@ -2234,7 +2236,7 @@ doNormalKeyEvent:
 
 		    ow = (int) SDL_ceil(vw * SdlTkX.scale);
 		    oh = (int) SDL_ceil(vh * SdlTkX.scale);
-		    if (ow < width || oh < height) {
+		    if ((ow < width) || (oh < height)) {
 			SdlTkX.outrect = &SdlTkX.outrect0;
 			SdlTkX.outrect->x = (width - ow) / 2;
 			SdlTkX.outrect->y = (height - oh) / 2;
@@ -2332,7 +2334,6 @@ doNormalKeyEvent:
 	refresh:
 	    SdlTkScreenChanged();
 	    return 0;
-		    
 	}
 	return 0;
 
@@ -2891,7 +2892,7 @@ SdlTkToplevelForWindow(_Window *_w, int *x, int *y)
 
     xOff = _w->atts.x;
     yOff = _w->atts.y;
-    while (_w->parent && !PARENT_IS_ROOT(_w->parent)) {
+    while ((_w->parent != NULL) && !PARENT_IS_ROOT(_w->parent)) {
 	_w = _w->parent;
 	xOff += _w->atts.x;
 	yOff += _w->atts.y;
@@ -2961,7 +2962,7 @@ SdlTkTopVisibleWrapper(void)
     _Window *child = ((_Window *) SdlTkX.screen->root)->child;
 
     while (child != NULL) {
-	if (child->atts.map_state != IsUnmapped &&
+	if ((child->atts.map_state != IsUnmapped) &&
 	    !child->atts.override_redirect) {
 	    if (child->dec != NULL) {
 		child = child->child; /* the wrapper */
@@ -3051,10 +3052,10 @@ SdlTkPointToWindow(_Window *_w, int x, int y, Bool mapped, Bool depth)
     _Window *child;
 
     for (child = _w->child; child != NULL; child = child->next) {
-	if (x >= child->atts.x &&
-	    x < child->atts.x + child->parentWidth &&
-	    y >= child->atts.y &&
-	    y < child->atts.y + child->parentHeight) {
+	if ((x >= child->atts.x) &&
+	    (x < child->atts.x + child->parentWidth) &&
+	    (y >= child->atts.y) &&
+	    (y < child->atts.y + child->parentHeight)) {
 	    if (!mapped || (child->atts.map_state != IsUnmapped)) {
 		x -= child->atts.x;
 		y -= child->atts.y;
@@ -3195,7 +3196,7 @@ SdlTkRestackWindow(_Window *_w, _Window *sibling, int stack_mode)
     int oldPos = 0, newPos = 0;
     _Window *child, *oldNext = _w->next;;
 
-    if (parent->child == _w && _w->next == NULL) {
+    if ((parent->child == _w) && (_w->next == NULL)) {
 	return;
     }
 
@@ -3318,7 +3319,7 @@ SdlTkBringToFrontIfNeeded(_Window *_w)
     }
 
     sibling = _w->parent->child;
-    while (sibling != _w && SdlTkIsTransientOf(sibling, _w))
+    while ((sibling != _w) && SdlTkIsTransientOf(sibling, _w))
 	sibling = sibling->next;
 
     if (sibling != _w) {
@@ -3496,24 +3497,160 @@ SdlTkDirtyRegion(Window w, Region rgn)
     SdlTkRgnPoolFree(r);
 }
 
-int
-Tk_SdlTkObjCmd(ClientData clientData, Tcl_Interp *interp, int objc,
-	       Tcl_Obj *const objv[])
+static int
+AccelbufferObjCmd(ClientData clientData, Tcl_Interp *interp,
+		  int objc, Tcl_Obj *const objv[])
+{
+    int axis;
+    Tcl_Obj *list;
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "axis");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[1], &axis) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    --axis;
+    if ((axis < 0) || (axis > 2)) {
+	Tcl_SetResult(interp, "illegal axis", TCL_STATIC);
+	return TCL_ERROR;
+    }
+    list = Tcl_NewListObj(0, NULL);
+#ifdef ANDROID
+    SdlTkLock(NULL);
+    if (SdlTkX.accel_id != -1) {
+	AccelRing *rp = &SdlTkX.accel_ring[axis];
+	int i, k, imax;
+
+	imax = sizeof (rp->values) / sizeof (rp->values[0]);
+	k = rp->index;
+	for (i = 0; i < imax; i++) {
+	    if (++k >= imax) {
+		k = 0;
+	    }
+	    Tcl_ListObjAppendElement(NULL, list,
+				     Tcl_NewIntObj(rp->values[k]));
+	}
+    }
+    SdlTkUnlock(NULL);
+#endif
+    Tcl_SetObjResult(interp, list);
+    return TCL_OK;
+}
+
+static int
+AccelerometerObjCmd(ClientData clientData, Tcl_Interp *interp,
+		    int objc, Tcl_Obj *const objv[])
+{
+    int flag = 0;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?onoff?");
+	return TCL_ERROR;
+    }
+    if (objc == 2) {
+	if (Tcl_GetBooleanFromObj(interp, objv[1], &flag) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+#ifdef ANDROID
+	SdlTkLock(NULL);
+	if (SdlTkX.accel_id != -1) {
+	    SdlTkX.accel_enabled = flag;
+	}
+	SdlTkUnlock(NULL);
+#endif
+    } else {
+#ifdef ANDROID
+	SdlTkLock(NULL);
+	flag = SdlTkX.accel_enabled;
+	SdlTkUnlock(NULL);
+#endif
+	Tcl_SetBooleanObj(Tcl_GetObjResult(interp), flag);
+    }
+    return TCL_OK;
+}
+
+static int
+AddfontObjCmd(ClientData clientData, Tcl_Interp *interp,
+	      int objc, Tcl_Obj *const objv[])
+{
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "filename");
+	return TCL_ERROR;
+    }
+    return SdlTkFontAdd(interp, Tcl_GetString(objv[1]));
+}
+
+static int
+AndroidObjCmd(ClientData clientData, Tcl_Interp *interp,
+	      int objc, Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+#ifdef ANDROID
+    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), 1);
+#else
+    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), 0);
+#endif
+    return TCL_OK;
+}
+
+static int
+ExposeObjCmd(ClientData clientData, Tcl_Interp *interp,
+	     int objc, Tcl_Obj *const objv[])
 {
     Tk_Window tkwin = (Tk_Window) clientData;
-    static const char *optionStrings[] = {
-	"accelbuffer", "accelerometer", "addfont", "android",
-	"expose", "joystick", "maxroot", "paintvisrgn", "powerinfo",
-	"root",	"screensaver", "textinput",
-	"touchtranslate", "viewport", "vsync",
-	NULL
-    };
-    enum options {
-	CMD_ACCELBUFFER, CMD_ACCELEROMETER, CMD_ADDFONT, CMD_ANDROID,
-	CMD_EXPOSE, CMD_JOYSTICK, CMD_MAXROOT, CMD_PAINT_VISRGN, CMD_POWERINFO,
-	CMD_ROOT, CMD_SCREENSAVER, CMD_TEXTINPUT,
-	CMD_TOUCHTRANSLATE, CMD_VIEWPORT, CMD_VSYNC
-    };
+    int x, y;
+    _Window *_w;
+    Region rgn;
+    XRectangle rect;
+    int ret = TCL_OK;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?window?");
+	return TCL_ERROR;
+    }
+    SdlTkLock(NULL);
+    if (objc == 2) {
+	Tk_Window tkwin2;
+
+	if (TkGetWindowFromObj(interp, tkwin, objv[1], &tkwin2) != TCL_OK) {
+	    ret = TCL_ERROR;
+	    goto done;
+	}
+	_w = (_Window *) ((TkWindow *) tkwin2)->window;
+    } else {
+	(void) SDL_GetMouseState(&x, &y);
+	TranslatePointer(0, &x, &y);
+	_w = SdlTkPointToWindow((_Window *) SdlTkX.screen->root,
+				x, y, True, True);
+    }
+    rgn = SdlTkRgnPoolGet();
+    rect.x = rect.y = 0;
+    rect.width = _w->parentWidth;
+    rect.height = _w->parentHeight;
+    XUnionRectWithRegion(&rect, rgn, rgn);
+    XIntersectRegion(_w->visRgn, rgn, rgn);
+    if (IS_ROOT(_w)) {
+	XUnionRegion(rgn, SdlTkX.screen_dirty_region,
+		     SdlTkX.screen_dirty_region);
+	SdlTkScreenChanged();
+    } else if (_w->tkwin != NULL) {
+	SdlTkGfxExposeRegion((Window) _w, rgn);
+    }
+    SdlTkRgnPoolFree(rgn);
+done:
+    SdlTkUnlock(NULL);
+    return ret;
+}
+
+static int
+JoystickObjCmd(ClientData clientData, Tcl_Interp *interp,
+	       int objc, Tcl_Obj *const objv[])
+{
     static const char *joptStrings[] = {
 	"ids", "guid", "name", "numaxes,", "numballs",
 	"numbuttons", "numhats",
@@ -3523,595 +3660,479 @@ Tk_SdlTkObjCmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	JOY_IDS, JOY_GUID, JOY_NAME, JOY_NAXES, JOY_NBALLS,
 	JOY_NBUTTONS, JOY_NHATS
     };
-    int index;
+    int index, joy_id;
+    long joy_idl;
+    Tcl_HashEntry *hPtr;
+    SDL_Joystick *stick;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg?");
+	Tcl_WrongNumArgs(interp, 1, objv, "suboption ?joyid?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-			    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], joptStrings,
+			    "suboption", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
+    if (index == JOY_IDS) {
+	Tcl_Obj *result;
+	Tcl_HashSearch search;
+
+	if (objc != 2) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "");
+	    return TCL_ERROR;
+	}
+	result = Tcl_NewListObj(0, NULL);
+	SdlTkLock(NULL);
+	hPtr = Tcl_FirstHashEntry(&SdlTkX.joystick_table, &search);
+	while (hPtr != NULL) {
+	    joy_idl = (long) Tcl_GetHashKey(&SdlTkX.joystick_table, hPtr);
+	    Tcl_ListObjAppendElement(interp, result,
+				     Tcl_NewIntObj((int) joy_idl));
+	    hPtr = Tcl_NextHashEntry(&search);
+	}
+	SdlTkUnlock(NULL);
+	Tcl_SetObjResult(interp, result);
+	return TCL_OK;
+    }
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "joyid");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIntFromObj(interp, objv[2], &joy_id) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    SdlTkLock(NULL);
+    joy_idl = joy_id;
+    hPtr = Tcl_FindHashEntry(&SdlTkX.joystick_table, (ClientData) joy_idl);
+    if (hPtr == NULL) {
+	SdlTkUnlock(NULL);
+	Tcl_SetResult(interp, "unknown joystick identifier", TCL_STATIC);
+	return TCL_ERROR;
+    }
+    stick = (SDL_Joystick *) Tcl_GetHashValue(hPtr);
     switch (index) {
-
-	/* sdltk expose ?win? */
-    case CMD_EXPOSE: {
-	int x, y;
-	_Window *_w;
-	Region rgn;
-	XRectangle rect;
-	int ret = TCL_OK;
-
-	if (objc > 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?window?");
-	    return TCL_ERROR;
-	}
-	SdlTkLock(NULL);
-	if (objc == 3) {
-	    Tk_Window tkwin2;
-
-	    if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2)
-		!= TCL_OK) {
-		ret = TCL_ERROR;
-		goto ce_done;
-	    }
-	    _w = (_Window *) ((TkWindow *) tkwin2)->window;
-	} else {
-	    (void) SDL_GetMouseState(&x, &y);
-	    TranslatePointer(0, &x, &y);
-	    _w = SdlTkPointToWindow((_Window *) SdlTkX.screen->root,
-				    x, y, True, True);
-	}
-	rgn = SdlTkRgnPoolGet();
-	rect.x = rect.y = 0;
-	rect.width = _w->parentWidth;
-	rect.height = _w->parentHeight;
-	XUnionRectWithRegion(&rect, rgn, rgn);
-	XIntersectRegion(_w->visRgn, rgn, rgn);
-	if (IS_ROOT(_w)) {
-	    XUnionRegion(rgn, SdlTkX.screen_dirty_region,
-			 SdlTkX.screen_dirty_region);
-	    SdlTkScreenChanged();
-	} else if (_w->tkwin != NULL) {
-	    SdlTkGfxExposeRegion((Window) _w, rgn);
-	}
-	SdlTkRgnPoolFree(rgn);
-ce_done:
-	SdlTkUnlock(NULL);
-	return ret;
-    }
-
-	/* sdltk paintvisrgn ?win? */
-    case CMD_PAINT_VISRGN: {
-	int x, y;
-	_Window *_w;
-	Region r;
-	int ret = TCL_OK;
-
-	if (objc > 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?window?");
-	    return TCL_ERROR;
-	}
-	SdlTkLock(NULL);
-	if (objc == 3) {
-	    Tk_Window tkwin2;
-
-	    if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2)
-		!= TCL_OK) {
-		ret = TCL_ERROR;
-		goto cpv_done;
-	    }
-	    _w = (_Window *) ((TkWindow *) tkwin2)->window;
-	} else {
-	    (void) SDL_GetMouseState(&x, &y);
-	    TranslatePointer(0, &x, &y);
-	    _w = SdlTkPointToWindow((_Window *) SdlTkX.screen->root,
-				    x, y, True, True);
-	}
-
-	r = SdlTkGetVisibleRegion(_w);
-	SdlTkGfxFillRegion((Drawable) _w, r, 0x0000FF88);
-	SDL_UpdateWindowSurface(SdlTkX.sdlscreen);
-cpv_done:
-	SdlTkUnlock(NULL);
-	return ret;
-    }
-
-	/* sdltk textinput ?onoff ?x y ?hints??? */
-    case CMD_TEXTINPUT: {
-	static int last_hints = 0;
-	int flag = 0, hints = 0, hints_changed = 0, ret = TCL_OK;
-
-	if (objc > 6) {
-tiWrongArgs:
-	    Tcl_WrongNumArgs(interp, 2, objv, "?onoff ?x y ?hints???");
-	    return TCL_ERROR;
-	}
-	if (objc == 3 || objc == 5 || objc == 6) {
-	    if (Tcl_GetBooleanFromObj(interp, objv[2], &flag) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    SdlTkLock(NULL);
-	    if (!SDL_HasScreenKeyboardSupport()) {
-		goto ti_done;
-	    }
-	    if (flag) {
-		if (objc == 5 || objc == 6) {
-		    int x, y;
-		    SDL_Rect r;
-
-		    if (Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK ||
-			Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK) {
-			ret = TCL_ERROR;
-			goto ti_done;
-		    }
-		    TranslatePointer(1, &x, &y);
-		    x -= 64;
-		    if (x < 0) {
-			x = 0;
-		    }
-		    y -= 64;
-		    if (y < 0) {
-			y = 0;
-		    }
-		    r.x = x;
-		    r.y = y;
-		    r.w = 256;
-		    r.h = 128;
-		    if (objc > 5) {
-			if (Tcl_GetIntFromObj(interp, objv[5], &hints)
-			    != TCL_OK) {
-			    ret = TCL_ERROR;
-			    goto ti_done;
-			}
-		    }
-		    if (hints != last_hints) {
-			hints_changed = 1;
-			last_hints = hints;
-		    }
-		    SDL_SetTextInputRect(&r, hints);
-		}
-		if (hints_changed &&
-		    SDL_IsScreenKeyboardShown(SdlTkX.sdlscreen)) {
-		    SDL_StopTextInput();
-		}
-		SDL_StartTextInput();
-	    } else {
-		SDL_StopTextInput();
-	    }
-ti_done:
-	    SdlTkUnlock(NULL);
-	    return ret;
-	} else if (objc == 4) {
-	    goto tiWrongArgs;
-	}
-	SdlTkLock(NULL);
-	if (SDL_HasScreenKeyboardSupport()) {
-	    flag = SDL_IsScreenKeyboardShown(SdlTkX.sdlscreen);
-	}
-	SdlTkUnlock(NULL);
-	Tcl_SetBooleanObj(Tcl_GetObjResult(interp), flag);
+    case JOY_NAME:
+	Tcl_SetResult(interp, (char *) SDL_JoystickName(stick), TCL_VOLATILE);
 	break;
-    }
-
-	/* sdltk accelerometer ?onoff? */
-    case CMD_ACCELEROMETER: {
-	int flag = 0;
-
-	if (objc > 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?onoff?");
-	    return TCL_ERROR;
-	}
-	if (objc == 3) {
-	    if (Tcl_GetBooleanFromObj(interp, objv[2], &flag) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-#ifdef ANDROID
-	    SdlTkLock(NULL);
-	    if (SdlTkX.accel_id != -1) {
-		SdlTkX.accel_enabled = flag;
-	    }
-	    SdlTkUnlock(NULL);
-#endif
-	    break;
-	}
-#ifdef ANDROID
-	SdlTkLock(NULL);
-	flag = SdlTkX.accel_enabled;
-	SdlTkUnlock(NULL);
-#endif
-	Tcl_SetBooleanObj(Tcl_GetObjResult(interp), flag);
-	break;
-    }
-
-	/* sdltk accelbuffer axis */
-    case CMD_ACCELBUFFER: {
-	int axis;
-	Tcl_Obj *list;
-
-	if (objc != 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "axis");
-	    return TCL_ERROR;
-	}
-	if (Tcl_GetIntFromObj(interp, objv[2], &axis) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	--axis;
-	if ((axis < 0) || (axis > 2)) {
-	    Tcl_SetResult(interp, "illegal axis", TCL_STATIC);
-	    return TCL_ERROR;
-	}
-	list = Tcl_NewListObj(0, NULL);
-#ifdef ANDROID
-	SdlTkLock(NULL);
-	if (SdlTkX.accel_id != -1) {
-	    AccelRing *rp = &SdlTkX.accel_ring[axis];
-	    int i, k, imax;
-
-	    imax = sizeof (rp->values) / sizeof (rp->values[0]);
-	    k = rp->index;
-	    for (i = 0; i < imax; i++) {
-		if (++k >= imax) {
-		    k = 0;
-		}
-		Tcl_ListObjAppendElement(NULL, list,
-					 Tcl_NewIntObj(rp->values[k]));
-	    }
-	}
-	SdlTkUnlock(NULL);
-#endif
-	Tcl_SetObjResult(interp, list);
-	break;
-    }
-
-	/* sdltk powerinfo */
-    case CMD_POWERINFO: {
-	SDL_PowerState pst;
-	int secs, pct;
-	char buf[32];
-
-	if (objc != 2) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "");
-	    return TCL_ERROR;
-	}
-	SdlTkLock(NULL);
-	pst = SDL_GetPowerInfo(&secs, &pct);
-	SdlTkUnlock(NULL);
-	Tcl_AppendElement(interp, "state");
-	switch (pst) {
-	case SDL_POWERSTATE_ON_BATTERY:
-	    Tcl_AppendElement(interp, "onbattery");
-	    break; 
-	case SDL_POWERSTATE_NO_BATTERY:
-	    Tcl_AppendElement(interp, "nobattery");
-	    break; 
-	case SDL_POWERSTATE_CHARGING:
-	    Tcl_AppendElement(interp, "charging");
-	    break; 
-	case SDL_POWERSTATE_CHARGED:
-	    Tcl_AppendElement(interp, "charged");
-	    break; 
-	default:
-	    Tcl_AppendElement(interp, "unknown");
-	    break; 
-	}
-	Tcl_AppendElement(interp, "seconds");
-	sprintf(buf, "%d", secs);
-	Tcl_AppendElement(interp, buf);
-	Tcl_AppendElement(interp, "percent");
-	sprintf(buf, "%d", pct);
-	Tcl_AppendElement(interp, buf);
-	break;
-    }
-
-	/* sdltk android */
-    case CMD_ANDROID: {
-	if (objc != 2) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "");
-	    return TCL_ERROR;
-	}
-#ifdef ANDROID
-	Tcl_SetBooleanObj(Tcl_GetObjResult(interp), 1);
-#else
-	Tcl_SetBooleanObj(Tcl_GetObjResult(interp), 0);
-#endif
-	break;
-    }
-
-	/* sdltk touchtranslate ?mask? */
-    case CMD_TOUCHTRANSLATE: {
-#ifdef ANDROID
-	int flag = TranslateInfo.enabled;
-#else
-	int flag = 0;
-#endif
-
-	if (objc > 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?mask?");
-	    return TCL_ERROR;
-	}
-	if (objc > 2) {
-	    if (Tcl_GetIntFromObj(interp, objv[2], &flag) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-#ifdef ANDROID
-	    flag &= TRANSLATE_RMB | TRANSLATE_PTZ |
-		TRANSLATE_ZOOM | TRANSLATE_FINGER | TRANSLATE_FBTNS;
-	    SdlTkLock(NULL);
-	    if (flag != TranslateInfo.enabled) {
-		TranslateInfo.enabled = flag;
-		if (!(flag & TRANSLATE_RMB)) {
-		    TranslateInfo.function = NULL;
-		}
-		TranslateInfo.state = 0;
-		TranslateInfo.count = 0;
-	    }
-	    SdlTkUnlock(NULL);
-#else
-	    flag = 0;
-#endif
-	}
-	Tcl_SetIntObj(Tcl_GetObjResult(interp), flag);
-	break;
-    }
-
-	/* sdltk screensaver ?flag? */
-    case CMD_SCREENSAVER: {
-	int flag;
-
-	if (objc > 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?flag?");
-	    return TCL_ERROR;
-	}
-	if (objc > 2) {
-	    if (Tcl_GetBooleanFromObj(interp, objv[2], &flag) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    SdlTkLock(NULL);
-	    if (flag) {
-		SDL_EnableScreenSaver();
-	    } else {
-		SDL_DisableScreenSaver();
-	    }
-	    SdlTkUnlock(NULL);
-	}
-	SdlTkLock(NULL);
-	flag = SDL_IsScreenSaverEnabled();
-	SdlTkUnlock(NULL);
-	Tcl_SetBooleanObj(Tcl_GetObjResult(interp), flag);
-	break;
-    }
-
-	/* sdltk viewport ?x y ?w h?? */
-    case CMD_VIEWPORT: {
-	int x, y, w, h;
+    case JOY_GUID: {
+	SDL_JoystickGUID guid;
 	char buffer[128];
 
-	if (objc != 2 && objc != 4 && objc != 6) {
-	    Tcl_WrongNumArgs(interp, 2, objv,
-			     "?xoffset yoffset? width height??");
-	    return TCL_ERROR;
-	}
-	if (objc > 2) {
-	    if (Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK ||
-		Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	}
-	if (objc > 4) {
-	    int sw, sh;
-
-	    if (Tcl_GetIntFromObj(interp, objv[4], &w) != TCL_OK ||
-		Tcl_GetIntFromObj(interp, objv[5], &h) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    SdlTkLock(NULL);
-	    SDL_GetWindowSize(SdlTkX.sdlscreen, &sw, &sh);
-	    SdlTkUnlock(NULL);
-	    if (w < 0 || h < 0 || w > sw || h > sh) {
-		Tcl_SetResult(interp, "illegal width or height", TCL_STATIC);
-		return TCL_ERROR;
-	    }
-	}
-	if (objc > 2) {
-	    SdlTkPanZoom(0, x, y, w, h);
-	} else {
-	    SdlTkLock(NULL);
-	    sprintf(buffer, "%d %d %d %d",
-		    SdlTkX.viewport.x, SdlTkX.viewport.y,
-		    SdlTkX.viewport.w, SdlTkX.viewport.h);
-	    SdlTkUnlock(NULL);
-	}
-	if (objc <= 2) {
-	    Tcl_SetResult(interp, buffer, TCL_VOLATILE);
-	}
+	guid = SDL_JoystickGetGUID(stick);
+	sprintf(buffer, "%02x%02x%02x%02x-%02x%02x-%02x%02x"
+		"-%02x%02x-%02x%02x%02x%02x%02x%02x",
+		guid.data[0], guid.data[1], guid.data[2],
+		guid.data[3], guid.data[4], guid.data[5],
+		guid.data[6], guid.data[7], guid.data[8],
+		guid.data[9], guid.data[10], guid.data[11],
+		guid.data[12], guid.data[13], guid.data[14],
+		guid.data[15]);
+	Tcl_SetResult(interp, buffer, TCL_VOLATILE);
 	break;
     }
-
-	/* sdltk vsync */
-    case CMD_VSYNC: {
-	int frame_count;
-
-	if (objc != 2) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "");
-	    return TCL_ERROR;
-	}
-	SdlTkLock(NULL);
-	frame_count = SdlTkX.frame_count;
-	SdlTkWaitVSync();
-	if (SdlTkX.frame_count == frame_count) {
-	    SdlTkWaitVSync();
-	}
-	frame_count -= SdlTkX.frame_count;
-	SdlTkUnlock(NULL);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(frame_count));
+    case JOY_NAXES:
+	Tcl_SetIntObj(Tcl_GetObjResult(interp), SDL_JoystickNumAxes(stick));
+	break;
+    case JOY_NBALLS:
+	Tcl_SetIntObj(Tcl_GetObjResult(interp), SDL_JoystickNumBalls(stick));
+	break;
+    case JOY_NHATS:
+	Tcl_SetIntObj(Tcl_GetObjResult(interp), SDL_JoystickNumHats(stick));
+	break;
+    case JOY_NBUTTONS:
+	Tcl_SetIntObj(Tcl_GetObjResult(interp), SDL_JoystickNumButtons(stick));
 	break;
     }
+    SdlTkUnlock(NULL);
+    return TCL_OK;
+}
 
-	/* sdltk maxroot */
-    case CMD_MAXROOT: {
+static int
+MaxrootObjCmd(ClientData clientData, Tcl_Interp *interp,
+	      int objc, Tcl_Obj *const objv[])
+{
+    SDL_RendererInfo ri;
+    char buffer[128];
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    SdlTkLock(NULL);
+    SDL_GetRendererInfo(SdlTkX.sdlrend, &ri);
+    SdlTkUnlock(NULL);
+    sprintf(buffer, "%d %d", ri.max_texture_width, ri.max_texture_height);
+    Tcl_SetResult(interp, buffer, TCL_VOLATILE);
+    return TCL_OK;
+}
+
+static int
+PaintvisrgnObjCmd(ClientData clientData, Tcl_Interp *interp,
+		  int objc, Tcl_Obj *const objv[])
+{
+    Tk_Window tkwin = (Tk_Window) clientData;
+    int x, y;
+    _Window *_w;
+    Region r;
+    int ret = TCL_OK;
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?window?");
+	return TCL_ERROR;
+    }
+    SdlTkLock(NULL);
+    if (objc == 2) {
+	Tk_Window tkwin2;
+
+	if (TkGetWindowFromObj(interp, tkwin, objv[1], &tkwin2) != TCL_OK) {
+	    ret = TCL_ERROR;
+	    goto done;
+	}
+	_w = (_Window *) ((TkWindow *) tkwin2)->window;
+    } else {
+	(void) SDL_GetMouseState(&x, &y);
+	TranslatePointer(0, &x, &y);
+	_w = SdlTkPointToWindow((_Window *) SdlTkX.screen->root,
+				x, y, True, True);
+    }
+    r = SdlTkGetVisibleRegion(_w);
+    SdlTkGfxFillRegion((Drawable) _w, r, 0x0000FF88);
+    SDL_UpdateWindowSurface(SdlTkX.sdlscreen);
+done:
+    SdlTkUnlock(NULL);
+    return ret;
+}
+
+static int
+PowerinfoObjCmd(ClientData clientData, Tcl_Interp *interp,
+		int objc, Tcl_Obj *const objv[])
+{
+    SDL_PowerState pst;
+    int secs, pct;
+    char buf[32];
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    SdlTkLock(NULL);
+    pst = SDL_GetPowerInfo(&secs, &pct);
+    SdlTkUnlock(NULL);
+    Tcl_AppendElement(interp, "state");
+    switch (pst) {
+    case SDL_POWERSTATE_ON_BATTERY:
+	Tcl_AppendElement(interp, "onbattery");
+	break;
+    case SDL_POWERSTATE_NO_BATTERY:
+	Tcl_AppendElement(interp, "nobattery");
+	break;
+    case SDL_POWERSTATE_CHARGING:
+	Tcl_AppendElement(interp, "charging");
+	break;
+    case SDL_POWERSTATE_CHARGED:
+	Tcl_AppendElement(interp, "charged");
+	break;
+    default:
+	Tcl_AppendElement(interp, "unknown");
+	break;
+    }
+    Tcl_AppendElement(interp, "seconds");
+    sprintf(buf, "%d", secs);
+    Tcl_AppendElement(interp, buf);
+    Tcl_AppendElement(interp, "percent");
+    sprintf(buf, "%d", pct);
+    Tcl_AppendElement(interp, buf);
+    return TCL_OK;
+}
+
+static int
+RootObjCmd(ClientData clientData, Tcl_Interp *interp,
+	   int objc, Tcl_Obj *const objv[])
+{
+    int w, h;
+    char buffer[128];
+
+    if ((objc != 1) && (objc != 3)) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?width height?");
+	return TCL_ERROR;
+    }
+    if (objc > 1) {
 	SDL_RendererInfo ri;
-	char buffer[128];
 
-	if (objc != 2) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "");
+	if ((Tcl_GetIntFromObj(interp, objv[1], &w) != TCL_OK) ||
+	    (Tcl_GetIntFromObj(interp, objv[2], &h) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
 	SdlTkLock(NULL);
 	SDL_GetRendererInfo(SdlTkX.sdlrend, &ri);
 	SdlTkUnlock(NULL);
-	sprintf(buffer, "%d %d",
-		ri.max_texture_width, ri.max_texture_height);
+	if ((w == 0) && (h == 0)) {
+	    /* accepted, native size */
+	} else if ((w < 200) || (h < 200) ||
+		   (w > ri.max_texture_width) || (h > ri.max_texture_height)) {
+	    Tcl_SetResult(interp, "unsupported width or height", TCL_STATIC);
+	    return TCL_ERROR;
+	}
+    }
+    if (objc > 1) {
+	SdlTkSetRootSize(w, h);
+    } else {
+	SdlTkLock(NULL);
+	sprintf(buffer, "%d %d", SdlTkX.root_w, SdlTkX.root_h);
+	SdlTkUnlock(NULL);
+    }
+    if (objc <= 1) {
 	Tcl_SetResult(interp, buffer, TCL_VOLATILE);
-	break;
     }
+    return TCL_OK;
+}
 
-	/* sdltk root ?w h? */
-    case CMD_ROOT: {
-	int w, h;
-	char buffer[128];
+static int
+ScreensaverObjCmd(ClientData clientData, Tcl_Interp *interp,
+		  int objc, Tcl_Obj *const objv[])
+{
+    int flag;
 
-	if (objc != 2 && objc != 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?width height?");
-	    return TCL_ERROR;
-	}
-	if (objc > 2) {
-	    SDL_RendererInfo ri;
-
-	    if (Tcl_GetIntFromObj(interp, objv[2], &w) != TCL_OK ||
-		Tcl_GetIntFromObj(interp, objv[3], &h) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    SdlTkLock(NULL);
-	    SDL_GetRendererInfo(SdlTkX.sdlrend, &ri);
-	    SdlTkUnlock(NULL);
-	    if (w == 0 && h == 0) {
-		/* accepted, native size */
-	    } else if (w < 200 || h < 200 ||
-		       w > ri.max_texture_width || h > ri.max_texture_height) {
-		Tcl_SetResult(interp, "unsupported width or height",
-			      TCL_STATIC);
-		return TCL_ERROR;
-	    }
-	}
-	if (objc > 2) {
-	    SdlTkSetRootSize(w, h);
-	} else {
-	    SdlTkLock(NULL);
-	    sprintf(buffer, "%d %d", SdlTkX.root_w, SdlTkX.root_h);
-	    SdlTkUnlock(NULL);
-	}
-	if (objc <= 2) {
-	    Tcl_SetResult(interp, buffer, TCL_VOLATILE);
-	}
-	break;
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?flag?");
+	return TCL_ERROR;
     }
-
-	/* sdltk joystick opt ?joyid? */
-    case CMD_JOYSTICK: {
-	int joy_id;
-	long joy_idl;
-	Tcl_HashEntry *hPtr;
-	SDL_Joystick *stick;
-
-	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "suboption ?joyid?");
-	    return TCL_ERROR;
-	}
-	if (Tcl_GetIndexFromObj(interp, objv[2], joptStrings,
-				"suboption", 0, &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	if (index == JOY_IDS) {
-	    Tcl_Obj *result;
-	    Tcl_HashSearch search;
-
-	    if (objc != 3) {
-		Tcl_WrongNumArgs(interp, 3, objv, "");
-		return TCL_ERROR;
-	    }
-	    result = Tcl_NewListObj(0, NULL);
-	    SdlTkLock(NULL);
-	    hPtr = Tcl_FirstHashEntry(&SdlTkX.joystick_table, &search);
-	    while (hPtr != NULL) {
-		joy_idl = (long) Tcl_GetHashKey(&SdlTkX.joystick_table,	hPtr);
-		Tcl_ListObjAppendElement(interp, result,
-					 Tcl_NewIntObj((int) joy_idl));
-		hPtr = Tcl_NextHashEntry(&search);
-	    }
-	    SdlTkUnlock(NULL);
-	    Tcl_SetObjResult(interp, result);
-	    return TCL_OK;
-	}
-	if (objc != 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "joyid");
-	    return TCL_ERROR;
-	}
-	if (Tcl_GetIntFromObj(interp, objv[3], &joy_id) != TCL_OK) {
+    if (objc > 1) {
+	if (Tcl_GetBooleanFromObj(interp, objv[1], &flag) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	SdlTkLock(NULL);
-	joy_idl = joy_id;
-	hPtr = Tcl_FindHashEntry(&SdlTkX.joystick_table, (ClientData) joy_idl);
-	if (hPtr == NULL) {
-	    SdlTkUnlock(NULL);
-	    Tcl_SetResult(interp, "unknown joystick identifier", TCL_STATIC);
-	    return TCL_ERROR;
-	}
-	stick = (SDL_Joystick *) Tcl_GetHashValue(hPtr);
-	switch (index) {
-	case JOY_NAME:
-	    Tcl_SetResult(interp, (char *) SDL_JoystickName(stick),
-			  TCL_VOLATILE);
-	    break;
-	case JOY_GUID: {
-	    SDL_JoystickGUID guid;
-	    char buffer[128];
-
-	    guid = SDL_JoystickGetGUID(stick);
-	    sprintf(buffer, "%02x%02x%02x%02x-%02x%02x-%02x%02x"
-		    "-%02x%02x-%02x%02x%02x%02x%02x%02x",
-		    guid.data[0], guid.data[1], guid.data[2],
-		    guid.data[3], guid.data[4], guid.data[5],
-		    guid.data[6], guid.data[7], guid.data[8],
-		    guid.data[9], guid.data[10], guid.data[11],
-		    guid.data[12], guid.data[13], guid.data[14],
-		    guid.data[15]);
-	    Tcl_SetResult(interp, buffer, TCL_VOLATILE);
-	    break;
-	}
-	case JOY_NAXES:
-	    Tcl_SetIntObj(Tcl_GetObjResult(interp),
-			  SDL_JoystickNumAxes(stick));
-	    break;
-	case JOY_NBALLS:
-	    Tcl_SetIntObj(Tcl_GetObjResult(interp),
-			  SDL_JoystickNumBalls(stick));
-	    break;
-	case JOY_NHATS:
-	    Tcl_SetIntObj(Tcl_GetObjResult(interp),
-			  SDL_JoystickNumHats(stick));
-	    break;
-	case JOY_NBUTTONS:
-	    Tcl_SetIntObj(Tcl_GetObjResult(interp),
-			  SDL_JoystickNumButtons(stick));
-	    break;
+	if (flag) {
+	    SDL_EnableScreenSaver();
+	} else {
+	    SDL_DisableScreenSaver();
 	}
 	SdlTkUnlock(NULL);
-	break;
     }
+    SdlTkLock(NULL);
+    flag = SDL_IsScreenSaverEnabled();
+    SdlTkUnlock(NULL);
+    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), flag);
+    return TCL_OK;
+}
 
-	/* sdltk addfont filename */
-    case CMD_ADDFONT: {
-	if (objc != 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "filename");
+static int
+TextinputObjCmd(ClientData clientData, Tcl_Interp *interp,
+		int objc, Tcl_Obj *const objv[])
+{
+    static int last_hints = 0;
+    int flag = 0, hints = 0, hints_changed = 0, ret = TCL_OK;
+
+    if (objc > 5) {
+tiWrongArgs:
+	Tcl_WrongNumArgs(interp, 1, objv, "?onoff ?x y ?hints???");
+	return TCL_ERROR;
+    }
+    if ((objc == 2) || (objc == 4) || (objc == 5)) {
+	if (Tcl_GetBooleanFromObj(interp, objv[1], &flag) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	return SdlTkFontAdd(interp, Tcl_GetString(objv[2]));
-    }
+	SdlTkLock(NULL);
+	if (!SDL_HasScreenKeyboardSupport()) {
+	    goto tiDone;
+	}
+	if (flag) {
+	    if ((objc == 4) || (objc == 5)) {
+		int x, y;
+		SDL_Rect r;
 
+		if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK) ||
+		    (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)) {
+		    ret = TCL_ERROR;
+		    goto tiDone;
+		}
+		TranslatePointer(1, &x, &y);
+		x -= 64;
+		if (x < 0) {
+		    x = 0;
+		}
+		y -= 64;
+		if (y < 0) {
+		    y = 0;
+		}
+		r.x = x;
+		r.y = y;
+		r.w = 256;
+		r.h = 128;
+		if (objc > 4) {
+		    if (Tcl_GetIntFromObj(interp, objv[4], &hints) != TCL_OK) {
+			ret = TCL_ERROR;
+			goto tiDone;
+		    }
+		}
+		if (hints != last_hints) {
+		    hints_changed = 1;
+		    last_hints = hints;
+		}
+#ifdef SDL_TEXTINPUT_WITH_HINTS
+		SDL_SetTextInputRect(&r, hints);
+#else
+		SDL_SetTextInputRect(&r);
+#endif
+	    }
+	    if (hints_changed &&
+		SDL_IsScreenKeyboardShown(SdlTkX.sdlscreen)) {
+		SDL_StopTextInput();
+	    }
+	    SDL_StartTextInput();
+	} else {
+	    SDL_StopTextInput();
+	}
+tiDone:
+	SdlTkUnlock(NULL);
+	return ret;
+    } else if (objc == 3) {
+	goto tiWrongArgs;
     }
+    SdlTkLock(NULL);
+    if (SDL_HasScreenKeyboardSupport()) {
+	flag = SDL_IsScreenKeyboardShown(SdlTkX.sdlscreen);
+    }
+    SdlTkUnlock(NULL);
+    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), flag);
+    return ret;
+}
+
+static int
+TouchtranslateObjCmd(ClientData clientData, Tcl_Interp *interp,
+		     int objc, Tcl_Obj *const objv[])
+{
+#ifdef ANDROID
+    int flag = TranslateInfo.enabled;
+#else
+    int flag = 0;
+#endif
+
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?mask?");
+	return TCL_ERROR;
+    }
+    if (objc > 1) {
+	if (Tcl_GetIntFromObj(interp, objv[1], &flag) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+#ifdef ANDROID
+	flag &= TRANSLATE_RMB | TRANSLATE_PTZ |
+	    TRANSLATE_ZOOM | TRANSLATE_FINGER | TRANSLATE_FBTNS;
+	SdlTkLock(NULL);
+	if (flag != TranslateInfo.enabled) {
+	    TranslateInfo.enabled = flag;
+	    if (!(flag & TRANSLATE_RMB)) {
+		TranslateInfo.function = NULL;
+	    }
+	    TranslateInfo.state = 0;
+	    TranslateInfo.count = 0;
+	}
+	SdlTkUnlock(NULL);
+#else
+	flag = 0;
+#endif
+    }
+    Tcl_SetIntObj(Tcl_GetObjResult(interp), flag);
+    return TCL_OK;
+}
+
+static int
+ViewportObjCmd(ClientData clientData, Tcl_Interp *interp,
+	       int objc, Tcl_Obj *const objv[])
+{
+    int x, y, w, h;
+    char buffer[128];
+
+    if ((objc != 1) && (objc != 3) && (objc != 5)) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?xoffset yoffset? width height??");
+	return TCL_ERROR;
+    }
+    if (objc > 1) {
+	if ((Tcl_GetIntFromObj(interp, objv[1], &x) != TCL_OK) ||
+	    (Tcl_GetIntFromObj(interp, objv[2], &y) != TCL_OK)) {
+	    return TCL_ERROR;
+	}
+    }
+    if (objc > 3) {
+	int sw, sh;
+
+	if ((Tcl_GetIntFromObj(interp, objv[3], &w) != TCL_OK) ||
+	    (Tcl_GetIntFromObj(interp, objv[4], &h) != TCL_OK)) {
+	    return TCL_ERROR;
+	}
+	SdlTkLock(NULL);
+	SDL_GetWindowSize(SdlTkX.sdlscreen, &sw, &sh);
+	SdlTkUnlock(NULL);
+	if ((w < 0) || (h < 0) || (w > sw) || (h > sh)) {
+	    Tcl_SetResult(interp, "illegal width or height", TCL_STATIC);
+	    return TCL_ERROR;
+	}
+    }
+    if (objc > 1) {
+	SdlTkPanZoom(0, x, y, w, h);
+    } else {
+	SdlTkLock(NULL);
+	sprintf(buffer, "%d %d %d %d",
+		SdlTkX.viewport.x, SdlTkX.viewport.y,
+		SdlTkX.viewport.w, SdlTkX.viewport.h);
+	SdlTkUnlock(NULL);
+    }
+    if (objc <= 1) {
+	Tcl_SetResult(interp, buffer, TCL_VOLATILE);
+    }
+    return TCL_OK;
+}
+
+static int
+VsyncObjCmd(ClientData clientData, Tcl_Interp *interp,
+	    int objc, Tcl_Obj *const objv[])
+{
+    int frame_count;
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    SdlTkLock(NULL);
+    frame_count = SdlTkX.frame_count;
+    SdlTkWaitVSync();
+    if (SdlTkX.frame_count == frame_count) {
+	SdlTkWaitVSync();
+    }
+    frame_count -= SdlTkX.frame_count;
+    SdlTkUnlock(NULL);
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(frame_count));
+    return TCL_OK;
+}
+
+/*
+ * Table of sdltk subcommand names and implementations.
+ */
+
+static const TkEnsemble sdltkCmdMap[] = {
+    { "accelbuffer", AccelbufferObjCmd, NULL },
+    { "accelerometer", AccelerometerObjCmd, NULL },
+    { "addfont", AddfontObjCmd, NULL },
+    { "android", AndroidObjCmd, NULL },
+    { "expose", ExposeObjCmd, NULL },
+    { "joystick", JoystickObjCmd, NULL },
+    { "maxroot", MaxrootObjCmd, NULL },
+    { "paintvisrgn", PaintvisrgnObjCmd, NULL },
+    { "powerinfo", PowerinfoObjCmd, NULL },
+    { "root", RootObjCmd, NULL },
+    { "screensaver", ScreensaverObjCmd, NULL },
+    { "textinput", TextinputObjCmd, NULL },
+    { "touchtranslate", TouchtranslateObjCmd, NULL },
+    { "viewport", ViewportObjCmd, NULL },
+    { "vsync", VsyncObjCmd, NULL },
+    { NULL, NULL, NULL }
+};
+
+int
+TkInitSdltkCmd(Tcl_Interp *interp, ClientData clientData)
+{
+    TkMakeEnsemble(interp, "::", "sdltk", clientData, sdltkCmdMap);
     return TCL_OK;
 }
 
@@ -4162,7 +4183,7 @@ TkpGetPixel(XColor *color)
  *	This function captures the mouse so that all future events
  *	will be reported to this window, even if the mouse is outside
  *	the window.  If the specified window is NULL, then the mouse
- *	is released. 
+ *	is released.
  *
  * Results:
  *	None.
@@ -4187,7 +4208,7 @@ TkpSetCaptureEx(Display *display, TkWindow *winPtr)
     if (SdlTkX.capture_window != NULL) {
 	w0 = (_Window *) SdlTkX.capture_window->window;
     }
-    if (w0 != NULL && w1 != NULL) {
+    if ((w0 != NULL) && (w1 != NULL)) {
 	if (w0->display == w1->display) {
 	    SdlTkX.capture_window = winPtr;
 	} else {
@@ -4269,7 +4290,7 @@ TkpSetCursor(TkpCursor cursor)
 void
 SdlTkClearPointer(_Window *_w)
 {
-    if (_w != NULL && _w->tkwin != NULL) {
+    if ((_w != NULL) && (_w->tkwin != NULL)) {
 	if (SdlTkX.capture_window == _w->tkwin) {
 	    SdlTkX.capture_window = NULL;
 	}
