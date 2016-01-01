@@ -48,6 +48,9 @@ pack $btns -side bottom -fill x
 # count -	Counter to control the number of times flashed
 
 proc focusAndFlash {W fg bg {count 9}} {
+    if {![winfo exists $W]} {
+	return
+    }
     focus -force $W
     if {$count<1} {
 	$W configure -foreground $fg -background $bg

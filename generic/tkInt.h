@@ -1226,6 +1226,10 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
+#ifdef PLATFORM_SDL
+MODULE_SCOPE int	TkInitSdltkCmd(Tcl_Interp *interp,
+			    ClientData clientData);
+#endif
 
 #ifdef _WIN32
 #define TkParseColor XParseColor

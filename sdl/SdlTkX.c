@@ -4376,7 +4376,9 @@ HandleRootSize(struct RootSizeRequest *r)
 	SdlTkX.screen->height = height;
 #ifdef ANDROID
 	xdpi = ydpi = 0;
+#ifdef SDL_HAS_GETWINDOWDPI
 	SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
+#endif
 	if (xdpi && ydpi) {
 	    SdlTkX.screen->mwidth = (254 * width) / xdpi;
 	    SdlTkX.screen->mwidth /= 10;
@@ -4979,7 +4981,9 @@ fatal:
     screen->height = height;
 #ifdef ANDROID
     xdpi = ydpi = 0;
+#ifdef SDL_HAS_GETWINDOWDPI
     SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
+#endif
     if (xdpi && ydpi) {
 	int dpi = (ydpi < xdpi) ? ydpi : xdpi;
 	extern int ttkMinThumbSize;
@@ -6527,6 +6531,7 @@ SDL_GLContext
 SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
 {
     _Window *_w = (_Window *) w;
+#ifdef SDL_RENDERER_HAS_TARGET_3D
 #ifdef ANDROID
     int depth;
 #endif
@@ -6592,6 +6597,10 @@ done:
 #else
     return _w->gl_ctx;
 #endif
+#else
+    _w->gl_ctx = NULL;
+    return NULL;
+#endif
 }
 
 /*
@@ -6612,6 +6621,7 @@ done:
 void
 SdlTkGLXDestroyContext(Display *display, Window w, SDL_GLContext ctx)
 {
+#ifdef SDL_RENDERER_HAS_TARGET_3D
     _Window *_w = (_Window *) w;
 
     SdlTkLock(display);
@@ -6631,6 +6641,7 @@ SdlTkGLXDestroyContext(Display *display, Window w, SDL_GLContext ctx)
 #endif
 done:
     SdlTkUnlock(display);
+#endif
 }
 
 /*
@@ -6651,6 +6662,7 @@ done:
 void
 SdlTkGLXMakeCurrent(Display *display, Window w, SDL_GLContext ctx)
 {
+#ifdef SDL_RENDERER_HAS_TARGET_3D
     _Window *_w = (_Window *) w;
 
     SdlTkLock(display);
@@ -6676,6 +6688,7 @@ SdlTkGLXMakeCurrent(Display *display, Window w, SDL_GLContext ctx)
 #endif
 done:
     SdlTkUnlock(display);
+#endif
 }
 
 /*
@@ -6696,6 +6709,7 @@ done:
 void
 SdlTkGLXReleaseCurrent(Display *display, Window w, SDL_GLContext ctx)
 {
+#ifdef SDL_RENDERER_HAS_TARGET_3D
 #ifdef ANDROID
     _Window *_w = (_Window *) w;
 
@@ -6713,6 +6727,7 @@ SdlTkGLXReleaseCurrent(Display *display, Window w, SDL_GLContext ctx)
     SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, NULL);
 done:
     SdlTkUnlock(display);
+#endif
 #endif
 }
 
@@ -6734,6 +6749,7 @@ done:
 void
 SdlTkGLXSwapBuffers(Display *display, Window w)
 {
+#ifdef SDL_RENDERER_HAS_TARGET_3D
     _Window *_w = (_Window *) w;
 
     SdlTkLock(display);
@@ -6823,6 +6839,7 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
     }
 done:
     SdlTkUnlock(display);
+#endif
 }
 
 /*

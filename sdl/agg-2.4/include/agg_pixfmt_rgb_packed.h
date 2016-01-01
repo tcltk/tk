@@ -1267,7 +1267,9 @@ namespace agg
                               int8u cover)
         {
             typedef typename SrcPixelFormatRenderer::value_type src_value_type;
+#ifdef TYPE_NOT_USED
             typedef typename SrcPixelFormatRenderer::color_type src_color_type;
+#endif
             const src_value_type* psrc = (src_value_type*)from.row_ptr(ysrc);
             if(psrc)
             {
