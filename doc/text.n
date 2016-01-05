@@ -1089,12 +1089,13 @@ the widget is in sync) or false (when it is not).
 Examples of use:
 .CS
 ## Example 1:
-# runtime, immediately complete line metrics at any cost (GUI unresponsive)
+# immediately complete line metrics at any cost (GUI unresponsive)
 $w sync
 $w yview moveto $fraction
 
 ## Example 2:
-# runtime, synchronously wait for up-to-date line metrics (GUI responsive)
+# synchronously wait for up-to-date line metrics (GUI responsive)
+# before executing the scheduled command, but don't block execution flow
 $w sync -command [list $w yview moveto $fraction]
 
 ## Example 3:
@@ -1783,7 +1784,7 @@ If \fIindex\fR is far out of view, then the command centers
 \fIindex\fR in the window.
 .TP
 \fIpathName \fBsync\fR ?\fB-command \fIcommand\fR?
-Control the synchronization of the view of text widget.
+Controls the synchronization of the view of the text widget.
 .RS
 .TP
 \fIpathName \fBsync\fR
@@ -1793,10 +1794,10 @@ outdated line heights, otherwise it returns only at the end of the computation.
 The command returns an empty string.
 .TP
 \fIpathName \fBsync -command \fIcommand\fR
-Schedule \fIcommand\fR to be executed exactly once as soon as all line heights
-are up-to-date. If there are no pending line metrics calculations, the
-scheduling is immediate. The command returns the empty string. \fBbgerror\fR is
-called on \fIcommand\fR failure.
+Schedules \fIcommand\fR to be executed (by the event loop) exactly once as soon
+as all line heights are up-to-date. If there are no pending line metrics
+calculations, the scheduling is immediate. The command returns the empty
+string. \fBbgerror\fR is called on \fIcommand\fR failure.
 .RE
 .TP
 \fIpathName \fBtag \fIoption \fR?\fIarg arg ...\fR?
