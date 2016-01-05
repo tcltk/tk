@@ -6752,7 +6752,7 @@ TkpTesttextCmd(
  *
  * RunAfterSyncCmd --
  *
- *	This function is called by the event loop and excutes the command
+ *	This function is called by the event loop and executes the command
  *      scheduled by [.text sync -command $cmd].
  *
  * Results:
