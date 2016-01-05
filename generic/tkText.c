@@ -388,6 +388,7 @@ static Tcl_Obj *	TextGetText(const TkText *textPtr,
 			    const TkTextIndex *index2, int visibleOnly);
 static void		GenerateModifiedEvent(TkText *textPtr);
 static void		UpdateDirtyFlag(TkSharedText *sharedPtr);
+static void		RunAfterSyncCmd(ClientData clientData);
 static void		TextPushUndoAction(TkText *textPtr,
 			    Tcl_Obj *undoString, int insert,
 			    const TkTextIndex *index1Ptr,
@@ -397,7 +398,6 @@ static int		TextSearchIndexInLine(const SearchSpec *searchSpecPtr,
 static int		TextPeerCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static TkUndoProc	TextUndoRedoCallback;
-static void		RunAfterSyncCmd(ClientData clientData);
 
 /*
  * Declarations of the three search procs required by the multi-line search
@@ -5377,6 +5377,52 @@ UpdateDirtyFlag(
 /*
  *----------------------------------------------------------------------
  *
+ * RunAfterSyncCmd --
+ *
+ *	This function is called by the event loop and executes the command
+ *      scheduled by [.text sync -command $cmd].
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Anything may happen, depending on $cmd contents.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RunAfterSyncCmd(
+    ClientData clientData)		/* Information about text widget. */
+{
+    register TkText *textPtr = (TkText *) clientData;
+    int code;
+
+    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+        /*
+        * The widget has been deleted. Don't do anything.
+        */
+
+        if (--textPtr->refCount == 0) {
+            ckfree((char *) textPtr);
+        }
+        return;
+    }
+
+    Tcl_Preserve((ClientData) textPtr->interp);
+    code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
+    if (code == TCL_ERROR) {
+        Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
+        Tcl_BackgroundError(textPtr->interp);
+    }
+    Tcl_Release((ClientData) textPtr->interp);
+    Tcl_DecrRefCount(textPtr->afterSyncCmd);
+    textPtr->afterSyncCmd = NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * SearchPerform --
  *
  *	Overall control of search process. Is given a pattern, a starting
@@ -6745,52 +6791,6 @@ TkpTesttextCmd(
     Tcl_AppendResult(interp, buf, NULL);
 
     return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * RunAfterSyncCmd --
- *
- *	This function is called by the event loop and executes the command
- *      scheduled by [.text sync -command $cmd].
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Anything may happen, depending on $cmd contents.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-RunAfterSyncCmd(
-    ClientData clientData)		/* Information about text widget. */
-{
-    register TkText *textPtr = (TkText *) clientData;
-    int code;
-
-    if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
-        /*
-        * The widget has been deleted. Don't do anything.
-        */
-
-        if (--textPtr->refCount == 0) {
-            ckfree((char *) textPtr);
-        }
-        return;
-    }
-
-    Tcl_Preserve((ClientData) textPtr->interp);
-    code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
-    if (code == TCL_ERROR) {
-        Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
-        Tcl_BackgroundError(textPtr->interp);
-    }
-    Tcl_Release((ClientData) textPtr->interp);
-    Tcl_DecrRefCount(textPtr->afterSyncCmd);
-    textPtr->afterSyncCmd = NULL;
 }
 
 /*
