@@ -2015,9 +2015,9 @@ DestroyText(
     textPtr->tkwin = NULL;
     textPtr->refCount--;
     Tcl_DeleteCommandFromToken(textPtr->interp, textPtr->widgetCmd);
-    if (textPtr->afterSyncCmd != 0){
+    if (textPtr->afterSyncCmd){
 	Tcl_DecrRefCount(textPtr->afterSyncCmd);
-	textPtr->afterSyncCmd = 0;
+	textPtr->afterSyncCmd = NULL;
     }
     if (textPtr->refCount == 0) {
 	ckfree((char *) textPtr);
