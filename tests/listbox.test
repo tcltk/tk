@@ -3092,6 +3092,21 @@ test listbox-31.1 {<<ListboxSelect>> event} -setup {
     unset -nocomplain res
 } -result {0 2 1}
 
+test listbox-31.2 {<<ListboxSelect>> event on lost selection} -setup {
+    destroy .l
+} -body {
+    pack [listbox .l -exportselection true]
+    update
+    bind .l <<ListboxSelect>> {lappend res [list [selection own] [%W curselection]]}
+    .l insert end a b c
+    focus -force .l
+    event generate .l <1> -x 5 -y 5  ; # <<ListboxSelect>> fires
+    selection clear                  ; # <<ListboxSelect>> fires again
+    set res
+} -cleanup {
+    destroy .l
+} -result {{.l 0} {{} {}}}
+
 resetGridInfo
 deleteWindows
 option clear
