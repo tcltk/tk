@@ -561,7 +561,7 @@ TkWinDisplayChanged(
 	screen->root_visual->class = TrueColor;
 	screen->root_visual->map_entries = 64;
 	screen->root_visual->red_mask = 0xf8;
-	screen->root_visual->green_mask = 0xfc00;
+	screen->root_visual->green_mask = 0xf800;
 	screen->root_visual->blue_mask = 0xf80000;
     } else if (screen->root_depth >= 24) {
 	screen->root_visual->class = TrueColor;
