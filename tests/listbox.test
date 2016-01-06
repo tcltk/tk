@@ -3068,6 +3068,30 @@ test listbox-30.1 {Bug 3607326} -setup {
     unset -nocomplain a
 } -result * -match glob -returnCodes error
 
+test listbox-31.1 {<<ListboxSelect>> event} -setup {
+    destroy .l
+    unset -nocomplain res
+} -body {
+    pack [listbox .l -state normal]
+    update
+    bind .l <<ListboxSelect>> {lappend res [%W curselection]}
+    .l insert end a b c
+    focus -force .l
+    event generate .l <1> -x 5 -y 5  ; # <<ListboxSelect>> fires
+    .l configure -state disabled
+    focus -force .l
+    event generate .l <Control-Home> ; # <<ListboxSelect>> does NOT fire
+    .l configure -state normal
+    focus -force .l
+    event generate .l <Control-End>  ; # <<ListboxSelect>> fires
+    .l selection clear 0 end         ; # <<ListboxSelect>> does NOT fire
+    .l selection set 1 1             ; # <<ListboxSelect>> does NOT fire
+    lappend res [.l curselection]
+} -cleanup {
+    destroy .l
+    unset -nocomplain res
+} -result {0 2 1}
+
 resetGridInfo
 deleteWindows
 option clear
