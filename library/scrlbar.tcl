@@ -157,6 +157,10 @@ switch [tk windowingsystem] {
 	bind Scrollbar <Shift-4> {tk::ScrollByUnits %W h -5}
 	bind Scrollbar <Shift-5> {tk::ScrollByUnits %W h 5}
     }
+} else {
+    bind Scrollbar <MouseWheel> {
+        tk::ScrollByUnits %W v [expr {- (%D/120)}]
+    }
 }
 # tk::ScrollButtonDown --
 # This procedure is invoked when a button is pressed in a scrollbar.
