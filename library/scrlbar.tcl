@@ -152,6 +152,9 @@ switch [tk windowingsystem] {
 	}
     }
     "x11" {
+	bind Scrollbar <MouseWheel> {
+	    tk::ScrollByUnits %W v [expr {- (%D/120)}]
+	}
 	bind Scrollbar <4> {tk::ScrollByUnits %W v -5}
 	bind Scrollbar <5> {tk::ScrollByUnits %W v 5}
 	bind Scrollbar <Shift-4> {tk::ScrollByUnits %W h -5}
