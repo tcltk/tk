@@ -278,7 +278,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 Tk_Offset(Listbox, selBorderWidth), 0, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	 DEF_LISTBOX_SELECT_FG_COLOR, -1, Tk_Offset(Listbox, selFgColorPtr),
-	 TK_CONFIG_NULL_OK, (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
+	 TK_OPTION_NULL_OK, (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_STRING, "-selectmode", "selectMode", "SelectMode",
 	 DEF_LISTBOX_SELECT_MODE, -1, Tk_Offset(Listbox, selectMode),
 	 TK_OPTION_NULL_OK, 0, 0},
