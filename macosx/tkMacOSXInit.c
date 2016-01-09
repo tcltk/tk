@@ -72,11 +72,13 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 	_mainPool = [NSAutoreleasePool new];
     }
 }
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 - (void)_postedNotification:(NSNotification *)notification {
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 }
 #endif
+
 - (void)_setupApplicationNotifications {
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 #define observe(n, s) [nc addObserver:self selector:@selector(s) name:(n) object:nil]
@@ -91,18 +93,19 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
     CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(), NULL, &keyboardChanged, kTISNotifySelectedKeyboardInputSourceChanged, NULL, CFNotificationSuspensionBehaviorCoalesce);
 #endif
 }
+
 - (void)_setupEventLoop {
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
     [self finishLaunching];
     [self setWindowsNeedUpdate:YES];
     [pool drain];
 }
+
 - (void)_setup:(Tcl_Interp *)interp {
     _eventInterp = interp;
-    _mainPool = nil;
+    _mainPool = [NSAutoreleasePool new];
     [NSApp setPoolProtected:NO];
     _defaultMainMenu = nil;
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     [self _setupMenus];
     [self setDelegate:self];
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
@@ -111,8 +114,8 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 #endif
     [self _setupWindowNotifications];
     [self _setupApplicationNotifications];
-    [pool drain];
 }
+
 - (NSString *)tkFrameworkImagePath:(NSString*)image {
     NSString *path = nil;
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
