@@ -632,7 +632,7 @@ test scrollbar-9.1 {scrollbar widget vs hidden commands} {
     list [winfo children .] [interp hidden]
 } [list {} $l]
 
-test scrollbar-10.1 {<MouseWheel> event on scrollbar} -setup {
+test scrollbar-10.1 {<MouseWheel> event on scrollbar} -constraints {win unix} -setup {
     destroy .t .s
 } -body {
     pack [text .t -yscrollcommand {.s set}] -side left
@@ -645,12 +645,12 @@ test scrollbar-10.1 {<MouseWheel> event on scrollbar} -setup {
     .t index @0,0
 } -cleanup {
     destroy .t .s
-} -result {2.0}
+} -result {5.0}
 
-test scrollbar-10.2 {<MouseWheel> event on scrollbar} -setup {
+test scrollbar-10.2 {<MouseWheel> event on scrollbar} -constraints {win unix} -setup {
     destroy .t .s
 } -body {
-    pack [text .t -xscrollcommand {.s set}] -side top
+    pack [text .t -xscrollcommand {.s set} -wrap none] -side top
     for {set i 1} {$i < 100} {incr i} {.t insert end "Char $i "}
     pack [scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
     update
@@ -660,7 +660,7 @@ test scrollbar-10.2 {<MouseWheel> event on scrollbar} -setup {
     .t index @0,0
 } -cleanup {
     destroy .t .s
-} -result {2.0}
+} -result {1.4}
 
 catch {destroy .s}
 catch {destroy .t}
