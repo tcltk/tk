@@ -902,6 +902,8 @@ TkWmDeadWindow(
 		[front makeKeyAndOrderFront:NSApp];
 	    }
 	}
+	[NSApp _resetAutoreleasePool];
+
 #if DEBUG_ZOMBIES > 0
 	fprintf(stderr, "================= Pool dump ===================\n");
 	[NSAutoreleasePool showPools];

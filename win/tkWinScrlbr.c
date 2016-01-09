@@ -217,10 +217,10 @@ CreateProc(
 
     if (scrollPtr->info.vertical) {
 	style = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS
-		| SBS_VERT | SBS_RIGHTALIGN;
+		| SBS_VERT;
     } else {
 	style = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS
-		| SBS_HORZ | SBS_BOTTOMALIGN;
+		| SBS_HORZ;
     }
 
     scrollPtr->hwnd = CreateWindow(TEXT("SCROLLBAR"), NULL, style,
