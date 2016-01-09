@@ -105,10 +105,9 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 - (void) _setup: (Tcl_Interp *) interp
 {
     _eventInterp = interp;
-    _mainPool = nil;
+    _mainPool = [NSAutoreleasePool new];
     [NSApp setPoolProtected:NO];
     _defaultMainMenu = nil;
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     [self _setupMenus];
     [self setDelegate:self];
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
@@ -117,7 +116,6 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 #endif
     [self _setupWindowNotifications];
     [self _setupApplicationNotifications];
-    [pool drain];
 }
 
 - (NSString *) tkFrameworkImagePath: (NSString *) image
