@@ -401,7 +401,7 @@ The main program in a typical OSX application looks like this (see *)
     }
 
 The run method implements the event loop for the application.  There
-are three key steps in the run method.  First it calls 
+are three key steps in the run method.  First it calls
 [NSApp finishLaunching], which creates the bouncing application icon
 and does other mysterious things. Second it creates an
 NSAutoreleasePool.  Third, it starts an event loop which drains the

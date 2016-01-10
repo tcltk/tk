@@ -494,9 +494,6 @@
 #define DEF_TEXT_SELECT_FG_MONO		WHITE
 #define DEF_TEXT_SELECT_RELIEF		"raised"
 #define DEF_TEXT_SET_GRID		"0"
-#define DEF_TEXT_SPACING1		"0"
-#define DEF_TEXT_SPACING2		"0"
-#define DEF_TEXT_SPACING3		"0"
 #define DEF_TEXT_STATE			"normal"
 #define DEF_TEXT_TABS			""
 #define DEF_TEXT_TABSTYLE		"tabular"
