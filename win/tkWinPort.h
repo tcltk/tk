@@ -87,6 +87,13 @@
 #define REDO_KEYSYM_LOOKUP
 
 /*
+ * See ticket [916c1095438eae56]: GetVersionExW triggers warnings
+ */
+#if defined(_MSC_VER)
+#   pragma warning(disable:4996)
+#endif
+
+/*
  * The following macro checks to see whether there is buffered
  * input data available for a stdio FILE.
  */
@@ -105,7 +112,7 @@
 	| ((p)->green & 0xff00) | (((p)->blue << 8) & 0xff0000)) | 0x20000000)
 
 /*
- * These calls implement native bitmaps which are not currently 
+ * These calls implement native bitmaps which are not currently
  * supported under Windows.  The macros eliminate the calls.
  */
 

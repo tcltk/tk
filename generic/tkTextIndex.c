@@ -40,6 +40,9 @@ static const char *	StartEnd(TkText *textPtr, const char *string,
 static int		GetIndex(Tcl_Interp *interp, TkSharedText *sharedPtr,
 			    TkText *textPtr, const char *string,
 			    TkTextIndex *indexPtr, int *canCachePtr);
+static int              IndexCountBytesOrdered(CONST TkText *textPtr,
+                            CONST TkTextIndex *indexPtr1,
+                            CONST TkTextIndex *indexPtr2);
 
 /*
  * The "textindex" Tcl_Obj definition:
@@ -759,11 +762,11 @@ GetIndex(
     }
 
     if (TkTextWindowIndex(textPtr, string, indexPtr) != 0) {
-	return TCL_OK;
+	goto done;
     }
 
     if (TkTextImageIndex(textPtr, string, indexPtr) != 0) {
-	return TCL_OK;
+	goto done;
     }
 
     /*
@@ -1616,6 +1619,90 @@ TkTextIndexForwChars(
 /*
  *---------------------------------------------------------------------------
  *
+ * TkTextIndexCountBytes --
+ *
+ *	Given a pair of indices in a text widget, this function counts how
+ *	many bytes are between the two indices. The two indices do not need
+ *	to be ordered.
+ *
+ * Results:
+ *	The number of bytes in the given range.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkTextIndexCountBytes(
+    CONST TkText *textPtr,
+    CONST TkTextIndex *indexPtr1, /* Index describing one location. */
+    CONST TkTextIndex *indexPtr2) /* Index describing second location. */
+{
+    int compare = TkTextIndexCmp(indexPtr1, indexPtr2);
+
+    if (compare == 0) {
+	return 0;
+    } else if (compare > 0) {
+	return IndexCountBytesOrdered(textPtr, indexPtr2, indexPtr1);
+    } else {
+	return IndexCountBytesOrdered(textPtr, indexPtr1, indexPtr2);
+    }
+}
+
+static int
+IndexCountBytesOrdered(
+    CONST TkText *textPtr,
+    CONST TkTextIndex *indexPtr1,
+				/* Index describing location of character from
+				 * which to count. */
+    CONST TkTextIndex *indexPtr2)
+				/* Index describing location of last character
+				 * at which to stop the count. */
+{
+    int byteCount, offset;
+    TkTextSegment *segPtr, *segPtr1;
+    TkTextLine *linePtr;
+
+    if (indexPtr1->linePtr == indexPtr2->linePtr) {
+        return indexPtr2->byteIndex - indexPtr1->byteIndex;
+    }
+
+    /*
+     * indexPtr2 is on a line strictly after the line containing indexPtr1.
+     * Add up:
+     *   bytes between indexPtr1 and end of its line
+     *   bytes in lines strictly between indexPtr1 and indexPtr2
+     *   bytes between start of the indexPtr2 line and indexPtr2
+     */
+
+    segPtr1 = TkTextIndexToSeg(indexPtr1, &offset);
+    byteCount = -offset;
+    for (segPtr = segPtr1; segPtr != NULL; segPtr = segPtr->nextPtr) {
+        byteCount += segPtr->size;
+    }
+
+    linePtr = TkBTreeNextLine(textPtr, indexPtr1->linePtr);
+    while (linePtr != indexPtr2->linePtr) {
+	for (segPtr = linePtr->segPtr; segPtr != NULL;
+                segPtr = segPtr->nextPtr) {
+            byteCount += segPtr->size;
+        }
+        linePtr = TkBTreeNextLine(textPtr, linePtr);
+        if (linePtr == NULL) {
+            Tcl_Panic("TextIndexCountBytesOrdered ran out of lines");
+        }
+    }
+
+    byteCount += indexPtr2->byteIndex;
+
+    return byteCount;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * TkTextIndexCount --
  *
  *	Given an ordered pair of indices in a text widget, this function
@@ -2118,7 +2205,7 @@ StartEnd(
     TkText *textPtr,		/* Information about text widget. */
     const char *string,		/* String to parse for additional info about
 				 * modifier (count and units). Points to first
-				 * character of modifer word. */
+				 * character of modifier word. */
     TkTextIndex *indexPtr)	/* Index to modify based on string. */
 {
     const char *p;
@@ -2240,7 +2327,7 @@ StartEnd(
 	int offset;
 
 	if (modifier == TKINDEX_DISPLAY) {
-	    TkTextIndexForwChars(NULL, indexPtr, 0, indexPtr,
+	    TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr,
 		    COUNT_DISPLAY_INDICES);
 	}
 
@@ -2269,11 +2356,20 @@ StartEnd(
 		}
 		firstChar = 0;
 	    }
-	    offset -= chSize;
-	    indexPtr->byteIndex -= chSize;
+            if (offset == 0) {
+                if (modifier == TKINDEX_DISPLAY) {
+                    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr,
+                        COUNT_DISPLAY_INDICES);
+                } else {
+                    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr,
+                        COUNT_INDICES);
+                }
+            } else {
+                indexPtr->byteIndex -= chSize;
+            }
+            offset -= chSize;
 	    if (offset < 0) {
-		if (indexPtr->byteIndex < 0) {
-		    indexPtr->byteIndex = 0;
+		if (indexPtr->byteIndex == 0) {
 		    goto done;
 		}
 		segPtr = TkTextIndexToSeg(indexPtr, &offset);

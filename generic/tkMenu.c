@@ -885,9 +885,14 @@ MenuWidgetObjCmd(
 	 * Tearoff menus are posted differently on Mac and Windows than
 	 * non-tearoffs. TkpPostMenu does not actually map the menu's window
 	 * on those platforms, and popup menus have to be handled specially.
+         * Also, menubar menues are not intended to be posted (bug 1567681,
+         * 2160206).
 	 */
 
-	if (menuPtr->menuType != TEAROFF_MENU) {
+	if (menuPtr->menuType == MENUBAR) {
+            Tcl_AppendResult(interp, "a menubar menu cannot be posted", NULL);
+            return TCL_ERROR;
+        } else if (menuPtr->menuType != TEAROFF_MENU) {
 	    result = TkpPostMenu(interp, menuPtr, x, y);
 	} else {
 	    result = TkPostTearoffMenu(interp, menuPtr, x, y);
@@ -1419,13 +1424,14 @@ DestroyMenuEntry(
 		}
 	    }
 	    UnhookCascadeEntry(mePtr);
+	    menuRefPtr = mePtr->childMenuRefPtr;
 	    if (menuRefPtr != NULL) {
 		if (menuRefPtr->menuPtr == destroyThis) {
 		    menuRefPtr->menuPtr = NULL;
 		}
-		if (destroyThis != NULL) {
-		    TkDestroyMenu(destroyThis);
-		}
+	    }
+	    if (destroyThis != NULL) {
+		TkDestroyMenu(destroyThis);
 	    }
 	} else {
 	    UnhookCascadeEntry(mePtr);
@@ -3044,7 +3050,6 @@ TkNewMenuName(
     char *destString;
     int i;
     int doDot;
-    Tcl_CmdInfo cmdInfo;
     Tcl_HashTable *nameTablePtr = NULL;
     TkWindow *winPtr = (TkWindow *) menuPtr->tkwin;
     const char *parentName = Tcl_GetString(parentPtr);
@@ -3084,7 +3089,7 @@ TkNewMenuName(
 	    Tcl_DecrRefCount(intPtr);
     	}
 	destString = Tcl_GetString(resultPtr);
-    	if ((Tcl_GetCommandInfo(interp, destString, &cmdInfo) == 0)
+    	if ((Tcl_FindCommand(interp, destString, NULL, 0) == NULL)
 		&& ((nameTablePtr == NULL)
 		|| (Tcl_FindHashEntry(nameTablePtr, destString) == NULL))) {
     	    break;
