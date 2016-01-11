@@ -168,7 +168,7 @@ typedef struct TkTextSegment {
     int size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[1];		/* Characters that make up character info.
+	char chars[2];		/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
@@ -1065,6 +1065,9 @@ MODULE_SCOPE void	TkTextIndexBackChars(const TkText *textPtr,
 			    const TkTextIndex *srcPtr, int count,
 			    TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE int	TkTextIndexCmp(const TkTextIndex *index1Ptr,
+			    const TkTextIndex *index2Ptr);
+MODULE_SCOPE int	TkTextIndexCountBytes(const TkText *textPtr,
+			    const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
 MODULE_SCOPE int	TkTextIndexCount(const TkText *textPtr,
 			    const TkTextIndex *index1Ptr,
