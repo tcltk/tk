@@ -580,14 +580,6 @@ CreateWidget(
 	textPtr->end = NULL;
     }
 
-    /*
-     * Register with the B-tree. In some sense it would be best if we could do
-     * this later (after configuration options), so that any changes to
-     * start,end do not require a total recalculation.
-     */
-
-    TkBTreeAddClient(sharedPtr->tree, textPtr, textPtr->charHeight);
-
     textPtr->state = TK_TEXT_STATE_NORMAL;
     textPtr->relief = TK_RELIEF_FLAT;
     textPtr->cursor = None;
@@ -596,6 +588,14 @@ CreateWidget(
     textPtr->wrapMode = TEXT_WRAPMODE_CHAR;
     textPtr->prevWidth = Tk_Width(newWin);
     textPtr->prevHeight = Tk_Height(newWin);
+
+    /*
+     * Register with the B-tree. In some sense it would be best if we could do
+     * this later (after configuration options), so that any changes to
+     * start,end do not require a total recalculation.
+     */
+
+    TkBTreeAddClient(sharedPtr->tree, textPtr, textPtr->charHeight);
 
     /*
      * This will add refCounts to textPtr.
@@ -881,7 +881,7 @@ TextWidgetObjCmd(
 	    } else if (c == 'd' && (length > 8)
 		    && !strncmp("-displaylines", option, (unsigned) length)) {
 		TkTextLine *fromPtr, *lastPtr;
-		TkTextIndex index;
+		TkTextIndex index, index2;
 
 		int compare = TkTextIndexCmp(indexFromPtr, indexToPtr);
 		value = 0;
@@ -916,35 +916,44 @@ TextWidgetObjCmd(
 		/*
 		 * We're going to count up all display lines in the logical
 		 * line of 'indexFromPtr' up to, but not including the logical
-		 * line of 'indexToPtr', and then subtract off what we didn't
-		 * want from 'from' and add on what we didn't count from 'to.
+		 * line of 'indexToPtr' (except if this line is elided), and
+                 * then subtract off what came in too much from elided lines,
+                 * also subtract off what we didn't want from 'from' and add
+		 * on what we didn't count from 'to'.
 		 */
 
-		while (index.linePtr != indexToPtr->linePtr) {
-		    value += TkTextUpdateOneLine(textPtr, fromPtr,0,&index,0);
-
-		    /*
-		     * We might have skipped past indexToPtr, if we have
-		     * multiple logical lines in a single display line.
-		     */
-		    if (TkTextIndexCmp(&index,indexToPtr) > 0) {
-			break;
-		    }
+                while (TkTextIndexCmp(&index,indexToPtr) < 0) {
+		    value += TkTextUpdateOneLine(textPtr, index.linePtr,
+                            0, &index, 0);
 		}
 
-		/*
-		 * Now we need to adjust the count to add on the number of
-		 * display lines in the last logical line, and subtract off
-		 * the number of display lines overcounted in the first
-		 * logical line. This logic is still ok if both indices are in
-		 * the same logical line.
-		 */
+                index2 = index;
 
+                /*
+                 * Now we need to adjust the count to:
+                 *   - subtract off the number of display lines between
+                 *     indexToPtr and index2, since we might have skipped past
+                 *     indexToPtr, if we have several logical lines in a
+                 *     single display line
+                 *   - subtract off the number of display lines overcounted
+                 *     in the first logical line
+                 *   - add on the number of display lines in the last logical
+                 *     line
+                 * This logic is still ok if both indexFromPtr and indexToPtr
+                 * are in the same logical line.
+                 */
+
+                index = *indexToPtr;
+                index.byteIndex = 0;
+                while (TkTextIndexCmp(&index,&index2) < 0) {
+                    value -= TkTextUpdateOneLine(textPtr, index.linePtr,
+                            0, &index, 0);
+                }
 		index.linePtr = indexFromPtr->linePtr;
 		index.byteIndex = 0;
 		while (1) {
 		    TkTextFindDisplayLineEnd(textPtr, &index, 1, NULL);
-		    if (index.byteIndex >= indexFromPtr->byteIndex) {
+                    if (TkTextIndexCmp(&index,indexFromPtr) >= 0) {
 			break;
 		    }
 		    TkTextIndexForwBytes(textPtr, &index, 1, &index);
@@ -956,7 +965,7 @@ TextWidgetObjCmd(
 		    index.byteIndex = 0;
 		    while (1) {
 			TkTextFindDisplayLineEnd(textPtr, &index, 1, NULL);
-			if (index.byteIndex >= indexToPtr->byteIndex) {
+                        if (TkTextIndexCmp(&index,indexToPtr) >= 0) {
 			    break;
 			}
 			TkTextIndexForwBytes(textPtr, &index, 1, &index);
@@ -2335,6 +2344,7 @@ TextWorldChanged(
 {
     Tk_FontMetrics fm;
     int border;
+    int oldCharHeight = textPtr->charHeight;
 
     textPtr->charWidth = Tk_TextWidth(textPtr->tkfont, "0", 1);
     if (textPtr->charWidth <= 0) {
@@ -2345,6 +2355,9 @@ TextWorldChanged(
     textPtr->charHeight = fm.linespace;
     if (textPtr->charHeight <= 0) {
 	textPtr->charHeight = 1;
+    }
+    if (textPtr->charHeight != oldCharHeight) {
+        TkBTreeClientRangeChanged(textPtr, textPtr->charHeight);
     }
     border = textPtr->borderWidth + textPtr->highlightWidth;
     Tk_GeometryRequest(textPtr->tkwin,
@@ -3013,11 +3026,9 @@ DeleteIndexRange(
      * The code below is ugly, but it's needed to make sure there is always a
      * dummy empty line at the end of the text. If the final newline of the
      * file (just before the dummy line) is being deleted, then back up index
-     * to just before the newline. If there is a newline just before the first
-     * character being deleted, then back up the first index too, so that an
-     * even number of lines gets deleted. Furthermore, remove any tags that
-     * are present on the newline that isn't going to be deleted after all
-     * (this simulates deleting the newline and then adding a "clean" one back
+     * to just before the newline. Furthermore, remove any tags that are
+     * present on the newline that isn't going to be deleted after all (this
+     * simulates deleting the newline and then adding a "clean" one back
      * again). Note that index1 and index2 might now be equal again which
      * means that no text will be deleted but tags might be removed.
      */
@@ -3032,10 +3043,6 @@ DeleteIndexRange(
 	oldIndex2 = index2;
 	TkTextIndexBackChars(NULL, &oldIndex2, 1, &index2, COUNT_INDICES);
 	line2--;
-	if ((index1.byteIndex == 0) && (line1 != 0)) {
-	    TkTextIndexBackChars(NULL, &index1, 1, &index1, COUNT_INDICES);
-	    line1--;
-	}
 	arrayPtr = TkBTreeGetTags(&index2, NULL, &arraySize);
 	if (arrayPtr != NULL) {
 	    for (i = 0; i < arraySize; i++) {
@@ -4231,7 +4238,11 @@ TextSearchFoundMatch(
 		    matchOffset += Tcl_NumUtfChars(segPtr->body.chars, -1);
 		}
 	    } else {
-		leftToScan -= segPtr->size;
+		if (searchSpecPtr->exact) {
+		    leftToScan -= segPtr->size;
+		} else {
+		    leftToScan -= Tcl_NumUtfChars(segPtr->body.chars, -1);
+		}
 	    }
 	    curIndex.byteIndex += segPtr->size;
 	}
@@ -6658,8 +6669,8 @@ int
 TkpTesttextCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
 {
     TkText *textPtr;
     size_t len;
@@ -6668,45 +6679,41 @@ TkpTesttextCmd(
     char buf[64];
     Tcl_CmdInfo info;
 
-    if (argc < 3) {
+    if (objc < 3) {
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetCommandInfo(interp, argv[1], &info) == 0) {
+    if (Tcl_GetCommandInfo(interp, Tcl_GetString(objv[1]), &info) == 0) {
 	return TCL_ERROR;
     }
-    if (info.isNativeObjectProc) {
-	textPtr = info.objClientData;
-    } else {
-	textPtr = info.clientData;
-    }
-    len = strlen(argv[2]);
-    if (strncmp(argv[2], "byteindex", len) == 0) {
-	if (argc != 5) {
+    textPtr = info.objClientData;
+    len = strlen(Tcl_GetString(objv[2]));
+    if (strncmp(Tcl_GetString(objv[2]), "byteindex", len) == 0) {
+	if (objc != 5) {
 	    return TCL_ERROR;
 	}
-	lineIndex = atoi(argv[3]) - 1;
-	byteIndex = atoi(argv[4]);
+	lineIndex = atoi(Tcl_GetString(objv[3])) - 1;
+	byteIndex = atoi(Tcl_GetString(objv[4]));
 
 	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineIndex,
 		byteIndex, &index);
-    } else if (strncmp(argv[2], "forwbytes", len) == 0) {
-	if (argc != 5) {
+    } else if (strncmp(Tcl_GetString(objv[2]), "forwbytes", len) == 0) {
+	if (objc != 5) {
 	    return TCL_ERROR;
 	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
+	if (TkTextGetIndex(interp, textPtr, Tcl_GetString(objv[3]), &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	byteOffset = atoi(argv[4]);
+	byteOffset = atoi(Tcl_GetString(objv[4]));
 	TkTextIndexForwBytes(textPtr, &index, byteOffset, &index);
-    } else if (strncmp(argv[2], "backbytes", len) == 0) {
-	if (argc != 5) {
+    } else if (strncmp(Tcl_GetString(objv[2]), "backbytes", len) == 0) {
+	if (objc != 5) {
 	    return TCL_ERROR;
 	}
-	if (TkTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
+	if (TkTextGetIndex(interp, textPtr, Tcl_GetString(objv[3]), &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	byteOffset = atoi(argv[4]);
+	byteOffset = atoi(Tcl_GetString(objv[4]));
 	TkTextIndexBackBytes(textPtr, &index, byteOffset, &index);
     } else {
 	return TCL_ERROR;

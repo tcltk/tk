@@ -25,7 +25,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".1"
+TK_PATCH_LEVEL=".4"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -80,12 +80,6 @@ fi
 
 AC_PROG_CC
 AC_C_INLINE
-
-# limits header checks must come early to prevent
-# an autoconf bug that throws errors on configure
-AC_CHECK_HEADER(limits.h,
-    [AC_DEFINE(HAVE_LIMITS_H, 1, [Do we have <limits.h>?])],
-    [AC_DEFINE(NO_LIMITS_H, 1, [Do we have <limits.h>?])])
 
 #--------------------------------------------------------------------
 # Supply a substitute for stdlib.h if it doesn't define strtol,
@@ -369,7 +363,7 @@ fi
 if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit"
-    EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c -fobjc-gc'
+    EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
         AC_DEFINE(TK_MAC_DEBUG, 1, [Are TkAqua debug messages enabled?])

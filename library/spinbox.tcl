@@ -52,7 +52,6 @@ bind Spinbox <<Copy>> {
     }
 }
 bind Spinbox <<Paste>> {
-    global tcl_platform
     catch {
 	if {[tk windowingsystem] ne "x11"} {
 	    catch {
@@ -74,8 +73,8 @@ bind Spinbox <<PasteSelection>> {
 }
 
 bind Spinbox <<TraverseIn>> {
-    %W selection range 0 end 
-    %W icursor end 
+    %W selection range 0 end
+    %W icursor end
 }
 
 # Standard Motif bindings:

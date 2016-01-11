@@ -506,12 +506,12 @@ declare 154 {
 
 # entries needed only by tktest:
 declare 156 {
-    int TkpTestembedCmd(ClientData clientData, Tcl_Interp *interp, int argc,
-	    const char **argv)
+    int TkpTestembedCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+	    Tcl_Obj *const objv[])
 }
 declare 157 {
-    int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int argc,
-	    const char **argv)
+    int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int objc,
+	    Tcl_Obj *const objv[])
 }
 declare 158 {
     int TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
@@ -684,8 +684,8 @@ declare 12 x11 {
 }
 # only needed by tktest:
 declare 13 x11 {
-    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int argc,
-	    const char **argv)
+    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+	    Tcl_Obj *const objv[])
 }
 
 ################################
@@ -841,8 +841,8 @@ declare 44 win {
 }
 # only needed by tktest:
 declare 45 win {
-    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int argc,
-	    const char **argv)
+    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+	    Tcl_Obj *const objv[])
 }
 
 ################################
@@ -1017,6 +1017,9 @@ declare 50 aqua {
 declare 51 aqua {
     void TkGenWMDestroyEvent(Tk_Window tkwin)
 }
+declare 52 aqua {
+    void TkMacOSXSetDrawingEnabled(TkWindow *winPtr, int flag)
+}
 
 # removed duplicate from tkPlat table (tk.decls)
 #declare 52 aqua {
@@ -1031,6 +1034,9 @@ declare 53 aqua {
 # For Canvas3d, requested by Sean Woods
 declare 54 aqua {
     void *TkMacOSXDrawable(Drawable drawable)
+}
+declare 55 aqua {
+    int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
 
 ##############################################################################

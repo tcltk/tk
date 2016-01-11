@@ -412,6 +412,7 @@ static void		ListboxEventProc(ClientData clientData,
 static int		ListboxFetchSelection(ClientData clientData,
 			    int offset, char *buffer, int maxBytes);
 static void		ListboxLostSelection(ClientData clientData);
+static void		GenerateListboxSelectEvent(Listbox *listPtr);
 static void		EventuallyRedrawRange(Listbox *listPtr,
 			    int first, int last);
 static void		ListboxScanTo(Listbox *listPtr, int x, int y);
@@ -3243,7 +3244,41 @@ ListboxLostSelection(
 
     if ((listPtr->exportSelection) && (listPtr->nElements > 0)) {
 	ListboxSelect(listPtr, 0, listPtr->nElements-1, 0);
+        GenerateListboxSelectEvent(listPtr);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateListboxSelectEvent --
+ *
+ *	Send an event that the listbox selection was updated. This is
+ *	equivalent to event generate $listboxWidget <<ListboxSelect>>
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Any side effect possible, depending on bindings to this event.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GenerateListboxSelectEvent(
+    Listbox *listPtr)		/* Information about widget. */
+{
+    union {XEvent general; XVirtualEvent virtual;} event;
+
+    memset(&event, 0, sizeof(event));
+    event.general.xany.type = VirtualEvent;
+    event.general.xany.serial = NextRequest(Tk_Display(listPtr->tkwin));
+    event.general.xany.send_event = False;
+    event.general.xany.window = Tk_WindowId(listPtr->tkwin);
+    event.general.xany.display = Tk_Display(listPtr->tkwin);
+    event.virtual.name = Tk_GetUid("ListboxSelect");
+    Tk_HandleEvent(&event.general);
 }
 
 /*

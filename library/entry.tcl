@@ -46,7 +46,6 @@ bind Entry <<Copy>> {
     }
 }
 bind Entry <<Paste>> {
-    global tcl_platform
     catch {
 	if {[tk windowingsystem] ne "x11"} {
 	    catch {
@@ -69,8 +68,8 @@ bind Entry <<PasteSelection>> {
 }
 
 bind Entry <<TraverseIn>> {
-    %W selection range 0 end 
-    %W icursor end 
+    %W selection range 0 end
+    %W icursor end
 }
 
 # Standard Motif bindings:
@@ -358,12 +357,18 @@ proc ::tk::EntryMouseSelect {w x} {
 	    }
 	}
 	word {
-	    if {$cur < [$w index anchor]} {
+	    if {$cur < $anchor} {
 		set before [tcl_wordBreakBefore [$w get] $cur]
 		set after [tcl_wordBreakAfter [$w get] [expr {$anchor-1}]]
-	    } else {
+	    } elseif {$cur > $anchor} {
 		set before [tcl_wordBreakBefore [$w get] $anchor]
 		set after [tcl_wordBreakAfter [$w get] [expr {$cur - 1}]]
+	    } else {
+		if {[$w index @$Priv(pressX)] < $anchor} {
+		      incr anchor -1
+		}
+		set before [tcl_wordBreakBefore [$w get] $anchor]
+		set after [tcl_wordBreakAfter [$w get] $anchor]
 	    }
 	    if {$before < 0} {
 		set before 0
