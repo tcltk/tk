@@ -203,6 +203,21 @@ test listbox-1.31 {configuration options} -body {
 } -cleanup {
     .l configure -highlightthickness [lindex [.l configure -highlightthickness] 3]
 } -result {0 0}
+test listbox-1.32.1 {configuration options} -setup {
+    set res {}
+} -body {
+    .l configure -justify left
+    set res [list [lindex [.l configure -justify] 4] [.l cget -justify]]
+    .l configure -justify center
+    lappend res [lindex [.l configure -justify] 4] [.l cget -justify]
+    .l configure -justify right
+    lappend res [lindex [.l configure -justify] 4] [.l cget -justify]
+} -cleanup {
+    .l configure -justify [lindex [.l configure -justify] 3]
+} -result {left left center center right right}
+test listbox-1.32.2 {configuration options} -body {
+    .l configure -justify bogus
+} -returnCodes error -result {bad justification "bogus": must be left, right, or center}
 test listbox-1.33 {configuration options} -body {
     .l configure -relief groove
     list [lindex [.l configure -relief] 4] [.l cget -relief]
