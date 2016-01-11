@@ -398,6 +398,7 @@ Tk_GetOpenFileObjCmd(
     NSMutableArray *fileTypes = nil;
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
+    BOOL parentIsKey = NO;
 
     TkInitFileFilters(&fl);
     for (i = 1; i < objc; i += 2) {
@@ -513,6 +514,7 @@ Tk_GetOpenFileObjCmd(
     callbackInfo->multiple = multiple;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
+	    parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 	[panel beginSheetForDirectory:directory
 	       file:filename
@@ -544,6 +546,9 @@ Tk_GetOpenFileObjCmd(
 		contextInfo:callbackInfo];
     }
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
+    if (parentIsKey) {
+	[parent makeKeyWindow];
+    }
     if (typeVariablePtr && result == TCL_OK) {
 	/*
 	 * The -typevariable option is not really supported.
@@ -596,6 +601,7 @@ Tk_GetSaveFileObjCmd(
     NSMutableArray *fileTypes = nil;
     NSSavePanel *panel = [NSSavePanel savePanel];
     NSInteger modalReturnCode = modalError;
+    BOOL parentIsKey = NO;
 
     TkInitFileFilters(&fl);
     for (i = 1; i < objc; i += 2) {
@@ -712,6 +718,7 @@ Tk_GetSaveFileObjCmd(
     callbackInfo->multiple = 0;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
+       parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 	[panel beginSheetForDirectory:directory
 	       file:filename
@@ -740,7 +747,9 @@ Tk_GetSaveFileObjCmd(
 		contextInfo:callbackInfo];
     }
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
-
+    if (parentIsKey) {
+	[parent makeKeyWindow];
+    }
   end:
     TkFreeFileFilters(&fl);
     return result;
@@ -783,6 +792,7 @@ Tk_ChooseDirectoryObjCmd(
     NSWindow *parent;
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
+    BOOL parentIsKey = NO;
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], chooseOptionStrings,
@@ -850,6 +860,7 @@ Tk_ChooseDirectoryObjCmd(
     callbackInfo->multiple = 0;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
+      parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 	[panel beginSheetForDirectory:directory
 		file:filename
@@ -877,7 +888,9 @@ Tk_ChooseDirectoryObjCmd(
 		contextInfo:callbackInfo];
     }
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
-
+    if (parentIsKey) {
+	[parent makeKeyWindow];
+    }
   end:
     return result;
 }
