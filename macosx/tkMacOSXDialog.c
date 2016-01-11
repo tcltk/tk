@@ -1016,7 +1016,8 @@ Tk_MessageBoxObjCmd(
     NSArray *buttons;
     NSAlert *alert = [NSAlert new];
     NSInteger modalReturnCode = 1;
-
+    BOOL parentIsKey = NO;
+    
     iconIndex = ICON_INFO;
     typeIndex = TYPE_OK;
     for (i = 1; i < objc; i += 2) {
@@ -1142,6 +1143,7 @@ Tk_MessageBoxObjCmd(
     callbackInfo->typeIndex = typeIndex;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
+	parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1090
  	[alert beginSheetModalForWindow:parent
 	       completionHandler:^(NSModalResponse returnCode)
@@ -1164,6 +1166,9 @@ Tk_MessageBoxObjCmd(
     result = (modalReturnCode >= NSAlertFirstButtonReturn) ? TCL_OK : TCL_ERROR;
   end:
     [alert release];
+    if (parentIsKey) {
+	[parent makeKeyWindow];
+    }
     return result;
 }
 
