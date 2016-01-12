@@ -1030,7 +1030,7 @@ Tk_MessageBoxObjCmd(
     NSAlert *alert = [NSAlert new];
     NSInteger modalReturnCode = 1;
     BOOL parentIsKey = NO;
-    
+
     iconIndex = ICON_INFO;
     typeIndex = TYPE_OK;
     for (i = 1; i < objc; i += 2) {
