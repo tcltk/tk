@@ -456,6 +456,80 @@ test listbox-3.18 {ListboxWidgetCmd procedure, "bbox" option, partial last line}
     mkPartial
     list [.partial.l bbox 3] [.partial.l bbox 4]
 } -result {{5 56 24 14} {5 73 23 14}}
+test listbox-3.18a {ListboxWidgetCmd procedure, "bbox" option, justified} -constraints {
+	fonts
+} -setup {
+    destroy .top.l .top
+    unset -nocomplain res
+} -body {
+    toplevel .top
+    listbox .top.l -justify left
+    .top.l insert end Item1 LongerItem2 MuchLongerItem3
+    pack .top.l
+    update
+    lappend res [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+    .top.l configure -justify center
+    lappend res [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+    .top.l configure -justify right
+    lappend res [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+} -cleanup {
+    destroy .top.l .top
+    unset -nocomplain res
+} -result {
+    # <TODO>
+    # Results to be defined when I get my hands on a platform featuring  tcltest::testConstraints fonts == 1
+    {TBD} {TBD} {TBD} {TBD} {TBD} {TBD}
+}
+test listbox-3.18b {ListboxWidgetCmd procedure, "bbox" option, justified, non-default borderwidth} -setup {
+    destroy .top.l .top
+    unset -nocomplain lres res
+} -body {
+    toplevel .top
+    listbox .top.l -justify left -borderwidth 17 -highlightthickness 19 -selectborderwidth 22
+    .top.l insert end Item1 LongerItem2 MuchLongerItem3
+    .top.l selection set 1
+    pack .top.l
+    update
+    lappend lres [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+    .top.l configure -justify center
+    lappend lres [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+    .top.l configure -justify right
+    lappend lres [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+    set res 1
+    for {set i 0} {$i < [llength $lres]} {incr i 4} {
+        set res [expr {$res * [expr {[lindex $lres $i] >= 0}] }]
+    }
+    set res
+} -cleanup {
+    destroy .top.l .top
+    unset -nocomplain lres res
+} -result {1}
+test listbox-3.18c {ListboxWidgetCmd procedure, "bbox" option, justified, selecting does not change offset} -setup {
+    destroy .top.l .top
+    unset -nocomplain bb1 bb2
+} -body {
+    toplevel .top
+    listbox .top.l -justify center
+    .top.l insert end Item1 Item2 Item3
+    pack .top.l
+    update
+    set bb1 [.top.l bbox 1]
+    .top.l selection set 1
+    update
+    set bb2 [.top.l bbox 1]
+    expr {
+            [lindex $bb1 0] == [lindex $bb2 0] &&
+            [lindex $bb1 1] == [lindex $bb2 1] &&
+            [lindex $bb1 2] == [lindex $bb2 2] &&
+            [lindex $bb1 3] == [lindex $bb2 3]
+         }
+    # Note: the result of this test is relevant only if test listbox-3.18a
+    #       succeeds first, otherwise the fact the present test listbox-3.18c
+    #       passes does not mean it is OK
+} -cleanup {
+    destroy .top.l .top
+    unset -nocomplain bb1 bb2
+} -result {1}
 test listbox-3.19 {ListboxWidgetCmd procedure, "cget" option} -body {
     .l cget
 } -returnCodes error -result {wrong # args: should be ".l cget option"}
