@@ -514,7 +514,7 @@ Tk_GetOpenFileObjCmd(
     callbackInfo->multiple = multiple;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
-	parentIsKey = [parent isKeyWindow];
+	    parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 	[panel beginSheetForDirectory:directory
 	       file:filename
@@ -860,7 +860,7 @@ Tk_ChooseDirectoryObjCmd(
     callbackInfo->multiple = 0;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
-	parentIsKey = [parent isKeyWindow];
+      parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 	[panel beginSheetForDirectory:directory
 		file:filename
