@@ -278,7 +278,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 Tk_Offset(Listbox, selBorderWidth), 0, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	 DEF_LISTBOX_SELECT_FG_COLOR, -1, Tk_Offset(Listbox, selFgColorPtr),
-	 TK_CONFIG_NULL_OK, (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
+	 TK_OPTION_NULL_OK, (ClientData) DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_STRING, "-selectmode", "selectMode", "SelectMode",
 	 DEF_LISTBOX_SELECT_MODE, -1, Tk_Offset(Listbox, selectMode),
 	 TK_OPTION_NULL_OK, 0, 0},
@@ -379,7 +379,7 @@ enum indices {
 static void		ChangeListboxOffset(Listbox *listPtr, int offset);
 static void		ChangeListboxView(Listbox *listPtr, int index);
 static int		ConfigureListbox(Tcl_Interp *interp, Listbox *listPtr,
-			    int objc, Tcl_Obj *const objv[], int flags);
+			    int objc, Tcl_Obj *const objv[]);
 static int		ConfigureListboxItem(Tcl_Interp *interp,
 			    Listbox *listPtr, ItemAttr *attrs, int objc,
 			    Tcl_Obj *const objv[], int index);
@@ -564,7 +564,7 @@ Tk_ListboxObjCmd(
 	return TCL_ERROR;
     }
 
-    if (ConfigureListbox(interp, listPtr, objc-2, objv+2, 0) != TCL_OK) {
+    if (ConfigureListbox(interp, listPtr, objc-2, objv+2) != TCL_OK) {
 	Tk_DestroyWindow(listPtr->tkwin);
 	return TCL_ERROR;
     }
@@ -700,7 +700,7 @@ ListboxWidgetObjCmd(
 		result = TCL_OK;
 	    }
 	} else {
-	    result = ConfigureListbox(interp, listPtr, objc-2, objv+2, 0);
+	    result = ConfigureListbox(interp, listPtr, objc-2, objv+2);
 	}
 	break;
     }
@@ -1544,8 +1544,7 @@ ConfigureListbox(
     register Listbox *listPtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in argv. */
-    Tcl_Obj *const objv[],	/* Arguments. */
-    int flags)			/* Flags to pass to Tk_ConfigureWidget. */
+    Tcl_Obj *const objv[])	/* Arguments. */
 {
     Tk_SavedOptions savedOptions;
     Tcl_Obj *oldListObj = NULL;
