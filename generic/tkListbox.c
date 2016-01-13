@@ -97,7 +97,7 @@ typedef struct {
     int partialLine;		/* 0 means that the window holds exactly
 				 * fullLines lines. 1 means that there is one
 				 * additional line that is partially
-				 * visble. */
+				 * visible. */
     int setGrid;		/* Non-zero means pass gridding information to
 				 * window manager. */
 
@@ -131,7 +131,7 @@ typedef struct {
     int active;			/* Index of "active" element (the one that has
 				 * been selected by keyboard traversal). -1
 				 * means none. */
-    int activeStyle;		/* style in which to draw the active element.
+    int activeStyle;		/* Style in which to draw the active element.
 				 * One of: underline, none, dotbox */
 
     /*
@@ -200,7 +200,7 @@ typedef struct {
  *				be updated.
  * GOT_FOCUS:			Non-zero means this widget currently has the
  *				input focus.
- * MAXWIDTH_IS_STALE:		Stored maxWidth may be out-of-date
+ * MAXWIDTH_IS_STALE:		Stored maxWidth may be out-of-date.
  * LISTBOX_DELETED:		This listbox has been effectively destroyed.
  */
 
@@ -318,7 +318,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 
 /*
  * The itemAttrOptionSpecs table defines the valid configuration options for
- * listbox items
+ * listbox items.
  */
 
 static const Tk_OptionSpec itemAttrOptionSpecs[] = {
@@ -345,7 +345,7 @@ static const Tk_OptionSpec itemAttrOptionSpecs[] = {
 };
 
 /*
- * The following tables define the listbox widget commands (and sub- commands)
+ * The following tables define the listbox widget commands (and sub-commands)
  * and map the indexes into the string tables into enumerated types used to
  * dispatch the listbox widget command.
  */
@@ -628,7 +628,7 @@ ListboxWidgetObjCmd(
 
     /*
      * Parse the command by looking up the second argument in the list of
-     * valid subcommand names
+     * valid subcommand names.
      */
 
     result = Tcl_GetIndexFromObj(interp, objv[1], commandNames,
@@ -2033,7 +2033,7 @@ DisplayListbox(
 	    } else {
 		/*
 		 * If there is an item attributes record for this item, draw
-		 * the background box and set the foreground color accordingly
+		 * the background box and set the foreground color accordingly.
 		 */
 
 		if (entry != NULL) {
@@ -2489,7 +2489,7 @@ ListboxDeleteSubCmd(
 	/*
 	 * Check width of the element. We only have to check if widthChanged
 	 * has not already been set to 1, because we only need one maxWidth
-	 * element to disappear for us to have to recompute the width
+	 * element to disappear for us to have to recompute the width.
 	 */
 
 	if (widthChanged == 0) {
@@ -2824,7 +2824,11 @@ GetListboxIndex(
 
     stringRep = Tcl_GetString(indexObj);
     if (stringRep[0] == '@') {
-	/* @x,y index */
+
+        /*
+         * @x,y index
+         */
+
 	int y;
 	const char *start;
 	char *end;
@@ -3554,7 +3558,7 @@ ListboxListVarProc(
 
     /*
      * If the list length has decreased, then we should clean up selection and
-     * attributes information for elements past the end of the new list
+     * attributes information for elements past the end of the new list.
      */
 
     oldLength = listPtr->nElements;
