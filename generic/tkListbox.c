@@ -90,7 +90,7 @@ typedef struct {
 				 * display. */
     int topIndex;		/* Index of top-most element visible in
 				 * window. */
-    int fullLines;		/* Number of lines that fit are completely
+    int fullLines;		/* Number of lines that are completely
 				 * visible in window. There may be one
 				 * additional line at the bottom that is
 				 * partially visible. */
