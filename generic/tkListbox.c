@@ -1857,7 +1857,7 @@ DisplayListbox(
 				 * or right edge of the listbox is
 				 * off-screen. */
     Pixmap pixmap;
-    int totalLength, height;
+    int textWidth;
 
     listPtr->flags &= ~REDRAW_PENDING;
     if (listPtr->flags & LISTBOX_DELETED) {
@@ -2079,21 +2079,19 @@ DisplayListbox(
 
         Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
         stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
-        Tk_ComputeTextLayout(listPtr->tkfont, stringRep, stringLen, 0,
-                listPtr->justify, TK_IGNORE_NEWLINES, &totalLength, &height);
+        textWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	y += fm.ascent + listPtr->selBorderWidth;
 
         if (listPtr->justify == TK_JUSTIFY_LEFT) {
-            x = listPtr->inset + listPtr->selBorderWidth - listPtr->xOffset;
+            x = (listPtr->inset + listPtr->selBorderWidth) - listPtr->xOffset;
         } else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
-            x = width - totalLength - listPtr->inset -
-                    listPtr->selBorderWidth - listPtr->xOffset +
-                    GetMaxOffset(listPtr) - 1;
+            x = Tk_Width(tkwin) - (listPtr->inset + listPtr->selBorderWidth)
+                    - textWidth - listPtr->xOffset + GetMaxOffset(listPtr);
         } else {
-            x = (width + GetMaxOffset(listPtr))/2 - totalLength/2 -
-                    listPtr->xOffset;
+            x = (Tk_Width(tkwin) - textWidth)/2
+                    - listPtr->xOffset + GetMaxOffset(listPtr)/2;
         }
 
         Tk_DrawChars(listPtr->display, pixmap, gc, listPtr->tkfont,
