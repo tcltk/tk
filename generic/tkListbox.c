@@ -581,6 +581,10 @@ Tk_ListboxObjCmd(
 	return TCL_ERROR;
     }
 
+    /*
+     * Adjust startup x view according to the justify option.
+     */
+
     if (listPtr->justify == TK_JUSTIFY_RIGHT) {
         listPtr->xOffset = GetMaxOffset(listPtr);
     } else if (listPtr->justify == TK_JUSTIFY_CENTER) {
