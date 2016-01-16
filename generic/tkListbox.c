@@ -114,7 +114,8 @@ typedef struct {
     int xOffset;		/* The left edge of each string in the listbox
 				 * is offset to the left by this many pixels
 				 * (0 means no offset, positive means there is
-				 * an offset). */
+				 * an offset). This is x scrolling information
+                                 * is not linked to justification. */
 
     /*
      * Information about what's selected or active, if any.
