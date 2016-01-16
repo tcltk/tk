@@ -476,11 +476,11 @@ test listbox-3.18a {ListboxWidgetCmd procedure, "bbox" option, justified} -const
 } -cleanup {
     destroy .top.l .top
     unset -nocomplain res
-} -result {
-    # <TODO>
-    # Results to be defined when I get my hands on a platform featuring  tcltest::testConstraints fonts == 1
-    {TBD} {TBD} {TBD} {TBD} {TBD} {TBD}
-}
+} -result [list \
+    {5 5 34 14} {5 22 74 14} {5 39 106 14}     \
+    {58 5 34 14} {38 22 74 14} {22 39 106 14}  \
+    {111 5 34 14} {71 22 74 14} {39 39 106 14} \
+]
 test listbox-3.18b {ListboxWidgetCmd procedure, "bbox" option, justified, non-default borderwidth} -setup {
     destroy .top.l .top
     unset -nocomplain lres res
