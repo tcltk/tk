@@ -1096,6 +1096,7 @@ ListboxBboxSubCmd(
     Listbox *listPtr,		/* Information about the listbox */
     int index)			/* Index of the element to get bbox info on */
 {
+    register Tk_Window tkwin = listPtr->tkwin;
     int lastVisibleIndex;
 
     /*
@@ -1131,7 +1132,15 @@ ListboxBboxSubCmd(
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
-	x = listPtr->inset + listPtr->selBorderWidth - listPtr->xOffset;
+        if (listPtr->justify == TK_JUSTIFY_LEFT) {
+            x = (listPtr->inset + listPtr->selBorderWidth) - listPtr->xOffset;
+        } else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
+            x = Tk_Width(tkwin) - (listPtr->inset + listPtr->selBorderWidth)
+                    - pixelWidth - listPtr->xOffset + GetMaxOffset(listPtr);
+        } else {
+            x = (Tk_Width(tkwin) - pixelWidth)/2
+                    - listPtr->xOffset + GetMaxOffset(listPtr)/2;
+        }
 	y = ((index - listPtr->topIndex)*listPtr->lineHeight)
 		+ listPtr->inset + listPtr->selBorderWidth;
 	results[0] = Tcl_NewIntObj(x);
