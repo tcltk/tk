@@ -57,6 +57,7 @@ proc mkPartial {{w .partial}} {
 # like border width have predictable values.
 
 option add *Listbox.borderWidth 2
+option add *Listbox.selectBorderWidth 1
 option add *Listbox.highlightThickness 2
 option add *Listbox.font {Helvetica -12 bold}
 
