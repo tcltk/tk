@@ -505,32 +505,6 @@ test listbox-3.18b {ListboxWidgetCmd procedure, "bbox" option, justified, non-de
     destroy .top.l .top
     unset -nocomplain lres res
 } -result {1}
-test listbox-3.18c {ListboxWidgetCmd procedure, "bbox" option, justified, selecting does not change offset} -setup {
-    destroy .top.l .top
-    unset -nocomplain bb1 bb2
-} -body {
-    toplevel .top
-    listbox .top.l -justify center
-    .top.l insert end Item1 Item2 Item3
-    pack .top.l
-    update
-    set bb1 [.top.l bbox 1]
-    .top.l selection set 1
-    update
-    set bb2 [.top.l bbox 1]
-    expr {
-            [lindex $bb1 0] == [lindex $bb2 0] &&
-            [lindex $bb1 1] == [lindex $bb2 1] &&
-            [lindex $bb1 2] == [lindex $bb2 2] &&
-            [lindex $bb1 3] == [lindex $bb2 3]
-         }
-    # Note: the result of this test is relevant only if test listbox-3.18a
-    #       succeeds first, otherwise the fact the present test listbox-3.18c
-    #       passes does not mean it is OK
-} -cleanup {
-    destroy .top.l .top
-    unset -nocomplain bb1 bb2
-} -result {1}
 test listbox-3.19 {ListboxWidgetCmd procedure, "cget" option} -body {
     .l cget
 } -returnCodes error -result {wrong # args: should be ".l cget option"}
