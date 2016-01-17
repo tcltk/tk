@@ -167,8 +167,6 @@ typedef struct {
     int flags;			/* Various flag bits: see below for
 				 * definitions. */
     Tk_Justify justify;         /* Justification. */
-    int oldMaxOffset;           /* Used in scrolling for right/center
-                                 * justification. */
 } Listbox;
 
 /*
@@ -554,7 +552,6 @@ Tk_ListboxObjCmd(
     listPtr->state		 = STATE_NORMAL;
     listPtr->gray		 = None;
     listPtr->justify             = TK_JUSTIFY_LEFT;
-    listPtr->oldMaxOffset        = 0;
 
     /*
      * Keep a hold of the associated tkwin until we destroy the listbox,
@@ -2623,7 +2620,6 @@ ListboxEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    int tmpOffset, tmpOffset2, maxOffset;
     Listbox *listPtr = clientData;
 
     if (eventPtr->type == Expose) {
@@ -2655,63 +2651,6 @@ ListboxEventProc(
 	}
 	listPtr->flags |= UPDATE_V_SCROLLBAR|UPDATE_H_SCROLLBAR;
 	ChangeListboxView(listPtr, listPtr->topIndex);
-        if (listPtr->justify == TK_JUSTIFY_RIGHT) {
-            maxOffset = GetMaxOffset(listPtr);
-            if (maxOffset != listPtr->oldMaxOffset && listPtr->oldMaxOffset > 0) {
-
-                /*
-                 * Window has shrunk.
-                 */
-
-                if (maxOffset > listPtr->oldMaxOffset) {
-                    tmpOffset = maxOffset - listPtr->oldMaxOffset;
-                } else {
-                    tmpOffset = listPtr->oldMaxOffset - maxOffset;
-                }
-                tmpOffset -= tmpOffset % listPtr->xScrollUnit;
-                if ((tmpOffset + listPtr->xOffset) > maxOffset) {
-                    tmpOffset = maxOffset - listPtr->xOffset;
-                }
-                if (tmpOffset < 0) {
-                    tmpOffset = 0;
-                }
-                listPtr->xOffset += tmpOffset;
-            } else {
-                listPtr->xOffset = maxOffset;
-            }
-            listPtr->oldMaxOffset = maxOffset;
-        } else if (listPtr->justify == TK_JUSTIFY_CENTER) {
-            maxOffset = GetMaxOffset(listPtr);
-            if (maxOffset != listPtr->oldMaxOffset && listPtr->oldMaxOffset > 0) {
-
-                /*
-                 * Window has shrunk.
-                 */
-
-                tmpOffset2 = maxOffset / 2;
-                if (maxOffset > listPtr->oldMaxOffset) {
-                    tmpOffset = maxOffset/2 - listPtr->oldMaxOffset/2;
-                } else {
-                    tmpOffset = listPtr->oldMaxOffset/2 - maxOffset/2;
-                }
-                tmpOffset -= tmpOffset % listPtr->xScrollUnit;
-                if ((tmpOffset + listPtr->xOffset) > maxOffset) {
-                    tmpOffset = maxOffset - listPtr->xOffset;
-                }
-                if (tmpOffset < 0) {
-                    tmpOffset = 0;
-                }
-                if (listPtr->xOffset < tmpOffset2) {
-                    listPtr->xOffset += tmpOffset;
-                } else {
-                    listPtr->xOffset -= tmpOffset;
-                }
-            } else {
-                listPtr->xOffset = maxOffset/2;
-                listPtr->xOffset -= listPtr->xOffset % listPtr->xScrollUnit;
-            }
-            listPtr->oldMaxOffset = maxOffset;
-        }
 	ChangeListboxOffset(listPtr, listPtr->xOffset);
 
 	/*
