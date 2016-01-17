@@ -3630,7 +3630,8 @@ MigrateHashEntries(
  *
  * GetMaxOffset --
  *
- *	Passing in a listbox pointer, returns the maximum offset for the box.
+ *	Passing in a listbox pointer, returns the maximum offset for the box,
+ *	i.e. the maximum possible horizontal scrolling value (in pixels).
  *
  * Results:
  *	Listbox's maxOffset.
@@ -3649,6 +3650,11 @@ static int GetMaxOffset(
             (Tk_Width(listPtr->tkwin) - 2*listPtr->inset -
             2*listPtr->selBorderWidth) + listPtr->xScrollUnit - 1;
     if (maxOffset < 0) {
+
+        /*
+         * Listbox is larger in width than its largest width item.
+         */
+
         maxOffset = 0;
     }
     maxOffset -= maxOffset % listPtr->xScrollUnit;
