@@ -485,6 +485,10 @@ test listbox-3.18b {ListboxWidgetCmd procedure, "bbox" option, justified, non-de
     destroy .top.l .top
     unset -nocomplain lres res
 } -body {
+    # This test checks whether all "x" values from bbox for different size
+    # items with different justification settings are all positive or zero
+    # This checks a bit the calculation of this x value with non-default
+    # borders widths of the listbox
     toplevel .top
     listbox .top.l -justify left -borderwidth 17 -highlightthickness 19 -selectborderwidth 22
     .top.l insert end Item1 LongerItem2 MuchLongerItem3
