@@ -3657,7 +3657,6 @@ static int GetMaxOffset(
 
         maxOffset = 0;
     }
-    maxOffset -= maxOffset % listPtr->xScrollUnit;
 
     return maxOffset;
 }
