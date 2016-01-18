@@ -509,6 +509,28 @@ test listbox-3.18b {ListboxWidgetCmd procedure, "bbox" option, justified, non-de
     destroy .top.l .top
     unset -nocomplain lres res
 } -result {1}
+test listbox-3.18c {ListboxWidgetCmd procedure, "bbox" option, justified, with x scrolling} -setup {
+     destroy .top.l .top.hs .top
+
+} -body {
+package req Tk
+destroy .top.l .top.hs .top
+     toplevel .top
+     listbox .top.l -justify right -borderwidth 7 -highlightthickness 10 -selectborderwidth 20
+     scrollbar .top.hs -command ".top.l xview" -orient horizontal
+     .top.l configure -xscrollcommand ".top.hs set"
+     set huge [concat "START -" [string repeat "Huge Item... " 20] "- END"]
+     .top.l insert end VeryVeryLongItem1 AnEvenMuchVeryVeryLongerItem2 $huge ShortItem3
+     pack .top.l -expand 1 -fill both
+     pack .top.hs -expand 1 -fill x
+     update
+
+<TODO> finish write this test case
+
+} -cleanup {
+     destroy .top.l .top.hs .top
+
+} -result {}
 test listbox-3.19 {ListboxWidgetCmd procedure, "cget" option} -body {
     .l cget
 } -returnCodes error -result {wrong # args: should be ".l cget option"}
