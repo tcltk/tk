@@ -2887,9 +2887,7 @@ ChangeListboxOffset(
      */
 
     offset += listPtr->xScrollUnit / 2;
-    maxOffset = listPtr->maxWidth - (Tk_Width(listPtr->tkwin) -
-	    2*listPtr->inset - 2*listPtr->selBorderWidth)
-	    + listPtr->xScrollUnit - 1;
+    maxOffset = GetMaxOffset(listPtr);
     if (offset > maxOffset) {
 	offset = maxOffset;
     }
@@ -2930,9 +2928,7 @@ ListboxScanTo(
     int newTopIndex, newOffset, maxIndex, maxOffset;
 
     maxIndex = listPtr->nElements - listPtr->fullLines;
-    maxOffset = listPtr->maxWidth + (listPtr->xScrollUnit - 1)
-	    - (Tk_Width(listPtr->tkwin) - 2*listPtr->inset
-	    - 2*listPtr->selBorderWidth - listPtr->xScrollUnit);
+    maxOffset = GetMaxOffset(listPtr);
 
     /*
      * Compute new top line for screen by amplifying the difference between
