@@ -243,18 +243,25 @@ if {"x11" eq [tk windowingsystem]} {
 
 proc ::tk::ListboxBeginSelect {w el {focus 1}} {
     variable ::tk::Priv
-    if {[$w cget -selectmode] eq "multiple"} {
+    if {[string equal [$w cget -selectmode] "multiple"]} {
 	if {[$w selection includes $el]} {
 	    $w selection clear $el
 	} else {
 	    $w selection set $el
 	}
     } else {
-	$w selection clear 0 end
-	$w selection set $el
-	$w selection anchor $el
-	set Priv(listboxSelection) {}
-	set Priv(listboxPrev) $el
+        $w selection anchor $el
+        set Priv(listboxPrev) $el
+        if {[$w selection includes $el]} {
+            # Deselect two separate ranges adjacent to $el,
+            # in order to prevent display flicker of $el.
+            $w selection clear 0 [incr el -1]
+            $w selection clear [incr el 2] end
+        } else {
+            $w selection clear 0 end
+            $w selection set $el
+        }
+        set Priv(listboxSelection) {}
     }
     tk::FireListboxSelectEvent $w
     # check existence as ListboxSelect may destroy us
@@ -287,34 +294,121 @@ proc ::tk::ListboxMotion {w el} {
 	    tk::FireListboxSelectEvent $w
 	}
 	extended {
-	    set i $Priv(listboxPrev)
-	    if {$i eq ""} {
-		set i $el
-		$w selection set $el
-	    }
-	    if {[$w selection includes anchor]} {
-		$w selection clear $i $el
-		$w selection set anchor $el
-	    } else {
-		$w selection clear $i $el
-		$w selection clear anchor $el
-	    }
-	    if {![info exists Priv(listboxSelection)]} {
-		set Priv(listboxSelection) [$w curselection]
-	    }
-	    while {($i < $el) && ($i < $anchor)} {
-		if {[lsearch $Priv(listboxSelection) $i] >= 0} {
-		    $w selection set $i
-		}
-		incr i
-	    }
-	    while {($i > $el) && ($i > $anchor)} {
-		if {[lsearch $Priv(listboxSelection) $i] >= 0} {
-		    $w selection set $i
-		}
-		incr i -1
-	    }
-	    set Priv(listboxPrev) $el
+            set p $Priv(listboxPrev)
+            if {[string equal {} $p]} {
+                # There is no previous element.
+                # Set it to the current element.
+                $w selection set anchor $el
+                if {![info exists Priv(listboxSelection)]} {
+                    set Priv(listboxSelection) [$w curselection]
+                }
+                set Priv(listboxPrev) $el
+                tk::FireListboxSelectEvent $w
+                return
+            }
+            
+            # Determine the index ranges to select and deselect
+            set Priv(listboxPrev) $el
+            set a [$w index anchor]
+            if {$el > $a} {
+                if {$p <= $el} {
+                    if {$p < $a} {
+                        # p<a<el
+                        set deselectRange(0) [list $p [incr a -1]]
+                        set selectRange [list [incr a 2] $el]
+                    } else {
+                        # a<p<el
+                        set selectRange [list [incr p] $el]
+                    }
+                } else {
+                    # a<el<p
+                    set deselectRange(0) [list [incr el] $p]
+                }
+            } elseif {$el < $a} {
+                if {$p >= $el} {
+                    if {$p > $a} {
+                        # el<a<p
+                        set deselectRange(0) [list [incr a] $p]
+                        set selectRange [list $el [incr a -2]]
+                    } else {
+                        # a<p<el
+                        set selectRange [list $el [incr p -1]]
+                    }
+                } else {
+                    # p<el<a
+                    set deselectRange(0) [list $p [incr el -1]]
+                }
+            } else {
+                if {$p > $a} {
+                    # el=a<p
+                    set deselectRange(0) [list [incr a] $p]
+                } else {
+                    # p<=a=el
+                    set deselectRange(0) [list $p [incr a -1]]
+                }
+            }
+            
+            # Correct the selection and deselection range for items
+            # that existed in a previous selection.
+            if {[info exists Priv(listboxSelection)] } {
+                set i 0
+                foreach index $Priv(listboxSelection) {
+                    # deselectRange($i) may have been unset in a previous iteration
+                    if {[info exists deselectRange($i)]} {
+                        # We do a detailed inspection of the deselectRange to
+                        # exclude all unwanted deselections. This may result in
+                        # several contiguous deselectRanges that are not adjacent.
+                        set begin [lindex $deselectRange($i) 0]
+                        set end [lindex $deselectRange($i) 1]
+                        if {($index >= $begin) && ($index <= $end)} {
+                            # adjust deselectRange($i)
+                            if {$begin == $end} {
+                                unset deselectRange($i)
+                            } elseif {$index == $begin} {
+                                set deselectRange($i) [list [incr begin] $end]
+                            } elseif {$index == $end} {
+                                set deselectRange($i) [list $begin [incr end -1]]
+                            } else {
+                                # Split the deselectRange into two separate ranges,
+                                # each being contiguous. The range with the higher
+                                # index values will be subject to inspection in
+                                # the next iteration
+                                set deselectRange($i) [list $begin [incr index -1]]
+                                set deselectRange([incr i]) [list [incr index 2] $end]
+                            }
+                        }
+                    }
+                    
+                    # We do a course inspection of the selectRange up to the
+                    # level where we can decide whether adjustment leaves us
+                    # with anything to select. More detailed inspection doesn't
+                    # gain much/any performance.
+                    if {[info exists selectRange]} {
+                        set begin [lindex $selectRange 0]
+                        set end [lindex $selectRange 1]
+                        if {($index >= $begin) && ($index <= $end)} {
+                            if {$begin == $end} {
+                                unset selectRange
+                            }
+                        }
+                    }
+                }
+            }
+            
+            # deselect the items in each contiguous deselection range
+            foreach i [array names deselectRange] {
+                $w selection clear [lindex $deselectRange($i) 0] \
+                        [lindex $deselectRange($i) 1]
+            }
+            # select the items in the selectRange
+            if {[info exists selectRange]} {
+                $w selection set anchor $el
+            }
+            
+            if {![info exists Priv(listboxSelection)]} {
+                set Priv(listboxSelection) [$w curselection]
+            }
+
 	    tk::FireListboxSelectEvent $w
 	}
     }
