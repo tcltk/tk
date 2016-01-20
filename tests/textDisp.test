@@ -1333,6 +1333,30 @@ test textDisp-9.13 {TkTextRedrawTag} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 6.0 7.0} {2.0 6.0 7.0}}
+test textDisp-9.14 {TkTextRedrawTag} {
+    pack [text .tnocrash]
+    for {set i 1} {$i < 6} {incr i} {
+        .tnocrash insert end \nfoo$i
+    }
+    .tnocrash tag configure mytag1 -relief raised
+    .tnocrash tag configure mytag2 -relief solid
+    update
+    proc doit {} {
+        .tnocrash tag add mytag1 4.0 5.0
+        .tnocrash tag add mytag2 4.0 5.0
+        after idle {
+            .tnocrash tag remove mytag1 1.0 end
+            .tnocrash tag remove mytag2 1.0 end
+        }
+        .tnocrash delete 1.0 2.0
+    }
+    doit  ; # must not crash
+    after 500 {
+        destroy .tnocrash
+        set done 1
+    }
+    vwait done
+} {}
 
 test textDisp-10.1 {TkTextRelayoutWindow} {
     .t configure -wrap char
@@ -2021,9 +2045,9 @@ test textDisp-16.18 {TkTextYviewCmd procedure, "moveto" roundoff} {textfonts} {
     wm geometry .top1 +0+0
     text .top1.t -height 3 -width 4 -wrap none -setgrid 1 -padx 6 \
 	-spacing3 6
-    .top1.t insert end "1\n2\n3\n4\n5\n6"
     pack .top1.t
     update
+    .top1.t insert end "1\n2\n3\n4\n5\n6"
     .top1.t yview moveto 0.3333
     set result [.top1.t yview]
     destroy .top1

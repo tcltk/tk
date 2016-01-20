@@ -933,19 +933,19 @@ On Windows, the following additional system colors are available
 .RS
 .DS
 .ta 6c
-3dDarkShadow	Highlight
-3dLight	HighlightText
-ActiveBorder	InactiveBorder
-ActiveCaption	InactiveCaption
-AppWorkspace	InactiveCaptionText
-Background	InfoBackground
-ButtonFace	InfoText
-ButtonHighlight	Menu
-ButtonShadow	MenuText
-ButtonText	Scrollbar
-CaptionText	Window
-DisabledText	WindowFrame
-GrayText	WindowText
+system3dDarkShadow	systemHighlight
+system3dLight	systemHighlightText
+systemActiveBorder	systemInactiveBorder
+systemActiveCaption	systemInactiveCaption
+systemAppWorkspace	systemInactiveCaptionText
+systemBackground	systemInfoBackground
+systemButtonFace	systemInfoText
+systemButtonHighlight	systemMenu
+systemButtonShadow	systemMenuText
+systemButtonText	systemScrollbar
+systemCaptionText	systemWindow
+systemDisabledText	systemWindowFrame
+systemGrayText	systemWindowText
 .DE
 .RE
 .SH "SEE ALSO"
