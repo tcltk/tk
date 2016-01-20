@@ -560,7 +560,7 @@ Tk_GetOption(
 		count	-= levelPtr[-1].bases[currentStack];
 	    }
 
-	    if (currentStack && CLASS) {
+	    if (currentStack & CLASS) {
 		nodeId = winClassId;
 	    } else {
 		nodeId = winNameId;
