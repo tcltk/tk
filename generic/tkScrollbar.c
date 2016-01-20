@@ -627,6 +627,8 @@ TkScrollbarEventProc(
 		TkScrollbarEventuallyRedraw(scrollPtr);
 	    }
 	}
+    } else if (eventPtr->type == MapNotify) {
+	TkScrollbarEventuallyRedraw(scrollPtr);
     }
 }
 
