@@ -7055,6 +7055,20 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
 
 2015-12-19 (bug)[793909] -textvariable handle undefined namespace (vogel)
 
+2015-12-26 (bug)[2f78c7] crash with [text] and [tablelist] (vogel)
+
+2016-01-06 (bug)[1288433,3102228] <<ListboxSelect>> misfires (vogel)
+
+2016-01-08 (bug)[1510538] initial scrollbar width (vogel,nijtmans)
+
+2016-01-08 (bug)[1305128] event not received by scrollbar (vogel,nijtmans)
+
+2016-01-09 (bug)[1927212] Mousewheel/scrollbar bindings (vogel)
+
+2016-01-11 (bug)[63c354] Cocoa message boxes (culler)
+
+2016-01-12 (bug)[2049429] get more $text options from database (vogel)
+
 Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 --- Released 8.5.19, January 31, 2016 --- http://core.tcl.tk/tk/ for details
