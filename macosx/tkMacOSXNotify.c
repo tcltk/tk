@@ -261,7 +261,7 @@ TkMacOSXEventsCheckProc(
 	NSEvent *currentEvent = nil;
 	NSEvent *testEvent = nil;
 	NSModalSession modalSession;
-	
+
 	do {
 	    [NSApp _resetAutoreleasePool];
 	    modalSession = TkMacOSXGetModalSession();

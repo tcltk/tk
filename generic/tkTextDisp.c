@@ -591,6 +591,7 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    Tcl_Obj *const objv[], double *dblPtr,
 			    int *intPtr);
 static void		AsyncUpdateLineMetrics(ClientData clientData);
+static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
                             CONST TkTextIndex *indexPtr);
@@ -2941,6 +2942,8 @@ AsyncUpdateLineMetrics(
     lineNum = TkTextUpdateLineMetrics(textPtr, lineNum,
 	    dInfoPtr->lastMetricUpdateLine, 256);
 
+    dInfoPtr->currentMetricUpdateLine = lineNum;
+
     if (tkTextDebug) {
 	char buffer[2 * TCL_INTEGER_SPACE + 1];
 
@@ -2958,8 +2961,30 @@ AsyncUpdateLineMetrics(
 	/*
 	 * We have looped over all lines, so we're done. We must release our
 	 * refCount on the widget (the timer token was already set to NULL
-	 * above).
+	 * above). If there is a registered aftersync command, run that first.
 	 */
+
+        if (textPtr->afterSyncCmd) {
+            int code;
+            Tcl_Preserve((ClientData) textPtr->interp);
+            code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd,
+                    TCL_EVAL_GLOBAL);
+	    if (code == TCL_ERROR) {
+                Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
+                Tcl_BackgroundError(textPtr->interp);
+	    }
+            Tcl_Release((ClientData) textPtr->interp);
+            Tcl_DecrRefCount(textPtr->afterSyncCmd);
+            textPtr->afterSyncCmd = NULL;
+	}
+
+        /*
+         * Fire the <<WidgetViewSync>> event since the widget view is in sync
+         * with its internal data (actually it will be after the next trip
+         * through the event loop, because the widget redraws at idle-time).
+         */
+
+        GenerateWidgetViewSyncEvent(textPtr, 1);
 
 	textPtr->refCount--;
 	if (textPtr->refCount == 0) {
@@ -2967,7 +2992,6 @@ AsyncUpdateLineMetrics(
 	}
 	return;
     }
-    dInfoPtr->currentMetricUpdateLine = lineNum;
 
     /*
      * Re-arm the timer. We already have a refCount on the text widget so no
@@ -2976,6 +3000,45 @@ AsyncUpdateLineMetrics(
 
     dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 	    AsyncUpdateLineMetrics, textPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateWidgetViewSyncEvent --
+ *
+ *      Send the <<WidgetViewSync>> event related to the text widget
+ *      line metrics asynchronous update.
+ *      This is equivalent to:
+ *         event generate $textWidget <<WidgetViewSync>> -detail $s
+ *      where $s is the sync status: true (when the widget view is in
+ *      sync with its internal data) or false (when it is not).
+ *
+ * Results:
+ *      None
+ *
+ * Side effects:
+ *      If corresponding bindings are present, they will trigger.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GenerateWidgetViewSyncEvent(
+    TkText *textPtr,		/* Information about text widget. */
+    Bool InSync)                /* True if in sync, false otherwise */
+{
+    union {XEvent general; XVirtualEvent virtual;} event;
+
+    memset(&event, 0, sizeof(event));
+    event.general.xany.type = VirtualEvent;
+    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
+    event.general.xany.send_event = False;
+    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
+    event.general.xany.display = Tk_Display(textPtr->tkwin);
+    event.virtual.name = Tk_GetUid("WidgetViewSync");
+    event.virtual.user_data = Tcl_NewBooleanObj(InSync);
+    Tk_HandleEvent(&event.general);
 }
 
 /*
@@ -3353,6 +3416,7 @@ TextInvalidateLineMetrics(
 	textPtr->refCount++;
 	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		AsyncUpdateLineMetrics, textPtr);
+        GenerateWidgetViewSyncEvent(textPtr, 0);
     }
 }
 
@@ -4805,9 +4869,16 @@ TextRedrawTag(
 
     /*
      * Round up the starting position if it's before the first line visible on
-     * the screen (we only care about what's on the screen).
+     * the screen (we only care about what's on the screen). Beware that the
+     * display info structure might need update, for instance if we arrived
+     * here from an 'after idle' script removing tags in a range whose
+     * display lines (and dInfo) were partially invalidated by a previous
+     * delete operation in the text widget.
      */
 
+    if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
+	UpdateDisplayInfo(textPtr);
+    }
     dlPtr = dInfoPtr->dLinePtr;
     if (dlPtr == NULL) {
 	return;
@@ -5057,6 +5128,7 @@ TkTextRelayoutWindow(
 	    textPtr->refCount++;
 	    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		    AsyncUpdateLineMetrics, textPtr);
+            GenerateWidgetViewSyncEvent(textPtr, 0);
 	}
     }
 }
@@ -6054,6 +6126,35 @@ TkTextYviewCmd(
 	break;
     }
     return TCL_OK;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkTextPendingsync --
+ *
+ *	This function checks if any line heights are not up-to-date.
+ *
+ * Results:
+ *	Returns a boolean true if it is the case, or false if all line
+ *      heights are up-to-date.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+Bool
+TkTextPendingsync(
+    TkText *textPtr)		/* Information about text widget. */
+{
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+
+    return (
+        ((dInfoPtr->metricEpoch == -1) &&
+         (dInfoPtr->lastMetricUpdateLine == dInfoPtr->currentMetricUpdateLine)) ?
+        0 : 1);
 }
 
 /*
