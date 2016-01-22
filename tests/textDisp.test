@@ -1333,6 +1333,30 @@ test textDisp-9.13 {TkTextRedrawTag} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 6.0 7.0} {2.0 6.0 7.0}}
+test textDisp-9.14 {TkTextRedrawTag} {
+    pack [text .tnocrash]
+    for {set i 1} {$i < 6} {incr i} {
+        .tnocrash insert end \nfoo$i
+    }
+    .tnocrash tag configure mytag1 -relief raised
+    .tnocrash tag configure mytag2 -relief solid
+    update
+    proc doit {} {
+        .tnocrash tag add mytag1 4.0 5.0
+        .tnocrash tag add mytag2 4.0 5.0
+        after idle {
+            .tnocrash tag remove mytag1 1.0 end
+            .tnocrash tag remove mytag2 1.0 end
+        }
+        .tnocrash delete 1.0 2.0
+    }
+    doit  ; # must not crash
+    after 500 {
+        destroy .tnocrash
+        set done 1
+    }
+    vwait done
+} {}
 
 test textDisp-10.1 {TkTextRelayoutWindow} {
     .t configure -wrap char
@@ -2021,9 +2045,9 @@ test textDisp-16.18 {TkTextYviewCmd procedure, "moveto" roundoff} {textfonts} {
     wm geometry .top1 +0+0
     text .top1.t -height 3 -width 4 -wrap none -setgrid 1 -padx 6 \
 	-spacing3 6
-    .top1.t insert end "1\n2\n3\n4\n5\n6"
     pack .top1.t
     update
+    .top1.t insert end "1\n2\n3\n4\n5\n6"
     .top1.t yview moveto 0.3333
     set result [.top1.t yview]
     destroy .top1
@@ -4173,29 +4197,34 @@ test textDisp-33.5 {bold or italic fonts} win {
 } {italic font measurement ok}
 destroy .tt
 
-test textDisp-34.1 {Text widgets multi-scrolling problem: Bug 2677890} -setup {
-    pack [text .t1 -width 10 -yscrollcommand {.sy set}] \
-	[ttk::scrollbar .sy -orient vertical -command {.t1 yview}] \
-	-side left -fill both
-    bindtags .sy {}; # No clicky!
+test textDisp-34.1 {Line heights recalculation problem: bug 2677890} -setup {
+    pack [text .t1] -expand 1 -fill both
     set txt ""
-    for {set i 0} {$i < 99} {incr i} {
-	lappend txt "$i" [list pc $i] "\n" ""
+    for {set i 1} {$i < 100} {incr i} {
+        append txt "Line $i\n"
     }
     set result {}
 } -body {
-    .t1 insert end {*}$txt
+    .t1 insert end $txt
+    .t1 debug 1
+    set ge [winfo geometry .]
+    scan $ge "%dx%d+%d+%d" width height left top
     update
-    lappend result [.sy get]
-    .t1 replace 6.0 6.0+1c "*"
-    lappend result [.sy get]
-    after 0 {lappend result [.sy get]}
-    after 1000 {lappend result [.sy get]}
-    vwait result;vwait result
-    return $result
+    .t1 sync
+    set negative 0
+    bind .t1 <<WidgetViewSync>> { if {%d < 0} {set negative 1} }
+    # Without the fix for bug 2677890, changing the width of the toplevel
+    # will launch recomputation of the line heights, but will produce negative
+    # number of still remaining outdated lines, which is obviously wrong.
+    # Thus we use this way to check for regression regarding bug 2677890,
+    # i.e. to check that the fix for this bug really is still in.
+    wm geometry . "[expr {$width * 2}]x$height+$left+$top"
+    update
+    .t1 sync
+    set negative
 } -cleanup {
-    destroy .t1 .sy
-} -result {{0.0 0.24} {0.0 0.24} {0.0 0.24} {0.0 0.24}}
+    destroy .t1
+} -result {0}
 
 test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -setup {
     pack [text .t1] -fill both -expand y -side left

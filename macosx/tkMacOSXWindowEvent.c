@@ -165,6 +165,10 @@ extern BOOL opaqueTag;
 
     if (winPtr) {
 	TkGenWMDestroyEvent((Tk_Window) winPtr);
+	if (_windowWithMouse == w) {
+	    _windowWithMouse = nil;
+	    [w release];
+	}
     }
 
     /*
@@ -806,7 +810,7 @@ ConfigureRestrictProc(
 {
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
-    
+
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
 
 #ifdef TK_MAC_DEBUG_DRAWING
@@ -855,16 +859,13 @@ ConfigureRestrictProc(
 	 * don't clobber the AutoreleasePool set up by the caller.
 	 */
 	[NSApp setPoolProtected:YES];
-	
+
 	/*
 	 * Try to prevent flickers and flashes.
-	 *
-	 * This stops the flickers on OSX 10.11. But flashes still occur when
-	 * the width of the window is 16, 32, 48, 64, 80, 96, 112, 256, 512,
-	 * 768, ... :^(
 	 */
 	[w disableFlushWindow];
-	
+	NSDisableScreenUpdates();
+
 	/* Disable Tk drawing until the window has been completely configured.*/
 	TkMacOSXSetDrawingEnabled(winPtr, 0);
 
@@ -887,6 +888,7 @@ ConfigureRestrictProc(
 	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
 	[w enableFlushWindow];
 	[w flushWindowIfNeeded];
+	NSEnableScreenUpdates();
 	[NSApp setPoolProtected:NO];
     }
 }
