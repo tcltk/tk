@@ -111,14 +111,11 @@ TkpDisplayWarning(
 #ifdef ANDROID
     __android_log_print(ANDROID_LOG_ERROR, "libtk", "%s: %s", title, msg);
 #else
-    Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
-
-    if (errChannel) {
-	Tcl_WriteChars(errChannel, title, -1);
-	Tcl_WriteChars(errChannel, ": ", 2);
-	Tcl_WriteChars(errChannel, msg, -1);
-	Tcl_WriteChars(errChannel, "\n", 1);
-    }
+    /*
+     * Cannot use TCL_STDERR here since it is  a console channel.
+     * We want to see the warning even when Tk is not fully initialized.
+     */
+    fprintf(stderr, "%s: %s\n", title, msg);
 #endif
 }
 

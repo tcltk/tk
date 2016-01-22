@@ -768,6 +768,7 @@ ProcessTextInput(XEvent *event, int sdl_mod, const char *text, int len)
     char buf[TCL_UTF_MAX];
 
     if (ulen <= 0) {
+	SdlTkX.keyuc = 0;
 	return 0;
     }
     if (sdl_mod & KMOD_RALT) {
@@ -778,31 +779,60 @@ ProcessTextInput(XEvent *event, int sdl_mod, const char *text, int len)
 
 	n = Tcl_UtfToUniChar(text, &ch);
 	n2 = 0;
+
 	/* Deal with surrogate pairs */
+#if TCL_UTF_MAX > 4
 	if ((ch >= 0xd800) && (ch <= 0xdbff)) {
 	    Tcl_UniChar ch2;
 
 	    if (i + 1 < ulen) {
 		n2 = Tcl_UtfToUniChar(text + n, &ch2);
 		if ((ch2 >= 0xdc00) && (ch2 <= 0xdfff)) {
-#if TCL_UTF_MAX > 4
 		    ch = ((ch & 0x3ff) << 10) | (ch2 & 0x3ff);
 		    ch += 0x10000;
-#else
-		    ch = 0xfffd;
-#endif
 		    ++i;
 		} else {
 		    ch = 0xfffd;
 		    n2 = 0;
 		}
 	    } else {
+		SdlTkX.keyuc = ch;
+		return -1;
+	    }
+	} else if ((ch >= 0xdc00) && (ch <= 0xdfff)) {
+	    if (SdlTkX.keyuc) {
+		ch = ((SdlTkX.keyuc & 0x3ff) << 10) | (ch & 0x3ff);
+		ch += 0x10000;
+	    } else {
 		ch = 0xfffd;
 	    }
-	} else if (((ch >= 0xdc00) && (ch <= 0xdfff)) ||
-		   (ch == 0xfffe) || (ch == 0xffff)) {
+	    SdlTkX.keyuc = 0;
+	} else if ((ch == 0xfffe) || (ch == 0xffff)) {
+	    ch = 0xfffd;
+	    SdlTkX.keyuc = 0;
+	} else {
+	    SdlTkX.keyuc = 0;
+	}
+#else
+	if ((ch >= 0xd800) && (ch <= 0xdbff)) {
+	    Tcl_UniChar ch2;
+
+	    if (i + 1 < ulen) {
+		n2 = Tcl_UtfToUniChar(text + n, &ch2);
+		if ((ch2 >= 0xdc00) && (ch2 <= 0xdfff)) {
+		    ++i;
+		} else {
+		    n2 = 0;
+		}
+	    }
+	    ch = 0xfffd;
+	} else if ((ch >= 0xdc00) && (ch <= 0xdfff)) {
+	    ch = 0xfffd;
+	} else if ((ch == 0xfffe) || (ch == 0xffff)) {
 	    ch = 0xfffd;
 	}
+	SdlTkX.keyuc = 0;
+#endif
 	event->xkey.nbytes = Tcl_UniCharToUtf(ch, buf);
 	event->xkey.time = SdlTkX.time_count;
 	if (event->xkey.nbytes > sizeof (event->xkey.trans_chars)) {
@@ -1196,6 +1226,15 @@ skipTranslation:
 	TkKeyEvent *kePtr = (TkKeyEvent *) event;
 	Window fwin;
 
+#ifdef _WIN32
+	switch (sdl_event->type) {
+	case SDL_KEYDOWN:
+	case SDL_KEYUP:
+	    /* Should immediately queue following SDL_TEXTINPUT events */
+	    SDL_PumpEvents();
+	}
+#endif
+
 	kePtr->charValueLen = 0;
 	kePtr->charValuePtr = NULL;
 
@@ -1277,6 +1316,13 @@ skipTranslation:
 	    /* SDL_SCANCODE_xxx */
 	    event->xkey.keycode = scancode;
 	}
+#ifdef _WIN32
+	/* fixup AltGr on Windows */
+	if ((sdl_event->key.keysym.mod & (KMOD_CTRL | KMOD_RALT)) ==
+	    (KMOD_LCTRL | KMOD_RALT)) {
+		event->xkey.state &= ~ControlMask;
+	}
+#endif
 
 	event->xkey.same_screen = True;
 
@@ -1288,7 +1334,7 @@ skipTranslation:
 	    if (len == 0) {
 		return 0;
 	    }
-	    if (!ProcessTextInput(event, 0, sdl_event->text.text, len)) {
+	    if (ProcessTextInput(event, 0, sdl_event->text.text, len) <= 0) {
 		return 0;
 	    }
 	} else if (sdl_event->type == SDL_TEXTEDITING) {
@@ -1300,10 +1346,15 @@ skipTranslation:
 				   SDL_TEXTINPUT, SDL_TEXTINPUT) == 1)) {
 	    int len = strlen(txt_sdl_event.text.text);
 
-	    if ((len <= 0) ||
-		!ProcessTextInput(event, sdl_event->key.keysym.mod,
-				  txt_sdl_event.text.text, len)) {
+	    if (len <= 0) {
 		goto doNormalKeyEvent;
+	    }
+	    len = ProcessTextInput(event, sdl_event->key.keysym.mod,
+				   txt_sdl_event.text.text, len);
+	    if (len == 0) {
+		goto doNormalKeyEvent;
+	    } else if (len < 0) {
+		return 0;
 	    }
 	} else if ((sdl_event->type == SDL_KEYDOWN) ||
 		   (sdl_event->type == SDL_KEYUP)) {
@@ -1390,6 +1441,10 @@ doNormalKeyEvent:
 		event->xkey.trans_chars[0] = ' ';
 	    } else {
 		MkTransChars(&event->xkey);
+	    }
+	    if (event->xkey.nbytes > 0) {
+		EVLOG("   KEYPRESS:             TRANS=0x%X",
+		      event->xkey.trans_chars[0]);
 	    }
 	}
 	break;
@@ -3652,7 +3707,7 @@ JoystickObjCmd(ClientData clientData, Tcl_Interp *interp,
 	       int objc, Tcl_Obj *const objv[])
 {
     static const char *joptStrings[] = {
-	"ids", "guid", "name", "numaxes,", "numballs",
+	"ids", "guid", "name", "numaxes", "numballs",
 	"numbuttons", "numhats",
 	NULL
     };

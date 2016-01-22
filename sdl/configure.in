@@ -316,7 +316,12 @@ if test "$found_sdl2" = "no" ; then
 fi
 AC_MSG_RESULT([$found_sdl2])
 if test "$found_sdl2" = "yes" ; then
-    dfb_cflags=`pkg-config --cflags directfb 2>/dev/null` || true
+    if test "${TCL_SHLIB_SUFFIX}" = ".dll" ; then
+	# workaround when cross-compiling for Win32: skip directfb
+	dfb_cflags=""
+    else
+	dfb_cflags=`pkg-config --cflags directfb 2>/dev/null` || true
+    fi
     if test -n "$dfb_cflags" ; then
 	SDL_CFLAGS="$SDL_CFLAGS $dfb_cflags"
     fi
@@ -402,6 +407,18 @@ TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
 
 #------------------------------------------------------------------------
+# Win32 resources
+#------------------------------------------------------------------------
+
+if test "${TCL_SHLIB_SUFFIX}" = ".dll" ; then
+    LIB_RES="libres.o"
+    WISH_RES="wishres.o"
+else
+    LIB_RES=""
+    WISH_RES=""
+fi
+
+#------------------------------------------------------------------------
 # sdl2tkConfig.sh refers to this by a different name
 #------------------------------------------------------------------------
 
@@ -456,6 +473,9 @@ AC_SUBST(FT_LIBS)
 AC_SUBST(SDL_CFLAGS)
 AC_SUBST(SDL_LIBS)
 AC_SUBST(GCC_LIBS)
+
+AC_SUBST(LIB_RES)
+AC_SUBST(WISH_RES)
 
 AC_CONFIG_FILES([
     Makefile:../sdl/Makefile.in

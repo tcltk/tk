@@ -1150,7 +1150,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 /*
  * On X11, these macros are just wrappers for the equivalent X Region calls.
  */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) || defined(PLATFORM_SDL) /* X11 */
 
 #undef TkClipBox
 #undef TkCreateRegion

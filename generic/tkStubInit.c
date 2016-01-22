@@ -23,7 +23,7 @@
 #include "tkSDLInt.h"
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #include "tkWinInt.h"
 #endif
 
@@ -43,9 +43,11 @@ MODULE_SCOPE const TkStubs tkStubs;
  * Remove macro that might interfere with the definition below.
  */
 
+#ifndef ANDROID
 #undef Tk_MainEx
+#endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 
 int
 TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
@@ -462,7 +464,7 @@ static const TkIntStubs tkIntStubs = {
 static const TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(PLATFORM_SDL) /* WIN */
     TkAlignImageData, /* 0 */
     0, /* 1 */
     TkGenerateActivateEvents, /* 2 */
@@ -568,7 +570,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXDrawable, /* 54 */
     TkpScanWindowId, /* 55 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) || defined(PLATFORM_SDL) /* X11 */
     TkCreateXEventSource, /* 0 */
     0, /* 1 */
     0, /* 2 */
@@ -589,7 +591,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 static const TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(PLATFORM_SDL) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -805,7 +807,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
 static const TkPlatStubs tkPlatStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(PLATFORM_SDL) /* WIN */
     Tk_AttachHWND, /* 0 */
     Tk_GetHINSTANCE, /* 1 */
     Tk_GetHWND, /* 2 */

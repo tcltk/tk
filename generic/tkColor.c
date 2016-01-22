@@ -830,7 +830,7 @@ TkDebugColor(
     return resultPtr;
 }
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(PLATFORM_SDL)
 
 /* This function is not necessary for Win32,
  * since XParseColor already does the right thing */

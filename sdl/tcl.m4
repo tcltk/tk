@@ -683,6 +683,10 @@ AC_DEFUN([SC_ENABLE_THREADS], [
     else
 	TCL_THREADS=0
     fi
+    if test "${TCL_SHLIB_SUFFIX}" = ".dll" ; then
+	# workaround when cross-compiling for Win32: force TCL_THREADS on
+	TCL_THREADS=1
+    fi
     # Do checking message here to not mess up interleaved configure output
     AC_MSG_CHECKING([for building with threads])
     if test "${TCL_THREADS}" = 1; then
@@ -2050,7 +2054,7 @@ dnl # preprocessing tests use only CPPFLAGS.
         LIB_SUFFIX=${SHARED_LIB_SUFFIX}
         MAKE_LIB='${SHLIB_LD} -o [$]@ ${OBJS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
         AS_IF([test "${SHLIB_SUFFIX}" = ".dll"], [
-            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)"'
+            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)";if test -f $(LIB_FILE).a; then $(INSTALL_DATA) $(LIB_FILE).a "$(LIB_INSTALL_DIR)"; fi;'
             DLL_INSTALL_DIR="\$(BIN_INSTALL_DIR)"
         ], [
             INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'

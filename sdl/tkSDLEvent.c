@@ -11,6 +11,9 @@
  */
 
 #include "tkSDLInt.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 /*
  * The following static indicates whether this module has been initialized in
@@ -28,7 +31,9 @@ static Tcl_ThreadDataKey dataKey;
 
 static void		DisplayCheckProc(ClientData clientData, int flags);
 static void		DisplayExitHandler(ClientData clientData);
+#ifndef _WIN32
 static void		DisplayFileProc(ClientData clientData, int flags);
+#endif
 static void		DisplaySetupProc(ClientData clientData, int flags);
 static void		TransferXEventsToTcl(Display *display);
 
@@ -121,10 +126,12 @@ TkpOpenDisplay(
     dispPtr = ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
+#ifndef _WIN32
     if (ConnectionNumber(display) >= 0) {
 	Tcl_CreateFileHandler(ConnectionNumber(display), TCL_READABLE,
 		DisplayFileProc, dispPtr);
     }
+#endif
     return dispPtr;
 }
 
@@ -153,9 +160,11 @@ TkpCloseDisplay(
     TkWmCleanup(dispPtr);
 
     if (dispPtr->display != 0) {
+#ifndef _WIN32
 	if (ConnectionNumber(dispPtr->display) >= 0) {
 	    Tcl_DeleteFileHandler(ConnectionNumber(dispPtr->display));
 	}
+#endif
 	(void) XSync(dispPtr->display, False);
 	(void) XCloseDisplay(dispPtr->display);
     }
@@ -321,6 +330,7 @@ DisplayCheckProc(
     }
 }
 
+#ifndef _WIN32
 /*
  *----------------------------------------------------------------------
  *
@@ -376,6 +386,7 @@ DisplayFileProc(
 
     TransferXEventsToTcl(display);
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -404,11 +415,16 @@ TkpDoOneXEvent(
 				 * should time out. */
 {
     TkDisplay *dispPtr;
+    Tcl_Time now;
+    int done = 0;
+#ifdef _WIN32
+    HANDLE *evtPtr = NULL;
+#else
     struct timeval blockTime;
     fd_mask readMask[MASK_SIZE];
-    Tcl_Time now;
-    int fd, index, numFound, numFdBits = 0, done = 0;
+    int fd, index, numFound, numFdBits = 0;
     fd_mask bit, *readMaskPtr = readMask;
+#endif
 
     /*
      * Look for queued events first.
@@ -423,17 +439,30 @@ TkpDoOneXEvent(
      * pending, then we want to poll instead of blocking.
      */
 
+#ifndef _WIN32
     blockTime.tv_sec = 0;
     blockTime.tv_usec = 20000;
     memset(readMask, 0, MASK_SIZE*sizeof(fd_mask));
+#endif
     for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 	    dispPtr = dispPtr->nextPtr) {
 	XFlush(dispPtr->display);
 	if (XEventsQueued(dispPtr->display, QueuedAlready) > 0) {
+	    done = 1;
+#ifdef _WIN32
+	    goto handleEvents;
+#else
 	    blockTime.tv_sec = 0;
 	    blockTime.tv_usec = 0;
-	    done = 1;
+#endif
 	}
+#ifdef _WIN32
+	/* Should be only one Display anyway. */
+	if (evtPtr == NULL) {
+	    evtPtr = (HANDLE*) &dispPtr->display->fd;
+	}
+	continue;
+#else
 	fd = ConnectionNumber(dispPtr->display);
 	if (fd < 0) {
 	    continue;
@@ -444,9 +473,27 @@ TkpDoOneXEvent(
 	if (numFdBits <= fd) {
 	    numFdBits = fd+1;
 	}
+#endif
     }
 
     do {
+#ifdef _WIN32
+	HANDLE evtHandle = INVALID_HANDLE_VALUE;
+
+	if (evtPtr != NULL) {
+	    evtHandle = *evtPtr;
+	}
+	if (evtHandle != INVALID_HANDLE_VALUE) {
+	    WaitForSingleObject(evtHandle, 10);
+	} else {
+	    Sleep(10);
+	}
+handleEvents:
+	for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
+	     dispPtr = dispPtr->nextPtr) {
+	    TransferXEventsToTcl(dispPtr->display);
+	}
+#else
 	numFound = select(numFdBits, (SELECT_MASK *) readMaskPtr, NULL, NULL,
 			  &blockTime);
 	if (numFound <= 0) {
@@ -478,6 +525,7 @@ TkpDoOneXEvent(
 		DisplayFileProc(dispPtr, TCL_READABLE);
 	    }
 	}
+#endif
 	if (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
 	    return 1;
 	}
@@ -493,9 +541,10 @@ TkpDoOneXEvent(
 		return 0;
 	    }
 	}
+#ifndef _WIN32
 	blockTime.tv_sec = 0;
 	blockTime.tv_usec = 20000;
-
+#endif
     } while (!done);
 
     /*

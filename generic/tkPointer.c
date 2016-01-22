@@ -19,7 +19,7 @@
 #include "SdlTk.h"
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #include "tkWinInt.h"
 #endif
 

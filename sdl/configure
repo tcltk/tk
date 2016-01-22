@@ -635,6 +635,8 @@ ac_includes_default="\
 #endif"
 
 ac_subst_vars='LTLIBOBJS
+WISH_RES
+LIB_RES
 GCC_LIBS
 SDL_LIBS
 SDL_CFLAGS
@@ -4681,6 +4683,10 @@ done
     else
 	TCL_THREADS=0
     fi
+    if test "${TCL_SHLIB_SUFFIX}" = ".dll" ; then
+	# workaround when cross-compiling for Win32: force TCL_THREADS on
+	TCL_THREADS=1
+    fi
     # Do checking message here to not mess up interleaved configure output
     { $as_echo "$as_me:$LINENO: checking for building with threads" >&5
 $as_echo_n "checking for building with threads... " >&6; }
@@ -7390,7 +7396,7 @@ fi
         MAKE_LIB='${SHLIB_LD} -o $@ ${OBJS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
         if test "${SHLIB_SUFFIX}" = ".dll"; then
 
-            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)"'
+            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)";if test -f $(LIB_FILE).a; then $(INSTALL_DATA) $(LIB_FILE).a "$(LIB_INSTALL_DIR)"; fi;'
             DLL_INSTALL_DIR="\$(BIN_INSTALL_DIR)"
 
 else
@@ -10153,7 +10159,12 @@ fi
 { $as_echo "$as_me:$LINENO: result: $found_sdl2" >&5
 $as_echo "$found_sdl2" >&6; }
 if test "$found_sdl2" = "yes" ; then
-    dfb_cflags=`pkg-config --cflags directfb 2>/dev/null` || true
+    if test "${TCL_SHLIB_SUFFIX}" = ".dll" ; then
+	# workaround when cross-compiling for Win32: skip directfb
+	dfb_cflags=""
+    else
+	dfb_cflags=`pkg-config --cflags directfb 2>/dev/null` || true
+    fi
     if test -n "$dfb_cflags" ; then
 	SDL_CFLAGS="$SDL_CFLAGS $dfb_cflags"
     fi
@@ -10298,10 +10309,25 @@ TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
 
 #------------------------------------------------------------------------
+# Win32 resources
+#------------------------------------------------------------------------
+
+if test "${TCL_SHLIB_SUFFIX}" = ".dll" ; then
+    LIB_RES="libres.o"
+    WISH_RES="wishres.o"
+else
+    LIB_RES=""
+    WISH_RES=""
+fi
+
+#------------------------------------------------------------------------
 # sdl2tkConfig.sh refers to this by a different name
 #------------------------------------------------------------------------
 
 TK_SHARED_BUILD=${SHARED_BUILD}
+
+
+
 
 
 

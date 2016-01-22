@@ -19,7 +19,7 @@
 #include "SdlTkInt.h"
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #include "tkWinInt.h"
 #elif !defined(MAC_OSX_TK)
 #ifndef PLATFORM_SDL
@@ -196,7 +196,7 @@ static const TkCmd commands[] = {
      * these commands differently (via the script library).
      */
 
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if (defined(_WIN32) || defined(MAC_OSX_TK)) && !defined(PLATFORM_SDL)
     {"tk_chooseColor",	Tk_ChooseColorObjCmd,	PASSMAINWINDOW},
     {"tk_chooseDirectory", Tk_ChooseDirectoryObjCmd,WINMACONLY|PASSMAINWINDOW},
     {"tk_getOpenFile",	Tk_GetOpenFileObjCmd,	WINMACONLY|PASSMAINWINDOW},
@@ -553,10 +553,17 @@ GetScreen(
 	    dispPtr->name[length] = '\0';
 	    break;
 	}
+#ifdef PLATFORM_SDL
+	/*
+	 * Ignore display name, we support only one.
+	 */
+	break;
+#else
 	if ((strncmp(dispPtr->name, screenName, length) == 0)
 		&& (dispPtr->name[length] == '\0')) {
 	    break;
 	}
+#endif
     }
     if (screenId >= ScreenCount(dispPtr->display)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -982,7 +989,7 @@ TkCreateMainWindow(
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
 
-#if defined(_WIN32) && !defined(STATIC_BUILD)
+#if defined(_WIN32) && !defined(STATIC_BUILD) && !defined(PLATFORM_SDL)
 	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->reserved9) {
 	    /*
 	     * We are running on Cygwin, so don't use the win32 dialogs.
@@ -1492,7 +1499,7 @@ Tk_DestroyWindow(
 #ifdef PLATFORM_SDL
 	TkPointerDeadWindow(winPtr);
 #endif
-#if defined(MAC_OSX_TK) || defined(_WIN32)
+#if (defined(MAC_OSX_TK) || defined(_WIN32)) && !defined(PLATFORM_SDL)
 	XDestroyWindow(winPtr->display, winPtr->window);
 #else
 	if ((winPtr->flags & TK_TOP_HIERARCHY)
@@ -2879,7 +2886,7 @@ DeleteWindowsExitProc(
     tsdPtr->initialized = 0;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 
 static HMODULE tkcygwindll = NULL;
 
@@ -2954,7 +2961,7 @@ int
 Tk_Init(
     Tcl_Interp *interp)		/* Interpreter to initialize. */
 {
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
     if (tkcygwindll) {
 	int (*tkinit)(Tcl_Interp *);
 
@@ -3027,7 +3034,7 @@ Tk_SafeInit(
      * checked at several places to differentiate the two initialisations.
      */
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
     if (tkcygwindll) {
 	int (*tksafeinit)(Tcl_Interp *);
 
