@@ -671,7 +671,7 @@ ComputeRectOvalBbox(
 	 * correct place to solve it, but it works.
 	 */
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 	bloat = 1;
 #else
 	bloat = 0;

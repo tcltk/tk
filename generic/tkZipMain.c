@@ -38,7 +38,7 @@
  * platforms which don't have <tchar.h> we have to translate that
  * to strcmp here.
  */
-#ifdef _WIN32
+#if !defined(PLATFORM_SDL) && defined(_WIN32)
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char
@@ -88,7 +88,7 @@
  * it will conflict with a declaration elsewhere on some systems.
  */
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #define isatty WinIsTty
 static int WinIsTty(int fd) {
     HANDLE handle;
@@ -190,11 +190,7 @@ Tk_ZipMain(
     is.gotPartial = 0;
     Tcl_Preserve(interp);
 
-#ifdef PLATFORM_SDL
-    Tk_InitConsoleChannels(interp);
-#endif
-
-#if defined(_WIN32) && !defined(__CYGWIN__)
+#if defined(PLATFORM_SDL) || (defined(_WIN32) && !defined(__CYGWIN__))
     Tk_InitConsoleChannels(interp);
 #endif
 
@@ -542,7 +538,7 @@ Tk_ZipMain(
 	const char *filename = Tcl_GetString(path);
 	int length = strlen(filename);
 
-	if ((length > 6) && (strncmp(filename, "zipfs:", 6) == 0)) {
+	if ((length > 6) && (strncasecmp(filename, "zipfs:", 6) == 0)) {
 	    Tcl_Obj *newPath;
 
 	    zipOk = Tclzipfs_Mount(interp, filename + 6, "/app", NULL);
@@ -574,6 +570,27 @@ Tk_ZipMain(
 		Tclzipfs_Unmount(interp, filename + 6);
 	    }
 	}
+#ifndef ANDROID
+	else if ((zipOk == TCL_OK) && (length > 8) &&
+		 (strncasecmp(filename, "builtin:", 8) == 0)) {
+	    Tcl_Obj *newPath;
+
+	    filename += 8;
+	    while (filename[0] == '/') {
+		++filename;
+	    }
+	    newPath = Tcl_NewStringObj(Tcl_GetNameOfExecutable(), -1);
+	    Tcl_AppendToObj(newPath, "/", 1);
+	    Tcl_AppendToObj(newPath, filename, -1);
+	    Tcl_IncrRefCount(newPath);
+	    if (Tcl_FSAccess(newPath, R_OK) == 0) {
+		Tcl_SetStartupScript(newPath, encodingName);
+		path = newPath;
+		goto doit;
+	    }
+	    Tcl_DecrRefCount(newPath);
+	}
+#endif
 doit:
 	Tcl_ResetResult(interp);
 	code = Tcl_FSEvalFileEx(interp, path, encodingName);

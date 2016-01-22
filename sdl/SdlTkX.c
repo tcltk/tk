@@ -44,6 +44,12 @@ struct PanZoomRequest {
     SDL_Rect r;
 };
 
+struct EventThreadStartup {
+    int init_done;
+    int *root_width;
+    int *root_height;
+};
+
 struct prop_key {
     _Window *w;
     Atom name;
@@ -82,7 +88,7 @@ SdlTkLock(Display *display)
 {
     Tcl_MutexLock(&xlib_lock);
     if (display != NULL) {
-	while (xlib_grab != NULL && xlib_grab != display) {
+	while ((xlib_grab != NULL) && (xlib_grab != display)) {
 	    Tcl_ConditionWait(&xlib_cond, &xlib_lock, NULL);
 	}
     }
@@ -182,7 +188,7 @@ XChangeGC(Display *display, GC gc, unsigned long mask, XGCValues *values)
     }
     if (mask & GCLineWidth) {
 	gc->line_width = values->line_width;
-    } 
+    }
     if (mask & GCLineStyle) {
 	gc->line_style = values->line_style;
     }
@@ -263,7 +269,7 @@ XChangeProperty(Display *display, Window w, Atom property, Atom type,
 	strcpy((char *) _w->title, (char *) data);
 
 	/* Redraw frame titlebar */
-	if (_w->parent != NULL && _w->parent->dec != NULL) {
+	if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	    SdlTkDecSetDraw(_w->parent, 1);
 	    SdlTkScreenChanged();
 	}
@@ -278,7 +284,7 @@ XChangeProperty(Display *display, Window w, Atom property, Atom type,
 	    atts.override_redirect = props[2] ? 0 : 1;
 	    if (_w->atts.override_redirect != atts.override_redirect) {
 		SdlTkChangeWindowAttributes(display, w,
-					    CWOverrideRedirect, &atts); 
+					    CWOverrideRedirect, &atts);
 	    }
 	}
 	goto done;
@@ -302,7 +308,7 @@ XChangeProperty(Display *display, Window w, Atom property, Atom type,
 	    xx = yy = 0;
 	    ww = SdlTkX.screen->width;
 	    hh = SdlTkX.screen->height;
-	    if (_w->parent != NULL && _w->parent->dec != NULL) {
+	    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 		xx -= SdlTkX.dec_frame_width;
 		yy -= SdlTkX.dec_title_height;
 		ww += SdlTkX.dec_frame_width * 2;
@@ -439,7 +445,7 @@ SdlTkChangeWindowAttributes(Display *display, Window w,
 	     * if the window was never mapped
 	     */
 
-	    if (_w->parent != NULL && _w->parent->dec != NULL) {
+	    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 		/* Reparent to root */
 		SdlTkReparentWindow(display, w, SdlTkX.screen->root,
 				    _w->parent->atts.x, _w->parent->atts.y);
@@ -484,6 +490,12 @@ XCloseDisplay(Display *display)
 
     display->request++;
 
+#ifdef _WIN32
+    if ((HANDLE) display->fd != INVALID_HANDLE_VALUE) {
+	CloseHandle((HANDLE) display->fd);
+	display->fd = INVALID_HANDLE_VALUE;
+    }
+#else
     if (display->fd >= 0) {
 	close(display->fd);
 	display->fd = -1;
@@ -494,11 +506,14 @@ XCloseDisplay(Display *display)
 	display->ext_number = -1;
     }
 #endif
+#endif
 
     ckfree((char *) display->screens);
     display->screens = NULL;
-    ckfree((char *) display->display_name);
-    display->display_name = NULL;
+    if (display->display_name != NULL) {
+	ckfree((char *) display->display_name);
+	display->display_name = NULL;
+    }
 
     /* Remove left over windows */
     _w = ((_Window *) SdlTkX.screen->root)->child;
@@ -646,7 +661,7 @@ XCopyArea(Display *display, Drawable src, Drawable dest, GC gc,
 	TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
 
 	SdlTkScreenChanged();
-	if (clipPtr && clipPtr->type == TKP_CLIP_REGION) {
+	if ((clipPtr != NULL) && (clipPtr->type == TKP_CLIP_REGION)) {
 	    Region clipRgn = (Region) clipPtr->value.region;
 
 	    SdlTkDirtyRegion(dest, clipRgn);
@@ -779,7 +794,7 @@ XCreateGC(Display *display, Drawable d, unsigned long mask, XGCValues *values)
     gp->plane_mask = (mask & GCPlaneMask) ? values->plane_mask : ~0;
     gp->foreground = (mask & GCForeground) ? values->foreground : 0;
     gp->background = (mask & GCBackground) ? values->background : 0xffffff;
-    gp->line_width = (mask & GCLineWidth) ? values->line_width : 1;	
+    gp->line_width = (mask & GCLineWidth) ? values->line_width : 1;
     gp->line_style = (mask & GCLineStyle) ? values->line_style : LineSolid;
     gp->cap_style = (mask & GCCapStyle)	? values->cap_style : 0;
     gp->join_style = (mask & GCJoinStyle) ? values->join_style : 0;
@@ -882,18 +897,15 @@ XCopyGC(Display *display, GC src, unsigned long mask, GC dest)
         dest->dashes = src->dashes;
     }
     if (mask & GCClipMask) {
-        if (dest->clip_mask == None &&
-	    src->clip_mask != None) {
+        if ((dest->clip_mask == None) && (src->clip_mask != None)) {
 	    dest->clip_mask = (Pixmap) ckalloc(sizeof (TkpClipMask));
 	    ((TkpClipMask *) dest->clip_mask)->type = TKP_CLIP_PIXMAP;
 	    ((TkpClipMask *) dest->clip_mask)->value.pixmap =
 		((TkpClipMask *) src->clip_mask)->value.pixmap;
-	} else if (dest->clip_mask != None &&
-		   src->clip_mask == None) {
+	} else if ((dest->clip_mask != None) && (src->clip_mask == None)) {
 	    ckfree(dest->clip_mask);
 	    dest->clip_mask = None;
-	} else if (dest->clip_mask != None &&
-		   src->clip_mask != None) {
+	} else if ((dest->clip_mask != None) && (src->clip_mask != None)) {
 	    ((TkpClipMask *) dest->clip_mask)->value.pixmap =
 		((TkpClipMask *) src->clip_mask)->value.pixmap;
 	}
@@ -1040,7 +1052,7 @@ XCreatePixmap(Display *display, Drawable d, unsigned int width,
 	}
     } else if (depth == (unsigned) -32) {
 	/* special case: tkpath + AGG2D, force BGRA8 for AGG2D */
-	sdl = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, 32, 
+	sdl = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, 32,
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 				   0x0000FF00,
 				   0x00FF0000,
@@ -1124,16 +1136,16 @@ SdlTkCreateWindow(Display *display, Window parent, int x, int y,
     _w->atts.visual = visual;
     _w->atts.map_state = IsUnmapped;
     _w->atts.override_redirect =
-	(attributes && (valuemask & CWOverrideRedirect)) ?
+	((attributes != NULL) && (valuemask & CWOverrideRedirect)) ?
 	attributes->override_redirect : False;
     _w->atts.your_event_mask =
-	(attributes && (valuemask & CWEventMask)) ?
+	((attributes != NULL) && (valuemask & CWEventMask)) ?
 	attributes->event_mask : 0;
-    if (attributes && (valuemask & CWBackPixel)) {
+    if ((attributes != NULL) && (valuemask & CWBackPixel)) {
 	_w->back_pixel_set = 1;
 	_w->back_pixel = attributes->background_pixel;
 	_w->back_pixmap = NULL;
-    } else if (attributes && (valuemask & CWBackPixmap)) {
+    } else if ((attributes != NULL) && (valuemask & CWBackPixmap)) {
 	_w->back_pixel_set = 0;
 	if (attributes->background_pixmap == ParentRelative) {
 	    _w->back_pixmap = (_Pixmap *) attributes->background_pixmap;
@@ -1179,7 +1191,7 @@ SdlTkCreateWindow(Display *display, Window parent, int x, int y,
 	event.xcreatewindow.border_width = _w->atts.border_width;
 	event.xcreatewindow.override_redirect = _w->atts.override_redirect;
 	SdlTkQueueEvent(&event);
-	if (!IS_ROOT(parent) && _parent->display != _w->display) {
+	if (!IS_ROOT(parent) && (_parent->display != _w->display)) {
 	    event.xcreatewindow.serial = _parent->display->request;
 	    event.xcreatewindow.display = _parent->display;
 	    SdlTkQueueEvent(&event);
@@ -1263,7 +1275,8 @@ static void
 SdlTkDestroyWindow(Display *display, Window w)
 {
     _Window *_w = (_Window *) w;
-    _Window *wdec = (_w->parent && _w->parent->dec) ? _w->parent : NULL;
+    _Window *wdec = ((_w->parent != NULL) && (_w->parent->dec != NULL)) ?
+			_w->parent : NULL;
     XEvent event;
     int hadFocus = 0, doNotify;
 
@@ -1319,7 +1332,7 @@ SdlTkDestroyWindow(Display *display, Window w)
 
     doNotify = (_w->atts.your_event_mask & StructureNotifyMask) != 0;
     doNotify = doNotify && (_w->display != _w->parent->display);
- 
+
     /* Remove from parent */
     SdlTkRemoveFromParent(_w);
 
@@ -1357,9 +1370,9 @@ SdlTkDestroyWindow(Display *display, Window w)
     /*
      * Remove properties
      */
-    if (prop_initialized) { 
+    if (prop_initialized) {
 	Tcl_HashEntry *hPtr;
-	Tcl_HashSearch search; 
+	Tcl_HashSearch search;
 	struct prop_key *keyPtr;
 
 	hPtr = Tcl_FirstHashEntry(&prop_table, &search);
@@ -1378,7 +1391,7 @@ SdlTkDestroyWindow(Display *display, Window w)
      * Destroy decorative frame:
      * actually this shouldn't happen, since Tk reparents the wrapper
      * to the root before destroying it, and reparenting should destroy the
-     * decorative frame 
+     * decorative frame
      */
 
     if (wdec != NULL) {
@@ -1486,7 +1499,7 @@ XDrawPoints(Display *display, Drawable d, GC gc, XPoint *points, int npoints,
     display->request++;
 
     for (n = 0; n < npoints; n++) {
-	if (n == 0 || mode == CoordModeOrigin) {
+	if ((n == 0) || (mode == CoordModeOrigin)) {
 	    x = points[n].x;
 	    y = points[n].y;
 	} else {
@@ -1734,7 +1747,7 @@ SdlTkQueueEvent(XEvent *event)
 
     EVLOG("QueueEvent %d %p", event->xany.type, (void *) event->xany.window);
 
-    if (display != NULL && display->screens == NULL) {
+    if ((display != NULL) && (display->screens == NULL)) {
 	return;
     }
 
@@ -1765,27 +1778,33 @@ SdlTkQueueEvent(XEvent *event)
     display->tail = qevent;
     display->qlen++;
 
+#ifdef _WIN32
+    if (trigger && ((HANDLE) display->fd != INVALID_HANDLE_VALUE)) {
+	SetEvent((HANDLE) display->fd);
+    }
+#else
 #ifdef HAVE_EVENTFD
-    if (trigger && display->fd >= 0) {
+    if (trigger && (display->fd >= 0)) {
 	long long buf = trigger;
 	int n = write(display->fd, &buf, sizeof (buf));
 
-	if (n < 0 && errno != EWOULDBLOCK && errno != EAGAIN) {
+	if ((n < 0) && (errno != EWOULDBLOCK) && (errno != EAGAIN)) {
 	    close(display->fd);
 	    display->fd = -1;
 	}
     }
 #else
-    if (trigger && display->ext_number >= 0) {
+    if (trigger && (display->ext_number >= 0)) {
 	int n = write(display->ext_number, "e", 1);
 
-	if (n < 0 && errno != EWOULDBLOCK && errno != EAGAIN) {
+	if ((n < 0) && (errno != EWOULDBLOCK) && (errno != EAGAIN)) {
 	    close(display->ext_number);
 	    display->ext_number = -1;
 	    close(display->fd);
 	    display->fd = -1;
 	}
     }
+#endif
 #endif
 
     Tcl_MutexUnlock((Tcl_Mutex *) &display->qlock);
@@ -1985,7 +2004,7 @@ XGetGeometry(Display *display, Drawable d, Window *root_return,
     display->request++;
 
     *root_return = SdlTkX.screen->root;
-    
+
     if (_p->type == DT_PIXMAP) {
 	*x_return = *y_return = 0;
 	*width_return = _p->sdl->w;
@@ -2034,7 +2053,7 @@ XGetImage(Display *display, Drawable d, int x, int y,
 				       _p->sdl->format->Bmask,
 				       _p->sdl->format->Amask);
 	bpp = _p->sdl->format->BitsPerPixel;
-	if (bpp == 8 && sdl != NULL) {
+	if ((bpp == 8) && (sdl != NULL)) {
 	    int i;
 	    SDL_Palette *pal = SDL_AllocPalette(256);
 	    SDL_Color graymap[256];
@@ -2087,7 +2106,7 @@ XGetImage(Display *display, Drawable d, int x, int y,
 
     SdlTkUnlock(display);
 
-    /* Allocate the XImage using the pixels we allocated above */ 
+    /* Allocate the XImage using the pixels we allocated above */
     return XCreateImage(display, SdlTkX.screen->root_visual,
 			bpp, ZPixmap, 0, pixels, width, height, 0, 0);
 }
@@ -2220,7 +2239,7 @@ XGetWindowProperty(Display *display, Window w, Atom property,
 		(*prop_return)[len] = '\0';
 	    }
 	}
-	if (delete && *bytes_after_return == 0) {
+	if (delete && (*bytes_after_return == 0)) {
 	    ckfree(Tcl_GetHashValue(hPtr));
 	    Tcl_DeleteHashEntry(hPtr);
 	    if (!IS_ROOT(w)) {
@@ -2260,7 +2279,7 @@ XGetVisualInfo(Display *display, long vinfo_mask, XVisualInfo *vinfo_template,
     info->red_mask = info->visual->red_mask;
     info->green_mask = info->visual->green_mask;
     info->blue_mask = info->visual->blue_mask;
-    
+
     if (((vinfo_mask & VisualIDMask)
 	    && (vinfo_template->visualid != info->visualid))
 	    || ((vinfo_mask & VisualScreenMask)
@@ -3537,12 +3556,12 @@ SdlTkMapWindow(Display *display, Window w)
     memset(&event, 0, sizeof (event));
 
     if (_w->fullscreen) {
-	if (_w->atts.width != SdlTkX.screen->width ||
-	    _w->atts.height != SdlTkX.screen->height) {
+	if ((_w->atts.width != SdlTkX.screen->width) ||
+	    (_w->atts.height != SdlTkX.screen->height)) {
 	    _w->atts_saved = _w->atts;
 	    _w->atts.width = SdlTkX.screen->width;
 	    _w->atts.height = SdlTkX.screen->height;
-	    if (_w->parent != NULL && _w->parent->dec != NULL) {
+	    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 		_Window *_p = _w->parent;
 
 		_w->atts.x = SdlTkX.dec_frame_width;
@@ -3616,7 +3635,7 @@ SdlTkMapWindow(Display *display, Window w)
     }
 
     /* Map decorative frame */
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	_w->parent->atts.map_state = IsViewable;
     }
 
@@ -3634,7 +3653,7 @@ SdlTkMapWindow(Display *display, Window w)
 	SdlTkQueueEvent(&event);
     }
 
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	SdlTkVisRgnChanged(_w->parent, VRC_CHANGED | VRC_DO_PARENT, 0, 0);
     } else {
 	SdlTkVisRgnChanged(_w, VRC_CHANGED | VRC_DO_PARENT, 0, 0);
@@ -3649,7 +3668,7 @@ SdlTkMapWindow(Display *display, Window w)
      * Don't focus on override_redirect's though (i.e., menus).
      */
 
-    if (_w == SdlTkTopVisibleWrapper() && _w->parent != NULL &&
+    if (_w == SdlTkTopVisibleWrapper() && (_w->parent != NULL) &&
 	!_w->atts.override_redirect) {
 	if (SdlTkX.keyboard_window == NULL) {
 	    SdlTkSetInputFocus(display, w, RevertToParent, CurrentTime);
@@ -3693,7 +3712,7 @@ XRaiseWindow(Display *display, Window w)
     if (_w->display == NULL) {
 	goto done;
     }
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	SdlTkRestackWindow(_w->parent, NULL, Above);
 	SdlTkRestackTransients(_w);
     } else {
@@ -3708,7 +3727,7 @@ XRaiseWindow(Display *display, Window w)
      * Don't focus on override_redirect's though (i.e., menus).
      */
 
-    if (_w == SdlTkTopVisibleWrapper() && _w->parent != NULL &&
+    if (_w == SdlTkTopVisibleWrapper() && (_w->parent != NULL) &&
 	!_w->atts.override_redirect) {
 	if (SdlTkX.keyboard_window == NULL) {
 	    SdlTkSetInputFocus(display, w, RevertToParent, CurrentTime);
@@ -3732,7 +3751,7 @@ XLowerWindow(Display *display, Window w)
     if (_w->display == NULL) {
 	goto done;
     }
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	SdlTkRestackWindow(_w->parent, NULL, Below);
     } else {
 	SdlTkRestackWindow(_w, NULL, Below);
@@ -3764,7 +3783,7 @@ SdlTkMoveWindow(Display *display, Window w, int x, int y)
      * instead of the given window.
      */
 
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	_Window *wdec = _w->parent;
 
 	ox = wdec->atts.x;
@@ -3782,7 +3801,7 @@ SdlTkMoveWindow(Display *display, Window w, int x, int y)
 	SdlTkGenerateConfigureNotify(w);
     }
 
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	SdlTkVisRgnChanged(_w->parent,
 			   VRC_CHANGED | VRC_DO_PARENT | VRC_MOVE, ox, oy);
     } else {
@@ -3830,10 +3849,10 @@ SdlTkMoveResizeWindow(Display *display, Window w, int x, int y,
      * not the given window
      */
 
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	_Window *wdec = _w->parent;
 
-	if (x != wdec->atts.x || y != wdec->atts.y) {
+	if ((x != wdec->atts.x) || (y != wdec->atts.y)) {
 	    ox = wdec->atts.x;
 	    oy = wdec->atts.y;
 	    flags |= VRC_MOVE;
@@ -3848,12 +3867,12 @@ SdlTkMoveResizeWindow(Display *display, Window w, int x, int y,
 	 * for <ConfigureNotify> so do nothing in this case.
 	 */
 
-	if (x == _w->atts.x && y == _w->atts.y &&
-	    width == _w->atts.width && height == _w->atts.height) {
+	if ((x == _w->atts.x) && (y == _w->atts.y) &&
+	    (width == _w->atts.width) && (height == _w->atts.height)) {
 	    return;
 	}
 
-	if (x != _w->atts.x || y != _w->atts.y) {
+	if ((x != _w->atts.x) || (y != _w->atts.y)) {
 	    ox = _w->atts.x;
 	    oy = _w->atts.y;
 	    flags |= VRC_MOVE;
@@ -3863,10 +3882,10 @@ SdlTkMoveResizeWindow(Display *display, Window w, int x, int y,
     }
 
     /* "wm geom +x+y" will call this, even though the size doesn't change */
-    if (_w->atts.width != width || _w->atts.height != height) {
+    if ((_w->atts.width != width) || (_w->atts.height != height)) {
 
 	/* If this window has a decorative frame, resize it */
-	if (_w->parent != NULL && _w->parent->dec != NULL) {
+	if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	    _Window *wdec = _w->parent;
 
 	    wdec->atts.width =
@@ -3902,7 +3921,7 @@ SdlTkMoveResizeWindow(Display *display, Window w, int x, int y,
 	SdlTkGenerateConfigureNotify(w);
     }
 
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	SdlTkVisRgnChanged(_w->parent, flags, ox, oy);
     } else {
 	SdlTkVisRgnChanged(_w, flags, ox, oy);
@@ -3929,13 +3948,18 @@ XNextEvent(Display *display, XEvent *event_return)
 
 again:
     Tcl_MutexLock((Tcl_Mutex *) &display->qlock);
+#ifdef _WIN32
+    if ((HANDLE) display->fd != INVALID_HANDLE_VALUE) {
+	WaitForSingleObject((HANDLE) display->fd, once ? 0 : 10);
+    }
+#else
     if (display->fd >= 0) {
 #ifdef HAVE_EVENTFD
 	long long buffer;
 	int n;
 
 	n = read(display->fd, &buffer, sizeof (buffer));
-	if (n < 0 && errno != EWOULDBLOCK && errno != EAGAIN) {
+	if ((n < 0) && (errno != EWOULDBLOCK) && (errno != EAGAIN)) {
 	    close(display->fd);
 	    display->fd = -1;
 	}
@@ -3945,7 +3969,7 @@ again:
 
 	for (;;) {
 	    n = read(display->fd, buffer, sizeof (buffer));
-	    if (n < 0 && (errno == EWOULDBLOCK || errno == EAGAIN)) {
+	    if ((n < 0) && ((errno == EWOULDBLOCK) || (errno == EAGAIN))) {
 		break;
 	    }
 	    if (n <= 0) {
@@ -3958,6 +3982,7 @@ again:
 	}
 #endif
     }
+#endif
     qevent = display->head;
     if (qevent != NULL) {
 	*event_return = qevent->event;
@@ -3976,7 +4001,10 @@ again:
 	    once = 0;
 	    EVLOG("XNextEvent sleeping");
 	}
+#ifndef _WIN32
+	/* On Windows the sleep is in WaitForSingleObject() above. */
 	Tcl_Sleep(10);
+#endif
 	goto again;
     }
     Tcl_MutexUnlock((Tcl_Mutex *) &display->qlock);
@@ -4034,7 +4062,7 @@ SdlTkPanInt(int dx, int dy)
     if (y < 0) {
 	y = 0;
     }
-    if (x != SdlTkX.viewport.x || y != SdlTkX.viewport.y) {
+    if ((x != SdlTkX.viewport.x) || (y != SdlTkX.viewport.y)) {
 	SdlTkX.viewport.x = x;
 	SdlTkX.viewport.y = y;
 	SdlTkX.draw_later |= SDLTKX_RENDCLR | SDLTKX_PRESENT;
@@ -4102,11 +4130,11 @@ SdlTkZoomInt(int x, int y, float z)
 	    vh = sh;
 	}
     }
-    if (scale != SdlTkX.scale ||
-	x != SdlTkX.viewport.x ||
-	y != SdlTkX.viewport.y ||
-	vw != SdlTkX.viewport.w ||
-	vh != SdlTkX.viewport.h) {
+    if ((scale != SdlTkX.scale) ||
+	(x != SdlTkX.viewport.x) ||
+	(y != SdlTkX.viewport.y) ||
+	(vw != SdlTkX.viewport.w) ||
+	(vh != SdlTkX.viewport.h)) {
 	SdlTkX.scale = scale;
 	SdlTkX.viewport.x = x;
 	SdlTkX.viewport.y = y;
@@ -4118,10 +4146,10 @@ SdlTkZoomInt(int x, int y, float z)
     }
     ow = (int) SDL_ceil(vw * SdlTkX.scale);
     oh = (int) SDL_ceil(vh * SdlTkX.scale);
-    if (ow < sw || oh < sh) {
-	if (SdlTkX.outrect == NULL ||
-	    SdlTkX.outrect->w != ow ||
-	    SdlTkX.outrect->h != oh) {
+    if ((ow < sw) || (oh < sh)) {
+	if ((SdlTkX.outrect == NULL) ||
+	    (SdlTkX.outrect->w != ow) ||
+	    (SdlTkX.outrect->h != oh)) {
 	    SdlTkX.draw_later |= SDLTKX_RENDCLR | SDLTKX_PRESENT;
 	}
 	SdlTkX.outrect = &SdlTkX.outrect0;
@@ -4132,7 +4160,7 @@ SdlTkZoomInt(int x, int y, float z)
     } else {
 	SdlTkX.outrect = NULL;
     }
-    if (SdlTkX.viewport.w == sw && SdlTkX.viewport.h == sh) {
+    if ((SdlTkX.viewport.w == sw) && (SdlTkX.viewport.h == sh)) {
 	SdlTkX.draw_later &= ~SDLTKX_SCALED;
     } else {
 	SdlTkX.draw_later |= SDLTKX_SCALED;
@@ -4225,11 +4253,11 @@ HandlePanZoom(struct PanZoomRequest *pz)
 	    vh = sh;
 	}
     }
-    if (scale != SdlTkX.scale ||
-	x != SdlTkX.viewport.x ||
-	y != SdlTkX.viewport.y ||
-	vw != SdlTkX.viewport.w ||
-	vh != SdlTkX.viewport.h) {
+    if ((scale != SdlTkX.scale) ||
+	(x != SdlTkX.viewport.x) ||
+	(y != SdlTkX.viewport.y) ||
+	(vw != SdlTkX.viewport.w) ||
+	(vh != SdlTkX.viewport.h)) {
 	SdlTkX.scale = scale;
 	SdlTkX.viewport.x = x;
 	SdlTkX.viewport.y = y;
@@ -4241,10 +4269,10 @@ HandlePanZoom(struct PanZoomRequest *pz)
     }
     ow = (int) SDL_ceil(vw * SdlTkX.scale);
     oh = (int) SDL_ceil(vh * SdlTkX.scale);
-    if (ow < sw || oh < sh) {
-	if (SdlTkX.outrect == NULL ||
-	    SdlTkX.outrect->w != ow ||
-	    SdlTkX.outrect->h != oh) {
+    if ((ow < sw) || (oh < sh)) {
+	if ((SdlTkX.outrect == NULL) ||
+	    (SdlTkX.outrect->w != ow) ||
+	    (SdlTkX.outrect->h != oh)) {
 	    SdlTkX.draw_later |= SDLTKX_RENDCLR | SDLTKX_PRESENT;
 	}
 	SdlTkX.outrect = &SdlTkX.outrect0;
@@ -4255,7 +4283,7 @@ HandlePanZoom(struct PanZoomRequest *pz)
     } else {
 	SdlTkX.outrect = NULL;
     }
-    if (SdlTkX.viewport.w == sw && SdlTkX.viewport.h == sh) {
+    if ((SdlTkX.viewport.w == sw) && (SdlTkX.viewport.h == sh)) {
 	SdlTkX.draw_later &= ~SDLTKX_SCALED;
     } else {
 	SdlTkX.draw_later |= SDLTKX_SCALED;
@@ -4316,10 +4344,10 @@ HandleRootSize(struct RootSizeRequest *r)
     height = r->height;
     oldw = SdlTkX.screen->width;
     oldh = SdlTkX.screen->height;
-    if (width == oldw && height == oldh) {
+    if ((width == oldw) && (height == oldh)) {
 	goto done;
     }
-    if (width == 0 || height == 0) {
+    if ((width == 0) || (height == 0)) {
 	/* adjust to real screen */
 	width = sw;
 	height = sh;
@@ -4348,11 +4376,11 @@ HandleRootSize(struct RootSizeRequest *r)
 			       SDL_TEXTUREACCESS_STREAMING,
 			       width, height);
 #ifdef ANDROID
-    if (newsurf != NULL && newtex != NULL) {
+    if ((newsurf != NULL) && (newtex != NULL)) {
 	SDL_GL_SwapWindow(SdlTkX.sdlscreen);
     }
 #endif
-    if (newsurf != NULL && newtex != NULL) {
+    if ((newsurf != NULL) && (newtex != NULL)) {
 	SDL_Rect sr;
 	Uint32 pixel;
 	_Window *child;
@@ -4365,7 +4393,7 @@ HandleRootSize(struct RootSizeRequest *r)
 	SdlTkX.sdlsurf = newsurf;
 	SDL_DestroyTexture(SdlTkX.sdltex);
 	SdlTkX.sdltex = newtex;
-	if (r->width == 0 && r->height == 0) {
+	if ((r->width == 0) && (r->height == 0)) {
 	    SdlTkX.root_w = 0;
 	    SdlTkX.root_h = 0;
 	} else {
@@ -4434,7 +4462,7 @@ HandleRootSize(struct RootSizeRequest *r)
 	    sr.w = width;
 	    SDL_FillRect(SdlTkX.sdlsurf, &sr, pixel);
 	}
-	if (width > oldw || height > oldh) {
+	if ((width > oldw) || (height > oldh)) {
 	    SdlTkVisRgnChanged(_w, VRC_CHANGED, 0, 0);
 	}
 	child = _w->child;
@@ -4487,9 +4515,9 @@ HandleRootSize(struct RootSizeRequest *r)
 	    SdlTkX.scale_min = (float) sh / height;
 	}
     }
-    if (SdlTkX.viewport.w > width ||
-	SdlTkX.viewport.h > height ||
-	SdlTkX.scale < SdlTkX.scale_min) {
+    if ((SdlTkX.viewport.w > width) ||
+	(SdlTkX.viewport.h > height) ||
+	(SdlTkX.scale < SdlTkX.scale_min)) {
 	SdlTkX.scale = 1.0f;
 	SdlTkX.viewport.x = 0;
 	SdlTkX.viewport.y = 0;
@@ -4566,165 +4594,19 @@ TimerCallback(Uint32 interval, void *clientData)
 /*
  *----------------------------------------------------------------------
  *
- * EventThread
+ * PerformSDLInit --
  *
- *	This function handles SDL events and carries out screen
- *	updates. It dispatches X events to the various Display
- *	structures.
- * 
+ *	SDL initialization (long)
+ *
  *----------------------------------------------------------------------
  */
 
-static Tcl_ThreadCreateType
-EventThread(ClientData clientData)
-{
-    SDL_Event sdl_event;
-    XEvent event;
-    SDL_TimerID timerId;
-    int skipRefresh = 0, overrun;
-    static const Tcl_Time t = { 0, 0 };
-
-    EVLOG("EventThread start");
-#ifdef ANDROID
-    Android_JNI_SetupThread();
-#endif
-    SdlTkLock(NULL);
-    /* inflate conditions */
-    Tcl_ConditionWait(&time_cond, &xlib_lock, &t);
-    Tcl_ConditionWait(&xlib_cond, &xlib_lock, &t);
-    SDL_GL_MakeCurrent(SdlTkX.sdlscreen, (SDL_GLContext) clientData);
-    SDL_SetRenderTarget(SdlTkX.sdlrend, NULL);
-#ifdef ANDROID
-    SDL_GL_SwapWindow(SdlTkX.sdlscreen);
-    SdlTkX.gl_context = (SDL_GLContext) clientData;
-#else
-    SDL_UpdateTexture(SdlTkX.sdltex, NULL, SdlTkX.sdlsurf->pixels,
-		      SdlTkX.sdlsurf->pitch);
-    SDL_RenderCopy(SdlTkX.sdlrend, SdlTkX.sdltex, NULL, NULL);
-#endif
-    SdlTkUnlock(NULL);
-
-    timerId = SDL_AddTimer(1000 / SDLTK_FRAMERATE, TimerCallback,
-			   (void *) &SdlTkX.time_count);
-    EVLOG("EventThread enter loop");
-    /* Add all pending SDL events to the X event queues */
-    while (1) {
-	_XSQEvent *qevent;
-
-	/* Enable timer messages. */
-	timer_enabled = !SdlTkX.in_background;
-	if (!SDL_WaitEvent(&sdl_event)) {
-	    break;
-	}
-	if (SdlTkX.sdlscreen == NULL) {
-	    break;
-	}
-	memset(&event, 0, sizeof (event));
-	SdlTkLock(NULL);
-	if ((sdl_event.type == SDL_USEREVENT) &&
-	    (sdl_event.user.data1 == TimerCallback) &&
-	    (sdl_event.user.data2 != NULL)) {
-	    /* Disable timer messages. */
-	    timer_enabled = 0;
-	    if (!skipRefresh) {
-#ifdef ANDROID
-		SdlTkScreenRefresh();
-#else
-		SDL_SetRenderTarget(SdlTkX.sdlrend, NULL);
-		SdlTkScreenRefresh();
-#endif
-	    }
-	    overrun = (SdlTkX.time_count - sdl_event.user.code) > 0;
-	    skipRefresh = !skipRefresh && overrun;
-	    /* Mark event to be skipped in SdlTkTranslateEvent() */
-	    sdl_event.type = SDL_USEREVENT + 0x1000;
-	}
-	if ((sdl_event.type == SDL_USEREVENT) &&
-	    (sdl_event.user.data1 == HandlePanZoom) &&
-	    (sdl_event.user.data2 != NULL)) {
-	    HandlePanZoom((struct PanZoomRequest *) sdl_event.user.data2);
-	    /* Mark event to be skipped in SdlTkTranslateEvent() */
-	    sdl_event.type = SDL_USEREVENT + 0x1001;
-	}
-	if ((sdl_event.type == SDL_USEREVENT) &&
-	    (sdl_event.user.data1 == HandleRootSize) &&
-	    (sdl_event.user.data2 != NULL)) {
-#ifndef ANDROID
-	    SDL_SetRenderTarget(SdlTkX.sdlrend, NULL);
-#endif
-	    HandleRootSize((struct RootSizeRequest *) sdl_event.user.data2);
-	    /* Mark event to be skipped in SdlTkTranslateEvent() */
-	    sdl_event.type = SDL_USEREVENT + 0x1002;
-	}
-	if (SdlTkTranslateEvent(&sdl_event, &event, SdlTkX.time_count)) {
-	    SdlTkQueueEvent(&event);
-	}
-	SdlTkUnlock(NULL);
-	/* Remove left over events from SdlTkX.display */
-	Tcl_MutexLock((Tcl_Mutex *) &SdlTkX.display->qlock);
-	qevent = SdlTkX.display->head;
-	while (qevent != NULL) {
-	    _XSQEvent *next = qevent->next;
-
-	    EVLOG("RemoveEvent %d %p", qevent->event.xany.type,
-		  (void *) qevent->event.xany.window);
-	    qevent->next = SdlTkX.display->qfree;
-	    SdlTkX.display->qfree = qevent;
-	    qevent = next;
-	}
-	SdlTkX.display->head = SdlTkX.display->tail = NULL;
-	Tcl_MutexUnlock((Tcl_Mutex *) &SdlTkX.display->qlock);
-    }
-    SDL_RemoveTimer(timerId);
-    TCL_THREAD_CREATE_RETURN;
-}
-
-int
-ScreenGetMMWidthHeight(Display *display, Screen *screen,
-		       int *mwidthp, int *widthp,
-		       int *mheightp, int *heightp)
-{
-    SdlTkLock(display);
-    if (mwidthp != NULL) {
-	*mwidthp = screen->mwidth;
-    }
-    if (widthp != NULL) {
-	*widthp = screen->width;
-    }
-    if (mheightp != NULL) {
-	*mheightp = screen->mheight;
-    }
-    if (heightp != NULL) {
-	*heightp = screen->height;
-    }
-    SdlTkUnlock(display);
-    return 0;
-}
-
-int
-ScreenGetMMWidth(Display *display, Screen *screen, int *mwidthp, int *widthp)
-{
-    return ScreenGetMMWidthHeight(display, screen, mwidthp, widthp, NULL, NULL);
-}
-
-int
-ScreenSetMMWidthHeight(Display *display, Screen *screen, int width, int height)
-{
-    SdlTkLock(display);
-    screen->moverride = 1;
-    screen->mwidth = width;
-    screen->mheight = height;
-    SdlTkUnlock(display);
-    return 0;
-}
-
-Display *
-XOpenDisplay(_Xconst char *display_name)
+static int
+PerformSDLInit(int *root_width, int *root_height)
 {
     Display *display;
     Screen *screen;
     int i, width, height, min_w = 200, min_h = 200;
-    int root_width = 0, root_height = 0;
     Uint32 videoflags;
     _Window *_w;
     SDL_SysWMinfo wminfo;
@@ -4738,16 +4620,7 @@ XOpenDisplay(_Xconst char *display_name)
     int initMask = SDL_INIT_VIDEO;
     int tfmt = SDL_PIXELFORMAT_RGB888;
 #endif
-#ifndef HAVE_EVENTFD
-    int pfd[2];
-#endif
     XGCValues values;
-
-    SdlTkLock(NULL);
-
-    if (SdlTkX.display != NULL) {
-	goto clone;
-    }
 
     if (SDL_Init(initMask) < 0) {
 #ifdef ANDROID
@@ -4757,13 +4630,13 @@ XOpenDisplay(_Xconst char *display_name)
 	fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
 #endif
 fatal:
-	SdlTkUnlock(NULL);
-	return NULL;
+	return 0;
     }
 #ifdef ANDROID
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
 #else
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_EnableScreenSaver();
 #endif
 
     /* preset some defaults */
@@ -4809,10 +4682,10 @@ fatal:
 	sscanf(SdlTkX.arg_height, "%d", &height);
     }
     if (SdlTkX.arg_rootwidth != NULL) {
-	sscanf(SdlTkX.arg_rootwidth, "%d", &root_width);
+	sscanf(SdlTkX.arg_rootwidth, "%d", root_width);
     }
     if (SdlTkX.arg_rootheight != NULL) {
-	sscanf(SdlTkX.arg_rootheight, "%d", &root_height);
+	sscanf(SdlTkX.arg_rootheight, "%d", root_height);
     }
 
 #ifdef SDL_HINT_VIDEO_ALLOW_SCREENSAVER
@@ -4820,7 +4693,7 @@ fatal:
 #endif
     SDL_GetDesktopDisplayMode(0, &info);
     pfmt = SDL_AllocFormat(info.format);
-    if (info.w > 0 && info.h > 0) {
+    if ((info.w > 0) && (info.h > 0)) {
 	if (videoflags & SDL_WINDOW_FULLSCREEN) {
 	    width = info.w;
 	    height = info.h;
@@ -4945,15 +4818,11 @@ fatal:
 	goto fatal;
     }
 
-    /* Set title for window */
-    SDL_SetWindowTitle(SdlTkX.sdlscreen, display_name);
-
     /* From win/tkWinX.c TkpOpenDisplay */
     display = (Display *) ckalloc(sizeof (Display));
     memset(display, '\0', sizeof (Display));
 
-    display->display_name = (char *) ckalloc(strlen(display_name)+1);
-    strcpy(display->display_name, display_name);
+    display->display_name = NULL;
 
     display->cursor_font = 1;
     display->nscreens = 1;
@@ -5137,7 +5006,11 @@ fatal:
 
     /* See TkpDoOneEvent */
     SDL_VERSION(&wminfo.version);
+#ifdef _WIN32
+    display->fd = INVALID_HANDLE_VALUE;
+#else
     display->fd = -1;
+#endif
     SDL_EventState(SDL_JOYDEVICEADDED, SDL_ENABLE);
     SDL_EventState(SDL_JOYDEVICEREMOVED, SDL_ENABLE);
     SDL_EventState(SDL_JOYBALLMOTION, SDL_ENABLE);
@@ -5158,8 +5031,22 @@ fatal:
     SDL_JoystickOpen(0);	/* should pick accelerometer */
     SDL_JoystickUpdate();
 #else
-    if (!SDL_GetWindowWMInfo(SdlTkX.sdlscreen, &wminfo) ||
-	(wminfo.subsystem != SDL_SYSWM_X11)) {
+    if (SDL_GetWindowWMInfo(SdlTkX.sdlscreen, &wminfo)) {
+#ifdef _WIN32
+	if (wminfo.subsystem == SDL_SYSWM_WINDOWS) {
+	    HWND hwnd = wminfo.info.win.window;
+	    HICON hicon;
+
+	    hicon = LoadIconA(GetModuleHandle(NULL), "tk");
+	    SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM) hicon);
+	    SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM) hicon);
+	}
+#else
+	if (wminfo.subsystem != SDL_SYSWM_X11) {
+	    SdlTkX.sdlfocus = 1;
+	}
+#endif
+    } else {
 	SdlTkX.sdlfocus = 1;
     }
 #endif
@@ -5191,13 +5078,215 @@ fatal:
     Tcl_MutexLock((Tcl_Mutex *) &display->qlock);
     Tcl_MutexUnlock((Tcl_Mutex *) &display->qlock);
 
-    /* Run thread to collect SDL events and to do screen updates */
-    Tcl_CreateThread(&SdlTkX.event_tid, EventThread,
-		     SDL_GL_GetCurrentContext(),
-		     TCL_THREAD_STACK_DEFAULT, TCL_THREAD_NOFLAGS);
-    SDL_GL_MakeCurrent(SdlTkX.sdlscreen, NULL);
+    SdlTkX.display = display;
 
-clone:
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * EventThread
+ *
+ *	This function handles SDL events and carries out screen
+ *	updates. It dispatches X events to the various Display
+ *	structures.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Tcl_ThreadCreateType
+EventThread(ClientData clientData)
+{
+    SDL_Event sdl_event;
+    XEvent event;
+    SDL_TimerID timerId;
+    int skipRefresh = 0, overrun, initSuccess;
+    struct EventThreadStartup *evs = (struct EventThreadStartup *) clientData;
+
+    EVLOG("EventThread start");
+#ifdef ANDROID
+    Android_JNI_SetupThread();
+#endif
+    SdlTkLock(NULL);
+    initSuccess = PerformSDLInit(evs->root_width, evs->root_height);
+    evs->init_done = 1;
+    Tcl_ConditionNotify(&xlib_cond);
+    if (!initSuccess) {
+	SdlTkUnlock(NULL);
+	TCL_THREAD_CREATE_RETURN;
+    }
+    evs = NULL;		/* just in case */
+
+    SDL_SetRenderTarget(SdlTkX.sdlrend, NULL);
+#ifdef ANDROID
+    SDL_GL_SwapWindow(SdlTkX.sdlscreen);
+    SdlTkX.gl_context = SDL_GL_GetCurrentContext();
+#else
+    SDL_UpdateTexture(SdlTkX.sdltex, NULL, SdlTkX.sdlsurf->pixels,
+		      SdlTkX.sdlsurf->pitch);
+    SDL_RenderCopy(SdlTkX.sdlrend, SdlTkX.sdltex, NULL, NULL);
+#endif
+    SdlTkUnlock(NULL);
+
+    timerId = SDL_AddTimer(1000 / SDLTK_FRAMERATE, TimerCallback,
+			   (void *) &SdlTkX.time_count);
+    EVLOG("EventThread enter loop");
+    /* Add all pending SDL events to the X event queues */
+    while (1) {
+	_XSQEvent *qevent;
+
+	/* Enable timer messages. */
+	timer_enabled = !SdlTkX.in_background;
+	if (!SDL_WaitEvent(&sdl_event)) {
+	    break;
+	}
+	if (SdlTkX.sdlscreen == NULL) {
+	    break;
+	}
+	memset(&event, 0, sizeof (event));
+	SdlTkLock(NULL);
+	if ((sdl_event.type == SDL_USEREVENT) &&
+	    (sdl_event.user.data1 == TimerCallback) &&
+	    (sdl_event.user.data2 != NULL)) {
+	    /* Disable timer messages. */
+	    timer_enabled = 0;
+	    if (!skipRefresh) {
+#ifdef ANDROID
+		SdlTkScreenRefresh();
+#else
+		SDL_SetRenderTarget(SdlTkX.sdlrend, NULL);
+		SdlTkScreenRefresh();
+#endif
+	    }
+	    overrun = (SdlTkX.time_count - sdl_event.user.code) > 0;
+	    skipRefresh = !skipRefresh && overrun;
+	    /* Mark event to be skipped in SdlTkTranslateEvent() */
+	    sdl_event.type = SDL_USEREVENT + 0x1000;
+	}
+	if ((sdl_event.type == SDL_USEREVENT) &&
+	    (sdl_event.user.data1 == HandlePanZoom) &&
+	    (sdl_event.user.data2 != NULL)) {
+	    HandlePanZoom((struct PanZoomRequest *) sdl_event.user.data2);
+	    /* Mark event to be skipped in SdlTkTranslateEvent() */
+	    sdl_event.type = SDL_USEREVENT + 0x1001;
+	}
+	if ((sdl_event.type == SDL_USEREVENT) &&
+	    (sdl_event.user.data1 == HandleRootSize) &&
+	    (sdl_event.user.data2 != NULL)) {
+#ifndef ANDROID
+	    SDL_SetRenderTarget(SdlTkX.sdlrend, NULL);
+#endif
+	    HandleRootSize((struct RootSizeRequest *) sdl_event.user.data2);
+	    /* Mark event to be skipped in SdlTkTranslateEvent() */
+	    sdl_event.type = SDL_USEREVENT + 0x1002;
+	}
+	if (SdlTkTranslateEvent(&sdl_event, &event, SdlTkX.time_count)) {
+	    SdlTkQueueEvent(&event);
+	}
+	SdlTkUnlock(NULL);
+	/* Remove left over events from SdlTkX.display */
+	Tcl_MutexLock((Tcl_Mutex *) &SdlTkX.display->qlock);
+	qevent = SdlTkX.display->head;
+	while (qevent != NULL) {
+	    _XSQEvent *next = qevent->next;
+
+	    EVLOG("RemoveEvent %d %p", qevent->event.xany.type,
+		  (void *) qevent->event.xany.window);
+	    qevent->next = SdlTkX.display->qfree;
+	    SdlTkX.display->qfree = qevent;
+	    qevent = next;
+	}
+	SdlTkX.display->head = SdlTkX.display->tail = NULL;
+	Tcl_MutexUnlock((Tcl_Mutex *) &SdlTkX.display->qlock);
+    }
+    SDL_RemoveTimer(timerId);
+    TCL_THREAD_CREATE_RETURN;
+}
+
+int
+ScreenGetMMWidthHeight(Display *display, Screen *screen,
+		       int *mwidthp, int *widthp,
+		       int *mheightp, int *heightp)
+{
+    SdlTkLock(display);
+    if (mwidthp != NULL) {
+	*mwidthp = screen->mwidth;
+    }
+    if (widthp != NULL) {
+	*widthp = screen->width;
+    }
+    if (mheightp != NULL) {
+	*mheightp = screen->mheight;
+    }
+    if (heightp != NULL) {
+	*heightp = screen->height;
+    }
+    SdlTkUnlock(display);
+    return 0;
+}
+
+int
+ScreenGetMMWidth(Display *display, Screen *screen, int *mwidthp, int *widthp)
+{
+    return ScreenGetMMWidthHeight(display, screen, mwidthp, widthp, NULL, NULL);
+}
+
+int
+ScreenSetMMWidthHeight(Display *display, Screen *screen, int width, int height)
+{
+    SdlTkLock(display);
+    screen->moverride = 1;
+    screen->mwidth = width;
+    screen->mheight = height;
+    SdlTkUnlock(display);
+    return 0;
+}
+
+static void
+OpenVeryFirstDisplay(int *root_width, int *root_height)
+{
+    struct EventThreadStartup evs;
+
+    /*
+     * Run thread to startup SDL, to collect SDL events,
+     * and to perform screen updates.
+     */
+    evs.init_done = 0;
+    evs.root_width = root_width;
+    evs.root_height = root_height;
+    Tcl_CreateThread(&SdlTkX.event_tid, EventThread, &evs,
+		     TCL_THREAD_STACK_DEFAULT, TCL_THREAD_NOFLAGS);
+    while (!evs.init_done) {
+	SdlTkWaitLock();
+    }
+}
+
+Display *
+XOpenDisplay(_Xconst char *display_name)
+{
+    Display *display;
+    Screen *screen;
+    int i, root_width = 0, root_height = 0;
+#if !defined(HAVE_EVENTFD) && !defined(_WIN32)
+    int pfd[2];
+#endif
+
+    SdlTkLock(NULL);
+
+    if (SdlTkX.display == NULL) {
+	OpenVeryFirstDisplay(&root_width, &root_height);
+	if (SdlTkX.display != NULL) {
+	    /* Set title for window */
+	    SDL_SetWindowTitle(SdlTkX.sdlscreen, display_name);
+	}
+    }
+
+    if (SdlTkX.display == NULL) {
+	SdlTkUnlock(NULL);
+	return NULL;
+    }
+
     display = (Display *) ckalloc(sizeof (Display));
     memset(display, '\0', sizeof (Display));
 
@@ -5221,6 +5310,9 @@ clone:
     display->proto_minor_version = 6;
     display->release = 0;
 
+#ifdef _WIN32
+    display->fd = (void *) CreateEvent(NULL, 0, 0, NULL);
+#else
 #ifdef HAVE_EVENTFD
     display->fd = eventfd(0, 0);
     fcntl(display->fd, F_SETFD, FD_CLOEXEC);
@@ -5233,6 +5325,7 @@ clone:
     fcntl(pfd[1], F_SETFL, O_NONBLOCK);
     display->fd = pfd[0];
     display->ext_number = pfd[1];
+#endif
 #endif
 
     /* Pre-allocate some events */
@@ -5303,7 +5396,7 @@ XPutImage(Display *display, Drawable d, GC gc, XImage *image,
 
     display->request++;
 
-    if (clipPtr && clipPtr->type == TKP_CLIP_REGION) {
+    if ((clipPtr != NULL) && (clipPtr->type == TKP_CLIP_REGION)) {
 	r = (Region) clipPtr->value.region;
     }
 
@@ -5461,7 +5554,7 @@ XReconfigureWMWindow(Display *display, Window w, int screen_number,
 
 	/* Attempting to restack a wrapper? Restack decframe instead. */
 	/* override_redirects won't have a decframe however */
-	if (parent != NULL && parent->dec != NULL) {
+	if ((parent != NULL) && (parent->dec != NULL)) {
 	    _w = parent;
 	    parent = parent->parent;
 	}
@@ -5504,7 +5597,7 @@ SdlTkReparentWindow(Display *display, Window w, Window parent, int x, int y)
     _Window *wdec = NULL;
     XEvent event;
 
-    if (_w->display == NULL || _parent->display == NULL) {
+    if ((_w->display == NULL) || (_parent->display == NULL)) {
 	return 0;
     }
     memset(&event, 0, sizeof (event));
@@ -5559,7 +5652,7 @@ SdlTkReparentWindow(Display *display, Window w, Window parent, int x, int y)
     }
 
     /* Destroy decorative frame */
-    if (wdec && wdec->child == NULL) {
+    if ((wdec != NULL) && (wdec->child == NULL)) {
 	SdlTkDestroyWindow(display, (Window) wdec);
     }
 
@@ -5602,7 +5695,7 @@ SdlTkResizeWindow(Display *display, Window w,
     }
 
     /* If this window has a decorative frame, resize it */
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	_Window *wdec = _w->parent;
 
 	wdec->atts.width = width + SdlTkX.dec_frame_width * 2;
@@ -5633,7 +5726,7 @@ SdlTkResizeWindow(Display *display, Window w,
 	SdlTkGenerateConfigureNotify(w);
     }
 
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	SdlTkVisRgnChanged(_w->parent, VRC_CHANGED | VRC_DO_PARENT, 0, 0);
     } else {
 	SdlTkVisRgnChanged(_w, VRC_CHANGED | VRC_DO_PARENT, 0, 0);
@@ -5682,16 +5775,16 @@ XSendEvent(Display *display, Window w, Bool propagate, long event_mask,
     SdlTkLock(display);
     display->request++;
     event = *event_send;
-    if (event.xany.type == ClientMessage && w != None &&
-	w != PointerRoot && w != InputFocus &&
-	event.xclient.message_type == SdlTkX.nwms_atom &&
-	event.xclient.data.l[1] == SdlTkX.nwmsf_atom) {
+    if ((event.xany.type == ClientMessage) && (w != None) &&
+	(w != PointerRoot) && (w != InputFocus) &&
+	(event.xclient.message_type == SdlTkX.nwms_atom) &&
+	(event.xclient.data.l[1] == SdlTkX.nwmsf_atom)) {
 	_Window *_w = (_Window *) event.xany.window;
 	int fullscreen = event.xclient.data.l[0];
 	int send_nwms = 0;
 	_Window *_ww = _w;
 
-	if (_w == NULL || _w->display == NULL) {
+	if ((_w == NULL) || (_w->display == NULL)) {
 	    goto done;
 	}
 	if (fullscreen && !_w->fullscreen) {
@@ -5701,7 +5794,7 @@ XSendEvent(Display *display, Window w, Bool propagate, long event_mask,
 	    xx = yy = 0;
 	    ww = SdlTkX.screen->width;
 	    hh = SdlTkX.screen->height;
-	    if (_w->parent != NULL && _w->parent->dec != NULL) {
+	    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 		xx -= SdlTkX.dec_frame_width;
 		yy -= SdlTkX.dec_title_height;
 	    }
@@ -5711,7 +5804,7 @@ XSendEvent(Display *display, Window w, Bool propagate, long event_mask,
 		_ww = _ww->parent;
 	    }
 	    send_nwms = 1;
-	} else if (_w != NULL && !fullscreen && _w->fullscreen) {
+	} else if ((_w != NULL) && !fullscreen && _w->fullscreen) {
 	    while (!IS_ROOT((Window) _ww)) {
 		_ww->fullscreen = 0;
 		_ww = _ww->parent;
@@ -5744,7 +5837,7 @@ XSendEvent(Display *display, Window w, Bool propagate, long event_mask,
     if (w == InputFocus) {
 	w = SdlTkX.focus_window;
     }
-    if (w != None && ((_Window *) w)->display != NULL) {
+    if ((w != None) && (((_Window *) w)->display != NULL)) {
 	event.xany.display = ((_Window *) w)->display;
 	SdlTkQueueEvent(&event);
 	ret = 1;
@@ -5760,7 +5853,7 @@ XSetCommand(Display *display, Window w, char **argv, int argc)
     return 0;
 }
 
-void 
+void
 XSetBackground(Display *display, GC gc, unsigned long background)
 {
     gc->background = background;
@@ -5850,7 +5943,7 @@ XSetFont(Display *display, GC gc, Font font)
     gc->font = font;
 }
 
-void 
+void
 XSetForeground(Display *display, GC gc, unsigned long foreground)
 {
     gc->foreground = foreground;
@@ -5867,7 +5960,7 @@ SdlTkSetInputFocus(Display *display, Window focus, int revert_to, Time time)
     _Window *_w;
     XEvent event;
 
-    if (focus != None && focus != PointerRoot) {
+    if ((focus != None) && (focus != PointerRoot)) {
 	_w = (_Window *) focus;
 	if (_w->display == NULL) {
 	    return;
@@ -5876,8 +5969,8 @@ SdlTkSetInputFocus(Display *display, Window focus, int revert_to, Time time)
     if (SdlTkX.focus_window == focus) {
 	return;
     }
-    if (SdlTkX.keyboard_window != NULL &&
-	SdlTkX.keyboard_window->display != display) {
+    if ((SdlTkX.keyboard_window != NULL) &&
+	(SdlTkX.keyboard_window->display != display)) {
 	return;
     }
 
@@ -5897,7 +5990,7 @@ SdlTkSetInputFocus(Display *display, Window focus, int revert_to, Time time)
     }
 
     SdlTkX.focus_window = focus;
-    if (focus == None || focus == PointerRoot) {
+    if ((focus == None) || (focus == PointerRoot)) {
 	_w = NULL;
     } else {
 	_w = (_Window *) focus;
@@ -5913,7 +6006,7 @@ SdlTkSetInputFocus(Display *display, Window focus, int revert_to, Time time)
 	SdlTkX.keyboard_window = _w;
     }
 
-    if (focus != None && focus != PointerRoot) {
+    if ((focus != None) && (focus != PointerRoot)) {
 	event.type = FocusIn;
 	event.xfocus.serial = _w->display->request;
 	event.xfocus.send_event = False;
@@ -5924,7 +6017,7 @@ SdlTkSetInputFocus(Display *display, Window focus, int revert_to, Time time)
 	SdlTkQueueEvent(&event);
     }
 
-    if (_w != NULL && _w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w != NULL) && (_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	SdlTkScreenChanged();
     }
 }
@@ -6021,8 +6114,8 @@ SdlTkSetSelectionOwner(Display *display, Atom selection, Window owner,
 	    event.xselectionclear.time = time;
 	    SdlTkQueueEvent(&event);
 	}
-	if (SdlTkX.clipboard_atom != None &&
-	    SdlTkX.current_clipboard != None) {
+	if ((SdlTkX.clipboard_atom != None) &&
+	    (SdlTkX.current_clipboard != None)) {
 	    current = &SdlTkX.current_clipboard;
 	    selection = SdlTkX.clipboard_atom;
 	    goto sendClr;
@@ -6036,7 +6129,7 @@ SdlTkSetSelectionOwner(Display *display, Atom selection, Window owner,
     } else {
 	return;
     }
-    if (owner == None && *current != None) {
+    if ((owner == None) && (*current != None)) {
 	SDL_SetClipboardText("");
     }
 sendClr:
@@ -6080,16 +6173,16 @@ XSetTransientForHint(Display *display, Window w, Window prop_window)
     }
     if (_p != NULL) {
 	_parent = _p->parent;
-	while (_parent && !IS_ROOT(_parent)) {
+	while ((_parent != NULL) && !IS_ROOT(_parent)) {
 	    _p = _parent;
 	    _parent = _p->parent;
 	}
-	if (_p && _p->dec) {
+	if ((_p != NULL) && (_p->dec != NULL)) {
 	    _p = _p->child;
 	}
     }
     _w->master = _p;
-    if (_p && IS_ROOT(_p)) {
+    if ((_p != NULL) && IS_ROOT(_p)) {
 	_w->master = NULL;
 	SdlTkMapWindow(display, w);
 	SdlTkBringToFrontIfNeeded(_w);
@@ -6341,8 +6434,8 @@ XUngrabKeyboard(Display *display, Time time)
 {
     SdlTkLock(display);
     display->request++;
-    if (SdlTkX.keyboard_window != NULL &&
-	SdlTkX.keyboard_window->display == display) {
+    if ((SdlTkX.keyboard_window != NULL) &&
+	(SdlTkX.keyboard_window->display == display)) {
 	SdlTkX.keyboard_window = NULL;
     }
     SdlTkUnlock(display);
@@ -6400,7 +6493,7 @@ SdlTkUnmapWindow(Display *display, Window w)
     }
 
     /* Unmap decorative frame */
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	_w->parent->atts.map_state = IsUnmapped;
     }
 
@@ -6419,7 +6512,7 @@ SdlTkUnmapWindow(Display *display, Window w)
 	SdlTkQueueEvent(&event);
     }
 
-    if (_w->parent != NULL && _w->parent->dec != NULL) {
+    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	SdlTkVisRgnChanged(_w->parent, VRC_CHANGED | VRC_DO_PARENT, 0, 0);
     } else {
 	SdlTkVisRgnChanged(_w, VRC_CHANGED | VRC_DO_PARENT, 0, 0);
@@ -6667,7 +6760,7 @@ SdlTkGLXMakeCurrent(Display *display, Window w, SDL_GLContext ctx)
 
     SdlTkLock(display);
     display->request++;
-    if (_w->display == NULL || display->gl_rend == NULL) {
+    if ((_w->display == NULL) || (display->gl_rend == NULL)) {
 	goto done;
     }
 #ifdef ANDROID
@@ -6680,7 +6773,7 @@ SdlTkGLXMakeCurrent(Display *display, Window w, SDL_GLContext ctx)
     SDL_SetRenderTargetQuick((SDL_Renderer *) display->gl_rend, _w->gl_tex);
 #else
     SDL_GL_MakeCurrentQuick(SdlTkX.sdlscreen, _w->gl_ctx);
-    if (_w->gl_ctx && _w->gl_tex) {
+    if ((_w->gl_ctx != NULL) && (_w->gl_tex != NULL)) {
 	SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, _w->gl_tex);
     } else {
 	SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, NULL);
@@ -6715,7 +6808,7 @@ SdlTkGLXReleaseCurrent(Display *display, Window w, SDL_GLContext ctx)
 
     SdlTkLock(display);
     display->request++;
-    if (_w->display == NULL || display->gl_rend == NULL) {
+    if ((_w->display == NULL) || (display->gl_rend == NULL)) {
 	goto done;
     }
     if (SdlTkX.in_background) {
@@ -6754,7 +6847,7 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 
     SdlTkLock(display);
     display->request++;
-    if (_w->display == NULL || display->gl_rend == NULL) {
+    if ((_w->display == NULL) || (display->gl_rend == NULL)) {
 	goto done;
     }
 #ifdef ANDROID
@@ -6826,7 +6919,7 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 	    /* wait for next screen refresh */
 	    do {
 		Tcl_ConditionWait(&time_cond, &xlib_lock, NULL);
-	    } while (wait_refr && SdlTkX.frame_count == frame_count);
+	    } while (wait_refr && (SdlTkX.frame_count == frame_count));
 #endif
 	}
     } else {

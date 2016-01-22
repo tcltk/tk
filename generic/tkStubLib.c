@@ -18,7 +18,9 @@
 #endif
 
 #ifdef _WIN32
+#ifndef PLATFORM_SDL
 #include "tkWinInt.h"
+#endif
 #endif
 
 #ifdef MAC_OSX_TK

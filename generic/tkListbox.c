@@ -15,7 +15,7 @@
 #include "default.h"
 #include "tkInt.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #include "tkWinInt.h"
 #endif
 
@@ -2077,7 +2077,7 @@ DisplayListbox(
 		Tk_UnderlineChars(listPtr->display, pixmap, gc,
 			listPtr->tkfont, stringRep, x, y, 0, stringLen);
 	    } else if (listPtr->activeStyle == ACTIVE_STYLE_DOTBOX) {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 		/*
 		 * This provides for exact default look and feel on Windows.
 		 */

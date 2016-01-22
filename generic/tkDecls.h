@@ -1723,7 +1723,7 @@ extern const TkStubs *tkStubsPtr;
 
 #if defined(ZIPFS_IN_TCL)
 #   define Tk_MainEx Tk_ZipMain
-#   ifdef _WIN32
+#   if defined(_WIN32) && !defined(PLATFORM_SDL)
     extern void Tk_ZipMain(int argc, wchar_t **argv,
 	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 #   else
