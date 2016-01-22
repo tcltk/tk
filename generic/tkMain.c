@@ -55,7 +55,7 @@ extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
  * platforms which don't have <tchar.h> we have to translate that
  * to strcmp here.
  */
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntPlatStubs, just
     enough to make it work. See [600b72bfbc] */
@@ -105,7 +105,7 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
  * it will conflict with a declaration elsewhere on some systems.
  */
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #define isatty WinIsTty
 static int WinIsTty(int fd) {
     HANDLE handle;
@@ -205,7 +205,7 @@ Tk_MainEx(
 	}
     }
 
-#if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
+#if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD) && !defined(PLATFORM_SDL)
 
     if (tclStubsPtr->reserved9) {
 	/* We are running win32 Tk under Cygwin, so let's check
@@ -236,7 +236,7 @@ Tk_MainEx(
     is.gotPartial = 0;
     Tcl_Preserve(interp);
 
-#if defined(_WIN32) && !defined(__CYGWIN__)
+#if defined(PLATFORM_SDL) || (defined(_WIN32) && !defined(__CYGWIN__))
     Tk_InitConsoleChannels(interp);
 #endif
 

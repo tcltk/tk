@@ -18,7 +18,9 @@
 #   include "tkSDLPort.h"
 #endif
 #if defined(_WIN32)
-#   include "tkWinPort.h"
+#   if !defined(PLATFORM_SDL)
+#	include "tkWinPort.h"
+#   endif
 #endif
 #ifndef _TK
 #   include "tk.h"

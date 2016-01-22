@@ -15,14 +15,14 @@
 #ifndef _TKSDLPORT
 #define _TKSDLPORT
 
-#define __UNIX__ 1
-
 #include <stdio.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <math.h>
+#ifndef _WIN32
 #include <pwd.h>
+#endif
 #ifdef NO_STDLIB_H
 #   include "../compat/stdlib.h"
 #else

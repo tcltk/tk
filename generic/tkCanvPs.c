@@ -1168,7 +1168,7 @@ GetPostscriptPoints(
  *--------------------------------------------------------------
  */
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #include <windows.h>
 
 /*
@@ -1186,7 +1186,7 @@ GetPostscriptPoints(
 
 #endif /* _WIN32 */
 
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if (defined(_WIN32) || defined(MAC_OSX_TK)) && !defined(PLATFORM_SDL)
 static void
 TkImageGetColor(
     TkColormapData *cdata,	/* Colormap data */

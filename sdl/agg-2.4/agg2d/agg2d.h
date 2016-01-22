@@ -23,7 +23,7 @@
 #define AGG2D_INCLUDED
 
 // With this define uncommented you can use FreeType font engine
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(PLATFORM_SDL)
 #define AGG2D_USE_FREETYPE
 #endif
 

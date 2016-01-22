@@ -407,7 +407,7 @@ TkImgPhotoGet(
  *----------------------------------------------------------------------
  */
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(PLATFORM_SDL)
 #define GetRValue(rgb)	(UCHAR(((rgb) & red_mask) >> red_shift))
 #define GetGValue(rgb)	(UCHAR(((rgb) & green_mask) >> green_shift))
 #define GetBValue(rgb)	(UCHAR(((rgb) & blue_mask) >> blue_shift))
@@ -453,7 +453,7 @@ BlendComplexAlpha(
      * might be cached for better performance.
      */
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(PLATFORM_SDL)
     unsigned long red_mask, green_mask, blue_mask;
     unsigned long red_shift, green_shift, blue_shift;
     Visual *visual = iPtr->visualInfo.visual;
@@ -481,7 +481,7 @@ BlendComplexAlpha(
      * optimized.
      */
 
-#if !(defined(_WIN32) || defined(MAC_OSX_TK))
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) || defined(PLATFORM_SDL)
     if (bgImg->depth < 24) {
 	unsigned char red_mlen, green_mlen, blue_mlen;
 
@@ -1336,7 +1336,7 @@ AllocateColors(
 	 * since we will be passing the color table into the TkPutImage call.
 	 */
 
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(PLATFORM_SDL)
 	if ((colorPtr->visualInfo.class != DirectColor)
 		&& (colorPtr->visualInfo.class != TrueColor)) {
 	    colorPtr->flags |= MAP_COLORS;
@@ -1770,7 +1770,7 @@ TkImgDitherInstance(
 		    case NBBY:
 			*destBytePtr++ = i;
 			break;
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(PLATFORM_SDL)
 			/*
 			 * This case is not valid for Windows because the
 			 * image format is different from the pixel format in
@@ -1832,7 +1832,7 @@ TkImgDitherInstance(
 		    case NBBY:
 			*destBytePtr++ = i;
 			break;
-#ifndef _WIN32
+#if !defined(_WIN32) || defined(PLATFORM_SDL)
 			/*
 			 * This case is not valid for Windows because the
 			 * image format is different from the pixel format in

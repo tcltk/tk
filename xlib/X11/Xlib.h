@@ -448,8 +448,16 @@ typedef struct {
 typedef struct _XDisplay {
 	XExtData *ext_data;	/* hook for extension to hang data */
 	struct _XFreeFuncs *free_funcs; /* internal free functions */
+#ifdef PLATFORM_SDL
+#ifdef _WIN32
+	void *fd;		/* HANDLE. */
+#else
 	int fd;			/* Network socket. */
-	int conn_checker;         /* ugly thing used by _XEventsQueued */
+#endif
+#else
+	int fd;			/* Network socket. */
+#endif
+	int conn_checker;	/* ugly thing used by _XEventsQueued */
 	int proto_major_version;/* maj. version of server's X protocol */
 	int proto_minor_version;/* minor version of servers X protocol */
 	char *vendor;		/* vendor of the server hardware */

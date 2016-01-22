@@ -12,8 +12,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#undef BUILD_tk
-#undef STATIC_BUILD
 #include "tk.h"
 
 #ifdef ANDROID
@@ -33,6 +31,10 @@ extern Tcl_PackageInitProc Tktest_Init;
 #undef  main
 #define main SDL_main
 #endif
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
 #endif
 
 /*
@@ -68,20 +70,43 @@ MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, char ***argv);
 /*
  *----------------------------------------------------------------------
  *
- * AndroidPanic --
+ * AndroidPanic, WindowsPanic --
  *
- *	Panic proc when running on Android
+ *	Panic proc when running on Android or Windows
  *
  *----------------------------------------------------------------------
  */
+
 #ifdef ANDROID
-static void
+TCL_NORETURN static void
 AndroidPanic(const char *fmt, ...)
 {
     va_list args;
 
     va_start(args, fmt);
     __android_log_vprint(ANDROID_LOG_FATAL, "AndroWish", fmt, args);
+    va_end(args);
+    abort();
+}
+#endif
+
+#ifdef _WIN32
+TCL_NORETURN static void
+WindowsPanic(const char *fmt, ...)
+{
+    va_list args;
+    char buf[1024];
+
+    va_start(args, fmt);
+    buf[sizeof (buf) - 2] = '\0';
+    buf[sizeof (buf) - 1] = '\0';
+    vsnprintf(buf, sizeof (buf) - 1, fmt, args);
+    if (buf[sizeof (buf) - 2] != '\0') {
+	memcpy(buf + sizeof (buf) - 5, " ...", 5);
+    }
+    MessageBeep(MB_ICONEXCLAMATION);
+    MessageBoxA(NULL, buf, "Fatal Error",
+	MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
     va_end(args);
     abort();
 }
@@ -317,6 +342,9 @@ main(
 	}
     }
 #endif
+#ifdef _WIN32
+    Tcl_InitSubsystems(WindowsPanic);
+#endif
 #if defined(ANDROID) && defined(PLATFORM_SDL)
     path = SDL_AndroidGetInternalStoragePath();
     temp = SDL_AndroidGetTempStoragePath();
@@ -433,7 +461,7 @@ int
 Tcl_AppInit(
     Tcl_Interp *interp)		/* Interpreter for application. */
 {
-#ifdef ANDROID
+#if defined(ANDROID) || defined(_WIN32)
     putenv("DISPLAY=:0.0");
 #endif
 

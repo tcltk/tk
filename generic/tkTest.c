@@ -24,7 +24,7 @@
 #include "tkInt.h"
 #include "tkText.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #include "tkWinInt.h"
 #endif
 
@@ -35,6 +35,9 @@
 
 #ifdef __UNIX__
 #include "tkUnixInt.h"
+#endif
+#ifdef PLATFORM_SDL
+#include "tkSDLInt.h"
 #endif
 
 /*
@@ -168,7 +171,7 @@ static int		TestmenubarObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 #endif
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if (defined(_WIN32) || defined(MAC_OSX_TK)) && !defined(PLATFORM_SDL)
 static int		TestmetricsObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
@@ -266,7 +269,7 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if (defined(_WIN32) || defined(MAC_OSX_TK)) && !defined(PLATFORM_SDL)
     Tcl_CreateObjCommand(interp, "testmetrics", TestmetricsObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 #elif !defined(__CYGWIN__)
@@ -1707,7 +1710,7 @@ TestmenubarObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
-#ifdef __UNIX__
+#if defined(__UNIX__) || defined(PLATFORM_SDL)
     Tk_Window mainWin = (Tk_Window) clientData;
     Tk_Window tkwin, menubar;
 
@@ -1765,7 +1768,7 @@ TestmenubarObjCmd(
  *----------------------------------------------------------------------
  */
 
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if (defined(_WIN32) || defined(MAC_OSX_TK)) && !defined(PLATFORM_SDL)
 static int
 TestmetricsObjCmd(
     ClientData clientData,	/* Main window for application. */

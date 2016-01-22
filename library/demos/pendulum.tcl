@@ -181,7 +181,12 @@ proc recomputeAngle {} {
 # This method ties together the simulation engine and the graphical
 # display code that visualizes it.
 proc repeat w {
-    global animationCallbacks
+    global animationCallbacks psw
+
+    if {![info exists psw]} {
+	set animationCallbacks(pendulum) [after 100 [list repeat $w]]
+	return
+    }
 
     # Simulate
     recomputeAngle

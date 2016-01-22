@@ -47,7 +47,7 @@ extern "C" {
  * Exported function declarations:
  */
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if !defined(PLATFORM_SDL) && (defined(_WIN32) || defined(__CYGWIN__)) /* WIN */
 /* 0 */
 EXTERN int		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);

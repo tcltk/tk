@@ -218,6 +218,8 @@ typedef struct {
     int greenOffset;
     int blueOffset;
     int alphaOffset;
+    int mask;
+    int madd;
     int num;
     unsigned char mapa[MAXCOLORMAPSIZE][3];
 } GifWriterState;
@@ -1831,6 +1833,12 @@ ColorNumber(
 {
     int x = (statePtr->alphaOffset != 0);
 
+    red &= statePtr->mask;
+    green &= statePtr->mask;
+    blue &= statePtr->mask;
+    red += statePtr->madd;
+    green += statePtr->madd;
+    blue += statePtr->madd;
     for (; x <= MAXCOLORMAPSIZE; x++) {
 	if ((statePtr->mapa[x][CM_RED] == red) &&
 		(statePtr->mapa[x][CM_GREEN] == green) &&
@@ -1864,8 +1872,9 @@ SaveMap(
     Tk_PhotoImageBlock *blockPtr)
 {
     unsigned char *colores;
-    int x, y;
+    int retries, x, y;
     unsigned char red, green, blue;
+    static const int madd[] = { 0, 0, 1, 2, 3, 7, 15, 31 };
 
     if (statePtr->alphaOffset) {
 	statePtr->num = 0;
@@ -1876,17 +1885,30 @@ SaveMap(
 	statePtr->num = -1;
     }
 
+    retries = 0;
+    statePtr->mask = 0xff;
+    statePtr->madd = 0;
+again:
     for (y=0 ; y<blockPtr->height ; y++) {
 	colores = blockPtr->pixelPtr + blockPtr->offset[0] + y*blockPtr->pitch;
 	for (x=0 ; x<blockPtr->width ; x++) {
 	    if (!statePtr->alphaOffset || colores[statePtr->alphaOffset]!=0) {
-		red = colores[0];
-		green = colores[statePtr->greenOffset];
-		blue = colores[statePtr->blueOffset];
+		red = colores[0] & statePtr->mask;
+		green = colores[statePtr->greenOffset] & statePtr->mask;
+		blue = colores[statePtr->blueOffset] & statePtr->mask;
+		red += statePtr->madd;
+		green += statePtr->madd;
+		blue += statePtr->madd;
 		if (IsNewColor(statePtr, red, green, blue)) {
 		    statePtr->num++;
 		    if (statePtr->num >= MAXCOLORMAPSIZE) {
-			return;
+			if (++retries > 6) {
+			    return;
+			}
+			statePtr->num = statePtr->alphaOffset ? 0 : -1;
+			statePtr->mask = statePtr->mask << 1;
+			statePtr->madd = madd[retries];
+			goto again;
 		    }
 		    statePtr->mapa[statePtr->num][CM_RED] = red;
 		    statePtr->mapa[statePtr->num][CM_GREEN] = green;

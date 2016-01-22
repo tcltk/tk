@@ -88,7 +88,7 @@ static const Tcl_ChannelType consoleChannelType = {
     NULL
 };
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #include <windows.h>
 
 /*

@@ -17,7 +17,7 @@
  */
 
 #include "tkInt.h"
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #include "tkWinInt.h"
 #elif defined(__CYGWIN__)
 #include "tkUnixInt.h"

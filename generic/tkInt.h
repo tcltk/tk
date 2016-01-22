@@ -1231,7 +1231,7 @@ MODULE_SCOPE int	TkInitSdltkCmd(Tcl_Interp *interp,
 			    ClientData clientData);
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 #define TkParseColor XParseColor
 #else
 MODULE_SCOPE Status TkParseColor (Display * display,
