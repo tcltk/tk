@@ -1162,6 +1162,7 @@ test font-33.1 {Tk_TextWidth procedure} {
 
 test font-34.1 {ConfigAttributesObj procedure: arguments} {
     # (Tcl_GetIndexFromObj() != TCL_OK)
+    set x {}
     setup
     list [catch {font create xyz -xyz} msg] $msg
 } {1 {bad option "-xyz": must be -family, -size, -weight, -slant, -underline, or -overstrike}}
