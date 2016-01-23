@@ -395,10 +395,12 @@ Tk_GetOpenFileObjCmd(
     NSMutableArray *fileTypes = nil;
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+    BOOL parentIsKey = NO;
+#endif
 
     TkInitFileFilters(&fl);
     for (i = 1; i < objc; i += 2) {
-    BOOL parentIsKey = NO;
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], openOptionStrings,
 		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
@@ -598,10 +600,11 @@ Tk_GetSaveFileObjCmd(
     NSMutableArray *fileTypes = nil;
     NSSavePanel *panel = [NSSavePanel savePanel];
     NSInteger modalReturnCode = modalError;
+    BOOL parentIsKey = NO;
 
     TkInitFileFilters(&fl);
     for (i = 1; i < objc; i += 2) {
-    BOOL parentIsKey = NO;
+	parentIsKey = NO;
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], saveOptionStrings,
 		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
