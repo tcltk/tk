@@ -24,8 +24,6 @@
 
 #define DEBUG_ZOMBIES 0
 
-#define DEBUG_ZOMBIES 0
-
 /*
 #ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_WINDOWS
