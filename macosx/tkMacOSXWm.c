@@ -911,9 +911,9 @@ TkWmDeadWindow(
 	fprintf(stderr, "================= Pool dump ===================\n");
 	[NSAutoreleasePool showPools];
 #endif
+    }
     ckfree((char *)wmPtr);
     winPtr->wmInfoPtr = NULL;
-    }
 }
 
 /*
@@ -5112,7 +5112,7 @@ TkUnsupported1ObjCmd(
     };
     Tk_Window tkwin = clientData;
     TkWindow *winPtr;
-    int index;
+    int index, i;
 
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option window ?arg ...?");
@@ -5121,56 +5121,40 @@ TkUnsupported1ObjCmd(
 
 
     /* Iterate through objc/objv to set correct background color and toggle opacity of window. */
-    int i;
     for (i= 0; i < objc; i++) {
-
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*black*") == 1) {
-    	    colorName = [NSColor blackColor];  // use #000000 in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*dark*") == 1) {
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*black*")) {
+    	    colorName = [NSColor blackColor];	// use #000000 in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*dark*")) {
     	    colorName = [NSColor darkGrayColor]; //use #545454 in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*light*") == 1) {
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*light*")) {
     	    colorName = [NSColor lightGrayColor]; //use #ababab in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*white*")) {
+    	    colorName = [NSColor whiteColor];	//use #ffffff in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "gray*")) {
+    	    colorName = [NSColor grayColor];	//use #7f7f7f in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*red*")) {
+    	    colorName = [NSColor redColor];	//use #ff0000 in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*green*")) {
+    	    colorName = [NSColor greenColor];	//use #00ff00 in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*blue*")) {
+    	    colorName = [NSColor blueColor];	//use #0000ff in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*cyan*")) {
+    	    colorName = [NSColor cyanColor];	//use #00ffff in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*yellow*")) {
+    	    colorName = [NSColor yellowColor];	//use #ffff00 in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*magenta*")) {
+    	    colorName = [NSColor magentaColor];	//use #ff00ff in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*orange*")) {
+    	    colorName = [NSColor orangeColor];	//use #ff8000 in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*purple*")) {
+    	    colorName = [NSColor purpleColor];	//use #800080 in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*brown*")){
+    	    colorName = [NSColor brownColor];	//use #996633 in Tk scripts to match
+    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*clear*")) {
+    	    colorName = [NSColor clearColor];	//use systemTransparent in Tk scripts to match
     	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*white*") == 1) {
-    	    colorName = [NSColor whiteColor]; //use #ffffff in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "gray*") == 1) {
-    	    colorName = [NSColor grayColor]; //use  #7f7f7f in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*red*") == 1) {
-    	    colorName = [NSColor redColor]; //use #ff0000 in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*green*") == 1) {
-    	    colorName = [NSColor greenColor]; //use #00ff00 in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*blue*") == 1) {
-    	    colorName = [NSColor blueColor]; //use #0000ff in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*cyan*") == 1) {
-    	    colorName = [NSColor cyanColor]; //use  #00ffff in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*yellow*") == 1) {
-    	    colorName = [NSColor yellowColor]; //use  #ffff00 in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*magenta*") == 1) {
-    	    colorName = [NSColor magentaColor]; //use #ff00ff in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*orange*") == 1) {
-    	    colorName = [NSColor orangeColor]; //use  #ff8000 in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*purple*") == 1) {
-    	    colorName = [NSColor purpleColor]; //use  #800080 in Tk scripts to match
-    	}
-    	if  (Tcl_StringMatch(Tcl_GetString(objv[i]), "*brown*") == 1){
-    	    colorName = [NSColor brownColor]; //use #996633 in Tk scripts to match
-    	}
-    	if  (Tcl_StringMatch(Tcl_GetString(objv[i]), "*clear*") == 1) {
-    	    colorName = [NSColor clearColor]; //use systemTransparent in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*opacity*") == 1) {
-    	    opaqueTag=YES;
+    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*opacity*")) {
+    	    opaqueTag = YES;
     	}
     }
 
