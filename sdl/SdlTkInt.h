@@ -217,6 +217,8 @@ typedef struct SdlTkXInfo {
     int arg_fullscreen;
     int arg_resizable;
     int arg_noborder;
+    int arg_xdpi;
+    int arg_ydpi;
     char *arg_rootwidth;
     char *arg_rootheight;
 

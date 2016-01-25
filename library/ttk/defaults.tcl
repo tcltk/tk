@@ -16,14 +16,22 @@ namespace eval ttk::theme::default {
 	-disabledfg	"#a3a3a3"
 	-indicator	"#4a6984"
     }
-    variable android
-    set android 0
-    catch {set android [sdltk android]}
+    variable sdltk [expr {[info command "sdltk"] eq "sdltk"}]
+    variable android 0
+    variable dpi 75
     variable geom
-    if {$android} {
-	variable dpi
+    if {$sdltk} {
+	set android [sdltk android]
 	set dpi [expr int((25.4 * [winfo screenwidth .]) / [winfo screenmmwidth .])]
-	if {$dpi < 140} {
+	if {$dpi < 110} {
+	    array set geom {
+		scrollbar.width 12
+		scrollbar.arrowsize 12
+		combobox.arrowsize 12
+		spinbox.arrowsize 10
+		indicatordiameter 10
+	    }
+	} elseif {$dpi < 140} {
 	    array set geom {
 		scrollbar.width 18
 		scrollbar.arrowsize 18

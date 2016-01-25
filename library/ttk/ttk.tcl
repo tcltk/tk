@@ -155,7 +155,10 @@ ttk::LoadThemes; rename ::ttk::LoadThemes {}
 #
 
 proc ttk::DefaultTheme {} {
-    set preferred [list aqua vista xpnative winnative droid]
+    set preferred [list aqua vista xpnative winnative]
+    if {$::ttk::theme::default::android} {
+	lappend preferred droid
+    }
 
     set userTheme [option get . tkTheme TkTheme]
     if {$userTheme ne {} && ![catch {

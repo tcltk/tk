@@ -245,7 +245,7 @@ static void RegisterWidgets(Tcl_Interp *interp)
 extern int TtkAltTheme_Init(Tcl_Interp *);
 extern int TtkClassicTheme_Init(Tcl_Interp *);
 extern int TtkClamTheme_Init(Tcl_Interp *);
-#ifdef ANDROID
+#ifdef PLATFORM_SDL
 extern int TtkDroidTheme_Init(Tcl_Interp *);
 #endif
 
@@ -255,7 +255,7 @@ static void RegisterThemes(Tcl_Interp *interp)
     TtkAltTheme_Init(interp);
     TtkClassicTheme_Init(interp);
     TtkClamTheme_Init(interp);
-#ifdef ANDROID
+#ifdef PLATFORM_SDL
     if (!Tcl_IsSafe(interp)) {
 	TtkDroidTheme_Init(interp);
     }

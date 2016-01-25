@@ -25,7 +25,7 @@ namespace eval ttk::theme::droid {
 
     variable hover hover
     variable dpi 120
-    if {$::ttk::theme::default::android} {
+    if {$::ttk::theme::default::sdltk} {
 	set dpi $::ttk::theme::default::dpi
     }
     if {$dpi < 140} {

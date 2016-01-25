@@ -323,10 +323,8 @@ proc ::tk::EntryButton1 {w x} {
     if {"disabled" ne [$w cget -state]} {
 	focus $w
 	if {"readonly" ne [$w cget -state]} {
-	    set bbox [$w bbox insert]
-	    set x [lindex $bbox 0]
-	    set y [lindex $bbox 1]
-	    catch {
+	    if {$::tk::sdltk} {
+		lassign [$w bbox insert] x y
 		incr x [winfo rootx $w]
 		incr y [winfo rooty $w]
 		sdltk textinput 1 $x $y

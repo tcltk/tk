@@ -22,7 +22,7 @@ namespace eval ::tk::dialog::file {
     variable showHiddenBtn 0
     variable showHiddenVar 1
     variable dpi 100
-    if {$::tk::android} {
+    if {$::tk::sdltk} {
 	set dpi $::tk::dpi
     }
 

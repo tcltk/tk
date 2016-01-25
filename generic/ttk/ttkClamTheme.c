@@ -21,10 +21,14 @@
 #define STR(x) StR(x)
 #define StR(x) #x
 
-#ifdef ANDROID
+#ifdef PLATFORM_SDL
 extern char ttkDefScrollbarWidth[TCL_INTEGER_SPACE];
 #define SCROLLBAR_THICKNESS ttkDefScrollbarWidth
+#ifdef ANDROID
 #define FALLBACK_SCROLLBAR_THICKNESS 19
+#else
+#define FALLBACK_SCROLLBAR_THICKNESS 14
+#endif
 #else
 #define SCROLLBAR_THICKNESS "14"
 #define FALLBACK_SCROLLBAR_THICKNESS 14

@@ -502,12 +502,12 @@ if {$::tk_library ne ""} {
         namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
-	variable android
-	set android 0
-	catch {set android [sdltk android]}
+	variable sdltk [expr {[info command "sdltk"] eq "sdltk"}]
 	variable dpi
 	set dpi [expr int((25.4 * [winfo screenwidth .]) / [winfo screenmmwidth .])]
-	if {$android} {
+	variable android 0
+	if {$sdltk} {
+	    set android [sdltk android]
 	    if {$dpi < 140} {
 		SourceLibFile icons
 	    } elseif {$dpi < 240} {
@@ -704,24 +704,34 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
-if {[info command sdltk] ne ""} {
+if {[info command "sdltk"] eq "sdltk"} {
     # Android hardware keyboard handling
-    bind . <<KeyboardInfo>> ::tk::AndroidKBDInfo
-    bind Toplevel <<KeyboardInfo>> ::tk::AndroidKBDInfo
+    if {[sdltk android]} {
+	bind . <<KeyboardInfo>> ::tk::AndroidKBDInfo
+	bind Toplevel <<KeyboardInfo>> ::tk::AndroidKBDInfo
 
-    proc ::tk::AndroidKBDCheck {} {
-	catch {array set kbd [borg keyboardinfo]}
-	if {[info exists kbd(hard_hidden)] && !$kbd(hard_hidden)} {
-	    sdltk textinput 1
+	proc ::tk::AndroidKBDCheck {} {
+	    if {[info command "::borg"] eq "::borg"} {
+		set kbd [::borg keyboardinfo]
+	    } else {
+		bind . <<KeyboardInfo>> {}
+		bind Toplevel <<KeyboardInfo>> {}
+		rename ::tk::AndroidKBDCheck {}
+		rename ::tk::AndroidKBDInfo {}
+		return
+	    }
+	    if {[info exists kbd(hard_hidden)] && !$kbd(hard_hidden)} {
+		sdltk textinput 1
+	    }
 	}
-    }
 
-    proc ::tk::AndroidKBDInfo {} {
-	after cancel ::tk::AndroidKBDCheck
-	after idle ::tk::AndroidKBDCheck
-    }
+	proc ::tk::AndroidKBDInfo {} {
+	    after cancel ::tk::AndroidKBDCheck
+	    after idle ::tk::AndroidKBDCheck
+	}
 
-    ::tk::AndroidKBDInfo
+	::tk::AndroidKBDInfo
+    }
 }
 
 # Run the Ttk themed widget set initialization

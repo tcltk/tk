@@ -4332,9 +4332,8 @@ HandleRootSize(struct RootSizeRequest *r)
     SDL_Surface *newsurf = NULL;
     SDL_Texture *newtex = NULL;
     _Window *_w;
-#ifdef ANDROID
     int xdpi, ydpi;
-#else
+#ifndef ANDROID
     int tfmt = SDL_PIXELFORMAT_RGB888;
 #endif
     float aspReal, aspRoot;
@@ -4402,10 +4401,18 @@ HandleRootSize(struct RootSizeRequest *r)
 	}
 	SdlTkX.screen->width = width;
 	SdlTkX.screen->height = height;
-#ifdef ANDROID
-	xdpi = ydpi = 0;
-#ifdef SDL_HAS_GETWINDOWDPI
-	SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
+	xdpi = SdlTkX.arg_xdpi;
+	ydpi = SdlTkX.arg_ydpi;
+	if (xdpi == 0) {
+	    xdpi = ydpi;
+	}
+	if (ydpi == 0) {
+	    ydpi = xdpi;
+	}
+#if defined(ANDROID) && defined(SDL_HAS_GETWINDOWDPI)
+	if (xdpi == 0) {
+	    SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
+	}
 #endif
 	if (xdpi && ydpi) {
 	    SdlTkX.screen->mwidth = (254 * width) / xdpi;
@@ -4413,13 +4420,14 @@ HandleRootSize(struct RootSizeRequest *r)
 	    SdlTkX.screen->mheight = (254 * height) / ydpi;
 	    SdlTkX.screen->mheight /= 10;
 	} else {
+#ifdef ANDROID
 	    SdlTkX.screen->mwidth = (width * 254 + 360) / 1440;
 	    SdlTkX.screen->mheight = (height * 254 + 360) / 1440;
-	}
 #else
-	SdlTkX.screen->mwidth = (width * 254 + 360) / 720;
-	SdlTkX.screen->mheight = (height * 254 + 360) / 720;
+	    SdlTkX.screen->mwidth = (width * 254 + 360) / 720;
+	    SdlTkX.screen->mheight = (height * 254 + 360) / 720;
 #endif
+	}
 	dpy = SdlTkX.display->next_display;
 	while (dpy != NULL) {
 	    dpy->screens[0].width = SdlTkX.screen->width;
@@ -4613,9 +4621,9 @@ PerformSDLInit(int *root_width, int *root_height)
     Uint32 fmt;
     SDL_DisplayMode info;
     SDL_PixelFormat *pfmt;
+    int xdpi, ydpi;
 #ifdef ANDROID
     int initMask = SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
-    int xdpi, ydpi;
 #else
     int initMask = SDL_INIT_VIDEO;
     int tfmt = SDL_PIXELFORMAT_RGB888;
@@ -4676,20 +4684,54 @@ fatal:
     height = 768;
 #endif
     if (SdlTkX.arg_width != NULL) {
-	sscanf(SdlTkX.arg_width, "%d", &width);
+	int tmp = 0;
+
+	sscanf(SdlTkX.arg_width, "%d", &tmp);
+	if (tmp > 0) {
+	    width = tmp;
+	}
     }
     if (SdlTkX.arg_height != NULL) {
-	sscanf(SdlTkX.arg_height, "%d", &height);
+	int tmp = 0;
+
+	sscanf(SdlTkX.arg_height, "%d", &tmp);
+	if (tmp > 0) {
+	    height = tmp;
+	}
+    }
+    if ((width <= 0) || (height <= 0)) {
+#ifdef ANDROID
+	width = 200;
+	height = 200;
+#else
+	width = 1024;
+	height = 768;
+#endif
     }
     if (SdlTkX.arg_rootwidth != NULL) {
-	sscanf(SdlTkX.arg_rootwidth, "%d", root_width);
+	int tmp = 0;
+
+	sscanf(SdlTkX.arg_rootwidth, "%d", &tmp);
+	if (tmp >0 ) {
+	    *root_width = tmp;
+	}
     }
     if (SdlTkX.arg_rootheight != NULL) {
-	sscanf(SdlTkX.arg_rootheight, "%d", root_height);
-    }
+	int tmp = 0;
 
+	sscanf(SdlTkX.arg_rootheight, "%d", &tmp);
+	if (tmp > 0) {
+	    *root_height = tmp;
+	}
+    }
+    if ((*root_width <= 0) || (*root_height <= 0)) {
+	*root_width = *root_height = 0;
+    }
 #ifdef SDL_HINT_VIDEO_ALLOW_SCREENSAVER
     SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
+#endif
+#ifdef SDL_HINT_RENDER_SCALE_QUALITY
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 #endif
     SDL_GetDesktopDisplayMode(0, &info);
     pfmt = SDL_AllocFormat(info.format);
@@ -4848,10 +4890,18 @@ fatal:
     /* TkWinDisplayChanged */
     screen->width = width;
     screen->height = height;
-#ifdef ANDROID
-    xdpi = ydpi = 0;
-#ifdef SDL_HAS_GETWINDOWDPI
-    SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
+    xdpi = SdlTkX.arg_xdpi;
+    ydpi = SdlTkX.arg_ydpi;
+    if (xdpi == 0) {
+	xdpi = ydpi;
+    }
+    if (ydpi == 0) {
+	ydpi = xdpi;
+    }
+#if defined(ANDROID) && defined(SDL_HAS_GETWINDOWDPI)
+    if (xdpi == 0) {
+	SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
+    }
 #endif
     if (xdpi && ydpi) {
 	int dpi = (ydpi < xdpi) ? ydpi : xdpi;
@@ -4906,17 +4956,18 @@ fatal:
 	    sprintf(tkDefScrollbarWidth, "%d", dsw);
 	}
     } else {
+#ifdef ANDROID
 	screen->mwidth = (screen->width * 254 + 360) / 1440;
 	screen->mheight = (screen->height * 254 + 360) / 1440;
 	SdlTkX.dec_frame_width = 8;
 	SdlTkX.dec_title_height = 30;
 	SdlTkX.dec_font_size = 14;
 	SdlTkX.dec_line_width = 3;
-    }
 #else
-    screen->mwidth = (screen->width * 254 + 360) / 720; /* from Mac Tk */
-    screen->mheight = (screen->height * 254 + 360) / 720;
+	screen->mwidth = (screen->width * 254 + 360) / 720; /* from Mac Tk */
+	screen->mheight = (screen->height * 254 + 360) / 720;
 #endif
+    }
 
     screen->root_depth = pfmt->BitsPerPixel;
 

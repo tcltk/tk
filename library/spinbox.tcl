@@ -371,7 +371,17 @@ proc ::tk::spinbox::ButtonDown {w x y} {
 	    set Priv(pressX) $x
 	    $w icursor [::tk::spinbox::ClosestGap $w $x]
 	    $w selection from insert
-	    if {"disabled" ne [$w cget -state]} {focus $w}
+	    if {"disabled" ne [$w cget -state]} {
+		focus $w
+		if {"readonly" ne [$w cget -state]} {
+		    if {$::tk::sdltk} {
+			lassign [$w bbox insert] x y
+			incr x [winfo rootx $w]
+			incr y [winfo rooty $w]
+			sdltk textinput 1 $x $y
+		    }
+		}
+	    }
 	    $w selection clear
 	}
 	default {

@@ -2154,9 +2154,7 @@ doNormalKeyEvent:
 	    }
 #endif
 	    if ((newsurf != NULL) && (newtex != NULL)) {
-#ifdef ANDROID
 		int xdpi, ydpi;
-#endif
 		SDL_Rect sr;
 		Uint32 pixel;
 		_Window *child;
@@ -2169,10 +2167,18 @@ doNormalKeyEvent:
 		SdlTkX.sdltex = newtex;
 		SdlTkX.screen->width = width;
 		SdlTkX.screen->height = height;
-#ifdef ANDROID
-		xdpi = ydpi = 0;
-#ifdef SDL_HAS_GETWINDOWDPI
-		SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
+		xdpi = SdlTkX.arg_xdpi;
+		ydpi = SdlTkX.arg_ydpi;
+		if (xdpi == 0) {
+		    xdpi = ydpi;
+		}
+		if (ydpi == 0) {
+		    ydpi = xdpi;
+		}
+#if defined(ANDROID) && defined(SDL_HAS_GETWINDOWDPI)
+		if (xdpi == 0) {
+		    SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
+		}
 #endif
 		if (xdpi && ydpi) {
 		    SdlTkX.screen->mwidth = (254 * width) / xdpi;
@@ -2180,13 +2186,14 @@ doNormalKeyEvent:
 		    SdlTkX.screen->mheight = (254 * height) / ydpi;
 		    SdlTkX.screen->mheight /= 10;
 		} else {
+#ifdef ANDROID
 		    SdlTkX.screen->mwidth = (width * 254 + 360) / 1440;
 		    SdlTkX.screen->mheight = (height * 254 + 360) / 1440;
-		}
 #else
-		SdlTkX.screen->mwidth = (width * 254 + 360) / 720;
-		SdlTkX.screen->mheight = (height * 254 + 360) / 720;
+		    SdlTkX.screen->mwidth = (width * 254 + 360) / 720;
+		    SdlTkX.screen->mheight = (height * 254 + 360) / 720;
 #endif
+		}
 		dpy = SdlTkX.display->next_display;
 		while (dpy != NULL) {
 		    dpy->screens[0].width = SdlTkX.screen->width;

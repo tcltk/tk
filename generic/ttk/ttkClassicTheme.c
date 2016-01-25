@@ -11,7 +11,7 @@
 #include "ttkTheme.h"
 
 #define DEFAULT_BORDERWIDTH "2"
-#ifdef ANDROID
+#ifdef PLATFORM_SDL
 extern char ttkDefScrollbarWidth[TCL_INTEGER_SPACE];
 #define DEFAULT_ARROW_SIZE ttkDefScrollbarWidth
 #else
