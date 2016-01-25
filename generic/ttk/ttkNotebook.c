@@ -901,7 +901,7 @@ static int NotebookAddCommand(
     if (tab->state == TAB_STATE_HIDDEN) {
 	tab->state = TAB_STATE_NORMAL;
     }
-    if (ConfigureTab(interp, nb, tab, slaveWindow, objc-4,objv+4) != TCL_OK) {
+    if (ConfigureTab(interp, nb, tab, slaveWindow, objc-3,objv+3) != TCL_OK) {
 	return TCL_ERROR;
     }
 
