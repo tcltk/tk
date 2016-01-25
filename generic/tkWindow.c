@@ -245,6 +245,10 @@ static const Tk_ArgvInfo argTable[] = {
 	(char *) &SdlTkX.arg_resizable, "SDL window resizable"},
     {"-sdlnoborder", TK_ARGV_CONSTANT, (char *) 1,
 	(char *) &SdlTkX.arg_noborder, "SDL borderless"},
+    {"-sdlxdpi", TK_ARGV_INT, (char *) 0,
+	(char *) &SdlTkX.arg_xdpi, "SDL screen DPI in X"},
+    {"-sdlydpi", TK_ARGV_INT, (char *) 0,
+	(char *) &SdlTkX.arg_ydpi, "SDL screen DPI in Y"},
     {"-sdlheight", TK_ARGV_STRING, (char *) NULL, (char *) &SdlTkX.arg_height,
 	"Height of SDL desktop"},
     {"-sdlwidth", TK_ARGV_STRING, (char *) NULL, (char *) &SdlTkX.arg_width,
@@ -3400,7 +3404,9 @@ tkInit",
 		 -1, 0);
     }
 #ifdef PLATFORM_SDL
-    SdlTkFontInit(interp);
+    if (code == TCL_OK) {
+	code = SdlTkFontInit(interp);
+    }
 #endif
     if (code == TCL_OK) {
 	/*
