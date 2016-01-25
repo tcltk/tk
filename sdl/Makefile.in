@@ -723,6 +723,12 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 install-libraries: libraries
 	@for i in "$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)/images" \
 		"$(SCRIPT_INSTALL_DIR)/msgs" "$(SCRIPT_INSTALL_DIR)/ttk" \
+		"$(SCRIPT_INSTALL_DIR)/ttk/droid" \
+		"$(SCRIPT_INSTALL_DIR)/ttk/droid/120" \
+		"$(SCRIPT_INSTALL_DIR)/ttk/droid/160" \
+		"$(SCRIPT_INSTALL_DIR)/ttk/droid/240" \
+		"$(SCRIPT_INSTALL_DIR)/ttk/droid/320" \
+		"$(SCRIPT_INSTALL_DIR)/ttk/droid/400" \
 		"$(SCRIPT_INSTALL_DIR)/fonts" ;\
 	    do \
 	    if [ -n "$$i" -a ! -d "$$i" ] ; then \
@@ -756,6 +762,43 @@ install-libraries: libraries
 	    do \
 	    if [ -f $$i ] ; then \
 		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/msgs"; \
+	    fi; \
+	    done;
+	@echo "Installing droid theme to $(SCRIPT_INSTALL_DIR)/ttk/...";
+	@for i in $(TOP_DIR)/library/ttk/droid/*.gif; \
+	    do \
+	    if [ -f $$i ] ; then \
+		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/ttk/droid"; \
+	    fi; \
+	    done;
+	@for i in $(TOP_DIR)/library/ttk/droid/120/*.gif; \
+	    do \
+	    if [ -f $$i ] ; then \
+		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/ttk/droid/120"; \
+	    fi; \
+	    done;
+	@for i in $(TOP_DIR)/library/ttk/droid/160/*.gif; \
+	    do \
+	    if [ -f $$i ] ; then \
+		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/ttk/droid/160"; \
+	    fi; \
+	    done;
+	@for i in $(TOP_DIR)/library/ttk/droid/240/*.gif; \
+	    do \
+	    if [ -f $$i ] ; then \
+		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/ttk/droid/240"; \
+	    fi; \
+	    done;
+	@for i in $(TOP_DIR)/library/ttk/droid/320/*.gif; \
+	    do \
+	    if [ -f $$i ] ; then \
+		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/ttk/droid/320"; \
+	    fi; \
+	    done;
+	@for i in $(TOP_DIR)/library/ttk/droid/400/*.gif; \
+	    do \
+	    if [ -f $$i ] ; then \
+		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/ttk/droid/400"; \
 	    fi; \
 	    done;
 	@echo "Installing font files to $(SCRIPT_INSTALL_DIR)/fonts/";

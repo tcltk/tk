@@ -345,12 +345,12 @@ proc ttk::entry::Press {w x} {
     $w instate !disabled {
 	focus $w
 	$w instate !readonly {
-	    set bbox [$w bbox insert]
-	    set xx [lindex $bbox 0]
-	    set yy [lindex $bbox 1]
-	    incr xx [winfo rootx $w]
-	    incr yy [winfo rooty $w]
-	    catch {sdltk textinput 1 $xx $yy}
+	    if {$::tk::sdltk} {
+		lassign [$w bbox insert] xx yy
+		incr xx [winfo rootx $w]
+		incr yy [winfo rooty $w]
+		sdltk textinput 1 $xx $yy
+	    }
 	}
     }
 

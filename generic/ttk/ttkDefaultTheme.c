@@ -12,18 +12,27 @@
 #include <X11/Xutil.h>
 #include "ttkTheme.h"
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 static const int WIN32_XDRAWLINE_HACK = 1;
 #else
 static const int WIN32_XDRAWLINE_HACK = 0;
 #endif
 
 #define BORDERWIDTH     2
+#ifdef PLATFORM_SDL
 #ifdef ANDROID
 char ttkDefScrollbarWidth[TCL_INTEGER_SPACE] = "19";
+#else
+char ttkDefScrollbarWidth[TCL_INTEGER_SPACE] = "14";
+#endif
 #define SCROLLBAR_WIDTH ttkDefScrollbarWidth
+#ifdef ANDROID
 #define FALLBACK_SCROLLBAR_WIDTH 19
 int ttkMinThumbSize = 14;
+#else
+#define FALLBACK_SCROLLBAR_WIDTH 14
+int ttkMinThumbSize = 8;
+#endif
 #define MIN_THUMB_SIZE  ttkMinThumbSize
 #else
 #define SCROLLBAR_WIDTH "14"
@@ -1311,7 +1320,7 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
     return TCL_OK;
 }
 
-#ifdef ANDROID
+#ifdef PLATFORM_SDL
 /*------------------------------------------------------------------------
  * TtkDroidTheme_Init --
  * 	Install droid theme.
