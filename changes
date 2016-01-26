@@ -7069,6 +7069,8 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
 
 2016-01-12 (bug)[2049429] get more $text options from database (vogel)
 
+2016-01-25 (bug) OBOE in ttk::notebook options parsing (bromley,english)
+
 Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 --- Released 8.5.19, January 31, 2016 --- http://core.tcl.tk/tk/ for details
