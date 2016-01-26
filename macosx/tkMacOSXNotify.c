@@ -274,7 +274,6 @@ TkMacOSXEventsCheckProc(
 						 inMode:GetRunLoopMode(modalSession)
 						dequeue:YES];
 	    if (currentEvent) {
-		[NSApp _resetAutoreleasePool];
 		/* Generate Xevents. */
 		int oldServiceMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 		NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
