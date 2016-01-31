@@ -274,6 +274,9 @@ VISIBILITY_HIDDEN
     NSArray *_defaultHelpMenuItems;
     NSWindow *_windowWithMouse;
     NSAutoreleasePool *_mainPool;
+#ifdef __i386__
+    BOOL _poolProtected;
+#endif
 }
 @property BOOL poolProtected;
 @end
