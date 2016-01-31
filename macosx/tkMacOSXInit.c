@@ -57,9 +57,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 @end
 
 @implementation TKApplication
-#ifndef __clang__
 @synthesize poolProtected = _poolProtected;
-#endif
 @end
 
 @implementation TKApplication(TKInit)
