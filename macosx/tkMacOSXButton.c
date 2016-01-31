@@ -289,10 +289,10 @@ TkpComputeButtonGeometry(
     if ( butPtr->indicatorOn ) {
       switch (butPtr->type) {
       case TYPE_RADIO_BUTTON:
-	GetThemeMetric(kThemeMetricRadioButtonWidth, &butPtr->indicatorDiameter);
+	GetThemeMetric(kThemeMetricRadioButtonWidth, (SInt32 *)&butPtr->indicatorDiameter);
 	  break;
       case TYPE_CHECK_BUTTON:
-	GetThemeMetric(kThemeMetricCheckBoxWidth, &butPtr->indicatorDiameter);
+	GetThemeMetric(kThemeMetricCheckBoxWidth, (SInt32 *)&butPtr->indicatorDiameter);
 	  break;
       default:
 	break;
