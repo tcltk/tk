@@ -187,7 +187,6 @@ test option-14.12 {error conditions} {
 
 set option1 [file join [testsDirectory] option.file1]
 set option2 [file join [testsDirectory] option.file2]
-set option3 [file join [testsDirectory] option.file3]
 
 test option-15.1 {database files} {
     list [catch {option read non-existent} msg] $msg
@@ -208,18 +207,16 @@ test option-15.9 {database files} {option get . x3 color} burgundy
 test option-15.10 {database files} {
     list [catch {option read $option2} msg] $msg
 } {1 {missing colon on line 2}}
-option read $option3
-test option-15.11 {database files} {option get . {x 4} color} br\xf3wn
 
 test option-16.1 {ReadOptionFile} {
-    set option4 [makeFile {} option.file3]
-    set file [open $option4 w]
+    set option3 [makeFile {} option.file3]
+    set file [open $option3 w]
     fconfigure $file -translation crlf
     puts $file "*x7: true\n*x8: false"
     close $file
-    option read $option4 userDefault
+    option read $option3 userDefault
     set result [list [option get . x7 color] [option get . x8 color]]
-    removeFile $option4
+    removeFile $option3
     set result
 } {true false}
 
