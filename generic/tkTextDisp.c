@@ -4765,6 +4765,11 @@ TextChanged(
         }
     }
 
+    while ((lastPtr != NULL)
+	    && (lastPtr->index.linePtr == index2Ptr->linePtr)) {
+	lastPtr = lastPtr->nextPtr;
+    }
+
     /*
      * Delete all the DLines from firstPtr up to but not including lastPtr.
      */
