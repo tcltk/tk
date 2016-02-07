@@ -4683,7 +4683,7 @@ TextChanged(
          */
 
         lastPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &rounded);
-        if ((lastPtr != NULL) && (TkTextIndexCmp(&lastPtr->index, &rounded) < 0)) {
+        while ((lastPtr != NULL) && (TkTextIndexCmp(&lastPtr->index, &rounded) < 0)) {
             lastPtr = lastPtr->nextPtr;
         }
 
