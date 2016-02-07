@@ -4683,6 +4683,9 @@ TextChanged(
          */
 
         lastPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &rounded);
+        if ((lastPtr != NULL) && (TkTextIndexCmp(&lastPtr->index, &rounded) < 0)) {
+            lastPtr = lastPtr->nextPtr;
+        }
 
         /*
          * At least one display line is supposed to change. This makes the
@@ -4697,11 +4700,6 @@ TextChanged(
         if (lastPtr == firstPtr) {
             lastPtr = lastPtr->nextPtr;
         }
-    }
-
-    while ((lastPtr != NULL)
-	    && (lastPtr->index.linePtr == index2Ptr->linePtr)) {
-	lastPtr = lastPtr->nextPtr;
     }
 
     /*
