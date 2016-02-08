@@ -645,10 +645,15 @@ TkImgPhotoDisplay(
 	 * Color info is unimportant as we only do this operation for depth >=
 	 * 15.
 	 */
-
+#if (!defined(_WIN32) && !defined(MAX_OSX_TK)) || defined(PLATFORM_SDL)
+	XPutImage(display, drawable, instancePtr->gc,
+		bgImg, 0, 0, drawableX, drawableY,
+		(unsigned int) width, (unsigned int) height);
+#else
 	TkPutImage(NULL, 0, display, drawable, instancePtr->gc,
 		bgImg, 0, 0, drawableX, drawableY,
 		(unsigned int) width, (unsigned int) height);
+#endif
 	XDestroyImage(bgImg);
 	Tk_DeleteErrorHandler(handler);
     } else {
@@ -1918,10 +1923,16 @@ TkImgDitherInstance(
 	 * we have just computed.
 	 */
 
+#if (!defined(_WIN32) && !defined(MAX_OSX_TK)) || defined(PLATFORM_SDL)
+	XPutImage(instancePtr->display, instancePtr->pixels,
+		instancePtr->gc, imagePtr, 0, 0, xStart, yStart,
+		(unsigned) width, (unsigned) nLines);
+#else
 	TkPutImage(colorPtr->pixelMap, colorPtr->numColors,
 		instancePtr->display, instancePtr->pixels,
 		instancePtr->gc, imagePtr, 0, 0, xStart, yStart,
 		(unsigned) width, (unsigned) nLines);
+#endif
 	yStart = yEnd;
     }
 

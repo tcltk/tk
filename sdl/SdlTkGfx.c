@@ -773,14 +773,12 @@ SdlTkGfxPutImage(Drawable d, Region r, XImage* image, int src_x, int src_y,
 				       image->green_mask, image->blue_mask, 0);
 
 	if (image->bits_per_pixel == 1 && flipbw) {
-	    SDL_Palette *pal = SDL_AllocPalette(256);
+	    SDL_Palette *pal = SDL_AllocPalette(2);
 	    SDL_Color colors[2];
 
 	    colors[0].r = colors[0].g = colors[0].b = 255;
 	    colors[1].r = colors[1].g = colors[1].b = 0;
 	    colors[0].a = colors[1].a = 255;
-	    SDL_SetPaletteColors(pal, colors + 1, 0, 1);
-	    SDL_SetPaletteColors(pal, colors + 0, 255, 1);
 	    SDL_SetSurfacePalette(sdl, pal);
 	    SDL_FreePalette(pal);
 	}

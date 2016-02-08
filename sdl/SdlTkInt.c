@@ -11,7 +11,7 @@
 #ifdef ANDROID
 #define EVLOG(...) __android_log_print(ANDROID_LOG_ERROR,"SDLEV",__VA_ARGS__)
 #else
-#define EVLOG(...) fprintf(stderr,__VA_ARGS__); fputc('\n', stderr)
+#define EVLOG(...) SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION,__VA_ARGS__)
 #endif
 #else
 #define EVLOG(...)
@@ -3661,6 +3661,18 @@ AndroidObjCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 static int
+DeiconifyObjCmd(ClientData clientData, Tcl_Interp *interp,
+	       int objc, Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    SdlTkSetWindowFlags(SDL_WINDOW_SHOWN, 0, 0, 0, 0);
+    return TCL_OK;
+}
+
+static int
 ExposeObjCmd(ClientData clientData, Tcl_Interp *interp,
 	     int objc, Tcl_Obj *const objv[])
 {
@@ -3707,6 +3719,42 @@ ExposeObjCmd(ClientData clientData, Tcl_Interp *interp,
 done:
     SdlTkUnlock(NULL);
     return ret;
+}
+
+static int
+FullscreenObjCmd(ClientData clientData, Tcl_Interp *interp,
+	       int objc, Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    SdlTkSetWindowFlags(SDL_WINDOW_FULLSCREEN, 0, 0, 0, 0);
+    return TCL_OK;
+}
+
+static int
+HasglObjCmd(ClientData clientData, Tcl_Interp *interp,
+	    int objc, Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    Tcl_SetBooleanObj(Tcl_GetObjResult(interp), !SdlTkX.arg_nogl);
+    return TCL_OK;
+}
+
+static int
+IconifyObjCmd(ClientData clientData, Tcl_Interp *interp,
+	       int objc, Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    SdlTkSetWindowFlags(SDL_WINDOW_MINIMIZED, 0, 0, 0, 0);
+    return TCL_OK;
 }
 
 static int
@@ -3810,6 +3858,48 @@ JoystickObjCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 static int
+LogObjCmd(ClientData clientData, Tcl_Interp *interp,
+	  int objc, Tcl_Obj *const objv[])
+{
+    int prio = SDL_LOG_PRIORITY_VERBOSE;
+    const char *prioStr;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "prio message");
+	return TCL_ERROR;
+    }
+    prioStr = Tcl_GetString(objv[1]);
+    if (strcmp(prioStr, "verbose") == 0) {
+	prio = SDL_LOG_PRIORITY_VERBOSE;
+    } else if (strcmp(prioStr, "debug") == 0) {
+	prio = SDL_LOG_PRIORITY_DEBUG;
+    } else if (strcmp(prioStr, "info") == 0) {
+	prio = SDL_LOG_PRIORITY_INFO;
+    } else if (strcmp(prioStr, "warn") == 0) {
+	prio = SDL_LOG_PRIORITY_WARN;
+    } else if (strcmp(prioStr, "error") == 0) {
+	prio = SDL_LOG_PRIORITY_ERROR;
+    } else if (strcmp(prioStr, "fatal") == 0) {
+	prio = SDL_LOG_PRIORITY_CRITICAL;
+    }
+    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, prio, "%s",
+		   Tcl_GetString(objv[2]));
+    return TCL_OK;
+}
+
+static int
+MaximizeObjCmd(ClientData clientData, Tcl_Interp *interp,
+	       int objc, Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    SdlTkSetWindowFlags(SDL_WINDOW_MAXIMIZED, 0, 0, 0, 0);
+    return TCL_OK;
+}
+
+static int
 MaxrootObjCmd(ClientData clientData, Tcl_Interp *interp,
 	      int objc, Tcl_Obj *const objv[])
 {
@@ -3904,6 +3994,18 @@ PowerinfoObjCmd(ClientData clientData, Tcl_Interp *interp,
     Tcl_AppendElement(interp, "percent");
     sprintf(buf, "%d", pct);
     Tcl_AppendElement(interp, buf);
+    return TCL_OK;
+}
+
+static int
+RestoreObjCmd(ClientData clientData, Tcl_Interp *interp,
+	       int objc, Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    SdlTkSetWindowFlags(SDL_WINDOW_SHOWN | SDL_WINDOW_HIDDEN, 0, 0, 0, 0);
     return TCL_OK;
 }
 
@@ -4168,6 +4270,18 @@ VsyncObjCmd(ClientData clientData, Tcl_Interp *interp,
     return TCL_OK;
 }
 
+static int
+WithdrawObjCmd(ClientData clientData, Tcl_Interp *interp,
+	       int objc, Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    SdlTkSetWindowFlags(SDL_WINDOW_HIDDEN, 0, 0, 0, 0);
+    return TCL_OK;
+}
+
 /*
  * Table of sdltk subcommand names and implementations.
  */
@@ -4177,17 +4291,25 @@ static const TkEnsemble sdltkCmdMap[] = {
     { "accelerometer", AccelerometerObjCmd, NULL },
     { "addfont", AddfontObjCmd, NULL },
     { "android", AndroidObjCmd, NULL },
+    { "deiconify", DeiconifyObjCmd, NULL },
     { "expose", ExposeObjCmd, NULL },
+    { "fullscreen", FullscreenObjCmd, NULL },
+    { "hasgl", HasglObjCmd, NULL },
+    { "iconify", IconifyObjCmd, NULL },
     { "joystick", JoystickObjCmd, NULL },
+    { "log", LogObjCmd, NULL },
     { "maxroot", MaxrootObjCmd, NULL },
+    { "maximize", MaximizeObjCmd, NULL },
     { "paintvisrgn", PaintvisrgnObjCmd, NULL },
     { "powerinfo", PowerinfoObjCmd, NULL },
+    { "restore", RestoreObjCmd, NULL },
     { "root", RootObjCmd, NULL },
     { "screensaver", ScreensaverObjCmd, NULL },
     { "textinput", TextinputObjCmd, NULL },
     { "touchtranslate", TouchtranslateObjCmd, NULL },
     { "viewport", ViewportObjCmd, NULL },
     { "vsync", VsyncObjCmd, NULL },
+    { "withdraw", WithdrawObjCmd, NULL },
     { NULL, NULL, NULL }
 };
 

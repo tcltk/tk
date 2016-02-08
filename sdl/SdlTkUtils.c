@@ -1,6 +1,17 @@
 #include "tkInt.h"
 #include "SdlTkInt.h"
 #include "tkFont.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+#undef TRACE_FONTS
+
+#ifdef TRACE_FONTS
+#define FNTLOG(...) SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION,__VA_ARGS__)
+#else
+#define FNTLOG(...)
+#endif
 
 #define XFT_XLFD		"xlfd"
 
@@ -18,13 +29,13 @@ typedef struct FileFaceSizeKey {
     int size;
 } FileFaceSizeKey;
 
-static Tcl_HashTable xlfd_hash;
-static Tcl_HashTable file_face_hash;
-static Tcl_HashTable file_face_size_hash;
+static Tcl_HashTable xlfdHash;
+static Tcl_HashTable fileFaceHash;
+static Tcl_HashTable fileFaceSizeHash;
 
-static const char *cursor_font_name = "cursor";
+static const char *cursorFontName = "cursor";
 
-TCL_DECLARE_MUTEX(fnt_mutex);
+TCL_DECLARE_MUTEX(fontMutex);
 
 /*
  * The next 2 functions implement a pool of Regions to minimize
@@ -39,23 +50,23 @@ typedef struct RgnEntry {
     struct RgnEntry *next;
 } RgnEntry;
 
-static RgnEntry *rgnpool = NULL; /* Linked list of available Regions */
-static RgnEntry *rgnfree = NULL; /* Linked list of free RgnEntrys */
+static RgnEntry *rgnPool = NULL; /* Linked list of available Regions */
+static RgnEntry *rgnFree = NULL; /* Linked list of free RgnEntrys */
 
 Region
 SdlTkRgnPoolGet(void)
 {
     Region r;
 
-    if (rgnpool != NULL) {
-	RgnEntry *entry = rgnpool;
+    if (rgnPool != NULL) {
+	RgnEntry *entry = rgnPool;
 
 	r = entry->r;
-	rgnpool = entry->next;
+	rgnPool = entry->next;
 
 	entry->r = NULL;
-	entry->next = rgnfree;
-	rgnfree = entry;
+	entry->next = rgnFree;
+	rgnFree = entry;
 
 	/*
 	 * Empty the region. The good thing about Regions is
@@ -76,15 +87,15 @@ SdlTkRgnPoolFree(Region r)
     if (r == NULL) {
 	Tcl_Panic("called RgnPoolFree with a NULL Region");
     }
-    if (rgnfree != NULL) {
-	entry = rgnfree;
-	rgnfree = entry->next;
+    if (rgnFree != NULL) {
+	entry = rgnFree;
+	rgnFree = entry->next;
     } else {
 	entry = (RgnEntry *) ckalloc(sizeof(RgnEntry));
     }
     entry->r = r;
-    entry->next = rgnpool;
-    rgnpool = entry;
+    entry->next = rgnPool;
+    rgnPool = entry;
 }
 
 /*
@@ -118,9 +129,10 @@ SdlTkListFonts(const char *name, int *count)
     Tcl_DString ds;
     char **names = NULL;
 
+    FNTLOG("FONTLIST: pattern '%s'", name);
     Tcl_DStringInit(&ds);
-    Tcl_MutexLock(&fnt_mutex);
-    hPtr = Tcl_FirstHashEntry(&file_face_hash, &search);
+    Tcl_MutexLock(&fontMutex);
+    hPtr = Tcl_FirstHashEntry(&fileFaceHash, &search);
     while (hPtr != NULL) {
         GlyphIndexHash *ghash;
         
@@ -144,7 +156,7 @@ SdlTkListFonts(const char *name, int *count)
 	}
 	hPtr = Tcl_NextHashEntry(&search);
     }
-    Tcl_MutexUnlock(&fnt_mutex);
+    Tcl_MutexUnlock(&fontMutex);
     *count = 0;
     /* fallback for "fixed" */
     if ((nmatch == 0) && (strcmp(name, "fixed") == 0)) {
@@ -164,6 +176,7 @@ SdlTkListFonts(const char *name, int *count)
 
 	    names[i] = ckalloc(len);
 	    strcpy(names[i], p);
+	    FNTLOG("FONTLIST:   '%s'", p);
 	    p += len;
 	}
 	names[i] = 0;
@@ -193,34 +206,34 @@ MatchFont(const char *xlfd, _Font *_f)
 
     p = xlfd;
     if (p[0] != '-') {
-	return TCL_ERROR;
+	goto error;
     }
     if (!(p = strchr(++p, '-'))) {
-        return TCL_ERROR;
+	goto error;
     }
     if (!(p = strchr(family = ++p, '-'))) {
-        return TCL_ERROR;
+	goto error;
     }
     if (!(p = strchr(weight = ++p, '-'))) {
-        return TCL_ERROR;
+	goto error;
     }
     if (!(p = strchr(slant = ++p, '-'))) {
-        return TCL_ERROR;
+	goto error;
     }
     if (!(p = strchr(++p, '-'))) {
-        return TCL_ERROR;
+	goto error;
     }
     if (!(p = strchr (++p, '-'))) {
-        return TCL_ERROR;
+	goto error;
     }
     if (!(p = XftGetInt (++p, &size)) || (size < 0)) {
-        return TCL_ERROR;
+	goto error;
     }
-    hPtr = Tcl_FirstHashEntry(&file_face_hash, &search);
+    hPtr = Tcl_FirstHashEntry(&fileFaceHash, &search);
     while (hPtr != NULL) {
 	ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);
 	if (Tcl_StringCaseMatch(xlfd, ghash->xlfdPattern, 1)) {
-	    ffKey = (FileFaceKey *) Tcl_GetHashKey(&file_face_hash, hPtr);
+	    ffKey = (FileFaceKey *) Tcl_GetHashKey(&fileFaceHash, hPtr);
 	    break;
 	}
 	hPtr = Tcl_NextHashEntry(&search);
@@ -257,13 +270,13 @@ MatchFont(const char *xlfd, _Font *_f)
 		    Tcl_DStringAppend(&ds, "-r", -1);
 		}
 		Tcl_DStringAppend(&ds, "-normal-*-*-*-*-*-*-*-ucs-4", -1);
-		hPtr = Tcl_FirstHashEntry(&file_face_hash, &search);
+		hPtr = Tcl_FirstHashEntry(&fileFaceHash, &search);
 		while (hPtr != NULL) {
 		    ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);
 		    if (Tcl_StringCaseMatch(Tcl_DStringValue(&ds),
 					    ghash->xlfdPattern, 1)) {
 		        ffKey = (FileFaceKey *)
-			    Tcl_GetHashKey(&file_face_hash, hPtr);
+			    Tcl_GetHashKey(&fileFaceHash, hPtr);
 			break;
 		    }
 		    hPtr = Tcl_NextHashEntry(&search);
@@ -276,7 +289,7 @@ MatchFont(const char *xlfd, _Font *_f)
 	ckfree((char *) family);
     }
     if (ffKey == NULL) {
-	return TCL_ERROR;
+	goto error;
     }
     _f->refCnt = 1;
     _f->file = (char *) ffKey->file;
@@ -303,12 +316,16 @@ MatchFont(const char *xlfd, _Font *_f)
     _f->xlfd = ckalloc(Tcl_DStringLength(&ds) + 1);
     strcpy((char *) _f->xlfd, Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
-
+    FNTLOG("FONTMATCH: xlfd(in) '%s', xlfd(out) '%s'", xlfd, _f->xlfd);
+    FNTLOG("FONTMATCH: size %d, file '%s'", _f->size, _f->file);
     return TCL_OK;
+error:
+    FNTLOG("FONTMATCH: xlfd(in) '%s', ERROR", xlfd);
+    return TCL_ERROR;
 }
 
 static void
-SdlTkLoadGlyphHash(GlyphIndexHash *ghash, FileFaceKey *ffKey, int file_size)
+SdlTkLoadGlyphHash(GlyphIndexHash *ghash, FileFaceKey *ffKey, int fsize)
 {
     FT_Library ftlib;
     FT_Open_Args ftarg;
@@ -326,7 +343,7 @@ SdlTkLoadGlyphHash(GlyphIndexHash *ghash, FileFaceKey *ffKey, int file_size)
     memset(&ftarg, 0, sizeof (ftarg));
     ftarg.flags = FT_OPEN_STREAM;
     ftarg.stream =
-	(FT_Stream) SdlTkGetFTStream((const char *) ffKey->file, file_size);
+	(FT_Stream) SdlTkXGetFTStream((const char *) ffKey->file, fsize);
     fterr = FT_Open_Face(ftlib, &ftarg, ffKey->index, &face);
     if (fterr != 0) {
         Tcl_Panic("loading freetype font failed");
@@ -356,29 +373,32 @@ SdlTkFontLoadXLFD(const char *xlfd)
     struct stat stbuf;
 
     /* TkGetCursorByName() */
-    if (!strcmp(xlfd, cursor_font_name)) {
+    if (!strcmp(xlfd, cursorFontName)) {
 	_f = (_Font *) ckalloc (sizeof (_Font));
 	memset(_f, 0, sizeof(_Font));
-	_f->file = cursor_font_name;
+	_f->file = cursorFontName;
 	_f->refCnt = 1;
+	FNTLOG("FONTLOAD: '%s' -> '%s'", xlfd, cursorFontName);
 	return (Font) _f;
     }
 
-    Tcl_MutexLock(&fnt_mutex);
+    Tcl_MutexLock(&fontMutex);
 
     /* See if this exact XLFD has already been loaded */
-    hPtr = Tcl_FindHashEntry(&xlfd_hash, xlfd);
+    hPtr = Tcl_FindHashEntry(&xlfdHash, xlfd);
     if (hPtr != NULL) {
 	_f = (_Font *) Tcl_GetHashValue(hPtr);
 	_f->refCnt++;
-	_f->glyph_index_hash->refCnt++;
-	Tcl_MutexUnlock(&fnt_mutex);
+	_f->glyphIndexHash->refCnt++;
+	Tcl_MutexUnlock(&fontMutex);
+	FNTLOG("FONTLOAD: '%s' -> '%s'", xlfd, _f->file);
 	return (Font) _f;
     }
 
     /* Look in the file_face_cache */
     if (MatchFont(xlfd, &fstorage) != TCL_OK) {
-	Tcl_MutexUnlock(&fnt_mutex);
+	Tcl_MutexUnlock(&fontMutex);
+	FNTLOG("FONTLOAD: '%s' -> None", xlfd);
 	return None;
     }
 
@@ -391,7 +411,7 @@ SdlTkFontLoadXLFD(const char *xlfd)
     ffsKey.file = XInternAtom(SdlTkX.display, fstorage.file, False);
     ffsKey.index = fstorage.index;
     ffsKey.size = fstorage.size;
-    hPtr = Tcl_CreateHashEntry(&file_face_size_hash, (char *) &ffsKey, &isNew);
+    hPtr = Tcl_CreateHashEntry(&fileFaceSizeHash, (char *) &ffsKey, &isNew);
     if (fstorage.file != (char *) ffsKey.file) {
 	ckfree((char *) fstorage.file);
     }
@@ -399,10 +419,11 @@ SdlTkFontLoadXLFD(const char *xlfd)
 	ckfree((char *) fstorage.xlfd);
 	_f = (_Font *) Tcl_GetHashValue(hPtr);
 	_f->refCnt++;
-	_f->glyph_index_hash->refCnt++;
-	hPtr = Tcl_CreateHashEntry(&xlfd_hash, (char *) xlfd, &isNew);
+	_f->glyphIndexHash->refCnt++;
+	hPtr = Tcl_CreateHashEntry(&xlfdHash, (char *) xlfd, &isNew);
 	Tcl_SetHashValue(hPtr, (char *) _f);
-	Tcl_MutexUnlock(&fnt_mutex);
+	Tcl_MutexUnlock(&fontMutex);
+	FNTLOG("FONTLOAD: '%s' -> '%s'", xlfd, _f->file);
 	return (Font) _f;
     }
 
@@ -418,33 +439,34 @@ SdlTkFontLoadXLFD(const char *xlfd)
     _f->size = fstorage.size;
     _f->fixedWidth = fstorage.fixedWidth;
     _f->xlfd = fstorage.xlfd;
-    _f->font_struct = SdlTkGfxAllocFontStruct(_f);
+    _f->fontStruct = SdlTkGfxAllocFontStruct(_f);
 
-    /* file_face_size_hash */
+    /* fileFaceSizeHash */
     Tcl_SetHashValue(hPtr, (char *) _f);
 
     /* Reuse existing GlyphIndexHash for this file && face */
     memset(&ffKey, '\0', sizeof(ffKey));
     ffKey.file = XInternAtom(SdlTkX.display, _f->file, False);
     ffKey.index = fstorage.index;
-    hPtr = Tcl_CreateHashEntry(&file_face_hash, (char *) &ffKey, &isNew);
+    hPtr = Tcl_CreateHashEntry(&fileFaceHash, (char *) &ffKey, &isNew);
     if (isNew) {
-	Tcl_MutexUnlock(&fnt_mutex);
+	Tcl_MutexUnlock(&fontMutex);
         Tcl_Panic("no GlyphIndexHash");
 	return None;
     } else {
 	GlyphIndexHash *ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);
 
-	_f->glyph_index_hash = ghash;
+	_f->glyphIndexHash = ghash;
 	ghash->refCnt++;
 	if (!ghash->hashLoaded) {
 	    SdlTkLoadGlyphHash(ghash, &ffKey, _f->file_size);
 	}
     }
 
-    hPtr = Tcl_CreateHashEntry(&xlfd_hash, (char *) xlfd, &isNew);
+    hPtr = Tcl_CreateHashEntry(&xlfdHash, (char *) xlfd, &isNew);
     Tcl_SetHashValue(hPtr, (char *) _f);
-    Tcl_MutexUnlock(&fnt_mutex);
+    Tcl_MutexUnlock(&fontMutex);
+    FNTLOG("FONTLOAD: '%s' -> '%s'", xlfd, _f->file);
     return (Font) _f;
 }
 
@@ -465,12 +487,12 @@ SdlTkFontHasChar(XFontStruct *fontStructPtr, char *buf)
     unsigned long lucs4 = ucs4;
     int ret = 0;
 
-    Tcl_MutexLock(&fnt_mutex);
-    hPtr = Tcl_FindHashEntry(&_f->glyph_index_hash->hash, (char *) lucs4);
+    Tcl_MutexLock(&fontMutex);
+    hPtr = Tcl_FindHashEntry(&_f->glyphIndexHash->hash, (char *) lucs4);
     if (hPtr != NULL) {
 	ret = (Tcl_GetHashValue(hPtr) != 0);
     }
-    Tcl_MutexUnlock(&fnt_mutex);
+    Tcl_MutexUnlock(&fontMutex);
     return ret;
 }
 
@@ -481,8 +503,8 @@ SdlTkFontCanDisplayChar(char *xlfd, TkFontAttributes *faPtr, int ch)
     Tcl_HashEntry *hPtr, *hPtr2;
     unsigned long lch = ch;
 
-    Tcl_MutexLock(&fnt_mutex);
-    hPtr = Tcl_FirstHashEntry(&file_face_hash, &search);
+    Tcl_MutexLock(&fontMutex);
+    hPtr = Tcl_FirstHashEntry(&fileFaceHash, &search);
     while (hPtr != NULL) {
         GlyphIndexHash *ghash;
         
@@ -505,17 +527,17 @@ SdlTkFontCanDisplayChar(char *xlfd, TkFontAttributes *faPtr, int ch)
 	    if (!ghash->hashLoaded) {
 	        FileFaceKey *ffKey;
 
-		ffKey = (FileFaceKey *) Tcl_GetHashKey(&file_face_hash, hPtr);
+		ffKey = (FileFaceKey *) Tcl_GetHashKey(&fileFaceHash, hPtr);
 		SdlTkLoadGlyphHash(ghash, ffKey, 0);
 	    }
 	    hPtr2 = Tcl_FindHashEntry(&ghash->hash, (char *) lch);
-	    Tcl_MutexUnlock(&fnt_mutex);
+	    Tcl_MutexUnlock(&fontMutex);
 	    return (hPtr2 == NULL) ? 0 : 1;
 	}
 next:
 	hPtr = Tcl_NextHashEntry(&search);
     }
-    Tcl_MutexUnlock(&fnt_mutex);
+    Tcl_MutexUnlock(&fontMutex);
     return (ch >= 0) && (ch < 256);
 }
 
@@ -696,14 +718,14 @@ SdlTkFontFreeFont(XFontStruct *fontStructPtr)
 {
     _Font *_f = (_Font *) fontStructPtr->fid;
 
-    if (_f->file == cursor_font_name) {
+    if (_f->file == cursorFontName) {
 	ckfree(_f);
 	return;
     }
-    Tcl_MutexLock(&fnt_mutex);
-    _f->glyph_index_hash->refCnt--;
+    Tcl_MutexLock(&fontMutex);
+    _f->glyphIndexHash->refCnt--;
     --_f->refCnt;
-    Tcl_MutexUnlock(&fnt_mutex);
+    Tcl_MutexUnlock(&fontMutex);
 }
 
 static unsigned long
@@ -757,7 +779,7 @@ SdlTkCloseFTStream(FT_Stream ftstr)
 }
 
 void *
-SdlTkGetFTStream(const char *pathname, int size)
+SdlTkXGetFTStream(const char *pathname, int size)
 {
     FT_Stream ftstr = (FT_Stream) ckalloc(sizeof (*ftstr));
     struct stat stbuf;
@@ -777,13 +799,13 @@ SdlTkGetFTStream(const char *pathname, int size)
 }
 
 int
-SdlTkGetFontFile(const char *family, int size, int isBold, int isItalic,
-		 const char **nameRet, int *filesizeRet)
+SdlTkXGetFontFile(const char *family, int size, int isBold, int isItalic,
+	     const char **nameRet, int *filesizeRet)
 {
     Tcl_DString ds;
     char *p, *q;
     int ret;
-    char *fileName = NULL;
+    char *fname = NULL;
     _Font fstorage;
 
     Tcl_DStringInit(&ds);
@@ -799,26 +821,26 @@ SdlTkGetFontFile(const char *family, int size, int isBold, int isItalic,
     sprintf(p, "-%s-%s-normal-*-%d-*-*-*-*-*-ucs-4",
 	    isBold ? "bold" : "normal", isItalic ? "o" : "r", size);
     p = Tcl_DStringValue(&ds);
-    Tcl_MutexLock(&fnt_mutex);
+    Tcl_MutexLock(&fontMutex);
     ret = MatchFont(p, &fstorage);
-    Tcl_MutexUnlock(&fnt_mutex);
+    Tcl_MutexUnlock(&fontMutex);
     Tcl_DStringFree(&ds);
     if (ret == TCL_OK) {
-	fileName = (char *) XInternAtom(SdlTkX.display, fstorage.file, False);
+	fname = (char *) XInternAtom(SdlTkX.display, fstorage.file, False);
     }
     if (nameRet != NULL) {
-	*nameRet = fileName;
+	*nameRet = fname;
     }
-    if ((filesizeRet != NULL) && (fileName != NULL)) {
+    if ((filesizeRet != NULL) && (fname != NULL)) {
 	struct stat stbuf;
 
 	*filesizeRet = 0;
 
-	if (Tcl_Stat(fileName, &stbuf) == 0) {
+	if (Tcl_Stat(fname, &stbuf) == 0) {
 	    *filesizeRet = stbuf.st_size;
 	}
     }
-    if ((fileName != NULL) && (fstorage.file != fileName)) {
+    if ((fname != NULL) && (fstorage.file != fname)) {
 	ckfree(fstorage.file);
     }
     if (fstorage.xlfd != NULL) {
@@ -827,12 +849,105 @@ SdlTkGetFontFile(const char *family, int size, int isBold, int isItalic,
     return ret == TCL_OK;
 }
 
+#ifdef _WIN32
+static void
+AddSysFontFiles(Tcl_Obj *list)
+{
+    HKEY top;
+    DWORD index = 0;
+    int fntlen;
+    char *p, *q;
+    WCHAR key[256];
+    Tcl_DString fntdir, ds;
+
+    /*
+     * Find out fonts folder from Windows system directory.
+     */
+    GetSystemDirectoryW(key, sizeof (key) / sizeof (WCHAR));
+    Tcl_WinTCharToUtf((TCHAR *) key, -1, &fntdir);
+    p = Tcl_DStringValue(&fntdir);
+    q = strrchr(p, '\\');
+    if (q != NULL) {
+	Tcl_DStringSetLength(&fntdir, q - p);
+	Tcl_DStringAppend(&fntdir, "\\Fonts\\", -1);
+    } else {
+	Tcl_DStringSetLength(&fntdir, 0);
+    }
+    p = Tcl_DStringValue(&fntdir);
+    while (*p != '\0') {
+	if (*p == '\\') {
+	    *p = '/';
+	}
+	++p;
+    }
+    fntlen = Tcl_DStringLength(&fntdir);
+
+    /*
+     * Search registry for fonts.
+     */
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+	    L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts", 0,
+	    KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &top) !=
+	ERROR_SUCCESS) {
+	return;
+    }
+    Tcl_DStringInit(&ds);
+    Tcl_DStringSetLength(&ds, 512 * sizeof (WCHAR));
+    while (1) {
+	DWORD ret, size, type;
+
+	size = sizeof (key) / sizeof (WCHAR);
+	ret = RegEnumValueW(top, index, key, &size, NULL, NULL, NULL, NULL);
+	if (ret != ERROR_SUCCESS) {
+	    break;
+	}
+	Tcl_DStringSetLength(&ds, 0);
+	size = 512 * sizeof (WCHAR);
+	if ((RegQueryValueExW(top, key, NULL, &type,
+		(BYTE *) Tcl_DStringValue(&ds), &size) == ERROR_SUCCESS) &&
+	    (type == REG_SZ)) {
+	    int isabs = 0;
+	    Tcl_DString fname;
+
+	    Tcl_WinTCharToUtf(Tcl_DStringValue(&ds), -1, &fname);
+	    p = Tcl_DStringValue(&fname);
+	    q = strrchr(p, '.');
+	    if ((q != NULL) && (strcasecmp(q, ".ttf") == 0)) {
+		q = p;
+		while (*q != '\0') {
+		    if (*q == '\\') {
+			*q = '/';
+			isabs++;
+		    }
+		    ++q;
+		}
+		if (!isabs) {
+		    Tcl_DStringSetLength(&fntdir, fntlen);
+		    Tcl_DStringAppend(&fntdir, p, -1);
+		    Tcl_ListObjAppendElement(NULL, list,
+			Tcl_NewStringObj(Tcl_DStringValue(&fntdir),
+			    Tcl_DStringLength(&fntdir)));
+		} else {
+		    Tcl_ListObjAppendElement(NULL, list,
+			Tcl_NewStringObj(p, -1));
+		}
+	    }
+	    Tcl_DStringFree(&fname);
+	}
+	++index;
+    }
+    Tcl_DStringFree(&ds);
+    RegCloseKey(top);
+    Tcl_DStringFree(&fntdir);
+}
+#endif
+
 int
 SdlTkFontInit(Tcl_Interp *interp)
 {
     static int initialized = 0;
-    int result, argc, i, nfonts;
-    const char **argv;
+    int result, objc, i, nfonts;
+    Tcl_Obj **objv;
     Tcl_EncodingType type;
     FT_Error fterr;
     FT_Library ftlib;
@@ -840,14 +955,14 @@ SdlTkFontInit(Tcl_Interp *interp)
     if (initialized) {
 	return TCL_OK;
     }
-    Tcl_MutexLock(&fnt_mutex);
+    Tcl_MutexLock(&fontMutex);
     if (initialized) {
 	goto success;
     }
 
-    Tcl_InitHashTable(&xlfd_hash, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&file_face_hash, sizeof (FileFaceKey) / sizeof (int));
-    Tcl_InitHashTable(&file_face_size_hash,
+    Tcl_InitHashTable(&xlfdHash, TCL_STRING_KEYS);
+    Tcl_InitHashTable(&fileFaceHash, sizeof (FileFaceKey) / sizeof (int));
+    Tcl_InitHashTable(&fileFaceSizeHash,
 		      sizeof (FileFaceSizeKey) / sizeof (int));
 
     fterr = FT_Init_FreeType(&ftlib);
@@ -855,19 +970,35 @@ SdlTkFontInit(Tcl_Interp *interp)
 	Tcl_AppendResult(interp, "error initializing freetype", (char *) NULL);
 	goto error;
     }
+    /*
+     * Search order:
+     *    1. packaged/built-in fonts ($tk_library/fonts/...)
+     *    2. $env(HOME)/.fonts directory
+     *    3. system specific directories
+     */ 
 #ifdef ANDROID
     result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
-			"[file join $tk_library fonts] *] "
-			"[glob -nocomplain -directory /system/fonts *.ttf "
-			"-types f] [glob -nocomplain "
-			"-directory /assets/assets/fonts *.ttf] "
-			"[glob -nocomplain -directory ~/.fonts -types f *.ttf]",
-			 -1, TCL_EVAL_GLOBAL);
-#else
+		"[file join $tk_library fonts] *] "
+		"[glob -nocomplain -directory ~/.fonts -types f *.ttf] "
+		"[glob -nocomplain -directory /system/fonts *.ttf"
+		" -types f]",
+		-1, TCL_EVAL_GLOBAL);
+#elif _WIN32
     result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
-			"[file join $tk_library fonts] *] "
-			"[glob -nocomplain -directory ~/.fonts -types f *.ttf]",
-			-1, TCL_EVAL_GLOBAL);
+		"[file join $tk_library fonts] *] "
+		"[glob -nocomplain -directory ~/.fonts -types f *.ttf]",
+		-1, TCL_EVAL_GLOBAL);
+#else
+    /*
+     * Needs more effort, currently tries /usr/share/fonts/... which
+     * should work on most modern Linuxen.
+     */
+    result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
+		"[file join $tk_library fonts] *] "
+		"[glob -nocomplain -directory ~/.fonts -types f *.ttf] "
+		"[glob -nocomplain -directory /usr/share/fonts"
+		" -types f */*.ttf] ",
+		-1, TCL_EVAL_GLOBAL);
 #endif
     if (result != TCL_OK) {
 fonterr:
@@ -875,24 +1006,28 @@ fonterr:
 			 (char *) NULL);
 	goto error;
     }
-    if (Tcl_SplitList(interp, Tcl_GetStringResult(interp), &argc, &argv)
+#ifdef _WIN32
+    AddSysFontFiles(Tcl_GetObjResult(interp));
+#endif
+    if (Tcl_ListObjGetElements(interp, Tcl_GetObjResult(interp), &objc, &objv)
 	!= TCL_OK) {
         goto fonterr;
     }
 
-    for (i = nfonts = 0; i < argc; i++) {
+    for (i = nfonts = 0; i < objc; i++) {
         FT_Face face = 0;
 	FT_Open_Args ftarg;
-	int k, nfaces, file_size;
+	const char *fname = Tcl_GetString(objv[i]);
+	int k, nfaces, fsize;
 
 	memset(&ftarg, 0, sizeof (ftarg));
 	ftarg.flags = FT_OPEN_STREAM;
-	ftarg.stream = (FT_Stream) SdlTkGetFTStream(argv[i], 0);
+	ftarg.stream = (FT_Stream) SdlTkXGetFTStream(fname, 0);
 	fterr = FT_Open_Face(ftlib, &ftarg, -1, &face);
 	if (fterr != 0) {
 	    continue;
 	}
-	file_size = ((FT_Stream) ftarg.stream)->size;
+	fsize = ((FT_Stream) ftarg.stream)->size;
 	nfaces = face->num_faces;
 	FT_Done_Face(face);
 	face = 0;
@@ -903,7 +1038,7 @@ fonterr:
 
 	    memset(&ftarg, 0, sizeof (ftarg));
 	    ftarg.flags = FT_OPEN_STREAM;
-	    ftarg.stream = (FT_Stream) SdlTkGetFTStream(argv[i], file_size);
+	    ftarg.stream = (FT_Stream) SdlTkXGetFTStream(fname, fsize);
 	    fterr = FT_Open_Face(ftlib, &ftarg, k, &face);
 	    if (fterr != 0) {
 	        continue;
@@ -916,9 +1051,9 @@ fonterr:
 		goto nextface;
 	    }
 	    memset(&ffKey, '\0', sizeof (ffKey));
-	    ffKey.file = XInternAtom(SdlTkX.display, argv[i], False);
+	    ffKey.file = XInternAtom(SdlTkX.display, fname, False);
 	    ffKey.index = k;
-	    hPtr = Tcl_CreateHashEntry(&file_face_hash, (char *) &ffKey,
+	    hPtr = Tcl_CreateHashEntry(&fileFaceHash, (char *) &ffKey,
 				       &isNew);
 	    if (isNew) {
 	        GlyphIndexHash *ghash;
@@ -952,6 +1087,8 @@ fonterr:
 		    strcat(ghash->familyName, " Thin");
 		} else if (strstr(style, "medium")) {
 		    strcat(ghash->familyName, " Medium");
+		} else if (strstr(style, "condensed")) {
+		    strcat(ghash->familyName, " Condensed");
 		}
 		if (ghash->styleFlags & FT_STYLE_FLAG_BOLD) {
 		    weight = "-bold";
@@ -971,6 +1108,8 @@ fonterr:
 		Tcl_DStringFree(&ds2);
 		ghash->hashLoaded = 0;
 		Tcl_SetHashValue(hPtr, (char *) ghash);
+		FNTLOG("FONTINIT: '%s' -> '%s'", ghash->xlfdPattern,
+		       (char *) ffKey.file);
 		nfonts++;
 	    }
 nextface:
@@ -978,7 +1117,6 @@ nextface:
 	}
     }
     FT_Done_FreeType(ftlib);
-    Tcl_Free((char *) argv);
 
     if (nfonts == 0) {
         Tcl_ResetResult(interp);
@@ -996,23 +1134,27 @@ nextface:
     Tcl_CreateEncoding(&type);
 
     initialized = 1;
+#ifndef ANDROID
+    /* unhide root window now */
+    SDL_ShowWindow(SdlTkX.sdlscreen);
+#endif
 success:
-    Tcl_MutexUnlock(&fnt_mutex);
+    Tcl_MutexUnlock(&fontMutex);
     return TCL_OK;
 
 error:
-    Tcl_MutexUnlock(&fnt_mutex);
+    Tcl_MutexUnlock(&fontMutex);
     return TCL_ERROR;
 }
 
 int
-SdlTkFontAdd(Tcl_Interp *interp, const char *fileName)
+SdlTkFontAdd(Tcl_Interp *interp, const char *fname)
 {
     FT_Error fterr;
     FT_Library ftlib;
     FT_Face face;
     FT_Open_Args ftarg;
-    int k, nfonts = 0, nfaces, file_size;
+    int k, nfonts = 0, nfaces, fsize;
     Tcl_HashEntry *hPtr;
     Tcl_HashTable famHash;
     Tcl_HashSearch search;
@@ -1021,7 +1163,7 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fileName)
 	return TCL_ERROR;
     }
 
-    Tcl_MutexLock(&fnt_mutex);
+    Tcl_MutexLock(&fontMutex);
 
     fterr = FT_Init_FreeType(&ftlib);
     if (fterr != 0) {
@@ -1030,13 +1172,13 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fileName)
     }
     memset(&ftarg, 0, sizeof (ftarg));
     ftarg.flags = FT_OPEN_STREAM;
-    ftarg.stream = (FT_Stream) SdlTkGetFTStream(fileName, 0);
+    ftarg.stream = (FT_Stream) SdlTkXGetFTStream(fname, 0);
     fterr = FT_Open_Face(ftlib, &ftarg, -1, &face);
     if (fterr != 0) {
 	Tcl_AppendResult(interp, "cannot open font file", (char *) NULL);
 	goto error;
     }
-    file_size = ((FT_Stream) ftarg.stream)->size;
+    fsize = ((FT_Stream) ftarg.stream)->size;
     nfaces = face->num_faces;
     FT_Done_Face(face);
     face = 0;
@@ -1047,7 +1189,7 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fileName)
 
 	memset(&ftarg, 0, sizeof (ftarg));
 	ftarg.flags = FT_OPEN_STREAM;
-	ftarg.stream = (FT_Stream) SdlTkGetFTStream(fileName, file_size);
+	ftarg.stream = (FT_Stream) SdlTkXGetFTStream(fname, fsize);
 	fterr = FT_Open_Face(ftlib, &ftarg, k, &face);
 	if (fterr != 0) {
 	    continue;
@@ -1060,9 +1202,9 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fileName)
 	    goto nextface;
 	}
 	memset(&ffKey, '\0', sizeof (ffKey));
-	ffKey.file = XInternAtom(SdlTkX.display, fileName, False);
+	ffKey.file = XInternAtom(SdlTkX.display, fname, False);
 	ffKey.index = k;
-	hPtr = Tcl_CreateHashEntry(&file_face_hash, (char *) &ffKey, &isNew);
+	hPtr = Tcl_CreateHashEntry(&fileFaceHash, (char *) &ffKey, &isNew);
 	if (isNew) {
 	    GlyphIndexHash *ghash;
 	    Tcl_DString ds;
@@ -1095,6 +1237,8 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fileName)
 	    Tcl_SetHashValue(hPtr, (char *) ghash);
 	    nfonts++;
 	    Tcl_CreateHashEntry(&famHash, ghash->familyName, &isNew);
+	    FNTLOG("FONTADD: '%s' -> '%s'", ghash->xlfdPattern,
+		   (char *) ffKey.file);
 	}
 nextface:
 	FT_Done_Face(face);
@@ -1107,7 +1251,7 @@ nextface:
 	goto error;
     }
 
-    Tcl_MutexUnlock(&fnt_mutex);
+    Tcl_MutexUnlock(&fontMutex);
     hPtr = Tcl_FirstHashEntry(&famHash, &search);
     while (hPtr != NULL) {
 	Tcl_AppendElement(interp, Tcl_GetHashKey(&famHash, hPtr));
@@ -1117,7 +1261,7 @@ nextface:
     return TCL_OK;
 
 error:
-    Tcl_MutexUnlock(&fnt_mutex);
+    Tcl_MutexUnlock(&fontMutex);
     return TCL_ERROR;
 }
 

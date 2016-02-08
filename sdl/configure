@@ -5943,7 +5943,18 @@ fi
 	    SHLIB_LD='${CC} -shared ${CFLAGS} ${LDFLAGS}'
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
+	    # workaround when cross-compiling for Win32: no -fPIC and -Wl,...
+	    if test "${TCL_SHLIB_SUFFIX}" = ".dll" ; then
+		SHLIB_CFLAGS=""
+		SHLIB_SUFFIX=".dll"
+		DL_OBJS=""
+		DL_LIBS=""
+		TCL_LIB_VERSIONS_OK=nodots
+		SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.dll'
+		UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.a'
+	    else
+		LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
+	    fi
 	    if test $doRpath = yes; then
 
 		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
@@ -10040,7 +10051,11 @@ _ACEOF
 fi
 
 TK_WINDOWINGSYSTEM=SDL
-EXTRA_CC_SWITCHES='-DPLATFORM_SDL=1'
+
+cat >>confdefs.h <<\_ACEOF
+#define PLATFORM_SDL 1
+_ACEOF
+
 
 #--------------------------------------------------------------------
 #	Check for the existence of various libraries.  The order here

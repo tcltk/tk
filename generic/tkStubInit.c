@@ -13,7 +13,6 @@
 
 #if !(defined(_WIN32) || defined(MAC_OSX_TK))
 /* UNIX */
-#define UNIX_TK
 #ifndef PLATFORM_SDL
 #include "tkUnixInt.h"
 #endif
@@ -21,6 +20,10 @@
 
 #ifdef PLATFORM_SDL
 #include "tkSDLInt.h"
+/* TODO: This needs further toughts */
+#undef  _TKINTXLIBDECLS
+#include "SdlTkInt.h"
+#define _TKINTXLIBDECLS
 #endif
 
 #if defined(_WIN32) && !defined(PLATFORM_SDL)
@@ -36,6 +39,26 @@
 #include "tkPlatDecls.h"
 #include "tkIntXlibDecls.h"
 
+#ifdef PLATFORM_SDL
+/* TODO: This needs further toughts */
+#undef SdlTkGLXAvailable
+#undef SdlTkGLXCreateContext
+#undef SdlTkGLXDestroyContext
+#undef SdlTkGLXMakeCurrent
+#undef SdlTkGLXReleaseCurrent
+#undef SdlTkGLXSwapBuffers
+#else
+#define XCreateWindow 0
+#define XOffsetRegion 0
+#define XUnionRegion 0
+#define SdlTkGLXAvailable 0
+#define SdlTkGLXCreateContext 0
+#define SdlTkGLXDestroyContext 0
+#define SdlTkGLXMakeCurrent 0
+#define SdlTkGLXReleaseCurrent 0
+#define SdlTkGLXSwapBuffers 0
+#endif
+
 static const TkIntStubs tkIntStubs;
 MODULE_SCOPE const TkStubs tkStubs;
 
@@ -45,6 +68,23 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 #ifndef ANDROID
 #undef Tk_MainEx
+#endif
+
+#ifndef PLATFORM_SDL
+#   undef  XScreenGetMMWidthHeight
+#   undef  XScreenSetMMWidthHeight
+#   undef  XGetAgg2D
+#   undef  XCreateAgg2D
+#   undef  XDestroyAgg2D
+#   undef  XGetFontFile
+#   undef  XGetFTStream
+#   define XScreenGetMMWidthHeight 0
+#   define XScreenSetMMWidthHeight 0
+#   define XGetAgg2D 0
+#   define XCreateAgg2D 0
+#   define XDestroyAgg2D 0
+#   define XGetFontFile 0
+#   define XGetFTStream 0
 #endif
 
 #if defined(_WIN32) && !defined(PLATFORM_SDL)
@@ -116,23 +156,6 @@ TkpPrintWindowId(
     Window window)		/* Window to be printed into buffer. */
 {
     sprintf(buf, "%#08lx", (unsigned long) (window));
-}
-
-int
-TkPutImage(
-    unsigned long *colors,	/* Array of pixel values used by this image.
-				 * May be NULL. */
-    int ncolors,		/* Number of colors used, or 0. */
-    Display *display,
-    Drawable d,			/* Destination drawable. */
-    GC gc,
-    XImage *image,		/* Source image. */
-    int src_x, int src_y,	/* Offset of subimage. */
-    int dest_x, int dest_y,	/* Position of subimage origin in drawable. */
-    unsigned int width, unsigned int height)
-				/* Dimensions of subimage. */
-{
-    return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
 }
 
 TkRegion TkCreateRegion()
@@ -234,6 +257,25 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkUnionRectWithRegion (void (*) (XRectangle *, TkRegion, TkRegion)) XUnionRectWithRegion
 #	define TkSubtractRegion (void (*) (TkRegion, TkRegion, TkRegion)) XSubtractRegion
 #   endif
+
+int
+TkPutImage(
+    unsigned long *colors,	/* Array of pixel values used by this image.
+				 * May be NULL. */
+    int ncolors,		/* Number of colors used, or 0. */
+    Display *display,
+    Drawable d,			/* Destination drawable. */
+    GC gc,
+    XImage *image,		/* Source image. */
+    int src_x, int src_y,	/* Offset of subimage. */
+    int dest_x, int dest_y,	/* Position of subimage origin in drawable. */
+    unsigned int width, unsigned int height)
+				/* Dimensions of subimage. */
+{
+    return XPutImage(display, d, gc, image, src_x, src_y,
+	    dest_x, dest_y, width, height);
+}
+
 #endif /* !_WIN32 */
 
 /*
@@ -591,7 +633,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 static const TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     0,
-#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(PLATFORM_SDL) /* WIN */
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -707,6 +749,22 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSynchronize, /* 112 */
     XSync, /* 113 */
     XVisualIDFromVisual, /* 114 */
+    XScreenGetMMWidthHeight, /* 115 */
+    XScreenSetMMWidthHeight, /* 116 */
+    XGetAgg2D, /* 117 */
+    XCreateAgg2D, /* 118 */
+    XDestroyAgg2D, /* 119 */
+    XGetFontFile, /* 120 */
+    XGetFTStream, /* 121 */
+    XOffsetRegion, /* 122 */
+    XUnionRegion, /* 123 */
+    XCreateWindow, /* 124 */
+    SdlTkGLXAvailable, /* 125 */
+    SdlTkGLXCreateContext, /* 126 */
+    SdlTkGLXDestroyContext, /* 127 */
+    SdlTkGLXMakeCurrent, /* 128 */
+    SdlTkGLXReleaseCurrent, /* 129 */
+    SdlTkGLXSwapBuffers, /* 130 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */

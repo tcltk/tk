@@ -4749,6 +4749,9 @@ TextChanged(
          */
 
         lastPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &rounded);
+        while ((lastPtr != NULL) && (TkTextIndexCmp(&lastPtr->index, &rounded) < 0)) {
+            lastPtr = lastPtr->nextPtr;
+        }
 
         /*
          * At least one display line is supposed to change. This makes the

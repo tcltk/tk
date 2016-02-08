@@ -576,7 +576,7 @@ static void IndicatorElementSize(
 #ifdef PLATFORM_SDL
     int wM, wS, hM, hS;
 
-    ScreenGetMMWidthHeight(display, DefaultScreenOfDisplay(display),
+    XScreenGetMMWidthHeight(display, DefaultScreenOfDisplay(display),
 	    &wM, &wS, &hM, &hS);
     if ((hS/hM) > (wS/wM)) {
 	wM = hM;
@@ -628,7 +628,7 @@ static void IndicatorElementDraw(
     b = Ttk_PadBox(b, padding);
 
 #ifdef PLATFORM_SDL
-    ScreenGetMMWidthHeight(display, DefaultScreenOfDisplay(display),
+    XScreenGetMMWidthHeight(display, DefaultScreenOfDisplay(display),
 	    &wM, &wS, &hM, &hS);
     if ((hS/hM) > (wS/wM)) {
 	wM = hM;
@@ -735,7 +735,11 @@ static void IndicatorElementDraw(
     memset(&gcValues, 0, sizeof(gcValues));
     copyGC = Tk_GetGC(tkwin, 0, &gcValues);
 
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK)) || defined(PLATFORM_SDL)
+    XPutImage(display, d, copyGC, img, 0, 0, b.x, b.y, w, h);
+#else
     TkPutImage(NULL, 0, display, d, copyGC, img, 0, 0, b.x, b.y, w, h);
+#endif
 
     /*
      * Tidy up.

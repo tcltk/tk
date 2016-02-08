@@ -1,8 +1,12 @@
 #ifdef HAVE_EVENTFD
 #include <sys/eventfd.h>
 #endif
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <errno.h>
 #include <unistd.h>
+#endif
 #include "tkInt.h"
 #include "tkIntPlatDecls.h"
 #include "SdlTk.h"
@@ -13,18 +17,26 @@
 
 #ifdef ANDROID
 #include <android/log.h>
+#else
+#include <SDL2/SDL_opengl.h>
 #endif
 
 #undef TRACE_EVENTS
+#undef TRACE_GL
 
 #ifdef TRACE_EVENTS
 #ifdef ANDROID
 #define EVLOG(...) __android_log_print(ANDROID_LOG_ERROR,"SDLEV",__VA_ARGS__)
 #else
-#define EVLOG(...) fprintf(stderr,__VA_ARGS__); fputc('\n', stderr)
+#define EVLOG(...) SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION,__VA_ARGS__)
 #endif
 #else
 #define EVLOG(...)
+#endif
+#ifdef TRACE_GL
+#define GLLOG(...) SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION,__VA_ARGS__)
+#else
+#define GLLOG(...)
 #endif
 
 TCL_DECLARE_MUTEX(atom_mutex);
@@ -43,6 +55,14 @@ struct PanZoomRequest {
     int running;
     SDL_Rect r;
 };
+
+#ifndef ANDROID
+struct WindowFlagsRequest {
+    int running;
+    int flags;
+    SDL_Rect r;
+};
+#endif
 
 struct EventThreadStartup {
     int init_done;
@@ -257,7 +277,7 @@ XChangeProperty(Display *display, Window w, Atom property, Atom type,
 
     display->request++;
 
-    if (_w->display == NULL) {
+    if ((_w == NULL) || (_w->display == NULL)) {
 	goto done;
     }
 
@@ -565,7 +585,7 @@ XCloseDisplay(Display *display)
     --num_displays;
 
     if (display->agg2d != NULL) {
-	SdlTkDestroyAgg2D(display, display->agg2d);
+	XDestroyAgg2D(display, display->agg2d);
     }
 
     /* Free GCs and Pixmaps */
@@ -958,7 +978,7 @@ XCreateGlyphCursor(Display *display, Font source_font, Font mask_font,
 }
 
 XIC
-XCreateIC(void)
+XCreateIC(XIM xim, ...)
 {
     return NULL;
 }
@@ -1284,10 +1304,22 @@ SdlTkDestroyWindow(Display *display, Window w)
 	return;
     }
 #ifndef ANDROID
+#ifdef _WIN32
+    if (_w->gl_rend) {
+	SDL_DestroyRenderer(_w->gl_rend);
+	_w->gl_rend = NULL;
+    }
+    if (_w->gl_wind) {
+	SDL_DestroyWindow(_w->gl_wind);
+	_w->gl_wind = NULL;
+    }
+    _w->gl_ctx = NULL;
+#else
     if (_w->gl_ctx) {
 	SDL_GL_DeleteContext(_w->gl_ctx);
 	_w->gl_ctx = NULL;
     }
+#endif
 #endif
     if (_w->gl_tex != NULL) {
 	SDL_DestroyTexture(_w->gl_tex);
@@ -2595,7 +2627,7 @@ XFontStruct *
 XLoadQueryFont(Display *display, _Xconst char *name)
 {
     Font f = SdlTkFontLoadXLFD(name);
-    return f ? ((_Font *) f)->font_struct : NULL;
+    return f ? ((_Font *) f)->fontStruct : NULL;
 }
 
 int
@@ -4567,6 +4599,124 @@ SdlTkSetRootSize(int w, int h)
     SdlTkUnlock(NULL);
 }
 
+#ifndef ANDROID
+static void
+HandleWindowFlags(struct WindowFlagsRequest *r)
+{
+    int flags;
+
+    flags = SDL_GetWindowFlags(SdlTkX.sdlscreen);
+
+    /* sdltk fullscreen */
+    if ((r->flags & SDL_WINDOW_FULLSCREEN) &&
+	!(flags & SDL_WINDOW_FULLSCREEN) &&
+	!SdlTkX.arg_fullscreen && SdlTkX.arg_resizable) {
+	int num;
+	SDL_DisplayMode info;
+
+	if (flags & SDL_WINDOW_HIDDEN) {
+	    SDL_ShowWindow(SdlTkX.sdlscreen);
+	}
+	num = SDL_GetWindowDisplayIndex(SdlTkX.sdlscreen);
+	if ((num >= 0) && SDL_GetDesktopDisplayMode(num, &info) == 0) {
+	    SDL_SetWindowSize(SdlTkX.sdlscreen, info.w, info.h);
+	    SDL_SetWindowFullscreen(SdlTkX.sdlscreen, SDL_WINDOW_FULLSCREEN);
+	}
+	goto done;
+    }
+    /* sdltk restore */
+    if ((r->flags & (SDL_WINDOW_SHOWN | SDL_WINDOW_HIDDEN)) ==
+	(SDL_WINDOW_SHOWN | SDL_WINDOW_HIDDEN)) {
+	if (flags & SDL_WINDOW_HIDDEN) {
+	    SDL_ShowWindow(SdlTkX.sdlscreen);
+	}
+	if (flags & SDL_WINDOW_FULLSCREEN) {
+	    SDL_SetWindowFullscreen(SdlTkX.sdlscreen, 0);
+	} else {
+	    SDL_RestoreWindow(SdlTkX.sdlscreen);
+	}
+	goto done;
+    }
+    /* sdltk deiconify */
+    if (r->flags & SDL_WINDOW_SHOWN) {
+	if (flags & SDL_WINDOW_HIDDEN) {
+	    SDL_ShowWindow(SdlTkX.sdlscreen);
+	}
+	if (flags & SDL_WINDOW_FULLSCREEN) {
+	    /* nothing */
+	} else if (flags & SDL_WINDOW_MAXIMIZED) {
+	    SDL_MaximizeWindow(SdlTkX.sdlscreen);
+	} else {
+	    SDL_RestoreWindow(SdlTkX.sdlscreen);
+	}
+	goto done;
+    }
+    /* sdltk iconify */
+    if (r->flags & SDL_WINDOW_MINIMIZED) {
+	if (flags & SDL_WINDOW_HIDDEN) {
+	    SDL_ShowWindow(SdlTkX.sdlscreen);
+	}
+	if (!(flags & SDL_WINDOW_MINIMIZED)) {
+	    SDL_MinimizeWindow(SdlTkX.sdlscreen);
+	}
+	goto done;
+    }
+    /* sdltk withdraw */
+    if (r->flags & SDL_WINDOW_HIDDEN) {
+	if (!(flags & SDL_WINDOW_HIDDEN)) {
+	    SDL_HideWindow(SdlTkX.sdlscreen);
+	}
+	goto done;
+    }
+    /* sdltk maximize */
+    if (r->flags & SDL_WINDOW_MAXIMIZED) {
+	if (!(flags & SDL_WINDOW_MAXIMIZED) &&
+	    !SdlTkX.arg_fullscreen && SdlTkX.arg_resizable) {
+	    if (!(flags & (SDL_WINDOW_SHOWN | SDL_WINDOW_MINIMIZED))) {
+		SDL_ShowWindow(SdlTkX.sdlscreen);
+	    }
+	    if (flags & SDL_WINDOW_FULLSCREEN) {
+		SDL_SetWindowFullscreen(SdlTkX.sdlscreen, 0);
+	    }
+	    SDL_MaximizeWindow(SdlTkX.sdlscreen);
+	}
+	goto done;
+    }
+done:
+    if (r->running) {
+	r->running = 0;
+	Tcl_ConditionNotify(&xlib_cond);
+    }
+}
+#endif
+
+void
+SdlTkSetWindowFlags(int flags, int x, int y, int w, int h)
+{
+#ifndef ANDROID
+    struct WindowFlagsRequest wreq;
+    SDL_Event event;
+
+    SdlTkLock(NULL);
+    wreq.running = 1;
+    wreq.flags = flags;
+    wreq.r.x = x;
+    wreq.r.y = y;
+    wreq.r.w = w;
+    wreq.r.h = h;
+    event.type = SDL_USEREVENT;
+    event.user.windowID = 0;
+    event.user.code = 0;
+    event.user.data1 = (void *) HandleWindowFlags;
+    event.user.data2 = (void *) &wreq;
+    SDL_PeepEvents(&event, 1, SDL_ADDEVENT, 0, 0);
+    while (wreq.running) {
+	SdlTkWaitLock();
+    }
+    SdlTkUnlock(NULL);
+#endif
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -4599,6 +4749,70 @@ TimerCallback(Uint32 interval, void *clientData)
     return interval;
 }
 
+#ifndef ANDROID
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SDL RW operations for icon file loading.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Sint64
+RWIconSize(struct SDL_RWops *rwops)
+{
+    return -1;
+}
+
+static Sint64
+RWIconSeek(struct SDL_RWops *rwops, Sint64 offset, int whence)
+{
+    Tcl_Channel chan = (Tcl_Channel) rwops->hidden.unknown.data1;
+    int op;
+
+    switch (whence) {
+    case RW_SEEK_SET:
+	op = SEEK_SET;
+	break;
+    case RW_SEEK_CUR:
+	op = SEEK_CUR;
+	break;
+    case RW_SEEK_END:
+	op = SEEK_END;
+	break;
+    default:
+	return -1;
+    }
+    return Tcl_Seek(chan, offset, op);
+}
+
+static size_t
+RWIconRead(struct SDL_RWops *rwops, void *p, size_t size, size_t max)
+{
+    Tcl_Channel chan = (Tcl_Channel) rwops->hidden.unknown.data1;
+    int n = size * max;
+
+    return Tcl_Read(chan, p, n);
+}
+
+static size_t
+RWIconWrite(struct SDL_RWops *rwops, const void *p, size_t size, size_t max)
+{
+    return -1;
+}
+
+static int
+RWIconClose(struct SDL_RWops *rwops)
+{
+    Tcl_Channel chan = (Tcl_Channel) rwops->hidden.unknown.data1;
+
+    Tcl_Close(NULL, chan);
+    return 0;
+}
+
+#endif
+
 /*
  *----------------------------------------------------------------------
  *
@@ -4615,7 +4829,7 @@ PerformSDLInit(int *root_width, int *root_height)
     Display *display;
     Screen *screen;
     int i, width, height, min_w = 200, min_h = 200;
-    Uint32 videoflags;
+    Uint32 videoFlags;
     _Window *_w;
     SDL_SysWMinfo wminfo;
     Uint32 fmt;
@@ -4630,12 +4844,16 @@ PerformSDLInit(int *root_width, int *root_height)
 #endif
     XGCValues values;
 
+    if (SdlTkX.arg_sdllog) {
+	SDL_LogSetAllPriority(SdlTkX.arg_sdllog);
+    }
     if (SDL_Init(initMask) < 0) {
 #ifdef ANDROID
 	__android_log_print(ANDROID_LOG_ERROR, "libtk",
 			    "Couldn't initialize SDL: %s", SDL_GetError());
 #else
-	fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
+	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+			"Couldn't initialize SDL: %s", SDL_GetError());
 #endif
 fatal:
 	return 0;
@@ -4643,8 +4861,9 @@ fatal:
 #ifdef ANDROID
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
 #else
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-    SDL_EnableScreenSaver();
+    if (!SdlTkX.arg_nogl) {
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    }
 #endif
 
     /* preset some defaults */
@@ -4663,25 +4882,31 @@ fatal:
 #endif
     Tcl_InitHashTable(&SdlTkX.joystick_table, TCL_ONE_WORD_KEYS);
 
-    videoflags = SDL_SWSURFACE;
+    videoFlags = SDL_SWSURFACE;
 #ifdef ANDROID
-    videoflags |= SDL_WINDOW_FULLSCREEN;
-    videoflags |= SDL_WINDOW_RESIZABLE;
-    videoflags |= SDL_WINDOW_BORDERLESS;
+    videoFlags |= SDL_WINDOW_FULLSCREEN;
+    videoFlags |= SDL_WINDOW_RESIZABLE;
+    videoFlags |= SDL_WINDOW_BORDERLESS;
     width = 200;
     height = 200;
 #else
     if (SdlTkX.arg_fullscreen) {
-	videoflags |= SDL_WINDOW_FULLSCREEN;
+	videoFlags |= SDL_WINDOW_FULLSCREEN;
     }
     if (SdlTkX.arg_resizable) {
-	videoflags |= SDL_WINDOW_RESIZABLE;
+	videoFlags |= SDL_WINDOW_RESIZABLE;
     }
     if (SdlTkX.arg_noborder) {
-	videoflags |= SDL_WINDOW_BORDERLESS;
+	videoFlags |= SDL_WINDOW_BORDERLESS;
     }
     width = 1024;
     height = 768;
+    /*
+     * Start the root window hidden since font init
+     * may take some time. At end of font init in
+     * SdlTkUtils.c the root window is shown.
+     */
+    videoFlags |= SDL_WINDOW_HIDDEN;
 #endif
     if (SdlTkX.arg_width != NULL) {
 	int tmp = 0;
@@ -4727,6 +4952,11 @@ fatal:
     if ((*root_width <= 0) || (*root_height <= 0)) {
 	*root_width = *root_height = 0;
     }
+#ifndef ANDROID
+    if (SdlTkX.arg_nogl) {
+	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+    }
+#endif
 #ifdef SDL_HINT_VIDEO_ALLOW_SCREENSAVER
     SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
 #endif
@@ -4736,7 +4966,7 @@ fatal:
     SDL_GetDesktopDisplayMode(0, &info);
     pfmt = SDL_AllocFormat(info.format);
     if ((info.w > 0) && (info.h > 0)) {
-	if (videoflags & SDL_WINDOW_FULLSCREEN) {
+	if (videoFlags & SDL_WINDOW_FULLSCREEN) {
 	    width = info.w;
 	    height = info.h;
 	}
@@ -4761,23 +4991,32 @@ fatal:
 	    min_h = height;
 	}
     }
+#ifndef ANDROID
+retry:
+#endif
     SdlTkX.sdlscreen = SDL_CreateWindow("SDLWISH", SDL_WINDOWPOS_UNDEFINED,
 				       SDL_WINDOWPOS_UNDEFINED, width,
-				       height, videoflags);
+				       height, videoFlags);
     if (SdlTkX.sdlscreen == NULL) {
 #ifdef ANDROID
 	__android_log_print(ANDROID_LOG_ERROR, "libtk",
 			    "Couldn't create SDL Window : %s", SDL_GetError());
-#else
-	fprintf(stderr, "Couldn't create SDL window: %s\n", SDL_GetError());
-	fflush(stderr);
-#endif
 	goto fatal;
+#else
+	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+			"Couldn't create SDL window: %s", SDL_GetError());
+	if (SdlTkX.arg_nogl) {
+	    /* no retry possible */
+	    goto fatal;
+	}
+	SdlTkX.arg_nogl = 1;
+	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+	goto retry;
+#endif
     }
 #ifndef ANDROID
     SDL_SetWindowMinimumSize(SdlTkX.sdlscreen, min_w, min_h);
 #endif
-
     SDL_GetWindowSize(SdlTkX.sdlscreen, &width, &height);
 
     fmt = SDL_GetWindowPixelFormat(SdlTkX.sdlscreen);
@@ -4793,9 +5032,9 @@ fatal:
 			    "Couldn't create SDL RGB surface: %s",
 			    SDL_GetError());
 #else
-	fprintf(stderr, "Couldn't create SDL RGB surface: %s\n",
-		SDL_GetError());
-	fflush(stderr);
+	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+			"Couldn't create SDL RGB surface: %s",
+			SDL_GetError());
 #endif
 	goto fatal;
     } else {
@@ -4809,7 +5048,12 @@ fatal:
 
 	SDL_FillRect(SdlTkX.sdlsurf, NULL, pixel);
     }
-
+#ifndef ANDROID
+    /* GL debug output? */
+    if (!SdlTkX.arg_nogl && SdlTkX.arg_sdllog) {
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+    }
+#endif
     SdlTkX.sdlrend = SDL_CreateRenderer(SdlTkX.sdlscreen, -1, 0);
     if (SdlTkX.sdlrend == NULL) {
 #ifdef ANDROID
@@ -4817,13 +5061,50 @@ fatal:
 			    "Couldn't create SDL renderer: %s",
 			    SDL_GetError());
 #else
-	fprintf(stderr, "Couldn't create SDL renderer: %s\n",
-		SDL_GetError());
-	fflush(stderr);
+	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+			"Couldn't create SDL renderer: %s",
+			SDL_GetError());
 #endif
 	goto fatal;
     }
 #ifndef ANDROID
+    if (!SdlTkX.arg_nogl) {
+	/* check for OpenGL >= 2.x, otherwise fall back to SW renderer */
+	int glvernum = -1;
+	int hasFBO = 0;
+	SDL_GLContext ctx = SDL_GL_CreateContext(SdlTkX.sdlscreen);
+
+	if (ctx != NULL) {
+	    const char *glver = NULL;
+#ifdef _WIN32
+	    const char *APIENTRY (*glgs)(int n);
+#else
+	    const char *(*glgs)(int n);
+#endif
+
+	    glgs = SDL_GL_GetProcAddress("glGetString");
+	    if (glgs != NULL) {
+		glver = glgs(GL_VERSION);
+	    }
+	    if (glver != NULL) {
+		sscanf(glver, "%d", &glvernum);
+	    }
+	    hasFBO = SDL_GL_ExtensionSupported("GL_EXT_framebuffer_object");
+	    SDL_GL_DeleteContext(ctx);
+	}
+	if ((glvernum >= 0) && (glvernum < 2)) {
+	    SDL_DestroyRenderer(SdlTkX.sdlrend);
+	    SdlTkX.sdlrend = NULL;
+	    SDL_FreeSurface(SdlTkX.sdlsurf);
+	    SdlTkX.sdlsurf = NULL;
+	    SDL_DestroyWindow(SdlTkX.sdlscreen);
+	    SdlTkX.sdlscreen = NULL;
+	    SdlTkX.arg_nogl = 1;
+	    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+	    goto retry;
+	}
+	SdlTkX.arg_nogl = (glvernum < 2) || !hasFBO;
+    }
     if (pfmt->BitsPerPixel == 15) {
 	tfmt = SDL_PIXELFORMAT_RGB555;
     } else if (pfmt->BitsPerPixel == 16) {
@@ -4833,9 +5114,9 @@ fatal:
 	    tfmt = SDL_PIXELFORMAT_RGB24;
 	}
     } else if (pfmt->BitsPerPixel < 15) {
-	fprintf(stderr, "Unsupported pixel format (%d bpp)\n",
-		pfmt->BitsPerPixel);
-	fflush(stderr);
+	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+			"Unsupported pixel format (%d bpp)",
+			pfmt->BitsPerPixel);
 	goto fatal;
     }
 #endif
@@ -4853,12 +5134,29 @@ fatal:
 			    "Couldn't create SDL texture: %s",
 			    SDL_GetError());
 #else
-	fprintf(stderr, "Couldn't create SDL texture: %s\n",
-		SDL_GetError());
-	fflush(stderr);
+	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+			"Couldn't create SDL texture: %s",
+			SDL_GetError());
 #endif
 	goto fatal;
     }
+
+#if defined(SDL_RENDERER_HAS_TARGET_3D) && !defined(ANDROID)
+    /* Probe for 3d canvas if we can create FBO textures */
+    if (!SdlTkX.arg_nogl) {
+	SDL_Texture *tex;
+
+	tex = SDL_CreateTexture(SdlTkX.sdlrend, SDL_PIXELFORMAT_ABGR8888,
+				SDL_TEXTUREACCESS_TARGET_3D, 64, 64);
+	if (tex == NULL) {
+	    SdlTkX.arg_nogl = 1;
+	    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+			"No support for FBOs: %s", SDL_GetError());
+	} else {
+	    SDL_DestroyTexture(tex);
+	}
+    }
+#endif
 
     /* From win/tkWinX.c TkpOpenDisplay */
     display = (Display *) ckalloc(sizeof (Display));
@@ -5082,15 +5380,44 @@ fatal:
     SDL_JoystickOpen(0);	/* should pick accelerometer */
     SDL_JoystickUpdate();
 #else
+    /*
+     * Try loading and setting BMP icon on SDL window.
+     */
+    if (SdlTkX.arg_icon != NULL) {
+	Tcl_Channel chan;
+	SDL_RWops rwops;
+	SDL_Surface *icon = NULL;
+
+	chan = Tcl_OpenFileChannel(NULL, SdlTkX.arg_icon, "r", 0666);
+	if (chan != NULL) {
+	    rwops.size = RWIconSize;
+	    rwops.seek = RWIconSeek;
+	    rwops.read = RWIconRead;
+	    rwops.write = RWIconWrite;
+	    rwops.close = RWIconClose;
+	    rwops.type = SDL_RWOPS_UNKNOWN;
+	    rwops.hidden.unknown.data1 = chan;
+	    rwops.hidden.unknown.data2 = NULL;
+	    icon = SDL_LoadBMP_RW(&rwops, SDL_TRUE);
+	}
+	if (icon != NULL) {
+	    SDL_SetWindowIcon(SdlTkX.sdlscreen, icon);
+	    SDL_FreeSurface(icon);
+	} else {
+	    SdlTkX.arg_icon = NULL;
+	}
+    }
     if (SDL_GetWindowWMInfo(SdlTkX.sdlscreen, &wminfo)) {
 #ifdef _WIN32
 	if (wminfo.subsystem == SDL_SYSWM_WINDOWS) {
 	    HWND hwnd = wminfo.info.win.window;
 	    HICON hicon;
 
-	    hicon = LoadIconA(GetModuleHandle(NULL), "tk");
-	    SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM) hicon);
-	    SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM) hicon);
+	    if (SdlTkX.arg_icon == NULL) {
+		hicon = LoadIconA(GetModuleHandle(NULL), "tk");
+		SendMessage(hwnd, WM_SETICON, ICON_SMALL, (LPARAM) hicon);
+		SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM) hicon);
+	    }
 	}
 #else
 	if (wminfo.subsystem != SDL_SYSWM_X11) {
@@ -5131,6 +5458,7 @@ fatal:
 
     SdlTkX.display = display;
 
+    SDL_EnableScreenSaver();
     return 1;
 }
 
@@ -5203,12 +5531,10 @@ EventThread(ClientData clientData)
 	    /* Disable timer messages. */
 	    timer_enabled = 0;
 	    if (!skipRefresh) {
-#ifdef ANDROID
-		SdlTkScreenRefresh();
-#else
+#if !defined(ANDROID) && !defined(_WIN32)
 		SDL_SetRenderTarget(SdlTkX.sdlrend, NULL);
-		SdlTkScreenRefresh();
 #endif
+		SdlTkScreenRefresh();
 	    }
 	    overrun = (SdlTkX.time_count - sdl_event.user.code) > 0;
 	    skipRefresh = !skipRefresh && overrun;
@@ -5218,6 +5544,9 @@ EventThread(ClientData clientData)
 	if ((sdl_event.type == SDL_USEREVENT) &&
 	    (sdl_event.user.data1 == HandlePanZoom) &&
 	    (sdl_event.user.data2 != NULL)) {
+#if !defined(ANDROID) && !defined(_WIN32)
+	    SDL_SetRenderTarget(SdlTkX.sdlrend, NULL);
+#endif
 	    HandlePanZoom((struct PanZoomRequest *) sdl_event.user.data2);
 	    /* Mark event to be skipped in SdlTkTranslateEvent() */
 	    sdl_event.type = SDL_USEREVENT + 0x1001;
@@ -5225,13 +5554,22 @@ EventThread(ClientData clientData)
 	if ((sdl_event.type == SDL_USEREVENT) &&
 	    (sdl_event.user.data1 == HandleRootSize) &&
 	    (sdl_event.user.data2 != NULL)) {
-#ifndef ANDROID
+#if !defined(ANDROID) && !defined(_WIN32)
 	    SDL_SetRenderTarget(SdlTkX.sdlrend, NULL);
 #endif
 	    HandleRootSize((struct RootSizeRequest *) sdl_event.user.data2);
 	    /* Mark event to be skipped in SdlTkTranslateEvent() */
 	    sdl_event.type = SDL_USEREVENT + 0x1002;
 	}
+#ifndef ANDROID
+	if ((sdl_event.type == SDL_USEREVENT) &&
+	    (sdl_event.user.data1 == HandleWindowFlags) &&
+	    (sdl_event.user.data2 != NULL)) {
+	    HandleWindowFlags((struct WindowFlagsRequest *) sdl_event.user.data2);
+	    /* Mark event to be skipped in SdlTkTranslateEvent() */
+	    sdl_event.type = SDL_USEREVENT + 0x1001;
+	}
+#endif
 	if (SdlTkTranslateEvent(&sdl_event, &event, SdlTkX.time_count)) {
 	    SdlTkQueueEvent(&event);
 	}
@@ -5256,7 +5594,7 @@ EventThread(ClientData clientData)
 }
 
 int
-ScreenGetMMWidthHeight(Display *display, Screen *screen,
+XScreenGetMMWidthHeight(Display *display, Screen *screen,
 		       int *mwidthp, int *widthp,
 		       int *mheightp, int *heightp)
 {
@@ -5278,13 +5616,7 @@ ScreenGetMMWidthHeight(Display *display, Screen *screen,
 }
 
 int
-ScreenGetMMWidth(Display *display, Screen *screen, int *mwidthp, int *widthp)
-{
-    return ScreenGetMMWidthHeight(display, screen, mwidthp, widthp, NULL, NULL);
-}
-
-int
-ScreenSetMMWidthHeight(Display *display, Screen *screen, int width, int height)
+XScreenSetMMWidthHeight(Display *display, Screen *screen, int width, int height)
 {
     SdlTkLock(display);
     screen->moverride = 1;
@@ -6596,9 +6928,10 @@ XUnmapWindow(Display *display, Window w)
     SdlTkUnlock(display);
 }
 
-void
+int
 XWindowEvent(Display *display, Window w, long event_mask, XEvent *event_return)
 {
+    return 0;
 }
 
 int
@@ -6658,6 +6991,31 @@ SdlTkLostFocusWindow(void)
 /*
  *----------------------------------------------------------------------
  *
+ * SdlTkGLXAvailable --
+ *
+ *	Test if OpenGL support available.
+ *
+ * Results:
+ *	0 (no OpenGL), 1 else.
+ *
+ * Side effects:
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+SdlTkGLXAvailable(Display *display)
+{
+#ifdef SDL_RENDERER_HAS_TARGET_3D
+    return ((display != NULL) && !SdlTkX.arg_nogl);
+#else
+    return 0;
+#endif
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * SdlTkGLXCreateContext --
  *
  *	Create GL context given display, X window identifier
@@ -6671,13 +7029,15 @@ SdlTkLostFocusWindow(void)
  *----------------------------------------------------------------------
  */
 
-SDL_GLContext
+void *
 SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
 {
     _Window *_w = (_Window *) w;
 #ifdef SDL_RENDERER_HAS_TARGET_3D
 #ifdef ANDROID
     int depth;
+#else
+    SDL_Renderer *rend;
 #endif
 
     SdlTkLock(display);
@@ -6712,34 +7072,54 @@ SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
     }
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depth);
 #else
-    if (_w->gl_ctx != NULL) {
+    if ((_w->gl_ctx != NULL) || SdlTkX.arg_nogl) {
 	goto done;
     }
+#ifdef _WIN32
+    if (SDL_CreateWindowAndRenderer(64, 64, SDL_WINDOW_HIDDEN, &_w->gl_wind,
+				    &_w->gl_rend) < 0) {
+	goto done2;
+    }
+    _w->gl_ctx = SDL_GL_GetCurrentContext();
+    rend = _w->gl_rend;
+#else
     display->gl_rend = SdlTkX.sdlrend;
+    rend = SdlTkX.sdlrend;
     _w->gl_ctx = SDL_GL_CreateContext(SdlTkX.sdlscreen);
+#endif
     if (_w->gl_ctx != NULL) {
 	SDL_Texture *tex;
 
-	tex = SDL_CreateTexture((SDL_Renderer *) display->gl_rend,
-				SDL_PIXELFORMAT_ABGR8888,
+	tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_ABGR8888,
 				SDL_TEXTUREACCESS_TARGET_3D,
 				_w->atts.width, _w->atts.height);
 	if (tex != NULL) {
-	    SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, tex);
-	    SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, NULL);
+	    SDL_SetRenderTarget(rend, tex);
+#ifndef _WIN32
+	    SDL_SetRenderTarget(rend, NULL);
+#endif
 	    _w->gl_tex = tex;
 	} else {
+#ifdef _WIN32
+	    SDL_DestroyRenderer(_w->gl_rend);
+	    _w->gl_rend = NULL;
+	    SDL_DestroyWindow(_w->gl_wind);
+	    _w->gl_wind = NULL;
+#else
 	    SDL_GL_DeleteContext(_w->gl_ctx);
+#endif
 	    _w->gl_ctx = NULL;
 	}
     }
+done2:
+    GLLOG("SdlTkGLXCreateContext: ctx=%p, tex=%p", _w->gl_ctx, _w->gl_tex);
 #endif
 done:
     SdlTkUnlock(display);
 #ifdef ANDROID
-    return (SDL_GLContext) _w->gl_tex;
+    return (void *) _w->gl_tex;
 #else
-    return _w->gl_ctx;
+    return (void *) _w->gl_ctx;
 #endif
 #else
     _w->gl_ctx = NULL;
@@ -6763,7 +7143,7 @@ done:
  */
 
 void
-SdlTkGLXDestroyContext(Display *display, Window w, SDL_GLContext ctx)
+SdlTkGLXDestroyContext(Display *display, Window w, void *ctx)
 {
 #ifdef SDL_RENDERER_HAS_TARGET_3D
     _Window *_w = (_Window *) w;
@@ -6773,15 +7153,30 @@ SdlTkGLXDestroyContext(Display *display, Window w, SDL_GLContext ctx)
     if (_w->display == NULL) {
 	goto done;
     }
+#ifndef ANDROID
+    GLLOG("SdlTkGLXDestroyContext: ctx=%p, tex=%p", _w->gl_ctx, _w->gl_tex);
+#endif
     if (_w->gl_tex != NULL) {
 	SDL_DestroyTexture(_w->gl_tex);
 	_w->gl_tex = NULL;
     }
 #ifndef ANDROID
+#ifdef _WIN32
+    if (_w->gl_rend != NULL) {
+	SDL_DestroyRenderer(_w->gl_rend);
+	_w->gl_rend = NULL;
+    }
+    if (_w->gl_wind != NULL) {
+	SDL_DestroyWindow(_w->gl_wind);
+	_w->gl_wind = NULL;
+    }
+    _w->gl_ctx = NULL;
+#else
     if (_w->gl_ctx != NULL) {
 	SDL_GL_DeleteContext(_w->gl_ctx);
 	_w->gl_ctx = NULL;
     }
+#endif
 #endif
 done:
     SdlTkUnlock(display);
@@ -6804,14 +7199,20 @@ done:
  */
 
 void
-SdlTkGLXMakeCurrent(Display *display, Window w, SDL_GLContext ctx)
+SdlTkGLXMakeCurrent(Display *display, Window w, void *ctx)
 {
 #ifdef SDL_RENDERER_HAS_TARGET_3D
     _Window *_w = (_Window *) w;
+    SDL_Renderer *rend;
 
     SdlTkLock(display);
     display->request++;
-    if ((_w->display == NULL) || (display->gl_rend == NULL)) {
+#ifdef _WIN32
+    rend = _w->gl_rend;
+#else
+    rend = (SDL_Renderer *) display->gl_rend;
+#endif
+    if ((_w->display == NULL) || (rend == NULL)) {
 	goto done;
     }
 #ifdef ANDROID
@@ -6821,14 +7222,17 @@ SdlTkGLXMakeCurrent(Display *display, Window w, SDL_GLContext ctx)
 	}
 	goto done;
     }
-    SDL_SetRenderTargetQuick((SDL_Renderer *) display->gl_rend, _w->gl_tex);
+    SDL_SetRenderTargetQuick(rend, _w->gl_tex);
 #else
+    GLLOG("SdlTkGLXMakeCurrent: ctx=%p, tex=%p", _w->gl_ctx, _w->gl_tex);
+#ifndef _WIN32
     SDL_GL_MakeCurrentQuick(SdlTkX.sdlscreen, _w->gl_ctx);
     if ((_w->gl_ctx != NULL) && (_w->gl_tex != NULL)) {
-	SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, _w->gl_tex);
+	SDL_SetRenderTarget(rend, _w->gl_tex);
     } else {
-	SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, NULL);
+	SDL_SetRenderTarget(rend, NULL);
     }
+#endif
 #endif
 done:
     SdlTkUnlock(display);
@@ -6851,27 +7255,35 @@ done:
  */
 
 void
-SdlTkGLXReleaseCurrent(Display *display, Window w, SDL_GLContext ctx)
+SdlTkGLXReleaseCurrent(Display *display, Window w, void *ctx)
 {
 #ifdef SDL_RENDERER_HAS_TARGET_3D
-#ifdef ANDROID
     _Window *_w = (_Window *) w;
+    SDL_Renderer *rend;
 
     SdlTkLock(display);
     display->request++;
-    if ((_w->display == NULL) || (display->gl_rend == NULL)) {
+#ifdef _WIN32
+    rend = _w->gl_rend;
+#else
+    rend = (SDL_Renderer *) display->gl_rend;
+#endif
+    if ((_w->display == NULL) || (rend == NULL)) {
 	goto done;
     }
+#ifdef ANDROID
     if (SdlTkX.in_background) {
 	if (_w->atts.map_state != IsUnmapped) {
 	    _w->gl_flags |= 1;
 	}
 	goto done;
     }
-    SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, NULL);
+    SDL_SetRenderTarget(rend, NULL);
+#else
+    GLLOG("SdlTkGLXReleaseCurrent: ctx=%p, tex=%p", _w->gl_ctx, _w->gl_tex);
+#endif
 done:
     SdlTkUnlock(display);
-#endif
 #endif
 }
 
@@ -6895,10 +7307,18 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 {
 #ifdef SDL_RENDERER_HAS_TARGET_3D
     _Window *_w = (_Window *) w;
+    SDL_Renderer *rend;
+    XGCValues xgc;
+    int doClear = 1;
 
     SdlTkLock(display);
     display->request++;
-    if ((_w->display == NULL) || (display->gl_rend == NULL)) {
+#ifdef _WIN32
+    rend = _w->gl_rend;
+#else
+    rend = (SDL_Renderer *) display->gl_rend;
+#endif
+    if ((_w->display == NULL) || (rend == NULL)) {
 	goto done;
     }
 #ifdef ANDROID
@@ -6908,7 +7328,10 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 	}
 	goto done;
     }
+#else
+    GLLOG("SdlTkGLXSwapBuffers: ctx=%p, tex=%p", _w->gl_ctx, _w->gl_tex);
 #endif
+    memset(&xgc, 0, sizeof (xgc));
     if (_w->gl_tex != NULL) {
 	int width, height;
 	SDL_Surface *surf;
@@ -6917,16 +7340,17 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 	if ((width != _w->atts.width) || (height != _w->atts.height)) {
 	    SDL_Texture *tex;
 
-	    tex = SDL_CreateTexture((SDL_Renderer *) display->gl_rend,
-				    SDL_PIXELFORMAT_ABGR8888,
+	    tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_ABGR8888,
 				    SDL_TEXTUREACCESS_TARGET_3D,
 				    _w->atts.width, _w->atts.height);
 	    if (tex != NULL) {
-		SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, tex);
+		SDL_SetRenderTarget(rend, tex);
 		SDL_DestroyTexture(_w->gl_tex);
 		_w->gl_tex = tex;
 		SdlTkGenerateConfigureNotify(w);
-		SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, NULL);
+#ifndef _WIN32
+		SDL_SetRenderTarget(rend, NULL);
+#endif
 		goto done;
 	    }
 	}
@@ -6938,20 +7362,13 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 				    SdlTkX.sdlsurf->format->Bmask,
 				    SdlTkX.sdlsurf->format->Amask);
 	if (surf != NULL) {
-#ifdef ANDROID
-            int frame_count = SdlTkX.frame_count;
-	    int wait_refr = 0;
-#endif
+#ifdef _WIN32
+	    Uint32 fmt = SDL_GetWindowPixelFormat(_w->gl_wind);
 
-	    if (SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend,
-				    _w->gl_tex) == 0) {
-		SDL_RenderReadPixels((SDL_Renderer *) display->gl_rend, NULL,
-				     SDL_GetWindowPixelFormat(SdlTkX.sdlscreen),
-				     surf->pixels, surf->pitch);
-		XGCValues xgc;
+	    if (SDL_RenderReadPixels(rend, NULL, fmt, surf->pixels,
+				     surf->pitch) == 0) {
 		_Pixmap p;
 
-		memset(&xgc, 0, sizeof (xgc));
 		p.type = DT_PIXMAP;
 		p.sdl = surf;
 		p.format = _w->format;
@@ -6960,26 +7377,53 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 				 width, height, 0, 0);
 		SdlTkScreenChanged();
 		SdlTkDirtyArea(w, 0, 0, width, height);
-#ifdef ANDROID
-		wait_refr = 1;
-#endif
+		doClear = 0;
 	    }
 	    SDL_FreeSurface(surf);
-	    SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, NULL);
+#else
+#ifdef ANDROID
+            int frame_count = SdlTkX.frame_count;
+	    int wait_refr = 0;
+#endif
+	    if (SDL_SetRenderTarget(rend, _w->gl_tex) == 0) {
+		Uint32 fmt = SDL_GetWindowPixelFormat(SdlTkX.sdlscreen);
+
+		if (SDL_RenderReadPixels(rend, NULL, fmt, surf->pixels,
+				         surf->pitch) == 0) {
+		    _Pixmap p;
+
+		    p.type = DT_PIXMAP;
+		    p.sdl = surf;
+		    p.format = _w->format;
+		    p.next = NULL;
+		    SdlTkGfxCopyArea((Pixmap) &p, w, &xgc, 0, 0,
+				     width, height, 0, 0);
+		    SdlTkScreenChanged();
+		    SdlTkDirtyArea(w, 0, 0, width, height);
+#ifdef ANDROID
+		    wait_refr = 1;
+#endif
+		    doClear = 0;
+		}
+	    }
+	    SDL_FreeSurface(surf);
+	    SDL_SetRenderTarget(rend, NULL);
 #ifdef ANDROID
 	    /* wait for next screen refresh */
 	    do {
 		Tcl_ConditionWait(&time_cond, &xlib_lock, NULL);
 	    } while (wait_refr && (SdlTkX.frame_count == frame_count));
 #endif
+#endif
 	}
-    } else {
-	/* no texture: clear window */
-	XGCValues xgc;
-
+    }
+    if (doClear) {
+	/* no texture or some other problem: clear window to black */
 	memset(&xgc, 0, sizeof (xgc));
 	xgc.foreground = SdlTkX.screen->black_pixel;
 	SdlTkGfxFillRect(w, &xgc, 0, 0, _w->atts.width, _w->atts.height);
+	SdlTkScreenChanged();
+	SdlTkDirtyArea(w, 0, 0, _w->atts.width, _w->atts.height);
     }
 done:
     SdlTkUnlock(display);

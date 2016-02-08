@@ -255,7 +255,7 @@ GetPixelsFromObjEx(
 		int heightM, heightS;
 		double d2, d3;
 
-		ScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
+		XScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
 			&widthM, &widthS, &heightM, &heightS);
 		d2 = widthS;
 		d2 /= widthM;
@@ -580,7 +580,7 @@ Tk_GetMMFromObj(
 	    int wM, wS, hM, hS;
 	    double d2 = d;
 
-	    ScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
+	    XScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
 		    &wM, &wS, &hM, &hS);
 	    d /= wS;
 	    d *= wM;

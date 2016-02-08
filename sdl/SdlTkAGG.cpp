@@ -1392,7 +1392,7 @@ SdlTkGfxAllocFontStruct(_Font *_f)
 	fman = new t_font_manager(*feng);
     }
     (void) feng->load_font(_f->file, _f->index, agg::glyph_ren_agg_gray8,
-	   (const char *) SdlTkGetFTStream(_f->file, _f->file_size));
+	   (const char *) XGetFTStream(_f->file, _f->file_size));
     feng->flip_y(true);
     feng->height(_f->size);
 
@@ -1417,7 +1417,7 @@ int SdlTkGfxTextWidth(Font f, const char *string, int length, int *maxw)
     Tcl_MutexLock(&txt_mutex);
 
     (void) feng->load_font(_f->file, _f->index, agg::glyph_ren_agg_gray8,
-	   (const char *) SdlTkGetFTStream(_f->file, _f->file_size));
+	   (const char *) XGetFTStream(_f->file, _f->file_size));
     feng->flip_y(true);
     feng->height(_f->size);
 
@@ -1497,7 +1497,7 @@ doDrawString(Drawable d, GC gc, int x, int y, const char *string,
 
     /* agg::glyph_ren_agg_gray8 is BROKEN with MS Gothic japanese chars */
     (void) feng->load_font(_f->file, _f->index, gr,
-	   (const char *) SdlTkGetFTStream(_f->file, _f->file_size));
+	   (const char *) XGetFTStream(_f->file, _f->file_size));
     feng->flip_y(true);
     feng->height(_f->size);
 
@@ -1690,7 +1690,7 @@ doDrawStringGray(Drawable d, GC gc, int x, int y, const char *string,
 
     /* agg::glyph_ren_agg_gray8 is BROKEN with MS Gothic japanese chars */
     (void) feng->load_font(_f->file, _f->index, gr,
-	   (const char *) SdlTkGetFTStream(_f->file, _f->file_size));
+	   (const char *) XGetFTStream(_f->file, _f->file_size));
     feng->flip_y(true);
     feng->height(_f->size);
 
@@ -2386,7 +2386,7 @@ SdlTkGfxFillRect(Drawable d, GC gc, int x, int y, int w, int h)
 #include "agg2d.h"
 
 void *
-SdlTkCreateAgg2D(Display *display)
+SdlTkXCreateAgg2D(Display *display)
 {
     Agg2D *agg2d;
     if (display == NULL) {
@@ -2397,7 +2397,7 @@ SdlTkCreateAgg2D(Display *display)
 }
 
 void
-SdlTkDestroyAgg2D(Display *display, void *ptr)
+SdlTkXDestroyAgg2D(Display *display, void *ptr)
 {
     if ((ptr == NULL) || (display == NULL)) {
 	return;
@@ -2409,7 +2409,7 @@ SdlTkDestroyAgg2D(Display *display, void *ptr)
 }
 
 void *
-SdlTkGetAgg2D(Display *display, Drawable d)
+SdlTkXGetAgg2D(Display *display, Drawable d)
 {
     _Pixmap *_p = (_Pixmap *) d;
     SDL_Surface *sdl;
