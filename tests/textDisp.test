@@ -1191,6 +1191,14 @@ test textDisp-8.12 {TkTextChanged, moving the insert cursor redraws only past an
     # because during (b) findDLine cannot return the display line the
     # cursor is in since this display line was just unlinked in (a).
 } {{8.0 9.0} {8.0 12.0} {8.0 12.0} {3.0 8.0} {2.0 3.0}}
+test textDisp-8.13 {TkTextChanged, used to crash, see [06c1433906]} {
+    .t delete 1.0 end
+    .t insert 1.0 \nLine1\nLine2\n
+    update
+    .t insert 3.0 ""
+    .t delete 1.0 2.0
+    update idletasks
+} {}
 
 test textDisp-9.1 {TkTextRedrawTag} {
     .t configure -wrap char
