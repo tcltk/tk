@@ -55,6 +55,7 @@
 
 #ifdef PLATFORM_SDL
 #include <SDL2/SDL.h>
+#include "SdlTkInt.h"
 #endif
 
 #ifdef ANDROID
@@ -396,6 +397,12 @@ Tk_ZipMain(
 	Tcl_DStringFree(&dsTcl);
 #endif
 
+	/*
+	 * Process startup script file if automatic run is requested.
+	 * The file .../app/main.tcl (or additionally .../assets/app/main.tcl
+	 * on ANDROID) is tested to be available in the mounted bootstrap
+	 * ZIP archive and set as startup script if present.
+	 */
 	if (autoRun) {
 	    char *filename;
 	    Tcl_Channel chan;
@@ -456,7 +463,8 @@ Tk_ZipMain(
 			Tcl_IncrRefCount(nv);
 			if (Tcl_ObjSetVar2(interp, no, NULL, nv,
 					   TCL_GLOBAL_ONLY) != NULL) {
-			    Tcl_GlobalEval(interp, "incr argc");
+			    Tcl_EvalEx(interp, "incr argc", -1,
+				       TCL_EVAL_GLOBAL);
 			}
 			Tcl_DecrRefCount(nv);
 		    }
@@ -468,6 +476,98 @@ Tk_ZipMain(
 	    } else {
 		autoRun = 0;
 	    }
+#ifdef PLATFORM_SDL
+#ifndef ANDROID
+	    /*
+	     * Similar procedure for BMP icon file in .../app/icon.bmp.
+	     */
+	    if (autoRun) {
+#ifndef ZIPFS_BOOTDIR
+		Tcl_DStringSetLength(&dsFilename, 0);
+		Tcl_DStringAppend(&dsFilename, exeName, -1);
+		Tcl_DStringAppend(&dsFilename, "/app/icon.bmp", -1);
+		filename = Tcl_DStringValue(&dsFilename);
+#else
+		filename = ZIPFS_BOOTDIR "/app/icon.bmp";
+#endif
+		chan = Tcl_OpenFileChannel(NULL, filename, "r", 0);
+		if (chan != (Tcl_Channel) NULL) {
+		    Tcl_Close(NULL, chan);
+		    if (SdlTkX.arg_icon != NULL) {
+			ckfree(SdlTkX.arg_icon);
+		    }
+		    SdlTkX.arg_icon = ckalloc(strlen(filename) + 1);
+		    strcpy(SdlTkX.arg_icon, filename);	
+		}
+	    }
+#endif
+	    /*
+	     * Similar procedure for embeddable command line options
+	     * in .../app/cmdline to set SDL options, e.g. for screen
+	     * dimension etc.
+	     */
+	    if (autoRun) {
+#ifndef ZIPFS_BOOTDIR
+		Tcl_DStringSetLength(&dsFilename, 0);
+#endif
+#ifdef ANDROID
+		if (zipFile2 != NULL) {
+		    filename = ZIPFS_BOOTDIR "/assets/app/cmdline";
+		    chan = Tcl_OpenFileChannel(NULL, filename, "r", 0);
+		} else
+#endif
+		{
+#ifdef ZIPFS_BOOTDIR
+		    filename = ZIPFS_BOOTDIR "/app/cmdline";
+#else
+		    Tcl_DStringAppend(&dsFilename, exeName, -1);
+		    Tcl_DStringAppend(&dsFilename, "/app/cmdline", -1);
+		    filename = Tcl_DStringValue(&dsFilename);
+#endif
+		    chan = Tcl_OpenFileChannel(NULL, filename, "r", 0);
+		}
+		if (chan != (Tcl_Channel) NULL) {
+		    Tcl_Obj *cmdLine;
+		    int nChars;
+
+		    Tcl_SetChannelOption(NULL, chan, "-encoding", "utf-8");
+		    cmdLine = Tcl_NewObj();
+		    Tcl_IncrRefCount(cmdLine);
+		    nChars = Tcl_ReadChars(chan, cmdLine, 4096, 0);
+		    Tcl_Close(NULL, chan);
+		    if (nChars > 0) {
+			Tcl_Obj *v, *no, **objv, *nv;
+			int objc, i;
+
+			no = Tcl_NewStringObj("argv", 4);
+			v = Tcl_ObjGetVar2(interp, no, NULL, TCL_GLOBAL_ONLY);
+			if (v != NULL) {
+			    objc = 0;
+			    Tcl_ListObjGetElements(NULL, v, &objc, &objv);
+			    nv = Tcl_NewListObj(objc, objv);
+			} else {
+			    nv = Tcl_NewListObj(0, NULL);
+			}
+			Tcl_IncrRefCount(nv);
+			objc = 0;
+			Tcl_ListObjGetElements(NULL, cmdLine, &objc, &objv);
+			for (i = 0; i < objc; i++) {
+			    Tcl_ListObjAppendElement(NULL, nv, objv[i]);
+			}
+			if (Tcl_ObjSetVar2(interp, no, NULL, nv,
+					   TCL_GLOBAL_ONLY) != NULL) {
+			    char incrCmd[64];
+
+			    sprintf(incrCmd, "incr argc %d", objc);
+			    Tcl_EvalEx(interp, incrCmd, -1, TCL_EVAL_GLOBAL);
+			}
+			Tcl_DecrRefCount(nv);
+			Tcl_DecrRefCount(no);
+		    }
+		    Tcl_DecrRefCount(cmdLine);
+		}
+	    }
+#endif
 #ifndef ZIPFS_BOOTDIR
 	    Tcl_DStringFree(&dsFilename);
 #endif

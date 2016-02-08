@@ -47,9 +47,9 @@ struct _Font {
     int index; /* face index in file */
     int size; /* pixel size */
     const char *xlfd; /* malloc */
-    GlyphIndexHash *glyph_index_hash;
+    GlyphIndexHash *glyphIndexHash;
     int fixedWidth;
-    XFontStruct *font_struct;
+    XFontStruct *fontStruct;
 };
 
 enum {
@@ -99,6 +99,10 @@ struct _Window {
 #ifdef ANDROID
     int gl_flags;
 #else
+#ifdef _WIN32
+    SDL_Renderer *gl_rend;
+    SDL_Window *gl_wind;
+#endif
     SDL_GLContext gl_ctx;
 #endif
     SDL_Texture *gl_tex;
@@ -217,10 +221,13 @@ typedef struct SdlTkXInfo {
     int arg_fullscreen;
     int arg_resizable;
     int arg_noborder;
+    int arg_nogl;
     int arg_xdpi;
     int arg_ydpi;
     char *arg_rootwidth;
     char *arg_rootheight;
+    int arg_sdllog;
+    char *arg_icon;
 
     /* Various atoms */
     Atom mwm_atom;
@@ -303,6 +310,7 @@ extern void SdlTkPanInt(int x, int y);
 extern int SdlTkZoomInt(int x, int y, float z);
 extern int SdlTkPanZoom(int locked, int x, int y, int w, int h);
 extern void SdlTkSetRootSize(int w, int h);
+extern void SdlTkSetWindowFlags(int flags, int x, int y, int w, int h);
 extern int SdlTkKeysym2Unicode(KeySym keysym);
 extern KeySym SdlTkUnicode2Keysym(int ucs);
 extern KeySym SdlTkUtf2KeySym(const char *utf, int len, int *lenret);
@@ -315,15 +323,15 @@ extern void SdlTkSetInputFocus(Display *display, Window focus, int revert_to,
     Time time);
 extern void SdlTkSetSelectionOwner(Display *display, Atom selection,
    Window owner, Time time);
-extern SDL_GLContext SdlTkGLXCreateContext(Display *display, Window w,
+#ifndef _TKINTXLIBDECLS
+extern int SdlTkGLXAvailable(Display *display);
+extern void *SdlTkGLXCreateContext(Display *display, Window w,
    Tk_Window tkwin);
-extern void SdlTkGLXDestroyContext(Display *display, Window w,
-   SDL_GLContext ctx);
-extern void SdlTkGLXMakeCurrent(Display *display, Window w,
-   SDL_GLContext ctx);
-extern void SdlTkGLXReleaseCurrent(Display *display, Window w,
-   SDL_GLContext ctx);
+extern void SdlTkGLXDestroyContext(Display *display, Window w, void *ctx);
+extern void SdlTkGLXMakeCurrent(Display *display, Window w, void *ctx);
+extern void SdlTkGLXReleaseCurrent(Display *display, Window w, void *ctx);
 extern void SdlTkGLXSwapBuffers(Display *display, Window w);
+#endif
 
 /* SdlTkAGG.c */
 extern void SdlTkGfxDrawArc(Drawable d, GC gc, int x, int y,
@@ -345,10 +353,6 @@ extern XFontStruct *SdlTkGfxAllocFontStruct(_Font *_f);
 extern void SdlTkGfxDrawString(Drawable d, GC gc, int x, int y,
     const char *string, int length, double angle, int *xret, int *yret);
 extern int SdlTkGfxTextWidth(Font f, const char *string, int length, int *maxw);
-extern void *SdlTkGetFTStream(const char *pathname, int size);
-extern void *SdlTkCreateAgg2D(Display *display);
-extern void SdlTkDestroyAgg2D(Display *display, void *agg2d);
-extern void *SdlTkGetAgg2D(Display *display, Drawable d);
 
 /* SdlTkGfx.c */
 extern int SdlTkPixelFormat(SDL_Surface *sdl);
@@ -381,8 +385,6 @@ extern int SdlTkFontIsFixedWidth(XFontStruct *fontStructPtr);
 extern int SdlTkFontHasChar(XFontStruct *fontStructPtr, char *buf);
 extern int SdlTkFontCanDisplayChar(char *xlfd, TkFontAttributes *faPtr, int ch);
 extern unsigned SdlTkGetNthGlyphIndex(_Font *_f, const char *s, int n);
-extern int SdlTkGetFontFile(const char *family, int size, int isBold,
-    int isItalic, const char **nameRet, int *filesizeRet);
 
 /* decframe.c */
 extern int SdlTkDecSetActive(_Window *_w, int active);

@@ -453,7 +453,7 @@ TkpComputeMenuButtonGeometry(
     if (mbPtr->indicatorOn) {
 	int mmW, mmH, pixW, pixH;
 
-	ScreenGetMMWidthHeight(mbPtr->display, Tk_Screen(mbPtr->tkwin),
+	XScreenGetMMWidthHeight(mbPtr->display, Tk_Screen(mbPtr->tkwin),
 		&mmW, &pixW, &mmH, &pixH);
 	if ((pixH/mmH) > (pixW/mmW)) {
 	    mmW = mmH;

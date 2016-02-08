@@ -673,7 +673,7 @@ SdlTkDecDrawFrame(_Window *_w)
 	if (_DFInfo.titlebar_font == NULL) {
 	    char fontname[128];
 
-	    sprintf(fontname, "-*-arial-normal-r-*-*-%d-*-*-*-*-*-*-*",
+	    sprintf(fontname, "-*-dejavu sans-normal-r-*-*-%d-*-*-*-*-*-*-*",
 		    SdlTkX.dec_font_size);
 	    _DFInfo.titlebar_font = XLoadQueryFont(SdlTkX.display, fontname);
 	}

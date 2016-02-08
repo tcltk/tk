@@ -189,12 +189,9 @@ static const char *const fontOpt[] = {
  */
 
 static const char *const timesAliases[] = {
-    "Times",			/* Unix. */
-    "Times New Roman",		/* Windows. */
-    "New York",			/* Mac. */
 #ifdef PLATFORM_SDL
-    "DejaVu LGC Serif",
     "DejaVu Serif",
+    "DejaVu LGC Serif",
 #ifdef ANDROID
     "Droid Serif",
     "Noto Serif",
@@ -202,16 +199,16 @@ static const char *const timesAliases[] = {
     "Liberation Serif",
 #endif
 #endif
+    "Times",			/* Unix. */
+    "Times New Roman",		/* Windows. */
+    "New York",			/* Mac. */
     NULL
 };
 
 static const char *const helveticaAliases[] = {
-    "Helvetica",		/* Unix. */
-    "Arial",			/* Windows. */
-    "Geneva",			/* Mac. */
 #ifdef PLATFORM_SDL
-    "DejaVu LGC Sans",
     "DejaVu Sans",
+    "DejaVu LGC Sans",
 #ifdef ANDROID
     "Roboto",
     "Droid Sans Fallback",
@@ -220,21 +217,24 @@ static const char *const helveticaAliases[] = {
     "Liberation Sans",
 #endif
 #endif
+    "Helvetica",		/* Unix. */
+    "Arial",			/* Windows. */
+    "Geneva",			/* Mac. */
     NULL
 };
 
 static const char *const courierAliases[] = {
-    "Courier",			/* Unix and Mac. */
-    "Courier New",		/* Windows. */
 #ifdef PLATFORM_SDL
-    "DejaVu LGC Sans Mono",
     "DejaVu Sans Mono",
+    "DejaVu LGC Sans Mono",
 #ifdef ANDROID
     "Droid Sans Mono",
 #else
     "Liberation Mono",
 #endif
 #endif
+    "Courier",			/* Unix and Mac. */
+    "Courier New",		/* Windows. */
     NULL
 };
 
@@ -4090,7 +4090,7 @@ TkFontGetPixels(
     }
 
 #ifdef PLATFORM_SDL
-    ScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
+    XScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
 	    &widthM, &widthS, &heightM, &heightS);
     d2 = size * 25.4 / 72.0;
     d2 *= heightS;
@@ -4145,7 +4145,7 @@ TkFontGetPoints(
     }
 
 #ifdef PLATFORM_SDL
-    ScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
+    XScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
 	    &widthM, &widthS, &heightM, &heightS);
     d2 = -size * 72.0 / 25.4;
     d2 *= heightM;

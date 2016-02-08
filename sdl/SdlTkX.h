@@ -4,12 +4,19 @@
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef USE_TK_STUBS
+
 #define XAllocColor SdlTkXAllocColor
 #define XAllocNamedColor SdlTkXAllocNamedColor
 #define XBell SdlTkXBell
 #define XChangeGC SdlTkXChangeGC
 #define XChangeProperty SdlTkXChangeProperty
 #define XChangeWindowAttributes SdlTkXChangeWindowAttributes
+#define XClearWindow 0
 #define XClipBox SdlTkXClipBox
 #define XCloseDisplay SdlTkXCloseDisplay
 #define XConfigureWindow SdlTkXConfigureWindow
@@ -114,9 +121,11 @@
 #define XSetCommand SdlTkXSetCommand
 #define XSetDashes SdlTkXSetDashes
 #define XSetErrorHandler SdlTkXSetErrorHandler
+#define XSetFillRule 0
 #define XSetFillStyle SdlTkXSetFillStyle
 #define XSetFont SdlTkXSetFont
 #define XSetForeground SdlTkXSetForeground
+#define XSetFunction 0
 #define XSetIconName SdlTkXSetIconName
 #define XSetInputFocus SdlTkXSetInputFocus
 #define XSetLineAttributes SdlTkXSetLineAttributes
@@ -162,13 +171,24 @@
 #define XFilterEvent SdlTkXFilterEvent
 #define XLookupString SdlTkXLookupString
 #define XPutBackEvent SdlTkXPutBackEvent
+#define XSetArcMode 0
 #define XSetBackground SdlTkXSetBackground
 #define XSetClassHint SdlTkXSetClassHint
 #define XSetWMHints SdlTkXSetWMHints
 #define XSetWMNormalHints SdlTkXSetWMNormalHints
 #define XUnionRegion SdlTkXUnionRegion
 #define XWindowEvent SdlTkXWindowEvent
-#define XmbLookupString SdlTkXmbLookupString
+#define XmbLookupString SdlTkXMbLookupString
+
+#define XScreenGetMMWidthHeight SdlTkXScreenGetMMWidthHeight
+#define XScreenSetMMWidthHeight SdlTkXScreenSetMMWidthHeight
+#define XGetAgg2D SdlTkXGetAgg2D
+#define XCreateAgg2D SdlTkXCreateAgg2D
+#define XDestroyAgg2D SdlTkXDestroyAgg2D
+#define XGetFontFile SdlTkXGetFontFile
+#define XGetFTStream SdlTkXGetFTStream
+#define XOffsetRegion SdlTkXOffsetRegion
+#define XUnionRegion SdlTkXUnionRegion
 
 Status XAllocColor(Display *d, Colormap c, XColor *xp);
 Status XAllocNamedColor(Display *display, Colormap colormap,
@@ -386,14 +406,42 @@ XSizeHints *XAllocSizeHints(void);
 void XSetWMNormalHints(Display *display, Window w, XSizeHints *hints);
 int XSetWMHints(Display *display, Window w, XWMHints *wm_hints);
 int XUnionRegion(Region reg1, Region reg2, Region newReg);
+int _XInitImageFuncPtrs(XImage *image);
+void XSetStipple(Display *display, GC gc, Pixmap stipple);
+void XSetFillStyle(Display *display, GC gc, int fill_style);
+void XSetBackground(Display *display, GC gc, unsigned long background);
+void XPutBackEvent(Display *display, XEvent *event);
+XIC XCreateIC(XIM xim, ...);
+void XDestroyIC(XIC xic);
+Bool XFilterEvent(XEvent *event, Window w);
+int XWindowEvent(Display *display, Window w, long event_mask,
+    XEvent *event_return);
+int XmbLookupString(XIC ic, XKeyPressedEvent *event, char *buffer_return,
+    int bytes_buffer, KeySym *keysym_return, Status *status_return);
 
 /* for "tk scaling" etc. */
-int ScreenGetMMWidth(Display *display, Screen *screen,
-   int *mwidthp, int *widthp);
-int ScreenGetMMWidthHeight(Display *display, Screen *screen,
+int XScreenGetMMWidthHeight(Display *display, Screen *screen,
    int *mwidthp, int *widthp, int *mheightp, int *heightp);
-int ScreenSetMMWidthHeight(Display *display, Screen *screen,
+int XScreenSetMMWidthHeight(Display *display, Screen *screen,
    int width, int height);
+
+/* for "tkpath" */
+void *XGetAgg2D(Display *displey, Drawable d);
+void *XCreateAgg2D(Display *display);
+void XDestroyAgg2D(Display *display, void *agg2d);
+int XGetFontFile(const char *family, int size, int isBold, int isItalic,
+    const char **nameRet, int *filesizeRet);
+void *XGetFTStream(const char *pathname, int size);
+
+/* for "tktreectrl" */
+int XOffsetRegion(Region rgn, int dx, int dy);
+int XUnionRegion(Region srca, Region srcb, Region dr_return);
+
+#endif /* !USE_TK_STUBS */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _SDLTKX_H */
 

@@ -263,7 +263,7 @@ if test $tcl_cv_pwd_pw_gecos = yes; then
 fi
 
 TK_WINDOWINGSYSTEM=SDL
-EXTRA_CC_SWITCHES='-DPLATFORM_SDL=1'
+AC_DEFINE(PLATFORM_SDL, 1, [Build with/using SDL2?])
 
 #--------------------------------------------------------------------
 #	Check for the existence of various libraries.  The order here
