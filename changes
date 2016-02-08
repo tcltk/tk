@@ -7029,8 +7029,6 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
 
 2015-10-22 (bug)[1414025] $entry insertion cursor visibility (vogel)
 
-2015-10-25 (bug)[477949] Unicode-enable [option readfile] (androwish,nijtmans)
-
 2015-10-26 (bug) PNG rendering on El Capitan (meier,walzer)
 
 2015-11-08 (bug)[2160206] menubutton panic (vogel)
@@ -7073,4 +7071,4 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
 
 Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
---- Released 8.5.19, January 31, 2016 --- http://core.tcl.tk/tk/ for details
+--- Released 8.5.19, February 12, 2016 --- http://core.tcl.tk/tk/ for details
