@@ -1446,6 +1446,67 @@ declare 114 win {
    VisualID XVisualIDFromVisual(Visual *visual)
 }
 
+# For tkpath
+declare 115 win {
+   int XScreenGetMMWidthHeight(Display *display, Screen *screen,
+	    int *mwidthp, int *widthp, int *mheightp, int *heightp)
+}
+declare 116 win {
+   int XScreenSetMMWidthHeight(Display *display, Screen *screen,
+	    int width, int height)
+}
+declare 117 win {
+   void *XGetAgg2D(Display *display, Drawable d)
+}
+declare 118 win {
+   void *XCreateAgg2D(Display *display)
+}
+declare 119 win {
+   void XDestroyAgg2D(Display *display, void *agg2d)
+}
+declare 120 win {
+   int XGetFontFile(const char *family, int size, int isBold, int isItalic,
+	    const char **nameRet, int *filesizeRet)
+}
+declare 121 win {
+   void *XGetFTStream(const char *pathname, int size)
+}
+
+# For tktreectrl
+declare 122 win {
+   int XOffsetRegion(Region rgn, int dx, int dy)
+}
+declare 123 win {
+   int XUnionRegion(Region srca, Region srcb, Region dr_return)
+}
+
+# For 3dcanvas
+declare 124 {
+   Window XCreateWindow(Display *display, Window parent, int x, int y,
+	    unsigned int width, unsigned int height,
+	    unsigned int border_width, int depth, unsigned int clazz,
+	    Visual *visual, unsigned long value_mask,
+	    XSetWindowAttributes *attributes)
+}
+declare 125 {
+   int SdlTkGLXAvailable(Display *display)
+}
+declare 126 {
+   void *SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
+}
+declare 127 {
+   SdlTkGLXDestroyContext(Display *display, Window w, void *ctx)
+}
+declare 128 {
+   SdlTkGLXMakeCurrent(Display *display, Window w, void *ctx)
+}
+declare 129 {
+   SdlTkGLXReleaseCurrent(Display *display, Window w, void *ctx)
+}
+declare 130 {
+   SdlTkGLXSwapBuffers(Display *display, Window w)
+}
+
 ################################
 # X functions for Aqua
 

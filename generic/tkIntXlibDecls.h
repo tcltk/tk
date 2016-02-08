@@ -23,6 +23,12 @@
 #   include <tcl.h>
 #endif
 
+#if defined(PLATFORM_SDL) || defined(_WIN32)
+/* Needed here, unfortunately */
+struct Tk_Window_;
+#endif
+
+#include "X11/Xlib.h"
 #include "X11/Xutil.h"
 #ifdef PLATFORM_SDL
 #include "SdlTkX.h"
@@ -359,6 +365,53 @@ EXTERN XAfterFunction	XSynchronize(Display *display, Bool onoff);
 EXTERN int		XSync(Display *display, Bool discard);
 /* 114 */
 EXTERN VisualID		XVisualIDFromVisual(Visual *visual);
+/* 115 */
+EXTERN int		XScreenGetMMWidthHeight(Display *display,
+				Screen *screen, int *mwidthp, int *widthp,
+				int *mheightp, int *heightp);
+/* 116 */
+EXTERN int		XScreenSetMMWidthHeight(Display *display,
+				Screen *screen, int width, int height);
+/* 117 */
+EXTERN void *		XGetAgg2D(Display *display, Drawable d);
+/* 118 */
+EXTERN void *		XCreateAgg2D(Display *display);
+/* 119 */
+EXTERN void		XDestroyAgg2D(Display *display, void *agg2d);
+/* 120 */
+EXTERN int		XGetFontFile(const char *family, int size,
+				int isBold, int isItalic,
+				const char **nameRet, int *filesizeRet);
+/* 121 */
+EXTERN void *		XGetFTStream(const char *pathname, int size);
+/* 122 */
+EXTERN int		XOffsetRegion(Region rgn, int dx, int dy);
+/* 123 */
+EXTERN int		XUnionRegion(Region srca, Region srcb,
+				Region dr_return);
+/* 124 */
+EXTERN Window		XCreateWindow(Display *display, Window parent,
+				int x, int y, unsigned int width,
+				unsigned int height, unsigned int border_width,
+				int depth, unsigned int clazz,
+				Visual *visual, unsigned long value_mask,
+				XSetWindowAttributes *attributes);
+/* 125 */
+EXTERN int		SdlTkGLXAvailable(Display *display);
+/* 126 */
+EXTERN void *		SdlTkGLXCreateContext(Display *display, Window w,
+				struct Tk_Window_ *tkwin);
+/* 127 */
+EXTERN void		SdlTkGLXDestroyContext(Display *display, Window w,
+				void *ctx);
+/* 128 */
+EXTERN void		SdlTkGLXMakeCurrent(Display *display, Window w,
+				void *ctx);
+/* 129 */
+EXTERN void		SdlTkGLXReleaseCurrent(Display *display, Window w,
+				void *ctx);
+/* 130 */
+EXTERN void		SdlTkGLXSwapBuffers(Display *display, Window w);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -745,6 +798,22 @@ typedef struct TkIntXlibStubs {
     XAfterFunction (*xSynchronize) (Display *display, Bool onoff); /* 112 */
     int (*xSync) (Display *display, Bool discard); /* 113 */
     VisualID (*xVisualIDFromVisual) (Visual *visual); /* 114 */
+    int (*xScreenGetMMWidthHeight) (Display *display, Screen *screen, int *mwidthp, int *widthp, int *mheightp, int *heightp); /* 115 */
+    int (*xScreenSetMMWidthHeight) (Display *display, Screen *screen, int width, int height); /* 116 */
+    void * (*xGetAgg2D) (Display *display, Drawable d); /* 117 */
+    void * (*xCreateAgg2D) (Display *display); /* 118 */
+    void (*xDestroyAgg2D) (Display *display, void *agg2d); /* 119 */
+    int (*xGetFontFile) (const char *family, int size, int isBold, int isItalic, const char **nameRet, int *filesizeRet); /* 120 */
+    void * (*xGetFTStream) (const char *pathname, int size); /* 121 */
+    int (*xOffsetRegion) (Region rgn, int dx, int dy); /* 122 */
+    int (*xUnionRegion) (Region srca, Region srcb, Region dr_return); /* 123 */
+    Window (*xCreateWindow) (Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int clazz, Visual *visual, unsigned long value_mask, XSetWindowAttributes *attributes); /* 124 */
+    int (*sdlTkGLXAvailable) (Display *display); /* 125 */
+    void * (*sdlTkGLXCreateContext) (Display *display, Window w, struct Tk_Window_ *tkwin); /* 126 */
+    void (*sdlTkGLXDestroyContext) (Display *display, Window w, void *ctx); /* 127 */
+    void (*sdlTkGLXMakeCurrent) (Display *display, Window w, void *ctx); /* 128 */
+    void (*sdlTkGLXReleaseCurrent) (Display *display, Window w, void *ctx); /* 129 */
+    void (*sdlTkGLXSwapBuffers) (Display *display, Window w); /* 130 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -1084,6 +1153,38 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xSync) /* 113 */
 #define XVisualIDFromVisual \
 	(tkIntXlibStubsPtr->xVisualIDFromVisual) /* 114 */
+#define XScreenGetMMWidthHeight \
+	(tkIntXlibStubsPtr->xScreenGetMMWidthHeight) /* 115 */
+#define XScreenSetMMWidthHeight \
+	(tkIntXlibStubsPtr->xScreenSetMMWidthHeight) /* 116 */
+#define XGetAgg2D \
+	(tkIntXlibStubsPtr->xGetAgg2D) /* 117 */
+#define XCreateAgg2D \
+	(tkIntXlibStubsPtr->xCreateAgg2D) /* 118 */
+#define XDestroyAgg2D \
+	(tkIntXlibStubsPtr->xDestroyAgg2D) /* 119 */
+#define XGetFontFile \
+	(tkIntXlibStubsPtr->xGetFontFile) /* 120 */
+#define XGetFTStream \
+	(tkIntXlibStubsPtr->xGetFTStream) /* 121 */
+#define XOffsetRegion \
+	(tkIntXlibStubsPtr->xOffsetRegion) /* 122 */
+#define XUnionRegion \
+	(tkIntXlibStubsPtr->xUnionRegion) /* 123 */
+#define XCreateWindow \
+	(tkIntXlibStubsPtr->xCreateWindow) /* 124 */
+#define SdlTkGLXAvailable \
+	(tkIntXlibStubsPtr->sdlTkGLXAvailable) /* 125 */
+#define SdlTkGLXCreateContext \
+	(tkIntXlibStubsPtr->sdlTkGLXCreateContext) /* 126 */
+#define SdlTkGLXDestroyContext \
+	(tkIntXlibStubsPtr->sdlTkGLXDestroyContext) /* 127 */
+#define SdlTkGLXMakeCurrent \
+	(tkIntXlibStubsPtr->sdlTkGLXMakeCurrent) /* 128 */
+#define SdlTkGLXReleaseCurrent \
+	(tkIntXlibStubsPtr->sdlTkGLXReleaseCurrent) /* 129 */
+#define SdlTkGLXSwapBuffers \
+	(tkIntXlibStubsPtr->sdlTkGLXSwapBuffers) /* 130 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #define XSetDashes \

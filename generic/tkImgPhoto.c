@@ -643,7 +643,7 @@ ImgPhotoCmd(
 	    savedMaster = *masterPtr;
 	    if (options.background == NULL) {
 		options.background =
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(PLATFORM_SDL)
 		    Tk_GetColor(interp,
 			Tk_MainWindow(interp), Tk_GetUid("SystemButtonFace"));
 #else

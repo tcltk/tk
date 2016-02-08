@@ -115,7 +115,7 @@ TkpDisplayWarning(
      * Cannot use TCL_STDERR here since it is  a console channel.
      * We want to see the warning even when Tk is not fully initialized.
      */
-    fprintf(stderr, "%s: %s\n", title, msg);
+    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s: %s\n", title, msg);
 #endif
 }
 

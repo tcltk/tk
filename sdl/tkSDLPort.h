@@ -124,18 +124,7 @@
 #   define WPARAM void *
 #   define LPARAM void *
 #   define LRESULT void *
-
-#else /* !__CYGWIN__ */
-    /*
-     * The TkPutImage macro strips off the color table information, which isn't
-     * needed for X.
-     */
-
-#   define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
-		XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
-		desty, width, height);
-
-#endif /* !__CYGWIN__ */
+#endif /* __CYGWIN__ */
 
 /*
  * Supply macros for seek offsets, if they're not already provided by

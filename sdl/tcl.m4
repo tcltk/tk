@@ -1410,7 +1410,18 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    SHLIB_LD='${CC} -shared ${CFLAGS} ${LDFLAGS}'
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
-	    LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
+	    # workaround when cross-compiling for Win32: no -fPIC and -Wl,...
+	    if test "${TCL_SHLIB_SUFFIX}" = ".dll" ; then
+		SHLIB_CFLAGS=""
+		SHLIB_SUFFIX=".dll"
+		DL_OBJS=""
+		DL_LIBS=""
+		TCL_LIB_VERSIONS_OK=nodots
+		SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.dll'
+		UNSHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.a'
+	    else
+		LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
+	    fi
 	    AS_IF([test $doRpath = yes], [
 		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'])
 	    LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
