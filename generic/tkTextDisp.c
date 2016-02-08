@@ -5176,7 +5176,10 @@ TkTextSetYView(
 
                     dInfoPtr->newTopPixelOffset = 0;
                     goto scheduleUpdate;
-	            }
+                }
+                /*
+                 * The line is already on screen, with no need to scroll.
+                 */
                 return;
             }
         }
