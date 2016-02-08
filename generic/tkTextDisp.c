@@ -6618,17 +6618,25 @@ FindDLine(
             /*
              * We're past the last display line, either because the desired
              * index lies past the visible text, or because the desired index
-             * is on the last display line showing the last logical line.
+             * is on the last display line.
              */
             indexPtr2 = dlPtrPrev->index;
             TkTextIndexForwBytes(textPtr, &indexPtr2, dlPtrPrev->byteCount,
                     &indexPtr2);
             if (TkTextIndexCmp(&indexPtr2,indexPtr) > 0) {
+                /*
+                 * The desired index is on the last display line.
+                 * --> return this display line.
+                 */
                 dlPtr = dlPtrPrev;
-                break;
             } else {
-                return NULL;
+                /*
+                 * The desired index is past the visible text. There is no
+                 * display line displaying something at the desired index
+                 * --> return NULL.
+                 */
             }
+            break;
         }
         if (TkTextIndexCmp(&dlPtr->index,indexPtr) > 0) {
             dlPtr = dlPtrPrev;
