@@ -518,10 +518,10 @@ margin for each line on the display is determined by the first non-elided
 character of that display line.
 .TP
 \fB\-selectbackground \fIcolor\fR
-\fIcolor\fR specifies the background color to use when displaying selected
+\fIColor\fR specifies the background color to use when displaying selected
 items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
 \fIcolor\fR has not been specified, or if it is specified as an empty
-string, then the color specified by the fB\-background\fR tag option is
+string, then the color specified by the \fB\-background\fR tag option is
 used.
 .TP
 \fB\-selectbgstipple \fIbitmap\fR
@@ -529,14 +529,22 @@ used.
 \fIBitmap\fR specifies a bitmap that is used as a stipple pattern for the
 selected background. It may have any of the forms accepted by
 \fBTk_GetBitmap\fR. If \fIbitmap\fR has not been specified, or if it is
-specified as an empty string, then the \fIbitmap\fR specified by
-'''-bgstipple''' will be used for the background.
+specified as an empty string, then the bitmap specified by
+\fB\-bgstipple\fR will be used for the background.
+.TP
+\fB\-selectfgstipple \fIbitmap\fR
+.
+\fIBitmap\fR specifies a bitmap that is used as a stipple pattern  when drawing
+selected text and other foreground information such as underlines. It may have any of
+the forms accepted by \fBTk_GetBitmap\fR. If \fIbitmap\fR has not been
+specified, or if it is specified as an empty string, then the bitmap specified by
+\fB\-fgstipple\fR will be used.
 .TP
 \fB\-selectforeground \fIcolor\fR
-\fIcolor\fR specifies the foreground color to use when displaying selected
+\fIColor\fR specifies the foreground color to use when displaying selected
 items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
 \fIcolor\fR has not been specified, or if it is specified as an empty
-string, then the color specified by the fB\-foreground\fR tag option is
+string, then the color specified by the \fB\-foreground\fR tag option is
 used.
 .TP
 \fB\-spacing1 \fIpixels\fR
