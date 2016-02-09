@@ -72,6 +72,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, -1, Tk_Offset(TkTextTag, rMarginString), TK_OPTION_NULL_OK, 0,0},
     {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, selBorder), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BITMAP, "-selectbgstipple", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, selBgStipple), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, selFgColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-spacing1", NULL, NULL,
@@ -524,6 +526,7 @@ TkTextTagCmd(
 		    || (tagPtr->selBorder != NULL)
 		    || (tagPtr->reliefString != NULL)
 		    || (tagPtr->bgStipple != None)
+		    || (tagPtr->selBgStipple != None)
 		    || (tagPtr->fgColor != NULL)
 		    || (tagPtr->selFgColor != NULL)
 		    || (tagPtr->fgStipple != None)
@@ -1032,6 +1035,7 @@ TkTextCreateTag(
     tagPtr->rMarginString = NULL;
     tagPtr->rMargin = 0;
     tagPtr->selBorder = NULL;
+    tagPtr->selBgStipple = None;
     tagPtr->selFgColor = NULL;
     tagPtr->spacing1String = NULL;
     tagPtr->spacing1 = 0;
