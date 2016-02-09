@@ -198,6 +198,17 @@ test textTag-1.21 {configuration options} -constraints {
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
 } -returnCodes error -result {expected boolean value but got "stupid"}
+test textTag-1.21a {tag configuration options} -body {
+    .t tag configure x -overstrikefg red
+    .t tag cget x -overstrikefg
+} -cleanup {
+    .t tag configure x -overstrikefg [lindex [.t tag configure x -overstrikefg] 3]
+} -result {red}
+test textTag-1.21b {configuration options} -body {
+    .t tag configure x -overstrikefg stupid
+} -cleanup {
+    .t tag configure x -overstrikefg [lindex [.t tag configure x -overstrikefg] 3]
+} -returnCodes error -result {unknown color name "stupid"}
 test textTag-1.22 {tag configuration options} -constraints {
     haveCourier12
 } -body {
@@ -630,6 +641,13 @@ test textTag-5.5 {TkTextTagCmd - "configure" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {on}
+test textTag-5.5a {TkTextTagCmd - "configure" option} -body {
+    .t tag delete x
+    .t tag configure x -overstrikefg lightgreen
+    .t tag configure x -overstrikefg
+} -cleanup {
+    .t tag delete x
+} -result {-overstrikefg {} {} {} lightgreen}
 test textTag-5.6 {TkTextTagCmd - "configure" option} -constraints {
 	haveCourier12 
 } -body {
