@@ -2262,7 +2262,11 @@ ConfigureText(
 	textPtr->selTagPtr->borderWidthPtr = textPtr->selBorderWidthPtr;
 	textPtr->selTagPtr->borderWidth = textPtr->selBorderWidth;
     }
-    textPtr->selTagPtr->fgColor = textPtr->selFgColorPtr;
+    if (textPtr->selTagPtr->selFgColor == NULL) {
+        textPtr->selTagPtr->fgColor = textPtr->selFgColorPtr;
+    } else {
+        textPtr->selTagPtr->selFgColor = textPtr->selFgColorPtr;
+    }
     textPtr->selTagPtr->affectsDisplay = 0;
     textPtr->selTagPtr->affectsDisplayGeometry = 0;
     if ((textPtr->selTagPtr->elideString != NULL)
@@ -2285,6 +2289,7 @@ ConfigureText(
 	    || (textPtr->selTagPtr->reliefString != NULL)
 	    || (textPtr->selTagPtr->bgStipple != None)
 	    || (textPtr->selTagPtr->fgColor != NULL)
+	    || (textPtr->selTagPtr->selFgColor != NULL)
 	    || (textPtr->selTagPtr->fgStipple != None)
 	    || (textPtr->selTagPtr->overstrikeString != NULL)
 	    || (textPtr->selTagPtr->underlineString != NULL)) {
