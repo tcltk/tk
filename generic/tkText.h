@@ -358,6 +358,8 @@ typedef struct TkTextTag {
     int overstrike;		/* Non-zero means draw horizontal line through
 				 * middle of text. Only valid if
 				 * overstrikeString is non-NULL. */
+    XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
+                                 * color as foreground. */
     char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
 				 * means option not specified. */
     int rMargin;		/* Right margin for text, in pixels. Only
