@@ -347,6 +347,17 @@ test textTag-1.35 {configuration options} -constraints {
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
 } -returnCodes error -result {expected boolean value but got "stupid"}
+test textTag-1.36 {tag configuration options} -body {
+    .t tag configure x -underlinefg red
+    .t tag cget x -underlinefg
+} -cleanup {
+    .t tag configure x -underlinefg [lindex [.t tag configure x -underlinefg] 3]
+} -result {red}
+test textTag-1.37 {configuration options} -body {
+    .t tag configure x -underlinefg stupid
+} -cleanup {
+    .t tag configure x -underlinefg [lindex [.t tag configure x -underlinefg] 3]
+} -returnCodes error -result {unknown color name "stupid"}
 
 
 test textTag-2.1 {TkTextTagCmd - "add" option} -constraints {
@@ -603,6 +614,13 @@ test textTag-5.4 {TkTextTagCmd - "configure" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {-underline {} {} {} yes}
+test textTag-5.4a {TkTextTagCmd - "configure" option} -body {
+    .t tag delete x
+    .t tag configure x -underlinefg lightgreen
+    .t tag configure x -underlinefg
+} -cleanup {
+    .t tag delete x
+} -result {-underlinefg {} {} {} lightgreen}
 test textTag-5.5 {TkTextTagCmd - "configure" option} -constraints {
 	haveCourier12 
 } -body {
