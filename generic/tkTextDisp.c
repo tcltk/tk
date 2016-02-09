@@ -140,6 +140,8 @@ typedef struct StyleValues {
 				 * baseline of line. */
     int overstrike;		/* Non-zero means draw overstrike through
 				 * text. */
+    XColor *overstrikeColor;	/* Foreground color for overstrike through
+                                 * text. */
     int rMargin;		/* Right margin, in pixels. */
     int spacing1;		/* Spacing above first dline in text line. */
     int spacing2;		/* Spacing between lines of dline. */
@@ -168,8 +170,9 @@ typedef struct TextStyle {
 				 * referenced in Chunks. */
     GC bgGC;			/* Graphics context for background. None means
 				 * use widget background. */
-    GC ulGC;			/* Graphics context for underline. */
     GC fgGC;			/* Graphics context for foreground. */
+    GC ulGC;			/* Graphics context for underline. */
+    GC ovGC;			/* Graphics context for overstrike. */
     StyleValues *sValuePtr;	/* Raw information from which GCs were
 				 * derived. */
     Tcl_HashEntry *hPtr;	/* Pointer to entry in styleTable. Used to
@@ -782,6 +785,7 @@ GetStyle(
     styleValues.relief = TK_RELIEF_FLAT;
     styleValues.fgColor = textPtr->fgColor;
     styleValues.underlineColor = textPtr->fgColor;
+    styleValues.overstrikeColor = textPtr->fgColor;
     styleValues.tkfont = textPtr->tkfont;
     styleValues.justify = TK_JUSTIFY_LEFT;
     styleValues.spacing1 = textPtr->spacing1;
@@ -906,6 +910,11 @@ GetStyle(
 		&& (tagPtr->priority > overstrikePrio)) {
 	    styleValues.overstrike = tagPtr->overstrike;
 	    overstrikePrio = tagPtr->priority;
+            if (tagPtr->overstrikeColor != None) {
+                 styleValues.overstrikeColor = tagPtr->overstrikeColor;
+            } else if (fgColor != None) {
+                 styleValues.overstrikeColor = fgColor;
+            }
 	}
 	if ((tagPtr->rMarginString != NULL)
 		&& (tagPtr->priority > rMarginPrio)) {
@@ -1005,6 +1014,8 @@ GetStyle(
     mask = GCForeground;
     gcValues.foreground = styleValues.underlineColor->pixel;
     stylePtr->ulGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
+    gcValues.foreground = styleValues.overstrikeColor->pixel;
+    stylePtr->ovGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     stylePtr->sValuePtr = (StyleValues *)
 	    Tcl_GetHashKey(&textPtr->dInfoPtr->styleTable, hPtr);
     stylePtr->hPtr = hPtr;
@@ -1047,6 +1058,9 @@ FreeStyle(
 	}
 	if (stylePtr->ulGC != None) {
 	    Tk_FreeGC(textPtr->display, stylePtr->ulGC);
+	}
+	if (stylePtr->ovGC != None) {
+	    Tk_FreeGC(textPtr->display, stylePtr->ovGC);
 	}
 	Tcl_DeleteHashEntry(stylePtr->hPtr);
 	ckfree(stylePtr);
@@ -7901,7 +7915,7 @@ CharDisplayProc(
 	    Tk_FontMetrics fm;
 
 	    Tk_GetFontMetrics(sValuePtr->tkfont, &fm);
-	    TkUnderlineCharsInContext(display, dst, stylePtr->fgGC,
+	    TkUnderlineCharsInContext(display, dst, stylePtr->ovGC,
 		    sValuePtr->tkfont, string, numBytes,
 		    ciPtr->baseChunkPtr->x + xDisplacement,
 		    y + baseline - sValuePtr->offset
@@ -7928,7 +7942,7 @@ CharDisplayProc(
 	    Tk_FontMetrics fm;
 
 	    Tk_GetFontMetrics(sValuePtr->tkfont, &fm);
-	    Tk_UnderlineChars(display, dst, stylePtr->fgGC, sValuePtr->tkfont,
+	    Tk_UnderlineChars(display, dst, stylePtr->ovGC, sValuePtr->tkfont,
 		    string, offsetX,
 		    y + baseline - sValuePtr->offset
 			    - fm.descent - (fm.ascent * 3) / 10,
