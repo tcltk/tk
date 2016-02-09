@@ -1181,16 +1181,15 @@ test textDisp-8.12 {TkTextChanged, moving the insert cursor redraws only past an
     .t mark set insert 3.8        ; # within the same line
     update
     lappend res $tk_textRedraw
-    # This last one is tricky: correct result really is {2.0 3.0} when
-    # calling .t mark set insert, two calls to TkTextChanged are done:
-    # (a) to redraw the line of the past position of the cursor
-    # (b) to redraw the line of the new position of the cursor
-    # During (a) the display line showing the cursor gets unlinked,
-    # which leads TkTextChanged in (b) to schedule a redraw starting
-    # one line _before_ the line containing the insert cursor. This is
-    # because during (b) findDLine cannot return the display line the
-    # cursor is in since this display line was just unlinked in (a).
-} {{8.0 9.0} {8.0 12.0} {8.0 12.0} {3.0 8.0} {2.0 3.0}}
+} {{8.0 9.0} {8.0 12.0} {8.0 12.0} {3.0 8.0} {3.0 4.0}}
+test textDisp-8.13 {TkTextChanged, used to crash, see [06c1433906]} {
+    .t delete 1.0 end
+    .t insert 1.0 \nLine2\nLine3\n
+    update
+    .t insert 3.0 ""
+    .t delete 1.0 2.0
+    update idletasks
+} {}
 
 test textDisp-9.1 {TkTextRedrawTag} {
     .t configure -wrap char
