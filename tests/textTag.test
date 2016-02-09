@@ -240,12 +240,23 @@ test textTag-1.25b {configuration options} -body {
     .t tag configure x -selectbackground [lindex [.t tag configure x -selectbackground] 3]
 } -returnCodes error -result {unknown color name "non-existent"}
 test textTag-1.25c {tag configuration options} -body {
+    .t tag configure x -selectbgstipple gray50
+    .t tag cget x -selectbgstipple
+} -cleanup {
+    .t tag configure x -selectbgstipple [lindex [.t tag configure x -selectbgstipple] 3]
+} -result {gray50}
+test textTag-1.25d {configuration options} -body {
+    .t tag configure x -selectbgstipple badStipple
+} -cleanup {
+    .t tag configure x -selectbgstipple [lindex [.t tag configure x -selectbgstipple] 3]
+} -returnCodes error -result {bitmap "badStipple" not defined}
+test textTag-1.25e {tag configuration options} -body {
     .t tag configure x -selectforeground #012345
     .t tag cget x -selectforeground
 } -cleanup {
     .t tag configure x -selectforeground [lindex [.t tag configure x -selectforeground] 3]
 } -result {#012345}
-test textTag-1.25d {configuration options} -body {
+test textTag-1.25f {configuration options} -body {
     .t tag configure x -selectforeground non-existent
 } -cleanup {
     .t tag configure x -selectforeground [lindex [.t tag configure x -selectforeground] 3]
