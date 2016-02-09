@@ -92,6 +92,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING, "-underline", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, underlineString),
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-underlinefg", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, underlineColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, wrapMode),
 	TK_OPTION_NULL_OK, wrapStrings, 0},
@@ -534,7 +536,8 @@ TkTextTagCmd(
 		    || (tagPtr->fgStipple != None)
 		    || (tagPtr->selFgStipple != None)
 		    || (tagPtr->overstrikeString != NULL)
-		    || (tagPtr->underlineString != NULL)) {
+		    || (tagPtr->underlineString != NULL)
+                    || (tagPtr->underlineColor != NULL)) {
 		tagPtr->affectsDisplay = 1;
 	    }
 	    if (!newTag) {
@@ -1052,6 +1055,7 @@ TkTextCreateTag(
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NONE;
     tagPtr->underlineString = NULL;
     tagPtr->underline = 0;
+    tagPtr->underlineColor = NULL;
     tagPtr->elideString = NULL;
     tagPtr->elide = 0;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
