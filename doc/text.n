@@ -524,6 +524,13 @@ items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
 string, then the color specified by the fB\-background\fR tag option is
 used.
 .TP
+\fB\-selectforeground \fIcolor\fR
+\fIcolor\fR specifies the foreground color to use when displaying selected
+items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
+\fIcolor\fR has not been specified, or if it is specified as an empty
+string, then the color specified by the fB\-foreground\fR tag option is
+used.
+.TP
 \fB\-spacing1 \fIpixels\fR
 .
 \fIPixels\fR specifies how much additional space should be left above each
