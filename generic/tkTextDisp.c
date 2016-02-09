@@ -798,9 +798,11 @@ GetStyle(
 
     for (i = 0 ; i < numTags; i++) {
 	Tk_3DBorder border;
+        XColor *fgColor;
 
 	tagPtr = tagPtrs[i];
 	border = tagPtr->border;
+        fgColor = tagPtr->fgColor;
 
 	/*
 	 * If this is the selection tag, and inactiveSelBorder is NULL (the
@@ -822,6 +824,10 @@ GetStyle(
 
         if ((tagPtr->selBorder != NULL) && (isSelected)) {
             border = tagPtr->selBorder;
+        }
+
+        if ((tagPtr->selFgColor != None) && (isSelected)) {
+            fgColor = tagPtr->selFgColor;
         }
 
 	if ((border != NULL) && (tagPtr->priority > borderPrio)) {
@@ -847,8 +853,8 @@ GetStyle(
 	    styleValues.bgStipple = tagPtr->bgStipple;
 	    bgStipplePrio = tagPtr->priority;
 	}
-	if ((tagPtr->fgColor != None) && (tagPtr->priority > fgPrio)) {
-	    styleValues.fgColor = tagPtr->fgColor;
+	if ((fgColor != None) && (tagPtr->priority > fgPrio)) {
+	    styleValues.fgColor = fgColor;
 	    fgPrio = tagPtr->priority;
 	}
 	if ((tagPtr->tkfont != None) && (tagPtr->priority > fontPrio)) {
