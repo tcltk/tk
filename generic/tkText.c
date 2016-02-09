@@ -2288,6 +2288,7 @@ ConfigureText(
 	    || (textPtr->selTagPtr->selBorder != NULL)
 	    || (textPtr->selTagPtr->reliefString != NULL)
 	    || (textPtr->selTagPtr->bgStipple != None)
+	    || (textPtr->selTagPtr->selBgStipple != None)
 	    || (textPtr->selTagPtr->fgColor != NULL)
 	    || (textPtr->selTagPtr->selFgColor != NULL)
 	    || (textPtr->selTagPtr->fgStipple != None)
