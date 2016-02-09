@@ -35,7 +35,7 @@ MANDIR			?= ${PREFIX}/man
 TCL_BUILD_DIR		?= ${BUILD_DIR}/tcl/${BUILD_STYLE}
 # location of installed tcl, only used if tcl in TCL_BUILD_DIR can't be found
 TCL_FRAMEWORK_DIR	?= /Library/Frameworks
-TCLSH_DIR		?= ${PREFIX}
+TCLSH_DIR		?= ${PREFIX}/bin
 
 # set to non-empty value to install manpages in addition to html help:
 INSTALL_MANPAGES	?=
@@ -116,7 +116,7 @@ TCL_FRAMEWORK_DIR	:= ${TCL_BUILD_DIR}/..
 MAKE_VARS		:=
 else
 TCL_DIR			:= ${TCL_FRAMEWORK_DIR}/Tcl.framework
-TCL_EXE			:= ${TCLSH_DIR}/bin/tclsh${TCL_VERSION}
+TCL_EXE			:= ${TCLSH_DIR}/tclsh${TCL_VERSION}
 MAKE_VARS		:= TCL_EXE
 export DYLD_FRAMEWORK_PATH := ${TCL_FRAMEWORK_DIR}
 endif
