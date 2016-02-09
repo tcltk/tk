@@ -500,6 +500,13 @@ Specifies whether or not to draw a horizontal rule through the middle of
 characters. \fIBoolean\fR may have any of the forms accepted by
 \fBTcl_GetBoolean\fR.
 .TP
+\fB\-overstrikefg \fIcolor\fR
+.
+\fIColor\fR specifies the color to use when displaying the overstrike. It may
+have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
+been specified, or if it is specified as an empty string, then the color
+specified by the \fB\-foreground\fR tag option is used.
+.TP
 \fB\-relief \fIrelief\fR
 .
 \fIRelief\fR specifies the relief style to use for drawing the border, in any
@@ -588,7 +595,6 @@ unspecified for the tag (the default).
 .
 \fIBoolean\fR specifies whether or not to draw an underline underneath
 characters. It may have any of the forms accepted by \fBTcl_GetBoolean\fR.
-.TP
 .TP
 \fB\-underlinefg \fIcolor\fR
 .
