@@ -2294,7 +2294,8 @@ ConfigureText(
 	    || (textPtr->selTagPtr->fgStipple != None)
 	    || (textPtr->selTagPtr->selFgStipple != None)
 	    || (textPtr->selTagPtr->overstrikeString != NULL)
-	    || (textPtr->selTagPtr->underlineString != NULL)) {
+	    || (textPtr->selTagPtr->underlineString != NULL)
+	    || (textPtr->selTagPtr->underlineColor != NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
     }
     TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, 1);

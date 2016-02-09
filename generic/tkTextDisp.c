@@ -149,6 +149,8 @@ typedef struct StyleValues {
     int tabStyle;		/* One of TABULAR or WORDPROCESSOR. */
     int underline;		/* Non-zero means draw underline underneath
 				 * text. */
+    XColor *underlineColor;	/* Foreground color for underline underneath
+                                 * text. */
     int elide;			/* Zero means draw text, otherwise not. */
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
 				 * One of TEXT_WRAPMODE_CHAR,
@@ -166,6 +168,7 @@ typedef struct TextStyle {
 				 * referenced in Chunks. */
     GC bgGC;			/* Graphics context for background. None means
 				 * use widget background. */
+    GC ulGC;			/* Graphics context for underline. */
     GC fgGC;			/* Graphics context for foreground. */
     StyleValues *sValuePtr;	/* Raw information from which GCs were
 				 * derived. */
@@ -778,6 +781,7 @@ GetStyle(
     memset(&styleValues, 0, sizeof(StyleValues));
     styleValues.relief = TK_RELIEF_FLAT;
     styleValues.fgColor = textPtr->fgColor;
+    styleValues.underlineColor = textPtr->fgColor;
     styleValues.tkfont = textPtr->tkfont;
     styleValues.justify = TK_JUSTIFY_LEFT;
     styleValues.spacing1 = textPtr->spacing1;
@@ -937,6 +941,11 @@ GetStyle(
 		&& (tagPtr->priority > underlinePrio)) {
 	    styleValues.underline = tagPtr->underline;
 	    underlinePrio = tagPtr->priority;
+            if (tagPtr->underlineColor != None) {
+                 styleValues.underlineColor = tagPtr->underlineColor;
+            } else if (fgColor != None) {
+                 styleValues.underlineColor = fgColor;
+            }
 	}
 	if ((tagPtr->elideString != NULL)
 		&& (tagPtr->priority > elidePrio)) {
@@ -993,6 +1002,9 @@ GetStyle(
 	mask |= GCStipple|GCFillStyle;
     }
     stylePtr->fgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
+    mask = GCForeground;
+    gcValues.foreground = styleValues.underlineColor->pixel;
+    stylePtr->ulGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     stylePtr->sValuePtr = (StyleValues *)
 	    Tcl_GetHashKey(&textPtr->dInfoPtr->styleTable, hPtr);
     stylePtr->hPtr = hPtr;
@@ -1032,6 +1044,9 @@ FreeStyle(
 	}
 	if (stylePtr->fgGC != None) {
 	    Tk_FreeGC(textPtr->display, stylePtr->fgGC);
+	}
+	if (stylePtr->ulGC != None) {
+	    Tk_FreeGC(textPtr->display, stylePtr->ulGC);
 	}
 	Tcl_DeleteHashEntry(stylePtr->hPtr);
 	ckfree(stylePtr);
@@ -7876,7 +7891,7 @@ CharDisplayProc(
 		y + baseline - sValuePtr->offset);
 
 	if (sValuePtr->underline) {
-	    TkUnderlineCharsInContext(display, dst, stylePtr->fgGC,
+	    TkUnderlineCharsInContext(display, dst, stylePtr->ulGC,
 		    sValuePtr->tkfont, string, numBytes,
 		    ciPtr->baseChunkPtr->x + xDisplacement,
 		    y + baseline - sValuePtr->offset,
@@ -7903,7 +7918,7 @@ CharDisplayProc(
 	Tk_DrawChars(display, dst, stylePtr->fgGC, sValuePtr->tkfont, string,
 		numBytes, offsetX, y + baseline - sValuePtr->offset);
 	if (sValuePtr->underline) {
-	    Tk_UnderlineChars(display, dst, stylePtr->fgGC, sValuePtr->tkfont,
+	    Tk_UnderlineChars(display, dst, stylePtr->ulGC, sValuePtr->tkfont,
 		    string, offsetX,
 		    y + baseline - sValuePtr->offset,
 		    0, numBytes);
