@@ -74,6 +74,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, -1, Tk_Offset(TkTextTag, selBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BITMAP, "-selectbgstipple", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, selBgStipple), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BITMAP, "-selectfgstipple", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, selFgStipple), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, selFgColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-spacing1", NULL, NULL,
@@ -530,6 +532,7 @@ TkTextTagCmd(
 		    || (tagPtr->fgColor != NULL)
 		    || (tagPtr->selFgColor != NULL)
 		    || (tagPtr->fgStipple != None)
+		    || (tagPtr->selFgStipple != None)
 		    || (tagPtr->overstrikeString != NULL)
 		    || (tagPtr->underlineString != NULL)) {
 		tagPtr->affectsDisplay = 1;
@@ -1037,6 +1040,7 @@ TkTextCreateTag(
     tagPtr->selBorder = NULL;
     tagPtr->selBgStipple = None;
     tagPtr->selFgColor = NULL;
+    tagPtr->selFgStipple = None;
     tagPtr->spacing1String = NULL;
     tagPtr->spacing1 = 0;
     tagPtr->spacing2String = NULL;

@@ -2292,6 +2292,7 @@ ConfigureText(
 	    || (textPtr->selTagPtr->fgColor != NULL)
 	    || (textPtr->selTagPtr->selFgColor != NULL)
 	    || (textPtr->selTagPtr->fgStipple != None)
+	    || (textPtr->selTagPtr->selFgStipple != None)
 	    || (textPtr->selTagPtr->overstrikeString != NULL)
 	    || (textPtr->selTagPtr->underlineString != NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
