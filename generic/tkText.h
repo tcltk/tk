@@ -398,7 +398,9 @@ typedef struct TkTextTag {
     int underline;		/* Non-zero means draw underline underneath
 				 * text. Only valid if underlineString is
 				 * non-NULL. */
-    TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
+    XColor *underlineColor;     /* Color for the underline. NULL means same
+                                 * color as foreground. */
+    TkWrapMode wrapMode;	/* How to hsandle wrap-around for this tag.
 				 * Must be TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, or
 				 * TEXT_WRAPMODE_NULL to use wrapmode for
