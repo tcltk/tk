@@ -70,6 +70,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, -1, Tk_Offset(TkTextTag, reliefString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-rmargin", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, rMarginString), TK_OPTION_NULL_OK, 0,0},
+    {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, selBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-spacing1", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, spacing1String), TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-spacing2", NULL, NULL,
@@ -484,7 +486,11 @@ TkTextTagCmd(
 	     */
 
 	    if (tagPtr == textPtr->selTagPtr) {
-		textPtr->selBorder = tagPtr->border;
+                if (tagPtr->selBorder == NULL) {
+                    textPtr->selBorder = tagPtr->border;
+                } else {
+                    textPtr->selBorder = tagPtr->selBorder;
+                }
 		textPtr->selBorderWidth = tagPtr->borderWidth;
 		textPtr->selBorderWidthPtr = tagPtr->borderWidthPtr;
 		textPtr->selFgColorPtr = tagPtr->fgColor;
@@ -509,6 +515,7 @@ TkTextTagCmd(
 		tagPtr->affectsDisplayGeometry = 1;
 	    }
 	    if ((tagPtr->border != NULL)
+		    || (tagPtr->selBorder != NULL)
 		    || (tagPtr->reliefString != NULL)
 		    || (tagPtr->bgStipple != None)
 		    || (tagPtr->fgColor != NULL)
@@ -1017,6 +1024,7 @@ TkTextCreateTag(
     tagPtr->overstrike = 0;
     tagPtr->rMarginString = NULL;
     tagPtr->rMargin = 0;
+    tagPtr->selBorder = NULL;
     tagPtr->spacing1String = NULL;
     tagPtr->spacing1 = 0;
     tagPtr->spacing2String = NULL;
