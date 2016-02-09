@@ -589,6 +589,14 @@ unspecified for the tag (the default).
 \fIBoolean\fR specifies whether or not to draw an underline underneath
 characters. It may have any of the forms accepted by \fBTcl_GetBoolean\fR.
 .TP
+.TP
+\fB\-underlinefg \fIcolor\fR
+.
+\fIColor\fR specifies the color to use when displaying the underline. It may
+have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
+been specified, or if it is specified as an empty string, then the color
+specified by the \fB\-foreground\fR tag option is used.
+.TP
 \fB\-wrap \fImode\fR
 .
 \fIMode\fR specifies how to handle lines that are wider than the text's
