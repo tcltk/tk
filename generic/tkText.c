@@ -2253,7 +2253,11 @@ ConfigureText(
      * replaced in the widget record.
      */
 
-    textPtr->selTagPtr->border = textPtr->selBorder;
+    if (textPtr->selTagPtr->selBorder == NULL) {
+        textPtr->selTagPtr->border = textPtr->selBorder;
+    } else {
+        textPtr->selTagPtr->selBorder = textPtr->selBorder;
+    }
     if (textPtr->selTagPtr->borderWidthPtr != textPtr->selBorderWidthPtr) {
 	textPtr->selTagPtr->borderWidthPtr = textPtr->selBorderWidthPtr;
 	textPtr->selTagPtr->borderWidth = textPtr->selBorderWidth;
@@ -2277,6 +2281,7 @@ ConfigureText(
 	textPtr->selTagPtr->affectsDisplayGeometry = 1;
     }
     if ((textPtr->selTagPtr->border != NULL)
+	    || (textPtr->selTagPtr->selBorder != NULL)
 	    || (textPtr->selTagPtr->reliefString != NULL)
 	    || (textPtr->selTagPtr->bgStipple != None)
 	    || (textPtr->selTagPtr->fgColor != NULL)
