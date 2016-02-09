@@ -66,6 +66,9 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING, "-overstrike", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, overstrikeString),
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-overstrikefg", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, overstrikeColor),
+        TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-relief", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, reliefString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-rmargin", NULL, NULL,
@@ -93,7 +96,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, -1, Tk_Offset(TkTextTag, underlineString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-underlinefg", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, underlineColor), TK_OPTION_NULL_OK, 0, 0},
+	NULL, -1, Tk_Offset(TkTextTag, underlineColor),
+        TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, wrapMode),
 	TK_OPTION_NULL_OK, wrapStrings, 0},
@@ -536,6 +540,7 @@ TkTextTagCmd(
 		    || (tagPtr->fgStipple != None)
 		    || (tagPtr->selFgStipple != None)
 		    || (tagPtr->overstrikeString != NULL)
+                    || (tagPtr->overstrikeColor != NULL)
 		    || (tagPtr->underlineString != NULL)
                     || (tagPtr->underlineColor != NULL)) {
 		tagPtr->affectsDisplay = 1;
@@ -1038,6 +1043,7 @@ TkTextCreateTag(
     tagPtr->offset = 0;
     tagPtr->overstrikeString = NULL;
     tagPtr->overstrike = 0;
+    tagPtr->overstrikeColor = NULL;
     tagPtr->rMarginString = NULL;
     tagPtr->rMargin = 0;
     tagPtr->selBorder = NULL;
