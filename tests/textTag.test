@@ -239,6 +239,17 @@ test textTag-1.25b {configuration options} -body {
 } -cleanup {
     .t tag configure x -selectbackground [lindex [.t tag configure x -selectbackground] 3]
 } -returnCodes error -result {unknown color name "non-existent"}
+test textTag-1.25c {tag configuration options} -body {
+    .t tag configure x -selectforeground #012345
+    .t tag cget x -selectforeground
+} -cleanup {
+    .t tag configure x -selectforeground [lindex [.t tag configure x -selectforeground] 3]
+} -result {#012345}
+test textTag-1.25d {configuration options} -body {
+    .t tag configure x -selectforeground non-existent
+} -cleanup {
+    .t tag configure x -selectforeground [lindex [.t tag configure x -selectforeground] 3]
+} -returnCodes error -result {unknown color name "non-existent"}
 test textTag-1.26 {tag configuration options} -constraints {
     haveCourier12
 } -body {
@@ -745,6 +756,29 @@ test textTag-5.23 {TkTextTagCmd - "configure" option} -body {
     .t configure -selectbackground black
     .t tag configure sel -selectbackground white
     lappend x [.t cget -selectbackground]
+    return $x
+} -result {yellow blue red white}
+test textTag-5.24 {TkTextTagCmd - "configure" option} -body {
+    set x {}
+    # when [.t tag cget sel -selectforeground] == "", mirroring happens between
+    #     the text widget option -selectforeground
+    # and the tag         option -foreground
+    .t tag configure sel -selectforeground {}
+    .t configure -selectforeground black
+    .t tag configure sel -foreground yellow
+    lappend x [.t cget -selectforeground]
+    .t tag configure sel -foreground orange
+    .t configure -selectforeground blue
+    lappend x [.t tag cget sel -foreground]
+    # when [.t tag cget sel -selectforeground] != "", mirroring happens between
+    #     the text widget option -selectforeground
+    # and the tag         option -selectforeground
+    .t tag configure sel -selectforeground green
+    .t configure -selectforeground red
+    lappend x [.t tag cget sel -selectforeground]
+    .t configure -selectforeground black
+    .t tag configure sel -selectforeground white
+    lappend x [.t cget -selectforeground]
     return $x
 } -result {yellow blue red white}
 
