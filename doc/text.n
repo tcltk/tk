@@ -524,6 +524,14 @@ items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
 string, then the color specified by the fB\-background\fR tag option is
 used.
 .TP
+\fB\-selectbgstipple \fIbitmap\fR
+.
+\fIBitmap\fR specifies a bitmap that is used as a stipple pattern for the
+selected background. It may have any of the forms accepted by
+\fBTk_GetBitmap\fR. If \fIbitmap\fR has not been specified, or if it is
+specified as an empty string, then the \fIbitmap\fR specified by
+'''-bgstipple''' will be used for the background.
+.TP
 \fB\-selectforeground \fIcolor\fR
 \fIcolor\fR specifies the foreground color to use when displaying selected
 items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
