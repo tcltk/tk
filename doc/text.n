@@ -533,6 +533,14 @@ option is only used when wrapping is enabled. If a text line wraps, the right
 margin for each line on the display is determined by the first non-elided
 character of that display line.
 .TP
+\fB\-rmargincolor \fIcolor\fR
+.
+\fIColor\fR specifies the background color to use in regions that do not
+contain characters because they are indented by \fB\-rmargin1\fR. It may
+have any of the forms accepted by \fBTk_GetColor\fR.If \fIcolor\fR has not
+been specified, or if it is specified as an empty string, then the color
+specified by the \fB-background\fR widget option is used.
+.TP
 \fB\-selectbackground \fIcolor\fR
 \fIColor\fR specifies the background color to use when displaying selected
 items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
