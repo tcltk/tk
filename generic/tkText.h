@@ -367,6 +367,8 @@ typedef struct TkTextTag {
 				 * means option not specified. */
     int rMargin;		/* Right margin for text, in pixels. Only
 				 * valid if rMarginString is non-NULL. */
+    Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
+				 * NULL means no value specified here. */
     Tk_3DBorder selBorder;	/* Used for drawing background for selected text.
 				 * NULL means no value specified here. */
     Pixmap selBgStipple;	/* Stipple bitmap for background of selected text.
