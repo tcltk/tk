@@ -168,6 +168,17 @@ test textTag-1.17 {configuration options} -constraints {
 } -cleanup {
     .t tag configure x -lmargin2 [lindex [.t tag configure x -lmargin2] 3]
 } -returnCodes error -result {bad screen distance "bad"}
+test textTag-1.17a {tag configuration options} -body {
+    .t tag configure x -lmargincolor lightgreen
+    .t tag cget x -lmargincolor
+} -cleanup {
+    .t tag configure x -lmargincolor [lindex [.t tag configure x -lmargincolor] 3]
+} -result {lightgreen}
+test textTag-1.17b {configuration options} -body {
+    .t tag configure x -lmargincolor non-existent
+} -cleanup {
+    .t tag configure x -lmargincolor [lindex [.t tag configure x -lmargincolor] 3]
+} -returnCodes error -result {unknown color name "non-existent"}
 test textTag-1.18 {tag configuration options} -constraints {
     haveCourier12
 } -body {
@@ -705,16 +716,15 @@ test textTag-5.12 {TkTextTagCmd - "configure" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad screen distance "1.0q"}
-test textTag-5.13 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12 
-} -body {
+test textTag-5.13 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
-    .t tag configure x -lmargin1 2 -lmargin2 4 -rmargin 5
+    .t tag configure x -lmargin1 2 -lmargin2 4 -rmargin 5 \
+        -lmargincolor darkblue
     list [.t tag configure x -lmargin1] [.t tag configure x -lmargin2] \
-        [.t tag configure x -rmargin]
+        [.t tag configure x -rmargin] [.t tag configure x -lmargincolor]
 } -cleanup {
     .t tag delete x
-} -result {{-lmargin1 {} {} {} 2} {-lmargin2 {} {} {} 4} {-rmargin {} {} {} 5}}
+} -result {{-lmargin1 {} {} {} 2} {-lmargin2 {} {} {} 4} {-rmargin {} {} {} 5} {-lmargincolor {} {} {} darkblue}}
 test textTag-5.14 {TkTextTagCmd - "configure" option} -constraints {
     haveCourier12 
 } -body {
@@ -731,6 +741,12 @@ test textTag-5.15 {TkTextTagCmd - "configure" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad screen distance "gorp"}
+test textTag-5.15a {TkTextTagCmd - "configure" option} -body {
+    .t tag delete x
+    .t tag configure x -lmargincolor rainbow
+} -cleanup {
+    .t tag delete x
+} -returnCodes error -result {unknown color name "rainbow"}
 test textTag-5.16 {TkTextTagCmd - "configure" option} -constraints {
     haveCourier12 
 } -body {
