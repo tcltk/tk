@@ -61,6 +61,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, -1, Tk_Offset(TkTextTag, lMargin1String), TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-lmargin2", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, lMargin2String), TK_OPTION_NULL_OK,0,0},
+    {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-offset", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, offsetString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-overstrike", NULL, NULL,
@@ -542,7 +544,8 @@ TkTextTagCmd(
 		    || (tagPtr->overstrikeString != NULL)
                     || (tagPtr->overstrikeColor != NULL)
 		    || (tagPtr->underlineString != NULL)
-                    || (tagPtr->underlineColor != NULL)) {
+                    || (tagPtr->underlineColor != NULL)
+                    || (tagPtr->lMarginColor != NULL)) {
 		tagPtr->affectsDisplay = 1;
 	    }
 	    if (!newTag) {
@@ -1039,6 +1042,7 @@ TkTextCreateTag(
     tagPtr->lMargin1 = 0;
     tagPtr->lMargin2String = NULL;
     tagPtr->lMargin2 = 0;
+    tagPtr->lMarginColor = NULL;
     tagPtr->offsetString = NULL;
     tagPtr->offset = 0;
     tagPtr->overstrikeString = NULL;
