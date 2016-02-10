@@ -2297,7 +2297,8 @@ ConfigureText(
             || (textPtr->selTagPtr->overstrikeColor != NULL)
 	    || (textPtr->selTagPtr->underlineString != NULL)
 	    || (textPtr->selTagPtr->underlineColor != NULL)
-            || (textPtr->selTagPtr->lMarginColor != NULL)) {
+            || (textPtr->selTagPtr->lMarginColor != NULL)
+            || (textPtr->selTagPtr->rMarginColor != NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
     }
     TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, 1);

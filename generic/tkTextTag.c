@@ -75,6 +75,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, -1, Tk_Offset(TkTextTag, reliefString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-rmargin", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, rMarginString), TK_OPTION_NULL_OK, 0,0},
+    {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, rMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, selBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BITMAP, "-selectbgstipple", NULL, NULL,
@@ -545,7 +547,8 @@ TkTextTagCmd(
                     || (tagPtr->overstrikeColor != NULL)
 		    || (tagPtr->underlineString != NULL)
                     || (tagPtr->underlineColor != NULL)
-                    || (tagPtr->lMarginColor != NULL)) {
+                    || (tagPtr->lMarginColor != NULL)
+                    || (tagPtr->rMarginColor != NULL)) {
 		tagPtr->affectsDisplay = 1;
 	    }
 	    if (!newTag) {
@@ -1050,6 +1053,7 @@ TkTextCreateTag(
     tagPtr->overstrikeColor = NULL;
     tagPtr->rMarginString = NULL;
     tagPtr->rMargin = 0;
+    tagPtr->rMarginColor = NULL;
     tagPtr->selBorder = NULL;
     tagPtr->selBgStipple = None;
     tagPtr->selFgColor = NULL;
