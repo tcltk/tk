@@ -136,6 +136,7 @@ typedef struct StyleValues {
 				 * line of each text line. */
     int lMargin2;		/* Left margin, in pixels, for second and
 				 * later display lines of each text line. */
+    Tk_3DBorder lMarginColor;	/* Color of left margins (1 and 2). */
     int offset;			/* Offset in pixels of baseline, relative to
 				 * baseline of line. */
     int overstrike;		/* Non-zero means draw overstrike through
@@ -240,6 +241,10 @@ typedef struct DLine {
     int spaceBelow;		/* How much extra space was added to the
 				 * bottom of the line because of spacing
 				 * options. This is included in height. */
+    Tk_3DBorder lMarginColor;	/* Background color of the area corresponding
+				 * to the left margin of the display line. */
+    int lMarginWidth;           /* Pixel width of the area corresponding to
+                                 * the left margin. */
     int length;			/* Total length of line, in pixels. */
     TkTextDispChunk *chunkPtr;	/* Pointer to first chunk in list of all of
 				 * those that are displayed on this line of
@@ -765,6 +770,7 @@ GetStyle(
     int fgPrio, fontPrio, fgStipplePrio;
     int underlinePrio, elidePrio, justifyPrio, offsetPrio;
     int lMargin1Prio, lMargin2Prio, rMarginPrio;
+    int lMarginColorPrio;
     int spacing1Prio, spacing2Prio, spacing3Prio;
     int overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
 
@@ -779,6 +785,7 @@ GetStyle(
     fgPrio = fontPrio = fgStipplePrio = -1;
     underlinePrio = elidePrio = justifyPrio = offsetPrio = -1;
     lMargin1Prio = lMargin2Prio = rMarginPrio = -1;
+    lMarginColorPrio = -1;
     spacing1Prio = spacing2Prio = spacing3Prio = -1;
     overstrikePrio = tabPrio = tabStylePrio = wrapPrio = -1;
     memset(&styleValues, 0, sizeof(StyleValues));
@@ -900,6 +907,11 @@ GetStyle(
 		&& (tagPtr->priority > lMargin2Prio)) {
 	    styleValues.lMargin2 = tagPtr->lMargin2;
 	    lMargin2Prio = tagPtr->priority;
+	}
+	if ((tagPtr->lMarginColor != NULL)
+		&& (tagPtr->priority > lMarginColorPrio)) {
+	    styleValues.lMarginColor = tagPtr->lMarginColor;
+	    lMarginColorPrio = tagPtr->priority;
 	}
 	if ((tagPtr->offsetString != NULL)
 		&& (tagPtr->priority > offsetPrio)) {
@@ -1173,6 +1185,8 @@ LayoutDLine(
     dlPtr->nextPtr = NULL;
     dlPtr->flags = NEW_LAYOUT | OLD_Y_INVALID;
     dlPtr->logicalLinesMerged = 0;
+    dlPtr->lMarginColor = NULL;
+    dlPtr->lMarginWidth = 0;
 
     /*
      * This is not necessarily totally correct, where we have merged logical
@@ -1447,6 +1461,7 @@ LayoutDLine(
 
 		x = chunkPtr->stylePtr->sValuePtr->lMargin2;
 	    }
+            dlPtr->lMarginWidth = x;
 	    if (wrapMode == TEXT_WRAPMODE_NONE) {
 		maxX = -1;
 	    } else {
@@ -1758,6 +1773,7 @@ LayoutDLine(
     }
     dlPtr->height += dlPtr->spaceAbove + dlPtr->spaceBelow;
     dlPtr->baseline += dlPtr->spaceAbove;
+    dlPtr->lMarginColor = sValuePtr->lMarginColor;
 
     /*
      * Recompute line length: may have changed because of justification.
@@ -2442,6 +2458,16 @@ DisplayDLine(
 
     Tk_Fill3DRectangle(textPtr->tkwin, pixmap, textPtr->border, 0, y,
 	    Tk_Width(textPtr->tkwin), dlPtr->height, 0, TK_RELIEF_FLAT);
+
+    /*
+     * Second, draw the background color of the left margin.
+     */
+    if (dlPtr->lMarginColor != NULL) {
+        int x = dlPtr->lMarginWidth + dInfoPtr->x - dInfoPtr->curXPixelOffset;
+
+        Tk_Fill3DRectangle(textPtr->tkwin, pixmap, dlPtr->lMarginColor, 0, y,
+            (x>0?x:0), dlPtr->height, 0, TK_RELIEF_FLAT);
+    }
 
     /*
      * Next, draw background information for the whole line.

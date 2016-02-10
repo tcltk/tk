@@ -347,6 +347,9 @@ typedef struct TkTextTag {
     int lMargin2;		/* Left margin for second and later display
 				 * lines of each text line, in pixels. Only
 				 * valid if lMargin2String is non-NULL. */
+    Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
+                                 * This is used for both lmargin1 and lmargin2.
+				 * NULL means no value specified here. */
     char *offsetString;		/* -offset option string (malloc-ed). NULL
 				 * means option not specified. */
     int offset;			/* Vertical offset of text's baseline from
