@@ -2479,10 +2479,9 @@ DisplayDLine(
      * Second, draw the background color of the left and right margins.
      */
     if (dlPtr->lMarginColor != NULL) {
-        int x = dlPtr->lMarginWidth + dInfoPtr->x - dInfoPtr->curXPixelOffset;
-
         Tk_Fill3DRectangle(textPtr->tkwin, pixmap, dlPtr->lMarginColor, 0, y,
-                (x>0?x:0), dlPtr->height, 0, TK_RELIEF_FLAT);
+                dlPtr->lMarginWidth + dInfoPtr->x - dInfoPtr->curXPixelOffset,
+                dlPtr->height, 0, TK_RELIEF_FLAT);
     }
     if (dlPtr->rMarginColor != NULL) {
         Tk_Fill3DRectangle(textPtr->tkwin, pixmap, dlPtr->rMarginColor,
