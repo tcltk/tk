@@ -336,6 +336,7 @@ proc ::tk::spinbox::ClosestGap {w x} {
 # Arguments:
 # w -		The spinbox window in which the button was pressed.
 # x -		The x-coordinate of the button press.
+# y -		The y-coordinate of the button press.
 
 proc ::tk::spinbox::ButtonDown {w x y} {
     variable ::tk::Priv
@@ -388,6 +389,7 @@ proc ::tk::spinbox::ButtonDown {w x y} {
 # Arguments:
 # w -		The spinbox window in which the button was pressed.
 # x -		The x-coordinate of the button press.
+# y -		The y-coordinate of the button press.
 
 proc ::tk::spinbox::ButtonUp {w x y} {
     variable ::tk::Priv
@@ -491,6 +493,8 @@ proc ::tk::spinbox::Paste {w x} {
 #
 # Arguments:
 # w -		The spinbox window.
+# x -		The x-coordinate of the mouse.
+# y -		The y-coordinate of the mouse.
 
 proc ::tk::spinbox::Motion {w x y} {
     variable ::tk::Priv
