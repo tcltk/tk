@@ -2072,6 +2072,21 @@ test spinbox-5.11 {ConfigureSpinbox procedure} -setup {
 } -cleanup {
     destroy .e
 } -result {}
+test spinbox-5.12 {ConfigureSpinbox procedure, -from and -to swapping} -setup {
+    spinbox .e
+} -body {
+    # this statement used to trigger error "-to value must be greater than -from value"
+    # because default value for -to is zero (bug [841280ffff])
+    set res [catch {.e configure -from 10}]
+    .e configure -from 1971 -to 2016  ; # standard case
+    lappend res [.e cget -from] [.e cget -to]
+    .e configure -from 2016 -to 1971  ; # auto-swapping happens
+    lappend res [.e cget -from] [.e cget -to]
+    .e configure -to 1971 -from 2016 ; # auto-swapping, order of options does not matter
+    lappend res [.e cget -from] [.e cget -to]
+} -cleanup {
+    destroy .e
+} -result {0 1971.0 2016.0 1971.0 2016.0 1971.0 2016.0}
 
 # No tests for DisplaySpinbox.
 
