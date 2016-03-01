@@ -1074,7 +1074,7 @@ test entry-3.42 {EntryWidgetCmd procedure, "scan" widget command} -setup {
 } -body {
     .e scan a
 } -cleanup {
-    destroy .efixed
+    destroy .e
 } -returnCodes error -result {wrong # args: should be ".e scan mark|dragto x"}
 test entry-3.43 {EntryWidgetCmd procedure, "scan" widget command} -setup {
     entry .e
