@@ -1640,7 +1640,7 @@ LayoutDLine(
      * Make one more pass over the line to recompute various things like its
      * height, length, and total number of bytes. Also modify the x-locations
      * of chunks to reflect justification. If we're not wrapping, I'm not sure
-     * what is the best way to handle left and center justification: should
+     * what is the best way to handle right and center justification: should
      * the total length, for purposes of justification, be (a) the window
      * width, (b) the length of the longest line in the window, or (c) the
      * length of the longest line in the text? (c) isn't available, (b) seems
@@ -4869,16 +4869,9 @@ TextRedrawTag(
 
     /*
      * Round up the starting position if it's before the first line visible on
-     * the screen (we only care about what's on the screen). Beware that the
-     * display info structure might need update, for instance if we arrived
-     * here from an 'after idle' script removing tags in a range whose
-     * display lines (and dInfo) were partially invalidated by a previous
-     * delete operation in the text widget.
+     * the screen (we only care about what's on the screen).
      */
 
-    if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
-	UpdateDisplayInfo(textPtr);
-    }
     dlPtr = dInfoPtr->dLinePtr;
     if (dlPtr == NULL) {
 	return;
@@ -5240,7 +5233,10 @@ TkTextSetYView(
 
                     dInfoPtr->newTopPixelOffset = 0;
                     goto scheduleUpdate;
-	            }
+                }
+                /*
+                 * The line is already on screen, with no need to scroll.
+                 */
                 return;
             }
         }
@@ -6703,6 +6699,7 @@ FindDLine(
     const TkTextIndex *indexPtr)/* Index of desired character. */
 {
     DLine *dlPtrPrev;
+    TkTextIndex indexPtr2;
 
     if (dlPtr == NULL) {
 	return NULL;
@@ -6727,24 +6724,58 @@ FindDLine(
         dlPtrPrev = dlPtr;
         dlPtr = dlPtr->nextPtr;
         if (dlPtr == NULL) {
-            TkTextIndex indexPtr2;
             /*
              * We're past the last display line, either because the desired
              * index lies past the visible text, or because the desired index
-             * is on the last display line showing the last logical line.
+             * is on the last display line.
              */
             indexPtr2 = dlPtrPrev->index;
             TkTextIndexForwBytes(textPtr, &indexPtr2, dlPtrPrev->byteCount,
                     &indexPtr2);
             if (TkTextIndexCmp(&indexPtr2,indexPtr) > 0) {
+                /*
+                 * The desired index is on the last display line.
+                 * --> return this display line.
+                 */
                 dlPtr = dlPtrPrev;
-                break;
             } else {
-                return NULL;
+                /*
+                 * The desired index is past the visible text. There is no
+                 * display line displaying something at the desired index.
+                 * --> return NULL.
+                 */
             }
+            break;
         }
         if (TkTextIndexCmp(&dlPtr->index,indexPtr) > 0) {
-            dlPtr = dlPtrPrev;
+            /*
+             * If we're here then we would normally expect that:
+             *   dlPtrPrev->index  <=  indexPtr  <  dlPtr->index
+             * i.e. we have found the searched display line being dlPtr.
+             * However it is possible that some DLines were unlinked
+             * previously, leading to a situation where going through
+             * the list of display lines skips display lines that did
+             * exist just a moment ago.
+             */
+            indexPtr2 = dlPtrPrev->index;
+            TkTextIndexForwBytes(textPtr, &indexPtr2, dlPtrPrev->byteCount,
+                    &indexPtr2);
+            if (TkTextIndexCmp(&indexPtr2,indexPtr) > 0) {
+                /*
+                 * Confirmed:
+                 *   dlPtrPrev->index  <=  indexPtr  <  dlPtr->index
+                 * --> return dlPtrPrev.
+                 */
+                dlPtr = dlPtrPrev;
+            } else {
+                /*
+                 * The last (rightmost) index shown by dlPtrPrev is still
+                 * before the desired index. This may be because there was
+                 * previously a display line between dlPtrPrev and dlPtr
+                 * and this display line has been unlinked.
+                 * --> return dlPtr.
+                 */
+            }
             break;
         }
     }
