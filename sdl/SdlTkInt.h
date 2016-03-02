@@ -1,7 +1,7 @@
 #ifndef _SDLTKINT_H
 #define _SDLTKINT_H
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 /*
  * For C++ compilers, use extern "C"
@@ -99,11 +99,8 @@ struct _Window {
 #ifdef ANDROID
     int gl_flags;
 #else
-#ifdef _WIN32
     SDL_Renderer *gl_rend;
     SDL_Window *gl_wind;
-#endif
-    SDL_GLContext gl_ctx;
 #endif
     SDL_Texture *gl_tex;
     int format; /* SDLTK_RGB24 etc */
@@ -271,7 +268,7 @@ extern int SdlTkGetMouseState(int *x, int *y);
 extern int SdlTkTranslateEvent(SDL_Event *sdl_event, XEvent *event,
     unsigned long now_ms);
 extern void SdlTkQueueEvent(XEvent *event);
-extern void SdlTkGenerateConfigureNotify(Window w);
+extern void SdlTkGenerateConfigureNotify(Display *display, Window w);
 extern void SdlTkGenerateExpose(Window w, int x, int y,
     int width, int height, int count);
 extern void SdlTkRootCoords(_Window *_w, int *x, int *y);
@@ -311,6 +308,7 @@ extern int SdlTkZoomInt(int x, int y, float z);
 extern int SdlTkPanZoom(int locked, int x, int y, int w, int h);
 extern void SdlTkSetRootSize(int w, int h);
 extern void SdlTkSetWindowFlags(int flags, int x, int y, int w, int h);
+extern void SdlTkSetWindowOpacity(double opacity);
 extern int SdlTkKeysym2Unicode(KeySym keysym);
 extern KeySym SdlTkUnicode2Keysym(int ucs);
 extern KeySym SdlTkUtf2KeySym(const char *utf, int len, int *lenret);

@@ -1,12 +1,12 @@
 # This file is the basis for a binary SDL-Tk Linux RPM.
 
-%define version 8.6.2
+%define version 8.6.5
 %define directory /opt/sdltk86
 
 Name:          sdl2tk
 Summary:       SDL-Tk graphical toolkit for the Tcl scripting language.
 Version:       %{version}
-Release:       2
+Release:       1
 License:       BSD
 Group:         Development/Languages
 Source:        sdl2tk-%{version}.tar.gz

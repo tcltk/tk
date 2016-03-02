@@ -828,16 +828,12 @@ ScalingCmd(
     if (objc - skip == 1) {
 #ifdef PLATFORM_SDL
 	double d2;
-	int widthM, widthS, heightM, heightS;
 
-	XScreenGetMMWidthHeight(Tk_Display(tkwin), screenPtr, &widthM, &widthS,
-	       &heightM, &heightS);
-	d = 25.4 / 72;
-	d *= widthS;
-	d /= widthM;
-	d2 = 25.4 / 72;
-	d2 *= heightS;
-	d2 /= heightM;
+	d = d2 = 25.4 / 72;
+	d *= WidthOfScreen(screenPtr);
+	d /= WidthMMOfScreen(screenPtr);
+	d2 *= HeightOfScreen(screenPtr);
+	d2 /= HeightMMOfScreen(screenPtr);
 	if (d2 > d) {
 	    d = d2;
 	}
@@ -860,11 +856,10 @@ ScalingCmd(
 	if (height <= 0) {
 	    height = 1;
 	}
-#ifdef PLATFORM_SDL
-	XScreenSetMMWidthHeight(Tk_Display(tkwin), screenPtr, width, height);
-#else
 	WidthMMOfScreen(screenPtr) = width;
 	HeightMMOfScreen(screenPtr) = height;
+#ifdef PLATFORM_SDL
+	screenPtr->moverride = 1;
 #endif
     } else {
 	Tcl_WrongNumArgs(interp, 1, objv, "?-displayof window? ?factor?");
@@ -1743,10 +1738,10 @@ Tk_WinfoObjCmd(
 	    return TCL_ERROR;
 	}
 #ifdef PLATFORM_SDL
-	XScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
-		&widthM, &widthS, &heightM, &heightS);
-	pixels = mm * widthS / widthM;
-	pixels2 = mm * heightS / heightM;
+	pixels = mm * WidthOfScreen(Tk_Screen(tkwin))
+		/ WidthMMOfScreen(Tk_Screen(tkwin));
+	pixels2 = mm * HeightOfScreen(Tk_Screen(tkwin))
+		/ HeightMMOfScreen(Tk_Screen(tkwin));
 	if (pixels2 > pixels) {
 	    pixels = pixels2;
 	}

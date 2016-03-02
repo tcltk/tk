@@ -636,18 +636,24 @@ AC_DEFUN([SC_ENABLE_THREADS], [
 		    [Do we really want to follow the standard? Yes we do!])
 	fi
 	AC_DEFINE(_THREAD_SAFE, 1, [Do we want the thread-safe OS API?])
-	AC_CHECK_LIB(pthread,pthread_mutex_init,tcl_ok=yes,tcl_ok=no)
-	if test "$tcl_ok" = "no"; then
-	    # Check a little harder for __pthread_mutex_init in the same
-	    # library, as some systems hide it there until pthread.h is
-	    # defined.  We could alternatively do an AC_TRY_COMPILE with
-	    # pthread.h, but that will work with libpthread really doesn't
-	    # exist, like AIX 4.2.  [Bug: 4359]
-	    AC_CHECK_LIB(pthread, __pthread_mutex_init,
-		tcl_ok=yes, tcl_ok=no)
+	# Don't test for Windows!!!
+	if test "${TCL_SHLIB_SUFFIX}" != ".dll" ; then
+	    AC_CHECK_LIB(pthread,pthread_mutex_init,tcl_ok=yes,tcl_ok=no)
+	    if test "$tcl_ok" = "no"; then
+		# Check a little harder for __pthread_mutex_init in the same
+		# library, as some systems hide it there until pthread.h is
+		# defined.  We could alternatively do an AC_TRY_COMPILE with
+		# pthread.h, but that will work with libpthread really doesn't
+		# exist, like AIX 4.2.  [Bug: 4359]
+		AC_CHECK_LIB(pthread, __pthread_mutex_init,
+		    tcl_ok=yes, tcl_ok=no)
+	    fi
 	fi
 
-	if test "$tcl_ok" = "yes"; then
+	if test "${TCL_SHLIB_SUFFIX}" = ".dll" ; then
+	    # Windows needs nothing special
+	    true
+	elif test "$tcl_ok" = "yes"; then
 	    # The space is needed
 	    THREADS_LIBS=" -lpthread"
 	else
@@ -676,10 +682,12 @@ AC_DEFUN([SC_ENABLE_THREADS], [
 	# Does the pthread-implementation provide
 	# 'pthread_attr_setstacksize' ?
 
-	ac_saved_libs=$LIBS
-	LIBS="$LIBS $THREADS_LIBS"
-	AC_CHECK_FUNCS(pthread_attr_setstacksize pthread_atfork)
-	LIBS=$ac_saved_libs
+	if test "${TCL_SHLIB_SUFFIX}" != ".dll" ; then
+	    ac_saved_libs=$LIBS
+	    LIBS="$LIBS $THREADS_LIBS"
+	    AC_CHECK_FUNCS(pthread_attr_setstacksize pthread_atfork)
+	    LIBS=$ac_saved_libs
+	fi
     else
 	TCL_THREADS=0
     fi

@@ -576,8 +576,10 @@ static void IndicatorElementSize(
 #ifdef PLATFORM_SDL
     int wM, wS, hM, hS;
 
-    XScreenGetMMWidthHeight(display, DefaultScreenOfDisplay(display),
-	    &wM, &wS, &hM, &hS);
+    wS = WidthOfScreen(DefaultScreenOfDisplay(display));
+    wM = WidthMMOfScreen(DefaultScreenOfDisplay(display));
+    hS = HeightOfScreen(DefaultScreenOfDisplay(display));
+    hM = HeightMMOfScreen(DefaultScreenOfDisplay(display));
     if ((hS/hM) > (wS/wM)) {
 	wM = hM;
 	wS = hS;
@@ -628,8 +630,10 @@ static void IndicatorElementDraw(
     b = Ttk_PadBox(b, padding);
 
 #ifdef PLATFORM_SDL
-    XScreenGetMMWidthHeight(display, DefaultScreenOfDisplay(display),
-	    &wM, &wS, &hM, &hS);
+    wS = WidthOfScreen(DefaultScreenOfDisplay(display));
+    wM = WidthMMOfScreen(DefaultScreenOfDisplay(display));
+    hS = HeightOfScreen(DefaultScreenOfDisplay(display));
+    hM = HeightMMOfScreen(DefaultScreenOfDisplay(display));
     if ((hS/hM) > (wS/wM)) {
 	wM = hM;
 	wS = hS;

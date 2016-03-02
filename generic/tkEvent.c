@@ -1789,6 +1789,7 @@ CleanUpTkEvent(
     XEvent *eventPtr)
 {
     switch (eventPtr->type) {
+#ifndef PLATFORM_SDL
     case KeyPress:
     case KeyRelease: {
 	TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
@@ -1800,6 +1801,7 @@ CleanUpTkEvent(
 	}
 	break;
     }
+#endif
 
     case VirtualEvent: {
 	XVirtualEvent *vePtr = (XVirtualEvent *) eventPtr;
