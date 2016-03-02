@@ -1826,6 +1826,11 @@ WmForgetCmd(
 		~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 	RemapWindows(winPtr, winPtr->parentPtr);
 
+        /*
+         * Make sure wm no longer manages this window
+         */
+        Tk_ManageGeometry(frameWin, NULL, NULL);
+
 	/*
 	 * Flags (above) must be cleared before calling TkMapTopFrame (below).
 	 */

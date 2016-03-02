@@ -3,7 +3,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH ttk::radiobutton n 8.5 Tk "Tk Themed Widget"
 .so man.macros
 .BS
@@ -29,21 +29,21 @@ it sets the variable to its associated value.
 .OP \-command command Command
 A Tcl script to evaluate whenever the widget is invoked.
 .OP \-value Value Value
-The value to store in the associated \fB\-variable\fR 
-when the widget is selected. 
+The value to store in the associated \fB\-variable\fR
+when the widget is selected.
 .OP \-variable variable Variable
 The name of a global variable whose value is linked to the widget.
 Default value is \fB::selectedButton\fR.
 .SH "WIDGET COMMAND"
 .PP
-In addition to the standard 
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR 
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
 commands, radiobuttons support the following additional
 widget commands:
 .TP
 \fIpathname\fB invoke\fR
 Sets the \fB\-variable\fR to the \fB\-value\fR, selects the widget,
-and evaluates the associated \fB\-command\fR.  
+and evaluates the associated \fB\-command\fR.
 Returns the result of the \fB\-command\fR, or the empty
 string if no \fB\-command\fR is specified.
 .\" Missing: select, deselect.  Useful?
@@ -51,11 +51,11 @@ string if no \fB\-command\fR is specified.
 .SH "WIDGET STATES"
 .PP
 The widget does not respond to user input if the \fBdisabled\fR state is set.
-The widget sets the \fBselected\fR state whenever 
+The widget sets the \fBselected\fR state whenever
 the linked \fB\-variable\fR is set to the widget's \fB\-value\fR,
 and clears it otherwise.
-The widget sets the \fBalternate\fR state whenever the 
-linked \fB\-variable\fR is unset.  
+The widget sets the \fBalternate\fR state whenever the
+linked \fB\-variable\fR is unset.
 (The \fBalternate\fR state may be used to indicate a
 .QW tri-state
 or

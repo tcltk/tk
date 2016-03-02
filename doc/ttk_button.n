@@ -3,7 +3,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH ttk::button n 8.5 Tk "Tk Themed Widget"
 .so man.macros
 .BS
@@ -36,12 +36,12 @@ button (meaning, roughly,
 The default is \fBnormal\fR.
 .RS
 .PP
-Depending on the theme, the default button may be displayed 
+Depending on the theme, the default button may be displayed
 with an extra highlight ring, or with a different border color.
 .RE
 .OP \-width width Width
-If greater than zero, specifies how much space, in character widths, 
-to allocate for the text label.  
+If greater than zero, specifies how much space, in character widths,
+to allocate for the text label.
 If less than zero, specifies a minimum width.
 If zero or unspecified, the natural width of the text label is used.
 Note that some themes may specify a non-zero \fB\-width\fR
@@ -55,8 +55,8 @@ in the style.
 .\" .OP \-relief relief Relief
 .SH "WIDGET COMMAND"
 .PP
-In addition to the standard 
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR 
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
 commands, buttons support the following additional widget commands:
 .TP
 \fIpathName \fBinvoke\fR
