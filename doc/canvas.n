@@ -263,7 +263,7 @@ automatically decremented by one.
 A number less than 0 is treated as if it were zero, and a
 number greater than the length of the text item is treated
 as if it were equal to the length of the text item. For
-polygons, numbers less than 0 or greater then the length
+polygons, numbers less than 0 or greater than the length
 of the coordinate list will be adjusted by adding or subtracting
 the length until the result is between zero and the length,
 inclusive.
@@ -405,7 +405,7 @@ behaves as if the \fIstart\fR argument had not been specified.
 .
 Selects all the items completely enclosed within the rectangular
 region given by \fIx1\fR, \fIy1\fR, \fIx2\fR, and \fIy2\fR.
-\fIX1\fR must be no greater then \fIx2\fR and \fIy1\fR must be
+\fIX1\fR must be no greater than \fIx2\fR and \fIy1\fR must be
 no greater than \fIy2\fR.
 .TP
 \fBoverlapping\fR \fIx1\fR \fIy1\fR \fIx2\fR \fIy2\fR
@@ -413,7 +413,7 @@ no greater than \fIy2\fR.
 Selects all the items that overlap or are enclosed within the
 rectangular region given by \fIx1\fR, \fIy1\fR, \fIx2\fR,
 and \fIy2\fR.
-\fIX1\fR must be no greater then \fIx2\fR and \fIy1\fR must be
+\fIX1\fR must be no greater than \fIx2\fR and \fIy1\fR must be
 no greater than \fIy2\fR.
 .TP
 \fBwithtag \fItagOrId\fR
