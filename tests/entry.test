@@ -1896,12 +1896,12 @@ test entry-6.12 {EntryComputeGeometry procedure} -constraints {
     fonts
 } -setup {
     catch {destroy .e}
-    entry .e -font $fixed -bd 2 -relief raised -width 20
+    entry .e -font {Courier -12} -bd 2 -relief raised -width 20
     pack .e
 } -body {
     .e insert end "012\t456\t"
     update
-    list [.e index @81] [.e index @82] [.e index @116] [.e index @117]
+    list [.e index @80] [.e index @81] [.e index @115] [.e index @116]
 } -cleanup {
     destroy .e
 } -result {6 7 7 8}

@@ -1788,6 +1788,11 @@ WmForgetCmd(
 	TkWmDeadWindow(winPtr);
 	RemapWindows(winPtr, (MacDrawable *) winPtr->parentPtr->window);
 
+        /*
+         * Make sure wm no longer manages this window
+         */
+        Tk_ManageGeometry(frameWin, NULL, NULL);
+
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 
 	/*

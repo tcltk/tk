@@ -7167,3 +7167,102 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
         *** POTENTIAL INCOMPATIBILITY ***
 
 --- Released 8.6.4, March 12, 2015 --- http://core.tcl.tk/tk/ for details
+
+2015-03-10 (bug) Cocoa: premature image free crash (walzer)
+
+2015-03-15 (bug) Cocoa: wish launches in front. [focus -force] works (culler)
+
+2015-04-09 (bug)[e4ed00] [$text index "1.0 display wordstart"] crash (vogel)
+
+2015-04-09 (bug)[562118] Unicode support of "wordstart" modifier (vogel)
+
+2015-05-05 (bug)[06c3fc] PNG alpha error corrupted output file (gauthier,porter)
+
+2015-05-20 (bug)[dece63] various mem corruptions in images (mic42,porter)
+
+2015-05-24 (bug)[53f8fc] panedwindow geometry management (vogel)
+
+2015-05-26 (bug)[1641721] tk_getOpenFile symlink display doubled (nijtmans)
+
+2015-06-01 (bug)[d7bad5][2368195][3592454][1714535][1292219][3592454]
+                panedwindow fixes (vogel)
+
+2015-06-25 (bug)[805cff] Tk_ConfigureWidget() segfault (aspect,nijtmans)
+
+2015-07-13 (bug)[3f179a] Text widget crash with elided text (vogel)
+
+2015-07-16 (bug)[2886436] Stop [$text delete] acting before start index (vogel)
+
+2015-07-28 (bug)[1236306] TraverseToMenu error bound to toplevel destroy (vogel)
+
+2015-08-20 (bug)[00189c] MSVC 14: semi-static UCRT support (dower,nijtmans)
+
+2015-09-13 (bug)[cc0ba3] PNG read buffer overflow (maxjarek,porter)
+
+2015-09-29 (bug)[1501749] Crash embedded window delete bound to <Map> (vogel)
+
+2015-10-04 (license) Replace icons that lacked clear free license (cowals)
+
+2015-10-06 (bug)[46c83f] Win: tk_getOpenFile -initialdir (koend,nadkarni)
+
+2015-10-08 (new feature)[TIP 437] New panedwindow options (vogel)
+
+2015-10-09 (bug)[1669632] [text] autoseparator placement (nash,vogel)
+
+2015-10-09 (bug)[2262711] [text] RE search Unicode+elided (kaitzschu,vogel)
+
+2015-10-09 (bug)[1815161] [$text count -ypixels] needs management (vogel)
+
+2015-10-22 (bug)[1520118] Document spinbox validate expectations (vogel)
+
+2015-10-22 (bug)[1414025] $entry insertion cursor visibility (vogel)
+
+2015-10-26 (bug) PNG rendering on El Capitan (meier,walzer)
+
+2015-11-08 (bug)[2160206] menubutton panic (vogel)
+
+2015-11-08 (bug)[220854] Display trailing TAB in entry (vogel)
+
+2015-11-08 (bug)[542199] double click on lone char in entry (vogel)
+
+2015-11-08 (bug)[297442d] strict motif binding on <Control-underscore> (vogel)
+
+2015-11-08 (bug)[3601604] $listbox -takefocus (vogel)
+
+2015-11-09 (bug)[5ee8af] X, Win: 64-bit enable embedded windows (vogel)
+
+2015-11-29 (bug)[1997299] [text] tag borderwidth leak (vogel)
+
+2015-12-12 (bug)[1739605] [text see] misbehavior (danckaert)
+
+2015-12-13 (bug)[ff8a1e] Never-mapped [text] performance (danckaert)
+
+2015-12-19 (bug)[1700065] Report errors from -textvariable write trace (vogel)
+
+2015-12-19 (bug)[793909] -textvariable handle undefined namespace (vogel)
+
+2015-12-26 (bug)[2f78c7] crash with [text] and [tablelist] (vogel)
+
+2016-01-06 (bug)[1288433,3102228] <<ListboxSelect>> misfires (vogel)
+
+2016-01-08 (bug)[1510538] initial scrollbar width (vogel,nijtmans)
+
+2016-01-08 (bug)[1305128] event not received by scrollbar (vogel,nijtmans)
+
+2016-01-09 (bug)[1927212] Mousewheel/scrollbar bindings (vogel)
+
+2016-01-11 (bug)[63c354] Cocoa message boxes (culler)
+
+2016-01-12 (bug)[2049429] get more $text options from database (vogel)
+
+2016-01-22 (TIP 441) New option [listbox ... -justify] (vogel)
+
+2016-01-25 (bug) OBOE in ttk::notebook options parsing (bromley,english)
+
+2016-02-08 (enhance) [option readile] expects utf-8 file (oehlmann,nijtmans)
+
+2016-02-08 (bug) crash in [$text delete] (griffin,vogel)
+
+Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
+
+--- Released 8.6.5, February 29, 2016 --- http://core.tcl.tk/tk/ for details
