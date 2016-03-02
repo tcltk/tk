@@ -1108,8 +1108,9 @@ fonterr:
 		Tcl_DStringFree(&ds2);
 		ghash->hashLoaded = 0;
 		Tcl_SetHashValue(hPtr, (char *) ghash);
-		FNTLOG("FONTINIT: '%s' -> '%s'", ghash->xlfdPattern,
-		       (char *) ffKey.file);
+		FNTLOG("FONTINIT: '%s' -> '%s' fflg=%lx sflg=%lx",
+		       ghash->xlfdPattern, (char *) ffKey.file,
+		       ghash->faceFlags, ghash->styleFlags);
 		nfonts++;
 	    }
 nextface:

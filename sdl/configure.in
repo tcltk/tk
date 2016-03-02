@@ -109,9 +109,6 @@ if test -z "$no_pipe" && test -n "$GCC"; then
 	CFLAGS="$CFLAGS -pipe"
     fi
 fi
-if test -n "$GCC" ; then
-    GCC_LIBS="-lstdc++"
-fi
 
 #------------------------------------------------------------------------
 # Threads support - this auto-enables if Tcl was compiled threaded
@@ -417,6 +414,35 @@ else
     LIB_RES=""
     WISH_RES=""
 fi
+
+#------------------------------------------------------------------------
+# See if libstdc++ is required (guesswork)
+#------------------------------------------------------------------------
+
+AC_MSG_CHECKING([for c++ library])
+if test "$SHARED_BUILD" = "1"; then
+    # shared build: always
+    if test -n "$GCC" ; then
+	GCC_LIBS="-lstdc++"
+    fi
+elif test -n "$GCC" ; then
+    # static build: guessing
+    tcl_cv_stdcxx=2
+    case "$CXX $CFLAGS $CXXFLAGS" in
+    *-fno-exceptions*)
+	tcl_cv_stdcxx="`expr $tcl_cv_stdcxx - 1`"
+	;;
+    esac
+    case "$CXX $CFLAGS $CXXFLAGS" in
+    *-fno-rtti*)
+	tcl_cv_stdcxx="`expr $tcl_cv_stdcxx - 1`"
+	;;
+    esac
+    if test $tcl_cv_stdcxx -gt 0 ; then
+	GCC_LIBS="-lstdc++"
+    fi
+fi
+AC_MSG_RESULT([$GCC_LIBS])
 
 #------------------------------------------------------------------------
 # sdl2tkConfig.sh refers to this by a different name

@@ -288,8 +288,10 @@ TkpDrawCheckIndicator(
 
     depth = Tk_Depth(tkwin);
 
-    XScreenGetMMWidthHeight(display, DefaultScreenOfDisplay(display),
-	    &dimW, &dimWI, &dimH, &dimHI);
+    dimW = WidthOfScreen(DefaultScreenOfDisplay(display));
+    dimWI = WidthMMOfScreen(DefaultScreenOfDisplay(display));
+    dimH = HeightOfScreen(DefaultScreenOfDisplay(display));
+    dimHI = HeightMMOfScreen(DefaultScreenOfDisplay(display));
     if ((dimHI/dimH) > (dimWI/dimW)) {
 	dimW = dimH;
 	dimWI = dimHI;

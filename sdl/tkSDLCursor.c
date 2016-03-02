@@ -21,7 +21,7 @@
 typedef struct {
     TkCursor info;		/* Generic cursor info used by tkCursor.c */
     Display *display;		/* Display for which cursor is valid. */
-} TkUnixCursor;
+} TkSDLCursor;
 
 /*
  * The table below is used to map from the name of a cursor to its index in
@@ -208,7 +208,7 @@ TkGetCursorByName(
     Tk_Uid string)		/* Description of cursor. See manual entry for
 				 * details on legal syntax. */
 {
-    TkUnixCursor *cursorPtr = NULL;
+    TkSDLCursor *cursorPtr = NULL;
     Cursor cursor = None;
     int argc;
     const char **argv = NULL;
@@ -338,7 +338,7 @@ TkGetCursorByName(
     }
 
     if (cursor != None) {
-	cursorPtr = ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = ckalloc(sizeof(TkSDLCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }
@@ -593,7 +593,7 @@ TkCreateCursorFromData(
 {
     Cursor cursor;
     Pixmap sourcePixmap, maskPixmap;
-    TkUnixCursor *cursorPtr = NULL;
+    TkSDLCursor *cursorPtr = NULL;
     Display *display = Tk_Display(tkwin);
 
     sourcePixmap = XCreateBitmapFromData(display,
@@ -608,7 +608,7 @@ TkCreateCursorFromData(
     Tk_FreePixmap(display, maskPixmap);
 
     if (cursor != None) {
-	cursorPtr = ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = ckalloc(sizeof(TkSDLCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }
@@ -636,10 +636,10 @@ void
 TkpFreeCursor(
     TkCursor *cursorPtr)
 {
-    TkUnixCursor *unixCursorPtr = (TkUnixCursor *) cursorPtr;
+    TkSDLCursor *sdlCursorPtr = (TkSDLCursor *) cursorPtr;
 
-    XFreeCursor(unixCursorPtr->display, (Cursor) unixCursorPtr->info.cursor);
-    Tk_FreeXId(unixCursorPtr->display, (XID) unixCursorPtr->info.cursor);
+    XFreeCursor(sdlCursorPtr->display, (Cursor) sdlCursorPtr->info.cursor);
+    Tk_FreeXId(sdlCursorPtr->display, (XID) sdlCursorPtr->info.cursor);
 }
 
 /*

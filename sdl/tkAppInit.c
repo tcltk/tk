@@ -25,7 +25,7 @@ extern Tcl_PackageInitProc Tktest_Init;
 #endif /* TK_TEST */
 
 #ifdef PLATFORM_SDL
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #ifdef ANDROID
 #include <android/log.h>
 #undef  main

@@ -54,7 +54,7 @@
 #endif
 
 #ifdef PLATFORM_SDL
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include "SdlTkInt.h"
 #endif
 
@@ -68,18 +68,26 @@
  * while otherwise NewNativeObj is needed (which provides proper
  * conversion from native encoding to UTF-8).
  */
-#ifdef UNICODE
+#if defined(UNICODE) && (TCL_UTF_MAX <= 4)
 #   define NewNativeObj Tcl_NewUnicodeObj
-#else /* !UNICODE */
-    static Tcl_Obj *NewNativeObj(char *string, int length) {
+#else /* !UNICODE || (TCL_UTF_MAX > 4) */
+    static Tcl_Obj *NewNativeObj(TCHAR *string, int length) {
 	Tcl_Obj *obj;
 	Tcl_DString ds;
-	Tcl_ExternalToUtfDString(NULL, string, length, &ds);
+
+#ifdef UNICODE
+	if (length > 0) {
+	    length *= sizeof (TCHAR);
+	}
+	Tcl_WinTCharToUtf(string, length, &ds);
+#else
+	Tcl_ExternalToUtfDString(NULL, (char *) string, length, &ds);
+#endif
 	obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
 	Tcl_DStringFree(&ds);
 	return obj;
 }
-#endif /* !UNICODE */
+#endif /* !UNICODE || (TCL_UTF_MAX > 4) */
 
 /*
  * Declarations for various library functions and variables (don't want to
@@ -180,8 +188,11 @@ Tk_ZipMain(
     const char *exeName;
     Tcl_DString systemEncodingName;
 #endif
+#ifndef ZIPFS_BOOTDIR
+    Tcl_Obj *mntpt = NULL;
+#endif
 
-#if !defined(ANDROID)
+#ifndef ANDROID
     exeName = Tcl_GetNameOfExecutable();
 #endif
 
@@ -226,7 +237,7 @@ Tk_ZipMain(
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
 	    argv += 3;
-        } else if (argc > 1) {
+	} else if (argc > 1) {
 	    length = strlen((char *) argv[1]);
 	    if ((length >= 2) &&
 		(0 == _tcsncmp(TEXT("-zip"), argv[1], length))) {
@@ -342,12 +353,16 @@ Tk_ZipMain(
 	char *tcl_lib = ZIPFS_BOOTDIR "/tcl" TCL_VERSION;
 	char *tcl_pkg = ZIPFS_BOOTDIR;
 #else
-	char *tcl_lib;
-	char *tcl_pkg = (char *) exeName;
+	char *tcl_pkg, *tcl_lib;
 	Tcl_DString dsTcl;
 
+	/* Use canonicalized mount point. */
+	Tclzipfs_Mount(interp, zipFile, NULL, NULL);
+	mntpt = Tcl_GetObjResult(interp);
+	Tcl_IncrRefCount(mntpt);
+	tcl_pkg = Tcl_GetString(mntpt);
 	Tcl_DStringInit(&dsTcl);
-	Tcl_DStringAppend(&dsTcl, exeName, -1);
+	Tcl_DStringAppend(&dsTcl, tcl_pkg, -1);
 	Tcl_DStringAppend(&dsTcl, "/tcl" TCL_VERSION, -1);
 	tcl_lib = Tcl_DStringValue(&dsTcl);
 #endif
@@ -364,33 +379,33 @@ Tk_ZipMain(
 	Tcl_DStringSetLength(&dsTk, 0);
 	tk_lib = Tcl_DStringValue(&dsTk);
 #ifdef PLATFORM_SDL
-        if (SDL_MAJOR_VERSION > 1) {
+	if (SDL_MAJOR_VERSION > 1) {
 	    sprintf(tk_lib, ZIPFS_BOOTDIR "/sdl%dtk" TK_VERSION,
 		    SDL_MAJOR_VERSION);
-        } else {
+	} else {
 	    strcpy(tk_lib, ZIPFS_BOOTDIR "/sdltk" TK_VERSION);
-        }
+	}
 #else
 	strcpy(tk_lib, ZIPFS_BOOTDIR "/tk" TK_VERSION);
 #endif
 #else
-	Tcl_DStringSetLength(&dsTk, strlen(exeName) + 32);
+	Tcl_DStringSetLength(&dsTk, strlen(tcl_pkg) + 32);
 	Tcl_DStringSetLength(&dsTk, 0);
 	tk_lib = Tcl_DStringValue(&dsTk);
 #ifdef PLATFORM_SDL
-        if (SDL_MAJOR_VERSION > 1) {
+	if (SDL_MAJOR_VERSION > 1) {
 	    sprintf(tk_lib, "%s/sdl%dtk" TK_VERSION,
-		    exeName, SDL_MAJOR_VERSION);
-        } else {
-	    sprintf(tk_lib, "%s/sdltk" TK_VERSION, exeName);
-        }
+		    tcl_pkg, SDL_MAJOR_VERSION);
+	} else {
+	    sprintf(tk_lib, "%s/sdltk" TK_VERSION, tcl_pkg);
+	}
 #else
-	sprintf(tk_lib, "%s/tk" TK_VERSION, exeName);
+	sprintf(tk_lib, "%s/tk" TK_VERSION, tcl_pkg);
 #endif
 #endif
 	Tcl_DStringSetLength(&dsTk, strlen(tk_lib));
         Tcl_SetVar2(interp, "env", "TK_LIBRARY", tk_lib, TCL_GLOBAL_ONLY);
-        Tcl_SetVar(interp, "tk_library", tk_lib, TCL_GLOBAL_ONLY);
+	Tcl_SetVar(interp, "tk_library", tk_lib, TCL_GLOBAL_ONLY);
 
 	Tcl_DStringFree(&dsTk);
 #ifndef ZIPFS_BOOTDIR
@@ -427,7 +442,7 @@ Tk_ZipMain(
 #ifdef ZIPFS_BOOTDIR
 		filename = ZIPFS_BOOTDIR "/app/main.tcl";
 #else
-		Tcl_DStringAppend(&dsFilename, exeName, -1);
+		Tcl_DStringAppend(&dsFilename, Tcl_GetString(mntpt), -1);
 		Tcl_DStringAppend(&dsFilename, "/app/main.tcl", -1);
 		filename = Tcl_DStringValue(&dsFilename);
 #endif
@@ -440,7 +455,7 @@ Tk_ZipMain(
 
 		/*
 		 * Push back script file to argv, if any.
- 		 */
+		 */
 		if (path != NULL) {
 		    arg = Tcl_GetString(path);
 		}
@@ -484,7 +499,7 @@ Tk_ZipMain(
 	    if (autoRun) {
 #ifndef ZIPFS_BOOTDIR
 		Tcl_DStringSetLength(&dsFilename, 0);
-		Tcl_DStringAppend(&dsFilename, exeName, -1);
+		Tcl_DStringAppend(&dsFilename, Tcl_GetString(mntpt), -1);
 		Tcl_DStringAppend(&dsFilename, "/app/icon.bmp", -1);
 		filename = Tcl_DStringValue(&dsFilename);
 #else
@@ -497,7 +512,7 @@ Tk_ZipMain(
 			ckfree(SdlTkX.arg_icon);
 		    }
 		    SdlTkX.arg_icon = ckalloc(strlen(filename) + 1);
-		    strcpy(SdlTkX.arg_icon, filename);	
+		    strcpy(SdlTkX.arg_icon, filename);
 		}
 	    }
 #endif
@@ -520,7 +535,7 @@ Tk_ZipMain(
 #ifdef ZIPFS_BOOTDIR
 		    filename = ZIPFS_BOOTDIR "/app/cmdline";
 #else
-		    Tcl_DStringAppend(&dsFilename, exeName, -1);
+		    Tcl_DStringAppend(&dsFilename, Tcl_GetString(mntpt), -1);
 		    Tcl_DStringAppend(&dsFilename, "/app/cmdline", -1);
 		    filename = Tcl_DStringValue(&dsFilename);
 #endif
@@ -575,8 +590,8 @@ Tk_ZipMain(
     }
 
     if (zipval != NULL) {
-        Tcl_DecrRefCount(zipval);
-        zipval = NULL;
+	Tcl_DecrRefCount(zipval);
+	zipval = NULL;
     }
 
     /*
@@ -598,26 +613,26 @@ Tk_ZipMain(
 	const char *tcl_pkg = ZIPFS_BOOTDIR;
 #else
 	char *tcl_lib;
-	char *tcl_pkg = (char *) exeName;
+	char *tcl_pkg = Tcl_GetString(mntpt);
 	Tcl_DString dsLib;
 
 	Tcl_DStringInit(&dsLib);
-	Tcl_DStringAppend(&dsLib, exeName, -1);
+	Tcl_DStringAppend(&dsLib, tcl_pkg, -1);
 	Tcl_DStringAppend(&dsLib, "/tcl" TCL_VERSION, -1);
 	tcl_lib = Tcl_DStringValue(&dsLib);
 #endif
 
 	Tcl_SetVar(interp, "tcl_libPath", tcl_lib, TCL_GLOBAL_ONLY);
 	Tcl_SetVar(interp, "tcl_library", tcl_lib, TCL_GLOBAL_ONLY);
-        Tcl_SetVar(interp, "tcl_pkgPath", tcl_pkg, TCL_GLOBAL_ONLY);
+	Tcl_SetVar(interp, "tcl_pkgPath", tcl_pkg, TCL_GLOBAL_ONLY);
 #ifndef ZIPFS_BOOTDIR
 	Tcl_DStringFree(&dsLib);
 #endif
 
 	/*
 	 * We need to set the system encoding (after initializing Tcl),
- 	 * otherwise "encoding system" will return "identity"
- 	 */
+	 * otherwise "encoding system" will return "identity"
+	 */
 
 #ifdef ANDROID
 	Tcl_SetSystemEncoding(NULL, "utf-8");
@@ -627,6 +642,12 @@ Tk_ZipMain(
 	Tcl_DStringFree(&systemEncodingName);
 #endif
     }
+#ifndef ZIPFS_BOOTDIR
+    if (mntpt != NULL) {
+	Tcl_DecrRefCount(mntpt);
+	mntpt = NULL;
+    }
+#endif
 
     /*
      * Invoke the script specified on the command line, if any. Must fetch it

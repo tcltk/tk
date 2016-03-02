@@ -726,8 +726,20 @@ Tk_CanvasObjCmd(
     canvasPtr->hotPrevPtr = NULL;
     canvasPtr->cursor = None;
     canvasPtr->takeFocus = NULL;
+#ifdef PLATFORM_SDL
+    {
+	double dW, dH;
+
+	dW = WidthOfScreen(Tk_Screen(newWin));
+	dW /= WidthMMOfScreen(Tk_Screen(newWin));
+	dH = HeightOfScreen(Tk_Screen(newWin));
+	dH /= HeightMMOfScreen(Tk_Screen(newWin));
+	canvasPtr->pixelsPerMM = (dH > dW) ? dH : dW;
+    }
+#else
     canvasPtr->pixelsPerMM = WidthOfScreen(Tk_Screen(newWin));
     canvasPtr->pixelsPerMM /= WidthMMOfScreen(Tk_Screen(newWin));
+#endif
     canvasPtr->flags = 0;
     canvasPtr->nextId = 1;
     canvasPtr->psInfo = NULL;

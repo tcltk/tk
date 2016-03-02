@@ -1425,7 +1425,7 @@ InitFont(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     unsigned long value;
-    int minHi, maxHi, minLo, maxLo, fixed, width, limit, i, n;
+    int minHi, maxHi, minLo, maxLo, i, n;
     FontAttributes fa;
     TkFontAttributes *faPtr;
     TkFontMetrics *fmPtr;
@@ -1445,23 +1445,6 @@ InitFont(
     minLo = fontStructPtr->min_char_or_byte2;
     maxLo = fontStructPtr->max_char_or_byte2;
 
-    fixed = 1;
-    if (fontStructPtr->per_char != NULL) {
-	width = 0;
-	limit = (maxHi - minHi + 1) * (maxLo - minLo + 1);
-	for (i = 0; i < limit; i++) {
-	    n = fontStructPtr->per_char[i].width;
-	    if (n != 0) {
-		if (width == 0) {
-		    width = n;
-		} else if (width != n) {
-		    fixed = 0;
-		    break;
-		}
-	    }
-	}
-    }
-
     fontPtr->font.fid = fontStructPtr->fid;
 
     faPtr = &fontPtr->font.fa;
@@ -1476,7 +1459,7 @@ InitFont(
     fmPtr->ascent = fontStructPtr->ascent;
     fmPtr->descent = fontStructPtr->descent;
     fmPtr->maxWidth = fontStructPtr->max_bounds.width;
-    fmPtr->fixed = fixed;
+    fmPtr->fixed = SdlTkFontIsFixedWidth(fontStructPtr);
 
     fontPtr->display = display;
     fontPtr->pixelSize = TkFontGetPixels(tkwin, fa.fa.size);

@@ -1448,62 +1448,54 @@ declare 114 win {
 
 # For tkpath
 declare 115 win {
-   int XScreenGetMMWidthHeight(Display *display, Screen *screen,
-	    int *mwidthp, int *widthp, int *mheightp, int *heightp)
-}
-declare 116 win {
-   int XScreenSetMMWidthHeight(Display *display, Screen *screen,
-	    int width, int height)
-}
-declare 117 win {
    void *XGetAgg2D(Display *display, Drawable d)
 }
-declare 118 win {
+declare 116 win {
    void *XCreateAgg2D(Display *display)
 }
-declare 119 win {
+declare 117 win {
    void XDestroyAgg2D(Display *display, void *agg2d)
 }
-declare 120 win {
+declare 118 win {
    int XGetFontFile(const char *family, int size, int isBold, int isItalic,
 	    const char **nameRet, int *filesizeRet)
 }
-declare 121 win {
+declare 119 win {
    void *XGetFTStream(const char *pathname, int size)
 }
 
 # For tktreectrl
-declare 122 win {
+declare 120 win {
    int XOffsetRegion(Region rgn, int dx, int dy)
 }
-declare 123 win {
+declare 121 win {
    int XUnionRegion(Region srca, Region srcb, Region dr_return)
 }
 
 # For 3dcanvas
-declare 124 {
+declare 122 {
    Window XCreateWindow(Display *display, Window parent, int x, int y,
 	    unsigned int width, unsigned int height,
 	    unsigned int border_width, int depth, unsigned int clazz,
 	    Visual *visual, unsigned long value_mask,
 	    XSetWindowAttributes *attributes)
 }
-declare 125 {
+declare 123 {
    int SdlTkGLXAvailable(Display *display)
 }
-declare 126 {
+declare 124 {
    void *SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
 }
-declare 127 {
+declare 125 {
    SdlTkGLXDestroyContext(Display *display, Window w, void *ctx)
 }
-declare 128 {
+declare 126 {
    SdlTkGLXMakeCurrent(Display *display, Window w, void *ctx)
 }
-declare 129 {
+declare 127 {
    SdlTkGLXReleaseCurrent(Display *display, Window w, void *ctx)
 }
-declare 130 {
+declare 128 {
    SdlTkGLXSwapBuffers(Display *display, Window w)
 }
 
