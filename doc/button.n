@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH button n 4.4 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -69,7 +69,7 @@ In this state the \fB\-disabledforeground\fR and
 Specifies a desired width for the button.
 If an image or bitmap is being displayed in the button then the value is in
 screen units (i.e. any of the forms acceptable to \fBTk_GetPixels\fR).
-For a text button (no image or with \fB\-compound none\fR) then the width 
+For a text button (no image or with \fB\-compound none\fR) then the width
 specifies how much space in characters to allocate for the text label.
 If the width is negative then this specifies a minimum width.
 If this option is not specified, the button's desired width is computed
@@ -96,7 +96,7 @@ one of the characters may optionally be underlined using the
 \fB\-underline\fR option.
 It can display itself in either of three different ways, according
 to
-the \fB\-state\fR option; 
+the \fB\-state\fR option;
 it can be made to appear raised, sunken, or flat;
 and it can be made to flash.  When a user invokes the
 button (by pressing mouse button 1 with the cursor over the
