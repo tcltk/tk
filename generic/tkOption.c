@@ -1080,10 +1080,10 @@ ReadOptionFile(
 				 * TK_MAX_PRIO. */
 {
     const char *realName;
-    char *buffer;
+    Tcl_Obj *buffer;
     int result, bufferSize;
     Tcl_Channel chan;
-    Tcl_DString newName, optString;
+    Tcl_DString newName;
 
     /*
      * Prevent file system access in a safe interpreter.
@@ -1108,24 +1108,10 @@ ReadOptionFile(
 	return TCL_ERROR;
     }
 
-    /*
-     * Compute size of file by seeking to the end of the file. This will
-     * overallocate if we are performing CRLF translation.
-     */
-
-    bufferSize = (int) Tcl_Seek(chan, (Tcl_WideInt) 0, SEEK_END);
-    Tcl_Seek(chan, (Tcl_WideInt) 0, SEEK_SET);
-
-    if (bufferSize < 0) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"error seeking to end of file \"%s\": %s",
-		fileName, Tcl_PosixError(interp)));
-	Tcl_Close(NULL, chan);
-	return TCL_ERROR;
-    }
-
-    buffer = ckalloc(bufferSize + 1);
-    bufferSize = Tcl_Read(chan, buffer, bufferSize);
+    buffer = Tcl_NewObj();
+    Tcl_IncrRefCount(buffer);
+    Tcl_SetChannelOption(NULL, chan, "-encoding", "utf-8");
+    bufferSize = Tcl_ReadChars(chan, buffer, -1, 0);
     if (bufferSize < 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading file \"%s\": %s",
@@ -1134,18 +1120,8 @@ ReadOptionFile(
 	return TCL_ERROR;
     }
     Tcl_Close(NULL, chan);
-    buffer[bufferSize] = 0;
-    if ((bufferSize>2) && !memcmp(buffer, "\357\273\277", 3)) {
-	/* File starts with UTF-8 BOM */
-	result = AddFromString(interp, tkwin, buffer+3, priority);
-    } else {
-	Tcl_DStringInit(&optString);
-	Tcl_ExternalToUtfDString(NULL, buffer, bufferSize, &optString);
-	result = AddFromString(interp, tkwin, Tcl_DStringValue(&optString),
-		priority);
-	Tcl_DStringFree(&optString);
-    }
-    ckfree(buffer);
+    result = AddFromString(interp, tkwin, Tcl_GetString(buffer), priority);
+    Tcl_DecrRefCount(buffer);
     return result;
 }
 
