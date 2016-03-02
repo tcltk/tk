@@ -4141,9 +4141,6 @@ $as_echo "$tcl_cv_cc_pipe" >&6; }
 	CFLAGS="$CFLAGS -pipe"
     fi
 fi
-if test -n "$GCC" ; then
-    GCC_LIBS="-lstdc++"
-fi
 
 #------------------------------------------------------------------------
 # Threads support - this auto-enables if Tcl was compiled threaded
@@ -4188,7 +4185,9 @@ cat >>confdefs.h <<\_ACEOF
 #define _THREAD_SAFE 1
 _ACEOF
 
-	{ $as_echo "$as_me:$LINENO: checking for pthread_mutex_init in -lpthread" >&5
+	# Don't test for Windows!!!
+	if test "${TCL_SHLIB_SUFFIX}" != ".dll" ; then
+	    { $as_echo "$as_me:$LINENO: checking for pthread_mutex_init in -lpthread" >&5
 $as_echo_n "checking for pthread_mutex_init in -lpthread... " >&6; }
 if test "${ac_cv_lib_pthread_pthread_mutex_init+set}" = set; then
   $as_echo_n "(cached) " >&6
@@ -4259,13 +4258,13 @@ else
   tcl_ok=no
 fi
 
-	if test "$tcl_ok" = "no"; then
-	    # Check a little harder for __pthread_mutex_init in the same
-	    # library, as some systems hide it there until pthread.h is
-	    # defined.  We could alternatively do an AC_TRY_COMPILE with
-	    # pthread.h, but that will work with libpthread really doesn't
-	    # exist, like AIX 4.2.  [Bug: 4359]
-	    { $as_echo "$as_me:$LINENO: checking for __pthread_mutex_init in -lpthread" >&5
+	    if test "$tcl_ok" = "no"; then
+		# Check a little harder for __pthread_mutex_init in the same
+		# library, as some systems hide it there until pthread.h is
+		# defined.  We could alternatively do an AC_TRY_COMPILE with
+		# pthread.h, but that will work with libpthread really doesn't
+		# exist, like AIX 4.2.  [Bug: 4359]
+		{ $as_echo "$as_me:$LINENO: checking for __pthread_mutex_init in -lpthread" >&5
 $as_echo_n "checking for __pthread_mutex_init in -lpthread... " >&6; }
 if test "${ac_cv_lib_pthread___pthread_mutex_init+set}" = set; then
   $as_echo_n "(cached) " >&6
@@ -4336,9 +4335,13 @@ else
   tcl_ok=no
 fi
 
+	    fi
 	fi
 
-	if test "$tcl_ok" = "yes"; then
+	if test "${TCL_SHLIB_SUFFIX}" = ".dll" ; then
+	    # Windows needs nothing special
+	    true
+	elif test "$tcl_ok" = "yes"; then
 	    # The space is needed
 	    THREADS_LIBS=" -lpthread"
 	else
@@ -4575,8 +4578,9 @@ $as_echo "$as_me: WARNING: Don't know how to find pthread lib on your system - y
 	# Does the pthread-implementation provide
 	# 'pthread_attr_setstacksize' ?
 
-	ac_saved_libs=$LIBS
-	LIBS="$LIBS $THREADS_LIBS"
+	if test "${TCL_SHLIB_SUFFIX}" != ".dll" ; then
+	    ac_saved_libs=$LIBS
+	    LIBS="$LIBS $THREADS_LIBS"
 
 
 for ac_func in pthread_attr_setstacksize pthread_atfork
@@ -4679,7 +4683,8 @@ _ACEOF
 fi
 done
 
-	LIBS=$ac_saved_libs
+	    LIBS=$ac_saved_libs
+	fi
     else
 	TCL_THREADS=0
     fi
@@ -10334,6 +10339,37 @@ else
     LIB_RES=""
     WISH_RES=""
 fi
+
+#------------------------------------------------------------------------
+# See if libstdc++ is required (guesswork)
+#------------------------------------------------------------------------
+
+{ $as_echo "$as_me:$LINENO: checking for c++ library" >&5
+$as_echo_n "checking for c++ library... " >&6; }
+if test "$SHARED_BUILD" = "1"; then
+    # shared build: always
+    if test -n "$GCC" ; then
+	GCC_LIBS="-lstdc++"
+    fi
+elif test -n "$GCC" ; then
+    # static build: guessing
+    tcl_cv_stdcxx=2
+    case "$CXX $CFLAGS $CXXFLAGS" in
+    *-fno-exceptions*)
+	tcl_cv_stdcxx="`expr $tcl_cv_stdcxx - 1`"
+	;;
+    esac
+    case "$CXX $CFLAGS $CXXFLAGS" in
+    *-fno-rtti*)
+	tcl_cv_stdcxx="`expr $tcl_cv_stdcxx - 1`"
+	;;
+    esac
+    if test $tcl_cv_stdcxx -gt 0 ; then
+	GCC_LIBS="-lstdc++"
+    fi
+fi
+{ $as_echo "$as_me:$LINENO: result: $GCC_LIBS" >&5
+$as_echo "$GCC_LIBS" >&6; }
 
 #------------------------------------------------------------------------
 # sdl2tkConfig.sh refers to this by a different name

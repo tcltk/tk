@@ -4088,18 +4088,15 @@ TkFontGetPixels(
     if (size < 0) {
 	return -size;
     }
-
 #ifdef PLATFORM_SDL
-    XScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
-	    &widthM, &widthS, &heightM, &heightS);
+    heightS = HeightOfScreen(Tk_Screen(tkwin));
+    heightM = HeightMMOfScreen(Tk_Screen(tkwin));
     d2 = size * 25.4 / 72.0;
     d2 *= heightS;
     d2 /= heightM;
-#else
+#endif
     widthS = WidthOfScreen(Tk_Screen(tkwin));
     widthM = WidthMMOfScreen(Tk_Screen(tkwin));
-#endif
-
     d = size * 25.4 / 72.0;
     d *= widthS;
     d /= widthM;
@@ -4143,18 +4140,15 @@ TkFontGetPoints(
     if (size >= 0) {
 	return size;
     }
-
 #ifdef PLATFORM_SDL
-    XScreenGetMMWidthHeight(Tk_Display(tkwin), Tk_Screen(tkwin),
-	    &widthM, &widthS, &heightM, &heightS);
+    heightS = HeightOfScreen(Tk_Screen(tkwin));
+    heightM = HeightMMOfScreen(Tk_Screen(tkwin));
     d2 = -size * 72.0 / 25.4;
     d2 *= heightM;
     d2 /= heightS;
-#else
+#endif
     widthS = WidthOfScreen(Tk_Screen(tkwin));
     widthM = WidthMMOfScreen(Tk_Screen(tkwin));
-#endif
-
     d = -size * 72.0 / 25.4;
     d *= widthM;
     d /= widthS;

@@ -84,18 +84,26 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
  * while otherwise NewNativeObj is needed (which provides proper
  * conversion from native encoding to UTF-8).
  */
-#ifdef UNICODE
+#if defined(UNICODE) && (TCL_UTF_MAX <= 4)
 #   define NewNativeObj Tcl_NewUnicodeObj
-#else /* !UNICODE */
-    static Tcl_Obj *NewNativeObj(char *string, int length) {
+#else /* !UNICODE || (TCL_UTF_MAX > 4) */
+    static Tcl_Obj *NewNativeObj(TCHAR *string, int length) {
 	Tcl_Obj *obj;
 	Tcl_DString ds;
-	Tcl_ExternalToUtfDString(NULL, string, length, &ds);
+
+#ifdef UNICODE
+	if (length > 0) {
+	    length *= sizeof (TCHAR);
+	}
+	Tcl_WinTCharToUtf(string, length, &ds);
+#else
+	Tcl_ExternalToUtfDString(NULL, (char *) string, length, &ds);
+#endif
 	obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
 	Tcl_DStringFree(&ds);
 	return obj;
 }
-#endif /* !UNICODE */
+#endif /* !UNICODE || (TCL_UTF_MAX > 4) */
 
 /*
  * Declarations for various library functions and variables (don't want to

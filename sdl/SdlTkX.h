@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-#ifndef USE_TK_STUBS
+#if !defined(USE_TK_STUBS) || !defined(_WIN32)
 
 #define XAllocColor SdlTkXAllocColor
 #define XAllocNamedColor SdlTkXAllocNamedColor
@@ -180,8 +180,6 @@ extern "C" {
 #define XWindowEvent SdlTkXWindowEvent
 #define XmbLookupString SdlTkXMbLookupString
 
-#define XScreenGetMMWidthHeight SdlTkXScreenGetMMWidthHeight
-#define XScreenSetMMWidthHeight SdlTkXScreenSetMMWidthHeight
 #define XGetAgg2D SdlTkXGetAgg2D
 #define XCreateAgg2D SdlTkXCreateAgg2D
 #define XDestroyAgg2D SdlTkXDestroyAgg2D
@@ -418,12 +416,6 @@ int XWindowEvent(Display *display, Window w, long event_mask,
     XEvent *event_return);
 int XmbLookupString(XIC ic, XKeyPressedEvent *event, char *buffer_return,
     int bytes_buffer, KeySym *keysym_return, Status *status_return);
-
-/* for "tk scaling" etc. */
-int XScreenGetMMWidthHeight(Display *display, Screen *screen,
-   int *mwidthp, int *widthp, int *mheightp, int *heightp);
-int XScreenSetMMWidthHeight(Display *display, Screen *screen,
-   int width, int height);
 
 /* for "tkpath" */
 void *XGetAgg2D(Display *displey, Drawable d);

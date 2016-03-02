@@ -482,29 +482,22 @@ namespace agg
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
     //------------------------------------------------------------------------
     font_engine_freetype_base::~font_engine_freetype_base()
     {
         unsigned i;
         for(i = 0; i < m_num_faces; ++i)
         {
-            delete [] m_face_names[i];
+            pod_allocator<char>::deallocate(m_face_names[i], 0);
+            //delete [] m_face_names[i];
             FT_Done_Face(m_faces[i]);
         }
-        delete [] m_face_names;
-        delete [] m_faces;
-        delete [] m_signature;
+        pod_allocator<char*>::deallocate(m_face_names, 0);
+        //delete [] m_face_names;
+        pod_allocator<FT_Face>::deallocate(m_faces, 0);
+        //delete [] m_faces;
+        pod_allocator<char>::deallocate(m_signature, 0);
+        //delete [] m_signature;
         if(m_library_initialized) FT_Done_FreeType(m_library);
     }
 
@@ -519,15 +512,15 @@ namespace agg
         m_name_len(256-16-1),
         m_face_index(0),
         m_char_map(FT_ENCODING_NONE),
-        m_signature(new char [256+256-16]),
+        //m_signature(new char [256+256-16]),
         m_height(0),
         m_width(0),
         m_hinting(true),
         m_flip_y(false),
         m_library_initialized(false),
         m_library(0),
-        m_faces(new FT_Face [max_faces]),
-        m_face_names(new char* [max_faces]),
+        //m_faces(new FT_Face [max_faces]),
+        //m_face_names(new char* [max_faces]),
         m_num_faces(0),
         m_max_faces(max_faces),
         m_cur_face(0),
@@ -550,12 +543,14 @@ namespace agg
         m_scanlines_bin(),
         m_rasterizer()
     {
+        m_signature = pod_allocator<char>::allocate(256+256-16);
+        m_faces = pod_allocator<FT_Face>::allocate(max_faces);
+        m_face_names = pod_allocator<char*>::allocate(max_faces);
         m_curves16.approximation_scale(4.0);
         m_curves32.approximation_scale(4.0);
         m_last_error = FT_Init_FreeType(&m_library);
         if(m_last_error == 0) m_library_initialized = true;
     }
-
 
 
     //------------------------------------------------------------------------
@@ -627,7 +622,8 @@ namespace agg
             {
                 if(m_num_faces >= m_max_faces)
                 {
-                    delete [] m_face_names[0];
+                    pod_allocator<char>::deallocate(m_face_names[0], 0);
+                    //delete [] m_face_names[0];
                     FT_Done_Face(m_faces[0]);
                     memcpy(m_faces, 
                            m_faces + 1, 
@@ -667,7 +663,8 @@ namespace agg
 
                 if(m_last_error == 0)
                 {
-                    m_face_names[m_num_faces] = new char [strlen(font_name) + 1];
+                    m_face_names[m_num_faces] = pod_allocator<char>::allocate(strlen(font_name) + 1);
+                    //m_face_names[m_num_faces] = new char [strlen(font_name) + 1];
                     strcpy(m_face_names[m_num_faces], font_name);
                     m_cur_face = m_faces[m_num_faces];
                     m_name     = m_face_names[m_num_faces];
@@ -834,8 +831,10 @@ namespace agg
             unsigned name_len = strlen(m_name);
             if(name_len > m_name_len)
             {
-                delete [] m_signature;
-                m_signature = new char [name_len + 32 + 256];
+                pod_allocator<char>::deallocate(m_signature, 0);
+                //delete [] m_signature;
+                m_signature = pod_allocator<char>::allocate(name_len + 32 + 256);
+                //m_signature = new char [name_len + 32 + 256];
                 m_name_len = name_len + 32 - 1;
             }
 

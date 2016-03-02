@@ -5,6 +5,9 @@ extern "C" {
 #include "SdlTkInt.h"
 #include "Xregion.h"
 
+#ifdef AGG_CUSTOM_ALLOCATOR
+#include <new>
+#endif
 #include "agg_bezier_arc.h"
 #include "agg_conv_curve.h"
 #include "agg_ellipse.h"
@@ -644,20 +647,20 @@ doDrawLines(Drawable d, GC gc, XPoint *points, int npoints, int mode)
     if ((gc->line_style == LineOnOffDash) && dashes[0]) {
 	agg::conv_dash<VertexSource_XPoints> dash(vertexSrc);
 	agg::conv_stroke<agg::conv_dash<VertexSource_XPoints> > stroke(dash);
-	unsigned dindex = 0;
+	unsigned dindex = 0, dlw;
 
+	dlw = (gc->line_width <= 0) ? 1 : gc->line_width;
 	dash.remove_all_dashes();
-	dash.dash_start(gc->dash_offset);
 	while (dashes[dindex] && dashes[dindex + 1] &&
 	       (dindex < sizeof (gc->dash_array))) {
-	    dash.add_dash(dashes[dindex] * gc->line_width,
-			  dashes[dindex + 1] * gc->line_width);
+	    dash.add_dash(dashes[dindex] * dlw, dashes[dindex + 1] * dlw);
 	    dindex += 2;
 	}
+	dash.dash_start(gc->dash_offset);
 	if (gc->line_width > 1) {
 	    stroke.width((double) gc->line_width - 0.5);
 	} else {
-	    stroke.width((double) gc->line_width);
+	    stroke.width(1);
 	}
 	if (gc->line_width >= 2) {
 	    switch (gc->cap_style) {
@@ -1388,8 +1391,21 @@ SdlTkGfxAllocFontStruct(_Font *_f)
     Tcl_MutexLock(&txt_mutex);
 
     if (!feng) {
+#ifdef AGG_CUSTOM_ALLOCATOR
+	unsigned size;
+	void *p;
+	size = sizeof (t_font_engine);
+	p = ckalloc(size);
+	memset(p, 0, size);
+	feng = new (p) t_font_engine;
+	size = sizeof (t_font_manager);
+	p = ckalloc(size);
+	memset(p, 0, size);
+	fman = new (p) t_font_manager(*feng);
+#else
 	feng = new t_font_engine;
 	fman = new t_font_manager(*feng);
+#endif
     }
     (void) feng->load_font(_f->file, _f->index, agg::glyph_ren_agg_gray8,
 	   (const char *) XGetFTStream(_f->file, _f->file_size));
@@ -2392,7 +2408,11 @@ SdlTkXCreateAgg2D(Display *display)
     if (display == NULL) {
 	return NULL;
     }
+#ifdef AGG_CUSTOM_ALLOCATOR
+    agg2d = agg::obj_allocator<Agg2D>::allocate();
+#else
     agg2d = new Agg2D();
+#endif
     return (void *) agg2d;
 }
 
@@ -2404,7 +2424,11 @@ SdlTkXDestroyAgg2D(Display *display, void *ptr)
     }
     if ((ptr != display->agg2d) || (display->screens == NULL)) {
 	Agg2D *agg2d = (Agg2D *) ptr;
+#ifdef AGG_CUSTOM_ALLOCATOR
+	agg::obj_allocator<Agg2D>::deallocate(agg2d);
+#else
 	delete agg2d;
+#endif
     }
 }
 
@@ -2423,7 +2447,11 @@ SdlTkXGetAgg2D(Display *display, Drawable d)
 	return NULL;
     }
     if (display->agg2d == NULL) {
+#ifdef AGG_CUSTOM_ALLOCATOR
+	agg2d = agg::obj_allocator<Agg2D>::allocate();
+#else
 	agg2d = new Agg2D();
+#endif
 	display->agg2d = (void *) agg2d;
     } else {
 	agg2d = (Agg2D *) display->agg2d;

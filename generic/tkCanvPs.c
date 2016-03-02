@@ -277,8 +277,18 @@ TkCanvPostscriptCmd(
 	}
 	psInfo.scale /= psInfo.height;
     } else {
+#ifdef PLATFORM_SDL
+	double scW, scH;
+
+	scW = (72.0/25.4)*WidthMMOfScreen(Tk_Screen(tkwin));
+	scW /= WidthOfScreen(Tk_Screen(tkwin));
+	scH = (72.0/25.4)*HeightMMOfScreen(Tk_Screen(tkwin));
+	scH /= HeightOfScreen(Tk_Screen(tkwin));
+	psInfo.scale = (scH > scW) ? scW : scH;
+#else
 	psInfo.scale = (72.0/25.4)*WidthMMOfScreen(Tk_Screen(tkwin));
 	psInfo.scale /= WidthOfScreen(Tk_Screen(tkwin));
+#endif
     }
     switch (psInfo.pageAnchor) {
     case TK_ANCHOR_NW:

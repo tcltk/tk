@@ -71,15 +71,11 @@ MODULE_SCOPE const TkStubs tkStubs;
 #endif
 
 #ifndef PLATFORM_SDL
-#   undef  XScreenGetMMWidthHeight
-#   undef  XScreenSetMMWidthHeight
 #   undef  XGetAgg2D
 #   undef  XCreateAgg2D
 #   undef  XDestroyAgg2D
 #   undef  XGetFontFile
 #   undef  XGetFTStream
-#   define XScreenGetMMWidthHeight 0
-#   define XScreenSetMMWidthHeight 0
 #   define XGetAgg2D 0
 #   define XCreateAgg2D 0
 #   define XDestroyAgg2D 0
@@ -749,22 +745,20 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSynchronize, /* 112 */
     XSync, /* 113 */
     XVisualIDFromVisual, /* 114 */
-    XScreenGetMMWidthHeight, /* 115 */
-    XScreenSetMMWidthHeight, /* 116 */
-    XGetAgg2D, /* 117 */
-    XCreateAgg2D, /* 118 */
-    XDestroyAgg2D, /* 119 */
-    XGetFontFile, /* 120 */
-    XGetFTStream, /* 121 */
-    XOffsetRegion, /* 122 */
-    XUnionRegion, /* 123 */
-    XCreateWindow, /* 124 */
-    SdlTkGLXAvailable, /* 125 */
-    SdlTkGLXCreateContext, /* 126 */
-    SdlTkGLXDestroyContext, /* 127 */
-    SdlTkGLXMakeCurrent, /* 128 */
-    SdlTkGLXReleaseCurrent, /* 129 */
-    SdlTkGLXSwapBuffers, /* 130 */
+    XGetAgg2D, /* 115 */
+    XCreateAgg2D, /* 116 */
+    XDestroyAgg2D, /* 117 */
+    XGetFontFile, /* 118 */
+    XGetFTStream, /* 119 */
+    XOffsetRegion, /* 120 */
+    XUnionRegion, /* 121 */
+    XCreateWindow, /* 122 */
+    SdlTkGLXAvailable, /* 123 */
+    SdlTkGLXCreateContext, /* 124 */
+    SdlTkGLXDestroyContext, /* 125 */
+    SdlTkGLXMakeCurrent, /* 126 */
+    SdlTkGLXReleaseCurrent, /* 127 */
+    SdlTkGLXSwapBuffers, /* 128 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */

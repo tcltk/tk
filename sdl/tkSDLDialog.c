@@ -9,7 +9,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tkUnixInt.h"
+#include "tkSDLInt.h"
 
 /*
  * The wrapper code for Unix is actually set up in library/tk.tcl these days;

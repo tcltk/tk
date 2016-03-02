@@ -67,7 +67,7 @@ class Agg2D
     class GradientF
     {
     public:
-        virtual int calculate(int x, int y, int d)
+        int calculate(int x, int y, int d)
         {
             return x;
         }
@@ -76,7 +76,7 @@ class Agg2D
     class GradientF_Repeat : public GradientF
     {
     public:
-        virtual int calculate(int x, int y, int d)
+        int calculate(int x, int y, int d)
         {
             int ret = x % d;
             if (ret < 0) ret += d;
@@ -87,7 +87,7 @@ class Agg2D
     class GradientF_Reflect : public GradientF
     {
     public:
-        virtual int calculate(int x, int y, int d)
+        int calculate(int x, int y, int d)
         {
             int d2 = d << 1;
             int ret = x % d2;

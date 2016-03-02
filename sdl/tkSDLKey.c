@@ -78,23 +78,11 @@ TkpGetString(
 {
     int len;
     Tcl_DString buf;
-    TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
-
-    /*
-     * If we have the value cached already, use it now. [Bug 1373712]
-     */
-
-    if (kePtr->charValuePtr != NULL) {
-	Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
-	memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
-		(unsigned) kePtr->charValueLen+1);
-	return Tcl_DStringValue(dsPtr);
-    }
+    KeySym keysym;
 
     /*
      * Fall back to convert a keyboard event to a UTF-8 string using
-     * XLookupString. This is used when input methods are turned off and
-     * for KeyRelease events.
+     * XLookupString.
      *
      * Note: XLookupString() normally returns a single ISO Latin 1 or
      * ASCII control character.
@@ -103,7 +91,7 @@ TkpGetString(
     Tcl_DStringInit(&buf);
     Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
     len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
-	    TCL_DSTRING_STATIC_SIZE, &kePtr->keysym, 0);
+	    TCL_DSTRING_STATIC_SIZE, &keysym, 0);
     Tcl_DStringValue(&buf)[len] = '\0';
 
     if (len == 1) {
@@ -120,15 +108,6 @@ TkpGetString(
 	strncpy(Tcl_DStringValue(dsPtr), Tcl_DStringValue(&buf), len);
     }
 
-    /*
-     * Cache the string in the event so that if/when we return to this
-     * function, we will be able to produce it without asking X. This stops us
-     * from having to reenter the XIM engine. [Bug 1373712]
-     */
-
-    kePtr->charValuePtr = ckalloc(len + 1);
-    kePtr->charValueLen = len;
-    memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
     return Tcl_DStringValue(dsPtr);
 }
 

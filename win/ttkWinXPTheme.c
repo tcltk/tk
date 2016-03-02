@@ -827,16 +827,21 @@ static void TextElementSize(
     ElementData *elementData = clientData;
     RECT rc = {0, 0};
     HRESULT hr = S_OK;
+    const char *src;
+    int len;
+    Tcl_DString ds;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
 
+    src = Tcl_GetStringFromObj(element->textObj, &len);
+    Tcl_WinUtfToTChar(src, len, &ds);
     hr = elementData->procs->GetThemeTextExtent(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
 	    Ttk_StateTableLookup(elementData->info->statemap, 0),
-	    Tcl_GetUnicode(element->textObj),
+	    (WCHAR *) Tcl_DStringValue(&ds),
 	    -1,
 	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
 	    NULL,
@@ -849,6 +854,7 @@ static void TextElementSize(
     if (*widthPtr < 80) *widthPtr = 80;
     if (*heightPtr < 20) *heightPtr = 20;
 
+    Tcl_DStringFree(&ds);
     FreeElementData(elementData);
 }
 
@@ -860,20 +866,27 @@ static void TextElementDraw(
     ElementData *elementData = clientData;
     RECT rc = BoxToRect(b);
     HRESULT hr = S_OK;
+    const char *src;
+    int len;
+    Tcl_DString ds;
 
     if (!InitElementData(elementData, tkwin, d))
 	return;
 
+    src = Tcl_GetStringFromObj(element->textObj, &len);
+    Tcl_WinUtfToTChar(src, len, &ds);
     hr = elementData->procs->DrawThemeText(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
 	    Ttk_StateTableLookup(elementData->info->statemap, state),
-	    Tcl_GetUnicode(element->textObj),
+	    (WCHAR *) Tcl_DStringValue(&ds),
 	    -1,
 	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
 	    (state & TTK_STATE_DISABLED) ? DTT_GRAYED : 0,
 	    &rc);
+
+    Tcl_DStringFree(&ds);
     FreeElementData(elementData);
 }
 
@@ -1100,7 +1113,7 @@ Ttk_CreateVsapiElement(
     XPThemeData *themeData = clientData;
     ElementInfo *elementPtr = NULL;
     ClientData elementData;
-    Tcl_UniChar *className;
+    WCHAR *className;
     int partId = 0;
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
@@ -1109,6 +1122,7 @@ Ttk_CreateVsapiElement(
     char *name;
     LPWSTR wname;
     Ttk_ElementSpec *elementSpec = &GenericElementSpec;
+    Tcl_DString classBuf;
 
     static const char *optionStrings[] =
 	{ "-padding","-width","-height","-margins", "-syssize",
@@ -1126,7 +1140,8 @@ Ttk_CreateVsapiElement(
     if (Tcl_GetIntFromObj(interp, objv[1], &partId) != TCL_OK) {
 	return TCL_ERROR;
     }
-    className = Tcl_GetUnicodeFromObj(objv[0], &length);
+    name = Tcl_GetStringFromObj(objv[0], &length);
+    className = (WCHAR *) Tcl_WinUtfToTChar(name, length, &classBuf);
 
     /* flags or padding */
     if (objc > 3) {
@@ -1138,54 +1153,54 @@ Ttk_CreateVsapiElement(
 			"Missing value for \"%s\".",
 			Tcl_GetString(objv[i])));
 		Tcl_SetErrorCode(interp, "TTK", "VSAPI", "MISSING", NULL);
-		return TCL_ERROR;
+		goto retErr;
 	    }
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
 		    sizeof(char *), "option", 0, &option) != TCL_OK)
-		return TCL_ERROR;
+		goto retErr;
 	    switch (option) {
 	    case O_PADDING:
 		if (Ttk_GetBorderFromObj(interp, objv[i+1], &pad) != TCL_OK) {
-		    return TCL_ERROR;
+		    goto retErr;
 		}
 		break;
 	    case O_MARGINS:
 		if (Ttk_GetBorderFromObj(interp, objv[i+1], &pad) != TCL_OK) {
-		    return TCL_ERROR;
+		    goto retErr;
 		}
 		flags |= PAD_MARGINS;
 		break;
 	    case O_WIDTH:
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
-		    return TCL_ERROR;
+		    goto retErr;
 		}
 		pad.left = pad.right = tmp;
 		flags |= IGNORE_THEMESIZE;
 		break;
 	    case O_HEIGHT:
 		if (Tcl_GetIntFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
-		    return TCL_ERROR;
+		    goto retErr;
 		}
 		pad.top = pad.bottom = tmp;
 		flags |= IGNORE_THEMESIZE;
 		break;
 	    case O_SYSSIZE:
 		if (GetSysFlagFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
-		    return TCL_ERROR;
+		    goto retErr;
 		}
 		elementSpec = &GenericSizedElementSpec;
 		flags |= (tmp & 0xFFFF);
 		break;
 	    case O_HALFHEIGHT:
 		if (Tcl_GetBooleanFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
-		    return TCL_ERROR;
+		    goto retErr;
 		}
 		if (tmp)
 		    flags |= HALF_HEIGHT;
 		break;
 	    case O_HALFWIDTH:
 		if (Tcl_GetBooleanFromObj(interp, objv[i+1], &tmp) != TCL_OK) {
-		    return TCL_ERROR;
+		    goto retErr;
 		}
 		if (tmp)
 		    flags |= HALF_WIDTH;
@@ -1199,7 +1214,7 @@ Ttk_CreateVsapiElement(
 	Tcl_Obj **specs;
 	int n,j,count, status = TCL_OK;
 	if (Tcl_ListObjGetElements(interp, objv[2], &count, &specs) != TCL_OK)
-	    return TCL_ERROR;
+	    goto retErr;
 	/* we over-allocate to ensure there is a terminating entry */
 	stateTable = ckalloc(sizeof(Ttk_StateTable) * (count + 1));
 	memset(stateTable, 0, sizeof(Ttk_StateTable) * (count + 1));
@@ -1215,6 +1230,7 @@ Ttk_CreateVsapiElement(
 	}
 	if (status != TCL_OK) {
 	    ckfree(stateTable);
+	    Tcl_DStringFree(&classBuf);
 	    return status;
 	}
     } else {
@@ -1235,7 +1251,7 @@ Ttk_CreateVsapiElement(
     elementPtr->elementName = name;
 
     /* set the class name to an allocated copy */
-    wname = ckalloc(sizeof(WCHAR) * (length + 1));
+    wname = ckalloc(Tcl_DStringLength(&classBuf) + sizeof(WCHAR));
     wcscpy(wname, className);
     elementPtr->className = wname;
 
@@ -1245,7 +1261,12 @@ Ttk_CreateVsapiElement(
 
     Ttk_RegisterCleanup(interp, elementData, DestroyElementData);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, -1));
+    Tcl_DStringFree(&classBuf);
     return TCL_OK;
+
+retErr:
+    Tcl_DStringFree(&classBuf);
+    return TCL_ERROR;
 }
 
 /*----------------------------------------------------------------------

@@ -116,8 +116,8 @@ HitTestFrame(_Window *_w, int x, int y, int *button)
 
     for (i = 1; i <= DEC_NUM_BUTTONS; i++) {
 	GetButtonBounds(_w, i, &buttonX, &buttonY, &buttonW, &buttonH);
-	if (x >= buttonX && x < buttonX + buttonW &&
-	    y >= buttonY && y < buttonY + buttonH) {
+	if ((x >= buttonX) && (x < buttonX + buttonW) &&
+	    (y >= buttonY) && (y < buttonY + buttonH)) {
 	    *button = i;
 	    return DEC_HIT_BUTTON;
 	}
@@ -171,8 +171,8 @@ HitTestFrame(_Window *_w, int x, int y, int *button)
 static void
 EnterButton(_Window *_w, int button)
 {
-    if (_DFInfo.track_action == DEC_TRACK_BUTTON &&
-	(_DFInfo.track_toplevel != _w || _DFInfo.track_button != button)) {
+    if ((_DFInfo.track_action == DEC_TRACK_BUTTON) &&
+	((_DFInfo.track_toplevel != _w) || (_DFInfo.track_button != button))) {
 	return;
     }
     _w->dec->button = button;
@@ -185,8 +185,8 @@ EnterButton(_Window *_w, int button)
 static void
 LeaveButton(_Window *_w, int button)
 {
-    if (_DFInfo.track_action == DEC_TRACK_BUTTON &&
-	(_DFInfo.track_toplevel != _w || _DFInfo.track_button != button)) {
+    if ((_DFInfo.track_action == DEC_TRACK_BUTTON) &&
+	((_DFInfo.track_toplevel != _w) || (_DFInfo.track_button != button))) {
 	return;
     }
     _w->dec->button = DEC_BUTTON_NONE;
@@ -229,8 +229,8 @@ SdlTkDecFrameEvent(_Window *_w, SDL_Event *sdl_event, int x, int y)
 
     switch (sdl_event->type) {
     case SDL_MOUSEBUTTONDOWN:
-	if (sdl_event->button.which != SDL_TOUCH_MOUSEID &&
-	    sdl_event->button.button != SDL_BUTTON_LEFT) {
+	if ((sdl_event->button.which != SDL_TOUCH_MOUSEID) &&
+	    (sdl_event->button.button != SDL_BUTTON_LEFT)) {
 	    break;
 	}
 	if (_w->dec == NULL) {
@@ -245,6 +245,10 @@ SdlTkDecFrameEvent(_Window *_w, SDL_Event *sdl_event, int x, int y)
 	    _DFInfo.track_toplevel = _w;
 	    _DFInfo.track_action = DEC_TRACK_BUTTON;
 	    _DFInfo.track_button = button;
+	    if (_DFInfo.motion_toplevel == NULL) {
+		_DFInfo.motion_toplevel = _w;
+		_DFInfo.motion_button = button;
+	    }
 	    EnterButton(_w, button); /* redraw pressed */
 	    break;
 	case DEC_HIT_TITLE:
@@ -264,16 +268,16 @@ SdlTkDecFrameEvent(_Window *_w, SDL_Event *sdl_event, int x, int y)
 	return 1;
 
     case SDL_MOUSEBUTTONUP:
-	if (sdl_event->button.which != SDL_TOUCH_MOUSEID &&
-	    sdl_event->button.button != SDL_BUTTON_LEFT) {
+	if ((sdl_event->button.which != SDL_TOUCH_MOUSEID) &&
+	    (sdl_event->button.button != SDL_BUTTON_LEFT)) {
 	    break;
 	}
 	if (_DFInfo.track_action != DEC_TRACK_NONE) {
 	    switch (_DFInfo.track_action) {
 	    case DEC_TRACK_BUTTON:
-		if (_DFInfo.motion_toplevel == _w &&
-		    _DFInfo.track_toplevel == _w &&
-		    _DFInfo.track_button == _DFInfo.motion_button) {
+		if ((_DFInfo.motion_toplevel == _w) &&
+		    (_DFInfo.track_toplevel == _w) &&
+		    (_DFInfo.track_button == _DFInfo.motion_button)) {
 		    if (_DFInfo.track_button == DEC_BUTTON_CLOSE) {
 			TkWindow *tkwin = _w->child->tkwin;
 
@@ -387,7 +391,7 @@ drag:
 		    dy = 0;
 		}
 	    }
-	    if (dx == 0 && dy == 0) {
+	    if ((dx == 0) && (dy == 0)) {
 		return 1;
 	    }
 	    switch (_DFInfo.track_edge) {
@@ -458,8 +462,8 @@ drag:
 	    hit = DEC_HIT_NONE;
 	} else {
 	    hit = HitTestFrame(_w, x - _w->atts.x, y - _w->atts.y, &button);
-	    if (button != _DFInfo.motion_button ||
-		_w != _DFInfo.motion_toplevel) {
+	    if ((button != _DFInfo.motion_button) ||
+		(_w != _DFInfo.motion_toplevel)) {
 		if (_DFInfo.motion_button) {
 		    LeaveButton(_DFInfo.motion_toplevel,
 				_DFInfo.motion_button);
@@ -533,11 +537,11 @@ drag:
 		}
 	    }
 	    if (tkwin == NULL) {
-		if (_ww->child != NULL) {
+		if ((_ww != NULL) && (_ww->child != NULL)) {
 		    tkwin = _ww->child->tkwin;
 		}
 	    }
-	    if (tkwin != NULL && !(tkwin->flags & TK_ALREADY_DEAD)) {
+	    if ((tkwin != NULL) && !(tkwin->flags & TK_ALREADY_DEAD)) {
 		Send_WM_DELETE_WINDOW(tkwin);
 		evsent++;
 	    }
@@ -566,7 +570,7 @@ SdlTkDecDrawFrame(_Window *_w)
     if (_w->dec == NULL) {
         Tcl_Panic("SdlTkRedrawFrame: not a decorative frame");
     }
-    if (_w->child == NULL || _w->child->tkwin == NULL) {
+    if ((_w->child == NULL) || (_w->child->tkwin == NULL)) {
 	return;
     }
 
@@ -684,8 +688,7 @@ SdlTkDecDrawFrame(_Window *_w)
 	    fakeGC.foreground = SdlTkX.screen->black_pixel;
 	    fakeGC.clip_mask = None;
 	    fakeGC.stipple = None;
-	    fakeGC.fill_style = FillSolid;	
-
+	    fakeGC.fill_style = FillSolid;
 	    if (_w->dec->active) {
 		fakeGC.foreground = lightGC->foreground;
 	    }

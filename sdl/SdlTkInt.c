@@ -19,6 +19,16 @@
 
 SdlTkXInfo SdlTkX = { 0, 0, NULL };
 
+#ifndef ANDROID
+static int translate_zoom = 1;
+#endif
+
+#define TRANSLATE_RMB    1
+#define TRANSLATE_PTZ    2
+#define TRANSLATE_ZOOM   4
+#define TRANSLATE_FINGER 8
+#define TRANSLATE_FBTNS  16
+
 /*
  *----------------------------------------------------------------------
  *
@@ -199,7 +209,7 @@ ConfigGLWindows(Window w)
 	if (_w->gl_flags & 1) {
 	    _w->gl_flags &= ~1;
 	    if (_w->atts.map_state != IsUnmapped) {
-		SdlTkGenerateConfigureNotify((Window ) _w);
+		SdlTkGenerateConfigureNotify(NULL, (Window ) _w);
 	    }
 	}
 	_w = _w->next;
@@ -546,12 +556,6 @@ TranslateFinger(SDL_Event *in, SDL_Event *out)
  *----------------------------------------------------------------------
  */
 
-#define TRANSLATE_RMB    1
-#define TRANSLATE_PTZ    2
-#define TRANSLATE_ZOOM   4
-#define TRANSLATE_FINGER 8
-#define TRANSLATE_FBTNS  16
-
 static struct TranslateInfo {
     int enabled;
     unsigned long now, when;
@@ -847,12 +851,13 @@ ProcessTextInput(XEvent *event, int sdl_mod, const char *text, int len)
 	text += n + n2;
 
 	/* Queue the KeyPress */
-	EVLOG("   KEYPRESS:  CODE=0x%X  UC=0x%X", event->xkey.keycode, ch);
+	EVLOG("   KEYPRESS:  CODE=0x%02X  UC=0x%X", event->xkey.keycode, ch);
 	event->type = KeyPress;
 	SdlTkQueueEvent(event);
 	/* Queue the KeyRelease except for the last */
 	event->type = KeyRelease;
 	if (i < ulen - 1) {
+	    EVLOG(" KEYRELEASE:  CODE=0x%02X", event->xkey.keycode);
 	    SdlTkQueueEvent(event);
 	}
     }
@@ -1219,11 +1224,21 @@ skipTranslation:
 
     switch (sdl_event->type) {
 
+    /* Drop target support, maybe later */
+    case SDL_DROPBEGIN:
+    case SDL_DROPCOMPLETE:
+	return 0;
+    case SDL_DROPFILE:
+    case SDL_DROPTEXT:
+	if (sdl_event->drop.file != NULL) {
+	    SDL_free(sdl_event->drop.file);
+	}
+	return 0;
+
     case SDL_TEXTINPUT:
     case SDL_TEXTEDITING:
     case SDL_KEYDOWN:
     case SDL_KEYUP: {
-	TkKeyEvent *kePtr = (TkKeyEvent *) event;
 	Window fwin;
 
 #ifdef _WIN32
@@ -1234,10 +1249,6 @@ skipTranslation:
 	    SDL_PumpEvents();
 	}
 #endif
-
-	kePtr->charValueLen = 0;
-	kePtr->charValuePtr = NULL;
-
 	state = SDL_GetMouseState(&x, &y);
 	TranslatePointer(0, &x, &y);
 
@@ -1275,15 +1286,15 @@ skipTranslation:
 	} else if (sdl_event->type == SDL_TEXTEDITING) {
 	    EVLOG("TEXTEDITING:  '%s'", sdl_event->edit.text);
 	} else if (sdl_event->type == SDL_KEYDOWN) {
-	    EVLOG("    KEYDOWN:  CODE=0x%X  MOD=0x%X",
+	    EVLOG("    KEYDOWN:  CODE=0x%02X  MOD=0x%X",
 		  sdl_event->key.keysym.scancode,
 		  sdl_event->key.keysym.mod);
 	} else if (sdl_event->type == SDL_KEYUP) {
-	    EVLOG("      KEYUP:  CODE=0x%X  MOD=0x%X",
+	    EVLOG("      KEYUP:  CODE=0x%02X  MOD=0x%X",
 		  sdl_event->key.keysym.scancode,
 		  sdl_event->key.keysym.mod);
 	} else if (sdl_event->type == SDL_TEXTEDITING) {
-	    EVLOG("      KEYUP:  CODE=0x%X  MOD=0x%X",
+	    EVLOG("      KEYUP:  CODE=0x%02X  MOD=0x%X",
 		  sdl_event->key.keysym.scancode,
 		  sdl_event->key.keysym.mod);
 	}
@@ -1340,7 +1351,8 @@ skipTranslation:
 	} else if (sdl_event->type == SDL_TEXTEDITING) {
 	    /* TODO: what can we do here? */
 	    return 0;
-	} else if ((SDL_PeepEvents(&txt_sdl_event, 1, SDL_PEEKEVENT,
+	} else if ((sdl_event->type == SDL_KEYDOWN) &&
+		   (SDL_PeepEvents(&txt_sdl_event, 1, SDL_PEEKEVENT,
 				   SDL_TEXTINPUT, SDL_TEXTINPUT) == 1) &&
 		   (SDL_PeepEvents(&txt_sdl_event, 1, SDL_GETEVENT,
 				   SDL_TEXTINPUT, SDL_TEXTINPUT) == 1)) {
@@ -1443,8 +1455,9 @@ doNormalKeyEvent:
 		MkTransChars(&event->xkey);
 	    }
 	    if (event->xkey.nbytes > 0) {
-		EVLOG("   KEYPRESS:             TRANS=0x%X",
-		      event->xkey.trans_chars[0]);
+		EVLOG(" %s:             TRANS=0x%X",
+		      (event->type == KeyRelease) ? "KEYRELEASE" :
+		      "  KEYPRESS", event->xkey.trans_chars[0]);
 	    }
 	}
 	break;
@@ -1658,19 +1671,25 @@ doNormalKeyEvent:
 #ifndef ANDROID
 	SDL_Keymod mod;
 
-	mod = SDL_GetModState();
-	if (mod & KMOD_LCTRL) {
-	    float dir = 0;
+	if (translate_zoom) {
+	    mod = SDL_GetModState();
+	    if (mod & KMOD_LCTRL) {
+		float dir = 0, factor = 0.96;
 
-	    if (sdl_event->wheel.y > 0) {
-		dir = 0.96;
-	    } else if (sdl_event->wheel.y < 0) {
-		dir = 1.0 / 0.96;
+		if (SdlTkX.arg_nogl && (SdlTkX.root_w == 0)) {
+		    /* integral scaling */
+		    factor = 0.5;
+		}
+		if (sdl_event->wheel.y > 0) {
+		    dir = factor;
+		} else if (sdl_event->wheel.y < 0) {
+		    dir = 1.0 / factor;
+		}
+		if (dir) {
+		    SdlTkZoomInt(SdlTkX.mouse_x, SdlTkX.mouse_y, dir);
+		}
+		return 0;
 	    }
-	    if (dir) {
-		SdlTkZoomInt(SdlTkX.mouse_x, SdlTkX.mouse_y, dir);
-	    }
-	    return 0;
 	}
 #endif
 	if (SdlTkX.mouse_window != NULL) {
@@ -2196,23 +2215,9 @@ doNormalKeyEvent:
 		}
 		dpy = SdlTkX.display->next_display;
 		while (dpy != NULL) {
-		    dpy->screens[0].width = SdlTkX.screen->width;
-		    dpy->screens[0].height = SdlTkX.screen->height;
-		    if (dpy->screens[0].moverride) {
-			if (((width > oldw) && (height < oldh)) ||
-			    ((width < oldw) && (height > oldh))) {
-			    int swp = dpy->screens[0].mwidth;
-
-			    dpy->screens[0].mwidth = dpy->screens[0].mheight;
-			    dpy->screens[0].mheight = swp;
-			}
-		    } else {
-			dpy->screens[0].mwidth = SdlTkX.screen->mwidth;
-			dpy->screens[0].mheight = SdlTkX.screen->mheight;
-		    }
+		    SdlTkGenerateConfigureNotify(dpy, dpy->screens[0].root);
 		    dpy = dpy->next_display;
 		}
-
 		_w = (_Window *) SdlTkX.screen->root;
 		_w->atts.width = _w->parentWidth = width;
 		_w->atts.height = _w->parentHeight = height;
@@ -2814,7 +2819,7 @@ SdlTkGetVisibleRegion(_Window *_w)
  */
 
 void
-SdlTkGenerateConfigureNotify(Window w)
+SdlTkGenerateConfigureNotify(Display *display, Window w)
 {
     _Window *_w = (_Window *) w;
     XEvent event;
@@ -2823,16 +2828,26 @@ SdlTkGenerateConfigureNotify(Window w)
     event.type = ConfigureNotify;
     event.xconfigure.serial = _w->display->request;
     event.xconfigure.send_event = False;
-    event.xconfigure.display = _w->display;
+    event.xconfigure.display = (display == NULL) ? _w->display : display;
     event.xconfigure.event = w;
     event.xconfigure.window = w;
-    event.xconfigure.border_width = _w->atts.border_width;
-    event.xconfigure.override_redirect = _w->atts.override_redirect;
-    event.xconfigure.x = _w->atts.x;
-    event.xconfigure.y = _w->atts.y;
-    event.xconfigure.width = _w->atts.width;
-    event.xconfigure.height = _w->atts.height;
     event.xconfigure.above = None;
+    if (w == _w->display->screens[0].root) {
+	/* special case: send mwidth/mheight as x/y */
+	event.xconfigure.border_width = 0;
+	event.xconfigure.override_redirect = 0;
+	event.xconfigure.x = SdlTkX.screen->mwidth;
+	event.xconfigure.y = SdlTkX.screen->mheight;
+	event.xconfigure.width = SdlTkX.screen->width;
+	event.xconfigure.height = SdlTkX.screen->height;
+    } else {
+	event.xconfigure.border_width = _w->atts.border_width;
+	event.xconfigure.override_redirect = _w->atts.override_redirect;
+	event.xconfigure.x = _w->atts.x;
+	event.xconfigure.y = _w->atts.y;
+	event.xconfigure.width = _w->atts.width;
+	event.xconfigure.height = _w->atts.height;
+    }
     SdlTkQueueEvent(&event);
 }
 
@@ -3919,6 +3934,32 @@ MaxrootObjCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 static int
+OpacityObjCmd(ClientData clientData, Tcl_Interp *interp,
+	      int objc, Tcl_Obj *const objv[])
+{
+    if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?value?");
+	return TCL_ERROR;
+    }
+    if (objc > 1) {
+	double d;
+
+	if (Tcl_GetDoubleFromObj(interp, objv[1], &d) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	SdlTkSetWindowOpacity(d);
+    } else {
+	float f = 1.0;
+
+	SdlTkLock(NULL);
+	SDL_GetWindowOpacity(SdlTkX.sdlscreen, &f);
+	SdlTkUnlock(NULL);
+	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(f));
+    }
+    return TCL_OK;
+}
+
+static int
 PaintvisrgnObjCmd(ClientData clientData, Tcl_Interp *interp,
 		  int objc, Tcl_Obj *const objv[])
 {
@@ -4169,7 +4210,7 @@ TouchtranslateObjCmd(ClientData clientData, Tcl_Interp *interp,
 #ifdef ANDROID
     int flag = TranslateInfo.enabled;
 #else
-    int flag = 0;
+    int flag = translate_zoom ? TRANSLATE_ZOOM : 0;
 #endif
 
     if (objc > 2) {
@@ -4194,7 +4235,8 @@ TouchtranslateObjCmd(ClientData clientData, Tcl_Interp *interp,
 	}
 	SdlTkUnlock(NULL);
 #else
-	flag = 0;
+	translate_zoom = (flag & TRANSLATE_ZOOM) ? 1 : 0;
+	flag = translate_zoom ? TRANSLATE_ZOOM : 0;
 #endif
     }
     Tcl_SetIntObj(Tcl_GetObjResult(interp), flag);
@@ -4299,6 +4341,7 @@ static const TkEnsemble sdltkCmdMap[] = {
     { "joystick", JoystickObjCmd, NULL },
     { "log", LogObjCmd, NULL },
     { "maxroot", MaxrootObjCmd, NULL },
+    { "opacity", OpacityObjCmd, NULL },
     { "maximize", MaximizeObjCmd, NULL },
     { "paintvisrgn", PaintvisrgnObjCmd, NULL },
     { "powerinfo", PowerinfoObjCmd, NULL },

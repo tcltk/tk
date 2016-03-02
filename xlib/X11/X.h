@@ -41,7 +41,12 @@ SOFTWARE.
 /* Resources */
 
 #ifdef _WIN64
-typedef __int64 XID;
+#ifdef _MSC_VER
+typedef unsigned __int64 XID;
+#else
+/* assuming gcc */
+typedef unsigned long long XID;
+#endif
 #else
 typedef unsigned long XID;
 #endif
