@@ -18,7 +18,7 @@
 
 #include <tcl.h>
 #if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION < 6)
-#	error Tk 8.6 must be compiled with tcl.h from Tcl 8.6 or better
+#	error Tk 8.7 must be compiled with tcl.h from Tcl 8.6 or better
 #endif
 
 #ifndef CONST84
@@ -73,12 +73,12 @@ extern "C" {
  */
 
 #define TK_MAJOR_VERSION	8
-#define TK_MINOR_VERSION	6
-#define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL	5
+#define TK_MINOR_VERSION	7
+#define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
+#define TK_RELEASE_SERIAL	0
 
-#define TK_VERSION		"8.6"
-#define TK_PATCH_LEVEL		"8.6.5"
+#define TK_VERSION		"8.7"
+#define TK_PATCH_LEVEL		"8.7a0"
 
 /*
  * A special definition used to allow this header file to be included from
