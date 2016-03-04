@@ -74,7 +74,7 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
     HWND       hwnd = NULL;
     TCHAR      title[32] = TEXT("TtkMonitorWindow");
     TCHAR      name[32] = TEXT("TtkMonitorClass");
-    
+
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc   = (WNDPROC)WndProc;
@@ -99,7 +99,7 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
     return hwnd;
 }
 
-static void 
+static void
 DestroyThemeMonitorWindow(void *clientData)
 {
     HWND hwnd = (HWND)clientData;

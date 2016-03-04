@@ -198,7 +198,7 @@ WidgetInstanceObjCmdDeleted(ClientData clientData)
  *	 Final cleanup for widget; called via Tcl_EventuallyFree().
  */
 static void
-FreeWidget(char *memPtr)
+FreeWidget(void *memPtr)
 {
     ckfree(memPtr);
 }
@@ -231,7 +231,7 @@ DestroyWidget(WidgetCore *corePtr)
 	/* NB: this can reenter the interpreter via a command traces */
 	Tcl_DeleteCommandFromToken(corePtr->interp, cmd);
     }
-    Tcl_EventuallyFree(corePtr, FreeWidget);
+    Tcl_EventuallyFree(corePtr, (Tcl_FreeProc *) FreeWidget);
 }
 
 /*
@@ -766,8 +766,8 @@ int TtkWidgetIdentifyCommand(
     }
     if (objc == 5) {
 	/* $w identify element $x $y */
-	if (Tcl_GetIndexFromObj(interp,objv[2],whatTable,"option",0,&what)
-		!= TCL_OK)
+	if (Tcl_GetIndexFromObjStruct(interp, objv[2], whatTable,
+		sizeof(char *), "option", 0, &what) != TCL_OK)
 	{
 	    return TCL_ERROR;
 	}

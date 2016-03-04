@@ -925,7 +925,7 @@ test text-3.2 {TextWidgetCmd procedure} -setup {
     .t gorp 1.0 z 1.2
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}
+} -returnCodes {error} -result {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
 
 test text-4.1 {TextWidgetCmd procedure, "bbox" option} -setup {
     text .t
@@ -1147,7 +1147,7 @@ Line 7"
     .t co 1.0 z 1.2
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}
+} -returnCodes {error} -result {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
 # "configure" option is already covered above
 
 test text-7.1 {TextWidgetCmd procedure, "debug" option} -setup {
@@ -1163,7 +1163,7 @@ test text-7.2 {TextWidgetCmd procedure, "debug" option} -setup {
     .t de 0 1
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}
+} -returnCodes {error} -result {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
 test text-7.3 {TextWidgetCmd procedure, "debug" option} -setup {
     text .t
 } -body {
@@ -2632,7 +2632,70 @@ test text-10.39 {TextWidgetCmd procedure, "count" option} -setup {
     lappend res [.t count -displaylines 1.19 3.24] [.t count -displaylines 1.0 end]
 } -cleanup {
     destroy .t
-} -result {2 6 2 5}
+} -result {2 6 1 5}
+test text-9.2.45 {TextWidgetCmd procedure, "count" option} -setup {
+    text .t
+    pack .t
+    update
+    set res {}
+} -body {
+    for {set i 1} {$i < 5} {incr i} {
+      .t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr 64+$i]]\n"
+    }
+    .t tag configure hidden -elide true
+    .t tag add hidden 2.15 3.10
+    .t configure -wrap none
+    set res [.t count -displaylines 2.0 3.0]
+} -cleanup {
+    destroy .t
+} -result {0}
+test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
+    toplevel .mytop
+    pack [text .mytop.t -font TkFixedFont -bd 0 -padx 0 -wrap char]
+    set spec [font measure TkFixedFont "Line 1+++Line 1---Li"]  ; # 20 chars
+    append spec x300+0+0
+    wm geometry .mytop $spec
+    .mytop.t delete 1.0 end
+    update
+    set res {}
+} -body {
+    for {set i 1} {$i < 5} {incr i} {
+      #                    0          1          2          3          4
+      #                    012345 678901234 567890123 456789012 34567890123456789
+      .mytop.t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr 64+$i]]\n"
+    }
+    .mytop.t tag configure hidden -elide true
+    .mytop.t tag add hidden 2.30 3.10
+    lappend res [.mytop.t count -displaylines 2.0 3.0]
+    lappend res [.mytop.t count -displaylines 2.0 3.50]
+} -cleanup {
+    destroy .mytop
+} -result {1 3}
+test text-9.2.47 {TextWidgetCmd procedure, "count" option} -setup {
+    text .t
+    pack .t
+    update
+    set res {}
+} -body {
+    for {set i 1} {$i < 25} {incr i} {
+        .t insert end "Line $i\n"
+    }
+    .t tag configure hidden -elide true
+    .t tag add hidden 5.7 11.0
+    update
+    # next line to be fully sure that asynchronous line heights calculation is
+    # up-to-date otherwise this test may fail (depending on the computer
+    # performance), especially when the . toplevel has small height
+    .t sync
+    set y1 [lindex [.t yview] 1]
+    .t count -displaylines 5.0 11.0
+    set y2 [lindex [.t yview] 1]
+    .t count -displaylines 5.0 12.0
+    set y3 [lindex [.t yview] 1]
+    list [expr {$y1 == $y2}] [expr {$y1 == $y3}]
+} -cleanup {
+    destroy .t
+} -result {1 1}
 
 
 test text-11.1 {counting with tag priority eliding} -setup {
@@ -2819,6 +2882,176 @@ test text-11.9 {counting with tag priority eliding} -setup {
     destroy .t
 } -result {1 0 0 1 0 2.0 4.0 4.0 4.0 3.0 3.0 3.0 2.0 1.0 1.0}
 
+test text-11a.1 {TextWidgetCmd procedure, "pendingsync" option} -setup {
+    destroy .yt
+} -body {
+    text .yt
+    list [catch {.yt pendingsync mytext} msg] $msg
+} -cleanup {
+    destroy .yt
+} -result {1 {wrong # args: should be ".yt pendingsync"}}
+test text-11a.2 {TextWidgetCmd procedure, "pendingsync" option} -setup {
+    destroy .top.yt .top
+} -body {
+    toplevel .top
+    pack [text .top.yt]
+    set content {}
+    for {set i 1} {$i < 300} {incr i} {
+        append content [string repeat "$i " 15] \n
+    }
+    .top.yt insert 1.0 $content
+    # wait for end of line metrics calculation to get correct $fraction1
+    # as a reference
+    while {[.top.yt pendingsync]} {update}
+    .top.yt yview moveto 1
+    set fraction1 [lindex [.top.yt yview] 0]
+    set res [expr {$fraction1 > 0}]
+    .top.yt delete 1.0 end
+    .top.yt insert 1.0 $content
+    # ensure the test is relevant
+    lappend res [.top.yt pendingsync]
+    # asynchronously wait for completion of line metrics calculation
+    while {[.top.yt pendingsync]} {update}
+    .top.yt yview moveto $fraction1
+    set fraction2 [lindex [.top.yt yview] 0]
+    lappend res [expr {$fraction1 == $fraction2}]
+} -cleanup {
+    destroy .top.yt .top
+} -result {1 1 1}
+
+test text-11a.11 {TextWidgetCmd procedure, "sync" option} -setup {
+    destroy .yt
+} -body {
+    text .yt
+    list [catch {.yt sync mytext} msg] $msg
+} -cleanup {
+    destroy .yt
+} -result {1 {wrong # args: should be ".yt sync ?-command command?"}}
+test text-11a.12 {TextWidgetCmd procedure, "sync" option} -setup {
+    destroy .top.yt .top
+} -body {
+    toplevel .top
+    pack [text .top.yt]
+    set content {}
+    for {set i 1} {$i < 30} {incr i} {
+        append content [string repeat "$i " 15] \n
+    }
+    .top.yt insert 1.0 $content
+    # wait for end of line metrics calculation to get correct $fraction1
+    # as a reference
+    .top.yt sync
+    .top.yt yview moveto 1
+    set fraction1 [lindex [.top.yt yview] 0]
+    set res [expr {$fraction1 > 0}]
+    # first case: do not wait for completion of line metrics calculation
+    .top.yt delete 1.0 end
+    .top.yt insert 1.0 $content
+    .top.yt yview moveto $fraction1
+    set fraction2 [lindex [.top.yt yview] 0]
+    lappend res [expr {$fraction1 == $fraction2}]
+    # second case: wait for completion of line metrics calculation
+    .top.yt delete 1.0 end
+    .top.yt insert 1.0 $content
+    .top.yt sync
+    .top.yt yview moveto $fraction1
+    set fraction2 [lindex [.top.yt yview] 0]
+    lappend res [expr {$fraction1 == $fraction2}]
+} -cleanup {
+    destroy .top.yt .top
+} -result {1 0 1}
+
+test text-11a.21 {TextWidgetCmd procedure, "sync" option with -command} -setup {
+    destroy .yt
+} -body {
+    text .yt
+    list [catch {.yt sync -comx foo} msg] $msg
+} -cleanup {
+    destroy .yt
+} -result {1 {wrong option "-comx": should be "-command"}}
+test text-11a.22 {TextWidgetCmd procedure, "sync" option with -command} -setup {
+    destroy .top.yt .top
+} -body {
+    set res {}
+    set ::x 0
+    toplevel .top
+    pack [text .top.yt]
+    set content {}
+    for {set i 1} {$i < 30} {incr i} {
+        append content [string repeat "$i " 15] \n
+    }
+    .top.yt insert 1.0 $content
+    # first case: line metrics calculation still running when launching 'sync -command'
+    lappend res [.top.yt pendingsync]
+    .top.yt sync -command [list set ::x 1]
+    lappend res $::x
+    # now finish line metrics calculations
+    while {[.top.yt pendingsync]} {update}
+    lappend res [.top.yt pendingsync] $::x
+    # second case: line metrics calculation completed when launching 'sync -command'
+    .top.yt sync -command [list set ::x 2]
+    lappend res $::x
+    vwait ::x
+    lappend res $::x
+} -cleanup {
+    destroy .top.yt .top
+} -result {1 0 0 1 1 2}
+
+test text-11a.31 {"<<WidgetViewSync>>" event} -setup {
+    destroy .top.yt .top
+} -body {
+    toplevel .top
+    pack [text .top.yt]
+    set content {}
+    for {set i 1} {$i < 300} {incr i} {
+        append content [string repeat "$i " 15] \n
+    }
+    .top.yt insert 1.0 $content
+    update
+    bind .top.yt <<WidgetViewSync>> { if {%d} {set yud(%W) 1} }
+    # wait for end of line metrics calculation to get correct $fraction1
+    # as a reference
+    if {[.top.yt pendingsync]} {vwait yud(.top.yt)}
+    .top.yt yview moveto 1
+    set fraction1 [lindex [.top.yt yview] 0]
+    set res [expr {$fraction1 > 0}]
+    .top.yt delete 1.0 end
+    .top.yt insert 1.0 $content
+    # synchronously wait for completion of line metrics calculation
+    # and ensure the test is relevant
+    set waited 0
+    if {[.top.yt pendingsync]} {set waited 1 ; vwait yud(.top.yt)}
+    lappend res $waited
+    .top.yt yview moveto $fraction1
+    set fraction2 [lindex [.top.yt yview] 0]
+    lappend res [expr {$fraction1 == $fraction2}]
+} -cleanup {
+    destroy .top.yt .top
+} -result {1 1 1}
+
+test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
+    destroy .top.yt .top
+} -body {
+    set res {}
+    toplevel .top
+    pack [text .top.yt]
+    set content {}
+    for {set i 1} {$i < 300} {incr i} {
+        append content [string repeat "$i " 50] \n
+    }
+    bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
+    .top.yt insert 1.0 $content
+    vwait res  ; # event dealt with by the event loop, with %d==0 i.e. we're out of sync
+    # ensure the test is relevant
+    lappend res "Pending:[.top.yt pendingsync]"
+    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs 
+    # - there is no more any pending sync after running 'sync'
+    .top.yt sync
+    vwait res  ; # event dealt with by the event loop, with %d==1 i.e. we're in sync again
+    lappend res "Pending:[.top.yt pendingsync]"
+    set res
+} -cleanup {
+    destroy .top.yt .top
+} -result {Sync:0 Pending:1 Sync:1 Pending:0}
 
 test text-12.1 {TextWidgetCmd procedure, "index" option} -setup {
     text .t
@@ -2840,7 +3073,7 @@ test text-12.3 {TextWidgetCmd procedure, "index" option} -setup {
     .t in a b
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, replace, scan, search, see, tag, window, xview, or yview}
+} -returnCodes {error} -result {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
 test text-12.4 {TextWidgetCmd procedure, "index" option} -setup {
     text .t
 } -body {
@@ -3440,9 +3673,10 @@ Line 4"
     list [.t tag ranges sel] [.t get 1.0 end]
 } -cleanup {
     destroy .t
-} -result {{1.0 3.5} {Line 1
+} -result {{1.0 4.0} {Line 1
 abcde
 12345
+
 }}
 test text-19.9 {DeleteChars procedure} -body {
     text .t
@@ -5498,6 +5732,27 @@ test text-22.217 {TextSearchCmd, elide up to match} -setup {
 } -cleanup {
     destroy .t
 } -result {{} {} 1.0 2.1 2.0 3.1 2.0 3.0}
+test text-22.217.1 {elide up to match, with UTF-8 chars before the match} -setup {
+    pack [text .t]
+    set res {}
+} -body {
+    .t tag configure e -elide 0
+    .t insert end A {} xyz e bb\n
+    .t insert end \u00c4 {} xyz e bb
+    set res {}
+    lappend res [.t search bb 1.0 "1.0 lineend"]
+    lappend res [.t search bb 2.0 "2.0 lineend"]
+    lappend res [.t search -regexp bb 1.0 "1.0 lineend"]
+    lappend res [.t search -regexp bb 2.0 "2.0 lineend"]
+    .t tag configure e -elide 1
+    lappend res [.t search bb 1.0 "1.0 lineend"]
+    lappend res [.t search bb 2.0 "2.0 lineend"]
+    lappend res [.t search -regexp bb 1.0 "1.0 lineend"]
+    lappend res [.t search -regexp -elide bb 2.0 "2.0 lineend"]
+    lappend res [.t search -regexp bb 2.0 "2.0 lineend"]
+} -cleanup {
+    destroy .t
+} -result {1.4 2.4 1.4 2.4 1.4 2.4 1.4 2.4 2.4}
 test text-22.218 {TextSearchCmd, strict limits} -body {
     pack [text .t]
     .t insert 1.0 "Hello world!\nThis is a test\n"
@@ -6113,6 +6368,95 @@ test text-27.18 {patch 1469210 - inserting after undo} -setup {
 } -cleanup {
     destroy .t
 } -result 1
+test text-25.19 {patch 1669632 (i) - undo after <Control-1>} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1
+    .t insert end foo\nbar
+    .t edit reset
+    .t insert 2.2 WORLD
+    event generate .t <Control-1> -x 1 -y 1
+    .t insert insert HELLO
+    .t edit undo
+    .t get 2.2 2.7
+} -cleanup {
+    destroy .t
+} -result WORLD
+test text-25.20 {patch 1669632 (iv) - undo after <<SelectNone>>} -setup {
+    destroy .top .top.t
+} -body {
+    toplevel .top
+    pack [text .top.t -undo 1]
+    .top.t insert end "This is an example text"
+    .top.t edit reset
+    .top.t mark set insert 1.5
+    .top.t insert 1.5 HELLO
+    .top.t tag add sel 1.10 1.12
+    update
+    focus -force .top.t
+    event generate .top.t <<SelectNone>>
+    .top.t insert insert " WORLD "
+    .top.t edit undo
+    .top.t get 1.5 1.10
+} -cleanup {
+    destroy .top.t .top
+} -result HELLO
+test text-25.21 {patch 1669632 (vii) - <<Undo>> shall not remove separators} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1
+    .t insert end "This is an example text"
+    .t edit reset
+    .t insert 1.5 "WORLD "
+    event generate .t <Control-1> -x 1 -y 1
+    .t insert insert HELLO
+    event generate .t <<Undo>>
+    .t insert insert E
+    event generate .t <<Undo>>
+    .t get 1.0 "1.0 lineend"
+} -cleanup {
+    destroy .t
+} -result "This WORLD is an example text"
+test text-25.22 {patch 1669632 (v) - <<Clear>> is atomic} -setup {
+    destroy .t
+} -body {
+    toplevel .top
+    pack [text .top.t -undo 1]
+    .top.t insert end "This is an example text"
+    .top.t edit reset
+    .top.t mark set insert 1.5
+    .top.t insert 1.5 "A"
+    update
+    focus -force .top.t
+    event generate .top.t <Delete>
+    event generate .top.t <<SelectNextChar>>
+    event generate .top.t <<Clear>>
+    event generate .top.t <Delete>
+    event generate .top.t <<Undo>>
+    .top.t get 1.0 "1.0 lineend"
+} -cleanup {
+    destroy .top.t .top
+} -result "This A an example text"
+ test text-25.23 {patch 1669632 (v) - <<Cut>> is atomic} -setup {
+    destroy .t
+} -body {
+    toplevel .top
+    pack [text .top.t -undo 1]
+    .top.t insert end "This is an example text"
+    .top.t edit reset
+    .top.t mark set insert 1.5
+    .top.t insert 1.5 "A"
+    update
+    focus -force .top.t
+    event generate .top.t <Delete>
+    event generate .top.t <<SelectNextChar>>
+    event generate .top.t <<Cut>>
+    event generate .top.t <Delete>
+    event generate .top.t <<Undo>>
+    .top.t get 1.0 "1.0 lineend"
+} -cleanup {
+    destroy .top.t .top
+} -result "This A an example text"
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
     pack [text .t -wrap none]
@@ -6536,7 +6880,7 @@ test text-33.2 {TextWidgetCmd procedure, "peer" option} -setup {
 test text-33.3 {TextWidgetCmd procedure, "peer" option} -setup {
     text .t
 } -body {
-    .t p names
+    .t pee names
 } -cleanup {
     destroy .t
 } -returnCodes {ok} -result {}

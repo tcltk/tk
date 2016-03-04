@@ -13,7 +13,7 @@ extern const char *TtkInitializeStubs(
 	interp, TTK_VERSION, TTK_STUBS_EPOCH, TTK_STUBS_REVISION)
 #else
 
-#define Ttk_InitStubs(interp) Tcl_PkgRequire(interp, "Ttk", TTK_VERSION, 0)
+#define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "Ttk", TTK_VERSION, 0, NULL)
 
 #endif
 
@@ -22,6 +22,10 @@ extern const char *TtkInitializeStubs(
 
 #define TTK_STUBS_EPOCH 0
 #define TTK_STUBS_REVISION 31
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Exported function declarations:
@@ -133,7 +137,7 @@ typedef struct TtkStubs {
     int magic;
     int epoch;
     int revision;
-    const struct TtkStubHooks *hooks;
+    void *hooks;
 
     Ttk_Theme (*ttk_GetTheme) (Tcl_Interp *interp, const char *name); /* 0 */
     Ttk_Theme (*ttk_GetDefaultTheme) (Tcl_Interp *interp); /* 1 */
@@ -178,10 +182,8 @@ typedef struct TtkStubs {
     int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *orient); /* 40 */
 } TtkStubs;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 extern const TtkStubs *ttkStubsPtr;
+
 #ifdef __cplusplus
 }
 #endif

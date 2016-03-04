@@ -146,8 +146,8 @@ static int		SetStyleFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 
 /*
  * The following structure defines the implementation of the "style" Tcl
- * object, used for drawing. The internalRep.otherValuePtr field of each style
- * object points to the Style structure for the stylefont, or NULL.
+ * object, used for drawing. The internalRep.twoPtrValue.ptr1 field of each
+ * style object points to the Style structure for the stylefont, or NULL.
  */
 
 static const Tcl_ObjType styleObjType = {
@@ -1410,7 +1410,7 @@ Tk_AllocStyleFromObj(
     if (objPtr->typePtr != &styleObjType) {
 	SetStyleFromAny(interp, objPtr);
     }
-    stylePtr = objPtr->internalRep.otherValuePtr;
+    stylePtr = objPtr->internalRep.twoPtrValue.ptr1;
 
     return (Tk_Style) stylePtr;
 }
@@ -1442,7 +1442,7 @@ Tk_GetStyleFromObj(
 	SetStyleFromAny(NULL, objPtr);
     }
 
-    return objPtr->internalRep.otherValuePtr;
+    return objPtr->internalRep.twoPtrValue.ptr1;
 }
 
 /*
@@ -1497,7 +1497,7 @@ SetStyleFromAny(
     }
 
     objPtr->typePtr = &styleObjType;
-    objPtr->internalRep.otherValuePtr = Tk_GetStyle(interp, name);
+    objPtr->internalRep.twoPtrValue.ptr1 = Tk_GetStyle(interp, name);
 
     return TCL_OK;
 }
@@ -1520,7 +1520,7 @@ static void
 FreeStyleObjProc(
     Tcl_Obj *objPtr)		/* The object we are releasing. */
 {
-    objPtr->internalRep.otherValuePtr = NULL;
+    objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     objPtr->typePtr = NULL;
 }
 
@@ -1541,8 +1541,8 @@ DupStyleObjProc(
     Tcl_Obj *dupObjPtr)		/* The object we are copying to. */
 {
     dupObjPtr->typePtr = srcObjPtr->typePtr;
-    dupObjPtr->internalRep.otherValuePtr =
-	    srcObjPtr->internalRep.otherValuePtr;
+    dupObjPtr->internalRep.twoPtrValue.ptr1 =
+	    srcObjPtr->internalRep.twoPtrValue.ptr1;
 }
 
 /*

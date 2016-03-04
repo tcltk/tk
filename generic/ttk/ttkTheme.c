@@ -508,8 +508,9 @@ static void ThemeChangedProc(ClientData clientData)
     static char ThemeChangedScript[] = "ttk::ThemeChanged";
     StylePackageData *pkgPtr = clientData;
 
-    if (Tcl_GlobalEval(pkgPtr->interp, ThemeChangedScript) != TCL_OK) {
-	Tcl_BackgroundError(pkgPtr->interp);
+    int code = Tcl_EvalEx(pkgPtr->interp, ThemeChangedScript, -1, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(pkgPtr->interp, code);
     }
     pkgPtr->themeChangePending = 0;
 }
@@ -1393,8 +1394,8 @@ static int StyleThemeCreateCmd(
 
     for (i=4; i < objc; i +=2) {
 	int option;
-	if (Tcl_GetIndexFromObj(
-	    interp, objv[i], optStrings, "option", 0, &option) != TCL_OK)
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optStrings,
+	    sizeof(char *), "option", 0, &option) != TCL_OK)
 	{
 	    return TCL_ERROR;
 	}
@@ -1673,7 +1674,7 @@ StyleObjCmd(
     return Ttk_InvokeEnsemble(StyleEnsemble, 1, clientData,interp,objc,objv);
 }
 
-MODULE_SCOPE 
+MODULE_SCOPE
 int Ttk_InvokeEnsemble(	/* Run an ensemble command */
     const Ttk_Ensemble *ensemble, int cmdIndex,
     void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])

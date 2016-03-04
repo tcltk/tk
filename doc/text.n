@@ -5,12 +5,12 @@
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 '\" 
-.so man.macros
 .TH text n 8.5 Tk "Tk Built-In Commands"
+.so man.macros
 .BS
 '\" Note: do not modify the .SH NAME line immediately below!
 .SH NAME
-text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate text widgets
+text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate 'text' hypertext editing widgets
 .SH SYNOPSIS
 .nf
 \fBtext\fR \fIpathName \fR?\fIoptions\fR?
@@ -634,15 +634,23 @@ embedded window annotation causes a window to be displayed at a particular
 point in the text. There may be any number of embedded windows in a text
 widget, and any widget may be used as an embedded window (subject to the usual
 rules for geometry management, which require the text window to be the parent
-of the embedded window or a descendant of its parent). The embedded window's
-position on the screen will be updated as the text is modified or scrolled,
-and it will be mapped and unmapped as it moves into and out of the visible
-area of the text widget. Each embedded window occupies one unit's worth of
-index space in the text widget, and it may be referred to either by the name
-of its embedded window or by its position in the widget's index space. If the
-range of text containing the embedded window is deleted then the window is
-destroyed. Similarly if the text widget as a whole is deleted, then the window
-is destroyed.
+of the embedded window or a descendant of its parent).
+.PP
+The embedded window's position on the screen will be updated as the text is
+modified or scrolled, and it will be mapped and unmapped as it moves into and
+out of the visible area of the text widget. Each embedded window occupies one
+unit's worth of index space in the text widget, and it may be referred to
+either by the name of its embedded window or by its position in the widget's
+index space. If the range of text containing the embedded window is deleted
+then the window is destroyed. Similarly if the text widget as a whole is
+deleted, then the window is destroyed.
+.PP
+Eliding an embedded window immediately after scheduling it for creation via
+\fIpathName \fBwindow create \fIindex \fB-create\fR will prevent it from being
+effectively created. Uneliding an elided embedded window scheduled for creation
+via \fIpathName \fBwindow create \fIindex \fB-create\fR will automatically
+trigger the associated creation script. After destroying an elided embedded
+window, the latter won't get automatically recreated.
 .PP
 When an embedded window is added to a text widget with the \fIpathName
 \fBwindow create\fR widget command, several configuration options may be
@@ -706,13 +714,22 @@ The final form of annotation in text widgets is an embedded image. Each
 embedded image annotation causes an image to be displayed at a particular
 point in the text. There may be any number of embedded images in a text
 widget, and a particular image may be embedded in multiple places in the same
-text widget. The embedded image's position on the screen will be updated as
-the text is modified or scrolled. Each embedded image occupies one unit's
-worth of index space in the text widget, and it may be referred to either by
-its position in the widget's index space, or the name it is assigned when the
-image is inserted into the text widget with \fIpathName \fBimage create\fR. If
-the range of text containing the embedded image is deleted then that copy of
-the image is removed from the screen.
+text widget.
+.PP
+The embedded image's position on the screen will be updated as the text is
+modified or scrolled. Each embedded image occupies one unit's worth of index
+space in the text widget, and it may be referred to either by its position in
+the widget's index space, or the name it is assigned when the image is inserted
+into the text widget with \fIpathName \fBimage create\fR. If the range of text
+containing the embedded image is deleted then that copy of the image is removed
+from the screen.
+.PP
+Eliding an embedded image immediately after scheduling it for creation via
+\fIpathName \fBimage create \fIindex \fB-create\fR will prevent it from being
+effectively created. Uneliding an elided embedded image scheduled for creation
+via \fIpathName \fBimage create \fIindex \fB-create\fR will automatically
+trigger the associated creation script. After destroying an elided embedded
+image, the latter won't get automatically recreated.
 .PP
 When an embedded image is added to a text widget with the \fIpathName \fBimage
 create\fR widget command, a name unique to this instance of the image is
@@ -900,6 +917,83 @@ affected.
 .PP
 See below for the \fIpathName \fBpeer\fR widget command that controls the
 creation of peer widgets.
+.SH "ASYNCHRONOUS UPDATE OF LINE HEIGHTS"
+.PP
+In order to maintain a responsive user-experience, the text widget calculates
+lines metrics (line heights in pixels) asynchronously. Because of this, some
+commands of the text widget may return wrong results if the asynchronous
+calculations are not finished at the time of calling. This applies to
+\fIpathName \fBcount -ypixels\fR and \fIpathName \fByview\fR.
+.PP
+Again for performance reasons, it would not be appropriate to let these
+commands always wait for the end of the update calculation each time they are
+called. In most use cases of these commands a more or less inaccurate result
+does not really matter compared to execution speed.
+.PP
+In case accurate result is needed (and if the text widget is managed by a
+geometry manager), one can resort to \fIpathName \fBsync\fR and \fIpathName
+\fBpendingsync\fR to control the synchronization of the view of text widgets.
+.PP
+The \fB<<WidgetViewSync>>\fR virtual event fires when the line heights of the
+text widget becomes obsolete (due to some editing command or configuration
+change), and again when the internal data of the text widget are back in sync
+with the widget view. The detail field (%d substitution) is either true (when
+the widget is in sync) or false (when it is not).
+.PP
+\fIpathName \fBsync\fR, \fIpathName \fBpendingsync\fR and
+\fB<<WidgetViewSync>>\fR apply to each text widget independently of its peers.
+.PP
+Examples of use:
+.CS
+## Example 1:
+# immediately complete line metrics at any cost (GUI unresponsive)
+$w sync
+$w yview moveto $fraction
+
+## Example 2:
+# synchronously wait for up-to-date line metrics (GUI responsive)
+# before executing the scheduled command, but don't block execution flow
+$w sync -command [list $w yview moveto $fraction]
+
+## Example 3:
+# init
+set yud($w) 0
+proc updateaction w {
+\&set ::yud($w) 1
+\&# any other update action here...
+}
+# runtime, synchronously wait for up-to-date line metrics (GUI responsive)
+$w sync -command [list updateaction $w]
+vwait yud($w)
+$w yview moveto $fraction
+
+## Example 4:
+# init
+set todo($w) {}
+proc updateaction w {
+\&foreach cmd $::todo($w) {uplevel #0 $cmd}
+\&set todo($w) {}
+}
+# runtime
+lappend todo($w) [list $w yview moveto $fraction]
+$w sync -command [list updateaction $w]
+
+## Example 5:
+# init
+set todo($w) {}
+bind $w <<WidgetViewSync>> {
+\&if {%d} {
+\&\&foreach cmd $todo(%W) {eval $cmd}
+\&\&set todo(%W) {}
+\&}
+}
+# runtime
+if {![$w pendingsync]} {
+\&$w yview moveto $fraction
+} else {
+\&lappend todo($w) [list $w yview moveto $fraction]
+}
+.CE
 .SH "WIDGET COMMAND"
 .PP
 The \fBtext\fR command creates a new Tcl command whose name is the same as the
@@ -959,11 +1053,14 @@ each counting option given. Valid counting options are \fB\-chars\fR,
 \fB\-displaychars\fR, \fB\-displayindices\fR, \fB\-displaylines\fR,
 \fB\-indices\fR, \fB\-lines\fR, \fB\-xpixels\fR and \fB\-ypixels\fR. The
 default value, if no option is specified, is \fB\-indices\fR. There is an
-additional possible option \fB\-update\fR which is a modifier. If given, then
-all subsequent options ensure that any possible out of date information is
-recalculated. This currently only has any effect for the \fB\-ypixels\fR count
-(which, if \fB\-update\fR is not given, will use the text widget's current
-cached value for each line). The count options are interpreted as follows:
+additional possible option \fB\-update\fR which is a modifier. If given (and
+if the text widget is managed by a geometry manager), then all subsequent
+options ensure that any possible out of date information is recalculated.
+This currently only has any effect for the \fB\-ypixels\fR count (which, if
+\fB\-update\fR is not given, will use the text widget's current cached value
+for each line). This \fB\-update\fR option is obsoleted by \fIpathName
+\fBsync\fR, \fIpathName \fBpendingsync\fR and \fB<<WidgetViewSync>>\fR.  The
+count options are interpreted as follows:
 .RS
 .IP \fB\-chars\fR
 count all characters, whether elided or not. Do not count embedded windows or
@@ -1071,8 +1168,8 @@ including \fIindex2\fR, including the text and information about marks, tags,
 and embedded windows. If \fIindex2\fR is not specified, then it defaults to
 one character past \fIindex1\fR. The information is returned in the following
 format:
-.LP
 .RS
+.LP
 \fIkey1 value1 index1 key2 value2 index2\fR ...
 .LP
 The possible \fIkey\fR values are \fBtext\fR, \fBmark\fR, \fBtagon\fR,
@@ -1326,13 +1423,16 @@ Returns a list of peers of this widget (this does not include the widget
 itself). The order within this list is undefined.
 .RE
 .TP
-\fIpathName \fBreplace \fIindex1 index2 chars\fR ?\fItagList chars tagList ...\fR?
-.
-Replaces the range of characters between \fIindex1\fR and \fIindex2\fR with
-the given characters and tags. See the section on \fIpathName \fBinsert\fR for
-an explanation of the handling of the \fItagList...\fR arguments, and the
-section on \fIpathName \fBdelete\fR for an explanation of the handling of the
-indices. If \fIindex2\fR corresponds to an index earlier in the text than
+\fIpathName \fBpendingsync\fR
+Returns 1 if the line heights calculations are not up-to-date, 0 otherwise.
+.TP
+\fIpathName \fBreplace\fR \fIindex1 index2 chars\fR ?\fItagList chars tagList ...\fR?
+Replaces the range of characters between \fIindex1\fR and \fIindex2\fR
+with the given characters and tags.  See the section on \fIpathName
+\fBinsert\fR for an explanation of the handling of the \fItagList...\fR
+arguments, and the section on \fIpathName
+\fBdelete\fR for an explanation of the handling of the indices.  If
+\fIindex2\fR corresponds to an index earlier in the text than
 \fIindex1\fR, an error will be generated.
 .RS
 .PP
@@ -1504,6 +1604,23 @@ nothing. If \fIindex\fR is a short distance out of view, the command adjusts
 the view just enough to make \fIindex\fR visible at the edge of the window.
 If \fIindex\fR is far out of view, then the command centers \fIindex\fR in the
 window.
+.TP
+\fIpathName \fBsync\fR ?\fB-command \fIcommand\fR?
+Controls the synchronization of the view of the text widget.
+.RS
+.TP
+\fIpathName \fBsync\fR
+Immediately brings the line metrics up-to-date by forcing computation of any
+outdated line heights. The command returns immediately if there is no such
+outdated line heights, otherwise it returns only at the end of the computation.
+The command returns an empty string.
+.TP
+\fIpathName \fBsync -command \fIcommand\fR
+Schedules \fIcommand\fR to be executed (by the event loop) exactly once as soon
+as all line heights are up-to-date. If there are no pending line metrics
+calculations, the scheduling is immediate. The command returns the empty
+string. \fBbgerror\fR is called on \fIcommand\fR failure.
+.RE
 .TP
 \fIpathName \fBtag \fIoption \fR?\fIarg arg ...\fR?
 .
@@ -1974,9 +2091,8 @@ the clipboard.
 Control-t reverses the order of the two characters to the right of the
 insertion cursor.
 .IP [32]
-Control-z (and Control-underscore on UNIX when \fBtk_strictMotif\fR is true)
-undoes the last edit action if the \fB\-undo\fR option is true. Does nothing
-otherwise.
+Control-z undoes the last edit action if the \fB\-undo\fR option is true.
+Does nothing otherwise.
 .IP [33]
 Control-Z (or Control-y on Windows) reapplies the last undone edit action if
 the \fB\-undo\fR option is true. Does nothing otherwise.

@@ -217,10 +217,10 @@ CreateProc(
 
     if (scrollPtr->info.vertical) {
 	style = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS
-		| SBS_VERT | SBS_RIGHTALIGN;
+		| SBS_VERT;
     } else {
 	style = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS
-		| SBS_HORZ | SBS_BOTTOMALIGN;
+		| SBS_HORZ;
     }
 
     scrollPtr->hwnd = CreateWindow(TEXT("SCROLLBAR"), NULL, style,
@@ -552,7 +552,7 @@ ScrollbarProc(
 	}
 
 	interp = scrollPtr->info.interp;
-	code = Tcl_GlobalEval(interp, cmdString.string);
+	code = Tcl_EvalEx(interp, cmdString.string, -1, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK && code != TCL_CONTINUE && code != TCL_BREAK) {
 	    Tcl_AddErrorInfo(interp, "\n    (scrollbar command)");
 	    Tcl_BackgroundException(interp, code);

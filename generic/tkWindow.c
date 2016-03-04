@@ -14,7 +14,7 @@
 
 #include "tkInt.h"
 
-#ifdef __WIN32__
+#ifdef _WIN32
 #include "tkWinInt.h"
 #elif !defined(MAC_OSX_TK)
 #include "tkUnixInt.h"
@@ -97,9 +97,8 @@ static const XSetWindowAttributes defAtts= {
 
 #define ISSAFE 1
 #define PASSMAINWINDOW 2
-#define NOOBJPROC 4
-#define WINMACONLY 8
-#define USEINITPROC 16
+#define WINMACONLY 4
+#define USEINITPROC 8
 
 typedef int (TkInitProc)(Tcl_Interp *interp, ClientData clientData);
 typedef struct {
@@ -149,13 +148,13 @@ static const TkCmd commands[] = {
     {"label",		Tk_LabelObjCmd,		ISSAFE},
     {"labelframe",	Tk_LabelframeObjCmd,	ISSAFE},
     {"listbox",		Tk_ListboxObjCmd,	ISSAFE},
+    {"menu",		Tk_MenuObjCmd,	PASSMAINWINDOW},
     {"menubutton",	Tk_MenubuttonObjCmd,	ISSAFE},
     {"message",		Tk_MessageObjCmd,	ISSAFE},
     {"panedwindow",	Tk_PanedWindowObjCmd,	ISSAFE},
     {"radiobutton",	Tk_RadiobuttonObjCmd,	ISSAFE},
     {"scale",		Tk_ScaleObjCmd,		ISSAFE},
-    {"scrollbar",	(Tcl_ObjCmdProc *) Tk_ScrollbarCmd,
-					NOOBJPROC|PASSMAINWINDOW|ISSAFE},
+    {"scrollbar",	Tk_ScrollbarObjCmd, PASSMAINWINDOW|ISSAFE},
     {"spinbox",		Tk_SpinboxObjCmd,	ISSAFE},
     {"text",		Tk_TextObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"toplevel",	Tk_ToplevelObjCmd,	0},
@@ -177,8 +176,7 @@ static const TkCmd commands[] = {
     {"::tk::panedwindow",Tk_PanedWindowObjCmd,	ISSAFE},
     {"::tk::radiobutton",Tk_RadiobuttonObjCmd,	ISSAFE},
     {"::tk::scale",	Tk_ScaleObjCmd,		ISSAFE},
-    {"::tk::scrollbar",	(Tcl_ObjCmdProc *) Tk_ScrollbarCmd,
-					NOOBJPROC|PASSMAINWINDOW|ISSAFE},
+    {"::tk::scrollbar",	Tk_ScrollbarObjCmd, PASSMAINWINDOW|ISSAFE},
     {"::tk::spinbox",	Tk_SpinboxObjCmd,	ISSAFE},
     {"::tk::text",	Tk_TextObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"::tk::toplevel",	Tk_ToplevelObjCmd,	0},
@@ -188,7 +186,7 @@ static const TkCmd commands[] = {
      * these commands differently (via the script library).
      */
 
-#if defined(__WIN32__) || defined(MAC_OSX_TK)
+#if defined(_WIN32) || defined(MAC_OSX_TK)
     {"tk_chooseColor",	Tk_ChooseColorObjCmd,	PASSMAINWINDOW},
     {"tk_chooseDirectory", Tk_ChooseDirectoryObjCmd,WINMACONLY|PASSMAINWINDOW},
     {"tk_getOpenFile",	Tk_GetOpenFileObjCmd,	WINMACONLY|PASSMAINWINDOW},
@@ -958,7 +956,7 @@ TkCreateMainWindow(
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
 
-#if defined(__WIN32__) && !defined(STATIC_BUILD)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
 	if ((cmdPtr->flags & WINMACONLY) && tclStubsPtr->reserved9) {
 	    /*
 	     * We are running on Cygwin, so don't use the win32 dialogs.
@@ -966,7 +964,7 @@ TkCreateMainWindow(
 
 	    continue;
 	}
-#endif /* __WIN32__ && !STATIC_BUILD */
+#endif /* _WIN32 && !STATIC_BUILD */
 
 	if (cmdPtr->flags & PASSMAINWINDOW) {
 	    clientData = tkwin;
@@ -975,9 +973,6 @@ TkCreateMainWindow(
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *) cmdPtr->objProc)(interp, clientData);
-	} else if (cmdPtr->flags & NOOBJPROC) {
-	    Tcl_CreateCommand(interp, cmdPtr->name,
-		    (Tcl_CmdProc *) cmdPtr->objProc, clientData, NULL);
 	} else {
 	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
 		    clientData, NULL);
@@ -987,14 +982,12 @@ TkCreateMainWindow(
 	}
     }
 
-    TkCreateMenuCmd(interp);
-
     /*
      * Set variables for the intepreter.
      */
 
-    Tcl_SetVar(interp, "tk_patchLevel", TK_PATCH_LEVEL, TCL_GLOBAL_ONLY);
-    Tcl_SetVar(interp, "tk_version",    TK_VERSION,     TCL_GLOBAL_ONLY);
+    Tcl_SetVar2(interp, "tk_patchLevel", NULL, TK_PATCH_LEVEL, TCL_GLOBAL_ONLY);
+    Tcl_SetVar2(interp, "tk_version",    NULL, TK_VERSION,     TCL_GLOBAL_ONLY);
 
     tsdPtr->numMainWindows++;
     return tkwin;
@@ -1467,7 +1460,7 @@ Tk_DestroyWindow(
 	TkWmRemoveFromColormapWindows(winPtr);
     }
     if (winPtr->window != None) {
-#if defined(MAC_OSX_TK) || defined(__WIN32__)
+#if defined(MAC_OSX_TK) || defined(_WIN32)
 	XDestroyWindow(winPtr->display, winPtr->window);
 #else
 	if ((winPtr->flags & TK_TOP_HIERARCHY)
@@ -1544,11 +1537,11 @@ Tk_DestroyWindow(
 	    if ((winPtr->mainPtr->interp != NULL) &&
 		    !Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
 		for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
-		    Tcl_CreateCommand(winPtr->mainPtr->interp, cmdPtr->name,
-			    TkDeadAppCmd, NULL, NULL);
+		    Tcl_CreateObjCommand(winPtr->mainPtr->interp, cmdPtr->name,
+			    TkDeadAppObjCmd, NULL, NULL);
 		}
-		Tcl_CreateCommand(winPtr->mainPtr->interp, "send",
-			TkDeadAppCmd, NULL, NULL);
+		Tcl_CreateObjCommand(winPtr->mainPtr->interp, "send",
+			TkDeadAppObjCmd, NULL, NULL);
 		Tcl_UnlinkVar(winPtr->mainPtr->interp, "tk_strictMotif");
 		Tcl_UnlinkVar(winPtr->mainPtr->interp,
 			"::tk::AlwaysShowSelection");
@@ -1579,7 +1572,7 @@ Tk_DestroyWindow(
 	     * display now and relinquish its data structures.
 	     */
 
-#if !defined(WIN32) && defined(NOT_YET)
+#if !defined(_WIN32) && defined(NOT_YET)
 	    if (dispPtr->refCount <= 0) {
 		/*
 		 * I have disabled this code because on Windows there are
@@ -1627,7 +1620,7 @@ Tk_DestroyWindow(
 
 		TkCloseDisplay(dispPtr);
 	    }
-#endif /* !WIN32 && NOT_YET */
+#endif /* !_WIN32 && NOT_YET */
 	}
     }
     Tcl_EventuallyFree(winPtr, TCL_DYNAMIC);
@@ -2852,7 +2845,7 @@ DeleteWindowsExitProc(
     tsdPtr->initialized = 0;
 }
 
-#if defined(__WIN32__) && !defined(__WIN64__)
+#if defined(_WIN32)
 
 static HMODULE tkcygwindll = NULL;
 
@@ -2898,7 +2891,7 @@ TkCygwinMainEx(
     tkmainex(argc, argv, appInitProc, interp);
     return 1;
 }
-#endif /* __WIN32__ && !__WIN64__ */
+#endif /* _WIN32 */
 
 /*
  *----------------------------------------------------------------------
@@ -2927,7 +2920,7 @@ int
 Tk_Init(
     Tcl_Interp *interp)		/* Interpreter to initialize. */
 {
-#if defined(__WIN32__) && !defined(__WIN64__)
+#if defined(_WIN32)
     if (tkcygwindll) {
 	int (*tkinit)(Tcl_Interp *);
 
@@ -2936,7 +2929,7 @@ Tk_Init(
 	    return tkinit(interp);
 	}
     }
-#endif /* __WIN32__ && !__WIN64__ */
+#endif /* _WIN32 */
     return Initialize(interp);
 }
 
@@ -3000,7 +2993,7 @@ Tk_SafeInit(
      * checked at several places to differentiate the two initialisations.
      */
 
-#if defined(__WIN32__) && !defined(__WIN64__)
+#if defined(_WIN32)
     if (tkcygwindll) {
 	int (*tksafeinit)(Tcl_Interp *);
 
@@ -3010,7 +3003,7 @@ Tk_SafeInit(
 	    return tksafeinit(interp);
 	}
     }
-#endif /* __WIN32__ && !__WIN64__ */
+#endif /* _WIN32 */
     return Initialize(interp);
 }
 
@@ -3047,11 +3040,10 @@ Initialize(
     ThreadSpecificData *tsdPtr;
 
     /*
-     * Ensure that we are getting a compatible version of Tcl. This is really
-     * only an issue when Tk is loaded dynamically.
+     * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3136,14 +3128,14 @@ Initialize(
 
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppendElement(&ds, "::safe::TkInit");
-	Tcl_DStringAppendElement(&ds, Tcl_GetStringResult(master));
+	Tcl_DStringAppendElement(&ds, Tcl_GetString(Tcl_GetObjResult(master)));
 
 	/*
 	 * Step 2 : Eval in the master. The argument is the *reversed* interp
 	 * path of the slave.
 	 */
 
-	code = Tcl_Eval(master, Tcl_DStringValue(&ds));
+	code = Tcl_EvalEx(master, Tcl_DStringValue(&ds), -1, 0);
 	if (code != TCL_OK) {
 	    /*
 	     * We might want to transfer the error message or not. We don't.
@@ -3164,7 +3156,7 @@ Initialize(
 	 * changing the code below.
 	 */
 
-	argString = Tcl_GetStringResult(master);
+	argString = Tcl_GetString(Tcl_GetObjResult(master));
     } else {
 	/*
 	 * If there is an "argv" variable, get its value, extract out relevant
@@ -3279,17 +3271,18 @@ Initialize(
      */
 
     if (geometry != NULL) {
-	Tcl_SetVar(interp, "geometry", geometry, TCL_GLOBAL_ONLY);
-	code = Tcl_VarEval(interp, "wm geometry . ", geometry, NULL);
+	Tcl_DString buf;
+
+	Tcl_SetVar2(interp, "geometry", NULL, geometry, TCL_GLOBAL_ONLY);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, "wm geometry . ", -1);
+	Tcl_DStringAppend(&buf, geometry, -1);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    goto done;
 	}
 	geometry = NULL;
-    }
-
-    if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 0) == NULL) {
-	code = TCL_ERROR;
-	goto done;
     }
 
     /*
@@ -3343,7 +3336,7 @@ Initialize(
 	 * an alternate [tkInit] command before calling Tk_Init().
 	 */
 
-	code = Tcl_Eval(interp,
+	code = Tcl_EvalEx(interp,
 "if {[namespace which -command tkInit] eq \"\"} {\n\
   proc tkInit {} {\n\
     global tk_library tk_version tk_patchLevel\n\
@@ -3351,7 +3344,7 @@ Initialize(
     tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
   }\n\
 }\n\
-tkInit");
+tkInit", -1, 0);
     }
     if (code == TCL_OK) {
 	/*
@@ -3397,7 +3390,7 @@ Tk_PkgInitStubsCheck(
     const char * version,
     int exact)
 {
-    const char *actualVersion = Tcl_PkgRequire(interp, "Tk", version, 0);
+    const char *actualVersion = Tcl_PkgRequireEx(interp, "Tk", version, 0, NULL);
 
     if (exact && actualVersion) {
 	const char *p = version;
@@ -3409,11 +3402,11 @@ Tk_PkgInitStubsCheck(
 	if (count == 1) {
 	    if (0 != strncmp(version, actualVersion, strlen(version))) {
 		/* Construct error message */
-		Tcl_PkgPresent(interp, "Tk", version, 1);
+		Tcl_PkgPresentEx(interp, "Tk", version, 1, NULL);
 		return NULL;
 	    }
 	} else {
-	    return Tcl_PkgPresent(interp, "Tk", version, 1);
+	    return Tcl_PkgPresentEx(interp, "Tk", version, 1, NULL);
 	}
     }
     return actualVersion;

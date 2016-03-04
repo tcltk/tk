@@ -14,6 +14,17 @@
 #include "tkMacOSXPrivate.h"
 #include "tkFileFilter.h"
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
+#define modalOK     NSOKButton
+#define modalCancel NSCancelButton
+#else
+#define modalOK     NSModalResponseOK
+#define modalCancel NSModalResponseCancel
+#endif
+#define modalOther  -1
+#define modalError  -2
+
+
 static const char *const colorOptionStrings[] = {
     "-initialcolor", "-parent", "-title", NULL
 };
@@ -130,6 +141,23 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     [TYPE_YESNO] =		{5, 6, 0},
     [TYPE_YESNOCANCEL] =	{5, 6, 4},
 };
+
+/*
+ * Construct a file URL from directory and filename.  Either may
+ * be nil.  If both are nil, returns nil.
+ */
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1050
+static NSURL *getFileURL(NSString *directory, NSString *filename) {
+    NSURL *url = nil;
+    if (directory) {
+	url = [NSURL fileURLWithPath:directory];
+    }
+    if (filename) {
+	url = [NSURL URLWithString:filename relativeToURL:url];
+    }
+    return url;
+}
+#endif
 
 #pragma mark TKApplication(TKDialog)
 
@@ -149,12 +177,12 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
 
 	if (callbackInfo->multiple) {
 	    resultObj = Tcl_NewListObj(0, NULL);
-	    for (NSString *name in [(NSOpenPanel*)panel filenames]) {
+	    for (NSURL *url in [(NSOpenPanel*)panel URLs]) {
 		Tcl_ListObjAppendElement(callbackInfo->interp, resultObj,
-			Tcl_NewStringObj([name UTF8String], -1));
+			Tcl_NewStringObj([[url path] UTF8String], -1));
 	    }
 	} else {
-	    resultObj = Tcl_NewStringObj([[panel filename] UTF8String], -1);
+	    resultObj = Tcl_NewStringObj([[[panel URL]path] UTF8String], -1);
 	}
 	if (callbackInfo->cmdObj) {
 	    Tcl_Obj **objv, **tmpv;
@@ -189,7 +217,7 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
 {
     AlertCallbackInfo *callbackInfo = contextInfo;
 
-    if (returnCode != NSAlertErrorReturn) {
+    if (returnCode >= NSAlertFirstButtonReturn) {
 	Tcl_Obj *resultObj = Tcl_NewStringObj(alertButtonStrings[
 		alertNativeButtonIndexAndTypeToButtonIndex[callbackInfo->
 		typeIndex][returnCode - NSAlertFirstButtonReturn]], -1);
@@ -259,8 +287,8 @@ Tk_ChooseColorObjCmd(
 	int index;
 	const char *value;
 
-	if (Tcl_GetIndexFromObj(interp, objv[i], colorOptionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], colorOptionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -309,7 +337,7 @@ Tk_ChooseColorObjCmd(
 	[colorPanel setColor:initialColor];
     }
     returnCode = [NSApp runModalForWindow:colorPanel];
-    if (returnCode == NSOKButton) {
+    if (returnCode == modalOK) {
 	color = [[colorPanel color] colorUsingColorSpace:
 		[NSColorSpace genericRGBColorSpace]];
 	numberOfComponents = [color numberOfComponents];
@@ -369,12 +397,13 @@ Tk_GetOpenFileObjCmd(
     NSWindow *parent;
     NSMutableArray *fileTypes = nil;
     NSOpenPanel *panel = [NSOpenPanel openPanel];
-    NSInteger returnCode = NSAlertErrorReturn;
+    NSInteger modalReturnCode = modalError;
+    BOOL parentIsKey = NO;
 
     TkInitFileFilters(&fl);
     for (i = 1; i < objc; i += 2) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], openOptionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], openOptionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -439,6 +468,7 @@ Tk_GetOpenFileObjCmd(
 	    break;
 	}
     }
+    [panel setAllowsMultipleSelection:multiple];
     if (fl.filters) {
 	fileTypes = [NSMutableArray array];
 	for (FileFilter *filterPtr = fl.filters; filterPtr;
@@ -471,7 +501,7 @@ Tk_GetOpenFileObjCmd(
 	    }
 	}
     }
-    [panel setAllowsMultipleSelection:multiple];
+    [panel setAllowedFileTypes:fileTypes];
     if (cmdObj) {
 	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
@@ -484,26 +514,48 @@ Tk_GetOpenFileObjCmd(
     callbackInfo->multiple = multiple;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
-	[panel beginSheetForDirectory:directory file:filename types:fileTypes
-		modalForWindow:parent modalDelegate:NSApp didEndSelector:
-		@selector(tkFilePanelDidEnd:returnCode:contextInfo:)
-		contextInfo:callbackInfo];
-	returnCode = cmdObj ? NSAlertOtherReturn :
-		[NSApp runModalForWindow:panel];
+	    parentIsKey = [parent isKeyWindow];
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+	[panel beginSheetForDirectory:directory
+	       file:filename
+	       types:fileTypes
+	       modalForWindow:parent
+	       modalDelegate:NSApp
+	       didEndSelector:
+		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
+	       contextInfo:callbackInfo];
+#else
+	[panel setAllowedFileTypes:fileTypes];
+	[panel setDirectoryURL:getFileURL(directory, filename)];
+	[panel beginSheetModalForWindow:parent
+	       completionHandler:^(NSInteger returnCode)
+	       { [NSApp tkFilePanelDidEnd:panel
+		       returnCode:returnCode
+		       contextInfo:callbackInfo ]; } ];
+#endif
+	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:panel];
     } else {
-	returnCode = [panel runModalForDirectory:directory file:filename
-		types:fileTypes];
-	[NSApp tkFilePanelDidEnd:panel returnCode:returnCode
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+	modalReturnCode = [panel runModalForDirectory:directory
+				 file:filename];
+#else
+	[panel setDirectoryURL:getFileURL(directory, filename)];
+	modalReturnCode = [panel runModal];
+#endif
+	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
-    result = (returnCode != NSAlertErrorReturn) ? TCL_OK : TCL_ERROR;
+    result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
+    if (parentIsKey) {
+	[parent makeKeyWindow];
+    }
     if (typeVariablePtr && result == TCL_OK) {
 	/*
 	 * The -typevariable option is not really supported.
 	 */
 
-	Tcl_SetVar(interp, Tcl_GetString(typeVariablePtr), "",
-		TCL_GLOBAL_ONLY);
+	Tcl_SetVar2(interp, Tcl_GetString(typeVariablePtr), NULL,
+		"", TCL_GLOBAL_ONLY);
     }
 
   end:
@@ -548,12 +600,13 @@ Tk_GetSaveFileObjCmd(
     NSWindow *parent;
     NSMutableArray *fileTypes = nil;
     NSSavePanel *panel = [NSSavePanel savePanel];
-    NSInteger returnCode = NSAlertErrorReturn;
+    NSInteger modalReturnCode = modalError;
+    BOOL parentIsKey = NO;
 
     TkInitFileFilters(&fl);
     for (i = 1; i < objc; i += 2) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], saveOptionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], saveOptionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -665,19 +718,38 @@ Tk_GetSaveFileObjCmd(
     callbackInfo->multiple = 0;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
-	[panel beginSheetForDirectory:directory file:filename
-		modalForWindow:parent modalDelegate:NSApp didEndSelector:
-		@selector(tkFilePanelDidEnd:returnCode:contextInfo:)
-		contextInfo:callbackInfo];
-	returnCode = cmdObj ? NSAlertOtherReturn :
-		[NSApp runModalForWindow:panel];
+       parentIsKey = [parent isKeyWindow];
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+	[panel beginSheetForDirectory:directory
+	       file:filename
+	       modalForWindow:parent
+	       modalDelegate:NSApp
+	       didEndSelector:
+		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
+	       contextInfo:callbackInfo];
+#else
+	[panel setDirectoryURL:getFileURL(directory, filename)];
+	[panel beginSheetModalForWindow:parent
+	       completionHandler:^(NSInteger returnCode)
+	       { [NSApp tkFilePanelDidEnd:panel
+		       returnCode:returnCode
+		       contextInfo:callbackInfo ]; } ];
+#endif
+	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:panel];
     } else {
-	returnCode = [panel runModalForDirectory:directory file:filename];
-	[NSApp tkFilePanelDidEnd:panel returnCode:returnCode
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+	modalReturnCode = [panel runModalForDirectory:directory file:filename];
+#else
+	[panel setDirectoryURL:getFileURL(directory, filename)];
+	modalReturnCode = [panel runModal];
+#endif
+	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
-    result = (returnCode != NSAlertErrorReturn) ? TCL_OK : TCL_ERROR;
-
+    result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
+    if (parentIsKey) {
+	[parent makeKeyWindow];
+    }
   end:
     TkFreeFileFilters(&fl);
     return result;
@@ -719,11 +791,12 @@ Tk_ChooseDirectoryObjCmd(
     NSString *message, *title;
     NSWindow *parent;
     NSOpenPanel *panel = [NSOpenPanel openPanel];
-    NSInteger returnCode = NSAlertErrorReturn;
+    NSInteger modalReturnCode = modalError;
+    BOOL parentIsKey = NO;
 
     for (i = 1; i < objc; i += 2) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], chooseOptionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], chooseOptionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -787,19 +860,37 @@ Tk_ChooseDirectoryObjCmd(
     callbackInfo->multiple = 0;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
-	[panel beginSheetForDirectory:directory file:filename
-		modalForWindow:parent modalDelegate:NSApp didEndSelector:
-		@selector(tkFilePanelDidEnd:returnCode:contextInfo:)
+      parentIsKey = [parent isKeyWindow];
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+	[panel beginSheetForDirectory:directory
+		file:filename
+		modalForWindow:parent
+		modalDelegate:NSApp
+		didEndSelector: @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
 		contextInfo:callbackInfo];
-	returnCode = cmdObj ? NSAlertOtherReturn :
-		[NSApp runModalForWindow:panel];
+#else
+	[panel setDirectoryURL:getFileURL(directory, filename)];
+	[panel beginSheetModalForWindow:parent
+	       completionHandler:^(NSInteger returnCode)
+	       { [NSApp tkFilePanelDidEnd:panel
+		       returnCode:returnCode
+		       contextInfo:callbackInfo ]; } ];
+#endif
+	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:panel];
     } else {
-	returnCode = [panel runModalForDirectory:directory file:filename];
-	[NSApp tkFilePanelDidEnd:panel returnCode:returnCode
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+	modalReturnCode = [panel runModalForDirectory:directory file:nil];
+#else
+	[panel setDirectoryURL:getFileURL(directory, filename)];
+	modalReturnCode = [panel runModal];
+#endif
+	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
-    result = (returnCode != NSAlertErrorReturn) ? TCL_OK : TCL_ERROR;
-
+    result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
+    if (parentIsKey) {
+	[parent makeKeyWindow];
+    }
   end:
     return result;
 }
@@ -857,6 +948,9 @@ TkAboutDlg(void)
 	    [[[NSAttributedString alloc] initWithString:
 	    [NSString stringWithFormat:
 	    @"%1$C 1987-%2$@ Tcl Core Team." "\n\n"
+		"%1$C 1989-%2$@ Contributors." "\n\n"
+		"%1$C 2011-%2$@ Kevin Walzer/WordTech Communications LLC." "\n\n"
+		"%1$C 2014-%2$@ Marc Culler." "\n\n"
 		"%1$C 2002-%2$@ Daniel A. Steffen." "\n\n"
 		"%1$C 2001-2009 Apple Inc." "\n\n"
 		"%1$C 2001-2002 Jim Ingham & Ian Reid" "\n\n"
@@ -896,7 +990,7 @@ TkMacOSXStandardAboutPanelObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-    [NSApp orderFrontStandardAboutPanelWithOptions:nil];
+    [NSApp orderFrontStandardAboutPanelWithOptions:[NSDictionary dictionary]];
     return TCL_OK;
 }
 
@@ -934,13 +1028,14 @@ Tk_MessageBoxObjCmd(
     NSWindow *parent;
     NSArray *buttons;
     NSAlert *alert = [NSAlert new];
-    NSInteger returnCode = NSAlertErrorReturn;
+    NSInteger modalReturnCode = 1;
+    BOOL parentIsKey = NO;
 
     iconIndex = ICON_INFO;
     typeIndex = TYPE_OK;
     for (i = 1; i < objc; i += 2) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], alertOptionStrings, "option",
-		TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], alertOptionStrings,
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 	if (i + 1 == objc) {
@@ -967,8 +1062,8 @@ Tk_MessageBoxObjCmd(
 	    break;
 
 	case ALERT_ICON:
-	    if (Tcl_GetIndexFromObj(interp, objv[i + 1], alertIconStrings,
-		    "value", TCL_EXACT, &iconIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertIconStrings,
+		    sizeof(char *), "value", TCL_EXACT, &iconIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -997,8 +1092,8 @@ Tk_MessageBoxObjCmd(
 	    break;
 
 	case ALERT_TYPE:
-	    if (Tcl_GetIndexFromObj(interp, objv[i + 1], alertTypeStrings,
-		    "value", TCL_EXACT, &typeIndex) != TCL_OK) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertTypeStrings,
+		    sizeof(char *), "value", TCL_EXACT, &typeIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -1013,8 +1108,8 @@ Tk_MessageBoxObjCmd(
 	 * why we do this here.
 	 */
 
-	if (Tcl_GetIndexFromObj(interp, objv[indexDefaultOption + 1],
-		alertButtonStrings, "value", TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[indexDefaultOption + 1],
+		alertButtonStrings, sizeof(char *), "value", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 
@@ -1061,19 +1156,32 @@ Tk_MessageBoxObjCmd(
     callbackInfo->typeIndex = typeIndex;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
-	[alert beginSheetModalForWindow:parent modalDelegate:NSApp
-		didEndSelector:@selector(tkAlertDidEnd:returnCode:contextInfo:)
-		contextInfo:callbackInfo];
-	returnCode = cmdObj ? NSAlertOtherReturn :
-		[NSApp runModalForWindow:[alert window]];
+	parentIsKey = [parent isKeyWindow];
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1090
+ 	[alert beginSheetModalForWindow:parent
+	       completionHandler:^(NSModalResponse returnCode)
+	       { [NSApp tkAlertDidEnd:alert
+			returnCode:returnCode
+			contextInfo:callbackInfo ]; } ];
+#else
+	[alert beginSheetModalForWindow:parent
+	       modalDelegate:NSApp
+	       didEndSelector:@selector(tkAlertDidEnd:returnCode:contextInfo:)
+	       contextInfo:callbackInfo];
+#endif
+	modalReturnCode = cmdObj ? 0 :
+	    [NSApp runModalForWindow:[alert window]];
     } else {
-	returnCode = [alert runModal];
-	[NSApp tkAlertDidEnd:alert returnCode:returnCode
+	modalReturnCode = [alert runModal];
+	[NSApp tkAlertDidEnd:alert returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
-    result = (returnCode != NSAlertErrorReturn) ? TCL_OK : TCL_ERROR;
+    result = (modalReturnCode >= NSAlertFirstButtonReturn) ? TCL_OK : TCL_ERROR;
   end:
     [alert release];
+    if (parentIsKey) {
+	[parent makeKeyWindow];
+    }
     return result;
 }
 
@@ -1357,8 +1465,8 @@ FontchooserConfigureCmd(
     for (i = 1; i < objc; i += 2) {
 	int optionIndex, len;
 
-	if (Tcl_GetIndexFromObj(interp, objv[i], fontchooserOptionStrings,
-		"option", 0, &optionIndex) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], fontchooserOptionStrings,
+		sizeof(char *), "option", 0, &optionIndex) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
@@ -1643,9 +1751,7 @@ TkInitFontchooser(
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteFontchooserData,
 	    fcdPtr);
     if (!fontPanelFontAttributes) {
-	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	fontPanelFontAttributes = [NSMutableDictionary new];
-	[pool drain];
     }
     return TCL_OK;
 }

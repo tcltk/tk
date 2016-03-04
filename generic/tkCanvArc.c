@@ -300,7 +300,7 @@ CreateArc(
     arcPtr->fillGC = None;
     arcPtr->height = 0;
 
-	
+
     /*
      * Process the arguments to fill in the item record.
      */
@@ -392,7 +392,7 @@ ArcCoords(
 	arcPtr->startPoint[1] = arcPtr->bbox[1];
 	arcPtr->endPoint[0] = arcPtr->bbox[2];
 	arcPtr->endPoint[1] = arcPtr->bbox[3];
-	
+
 	ComputeArcBbox(canvas, arcPtr);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -474,7 +474,7 @@ ConfigureArc(
 	ComputeArcFromHeight(arcPtr);
 	ComputeArcBbox(canvas, arcPtr);
     }
-    
+
     i = (int) (arcPtr->start/360.0);
     arcPtr->start -= i*360.0;
     if (arcPtr->start < 0) {
@@ -499,7 +499,7 @@ ConfigureArc(
     } else if (flags & TK_OFFSET_BOTTOM) {
 	tsoffset->yoffset = (int) (arcPtr->bbox[2] + 0.5);
     }
-	
+
     mask = Tk_ConfigOutlineGC(&gcValues, canvas, itemPtr, &(arcPtr->outline));
     if (mask) {
 	gcValues.cap_style = CapButt;
@@ -606,14 +606,14 @@ ComputeArcFromHeight(
 		     ArcItem* arcPtr)
 {
     double chordLen, chordDir[2], chordCen[2], arcCen[2], d, radToDeg, radius;
-	
+
     /* The chord */
     chordLen = hypot(arcPtr->endPoint[1]-arcPtr->startPoint[1], arcPtr->startPoint[0]-arcPtr->endPoint[0]);
     chordDir[0] = (arcPtr->endPoint[0]-arcPtr->startPoint[0])/chordLen;
     chordDir[1] = (arcPtr->endPoint[1]-arcPtr->startPoint[1])/chordLen;
     chordCen[0] = (arcPtr->startPoint[0]+arcPtr->endPoint[0])/2;
     chordCen[1] = (arcPtr->startPoint[1]+arcPtr->endPoint[1])/2;
-    
+
     /* Calculate the radius (assumes height != 0) */
     radius = (4*pow(arcPtr->height,2) + pow(chordLen,2))/(8*arcPtr->height);
 
@@ -640,7 +640,7 @@ ComputeArcFromHeight(
 
     /* Set the height to 0 so that itemcget -height returns 0 */
     arcPtr->height = 0;
-   
+
 }
 
 /*

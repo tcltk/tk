@@ -20,6 +20,10 @@
 #include <stdlib.h>
 #include <tchar.h>
 
+#if defined(__GNUC__)
+int _CRT_glob = 0;
+#endif /* __GNUC__ */
+
 #ifdef TK_TEST
 extern Tcl_PackageInitProc Tktest_Init;
 #endif /* TK_TEST */
@@ -49,7 +53,10 @@ static BOOL consoleRequired = TRUE;
 #ifndef TK_LOCAL_APPINIT
 #define TK_LOCAL_APPINIT Tcl_AppInit
 #endif
-extern int TK_LOCAL_APPINIT(Tcl_Interp *interp);
+#ifndef MODULE_SCOPE
+#   define MODULE_SCOPE extern
+#endif
+MODULE_SCOPE int TK_LOCAL_APPINIT(Tcl_Interp *interp);
 
 /*
  * The following #if block allows you to change how Tcl finds the startup
@@ -58,8 +65,12 @@ extern int TK_LOCAL_APPINIT(Tcl_Interp *interp);
  */
 
 #ifdef TK_LOCAL_MAIN_HOOK
-extern int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
+MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
 #endif
+
+/* Make sure the stubbed variants of those are never used. */
+#undef Tcl_ObjSetVar2
+#undef Tcl_NewStringObj
 
 /*
  *----------------------------------------------------------------------
@@ -126,9 +137,9 @@ _tWinMain(
      * Forward slashes substituted for backslashes.
      */
 
-    for (p = argv[0]; *p != TEXT('\0'); p++) {
-	if (*p == TEXT('\\')) {
-	    *p = TEXT('/');
+    for (p = argv[0]; *p != '\0'; p++) {
+	if (*p == '\\') {
+	    *p = '/';
 	}
     }
 
@@ -213,7 +224,7 @@ Tcl_AppInit(
      */
 
     /*
-     * Call Tcl_CreateCommand for application-specific commands, if they
+     * Call Tcl_CreateObjCommand for application-specific commands, if they
      * weren't already created by the init procedures called above.
      */
 
@@ -224,7 +235,8 @@ Tcl_AppInit(
      * specific startup file will be run under any conditions.
      */
 
-    (Tcl_SetVar)(interp, "tcl_rcFileName", "~/wishrc.tcl", TCL_GLOBAL_ONLY);
+    Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
+	    Tcl_NewStringObj("~/wishrc.tcl", -1), TCL_GLOBAL_ONLY);
     return TCL_OK;
 }
 
@@ -336,13 +348,13 @@ setargv(
      */
 
     size = 2;
-    for (p = cmdLine; *p != TEXT('\0'); p++) {
-	if ((*p == TEXT(' ')) || (*p == TEXT('\t'))) {	/* INTL: ISO space. */
+    for (p = cmdLine; *p != '\0'; p++) {
+	if ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
 	    size++;
-	    while ((*p == TEXT(' ')) || (*p == TEXT('\t'))) { /* INTL: ISO space. */
+	    while ((*p == ' ') || (*p == '\t')) { /* INTL: ISO space. */
 		p++;
 	    }
-	    if (*p == TEXT('\0')) {
+	    if (*p == '\0') {
 		break;
 	    }
 	}
@@ -352,8 +364,8 @@ setargv(
     #undef Tcl_Alloc
     #undef Tcl_DbCkalloc
 
-    argSpace = ckalloc(size*sizeof(char *)
-	    + (_tcslen(cmdLine)+1) * sizeof(TCHAR));
+    argSpace = ckalloc(size * sizeof(char *)
+	    + (_tcslen(cmdLine) * sizeof(TCHAR)) + sizeof(TCHAR));
     argv = (TCHAR **) argSpace;
     argSpace += size * (sizeof(char *)/sizeof(TCHAR));
     size--;
@@ -361,10 +373,10 @@ setargv(
     p = cmdLine;
     for (argc = 0; argc < size; argc++) {
 	argv[argc] = arg = argSpace;
-	while ((*p == TEXT(' ')) || (*p == TEXT('\t'))) {	/* INTL: ISO space. */
+	while ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
 	    p++;
 	}
-	if (*p == TEXT('\0')) {
+	if (*p == '\0') {
 	    break;
 	}
 
@@ -372,14 +384,14 @@ setargv(
 	slashes = 0;
 	while (1) {
 	    copy = 1;
-	    while (*p == TEXT('\\')) {
+	    while (*p == '\\') {
 		slashes++;
 		p++;
 	    }
-	    if (*p == TEXT('"')) {
+	    if (*p == '"') {
 		if ((slashes & 1) == 0) {
 		    copy = 0;
-		    if ((inquote) && (p[1] == TEXT('"'))) {
+		    if ((inquote) && (p[1] == '"')) {
 			p++;
 			copy = 1;
 		    } else {
@@ -390,13 +402,13 @@ setargv(
 	    }
 
 	    while (slashes) {
-		*arg = TEXT('\\');
+		*arg = '\\';
 		arg++;
 		slashes--;
 	    }
 
-	    if ((*p == TEXT('\0')) || (!inquote &&
-		    ((*p == TEXT(' ')) || (*p == TEXT('\t'))))) {	/* INTL: ISO space. */
+	    if ((*p == '\0') || (!inquote &&
+		    ((*p == ' ') || (*p == '\t')))) {	/* INTL: ISO space. */
 		break;
 	    }
 	    if (copy != 0) {
@@ -408,7 +420,7 @@ setargv(
 	*arg = '\0';
 	argSpace = arg + 1;
     }
-    argv[argc] = 0;
+    argv[argc] = NULL;
 
     *argcPtr = argc;
     *argvPtr = argv;

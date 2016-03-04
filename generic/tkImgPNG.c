@@ -10,6 +10,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "assert.h"
 #include "tkInt.h"
 
 #define	PNG_INT32(a,b,c,d)	\
@@ -334,9 +335,11 @@ InitPNGImage(
 
     if (Tcl_ZlibStreamInit(NULL, dir, TCL_ZLIB_FORMAT_ZLIB,
 	    TCL_ZLIB_COMPRESS_DEFAULT, NULL, &pngPtr->stream) != TCL_OK) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"zlib initialization failed", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "ZLIB_INIT", NULL);
+    if (interp) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "zlib initialization failed", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "ZLIB_INIT", NULL);
+	}
 	if (objPtr) {
 	    Tcl_DecrRefCount(objPtr);
 	}
@@ -799,7 +802,7 @@ SkipChunk(
 /*
  * 4.3. Summary of standard chunks
  *
- * This table summarizes some properties of the standard chunk types. 
+ * This table summarizes some properties of the standard chunk types.
  *
  *	Critical chunks (must appear in this order, except PLTE is optional):
  *
@@ -1844,6 +1847,13 @@ DecodeLine(
     if (UnfilterLine(interp, pngPtr) == TCL_ERROR) {
 	return TCL_ERROR;
     }
+    if (pngPtr->currentLine >= pngPtr->block.height) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"PNG image data overflow"));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "DATA_OVERFLOW", NULL);
+	return TCL_ERROR;
+    }
+
 
     if (pngPtr->interlace) {
 	switch (pngPtr->phase) {
@@ -2173,10 +2183,13 @@ ReadIDAT(
 
 	    /*
 	     * Try to read another line of pixels out of the buffer
-	     * immediately.
+	     * immediately, but don't allow write past end of block.
 	     */
 
-	    goto getNextLine;
+	    if (pngPtr->currentLine < pngPtr->block.height) {
+		goto getNextLine;
+	    }
+
 	}
 
 	/*
@@ -2281,10 +2294,10 @@ ParseFormat(
     Tcl_Obj **objv = NULL;
     int objc = 0;
     static const char *const fmtOptions[] = {
-	"png", "-alpha", NULL
+	"-alpha", NULL
     };
     enum fmtOptions {
-	OPT_PNG, OPT_ALPHA
+	OPT_ALPHA
     };
 
     /*
@@ -2297,33 +2310,30 @@ ParseFormat(
     }
 
     for (; objc>0 ; objc--, objv++) {
-    	int optIndex;
-
-        if (Tcl_GetIndexFromObj(interp, objv[0], fmtOptions, "option", 0,
-		&optIndex) == TCL_ERROR) {
-            return TCL_ERROR;
-	}
+	int optIndex;
 
 	/*
 	 * Ignore the "png" part of the format specification.
 	 */
 
-	if (OPT_PNG == optIndex) {
+	if (!strcasecmp(Tcl_GetString(objv[0]), "png")) {
 	    continue;
 	}
 
-    	if (objc < 2) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[0], fmtOptions,
+		sizeof(char *), "option", 0, &optIndex) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	if (objc < 2) {
 	    Tcl_WrongNumArgs(interp, 1, objv, "value");
 	    return TCL_ERROR;
-    	}
+	}
 
 	objc--;
 	objv++;
 
 	switch ((enum fmtOptions) optIndex) {
-	case OPT_PNG:
-	    break;
-
 	case OPT_ALPHA:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0],
 		    &pngPtr->alpha) == TCL_ERROR) {
@@ -2667,11 +2677,8 @@ FileMatchPNG(
 {
     PNGImage png;
     int match = 0;
-    Tcl_SavedResult sya;
 
-    Tcl_SaveResult(interp, &sya);
-
-    InitPNGImage(interp, &png, chan, NULL, TCL_ZLIB_STREAM_INFLATE);
+    InitPNGImage(NULL, &png, chan, NULL, TCL_ZLIB_STREAM_INFLATE);
 
     if (ReadIHDR(interp, &png) == TCL_OK) {
 	*widthPtr = png.block.width;
@@ -2680,7 +2687,6 @@ FileMatchPNG(
     }
 
     CleanupPNGImage(&png);
-    Tcl_RestoreResult(interp, &sya);
 
     return match;
 }
@@ -2759,10 +2765,8 @@ StringMatchPNG(
 {
     PNGImage png;
     int match = 0;
-    Tcl_SavedResult sya;
 
-    Tcl_SaveResult(interp, &sya);
-    InitPNGImage(interp, &png, NULL, pObjData, TCL_ZLIB_STREAM_INFLATE);
+    InitPNGImage(NULL, &png, NULL, pObjData, TCL_ZLIB_STREAM_INFLATE);
 
     png.strDataBuf = Tcl_GetByteArrayFromObj(pObjData, &png.strDataLen);
 
@@ -2773,7 +2777,6 @@ StringMatchPNG(
     }
 
     CleanupPNGImage(&png);
-    Tcl_RestoreResult(interp, &sya);
     return match;
 }
 
@@ -3163,7 +3166,7 @@ WriteIDAT(
 
 	    *destPtr++ = srcPtr[blockPtr->offset[0]];
 
-	    /* 
+	    /*
 	     * If not grayscale, copy the green and blue channels.
 	     */
 
@@ -3353,7 +3356,7 @@ EncodePNG(
 	    pngPtr->colorType = PNG_COLOR_RGBA;
 	    pngPtr->bytesPerPixel = 4;
 	} else {
-	    pngPtr->colorType = PNG_COLOR_RGBA;
+	    pngPtr->colorType = PNG_COLOR_RGB;
 	    pngPtr->bytesPerPixel = 3;
 	}
     } else {

@@ -12,6 +12,7 @@
 
 #include "tkWinInt.h"
 #include "tkSelect.h"
+#include <shlobj.h>    /* for DROPFILES */
 
 static void		UpdateClipboard(HWND hwnd);
 
@@ -52,7 +53,7 @@ TkSelGetSelection(
     Tcl_DString ds;
     HGLOBAL handle;
     Tcl_Encoding encoding;
-    int result, locale;
+    int result, locale, noBackslash = 0;
 
     if ((selection != Tk_InternAtom(tkwin, "CLIPBOARD"))
 	    || (target != XA_STRING)
@@ -132,7 +133,37 @@ TkSelGetSelection(
 	if (encoding) {
 	    Tcl_FreeEncoding(encoding);
 	}
+    } else if (IsClipboardFormatAvailable(CF_HDROP)) {
+	DROPFILES *drop;
 
+	handle = GetClipboardData(CF_HDROP);
+	if (!handle) {
+	    CloseClipboard();
+	    goto error;
+	}
+	Tcl_DStringInit(&ds);
+	drop = (DROPFILES *) GlobalLock(handle);
+	if (drop->fWide) {
+	    WCHAR *fname = (WCHAR *) ((char *) drop + drop->pFiles);
+	    Tcl_DString dsTmp;
+	    int count = 0, len;
+
+	    while (*fname != 0) {
+		if (count) {
+		    Tcl_DStringAppend(&ds, "\n", 1);
+		}
+		len = Tcl_UniCharLen((Tcl_UniChar *) fname);
+		Tcl_DStringInit(&dsTmp);
+		Tcl_UniCharToUtfDString((Tcl_UniChar *) fname, len, &dsTmp);
+		Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsTmp),
+			Tcl_DStringLength(&dsTmp));
+		Tcl_DStringFree(&dsTmp);
+		fname += len + 1;
+		count++;
+	    }
+	    noBackslash = (count > 0);
+	}
+	GlobalUnlock(handle);
     } else {
 	CloseClipboard();
 	goto error;
@@ -146,6 +177,9 @@ TkSelGetSelection(
     while (*data) {
 	if (data[0] == '\r' && data[1] == '\n') {
 	    data++;
+	} else if (noBackslash && data[0] == '\\') {
+	    data++;
+	    *destPtr++ = '/';
 	} else {
 	    *destPtr++ = *data++;
 	}

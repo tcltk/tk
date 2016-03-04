@@ -13,7 +13,7 @@
 # Insist on running with compatible version of Tcl
 package require Tcl 8.6
 # Verify that we have Tk binary and script components from the same release
-package require -exact Tk  8.6b3
+package require -exact Tk  8.7a0
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -24,7 +24,7 @@ namespace eval ::tk {
             # The msgcat package is not available.  Supply our own
             # minimal replacement.
             proc mc {src args} {
-                tailcall format $src {*}$args
+                return [format $src {*}$args]
             }
             proc mcmax {args} {
                 set max 0
@@ -253,7 +253,6 @@ proc ::tk::ScreenChanged screen {
 
     uplevel #0 [list upvar #0 ::tk::Priv.$disp ::tk::Priv]
     variable ::tk::Priv
-    global tcl_platform
 
     if {[info exists Priv]} {
 	set Priv(screen) $screen
@@ -302,55 +301,66 @@ tk::ScreenChanged [winfo screen .]
 
 proc ::tk::EventMotifBindings {n1 dummy dummy} {
     upvar $n1 name
-    
+
     if {$name} {
 	set op delete
     } else {
 	set op add
     }
 
-    event $op <<Cut>> <Control-Key-w> <Shift-Key-Delete>
-    event $op <<Copy>> <Meta-Key-w> <Control-Key-Insert>
-    event $op <<Paste>> <Control-Key-y> <Shift-Key-Insert>
-    event $op <<Undo>> <Control-underscore>
+    event $op <<Cut>> <Control-Key-w> <Control-Lock-Key-W> <Shift-Key-Delete>
+    event $op <<Copy>> <Meta-Key-w> <Meta-Lock-Key-W> <Control-Key-Insert>
+    event $op <<Paste>> <Control-Key-y> <Control-Lock-Key-Y> <Shift-Key-Insert>
+    event $op <<PrevChar>> <Control-Key-b> <Control-Lock-Key-B>
+    event $op <<NextChar>> <Control-Key-f> <Control-Lock-Key-F>
+    event $op <<PrevLine>> <Control-Key-p> <Control-Lock-Key-P>
+    event $op <<NextLine>> <Control-Key-n> <Control-Lock-Key-N>
+    event $op <<LineStart>> <Control-Key-a> <Control-Lock-Key-A>
+    event $op <<LineEnd>> <Control-Key-e> <Control-Lock-Key-E>
+    event $op <<SelectPrevChar>> <Control-Key-B> <Control-Lock-Key-b>
+    event $op <<SelectNextChar>> <Control-Key-F> <Control-Lock-Key-f>
+    event $op <<SelectPrevLine>> <Control-Key-P> <Control-Lock-Key-p>
+    event $op <<SelectNextLine>> <Control-Key-N> <Control-Lock-Key-n>
+    event $op <<SelectLineStart>> <Control-Key-A> <Control-Lock-Key-a>
+    event $op <<SelectLineEnd>> <Control-Key-E> <Control-Lock-Key-e>
 }
 
 #----------------------------------------------------------------------
-# Define common dialogs on platforms where they are not implemented 
+# Define common dialogs on platforms where they are not implemented
 # using compiled code.
 #----------------------------------------------------------------------
 
 if {![llength [info commands tk_chooseColor]]} {
     proc ::tk_chooseColor {args} {
-	tailcall ::tk::dialog::color:: {*}$args
+	return [::tk::dialog::color:: {*}$args]
     }
 }
 if {![llength [info commands tk_getOpenFile]]} {
     proc ::tk_getOpenFile {args} {
 	if {$::tk_strictMotif} {
-	    tailcall ::tk::MotifFDialog open {*}$args
+	    return [::tk::MotifFDialog open {*}$args]
 	} else {
-	    tailcall ::tk::dialog::file:: open {*}$args
+	    return [::tk::dialog::file:: open {*}$args]
 	}
     }
 }
 if {![llength [info commands tk_getSaveFile]]} {
     proc ::tk_getSaveFile {args} {
 	if {$::tk_strictMotif} {
-	    tailcall ::tk::MotifFDialog save {*}$args
+	    return [::tk::MotifFDialog save {*}$args]
 	} else {
-	    tailcall ::tk::dialog::file:: save {*}$args
+	    return [::tk::dialog::file:: save {*}$args]
 	}
     }
 }
 if {![llength [info commands tk_messageBox]]} {
     proc ::tk_messageBox {args} {
-	tailcall ::tk::MessageBox {*}$args
+	return [::tk::MessageBox {*}$args]
     }
 }
 if {![llength [info command tk_chooseDirectory]]} {
     proc ::tk_chooseDirectory {args} {
-	tailcall ::tk::dialog::file::chooseDir:: {*}$args
+	return [::tk::dialog::file::chooseDir:: {*}$args]
     }
 }
 
@@ -367,32 +377,31 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z>
 	event add <<Redo>>		<Control-Key-Z> <Control-Lock-Key-z>
 	event add <<ContextMenu>>	<Button-3>
-	if {[info exists tcl_platform(os)] && $tcl_platform(os) eq "Darwin"} {
-	    event add <<ContextMenu>>	<Button-2>
-	}
+	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
+	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
 
 	event add <<SelectAll>>		<Control-Key-slash>
 	event add <<SelectNone>>	<Control-Key-backslash>
-	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
-	event add <<SelectNextChar>>	<Shift-Right> <Control-Key-F> <Control-Lock-Key-f>
-	event add <<PrevChar>>		<Left> <Control-Key-b> <Control-Lock-Key-B>
-	event add <<SelectPrevChar>>	<Shift-Left> <Control-Key-B> <Control-Lock-Key-b>
+	event add <<NextChar>>		<Right>
+	event add <<SelectNextChar>>	<Shift-Right>
+	event add <<PrevChar>>		<Left>
+	event add <<SelectPrevChar>>	<Shift-Left>
 	event add <<NextWord>>		<Control-Right>
 	event add <<SelectNextWord>>	<Control-Shift-Right>
 	event add <<PrevWord>>		<Control-Left>
 	event add <<SelectPrevWord>>	<Control-Shift-Left>
-	event add <<LineStart>>		<Home> <Control-Key-a> <Control-Lock-Key-A>
-	event add <<SelectLineStart>>	<Shift-Home> <Control-Key-A> <Control-Lock-Key-a>
-	event add <<LineEnd>>		<End> <Control-Key-e> <Control-Lock-Key-E>
-	event add <<SelectLineEnd>>	<Shift-End> <Control-Key-E> <Control-Lock-Key-e>
-	event add <<PrevLine>>		<Up> <Control-Key-p> <Control-Lock-Key-P>
-	event add <<NextLine>>		<Down> <Control-Key-n> <Control-Lock-Key-N>
-	event add <<SelectPrevLine>>	<Shift-Up> <Control-Key-P> <Control-Lock-Key-p>
-	event add <<SelectNextLine>>	<Shift-Down> <Control-Key-N> <Control-Lock-Key-n>
+	event add <<LineStart>>		<Home>
+	event add <<SelectLineStart>>	<Shift-Home>
+	event add <<LineEnd>>		<End>
+	event add <<SelectLineEnd>>	<Shift-End>
+	event add <<PrevLine>>		<Up>
+	event add <<NextLine>>		<Down>
+	event add <<SelectPrevLine>>	<Shift-Up>
+	event add <<SelectNextLine>>	<Shift-Down>
 	event add <<PrevPara>>		<Control-Up>
 	event add <<NextPara>>		<Control-Down>
 	event add <<SelectPrevPara>>	<Control-Shift-Up>
-	event add <<SelectPrevPara>>	<Control-Shift-Down>
+	event add <<SelectNextPara>>	<Control-Shift-Down>
 	event add <<ToggleSelection>>	<Control-ButtonPress-1>
 
 	# Some OS's define a goofy (as in, not <Shift-Tab>) keysym that is
@@ -441,14 +450,14 @@ switch -exact -- [tk windowingsystem] {
 	event add <<PrevPara>>		<Control-Up>
 	event add <<NextPara>>		<Control-Down>
 	event add <<SelectPrevPara>>	<Control-Shift-Up>
-	event add <<SelectPrevPara>>	<Control-Shift-Down>
+	event add <<SelectNextPara>>	<Control-Shift-Down>
 	event add <<ToggleSelection>>	<Control-ButtonPress-1>
     }
     "aqua" {
-	event add <<Cut>>		<Command-Key-x> <Key-F2> <Control-Lock-Key-X>
-	event add <<Copy>>		<Command-Key-c> <Key-F3> <Control-Lock-Key-C>
-	event add <<Paste>>		<Command-Key-v> <Key-F4> <Control-Lock-Key-V>
-	event add <<PasteSelection>>	<ButtonRelease-2>
+	event add <<Cut>>		<Command-Key-x> <Key-F2> <Command-Lock-Key-X>
+	event add <<Copy>>		<Command-Key-c> <Key-F3> <Command-Lock-Key-C>
+	event add <<Paste>>		<Command-Key-v> <Key-F4> <Command-Lock-Key-V>
+	event add <<PasteSelection>>	<ButtonRelease-3>
 	event add <<Clear>>		<Clear>
 	event add <<ContextMenu>>	<Button-2>
 
@@ -456,30 +465,30 @@ switch -exact -- [tk windowingsystem] {
 	# See http://support.apple.com/kb/HT1343
 	event add <<SelectAll>>		<Command-Key-a>
 	event add <<SelectNone>>	<Option-Command-Key-a>
-	event add <<Undo>>		<Command-Key-z> <Control-Lock-Key-Z>
-	event add <<Redo>>		<Command-Key-Z> <Control-Lock-Key-z>
+	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z>
+	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z>
 	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
-	event add <<SelectNextChar>>	<Shift-Right> <Control-Key-F> <Control-Lock-Key-f>
+	event add <<SelectNextChar>>	<Shift-Right> <Shift-Control-Key-F> <Shift-Control-Lock-Key-F>
 	event add <<PrevChar>>		<Left> <Control-Key-b> <Control-Lock-Key-B>
-	event add <<SelectPrevChar>>	<Shift-Left> <Control-Key-B> <Control-Lock-Key-b>
+	event add <<SelectPrevChar>>	<Shift-Left> <Shift-Control-Key-B> <Shift-Control-Lock-Key-B>
 	event add <<NextWord>>		<Option-Right>
 	event add <<SelectNextWord>>	<Shift-Option-Right>
 	event add <<PrevWord>>		<Option-Left>
 	event add <<SelectPrevWord>>	<Shift-Option-Left>
 	event add <<LineStart>>		<Home> <Command-Left> <Control-Key-a> <Control-Lock-Key-A>
-	event add <<SelectLineStart>>	<Shift-Home> <Shift-Command-Left> <Control-Key-A> <Control-Lock-Key-a>
+	event add <<SelectLineStart>>	<Shift-Home> <Shift-Command-Left> <Shift-Control-Key-A> <Shift-Control-Lock-Key-A>
 	event add <<LineEnd>>		<End> <Command-Right> <Control-Key-e> <Control-Lock-Key-E>
-	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right> <Control-Key-E> <Control-Lock-Key-e>
+	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right> <Shift-Control-Key-E> <Shift-Control-Lock-Key-E>
 	event add <<PrevLine>>		<Up> <Control-Key-p> <Control-Lock-Key-P>
-	event add <<SelectPrevLine>>	<Shift-Up> <Control-Key-P> <Control-Lock-Key-p>
+	event add <<SelectPrevLine>>	<Shift-Up> <Shift-Control-Key-P> <Shift-Control-Lock-Key-P>
 	event add <<NextLine>>		<Down> <Control-Key-n> <Control-Lock-Key-N>
-	event add <<SelectNextLine>>	<Shift-Down> <Control-Key-N> <Control-Lock-Key-n>
+	event add <<SelectNextLine>>	<Shift-Down> <Shift-Control-Key-N> <Shift-Control-Lock-Key-N>
 	# Not official, but logical extensions of above. Also derived from
 	# bindings present in MS Word on OSX.
 	event add <<PrevPara>>		<Option-Up>
 	event add <<NextPara>>		<Option-Down>
 	event add <<SelectPrevPara>>	<Shift-Option-Up>
-	event add <<SelectPrevPara>>	<Shift-Option-Down>
+	event add <<SelectNextPara>>	<Shift-Option-Down>
 	event add <<ToggleSelection>>	<Command-ButtonPress-1>
     }
 }
@@ -532,7 +541,7 @@ proc ::tk::CancelRepeat {} {
 
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
-# It sends a <<TraverseOut>> virtual event to the previous focus window, 
+# It sends a <<TraverseOut>> virtual event to the previous focus window,
 # if any, before changing the focus, and a <<TraverseIn>> event
 # to the new focus window afterwards.
 #
@@ -560,7 +569,7 @@ proc ::tk::UnderlineAmpersand {text} {
     return [list [string map {\ufeff {}} $s] $idx]
 }
 
-# ::tk::SetAmpText -- 
+# ::tk::SetAmpText --
 #	Given widget path and text with "magic ampersands", sets -text and
 #	-underline options for the widget
 #

@@ -356,7 +356,7 @@ CreateXIC(
 	/* XCreateIC failed. */
 	return;
     }
-    
+
     /*
      * Adjust the window's event mask if the IM requires it.
      */
@@ -2039,6 +2039,12 @@ TkFinalize(
 {
     ExitHandler *exitPtr;
 
+#if defined(_WIN32) && !defined(STATIC_BUILD)
+    if (!tclStubsPtr) {
+	return;
+    }
+#endif
+
     Tcl_DeleteExitHandler(TkFinalize, NULL);
 
     Tcl_MutexLock(&exitMutex);
@@ -2065,7 +2071,7 @@ TkFinalize(
  * TkFinalizeThread --
  *
  *	Runs our private thread exit handlers and removes itself from Tcl.
- *	This is benificial should we want to protect from dangling pointers
+ *	This is beneficial should we want to protect from dangling pointers
  *	should the Tk shared library be unloaded prior to Tcl which can happen
  *	on Windows should the process be forcefully exiting from an exception
  *	handler.

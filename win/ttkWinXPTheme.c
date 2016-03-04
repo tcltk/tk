@@ -25,7 +25,7 @@ int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 
 #include <windows.h>
 #include <uxtheme.h>
-#ifdef HAVE_VSSYM32_H
+#if defined(HAVE_VSSYM32_H) || _MSC_VER > 1500
 #   include <vssym32.h>
 #else
 #   include <tmschema.h>
@@ -1068,8 +1068,8 @@ GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
     }
     for (i = 0; i < objc; ++i) {
 	int option;
-	if (Tcl_GetIndexFromObj(interp, objv[i], names, "system constant", 0, &option)
-		!= TCL_OK)
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], names,
+		sizeof(char *), "system constant", 0, &option) != TCL_OK)
 	    return TCL_ERROR;
 	*resultPtr |= (flags[option] << (8 * (1 - i)));
     }
@@ -1140,8 +1140,8 @@ Ttk_CreateVsapiElement(
 		Tcl_SetErrorCode(interp, "TTK", "VSAPI", "MISSING", NULL);
 		return TCL_ERROR;
 	    }
-	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
-		    "option", 0, &option) != TCL_OK)
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
+		    sizeof(char *), "option", 0, &option) != TCL_OK)
 		return TCL_ERROR;
 	    switch (option) {
 	    case O_PADDING:
@@ -1259,10 +1259,10 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     HINSTANCE hlibrary;
     Ttk_Theme themePtr, parentPtr, vistaPtr;
     ElementInfo *infoPtr;
-    OSVERSIONINFO os;
+    OSVERSIONINFOW os;
 
-    os.dwOSVersionInfoSize = sizeof(os);
-    GetVersionEx(&os);
+    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+    GetVersionExW(&os);
 
     procs = LoadXPThemeProcs(&hlibrary);
     if (!procs)

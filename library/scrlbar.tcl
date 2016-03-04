@@ -15,7 +15,7 @@
 #-------------------------------------------------------------------------
 
 # Standard Motif bindings:
-if {[tk windowingsystem] eq "x11"} {
+if {[tk windowingsystem] eq "x11" || [tk windowingsystem] eq "aqua"} {
 
 bind Scrollbar <Enter> {
     if {$tk_strictMotif} {
@@ -152,6 +152,12 @@ switch [tk windowingsystem] {
 	}
     }
     "x11" {
+	bind Scrollbar <MouseWheel> {
+	    tk::ScrollByUnits %W v [expr {- (%D /120 ) * 4}]
+	}
+	bind Scrollbar <Shift-MouseWheel> {
+	    tk::ScrollByUnits %W h [expr {- (%D /120 ) * 4}]
+	}
 	bind Scrollbar <4> {tk::ScrollByUnits %W v -5}
 	bind Scrollbar <5> {tk::ScrollByUnits %W v 5}
 	bind Scrollbar <Shift-4> {tk::ScrollByUnits %W h -5}

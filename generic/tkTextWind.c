@@ -153,8 +153,8 @@ TkTextWindowCmd(
 	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[2], windOptionStrings,
-	    "window option", 0, &optionIndex) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], windOptionStrings,
+	    sizeof(char *), "window option", 0, &optionIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch ((enum windOptions) optionIndex) {
@@ -911,10 +911,10 @@ EmbWinLayoutProc(
 
 	if (dsPtr != NULL) {
 	    Tcl_DStringAppend(dsPtr, before, (int) (string-before));
-	    code = Tcl_GlobalEval(textPtr->interp, Tcl_DStringValue(dsPtr));
+	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), -1, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(dsPtr);
 	} else {
-	    code = Tcl_GlobalEval(textPtr->interp, ewPtr->body.ew.create);
+	    code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, -1, TCL_EVAL_GLOBAL);
 	}
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(textPtr->interp, code);
@@ -927,7 +927,7 @@ EmbWinLayoutProc(
 		Tcl_GetString(nameObj), textPtr->tkwin);
 	Tcl_DecrRefCount(nameObj);
 	if (ewPtr->body.ew.tkwin == NULL) {
-	    Tcl_BackgroundError(textPtr->interp);
+	    Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
 	    goto gotWindow;
 	}
 
@@ -948,7 +948,7 @@ EmbWinLayoutProc(
 		    Tk_PathName(textPtr->tkwin)));
 	    Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY", "HIERARCHY",
 		    NULL);
-	    Tcl_BackgroundError(textPtr->interp);
+	    Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
 	    ewPtr->body.ew.tkwin = NULL;
 	    goto gotWindow;
 	}
@@ -1134,6 +1134,16 @@ TkTextEmbWinDisplayProc(
 	    &lineX, &windowY, &width, &height);
     windowX = lineX - chunkPtr->x + x;
 
+    /*
+     * Mark the window as displayed so that it won't get unmapped.
+     * This needs to be done before the next instruction block because
+     * Tk_MaintainGeometry/Tk_MapWindow will run event handlers, in
+     * particular for the <Map> event, and if the bound script deletes
+     * the embedded window its clients will get freed.
+     */
+
+    client->displayed = 1;
+
     if (textPtr->tkwin == Tk_Parent(tkwin)) {
 	if ((windowX != Tk_X(tkwin)) || (windowY != Tk_Y(tkwin))
 		|| (Tk_ReqWidth(tkwin) != Tk_Width(tkwin))
@@ -1145,12 +1155,6 @@ TkTextEmbWinDisplayProc(
 	Tk_MaintainGeometry(tkwin, textPtr->tkwin, windowX, windowY,
 		width, height);
     }
-
-    /*
-     * Mark the window as displayed so that it won't get unmapped.
-     */
-
-    client->displayed = 1;
 }
 
 /*
@@ -1339,6 +1343,10 @@ TkTextWindowIndex(
 {
     Tcl_HashEntry *hPtr;
     TkTextSegment *ewPtr;
+
+    if (textPtr == NULL) {
+	return 0;
+    }
 
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->windowTable, name);
     if (hPtr == NULL) {

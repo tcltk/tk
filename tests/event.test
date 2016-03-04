@@ -756,9 +756,7 @@ test event-7.1(double-click) {A double click on a lone character
     deleteWindows
 } -result {1.3 A 1.3 A}
 test event-7.2(double-click) {A double click on a lone character
-    in an entry widget should select that character} -constraints {
-    knownBug
-} -setup {
+    in an entry widget should select that character} -setup {
 	deleteWindows
 } -body {
     set t [toplevel .t]
@@ -822,7 +820,7 @@ test event-7.2(double-click) {A double click on a lone character
     return $result
 } -cleanup {
     deleteWindows
-} -result {3 A 4 A}
+} -result {4 A 4 A}
 
 # cleanup
 unset -nocomplain keypress_lookup

@@ -17,6 +17,7 @@
 #-------------------------------------------------------------------------
 
 if {[tk windowingsystem] eq "aqua"} {
+
     bind Radiobutton <Enter> {
 	tk::ButtonEnter %W
     }
@@ -109,6 +110,15 @@ bind Checkbutton <space> {
 bind Radiobutton <space> {
     tk::CheckRadioInvoke %W
 }
+bind Button <<Invoke>> {
+    tk::ButtonInvoke %W
+}
+bind Checkbutton <<Invoke>> {
+    tk::CheckRadioInvoke %W
+}
+bind Radiobutton <<Invoke>> {
+    tk::CheckRadioInvoke %W
+}
 
 bind Button <FocusIn> {}
 bind Button <Enter> {
@@ -134,7 +144,7 @@ bind Radiobutton <Leave> {
 if {"win32" eq [tk windowingsystem]} {
 
 #########################
-# Windows implementation 
+# Windows implementation
 #########################
 
 # ::tk::ButtonEnter --

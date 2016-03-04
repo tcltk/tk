@@ -526,6 +526,7 @@ typedef struct TkDisplay {
 #define TK_DISPLAY_USE_IM			(1 << 1)
 #define TK_DISPLAY_WM_TRACING			(1 << 3)
 #define TK_DISPLAY_IN_WARP			(1 << 4)
+#define TK_DISPLAY_USE_XKB			(1 << 5)
 
 /*
  * One of the following structures exists for each error handler created by a
@@ -1076,6 +1077,9 @@ MODULE_SCOPE int	Tk_ListboxObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_LowerObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE int	Tk_MenuObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_MenubuttonObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -1106,13 +1110,15 @@ MODULE_SCOPE int	Tk_RaiseObjCmd(ClientData clientData,
 MODULE_SCOPE int	Tk_ScaleObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ScrollbarCmd(ClientData clientData,
-			    Tcl_Interp *interp, int argc, const char **argv);
+MODULE_SCOPE int	Tk_ScrollbarObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_SelectionObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SendCmd(ClientData clientData,
-			    Tcl_Interp *interp, int argc, const char **argv);
+MODULE_SCOPE int	Tk_SendObjCmd(ClientData clientData,
+			    Tcl_Interp *interp,int objc,
+			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_SendObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -1147,9 +1153,8 @@ MODULE_SCOPE void	TkFreeGeometryMaster(Tk_Window tkwin,
 
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
-MODULE_SCOPE int	TkCreateMenuCmd(Tcl_Interp *interp);
-MODULE_SCOPE int	TkDeadAppCmd(ClientData clientData,
-			    Tcl_Interp *interp, int argc, const char **argv);
+MODULE_SCOPE int	TkDeadAppObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc, Tcl_Obj *const argv[]);
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
 			    double *doublePtr);
@@ -1213,7 +1218,7 @@ MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
 
-#ifdef __WIN32__
+#ifdef _WIN32
 #define TkParseColor XParseColor
 #else
 MODULE_SCOPE Status TkParseColor (Display * display,
@@ -1239,7 +1244,7 @@ MODULE_SCOPE int SquareObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
 MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK))
+#if !(defined(_WIN32) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
 #else
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);

@@ -336,8 +336,8 @@ Tk_SendObjCmd(
     for (i = 1; i < (objc - 1); ) {
 	stringRep = Tcl_GetString(objv[i]);
 	if (stringRep[0] == '-') {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], sendOptions, "option", 0,
-		    &index) != TCL_OK) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
+		    sizeof(char *), "option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (index == 0) {

@@ -81,8 +81,9 @@ static Tk_ImageType imageType = {
  * Forward declarations for functions defined later in this file:
  */
 
-static int              ImageCmd(ClientData dummy,
-                            Tcl_Interp *interp, int argc, const char **argv);
+static int              ImageObjCmd(ClientData dummy,
+                            Tcl_Interp *interp, int objc,
+            			    Tcl_Obj * const objv[]);
 
 
 /*
@@ -175,7 +176,7 @@ ImageCreate(
     strcpy(timPtr->imageName, name);
     timPtr->varName = ckalloc((unsigned) (strlen(varName) + 1));
     strcpy(timPtr->varName, varName);
-    Tcl_CreateCommand(interp, name, ImageCmd, timPtr, NULL);
+    Tcl_CreateObjCommand(interp, name, ImageObjCmd, timPtr, NULL);
     *clientDataPtr = timPtr;
     Tk_ImageChanged(master, 0, 0, 30, 15, 30, 15);
     return TCL_OK;
@@ -184,7 +185,7 @@ ImageCreate(
 /*
  *----------------------------------------------------------------------
  *
- * ImageCmd --
+ * ImageObjCmd --
  *
  *	This function implements the commands corresponding to individual
  *	images.
@@ -200,38 +201,37 @@ ImageCreate(
 
 	/* ARGSUSED */
 static int
-ImageCmd(
+ImageObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
 {
     TImageMaster *timPtr = clientData;
     int x, y, width, height;
 
-    if (argc < 2) {
-	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], "option ?arg ...?", NULL);
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (strcmp(argv[1], "changed") == 0) {
-	if (argc != 8) {
-	    Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-		    " changed x y width height imageWidth imageHeight", NULL);
+    if (strcmp(Tcl_GetString(objv[1]), "changed") == 0) {
+	if (objc != 8) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "changed x y width height"
+		    " imageWidth imageHeight");
 	    return TCL_ERROR;
 	}
-	if ((Tcl_GetInt(interp, argv[2], &x) != TCL_OK)
-		|| (Tcl_GetInt(interp, argv[3], &y) != TCL_OK)
-		|| (Tcl_GetInt(interp, argv[4], &width) != TCL_OK)
-		|| (Tcl_GetInt(interp, argv[5], &height) != TCL_OK)
-		|| (Tcl_GetInt(interp, argv[6], &timPtr->width) != TCL_OK)
-		|| (Tcl_GetInt(interp, argv[7], &timPtr->height) != TCL_OK)) {
+	if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
+		|| (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)
+		|| (Tcl_GetIntFromObj(interp, objv[4], &width) != TCL_OK)
+		|| (Tcl_GetIntFromObj(interp, objv[5], &height) != TCL_OK)
+		|| (Tcl_GetIntFromObj(interp, objv[6], &timPtr->width) != TCL_OK)
+		|| (Tcl_GetIntFromObj(interp, objv[7], &timPtr->height) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
 	Tk_ImageChanged(timPtr->master, x, y, width, height, timPtr->width,
 		timPtr->height);
     } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
+	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
 		"\": must be changed", NULL);
 	return TCL_ERROR;
     }
@@ -268,7 +268,7 @@ ImageGet(
     XGCValues gcValues;
 
     sprintf(buffer, "%s get", timPtr->imageName);
-    Tcl_SetVar(timPtr->interp, timPtr->varName, buffer,
+    Tcl_SetVar2(timPtr->interp, timPtr->varName, NULL, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 
     instPtr = ckalloc(sizeof(TImageInstance));
@@ -315,8 +315,8 @@ ImageDisplay(
     sprintf(buffer, "%s display %d %d %d %d %d %d",
 	    instPtr->masterPtr->imageName, imageX, imageY, width, height,
 	    drawableX, drawableY);
-    Tcl_SetVar(instPtr->masterPtr->interp, instPtr->masterPtr->varName, buffer,
-	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+    Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
+	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     if (width > (instPtr->masterPtr->width - imageX)) {
 	width = instPtr->masterPtr->width - imageX;
     }
@@ -358,8 +358,8 @@ ImageFree(
     char buffer[200];
 
     sprintf(buffer, "%s free", instPtr->masterPtr->imageName);
-    Tcl_SetVar(instPtr->masterPtr->interp, instPtr->masterPtr->varName, buffer,
-	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+    Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
+	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     Tk_FreeColor(instPtr->fg);
     Tk_FreeGC(display, instPtr->gc);
     ckfree(instPtr);
@@ -392,7 +392,7 @@ ImageDelete(
     char buffer[100];
 
     sprintf(buffer, "%s delete", timPtr->imageName);
-    Tcl_SetVar(timPtr->interp, timPtr->varName, buffer,
+    Tcl_SetVar2(timPtr->interp, timPtr->varName, NULL, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 
     Tcl_DeleteCommand(timPtr->interp, timPtr->imageName);

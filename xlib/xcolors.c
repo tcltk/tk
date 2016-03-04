@@ -14,11 +14,14 @@
 #include "tkInt.h"
 
 /*
- * Index array. For each of the characters 'a'-'y', this table gives the first color
- * starting with that character in the xColors table.
+ * Index array. For each of the characters 'a'-'y', this table gives the first
+ * color starting with that character in the xColors table.
  */
-static const unsigned char az[] = {0, 5, 13, 21, 45, 46, 50, 60, 62, 65, 66,
-	67, 91, 106, 109, 115, 126, 127, 130, 144, 149, 150, 152, 155, 156, 158};
+
+static const unsigned char az[] = {
+    0, 5, 13, 21, 45, 46, 50, 60, 62, 65, 66,
+    67, 91, 106, 109, 115, 126, 127, 130, 144, 149, 150, 152, 155, 156, 158
+};
 
 /*
  * Define an array that defines the mapping from color names to RGB values.
@@ -241,15 +244,17 @@ static const elem xColors[] = {
  *	None.
  *
  *----------------------------------------------------------------------
+ *
+ * This only handles hex-strings without 0x prefix. Luckily, that's just what
+ * we need.
  */
 
-#if defined(__WIN32__) && !defined(__CYGWIN__)
-#   ifdef NO_STRTOI64
-/* This version only handles hex-strings without 0x prefix */
-static __int64
-_strtoi64(const char *spec, char **p, int base)
+static Tcl_WideInt
+parseHex64bit(
+    const char *spec,
+    char **p)
 {
-    __int64 result = 0;
+    Tcl_WideInt result = 0;
     char c;
     while ((c = *spec)) {
 	if ((c >= '0') && (c <= '9')) {
@@ -267,16 +272,18 @@ _strtoi64(const char *spec, char **p, int base)
     *p = (char *) spec;
     return result;
 }
-#   endif
-#else
-#   define _strtoi64 strtoll
-#endif
 
-static int colorcmp(const char *spec, const char *pname, int *special) {
+static int
+colorcmp(
+    const char *spec,
+    const char *pname,
+    int *special)
+{
     int r;
     int c, d;
     int notequal = 0;
     int num = 0;
+
     do {
 	d = *pname++;
 	c = (*spec == ' ');
@@ -286,9 +293,12 @@ static int colorcmp(const char *spec, const char *pname, int *special) {
 	if ((unsigned)(d - 'A') <= (unsigned)('Z' - 'A')) {
 	    d += 'a' - 'A';
 	} else if (c) {
-	    /* A space doesn't match a lowercase, but we don't know
-	     * yet whether we should return a negative or positive
-	     * number. That depends on what follows. */
+	    /*
+	     * A space doesn't match a lowercase, but we don't know yet
+	     * whether we should return a negative or positive number. That
+	     * depends on what follows.
+	     */
+
 	    notequal = 1;
 	}
 	c = *spec++;
@@ -305,19 +315,24 @@ static int colorcmp(const char *spec, const char *pname, int *special) {
 	    }
 	}
 	r = c - d;
-    } while(!r && d);
+    } while (!r && d);
+
     if (!r && notequal) {
-	/* Strings are equal, but difference in spacings only. We should still
-	 * report not-equal, so "burly wood" is not a valid color */
+	/*
+	 * Strings are equal, but difference in spacings only. We should still
+	 * report not-equal, so "burly wood" is not a valid color.
+	 */
+
 	r = 1;
     }
     *special = num;
     return r;
 }
 
-#define RED(p) ((unsigned char)(p)[0])
-#define GREEN(p) ((unsigned char)(p)[1])
-#define BLUE(p) ((unsigned char)(p)[2])
+#define RED(p)		((unsigned char) (p)[0])
+#define GREEN(p)	((unsigned char) (p)[1])
+#define BLUE(p)		((unsigned char) (p)[2])
+#define US(expr)	((unsigned short) (expr))
 
 Status
 XParseColor(
@@ -328,42 +343,44 @@ XParseColor(
 {
     if (spec[0] == '#') {
 	char *p;
-	Tcl_WideInt value = _strtoi64(++spec, &p, 16);
+	Tcl_WideInt value = parseHex64bit(++spec, &p);
 
 	switch ((int)(p-spec)) {
 	case 3:
-	    colorPtr->red = (unsigned short) (((value >> 8) & 0xf) * 0x1111);
-	    colorPtr->green = (unsigned short) (((value >> 4) & 0xf) * 0x1111);
-	    colorPtr->blue = (unsigned short) ((value & 0xf) * 0x1111);
+	    colorPtr->red = US(((value >> 8) & 0xf) * 0x1111);
+	    colorPtr->green = US(((value >> 4) & 0xf) * 0x1111);
+	    colorPtr->blue = US((value & 0xf) * 0x1111);
 	    break;
 	case 6:
-	    colorPtr->red = (unsigned short) (((value >> 16) & 0xff) | ((value >> 8) & 0xff00));
-	    colorPtr->green = (unsigned short) (((value >> 8) & 0xff) | (value & 0xff00));
-	    colorPtr->blue = (unsigned short) ((value & 0xff) | (value << 8));
+	    colorPtr->red = US(((value >> 16) & 0xff) | ((value >> 8) & 0xff00));
+	    colorPtr->green = US(((value >> 8) & 0xff) | (value & 0xff00));
+	    colorPtr->blue = US((value & 0xff) | (value << 8));
 	    break;
 	case 9:
-	    colorPtr->red = (unsigned short) (((value >> 32) & 0xf) | ((value >> 20) & 0xfff0));
-	    colorPtr->green = (unsigned short) (((value >> 20) & 0xf) | ((value >> 8) & 0xfff0));
-	    colorPtr->blue = (unsigned short) (((value >> 8) & 0xf) | (value << 4));
+	    colorPtr->red = US(((value >> 32) & 0xf) | ((value >> 20) & 0xfff0));
+	    colorPtr->green = US(((value >> 20) & 0xf) | ((value >> 8) & 0xfff0));
+	    colorPtr->blue = US(((value >> 8) & 0xf) | (value << 4));
 	    break;
 	case 12:
-	    colorPtr->red = (unsigned short) (value >> 32);
-	    colorPtr->green = (unsigned short) (value >> 16);
-	    colorPtr->blue = (unsigned short) value;
+	    colorPtr->red = US(value >> 32);
+	    colorPtr->green = US(value >> 16);
+	    colorPtr->blue = US(value);
 	    break;
 	default:
 	    return 0;
 	}
     } else {
-	int size, num;
-	const elem *p;
-	const char *q;
 	/*
 	 * Perform a binary search on the sorted array of colors.
 	 * size = current size of search range
 	 * p    = pointer to current element being considered.
 	 */
+
+	int size, num;
+	const elem *p;
+	const char *q;
 	int r = (spec[0] - 'A') & 0xdf;
+
 	if (r >= (int) sizeof(az) - 1) {
 	    return 0;
 	}
@@ -386,11 +403,15 @@ XParseColor(
 	    r = colorcmp(spec + 1, *p, &num);
 	}
 	if (num > (*p)[31]) {
-	    if (((*p)[31] != 8) || num > 100)
+	    if (((*p)[31] != 8) || num > 100) {
 	    	return 0;
+	    }
 	    num = (num * 255 + 50) / 100;
 	    if ((num == 230) || (num == 128)) {
-	    	/* Those two entries have a deviation i.r.t the table */
+	    	/*
+		 * Those two entries have a deviation i.r.t the table.
+		 */
+
 		num--;
 	    }
 	    num |= (num << 8);
@@ -408,49 +429,6 @@ XParseColor(
     return 1;
 }
 
-
-#if 0
-int main() {
-    XColor color;
-    char buf[32];
-    int charindex;
-    int i, result;
-    int repeat = 1;
-    int num, maxnum;
-    char *end;
-
-    while (repeat--) {
-	buf[0] = 'a';
-	charindex = 1;
-	for (i = 0; i < sizeof(xColors)/sizeof(xColors[0]); ++i) {
-	    while (i >= az[charindex]) {
-		++charindex;
-		++(buf[0]);
-	    }
-	    strcpy(buf + 1, xColors[i]);
-	    end = buf + strlen(buf);
-	    num = 0;
-	    result = XParseColor(0, 0, buf, &color);
-	    printf("%3d %3d %3d\t\t%s\n", color.red >> 8, color.green >> 8, color.blue >> 8, buf);
-	    maxnum = xColors[i][31];
-	    if (maxnum == 8) maxnum = 100;
-	    while (result && ++num <= maxnum) {
-	    	sprintf(end, "%d", num);
-		result = XParseColor(0, 0, buf, &color);
-		printf("%3d %3d %3d\t\t%s\n", color.red >> 8, color.green >> 8, color.blue >> 8, buf);
-	    }
-	    if (!result) {
-		break;
-	    }
-	}
-    }
-    if (!result) {
-	printf("NOT OK: %s\n", buf);
-    } else {
-	printf("OK\n");
-    }
-}
-#endif
 /*
  * Local Variables:
  * mode: c

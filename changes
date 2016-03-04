@@ -7022,4 +7022,247 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2012-10-24 (bug fix)[3574893] crash in [wm forget] (porter)
 
---- Released 8.6.0, ??? ??, 2012 --- See ChangeLog for details ---
+2012-11-07 (bug fix)[3574708] crash in focus handling (fellows)
+
+2012-11-14 (bug fix)[3500545] fix [tk_getOpenFile -multiple] (bruederlin)
+
+2012-12-04 (bug fix)[3588824] Support weird image names in [text] (vogel)
+
+2012-12-06 (bug fix)[3592736] stop pink greys from buggy mingw builds (fellows)
+
+--- Released 8.6.0, December 20, 2012 --- See ChangeLog for details ---
+
+2013-01-04 (bug fix) Tk_InitStubs("8.6") rejected in 8.60 interp (nijtmans)
+
+2013-01-10 (bug fix)[3600251] Mac <Control-v> binding (kjnash,nijtmans)
+
+2013-01-10 (bug fix)[3600260] <<SelectNextPara>> binding (kjnash,nijtmans)
+
+2013-01-13 (bug fix)[3600290] restore $tk_strictMotif respect (kjnash,nijtmans)
+
+2013-01-22 (bug fix)[3601782] Tcl_InitStubs failure message (nijtmans)
+
+2013-01-31 (bug fix)[3599928] use XKeycodeToKeysym on old systems (cassoff)
+
+2013-02-04 (bug fix)[3603077] treeview update on tag add/remove (english)
+
+2013-02-28 (bug fix)[3599312] First Alt key event is lost (mcdonald)
+
+2013-03-11 (bug fix)[3607326] Crash [listbox .l -listvariable $array] (porter)
+
+2013-03-13 (enhancement) better build support for Debian arch (shadura)
+
+2013-03-27 (bug fix)[3608074] button, listbox, menu <<Invoke>> (nijtmans)
+
+2013-04-01 (bug fix)[3607830] Xkb runtime checks (griffin)
+
+2013-05-19 (platform support) FreeBSD updates (cerutti)
+
+2013-06-05 (bug fix)[3613759] [ttk::entry .e; .e xview end] (nijtmans)
+
+2013-06-05 (bug fix)[2100430] [ttk::entry .e; .e xview insert] (nijtmans)
+
+2013-06-28 (bug fix)[2501278] reverse ttk::scale key bindings {mcdonald)
+
+2013-07-02 (bug fix)[32afa6] corrected dirent64 check (griffin)
+
+2013-08-14 (bug fix)[069c9e] "option" value refcount crash (tim,nijtmans)
+
+2013-08-15 (bug fix)[c597acd] [$pb step] work with traces (english)
+
+2013-08-25 (bug fix)[3016181] Cocoa: [destroy $scrollbar] => crash (goddard)
+
+--- Released 8.6.1, September 19, 2013 --- http://core.tcl.tk/tk/ for details
+
+2013-10-27 (bug fix) OSX drawing lags (deily,steffen,walzer)
+
+2013-10-28 (bug fix)[3603436] png wrong component indices (nijtmans)
+
+2013-10-31 (bug fix) C++ friendly stubs struct declarations (nijtmans)
+
+2013-10-31 (bug fix)[c0cc9fd] PNG parser accept uppercase -format (nijtmans)
+
+2013-10-31 (bug fix) double free of a TkFont (nijtmans)
+
+2013-11-03 (bug fix)[1632447] support PPM maxval up to 65535 (fellows)
+
+2013-11-05 (bug fix)[426679e] OpenBSD man page rendering (nijtmans)
+
+2013-11-11 (bug fix)[f214b8a] multi-interp font teardown double free (porter)
+
+2013-11-11 (bug fix)[0aa5e85] option file \n syntax support (nijtmans)
+
+2013-11-20 (platforms) Support for Windows 8.1 (nijtmans)
+
+2014-01-23 (bug fix)[3606644] X: correct fontconfig dependence (venable)
+
+2014-01-23 (bug fix) FreeBSD build fixes (cerutti)
+
+2014-02-06 (bug fix)[3279221] [menu] event race (danckaert,kupries)
+
+2014-02-07 (bug fix)[6867cc1] creative writing in [tk fontchooser] (nijtmans)
+
+2014-02-11 (bug fix)[52ca3e7] XkbOpenDisplay macro correction (nijtmans)
+
+2014-03-16 (bug fix) Xcode 5.1 update; Retina displays (walzer)
+
+2014-03-20 (bug fix)[2f7cbd0] FreeBSD 10.0 build failure (nijtmans)
+
+2014-04-01 (bug fix)[5bcb502] @TK_LIBS@ in pkgconfig (badshah400,nijtmans)
+
+2014-05-27 (bug fix)[a80f5d7] autoscroll initiation (crogers,english)
+
+2014-07-07 (bug fix) OSX alpha channel rendering (culler,walzer)
+
+2014-07-08 (workaround)[4955f5d] Ocaml trouble with tailcall splice (nijtmans)
+
+2014-07-24 (bug fix) OSX [text] image display & scrolling (culler,walzer)
+
+2014-08-01 (bug fix) OSX font config crash (rob@bitkeeper)
+
+--- Released 8.6.2, August 27, 2014 --- http://core.tcl.tk/tk/ for details
+
+2014-08-27 (bug) Cocoa: Crash after [$button destroy] (walzer)
+
+2014-09-23 (bug) Cocoa: button and scroll display fixes (walzer)
+
+2014-09-24 (bug) Cocoa: improved drawing performance (walzer)
+
+2014-10-11 (bug)[9e487e] Phony button clicks from browsers to plugin (nijtmans)
+
+2014-10-11 (bug)[810c43] [text] elide changes advance epoch (vogel)
+
+2014-10-14 (bug)[fb35eb] fix PNG transparency appearance (walton,culler)
+
+2014-10-18 (feature)[TIP 432] Win: updated file dialogs (nadkarni)
+
+2014-10-26 Support for Windows 10 (nijtmans)
+
+2014-10-28 (bug) OSX: Improved ttk notebook tab metrics for Yosemite (walzer)
+
+2014-10-30 (bug)[3417012] [scale -digits $bigValue] segfault (vogel)
+
+2014-11-07 (bug)[3529885] [scale] handling of negative resolution (vogel)
+
+--- Released 8.6.3, November 12, 2014 --- http://core.tcl.tk/tk/ for details
+
+2014-11-14 (bug)[d43a10] shimmer-related crash in [tk_getOpenFile] (nadkarni)
+
+2014-11-23 (bug)[1c0d6e] Win build trouble with SIGDN (keene)
+
+2014-12-03 (bug)[4a0451] [tk_getOpenFile] result (nadkarni)
+
+2014-12-13 fix header files installation on OS X (houben)
+
+2015-01-02 (bug) Stop bit loss in [winfo id] on 64-bit Cocoa (porter)
+
+2015-02-06 (bug) several fixes to elided context in [text] (vogel)
+
+2015-02-06 (new feature)[TIP 433] %M binding substitution (mistachkin)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2015-02-22 (bug)[ab6dab] corrupt dashed lines in postscript (porter)
+
+Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+--- Released 8.6.4, March 12, 2015 --- http://core.tcl.tk/tk/ for details
+
+2015-03-10 (bug) Cocoa: premature image free crash (walzer)
+
+2015-03-15 (bug) Cocoa: wish launches in front. [focus -force] works (culler)
+
+2015-04-09 (bug)[e4ed00] [$text index "1.0 display wordstart"] crash (vogel)
+
+2015-04-09 (bug)[562118] Unicode support of "wordstart" modifier (vogel)
+
+2015-05-05 (bug)[06c3fc] PNG alpha error corrupted output file (gauthier,porter)
+
+2015-05-20 (bug)[dece63] various mem corruptions in images (mic42,porter)
+
+2015-05-24 (bug)[53f8fc] panedwindow geometry management (vogel)
+
+2015-05-26 (bug)[1641721] tk_getOpenFile symlink display doubled (nijtmans)
+
+2015-06-01 (bug)[d7bad5][2368195][3592454][1714535][1292219][3592454]
+                panedwindow fixes (vogel)
+
+2015-06-25 (bug)[805cff] Tk_ConfigureWidget() segfault (aspect,nijtmans)
+
+2015-07-13 (bug)[3f179a] Text widget crash with elided text (vogel)
+
+2015-07-16 (bug)[2886436] Stop [$text delete] acting before start index (vogel)
+
+2015-07-28 (bug)[1236306] TraverseToMenu error bound to toplevel destroy (vogel)
+
+2015-08-20 (bug)[00189c] MSVC 14: semi-static UCRT support (dower,nijtmans)
+
+2015-09-13 (bug)[cc0ba3] PNG read buffer overflow (maxjarek,porter)
+
+2015-09-29 (bug)[1501749] Crash embedded window delete bound to <Map> (vogel)
+
+2015-10-04 (license) Replace icons that lacked clear free license (cowals)
+
+2015-10-06 (bug)[46c83f] Win: tk_getOpenFile -initialdir (koend,nadkarni)
+
+2015-10-08 (new feature)[TIP 437] New panedwindow options (vogel)
+
+2015-10-09 (bug)[1669632] [text] autoseparator placement (nash,vogel)
+
+2015-10-09 (bug)[2262711] [text] RE search Unicode+elided (kaitzschu,vogel)
+
+2015-10-09 (bug)[1815161] [$text count -ypixels] needs management (vogel)
+
+2015-10-22 (bug)[1520118] Document spinbox validate expectations (vogel)
+
+2015-10-22 (bug)[1414025] $entry insertion cursor visibility (vogel)
+
+2015-10-26 (bug) PNG rendering on El Capitan (meier,walzer)
+
+2015-11-08 (bug)[2160206] menubutton panic (vogel)
+
+2015-11-08 (bug)[220854] Display trailing TAB in entry (vogel)
+
+2015-11-08 (bug)[542199] double click on lone char in entry (vogel)
+
+2015-11-08 (bug)[297442d] strict motif binding on <Control-underscore> (vogel)
+
+2015-11-08 (bug)[3601604] $listbox -takefocus (vogel)
+
+2015-11-09 (bug)[5ee8af] X, Win: 64-bit enable embedded windows (vogel)
+
+2015-11-29 (bug)[1997299] [text] tag borderwidth leak (vogel)
+
+2015-12-12 (bug)[1739605] [text see] misbehavior (danckaert)
+
+2015-12-13 (bug)[ff8a1e] Never-mapped [text] performance (danckaert)
+
+2015-12-19 (bug)[1700065] Report errors from -textvariable write trace (vogel)
+
+2015-12-19 (bug)[793909] -textvariable handle undefined namespace (vogel)
+
+2015-12-26 (bug)[2f78c7] crash with [text] and [tablelist] (vogel)
+
+2016-01-06 (bug)[1288433,3102228] <<ListboxSelect>> misfires (vogel)
+
+2016-01-08 (bug)[1510538] initial scrollbar width (vogel,nijtmans)
+
+2016-01-08 (bug)[1305128] event not received by scrollbar (vogel,nijtmans)
+
+2016-01-09 (bug)[1927212] Mousewheel/scrollbar bindings (vogel)
+
+2016-01-11 (bug)[63c354] Cocoa message boxes (culler)
+
+2016-01-12 (bug)[2049429] get more $text options from database (vogel)
+
+2016-01-22 (TIP 441) New option [listbox ... -justify] (vogel)
+
+2016-01-25 (bug) OBOE in ttk::notebook options parsing (bromley,english)
+
+2016-02-08 (enhance) [option readile] expects utf-8 file (oehlmann,nijtmans)
+
+2016-02-08 (bug) crash in [$text delete] (griffin,vogel)
+
+Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
+
+--- Released 8.6.5, February 29, 2016 --- http://core.tcl.tk/tk/ for details

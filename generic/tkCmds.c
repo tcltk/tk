@@ -14,7 +14,7 @@
 
 #include "tkInt.h"
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #include "tkWinInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
@@ -49,7 +49,7 @@ static int		WindowingsystemCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const *objv);
 
-#if defined(__WIN32__) || defined(MAC_OSX_TK)
+#if defined(_WIN32) || defined(MAC_OSX_TK)
 MODULE_SCOPE const TkEnsemble tkFontchooserEnsemble[];
 #else
 #define tkFontchooserEnsemble NULL
@@ -109,8 +109,8 @@ Tk_BellObjCmd(
     }
 
     for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObj(interp, objv[i], bellOptions, "option", 0,
-		&index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], bellOptions,
+		sizeof(char *), "option", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	switch ((enum options) index) {
@@ -452,7 +452,7 @@ TkFreeBindingTags(
 	     * have to be freed.
 	     */
 
-	    ckfree(p);
+	    ckfree((char *)p);
 	}
     }
     ckfree(winPtr->tagPtr);
@@ -649,7 +649,7 @@ TkInitTkCmd(
     ClientData clientData)
 {
     TkMakeEnsemble(interp, "::", "tk", clientData, tkCmdMap);
-#if defined(__WIN32__) || defined(MAC_OSX_TK)
+#if defined(_WIN32) || defined(MAC_OSX_TK)
     TkInitFontchooser(interp, clientData);
 #endif
     return TCL_OK;
@@ -914,7 +914,7 @@ WindowingsystemCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-#if defined(WIN32)
+#if defined(_WIN32)
     windowingsystem = "win32";
 #elif defined(MAC_OSX_TK)
     windowingsystem = "aqua";
@@ -1018,8 +1018,8 @@ Tk_TkwaitObjCmd(
 
     switch ((enum options) index) {
     case TKWAIT_VARIABLE:
-	if (Tcl_TraceVar(interp, Tcl_GetString(objv[2]),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	if (Tcl_TraceVar2(interp, Tcl_GetString(objv[2]),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		WaitVariableProc, &done) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -1031,8 +1031,8 @@ Tk_TkwaitObjCmd(
 	    }
 	    Tcl_DoOneEvent(0);
 	}
-	Tcl_UntraceVar(interp, Tcl_GetString(objv[2]),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(interp, Tcl_GetString(objv[2]),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		WaitVariableProc, &done);
 	break;
 
@@ -2094,7 +2094,7 @@ TkGetDisplayOf(
 /*
  *----------------------------------------------------------------------
  *
- * TkDeadAppCmd --
+ * TkDeadAppObjCmd --
  *
  *	If an application has been deleted then all Tk commands will be
  *	re-bound to this function.
@@ -2111,15 +2111,15 @@ TkGetDisplayOf(
 
 	/* ARGSUSED */
 int
-TkDeadAppCmd(
+TkDeadAppObjCmd(
     ClientData clientData,	/* Dummy. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
 {
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "can't invoke \"%s\" command: application has been destroyed", 
-	    argv[0]));
+	    "can't invoke \"%s\" command: application has been destroyed",
+	    Tcl_GetString(objv[0])));
     return TCL_ERROR;
 }
 
