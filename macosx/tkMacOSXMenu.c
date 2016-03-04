@@ -258,9 +258,10 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
-	    /*Add time for errors to fire if necessary. This is sub-optimal but avoids issues with Tcl/Cocoa event loop integration.*/
+	    /*Add time for errors to fire if necessary. This is sub-optimal
+	     *but avoids issues with Tcl/Cocoa event loop integration.
+	     */
 	    Tcl_Sleep(100);
-
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
 
@@ -411,7 +412,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 	    if (!mePtr || !(mePtr->entryFlags & ENTRY_APPLE_MENU)) {
 		applicationMenuItem = [NSMenuItem itemWithSubmenu:
-			[[_defaultApplicationMenu copy] autorelease]];
+			[_defaultApplicationMenu copy]];
 		[menu insertItem:applicationMenuItem atIndex:0];
 	    }
 	    [menu setSpecial:tkMainMenu];
@@ -419,7 +420,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	applicationMenu = (TKMenu *)[applicationMenuItem submenu];
 	if (![applicationMenu isSpecial:tkApplicationMenu]) {
 	    for (NSMenuItem *item in _defaultApplicationMenuItems) {
-		[applicationMenu addItem:[[item copy] autorelease]];
+		[applicationMenu addItem:[item copy]];
 	    }
 	    [applicationMenu setSpecial:tkApplicationMenu];
 	}
@@ -429,15 +430,13 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	for (NSMenuItem *item in itemArray) {
 	    TkMenuEntry *mePtr = (TkMenuEntry *)[item tag];
 	    TKMenu *submenu = (TKMenu *)[item submenu];
-
 	    if (mePtr && submenu) {
 		if ((mePtr->entryFlags & ENTRY_WINDOWS_MENU) &&
 			![submenu isSpecial:tkWindowsMenu]) {
 		    NSInteger index = 0;
 
 		    for (NSMenuItem *i in _defaultWindowsMenuItems) {
-			[submenu insertItem:[[i copy] autorelease] atIndex:
-				index++];
+			[submenu insertItem:[i copy] atIndex:index++];
 		    }
 		    [self setWindowsMenu:submenu];
 		    [submenu setSpecial:tkWindowsMenu];
@@ -446,8 +445,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 		    NSInteger index = 0;
 
 		    for (NSMenuItem *i in _defaultHelpMenuItems) {
-			[submenu insertItem:[[i copy] autorelease] atIndex:
-				index++];
+			[submenu insertItem:[i copy] atIndex:index++];
 		    }
 		    [submenu setSpecial:tkHelpMenu];
 		}
@@ -496,8 +494,7 @@ TkpNewMenu(
 				 * platform structure for. */
 {
     TKMenu *menu = [[TKMenu alloc] initWithTkMenu:menuPtr];
-    menuPtr->platformData = (TkMenuPlatformData)
-	    TkMacOSXMakeUncollectable(menu);
+    menuPtr->platformData = (TkMenuPlatformData) menu;
     CheckForSpecialMenu(menuPtr);
     return TCL_OK;
 }
@@ -522,7 +519,10 @@ void
 TkpDestroyMenu(
     TkMenu *menuPtr)		/* The common menu structure */
 {
-    TkMacOSXMakeCollectableAndRelease(menuPtr->platformData);
+    NSMenu* nsmenu = (NSMenu*)(menuPtr->platformData);
+
+    [nsmenu release];
+    menuPtr->platformData = NULL;
 }
 
 /*
@@ -555,8 +555,7 @@ TkpMenuNewEntry(
     } else {
 	menuItem = [menu newTkMenuItem:mePtr];
     }
-    mePtr->platformEntryData = (TkMenuPlatformEntryData)
-	    TkMacOSXMakeUncollectable(menuItem);
+    mePtr->platformEntryData = (TkMenuPlatformEntryData) menuItem;
 
     /*
      * Caller TkMenuEntry() already did this same insertion into the generic
@@ -684,6 +683,9 @@ TkpConfigureMenuEntry(
 		  NSArray *itemArray = [submenu itemArray];
 		  for (NSMenuItem *item in itemArray) {
 		    TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
+		    /* Work around an apparent bug where itemArray can have
+                      more items than the menu's entries[] array. */
+                    if (i >= menuRefPtr->menuPtr->numEntries) break;
 		    [item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
 		    i++;
 		  }
@@ -717,16 +719,21 @@ void
 TkpDestroyMenuEntry(
     TkMenuEntry *mePtr)
 {
+    NSMenuItem *menuItem;
+    TKMenu *menu;
+    NSInteger index;
+
     if (mePtr->platformEntryData && mePtr->menuPtr->platformData) {
-	TKMenu *menu = (TKMenu *) mePtr->menuPtr->platformData;
-	NSMenuItem *menuItem = (NSMenuItem *) mePtr->platformEntryData;
-	NSInteger index = [menu indexOfItem:menuItem];
+	menu = (TKMenu *) mePtr->menuPtr->platformData;
+	menuItem = (NSMenuItem *) mePtr->platformEntryData;
+	index = [menu indexOfItem:menuItem];
 
 	if (index > -1) {
 	    [menu removeItemAtIndex:index];
 	}
+	[menuItem release];
+	mePtr->platformEntryData = NULL;
     }
-    TkMacOSXMakeCollectableAndRelease(mePtr->platformEntryData);
 }
 
 /*
@@ -754,10 +761,18 @@ TkpPostMenu(
 				 * to be posted. */
     int y)			/* The global y-coordinate */
 {
-    NSWindow *win = [NSApp keyWindow];
-    if (!win) {
+
+
+    /* Get the object that holds this Tk Window.*/
+    Tk_Window root;
+    root = Tk_MainWindow(interp);
+    if (root == NULL) {
 	return TCL_ERROR;
     }
+
+    Drawable d = Tk_WindowId(root);
+    NSView *rootview = TkMacOSXGetRootControl(d);
+    NSWindow *win = [rootview window];
 
     inPostMenu = 1;
 
@@ -766,7 +781,7 @@ TkpPostMenu(
     NSRect frame = NSMakeRect(x + 9, tkMacOSXZeroScreenHeight - y - 9, 1, 1);
 
     frame.origin = [view convertPoint:
-	    [win convertScreenToBase:frame.origin] fromView:nil];
+	    [win convertPointFromScreen:frame.origin] fromView:nil];
 
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSPopUpButtonCell *popUpButtonCell = [[NSPopUpButtonCell alloc]
@@ -819,11 +834,16 @@ TkpSetWindowMenuBar(
  *	Puts the menu associated with a window into the menubar. Should only
  *	be called when the window is in front.
  *
+ *      This is a no-op on all other platforms.  On OS X it is a no-op when
+ *      passed a NULL menuName or a nonexistent menuName, with an exception
+ *      for the first call in a new interpreter.  In that special case, passing a
+ *      NULL menuName installs the default menu.
+ *
  * Results:
  *	None.
  *
  * Side effects:
- *	The menubar is changed.
+ *	The menubar may be changed.
  *
  *----------------------------------------------------------------------
  */
@@ -832,8 +852,7 @@ void
 TkpSetMainMenubar(
     Tcl_Interp *interp,		/* The interpreter of the application */
     Tk_Window tkwin,		/* The frame we are setting up */
-    const char *menuName)	/* The name of the menu to put in front. If
-				 * NULL, use the default menu bar. */
+    const char *menuName)	/* The name of the menu to put in front. */
 {
     static Tcl_Interp *currentInterp = NULL;
     TKMenu *menu = nil;

@@ -4,9 +4,6 @@
     #ifndef _TKCONFIG
     #define _TKCONFIG
 
-/* Define if building universal (internal helper macro) */
-#undef AC_APPLE_UNIVERSAL_BUILD
-
 /* Define to 1 if you have the <AvailabilityMacros.h> header file. */
 #undef HAVE_AVAILABILITYMACROS_H
 
@@ -15,6 +12,9 @@
 
 /* Do we have access to Darwin CoreFoundation.framework? */
 #undef HAVE_COREFOUNDATION
+
+/* Compiler support for module scope symbols */
+#undef HAVE_HIDDEN
 
 /* Do we have the intptr_t type? */
 #undef HAVE_INTPTR_T
@@ -25,9 +25,6 @@
 /* Define to 1 if you have the `Xft' library (-lXft). */
 #undef HAVE_LIBXFT
 
-/* Do we have <limits.h>? */
-#undef HAVE_LIMITS_H
-
 /* Define to 1 if you have the `lseek64' function. */
 #undef HAVE_LSEEK64
 
@@ -36,6 +33,9 @@
 
 /* Define to 1 if you have the `open64' function. */
 #undef HAVE_OPEN64
+
+/* Define to 1 if you have the `pthread_atfork' function. */
+#undef HAVE_PTHREAD_ATFORK
 
 /* Define to 1 if you have the `pthread_attr_setstacksize' function. */
 #undef HAVE_PTHREAD_ATTR_SETSTACKSIZE
@@ -88,6 +88,9 @@
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
 
+/* Do we have XkbKeycodeToKeysym? */
+#undef HAVE_XKBKEYCODETOKEYSYM
+
 /* Is XScreenSaver available? */
 #undef HAVE_XSS
 
@@ -109,14 +112,8 @@
 /* Do we have fd_set? */
 #undef NO_FD_SET
 
-/* Do we have <limits.h>? */
-#undef NO_LIMITS_H
-
 /* Do we have <stdlib.h>? */
 #undef NO_STDLIB_H
-
-/* No visibility attribute */
-#undef NO_VIZ
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
@@ -129,9 +126,6 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
-
-/* Define to the home page for this package. */
-#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
@@ -181,17 +175,12 @@
 /* Do we want to use the threaded memory allocator? */
 #undef USE_THREAD_ALLOC
 
-/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
-   significant byte first (like Motorola and SPARC, unlike Intel). */
-#if defined AC_APPLE_UNIVERSAL_BUILD
-# if defined __BIG_ENDIAN__
-#  define WORDS_BIGENDIAN 1
-# endif
-#else
-# ifndef WORDS_BIGENDIAN
-#  undef WORDS_BIGENDIAN
-# endif
-#endif
+/* Define to 1 if your processor stores words with the most significant byte
+   first (like Motorola and SPARC, unlike Intel and VAX). */
+#undef WORDS_BIGENDIAN
+
+/* Is XKeycodeToKeysym deprecated? */
+#undef XKEYCODETOKEYSYM_IS_DEPRECATED
 
 /* Are Darwin SUSv3 extensions available? */
 #undef _DARWIN_C_SOURCE
@@ -246,7 +235,7 @@
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
 
-/* Define to `unsigned int' if <sys/types.h> does not define. */
+/* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t
 
 /* Do we want to use the strtod() in compat? */

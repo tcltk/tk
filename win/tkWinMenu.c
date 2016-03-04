@@ -1948,7 +1948,7 @@ DrawMenuUnderline(
 	if (mePtr->underline < len) {
 	    const char *label, *start, *end;
 
-	    label = Tcl_GetStringFromObj(mePtr->labelPtr, NULL);
+	    label = Tcl_GetString(mePtr->labelPtr);
 	    start = Tcl_UtfAtIndex(label, mePtr->underline);
 	    end = Tcl_UtfNext(start);
 	    Tk_UnderlineChars(menuPtr->display, d,
@@ -3194,7 +3194,7 @@ SetDefaults(
         int padding;
 #endif
     } nc;
-    OSVERSIONINFO os;
+    OSVERSIONINFOW os;
 
     /*
      * Set all of the default options. The loop will terminate when we run out
@@ -3214,8 +3214,8 @@ SetDefaults(
 
     nc.metrics.cbSize = sizeof(nc);
 
-    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&os);
+    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+    GetVersionExW(&os);
     if (os.dwMajorVersion < 6) {
 	nc.metrics.cbSize -= sizeof(int);
     }

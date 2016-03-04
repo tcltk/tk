@@ -54,8 +54,17 @@ extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
  * platforms which don't have <tchar.h> we have to translate that
  * to strcmp here.
  */
-#ifdef __WIN32__
-#   include "tclInt.h"
+#ifdef _WIN32
+/*  Little hack to eliminate the need for "tclInt.h" here:
+    Just copy a small portion of TclIntPlatStubs, just
+    enough to make it work. See [600b72bfbc] */
+typedef struct {
+    int magic;
+    void *hooks;
+    void (*dummy[16]) (void); /* dummy entries 0-15, not used */
+    int (*tclpIsAtty) (int fd); /* 16 */
+} TclIntPlatStubs;
+extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #   include "tkWinInt.h"
 #else
 #   define TCHAR char
@@ -95,7 +104,7 @@ extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
  * it will conflict with a declaration elsewhere on some systems.
  */
 
-#if defined(__WIN32__) || defined(_WIN32)
+#if defined(_WIN32)
 #define isatty WinIsTty
 static int WinIsTty(int fd) {
     HANDLE handle;
@@ -108,9 +117,9 @@ static int WinIsTty(int fd) {
      */
 
 #if !defined(STATIC_BUILD)
-	if (tclStubsPtr->reserved9 && TclpIsAtty) {
+	if (tclStubsPtr->reserved9 && tclIntPlatStubsPtr->tclpIsAtty) {
 	    /* We are running on Cygwin */
-	    return TclpIsAtty(fd);
+	    return tclIntPlatStubsPtr->tclpIsAtty(fd);
 	}
 #endif
     handle = GetStdHandle(STD_INPUT_HANDLE + fd);
@@ -184,15 +193,18 @@ Tk_MainEx(
     InteractiveState is;
 
     /*
-     * Ensure that we are getting a compatible version of Tcl. This is really
-     * only an issue when Tk is loaded dynamically.
+     * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
-	abort();
+    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+	if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
+	    abort();
+	} else {
+	    Tcl_Panic("%s", Tcl_GetString(Tcl_GetObjResult(interp)));
+	}
     }
 
-#if defined(__WIN32__) && !defined(__WIN64__) && !defined(UNICODE) && !defined(STATIC_BUILD)
+#if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
 
     if (tclStubsPtr->reserved9) {
 	/* We are running win32 Tk under Cygwin, so let's check
@@ -223,7 +235,7 @@ Tk_MainEx(
     is.gotPartial = 0;
     Tcl_Preserve(interp);
 
-#if defined(__WIN32__) && !defined(__CYGWIN__)
+#if defined(_WIN32) && !defined(__CYGWIN__)
     Tk_InitConsoleChannels(interp);
 #endif
 
@@ -315,7 +327,7 @@ Tk_MainEx(
      */
 
     if (appInitProc(interp) != TCL_OK) {
-	TkpDisplayWarning(Tcl_GetStringResult(interp),
+	TkpDisplayWarning(Tcl_GetString(Tcl_GetObjResult(interp)),
 		"application-specific initialization failed");
     }
 
@@ -335,7 +347,7 @@ Tk_MainEx(
 	     */
 
 	    Tcl_AddErrorInfo(interp, "");
-	    TkpDisplayWarning(Tcl_GetVar(interp, "errorInfo",
+	    TkpDisplayWarning(Tcl_GetVar2(interp, "errorInfo", NULL,
 		    TCL_GLOBAL_ONLY), "Error in startup script");
 	    Tcl_DeleteInterp(interp);
 	    Tcl_Exit(1);
@@ -448,7 +460,7 @@ StdinProc(
 	Tcl_CreateChannelHandler(isPtr->input, TCL_READABLE, StdinProc, isPtr);
     }
     Tcl_DStringFree(&isPtr->command);
-    if (Tcl_GetStringResult(interp)[0] != '\0') {
+    if (Tcl_GetString(Tcl_GetObjResult(interp))[0] != '\0') {
 	if ((code != TCL_OK) || (isPtr->tty)) {
 	    chan = Tcl_GetStdChannel((code != TCL_OK) ? TCL_STDERR : TCL_STDOUT);
 	    if (chan) {
@@ -511,7 +523,7 @@ Prompt(
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (script that generates prompt)");
-	    if (Tcl_GetStringResult(interp)[0] != '\0') {
+	    if (Tcl_GetString(Tcl_GetObjResult(interp))[0] != '\0') {
 		chan = Tcl_GetStdChannel(TCL_STDERR);
 		if (chan != NULL) {
 		    Tcl_WriteObj(chan, Tcl_GetObjResult(interp));

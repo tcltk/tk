@@ -41,8 +41,6 @@ interp alias {} EvalAttached {} consoleinterp eval
 # 	None.
 
 proc ::tk::ConsoleInit {} {
-    global tcl_platform
-
     if {![consoleinterp eval {set tcl_interactive}]} {
 	wm withdraw .
     }
@@ -78,7 +76,7 @@ proc ::tk::ConsoleInit {} {
     AmpMenuArgs	.menubar.edit add command -label [mc P&aste] -accel "$mod+V"\
 	    -command {event generate .console <<Paste>>}
 
-    if {$tcl_platform(platform) ne "windows"} {
+    if {[tk windowingsystem] ne "win32"} {
 	AmpMenuArgs .menubar.edit add command -label [mc Cl&ear] \
 		-command {event generate .console <<Clear>>}
     } else {
@@ -114,6 +112,8 @@ proc ::tk::ConsoleInit {} {
         -accel "$mod++" -command {event generate .console <<Console_FontSizeIncr>>}
     AmpMenuArgs .menubar.edit add command -label [mc "&Decrease Font Size"] \
         -accel "$mod+-" -command {event generate .console <<Console_FontSizeDecr>>}
+    AmpMenuArgs .menubar.edit add command -label [mc "Fit To Screen Width"] \
+        -command {event generate .console <<Console_FitScreenWidth>>}
 
     if {[tk windowingsystem] eq "aqua"} {
 	.menubar add cascade -label [mc Window] -menu [menu .menubar.window]
@@ -193,7 +193,7 @@ proc ::tk::ConsoleInit {} {
     $w mark set promptEnd insert
     $w mark gravity promptEnd left
 
-    if {$tcl_platform(platform) eq "windows"} {
+    if {[tk windowingsystem] ne "aqua"} {
 	# Subtle work-around to erase the '% ' that tclMain.c prints out
 	after idle [subst -nocommand {
 	    if {[$con get 1.0 output] eq "% "} { $con delete 1.0 output }
@@ -311,7 +311,7 @@ proc ::tk::ConsoleHistory {cmd} {
 
 # ::tk::ConsolePrompt --
 # This procedure draws the prompt.  If tcl_prompt1 or tcl_prompt2
-# exists in the main interpreter it will be called to generate the 
+# exists in the main interpreter it will be called to generate the
 # prompt.  Otherwise, a hard coded default prompt is printed.
 #
 # Arguments:
@@ -375,6 +375,26 @@ proc ::tk::console::Paste {w} {
             tk::ConsoleInvoke
             tk::ConsoleInsert $w $x
         }
+    }
+}
+
+# Fit TkConsoleFont to window width
+proc ::tk::console::FitScreenWidth {w} {
+    set width [winfo screenwidth $w]
+    set cwidth [$w cget -width]
+    set s -50
+    set fit 0
+    array set fi [font configure TkConsoleFont]
+    while {$s < 0} {
+        set fi(-size) $s
+        set f [font create {*}[array get fi]]
+        set c [font measure $f "eM"]
+        font delete $f
+        if {$c * $cwidth < 1.667 * $width} {
+            font configure TkConsoleFont -size $s
+            break
+        }
+	incr s 2
     }
 }
 
@@ -600,6 +620,9 @@ proc ::tk::ConsoleBind {w} {
 	    tk fontchooser configure -font TkConsoleFont
 	}
     }
+    bind Console <<Console_FitScreenWidth>> {
+	::tk::console::FitScreenWidth %W
+    }
 
     ##
     ## Bindings for doing special things based on certain keys
@@ -781,7 +804,7 @@ proc ::tk::console::TagProc w {
 # 	c2	- second char of pair
 #
 # Calls:	::tk::console::Blink
- 
+
 proc ::tk::console::MatchPair {w c1 c2 {lim 1.0}} {
     if {!$::tk::console::magicKeys} {
 	return
@@ -836,7 +859,7 @@ proc ::tk::console::MatchPair {w c1 c2 {lim 1.0}} {
 #	w	- console text widget
 #
 # Calls:	::tk::console::Blink
- 
+
 proc ::tk::console::MatchQuote {w {lim 1.0}} {
     if {!$::tk::console::magicKeys} {
 	return
@@ -971,7 +994,7 @@ proc ::tk::console::Expand {w {type ""}} {
 #
 # Returns:	list containing longest unique match followed by all the
 #		possible further matches
- 
+
 proc ::tk::console::ExpandPathname str {
     set pwd [EvalAttached pwd]
     if {[catch {EvalAttached [list cd [file dirname $str]]} err opt]} {
@@ -987,8 +1010,7 @@ proc ::tk::console::ExpandPathname str {
 	set match {}
     } else {
 	if {[llength $m] > 1} {
-	    global tcl_platform
-	    if {[string match windows $tcl_platform(platform)]} {
+	    if { $::tcl_platform(platform) eq "windows" } {
 		## Windows is screwy because it's case insensitive
 		set tmp [ExpandBestMatch [string tolower $m] \
 			[string tolower $dir]]

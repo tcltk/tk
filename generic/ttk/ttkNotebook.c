@@ -901,7 +901,7 @@ static int NotebookAddCommand(
     if (tab->state == TAB_STATE_HIDDEN) {
 	tab->state = TAB_STATE_NORMAL;
     }
-    if (ConfigureTab(interp, nb, tab, slaveWindow, objc-4,objv+4) != TCL_OK) {
+    if (ConfigureTab(interp, nb, tab, slaveWindow, objc-3,objv+3) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1058,9 +1058,8 @@ static int NotebookIdentifyCommand(
 
     if (   Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
 	|| Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
-	|| (objc == 5 &&
-	    Tcl_GetIndexFromObj(interp, objv[2], whatTable, "option", 0, &what)
-		!= TCL_OK)
+	|| (objc == 5 && Tcl_GetIndexFromObjStruct(interp, objv[2], whatTable,
+		sizeof(char *), "option", 0, &what) != TCL_OK)
     ) {
 	return TCL_ERROR;
     }
