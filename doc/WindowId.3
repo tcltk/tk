@@ -4,9 +4,9 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
-.so man.macros
+'\"
 .TH Tk_WindowId 3 "8.4" Tk "Tk Library Procedures"
+.so man.macros
 .BS
 .SH NAME
 Tk_WindowId, Tk_Parent, Tk_Display, Tk_DisplayName, Tk_ScreenNumber, Tk_Screen, Tk_X, Tk_Y, Tk_Width, Tk_Height, Tk_Changes, Tk_Attributes, Tk_IsContainer, Tk_IsEmbedded, Tk_IsMapped, Tk_IsTopLevel, Tk_ReqWidth, Tk_ReqHeight, Tk_MinReqWidth, Tk_MinReqHeight, Tk_InternalBorderLeft, Tk_InternalBorderRight, Tk_InternalBorderTop, Tk_InternalBorderBottom, Tk_Visual, Tk_Depth, Tk_Colormap, Tk_Interp  \- retrieve information from Tk's local data structure
@@ -168,7 +168,7 @@ the window's minimum requested size.  These values correspond to the last
 call to \fBTk_SetMinimumRequestSize\fR for \fItkwin\fR.
 .PP
 \fBTk_InternalBorderLeft\fR, \fBTk_InternalBorderRight\fR,
-\fBTk_InternalBorderTop\fR and \fBTk_InternalBorderBottom\fR 
+\fBTk_InternalBorderTop\fR and \fBTk_InternalBorderBottom\fR
 return the width of one side of the internal border
 that has been requested for \fItkwin\fR, or 0 if no internal border was
 requested.  The return value is simply the last value passed to

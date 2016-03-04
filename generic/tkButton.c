@@ -797,8 +797,8 @@ ButtonWidgetObjCmd(
         Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    result = Tcl_GetIndexFromObj(interp, objv[1], commandNames[butPtr->type],
-	    "option", 0, &index);
+    result = Tcl_GetIndexFromObjStruct(interp, objv[1], commandNames[butPtr->type],
+	    sizeof(char *), "option", 0, &index);
     if (result != TCL_OK) {
 	return result;
     }
@@ -962,8 +962,8 @@ DestroyButton(
 
     Tcl_DeleteCommandFromToken(butPtr->interp, butPtr->widgetCmd);
     if (butPtr->textVarNamePtr != NULL) {
-	Tcl_UntraceVar(butPtr->interp, Tcl_GetString(butPtr->textVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(butPtr->interp, Tcl_GetString(butPtr->textVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonTextVarProc, butPtr);
     }
     if (butPtr->image != NULL) {
@@ -997,8 +997,8 @@ DestroyButton(
 	Tk_FreeTextLayout(butPtr->textLayout);
     }
     if (butPtr->selVarNamePtr != NULL) {
-	Tcl_UntraceVar(butPtr->interp, Tcl_GetString(butPtr->selVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(butPtr->interp, Tcl_GetString(butPtr->selVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonVarProc, butPtr);
     }
     Tk_FreeConfigOptions((char *) butPtr, butPtr->optionTable,
@@ -1045,13 +1045,13 @@ ConfigureButton(
      */
 
     if (butPtr->textVarNamePtr != NULL) {
-	Tcl_UntraceVar(interp, Tcl_GetString(butPtr->textVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(interp, Tcl_GetString(butPtr->textVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonTextVarProc, butPtr);
     }
     if (butPtr->selVarNamePtr != NULL) {
-	Tcl_UntraceVar(interp, Tcl_GetString(butPtr->selVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_UntraceVar2(interp, Tcl_GetString(butPtr->selVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonVarProc, butPtr);
     }
 
@@ -1297,13 +1297,13 @@ ConfigureButton(
      */
 
     if (butPtr->textVarNamePtr != NULL) {
-	Tcl_TraceVar(interp, Tcl_GetString(butPtr->textVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_TraceVar2(interp, Tcl_GetString(butPtr->textVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonTextVarProc, butPtr);
     }
     if (butPtr->selVarNamePtr != NULL) {
-	Tcl_TraceVar(interp, Tcl_GetString(butPtr->selVarNamePtr),
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	Tcl_TraceVar2(interp, Tcl_GetString(butPtr->selVarNamePtr),
+		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonVarProc, butPtr);
     }
 
@@ -1618,8 +1618,8 @@ ButtonVarProc(
     if (flags & TCL_TRACE_UNSETS) {
 	butPtr->flags &= ~(SELECTED | TRISTATED);
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_TraceVar(interp, Tcl_GetString(butPtr->selVarNamePtr),
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	    Tcl_TraceVar2(interp, Tcl_GetString(butPtr->selVarNamePtr),
+		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ButtonVarProc, clientData);
 	}
 	goto redisplay;
@@ -1643,7 +1643,7 @@ ButtonVarProc(
 	}
 	butPtr->flags |= SELECTED;
         butPtr->flags &= ~TRISTATED;
-    } else if (butPtr->offValuePtr 
+    } else if (butPtr->offValuePtr
 	&& strcmp(value, Tcl_GetString(butPtr->offValuePtr)) == 0) {
 	if (!(butPtr->flags & (SELECTED | TRISTATED))) {
 	    return NULL;
@@ -1712,8 +1712,8 @@ ButtonTextVarProc(
 	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
 	    Tcl_ObjSetVar2(interp, butPtr->textVarNamePtr, NULL,
 		    butPtr->textPtr, TCL_GLOBAL_ONLY);
-	    Tcl_TraceVar(interp, Tcl_GetString(butPtr->textVarNamePtr),
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	    Tcl_TraceVar2(interp, Tcl_GetString(butPtr->textVarNamePtr),
+		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ButtonTextVarProc, clientData);
 	}
 	return NULL;

@@ -113,6 +113,10 @@ Tk_ConfigureWidget(
 
     staticSpecs = GetCachedSpecs(interp, specs);
 
+    for (specPtr = staticSpecs; specPtr->type != TK_CONFIG_END; specPtr++) {
+	specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
+    }
+
     /*
      * Pass one: scan through all of the arguments, processing those that
      * match entries in the specs.
@@ -122,7 +126,7 @@ Tk_ConfigureWidget(
 	const char *arg;
 
 	if (flags & TK_CONFIG_OBJS) {
-	    arg = Tcl_GetStringFromObj((Tcl_Obj *) *argv, NULL);
+	    arg = Tcl_GetString((Tcl_Obj *) *argv);
 	} else {
 	    arg = *argv;
 	}
@@ -167,7 +171,6 @@ Tk_ConfigureWidget(
 	    if ((specPtr->specFlags & TK_CONFIG_OPTION_SPECIFIED)
 		    || (specPtr->argvName == NULL)
 		    || (specPtr->type == TK_CONFIG_SYNONYM)) {
-		specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
 		continue;
 	    }
 	    if (((specPtr->specFlags & needFlags) != needFlags)
@@ -718,7 +721,7 @@ FormatConfigInfo(
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree(argv[4]);
+	    ckfree((char *) argv[4]);
 	} else {
 	    freeProc((char *) argv[4]);
 	}
@@ -939,7 +942,7 @@ Tk_ConfigureValue(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(result, -1));
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
-	    ckfree(result);
+	    ckfree((char *) result);
 	} else {
 	    freeProc((char *) result);
 	}
@@ -1126,7 +1129,6 @@ GetCachedSpecs(
 		    specPtr->defValue = Tk_GetUid(specPtr->defValue);
 		}
 	    }
-	    specPtr->specFlags &= ~TK_CONFIG_OPTION_SPECIFIED;
 	}
     } else {
 	cachedSpecs = Tcl_GetHashValue(entryPtr);

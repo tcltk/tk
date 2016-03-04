@@ -1673,11 +1673,10 @@ GetPolygonIndex(
     int *indexPtr)		/* Where to store converted index. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    int length;
-    const char *string = Tcl_GetStringFromObj(obj, &length);
+    const char *string = Tcl_GetString(obj);
 
     if (string[0] == 'e') {
-	if (strncmp(string, "end", (unsigned)length) != 0) {
+	if (strncmp(string, "end", obj->length) != 0) {
 	    goto badIndex;
 	}
 	*indexPtr = 2*(polyPtr->numPoints - polyPtr->autoClosed);

@@ -138,8 +138,8 @@ TkTextImageCmd(
 	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings, "option", 0,
-	    &idx) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
+	    sizeof(char *), "option", 0, &idx) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch ((enum opts) idx) {
@@ -785,6 +785,10 @@ TkTextImageIndex(
 {
     Tcl_HashEntry *hPtr;
     TkTextSegment *eiPtr;
+
+    if (textPtr == NULL) {
+	return 0;
+    }
 
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name);
     if (hPtr == NULL) {

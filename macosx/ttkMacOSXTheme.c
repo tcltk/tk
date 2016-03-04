@@ -294,14 +294,13 @@ static Ttk_StateTable TabPositionTable[] = {
  *       TP30000359-TPXREF116>
  */
 
-static const int TAB_HEIGHT = 10;
-static const int TAB_OVERLAP = 10;
-
 static void TabElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    *heightPtr = TAB_HEIGHT + TAB_OVERLAP - 1;
+    GetThemeMetric(kThemeMetricLargeTabHeight, (SInt32 *)heightPtr);
+    *paddingPtr = Ttk_MakePadding(0, 0, 0, 2);
+
 }
 
 static void TabElementDraw(
@@ -319,7 +318,6 @@ static void TabElementDraw(
 	.position = Ttk_StateTableLookup(TabPositionTable, state),
     };
 
-    bounds.size.height += TAB_OVERLAP;
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawTab, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
@@ -357,8 +355,8 @@ static void PaneElementDraw(
 	.adornment = kHIThemeTabPaneAdornmentNormal,
     };
 
-    bounds.origin.y -= TAB_OVERLAP;
-    bounds.size.height += TAB_OVERLAP;
+    bounds.origin.y -= kThemeMetricTabFrameOverlap;
+    bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
     END_DRAWING
@@ -520,6 +518,10 @@ static Ttk_ElementSpec ComboboxElementSpec = {
     ComboboxElementDraw
 };
 
+
+
+
+
 /*----------------------------------------------------------------------
  * +++ Spinbuttons.
  *
@@ -592,6 +594,7 @@ static TrackElementData ScaleData = {
     kThemeSlider, kThemeMetricHSliderHeight
 };
 
+
 typedef struct {
     Tcl_Obj *fromObj;		/* minimum value */
     Tcl_Obj *toObj;		/* maximum value */
@@ -652,6 +655,7 @@ static void TrackElementDraw(
 		kThemeThumbPressed : 0;
 	info.trackInfo.slider.thumbDir = kThemeThumbPlain;
     }
+
 
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);

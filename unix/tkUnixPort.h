@@ -20,11 +20,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <fcntl.h>
-#ifndef NO_LIMITS_H
-#   include <limits.h>
-#else
-#   include "../compat/limits.h"
-#endif
+#include <limits.h>
 #include <math.h>
 #include <pwd.h>
 #ifdef NO_STDLIB_H
@@ -114,6 +110,7 @@
 #endif
 
 #ifdef __CYGWIN__
+#   include "tkIntXlibDecls.h"
 #   define UINT unsigned int
 #   define HWND void *
 #   define HDC void *
@@ -126,9 +123,6 @@
 #   define WPARAM void *
 #   define LPARAM void *
 #   define LRESULT void *
-
-EXTERN int TkPutImage (unsigned long *, int, Display *, Drawable, GC,
-	XImage *, int, int, int, int, unsigned int, unsigned int);
 
 #else /* !__CYGWIN__ */
     /*

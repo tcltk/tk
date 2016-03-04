@@ -330,7 +330,7 @@ ImgBmapConfigureMaster(
  *	None.
  *
  * Side effects:
- *	Generates errors via Tcl_BackgroundError if there are problems in
+ *	Generates errors via Tcl_BackgroundException if there are problems in
  *	setting up the instance.
  *
  *----------------------------------------------------------------------
@@ -448,7 +448,7 @@ ImgBmapConfigureInstance(
     Tcl_AppendObjToErrorInfo(masterPtr->interp, Tcl_ObjPrintf(
 	    "\n    (while configuring image \"%s\")", Tk_NameOfImage(
 	    masterPtr->tkMaster)));
-    Tcl_BackgroundError(masterPtr->interp);
+    Tcl_BackgroundException(masterPtr->interp, TCL_ERROR);
 }
 
 /*
@@ -764,8 +764,8 @@ ImgBmapCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], bmapOptions, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], bmapOptions,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch (index) {

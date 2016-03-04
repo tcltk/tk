@@ -1047,7 +1047,7 @@ CanvasWidgetCmd(
 	    command = Tk_GetBinding(interp, canvasPtr->bindingTable,
 		    object, Tcl_GetString(objv[3]));
 	    if (command == NULL) {
-		const char *string = Tcl_GetStringResult(interp);
+		const char *string = Tcl_GetString(Tcl_GetObjResult(interp));
 
 		/*
 		 * Ignore missing binding errors. This is a special hack that
@@ -1242,14 +1242,15 @@ CanvasWidgetCmd(
 	int isNew = 0;
 	Tcl_HashEntry *entryPtr;
 	const char *arg;
-	int length;
+	size_t length;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "type coords ?arg ...?");
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	arg = Tcl_GetStringFromObj(objv[2], &length);
+	arg = Tcl_GetString(objv[2]);
+	length = objv[2]->length;
 	c = arg[0];
 
 	/*
@@ -1261,7 +1262,7 @@ CanvasWidgetCmd(
 	Tcl_MutexLock(&typeListMutex);
 	for (typePtr = typeList; typePtr != NULL; typePtr = typePtr->nextPtr){
 	    if ((c == typePtr->name[0])
-		    && (!strncmp(arg, typePtr->name, (unsigned)length))) {
+		    && (!strncmp(arg, typePtr->name, length))) {
 		if (matchPtr != NULL) {
 		    Tcl_MutexUnlock(&typeListMutex);
 		    goto badType;
@@ -2445,6 +2446,19 @@ DisplayCanvas(
     if (!Tk_IsMapped(tkwin)) {
 	goto done;
     }
+
+#ifdef MAC_OSX_TK
+    /*
+     * If drawing is disabled, all we need to do is
+     * clear the REDRAW_PENDING flag.
+     */
+    TkWindow *winPtr = (TkWindow *)(canvasPtr->tkwin);
+    MacDrawable *macWin = winPtr->privatePtr;
+    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
+	canvasPtr->flags &= ~REDRAW_PENDING;
+	return;
+    }
+#endif
 
     /*
      * Choose a new current item if that is needed (this could cause event
@@ -5539,6 +5553,7 @@ CanvasUpdateScrollbars(
     int xOrigin, yOrigin, inset, width, height;
     int scrollX1, scrollX2, scrollY1, scrollY2;
     char *xScrollCmd, *yScrollCmd;
+    Tcl_DString buf;
 
     /*
      * Save all the relevant values from the canvasPtr, because it might be
@@ -5569,8 +5584,12 @@ CanvasUpdateScrollbars(
 	Tcl_Obj *fractions = ScrollFractions(xOrigin + inset,
 		xOrigin + width - inset, scrollX1, scrollX2);
 
-	result = Tcl_VarEval(interp, xScrollCmd," ",Tcl_GetString(fractions),
-		NULL);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, xScrollCmd, -1);
+	Tcl_DStringAppend(&buf, " ", -1);
+	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
 	    Tcl_BackgroundException(interp, result);
@@ -5583,8 +5602,12 @@ CanvasUpdateScrollbars(
 	Tcl_Obj *fractions = ScrollFractions(yOrigin + inset,
 		yOrigin + height - inset, scrollY1, scrollY2);
 
-	result = Tcl_VarEval(interp, yScrollCmd," ",Tcl_GetString(fractions),
-		NULL);
+	Tcl_DStringInit(&buf);
+	Tcl_DStringAppend(&buf, yScrollCmd, -1);
+	Tcl_DStringAppend(&buf, " ", -1);
+	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
 	    Tcl_BackgroundException(interp, result);

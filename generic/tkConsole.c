@@ -84,7 +84,7 @@ static const Tcl_ChannelType consoleChannelType = {
     NULL
 };
 
-#ifdef __WIN32__
+#ifdef _WIN32
 #include <windows.h>
 
 /*
@@ -220,11 +220,10 @@ Tk_InitConsoleChannels(
     Tcl_Channel consoleChannel;
 
     /*
-     * Ensure that we are getting a compatible version of Tcl. This is really
-     * only an issue when Tk is loaded dynamically.
+     * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
         return;
     }
 
@@ -439,7 +438,8 @@ Tk_CreateConsoleWindow(
     }
 
     Tcl_Preserve(consoleInterp);
-    result = Tcl_GlobalEval(consoleInterp, "source $tk_library/console.tcl");
+    result = Tcl_EvalEx(consoleInterp, "source $tk_library/console.tcl",
+	    -1, TCL_EVAL_GLOBAL);
     if (result == TCL_ERROR) {
 	Tcl_SetReturnOptions(interp,
 		Tcl_GetReturnOptions(consoleInterp, result));
@@ -531,7 +531,7 @@ ConsoleOutput(
 
 	    Tcl_DStringFree(&ds);
 	    Tcl_IncrRefCount(cmd);
-	    Tcl_GlobalEvalObj(consoleInterp, cmd);
+	    Tcl_EvalObjEx(consoleInterp, cmd, TCL_EVAL_GLOBAL);
 	    Tcl_DecrRefCount(cmd);
 	}
     }
@@ -697,8 +697,8 @@ ConsoleObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], options, "option", 0, &index)
-	    != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -741,7 +741,7 @@ ConsoleObjCmd(
     Tcl_IncrRefCount(cmd);
     if (consoleInterp && !Tcl_InterpDeleted(consoleInterp)) {
 	Tcl_Preserve(consoleInterp);
-	result = Tcl_GlobalEvalObj(consoleInterp, cmd);
+	result = Tcl_EvalObjEx(consoleInterp, cmd, TCL_EVAL_GLOBAL);
 	Tcl_SetReturnOptions(interp,
 		Tcl_GetReturnOptions(consoleInterp, result));
 	Tcl_SetObjResult(interp, Tcl_GetObjResult(consoleInterp));
@@ -787,8 +787,8 @@ InterpreterObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option arg");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], options, "option", 0, &index)
-	    != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -807,7 +807,7 @@ InterpreterObjCmd(
     Tcl_Preserve(otherInterp);
     switch ((enum option) index) {
     case OTHER_EVAL:
-   	result = Tcl_GlobalEvalObj(otherInterp, objv[2]);
+   	result = Tcl_EvalObjEx(otherInterp, objv[2], TCL_EVAL_GLOBAL);
 
 	/*
 	 * TODO: Should exceptions be filtered here?
@@ -946,7 +946,7 @@ ConsoleEventProc(
 	Tcl_Interp *consoleInterp = info->consoleInterp;
 
 	if (consoleInterp && !Tcl_InterpDeleted(consoleInterp)) {
-	    Tcl_GlobalEval(consoleInterp, "tk::ConsoleExit");
+	    Tcl_EvalEx(consoleInterp, "tk::ConsoleExit", -1, TCL_EVAL_GLOBAL);
 	}
 
 	if (--info->refCount <= 0) {
