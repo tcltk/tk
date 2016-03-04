@@ -12,6 +12,11 @@
 
 #include "tkUnixInt.h"
 #include <signal.h>
+#ifdef HAVE_XKBKEYCODETOKEYSYM
+#  include <X11/XKBlib.h>
+#else
+#  define XkbOpenDisplay(D,V,E,M,m,R) ((V),(E),(M),(m),(R),(NULL))
+#endif
 
 /*
  * The following static indicates whether this module has been initialized in
@@ -116,7 +121,54 @@ TkpOpenDisplay(
     const char *displayNameStr)
 {
     TkDisplay *dispPtr;
-    Display *display = XOpenDisplay(displayNameStr);
+    Display *display;
+    int event = 0;
+    int error = 0;
+    int major = 1;
+    int minor = 0;
+    int reason = 0;
+    unsigned int use_xkb = 0;
+    /* Disabled, until we have a better test. See [Bug 3613668] */
+#if 0 && defined(XKEYCODETOKEYSYM_IS_DEPRECATED) && defined(TCL_THREADS)
+    static int xinited = 0;
+    static Tcl_Mutex xinitMutex = NULL;
+
+    if (!xinited) {
+	Tcl_MutexLock(&xinitMutex);
+	if (!xinited) {
+	    /* Necessary for threaded apps, of no consequence otherwise  */
+	    /* need only be called once, but must be called before *any* */
+	    /* Xlib call is made. If xinitMutex is still NULL after the  */
+	    /* Tcl_MutexLock call, Tcl was compiled without threads so   */
+	    /* we cannot use XInitThreads() either.                      */
+	    if (xinitMutex != NULL){
+		XInitThreads();
+	    }
+	    xinited = 1;
+	}
+	Tcl_MutexUnlock(&xinitMutex);
+    }
+#endif
+
+    /*
+    ** Bug [3607830]: Before using Xkb, it must be initialized and confirmed
+    **                that the serve supports it.  The XkbOpenDisplay call
+    **                will perform this check and return NULL if the extension
+    **                is not supported.
+    **
+    ** Work around un-const-ified Xkb headers using (char *) cast.
+    */
+    display = XkbOpenDisplay((char *)displayNameStr, &event, &error, &major,
+	    &minor, &reason);
+
+    if (display == NULL) {
+	/*fprintf(stderr,"event=%d error=%d major=%d minor=%d reason=%d\nDisabling xkb\n",
+	event, error, major, minor, reason);*/
+	display  = XOpenDisplay(displayNameStr);
+    } else {
+	use_xkb = TK_DISPLAY_USE_XKB;
+	/*fprintf(stderr, "Using xkb %d.%d\n", major, minor);*/
+    }
 
     if (display == NULL) {
 	return NULL;
@@ -124,6 +176,7 @@ TkpOpenDisplay(
     dispPtr = ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
+    dispPtr->flags |= use_xkb;
 #ifdef TK_USE_INPUT_METHODS
     OpenIM(dispPtr);
 #endif

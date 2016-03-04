@@ -36,7 +36,7 @@ static void NullImageChanged(ClientData clientData,
 
 /* TtkGetImageSpec --
  * 	Constructs a Ttk_ImageSpec * from a Tcl_Obj *.
- * 	Result must be released using TtkFreeImageSpec.  
+ * 	Result must be released using TtkFreeImageSpec.
  *
  * TODO: Need a variant of this that takes a user-specified ImageChanged proc
  */
@@ -364,8 +364,8 @@ Ttk_CreateImageElement(
 	}
 #endif
 
-	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
-		"option", 0, &option) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
+		sizeof(char *), "option", 0, &option) != TCL_OK) {
 	    goto error;
 	}
 

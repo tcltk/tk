@@ -28,7 +28,6 @@ static char tkLibPath[PATH_MAX + 1] = "";
 
 static char scriptPath[PATH_MAX + 1] = "";
 
-int tkMacOSXGCEnabled = 0;
 long tkMacOSXMacOSXVersion = 0;
 
 #pragma mark TKApplication(TKInit)
@@ -53,18 +52,22 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 - (void) _setupWindowNotifications;
 @end
 
-@interface TKApplication(TKScrlbr)
-- (void) _setupScrollBarNotifications;
-@end
-
 @interface TKApplication(TKMenus)
 - (void) _setupMenus;
 @end
 
 @implementation TKApplication
+@synthesize poolProtected = _poolProtected;
 @end
 
 @implementation TKApplication(TKInit)
+- (void) _resetAutoreleasePool
+{
+    if(![self poolProtected]) {
+	[_mainPool drain];
+	_mainPool = [NSAutoreleasePool new];
+    }
+}
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 - (void) _postedNotification: (NSNotification *) notification
 {
@@ -91,17 +94,17 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 
 - (void) _setupEventLoop
 {
-    _running = 1;
-    if (!_appFlags._hasBeenRun) {
-        _appFlags._hasBeenRun = YES;
-	[self finishLaunching];
-    }
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+    [self finishLaunching];
     [self setWindowsNeedUpdate:YES];
+    [pool drain];
 }
 
 - (void) _setup: (Tcl_Interp *) interp
 {
     _eventInterp = interp;
+    _mainPool = [NSAutoreleasePool new];
+    [NSApp setPoolProtected:NO];
     _defaultMainMenu = nil;
     [self _setupMenus];
     [self setDelegate:self];
@@ -110,14 +113,13 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 	    selector:@selector(_postedNotification:) name:nil object:nil];
 #endif
     [self _setupWindowNotifications];
-    [self _setupScrollBarNotifications];
     [self _setupApplicationNotifications];
 }
 
 - (NSString *) tkFrameworkImagePath: (NSString *) image
 {
     NSString *path = nil;
-
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     if (tkLibPath[0] != '\0') {
 	path = [[NSBundle bundleWithPath:[[NSString stringWithUTF8String:
 		tkLibPath] stringByAppendingString:@"/../.."]]
@@ -150,6 +152,8 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 	}
     }
 #endif
+    [path retain];
+    [pool drain];
     return path;
 }
 @end
@@ -176,6 +180,7 @@ static void
 SetApplicationIcon(
     ClientData clientData)
 {
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     NSString *path = [NSApp tkFrameworkImagePath:@"Tk.icns"];
     if (path) {
 	NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
@@ -184,6 +189,7 @@ SetApplicationIcon(
 	    [image release];
 	}
     }
+    [pool drain];
 }
 
 /*
@@ -236,11 +242,16 @@ TkpInit(
 	if (!uname(&name)) {
 	    tkMacOSXMacOSXVersion = (strtod(name.release, NULL) + 96) * 10;
 	}
-	if (tkMacOSXMacOSXVersion &&
+       /*Check for new versioning scheme on Yosemite (10.10) and later.*/
+	if (MAC_OS_X_VERSION_MIN_REQUIRED > 100000) {
+		tkMacOSXMacOSXVersion = MAC_OS_X_VERSION_MIN_REQUIRED/100;
+	    }
+	if (tkMacOSXMacOSXVersion && MAC_OS_X_VERSION_MIN_REQUIRED < 100000 &&
 		tkMacOSXMacOSXVersion/10 < MAC_OS_X_VERSION_MIN_REQUIRED/10) {
 	    Tcl_Panic("Mac OS X 10.%d or later required !",
 		    (MAC_OS_X_VERSION_MIN_REQUIRED/10)-100);
 	}
+
 
 #ifdef TK_FRAMEWORK
 	/*
@@ -256,20 +267,19 @@ TkpInit(
 	}
 #endif
 
-	static NSAutoreleasePool *pool = nil;
-	if (!pool) {
-	    pool = [NSAutoreleasePool new];
+	{
+	    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+		[[NSUserDefaults standardUserDefaults] registerDefaults:
+		     [NSDictionary dictionaryWithObjectsAndKeys:
+		     [NSNumber numberWithBool:YES],
+		     @"_NSCanWrapButtonTitles",
+		     [NSNumber numberWithInt:-1],
+		     @"NSStringDrawingTypesetterBehavior",
+		     nil]];
+	    [TKApplication sharedApplication];
+	    [pool drain];
+	    [NSApp _setup:interp];
 	}
-	tkMacOSXGCEnabled = ([NSGarbageCollector defaultCollector] != nil);
-	[[NSUserDefaults standardUserDefaults] registerDefaults:
-		[NSDictionary dictionaryWithObjectsAndKeys:
-		[NSNumber numberWithBool:YES],
-		@"_NSCanWrapButtonTitles",
-		[NSNumber numberWithInt:-1],
-		@"NSStringDrawingTypesetterBehavior",
-		nil]];
-	[TKApplication sharedApplication];
-	[NSApp _setup:interp];
 
 	/* Check whether we are a bundled executable: */
 	bundleRef = CFBundleGetMainBundle();
@@ -326,12 +336,14 @@ TkpInit(
 	    Tcl_DoWhenIdle(SetApplicationIcon, NULL);
 	}
 
-	[NSApp _setupEventLoop];
-	TkMacOSXInitAppleEvents(interp);
-	TkMacOSXUseAntialiasedText(interp, -1);
-	TkMacOSXInitCGDrawing(interp, TRUE, 0);
-	[pool drain];
-	pool = [NSAutoreleasePool new];
+	{
+	    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+	    [NSApp _setupEventLoop];
+	    TkMacOSXInitAppleEvents(interp);
+	    TkMacOSXUseAntialiasedText(interp, -1);
+	    TkMacOSXInitCGDrawing(interp, TRUE, 0);
+	    [pool drain];
+	}
 
 	/*
 	 * FIXME: Close stdin & stdout for remote debugging otherwise we will
@@ -363,11 +375,11 @@ TkpInit(
 	     */
 
 	    if (Tcl_GetStartupScript(NULL) == NULL) {
-		const char *intvar = Tcl_GetVar(interp,
-			"tcl_interactive", TCL_GLOBAL_ONLY);
+		const char *intvar = Tcl_GetVar2(interp,
+			"tcl_interactive", NULL, TCL_GLOBAL_ONLY);
 
 		if (intvar == NULL) {
-		    Tcl_SetVar(interp, "tcl_interactive", "1",
+		    Tcl_SetVar2(interp, "tcl_interactive", NULL, "1",
 			    TCL_GLOBAL_ONLY);
 		}
 	    }
@@ -380,11 +392,11 @@ TkpInit(
     Tk_MacOSXSetupTkNotifier();
 
     if (tkLibPath[0] != '\0') {
-	Tcl_SetVar(interp, "tk_library", tkLibPath, TCL_GLOBAL_ONLY);
+	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
 
     if (scriptPath[0] != '\0') {
-	Tcl_SetVar(interp, "auto_path", scriptPath,
+	Tcl_SetVar2(interp, "auto_path", NULL, scriptPath,
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
 
@@ -421,7 +433,7 @@ TkpGetAppName(
 {
     const char *p, *name;
 
-    name = Tcl_GetVar(interp, "argv0", TCL_GLOBAL_ONLY);
+    name = Tcl_GetVar2(interp, "argv0", NULL, TCL_GLOBAL_ONLY);
     if ((name == NULL) || (*name == 0)) {
 	name = "tk";
     } else {
@@ -488,9 +500,8 @@ TkpDisplayWarning(
 MODULE_SCOPE void
 TkMacOSXDefaultStartupScript(void)
 {
-    CFBundleRef bundleRef;
-
-    bundleRef = CFBundleGetMainBundle();
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+    CFBundleRef bundleRef = CFBundleGetMainBundle();
 
     if (bundleRef != NULL) {
 	CFURLRef appMainURL = CFBundleCopyResourceURL(bundleRef,
@@ -514,6 +525,7 @@ TkMacOSXDefaultStartupScript(void)
 	    CFRelease(appMainURL);
 	}
     }
+    [pool drain];
 }
 
 /*

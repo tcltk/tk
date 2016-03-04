@@ -97,7 +97,6 @@ FindSystemColor(
 {
     int l, u, r, i;
     int index;
-	int version = LOBYTE(LOWORD(GetVersion()));
 
     /*
      * Perform a binary search on the sorted array of colors.
@@ -120,15 +119,7 @@ FindSystemColor(
 	return 0;
     }
 
-    index = sysColors[i].index;
-    if (version < 4) {
-	if (index == COLOR_3DDKSHADOW) {
-	    index = COLOR_BTNSHADOW;
-	} else if (index == COLOR_3DLIGHT) {
-	    index = COLOR_BTNHIGHLIGHT;
-	}
-    }
-    *indexPtr = index;
+    *indexPtr = index = sysColors[i].index;
     colorPtr->pixel = GetSysColor(index);
 
     /*
@@ -325,7 +316,8 @@ XAllocColor(
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 	unsigned long sizePalette = GetDeviceCaps(dc, SIZEPALETTE);
 	UINT newPixel, closePixel;
-	int new, refCount;
+	int new;
+	size_t refCount;
 	Tcl_HashEntry *entryPtr;
 	UINT index;
 
@@ -370,9 +362,9 @@ XAllocColor(
 	if (new) {
 	    refCount = 1;
 	} else {
-	    refCount = (PTR2INT(Tcl_GetHashValue(entryPtr))) + 1;
+	    refCount = (size_t)Tcl_GetHashValue(entryPtr) + 1;
 	}
-	Tcl_SetHashValue(entryPtr, INT2PTR(refCount));
+	Tcl_SetHashValue(entryPtr, (void *)refCount);
     } else {
 	/*
 	 * Determine what color will actually be used on non-colormap systems.
@@ -416,7 +408,8 @@ XFreeColors(
 {
     TkWinColormap *cmap = (TkWinColormap *) colormap;
     COLORREF cref;
-    UINT count, index, refCount;
+    UINT count, index;
+    size_t refCount;
     int i;
     PALETTEENTRY entry, *entries;
     Tcl_HashEntry *entryPtr;
@@ -436,7 +429,7 @@ XFreeColors(
 	    if (!entryPtr) {
 		Tcl_Panic("Tried to free a color that isn't allocated");
 	    }
-	    refCount = PTR2INT(Tcl_GetHashValue(entryPtr)) - 1;
+	    refCount = (size_t)Tcl_GetHashValue(entryPtr) - 1;
 	    if (refCount == 0) {
 		cref = pixels[i] & 0x00ffffff;
 		index = GetNearestPaletteIndex(cmap->palette, cref);
@@ -453,7 +446,7 @@ XFreeColors(
 		}
 		Tcl_DeleteHashEntry(entryPtr);
 	    } else {
-		Tcl_SetHashValue(entryPtr, INT2PTR(refCount));
+		Tcl_SetHashValue(entryPtr, (size_t)refCount);
 	    }
 	}
     }

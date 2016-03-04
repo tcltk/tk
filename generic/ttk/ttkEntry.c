@@ -652,7 +652,7 @@ static void EntryRevalidateBG(Entry *entryPtr, VREASON reason)
 {
     Tcl_Interp *interp = entryPtr->core.interp;
     if (EntryRevalidate(interp, entryPtr, reason) == TCL_ERROR) {
-	Tcl_BackgroundError(interp);
+	Tcl_BackgroundException(interp, TCL_ERROR);
     }
 }
 
@@ -758,8 +758,8 @@ static int EntrySetValue(Entry *entryPtr, const char *value)
 	    Tcl_GetString(entryPtr->entry.textVariableObj);
 	if (textVarName && *textVarName) {
 	    entryPtr->core.flags |= SYNCING_VARIABLE;
-	    value = Tcl_SetVar(entryPtr->core.interp, textVarName,
-		    value, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
+	    value = Tcl_SetVar2(entryPtr->core.interp, textVarName,
+		    NULL, value, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
 	    entryPtr->core.flags &= ~SYNCING_VARIABLE;
 	    if (!value || WidgetDestroyed(&entryPtr->core)) {
 		return TCL_ERROR;
@@ -786,7 +786,7 @@ static void EntryTextVariableTrace(void *recordPtr, const char *value)
     }
 
     if (entryPtr->core.flags & SYNCING_VARIABLE) {
-	/* Trace was fired due to Tcl_SetVar call in EntrySetValue.
+	/* Trace was fired due to Tcl_SetVar2 call in EntrySetValue.
 	 * Don't do anything.
 	 */
 	return;
@@ -1314,8 +1314,8 @@ EntryIndex(
     int *indexPtr)		/* Return value */
 {
 #   define EntryWidth(e) (Tk_Width(entryPtr->core.tkwin)) /* Not Right */
-    int length;
-    const char *string = Tcl_GetStringFromObj(indexObj, &length);
+    const char *string = Tcl_GetString(indexObj);
+    size_t length = indexObj->length;
 
     if (strncmp(string, "end", length) == 0) {
 	*indexPtr = entryPtr->entry.numChars;
@@ -1644,6 +1644,14 @@ static int EntryXViewCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
+    if (objc == 3) {
+	int newFirst;
+	if (EntryIndex(interp, entryPtr, objv[2], &newFirst) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	TtkScrollTo(entryPtr->entry.xscrollHandle, newFirst);
+	return TCL_OK;
+    }
     return TtkScrollviewCommand(interp, objc, objv, entryPtr->entry.xscrollHandle);
 }
 

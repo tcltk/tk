@@ -421,7 +421,7 @@ TkFontPkgFree(
 	fontsLeft++;
 #ifdef DEBUG_FONTS
 	fprintf(stderr, "Font %s still in cache.\n",
-		Tcl_GetHashKey(&fiPtr->fontCache, searchPtr));
+		(char *) Tcl_GetHashKey(&fiPtr->fontCache, searchPtr));
 #endif
     }
 
@@ -600,40 +600,40 @@ Tk_FontObjCmd(
 	return result;
     }
     case FONT_CONFIGURE: {
-	int result;
-	const char *string;
-	Tcl_Obj *objPtr;
-	NamedFont *nfPtr;
-	Tcl_HashEntry *namedHashPtr;
+    	int result;
+    	const char *string;
+    	Tcl_Obj *objPtr;
+    	NamedFont *nfPtr;
+    	Tcl_HashEntry *namedHashPtr;
 
-	if (objc < 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "fontname ?-option value ...?");
-	    return TCL_ERROR;
-	}
-	string = Tcl_GetString(objv[2]);
-	namedHashPtr = Tcl_FindHashEntry(&fiPtr->namedTable, string);
+    	if (objc < 3) {
+    	    Tcl_WrongNumArgs(interp, 2, objv, "fontname ?-option value ...?");
+    	    return TCL_ERROR;
+    	}
+    	string = Tcl_GetString(objv[2]);
+    	namedHashPtr = Tcl_FindHashEntry(&fiPtr->namedTable, string);
 	nfPtr = NULL;		/* lint. */
-	if (namedHashPtr != NULL) {
-	    nfPtr = Tcl_GetHashValue(namedHashPtr);
-	}
-	if ((namedHashPtr == NULL) || nfPtr->deletePending) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "named font \"%s\" doesn't exist", string));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
-	    return TCL_ERROR;
-	}
-	if (objc == 3) {
-	    objPtr = NULL;
-	} else if (objc == 4) {
-	    objPtr = objv[3];
-	} else {
-	    result = ConfigAttributesObj(interp, tkwin, objc - 3, objv + 3,
-		    &nfPtr->fa);
-	    UpdateDependentFonts(fiPtr, tkwin, namedHashPtr);
-	    return result;
-	}
-	return GetAttributeInfoObj(interp, &nfPtr->fa, objPtr);
-    }
+    	if (namedHashPtr != NULL) {
+    	    nfPtr = Tcl_GetHashValue(namedHashPtr);
+    	}
+    	if ((namedHashPtr == NULL) || nfPtr->deletePending) {
+    	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+    		    "named font \"%s\" doesn't exist", string));
+    	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
+    	    return TCL_ERROR;
+    	}
+    	if (objc == 3) {
+    	    objPtr = NULL;
+    	} else if (objc == 4) {
+    	    objPtr = objv[3];
+    	} else {
+    	    result = ConfigAttributesObj(interp, tkwin, objc - 3, objv + 3,
+    		    &nfPtr->fa);
+    	    UpdateDependentFonts(fiPtr, tkwin, namedHashPtr);
+    	    return result;
+    	}
+    	return GetAttributeInfoObj(interp, &nfPtr->fa, objPtr);
+     }
     case FONT_CREATE: {
 	int skip = 3, i;
 	const char *name;
@@ -1093,7 +1093,8 @@ Tk_AllocFontFromObj(
     int isNew, descent;
     NamedFont *nfPtr;
 
-    if (objPtr->typePtr != &tkFontObjType) {
+    if (objPtr->typePtr != &tkFontObjType
+	    || objPtr->internalRep.twoPtrValue.ptr2 != fiPtr) {
 	SetFontFromAny(interp, objPtr);
     }
 
@@ -1133,6 +1134,7 @@ Tk_AllocFontFromObj(
 	    fontPtr->resourceRefCount++;
 	    fontPtr->objRefCount++;
 	    objPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
+	    objPtr->internalRep.twoPtrValue.ptr2 = fiPtr;
 	    return (Tk_Font) fontPtr;
 	}
     }
@@ -1243,6 +1245,7 @@ Tk_AllocFontFromObj(
     }
 
     objPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
+    objPtr->internalRep.twoPtrValue.ptr2 = fiPtr;
     return (Tk_Font) fontPtr;
 }
 
@@ -1275,7 +1278,8 @@ Tk_GetFontFromObj(
     TkFont *fontPtr;
     Tcl_HashEntry *hashPtr;
 
-    if (objPtr->typePtr != &tkFontObjType) {
+    if (objPtr->typePtr != &tkFontObjType
+	    || objPtr->internalRep.twoPtrValue.ptr2 != fiPtr) {
 	SetFontFromAny(NULL, objPtr);
     }
 
@@ -1311,6 +1315,7 @@ Tk_GetFontFromObj(
 	    if (Tk_Screen(tkwin) == fontPtr->screen) {
 		fontPtr->objRefCount++;
 		objPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
+		objPtr->internalRep.twoPtrValue.ptr2 = fiPtr;
 		return (Tk_Font) fontPtr;
 	    }
 	}
@@ -1356,6 +1361,7 @@ SetFontFromAny(
     }
     objPtr->typePtr = &tkFontObjType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
+    objPtr->internalRep.twoPtrValue.ptr2 = NULL;
 
     return TCL_OK;
 }
@@ -1517,8 +1523,9 @@ FreeFontObj(
 	fontPtr->objRefCount--;
 	if ((fontPtr->resourceRefCount == 0) && (fontPtr->objRefCount == 0)) {
 	    ckfree(fontPtr);
-	    objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 	}
+	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
+	objPtr->internalRep.twoPtrValue.ptr2 = NULL;
     }
 }
 
@@ -1549,6 +1556,8 @@ DupFontObjProc(
 
     dupObjPtr->typePtr = srcObjPtr->typePtr;
     dupObjPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
+    dupObjPtr->internalRep.twoPtrValue.ptr2
+	    = srcObjPtr->internalRep.twoPtrValue.ptr2;
 
     if (fontPtr != NULL) {
 	fontPtr->objRefCount++;
@@ -2058,14 +2067,14 @@ Tk_ComputeTextLayout(
 		NewChunk(&layoutPtr, &maxChunks, start, 1, curX, newX,
 			baseline)->numDisplayChars = -1;
 		start++;
+		curX = newX;
+		flags &= ~TK_AT_LEAST_ONE;
 		if ((start < end) &&
 			((wrapLength <= 0) || (newX <= wrapLength))) {
 		    /*
 		     * More chars can still fit on this line.
 		     */
 
-		    curX = newX;
-		    flags &= ~TK_AT_LEAST_ONE;
 		    continue;
 		}
 	    } else {
@@ -2985,13 +2994,6 @@ PointInQuadrilateral(
 }
 
 static inline int
-sign(
-    double value)
-{
-    return (value < 0.0) ? -1 : (value > 0.0) ? 1 : 0;
-}
-
-static inline int
 SidesIntersect(
     double ax1, double ay1, double ax2, double ay2,
     double bx1, double by1, double bx2, double by2)
@@ -3366,7 +3368,6 @@ ConfigAttributesObj(
 
     for (i = 0; i < objc; i += 2) {
 	optionPtr = objv[i];
-	valuePtr = objv[i + 1];
 
 	if (Tcl_GetIndexFromObj(interp, optionPtr, fontOpt, "option", 1,
 		&index) != TCL_OK) {
@@ -3387,6 +3388,7 @@ ConfigAttributesObj(
 	    }
 	    return TCL_ERROR;
 	}
+	valuePtr = objv[i + 1];
 
 	switch (index) {
 	case FONT_FAMILY:

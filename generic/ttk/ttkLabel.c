@@ -293,6 +293,7 @@ static void ImageCleanup(ImageElement *image)
     TtkFreeImageSpec(image->imageSpec);
 }
 
+#ifndef MAC_OSX_TK
 /*
  * StippleOver --
  * 	Draw a stipple over the image area, to make it look "grayed-out"
@@ -317,6 +318,7 @@ static void StippleOver(
 	Tk_FreeBitmapFromObj(tkwin, image->stippleObj);
     }
 }
+#endif
 
 static void ImageDraw(
     ImageElement *image, Tk_Window tkwin,Drawable d,Ttk_Box b,Ttk_State state)
@@ -486,6 +488,7 @@ static Ttk_ElementOptionSpec LabelElementOptions[] = {
  * 	Calculate the text, image, and total width and height.
  */
 
+#undef  MAX
 #define MAX(a,b) ((a) > (b) ? a : b);
 static void LabelSetup(
     LabelElement *c, Tk_Window tkwin, Ttk_State state)

@@ -1069,13 +1069,6 @@ declare 273 {
     void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
 
-declare 274 {
-    void reserved274(void)
-}
-declare 275 {
-    void reserved275(void)
-}
-
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.
 

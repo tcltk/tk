@@ -35,6 +35,10 @@ struct TkSharedText;
 
 /* !BEGIN!: Do not edit below this line. */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Exported function declarations:
  */
@@ -429,11 +433,11 @@ EXTERN void		TkDeleteThreadExitHandler(Tcl_ExitProc *proc,
 /* Slot 155 is reserved */
 /* 156 */
 EXTERN int		TkpTestembedCmd(ClientData clientData,
-				Tcl_Interp *interp, int argc,
-				const char **argv);
+				Tcl_Interp *interp, int objc,
+				Tcl_Obj *const objv[]);
 /* 157 */
 EXTERN int		TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp,
-				int argc, const char **argv);
+				int objc, Tcl_Obj *const objv[]);
 /* 158 */
 EXTERN int		TkSelGetSelection(Tcl_Interp *interp,
 				Tk_Window tkwin, Atom selection, Atom target,
@@ -549,7 +553,7 @@ EXTERN void		TkDrawAngledChars(Display *display,
 
 typedef struct TkIntStubs {
     int magic;
-    const struct TkIntStubHooks *hooks;
+    void *hooks;
 
     TkWindow * (*tkAllocWindow) (TkDisplay *dispPtr, int screenNum, TkWindow *parentPtr); /* 0 */
     void (*tkBezierPoints) (double control[], int numSteps, double *coordPtr); /* 1 */
@@ -672,20 +676,20 @@ typedef struct TkIntStubs {
     void (*tkSetRegion) (Display *display, GC gc, TkRegion rgn); /* 118 */
     void (*tkUnionRectWithRegion) (XRectangle *rect, TkRegion src, TkRegion dr_return); /* 119 */
     void (*reserved120)(void);
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     void (*reserved121)(void);
 #endif /* X11 */
-#if defined(__WIN32__) /* WIN */
+#if defined(_WIN32) /* WIN */
     void (*reserved121)(void);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     void (*reserved121)(void); /* Dummy entry for stubs table backwards compatibility */
     Pixmap (*tkpCreateNativeBitmap) (Display *display, const void *source); /* 121 */
 #endif /* AQUA */
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     void (*reserved122)(void);
 #endif /* X11 */
-#if defined(__WIN32__) /* WIN */
+#if defined(_WIN32) /* WIN */
     void (*reserved122)(void);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
@@ -693,10 +697,10 @@ typedef struct TkIntStubs {
     void (*tkpDefineNativeBitmaps) (void); /* 122 */
 #endif /* AQUA */
     void (*reserved123)(void);
-#if !(defined(__WIN32__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     void (*reserved124)(void);
 #endif /* X11 */
-#if defined(__WIN32__) /* WIN */
+#if defined(_WIN32) /* WIN */
     void (*reserved124)(void);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
@@ -734,8 +738,8 @@ typedef struct TkIntStubs {
     void (*tkCreateThreadExitHandler) (Tcl_ExitProc *proc, ClientData clientData); /* 153 */
     void (*tkDeleteThreadExitHandler) (Tcl_ExitProc *proc, ClientData clientData); /* 154 */
     void (*reserved155)(void);
-    int (*tkpTestembedCmd) (ClientData clientData, Tcl_Interp *interp, int argc, const char **argv); /* 156 */
-    int (*tkpTesttextCmd) (ClientData dummy, Tcl_Interp *interp, int argc, const char **argv); /* 157 */
+    int (*tkpTestembedCmd) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 156 */
+    int (*tkpTesttextCmd) (ClientData dummy, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 157 */
     int (*tkSelGetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, ClientData clientData); /* 158 */
     int (*tkTextGetIndex) (Tcl_Interp *interp, struct TkText *textPtr, const char *string, struct TkTextIndex *indexPtr); /* 159 */
     int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 160 */
@@ -765,10 +769,8 @@ typedef struct TkIntStubs {
     void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, double x, double y, double angle); /* 184 */
 } TkIntStubs;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 extern const TkIntStubs *tkIntStubsPtr;
+
 #ifdef __cplusplus
 }
 #endif
@@ -1148,7 +1150,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 /*
  * On X11, these macros are just wrappers for the equivalent X Region calls.
  */
-#if !(defined(__WIN32__) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 
 #undef TkClipBox
 #undef TkCreateRegion

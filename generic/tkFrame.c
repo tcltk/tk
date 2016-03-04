@@ -308,7 +308,7 @@ static int		ConfigureFrame(Tcl_Interp *interp, Frame *framePtr,
 static int		CreateFrame(ClientData clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const argv[],
 			    enum FrameType type, const char *appName);
-static void		DestroyFrame(char *memPtr);
+static void		DestroyFrame(void *memPtr);
 static void		DestroyFramePartly(Frame *framePtr);
 static void		DisplayFrame(ClientData clientData);
 static void		FrameCmdDeletedProc(ClientData clientData);
@@ -727,8 +727,8 @@ FrameWidgetObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], frameOptions, "option", 0,
-	    &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], frameOptions,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_Preserve(framePtr);
@@ -834,10 +834,10 @@ FrameWidgetObjCmd(
 
 static void
 DestroyFrame(
-    char *memPtr)		/* Info about frame widget. */
+    void *memPtr)		/* Info about frame widget. */
 {
-    register Frame *framePtr = (Frame *) memPtr;
-    register Labelframe *labelframePtr = (Labelframe *) memPtr;
+    register Frame *framePtr = memPtr;
+    register Labelframe *labelframePtr = memPtr;
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	Tk_FreeTextLayout(labelframePtr->textLayout);
@@ -1656,7 +1656,7 @@ FrameEventProc(
 	    Tcl_CancelIdleCall(DisplayFrame, framePtr);
 	}
 	Tcl_CancelIdleCall(MapFrame, framePtr);
-	Tcl_EventuallyFree(framePtr, DestroyFrame);
+	Tcl_EventuallyFree(framePtr, (Tcl_FreeProc *) DestroyFrame);
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    framePtr->flags |= GOT_FOCUS;

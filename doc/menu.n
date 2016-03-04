@@ -4,13 +4,13 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
-.so man.macros
+'\"
 .TH menu n 4.1 Tk "Tk Built-In Commands"
+.so man.macros
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-menu, tk_menuSetFocus \- Create and manipulate menu widgets
+menu, tk_menuSetFocus \- Create and manipulate 'menu' widgets and menubars
 .SH SYNOPSIS
 .nf
 \fBmenu\fR \fIpathName \fR?\fIoptions\fR?
@@ -73,6 +73,9 @@ library.
 .PP
 The \fBmenu\fR command creates a new top-level window (given
 by the \fIpathName\fR argument) and makes it into a menu widget.
+That menu widget can either be used as a pop-up window or applied to a
+\fBtoplevel\fR (with its \fB\-menu\fR option) to make it into the menubar for
+that toplevel.
 Additional
 options, described above, may be specified on the command line
 or in the option database
@@ -266,8 +269,8 @@ are appended to the standard Help menu of the user's menubar whenever
 the window's menubar is in front. The first items in the menu
 are provided by Mac OS X.
 .PP
-When Tk sees a System menu on Windows, its items are appended to the 
-system menu that the menubar is attached to. This menu is tied to the 
+When Tk sees a System menu on Windows, its items are appended to the
+system menu that the menubar is attached to. This menu is tied to the
 application icon and can be invoked with the mouse or by typing
 Alt+Spacebar.  Due to limitations in the Windows API, any font changes,
 colors, images, bitmaps, or tearoff images will not appear in the
@@ -301,15 +304,9 @@ operations on the widget.  It has the following general form:
 determine the exact behavior of the command.
 .PP
 Many of the widget commands for a menu take as one argument an
-indicator of which entry of the menu to operate on.  These
+indicator of which entry of the menu to operate on. These
 indicators are called \fIindex\fRes and may be specified in
 any of the following forms:
-.TP 12
-\fInumber\fR
-.
-Specifies the entry numerically, where 0 corresponds
-to the top-most entry of the menu, 1 to the entry below it, and
-so on.
 .TP 12
 \fBactive\fR
 .
@@ -345,6 +342,12 @@ For example,
 .QW \fB@0\fR
 indicates the top-most entry in the window.
 .TP 12
+\fInumber\fR
+.
+Specifies the entry numerically, where 0 corresponds
+to the top-most entry of the menu, 1 to the entry below it, and
+so on.
+.TP 12
 \fIpattern\fR
 .
 If the index does not satisfy one of the above forms then this
@@ -352,6 +355,9 @@ form is used.  \fIPattern\fR is pattern-matched against the label of
 each entry in the menu, in order from the top down, until a
 matching entry is found.  The rules of \fBstring match\fR
 are used.
+.PP
+If the index could match more than one of the above forms, then
+the form earlier in the above list takes precedence.
 .PP
 The following widget commands are possible for menu widgets:
 .TP
@@ -670,7 +676,7 @@ option for the menu along with the \fB\-activebackground\fR option from
 the entry.  Disabled state means that the entry
 should be insensitive:  the default bindings will refuse to activate
 or invoke the entry.
-In this state the entry is displayed according to the 
+In this state the entry is displayed according to the
 \fB\-disabledforeground\fR option for the menu and the
 \fB\-background\fR option from the entry.
 This option is not available for separator entries.

@@ -12,7 +12,7 @@
 #include <X11/Xutil.h>
 #include "ttkTheme.h"
 
-#if defined(WIN32)
+#if defined(_WIN32)
 static const int WIN32_XDRAWLINE_HACK = 1;
 #else
 static const int WIN32_XDRAWLINE_HACK = 0;
@@ -722,8 +722,8 @@ static void MenubuttonArrowElementDraw(
     int width = 0, height = 0;
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
-    Tcl_GetIndexFromObj(NULL, arrow->directionObj, directionStrings,
-	   ""/*message*/, 0/*flags*/, &postDirection);
+    Tcl_GetIndexFromObjStruct(NULL, arrow->directionObj, directionStrings,
+	   sizeof(char *), ""/*message*/, 0/*flags*/, &postDirection);
 
     /* ... this might not be such a great idea ... */
     switch (postDirection) {
