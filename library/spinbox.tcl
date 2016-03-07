@@ -299,6 +299,10 @@ bind Spinbox <B2-Motion> {
 proc ::tk::spinbox::Invoke {w elem} {
     variable ::tk::Priv
 
+    if {![winfo exists $w]} {
+      return
+    }
+
     if {![info exists Priv(outsideElement)]} {
 	$w invoke $elem
 	incr Priv(repeated)
