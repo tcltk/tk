@@ -2276,6 +2276,32 @@ test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
     deleteWindows
 } -result {}
 
+test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
+    catch {destroy .l .f.b .f}
+    set res {}
+} -body {
+    label .l -text "Top Dot"
+    frame .f
+    button .f.b -text Hello -command "puts Hello!"
+    pack .l -side top
+    pack .f.b
+    pack .f -side bottom
+    update
+    set res [winfo manager .f]
+    pack forget .f
+    update
+    lappend res [winfo manager .f]
+    wm manage .f
+    update
+    lappend res [winfo manager .f]
+    wm forget .f
+    update
+    lappend res [winfo manager .f]
+} -cleanup {
+    destroy .l .f.b .f
+    unset res
+} -result {pack {} wm {}}
+
 # FIXME:
 
 # Test delivery of virtual events to the WM. We could check to see if the
