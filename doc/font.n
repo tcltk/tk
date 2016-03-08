@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH font n 8.0 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -38,7 +38,7 @@ that character, which will be different from the base font if the base
 font does not contain the given character.  If \fIchar\fR may be a hyphen, it
 should be preceded by \fB\-\|\-\fR to distinguish it from a misspelled
 \fIoption\fR.
-.TP 
+.TP
 \fBfont configure \fIfontname\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
 Query or modify the desired attributes for the named font called
@@ -88,7 +88,7 @@ omitted, it defaults to the main window.
 Measures the amount of space the string \fItext\fR would use in the given
 \fIfont\fR when displayed in \fIwindow\fR.  \fIfont\fR is a font description;
 see \fBFONT DESCRIPTIONS\fR below.  If the \fIwindow\fR argument is
-omitted, it 
+omitted, it
 defaults to the main window.  The return value is the total width in pixels
 of \fItext\fR, not including the extra pixels used by highly exaggerated
 characters such as cursive

@@ -303,6 +303,12 @@ Tk_ScaleObjCmd(
 	return TCL_ERROR;
     }
 
+    /*
+     * The widget was just created, no command callback must be invoked.
+     */
+
+    scalePtr->flags &= ~INVOKE_COMMAND;
+
     Tcl_SetObjResult(interp, TkNewWindowObj(scalePtr->tkwin));
     return TCL_OK;
 }
@@ -1268,7 +1274,14 @@ TkScaleSetValue(
 	return;
     }
     scalePtr->value = value;
-    if (invokeCommand) {
+
+    /*
+     * Schedule command callback invocation only if there is such a command
+     * already registered, otherwise the callback would trigger later when
+     * configuring the widget -command option even if the value did not change.
+     */
+
+    if ((invokeCommand) && (scalePtr->command != NULL)) {
 	scalePtr->flags |= INVOKE_COMMAND;
     }
     TkEventuallyRedrawScale(scalePtr, REDRAW_SLIDER);
