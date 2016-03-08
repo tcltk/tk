@@ -371,13 +371,8 @@ typedef struct TkTextTag {
 				 * NULL means no value specified here. */
     Tk_3DBorder selBorder;	/* Used for drawing background for selected text.
 				 * NULL means no value specified here. */
-    Pixmap selBgStipple;	/* Stipple bitmap for background of selected text.
-				 * None means no value specified here. */
     XColor *selFgColor;		/* Foreground color for selected text. NULL means
 				 * no value specified here. */
-    Pixmap selFgStipple;	/* Stipple bitmap for text and other
-				 * foreground stuff when selected. None means
-				 * no value specified here.*/
     char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
 				 * means option not specified. */
     int spacing1;		/* Extra spacing above first display line for

@@ -818,15 +818,11 @@ GetStyle(
 
     for (i = 0 ; i < numTags; i++) {
 	Tk_3DBorder border;
-        Pixmap bgStipple;
         XColor *fgColor;
-        Pixmap fgStipple;
 
 	tagPtr = tagPtrs[i];
 	border = tagPtr->border;
-        bgStipple = tagPtr->bgStipple;
         fgColor = tagPtr->fgColor;
-        fgStipple = tagPtr->fgStipple;
 
 	/*
 	 * If this is the selection tag, and inactiveSelBorder is NULL (the
@@ -850,16 +846,8 @@ GetStyle(
             border = tagPtr->selBorder;
         }
 
-        if ((tagPtr->selBgStipple != None) && (isSelected)) {
-            bgStipple = tagPtr->selBgStipple;
-        }
-
         if ((tagPtr->selFgColor != None) && (isSelected)) {
             fgColor = tagPtr->selFgColor;
-        }
-
-        if ((tagPtr->selFgStipple != None) && (isSelected)) {
-            bgStipple = tagPtr->selFgStipple;
         }
 
 	if ((border != NULL) && (tagPtr->priority > borderPrio)) {
@@ -880,9 +868,9 @@ GetStyle(
 	    styleValues.relief = tagPtr->relief;
 	    reliefPrio = tagPtr->priority;
 	}
-	if ((bgStipple != None)
+	if ((tagPtr->bgStipple != None)
 		&& (tagPtr->priority > bgStipplePrio)) {
-	    styleValues.bgStipple = bgStipple;
+	    styleValues.bgStipple = tagPtr->bgStipple;
 	    bgStipplePrio = tagPtr->priority;
 	}
 	if ((fgColor != None) && (tagPtr->priority > fgPrio)) {
@@ -893,9 +881,9 @@ GetStyle(
 	    styleValues.tkfont = tagPtr->tkfont;
 	    fontPrio = tagPtr->priority;
 	}
-	if ((fgStipple != None)
+	if ((tagPtr->fgStipple != None)
 		&& (tagPtr->priority > fgStipplePrio)) {
-	    styleValues.fgStipple = fgStipple;
+	    styleValues.fgStipple = tagPtr->fgStipple;
 	    fgStipplePrio = tagPtr->priority;
 	}
 	if ((tagPtr->justifyString != NULL)
