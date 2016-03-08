@@ -3,7 +3,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH ttk::menubutton n 8.5 Tk "Tk Themed Widget"
 .so man.macros
 .BS
@@ -24,10 +24,10 @@ and displays a menu when pressed.
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-direction direction Direction
-Specifies where the menu is to be popped up relative 
-to the menubutton.  
+Specifies where the menu is to be popped up relative
+to the menubutton.
 One of: \fBabove\fR, \fBbelow\fR, \fBleft\fR, \fBright\fR,
-or \fBflush\fR.  The default is \fBbelow\fR.  
+or \fBflush\fR.  The default is \fBbelow\fR.
 \fBflush\fR pops the menu up directly over the menubutton.
 .OP \-menu menu Menu
 Specifies the path name of the menu associated with the menubutton.
@@ -38,8 +38,8 @@ menubutton.
 .\" .OP \-padding padding Pad
 .SH "WIDGET COMMAND"
 .PP
-Menubutton widgets support the standard 
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR 
+Menubutton widgets support the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
 methods.  No other widget methods are used.
 .SH "STANDARD STYLES"
 .PP
