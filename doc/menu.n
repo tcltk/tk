@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH menu n 4.1 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -269,8 +269,8 @@ are appended to the standard Help menu of the user's menubar whenever
 the window's menubar is in front. The first items in the menu
 are provided by Mac OS X.
 .PP
-When Tk sees a System menu on Windows, its items are appended to the 
-system menu that the menubar is attached to. This menu is tied to the 
+When Tk sees a System menu on Windows, its items are appended to the
+system menu that the menubar is attached to. This menu is tied to the
 application icon and can be invoked with the mouse or by typing
 Alt+Spacebar.  Due to limitations in the Windows API, any font changes,
 colors, images, bitmaps, or tearoff images will not appear in the
@@ -676,7 +676,7 @@ option for the menu along with the \fB\-activebackground\fR option from
 the entry.  Disabled state means that the entry
 should be insensitive:  the default bindings will refuse to activate
 or invoke the entry.
-In this state the entry is displayed according to the 
+In this state the entry is displayed according to the
 \fB\-disabledforeground\fR option for the menu and the
 \fB\-background\fR option from the entry.
 This option is not available for separator entries.

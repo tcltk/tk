@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH listbox n 8.4 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -229,7 +229,7 @@ list.  Returns an empty string.
 \fIpathName \fBitemcget \fIindex option\fR
 .
 Returns the current value of the item configuration option given
-by \fIoption\fR. \fIOption\fR may have any of the values accepted 
+by \fIoption\fR. \fIOption\fR may have any of the values accepted
 by the \fBitemconfigure\fR command.
 .TP
 \fIpathName \fBitemconfigure \fIindex\fR ?\fIoption\fR? ?\fIvalue\fR? ?\fIoption value ...\fR?
@@ -249,7 +249,7 @@ are currently supported for items:
 .TP
 \fB\-background \fIcolor\fR
 .
-\fIColor\fR specifies the background color to use when displaying the 
+\fIColor\fR specifies the background color to use when displaying the
 item. It may have any of the forms accepted by \fBTk_GetColor\fR.
 .TP
 \fB\-foreground \fIcolor\fR
