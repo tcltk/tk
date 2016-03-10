@@ -4955,6 +4955,38 @@ test panedwindow-23.30 {ConfigurePanes, -hide works} -setup {
 } -cleanup {
     deleteWindows
 } -result {1 1 1 0 39 40 40 1 130 1 0 1 1 40 40 40 42 130}
+test panedwindow-23.30a {ConfigurePanes, hidden panes are unmapped} -setup {
+	deleteWindows
+} -body {
+    panedwindow .p1 -sashrelief raised
+    panedwindow .p2 -sashrelief raised
+    label .l1 -text Label1
+    label .l2 -text Label2
+    label .l3 -text Label3
+    .p2 add .l2 -sticky nsew
+    .p2 add .l3 -sticky nsew
+    .p1 add .p2 -sticky nsew
+    .p1 add .l1 -sticky nsew
+    pack .p1 -side top -expand 1 -fill both
+	update
+	set result [list]
+	lappend result [list [winfo ismapped .p1] [winfo ismapped .p2] \
+		    [winfo ismapped .l1] [winfo ismapped .l2] [winfo ismapped .l3]]
+    .p2 paneconfigure .l1 -hide 1
+	update
+	lappend result [list [winfo ismapped .p1] [winfo ismapped .p2] \
+		    [winfo ismapped .l1] [winfo ismapped .l2] [winfo ismapped .l3]]
+    .p1 paneconfigure .p2 -hide 1
+	update
+	lappend result [list [winfo ismapped .p1] [winfo ismapped .p2] \
+		    [winfo ismapped .l1] [winfo ismapped .l2] [winfo ismapped .l3]]
+    .p1 paneconfigure .p2 -hide 0
+	update
+	lappend result [list [winfo ismapped .p1] [winfo ismapped .p2] \
+		    [winfo ismapped .l1] [winfo ismapped .l2] [winfo ismapped .l3]]
+} -cleanup {
+    deleteWindows
+} -result {{1 1 1 1 1} {1 1 0 1 1} {1 0 0 0 0} {1 1 0 1 1}}
 test panedwindow-23.31 {ConfigurePanes, -hide works, last pane stretches} -setup {
 	deleteWindows
 } -body {
