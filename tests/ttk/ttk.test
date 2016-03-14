@@ -206,7 +206,7 @@ test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
     destroy .b
     set ttk28 {}
     pack [ttk::button .b -command {set ::ttk28 failed}]
-} -body { 
+} -body {
     bind .b <ButtonPress-1> {after 0 {.b configure -state disabled}}
     after 1 {event generate .b <ButtonPress-1>}
     after 20 {event generate .b <ButtonRelease-1>}
