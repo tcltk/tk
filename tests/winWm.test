@@ -474,7 +474,7 @@ test winWm-9.0 "Bug #2799589 - delayed activation of destroyed window" -constrai
     global winwm90done
     set winwm90done wait
     toplevel .t
-} -body {    
+} -body {
     pack [button .t.b -text "Show" -command {winwm90proc1 .tx}]
     bind .t.b <Map> {bind %W <Map> {}; after idle {winwm90click %W}}
     after 5000 {set winwm90done timeout}
@@ -485,7 +485,7 @@ test winWm-9.0 "Bug #2799589 - delayed activation of destroyed window" -constrai
         rename winwm90$cmd {}
     }
     destroy .tx .t .sd
-} -result {ok} 
+} -result {ok}
 
 test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win -setup {
     proc winwm91click {w} {
@@ -519,7 +519,7 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
     global winwm91done
     set winwm91done wait
     toplevel .t
-} -body {    
+} -body {
     pack [button .t.b -text "Show" -command {winwm91proc1 .tx}]
     bind .t.b <Map> {bind %W <Map> {}; after idle {winwm91click %W}}
     after 5000 {set winwm91done timeout}
