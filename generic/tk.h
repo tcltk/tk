@@ -17,7 +17,7 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION < 6)
+#if (TCL_MAJOR_VERSION < 8) || (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
 #	error Tk 8.7 must be compiled with tcl.h from Tcl 8.6 or better
 #endif
 
