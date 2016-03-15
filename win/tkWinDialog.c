@@ -1113,7 +1113,7 @@ ParseOFNOptions(
             if (strcmp(Tcl_GetString(objv[i]), "-xpstyle"))
                 goto error_return;
             if (i + 1 == objc) {
-                Tcl_SetResult(interp, "value for \"-xpstyle\" missing", TCL_STATIC);
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("value for \"-xpstyle\" missing", -1));
                 Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
                 goto error_return;
             }
@@ -1281,9 +1281,8 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     int oldMode;
 
     if (tsdPtr->newFileDialogsState != FDLG_STATE_USE_NEW) {
-        /* XXX - should be an assert but Tcl does not seem to have one? */
-        Tcl_SetResult(interp, "Internal error: GetFileNameVista: IFileDialog API not available", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_Panic("Internal error: GetFileNameVista: IFileDialog API not available");
+	return TCL_ERROR;
     }
 
     /*
