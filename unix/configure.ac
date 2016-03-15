@@ -3,8 +3,8 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 
-AC_INIT([tk],[8.6])
-AC_PREREQ(2.59)
+AC_INIT([tk],[8.7])
+AC_PREREQ(2.69)
 
 dnl This is only used when included from macosx/configure.ac
 m4_ifdef([SC_USE_CONFIG_HEADERS], [
@@ -22,10 +22,10 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
     #endif /* _TKCONFIG */])
 ])
 
-TK_VERSION=8.6
+TK_VERSION=8.7
 TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".5"
+TK_MINOR_VERSION=7
+TK_PATCH_LEVEL="a0"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
