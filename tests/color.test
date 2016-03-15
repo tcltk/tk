@@ -158,7 +158,7 @@ test color-1.5 {Color table} nonPortable {
 	if {$rgb != [lrange $line 0 2] } {
 		append result $line\n
 	}
-	
+
     }
     return $result
 } {}

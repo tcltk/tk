@@ -315,7 +315,7 @@ test canvImg-6.9 {ComputeImageBbox procedure} -constraints testImageType -setup 
     imageCleanup
 } -result {5 15 35 30}
 test canvImg-6.10 {ComputeImageBbox procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     image create test foo
     .c delete all
@@ -328,7 +328,7 @@ test canvImg-6.10 {ComputeImageBbox procedure} -constraints {
     image delete foo
 } -result {20 15 50 30}
 test canvImg-6.11 {ComputeImageBbox procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     image create test foo
     .c delete all
@@ -341,7 +341,7 @@ test canvImg-6.11 {ComputeImageBbox procedure} -constraints {
     image delete foo
 } -result {20 23 50 38}
 test canvImg-6.12 {ComputeImageBbox procedure} -constraints {
-	testImageType 
+	testImageType
 } -setup {
     image create test foo
     .c delete all
@@ -750,7 +750,7 @@ test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
 	image delete foo
 } -result {{foo display 0 0 40 50 30 30}}
 test canvImg-11.2 {ImageChangedProc procedure} -constraints {
-	testImageType 
+	testImageType
 } -setup {
     .c delete all
 } -body {
@@ -765,7 +765,7 @@ test canvImg-11.2 {ImageChangedProc procedure} -constraints {
 	image delete foo
 } -result {30 75 70 125}
 test canvImg-11.3 {ImageChangedProc procedure} -constraints {
-	testImageType 
+	testImageType
 } -setup {
     .c delete all
 } -body {
