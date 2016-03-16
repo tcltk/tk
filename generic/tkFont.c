@@ -497,7 +497,7 @@ Tk_FontObjCmd(
 	const char *s;
 	Tk_Font tkfont;
 	Tcl_Obj *optPtr, *charPtr, *resultPtr;
-	Tcl_UniChar uniChar = 0;
+	int uniChar = 0;
 	const TkFontAttributes *faPtr;
 	TkFontAttributes fa;
 
@@ -1714,10 +1714,10 @@ Tk_PostscriptFontName(
 	    }
 	    src += Tcl_UtfToUniChar(src, &ch);
 	    if (upper) {
-		ch = Tcl_UniCharToUpper(ch);
+		ch = (Tcl_UniChar) Tcl_UniCharToUpper(ch);
 		upper = 0;
 	    } else {
-		ch = Tcl_UniCharToLower(ch);
+		ch = (Tcl_UniChar) Tcl_UniCharToLower(ch);
 	    }
 	    dest += Tcl_UniCharToUtf(ch, dest);
 	}
