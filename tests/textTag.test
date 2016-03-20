@@ -168,6 +168,17 @@ test textTag-1.17 {configuration options} -constraints {
 } -cleanup {
     .t tag configure x -lmargin2 [lindex [.t tag configure x -lmargin2] 3]
 } -returnCodes error -result {bad screen distance "bad"}
+test textTag-1.17a {tag configuration options} -body {
+    .t tag configure x -lmargincolor lightgreen
+    .t tag cget x -lmargincolor
+} -cleanup {
+    .t tag configure x -lmargincolor [lindex [.t tag configure x -lmargincolor] 3]
+} -result {lightgreen}
+test textTag-1.17b {configuration options} -body {
+    .t tag configure x -lmargincolor non-existent
+} -cleanup {
+    .t tag configure x -lmargincolor [lindex [.t tag configure x -lmargincolor] 3]
+} -returnCodes error -result {unknown color name "non-existent"}
 test textTag-1.18 {tag configuration options} -constraints {
     haveCourier12
 } -body {
@@ -198,6 +209,17 @@ test textTag-1.21 {configuration options} -constraints {
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
 } -returnCodes error -result {expected boolean value but got "stupid"}
+test textTag-1.21a {tag configuration options} -body {
+    .t tag configure x -overstrikefg red
+    .t tag cget x -overstrikefg
+} -cleanup {
+    .t tag configure x -overstrikefg [lindex [.t tag configure x -overstrikefg] 3]
+} -result {red}
+test textTag-1.21b {configuration options} -body {
+    .t tag configure x -overstrikefg stupid
+} -cleanup {
+    .t tag configure x -overstrikefg [lindex [.t tag configure x -overstrikefg] 3]
+} -returnCodes error -result {unknown color name "stupid"}
 test textTag-1.22 {tag configuration options} -constraints {
     haveCourier12
 } -body {
@@ -228,6 +250,39 @@ test textTag-1.25 {configuration options} -constraints {
 } -cleanup {
     .t tag configure x -rmargin [lindex [.t tag configure x -rmargin] 3]
 } -returnCodes error -result {bad screen distance "bad"}
+test textTag-1.25a {tag configuration options} -body {
+    .t tag configure x -rmargincolor darkblue
+    .t tag cget x -rmargincolor
+} -cleanup {
+    .t tag configure x -rmargincolor [lindex [.t tag configure x -rmargincolor] 3]
+} -result {darkblue}
+test textTag-1.25b {configuration options} -body {
+    .t tag configure x -rmargincolor non-existent
+} -cleanup {
+    .t tag configure x -rmargincolor [lindex [.t tag configure x -rmargincolor] 3]
+} -returnCodes error -result {unknown color name "non-existent"}
+test textTag-1.25c {tag configuration options} -body {
+    .t tag configure x -selectbackground #012345
+    .t tag cget x -selectbackground
+} -cleanup {
+    .t tag configure x -selectbackground [lindex [.t tag configure x -selectbackground] 3]
+} -result {#012345}
+test textTag-1.25d {configuration options} -body {
+    .t tag configure x -selectbackground non-existent
+} -cleanup {
+    .t tag configure x -selectbackground [lindex [.t tag configure x -selectbackground] 3]
+} -returnCodes error -result {unknown color name "non-existent"}
+test textTag-1.25e {tag configuration options} -body {
+    .t tag configure x -selectforeground #012345
+    .t tag cget x -selectforeground
+} -cleanup {
+    .t tag configure x -selectforeground [lindex [.t tag configure x -selectforeground] 3]
+} -result {#012345}
+test textTag-1.25f {configuration options} -body {
+    .t tag configure x -selectforeground non-existent
+} -cleanup {
+    .t tag configure x -selectforeground [lindex [.t tag configure x -selectforeground] 3]
+} -returnCodes error -result {unknown color name "non-existent"}
 test textTag-1.26 {tag configuration options} -constraints {
     haveCourier12
 } -body {
@@ -303,6 +358,17 @@ test textTag-1.35 {configuration options} -constraints {
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
 } -returnCodes error -result {expected boolean value but got "stupid"}
+test textTag-1.36 {tag configuration options} -body {
+    .t tag configure x -underlinefg red
+    .t tag cget x -underlinefg
+} -cleanup {
+    .t tag configure x -underlinefg [lindex [.t tag configure x -underlinefg] 3]
+} -result {red}
+test textTag-1.37 {configuration options} -body {
+    .t tag configure x -underlinefg stupid
+} -cleanup {
+    .t tag configure x -underlinefg [lindex [.t tag configure x -underlinefg] 3]
+} -returnCodes error -result {unknown color name "stupid"}
 
 
 test textTag-2.1 {TkTextTagCmd - "add" option} -constraints {
@@ -559,6 +625,13 @@ test textTag-5.4 {TkTextTagCmd - "configure" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {-underline {} {} {} yes}
+test textTag-5.4a {TkTextTagCmd - "configure" option} -body {
+    .t tag delete x
+    .t tag configure x -underlinefg lightgreen
+    .t tag configure x -underlinefg
+} -cleanup {
+    .t tag delete x
+} -result {-underlinefg {} {} {} lightgreen}
 test textTag-5.5 {TkTextTagCmd - "configure" option} -constraints {
 	haveCourier12 
 } -body {
@@ -568,6 +641,13 @@ test textTag-5.5 {TkTextTagCmd - "configure" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {on}
+test textTag-5.5a {TkTextTagCmd - "configure" option} -body {
+    .t tag delete x
+    .t tag configure x -overstrikefg lightgreen
+    .t tag configure x -overstrikefg
+} -cleanup {
+    .t tag delete x
+} -result {-overstrikefg {} {} {} lightgreen}
 test textTag-5.6 {TkTextTagCmd - "configure" option} -constraints {
 	haveCourier12 
 } -body {
@@ -625,16 +705,19 @@ test textTag-5.12 {TkTextTagCmd - "configure" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad screen distance "1.0q"}
-test textTag-5.13 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12 
-} -body {
+test textTag-5.13 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
-    .t tag configure x -lmargin1 2 -lmargin2 4 -rmargin 5
+    .t tag configure x -lmargin1 2 -lmargin2 4 -rmargin 5 \
+        -lmargincolor darkblue -rmargincolor lightgreen
     list [.t tag configure x -lmargin1] [.t tag configure x -lmargin2] \
-        [.t tag configure x -rmargin]
+        [.t tag configure x -rmargin] [.t tag configure x -lmargincolor] \
+        [.t tag configure x -rmargincolor]
 } -cleanup {
     .t tag delete x
-} -result {{-lmargin1 {} {} {} 2} {-lmargin2 {} {} {} 4} {-rmargin {} {} {} 5}}
+} -result [list {-lmargin1 {} {} {} 2} {-lmargin2 {} {} {} 4} \
+                {-rmargin {} {} {} 5} \
+                {-lmargincolor {} {} {} darkblue} {-rmargincolor {} {} {} lightgreen} \
+          ]
 test textTag-5.14 {TkTextTagCmd - "configure" option} -constraints {
     haveCourier12 
 } -body {
@@ -651,6 +734,12 @@ test textTag-5.15 {TkTextTagCmd - "configure" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad screen distance "gorp"}
+test textTag-5.15a {TkTextTagCmd - "configure" option} -body {
+    .t tag delete x
+    .t tag configure x -lmargincolor rainbow
+} -cleanup {
+    .t tag delete x
+} -returnCodes error -result {unknown color name "rainbow"}
 test textTag-5.16 {TkTextTagCmd - "configure" option} -constraints {
     haveCourier12 
 } -body {
@@ -659,6 +748,12 @@ test textTag-5.16 {TkTextTagCmd - "configure" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad screen distance "140.1.1"}
+test textTag-5.16a {TkTextTagCmd - "configure" option} -body {
+    .t tag delete x
+    .t tag configure x -rmargincolor rainbow
+} -cleanup {
+    .t tag delete x
+} -returnCodes error -result {unknown color name "rainbow"}
 .t tag delete x
 test textTag-5.17 {TkTextTagCmd - "configure" option} -constraints {
     haveCourier12 
@@ -713,7 +808,52 @@ test textTag-5.22 {TkTextTagCmd - "configure" option} -constraints {
     .t tag configure sel -borderwidth {}
     .t cget -selectborderwidth
 } -result {}
-
+test textTag-5.23 {TkTextTagCmd - "configure" option} -body {
+    set x {}
+    # when [.t tag cget sel -selectbackground] == "", mirroring happens between
+    #     the text widget option -selectbackground
+    # and the tag         option -background
+    .t tag configure sel -selectbackground {}
+    .t configure -selectbackground black
+    .t tag configure sel -background yellow
+    lappend x [.t cget -selectbackground]
+    .t tag configure sel -background orange
+    .t configure -selectbackground blue
+    lappend x [.t tag cget sel -background]
+    # when [.t tag cget sel -selectbackground] != "", mirroring happens between
+    #     the text widget option -selectbackground
+    # and the tag         option -selectbackground
+    .t tag configure sel -selectbackground green
+    .t configure -selectbackground red
+    lappend x [.t tag cget sel -selectbackground]
+    .t configure -selectbackground black
+    .t tag configure sel -selectbackground white
+    lappend x [.t cget -selectbackground]
+    return $x
+} -result {yellow blue red white}
+test textTag-5.24 {TkTextTagCmd - "configure" option} -body {
+    set x {}
+    # when [.t tag cget sel -selectforeground] == "", mirroring happens between
+    #     the text widget option -selectforeground
+    # and the tag         option -foreground
+    .t tag configure sel -selectforeground {}
+    .t configure -selectforeground black
+    .t tag configure sel -foreground yellow
+    lappend x [.t cget -selectforeground]
+    .t tag configure sel -foreground orange
+    .t configure -selectforeground blue
+    lappend x [.t tag cget sel -foreground]
+    # when [.t tag cget sel -selectforeground] != "", mirroring happens between
+    #     the text widget option -selectforeground
+    # and the tag         option -selectforeground
+    .t tag configure sel -selectforeground green
+    .t configure -selectforeground red
+    lappend x [.t tag cget sel -selectforeground]
+    .t configure -selectforeground black
+    .t tag configure sel -selectforeground white
+    lappend x [.t cget -selectforeground]
+    return $x
+} -result {yellow blue red white}
 
 test textTag-6.1 {TkTextTagCmd - "delete" option} -constraints {
     haveCourier12 
