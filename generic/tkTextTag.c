@@ -61,15 +61,26 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, -1, Tk_Offset(TkTextTag, lMargin1String), TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-lmargin2", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, lMargin2String), TK_OPTION_NULL_OK,0,0},
+    {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-offset", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, offsetString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-overstrike", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, overstrikeString),
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-overstrikefg", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, overstrikeColor),
+        TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-relief", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, reliefString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-rmargin", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, rMarginString), TK_OPTION_NULL_OK, 0,0},
+    {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, rMarginColor), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, selBorder), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, selFgColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-spacing1", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, spacing1String), TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-spacing2", NULL, NULL,
@@ -84,6 +95,9 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING, "-underline", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, underlineString),
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-underlinefg", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, underlineColor),
+        TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, wrapMode),
 	TK_OPTION_NULL_OK, wrapStrings, 0},
@@ -484,10 +498,18 @@ TkTextTagCmd(
 	     */
 
 	    if (tagPtr == textPtr->selTagPtr) {
-		textPtr->selBorder = tagPtr->border;
+                if (tagPtr->selBorder == NULL) {
+                    textPtr->selBorder = tagPtr->border;
+                } else {
+                    textPtr->selBorder = tagPtr->selBorder;
+                }
 		textPtr->selBorderWidth = tagPtr->borderWidth;
 		textPtr->selBorderWidthPtr = tagPtr->borderWidthPtr;
-		textPtr->selFgColorPtr = tagPtr->fgColor;
+                if (tagPtr->selFgColor == NULL) {
+                    textPtr->selFgColorPtr = tagPtr->fgColor;
+                } else {
+                    textPtr->selFgColorPtr = tagPtr->selFgColor;
+                }
 	    }
 
 	    tagPtr->affectsDisplay = 0;
@@ -509,12 +531,18 @@ TkTextTagCmd(
 		tagPtr->affectsDisplayGeometry = 1;
 	    }
 	    if ((tagPtr->border != NULL)
+		    || (tagPtr->selBorder != NULL)
 		    || (tagPtr->reliefString != NULL)
 		    || (tagPtr->bgStipple != None)
 		    || (tagPtr->fgColor != NULL)
+		    || (tagPtr->selFgColor != NULL)
 		    || (tagPtr->fgStipple != None)
 		    || (tagPtr->overstrikeString != NULL)
-		    || (tagPtr->underlineString != NULL)) {
+                    || (tagPtr->overstrikeColor != NULL)
+		    || (tagPtr->underlineString != NULL)
+                    || (tagPtr->underlineColor != NULL)
+                    || (tagPtr->lMarginColor != NULL)
+                    || (tagPtr->rMarginColor != NULL)) {
 		tagPtr->affectsDisplay = 1;
 	    }
 	    if (!newTag) {
@@ -1011,12 +1039,17 @@ TkTextCreateTag(
     tagPtr->lMargin1 = 0;
     tagPtr->lMargin2String = NULL;
     tagPtr->lMargin2 = 0;
+    tagPtr->lMarginColor = NULL;
     tagPtr->offsetString = NULL;
     tagPtr->offset = 0;
     tagPtr->overstrikeString = NULL;
     tagPtr->overstrike = 0;
+    tagPtr->overstrikeColor = NULL;
     tagPtr->rMarginString = NULL;
     tagPtr->rMargin = 0;
+    tagPtr->rMarginColor = NULL;
+    tagPtr->selBorder = NULL;
+    tagPtr->selFgColor = NULL;
     tagPtr->spacing1String = NULL;
     tagPtr->spacing1 = 0;
     tagPtr->spacing2String = NULL;
@@ -1028,6 +1061,7 @@ TkTextCreateTag(
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NONE;
     tagPtr->underlineString = NULL;
     tagPtr->underline = 0;
+    tagPtr->underlineColor = NULL;
     tagPtr->elideString = NULL;
     tagPtr->elide = 0;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
