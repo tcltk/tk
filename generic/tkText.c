@@ -2253,12 +2253,20 @@ ConfigureText(
      * replaced in the widget record.
      */
 
-    textPtr->selTagPtr->border = textPtr->selBorder;
+    if (textPtr->selTagPtr->selBorder == NULL) {
+        textPtr->selTagPtr->border = textPtr->selBorder;
+    } else {
+        textPtr->selTagPtr->selBorder = textPtr->selBorder;
+    }
     if (textPtr->selTagPtr->borderWidthPtr != textPtr->selBorderWidthPtr) {
 	textPtr->selTagPtr->borderWidthPtr = textPtr->selBorderWidthPtr;
 	textPtr->selTagPtr->borderWidth = textPtr->selBorderWidth;
     }
-    textPtr->selTagPtr->fgColor = textPtr->selFgColorPtr;
+    if (textPtr->selTagPtr->selFgColor == NULL) {
+        textPtr->selTagPtr->fgColor = textPtr->selFgColorPtr;
+    } else {
+        textPtr->selTagPtr->selFgColor = textPtr->selFgColorPtr;
+    }
     textPtr->selTagPtr->affectsDisplay = 0;
     textPtr->selTagPtr->affectsDisplayGeometry = 0;
     if ((textPtr->selTagPtr->elideString != NULL)
@@ -2277,12 +2285,18 @@ ConfigureText(
 	textPtr->selTagPtr->affectsDisplayGeometry = 1;
     }
     if ((textPtr->selTagPtr->border != NULL)
+	    || (textPtr->selTagPtr->selBorder != NULL)
 	    || (textPtr->selTagPtr->reliefString != NULL)
 	    || (textPtr->selTagPtr->bgStipple != None)
 	    || (textPtr->selTagPtr->fgColor != NULL)
+	    || (textPtr->selTagPtr->selFgColor != NULL)
 	    || (textPtr->selTagPtr->fgStipple != None)
 	    || (textPtr->selTagPtr->overstrikeString != NULL)
-	    || (textPtr->selTagPtr->underlineString != NULL)) {
+            || (textPtr->selTagPtr->overstrikeColor != NULL)
+	    || (textPtr->selTagPtr->underlineString != NULL)
+	    || (textPtr->selTagPtr->underlineColor != NULL)
+            || (textPtr->selTagPtr->lMarginColor != NULL)
+            || (textPtr->selTagPtr->rMarginColor != NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
     }
     TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, 1);
@@ -3016,7 +3030,7 @@ CountIndices(
  *	If 'viewUpdate' is true, we may adjust the window contents'
  *	y-position, and scrollbar setting.
  *
- *	If 'viewUpdate' is false, true we can guarantee that textPtr->topIndex
+ *	If 'viewUpdate' is true we can guarantee that textPtr->topIndex
  *	points to a valid TkTextLine after this function returns. However, if
  *	'viewUpdate' is false, then there is no such guarantee (since
  *	topIndex.linePtr can be garbage). The caller is expected to take

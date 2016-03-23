@@ -357,7 +357,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 
     # Save the position of the insert cursor
     lappend result [$e index insert]
-    
+
     # Now drag until selend is highlighted, then click up
 
     set current $anchor
@@ -424,7 +424,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 
     # Save the position of the insert cursor
     lappend result [$e index insert]
-    
+
     # Now drag until selend is highlighted, then click up
 
     set current $anchor
@@ -610,7 +610,7 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
     deleteWindows
 } -result {select 11 7 select 4 { select} {Word select} 2}
 
-test event-5.1(triple-click-drag) {Triple click and drag across lines in a 
+test event-5.1(triple-click-drag) {Triple click and drag across lines in a
         text widget, this should extend the selection to the new line} -setup {
 	deleteWindows
 } -body {
@@ -795,7 +795,7 @@ test event-7.2(double-click) {A double click on a lone character
     set result [list]
     lappend result [$e index insert]
     lappend result [_get_selection $e]
-  
+
     # Clear selection by clicking at 0,0
 
     event generate $e <ButtonPress-1> -x 0 -y 0

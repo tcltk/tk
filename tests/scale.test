@@ -324,7 +324,7 @@ test scale-2.1 {Tk_ScaleCmd procedure} -body {
     scale
 } -returnCodes error -result {wrong # args: should be "scale pathName ?-option value ...?"}
 test scale-2.2 {Tk_ScaleCmd procedure} -body {
-    scale foo 
+    scale foo
 } -returnCodes error -result {bad window path name "foo"}
 test scale-2.3 {Tk_ScaleCmd procedure} -body {
     catch {scale foo}
@@ -1395,6 +1395,114 @@ test scale-19 {Bug [3529885fff] - Click in through goes in wrong direction} \
         destroy .s1 .s2 .s3 .s4
     } \
     -result {1.0 1.0 1.0 1.0}
+
+test scale-20.1 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 1} -setup {
+    catch {destroy .s}
+    set res {}
+    set commandedVar -1
+} -body {
+    scale .s -from 1 -to 50 -command {set commandedVar}
+    pack .s
+    update  ; # -command callback shall NOT fire
+    set res [list [.s get] $commandedVar]
+} -cleanup {
+    destroy .s
+} -result {1 -1}
+test scale-20.2 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 2} -setup {
+    catch {destroy .s}
+    set res {}
+    set commandedVar -1
+    set scaleVar 7
+} -body {
+    scale .s -from 1 -to 50 -variable scaleVar -command {set commandedVar}
+    pack .s
+    update  ; # -command callback shall NOT fire
+    set res [list [.s get] $commandedVar]
+} -cleanup {
+    destroy .s
+} -result {7 -1}
+test scale-20.3 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 3} -setup {
+    catch {destroy .s}
+    set res {}
+    set commandedVar -1
+} -body {
+    scale .s -from 1 -to 50
+    .s set 10
+    .s configure -command {set commandedVar}
+    pack .s
+    update  ; # -command callback shall NOT fire
+    set res [list [.s get] $commandedVar]
+} -cleanup {
+    destroy .s
+} -result {10 -1}
+test scale-20.4 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 4} -setup {
+    catch {destroy .s}
+    set res {}
+    set commandedVar -1
+} -body {
+    scale .s -from 1 -to 50 -command {set commandedVar}
+    .s set 10
+    pack .s
+    update  ; # -command callback shall fire
+    set res [list [.s get] $commandedVar]
+} -cleanup {
+    destroy .s
+} -result {10 10}
+test scale-20.5 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 5} -setup {
+    catch {destroy .s}
+    set res {}
+    set commandedVar -1
+} -body {
+    scale .s -from 1 -to 50
+    pack .s
+    .s set 10
+    .s configure -command {set commandedVar}
+    update  ; # -command callback shall NOT fire
+    set res [list [.s get] $commandedVar]
+} -cleanup {
+    destroy .s
+} -result {10 -1}
+test scale-20.6 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 6} -setup {
+    catch {destroy .s}
+    set res {}
+    set commandedVar -1
+} -body {
+    scale .s -from 1 -to 50
+    pack .s
+    .s configure -command {set commandedVar}
+    .s set 10
+    update  ; # -command callback shall fire
+    set res [list [.s get] $commandedVar]
+} -cleanup {
+    destroy .s
+} -result {10 10}
+test scale-20.7 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 7} -setup {
+    catch {destroy .s}
+    set res {}
+    set commandedVar -1
+} -body {
+    scale .s -from 1 -to 50 -command {set commandedVar}
+    pack .s
+    .s set 10
+    update  ; # -command callback shall fire
+    set res [list [.s get] $commandedVar]
+} -cleanup {
+    destroy .s
+} -result {10 10}
+test scale-20.8 {Bug [2262543fff] - Scale widget unexpectedly fires command callback, case 8} -setup {
+    catch {destroy .s}
+    set res {}
+    set commandedVar -1
+    set scaleVar 7
+} -body {
+    scale .s -from 1 -to 50 -variable scaleVar -command {set commandedVar}
+    pack .s
+    .s set 10
+    update  ; # -command callback shall fire
+    set res [list [.s get] $commandedVar]
+} -cleanup {
+    destroy .s
+} -result {10 10}
 
 option clear
 
