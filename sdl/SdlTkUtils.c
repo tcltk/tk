@@ -975,30 +975,43 @@ SdlTkFontInit(Tcl_Interp *interp)
      *    1. packaged/built-in fonts ($tk_library/fonts/...)
      *    2. $env(HOME)/.fonts directory
      *    3. system specific directories
+     * On desktop platforms 2. and 3. are skipped when
+     * the -sdlnosysfonts command line option is present.
      */ 
 #ifdef ANDROID
     result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
 		"[file join $tk_library fonts] *] "
-		"[glob -nocomplain -directory ~/.fonts -types f *.ttf] "
+		"[glob -nocomplain -directory [file normalize ~/.fonts] "
+		"-types f *.ttf] "
 		"[glob -nocomplain -directory /system/fonts *.ttf"
 		" -types f]",
 		-1, TCL_EVAL_GLOBAL);
-#elif _WIN32
-    result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
-		"[file join $tk_library fonts] *] "
-		"[glob -nocomplain -directory ~/.fonts -types f *.ttf]",
-		-1, TCL_EVAL_GLOBAL);
 #else
-    /*
-     * Needs more effort, currently tries /usr/share/fonts/... which
-     * should work on most modern Linuxen.
-     */
-    result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
-		"[file join $tk_library fonts] *] "
-		"[glob -nocomplain -directory ~/.fonts -types f *.ttf] "
-		"[glob -nocomplain -directory /usr/share/fonts"
-		" -types f */*.ttf] ",
-		-1, TCL_EVAL_GLOBAL);
+    if (SdlTkX.arg_nosysfonts) {
+	result = Tcl_EvalEx(interp, "glob -nocomplain -directory "
+		    "[file join $tk_library fonts] *",
+		    -1, TCL_EVAL_GLOBAL);
+    } else {
+#ifdef _WIN32
+	result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
+		    "[file join $tk_library fonts] *] "
+		    "[glob -nocomplain -directory [file normalize ~/.fonts] "
+		    "-types f *.ttf]",
+		    -1, TCL_EVAL_GLOBAL);
+#else
+	/*
+	 * Needs more effort, currently tries /usr/share/fonts/... which
+	 * should work on most modern Linuxen.
+	 */
+	result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
+		    "[file join $tk_library fonts] *] "
+		    "[glob -nocomplain -directory [file normalize ~/.fonts] "
+		    "-types f *.ttf] "
+		    "[glob -nocomplain -directory /usr/share/fonts"
+		    " -types f */*.ttf] ",
+		    -1, TCL_EVAL_GLOBAL);
+#endif
+    }
 #endif
     if (result != TCL_OK) {
 fonterr:
@@ -1007,7 +1020,9 @@ fonterr:
 	goto error;
     }
 #ifdef _WIN32
-    AddSysFontFiles(Tcl_GetObjResult(interp));
+    if (!SdlTkX.arg_nosysfonts) {
+	AddSysFontFiles(Tcl_GetObjResult(interp));
+    }
 #endif
     if (Tcl_ListObjGetElements(interp, Tcl_GetObjResult(interp), &objc, &objv)
 	!= TCL_OK) {
@@ -1264,6 +1279,39 @@ nextface:
 error:
     Tcl_MutexUnlock(&fontMutex);
     return TCL_ERROR;
+}
+
+int
+SdlTkFontList(Tcl_Interp *interp)
+{
+    Tcl_HashSearch search;
+    Tcl_HashEntry *hPtr;
+    Tcl_Obj *list;
+
+    if (SdlTkFontInit(interp) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    list = Tcl_NewListObj(0, NULL);
+    Tcl_MutexLock(&fontMutex);
+    hPtr = Tcl_FirstHashEntry(&fileFaceHash, &search);
+    while (hPtr != NULL) {
+	GlyphIndexHash *ghash;
+	Tcl_Obj *obj;
+	FileFaceKey *ffKey;
+
+	ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);
+	ffKey = (FileFaceKey *) Tcl_GetHashKey(&fileFaceHash, hPtr);
+	Tcl_ListObjAppendElement(NULL, list,
+		Tcl_NewStringObj(ghash->xlfdPattern, -1));
+	Tcl_ListObjAppendElement(NULL, list,
+		Tcl_NewStringObj((char *) ffKey->file, -1));
+	Tcl_ListObjAppendElement(NULL, list, Tcl_NewIntObj(ffKey->index));
+	hPtr = Tcl_NextHashEntry(&search);
+    }
+    Tcl_MutexUnlock(&fontMutex);
+    Tcl_SetObjResult(interp, list);
+    return TCL_OK;
 }
 
 /*

@@ -5040,6 +5040,10 @@ fatal:
 #ifndef ANDROID
     if (SdlTkX.arg_nogl) {
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+    } else {
+#ifndef _WIN32
+	videoFlags |= SDL_WINDOW_OPENGL;
+#endif
     }
 #endif
 #ifdef SDL_HINT_VIDEO_ALLOW_SCREENSAVER
@@ -5095,6 +5099,7 @@ retry:
 	    goto fatal;
 	}
 	SdlTkX.arg_nogl = 1;
+	videoFlags &= ~SDL_WINDOW_OPENGL;
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
 	goto retry;
 #endif
@@ -5217,7 +5222,11 @@ ctxRetry:
 	    SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
 	    goto retry;
 	}
+#ifdef _WIN32
 	SdlTkX.arg_nogl = (glvernum < 2) || !hasFBO;
+#else
+	SdlTkX.arg_nogl = (glvernum < 1) || !hasFBO;
+#endif
     }
     if (pfmt->BitsPerPixel == 15) {
 	tfmt = SDL_PIXELFORMAT_RGB555;
@@ -5543,6 +5552,13 @@ ctxRetry:
     }
 #endif
     SdlTkSetCursor(None);
+#ifndef ANDROID
+    if (SdlTkX.arg_opacity > 0) {
+	double d = SdlTkX.arg_opacity / 100.0;
+	
+	SDL_SetWindowOpacity(SdlTkX.sdlscreen, d);
+    }
+#endif
 
     /* Pre-allocate some events */
     display->head = display->tail = NULL;
@@ -5607,7 +5623,7 @@ EventThread(ClientData clientData)
     Tcl_ConditionNotify(&xlib_cond);
     if (!initSuccess) {
 	SdlTkUnlock(NULL);
-	TCL_THREAD_CREATE_RETURN;
+	goto eventThreadEnd;
     }
     evs = NULL;		/* just in case */
 
@@ -5695,6 +5711,7 @@ EventThread(ClientData clientData)
 	Tcl_MutexUnlock((Tcl_Mutex *) &SdlTkX.display->qlock);
     }
     SDL_RemoveTimer(timerId);
+eventThreadEnd:
     TCL_THREAD_CREATE_RETURN;
 }
 
@@ -7147,8 +7164,9 @@ SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
     if (SdlTkX.arg_nogl) {
 	goto done;
     }
-    if (SDL_CreateWindowAndRenderer(64, 64, SDL_WINDOW_HIDDEN, &_w->gl_wind,
-				    &_w->gl_rend) < 0) {
+    if (SDL_CreateWindowAndRenderer(64, 64,
+				    SDL_WINDOW_HIDDEN | SDL_WINDOW_POPUP_MENU,
+				    &_w->gl_wind, &_w->gl_rend) < 0) {
 	goto done2;
     }
     ctx = SDL_GL_GetCurrentContext();
