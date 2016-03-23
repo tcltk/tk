@@ -263,6 +263,11 @@ static const Tk_ArgvInfo argTable[] = {
 	(char *) &SdlTkX.arg_sdllog, "SDL log level"},
     {"-sdlicon", TK_ARGV_STRING, (char *) NULL, (char *) &SdlTkX.arg_icon,
 	"SDL file name of BMP icon"},
+    {"-sdlopacity", TK_ARGV_INT, (char *) 100, (char *) &SdlTkX.arg_opacity,
+	"Opacity of SDL root window in percent"},
+    {"-sdlnosysfonts", TK_ARGV_CONSTANT, (char *) 1,
+	(char *) &SdlTkX.arg_nosysfonts,
+	"Don't search and load system fonts"},
 #endif
     {"-sync", TK_ARGV_CONSTANT, (char *) 1, (char *) &synchronize,
 	"Use synchronous mode for display server"},

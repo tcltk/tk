@@ -221,10 +221,12 @@ typedef struct SdlTkXInfo {
     int arg_nogl;
     int arg_xdpi;
     int arg_ydpi;
+    int arg_opacity;
     char *arg_rootwidth;
     char *arg_rootheight;
     int arg_sdllog;
     char *arg_icon;
+    int arg_nosysfonts;
 
     /* Various atoms */
     Atom mwm_atom;
@@ -378,6 +380,7 @@ extern char **SdlTkListFonts(const char *xlfd, int *count);
 extern Font SdlTkFontLoadXLFD(const char *xlfd);
 extern int SdlTkFontInit(Tcl_Interp *interp);
 extern int SdlTkFontAdd(Tcl_Interp *interp, const char *fileName);
+extern int SdlTkFontList(Tcl_Interp *interp);
 extern void SdlTkFontFreeFont(XFontStruct *fontStructPtr);
 extern int SdlTkFontIsFixedWidth(XFontStruct *fontStructPtr);
 extern int SdlTkFontHasChar(XFontStruct *fontStructPtr, char *buf);

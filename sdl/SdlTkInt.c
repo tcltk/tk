@@ -3737,6 +3737,17 @@ done:
 }
 
 static int
+FontsObjCmd(ClientData clientData, Tcl_Interp *interp,
+	       int objc, Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "");
+	return TCL_ERROR;
+    }
+    return SdlTkFontList(interp);
+}
+
+static int
 FullscreenObjCmd(ClientData clientData, Tcl_Interp *interp,
 	       int objc, Tcl_Obj *const objv[])
 {
@@ -4335,6 +4346,7 @@ static const TkEnsemble sdltkCmdMap[] = {
     { "android", AndroidObjCmd, NULL },
     { "deiconify", DeiconifyObjCmd, NULL },
     { "expose", ExposeObjCmd, NULL },
+    { "fonts", FontsObjCmd, NULL },
     { "fullscreen", FullscreenObjCmd, NULL },
     { "hasgl", HasglObjCmd, NULL },
     { "iconify", IconifyObjCmd, NULL },
