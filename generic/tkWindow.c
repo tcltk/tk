@@ -1178,7 +1178,7 @@ Tk_CreateWindowFromPath(
      * space for the copy will have to be malloc'ed); (b) must special-case
      * the situation where the parent is "."; (c) the parent's name cannot be
      * only 1 character long because it should include both a leading dot and
-     * at least one additional characters.
+     * at least one additional character.
      */
 
     p = strrchr(pathName, '.');
