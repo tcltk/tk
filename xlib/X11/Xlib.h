@@ -543,6 +543,7 @@ typedef struct _XDisplay {
 	void *gl_rend;
 	void *agg2d;
 	unsigned char agg2d_dummyfb[32];
+	int qlenmax, nqtotal;
 	void *qlock; /* Tcl_Mutex */
 #endif
 } Display;

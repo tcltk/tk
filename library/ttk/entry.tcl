@@ -346,9 +346,13 @@ proc ttk::entry::Press {w x} {
 	focus $w
 	$w instate !readonly {
 	    if {$::tk::sdltk} {
-		lassign [$w bbox insert] xx yy
-		incr xx [winfo rootx $w]
-		incr yy [winfo rooty $w]
+		if {[catch {
+		    lassign [$w bbox insert] xx yy
+		    incr xx [winfo rootx $w]
+		    incr yy [winfo rooty $w]
+		}]} {
+		    lassign [winfo pointerxy $w] xx yy
+		}
 		sdltk textinput 1 $xx $yy
 	    }
 	}

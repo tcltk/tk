@@ -500,9 +500,13 @@ proc ::tk::TextSetInput {w} {
 	return
     }
     if {$::tk::sdltk} {
-	lassign [$w bbox insert] x y
-	incr x [winfo rootx $w]
-	incr y [winfo rooty $w]
+	if {[catch {
+	    lassign [$w bbox insert] x y
+	    incr x [winfo rootx $w]
+	    incr y [winfo rooty $w]
+	}]} {
+	    lassign [winfo pointerxy $w] x y
+	}
 	sdltk textinput 1 $x $y
     }
 }

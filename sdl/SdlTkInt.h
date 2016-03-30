@@ -180,6 +180,7 @@ typedef struct SdlTkXInfo {
     /* Display/Screen/Window elements */
     Display *display;
     Screen *screen;
+    int nwfree, nwtotal;
     _Window *wfree, *wtail;
 
     /* Geometry of decorative frames */
@@ -376,6 +377,7 @@ extern void SdlTkGfxPutImage(Drawable d, Region r, XImage* image,
 /* SdlTkUtils.c */
 extern Region SdlTkRgnPoolGet(void);
 extern void SdlTkRgnPoolFree(Region r);
+extern int *SdlTkRgnPoolStat(void);
 extern char **SdlTkListFonts(const char *xlfd, int *count);
 extern Font SdlTkFontLoadXLFD(const char *xlfd);
 extern int SdlTkFontInit(Tcl_Interp *interp);

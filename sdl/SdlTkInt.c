@@ -1659,7 +1659,7 @@ doNormalKeyEvent:
 	}
 	SdlTkX.mouse_x = x;
 	SdlTkX.mouse_y = y;
-	if (tkwin != NULL) {
+	if ((tkwin != NULL) && (Tk_WindowId(tkwin) != None)) {
 	    SendPointerUpdate(tkwin, x, y, xstate);
 	}
 	return 0;
@@ -1712,7 +1712,7 @@ doNormalKeyEvent:
 	} else if (sdl_event->wheel.y > 0) {
 	    xstate |= Button4Mask;
 	}
-	if (tkwin && xstate) {
+	if ((tkwin != NULL) && (Tk_WindowId(tkwin) != None) && xstate) {
 	    SendPointerUpdate(tkwin, SdlTkX.mouse_x, SdlTkX.mouse_y,
 			      xstate);
 	    SendPointerUpdate(tkwin, SdlTkX.mouse_x, SdlTkX.mouse_y,
@@ -2549,7 +2549,7 @@ SdlTkCalculateVisibleRegion(_Window *_w)
 /*
  *----------------------------------------------------------------------
  *
- * blitMovedWindow --
+ * BlitMovedWindow --
  *
  *	Helper routine for SdlTkVisRgnChanged(). Copies the visible
  *	pixels of a window from its old location to its new location.
@@ -2565,11 +2565,11 @@ SdlTkCalculateVisibleRegion(_Window *_w)
  */
 
 static void
-blitMovedWindow(_Window *_w, int x, int y)
+BlitMovedWindow(_Window *_w, int x, int y)
 {
     XGCValues fakeGC;
     TkpClipMask clip;
-    int xOff, yOff;
+    int xOff, yOff, width, height;
     Region parentVisRgn;
 
     /*
@@ -2578,6 +2578,15 @@ blitMovedWindow(_Window *_w, int x, int y)
      */
     parentVisRgn = _w->parent->visRgn;
     _w->parent->visRgn = _w->parent->visRgnInParent;
+
+    /*
+     * What actually needs to be done is copy pixels inside the
+     * old visRgnInParent to the new location. The copy operation
+     * must be constrained by the parent window, since the
+     * child may be larger.
+     */
+    width = _w->parentWidth;
+    height = _w->parentHeight;
 
     /*
      * This window's visRgnInParent is used as the clip region. Put
@@ -2592,12 +2601,8 @@ blitMovedWindow(_Window *_w, int x, int y)
     fakeGC.clip_x_origin = 0;
     fakeGC.clip_y_origin = 0;
 
-    /*
-     * What actually needs to be done is copy everything inside the
-     * old visRgnInParent to the new location.
-     */
     SdlTkGfxCopyArea((Drawable) _w->parent, (Drawable) _w->parent, &fakeGC,
-	x, y, _w->parentWidth, _w->parentHeight, _w->atts.x, _w->atts.y);
+	x, y, width, height, _w->atts.x, _w->atts.y);
 
     XOffsetRegion(_w->visRgnInParent, -_w->atts.x, -_w->atts.y);
 
@@ -2642,8 +2647,9 @@ blitMovedWindow(_Window *_w, int x, int y)
 static void
 SdlTkVisRgnChangedInt(_Window *_w, int flags, int x, int y)
 {
-    int cleared = 0;
+    Region visRgn = NULL;
     Region visRgnInParent = NULL;
+    int clrRgn = 0;
 
     /*
      * If this is NOT the window that was mapped/unmapped/moved/
@@ -2651,7 +2657,6 @@ SdlTkVisRgnChangedInt(_Window *_w, int flags, int x, int y)
      * visible regions for this window.
      */
     if ((flags & VRC_CHANGED) || (_w->atts.map_state != IsUnmapped)) {
-	Region visRgn;
 
 	/*
 	 * A window obscures part of its parent.
@@ -2672,7 +2677,15 @@ SdlTkVisRgnChangedInt(_Window *_w, int flags, int x, int y)
   	 * pixels to the new location.
   	 */
 	if ((flags & VRC_MOVE) && !XEmptyRegion(_w->visRgnInParent)) {
-	    blitMovedWindow(_w, x, y);
+	    Region newRgnInParent, blitRgn = SdlTkRgnPoolGet();
+
+	    /* For the pixel copy, intersect old and new regions of parent */
+	    newRgnInParent = _w->visRgnInParent;
+	    XIntersectRegion(visRgnInParent, newRgnInParent, blitRgn);
+	    _w->visRgnInParent = blitRgn;
+	    BlitMovedWindow(_w, x, y);
+	    _w->visRgnInParent = newRgnInParent;
+	    SdlTkRgnPoolFree(blitRgn);
 	}
 
 	if (_w->atts.map_state != IsUnmapped) {
@@ -2685,17 +2698,16 @@ SdlTkVisRgnChangedInt(_Window *_w, int flags, int x, int y)
 	     * decframe or wrapper
 	     */
 	    if (_w->tkwin != NULL) {
-		cleared = SdlTkGfxClearRegion((Window) _w, visRgn);
-		if ((cleared && !(flags & VRC_EXPOSE)) ||
-		    (_w->gl_tex != NULL)) {
-		    SdlTkGfxExposeRegion((Window) _w, visRgn);
+		if (!XEmptyRegion(visRgn) || (_w->gl_tex != NULL)) {
+		    flags |= VRC_EXPOSE;
+		    clrRgn = 1;
 		}
-		cleared = 1;
 	    } else if (_w->dec != NULL) {
 		if (!XEmptyRegion(visRgn)) {
 		    SdlTkDecSetDraw(_w, 1);
+		    clrRgn = 1;
 		}
-		cleared = 1;
+		flags |= VRC_EXPOSE;
 	    } else if (IS_ROOT(_w)) {
 		/*
 		 * Can't erase right away, because it will erase the pixels of
@@ -2708,13 +2720,13 @@ SdlTkVisRgnChangedInt(_Window *_w, int flags, int x, int y)
 			     SdlTkX.screen_dirty_region);
 	    }
 	}
-
-	SdlTkRgnPoolFree(visRgn);
     }
 
-    if (flags & VRC_EXPOSE) {
-	if (_w->tkwin != NULL) {
+    if ((_w->atts.map_state != IsUnmapped) && (flags & VRC_EXPOSE)) {
+	if ((flags & (VRC_MOVE | VRC_CHANGED)) && XEmptyRegion(visRgn)) {
 	    SdlTkGfxExposeRegion((Window) _w, _w->visRgn);
+	} else {
+	    SdlTkGfxExposeRegion((Window) _w, visRgn);
 	}
     }
 
@@ -2731,22 +2743,22 @@ SdlTkVisRgnChangedInt(_Window *_w, int flags, int x, int y)
 	     * moving a toplevel), don't recalculate the visible
 	     * regions of any descendants.
 	     */
-	    if ((flags & VRC_EXPOSE) || cleared ||
+	    if ((flags & VRC_EXPOSE) ||
 		!XEqualRegion(_w->visRgnInParent, visRgnInParent)) {
 		/*
 		 * We only need to do our first child, because it will do
 		 * its next sibling etc.
 		 */
 	        if (_w->child != NULL) {
-		    SdlTkVisRgnChangedInt(_w->child, cleared ? VRC_EXPOSE : 0,
+		    SdlTkVisRgnChangedInt(_w->child, flags & VRC_EXPOSE,
 					  0, 0);
 		}
 	    }
 	}
 
-	if (visRgnInParent != NULL) {
-	    SdlTkRgnPoolFree(visRgnInParent);
-	    visRgnInParent = NULL;
+	if (clrRgn && (visRgn != NULL)) {
+	    /* Clear what we <Expose>'d before */
+	    SdlTkGfxClearRegion((Window) _w, visRgn);
 	}
 
 	/* A window may obscure siblings lower in the stacking order */
@@ -2757,6 +2769,11 @@ SdlTkVisRgnChangedInt(_Window *_w, int flags, int x, int y)
 		_w = _w->next;
 	    }
 	}
+    }
+
+    if (visRgn != NULL) {
+	SdlTkRgnPoolFree(visRgn);
+	visRgn = NULL;
     }
 
     if (visRgnInParent != NULL) {
@@ -4133,6 +4150,49 @@ ScreensaverObjCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 static int
+StatObjCmd(ClientData clientData, Tcl_Interp *interp,
+	   int objc, Tcl_Obj *const objv[])
+{
+    Tk_Window tkwin = (Tk_Window) clientData;
+    Display *display;
+    Tcl_DString ds;
+    char buffer[128];
+    int *rgnCounts;
+
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+    Tcl_DStringInit(&ds);
+    SdlTkLock(NULL);
+    rgnCounts = SdlTkRgnPoolStat();
+    sprintf(buffer, "frame_count %d", SdlTkX.frame_count);
+    Tcl_DStringAppend(&ds, buffer, -1);
+    sprintf(buffer, " time_count %d", SdlTkX.time_count);
+    Tcl_DStringAppend(&ds, buffer, -1);
+    sprintf(buffer, " window_free %d", SdlTkX.nwfree);
+    Tcl_DStringAppend(&ds, buffer, -1);
+    sprintf(buffer, " window_total %d", SdlTkX.nwtotal);
+    Tcl_DStringAppend(&ds, buffer, -1);
+    sprintf(buffer, " region_free %d", rgnCounts[0]);
+    Tcl_DStringAppend(&ds, buffer, -1);
+    sprintf(buffer, " region_total %d", rgnCounts[1]);
+    Tcl_DStringAppend(&ds, buffer, -1);
+    SdlTkUnlock(NULL);
+    display = Tk_Display(tkwin);
+    Tcl_MutexLock((Tcl_Mutex *) &display->qlock);
+    sprintf(buffer, " event_length %d", display->qlen);
+    Tcl_DStringAppend(&ds, buffer, -1);
+    sprintf(buffer, " event_length_max %d", display->qlenmax);
+    Tcl_DStringAppend(&ds, buffer, -1);
+    sprintf(buffer, " event_total %d", display->nqtotal);
+    Tcl_DStringAppend(&ds, buffer, -1);
+    Tcl_MutexUnlock((Tcl_Mutex *) &display->qlock);
+    Tcl_DStringResult(interp, &ds);
+    return TCL_OK;
+}
+
+static int
 TextinputObjCmd(ClientData clientData, Tcl_Interp *interp,
 		int objc, Tcl_Obj *const objv[])
 {
@@ -4360,6 +4420,7 @@ static const TkEnsemble sdltkCmdMap[] = {
     { "restore", RestoreObjCmd, NULL },
     { "root", RootObjCmd, NULL },
     { "screensaver", ScreensaverObjCmd, NULL },
+    { "stat", StatObjCmd, NULL },
     { "textinput", TextinputObjCmd, NULL },
     { "touchtranslate", TouchtranslateObjCmd, NULL },
     { "viewport", ViewportObjCmd, NULL },
