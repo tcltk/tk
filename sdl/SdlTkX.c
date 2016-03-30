@@ -752,7 +752,7 @@ XCreateBitmapFromData(Display *display, Drawable d, _Xconst char *data,
     SDL_FreePalette(pal);
 
     _p = (_Pixmap *) ckalloc(sizeof (_Pixmap));
-    memset(_p, '\0', sizeof (_Pixmap));
+    memset(_p, 0, sizeof (_Pixmap));
     _p->type = DT_PIXMAP;
     _p->sdl = sdl;
     _p->format = SdlTkPixelFormat(sdl);
@@ -815,7 +815,7 @@ XCreateGC(Display *display, Drawable d, unsigned long mask, XGCValues *values)
     if (!gp) {
 	return None;
     }
-    memset(gp, '\0', sizeof (XGCValues));
+    memset(gp, 0, sizeof (XGCValues));
     gp->next = display->gcs;
     display->gcs = gp;
     gp->function = (mask & GCFunction) ? values->function : GXcopy;
@@ -1133,7 +1133,7 @@ XCreatePixmap(Display *display, Drawable d, unsigned int width,
     }
 
     _p = (_Pixmap *) ckalloc(sizeof (_Pixmap));
-    memset(_p, '\0', sizeof (_Pixmap));
+    memset(_p, 0, sizeof (_Pixmap));
     _p->type = DT_PIXMAP;
     _p->sdl = sdl;
     _p->format = SdlTkPixelFormat(sdl);
@@ -1167,15 +1167,17 @@ SdlTkCreateWindow(Display *display, Window parent, int x, int y,
     _Window *_parent = (_Window *) parent;
     _Window *_w;
 
-    _w = SdlTkX.wfree;
+    _w = (SdlTkX.nwfree >= 16) ? SdlTkX.wfree : NULL;
     if (_w == NULL) {
 	_w = (_Window *) ckalloc(sizeof (_Window));
-	memset(_w, '\0', sizeof (_Window));
+	memset(_w, 0, sizeof (_Window));
+	SdlTkX.nwtotal++;
     } else {
 	SdlTkX.wfree = _w->next;
 	if (SdlTkX.wfree == NULL) {
 	    SdlTkX.wtail = NULL;
 	}
+	SdlTkX.nwfree--;
     }
 
     _w->type = DT_WINDOW;
@@ -1380,8 +1382,6 @@ SdlTkDestroyWindow(Display *display, Window w)
 	SdlTkUnmapWindow(display, w);
     }
 
-    display->request++;
-
     /* Destroy children recursively */
     while (_w->child != NULL) {
 	SdlTkDestroyWindow(display, (Window) _w->child);
@@ -1423,6 +1423,7 @@ SdlTkDestroyWindow(Display *display, Window w)
 	SdlTkX.wtail->next = _w;
 	SdlTkX.wtail = _w;
     }
+    SdlTkX.nwfree++;
 
     /*
      * Remove properties
@@ -1814,8 +1815,9 @@ SdlTkQueueEvent(XEvent *event)
     qevent = display->qfree;
     if (qevent == NULL) {
 	qevent = (_XSQEvent *) ckalloc(sizeof (_XSQEvent));
+	display->nqtotal++;
     } else {
-	display->qfree = display->qfree->next;
+	display->qfree = qevent->next;
     }
     qevent->event = *event;
     qevent->next = NULL;
@@ -1832,8 +1834,18 @@ SdlTkQueueEvent(XEvent *event)
 	display->head = qevent;
 	trigger = 1;
     }
+    /* Delay trigger for (Graphics)Expose with count greater zero */
+    if ((event->xany.type == Expose) && (event->xexpose.count > 0)) {
+	trigger = 0;
+    } else if ((event->xany.type == GraphicsExpose) &&
+	       (event->xgraphicsexpose.count > 0)) {
+	trigger = 0;
+    }
     display->tail = qevent;
     display->qlen++;
+    if (display->qlen > display->qlenmax) {
+	display->qlenmax = display->qlen;
+    }
 
 #ifdef _WIN32
     if (trigger && ((HANDLE) display->fd != INVALID_HANDLE_VALUE)) {
@@ -2325,7 +2337,7 @@ XGetVisualInfo(Display *display, long vinfo_mask, XVisualInfo *vinfo_template,
 {
     XVisualInfo *info = (XVisualInfo *)ckalloc(sizeof (XVisualInfo));
 
-    memset(info, '\0', sizeof (XVisualInfo));
+    memset(info, 0, sizeof (XVisualInfo));
     info->visual = DefaultVisual(display, 0);
     info->visualid = info->visual->visualid;
     info->screen = 0;
@@ -3823,7 +3835,7 @@ void
 SdlTkMoveWindow(Display *display, Window w, int x, int y)
 {
     _Window *_w = (_Window *) w;
-    int ox, oy;
+    int ox = 0, oy = 0, flags;
 
     if (_w->display == NULL) {
 	return;
@@ -3835,6 +3847,8 @@ SdlTkMoveWindow(Display *display, Window w, int x, int y)
 	return;
     }
 
+    flags = VRC_CHANGED | VRC_DO_PARENT;
+
     /*
      * If the window has a decorative frame, move the decorative frame
      * instead of the given window.
@@ -3843,15 +3857,21 @@ SdlTkMoveWindow(Display *display, Window w, int x, int y)
     if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	_Window *wdec = _w->parent;
 
-	ox = wdec->atts.x;
-	oy = wdec->atts.y;
-	wdec->atts.x = x;
-	wdec->atts.y = y;
+	if ((x != wdec->atts.x) || (y != wdec->atts.y)) {
+	    ox = wdec->atts.x;
+	    oy = wdec->atts.y;
+	    flags |= VRC_MOVE | VRC_EXPOSE;
+	    wdec->atts.x = x;
+	    wdec->atts.y = y;
+	}
     } else {
-	ox = _w->atts.x;
-	oy = _w->atts.y;
-	_w->atts.x = x;
-	_w->atts.y = y;
+	if ((x != _w->atts.x) || (y != _w->atts.y)) {
+	    ox = _w->atts.x;
+	    oy = _w->atts.y;
+	    flags |= VRC_MOVE | VRC_EXPOSE;
+	    _w->atts.x = x;
+	    _w->atts.y = y;
+	}
     }
 
     if (_w->atts.your_event_mask & StructureNotifyMask) {
@@ -3859,10 +3879,9 @@ SdlTkMoveWindow(Display *display, Window w, int x, int y)
     }
 
     if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
-	SdlTkVisRgnChanged(_w->parent,
-			   VRC_CHANGED | VRC_DO_PARENT | VRC_MOVE, ox, oy);
+	SdlTkVisRgnChanged(_w->parent, flags, ox, oy);
     } else {
-	SdlTkVisRgnChanged(_w, VRC_CHANGED | VRC_DO_PARENT | VRC_MOVE, ox, oy);
+	SdlTkVisRgnChanged(_w, flags, ox, oy);
     }
 
     SdlTkScreenChanged();
@@ -3882,7 +3901,7 @@ SdlTkMoveResizeWindow(Display *display, Window w, int x, int y,
 		      unsigned int width, unsigned int height)
 {
     _Window *_w = (_Window *) w;
-    int ox = 0, oy = 0, flags = VRC_CHANGED | VRC_DO_PARENT;
+    int ox = 0, oy = 0, flags;
 
     if (_w->display == NULL) {
 	return;
@@ -3901,6 +3920,8 @@ SdlTkMoveResizeWindow(Display *display, Window w, int x, int y,
 	height = 1;
     }
 
+    flags = VRC_CHANGED | VRC_DO_PARENT;
+
     /*
      * If this window has a decorative frame, move the decorative frame,
      * not the given window
@@ -3912,7 +3933,7 @@ SdlTkMoveResizeWindow(Display *display, Window w, int x, int y,
 	if ((x != wdec->atts.x) || (y != wdec->atts.y)) {
 	    ox = wdec->atts.x;
 	    oy = wdec->atts.y;
-	    flags |= VRC_MOVE;
+	    flags |= VRC_MOVE | VRC_EXPOSE;
 	    wdec->atts.x = x;
 	    wdec->atts.y = y;
 	}
@@ -3932,7 +3953,7 @@ SdlTkMoveResizeWindow(Display *display, Window w, int x, int y,
 	if ((x != _w->atts.x) || (y != _w->atts.y)) {
 	    ox = _w->atts.x;
 	    oy = _w->atts.y;
-	    flags |= VRC_MOVE;
+	    flags |= VRC_MOVE | VRC_EXPOSE;
 	    _w->atts.x = x;
 	    _w->atts.y = y;
 	}
@@ -3961,6 +3982,9 @@ SdlTkMoveResizeWindow(Display *display, Window w, int x, int y,
 		wdec->atts.height + 2 * wdec->atts.border_width;
 	}
 
+	if ((width > _w->atts.width) || (height > _w->atts.height)) {
+	    flags |= VRC_EXPOSE;
+	}
 	_w->atts.width = width;
 	_w->atts.height = height;
 
@@ -4001,7 +4025,7 @@ int
 XNextEvent(Display *display, XEvent *event_return)
 {
     _XSQEvent *qevent;
-    int once = 1;
+    int n, once = 1;
 
 again:
     Tcl_MutexLock((Tcl_Mutex *) &display->qlock);
@@ -4013,7 +4037,6 @@ again:
     if (display->fd >= 0) {
 #ifdef HAVE_EVENTFD
 	long long buffer;
-	int n;
 
 	n = read(display->fd, &buffer, sizeof (buffer));
 	if ((n < 0) && (errno != EWOULDBLOCK) && (errno != EAGAIN)) {
@@ -4022,7 +4045,6 @@ again:
 	}
 #else
 	char buffer[64];
-	int n;
 
 	for (;;) {
 	    n = read(display->fd, buffer, sizeof (buffer));
@@ -4052,6 +4074,20 @@ again:
 	qevent->next = display->qfree;
 	display->qfree = qevent;
 	display->qlen--;
+	/* Shrink free list down to 4 times initial pre-allocated size */
+	n = 0;
+	while (display->nqtotal > 4 * 128) {
+	    qevent = display->qfree;
+	    if (qevent == NULL) {
+		break;
+	    }
+	    display->qfree = qevent->next;
+	    display->nqtotal--;
+	    ckfree((char *) qevent);
+	    if (++n > 16) {
+		break;
+	    }
+	}
     } else {
 	Tcl_MutexUnlock((Tcl_Mutex *) &display->qlock);
 	if (once) {
@@ -5283,17 +5319,16 @@ ctxRetry:
 
     /* From win/tkWinX.c TkpOpenDisplay */
     display = (Display *) ckalloc(sizeof (Display));
-    memset(display, '\0', sizeof (Display));
+    memset(display, 0, sizeof (Display));
 
     display->display_name = NULL;
 
     display->cursor_font = 1;
     display->nscreens = 1;
     display->request = 1;
-    display->qlen = 0;
 
     screen = (Screen *) ckalloc(sizeof (Screen));
-    memset(screen, '\0', sizeof (Screen));
+    memset(screen, 0, sizeof (Screen));
     screen->display = display;
 
     screen->white_pixel = SDL_MapRGB(pfmt, 255, 255, 255);
@@ -5393,7 +5428,7 @@ ctxRetry:
     screen->root_depth = pfmt->BitsPerPixel;
 
     screen->root_visual = (Visual *) ckalloc(sizeof (Visual));
-    memset(screen->root_visual, '\0', sizeof (Visual));
+    memset(screen->root_visual, 0, sizeof (Visual));
     screen->root_visual->visualid = 0;
 
     if (pfmt->palette != NULL) {
@@ -5483,6 +5518,7 @@ ctxRetry:
 #else
     display->fd = -1;
 #endif
+    display->ext_number = -1;
     SDL_EventState(SDL_JOYDEVICEADDED, SDL_ENABLE);
     SDL_EventState(SDL_JOYDEVICEREMOVED, SDL_ENABLE);
     SDL_EventState(SDL_JOYBALLMOTION, SDL_ENABLE);
@@ -5563,12 +5599,15 @@ ctxRetry:
     /* Pre-allocate some events */
     display->head = display->tail = NULL;
     display->qfree = NULL;
+    display->qlen = display->qlenmax = 0;
+    display->nqtotal = 0;
     for (i = 0; i < 128; i++) {
 	_XSQEvent *qevent = (_XSQEvent *) ckalloc(sizeof (_XSQEvent));
 
 	memset(qevent, 0, sizeof (_XSQEvent));
 	qevent->next = display->qfree;
 	display->qfree = qevent;
+	display->nqtotal++;
     }
 
     SdlTkX.draw_later &= ~(SDLTKX_SCALED | SDLTKX_RENDCLR);
@@ -5589,6 +5628,21 @@ ctxRetry:
     SdlTkX.display = display;
 
     SDL_EnableScreenSaver();
+
+    /* Pre-allocate some _Window structs */
+    for (i = 0; i < 128; i++) {
+	_w = (_Window *) ckalloc(sizeof (_Window));
+	memset(_w, 0, sizeof (_Window));
+	if (SdlTkX.wtail == NULL) {
+	    SdlTkX.wtail = SdlTkX.wfree = _w;
+	} else {
+	    SdlTkX.wtail->next = _w;
+	    SdlTkX.wtail = _w;
+	}
+	SdlTkX.nwtotal++;
+	SdlTkX.nwfree++;
+    }
+
     return 1;
 }
 
@@ -5708,6 +5762,7 @@ EventThread(ClientData clientData)
 	    qevent = next;
 	}
 	SdlTkX.display->head = SdlTkX.display->tail = NULL;
+	SdlTkX.display->qlen = 0;
 	Tcl_MutexUnlock((Tcl_Mutex *) &SdlTkX.display->qlock);
     }
     SDL_RemoveTimer(timerId);
@@ -5760,7 +5815,7 @@ XOpenDisplay(_Xconst char *display_name)
     }
 
     display = (Display *) ckalloc(sizeof (Display));
-    memset(display, '\0', sizeof (Display));
+    memset(display, 0, sizeof (Display));
 
     display->display_name = (char *) ckalloc(strlen(display_name)+1);
     strcpy(display->display_name, display_name);
@@ -5803,12 +5858,15 @@ XOpenDisplay(_Xconst char *display_name)
     /* Pre-allocate some events */
     display->head = display->tail = NULL;
     display->qfree = NULL;
+    display->qlen = display->qlenmax = 0;
+    display->nqtotal = 0;
     for (i = 0; i < 128; i++) {
 	_XSQEvent *qevent = (_XSQEvent *) ckalloc(sizeof (_XSQEvent));
 
 	memset(qevent, 0, sizeof (_XSQEvent));
 	qevent->next = display->qfree;
 	display->qfree = qevent;
+	display->nqtotal++;
     }
 
     /* Inflate event queue mutex */
@@ -6148,6 +6206,7 @@ SdlTkResizeWindow(Display *display, Window w,
 		  unsigned int width, unsigned int height)
 {
     _Window *_w = (_Window *) w;
+    int flags;
 
     if (_w->display == NULL) {
 	return;
@@ -6166,6 +6225,8 @@ SdlTkResizeWindow(Display *display, Window w,
 	height = 1;
     }
 
+    flags = VRC_CHANGED | VRC_DO_PARENT;
+
     /* If this window has a decorative frame, resize it */
     if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	_Window *wdec = _w->parent;
@@ -6183,6 +6244,9 @@ SdlTkResizeWindow(Display *display, Window w,
 	wdec->parentHeight = wdec->atts.height + 2 * wdec->atts.border_width;
     }
 
+    if ((width > _w->atts.width) || (height > _w->atts.height)) {
+	flags |= VRC_EXPOSE;
+    }
     _w->atts.width = width;
     _w->atts.height = height;
 
@@ -6199,9 +6263,9 @@ SdlTkResizeWindow(Display *display, Window w,
     }
 
     if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
-	SdlTkVisRgnChanged(_w->parent, VRC_CHANGED | VRC_DO_PARENT, 0, 0);
+	SdlTkVisRgnChanged(_w->parent, flags, 0, 0);
     } else {
-	SdlTkVisRgnChanged(_w, VRC_CHANGED | VRC_DO_PARENT, 0, 0);
+	SdlTkVisRgnChanged(_w, flags, 0, 0);
     }
 
     SdlTkScreenChanged();

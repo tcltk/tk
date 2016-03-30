@@ -50,6 +50,7 @@ typedef struct RgnEntry {
     struct RgnEntry *next;
 } RgnEntry;
 
+static int rgnCounts[2] = { 0, 0 }; /* Statistic counters */
 static RgnEntry *rgnPool = NULL; /* Linked list of available Regions */
 static RgnEntry *rgnFree = NULL; /* Linked list of free RgnEntrys */
 
@@ -73,6 +74,7 @@ SdlTkRgnPoolGet(void)
 	 * they don't deallocate memory when getting smaller.
 	 */
 	XSetEmptyRegion(r);
+	rgnCounts[0]--;
 	return r;
     }
 
@@ -91,11 +93,19 @@ SdlTkRgnPoolFree(Region r)
 	entry = rgnFree;
 	rgnFree = entry->next;
     } else {
-	entry = (RgnEntry *) ckalloc(sizeof(RgnEntry));
+	entry = (RgnEntry *) ckalloc(sizeof (RgnEntry));
+	rgnCounts[1]++;
     }
     entry->r = r;
     entry->next = rgnPool;
     rgnPool = entry;
+    rgnCounts[0]++;
+}
+
+int *
+SdlTkRgnPoolStat(void)
+{
+    return rgnCounts;
 }
 
 /*
@@ -375,7 +385,7 @@ SdlTkFontLoadXLFD(const char *xlfd)
     /* TkGetCursorByName() */
     if (!strcmp(xlfd, cursorFontName)) {
 	_f = (_Font *) ckalloc (sizeof (_Font));
-	memset(_f, 0, sizeof(_Font));
+	memset(_f, 0, sizeof (_Font));
 	_f->file = cursorFontName;
 	_f->refCnt = 1;
 	FNTLOG("FONTLOAD: '%s' -> '%s'", xlfd, cursorFontName);
@@ -407,7 +417,7 @@ SdlTkFontLoadXLFD(const char *xlfd)
      * we were given an XLFD refering to a font already loaded, and we hadn't
      * seen the XLFD before (in practice this doesn't seem to happen).
      */
-    memset(&ffsKey, '\0', sizeof(ffsKey));
+    memset(&ffsKey, 0, sizeof (ffsKey));
     ffsKey.file = XInternAtom(SdlTkX.display, fstorage.file, False);
     ffsKey.index = fstorage.index;
     ffsKey.size = fstorage.size;
@@ -445,7 +455,7 @@ SdlTkFontLoadXLFD(const char *xlfd)
     Tcl_SetHashValue(hPtr, (char *) _f);
 
     /* Reuse existing GlyphIndexHash for this file && face */
-    memset(&ffKey, '\0', sizeof(ffKey));
+    memset(&ffKey, 0, sizeof (ffKey));
     ffKey.file = XInternAtom(SdlTkX.display, _f->file, False);
     ffKey.index = fstorage.index;
     hPtr = Tcl_CreateHashEntry(&fileFaceHash, (char *) &ffKey, &isNew);
@@ -1065,7 +1075,7 @@ fonterr:
 		(face->charmap->encoding != FT_ENCODING_UNICODE)) {
 		goto nextface;
 	    }
-	    memset(&ffKey, '\0', sizeof (ffKey));
+	    memset(&ffKey, 0, sizeof (ffKey));
 	    ffKey.file = XInternAtom(SdlTkX.display, fname, False);
 	    ffKey.index = k;
 	    hPtr = Tcl_CreateHashEntry(&fileFaceHash, (char *) &ffKey,
@@ -1217,7 +1227,7 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fname)
 	    (face->charmap->encoding != FT_ENCODING_UNICODE)) {
 	    goto nextface;
 	}
-	memset(&ffKey, '\0', sizeof (ffKey));
+	memset(&ffKey, 0, sizeof (ffKey));
 	ffKey.file = XInternAtom(SdlTkX.display, fname, False);
 	ffKey.index = k;
 	hPtr = Tcl_CreateHashEntry(&fileFaceHash, (char *) &ffKey, &isNew);

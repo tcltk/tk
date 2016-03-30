@@ -291,7 +291,9 @@ TransferXEventsToTcl(
     while (numFound > 0) {
 	memset(&event, 0, sizeof(event));
 	XNextEvent(display, &event.x);
-	Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
+	if (event.type != PointerUpdate) {
+	    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
+	}
 	numFound--;
     }
 }
