@@ -335,7 +335,7 @@ InitPNGImage(
 
     if (Tcl_ZlibStreamInit(NULL, dir, TCL_ZLIB_FORMAT_ZLIB,
 	    TCL_ZLIB_COMPRESS_DEFAULT, NULL, &pngPtr->stream) != TCL_OK) {
-    if (interp) {
+	if (interp) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "zlib initialization failed", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "ZLIB_INIT", NULL);
