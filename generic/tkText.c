@@ -2093,7 +2093,7 @@ ConfigureText(
     textPtr->sharedTextPtr->maxUndo = textPtr->maxUndo;
     textPtr->sharedTextPtr->autoSeparators = textPtr->autoSeparators;
 
-    TkUndoSetDepth(textPtr->sharedTextPtr->undoStack,
+    TkUndoSetMaxDepth(textPtr->sharedTextPtr->undoStack,
 	    textPtr->sharedTextPtr->maxUndo);
 
     /*
@@ -5165,10 +5165,12 @@ TextEditCmd(
 {
     int index, setModified, oldModified;
     static const char *const editOptionStrings[] = {
-	"modified", "redo", "reset", "separator", "undo", NULL
+	"modified", "redo", "redodepth", "reset", "separator", "undo",
+        "undodepth", NULL
     };
     enum editOptions {
-	EDIT_MODIFIED, EDIT_REDO, EDIT_RESET, EDIT_SEPARATOR, EDIT_UNDO
+	EDIT_MODIFIED, EDIT_REDO, EDIT_REDODEPTH, EDIT_RESET,
+        EDIT_SEPARATOR, EDIT_UNDO, EDIT_UNDODEPTH
     };
 
     if (objc < 3) {
@@ -5229,6 +5231,17 @@ TextEditCmd(
 	    return TCL_ERROR;
 	}
 	break;
+    case EDIT_REDODEPTH: {
+        int depth;
+
+        if (objc != 3) {
+            Tcl_WrongNumArgs(interp, 3, objv, NULL);
+            return TCL_ERROR;
+        }
+        depth = TkUndoGetDepth(textPtr->sharedTextPtr->undoStack, 1);
+        Tcl_SetObjResult(interp, Tcl_NewIntObj(depth));
+        break;
+    }
     case EDIT_RESET:
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
@@ -5254,6 +5267,17 @@ TextEditCmd(
 	    return TCL_ERROR;
 	}
 	break;
+    case EDIT_UNDODEPTH: {
+        int depth;
+
+        if (objc != 3) {
+            Tcl_WrongNumArgs(interp, 3, objv, NULL);
+            return TCL_ERROR;
+        }
+        depth = TkUndoGetDepth(textPtr->sharedTextPtr->undoStack, 0);
+        Tcl_SetObjResult(interp, Tcl_NewIntObj(depth));
+        break;
+    }
     }
     return TCL_OK;
 }
