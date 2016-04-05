@@ -353,7 +353,7 @@ TkUndoInitStack(
 /*
  *----------------------------------------------------------------------
  *
- * TkUndoSetDepth --
+ * TkUndoSetMaxDepth --
  *
  *	Set the maximum depth of stack.
  *
@@ -368,7 +368,7 @@ TkUndoInitStack(
  */
 
 void
-TkUndoSetDepth(
+TkUndoSetMaxDepth(
     TkUndoRedoStack *stack,	/* An Undo/Redo stack */
     int maxdepth)		/* The maximum stack depth */
 {
@@ -423,6 +423,67 @@ TkUndoSetDepth(
 	}
 	stack->depth = stack->maxdepth;
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkUndoGetDepth
+ *
+ *	Return the depth of the undo (or redo) stack.
+ *
+ * Results:
+ *	An integer representing the number of undoable (or redoable) actions.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkUndoGetDepth(
+    TkUndoRedoStack *stack,	/* An Undo/Redo stack */
+    int whichStack)		/* 0 means the undo stack,
+                                 * otherwise the redo stack */
+{
+    int depth = 0;
+    TkUndoAtom *elem = NULL;
+
+    if (stack != NULL) {
+        if (whichStack) {
+            elem = stack->redoStack;
+        } else {
+            elem = stack->undoStack;
+        }
+
+        if (elem != NULL) {
+            /*
+             * Skip the first (top) separator if there is one.
+             */
+
+            if (elem->type == TK_UNDO_SEPARATOR) {
+                elem = elem->next;
+            }
+
+            /*
+             * The number of compound actions in the stack is then
+             * the number of separators plus one, except if there is
+             * a separator at the bottom of the stack. This latter
+             * case cannot however happen (TkUndoInsertSeparator
+             * prevents from inserting a separator there).
+             */
+
+            while (elem != NULL) {
+                if (elem->type == TK_UNDO_SEPARATOR) {
+                    depth++;
+                }
+                elem = elem->next;
+            }
+            depth++;
+        }
+    }
+    return depth;
 }
 
 /*
@@ -498,7 +559,7 @@ TkUndoInsertUndoSeparator(
 {
     if (TkUndoInsertSeparator(&stack->undoStack)) {
 	stack->depth++;
-	TkUndoSetDepth(stack, stack->maxdepth);
+	TkUndoSetMaxDepth(stack, stack->maxdepth);
     }
 }
 
