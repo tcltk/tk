@@ -96,7 +96,8 @@ MODULE_SCOPE void	TkUndoClearStack(TkUndoAtom **stack);
  */
 
 MODULE_SCOPE TkUndoRedoStack *TkUndoInitStack(Tcl_Interp *interp, int maxdepth);
-MODULE_SCOPE void	TkUndoSetDepth(TkUndoRedoStack *stack, int maxdepth);
+MODULE_SCOPE void	TkUndoSetMaxDepth(TkUndoRedoStack *stack, int maxdepth);
+MODULE_SCOPE int	TkUndoGetDepth(TkUndoRedoStack *stack, int whichStack);
 MODULE_SCOPE void	TkUndoClearStacks(TkUndoRedoStack *stack);
 MODULE_SCOPE void	TkUndoFreeStack(TkUndoRedoStack *stack);
 MODULE_SCOPE void	TkUndoInsertUndoSeparator(TkUndoRedoStack *stack);
