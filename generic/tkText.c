@@ -5232,13 +5232,15 @@ TextEditCmd(
 	}
 	break;
     case EDIT_REDODEPTH: {
-        int depth;
+        int depth = 0;
 
         if (objc != 3) {
             Tcl_WrongNumArgs(interp, 3, objv, NULL);
             return TCL_ERROR;
         }
-        depth = TkUndoGetDepth(textPtr->sharedTextPtr->undoStack, 1);
+        if (textPtr->sharedTextPtr->undo) {
+            depth = TkUndoGetDepth(textPtr->sharedTextPtr->undoStack, 1);
+        }
         Tcl_SetObjResult(interp, Tcl_NewIntObj(depth));
         break;
     }
@@ -5268,13 +5270,15 @@ TextEditCmd(
 	}
 	break;
     case EDIT_UNDODEPTH: {
-        int depth;
+        int depth = 0;
 
         if (objc != 3) {
             Tcl_WrongNumArgs(interp, 3, objv, NULL);
             return TCL_ERROR;
         }
-        depth = TkUndoGetDepth(textPtr->sharedTextPtr->undoStack, 0);
+        if (textPtr->sharedTextPtr->undo) {
+            depth = TkUndoGetDepth(textPtr->sharedTextPtr->undoStack, 0);
+        }
         Tcl_SetObjResult(interp, Tcl_NewIntObj(depth));
         break;
     }
