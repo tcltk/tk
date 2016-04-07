@@ -1295,6 +1295,12 @@ When the \fB\-undo\fR option is true, reapplies the last undone edits provided
 no other edits were done since then. Generates an error when the redo stack is
 empty. Does nothing when the \fB\-undo\fR option is false.
 .TP
+\fIpathName \fBedit redodepth\fR
+.
+Returns the depth of the redo stack (number of redoable actions). When this is
+zero there is nothing to redo. When the \fB\-undo\fR option is false zero is
+returned.
+.TP
 \fIpathName \fBedit reset\fR
 .
 Clears the undo and redo stacks.
@@ -1310,6 +1316,12 @@ Undoes the last edit action when the \fB\-undo\fR option is true. An edit
 action is defined as all the insert and delete commands that are recorded on
 the undo stack in between two separators. Generates an error when the undo
 stack is empty. Does nothing when the \fB\-undo\fR option is false.
+.TP
+\fIpathName \fBedit undodepth\fR
+.
+Returns the depth of the undo stack (number of undoable actions). When this is
+zero there is nothing to undo. When the \fB\-undo\fR option is false zero is
+returned.
 .RE
 .TP
 \fIpathName \fBget\fR ?\fB\-displaychars\fR? ?\fB\-\-\fR? \fIindex1\fR ?\fIindex2 ...\fR?
