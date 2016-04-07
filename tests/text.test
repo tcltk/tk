@@ -6188,7 +6188,7 @@ test text-27.2 {TextEditCmd procedure, argument parsing} -body {
     .t edit gorp
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad edit option "gorp": must be modified, redo, reset, separator, or undo}
+} -returnCodes {error} -result {bad edit option "gorp": must be modified, redo, redodepth, reset, separator, undo, or undodepth}
 test text-27.3 {TextEditUndo procedure, undoing changes} -body {
     text .t -undo 1
     pack .t
@@ -6456,6 +6456,32 @@ test text-27.22 {patch 1669632 (v) - <<Clear>> is atomic} -setup {
 } -cleanup {
     destroy .top.t .top
 } -result "This A an example text"
+test text-27.24 {TextEditCmd procedure, undo and redo stack depths} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo false -autoseparators false
+    lappend res [.t edit undodepth] [.t edit redodepth]
+    .t configure -undo true
+    lappend res [.t edit undodepth] [.t edit redodepth]
+    .t insert end "DO\n"
+    .t edit separator
+    .t insert end "IT\n"
+    .t insert end "YOURSELF\n"
+    .t edit separator
+    lappend res [.t edit undodepth] [.t edit redodepth]
+    .t edit undo
+    lappend res [.t edit undodepth] [.t edit redodepth]
+    .t configure -undo false
+    lappend res [.t edit undodepth] [.t edit redodepth]
+    .t configure -undo true
+    lappend res [.t edit undodepth] [.t edit redodepth]
+    .t edit redo
+    lappend res [.t edit undodepth] [.t edit redodepth]
+} -cleanup {
+    destroy .t
+} -result {0 0 0 0 2 0 1 1 0 0 1 1 2 0}
+
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
     pack [text .t -wrap none]
