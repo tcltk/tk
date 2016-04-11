@@ -64,6 +64,43 @@
 #include <X11/Xresource.h>
 #include <X11/Xutil.h>
 
+#ifndef Button6
+# define Button6			6
+#endif
+#ifndef Button7
+# define Button7			7
+#endif
+#ifndef Button8
+# define Button8			8
+#endif
+#ifndef Button9
+# define Button9			9
+#endif
+#ifndef Button6Mask
+# define Button6Mask		(1<<13)
+#endif
+#ifndef Button7Mask
+# define Button7Mask		(1<<14)
+#endif
+#ifndef Button8Mask
+# define Button8Mask		(AnyModifier<<4)
+#endif
+#ifndef Button9Mask
+# define Button9Mask		(AnyModifier<<5)
+#endif
+#ifndef Button6MotionMask
+# define Button6MotionMask		(1L<<25)
+#endif
+#ifndef Button7MotionMask
+# define Button7MotionMask		(1L<<26)
+#endif
+#ifndef Button8MotionMask
+# define Button8MotionMask		(1L<<27)
+#endif
+#ifndef Button9MotionMask
+# define Button9MotionMask		(1L<<28)
+#endif
+
 /*
  * The following macro defines the type of the mask arguments to
  * select:

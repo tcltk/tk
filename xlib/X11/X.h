@@ -133,6 +133,10 @@ typedef unsigned long KeyCode;	/* In order to use IME, the Macintosh needs
 #define PropertyChangeMask		(1L<<22)
 #define ColormapChangeMask		(1L<<23)
 #define OwnerGrabButtonMask		(1L<<24)
+#define Button6MotionMask		(1L<<25)
+#define Button7MotionMask		(1L<<26)
+#define Button8MotionMask		(1L<<27)
+#define Button9MotionMask		(1L<<28)
 
 /* Event names.  Used in "type" field in XEvent structures.  Not to be
 confused with event masks above.  They start from 2 because 0 and 1
@@ -207,6 +211,10 @@ are reserved in the protocol for errors and replies. */
 #define Button3Mask		(1<<10)
 #define Button4Mask		(1<<11)
 #define Button5Mask		(1<<12)
+#define Button6Mask		(1<<13)
+#define Button7Mask		(1<<14)
+#define Button8Mask		(AnyModifier<<4)
+#define Button9Mask		(AnyModifier<<5)
 
 #define AnyModifier		(1<<15)  /* used in GrabButton, GrabKey */
 
@@ -220,6 +228,10 @@ are reserved in the protocol for errors and replies. */
 #define Button3			3
 #define Button4			4
 #define Button5			5
+#define Button6			6
+#define Button7			7
+#define Button8			8
+#define Button9			9
 
 /* Notify modes */
 
