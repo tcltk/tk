@@ -280,8 +280,7 @@ EXTERN void		Tk_FreeOptions(const Tk_ConfigSpec *specs,
 EXTERN void		Tk_FreePixmap(Display *display, Pixmap pixmap);
 /* 76 */
 EXTERN void		Tk_FreeTextLayout(Tk_TextLayout textLayout);
-/* 77 */
-EXTERN void		Tk_FreeXId(Display *display, XID xid);
+/* Slot 77 is reserved */
 /* 78 */
 EXTERN GC		Tk_GCForColor(XColor *colorPtr, Drawable drawable);
 /* 79 */
@@ -953,7 +952,7 @@ typedef struct TkStubs {
     void (*tk_FreeOptions) (const Tk_ConfigSpec *specs, char *widgRec, Display *display, int needFlags); /* 74 */
     void (*tk_FreePixmap) (Display *display, Pixmap pixmap); /* 75 */
     void (*tk_FreeTextLayout) (Tk_TextLayout textLayout); /* 76 */
-    void (*tk_FreeXId) (Display *display, XID xid); /* 77 */
+    void (*reserved77)(void);
     GC (*tk_GCForColor) (XColor *colorPtr, Drawable drawable); /* 78 */
     void (*tk_GeometryRequest) (Tk_Window tkwin, int reqWidth, int reqHeight); /* 79 */
     Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid colorName); /* 80 */
@@ -1318,8 +1317,7 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_FreePixmap) /* 75 */
 #define Tk_FreeTextLayout \
 	(tkStubsPtr->tk_FreeTextLayout) /* 76 */
-#define Tk_FreeXId \
-	(tkStubsPtr->tk_FreeXId) /* 77 */
+/* Slot 77 is reserved */
 #define Tk_GCForColor \
 	(tkStubsPtr->tk_GCForColor) /* 78 */
 #define Tk_GeometryRequest \
