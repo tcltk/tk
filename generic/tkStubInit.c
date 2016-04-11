@@ -908,7 +908,7 @@ const TkStubs tkStubs = {
     Tk_FreeOptions, /* 74 */
     Tk_FreePixmap, /* 75 */
     Tk_FreeTextLayout, /* 76 */
-    Tk_FreeXId, /* 77 */
+    0, /* 77 */
     Tk_GCForColor, /* 78 */
     Tk_GeometryRequest, /* 79 */
     Tk_Get3DBorder, /* 80 */

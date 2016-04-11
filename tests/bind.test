@@ -5757,8 +5757,8 @@ test bind-27.1 {button names} -body {
     bind .t <Expose-1> foo
 } -returnCodes error -result {specified button "1" for non-button event}
 test bind-27.2 {button names} -body {
-    bind .t <Button-6> foo
-} -returnCodes error -result {specified keysym "6" for non-key event}
+    bind .t <Button-10> foo
+} -returnCodes error -result {bad event type or keysym "10"}
 test bind-27.3 {button names} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -5829,6 +5829,62 @@ test bind-27.7 {button names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {<Button-5> {button 5}}
+test bind-27.8 {button names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    bind .t.f <Button-6> {lappend x "button 6"}
+    set x [bind .t.f]
+    event generate .t.f <Button-6>
+    event generate .t.f <ButtonRelease-6>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {<Button-6> {button 6}}
+test bind-27.9 {button names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    bind .t.f <Button-7> {lappend x "button 7"}
+    set x [bind .t.f]
+    event generate .t.f <Button-7>
+    event generate .t.f <ButtonRelease-7>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {<Button-7> {button 7}}
+test bind-27.10 {button names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    bind .t.f <Button-8> {lappend x "button 8"}
+    set x [bind .t.f]
+    event generate .t.f <Button-8>
+    event generate .t.f <ButtonRelease-8>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {<Button-8> {button 8}}
+test bind-27.11 {button names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    bind .t.f <Button-9> {lappend x "button 9"}
+    set x [bind .t.f]
+    event generate .t.f <Button-9>
+    event generate .t.f <ButtonRelease-9>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {<Button-9> {button 9}}
 
 test bind-28.1 {keysym names} -body {
     bind .t <Expose-a> foo
