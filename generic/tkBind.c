@@ -626,8 +626,6 @@ static int		GetVirtualEvent(Tcl_Interp *interp,
 			    VirtualEventTable *vetPtr, Tcl_Obj *virtName);
 static Tk_Uid		GetVirtualEventUid(Tcl_Interp *interp,
 			    char *virtString);
-static int		HandleEventGenerate(Tcl_Interp *interp, Tk_Window main,
-			    int objc, Tcl_Obj *const objv[]);
 static void		InitVirtualEventTable(VirtualEventTable *vetPtr);
 static PatSeq *		MatchPatterns(TkDisplay *dispPtr,
 			    BindingTable *bindPtr, PatSeq *psPtr,
@@ -2399,7 +2397,7 @@ Tk_EventObjCmd(
 		    "window event ?-option value ...?");
 	    return TCL_ERROR;
 	}
-	return HandleEventGenerate(interp, tkwin, objc - 2, objv + 2);
+	return TkHandleEventGenerate(interp, tkwin, objc - 2, objv + 2);
     case EVENT_INFO:
 	if (objc == 2) {
 	    GetAllVirtualEvents(interp, vetPtr);
@@ -2843,7 +2841,7 @@ GetAllVirtualEvents(
 /*
  *---------------------------------------------------------------------------
  *
- * HandleEventGenerate --
+ * TkHandleEventGenerate --
  *
  *	Helper function for the "event generate" command. Generate and process
  *	an XEvent, constructed from information parsed from the event
@@ -2875,8 +2873,8 @@ GetAllVirtualEvents(
  *---------------------------------------------------------------------------
  */
 
-static int
-HandleEventGenerate(
+int
+TkHandleEventGenerate(
     Tcl_Interp *interp,		/* Interp for errors return and name lookup. */
     Tk_Window mainWin,		/* Main window associated with interp. */
     int objc,			/* Number of arguments. */
