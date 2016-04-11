@@ -113,6 +113,10 @@ Modifiers consist of any of the following values:
 \fBButton3\fR, \fBB3\fR	\fBTriple\fR
 \fBButton4\fR, \fBB4\fR	\fBQuadruple\fR
 \fBButton5\fR, \fBB5\fR
+\fBButton6\fR, \fBB6\fR
+\fBButton7\fR, \fBB7\fR
+\fBButton8\fR, \fBB8\fR
+\fBButton9\fR, \fBB9\fR
 .DE
 Where more than one value is listed, separated by commas, the values
 are equivalent.

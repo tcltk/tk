@@ -29,9 +29,9 @@
  */
 
 #define ALL_BUTTONS \
-	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
+	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
 static const unsigned int buttonMasks[] = {
-    Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask
+    Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask, Button6Mask, Button7Mask, Button8Mask, Button9Mask
 };
 #define ButtonMask(b) (buttonMasks[(b)-Button1])
 
@@ -266,7 +266,7 @@ Tk_UpdatePointer(
      * between the current button state and the last known button state.
      */
 
-    for (b = Button1; b <= Button5; b++) {
+    for (b = Button1; b <= Button9; b++) {
 	mask = ButtonMask(b);
 	if (changes & mask) {
 	    if (state & mask) {

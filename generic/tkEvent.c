@@ -82,7 +82,8 @@ static const unsigned long realEventMasks[MappingNotify+1] = {
     ButtonReleaseMask,			/* ButtonRelease */
     PointerMotionMask|PointerMotionHintMask|ButtonMotionMask
 	    |Button1MotionMask|Button2MotionMask|Button3MotionMask
-	    |Button4MotionMask|Button5MotionMask,
+	    |Button4MotionMask|Button5MotionMask|Button6MotionMask
+	    |Button7MotionMask|Button8MotionMask|Button9MotionMask,
 					/* MotionNotify */
     EnterWindowMask,			/* EnterNotify */
     LeaveWindowMask,			/* LeaveNotify */
@@ -551,6 +552,14 @@ GetButtonMask(
 	return Button4Mask;
     case 5:
 	return Button5Mask;
+    case 6:
+	return Button6Mask;
+    case 7:
+	return Button7Mask;
+    case 8:
+	return Button8Mask;
+    case 9:
+	return Button9Mask;
     }
     return 0;
 }
@@ -582,7 +591,8 @@ UpdateButtonEventState(
 {
     TkDisplay *dispPtr;
     int allButtonsMask = Button1Mask | Button2Mask | Button3Mask
-	    | Button4Mask | Button5Mask;
+	    | Button4Mask | Button5Mask | Button6Mask | Button7Mask
+	    | Button8Mask | Button9Mask;
 
     switch (eventPtr->type) {
     case ButtonPress:
