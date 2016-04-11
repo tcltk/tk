@@ -140,9 +140,9 @@ typedef struct NewGrabWinEvent {
  */
 
 #define ALL_BUTTONS \
-	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
+	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
 static const unsigned int buttonStates[] = {
-    Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask
+    Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask, Button6Mask, Button7Mask, Button8Mask, Button9Mask
 };
 
 /*

@@ -1029,7 +1029,9 @@ CanvasWidgetCmd(
 	    }
 	    if (mask & (unsigned) ~(ButtonMotionMask|Button1MotionMask
 		    |Button2MotionMask|Button3MotionMask|Button4MotionMask
-		    |Button5MotionMask|ButtonPressMask|ButtonReleaseMask
+		    |Button5MotionMask|Button6MotionMask|Button7MotionMask
+		    |Button8MotionMask|Button9MotionMask
+		    |ButtonPressMask|ButtonReleaseMask
 		    |EnterWindowMask|LeaveWindowMask|KeyPressMask
 		    |KeyReleaseMask|PointerMotionMask|VirtualEventMask)) {
 		Tk_DeleteBinding(interp, canvasPtr->bindingTable,
@@ -4771,6 +4773,18 @@ CanvasBindProc(
 	case Button5:
 	    mask = Button5Mask;
 	    break;
+	case Button6:
+	    mask = Button6Mask;
+	    break;
+	case Button7:
+	    mask = Button7Mask;
+	    break;
+	case Button8:
+	    mask = Button8Mask;
+	    break;
+	case Button9:
+	    mask = Button9Mask;
+	    break;
 	default:
 	    mask = 0;
 	    break;
@@ -4871,7 +4885,7 @@ PickCurrentItem(
      */
 
     buttonDown = canvasPtr->state
-	    & (Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask);
+	    & (Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask|Button6Mask|Button7Mask|Button8Mask|Button9Mask);
 
     /*
      * Save information about this event in the canvas. The event in the
