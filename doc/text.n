@@ -980,7 +980,7 @@ geometry manager), one can resort to \fIpathName \fBsync\fR and \fIpathName
 \fBpendingsync\fR to control the synchronization of the view of text widgets.
 .PP
 The \fB<<WidgetViewSync>>\fR virtual event fires when the line heights of the
-text widget becomes obsolete (due to some editing command or configuration
+text widget become obsolete (due to some editing command or configuration
 change), and again when the internal data of the text widget are back in sync
 with the widget view. The detail field (%d substitution) is either true (when
 the widget is in sync) or false (when it is not).
@@ -1173,22 +1173,30 @@ test suite.
 .TP
 \fIpathName \fBdelete \fIindex1 \fR?\fIindex2 ...\fR?
 .
-Delete a range of characters from the text. If both \fIindex1\fR and
-\fIindex2\fR are specified, then delete all the characters starting with the
-one given by \fIindex1\fR and stopping just before \fIindex2\fR (i.e. the
-character at \fIindex2\fR is not deleted). If \fIindex2\fR does not specify a
-position later in the text than \fIindex1\fR then no characters are deleted.
-If \fIindex2\fR is not specified then the single character at \fIindex1\fR is
-deleted. It is not allowable to delete characters in a way that would leave
-the text without a newline as the last character. The command returns an empty
-string. If more indices are given, multiple ranges of text will be deleted.
-All indices are first checked for validity before any deletions are made. They
-are sorted and the text is removed from the last range to the first range so
-deleted text does not cause an undesired index shifting side-effects. If
-multiple ranges with the same start index are given, then the longest range is
-used. If overlapping ranges are given, then they will be merged into spans
-that do not cause deletion of text outside the given ranges due to text
-shifted during deletion.
+Delete a range of characters from the text.
+If both \fIindex1\fR and \fIindex2\fR are specified, then delete
+all the characters starting with the one given by \fIindex1\fR
+and stopping just before \fIindex2\fR (i.e. the character at
+\fIindex2\fR is not deleted).
+If \fIindex2\fR does not specify a position later in the text
+than \fIindex1\fR then no characters are deleted.
+If \fIindex2\fR is not specified then the single character at
+\fIindex1\fR is deleted.
+Attempts to delete characters in a way that would leave
+the text without a newline as the last character will be tweaked by the
+text widget to avoid this. In particular, deletion of complete lines of
+text up to the end of the text will also delete the newline character just
+before the deleted block so that it is replaced by the new final newline
+of the text widget.
+The command returns an empty string.
+If more indices are given, multiple ranges of text will be deleted.
+All indices are first checked for validity before any deletions are made.
+They are sorted and the text is removed from the last range to the
+first range so deleted text does not cause an undesired index shifting
+side-effects.  If multiple ranges with the same start index are given,
+then the longest range is used.  If overlapping ranges are given, then
+they will be merged into spans that do not cause deletion of text
+outside the given ranges due to text shifted during deletion.
 .TP
 \fIpathName \fBdlineinfo \fIindex\fR
 .
