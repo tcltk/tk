@@ -5424,6 +5424,77 @@ test bind-25.49 {modifier names} -setup {
 	destroy .t.f
 } -result <Extended-Key-Return>
 
+test bind-25.50 {modifier names} -setup {
+	frame .t.f -class Test -width 150 -height 100
+} -body {
+	bind .t.f <Button6-a> foo
+	bind .t.f
+} -cleanup {
+	destroy .t.f
+} -result <B6-Key-a>
+
+test bind-25.51 {modifier names} -setup {
+	frame .t.f -class Test -width 150 -height 100
+} -body {
+	bind .t.f <Button7-a> foo
+	bind .t.f
+} -cleanup {
+	destroy .t.f
+} -result <B7-Key-a>
+
+test bind-25.52 {modifier names} -setup {
+	frame .t.f -class Test -width 150 -height 100
+} -body {
+	bind .t.f <Button8-a> foo
+	bind .t.f
+} -cleanup {
+	destroy .t.f
+} -result <B8-Key-a>
+
+test bind-25.53 {modifier names} -setup {
+	frame .t.f -class Test -width 150 -height 100
+} -body {
+	bind .t.f <Button9-a> foo
+	bind .t.f
+} -cleanup {
+	destroy .t.f
+} -result <B9-Key-a>
+
+test bind-25.54 {modifier names} -setup {
+	frame .t.f -class Test -width 150 -height 100
+} -body {
+	bind .t.f <B6-a> foo
+	bind .t.f
+} -cleanup {
+	destroy .t.f
+} -result <B6-Key-a>
+
+test bind-25.55 {modifier names} -setup {
+	frame .t.f -class Test -width 150 -height 100
+} -body {
+	bind .t.f <B7-a> foo
+	bind .t.f
+} -cleanup {
+	destroy .t.f
+} -result <B7-Key-a>
+
+test bind-25.56 {modifier names} -setup {
+	frame .t.f -class Test -width 150 -height 100
+} -body {
+	bind .t.f <B8-a> foo
+	bind .t.f
+} -cleanup {
+	destroy .t.f
+} -result <B8-Key-a>
+
+test bind-25.57 {modifier names} -setup {
+	frame .t.f -class Test -width 150 -height 100
+} -body {
+	bind .t.f <B9-a> foo
+	bind .t.f
+} -cleanup {
+	destroy .t.f
+} -result <B9-Key-a>
 
 
 test bind-26.1 {event names} -setup {
