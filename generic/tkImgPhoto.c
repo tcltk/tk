@@ -641,16 +641,6 @@ ImgPhotoCmd(
 	    PhotoMaster savedMaster;
 
 	    savedMaster = *masterPtr;
-	    if (options.background == NULL) {
-		options.background =
-#if defined(_WIN32) && !defined(PLATFORM_SDL)
-		    Tk_GetColor(interp,
-			Tk_MainWindow(interp), Tk_GetUid("SystemButtonFace"));
-#else
-		    Tk_GetColor(interp,
-			Tk_MainWindow(interp), Tk_GetUid("black"));
-#endif
-	    }
 	    if (sameSrc) {
 		masterPtr->pix32 = NULL;
 		masterPtr->width = masterPtr->height = 0;
@@ -1752,7 +1742,7 @@ ParseSubcommandOptions(
 			    return TCL_ERROR;
 			}
 		    }
-		} 
+		}
 	    } else {
 		Tcl_AppendResult(interp, "the \"-scale\" option ",
 			"requires one or two values", (char *) NULL);
@@ -1790,7 +1780,7 @@ ParseSubcommandOptions(
 		}
 	    } else {
 		optPtr->filtername = "Mitchell";
-	    } 
+	    }
 	} else if (bit == OPT_SMOOTHEDGE) {
 	    if (index + 1 < objc) {
 		char *temp;
@@ -4343,7 +4333,7 @@ Mitchell(
 	return 0.888888888889 + (-2.0 + 1.16666666667 * x) * x * x;
     }
     if (x < 2.0) {
-	return 1.77777777778 + (-3.33333333333 + 
+	return 1.77777777778 + (-3.33333333333 +
 		(2.0 - 0.388888888889 * x) * x) * x;
     }
     return 0.0;
@@ -4507,6 +4497,11 @@ ImgPhotoPutResizedRotatedBlock(
     }
     masterPtr = (PhotoMaster *) destHandle;
 
+    alphaOffset = srcBlkPtr->offset[3];
+    if ((alphaOffset >= srcBlkPtr->pixelSize) || (alphaOffset < 0)) {
+	alphaOffset = 0;
+    }
+
     /*
      * First, we juggle around a bit in order to decompose the rotation
      * into a tilt between -45 and 45 degrees (inclusive) and an integral
@@ -4552,7 +4547,7 @@ ImgPhotoPutResizedRotatedBlock(
 	startY += srcBlkPtr->height;
     }
     if (endY <= 0) {
-	endY += srcBlkPtr->height; 
+	endY += srcBlkPtr->height;
     }
     if (endY > srcBlkPtr->height) {
 	endY = srcBlkPtr->height;
@@ -4565,7 +4560,7 @@ ImgPhotoPutResizedRotatedBlock(
 	bg0 = 0xFF;
 	bg1 = 0xFF;
 	bg2 = 0xFF;
-	bg3 = 0xFF;
+	bg3 = alphaOffset ? 0x00 : 0xFF;
     } else {
 	bg0 = (unsigned char) ((background->red) >> 8);
 	bg1 = (unsigned char) ((background->green) >> 8);
@@ -4638,14 +4633,16 @@ ImgPhotoPutResizedRotatedBlock(
 	    val0 = val1 = val2 = val3 = 0.0;
 	    for (N = 0; N < run; N++) {
 		if (((left + N) < 0) || ((left + N) >= width)) {
-		    val0 += weights[N] * bg0; 
-		    val1 += weights[N] * bg1; 
-		    val2 += weights[N] * bg2; 
+		    val0 += weights[N] * bg0;
+		    val1 += weights[N] * bg1;
+		    val2 += weights[N] * bg2;
+		    val3 += weights[N] * bg3;
 		} else {
 		    idX = iy * pitch + (left + N) * pixelSize;
-		    val0 += weights[N] * srcPixelPtr[idX]; 
-		    val1 += weights[N] * srcPixelPtr[idX + 1]; 
-		    val2 += weights[N] * srcPixelPtr[idX + 2]; 
+		    val0 += weights[N] * srcPixelPtr[idX];
+		    val1 += weights[N] * srcPixelPtr[idX + 1];
+		    val2 += weights[N] * srcPixelPtr[idX + 2];
+		    val3 += weights[N] * srcPixelPtr[idX + 3];
 		}
 	    }
 	    idY = 4 * (iy * (columns + xf2) + ix + xf);
@@ -4655,9 +4652,14 @@ ImgPhotoPutResizedRotatedBlock(
 		((val1 < 0) ? 0 : ((val1 > 255) ? 255 : val1));
 	    transImg[idY + 2] = (unsigned char)
 		((val2 < 0) ? 0 : ((val2 > 255) ? 255 : val2));
-	    transImg[idY + 3] = 255;
+	    if (alphaOffset) {
+		transImg[idY + 3] = (unsigned char)
+		    ((val3 < 0) ? 0 : ((val3 > 255) ? 255 : val3));
+	    } else {
+		transImg[idY + 3] = 255;
+	    }
 	}
-    } 
+    }
 
     columns += xf2;
 
@@ -4694,14 +4696,16 @@ ImgPhotoPutResizedRotatedBlock(
 	    val0 = val1 = val2 = val3 = 0.0;
 	    for (N = 0; N < run; N++) {
 		if (((left + N) < 0) || ((left + N) >= height)) {
-		    val0 += weights[N] * bg0; 
-		    val1 += weights[N] * bg1; 
-		    val2 += weights[N] * bg2; 
+		    val0 += weights[N] * bg0;
+		    val1 += weights[N] * bg1;
+		    val2 += weights[N] * bg2;
+		    val3 += weights[N] * bg3;
 		} else {
 		    idY = ix * pixelSize + (left + N) * pitch;
-		    val0 += weights[N] * srcPixelPtr[idY]; 
-		    val1 += weights[N] * srcPixelPtr[idY + 1]; 
-		    val2 += weights[N] * srcPixelPtr[idY + 2]; 
+		    val0 += weights[N] * srcPixelPtr[idY];
+		    val1 += weights[N] * srcPixelPtr[idY + 1];
+		    val2 += weights[N] * srcPixelPtr[idY + 2];
+		    val3 += weights[N] * srcPixelPtr[idY + 3];
 		}
 	    }
 	    idX = 4 * ((iy + xf) * columns + ix);
@@ -4711,9 +4715,14 @@ ImgPhotoPutResizedRotatedBlock(
 		((val1 < 0) ? 0 : ((val1 > 255) ? 255 : val1));
 	    newImg[idX + 2] = (unsigned char)
 		((val2 < 0) ? 0 : ((val2 > 255) ? 255 : val2));
-	    newImg[idX + 3] = 255;
+	    if (alphaOffset) {
+		newImg[idX + 3] = (unsigned char)
+		    ((val3 < 0) ? 0 : ((val3 > 255) ? 255 : val3));
+	    } else {
+		newImg[idX + 3] = 255;
+	    }
 	}
-    } 
+    }
 
     rows += xf2;
 
@@ -4762,7 +4771,7 @@ afterFiltering:
 	    + startY * srcBlkPtr->pitch;
 	break;
     }
-   
+
     pixelSize = pxpx[dir_n_roll_n_mirror] * srcBlkPtr->pixelSize
 	+ pxpt[dir_n_roll_n_mirror] * srcBlkPtr->pitch;
     pitch = ptpx[dir_n_roll_n_mirror] * srcBlkPtr->pixelSize
@@ -4839,7 +4848,7 @@ afterFiltering:
      */
 
     yTi4 = (int) (yT4 + dispY) - dispY;
-   
+
     /*
      * However, there may not be pixel grid points within the transformed
      * area with either of the above coordinates.
@@ -4858,10 +4867,10 @@ afterFiltering:
 
     /* Size and rows/columns of the transformed image. */
     resSizeX = (int) (- 2 * xTi1);
-    resSizeY = (int) (2 * yTi4); 
+    resSizeY = (int) (2 * yTi4);
     resWidth = resSizeX + 1;
     resHeight = resSizeY + 1;
-     
+
     /*
      * We have to steal a glance at the target image metrics before
      * we can proceed. The task is to determine whether clipping by
@@ -4929,7 +4938,7 @@ afterFiltering:
 		    + startY * srcBlkPtr->pitch;
 		break;
 	    }
-   
+
 	    pixelSize = pxpx[dir_n_roll_n_mirror] * srcBlkPtr->pixelSize
 		+ pxpt[dir_n_roll_n_mirror] * srcBlkPtr->pitch;
 	    pitch = ptpx[dir_n_roll_n_mirror] * srcBlkPtr->pixelSize
@@ -4952,16 +4961,11 @@ afterFiltering:
      * components, mark it as a color image.
      */
 
-    alphaOffset = srcBlkPtr->offset[3];
-    if ((alphaOffset >= srcBlkPtr->pixelSize) || (alphaOffset < 0)) {
-	alphaOffset = 0;
-    }
-
     if (((srcBlkPtr->offset[1] - srcBlkPtr->offset[0]) != 0) ||
 	((srcBlkPtr->offset[2] - srcBlkPtr->offset[0]) != 0)) {
 	masterPtr->flags |= COLOR_IMAGE;
     }
- 
+
     /*
      * Now we have sufficient data to complete the *Tk_PhotoImageBlock*
      * structure for the resulting transformed image.
@@ -5090,7 +5094,7 @@ afterFiltering:
 	 * The faster notebook had only 32 bit TrueColor on which Tk
 	 * had paniced!
 	 */
-         
+
 	for (; xx < to; ++xx, sU = sU + dsU, sL = sL + dsL) {
 	    sUi = (int) (sU + dispY) - dispY - ((sU < 0) ? 1 : 0);
 	    if (sUi > bndU) {
@@ -5108,7 +5112,7 @@ afterFiltering:
 	    if (xn > bndX) {
 		break;
 	    }
-	    yn = (int) (resSizeY / 2.0 - sUi + 0.25) * resPitch; 
+	    yn = (int) (resSizeY / 2.0 - sUi + 0.25) * resPitch;
 
 	    for (yy = sUi; yy >= sLb; --yy) {
 		sUx = sUx - SIN_X;
@@ -5116,7 +5120,7 @@ afterFiltering:
 		ssX = (int) sUx;
 		ssY = (int) sUy;
 
-		fromPtr = srcPixelPtr + pixelSize * ssX  + pitch * ssY;
+		fromPtr = srcPixelPtr + pixelSize * ssX + pitch * ssY;
 		toPtr = resPixelPtr + xn + yn;
 		yn += resPitch;
 
@@ -5133,7 +5137,7 @@ afterFiltering:
 		sx_sy = sx_ * sy;
 		sxsy_ = sx * sy_;
 		sx_sy_ = sx_ * sy_;
-		val0 = val1 = val2 = val3= 0;
+		val0 = val1 = val2 = val3 = 0;
 		if ((ssX < 0) || (ssX > width) ||
 		    (ssY < 0) || (ssY > height)) {
 		    val0 += bg0 * sx_sy_;
@@ -5191,16 +5195,14 @@ afterFiltering:
 		} else {
 		    alpha  = ((ssX < 0) || (ssX > width) ||
 			      (ssY < 0) || (ssY > height)) ?
-			0 : *fromPtr3 / 255.0;
-		    alpha_  = 1 - alpha;
+			0.0 : (val3 / 255.0);
+		    alpha_ = 1 - alpha;
 		    if (*(toPtr + 3) == 255) {
 			*toPtr += (unsigned char) ((val0 - *toPtr) * alpha);
 			toPtr++;
 			*toPtr += (unsigned char) ((val1 - *toPtr) * alpha);
 			toPtr++;
 			*toPtr += (unsigned char) ((val2 - *toPtr) * alpha);
-			toPtr++;
-			*toPtr += 255;
 		    } else {
 			beta = *(toPtr + 3) / 255.0;
 			*toPtr = (unsigned char)
@@ -5213,7 +5215,7 @@ afterFiltering:
 			    (val2 * alpha - alpha_ * beta * *toPtr);
 			toPtr++;
 			*toPtr = (unsigned char)
-			    (*fromPtr3 + (255 - *fromPtr3) * beta);
+			    (val3 + (255.0 - val3) * beta);
 		    }
 		}
 	    }
@@ -5229,7 +5231,7 @@ afterFiltering:
      * The finishing touches are from  *Tk_PhotoPutZoomedBlock*.
      * Recompute the region of data for which we have valid pixels to plot.
      */
-   if (alphaOffset) {
+    if (alphaOffset) {
 	int x1, y1, end;
 
 	if (compRule != TK_PHOTO_COMPOSITE_OVERLAY) {

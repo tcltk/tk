@@ -980,7 +980,7 @@ geometry manager), one can resort to \fIpathName \fBsync\fR and \fIpathName
 \fBpendingsync\fR to control the synchronization of the view of text widgets.
 .PP
 The \fB<<WidgetViewSync>>\fR virtual event fires when the line heights of the
-text widget becomes obsolete (due to some editing command or configuration
+text widget become obsolete (due to some editing command or configuration
 change), and again when the internal data of the text widget are back in sync
 with the widget view. The detail field (%d substitution) is either true (when
 the widget is in sync) or false (when it is not).
