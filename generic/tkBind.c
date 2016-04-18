@@ -2881,7 +2881,7 @@ GetAllVirtualEvents(
  *	Any other fields in eventPtr which are not specified by the pattern
  *	string or the optional arguments, are set to 0.
  *
- *	The event may be handled sychronously or asynchronously, depending on
+ *	The event may be handled synchronously or asynchronously, depending on
  *	the value specified by the optional "-when" option. The default
  *	setting is synchronous.
  *

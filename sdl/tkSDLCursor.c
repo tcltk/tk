@@ -639,7 +639,6 @@ TkpFreeCursor(
     TkSDLCursor *sdlCursorPtr = (TkSDLCursor *) cursorPtr;
 
     XFreeCursor(sdlCursorPtr->display, (Cursor) sdlCursorPtr->info.cursor);
-    Tk_FreeXId(sdlCursorPtr->display, (XID) sdlCursorPtr->info.cursor);
 }
 
 /*
