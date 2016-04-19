@@ -24,6 +24,7 @@ int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #define WINVER 0x0501	/* Requires Windows XP APIs */
 
 #include <windows.h>
+#include <commctrl.h>
 #include <uxtheme.h>
 #if defined(HAVE_VSSYM32_H) || _MSC_VER > 1500
 #   include <vssym32.h>

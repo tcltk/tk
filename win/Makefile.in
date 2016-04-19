@@ -176,7 +176,7 @@ MAN2TCLFLAGS	= @MAN2TCLFLAGS@
 
 AR		= @AR@
 RANLIB		= @RANLIB@
-CC		= @CC@
+CC		= $(if $(Q), @echo CC $(notdir $<) ; @CC@, @CC@)
 RC		= @RC@
 RES		= @RES@
 TK_RES		= @TK_RES@
@@ -612,7 +612,7 @@ install-private-headers: libraries
 
 $(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES)
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TK_LIB_FILE) \
-	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
+	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) $(XLIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 	@VC_MANIFEST_EMBED_EXE@
 

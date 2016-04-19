@@ -263,7 +263,7 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
 LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @EXTRA_WISH_LIBS@
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @EXTRA_WISH_LIBS@ $(XLIBS)
 
 # The symbols below provide support for dynamic loading and shared
 # libraries.  See configure.in for a description of what the
@@ -325,7 +325,7 @@ XLIB_DIR		= $(TOP_DIR)/xlib
 # should be installed (symlinks, compression, package name suffix).
 MAN_FLAGS               = @MAN_FLAGS@
 
-CC			= @CC@
+CC			= $(if $(Q), @echo CC $(notdir $<) ; @CC@, @CC@)
 
 CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} -I${TCL_GENERIC_DIR} \
