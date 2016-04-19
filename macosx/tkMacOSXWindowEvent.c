@@ -165,6 +165,10 @@ extern BOOL opaqueTag;
 
     if (winPtr) {
 	TkGenWMDestroyEvent((Tk_Window) winPtr);
+	if (_windowWithMouse == w) {
+	    _windowWithMouse = nil;
+	    [w release];
+	}
     }
 
     /*
@@ -745,15 +749,16 @@ TkWmProtocolEventProc(
 int
 Tk_MacOSXIsAppInFront(void)
 {
-    OSStatus err;
-    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
     Boolean isFrontProcess = true;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
 
-    err = ChkErr(GetFrontProcess, &frontPsn);
-    if (err == noErr) {
-	ChkErr(SameProcess, &frontPsn, &ourPsn, &isFrontProcess);
+    if (noErr == GetFrontProcess(&frontPsn)){
+	SameProcess(&frontPsn, &ourPsn, &isFrontProcess);
     }
-
+#else
+    isFrontProcess = [NSRunningApplication currentApplication].active;
+#endif
     return (isFrontProcess == true);
 }
 
@@ -779,21 +784,6 @@ Tk_MacOSXIsAppInFront(void)
  * HITheme API.
  *
  */
-
-@interface TKContentView(TKWindowEvent)
-- (void) drawRect: (NSRect) rect;
-- (void) generateExposeEvents: (HIShapeRef) shape;
-- (void) generateExposeEvents: (HIShapeRef) shape childrenOnly: (int) childrenOnly;
-- (void) viewDidEndLiveResize;
-- (void) tkToolbarButton: (id) sender;
-- (BOOL) isOpaque;
-- (BOOL) wantsDefaultClipping;
-- (BOOL) acceptsFirstResponder;
-- (void) keyDown: (NSEvent *) theEvent;
-@end
-
-@implementation TKContentView
-@end
 
 /*Restrict event processing to Expose events.*/
 static Tk_RestrictAction
@@ -854,7 +844,8 @@ ConfigureRestrictProc(
 
 -(void) setFrameSize: (NSSize)newsize
 {
-    if ( [self inLiveResize] ) {
+    [super setFrameSize: newsize];
+    if ([self inLiveResize]) {
 	NSWindow *w = [self window];
 	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 	Tk_Window tkwin = (Tk_Window) winPtr;
@@ -863,17 +854,26 @@ ConfigureRestrictProc(
 	ClientData oldArg;
     	Tk_RestrictProc *oldProc;
 
-	/* Resize the NSView */
-	[super setFrameSize: newsize];
+	/* This can be called from outside the Tk event loop.
+	 * Since it calls Tcl_DoOneEvent, we need to make sure we
+	 * don't clobber the AutoreleasePool set up by the caller.
+	 */
+	[NSApp setPoolProtected:YES];
 
-	/* Disable drawing until the window has been completely configured.*/
+	/*
+	 * Try to prevent flickers and flashes.
+	 */
+	[w disableFlushWindow];
+	NSDisableScreenUpdates();
+
+	/* Disable Tk drawing until the window has been completely configured.*/
 	TkMacOSXSetDrawingEnabled(winPtr, 0);
 
 	 /* Generate and handle a ConfigureNotify event for the new size.*/
 	TkGenWMConfigureEvent(tkwin, Tk_X(tkwin), Tk_Y(tkwin), width, height,
 			      TK_SIZE_CHANGED | TK_MACOSX_HANDLE_EVENT_IMMEDIATELY);
     	oldProc = Tk_RestrictEvents(ConfigureRestrictProc, NULL, &oldArg);
-	while ( Tk_DoOneEvent(TK_X_EVENTS|TK_DONT_WAIT) ) {}
+	while (Tk_DoOneEvent(TK_X_EVENTS|TK_DONT_WAIT)) {}
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/* Now that Tk has configured all subwindows we can create the clip regions. */
@@ -885,9 +885,11 @@ ConfigureRestrictProc(
 	HIRect bounds = NSRectToCGRect([self bounds]);
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
 	[self generateExposeEvents: shape];
-	while ( Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT) ) {}
-    } else {
-        [super setFrameSize: newsize];
+	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
+	[w enableFlushWindow];
+	[w flushWindowIfNeeded];
+	NSEnableScreenUpdates();
+	[NSApp setPoolProtected:NO];
     }
 }
 
@@ -905,12 +907,10 @@ ConfigureRestrictProc(
     [self generateExposeEvents: shape];
 }
 
-/* Core method of this class: generates expose events for redrawing.
- * Whereas drawRect is intended to be called only from the Appkit event
- * loop, this can be called from Tk.  If the Tcl_ServiceMode is set to
- * TCL_SERVICE_ALL then the expose events will be immediately removed
- * from the Tcl event loop and processed.  Typically, they should be queued,
- * however.
+/* Core method of this class: generates expose events for redrawing.  If the
+ * Tcl_ServiceMode is set to TCL_SERVICE_ALL then the expose events will be
+ * immediately removed from the Tcl event loop and processed.  Typically, they
+ * should be queued, however.
  */
 - (void) generateExposeEvents: (HIShapeRef) shape
 {

@@ -3867,6 +3867,18 @@ test menu-35.1 {menu -underline string overruns Bug 1599877} -setup {
 	deleteWindows
 } -result {}
 
+test menu-37.1 {menubar menues cannot be posted - bug 2160206} -setup {
+    catch {destroy .m}
+} -body {
+    # On Linux the following used to panic
+    # It now returns an error (on all platforms)
+    menu .m -type menubar
+    list [catch ".m post 1 1" msg] $msg
+} -cleanup {
+    destroy .m
+} -result {1 {a menubar menu cannot be posted}}
+
+
 # cleanup
 imageFinish
 deleteWindows

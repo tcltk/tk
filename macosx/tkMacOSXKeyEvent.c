@@ -227,7 +227,7 @@ static unsigned isFunctionKey(unsigned int code);
 
 
 
-@implementation TKContentView(TKKeyEvent)
+@implementation TKContentView
 /* <NSTextInput> implementation (called through interpretKeyEvents:]). */
 
 /* <NSTextInput>: called when done composing;
@@ -293,22 +293,6 @@ static unsigned isFunctionKey(unsigned int code);
 }
 
 
-/* delete display of composing characters [not in <NSTextInput>] */
-- (void)deleteWorkingText
-{
-  if (privateWorkingText == nil)
-    return;
-  if (NS_KEYLOG)
-    NSLog(@"deleteWorkingText len = %lu\n",
-	    (unsigned long)[privateWorkingText length]);
-  [privateWorkingText release];
-  privateWorkingText = nil;
-  processingCompose = NO;
-
-  //PENDING: delete working text
-}
-
-
 - (BOOL)hasMarkedText
 {
   return privateWorkingText != nil;
@@ -344,7 +328,7 @@ static unsigned isFunctionKey(unsigned int code);
   pt.y = caret_y;
 
   pt = [self convertPoint: pt toView: nil];
-  pt = [[self window] convertBaseToScreen: pt];
+  pt = [[self window] convertPointToScreen: pt];
   pt.y -= caret_height;
 
   rect.origin = pt;
@@ -417,6 +401,24 @@ static unsigned isFunctionKey(unsigned int code);
 /* End <NSTextInput> impl. */
 @end
 
+
+@implementation TKContentView(TKKeyEvent)
+/* delete display of composing characters [not in <NSTextInput>] */
+- (void)deleteWorkingText
+{
+  if (privateWorkingText == nil)
+    return;
+  if (NS_KEYLOG)
+    NSLog(@"deleteWorkingText len = %lu\n",
+	    (unsigned long)[privateWorkingText length]);
+  [privateWorkingText release];
+  privateWorkingText = nil;
+  processingCompose = NO;
+
+  //PENDING: delete working text
+}
+@end
+
 
 
 /*

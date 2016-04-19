@@ -141,7 +141,7 @@ BitmapRepFromDrawableRect(
     if ( mac_drawable->flags & TK_IS_PIXMAP ) {
 	/*
 	   This means that the MacDrawable is functioning as a Tk Pixmap, so its view
-	   field is NULL.  It's context field should point to a CGImage.
+	   field is NULL.
 	*/
 	cg_context = GetCGContextForDrawable(drawable);
 	CGRect image_rect = CGRectMake(x, y, width, height);
@@ -199,10 +199,10 @@ XCopyArea(
     Display *display,		/* Display. */
     Drawable src,		/* Source drawable. */
     Drawable dst,		/* Destination drawable. */
-    GC gc,			/* GC to use. */
+    GC gc,				/* GC to use. */
     int src_x,			/* X & Y, width & height */
     int src_y,			/* define the source rectangle */
-    unsigned int width,		/* that will be copied. */
+    unsigned int width,	/* that will be copied. */
     unsigned int height,
     int dest_x,			/* Dest X & Y on dest rect. */
     int dest_y)
@@ -282,10 +282,10 @@ XCopyPlane(
     Display *display,		/* Display. */
     Drawable src,		/* Source drawable. */
     Drawable dst,		/* Destination drawable. */
-    GC gc,			/* GC to use. */
+    GC gc,				/* GC to use. */
     int src_x,			/* X & Y, width & height */
     int src_y,			/* define the source rectangle */
-    unsigned int width,		/* that will be copied. */
+    unsigned int width,	/* that will be copied. */
     unsigned int height,
     int dest_x,			/* Dest X & Y on dest rect. */
     int dest_y,
@@ -293,6 +293,7 @@ XCopyPlane(
 {
     TkMacOSXDrawingContext dc;
     MacDrawable *srcDraw = (MacDrawable *) src;
+    MacDrawable *dstDraw = (MacDrawable *) dst;
 
     display->request++;
     if (!width || !height) {
@@ -306,33 +307,47 @@ XCopyPlane(
 	if (!TkMacOSXSetupDrawingContext(dst, gc, 1, &dc)) {
 	    return;
 	}
-	if (dc.context) {
+	CGContextRef context = dc.context;
+	if (context) {
 	    CGImageRef img = TkMacOSXCreateCGImageWithDrawable(src);
-
 	    if (img) {
 		TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
 		unsigned long imageBackground  = gc->background;
-
-		if (clipPtr && clipPtr->type == TKP_CLIP_PIXMAP &&
-			clipPtr->value.pixmap == src) {
-		    imageBackground = TRANSPARENT_PIXEL << 24;
+                if (clipPtr && clipPtr->type == TKP_CLIP_PIXMAP){
+			CGImageRef mask = TkMacOSXCreateCGImageWithDrawable(clipPtr->value.pixmap);
+			CGRect rect = CGRectMake(dest_x, dest_y, width, height);
+			rect = CGRectOffset(rect, dstDraw->xOff, dstDraw->yOff);
+			CGContextSaveGState(context);
+			/* Move the origin of the destination to top left. */
+			CGContextTranslateCTM(context, 0, rect.origin.y + CGRectGetMaxY(rect));
+			CGContextScaleCTM(context, 1, -1);
+			/* Fill with the background color, clipping to the mask. */
+			CGContextClipToMask(context, rect, mask);
+			TkMacOSXSetColorInContext(gc, gc->background, dc.context);
+			CGContextFillRect(dc.context, rect);
+			/* Fill with the foreground color, clipping to the intersection of img and mask. */
+			CGContextClipToMask(context, rect, img);
+			TkMacOSXSetColorInContext(gc, gc->foreground, context);
+			CGContextFillRect(context, rect);
+			CGContextRestoreGState(context);
+			CGImageRelease(mask);
+			CGImageRelease(img);
+		} else {
+		    DrawCGImage(dst, gc, dc.context, img, gc->foreground, imageBackground,
+				CGRectMake(0, 0, srcDraw->size.width, srcDraw->size.height),
+			    CGRectMake(src_x, src_y, width, height),
+			    CGRectMake(dest_x, dest_y, width, height));
+		    CGImageRelease(img);
 		}
-		DrawCGImage(dst, gc, dc.context, img, gc->foreground,
-			imageBackground, CGRectMake(0, 0,
-			srcDraw->size.width, srcDraw->size.height),
-			CGRectMake(src_x, src_y, width, height),
-			CGRectMake(dest_x, dest_y, width, height));
-		CFRelease(img);
-	    } else {
+	    } else { /* no image */
 		TkMacOSXDbgMsg("Invalid source drawable");
 	    }
 	} else {
-	    TkMacOSXDbgMsg("Invalid destination drawable");
+	    TkMacOSXDbgMsg("Invalid destination drawable - could not get a bitmap context.");
 	}
 	TkMacOSXRestoreDrawingContext(&dc);
-    } else {
-	XCopyArea(display, src, dst, gc, src_x, src_y, width, height, dest_x,
-		dest_y);
+    } else { /* source drawable is a window, not a Pixmap */
+	XCopyArea(display, src, dst, gc, src_x, src_y, width, height, dest_x, dest_y);
     }
 }
 
@@ -356,16 +371,16 @@ XCopyPlane(
 int
 TkPutImage(
     unsigned long *colors,	/* Unused on Macintosh. */
-    int ncolors,		/* Unused on Macintosh. */
+    int ncolors,			/* Unused on Macintosh. */
     Display* display,		/* Display. */
     Drawable d,			/* Drawable to place image on. */
-    GC gc,			/* GC to use. */
+    GC gc,				/* GC to use. */
     XImage* image,		/* Image to place. */
     int src_x,			/* Source X & Y. */
     int src_y,
     int dest_x,			/* Destination X & Y. */
     int dest_y,
-    unsigned int width,		/* Same width & height for both */
+    unsigned int width,	/* Same width & height for both */
     unsigned int height)	/* distination and source. */
 {
     TkMacOSXDrawingContext dc;
@@ -431,11 +446,12 @@ CreateCGImageWithXImage(
 	 * BW image
 	 */
 
+	/* Reverses the sense of the bits */
 	static const CGFloat decodeWB[2] = {1, 0};
+	decode = decodeWB;
 
 	bitsPerComponent = 1;
 	bitsPerPixel = 1;
-	decode = decodeWB;
 	if (image->bitmap_bit_order != MSBFirst) {
 	    char *srcPtr = image->data + image->xoffset;
 	    char *endPtr = srcPtr + len;
@@ -445,16 +461,14 @@ CreateCGImageWithXImage(
 		*destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
 	    }
 	} else {
-	    data = memcpy(ckalloc(len), image->data + image->xoffset,
-		    len);
+	    data = memcpy(ckalloc(len), image->data + image->xoffset, len);
 	}
 	if (data) {
 	    provider = CGDataProviderCreateWithData(data, data, len, releaseData);
 	}
 	if (provider) {
 	    img = CGImageMaskCreate(image->width, image->height, bitsPerComponent,
-		    bitsPerPixel, image->bytes_per_line,
-		    provider, decode, 0);
+				    bitsPerPixel, image->bytes_per_line, provider, decode, 0);
 	}
     } else if (image->format == ZPixmap && image->bits_per_pixel == 32) {
 	/*
@@ -476,6 +490,7 @@ CreateCGImageWithXImage(
 	    img = CGImageCreate(image->width, image->height, bitsPerComponent,
 		    bitsPerPixel, image->bytes_per_line, colorspace, bitmapInfo,
 		    provider, decode, 0, kCGRenderingIntentDefault);
+	    CFRelease(provider);
 	}
 	if (colorspace) {
 	    CFRelease(colorspace);
@@ -483,10 +498,6 @@ CreateCGImageWithXImage(
     } else {
 	TkMacOSXDbgMsg("Unsupported image type");
     }
-    if (provider) {
-	CFRelease(provider);
-    }
-
     return img;
 }
 
@@ -660,12 +671,11 @@ GetCGContextForDrawable(
 	kCGBitmapByteOrderDefault;
 #endif
 	char *data;
-	CGRect bounds = CGRectMake(0, 0, macDraw->size.width,
-		macDraw->size.height);
+	CGRect bounds = CGRectMake(0, 0, macDraw->size.width, macDraw->size.height);
 
 	if (macDraw->flags & TK_IS_BW_PIXMAP) {
 	    bitsPerPixel = 8;
-	    bitmapInfo = kCGImageAlphaOnly;
+	    bitmapInfo = (CGBitmapInfo)kCGImageAlphaOnly;
 	} else {
 	    colorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
 	    bitsPerPixel = 32;
@@ -738,6 +748,7 @@ DrawCGImage(
 	if (CGImageIsMask(image)) {
 	    /*CGContextSaveGState(context);*/
 	    if (macDraw->flags & TK_IS_BW_PIXMAP) {
+		/* Set fill color to black, background comes from the context, or is transparent. */
 		if (imageBackground != TRANSPARENT_PIXEL << 24) {
 		    CGContextClearRect(context, dstBounds);
 		}
@@ -750,6 +761,7 @@ DrawCGImage(
 		TkMacOSXSetColorInContext(gc, imageForeground, context);
 	    }
 	}
+
 #ifdef TK_MAC_DEBUG_IMAGE_DRAWING
 	CGContextSaveGState(context);
 	CGContextSetLineWidth(context, 1.0);
@@ -769,8 +781,7 @@ DrawCGImage(
 		dstBounds.size.width, dstBounds.size.height);
 #else /* TK_MAC_DEBUG_IMAGE_DRAWING */
 	CGContextSaveGState(context);
-	CGContextTranslateCTM(context, 0,
-			      dstBounds.origin.y + CGRectGetMaxY(dstBounds));
+	CGContextTranslateCTM(context, 0, dstBounds.origin.y + CGRectGetMaxY(dstBounds));
 	CGContextScaleCTM(context, 1, -1);
 	CGContextDrawImage(context, dstBounds, image);
 	CGContextRestoreGState(context);
@@ -1480,7 +1491,7 @@ TkScrollWindow(
 {
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable;
-    NSView *view = TkMacOSXDrawableView(macDraw);
+    TKContentView *view = (TKContentView *)TkMacOSXDrawableView(macDraw);
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
@@ -1557,7 +1568,6 @@ TkScrollWindow(
 
 	    /* Belt and suspenders: make the AppKit request a redraw
 	       when it gets control again. */
-	    [view setNeedsDisplay:YES];
   	}
     } else {
 	dmgRgn = HIShapeCreateEmpty();
@@ -1843,7 +1853,6 @@ TkMacOSXGetClipRgn(
     } else if (macDraw->visRgn) {
 	clipRgn = HIShapeCreateCopy(macDraw->visRgn);
     }
-
     return clipRgn;
 }
 

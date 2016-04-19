@@ -917,6 +917,83 @@ affected.
 .PP
 See below for the \fIpathName \fBpeer\fR widget command that controls the
 creation of peer widgets.
+.SH "ASYNCHRONOUS UPDATE OF LINE HEIGHTS"
+.PP
+In order to maintain a responsive user-experience, the text widget calculates
+lines metrics (line heights in pixels) asynchronously. Because of this, some
+commands of the text widget may return wrong results if the asynchronous
+calculations are not finished at the time of calling. This applies to
+\fIpathName \fBcount -ypixels\fR and \fIpathName \fByview\fR.
+.PP
+Again for performance reasons, it would not be appropriate to let these
+commands always wait for the end of the update calculation each time they are
+called. In most use cases of these commands a more or less inaccurate result
+does not really matter compared to execution speed.
+.PP
+In case accurate result is needed (and if the text widget is managed by a
+geometry manager), one can resort to \fIpathName \fBsync\fR and \fIpathName
+\fBpendingsync\fR to control the synchronization of the view of text widgets.
+.PP
+The \fB<<WidgetViewSync>>\fR virtual event fires when the line heights of the
+text widget becomes obsolete (due to some editing command or configuration
+change), and again when the internal data of the text widget are back in sync
+with the widget view. The detail field (%d substitution) is either true (when
+the widget is in sync) or false (when it is not).
+.PP
+\fIpathName \fBsync\fR, \fIpathName \fBpendingsync\fR and
+\fB<<WidgetViewSync>>\fR apply to each text widget independently of its peers.
+.PP
+Examples of use:
+.CS
+## Example 1:
+# immediately complete line metrics at any cost (GUI unresponsive)
+$w sync
+$w yview moveto $fraction
+
+## Example 2:
+# synchronously wait for up-to-date line metrics (GUI responsive)
+# before executing the scheduled command, but don't block execution flow
+$w sync -command [list $w yview moveto $fraction]
+
+## Example 3:
+# init
+set yud($w) 0
+proc updateaction w {
+\&set ::yud($w) 1
+\&# any other update action here...
+}
+# runtime, synchronously wait for up-to-date line metrics (GUI responsive)
+$w sync -command [list updateaction $w]
+vwait yud($w)
+$w yview moveto $fraction
+
+## Example 4:
+# init
+set todo($w) {}
+proc updateaction w {
+\&foreach cmd $::todo($w) {uplevel #0 $cmd}
+\&set todo($w) {}
+}
+# runtime
+lappend todo($w) [list $w yview moveto $fraction]
+$w sync -command [list updateaction $w]
+
+## Example 5:
+# init
+set todo($w) {}
+bind $w <<WidgetViewSync>> {
+\&if {%d} {
+\&\&foreach cmd $todo(%W) {eval $cmd}
+\&\&set todo(%W) {}
+\&}
+}
+# runtime
+if {![$w pendingsync]} {
+\&$w yview moveto $fraction
+} else {
+\&lappend todo($w) [list $w yview moveto $fraction]
+}
+.CE
 .SH "WIDGET COMMAND"
 .PP
 The \fBtext\fR command creates a new Tcl command whose name is the same as the
@@ -981,7 +1058,9 @@ if the text widget is managed by a geometry manager), then all subsequent
 options ensure that any possible out of date information is recalculated.
 This currently only has any effect for the \fB\-ypixels\fR count (which, if
 \fB\-update\fR is not given, will use the text widget's current cached value
-for each line). The count options are interpreted as follows:
+for each line). This \fB\-update\fR option is obsoleted by \fIpathName
+\fBsync\fR, \fIpathName \fBpendingsync\fR and \fB<<WidgetViewSync>>\fR.  The
+count options are interpreted as follows:
 .RS
 .IP \fB\-chars\fR
 count all characters, whether elided or not. Do not count embedded windows or
@@ -1344,13 +1423,16 @@ Returns a list of peers of this widget (this does not include the widget
 itself). The order within this list is undefined.
 .RE
 .TP
-\fIpathName \fBreplace \fIindex1 index2 chars\fR ?\fItagList chars tagList ...\fR?
-.
-Replaces the range of characters between \fIindex1\fR and \fIindex2\fR with
-the given characters and tags. See the section on \fIpathName \fBinsert\fR for
-an explanation of the handling of the \fItagList...\fR arguments, and the
-section on \fIpathName \fBdelete\fR for an explanation of the handling of the
-indices. If \fIindex2\fR corresponds to an index earlier in the text than
+\fIpathName \fBpendingsync\fR
+Returns 1 if the line heights calculations are not up-to-date, 0 otherwise.
+.TP
+\fIpathName \fBreplace\fR \fIindex1 index2 chars\fR ?\fItagList chars tagList ...\fR?
+Replaces the range of characters between \fIindex1\fR and \fIindex2\fR
+with the given characters and tags.  See the section on \fIpathName
+\fBinsert\fR for an explanation of the handling of the \fItagList...\fR
+arguments, and the section on \fIpathName
+\fBdelete\fR for an explanation of the handling of the indices.  If
+\fIindex2\fR corresponds to an index earlier in the text than
 \fIindex1\fR, an error will be generated.
 .RS
 .PP
@@ -1522,6 +1604,23 @@ nothing. If \fIindex\fR is a short distance out of view, the command adjusts
 the view just enough to make \fIindex\fR visible at the edge of the window.
 If \fIindex\fR is far out of view, then the command centers \fIindex\fR in the
 window.
+.TP
+\fIpathName \fBsync\fR ?\fB-command \fIcommand\fR?
+Controls the synchronization of the view of the text widget.
+.RS
+.TP
+\fIpathName \fBsync\fR
+Immediately brings the line metrics up-to-date by forcing computation of any
+outdated line heights. The command returns immediately if there is no such
+outdated line heights, otherwise it returns only at the end of the computation.
+The command returns an empty string.
+.TP
+\fIpathName \fBsync -command \fIcommand\fR
+Schedules \fIcommand\fR to be executed (by the event loop) exactly once as soon
+as all line heights are up-to-date. If there are no pending line metrics
+calculations, the scheduling is immediate. The command returns the empty
+string. \fBbgerror\fR is called on \fIcommand\fR failure.
+.RE
 .TP
 \fIpathName \fBtag \fIoption \fR?\fIarg arg ...\fR?
 .
@@ -1992,9 +2091,8 @@ the clipboard.
 Control-t reverses the order of the two characters to the right of the
 insertion cursor.
 .IP [32]
-Control-z (and Control-underscore on UNIX when \fBtk_strictMotif\fR is true)
-undoes the last edit action if the \fB\-undo\fR option is true. Does nothing
-otherwise.
+Control-z undoes the last edit action if the \fB\-undo\fR option is true.
+Does nothing otherwise.
 .IP [33]
 Control-Z (or Control-y on Windows) reapplies the last undone edit action if
 the \fB\-undo\fR option is true. Does nothing otherwise.

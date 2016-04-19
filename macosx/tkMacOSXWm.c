@@ -196,6 +196,48 @@ static int tkMacOSXWmAttrNotifyVal = 0;
 static Tcl_HashTable windowTable;
 static int windowHashInit = false;
 
+
+
+#pragma mark NSWindow(TKWm)
+
+/*
+ * Conversion of coordinates between window and screen.
+ */
+
+@implementation NSWindow(TKWm)
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+- (NSPoint) convertPointToScreen: (NSPoint) point
+{
+    return [self convertBaseToScreen:point];
+}
+- (NSPoint) convertPointFromScreen: (NSPoint)point
+{
+    return [self convertScreenToBase:point];
+}
+@end
+#else
+- (NSPoint) convertPointToScreen: (NSPoint) point
+{
+    NSRect pointrect;
+    pointrect.origin = point;
+    pointrect.size.width = 0;
+    pointrect.size.height = 0;
+    return [self convertRectToScreen:pointrect].origin;
+}
+- (NSPoint) convertPointFromScreen: (NSPoint)point
+{
+    NSRect pointrect;
+    pointrect.origin = point;
+    pointrect.size.width = 0;
+    pointrect.size.height = 0;
+    return [self convertRectFromScreen:pointrect].origin;
+}
+@end
+#endif
+
+#pragma mark -
+
+
 /*
  * Forward declarations for procedures defined in this file:
  */
@@ -344,6 +386,7 @@ static void		RemapWindows(TkWindow *winPtr,
 @end
 
 @implementation TKWindow(TKWm)
+
 - (BOOL) canBecomeKeyWindow
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
@@ -353,16 +396,58 @@ static void		RemapWindows(TkWindow *winPtr,
 	    kWindowNoActivatesAttribute)) ? NO : YES;
 }
 
+#if DEBUG_ZOMBIES
 - (id) retain
 {
-#if DEBUG_ZOMBIES
+    id result = [super retain];
     const char *title = [[self title] UTF8String];
-    if (title != NULL) {
-	printf("Retaining %s with count %lu\n", title, [self retainCount]);
+    if (title == nil) {
+	title = "unnamed window";
     }
-#endif
-    return [super retain];
+    if (DEBUG_ZOMBIES > 1){
+	printf("Retained <%s>. Count is: %lu\n", title, [self retainCount]);
+    }
+    return result;
 }
+
+- (id) autorelease
+{
+    static int xcount = 0;
+    id result = [super autorelease];
+    const char *title = [[self title] UTF8String];
+    if (title == nil) {
+	title = "unnamed window";
+    }
+    if (DEBUG_ZOMBIES > 1){
+	printf("Autoreleased <%s>. Count is %lu\n", title, [self retainCount]);
+    }
+    return result;
+}
+
+- (oneway void) release {
+    const char *title = [[self title] UTF8String];
+    if (title == nil) {
+	title = "unnamed window";
+    }
+    if (DEBUG_ZOMBIES > 1){
+	printf("Releasing <%s>. Count is %lu\n", title, [self retainCount]);
+    }
+    [super release];
+}
+
+- (void) dealloc {
+    const char *title = [[self title] UTF8String];
+    if (title == nil) {
+	title = "unnamed window";
+    }
+    if (DEBUG_ZOMBIES > 0){
+	printf(">>>> Freeing <%s>. Count is %lu\n", title, [self retainCount]);
+    }
+    [super dealloc];
+}
+
+
+#endif
 @end
 
 #pragma mark -
@@ -476,7 +561,6 @@ FrontWindowAtPoint(
     int x, int y)
 {
     NSPoint p = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     NSArray *windows = [NSApp orderedWindows];
     TkWindow *front = NULL;
 
@@ -486,7 +570,6 @@ FrontWindowAtPoint(
 		break;
 	    }
 	}
-    [pool drain];
     return front;
 }
 
@@ -790,7 +873,6 @@ TkWmDeadWindow(
     NSWindow *window = wmPtr->window;
 
     if (window && !Tk_IsEmbedded(winPtr) ) {
-	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	NSWindow *parent = [window parentWindow];
 	if (parent) {
 	    [parent removeChildWindow:window];
@@ -800,17 +882,32 @@ TkWmDeadWindow(
         if (winPtr->window) {
             ((MacDrawable *) winPtr->window)->view = nil;
         }
+#if DEBUG_ZOMBIES > 0
+	{
+	    const char *title = [[window title] UTF8String];
+	    if (title == nil) {
+		title = "unnamed window";
+	    }
+	    printf(">>>> Closing <%s>. Count is: %lu\n", title, [window retainCount]);
+	}
+#endif
         [window release];
 	wmPtr->window = NULL;
-       /* Activate the highest window left on the screen. */
-       NSArray *windows = [NSApp orderedWindows];
-       if ( [windows count] > 0 ) {
-	   NSWindow *front = [windows objectAtIndex:0];
-	   if ( front && [front canBecomeKeyWindow] ) {
-               [front makeKeyAndOrderFront:NSApp];
-           }
-       }
-       [pool drain];
+
+	/* Activate the highest window left on the screen. */
+	NSArray *windows = [NSApp orderedWindows];
+	if ( [windows count] > 0 ) {
+	    NSWindow *front = [windows objectAtIndex:0];
+	    if ( front && [front canBecomeKeyWindow] ) {
+		[front makeKeyAndOrderFront:NSApp];
+	    }
+	}
+	[NSApp _resetAutoreleasePool];
+
+#if DEBUG_ZOMBIES > 0
+	fprintf(stderr, "================= Pool dump ===================\n");
+	[NSAutoreleasePool showPools];
+#endif
     }
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
@@ -1690,6 +1787,11 @@ WmForgetCmd(
 
 	TkWmDeadWindow(winPtr);
 	RemapWindows(winPtr, (MacDrawable *) winPtr->parentPtr->window);
+
+        /*
+         * Make sure wm no longer manages this window
+         */
+        Tk_ManageGeometry(frameWin, NULL, NULL);
 
 	winPtr->flags &= ~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 
@@ -5464,7 +5566,6 @@ TkMacOSXMakeRealWindowExist(
 	 * TODO: Here we should handle out of process embedding.
 	 */
     }
-
     WindowClass macClass = wmPtr->macClass;
     wmPtr->attributes &= (tkAlwaysValidAttributes |
 	    macClassAttrs[macClass].validAttrs);
@@ -5498,10 +5599,10 @@ TkMacOSXMakeRealWindowExist(
     NSWindow *window = [[winClass alloc] initWithContentRect:contentRect
 	    styleMask:styleMask backing:NSBackingStoreBuffered defer:YES];
     if (!window) {
-	Tcl_Panic("couldn't allocate new Mac window");
+    	Tcl_Panic("couldn't allocate new Mac window");
     }
     TKContentView *contentView = [[TKContentView alloc]
-	    initWithFrame:NSZeroRect];
+				     initWithFrame:NSZeroRect];
     [window setContentView:contentView];
     [contentView release];
     [window setDelegate:NSApp];
@@ -5536,7 +5637,7 @@ TkMacOSXMakeRealWindowExist(
 
     [window setDocumentEdited:NO];
     wmPtr->window = window;
-    macWin->view = contentView;
+    macWin->view = window.contentView;
     TkMacOSXApplyWindowAttributes(winPtr, window);
 
     NSRect geometry = InitialWindowBounds(winPtr, window);
@@ -5545,7 +5646,6 @@ TkMacOSXMakeRealWindowExist(
     geometry.origin.y = tkMacOSXZeroScreenHeight - (geometry.origin.y +
 	    geometry.size.height);
     [window setFrame:geometry display:NO];
-
     TkMacOSXRegisterOffScreenWindow((Window) macWin, window);
     macWin->flags |= TK_HOST_EXISTS;
 }
@@ -5940,7 +6040,6 @@ TkpChangeFocus(
 
     if (Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr) ){
     	NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-	NSAutoreleasePool *pool = [NSAutoreleasePool new];
     	TkWmRestackToplevel(winPtr, Above, NULL);
     	if (force ) {
     	    [NSApp activateIgnoringOtherApps:YES];
@@ -5948,7 +6047,6 @@ TkpChangeFocus(
 	if ( win && [win canBecomeKeyWindow] ) {
 	    [win makeKeyAndOrderFront:NSApp];
 	}
-	[pool drain];
     }
 
     /*

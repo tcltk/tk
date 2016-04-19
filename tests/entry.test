@@ -1892,6 +1892,19 @@ test entry-6.11 {EntryComputeGeometry procedure} -constraints {
 } -cleanup {
     destroy .e
 } -result {1 1 1}
+test entry-6.12 {EntryComputeGeometry procedure} -constraints {
+    fonts
+} -setup {
+    catch {destroy .e}
+    entry .e -font {Courier -12} -bd 2 -relief raised -width 20
+    pack .e
+} -body {
+    .e insert end "012\t456\t"
+    update
+    list [.e index @80] [.e index @81] [.e index @115] [.e index @116]
+} -cleanup {
+    destroy .e
+} -result {6 7 7 8}
 
 
 test entry-7.1 {InsertChars procedure} -setup {
@@ -3447,8 +3460,6 @@ test entry-22.1 {lost namespaced textvar} -body {
     namespace eval test { variable foo {a b} }
     entry .e -textvariable ::test::foo
     namespace delete test
-    .e insert end "more stuff"
-    .e delete 5 end
     set ::test::foo
 } -cleanup {
     destroy .e
@@ -3457,13 +3468,39 @@ test entry-22.2 {lost namespaced textvar} -body {
     namespace eval test { variable foo {a b} }
     entry .e -textvariable ::test::foo
     namespace delete test
-    .e insert end "more stuff"
-    .e delete 5 end 
-    catch {set ::test::foo}
-    list [.e get] [.e cget -textvar] 
+    catch {.e insert end "more stuff"} result1
+    catch {.e delete 5 end } result2
+    catch {set ::test::foo} result3
+    list [.e get] [.e cget -textvar] $result1 $result2 $result3
 } -cleanup {
     destroy .e
-} -result [list "a bmo" ::test::foo]
+} -result [list "a bmo" ::test::foo \
+	{can't set "::test::foo": parent namespace doesn't exist} \
+	{can't set "::test::foo": parent namespace doesn't exist} \
+	{can't read "::test::foo": no such variable}]
+
+test entry-23.1 {error in trace proc attached to the textvariable} -setup {
+    destroy .e
+} -body {
+    trace variable myvar w traceit
+    proc traceit args {error "Intentional error here!"}
+    entry .e -textvariable myvar
+    catch {.e insert end mystring} result1
+    catch {.e delete 0} result2
+    list $result1 $result2
+} -cleanup {
+    destroy .e
+} -result [list {can't set "myvar": Intentional error here!} \
+    {can't set "myvar": Intentional error here!}]
+
+test entry-24.1 {textvariable lives in a non-existing namespace} -setup {
+    destroy .e
+} -body {
+    catch {entry .e -textvariable thisnsdoesntexist::myvar} result1
+    set result1
+} -cleanup {
+  destroy .e
+} -result {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
 
 # Gathered comments about lacks
 # XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,

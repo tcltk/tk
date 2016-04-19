@@ -55,7 +55,7 @@ A floating-point value corresponding to the lowest value for a spinbox, to
 be used in conjunction with \fB\-to\fR and \fB\-increment\fR.  When all
 are specified correctly, the spinbox will use these values to control its
 contents.  This value must be less than the \fB\-to\fR option.
-If \fB\-values\fR is specified, it supercedes this option.
+If \fB\-values\fR is specified, it supersedes this option.
 .OP "\-invalidcommand or \-invcmd" invalidCommand InvalidCommand
 Specifies a script to eval when \fB\-validatecommand\fR returns 0.  Setting
 it to an empty string disables this feature (the default).  The best use of
@@ -84,7 +84,7 @@ A floating-point value corresponding to the highest value for the spinbox,
 to be used in conjunction with \fB\-from\fR and \fB\-increment\fR.  When
 all are specified correctly, the spinbox will use these values to control
 its contents.  This value must be greater than the \fB\-from\fR option.
-If \fB\-values\fR is specified, it supercedes this option.
+If \fB\-values\fR is specified, it supersedes this option.
 .OP \-validate validate Validate
 Specifies the mode in which validation should operate: \fBnone\fR,
 \fBfocus\fR, \fBfocusin\fR, \fBfocusout\fR, \fBkey\fR, or \fBall\fR.
@@ -196,7 +196,7 @@ dangerous to mix.  Any problems have been overcome so that using the
 the spinbox widget.  Using the \fB\-textvariable\fR for read-only purposes will
 never cause problems.  The danger comes when you try set the
 \fB\-textvariable\fR to something that the \fB\-validatecommand\fR would not
-accept, which causes \fB\-validate\fR to become \fInone\fR (the
+accept, which causes \fB\-validate\fR to become \fBnone\fR (the
 \fB\-invalidcommand\fR will not be triggered).  The same happens
 when an error occurs evaluating the \fB\-validatecommand\fR.
 .PP
@@ -216,6 +216,16 @@ in the \fB\-validatecommand\fR or \fB\-invalidcommand\fR (whichever one you
 were editing the spinbox widget from).  It is also recommended to not set an
 associated \fB\-textvariable\fR during validation, as that can cause the
 spinbox widget to become out of sync with the \fB\-textvariable\fR.
+.PP
+Also, the \fBvalidate\fR option will set itself to \fBnone\fR when the
+spinbox value gets changed because of adjustment of \fBfrom\fR or \fBto\fR
+and the \fBvalidateCommand\fR returns false. For instance
+.CS
+     \fIspinbox pathName \-from 1 \-to 10 \-validate all \-vcmd {return 0}\fR
+.CE
+will in fact set the \fBvalidate\fR option to \fBnone\fR because the default
+value for the spinbox gets changed (due to the \fBfrom\fR and \fBto\fR
+options) to a value not accepted by the validation script.
 .SH "WIDGET COMMAND"
 .PP
 The \fBspinbox\fR command creates a new Tcl command whose

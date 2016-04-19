@@ -298,7 +298,7 @@ static void TabElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    *heightPtr = GetThemeMetric(kThemeMetricLargeTabHeight, heightPtr);
+    GetThemeMetric(kThemeMetricLargeTabHeight, (SInt32 *)heightPtr);
     *paddingPtr = Ttk_MakePadding(0, 0, 0, 2);
 
 }

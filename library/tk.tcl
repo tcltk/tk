@@ -13,7 +13,7 @@
 # Insist on running with compatible version of Tcl
 package require Tcl 8.6
 # Verify that we have Tk binary and script components from the same release
-package require -exact Tk  8.6.4
+package require -exact Tk  8.6.5
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -311,7 +311,6 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
     event $op <<Cut>> <Control-Key-w> <Control-Lock-Key-W> <Shift-Key-Delete>
     event $op <<Copy>> <Meta-Key-w> <Meta-Lock-Key-W> <Control-Key-Insert>
     event $op <<Paste>> <Control-Key-y> <Control-Lock-Key-Y> <Shift-Key-Insert>
-    event $op <<Undo>> <Control-underscore>
     event $op <<PrevChar>> <Control-Key-b> <Control-Lock-Key-B>
     event $op <<NextChar>> <Control-Key-f> <Control-Lock-Key-F>
     event $op <<PrevLine>> <Control-Key-p> <Control-Lock-Key-P>

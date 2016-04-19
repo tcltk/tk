@@ -57,6 +57,7 @@ proc mkPartial {{w .partial}} {
 # like border width have predictable values.
 
 option add *Listbox.borderWidth 2
+option add *Listbox.selectBorderWidth 1
 option add *Listbox.highlightThickness 2
 option add *Listbox.font {Helvetica -12 bold}
 
@@ -203,6 +204,21 @@ test listbox-1.31 {configuration options} -body {
 } -cleanup {
     .l configure -highlightthickness [lindex [.l configure -highlightthickness] 3]
 } -result {0 0}
+test listbox-1.32.1 {configuration options} -setup {
+    set res {}
+} -body {
+    .l configure -justify left
+    set res [list [lindex [.l configure -justify] 4] [.l cget -justify]]
+    .l configure -justify center
+    lappend res [lindex [.l configure -justify] 4] [.l cget -justify]
+    .l configure -justify right
+    lappend res [lindex [.l configure -justify] 4] [.l cget -justify]
+} -cleanup {
+    .l configure -justify [lindex [.l configure -justify] 3]
+} -result {left left center center right right}
+test listbox-1.32.2 {configuration options} -body {
+    .l configure -justify bogus
+} -returnCodes error -result {bad justification "bogus": must be left, right, or center}
 test listbox-1.33 {configuration options} -body {
     .l configure -relief groove
     list [lindex [.l configure -relief] 4] [.l cget -relief]
@@ -441,6 +457,58 @@ test listbox-3.18 {ListboxWidgetCmd procedure, "bbox" option, partial last line}
     mkPartial
     list [.partial.l bbox 3] [.partial.l bbox 4]
 } -result {{5 56 24 14} {5 73 23 14}}
+test listbox-3.18a {ListboxWidgetCmd procedure, "bbox" option, justified} -constraints {
+	fonts
+} -setup {
+    destroy .top.l .top
+    unset -nocomplain res
+} -body {
+    toplevel .top
+    listbox .top.l -justify left
+    .top.l insert end Item1 LongerItem2 MuchLongerItem3
+    pack .top.l
+    update
+    lappend res [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+    .top.l configure -justify center
+    lappend res [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+    .top.l configure -justify right
+    lappend res [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+} -cleanup {
+    destroy .top.l .top
+    unset -nocomplain res
+} -result [list \
+    {5 5 34 14} {5 22 74 14} {5 39 106 14}     \
+    {58 5 34 14} {38 22 74 14} {22 39 106 14}  \
+    {111 5 34 14} {71 22 74 14} {39 39 106 14} \
+]
+test listbox-3.18b {ListboxWidgetCmd procedure, "bbox" option, justified, non-default borderwidth} -setup {
+    destroy .top.l .top
+    unset -nocomplain lres res
+} -body {
+    # This test checks whether all "x" values from bbox for different size
+    # items with different justification settings are all positive or zero
+    # This checks a bit the calculation of this x value with non-default
+    # borders widths of the listbox
+    toplevel .top
+    listbox .top.l -justify left -borderwidth 17 -highlightthickness 19 -selectborderwidth 22
+    .top.l insert end Item1 LongerItem2 MuchLongerItem3
+    .top.l selection set 1
+    pack .top.l
+    update
+    lappend lres [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+    .top.l configure -justify center
+    lappend lres [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+    .top.l configure -justify right
+    lappend lres [.top.l bbox 0] [.top.l bbox 1] [.top.l bbox 2]
+    set res 1
+    for {set i 0} {$i < [llength $lres]} {incr i 4} {
+        set res [expr {$res * [expr {[lindex $lres $i] >= 0}] }]
+    }
+    set res
+} -cleanup {
+    destroy .top.l .top
+    unset -nocomplain lres res
+} -result {1}
 test listbox-3.19 {ListboxWidgetCmd procedure, "cget" option} -body {
     .l cget
 } -returnCodes error -result {wrong # args: should be ".l cget option"}
@@ -455,7 +523,7 @@ test listbox-3.22 {ListboxWidgetCmd procedure, "cget" option} -body {
 } -result {0}
 test listbox-3.23 {ListboxWidgetCmd procedure, "configure" option} -body {
     llength [.l configure]
-} -result {27}
+} -result {28}
 test listbox-3.24 {ListboxWidgetCmd procedure, "configure" option} -body {
     .l configure -gorp
 } -returnCodes error -result {unknown option "-gorp"}
@@ -3067,6 +3135,45 @@ test listbox-30.1 {Bug 3607326} -setup {
     destroy .l
     unset -nocomplain a
 } -result * -match glob -returnCodes error
+
+test listbox-31.1 {<<ListboxSelect>> event} -setup {
+    destroy .l
+    unset -nocomplain res
+} -body {
+    pack [listbox .l -state normal]
+    update
+    bind .l <<ListboxSelect>> {lappend res [%W curselection]}
+    .l insert end a b c
+    focus -force .l
+    event generate .l <1> -x 5 -y 5  ; # <<ListboxSelect>> fires
+    .l configure -state disabled
+    focus -force .l
+    event generate .l <Control-Home> ; # <<ListboxSelect>> does NOT fire
+    .l configure -state normal
+    focus -force .l
+    event generate .l <Control-End>  ; # <<ListboxSelect>> fires
+    .l selection clear 0 end         ; # <<ListboxSelect>> does NOT fire
+    .l selection set 1 1             ; # <<ListboxSelect>> does NOT fire
+    lappend res [.l curselection]
+} -cleanup {
+    destroy .l
+    unset -nocomplain res
+} -result {0 2 1}
+
+test listbox-31.2 {<<ListboxSelect>> event on lost selection} -setup {
+    destroy .l
+} -body {
+    pack [listbox .l -exportselection true]
+    update
+    bind .l <<ListboxSelect>> {lappend res [list [selection own] [%W curselection]]}
+    .l insert end a b c
+    focus -force .l
+    event generate .l <1> -x 5 -y 5  ; # <<ListboxSelect>> fires
+    selection clear                  ; # <<ListboxSelect>> fires again
+    set res
+} -cleanup {
+    destroy .l
+} -result {{.l 0} {{} {}}}
 
 resetGridInfo
 deleteWindows
