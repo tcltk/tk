@@ -3223,16 +3223,11 @@ static void
 GenerateListboxSelectEvent(
     Listbox *listPtr)		/* Information about widget. */
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
+    Tcl_Obj *params[2];
 
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(listPtr->tkwin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(listPtr->tkwin);
-    event.general.xany.display = Tk_Display(listPtr->tkwin);
-    event.virtual.name = Tk_GetUid("ListboxSelect");
-    Tk_HandleEvent(&event.general);
+    params[0] = Tcl_NewStringObj(Tk_PathName(listPtr->tkwin), -1);
+    params[1] = Tcl_NewStringObj("<<ListboxSelect>>", -1);
+    TkHandleEventGenerate(listPtr->interp, listPtr->tkwin, 2, params);
 }
 
 /*
