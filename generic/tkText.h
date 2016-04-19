@@ -168,7 +168,7 @@ typedef struct TkTextSegment {
     int size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[1];		/* Characters that make up character info.
+	char chars[2];		/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
@@ -785,6 +785,8 @@ typedef struct TkText {
 				 * statements. */
     int autoSeparators;		/* Non-zero means the separators will be
 				 * inserted automatically. */
+    Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
+                                 * date */
 } TkText;
 
 /*
@@ -1109,6 +1111,7 @@ MODULE_SCOPE int	TkTextMarkNameToIndex(TkText *textPtr,
 MODULE_SCOPE void	TkTextMarkSegToIndex(TkText *textPtr,
 			    TkTextSegment *markPtr, TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextEventuallyRepick(TkText *textPtr);
+MODULE_SCOPE Bool	TkTextPendingsync(TkText *textPtr);
 MODULE_SCOPE void	TkTextPickCurrent(TkText *textPtr, XEvent *eventPtr);
 MODULE_SCOPE void	TkTextPixelIndex(TkText *textPtr, int x, int y,
 			    TkTextIndex *indexPtr, int *nearest);

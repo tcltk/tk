@@ -512,13 +512,13 @@ test winDialog-5.12.2 {tk_getSaveFile: initial directory: ~user} -constraints {
 
     unset -nocomplain x
     start {set x [tk_getSaveFile \
-                      -initialdir ~$::env(USERNAME) \
+                      -initialdir ~$::tcl_platform(user) \
                       -initialfile "5 12 2" -title Foo]}
     then {
         Click ok
     }
     return $x
-} -result [file normalize [file join ~$::env(USERNAME) "5 12 2"]]
+} -result [file normalize [file join ~$::tcl_platform(user) "5 12 2"]]
 
 test winDialog-5.12.3 {tk_getSaveFile: initial directory: .} -constraints {
     nt testwinevent
@@ -594,7 +594,7 @@ test winDialog-5.12.6 {tk_getSaveFile: initial directory: relative} -constraints
 test winDialog-5.12.7 {tk_getOpenFile: initial directory: ~} -constraints {
     nt testwinevent
 } -body {
-    set fn [file tail [lindex [glob ~/*] 0]]
+    set fn [file tail [lindex [glob -types f ~/*] 0]]
     unset -nocomplain x
     start {set x [tk_getOpenFile \
                       -initialdir ~ \

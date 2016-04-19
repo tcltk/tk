@@ -388,3 +388,64 @@ make overrides to the tk/macosx GNUmakefile, e.g.
 	sudo make -C tk${ver}/macosx install \
 	    TCL_FRAMEWORK_DIR=$HOME/Library/Frameworks TCLSH_DIR=$HOME/usr/bin
 The Makefile variables TCL_FRAMEWORK_DIR and TCLSH_DIR were added with Tk 8.4.3.
+
+4. About the event loop in Tk for Mac OSX
+-----------------------------------------
+
+The main program in a typical OSX application looks like this (see *)
+
+    void NSApplicationMain(int argc, char *argv[]) {
+        [NSApplication sharedApplication];
+        [NSBundle loadNibNamed:@"myMain" owner:NSApp];
+        [NSApp run];
+    }
+
+The run method implements the event loop for the application.  There
+are three key steps in the run method.  First it calls
+[NSApp finishLaunching], which creates the bouncing application icon
+and does other mysterious things. Second it creates an
+NSAutoreleasePool.  Third, it starts an event loop which drains the
+NSAutoreleasePool every time the queue is empty, and replaces the
+drained pool with a new one.  This third step is essential to
+preventing memory leaks, since the internal methods of Appkit objects
+all assume that an autorelease pool is in scope and will be drained
+when the event processing cycle ends.
+
+Mac OSX Tk does not call the [NSApp run] method at all.  Instead it
+uses the event loop built in to Tk.  So we must take care to replicate
+the important features of the method ourselves.  Here is how this
+works in outline.
+
+We add a private NSAUtoreleasePool* property to our subclass of
+NSApplication.  (The subclass is called TKApplication but can be
+referenced with the global variable NSApp).  The TkpInit
+function calls [NSApp _setup] which initializes this property by
+creating an NSAutoreleasePool. A bit later on, TkpInit calls
+[NSAPP _setupEventLoop] which in turn calls the
+[NSApp finishLaunching] method.
+
+Each time that Tcl processes an event in its queue, it calls a
+platform specific function which, in the case of Mac OSX, is named
+TkMacOSXEventsCheckProc.  In the unix implementations of Tk, including
+the Mac OSX version, this function collects events from an "event
+source", and transfers them to the Tcl event queue.  In Mac OSX the
+event source is the NSApplication event queue.  Each NSEvent is
+converted to a Tcl event which is added to the Tcl event queue.  The
+NSEvent is also passed to [NSApp sendevent], which sends the event on
+to the application's NSWindows, which send it to their NSViews, etc.
+Since the CheckProc function gets called for every Tk event, it is an
+appropriate place to drain the main NSAutoreleasePool and replace it
+with a new pool.  This is done by calling the method
+[NSApp _resetAutoreleasePool], where _resetAutoreleasePool is a method
+which we define for the subclass TKApplication.
+
+One minor caveat is that there are several steps of the Tk
+initialization which precede the call to TkpInit.  Notably, the font
+package is initialized first.  Since there is no NSAUtoreleasePool in
+scope prior to calling TkpInit, the functions called in these
+preliminary stages need to create and drain their own
+NSAutoreleasePools whenever they call methods of Appkit objects
+(e.g. NSFont).
+
+* https://developer.apple.com/library/mac/documentation/Cocoa/\
+Reference/ApplicationKit/Classes/NSApplication_Class

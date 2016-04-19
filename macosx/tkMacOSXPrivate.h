@@ -274,10 +274,18 @@ VISIBILITY_HIDDEN
     TKMenu *_defaultMainMenu, *_defaultApplicationMenu;
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems;
+    NSWindow *_windowWithMouse;
+    NSAutoreleasePool *_mainPool;
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    BOOL _poolProtected;
+#endif
 }
+@property BOOL poolProtected;
 @end
 @interface TKApplication(TKInit)
 - (NSString *)tkFrameworkImagePath:(NSString*)image;
+- (void)_resetAutoreleasePool;
 @end
 @interface TKApplication(TKEvent)
 - (NSEvent *)tkProcessEvent:(NSEvent *)theEvent;
@@ -295,15 +303,33 @@ VISIBILITY_HIDDEN
 - (void)tkProvidePasteboard:(TkDisplay *)dispPtr;
 - (void)tkCheckPasteboard;
 @end
+@interface TKApplication(TKHLEvents)
+- (void) terminate: (id) sender;
+- (void) preferences: (id) sender;
+- (void) handleQuitApplicationEvent:   (NSAppleEventDescriptor *)event
+		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
+- (void) handleOpenApplicationEvent:   (NSAppleEventDescriptor *)event
+		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
+- (void) handleReopenApplicationEvent: (NSAppleEventDescriptor *)event
+		       withReplyEvent: (NSAppleEventDescriptor *)replyEvent;
+- (void) handleShowPreferencesEvent:   (NSAppleEventDescriptor *)event
+		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
+- (void) handleOpenDocumentsEvent:     (NSAppleEventDescriptor *)event
+		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+- (void) handlePrintDocumentsEvent:    (NSAppleEventDescriptor *)event
+		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+- (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
+		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+@end
 
 VISIBILITY_HIDDEN
 @interface TKContentView : NSView <NSTextInput> {
 @private
   /*Remove private API calls.*/
-   #if 0
+#if 0
     id _savedSubviews;
     BOOL _subviewsSetAside;
-    #endif
+#endif
     NSString *privateWorkingText;
 }
 @end
@@ -312,8 +338,25 @@ VISIBILITY_HIDDEN
 - (void) deleteWorkingText;
 @end
 
+@interface TKContentView(TKWindowEvent)
+- (void) drawRect: (NSRect) rect;
+- (void) generateExposeEvents: (HIShapeRef) shape;
+- (void) generateExposeEvents: (HIShapeRef) shape childrenOnly: (int) childrenOnly;
+- (void) viewDidEndLiveResize;
+- (void) tkToolbarButton: (id) sender;
+- (BOOL) isOpaque;
+- (BOOL) wantsDefaultClipping;
+- (BOOL) acceptsFirstResponder;
+- (void) keyDown: (NSEvent *) theEvent;
+@end
+
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
+@end
+
+@interface NSWindow(TKWm)
+- (NSPoint) convertPointToScreen:(NSPoint)point;
+- (NSPoint) convertPointFromScreen:(NSPoint)point;
 @end
 
 #pragma mark NSMenu & NSMenuItem Utilities

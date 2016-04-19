@@ -258,10 +258,10 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
-	    /*Add time for errors to fire if necessary. This is sub-optimal but avoids issues with Tcl/Cocoa event loop integration.*/
+	    /*Add time for errors to fire if necessary. This is sub-optimal
+	     *but avoids issues with Tcl/Cocoa event loop integration.
+	     */
 	    Tcl_Sleep(100);
-
-	    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
 
@@ -274,7 +274,6 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	    }
 	    Tcl_Release(menuPtr);
 	    Tcl_Release(interp);
-	    [pool drain];
 	}
     }
 }
@@ -377,13 +376,6 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 @implementation TKApplication(TKMenu)
 
-- (void) safeSetMainMenu: (NSMenu *) menu
-{
-    NSAutoreleasePool* pool = [NSAutoreleasePool new];
-    [self setMainMenu: menu];
-    [pool drain];
-}
-
 - (void) menuBeginTracking: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
@@ -420,7 +412,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 	    if (!mePtr || !(mePtr->entryFlags & ENTRY_APPLE_MENU)) {
 		applicationMenuItem = [NSMenuItem itemWithSubmenu:
-			[[_defaultApplicationMenu copy] autorelease]];
+			[_defaultApplicationMenu copy]];
 		[menu insertItem:applicationMenuItem atIndex:0];
 	    }
 	    [menu setSpecial:tkMainMenu];
@@ -428,7 +420,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	applicationMenu = (TKMenu *)[applicationMenuItem submenu];
 	if (![applicationMenu isSpecial:tkApplicationMenu]) {
 	    for (NSMenuItem *item in _defaultApplicationMenuItems) {
-		[applicationMenu addItem:[[item copy] autorelease]];
+		[applicationMenu addItem:[item copy]];
 	    }
 	    [applicationMenu setSpecial:tkApplicationMenu];
 	}
@@ -438,15 +430,13 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	for (NSMenuItem *item in itemArray) {
 	    TkMenuEntry *mePtr = (TkMenuEntry *)[item tag];
 	    TKMenu *submenu = (TKMenu *)[item submenu];
-
 	    if (mePtr && submenu) {
 		if ((mePtr->entryFlags & ENTRY_WINDOWS_MENU) &&
 			![submenu isSpecial:tkWindowsMenu]) {
 		    NSInteger index = 0;
 
 		    for (NSMenuItem *i in _defaultWindowsMenuItems) {
-			[submenu insertItem:[[i copy] autorelease] atIndex:
-				index++];
+			[submenu insertItem:[i copy] atIndex:index++];
 		    }
 		    [self setWindowsMenu:submenu];
 		    [submenu setSpecial:tkWindowsMenu];
@@ -455,8 +445,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 		    NSInteger index = 0;
 
 		    for (NSMenuItem *i in _defaultHelpMenuItems) {
-			[submenu insertItem:[[i copy] autorelease] atIndex:
-				index++];
+			[submenu insertItem:[i copy] atIndex:index++];
 		    }
 		    [submenu setSpecial:tkHelpMenu];
 		}
@@ -475,7 +464,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 	[servicesMenuItem setSubmenu:_servicesMenu];
     }
     [self setAppleMenu:applicationMenu];
-    [self safeSetMainMenu:menu];
+    [self setMainMenu:menu];
 }
 @end
 
@@ -792,7 +781,7 @@ TkpPostMenu(
     NSRect frame = NSMakeRect(x + 9, tkMacOSXZeroScreenHeight - y - 9, 1, 1);
 
     frame.origin = [view convertPoint:
-	    [win convertScreenToBase:frame.origin] fromView:nil];
+	    [win convertPointFromScreen:frame.origin] fromView:nil];
 
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSPopUpButtonCell *popUpButtonCell = [[NSPopUpButtonCell alloc]

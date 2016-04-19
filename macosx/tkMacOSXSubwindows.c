@@ -131,11 +131,6 @@ XMapWindow(
 {
     MacDrawable *macWin = (MacDrawable *) window;
     XEvent event;
-    /*
-     * This function can be called from outside the AppKit event
-     * loop, so it needs its own AutoreleasePool.
-     */
-    NSAutoreleasePool* pool = [NSAutoreleasePool new];
 
     /*
      * Under certain situations it's possible for this function to be called
@@ -158,6 +153,7 @@ XMapWindow(
 	    if ( [win canBecomeKeyWindow] ) {
 		[win makeKeyAndOrderFront:NSApp];
 	    }
+	    /* Why do we need this? (It is used by Carbon)*/
 	    [win windowRef];
 	    TkMacOSXApplyWindowAttributes(macWin->winPtr, win);
 	}
@@ -194,7 +190,6 @@ XMapWindow(
     event.xvisibility.type = VisibilityNotify;
     event.xvisibility.state = VisibilityUnobscured;
     NotifyVisibility(macWin->winPtr, &event);
-    [pool drain];
 }
 
 /*
@@ -318,7 +313,6 @@ XResizeWindow(
     unsigned int height)
 {
     MacDrawable *macWin = (MacDrawable *) window;
-
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
@@ -365,7 +359,6 @@ XMoveResizeWindow(
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
-
 	if (w) {
 	    NSRect r = NSMakeRect(x + macWin->winPtr->wmInfoPtr->xInParent,
 		    tkMacOSXZeroScreenHeight - (y +
@@ -406,7 +399,6 @@ XMoveWindow(
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
-
 	if (w) {
 	    [w setFrameTopLeftPoint:NSMakePoint(x, tkMacOSXZeroScreenHeight - y)];
 	}
@@ -805,10 +797,6 @@ TkMacOSXUpdateClipRgn(
 		/*
 		 * TODO: Here we should handle out of process embedding.
 		 */
-	    } else if (winPtr->wmInfoPtr->attributes &
-		    kWindowResizableAttribute) {
-		NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
-
 	    }
 	    macWin->aboveVisRgn = HIShapeCreateCopy(rgn);
 

@@ -50,7 +50,7 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 @end
 
 @implementation TKApplication(TKNotify)
-/* Call super then redisplay all of our windows. */
+/* Display all windows each time an event is removed from the queue.*/
 - (NSEvent *) nextEventMatchingMask: (NSUInteger) mask
 	untilDate: (NSDate *) expiration inMode: (NSString *) mode
 	dequeue: (BOOL) deqFlag
@@ -59,9 +59,9 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 					untilDate:expiration
 					   inMode:mode
 					  dequeue:deqFlag];
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
+    /* Retain this event for later use. Must be released.*/
+    [event retain];
     [NSApp makeWindowsPerform:@selector(tkDisplayIfNeeded) inOrder:NO];
-    [pool drain];
     return event;
 }
 
@@ -70,10 +70,8 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
  */
 - (void) sendEvent: (NSEvent *) theEvent
 {
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     [super sendEvent:theEvent];
     [NSApp tkCheckPasteboard];
-    [pool drain];
 }
 @end
 
@@ -217,17 +215,20 @@ TkMacOSXEventsSetupProc(
     ClientData clientData,
     int flags)
 {
-    if (flags & TCL_WINDOW_EVENTS &&
-	    ![[NSRunLoop currentRunLoop] currentMode]) {
+    NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
+    /* runloopMode will be nil if we are in the Tcl event loop. */
+    if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
 	static const Tcl_Time zeroBlockTime = { 0, 0 };
-
 	/* Call this with dequeue=NO -- just checking if the queue is empty. */
 	NSEvent *currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
-						   untilDate:[NSDate distantPast]
-						      inMode:GetRunLoopMode(TkMacOSXGetModalSession())
-						     dequeue:NO];
-	if (currentEvent && currentEvent.type > 0) {
-	    Tcl_SetMaxBlockTime(&zeroBlockTime);
+				       untilDate:[NSDate distantPast]
+				       inMode:GetRunLoopMode(TkMacOSXGetModalSession())
+				       dequeue:NO];
+	if (currentEvent) {
+	    if (currentEvent.type > 0) {
+		Tcl_SetMaxBlockTime(&zeroBlockTime);
+	    }
+	    [currentEvent release];
 	}
     }
 }
@@ -255,13 +256,14 @@ TkMacOSXEventsCheckProc(
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
+    /* runloopMode will be nil if we are in the Tcl event loop. */
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
-
 	NSEvent *currentEvent = nil;
 	NSEvent *testEvent = nil;
 	NSModalSession modalSession;
 
 	do {
+	    [NSApp _resetAutoreleasePool];
 	    modalSession = TkMacOSXGetModalSession();
 	    testEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 					      untilDate:[NSDate distantPast]
@@ -276,25 +278,25 @@ TkMacOSXEventsCheckProc(
 					      untilDate:[NSDate distantPast]
 						 inMode:GetRunLoopMode(modalSession)
 						dequeue:YES];
-	    if (!currentEvent) {
-		break; /* No events are available. */
-	    }
-	    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-	    /* Generate Xevents. */
-	    int oldServiceMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	    NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
-	    Tcl_SetServiceMode(oldServiceMode);
-	    if (processedEvent) { /* Should always be non-NULL. */
+	    if (currentEvent) {
+		/* Generate Xevents. */
+		int oldServiceMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+		NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
+		Tcl_SetServiceMode(oldServiceMode);
+		if (processedEvent) { /* Should always be non-NULL. */
 #ifdef TK_MAC_DEBUG_EVENTS
-		TKLog(@"   event: %@", currentEvent);
+		    TKLog(@"   event: %@", currentEvent);
 #endif
-		if (modalSession) {
-		    [NSApp _modalSession:modalSession sendEvent:currentEvent];
-		} else {
-		    [NSApp sendEvent:currentEvent];
+		    if (modalSession) {
+			[NSApp _modalSession:modalSession sendEvent:currentEvent];
+		    } else {
+			[NSApp sendEvent:currentEvent];
+		    }
 		}
+		[currentEvent release];
+	    } else {
+		break;
 	    }
-	    [pool drain];
 	} while (1);
     }
 }
