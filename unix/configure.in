@@ -480,7 +480,7 @@ if test $tk_aqua = no; then
 	if test "$found_xft" = "no" ; then
 	    found_xft=yes
 	    XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || found_xft="no"
-	    XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || found_xft="no"
+	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
 	fi
 	AC_MSG_RESULT([$found_xft])
 	dnl make sure that compiling against Xft header file doesn't bomb
@@ -522,7 +522,7 @@ if test $tk_aqua = no; then
 	dnl print a warning if xft is unusable and was specifically requested
 	if test "$found_xft" = "no" ; then
 	    if test "$enable_xft" = "yes" ; then
-		AC_MSG_WARN([Can't find xft configuration, or xft is unusable])
+		AC_MSG_ERROR([Can't find xft configuration, or xft is unusable])
 	    fi
 	    enable_xft=no
 	    XFT_CFLAGS=""

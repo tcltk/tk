@@ -695,8 +695,8 @@ TkpConfigureMenuEntry(
 		  for (NSMenuItem *item in itemArray) {
 		    TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
 		    /* Work around an apparent bug where itemArray can have
-                      more items than the menu's entries[] array. */
-                    if (i >= menuRefPtr->menuPtr->numEntries) break;
+		       more items than the menu's entries[] array. */
+		    if (i >= menuRefPtr->menuPtr->numEntries) break;
 		    [item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
 		    i++;
 		  }
