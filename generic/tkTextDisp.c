@@ -3122,17 +3122,13 @@ GenerateWidgetViewSyncEvent(
     TkText *textPtr,		/* Information about text widget. */
     Bool InSync)                /* True if in sync, false otherwise */
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
+    Tcl_Obj *params[4];
 
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
-    event.general.xany.display = Tk_Display(textPtr->tkwin);
-    event.virtual.name = Tk_GetUid("WidgetViewSync");
-    event.virtual.user_data = Tcl_NewBooleanObj(InSync);
-    Tk_HandleEvent(&event.general);
+    params[0] = Tcl_NewStringObj(Tk_PathName(textPtr->tkwin), -1);
+    params[1] = Tcl_NewStringObj("<<WidgetViewSync>>", -1);
+    params[2] = Tcl_NewStringObj("-data", -1);
+    params[3] = Tcl_NewBooleanObj(InSync);
+    TkHandleEventGenerate(textPtr->interp, textPtr->tkwin, 4, params);
 }
 
 /*
