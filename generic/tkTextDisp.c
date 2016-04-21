@@ -3104,7 +3104,7 @@ AsyncUpdateLineMetrics(
  *      Send the <<WidgetViewSync>> event related to the text widget
  *      line metrics asynchronous update.
  *      This is equivalent to:
- *         event generate $textWidget <<WidgetViewSync>> -detail $s
+ *         event generate $textWidget <<WidgetViewSync>> -data $s
  *      where $s is the sync status: true (when the widget view is in
  *      sync with its internal data) or false (when it is not).
  *
@@ -3120,19 +3120,10 @@ AsyncUpdateLineMetrics(
 static void
 GenerateWidgetViewSyncEvent(
     TkText *textPtr,		/* Information about text widget. */
-    Bool InSync)                /* True if in sync, false otherwise */
+    Bool InSync)                /* true if in sync, false otherwise */
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
-    event.general.xany.display = Tk_Display(textPtr->tkwin);
-    event.virtual.name = Tk_GetUid("WidgetViewSync");
-    event.virtual.user_data = Tcl_NewBooleanObj(InSync);
-    Tk_HandleEvent(&event.general);
+    TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
+        Tcl_NewBooleanObj(InSync));
 }
 
 /*
