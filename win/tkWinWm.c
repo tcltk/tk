@@ -8680,6 +8680,100 @@ RemapWindows(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * GetMonitorRect
+ *
+ *	Return the rectangle of the monitor on which the given window
+ *	is displayed.
+ *
+ * Results:
+ *	The display rectangle of the monitor, in virtual screen
+ *	coordinates.
+ *
+ * Side effects:
+ *	The passed window comes into existence if it was not already
+ *	the case.
+ *
+ *----------------------------------------------------------------------
+ */
+
+RECT
+GetMonitorRect(
+    Tk_Window tkwin)
+{
+    HWND hWnd;
+    HMONITOR hMonitor;
+    MONITORINFO mi;
+
+    Tk_MakeWindowExist(tkwin);
+
+    /*
+     * Get monitor information for the monitor showing the window.
+     */
+
+    hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
+    hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTOPRIMARY);
+
+    mi.cbSize = sizeof(mi);
+    GetMonitorInfo(hMonitor, &mi);
+
+    return mi.rcMonitor;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpHeightOfScreen
+ *
+ *	Return the height (in pixels) of the monitor on which the given
+ *	window is displayed.
+ *
+ * Results:
+ *	The pixel height of the monitor.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpHeightOfScreen(
+    Tk_Window tkwin)
+{
+    RECT rc = GetMonitorRect(tkwin);
+
+    return (rc.bottom - rc.top);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWidthOfScreen
+ *
+ *	Return the width (in pixels) of the monitor on which the given
+ *	window is displayed.
+ *
+ * Results:
+ *	The pixel width of the monitor.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpWidthOfScreen(
+    Tk_Window tkwin)
+{
+    RECT rc = GetMonitorRect(tkwin);
+
+    return (rc.right - rc.left);
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4

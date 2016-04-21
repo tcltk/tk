@@ -6757,6 +6757,52 @@ RemapWindows(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpHeightOfScreen
+ *
+ *	Return the height (in pixels) of the screen.
+ *
+ * Results:
+ *	The pixel height of the screen.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpHeightOfScreen(
+    Tk_Window tkwin)
+{
+    return HeightOfScreen(Tk_Screen(tkwin));
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpWidthOfScreen
+ *
+ *	Return the width (in pixels) of the screen.
+ *
+ * Results:
+ *	The pixel width of the screen.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpWidthOfScreen(
+    Tk_Window tkwin)
+{
+    return WidthOfScreen(Tk_Screen(tkwin));
+}
+
+/*
  * Local Variables:
  * mode: objc
  * c-basic-offset: 4
