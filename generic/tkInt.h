@@ -1217,6 +1217,8 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
+MODULE_SCOPE int	TkpHeightOfScreen(Tk_Window tkwin);
+MODULE_SCOPE int	TkpWidthOfScreen(Tk_Window tkwin);
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
