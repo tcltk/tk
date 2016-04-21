@@ -1477,12 +1477,12 @@ Tk_WinfoObjCmd(
 		Tcl_NewIntObj(DefaultDepthOfScreen(Tk_Screen(tkwin))));
 	break;
     case WIN_SCREENHEIGHT:
-	Tcl_SetObjResult(interp,
-		Tcl_NewIntObj(HeightOfScreen(Tk_Screen(tkwin))));
+ 	Tcl_SetObjResult(interp,
+		Tcl_NewIntObj(TkpHeightOfScreen(tkwin)));
 	break;
     case WIN_SCREENWIDTH:
-	Tcl_SetObjResult(interp,
-		Tcl_NewIntObj(WidthOfScreen(Tk_Screen(tkwin))));
+ 	Tcl_SetObjResult(interp,
+		Tcl_NewIntObj(TkpWidthOfScreen(tkwin)));
 	break;
     case WIN_SCREENMMHEIGHT:
 	Tcl_SetObjResult(interp,
