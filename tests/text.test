@@ -3053,6 +3053,25 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -result {Sync:0 Pending:1 Sync:1 Pending:0}
 
+test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
+                  NOT Tk_HandleEvent().
+                  Bug [b362182e45704dd7bbd6aed91e48122035ea3d16]} -setup {
+    destroy .top.t .top
+} -body {
+    set res {}
+    toplevel .top
+    pack [text .top.t]
+    for {set i 1} {$i < 10000} {incr i} {
+        .top.t insert end "Hello world!\n" 
+    }
+    bind .top.t <<WidgetViewSync>> {destroy .top.t}
+    .top.t tag add mytag 1.5 8000.8    ; # shall not crash
+    update
+    set res "Still doing fine!"
+} -cleanup {
+    destroy .top.t .top
+} -result {Still doing fine!}
+
 test text-12.1 {TextWidgetCmd procedure, "index" option} -setup {
     text .t
 } -body {
