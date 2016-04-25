@@ -546,12 +546,6 @@ static int		WmWithdrawCmd(Tk_Window tkwin,
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 
 /*
- * Declarations of static variables used in this file.
- */
-
-static int screenId = -1;               /* Used to enumerate monitors */
-
-/*
  * Used in BytesPerLine
  */
 
@@ -7831,44 +7825,6 @@ TopLevelProc(
 	return 0;
     }
     return TkWinChildProc(hwnd, message, wParam, lParam);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * MonitorEnumProcScreenChanged
- *
- *	Monitors enumeration callback. This updates the screen number for
- *	the given window. This callback is called once for each monitor.
- *
- * Results:
- *	Screen number of the given window is updated.
- *
- * Side effects:
- *	The window becomes "linked" to the new screen.
- *	All [winfo screenxxx ...] will return information based on the new
- *	screen.
- *
- *----------------------------------------------------------------------
- */
-
-BOOL CALLBACK
-MonitorEnumProcScreenChanged(
-    HMONITOR hMonitor,
-    HDC hdcMonitor,
-    LPRECT lprcMonitor,
-    LPARAM dwData)
-{
-    HMONITOR hMonitorWin;
-
-    screenId++;
-    hMonitorWin = MonitorFromWindow(Tk_GetHWND(((TkWindow *) dwData)->window),
-            MONITOR_DEFAULTTOPRIMARY);
-    if (hMonitor == hMonitorWin) {
-        ((TkWindow *) dwData)->screenNum = screenId;
-        return FALSE;
-    }
-    return TRUE;
 }
 
 /*
