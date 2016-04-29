@@ -604,8 +604,8 @@ proc ::tk::ButtonInvoke w {
 	update idletasks
 	after 100
         if {[winfo exists $w]} {
-        	$w configure -state $oldState -relief $oldRelief
-        	uplevel #0 [list $w invoke]
+            $w configure -state $oldState -relief $oldRelief
+            uplevel #0 [list $w invoke]
         }
     }
 }
