@@ -5215,7 +5215,10 @@ TextEditCmd(
 	 */
 
 	if ((!oldModified) != (!setModified)) {
-	    GenerateModifiedEvent(textPtr);
+            for (textPtr = textPtr->sharedTextPtr->peers; textPtr != NULL;
+                    textPtr = textPtr->next) {
+                GenerateModifiedEvent(textPtr);
+            }
 	}
 	break;
     case EDIT_REDO:
