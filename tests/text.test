@@ -6321,6 +6321,21 @@ test text-27.14 {<<Modified>> virtual event - delete before Modified} -body {
 } -cleanup {
     destroy .t
 } -result {thing special}
+test text-27.14a {<<Modified>> virtual event - propagation to peers} -body {
+# Bug [fd3a4dc111], <<Modified>> event is not always sent to peers
+    set ::retval 0
+    text .t -undo 1
+    .t peer create .tt
+    pack .t .tt
+    bind .t <<Modified>> {incr ::retval}
+    bind .tt <<Modified>> {incr ::retval}
+    .t insert end "This increments ::retval once for each peer, i.e. twice."
+    .t edit modified 0  ; # shall increment twice as well, not just once
+    update idletasks
+    set ::retval
+} -cleanup {
+    destroy .t .tt
+} -result {4}
 test text-27.15 {<<Selection>> virtual event} -body {
     set ::retval no_selection
     pack [text .t -undo 1]
