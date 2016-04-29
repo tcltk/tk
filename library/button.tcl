@@ -597,14 +597,16 @@ proc ::tk::ButtonUp w {
 # w -		The name of the widget.
 
 proc ::tk::ButtonInvoke w {
-    if {[$w cget -state] ne "disabled"} {
+    if {[winfo exists $w] && [$w cget -state] ne "disabled"} {
 	set oldRelief [$w cget -relief]
 	set oldState [$w cget -state]
 	$w configure -state active -relief sunken
 	update idletasks
 	after 100
-	$w configure -state $oldState -relief $oldRelief
-	uplevel #0 [list $w invoke]
+        if {[winfo exists $w]} {
+        	$w configure -state $oldState -relief $oldRelief
+        	uplevel #0 [list $w invoke]
+        }
     }
 }
 
