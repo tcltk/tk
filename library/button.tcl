@@ -589,6 +589,20 @@ proc ::tk::ButtonUp w {
 # Shared routines
 ##################
 
+# ::tk::ButtonInvokeEnd --
+# The procedure below is called after a button is invoked through
+# the keyboard.  It simulate a release of the button via the mouse.
+#
+# Arguments:
+# w -		The name of the widget.
+
+proc ::tk::ButtonInvokeEnd {w oldState oldRelief} {
+    if {[winfo exists $w]} {
+	$w configure -state $oldState -relief $oldRelief
+	uplevel #0 [list $w invoke]
+    }
+}
+
 # ::tk::ButtonInvoke --
 # The procedure below is called when a button is invoked through
 # the keyboard.  It simulate a press of the button via the mouse.
@@ -601,12 +615,7 @@ proc ::tk::ButtonInvoke w {
 	set oldRelief [$w cget -relief]
 	set oldState [$w cget -state]
 	$w configure -state active -relief sunken
-	update idletasks
-	after 100
-        if {[winfo exists $w]} {
-            $w configure -state $oldState -relief $oldRelief
-            uplevel #0 [list $w invoke]
-        }
+	after 100 [list ::tk::ButtonInvokeEnd $w $oldState $oldRelief]
     }
 }
 
