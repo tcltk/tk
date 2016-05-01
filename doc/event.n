@@ -351,6 +351,12 @@ This is sent to a widget when the focus leaves the widget because of a
 user-driven
 .QW "tab to widget"
 action.
+.TP
+\fB<<WidgetViewSync>>\fR
+This is sent to a text widget when its internal data become obsolete,
+and again when these internal data are back in sync with the widget
+view. The detail field (%d substitution) is either true (when the
+widget is in sync) or false (when it is not).
 .PP
 Tk defines the following virtual events for the purposes of unifying
 bindings across multiple platforms. Users expect them to behave in the
