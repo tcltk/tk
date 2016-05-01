@@ -3170,6 +3170,7 @@ test listbox-31.2 {<<ListboxSelect>> event on lost selection} -setup {
     focus -force .l
     event generate .l <1> -x 5 -y 5  ; # <<ListboxSelect>> fires
     selection clear                  ; # <<ListboxSelect>> fires again
+    update
     set res
 } -cleanup {
     destroy .l
