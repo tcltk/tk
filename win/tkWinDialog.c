@@ -3144,13 +3144,13 @@ HookProc(
 	if (IsWindow(hwndCtrl)) {
 	    EnableWindow(hwndCtrl, FALSE);
 	}
-	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility");
+	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
 	return 1; /* we handled the message */
     }
 
     if (WM_DESTROY == msg) {
 	phd->hwnd = NULL;
-	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility");
+	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
 	return 0;
     }
 
@@ -3168,7 +3168,7 @@ HookProc(
 	    ApplyLogfont(phd->interp, phd->cmdObj, hdc, &lf);
 	}
 	if (phd && phd->parent) {
-	    TkSendVirtualEvent(phd->parent, "TkFontchooserFontChanged");
+	    TkSendVirtualEvent(phd->parent, "TkFontchooserFontChanged", NULL);
 	}
 	return 1;
     }
@@ -3480,7 +3480,7 @@ FontchooserShowCmd(
 		ApplyLogfont(hdPtr->interp, hdPtr->cmdObj, hdc, &lf);
 	    }
 	    if (hdPtr->parent) {
-		TkSendVirtualEvent(hdPtr->parent, "TkFontchooserFontChanged");
+		TkSendVirtualEvent(hdPtr->parent, "TkFontchooserFontChanged", NULL);
 	    }
 	}
 	Tcl_SetServiceMode(oldMode);
