@@ -3908,6 +3908,25 @@ test button-13.8 {size behavior: checkbutton} -setup {
     destroy .a .b .c
 } -result {1 1 1} 
 
+test button-14.1 {bug fix: [011706ec42] tk::ButtonInvoke unsafe wrt widget destruction} -body {
+    proc destroy_button {} {
+        if {[winfo exists .top.b]} {
+            destroy .top.b
+            puts destroyed
+        }
+    }
+    toplevel .top
+    button .top.b -text Foo -command destroy_button
+    bind .top.b <space> destroy_button
+    pack .top.b
+    focus -force .top.b
+    update
+    event generate .top.b <space>
+    update  ; # shall not trigger error  invalid command name ".top.b"
+} -cleanup {
+    destroy .top.b .top
+} -result {} 
+
 imageFinish
 cleanupTests
 return
