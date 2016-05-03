@@ -3912,7 +3912,6 @@ test button-14.1 {bug fix: [011706ec42] tk::ButtonInvoke unsafe wrt widget destr
     proc destroy_button {} {
         if {[winfo exists .top.b]} {
             destroy .top.b
-            puts destroyed
         }
     }
     toplevel .top
