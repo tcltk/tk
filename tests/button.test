@@ -3924,7 +3924,7 @@ test button-14.1 {bug fix: [011706ec42] tk::ButtonInvoke unsafe wrt widget destr
     update  ; # shall not trigger error  invalid command name ".top.b"
 } -cleanup {
     destroy .top.b .top
-} -result {} 
+} -result {}
 
 imageFinish
 cleanupTests
