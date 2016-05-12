@@ -1282,6 +1282,16 @@ behavior of the command depends on the \fIoption\fR argument that follows the
 supported:
 .RS
 .TP
+\fIpathName \fBedit canredo\fR
+.
+Returns a boolean true if redo is possible, i.e. when the redo stack is not
+empty. Otherwise returns false.
+.TP
+\fIpathName \fBedit canundo\fR
+.
+Returns a boolean true if undo is possible, i.e. when the undo stack is not
+empty. Otherwise returns false.
+.TP
 \fIpathName \fBedit modified \fR?\fIboolean\fR?
 .
 If \fIboolean\fR is not specified, returns the modified flag of the widget.
