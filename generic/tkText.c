@@ -2093,7 +2093,7 @@ ConfigureText(
     textPtr->sharedTextPtr->maxUndo = textPtr->maxUndo;
     textPtr->sharedTextPtr->autoSeparators = textPtr->autoSeparators;
 
-    TkUndoSetDepth(textPtr->sharedTextPtr->undoStack,
+    TkUndoSetMaxDepth(textPtr->sharedTextPtr->undoStack,
 	    textPtr->sharedTextPtr->maxUndo);
 
     /*
@@ -5156,10 +5156,12 @@ TextEditCmd(
 {
     int index, setModified, oldModified;
     static const char *const editOptionStrings[] = {
-	"modified", "redo", "reset", "separator", "undo", NULL
+	"canundo", "canredo", "modified", "redo", "reset", "separator",
+        "undo", NULL
     };
     enum editOptions {
-	EDIT_MODIFIED, EDIT_REDO, EDIT_RESET, EDIT_SEPARATOR, EDIT_UNDO
+	EDIT_CANUNDO, EDIT_CANREDO, EDIT_MODIFIED, EDIT_REDO, EDIT_RESET,
+	EDIT_SEPARATOR, EDIT_UNDO
     };
 
     if (objc < 3) {
@@ -5173,6 +5175,32 @@ TextEditCmd(
     }
 
     switch ((enum editOptions) index) {
+    case EDIT_CANREDO: {
+        int canRedo = 0;
+
+        if (objc != 3) {
+            Tcl_WrongNumArgs(interp, 3, objv, NULL);
+             return TCL_ERROR;
+        }
+        if (textPtr->sharedTextPtr->undo) {
+            canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
+        }
+        Tcl_SetObjResult(interp, Tcl_NewBooleanObj(canRedo));
+        break;
+    }
+    case EDIT_CANUNDO: {
+        int canUndo = 0;
+
+        if (objc != 3) {
+            Tcl_WrongNumArgs(interp, 3, objv, NULL);
+             return TCL_ERROR;
+        }
+        if (textPtr->sharedTextPtr->undo) {
+            canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
+        }
+        Tcl_SetObjResult(interp, Tcl_NewBooleanObj(canUndo));
+        break;
+    }
     case EDIT_MODIFIED:
 	if (objc == 3) {
 	    Tcl_SetObjResult(interp,
