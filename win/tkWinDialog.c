@@ -1427,7 +1427,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
     hr = fdlgIf->lpVtbl->Show(fdlgIf, hWnd);
     Tcl_SetServiceMode(oldMode);
-    EatSpuriousMessageBugFix(interp);
+    EatSpuriousMessageBugFix();
 
     /*
      * Ensure that hWnd is enabled, because it can happen that we have updated
