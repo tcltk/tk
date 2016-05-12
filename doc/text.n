@@ -898,8 +898,7 @@ inserted. That means that two separators on the undo stack are always
 separated by at least one insert or delete action.
 .PP
 The \fB<<UndoStack>>\fR virtual event is generated every time the undo stack
-or the redo stack becomes empty or unempty. This event is generated once for
-each peer widget.
+or the redo stack becomes empty or unempty.
 .PP
 The undo mechanism is also linked to the modified flag. This means that
 undoing or redoing changes can take a modified text widget back to the
