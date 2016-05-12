@@ -6519,6 +6519,49 @@ test text-27.24 {TextEditCmd procedure, canundo and canredo} -setup {
 } -cleanup {
     destroy .t
 } -result {0 0 0 0 1 0 1 1 0 0 1 1 1 0}
+test text-27.25 {<<UndoStack>> virtual event} -setup {
+    destroy .t
+    set res {}
+    set nbUS 0
+} -body {
+    text .t -undo false -autoseparators false
+    bind .t <<UndoStack>> {incr nbUS}
+    update ; lappend res $nbUS
+    .t configure -undo true
+    update ; lappend res $nbUS
+    .t insert end "DO\n"
+    .t edit separator
+    .t insert end "IT\n"
+    .t insert end "YOURSELF\n"
+    .t edit separator
+    .t insert end "MAN\n"
+    .t edit separator
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit reset
+    update ; lappend res $nbUS
+} -cleanup {
+    destroy .t
+} -result {0 0 1 2 3 4 4 5 6 6 7 8 8 9}
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
