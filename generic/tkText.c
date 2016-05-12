@@ -5241,10 +5241,7 @@ TextEditCmd(
 	 */
 
 	if ((!oldModified) != (!setModified)) {
-            for (textPtr = textPtr->sharedTextPtr->peers; textPtr != NULL;
-                    textPtr = textPtr->next) {
-                GenerateModifiedEvent(textPtr);
-            }
+            GenerateModifiedEvent(textPtr);
 	}
 	break;
     case EDIT_REDO:
@@ -5391,7 +5388,8 @@ TextGetText(
  *
  *	Send an event that the text was modified. This is equivalent to:
  *	   event generate $textWidget <<Modified>>
- *
+  *	for all peers of $textWidget.
+*
  * Results:
  *	None
  *
@@ -5405,8 +5403,11 @@ static void
 GenerateModifiedEvent(
     TkText *textPtr)	/* Information about text widget. */
 {
-    Tk_MakeWindowExist(textPtr->tkwin);
-    TkSendVirtualEvent(textPtr->tkwin, "Modified", NULL);
+    for (textPtr = textPtr->sharedTextPtr->peers; textPtr != NULL;
+            textPtr = textPtr->next) {
+        Tk_MakeWindowExist(textPtr->tkwin);
+        TkSendVirtualEvent(textPtr->tkwin, "Modified", NULL);
+    }
 }
 
 /*
@@ -5460,7 +5461,6 @@ UpdateDirtyFlag(
     TkSharedText *sharedTextPtr)/* Information about text widget. */
 {
     int oldDirtyFlag;
-    TkText *textPtr;
 
     /*
      * If we've been forced to be dirty, we stay dirty (until explicitly
@@ -5491,10 +5491,7 @@ UpdateDirtyFlag(
     }
 
     if (sharedTextPtr->isDirty == 0 || oldDirtyFlag == 0) {
-	for (textPtr = sharedTextPtr->peers; textPtr != NULL;
-		textPtr = textPtr->next) {
-	    GenerateModifiedEvent(textPtr);
-	}
+        GenerateModifiedEvent(sharedTextPtr->peers);
     }
 }
 
