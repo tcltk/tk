@@ -679,7 +679,7 @@ static void LoadShellProcs()
  *      poll the message queue consuming WM_LBUTTONUP messages.
  * 	On seeing a WM_LBUTTONDOWN message, it would exit early, since the user
  * 	must be doing something new. However this early exit does not work
- *      on Vista and later because the Windows sends both BUTTONDOWN and 
+ *      on Vista and later because the Windows sends both BUTTONDOWN and
  *      BUTTONUP after the DBLCLICK instead of just BUTTONUP as on XP.
  *      Rather than try and figure out version specific sequences, we
  *      ignore all mouse events in that interval.
@@ -704,7 +704,7 @@ EatSpuriousMessageBugFix(void)
     DWORD nTime = GetTickCount() + 250;
 
     while (GetTickCount() < nTime) {
-	PeekMessageA(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE);
+	PeekMessage(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE);
     }
 }
 
