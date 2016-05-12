@@ -353,7 +353,7 @@ TkUndoInitStack(
 /*
  *----------------------------------------------------------------------
  *
- * TkUndoSetDepth --
+ * TkUndoSetMaxDepth --
  *
  *	Set the maximum depth of stack.
  *
@@ -368,7 +368,7 @@ TkUndoInitStack(
  */
 
 void
-TkUndoSetDepth(
+TkUndoSetMaxDepth(
     TkUndoRedoStack *stack,	/* An Undo/Redo stack */
     int maxdepth)		/* The maximum stack depth */
 {
@@ -478,6 +478,72 @@ TkUndoFreeStack(
 /*
  *----------------------------------------------------------------------
  *
+ * TkUndoCanRedo --
+ *
+ *	Returns true if redo is possible, i.e. if the redo stack is not empty.
+ *
+ * Results:
+ *	 A boolean.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkUndoCanRedo(
+    TkUndoRedoStack *stack)	/* An Undo/Redo stack */
+{
+    int canRedo = 0;
+    TkUndoAtom *elem = stack->redoStack;
+
+    while (elem != NULL) {
+        if (elem->type != TK_UNDO_SEPARATOR) {
+            canRedo = 1;
+            break;
+        }
+        elem = elem->next;
+    }
+    return canRedo;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkUndoCanUndo --
+ *
+ *	Returns true if undo is possible, i.e. if the undo stack is not empty.
+ *
+ * Results:
+ *	 A boolean.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkUndoCanUndo(
+    TkUndoRedoStack *stack)	/* An Undo/Redo stack */
+{
+    int canUndo = 0;
+    TkUndoAtom *elem = stack->undoStack;
+
+    while (elem != NULL) {
+        if (elem->type != TK_UNDO_SEPARATOR) {
+            canUndo = 1;
+            break;
+        }
+        elem = elem->next;
+    }
+    return canUndo;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkUndoInsertUndoSeparator --
  *
  *	Insert a separator on the undo stack, indicating a border for an
@@ -498,7 +564,7 @@ TkUndoInsertUndoSeparator(
 {
     if (TkUndoInsertSeparator(&stack->undoStack)) {
 	stack->depth++;
-	TkUndoSetDepth(stack, stack->maxdepth);
+	TkUndoSetMaxDepth(stack, stack->maxdepth);
     }
 }
 
