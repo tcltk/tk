@@ -2770,7 +2770,7 @@ TextPushUndoAction(
 				/* Index describing second location. */
 {
     TkUndoSubAtom *iAtom, *dAtom;
-    TkUndoAtom *redoElem, *undoElem;
+    int canUndo, canRedo;
 
     /*
      * Create the helpers.
@@ -2857,8 +2857,8 @@ TextPushUndoAction(
     Tcl_DecrRefCount(index1Obj);
     Tcl_DecrRefCount(index2Obj);
 
-    undoElem = textPtr->sharedTextPtr->undoStack->undoStack;
-    redoElem = textPtr->sharedTextPtr->undoStack->redoStack;
+    canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
+    canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
 
     /*
      * Depending whether the action is to insert or delete, we provide the
@@ -2872,7 +2872,7 @@ TextPushUndoAction(
 	TkUndoPushAction(textPtr->sharedTextPtr->undoStack, dAtom, iAtom);
     }
 
-    if (undoElem == NULL || redoElem != NULL) {
+    if (!canUndo || canRedo) {
         GenerateUndoStackEvent(textPtr);
     }
 }
@@ -5166,7 +5166,6 @@ TextEditCmd(
     int index, setModified, oldModified;
     int canRedo = 0;
     int canUndo = 0;
-    TkUndoAtom *redoElem, *undoElem;
 
     static const char *const editOptionStrings[] = {
 	"canundo", "canredo", "modified", "redo", "reset", "separator",
@@ -5249,14 +5248,14 @@ TextEditCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
-	undoElem = textPtr->sharedTextPtr->undoStack->undoStack;
+	canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
         if (TextEditRedo(textPtr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to redo", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_REDO", NULL);
 	    return TCL_ERROR;
 	}
-        redoElem = textPtr->sharedTextPtr->undoStack->redoStack;
-        if (undoElem == NULL || redoElem == NULL) {
+        canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
+        if (!canUndo || !canRedo) {
             GenerateUndoStackEvent(textPtr);
         }
 	break;
@@ -5265,10 +5264,10 @@ TextEditCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
-        undoElem = textPtr->sharedTextPtr->undoStack->undoStack;
-        redoElem = textPtr->sharedTextPtr->undoStack->redoStack;
+        canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
+        canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
 	TkUndoClearStacks(textPtr->sharedTextPtr->undoStack);
-        if (undoElem != NULL || redoElem != NULL) {
+        if (canUndo || canRedo) {
             GenerateUndoStackEvent(textPtr);
         }
 	break;
@@ -5284,14 +5283,14 @@ TextEditCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
-        redoElem = textPtr->sharedTextPtr->undoStack->redoStack;
+        canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
 	if (TextEditUndo(textPtr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to undo", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_UNDO", NULL);
 	    return TCL_ERROR;
 	}
-        undoElem = textPtr->sharedTextPtr->undoStack->undoStack;
-        if (redoElem == NULL || undoElem == NULL) {
+        canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
+        if (!canRedo || !canUndo) {
             GenerateUndoStackEvent(textPtr);
         }
 	break;

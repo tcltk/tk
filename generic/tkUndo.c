@@ -495,17 +495,7 @@ int
 TkUndoCanRedo(
     TkUndoRedoStack *stack)	/* An Undo/Redo stack */
 {
-    int canRedo = 0;
-    TkUndoAtom *elem = stack->redoStack;
-
-    while (elem != NULL) {
-        if (elem->type != TK_UNDO_SEPARATOR) {
-            canRedo = 1;
-            break;
-        }
-        elem = elem->next;
-    }
-    return canRedo;
+    return stack->redoStack != NULL;
 }
 
 /*
@@ -528,17 +518,7 @@ int
 TkUndoCanUndo(
     TkUndoRedoStack *stack)	/* An Undo/Redo stack */
 {
-    int canUndo = 0;
-    TkUndoAtom *elem = stack->undoStack;
-
-    while (elem != NULL) {
-        if (elem->type != TK_UNDO_SEPARATOR) {
-            canUndo = 1;
-            break;
-        }
-        elem = elem->next;
-    }
-    return canUndo;
+    return stack->undoStack != NULL;
 }
 
 /*
