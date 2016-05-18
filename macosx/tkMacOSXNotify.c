@@ -270,10 +270,15 @@ TkMacOSXEventsCheckProc(
 						 inMode:GetRunLoopMode(modalSession)
 						dequeue:NO];
 	    /* We must not steal any events during LiveResize. */
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
 	    if (testEvent && [[testEvent window] inLiveResize]) {
 		break;
 	    }
-
+#else
+	    if (testEvent && [[[testEvent window] contentView] inLiveResize]) {
+		break;
+	    }
+#endif
 	    currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 					      untilDate:[NSDate distantPast]
 						 inMode:GetRunLoopMode(modalSession)
