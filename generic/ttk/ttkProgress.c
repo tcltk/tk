@@ -435,7 +435,7 @@ static int ProgressbarStepCommand(
 	int result = Tcl_ObjSetVar2(
 			interp, pb->progress.variableObj, 0, newValueObj,
 			TCL_GLOBAL_ONLY | TCL_LEAVE_ERR_MSG)
-		? TCL_OK : TCL_ERROR;
+		    ? TCL_OK : TCL_ERROR;
 	Tcl_DecrRefCount(newValueObj);
 	return result;
     }

@@ -14,6 +14,8 @@
 #include <X11/Xft/Xft.h>
 #include <ctype.h>
 
+#define MAX_CACHED_COLORS 16
+
 typedef struct {
     XftFont *ftFont;
     XftFont *ft0Font;
@@ -21,6 +23,11 @@ typedef struct {
     FcCharSet *charset;
     double angle;
 } UnixFtFace;
+
+typedef struct {
+    XftColor color;
+    int next;
+} UnixFtColorList;
 
 typedef struct {
     TkFont font;	    	/* Stuff used by generic font package. Must be
@@ -33,7 +40,9 @@ typedef struct {
     Display *display;
     int screen;
     XftDraw *ftDraw;
-    XftColor color;
+    int ncolors;
+    int firstColor;
+    UnixFtColorList colors[MAX_CACHED_COLORS];
 } UnixFtFont;
 
 /*
@@ -289,11 +298,8 @@ InitFont(
     fontPtr->display = Tk_Display(tkwin);
     fontPtr->screen = Tk_ScreenNumber(tkwin);
     fontPtr->ftDraw = 0;
-    fontPtr->color.color.red = 0;
-    fontPtr->color.color.green = 0;
-    fontPtr->color.color.blue = 0;
-    fontPtr->color.color.alpha = 0xffff;
-    fontPtr->color.pixel = 0xffffffff;
+    fontPtr->ncolors = 0;
+    fontPtr->firstColor = -1;
 
     /*
      * Fill in platform-specific fields of TkFont.
@@ -609,7 +615,7 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    Tcl_UniChar c,		/* Character of interest */
+    int c,         		/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
@@ -737,6 +743,89 @@ TkpMeasureCharsInContext(
 	    maxLength, flags, lengthPtr);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * LookUpColor --
+ *
+ *	Convert a pixel value to an XftColor.  This can be slow due to the
+ * need to call XQueryColor, which involves a server round-trip.  To
+ * avoid that, a least-recently-used cache of up to MAX_CACHED_COLORS
+ * is kept, in the form of a linked list.  The returned color is moved
+ * to the front of the list, so repeatedly asking for the same one
+ * should be fast.
+ *
+ * Results:
+ *      A pointer to the XftColor structure for the requested color is
+ * returned.
+ *
+ * Side effects:
+ *      The converted color is stored in a cache in the UnixFtFont structure.  The cache
+ * can hold at most MAX_CACHED_COLORS colors.  If no more slots are available, the least
+ * recently used color is replaced with the new one.
+ *----------------------------------------------------------------------
+ */
+
+static XftColor *
+LookUpColor(Display *display,      /* Display to lookup colors on */
+	    UnixFtFont *fontPtr,   /* Font to search for cached colors */
+	    unsigned long pixel)   /* Pixel value to translate to XftColor */
+{
+    int i, last = -1, last2 = -1;
+    XColor xcolor;
+
+    for (i = fontPtr->firstColor;
+	 i >= 0; last2 = last, last = i, i = fontPtr->colors[i].next) {
+
+	if (pixel == fontPtr->colors[i].color.pixel) {
+	    /* 
+	     * Color found in cache.  Move it to the front of the list and return it.
+	     */
+	    if (last >= 0) {
+		fontPtr->colors[last].next = fontPtr->colors[i].next;
+		fontPtr->colors[i].next = fontPtr->firstColor;
+		fontPtr->firstColor = i;
+	    }
+
+	    return &fontPtr->colors[i].color;
+	}
+    }
+
+    /*
+     * Color wasn't found, so it needs to be added to the cache.
+     * If a spare slot is available, it can be put there.  If not, last
+     * will now point to the least recently used color, so replace that one.
+     */
+
+    if (fontPtr->ncolors < MAX_CACHED_COLORS) {
+	last2 = -1;
+	last = fontPtr->ncolors++;
+    }
+
+    /* 
+     * Translate the pixel value to a color.  Needs a server round-trip.
+     */
+    xcolor.pixel = pixel;
+    XQueryColor(display, DefaultColormap(display, fontPtr->screen), &xcolor);
+
+    fontPtr->colors[last].color.color.red = xcolor.red;
+    fontPtr->colors[last].color.color.green = xcolor.green;
+    fontPtr->colors[last].color.color.blue = xcolor.blue;
+    fontPtr->colors[last].color.color.alpha = 0xffff;
+    fontPtr->colors[last].color.pixel = pixel;
+
+    /*
+     * Put at the front of the list.
+     */
+    if (last2 >= 0) {
+	fontPtr->colors[last2].next = fontPtr->colors[last].next;
+    }
+    fontPtr->colors[last].next = fontPtr->firstColor;
+    fontPtr->firstColor = last;
+
+    return &fontPtr->colors[last].color;
+}
+
 #define NUM_SPEC    1024
 
 void
@@ -760,7 +849,7 @@ Tk_DrawChars(
     const int maxCoord = 0x7FFF;/* Xft coordinates are 16 bit values */
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     XGCValues values;
-    XColor xcolor;
+    XftColor *xftcolor;
     int clen, nspec, xStart = x;
     XftGlyphFontSpec specs[NUM_SPEC];
     XGlyphInfo metrics;
@@ -782,16 +871,7 @@ Tk_DrawChars(
 	Tk_DeleteErrorHandler(handler);
     }
     XGetGCValues(display, gc, GCForeground, &values);
-    if (values.foreground != fontPtr->color.pixel) {
-	xcolor.pixel = values.foreground;
-	XQueryColor(display, DefaultColormap(display, fontPtr->screen),
-		&xcolor);
-	fontPtr->color.color.red = xcolor.red;
-	fontPtr->color.color.green = xcolor.green;
-	fontPtr->color.color.blue = xcolor.blue;
-	fontPtr->color.color.alpha = 0xffff;
-	fontPtr->color.pixel = values.foreground;
-    }
+    xftcolor = LookUpColor(display, fontPtr, values.foreground);
     if (tsdPtr->clipRegion != None) {
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
@@ -823,14 +903,14 @@ Tk_DrawChars(
 	    y += metrics.yOff;
 	    nspec++;
 	    if (nspec == NUM_SPEC) {
-		XftDrawGlyphFontSpec(fontPtr->ftDraw, &fontPtr->color,
+		XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
 			specs, nspec);
 		nspec = 0;
 	    }
 	}
     }
     if (nspec) {
-	XftDrawGlyphFontSpec(fontPtr->ftDraw, &fontPtr->color, specs, nspec);
+	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
     }
 
   doUnderlineStrikeout:
@@ -892,7 +972,7 @@ TkDrawAngledChars(
     const int minCoord = -1000;	/* Should be good enough... */
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     XGCValues values;
-    XColor xcolor;
+    XftColor *xftcolor;
     int xStart = x, yStart = y;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -919,16 +999,7 @@ TkDrawAngledChars(
     }
 
     XGetGCValues(display, gc, GCForeground, &values);
-    if (values.foreground != fontPtr->color.pixel) {
-	xcolor.pixel = values.foreground;
-	XQueryColor(display, DefaultColormap(display, fontPtr->screen),
-		&xcolor);
-	fontPtr->color.color.red = xcolor.red;
-	fontPtr->color.color.green = xcolor.green;
-	fontPtr->color.color.blue = xcolor.blue;
-	fontPtr->color.color.alpha = 0xffff;
-	fontPtr->color.pixel = values.foreground;
-    }
+    xftcolor = LookUpColor(display, fontPtr, values.foreground);
     if (tsdPtr->clipRegion != None) {
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
@@ -967,7 +1038,7 @@ TkDrawAngledChars(
 		 * this information... but we'll be ready when it does!
 		 */
 
-		XftDrawGlyphs(fontPtr->ftDraw, &fontPtr->color, currentFtFont,
+		XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
 			originX, originY, glyphs, nglyph);
 	    }
 	    originX = ROUND16(x);
@@ -984,7 +1055,7 @@ TkDrawAngledChars(
 	glyphs[nglyph++] = XftCharIndex(fontPtr->display, ftFont, c);
     }
     if (nglyph) {
-	XftDrawGlyphs(fontPtr->ftDraw, &fontPtr->color, currentFtFont,
+	XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
 		originX, originY, glyphs, nglyph);
     }
 #else /* !XFT_HAS_FIXED_ROTATED_PLACEMENT */
@@ -1008,16 +1079,7 @@ TkDrawAngledChars(
 	Tk_DeleteErrorHandler(handler);
     }
     XGetGCValues(display, gc, GCForeground, &values);
-    if (values.foreground != fontPtr->color.pixel) {
-	xcolor.pixel = values.foreground;
-	XQueryColor(display, DefaultColormap(display, fontPtr->screen),
-		&xcolor);
-	fontPtr->color.color.red = xcolor.red;
-	fontPtr->color.color.green = xcolor.green;
-	fontPtr->color.color.blue = xcolor.blue;
-	fontPtr->color.color.alpha = 0xffff;
-	fontPtr->color.pixel = values.foreground;
-    }
+    xftcolor = LookUpColor(display, fontPtr, values.foreground);
     if (tsdPtr->clipRegion != None) {
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
@@ -1051,14 +1113,14 @@ TkDrawAngledChars(
 	    y += metrics.yOff*cosA - metrics.xOff*sinA;
 	    nspec++;
 	    if (nspec == NUM_SPEC) {
-		XftDrawGlyphFontSpec(fontPtr->ftDraw, &fontPtr->color,
+		XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
 			specs, nspec);
 		nspec = 0;
 	    }
 	}
     }
     if (nspec) {
-	XftDrawGlyphFontSpec(fontPtr->ftDraw, &fontPtr->color, specs, nspec);
+	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
     }
 #endif /* XFT_HAS_FIXED_ROTATED_PLACEMENT */
 

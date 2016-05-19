@@ -3053,6 +3053,25 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -result {Sync:0 Pending:1 Sync:1 Pending:0}
 
+test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
+                  NOT Tk_HandleEvent().
+                  Bug [b362182e45704dd7bbd6aed91e48122035ea3d16]} -setup {
+    destroy .top.t .top
+} -body {
+    set res {}
+    toplevel .top
+    pack [text .top.t]
+    for {set i 1} {$i < 10000} {incr i} {
+        .top.t insert end "Hello world!\n"
+    }
+    bind .top.t <<WidgetViewSync>> {destroy .top.t}
+    .top.t tag add mytag 1.5 8000.8    ; # shall not crash
+    update
+    set res "Still doing fine!"
+} -cleanup {
+    destroy .top.t .top
+} -result {Still doing fine!}
+
 test text-12.1 {TextWidgetCmd procedure, "index" option} -setup {
     text .t
 } -body {
@@ -6280,7 +6299,7 @@ test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
 # Shouldn't require [update idle] to trigger event [Bug 1809538]
     lappend ::retval [.t edit modified]
     .t edit modified 1
-    update idletasks
+    update
     lappend ::retval [.t edit modified]
     .t edit modified 1 ; # binding should only fire once [Bug 1799782]
     update idletasks
@@ -6295,6 +6314,7 @@ test text-27.12 {<<Modified>> virtual event} -body {
     bind .t <<Modified>> "set ::retval modified"
     update idletasks
     .t insert end "nothing special\n"
+    update
     return $::retval
 } -cleanup {
     destroy .t
@@ -6305,6 +6325,7 @@ test text-27.13 {<<Modified>> virtual event - insert before Modified} -body {
     bind .t <<Modified>> { set ::retval [.t get 1.0 end-1c] }
     update idletasks
     .t insert end "nothing special"
+    update
     return $::retval
 } -cleanup {
     destroy .t
@@ -6317,10 +6338,26 @@ test text-27.14 {<<Modified>> virtual event - delete before Modified} -body {
     .t insert end "nothing special"
     .t edit modified 0
     .t delete 1.0 1.2
+    update
     set ::retval
 } -cleanup {
     destroy .t
 } -result {thing special}
+test text-27.14a {<<Modified>> virtual event - propagation to peers} -body {
+# Bug [fd3a4dc111], <<Modified>> event is not always sent to peers
+    set ::retval 0
+    text .t -undo 1
+    .t peer create .tt
+    pack .t .tt
+    bind .t <<Modified>> {incr ::retval}
+    bind .tt <<Modified>> {incr ::retval}
+    .t insert end "This increments ::retval once for each peer, i.e. twice."
+    .t edit modified 0  ; # shall increment twice as well, not just once
+    update
+    set ::retval
+} -cleanup {
+    destroy .t .tt
+} -result {4}
 test text-27.15 {<<Selection>> virtual event} -body {
     set ::retval no_selection
     pack [text .t -undo 1]
@@ -6328,6 +6365,7 @@ test text-27.15 {<<Selection>> virtual event} -body {
     update idletasks
     .t insert end "nothing special\n"
     .t tag add sel 1.0 1.1
+    update
     set ::retval
 } -cleanup {
     destroy .t
