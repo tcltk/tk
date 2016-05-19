@@ -3554,16 +3554,7 @@ TkTextSelectionEvent(
      *     event generate $textWidget <<Selection>>
      */
 
-    union {XEvent general; XVirtualEvent virtual;} event;
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
-    event.general.xany.display = Tk_Display(textPtr->tkwin);
-    event.virtual.name = Tk_GetUid("Selection");
-    Tk_HandleEvent(&event.general);
+    TkSendVirtualEvent(textPtr->tkwin, "Selection", NULL);
 }
 
 /*
@@ -5215,7 +5206,10 @@ TextEditCmd(
 	 */
 
 	if ((!oldModified) != (!setModified)) {
-	    GenerateModifiedEvent(textPtr);
+            for (textPtr = textPtr->sharedTextPtr->peers; textPtr != NULL;
+                    textPtr = textPtr->next) {
+                GenerateModifiedEvent(textPtr);
+            }
 	}
 	break;
     case EDIT_REDO:
@@ -5361,21 +5355,8 @@ static void
 GenerateModifiedEvent(
     TkText *textPtr)	/* Information about text widget. */
 {
-    union {
-	XEvent general;
-	XVirtualEvent virtual;
-    } event;
-
     Tk_MakeWindowExist(textPtr->tkwin);
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
-    event.general.xany.display = Tk_Display(textPtr->tkwin);
-    event.virtual.name = Tk_GetUid("Modified");
-    Tk_HandleEvent(&event.general);
+    TkSendVirtualEvent(textPtr->tkwin, "Modified", NULL);
 }
 
 /*
