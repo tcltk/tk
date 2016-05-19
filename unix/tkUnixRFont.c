@@ -778,7 +778,7 @@ LookUpColor(Display *display,      /* Display to lookup colors on */
 	 i >= 0; last2 = last, last = i, i = fontPtr->colors[i].next) {
 
 	if (pixel == fontPtr->colors[i].color.pixel) {
-	    /* 
+	    /*
 	     * Color found in cache.  Move it to the front of the list and return it.
 	     */
 	    if (last >= 0) {
@@ -802,7 +802,7 @@ LookUpColor(Display *display,      /* Display to lookup colors on */
 	last = fontPtr->ncolors++;
     }
 
-    /* 
+    /*
      * Translate the pixel value to a color.  Needs a server round-trip.
      */
     xcolor.pixel = pixel;
