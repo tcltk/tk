@@ -1320,7 +1320,7 @@ FontchooserEvent(
     switch (kind) {
     case FontchooserClosed:
 	if (fcdPtr->parent != None) {
-	    TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility");
+	    TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility", NULL);
 	    fontchooserInterp = NULL;
 	}
 	break;
@@ -1343,7 +1343,7 @@ FontchooserEvent(
 		    ckfree(tmpv);
 		}
 	    }
-	    TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged");
+	    TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged", NULL);
 	}
 	break;
     }
@@ -1553,7 +1553,7 @@ FontchooserConfigureCmd(
 	    [fm setSelectedAttributes:fontPanelFontAttributes
 		    isMultiple:NO];
 	    if ([fp isVisible]) {
-		TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged");
+		TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged", NULL);
 	    }
 	    break;
 	case FontchooserCmd:
@@ -1616,7 +1616,7 @@ FontchooserShowCmd(
     }
     if (![fp isVisible]) {
 	[fm orderFrontFontPanel:NSApp];
-	TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility");
+	TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserVisibility", NULL);
     }
     fontchooserInterp = interp;
 
