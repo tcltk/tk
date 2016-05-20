@@ -1162,7 +1162,8 @@ TkMakeEnsemble(
  * TkSendVirtualEvent --
  *
  * 	Send a virtual event notification to the specified target window.
- * 	Equivalent to "event generate $target <<$eventName>>"
+ * 	Equivalent to:
+ * 	    "event generate $target <<$eventName>> -data $detail"
  *
  * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent, so this
  * 	routine does not reenter the interpreter.
@@ -1173,7 +1174,8 @@ TkMakeEnsemble(
 void
 TkSendVirtualEvent(
     Tk_Window target,
-    const char *eventName)
+    const char *eventName,
+    Tcl_Obj *detail)
 {
     union {XEvent general; XVirtualEvent virtual;} event;
 
@@ -1184,6 +1186,9 @@ TkSendVirtualEvent(
     event.general.xany.window = Tk_WindowId(target);
     event.general.xany.display = Tk_Display(target);
     event.virtual.name = Tk_GetUid(eventName);
+    if (detail != NULL) {
+        event.virtual.user_data = detail;
+    }
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
