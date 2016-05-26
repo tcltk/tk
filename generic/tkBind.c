@@ -3537,11 +3537,12 @@ DoWarp(
 
     /*
      * DoWarp was scheduled only if the window was mapped. It needs to be
-     * still mapped at the time the present idle callback is executed. In
-     * particular, this guards against window destruction in the meantime.
+     * still mapped at the time the present idle callback is executed. Also
+     * one needs to guard against window destruction in the meantime.
      */
 
-    if (Tk_IsMapped(dispPtr->warpWindow)) {
+    if (Tk_IsMapped(dispPtr->warpWindow)
+            && (Tk_WindowId(dispPtr->warpWindow) != None)) {
         TkpWarpPointer(dispPtr);
         XForceScreenSaver(dispPtr->display, ScreenSaverReset);
     }
