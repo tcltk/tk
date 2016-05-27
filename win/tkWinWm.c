@@ -546,6 +546,12 @@ static int		WmWithdrawCmd(Tk_Window tkwin,
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 
 /*
+ * Declarations of static variables used in this file.
+ */
+
+static int screenId = -1;               /* Used to enumerate monitors */
+
+/*
  * Used in BytesPerLine
  */
 
@@ -7830,6 +7836,44 @@ TopLevelProc(
 /*
  *----------------------------------------------------------------------
  *
+ * MonitorEnumProcScreenChanged
+ *
+ *	Monitors enumeration callback. This updates the screen number for
+ *	the given window. This callback is called once for each monitor.
+ *
+ * Results:
+ *	Screen number of the given window is updated.
+ *
+ * Side effects:
+ *	The window becomes "linked" to the new screen.
+ *	All [winfo screenxxx ...] will return information based on the new
+ *	screen.
+ *
+ *----------------------------------------------------------------------
+ */
+
+BOOL CALLBACK
+MonitorEnumProcScreenChanged(
+    HMONITOR hMonitor,
+    HDC hdcMonitor,
+    LPRECT lprcMonitor,
+    LPARAM dwData)
+{
+    HMONITOR hMonitorWin;
+
+    screenId++;
+    hMonitorWin = MonitorFromWindow(Tk_GetHWND(((TkWindow *) dwData)->window),
+            MONITOR_DEFAULTTOPRIMARY);
+    if (hMonitor == hMonitorWin) {
+        ((TkWindow *) dwData)->screenNum = screenId;
+        return FALSE;
+    }
+    return TRUE;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WmProc --
  *
  *	Callback from Windows whenever an event occurs on the decorative
@@ -7981,6 +8025,18 @@ WmProc(
 	break;
 
     case WM_WINDOWPOSCHANGED:
+        /*
+         * If the window got moved we potentially need to link the window to a
+         * different screen so that [winfo screen...] will output the correct
+         * results. This is also needed for other reasons such as having
+         * -fullscreen show the window on the monitor on which that window was
+         * displayed when -fullscreen got applied.
+         */
+
+        winPtr = GetTopLevel(((WINDOWPOS *) lParam)->hwnd);
+        screenId = -1;
+        EnumDisplayMonitors(NULL, NULL, MonitorEnumProcScreenChanged, (LPARAM) winPtr);
+
 	ConfigureTopLevel((WINDOWPOS *) lParam);
 	result = 0;
 	goto done;
