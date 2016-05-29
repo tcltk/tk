@@ -21,7 +21,7 @@
  */
 
 typedef struct TkBorder {
-    Screen *screen;		/* Screen on which the border will be used. */
+    Display *display;           /* Display on which the border will be used. */
     Visual *visual;		/* Visual for all windows and pixmaps using
 				 * the border. */
     int depth;			/* Number of bits per pixel of drawables where
@@ -63,9 +63,8 @@ typedef struct TkBorder {
 				 * delete structure). */
     struct TkBorder *nextPtr;	/* Points to the next TkBorder structure with
 				 * the same color name. Borders with the same
-				 * name but different screens or colormaps are
-				 * chained together off a single entry in
-				 * borderTable. */
+				 * name but different colormaps are chained
+				 * together off a single entry in borderTable. */
 } TkBorder;
 
 /*

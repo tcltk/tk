@@ -81,7 +81,7 @@ const Tcl_ObjType tkBorderObjType = {
 Tk_3DBorder
 Tk_Alloc3DBorderFromObj(
     Tcl_Interp *interp,		/* Interp for error results. */
-    Tk_Window tkwin,		/* Need the screen the border is used on.*/
+    Tk_Window tkwin,		/* To check colormaps matching.*/
     Tcl_Obj *objPtr)		/* Object giving name of color for window
 				 * background. */
 {
@@ -106,8 +106,7 @@ Tk_Alloc3DBorderFromObj(
 
 	    FreeBorderObj(objPtr);
 	    borderPtr = NULL;
-	} else if ((Tk_Screen(tkwin) == borderPtr->screen)
-		&& (Tk_Colormap(tkwin) == borderPtr->colormap)) {
+	} else if (Tk_Colormap(tkwin) == borderPtr->colormap) {
 	    borderPtr->resourceRefCount++;
 	    return (Tk_3DBorder) borderPtr;
 	}
@@ -122,8 +121,8 @@ Tk_Alloc3DBorderFromObj(
      * going in, or the object is a color type but had previously been freed.
      *
      * If the value is not NULL, the internal rep is the value of the color
-     * the last time this object was accessed. Check the screen and colormap
-     * of the last access, and if they match, we are done.
+     * the last time this object was accessed. Check the colormap of the
+     * last access, and if it matches, we are done.
      */
 
     if (borderPtr != NULL) {
@@ -132,8 +131,7 @@ Tk_Alloc3DBorderFromObj(
 	FreeBorderObj(objPtr);
 	for (borderPtr = firstBorderPtr ; borderPtr != NULL;
 		borderPtr = borderPtr->nextPtr) {
-	    if ((Tk_Screen(tkwin) == borderPtr->screen)
-		    && (Tk_Colormap(tkwin) == borderPtr->colormap)) {
+	    if (Tk_Colormap(tkwin) == borderPtr->colormap) {
 		borderPtr->resourceRefCount++;
 		borderPtr->objRefCount++;
 		objPtr->internalRep.twoPtrValue.ptr1 = borderPtr;
@@ -203,8 +201,7 @@ Tk_Get3DBorder(
 	existingBorderPtr = Tcl_GetHashValue(hashPtr);
 	for (borderPtr = existingBorderPtr; borderPtr != NULL;
 		borderPtr = borderPtr->nextPtr) {
-	    if ((Tk_Screen(tkwin) == borderPtr->screen)
-		    && (Tk_Colormap(tkwin) == borderPtr->colormap)) {
+	    if (Tk_Colormap(tkwin) == borderPtr->colormap) {
 		borderPtr->resourceRefCount++;
 		return (Tk_3DBorder) borderPtr;
 	    }
@@ -226,7 +223,7 @@ Tk_Get3DBorder(
     }
 
     borderPtr = TkpGetBorder();
-    borderPtr->screen = Tk_Screen(tkwin);
+    borderPtr->display = Tk_Display(tkwin);
     borderPtr->visual = Tk_Visual(tkwin);
     borderPtr->depth = Tk_Depth(tkwin);
     borderPtr->colormap = Tk_Colormap(tkwin);
@@ -417,7 +414,6 @@ Tk_Free3DBorder(
     Tk_3DBorder border)		/* Token for border to be released. */
 {
     TkBorder *borderPtr = (TkBorder *) border;
-    Display *display = DisplayOfScreen(borderPtr->screen);
     TkBorder *prevPtr;
 
     borderPtr->resourceRefCount--;
@@ -437,16 +433,16 @@ Tk_Free3DBorder(
 	Tk_FreeColor(borderPtr->lightColorPtr);
     }
     if (borderPtr->shadow != None) {
-	Tk_FreeBitmap(display, borderPtr->shadow);
+	Tk_FreeBitmap(borderPtr->display, borderPtr->shadow);
     }
     if (borderPtr->bgGC != None) {
-	Tk_FreeGC(display, borderPtr->bgGC);
+	Tk_FreeGC(borderPtr->display, borderPtr->bgGC);
     }
     if (borderPtr->darkGC != None) {
-	Tk_FreeGC(display, borderPtr->darkGC);
+	Tk_FreeGC(borderPtr->display, borderPtr->darkGC);
     }
     if (borderPtr->lightGC != None) {
-	Tk_FreeGC(display, borderPtr->lightGC);
+	Tk_FreeGC(borderPtr->display, borderPtr->lightGC);
     }
     if (prevPtr == borderPtr) {
 	if (borderPtr->nextPtr == NULL) {
@@ -489,7 +485,7 @@ Tk_Free3DBorder(
 void
 Tk_Free3DBorderFromObj(
     Tk_Window tkwin,		/* The window this border lives in. Needed for
-				 * the screen and colormap values. */
+				 * the colormap value. */
     Tcl_Obj *objPtr)		/* The Tcl_Obj * to be freed. */
 {
     Tk_Free3DBorder(Tk_Get3DBorderFromObj(tkwin, objPtr));
@@ -1248,15 +1244,14 @@ Tk_Get3DBorderFromObj(
     }
 
     /*
-     * If we are lucky (and the user doesn't use too many different displays,
-     * screens, or colormaps...) then the TkBorder structure we need will be
-     * cached in the internal representation of the Tcl_Obj. Check it out...
+     * If we are lucky (and the user doesn't use too many different displays
+     * or colormaps...) then the TkBorder structure we need will be cached
+     * in the internal representation of the Tcl_Obj. Check it out...
      */
 
     borderPtr = objPtr->internalRep.twoPtrValue.ptr1;
     if ((borderPtr != NULL)
 	    && (borderPtr->resourceRefCount > 0)
-	    && (Tk_Screen(tkwin) == borderPtr->screen)
 	    && (Tk_Colormap(tkwin) == borderPtr->colormap)) {
 	/*
 	 * The object already points to the right border structure. Just
@@ -1269,12 +1264,12 @@ Tk_Get3DBorderFromObj(
     /*
      * If we make it here, it means we aren't so lucky. Either there was no
      * cached TkBorder in the Tcl_Obj, or the TkBorder that was there is for
-     * the wrong screen/colormap. Either way, we have to search for the right
+     * the wrong colormap. Either way, we have to search for the right
      * TkBorder. For each color name, there is linked list of TkBorder
-     * structures, one structure for each screen/colormap combination. The
-     * head of the linked list is recorded in a hash table (where the key is
-     * the color name) attached to the TkDisplay structure. Walk this list to
-     * find the right TkBorder structure.
+     * structures, one structure for each colormap. The head of the linked
+     * list is recorded in a hash table (where the key is the color name)
+     * attached to the TkDisplay structure. Walk this list to find the right
+     * TkBorder structure.
      */
 
     hashPtr = Tcl_FindHashEntry(&dispPtr->borderTable, Tcl_GetString(objPtr));
@@ -1283,8 +1278,7 @@ Tk_Get3DBorderFromObj(
     }
     for (borderPtr = Tcl_GetHashValue(hashPtr); borderPtr != NULL;
 	    borderPtr = borderPtr->nextPtr) {
-	if ((Tk_Screen(tkwin) == borderPtr->screen)
-		&& (Tk_Colormap(tkwin) == borderPtr->colormap)) {
+	if (Tk_Colormap(tkwin) == borderPtr->colormap) {
 	    FreeBorderObj(objPtr);
 	    objPtr->internalRep.twoPtrValue.ptr1 = borderPtr;
 	    borderPtr->objRefCount++;
