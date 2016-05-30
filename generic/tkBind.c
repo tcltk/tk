@@ -3539,10 +3539,13 @@ DoWarp(
      * DoWarp was scheduled only if the window was mapped. It needs to be
      * still mapped at the time the present idle callback is executed. Also
      * one needs to guard against window destruction in the meantime.
+     * Finally, the case warpWindow == NULL is special in that it means
+     * the whole screen.
      */
 
-    if (Tk_IsMapped(dispPtr->warpWindow)
-            && (Tk_WindowId(dispPtr->warpWindow) != None)) {
+    if ((dispPtr->warpWindow == NULL) ||
+            (Tk_IsMapped(dispPtr->warpWindow)
+            && (Tk_WindowId(dispPtr->warpWindow) != None))) {
         TkpWarpPointer(dispPtr);
         XForceScreenSaver(dispPtr->display, ScreenSaverReset);
     }
