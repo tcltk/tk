@@ -6108,6 +6108,7 @@ test bind-32 {-warp, window was destroyed before the idle callback DoWarp} -setu
     update
 } -body {
     event generate .t.f <Button-1> -warp 1
+    event generate .t.f <ButtonRelease-1>
     destroy .t.f
     update  ;  # shall simply not crash
 } -cleanup {
