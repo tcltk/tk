@@ -352,6 +352,10 @@ user-driven
 .QW "tab to widget"
 action.
 .TP
+\fB<<UndoStack>>\fR
+This is sent to a text widget when its undo stack or redo stack becomes
+empty or unempty.
+.TP
 \fB<<WidgetViewSync>>\fR
 This is sent to a text widget when its internal data become obsolete,
 and again when these internal data are back in sync with the widget
