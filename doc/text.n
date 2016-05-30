@@ -897,6 +897,9 @@ separator is already present at the top of the undo stack no other will be
 inserted. That means that two separators on the undo stack are always
 separated by at least one insert or delete action.
 .PP
+The \fB<<UndoStack>>\fR virtual event is generated every time the undo stack
+or the redo stack becomes empty or unempty.
+.PP
 The undo mechanism is also linked to the modified flag. This means that
 undoing or redoing changes can take a modified text widget back to the
 unmodified state or vice versa. The modified flag will be set automatically to
@@ -1281,6 +1284,16 @@ behavior of the command depends on the \fIoption\fR argument that follows the
 \fBedit\fR argument. The following forms of the command are currently
 supported:
 .RS
+.TP
+\fIpathName \fBedit canredo\fR
+.
+Returns a boolean true if redo is possible, i.e. when the redo stack is not
+empty. Otherwise returns false.
+.TP
+\fIpathName \fBedit canundo\fR
+.
+Returns a boolean true if undo is possible, i.e. when the undo stack is not
+empty. Otherwise returns false.
 .TP
 \fIpathName \fBedit modified \fR?\fIboolean\fR?
 .
