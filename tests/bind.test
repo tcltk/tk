@@ -34,6 +34,14 @@ proc unsetBindings {} {
     bind .t <Enter> {}
 }
 
+# move the mouse pointer away of the testing area
+# otherwise some spurious events may pollute the tests
+toplevel .top
+wm geometry .top 50x50-50-50
+update
+event generate .top <Button-1> -warp 1
+update
+destroy .top
 
 test bind-1.1 {bind command} -body {
     bind
