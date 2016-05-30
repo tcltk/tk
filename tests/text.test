@@ -6207,7 +6207,7 @@ test text-27.2 {TextEditCmd procedure, argument parsing} -body {
     .t edit gorp
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad edit option "gorp": must be modified, redo, reset, separator, or undo}
+} -returnCodes {error} -result {bad edit option "gorp": must be canundo, canredo, modified, redo, reset, separator, or undo}
 test text-27.3 {TextEditUndo procedure, undoing changes} -body {
     text .t -undo 1
     pack .t
@@ -6494,6 +6494,75 @@ test text-27.22 {patch 1669632 (v) - <<Clear>> is atomic} -setup {
 } -cleanup {
     destroy .top.t .top
 } -result "This A an example text"
+test text-27.24 {TextEditCmd procedure, canundo and canredo} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo false -autoseparators false
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t configure -undo true
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t insert end "DO\n"
+    .t edit separator
+    .t insert end "IT\n"
+    .t insert end "YOURSELF\n"
+    .t edit separator
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t edit undo
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t configure -undo false
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t configure -undo true
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t edit redo
+    lappend res [.t edit canundo] [.t edit canredo]
+} -cleanup {
+    destroy .t
+} -result {0 0 0 0 1 0 1 1 0 0 1 1 1 0}
+test text-27.25 {<<UndoStack>> virtual event} -setup {
+    destroy .t
+    set res {}
+    set nbUS 0
+} -body {
+    text .t -undo false -autoseparators false
+    bind .t <<UndoStack>> {incr nbUS}
+    update ; lappend res $nbUS
+    .t configure -undo true
+    update ; lappend res $nbUS
+    .t insert end "DO\n"
+    .t edit separator
+    .t insert end "IT\n"
+    .t insert end "YOURSELF\n"
+    .t edit separator
+    .t insert end "MAN\n"
+    .t edit separator
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit reset
+    update ; lappend res $nbUS
+} -cleanup {
+    destroy .t
+} -result {0 0 1 2 3 4 4 5 6 6 7 8 8 9}
+
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
     pack [text .t -wrap none]
