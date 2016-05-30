@@ -6157,6 +6157,18 @@ test bind-31.7 {virtual event user_data field - unshared, asynch} -setup {
     destroy .t.f
 } -result {{} {} {TestUserData >b<}}
 
+test bind-32 {-warp, window was destroyed before the idle callback DoWarp} -setup {
+    frame .t.f
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    event generate .t.f <Button-1> -warp 1
+    destroy .t.f
+    update  ;  # shall simply not crash
+} -cleanup {
+} -result {}
+
 
 # cleanup
 cleanupTests
