@@ -662,6 +662,43 @@ test scrollbar-10.2 {<MouseWheel> event on scrollbar} -constraints {win|unix} -s
     destroy .t .s
 } -result {1.4}
 
+test scrollbar-11.1 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destruction} -body {
+    proc destroy_scrollbar {} {
+        if {[winfo exists .top.s]} {
+            destroy .top.s
+        }
+    }
+    toplevel .top
+    scrollbar .top.s
+    bind .top.s <2> {destroy_scrollbar}
+    pack .top.s
+    focus -force .top.s
+    update
+    event generate .top.s <2>
+    update  ; # shall not trigger error  invalid command name ".top.s"
+} -cleanup {
+    destroy .top.s .top
+} -result {}
+test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destruction} -body {
+    proc destroy_scrollbar {{y 0}} {
+        if {[winfo exists .top.s]} {
+            destroy .top.s
+        }
+    }
+    toplevel .top
+    wm minsize .top 50 400
+    update
+    scrollbar .top.s
+    bind .top.s <2> {after idle destroy_scrollbar}
+    pack .top.s -expand true -fill y
+    focus -force .top.s
+    update
+    event generate .top.s <2> -x 2 -y [expr {[winfo height .top.s] / 2}]
+    update  ; # shall not trigger error  invalid command name ".top.s"
+} -cleanup {
+    destroy .top.s .top
+} -result {}
+
 catch {destroy .s}
 catch {destroy .t}
 
