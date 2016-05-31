@@ -678,7 +678,7 @@ test scrollbar-11.1 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
     update  ; # shall not trigger error  invalid command name ".top.s"
 } -cleanup {
     destroy .top.s .top
-} -result {} 
+} -result {}
 test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destruction} -body {
     proc destroy_scrollbar {{y 0}} {
         if {[winfo exists .top.s]} {
@@ -697,7 +697,7 @@ test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
     update  ; # shall not trigger error  invalid command name ".top.s"
 } -cleanup {
     destroy .top.s .top
-} -result {} 
+} -result {}
 
 catch {destroy .s}
 catch {destroy .t}
