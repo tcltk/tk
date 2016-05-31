@@ -597,12 +597,25 @@ proc ::tk::ButtonUp w {
 # w -		The name of the widget.
 
 proc ::tk::ButtonInvoke w {
-    if {[$w cget -state] ne "disabled"} {
+    if {[winfo exists $w] && [$w cget -state] ne "disabled"} {
 	set oldRelief [$w cget -relief]
 	set oldState [$w cget -state]
 	$w configure -state active -relief sunken
-	update idletasks
-	after 100
+	after 100 [list ::tk::ButtonInvokeEnd $w $oldState $oldRelief]
+    }
+}
+
+# ::tk::ButtonInvokeEnd --
+# The procedure below is called after a button is invoked through
+# the keyboard.  It simulate a release of the button via the mouse.
+#
+# Arguments:
+# w -         The name of the widget.
+# oldState -  Old state to be set back.
+# oldRelief - Old relief to be set back.
+
+proc ::tk::ButtonInvokeEnd {w oldState oldRelief} {
+    if {[winfo exists $w]} {
 	$w configure -state $oldState -relief $oldRelief
 	uplevel #0 [list $w invoke]
     }

@@ -139,7 +139,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     gcValues.foreground = WhitePixelOfScreen(Tk_Screen(tkwin));
     gc2 = Tk_GetGC(tkwin, GCFont | GCForeground, &gcValues);
 
-    /* 
+    /*
      * Place text according to -anchor:
      */
     Tk_GetAnchorFromObj(NULL, text->anchorObj, &anchor);
@@ -342,15 +342,15 @@ static void ImageDraw(
 
     Tk_RedrawImage(image->tkimg, 0,0, width, height, d, b.x, b.y);
 
-    /* If we're disabled there's no state-specific 'disabled' image, 
+    /* If we're disabled there's no state-specific 'disabled' image,
      * stipple the image.
      * @@@ Possibly: Don't do disabled-stippling at all;
      * @@@ it's ugly and out of fashion.
-     * Do not stipple at all under Aqua, just draw the image: it shows up 
+     * Do not stipple at all under Aqua, just draw the image: it shows up
      * as a white rectangle otherwise.
      */
 
-    
+
     if (state & TTK_STATE_DISABLED) {
 	if (TtkSelectImage(image->imageSpec, 0ul) == image->tkimg) {
 #ifndef MAC_OSX_TK
@@ -577,7 +577,7 @@ static void LabelElementSize(
     if (label->compound != TTK_COMPOUND_IMAGE)
 	textReqWidth = TextReqWidth(&label->text);
 
-    switch (label->compound) 
+    switch (label->compound)
     {
 	case TTK_COMPOUND_TEXT:
 	    *widthPtr = textReqWidth;
@@ -588,11 +588,11 @@ static void LabelElementSize(
 	case TTK_COMPOUND_TOP:
 	case TTK_COMPOUND_BOTTOM:
 	case TTK_COMPOUND_CENTER:
-	    *widthPtr = MAX(label->image.width, textReqWidth); 
+	    *widthPtr = MAX(label->image.width, textReqWidth);
 	    break;
 	case TTK_COMPOUND_LEFT:
 	case TTK_COMPOUND_RIGHT:
-	    *widthPtr = label->image.width + textReqWidth + label->space; 
+	    *widthPtr = label->image.width + textReqWidth + label->space;
 	    break;
 	case TTK_COMPOUND_NONE:
 	    break; /* Can't happen */

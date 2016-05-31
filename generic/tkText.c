@@ -401,6 +401,7 @@ static Tcl_Obj *	TextGetText(const TkText *textPtr,
 			    const TkTextIndex *index1,
 			    const TkTextIndex *index2, int visibleOnly);
 static void		GenerateModifiedEvent(TkText *textPtr);
+static void		GenerateUndoStackEvent(TkText *textPtr);
 static void		UpdateDirtyFlag(TkSharedText *sharedPtr);
 static void		RunAfterSyncCmd(ClientData clientData);
 static void		TextPushUndoAction(TkText *textPtr,
@@ -2093,7 +2094,7 @@ ConfigureText(
     textPtr->sharedTextPtr->maxUndo = textPtr->maxUndo;
     textPtr->sharedTextPtr->autoSeparators = textPtr->autoSeparators;
 
-    TkUndoSetDepth(textPtr->sharedTextPtr->undoStack,
+    TkUndoSetMaxDepth(textPtr->sharedTextPtr->undoStack,
 	    textPtr->sharedTextPtr->maxUndo);
 
     /*
@@ -2769,6 +2770,7 @@ TextPushUndoAction(
 				/* Index describing second location. */
 {
     TkUndoSubAtom *iAtom, *dAtom;
+    int canUndo, canRedo;
 
     /*
      * Create the helpers.
@@ -2855,6 +2857,9 @@ TextPushUndoAction(
     Tcl_DecrRefCount(index1Obj);
     Tcl_DecrRefCount(index2Obj);
 
+    canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
+    canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
+
     /*
      * Depending whether the action is to insert or delete, we provide the
      * appropriate second and third arguments to TkUndoPushAction. (The first
@@ -2865,6 +2870,10 @@ TextPushUndoAction(
 	TkUndoPushAction(textPtr->sharedTextPtr->undoStack, iAtom, dAtom);
     } else {
 	TkUndoPushAction(textPtr->sharedTextPtr->undoStack, dAtom, iAtom);
+    }
+
+    if (!canUndo || canRedo) {
+        GenerateUndoStackEvent(textPtr);
     }
 }
 
@@ -3554,16 +3563,7 @@ TkTextSelectionEvent(
      *     event generate $textWidget <<Selection>>
      */
 
-    union {XEvent general; XVirtualEvent virtual;} event;
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
-    event.general.xany.display = Tk_Display(textPtr->tkwin);
-    event.virtual.name = Tk_GetUid("Selection");
-    Tk_HandleEvent(&event.general);
+    TkSendVirtualEvent(textPtr->tkwin, "Selection", NULL);
 }
 
 /*
@@ -5164,11 +5164,16 @@ TextEditCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, setModified, oldModified;
+    int canRedo = 0;
+    int canUndo = 0;
+
     static const char *const editOptionStrings[] = {
-	"modified", "redo", "reset", "separator", "undo", NULL
+	"canundo", "canredo", "modified", "redo", "reset", "separator",
+        "undo", NULL
     };
     enum editOptions {
-	EDIT_MODIFIED, EDIT_REDO, EDIT_RESET, EDIT_SEPARATOR, EDIT_UNDO
+	EDIT_CANUNDO, EDIT_CANREDO, EDIT_MODIFIED, EDIT_REDO, EDIT_RESET,
+	EDIT_SEPARATOR, EDIT_UNDO
     };
 
     if (objc < 3) {
@@ -5182,6 +5187,26 @@ TextEditCmd(
     }
 
     switch ((enum editOptions) index) {
+    case EDIT_CANREDO:
+        if (objc != 3) {
+            Tcl_WrongNumArgs(interp, 3, objv, NULL);
+             return TCL_ERROR;
+        }
+        if (textPtr->sharedTextPtr->undo) {
+            canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
+        }
+        Tcl_SetObjResult(interp, Tcl_NewBooleanObj(canRedo));
+        break;
+    case EDIT_CANUNDO:
+        if (objc != 3) {
+            Tcl_WrongNumArgs(interp, 3, objv, NULL);
+             return TCL_ERROR;
+        }
+        if (textPtr->sharedTextPtr->undo) {
+            canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
+        }
+        Tcl_SetObjResult(interp, Tcl_NewBooleanObj(canUndo));
+        break;
     case EDIT_MODIFIED:
 	if (objc == 3) {
 	    Tcl_SetObjResult(interp,
@@ -5215,26 +5240,36 @@ TextEditCmd(
 	 */
 
 	if ((!oldModified) != (!setModified)) {
-	    GenerateModifiedEvent(textPtr);
+            GenerateModifiedEvent(textPtr);
 	}
 	break;
     case EDIT_REDO:
-	if (objc != 3) {
+        if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
-	if (TextEditRedo(textPtr)) {
+	canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
+        if (TextEditRedo(textPtr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to redo", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_REDO", NULL);
 	    return TCL_ERROR;
 	}
+        canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
+        if (!canUndo || !canRedo) {
+            GenerateUndoStackEvent(textPtr);
+        }
 	break;
     case EDIT_RESET:
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
+        canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
+        canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
 	TkUndoClearStacks(textPtr->sharedTextPtr->undoStack);
+        if (canUndo || canRedo) {
+            GenerateUndoStackEvent(textPtr);
+        }
 	break;
     case EDIT_SEPARATOR:
 	if (objc != 3) {
@@ -5244,15 +5279,20 @@ TextEditCmd(
 	TkUndoInsertUndoSeparator(textPtr->sharedTextPtr->undoStack);
 	break;
     case EDIT_UNDO:
-	if (objc != 3) {
+        if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
+        canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
 	if (TextEditUndo(textPtr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to undo", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_UNDO", NULL);
 	    return TCL_ERROR;
 	}
+        canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
+        if (!canRedo || !canUndo) {
+            GenerateUndoStackEvent(textPtr);
+        }
 	break;
     }
     return TCL_OK;
@@ -5347,7 +5387,8 @@ TextGetText(
  *
  *	Send an event that the text was modified. This is equivalent to:
  *	   event generate $textWidget <<Modified>>
- *
+  *	for all peers of $textWidget.
+*
  * Results:
  *	None
  *
@@ -5361,21 +5402,41 @@ static void
 GenerateModifiedEvent(
     TkText *textPtr)	/* Information about text widget. */
 {
-    union {
-	XEvent general;
-	XVirtualEvent virtual;
-    } event;
+    for (textPtr = textPtr->sharedTextPtr->peers; textPtr != NULL;
+            textPtr = textPtr->next) {
+        Tk_MakeWindowExist(textPtr->tkwin);
+        TkSendVirtualEvent(textPtr->tkwin, "Modified", NULL);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateUndoStackEvent --
+ *
+ *	Send an event that the undo or redo stack became empty or unempty.
+ *	This is equivalent to:
+ *	   event generate $textWidget <<UndoStack>>
+ *	for all peers of $textWidget.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	May force the text window (and all peers) into existence.
+ *
+ *----------------------------------------------------------------------
+ */
 
-    Tk_MakeWindowExist(textPtr->tkwin);
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
-    event.general.xany.display = Tk_Display(textPtr->tkwin);
-    event.virtual.name = Tk_GetUid("Modified");
-    Tk_HandleEvent(&event.general);
+static void
+GenerateUndoStackEvent(
+    TkText *textPtr)	/* Information about text widget. */
+{
+    for (textPtr = textPtr->sharedTextPtr->peers; textPtr != NULL;
+            textPtr = textPtr->next) {
+        Tk_MakeWindowExist(textPtr->tkwin);
+        TkSendVirtualEvent(textPtr->tkwin, "UndoStack", NULL);
+    }
 }
 
 /*
@@ -5399,7 +5460,6 @@ UpdateDirtyFlag(
     TkSharedText *sharedTextPtr)/* Information about text widget. */
 {
     int oldDirtyFlag;
-    TkText *textPtr;
 
     /*
      * If we've been forced to be dirty, we stay dirty (until explicitly
@@ -5430,10 +5490,7 @@ UpdateDirtyFlag(
     }
 
     if (sharedTextPtr->isDirty == 0 || oldDirtyFlag == 0) {
-	for (textPtr = sharedTextPtr->peers; textPtr != NULL;
-		textPtr = textPtr->next) {
-	    GenerateModifiedEvent(textPtr);
-	}
+        GenerateModifiedEvent(sharedTextPtr->peers);
     }
 }
 
