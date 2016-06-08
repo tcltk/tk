@@ -556,7 +556,8 @@ TkUndoInsertUndoSeparator(
  *	Undo a compound action on the stack.
  *
  * Results:
- *	A Tcl status code
+ *	A Tcl status code. Also, the passed Tcl_(List)Obj is appended by the
+ *	interp results from evaluation of each element of the undo stack.
  *
  * Side effects:
  *	None.
@@ -566,7 +567,8 @@ TkUndoInsertUndoSeparator(
 
 int
 TkUndoRevert(
-    TkUndoRedoStack *stack)
+    TkUndoRedoStack *stack,
+    Tcl_Obj *retObj)
 {
     TkUndoAtom *elem;
 
@@ -598,6 +600,13 @@ TkUndoRevert(
 
 	EvaluateActionList(stack->interp, elem->revert);
 
+        /*
+         * The interp result is appended to the returned object for each
+         * element of the undo stack (not for each sub-atom).
+         */
+
+        Tcl_ListObjAppendList(NULL, retObj, Tcl_GetObjResult(stack->interp));
+
 	TkUndoPushStack(&stack->redoStack, elem);
 	elem = TkUndoPopStack(&stack->undoStack);
     }
@@ -619,7 +628,8 @@ TkUndoRevert(
  *	Redo a compound action on the stack.
  *
  * Results:
- *	A Tcl status code
+ *	A Tcl status code. Also, the passed Tcl_(List)Obj is appended by the
+ *	interp results from evaluation of each element of the redo stack.
  *
  * Side effects:
  *	None.
@@ -629,7 +639,8 @@ TkUndoRevert(
 
 int
 TkUndoApply(
-    TkUndoRedoStack *stack)
+    TkUndoRedoStack *stack,
+    Tcl_Obj *retObj)
 {
     TkUndoAtom *elem;
 
@@ -659,6 +670,13 @@ TkUndoApply(
 	 */
 
 	EvaluateActionList(stack->interp, elem->apply);
+
+        /*
+         * The interp result is appended to the returned object for each
+         * element of the redo stack (not for each sub-atom).
+         */
+
+        Tcl_ListObjAppendList(NULL, retObj, Tcl_GetObjResult(stack->interp));
 
 	TkUndoPushStack(&stack->undoStack, elem);
 	elem = TkUndoPopStack(&stack->redoStack);
