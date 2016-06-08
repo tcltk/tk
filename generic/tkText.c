@@ -395,8 +395,8 @@ static int		DumpSegment(TkText *textPtr, Tcl_Interp *interp,
 			    const char *key, const char *value,
 			    Tcl_Obj *command, const TkTextIndex *index,
 			    int what);
-static int		TextEditUndo(TkText *textPtr);
-static int		TextEditRedo(TkText *textPtr);
+static int		TextEditUndo(TkText *textPtr, Tcl_Obj *rangesObj);
+static int		TextEditRedo(TkText *textPtr, Tcl_Obj *rangesObj);
 static Tcl_Obj *	TextGetText(const TkText *textPtr,
 			    const TkTextIndex *index1,
 			    const TkTextIndex *index2, int visibleOnly);
@@ -5060,7 +5060,7 @@ DumpSegment(
  *	Undo the last change.
  *
  * Results:
- *	None.
+ *	The ranges of text that were changed by the undo operation.
  *
  * Side effects:
  *	Apart from manipulating the undo and redo stacks, the state of the
@@ -5071,7 +5071,8 @@ DumpSegment(
 
 static int
 TextEditUndo(
-    TkText *textPtr)		/* Overall information about text widget. */
+    TkText *textPtr,		/* Overall information about text widget. */
+    Tcl_Obj *rangesObj)         /* Ranges of text that were changed. */
 {
     int status;
 
@@ -5090,7 +5091,7 @@ TextEditUndo(
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_UNDO;
     }
 
-    status = TkUndoRevert(textPtr->sharedTextPtr->undoStack);
+    status = TkUndoRevert(textPtr->sharedTextPtr->undoStack, rangesObj);
 
     if (textPtr->sharedTextPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
@@ -5108,7 +5109,7 @@ TextEditUndo(
  *	Redo the last undone change.
  *
  * Results:
- *	None.
+ *	The ranges of text that were changed by the undo operation.
  *
  * Side effects:
  *	Apart from manipulating the undo and redo stacks, the state of the
@@ -5119,7 +5120,8 @@ TextEditUndo(
 
 static int
 TextEditRedo(
-    TkText *textPtr)		/* Overall information about text widget. */
+    TkText *textPtr,		/* Overall information about text widget. */
+    Tcl_Obj *rangesObj)         /* Ranges of text that were changed. */
 {
     int status;
 
@@ -5138,7 +5140,7 @@ TextEditRedo(
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_REDO;
     }
 
-    status = TkUndoApply(textPtr->sharedTextPtr->undoStack);
+    status = TkUndoApply(textPtr->sharedTextPtr->undoStack, rangesObj);
 
     if (textPtr->sharedTextPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
@@ -5174,6 +5176,7 @@ TextEditCmd(
     int index, setModified, oldModified;
     int canRedo = 0;
     int canUndo = 0;
+    Tcl_Obj *rangesObj = Tcl_NewObj();
 
     static const char *const editOptionStrings[] = {
 	"canundo", "canredo", "modified", "redo", "reset", "separator",
@@ -5257,11 +5260,13 @@ TextEditCmd(
 	    return TCL_ERROR;
 	}
 	canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
-        if (TextEditRedo(textPtr)) {
+        if (TextEditRedo(textPtr, rangesObj)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to redo", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_REDO", NULL);
 	    return TCL_ERROR;
-	}
+        } else {
+            Tcl_SetObjResult(interp, rangesObj);
+        }
         canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
         if (!canUndo || !canRedo) {
             GenerateUndoStackEvent(textPtr);
@@ -5292,11 +5297,13 @@ TextEditCmd(
 	    return TCL_ERROR;
 	}
         canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
-	if (TextEditUndo(textPtr)) {
+	if (TextEditUndo(textPtr, rangesObj)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to undo", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_UNDO", NULL);
 	    return TCL_ERROR;
-	}
+        } else {
+            Tcl_SetObjResult(interp, rangesObj);
+        }
         canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
         if (!canRedo || !canUndo) {
             GenerateUndoStackEvent(textPtr);
