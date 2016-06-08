@@ -6562,6 +6562,36 @@ test text-27.25 {<<UndoStack>> virtual event} -setup {
 } -cleanup {
     destroy .t
 } -result {0 0 1 2 3 4 4 5 6 6 7 8 8 9}
+test text-27.26 {edit undo and edit redo return ranges} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo true -autoseparators false
+    .t insert end "Hello "
+    .t edit separator
+    .t insert end "World!\n"
+    .t insert 1.6 "GREAT "
+    .t insert end "Another edit here!!"
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+    .t edit separator
+    .t delete 1.6
+    .t delete 1.9 1.10
+    .t insert 1.9 L
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+    .t replace 1.6 1.10 Tcl/Tk
+    .t replace 2.8 2.12 "one bites the dust"
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+} -cleanup {
+    destroy .t
+} -result [list {2.0 2.19 1.6 1.12 1.6 2.0} \
+                {1.6 2.0 1.6 1.12 2.0 2.19} \
+                {1.9 1.10 1.9 1.10 1.6 1.7} \
+                {1.6 1.7 1.9 1.10 1.9 1.10} \
+                {2.8 2.26 2.8 2.12 1.6 1.12 1.6 1.10} \
+                {1.6 1.10 1.6 1.12 2.8 2.12 2.8 2.26} ]
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
