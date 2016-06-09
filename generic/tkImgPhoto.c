@@ -2762,7 +2762,7 @@ Tk_PhotoPutBlock(
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
     blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
     alphaOffset = blockPtr->offset[3];
-    if ((alphaOffset >= blockPtr->pixelSize) || (alphaOffset < 0)) {
+    if (alphaOffset == -1) {
 	alphaOffset = 0;
 	sourceIsSimplePhoto = 1;
     } else {
@@ -3159,7 +3159,7 @@ Tk_PhotoPutZoomedBlock(
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
     blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
     alphaOffset = blockPtr->offset[3];
-    if ((alphaOffset >= blockPtr->pixelSize) || (alphaOffset < 0)) {
+    if (alphaOffset == -1) {
 	alphaOffset = 0;
 	sourceIsSimplePhoto = 1;
     } else {
