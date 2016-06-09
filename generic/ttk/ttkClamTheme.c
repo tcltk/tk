@@ -7,8 +7,8 @@
 #include <tk.h>
 #include "ttkTheme.h"
 
-/* 
- * Under windows, the Tk-provided XDrawLine and XDrawArc have an 
+/*
+ * Under windows, the Tk-provided XDrawLine and XDrawArc have an
  * off-by-one error in the end point. This is especially apparent with this
  * theme. Defining this macro as true handles this case.
  */
@@ -134,8 +134,8 @@ static Ttk_ElementOptionSpec BorderElementOptions[] = {
 /*
  * <<NOTE-BORDERWIDTH>>: -borderwidth is only partially supported:
  * in this theme, borders are always exactly 2 pixels thick.
- * With -borderwidth 0, border is not drawn at all; 
- * otherwise a 2-pixel border is used.  For -borderwidth > 2, 
+ * With -borderwidth 0, border is not drawn at all;
+ * otherwise a 2-pixel border is used.  For -borderwidth > 2,
  * the excess is used as padding.
  */
 
@@ -145,7 +145,6 @@ static void BorderElementSize(
 {
     BorderElement *border = (BorderElement*)elementRecord;
     int borderWidth = 2;
-
     Tk_GetPixelsFromObj(NULL, tkwin, border->borderWidthObj, &borderWidth);
     if (borderWidth == 1) ++borderWidth;
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
@@ -421,7 +420,7 @@ typedef struct {
 static Ttk_ElementOptionSpec MenuIndicatorElementOptions[] =
 {
     { "-arrowsize", TK_OPTION_PIXELS,
-	Tk_Offset(MenuIndicatorElement,sizeObj), 
+	Tk_Offset(MenuIndicatorElement,sizeObj),
 	STR(MENUBUTTON_ARROW_SIZE)},
     { "-arrowcolor",TK_OPTION_COLOR,
 	Tk_Offset(MenuIndicatorElement,colorObj),
@@ -634,7 +633,6 @@ static void ThumbElementSize(
 {
     ScrollbarElement *sb = elementRecord;
     int size = FALLBACK_SCROLLBAR_THICKNESS;
-
     Tcl_GetInt(NULL, SCROLLBAR_THICKNESS, &size);
     Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
     *widthPtr = *heightPtr = size;
@@ -663,7 +661,7 @@ static void ThumbElementDraw(
     Tcl_GetIntFromObj(NULL, sb->gripCountObj, &gripCount);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
-    
+
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	dx = 1; dy = 0;
 	x1 = x2 = b.x + b.width / 2 - gripCount;
@@ -745,12 +743,12 @@ static void PbarElementDraw(
     Drawable d, Ttk_Box b, unsigned state)
 {
     ScrollbarElement *sb = elementRecord;
-    
+
     b = Ttk_PadBox(b, Ttk_UniformPadding(2));
     if (b.width > 4 && b.height > 4) {
 	DrawSmoothBorder(tkwin, d, b,
 	    sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
-	XFillRectangle(Tk_Display(tkwin), d, 
+	XFillRectangle(Tk_Display(tkwin), d,
 	    BackgroundGC(tkwin, sb->backgroundObj),
 	    b.x+2, b.y+2, b.width-4, b.height-4);
     }
@@ -817,8 +815,8 @@ static Ttk_ElementSpec ArrowElementSpec = {
 
 /*------------------------------------------------------------------------
  * +++ Notebook elements.
- * 	
- * Note: Tabs, except for the rightmost, overlap the neighbor to 
+ *
+ * Note: Tabs, except for the rightmost, overlap the neighbor to
  * their right by one pixel.
  */
 
@@ -846,7 +844,6 @@ static void TabElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     int borderWidth = 2;
-
     paddingPtr->top = paddingPtr->left = paddingPtr->right = borderWidth;
     paddingPtr->bottom = 0;
 }
@@ -902,7 +899,6 @@ static void ClientElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     int borderWidth = 2;
-
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
