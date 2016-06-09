@@ -34,6 +34,14 @@ proc unsetBindings {} {
     bind .t <Enter> {}
 }
 
+# move the mouse pointer away of the testing area
+# otherwise some spurious events may pollute the tests
+toplevel .top
+wm geometry .top 50x50-50-50
+update
+event generate .top <Button-1> -warp 1
+update
+destroy .top
 
 test bind-1.1 {bind command} -body {
     bind
@@ -6148,6 +6156,19 @@ test bind-31.7 {virtual event user_data field - unshared, asynch} -setup {
 } -cleanup {
     destroy .t.f
 } -result {{} {} {TestUserData >b<}}
+
+test bind-32 {-warp, window was destroyed before the idle callback DoWarp} -setup {
+    frame .t.f
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    event generate .t.f <Button-1> -warp 1
+    event generate .t.f <ButtonRelease-1>
+    destroy .t.f
+    update  ;  # shall simply not crash
+} -cleanup {
+} -result {}
 
 
 # cleanup

@@ -13,6 +13,12 @@
 
 #include "tkInt.h"
 
+#if defined(_WIN32) && defined(PLATFORM_SDL)
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef WIN32_LEAN_AND_MEAN
+#endif
+
 /*
  * Index array. For each of the characters 'a'-'y', this table gives the first
  * color starting with that character in the xColors table.
@@ -229,6 +235,41 @@ static const elem xColors[] = {
     "ellow\0          \213\213\000\315\315\000\356\356\000\377\377\000\377\377\000\4",
     "ellowGreen\0                 \232\315\062\0"
 };
+
+#if defined(_WIN32) && defined(PLATFORM_SDL)
+static struct {
+    const char *name;
+    int index;
+} win32colors[] = {
+    { "3dDarkShadow",		COLOR_3DDKSHADOW },
+    { "3dLight",		COLOR_3DLIGHT },
+    { "ActiveBorder",		COLOR_ACTIVEBORDER },
+    { "ActiveCaption",		COLOR_ACTIVECAPTION },
+    { "AppWorkspace",		COLOR_APPWORKSPACE },
+    { "Background",		COLOR_BACKGROUND },
+    { "ButtonFace",		COLOR_BTNFACE },
+    { "ButtonHighlight",	COLOR_BTNHIGHLIGHT },
+    { "ButtonShadow",		COLOR_BTNSHADOW },
+    { "ButtonText",		COLOR_BTNTEXT },
+    { "CaptionText",		COLOR_CAPTIONTEXT },
+    { "DisabledText",		COLOR_GRAYTEXT },
+    { "GrayText",		COLOR_GRAYTEXT },
+    { "Highlight",		COLOR_HIGHLIGHT },
+    { "HighlightText",		COLOR_HIGHLIGHTTEXT },
+    { "InactiveBorder",		COLOR_INACTIVEBORDER },
+    { "InactiveCaption",	COLOR_INACTIVECAPTION },
+    { "InactiveCaptionText",	COLOR_INACTIVECAPTIONTEXT },
+    { "InfoBackground",		COLOR_INFOBK },
+    { "InfoText",		COLOR_INFOTEXT },
+    { "Menu",			COLOR_MENU },
+    { "MenuText",		COLOR_MENUTEXT },
+    { "Scrollbar",		COLOR_SCROLLBAR },
+    { "Window",			COLOR_WINDOW },
+    { "WindowFrame",		COLOR_WINDOWFRAME },
+    { "WindowText",		COLOR_WINDOWTEXT },
+    { NULL, 0 }
+};
+#endif
 
 /*
  *----------------------------------------------------------------------
@@ -341,6 +382,10 @@ XParseColor(
     const char *spec,
     XColor *colorPtr)
 {
+    int size, num, r;
+    const elem *p;
+    const char *q;
+
     if (spec[0] == '#') {
 	char *p;
 	Tcl_WideInt value = parseHex64bit(++spec, &p);
@@ -369,18 +414,35 @@ XParseColor(
 	default:
 	    return 0;
 	}
+#if defined(_WIN32) && defined(PLATFORM_SDL)
+    } else if ((spec[0] == 'S') && (spec[1] == 'y') && (strlen(spec) > 6) &&
+	       (strncmp(spec, "System", 6) == 0)) {
+	r = 0;
+	while (win32colors[r].name != NULL) {
+	    if (strcmp(spec + 6, win32colors[r].name) == 0) {
+		DWORD pixel = GetSysColor(win32colors[r].index);
+
+		colorPtr->red = GetRValue(pixel) * 257;
+		colorPtr->green = GetGValue(pixel) * 257;
+		colorPtr->blue = GetBValue(pixel) * 257;
+		break;
+	    }
+	    ++r;
+	}
+	if (win32colors[r].name == NULL) {
+	    goto nameLookup;
+	}
+#endif
     } else {
+#if defined(_WIN32) && defined(PLATFORM_SDL)
+nameLookup:
+#endif
 	/*
 	 * Perform a binary search on the sorted array of colors.
 	 * size = current size of search range
 	 * p    = pointer to current element being considered.
 	 */
-
-	int size, num;
-	const elem *p;
-	const char *q;
-	int r = (spec[0] - 'A') & 0xdf;
-
+	r = (spec[0] - 'A') & 0xdf;
 	if (r >= (int) sizeof(az) - 1) {
 	    return 0;
 	}

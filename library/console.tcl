@@ -196,6 +196,7 @@ proc ::tk::ConsoleInit {} {
     if {[tk windowingsystem] ne "aqua"} {
 	# Subtle work-around to erase the '% ' that tclMain.c prints out
 	after idle [subst -nocommand {
+	    consoleinterp flush
 	    if {[$con get 1.0 output] eq "% "} { $con delete 1.0 output }
 	}]
     }
@@ -982,8 +983,19 @@ proc ::tk::console::Expand {w {type ""}} {
 	$w delete $tmp insert
 	$w insert $tmp $repl {input stdin}
 	if {($len > 1) && ($::tk::console::showMatches) && ($repl eq $str)} {
-	    $w insert output [lsort [lreplace $res 0 0]] stdout
+	    set txt [lsort [lreplace $res 0 0]]
+	    if {[string length $txt] > 2043} {
+		set txt [string range $txt 0 2043]
+		if {$::tk::sdltk} {
+		    append txt "\u2026"
+		} else {
+		    append txt "..."
+		}
+	    }
+	    $w insert output $txt stdout
 	    $w insert output "\n" stdout
+	    after cancel [subst {catch {$w see insert}}]
+	    after idle [subst {catch {$w see insert}}]
 	}
     } else {
 	bell
