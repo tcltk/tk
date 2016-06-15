@@ -2429,6 +2429,9 @@ SdlTkXDestroyAgg2D(Display *display, void *ptr)
 #else
 	delete agg2d;
 #endif
+	if (ptr == display->agg2d) {
+	    display->agg2d = NULL;
+	}
     }
 }
 
