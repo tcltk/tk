@@ -6383,6 +6383,21 @@ test text-27.16 {-maxundo configuration option} -body {
 } -cleanup {
     destroy .t
 } -result "line 1\n\n"
+test text-27.16a {undo configuration options with peers} -body {
+    text .t -undo 1 -autoseparators 0 -maxundo 100
+    .t peer create .tt
+    set res     [.t  cget -undo]
+    lappend res [.tt cget -undo]
+    lappend res [.t  cget -autoseparators]
+    lappend res [.tt cget -autoseparators]
+    lappend res [.t  cget -maxundo]
+    lappend res [.tt cget -maxundo]
+    .t insert end "The undo stack is common between peers"
+    lappend res [.t  edit canundo]
+    lappend res [.tt edit canundo]
+} -cleanup {
+    destroy .t
+} -result {1 1 0 0 100 100 1 1}
 test text-27.17 {bug fix 1536735 - undo with empty text} -body {
     text .t -undo 1
     set r [.t edit modified]
