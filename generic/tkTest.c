@@ -239,7 +239,7 @@ Tktest_Init(
      */
 
     if (Tcl_PkgProvideEx(interp, "Tktest", TK_PATCH_LEVEL, NULL) == TCL_ERROR) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     Tcl_CreateObjCommand(interp, "square", SquareObjCmd, NULL, NULL);
