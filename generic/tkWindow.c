@@ -3084,7 +3084,7 @@ Initialize(
 	 * master.
 	 */
 
-	Tcl_DString ds;
+	Tcl_Obj *cmd;
 
 	/*
 	 * Step 1 : find the master and construct the interp name (could be a
@@ -3095,7 +3095,7 @@ Initialize(
 
 	Tcl_Interp *master = interp;
 
-	while (1) {
+	while (Tcl_IsSafe(master)) {
 	    master = Tcl_GetMaster(master);
 	    if (master == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3103,10 +3103,6 @@ Initialize(
 		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_MASTER", NULL);
 		code = TCL_ERROR;
 		goto done;
-	    }
-	    if (!Tcl_IsSafe(master)) {
-		/* Found the trusted master. */
-		break;
 	    }
 	}
 
@@ -3116,39 +3112,30 @@ Initialize(
 
 	code = Tcl_GetInterpPath(master, interp);
 	if (code != TCL_OK) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "error in Tcl_GetInterpPath", -1));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", "FAILED", NULL);
-	    goto done;
+	    Tcl_Panic("Tcl_GetInterpPath broken!");
 	}
 
 	/*
-	 * Build the string to eval.
+	 * Build the command to eval in trusted master.
 	 */
 
-	Tcl_DStringInit(&ds);
-	Tcl_DStringAppendElement(&ds, "::safe::TkInit");
-	Tcl_DStringAppendElement(&ds, Tcl_GetString(Tcl_GetObjResult(master)));
-
+	cmd = Tcl_NewListObj(2, NULL);
+	Tcl_ListObjAppendElement(NULL, cmd,
+		Tcl_NewStringObj("::safe::TkInit", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(master));
+	
 	/*
 	 * Step 2 : Eval in the master. The argument is the *reversed* interp
 	 * path of the slave.
 	 */
 
-	code = Tcl_EvalEx(master, Tcl_DStringValue(&ds), -1, 0);
+	Tcl_IncrRefCount(cmd);
+	code = Tcl_EvalObjEx(master, cmd, 0);
+	Tcl_DecrRefCount(cmd);
+	Tcl_TransferResult(master, code, interp);
 	if (code != TCL_OK) {
-	    /*
-	     * We might want to transfer the error message or not. We don't.
-	     * (No API to do it and maybe security reasons).
-	     */
-
-	    Tcl_DStringFree(&ds);
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "not allowed to start Tk by master's safe::TkInit", -1));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", "FAILED", NULL);
 	    goto done;
 	}
-	Tcl_DStringFree(&ds);
 
 	/*
 	 * Use the master's result as argv. Note: We don't use the Obj
@@ -3156,7 +3143,7 @@ Initialize(
 	 * changing the code below.
 	 */
 
-	argString = Tcl_GetString(Tcl_GetObjResult(master));
+	argString = Tcl_GetString(Tcl_GetObjResult(interp));
     } else {
 	/*
 	 * If there is an "argv" variable, get its value, extract out relevant
