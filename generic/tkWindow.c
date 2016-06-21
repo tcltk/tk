@@ -2993,7 +2993,7 @@ CopyValue(
     Tcl_Obj *objPtr,
     void *dstPtr)
 {
-    dstPtr = objPtr;
+    *(Tcl_Obj **)dstPtr = objPtr;
     return 1;
 }
 
