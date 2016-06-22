@@ -447,6 +447,30 @@ TkCreateFrame(
     return result;
 }
 
+int
+TkListCreateFrame(
+    ClientData clientData,	/* Either NULL or pointer to option table. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Obj *listObj,		/* List of arguments. */
+    int toplevel,		/* Non-zero means create a toplevel window,
+				 * zero means create a frame. */
+    Tcl_Obj *nameObj)		/* Should only be non-NULL if there is no main
+				 * window associated with the interpreter.
+				 * Gives the base name to use for the new
+				 * application. */
+    
+{
+    int objc;
+    Tcl_Obj **objv;
+
+    if (TCL_OK != Tcl_ListObjGetElements(interp, listObj, &objc, &objv)) {
+	return TCL_ERROR;
+    }
+    return CreateFrame(clientData, interp, objc, objv,
+	    toplevel ? TYPE_TOPLEVEL : TYPE_FRAME,
+	    nameObj ? Tcl_GetString(nameObj) : NULL);
+}
+
 static int
 CreateFrame(
     ClientData clientData,	/* NULL. */
