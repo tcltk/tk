@@ -1226,6 +1226,9 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
+MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
+			    Tcl_Interp *interp, Tcl_Obj *listObj,
+			    int toplevel, Tcl_Obj *nameObj);
 #ifdef PLATFORM_SDL
 MODULE_SCOPE int	TkInitSdltkCmd(Tcl_Interp *interp,
 			    ClientData clientData);
