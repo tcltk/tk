@@ -6017,7 +6017,7 @@ XQueryTree(Display *display, Window w, Window *root_return,
 {
     _Window *_w = (_Window *) w;
     _Window *child;
-    int n = 0;
+    int k, n = 0;
 
     SdlTkLock(display);
 
@@ -6041,10 +6041,10 @@ XQueryTree(Display *display, Window w, Window *root_return,
 
     /* Make array of children */
     *children_return = (Window *) ckalloc(sizeof (Window) * n);
-    n = 0;
+    k = n;
     child = _w->child;
     while (child != NULL) {
-	(*children_return)[n++] = (Window) child;
+	(*children_return)[--k] = (Window) child;
 	child = child->next;
     }
     *nchildren_return = n;
