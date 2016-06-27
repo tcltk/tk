@@ -99,6 +99,8 @@ being written to the photo image.
 particular photo image to the other procedures.  The parameter is the
 name of the image, that is, the name specified to the \fBimage create
 photo\fR command, or assigned by that command if no name was specified.
+If \fIimageName\fR does not exist or is not a photo image, 
+\fBTk_FindPhoto\fR returns NULL. 
 .PP
 \fBTk_PhotoPutBlock\fR is used to supply blocks of image data to be
 displayed.  The call affects an area of the image of size
@@ -181,6 +183,18 @@ in the structure pointed to by the \fIblockPtr\fR parameter with values
 that describe the address and layout of the image data that the
 photo image has stored internally.  The values are valid
 until the image is destroyed or its size is changed.
+.PP
+It is possible to modify an image by writing directly to the data 
+the \fIpixelPtr\fR field points to. The size of the image cannot be
+changed this way, though.
+Also, changes made by writing directly to \fIpixelPtr\fR will not be 
+immediately visible, but only after a call to 
+\fBTk_ImageChanged\fR or after an event that causes the interested 
+widgets to redraw themselves.
+For these reasons usually it is preferable to make changes to 
+a copy of the image data and write it back with 
+\fBTk_PhotoPutBlock\fR or \fBTk_PhotoPutZoomedBlock\fR. 
+.PP
 \fBTk_PhotoGetImage\fR returns 1 for compatibility with the
 corresponding procedure in the old photo widget.
 .PP
