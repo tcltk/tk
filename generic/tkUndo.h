@@ -109,7 +109,7 @@ MODULE_SCOPE TkUndoSubAtom *TkUndoMakeSubAtom(TkUndoProc *funcPtr,
 			    TkUndoSubAtom *subAtomList);
 MODULE_SCOPE void	TkUndoPushAction(TkUndoRedoStack *stack,
 			    TkUndoSubAtom *apply, TkUndoSubAtom *revert);
-MODULE_SCOPE int	TkUndoRevert(TkUndoRedoStack *stack, Tcl_Obj *retObj);
-MODULE_SCOPE int	TkUndoApply(TkUndoRedoStack *stack, Tcl_Obj *retObj);
+MODULE_SCOPE int	TkUndoRevert(TkUndoRedoStack *stack);
+MODULE_SCOPE int	TkUndoApply(TkUndoRedoStack *stack);
 
 #endif /* _TKUNDO */
