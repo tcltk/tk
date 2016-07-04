@@ -398,8 +398,8 @@ static int		DumpSegment(TkText *textPtr, Tcl_Interp *interp,
 			    const char *key, const char *value,
 			    Tcl_Obj *command, const TkTextIndex *index,
 			    int what);
-static int		TextEditUndo(TkText *textPtr, Tcl_Obj *rangesObj);
-static int		TextEditRedo(TkText *textPtr, Tcl_Obj *rangesObj);
+static int		TextEditUndo(TkText *textPtr);
+static int		TextEditRedo(TkText *textPtr);
 static Tcl_Obj *	TextGetText(const TkText *textPtr,
 			    const TkTextIndex *index1,
 			    const TkTextIndex *index2, int visibleOnly);
@@ -2774,6 +2774,10 @@ TextPushUndoAction(
 {
     TkUndoSubAtom *iAtom, *dAtom;
     int canUndo, canRedo;
+    static int undoMarkId = -1;
+    char lMarkName[20] = "tk::undoMarkL";
+    char rMarkName[20] = "tk::undoMarkR";
+    char stringUndoMarkId[7] = "";
 
     /*
      * Create the helpers.
@@ -2784,7 +2788,10 @@ TextPushUndoAction(
     Tcl_Obj *markSet2InsertObj = NULL;
     Tcl_Obj *insertCmdObj = Tcl_NewObj();
     Tcl_Obj *deleteCmdObj = Tcl_NewObj();
-    Tcl_Obj *returnCmdObj = Tcl_NewObj();
+    Tcl_Obj *markSetLUndoMarkCmdObj = Tcl_NewObj();
+    Tcl_Obj *markSetRUndoMarkCmdObj = NULL;
+    Tcl_Obj *markGravityLUndoMarkCmdObj = Tcl_NewObj();
+    Tcl_Obj *markGravityRUndoMarkCmdObj = NULL;
 
     /*
      * Get the index positions.
@@ -2834,10 +2841,39 @@ TextPushUndoAction(
     Tcl_ListObjAppendElement(NULL, deleteCmdObj, index1Obj);
     Tcl_ListObjAppendElement(NULL, deleteCmdObj, index2Obj);
 
-    Tcl_ListObjAppendElement(NULL, returnCmdObj,
-	    Tcl_NewStringObj("list", 4));
-    Tcl_ListObjAppendElement(NULL, returnCmdObj, index1Obj);
-    Tcl_ListObjAppendElement(NULL, returnCmdObj, index2Obj);
+    Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
+	    Tcl_NewStringObj(Tk_PathName(textPtr->tkwin), -1));
+    Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
+	    Tcl_NewStringObj("mark", 4));
+    Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
+	    Tcl_NewStringObj("set", 3));
+    markSetRUndoMarkCmdObj = Tcl_DuplicateObj(markSetLUndoMarkCmdObj);
+    undoMarkId++;
+    sprintf(stringUndoMarkId, "%d", undoMarkId);
+    strcat(lMarkName, stringUndoMarkId);
+    strcat(rMarkName, stringUndoMarkId);
+    Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
+	    Tcl_NewStringObj(lMarkName, -1));
+    Tcl_ListObjAppendElement(NULL, markSetRUndoMarkCmdObj,
+	    Tcl_NewStringObj(rMarkName, -1));
+    Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj, index1Obj);
+    Tcl_ListObjAppendElement(NULL, markSetRUndoMarkCmdObj, index2Obj);
+
+    Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
+	    Tcl_NewStringObj(Tk_PathName(textPtr->tkwin), -1));
+    Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
+	    Tcl_NewStringObj("mark", 4));
+    Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
+	    Tcl_NewStringObj("gravity", 7));
+    markGravityRUndoMarkCmdObj = Tcl_DuplicateObj(markGravityLUndoMarkCmdObj);
+    Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
+	    Tcl_NewStringObj(lMarkName, -1));
+    Tcl_ListObjAppendElement(NULL, markGravityRUndoMarkCmdObj,
+	    Tcl_NewStringObj(rMarkName, -1));
+    Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
+            Tcl_NewStringObj("left", 4));
+    Tcl_ListObjAppendElement(NULL, markGravityRUndoMarkCmdObj,
+            Tcl_NewStringObj("right", 5));
 
     /*
      * Note: we don't wish to use textPtr->widgetCmd in these callbacks
@@ -2856,13 +2892,19 @@ TextPushUndoAction(
 	    insertCmdObj, NULL);
     TkUndoMakeCmdSubAtom(NULL, markSet2InsertObj, iAtom);
     TkUndoMakeCmdSubAtom(NULL, seeInsertObj, iAtom);
-    TkUndoMakeCmdSubAtom(NULL, returnCmdObj, iAtom);
+    TkUndoMakeCmdSubAtom(NULL, markSetLUndoMarkCmdObj, iAtom);
+    TkUndoMakeCmdSubAtom(NULL, markSetRUndoMarkCmdObj, iAtom);
+    TkUndoMakeCmdSubAtom(NULL, markGravityLUndoMarkCmdObj, iAtom);
+    TkUndoMakeCmdSubAtom(NULL, markGravityRUndoMarkCmdObj, iAtom);
 
     dAtom = TkUndoMakeSubAtom(&TextUndoRedoCallback, textPtr->sharedTextPtr,
 	    deleteCmdObj, NULL);
     TkUndoMakeCmdSubAtom(NULL, markSet1InsertObj, dAtom);
     TkUndoMakeCmdSubAtom(NULL, seeInsertObj, dAtom);
-    TkUndoMakeCmdSubAtom(NULL, returnCmdObj, dAtom);
+    TkUndoMakeCmdSubAtom(NULL, markSetLUndoMarkCmdObj, dAtom);
+    TkUndoMakeCmdSubAtom(NULL, markSetRUndoMarkCmdObj, dAtom);
+    TkUndoMakeCmdSubAtom(NULL, markGravityLUndoMarkCmdObj, dAtom);
+    TkUndoMakeCmdSubAtom(NULL, markGravityRUndoMarkCmdObj, dAtom);
 
     Tcl_DecrRefCount(seeInsertObj);
     Tcl_DecrRefCount(index1Obj);
@@ -5063,7 +5105,7 @@ DumpSegment(
  *	Undo the last change.
  *
  * Results:
- *	The ranges of text that were changed by the undo operation.
+ *	None.
  *
  * Side effects:
  *	Apart from manipulating the undo and redo stacks, the state of the
@@ -5074,10 +5116,11 @@ DumpSegment(
 
 static int
 TextEditUndo(
-    TkText *textPtr,		/* Overall information about text widget. */
-    Tcl_Obj *rangesObj)         /* Ranges of text that were changed. */
+    TkText *textPtr)		/* Overall information about text widget. */
 {
     int status;
+    Tcl_Obj *cmdObj;
+    int code;
 
     if (!textPtr->sharedTextPtr->undo) {
 	return TCL_OK;
@@ -5094,12 +5137,28 @@ TextEditUndo(
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_UNDO;
     }
 
-    status = TkUndoRevert(textPtr->sharedTextPtr->undoStack, rangesObj);
+    status = TkUndoRevert(textPtr->sharedTextPtr->undoStack);
 
     if (textPtr->sharedTextPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
     }
     textPtr->sharedTextPtr->undo = 1;
+
+    /*
+     * Convert undo/redo temporary marks set by TkUndoRevert() into
+     * indices left in the interp result.
+     */
+
+    cmdObj = Tcl_ObjPrintf("::tk::TextUndoRedoProcessMarks %s",
+            Tk_PathName(textPtr->tkwin));
+    Tcl_IncrRefCount(cmdObj);
+    code = Tcl_EvalObjEx(textPtr->interp, cmdObj, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+        Tcl_AddErrorInfo(textPtr->interp,
+                "\n    (on undoing)");
+        Tcl_BackgroundException(textPtr->interp, code);
+    }
+    Tcl_DecrRefCount(cmdObj);
 
     return status;
 }
@@ -5112,7 +5171,7 @@ TextEditUndo(
  *	Redo the last undone change.
  *
  * Results:
- *	The ranges of text that were changed by the undo operation.
+ *	None.
  *
  * Side effects:
  *	Apart from manipulating the undo and redo stacks, the state of the
@@ -5123,10 +5182,11 @@ TextEditUndo(
 
 static int
 TextEditRedo(
-    TkText *textPtr,		/* Overall information about text widget. */
-    Tcl_Obj *rangesObj)         /* Ranges of text that were changed. */
+    TkText *textPtr)		/* Overall information about text widget. */
 {
     int status;
+    Tcl_Obj *cmdObj;
+    int code;
 
     if (!textPtr->sharedTextPtr->undo) {
 	return TCL_OK;
@@ -5143,12 +5203,29 @@ TextEditRedo(
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_REDO;
     }
 
-    status = TkUndoApply(textPtr->sharedTextPtr->undoStack, rangesObj);
+    status = TkUndoApply(textPtr->sharedTextPtr->undoStack);
 
     if (textPtr->sharedTextPtr->dirtyMode != TK_TEXT_DIRTY_FIXED) {
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
     }
     textPtr->sharedTextPtr->undo = 1;
+
+    /*
+     * Convert undo/redo temporary marks set by TkUndoApply() into
+     * indices left in the interp result.
+     */
+
+    cmdObj = Tcl_ObjPrintf("::tk::TextUndoRedoProcessMarks %s",
+            Tk_PathName(textPtr->tkwin));
+    Tcl_IncrRefCount(cmdObj);
+    code = Tcl_EvalObjEx(textPtr->interp, cmdObj, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+        Tcl_AddErrorInfo(textPtr->interp,
+                "\n    (on undoing)");
+        Tcl_BackgroundException(textPtr->interp, code);
+    }
+    Tcl_DecrRefCount(cmdObj);
+
     return status;
 }
 
@@ -5179,7 +5256,6 @@ TextEditCmd(
     int index, setModified, oldModified;
     int canRedo = 0;
     int canUndo = 0;
-    Tcl_Obj *rangesObj = Tcl_NewObj();
 
     static const char *const editOptionStrings[] = {
 	"canundo", "canredo", "modified", "redo", "reset", "separator",
@@ -5263,13 +5339,11 @@ TextEditCmd(
 	    return TCL_ERROR;
 	}
 	canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
-	if (TextEditRedo(textPtr, rangesObj)) {
+        if (TextEditRedo(textPtr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to redo", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_REDO", NULL);
 	    return TCL_ERROR;
-        } else {
-            Tcl_SetObjResult(interp, rangesObj);
-        }
+	}
 	canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
 	if (!canUndo || !canRedo) {
 	    GenerateUndoStackEvent(textPtr);
@@ -5300,13 +5374,11 @@ TextEditCmd(
 	    return TCL_ERROR;
 	}
 	canRedo = TkUndoCanRedo(textPtr->sharedTextPtr->undoStack);
-	if (TextEditUndo(textPtr, rangesObj)) {
+	if (TextEditUndo(textPtr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to undo", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_UNDO", NULL);
 	    return TCL_ERROR;
-        } else {
-            Tcl_SetObjResult(interp, rangesObj);
-        }
+	}
 	canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
 	if (!canRedo || !canUndo) {
 	    GenerateUndoStackEvent(textPtr);
