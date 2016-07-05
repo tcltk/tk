@@ -6601,12 +6601,42 @@ test text-27.26 {edit undo and edit redo return ranges} -setup {
     lappend res [.t edit redo]
 } -cleanup {
     destroy .t
-} -result [list {2.0 2.19 1.6 1.12 1.6 2.0} \
-                {1.6 2.0 1.6 1.12 2.0 2.19} \
-                {1.9 1.10 1.9 1.10 1.6 1.7} \
-                {1.6 1.7 1.9 1.10 1.9 1.10} \
-                {2.8 2.26 2.8 2.12 1.6 1.12 1.6 1.10} \
-                {1.6 1.10 1.6 1.12 2.8 2.12 2.8 2.26} ]
+} -result [list {1.6 2.0}           \
+                {1.6 2.19}          \
+                {1.6 1.7 1.10 1.12} \
+                {1.6 1.7 1.9 1.11}  \
+                {1.6 1.16 2.8 2.19} \
+                {1.6 1.16 2.8 2.30} ]
+test text-27.27 {edit undo and edit redo return ranges} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo true -autoseparators false
+    for {set i 3} {$i >= 1} {incr i -1} {
+        .t insert 1.0 "Line $i\n"
+    }
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+} -cleanup {
+    destroy .t
+} -result [list {1.0 2.0} \
+                {1.0 4.0} ]
+test text-27.28 {edit undo and edit redo do not leave \
+                 spurious temporary marks behind them} -setup {
+    destroy .t
+    set res {}
+} -body {
+    pack [text .t -undo true -autoseparators false]
+    .t insert end "Hello World.\n"
+    .t edit separator
+    .t insert end "Again hello.\n"
+    .t edit undo
+    lappend res [lsearch [.t mark names] tk::undoMark*]
+    .t edit undo
+    lappend res [lsearch [.t mark names] tk::undoMark*]
+} -cleanup {
+    destroy .t
+} -result [list -1 -1]
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
