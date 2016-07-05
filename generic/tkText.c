@@ -5339,7 +5339,7 @@ TextEditCmd(
 	    return TCL_ERROR;
 	}
 	canUndo = TkUndoCanUndo(textPtr->sharedTextPtr->undoStack);
-        if (TextEditRedo(textPtr)) {
+	if (TextEditRedo(textPtr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to redo", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_REDO", NULL);
 	    return TCL_ERROR;
