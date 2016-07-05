@@ -1217,13 +1217,17 @@ proc ::tk::TextScanDrag {w x y} {
 proc ::tk::TextUndoRedoProcessMarks {w} {
     set indices {}
     set undoMarks {}
+
     # only consider the temporary marks set by an undo/redo action
     foreach mark [$w mark names] {
         if {[string range $mark 0 11] eq "tk::undoMark"} {
             lappend undoMarks $mark
         }
     }
-    # the number of undo/redo marks is always even
+
+    # transform marks into indices
+    # the number of undo/redo marks is always even, each right mark
+    # completes a left mark to give a range
     set nUndoMarks [llength $undoMarks]
     set n [expr {$nUndoMarks / 2}]
     set undoMarks [lsort -dictionary $undoMarks]
@@ -1233,39 +1237,51 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
         lappend indices [$w index $Lmark] [$w index $Rmark]
         $w mark unset $Lmark $Rmark
     }
-#puts "Unoptimized indices: $indices"
+
     # process ranges to:
     #   - remove those already fully included in another range
     #   - merge overlapping ranges
     set ind [lsort -dictionary -stride 2 $indices]
     set indices {}
+
     for {set i 0} {$i < $nUndoMarks} {incr i 2} {
         set il1 [lindex $ind $i]
         set ir1 [lindex $ind [expr {$i + 1}]]
         lappend indices $il1 $ir1
-#puts "  range1: $il1 $ir1"
+ 
         for {set j [expr {$i + 2}]} {$j < $nUndoMarks} {incr j 2} {
             set il2 [lindex $ind $j]
             set ir2 [lindex $ind [expr {$j + 1}]]
-#puts "  range2: $il2 $ir2"
+ 
             if {[$w compare $il2 > $ir1]} {
                 # second range starts after the end of first range
+                # -> further second ranges do not need to be considered
+                #    because ranges were sorted by increasing first index
                 set j $nUndoMarks
+ 
             } else {
                 if {[$w compare $ir2 > $ir1]} {
-                    # second range overlaps with first range
+                    # second range overlaps first range
+                    # -> merge them into a single range
                     set indices [lreplace $indices end-1 end]
                     lappend indices $il1 $ir2
+
                 } else {
                     # second range is fully included in first range
+                    # -> ignore it
+
                 }
+                # in both cases above, the second range shall be
+                # trimmed out from the list of ranges
                 set ind [lreplace $ind $j [expr {$j + 1}]]
                 incr j -2
                 incr nUndoMarks -2
+ 
             }
-#puts "    indices: $indices"
+
         }
+
     }
-#puts "OPTIMIZED indices: $indices"
+
     return $indices
 }
