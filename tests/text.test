@@ -6632,7 +6632,7 @@ test text-27.28 {edit undo and edit redo do not leave \
     .t insert end "Again hello.\n"
     .t edit undo
     lappend res [lsearch [.t mark names] tk::undoMark*]
-    .t edit undo
+    .t edit redo
     lappend res [lsearch [.t mark names] tk::undoMark*]
 } -cleanup {
     destroy .t
