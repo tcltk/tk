@@ -1458,7 +1458,19 @@ Line 7"
     rename .t {}
     rename test.t .t
     destroy .t
-} -result {{edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} {insert 2.1 ef} {mark set insert 2.3} {see insert}}
+} -result [list {edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} \
+                {mark set tk::undoMarkL3 2.1} {mark set tk::undoMarkR3 2.4} \
+                {mark gravity tk::undoMarkL3 left} {mark gravity tk::undoMarkR3 right} \
+                {insert 2.1 ef} {mark set insert 2.3} {see insert} \
+                {mark set tk::undoMarkL2 2.1} {mark set tk::undoMarkR2 2.3} \
+                {mark gravity tk::undoMarkL2 left} {mark gravity tk::undoMarkR2 right} \
+                {mark names} \
+                {index tk::undoMarkL2} {index tk::undoMarkR2} \
+                {mark unset tk::undoMarkL2 tk::undoMarkR2} \
+                {index tk::undoMarkL3} {index tk::undoMarkR3} \
+                {mark unset tk::undoMarkL3 tk::undoMarkR3} \
+                {compare 2.1 > 2.3} {compare 2.6 > 2.3} ]
+
 test text-8.23 {TextWidgetCmd procedure, "replace" option with undo} -setup {
     text .t
 } -body {
