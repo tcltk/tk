@@ -2774,7 +2774,6 @@ TextPushUndoAction(
 {
     TkUndoSubAtom *iAtom, *dAtom;
     int canUndo, canRedo;
-    static int undoMarkId = -1;
     char lMarkName[20] = "tk::undoMarkL";
     char rMarkName[20] = "tk::undoMarkR";
     char stringUndoMarkId[7] = "";
@@ -2848,8 +2847,8 @@ TextPushUndoAction(
     Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
 	    Tcl_NewStringObj("set", 3));
     markSetRUndoMarkCmdObj = Tcl_DuplicateObj(markSetLUndoMarkCmdObj);
-    undoMarkId++;
-    sprintf(stringUndoMarkId, "%d", undoMarkId);
+    textPtr->sharedTextPtr->undoMarkId++;
+    sprintf(stringUndoMarkId, "%d", textPtr->sharedTextPtr->undoMarkId);
     strcat(lMarkName, stringUndoMarkId);
     strcat(rMarkName, stringUndoMarkId);
     Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
