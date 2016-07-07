@@ -1228,6 +1228,19 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
     # transform marks into indices
     # the number of undo/redo marks is always even, each right mark
     # completes a left mark to give a range
+    # this is true because:
+    #   - undo/redo only deals with insertions and deletions of text
+    #   - insertions may move marks but not delete them
+    #   - when deleting text, marks located inside the deleted range
+    #     are not erased but moved to the start of the deletion range
+    #         . this is done in TkBTreeDeleteIndexRange ("This segment
+    #           refuses to die...")
+    #         . because MarkDeleteProc does nothing else than returning
+    #           a value indicating that marks are not deleted by this
+    #           deleteProc
+    #         . mark deletion rather happen through [.text mark unset xxx]
+    #           which was not used _up to this point of the code_ (it
+    #           is a bit later just before exiting the present proc)
     set nUndoMarks [llength $undoMarks]
     set n [expr {$nUndoMarks / 2}]
     set undoMarks [lsort -dictionary $undoMarks]
