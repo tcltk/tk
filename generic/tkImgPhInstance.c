@@ -404,6 +404,9 @@ TkImgPhotoGet(
  *
  *	Note that Win32 pre-defines those operations that we really need.
  *
+ *	Note that on MacOS, if the background comes from a Retina display
+ *	then it will be twice as wide and twice as high as the photoimage.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -433,7 +436,16 @@ BlendComplexAlpha(
     unsigned long pixel;
     unsigned char r, g, b, alpha, unalpha, *masterPtr;
     unsigned char *alphaAr = iPtr->masterPtr->pix32;
-
+#if defined(MAC_OSX_TK)
+    /* Background "pixels" are actually 2^pp x 2^pp blocks of subpixels.  Each
+     * block gets blended with the color of one image pixel.  Since we iterate
+     * over the background subpixels, we reset the width and height to the
+     * subpixel dimensions of the background image we are using.
+     */
+    int pp = bgImg->pixelpower;
+    width = width << pp;
+    height = height << pp;
+#endif
     /*
      * This blending is an integer version of the Source-Over compositing rule
      * (see Porter&Duff, "Compositing Digital Images", proceedings of SIGGRAPH
@@ -532,9 +544,16 @@ BlendComplexAlpha(
 #endif /* !_WIN32 && !MAC_OSX_TK */
 
     for (y = 0; y < height; y++) {
+# if !defined(MAC_OSX_TK)
 	line = (y + yOffset) * iPtr->masterPtr->width;
 	for (x = 0; x < width; x++) {
 	    masterPtr = alphaAr + ((line + x + xOffset) * 4);
+#else
+	/* Repeat each image row and column 2^pp times. */
+	line = ((y>>pp) + yOffset) * iPtr->masterPtr->width;
+	for (x = 0; x < width; x++) {
+	    masterPtr = alphaAr + ((line + (x>>pp) + xOffset) * 4);
+#endif
 	    alpha = masterPtr[3];
 
 	    /*
@@ -635,7 +654,9 @@ TkImgPhotoDisplay(
 		(unsigned int)width, (unsigned int)height, AllPlanes, ZPixmap);
 	if (bgImg == NULL) {
 	    Tk_DeleteErrorHandler(handler);
-	    /* We failed to get the image so draw without blending alpha. It's the best we can do */
+	    /* We failed to get the image, so draw without blending alpha.
+	     * It's the best we can do.
+	     */
 	    goto fallBack;
 	}
 
