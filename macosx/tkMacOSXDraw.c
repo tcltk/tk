@@ -399,9 +399,11 @@ TkPutImage(
 	CGImageRef img = CreateCGImageWithXImage(image);
 
 	if (img) {
+	    /* If the XImage has big pixels, rescale the source dimensions.*/
+	    int pp = image->pixelpower;
 	    DrawCGImage(d, gc, dc.context, img, gc->foreground, gc->background,
-		    CGRectMake(0, 0, image->width, image->height),
-		    CGRectMake(src_x, src_y, width, height),
+		    CGRectMake(0, 0, image->width<<pp, image->height<<pp),
+		    CGRectMake(src_x<<pp, src_y<<pp, width<<pp, height<<pp),
 		    CGRectMake(dest_x, dest_y, width, height));
 	    CFRelease(img);
 	} else {
