@@ -433,6 +433,10 @@ MakeTransparentWindowExist(
 
     TkpMakeTransparentWindowExist(tkwin, parent);
 
+    if (winPtr->window == None) {
+	return;			/* Platform didn't make Window. */
+    }
+
     dispPtr = winPtr->dispPtr;
     hPtr = Tcl_CreateHashEntry(&dispPtr->winTable, (char *) winPtr->window,
 	    &notUsed);
