@@ -3,7 +3,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH ttk::spinbox n 8.5 Tk "Tk Themed Widget"
 .so man.macros
 .BS
@@ -42,7 +42,7 @@ time one of the widget spin buttons is pressed. The up button applies a
 positive increment, the down button applies a negative increment.
 .OP \-values values Values
 This must be a Tcl list of values. If this option is set then this will
-override any range set using the \fB\-from\fR, \fB\-to\fR and 
+override any range set using the \fB\-from\fR, \fB\-to\fR and
 \fB\-increment\fR options. The widget will instead use the values
 specified beginning with the first value.
 .OP \-wrap wrap Wrap
@@ -60,7 +60,7 @@ Specifies a Tcl command to be invoked whenever a spinbutton is invoked.
 See the \fBttk::entry\fR manual for information about indexing characters.
 .SH "VALIDATION"
 .PP
-See the \fBttk::entry\fR manual for information about using the 
+See the \fBttk::entry\fR manual for information about using the
 \fB\-validate\fR and \fB\-validatecommand\fR options.
 .SH "WIDGET COMMAND"
 .PP
