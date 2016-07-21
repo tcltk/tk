@@ -155,7 +155,7 @@ static void		DrawWindowsSystemBitmap(Display *display,
 			    Drawable drawable, GC gc, const RECT *rectPtr,
 			    int bitmapID, int alignFlags);
 static void		FreeID(WORD commandID);
-static char *		GetEntryText(TkMenuEntry *mePtr);
+static char *		GetEntryText(TkMenu *menuPtr, TkMenuEntry *mePtr);
 static void		GetMenuAccelGeometry(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Tk_Font tkfont,
 			    const Tk_FontMetrics *fmPtr, int *widthPtr,
@@ -486,6 +486,7 @@ TkpDestroyMenuEntry(
 
 static char *
 GetEntryText(
+    TkMenu *menuPtr,		/* The menu considered. */
     TkMenuEntry *mePtr)		/* A pointer to the menu entry. */
 {
     char *itemText;
@@ -506,7 +507,7 @@ GetEntryText(
 	int i;
 	const char *label = (mePtr->labelPtr == NULL) ? ""
 		: Tcl_GetString(mePtr->labelPtr);
-	const char *accel = (mePtr->accelPtr == NULL) ? ""
+	const char *accel = ((menuPtr->menuType == MENUBAR) || (mePtr->accelPtr == NULL)) ? ""
 		: Tcl_GetString(mePtr->accelPtr);
 	const char *p, *next;
 	Tcl_DString itemString;
@@ -605,7 +606,7 @@ ReconfigureWindowsMenu(
 	    continue;
 	}
 
-	itemText = GetEntryText(mePtr);
+	itemText = GetEntryText(menuPtr, mePtr);
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
 	    Tcl_WinUtfToTChar(itemText, -1, &translatedText);
@@ -1287,7 +1288,17 @@ TkWinHandleMenuEvent(
 	    if (menuPtr != NULL) {
 		long entryIndex = LOWORD(*pwParam);
 
-		mePtr = NULL;
+                if ((menuPtr->menuType == MENUBAR) && menuPtr->tearoff) {
+                    /*
+                     * Windows passes the entry index starting at 0 for
+                     * the first menu entry. However this entry #0 is the
+                     * tearoff entry for Tk (the menu has -tearoff 1),
+                     * which is ignored for MENUBAR menues on Windows.
+                     */
+
+                    entryIndex++;
+                }
+                mePtr = NULL;
 		if (flags != 0xFFFF) {
 		    if ((flags&MF_POPUP) && (entryIndex<menuPtr->numEntries)) {
 			mePtr = menuPtr->entries[entryIndex];
@@ -1502,12 +1513,12 @@ GetMenuAccelGeometry(
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
 	*widthPtr = 0;
-    } else if (mePtr->accelPtr == NULL) {
-	*widthPtr = 0;
-    } else {
+    } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
 	*widthPtr = Tk_TextWidth(tkfont, accel, mePtr->accelLength);
+    } else {
+    	*widthPtr = 0;
     }
 }
 
@@ -1762,6 +1773,10 @@ DrawMenuEntryAccelerator(
     int baseline;
     int leftEdge = x + mePtr->indicatorSpace + mePtr->labelWidth;
     const char *accel;
+
+    if (menuPtr->menuType == MENUBAR) {
+        return;
+    }
 
     if (mePtr->accelPtr != NULL) {
 	accel = Tcl_GetString(mePtr->accelPtr);
