@@ -3,7 +3,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH ttk_vsapi n 8.5 Tk "Tk Themed Widget"
 .so man.macros
 .BS
@@ -72,7 +72,7 @@ If no \fIstateMap\fR parameter is given there is an implicit default
 map of {{} 1}
 .SH "EXAMPLE"
 .PP
-Create a correctly themed close button by changing the layout of 
+Create a correctly themed close button by changing the layout of
 a \fBttk::button\fR(n). This uses the WINDOW part WP_SMALLCLOSEBUTTON
 and as documented the states CBS_DISABLED, CBS_HOT, CBS_NORMAL and
 CBS_PUSHED are mapped from ttk states.
