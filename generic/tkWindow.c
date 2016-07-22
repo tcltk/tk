@@ -2358,6 +2358,9 @@ Tk_IdToWindow(
 	    break;
 	}
     }
+    if (window == None) {
+	return NULL;
+    }
 
     hPtr = Tcl_FindHashEntry(&dispPtr->winTable, (char *) window);
     if (hPtr == NULL) {
