@@ -7266,3 +7266,60 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
 Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 --- Released 8.6.5, February 29, 2016 --- http://core.tcl.tk/tk/ for details
+
+2016-03-07 (bug)[3137232] spinbox teardown hygiene (vogel)
+
+2016-03-07 (bug)[2981253] spinbox rapid button action (vogel)
+
+2016-03-07 (bug)[2262543] scale initialization callbacks (vogel)
+
+2016-03-07 (bug)[e9112e] incomplete [wm forget] (vogel)
+
+2016-03-11 (bug)[d95e5d] <Map> from hidden panes (vogel)
+
+2016-03-20 (TIP 443) More configuration options for text tags (vogel)
+
+2016-03-20 (bug)[487861] menu: cascade/accelerator appearance (vogel)
+
+2016-03-27 (bug)[1192095] active index from toplevel menus (vogel)
+
+2016-03-27 (bug)[18c08d] revised final newline behavior in [text] (vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2016-04-29 (bug)[fd3a4d] (vogel)
+
+2016-05-01 (bug)[b36218] (vogel)
+
+2016-05-03 (bug)[011706] (vogel)
+
+2016-05-12 (bug)[64261b] (nijtmans)
+
+2016-05-18 (bug)[545f10] Xft color font speed (bonfield,davies,girffin,vogel)
+
+2016-05-25 (bug)[109865] (vogel)
+
+2016-05-30 (TIP 446)[1273358] (vogel)
+
+2016-05-30 (bug)[f2655b] (vogel)
+
+2016-05-30 (bug)[79549a] (vogel)
+
+2016-06-11 (bug)[6976e4] (vogel)
+
+2016-06-22 (bug)[787adc] (porter)
+
+2016-06-27 (bug)[4cb3da] (vogel)
+
+2016-06-28 (bug)[ce92c7] (bron,fellows)
+
+2016-07-06 (bug) (lanam,walzer)
+
+2016-07-08 (bug) (culler,walzer)
+
+2016-07-15 (bug) (culler,walzer)
+
+2016-07-17 (bug)[c84f66] (culler,walzer)
+
+2016-07-21 (bug)[450bb0] (porter)
+
+--- Released 8.6.6, August ?, 2016 --- http://core.tcl.tk/tk/ for details
