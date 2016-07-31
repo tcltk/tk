@@ -491,7 +491,7 @@ second and later display lines for a text line.
 \fIColor\fR specifies the background color to use in regions that do not
 contain characters because they are indented by \fB\-lmargin1\fR or
 \fB\-lmargin2\fR. It may have any of the forms accepted by
-\fBTk_GetColor\fR.If \fIcolor\fR has not been specified, or if it is
+\fBTk_GetColor\fR. If \fIcolor\fR has not been specified, or if it is
 specified as an empty string, then the color used is specified by the
 \fB-background\fR tag option (or, if this is also unspecified, by the
 \fB-background\fR widget option).
