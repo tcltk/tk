@@ -153,8 +153,6 @@ XMapWindow(
 	    if ( [win canBecomeKeyWindow] ) {
 		[win makeKeyAndOrderFront:NSApp];
 	    }
-	    /* Why do we need this? (It is used by Carbon)*/
-	    [win windowRef];
 	    TkMacOSXApplyWindowAttributes(macWin->winPtr, win);
 	}
 	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
@@ -316,7 +314,6 @@ XResizeWindow(
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
-
 	if (w) {
 	    NSRect r = [w contentRectForFrameRect:[w frame]];
 	    r.origin.y += r.size.height - height;
@@ -360,10 +357,19 @@ XMoveResizeWindow(
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
 	if (w) {
-	    NSRect r = NSMakeRect(x + macWin->winPtr->wmInfoPtr->xInParent,
-		    tkMacOSXZeroScreenHeight - (y +
-		    macWin->winPtr->wmInfoPtr->yInParent + height),
-		    width, height);
+	    /* We explicitly convert everything to doubles so we don't get
+	     * surprised (again) by what happens when you do arithmetic with
+	     * unsigned ints.
+	     */
+	    CGFloat X = (CGFloat)x;
+	    CGFloat Y = (CGFloat)y;
+	    CGFloat Width = (CGFloat)width;
+	    CGFloat Height = (CGFloat)height;
+	    CGFloat XOff = (CGFloat)macWin->winPtr->wmInfoPtr->xInParent; 
+	    CGFloat YOff = (CGFloat)macWin->winPtr->wmInfoPtr->yInParent;
+	    NSRect r = NSMakeRect(X + XOff,
+	    			  tkMacOSXZeroScreenHeight - Y - YOff - Height,
+	    			  Width, Height);
 	    [w setFrame:[w frameRectForContentRect:r] display:YES];
 	}
     } else {

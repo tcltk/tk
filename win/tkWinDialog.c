@@ -674,19 +674,25 @@ static void LoadShellProcs()
  * 	processing functions are used to cope with keyboard navigation of
  * 	controls.)
  *
- * 	Here is one solution. After returning, we poll the message queue for
- * 	1/4s looking for WM_LBUTTON up messages. If we see one it's consumed.
- * 	If we get a WM_LBUTTONDOWN message, then we exit early, since the user
- * 	must be doing something new. This fix only works for the current
- * 	application, so the problem will still occur if the open dialog
- * 	happens to be over another applications button. However this is a
- * 	fairly rare occurrance.
+ * 	Here is one solution. After returning, we flush all mouse events
+ *      for 1/4 second. In 8.6.5 and earlier, the code used to
+ *      poll the message queue consuming WM_LBUTTONUP messages.
+ * 	On seeing a WM_LBUTTONDOWN message, it would exit early, since the user
+ * 	must be doing something new. However this early exit does not work
+ *      on Vista and later because the Windows sends both BUTTONDOWN and
+ *      BUTTONUP after the DBLCLICK instead of just BUTTONUP as on XP.
+ *      Rather than try and figure out version specific sequences, we
+ *      ignore all mouse events in that interval.
+ *
+ *      This fix only works for the current application, so the problem will
+ * 	still occur if the open dialog happens to be over another applications
+ * 	button. However this is a fairly rare occurrance.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Consumes an unwanted BUTTON messages.
+ *	Consumes unwanted mouse related messages.
  *
  *-------------------------------------------------------------------------
  */
@@ -698,10 +704,7 @@ EatSpuriousMessageBugFix(void)
     DWORD nTime = GetTickCount() + 250;
 
     while (GetTickCount() < nTime) {
-	if (PeekMessageA(&msg, 0, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_NOREMOVE)){
-	    break;
-	}
-	PeekMessageA(&msg, 0, WM_LBUTTONUP, WM_LBUTTONUP, PM_REMOVE);
+	PeekMessage(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE);
     }
 }
 
@@ -1113,7 +1116,7 @@ ParseOFNOptions(
             if (strcmp(Tcl_GetString(objv[i]), "-xpstyle"))
                 goto error_return;
             if (i + 1 == objc) {
-                Tcl_SetResult(interp, "value for \"-xpstyle\" missing", TCL_STATIC);
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("value for \"-xpstyle\" missing", -1));
                 Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
                 goto error_return;
             }
@@ -1281,9 +1284,8 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     int oldMode;
 
     if (tsdPtr->newFileDialogsState != FDLG_STATE_USE_NEW) {
-        /* XXX - should be an assert but Tcl does not seem to have one? */
-        Tcl_SetResult(interp, "Internal error: GetFileNameVista: IFileDialog API not available", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_Panic("Internal error: GetFileNameVista: IFileDialog API not available");
+	return TCL_ERROR;
     }
 
     /*
@@ -1425,6 +1427,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
     hr = fdlgIf->lpVtbl->Show(fdlgIf, hWnd);
     Tcl_SetServiceMode(oldMode);
+    EatSpuriousMessageBugFix();
 
     /*
      * Ensure that hWnd is enabled, because it can happen that we have updated
@@ -3145,13 +3148,13 @@ HookProc(
 	if (IsWindow(hwndCtrl)) {
 	    EnableWindow(hwndCtrl, FALSE);
 	}
-	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility");
+	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
 	return 1; /* we handled the message */
     }
 
     if (WM_DESTROY == msg) {
 	phd->hwnd = NULL;
-	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility");
+	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
 	return 0;
     }
 
@@ -3169,7 +3172,7 @@ HookProc(
 	    ApplyLogfont(phd->interp, phd->cmdObj, hdc, &lf);
 	}
 	if (phd && phd->parent) {
-	    TkSendVirtualEvent(phd->parent, "TkFontchooserFontChanged");
+	    TkSendVirtualEvent(phd->parent, "TkFontchooserFontChanged", NULL);
 	}
 	return 1;
     }
@@ -3481,7 +3484,7 @@ FontchooserShowCmd(
 		ApplyLogfont(hdPtr->interp, hdPtr->cmdObj, hdc, &lf);
 	    }
 	    if (hdPtr->parent) {
-		TkSendVirtualEvent(hdPtr->parent, "TkFontchooserFontChanged");
+		TkSendVirtualEvent(hdPtr->parent, "TkFontchooserFontChanged", NULL);
 	    }
 	}
 	Tcl_SetServiceMode(oldMode);
