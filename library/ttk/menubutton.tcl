@@ -10,7 +10,7 @@
 # (In addition, when menu system is active, "dropdown" -- menu posts
 # on mouse-over.  Ttk menubuttons don't implement this).
 #
-# For keyboard and popdown mode, we hand off to tk_popup and let 
+# For keyboard and popdown mode, we hand off to tk_popup and let
 # the built-in Tk bindings handle the rest of the interaction.
 #
 # ON X11:
@@ -22,13 +22,13 @@
 # rely on the passive grab that occurs on <ButtonPress> events,
 # and transition to popdown mode when the mouse is released
 # or dragged outside the menubutton.
-# 
+#
 # ON WINDOWS:
 #
-# I'm not sure what the hell is going on here.  [$menu post] apparently 
+# I'm not sure what the hell is going on here.  [$menu post] apparently
 # sets up some kind of internal grab for native menus.
 # On this platform, just use [tk_popup] for all menu actions.
-# 
+#
 # ON MACOS:
 #
 # Same probably applies here.
@@ -57,11 +57,11 @@ if {[tk windowingsystem] eq "x11"} {
     bind TMenubutton <ButtonPress-1>  \
 	{ %W state pressed ; ttk::menubutton::Popdown %W }
     bind TMenubutton <ButtonRelease-1>  \
-	{ %W state !pressed }
+	{ if {[winfo exists %W]} { %W state !pressed } }
 }
 
 # PostPosition --
-#	Returns the x and y coordinates where the menu 
+#	Returns the x and y coordinates where the menu
 #	should be posted, based on the menubutton and menu size
 #	and -direction option.
 #
@@ -85,7 +85,7 @@ proc ttk::menubutton::PostPosition {mb menu} {
 	below { if {$y <= $sh} { incr y  $bh } { incr y -$mh } }
 	left  { if {$x >= $mw} { incr x -$mw } { incr x  $bw } }
 	right { if {$x <= $sw} { incr x  $bw } { incr x -$mw } }
-	flush { 
+	flush {
 	    # post menu atop menubutton.
 	    # If there's a menu entry whose label matches the
 	    # menubutton -text, assume this is an optionmenu
@@ -113,7 +113,7 @@ proc ttk::menubutton::Popdown {mb} {
 
 # Pulldown (X11 only) --
 #	Called when Button1 is pressed on a menubutton.
-#	Posts the menu; a subsequent ButtonRelease 
+#	Posts the menu; a subsequent ButtonRelease
 #	or Leave event will set a grab on the menu.
 #
 proc ttk::menubutton::Pulldown {mb} {
