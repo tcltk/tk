@@ -39,9 +39,7 @@ test window-1.1 {Tk_CreateWindowFromPath procedure, parent dead} -setup {
     while executing
 "button .t.b -text hello"
     (command bound to event)}}
-test window-1.2 {Tk_CreateWindowFromPath procedure, pathname starting with two dots} -body {
-    label ..mylabel
-} -returnCodes error -result {bad window path name "..mylabel"}
+
 
 # Most of the tests below don't produce meaningful results;  they
 # will simply dump core if there are bugs.
