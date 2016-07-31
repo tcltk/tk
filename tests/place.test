@@ -396,7 +396,7 @@ test place-10.4 {ConfigureSlave} -setup {
 } -cleanup {
     destroy .foo
 } -returnCodes error -result {value for "-y" missing}
-    
+
 
 test place-11.1 {PlaceObjCmd, slaves command} -setup {
     destroy .foo

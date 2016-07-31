@@ -1288,7 +1288,17 @@ TkWinHandleMenuEvent(
 	    if (menuPtr != NULL) {
 		long entryIndex = LOWORD(*pwParam);
 
-		mePtr = NULL;
+                if ((menuPtr->menuType == MENUBAR) && menuPtr->tearoff) {
+                    /*
+                     * Windows passes the entry index starting at 0 for
+                     * the first menu entry. However this entry #0 is the
+                     * tearoff entry for Tk (the menu has -tearoff 1),
+                     * which is ignored for MENUBAR menues on Windows.
+                     */
+
+                    entryIndex++;
+                }
+                mePtr = NULL;
 		if (flags != 0xFFFF) {
 		    if ((flags&MF_POPUP) && (entryIndex<menuPtr->numEntries)) {
 			mePtr = menuPtr->entries[entryIndex];

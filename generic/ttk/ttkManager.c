@@ -320,7 +320,7 @@ void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window slaveWindow)
     int reqHeight= Tk_ReqHeight(slaveWindow);
 
     if (mgr->managerSpec->SlaveRequest(
-		mgr->managerData, slaveIndex, reqWidth, reqHeight)) 
+		mgr->managerData, slaveIndex, reqWidth, reqHeight))
     {
 	ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
     }

@@ -610,7 +610,7 @@ static void		AsyncUpdateLineMetrics(ClientData clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
-                            CONST TkTextIndex *indexPtr);
+                            const TkTextIndex *indexPtr);
 
 /*
  * Result values returned by TextGetScrollInfoObj:
@@ -2464,7 +2464,13 @@ DisplayDLine(
 	    Tk_Width(textPtr->tkwin), dlPtr->height, 0, TK_RELIEF_FLAT);
 
     /*
-     * Second, draw the background color of the left and right margins.
+     * Second, draw background information for the whole line.
+     */
+
+    DisplayLineBackground(textPtr, dlPtr, prevPtr, pixmap);
+
+    /*
+     * Third, draw the background color of the left and right margins.
      */
     if (dlPtr->lMarginColor != NULL) {
         Tk_Fill3DRectangle(textPtr->tkwin, pixmap, dlPtr->lMarginColor, 0, y,
@@ -2476,12 +2482,6 @@ DisplayDLine(
                 dInfoPtr->maxX - dlPtr->rMarginWidth + dInfoPtr->curXPixelOffset,
                 y, dlPtr->rMarginWidth, dlPtr->height, 0, TK_RELIEF_FLAT);
     }
-
-    /*
-     * Next, draw background information for the whole line.
-     */
-
-    DisplayLineBackground(textPtr, dlPtr, prevPtr, pixmap);
 
     /*
      * Make another pass through all of the chunks to redraw the insertion
@@ -3104,7 +3104,7 @@ AsyncUpdateLineMetrics(
  *      Send the <<WidgetViewSync>> event related to the text widget
  *      line metrics asynchronous update.
  *      This is equivalent to:
- *         event generate $textWidget <<WidgetViewSync>> -detail $s
+ *         event generate $textWidget <<WidgetViewSync>> -data $s
  *      where $s is the sync status: true (when the widget view is in
  *      sync with its internal data) or false (when it is not).
  *
@@ -3120,19 +3120,10 @@ AsyncUpdateLineMetrics(
 static void
 GenerateWidgetViewSyncEvent(
     TkText *textPtr,		/* Information about text widget. */
-    Bool InSync)                /* True if in sync, false otherwise */
+    Bool InSync)                /* true if in sync, false otherwise */
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
-    event.general.xany.display = Tk_Display(textPtr->tkwin);
-    event.virtual.name = Tk_GetUid("WidgetViewSync");
-    event.virtual.user_data = Tcl_NewBooleanObj(InSync);
-    Tk_HandleEvent(&event.general);
+    TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
+        Tcl_NewBooleanObj(InSync));
 }
 
 /*
@@ -6899,7 +6890,7 @@ FindDLine(
 static int
 IsStartOfNotMergedLine(
       TkText *textPtr,              /* Widget record for text widget. */
-      CONST TkTextIndex *indexPtr)  /* Index to check. */
+      const TkTextIndex *indexPtr)  /* Index to check. */
 {
     TkTextIndex indexPtr2;
 

@@ -5,7 +5,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH bind n 8.0 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -351,7 +351,7 @@ position in the stacking order.
 .PP
 The last part of a long event specification is \fIdetail\fR.  In the
 case of a \fBButtonPress\fR or \fBButtonRelease\fR event, it is the
-number of a button (1\-5).  If a button number is given, then only an
+number of a button (1\-9).  If a button number is given, then only an
 event on that particular button will match;  if no button number is
 given, then an event on any button will match.  Note:  giving a
 specific button number is different than specifying a button modifier;
