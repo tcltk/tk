@@ -15,7 +15,7 @@ namespace import -force tcltest::test
 
 # Can't find a usable tk.tcl in the following directories:
 #     {$p(:26:)}
-# 
+#
 # $p(:26:)/tk.tcl: script error
 # script error
 #     invoked from within
@@ -23,8 +23,8 @@ namespace import -force tcltest::test
 #     ("uplevel" body line 1)
 #     invoked from within
 # "uplevel #0 [list source $file]"
-# 
-# 
+#
+#
 # This probably means that tk wasn't installed properly.
 
 ## it indicates that something went wrong sourcing tk.tcl.
@@ -187,7 +187,7 @@ test safe-5.1 {loading Tk in safe interps without master's clearance} -body {
     interp eval $i {load {} Tk}
 } -cleanup {
     safe::interpDelete $i
-} -returnCodes error -result {not allowed to start Tk by master's safe::TkInit}
+} -returnCodes error -result {not allowed}
 test safe-5.2 {multi-level Tk loading with clearance} -setup {
     set safeParent [safe::interpCreate]
 } -body {
