@@ -466,10 +466,12 @@ TkWinDisplayChanged(
     dc = GetDC(NULL);
     screen->width = GetDeviceCaps(dc, HORZRES);
     screen->height = GetDeviceCaps(dc, VERTRES);
-    screen->mwidth = MulDiv(screen->width, 254,
-	    GetDeviceCaps(dc, LOGPIXELSX) * 10);
-    screen->mheight = MulDiv(screen->height, 254,
-	    GetDeviceCaps(dc, LOGPIXELSY) * 10);
+    /* screen->mwidth = MulDiv(screen->width, 254, */
+    /* 	    GetDeviceCaps(dc, LOGPIXELSX) * 10); */
+    /* screen->mheight = MulDiv(screen->height, 254, */
+    /* 	    GetDeviceCaps(dc, LOGPIXELSY) * 10); */
+    screen->mwidth = GetDeviceCaps(dc, HORZSIZE);
+    screen->mheight = GetDeviceCaps(dc, VERTSIZE);
 
     /*
      * On windows, when creating a color bitmap, need two pieces of
@@ -858,6 +860,38 @@ TkWinChildProc(
  *----------------------------------------------------------------------
  */
 
+#define ADD_DICT_PAIR(d, s, i) \
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1),  Tcl_NewIntObj(i))
+
+static void
+InitTouchEvent(XEvent *event, HWND hwnd, int rootx, int rooty)
+{
+    POINT sInput, cInput;
+    Tk_Window tkwin;
+    TkWindow *winPtr;
+
+    sInput.x = rootx;
+    sInput.y = rooty;
+    cInput = sInput;
+    ScreenToClient(hwnd, &cInput);
+
+    tkwin = Tk_HWNDToWindow(hwnd);
+    winPtr = (TkWindow *)tkwin;
+    memset(event, 0, sizeof(*event));
+    event->xany.type = TouchEvent;
+    event->xany.serial =
+	LastKnownRequestProcessed(winPtr->display);
+    event->xany.send_event = False;
+    event->xany.window = Tk_WindowId(tkwin);
+    event->xany.display = winPtr->display;
+    event->xkey.root =
+	RootWindow(winPtr->display,winPtr->screenNum);
+    event->xkey.x_root = sInput.x;
+    event->xkey.y_root = sInput.y;
+    event->xkey.x = cInput.x;
+    event->xkey.y = cInput.y;
+}
+
 static int
 GenerateTouchEvent(
     HWND hwnd,
@@ -867,9 +901,7 @@ GenerateTouchEvent(
     BOOL bHandled = FALSE;
     UINT cInputs = LOWORD(wParam);
     PTOUCHINPUT pInputs = ckalloc(sizeof(TOUCHINPUT)*cInputs);
-    Tk_Window tkwin;
     union {XEvent general; XVirtualEvent virtual;} event;
-    TkWindow *winPtr;
     Tcl_Obj *dictPtr;
 
     if (pInputs != NULL) {
@@ -879,28 +911,9 @@ GenerateTouchEvent(
 			      sizeof(TOUCHINPUT))) {
 	    for (UINT i=0; i < cInputs; i++){
 		TOUCHINPUT ti = pInputs[i];
-		POINT sInput, cInput;
-		sInput.x = TOUCH_COORD_TO_PIXEL(ti.x);
-		sInput.y = TOUCH_COORD_TO_PIXEL(ti.y);
-		cInput = sInput;
-		ScreenToClient(hwnd, &cInput);
-
-		tkwin = Tk_HWNDToWindow(hwnd);
-		winPtr = (TkWindow *)tkwin;
-		memset(&event, 0, sizeof(event));
-		event.general.xany.type = TouchEvent;
-		event.general.xany.serial =
-		    LastKnownRequestProcessed(winPtr->display);
-		event.general.xany.send_event = False;
-		event.general.xany.window = Tk_WindowId(tkwin);
-		event.general.xany.display = winPtr->display;
-		event.general.xkey.root =
-		    RootWindow(winPtr->display,winPtr->screenNum);
-		event.general.xkey.x_root = sInput.x;
-		event.general.xkey.y_root = sInput.y;
-		event.general.xkey.x = cInput.x;
-		event.general.xkey.y = cInput.y;
-
+		InitTouchEvent(&event.general, hwnd,
+			       TOUCH_COORD_TO_PIXEL(ti.x),
+			       TOUCH_COORD_TO_PIXEL(ti.y));
 		/*
 		 * Which info needs to be passed to the event, and how should
 		 * is be passed ?
@@ -908,13 +921,34 @@ GenerateTouchEvent(
 		 */
 		dictPtr = Tcl_NewDictObj();
 		Tcl_IncrRefCount(dictPtr);
-		Tcl_DictObjPut(NULL, dictPtr,
-		    Tcl_NewStringObj("id", -1),
-		    Tcl_NewIntObj(ti.dwID));
-		/* Maybe parse flags and pass it as separate fields? */
-		Tcl_DictObjPut(NULL, dictPtr,
-		    Tcl_NewStringObj("flags", -1),
-		    Tcl_NewIntObj(ti.dwFlags));
+		/* Identify as a touch event */
+		ADD_DICT_PAIR(dictPtr, "touch", 1);
+		/* Touch ID */
+		ADD_DICT_PAIR(dictPtr, "id", ti.dwID);
+		/* Raw flags value */
+		ADD_DICT_PAIR(dictPtr, "flags", ti.dwFlags);
+		/* Decode known flags */
+		if (ti.dwFlags & TOUCHEVENTF_MOVE) {
+		    ADD_DICT_PAIR(dictPtr, "move", 1);
+		}
+		if (ti.dwFlags & TOUCHEVENTF_DOWN) {
+		    ADD_DICT_PAIR(dictPtr, "down", 1);
+		}
+		if (ti.dwFlags & TOUCHEVENTF_UP) {
+		    ADD_DICT_PAIR(dictPtr, "up", 1);
+		}
+		if (ti.dwFlags & TOUCHEVENTF_INRANGE) {
+		    ADD_DICT_PAIR(dictPtr, "inrange", 1);
+		}
+		if (ti.dwFlags & TOUCHEVENTF_PRIMARY) {
+		    ADD_DICT_PAIR(dictPtr, "primary", 1);
+		}
+		if (ti.dwFlags & TOUCHEVENTF_NOCOALESCE) {
+		    ADD_DICT_PAIR(dictPtr, "nocoalesce", 1);
+		}
+		if (ti.dwFlags & TOUCHEVENTF_PALM) {
+		    ADD_DICT_PAIR(dictPtr, "palm", 1);
+		}
 		event.virtual.user_data = dictPtr;
 		Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 	    }            
@@ -932,48 +966,75 @@ GenerateTouchEvent(
 static int
 GenerateGestureEvent(
     HWND hwnd,
-    UINT message,
     WPARAM wParam,
     LPARAM lParam)
 {
     GESTUREINFO gi;
+    union {XEvent general; XVirtualEvent virtual;} event;
+    Tcl_Obj *dictPtr;
+
     ZeroMemory(&gi, sizeof(GESTUREINFO));
     gi.cbSize = sizeof(GESTUREINFO);
-
-    BOOL bResult  = GetGestureInfo((HGESTUREINFO)lParam, &gi);
-    BOOL bHandled = FALSE;
     
-    if (bResult){
-        // now interpret the gesture
-        switch (gi.dwID){
-           case GID_ZOOM:
-               // Code for zooming goes here     
-               bHandled = TRUE;
-               break;
-           case GID_PAN:
-               // Code for panning goes here
-               bHandled = TRUE;
-               break;
-           case GID_ROTATE:
-               // Code for rotation goes here
-               bHandled = TRUE;
-               break;
-           case GID_TWOFINGERTAP:
-               // Code for two-finger tap goes here
-               bHandled = TRUE;
-               break;
-           case GID_PRESSANDTAP:
-               // Code for roll over goes here
-               bHandled = TRUE;
-               break;
-           default:
-               // A gesture was not recognized
-               break;
-        }
+    if (!GetGestureInfo((HGESTUREINFO)lParam, &gi)){
+	return 0;
     }
-    if (bHandled){
-        return 1;
+
+    // now interpret the gesture
+    switch (gi.dwID) {
+    case GID_ZOOM:
+    case GID_PAN:
+    case GID_ROTATE:
+    case GID_TWOFINGERTAP:
+    case GID_PRESSANDTAP:
+	break;
+    default:
+	// A gesture was not recognized
+	return 0;
     }
+
+    InitTouchEvent(&event.general, hwnd, 0, 0);
+    dictPtr = Tcl_NewDictObj();
+    Tcl_IncrRefCount(dictPtr);
+    /* Identify as a gesture event */
+    ADD_DICT_PAIR(dictPtr, "gesture", 1);
+    /* Touch ID TBD */
+    ADD_DICT_PAIR(dictPtr, "id", 0);
+
+    switch (gi.dwID){
+    case GID_ZOOM:
+	// Code for zooming goes here     
+	ADD_DICT_PAIR(dictPtr, "zoom", 1);
+	break;
+    case GID_PAN:
+	// Code for panning goes here
+	ADD_DICT_PAIR(dictPtr, "pan", 1);
+	break;
+    case GID_ROTATE:
+	// Code for rotation goes here
+	ADD_DICT_PAIR(dictPtr, "rotate", 1);
+	break;
+    case GID_TWOFINGERTAP:
+	// Code for two-finger tap goes here
+	ADD_DICT_PAIR(dictPtr, "twofingertap", 1);
+	break;
+    case GID_PRESSANDTAP:
+	// Code for press and tap goes here
+	ADD_DICT_PAIR(dictPtr, "pressandtap", 1);
+	break;
+    }
+    event.virtual.user_data = dictPtr;
+    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
+    return 1;
+}
+static int
+HandleGestureNotify (
+    HWND hwnd,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    GESTURECONFIG gc = {0,GC_ALLGESTURES,0};
+    BOOL bResult = SetGestureConfig(hwnd,0,1,&gc,sizeof(GESTURECONFIG));
     return 0;
 }
 
@@ -1050,9 +1111,10 @@ Tk_TranslateWinEvent(
     case WM_TOUCH:
 	return GenerateTouchEvent(hwnd, wParam, lParam);
 
-    case WM_GESTURE:
     case WM_GESTURENOTIFY:
-	return GenerateGestureEvent(hwnd, message, wParam, lParam);
+	return HandleGestureNotify(hwnd, wParam, lParam);
+    case WM_GESTURE:
+	return GenerateGestureEvent(hwnd, wParam, lParam);
 
     case WM_CLOSE:
     case WM_SETFOCUS:
