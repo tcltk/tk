@@ -7979,10 +7979,12 @@ WmProc(
 
 		screen->width = LOWORD(lParam);		/* horizontal res */
 		screen->height = HIWORD(lParam);	/* vertical res */
-		screen->mwidth = MulDiv(screen->width, 254,
-			GetDeviceCaps(dc, LOGPIXELSX) * 10);
-		screen->mheight = MulDiv(screen->height, 254,
-			GetDeviceCaps(dc, LOGPIXELSY) * 10);
+		/* screen->mwidth = MulDiv(screen->width, 254, */
+		/* 	GetDeviceCaps(dc, LOGPIXELSX) * 10); */
+		/* screen->mheight = MulDiv(screen->height, 254, */
+		/* 	GetDeviceCaps(dc, LOGPIXELSY) * 10); */
+		screen->mwidth = GetDeviceCaps(dc, HORZSIZE);
+		screen->mheight = GetDeviceCaps(dc, VERTSIZE);
 		ReleaseDC(NULL, dc);
 	    }
 	    if (Tk_Depth(winPtr) != (int) wParam) {
