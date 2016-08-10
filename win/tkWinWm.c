@@ -537,6 +537,9 @@ static int		WmStateCmd(Tk_Window tkwin,
 static int		WmTitleCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+static int		WmTouchCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 static int		WmTransientCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -2784,7 +2787,7 @@ Tk_WmObjCmd(
 	"iconphoto", "iconposition",
 	"iconwindow", "manage", "maxsize", "minsize", "overrideredirect",
 	"positionfrom", "protocol", "resizable", "sizefrom",
-	"stackorder", "state", "title", "transient",
+	"stackorder", "state", "title", "touch", "transient",
 	"withdraw", NULL
     };
     enum options {
@@ -2797,7 +2800,7 @@ Tk_WmObjCmd(
 	WMOPT_ICONWINDOW, WMOPT_MANAGE, WMOPT_MAXSIZE, WMOPT_MINSIZE,
 	WMOPT_OVERRIDEREDIRECT,
 	WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
-	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
+	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TOUCH, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW
     };
     int index;
@@ -2852,7 +2855,7 @@ Tk_WmObjCmd(
 	return TCL_ERROR;
     }
     if (!Tk_IsTopLevel(winPtr) && (index != WMOPT_MANAGE)
-	    && (index != WMOPT_FORGET)) {
+	    && (index != WMOPT_TOUCH) && (index != WMOPT_FORGET)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
@@ -2921,6 +2924,8 @@ Tk_WmObjCmd(
 	return WmStateCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_TITLE:
 	return WmTitleCmd(tkwin, winPtr, interp, objc, objv);
+    case WMOPT_TOUCH:
+	return WmTouchCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_TRANSIENT:
 	return WmTransientCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_WITHDRAW:
@@ -5497,6 +5502,50 @@ WmTitleCmd(
 	    Tcl_DStringFree(&titleString);
 	}
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmTouchCmd --
+ *
+ *	This function is invoked to process the "wm touch" Tcl command. See
+ *	the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmTouchCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    Window win;
+    HWND hwnd;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "window");
+	return TCL_ERROR;
+    }
+    win = Tk_WindowId((Tk_Window) winPtr);
+    if (win == None) {
+	Tk_MakeWindowExist((Tk_Window) winPtr);
+	win = Tk_WindowId((Tk_Window) winPtr);
+    }
+
+    hwnd = Tk_GetHWND(win);
+    RegisterTouchWindow(hwnd, 0);
+
     return TCL_OK;
 }
 
