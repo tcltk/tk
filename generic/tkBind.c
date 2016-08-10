@@ -443,6 +443,7 @@ static const EventInfo eventArray[] = {
     {"Activate",	ActivateNotify,		ActivateMask},
     {"Deactivate",	DeactivateNotify,	ActivateMask},
     {"MouseWheel",	MouseWheelEvent,	MouseWheelMask},
+    {"Touch",		TouchEvent,		TouchEventMask},
     {"CirculateRequest", CirculateRequest,	SubstructureRedirectMask},
     {"ConfigureRequest", ConfigureRequest,	SubstructureRedirectMask},
     {"Create",		CreateNotify,		SubstructureNotifyMask},
@@ -526,7 +527,8 @@ static const int flagArray[TK_LASTEVENT] = {
    /* VirtualEvent */		VIRTUAL,
    /* Activate */		ACTIVATE,
    /* Deactivate */		ACTIVATE,
-   /* MouseWheel */		KEY
+   /* MouseWheel */		KEY,
+   /* Touch */		        VIRTUAL
 };
 
 /*

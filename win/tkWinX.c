@@ -844,6 +844,142 @@ TkWinChildProc(
 /*
  *----------------------------------------------------------------------
  *
+ * GenerateTouchEvent --
+ *
+ *	This function generate touch events when a Win touch event has
+ *      been received.
+ *
+ * Results:
+ *	Returns 1 if the event was handled, else 0.
+ *
+ * Side effects:
+ *	Queues one or more X events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+GenerateTouchEvent(
+    HWND hwnd,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    BOOL bHandled = FALSE;
+    UINT cInputs = LOWORD(wParam);
+    PTOUCHINPUT pInputs = ckalloc(sizeof(TOUCHINPUT)*cInputs);
+    Tk_Window tkwin;
+    union {XEvent general; XVirtualEvent virtual;} event;
+    TkWindow *winPtr;
+    Tcl_Obj *dictPtr;
+
+    if (pInputs != NULL) {
+	if (GetTouchInputInfo((HTOUCHINPUT)lParam,
+			      cInputs,
+			      pInputs,
+			      sizeof(TOUCHINPUT))) {
+	    for (UINT i=0; i < cInputs; i++){
+		TOUCHINPUT ti = pInputs[i];
+		POINT sInput, cInput;
+		sInput.x = TOUCH_COORD_TO_PIXEL(ti.x);
+		sInput.y = TOUCH_COORD_TO_PIXEL(ti.y);
+		cInput = sInput;
+		ScreenToClient(hwnd, &cInput);
+
+		tkwin = Tk_HWNDToWindow(hwnd);
+		winPtr = (TkWindow *)tkwin;
+		memset(&event, 0, sizeof(event));
+		event.general.xany.type = TouchEvent;
+		event.general.xany.serial =
+		    LastKnownRequestProcessed(winPtr->display);
+		event.general.xany.send_event = False;
+		event.general.xany.window = Tk_WindowId(tkwin);
+		event.general.xany.display = winPtr->display;
+		event.general.xkey.root =
+		    RootWindow(winPtr->display,winPtr->screenNum);
+		event.general.xkey.x_root = sInput.x;
+		event.general.xkey.y_root = sInput.y;
+		event.general.xkey.x = cInput.x;
+		event.general.xkey.y = cInput.y;
+
+		/*
+		 * Which info needs to be passed to the event, and how should
+		 * is be passed ?
+		 * Put it into a dict and pass it through %d  
+		 */
+		dictPtr = Tcl_NewDictObj();
+		Tcl_IncrRefCount(dictPtr);
+		Tcl_DictObjPut(NULL, dictPtr,
+		    Tcl_NewStringObj("id", -1),
+		    Tcl_NewIntObj(ti.dwID));
+		/* Maybe parse flags and pass it as separate fields? */
+		Tcl_DictObjPut(NULL, dictPtr,
+		    Tcl_NewStringObj("flags", -1),
+		    Tcl_NewIntObj(ti.dwFlags));
+		event.virtual.user_data = dictPtr;
+		Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
+	    }            
+	    bHandled = TRUE;
+	}
+	ckfree(pInputs);
+    }
+    if (bHandled) {
+	CloseTouchInputHandle((HTOUCHINPUT)lParam);
+	return 1;
+    }
+    return 0;
+}
+// Called for WM_GESTURE*
+static int
+GenerateGestureEvent(
+    HWND hwnd,
+    UINT message,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    GESTUREINFO gi;
+    ZeroMemory(&gi, sizeof(GESTUREINFO));
+    gi.cbSize = sizeof(GESTUREINFO);
+
+    BOOL bResult  = GetGestureInfo((HGESTUREINFO)lParam, &gi);
+    BOOL bHandled = FALSE;
+    
+    if (bResult){
+        // now interpret the gesture
+        switch (gi.dwID){
+           case GID_ZOOM:
+               // Code for zooming goes here     
+               bHandled = TRUE;
+               break;
+           case GID_PAN:
+               // Code for panning goes here
+               bHandled = TRUE;
+               break;
+           case GID_ROTATE:
+               // Code for rotation goes here
+               bHandled = TRUE;
+               break;
+           case GID_TWOFINGERTAP:
+               // Code for two-finger tap goes here
+               bHandled = TRUE;
+               break;
+           case GID_PRESSANDTAP:
+               // Code for roll over goes here
+               bHandled = TRUE;
+               break;
+           default:
+               // A gesture was not recognized
+               break;
+        }
+    }
+    if (bHandled){
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_TranslateWinEvent --
  *
  *	This function is called by widget window functions to handle the
@@ -910,6 +1046,13 @@ Tk_TranslateWinEvent(
     case WM_MOUSEMOVE:
 	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
+
+    case WM_TOUCH:
+	return GenerateTouchEvent(hwnd, wParam, lParam);
+
+    case WM_GESTURE:
+    case WM_GESTURENOTIFY:
+	return GenerateGestureEvent(hwnd, message, wParam, lParam);
 
     case WM_CLOSE:
     case WM_SETFOCUS:

@@ -1187,6 +1187,7 @@ TkSendVirtualEvent(
     event.general.xany.display = Tk_Display(target);
     event.virtual.name = Tk_GetUid(eventName);
     if (detail != NULL) {
+	Tcl_IncrRefCount(detail);
 	event.virtual.user_data = detail;
     }
 
