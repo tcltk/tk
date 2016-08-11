@@ -5532,11 +5532,129 @@ WmTouchCmd(
 {
     Window win;
     HWND hwnd;
+    int i, index, gCnt = 0, value;
+    ULONG flags = 0;
+    int touch = 0;
+    GESTURECONFIG gc[10]; /* TBD: protect from overflow */
+    static const char *const optionStrings[] = {
+	"-all", "-fine", "-pan", "-pressandtap", "-rotate",
+	"-touch", "-twofingertap", "-wantpalm", "-zoom",
+	NULL
+    };
+    enum options {
+	TOUCH_ALL, TOUCH_FINE, TOUCH_PAN, TOUCH_PRESSANDTAP, TOUCH_ROTATE,
+	TOUCH_TOUCH, TOUCH_TWOFINGERTAP, TOUCH_WANTPALM, TOUCH_ZOOM
+    };
 
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "window");
+    if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "window ?-option value ...?");
 	return TCL_ERROR;
     }
+    ZeroMemory(&gc, sizeof(gc));
+    for (i = 3; i < objc; i++) {
+	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
+				&index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	switch ((enum options) index) {
+	case TOUCH_ALL:
+	    gc[gCnt++].dwWant = GC_ALLGESTURES;
+	    break;
+	case TOUCH_FINE:
+	    flags |= TWF_FINETOUCH;
+	    touch = 1;
+	    break;
+	case TOUCH_PAN:
+	    if (++i >= objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"missing pan", -1));
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    /* TBD: support details about pan */
+	    gc[gCnt].dwID = GID_PAN;
+	    if (value) {
+		gc[gCnt++].dwWant = GC_PAN;
+	    } else {
+		gc[gCnt++].dwBlock = GC_PAN;
+	    }
+            break;
+	case TOUCH_PRESSANDTAP:
+	    if (++i >= objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"missing pressandtap", -1));
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    gc[gCnt].dwID = GID_PRESSANDTAP;
+	    if (value) {
+		gc[gCnt++].dwWant = GC_PRESSANDTAP;
+	    } else {
+		gc[gCnt++].dwBlock = GC_PRESSANDTAP;
+	    }
+            break;
+	case TOUCH_ROTATE:
+	    if (++i >= objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"missing rotate", -1));
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    gc[gCnt].dwID = GID_ROTATE;
+	    if (value) {
+		gc[gCnt++].dwWant = GC_ROTATE;
+	    } else {
+		gc[gCnt++].dwBlock = GC_ROTATE;
+	    }
+            break;
+	case TOUCH_TOUCH:
+	    touch = 1;
+	    break;
+	case TOUCH_TWOFINGERTAP:
+	    if (++i >= objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"missing pressandtap", -1));
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    gc[gCnt].dwID = GID_TWOFINGERTAP;
+	    if (value) {
+		gc[gCnt++].dwWant = GC_TWOFINGERTAP;
+	    } else {
+		gc[gCnt++].dwBlock = GC_TWOFINGERTAP;
+	    }
+            break;
+	case TOUCH_WANTPALM:
+	    flags |= TWF_WANTPALM;
+	    touch = 1;
+	    break;
+	case TOUCH_ZOOM:
+	    if (++i >= objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"missing zoom", -1));
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    gc[gCnt].dwID = GID_ZOOM;
+	    if (value) {
+		gc[gCnt++].dwWant = GC_ZOOM;
+	    } else {
+		gc[gCnt++].dwBlock = GC_ZOOM;
+	    }
+            break;
+	}
+    }
+
     win = Tk_WindowId((Tk_Window) winPtr);
     if (win == None) {
 	Tk_MakeWindowExist((Tk_Window) winPtr);
@@ -5544,8 +5662,14 @@ WmTouchCmd(
     }
 
     hwnd = Tk_GetHWND(win);
-    RegisterTouchWindow(hwnd, 0);
 
+    if (touch) {
+	/* TBD: support to unregister */
+	RegisterTouchWindow(hwnd, flags);
+    }
+    if (gCnt > 0) {
+	SetGestureConfig(hwnd, 0, gCnt, gc, sizeof(GESTURECONFIG));
+    }
     return TCL_OK;
 }
 
