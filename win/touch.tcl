@@ -110,6 +110,8 @@ lappend ::messages "Gesture"
 .c2 create text [expr {$::size / 2}] [expr {$::size / 2}] -text Gesture -tags gesture
 
 pack .c1 .c2 -side left -fill both -expand 1
-wm touch .c1
+wm touch .c1 -touch
+wm touch .c2 -all
+#wm touch .c2 -pan 0 -rotate 0 -zoom 1 -twofingertap 1 -pressandtap 1
 bind .c1 <Touch> "Touch1 %d %x %y %X %Y"
 bind .c2 <Touch> "Touch2 %d %x %y %X %Y"
