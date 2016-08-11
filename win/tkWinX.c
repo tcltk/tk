@@ -966,7 +966,8 @@ GenerateTouchEvent(
     }
     return 0;
 }
-// Called for WM_GESTURE*
+
+/* Called for WM_GESTURE */
 static int
 GenerateGestureEvent(
     HWND hwnd,
@@ -1057,17 +1058,6 @@ GenerateGestureEvent(
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
     return 1;
 }
-
-static int
-HandleGestureNotify (
-    HWND hwnd,
-    WPARAM wParam,
-    LPARAM lParam)
-{
-    GESTURECONFIG gc = {0,GC_ALLGESTURES,0};
-    BOOL bResult = SetGestureConfig(hwnd,0,1,&gc,sizeof(GESTURECONFIG));
-    return 0;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -1142,8 +1132,6 @@ Tk_TranslateWinEvent(
     case WM_TOUCH:
 	return GenerateTouchEvent(hwnd, wParam, lParam);
 
-    case WM_GESTURENOTIFY:
-	return HandleGestureNotify(hwnd, wParam, lParam);
     case WM_GESTURE:
 	return GenerateGestureEvent(hwnd, wParam, lParam);
 
