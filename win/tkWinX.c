@@ -860,8 +860,12 @@ TkWinChildProc(
  *----------------------------------------------------------------------
  */
 
-#define ADD_DICT_PAIR(d, s, i) \
-    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1),  Tcl_NewIntObj(i))
+#define ADD_DICT_INT(d, s, v) \
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewIntObj(v))
+#define ADD_DICT_WIDE(d, s, v) \
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewWideIntObj(v))
+#define ADD_DICT_DOUB(d, s, v) \
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewDoubleObj(v))
 
 static void
 InitTouchEvent(XEvent *event, HWND hwnd, int rootx, int rooty)
@@ -922,32 +926,32 @@ GenerateTouchEvent(
 		dictPtr = Tcl_NewDictObj();
 		Tcl_IncrRefCount(dictPtr);
 		/* Identify as a touch event */
-		ADD_DICT_PAIR(dictPtr, "touch", 1);
+		ADD_DICT_INT(dictPtr, "touch", 1);
 		/* Touch ID */
-		ADD_DICT_PAIR(dictPtr, "id", ti.dwID);
+		ADD_DICT_INT(dictPtr, "id", ti.dwID);
 		/* Raw flags value */
-		ADD_DICT_PAIR(dictPtr, "flags", ti.dwFlags);
+		ADD_DICT_INT(dictPtr, "flags", ti.dwFlags);
 		/* Decode known flags */
 		if (ti.dwFlags & TOUCHEVENTF_MOVE) {
-		    ADD_DICT_PAIR(dictPtr, "move", 1);
+		    ADD_DICT_INT(dictPtr, "move", 1);
 		}
 		if (ti.dwFlags & TOUCHEVENTF_DOWN) {
-		    ADD_DICT_PAIR(dictPtr, "down", 1);
+		    ADD_DICT_INT(dictPtr, "down", 1);
 		}
 		if (ti.dwFlags & TOUCHEVENTF_UP) {
-		    ADD_DICT_PAIR(dictPtr, "up", 1);
+		    ADD_DICT_INT(dictPtr, "up", 1);
 		}
 		if (ti.dwFlags & TOUCHEVENTF_INRANGE) {
-		    ADD_DICT_PAIR(dictPtr, "inrange", 1);
+		    ADD_DICT_INT(dictPtr, "inrange", 1);
 		}
 		if (ti.dwFlags & TOUCHEVENTF_PRIMARY) {
-		    ADD_DICT_PAIR(dictPtr, "primary", 1);
+		    ADD_DICT_INT(dictPtr, "primary", 1);
 		}
 		if (ti.dwFlags & TOUCHEVENTF_NOCOALESCE) {
-		    ADD_DICT_PAIR(dictPtr, "nocoalesce", 1);
+		    ADD_DICT_INT(dictPtr, "nocoalesce", 1);
 		}
 		if (ti.dwFlags & TOUCHEVENTF_PALM) {
-		    ADD_DICT_PAIR(dictPtr, "palm", 1);
+		    ADD_DICT_INT(dictPtr, "palm", 1);
 		}
 		event.virtual.user_data = dictPtr;
 		Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
@@ -972,6 +976,9 @@ GenerateGestureEvent(
     GESTUREINFO gi;
     union {XEvent general; XVirtualEvent virtual;} event;
     Tcl_Obj *dictPtr;
+    POINT sLoc, cLoc, delta;
+    POINTS pts;
+    UINT tmp;
 
     ZeroMemory(&gi, sizeof(GESTUREINFO));
     gi.cbSize = sizeof(GESTUREINFO);
@@ -980,8 +987,12 @@ GenerateGestureEvent(
 	return 0;
     }
 
-    // now interpret the gesture
+    /* Is it something we want to handle? */
     switch (gi.dwID) {
+    case GID_BEGIN:
+    case GID_END:
+	/* These should not be handled */
+	return 0;
     case GID_ZOOM:
     case GID_PAN:
     case GID_ROTATE:
@@ -989,44 +1000,64 @@ GenerateGestureEvent(
     case GID_PRESSANDTAP:
 	break;
     default:
-	// A gesture was not recognized
+	/* A gesture was not recognized */
 	return 0;
     }
 
-    InitTouchEvent(&event.general, hwnd, 0, 0);
+    POINTSTOPOINT(sLoc, gi.ptsLocation);
+    
+    InitTouchEvent(&event.general, hwnd, sLoc.x, sLoc.y);
     dictPtr = Tcl_NewDictObj();
     Tcl_IncrRefCount(dictPtr);
     /* Identify as a gesture event */
-    ADD_DICT_PAIR(dictPtr, "gesture", 1);
-    /* Touch ID TBD */
-    ADD_DICT_PAIR(dictPtr, "id", 0);
-
+    ADD_DICT_INT(dictPtr, "gesture", 1);
+    /* Gesture ID */
+    ADD_DICT_INT(dictPtr, "id", gi.dwID);
+    /* Raw flags value */
+    ADD_DICT_INT(dictPtr, "flags", gi.dwFlags);
+    /* Decode known flags */
+    if (gi.dwFlags & GF_BEGIN) {
+	ADD_DICT_INT(dictPtr, "begin", 1);
+    }
+    if (gi.dwFlags & GF_INERTIA) {
+	ADD_DICT_INT(dictPtr, "inertia", 1);
+    }
+    if (gi.dwFlags & GF_END) {
+	ADD_DICT_INT(dictPtr, "end", 1);
+    }
+    
     switch (gi.dwID){
     case GID_ZOOM:
-	// Code for zooming goes here     
-	ADD_DICT_PAIR(dictPtr, "zoom", 1);
+	ADD_DICT_INT(dictPtr, "zoom", 1);
+	ADD_DICT_WIDE(dictPtr, "distance", gi.ullArguments);
 	break;
     case GID_PAN:
-	// Code for panning goes here
-	ADD_DICT_PAIR(dictPtr, "pan", 1);
+	ADD_DICT_INT(dictPtr, "pan", 1);
+	ADD_DICT_WIDE(dictPtr, "distance", gi.ullArguments);
 	break;
     case GID_ROTATE:
-	// Code for rotation goes here
-	ADD_DICT_PAIR(dictPtr, "rotate", 1);
+	ADD_DICT_INT(dictPtr, "rotate", 1);
+	ADD_DICT_DOUB(dictPtr, "angle",
+		      GID_ROTATE_ANGLE_FROM_ARGUMENT(gi.ullArguments));
 	break;
     case GID_TWOFINGERTAP:
-	// Code for two-finger tap goes here
-	ADD_DICT_PAIR(dictPtr, "twofingertap", 1);
+	ADD_DICT_INT(dictPtr, "twofingertap", 1);
+	ADD_DICT_WIDE(dictPtr, "distance", gi.ullArguments);
 	break;
     case GID_PRESSANDTAP:
-	// Code for press and tap goes here
-	ADD_DICT_PAIR(dictPtr, "pressandtap", 1);
+	ADD_DICT_INT(dictPtr, "pressandtap", 1);
+	tmp = (UINT) gi.ullArguments;
+	pts = MAKEPOINTS(tmp);
+	POINTSTOPOINT(delta, pts);
+	ADD_DICT_INT(dictPtr, "deltax", delta.x);
+	ADD_DICT_INT(dictPtr, "deltay", delta.y);
 	break;
     }
     event.virtual.user_data = dictPtr;
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
     return 1;
 }
+
 static int
 HandleGestureNotify (
     HWND hwnd,
