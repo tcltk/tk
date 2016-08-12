@@ -1610,30 +1610,6 @@ HandleIMEComposition(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_FreeXId --
- *
- *	This interface is not needed under Windows.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_FreeXId(
-    Display *display,
-    XID xid)
-{
-    /* Do nothing */
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkWinResendEvent --
  *
  *	This function converts an X event into a Windows event and invokes the
