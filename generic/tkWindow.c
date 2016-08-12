@@ -54,12 +54,6 @@ typedef struct ThreadSpecificData {
 static Tcl_ThreadDataKey dataKey;
 
 /*
- * The Mutex below is used to lock access to the Tk_Uid structs above.
- */
-
-TCL_DECLARE_MUTEX(windowMutex)
-
-/*
  * Default values for "changes" and "atts" fields of TkWindows. Note that Tk
  * always requests all events for all windows, except StructureNotify events
  * on internal windows: these events are generated internally.
@@ -203,40 +197,6 @@ static const TkCmd commands[] = {
 			TkUnsupported1ObjCmd,	PASSMAINWINDOW|ISSAFE},
 #endif
     {NULL,		NULL,			0}
-};
-
-/*
- * The variables and table below are used to parse arguments from the "argv"
- * variable in Tk_Init.
- */
-
-static int synchronize = 0;
-static char *name = NULL;
-static char *display = NULL;
-static char *geometry = NULL;
-static char *colormap = NULL;
-static char *use = NULL;
-static char *visual = NULL;
-static int rest = 0;
-
-static const Tk_ArgvInfo argTable[] = {
-    {"-colormap", TK_ARGV_STRING, NULL, (char *) &colormap,
-	"Colormap for main window"},
-    {"-display", TK_ARGV_STRING, NULL, (char *) &display,
-	"Display to use"},
-    {"-geometry", TK_ARGV_STRING, NULL, (char *) &geometry,
-	"Initial geometry for window"},
-    {"-name", TK_ARGV_STRING, NULL, (char *) &name,
-	"Name to use for application"},
-    {"-sync", TK_ARGV_CONSTANT, (char *) 1, (char *) &synchronize,
-	"Use synchronous mode for display server"},
-    {"-visual", TK_ARGV_STRING, NULL, (char *) &visual,
-	"Visual for main window"},
-    {"-use", TK_ARGV_STRING, NULL, (char *) &use,
-	"Id of window in which to embed application"},
-    {"--", TK_ARGV_REST, (char *) 1, (char *) &rest,
-	"Pass all remaining arguments through to script"},
-    {NULL, TK_ARGV_END, NULL, NULL, NULL}
 };
 
 /*
@@ -1173,12 +1133,10 @@ Tk_CreateWindowFromPath(
 
     /*
      * Strip the parent's name out of pathName (it's everything up to the last
-     * dot). There are three tricky parts: (a) must copy the parent's name
+     * dot). There are two tricky parts: (a) must copy the parent's name
      * somewhere else to avoid modifying the pathName string (for large names,
      * space for the copy will have to be malloc'ed); (b) must special-case
-     * the situation where the parent is "."; (c) the parent's name cannot be
-     * only 1 character long because it should include both a leading dot and
-     * at least one additional character.
+     * the situation where the parent is ".".
      */
 
     p = strrchr(pathName, '.');
@@ -1197,11 +1155,6 @@ Tk_CreateWindowFromPath(
     if (numChars == 0) {
 	*p = '.';
 	p[1] = '\0';
-    } else if (numChars == 1) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad window path name \"%s\"", pathName));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", NULL);
-	return NULL;
     } else {
 	strncpy(p, pathName, (size_t) numChars);
 	p[numChars] = '\0';
@@ -2398,6 +2351,9 @@ Tk_IdToWindow(
 	    break;
 	}
     }
+    if (window == None) {
+	return NULL;
+    }
 
     hPtr = Tcl_FindHashEntry(&dispPtr->winTable, (char *) window);
     if (hPtr == NULL) {
@@ -3035,16 +2991,51 @@ MODULE_SCOPE const TkStubs tkStubs;
  */
 
 static int
+CopyValue(
+    ClientData dummy,
+    Tcl_Obj *objPtr,
+    void *dstPtr)
+{
+    *(Tcl_Obj **)dstPtr = objPtr;
+    return 1;
+}
+
+static int
 Initialize(
     Tcl_Interp *interp)		/* Interpreter to initialize. */
 {
-    char *p;
-    int argc, code;
-    const char **argv;
-    const char *args[20];
-    const char *argString = NULL;
-    Tcl_DString class;
+    int code = TCL_OK;
     ThreadSpecificData *tsdPtr;
+    Tcl_Obj *value = NULL;
+    Tcl_Obj *cmd;
+
+    Tcl_Obj *nameObj = NULL;
+    Tcl_Obj *classObj = NULL;
+    Tcl_Obj *displayObj = NULL;
+    Tcl_Obj *colorMapObj = NULL;
+    Tcl_Obj *useObj = NULL;
+    Tcl_Obj *visualObj = NULL;
+    Tcl_Obj *geometryObj = NULL;
+
+    int sync = 0;
+
+    const Tcl_ArgvInfo table[] = {
+	{TCL_ARGV_CONSTANT, "-sync", INT2PTR(1), &sync,
+		"Use synchronous mode for display server", NULL},
+	{TCL_ARGV_FUNC, "-colormap", CopyValue, &colorMapObj,
+		"Colormap for main window", NULL},
+	{TCL_ARGV_FUNC, "-display", CopyValue, &displayObj,
+		"Display to use", NULL},
+	{TCL_ARGV_FUNC, "-geometry", CopyValue, &geometryObj,
+		"Initial geometry for window", NULL},
+	{TCL_ARGV_FUNC, "-name", CopyValue, &nameObj,
+		"Name to use for application", NULL},
+	{TCL_ARGV_FUNC, "-visual", CopyValue, &visualObj,
+		"Visual for main window", NULL},
+	{TCL_ARGV_FUNC, "-use", CopyValue, &useObj,
+		"Id of window in which to embed application", NULL},
+	TCL_ARGV_AUTO_REST, TCL_ARGV_AUTO_HELP, TCL_ARGV_TABLE_END
+    };
 
     /*
      * Ensure that we are getting a compatible version of Tcl.
@@ -3063,23 +3054,6 @@ Initialize(
     tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
-     * Start by initializing all the static variables to default acceptable
-     * values so that no information is leaked from a previous run of this
-     * code.
-     */
-
-    Tcl_MutexLock(&windowMutex);
-    synchronize = 0;
-    name = NULL;
-    display = NULL;
-    geometry = NULL;
-    colormap = NULL;
-    use = NULL;
-    visual = NULL;
-    rest = 0;
-    argv = NULL;
-
-    /*
      * We start by resetting the result because it might not be clean.
      */
 
@@ -3091,8 +3065,6 @@ Initialize(
 	 * master.
 	 */
 
-	Tcl_DString ds;
-
 	/*
 	 * Step 1 : find the master and construct the interp name (could be a
 	 * function if new APIs were ok). We could also construct the path
@@ -3102,18 +3074,13 @@ Initialize(
 
 	Tcl_Interp *master = interp;
 
-	while (1) {
+	while (Tcl_IsSafe(master)) {
 	    master = Tcl_GetMaster(master);
 	    if (master == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"no controlling master interpreter", -1));
 		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_MASTER", NULL);
-		code = TCL_ERROR;
-		goto done;
-	    }
-	    if (!Tcl_IsSafe(master)) {
-		/* Found the trusted master. */
-		break;
+		return TCL_ERROR;
 	    }
 	}
 
@@ -3123,39 +3090,30 @@ Initialize(
 
 	code = Tcl_GetInterpPath(master, interp);
 	if (code != TCL_OK) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "error in Tcl_GetInterpPath", -1));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", "FAILED", NULL);
-	    goto done;
+	    Tcl_Panic("Tcl_GetInterpPath broken!");
 	}
 
 	/*
-	 * Build the string to eval.
+	 * Build the command to eval in trusted master.
 	 */
 
-	Tcl_DStringInit(&ds);
-	Tcl_DStringAppendElement(&ds, "::safe::TkInit");
-	Tcl_DStringAppendElement(&ds, Tcl_GetString(Tcl_GetObjResult(master)));
+	cmd = Tcl_NewListObj(2, NULL);
+	Tcl_ListObjAppendElement(NULL, cmd,
+		Tcl_NewStringObj("::safe::TkInit", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(master));
 
 	/*
 	 * Step 2 : Eval in the master. The argument is the *reversed* interp
 	 * path of the slave.
 	 */
 
-	code = Tcl_EvalEx(master, Tcl_DStringValue(&ds), -1, 0);
+	Tcl_IncrRefCount(cmd);
+	code = Tcl_EvalObjEx(master, cmd, 0);
+	Tcl_DecrRefCount(cmd);
+	Tcl_TransferResult(master, code, interp);
 	if (code != TCL_OK) {
-	    /*
-	     * We might want to transfer the error message or not. We don't.
-	     * (No API to do it and maybe security reasons).
-	     */
-
-	    Tcl_DStringFree(&ds);
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "not allowed to start Tk by master's safe::TkInit", -1));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", "FAILED", NULL);
-	    goto done;
+	    return code;
 	}
-	Tcl_DStringFree(&ds);
 
 	/*
 	 * Use the master's result as argv. Note: We don't use the Obj
@@ -3163,7 +3121,7 @@ Initialize(
 	 * changing the code below.
 	 */
 
-	argString = Tcl_GetString(Tcl_GetObjResult(master));
+	value = Tcl_GetObjResult(interp);
     } else {
 	/*
 	 * If there is an "argv" variable, get its value, extract out relevant
@@ -3171,50 +3129,67 @@ Initialize(
 	 * that we used.
 	 */
 
-	argString = Tcl_GetVar2(interp, "argv", NULL, TCL_GLOBAL_ONLY);
+	value = Tcl_GetVar2Ex(interp, "argv", NULL, TCL_GLOBAL_ONLY);
     }
-    if (argString != NULL) {
-	char buffer[TCL_INTEGER_SPACE];
 
-	if (Tcl_SplitList(interp, argString, &argc, &argv) != TCL_OK) {
-	argError:
+    if (value) {
+	int objc;
+	Tcl_Obj **objv, **rest;
+	Tcl_Obj *parseList = Tcl_NewListObj(1, NULL);
+
+	Tcl_ListObjAppendElement(NULL, parseList, Tcl_NewObj());
+
+	Tcl_IncrRefCount(value);
+	if (TCL_OK != Tcl_ListObjAppendList(interp, parseList, value) ||
+	    TCL_OK != Tcl_ListObjGetElements(NULL, parseList, &objc, &objv) ||
+	    TCL_OK != Tcl_ParseArgsObjv(interp, table, &objc, objv, &rest)) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (processing arguments in argv variable)");
 	    code = TCL_ERROR;
+	}
+	if (code == TCL_OK) {
+	    Tcl_SetVar2Ex(interp, "argv", NULL,
+		    Tcl_NewListObj(objc-1, rest+1), TCL_GLOBAL_ONLY);
+	    Tcl_SetVar2Ex(interp, "argc", NULL,
+		    Tcl_NewIntObj(objc-1), TCL_GLOBAL_ONLY);
+	    ckfree(rest);
+	}
+	Tcl_DecrRefCount(parseList);
+	if (code != TCL_OK) {
 	    goto done;
 	}
-	if (Tk_ParseArgv(interp, (Tk_Window) NULL, &argc, argv,
-		argTable, TK_ARGV_DONT_SKIP_FIRST_ARG|TK_ARGV_NO_DEFAULTS)
-		!= TCL_OK) {
-	    goto argError;
-	}
-	p = Tcl_Merge(argc, argv);
-	Tcl_SetVar2(interp, "argv", NULL, p, TCL_GLOBAL_ONLY);
-	sprintf(buffer, "%d", argc);
-	Tcl_SetVar2(interp, "argc", NULL, buffer, TCL_GLOBAL_ONLY);
-	ckfree(p);
     }
 
     /*
      * Figure out the application's name and class.
      */
 
-    Tcl_DStringInit(&class);
-    if (name == NULL) {
-	int offset;
+    /*
+     * If we got no -name argument, fetch from TkpGetAppName().
+     */
 
-	TkpGetAppName(interp, &class);
-	offset = Tcl_DStringLength(&class)+1;
-	Tcl_DStringSetLength(&class, offset);
-	Tcl_DStringAppend(&class, Tcl_DStringValue(&class), offset-1);
-	name = Tcl_DStringValue(&class) + offset;
-    } else {
-	Tcl_DStringAppend(&class, name, -1);
+    if (nameObj == NULL) {
+	Tcl_DString nameDS;
+
+	Tcl_DStringInit(&nameDS);
+	TkpGetAppName(interp, &nameDS);
+	nameObj = Tcl_NewStringObj(Tcl_DStringValue(&nameDS),
+		Tcl_DStringLength(&nameDS));
+	Tcl_DStringFree(&nameDS);
     }
 
-    p = Tcl_DStringValue(&class);
-    if (*p) {
-	Tcl_UtfToTitle(p);
+    /*
+     * The -class argument is always the ToTitle of the -name
+     */
+
+    {
+	int numBytes;
+	const char *bytes = Tcl_GetStringFromObj(nameObj, &numBytes);
+
+	classObj = Tcl_NewStringObj(bytes, numBytes);
+
+	numBytes = Tcl_UtfToTitle(Tcl_GetString(classObj));
+	Tcl_SetObjLength(classObj, numBytes);
     }
 
     /*
@@ -3222,15 +3197,14 @@ Initialize(
      * information parsed from argv, if any.
      */
 
-    args[0] = "toplevel";
-    args[1] = ".";
-    args[2] = "-class";
-    args[3] = Tcl_DStringValue(&class);
-    argc = 4;
-    if (display != NULL) {
-	args[argc] = "-screen";
-	args[argc+1] = display;
-	argc += 2;
+    cmd = Tcl_NewStringObj("toplevel . -class", -1);
+
+    Tcl_ListObjAppendElement(NULL, cmd, classObj);
+    classObj = NULL;
+
+    if (displayObj) {
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-screen", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, displayObj);
 
 	/*
 	 * If this is the first application for this process, save the display
@@ -3239,36 +3213,35 @@ Initialize(
 	 */
 
 	if (tsdPtr->numMainWindows == 0) {
-	    Tcl_SetVar2(interp, "env", "DISPLAY", display, TCL_GLOBAL_ONLY);
+	    Tcl_SetVar2Ex(interp, "env", "DISPLAY", displayObj, TCL_GLOBAL_ONLY);
 	}
+	displayObj = NULL;
     }
-    if (colormap != NULL) {
-	args[argc] = "-colormap";
-	args[argc+1] = colormap;
-	argc += 2;
-	colormap = NULL;
+    if (colorMapObj) {
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-colormap", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, colorMapObj);
+	colorMapObj = NULL;
     }
-    if (use != NULL) {
-	args[argc] = "-use";
-	args[argc+1] = use;
-	argc += 2;
-	use = NULL;
+    if (useObj) {
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-use", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, useObj);
+	useObj = NULL;
     }
-    if (visual != NULL) {
-	args[argc] = "-visual";
-	args[argc+1] = visual;
-	argc += 2;
-	visual = NULL;
+    if (visualObj) {
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-visual", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, visualObj);
+	visualObj = NULL;
     }
-    args[argc] = NULL;
-    code = TkCreateFrame(NULL, interp, argc, args, 1, name);
 
-    Tcl_DStringFree(&class);
+    code = TkListCreateFrame(NULL, interp, cmd, 1, nameObj);
+
+    Tcl_DecrRefCount(cmd);
+
     if (code != TCL_OK) {
 	goto done;
     }
     Tcl_ResetResult(interp);
-    if (synchronize) {
+    if (sync) {
 	XSynchronize(Tk_Display(Tk_MainWindow(interp)), True);
     }
 
@@ -3277,19 +3250,19 @@ Initialize(
      * geometry into the "geometry" variable.
      */
 
-    if (geometry != NULL) {
-	Tcl_DString buf;
+    if (geometryObj) {
 
-	Tcl_SetVar2(interp, "geometry", NULL, geometry, TCL_GLOBAL_ONLY);
-	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, "wm geometry . ", -1);
-	Tcl_DStringAppend(&buf, geometry, -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
-	Tcl_DStringFree(&buf);
+	Tcl_SetVar2Ex(interp, "geometry", NULL, geometryObj, TCL_GLOBAL_ONLY);
+
+	cmd = Tcl_NewStringObj("wm geometry .", -1);
+	Tcl_ListObjAppendElement(NULL, cmd, geometryObj);
+	Tcl_IncrRefCount(cmd);
+	code = Tcl_EvalObjEx(interp, cmd, 0);
+	Tcl_DecrRefCount(cmd);
+	geometryObj = NULL;
 	if (code != TCL_OK) {
 	    goto done;
 	}
-	geometry = NULL;
     }
 
     /*
@@ -3326,10 +3299,6 @@ Initialize(
      * console window interpreter.
      */
 
-    Tcl_MutexUnlock(&windowMutex);
-    if (argv != NULL) {
-	ckfree(argv);
-    }
     code = TkpInit(interp);
     if (code == TCL_OK) {
 
@@ -3362,12 +3331,10 @@ tkInit", -1, 0);
 
 	TkCreateThreadExitHandler(DeleteWindowsExitProc, tsdPtr);
     }
-    return code;
-
   done:
-    Tcl_MutexUnlock(&windowMutex);
-    if (argv != NULL) {
-	ckfree(argv);
+    if (value) {
+	Tcl_DecrRefCount(value);
+	value = NULL;
     }
     return code;
 }
