@@ -1323,6 +1323,21 @@ GetState(
 	if (HIWORD(lParam) & KF_EXTENDED) {
 	    state |= EXTENDED_MASK;
 	}
+
+	/*
+	 * Windows does not set the Extended flag for neither the left nor the right
+	 * shift key. Since we need to distinguish later at event handling time
+	 * which one was pressed, we force the Extended flag manually here so that
+	 * KeycodeToKeysym() in tkWinKey.c can return the correct left or right
+	 * keysym. Detection is based on the scan code contained in lParam.
+	 * This is a bit of a hack but there is no other way that would work
+	 * for both KeyPress and KeyRelease events.
+	 */
+
+        if ((wParam == VK_SHIFT) && 
+                ((HIWORD(lParam) & 0xFF) != MapVirtualKey(VK_LSHIFT, 0))) {
+            state |= EXTENDED_MASK;
+         }
     }
     return state;
 }
