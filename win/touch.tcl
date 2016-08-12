@@ -1,3 +1,67 @@
+# Example usage of the touch interface
+
+if 0 {
+    The current interface is as follows.
+
+    All configuration is done via:
+    wm touch <win> ?options?
+
+    Some gestures are on by default. It seems like all but rotate.
+    To get raw touch events, they must be turned on.
+
+    To control gestures:
+    -all : Turn on all gestures
+    -pan <bool> : Turn on or off Pan gesture
+    -pressandtap <bool> : Turn on or off PressAndTap gesture
+    -rotate <bool> : Turn on or off Rotate gesture
+    -twofingertap <bool> : Turn on or off TwoFingerTap gesture
+    -zoom <bool> : Turn on or off Zoom gesture
+
+    To get raw touch events:
+    If any of the flags -touch, -fine or -wantpalm is given,
+    the window is registered to receive raw touch event.
+    It will no longer receive any gesture events.
+    The flags -fine/-wantpalm corresponds to the Windows API
+    RegisterTouchWindow.
+
+    Events are received as <Touch> events.
+    These events support at least base %W %x %y %X %Y fields.
+    All extra information is given in a dictionary in the %d field.
+
+    Any boolean field in the dictionary is either present with
+    the value 1 or not present. Below they are written without a value.
+
+    Touch fields:
+    touch : Identify event as a touch. (i.e. not a gesture)
+    id <val> : Id to know what events belong to the same touch.
+    flags <val> : Raw flags value, in case future flags are provided.
+    down : Start of touch
+    move : Touch is moving
+    up   : End of touch
+    primary : First touch in a multi touch. Primary touch might also cause
+              button events.
+    inrange/nocoalesce/palm : See TOUCHINPUT in Windows API.
+
+    Gesture fields:
+    gesture : Identify event as a gesture.
+    id <val> : Id to know what events belong to the same gesture.
+    flags <val> : Raw flags value, in case future flags are provided.
+    begin : Start of gesture
+    end : End of gesture
+    inertia : Gesture has triggered inertia
+
+    zoom : Zoom gesture. %x/y is between fingers
+    pan  : Pan gesture. %x/y is between fingers
+    rotate : Rotate gesture. %x/y is between fingers
+    twofingertap : Two finger tap gesture. %x/y is between fingers
+    pressandtap : Press and tap gesture. %x/y is first finger
+    
+    distance <i> : For zoom/pan/twofingertap: Distance between fingers.
+    angle <r> : For rotate: Rotation angle in radians.
+    deltax <i> : For pressandtap: Locates second finger.
+    deltay <i> : For pressandtap: Locates second finger.
+}
+
 namespace import tcl::mathop::*
 
 proc rndCol {} {
@@ -11,7 +75,7 @@ proc Circle {w x y r args} {
 	-fill "" -outline black -width 2 {*}$args
 }
 
-proc Touch1 {d x y X Y} {
+proc Touch1 {W d x y X Y} {
     set id [dict get $d id]
 
     set move [dict exists $d move]
@@ -20,15 +84,15 @@ proc Touch1 {d x y X Y} {
     set primary [dict exists $d primary]
 
     if {![info exists ::t($id,id)]} {
-	set ::t($id,id) [.c1 create oval $x $y $x $y]
+	set ::t($id,id) [$W create oval $x $y $x $y]
 	if {$primary} {
-	    .c1 itemconfigure $::t($id,id) -fill red
+	    $W itemconfigure $::t($id,id) -fill red
 	} else {
-	    .c1 itemconfigure $::t($id,id) -fill [rndCol]
+	    $W itemconfigure $::t($id,id) -fill [rndCol]
 	}
     }
     if {$up} {
-	.c1 delete $::t($id,id)
+	$W delete $::t($id,id)
 	array unset ::t $id,*
 	return
     }
@@ -40,78 +104,83 @@ proc Touch1 {d x y X Y} {
     set r [expr {[winfo screenwidth .] / 50}]
     set ::t($id,x) $x
     set ::t($id,y) $y
-    .c1 coords $::t($id,id) [expr {$x - $r}] [expr {$y - $r}] \
-	[expr {$x + $r}] [expr {$y + $r}]
+    $W coords $::t($id,id) [- $x $r] [- $y $r] [+ $x $r] [+ $y $r]
 }
 
-proc Log {d} {
+proc Log {d W} {
     # Make a little log of messages for now
     if {[lindex $::messages 9] ne $d} {
 	lappend ::messages $d
 	set ::messages [lrange $::messages end-9 end]
     }
     set txt [join $::messages \n]
-    .c2 itemconfigure gesture -text $txt
+    $W itemconfigure gesture -text $txt
 }
 
-proc Touch2 {d x y X Y} {
+proc Touch2 {W d x y X Y} {
     set id [dict get $d id]
 
     if {[dict exists $d twofingertap]} {
-	.c2 delete twofingertap
+	$W delete twofingertap
 	set r [expr {[dict get $d distance] / 2}]
-	Circle .c2 $x $y $r -fill yellow -tags twofingertap
+	Circle $W $x $y $r -fill yellow -tags twofingertap
 	return
     }
     if {[dict exists $d pressandtap]} {
 	if {[dict exists $d begin]} {
 	    # Only the begin message has delta set
-	    .c2 delete pressandtap
+	    $W delete pressandtap
 	    set x1 [expr {$x + [dict get $d deltax]}]
 	    set y1 [expr {$y + [dict get $d deltay]}]
-	    .c2 create line $x $y $x1 $y1 -width 5 -fill red -tags pressandtap
+	    $W create line $x $y $x1 $y1 -width 5 -fill red -tags pressandtap
 	}
 	if {[dict exists $d end]} {
 	    # Make end visible by changing colour
-	    .c2 itemconfigure pressandtap -fill purple
+	    $W itemconfigure pressandtap -fill purple
 	}
 	return
     }
     if {[dict exists $d zoom]} {
-	.c2 delete zoom
+	$W delete zoom
 	set r [expr {[dict get $d distance] / 2}]
-	Circle .c2 $x $y $r -fill blue -tags zoom
+	Circle $W $x $y $r -fill blue -tags zoom
 	return
     }
     if {[dict exists $d pan]} {
-	.c2 delete pan
+	$W delete pan
 	set r [expr {[dict get $d distance] / 2}]
-	Circle .c2 $x $y $r -fill green -tags pan
+	Circle $W $x $y $r -fill green -tags pan
 	return
     }
     if {[dict exists $d rotate]} {
-	.c2 delete rotate
-	set a [expr {180.0*[dict get $d angle]/3.141592 - 10}]
-	set r 100
-	.c2 create arc [- $x $r] [- $y $r] [+ $x $r] [+ $y $r] \
+	$W delete rotate
+	set a [expr {180.0*[dict get $d angle]/3.141592 - 20}]
+	set r [expr {$::size/4}]
+	$W create arc [- $x $r] [- $y $r] [+ $x $r] [+ $y $r] \
 	    -fill orange -outline black -width 2 -tags rotate \
-	    -start $a -extent 20
+	    -start $a -extent 40
 	return
     }
-    Log $d
+    Log $W $d
 }
 
 #console show
-set ::size [expr {[winfo screenwidth .] / 4}]
+set ::size [expr {[winfo screenwidth .] / 5}]
 canvas .c1 -width $::size -height $::size -bd 3 -relief solid
 canvas .c2 -width $::size -height $::size -bd 3 -relief solid
+canvas .c3 -width $::size -height $::size -bd 3 -relief solid
 .c1 create text [expr {$::size /2}] [expr {$::size /2}] -text Touch
 lappend ::messages "Gesture"
-.c2 create text [expr {$::size / 2}] [expr {$::size / 2}] -text Gesture -tags gesture
+.c2 create text [expr {$::size / 2}] [expr {$::size / 2}] -text GestureAll -tags gesture
+.c3 create text [expr {$::size / 2}] [expr {$::size / 2}] -text GestureDef -tags gesture
 
-pack .c1 .c2 -side left -fill both -expand 1
+grid .c1 -   -sticky news
+grid .c2 .c3 -sticky news
+grid columnconfigure . all -weight 1
+grid rowconfigure . all -weight 1
 wm touch .c1 -touch
 wm touch .c2 -all
 #wm touch .c2 -pan 0 -rotate 0 -zoom 1 -twofingertap 1 -pressandtap 1
-bind .c1 <Touch> "Touch1 %d %x %y %X %Y"
-bind .c2 <Touch> "Touch2 %d %x %y %X %Y"
+bind .c1 <Touch> "Touch1 %W %d %x %y %X %Y"
+bind .c2 <Touch> "Touch2 %W %d %x %y %X %Y"
+bind .c3 <Touch> "Touch2 %W %d %x %y %X %Y"

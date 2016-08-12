@@ -119,7 +119,7 @@ static const unsigned long virtualEventMasks[TK_LASTEVENT-VirtualEvent] = {
     ActivateMask,			/* ActivateNotify */
     ActivateMask,			/* DeactivateNotify */
     MouseWheelMask,			/* MouseWheelEvent */
-    TouchEventMask
+    TouchEventMask			/* TouchEvent */
 };
 
 /*
