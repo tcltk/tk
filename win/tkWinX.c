@@ -54,6 +54,18 @@
 #endif
 
 /*
+ * Helpers for touch event to fill in its dictionary.
+ */
+
+#define ADD_DICT_INT(d, s, v)						\
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewIntObj(v))
+#define ADD_DICT_WIDE(d, s, v) \
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewWideIntObj(v))
+#define ADD_DICT_DOUB(d, s, v) \
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewDoubleObj(v))
+
+
+/*
  * Declarations of static variables used in this file.
  */
 
@@ -846,26 +858,19 @@ TkWinChildProc(
 /*
  *----------------------------------------------------------------------
  *
- * GenerateTouchEvent --
+ * InitTouchEvent --
  *
- *	This function generate touch events when a Win touch event has
- *      been received.
+ *	This function initialises an event structure with the base
+ *	fields used in a TouchEvent.
  *
  * Results:
- *	Returns 1 if the event was handled, else 0.
+ *	None.
  *
  * Side effects:
- *	Queues one or more X events.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
-
-#define ADD_DICT_INT(d, s, v) \
-    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewIntObj(v))
-#define ADD_DICT_WIDE(d, s, v) \
-    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewWideIntObj(v))
-#define ADD_DICT_DOUB(d, s, v) \
-    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewDoubleObj(v))
 
 static void
 InitTouchEvent(XEvent *event, HWND hwnd, int rootx, int rooty)
@@ -895,6 +900,23 @@ InitTouchEvent(XEvent *event, HWND hwnd, int rootx, int rooty)
     event->xkey.x = cInput.x;
     event->xkey.y = cInput.y;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateTouchEvent --
+ *
+ *	This function generate touch events when a WM_TOUCH event has
+ *      been received.
+ *
+ * Results:
+ *	Returns 1 if the event was handled, else 0.
+ *
+ * Side effects:
+ *	May queue one or more X events.
+ *
+ *----------------------------------------------------------------------
+ */
 
 static int
 GenerateTouchEvent(
@@ -966,8 +988,24 @@ GenerateTouchEvent(
     }
     return 0;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateGestureEvent --
+ *
+ *	This function generate touch events when a WM_GESTURE event has
+ *      been received.
+ *
+ * Results:
+ *	Returns 1 if the event was handled, else 0.
+ *
+ * Side effects:
+ *	May queue an X event.
+ *
+ *----------------------------------------------------------------------
+ */
 
-/* Called for WM_GESTURE */
 static int
 GenerateGestureEvent(
     HWND hwnd,
