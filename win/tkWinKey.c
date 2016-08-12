@@ -339,14 +339,13 @@ KeycodeToKeysym(
 	 * and Alt (aka Menu) keys are such extended keys (which their left
 	 * counterparts are not).
 	 * Regarding the shift case, Windows does not set the Extended flag for
-	 * the neither the left nor the right shift key. As a consequence another
-	 * way to distinguish between the two keys is to query the state of one
-	 * of the two to determine which was actually pressed. So if the keycode
-	 * indicates Shift, do this extra test. If the right-side key was
-	 * pressed, return the appropriate keycode. Otherwise, we fall through
-	 * and rely on the keymap table to hold the correct keysym value.
-	 * Note: this little trick only works for KeyPress, not for KeyRelease,
-	 * for reasons stated in bug [2945130]
+	 * neither the left nor the right shift key. This is therefore manually
+	 * enforced at KeyPress/KeyRelease event generation time (in tkWinX.c).
+	 * This is a bit of a hack but there is no other way that would work
+	 * for both KeyPress and KeyRelease events.
+	 * If the right-side key was pressed, return the appropriate keycode.
+	 * Otherwise, we fall through and rely on the keymap table to hold the
+	 * correct keysym value.
 	 */
 
     case VK_CONTROL:
@@ -355,7 +354,7 @@ KeycodeToKeysym(
         }
 	break;
     case VK_SHIFT:
-	if (GetKeyState(VK_RSHIFT) & 0x80) {
+	if (state & EXTENDED_MASK) {
 	    return XK_Shift_R;
 	}
 	break;
