@@ -57,6 +57,8 @@
  * Helpers for touch event to fill in its dictionary.
  */
 
+#define ADD_DICT_STR(d, s, v)						\
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewStringObj(v, -1))
 #define ADD_DICT_INT(d, s, v)						\
     Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewIntObj(v))
 #define ADD_DICT_WIDE(d, s, v) \
@@ -478,12 +480,10 @@ TkWinDisplayChanged(
     dc = GetDC(NULL);
     screen->width = GetDeviceCaps(dc, HORZRES);
     screen->height = GetDeviceCaps(dc, VERTRES);
-    /* screen->mwidth = MulDiv(screen->width, 254, */
-    /* 	    GetDeviceCaps(dc, LOGPIXELSX) * 10); */
-    /* screen->mheight = MulDiv(screen->height, 254, */
-    /* 	    GetDeviceCaps(dc, LOGPIXELSY) * 10); */
-    screen->mwidth = GetDeviceCaps(dc, HORZSIZE);
-    screen->mheight = GetDeviceCaps(dc, VERTSIZE);
+    screen->mwidth = MulDiv(screen->width, 254,
+    	    GetDeviceCaps(dc, LOGPIXELSX) * 10);
+    screen->mheight = MulDiv(screen->height, 254,
+    	    GetDeviceCaps(dc, LOGPIXELSY) * 10);
 
     /*
      * On windows, when creating a color bitmap, need two pieces of
@@ -948,7 +948,7 @@ GenerateTouchEvent(
 		dictPtr = Tcl_NewDictObj();
 		Tcl_IncrRefCount(dictPtr);
 		/* Identify as a touch event */
-		ADD_DICT_INT(dictPtr, "touch", 1);
+		ADD_DICT_STR(dictPtr, "event", "touch");
 		/* Touch ID */
 		ADD_DICT_INT(dictPtr, "id", ti.dwID);
 		/* Raw flags value */
@@ -1015,9 +1015,9 @@ GenerateGestureEvent(
     GESTUREINFO gi;
     union {XEvent general; XVirtualEvent virtual;} event;
     Tcl_Obj *dictPtr;
-    POINT sLoc, cLoc, delta;
+    POINT sLoc, delta;
     POINTS pts;
-    UINT tmp;
+    UINT LInt, HInt;
 
     ZeroMemory(&gi, sizeof(GESTUREINFO));
     gi.cbSize = sizeof(GESTUREINFO);
@@ -1049,9 +1049,7 @@ GenerateGestureEvent(
     dictPtr = Tcl_NewDictObj();
     Tcl_IncrRefCount(dictPtr);
     /* Identify as a gesture event */
-    ADD_DICT_INT(dictPtr, "gesture", 1);
-    /* Gesture ID */
-    ADD_DICT_INT(dictPtr, "id", gi.dwID);
+    ADD_DICT_STR(dictPtr, "event", "gesture");
     /* Raw flags value */
     ADD_DICT_INT(dictPtr, "flags", gi.dwFlags);
     /* Decode known flags */
@@ -1065,28 +1063,34 @@ GenerateGestureEvent(
 	ADD_DICT_INT(dictPtr, "end", 1);
     }
     
+    LInt = (UINT) (gi.ullArguments & 0xFFFFFFFF);
+    HInt = (UINT) (gi.ullArguments >> 32);
     switch (gi.dwID){
     case GID_ZOOM:
-	ADD_DICT_INT(dictPtr, "zoom", 1);
+	ADD_DICT_STR(dictPtr, "gesture", "zoom");
 	ADD_DICT_WIDE(dictPtr, "distance", gi.ullArguments);
 	break;
     case GID_PAN:
-	ADD_DICT_INT(dictPtr, "pan", 1);
-	ADD_DICT_WIDE(dictPtr, "distance", gi.ullArguments);
+	ADD_DICT_STR(dictPtr, "gesture", "pan");
+	ADD_DICT_WIDE(dictPtr, "distance", LInt);
+	if (gi.dwFlags & GF_INERTIA) {
+	    pts = MAKEPOINTS(HInt);
+	    ADD_DICT_INT(dictPtr, "inertiax", pts.x);
+	    ADD_DICT_INT(dictPtr, "inertiay", pts.y);
+	}
 	break;
     case GID_ROTATE:
-	ADD_DICT_INT(dictPtr, "rotate", 1);
+	ADD_DICT_STR(dictPtr, "gesture", "rotate");
 	ADD_DICT_DOUB(dictPtr, "angle",
 		      GID_ROTATE_ANGLE_FROM_ARGUMENT(gi.ullArguments));
 	break;
     case GID_TWOFINGERTAP:
-	ADD_DICT_INT(dictPtr, "twofingertap", 1);
+	ADD_DICT_STR(dictPtr, "gesture", "twofingertap");
 	ADD_DICT_WIDE(dictPtr, "distance", gi.ullArguments);
 	break;
     case GID_PRESSANDTAP:
-	ADD_DICT_INT(dictPtr, "pressandtap", 1);
-	tmp = (UINT) gi.ullArguments;
-	pts = MAKEPOINTS(tmp);
+	ADD_DICT_STR(dictPtr, "gesture", "pressandtap");
+	pts = MAKEPOINTS(LInt);
 	POINTSTOPOINT(delta, pts);
 	ADD_DICT_INT(dictPtr, "deltax", delta.x);
 	ADD_DICT_INT(dictPtr, "deltay", delta.y);

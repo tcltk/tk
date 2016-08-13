@@ -5534,15 +5534,18 @@ WmTouchCmd(
     HWND hwnd;
     int i, index, gCnt = 0, value;
     ULONG flags = 0;
-    int touch = 0;
+    int touch = 0, panFlag;
+    GESTURECONFIG gcPan = { 0, 0, 0 };
     GESTURECONFIG gc[10]; /* TBD: protect from overflow */
     static const char *const optionStrings[] = {
-	"-all", "-fine", "-pan", "-pressandtap", "-rotate",
+	"-all", "-fine", "-pan", "-pangutter", "-paninertia",
+	"-pansfh", "-pansfv", "-pressandtap", "-rotate",
 	"-touch", "-twofingertap", "-wantpalm", "-zoom",
 	NULL
     };
     enum options {
-	TOUCH_ALL, TOUCH_FINE, TOUCH_PAN, TOUCH_PRESSANDTAP, TOUCH_ROTATE,
+	TOUCH_ALL, TOUCH_FINE, TOUCH_PAN, TOUCH_PANGUTTER, TOUCH_PANINERTIA,
+	TOUCH_PANSFH, TOUCH_PANSFV, TOUCH_PRESSANDTAP, TOUCH_ROTATE,
 	TOUCH_TOUCH, TOUCH_TWOFINGERTAP, TOUCH_WANTPALM, TOUCH_ZOOM
     };
 
@@ -5565,20 +5568,33 @@ WmTouchCmd(
 	    touch = 1;
 	    break;
 	case TOUCH_PAN:
+	    panFlag = GC_PAN;
+	    goto pan;
+	case TOUCH_PANGUTTER:
+	    panFlag = GC_PAN_WITH_GUTTER;
+	    goto pan;
+	case TOUCH_PANINERTIA:
+	    panFlag = GC_PAN_WITH_INERTIA;
+	    goto pan;
+	case TOUCH_PANSFH:
+	    panFlag = GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
+	    goto pan;
+	case TOUCH_PANSFV:
+	    panFlag = GC_PAN_WITH_SINGLE_FINGER_VERTICALLY;
+	pan:
 	    if (++i >= objc) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"missing pan", -1));
+			"missing value", -1));
 		return TCL_ERROR;
 	    }
 	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    /* TBD: support details about pan */
-	    gc[gCnt].dwID = GID_PAN;
+	    gcPan.dwID = GID_PAN;
 	    if (value) {
-		gc[gCnt++].dwWant = GC_PAN;
+		gcPan.dwWant |= panFlag;
 	    } else {
-		gc[gCnt++].dwBlock = GC_PAN;
+		gcPan.dwBlock |= panFlag;
 	    }
             break;
 	case TOUCH_PRESSANDTAP:
@@ -5653,6 +5669,10 @@ WmTouchCmd(
 	    }
             break;
 	}
+    }
+
+    if (gcPan.dwID != 0) {
+	gc[gCnt++] = gcPan;
     }
 
     win = Tk_WindowId((Tk_Window) winPtr);
@@ -8103,12 +8123,10 @@ WmProc(
 
 		screen->width = LOWORD(lParam);		/* horizontal res */
 		screen->height = HIWORD(lParam);	/* vertical res */
-		/* screen->mwidth = MulDiv(screen->width, 254, */
-		/* 	GetDeviceCaps(dc, LOGPIXELSX) * 10); */
-		/* screen->mheight = MulDiv(screen->height, 254, */
-		/* 	GetDeviceCaps(dc, LOGPIXELSY) * 10); */
-		screen->mwidth = GetDeviceCaps(dc, HORZSIZE);
-		screen->mheight = GetDeviceCaps(dc, VERTSIZE);
+		screen->mwidth = MulDiv(screen->width, 254,
+			GetDeviceCaps(dc, LOGPIXELSX) * 10);
+		screen->mheight = MulDiv(screen->height, 254,
+			GetDeviceCaps(dc, LOGPIXELSY) * 10);
 		ReleaseDC(NULL, dc);
 	    }
 	    if (Tk_Depth(winPtr) != (int) wParam) {
