@@ -30,6 +30,12 @@ typedef struct {
     Tcl_Obj 	*maximumObj;
     Tcl_Obj 	*valueObj;
     Tcl_Obj 	*phaseObj;
+    Tcl_Obj 	*textObj;
+    Tcl_Obj 	*fontObj;
+    Tcl_Obj 	*foregroundObj;
+    Tcl_Obj 	*anchorObj;
+    Tcl_Obj 	*justifyObj;
+    Tcl_Obj 	*wrapLengthObj;
 
     int 	mode;
     Ttk_TraceHandle *variableTrace;	/* Trace handle for -variable option */
@@ -68,6 +74,24 @@ static Tk_OptionSpec ProgressbarOptionSpecs[] =
     {TK_OPTION_INT, "-phase", "phase", "Phase",
 	"0", Tk_Offset(Progressbar,progress.phaseObj), -1,
 	0, 0, 0 },
+    {TK_OPTION_STRING, "-text", "text", "Text", "",
+	Tk_Offset(Progressbar,progress.textObj), -1,
+	0,0,GEOMETRY_CHANGED },
+    {TK_OPTION_FONT, "-font", "font", "Font",
+	DEFAULT_FONT, Tk_Offset(Progressbar,progress.fontObj), -1,
+	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+    {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
+	"black", Tk_Offset(Progressbar,progress.foregroundObj), -1,
+	TK_OPTION_NULL_OK,0,0 },
+    {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
+	"w", Tk_Offset(Progressbar,progress.anchorObj), -1,
+	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
+    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
+	"left", Tk_Offset(Progressbar,progress.justifyObj), -1,
+	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+    {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
+	"0", Tk_Offset(Progressbar, progress.wrapLengthObj), -1,
+	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -522,7 +546,8 @@ TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(HorizontalProgressbarLayout)
     TTK_GROUP("Horizontal.Progressbar.trough", TTK_FILL_BOTH,
-	TTK_NODE("Horizontal.Progressbar.pbar", TTK_PACK_LEFT|TTK_FILL_Y))
+	TTK_NODE("Horizontal.Progressbar.pbar", TTK_PACK_LEFT|TTK_FILL_Y)
+	TTK_NODE("Horizontal.Progressbar.text", TTK_PACK_LEFT))
 TTK_END_LAYOUT
 
 /*
