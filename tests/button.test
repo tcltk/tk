@@ -3435,15 +3435,15 @@ test button-5.23 {ConfigureButton - -height option} -constraints {
 test button-5.24 {ConfigureButton - computing geometry} -constraints {
     fonts
 } -body {
-    button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
-    .b configure -text "Sample text" -width 10 -height 2
+    button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12}
+    .b configure -text "Sample text" -height 2
     pack .b
     set result "[winfo reqwidth .b] [winfo reqheight .b]"
     .b configure -bitmap questhead
     lappend result [winfo reqwidth .b] [winfo reqheight .b]
 } -cleanup {
     destroy .b
-} -result {104 46 20 12}
+} -result {96 46 30 12}
 
 test button-5.25 {ConfigureButton - computing geometry} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
