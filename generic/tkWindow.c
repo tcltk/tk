@@ -1221,12 +1221,10 @@ Tk_CreateWindowFromPath(
 
     /*
      * Strip the parent's name out of pathName (it's everything up to the last
-     * dot). There are three tricky parts: (a) must copy the parent's name
+     * dot). There are two tricky parts: (a) must copy the parent's name
      * somewhere else to avoid modifying the pathName string (for large names,
      * space for the copy will have to be malloc'ed); (b) must special-case
-     * the situation where the parent is "."; (c) the parent's name cannot be
-     * only 1 character long because it should include both a leading dot and
-     * at least one additional character.
+     * the situation where the parent is ".".
      */
 
     p = strrchr(pathName, '.');
@@ -1245,11 +1243,6 @@ Tk_CreateWindowFromPath(
     if (numChars == 0) {
 	*p = '.';
 	p[1] = '\0';
-    } else if (numChars == 1) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad window path name \"%s\"", pathName));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", NULL);
-	return NULL;
     } else {
 	strncpy(p, pathName, (size_t) numChars);
 	p[numChars] = '\0';
@@ -1330,9 +1323,6 @@ Tk_DestroyWindow(
     TkHalfdeadWindow *halfdeadPtr, *prev_halfdeadPtr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-#ifdef PLATFORM_SDL
-    extern void TkPointerDeadWindow(TkWindow *winPtr);
-#endif
 
     if (winPtr->flags & TK_ALREADY_DEAD) {
 	/*
@@ -1519,6 +1509,8 @@ Tk_DestroyWindow(
     }
     if (winPtr->window != None) {
 #ifdef PLATFORM_SDL
+	extern void TkPointerDeadWindow(TkWindow *winPtr);
+
 	TkPointerDeadWindow(winPtr);
 #endif
 #if (defined(MAC_OSX_TK) || defined(_WIN32)) && !defined(PLATFORM_SDL)
@@ -2453,6 +2445,9 @@ Tk_IdToWindow(
 	if (dispPtr->display == display) {
 	    break;
 	}
+    }
+    if (window == None) {
+	return NULL;
     }
 
     hPtr = Tcl_FindHashEntry(&dispPtr->winTable, (char *) window);

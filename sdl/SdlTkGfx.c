@@ -643,7 +643,7 @@ SdlTkGfxPresent(SDL_Renderer *rend, SDL_Texture *tex)
     SDL_RenderPresent(rend);
 }
 
-unsigned long 
+unsigned long
 SdlTkImageGetPixel(XImage *image, int x, int y)
 {
     unsigned long pixel = 0;
@@ -766,7 +766,7 @@ SdlTkGfxPutImage(Drawable d, Region r, XImage* image, int src_x, int src_y,
 	    SDL_SetSurfacePalette(sdl, pal);
 	    SDL_FreePalette(pal);
 	}
-    } else { 
+    } else {
 	sdl = SDL_CreateRGBSurfaceFrom(pixels, image->width, image->height,
 				       image->bits_per_pixel,
 				       image->bytes_per_line, image->red_mask,

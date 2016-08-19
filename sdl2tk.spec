@@ -1,6 +1,6 @@
 # This file is the basis for a binary SDL-Tk Linux RPM.
 
-%define version 8.6.5
+%define version 8.6.6
 %define directory /opt/sdltk86
 
 Name:          sdl2tk86

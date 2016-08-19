@@ -2464,7 +2464,13 @@ DisplayDLine(
 	    Tk_Width(textPtr->tkwin), dlPtr->height, 0, TK_RELIEF_FLAT);
 
     /*
-     * Second, draw the background color of the left and right margins.
+     * Second, draw background information for the whole line.
+     */
+
+    DisplayLineBackground(textPtr, dlPtr, prevPtr, pixmap);
+
+    /*
+     * Third, draw the background color of the left and right margins.
      */
     if (dlPtr->lMarginColor != NULL) {
         Tk_Fill3DRectangle(textPtr->tkwin, pixmap, dlPtr->lMarginColor, 0, y,
@@ -2477,11 +2483,6 @@ DisplayDLine(
                 y, dlPtr->rMarginWidth, dlPtr->height, 0, TK_RELIEF_FLAT);
     }
 
-    /*
-     * Next, draw background information for the whole line.
-     */
-
-    DisplayLineBackground(textPtr, dlPtr, prevPtr, pixmap);
 
     /*
      * Make another pass through all of the chunks to redraw the insertion

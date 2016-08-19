@@ -251,7 +251,7 @@ DisplaySetupProc(
 	    Tcl_SetMaxBlockTime(&blockTime);
 	} else {
 	    Tcl_SetMaxBlockTime(&blockTime20);
-	} 
+	}
     }
 }
 

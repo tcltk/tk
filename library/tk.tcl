@@ -11,7 +11,7 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact Tk  8.6.5
+package require -exact Tk  8.6.6
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -705,12 +705,16 @@ if {[tk windowingsystem] eq "aqua"} {
 if {[info command "sdltk"] eq "sdltk"} {
     # Android hardware keyboard handling
     if {[sdltk android]} {
+	if {[package versions borg] ne {}} {
+	    package require borg
+	}
+
 	bind . <<KeyboardInfo>> ::tk::AndroidKBDInfo
 	bind Toplevel <<KeyboardInfo>> ::tk::AndroidKBDInfo
 
 	proc ::tk::AndroidKBDCheck {} {
-	    if {[info command "::borg"] eq "::borg"} {
-		set kbd [::borg keyboardinfo]
+	    if {[info command "borg"] eq "borg"} {
+		array set kbd [borg keyboardinfo]
 	    } else {
 		bind . <<KeyboardInfo>> {}
 		bind Toplevel <<KeyboardInfo>> {}

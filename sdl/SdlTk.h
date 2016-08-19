@@ -13,10 +13,10 @@ EXTERN int		TkpSetCaptureEx(Display *display, TkWindow *winPtr);
 
 #ifdef PLATFORM_SDL
 
-EXTERN char *		TkAlignImageData(XImage *image, 
+EXTERN char *		TkAlignImageData(XImage *image,
 				int alignment, int bitOrder);
 
-EXTERN int		TkpCmapStressed(Tk_Window tkwin, 
+EXTERN int		TkpCmapStressed(Tk_Window tkwin,
 				Colormap colormap);
 
 EXTERN void		TkCreateXEventSource(void);
@@ -25,7 +25,7 @@ EXTERN void		TkFreeXId(TkDisplay *dispPtr);
 
 EXTERN unsigned long	TkpGetMS(void);
 
-EXTERN int		TkpScanWindowId(Tcl_Interp *interp, 
+EXTERN int		TkpScanWindowId(Tcl_Interp *interp,
 				const char *string, Window *idPtr);
 
 EXTERN void		TkpSetCursor(TkpCursor cursor);
@@ -46,7 +46,7 @@ EXTERN Window		TkpContainerId(TkWindow *winPtr);
 
 EXTERN int		TkpDoOneXEvent(Tcl_Time *timePtr);
 
-EXTERN void		TkpSetMenubar(Tk_Window tkwin, 
+EXTERN void		TkpSetMenubar(Tk_Window tkwin,
 				Tk_Window menubar);
 
 #endif

@@ -1796,8 +1796,7 @@ proc ::tk::dialog::file::GlobFiltered {dir type nativeonly {overrideFilter 0}} {
 		continue
 	    }
 	    if {$nativeonly} {
-		set sys [file system [file join $dir $f]]
-		if {$sys ne "native"} {
+		if {"native" ni [file system [file join $dir $f]]} {
 		    continue
 		}
 	    }

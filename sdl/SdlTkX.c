@@ -5591,7 +5591,7 @@ ctxRetry:
 #ifndef ANDROID
     if (SdlTkX.arg_opacity > 0) {
 	double d = SdlTkX.arg_opacity / 100.0;
-	
+
 	SDL_SetWindowOpacity(SdlTkX.sdlscreen, d);
     }
 #endif
