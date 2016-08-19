@@ -102,7 +102,7 @@ PROJECT			:= tk
 PRODUCT_NAME		:= Tk
 
 UNIX_DIR		:= ${CURDIR}/../unix
-VERSION			:= $(shell awk -F= '/^TK_VERSION/ {print $$2; nextfile}' ${UNIX_DIR}/configure.ac)
+VERSION			:= $(shell awk -F= '/^TK_VERSION/ {print $$2; nextfile}' ${UNIX_DIR}/configure.in)
 TCL_VERSION		:= ${VERSION}
 wish			:= wish
 WISH			= wish${VERSION}

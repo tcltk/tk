@@ -1810,6 +1810,47 @@ doNormalKeyEvent:
     doFingerEvent: {
 	_Window *_w;
 	Tk_Window tkwin = NULL;
+#if defined(_WIN32) || defined(_WIN64)
+	static char fbits[20];
+	static SDL_FingerID fids[20];
+	int i, b = -1, fingerId = -1;
+
+	/* This snippet cannot handle more than one touch screen! */
+	for (i = 0; i < sizeof (fbits); i++) {
+	    if (fbits[i]) {
+		if (fids[i] == sdl_event->tfinger.fingerId) {
+		    b = i;
+		    break;
+		}
+	    } else if (fingerId < 0) {
+		fingerId = i;
+	    }
+	}
+	if (b >= 0) {
+	    fingerId = b;
+	    if (sdl_event->type == SDL_FINGERUP) {
+		fbits[fingerId] = 0;
+	    }
+	} else if (fingerId >= 0) {
+	    if ((sdl_event->type == SDL_FINGERDOWN) ||
+		(sdl_event->type == SDL_FINGERMOTION)) {
+		fbits[fingerId] = 1;
+		fids[fingerId] = sdl_event->tfinger.fingerId;
+	    } else {
+		return 0;	/* ignore event */
+	    }
+	} else {
+	    if ((sdl_event->type == SDL_FINGERDOWN) ||
+		(sdl_event->type == SDL_FINGERMOTION)) {
+		fingerId = 0;	/* reuse first */
+		fbits[fingerId] = 1;
+		fids[fingerId] = sdl_event->tfinger.fingerId;
+	    } else {
+		fbits[0] = 0;	/* make room and ignore event */
+		return 0;	/* ignore event */
+	    }
+	}
+#endif
 
 	FingerToScreen(sdl_event, &x, &y);
 
@@ -1911,12 +1952,16 @@ doNormalKeyEvent:
 		pressure = 0;
 	    }
 	    event->xbutton.time = pressure;
+#if defined(_WIN32) || defined(_WIN64)
+	    event->xbutton.state = fingerId + 1;
+#else
 	    event->xbutton.state = sdl_event->tfinger.fingerId + 1;
+#endif
 	    ((XVirtualEvent *) event)->name = (Tk_Uid) evname;
 	    return 1;
 	}
 	return 0;
-	}
+    }
 
     case SDL_CLIPBOARDUPDATE:
 	SdlTkSetSelectionOwner(SdlTkX.display, None, None, now_ms);

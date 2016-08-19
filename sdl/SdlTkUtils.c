@@ -145,7 +145,7 @@ SdlTkListFonts(const char *name, int *count)
     hPtr = Tcl_FirstHashEntry(&fileFaceHash, &search);
     while (hPtr != NULL) {
         GlyphIndexHash *ghash;
-        
+
 	ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);
 	if ((name[0] == '*') || (strcasecmp(ghash->familyName, name) == 0)) {
 	    Tcl_DStringAppend(&ds, "-unknown-", -1);
@@ -517,7 +517,7 @@ SdlTkFontCanDisplayChar(char *xlfd, TkFontAttributes *faPtr, int ch)
     hPtr = Tcl_FirstHashEntry(&fileFaceHash, &search);
     while (hPtr != NULL) {
         GlyphIndexHash *ghash;
-        
+
 	ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);
 	if (strcasecmp((char *) faPtr->family, ghash->familyName) == 0) {
 	    if (faPtr->weight & TK_FW_BOLD) {
@@ -567,7 +567,7 @@ next:
  *-------------------------------------------------------------------------
  */
 
-static int 
+static int
 Ucs4ToUtfProc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 	      srcReadPtr, dstWrotePtr, dstCharsPtr)
     ClientData clientData;	/* Not used. */
@@ -598,7 +598,7 @@ Ucs4ToUtfProc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
     const unsigned int *wSrc, *wSrcStart, *wSrcEnd;
     char *dstEnd, *dstStart;
     int result, numChars;
-    
+
     result = TCL_OK;
     if ((srcLen % sizeof (unsigned int)) != 0) {
 	result = TCL_CONVERT_MULTIBYTE;
@@ -647,7 +647,7 @@ Ucs4ToUtfProc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
  *-------------------------------------------------------------------------
  */
 
-static int 
+static int
 UtfToUcs4Proc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 	      srcReadPtr, dstWrotePtr, dstCharsPtr)
     ClientData clientData;	/* TableEncodingData that specifies encoding. */
@@ -678,7 +678,7 @@ UtfToUcs4Proc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
     const char *srcStart, *srcEnd, *srcClose;
     unsigned int *wDst, *wDstStart, *wDstEnd;
     int result, numChars;
-    
+
     srcStart = src;
     srcEnd = src + srcLen;
     srcClose = srcEnd;
@@ -785,7 +785,7 @@ SdlTkCloseFTStream(FT_Stream ftstr)
 	ftstr->descriptor.pointer = NULL;
     }
     ftstr->pathname.pointer = NULL;
-    ckfree((char *) ftstr); 
+    ckfree((char *) ftstr);
 }
 
 void *
@@ -987,7 +987,7 @@ SdlTkFontInit(Tcl_Interp *interp)
      *    3. system specific directories
      * On desktop platforms 2. and 3. are skipped when
      * the -sdlnosysfonts command line option is present.
-     */ 
+     */
 #ifdef ANDROID
     result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
 		"[file join $tk_library fonts] *] "
@@ -1018,7 +1018,9 @@ SdlTkFontInit(Tcl_Interp *interp)
 		    "[glob -nocomplain -directory [file normalize ~/.fonts] "
 		    "-types f *.ttf] "
 		    "[glob -nocomplain -directory /usr/share/fonts"
-		    " -types f */*.ttf] ",
+		    " -types f */*.ttf] "
+		    "[glob -nocomplain -directory /usr/share/fonts/truetype"
+		    " -types f */*.ttf]",
 		    -1, TCL_EVAL_GLOBAL);
 #endif
     }
@@ -1282,7 +1284,7 @@ nextface:
     while (hPtr != NULL) {
 	Tcl_AppendElement(interp, Tcl_GetHashKey(&famHash, hPtr));
 	hPtr = Tcl_NextHashEntry(&search);
-    }    
+    }
     Tcl_DeleteHashTable(&famHash);
     return TCL_OK;
 

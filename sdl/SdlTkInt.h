@@ -402,7 +402,7 @@ extern void SdlTkDecDestroy(_Window *_w);
 /*
  * end block for C++
  */
-    
+
 #ifdef __cplusplus
 }
 #endif

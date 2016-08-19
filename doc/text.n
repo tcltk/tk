@@ -491,9 +491,10 @@ second and later display lines for a text line.
 \fIColor\fR specifies the background color to use in regions that do not
 contain characters because they are indented by \fB\-lmargin1\fR or
 \fB\-lmargin2\fR. It may have any of the forms accepted by
-\fBTk_GetColor\fR.If \fIcolor\fR has not been specified, or if it is
-specified as an empty string, then the color specified by the
-\fB-background\fR widget option is used.
+\fBTk_GetColor\fR. If \fIcolor\fR has not been specified, or if it is
+specified as an empty string, then the color used is specified by the
+\fB-background\fR tag option (or, if this is also unspecified, by the
+\fB-background\fR widget option).
 .TP
 \fB\-offset \fIpixels\fR
 .
@@ -537,9 +538,10 @@ character of that display line.
 .
 \fIColor\fR specifies the background color to use in regions that do not
 contain characters because they are indented by \fB\-rmargin1\fR. It may
-have any of the forms accepted by \fBTk_GetColor\fR.If \fIcolor\fR has not
+have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
-specified by the \fB-background\fR widget option is used.
+used is specified by the \fB-background\fR tag option (or, if this is also
+unspecified, by the \fB-background\fR widget option).
 .TP
 \fB\-selectbackground \fIcolor\fR
 \fIColor\fR specifies the background color to use when displaying selected

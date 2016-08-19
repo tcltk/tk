@@ -28,13 +28,13 @@ Copyright 1987, 1988 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -303,9 +303,9 @@ XOffsetRegion(
     return 1;
 }
 
-/* 
+/*
    Utility procedure Compress:
-   Replace r by the region r', where 
+   Replace r by the region r', where
      p in r' iff (Quantifer m <= dx) (p + m in r), and
      Quantifier is Exists if grow is TRUE, For all if grow is FALSE, and
      (x,y) + m = (x+m,y) if xdir is TRUE; (x,y+m) if xdir is FALSE.
@@ -382,7 +382,7 @@ XShrinkRegion(
  *     scanline y.  numRects is the size of the array.
  ***********************************************************/
 
-static BOX 
+static BOX
 *IndexRects(
     register BOX *rects,
     register int numRects,
@@ -486,9 +486,9 @@ XIntersectRegion(
 	(!EXTENTCHECK(&reg1->extents, &reg2->extents)))
         newReg->numRects = 0;
     else
-	miRegionOp (newReg, reg1, reg2, 
+	miRegionOp (newReg, reg1, reg2,
     		miIntersectO, NULL, NULL);
-    
+
     /*
      * Can't alter newReg's extents before we call miRegionOp because
      * it might be one of the source regions and miRegionOp depends
@@ -507,13 +507,13 @@ miRegionCopy(
 
 {
     if (dstrgn != rgn) /*  don't want to copy to itself */
-    {  
+    {
         if (dstrgn->size < rgn->numRects)
         {
             if (dstrgn->rects)
             {
 		BOX *prevRects = dstrgn->rects;
-		
+
                 if (! (dstrgn->rects = (BOX *)
 		       Xrealloc((char *) dstrgn->rects,
 				(unsigned) rgn->numRects * (sizeof(BOX))))) {
@@ -539,7 +539,7 @@ miRegionCopy(
 /*
  *  combinRegs(newReg, reg1, reg2)
  *    if one region is above or below the other.
-*/ 
+ */
 
 static void
 combineRegs(
@@ -579,7 +579,7 @@ combineRegs(
     }
     tempReg->extents = reg1->extents;
     tempReg->numRects = reg1->numRects + reg2->numRects;
-    EXTENTS(&reg2->extents, tempReg);  
+    EXTENTS(&reg2->extents, tempReg);
     miRegionCopy(newReg, tempReg);
     Xfree((char *)tempReg);
 }
@@ -588,7 +588,7 @@ combineRegs(
  *  QuickCheck checks to see if it does not have to go through all the
  *  the ugly code for the region call.  It returns 1 if it did all
  *  the work for Union, otherwise 0 - still work to be done.
-*/ 
+ */
 
 static int
 QuickCheck(Region newReg, Region reg1, Region reg2)
@@ -622,8 +622,8 @@ QuickCheck(Region newReg, Region reg1, Region reg2)
 /*   TopRects(rects, reg1, reg2)
  * N.B. We now assume that reg1 and reg2 intersect.  Therefore we are
  * NOT checking in the two while loops for stepping off the end of the
- * region.  
- */ 
+ * region.
+ */
 
 static int
 TopRects(
@@ -642,7 +642,7 @@ TopRects(
         while(tempRects->y1 < reg2->extents.y1)
 	{
 	    MEMCHECK(newReg, rects, FirstRect);
-            ADDRECTNOX(newReg,rects, tempRects->x1, tempRects->y1, 
+            ADDRECTNOX(newReg,rects, tempRects->x1, tempRects->y1,
 		       tempRects->x2, MIN(tempRects->y2, reg2->extents.y1));
             tempRects++;
 	}
@@ -654,7 +654,7 @@ TopRects(
         while (tempRects->y1 < reg1->extents.y1)
         {
             MEMCHECK(newReg, rects, FirstRect);
-            ADDRECTNOX(newReg, rects, tempRects->x1,tempRects->y1, 
+            ADDRECTNOX(newReg, rects, tempRects->x1,tempRects->y1,
 		       tempRects->x2, MIN(tempRects->y2, reg1->extents.y1));
             tempRects++;
 	}
@@ -718,7 +718,7 @@ miCoalesce(
     {
 	pCurBox++;
     }
-    
+
     if (pCurBox != pRegEnd)
     {
 	/*
@@ -735,7 +735,7 @@ miCoalesce(
 	curStart = pRegEnd - pReg->rects;
 	pRegEnd = pReg->rects + pReg->numRects;
     }
-	
+
     if ((curNumRects == prevNumRects) && (curNumRects != 0)) {
 	pCurBox -= curNumRects;
 	/*
@@ -803,7 +803,7 @@ miCoalesce(
 		    *pPrevBox++ = *pCurBox++;
 		} while (pCurBox != pRegEnd);
 	    }
-	    
+
 	}
     }
     return (curStart);
@@ -884,7 +884,7 @@ miRegionOp(
 						 * band */
     short     	  	bot;	    	    	/* Bottom of non-overlapping
 						 * band */
-    
+
     /*
      * Initialization:
      *	set r1, r2, r1End and r2End appropriately, preserve the important
@@ -896,9 +896,9 @@ miRegionOp(
     r2 = reg2->rects;
     r1End = r1 + reg1->numRects;
     r2End = r2 + reg2->numRects;
-    
+
     oldRects = newReg->rects;
-    
+
     EMPTY_REGION(newReg);
 
     /*
@@ -915,7 +915,7 @@ miRegionOp(
 	newReg->size = 0;
 	return;
     }
-    
+
     /*
      * Initialize ybot and ytop.
      * In the upcoming loop, ybot and ytop serve different functions depending
@@ -933,7 +933,7 @@ miRegionOp(
 	ybot = reg1->extents.y1;
     else
 	ybot = reg2->extents.y1;
-    
+
     /*
      * prevBand serves to mark the start of the previous band so rectangles
      * can be coalesced into larger rectangles. qv. miCoalesce, above.
@@ -944,7 +944,7 @@ miRegionOp(
      * array of rectangles.
      */
     prevBand = 0;
-    
+
     do
     {
 	curBand = newReg->numRects;
@@ -961,13 +961,13 @@ miRegionOp(
 	{
 	    r1BandEnd++;
 	}
-	
+
 	r2BandEnd = r2;
 	while ((r2BandEnd != r2End) && (r2BandEnd->y1 == r2->y1))
 	{
 	    r2BandEnd++;
 	}
-	
+
 	/*
 	 * First handle the band that doesn't intersect, if any.
 	 *
@@ -1027,7 +1027,7 @@ miRegionOp(
 	    (* overlapFunc) (newReg, r1, r1BandEnd, r2, r2BandEnd, ytop, ybot);
 
 	}
-	
+
 	if (newReg->numRects != curBand)
 	{
 	    prevBand = miCoalesce (newReg, prevBand, curBand);
@@ -1204,7 +1204,7 @@ miUnionO (
     register short	y2)
 {
     register BoxPtr	pNextRect;
-    
+
     pNextRect = &pReg->rects[pReg->numRects];
 
 #define MERGERECT(r) \
@@ -1231,7 +1231,7 @@ miUnionO (
     }  \
     assert(pReg->numRects<=pReg->size);\
     r++;
-    
+
     assert (y1<y2);
     while ((r1 != r1End) && (r2 != r2End))
     {
@@ -1244,7 +1244,7 @@ miUnionO (
 	    MERGERECT(r2);
 	}
     }
-    
+
     if (r1 != r1End)
     {
 	do
@@ -1290,7 +1290,7 @@ XUnionRegion(
     /*
      * Region 1 completely subsumes region 2
      */
-    if ((reg1->numRects == 1) && 
+    if ((reg1->numRects == 1) &&
 	(reg1->extents.x1 <= reg2->extents.x1) &&
 	(reg1->extents.y1 <= reg2->extents.y1) &&
 	(reg1->extents.x2 >= reg2->extents.x2) &&
@@ -1304,7 +1304,7 @@ XUnionRegion(
     /*
      * Region 2 completely subsumes region 1
      */
-    if ((reg2->numRects == 1) && 
+    if ((reg2->numRects == 1) &&
 	(reg2->extents.x1 <= reg1->extents.x1) &&
 	(reg2->extents.y1 <= reg1->extents.y1) &&
 	(reg2->extents.x2 >= reg1->extents.x2) &&
@@ -1315,7 +1315,7 @@ XUnionRegion(
         return 1;
     }
 
-    miRegionOp (newReg, reg1, reg2, miUnionO, 
+    miRegionOp (newReg, reg1, reg2, miUnionO,
     		miUnionNonO, miUnionNonO);
 
     newReg->extents.x1 = min(reg1->extents.x1, reg2->extents.x1);
@@ -1355,9 +1355,9 @@ miSubtractNonO1 (
     register short   	y2)
 {
     register BoxPtr	pNextRect;
-	
+
     pNextRect = &pReg->rects[pReg->numRects];
-	
+
     assert(y1<y2);
 
     while (r != rEnd)
@@ -1405,9 +1405,9 @@ miSubtractO (
 {
     register BoxPtr	pNextRect;
     register int  	x1;
-    
+
     x1 = r1->x1;
-    
+
     assert(y1<y2);
     pNextRect = &pReg->rects[pReg->numRects];
 
@@ -1526,7 +1526,7 @@ miSubtractO (
     }
     return 0;	/* lint */
 }
-	
+
 /*-
  *-----------------------------------------------------------------------
  * miSubtract --
@@ -1545,7 +1545,7 @@ miSubtractO (
 int
 XSubtractRegion(
     Region 	  	regM,
-    Region	  	regS,          
+    Region	  	regS,
     register Region	regD)
 {
    /* check for trivial reject */
@@ -1555,8 +1555,8 @@ XSubtractRegion(
 	miRegionCopy(regD, regM);
         return 1;
     }
- 
-    miRegionOp (regD, regM, regS, miSubtractO, 
+
+    miRegionOp (regD, regM, regS, miSubtractO,
     		miSubtractNonO1, NULL);
 
     /*
@@ -1586,10 +1586,10 @@ XXorRegion(Region sra, Region srb, Region dr)
 }
 
 /*
- * Check to see if the region is empty.  Assumes a region is passed 
+ * Check to see if the region is empty.  Assumes a region is passed
  * as a parameter
  */
-int 
+int
 XEmptyRegion(
     Region r)
 {
@@ -1598,9 +1598,9 @@ XEmptyRegion(
 }
 
 /*
- *	Check to see if two regions are equal	
+ *	Check to see if two regions are equal
  */
-int 
+int
 XEqualRegion(Region r1, Region r2)
 {
     int i;
@@ -1620,7 +1620,7 @@ XEqualRegion(Region r1, Region r2)
     return TRUE;
 }
 
-int 
+int
 XPointInRegion(
     Region pRegion,
     int x, int y)
@@ -1639,7 +1639,7 @@ XPointInRegion(
     return FALSE;
 }
 
-int 
+int
 XRectInRegion(
     register Region	region,
     int rx, int ry,
@@ -1655,7 +1655,7 @@ XRectInRegion(
     prect->y1 = ry;
     prect->x2 = rwidth + rx;
     prect->y2 = rheight + ry;
-    
+
     /* this is (just) a useful optimization */
     if ((region->numRects == 0) || !EXTENTCHECK(&region->extents, prect))
         return(RectangleOut);
@@ -1717,6 +1717,6 @@ XRectInRegion(
 
     }
 
-    return(partIn ? ((ry < prect->y2) ? RectanglePart : RectangleIn) : 
+    return(partIn ? ((ry < prect->y2) ? RectanglePart : RectangleIn) :
 		RectangleOut);
 }

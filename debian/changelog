@@ -1,3 +1,9 @@
+sdl2tk8.6 (8.6.6-1) unstable; urgency=low
+
+  * Update to 8.6.6
+
+ -- Christian Werner <chw@ch-werner.de>  Wed, 13 Jul 2016 10:30:00 +0200
+
 sdl2tk8.6 (8.6.5-1) unstable; urgency=low
 
   * Update to 8.6.5

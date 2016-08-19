@@ -3473,7 +3473,7 @@ HandleEventGenerate(
 	    Tcl_DoWhenIdle(DoWarp, dispPtr);
 	    dispPtr->flags |= TK_DISPLAY_IN_WARP;
 	}
-	dispPtr->warpWindow = Tk_IdToWindow(Tk_Display(mainWin),
+	dispPtr->warpWindow = Tk_IdToWindow(dispPtr->display,
 		event.general.xmotion.window);
 	dispPtr->warpMainwin = mainWin;
 	dispPtr->warpX = event.general.xmotion.x;

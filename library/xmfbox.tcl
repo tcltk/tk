@@ -581,7 +581,7 @@ proc ::tk::MotifFDialog_LoadFiles {w} {
 	$data(dList) insert end ".."
 	return
     }
-    if {$data(-nativeonly) && [file system $data(selectPath)] ne "native"} {
+    if {$data(-nativeonly) && ("native" ni [file system $data(selectPath)])} {
 	cd $appPWD
 
 	$data(dList) insert end ".."
@@ -601,7 +601,7 @@ proc ::tk::MotifFDialog_LoadFiles {w} {
     set flist ""
     foreach f [glob -nocomplain .* *] {
 	if {[file isdir ./$f]} {
-	    if {$data(-nativeonly) && [file system ./$f] ne "native"} {
+	    if {$data(-nativeonly) && ("native" ni [file system ./$f])} {
 		continue
 	    }
 	    lappend dlist $f
