@@ -29,9 +29,12 @@ if 0 {
     The flags -fine/-wantpalm corresponds to the Windows API
     RegisterTouchWindow.
 
-    Events are received as <Touch> events.
+    Events are received as virtual events.
     These events support at least base %W %x %y %X %Y fields.
     All extra information is given in a dictionary in the %d field.
+    <<FingerDown>> <<FingerUp>> <<FingerMotion>> : Raw touch events
+    <<PinchToZoom>> : Zoom gesture
+    <<Gesture>>     : Other gestures
 
     Any boolean field in the dictionary is either present with
     the value 1 or not present. Below they are written without a value.
@@ -69,6 +72,7 @@ if 0 {
     deltay <i> : For pressandtap: Locates second finger. Valid with begin.
     inertiax <i> : For pan: Inertia vector. Valid with inertia flag.
     inertiay <i> : For pan: Inertia vector. Valid with inertia flag.
+
 }
 
 namespace import tcl::mathop::*
@@ -180,7 +184,7 @@ proc Touch2 {W d x y X Y} {
     Log $W $d
 }
 
-#console show
+console show
 set ::size [expr {[winfo screenwidth .] / 4}]
 canvas .c1 -width $::size -height $::size -bd 3 -relief solid
 canvas .c2 -width $::size -height $::size -bd 3 -relief solid
@@ -197,6 +201,11 @@ grid rowconfigure . all -weight 1
 wm touch .c1 -touch
 wm touch .c2 -all
 wm touch .c3 -pan 1 -pansfv 0 -pansfh 0 -pangutter 0 -paninertia 0
-bind .c1 <Touch> "Touch1 %W %d %x %y %X %Y"
-bind .c2 <Touch> "Touch2 %W %d %x %y %X %Y"
-bind .c3 <Touch> "Touch2 %W %d %x %y %X %Y"
+bind .c1 <<FingerDown>> "Touch1 %W %d %x %y %X %Y"
+bind .c1 <<FingerUp>> "Touch1 %W %d %x %y %X %Y"
+bind .c1 <<FingerMotion>> "Touch1 %W %d %x %y %X %Y"
+bind .c2 <<Gesture>> "Touch2 %W %d %x %y %X %Y"
+bind .c2 <<PinchToZoom>> "Touch2 %W %d %x %y %X %Y"
+bind .c3 <<Gesture>> "Touch2 %W %d %x %y %X %Y"
+bind .c3 <<PinchToZoom>> "Touch2 %W %d %x %y %X %Y"
+

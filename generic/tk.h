@@ -651,13 +651,11 @@ typedef struct Tk_GeomMgr {
 #define ActivateNotify	    (MappingNotify + 2)
 #define DeactivateNotify    (MappingNotify + 3)
 #define MouseWheelEvent     (MappingNotify + 4)
-#define TouchEvent          (MappingNotify + 5)
-#define TK_LASTEVENT	    (MappingNotify + 6)
+#define TK_LASTEVENT	    (MappingNotify + 5)
 
 #define MouseWheelMask	    (1L << 28)
 #define ActivateMask	    (1L << 29)
 #define VirtualEventMask    (1L << 30)
-#define TouchEventMask      (1L << 31)
 
 /*
  * A virtual event shares most of its fields with the XKeyEvent and

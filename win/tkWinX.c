@@ -887,7 +887,7 @@ InitTouchEvent(XEvent *event, HWND hwnd, int rootx, int rooty)
     tkwin = Tk_HWNDToWindow(hwnd);
     winPtr = (TkWindow *)tkwin;
     memset(event, 0, sizeof(*event));
-    event->xany.type = TouchEvent;
+    event->xany.type = VirtualEvent;
     event->xany.serial =
 	LastKnownRequestProcessed(winPtr->display);
     event->xany.send_event = False;
@@ -956,12 +956,15 @@ GenerateTouchEvent(
 		/* Decode known flags */
 		if (ti.dwFlags & TOUCHEVENTF_MOVE) {
 		    ADD_DICT_INT(dictPtr, "move", 1);
+		    event.virtual.name = Tk_GetUid("FingerMotion");
 		}
 		if (ti.dwFlags & TOUCHEVENTF_DOWN) {
 		    ADD_DICT_INT(dictPtr, "down", 1);
+		    event.virtual.name = Tk_GetUid("FingerDown");
 		}
 		if (ti.dwFlags & TOUCHEVENTF_UP) {
 		    ADD_DICT_INT(dictPtr, "up", 1);
+		    event.virtual.name = Tk_GetUid("FingerUp");
 		}
 		if (ti.dwFlags & TOUCHEVENTF_INRANGE) {
 		    ADD_DICT_INT(dictPtr, "inrange", 1);
@@ -1046,6 +1049,7 @@ GenerateGestureEvent(
     POINTSTOPOINT(sLoc, gi.ptsLocation);
     
     InitTouchEvent(&event.general, hwnd, sLoc.x, sLoc.y);
+    event.virtual.name = Tk_GetUid("Gesture");
     dictPtr = Tcl_NewDictObj();
     Tcl_IncrRefCount(dictPtr);
     /* Identify as a gesture event */
@@ -1069,6 +1073,7 @@ GenerateGestureEvent(
     case GID_ZOOM:
 	ADD_DICT_STR(dictPtr, "gesture", "zoom");
 	ADD_DICT_WIDE(dictPtr, "distance", gi.ullArguments);
+	event.virtual.name = Tk_GetUid("PinchToZoom");
 	break;
     case GID_PAN:
 	ADD_DICT_STR(dictPtr, "gesture", "pan");
