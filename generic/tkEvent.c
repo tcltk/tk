@@ -118,8 +118,7 @@ static const unsigned long virtualEventMasks[TK_LASTEVENT-VirtualEvent] = {
     VirtualEventMask,			/* VirtualEvents */
     ActivateMask,			/* ActivateNotify */
     ActivateMask,			/* DeactivateNotify */
-    MouseWheelMask,			/* MouseWheelEvent */
-    TouchEventMask			/* TouchEvent */
+    MouseWheelMask			/* MouseWheelEvent */
 };
 
 /*
@@ -1792,7 +1791,6 @@ CleanUpTkEvent(
 	break;
     }
 
-    case TouchEvent:
     case VirtualEvent: {
 	XVirtualEvent *vePtr = (XVirtualEvent *) eventPtr;
 
