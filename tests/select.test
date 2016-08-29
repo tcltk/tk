@@ -944,7 +944,7 @@ test select-9.5 {SelCvtToX and SelCvtFromX procedures} -setup {
 
 # most control paths have been exercised above
 test select-10.1 {ConvertSelection procedure, race with selection clear} -constraints {
-    unix 
+    unix
 } -setup {
     setup
 } -body {
@@ -1013,7 +1013,7 @@ test select-10.4 {ConvertSelection procedure} -constraints {
     lappend result $selInfo
 } -result {{selection owner didn't respond} {STRING 0 4000 STRING 4000 4000 STRING 8000 4000 STRING 12000 4000 STRING 16000 4000 STRING 0 4000 STRING 4000 4000}}
 test select-10.5 {ConvertSelection procedure, reentrancy issues} -constraints {
-    unix 
+    unix
 } -setup {
     setup
     setupbg
@@ -1028,7 +1028,7 @@ test select-10.5 {ConvertSelection procedure, reentrancy issues} -constraints {
     lappend result $selInfo
 } -result {{PRIMARY selection doesn't exist or form "STRING" not defined} {.f1 STRING 0 4000}}
 test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
-    unix 
+    unix
 } -setup {
     setup
     setupbg
@@ -1121,7 +1121,7 @@ test select-12.6 {DefaultSelection procedure} -body {
 } -result {{Targets value} {TARGETS.f1 0 4000} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
 
 test select-13.1 {SelectionSize procedure, handler deleted} -constraints {
-    unix 
+    unix
 } -setup {
     setup
     setupbg

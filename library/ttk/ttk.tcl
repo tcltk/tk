@@ -122,7 +122,7 @@ proc ttk::LoadThemes {} {
     variable library
 
     # "default" always present:
-    uplevel #0 [list source [file join $library defaults.tcl]] 
+    uplevel #0 [list source [file join $library defaults.tcl]]
 
     set builtinThemes [style theme names]
     foreach {theme scripts} {
