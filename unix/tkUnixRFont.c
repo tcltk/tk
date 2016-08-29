@@ -615,7 +615,7 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,         		/* Character of interest */
+    Tcl_UniChar c,		/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
@@ -778,7 +778,7 @@ LookUpColor(Display *display,      /* Display to lookup colors on */
 	 i >= 0; last2 = last, last = i, i = fontPtr->colors[i].next) {
 
 	if (pixel == fontPtr->colors[i].color.pixel) {
-	    /*
+	    /* 
 	     * Color found in cache.  Move it to the front of the list and return it.
 	     */
 	    if (last >= 0) {
@@ -802,7 +802,7 @@ LookUpColor(Display *display,      /* Display to lookup colors on */
 	last = fontPtr->ncolors++;
     }
 
-    /*
+    /* 
      * Translate the pixel value to a color.  Needs a server round-trip.
      */
     xcolor.pixel = pixel;
