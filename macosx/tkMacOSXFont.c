@@ -672,14 +672,14 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    Tcl_UniChar c,		/* Character of interest */
+    int c,         		/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
 {
     MacFont *fontPtr = (MacFont *) tkfont;
     NSFont *nsFont = fontPtr->nsFont;
     *faPtr = fontPtr->font.fa;
     if (nsFont && ![[nsFont coveredCharacterSet] characterIsMember:c]) {
-	UTF16Char ch = c;
+	UTF16Char ch = (UTF16Char) c;
 
 	nsFont = [nsFont bestMatchingFontForCharacters:&ch
 		length:1 attributes:nil actualCoveredLength:NULL];

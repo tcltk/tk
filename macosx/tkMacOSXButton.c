@@ -318,7 +318,8 @@ TkpComputeButtonGeometry(
 		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
 		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
-	txtWidth = butPtr->textWidth + DEF_INSET_LEFT + DEF_INSET_RIGHT;
+	/*Remove extraneous padding around label widgets.*/
+	txtWidth = butPtr->textWidth;
 	txtHeight = butPtr->textHeight + DEF_INSET_BOTTOM + DEF_INSET_TOP;
 	charWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
 	Tk_GetFontMetrics(butPtr->tkfont, &fm);

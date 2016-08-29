@@ -46,14 +46,14 @@ typedef struct
 static Tk_OptionSpec ScaleOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
-	Tk_Offset(Scale,scale.commandObj), -1, 
+	Tk_Offset(Scale,scale.commandObj), -1,
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-variable", "variable", "Variable", "",
-	Tk_Offset(Scale,scale.variableObj), -1, 
+	Tk_Offset(Scale,scale.variableObj), -1,
 	0,0,0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	Tk_Offset(Scale,scale.orientObj),
-	Tk_Offset(Scale,scale.orient), 0, 
+	Tk_Offset(Scale,scale.orient), 0,
 	(ClientData)ttkOrientStrings, STYLE_CHANGED },
 
     {TK_OPTION_DOUBLE, "-from", "from", "From", "0",
@@ -63,7 +63,7 @@ static Tk_OptionSpec ScaleOptionSpecs[] =
     {TK_OPTION_DOUBLE, "-value", "value", "Value", "0",
 	Tk_Offset(Scale,scale.valueObj), -1, 0, 0, 0},
     {TK_OPTION_PIXELS, "-length", "length", "Length",
-	DEF_SCALE_LENGTH, Tk_Offset(Scale,scale.lengthObj), -1, 0, 0, 
+	DEF_SCALE_LENGTH, Tk_Offset(Scale,scale.lengthObj), -1, 0, 0,
     	GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -76,7 +76,7 @@ static double PointToValue(Scale *scalePtr, int x, int y);
 /* ScaleVariableChanged --
  * 	Variable trace procedure for scale -variable;
  * 	Updates the scale's value.
- * 	If the linked variable is not a valid double, 
+ * 	If the linked variable is not a valid double,
  * 	sets the 'invalid' state.
  */
 static void ScaleVariableChanged(void *recordPtr, const char *value)
@@ -172,7 +172,7 @@ static int ScalePostConfigure(
 /* ScaleGetLayout --
  *	getLayout hook.
  */
-static Ttk_Layout 
+static Ttk_Layout
 ScaleGetLayout(Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
     Scale *scalePtr = recordPtr;
@@ -236,7 +236,7 @@ static double ScaleFraction(Scale *scalePtr, double value)
 }
 
 /* $scale get ?x y? --
- * 	Returns the current value of the scale widget, or if $x and 
+ * 	Returns the current value of the scale widget, or if $x and
  * 	$y are specified, the value represented by point @x,y.
  */
 static int

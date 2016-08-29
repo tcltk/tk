@@ -176,7 +176,7 @@ test clipboard-4.4 {ClipboardLostSel procedure} -setup {
     clipboard get
 } -cleanup {
     clipboard clear
-}  -returnCodes error -result {CLIPBOARD selection doesn't exist or form "STRING" not defined} 
+}  -returnCodes error -result {CLIPBOARD selection doesn't exist or form "STRING" not defined}
 test clipboard-4.5 {ClipboardLostSel procedure} -setup {
     clipboard clear
 } -body {

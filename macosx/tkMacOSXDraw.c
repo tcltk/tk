@@ -314,29 +314,35 @@ XCopyPlane(
 		TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
 		unsigned long imageBackground  = gc->background;
                 if (clipPtr && clipPtr->type == TKP_CLIP_PIXMAP){
-			CGImageRef mask = TkMacOSXCreateCGImageWithDrawable(clipPtr->value.pixmap);
-			CGRect rect = CGRectMake(dest_x, dest_y, width, height);
-			rect = CGRectOffset(rect, dstDraw->xOff, dstDraw->yOff);
-			CGContextSaveGState(context);
-			/* Move the origin of the destination to top left. */
-			CGContextTranslateCTM(context, 0, rect.origin.y + CGRectGetMaxY(rect));
-			CGContextScaleCTM(context, 1, -1);
-			/* Fill with the background color, clipping to the mask. */
-			CGContextClipToMask(context, rect, mask);
-			TkMacOSXSetColorInContext(gc, gc->background, dc.context);
-			CGContextFillRect(dc.context, rect);
-			/* Fill with the foreground color, clipping to the intersection of img and mask. */
-			CGContextClipToMask(context, rect, img);
-			TkMacOSXSetColorInContext(gc, gc->foreground, context);
-			CGContextFillRect(context, rect);
-			CGContextRestoreGState(context);
-			CGImageRelease(mask);
-			CGImageRelease(img);
+		    CGRect srcRect = CGRectMake(src_x, src_y, width, height);
+		    CGImageRef mask = TkMacOSXCreateCGImageWithDrawable(clipPtr->value.pixmap);
+		    CGImageRef submask = CGImageCreateWithImageInRect(img, srcRect);
+		    CGRect rect = CGRectMake(dest_x, dest_y, width, height);
+		    rect = CGRectOffset(rect, dstDraw->xOff, dstDraw->yOff);
+		    CGContextSaveGState(context);
+		    /* Move the origin of the destination to top left. */
+		    CGContextTranslateCTM(context, 0, rect.origin.y + CGRectGetMaxY(rect));
+		    CGContextScaleCTM(context, 1, -1);
+		    /* Fill with the background color, clipping to the mask. */
+		    CGContextClipToMask(context, rect, submask);
+		    TkMacOSXSetColorInContext(gc, gc->background, dc.context);
+		    CGContextFillRect(context, rect);
+		    /* Fill with the foreground color, clipping to the
+		       intersection of img and mask. */
+		    CGImageRef subimage = CGImageCreateWithImageInRect(img, srcRect);
+		    CGContextClipToMask(context, rect, subimage);
+		    TkMacOSXSetColorInContext(gc, gc->foreground, context);
+		    CGContextFillRect(context, rect);
+		    CGContextRestoreGState(context);
+		    CGImageRelease(img);
+		    CGImageRelease(mask);
+		    CGImageRelease(submask);
+		    CGImageRelease(subimage);
 		} else {
 		    DrawCGImage(dst, gc, dc.context, img, gc->foreground, imageBackground,
 				CGRectMake(0, 0, srcDraw->size.width, srcDraw->size.height),
-			    CGRectMake(src_x, src_y, width, height),
-			    CGRectMake(dest_x, dest_y, width, height));
+				CGRectMake(src_x, src_y, width, height),
+				CGRectMake(dest_x, dest_y, width, height));
 		    CGImageRelease(img);
 		}
 	    } else { /* no image */
@@ -393,9 +399,11 @@ TkPutImage(
 	CGImageRef img = CreateCGImageWithXImage(image);
 
 	if (img) {
+	    /* If the XImage has big pixels, rescale the source dimensions.*/
+	    int pp = image->pixelpower;
 	    DrawCGImage(d, gc, dc.context, img, gc->foreground, gc->background,
-		    CGRectMake(0, 0, image->width, image->height),
-		    CGRectMake(src_x, src_y, width, height),
+		    CGRectMake(0, 0, image->width<<pp, image->height<<pp),
+		    CGRectMake(src_x<<pp, src_y<<pp, width<<pp, height<<pp),
 		    CGRectMake(dest_x, dest_y, width, height));
 	    CFRelease(img);
 	} else {
@@ -786,9 +794,6 @@ DrawCGImage(
 	CGContextDrawImage(context, dstBounds, image);
 	CGContextRestoreGState(context);
 #endif /* TK_MAC_DEBUG_IMAGE_DRAWING */
-	/*if (CGImageIsMask(image)) {
-	    CGContextRestoreGState(context);
-	}*/
 	if (subImage) {
 	    CFRelease(subImage);
 	}

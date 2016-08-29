@@ -2868,7 +2868,7 @@ GetAllVirtualEvents(
  *	Any other fields in eventPtr which are not specified by the pattern
  *	string or the optional arguments, are set to 0.
  *
- *	The event may be handled sychronously or asynchronously, depending on
+ *	The event may be handled synchronously or asynchronously, depending on
  *	the value specified by the optional "-when" option. The default
  *	setting is synchronous.
  *
@@ -3460,7 +3460,7 @@ HandleEventGenerate(
 	    Tcl_DoWhenIdle(DoWarp, dispPtr);
 	    dispPtr->flags |= TK_DISPLAY_IN_WARP;
 	}
-	dispPtr->warpWindow = Tk_IdToWindow(Tk_Display(mainWin),
+	dispPtr->warpWindow = Tk_IdToWindow(dispPtr->display,
 		event.general.xmotion.window);
 	dispPtr->warpMainwin = mainWin;
 	dispPtr->warpX = event.general.xmotion.x;
@@ -3949,7 +3949,7 @@ ParseEventDescription(
 	p = GetField(p, field, FIELD_SIZE);
     }
     if (*field != '\0') {
-	if ((*field >= '1') && (*field <= '5') && (field[1] == '\0')) {
+	if ((*field >= '1') && (*field <= '9') && (field[1] == '\0')) {
 	    if (eventFlags == 0) {
 		patPtr->eventType = ButtonPress;
 		eventMask = ButtonPressMask;

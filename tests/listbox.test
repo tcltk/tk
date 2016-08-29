@@ -1403,7 +1403,7 @@ test listbox-4.12 {ConfigureListbox procedure, listvar -> different listvar} -se
 } -body {
     set x [list a b c d]
     set y [list 1 2 3 4]
-    listbox .l2 
+    listbox .l2
     .l2 configure -listvar x
     .l2 configure -listvar y
     .l2 insert end 5 6 7 8
@@ -1551,7 +1551,7 @@ test listbox-5.6 {ListboxComputeGeometry procedure} -setup {
 } -cleanup {
     destroy .l
 } -result {}
-    
+
 
 # Listbox used in 6.*, 7.* tests
 destroy .l
@@ -1912,7 +1912,7 @@ test listbox-9.1 {ListboxCmdDeletedProc procedure} -setup {
     deleteWindows
 } -result {{} {}}
 test listbox-9.2 {ListboxCmdDeletedProc procedure, disabling -setgrid} -constraints {
-	fonts 
+	fonts
 } -setup {
     destroy .top
 } -body {
@@ -2993,7 +2993,7 @@ test listbox-25.2 {listbox item configurations and widget based inserts} -setup 
 } -cleanup {
     destroy .l
 } -result {{} red}
-    
+
 
 # state issues
 test listbox-26.1 {listbox disabled state disallows inserts} -setup {
