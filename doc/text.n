@@ -1307,8 +1307,9 @@ of the widget to \fIboolean\fR.
 \fIpathName \fBedit redo\fR
 .
 When the \fB\-undo\fR option is true, reapplies the last undone edits provided
-no other edits were done since then. Generates an error when the redo stack is
-empty. Does nothing when the \fB\-undo\fR option is false.
+no other edits were done since then, and returns a list of indices indicating
+what ranges were changed by the redo operation. Generates an error when the
+redo stack is empty. Does nothing when the \fB\-undo\fR option is false.
 .TP
 \fIpathName \fBedit reset\fR
 .
@@ -1321,9 +1322,10 @@ Inserts a separator (boundary) on the undo stack. Does nothing when the
 .TP
 \fIpathName \fBedit undo\fR
 .
-Undoes the last edit action when the \fB\-undo\fR option is true. An edit
-action is defined as all the insert and delete commands that are recorded on
-the undo stack in between two separators. Generates an error when the undo
+Undoes the last edit action when the \fB\-undo\fR option is true, and returns a
+list of indices indicating what ranges were changed by the undo operation. An
+edit action is defined as all the insert and delete commands that are recorded
+on the undo stack in between two separators. Generates an error when the undo
 stack is empty. Does nothing when the \fB\-undo\fR option is false.
 .RE
 .TP
