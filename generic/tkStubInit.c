@@ -38,15 +38,6 @@ MODULE_SCOPE const TkStubs tkStubs;
  */
 
 #undef Tk_MainEx
-#undef Tk_FreeXId
-
-static void
-doNothing(void)
-{
-    /* dummy implementation, no need to do anything */
-}
-
-#define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
 
 #ifdef _WIN32
 

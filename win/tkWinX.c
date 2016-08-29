@@ -1209,9 +1209,8 @@ GenerateXEvent(
 	    if ((int)wParam & 0xff00) {
 		int i, ch1 = wParam & 0xffff;
 		char buffer[TCL_UTF_MAX+1];
-#if TCL_UTF_MAX >= 4
-		MSG msg;
 
+#if TCL_UTF_MAX >= 4
 		if ((((int)wParam & 0xfc00) == 0xd800)
 			&& (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0)
 			&& (msg.message == WM_CHAR)) {
@@ -1220,20 +1219,13 @@ GenerateXEvent(
 
 		    GetMessage(&msg, NULL, 0, 0);
 		    ch2 = wParam & 0xffff;
-#if TCL_UTF_MAX == 4
-		    event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
-		    event.xkey.nbytes += Tcl_UniCharToUtf(ch2, buffer);
-#else
 		    ch1 = ((ch1 & 0x3ff) << 10) | (ch2 & 0x3ff);
 	   	    ch1 += 0x10000;
 		    event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
-#endif
 		} else
 #endif
-		{
 		    event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
-		}
-		for (i=0; i<event.xkey.nbytes && i<TCL_UTF_MAX; ++i) {
+		for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
 		    event.xkey.trans_chars[i] = buffer[i];
 		}
 		event.xany.send_event = -3;
@@ -1259,28 +1251,11 @@ GenerateXEvent(
 	case WM_UNICHAR: {
 	    char buffer[TCL_UTF_MAX+1];
 	    int i;
-
 	    event.type = KeyPress;
 	    event.xany.send_event = -3;
 	    event.xkey.keycode = wParam;
-#if TCL_UTF_MAX < 4
-	    event.xkey.nbytes = Tcl_UniCharToUtf(((int)wParam > 0xffff) ?
-		    0xfffd : (int)wParam, buffer);
-#else
-#if TCL_UTF_MAX == 4
-	    if ((int)wParam > 0xffff) {
-		Tcl_UniChar uch;
-
-		uch = (((int)wParam - 0x10000) >> 10) & 0x3ff;
-		event.xkey.nbytes = Tcl_UniCharToUtf(uch | 0xd800, buffer);
-		uch = ((int)wParam - 0x10000) & 0x3ff;
-		event.xkey.nbytes += Tcl_UniCharToUtf(uch | 0xdc00,
-			buffer + event.xkey.nbytes);
-	    } else
-#endif
 	    event.xkey.nbytes = Tcl_UniCharToUtf((int)wParam, buffer);
-#endif
-	    for (i=0; i<event.xkey.nbytes && i<TCL_UTF_MAX; ++i) {
+	    for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
 		event.xkey.trans_chars[i] = buffer[i];
 	    }
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -1664,6 +1639,30 @@ HandleIMEComposition(
     }
     ImmReleaseContext(hwnd, hIMC);
     return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_FreeXId --
+ *
+ *	This interface is not needed under Windows.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_FreeXId(
+    Display *display,
+    XID xid)
+{
+    /* Do nothing */
 }
 
 /*

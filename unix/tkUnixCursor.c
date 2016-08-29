@@ -639,6 +639,7 @@ TkpFreeCursor(
     TkUnixCursor *unixCursorPtr = (TkUnixCursor *) cursorPtr;
 
     XFreeCursor(unixCursorPtr->display, (Cursor) unixCursorPtr->info.cursor);
+    Tk_FreeXId(unixCursorPtr->display, (XID) unixCursorPtr->info.cursor);
 }
 
 /*
