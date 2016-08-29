@@ -2351,6 +2351,9 @@ Tk_IdToWindow(
 	    break;
 	}
     }
+    if (window == None) {
+	return NULL;
+    }
 
     hPtr = Tcl_FindHashEntry(&dispPtr->winTable, (char *) window);
     if (hPtr == NULL) {
@@ -3098,7 +3101,7 @@ Initialize(
 	Tcl_ListObjAppendElement(NULL, cmd,
 		Tcl_NewStringObj("::safe::TkInit", -1));
 	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(master));
-	
+
 	/*
 	 * Step 2 : Eval in the master. The argument is the *reversed* interp
 	 * path of the slave.

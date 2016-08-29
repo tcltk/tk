@@ -98,8 +98,10 @@ a bitmap, or an image, controlled by the \fB\-label\fR,
 \fB\-bitmap\fR, and \fB\-image\fR options for the entry.
 If the  \fB\-accelerator\fR option is specified for an entry then a second
 textual field is displayed to the right of the label.  The accelerator
-typically describes a keystroke sequence that may be typed in the
+typically describes a keystroke sequence that may be used in the
 application to cause the same result as invoking the menu entry.
+This is a display option, it does not actually set the corresponding
+binding (which can be achieved using the \fBbind\fR command). 
 The third field is an \fIindicator\fR.  The indicator is present only for
 checkbutton or radiobutton entries.  It indicates whether the entry
 is selected or not, and is displayed to the left of the entry's
@@ -537,8 +539,10 @@ This option is not available for separator or tear-off entries.
 .
 Specifies a string to display at the right side of the menu entry.
 Normally describes an accelerator keystroke sequence that may be
-typed to invoke the same function as the menu entry.  This option
-is not available for separator or tear-off entries.
+used to invoke the same function as the menu entry. This is a display
+option, it does not actually set the corresponding binding (which can
+be achieved using the \fBbind\fR command). This option is not available
+for separator or tear-off entries.
 .TP
 \fB\-background \fIvalue\fR
 .
