@@ -324,6 +324,9 @@ proc ::tk::EntryButton1 {w x} {
 	focus $w
 	if {"readonly" ne [$w cget -state]} {
 	    if {$::tk::sdltk} {
+		if {"SdlTkNoTextInput" in [bindtags $w]} {
+		    return
+		}
 		if {[catch {
 		    lassign [$w bbox insert] x y
 		    incr x [winfo rootx $w]

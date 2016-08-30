@@ -614,6 +614,10 @@ proc ::tk::MenuButtonDown menu {
     if {![winfo viewable $menu]} {
         return
     }
+    if {[$menu index active] eq "none"} {
+        set Priv(window) {}
+        return
+    }
     $menu postcascade active
     if {$Priv(postedMb) ne "" && [winfo viewable $Priv(postedMb)]} {
 	grab -global $Priv(postedMb)

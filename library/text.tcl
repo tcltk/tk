@@ -500,6 +500,9 @@ proc ::tk::TextSetInput {w} {
 	return
     }
     if {$::tk::sdltk} {
+	if {"SdlTkNoTextInput" in [bindtags $w]} {
+	    return
+	}
 	if {[catch {
 	    lassign [$w bbox insert] x y
 	    incr x [winfo rootx $w]
