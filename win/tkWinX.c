@@ -81,6 +81,7 @@ typedef struct ThreadSpecificData {
     TkDisplay *winDisplay;	/* TkDisplay structure that represents Windows
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
+    int surrogateBuffer;	/* Buffer for first of surrogate pair. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -1208,23 +1209,19 @@ GenerateXEvent(
 	    event.xkey.keycode = 0;
 	    if ((int)wParam & 0xff00) {
 		int i, ch1 = wParam & 0xffff;
-		char buffer[TCL_UTF_MAX+1];
+		char buffer[XMaxTransChars];
 
-#if TCL_UTF_MAX >= 4
-		if ((((int)wParam & 0xfc00) == 0xd800)
-			&& (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0)
-			&& (msg.message == WM_CHAR)) {
-		    MSG msg;
-		    int ch2;
-
-		    GetMessage(&msg, NULL, 0, 0);
-		    ch2 = wParam & 0xffff;
-		    ch1 = ((ch1 & 0x3ff) << 10) | (ch2 & 0x3ff);
-	   	    ch1 += 0x10000;
-		    event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
-		} else
-#endif
-		    event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
+		if ((ch1 & 0xfc00) == 0xd800) {
+		    tsdPtr->surrogateBuffer = ch1;
+		    return;
+		}
+		if ((ch1 & 0xfc00) == 0xdc00) {
+		    ch1 = ((tsdPtr->surrogateBuffer & 0x3ff) << 10) |
+			    (ch1 & 0x3ff);
+		    ch1 += 0x10000;
+		    tsdPtr->surrogateBuffer = 0;
+		}
+		event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
 		for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
 		    event.xkey.trans_chars[i] = buffer[i];
 		}
@@ -1249,7 +1246,7 @@ GenerateXEvent(
 	    break;
 
 	case WM_UNICHAR: {
-	    char buffer[TCL_UTF_MAX+1];
+	    char buffer[XMaxTransChars];
 	    int i;
 	    event.type = KeyPress;
 	    event.xany.send_event = -3;
