@@ -1252,8 +1252,14 @@ GenerateXEvent(
 	    event.xany.send_event = -3;
 	    event.xkey.keycode = wParam;
 	    event.xkey.nbytes = Tcl_UniCharToUtf((int)wParam, buffer);
-	    for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
-		event.xkey.trans_chars[i] = buffer[i];
+	    if(((int)wParam > 0xffff) && (event.xkey.nbytes < 4)) {
+		/* trans_chars buffer is not big enough to hold 2 surrogate
+		   characters, so don't store anything */
+		event.xkey.nbytes = 0;
+	    } else {
+		for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
+		    event.xkey.trans_chars[i] = buffer[i];
+		}
 	    }
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 	    event.type = KeyRelease;

@@ -102,7 +102,7 @@ TkpGetString(
 	 */
 
 	int unichar;
-	char buf[TCL_UTF_MAX];
+	char buf[XMaxTransChars];
 	int len;
 
 	unichar = keyEv->trans_chars[1] & 0xff;
@@ -115,10 +115,18 @@ TkpGetString(
     } else if (keyEv->send_event == -3) {
 	/*
 	 * Special case for WM_UNICHAR. xkey.trans_chars[] already contains a
-	 * UTF-8 char.
+	 * UTF-8 char, except when nbytes == 0 (then it didn't fit there).
 	 */
 
-	Tcl_DStringAppend(dsPtr, keyEv->trans_chars, keyEv->nbytes);
+	if (keyEv->nbytes) {
+	    Tcl_DStringAppend(dsPtr, keyEv->trans_chars, keyEv->nbytes);
+	} else if (keyEv->keycode > 0xffff) {
+	    char buf[XMaxTransChars];
+	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) >> 10) | 0xd800, buf);
+	    Tcl_DStringAppend(dsPtr, buf, 3);
+	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) & 0x3ff) | 0xdc00, buf);
+	    Tcl_DStringAppend(dsPtr, buf, 3);
+	}
     } else {
 	/*
 	 * This is an event generated from generic code. It has no nchars or
@@ -129,7 +137,7 @@ TkpGetString(
 
 	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
 		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    char buf[TCL_UTF_MAX];
+	    char buf[XMaxTransChars];
 	    int len;
 
 	    len = Tcl_UniCharToUtf((Tcl_UniChar) (keysym & 255), buf);
