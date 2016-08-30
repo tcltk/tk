@@ -398,14 +398,16 @@ proc ::tk::spinbox::ButtonDown {w x y} {
 		focus $w
 		if {"readonly" ne [$w cget -state]} {
 		    if {$::tk::sdltk} {
-			if {[catch {
-			    lassign [$w bbox insert] x y
-			    incr x [winfo rootx $w]
-			    incr y [winfo rooty $w]
-			}]} {
-			    lassign [winfo pointerxy $w] x y
+			if {"SdlTkNoTextInput" ni [bindtags $w]} {
+			    if {[catch {
+				lassign [$w bbox insert] x y
+				incr x [winfo rootx $w]
+				incr y [winfo rooty $w]
+			    }]} {
+				lassign [winfo pointerxy $w] x y
+			    }
+			    sdltk textinput 1 $x $y
 			}
-			sdltk textinput 1 $x $y
 		    }
 		}
 	    }
