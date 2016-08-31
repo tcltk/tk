@@ -290,7 +290,8 @@ static char *EntryDisplayString(const char *showChar, int numChars)
     p = displayString = ckalloc(numChars * size + 1);
 
     while (numChars--) {
-	p += Tcl_UniCharToUtf(ch, p);
+	memcpy(p, buf, size);
+	p += size;
     }
     *p = '\0';
 

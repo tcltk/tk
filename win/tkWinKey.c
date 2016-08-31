@@ -102,7 +102,7 @@ TkpGetString(
 	 */
 
 	int unichar;
-	char buf[TCL_UTF_MAX];
+	char buf[XMaxTransChars];
 	int len;
 
 	unichar = keyEv->trans_chars[1] & 0xff;
@@ -129,7 +129,7 @@ TkpGetString(
 
 	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
 		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    char buf[TCL_UTF_MAX];
+	    char buf[XMaxTransChars];
 	    int len;
 
 	    len = Tcl_UniCharToUtf((Tcl_UniChar) (keysym & 255), buf);
