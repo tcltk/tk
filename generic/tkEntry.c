@@ -1927,7 +1927,7 @@ EntryComputeGeometry(
 
     if (entryPtr->showChar != NULL) {
 	Tcl_UniChar ch;
-	char buf[TCL_UTF_MAX];
+	char buf[4];
 	int size;
 
 	/*
@@ -1945,7 +1945,8 @@ EntryComputeGeometry(
 	entryPtr->displayString = p;
 
 	for (i = entryPtr->numChars; --i >= 0; ) {
-	    p += Tcl_UniCharToUtf(ch, p);
+	    memcpy(p, buf, size);
+	    p += size;
 	}
 	*p = '\0';
     }
