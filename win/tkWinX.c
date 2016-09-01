@@ -1225,6 +1225,7 @@ GenerateXEvent(
 		event.xany.send_event = -3;
 		event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
 		if ((ch1 <= 0xffff) || (event.xkey.nbytes == XMaxTransChars)) {
+		    event.xkey.keycode = ch1;
 		    for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
 			event.xkey.trans_chars[i] = buffer[i];
 		    }
