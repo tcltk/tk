@@ -29,8 +29,6 @@
 #   pragma comment (lib, "advapi32.lib")
 #endif
 
-#define USE_EXTRA_EVENTS 0 /* Set this to 1 if you want to generate
-                              additional events for surrogates */
 /*
  * The zmouse.h file includes the definition for WM_MOUSEWHEEL.
  */
