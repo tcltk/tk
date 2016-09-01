@@ -1210,8 +1210,7 @@ GenerateXEvent(
 	    event.xany.send_event = -1;
 	    event.xkey.keycode = 0;
 	    if ((int)wParam & 0xff00) {
-		int i, ch1 = wParam & 0xffff;
-		char buffer[XMaxTransChars];
+		int ch1 = wParam & 0xffff;
 
 		if ((ch1 & 0xfc00) == 0xd800) {
 		    tsdPtr->surrogateBuffer = ch1;
@@ -1223,32 +1222,8 @@ GenerateXEvent(
 		    tsdPtr->surrogateBuffer = 0;
 		}
 		event.xany.send_event = -3;
-		event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
-		if ((ch1 <= 0xffff) || (event.xkey.nbytes == XMaxTransChars)) {
-		    event.xkey.keycode = ch1;
-		    for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
-			event.xkey.trans_chars[i] = buffer[i];
-		    }
-		} else {
-#ifdef USE_EXTRA_EVENTS
-		    event.xkey.keycode = ((int)(ch1 - 0x10000)>>10) | 0xd800;
-		    event.xkey.nbytes = Tcl_UniCharToUtf(event.xkey.keycode, buffer);
-		    for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
-			event.xkey.trans_chars[i] = buffer[i];
-		    }
-		    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-		    event.type = KeyRelease;
-		    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-		    event.type = KeyPress;
-		    event.xkey.keycode = ((int)(ch1 - 0x10000)&0x3ff) | 0xdc00;
-		    event.xkey.nbytes = Tcl_UniCharToUtf(event.xkey.keycode, buffer);
-		    for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
-			event.xkey.trans_chars[i] = buffer[i];
-		    }
-#else
-		    event.xkey.nbytes = 0;
-#endif
-		}
+		event.xkey.nbytes = 0;
+		event.xkey.keycode = ch1;
 	    } else {
 		event.xkey.nbytes = 1;
 		event.xkey.trans_chars[0] = (char) wParam;
@@ -1269,41 +1244,10 @@ GenerateXEvent(
 	    break;
 
 	case WM_UNICHAR: {
-	    char buffer[XMaxTransChars];
-	    int i;
 	    event.type = KeyPress;
 	    event.xany.send_event = -3;
 	    event.xkey.keycode = wParam;
-	    event.xkey.nbytes = Tcl_UniCharToUtf((int)wParam, buffer);
-	    if(((int)wParam > 0xffff) && (event.xkey.nbytes < XMaxTransChars)) {
-#if USE_EXTRA_EVENTS
-		/* trans_chars buffer is not big enough to hold 2 surrogate
-		   characters, so split it in two separate events */
-
-		event.xkey.keycode = ((int)(wParam - 0x10000)>>10) | 0xd800;
-		event.xkey.nbytes = Tcl_UniCharToUtf(event.xkey.keycode, buffer);
-		for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
-		    event.xkey.trans_chars[i] = buffer[i];
-		}
-		Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-		event.type = KeyRelease;
-		Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-		event.type = KeyPress;
-		event.xkey.keycode = ((int)(wParam - 0x10000)&0x3ff) | 0xdc00;
-		event.xkey.nbytes = Tcl_UniCharToUtf(event.xkey.keycode, buffer);
-		for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
-		    event.xkey.trans_chars[i] = buffer[i];
-		}
-#else
-		/* trans_chars buffer is not big enough to hold 2 surrogate
-		   characters, so don't store anything redundant anyway. */
-		event.xkey.nbytes = 0;
-#endif
-	    } else {
-		for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
-		    event.xkey.trans_chars[i] = buffer[i];
-		}
-	    }
+	    event.xkey.nbytes = 0;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 	    event.type = KeyRelease;
 	    break;
