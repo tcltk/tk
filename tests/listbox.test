@@ -1222,6 +1222,7 @@ test listbox-4.1 {ConfigureListbox procedure} -constraints {
     pack .l
     update
 } -body {
+    update
     set x [getsize .]
     .l configure -setgrid 0
     update
