@@ -681,14 +681,6 @@ XForceScreenSaver(
     display->request++;
 }
 
-void
-Tk_FreeXId(
-    Display *display,
-    XID xid)
-{
-    /* no-op function needed for stubs implementation. */
-}
-
 int
 XSync(
     Display *display,
@@ -897,7 +889,7 @@ XGetImage(
      * We do not support any other values here.
      */
     int scalefactor = 1;
-    if (win && [win respondsToSelector:@selector(backingScaleFactor)]) { 
+    if (win && [win respondsToSelector:@selector(backingScaleFactor)]) {
 	scalefactor = ([win backingScaleFactor] == 2.0) ? 2 : 1;
     }
     int scaled_height = height * scalefactor;

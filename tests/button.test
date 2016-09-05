@@ -3435,15 +3435,47 @@ test button-5.23 {ConfigureButton - -height option} -constraints {
 test button-5.24 {ConfigureButton - computing geometry} -constraints {
     fonts
 } -body {
-    button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
-    .b configure -text "Sample text" -width 10 -height 2
+    button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+                -padx 30 -pady 20
+    # 1. button with text
+    .b configure -text "Sample text"
     pack .b
-    set result "[winfo reqwidth .b] [winfo reqheight .b]"
-    .b configure -bitmap questhead
-    lappend result [winfo reqwidth .b] [winfo reqheight .b]
+    set textwidth [font measure [.b cget -font] -displayof .b [.b cget -text]]
+    set expectedwidth [expr {$textwidth + 2*[.b cget -borderwidth] \
+            + 2*[.b cget -highlightthickness] + 2*[.b cget -padx]}]
+    incr expectedwidth 2   ; # added (hardcoded) in tkUnixButton.c
+    set result [expr $expectedwidth == [winfo reqwidth .b]]
+    set linespace [lindex [font metrics [.b cget -font] -displayof .b] 5]
+    set expectedheight [expr {$linespace + 2*[.b cget -borderwidth] \
+            + 2*[.b cget -highlightthickness] + 2*[.b cget -pady]}]
+    incr expectedheight 2   ; # added (hardcoded) in tkUnixButton.c
+    lappend result [expr $expectedheight == [winfo reqheight .b]]
+    # 2. button with a bitmap image
+    # there is no access to characteristics the predefined bitmaps,
+    # so define one as an image (copied from questhead.xbm)
+    set myquesthead [image create bitmap -data {
+        #define myquesthead_width 20
+        #define myquesthead_height 22
+        static unsigned char myquesthead_bits[] = {
+           0xf8, 0x1f, 0x00, 0xac, 0x2a, 0x00, 0x56, 0x55, 0x00, 0xeb, 0xaf, 0x00,
+           0xf5, 0x5f, 0x01, 0xfb, 0xbf, 0x00, 0x75, 0x5d, 0x01, 0xfb, 0xbe, 0x02,
+           0x75, 0x5d, 0x05, 0xab, 0xbe, 0x0a, 0x55, 0x5f, 0x07, 0xab, 0xaf, 0x00,
+           0xd6, 0x57, 0x01, 0xac, 0xab, 0x00, 0xd8, 0x57, 0x00, 0xb0, 0xaa, 0x00,
+           0x50, 0x55, 0x00, 0xb0, 0x0b, 0x00, 0xd0, 0x17, 0x00, 0xb0, 0x0b, 0x00,
+           0x58, 0x15, 0x00, 0xa8, 0x2a, 0x00};
+    }]
+    .b configure -image $myquesthead
+    set expectedwidth [expr {[image width $myquesthead] + 2*[.b cget -borderwidth] \
+            + 2*[.b cget -highlightthickness]}]
+    incr expectedwidth 2   ; # added (hardcoded) in tkUnixButton.c
+    lappend result [expr $expectedwidth == [winfo reqwidth .b]]
+    set expectedheight [expr {[image height $myquesthead] + 2*[.b cget -borderwidth] \
+            + 2*[.b cget -highlightthickness]}]
+    incr expectedheight 2   ; # added (hardcoded) in tkUnixButton.c
+    lappend result [expr $expectedheight == [winfo reqheight .b]]
 } -cleanup {
     destroy .b
-} -result {104 46 20 12}
+} -result {1 1 1 1}
 
 test button-5.25 {ConfigureButton - computing geometry} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
