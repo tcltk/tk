@@ -29,6 +29,15 @@ test text-1.1 {configuration option: "autoseparators"} -setup {
 } -cleanup {
     destroy .t
 } -result {1}
+test text-1.1b {configuration option: "autoseparators", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -autoseparators
+} -cleanup {
+    destroy .t
+} -result {1}
 test text-1.2 {configuration option: "autoseparators"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -428,6 +437,15 @@ test text-1.43 {configuration option: "maxundo"} -setup {
 } -cleanup {
     destroy .t
 } -result {5}
+test text-1.43b {configuration option: "maxundo", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -maxundo
+} -cleanup {
+    destroy .t
+} -result {0}
 test text-1.44 {configuration option: "maxundo"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -732,6 +750,15 @@ test text-1.75 {configuration option: "undo"} -setup {
 } -cleanup {
     destroy .t
 } -result {1}
+test text-1.75b {configuration option: "undo", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -undo
+} -cleanup {
+    destroy .t
+} -result {0}
 test text-1.76 {configuration option: "undo"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -1458,7 +1485,19 @@ Line 7"
     rename .t {}
     rename test.t .t
     destroy .t
-} -result {{edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} {insert 2.1 ef} {mark set insert 2.3} {see insert}}
+} -result [list {edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} \
+                {mark set tk::undoMarkL2 2.1} {mark set tk::undoMarkR2 2.4} \
+                {mark gravity tk::undoMarkL2 left} {mark gravity tk::undoMarkR2 right} \
+                {insert 2.1 ef} {mark set insert 2.3} {see insert} \
+                {mark set tk::undoMarkL1 2.1} {mark set tk::undoMarkR1 2.3} \
+                {mark gravity tk::undoMarkL1 left} {mark gravity tk::undoMarkR1 right} \
+                {mark names} \
+                {index tk::undoMarkL1} {index tk::undoMarkR1} \
+                {mark unset tk::undoMarkL1 tk::undoMarkR1} \
+                {index tk::undoMarkL2} {index tk::undoMarkR2} \
+                {mark unset tk::undoMarkL2 tk::undoMarkR2} \
+                {compare 2.1 > 2.3} {compare 2.6 > 2.3} ]
+
 test text-8.23 {TextWidgetCmd procedure, "replace" option with undo} -setup {
     text .t
 } -body {
@@ -6396,8 +6435,23 @@ test text-27.16a {undo configuration options with peers} -body {
     lappend res [.t  edit canundo]
     lappend res [.tt edit canundo]
 } -cleanup {
-    destroy .t
+    destroy .t .tt
 } -result {1 1 0 0 100 100 1 1}
+test text-27.16b {undo configuration options with peers, defaults} -body {
+    text .t
+    .t peer create .tt
+    set res     [.t  cget -undo]
+    lappend res [.tt cget -undo]
+    lappend res [.t  cget -autoseparators]
+    lappend res [.tt cget -autoseparators]
+    lappend res [.t  cget -maxundo]
+    lappend res [.tt cget -maxundo]
+    .t insert end "The undo stack is common between peers"
+    lappend res [.t  edit canundo]
+    lappend res [.tt edit canundo]
+} -cleanup {
+    destroy .t .tt
+} -result {0 0 1 1 0 0 0 0}
 test text-27.17 {bug fix 1536735 - undo with empty text} -body {
     text .t -undo 1
     set r [.t edit modified]
@@ -6577,6 +6631,66 @@ test text-27.25 {<<UndoStack>> virtual event} -setup {
 } -cleanup {
     destroy .t
 } -result {0 0 1 2 3 4 4 5 6 6 7 8 8 9}
+test text-27.26 {edit undo and edit redo return ranges} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo true -autoseparators false
+    .t insert end "Hello "
+    .t edit separator
+    .t insert end "World!\n"
+    .t insert 1.6 "GREAT "
+    .t insert end "Another edit here!!"
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+    .t edit separator
+    .t delete 1.6
+    .t delete 1.9 1.10
+    .t insert 1.9 L
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+    .t replace 1.6 1.10 Tcl/Tk
+    .t replace 2.8 2.12 "one bites the dust"
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+} -cleanup {
+    destroy .t
+} -result [list {1.6 2.0}           \
+                {1.6 2.19}          \
+                {1.6 1.7 1.10 1.12} \
+                {1.6 1.7 1.9 1.11}  \
+                {1.6 1.16 2.8 2.19} \
+                {1.6 1.16 2.8 2.30} ]
+test text-27.27 {edit undo and edit redo return ranges} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo true -autoseparators false
+    for {set i 3} {$i >= 1} {incr i -1} {
+        .t insert 1.0 "Line $i\n"
+    }
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+} -cleanup {
+    destroy .t
+} -result [list {1.0 2.0} \
+                {1.0 4.0} ]
+test text-27.28 {edit undo and edit redo do not leave \
+                 spurious temporary marks behind them} -setup {
+    destroy .t
+    set res {}
+} -body {
+    pack [text .t -undo true -autoseparators false]
+    .t insert end "Hello World.\n"
+    .t edit separator
+    .t insert end "Again hello.\n"
+    .t edit undo
+    lappend res [lsearch [.t mark names] tk::undoMark*]
+    .t edit redo
+    lappend res [lsearch [.t mark names] tk::undoMark*]
+} -cleanup {
+    destroy .t
+} -result [list -1 -1]
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
