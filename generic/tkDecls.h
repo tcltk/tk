@@ -1721,6 +1721,9 @@ extern const TkStubs *tkStubsPtr;
 #undef Tk_SafeInit
 #undef Tk_CreateConsoleWindow
 
+#undef Tk_FreeXId
+#define Tk_FreeXId(display,xid)
+
 #if defined(_WIN32) && defined(UNICODE)
 #   define Tk_MainEx Tk_MainExW
     EXTERN void Tk_MainExW(int argc, wchar_t **argv,

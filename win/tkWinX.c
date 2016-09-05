@@ -1486,13 +1486,13 @@ GenerateXEvent(
 	    break;
 
 	case WM_UNICHAR: {
-	    char buffer[TCL_UTF_MAX+1];
+	    char buffer[XMaxTransChars];
 	    int i;
 	    event.type = KeyPress;
 	    event.xany.send_event = -3;
 	    event.xkey.keycode = wParam;
 	    event.xkey.nbytes = Tcl_UniCharToUtf((int)wParam, buffer);
-	    for (i=0; i<event.xkey.nbytes && i<TCL_UTF_MAX; ++i) {
+	    for (i=0; i<event.xkey.nbytes && i<XMaxTransChars; ++i) {
 		event.xkey.trans_chars[i] = buffer[i];
 	    }
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -1592,11 +1592,7 @@ GetState(
 	    state &= ~mask;
 	}
 	if (HIWORD(lParam) & KF_EXTENDED) {
-	    if (message == WM_SYSKEYDOWN || message == WM_KEYDOWN) {
-		state |= EXTENDED_MASK;
-	    } else {
-		state &= ~EXTENDED_MASK;
-	    }
+	    state |= EXTENDED_MASK;
 	}
     }
     return state;
@@ -1876,30 +1872,6 @@ HandleIMEComposition(
     }
     ImmReleaseContext(hwnd, hIMC);
     return 1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_FreeXId --
- *
- *	This interface is not needed under Windows.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_FreeXId(
-    Display *display,
-    XID xid)
-{
-    /* Do nothing */
 }
 
 /*

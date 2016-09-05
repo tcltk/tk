@@ -283,14 +283,15 @@ static char *EntryDisplayString(const char *showChar, int numChars)
     char *displayString, *p;
     int size;
     Tcl_UniChar ch;
-    char buf[TCL_UTF_MAX];
+    char buf[4];
 
     Tcl_UtfToUniChar(showChar, &ch);
     size = Tcl_UniCharToUtf(ch, buf);
     p = displayString = ckalloc(numChars * size + 1);
 
     while (numChars--) {
-	p += Tcl_UniCharToUtf(ch, p);
+	memcpy(p, buf, size);
+	p += size;
     }
     *p = '\0';
 
