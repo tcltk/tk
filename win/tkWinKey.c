@@ -102,7 +102,7 @@ TkpGetString(
 	 */
 
 	int unichar;
-	char buf[TCL_UTF_MAX];
+	char buf[XMaxTransChars];
 	int len;
 
 	unichar = keyEv->trans_chars[1] & 0xff;
@@ -113,12 +113,23 @@ TkpGetString(
 
 	Tcl_DStringAppend(dsPtr, buf, len);
     } else if (keyEv->send_event == -3) {
+
+	char buf[XMaxTransChars];
+	int len;
+
 	/*
-	 * Special case for WM_UNICHAR. xkey.trans_chars[] already contains a
-	 * UTF-8 char.
+	 * Special case for WM_UNICHAR.
 	 */
 
-	Tcl_DStringAppend(dsPtr, keyEv->trans_chars, keyEv->nbytes);
+	len = Tcl_UniCharToUtf(keyEv->keycode, buf);
+	if ((keyEv->keycode <= 0xffff) || (len == XMaxTransChars)) {
+	    Tcl_DStringAppend(dsPtr, buf, len);
+	} else {
+	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) >> 10) | 0xd800, buf);
+	    Tcl_DStringAppend(dsPtr, buf, 3);
+	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) & 0x3ff) | 0xdc00, buf);
+	    Tcl_DStringAppend(dsPtr, buf, 3);
+	}
     } else {
 	/*
 	 * This is an event generated from generic code. It has no nchars or
@@ -129,7 +140,7 @@ TkpGetString(
 
 	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
 		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    char buf[TCL_UTF_MAX];
+	    char buf[XMaxTransChars];
 	    int len;
 
 	    len = Tcl_UniCharToUtf((Tcl_UniChar) (keysym & 255), buf);
@@ -335,18 +346,24 @@ KeycodeToKeysym(
 	/*
 	 * Windows only gives us an undifferentiated VK_CONTROL code (for
 	 * example) when either Control key is pressed. To distinguish between
-	 * left and right, we have to query the state of one of the two to
-	 * determine which was actually pressed. So if the keycode indicates
-	 * Control, Shift, or Menu (the key that everybody else calls Alt), do
-	 * this extra test. If the right-side key was pressed, return the
-	 * appropriate keycode. Otherwise, we fall through and rely on the
-	 * keymap table to hold the correct keysym value.
+	 * left and right, we use the Extended flag. Indeed, the right Control
+	 * and Alt (aka Menu) keys are such extended keys (which their left
+	 * counterparts are not).
+	 * Regarding the shift case, Windows does not set the Extended flag for
+	 * the neither the left nor the right shift key. As a consequence another
+	 * way to distinguish between the two keys is to query the state of one
+	 * of the two to determine which was actually pressed. So if the keycode
+	 * indicates Shift, do this extra test. If the right-side key was
+	 * pressed, return the appropriate keycode. Otherwise, we fall through
+	 * and rely on the keymap table to hold the correct keysym value.
+	 * Note: this little trick only works for KeyPress, not for KeyRelease,
+	 * for reasons stated in bug [2945130]
 	 */
 
     case VK_CONTROL:
-	if (GetKeyState(VK_RCONTROL) & 0x80) {
-	    return XK_Control_R;
-	}
+        if (state & EXTENDED_MASK) {
+            return XK_Control_R;
+        }
 	break;
     case VK_SHIFT:
 	if (GetKeyState(VK_RSHIFT) & 0x80) {
@@ -354,9 +371,9 @@ KeycodeToKeysym(
 	}
 	break;
     case VK_MENU:
-	if (GetKeyState(VK_RMENU) & 0x80) {
-	    return XK_Alt_R;
-	}
+        if (state & EXTENDED_MASK) {
+            return XK_Alt_R;
+        }
 	break;
     }
     return keymap[keycode];
