@@ -1951,7 +1951,8 @@ EntryComputeGeometry(
 	entryPtr->displayString = p;
 
 	for (i = entryPtr->numChars; --i >= 0; ) {
-	    p += Tcl_UniCharToUtf(ch, p);
+	    memcpy(p, buf, size);
+	    p += size;
 	}
 	*p = '\0';
     }

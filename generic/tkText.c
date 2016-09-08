@@ -547,7 +547,7 @@ CreateWidget(
 	Tcl_InitHashTable(&sharedPtr->windowTable, TCL_STRING_KEYS);
 	Tcl_InitHashTable(&sharedPtr->imageTable, TCL_STRING_KEYS);
 	sharedPtr->undoStack = TkUndoInitStack(interp,0);
-	sharedPtr->undo = 1;
+	sharedPtr->undo = 0;
 	sharedPtr->isDirty = 0;
 	sharedPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
 	sharedPtr->autoSeparators = 1;

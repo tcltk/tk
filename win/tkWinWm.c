@@ -397,6 +397,54 @@ static int initialized;		/* Flag indicating whether module has been
 
 TCL_DECLARE_MUTEX(winWmMutex)
 
+#if (_WIN32_WINNT >= 0x0601)
+
+/*
+ * Helpers for touch event to fill in its dictionary.
+ */
+
+#define ADD_DICT_STR(d, s, v)						\
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewStringObj(v, -1))
+#define ADD_DICT_INT(d, s, v)						\
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewIntObj(v))
+#define ADD_DICT_WIDE(d, s, v) \
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewWideIntObj(v))
+#define ADD_DICT_DOUB(d, s, v) \
+    Tcl_DictObjPut(NULL, d, Tcl_NewStringObj(s, -1), Tcl_NewDoubleObj(v))
+
+/*
+ * Touch/gesture event Windows APIs.
+ */
+
+typedef WINBOOL (WINAPI CloseTouchInputHandleProc)(HANDLE);
+typedef WINBOOL (WINAPI GetTouchInputInfoProc)(HANDLE, UINT, PTOUCHINPUT, int);
+typedef WINBOOL (WINAPI RegisterTouchWindowProc)(HWND, ULONG);
+typedef WINBOOL (WINAPI UnregisterTouchWindowProc)(HWND);
+typedef WINBOOL (WINAPI GetGestureInfoProc)(HGESTUREINFO, PGESTUREINFO);
+typedef WINBOOL (WINAPI SetGestureConfigProc)(HWND, DWORD, UINT,
+				PGESTURECONFIG, UINT);
+
+static CloseTouchInputHandleProc	*pCloseTouchInputHandle;
+static GetTouchInputInfoProc		*pGetTouchInputInfo;
+static RegisterTouchWindowProc		*pRegisterTouchWindow;
+static UnregisterTouchWindowProc	*pUnregisterTouchWindow;
+static GetGestureInfoProc		*pGetGestureInfo;
+static SetGestureConfigProc		*pSetGestureConfig;
+
+#ifndef TWF_FINETOUCH
+#define TWF_FINETOUCH 1
+#endif
+
+#ifndef TWF_WANTPALM
+#define TWF_WANTPALM 2 
+#endif
+
+#ifndef TOUCH_COORD_TO_PIXEL
+#define TOUCH_COORD_TO_PIXEL(c) ((c) / 100)
+#endif
+
+#endif
+
 /*
  * Forward declarations for functions defined in this file:
  */
@@ -535,6 +583,9 @@ static int		WmStateCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmTitleCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+static int		WmTouchCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmTransientCmd(Tk_Window tkwin,
@@ -902,6 +953,27 @@ InitWindowClass(
 	    if (!RegisterClass(&class)) {
 		Tcl_Panic("Unable to register TkTopLevel class");
 	    }
+#if (_WIN32_WINNT >= 0x0601)
+	    {
+		HANDLE lib = LoadLibrary(TEXT("user32.dll"));
+
+		if (lib != NULL) {
+		    pCloseTouchInputHandle = (CloseTouchInputHandleProc *)
+			GetProcAddress(lib, "CloseTouchInputHandle");
+		    pGetTouchInputInfo = (GetTouchInputInfoProc *)
+			GetProcAddress(lib, "GetTouchInputInfo");
+		    pRegisterTouchWindow = (RegisterTouchWindowProc *)
+			GetProcAddress(lib, "RegisterTouchWindow");
+		    pUnregisterTouchWindow = (UnregisterTouchWindowProc *)
+			GetProcAddress(lib, "UnregisterTouchWindow");
+		    pGetGestureInfo = (GetGestureInfoProc *)
+			GetProcAddress(lib, "GetGestureInfo");
+		    pSetGestureConfig = (SetGestureConfigProc *)
+			GetProcAddress(lib, "SetGestureConfig");
+		}
+		FreeLibrary(lib);
+	    }
+#endif
 	}
 	Tcl_MutexUnlock(&winWmMutex);
     }
@@ -2784,7 +2856,7 @@ Tk_WmObjCmd(
 	"iconphoto", "iconposition",
 	"iconwindow", "manage", "maxsize", "minsize", "overrideredirect",
 	"positionfrom", "protocol", "resizable", "sizefrom",
-	"stackorder", "state", "title", "transient",
+	"stackorder", "state", "title", "touch", "transient",
 	"withdraw", NULL
     };
     enum options {
@@ -2797,7 +2869,7 @@ Tk_WmObjCmd(
 	WMOPT_ICONWINDOW, WMOPT_MANAGE, WMOPT_MAXSIZE, WMOPT_MINSIZE,
 	WMOPT_OVERRIDEREDIRECT,
 	WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
-	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
+	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TOUCH, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW
     };
     int index;
@@ -2852,7 +2924,7 @@ Tk_WmObjCmd(
 	return TCL_ERROR;
     }
     if (!Tk_IsTopLevel(winPtr) && (index != WMOPT_MANAGE)
-	    && (index != WMOPT_FORGET)) {
+	    && (index != WMOPT_TOUCH) && (index != WMOPT_FORGET)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
@@ -2921,6 +2993,8 @@ Tk_WmObjCmd(
 	return WmStateCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_TITLE:
 	return WmTitleCmd(tkwin, winPtr, interp, objc, objv);
+    case WMOPT_TOUCH:
+	return WmTouchCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_TRANSIENT:
 	return WmTransientCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_WITHDRAW:
@@ -3674,10 +3748,10 @@ WmForgetCmd(
 	Tk_MakeWindowExist((Tk_Window)winPtr->parentPtr);
 	RemapWindows(winPtr, Tk_GetHWND(winPtr->parentPtr->window));
 
-        /*
-         * Make sure wm no longer manages this window
-         */
-        Tk_ManageGeometry(frameWin, NULL, NULL);
+	/*
+	 * Make sure wm no longer manages this window
+	 */
+	Tk_ManageGeometry(frameWin, NULL, NULL);
 
 	TkWmDeadWindow(winPtr);
 	/* flags (above) must be cleared before calling */
@@ -5497,6 +5571,215 @@ WmTitleCmd(
 	    Tcl_DStringFree(&titleString);
 	}
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmTouchCmd --
+ *
+ *	This function is invoked to process the "wm touch" Tcl command. See
+ *	the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmTouchCmd(
+    Tk_Window tkwin,		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+#if (_WIN32_WINNT >= 0x0601)
+    Window win;
+    HWND hwnd;
+    int i, index, gCnt = 0, value;
+    ULONG flags = 0;
+    int touch = 0, panFlag;
+    GESTURECONFIG gcPan = { 0, 0, 0 };
+    GESTURECONFIG gc[16];
+    static const char *const optionStrings[] = {
+	"-all", "-fine", "-pan", "-pangutter", "-paninertia",
+	"-pansfh", "-pansfv", "-pressandtap", "-rotate",
+	"-touch", "-twofingertap", "-wantpalm", "-zoom",
+	"-notouch", "-none", NULL
+    };
+    enum options {
+	TOUCH_ALL, TOUCH_FINE, TOUCH_PAN, TOUCH_PANGUTTER, TOUCH_PANINERTIA,
+	TOUCH_PANSFH, TOUCH_PANSFV, TOUCH_PRESSANDTAP, TOUCH_ROTATE,
+	TOUCH_TOUCH, TOUCH_TWOFINGERTAP, TOUCH_WANTPALM, TOUCH_ZOOM,
+	TOUCH_NOTOUCH, TOUCH_NONE,
+    };
+
+    if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "window ?-option value ...?");
+	return TCL_ERROR;
+    }
+    ZeroMemory(&gc, sizeof(gc));
+    for (i = 3; i < objc; i++) {
+	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings, "option", 0,
+				&index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	switch ((enum options) index) {
+	case TOUCH_ALL:
+	    gc[gCnt++].dwWant = GC_ALLGESTURES;
+	    break;
+	case TOUCH_NONE:
+	    gc[gCnt++].dwBlock = GC_ALLGESTURES;
+	    break;
+	case TOUCH_FINE:
+	    flags |= TWF_FINETOUCH;
+	    touch = 1;
+	    break;
+	case TOUCH_PAN:
+	    panFlag = GC_PAN;
+	    goto pan;
+	case TOUCH_PANGUTTER:
+	    panFlag = GC_PAN_WITH_GUTTER;
+	    goto pan;
+	case TOUCH_PANINERTIA:
+	    panFlag = GC_PAN_WITH_INERTIA;
+	    goto pan;
+	case TOUCH_PANSFH:
+	    panFlag = GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY;
+	    goto pan;
+	case TOUCH_PANSFV:
+	    panFlag = GC_PAN_WITH_SINGLE_FINGER_VERTICALLY;
+	pan:
+	    if (++i >= objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"missing value", -1));
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    gcPan.dwID = GID_PAN;
+	    if (value) {
+		gcPan.dwWant |= panFlag;
+	    } else {
+		gcPan.dwBlock |= panFlag;
+	    }
+	    break;
+	case TOUCH_PRESSANDTAP:
+	    if (++i >= objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"missing pressandtap", -1));
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    gc[gCnt].dwID = GID_PRESSANDTAP;
+	    if (value) {
+		gc[gCnt++].dwWant = GC_PRESSANDTAP;
+	    } else {
+		gc[gCnt++].dwBlock = GC_PRESSANDTAP;
+	    }
+	    break;
+	case TOUCH_ROTATE:
+	    if (++i >= objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"missing rotate", -1));
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    gc[gCnt].dwID = GID_ROTATE;
+	    if (value) {
+		gc[gCnt++].dwWant = GC_ROTATE;
+	    } else {
+		gc[gCnt++].dwBlock = GC_ROTATE;
+	    }
+	    break;
+	case TOUCH_TOUCH:
+	    touch = 1;
+	    break;
+	case TOUCH_TWOFINGERTAP:
+	    if (++i >= objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"missing pressandtap", -1));
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    gc[gCnt].dwID = GID_TWOFINGERTAP;
+	    if (value) {
+		gc[gCnt++].dwWant = GC_TWOFINGERTAP;
+	    } else {
+		gc[gCnt++].dwBlock = GC_TWOFINGERTAP;
+	    }
+	    break;
+	case TOUCH_WANTPALM:
+	    flags |= TWF_WANTPALM;
+	    touch = 1;
+	    break;
+	case TOUCH_ZOOM:
+	    if (++i >= objc) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"missing zoom", -1));
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetBooleanFromObj(interp, objv[i], &value) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    gc[gCnt].dwID = GID_ZOOM;
+	    if (value) {
+		gc[gCnt++].dwWant = GC_ZOOM;
+	    } else {
+		gc[gCnt++].dwBlock = GC_ZOOM;
+	    }
+	    break;
+	case TOUCH_NOTOUCH:
+	    touch = -1;
+	    break;
+	}
+	if (gCnt >= sizeof (gc) / sizeof (gc[0]) - 1) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"touch config overflow", -1));
+	    return TCL_ERROR;
+	}
+    }
+
+    if (gcPan.dwID != 0) {
+	gc[gCnt++] = gcPan;
+    }
+
+    win = Tk_WindowId((Tk_Window) winPtr);
+    if (win == None) {
+	Tk_MakeWindowExist((Tk_Window) winPtr);
+	win = Tk_WindowId((Tk_Window) winPtr);
+    }
+
+    hwnd = Tk_GetHWND(win);
+
+    if (touch > 0) {
+	if (pRegisterTouchWindow != NULL) {
+	    pRegisterTouchWindow(hwnd, flags);
+	}
+    } else if (touch < 0) {
+	if (pUnregisterTouchWindow != NULL) {
+	    pUnregisterTouchWindow(hwnd);
+	}
+    }
+    if (gCnt > 0) {
+	if (pSetGestureConfig != NULL) {
+	    pSetGestureConfig(hwnd, 0, gCnt, gc, sizeof(GESTURECONFIG));
+	}
+    }
+#endif
     return TCL_OK;
 }
 
@@ -8677,6 +8960,274 @@ RemapWindows(
 	RemapWindows(childPtr,
 		winPtr->window ? Tk_GetHWND(winPtr->window) : NULL);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * InitTouchEvent --
+ *
+ *	This function initialises an event structure with the base
+ *	fields used in a TouchEvent.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#if (_WIN32_WINNT >= 0x0601)
+static void
+InitTouchEvent(XEvent *event, HWND hwnd, int rootx, int rooty)
+{
+    POINT sInput, cInput;
+    Tk_Window tkwin;
+    TkWindow *winPtr;
+
+    sInput.x = rootx;
+    sInput.y = rooty;
+    cInput = sInput;
+    ScreenToClient(hwnd, &cInput);
+
+    tkwin = Tk_HWNDToWindow(hwnd);
+    winPtr = (TkWindow *)tkwin;
+    memset(event, 0, sizeof(*event));
+    event->xany.type = VirtualEvent;
+    event->xany.serial =
+	LastKnownRequestProcessed(winPtr->display);
+    event->xany.send_event = False;
+    event->xany.window = Tk_WindowId(tkwin);
+    event->xany.display = winPtr->display;
+    event->xkey.root =
+	RootWindow(winPtr->display,winPtr->screenNum);
+    event->xkey.x_root = sInput.x;
+    event->xkey.y_root = sInput.y;
+    event->xkey.x = cInput.x;
+    event->xkey.y = cInput.y;
+}
+#endif
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinGenerateTouchEvent --
+ *
+ *	This function generate touch events when a WM_TOUCH event has
+ *      been received.
+ *
+ * Results:
+ *	Returns 1 if the event was handled, else 0.
+ *
+ * Side effects:
+ *	May queue one or more X events.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkWinGenerateTouchEvent(
+    HWND hwnd,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+#if (_WIN32_WINNT >= 0x0601)
+    BOOL bHandled = FALSE;
+    UINT cInputs = LOWORD(wParam);
+    PTOUCHINPUT pInputs = ckalloc(sizeof(TOUCHINPUT)*cInputs);
+    union {XEvent general; XVirtualEvent virtual;} event;
+    Tcl_Obj *dictPtr;
+
+    if (pGetTouchInputInfo == NULL) {
+	return 0;
+    }
+    if (pInputs != NULL) {
+	if (pGetTouchInputInfo((HANDLE)lParam,
+			       cInputs,
+			       pInputs,
+			       sizeof(TOUCHINPUT))) {
+	    UINT i;
+
+	    for (i = 0; i < cInputs; i++) {
+		TOUCHINPUT ti = pInputs[i];
+		InitTouchEvent(&event.general, hwnd,
+			       TOUCH_COORD_TO_PIXEL(ti.x),
+			       TOUCH_COORD_TO_PIXEL(ti.y));
+		/*
+		 * Which info needs to be passed to the event, and how should
+		 * is be passed ?
+		 * Put it into a dict and pass it through %d
+		 */
+		dictPtr = Tcl_NewDictObj();
+		Tcl_IncrRefCount(dictPtr);
+		/* Identify as a touch event */
+		ADD_DICT_STR(dictPtr, "event", "touch");
+		/* Touch ID */
+		ADD_DICT_INT(dictPtr, "id", ti.dwID);
+		/* Raw flags value */
+		ADD_DICT_INT(dictPtr, "flags", ti.dwFlags);
+		/* Decode known flags */
+		if (ti.dwFlags & TOUCHEVENTF_MOVE) {
+		    ADD_DICT_INT(dictPtr, "move", 1);
+		    event.virtual.name = Tk_GetUid("FingerMotion");
+		}
+		if (ti.dwFlags & TOUCHEVENTF_DOWN) {
+		    ADD_DICT_INT(dictPtr, "down", 1);
+		    event.virtual.name = Tk_GetUid("FingerDown");
+		}
+		if (ti.dwFlags & TOUCHEVENTF_UP) {
+		    ADD_DICT_INT(dictPtr, "up", 1);
+		    event.virtual.name = Tk_GetUid("FingerUp");
+		}
+		if (ti.dwFlags & TOUCHEVENTF_INRANGE) {
+		    ADD_DICT_INT(dictPtr, "inrange", 1);
+		}
+		if (ti.dwFlags & TOUCHEVENTF_PRIMARY) {
+		    ADD_DICT_INT(dictPtr, "primary", 1);
+		}
+		if (ti.dwFlags & TOUCHEVENTF_NOCOALESCE) {
+		    ADD_DICT_INT(dictPtr, "nocoalesce", 1);
+		}
+		if (ti.dwFlags & TOUCHEVENTF_PALM) {
+		    ADD_DICT_INT(dictPtr, "palm", 1);
+		}
+		event.virtual.user_data = dictPtr;
+		Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
+	    }
+	    bHandled = TRUE;
+	}
+	ckfree(pInputs);
+    }
+    if (bHandled) {
+	pCloseTouchInputHandle((HANDLE)lParam);
+	return 1;
+    }
+#endif
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkWinGenerateGestureEvent --
+ *
+ *	This function generate touch events when a WM_GESTURE event has
+ *      been received.
+ *
+ * Results:
+ *	Returns 1 if the event was handled, else 0.
+ *
+ * Side effects:
+ *	May queue an X event.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkWinGenerateGestureEvent(
+    HWND hwnd,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+#if (_WIN32_WINNT >= 0x0601)
+    GESTUREINFO gi;
+    union {XEvent general; XVirtualEvent virtual;} event;
+    Tcl_Obj *dictPtr;
+    POINT sLoc, delta;
+    POINTS pts;
+    UINT LInt, HInt;
+
+    if (pGetGestureInfo == NULL) {
+	return 0;
+    }
+
+    ZeroMemory(&gi, sizeof(GESTUREINFO));
+    gi.cbSize = sizeof(GESTUREINFO);
+
+    if (!pGetGestureInfo((HGESTUREINFO)lParam, &gi)) {
+	return 0;
+    }
+
+    /* Is it something we want to handle? */
+    switch (gi.dwID) {
+    case GID_BEGIN:
+    case GID_END:
+	/* These should not be handled */
+	return 0;
+    case GID_ZOOM:
+    case GID_PAN:
+    case GID_ROTATE:
+    case GID_TWOFINGERTAP:
+    case GID_PRESSANDTAP:
+	break;
+    default:
+	/* A gesture was not recognized */
+	return 0;
+    }
+
+    POINTSTOPOINT(sLoc, gi.ptsLocation);
+
+    InitTouchEvent(&event.general, hwnd, sLoc.x, sLoc.y);
+    event.virtual.name = Tk_GetUid("Gesture");
+    dictPtr = Tcl_NewDictObj();
+    Tcl_IncrRefCount(dictPtr);
+    /* Identify as a gesture event */
+    ADD_DICT_STR(dictPtr, "event", "gesture");
+    /* Raw flags value */
+    ADD_DICT_INT(dictPtr, "flags", gi.dwFlags);
+    /* Decode known flags */
+    if (gi.dwFlags & GF_BEGIN) {
+	ADD_DICT_INT(dictPtr, "begin", 1);
+    }
+    if (gi.dwFlags & GF_INERTIA) {
+	ADD_DICT_INT(dictPtr, "inertia", 1);
+    }
+    if (gi.dwFlags & GF_END) {
+	ADD_DICT_INT(dictPtr, "end", 1);
+    }
+
+    LInt = (UINT) (gi.ullArguments & 0xFFFFFFFF);
+    HInt = (UINT) (gi.ullArguments >> 32);
+    switch (gi.dwID) {
+    case GID_ZOOM:
+	ADD_DICT_STR(dictPtr, "gesture", "zoom");
+	ADD_DICT_WIDE(dictPtr, "distance", gi.ullArguments);
+	event.virtual.name = Tk_GetUid("PinchToZoom");
+	break;
+    case GID_PAN:
+	ADD_DICT_STR(dictPtr, "gesture", "pan");
+	ADD_DICT_WIDE(dictPtr, "distance", LInt);
+	if (gi.dwFlags & GF_INERTIA) {
+	    pts = MAKEPOINTS(HInt);
+	    ADD_DICT_INT(dictPtr, "inertiax", pts.x);
+	    ADD_DICT_INT(dictPtr, "inertiay", pts.y);
+	}
+	break;
+    case GID_ROTATE:
+	ADD_DICT_STR(dictPtr, "gesture", "rotate");
+	ADD_DICT_DOUB(dictPtr, "angle",
+		      GID_ROTATE_ANGLE_FROM_ARGUMENT(gi.ullArguments));
+	break;
+    case GID_TWOFINGERTAP:
+	ADD_DICT_STR(dictPtr, "gesture", "twofingertap");
+	ADD_DICT_WIDE(dictPtr, "distance", gi.ullArguments);
+	break;
+    case GID_PRESSANDTAP:
+	ADD_DICT_STR(dictPtr, "gesture", "pressandtap");
+	pts = MAKEPOINTS(LInt);
+	POINTSTOPOINT(delta, pts);
+	ADD_DICT_INT(dictPtr, "deltax", delta.x);
+	ADD_DICT_INT(dictPtr, "deltay", delta.y);
+	break;
+    }
+    event.virtual.user_data = dictPtr;
+    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
+    return 1;
+#else
+    return 0;
+#endif
 }
 
 /*

@@ -2192,7 +2192,7 @@ FontMapLoadPage(
 {
     FontFamily *familyPtr;
     Tcl_Encoding encoding;
-    char src[TCL_UTF_MAX], buf[16];
+    char src[XMaxTransChars], buf[16];
     USHORT *startCount, *endCount;
     int i, j, bitOffset, end, segCount;
 

@@ -29,6 +29,15 @@ test text-1.1 {configuration option: "autoseparators"} -setup {
 } -cleanup {
     destroy .t
 } -result {1}
+test text-1.1b {configuration option: "autoseparators", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -autoseparators
+} -cleanup {
+    destroy .t
+} -result {1}
 test text-1.2 {configuration option: "autoseparators"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -428,6 +437,15 @@ test text-1.43 {configuration option: "maxundo"} -setup {
 } -cleanup {
     destroy .t
 } -result {5}
+test text-1.43b {configuration option: "maxundo", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -maxundo
+} -cleanup {
+    destroy .t
+} -result {0}
 test text-1.44 {configuration option: "maxundo"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -732,6 +750,15 @@ test text-1.75 {configuration option: "undo"} -setup {
 } -cleanup {
     destroy .t
 } -result {1}
+test text-1.75b {configuration option: "undo", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -undo
+} -cleanup {
+    destroy .t
+} -result {0}
 test text-1.76 {configuration option: "undo"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -6396,8 +6423,23 @@ test text-27.16a {undo configuration options with peers} -body {
     lappend res [.t  edit canundo]
     lappend res [.tt edit canundo]
 } -cleanup {
-    destroy .t
+    destroy .t .tt
 } -result {1 1 0 0 100 100 1 1}
+test text-27.16b {undo configuration options with peers, defaults} -body {
+    text .t
+    .t peer create .tt
+    set res     [.t  cget -undo]
+    lappend res [.tt cget -undo]
+    lappend res [.t  cget -autoseparators]
+    lappend res [.tt cget -autoseparators]
+    lappend res [.t  cget -maxundo]
+    lappend res [.tt cget -maxundo]
+    .t insert end "The undo stack is common between peers"
+    lappend res [.t  edit canundo]
+    lappend res [.tt edit canundo]
+} -cleanup {
+    destroy .t .tt
+} -result {0 0 1 1 0 0 0 0}
 test text-27.17 {bug fix 1536735 - undo with empty text} -body {
     text .t -undo 1
     set r [.t edit modified]
