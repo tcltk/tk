@@ -53,6 +53,12 @@
 #define UNICODE_NOCHAR 0xFFFF
 #endif
 
+#if (_WIN32_WINNT >= 0x0601)
+#ifndef WM_TOUCH
+#define WM_TOUCH       0x0240
+#endif
+#endif
+
 /*
  * Declarations of static variables used in this file.
  */
@@ -81,6 +87,7 @@ typedef struct ThreadSpecificData {
     TkDisplay *winDisplay;	/* TkDisplay structure that represents Windows
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
+    int surrogateBuffer;	/* Buffer for first of surrogate pair. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -911,9 +918,16 @@ Tk_TranslateWinEvent(
 	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
 
+#if (_WIN32_WINNT >= 0x0601)
+    case WM_TOUCH:
+	return TkWinGenerateTouchEvent(hwnd, wParam, lParam);
+    case WM_GESTURE:
+	return TkWinGenerateGestureEvent(hwnd, wParam, lParam);
+#endif
+
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
-	if (wParam == VK_PACKET) { 
+	if (wParam == VK_PACKET) {
 	    /*
 	     * This will trigger WM_CHAR event(s) with unicode data.
 	     */
@@ -1207,36 +1221,20 @@ GenerateXEvent(
 	    event.xany.send_event = -1;
 	    event.xkey.keycode = 0;
 	    if ((int)wParam & 0xff00) {
-		int i, ch1 = wParam & 0xffff;
-		char buffer[TCL_UTF_MAX+1];
-#if TCL_UTF_MAX >= 4
-		MSG msg;
+		int ch1 = wParam & 0xffff;
 
-		if ((((int)wParam & 0xfc00) == 0xd800)
-			&& (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0)
-			&& (msg.message == WM_CHAR)) {
-		    MSG msg;
-		    int ch2;
-
-		    GetMessage(&msg, NULL, 0, 0);
-		    ch2 = wParam & 0xffff;
-#if TCL_UTF_MAX == 4
-		    event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
-		    event.xkey.nbytes += Tcl_UniCharToUtf(ch2, buffer);
-#else
-		    ch1 = ((ch1 & 0x3ff) << 10) | (ch2 & 0x3ff);
-	   	    ch1 += 0x10000;
-		    event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
-#endif
-		} else
-#endif
-		{
-		    event.xkey.nbytes = Tcl_UniCharToUtf(ch1, buffer);
+		if ((ch1 & 0xfc00) == 0xd800) {
+		    tsdPtr->surrogateBuffer = ch1;
+		    return;
 		}
-		for (i=0; i<event.xkey.nbytes && i<TCL_UTF_MAX; ++i) {
-		    event.xkey.trans_chars[i] = buffer[i];
+		if ((ch1 & 0xfc00) == 0xdc00) {
+		    ch1 = ((tsdPtr->surrogateBuffer & 0x3ff) << 10) |
+			    (ch1 & 0x3ff) | 0x10000;
+		    tsdPtr->surrogateBuffer = 0;
 		}
 		event.xany.send_event = -3;
+		event.xkey.nbytes = 0;
+		event.xkey.keycode = ch1;
 	    } else {
 		event.xkey.nbytes = 1;
 		event.xkey.trans_chars[0] = (char) wParam;
@@ -1257,32 +1255,10 @@ GenerateXEvent(
 	    break;
 
 	case WM_UNICHAR: {
-	    char buffer[TCL_UTF_MAX+1];
-	    int i;
-
 	    event.type = KeyPress;
 	    event.xany.send_event = -3;
 	    event.xkey.keycode = wParam;
-#if TCL_UTF_MAX < 4
-	    event.xkey.nbytes = Tcl_UniCharToUtf(((int)wParam > 0xffff) ?
-		    0xfffd : (int)wParam, buffer);
-#else
-#if TCL_UTF_MAX == 4
-	    if ((int)wParam > 0xffff) {
-		Tcl_UniChar uch;
-
-		uch = (((int)wParam - 0x10000) >> 10) & 0x3ff;
-		event.xkey.nbytes = Tcl_UniCharToUtf(uch | 0xd800, buffer);
-		uch = ((int)wParam - 0x10000) & 0x3ff;
-		event.xkey.nbytes += Tcl_UniCharToUtf(uch | 0xdc00,
-			buffer + event.xkey.nbytes);
-	    } else
-#endif
-	    event.xkey.nbytes = Tcl_UniCharToUtf((int)wParam, buffer);
-#endif
-	    for (i=0; i<event.xkey.nbytes && i<TCL_UTF_MAX; ++i) {
-		event.xkey.trans_chars[i] = buffer[i];
-	    }
+	    event.xkey.nbytes = 0;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 	    event.type = KeyRelease;
 	    break;
@@ -1380,11 +1356,7 @@ GetState(
 	    state &= ~mask;
 	}
 	if (HIWORD(lParam) & KF_EXTENDED) {
-	    if (message == WM_SYSKEYDOWN || message == WM_KEYDOWN) {
-		state |= EXTENDED_MASK;
-	    } else {
-		state &= ~EXTENDED_MASK;
-	    }
+	    state |= EXTENDED_MASK;
 	}
     }
     return state;
