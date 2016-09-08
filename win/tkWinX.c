@@ -1343,11 +1343,7 @@ GetState(
 	    state &= ~mask;
 	}
 	if (HIWORD(lParam) & KF_EXTENDED) {
-	    if (message == WM_SYSKEYDOWN || message == WM_KEYDOWN) {
-		state |= EXTENDED_MASK;
-	    } else {
-		state &= ~EXTENDED_MASK;
-	    }
+	    state |= EXTENDED_MASK;
 	}
     }
     return state;
