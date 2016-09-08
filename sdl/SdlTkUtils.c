@@ -144,7 +144,7 @@ SdlTkListFonts(const char *name, int *count)
     Tcl_MutexLock(&fontMutex);
     hPtr = Tcl_FirstHashEntry(&fileFaceHash, &search);
     while (hPtr != NULL) {
-        GlyphIndexHash *ghash;
+	GlyphIndexHash *ghash;
 
 	ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);
 	if ((name[0] == '*') || (strcasecmp(ghash->familyName, name) == 0)) {
@@ -178,9 +178,9 @@ SdlTkListFonts(const char *name, int *count)
 	nmatch++;
     }
     if (nmatch > 0) {
-        char *p = Tcl_DStringValue(&ds);
+	char *p = Tcl_DStringValue(&ds);
 
-        names = (char **) ckalloc(sizeof (char *) * (nmatch + 1));
+	names = (char **) ckalloc(sizeof (char *) * (nmatch + 1));
 	for (i = 0; i < nmatch; i++) {
 	    int len = strlen(p) + 1;
 
@@ -250,10 +250,10 @@ MatchFont(const char *xlfd, _Font *_f)
     }
     Tcl_DStringInit(&ds);
     if (ffKey == NULL) {
-        const char *const *aliases = NULL;
+	const char *const *aliases = NULL;
 	char *q;
 
-        q = ckalloc(strlen(family) + 1);
+	q = ckalloc(strlen(family) + 1);
 	strcpy(q, family);
 	family = q;
 	q = strchr(family, '-');
@@ -312,14 +312,14 @@ MatchFont(const char *xlfd, _Font *_f)
     Tcl_DStringAppend(&ds, "-unknown-", -1);
     Tcl_DStringAppend(&ds, ghash->familyName, -1);
     if (ghash->styleFlags & FT_STYLE_FLAG_BOLD) {
-        Tcl_DStringAppend(&ds, "-bold", -1);
+	Tcl_DStringAppend(&ds, "-bold", -1);
     } else {
-        Tcl_DStringAppend(&ds, "-normal", -1);
+	Tcl_DStringAppend(&ds, "-normal", -1);
     }
     if (ghash->styleFlags & FT_STYLE_FLAG_ITALIC) {
-        Tcl_DStringAppend(&ds, "-o", -1);
+	Tcl_DStringAppend(&ds, "-o", -1);
     } else {
-        Tcl_DStringAppend(&ds, "-r", -1);
+	Tcl_DStringAppend(&ds, "-r", -1);
     }
     sprintf(buffer, "-normal-*-%d-*-*-*-*-*-ucs-4", _f->size);
     Tcl_DStringAppend(&ds, buffer, -1);
@@ -348,7 +348,7 @@ SdlTkLoadGlyphHash(GlyphIndexHash *ghash, FileFaceKey *ffKey, int fsize)
 
     fterr = FT_Init_FreeType(&ftlib);
     if (fterr != 0) {
-        Tcl_Panic("init of freetype failed");
+	Tcl_Panic("init of freetype failed");
     }
     memset(&ftarg, 0, sizeof (ftarg));
     ftarg.flags = FT_OPEN_STREAM;
@@ -356,11 +356,11 @@ SdlTkLoadGlyphHash(GlyphIndexHash *ghash, FileFaceKey *ffKey, int fsize)
 	(FT_Stream) SdlTkXGetFTStream((const char *) ffKey->file, fsize);
     fterr = FT_Open_Face(ftlib, &ftarg, ffKey->index, &face);
     if (fterr != 0) {
-        Tcl_Panic("loading freetype font failed");
+	Tcl_Panic("loading freetype font failed");
     }
     charcode = FT_Get_First_Char(face, &gindex);
     while (gindex != 0) {
-        hPtr = Tcl_CreateHashEntry(&ghash->hash,
+	hPtr = Tcl_CreateHashEntry(&ghash->hash,
 				   (char *) charcode, &isNew);
 	if (isNew) {
 	    Tcl_SetHashValue(hPtr, (char *) charcode);
@@ -461,7 +461,7 @@ SdlTkFontLoadXLFD(const char *xlfd)
     hPtr = Tcl_CreateHashEntry(&fileFaceHash, (char *) &ffKey, &isNew);
     if (isNew) {
 	Tcl_MutexUnlock(&fontMutex);
-        Tcl_Panic("no GlyphIndexHash");
+	Tcl_Panic("no GlyphIndexHash");
 	return None;
     } else {
 	GlyphIndexHash *ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);
@@ -516,7 +516,7 @@ SdlTkFontCanDisplayChar(char *xlfd, TkFontAttributes *faPtr, int ch)
     Tcl_MutexLock(&fontMutex);
     hPtr = Tcl_FirstHashEntry(&fileFaceHash, &search);
     while (hPtr != NULL) {
-        GlyphIndexHash *ghash;
+	GlyphIndexHash *ghash;
 
 	ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);
 	if (strcasecmp((char *) faPtr->family, ghash->familyName) == 0) {
@@ -756,7 +756,7 @@ SdlTkReadFTStream(FT_Stream ftstr, unsigned long offs, unsigned char *buf,
 	}
     }
     if ((ftstr->descriptor.pointer != NULL) && count) {
-        Tcl_WideInt wOffs;
+	Tcl_WideInt wOffs;
 	int n;
 
 	wOffs = offs;
@@ -781,7 +781,7 @@ SdlTkCloseFTStream(FT_Stream ftstr)
 	return;
     }
     if (ftstr->descriptor.pointer != NULL) {
-        Tcl_Close(NULL, (Tcl_Channel) ftstr->descriptor.pointer);
+	Tcl_Close(NULL, (Tcl_Channel) ftstr->descriptor.pointer);
 	ftstr->descriptor.pointer = NULL;
     }
     ftstr->pathname.pointer = NULL;
@@ -1038,11 +1038,11 @@ fonterr:
 #endif
     if (Tcl_ListObjGetElements(interp, Tcl_GetObjResult(interp), &objc, &objv)
 	!= TCL_OK) {
-        goto fonterr;
+	goto fonterr;
     }
 
     for (i = nfonts = 0; i < objc; i++) {
-        FT_Face face = 0;
+	FT_Face face = 0;
 	FT_Open_Args ftarg;
 	const char *fname = Tcl_GetString(objv[i]);
 	int k, nfaces, fsize;
@@ -1147,7 +1147,7 @@ nextface:
     FT_Done_FreeType(ftlib);
 
     if (nfonts == 0) {
-        Tcl_ResetResult(interp);
+	Tcl_ResetResult(interp);
 	Tcl_AppendResult(interp, "no fonts installed", (char *) NULL);
 	goto error;
     }

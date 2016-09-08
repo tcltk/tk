@@ -205,6 +205,11 @@ MODULE_SCOPE int		TkpWmGetState(TkWindow *winPtr);
  */
 MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
 
+/*
+ * Touch/gesture event support
+ */
+MODULE_SCOPE int		TkWinGenerateTouchEvent(HWND hwnd, WPARAM wParam, LPARAM lParam);
+MODULE_SCOPE int		TkWinGenerateGestureEvent(HWND hwnd, WPARAM wParam, LPARAM lParam);
 
 /*
  * The following functions are not present in old versions of Windows
