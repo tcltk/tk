@@ -113,12 +113,23 @@ TkpGetString(
 
 	Tcl_DStringAppend(dsPtr, buf, len);
     } else if (keyEv->send_event == -3) {
+
+	char buf[XMaxTransChars];
+	int len;
+
 	/*
-	 * Special case for WM_UNICHAR. xkey.trans_chars[] already contains a
-	 * UTF-8 char.
+	 * Special case for WM_UNICHAR.
 	 */
 
-	Tcl_DStringAppend(dsPtr, keyEv->trans_chars, keyEv->nbytes);
+	len = Tcl_UniCharToUtf(keyEv->keycode, buf);
+	if ((keyEv->keycode <= 0xffff) || (len == XMaxTransChars)) {
+	    Tcl_DStringAppend(dsPtr, buf, len);
+	} else {
+	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) >> 10) | 0xd800, buf);
+	    Tcl_DStringAppend(dsPtr, buf, 3);
+	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) & 0x3ff) | 0xdc00, buf);
+	    Tcl_DStringAppend(dsPtr, buf, 3);
+	}
     } else {
 	/*
 	 * This is an event generated from generic code. It has no nchars or
