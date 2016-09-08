@@ -81,6 +81,7 @@ typedef struct ThreadSpecificData {
     TkDisplay *winDisplay;	/* TkDisplay structure that represents Windows
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
+    int surrogateBuffer;	/* Buffer for first of surrogate pair. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -911,15 +912,24 @@ Tk_TranslateWinEvent(
 	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
 
+    case WM_SYSKEYDOWN:
+    case WM_KEYDOWN:
+	if (wParam == VK_PACKET) {
+	    /*
+	     * This will trigger WM_CHAR event(s) with unicode data.
+	     */
+	    *resultPtr =
+		PostMessageW(hwnd, message, HIWORD(lParam), LOWORD(lParam));
+	    return 1;
+	}
+	/* else fall through */
     case WM_CLOSE:
     case WM_SETFOCUS:
     case WM_KILLFOCUS:
     case WM_DESTROYCLIPBOARD:
     case WM_UNICHAR:
     case WM_CHAR:
-    case WM_SYSKEYDOWN:
     case WM_SYSKEYUP:
-    case WM_KEYDOWN:
     case WM_KEYUP:
     case WM_MOUSEWHEEL:
 	GenerateXEvent(hwnd, message, wParam, lParam);
@@ -1197,17 +1207,34 @@ GenerateXEvent(
 	    event.type = KeyPress;
 	    event.xany.send_event = -1;
 	    event.xkey.keycode = 0;
-	    event.xkey.nbytes = 1;
-	    event.xkey.trans_chars[0] = (char) wParam;
+	    if ((int)wParam & 0xff00) {
+		int ch1 = wParam & 0xffff;
 
-	    if (IsDBCSLeadByte((BYTE) wParam)) {
-		MSG msg;
+		if ((ch1 & 0xfc00) == 0xd800) {
+		    tsdPtr->surrogateBuffer = ch1;
+		    return;
+		}
+		if ((ch1 & 0xfc00) == 0xdc00) {
+		    ch1 = ((tsdPtr->surrogateBuffer & 0x3ff) << 10) |
+			    (ch1 & 0x3ff) | 0x10000;
+		    tsdPtr->surrogateBuffer = 0;
+		}
+		event.xany.send_event = -3;
+		event.xkey.nbytes = 0;
+		event.xkey.keycode = ch1;
+	    } else {
+		event.xkey.nbytes = 1;
+		event.xkey.trans_chars[0] = (char) wParam;
 
-		if ((PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0)
-			&& (msg.message == WM_CHAR)) {
-		    GetMessage(&msg, NULL, 0, 0);
-		    event.xkey.nbytes = 2;
-		    event.xkey.trans_chars[1] = (char) msg.wParam;
+		if (IsDBCSLeadByte((BYTE) wParam)) {
+		    MSG msg;
+
+		    if ((PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0)
+			    && (msg.message == WM_CHAR)) {
+			GetMessage(&msg, NULL, 0, 0);
+			event.xkey.nbytes = 2;
+			event.xkey.trans_chars[1] = (char) msg.wParam;
+		   }
 		}
 	    }
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -1215,15 +1242,10 @@ GenerateXEvent(
 	    break;
 
 	case WM_UNICHAR: {
-	    char buffer[TCL_UTF_MAX+1];
-	    int i;
 	    event.type = KeyPress;
 	    event.xany.send_event = -3;
 	    event.xkey.keycode = wParam;
-	    event.xkey.nbytes = Tcl_UniCharToUtf((int)wParam, buffer);
-	    for (i=0; i<event.xkey.nbytes && i<TCL_UTF_MAX; ++i) {
-		event.xkey.trans_chars[i] = buffer[i];
-	    }
+	    event.xkey.nbytes = 0;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 	    event.type = KeyRelease;
 	    break;
@@ -1321,11 +1343,7 @@ GetState(
 	    state &= ~mask;
 	}
 	if (HIWORD(lParam) & KF_EXTENDED) {
-	    if (message == WM_SYSKEYDOWN || message == WM_KEYDOWN) {
-		state |= EXTENDED_MASK;
-	    } else {
-		state &= ~EXTENDED_MASK;
-	    }
+	    state |= EXTENDED_MASK;
 	}
     }
     return state;
