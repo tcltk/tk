@@ -54,12 +54,6 @@ typedef struct ThreadSpecificData {
     Region clipRegion;		/* The clipping region, or None. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
-
-#if TCL_UTF_MAX == 4
-#define	UtfToUniChar(src, chPtr) TkUtfToUniChar32(src, chPtr)
-#else
-#define	UtfToUniChar(src, chPtr) Tcl_UtfToUniChar(src, chPtr)
-#endif
 
 /*
  * Package initialization:
@@ -674,13 +668,9 @@ Tk_MeasureChars(
     curByte = 0;
     sawNonSpace = 0;
     while (numBytes > 0) {
-#if TCL_UTF_MAX == 4
 	int unichar;
-#else
-	Tcl_UniChar unichar;
-#endif
 
-	clen = UtfToUniChar(source, &unichar);
+	clen = TkUtfToUniChar2(source, &unichar);
 	c = (FcChar32) unichar;
 
 	if (clen <= 0) {

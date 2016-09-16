@@ -2298,13 +2298,9 @@ StartEnd(
 	    int chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
-#if TCL_UTF_MAX == 4
 		int ch;
-		chSize = TkUtfToUniChar32(segPtr->body.chars + offset, &ch);
-#else
-		Tcl_UniChar ch;
-		chSize = Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
-#endif
+
+		chSize = TkUtfToUniChar2(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
@@ -2347,13 +2343,9 @@ StartEnd(
 	    int chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
-#if TCL_UTF_MAX == 4
+
 		int ch;
-		TkUtfToUniChar32(segPtr->body.chars + offset, &ch);
-#else
-		Tcl_UniChar ch;
-		Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
-#endif
+		TkUtfToUniChar2(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}

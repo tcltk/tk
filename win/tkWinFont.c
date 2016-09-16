@@ -26,13 +26,8 @@
  * Under Windows, a "font family" is uniquely identified by its face name.
  */
 
-#if TCL_UTF_MAX > 3
 #define FONTMAP_SHIFT		12
 #define FONTMAP_PAGES	    	(1 << (21 - FONTMAP_SHIFT))
-#else
-#define FONTMAP_SHIFT		10
-#define FONTMAP_PAGES		(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
-#endif
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
 
 typedef struct FontFamily {
@@ -233,11 +228,6 @@ static inline HFONT	SelectFont(HDC hdc, WinFont *fontPtr,
 			    SubFont *subFontPtr, double angle);
 static inline void	SwapLong(PULONG p);
 static inline void	SwapShort(USHORT *p);
-#if TCL_UTF_MAX == 4
-#define			UtfToUniChar(src, chPtr) TkUtfToUniChar32(src, chPtr)
-#else
-#define			UtfToUniChar(src, chPtr) Tcl_UtfToUniChar(src, chPtr)
-#endif
 static int CALLBACK	WinFontCanUseProc(ENUMLOGFONT *lfPtr,
 			    NEWTEXTMETRIC *tmPtr, int fontType,
 			    LPARAM lParam);
@@ -837,11 +827,7 @@ Tk_MeasureChars(
     HFONT oldFont;
     WinFont *fontPtr;
     int curX, moretomeasure;
-#if TCL_UTF_MAX == 4
     int ch;
-#else
-    Tcl_UniChar ch;
-#endif
     SIZE size;
     FontFamily *familyPtr;
     Tcl_DString runString;
@@ -872,7 +858,7 @@ Tk_MeasureChars(
     start = source;
     end = start + numBytes;
     for (p = start; p < end; ) {
-	next = p + UtfToUniChar(p, &ch);
+	next = p + TkUtfToUniChar2(p, &ch);
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	if (thisSubFontPtr != lastSubFontPtr) {
 	    familyPtr = lastSubFontPtr->familyPtr;
@@ -934,7 +920,7 @@ Tk_MeasureChars(
 	familyPtr = lastSubFontPtr->familyPtr;
 	Tcl_DStringInit(&runString);
 	for (p = start; p < end; ) {
-	    next = p + UtfToUniChar(p, &ch);
+	    next = p + TkUtfToUniChar2(p, &ch);
 	    Tcl_UtfToExternal(NULL, familyPtr->encoding, p,
 		    (int) (next - p), 0, NULL, buf, sizeof(buf), NULL,
 		    &dstWrote, NULL);
@@ -983,17 +969,13 @@ Tk_MeasureChars(
 	 */
 
 	const char *lastWordBreak = NULL;
-#if TCL_UTF_MAX == 4
 	int ch2;
-#else
-	Tcl_UniChar ch2;
-#endif
 
 	end = p;
 	p = source;
 	ch = ' ';
 	while (p < end) {
-	    next = p + UtfToUniChar(p, &ch2);
+	    next = p + TkUtfToUniChar2(p, &ch2);
 	    if ((ch != ' ') && (ch2 == ' ')) {
 		lastWordBreak = p;
 	    }
@@ -1460,11 +1442,7 @@ MultiFontTextOut(
 				 * string when drawing. */
     double angle)
 {
-#if TCL_UTF_MAX == 4
     int ch;
-#else
-    Tcl_UniChar ch;
-#endif
     SIZE size;
     HFONT oldFont;
     FontFamily *familyPtr;
@@ -1479,7 +1457,7 @@ MultiFontTextOut(
 
     end = source + numBytes;
     for (p = source; p < end; ) {
-	next = p + UtfToUniChar(p, &ch);
+	next = p + TkUtfToUniChar2(p, &ch);
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	if (thisSubFontPtr != lastSubFontPtr) {
 	    if (p > source) {
@@ -2209,7 +2187,7 @@ FontMapLoadPage(
 {
     FontFamily *familyPtr;
     Tcl_Encoding encoding;
-    char src[TCL_UTF_MAX], buf[16];
+    char src[XMaxTransChars], buf[16];
     USHORT *startCount, *endCount;
     int i, j, bitOffset, end, segCount;
 
