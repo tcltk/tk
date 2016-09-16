@@ -282,10 +282,16 @@ static char *EntryDisplayString(const char *showChar, int numChars)
 {
     char *displayString, *p;
     int size;
-    Tcl_UniChar ch;
     char buf[4];
+#if TCL_UTF_MAX == 4
+    int ch;
+
+    TkUtfToUniChar32(showChar, &ch);
+#else
+    Tcl_UniChar ch;
 
     Tcl_UtfToUniChar(showChar, &ch);
+#endif
     size = Tcl_UniCharToUtf(ch, buf);
     p = displayString = ckalloc(numChars * size + 1);
 
@@ -406,7 +412,11 @@ ExpandPercents(
     int number, length;
     const char *string;
     int stringLength;
+#if TCL_UTF_MAX == 4
+    int ch;
+#else
     Tcl_UniChar ch;
+#endif
     char numStorage[2*TCL_INTEGER_SPACE];
 
     while (*template) {
@@ -430,7 +440,11 @@ ExpandPercents(
 	 */
 	++template; /* skip over % */
 	if (*template != '\0') {
+#if TCL_UTF_MAX == 4
+	    template += TkUtfToUniChar32(template, &ch);
+#else
 	    template += Tcl_UtfToUniChar(template, &ch);
+#endif
 	} else {
 	    ch = '%';
 	}
