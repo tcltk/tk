@@ -7581,8 +7581,8 @@ TkTextCharLayoutProc(
 
     if (bytesThatFit < maxBytes) {
 	if ((bytesThatFit == 0) && noCharsYet) {
-	    Tcl_UniChar ch;
-	    int chLen = Tcl_UtfToUniChar(p, &ch);
+	    int ch;
+	    int chLen = TkUtfToUniChar2(p, &ch);
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,

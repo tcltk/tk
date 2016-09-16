@@ -113,6 +113,7 @@ TkpGetString(
 
 	Tcl_DStringAppend(dsPtr, buf, len);
     } else if (keyEv->send_event == -3) {
+
 	char buf[XMaxTransChars];
 	int len;
 
@@ -121,7 +122,7 @@ TkpGetString(
 	 */
 
 	len = Tcl_UniCharToUtf(keyEv->keycode, buf);
-	if ((keyEv->keycode <= 0xffff) || (len > 3)) {
+	if ((keyEv->keycode <= 0xffff) || (len == XMaxTransChars)) {
 	    Tcl_DStringAppend(dsPtr, buf, len);
 	} else {
 	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) >> 10) | 0xd800, buf);
