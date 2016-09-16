@@ -1192,6 +1192,108 @@ TkSendVirtualEvent(
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
+
+#if TCL_UTF_MAX == 4
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfToUniChar32 --
+ *
+ *	Copied from Tcl_UtfToUniChar but using int instead of Tcl_UniChar!
+ *
+ *	Extract the Tcl_UniChar represented by the UTF-8 string. Bad UTF-8
+ *	sequences are converted to valid Tcl_UniChars and processing
+ *	continues. Equivalent to Plan 9 chartorune().
+ *
+ *	The caller must ensure that the source buffer is long enough that this
+ *	routine does not run off the end and dereference non-existent memory
+ *	looking for trail bytes. If the source buffer is known to be '\0'
+ *	terminated, this cannot happen. Otherwise, the caller should call
+ *	Tcl_UtfCharComplete() before calling this routine to ensure that
+ *	enough bytes remain in the string.
+ *
+ * Results:
+ *	*chPtr is filled with the Tcl_UniChar, and the return value is the
+ *	number of bytes from the UTF-8 string that were consumed.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkUtfToUniChar32(
+    const char *src,	/* The UTF-8 string. */
+    int *chPtr)		/* Filled with the Tcl_UniChar represented by
+			 * the UTF-8 string. */
+{
+    int byte;
+
+    /*
+     * Unroll 1 to 3 byte UTF-8 sequences, use loop to handle longer ones.
+     */
+
+    byte = *((unsigned char *) src);
+    if (byte < 0xC0) {
+	/*
+	 * Handles properly formed UTF-8 characters between 0x01 and 0x7F.
+	 * Also treats \0 and naked trail bytes 0x80 to 0xBF as valid
+	 * characters representing themselves.
+	 */
+
+	*chPtr = byte;
+	return 1;
+    } else if (byte < 0xE0) {
+	if ((src[1] & 0xC0) == 0x80) {
+	    /*
+	     * Two-byte-character lead-byte followed by a trail-byte.
+	     */
+
+	    *chPtr = ((byte & 0x1F) << 6) | (src[1] & 0x3F);
+	    return 2;
+	}
+
+	/*
+	 * A two-byte-character lead-byte not followed by trail-byte
+	 * represents itself.
+	 */
+    } else if (byte < 0xF0) {
+	if (((src[1] & 0xC0) == 0x80) && ((src[2] & 0xC0) == 0x80)) {
+	    /*
+	     * Three-byte-character lead byte followed by two trail bytes.
+	     */
+
+	    *chPtr = ((byte & 0x0F) << 12)
+		    | ((src[1] & 0x3F) << 6) | (src[2] & 0x3F);
+	    return 3;
+	}
+
+	/*
+	 * A three-byte-character lead-byte not followed by two trail-bytes
+	 * represents itself.
+	 */
+    } else if (byte < 0xF8) {
+	if (((src[1] & 0xC0) == 0x80) && ((src[2] & 0xC0) == 0x80) && ((src[3] & 0xC0) == 0x80)) {
+	    /*
+	     * Four-byte-character lead byte followed by three trail bytes.
+	     */
+
+	    *chPtr = ((byte & 0x0E) << 18) | ((src[1] & 0x3F) << 12)
+		    | ((src[2] & 0x3F) << 6) | (src[3] & 0x3F);
+	    return 4;
+	}
+
+	/*
+	 * A three-byte-character lead-byte not followed by two trail-bytes
+	 * represents itself.
+	 */
+    }
+
+    *chPtr = byte;
+    return 1;
+}
+#endif
 /*
  * Local Variables:
  * mode: c

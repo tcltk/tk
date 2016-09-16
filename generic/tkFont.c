@@ -497,7 +497,11 @@ Tk_FontObjCmd(
 	const char *s;
 	Tk_Font tkfont;
 	Tcl_Obj *optPtr, *charPtr, *resultPtr;
+#if TCL_UTF_MAX == 4
 	int uniChar = 0;
+#else
+	Tcl_UniChar uniChar = 0;
+#endif
 	const TkFontAttributes *faPtr;
 	TkFontAttributes fa;
 
@@ -562,6 +566,10 @@ Tk_FontObjCmd(
 	 */
 
 	if (charPtr != NULL) {
+#if TCL_UTF_MAX == 4
+	    Tcl_UniChar *ucPtr;
+#endif
+
 	    if (Tcl_GetCharLength(charPtr) != 1) {
 		resultPtr = Tcl_NewStringObj(
 			"expected a single character but got \"", -1);
@@ -572,7 +580,18 @@ Tk_FontObjCmd(
 		Tcl_SetErrorCode(interp, "TK", "VALUE", "FONT_SAMPLE", NULL);
 		return TCL_ERROR;
 	    }
+#if TCL_UTF_MAX == 4
+	    ucPtr = Tcl_GetUnicodeFromObj(charPtr, NULL);
+	    uniChar = *ucPtr;
+	    if (((uniChar & 0xFC00) == 0xD800) && (ucPtr[1] != 0x000)) {
+		if ((ucPtr[1] & 0xFC00) == 0xDC00) {
+		    uniChar = ((uniChar & 0x3FF) << 10) + (ucPtr[1] & 0x3FF);
+		    uniChar += 0x10000;
+		}
+	    }
+#else
 	    uniChar = Tcl_GetUniChar(charPtr, 0);
+#endif
 	}
 
 	/*
@@ -1694,7 +1713,11 @@ Tk_PostscriptFontName(
     } else if (strcasecmp(family, "ZapfDingbats") == 0) {
 	family = "ZapfDingbats";
     } else {
+#if TCL_UTF_MAX == 4
+	int ch;
+#else
 	Tcl_UniChar ch;
+#endif
 
 	/*
 	 * Inline, capitalize the first letter of each word, lowercase the
@@ -1712,7 +1735,11 @@ Tk_PostscriptFontName(
 		src++;
 		upper = 1;
 	    }
+#if TCL_UTF_MAX == 4
+	    src += TkUtfToUniChar32(src, &ch);
+#else
 	    src += Tcl_UtfToUniChar(src, &ch);
+#endif
 	    if (upper) {
 		ch = (Tcl_UniChar) Tcl_UniCharToUpper(ch);
 		upper = 0;
@@ -3249,7 +3276,11 @@ Tk_TextLayoutToPostscript(
     int i, j, len;
     const char *p, *glyphname;
     char uindex[5], c, *ps;
+#if TCL_UTF_MAX == 4
+    int ch;
+#else
     Tcl_UniChar ch;
+#endif
 
     Tcl_AppendToObj(psObj, "[(", -1);
     for (i = 0; i < layoutPtr->numChunks; i++, chunkPtr++) {
@@ -3272,7 +3303,11 @@ Tk_TextLayoutToPostscript(
 	     * international postscript fonts.
 	     */
 
+#if TCL_UTF_MAX == 4
+	    p += TkUtfToUniChar32(p, &ch);
+#else
 	    p += Tcl_UtfToUniChar(p, &ch);
+#endif
 	    if ((ch == '(') || (ch == ')') || (ch == '\\') || (ch < 0x20)) {
 		/*
 		 * Tricky point: the "03" is necessary in the sprintf below,
@@ -3298,6 +3333,11 @@ Tk_TextLayoutToPostscript(
 	     * use the full glyph name.
 	     */
 
+#if TCL_UTF_MAX > 3
+	    if (ch > 0xffff) {
+		goto noMapping;
+	    }
+#endif
 	    sprintf(uindex, "%04X", ch);		/* endianness? */
 	    glyphname = Tcl_GetVar2(interp, "::tk::psglyphs", uindex, 0);
 	    if (glyphname) {
@@ -3318,6 +3358,7 @@ Tk_TextLayoutToPostscript(
 		 * No known mapping for the character into the space of
 		 * PostScript glyphs. Ignore it. :-(
 		 */
+noMapping:	;
 
 #ifdef TK_DEBUG_POSTSCRIPT_OUTPUT
 		fprintf(stderr, "Warning: no mapping to PostScript "

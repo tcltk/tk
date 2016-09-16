@@ -35,9 +35,13 @@ static const char *const encodingList[] = {
  * family": the foundry, face name, and charset.
  */
 
+#if TCL_UTF_MAX > 3
+#define FONTMAP_SHIFT		12
+#define FONTMAP_PAGES		(1 << (21 - FONTMAP_SHIFT))
+#else
 #define FONTMAP_SHIFT		10
-
 #define FONTMAP_PAGES		(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
+#endif
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
 
 typedef struct FontFamily {
