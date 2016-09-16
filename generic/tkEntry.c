@@ -1926,7 +1926,6 @@ EntryComputeGeometry(
      */
 
     if (entryPtr->showChar != NULL) {
-	Tcl_UniChar ch;
 	char buf[4];
 	int size;
 
@@ -1936,8 +1935,15 @@ EntryComputeGeometry(
 	 * characters might end up looking like one valid UTF character in the
 	 * resulting string.
 	 */
+#if TCL_UTF_MAX == 4
+	int ch;
+
+	TkUtfToUniChar32(entryPtr->showChar, &ch);
+#else
+	Tcl_UniChar ch;
 
 	Tcl_UtfToUniChar(entryPtr->showChar, &ch);
+#endif
 	size = Tcl_UniCharToUtf(ch, buf);
 
 	entryPtr->numDisplayBytes = entryPtr->numChars * size;
@@ -3414,7 +3420,11 @@ ExpandPercents(
 				 * list element. */
     int number, length;
     register const char *string;
+#if TCL_UTF_MAX == 4
+    int ch;
+#else
     Tcl_UniChar ch;
+#endif
     char numStorage[2*TCL_INTEGER_SPACE];
 
     while (1) {
@@ -3447,7 +3457,11 @@ ExpandPercents(
 
 	before++; /* skip over % */
 	if (*before != '\0') {
+#if TCL_UTF_MAX == 4
+	    before += TkUtfToUniChar32(before, &ch);
+#else
 	    before += Tcl_UtfToUniChar(before, &ch);
+#endif
 	} else {
 	    ch = '%';
 	}

@@ -4508,7 +4508,11 @@ TkTextGetTabs(
     Tcl_Obj **objv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
+#if TCL_UTF_MAX == 4
+    int ch;
+#else
     Tcl_UniChar ch;
+#endif
     double prevStop, lastStop;
     /*
      * Map these strings to TkTextTabAlign values.
@@ -4615,7 +4619,11 @@ TkTextGetTabs(
 	 * There may be a more efficient way of getting this.
 	 */
 
+#if TCL_UTF_MAX == 4
+	TkUtfToUniChar32(Tcl_GetString(objv[i+1]), &ch);
+#else
 	Tcl_UtfToUniChar(Tcl_GetString(objv[i+1]), &ch);
+#endif
 	if (!Tcl_UniCharIsAlpha(ch)) {
 	    continue;
 	}
