@@ -2300,7 +2300,7 @@ StartEnd(
 	    if (segPtr->typePtr == &tkTextCharType) {
 		int ch;
 
-		chSize = TkUtfToUniChar2(segPtr->body.chars + offset, &ch);
+		chSize = TkUtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
@@ -2345,7 +2345,7 @@ StartEnd(
 	    if (segPtr->typePtr == &tkTextCharType) {
 
 		int ch;
-		TkUtfToUniChar2(segPtr->body.chars + offset, &ch);
+		TkUtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
