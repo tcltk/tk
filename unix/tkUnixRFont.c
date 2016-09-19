@@ -670,7 +670,7 @@ Tk_MeasureChars(
     while (numBytes > 0) {
 	int unichar;
 
-	clen = TkUtfToUniChar2(source, &unichar);
+	clen = TkUtfToUniChar(source, &unichar);
 	c = (FcChar32) unichar;
 
 	if (clen <= 0) {
