@@ -405,7 +405,7 @@ ControlUtfProc(
 {
     const char *srcStart, *srcEnd;
     char *dstStart, *dstEnd;
-    Tcl_UniChar ch;
+    int ch;
     int result;
     static char hexChars[] = "0123456789abcdef";
     static char mapChars[] = {
@@ -426,9 +426,9 @@ ControlUtfProc(
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
 	}
-	src += Tcl_UtfToUniChar(src, &ch);
+	src += TkUtfToUniChar(src, &ch);
 	dst[0] = '\\';
-	if ((ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
+	if (((size_t) ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
 	    dst[1] = mapChars[ch];
 	    dst += 2;
 	} else if (ch < 256) {
@@ -436,12 +436,20 @@ ControlUtfProc(
 	    dst[2] = hexChars[(ch >> 4) & 0xf];
 	    dst[3] = hexChars[ch & 0xf];
 	    dst += 4;
-	} else {
+	} else if (ch < 0x10000) {
 	    dst[1] = 'u';
 	    dst[2] = hexChars[(ch >> 12) & 0xf];
 	    dst[3] = hexChars[(ch >> 8) & 0xf];
 	    dst[4] = hexChars[(ch >> 4) & 0xf];
 	    dst[5] = hexChars[ch & 0xf];
+	    dst += 6;
+	} else {
+	    /* TODO we can do better here */
+	    dst[1] = 'u';
+	    dst[2] = 'f';
+	    dst[3] = 'f';
+	    dst[4] = 'f';
+	    dst[5] = 'd';
 	    dst += 6;
 	}
     }
@@ -1027,7 +1035,7 @@ Tk_MeasureChars(
 	curByte = 0;
     } else if (maxLength < 0) {
 	const char *p, *end, *next;
-	Tcl_UniChar ch;
+	int ch;
 	SubFont *thisSubFontPtr;
 	FontFamily *familyPtr;
 	Tcl_DString runString;
@@ -1043,7 +1051,7 @@ Tk_MeasureChars(
 	curX = 0;
 	end = source + numBytes;
 	for (p = source; p < end; ) {
-	    next = p + Tcl_UtfToUniChar(p, &ch);
+	    next = p + TkUtfToUniChar(p, &ch);
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;

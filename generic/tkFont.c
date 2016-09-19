@@ -563,7 +563,7 @@ Tk_FontObjCmd(
 
 	if (charPtr != NULL) {
 	    const char *string = Tcl_GetString(charPtr);
-	    int len = TkUtfToUniChar2(string, &uniChar);
+	    int len = TkUtfToUniChar(string, &uniChar);
 
 	    if (len != charPtr->length) {
 		resultPtr = Tcl_NewStringObj(
@@ -1714,7 +1714,7 @@ Tk_PostscriptFontName(
 		src++;
 		upper = 1;
 	    }
-	    src += TkUtfToUniChar2(src, &ch);
+	    src += TkUtfToUniChar(src, &ch);
 	    if (upper) {
 		ch = (Tcl_UniChar) Tcl_UniCharToUpper(ch);
 		upper = 0;
@@ -3274,7 +3274,7 @@ Tk_TextLayoutToPostscript(
 	     * international postscript fonts.
 	     */
 
-	    p += TkUtfToUniChar2(p, &ch);
+	    p += TkUtfToUniChar(p, &ch);
 	    if ((ch == '(') || (ch == ')') || (ch == '\\') || (ch < 0x20)) {
 		/*
 		 * Tricky point: the "03" is necessary in the sprintf below,
