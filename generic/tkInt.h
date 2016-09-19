@@ -1196,7 +1196,7 @@ MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 			    const char *string, int numBytes, int x, int y,
 			    int firstByte, int lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
-			    Tcl_UniChar c, struct TkFontAttributes *faPtr);
+			    int c, struct TkFontAttributes *faPtr);
 MODULE_SCOPE Tcl_Obj *	TkNewWindowObj(Tk_Window tkwin);
 MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);
@@ -1230,6 +1230,14 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #endif
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
+#endif
+
+#if TCL_UTF_MAX > 4
+#   define TkUtfToUniChar Tcl_UtfToUniChar
+#   define TkUniCharToUtf Tcl_UniCharToUtf
+#else
+    MODULE_SCOPE int TkUtfToUniChar(const char *, int *);
+    MODULE_SCOPE int TkUniCharToUtf(int, char *);
 #endif
 
 /*
