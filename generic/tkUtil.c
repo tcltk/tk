@@ -1197,7 +1197,7 @@ TkSendVirtualEvent(
 /*
  *---------------------------------------------------------------------------
  *
- * TkUtfToUniChar2 --
+ * TkUtfToUniChar --
  *
  *	Almost the same as Tcl_UtfToUniChar but using int instead of Tcl_UniChar.
  *	This function is capable of collapsing a upper/lower pair to a single
@@ -1214,7 +1214,7 @@ TkSendVirtualEvent(
  */
 
 int
-TkUtfToUniChar2(
+TkUtfToUniChar(
     const char *src,	/* The UTF-8 string. */
     int *chPtr)		/* Filled with the Tcl_UniChar represented by
 			 * the UTF-8 string. */
@@ -1238,6 +1238,39 @@ TkUtfToUniChar2(
     }
     return len;
 }
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUniCharToUtf --
+ *
+ *	Almost the same as Tcl_UniCharToUtf but producing surrogates if
+ *	TCL_UTF_MAX==3.
+ *
+ * Results:
+ *	*buf is filled with the UTF-8 string, and the return value is the
+ *	number of bytes produced.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int TkUniCharToUtf(int ch, char *buf)
+{
+    int size = Tcl_UniCharToUtf(ch, buf);
+    if ((ch > 0xffff) && (size < 4)) {
+	/* Hey, this is wrong, we must be running TCL_UTF_MAX==3
+	 * The best thing we can do is spit out 2 surrogates */
+	ch -= 0x10000;
+	size = Tcl_UniCharToUtf(((ch >> 10) | 0xd800), buf);
+	size += Tcl_UniCharToUtf(((ch & 0x3ff) | 0xdc00), buf+size);
+    }
+    return size;
+}
+
+
 #endif
 /*
  * Local Variables:

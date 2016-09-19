@@ -858,7 +858,7 @@ Tk_MeasureChars(
     start = source;
     end = start + numBytes;
     for (p = start; p < end; ) {
-	next = p + TkUtfToUniChar2(p, &ch);
+	next = p + TkUtfToUniChar(p, &ch);
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	if (thisSubFontPtr != lastSubFontPtr) {
 	    familyPtr = lastSubFontPtr->familyPtr;
@@ -920,7 +920,7 @@ Tk_MeasureChars(
 	familyPtr = lastSubFontPtr->familyPtr;
 	Tcl_DStringInit(&runString);
 	for (p = start; p < end; ) {
-	    next = p + TkUtfToUniChar2(p, &ch);
+	    next = p + TkUtfToUniChar(p, &ch);
 	    Tcl_UtfToExternal(NULL, familyPtr->encoding, p,
 		    (int) (next - p), 0, NULL, buf, sizeof(buf), NULL,
 		    &dstWrote, NULL);
@@ -975,7 +975,7 @@ Tk_MeasureChars(
 	p = source;
 	ch = ' ';
 	while (p < end) {
-	    next = p + TkUtfToUniChar2(p, &ch2);
+	    next = p + TkUtfToUniChar(p, &ch2);
 	    if ((ch != ' ') && (ch2 == ' ')) {
 		lastWordBreak = p;
 	    }
@@ -1457,7 +1457,7 @@ MultiFontTextOut(
 
     end = source + numBytes;
     for (p = source; p < end; ) {
-	next = p + TkUtfToUniChar2(p, &ch);
+	next = p + TkUtfToUniChar(p, &ch);
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	if (thisSubFontPtr != lastSubFontPtr) {
 	    if (p > source) {

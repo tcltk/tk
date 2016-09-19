@@ -1926,8 +1926,8 @@ EntryComputeGeometry(
      */
 
     if (entryPtr->showChar != NULL) {
-	Tcl_UniChar ch;
-	char buf[4];
+	int ch;
+	char buf[6];
 	int size;
 
 	/*
@@ -1937,8 +1937,8 @@ EntryComputeGeometry(
 	 * resulting string.
 	 */
 
-	Tcl_UtfToUniChar(entryPtr->showChar, &ch);
-	size = Tcl_UniCharToUtf(ch, buf);
+	TkUtfToUniChar(entryPtr->showChar, &ch);
+	size = TkUniCharToUtf(ch, buf);
 
 	entryPtr->numDisplayBytes = entryPtr->numChars * size;
 	p = ckalloc(entryPtr->numDisplayBytes + 1);
