@@ -615,7 +615,7 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    Tcl_UniChar c,		/* Character of interest */
+    int c,			/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
@@ -668,9 +668,9 @@ Tk_MeasureChars(
     curByte = 0;
     sawNonSpace = 0;
     while (numBytes > 0) {
-	Tcl_UniChar unichar;
+	int unichar;
 
-	clen = Tcl_UtfToUniChar(source, &unichar);
+	clen = TkUtfToUniChar(source, &unichar);
 	c = (FcChar32) unichar;
 
 	if (clen <= 0) {

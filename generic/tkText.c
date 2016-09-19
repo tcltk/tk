@@ -4459,7 +4459,7 @@ TkTextGetTabs(
     Tcl_Obj **objv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
-    Tcl_UniChar ch;
+    int ch;
     double prevStop, lastStop;
     /*
      * Map these strings to TkTextTabAlign values.
@@ -4566,7 +4566,7 @@ TkTextGetTabs(
 	 * There may be a more efficient way of getting this.
 	 */
 
-	Tcl_UtfToUniChar(Tcl_GetString(objv[i+1]), &ch);
+	TkUtfToUniChar(Tcl_GetString(objv[i+1]), &ch);
 	if (!Tcl_UniCharIsAlpha(ch)) {
 	    continue;
 	}
@@ -5880,7 +5880,7 @@ SearchCore(
 
 	    CLANG_ASSERT(pattern);
 	    do {
-		Tcl_UniChar ch;
+		int ch;
 		const char *p;
 		int lastFullLine = lastOffset;
 
@@ -6110,7 +6110,7 @@ SearchCore(
 			}
 		    } else {
 			firstOffset = p - startOfLine +
-				Tcl_UtfToUniChar(startOfLine+matchOffset,&ch);
+				TkUtfToUniChar(startOfLine+matchOffset,&ch);
 		    }
 		}
 	    } while (searchSpecPtr->all);
