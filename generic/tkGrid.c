@@ -1733,12 +1733,14 @@ ArrangeGrid(
 
     /*
      * If the master has no slaves anymore, then don't do anything at all:
-     * just leave the master's size as-is. Otherwise there is no way to
-     * "relinquish" control over the master so another geometry manager can
-     * take over.
+     * just leave the master's size as-is, but signal the master with the
+     * <<GeometryManager>> virtual event.
+     * Otherwise there is no way to "relinquish" control over the master
+     * so another geometry manager can take over.
      */
 
     if (masterPtr->slavePtr == NULL) {
+        TkSendVirtualEvent(masterPtr->tkwin, "GeometryManager", NULL);
 	return;
     }
 
