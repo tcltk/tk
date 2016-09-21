@@ -15,6 +15,9 @@ namespace eval ttk::theme::default {
 	-darker 	"#c3c3c3"
 	-disabledfg	"#a3a3a3"
 	-indicator	"#4a6984"
+	-disabledindicator	"#a3a3a3"
+	-altindicator "#9fbdd8"
+	-disabledaltindicator "#c0c0c0"
     }
 
     ttk::style theme settings default {
@@ -45,12 +48,20 @@ namespace eval ttk::theme::default {
 	ttk::style configure TCheckbutton \
 	    -indicatorcolor "#ffffff" -indicatorrelief sunken -padding 1
 	ttk::style map TCheckbutton -indicatorcolor \
-	    [list pressed $colors(-activebg)  selected $colors(-indicator)]
+	    [list pressed $colors(-activebg)  \
+			{!disabled selected} $colors(-indicator) {disabled selected} $colors(-disabledindicator) \
+			{!disabled alternate} $colors(-altindicator) {disabled alternate} $colors(-disabledaltindicator)]
+	ttk::style map TCheckbutton -indicatorrelief \
+	    [list alternate raised]
 
 	ttk::style configure TRadiobutton \
 	    -indicatorcolor "#ffffff" -indicatorrelief sunken -padding 1
 	ttk::style map TRadiobutton -indicatorcolor \
-	    [list pressed $colors(-activebg)  selected $colors(-indicator)]
+	    [list pressed $colors(-activebg)  \
+			{!disabled selected} $colors(-indicator) {disabled selected} $colors(-disabledindicator) \
+			{!disabled alternate} $colors(-altindicator) {disabled alternate} $colors(-disabledaltindicator)]
+	ttk::style map TRadiobutton -indicatorrelief \
+	    [list alternate raised]
 
 	ttk::style configure TMenubutton \
 	    -relief raised -padding "10 3"
