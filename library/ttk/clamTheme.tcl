@@ -17,6 +17,8 @@ namespace eval ttk::theme::clam {
 	-lightest 	"#ffffff"
 	-selectbg	"#4a6984"
 	-selectfg	"#ffffff"
+	-altindicator "#9fbdd8"
+	-disabledaltindicator "#c0c0c0"
     }
 
     ttk::style theme settings clam {
@@ -80,9 +82,11 @@ namespace eval ttk::theme::clam {
 	    -indicatormargin {1 1 4 1} \
 	    -padding 2 ;
 	ttk::style map TCheckbutton -indicatorbackground \
-	    [list  disabled $colors(-frame)  pressed $colors(-frame)]
+	    [list  disabled $colors(-frame)  pressed $colors(-frame) \
+			{!disabled alternate} $colors(-altindicator) {disabled alternate} $colors(-disabledaltindicator)]
 	ttk::style map TRadiobutton -indicatorbackground \
-	    [list  disabled $colors(-frame)  pressed $colors(-frame)]
+	    [list  disabled $colors(-frame)  pressed $colors(-frame) \
+			{!disabled alternate} $colors(-altindicator) {disabled alternate} $colors(-disabledaltindicator)]
 
 	ttk::style configure TMenubutton \
 	    -width -11 -padding 5 -relief raised
