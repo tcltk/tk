@@ -2780,9 +2780,7 @@ Unlink(
      */
 
     if ((masterPtr->slavePtr == NULL) && (masterPtr->flags & ALLOCED_MASTER)) {
-	if (!(masterPtr->flags & DONT_PROPAGATE)) {
-	    Tk_GeometryRequest(masterPtr->tkwin, 0, 0);
-	}
+	Tk_GeometryRequest(masterPtr->tkwin, 0, 0);
 	TkFreeGeometryMaster(masterPtr->tkwin, "grid");
 	masterPtr->flags &= ~ALLOCED_MASTER;
     }
@@ -3510,6 +3508,7 @@ ConfigureSlaves(
      */
 
     if (masterPtr->slavePtr == NULL && masterPtr->flags & ALLOCED_MASTER) {
+	Tk_GeometryRequest(masterPtr->tkwin, 0, 0);
 	TkFreeGeometryMaster(masterPtr->tkwin, "grid");
 	masterPtr->flags &= ~ALLOCED_MASTER;
     }
