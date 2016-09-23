@@ -82,6 +82,9 @@ typedef struct ThreadSpecificData {
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
     int surrogateBuffer;	/* Buffer for first of surrogate pair. */
+    int gotKeyDown;         /* If 1, we are handling the WM_KEYDOWN or WM_SYSKEYDOWN message */
+    XEvent event;           /* partial event */
+    char leadByte;	        /* lead byte. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -92,7 +95,6 @@ static Tcl_ThreadDataKey dataKey;
 static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
-static void 		GetTranslatedKey(XKeyEvent *xkey);
 static void		UpdateInputLanguage(int charset);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
@@ -1153,13 +1155,11 @@ GenerateXEvent(
 	     * that the Windows extension xkey.trans_chars is filled with the
 	     * MBCS characters that came from the TranslateMessage call.
 	     */
-
-	    event.type = KeyPress;
-	    event.xany.send_event = -1;
-	    event.xkey.keycode = wParam;
-	    GetTranslatedKey(&event.xkey);
-	    break;
-
+	    tsdPtr->gotKeyDown = 1;
+	    memcpy(&tsdPtr->event, &event, sizeof(XEvent));
+	    tsdPtr->event.type = KeyPress;
+	    tsdPtr->event.xkey.nbytes = 0;
+	    return;
 	case WM_SYSKEYUP:
 	case WM_KEYUP:
 	    /*
@@ -1173,6 +1173,7 @@ GenerateXEvent(
 	    event.xkey.nbytes = 0;
 	    break;
 
+	/* case WM_SYSCHAR: TODO: how about this one? */
 	case WM_CHAR:
 	    /*
 	     * Synthesize both a KeyPress and a KeyRelease. Strings generated
@@ -1207,7 +1208,47 @@ GenerateXEvent(
 	    event.type = KeyPress;
 	    event.xany.send_event = -1;
 	    event.xkey.keycode = 0;
-	    if ((int)wParam & 0xff00) {
+	    if (tsdPtr->gotKeyDown) {
+	    int len;
+		WCHAR buf[4];
+		if((int) wParam & 0xff00) {
+		    /*
+		     * Some "addon" input devices, such as the popular PenPower
+		     * Chinese writing pad, generate 16 bit values in WM_CHAR messages
+		     * (instead of passing them in two separate WM_CHAR messages
+		     * containing two 8-bit values.
+		     */
+		    memcpy(&event, &tsdPtr->event, sizeof(XEvent));
+		    event.xany.send_event = -3;
+		    event.xkey.keycode = (int) wParam;
+		} else {
+		    tsdPtr->event.xkey.trans_chars[tsdPtr->event.xkey.nbytes++] = (char) wParam;
+		    len = MultiByteToWideChar(keyInputCharset, MB_ERR_INVALID_CHARS, tsdPtr->event.xkey.trans_chars,
+			    tsdPtr->event.xkey.nbytes, buf, 4);
+		    if ( len == 0) {
+			/* Character is not complete yet, so wait for next WM_CHAR */
+			return;
+		    }
+		    memcpy(&event, &tsdPtr->event, sizeof(XEvent));
+		    event.xany.send_event = -3;
+		    if (len == 2) {
+			/* must be high/low surrogate characters */
+			event.xkey.keycode = ((buf[0] & 0x3ff) << 10) + (buf[1] & 0x3ff) + 0x10000;
+		    } else {
+			event.xkey.keycode = buf[0];
+		    }
+		    if ((message == WM_CHAR) && (lParam & 0x20000000)) {
+			event.xkey.state = 0;
+		    }
+		}
+
+		tsdPtr->gotKeyDown = 0;
+	    } else if (tsdPtr->leadByte) {
+		event.xkey.nbytes = 2;
+		event.xkey.trans_chars[0] = (char) tsdPtr->leadByte;
+		event.xkey.trans_chars[1] = (char) wParam;
+		tsdPtr->leadByte = 0;
+	    } else if ((int)wParam & 0xff00) {
 		int ch1 = wParam & 0xffff;
 
 		if ((ch1 & 0xfc00) == 0xd800) {
@@ -1227,14 +1268,8 @@ GenerateXEvent(
 		event.xkey.trans_chars[0] = (char) wParam;
 
 		if (IsDBCSLeadByte((BYTE) wParam)) {
-		    MSG msg;
-
-		    if ((PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0)
-			    && (msg.message == WM_CHAR)) {
-			GetMessage(&msg, NULL, 0, 0);
-			event.xkey.nbytes = 2;
-			event.xkey.trans_chars[1] = (char) msg.wParam;
-		   }
+		    tsdPtr->leadByte = (char) wParam;
+		    return;
 		}
 	    }
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -1347,68 +1382,6 @@ GetState(
 	}
     }
     return state;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GetTranslatedKey --
- *
- *	Retrieves WM_CHAR messages that are placed on the system queue by the
- *	TranslateMessage system call and places them in the given KeyPress
- *	event.
- *
- * Results:
- *	Sets the trans_chars and nbytes member of the key event.
- *
- * Side effects:
- *	Removes any WM_CHAR messages waiting on the top of the system event
- *	queue.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-GetTranslatedKey(
-    XKeyEvent *xkey)
-{
-    MSG msg;
-
-    xkey->nbytes = 0;
-
-    while ((xkey->nbytes < XMaxTransChars)
-	    && PeekMessageA(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-	if ((msg.message != WM_CHAR) && (msg.message != WM_SYSCHAR)) {
-	    break;
-	}
-
-	GetMessageA(&msg, NULL, 0, 0);
-
-	/*
-	 * If this is a normal character message, we may need to strip off the
-	 * Alt modifier (e.g. Alt-digits). Note that we don't want to do this
-	 * for system messages, because those were presumably generated as an
-	 * Alt-char sequence (e.g. accelerator keys).
-	 */
-
-	if ((msg.message == WM_CHAR) && (msg.lParam & 0x20000000)) {
-	    xkey->state = 0;
-	}
-	xkey->trans_chars[xkey->nbytes] = (char) msg.wParam;
-	xkey->nbytes++;
-
-	if (((unsigned short) msg.wParam) > ((unsigned short) 0xff)) {
-	    /*
-	     * Some "addon" input devices, such as the popular PenPower
-	     * Chinese writing pad, generate 16 bit values in WM_CHAR messages
-	     * (instead of passing them in two separate WM_CHAR messages
-	     * containing two 8-bit values.
-	     */
-
-	    xkey->trans_chars[xkey->nbytes] = (char) (msg.wParam >> 8);
-	    xkey->nbytes ++;
-	}
-    }
 }
 
 /*
