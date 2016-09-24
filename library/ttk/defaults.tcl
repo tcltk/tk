@@ -49,8 +49,10 @@ namespace eval ttk::theme::default {
 	    -indicatorcolor "#ffffff" -indicatorrelief sunken -padding 1
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
-			{!disabled selected} $colors(-indicator) {disabled selected} $colors(-disabledindicator) \
-			{!disabled alternate} $colors(-altindicator) {disabled alternate} $colors(-disabledaltindicator)]
+			{!disabled selected} $colors(-indicator) \
+			{disabled selected} $colors(-disabledindicator) \
+			{!disabled alternate} $colors(-altindicator) \
+			{disabled alternate} $colors(-disabledaltindicator)]
 	ttk::style map TCheckbutton -indicatorrelief \
 	    [list alternate raised]
 
@@ -58,8 +60,10 @@ namespace eval ttk::theme::default {
 	    -indicatorcolor "#ffffff" -indicatorrelief sunken -padding 1
 	ttk::style map TRadiobutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
-			{!disabled selected} $colors(-indicator) {disabled selected} $colors(-disabledindicator) \
-			{!disabled alternate} $colors(-altindicator) {disabled alternate} $colors(-disabledaltindicator)]
+			{!disabled selected} $colors(-indicator) \
+			{disabled selected} $colors(-disabledindicator) \
+			{!disabled alternate} $colors(-altindicator) \
+			{disabled alternate} $colors(-disabledaltindicator)]
 	ttk::style map TRadiobutton -indicatorrelief \
 	    [list alternate raised]
 
