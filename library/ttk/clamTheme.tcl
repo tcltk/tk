@@ -7,18 +7,18 @@
 namespace eval ttk::theme::clam {
     variable colors 
     array set colors {
-	-disabledfg	"#999999"
-	-frame  	"#dcdad5"
-	-window  	"#ffffff"
-	-dark		"#cfcdc8"
-	-darker 	"#bab5ab"
-	-darkest	"#9e9a91"
-	-lighter	"#eeebe7"
-	-lightest 	"#ffffff"
-	-selectbg	"#4a6984"
-	-selectfg	"#ffffff"
-	-altindicator "#9fbdd8"
-	-disabledaltindicator "#c0c0c0"
+	-disabledfg		"#999999"
+	-frame  		"#dcdad5"
+	-window  		"#ffffff"
+	-dark			"#cfcdc8"
+	-darker 		"#bab5ab"
+	-darkest		"#9e9a91"
+	-lighter		"#eeebe7"
+	-lightest 		"#ffffff"
+	-selectbg		"#4a6984"
+	-selectfg		"#ffffff"
+	-altindicator		"#9fbdd8"
+	-disabledaltindicator	"#c0c0c0"
     }
 
     ttk::style theme settings clam {

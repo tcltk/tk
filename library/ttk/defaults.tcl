@@ -5,19 +5,19 @@
 namespace eval ttk::theme::default {
     variable colors
     array set colors {
-	-frame		"#d9d9d9"
-	-foreground	"#000000"
-	-window		"#ffffff"
-	-text   	"#000000"
-	-activebg	"#ececec"
-	-selectbg	"#4a6984"
-	-selectfg	"#ffffff"
-	-darker 	"#c3c3c3"
-	-disabledfg	"#a3a3a3"
-	-indicator	"#4a6984"
+	-frame			"#d9d9d9"
+	-foreground		"#000000"
+	-window			"#ffffff"
+	-text   		"#000000"
+	-activebg		"#ececec"
+	-selectbg		"#4a6984"
+	-selectfg		"#ffffff"
+	-darker 		"#c3c3c3"
+	-disabledfg		"#a3a3a3"
+	-indicator		"#4a6984"
 	-disabledindicator	"#a3a3a3"
-	-altindicator "#9fbdd8"
-	-disabledaltindicator "#c0c0c0"
+	-altindicator		"#9fbdd8"
+	-disabledaltindicator	"#c0c0c0"
     }
 
     ttk::style theme settings default {
