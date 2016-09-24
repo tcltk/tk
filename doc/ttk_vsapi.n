@@ -61,7 +61,7 @@ corresponding Visual Styles API state value.
 This permits the element appearance to respond to changes in the
 widget state such as becoming active or being pressed. The list should
 be as described for the \fBttk::style map\fR command but note that the
-last pair in the list should be the default state and is typically and
+last pair in the list should be the default state and is typically an
 empty list and 1. Unfortunately all the Visual Styles parts have
 different state values and these must be looked up either in the
 Microsoft documentation or more likely in the header files. The
