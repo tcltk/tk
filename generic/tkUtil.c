@@ -1200,8 +1200,8 @@ TkSendVirtualEvent(
  * TkUtfToUniChar --
  *
  *	Almost the same as Tcl_UtfToUniChar but using int instead of Tcl_UniChar.
- *	This function is capable of collapsing a upper/lower pair to a single
- *	unicode character. So, up to 6 bytes (two UTF-8 characters) might be read.
+ *	This function is capable of collapsing a upper/lower surrogate pair to a
+ *	single unicode character. So, up to 6 bytes might be consumed.
  *
  * Results:
  *	*chPtr is filled with the Tcl_UniChar, and the return value is the
@@ -1224,11 +1224,11 @@ TkUtfToUniChar(
     int len = Tcl_UtfToUniChar(src, &uniChar);
     if ((uniChar & 0xfc00) == 0xd800) {
 	Tcl_UniChar high = uniChar;
-	/* This can only happen when Tcl is compiled with TCL_UTF_MAX=4,
-	 * or when a high surrogate character is detected */
+	/* This can only happen if Tcl is compiled with TCL_UTF_MAX=4,
+	 * or when a high surrogate character is detected in UTF-8 form */
 	int len2 = Tcl_UtfToUniChar(src+len, &uniChar);
 	if ((uniChar & 0xfc00) == 0xdc00) {
-	    *chPtr = ((high & 0x3ff) << 10) | (uniChar & 0x3ff) | 0x10000;
+	    *chPtr = (((high & 0x3ff) << 10) | (uniChar & 0x3ff)) + 0x10000;
 	    len += len2;
 	} else {
 	    *chPtr = high;
@@ -1245,7 +1245,7 @@ TkUtfToUniChar(
  * TkUniCharToUtf --
  *
  *	Almost the same as Tcl_UniCharToUtf but producing surrogates if
- *	TCL_UTF_MAX==3.
+ *	TCL_UTF_MAX==3. So, up to 6 bytes might be produced.
  *
  * Results:
  *	*buf is filled with the UTF-8 string, and the return value is the
@@ -1260,7 +1260,7 @@ TkUtfToUniChar(
 int TkUniCharToUtf(int ch, char *buf)
 {
     int size = Tcl_UniCharToUtf(ch, buf);
-    if ((ch > 0xffff) && (size < 4)) {
+    if ((ch > 0xffff) && (ch <= 0x10ffff) && (size < 4)) {
 	/* Hey, this is wrong, we must be running TCL_UTF_MAX==3
 	 * The best thing we can do is spit out 2 surrogates */
 	ch -= 0x10000;
