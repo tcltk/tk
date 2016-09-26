@@ -1668,7 +1668,9 @@ doNormalKeyEvent:
     case SDL_MOUSEWHEEL: {
 	int xstate = 0;
 	Tk_Window tkwin = NULL;
-#ifndef ANDROID
+#ifdef ANDROID
+	int translate_zoom = (info->enabled & TRANSLATE_ZOOM) ? 1 : 0;
+#endif
 	SDL_Keymod mod;
 
 	if (translate_zoom) {
@@ -1691,7 +1693,6 @@ doNormalKeyEvent:
 		return 0;
 	    }
 	}
-#endif
 	if (SdlTkX.mouse_window != NULL) {
 	    tkwin = (Tk_Window) SdlTkX.mouse_window->tkwin;
 	}

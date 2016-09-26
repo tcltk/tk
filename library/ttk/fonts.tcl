@@ -129,7 +129,12 @@ switch -- [tk windowingsystem] {
 	    set F(fixed)  "DejaVu Sans Mono"
 	    if {[sdltk android]} {
 		set F(dpi) [expr int((25.4 * [winfo screenwidth .]) / [winfo screenmmwidth .])]
-		if {$F(dpi) < 480} {
+		if {$F(dpi) < 100} {
+		    set F(size) 11
+		    set F(ttsize) 10
+		    set F(capsize) 13
+		    set F(fixedsize) 10
+		} elseif {$F(dpi) < 480} {
 		    set F(size) 8
 		    set F(ttsize) 8
 		    set F(capsize) 8
