@@ -88,6 +88,8 @@ TkpGetString(
 				 * result. */
 {
     XKeyEvent *keyEv = &eventPtr->xkey;
+    char buf[6];
+    int len;
 
     Tcl_DStringInit(dsPtr);
     if (keyEv->send_event == -1) {
@@ -102,8 +104,6 @@ TkpGetString(
 	 */
 
 	int unichar;
-	char buf[XMaxTransChars];
-	int len;
 
 	unichar = keyEv->trans_chars[1] & 0xff;
 	unichar <<= 8;
@@ -114,22 +114,12 @@ TkpGetString(
 	Tcl_DStringAppend(dsPtr, buf, len);
     } else if (keyEv->send_event == -3) {
 
-	char buf[XMaxTransChars];
-	int len;
-
 	/*
 	 * Special case for WM_UNICHAR.
 	 */
 
-	len = Tcl_UniCharToUtf(keyEv->keycode, buf);
-	if ((keyEv->keycode <= 0xffff) || (len == XMaxTransChars)) {
-	    Tcl_DStringAppend(dsPtr, buf, len);
-	} else {
-	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) >> 10) | 0xd800, buf);
-	    Tcl_DStringAppend(dsPtr, buf, 3);
-	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) & 0x3ff) | 0xdc00, buf);
-	    Tcl_DStringAppend(dsPtr, buf, 3);
-	}
+	len = TkUniCharToUtf(keyEv->keycode, buf);
+	Tcl_DStringAppend(dsPtr, buf, len);
     } else {
 	/*
 	 * This is an event generated from generic code. It has no nchars or
@@ -140,9 +130,6 @@ TkpGetString(
 
 	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
 		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    char buf[XMaxTransChars];
-	    int len;
-
 	    len = Tcl_UniCharToUtf((Tcl_UniChar) (keysym & 255), buf);
 	    Tcl_DStringAppend(dsPtr, buf, len);
 	}
