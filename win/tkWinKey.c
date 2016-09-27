@@ -97,21 +97,6 @@ TkpGetString(
 	    Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
 		    keyEv->trans_chars, keyEv->nbytes, dsPtr);
 	}
-    } else if (keyEv->send_event == -2) {
-	/*
-	 * Special case for win2000 multi-lingal IME input. xkey.trans_chars[]
-	 * already contains a UNICODE char.
-	 */
-
-	int unichar;
-
-	unichar = keyEv->trans_chars[1] & 0xff;
-	unichar <<= 8;
-	unichar |= keyEv->trans_chars[0] & 0xff;
-
-	len = Tcl_UniCharToUtf((Tcl_UniChar) unichar, buf);
-
-	Tcl_DStringAppend(dsPtr, buf, len);
     } else if (keyEv->send_event == -3) {
 
 	/*
