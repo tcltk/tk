@@ -92,7 +92,7 @@ static Tcl_ThreadDataKey dataKey;
 static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
-static void 		GetTranslatedKey(XKeyEvent *xkey);
+static void 		GetTranslatedKey(XKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
@@ -1157,7 +1157,8 @@ GenerateXEvent(
 	    event.type = KeyPress;
 	    event.xany.send_event = -1;
 	    event.xkey.keycode = wParam;
-	    GetTranslatedKey(&event.xkey);
+	    GetTranslatedKey(&event.xkey, (message == WM_KEYDOWN) ? WM_CHAR :
+	            WM_SYSCHAR);
 	    break;
 
 	case WM_SYSKEYUP:
@@ -1229,9 +1230,10 @@ GenerateXEvent(
 		if (IsDBCSLeadByte((BYTE) wParam)) {
 		    MSG msg;
 
-		    if ((PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0)
+		    if ((PeekMessage(&msg, NULL, WM_CHAR, WM_CHAR,
+		            PM_NOREMOVE) != 0)
 			    && (msg.message == WM_CHAR)) {
-			GetMessage(&msg, NULL, 0, 0);
+			GetMessage(&msg, NULL, WM_CHAR, WM_CHAR);
 			event.xkey.nbytes = 2;
 			event.xkey.trans_chars[1] = (char) msg.wParam;
 		   }
@@ -1370,19 +1372,20 @@ GetState(
 
 static void
 GetTranslatedKey(
-    XKeyEvent *xkey)
+    XKeyEvent *xkey,
+    UINT type)
 {
     MSG msg;
 
     xkey->nbytes = 0;
 
     while ((xkey->nbytes < XMaxTransChars)
-	    && PeekMessageA(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-	if ((msg.message != WM_CHAR) && (msg.message != WM_SYSCHAR)) {
+	    && (PeekMessageA(&msg, NULL, type, type, PM_NOREMOVE) != 0)) {
+	if (msg.message != type) {
 	    break;
 	}
 
-	GetMessageA(&msg, NULL, 0, 0);
+	GetMessageA(&msg, NULL, type, type);
 
 	/*
 	 * If this is a normal character message, we may need to strip off the
@@ -1570,18 +1573,18 @@ HandleIMEComposition(
     n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
-	char *buff = ckalloc(n);
+	WCHAR *buff = (WCHAR *) ckalloc(n);
 	TkWindow *winPtr;
 	XEvent event;
 	int i;
 
-	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n);
+	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n) / 2;
 
 	/*
 	 * Set up the fields pertinent to key event.
 	 *
-	 * We set send_event to the special value of -2, so that TkpGetString
-	 * in tkWinKey.c knows that trans_chars[] already contains a UNICODE
+	 * We set send_event to the special value of -3, so that TkpGetString
+	 * in tkWinKey.c knows that keycode already contains a UNICODE
 	 * char and there's no need to do encoding conversion.
 	 *
 	 * Note that the event *must* be zeroed out first; Tk plays cunning
@@ -1592,7 +1595,7 @@ HandleIMEComposition(
 
 	memset(&event, 0, sizeof(XEvent));
 	event.xkey.serial = winPtr->display->request++;
-	event.xkey.send_event = -2;
+	event.xkey.send_event = -3;
 	event.xkey.display = winPtr->display;
 	event.xkey.window = winPtr->window;
 	event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
@@ -1600,8 +1603,6 @@ HandleIMEComposition(
 	event.xkey.state = TkWinGetModifierState();
 	event.xkey.time = TkpGetMS();
 	event.xkey.same_screen = True;
-	event.xkey.keycode = 0;
-	event.xkey.nbytes = 2;
 
 	for (i=0; i<n; ) {
 	    /*
@@ -1609,8 +1610,7 @@ HandleIMEComposition(
 	     * UNICODE character in the composition.
 	     */
 
-	    event.xkey.trans_chars[0] = (char) buff[i++];
-	    event.xkey.trans_chars[1] = (char) buff[i++];
+	    event.xkey.keycode = buff[i++];
 
 	    event.type = KeyPress;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
