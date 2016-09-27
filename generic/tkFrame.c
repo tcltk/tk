@@ -458,7 +458,6 @@ TkListCreateFrame(
 				 * window associated with the interpreter.
 				 * Gives the base name to use for the new
 				 * application. */
-    
 {
     int objc;
     Tcl_Obj **objv;

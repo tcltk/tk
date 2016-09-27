@@ -1721,7 +1721,7 @@ Tk_PostscriptFontName(
 	    } else {
 		ch = Tcl_UniCharToLower(ch);
 	    }
-	    dest += Tcl_UniCharToUtf(ch, dest);
+	    dest += TkUniCharToUtf(ch, dest);
 	}
 	*dest = '\0';
 	Tcl_DStringSetLength(dsPtr, dest - Tcl_DStringValue(dsPtr));
