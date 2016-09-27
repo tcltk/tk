@@ -26,8 +26,9 @@
  * Under Windows, a "font family" is uniquely identified by its face name.
  */
 
-#define FONTMAP_SHIFT		12
-#define FONTMAP_PAGES	    	(1 << (21 - FONTMAP_SHIFT))
+#define FONTMAP_SHIFT	    10
+
+#define FONTMAP_PAGES	    	(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
 
 typedef struct FontFamily {
