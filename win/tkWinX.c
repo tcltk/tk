@@ -92,7 +92,7 @@ static Tcl_ThreadDataKey dataKey;
 static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
-static void 		GetTranslatedKey(XKeyEvent *xkey);
+static void 		GetTranslatedKey(XKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
@@ -1157,7 +1157,8 @@ GenerateXEvent(
 	    event.type = KeyPress;
 	    event.xany.send_event = -1;
 	    event.xkey.keycode = wParam;
-	    GetTranslatedKey(&event.xkey);
+	    GetTranslatedKey(&event.xkey, (message == WM_KEYDOWN) ? WM_CHAR :
+	            WM_SYSCHAR);
 	    break;
 
 	case WM_SYSKEYUP:
@@ -1229,9 +1230,10 @@ GenerateXEvent(
 		if (IsDBCSLeadByte((BYTE) wParam)) {
 		    MSG msg;
 
-		    if ((PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0)
+		    if ((PeekMessage(&msg, NULL, WM_CHAR, WM_CHAR,
+		            PM_NOREMOVE) != 0)
 			    && (msg.message == WM_CHAR)) {
-			GetMessage(&msg, NULL, 0, 0);
+			GetMessage(&msg, NULL, WM_CHAR, WM_CHAR);
 			event.xkey.nbytes = 2;
 			event.xkey.trans_chars[1] = (char) msg.wParam;
 		   }
@@ -1370,19 +1372,20 @@ GetState(
 
 static void
 GetTranslatedKey(
-    XKeyEvent *xkey)
+    XKeyEvent *xkey,
+    UINT type)
 {
     MSG msg;
 
     xkey->nbytes = 0;
 
     while ((xkey->nbytes < XMaxTransChars)
-	    && PeekMessageA(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-	if ((msg.message != WM_CHAR) && (msg.message != WM_SYSCHAR)) {
+	    && (PeekMessageA(&msg, NULL, type, type, PM_NOREMOVE) != 0)) {
+	if (msg.message != type) {
 	    break;
 	}
 
-	GetMessageA(&msg, NULL, 0, 0);
+	GetMessageA(&msg, NULL, type, type);
 
 	/*
 	 * If this is a normal character message, we may need to strip off the
@@ -1523,7 +1526,7 @@ TkWinGetUnicodeEncoding(void)
  *
  * HandleIMEComposition --
  *
- *	This function works around a definciency in some versions of Windows
+ *	This function works around a deficiency in some versions of Windows
  *	2000 to make it possible to entry multi-lingual characters under all
  *	versions of Windows 2000.
  *
@@ -1553,6 +1556,7 @@ HandleIMEComposition(
 {
     HIMC hIMC;
     int n;
+    int high = 0;
 
     if ((lParam & GCS_RESULTSTR) == 0) {
 	/*
@@ -1570,12 +1574,12 @@ HandleIMEComposition(
     n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
-	char *buff = ckalloc(n);
+	WCHAR *buff = (WCHAR *) ckalloc(n);
 	TkWindow *winPtr;
 	XEvent event;
 	int i;
 
-	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n);
+	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n) / 2;
 
 	/*
 	 * Set up the fields pertinent to key event.
@@ -1600,7 +1604,6 @@ HandleIMEComposition(
 	event.xkey.state = TkWinGetModifierState();
 	event.xkey.time = TkpGetMS();
 	event.xkey.same_screen = True;
-	event.xkey.nbytes = 0;
 
 	for (i=0; i<n; ) {
 	    /*
@@ -1608,9 +1611,16 @@ HandleIMEComposition(
 	     * UNICODE character in the composition.
 	     */
 
-	    event.xkey.keycode = ((unsigned char) buff[i++]) << 8;
-	    event.xkey.keycode += (unsigned char) buff[i++];
+	    event.xkey.keycode = buff[i++];
 
+	    if ((event.xkey.keycode & 0xfc00) == 0xd800) {
+		high = ((event.xkey.keycode & 0x3ff) << 10) + 0x10000;
+		break;
+	    } else if (high && (event.xkey.keycode & 0xfc00) == 0xdc00) {
+		event.xkey.keycode &= 0x3ff;
+		event.xkey.keycode += high;
+		high = 0;
+	    }
 	    event.type = KeyPress;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
