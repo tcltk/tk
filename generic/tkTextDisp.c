@@ -7604,6 +7604,18 @@ TkTextCharLayoutProc(
 	    nextX = maxX;
 	    bytesThatFit++;
 	}
+        if (wrapMode == TEXT_WRAPMODE_WORD) {
+            while (p[bytesThatFit] == ' ') {
+                /*
+                 * Space characters that would go at the beginning of the
+                 * next line are allocated to the current line. This gives
+                 * the effect of trimming white spaces that would otherwise
+                 * be seen at the beginning of wrapped lines.
+                 */
+
+                bytesThatFit++;
+            }
+        }
 	if (p[bytesThatFit] == '\n') {
 	    /*
 	     * A newline character takes up no space, so if the previous
@@ -7612,18 +7624,6 @@ TkTextCharLayoutProc(
 
 	    bytesThatFit++;
 	}
-        if (wrapMode == TEXT_WRAPMODE_WORD) {
-            while (p[bytesThatFit] == ' ') {
-                /*
-                 * Space characters that would go at the beginning of the
-                 * next line are allocated to the present line. This gives
-                 * the effect of trimming white spaces at the beginning of
-                 * wrapped lines.
-                 */
-
-                bytesThatFit++;
-            }
-        }
 	if (bytesThatFit == 0) {
 #if TK_LAYOUT_WITH_BASE_CHUNKS
 	    chunkPtr->clientData = NULL;
