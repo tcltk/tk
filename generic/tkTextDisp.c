@@ -7611,6 +7611,9 @@ TkTextCharLayoutProc(
                  * next line are allocated to the current line. This gives
                  * the effect of trimming white spaces that would otherwise
                  * be seen at the beginning of wrapped lines.
+                 * Note that testing for '\t' is useless here because the
+                 * chunk always includes at most one trailing \t, see
+                 * LayoutDLine.
                  */
 
                 bytesThatFit++;
