@@ -2920,11 +2920,6 @@ test entry-16.4 {EntryVisibleRange procedure} -body {
 } -cleanup {
     destroy .e
 } -result {0.000000 1.000000}
-test entry-16.5 {Unicode handling in entry widget} -body {
-    entry .e -show abc
-} -cleanup {
-    destroy .e
-} -result {0.000000 1.000000}
 
 
 test entry-17.1 {EntryUpdateScrollbar procedure} -body {
