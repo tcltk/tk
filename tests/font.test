@@ -145,6 +145,18 @@ test font-4.10 {font command: actual} -constraints win -body {
 test font-4.11 {font command: bad option} -body {
     font actual xyz -style
 } -returnCodes error -result {bad option "-style": must be -family, -size, -weight, -slant, -underline, or -overstrike}
+test font-4.12 {font command: actual} -body {
+    font actual {-family times} -- \ud800
+} -match glob -result {*}
+test font-4.13 {font command: actual} -body {
+    font actual {-family times} -- \udc00
+} -match glob -result {*}
+test font-4.14 {font command: actual} -constraints win -body {
+    font actual {-family times} -family -- \ud800\udc00
+} -result {Times New Roman}
+test font-4.15 {font command: actual} -body {
+    font actual {-family times} -- \udc00\ud800
+} -returnCodes 1 -match glob -result {expected a single character but got "*"}
 
 
 test font-5.1 {font command: configure} -body {
