@@ -100,7 +100,7 @@ TkpGetString(
     } else if (keyEv->send_event == -3) {
 
 	/*
-	 * Special case for WM_UNICHAR.
+	 * Special case for WM_UNICHAR and win2000 multi-lingal IME input
 	 */
 
 	len = TkUniCharToUtf(keyEv->keycode, buf);
