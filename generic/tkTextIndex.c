@@ -2298,9 +2298,9 @@ StartEnd(
 	    int chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
-		Tcl_UniChar ch;
+		int ch;
 
-		chSize = Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
+		chSize = TkUtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
@@ -2343,9 +2343,9 @@ StartEnd(
 	    int chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
-		Tcl_UniChar ch;
 
-		Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
+		int ch;
+		TkUtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}

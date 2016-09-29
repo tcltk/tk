@@ -1924,8 +1924,8 @@ EntryComputeGeometry(
      */
 
     if (entryPtr->showChar != NULL) {
-	Tcl_UniChar ch;
-	char buf[TCL_UTF_MAX];
+	int ch;
+	char buf[6];
 	int size;
 
 	/*
@@ -1935,8 +1935,8 @@ EntryComputeGeometry(
 	 * resulting string.
 	 */
 
-	Tcl_UtfToUniChar(entryPtr->showChar, &ch);
-	size = Tcl_UniCharToUtf(ch, buf);
+	TkUtfToUniChar(entryPtr->showChar, &ch);
+	size = TkUniCharToUtf(ch, buf);
 
 	entryPtr->numDisplayBytes = entryPtr->numChars * size;
 	p = ckalloc(entryPtr->numDisplayBytes + 1);
@@ -3412,7 +3412,7 @@ ExpandPercents(
 				 * list element. */
     int number, length;
     register const char *string;
-    Tcl_UniChar ch;
+    int ch;
     char numStorage[2*TCL_INTEGER_SPACE];
 
     while (1) {
@@ -3445,7 +3445,7 @@ ExpandPercents(
 
 	before++; /* skip over % */
 	if (*before != '\0') {
-	    before += Tcl_UtfToUniChar(before, &ch);
+	    before += TkUtfToUniChar(before, &ch);
 	} else {
 	    ch = '%';
 	}
@@ -3465,7 +3465,7 @@ ExpandPercents(
 		string = Tk_PathName(entryPtr->tkwin);
 		break;
 	    default:
-		length = Tcl_UniCharToUtf(ch, numStorage);
+		length = TkUniCharToUtf(ch, numStorage);
 		numStorage[length] = '\0';
 		string = numStorage;
 		break;
@@ -3525,7 +3525,7 @@ ExpandPercents(
 		string = Tk_PathName(entryPtr->tkwin);
 		break;
 	    default:
-		length = Tcl_UniCharToUtf(ch, numStorage);
+		length = TkUniCharToUtf(ch, numStorage);
 		numStorage[length] = '\0';
 		string = numStorage;
 		break;
