@@ -13,7 +13,6 @@
 
 #include "tkInt.h"
 #include "tkFont.h"
-#include <windows.h>
 
 /*
  * The following structure is used to keep track of all the fonts that exist
@@ -1717,10 +1716,10 @@ Tk_PostscriptFontName(
 	    }
 	    src += TkUtfToUniChar(src, &ch);
 	    if (upper) {
-		ch = (Tcl_UniChar) Tcl_UniCharToUpper(ch);
+		ch = Tcl_UniCharToUpper(ch);
 		upper = 0;
 	    } else {
-		ch = (Tcl_UniChar) Tcl_UniCharToLower(ch);
+		ch = Tcl_UniCharToLower(ch);
 	    }
 	    dest += TkUniCharToUtf(ch, dest);
 	}
