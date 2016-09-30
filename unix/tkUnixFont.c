@@ -171,7 +171,7 @@ static Tcl_ThreadDataKey dataKey;
  * encodings into the names expected by the Tcl encoding package.
  */
 
-static EncodingAlias encodingAliases[] = {
+static const EncodingAlias encodingAliases[] = {
     {"gb2312-raw",	"gb2312*"},
     {"big5",		"big5*"},
     {"cns11643-1",	"cns11643*-1"},
@@ -408,8 +408,8 @@ ControlUtfProc(
     char *dstStart, *dstEnd;
     int ch;
     int result;
-    static char hexChars[] = "0123456789abcdef";
-    static char mapChars[] = {
+    static const char hexChars[] = "0123456789abcdef";
+    static const char mapChars[] = {
 	0, 0, 0, 0, 0, 0, 0,
 	'a', 'b', 't', 'n', 'v', 'f', 'r'
     };
