@@ -7542,6 +7542,9 @@ TkTextCharLayoutProc(
      *	 (b) at least one pixel of the character is visible, we have not
      *	     already exceeded the character limit, and the next character is a
      *	     white space character.
+     * In the specific case of 'word' wrapping mode however, include all space
+     * characters following the characters that fit in the space we've got,
+     * even if no pixel of them is visible.
      */
 
     p = segPtr->body.chars + byteOffset;
