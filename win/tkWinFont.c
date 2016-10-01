@@ -965,7 +965,7 @@ Tk_MeasureChars(
 
     if ((flags & TK_WHOLE_WORDS) && (p < end)) {
 	/*
-	 * Scan the string for the last word break and than repeat the whole
+	 * Scan the string for the last word break and then repeat the whole
 	 * procedure without the maxLength limit or any flags.
 	 */
 
