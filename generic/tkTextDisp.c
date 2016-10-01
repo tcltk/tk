@@ -1372,7 +1372,7 @@ LayoutDLine(
 			= lastChunkPtr->numBytes;
 
 		/*
-		 * If have we have a tag toggle, there is a chance that
+		 * If we have a tag toggle, there is a chance that
 		 * invisibility state changed, so bail out.
 		 */
 	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
