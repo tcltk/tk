@@ -520,6 +520,15 @@ test textDisp-2.30 {LayoutDLine, tabs, running out of space in dline} {textfonts
     .t insert 1.0 "a\tx\tabc"
     .t bbox 1.4
 } [list 117 5 7 $fixedHeight]
+test textDisp-2.31 {LayoutDLine, word wrap on ordinary hyphen} {textfonts} {
+    .t delete 1.0 end
+    .t insert 1.0 "This is a  normal  hyphen  test: abc-123\n"
+    # test robustness: we only want to check that line wrapped at the hyphen, i.e.
+    # that the hyphen is still on the second display line while "123" is on the
+    # third one - check exactly this and not, say, a bbox
+    .t sync
+    list [.t count -displaylines 1.0 1.36] [.t count -displaylines 1.36 1.37]
+} [list 1 1]
 
 test textDisp-3.1 {different character sizes} {textfonts} {
     .t configure -wrap word

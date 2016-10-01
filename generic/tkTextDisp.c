@@ -7696,6 +7696,7 @@ TkTextCharLayoutProc(
 
 	    switch (*p) {
 	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
+                    case '-':
 		chunkPtr->breakIndex = count;
 		goto checkForNextChunk;
 	    }
