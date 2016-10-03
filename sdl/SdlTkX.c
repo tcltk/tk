@@ -2459,37 +2459,9 @@ XInternAtom(Display *display, _Xconst char *atom_name, Bool only_if_exists)
 	    Tcl_SetHashValue(hPtr, Tcl_GetHashKey(&atom_table, hPtr));
 	}
     }
-    if (hPtr == NULL) {
-	goto done;
+    if (hPtr != NULL) {
+	ret = (Atom) Tcl_GetHashValue(hPtr);
     }
-    if ((SdlTkX.mwm_atom == None) &&
-	(strcmp(atom_name, "_MOTIF_WM_HINTS") == 0)) {
-	SdlTkX.mwm_atom = (Atom) Tcl_GetHashValue(hPtr);
-    } else if ((SdlTkX.nwmn_atom == None) &&
-	       (strcmp(atom_name, "_NET_WM_NAME") == 0)) {
-	SdlTkX.nwmn_atom = (Atom) Tcl_GetHashValue(hPtr);
-    } else if ((SdlTkX.nwms_atom == None) &&
-	       (strcmp(atom_name, "_NET_WM_STATE") == 0)) {
-	SdlTkX.nwms_atom = (Atom) Tcl_GetHashValue(hPtr);
-    } else if ((SdlTkX.nwmsf_atom == None) &&
-	       (strcmp(atom_name, "_NET_WM_STATE_FULLSCREEN") == 0)) {
-	SdlTkX.nwmsf_atom = (Atom) Tcl_GetHashValue(hPtr);
-    } else if ((SdlTkX.clipboard_atom == None) &&
-	       (strcmp(atom_name, "CLIPBOARD") == 0)) {
-	SdlTkX.clipboard_atom = (Atom) Tcl_GetHashValue(hPtr);
-    } else if ((SdlTkX.comm_atom == None) &&
-	       (strcmp(atom_name, "Comm") == 0)) {
-	SdlTkX.comm_atom = (Atom) Tcl_GetHashValue(hPtr);
-    } else if ((SdlTkX.interp_atom == None) &&
-	       (strcmp(atom_name, "InterpRegistry") == 0)) {
-	SdlTkX.interp_atom = (Atom) Tcl_GetHashValue(hPtr);
-    } else if ((SdlTkX.tkapp_atom == None) &&
-	       (strcmp(atom_name, "TK_APPLICATION") == 0)) {
-	SdlTkX.tkapp_atom = (Atom) Tcl_GetHashValue(hPtr);
-    }
-
-    ret = (Atom) Tcl_GetHashValue(hPtr);
-done:
     Tcl_MutexUnlock(&atom_mutex);
     return ret;
 }
@@ -5628,6 +5600,18 @@ ctxRetry:
     SdlTkX.display = display;
 
     SDL_EnableScreenSaver();
+
+    /* Some well known atoms */
+    SdlTkX.mwm_atom = XInternAtom(NULL, "_MOTIF_WM_HINTS", False);
+    SdlTkX.nwmn_atom = XInternAtom(NULL, "_NET_WM_NAME", False);
+    SdlTkX.nwms_atom = XInternAtom(NULL, "_NET_WM_STATE", False);
+    SdlTkX.nwmsf_atom = XInternAtom(NULL, "_NET_WM_STATE_FULLSCREEN", False);
+    SdlTkX.clipboard_atom = XInternAtom(NULL, "CLIPBOARD", False);
+    SdlTkX.comm_atom = XInternAtom(NULL, "Comm", False);
+    SdlTkX.interp_atom = XInternAtom(NULL, "InterpRegistry", False);
+    SdlTkX.tkapp_atom = XInternAtom(NULL, "TK_APPLICATION", False);
+    SdlTkX.wm_prot_atom = XInternAtom(NULL, "WM_PROTOCOLS", False);
+    SdlTkX.wm_dele_atom = XInternAtom(NULL, "WM_DELETE_WINDOW", False);
 
     /* Pre-allocate some _Window structs */
     for (i = 0; i < 128; i++) {

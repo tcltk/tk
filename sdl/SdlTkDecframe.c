@@ -200,24 +200,16 @@ static void
 Send_WM_DELETE_WINDOW(TkWindow *tkwin)
 {
     XEvent event;
-    static Atom wm_prot = None;
-    static Atom wm_dele = None;
 
-    if (wm_prot == None) {
-	wm_prot = XInternAtom(NULL, "WM_PROTOCOLS", False);
-    }
-    if (wm_dele == None) {
-	wm_dele = XInternAtom(NULL, "WM_DELETE_WINDOW", False);
-    }
     memset(&event, 0, sizeof (event));
     event.type = ClientMessage;
     event.xclient.serial = tkwin->display->request;
     event.xclient.send_event = False;
     event.xclient.display = tkwin->display;
     event.xclient.window = tkwin->window;
-    event.xclient.message_type = wm_prot;
+    event.xclient.message_type = SdlTkX.wm_prot_atom;
     event.xclient.format = 32;
-    event.xclient.data.l[0] = wm_dele;
+    event.xclient.data.l[0] = SdlTkX.wm_dele_atom;
     SdlTkQueueEvent(&event);
 }
 

@@ -1171,7 +1171,7 @@ GenerateXEvent(
 	    event.xany.send_event = -1;
 	    event.xkey.keycode = wParam;
 	    GetTranslatedKey(&event.xkey, (message == WM_KEYDOWN) ? WM_CHAR :
-		    WM_SYSCHAR);
+	            WM_SYSCHAR);
 	    break;
 
 	case WM_SYSKEYUP:
@@ -1244,7 +1244,7 @@ GenerateXEvent(
 		    MSG msg;
 
 		    if ((PeekMessage(&msg, NULL, WM_CHAR, WM_CHAR,
-			    PM_NOREMOVE) != 0)
+		            PM_NOREMOVE) != 0)
 			    && (msg.message == WM_CHAR)) {
 			GetMessage(&msg, NULL, WM_CHAR, WM_CHAR);
 			event.xkey.nbytes = 2;
@@ -1539,7 +1539,7 @@ TkWinGetUnicodeEncoding(void)
  *
  * HandleIMEComposition --
  *
- *	This function works around a definciency in some versions of Windows
+ *	This function works around a deficiency in some versions of Windows
  *	2000 to make it possible to entry multi-lingual characters under all
  *	versions of Windows 2000.
  *
@@ -1569,6 +1569,7 @@ HandleIMEComposition(
 {
     HIMC hIMC;
     int n;
+    int high = 0;
 
     if ((lParam & GCS_RESULTSTR) == 0) {
 	/*
@@ -1586,18 +1587,18 @@ HandleIMEComposition(
     n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
-	char *buff = ckalloc(n);
+	WCHAR *buff = (WCHAR *) ckalloc(n);
 	TkWindow *winPtr;
 	XEvent event;
 	int i;
 
-	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n);
+	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n) / 2;
 
 	/*
 	 * Set up the fields pertinent to key event.
 	 *
-	 * We set send_event to the special value of -2, so that TkpGetString
-	 * in tkWinKey.c knows that trans_chars[] already contains a UNICODE
+	 * We set send_event to the special value of -3, so that TkpGetString
+	 * in tkWinKey.c knows that keycode already contains a UNICODE
 	 * char and there's no need to do encoding conversion.
 	 *
 	 * Note that the event *must* be zeroed out first; Tk plays cunning
@@ -1608,7 +1609,7 @@ HandleIMEComposition(
 
 	memset(&event, 0, sizeof(XEvent));
 	event.xkey.serial = winPtr->display->request++;
-	event.xkey.send_event = -2;
+	event.xkey.send_event = -3;
 	event.xkey.display = winPtr->display;
 	event.xkey.window = winPtr->window;
 	event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
@@ -1616,8 +1617,6 @@ HandleIMEComposition(
 	event.xkey.state = TkWinGetModifierState();
 	event.xkey.time = TkpGetMS();
 	event.xkey.same_screen = True;
-	event.xkey.keycode = 0;
-	event.xkey.nbytes = 2;
 
 	for (i=0; i<n; ) {
 	    /*
@@ -1625,9 +1624,16 @@ HandleIMEComposition(
 	     * UNICODE character in the composition.
 	     */
 
-	    event.xkey.trans_chars[0] = (char) buff[i++];
-	    event.xkey.trans_chars[1] = (char) buff[i++];
+	    event.xkey.keycode = buff[i++];
 
+	    if ((event.xkey.keycode & 0xfc00) == 0xd800) {
+		high = ((event.xkey.keycode & 0x3ff) << 10) + 0x10000;
+		break;
+	    } else if (high && (event.xkey.keycode & 0xfc00) == 0xdc00) {
+		event.xkey.keycode &= 0x3ff;
+		event.xkey.keycode += high;
+		high = 0;
+	    }
 	    event.type = KeyPress;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 

@@ -238,6 +238,8 @@ typedef struct SdlTkXInfo {
     Atom comm_atom;
     Atom interp_atom;
     Atom tkapp_atom;
+    Atom wm_prot_atom;
+    Atom wm_dele_atom;
 
     /* Selection */
     Window current_primary;
