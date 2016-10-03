@@ -1090,7 +1090,7 @@ fonterr:
 		ghash = (GlyphIndexHash *) ckalloc(sizeof (GlyphIndexHash));
 		Tcl_InitHashTable(&ghash->hash, TCL_ONE_WORD_KEYS);
 		ghash->refCnt = 1;
-		ghash->familyName = ckalloc(strlen(face->family_name) + 24);
+		ghash->familyName = ckalloc(strlen(face->family_name) + 32);
 		strcpy(ghash->familyName, face->family_name);
 		ghash->faceFlags = face->face_flags;
 		ghash->styleFlags = face->style_flags;
@@ -1106,6 +1106,9 @@ fonterr:
 		}
 		weight = "-normal";
 		style = Tcl_DStringValue(&ds2);
+		if (strstr(style, "condensed")) {
+		    strcat(ghash->familyName, " Condensed");
+		}
 		if (strstr(style, "black")) {
 		    strcat(ghash->familyName, " Black");
 		} else if (strstr(style, "light")) {
@@ -1114,8 +1117,6 @@ fonterr:
 		    strcat(ghash->familyName, " Thin");
 		} else if (strstr(style, "medium")) {
 		    strcat(ghash->familyName, " Medium");
-		} else if (strstr(style, "condensed")) {
-		    strcat(ghash->familyName, " Condensed");
 		}
 		if (ghash->styleFlags & FT_STYLE_FLAG_BOLD) {
 		    weight = "-bold";
@@ -1235,16 +1236,39 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fname)
 	hPtr = Tcl_CreateHashEntry(&fileFaceHash, (char *) &ffKey, &isNew);
 	if (isNew) {
 	    GlyphIndexHash *ghash;
-	    Tcl_DString ds;
+	    Tcl_DString ds, ds2;
+	    char *style;
 
 	    ghash = (GlyphIndexHash *) ckalloc(sizeof (GlyphIndexHash));
 	    Tcl_InitHashTable(&ghash->hash, TCL_ONE_WORD_KEYS);
 	    ghash->refCnt = 1;
-	    ghash->familyName = ckalloc(strlen(face->family_name) + 1);
+	    ghash->familyName = ckalloc(strlen(face->family_name) + 32);
 	    strcpy(ghash->familyName, face->family_name);
 	    ghash->faceFlags = face->face_flags;
 	    ghash->styleFlags = face->style_flags;
 	    Tcl_DStringInit(&ds);
+	    Tcl_DStringInit(&ds2);
+	    if (face->style_name != NULL) {
+		Tcl_DStringAppend(&ds2, face->style_name, -1);
+		style = Tcl_DStringValue(&ds2);
+		while (*style) {
+		    *style = tolower((UCHAR(*style)));
+		    ++style;
+		}
+	    }
+	    style = Tcl_DStringValue(&ds2);
+	    if (strstr(style, "condensed")) {
+		strcat(ghash->familyName, " Condensed");
+	    }
+	    if (strstr(style, "black")) {
+		strcat(ghash->familyName, " Black");
+	    } else if (strstr(style, "light")) {
+		strcat(ghash->familyName, " Light");
+	    } else if (strstr(style, "thin")) {
+		strcat(ghash->familyName, " Thin");
+	    } else if (strstr(style, "medium")) {
+		strcat(ghash->familyName, " Medium");
+	    }
 	    Tcl_DStringAppend(&ds, "-*-", -1);
 	    Tcl_DStringAppend(&ds, ghash->familyName, -1);
 	    if (ghash->styleFlags & FT_STYLE_FLAG_BOLD) {
@@ -1261,6 +1285,7 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fname)
 	    ghash->xlfdPattern = ckalloc(Tcl_DStringLength(&ds) + 1);
 	    strcpy(ghash->xlfdPattern, Tcl_DStringValue(&ds));
 	    Tcl_DStringFree(&ds);
+	    Tcl_DStringFree(&ds2);
 	    ghash->hashLoaded = 0;
 	    Tcl_SetHashValue(hPtr, (char *) ghash);
 	    nfonts++;

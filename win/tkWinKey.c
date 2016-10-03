@@ -97,29 +97,20 @@ TkpGetString(
 	    Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
 		    keyEv->trans_chars, keyEv->nbytes, dsPtr);
 	}
-    } else if (keyEv->send_event == -2) {
-	/*
-	 * Special case for win2000 multi-lingal IME input. xkey.trans_chars[]
-	 * already contains a UNICODE char.
-	 */
-
-	int unichar;
-
-	unichar = keyEv->trans_chars[1] & 0xff;
-	unichar <<= 8;
-	unichar |= keyEv->trans_chars[0] & 0xff;
-
-	len = Tcl_UniCharToUtf((Tcl_UniChar) unichar, buf);
-
-	Tcl_DStringAppend(dsPtr, buf, len);
     } else if (keyEv->send_event == -3) {
-
 	/*
-	 * Special case for WM_UNICHAR.
+	 * Special case for WM_UNICHAR and win2000 multi-lingal IME input
 	 */
 
-	len = TkUniCharToUtf(keyEv->keycode, buf);
-	Tcl_DStringAppend(dsPtr, buf, len);
+	len = Tcl_UniCharToUtf(keyEv->keycode, buf);
+	if ((keyEv->keycode <= 0xffff) || (len > 3)) {
+	    Tcl_DStringAppend(dsPtr, buf, len);
+	} else {
+	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) >> 10) | 0xd800, buf);
+	    Tcl_DStringAppend(dsPtr, buf, 3);
+	    Tcl_UniCharToUtf(((keyEv->keycode - 0x10000) & 0x3ff) | 0xdc00, buf);
+	    Tcl_DStringAppend(dsPtr, buf, 3);
+	}
     } else {
 	/*
 	 * This is an event generated from generic code. It has no nchars or
