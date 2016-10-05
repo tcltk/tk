@@ -17,8 +17,8 @@ namespace eval ttk::theme::clam {
 	-lightest 		"#ffffff"
 	-selectbg		"#4a6984"
 	-selectfg		"#ffffff"
-	-altindicator		"#9fbdd8"
-	-disabledaltindicator	"#c0c0c0"
+	-altindicator		"#5895bc"
+	-disabledaltindicator	"#a0a0a0"
     }
 
     ttk::style theme settings clam {
