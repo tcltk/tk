@@ -51,18 +51,18 @@ namespace eval ttk::theme::classic {
 	ttk::style map TCheckbutton \
 	    -indicatorcolor [list \
 		    pressed $colors(-frame) \
-		    selected $colors(-indicator) \
-		    alternate $colors(-altindicator)] \
-	    -indicatorrelief {selected sunken  pressed sunken} \
+		    alternate $colors(-altindicator) \
+		    selected $colors(-indicator)] \
+	    -indicatorrelief {alternate raised  selected sunken  pressed sunken} \
 	    ;
 
 	ttk::style configure TRadiobutton -indicatorrelief raised
 	ttk::style map TRadiobutton \
 	    -indicatorcolor [list \
 		    pressed $colors(-frame) \
-		    selected $colors(-indicator) \
-		    alternate $colors(-altindicator)] \
-	    -indicatorrelief {selected sunken  pressed sunken} \
+		    alternate $colors(-altindicator) \
+		    selected $colors(-indicator)] \
+	    -indicatorrelief {alternate raised  selected sunken  pressed sunken} \
 	    ;
 
 	ttk::style configure TMenubutton -relief raised -padding "3m 1m"
