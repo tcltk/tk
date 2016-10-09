@@ -3828,7 +3828,7 @@ test text-19.16 {DeleteChars procedure, updates affecting topIndex} -setup {
     wm geometry .top +0+0
     update
 } -body {
-    .top.t insert end "abc def\n01 2345 678 9101112\nLine 3\nLine 4\nLine 5\n6\n7\n8\n"
+    .top.t insert end "abc def\n01 2a345 678 9101112\nLine 3\nLine 4\nLine 5\n6\n7\n8\n"
     .top.t yview 2.4
     .top.t delete 2.5
     set x [.top.t index @0,0]
