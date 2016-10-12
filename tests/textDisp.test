@@ -522,7 +522,7 @@ test textDisp-2.30 {LayoutDLine, tabs, running out of space in dline} {textfonts
 } [list 117 5 7 $fixedHeight]
 test textDisp-2.31 {LayoutDLine, word wrap on ordinary hyphen} {textfonts} {
     .t delete 1.0 end
-    .t insert 1.0 "This is a  normal  hyphen  test: abc-123\n"
+    .t insert 1.0 "This is a *normal* hyphen  test: abc-123\n"
     # test robustness: we only want to check that line wrapped at the hyphen, i.e.
     # that the hyphen is still on the second display line while "123" is on the
     # third one - check exactly this and not, say, a bbox
@@ -531,13 +531,30 @@ test textDisp-2.31 {LayoutDLine, word wrap on ordinary hyphen} {textfonts} {
 } [list 1 1]
 test textDisp-2.32 {LayoutDLine, word wrap on soft hyphen} {textfonts} {
     .t delete 1.0 end
-    .t insert 1.0 "This is a  normal  hyphen  test: abc\u00AD123\n"
+    .t insert 1.0 "This is a  -*soft*-  hyphen   test: abc\u00AD123\n"
     # test robustness: we only want to check that line wrapped at the hyphen, i.e.
     # that the hyphen is still on the second display line while "123" is on the
     # third one - check exactly this and not, say, a bbox
     .t sync
-    list [.t count -displaylines 1.0 1.36] [.t count -displaylines 1.36 1.37]
+    list [.t count -displaylines 1.0 1.39] [.t count -displaylines 1.39 1.40]
 } [list 1 1]
+test textDisp-2.33 {soft hyphen is not visible when not at display line end} {textfonts} {
+    .t delete 1.0 end
+    .t insert 1.0 "\u00ADSoft\u00AD\u00AD\u00ADhyphen test.\nAgain!\u00AD"
+tk_messageBox
+    set res [lindex [.t bbox 1.0] 2]
+    lappend res [expr [lindex [.t bbox 1.1] 2] > 0 ]
+    lappend res [lindex [.t bbox 1.5] 2]
+    lappend res [lindex [.t bbox 1.6] 2]
+    lappend res [lindex [.t bbox 1.7] 2]
+    lappend res [expr [lindex [.t bbox 1.8] 2] > 0 ]
+    lappend res [lindex [.t bbox 2.6] 2]
+} [list 0 1 0 0 0 1 0]
+test textDisp-2.34 {soft hyphen is visible when at display line end} {textfonts} {
+    .t delete 1.0 end
+    .t insert 1.0 "This is a  -*soft*-  hyphen   test: abc\u00AD123\n"
+    set res [expr [lindex [.t bbox 1.39] 2] > 0]
+} {1}
 
 test textDisp-3.1 {different character sizes} {textfonts} {
     .t configure -wrap word
