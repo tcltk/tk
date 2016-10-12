@@ -541,7 +541,6 @@ test textDisp-2.32 {LayoutDLine, word wrap on soft hyphen} {textfonts} {
 test textDisp-2.33 {soft hyphen is not visible when not at display line end} {textfonts} {
     .t delete 1.0 end
     .t insert 1.0 "\u00ADSoft\u00AD\u00AD\u00ADhyphen test.\nAgain!\u00AD"
-tk_messageBox
     set res [lindex [.t bbox 1.0] 2]
     lappend res [expr [lindex [.t bbox 1.1] 2] > 0 ]
     lappend res [lindex [.t bbox 1.5] 2]
