@@ -1478,7 +1478,7 @@ LayoutDLine(
 	if (segPtr->typePtr == &tkTextCharType) {
 
 	    /*
-	     * See if there is a tab in the current chunk; if so, only layout
+	     * See if there is a tab in the current segment; if so, only layout
 	     * characters up to (and including) the tab.
 	     */
 
@@ -7596,8 +7596,7 @@ TkTextCharLayoutProc(
 		    chunkPtr->x, -1, 0, &nextX);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 	}
-	if ((nextX < maxX) && ((p[bytesThatFit] == ' ')
-		|| (p[bytesThatFit] == '\t'))) {
+	if ((nextX < maxX) && (p[bytesThatFit] == ' ')) {
 	    /*
 	     * Space characters are funny, in that they are considered to fit
 	     * if there is at least one pixel of space left on the line. Just
