@@ -1477,19 +1477,31 @@ LayoutDLine(
 	maxBytes = segPtr->size - byteOffset;
 	if (segPtr->typePtr == &tkTextCharType) {
 
-	    /*
-	     * See if there is a tab in the current segment; if so, only layout
-	     * characters up to (and including) the tab.
-	     */
+            /*
+             * See if there is a tab or soft hyphen in the current segment; if so,
+             * only layout characters up to (and including) this character.
+             */
 
+            if (!elide) {
+                char *p;
+
+                for (p = segPtr->body.chars + byteOffset; *p != 0; p++) {
+                    if (*p == '\u00AD') {
+                        maxBytes = (p + 1 - segPtr->body.chars) - byteOffset;
+                        break;
+                    }
+                }
+            }
 	    if (!elide && justify == TK_JUSTIFY_LEFT) {
 		char *p;
 
 		for (p = segPtr->body.chars + byteOffset; *p != 0; p++) {
 		    if (*p == '\t') {
-			maxBytes = (p + 1 - segPtr->body.chars) - byteOffset;
-			gotTab = 1;
-			break;
+                        if ((p + 1 - segPtr->body.chars) - byteOffset <= maxBytes) {
+                            maxBytes = (p + 1 - segPtr->body.chars) - byteOffset;
+			    gotTab = 1;
+			    break;
+                        }
 		    }
 		}
 	    }
@@ -7683,11 +7695,14 @@ TkTextCharLayoutProc(
     bciPtr->width = nextX - baseCharChunkPtr->x;
 
     /*
-     * Finalize the base chunk if this chunk ends in a tab, which definitly
-     * breaks the context and needs to be handled on a higher level.
+     * Finalize the base chunk if this chunk ends in a tab or soft hyphen,
+     * which definitely breaks the context and needs to be handled on a
+     * higher level.
      */
 
     if (ciPtr->numBytes > 0 && p[ciPtr->numBytes - 1] == '\t') {
+	FinalizeBaseChunk(chunkPtr);
+    } else if (ciPtr->numBytes > 1 && p[ciPtr->numBytes - 1] == '\u00AD') {
 	FinalizeBaseChunk(chunkPtr);
     }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -7938,6 +7953,19 @@ CharDisplayProc(
 	if ((len > 0) && (string[start + len - 1] == '\t')) {
 	    len--;
 	}
+
+        /*
+         * Don't draw any soft hyphen unless it is the last character
+         * of the display line. Soft hyphens can only show up at the
+         * end of a chunk, so test their presence at this place only.
+         */
+
+        if (chunkPtr->nextPtr != NULL) {
+            if ((len > 1) && (string[start + len - 1] == '\u00AD')) {
+                len = len - 2;
+            }
+        }
+
 	if (len <= 0) {
 	    return;
 	}
@@ -7972,6 +8000,19 @@ CharDisplayProc(
 	if ((numBytes > 0) && (string[numBytes - 1] == '\t')) {
 	    numBytes--;
 	}
+
+        /*
+         * Don't draw any soft hyphen unless it is the last character
+         * of the display line. Soft hyphens can only show up at the
+         * end of a chunk, so test their presence at this place only.
+         */
+
+        if (chunkPtr->nextPtr != NULL) {
+            if ((numBytes > 1) && (string[numBytes - 1] == '\u00AD')) {
+                numBytes = numBytes - 2;
+            }
+        }
+
 	Tk_DrawChars(display, dst, stylePtr->fgGC, sValuePtr->tkfont, string,
 		numBytes, offsetX, y + baseline - sValuePtr->offset);
 	if (sValuePtr->underline) {
@@ -8538,8 +8579,8 @@ NextTabStop(
  *	assumption that Tk_DrawChars will be used to actually display the
  *	characters.
  *
- *	If tabs are encountered in the string, they will be ignored (they
- *	should only occur as last character of the string anyway).
+ *	If tabs or soft hyphens are encountered in the string, they will be
+ *	ignored (they can only occur as last character of the string).
  *
  *	If a newline is encountered in the string, the line will be broken at
  *	that point.
@@ -8592,6 +8633,10 @@ MeasureChars(
 		if ((ch == '\t') || (ch == '\n')) {
 		    break;
 		}
+                if (ch == '\u00AD') {
+                    special--;
+                    break;
+                }
 	    }
 	}
 
@@ -8621,9 +8666,12 @@ MeasureChars(
 	    break;
 	}
 	if (special < end) {
-	    if (ch != '\t') {
+	    if (ch == '\n') {
 		break;
 	    }
+            if (ch == '\u00AD') {
+                start++;
+            }
 	    start++;
 	}
     }
