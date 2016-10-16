@@ -565,6 +565,18 @@ test textDisp-2.35 {LayoutDline, maxBytes calculation for chunk with both soft h
     lappend res [expr [lindex [.t bbox 2.14] 2] > 0]
     lappend res [lindex [.t bbox 2.25] 2]
 } [list 1 0 1 0 1 0]
+test textDisp-2.36 {a soft hyphen counts for 1 char even if not visible} {textfonts} {
+    .t delete 1.0 end
+    .t insert 1.0 "\u00ADSoft\u00AD\u00AD\u00ADhyphen test."
+    set res [.t count -chars 1.0 1.14]
+    lappend res [.t count -displaychars 1.0 1.14]
+    lappend res [.t count -indices 1.0 1.14]
+    lappend res [.t count -displayindices 1.0 1.14]
+    # All the above results must be same. With or without the "display" modifier
+    # makes no difference: despite not being visible the soft hyphens are not
+    # *elided* (i.e. not tagged as elided). In other words soft hyphens are
+    # displayed and count for 1 char each, but with zero width
+} [list 14 14 14 14]
 
 test textDisp-3.1 {different character sizes} {textfonts} {
     .t configure -wrap word
