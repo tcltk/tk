@@ -281,11 +281,7 @@ foreach mode $modes {
 		    -initialfile $fileName -initialdir $fileDir \
 		    -typevariable tv]
 	    if {[info exists tv]} {
-		if {$mode == 0} {
-		    set typeName $tv
-		} else {
-		    regexp {^(.*) \(.*\)$} $tv dummy typeName
-		}
+		set typeName $tv
 	    } else {
 		set typeName "-unset-"
 	    }
