@@ -791,7 +791,6 @@ test pack-7.7 {requesting size for parent} -setup {
     list [winfo reqwidth .pack] [winfo reqheight .pack]
 } -result {100 110}
 
-
 # For the tests below, create a couple of "pad" windows to shrink
 # the available space for the remaining windows.  The tests have to
 # be done this way rather than shrinking the whole window, because
@@ -1626,6 +1625,43 @@ test pack-19.2 {test support for minreqsize} -setup {
     destroy .pack.l .pack.lf
 } -result {162x127+0+0 172x112+0+0}
 
+test pack-20.1 {frame returns to 1x1 when children unpacked (tip 454)} -setup {
+    catch {eval pack forget [pack slaves .pack]}
+    destroy .pack.f
+} -body {
+    pack [frame .pack.f]
+    pack [entry .pack.f.e]
+    update
+    set res [list [expr {[winfo reqwidth .pack.f] > 1}]\
+            [expr {[winfo reqheight .pack.f] > 1}]]
+    destroy .pack.f.e
+    lappend res [winfo reqwidth .pack.f] [winfo reqheight .pack.f]
+} -result {1 1 1 1}
+
+test pack-20.2 {ttk::frame returns to 1x1 when children unpacked (tip 454)} -setup {
+    catch {eval pack forget [pack slaves .pack]}
+    destroy .pack.f
+} -body {
+    pack [ttk::frame .pack.f]
+    pack [entry .pack.f.e]
+    update
+    set res [list [expr {[winfo reqwidth .pack.f] > 1}]\
+            [expr {[winfo reqheight .pack.f] > 1}]]
+    destroy .pack.f.e
+    lappend res [winfo reqwidth .pack.f] [winfo reqheight .pack.f]
+} -result {1 1 1 1}
+test pack-20.3 {ttk::labelframe returns to 1x1 when children unpacked (tip 454)} -setup {
+    catch {eval pack forget [pack slaves .pack]}
+    destroy .pack.f
+} -body {
+    pack [ttk::labelframe .pack.f]
+    pack [entry .pack.f.e]
+    update
+    set res [list [expr {[winfo reqwidth .pack.f] > 1}]\
+            [expr {[winfo reqheight .pack.f] > 1}]]
+    destroy .pack.f.e
+    lappend res [winfo reqwidth .pack.f] [winfo reqheight .pack.f]
+} -result {1 1 1 1}
 
 # cleanup
 cleanupTests
