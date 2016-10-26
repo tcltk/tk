@@ -1625,7 +1625,7 @@ test pack-19.2 {test support for minreqsize} -setup {
     destroy .pack.l .pack.lf
 } -result {162x127+0+0 172x112+0+0}
 
-test pack-20.1 {frame returns to 1x1 when children unpacked (tip 454)} -setup {
+test pack-20.1 {frame returns to 1x1 when children destroyed (tip 454)} -setup {
     catch {eval pack forget [pack slaves .pack]}
     destroy .pack.f
 } -body {
@@ -1638,7 +1638,22 @@ test pack-20.1 {frame returns to 1x1 when children unpacked (tip 454)} -setup {
     lappend res [winfo reqwidth .pack.f] [winfo reqheight .pack.f]
 } -result {1 1 1 1}
 
-test pack-20.2 {ttk::frame returns to 1x1 when children unpacked (tip 454)} -setup {
+test pack-20.2 {frame keeps size when children destroyed and no propagation (tip 454)} -setup {
+    catch {eval pack forget [pack slaves .pack]}
+    destroy .pack.f
+} -body {
+    pack [frame .pack.f]
+    pack [entry .pack.f.e]
+    update
+    set w [winfo reqwidth .pack.f]
+    set h [winfo reqheight .pack.f]
+    pack propagate .pack.f 0
+    destroy .pack.f.e
+    list [expr {$w - [winfo reqwidth .pack.f]}]\
+            [expr {$h - [winfo reqheight .pack.f]}]
+} -result {0 0}
+
+test pack-20.3 {ttk::frame returns to 1x1 when children unpacked (tip 454)} -setup {
     catch {eval pack forget [pack slaves .pack]}
     destroy .pack.f
 } -body {
@@ -1647,19 +1662,24 @@ test pack-20.2 {ttk::frame returns to 1x1 when children unpacked (tip 454)} -set
     update
     set res [list [expr {[winfo reqwidth .pack.f] > 1}]\
             [expr {[winfo reqheight .pack.f] > 1}]]
-    destroy .pack.f.e
+    pack forget .pack.f.e
     lappend res [winfo reqwidth .pack.f] [winfo reqheight .pack.f]
 } -result {1 1 1 1}
-test pack-20.3 {ttk::labelframe returns to 1x1 when children unpacked (tip 454)} -setup {
+
+test pack-20.4 {ttk::frame returns to 1x1 when children moved (tip 454)} -setup {
     catch {eval pack forget [pack slaves .pack]}
     destroy .pack.f
+    destroy .pack.f2
+    destroy .pack.e
 } -body {
-    pack [ttk::labelframe .pack.f]
-    pack [entry .pack.f.e]
+    pack [ttk::frame .pack.f]
+    pack [ttk::frame .pack.f2]
+    entry .pack.e
+    pack .pack.e -in .pack.f
     update
     set res [list [expr {[winfo reqwidth .pack.f] > 1}]\
             [expr {[winfo reqheight .pack.f] > 1}]]
-    destroy .pack.f.e
+    pack configure .pack.e -in .pack.f2
     lappend res [winfo reqwidth .pack.f] [winfo reqheight .pack.f]
 } -result {1 1 1 1}
 

@@ -1998,7 +1998,7 @@ test grid-22.5 {remove} {
     grid info .c
 } {-in . -column 0 -row 0 -columnspan 2 -rowspan 2 -ipadx 0 -ipady 0 -padx {3 5} -pady {4 7} -sticky ns}
 grid_reset 22.5
-test grid-23.1 {frame returns to 1x1 when children ungridded (tip 454)} {
+test grid-23.1 {frame returns to 1x1 when children destroyed (tip 454)} {
     grid [frame .f]
     grid [frame .f.f]
     grid [entry .f.f.e]
@@ -2009,28 +2009,42 @@ test grid-23.1 {frame returns to 1x1 when children ungridded (tip 454)} {
     lappend res [winfo reqwidth .f.f] [winfo reqheight .f.f]
 } {1 1 1 1}
 grid_reset 23.1
-test grid-23.2 {ttk::frame returns to 1x1 when children ungridded (tip 454)} {
+test grid-23.2 {frame keeps size when children destroyed with propagate off (tip 454)} {
     grid [frame .f]
-    grid [ttk::frame .f.f]
+    grid [frame .f.f]
+    grid [entry .f.f.e]
+    update
+    set w [winfo reqwidth .f.f]
+    set h [winfo reqheight .f.f]
+    grid propagate .f.f 0
+    destroy .f.f.e
+    list [expr { $w - [winfo reqwidth .f.f]}]\
+            [expr {$h - [winfo reqheight .f.f]}]
+} {0 0}
+grid_reset 23.2
+test grid-23.3 {frame returns to 1x1 when children ungridded (tip 454)} {
+    grid [frame .f]
+    grid [frame .f.f]
     grid [entry .f.f.e]
     update
     set res [list [expr {[winfo reqwidth .f.f] > 1}]\
             [expr {[winfo reqheight .f.f] > 1}]]
-    destroy .f.f.e
+    grid forget .f.f.e
     lappend res [winfo reqwidth .f.f] [winfo reqheight .f.f]
 } {1 1 1 1}
-grid_reset 23.2
-test grid-23.2 {ttk::labelframe returns to 1x1 when children ungridded (tip 454)} {
+grid_reset 23.3
+test grid-23.4 {frame returns to 1x1 when children moved (tip 454)} {
     grid [frame .f]
-    grid [ttk::labelframe .f.f]
-    grid [entry .f.f.e]
+    grid [frame .f.f]
+    grid [entry .e] -in .f.f
+    grid [frame .f2]
     update
     set res [list [expr {[winfo reqwidth .f.f] > 1}]\
             [expr {[winfo reqheight .f.f] > 1}]]
-    destroy .f.f.e
+    grid configure .e -in .f2
     lappend res [winfo reqwidth .f.f] [winfo reqheight .f.f]
 } {1 1 1 1}
-grid_reset 23.2
+grid_reset 23.4
 
 # cleanup
 cleanupTests
