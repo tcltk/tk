@@ -210,6 +210,7 @@ proc ::tk::MotifFDialog_SetFilter {w type} {
     variable ::tk::Priv
 
     set data(filter) [lindex $type 1]
+    set Priv(selectFileType) [lindex [lindex $type 0] 0]
 
     MotifFDialog_Update $w
 }
@@ -978,5 +979,11 @@ proc ::tk::ListBoxKeyAccel_Reset {w} {
     variable ::tk::Priv
 
     unset -nocomplain Priv(lbAccel,$w)
+}
+
+proc ::tk_getFileType {} {
+    variable ::tk::Priv
+
+    return $Priv(selectFileType)
 }
 
