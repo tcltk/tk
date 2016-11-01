@@ -1483,13 +1483,11 @@ LayoutDLine(
              */
 
             if (!elide) {
-                char *p;
-
-                for (p = segPtr->body.chars + byteOffset; *p != 0; p++) {
-                    if (*p == '\u00AD') {
-                        maxBytes = (p + 1 - segPtr->body.chars) - byteOffset;
-                        break;
-                    }
+                const char *p;
+                
+                p = Tcl_UtfFindFirst(segPtr->body.chars + byteOffset, 0x00AD);
+                if (p != NULL) {
+                    maxBytes = (p + 2 - segPtr->body.chars) - byteOffset;
                 }
             }
 	    if (!elide && justify == TK_JUSTIFY_LEFT) {
@@ -7532,11 +7530,12 @@ TkTextCharLayoutProc(
 				 * set by the caller. */
 {
     Tk_Font tkfont;
-    int nextX, bytesThatFit, count;
+    int nextX, bytesThatFit;
     CharInfo *ciPtr;
-    char *p;
+    char *p, *p2;
     TkTextSegment *nextPtr;
     Tk_FontMetrics fm;
+    int ch, nBytes;
 #if TK_LAYOUT_WITH_BASE_CHUNKS
     const char *line;
     int lineOffset;
@@ -7702,8 +7701,11 @@ TkTextCharLayoutProc(
 
     if (ciPtr->numBytes > 0 && p[ciPtr->numBytes - 1] == '\t') {
 	FinalizeBaseChunk(chunkPtr);
-    } else if (ciPtr->numBytes > 1 && p[ciPtr->numBytes - 1] == '\u00AD') {
-	FinalizeBaseChunk(chunkPtr);
+    } else {
+        nBytes = TkUtfToUniChar(Tcl_UtfPrev(p + numBytes, p), &ch);
+        if (ch == 0x00AD) {
+            FinalizeBaseChunk(chunkPtr);
+        }
     }
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
@@ -7716,23 +7718,28 @@ TkTextCharLayoutProc(
     if (wrapMode != TEXT_WRAPMODE_WORD) {
 	chunkPtr->breakIndex = chunkPtr->numBytes;
     } else {
-	for (count = bytesThatFit, p += bytesThatFit - 1; count > 0;
-		count--, p--) {
-	    /*
+        p2 = p + bytesThatFit;
+        while (p2 - p > 0) {
+            /*
 	     * Don't use isspace(); effects are unpredictable and can lead to
 	     * odd word-wrapping problems on some platforms. Also don't use
 	     * Tcl_UniCharIsSpace here either, as it identifies non-breaking
 	     * spaces as places to break. What we actually want is only the
 	     * ASCII space characters, so use them explicitly...
+             * 0x09 is '\t', 0x0A is '\n', 0x0B is '\v', 0x0C is '\f',
+             * 0x0D is '\r', 0x20 is ' ', 0x2D is '-', and 0x00AD is the soft
+             * hyphen
 	     */
 
-	    switch (*p) {
-	    case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
-                    case '-': case '\u00AD':
-		chunkPtr->breakIndex = count;
+            nBytes = TkUtfToUniChar(Tcl_UtfPrev(p2, p), &ch);
+            switch (ch) {
+            case 0x09: case 0x0A: case 0x0B: case 0x0C: case 0x0D:
+                    case 0x20: case 0x2D: case 0x00AD:
+		chunkPtr->breakIndex = p2 - p;
 		goto checkForNextChunk;
-	    }
-	}
+            }
+            p2 -= nBytes;
+        }
     checkForNextChunk:
 	if ((bytesThatFit + byteOffset) == segPtr->size) {
 	    for (nextPtr = segPtr->nextPtr; nextPtr != NULL;
@@ -7887,6 +7894,7 @@ CharDisplayProc(
     TextStyle *stylePtr;
     StyleValues *sValuePtr;
     int numBytes, offsetBytes, offsetX;
+    int ch, nBytes;
 #if TK_DRAW_IN_CONTEXT
     BaseCharInfo *bciPtr;
 #endif /* TK_DRAW_IN_CONTEXT */
@@ -7961,8 +7969,10 @@ CharDisplayProc(
          */
 
         if (chunkPtr->nextPtr != NULL) {
-            if ((len > 1) && (string[start + len - 1] == '\u00AD')) {
-                len = len - 2;
+            nBytes = TkUtfToUniChar(Tcl_UtfPrev(string + start + len,
+                    string + start), &ch);
+            if (ch == 0x00AD) {
+                len -= nBytes;
             }
         }
 
@@ -8008,8 +8018,10 @@ CharDisplayProc(
          */
 
         if (chunkPtr->nextPtr != NULL) {
-            if ((numBytes > 1) && (string[numBytes - 1] == '\u00AD')) {
-                numBytes = numBytes - 2;
+            nBytes = TkUtfToUniChar(Tcl_UtfPrev(string + numBytes, string),
+                    &ch);
+            if (ch == 0x00AD) {
+                numBytes -= nBytes;
             }
         }
 
@@ -8614,7 +8626,7 @@ MeasureChars(
     int *nextXPtr)		/* Return x-position of terminating character
 				 * here. */
 {
-    int curX, width, ch;
+    int curX, width, ch, nBytes;
     const char *special, *end, *start;
 
     ch = 0;			/* lint. */
@@ -8628,15 +8640,13 @@ MeasureChars(
 	     * Find the next special character in the string.
 	     */
 
-	    for (special = start; special < end; special++) {
-		ch = *special;
-		if ((ch == '\t') || (ch == '\n')) {
+	    special = start;
+            while (special < end) {
+		nBytes = TkUtfToUniChar(special, &ch);
+		if ((ch == 0x09) || (ch == 0x0A) || (ch == 0x00AD)) {
 		    break;
 		}
-                if (ch == '\u00AD') {
-                    special--;
-                    break;
-                }
+                special += nBytes;
 	    }
 	}
 
@@ -8666,13 +8676,14 @@ MeasureChars(
 	    break;
 	}
 	if (special < end) {
-	    if (ch == '\n') {
+	    if (ch == 0x0A) {
 		break;
 	    }
-            if (ch == '\u00AD') {
-                start++;
+            if (ch == 0x00AD) {
+                start += nBytes;
+            } else {
+	        start++;
             }
-	    start++;
 	}
     }
 
