@@ -552,7 +552,9 @@ test textDisp-2.33 {soft hyphen is not visible when not at display line end} {te
 test textDisp-2.34 {soft hyphen is visible when at display line end} {textfonts} {
     .t delete 1.0 end
     .t insert 1.0 "This is a  -*soft*-  hyphen   test: abc\u00AD123\n"
-    set res [expr [lindex [.t bbox 1.39] 2] > 0]
+    # soft hyphens always have zero width in their bounding boxes,
+    # even if they are accidentally displayed
+    set res [expr [lindex [.t bbox 1.39] 2] == 0]
 } {1}
 test textDisp-2.35 {LayoutDline, maxBytes calculation for chunk with both soft hyphen and tab} {textfonts} {
     .t delete 1.0 end
