@@ -822,6 +822,41 @@ test event-7.2(double-click) {A double click on a lone character
     deleteWindows
 } -result {4 A 4 A}
 
+test event-8 {event generate with keysyms corresponding to
+              multi-byte virtual keycodes - bug 
+              e36963bfe8df9f5e528134707a91b9c0051de723} -setup {
+    deleteWindows
+    set res [list ]
+} -body {
+    set t [toplevel .t]
+    set e [entry $t.e]
+    pack $e
+    tkwait visibility $e
+    bind $e <KeyPress> {lappend res keycode: %k keysym: %K}
+    focus -force $e
+    update
+    event generate $e <diaeresis>
+    # The value now contained in $res depends on the actual
+    # physical keyboard layout and keycode generated, from
+    # the hardware on which the test suite happens to run.
+    # We don't need (and we can't really) check correctness
+    # of the (system-dependent) keycode received, however
+    # Tk should be able to associate this keycode to a
+    # (system-independent) known keysym, unless the system
+    # running the test does not have a keyboard with a
+    # diaeresis key.
+    if {[expr {[lindex $res 3] ne "??"}]} {
+        # keyboard has a physical diaeresis key and bug is fixed
+        return "OK"
+    } else  {
+        return "Test failed, unless the keyboard tied to the system \
+                on which this test is run does NOT have a diaeresis \
+                physical key - in this case, test is actually void."
+    }
+} -cleanup {
+    deleteWindows
+} -result {OK}
+
 # cleanup
 unset -nocomplain keypress_lookup
 rename _init_keypress_lookup {}
