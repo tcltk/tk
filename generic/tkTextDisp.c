@@ -7542,6 +7542,9 @@ TkTextCharLayoutProc(
      *	 (b) at least one pixel of the character is visible, we have not
      *	     already exceeded the character limit, and the next character is a
      *	     white space character.
+     * In the specific case of 'word' wrapping mode however, include all space
+     * characters following the characters that fit in the space we've got,
+     * even if no pixel of them is visible.
      */
 
     p = segPtr->body.chars + byteOffset;
@@ -7581,8 +7584,8 @@ TkTextCharLayoutProc(
 
     if (bytesThatFit < maxBytes) {
 	if ((bytesThatFit == 0) && noCharsYet) {
-	    Tcl_UniChar ch;
-	    int chLen = Tcl_UtfToUniChar(p, &ch);
+	    int ch;
+	    int chLen = TkUtfToUniChar(p, &ch);
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
@@ -7604,6 +7607,21 @@ TkTextCharLayoutProc(
 	    nextX = maxX;
 	    bytesThatFit++;
 	}
+        if (wrapMode == TEXT_WRAPMODE_WORD) {
+            while (p[bytesThatFit] == ' ') {
+                /*
+                 * Space characters that would go at the beginning of the
+                 * next line are allocated to the current line. This gives
+                 * the effect of trimming white spaces that would otherwise
+                 * be seen at the beginning of wrapped lines.
+                 * Note that testing for '\t' is useless here because the
+                 * chunk always includes at most one trailing \t, see
+                 * LayoutDLine.
+                 */
+
+                bytesThatFit++;
+            }
+        }
 	if (p[bytesThatFit] == '\n') {
 	    /*
 	     * A newline character takes up no space, so if the previous

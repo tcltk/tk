@@ -1526,7 +1526,7 @@ TkWinGetUnicodeEncoding(void)
  *
  * HandleIMEComposition --
  *
- *	This function works around a definciency in some versions of Windows
+ *	This function works around a deficiency in some versions of Windows
  *	2000 to make it possible to entry multi-lingual characters under all
  *	versions of Windows 2000.
  *
@@ -1556,6 +1556,7 @@ HandleIMEComposition(
 {
     HIMC hIMC;
     int n;
+    int high = 0;
 
     if ((lParam & GCS_RESULTSTR) == 0) {
 	/*
@@ -1612,6 +1613,14 @@ HandleIMEComposition(
 
 	    event.xkey.keycode = buff[i++];
 
+	    if ((event.xkey.keycode & 0xfc00) == 0xd800) {
+		high = ((event.xkey.keycode & 0x3ff) << 10) + 0x10000;
+		break;
+	    } else if (high && (event.xkey.keycode & 0xfc00) == 0xdc00) {
+		event.xkey.keycode &= 0x3ff;
+		event.xkey.keycode += high;
+		high = 0;
+	    }
 	    event.type = KeyPress;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 

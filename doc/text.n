@@ -609,9 +609,11 @@ specified by the \fB\-foreground\fR tag option is used.
 \fB\-wrap \fImode\fR
 .
 \fIMode\fR specifies how to handle lines that are wider than the text's
-window. It has the same legal values as the \fB\-wrap\fR option for the text
-widget: \fBnone\fR, \fBchar\fR, or \fBword\fR. If this tag option is
-specified, it overrides the \fB\-wrap\fR option for the text widget.
+window. This option only applies to a display line if it applies to the
+first non-elided character on that display line. It has the same legal
+values as the \fB\-wrap\fR option for the text widget: \fBnone\fR,
+\fBchar\fR, or \fBword\fR. If this tag option is specified, it
+overrides the \fB\-wrap\fR option for the text widget.
 .PP
 If a character has several tags associated with it, and if their display
 options conflict, then the options of the highest priority tag are used. If a
