@@ -35,9 +35,9 @@ static const char *const encodingList[] = {
  * family": the foundry, face name, and charset.
  */
 
-#define FONTMAP_SHIFT		10
+#define FONTMAP_SHIFT		12
 
-#define FONTMAP_PAGES		(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
+#define FONTMAP_PAGES		(1 << (21 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
 
 typedef struct FontFamily {
@@ -171,7 +171,7 @@ static Tcl_ThreadDataKey dataKey;
  * encodings into the names expected by the Tcl encoding package.
  */
 
-static EncodingAlias encodingAliases[] = {
+static const EncodingAlias encodingAliases[] = {
     {"gb2312-raw",	"gb2312*"},
     {"big5",		"big5*"},
     {"cns11643-1",	"cns11643*-1"},
@@ -406,10 +406,10 @@ ControlUtfProc(
 {
     const char *srcStart, *srcEnd;
     char *dstStart, *dstEnd;
-    Tcl_UniChar ch;
+    int ch;
     int result;
-    static char hexChars[] = "0123456789abcdef";
-    static char mapChars[] = {
+    static const char hexChars[] = "0123456789abcdef";
+    static const char mapChars[] = {
 	0, 0, 0, 0, 0, 0, 0,
 	'a', 'b', 't', 'n', 'v', 'f', 'r'
     };
@@ -427,9 +427,9 @@ ControlUtfProc(
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
 	}
-	src += Tcl_UtfToUniChar(src, &ch);
+	src += TkUtfToUniChar(src, &ch);
 	dst[0] = '\\';
-	if ((ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
+	if (((size_t) ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
 	    dst[1] = mapChars[ch];
 	    dst += 2;
 	} else if (ch < 256) {
@@ -437,12 +437,20 @@ ControlUtfProc(
 	    dst[2] = hexChars[(ch >> 4) & 0xf];
 	    dst[3] = hexChars[ch & 0xf];
 	    dst += 4;
-	} else {
+	} else if (ch < 0x10000) {
 	    dst[1] = 'u';
 	    dst[2] = hexChars[(ch >> 12) & 0xf];
 	    dst[3] = hexChars[(ch >> 8) & 0xf];
 	    dst[4] = hexChars[(ch >> 4) & 0xf];
 	    dst[5] = hexChars[ch & 0xf];
+	    dst += 6;
+	} else {
+	    /* TODO we can do better here */
+	    dst[1] = 'u';
+	    dst[2] = 'f';
+	    dst[3] = 'f';
+	    dst[4] = 'f';
+	    dst[5] = 'd';
 	    dst += 6;
 	}
     }
@@ -1028,7 +1036,7 @@ Tk_MeasureChars(
 	curByte = 0;
     } else if (maxLength < 0) {
 	const char *p, *end, *next;
-	Tcl_UniChar ch;
+	int ch;
 	SubFont *thisSubFontPtr;
 	FontFamily *familyPtr;
 	Tcl_DString runString;
@@ -1044,7 +1052,7 @@ Tk_MeasureChars(
 	curX = 0;
 	end = source + numBytes;
 	for (p = source; p < end; ) {
-	    next = p + Tcl_UtfToUniChar(p, &ch);
+	    next = p + TkUtfToUniChar(p, &ch);
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;

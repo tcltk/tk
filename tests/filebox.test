@@ -281,7 +281,7 @@ foreach mode $modes {
 		    -initialfile $fileName -initialdir $fileDir \
 		    -typevariable tv]
 	    if {[info exists tv]} {
-		regexp {^(.*) \(.*\)$} $tv dummy typeName
+		set typeName $tv
 	    } else {
 		set typeName "-unset-"
 	    }
@@ -463,7 +463,7 @@ foreach mode $modes {
     }
 
     # The rest of the tests need to be executed on Unix only.
-    # The test whether the dialog box widgets were implemented correctly.
+    # They test whether the dialog box widgets were implemented correctly.
     # These tests are not
     # needed on the other platforms because they use native file dialogs.
 }
