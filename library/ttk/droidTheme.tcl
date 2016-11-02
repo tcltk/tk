@@ -11,14 +11,16 @@ namespace eval ttk::theme::droid {
 
     variable colors
     array set colors {
-    	-frame 		"#e6e6e6"
-	-window		"#ffffff"
-	-activebg	"#e6e6e6"
-	-troughbg	"#657a9e"
-	-selectbg	"#657a9e"
-	-selectfg	"#ffffff"
-	-disabledfg	"#aaaaaa"
-	-indicator	"#b03060"
+    	-frame 			"#e6e6e6"
+	-window			"#ffffff"
+	-activebg		"#e6e6e6"
+	-troughbg		"#657a9e"
+	-selectbg		"#657a9e"
+	-selectfg		"#ffffff"
+	-disabledfg		"#aaaaaa"
+	-indicator		"#b03060"
+	-altindicator		"#657a9e"
+	-disabledaltindicator	"#657a9e"
     }
 
     set colors(-frame) [. cget -bg]
@@ -180,12 +182,22 @@ namespace eval ttk::theme::droid {
 
 	ttk::style element create Checkbutton.indicator image \
 	    [list $I(check-nu) {pressed selected} $I(check-pc) \
-		 pressed $I(check-hc) selected $I(check-nc)] \
+		 pressed $I(check-hc) \
+		 {!disabled selected} $I(check-nc) \
+		 {disabled !selected} $I(check-nu) \
+		 {disabled selected} $I(check-pc) \
+		 {!disabled alternate} $I(check-nu) \
+		 {disabled alternate} $I(check-pc)] \
 	    -sticky {}
 
 	ttk::style element create Radiobutton.indicator image \
 	    [list $I(radio-nu) {pressed selected} $I(radio-pc) \
-		 pressed $I(radio-hc) selected $I(radio-nc)] \
+		 pressed $I(radio-hc) \
+		 {!disabled selected} $I(radio-nc) \
+		 {disabled !selected} $I(radio-nu) \
+		 {disabled selected} $I(radio-pc) \
+		 {!disabled alternate} $I(radio-nu) \
+		 {disabled alternate} $I(radio-pc)] \
 	    -sticky {}
 
 	ttk::style element create Horizontal.Scrollbar.thumb \

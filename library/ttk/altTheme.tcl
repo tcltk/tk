@@ -14,6 +14,7 @@ namespace eval ttk::theme::alt {
 	-disabledfg	"#a3a3a3"
 	-selectbg	"#4a6984"
 	-selectfg	"#ffffff"
+	-altindicator	"#aaaaaa"
     }
 
     ttk::style theme settings alt {
@@ -46,9 +47,13 @@ namespace eval ttk::theme::alt {
 	ttk::style configure TCheckbutton -indicatorcolor "#ffffff" -padding 2
 	ttk::style configure TRadiobutton -indicatorcolor "#ffffff" -padding 2
 	ttk::style map TCheckbutton -indicatorcolor \
-	    [list  disabled $colors(-frame)  pressed $colors(-frame)]
+	    [list  pressed $colors(-frame) \
+	           alternate $colors(-altindicator) \
+	           disabled $colors(-frame)]
 	ttk::style map TRadiobutton -indicatorcolor \
-	    [list  disabled $colors(-frame)  pressed $colors(-frame)]
+	    [list  pressed $colors(-frame) \
+	           alternate $colors(-altindicator) \
+	           disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
 	    -width -11 -padding "3 3" -relief raised

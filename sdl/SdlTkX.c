@@ -22,6 +22,7 @@
 #endif
 
 #undef TRACE_EVENTS
+#undef TRACE_XEVENTS
 #undef TRACE_GL
 
 #ifdef TRACE_EVENTS
@@ -2038,7 +2039,82 @@ XGetAtomName(Display *display, Atom atom)
 {
     char *ret = NULL;
 
-    if (atom != None) {
+    if ((atom != None) && (atom <= XA_LAST_PREDEFINED)) {
+	const char *names[] = {
+	    "NO_ATOM",
+	    "XA_PRIMARY",
+	    "XA_SECONDARY",
+	    "XA_ARC",
+	    "XA_ATOM",
+	    "XA_BITMAP",
+	    "XA_CARDINAL",
+	    "XA_COLORMAP",
+	    "XA_CURSOR",
+	    "XA_CUT_BUFFER0",
+	    "XA_CUT_BUFFER1",
+	    "XA_CUT_BUFFER2",
+	    "XA_CUT_BUFFER3",
+	    "XA_CUT_BUFFER4",
+	    "XA_CUT_BUFFER5",
+	    "XA_CUT_BUFFER6",
+	    "XA_CUT_BUFFER7",
+	    "XA_DRAWABLE",
+	    "XA_FONT",
+	    "XA_INTEGER",
+	    "XA_PIXMAP",
+	    "XA_POINT",
+	    "XA_RECTANGLE",
+	    "XA_RESOURCE_MANAGER",
+	    "XA_RGB_COLOR_MAP",
+	    "XA_RGB_BEST_MAP",
+	    "XA_RGB_BLUE_MAP",
+	    "XA_RGB_DEFAULT_MAP",
+	    "XA_RGB_GRAY_MAP",
+	    "XA_RGB_GREEN_MAP",
+	    "XA_RGB_RED_MAP",
+	    "XA_STRING",
+	    "XA_VISUALID",
+	    "XA_WINDOW",
+	    "XA_WM_COMMAND",
+	    "XA_WM_HINTS",
+	    "XA_WM_CLIENT_MACHINE",
+	    "XA_WM_ICON_NAME",
+	    "XA_WM_ICON_SIZE",
+	    "XA_WM_NAME",
+	    "XA_WM_NORMAL_HINTS",
+	    "XA_WM_SIZE_HINTS",
+	    "XA_WM_ZOOM_HINTS",
+	    "XA_MIN_SPACE",
+	    "XA_NORM_SPACE",
+	    "XA_MAX_SPACE",
+	    "XA_END_SPACE",
+	    "XA_SUPERSCRIPT_X",
+	    "XA_SUPERSCRIPT_Y",
+	    "XA_SUBSCRIPT_X",
+	    "XA_SUBSCRIPT_Y",
+	    "XA_UNDERLINE_POSITION",
+	    "XA_UNDERLINE_THICKNESS",
+	    "XA_STRIKEOUT_ASCENT",
+	    "XA_STRIKEOUT_DESCENT",
+	    "XA_ITALIC_ANGLE",
+	    "XA_X_HEIGHT",
+	    "XA_QUAD_WIDTH",
+	    "XA_WEIGHT",
+	    "XA_POINT_SIZE",
+	    "XA_RESOLUTION",
+	    "XA_COPYRIGHT",
+	    "XA_NOTICE",
+	    "XA_FONT_NAME",
+	    "XA_FAMILY_NAME",
+	    "XA_FULL_NAME",
+	    "XA_CAP_HEIGHT",
+	    "XA_WM_CLASS",
+	    "XA_WM_TRANSIENT_FOR"
+	};
+
+	ret = ckalloc(strlen(names[(long) atom]) + 1);
+	strcpy(ret, names[(long) atom]);
+    } else if (atom != None) {
 	int len = strlen((char *) atom) + 1;
 
 	ret = ckalloc(len);
@@ -7521,6 +7597,577 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
     }
 done:
     SdlTkUnlock(display);
+#endif
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SdlTkDumpXEvent --
+ *
+ *	Poor man's "xev" like event printer.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#ifdef TRACE_XEVENTS
+#ifdef ANDROID
+#define XELOG(...) __android_log_print(ANDROID_LOG_ERROR,"XEV",__VA_ARGS__)
+#else
+#define XELOG(...) SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION,__VA_ARGS__)
+#endif
+#else
+#define XELOG(...)
+#endif
+
+void
+SdlTkDumpXEvent(XEvent *eventPtr)
+{
+#ifdef TRACE_XEVENTS
+    const char *name, *sep1 = ",";
+    char buffer[256];
+
+    switch (eventPtr->xany.type) {
+    case KeyPress:		name = "KeyPress"; break;
+    case KeyRelease:		name = "KeyRelease"; break;
+    case ButtonPress:		name = "ButtonPress"; break;
+    case ButtonRelease:		name = "ButtonRelease"; break;
+    case MotionNotify:		name = "MotionNotify"; break;
+    case EnterNotify:		name = "EnterNotify"; break;
+    case LeaveNotify:		name = "LeaveNotify"; break;
+    case FocusIn:		name = "FocusIn"; break;
+    case FocusOut:		name = "FocusOut"; break;
+    case KeymapNotify:		name = "KeymapNotify"; break;
+    case Expose:		name = "Expose"; break;
+    case GraphicsExpose:	name = "GraphicsExpose"; break;
+    case NoExpose:		name = "NoExpose"; break;
+    case VisibilityNotify:	name = "VisibilityNotify"; break;
+    case CreateNotify:		name = "CreateNotify"; break;
+    case DestroyNotify:		name = "DestroyNotify"; break;
+    case UnmapNotify:		name = "UnmapNotify"; break;
+    case MapNotify:		name = "MapNotify"; break;
+    case MapRequest:		name = "MapRequest"; break;
+    case ReparentNotify:	name = "ReparentNotify"; break;
+    case ConfigureNotify:	name = "ConfigureNotify"; break;
+    case ConfigureRequest:	name = "ConfigureRequest"; break;
+    case GravityNotify:		name = "GravityNotify"; break;
+    case ResizeRequest:		name = "ResizeRequest"; break;
+    case CirculateNotify:	name = "CirculateNotify"; break;
+    case CirculateRequest:	name = "CirculateRequest"; break;
+    case PropertyNotify:	name = "PropertyNotify"; break;
+    case SelectionClear:	name = "SelectionClear"; break;
+    case SelectionRequest:	name = "SelectionRequest"; break;
+    case SelectionNotify:	name = "SelectionNotify"; break;
+    case ColormapNotify:	name = "ColormapNotify"; break;
+    case ClientMessage:		name = "ClientMessage"; break;
+    case MappingNotify:		name = "MappingNotify"; break;
+    case VirtualEvent:		name = "VirtualEvent"; break;
+    case ActivateNotify:	name = "ActivateNotify"; sep1 = ""; break;
+    case DeactivateNotify:	name = "DeactivateNotify"; sep1 = ""; break;
+    case MouseWheelEvent:	name = "MouseWheelEvent"; sep1 = ""; break;
+    case PointerUpdate:		name = "PointerUpdate"; sep1 = ""; break;
+    default:
+	sprintf(buffer, "UnknownType%d", eventPtr->xany.type);
+	name = buffer;
+	sep1 = "";
+	break;
+    }
+
+    XELOG("%s event, serial %ld, synthetic %s, window 0x%lx%s", name,
+	eventPtr->xany.serial, eventPtr->xany.send_event ? "YES" : "NO",
+	eventPtr->xany.window, sep1);
+
+    switch (eventPtr->xany.type) {
+
+    case KeyPress:
+    case KeyRelease: {
+	XKeyEvent *evPtr = &eventPtr->xkey;
+	int i;
+	char line[80];
+
+	XELOG("    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),",
+	    evPtr->root, evPtr->subwindow, evPtr->time, evPtr->x, evPtr->y,
+	    evPtr->x_root, evPtr->y_root);
+	XELOG("    state 0x%x, keycode %u, same_screen %s, nbytes %d%s",
+	    evPtr->state, evPtr->keycode, evPtr->same_screen ? "YES" : "NO",
+	    evPtr->nbytes, (evPtr->nbytes > 0) ? "," : "");
+	if (evPtr->nbytes > 0) {
+	    for (i = 0; i < evPtr->nbytes; i++) {
+		sprintf(line + i * 5, " 0x%02x", evPtr->trans_chars[i] & 0xff);
+	    }
+	    XELOG("    trans_chars:%s", line);
+	}
+	break;
+    }
+
+    case ButtonPress:
+    case ButtonRelease: {
+	XButtonEvent *evPtr = &eventPtr->xbutton;
+
+	XELOG("    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),",
+	    evPtr->root, evPtr->subwindow, evPtr->time, evPtr->x, evPtr->y,
+	    evPtr->x_root, evPtr->y_root);
+	XELOG("    state 0x%x, button %u, same_screen %s",
+	    evPtr->state, evPtr->button, evPtr->same_screen ? "YES" : "NO");
+	break;
+    }
+
+    case MotionNotify: {
+	XMotionEvent *evPtr = &eventPtr->xmotion;
+
+	XELOG ("    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),",
+	    evPtr->root, evPtr->subwindow, evPtr->time, evPtr->x, evPtr->y,
+	    evPtr->x_root, evPtr->y_root);
+	XELOG ("    state 0x%x, is_hint %u, same_screen %s",
+	    evPtr->state, evPtr->is_hint, evPtr->same_screen ? "YES" : "NO");
+	break;
+    }
+
+    case EnterNotify:
+    case LeaveNotify: {
+	XCrossingEvent *evPtr = &eventPtr->xcrossing;
+	const char *mode, *detail;
+	char dmode[16], ddetail[16];
+
+	switch (evPtr->mode) {
+	case NotifyNormal:		mode = "NotifyNormal"; break;
+	case NotifyGrab:		mode = "NotifyGrab"; break;
+	case NotifyUngrab:		mode = "NotifyUngrab"; break;
+	case NotifyWhileGrabbed:	mode = "NotifyWhileGrabbed"; break;
+	default:
+	    mode = dmode;
+	    sprintf(dmode, "%u", evPtr->mode);
+	    break;
+	}
+	switch (evPtr->detail) {
+	case NotifyAncestor:		detail = "NotifyAncestor"; break;
+	case NotifyVirtual:		detail = "NotifyVirtual"; break;
+	case NotifyInferior:		detail = "NotifyInferior"; break;
+	case NotifyNonlinear:		detail = "NotifyNonlinear"; break;
+	case NotifyNonlinearVirtual:	detail = "NotifyNonlinearVirtual";
+	    break;
+	case NotifyPointer:		detail = "NotifyPointer"; break;
+	case NotifyPointerRoot:		detail = "NotifyPointerRoot"; break;
+	case NotifyDetailNone:		detail = "NotifyDetailNone"; break;
+	default:
+	    detail = ddetail;
+	    sprintf(ddetail, "%u", evPtr->detail);
+	    break;
+	}
+	XELOG("    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),",
+	    evPtr->root, evPtr->subwindow, evPtr->time, evPtr->x, evPtr->y,
+	    evPtr->x_root, evPtr->y_root);
+	XELOG("    mode %s, detail %s, same_screen %s,",
+	    mode, detail, evPtr->same_screen ? "YES" : "NO");
+	XELOG("    focus %s, state %u", evPtr->focus ? "YES" : "NO",
+	    evPtr->state);
+	break;
+    }
+
+    case FocusIn:
+    case FocusOut: {
+	XFocusChangeEvent *evPtr = &eventPtr->xfocus;
+	const char *mode, *detail;
+	char dmode[16], ddetail[16];
+
+	switch (evPtr->mode) {
+	case NotifyNormal:		mode = "NotifyNormal"; break;
+	case NotifyGrab:		mode = "NotifyGrab"; break;
+	case NotifyUngrab:		mode = "NotifyUngrab"; break;
+	case NotifyWhileGrabbed:	mode = "NotifyWhileGrabbed"; break;
+	default:
+	    mode = dmode;
+	    sprintf(dmode, "%u", evPtr->mode);
+	    break;
+	}
+	switch (evPtr->detail) {
+	case NotifyAncestor:		detail = "NotifyAncestor"; break;
+	case NotifyVirtual:		detail = "NotifyVirtual"; break;
+	case NotifyInferior:		detail = "NotifyInferior"; break;
+	case NotifyNonlinear:		detail = "NotifyNonlinear"; break;
+	case NotifyNonlinearVirtual:	detail = "NotifyNonlinearVirtual";
+	    break;
+	case NotifyPointer:		detail = "NotifyPointer"; break;
+	case NotifyPointerRoot:		detail = "NotifyPointerRoot"; break;
+	case NotifyDetailNone:		detail = "NotifyDetailNone"; break;
+	default:
+	    detail = ddetail;
+	    sprintf(ddetail, "%u", evPtr->detail);
+	    break;
+	}
+	XELOG("    mode %s, detail %s", mode, detail);
+	break;
+    }
+
+    case KeymapNotify: {
+	XKeymapEvent *evPtr = &eventPtr->xkeymap;
+	int i;
+	char line[80];
+
+	for (i = 0; i < 16; i++) {
+	    sprintf(line + i * 4, "%-3u ",
+		    (unsigned int) evPtr->key_vector[i]);
+	}
+	XELOG("    keys:  %s", line);
+	for (; i < 32; i++) {
+	    sprintf(line + (i - 16) * 4, "%-3u ",
+		    (unsigned int) evPtr->key_vector[i]);
+	}
+	XELOG("           %s", line);
+	break;
+    }
+
+    case Expose: {
+	XExposeEvent *evPtr = &eventPtr->xexpose;
+
+	XELOG("    (%d,%d), width %d, height %d, count %d",
+	    evPtr->x, evPtr->y, evPtr->width, evPtr->height, evPtr->count);
+	break;
+    }
+
+    case GraphicsExpose: {
+	XGraphicsExposeEvent *evPtr = &eventPtr->xgraphicsexpose;
+	const char *m;
+	char mdummy[16];
+
+	switch (evPtr->major_code) {
+	case 62:	m = "CopyArea";  break;
+	case 63:	m = "CopyPlane";  break;
+	default:
+	    m = mdummy;
+	    sprintf(mdummy, "%d", evPtr->major_code);
+	    break;
+	}
+	XELOG("    (%d,%d), width %d, height %d, count %d,",
+	    evPtr->x, evPtr->y, evPtr->width, evPtr->height, evPtr->count);
+	XELOG("    major %s, minor %d", m, evPtr->minor_code);
+	break;
+    }
+
+    case NoExpose: {
+	XNoExposeEvent *evPtr = &eventPtr->xnoexpose;
+	const char *m;
+	char mdummy[16];
+
+	switch (evPtr->major_code) {
+	case 62:	m = "CopyArea";  break;
+	case 63:	m = "CopyPlane";  break;
+	default:
+	    m = mdummy;
+	    sprintf(mdummy, "%d", evPtr->major_code);
+	    break;
+	}
+	XELOG("    major %s, minor %d", m, evPtr->minor_code);
+	break;
+    }
+
+    case VisibilityNotify: {
+	XVisibilityEvent *evPtr = &eventPtr->xvisibility;
+	const char *v;
+	char vdummy[16];
+
+	switch (evPtr->state) {
+	case VisibilityUnobscured:
+	    v = "VisibilityUnobscured";
+	    break;
+	case VisibilityPartiallyObscured:
+	    v = "VisibilityPartiallyObscured";
+	    break;
+	case VisibilityFullyObscured:
+	    v = "VisibilityFullyObscured";
+	    break;
+	default:
+	    v = vdummy;
+	    sprintf(vdummy, "%d", evPtr->state);
+	    break;
+	}
+	XELOG("    state %s", v);
+	break;
+    }
+
+    case CreateNotify: {
+	XCreateWindowEvent *evPtr = &eventPtr->xcreatewindow;
+
+	XELOG("    parent 0x%lx, window 0x%lx, (%d,%d), width %d, height %d,",
+	    evPtr->parent, evPtr->window, evPtr->x, evPtr->y,
+	    evPtr->width, evPtr->height);
+	XELOG("    border_width %d, override %s",
+	    evPtr->border_width, evPtr->override_redirect ? "YES" : "NO");
+	break;
+    }
+
+    case DestroyNotify: {
+	XDestroyWindowEvent *evPtr = &eventPtr->xdestroywindow;
+
+	XELOG("    event 0x%lx, window 0x%lx", evPtr->event, evPtr->window);
+	break;
+    }
+
+    case UnmapNotify: {
+	XUnmapEvent *evPtr = &eventPtr->xunmap;
+
+	XELOG("    event 0x%lx, window 0x%lx, from_configure %s",
+	    evPtr->event, evPtr->window, evPtr->from_configure ? "YES" : "NO");
+	break;
+    }
+
+    case MapNotify: {
+	XMapEvent *evPtr = &eventPtr->xmap;
+
+	XELOG("    event 0x%lx, window 0x%lx, override %s",
+	    evPtr->event, evPtr->window,
+	    evPtr->override_redirect ? "YES" : "NO");
+	break;
+    }
+
+    case MapRequest: {
+	XMapRequestEvent *evPtr = &eventPtr->xmaprequest;
+
+	XELOG("    parent 0x%lx, window 0x%lx",
+	      evPtr->parent, evPtr->window);
+	break;
+    }
+
+    case ReparentNotify: {
+	XReparentEvent *evPtr = &eventPtr->xreparent;
+
+	XELOG("    event 0x%lx, window 0x%lx, parent 0x%lx,",
+	    evPtr->event, evPtr->window, evPtr->parent);
+	XELOG("    (%d,%d), override %s", evPtr->x, evPtr->y,
+	    evPtr->override_redirect ? "YES" : "NO");
+	break;
+    }
+
+    case ConfigureNotify: {
+	XConfigureEvent *evPtr = &eventPtr->xconfigure;
+
+	XELOG("    event 0x%lx, window 0x%lx, (%d,%d), width %d, height %d,",
+	    evPtr->event, evPtr->window, evPtr->x, evPtr->y,
+	    evPtr->width, evPtr->height);
+	XELOG("    border_width %d, above 0x%lx, override %s",
+	    evPtr->border_width, evPtr->above,
+	    evPtr->override_redirect ? "YES" : "NO");
+	break;
+    }
+
+    case ConfigureRequest: {
+	XConfigureRequestEvent *evPtr = &eventPtr->xconfigurerequest;
+	const char *detail;
+	char ddummy[16];
+
+	switch (evPtr->detail) {
+	case Above:	detail = "Above";  break;
+	case Below:	detail = "Below";  break;
+	case TopIf:	detail = "TopIf";  break;
+	case BottomIf:	detail = "BottomIf"; break;
+	case Opposite:	detail = "Opposite"; break;
+	default:
+	    detail = ddummy;
+	    sprintf(ddummy, "%d", evPtr->detail);
+	    break;
+	}
+	XELOG("    parent 0x%lx, window 0x%lx, (%d,%d), width %d, height %d,",
+	    evPtr->parent, evPtr->window, evPtr->x, evPtr->y,
+	    evPtr->width, evPtr->height);
+	XELOG("    border_width %d, above 0x%lx, detail %s, value 0x%lx",
+	    evPtr->border_width, evPtr->above, detail, evPtr->value_mask);
+	break;
+    }
+
+    case GravityNotify: {
+	XGravityEvent *evPtr = &eventPtr->xgravity;
+
+	XELOG("    event 0x%lx, window 0x%lx, (%d,%d)",
+	    evPtr->event, evPtr->window, evPtr->x, evPtr->y);
+	break;
+    }
+
+    case ResizeRequest: {
+	XResizeRequestEvent *evPtr = &eventPtr->xresizerequest;
+
+	XELOG("    width %d, height %d", evPtr->width, evPtr->height);
+	break;
+    }
+
+    case CirculateNotify: {
+	XCirculateEvent *evPtr = &eventPtr->xcirculate;
+	const char *p;
+	char pdummy[16];
+
+	switch (evPtr->place) {
+	case PlaceOnTop:	p = "PlaceOnTop"; break;
+	case PlaceOnBottom:	p = "PlaceOnBottom"; break;
+	default:
+	    p = pdummy;
+	    sprintf(pdummy, "%d", evPtr->place);
+	    break;
+	}
+	XELOG("    event 0x%lx, window 0x%lx, place %s",
+	    evPtr->event, evPtr->window, p);
+	break;
+    }
+
+    case CirculateRequest: {
+	XCirculateRequestEvent *evPtr = &eventPtr->xcirculaterequest;
+	char *p;
+	char pdummy[16];
+
+	switch (evPtr->place) {
+	case PlaceOnTop:	p = "PlaceOnTop"; break;
+	case PlaceOnBottom:	p = "PlaceOnBottom"; break;
+	default:
+	    p = pdummy;
+	    sprintf(pdummy, "%d", evPtr->place);
+	    break;
+	}
+	XELOG("    parent 0x%lx, window 0x%lx, place %s",
+	    evPtr->parent, evPtr->window, p);
+	break;
+    }
+
+    case PropertyNotify: {
+	XPropertyEvent *evPtr = &eventPtr->xproperty;
+	char *aname = XGetAtomName(evPtr->display, evPtr->atom);
+	char *s;
+	char sdummy[16];
+
+	switch (evPtr->state) {
+	case PropertyNewValue:	s = "PropertyNewValue"; break;
+	case PropertyDelete:	s = "PropertyDelete"; break;
+	default:
+	    s = sdummy;
+	    sprintf(sdummy, "%d", evPtr->state);
+	    break;
+	}
+	XELOG("    atom 0x%lx (%s), time %lu, state %s",
+	   evPtr->atom, aname ? aname : "Unknown", evPtr->time,  s);
+	if (aname) {
+	    XFree(aname);
+	}
+	break;
+    }
+
+    case SelectionClear: {
+	XSelectionClearEvent *evPtr = &eventPtr->xselectionclear;
+	char *sname = XGetAtomName(evPtr->display, evPtr->selection);
+
+	XELOG("    selection 0x%lx (%s), time %lu",
+	    evPtr->selection, sname ? sname : "Unknown", evPtr->time);
+	if (sname) {
+	    XFree(sname);
+	}
+	break;
+    }
+
+    case SelectionRequest: {
+	XSelectionRequestEvent *evPtr = &eventPtr->xselectionrequest;
+	char *sname = XGetAtomName(evPtr->display, evPtr->selection);
+	char *tname = XGetAtomName(evPtr->display, evPtr->target);
+	char *pname = XGetAtomName(evPtr->display, evPtr->property);
+
+	XELOG("    owner 0x%lx, requestor 0x%lx, selection 0x%lx (%s),",
+	    evPtr->owner, evPtr->requestor, evPtr->selection,
+	    sname ? sname : "Unknown");
+	XELOG("    target 0x%lx (%s), property 0x%lx (%s), time %lu",
+	    evPtr->target, tname ? tname : "Unknown", evPtr->property,
+	    pname ? pname : "Unknown", evPtr->time);
+	if (sname) {
+	    XFree(sname);
+	}
+	if (tname) {
+	    XFree(tname);
+	}
+	if (pname) {
+	    XFree(pname);
+	}
+	break;
+    }
+
+    case SelectionNotify: {
+	XSelectionEvent *evPtr = &eventPtr->xselection;
+	char *sname = XGetAtomName(evPtr->display, evPtr->selection);
+	char *tname = XGetAtomName(evPtr->display, evPtr->target);
+	char *pname = XGetAtomName(evPtr->display, evPtr->property);
+
+	XELOG("    selection 0x%lx (%s), target 0x%lx (%s),",
+	    evPtr->selection, sname ? sname : "Unknown", evPtr->target,
+	    tname ? tname : "Unknown");
+	XELOG("    property 0x%lx (%s), time %lu",
+	    evPtr->property, pname ? pname : "Unknown", evPtr->time);
+	if (sname) {
+	    XFree(sname);
+	}
+	if (tname) {
+	    XFree(tname);
+	}
+	if (pname) {
+	    XFree(pname);
+	}
+	break;
+    }
+
+    case ColormapNotify: {
+	XColormapEvent *evPtr = &eventPtr->xcolormap;
+	const char *s;
+	char sdummy[16];
+
+	switch (evPtr->state) {
+	case ColormapInstalled:		s = "ColormapInstalled"; break;
+	case ColormapUninstalled:	s = "ColormapUninstalled"; break;
+	default:
+	    s = sdummy;
+	    sprintf(sdummy, "%d", evPtr->state);
+	    break;
+	}
+	XELOG("    colormap 0x%lx, new %s, state %s",
+	    evPtr->colormap, evPtr->new ? "YES" : "NO", s);
+	break;
+    }
+
+    case ClientMessage: {
+	XClientMessageEvent *evPtr = &eventPtr->xclient;
+	char *mname = XGetAtomName(evPtr->display, evPtr->message_type);
+
+        XELOG("    message_type 0x%lx (%s), format %d",
+	    evPtr->message_type, mname ? mname : "Unknown", evPtr->format);
+	if (mname) {
+	    XFree(mname);
+	}
+	break;
+    }
+
+    case MappingNotify: {
+	XMappingEvent *evPtr = &eventPtr->xmapping;
+	const char *r;
+	char rdummy[16];
+
+	switch (evPtr->request) {
+	case MappingModifier:	r = "MappingModifier"; break;
+	case MappingKeyboard:	r = "MappingKeyboard"; break;
+	case MappingPointer:	r = "MappingPointer"; break;
+	default:
+	    r = rdummy;
+	    sprintf(rdummy, "%d", evPtr->request);
+	    break;
+	}
+	XELOG("    request %s, first_keycode %d, count %d",
+	    r, evPtr->first_keycode, evPtr->count);
+	break;
+    }
+
+    case VirtualEvent: {
+	XVirtualEvent *evPtr = (XVirtualEvent *) eventPtr;
+
+	XELOG("    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),",
+	    evPtr->root, evPtr->subwindow, evPtr->time, evPtr->x, evPtr->y,
+	    evPtr->x_root, evPtr->y_root);
+	XELOG("    state 0x%x, same_screen %s,", evPtr->state,
+	    evPtr->same_screen ? "YES" : "NO");
+	XELOG("    uid %p (%s), user_data %p", evPtr->name,
+	    (char *) evPtr->name, evPtr->user_data);
+	break;
+    }
+    }
 #endif
 }
 

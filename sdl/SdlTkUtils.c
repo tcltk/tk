@@ -1094,6 +1094,8 @@ fonterr:
 		strcpy(ghash->familyName, face->family_name);
 		ghash->faceFlags = face->face_flags;
 		ghash->styleFlags = face->style_flags;
+		FNTLOG("FONTINIT: family '%s'", face->family_name);
+		FNTLOG("FONTINIT: style  '%s'", face->style_name);
 		Tcl_DStringInit(&ds);
 		Tcl_DStringInit(&ds2);
 		if (face->style_name != NULL) {
@@ -1111,12 +1113,16 @@ fonterr:
 		}
 		if (strstr(style, "black")) {
 		    strcat(ghash->familyName, " Black");
+		} else if (strstr(style, "extralight")) {
+		    strcat(ghash->familyName, " ExtraLight");
 		} else if (strstr(style, "light")) {
 		    strcat(ghash->familyName, " Light");
 		} else if (strstr(style, "thin")) {
 		    strcat(ghash->familyName, " Thin");
 		} else if (strstr(style, "medium")) {
 		    strcat(ghash->familyName, " Medium");
+		} else if (strstr(style, "semibold")) {
+		    strcat(ghash->familyName, " SemiBold");
 		}
 		if (ghash->styleFlags & FT_STYLE_FLAG_BOLD) {
 		    weight = "-bold";
@@ -1246,6 +1252,8 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fname)
 	    strcpy(ghash->familyName, face->family_name);
 	    ghash->faceFlags = face->face_flags;
 	    ghash->styleFlags = face->style_flags;
+	    FNTLOG("FONTADD: family '%s'", face->family_name);
+	    FNTLOG("FONTADD: style  '%s'", face->style_name);
 	    Tcl_DStringInit(&ds);
 	    Tcl_DStringInit(&ds2);
 	    if (face->style_name != NULL) {
@@ -1262,12 +1270,16 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fname)
 	    }
 	    if (strstr(style, "black")) {
 		strcat(ghash->familyName, " Black");
+	    } else if (strstr(style, "extralight")) {
+		strcat(ghash->familyName, " ExtraLight");
 	    } else if (strstr(style, "light")) {
 		strcat(ghash->familyName, " Light");
 	    } else if (strstr(style, "thin")) {
 		strcat(ghash->familyName, " Thin");
 	    } else if (strstr(style, "medium")) {
 		strcat(ghash->familyName, " Medium");
+	    } else if (strstr(style, "semibold")) {
+		strcat(ghash->familyName, " SemiBold");
 	    }
 	    Tcl_DStringAppend(&ds, "-*-", -1);
 	    Tcl_DStringAppend(&ds, ghash->familyName, -1);
@@ -1290,8 +1302,9 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fname)
 	    Tcl_SetHashValue(hPtr, (char *) ghash);
 	    nfonts++;
 	    Tcl_CreateHashEntry(&famHash, ghash->familyName, &isNew);
-	    FNTLOG("FONTADD: '%s' -> '%s'", ghash->xlfdPattern,
-		   (char *) ffKey.file);
+	    FNTLOG("FONTADD: '%s' -> '%s' fflg=%lx sflg=%lx",
+		   ghash->xlfdPattern, (char *) ffKey.file,
+		   ghash->faceFlags, ghash->styleFlags);
 	}
 nextface:
 	FT_Done_Face(face);

@@ -70,7 +70,9 @@ proc ::tk::fontchooser::Show {} {
 
 proc ::tk::fontchooser::Hide {} {
     variable S
-    wm withdraw $S(W)
+    if {[winfo exists $S(W)]} {
+        wm withdraw $S(W)
+    }
 }
 
 proc ::tk::fontchooser::Configure {args} {
