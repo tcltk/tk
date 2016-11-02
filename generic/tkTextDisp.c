@@ -7702,7 +7702,7 @@ TkTextCharLayoutProc(
     if (ciPtr->numBytes > 0 && p[ciPtr->numBytes - 1] == '\t') {
 	FinalizeBaseChunk(chunkPtr);
     } else {
-        nBytes = TkUtfToUniChar(Tcl_UtfPrev(p + numBytes, p), &ch);
+        TkUtfToUniChar(Tcl_UtfPrev(p + ciPtr->numBytes, p), &ch);
         if (ch == 0x00AD) {
             FinalizeBaseChunk(chunkPtr);
         }
