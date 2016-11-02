@@ -766,7 +766,8 @@ MkTransChars(XKeyEvent *ev)
 }
 
 static int
-ProcessTextInput(XEvent *event, int sdl_mod, const char *text, int len)
+ProcessTextInput(XEvent *event, int no_rel, int sdl_mod,
+		 const char *text, int len)
 {
     int i, n, n2, ulen = Tcl_NumUtfChars(text, len);
     char buf[TCL_UTF_MAX];
@@ -853,12 +854,14 @@ ProcessTextInput(XEvent *event, int sdl_mod, const char *text, int len)
 	/* Queue the KeyPress */
 	EVLOG("   KEYPRESS:  CODE=0x%02X  UC=0x%X", event->xkey.keycode, ch);
 	event->type = KeyPress;
-	SdlTkQueueEvent(event);
-	/* Queue the KeyRelease except for the last */
-	event->type = KeyRelease;
-	if (i < ulen - 1) {
-	    EVLOG(" KEYRELEASE:  CODE=0x%02X", event->xkey.keycode);
+	if (!no_rel || (i < ulen - 1)) {
 	    SdlTkQueueEvent(event);
+	    /* Queue the KeyRelease except for the last */
+	    event->type = KeyRelease;
+	    if (i < ulen - 1) {
+		EVLOG(" KEYRELEASE:  CODE=0x%02X", event->xkey.keycode);
+		SdlTkQueueEvent(event);
+	    }
 	}
     }
     return 1;
@@ -1345,7 +1348,7 @@ skipTranslation:
 	    if (len == 0) {
 		return 0;
 	    }
-	    if (ProcessTextInput(event, 0, sdl_event->text.text, len) <= 0) {
+	    if (ProcessTextInput(event, 0, 0, sdl_event->text.text, len) <= 0) {
 		return 0;
 	    }
 	} else if (sdl_event->type == SDL_TEXTEDITING) {
@@ -1361,7 +1364,7 @@ skipTranslation:
 	    if (len <= 0) {
 		goto doNormalKeyEvent;
 	    }
-	    len = ProcessTextInput(event, sdl_event->key.keysym.mod,
+	    len = ProcessTextInput(event, 1, sdl_event->key.keysym.mod,
 				   txt_sdl_event.text.text, len);
 	    if (len == 0) {
 		goto doNormalKeyEvent;
@@ -2885,6 +2888,7 @@ void
 SdlTkGenerateConfigureNotify(Display *display, Window w)
 {
     _Window *_w = (_Window *) w;
+    _Window *parent = NULL;
     XEvent event;
 
     memset(&event, 0, sizeof (event));
@@ -2910,8 +2914,20 @@ SdlTkGenerateConfigureNotify(Display *display, Window w)
 	event.xconfigure.y = _w->atts.y;
 	event.xconfigure.width = _w->atts.width;
 	event.xconfigure.height = _w->atts.height;
+	if (!IS_ROOT(_w->parent)) {
+	    parent = _w->parent;
+	    if (!(parent->atts.your_event_mask & SubstructureNotifyMask)) {
+		parent = NULL;
+	    }
+	}
     }
     SdlTkQueueEvent(&event);
+    if (parent != NULL) {
+	event.xconfigure.event = (Window) parent;
+	event.xconfigure.serial = parent->display->request;
+	event.xconfigure.display = parent->display;
+	SdlTkQueueEvent(&event);
+    }
 }
 
 /*

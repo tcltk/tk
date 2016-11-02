@@ -14,6 +14,9 @@
  */
 
 #include "tkInt.h"
+#ifdef PLATFORM_SDL
+#include "SdlTkInt.h"
+#endif
 
 /*
  * There's a potential problem if a handler is deleted while it's current
@@ -1608,6 +1611,10 @@ Tk_QueueWindowEvent(
 	    break;
 	}
     }
+
+#ifdef PLATFORM_SDL
+    SdlTkDumpXEvent(eventPtr);
+#endif
 
     /*
      * Don't filter motion events if the user defaulting to true (1), which

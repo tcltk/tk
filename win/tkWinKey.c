@@ -185,18 +185,18 @@ KeycodeToKeysym(
 {
     BYTE keys[256];
     int result, deadkey, shift;
-    char buf[4];
+    TCHAR buf[4];
     unsigned int scancode = MapVirtualKey(keycode, 0);
 
     /*
-     * Do not run keycodes of lock keys through ToAscii(). One of ToAscii()'s
+     * Do not run keycodes of lock keys through ToUnicode(). One of ToUnicode()'s
      * side effects is to handle the lights on the keyboard, and we don't want
      * to mess that up.
      */
 
     if (noascii || keycode == VK_CAPITAL || keycode == VK_SCROLL ||
 	    keycode == VK_NUMLOCK) {
-	goto skipToAscii;
+	goto skipToUnicode;
     }
 
     /*
@@ -237,24 +237,24 @@ KeycodeToKeysym(
 	keys[VK_NUMLOCK] = 1;
     }
 
-    result = ToAscii(keycode, scancode, keys, (LPWORD) buf, 0);
+    result = ToUnicode(keycode, scancode, keys, buf, 4, 0);
 
     if (result < 0) {
 	/*
 	 * Win95/98: This was a dead char, which is now remembered by the
-	 * keyboard. Call ToAscii() again to forget it.
+	 * keyboard. Call ToUnicode() again to forget it.
 	 * WinNT: This was a dead char, overwriting any previously remembered
-	 * key. Calling ToAscii() again does not affect anything.
+	 * key. Calling ToUnicode() again does not affect anything.
 	 */
 
-	ToAscii(keycode, scancode, keys, (LPWORD) buf, 0);
+	ToUnicode(keycode, scancode, keys, buf, 4, 0);
 	return XK_Multi_key;
     }
 
     if (result == 2) {
 	/*
 	 * This was a dead char, and there were one previously remembered by
-	 * the keyboard. Call ToAscii() again with proper parameters to
+	 * the keyboard. Call ToUnicode() again with proper parameters to
 	 * restore it.
 	 *
 	 * Get information about the old char
@@ -279,26 +279,26 @@ KeycodeToKeysym(
 	if (shift & 4) {
 	    keys[VK_MENU] = 0x80;
 	}
-	ToAscii(deadkey, scancode, keys, (LPWORD) buf, 0);
+	ToUnicode(deadkey, scancode, keys, buf, 4, 0);
 	return XK_Multi_key;
     }
 
     /*
-     * Keycode mapped to a valid Latin-1 character. Since the keysyms for
-     * alphanumeric characters map onto Latin-1, we just return it.
+     * Keycode mapped to a valid Unicode character. Since the keysyms for
+     * alphanumeric characters map onto Unicode, we just return it.
      *
      * We treat 0x7F as a special case mostly for backwards compatibility. In
      * versions of Tk<=8.2, Control-Backspace returned "XK_BackSpace" as the X
      * Keysym. This was due to the fact that we did not initialize the keys
-     * array properly when we passed it to ToAscii, above. We had previously
+     * array properly when we passed it to ToUnicode, above. We had previously
      * not been setting the state bit for the Control key. When we fixed that,
      * we found that Control-Backspace on Windows is interpreted as ASCII-127
      * (0x7F), which corresponds to the Delete key.
      *
      * Upon discovering this, we realized we had two choices: return XK_Delete
      * or return XK_BackSpace. If we returned XK_Delete, that could be
-     * considered "more correct" (although the correctness would be dependant
-     * on whether you believe that ToAscii is doing the right thing in that
+     * considered "more correct" (although the correctness would be dependent
+     * on whether you believe that ToUnicode is doing the right thing in that
      * case); however, this would break backwards compatibility, and worse, it
      * would limit application programmers; they would effectively be unable
      * to bind to <Control-Backspace> on Windows. We therefore chose instead
@@ -308,15 +308,15 @@ KeycodeToKeysym(
      * XK_BackSpace).
      */
 
-    if (result == 1 && UCHAR(buf[0]) >= 0x20 && UCHAR(buf[0]) != 0x7F) {
-	return (KeySym) UCHAR(buf[0]);
+    if (result == 1 && buf[0] >= 0x20 && buf[0] != 0x7F) {
+	return (KeySym) buf[0];
     }
 
     /*
      * Keycode is a non-alphanumeric key, so we have to do the lookup.
      */
 
-  skipToAscii:
+  skipToUnicode:
     if (keycode > MAX_KEYCODE) {
 	return NoSymbol;
     }
@@ -571,7 +571,7 @@ TkpSetKeycodeAndState(
 	}
     }
     if (keySym >= 0x20) {
-	result = VkKeyScan((char) keySym);
+	result = VkKeyScan((TCHAR) keySym);
 	if (result != -1) {
 	    shift = result >> 8;
 	    if (shift & 1)
@@ -624,7 +624,7 @@ XKeysymToKeycode(
 	}
     }
     if (keysym >= 0x20) {
-	result = VkKeyScan((char) keysym);
+	result = VkKeyScan((TCHAR) keysym);
 	if (result != -1) {
 	    return (KeyCode) (result & 0xff);
 	}
