@@ -19,8 +19,8 @@
  * The preferred font encodings.
  */
 
-static const char *const encodingList[] = {
-    "iso8859-1", "jis0208", "jis0212", NULL
+static const char encodingList[][10] = {
+    "iso8859-1", "jis0208", "jis0212"
 };
 
 /*
@@ -42,7 +42,7 @@ static const char *const encodingList[] = {
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
-    int refCount;		/* How many SubFonts are referring to this
+    size_t refCount;		/* How many SubFonts are referring to this
 				 * FontFamily. When the refCount drops to
 				 * zero, this FontFamily may be freed. */
     /*
@@ -1916,8 +1916,7 @@ FreeFontFamily(
     if (familyPtr == NULL) {
 	return;
     }
-    familyPtr->refCount--;
-    if (familyPtr->refCount > 0) {
+    if (familyPtr->refCount-- > 1) {
 	return;
     }
     Tcl_FreeEncoding(familyPtr->encoding);
@@ -2686,7 +2685,7 @@ RankAttributes(
 	penalty += 150 * diff;
     }
     if (gotPtr->xa.charset != wantPtr->xa.charset) {
-	int i;
+	size_t i;
 	const char *gotAlias, *wantAlias;
 
 	penalty += 65000;
@@ -2694,7 +2693,7 @@ RankAttributes(
 	wantAlias = GetEncodingAlias(wantPtr->xa.charset);
 	if (strcmp(gotAlias, wantAlias) != 0) {
 	    penalty += 30000;
-	    for (i = 0; encodingList[i] != NULL; i++) {
+	    for (i = 0; i < sizeof(encodingList)/sizeof(encodingList[0]); i++) {
 		if (strcmp(gotAlias, encodingList[i]) == 0) {
 		    penalty -= 30000;
 		    break;
@@ -3012,7 +3011,7 @@ static const char *
 GetEncodingAlias(
     const char *name)		/* The name to look up. */
 {
-    EncodingAlias *aliasPtr;
+    const EncodingAlias *aliasPtr;
 
     for (aliasPtr = encodingAliases; aliasPtr->aliasPattern != NULL; ) {
 	if (Tcl_StringMatch(name, aliasPtr->aliasPattern)) {
