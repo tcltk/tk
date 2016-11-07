@@ -880,7 +880,7 @@ XDrawLines(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawSegments(
     Display *display,
     Drawable d,
@@ -894,7 +894,7 @@ XDrawSegments(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	double o = (lw % 2) ? .5 : 0;
@@ -911,6 +911,7 @@ XDrawSegments(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
