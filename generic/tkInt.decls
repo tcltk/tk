@@ -1422,81 +1422,112 @@ declare 106 win {
 
 # New in Tk 8.6
 declare 107 win {
-   int XFlush(Display *display)
+    int XFlush(Display *display)
 }
 declare 108 win {
-   int XGrabServer(Display *display)
+    int XGrabServer(Display *display)
 }
 declare 109 win {
-   int XUngrabServer(Display *display)
+    int XUngrabServer(Display *display)
 }
 declare 110 win {
-   int XFree(void *data)
+    int XFree(void *data)
 }
 declare 111 win {
-   int XNoOp(Display *display)
+    int XNoOp(Display *display)
 }
 declare 112 win {
-   XAfterFunction XSynchronize(Display *display, Bool onoff)
+    XAfterFunction XSynchronize(Display *display, Bool onoff)
 }
 declare 113 win {
-   int XSync(Display *display, Bool discard)
+    int XSync(Display *display, Bool discard)
 }
 declare 114 win {
-   VisualID XVisualIDFromVisual(Visual *visual)
+    VisualID XVisualIDFromVisual(Visual *visual)
 }
 
 # For tkpath
 declare 115 win {
-   void *XGetAgg2D(Display *display, Drawable d)
+    void *XGetAgg2D(Display *display, Drawable d)
 }
 declare 116 win {
-   void *XCreateAgg2D(Display *display)
+    void *XCreateAgg2D(Display *display)
 }
 declare 117 win {
-   void XDestroyAgg2D(Display *display, void *agg2d)
+    void XDestroyAgg2D(Display *display, void *agg2d)
 }
 declare 118 win {
-   int XGetFontFile(const char *family, int size, int isBold, int isItalic,
+    int XGetFontFile(const char *family, int size, int isBold, int isItalic,
 	    const char **nameRet, int *filesizeRet)
 }
 declare 119 win {
-   void *XGetFTStream(const char *pathname, int size)
+    void *XGetFTStream(const char *pathname, int size)
 }
 
 # For tktreectrl
 declare 120 win {
-   int XOffsetRegion(Region rgn, int dx, int dy)
+    int XOffsetRegion(Region rgn, int dx, int dy)
 }
 declare 121 win {
-   int XUnionRegion(Region srca, Region srcb, Region dr_return)
+    int XUnionRegion(Region srca, Region srcb, Region dr_return)
 }
 
 # For 3dcanvas
-declare 122 {
-   Window XCreateWindow(Display *display, Window parent, int x, int y,
+declare 122 win {
+    Window XCreateWindow(Display *display, Window parent, int x, int y,
 	    unsigned int width, unsigned int height,
 	    unsigned int border_width, int depth, unsigned int clazz,
 	    Visual *visual, unsigned long value_mask,
 	    XSetWindowAttributes *attributes)
 }
-declare 123 {
-   int SdlTkGLXAvailable(Display *display)
+declare 123 win {
+    int SdlTkGLXAvailable(Display *display)
 }
-declare 124 {
-   void *SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
+declare 124 win {
+    void *SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
 }
-declare 125 {
-   SdlTkGLXDestroyContext(Display *display, Window w, void *ctx)
+declare 125 win {
+    void SdlTkGLXDestroyContext(Display *display, Window w, void *ctx)
 }
-declare 126 {
-   SdlTkGLXMakeCurrent(Display *display, Window w, void *ctx)
+declare 126 win {
+    void SdlTkGLXMakeCurrent(Display *display, Window w, void *ctx)
 }
-declare 127 {
-   SdlTkGLXReleaseCurrent(Display *display, Window w, void *ctx)
+declare 127 win {
+    void SdlTkGLXReleaseCurrent(Display *display, Window w, void *ctx)
 }
-declare 128 {
-   SdlTkGLXSwapBuffers(Display *display, Window w)
+declare 128 win {
+    void SdlTkGLXSwapBuffers(Display *display, Window w)
+}
+
+# Various, e.g. for stub-enabled BLT
+declare 129 win {
+    int XLowerWindow(Display *d, Window w)
+}
+declare 130 win {
+    int XFillArcs(Display *d, Drawable dr, GC gc, XArc *a, int n)
+}
+declare 131 win {
+    int XDrawArcs(Display *d, Drawable dr, GC gc, XArc *a, int n)
+}
+declare 132 win {
+    int XDrawRectangles(Display *d, Drawable dr, GC gc, XRectangle *r, int n)
+}
+declare 133 win {
+    int XDrawSegments(Display *d, Drawable dr, GC gc, XSegment *s, int n)
+}
+declare 134 win {
+    int XDrawPoint(Display *d, Drawable dr, GC gc, int x, int y)
+}
+declare 135 win {
+    int XDrawPoints(Display *d, Drawable dr, GC gc, XPoint *p, int n, int m)
+}
+declare 136 win {
+    int XReparentWindow(Display *d, Window w, Window p, int x, int y)
+}
+declare 137 win {
+    int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+	    int sx, int sy, int dx, int dy,
+	    unsigned int w, unsigned int h)
 }
 
 ################################

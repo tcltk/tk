@@ -955,7 +955,7 @@ InitWindowClass(
 	    }
 #if (_WIN32_WINNT >= 0x0601)
 	    {
-		HANDLE lib = LoadLibrary(TEXT("user32.dll"));
+		HANDLE lib = GetModuleHandleA("USER32");
 
 		if (lib != NULL) {
 		    pCloseTouchInputHandle = (CloseTouchInputHandleProc *)
@@ -971,7 +971,6 @@ InitWindowClass(
 		    pSetGestureConfig = (SetGestureConfigProc *)
 			GetProcAddress(lib, "SetGestureConfig");
 		}
-		FreeLibrary(lib);
 	    }
 #endif
 	}
