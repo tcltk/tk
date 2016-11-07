@@ -486,7 +486,7 @@ XCopyPlane(
 /*
  *----------------------------------------------------------------------
  *
- * TkPutImage --
+ * TkPutImage, XPutImage --
  *
  *	Copies a subimage from an in-memory image to a rectangle of of the
  *	specified drawable.
@@ -598,6 +598,21 @@ TkPutImage(
     DeleteDC(dcMem);
     TkWinReleaseDrawableDC(d, dc, &state);
     return Success;
+}
+
+int
+XPutImage(
+    Display *display,
+    Drawable d,			/* Destination drawable. */
+    GC gc,
+    XImage *image,		/* Source image. */
+    int src_x, int src_y,	/* Offset of subimage. */
+    int dest_x, int dest_y,	/* Position of subimage origin in drawable. */
+    unsigned int width, unsigned int height)
+				/* Dimensions of subimage. */
+{
+    return TkPutImage(NULL, 0, display, d, gc, image,
+		src_x, src_y, dest_x, dest_y, width, height);
 }
 
 /*
@@ -940,7 +955,7 @@ XFillPolygon(
 /*
  *----------------------------------------------------------------------
  *
- * XDrawRectangle --
+ * XDrawRectangle, XDrawRectangles --
  *
  *	Draws a rectangle.
  *
@@ -985,11 +1000,31 @@ XDrawRectangle(
     TkWinReleaseDrawableDC(d, dc, &state);
     return Success;
 }
+
+int
+XDrawRectangles(
+    Display *display,
+    Drawable d,
+    GC gc,
+    XRectangle rects[],
+    int nrects)
+{
+    int n, ret;
+
+    for (n = 0; n < nrects; n++) {
+	ret = XDrawRectangle(display, d, gc, rects[n].x, rects[n].y,
+		    rects[n].width, rects[n].height);
+	if (ret != Success) {
+	    break;
+	}
+    }
+    return ret;
+}
 
 /*
  *----------------------------------------------------------------------
  *
- * XDrawArc --
+ * XDrawArc, XDrawArcs --
  *
  *	Draw an arc.
  *
@@ -1015,11 +1050,34 @@ XDrawArc(
 
     return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 0);
 }
+
+int
+XDrawArcs(
+    Display *display,
+    Drawable d,
+    GC gc,
+    XArc *arcs,
+    int narcs)
+{
+    int n, ret;
+
+    display->request++;
+
+    for (n = 0; n < narcs; n++) {
+	ret = DrawOrFillArc(display, d, gc, arcs[n].x, arcs[n].y,
+		    arcs[n].width, arcs[n].height,
+		    arcs[n].angle1, arcs[n].angle2, 0);
+	if (ret != Success) {
+	    break;
+	}
+    }
+    return ret;
+}
 
 /*
  *----------------------------------------------------------------------
  *
- * XFillArc --
+ * XFillArc, XFillArcs --
  *
  *	Draw a filled arc.
  *
@@ -1044,6 +1102,29 @@ XFillArc(
     display->request++;
 
     return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 1);
+}
+
+int
+XFillArcs(
+    Display *display,
+    Drawable d,
+    GC gc,
+    XArc *arcs,
+    int narcs)
+{
+    int n, ret;
+
+    display->request++;
+
+    for (n = 0; n < narcs; n++) {
+	ret = DrawOrFillArc(display, d, gc, arcs[n].x, arcs[n].y,
+		    arcs[n].width, arcs[n].height,
+		    arcs[n].angle1, arcs[n].angle2, 1);
+	if (ret != Success) {
+	    break;
+	}
+    }
+    return ret;
 }
 
 /*

@@ -759,6 +759,15 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     SdlTkGLXMakeCurrent, /* 126 */
     SdlTkGLXReleaseCurrent, /* 127 */
     SdlTkGLXSwapBuffers, /* 128 */
+    XLowerWindow, /* 129 */
+    XFillArcs, /* 130 */
+    XDrawArcs, /* 131 */
+    XDrawRectangles, /* 132 */
+    XDrawSegments, /* 133 */
+    XDrawPoint, /* 134 */
+    XDrawPoints, /* 135 */
+    XReparentWindow, /* 136 */
+    XPutImage, /* 137 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */

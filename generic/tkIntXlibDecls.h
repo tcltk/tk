@@ -383,11 +383,12 @@ EXTERN int		XOffsetRegion(Region rgn, int dx, int dy);
 EXTERN int		XUnionRegion(Region srca, Region srcb,
 				Region dr_return);
 /* 122 */
-EXTERN Window		XCreateWindow(Display *display, Window parent,
-				int x, int y, unsigned int width,
-				unsigned int height, unsigned int border_width,
-				int depth, unsigned int clazz,
-				Visual *visual, unsigned long value_mask,
+EXTERN Window		XCreateWindow(Display *display, Window parent, int x,
+				int y, unsigned int width,
+				unsigned int height,
+				unsigned int border_width, int depth,
+				unsigned int clazz, Visual *visual,
+				unsigned long value_mask,
 				XSetWindowAttributes *attributes);
 /* 123 */
 EXTERN int		SdlTkGLXAvailable(Display *display);
@@ -405,6 +406,33 @@ EXTERN void		SdlTkGLXReleaseCurrent(Display *display, Window w,
 				void *ctx);
 /* 128 */
 EXTERN void		SdlTkGLXSwapBuffers(Display *display, Window w);
+/* 129 */
+EXTERN int		XLowerWindow(Display *d, Window w);
+/* 130 */
+EXTERN int		XFillArcs(Display *d, Drawable dr, GC gc, XArc *a,
+				int n);
+/* 131 */
+EXTERN int		XDrawArcs(Display *d, Drawable dr, GC gc, XArc *a,
+				int n);
+/* 132 */
+EXTERN int		XDrawRectangles(Display *d, Drawable dr, GC gc,
+				XRectangle *r, int n);
+/* 133 */
+EXTERN int		XDrawSegments(Display *d, Drawable dr, GC gc,
+				XSegment *s, int n);
+/* 134 */
+EXTERN int		XDrawPoint(Display *d, Drawable dr, GC gc, int x,
+				int y);
+/* 135 */
+EXTERN int		XDrawPoints(Display *d, Drawable dr, GC gc,
+				XPoint *p, int n, int m);
+/* 136 */
+EXTERN int		XReparentWindow(Display *d, Window w, Window p,
+				int x, int y);
+/* 137 */
+EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+				int sx, int sy, int dx, int dy,
+				unsigned int w, unsigned int h);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -805,6 +833,15 @@ typedef struct TkIntXlibStubs {
     void (*sdlTkGLXMakeCurrent) (Display *display, Window w, void *ctx); /* 126 */
     void (*sdlTkGLXReleaseCurrent) (Display *display, Window w, void *ctx); /* 127 */
     void (*sdlTkGLXSwapBuffers) (Display *display, Window w); /* 128 */
+    void (*xLowerWindow) (Display *d, Window w); /* 129 */
+    void (*xFillArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 130 */
+    void (*xDrawArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 131 */
+    void (*xDrawRectangles) (Display *d, Drawable dr, GC gc, XRectangle *r, int n); /* 132 */
+    void (*xDrawSegments) (Display *d, Drawable dr, GC gc, XSegment *s, int n); /* 133 */
+    void (*xDrawPoint) (Display *d, Drawable dr, GC gc, int x, int y); /* 134 */
+    void (*xDrawPoints) (Display *d, Drawable dr, GC gc, XPoint *p, int n, int m); /* 135 */
+    void (*xReparentWindow) (Display *d, Window w, Window p, int x, int y); /* 136 */
+    void (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, int w, int h); /* 137 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -1172,6 +1209,24 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->sdlTkGLXReleaseCurrent) /* 127 */
 #define SdlTkGLXSwapBuffers \
 	(tkIntXlibStubsPtr->sdlTkGLXSwapBuffers) /* 128 */
+#define XLowerWindow \
+	(tkIntXlibStubsPtr->xLowerWindow) /* 129 */
+#define XFillArcs \
+	(tkIntXlibStubsPtr->xFillArcs) /* 130 */
+#define XDrawArcs \
+	(tkIntXlibStubsPtr->xDrawArcs) /* 131 */
+#define XDrawRectangles \
+	(tkIntXlibStubsPtr->xDrawRectangles) /* 132 */
+#define XDrawSegments \
+	(tkIntXlibStubsPtr->xDrawSegments) /* 133 */
+#define XDrawPoint \
+	(tkIntXlibStubsPtr->xDrawPoint) /* 134 */
+#define XDrawPoints \
+	(tkIntXlibStubsPtr->xDrawPoints) /* 135 */
+#define XReparentWindow \
+	(tkIntXlibStubsPtr->xReparentWindow) /* 136 */
+#define XPutImage \
+	(tkIntXlibStubsPtr->xPutImage) /* 137 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #define XSetDashes \

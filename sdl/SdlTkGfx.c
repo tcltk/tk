@@ -779,6 +779,7 @@ SdlTkGfxPutImage(Drawable d, Region r, XImage* image, int src_x, int src_y,
 	    colors[0].r = colors[0].g = colors[0].b = 255;
 	    colors[1].r = colors[1].g = colors[1].b = 0;
 	    colors[0].a = colors[1].a = 255;
+	    SDL_SetPaletteColors(pal, colors, 0, 2);
 	    SDL_SetSurfacePalette(sdl, pal);
 	    SDL_FreePalette(pal);
 	}
