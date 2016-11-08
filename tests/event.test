@@ -824,7 +824,7 @@ test event-7.2(double-click) {A double click on a lone character
 
 test event-8 {event generate with keysyms corresponding to
               multi-byte virtual keycodes - bug 
-              e36963bfe8df9f5e528134707a91b9c0051de723} -setup {
+              e36963bfe8df9f5e528134707a91b9c0051de723} -constraints nonPortable -setup {
     deleteWindows
     set res [list ]
 } -body {
