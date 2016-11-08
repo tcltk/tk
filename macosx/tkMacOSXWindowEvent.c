@@ -364,10 +364,10 @@ GenerateUpdates(
     event.xexpose.count = 0;
     Tk_HandleEvent(&event);
 
-    #ifdef TK_MAC_DEBUG_DRAWING
+#ifdef TK_MAC_DEBUG_DRAWING
     NSLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
 	event.xexpose.y, event.xexpose.width, event.xexpose.height);
-    #endif
+#endif
 
     /*
      * Generate updates for the children of this window
