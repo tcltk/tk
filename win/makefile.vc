@@ -614,7 +614,9 @@ shell: setup $(WISH)
 !else
 	@set PATH=$(_TCLDIR)\win\$(BUILDDIRTOP);$(PATH)
 !endif
-	$(DEBUGGER) $(WISH) $(SCRIPT)
+	$(DEBUGGER) $(WISH) <<
+	console show
+<<
 
 dbgshell: setup $(WISH)
 	@set TCL_LIBRARY=$(TCL_LIBRARY:\=/)

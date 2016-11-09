@@ -13,16 +13,6 @@
 
 #include "tkWinInt.h"
 
-/*
- * The w32api 1.1 package (included in Mingw 1.1) does not define _WIN32_IE by
- * default. Define it here to gain access to the InitCommonControlsEx API in
- * commctrl.h.
- */
-
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0550 /* IE 5.5 */
-#endif
-
 #include <commctrl.h>
 #ifdef _MSC_VER
 #   pragma comment (lib, "comctl32.lib")
@@ -487,9 +477,9 @@ TkWinDisplayChanged(
     screen->width = GetDeviceCaps(dc, HORZRES);
     screen->height = GetDeviceCaps(dc, VERTRES);
     screen->mwidth = MulDiv(screen->width, 254,
-    	    GetDeviceCaps(dc, LOGPIXELSX) * 10);
+	    GetDeviceCaps(dc, LOGPIXELSX) * 10);
     screen->mheight = MulDiv(screen->height, 254,
-    	    GetDeviceCaps(dc, LOGPIXELSY) * 10);
+	    GetDeviceCaps(dc, LOGPIXELSY) * 10);
 
     /*
      * On windows, when creating a color bitmap, need two pieces of
