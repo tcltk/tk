@@ -8630,6 +8630,7 @@ MeasureChars(
     const char *special, *end, *start;
 
     ch = 0;			/* lint. */
+    nBytes = 0;		/* Silence compiler warning. */
     curX = startX;
     start = source + rangeStart;
     end = start + rangeLength;
