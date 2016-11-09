@@ -62,6 +62,9 @@ TkCreateXEventSource(void)
 #   define TkUnixContainerId 0
 #   define TkUnixDoOneXEvent 0
 #   define TkUnixSetMenubar 0
+#   define XCreateWindow 0
+#   define XOffsetRegion 0
+#   define XUnionRegion 0
 #   define TkWmCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkSendCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkpTestsendCmd 0
@@ -698,6 +701,29 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSynchronize, /* 112 */
     XSync, /* 113 */
     XVisualIDFromVisual, /* 114 */
+    0, /* 115 */
+    0, /* 116 */
+    0, /* 117 */
+    0, /* 118 */
+    0, /* 119 */
+    XOffsetRegion, /* 120 */
+    XUnionRegion, /* 121 */
+    XCreateWindow, /* 122 */
+    0, /* 123 */
+    0, /* 124 */
+    0, /* 125 */
+    0, /* 126 */
+    0, /* 127 */
+    0, /* 128 */
+    XLowerWindow, /* 129 */
+    XFillArcs, /* 130 */
+    XDrawArcs, /* 131 */
+    XDrawRectangles, /* 132 */
+    XDrawSegments, /* 133 */
+    XDrawPoint, /* 134 */
+    XDrawPoints, /* 135 */
+    XReparentWindow, /* 136 */
+    XPutImage, /* 137 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */

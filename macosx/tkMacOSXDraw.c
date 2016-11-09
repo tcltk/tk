@@ -880,7 +880,7 @@ XDrawLines(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawSegments(
     Display *display,
     Drawable d,
@@ -894,7 +894,7 @@ XDrawSegments(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	double o = (lw % 2) ? .5 : 0;
@@ -911,6 +911,7 @@ XDrawSegments(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
@@ -1694,13 +1695,13 @@ TkMacOSXSetupDrawingContext(
 	CGContextSetTextDrawingMode(dc.context, kCGTextFill);
 	CGContextConcatCTM(dc.context, t);
 	if (dc.clipRgn) {
-	    #ifdef TK_MAC_DEBUG_DRAWING
+#ifdef TK_MAC_DEBUG_DRAWING
 	    CGContextSaveGState(dc.context);
 	    ChkErr(HIShapeReplacePathInCGContext, dc.clipRgn, dc.context);
 	    CGContextSetRGBFillColor(dc.context, 1.0, 0.0, 0.0, 0.1);
 	    CGContextEOFillPath(dc.context);
 	    CGContextRestoreGState(dc.context);
-	    #endif /* TK_MAC_DEBUG_DRAWING */
+#endif /* TK_MAC_DEBUG_DRAWING */
 	    CGRect r;
 	    if (!HIShapeIsRectangular(dc.clipRgn) || !CGRectContainsRect(
 		    *HIShapeGetBounds(dc.clipRgn, &r),
