@@ -1261,17 +1261,17 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
         set il1 [lindex $ind $i]
         set ir1 [lindex $ind [expr {$i + 1}]]
         lappend indices $il1 $ir1
- 
+
         for {set j [expr {$i + 2}]} {$j < $nUndoMarks} {incr j 2} {
             set il2 [lindex $ind $j]
             set ir2 [lindex $ind [expr {$j + 1}]]
- 
+
             if {[$w compare $il2 > $ir1]} {
                 # second range starts after the end of first range
                 # -> further second ranges do not need to be considered
                 #    because ranges were sorted by increasing first index
                 set j $nUndoMarks
- 
+
             } else {
                 if {[$w compare $ir2 > $ir1]} {
                     # second range overlaps first range
@@ -1289,7 +1289,7 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
                 set ind [lreplace $ind $j [expr {$j + 1}]]
                 incr j -2
                 incr nUndoMarks -2
- 
+
             }
 
         }
