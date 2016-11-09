@@ -23,7 +23,13 @@
 #   include <tcl.h>
 #endif
 
+/* Some (older) versions of X11/Xutil.h have a wrong signature of those
+   two functions, so move them out of the way temporarly. */
+#define XOffsetRegion _XOffsetRegion
+#define XUnionRegion _XUnionRegion
 #include "X11/Xutil.h"
+#undef XOffsetRegion
+#undef XUnionRegion
 
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
