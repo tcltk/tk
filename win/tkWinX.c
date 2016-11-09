@@ -13,16 +13,6 @@
 
 #include "tkWinInt.h"
 
-/*
- * The w32api 1.1 package (included in Mingw 1.1) does not define _WIN32_IE by
- * default. Define it here to gain access to the InitCommonControlsEx API in
- * commctrl.h.
- */
-
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0550 /* IE 5.5 */
-#endif
-
 #include <commctrl.h>
 #ifdef _MSC_VER
 #   pragma comment (lib, "comctl32.lib")
@@ -125,15 +115,12 @@ TkGetServerInfo(
     OSVERSIONINFOW os;
 
     if (!buffer[0]) {
-	HANDLE handle = LoadLibraryW(L"NTDLL");
+	HANDLE handle = GetModuleHandle(TEXT("NTDLL"));
 	int(__stdcall *getversion)(void *) =
 		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	if (!getversion || getversion(&os)) {
 	    GetVersionExW(&os);
-	}
-	if (handle) {
-	    FreeLibrary(handle);
 	}
 	/* Write the first character last, preventing multi-thread issues. */
 	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
