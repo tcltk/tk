@@ -3203,12 +3203,7 @@ SetDefaults(
     int pointSize;
     HFONT menuFont;
     /* See: [Bug #3239768] tk8.4.19 (and later) WIN32 menu font support */
-    struct {
-        NONCLIENTMETRICS metrics;
-#if (WINVER < 0x0600)
-        int padding;
-#endif
-    } nc;
+    NONCLIENTMETRICS metrics;
     OSVERSIONINFOW os;
 
     /*
@@ -3227,17 +3222,17 @@ SetDefaults(
     }
     Tcl_DStringInit(&menuFontDString);
 
-    nc.metrics.cbSize = sizeof(nc);
+    metrics.cbSize = sizeof(metrics);
 
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
     GetVersionExW(&os);
     if (os.dwMajorVersion < 6) {
-	nc.metrics.cbSize -= sizeof(int);
+	metrics.cbSize -= sizeof(int);
     }
 
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, nc.metrics.cbSize,
-	    &nc.metrics, 0);
-    menuFont = CreateFontIndirect(&nc.metrics.lfMenuFont);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, metrics.cbSize,
+	    &metrics, 0);
+    menuFont = CreateFontIndirect(&metrics.lfMenuFont);
     SelectObject(scratchDC, menuFont);
     GetTextMetricsA(scratchDC, &tm);
     GetTextFaceA(scratchDC, LF_FACESIZE, faceName);

@@ -18,14 +18,20 @@
  * the SystemParametersInfo API doesn't like to receive structures that
  * are larger than it expects which affects the font assignments.
  *
- * WINVER = 0x0500 means Windows 2000 and above
+ * NTDDI_VERSION = 0x0600 means Windows Vista and above
  */
 
+#ifndef NTDDI_VERSION
+#define NTDDI_VERSION 0x06010000
+#endif
 #ifndef WINVER
 #define WINVER 0x0601
 #endif
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0601
+#endif
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x0601
 #endif
 
 #ifndef _TK
