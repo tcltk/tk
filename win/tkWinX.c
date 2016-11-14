@@ -131,15 +131,12 @@ TkGetServerInfo(
     OSVERSIONINFOW os;
 
     if (!buffer[0]) {
-	HANDLE handle = LoadLibraryW(L"NTDLL");
+	HANDLE handle = GetModuleHandle(TEXT("NTDLL"));
 	int(__stdcall *getversion)(void *) =
 		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	if (!getversion || getversion(&os)) {
 	    GetVersionExW(&os);
-	}
-	if (handle) {
-	    FreeLibrary(handle);
 	}
 	/* Write the first character last, preventing multi-thread issues. */
 	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,

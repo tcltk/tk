@@ -540,16 +540,15 @@ XDrawPoints(
     int npoints,
     int mode)
 {
-    int i, ret;
+    int res = Success;
 
-    for (i = 0; i < npoints; i++) {
-	ret = XDrawLine(display, d, gc,
-		    points[i].x, points[i].y, points[i].x, points[i].y);
-	if (ret != Success) {
-	    break;
-	}
+    while (npoints-- > 0) {
+	res = XDrawLine(display, d, gc,
+		points[0].x, points[0].y, points[0].x, points[0].y);
+	if (res != Success) break;
+	++points;
     }
-    return ret;
+    return res;
 }
 
 #if !defined(MAC_OSX_TK)
