@@ -1809,7 +1809,7 @@ declare 79 aqua {
 	    XTextProperty *text_prop_return)
 }
 declare 80 aqua {
-    void XDrawSegments(Display *display, Drawable d, GC gc,
+    int XDrawSegments(Display *display, Drawable d, GC gc,
 	    XSegment *segments, int nsegments)
 }
 declare 81 aqua {
@@ -1827,10 +1827,10 @@ declare 84 aqua {
     void XClearWindow(Display *d, Window w)
 }
 declare 85 aqua {
-    void XDrawPoint(Display *display, Drawable d, GC gc, int x, int y)
+    int XDrawPoint(Display *display, Drawable d, GC gc, int x, int y)
 }
 declare 86 aqua {
-    void XDrawPoints(Display *display, Drawable d, GC gc, XPoint *points,
+    int XDrawPoints(Display *display, Drawable d, GC gc, XPoint *points,
 	    int npoints, int mode)
 }
 declare 87 aqua {

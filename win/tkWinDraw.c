@@ -640,7 +640,6 @@ XFillRectangles(
     int nrectangles)
 {
     HDC dc;
-    int i;
     RECT rect;
     TkWinDCState state;
     HBRUSH brush, oldBrush;
@@ -681,25 +680,26 @@ XFillRectangles(
 	 * result with the stipple pattern.
 	 */
 
-	for (i = 0; i < nrectangles; i++) {
-	    bitmap = CreateCompatibleBitmap(dc, rectangles[i].width,
-		    rectangles[i].height);
+	while (nrectangles-- > 0) {
+	    bitmap = CreateCompatibleBitmap(dc, rectangles[0].width,
+		    rectangles[0].height);
 	    oldBitmap = SelectObject(dcMem, bitmap);
 	    rect.left = 0;
 	    rect.top = 0;
-	    rect.right = rectangles[i].width;
-	    rect.bottom = rectangles[i].height;
+	    rect.right = rectangles[0].width;
+	    rect.bottom = rectangles[0].height;
 	    FillRect(dcMem, &rect, brush);
-	    BitBlt(dc, rectangles[i].x, rectangles[i].y, rectangles[i].width,
-		    rectangles[i].height, dcMem, 0, 0, COPYFG);
+	    BitBlt(dc, rectangles[0].x, rectangles[0].y, rectangles[0].width,
+		    rectangles[0].height, dcMem, 0, 0, COPYFG);
 	    if (gc->fill_style == FillOpaqueStippled) {
 		FillRect(dcMem, &rect, bgBrush);
-		BitBlt(dc, rectangles[i].x, rectangles[i].y,
-			rectangles[i].width, rectangles[i].height, dcMem,
+		BitBlt(dc, rectangles[0].x, rectangles[0].y,
+			rectangles[0].width, rectangles[0].height, dcMem,
 			0, 0, COPYBG);
 	    }
 	    SelectObject(dcMem, oldBitmap);
 	    DeleteObject(bitmap);
+	    ++rectangles;
 	}
 
 	DeleteDC(dcMem);
@@ -708,22 +708,24 @@ XFillRectangles(
 	DeleteObject(bgBrush);
     } else {
 	if (gc->function == GXcopy) {
-	    for (i = 0; i < nrectangles; i++) {
-		rect.left = rectangles[i].x;
-		rect.right = rect.left + rectangles[i].width;
-		rect.top = rectangles[i].y;
-		rect.bottom = rect.top + rectangles[i].height;
+	    while (nrectangles-- > 0) {
+		rect.left = rectangles[0].x;
+		rect.right = rect.left + rectangles[0].width;
+		rect.top = rectangles[0].y;
+		rect.bottom = rect.top + rectangles[0].height;
 		FillRect(dc, &rect, brush);
+		++rectangles;
 	    }
 	} else {
 	    HPEN newPen = CreatePen(PS_NULL, 0, gc->foreground);
 	    HPEN oldPen = SelectObject(dc, newPen);
 	    oldBrush = SelectObject(dc, brush);
 
-	    for (i = 0; i < nrectangles; i++) {
-		Rectangle(dc, rectangles[i].x, rectangles[i].y,
-		    rectangles[i].x + rectangles[i].width + 1,
-		    rectangles[i].y + rectangles[i].height + 1);
+	    while (nrectangles-- > 0) {
+		Rectangle(dc, rectangles[0].x, rectangles[0].y,
+		    rectangles[0].x + rectangles[0].width + 1,
+		    rectangles[0].y + rectangles[0].height + 1);
+		++rectangles;
 	    }
 
 	    SelectObject(dc, oldBrush);
@@ -1009,14 +1011,15 @@ XDrawRectangles(
     XRectangle rects[],
     int nrects)
 {
-    int n, ret;
+    int ret = Success;
 
-    for (n = 0; n < nrects; n++) {
-	ret = XDrawRectangle(display, d, gc, rects[n].x, rects[n].y,
-		    rects[n].width, rects[n].height);
+    while (nrects-- > 0) {
+	ret = XDrawRectangle(display, d, gc, rects[0].x, rects[0].y,
+		    rects[0].width, rects[0].height);
 	if (ret != Success) {
 	    break;
 	}
+	++rects;
     }
     return ret;
 }
@@ -1059,17 +1062,18 @@ XDrawArcs(
     XArc *arcs,
     int narcs)
 {
-    int n, ret;
+    int ret = Success;
 
     display->request++;
 
-    for (n = 0; n < narcs; n++) {
-	ret = DrawOrFillArc(display, d, gc, arcs[n].x, arcs[n].y,
-		    arcs[n].width, arcs[n].height,
-		    arcs[n].angle1, arcs[n].angle2, 0);
+    while (narcs-- > 0) {
+	ret = DrawOrFillArc(display, d, gc, arcs[0].x, arcs[0].y,
+		    arcs[0].width, arcs[0].height,
+		    arcs[0].angle1, arcs[0].angle2, 0);
 	if (ret != Success) {
 	    break;
 	}
+	++arcs;
     }
     return ret;
 }
@@ -1112,17 +1116,18 @@ XFillArcs(
     XArc *arcs,
     int narcs)
 {
-    int n, ret;
+    int ret = Success;
 
     display->request++;
 
-    for (n = 0; n < narcs; n++) {
-	ret = DrawOrFillArc(display, d, gc, arcs[n].x, arcs[n].y,
-		    arcs[n].width, arcs[n].height,
-		    arcs[n].angle1, arcs[n].angle2, 1);
+    while (narcs-- > 0) {
+	ret = DrawOrFillArc(display, d, gc, arcs[0].x, arcs[0].y,
+		    arcs[0].width, arcs[0].height,
+		    arcs[0].angle1, arcs[0].angle2, 1);
 	if (ret != Success) {
 	    break;
 	}
+	++arcs;
     }
     return ret;
 }

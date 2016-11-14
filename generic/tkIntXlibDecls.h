@@ -661,7 +661,7 @@ EXTERN void		XSetWMClientMachine(Display *display, Window w,
 EXTERN Status		XStringListToTextProperty(char **list, int count,
 				XTextProperty *text_prop_return);
 /* 80 */
-EXTERN void		XDrawSegments(Display *display, Drawable d, GC gc,
+EXTERN int		XDrawSegments(Display *display, Drawable d, GC gc,
 				XSegment *segments, int nsegments);
 /* 81 */
 EXTERN void		XForceScreenSaver(Display *display, int mode);
@@ -675,10 +675,10 @@ EXTERN int		XFillRectangle(Display *display, Drawable d, GC gc,
 /* 84 */
 EXTERN void		XClearWindow(Display *d, Window w);
 /* 85 */
-EXTERN void		XDrawPoint(Display *display, Drawable d, GC gc,
+EXTERN int		XDrawPoint(Display *display, Drawable d, GC gc,
 				int x, int y);
 /* 86 */
-EXTERN void		XDrawPoints(Display *display, Drawable d, GC gc,
+EXTERN int		XDrawPoints(Display *display, Drawable d, GC gc,
 				XPoint *points, int npoints, int mode);
 /* 87 */
 EXTERN int		XWarpPointer(Display *display, Window src_w,
@@ -833,15 +833,15 @@ typedef struct TkIntXlibStubs {
     void (*sdlTkGLXMakeCurrent) (Display *display, Window w, void *ctx); /* 126 */
     void (*sdlTkGLXReleaseCurrent) (Display *display, Window w, void *ctx); /* 127 */
     void (*sdlTkGLXSwapBuffers) (Display *display, Window w); /* 128 */
-    void (*xLowerWindow) (Display *d, Window w); /* 129 */
-    void (*xFillArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 130 */
-    void (*xDrawArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 131 */
-    void (*xDrawRectangles) (Display *d, Drawable dr, GC gc, XRectangle *r, int n); /* 132 */
-    void (*xDrawSegments) (Display *d, Drawable dr, GC gc, XSegment *s, int n); /* 133 */
-    void (*xDrawPoint) (Display *d, Drawable dr, GC gc, int x, int y); /* 134 */
-    void (*xDrawPoints) (Display *d, Drawable dr, GC gc, XPoint *p, int n, int m); /* 135 */
-    void (*xReparentWindow) (Display *d, Window w, Window p, int x, int y); /* 136 */
-    void (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, int w, int h); /* 137 */
+    int (*xLowerWindow) (Display *d, Window w); /* 129 */
+    int (*xFillArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 130 */
+    int (*xDrawArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 131 */
+    int (*xDrawRectangles) (Display *d, Drawable dr, GC gc, XRectangle *r, int n); /* 132 */
+    int (*xDrawSegments) (Display *d, Drawable dr, GC gc, XSegment *s, int n); /* 133 */
+    int (*xDrawPoint) (Display *d, Drawable dr, GC gc, int x, int y); /* 134 */
+    int (*xDrawPoints) (Display *d, Drawable dr, GC gc, XPoint *p, int n, int m); /* 135 */
+    int (*xReparentWindow) (Display *d, Window w, Window p, int x, int y); /* 136 */
+    int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -924,13 +924,13 @@ typedef struct TkIntXlibStubs {
     XVisualInfo * (*xGetVisualInfo) (Display *display, long vinfo_mask, XVisualInfo *vinfo_template, int *nitems_return); /* 77 */
     void (*xSetWMClientMachine) (Display *display, Window w, XTextProperty *text_prop); /* 78 */
     Status (*xStringListToTextProperty) (char **list, int count, XTextProperty *text_prop_return); /* 79 */
-    void (*xDrawSegments) (Display *display, Drawable d, GC gc, XSegment *segments, int nsegments); /* 80 */
+    int (*xDrawSegments) (Display *display, Drawable d, GC gc, XSegment *segments, int nsegments); /* 80 */
     void (*xForceScreenSaver) (Display *display, int mode); /* 81 */
     int (*xDrawLine) (Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2); /* 82 */
     int (*xFillRectangle) (Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height); /* 83 */
     void (*xClearWindow) (Display *d, Window w); /* 84 */
-    void (*xDrawPoint) (Display *display, Drawable d, GC gc, int x, int y); /* 85 */
-    void (*xDrawPoints) (Display *display, Drawable d, GC gc, XPoint *points, int npoints, int mode); /* 86 */
+    int (*xDrawPoint) (Display *display, Drawable d, GC gc, int x, int y); /* 85 */
+    int (*xDrawPoints) (Display *display, Drawable d, GC gc, XPoint *points, int npoints, int mode); /* 86 */
     int (*xWarpPointer) (Display *display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y); /* 87 */
     void (*xQueryColor) (Display *display, Colormap colormap, XColor *def_in_out); /* 88 */
     void (*xQueryColors) (Display *display, Colormap colormap, XColor *defs_in_out, int ncolors); /* 89 */
