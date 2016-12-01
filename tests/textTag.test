@@ -12,16 +12,18 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 set textWidgetFont {Courier 12}
-set bigFont        {Helvetica 24}
+set bigFont        {Courier 24}
 
-# what is needed is a specific font *size* because in some tests (that
-# will be constrained by haveFontSizes), a tag applying the $bigFont
-# will be set to some characters, which action has the effect of
-# changing what character is under the mouse pointer, which is the
-# purpose of the tests
+# what is needed is a font that is both fixed-width and featuring a
+# specific size because in some tests (that will be constrained by
+# haveFontSizes), a tag applying the $bigFont will be set to some
+# characters, which action has the effect of changing what character
+# is under the mouse pointer, which is the purpose of the tests
 testConstraint haveFontSizes [expr {
-    [font actual $textWidgetFont -size] == 12 &&
-    [font actual $bigFont -size] == 24 }
+    [font metrics $textWidgetFont -fixed] &&
+    [font actual  $textWidgetFont -size] == 12 &&
+    [font metrics $bigFont -fixed] &&
+    [font actual  $bigFont -size] == 24 }
 ]
 
 destroy .t
