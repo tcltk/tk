@@ -1342,7 +1342,6 @@ test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
 } -setup {
     .t tag delete {*}[.t tag names]
     event generate {} <Motion> -warp 1 -x -1 -y -1; update
-    set curFont [.t cget -font]
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1417,7 +1416,6 @@ test textTag-16.5 {TkTextPickCurrent procedure} -constraints {
         .t tag remove $i 1.0 end
     }
     event generate {} <Motion> -warp 1 -x -1 -y -1; update
-    set curFont [.t cget -font]
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1438,7 +1436,6 @@ test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
         .t tag remove $i 1.0 end
     }
     event generate {} <Motion> -warp 1 -x -1 -y -1; update
-    set curFont [.t cget -font]
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1460,7 +1457,6 @@ test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
         .t tag remove $i 1.0 end
     }
     event generate {} <Motion> -warp 1 -x -1 -y -1; update
-    set curFont [.t cget -font]
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
