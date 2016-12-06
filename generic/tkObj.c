@@ -1130,23 +1130,25 @@ TkRegisterObjTypes(void)
 {
     /* When running in Tcl 9, no need to Register the objTypes, and
      * no need to provide fromAnyProc's. */
-    if ((*((&(tclStubsPtr->tcl_PkgProvideEx))[77])) == NULL) {
-	tkFontObjType.setFromAnyProc = NULL;
-	mmObjType.setFromAnyProc = NULL;
-	pixelObjType.setFromAnyProc = NULL;
-	windowObjType.setFromAnyProc = NULL;
+#if !defined(STATIC_BUILD)
+    if ((*((&(tclStubsPtr->tcl_PkgProvideEx))[77])) != NULL) {
+	registerObjType(tkBorderObjType);
+	registerObjType(tkBitmapObjType);
+	registerObjType(tkColorObjType);
+	registerObjType(tkCursorObjType);
+	registerObjType(tkFontObjType);
+	registerObjType(mmObjType);
+	registerObjType(pixelObjType);
+	registerObjType(tkStateKeyObjType);
+	registerObjType(windowObjType);
+	registerObjType(tkTextIndexType);
 	return;
     }
-    registerObjType(tkBorderObjType);
-    registerObjType(tkBitmapObjType);
-    registerObjType(tkColorObjType);
-    registerObjType(tkCursorObjType);
-    registerObjType(tkFontObjType);
-    registerObjType(mmObjType);
-    registerObjType(pixelObjType);
-    registerObjType(tkStateKeyObjType);
-    registerObjType(windowObjType);
-    registerObjType(tkTextIndexType);
+#endif
+    tkFontObjType.setFromAnyProc = NULL;
+    mmObjType.setFromAnyProc = NULL;
+    pixelObjType.setFromAnyProc = NULL;
+    windowObjType.setFromAnyProc = NULL;
 }
 
 /*
