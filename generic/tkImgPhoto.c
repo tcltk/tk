@@ -813,18 +813,18 @@ ImgPhotoCmd(
 
     case PHOTO_PUT:
 	/*
-	 * photo put command - first parse the options and colors specified.
+	 * photo put command - first get the image data, then parse the options and colors specified.
 	 */
 
-	index = 2;
+	index = 3;
 	memset(&options, 0, sizeof(options));
-	options.name = NULL;
-	if (ParseSubcommandOptions(&options, interp, OPT_TO|OPT_FORMAT,
-		&index, objc, objv) != TCL_OK) {
+	if (objc<3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "data ?-option value ...?");
 	    return TCL_ERROR;
 	}
-	if ((options.name == NULL) || (index < objc)) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "data ?-option value ...?");
+        options.name = objv[2];
+	if (ParseSubcommandOptions(&options, interp, OPT_TO|OPT_FORMAT,
+		&index, objc, objv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -1000,20 +1000,19 @@ ImgPhotoCmd(
 	Tcl_Obj *format;
 
 	/*
-	 * photo read command - first parse the options specified.
+	 * photo read command - first get the filename, then parse the options specified.
 	 */
 
-	index = 2;
+	index = 3;
 	memset(&options, 0, sizeof(options));
-	options.name = NULL;
-	options.format = NULL;
+	if (objc < 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "fileName ?-option value ...?");
+	    return TCL_ERROR;
+	}
+	options.name = objv[2];
 	if (ParseSubcommandOptions(&options, interp,
 		OPT_FORMAT | OPT_FROM | OPT_TO | OPT_SHRINK,
 		&index, objc, objv) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	if ((options.name == NULL) || (index < objc)) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "fileName ?-option value ...?");
 	    return TCL_ERROR;
 	}
 
@@ -1292,20 +1291,19 @@ ImgPhotoCmd(
 	}
 
 	/*
-	 * photo write command - first parse and check any options given.
+	 * photo write command - first get the filename, then parse and check any options given.
 	 */
 
-	index = 2;
+	index = 3;
 	memset(&options, 0, sizeof(options));
-	options.name = NULL;
-	options.format = NULL;
+	if (objc<3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "fileName ?-option value ...?");
+	    return TCL_ERROR;
+	}
+        options.name = objv[2];
 	if (ParseSubcommandOptions(&options, interp,
 		OPT_FORMAT | OPT_FROM | OPT_GRAYSCALE | OPT_BACKGROUND,
 		&index, objc, objv) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	if ((options.name == NULL) || (index < objc)) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "fileName ?-option value ...?");
 	    return TCL_ERROR;
 	}
 	if ((options.fromX > masterPtr->width)
