@@ -422,7 +422,7 @@ test imgPhoto-4.28 {ImgPhotoCmd procedure: put option} -setup {
 test imgPhoto-4.29 {ImgPhotoCmd procedure: put option} -setup {
     image create photo photo1
 } -body {
-    photo1 put -to 10 10 20 20 {{white}}
+    photo1 put {{white}} -to 10 10 20 20
     photo1 get 19 19
 } -cleanup {
     image delete photo1
