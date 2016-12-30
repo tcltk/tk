@@ -7933,6 +7933,7 @@ CharDisplayProc(
 #if TK_DRAW_IN_CONTEXT
 	int start = ciPtr->baseOffset + offsetBytes;
 	int len = ciPtr->numBytes - offsetBytes;
+	int xDisplacement = x - chunkPtr->x;
 
 	if ((len > 0) && (string[start + len - 1] == '\t')) {
 	    len--;
@@ -7942,12 +7943,14 @@ CharDisplayProc(
 	}
 
 	TkpDrawCharsInContext(display, dst, stylePtr->fgGC, sValuePtr->tkfont,
-		string, numBytes, start, len, offsetX,
+		string, numBytes, start, len,
+		ciPtr->baseChunkPtr->x + xDisplacement,
 		y + baseline - sValuePtr->offset);
 
 	if (sValuePtr->underline) {
 	    TkUnderlineCharsInContext(display, dst, stylePtr->ulGC,
-		    sValuePtr->tkfont, string, numBytes, offsetX,
+		    sValuePtr->tkfont, string, numBytes,
+		    ciPtr->baseChunkPtr->x + xDisplacement,
 		    y + baseline - sValuePtr->offset,
 		    start, start+len);
 	}
@@ -7956,7 +7959,8 @@ CharDisplayProc(
 
 	    Tk_GetFontMetrics(sValuePtr->tkfont, &fm);
 	    TkUnderlineCharsInContext(display, dst, stylePtr->ovGC,
-		    sValuePtr->tkfont, string, numBytes, offsetX,
+		    sValuePtr->tkfont, string, numBytes,
+		    ciPtr->baseChunkPtr->x + xDisplacement,
 		    y + baseline - sValuePtr->offset
 			    - fm.descent - (fm.ascent * 3) / 10,
 		    start, start+len);
