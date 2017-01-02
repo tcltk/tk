@@ -7947,6 +7947,22 @@ CharDisplayProc(
 		x, 0, 0, &offsetX);
     }
 
+#if TK_LAYOUT_WITH_BASE_CHUNKS
+    /*
+     * Adjust chunkPtr (which at this point is the base chunk) to
+     * point to the chunk displaying the final part of the stretch.
+     * Therefore the test below    if (chunkPtr->nextPtr != NULL)
+     * really checks whether the last character of this base chunk
+     * is the last character of the display line.
+     */
+
+    nBytes = ciPtr->numBytes;
+    while ((nBytes < numBytes) && (chunkPtr->nextPtr != NULL)) {
+        chunkPtr = chunkPtr->nextPtr;
+        nBytes += chunkPtr->numBytes;
+    }
+#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
+
     /*
      * Draw the text, underline, and overstrike for this chunk.
      */
@@ -8010,22 +8026,6 @@ CharDisplayProc(
 	if ((numBytes > 0) && (string[numBytes - 1] == '\t')) {
 	    numBytes--;
 	}
-
-#if TK_LAYOUT_WITH_BASE_CHUNKS
-        /*
-         * Adjust chunkPtr (which at this point is the base chunk) to
-         * point to the chunk displaying the final part of the stretch.
-         * Therefore the test below    if (chunkPtr->nextPtr != NULL)
-         * really checks whether the last character of this base chunk
-         * is the last character of the display line.
-         */
-
-        nBytes = ciPtr->numBytes;
-        while (nBytes < numBytes) {
-            chunkPtr = chunkPtr->nextPtr;
-            nBytes += chunkPtr->numBytes;
-        }
-#endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
         /*
          * Don't draw any soft hyphen unless it is the last character
