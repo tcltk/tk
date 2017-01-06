@@ -1,11 +1,16 @@
-#ifdef HAVE_EVENTFD
+#ifdef linux
+#define _BSD_SOURCE
+#if defined(__arm__) || defined(__aarch64__) || defined(ANDROID)
 #include <sys/eventfd.h>
+#endif
+#include <dlfcn.h>
 #endif
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <errno.h>
 #include <unistd.h>
+#include <stdlib.h>
 #endif
 #include "tkInt.h"
 #include "tkIntPlatDecls.h"
@@ -269,7 +274,7 @@ XChangeGC(Display *display, GC gc, unsigned long mask, XGCValues *values)
 	gc->dash_offset = values->dash_offset;
     }
     if (mask & GCDashList) {
-	gc->dashes = values->dashes ? 2 : 0;
+	gc->dashes = values->dashes ? values->dashes : 0;
 	(&gc->dashes)[1] = values->dashes ? values->dashes : 0;
 	(&gc->dashes)[2] = 0;
     }
@@ -529,12 +534,10 @@ XCloseDisplay(Display *display)
 	close(display->fd);
 	display->fd = -1;
     }
-#ifndef HAVE_EVENTFD
     if (display->ext_number >= 0) {
 	close(display->ext_number);
 	display->ext_number = -1;
     }
-#endif
 #endif
 
     ckfree((char *) display->screens);
@@ -621,6 +624,7 @@ XCloseDisplay(Display *display)
     Tcl_ConditionNotify(&xlib_cond);
     SdlTkUnlock(display);
 
+    memset(display, 0, sizeof (Display));
     ckfree((char *) display);
 
     return 0;
@@ -843,7 +847,7 @@ XCreateGC(Display *display, Drawable d, unsigned long mask, XGCValues *values)
     gp->clip_y_origin = (mask & GCClipYOrigin) ? values->clip_y_origin : 0;
     gp->dash_offset = (mask & GCDashOffset) ? values->dash_offset : 0;
     if (mask & GCDashList) {
-	gp->dashes = values->dashes ? 2 : 0;
+	gp->dashes = values->dashes ? values->dashes : 0;
 	(&gp->dashes)[1] = values->dashes ? values->dashes : 0;
 	(&gp->dashes)[2] = 0;
     } else {
@@ -1336,6 +1340,7 @@ SdlTkDestroyWindow(Display *display, Window w)
     XEvent event;
     int hadFocus = 0, doNotify;
 
+    _w->tkwin = NULL;
     if (_w->display == NULL) {
 	return;
     }
@@ -1806,7 +1811,7 @@ SdlTkQueueEvent(XEvent *event)
 
     EVLOG("QueueEvent %d %p", event->xany.type, (void *) event->xany.window);
 
-    if ((display != NULL) && (display->screens == NULL)) {
+    if ((display == NULL) || (display->screens == NULL)) {
 	return;
     }
 
@@ -1826,11 +1831,14 @@ SdlTkQueueEvent(XEvent *event)
     /* Append to event queue */
     if (display->tail) {
 	display->tail->next = qevent;
-#ifdef HAVE_EVENTFD
-	trigger = 1;
-#else
-	trigger = (display->qlen & (64 - 1)) == 0;
+#ifdef linux
+	if (display->ext_number < 0) {
+	    trigger = 1;
+	} else
 #endif
+	{
+	    trigger = (display->qlen & (64 - 1)) == 0;
+	}
     } else {
 	display->head = qevent;
 	trigger = 1;
@@ -1853,17 +1861,17 @@ SdlTkQueueEvent(XEvent *event)
 	SetEvent((HANDLE) display->fd);
     }
 #else
-#ifdef HAVE_EVENTFD
-    if (trigger && (display->fd >= 0)) {
-	long long buf = trigger;
-	int n = write(display->fd, &buf, sizeof (buf));
+#ifdef linux
+    if (trigger && (display->fd >= 0) && (display->ext_number < 0)) {
+	static const long long buf[1] = { 1 };
+	int n = write(display->fd, buf, sizeof (buf));
 
 	if ((n < 0) && (errno != EWOULDBLOCK) && (errno != EAGAIN)) {
 	    close(display->fd);
 	    display->fd = -1;
 	}
     }
-#else
+#endif
     if (trigger && (display->ext_number >= 0)) {
 	int n = write(display->ext_number, "e", 1);
 
@@ -1874,7 +1882,6 @@ SdlTkQueueEvent(XEvent *event)
 	    display->fd = -1;
 	}
     }
-#endif
 #endif
 
     Tcl_MutexUnlock((Tcl_Mutex *) &display->qlock);
@@ -4083,17 +4090,19 @@ again:
     }
 #else
     if (display->fd >= 0) {
-#ifdef HAVE_EVENTFD
-	long long buffer;
-
-	n = read(display->fd, &buffer, sizeof (buffer));
-	if ((n < 0) && (errno != EWOULDBLOCK) && (errno != EAGAIN)) {
-	    close(display->fd);
-	    display->fd = -1;
-	}
-#else
 	char buffer[64];
 
+#ifdef linux
+	if (display->ext_number < 0) {
+	    long long buffer;
+
+	    n = read(display->fd, &buffer, sizeof (buffer));
+	    if ((n < 0) && (errno != EWOULDBLOCK) && (errno != EAGAIN)) {
+		close(display->fd);
+		display->fd = -1;
+	    }
+	} else
+#endif
 	for (;;) {
 	    n = read(display->fd, buffer, sizeof (buffer));
 	    if ((n < 0) && ((errno == EWOULDBLOCK) || (errno == EAGAIN))) {
@@ -4107,7 +4116,6 @@ again:
 		break;
 	    }
 	}
-#endif
     }
 #endif
     qevent = display->head;
@@ -4822,11 +4830,23 @@ SdlTkSetWindowFlags(int flags, int x, int y, int w, int h)
 #ifndef ANDROID
     struct WindowFlagsRequest wreq;
     SDL_Event event;
+    SDL_SysWMinfo wminfo;
 
     if (flags == 0) {
 	return;
     }
     SdlTkLock(NULL);
+    SDL_VERSION(&wminfo.version);
+    if (SDL_GetWindowWMInfo(SdlTkX.sdlscreen, &wminfo)) {
+	if (wminfo.subsystem == SDL_SYSWM_WAYLAND) {
+	    /*
+	     * Currently there's no stable support for
+	     * changing the window visibility/state/size
+	     * in the Wayland video driver.
+	     */
+	    goto done;
+	}
+    }
     wreq.running = 1;
     wreq.flags = flags;
     wreq.r.x = x;
@@ -4843,6 +4863,7 @@ SdlTkSetWindowFlags(int flags, int x, int y, int w, int h)
     while (wreq.running) {
 	SdlTkWaitLock();
     }
+done:
     SdlTkUnlock(NULL);
 #endif
 }
@@ -5010,6 +5031,19 @@ PerformSDLInit(int *root_width, int *root_height)
 	SDL_LogSetAllPriority(SdlTkX.arg_sdllog);
     }
 #ifndef ANDROID
+#ifdef linux
+    /*
+     * Wayland: if SDL_VIDEODRIVER is unset but WAYLAND_DISPLAY
+     * is set, prefer the Wayland video driver.
+     */
+    if (getenv("SDL_VIDEODRIVER") == NULL) {
+	char *p = getenv("WAYLAND_DISPLAY");
+
+	if ((p != NULL) && p[0]) {
+	    putenv("SDL_VIDEODRIVER=wayland");
+	}
+    }
+#endif
 retryInit:
 #endif
     if (SDL_Init(initMask) < 0) {
@@ -5194,6 +5228,13 @@ retry:
     SDL_GetWindowSize(SdlTkX.sdlscreen, &width, &height);
 
     fmt = SDL_GetWindowPixelFormat(SdlTkX.sdlscreen);
+    if (fmt == SDL_PIXELFORMAT_UNKNOWN) {
+	/*
+	 * This can happen with the Wayland video driver,
+	 * thus try to go on with 24 bit RGB.
+	 */
+	fmt = SDL_PIXELFORMAT_RGB888;
+    }
     pfmt = SDL_AllocFormat(fmt);
 
     SdlTkX.sdlsurf = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height,
@@ -5629,6 +5670,12 @@ ctxRetry:
 #else
 	if (wminfo.subsystem != SDL_SYSWM_X11) {
 	    SdlTkX.sdlfocus = 1;
+#ifdef linux
+	    /* Wayland? Try to load libGL.so for 3D canvas. */
+	    if (!SdlTkX.arg_nogl) {
+		dlopen("libGL.so.1", RTLD_NOW | RTLD_GLOBAL);
+	    }
+#endif
 	}
 #endif
     } else {
@@ -5725,6 +5772,14 @@ EventThread(ClientData clientData)
     XEvent event;
     SDL_TimerID timerId;
     int skipRefresh = 0, overrun, initSuccess;
+#ifndef ANDROID
+    /* Key repeat handling for Wayland. */
+    SDL_Event key_event, txt_event;
+    int key_rpt_state = 0, key_rpt_time = 0;
+    extern int SDL_SendKeyboardKey(Uint8 state, SDL_Scancode scancode,
+				   Uint16 rate, Uint16 delay);
+    extern int SDL_SendKeyboardText(const char *text);
+#endif
     struct EventThreadStartup *evs = (struct EventThreadStartup *) clientData;
 
     EVLOG("EventThread start");
@@ -5755,7 +5810,10 @@ EventThread(ClientData clientData)
     timerId = SDL_AddTimer(1000 / SDLTK_FRAMERATE, TimerCallback,
 			   (void *) &SdlTkX.time_count);
     EVLOG("EventThread enter loop");
-    /* Add all pending SDL events to the X event queues */
+    /*
+     * Add all pending SDL events to the X event queues and
+     * deal with screen refresh.
+     */
     while (1) {
 	_XSQEvent *qevent;
 
@@ -5781,7 +5839,41 @@ EventThread(ClientData clientData)
 	    skipRefresh = !skipRefresh && overrun;
 	    /* Mark event to be skipped in SdlTkTranslateEvent() */
 	    sdl_event.type = SDL_USEREVENT + 0x1000;
+#ifndef ANDROID
+	    /* Key repeat handling for Wayland. */
+	    if (key_rpt_state && (SdlTkX.time_count - key_rpt_time >= 0)) {
+		if (key_event.key.rate) {
+		    key_rpt_time = SdlTkX.time_count + 1000/key_event.key.rate;
+		    if (key_rpt_state > 1) {
+			SDL_SendKeyboardText(txt_event.text.text);
+		    } else {
+			SDL_SendKeyboardKey(SDL_PRESSED,
+					    key_event.key.keysym.scancode,
+					    key_event.key.rate, 0);
+		    }
+		} else {
+		    key_rpt_state = 0;
+		}
+	    }
+#endif
 	}
+#ifndef ANDROID
+	/* Key repeat handling for Wayland. */
+	if ((sdl_event.type == SDL_KEYDOWN) && sdl_event.key.rate &&
+	    sdl_event.key.delay && !sdl_event.key.repeat) {
+	    key_rpt_state = 1;
+	    key_event = sdl_event;
+	    key_rpt_time = SdlTkX.time_count + key_event.key.delay;
+	    if (SDL_PeepEvents(&txt_event, 1, SDL_PEEKEVENT,
+			       SDL_TEXTINPUT, SDL_TEXTINPUT) == 1) {
+		key_rpt_state = 2;
+	    }
+	} else if (key_rpt_state && (sdl_event.type == SDL_KEYUP) &&
+		   sdl_event.key.rate && sdl_event.key.delay &&
+		   !sdl_event.key.repeat) {
+	    key_rpt_state = 0;
+	}
+#endif
 	if ((sdl_event.type == SDL_USEREVENT) &&
 	    (sdl_event.user.data1 == HandlePanZoom) &&
 	    (sdl_event.user.data2 != NULL)) {
@@ -5826,8 +5918,23 @@ EventThread(ClientData clientData)
 	Tcl_MutexUnlock((Tcl_Mutex *) &SdlTkX.display->qlock);
     }
     SDL_RemoveTimer(timerId);
+    /* tear down font manager/engine */
+    SdlTkGfxDeinitFC();
 eventThreadEnd:
     TCL_THREAD_CREATE_RETURN;
+}
+
+static void
+EventThreadExitHandler(ClientData clientData)
+{
+    int state;
+    Tcl_ThreadId event_tid = SdlTkX.event_tid;
+
+    if (event_tid) {
+	SdlTkX.event_tid = NULL;
+	SdlTkX.sdlscreen = NULL;
+	Tcl_JoinThread(event_tid, &state);
+    }
 }
 
 static void
@@ -5847,6 +5954,7 @@ OpenVeryFirstDisplay(int *root_width, int *root_height)
     while (!evs.init_done) {
 	SdlTkWaitLock();
     }
+    Tcl_CreateExitHandler(EventThreadExitHandler, NULL);
 }
 
 Display *
@@ -5855,9 +5963,6 @@ XOpenDisplay(_Xconst char *display_name)
     Display *display;
     Screen *screen;
     int i, root_width = 0, root_height = 0;
-#if !defined(HAVE_EVENTFD) && !defined(_WIN32)
-    int pfd[2];
-#endif
 
     SdlTkLock(NULL);
 
@@ -5900,19 +6005,45 @@ XOpenDisplay(_Xconst char *display_name)
 #ifdef _WIN32
     display->fd = (void *) CreateEvent(NULL, 0, 0, NULL);
 #else
-#ifdef HAVE_EVENTFD
+#ifdef linux
+    /*
+     * Hacked call to eventfd2() to enable build and run
+     * with/on old platforms. Intel and ARM CPUs for now.
+     */
+#if defined(__arm__) || defined(__aarch64__) || defined(ANDROID)
     display->fd = eventfd(0, 0);
-    fcntl(display->fd, F_SETFD, FD_CLOEXEC);
-    fcntl(display->fd, F_SETFL, O_NONBLOCK);
+#elif defined(__i386__)
+    display->fd = syscall(328, 0, 0);
+#elif defined(__x86_64__)
+    display->fd = syscall(290, 0, 0);
 #else
-    display->fd = pipe(pfd);
-    fcntl(pfd[0], F_SETFD, FD_CLOEXEC);
-    fcntl(pfd[1], F_SETFD, FD_CLOEXEC);
-    fcntl(pfd[0], F_SETFL, O_NONBLOCK);
-    fcntl(pfd[1], F_SETFL, O_NONBLOCK);
-    display->fd = pfd[0];
-    display->ext_number = pfd[1];
+    display->fd = -1;
 #endif
+    if (display->fd != -1) {
+	if ((fcntl(display->fd, F_SETFD, FD_CLOEXEC) < 0) ||
+	    (fcntl(display->fd, F_SETFL, O_NONBLOCK) < 0)) {
+	    close(display->fd);
+	    display->fd = -1;
+	} else {
+	    SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION, "using eventfd %d",
+			   display->fd);
+	}
+	display->ext_number = -1;
+    }
+#else
+    display->fd = -1;
+#endif
+    if (display->fd == -1) {
+	int pfd[2] = { -1, -1 };
+
+	display->fd = pipe(pfd);
+	fcntl(pfd[0], F_SETFD, FD_CLOEXEC);
+	fcntl(pfd[1], F_SETFD, FD_CLOEXEC);
+	fcntl(pfd[0], F_SETFL, O_NONBLOCK);
+	fcntl(pfd[1], F_SETFL, O_NONBLOCK);
+	display->fd = pfd[0];
+	display->ext_number = pfd[1];
+    }
 #endif
 
     /* Pre-allocate some events */
@@ -6511,19 +6642,28 @@ XSetDashes(Display *display, GC gc, int dash_offset, _Xconst char *dash_list,
     gc->dash_offset = dash_offset;
     if (n + nn >= sizeof (gc->dash_array)) {
 	if (nn) {
-	    n = nn = sizeof (gc->dash_array) / 2 - 1;
+	    n = nn = sizeof (gc->dash_array) / 2;
 	} else {
 	    n = sizeof (gc->dash_array) - 1;
+	    n &= ~1;
 	}
     }
     i = 0;
     while (n-- > 0) {
 	*p++ = dash_list[i++];
     }
+    /*
+     * XSetDashes() man page: "Specifying an odd-length list is
+     * equivalent to specifying the same list concatenated with
+     * itself to produce an even-length list."
+     */
     i = 0;
     while (nn-- > 0) {
 	*p++ = dash_list[i++];
     }
+    /*
+     * Mark end of list.
+     */
     *p = 0;
 }
 
@@ -7569,6 +7709,13 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 #else
 	    Uint32 fmt = SDL_GetWindowPixelFormat(_w->gl_wind);
 
+	    if (fmt == SDL_PIXELFORMAT_UNKNOWN) {
+		/*
+		 * This can happen with the Wayland video driver,
+		 * thus try to go on with 24 bit RGB.
+		 */
+		fmt = SDL_PIXELFORMAT_RGB888;
+	    }
 	    if (SDL_RenderReadPixels(rend, NULL, fmt, surf->pixels,
 				     surf->pitch) == 0) {
 		_Pixmap p;

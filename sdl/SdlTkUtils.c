@@ -743,33 +743,57 @@ SdlTkReadFTStream(FT_Stream ftstr, unsigned long offs, unsigned char *buf,
 		  unsigned long count)
 {
     unsigned long ret = 0;
+    Tcl_Channel chan;
 
     if (ftstr->descriptor.pointer == NULL) {
-	Tcl_Channel chan;
-
 	chan = Tcl_OpenFileChannel(NULL, (char *) ftstr->pathname.pointer,
 				   "r", 0);
 	if (chan) {
 	    Tcl_SetChannelOption(NULL, chan, "-encoding", "binary");
 	    Tcl_SetChannelOption(NULL, chan, "-translation", "binary");
 	    ftstr->descriptor.pointer = (void *) chan;
+	    FNTLOG("FONTSTREAM: open '%s'", (char *) ftstr->pathname.pointer);
 	}
+    } else {
+	/*
+	 * Since there's a singleton font manager/font cache in
+	 * the AGG based drawing functions which is shared among
+	 * all threads, the channel is spliced into the current
+	 * thread here.
+	 */
+	Tcl_SpliceChannel((Tcl_Channel) ftstr->descriptor.pointer);
     }
     if ((ftstr->descriptor.pointer != NULL) && count) {
 	Tcl_WideInt wOffs;
 	int n;
 
+	chan = (Tcl_Channel) ftstr->descriptor.pointer;
 	wOffs = offs;
-	wOffs = Tcl_Seek((Tcl_Channel) ftstr->descriptor.pointer, wOffs,
-			 SEEK_SET);
+	wOffs = Tcl_Seek(chan, wOffs, SEEK_SET);
 	if (wOffs == -1) {
-	    return ret;
+	    FNTLOG("FONTSTREAM: seek '%s' @%ld failed",
+		   (char *) ftstr->pathname.pointer, offs);
+	    goto done;
 	}
-	n = Tcl_Read((Tcl_Channel) ftstr->descriptor.pointer,
-		     (char *) buf, count);
+	n = Tcl_Read(chan, (char *) buf, count);
 	if (n != -1) {
+	    FNTLOG("FONTSTREAM: read '%s' @%ld size %d (%ld)",
+		   (char *) ftstr->pathname.pointer, offs, n, count);
 	    ret = n;
+	} else {
+	    FNTLOG("FONTSTREAM: read '%s' @%ld failed (%ld)",
+		   (char *) ftstr->pathname.pointer, offs, count);
 	}
+    }
+done:
+    if (ftstr->descriptor.pointer != NULL) {
+	/*
+	 * Since there's a singleton font manager/font cache in
+	 * the AGG based drawing functions which is shared among
+	 * all threads, the channel is cut from the current
+	 * thread here.
+	 */
+	Tcl_CutChannel((Tcl_Channel) ftstr->descriptor.pointer);
     }
     return ret;
 }
@@ -781,9 +805,20 @@ SdlTkCloseFTStream(FT_Stream ftstr)
 	return;
     }
     if (ftstr->descriptor.pointer != NULL) {
+	/*
+	 * Since there's a singleton font manager/font cache in
+	 * the AGG based drawing functions which is shared among
+	 * all threads, the channel is spliced into the current
+	 * thread here before it gets closed.
+	 */
+	Tcl_SpliceChannel((Tcl_Channel) ftstr->descriptor.pointer);
 	Tcl_Close(NULL, (Tcl_Channel) ftstr->descriptor.pointer);
 	ftstr->descriptor.pointer = NULL;
+	FNTLOG("FONTSTREAM: close '%s'",
+	       (char *) ftstr->pathname.pointer);
     }
+    FNTLOG("FONTSTREAM: release stream '%s'",
+	   (char *) ftstr->pathname.pointer);
     ftstr->pathname.pointer = NULL;
     ckfree((char *) ftstr);
 }
@@ -794,6 +829,7 @@ SdlTkXGetFTStream(const char *pathname, int size)
     FT_Stream ftstr = (FT_Stream) ckalloc(sizeof (*ftstr));
     struct stat stbuf;
 
+    FNTLOG("FONTSTREAM: get stream '%s' size %d", pathname, size);
     memset(ftstr, 0, sizeof (*ftstr));
     ftstr->pathname.pointer = (char *) pathname;
     ftstr->read = SdlTkReadFTStream;
@@ -801,6 +837,7 @@ SdlTkXGetFTStream(const char *pathname, int size)
     if (size <= 0) {
 	if (Tcl_Stat(pathname, &stbuf) == 0) {
 	    ftstr->size = stbuf.st_size;
+	    FNTLOG("FONTSTREAM: file size %ld", ftstr->size);
 	}
     } else {
 	ftstr->size = size;
@@ -961,6 +998,9 @@ SdlTkFontInit(Tcl_Interp *interp)
     Tcl_EncodingType type;
     FT_Error fterr;
     FT_Library ftlib;
+
+    /* font manager/engine init */
+    SdlTkGfxInitFC();
 
     if (initialized) {
 	return TCL_OK;
@@ -1347,7 +1387,6 @@ SdlTkFontList(Tcl_Interp *interp)
     hPtr = Tcl_FirstHashEntry(&fileFaceHash, &search);
     while (hPtr != NULL) {
 	GlyphIndexHash *ghash;
-	Tcl_Obj *obj;
 	FileFaceKey *ffKey;
 
 	ghash = (GlyphIndexHash *) Tcl_GetHashValue(hPtr);

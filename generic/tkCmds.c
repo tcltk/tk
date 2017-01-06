@@ -1723,7 +1723,6 @@ Tk_WinfoObjCmd(
 	double mm, pixels;
 #ifdef PLATFORM_SDL
 	double pixels2;
-	int widthM, widthS, heightM, heightS;
 #endif
 
 	if (objc != 4) {

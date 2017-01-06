@@ -922,9 +922,9 @@ test text-2.8 {Tk_TextCmd procedure} -constraints {
     .t tag cget sel -relief
 } -cleanup {
     destroy .t
-} -result {solid}
+} -result {flat}
 test text-2.9 {Tk_TextCmd procedure} -constraints {
-    unix
+    unix notAqua
 } -body {
     catch {destroy .t}
     text .t

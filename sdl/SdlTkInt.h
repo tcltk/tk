@@ -353,6 +353,8 @@ extern void SdlTkGfxFillPolygon(Drawable d, GC gc, XPoint *points,
     int npoints, int shape, int mode);
 extern void SdlTkGfxFillRegion(Drawable d, Region rgn, Uint32 pixel);
 extern void SdlTkGfxFillRect(Drawable d, GC gc, int x, int y, int w, int h);
+extern void SdlTkGfxInitFC(void);
+extern void SdlTkGfxDeinitFC(void);
 extern XFontStruct *SdlTkGfxAllocFontStruct(_Font *_f);
 extern void SdlTkGfxDrawString(Drawable d, GC gc, int x, int y,
     const char *string, int length, double angle, int *xret, int *yret);

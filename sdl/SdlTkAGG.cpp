@@ -34,8 +34,6 @@ extern "C" {
 #include "agg_vcgen_stroke.h"
 #include "agg_vcgen_dash.h"
 
-TCL_DECLARE_MUTEX(txt_mutex);
-
 #ifdef AGG23
 
 /*
@@ -1377,19 +1375,21 @@ SdlTkGfxDrawRect(Drawable d, GC gc, int x, int y, int w, int h)
     }
 }
 
+/*
+ * Font manager/engine are protected by txt_mutex.
+ */
+
+TCL_DECLARE_MUTEX(txt_mutex);
+
 typedef agg::font_engine_freetype_int16 t_font_engine;
 typedef agg::font_cache_manager<t_font_engine> t_font_manager;
 static t_font_engine *feng = 0;
 static t_font_manager *fman = 0;
 
-XFontStruct *
-SdlTkGfxAllocFontStruct(_Font *_f)
+void
+SdlTkGfxInitFC(void)
 {
-    XFontStruct *fs = (XFontStruct *) ckalloc(sizeof (XFontStruct));
-    memset(fs, 0, sizeof(XFontStruct));
-
     Tcl_MutexLock(&txt_mutex);
-
     if (!feng) {
 #ifdef AGG_CUSTOM_ALLOCATOR
 	unsigned size;
@@ -1407,18 +1407,52 @@ SdlTkGfxAllocFontStruct(_Font *_f)
 	fman = new t_font_manager(*feng);
 #endif
     }
-    (void) feng->load_font(_f->file, _f->index, agg::glyph_ren_agg_gray8,
-	   (const char *) XGetFTStream(_f->file, _f->file_size));
-    feng->flip_y(true);
-    feng->height(_f->size);
-
-    fs->fid = (Font) _f;
-    fs->ascent = (int) (feng->ascender() + 0.5);
-    fs->descent = 0 - (int) (feng->descender() - 0.5);
-    fs->max_bounds.width = 10; /* FIXME */
-
     Tcl_MutexUnlock(&txt_mutex);
+}
 
+void
+SdlTkGfxDeinitFC(void)
+{
+    Tcl_MutexLock(&txt_mutex);
+    if (feng) {
+#ifdef AGG_CUSTOM_ALLOCATOR
+	void *p, *q;
+	p = fman;
+	q = feng;
+	fman->~t_font_manager();
+	feng->~t_font_engine();
+	ckfree(p);
+	ckfree(q);
+#else
+	delete fman;
+	delete feng;
+#endif
+	fman = 0;
+	feng = 0;
+    }
+    Tcl_MutexUnlock(&txt_mutex);
+}
+
+XFontStruct *
+SdlTkGfxAllocFontStruct(_Font *_f)
+{
+    XFontStruct *fs = (XFontStruct *) ckalloc(sizeof (XFontStruct));
+
+    memset(fs, 0, sizeof(XFontStruct));
+    Tcl_MutexLock(&txt_mutex);
+    fs->fid = (Font) _f;
+    if (feng) {
+	(void) feng->load_font(_f->file, _f->index, agg::glyph_ren_agg_gray8,
+		(const char *) XGetFTStream(_f->file, _f->file_size));
+	feng->flip_y(true);
+	feng->height(_f->size);
+	fs->ascent = (int) (feng->ascender() + 0.5);
+	fs->descent = 0 - (int) (feng->descender() - 0.5);
+    } else {
+	fs->ascent = fs->descent = 1;
+    }
+    fs->max_bounds.width = 10; /* FIXME */
+    Tcl_MutexUnlock(&txt_mutex);
     return fs;
 }
 
@@ -1431,14 +1465,15 @@ int SdlTkGfxTextWidth(Font f, const char *string, int length, int *maxw)
     double w = 0.0;
 
     Tcl_MutexLock(&txt_mutex);
-
+    if (!feng) {
+	w = length;
+	goto done;
+    }
     (void) feng->load_font(_f->file, _f->index, agg::glyph_ren_agg_gray8,
 	   (const char *) XGetFTStream(_f->file, _f->file_size));
     feng->flip_y(true);
     feng->height(_f->size);
-
     length /= sizeof(unsigned int) /* FcChar32 */;
-
     for (i = 0; i < length; i++) {
 	const agg::glyph_cache *glyph = fman->glyph(SdlTkGetNthGlyphIndex(_f, string, i));
 	if (glyph) {
@@ -1449,9 +1484,8 @@ int SdlTkGfxTextWidth(Font f, const char *string, int length, int *maxw)
 	    break;
 	}
     }
-
+done:
     Tcl_MutexUnlock(&txt_mutex);
-
     return (int) w;
 }
 
@@ -1763,15 +1797,15 @@ doDrawStringGray(Drawable d, GC gc, int x, int y, const char *string,
 	feng->transform(mtx);
     }
 
-    if (tmpRgn) {
-	SdlTkRgnPoolFree(tmpRgn);
-    }
-
     if (xret != NULL) {
         *xret = fx - xOff;
     }
     if (yret != NULL) {
         *yret = fy - yOff;
+    }
+
+    if (tmpRgn) {
+	SdlTkRgnPoolFree(tmpRgn);
     }
 
     /* Unlock surface */
@@ -1793,6 +1827,16 @@ SdlTkGfxDrawString(Drawable d, GC gc, int x, int y, const char *string,
     }
 
     Tcl_MutexLock(&txt_mutex);
+
+    if (!feng) {
+	if (xret != NULL) {
+	    *xret = x;
+	}
+	if (yret != NULL) {
+	    *yret = y;
+	}
+	goto done;
+    }
 
     switch (format) {
     case SDLTK_RGB565:
@@ -1836,7 +1880,7 @@ SdlTkGfxDrawString(Drawable d, GC gc, int x, int y, const char *string,
 					 angle, xret, yret);
 	break;
     }
-
+done:
     Tcl_MutexUnlock(&txt_mutex);
 }
 
