@@ -3925,7 +3925,7 @@ test text-20.5 {TextFetchSelection procedure, long selections} -setup {
 } -result {1}
 
 
-test text-21.1 {TkTextLostSelection procedure} -constraints {unix notAqua} -setup {
+test text-21.1 {TkTextLostSelection procedure} -constraints {x11} -setup {
     text .t
     .t insert 1.0 "Line 1"
     entry .t.e
@@ -3940,22 +3940,7 @@ test text-21.1 {TkTextLostSelection procedure} -constraints {unix notAqua} -setu
 } -cleanup {
     destroy .t .t2
 } -result {}
-test text-21.1a {TkTextLostSelection procedure} -constraints {unix aqua} -setup {
-    text .t
-    .t insert 1.0 "Line 1"
-    entry .t.e
-    .t.e insert end "abcdefg"
-    text .t2
-    .t2 insert 1.0 "abc\ndef\nghijk\n1234"
-} -body {
-    .t2 tag add sel 1.2 3.3
-    .t.e select from 0
-    .t.e select to 1
-    .t2 tag ranges sel
-} -cleanup {
-    destroy .t .t2
-} -result {1.2 3.3}
-test text-21.2 {TkTextLostSelection procedure} -constraints win -setup {
+test text-21.2 {TkTextLostSelection procedure} -constraints aquaOrWin32 -setup {
     text .t
     .t insert 1.0 "Line 1"
     entry .t.e
