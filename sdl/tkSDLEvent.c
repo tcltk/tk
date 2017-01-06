@@ -517,6 +517,8 @@ handleEvents:
 	    if (fd < 0) {
 		if (XEventsQueued(dispPtr->display, QueuedAlready) > 0) {
 		    DisplayFileProc(dispPtr, TCL_READABLE);
+		    done = 1;
+		    break;
 		}
 		continue;
 	    }
@@ -525,7 +527,12 @@ handleEvents:
 	    if ((readMask[index] & bit) ||
 		(XEventsQueued(dispPtr->display, QueuedAlready) > 0)) {
 		DisplayFileProc(dispPtr, TCL_READABLE);
+		done = 1;
+		break;
 	    }
+	}
+	if (done) {
+	    break;
 	}
 #endif
 	if (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {

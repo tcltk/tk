@@ -6,6 +6,7 @@
 *.lib
 *.o
 *.obj
+*.pdb
 *.res
 *.sl
 *.so
@@ -18,4 +19,6 @@
 */tktest*
 */versions.vc
 doc/man.macros
+win/Debug_VC*
+win/Release_VC*
 unix/tk.pc

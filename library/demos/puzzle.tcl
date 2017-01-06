@@ -59,6 +59,13 @@ scrollbar $w.s
 
 if {[tk windowingsystem] eq "aqua"} {
     set frameSize 168
+} elseif {[info command "sdltk"] eq "sdltk"} {
+    set sw [winfo screenwidth $w]
+    set sh [winfo screenheight $w]
+    if {$sh < $sw} {
+	set sw $sh
+    }
+    set frameSize [expr {round($sw * 0.45)}]
 } else {
     set frameSize 120
 }

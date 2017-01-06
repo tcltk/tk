@@ -296,8 +296,7 @@ TkpDrawCheckIndicator(
 	dimW = dimH;
 	dimWI = dimHI;
     }
-    dimWI *= 2;
-    dimWI /= dimW;
+    dimWI = (2 * dimW) / dimWI;
     if (dimWI < 11) {
 	/* < 140 DPI */
 	button_images = button_images_small;
