@@ -922,9 +922,9 @@ test text-2.8 {Tk_TextCmd procedure} -constraints {
     .t tag cget sel -relief 
 } -cleanup {
     destroy .t
-} -result {solid}
+} -result {flat}
 test text-2.9 {Tk_TextCmd procedure} -constraints {
-    unix
+    unix notAqua
 } -body {
     catch {destroy .t}
     text .t
@@ -3925,7 +3925,7 @@ test text-20.5 {TextFetchSelection procedure, long selections} -setup {
 } -result {1}
 
 
-test text-21.1 {TkTextLostSelection procedure} -constraints unix -setup {
+test text-21.1 {TkTextLostSelection procedure} -constraints {x11} -setup {
     text .t
     .t insert 1.0 "Line 1"
     entry .t.e
@@ -3940,7 +3940,7 @@ test text-21.1 {TkTextLostSelection procedure} -constraints unix -setup {
 } -cleanup {
     destroy .t .t2
 } -result {}
-test text-21.2 {TkTextLostSelection procedure} -constraints win -setup {
+test text-21.2 {TkTextLostSelection procedure} -constraints aquaOrWin32 -setup {
     text .t
     .t insert 1.0 "Line 1"
     entry .t.e
