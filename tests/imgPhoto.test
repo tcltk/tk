@@ -804,6 +804,16 @@ test imgPhoto-4.74 {ImgPhotoCmd procedure: put option error handling} -setup {
 } -cleanup {
     image delete photo1
 } -returnCodes 1 -result {wrong # args: should be "photo1 put data ?-option value ...?"}
+test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constraints {
+    hasTeapotPhoto
+} -body {
+    file copy -force $teapotPhotoFile -teapotPhotoFile
+    image create photo photo1
+    photo1 read -teapotPhotoFile
+} -cleanup {
+    image delete photo1
+    file delete ./-teapotPhotoFile
+} -result {}
 
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -constraints {
     hasTeapotPhoto
