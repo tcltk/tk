@@ -1540,7 +1540,11 @@ ParseSubcommandOptions(
 	 */
 
 	if (!(allowedOptions & bit)) {
-	    goto unknownOrAmbiguousOption;
+	    if (optPtr->name != NULL) {
+		goto unknownOrAmbiguousOption;
+	    }
+	    optPtr->name = objv[index];
+	    continue;
 	}
 
 	/*
