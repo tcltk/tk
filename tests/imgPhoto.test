@@ -226,7 +226,7 @@ test imgPhoto-4.28 {ImgPhotoCmd procedure: put option} {
     list [catch {p1 put {{blahgle}}} err] $err
 } {1 {can't parse color "blahgle"}}
 test imgPhoto-4.29 {ImgPhotoCmd procedure: put option} {
-    p1 put -to 10 10 20 20 {{white}}
+    p1 put {{white}} -to 10 10 20 20
     p1 get 19 19
 } {255 255 255}
 test imgPhoto-4.30 {ImgPhotoCmd procedure: read option} {
@@ -440,6 +440,23 @@ test imgPhoto-4.72 {ImgPhotoCmd procedure: copy with -compositingrule} {
     checkImgTrans p1 3 3
 } {0 2 1 1 2 0}
 catch {rename checkImgTrans {}}
+test imgPhoto-4.74 {ImgPhotoCmd procedure: put option error handling} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{white}} -to 10 10 20 20 {{white}}
+} -cleanup {
+    image delete photo1
+} -returnCodes 1 -result {wrong # args: should be "photo1 put data ?options?"}
+test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constraints {
+    hasTeapotPhoto 
+} -body {
+    file copy -force $teapotPhotoFile -teapotPhotoFile
+    image create photo photo1
+    photo1 read -teapotPhotoFile
+} -cleanup {
+    image delete photo1
+    file delete ./-teapotPhotoFile
+} -result {}
 
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} hasTeapotPhoto {
     eval image delete [image names]

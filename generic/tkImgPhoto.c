@@ -1675,6 +1675,10 @@ ParseSubcommandOptions(
 	 */
 
 	if ((allowedOptions & bit) == 0) {
+	    if (optPtr->name == NULL) {
+		optPtr->name = objv[index];
+		continue;
+	    }
 	    Tcl_AppendResult(interp, "unrecognized option \"",
 	    	    Tcl_GetString(objv[index]),
 		    "\": must be ", NULL);
