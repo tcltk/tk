@@ -1527,12 +1527,6 @@ TkScrollWindow(
 	    srcRect = CGRectMake(x, y, width, height);
 	    dstRect = CGRectOffset(srcRect, dx, dy);
 
-	    /* Expand the rectangles slightly to avoid degeneracies. */
-	    srcRect.origin.y -= 1;
-	    srcRect.size.height += 2;
-	    dstRect.origin.y += 1;
-	    dstRect.size.height -= 2;
-
 	    /* Compute the damage. */
   	    dmgRgn = HIShapeCreateMutableWithRect(&srcRect);
  	    extraRgn = HIShapeCreateWithRect(&dstRect);
