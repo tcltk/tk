@@ -357,8 +357,8 @@ GenerateUpdates(
     event.xany.window = Tk_WindowId(winPtr);
     event.xany.display = Tk_Display(winPtr);
     event.type = Expose;
-    event.xexpose.x = damageBounds.origin.x - bounds.origin.x;
-    event.xexpose.y = damageBounds.origin.y - bounds.origin.y;
+    event.xexpose.x = damageBounds.origin.x;
+    event.xexpose.y = damageBounds.origin.y;
     event.xexpose.width = damageBounds.size.width;
     event.xexpose.height = damageBounds.size.height;
     event.xexpose.count = 0;
