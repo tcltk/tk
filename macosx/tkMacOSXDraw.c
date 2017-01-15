@@ -1565,9 +1565,6 @@ TkScrollWindow(
 	    int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
 	    [view generateExposeEvents:dmgRgn childrenOnly:1];
 	    Tcl_SetServiceMode(oldMode);
-
-	    /* Belt and suspenders: make the AppKit request a redraw
-	       when it gets control again. */
   	}
     } else {
 	dmgRgn = HIShapeCreateEmpty();
