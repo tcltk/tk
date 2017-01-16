@@ -705,8 +705,8 @@ if {[tk windowingsystem] eq "aqua"} {
 if {[info command "sdltk"] eq "sdltk"} {
     # Android hardware keyboard handling
     if {[sdltk android]} {
-	if {[package versions borg] ne {}} {
-	    package require borg
+	if {[package versions Borg] ne {}} {
+	    package require Borg
 	}
 
 	bind . <<KeyboardInfo>> ::tk::AndroidKBDInfo
