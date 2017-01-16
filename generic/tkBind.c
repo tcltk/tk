@@ -1274,13 +1274,13 @@ Tk_BindEvent(
     }
 
     /*
-     * Ignore event types which are not in flagArray. Most notably,
-     * NoExpose events can fill the ring buffer and disturb (thus
-     * masking out) event sequences of interest.
+     * Ignore event types which are not in flagArray and all zeroes there.
+     * Most notably, NoExpose events can fill the ring buffer and disturb
+     * (thus masking out) event sequences of interest.
      */
 
     if ((eventPtr->type >= TK_LASTEVENT) || !flagArray[eventPtr->type]) {
-	return;
+       return;
     }
 
     dispPtr = ((TkWindow *) tkwin)->dispPtr;

@@ -1410,10 +1410,13 @@ TkpDrawCharsInContext(
 				 * whole (not just the range) string when
 				 * drawing. */
 {
+    int widthUntilStart;
+
     (void) numBytes; /*unused*/
 
+    Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart,
-	    rangeLength, x, y);
+	    rangeLength, x+widthUntilStart, y);
 }
 
 /*

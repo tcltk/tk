@@ -7824,7 +7824,7 @@ CharChunkMeasureChars(
 
 	    MeasureChars(tkfont, chars, charsLen, 0, bstart,
 		    0, -1, 0, &widthUntilStart);
-	    xDisplacement = startX - widthUntilStart - chunkPtr->x;
+	    xDisplacement = startX - widthUntilStart - ciPtr->baseChunkPtr->x;
 	}
 
 	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,

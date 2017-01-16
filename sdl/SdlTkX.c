@@ -4992,6 +4992,64 @@ RWIconClose(struct SDL_RWops *rwops)
 
 #endif
 
+#ifdef linux
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Hit test procedure for Wayland move/resize of root window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static SDL_HitTestResult
+HitTestProc(SDL_Window *win, const SDL_Point *point, void *data)
+{
+    int w, h, x, y, flags;
+    SDL_HitTestResult ret = SDL_HITTEST_NORMAL;
+
+    flags = SDL_GetWindowFlags(SdlTkX.sdlscreen);
+    if (flags &
+	(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED)) {
+	goto done;
+    }
+    SDL_GetWindowSize(SdlTkX.sdlscreen, &w, &h);
+    x = point->x;
+    y = point->y;
+    if ((x < 6) && (y < 6)) {
+	if (SdlTkX.arg_resizable) {
+	    ret = SDL_HITTEST_RESIZE_TOPLEFT;
+	} else {
+	    ret = SDL_HITTEST_DRAGGABLE;
+	}
+    } else if ((x < 6) && (y >= h - 6)) {
+	if (SdlTkX.arg_resizable) {
+	    ret = SDL_HITTEST_RESIZE_BOTTOMLEFT;
+	} else {
+	    ret = SDL_HITTEST_DRAGGABLE;
+	}
+    } else if ((x >= w - 6) && (y >= h - 6)) {
+	if (SdlTkX.arg_resizable) {
+	    ret = SDL_HITTEST_RESIZE_BOTTOMRIGHT;
+	} else {
+	    ret = SDL_HITTEST_DRAGGABLE;
+	}
+    } else if ((x >= w - 6) && (y < 6)) {
+	if (SdlTkX.arg_resizable) {
+	    ret = SDL_HITTEST_RESIZE_TOPRIGHT;
+	} else {
+	    ret = SDL_HITTEST_DRAGGABLE;
+	}
+    } else if ((x < 6) || (y < 6) ||
+	(x >= w - 6) || (y >= h - 6)) {
+	ret = SDL_HITTEST_DRAGGABLE;
+    }
+done:
+    return ret;
+}
+
+#endif
+
 /*
  *----------------------------------------------------------------------
  *
@@ -5034,13 +5092,20 @@ PerformSDLInit(int *root_width, int *root_height)
 #ifdef linux
     /*
      * Wayland: if SDL_VIDEODRIVER is unset but WAYLAND_DISPLAY
-     * is set, prefer the Wayland video driver.
+     * is set, prefer the Wayland video driver if available.
      */
     if (getenv("SDL_VIDEODRIVER") == NULL) {
 	char *p = getenv("WAYLAND_DISPLAY");
 
 	if ((p != NULL) && p[0]) {
-	    putenv("SDL_VIDEODRIVER=wayland");
+	    int n = SDL_GetNumVideoDrivers();
+
+	    for (i = 0; i < n; i++) {
+		if (strcmp(SDL_GetVideoDriver(i), "wayland") == 0) {
+		    putenv("SDL_VIDEODRIVER=wayland");
+		    break;
+		}
+	    }
 	}
     }
 #endif
@@ -5670,12 +5735,14 @@ ctxRetry:
 #else
 	if (wminfo.subsystem != SDL_SYSWM_X11) {
 	    SdlTkX.sdlfocus = 1;
-#ifdef linux
-	    /* Wayland? Try to load libGL.so for 3D canvas. */
-	    if (!SdlTkX.arg_nogl) {
-		dlopen("libGL.so.1", RTLD_NOW | RTLD_GLOBAL);
-	    }
+	}
 #endif
+#ifdef linux
+	if ((wminfo.subsystem == SDL_SYSWM_WAYLAND) && !SdlTkX.arg_nogl) {
+	    /* Wayland? Try to pre-load libGL.so for 3D canvas. */
+	    dlopen("libGL.so.1", RTLD_NOW | RTLD_GLOBAL);
+	    /* Add hit test function for move/resize. */
+	    SDL_SetWindowHitTest(SdlTkX.sdlscreen, HitTestProc, NULL);
 	}
 #endif
     } else {
@@ -5774,7 +5841,7 @@ EventThread(ClientData clientData)
     int skipRefresh = 0, overrun, initSuccess;
 #ifndef ANDROID
     /* Key repeat handling for Wayland. */
-    SDL_Event key_event, txt_event;
+    SDL_Event key_event = { 0 }, txt_event = { 0 };
     int key_rpt_state = 0, key_rpt_time = 0;
     extern int SDL_SendKeyboardKey(Uint8 state, SDL_Scancode scancode,
 				   Uint16 rate, Uint16 delay);
