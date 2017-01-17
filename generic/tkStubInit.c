@@ -40,6 +40,10 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef Tk_MainEx
 #undef Tk_FreeXId
 
+
+#ifdef TK_NO_DEPRECATED
+#define Tk_FreeXId 0
+#else
 static void
 doNothing(void)
 {
@@ -47,6 +51,7 @@ doNothing(void)
 }
 
 #define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
+#endif
 
 #ifdef _WIN32
 
