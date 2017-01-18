@@ -870,7 +870,7 @@ TkpMeasureCharsInContext(
 	if (index <= start && !(flags & TK_WHOLE_WORDS)) {
 	    index = CTTypesetterSuggestClusterBreak(typesetter, start, maxWidth);
 	}
-	cs = (index < len || (flags & TK_WHOLE_WORDS)) ?
+	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
 	while (index > start &&
 		[cs characterIsMember:[string characterAtIndex:(index - 1)]]) {

@@ -1261,9 +1261,6 @@ MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 MODULE_SCOPE int	TkplatformtestInit(Tcl_Interp *interp);
 #endif
 
-#undef Tcl_AddErrorInfo
-#define Tcl_AddErrorInfo(interp, message) \
-	Tcl_AppendObjToErrorInfo((interp), Tcl_NewStringObj((message), -1))
 #endif /* _TKINT */
 
 /*
