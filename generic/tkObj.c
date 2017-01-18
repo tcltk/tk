@@ -211,14 +211,14 @@ GetPixelsFromObjEx(
 	ThreadSpecificData *typeCache = GetTypeCache();
 
 	if (objPtr->typePtr == typeCache->doubleTypePtr) {
-	    Tcl_GetDoubleFromObj(interp, objPtr, &d);
+	    (void) Tcl_GetDoubleFromObj(interp, objPtr, &d);
 	    if (dblPtr != NULL) {
 		*dblPtr = d;
 	    }
 	    *intPtr = (int) (d<0 ? d-0.5 : d+0.5);
 	    return TCL_OK;
 	} else if (objPtr->typePtr == typeCache->intTypePtr) {
-	    Tcl_GetIntFromObj(interp, objPtr, intPtr);
+	    (void) Tcl_GetIntFromObj(interp, objPtr, intPtr);
 	    if (dblPtr) {
 		*dblPtr = (double) (*intPtr);
 	    }
