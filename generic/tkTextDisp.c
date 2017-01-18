@@ -3005,7 +3005,7 @@ AsyncUpdateLineMetrics(
 	 * The widget has been deleted, or is not mapped. Don't do anything.
 	 */
 
-	if (--textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	}
 	return;
@@ -3080,8 +3080,7 @@ AsyncUpdateLineMetrics(
 
         GenerateWidgetViewSyncEvent(textPtr, 1);
 
-	textPtr->refCount--;
-	if (textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	}
 	return;
@@ -4163,7 +4162,7 @@ DisplayText(
 	textPtr->refCount++;
 	dInfoPtr->flags &= ~REPICK_NEEDED;
 	TkTextPickCurrent(textPtr, &textPtr->pickEvent);
-	if (--textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	    goto end;
 	}
@@ -6752,7 +6751,7 @@ AsyncUpdateYScrollbar(
 	GetYView(textPtr->interp, textPtr, 1);
     }
 
-    if (--textPtr->refCount == 0) {
+    if (textPtr->refCount-- <= 1) {
 	ckfree(textPtr);
     }
 }
@@ -7819,7 +7818,7 @@ CharChunkMeasureChars(
 
 	    MeasureChars(tkfont, chars, charsLen, 0, bstart,
 		    0, -1, 0, &widthUntilStart);
-	    xDisplacement = startX - widthUntilStart - chunkPtr->x;
+	    xDisplacement = startX - widthUntilStart - ciPtr->baseChunkPtr->x;
 	}
 
 	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
@@ -8981,13 +8980,13 @@ RemoveFromBaseChunk(
 
     bciPtr = baseCharChunkPtr->clientData;
 
+#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
     if ((ciPtr->baseOffset + ciPtr->numBytes)
 	    != Tcl_DStringLength(&bciPtr->baseChars)) {
-#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
 	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk "
 		"(not last)\n");
-#endif
     }
+#endif
 
     Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
 
