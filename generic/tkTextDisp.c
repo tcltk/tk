@@ -3015,7 +3015,7 @@ AsyncUpdateLineMetrics(
 	 * The widget has been deleted, or is not mapped. Don't do anything.
 	 */
 
-	if (--textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	}
 	return;
@@ -3090,8 +3090,7 @@ AsyncUpdateLineMetrics(
 
         GenerateWidgetViewSyncEvent(textPtr, 1);
 
-	textPtr->refCount--;
-	if (textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	}
 	return;
@@ -4173,7 +4172,7 @@ DisplayText(
 	textPtr->refCount++;
 	dInfoPtr->flags &= ~REPICK_NEEDED;
 	TkTextPickCurrent(textPtr, &textPtr->pickEvent);
-	if (--textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	    goto end;
 	}
@@ -4309,8 +4308,9 @@ DisplayText(
 	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x,
 		oldY, dInfoPtr->maxX-dInfoPtr->x, height, 0, y-oldY,
 		damageRgn)) {
+#ifndef MAC_OSX_TK
 	    TextInvalidateRegion(textPtr, damageRgn);
-
+#endif
 	}
 	numCopies++;
 	TkDestroyRegion(damageRgn);
@@ -6762,7 +6762,7 @@ AsyncUpdateYScrollbar(
 	GetYView(textPtr->interp, textPtr, 1);
     }
 
-    if (--textPtr->refCount == 0) {
+    if (textPtr->refCount-- <= 1) {
 	ckfree(textPtr);
     }
 }
