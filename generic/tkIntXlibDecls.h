@@ -23,6 +23,10 @@
 #   include <tcl.h>
 #endif
 
+#ifndef EXTERN
+#   define EXTERN extern TCL_STORAGE_CLASS
+#endif
+
 /* Some (older) versions of X11/Xutil.h have a wrong signature of those
    two functions, so move them out of the way temporarly. */
 #define XOffsetRegion _XOffsetRegion
