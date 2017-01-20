@@ -153,12 +153,19 @@ GetTypeCache(void)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->doubleTypePtr == NULL) {
-	Tcl_Obj *obj = Tcl_NewDoubleObj(0.0);
-	tsdPtr->doubleTypePtr = obj->typePtr;
-	Tcl_DecrRefCount(obj);
-	obj = Tcl_NewLongObj(0);
-	tsdPtr->intTypePtr = obj->typePtr;
-	Tcl_DecrRefCount(obj);
+	/* Smart initialization of doubleTypePtr/intTypePtr without
+	 * hash-table lookup or creating complete Tcl_Obj's */
+	Tcl_Obj obj;
+	obj.length = 3;
+	obj.bytes = (char *)"0.0";
+	obj.typePtr = NULL;
+	Tcl_GetDoubleFromObj(NULL, &obj, &obj.internalRep.doubleValue);
+	tsdPtr->doubleTypePtr = obj.typePtr;
+	obj.bytes += 2;
+	obj.length = 1;
+	obj.typePtr = NULL;
+	Tcl_GetLongFromObj(NULL, &obj, &obj.internalRep.longValue);
+	tsdPtr->intTypePtr = obj.typePtr;
     }
     return tsdPtr;
 }
