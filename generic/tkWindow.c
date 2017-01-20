@@ -1479,8 +1479,7 @@ Tk_DestroyWindow(
 
 	    winPtr->mainPtr->deletionEpoch++;
 	}
-	winPtr->mainPtr->refCount--;
-	if (winPtr->mainPtr->refCount == 0) {
+	if (winPtr->mainPtr->refCount-- <= 1) {
 	    register const TkCmd *cmdPtr;
 
 	    /*
