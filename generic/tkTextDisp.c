@@ -4298,8 +4298,9 @@ DisplayText(
 	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x,
 		oldY, dInfoPtr->maxX-dInfoPtr->x, height, 0, y-oldY,
 		damageRgn)) {
+#ifndef MAC_OSX_TK
 	    TextInvalidateRegion(textPtr, damageRgn);
-
+#endif
 	}
 	numCopies++;
 	TkDestroyRegion(damageRgn);
