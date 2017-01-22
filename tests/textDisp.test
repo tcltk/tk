@@ -1952,13 +1952,15 @@ test textDisp-15.8 {Scrolling near end of window} {
 	.tf.f.t insert end "\nLine $i"
     }
     update ; after 1000 ; update
+    set refind [.tf.f.t index @0,[winfo height .tf.f.t]]
     # Should scroll and should not crash!
     .tf.f.t yview scroll 1 unit
     # Check that it has scrolled
-    set res [.tf.f.t index @0,[expr [winfo height .tf.f.t] - 15]]
+    set newind [.tf.f.t index @0,[winfo height .tf.f.t]]
+    set res [.tf.f.t compare $newind > $refind]
     destroy .tf
     set res
-} {12.0}
+} {1}
 
 .t configure -wrap char
 .t delete 1.0 end
