@@ -710,10 +710,10 @@ proc PrintTextWin32 {filename} {
 proc tkAboutDialog {} {
     tk_messageBox -icon info -type ok -title [mc "About Widget Demo"] \
 	    -message [mc "Tk widget demonstration application"] -detail \
-"[mc \"Copyright\ \u00a9\ %s\" {1996-1997 Sun Microsystems, Inc.}]
-[mc \"Copyright\ \u00a9\ %s\" {1997-2000 Ajuba Solutions, Inc.}]
-[mc \"Copyright\ \u00a9\ %s\" {2001-2009 Donal K. Fellows}]
-[mc \"Copyright\ \u00a9\ %s\" {2002-2007 Daniel A. Steffen}]"
+"[mc "Copyright \u00a9 %s" {1996-1997 Sun Microsystems, Inc.}]
+[mc "Copyright \u00a9 %s" {1997-2000 Ajuba Solutions, Inc.}]
+[mc "Copyright \u00a9 %s" {2001-2009 Donal K. Fellows}]
+[mc "Copyright \u00a9 %s" {2002-2007 Daniel A. Steffen}]"
 }
 
 # Local Variables:
