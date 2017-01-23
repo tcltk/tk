@@ -36,8 +36,12 @@
 #undef XUnionRegion
 
 #ifdef BUILD_tk
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLEXPORT
+#  undef TCL_STORAGE_CLASS
+#  define TCL_STORAGE_CLASS DLLEXPORT
+#else
+#  ifndef TCL_STORAGE_CLASS
+#    define TCL_STORAGE_CLASS DLLIMPORT
+#  endif
 #endif
 
 typedef int (*XAfterFunction) (	    /* WARNING, this type not in Xlib spec */
