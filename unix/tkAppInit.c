@@ -12,6 +12,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#undef BUILD_tk
+#undef STATIC_BUILD
 #include "tk.h"
 
 #ifdef TK_TEST
