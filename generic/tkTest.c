@@ -452,7 +452,7 @@ TestcursorObjCmd(
  *	A standard Tcl result.
  *
  * Side effects:
- *	All the intepreters created by previous calls to "testnewapp" get
+ *	All the interpreters created by previous calls to "testnewapp" get
  *	deleted.
  *
  *----------------------------------------------------------------------
