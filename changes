@@ -1315,7 +1315,7 @@ ISO Latin-1 character set.
 result across the execution of binding scripts.  Otherwise if an event
 triggers in the middle of some other script (e.g. a destroy event during
 window creation, because there was an error in the creation command),
-the intepreter's result gets lost.
+the interpreter's result gets lost.
 
 2/19/94 (bug fix) Fixed bug in dealing with results of sent command
 that could cause them to get lost in some situations.
