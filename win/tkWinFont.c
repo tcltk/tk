@@ -2528,22 +2528,6 @@ FamilyExists(
     int result;
     Tcl_DString faceString;
 
-    /*
-     * Just immediately rule out the following fonts, because they look so
-     * ugly on windows. The caller's fallback mechanism will cause the
-     * corresponding appropriate TrueType fonts to be selected.
-     */
-
-    if (strcasecmp(faceName, "Courier") == 0) {
-	return 0;
-    }
-    if (strcasecmp(faceName, "Times") == 0) {
-	return 0;
-    }
-    if (strcasecmp(faceName, "Helvetica") == 0) {
-	return 0;
-    }
-
     Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &faceString);
 
     /*
