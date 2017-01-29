@@ -1,6 +1,3 @@
-/*
- * This file is generated from $(INCLUDESRC)/keysymdef.h.  Do not edit.
- */
 { "BackSpace", 0xFF08 },
 { "Tab", 0xFF09 },
 { "Linefeed", 0xFF0A },
