@@ -1,3 +1,16 @@
+/*
+ * This file should be maintained in sync with xlib/X11/keysymdefs.h
+ *
+ * Note that this should be done manually only, because in some cases
+ * keysymdefs.h defines the same integer for multiple keysyms, e.g.:
+ *
+ *    #define XK_Greek_LAMDA                         0x7cb
+ *    #define XK_Greek_LAMBDA                        0x7cb
+ *
+ *    #define XK_Cyrillic_DZHE                       0x6bf
+ *    #define XK_Serbian_DZE                         0x6bf  (deprecated)
+ *
+ */
 { "BackSpace", 0xFF08 },
 { "Tab", 0xFF09 },
 { "Linefeed", 0xFF0A },
