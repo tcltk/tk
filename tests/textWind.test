@@ -22,7 +22,7 @@ option add *Text.font {Courier -12}
 deleteWindows
 # Widget used in tests 1.* - 16.*
 text .t -width 30 -height 6 -bd 2 -highlightthickness 2
-pack append . .t {top expand fill}
+pack .t -expand 1 -fill both
 update
 .t debug on
 
