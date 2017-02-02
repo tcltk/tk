@@ -2819,6 +2819,7 @@ test textDisp-19.17 {count -ypixels with indices in elided lines} {
     .t tag configure hidden -elide true
     set res {}
     update
+    .t sync
     lappend res \
       [.t count -ypixels 1.0 6.0] \
       [.t count -ypixels 2.0 7.5] \
@@ -2833,6 +2834,8 @@ test textDisp-19.17 {count -ypixels with indices in elided lines} {
       [.t count -ypixels 25.4 27.50] \
       [.t count -ypixels 35.0 38.0]
     .t yview 35.0
+    update
+    .t sync
     lappend res [.t count -ypixels 5.0 25.0]
 } [list [expr {4 * $fixedHeight}] [expr {3 * $fixedHeight}] 0 0 0 0 0 0 [expr {5 * $fixedHeight}] [expr {- 5 * $fixedHeight}] [expr {2 * $fixedHeight}] [expr {3 * $fixedHeight}] [expr {5 * $fixedHeight}]]
 test textDisp-19.18 {count -ypixels with indices in elided lines} {
@@ -2847,9 +2850,11 @@ test textDisp-19.18 {count -ypixels with indices in elided lines} {
     .t yview 35.0
     set res {}
     update
+    .t sync
     lappend res [.t count -ypixels 5.0 25.0]
     .t yview scroll [expr {- 15 * $fixedHeight}] pixels
     update
+    .t sync
     lappend res [.t count -ypixels 5.0 25.0]
 } [list [expr {5 * $fixedHeight}] [expr {5 * $fixedHeight}]]
 test textDisp-19.19 {count -ypixels with indices in elided lines} {
