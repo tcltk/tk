@@ -355,6 +355,9 @@ CreateTopLevelWindow(
      * Set the flags specified in the call.
      */
 
+#ifdef TK_USE_INPUT_METHODS
+    winPtr->ximGeneration = 0;
+#endif /*TK_USE_INPUT_METHODS*/
     winPtr->flags |= flags;
 
     /*
@@ -472,6 +475,9 @@ GetScreen(
 	    dispPtr->cursorFont = None;
 	    dispPtr->warpWindow = NULL;
 	    dispPtr->multipleAtom = None;
+#ifdef TK_USE_INPUT_METHODS
+	    dispPtr->ximGeneration = 0;
+#endif /*TK_USE_INPUT_METHODS*/
 
 	    /*
 	     * By default we do want to collapse motion events in
@@ -1442,10 +1448,11 @@ Tk_DestroyWindow(
     UnlinkWindow(winPtr);
     TkEventDeadWindow(winPtr);
 #ifdef TK_USE_INPUT_METHODS
-    if (winPtr->inputContext != NULL) {
+    if (winPtr->inputContext != NULL &&
+	    winPtr->ximGeneration == winPtr->dispPtr->ximGeneration) {
 	XDestroyIC(winPtr->inputContext);
-	winPtr->inputContext = NULL;
     }
+    winPtr->inputContext = NULL;
 #endif /* TK_USE_INPUT_METHODS */
     if (winPtr->tagPtr != NULL) {
 	TkFreeBindingTags(winPtr);
