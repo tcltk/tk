@@ -8868,7 +8868,7 @@ FinalizeBaseChunk(
 #if TK_DRAW_IN_CONTEXT
 	newwidth = 0;
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, 0, -1, 0, &newwidth);
-	if (newwidth != chunkPtr->width) {
+	if (newwidth < chunkPtr->width) {
 	    widthAdjust += newwidth - chunkPtr->width;
 	    chunkPtr->width = newwidth;
 	}
