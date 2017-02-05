@@ -7890,7 +7890,7 @@ CharDisplayProc(
 				 * corresponds to y. */
 {
     CharInfo *ciPtr = chunkPtr->clientData;
-    const char *string;
+    char *string;
     TextStyle *stylePtr;
     StyleValues *sValuePtr;
     int numBytes, offsetBytes, offsetX;
@@ -7975,6 +7975,23 @@ CharDisplayProc(
             if (ch == 0x00AD) {
                 len -= nBytes;
             }
+        } else {
+
+            /*
+             * On OS X, the soft hyphen does not render (there is no
+             * corresponding glyph in OS X fonts). Display a regular
+             * hard hyphen instead.
+             */
+
+#ifdef MAC_OSX_TK
+            nBytes = TkUtfToUniChar(Tcl_UtfPrev(string + start + len,
+                    string + start), &ch);
+            if (ch == 0x00AD) {
+                string[start + len - nBytes] = '-';
+                string[start + len - nBytes + 1] = '\0';
+                len -= nBytes - 1;
+            }
+#endif
         }
 
 	if (len <= 0) {
@@ -8038,6 +8055,23 @@ CharDisplayProc(
             if (ch == 0x00AD) {
                 numBytes -= nBytes;
             }
+        } else {
+
+            /*
+             * On OS X, the soft hyphen does not render (there is no
+             * corresponding glyph in OS X fonts). Display a regular
+             * hard hyphen instead.
+             */
+
+#ifdef MAC_OSX_TK
+            nBytes = TkUtfToUniChar(Tcl_UtfPrev(string + numBytes, string),
+                    &ch);
+            if (ch == 0x00AD) {
+                string[numBytes - nBytes] = '-';
+                string[numBytes - nBytes + 1] = '\0';
+                numBytes -= nBytes - 1;
+            }
+#endif
         }
 
 	Tk_DrawChars(display, dst, stylePtr->fgGC, sValuePtr->tkfont, string,
