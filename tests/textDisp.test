@@ -41,7 +41,7 @@ catch {destroy .f .t}
 frame .f -width 100 -height 20
 pack .f -side left
 
-set fixedFont {Courier -12}
+set fixedFont {"Courier New" -12}
 # 15 on XP, 13 on Solaris 8
 set fixedHeight [font metrics $fixedFont -linespace]
 # 7 on all platforms

@@ -141,7 +141,7 @@ test font-4.9 {font command: actual} -constraints {unix noExceed} -body {
 test font-4.10 {font command: actual} -constraints win -body {
     # (objc > 3) so objPtr = objv[3 + skip]
     font actual {-family times} -family
-} -result {Times New Roman}
+} -result {times}
 test font-4.11 {font command: bad option} -body {
     font actual xyz -style
 } -returnCodes error -result {bad option "-style": must be -family, -size, -weight, -slant, -underline, or -overstrike}
@@ -153,7 +153,7 @@ test font-4.13 {font command: actual} -body {
 } -match glob -result {*}
 test font-4.14 {font command: actual} -constraints win -body {
     font actual {-family times} -family -- \ud800\udc00
-} -result {Times New Roman}
+} -result {times}
 test font-4.15 {font command: actual} -body {
     font actual {-family times} -- \udc00\ud800
 } -returnCodes 1 -match glob -result {expected a single character but got "*"}
@@ -2345,7 +2345,7 @@ test font-45.1 {TkFontGetAliasList: no match} -body {
 } -result [font actual {-size 10} -family]
 test font-45.2 {TkFontGetAliasList: match} -constraints win -body {
     font actual {times 10} -family
-} -result {Times New Roman}
+} -result {times}
 test font-45.3 {TkFontGetAliasList: match} -constraints {unix noExceed} -body {
     # can fail on Unix systems that have a real "times new roman" font
     font actual {{times new roman} 10} -family
