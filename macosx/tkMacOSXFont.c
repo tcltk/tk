@@ -876,6 +876,16 @@ TkpMeasureCharsInContext(
 		[cs characterIsMember:[string characterAtIndex:(index - 1)]]) {
 	    index--;
 	}
+
+        /*
+         * CTTypesetterSuggestClusterBreak et al. above may return an index
+         * larger than the end of the range to consider. Limit to given end.
+         */
+
+        if (index > start + len) {
+            index = start + len;
+        }
+
 	if (index <= start && (flags & TK_AT_LEAST_ONE)) {
 	    index = start + 1;
 	}
