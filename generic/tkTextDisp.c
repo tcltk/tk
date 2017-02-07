@@ -7980,7 +7980,8 @@ CharDisplayProc(
             /*
              * On OS X, the soft hyphen does not render (there is no
              * corresponding glyph in OS X fonts). Display a regular
-             * hard hyphen instead.
+             * hard hyphen instead. This could be done on all platforms
+             * but for performance reasons do it only if it's needed.
              */
 
 #ifdef MAC_OSX_TK
@@ -8060,7 +8061,8 @@ CharDisplayProc(
             /*
              * On OS X, the soft hyphen does not render (there is no
              * corresponding glyph in OS X fonts). Display a regular
-             * hard hyphen instead.
+             * hard hyphen instead. This could be done on all platforms
+             * but for performance reasons do it only if it's needed.
              */
 
 #ifdef MAC_OSX_TK
