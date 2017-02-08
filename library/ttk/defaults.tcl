@@ -74,6 +74,7 @@ namespace eval ttk::theme::default {
 	    -relief sunken -fieldbackground white -padding 1
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
+        ttk::style map TCombobox -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TCombobox -arrowsize 12 -padding 1
 	ttk::style map TCombobox -fieldbackground \
