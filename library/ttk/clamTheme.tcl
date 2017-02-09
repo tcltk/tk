@@ -110,8 +110,7 @@ namespace eval ttk::theme::clam {
 	    -fieldbackground [list {readonly focus} $colors(-selectbg) \
 				  readonly $colors(-frame)] \
 	    -foreground [list {readonly focus} $colors(-selectfg)] \
-	    ;
-        ttk::style map TCombobox -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledfg)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
