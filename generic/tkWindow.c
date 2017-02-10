@@ -475,9 +475,6 @@ GetScreen(
 	    dispPtr->cursorFont = None;
 	    dispPtr->warpWindow = NULL;
 	    dispPtr->multipleAtom = None;
-#ifdef TK_USE_INPUT_METHODS
-	    dispPtr->ximGeneration = 0;
-#endif /*TK_USE_INPUT_METHODS*/
 
 	    /*
 	     * By default we do want to collapse motion events in
@@ -656,6 +653,7 @@ TkAllocWindow(
     winPtr->flags = 0;
     winPtr->handlerList = NULL;
 #ifdef TK_USE_INPUT_METHODS
+    winPtr->ximGeneration = 0;
     winPtr->inputContext = NULL;
 #endif /* TK_USE_INPUT_METHODS */
     winPtr->tagPtr = NULL;
