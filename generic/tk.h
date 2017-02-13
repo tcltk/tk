@@ -105,6 +105,10 @@ extern "C" {
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS	DLLEXPORT
+#else
+# ifndef TCL_STORAGE_CLASS
+#   define TCL_STORAGE_CLASS DLLIMPORT
+# endif
 #endif
 
 /*
