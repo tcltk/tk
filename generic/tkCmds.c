@@ -2068,14 +2068,13 @@ TkGetDisplayOf(
 				 * present. */
 {
     const char *string;
-    int length;
 
     if (objc < 1) {
 	return 0;
     }
-    string = Tcl_GetStringFromObj(objv[0], &length);
-    if ((length >= 2) &&
-	    (strncmp(string, "-displayof", (unsigned) length) == 0)) {
+    string = Tcl_GetString(objv[0]);
+    if ((objv[0]->length >= 2) &&
+	    (strncmp(string, "-displayof", objv[0]->length) == 0)) {
         if (objc < 2) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "value for \"-displayof\" missing", -1));
