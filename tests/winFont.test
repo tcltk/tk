@@ -71,7 +71,7 @@ test winfont-2.7 {TkpGetFontFromAttributes procedure: Times fonts} -constraints 
     lappend x [font actual {-family "Times"} -family]
     lappend x [font actual {-family "New York"} -family]
     lappend x [font actual {-family "Times New Roman"} -family]
-} -result {{Times New Roman} {Times New Roman} {Times New Roman}}
+} -result {Times Times {Times New Roman}}
 test winfont-2.8 {TkpGetFontFromAttributes procedure: Courier fonts} -constraints {
     win
 } -setup {
@@ -80,7 +80,7 @@ test winfont-2.8 {TkpGetFontFromAttributes procedure: Courier fonts} -constraint
     lappend x [font actual {-family "Courier"} -family]
     lappend x [font actual {-family "Monaco"} -family]
     lappend x [font actual {-family "Courier New"} -family]
-} -result {{Courier New} {Courier New} {Courier New}}
+} -result {Courier Courier {Courier New}}
 test winfont-2.9 {TkpGetFontFromAttributes procedure: Helvetica fonts} -constraints {
     win
 } -setup {
@@ -89,7 +89,7 @@ test winfont-2.9 {TkpGetFontFromAttributes procedure: Helvetica fonts} -constrai
     lappend x [font actual {-family "Helvetica"} -family]
     lappend x [font actual {-family "Geneva"} -family]
     lappend x [font actual {-family "Arial"} -family]
-} -result {Arial Arial Arial}
+} -result {Helvetica Helvetica Arial}
 test winfont-2.10 {TkpGetFontFromAttributes procedure: fallback} -constraints {
     win
 } -body {
