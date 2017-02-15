@@ -38,6 +38,20 @@ MODULE_SCOPE const TkStubs tkStubs;
  */
 
 #undef Tk_MainEx
+#undef Tk_FreeXId
+
+
+#ifdef TK_NO_DEPRECATED
+#define Tk_FreeXId 0
+#else
+static void
+doNothing(void)
+{
+    /* dummy implementation, no need to do anything */
+}
+
+#define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
+#endif
 
 #ifdef _WIN32
 
@@ -934,7 +948,7 @@ const TkStubs tkStubs = {
     Tk_FreeOptions, /* 74 */
     Tk_FreePixmap, /* 75 */
     Tk_FreeTextLayout, /* 76 */
-    0, /* 77 */
+    Tk_FreeXId, /* 77 */
     Tk_GCForColor, /* 78 */
     Tk_GeometryRequest, /* 79 */
     Tk_Get3DBorder, /* 80 */
