@@ -13,7 +13,7 @@ tcltest::loadTestedCommands
 
 destroy .t
 text .t -width 20 -height 10
-pack .t -expand 1 -fill both
+pack append . .t {top expand fill}
 update
 .t debug on
 wm geometry . {}
@@ -38,7 +38,7 @@ wm deiconify .
 
 test textMark-1.1 {TkTextMarkCmd - missing option} -returnCodes error -body {
     .t mark
-} -result {wrong # args: should be ".t mark option ?arg ...?"}
+} -result {wrong # args: should be ".t mark option ?arg arg ...?"}
 test textMark-1.2 {TkTextMarkCmd - bogus option} -returnCodes error -body {
     .t mark gorp
 } -match glob -result {bad mark option "gorp": must be *}
@@ -52,7 +52,7 @@ test textMark-1.4 {TkTextMarkCmd - "gravity" option} -body {
 } -result {right 1.4}
 test textMark-1.5 {TkTextMarkCmd - "gravity" option} -body {
     .t mark set x 1.3
-    .t mark g x left
+    .t mark gravity x left
     .t insert 1.3 x
     list [.t mark gravity x] [.t index x]
 } -result {left 1.3}
@@ -88,10 +88,10 @@ test textMark-2.3 {TkTextMarkCmd - "names" option} -setup {
 
 test textMark-3.1 {TkTextMarkCmd - "set" option} -returnCodes error -body {
     .t mark set a
-} -result {wrong # args: should be ".t mark set markName index"}
+} -result {wrong # args: should be ".t mark set markName index ?direction?"}
 test textMark-3.2 {TkTextMarkCmd - "set" option} -returnCodes error -body {
-    .t mark s a b c
-} -result {wrong # args: should be ".t mark set markName index"}
+    .t mark s a b c d
+} -result {wrong # args: should be ".t mark set markName index ?direction?"}
 test textMark-3.3 {TkTextMarkCmd - "set" option} -body {
     .t mark set a @x
 } -returnCodes error -result {bad text index "@x"}
@@ -103,6 +103,9 @@ test textMark-3.5 {TkTextMarkCmd - "set" option} -body {
     .t mark set a end
     .t index a
 } -result {8.0}
+test textMark-3.6 {TkTextMarkCmd - "set" option} -returnCodes error -body {
+    .t mark s a b c
+} -result {bad text index "b"}
 
 test textMark-4.1 {TkTextMarkCmd - "unset" option} -body {
     .t mark unset
@@ -129,10 +132,10 @@ test textMark-4.3 {TkTextMarkCmd - "unset" option} -body {
 
 test textMark-5.1 {TkTextMarkCmd - miscellaneous} -returnCodes error -body {
     .t mark
-} -result {wrong # args: should be ".t mark option ?arg ...?"}
+} -result {wrong # args: should be ".t mark option ?arg arg ...?"}
 test textMark-5.2 {TkTextMarkCmd - miscellaneous} -returnCodes error -body {
     .t mark foo
-} -result {bad mark option "foo": must be gravity, names, next, previous, set, or unset}
+} -result {bad mark option "foo": must be compare, exists, generate, gravity, names, next, previous, set, or unset}
 
 test textMark-6.1 {TkTextMarkSegToIndex} -body {
     .t mark set a 1.2
@@ -234,7 +237,7 @@ test textMark-7.9 {MarkFindNext - mark set in a text widget and retrieved from a
     .t mark unset {*}[.t mark names]
 } -body {
     .t mark set mymark 1.0
-    lsort [list [.pt mark next 1.0] [.pt mark next mymark] [.pt mark next insert]]
+    lsort [list [.pt mark next 1.0] [.pt mark next mymark] [.pt mark next current]]
 } -result {current insert mymark}
 
 test textMark-8.1 {MarkFindPrev - invalid mark name} -body {
@@ -304,3 +307,4 @@ return
 # Local Variables:
 # mode: tcl
 # End:
+# vi:set ts=8 sw=4:

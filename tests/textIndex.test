@@ -13,7 +13,7 @@ namespace import -force tcltest::test
 
 catch {destroy .t}
 text .t -font {Courier -12} -width 20 -height 10
-pack .t -expand 1 -fill both
+pack append . .t {top expand fill}
 update
 .t debug on
 wm geometry . {}
@@ -456,7 +456,7 @@ test textIndex-12.9 {TkTextIndexForwChars: find index} {
     # not (segPtr->typePtr == &tkTextCharType)
 
     .t image create 2.4 -image textimage
-    set x [.t get {2.3 + 3 chars}]
+    set x [.t get {2.3 + 3 indices}]
     .t delete 2.4
     set x
 } "f"
@@ -557,7 +557,7 @@ test textIndex-14.8 {TkTextIndexBackChars: loop backwards over chars} {
     # Still more chars, but we reached beginning of segment
 
     .t image create 5.6 -image textimage
-    set x [.t index {5.8 - 3 chars}]
+    set x [.t index {5.8 - 3 indices}]
     .t delete 5.6
     set x
 } 5.5
@@ -565,7 +565,7 @@ test textIndex-14.9 {TkTextIndexBackChars: back over image} {
     # not (segPtr->typePtr == &tkTextCharType)
 
     .t image create 5.6 -image textimage
-    set x [.t get {5.8 - 4 chars}]
+    set x [.t get {5.8 - 4 indices}]
     .t delete 5.6
     set x
 } "G"
@@ -714,7 +714,7 @@ test textIndex-18.1 {Object indices don't cache mark names} {
 } {3.4 3.0 1.0}
 
 frame .f -width 100 -height 20
-pack .f -side left
+pack append . .f left
 
 set fixedFont {Courier -12}
 set fixedHeight [font metrics $fixedFont -linespace]
@@ -724,9 +724,8 @@ set varFont {Times -14}
 set bigFont {Helvetica -24}
 destroy .t
 text .t -font $fixedFont -width 20 -height 10 -wrap char
-pack .t -expand 1 -fill both
+pack append . .t {top expand fill}
 .t tag configure big -font $bigFont
-.t debug on
 wm geometry . {}
 
 # The statements below reset the main window;  it's needed if the window
@@ -956,8 +955,29 @@ test textIndex-25.1 {IndexCountBytesOrdered, bug [3f1f79abcf]} {
     destroy .t2
 } {}
 
+test textIndex-26.1 {TkTextGetIndex bug (wish8.6)} -body {
+    catch {destroy .t}
+    text .t
+    .t insert current "Tes"
+    .t mark set "end" 1.0
+    .t insert end "t"
+    .t get 1.0 "1.0 lineend"
+} -result {Test}
+test textIndex-26.2 {TkTextGetIndex bug (wish8.6)} -body {
+    catch {destroy .t}
+    text .t
+    .t insert end "a"
+    .t mark set 1.0 1.1
+    .t index 1.0
+} -result {1.0}
+
 # cleanup
 rename textimage {}
 catch {destroy .t}
 cleanupTests
 return
+
+# Local variables:
+# mode: tcl
+# End:
+# vi:set ts=8 sw=4:

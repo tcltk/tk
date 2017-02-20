@@ -17,33 +17,36 @@ imageInit
 destroy .t
 font create test_font -family courier -size 14
 text .t -font test_font
+.t debug on
 destroy .t
+
+proc setup {} {
+    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
+    pack .t
+}
 
 test textImage-1.1 {basic argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image
 } -cleanup {
     destroy .t
-} -returnCodes error -result {wrong # args: should be ".t image option ?arg ...?"}
+} -returnCodes error -result {wrong # args: should be ".t image option ?arg arg ...?"}
 
 test textImage-1.2 {basic argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image c
 } -cleanup {
     destroy .t
-} -returnCodes error -result {ambiguous option "c": must be cget, configure, create, or names}
+} -returnCodes error -result {ambiguous option "c": must be bind, cget, configure, create, or names}
 
 test textImage-1.3 {cget argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image cget
 } -cleanup {
     destroy .t
@@ -52,8 +55,7 @@ test textImage-1.3 {cget argument checking} -setup {
 test textImage-1.4 {cget argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image cget blurf -flurp
 } -cleanup {
     destroy .t
@@ -62,8 +64,7 @@ test textImage-1.4 {cget argument checking} -setup {
 test textImage-1.5 {cget argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image cget 1.1 -flurp
 } -cleanup {
     destroy .t
@@ -72,18 +73,16 @@ test textImage-1.5 {cget argument checking} -setup {
 test textImage-1.6 {configure argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image configure
 } -cleanup {
     destroy .t
-} -returnCodes error -result {wrong # args: should be ".t image configure index ?-option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t image configure index ?option value ...?"}
 
 test textImage-1.7 {configure argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image configure blurf
 } -cleanup {
     destroy .t
@@ -92,8 +91,7 @@ test textImage-1.7 {configure argument checking} -setup {
 test textImage-1.8 {configure argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image configure 1.1
 } -cleanup {
     destroy .t
@@ -102,18 +100,16 @@ test textImage-1.8 {configure argument checking} -setup {
 test textImage-1.9 {create argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create
 } -cleanup {
     destroy .t
-} -returnCodes error -result {wrong # args: should be ".t image create index ?-option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t image create index ?option value ...?"}
 
 test textImage-1.10 {create argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create blurf
 } -cleanup {
     destroy .t
@@ -126,8 +122,7 @@ test textImage-1.11 {basic argument checking} -setup {
         image create photo small -width 5 -height 5
         small put red -to 0 0 4 4
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create 1000.1000 -image small
 } -cleanup {
     destroy .t
@@ -137,8 +132,7 @@ test textImage-1.11 {basic argument checking} -setup {
 test textImage-1.12 {names argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image names dates places
 } -cleanup {
     destroy .t
@@ -153,8 +147,7 @@ test textImage-1.13 {names argument checking} -setup {
         image create photo small -width 5 -height 5
         small put red -to 0 0 4 4
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     lappend result [.t image names]
     .t image create insert -image small
     lappend result [.t image names]
@@ -170,12 +163,11 @@ test textImage-1.13 {names argument checking} -setup {
 test textImage-1.14 {basic argument checking} -setup {
     destroy .t
 } -body {
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image huh
 } -cleanup {
     destroy .t
-} -returnCodes error -result {bad option "huh": must be cget, configure, create, or names}
+} -returnCodes error -result {bad option "huh": must be bind, cget, configure, create, or names}
 
 test textImage-1.15 {align argument checking} -setup {
     destroy .t
@@ -184,8 +176,7 @@ test textImage-1.15 {align argument checking} -setup {
         image create photo small -width 5 -height 5
         small put red -to 0 0 4 4
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create end -image small -align wrong
 } -cleanup {
     destroy .t
@@ -199,8 +190,7 @@ test textImage-1.16 {configure} -setup {
         image create photo small -width 5 -height 5
         small put red -to 0 0 4 4
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create end -image small
     .t image configure small
 } -cleanup {
@@ -216,8 +206,7 @@ test textImage-1.17 {basic cget options} -setup {
         image create photo small -width 5 -height 5
         small put red -to 0 0 4 4
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create end -image small
     foreach i {align padx pady image name} {
         lappend result $i:[.t image cget small -$i]
@@ -238,8 +227,7 @@ test textImage-1.18 {basic configure options} -setup {
         image create photo large -width 50 -height 50
         large put green -to 0 0 50 50
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create end -image small
     foreach {option value}  {align top padx 5 pady 7 image large name none} {
         .t image configure small -$option $value
@@ -258,8 +246,7 @@ test textImage-1.19 {basic image naming} -setup {
         image create photo small -width 5 -height 5
         small put red -to 0 0 4 4
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create end -image small
     .t image create end -image small -name small
     .t image create end -image small -name small#6342
@@ -268,7 +255,7 @@ test textImage-1.19 {basic image naming} -setup {
 } -cleanup {
     destroy .t
     image delete small
-} -result {small small#1 small#6342 small#6343}
+} -result {small small#1 small#2 small#6342}
 
 test textImage-2.1 {debug} -setup {
     destroy .t
@@ -277,15 +264,12 @@ test textImage-2.1 {debug} -setup {
         image create photo small -width 5 -height 5
         small put red -to 0 0 4 4
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
-    .t debug 1
+    setup
     .t insert end front
     .t image create end -image small
     .t insert end back
     .t delete small
     .t image names
-    .t debug 0
 } -cleanup {
     destroy .t
     image delete small
@@ -300,8 +284,7 @@ test textImage-3.1 {image change propagation} -setup {
         image create photo vary -width 5 -height 5
         vary put red -to 0 0 4 4
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create end -image vary -align top
     update
     lappend result base:[.t bbox vary]
@@ -324,8 +307,7 @@ test textImage-3.2 {delayed image management, see also bug 1591493} -setup {
         image create photo small -width 5 -height 5
         small put red -to 0 0 4 4
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create end -name test
     update
     foreach {x1 y1 w1 h1} [.t bbox test] {}
@@ -352,8 +334,7 @@ test textImage-4.1 {alignment checking - except baseline} -setup {
         image create photo large -width 50 -height 50
         large put green -to 0 0 50 50
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create end -image large
     .t image create end -image small
     .t insert end test
@@ -380,9 +361,9 @@ test textImage-4.2 {alignment checking - baseline} -setup {
         image create photo large -width 50 -height 50
         large put green -to 0 0 50 50
     }
+	 setup
     font create test_font2 -size 5
-    text .t -font test_font2 -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    .t configure -font test_font2
     .t image create end -image large
     .t image create end -image small -align baseline
     .t insert end test
@@ -419,8 +400,7 @@ test textImage-4.3 {alignment and padding checking} -constraints {
         image create photo large -width 50 -height 50
         large put green -to 0 0 50 50
     }
-    text .t -font test_font -bd 0 -highlightthickness 0 -padx 0 -pady 0
-    pack .t
+    setup
     .t image create end -image large
     .t image create end -image small -padx 5 -pady 10
     .t insert end test
@@ -471,3 +451,4 @@ return
 # Local variables:
 # mode: tcl
 # End:
+# vi:set ts=8 sw=4:

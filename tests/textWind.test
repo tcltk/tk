@@ -22,7 +22,7 @@ option add *Text.font {"Courier New" -12}
 deleteWindows
 # Widget used in tests 1.* - 16.*
 text .t -width 30 -height 6 -bd 2 -highlightthickness 2
-pack .t -expand 1 -fill both
+pack append . .t {top expand fill}
 update
 .t debug on
 
@@ -32,7 +32,7 @@ set fixedDiff [expr {$fixedHeight - 13}] ;# 2 on XP
 set color [expr {[winfo depth .t] > 1 ? "green" : "black"}]
 
 wm geometry . {}
-
+ 
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
 
@@ -109,7 +109,7 @@ test textWind-1.6 {basic tests of options} -constraints fonts -setup {
 .t insert end "This is the first line"
 test textWind-2.1 {TkTextWindowCmd procedure} -body {
     .t window
-} -returnCodes error -result {wrong # args: should be ".t window option ?arg ...?"}
+} -returnCodes error -result {wrong # args: should be ".t window option ?arg arg ...?"}
 test textWind-2.2 {TkTextWindowCmd procedure, "cget" option} -body {
     .t window cget
 } -returnCodes error -result {wrong # args: should be ".t window cget index option"}
@@ -142,7 +142,7 @@ test textWind-2.7 {TkTextWindowCmd procedure, "cget" option} -setup {
 } -returnCodes ok -result {2}
 test textWind-2.8 {TkTextWindowCmd procedure} -body {
     .t window co
-} -returnCodes error -result {wrong # args: should be ".t window configure index ?-option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t window configure index ?option value ...?"}
 test textWind-2.9 {TkTextWindowCmd procedure} -body {
     .t window configure gorp
 } -returnCodes error -result {bad text index "gorp"}
@@ -203,7 +203,7 @@ test textWind-2.14 {TkTextWindowCmd procedure} -setup {
     .t delete 1.0 end
 } -body {
     .t window create
-} -returnCodes error -result {wrong # args: should be ".t window create index ?-option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t window create index ?option value ...?"}
 test textWind-2.15 {TkTextWindowCmd procedure} -setup {
     .t delete 1.0 end
 } -body {
@@ -769,6 +769,8 @@ test textWind-10.8 {EmbWinLayoutProc procedure, error in creating window} -setup
     destroy .t2
     proc bgerror args {
         global msg
+# in prior versions the message {window name "t2" already exists in parent}
+# has been received, but not anymore since 8.5.
         if {[lsearch -exact $msg $args] == -1} {
             lappend msg $args
         }
@@ -788,7 +790,7 @@ test textWind-10.8 {EmbWinLayoutProc procedure, error in creating window} -setup
 } -cleanup {
     destroy .t2
     rename bgerror {}
-} -result {{{can't embed .t2 relative to .t}} {{window name "t2" already exists in parent}}}
+} -result {{{can't embed .t2 relative to .t}}}
 
 test textWind-10.9 {EmbWinLayoutProc procedure, steal window from self} -setup {
     .t delete 1.0 end
@@ -1458,25 +1460,13 @@ test textWind-17.10 {peer widget window configuration} -setup {
     destroy .tt .t
 }  -result {{-window {} {} {} {}} {-window {} {} {} {}} {-window {} {} {} .t.f} {-window {} {} {} .tt.t.f}}
 
-test textWind-18.1 {embedded window deletion triggered by a script bound to <Map>} -setup {
-    catch {destroy .t .f .f2}
-} -body {
-    pack [text .t]
-    for {set i 1} {$i < 100} {incr i} {.t insert end "Line $i\n"}
-    .t window create end -window [frame .f -background red -width 80 -height 80]
-    .t window create end -window [frame .f2 -background blue -width 80 -height 80]
-    bind .f <Map> {.t delete .f}
-    update
-    # this shall not crash (bug 1501749)
-    after 100 {.t yview end}
-    tkwait visibility .f2
-    update
-} -cleanup {
-    destroy .t .f .f2
-} -result {}
-
 option clear
 
 # cleanup
 cleanupTests
 return
+
+# Local variables:
+# mode: tcl
+# End:
+# vi:set ts=8 sw=4:
