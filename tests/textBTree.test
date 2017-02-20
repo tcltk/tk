@@ -14,7 +14,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 proc setup {} {
-    .t delete 1.0 100000.0
+    .t delete 1.0 end
     .t tag delete x y
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     .t tag add x 1.1
@@ -25,7 +25,7 @@ proc setup {} {
 
 # setup procedure for tests 10.*, 11.*, 12.*
 proc msetup {} {
-    .t delete 1.0 100000.0
+    .t delete 1.0 end
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     .t mark set m1 1.2
     .t mark set l1 1.2
@@ -784,49 +784,49 @@ test btree-13.1 {tag searching} -setup {
     .t delete 1.0 100000.0
 } -body {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
-    .t tag next x 2.2 2.1
+    .t tag nextrange x 2.2 2.1
 } -result {}
 test btree-13.2 {tag searching} -setup {
     .t delete 1.0 100000.0
 } -body {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     .t tag add x 2.2 2.4
-    .t tag next x 2.2 2.3
+    .t tag nextrange x 2.2 2.3
 } -result {2.2 2.4}
 test btree-13.3 {tag searching} -setup {
     .t delete 1.0 100000.0
 } -body {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     .t tag add x 2.2 2.4
-    .t tag next x 2.3 2.6
+    .t tag nextrange x 2.3 2.6
 } -result {}
 test btree-13.4 {tag searching} -setup {
     .t delete 1.0 100000.0
 } -body {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     .t tag add x 2.5 2.8
-    .t tag next x 2.1 2.6
+    .t tag nextrange x 2.1 2.6
 } -result {2.5 2.8}
 test btree-13.5 {tag searching} -setup {
     .t delete 1.0 100000.0
 } -body {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     .t tag add x 2.5 2.8
-    .t tag next x 2.1 2.5
+    .t tag nextrange x 2.1 2.5
 } -result {}
 test btree-13.6 {tag searching} -setup {
     .t delete 1.0 100000.0
 } -body {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     .t tag add x 2.1 2.4
-    .t tag next x 2.5 2.8
+    .t tag nextrange x 2.5 2.8
 } -result {}
 test btree-13.7 {tag searching} -setup {
     .t delete 1.0 100000.0
 } -body {
     .t insert 1.0 "Text for first line\nSecond line\n\nLast line of info"
     .t tag add x 2.5 2.8
-    .t tag next x 2.1 2.4
+    .t tag nextrange x 2.1 2.4
 } -result {}
 test btree-13.8 {tag searching} -setup {
     set bigText2 {}
@@ -837,7 +837,7 @@ test btree-13.8 {tag searching} -setup {
     setup
     .t insert 1.2 $bigText2
     .t tag add x 190.3 191.2
-    .t tag next x 3.5
+    .t tag nextrange x 3.5
 } -result {190.3 191.2}
 destroy .t
 
@@ -1038,7 +1038,7 @@ test btree-16.11 {StartSearchBack boundary case} -setup {
     }
 } -body {
     .t tag add x 1.3 1.4
-    .t tag prevr x 2.0 1.4
+    .t tag prevrange x 2.0 1.4
 } -cleanup {
     destroy .t
 } -result {}
@@ -1050,7 +1050,7 @@ test btree-16.12 {StartSearchBack boundary case} -setup {
     }
 } -body {
     .t tag add x 1.3 1.4
-    .t tag prevr x 2.0 1.3
+    .t tag prevrange x 2.0 1.3
 } -cleanup {
     destroy .t
 } -result {1.3 1.4}
@@ -1062,7 +1062,7 @@ test btree-16.13 {StartSearchBack boundary case} -setup {
     }
 } -body {
     .t tag add x 1.0 1.4
-    .t tag prevr x 1.3
+    .t tag prevrange x 1.3
 } -cleanup {
     destroy .t
 } -result {1.0 1.4}
@@ -1144,7 +1144,7 @@ test btree-18.1 {tag search back, no tag} -setup {
     text .t
 } -body {
     .t insert 1.0 "Line 1 abcd efgh ijkl\n"
-    .t tag prev x 1.1 1.1
+    .t tag prevrange x 1.1 1.1
 } -cleanup {
     destroy .t
 } -result {}
@@ -1156,7 +1156,7 @@ test btree-18.2 {tag search back, start at existing range} -setup {
     .t tag add x 1.1 1.4
     .t tag add x 1.8 1.11
     .t tag add x 1.16
-    .t tag prev x 1.1
+    .t tag prevrange x 1.1
 } -cleanup {
     destroy .t
 } -result {}
@@ -1168,7 +1168,7 @@ test btree-18.3 {tag search back, end at existing range} -setup {
     .t tag add x 1.1 1.4
     .t tag add x 1.8 1.11
     .t tag add x 1.16
-    .t tag prev x 1.3 1.1
+    .t tag prevrange x 1.3 1.1
 } -cleanup {
     destroy .t
 } -result {1.1 1.4}
@@ -1180,7 +1180,7 @@ test btree-18.4 {tag search back, start within range} -setup {
     .t tag add x 1.1 1.4
     .t tag add x 1.8 1.11
     .t tag add x 1.16
-    .t tag prev x 1.10 1.0
+    .t tag prevrange x 1.10 1.0
 } -cleanup {
     destroy .t
 } -result {1.8 1.11}
@@ -1192,7 +1192,7 @@ test btree-18.5 {tag search back, start at end of range} -setup {
     .t tag add x 1.1 1.4
     .t tag add x 1.8 1.11
     .t tag add x 1.16
-    list [.t tag prev x 1.4 1.0] [.t tag prev x 1.11 1.0]
+    list [.t tag prevrange x 1.4 1.0] [.t tag prevrange x 1.11 1.0]
 } -cleanup {
     destroy .t
 } -result {{1.1 1.4} {1.8 1.11}}
@@ -1204,7 +1204,7 @@ test btree-18.6 {tag search back, start beyond range, same level 0 node} -setup 
     .t tag add x 1.1 1.4
     .t tag add x 1.8 1.11
     .t tag add x 1.16
-    .t tag prev x 3.0
+    .t tag prevrange x 3.0
 } -cleanup {
     destroy .t
 } -result {1.16 1.17}
@@ -1215,7 +1215,7 @@ test btree-18.7 {tag search back, outside any range} -setup {
     .t insert 1.0 "Line 1 abcd efgh ijkl\n"
     .t tag add x 1.1 1.4
     .t tag add x 1.16
-    .t tag prev x 1.8 1.5
+    .t tag prevrange x 1.8 1.5
 } -cleanup {
     destroy .t
 } -result {}
@@ -1225,7 +1225,7 @@ test btree-18.8 {tag search back, start at start of node boundary} -setup {
 } -body {
     setupBig
     .t tag add x 2.5 2.8
-    .t tag prev x 19.0
+    .t tag prevrange x 19.0
 } -cleanup {
     destroy .t
 } -result {2.5 2.8}
@@ -1237,11 +1237,148 @@ test btree-18.9 {tag search back, large complex btree spans} -setup {
     .t tag add x 1.3 1.end
     .t tag add x 200.0 220.0
     .t tag add x 500.0 520.0
-    list [.t tag prev x end] [.t tag prev x 433.0]
+    list [.t tag prevrange x end] [.t tag prevrange x 433.0]
 } -cleanup {
     destroy .t
 } -result {{500.0 520.0} {200.0 220.0}}
 
+
+test btree-19.0 {test toggle chain 1} -setup {
+    text .t
+} -body {
+    .t insert end "abcdefghijklmnopqrstuvwxyzabcdef"
+    .t tag add x 1.0 1.2
+    .t tag add x 1.5 1.7
+    .t tag add x 1.10 1.12
+    .t tag add x 1.20 1.22
+    .t tag add x 1.25 1.28
+
+    .t tag add x 1.15 1.17
+} -cleanup {
+    destroy .t
+} -result {}
+test btree-19.1 {test toggle chain 2} -setup {
+    text .t
+} -body {
+    .t insert end "abcdefghijklmnopqrstuvwxyzabcdef"
+    .t tag add x 1.0 1.2
+    .t tag add x 1.5 1.7
+    .t tag add x 1.10 1.12
+    .t tag add x 1.20 1.22
+    .t tag add x 1.25 1.28
+
+    .t tag add x 1.13 1.17
+} -cleanup {
+    destroy .t
+} -result {}
+test btree-19.2 {test toggle chain 3} -setup {
+    text .t
+} -body {
+    .t insert end "abcdefghijklmnopqrstuvwxyzabcdef"
+    .t tag add x 1.0 1.2
+    .t tag add x 1.5 1.7
+    .t tag add x 1.10 1.12
+    .t tag add x 1.20 1.22
+    .t tag add x 1.25 1.28
+
+    .t tag add x 1.11 1.17
+} -cleanup {
+    destroy .t
+} -result {}
+test btree-19.3 {test toggle chain 4} -setup {
+    text .t
+} -body {
+    .t insert end "abcdefghijklmnopqrstuvwxyzabcdef"
+    .t tag add x 1.0 1.2
+    .t tag add x 1.5 1.7
+    .t tag add x 1.10 1.12
+    .t tag add x 1.20 1.22
+    .t tag add x 1.25 1.28
+
+    .t tag add x 1.6 1.17
+} -cleanup {
+    destroy .t
+} -result {}
+    text .t
+test btree-19.4 {test toggle chain 5} -setup {
+} -body {
+    .t insert end "abcdefghijklmnopqrstuvwxyzabcdef"
+    .t tag add x 1.0 1.2
+    .t tag add x 1.5 1.7
+    .t tag add x 1.10 1.12
+    .t tag add x 1.20 1.22
+    .t tag add x 1.25 1.28
+
+    .t tag add x 1.6 1.21
+} -cleanup {
+    destroy .t
+} -result {}
+test btree-19.5 {test toggle chain 6} -setup {
+    text .t
+} -body {
+    .t insert end "abcdefghijklmnopqrstuvwxyzabcdef"
+    .t tag add x 1.0 1.2
+    .t tag add x 1.5 1.7
+    .t tag add x 1.10 1.12
+    .t tag add x 1.15 1.17
+    .t tag add x 1.20 1.22
+    .t tag add x 1.25 1.28
+
+    .t tag remove 1.11 1.16
+} -cleanup {
+    destroy .t
+} -result {}
+test btree-19.6 {test toggle chain 7} -setup {
+    text .t
+} -body {
+    .t insert end "abcdefghijklmnopqrstuvwxyzabcdef"
+    .t tag add x 1.0 1.2
+    .t tag add x 1.5 1.7
+    .t tag add x 1.10 1.12
+    .t tag add x 1.15 1.17
+    .t tag add x 1.20 1.22
+    .t tag add x 1.25 1.28
+
+    .t tag remove 1.6 1.16
+} -cleanup {
+    destroy .t
+} -result {}
+test btree-19.7 {test toggle chain 8} -setup {
+    text .t
+} -body {
+    .t insert end "abcdefghijklmnopqrstuvwxyzabcdef"
+    .t tag add x 1.0 1.2
+    .t tag add x 1.5 1.7
+    .t tag add x 1.10 1.12
+    .t tag add x 1.15 1.17
+    .t tag add x 1.20 1.22
+    .t tag add x 1.25 1.28
+
+    .t tag remove 1.6 1.20
+} -cleanup {
+    destroy .t
+} -result {}
+test btree-19.8 {test toggle chain 9} -setup {
+    text .t
+} -body {
+    .t insert end "abcdefghijklmnopqrstuvwxyzabcdef"
+    .t tag add x 1.0 1.2
+    .t tag add x 1.5 1.7
+    .t tag add x 1.10 1.12
+    .t tag add x 1.15 1.17
+    .t tag add x 1.20 1.22
+    .t tag add x 1.25 1.28
+
+    .t tag remove 1.4 1.23
+} -cleanup {
+    destroy .t
+} -result {}
+
 # cleanup
 cleanupTests
 return
+
+# Local Variables:
+# mode: tcl
+# End:
+# vi:set ts=8 sw=4:

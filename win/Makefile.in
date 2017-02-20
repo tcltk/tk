@@ -27,7 +27,6 @@ exec_prefix		= @exec_prefix@
 bindir			= @bindir@
 libdir			= @libdir@
 includedir		= @includedir@
-datarootdir		= @datarootdir@
 mandir			= @mandir@
 
 # The following definition can be set to non-null for special systems
@@ -170,7 +169,7 @@ LDFLAGS_OPTIMIZE = @LDFLAGS_OPTIMIZE@
 #CFLAGS		= $(CFLAGS_DEBUG)
 #CFLAGS		= $(CFLAGS_OPTIMIZE)
 #CFLAGS		= $(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
-CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@ -DUNICODE -D_UNICODE -D_ATL_XP_TARGETING
+CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@ -DUNICODE -D_UNICODE
 
 # Special compiler flags to use when building man2tcl on Windows.
 MAN2TCLFLAGS	= @MAN2TCLFLAGS@
@@ -285,6 +284,7 @@ TK_OBJS = \
 	tkArgv.$(OBJEXT) \
 	tkAtom.$(OBJEXT) \
 	tkBind.$(OBJEXT) \
+	tkBitField.$(OBJEXT) \
 	tkBitmap.$(OBJEXT) \
 	tkBusy.$(OBJEXT) \
 	tkButton.$(OBJEXT) \
@@ -323,6 +323,7 @@ TK_OBJS = \
 	tkImgPhoto.$(OBJEXT) \
 	tkImgPhInstance.$(OBJEXT) \
 	tkImgUtil.$(OBJEXT) \
+	tkIntSet.$(OBJEXT) \
 	tkListbox.$(OBJEXT) \
 	tkMacWinMenu.$(OBJEXT) \
 	tkMain.$(OBJEXT) \
@@ -338,6 +339,8 @@ TK_OBJS = \
 	tkPack.$(OBJEXT) \
 	tkPlace.$(OBJEXT) \
 	tkPointer.$(OBJEXT) \
+	tkQTree.$(OBJEXT) \
+	tkRangeList.$(OBJEXT) \
 	tkRectOval.$(OBJEXT) \
 	tkScale.$(OBJEXT) \
 	tkScrollbar.$(OBJEXT) \
@@ -348,11 +351,12 @@ TK_OBJS = \
 	tkTextDisp.$(OBJEXT) \
 	tkTextImage.$(OBJEXT) \
 	tkTextIndex.$(OBJEXT) \
+	tkTextLineBreak.$(OBJEXT) \
 	tkTextMark.$(OBJEXT) \
 	tkTextTag.$(OBJEXT) \
+	tkTextTagSet.$(OBJEXT) \
 	tkTextWind.$(OBJEXT) \
 	tkTrig.$(OBJEXT) \
-	tkUndo.$(OBJEXT) \
 	tkUtil.$(OBJEXT) \
 	tkVisual.$(OBJEXT) \
 	tkStubInit.$(OBJEXT) \
@@ -487,7 +491,7 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[catch {package present Tcl 8.6-}]} return";\
+	echo "if {[catch {package present Tcl 8.6.0}]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
 	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]] Tk]";\
@@ -730,7 +734,7 @@ genstubs:
 	    "$(GENERIC_DIR_NATIVE)" \
 	    "$(GENERIC_DIR_NATIVE)/tk.decls" \
 	    "$(GENERIC_DIR_NATIVE)/tkInt.decls"
-	$(TCL_EXE) "$(TCL_TOOL_DIR)/genStubs.tcl" \
+	$(TCL_EXE) "$(TTK_DIR)/ttkGenStubs.tcl" \
 	    "$(TTK_DIR)" \
 	    "$(TTK_DIR)/ttk.decls"
 
