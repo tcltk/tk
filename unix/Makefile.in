@@ -457,9 +457,8 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkTextDisp.c $(GENERIC_DIR)/tkTextImage.c \
 	$(GENERIC_DIR)/tkTextIndex.c $(GENERIC_DIR)/tkTextLineBreak.c \
 	$(GENERIC_DIR)/tkTextMark.c $(GENERIC_DIR)/tkTextTag.c \
-	$(GENERIC_DIR)/tkTextTag.c $(GENERIC_DIR)/tkTextTagSet.c \
 	$(GENERIC_DIR)/tkTextTagSet.c $(GENERIC_DIR)/tkTextUndo.c \
-	$(GENERIC_DIR)/tkTextUndo.c $(GENERIC_DIR)/tkTextWind.c \
+	$(GENERIC_DIR)/tkTextWind.c \
 	$(GENERIC_DIR)/tkOldConfig.c $(GENERIC_DIR)/tkOldTest.c \
 	$(GENERIC_DIR)/tkSquare.c $(GENERIC_DIR)/tkTest.c \
 	$(GENERIC_DIR)/tkStubInit.c
