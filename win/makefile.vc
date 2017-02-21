@@ -364,6 +364,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkTextMark.obj \
 	$(TMP_DIR)\tkTextTag.obj \
 	$(TMP_DIR)\tkTextTagSet.obj \
+	$(TMP_DIR)\tkTextUndo.obj \
 	$(TMP_DIR)\tkTextWind.obj \
 	$(TMP_DIR)\tkTrig.obj \
 	$(TMP_DIR)\tkUtil.obj \
