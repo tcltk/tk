@@ -355,6 +355,7 @@ TK_OBJS = \
 	tkTextMark.$(OBJEXT) \
 	tkTextTag.$(OBJEXT) \
 	tkTextTagSet.$(OBJEXT) \
+	tkTextUndo.$(OBJEXT) \
 	tkTextWind.$(OBJEXT) \
 	tkTrig.$(OBJEXT) \
 	tkUtil.$(OBJEXT) \
