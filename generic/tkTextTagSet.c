@@ -11,7 +11,7 @@
 
 #include "tkTextTagSet.h"
 
-#if !(__STDC_VERSION__ >= 199901L || (defined(_MSC_VER) && _MSC_VER >= 1900))
+#if !(__STDC_VERSION__ >= 199901L)
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextTagSetPriv.h"
 #endif
@@ -1665,7 +1665,7 @@ TkTextTagSetJoinOfDifferences(
 #endif  /* !TK_TEXT_USE_BITFIELDS */
 
 
-#if __STDC_VERSION__ >= 199901L || (defined(_MSC_VER) && _MSC_VER >= 1900)
+#if __STDC_VERSION__ >= 199901L
 /* Additionally we need stand-alone object code. */
 #define inline extern
 #if !TK_TEXT_DONT_USE_BITFIELDS

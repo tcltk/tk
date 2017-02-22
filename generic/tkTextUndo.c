@@ -14,7 +14,7 @@
 #include "tkAlloc.h"
 #include <assert.h>
 
-#if !(__STDC_VERSION__ >= 199901L || (defined(_MSC_VER) && _MSC_VER >= 1900))
+#if !(__STDC_VERSION__ >= 199901L)
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextUndoPriv.h"
 #endif
@@ -1040,7 +1040,7 @@ TkTextUndoNextRedoAtom(
 }
 
 
-#if __STDC_VERSION__ >= 199901L || (defined(_MSC_VER) && _MSC_VER >= 1900)
+#if __STDC_VERSION__ >= 199901L
 /* Additionally we need stand-alone object code. */
 #define inline extern
 inline void TkTextUndoSetContext(TkTextUndoStack stack, TkTextUndoContext context);
