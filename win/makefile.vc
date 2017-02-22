@@ -438,7 +438,7 @@ CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
 		 -DTTK_SQUARE_WIDGET=1 \
 !endif
 
-TK_DEFINES	=-DBUILD_ttk $(OPTDEFINES)  $(CONFIG_DEFS) -Dinline=__inline -DMODULE_SCOPE=""
+TK_DEFINES	=-DBUILD_ttk $(OPTDEFINES)  $(CONFIG_DEFS) -Dinline=__inline
 
 #---------------------------------------------------------------------
 # Compile flags
