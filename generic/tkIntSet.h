@@ -17,7 +17,7 @@
 #endif
 
 #include "tkBool.h"
-#include <stdint.h>
+#include "mystdint.h"
 
 #if defined(__GNUC__) || defined(__clang__)
 # define __warn_unused__ __attribute__((warn_unused_result))

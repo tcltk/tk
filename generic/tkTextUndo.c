@@ -11,7 +11,6 @@
 
 #include "tkTextUndo.h"
 #include "tkInt.h"
-#include "tkAlloc.h"
 #include <assert.h>
 
 #if !(__STDC_VERSION__ >= 199901L || (defined(_MSC_VER) && _MSC_VER >= 1900))
@@ -119,7 +118,7 @@ Release(
     do {
 	MyUndoAtom *next = atom->next;
 	FreeItems(stack, &atom->data);
-	free(atom);
+	ckfree(atom);
 	atom = next;
     } while (atom != root);
 
@@ -149,7 +148,8 @@ ResetCurrent(
 
     if (force || !current || current->capacity > InitialCapacity) {
 	static unsigned Size = ATOM_SIZE(InitialCapacity);
-	current = stack->current = memset(realloc(current, Size), 0, Size);
+	current = stack->current = ckrealloc(current, Size);
+	memset(current, 0, Size);
 	current->capacity = InitialCapacity;
     }
 
@@ -169,7 +169,7 @@ SwapCurrent(
     assert(atom != current);
 
     if (current->capacity != current->data.size) {
-	current = stack->current = realloc(current, ATOM_SIZE(current->data.arraySize));
+	current = stack->current = ckrealloc(current, ATOM_SIZE(current->data.arraySize));
 	current->capacity = current->data.arraySize;
     }
 
@@ -414,7 +414,7 @@ TkTextUndoCreateStack(
 
     assert(undoProc);
 
-    stack = memset(malloc(sizeof(*stack)), 0, sizeof(*stack));
+    stack = memset(ckalloc(sizeof(*stack)), 0, sizeof(*stack));
     stack->undoProc = undoProc;
     stack->freeProc = freeProc;
     stack->contentChangedProc = contentChangedProc;
@@ -439,7 +439,7 @@ TkTextUndoDestroyStack(
 	    if (stack->current) {
 		FreeItems(stack, &stack->current->data);
 	    }
-	    free(stack);
+	    ckfree(stack);
 	    *stackPtr = NULL;
 	}
     }
@@ -755,7 +755,7 @@ TkTextUndoPushItem(
 	atom = stack->current;
     } else if (atom->data.arraySize == atom->capacity) {
 	atom->capacity *= 2;
-	atom = stack->current = realloc(atom, ATOM_SIZE(atom->capacity));
+	atom = stack->current = ckrealloc(atom, ATOM_SIZE(atom->capacity));
     }
 
     subAtom = ((TkTextUndoSubAtom *) atom->data.array) + atom->data.arraySize++;

@@ -416,7 +416,7 @@ TkTextTagCmd(
 
 	discardSelection = false;
 	epoch = TkBTreeEpoch(sharedTextPtr->tree);
-	arrayPtr = malloc(sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
+	arrayPtr = ckalloc(sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
 	countTags = 0;
 	anyChanges = false;
 
@@ -464,7 +464,7 @@ TkTextTagCmd(
 	    TkTextUpdateAlteredFlag(sharedTextPtr);
 	}
 	AppendTags(interp, countTags, arrayPtr);
-	free(arrayPtr);
+	ckfree(arrayPtr);
 	break;
     }
     case TAG_CONFIGURE:
@@ -1144,7 +1144,7 @@ TkConfigureTag(
 	}
     }
     if (tagPtr->tabArrayPtr) {
-	free(tagPtr->tabArrayPtr);
+	ckfree(tagPtr->tabArrayPtr);
 	tagPtr->tabArrayPtr = NULL;
     }
     if (tagPtr->tabStringPtr) {
@@ -1178,7 +1178,7 @@ TkConfigureTag(
 	     * to 'true' (this would cause errors, because this case is not implemented).
 	     */
 
-	    free(tagPtr->elideString);
+	    ckfree(tagPtr->elideString);
 	    tagPtr->elideString = NULL;
 	    tagPtr->elide = false;
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -1385,7 +1385,7 @@ FindTags(
 
     assert(segPtr);
 
-    tagArray = malloc(textPtr->sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
+    tagArray = ckalloc(textPtr->sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
     tagPtr = TkBTreeGetSegmentTags(textPtr->sharedTextPtr, segPtr, textPtr);
 
     for (count = 0; tagPtr; tagPtr = tagPtr->nextPtr) {
@@ -1395,7 +1395,7 @@ FindTags(
     }
 
     AppendTags(interp, count, tagArray);
-    free(tagArray);
+    ckfree(tagArray);
 }
 
 /*
@@ -1735,7 +1735,7 @@ TkTextCreateTag(
 	sharedTextPtr->affectGeometryNonSelTags = TkBitResize(
 		sharedTextPtr->affectGeometryNonSelTags, newSize);
 	sharedTextPtr->affectLineHeightTags = TkBitResize(sharedTextPtr->affectLineHeightTags, newSize);
-	sharedTextPtr->tagLookup = realloc(sharedTextPtr->tagLookup, newSize * sizeof(TkTextTag *));
+	sharedTextPtr->tagLookup = ckrealloc(sharedTextPtr->tagLookup, newSize * sizeof(TkTextTag *));
 	DEBUG(memset(sharedTextPtr->tagLookup + oldSize, 0, (newSize - oldSize) * sizeof(TkTextTag *)));
     }
 
@@ -1748,7 +1748,7 @@ TkTextCreateTag(
      * to it to the hash table entry.
      */
 
-    tagPtr = memset(malloc(sizeof(TkTextTag)), 0, sizeof(TkTextTag));
+    tagPtr = memset(ckalloc(sizeof(TkTextTag)), 0, sizeof(TkTextTag));
     tagPtr->name = name;
     tagPtr->index = index;
     tagPtr->priority = textPtr->sharedTextPtr->numEnabledTags;
@@ -1939,7 +1939,7 @@ TkTextReleaseTag(
      */
 
     if (tagPtr->tabArrayPtr) {
-	free(tagPtr->tabArrayPtr);
+	ckfree(tagPtr->tabArrayPtr);
     }
 
     if (sharedTextPtr->tagBindingTable) {
@@ -1953,7 +1953,7 @@ TkTextReleaseTag(
 
     if (tagPtr->textPtr) {
 	if (--((TkText *) tagPtr->textPtr)->refCount == 0) {
-	    free(tagPtr->textPtr);
+	    ckfree(tagPtr->textPtr);
 	}
 	tagPtr->textPtr = NULL;
     }
@@ -1962,7 +1962,7 @@ TkTextReleaseTag(
      * Finally free the tag's memory.
      */
 
-    free(tagPtr);
+    ckfree(tagPtr);
     DEBUG_ALLOC(tkTextCountDestroyTag++);
 }
 /*
@@ -2135,7 +2135,7 @@ TkTextFreeAllTags(
 	 */
 
 	if (tagPtr->tabArrayPtr) {
-	    free(tagPtr->tabArrayPtr);
+	    ckfree(tagPtr->tabArrayPtr);
 	}
 
 	if (tagPtr->undoTagListIndex >= 0) {
@@ -2150,7 +2150,7 @@ TkTextFreeAllTags(
 	if (tagPtr->textPtr) {
 	    assert(textPtr == tagPtr->textPtr);
 	    if (--textPtr->refCount == 0) {
-		free(textPtr);
+		ckfree(textPtr);
 	    }
 	    tagPtr->textPtr = NULL;
 	}
@@ -2159,7 +2159,7 @@ TkTextFreeAllTags(
 	 * Finally free the tag's memory.
 	 */
 
-	free(tagPtr);
+	ckfree(tagPtr);
 	DEBUG_ALLOC(tkTextCountDestroyTag++);
     }
 
@@ -2262,12 +2262,12 @@ TkTextReleaseUndoTagToken(
     assert(tagPtr->undoTagListIndex < sharedTextPtr->undoTagListCount);
 
     if (tagPtr->recentTagAddRemoveToken) {
-	free(tagPtr->recentTagAddRemoveToken);
+	ckfree(tagPtr->recentTagAddRemoveToken);
 	DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	tagPtr->recentTagAddRemoveToken = NULL;
     }
     if (tagPtr->recentChangePriorityToken) {
-	free(tagPtr->recentChangePriorityToken);
+	ckfree(tagPtr->recentChangePriorityToken);
 	DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	tagPtr->recentChangePriorityToken = NULL;
     }
@@ -2345,7 +2345,7 @@ TkTextPushUndoTagTokens(
 
     if (tagPtr->recentTagAddRemoveToken) {
 	if (tagPtr->recentTagAddRemoveTokenIsNull) {
-	    free(tagPtr->recentTagAddRemoveToken);
+	    ckfree(tagPtr->recentTagAddRemoveToken);
 	    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	} else {
 	    TkTextUndoPushItem(sharedTextPtr->undoStack, tagPtr->recentTagAddRemoveToken, 0);
@@ -2358,7 +2358,7 @@ TkTextPushUndoTagTokens(
 	    TkTextUndoPushItem(sharedTextPtr->undoStack, tagPtr->recentChangePriorityToken, 0);
 	    tagPtr->refCount += 1;
 	} else {
-	    free(tagPtr->recentChangePriorityToken);
+	    ckfree(tagPtr->recentChangePriorityToken);
 	    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	}
 	tagPtr->recentChangePriorityToken = NULL;
@@ -2401,7 +2401,7 @@ TkTextTagAddRetainedUndo(
 
     if (sharedTextPtr->undoTagListCount == sharedTextPtr->undoTagListSize) {
 	sharedTextPtr->undoTagListSize = 2*sharedTextPtr->numEnabledTags;
-	sharedTextPtr->undoTagList = realloc(sharedTextPtr->undoTagList,
+	sharedTextPtr->undoTagList = ckrealloc(sharedTextPtr->undoTagList,
 		sharedTextPtr->undoTagListSize * sizeof(sharedTextPtr->undoTagList[0]));
     }
     sharedTextPtr->undoTagList[sharedTextPtr->undoTagListCount] = tagPtr;
@@ -2436,7 +2436,7 @@ TkTextPushTagPriorityUndo(
 {
     UndoTokenTagPriority *token;
 
-    token = malloc(sizeof(UndoTokenTagPriority));
+    token = ckalloc(sizeof(UndoTokenTagPriority));
     token->undoType = &undoTokenTagPriorityType;
     (token->tagPtr = tagPtr)->refCount += 1;
     token->priority = priority;
@@ -2470,7 +2470,7 @@ TkTextPushTagPriorityRedo(
 {
     UndoTokenTagPriority *token;
 
-    token = malloc(sizeof(UndoTokenTagPriority));
+    token = ckalloc(sizeof(UndoTokenTagPriority));
     token->undoType = &redoTokenTagPriorityType;
     (token->tagPtr = tagPtr)->refCount += 1;
     token->priority = priority;
@@ -2531,7 +2531,7 @@ ChangeTagPriority(
 	
 	if (!tagPtr->recentChangePriorityToken) {
 	    tagPtr->savedPriority = tagPtr->priority;
-	    token = malloc(sizeof(UndoTokenTagPriority));
+	    token = ckalloc(sizeof(UndoTokenTagPriority));
 	    DEBUG_ALLOC(tkTextCountNewUndoToken++);
 	    tagPtr->recentChangePriorityToken = (TkTextUndoToken *) token;
 	    TkTextTagAddRetainedUndo(sharedTextPtr, tagPtr);
@@ -2670,7 +2670,7 @@ TkTextBindProc(
 
   done:
     if (--textPtr->refCount == 0) {
-	free(textPtr);
+	ckfree(textPtr);
     }
 }
 
@@ -2813,7 +2813,7 @@ TkTextPickCurrent(
 	    TkTextTag *tagPtr = TkBTreeGetTags(&index);
 	    if (tagPtr) {
 		epoch = ++sharedTextPtr->pickEpoch;
-		newArrayPtr = malloc(sharedTextPtr->numEnabledTags * sizeof(newArrayPtr[0]));
+		newArrayPtr = ckalloc(sharedTextPtr->numEnabledTags * sizeof(newArrayPtr[0]));
 		for (i = 0; i < textPtr->numCurTags; ++i) {
 		    textPtr->curTagArrayPtr[i]->flag = false; /* mark as *not* common */
 		    textPtr->curTagArrayPtr[i]->epoch = epoch;
@@ -2841,7 +2841,7 @@ TkTextPickCurrent(
 	    if (size < sizeof(copyArrayBuffer)/sizeof(copyArrayBuffer[0])) {
 		copyArrayPtr = copyArrayBuffer;
 	    } else {
-		copyArrayPtr = memcpy(malloc(size), newArrayPtr, size);
+		copyArrayPtr = memcpy(ckalloc(size), newArrayPtr, size);
 	    }
 	    memcpy(copyArrayPtr, newArrayPtr, size);
 
@@ -2890,7 +2890,7 @@ TkTextPickCurrent(
 		event.xcrossing.detail = NotifyAncestor;
 		TagBindEvent(textPtr, &event, numOldTags, oldArrayPtr);
 	    }
-	    free(oldArrayPtr);
+	    ckfree(oldArrayPtr);
 	}
     }
 
@@ -2917,7 +2917,7 @@ TkTextPickCurrent(
 	    TagBindEvent(textPtr, &event, numNewTags, copyArrayPtr);
 	}
 	if (copyArrayPtr != copyArrayBuffer) {
-	    free(copyArrayPtr);
+	    ckfree(copyArrayPtr);
 	}
     }
 
@@ -2978,7 +2978,7 @@ TkTextPickCurrent(
 	textPtr->hoveredImageArrSize = 0;
 	if (countHoveredImages > textPtr->hoveredImageArrCapacity) {
 	    textPtr->hoveredImageArrCapacity = MAX(4, 2*textPtr->hoveredImageArrCapacity);
-	    textPtr->hoveredImageArr = realloc(textPtr->hoveredImageArr,
+	    textPtr->hoveredImageArr = ckrealloc(textPtr->hoveredImageArr,
 		textPtr->hoveredImageArrCapacity * sizeof(textPtr->hoveredImageArr[0]));
 	}
 	for (eiPtr = eiListPtr; eiPtr; eiPtr = eiPtr->nextPtr) {
@@ -3029,7 +3029,7 @@ TagBindEvent(
      */
 
     if (numTags > sizeof(nameArrayBuf) / sizeof(nameArrayBuf[0])) {
-	nameArrPtr = malloc(numTags * sizeof(nameArrPtr[0]));
+	nameArrPtr = ckalloc(numTags * sizeof(nameArrPtr[0]));
     } else {
 	nameArrPtr = nameArrayBuf;
     }
@@ -3059,7 +3059,7 @@ TagBindEvent(
 	    textPtr->tkwin, numTags, (ClientData *) nameArrPtr);
 
     if (nameArrPtr != nameArrayBuf) {
-	free(nameArrPtr);
+	ckfree(nameArrPtr);
     }
 }
 
@@ -3266,7 +3266,7 @@ EnumerateTags(
 	TkBitRemove(includeBits, discardBits);
     }
 
-    arrayPtr = malloc(sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
+    arrayPtr = ckalloc(sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
     countTags = 0;
 
     for (i = TkBitFindFirst(includeBits); i != TK_BIT_NPOS; i = TkBitFindNext(includeBits, i)) {
@@ -3274,7 +3274,7 @@ EnumerateTags(
     }
 
     AppendTags(interp, countTags, arrayPtr);
-    free(arrayPtr);
+    ckfree(arrayPtr);
 
     TkBitDecrRefCount(includeBits);
     if (discardBits) {

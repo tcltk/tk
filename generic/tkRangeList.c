@@ -10,7 +10,6 @@
  */
 
 #include "tkRangeList.h"
-#include "tkAlloc.h"
 
 #include <tk.h>
 #include <string.h>
@@ -106,7 +105,7 @@ Increase(
 
     if (ranges->size == ranges->capacity) {
 	ranges->capacity = MAX(1, 2*ranges->capacity);
-	ranges = realloc(ranges, MEM_SIZE(ranges->capacity));
+	ranges = ckrealloc(ranges, MEM_SIZE(ranges->capacity));
 	*rangesPtr = ranges;
     }
 
@@ -127,14 +126,14 @@ Insert(
 	TkRange *newEntry;
 
 	ranges->capacity = MAX(1, 2*ranges->capacity);
-	newRanges = malloc(MEM_SIZE(ranges->capacity));
+	newRanges = ckalloc(MEM_SIZE(ranges->capacity));
 	newRanges->capacity = ranges->capacity;
 	newRanges->size = ranges->size + 1;
 	newRanges->count = ranges->count;
 	newEntry = newRanges->items + pos;
 	memcpy(newRanges->items, ranges->items, pos*sizeof(TkRange));
 	memcpy(newEntry + 1, entry, (ranges->size - pos)*sizeof(TkRange));
-	free(ranges);
+	ckfree(ranges);
 	*rangesPtr = ranges = newRanges;
 	entry = newEntry;
     } else {
@@ -178,7 +177,7 @@ TkRangeListCreate(unsigned capacity)
 {
     TkRangeList *ranges;
 
-    ranges = malloc(MEM_SIZE(capacity));
+    ranges = ckalloc(MEM_SIZE(capacity));
     ranges->size = 0;
     ranges->capacity = capacity;
     ranges->count = 0;
@@ -196,7 +195,7 @@ TkRangeListCopy(
 
     assert(ranges);
 
-    copy = malloc(memSize = MEM_SIZE(ranges->size));
+    copy = ckalloc(memSize = MEM_SIZE(ranges->size));
     memcpy(copy, ranges, memSize);
     DEBUG_ALLOC(tkRangeListCountNew++);
     return copy;
@@ -210,7 +209,7 @@ TkRangeListDestroy(
     assert(rangesPtr);
 
     if (*rangesPtr) {
-	free(*rangesPtr);
+	ckfree(*rangesPtr);
 	*rangesPtr = NULL;
 	DEBUG_ALLOC(tkRangeListCountDestroy++);
     }

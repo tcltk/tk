@@ -257,7 +257,7 @@ UndoLinkSegmentPerform(
 
     if (redoInfo) {
 	RedoTokenLinkSegment *redoToken;
-	redoToken = malloc(sizeof(RedoTokenLinkSegment));
+	redoToken = ckalloc(sizeof(RedoTokenLinkSegment));
 	redoToken->undoType = &redoTokenLinkSegmentType;
 	TkBTreeMakeUndoIndex(sharedTextPtr, segPtr, &redoToken->index);
 	redoInfo->token = (TkTextUndoToken *) redoToken;
@@ -559,7 +559,7 @@ TkTextWindowCmd(
 	    assert(sharedTextPtr->undoStack);
 	    assert(ewPtr->typePtr == &tkTextEmbWindowType);
 
-	    token = malloc(sizeof(UndoTokenLinkSegment));
+	    token = ckalloc(sizeof(UndoTokenLinkSegment));
 	    token->undoType = &undoTokenLinkSegmentType;
 	    token->segPtr = ewPtr;
 	    ewPtr->refCount += 1;
@@ -617,7 +617,7 @@ MakeWindow(
     TkTextSegment *ewPtr;
     TkTextEmbWindowClient *client;
 
-    ewPtr = memset(malloc(SEG_SIZE(TkTextEmbWindow)), 0, SEG_SIZE(TkTextEmbWindow));
+    ewPtr = memset(ckalloc(SEG_SIZE(TkTextEmbWindow)), 0, SEG_SIZE(TkTextEmbWindow));
     ewPtr->typePtr = &tkTextEmbWindowType;
     ewPtr->size = 1;
     ewPtr->refCount = 1;
@@ -626,7 +626,7 @@ MakeWindow(
     ewPtr->body.ew.optionTable = Tk_CreateOptionTable(textPtr->interp, optionSpecs);
     DEBUG_ALLOC(tkTextCountNewSegment++);
 
-    client = memset(malloc(sizeof(TkTextEmbWindowClient)), 0, sizeof(TkTextEmbWindowClient));
+    client = memset(ckalloc(sizeof(TkTextEmbWindowClient)), 0, sizeof(TkTextEmbWindowClient));
     client->textPtr = textPtr;
     client->parent = ewPtr;
     ewPtr->body.ew.clients = client;
@@ -796,7 +796,7 @@ EmbWinConfigure(
 		 * Have to make the new client.
 		 */
 
-		client = malloc(sizeof(TkTextEmbWindowClient));
+		client = ckalloc(sizeof(TkTextEmbWindowClient));
 		memset(client, 0, sizeof(TkTextEmbWindowClient));
 		client->next = ewPtr->body.ew.clients;
 		client->textPtr = textPtr;
@@ -975,7 +975,7 @@ EmbWinLostSlaveProc(
 	}
 	loop->next = client->next;
     }
-    free(client);
+    ckfree(client);
 
     TkTextIndexClear(&index, textPtr);
     TkTextIndexSetSegment(&index, ewPtr);
@@ -1036,7 +1036,7 @@ TkTextWinFreeClient(
      * Free up this client.
      */
 
-    free(client);
+    ckfree(client);
 }
 
 /*
@@ -1395,7 +1395,7 @@ EmbWinLayoutProc(
 	     * now need to add to our client list.
 	     */
 
-	    client = malloc(sizeof(TkTextEmbWindowClient));
+	    client = ckalloc(sizeof(TkTextEmbWindowClient));
 	    memset(client, 0, sizeof(TkTextEmbWindowClient));
 	    client->next = ewPtr->body.ew.clients;
 	    client->textPtr = textPtr;
