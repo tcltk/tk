@@ -19,14 +19,10 @@
 #include "tkBool.h"
 #include <stdint.h>
 
-#ifdef _MSC_VER
-# if _MSC_VER >= 1900
-#  define inline __inline
-# else
-#  define inline
+#ifndef _MSC_VER
+# if __STDC_VERSION__ < 199901L
+#  define inline /* we are not C99 conform */
 # endif
-#elif __STDC_VERSION__ < 199901L
-# define inline /* we are not C99 conform */
 #endif
 
 
@@ -174,12 +170,10 @@ unsigned TkQTreeSearchRectsContaining(const TkQTree tree, const TkQTreeRect *rec
 #endif /* QTREE_SEARCH_RECTS_CONTAINING */
 
 
-#if __STDC_VERSION__ >= 199901L || (defined(_MSC_VER) && _MSC_VER >= 1900)
+#if __STDC_VERSION__ >= 199901L
 # define _TK_NEED_IMPLEMENTATION
 #include "tkQTreePriv.h"
 # undef _TK_NEED_IMPLEMENTATION
-#else
-# undef inline
 #endif
 
 #endif /* _TKQTREE */

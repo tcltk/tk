@@ -33,14 +33,10 @@
 # include "tkMacOSXInt.h"
 #endif
 
-#ifdef _MSC_VER
-# if _MSC_VER >= 1900
-#  define inline __inline
-# else
-#  define inline
+#ifndef _MSC_VER
+# if __STDC_VERSION__ < 199901L
+#  define inline /* we are not C99 conform */
 # endif
-#elif __STDC_VERSION__ < 199901L
-# define inline /* we are not C99 conform */
 #endif
 
 #ifdef BUILD_tk
@@ -2107,11 +2103,9 @@ MODULE_SCOPE void	TkTextInsertDisplayProc(struct TkText *textPtr, struct TkTextD
 
 #undef STRUCT
 
-#if __STDC_VERSION__ >= 199901L || (defined(_MSC_VER) && _MSC_VER >= 1900)
+#if __STDC_VERSION__ >= 199901L
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextPriv.h"
-#else
-# undef inline
 #endif
 
 #endif /* _TKTEXT */

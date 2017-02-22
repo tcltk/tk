@@ -25,14 +25,10 @@
 # define __warn_unused__
 #endif
 
-#ifdef _MSC_VER
-# if _MSC_VER >= 1900
-#  define inline __inline
-# else
-#  define inline
+#ifndef _MSC_VER
+# if __STDC_VERSION__ < 199901L
+#  define inline /* we are not C99 conform */
 # endif
-#elif __STDC_VERSION__ < 199901L
-# define inline /* we are not C99 conform */
 #endif
 
 
@@ -280,12 +276,10 @@ inline unsigned TkTextTagSetByteSize(const TkIntSet *ts);
 
 #undef __warn_unused__
 
-#if __STDC_VERSION__ >= 199901L || (defined(_MSC_VER) && _MSC_VER >= 1900)
+#if __STDC_VERSION__ >= 199901L
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextTagSetPriv.h"
 # undef _TK_NEED_IMPLEMENTATION
-#else
-# undef inline
 #endif
 
 #endif /* _TKTEXTTAGSET */
