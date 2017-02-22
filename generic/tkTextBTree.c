@@ -554,9 +554,11 @@ static TkTextSegment *
 GetPrevTagInfoSegment(
     TkTextSegment *segPtr)
 {
+    TkTextLine *linePtr;
+
     assert(segPtr);
 
-    TkTextLine *linePtr = segPtr->sectionPtr->linePtr;
+    linePtr = segPtr->sectionPtr->linePtr;
 
     for (segPtr = segPtr->prevPtr; segPtr; segPtr = segPtr->prevPtr) {
 	if (segPtr->tagInfoPtr) {
@@ -1440,8 +1442,9 @@ UndoDeletePerform(
      * insertion point, then rebalance the tree if necessary.
      */
 
-    SubtractPixelCount2(treePtr, nodePtr, -changeToLineCount,
-	    -changeToLogicalLineCount, -changeToBranchCount, -size, changeToPixelInfo);
+    SubtractPixelCount2(treePtr, nodePtr, -((int)changeToLineCount),
+	    -((int)changeToLogicalLineCount), -((int)changeToBranchCount),
+            -((int)size), changeToPixelInfo);
     linePtr->parentPtr->numChildren += changeToLineCount;
 
     if (nodePtr->numChildren > MAX_CHILDREN) {
@@ -1747,8 +1750,8 @@ UndoClearTagsPerform(
     nodePtr = linePtr->parentPtr;
 
     for (i = 0; i < n; ++i, ++entry) {
-	unsigned skip = entry->skip;
-	unsigned size = entry->size;
+	int skip = entry->skip;
+	int size = entry->size;
 
 	while (size > 0) {
 	    while (linePtr->size - offs <= skip) {
@@ -4364,7 +4367,7 @@ TkBTreeInsertChars(
 		 * Fill increased/decreased char segment.
 		 */
 		segPtr = prevPtr;
-		assert(segPtr->size >= info.offset + chunkSize);
+		assert(segPtr->size >= info.offset + (int)chunkSize);
 		memcpy(segPtr->body.chars + info.offset, string, chunkSize);
 		segPtr->sectionPtr->size += chunkSize;
 		linePtr->size += chunkSize;
@@ -4517,8 +4520,8 @@ TkBTreeInsertChars(
      * insertion point, then rebalance the tree if necessary.
      */
 
-    SubtractPixelCount2(treePtr, linePtr->parentPtr, -changeToLineCount,
-	    -changeToLogicalLineCount, 0, -size, changeToPixelInfo);
+    SubtractPixelCount2(treePtr, linePtr->parentPtr, -((int)changeToLineCount),
+	    -((int)changeToLogicalLineCount), 0, -((int)size), changeToPixelInfo);
 
     if ((linePtr->parentPtr->numChildren += changeToLineCount) > MAX_CHILDREN) {
 	Rebalance(treePtr, linePtr->parentPtr);
@@ -5678,7 +5681,7 @@ RebuildSections(
     assert(!propagateChangeOfNumBranches
 	    || TkBTreeGetRoot(sharedTextPtr->tree)->numBranches >= linePtr->numBranches);
 
-    changeToNumBranches = -linePtr->numBranches;
+    changeToNumBranches = -(int)linePtr->numBranches;
     linePtr->numBranches = 0;
     linePtr->numLinks = 0;
     linePtr->size = 0;
@@ -5844,7 +5847,7 @@ FreeLine(
     assert(linePtr->parentPtr);
     DEBUG(linePtr->parentPtr = NULL);
 
-    for (i = 0; i < treePtr->numPixelReferences; ++i) {
+    for (i = 0; i < (int)treePtr->numPixelReferences; ++i) {
 	TkTextDispLineInfo *dispLineInfo = linePtr->pixelInfo[i].dispLineInfo;
 
 	if (dispLineInfo) {
@@ -5931,7 +5934,7 @@ CopyCharSeg(
 {
     assert(segPtr);
     assert(segPtr->typePtr == &tkTextCharType);
-    assert(segPtr->size >= offset + length);
+    assert(segPtr->size >= (int)(offset + length));
 
     return MakeCharSeg(segPtr->sectionPtr, segPtr->tagInfoPtr, newSize,
 	    segPtr->body.chars + offset, length);
@@ -5965,7 +5968,7 @@ SplitCharSegment(
     assert(segPtr->typePtr == &tkTextCharType);
     assert(segPtr->sectionPtr); /* otherwise segment is freed */
     assert(index > 0);
-    assert(index < segPtr->size);
+    assert((int)index < segPtr->size);
 
     newPtr1 = CopyCharSeg(segPtr, 0, index, index);
     newPtr2 = CopyCharSeg(segPtr, index, segPtr->size - index, segPtr->size - index);
@@ -6091,20 +6094,22 @@ PrepareInsertIntoCharSeg(
     unsigned offset,		/* Offset in segment. */
     SplitInfo *splitInfo)	/* Additional arguments. */
 {
+    unsigned oldCapacity, newCapacity;
+
     assert(splitInfo);
     assert(!splitInfo->splitted);
     assert(splitInfo->increase != 0);
     assert(segPtr);
     assert(segPtr->typePtr == &tkTextCharType);
-    assert(offset <= segPtr->size);
-    assert(offset < segPtr->size || segPtr->body.chars[segPtr->size - 1] != '\n');
+    assert((int)offset <= segPtr->size);
+    assert((int)offset < segPtr->size || segPtr->body.chars[segPtr->size - 1] != '\n');
 
     /*
      * We must not split if the new char content will be appended
      * to the current content (i.e. offset == segPtr->size).
      */
 
-    if (splitInfo->forceSplit && offset < segPtr->size) {
+    if (splitInfo->forceSplit && (int)offset < segPtr->size) {
 	unsigned newSize, decreasedSize;
 	TkTextSegment *newPtr;
 
@@ -6138,8 +6143,8 @@ PrepareInsertIntoCharSeg(
 	SplitSection(segPtr->sectionPtr);
     }
 
-    unsigned oldCapacity = CSEG_CAPACITY(segPtr->size);
-    unsigned newCapacity = CSEG_CAPACITY(segPtr->size + splitInfo->increase);
+    oldCapacity = CSEG_CAPACITY(segPtr->size);
+    newCapacity = CSEG_CAPACITY(segPtr->size + splitInfo->increase);
 
     if (oldCapacity != newCapacity) {
 	/*
@@ -6785,7 +6790,7 @@ DeleteRange(
 		     */
 		    SubtractPixelInfo(treePtr, curLinePtr);
 		    if (curLinePtr->numBranches) {
-			PropagateChangeOfNumBranches(curLinePtr->parentPtr, -curLinePtr->numBranches);
+			PropagateChangeOfNumBranches(curLinePtr->parentPtr, -(int)curLinePtr->numBranches);
 		    }
 		}
 
@@ -7343,7 +7348,7 @@ TkBTreeFindLine(
     }
 
     nodePtr = treePtr->rootPtr;
-    if (line < 0 || nodePtr->numLines <= line) {
+    if (line < 0 || (int)nodePtr->numLines <= line) {
 	return NULL;
     }
 
@@ -7353,10 +7358,10 @@ TkBTreeFindLine(
 
     if (textPtr) {
 	line += TkBTreeLinesTo(tree, NULL, TkBTreeGetStartLine(textPtr), NULL);
-	if (line >= nodePtr->numLines) {
+	if (line >= (int)nodePtr->numLines) {
 	    return NULL;
 	}
-	if (line > TkBTreeLinesTo(tree, NULL, TkBTreeGetLastLine(textPtr), NULL)) {
+	if (line > (int)TkBTreeLinesTo(tree, NULL, TkBTreeGetLastLine(textPtr), NULL)) {
 	    return NULL;
 	}
     }
@@ -7374,7 +7379,7 @@ TkBTreeFindLine(
 
     while (nodePtr->level > 0) {
 	for (nodePtr = nodePtr->childPtr;
-		nodePtr && nodePtr->numLines <= line;
+		nodePtr && (int)nodePtr->numLines <= line;
 		nodePtr = nodePtr->nextPtr) {
 	    line -= nodePtr->numLines;
 	}
@@ -7435,7 +7440,7 @@ TkBTreeFindPixelLine(
     if (0 > pixels) {
 	return NULL;
     }
-    if (pixels >= nodePtr->pixelInfo[pixelReference].pixels) {
+    if (pixels >= (int)nodePtr->pixelInfo[pixelReference].pixels) {
 	return TkBTreeGetLastLine(textPtr);
     }
 
@@ -7445,7 +7450,7 @@ TkBTreeFindPixelLine(
 
     while (nodePtr->level != 0) {
 	for (nodePtr = nodePtr->childPtr;
-		nodePtr->pixelInfo[pixelReference].pixels <= pixels;
+		(int)nodePtr->pixelInfo[pixelReference].pixels <= pixels;
 		nodePtr = nodePtr->nextPtr) {
 	    assert(nodePtr);
 	    pixels -= nodePtr->pixelInfo[pixelReference].pixels;
@@ -7457,7 +7462,7 @@ TkBTreeFindPixelLine(
      */
 
     for (linePtr = nodePtr->linePtr;
-	    linePtr->pixelInfo[pixelReference].height <= pixels;
+	    (int)linePtr->pixelInfo[pixelReference].height <= pixels;
 	    linePtr = linePtr->nextPtr) {
 	assert(linePtr != nodePtr->lastPtr->nextPtr);
 	pixels -= linePtr->pixelInfo[pixelReference].height;
@@ -9148,7 +9153,7 @@ TreeTagNode(
     } else if (nchilds < nodePtr->numChildren) {
 	flags |= HAS_TAGOFF;
     }
-    if (nchilds > (nodePtr->level > 0 ? 1 : 0)) {
+    if (nchilds > (unsigned)(nodePtr->level > 0 ? 1 : 0)) {
 	tagPtr->rootPtr = nodePtr;
     }
 
@@ -12627,7 +12632,7 @@ CheckNodeConsistency(
     }
 
     minChildren = nodePtr->parentPtr ? MIN_CHILDREN : (nodePtr->level > 0 ? 2 : 1);
-    if (nodePtr->numChildren < minChildren || nodePtr->numChildren > MAX_CHILDREN) {
+    if ((int)nodePtr->numChildren < minChildren || (int)nodePtr->numChildren > MAX_CHILDREN) {
 	Tcl_Panic("CheckNodeConsistency: bad child count (%d)", nodePtr->numChildren);
     }
 
@@ -12684,7 +12689,7 @@ CheckNodeConsistency(
 	prevLinePtr = NULL;
 	linePtr = nodePtr->linePtr;
 	for (linePtr = nodePtr->linePtr;
-		numChildren < nodePtr->numChildren;
+		numChildren < (int)nodePtr->numChildren;
 		++numChildren, ++numLines, linePtr = linePtr->nextPtr) {
 	    if (!linePtr) {
 		Tcl_Panic("CheckNodeConsistency: unexpected end of line chain");
@@ -12695,7 +12700,7 @@ CheckNodeConsistency(
 	    CheckSegments(sharedTextPtr, linePtr);
 	    CheckSegmentItems(sharedTextPtr, linePtr);
 	    CheckSections(linePtr);
-	    for (i = 0; i < references; ++i) {
+	    for (i = 0; i < (int)references; ++i) {
 		pixelInfo[i].pixels += linePtr->pixelInfo[i].height;
 		pixelInfo[i].numDispLines += GetDisplayLines(linePtr, i);
 	    }
@@ -12754,7 +12759,7 @@ CheckNodeConsistency(
 		    TkTextTagSetIncrRefCount(additionalTagoffPtr = nodePtr->tagonPtr);
 		}
 	    }
-	    for (i = 0; i < references; i++) {
+	    for (i = 0; i < (int)references; i++) {
 		pixelInfo[i].pixels += childNodePtr->pixelInfo[i].pixels;
 		pixelInfo[i].numDispLines += childNodePtr->pixelInfo[i].numDispLines;
 	    }
@@ -12805,7 +12810,7 @@ CheckNodeConsistency(
 	TkTextTagSetDecrRefCount(tagoffPtr);
 	TkTextTagSetDecrRefCount(additionalTagoffPtr);
     }
-    for (i = 0; i < references; i++) {
+    for (i = 0; i < (int)references; i++) {
 	if (pixelInfo[i].pixels != nodePtr->pixelInfo[i].pixels) {
 	    Tcl_Panic("CheckNodeConsistency: mismatch in pixel count "
 		    "(expected: %d, counted: %d) for widget (%d) at level %d",
@@ -13867,7 +13872,7 @@ TkBTreeNextDisplayLine(
     assert(textPtr);
     assert(linePtr->logicalLine || linePtr == TkBTreeGetStartLine(textPtr));
     assert(*displayLineNo >= 0);
-    assert(*displayLineNo < GetDisplayLines(linePtr, textPtr->pixelReference));
+    assert(*displayLineNo < (int)GetDisplayLines(linePtr, textPtr->pixelReference));
 
     if (offset == 0) {
 	return linePtr;
@@ -14002,7 +14007,7 @@ TkBTreePrevDisplayLine(
     assert(textPtr);
     assert(linePtr->logicalLine || linePtr == TkBTreeGetStartLine(textPtr));
     assert(*displayLineNo >= 0);
-    assert(*displayLineNo < GetDisplayLines(linePtr, textPtr->pixelReference));
+    assert(*displayLineNo < (int)GetDisplayLines(linePtr, textPtr->pixelReference));
 
     if (offset == 0) {
 	return linePtr;
@@ -14524,14 +14529,14 @@ TkBTreeCountSize(
 
 	if (textPtr->startMarker != sharedTextPtr->startMarker) {
 	    if (linePtr1 == textPtr->startMarker->sectionPtr->linePtr) {
-		assert(TkTextSegToIndex(textPtr->startMarker) <= numBytes);
+		assert(TkTextSegToIndex(textPtr->startMarker) <= (int)numBytes);
 		numBytes -= TkTextSegToIndex(textPtr->startMarker);
 	    }
 	}
 	if (textPtr->endMarker != sharedTextPtr->endMarker) {
 	    if (!SegIsAtStartOfLine(textPtr->endMarker)) {
 		const TkTextLine *linePtr = textPtr->endMarker->sectionPtr->linePtr;
-		assert(linePtr->size - TkTextSegToIndex(textPtr->endMarker) - 1 <= numBytes);
+		assert(linePtr->size - TkTextSegToIndex(textPtr->endMarker) - 1 <= (int)numBytes);
 		numBytes -= linePtr->size - TkTextSegToIndex(textPtr->endMarker) - 1;
 	    }
 	}
@@ -14611,12 +14616,12 @@ TkBTreeMoveForward(
      */
 
     while (parentPtr) {
-	if (!nodePtr || (!HasLeftNode(nodePtr) && byteIndex >= parentPtr->size)) {
+	if (!nodePtr || (!HasLeftNode(nodePtr) && byteIndex >= (int)parentPtr->size)) {
 	    nodePtr = parentPtr->nextPtr;
 	    parentPtr = parentPtr->parentPtr;
 	} else {
 	    while (nodePtr) {
-		if (byteIndex < nodePtr->size) {
+		if (byteIndex < (int)nodePtr->size) {
 		    if (nodePtr->level > 0) {
 			nodePtr = nodePtr->childPtr;
 			continue;
@@ -14725,7 +14730,7 @@ TkBTreeMoveBackward(
     nodePtr = idx ? nodeStack[--idx] : NULL;
 
     while (parentPtr) {
-	if (!nodePtr || (!nodePtr->nextPtr && byteIndex >= parentPtr->size)) {
+	if (!nodePtr || (!nodePtr->nextPtr && byteIndex >= (int)parentPtr->size)) {
 	    nodePtr = parentPtr;
 	    if ((parentPtr = parentPtr->parentPtr)) {
 		for (nPtr = parentPtr->childPtr, idx = 0; nPtr != nodePtr; nPtr = nPtr->nextPtr) {
@@ -14735,7 +14740,7 @@ TkBTreeMoveBackward(
 	    }
 	} else {
 	    while (nodePtr) {
-		if (byteIndex < nodePtr->size) {
+		if (byteIndex < (int)nodePtr->size) {
 		    if (nodePtr->level > 0) {
 			parentPtr = nodePtr;
 			idx = 0;
