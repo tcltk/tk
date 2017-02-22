@@ -2050,6 +2050,7 @@ TextWidgetObjCmd(
 
 	for (; i < objc; i += 2) {
 	    TkTextIndex index1, index2;
+            Tcl_Obj *get;
 
 	    if (!TkTextGetIndexFromObj(interp, textPtr, objv[i], &index1)) {
 		if (objPtr) {
@@ -2080,7 +2081,7 @@ TextWidgetObjCmd(
 	     * more, we want to do it efficiently!
 	     */
 
-	    Tcl_Obj *get = TextGetText(textPtr, &index1, &index2, NULL, NULL, UINT_MAX,
+	    get = TextGetText(textPtr, &index1, &index2, NULL, NULL, UINT_MAX,
 		    visibleOnly, includeHyphens);
 
 	    if (++found == 1) {
@@ -5388,7 +5389,7 @@ CountIndices(
 	return 0;
     }
     if (compare > 0) {
-	return -TkTextIndexCount(textPtr, indexPtr2, indexPtr1, type);
+	return -((int)TkTextIndexCount(textPtr, indexPtr2, indexPtr1, type));
     }
     return TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type);
 }
@@ -6137,7 +6138,7 @@ TextInsertCmd(
 
 		    tagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
 
-		    for (i = 0; i < numTags; ++i) {
+		    for (i = 0; i < (unsigned)numTags; ++i) {
 			tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(tagNamePtrs[i]), NULL);
 #if !TK_TEXT_DONT_USE_BITFIELDS
 			if (tagPtr->index >= TkTextTagSetSize(tagInfoPtr)) {
@@ -8516,11 +8517,11 @@ InspectRetainedUndoItems(
 	Tcl_Obj *resultPtr = Tcl_NewObj();
 	int i;
 
-	for (i = 0; i < sharedTextPtr->undoTagListCount; ++i) {
+	for (i = 0; i < (int)sharedTextPtr->undoTagListCount; ++i) {
 	    TkTextInspectUndoTagItem(sharedTextPtr, sharedTextPtr->undoTagList[i], resultPtr);
 	}
 
-	for (i = 0; i < sharedTextPtr->undoMarkListCount; ++i) {
+	for (i = 0; i < (int)sharedTextPtr->undoMarkListCount; ++i) {
 	    TkTextInspectUndoMarkItem(sharedTextPtr, &sharedTextPtr->undoMarkList[i], resultPtr);
 	}
 
@@ -9174,7 +9175,7 @@ TextGetText(
 
     if (segPtr == lastPtr) {
 	if (segPtr->typePtr == &tkTextCharType) {
-	    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset1, MIN(maxBytes, offset2 - offset1));
+	    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset1, MIN((int)maxBytes, offset2 - offset1));
 	}
     } else {
 	TkTextLine *linePtr = segPtr->sectionPtr->linePtr;
@@ -9182,7 +9183,7 @@ TextGetText(
 	TkTextIndexClear(&index, textPtr);
 
 	if (segPtr->typePtr == &tkTextCharType) {
-	    unsigned nbytes = MIN(maxBytes, segPtr->size - offset1);
+	    unsigned nbytes = MIN((int)maxBytes, segPtr->size - offset1);
 	    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset1, nbytes);
 	    if ((maxBytes -= nbytes) == 0) {
 		return resultPtr;
@@ -9210,7 +9211,7 @@ TextGetText(
 	}
 	while (segPtr != lastPtr) {
 	    if (segPtr->typePtr == &tkTextCharType) {
-		unsigned nbytes = MIN(maxBytes, segPtr->size);
+		unsigned nbytes = MIN((int)maxBytes, segPtr->size);
 		Tcl_AppendToObj(resultPtr, segPtr->body.chars, nbytes);
 		if ((maxBytes -= nbytes) == 0) {
 		    if (lastIndexPtr) {
@@ -9242,7 +9243,7 @@ TextGetText(
 	    }
 	}
 	if (offset2 > 0) {
-	    Tcl_AppendToObj(resultPtr, segPtr->body.chars, MIN(maxBytes, offset2));
+	    Tcl_AppendToObj(resultPtr, segPtr->body.chars, MIN((int)maxBytes, offset2));
 	}
     }
 
