@@ -736,7 +736,7 @@ RemoveElem(
 
 void
 TkQTreeTraverse(
-    TkQTree tree,
+    const TkQTree tree,
     TkQTreeCallback cbHit,
     TkQTreeClientData cbArg)
 {
