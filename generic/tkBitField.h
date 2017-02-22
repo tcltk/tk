@@ -17,7 +17,7 @@
 #endif
 
 #include "tkBool.h"
-#include <stdint.h>
+#include "mystdint.h"
 
 #ifdef _MSC_VER
 # if _MSC_VER >= 1900

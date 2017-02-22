@@ -25,8 +25,7 @@
 #include "tkTextUndo.h"
 #include "tkQTree.h"
 #include "tkBool.h"
-#include "tkAlloc.h"
-#include <stdint.h>
+#include "mystdint.h"
 
 #ifdef MAC_OSX_TK
 /* required for TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -41,6 +40,11 @@
 # endif
 #elif __STDC_VERSION__ < 199901L
 # define inline /* we are not C99 conform */
+#endif
+
+/* ISO hack for dumb VC++ */
+#ifdef _MSC_VER
+#define   snprintf	_snprintf
 #endif
 
 #ifdef BUILD_tk
@@ -1675,7 +1679,7 @@ enum { DISP_LINE_START = false, DISP_LINE_END = true };
 #define FREE_SEGMENT(ptr) { \
     assert(ptr->typePtr); \
     assert(!(ptr->typePtr = NULL)); \
-    free(ptr); }
+    ckfree(ptr); }
 
 /*
  * We need a callback function for tag changes. The return value informs whether

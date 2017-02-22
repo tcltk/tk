@@ -15,7 +15,6 @@
 #include "tkInt.h"
 #include "tkText.h"
 #include "tk3d.h"
-#include <inttypes.h>
 #include <assert.h>
 
 #ifndef MAX
@@ -448,7 +447,7 @@ RedoSetMarkPerform(
     if (redoInfo) {
 	UndoTokenSetMark *redoToken;
 
-	redoToken = malloc(sizeof(UndoTokenSetMark));
+	redoToken = ckalloc(sizeof(UndoTokenSetMark));
 	redoToken->markPtr = token->markPtr;
 	redoToken->undoType = &undoTokenSetMarkType;
 	redoInfo->token = (TkTextUndoToken *) redoToken;
@@ -638,9 +637,15 @@ TkTextMarkCmd(
 	/* ensure fixed length (depending on pointer size) */
 	snprintf(uniqName, sizeof(uniqName),
 #ifdef TCL_WIDE_INT_IS_LONG
+        #ifndef PRIx64
+            #define PRIx64 "llx"
+        #endif
 	    "##ID##0x%016"PRIx64"##0x%016"PRIx64"##%08u##", /* we're on a real 64-bit system */
 	    (uint64_t) textPtr, (uint64_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter);
 #else /* ifndef TCL_WIDE_INT_IS_LONG */
+        #ifndef PRIx32
+            #define PRIx32 "lx"
+        #endif
 	    "##ID##0x%08"PRIx32"##0x%08"PRIx32"##%08u##",   /* we're on a 32-bit system */
 	    (uint32_t) textPtr, (uint32_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter);
 #endif /* TCL_WIDE_INT_IS_LONG */
@@ -914,7 +919,7 @@ ReactivateMark(
     name = GET_NAME(markPtr);
     hPtr = Tcl_CreateHashEntry(&sharedTextPtr->markTable, name, (int *) &isNew);
     assert(isNew);
-    free(name);
+    ckfree(name);
     Tcl_SetHashValue(hPtr, markPtr);
     markPtr->body.mark.ptr = PTR_TO_INT(hPtr);
 }
@@ -963,7 +968,7 @@ TkTextFreeMarks(
 	    markPtr->prevPtr = NULL;
 	    markPtr->sectionPtr = NULL;
 	    markPtr->nextPtr = chainPtr;
-	    dup = malloc(strlen(name) + 1);
+	    dup = ckalloc(strlen(name) + 1);
 	    markPtr->body.mark.ptr = PTR_TO_INT(strcpy(dup, name));
 	    MAKE_PRESERVED(markPtr);
 	    chainPtr = markPtr;
@@ -1079,7 +1084,7 @@ MakeMark(
 {
     TkTextSegment *markPtr;
 
-    markPtr = memset(malloc(SEG_SIZE(TkTextMark)), 0, SEG_SIZE(TkTextMark));
+    markPtr = memset(ckalloc(SEG_SIZE(TkTextMark)), 0, SEG_SIZE(TkTextMark));
     markPtr->typePtr = &tkTextRightMarkType;
     markPtr->refCount = 1;
     markPtr->body.mark.textPtr = textPtr;
@@ -1190,7 +1195,7 @@ MakeChangeItem(
     if (!changePtr) {
 	if (sharedTextPtr->undoMarkListCount == sharedTextPtr->undoMarkListSize) {
 	    sharedTextPtr->undoMarkListSize = MAX(20, 2*sharedTextPtr->undoMarkListSize);
-	    sharedTextPtr->undoMarkList = realloc(sharedTextPtr->undoMarkList,
+	    sharedTextPtr->undoMarkList = ckrealloc(sharedTextPtr->undoMarkList,
 		    sharedTextPtr->undoMarkListSize * sizeof(sharedTextPtr->undoMarkList[0]));
 	}
 	changePtr = &sharedTextPtr->undoMarkList[sharedTextPtr->undoMarkListCount++];
@@ -1218,7 +1223,7 @@ MakeUndoToggleGravity(
 	TkTextMarkChange *changePtr = MakeChangeItem(sharedTextPtr, markPtr);
 	UndoTokenToggleGravity *token;
 
-	token = memset(malloc(sizeof(UndoTokenToggleGravity)), 0, sizeof(UndoTokenToggleGravity));
+	token = memset(ckalloc(sizeof(UndoTokenToggleGravity)), 0, sizeof(UndoTokenToggleGravity));
 	token->undoType = &undoTokenToggleGravityType;
 	(token->markPtr = markPtr)->refCount += 1;
 	DEBUG_ALLOC(tkTextCountNewUndoToken++);
@@ -1320,14 +1325,14 @@ UnsetMark(
 		changePtr->toggleGravity = NULL;
 	    }
 	    if (changePtr->moveMark) {
-		free(changePtr->moveMark);
+		ckfree(changePtr->moveMark);
 		changePtr->moveMark = NULL;
 		DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 		assert(markPtr->refCount > 1);
 		markPtr->refCount -= 1;
 	    }
 	    if (changePtr->setMark) {
-		free(changePtr->setMark);
+		ckfree(changePtr->setMark);
 		changePtr->setMark = NULL;
 		DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 		assert(markPtr->refCount > 1);
@@ -1336,7 +1341,7 @@ UnsetMark(
 	}
 
 	memset(redoInfo, 0, sizeof(*redoInfo));
-	token = malloc(sizeof(RedoTokenSetMark));
+	token = ckalloc(sizeof(RedoTokenSetMark));
 	token->undoType = &redoTokenSetMarkType;
 	markPtr->refCount += 1;
 	token->markPtr = markPtr;
@@ -1421,7 +1426,7 @@ TriggerWatchCursor(
     for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
 	if (numTags == tagArraySize) {
 	    tagArraySize *= 2;
-	    tagArrayPtr = realloc(tagArrayPtr == tagArrayBuffer ? NULL : tagArrayPtr, tagArraySize);
+	    tagArrayPtr = ckrealloc(tagArrayPtr == tagArrayBuffer ? NULL : tagArrayPtr, tagArraySize);
 	}
 	tagArrayPtr[numTags++] = tagPtr;
     }
@@ -1430,7 +1435,7 @@ TriggerWatchCursor(
 	Tcl_DStringAppendElement(&buf, tagArrayPtr[i]->name);
     }
     if (tagArrayPtr != tagArrayBuffer) {
-	free(tagArrayPtr);
+	ckfree(tagArrayPtr);
     }
 
     rc = TkTextTriggerWatchCmd(textPtr, "cursor", idx[0], idx[1], Tcl_DStringValue(&buf), false);
@@ -1469,21 +1474,21 @@ TkTextReleaseUndoMarkTokens(
     assert(changePtr->markPtr->body.mark.changePtr);
 
     if (changePtr->toggleGravity) {
-	free(changePtr->toggleGravity);
+	ckfree(changePtr->toggleGravity);
 	changePtr->toggleGravity = NULL;
 	DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	assert(changePtr->markPtr->refCount > 1);
 	changePtr->markPtr->refCount -= 1;
     }
     if (changePtr->moveMark) {
-	free(changePtr->moveMark);
+	ckfree(changePtr->moveMark);
 	changePtr->moveMark = NULL;
 	DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	assert(changePtr->markPtr->refCount > 1);
 	changePtr->markPtr->refCount -= 1;
     }
     if (changePtr->setMark) {
-	free(changePtr->setMark);
+	ckfree(changePtr->setMark);
 	changePtr->setMark = NULL;
 	DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	assert(changePtr->markPtr->refCount > 1);
@@ -1529,7 +1534,7 @@ TkTextPushUndoMarkTokens(
 	if (changePtr->savedMarkType != token->markPtr->typePtr) {
 	    TkTextUndoPushItem(sharedTextPtr->undoStack, (TkTextUndoToken *) token, 0);
 	} else {
-	    free(token);
+	    ckfree(token);
 	    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	    assert(changePtr->markPtr->refCount > 1);
 	    changePtr->markPtr->refCount -= 1;
@@ -1751,7 +1756,7 @@ SetMark(
 	    if (TkTextIndexIsEmpty(&oldIndex)) {
 		UndoTokenSetMark *token;
 
-		token = malloc(sizeof(UndoTokenSetMark));
+		token = ckalloc(sizeof(UndoTokenSetMark));
 		token->undoType = &undoTokenSetMarkType;
 		(token->markPtr = markPtr)->refCount += 1;
 		DEBUG_ALLOC(tkTextCountNewUndoToken++);
@@ -1762,7 +1767,7 @@ SetMark(
 	    } else {
 		UndoTokenMoveMark *token;
 
-		token = malloc(sizeof(UndoTokenMoveMark));
+		token = ckalloc(sizeof(UndoTokenMoveMark));
 		token->undoType = &undoTokenMoveMarkType;
 		(token->markPtr = markPtr)->refCount += 1;
 		token->index = undoIndex;
@@ -2207,7 +2212,7 @@ MarkDeleteProc(
 
     if (--segPtr->refCount == 0) {
 	if (IS_PRESERVED(segPtr)) {
-	    free(GET_NAME(segPtr));
+	    ckfree(GET_NAME(segPtr));
 	} else {
 	    sharedTextPtr->numMarks -= 1;
 	    Tcl_DeleteHashEntry(GET_HPTR(segPtr));
@@ -2221,7 +2226,7 @@ MarkDeleteProc(
 
 	name = Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr = GET_HPTR(segPtr));
 	size = strlen(name) + 1;
-	segPtr->body.mark.ptr = PTR_TO_INT(memcpy(malloc(size), name, size));
+	segPtr->body.mark.ptr = PTR_TO_INT(memcpy(ckalloc(size), name, size));
 	MAKE_PRESERVED(segPtr);
 	Tcl_DeleteHashEntry(hPtr);
 	sharedTextPtr->numMarks -= 1;
@@ -2262,7 +2267,7 @@ MarkRestoreProc(
 	hPtr = Tcl_CreateHashEntry(&sharedTextPtr->markTable, GET_NAME(segPtr), &isNew);
 	assert(isNew);
 	Tcl_SetHashValue(hPtr, segPtr);
-	free(GET_NAME(segPtr));
+	ckfree(GET_NAME(segPtr));
 	segPtr->body.mark.ptr = PTR_TO_INT(hPtr);
 	sharedTextPtr->numMarks += 1;
     }

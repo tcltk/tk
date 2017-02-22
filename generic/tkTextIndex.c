@@ -2964,8 +2964,9 @@ TkTextIndexForwBytes(
     }
 
     if ((byteIndex = dstPtr->priv.byteIndex + byteCount) > linePtr->size) {
+	bool rc;
 	DEBUG(TkTextIndex index = *srcPtr);
-	bool rc = TkBTreeMoveForward(dstPtr, byteCount);
+	rc = TkBTreeMoveForward(dstPtr, byteCount);
 	assert(!rc || TkTextIndexCountBytes(&index, dstPtr) == byteCount);
 	return rc ? 0 : 1;
     }
@@ -3472,8 +3473,9 @@ TkTextIndexBackBytes(
     }
 
     if (byteCount > byteIndex + 1) {
+	bool rc;
 	DEBUG(TkTextIndex index = *srcPtr);
-	bool rc = TkBTreeMoveBackward(dstPtr, byteCount);
+	rc = TkBTreeMoveBackward(dstPtr, byteCount);
 	assert(!rc || TkTextIndexCountBytes(dstPtr, &index) == byteCount);
 	return rc ? 0 : 1;
     }

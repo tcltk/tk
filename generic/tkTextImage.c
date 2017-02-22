@@ -239,7 +239,7 @@ UndoLinkSegmentPerform(
 
     if (redoInfo) {
 	RedoTokenLinkSegment *redoToken;
-	redoToken = malloc(sizeof(RedoTokenLinkSegment));
+	redoToken = ckalloc(sizeof(RedoTokenLinkSegment));
 	redoToken->undoType = &redoTokenLinkSegmentType;
 	TkBTreeMakeUndoIndex(sharedTextPtr, segPtr, &redoToken->index);
 	redoInfo->token = (TkTextUndoToken *) redoToken;
@@ -565,7 +565,7 @@ TkTextImageCmd(
 		assert(sharedTextPtr->undoStack);
 		assert(eiPtr->typePtr == &tkTextEmbImageType);
 
-		token = malloc(sizeof(UndoTokenLinkSegment));
+		token = ckalloc(sizeof(UndoTokenLinkSegment));
 		token->undoType = &undoTokenLinkSegmentType;
 		token->segPtr = eiPtr;
 		eiPtr->refCount += 1;
@@ -663,7 +663,7 @@ MakeImage(
 {
     TkTextSegment *eiPtr;
 
-    eiPtr = memset(malloc(SEG_SIZE(TkTextEmbImage)), 0, SEG_SIZE(TkTextEmbImage));
+    eiPtr = memset(ckalloc(SEG_SIZE(TkTextEmbImage)), 0, SEG_SIZE(TkTextEmbImage));
     eiPtr->typePtr = &tkTextEmbImageType;
     eiPtr->size = 1;
     eiPtr->refCount = 1;
@@ -771,7 +771,7 @@ SetImageName(
     img->hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name, &dummy);
     textPtr->sharedTextPtr->numImages += 1;
     Tcl_SetHashValue(img->hPtr, eiPtr);
-    img->name = malloc(length + 1);
+    img->name = ckalloc(length + 1);
     memcpy(img->name, name, length + 1);
     Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
     Tcl_DStringFree(&newName);
@@ -927,10 +927,10 @@ ReleaseImage(
 
     Tk_FreeConfigOptions((char *) img, img->optionTable, NULL);
     if (img->name) {
-	free(img->name);
+	ckfree(img->name);
     }
     if (img->bbox) {
-	free(img->bbox);
+	ckfree(img->bbox);
     }
     TkTextTagSetDecrRefCount(eiPtr->tagInfoPtr);
     FREE_SEGMENT(eiPtr);
@@ -1230,7 +1230,7 @@ EmbImageDisplayProc(
 	unsigned numClients = textPtr->pixelReference + 1;
 
 	assert((img->numClients == 0) == !img->bbox);
-	img->bbox = realloc(img->bbox, numClients * sizeof(img->bbox[0]));
+	img->bbox = ckrealloc(img->bbox, numClients * sizeof(img->bbox[0]));
 	memset(img->bbox + img->numClients, 0, (numClients - img->numClients) * sizeof(img->bbox[0]));
 	img->numClients = numClients;
     }
