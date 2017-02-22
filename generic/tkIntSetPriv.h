@@ -34,14 +34,10 @@ MODULE_SCOPE bool TkIntSetIsEqual__(
 
 #include <assert.h>
 
-#ifdef _MSC_VER
-# if _MSC_VER >= 1900
-#  define inline __inline
-# else
-#  define inline
+#ifndef _MSC_VER
+# if __STDC_VERSION__ < 199901L
+#  define inline /* we are not C99 conform */
 # endif
-#elif __STDC_VERSION__ < 199901L
-# define inline /* we are not C99 conform */
 #endif
 
 
