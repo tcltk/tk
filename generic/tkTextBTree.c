@@ -9269,7 +9269,9 @@ TkBTreeTag(
     assert(indexPtr1);
     assert(indexPtr2);
     assert(TkTextIndexCompare(indexPtr1, indexPtr2) <= 0);
-    assert(changedProc);
+    /* assert(changedProc); */	/* MSVC erroneously triggers warning C4550: expression
+				 * evaluates to a function which is missing an argument list
+				 */
 
     if (!add && !tagPtr->rootPtr) {
 	return false;
@@ -10058,7 +10060,9 @@ TkBTreeClearTags(
     unsigned i;
 
     assert(TkTextIndexCompare(indexPtr1, indexPtr2) <= 0);
-    assert(changedProc);
+    /* assert(changedProc); */	/* MSVC erroneously triggers warning C4550: expression
+				 * evaluates to a function which is missing an argument list
+				 */
 
     if (TkTextIndexIsEqual(indexPtr1, indexPtr2)) {
 	return NULL;
