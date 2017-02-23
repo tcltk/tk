@@ -414,7 +414,9 @@ TkTextUndoCreateStack(
 {
     TkTextUndoStack stack;
 
-    assert(undoProc);
+    /* assert(undoProc); */	/* MSVC erroneously triggers warning C4550: expression
+				 * evaluates to a function which is missing an argument list
+				 */
 
     stack = memset(malloc(sizeof(*stack)), 0, sizeof(*stack));
     stack->undoProc = undoProc;
