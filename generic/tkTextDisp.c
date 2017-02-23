@@ -1563,7 +1563,9 @@ TkTextCreateDInfo(
 #endif
 #ifndef NDEBUG
     if (!stats.perfFuncIsHooked) {
+#ifndef _MSC_VER	/* MSVC erroneously triggers warning warning C4113 */
 	atexit(PerfStatistic);
+#endif
 	stats.perfFuncIsHooked = true;
     }
 #endif
