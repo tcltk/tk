@@ -74,6 +74,11 @@
 # define STRUCT union
 #endif /* TK_TEXT_DONT_USE_BITFIELDS < 9 */
 
+#ifdef _MSC_VER
+/* earlier versions of MSVC don't know snprintf, but _snprintf is compatible. */
+# define snprintf _snprintf
+#endif
+
 /*
  * Forward declarations.
  */

@@ -24,11 +24,6 @@
 # define PRIx32 "lx"
 #endif
 
-#ifdef MSC_VER
-/* earlier versions of MSCV don't knows snprintf, but _snprintf is compatible. */
-# define snprintf _snprintf
-#endif
-
 #ifndef MAX
 # define MAX(a,b) ((a) < (b) ? b : a)
 #endif
