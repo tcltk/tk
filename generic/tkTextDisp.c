@@ -7480,7 +7480,7 @@ TkTextFindDisplayLineStartEnd(
     TkTextIndex *indexPtr,	/* Index we will adjust to the display line start or end. */
     bool end)			/* 'false' = start, 'true' = end. */
 {
-    return FindDisplayLineStartEnd(textPtr, indexPtr, end, DLINE_CACHE);
+    FindDisplayLineStartEnd(textPtr, indexPtr, end, DLINE_CACHE);
 }
 
 /*
