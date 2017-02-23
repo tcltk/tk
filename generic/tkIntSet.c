@@ -16,7 +16,7 @@
 #include "tkBitField.h"
 #include "tkAlloc.h"
 
-#if !(__STDC_VERSION__ >= 199901L)
+#ifndef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkIntSetPriv.h"
 #endif
@@ -1559,7 +1559,7 @@ TkIntSetDisjunctiveBits(
 #endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
 
-#if !NDEBUG
+#ifndef NDEBUG
 
 # include <stdio.h>
 
@@ -1581,7 +1581,7 @@ TkIntSetPrint(
     printf(" }\n");
 }
 
-#endif /* !NDEBUG */
+#endif /* NDEBUG */
 
 #if TK_UNUSED_INTSET_FUNCTIONS
 
@@ -2124,28 +2124,27 @@ TkIntSetInnerJoinDifferenceIsEqual(
 #endif /* TK_UNUSED_INTSET_FUNCTIONS */
 
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
-#define inline extern
-inline unsigned TkIntSetByteSize(const TkIntSet *set);
-inline const unsigned char *TkIntSetData(const TkIntSet *set);
-inline bool TkIntSetIsEmpty(const TkIntSet *set);
-inline unsigned TkIntSetSize(const TkIntSet *set);
-inline unsigned TkIntSetMax(const TkIntSet *set);
-inline unsigned TkIntSetRefCount(const TkIntSet *set);
-inline void TkIntSetIncrRefCount(TkIntSet *set);
-inline unsigned TkIntSetDecrRefCount(TkIntSet *set);
-inline TkIntSetType TkIntSetAccess(const TkIntSet *set, unsigned index);
-inline bool TkIntSetTest(const TkIntSet *set, unsigned n);
-inline bool TkIntSetNone(const TkIntSet *set);
-inline bool TkIntSetAny(const TkIntSet *set);
-inline bool TkIntSetIsEqual(const TkIntSet *set1, const TkIntSet *set2);
-inline bool TkIntSetContains(const TkIntSet *set1, const TkIntSet *set2);
-inline bool TkIntSetDisjunctive(const TkIntSet *set1, const TkIntSet *set2);
-inline bool TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
-inline unsigned TkIntSetFindFirst(const TkIntSet *set);
-inline unsigned TkIntSetFindNext(const TkIntSet *set);
-inline TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, bool add);
+extern unsigned TkIntSetByteSize(const TkIntSet *set);
+extern const unsigned char *TkIntSetData(const TkIntSet *set);
+extern bool TkIntSetIsEmpty(const TkIntSet *set);
+extern unsigned TkIntSetSize(const TkIntSet *set);
+extern unsigned TkIntSetMax(const TkIntSet *set);
+extern unsigned TkIntSetRefCount(const TkIntSet *set);
+extern void TkIntSetIncrRefCount(TkIntSet *set);
+extern unsigned TkIntSetDecrRefCount(TkIntSet *set);
+extern TkIntSetType TkIntSetAccess(const TkIntSet *set, unsigned index);
+extern bool TkIntSetTest(const TkIntSet *set, unsigned n);
+extern bool TkIntSetNone(const TkIntSet *set);
+extern bool TkIntSetAny(const TkIntSet *set);
+extern bool TkIntSetIsEqual(const TkIntSet *set1, const TkIntSet *set2);
+extern bool TkIntSetContains(const TkIntSet *set1, const TkIntSet *set2);
+extern bool TkIntSetDisjunctive(const TkIntSet *set1, const TkIntSet *set2);
+extern bool TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
+extern unsigned TkIntSetFindFirst(const TkIntSet *set);
+extern unsigned TkIntSetFindNext(const TkIntSet *set);
+extern TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, bool add);
 #endif /* __STDC_VERSION__ >= 199901L */
 
 /* vi:set ts=8 sw=4: */

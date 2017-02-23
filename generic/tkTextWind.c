@@ -19,7 +19,7 @@
 #include "tkTextUndo.h"
 #include <assert.h>
 
-#if NDEBUG
+#ifdef NDEBUG
 # define DEBUG(expr)
 #else
 # define DEBUG(expr) expr

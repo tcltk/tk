@@ -25,13 +25,6 @@
 # define __warn_unused__
 #endif
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
-
 struct TkBitField;
 
 
@@ -150,7 +143,7 @@ TkIntSet *TkIntSetTestAndUnset(TkIntSet *set, unsigned n) __warn_unused__;
 inline TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, bool add) __warn_unused__;
 TkIntSet *TkIntSetClear(TkIntSet *set) __warn_unused__;
 
-#if !NDEBUG
+#ifndef NDEBUG
 void TkIntSetPrint(const TkIntSet *set);
 #endif
 
@@ -183,11 +176,9 @@ bool TkIntSetInnerJoinDifferenceIsEqual(const TkIntSet *set1, const TkIntSet *se
 
 #undef __warn_unused__
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
-#include "tkIntSetPriv.h"
-# undef _TK_NEED_IMPLEMENTATION
+# include "tkIntSetPriv.h"
 #endif
-
 #endif /* _TKINTSET */
 /* vi:set ts=8 sw=4: */

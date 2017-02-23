@@ -26,7 +26,7 @@
 # define MAX(a,b) (((int) a) < ((int) b) ? b : a)
 #endif
 
-#if NDEBUG
+#ifdef NDEBUG
 # define DEBUG(expr)
 #else
 # define DEBUG(expr) expr
@@ -2259,7 +2259,7 @@ TkTextReleaseUndoTagToken(
     }
 
     assert(tagPtr->undoTagListIndex >= 0);
-    assert(tagPtr->undoTagListIndex < sharedTextPtr->undoTagListCount);
+    assert(tagPtr->undoTagListIndex < (int) sharedTextPtr->undoTagListCount);
 
     if (tagPtr->recentTagAddRemoveToken) {
 	free(tagPtr->recentTagAddRemoveToken);
@@ -2341,7 +2341,7 @@ TkTextPushUndoTagTokens(
     }
 
     assert(tagPtr->undoTagListIndex >= 0);
-    assert(tagPtr->undoTagListIndex < sharedTextPtr->undoTagListCount);
+    assert(tagPtr->undoTagListIndex < (int) sharedTextPtr->undoTagListCount);
 
     if (tagPtr->recentTagAddRemoveToken) {
 	if (tagPtr->recentTagAddRemoveTokenIsNull) {
@@ -3154,6 +3154,7 @@ EnumerateTags(
     bool discardSelection = false;
     TkTextTag **arrayPtr;
     int index, countTags, i;
+    unsigned k;
 
     for (i = 3; i < objc; ++i) {
 	const char *option = Tcl_GetString(objv[i]);
@@ -3269,8 +3270,8 @@ EnumerateTags(
     arrayPtr = malloc(sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
     countTags = 0;
 
-    for (i = TkBitFindFirst(includeBits); i != TK_BIT_NPOS; i = TkBitFindNext(includeBits, i)) {
-	arrayPtr[countTags++] = sharedTextPtr->tagLookup[i];
+    for (k = TkBitFindFirst(includeBits); k != TK_BIT_NPOS; k = TkBitFindNext(includeBits, k)) {
+	arrayPtr[countTags++] = sharedTextPtr->tagLookup[k];
     }
 
     AppendTags(interp, countTags, arrayPtr);

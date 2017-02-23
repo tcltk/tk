@@ -47,12 +47,6 @@ struct TkTextMyBTree {
 #ifdef _TK_NEED_IMPLEMENTATION
 
 #include <assert.h>
-
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
 
 /*
  *----------------------------------------------------------------------

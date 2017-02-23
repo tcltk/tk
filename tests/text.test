@@ -1466,7 +1466,7 @@ bOy GIrl .#@? x_yz
 Line 7"
     .t configure -state disabled
     .t delete 2.3
-    .t g 2.0 2.end
+    .t get 2.0 2.end
 } -cleanup {
     destroy .t
 } -result {abcdefghijklm}

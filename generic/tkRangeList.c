@@ -16,7 +16,7 @@
 #include <string.h>
 #include <assert.h>
 
-#if !(__STDC_VERSION__ >= 199901L)
+#ifndef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkRangeListPriv.h"
 #endif
@@ -42,9 +42,9 @@ DEBUG_ALLOC(unsigned tkRangeListCountNew = 0);
 DEBUG_ALLOC(unsigned tkRangeListCountDestroy = 0);
 
 
-#if !NDEBUG
+#ifndef NDEBUG
 
-static int
+static unsigned
 ComputeRangeSize(
     const TkRangeList *ranges)
 {
@@ -58,7 +58,7 @@ ComputeRangeSize(
     return count;
 }
 
-#endif /* !NDEBUG */
+#endif /* NDEBUG */
 
 
 static TkRange *
@@ -652,7 +652,7 @@ TkRangeListDelete(
 }
 
 
-#if !NDEBUG
+#ifndef NDEBUG
 
 void
 TkRangeListPrint(
@@ -666,25 +666,24 @@ TkRangeListPrint(
     printf("(%d)\n", ranges->count);
 }
 
-#endif /* !NDEBUG */
+#endif /* NDEBUG */
 
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
-#define inline extern
-inline int TkRangeSpan(const TkRange *range);
-inline bool TkRangeTest(const TkRange *range, int value);
-inline int TkRangeListLow(const TkRangeList *ranges);
-inline int TkRangeListHigh(const TkRangeList *ranges);
-inline unsigned TkRangeListSpan(const TkRangeList *ranges);
-inline unsigned TkRangeListCount(const TkRangeList *ranges);
-inline unsigned TkRangeListSize(const TkRangeList *ranges);
-inline const TkRange *TkRangeListAccess(const TkRangeList *ranges, unsigned index);
-inline const TkRange *TkRangeListFirst(const TkRangeList *ranges);
-inline const TkRange *TkRangeListNext(const TkRangeList *ranges, const TkRange *item);
-inline bool TkRangeListIsEmpty(const TkRangeList *ranges);
-inline bool TkRangeListContains(const TkRangeList *ranges, int value);
-inline bool TkRangeListContainsRange(const TkRangeList *ranges, int low, int high);
+extern int TkRangeSpan(const TkRange *range);
+extern bool TkRangeTest(const TkRange *range, int value);
+extern int TkRangeListLow(const TkRangeList *ranges);
+extern int TkRangeListHigh(const TkRangeList *ranges);
+extern unsigned TkRangeListSpan(const TkRangeList *ranges);
+extern unsigned TkRangeListCount(const TkRangeList *ranges);
+extern unsigned TkRangeListSize(const TkRangeList *ranges);
+extern const TkRange *TkRangeListAccess(const TkRangeList *ranges, unsigned index);
+extern const TkRange *TkRangeListFirst(const TkRangeList *ranges);
+extern const TkRange *TkRangeListNext(const TkRangeList *ranges, const TkRange *item);
+extern bool TkRangeListIsEmpty(const TkRangeList *ranges);
+extern bool TkRangeListContains(const TkRangeList *ranges, int value);
+extern bool TkRangeListContainsRange(const TkRangeList *ranges, int low, int high);
 #endif /* __STDC_VERSION__ >= 199901L */
 
 /* vi:set ts=8 sw=4: */

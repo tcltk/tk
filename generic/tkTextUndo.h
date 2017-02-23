@@ -33,12 +33,6 @@
 #include "tkBool.h"
 #include <stdint.h>
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
 
 /*
  * Our (private) stack type.
@@ -244,11 +238,9 @@ int TkTextUndoDoUndo(TkTextUndoStack stack);
 int TkTextUndoDoRedo(TkTextUndoStack stack);
 
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextUndoPriv.h"
-# undef _TK_NEED_IMPLEMENTATION
 #endif
-
 #endif /* _TKTEXTUNDO */
 /* vi:set ts=8 sw=4: */

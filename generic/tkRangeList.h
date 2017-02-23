@@ -23,12 +23,6 @@
 # define __warn_unused__
 #endif
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
 
 typedef struct TkRange {
     int low;
@@ -194,16 +188,14 @@ TkRangeList *TkRangeListInsert(TkRangeList *ranges, int low, int high) __warn_un
  */
 TkRangeList *TkRangeListDelete(TkRangeList *ranges, int low, int high);
 
-#if !NDEBUG
+#ifndef NDEBUG
 void TkRangeListPrint(const TkRangeList *ranges);
 #endif
 
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkRangeListPriv.h"
-# undef _TK_NEED_IMPLEMENTATION
 #endif
-
 #endif /* _TKRANGELIST */
 /* vi:set ts=8 sw=4: */
