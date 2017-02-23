@@ -48,7 +48,7 @@
 #include "tkQTree.h"
 #include "tkAlloc.h"
 
-#if !(__STDC_VERSION__ >= 199901L)
+#ifndef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkQTreePriv.h"
 #endif
@@ -1130,17 +1130,16 @@ TkQTreeSearchRectsContaining(
 #endif /* QTREE_SEARCH_RECTS_CONTAINING */
 
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
-#define inline extern
-inline bool TkQTreeRectIsEmpty(const TkQTreeRect *rect);
-inline bool TkQTreeRectIsEqual(const TkQTreeRect *rect1, const TkQTreeRect *rect2);
-inline bool TkQTreeRectContainsPoint(const TkQTreeRect *rect, TkQTreeCoord x, TkQTreeCoord y);
-inline bool TkQTreeRectContainsRect(const TkQTreeRect *rect1, const TkQTreeRect *rect2);
-inline bool TkQTreeRectIntersects(const TkQTreeRect *rect1, const TkQTreeRect *rect2);
-inline TkQTreeRect *TkQTreeRectSet(TkQTreeRect *rect,
+extern bool TkQTreeRectIsEmpty(const TkQTreeRect *rect);
+extern bool TkQTreeRectIsEqual(const TkQTreeRect *rect1, const TkQTreeRect *rect2);
+extern bool TkQTreeRectContainsPoint(const TkQTreeRect *rect, TkQTreeCoord x, TkQTreeCoord y);
+extern bool TkQTreeRectContainsRect(const TkQTreeRect *rect1, const TkQTreeRect *rect2);
+extern bool TkQTreeRectIntersects(const TkQTreeRect *rect1, const TkQTreeRect *rect2);
+extern TkQTreeRect *TkQTreeRectSet(TkQTreeRect *rect,
     TkQTreeCoord xmin, TkQTreeCoord ymin, TkQTreeCoord xmax, TkQTreeCoord ymax);
-inline TkQTreeRect *TkQTreeRectTranslate(TkQTreeRect *rect, TkQTreeCoord dx, TkQTreeCoord dy);
+extern TkQTreeRect *TkQTreeRectTranslate(TkQTreeRect *rect, TkQTreeCoord dx, TkQTreeCoord dy);
 #endif /* __STDC_VERSION__ >= 199901L */
 
 /* vi:set ts=8 sw=4: */

@@ -26,12 +26,6 @@ MODULE_SCOPE bool TkBitNone_(const TkBitWord *buf, unsigned words);
 
 #include <assert.h>
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
 
 #define TK_BIT_WORD_INDEX(n)	((n) >> ((TK_BIT_NBITS + 128) >> 5))
 #define TK_BIT_INDEX(n)		((n) & (TK_BIT_NBITS - 1))
@@ -205,6 +199,7 @@ TkBitPut(
 	TkBitUnset(bf, n);
     }
 }
+
 
 #undef _TK_NEED_IMPLEMENTATION
 #endif /* _TK_NEED_IMPLEMENTATION */

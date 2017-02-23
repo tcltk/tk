@@ -19,12 +19,6 @@
 #include "tkBool.h"
 #include <stdint.h>
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
 
 #ifdef TCL_WIDE_INT_IS_LONG
 typedef uint64_t TkBitWord;
@@ -140,7 +134,7 @@ void TkBitClear(TkBitField *bf);
 /* Return nearest multiple of TK_BIT_NBITS which is greater or equal to given argument. */
 inline unsigned TkBitAdjustSize(unsigned size);
 
-#if !NDEBUG
+#ifndef NDEBUG
 void TkBitPrint(const TkBitField *bf);
 #endif
 
@@ -173,10 +167,9 @@ bool TkBitInnerJoinDifferenceIsEqual(const TkBitField *bf1, const TkBitField *bf
 
 #endif /* TK_UNUSED_BITFIELD_FUNCTIONS */
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkBitFieldPriv.h"
 #endif
-
 #endif /* _TKBITFIELD */
 /* vi:set ts=8 sw=4: */

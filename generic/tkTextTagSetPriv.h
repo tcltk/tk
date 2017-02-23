@@ -66,12 +66,6 @@ MODULE_SCOPE bool TkTextTagSetIntersectionIsEqual_(const TkTextTagSet *ts1, cons
 
 #include <assert.h>
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
 
 #if !TK_TEXT_DONT_USE_BITFIELDS /* shared implementation ****************************/
 

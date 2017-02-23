@@ -20,10 +20,9 @@
 #define _TK_ALLOC
 
 #include "tcl.h"
+#include <stdlib.h>
 
 #if TK_VALGRIND
-
-# include <stdlib.h>
 
 /* enables compiler check that these functions will not be used */
 # undef ckalloc

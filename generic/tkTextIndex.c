@@ -24,7 +24,7 @@
 # define MIN(a,b) (((int) a) < ((int) b) ? a : b)
 #endif
 
-#if NDEBUG
+#ifdef NDEBUG
 # define DEBUG(expr)
 #else
 # define DEBUG(expr) expr
@@ -146,7 +146,7 @@ TkTextGetIndexFromObj(
  *----------------------------------------------------------------------
  */
 
-#if !NDEBUG
+#ifndef NDEBUG
 static bool
 CheckLine(
     const TkTextIndex *indexPtr,
@@ -161,12 +161,12 @@ CheckLine(
 	}
 	if (indexPtr->priv.lineNo != -1
 		&& indexPtr->priv.lineNo !=
-		    TkBTreeLinesTo(indexPtr->tree, NULL, indexPtr->priv.linePtr, NULL)) {
+		(int) TkBTreeLinesTo(indexPtr->tree, NULL, indexPtr->priv.linePtr, NULL)) {
 	    return false;
 	}
 	if (indexPtr->priv.lineNoRel != -1
 		&& indexPtr->priv.lineNoRel !=
-		    TkBTreeLinesTo(indexPtr->tree, indexPtr->textPtr, indexPtr->priv.linePtr, NULL)) {
+		(int) TkBTreeLinesTo(indexPtr->tree, indexPtr->textPtr, indexPtr->priv.linePtr, NULL)) {
 	    return false;
 	}
     }
@@ -176,17 +176,17 @@ CheckLine(
 	const TkTextLine *endLine = TkBTreeGetLastLine(indexPtr->textPtr);
 	int lineNo = TkBTreeLinesTo(indexPtr->tree, NULL, linePtr, NULL);
 
-	if (lineNo < TkBTreeLinesTo(indexPtr->tree, NULL, startLine, NULL)) {
+	if (lineNo < (int) TkBTreeLinesTo(indexPtr->tree, NULL, startLine, NULL)) {
 	    return false;
 	}
-	if (lineNo > TkBTreeLinesTo(indexPtr->tree, NULL, endLine, NULL)) {
+	if (lineNo > (int) TkBTreeLinesTo(indexPtr->tree, NULL, endLine, NULL)) {
 	    return false;
 	}
     }
 
     return true;
 }
-#endif
+#endif /* NDEBUG */
 
 static int
 FindStartByteIndex(
@@ -279,7 +279,7 @@ TkTextIndexSetLine(
  *----------------------------------------------------------------------
  */
 
-#if !NDEBUG
+#ifndef NDEBUG
 static bool
 CheckByteIndex(
     const TkTextIndex *indexPtr,
@@ -310,7 +310,7 @@ CheckByteIndex(
 
     return byteIndex < linePtr->size;
 }
-#endif /* !NDEBUG */
+#endif /* NDEBUG */
 
 void
 TkTextIndexSetPosition(
@@ -334,7 +334,7 @@ TkTextIndexSetPosition(
     indexPtr->priv.segPtr = segPtr;
     indexPtr->priv.isCharSegment = segPtr->typePtr == &tkTextCharType;
 
-#if !NDEBUG
+#ifndef NDEBUG
     {
 	int pos = SegToIndex(indexPtr->priv.linePtr, segPtr);
 
@@ -344,7 +344,7 @@ TkTextIndexSetPosition(
 	    assert(pos == byteIndex);
 	}
     }
-#endif /* !NDEBUG */
+#endif /* NDEBUG */
 }
 
 /*
@@ -912,7 +912,7 @@ TkTextIndexGetLineNumber(
 	TkTextIndexSetEpoch(iPtr, epoch);
 	*lineNo = TkBTreeLinesTo(iPtr->tree, textPtr, iPtr->priv.linePtr, NULL);
     } else {
-	assert(*lineNo == TkBTreeLinesTo(indexPtr->tree, textPtr, indexPtr->priv.linePtr, NULL));
+	assert(*lineNo == (int) TkBTreeLinesTo(indexPtr->tree, textPtr, indexPtr->priv.linePtr, NULL));
     }
 
     return *lineNo;
@@ -1639,7 +1639,7 @@ TkTextIndexAddToByteIndex(
  *
  *---------------------------------------------------------------------------
  */
-#if !NDEBUG
+#ifndef NDEBUG
 
 void
 TkpTextIndexDump(
@@ -1651,7 +1651,7 @@ TkpTextIndexDump(
     printf("%s\n", buf);
 }
 
-#endif /* !NDEBUG */
+#endif /* NDEBUG */
 
 /*
  *---------------------------------------------------------------------------
@@ -2966,7 +2966,7 @@ TkTextIndexForwBytes(
     if ((byteIndex = dstPtr->priv.byteIndex + byteCount) > linePtr->size) {
 	DEBUG(TkTextIndex index = *srcPtr);
 	bool rc = TkBTreeMoveForward(dstPtr, byteCount);
-	assert(!rc || TkTextIndexCountBytes(&index, dstPtr) == byteCount);
+	assert(!rc || (int) TkTextIndexCountBytes(&index, dstPtr) == byteCount);
 	return rc ? 0 : 1;
     }
 
@@ -3474,7 +3474,7 @@ TkTextIndexBackBytes(
     if (byteCount > byteIndex + 1) {
 	DEBUG(TkTextIndex index = *srcPtr);
 	bool rc = TkBTreeMoveBackward(dstPtr, byteCount);
-	assert(!rc || TkTextIndexCountBytes(dstPtr, &index) == byteCount);
+	assert(!rc || (int) TkTextIndexCountBytes(dstPtr, &index) == byteCount);
 	return rc ? 0 : 1;
     }
 

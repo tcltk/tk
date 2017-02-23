@@ -948,7 +948,7 @@ tkBind.o: $(GENERIC_DIR)/tkBind.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkBind.c
 
 tkBitField.o: $(GENERIC_DIR)/tkBitField.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkBitField.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkBitField.c
 
 tkBitmap.o: $(GENERIC_DIR)/tkBitmap.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkBitmap.c
@@ -1131,49 +1131,49 @@ tkOldTest.o: $(GENERIC_DIR)/tkOldTest.c
 	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkOldTest.c
 
 tkQTree.o: $(GENERIC_DIR)/tkQTree.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkQTree.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkQTree.c
 
 tkRangeList.o: $(GENERIC_DIR)/tkRangeList.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkRangeList.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkRangeList.c
 
 tkIntSet.o: $(GENERIC_DIR)/tkIntSet.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIntSet.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIntSet.c
 
 tkTest.o: $(GENERIC_DIR)/tkTest.c
 	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkTest.c
 
 tkText.o: $(GENERIC_DIR)/tkText.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkText.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkText.c
 
 tkTextBTree.o: $(GENERIC_DIR)/tkTextBTree.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextBTree.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextBTree.c
 
 tkTextDisp.o: $(GENERIC_DIR)/tkTextDisp.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextDisp.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextDisp.c
 
 tkTextImage.o: $(GENERIC_DIR)/tkTextImage.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextImage.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextImage.c
 
 tkTextIndex.o: $(GENERIC_DIR)/tkTextIndex.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextIndex.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextIndex.c
 
 tkTextLineBreak.o: $(GENERIC_DIR)/tkTextLineBreak.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextLineBreak.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextLineBreak.c
 
 tkTextMark.o: $(GENERIC_DIR)/tkTextMark.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextMark.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextMark.c
 
 tkTextTag.o: $(GENERIC_DIR)/tkTextTag.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextTag.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextTag.c
 
 tkTextTagSet.o: $(GENERIC_DIR)/tkTextTagSet.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextTagSet.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextTagSet.c
 
 tkTextUndo.o: $(GENERIC_DIR)/tkTextUndo.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextUndo.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextUndo.c
 
 tkTextWind.o: $(GENERIC_DIR)/tkTextWind.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextWind.c
+	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTextWind.c
 
 tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubInit.c

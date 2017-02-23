@@ -33,12 +33,6 @@
 # include "tkMacOSXInt.h"
 #endif
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
 #ifdef BUILD_tk
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
@@ -759,7 +753,7 @@ typedef struct TkTextTag {
     				 * dominates the ranges of text occupied by the tag. At this node
 				 * there is no information about the tag. One or more children of
 				 * the node do contain information about the tag. */
-    int32_t priority;		/* Priority of this tag within widget. 0 means lowest priority.
+    uint32_t priority;		/* Priority of this tag within widget. 0 means lowest priority.
     				 * Exactly one tag has each integer value between 0 and numTags-1. */
     uint32_t index;		/* Unique index for fast tag lookup. It is guaranteed that the index
     				 * number is less or equal than 'TkBitSize(sharedTextPtr->usedTags)'.*/
@@ -788,7 +782,7 @@ typedef struct TkTextTag {
     bool recentTagAddRemoveTokenIsNull;
     				/* 'recentTagAddRemoveToken' is null, this means the pointer still
 				 * is valid, but should not be saved onto undo stack. */
-    int32_t savedPriority; 	/* Contains the priority before recentChangePriorityToken will be set. */
+    uint32_t savedPriority; 	/* Contains the priority before recentChangePriorityToken will be set. */
     int32_t undoTagListIndex;	/* Index to entry in 'undoTagList', is -1 if not in 'undoTagList'. */
 
     /*
@@ -899,7 +893,7 @@ typedef struct TkTextTag {
     				 * information is displayed on the screen (so need to recalculate
 				 * line dimensions if tag changes). */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
-    } TkTextTag;
+} TkTextTag;
 
 /*
  * Some definitions for tag search, used by TkBTreeStartSearch, TkBTreeStartSearchBack:
@@ -1716,7 +1710,7 @@ MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkSharedText *sharedTextPtr,
 inline unsigned		TkBTreeEpoch(TkTextBTree tree);
 inline unsigned		TkBTreeIncrEpoch(TkTextBTree tree);
 inline struct Node	* TkBTreeGetRoot(TkTextBTree tree);
-MODULE_SCOPE TkTextLine * TkBTreeFindLine(TkTextBTree tree, const TkText *textPtr, int line);
+MODULE_SCOPE TkTextLine * TkBTreeFindLine(TkTextBTree tree, const TkText *textPtr, unsigned line);
 MODULE_SCOPE TkTextLine * TkBTreeFindPixelLine(TkTextBTree tree,
 			    const TkText *textPtr, int pixels, int32_t *pixelOffset);
 MODULE_SCOPE TkTextLine * TkBTreeGetLogicalLine(const TkSharedText *sharedTextPtr,
@@ -1726,9 +1720,9 @@ MODULE_SCOPE TkTextLine * TkBTreeNextLogicalLine(const TkSharedText *sharedTextP
 inline TkTextLine *	TkBTreePrevLogicalLine(const TkSharedText *sharedTextPtr,
 			    const TkText *textPtr, TkTextLine *linePtr);
 MODULE_SCOPE TkTextLine * TkBTreeNextDisplayLine(TkText *textPtr, TkTextLine *linePtr,
-			    int *displayLineNo, unsigned offset);
+			    unsigned *displayLineNo, unsigned offset);
 MODULE_SCOPE TkTextLine * TkBTreePrevDisplayLine(TkText *textPtr, TkTextLine *linePtr,
-			    int *displayLineNo, unsigned offset);
+			    unsigned *displayLineNo, unsigned offset);
 MODULE_SCOPE TkTextSegment * TkBTreeFindStartOfElidedRange(const TkSharedText *sharedTextPtr,
 			    const TkText *textPtr, const TkTextSegment *segPtr);
 MODULE_SCOPE TkTextSegment * TkBTreeFindEndOfElidedRange(const TkSharedText *sharedTextPtr,
@@ -1913,8 +1907,6 @@ MODULE_SCOPE void	TkTextRunAfterSyncCmd(TkText *textPtr);
 MODULE_SCOPE void	TkTextInvalidateLineMetrics(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    TkTextLine *linePtr, unsigned lineCount, TkTextInvalidateAction action);
 MODULE_SCOPE void	TkTextUpdateLineMetrics(TkText *textPtr, unsigned lineNum, unsigned endLine);
-MODULE_SCOPE int	TkTextUpdateOneLine(TkText *textPtr, TkTextLine *linePtr, TkTextIndex *indexPtr,
-			    unsigned maxDispLines);
 MODULE_SCOPE int	TkTextMarkCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE TkTextSegment * TkTextFindMark(const TkText *textPtr, const char *name);
@@ -2103,11 +2095,10 @@ MODULE_SCOPE void	TkTextInsertDisplayProc(struct TkText *textPtr, struct TkTextD
 
 #undef STRUCT
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextPriv.h"
 #endif
-
 #endif /* _TKTEXT */
 /*
  * Local Variables:

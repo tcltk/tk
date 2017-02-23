@@ -14,7 +14,7 @@
 #include "tkAlloc.h"
 #include <assert.h>
 
-#if !(__STDC_VERSION__ >= 199901L)
+#ifndef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextUndoPriv.h"
 #endif
@@ -149,7 +149,9 @@ ResetCurrent(
 
     if (force || !current || current->capacity > InitialCapacity) {
 	static unsigned Size = ATOM_SIZE(InitialCapacity);
-	current = stack->current = memset(realloc(current, Size), 0, Size);
+	current = stack->current = realloc(current, Size);
+	/* NOTE: MSVS 2010 throws internal compiler error when using memset(realloc()). */
+	memset(current, 0, Size);
 	current->capacity = InitialCapacity;
     }
 
@@ -302,7 +304,7 @@ InsertCurrentAtom(
 	/*
 	 * We'll push a redo atom while performing an undo.
 	 */
-	assert(stack->maxRedoDepth <= 0 || stack->redoDepth < stack->maxRedoDepth);
+	assert(stack->maxRedoDepth <= 0 || (int) stack->redoDepth < stack->maxRedoDepth);
 	atom = stack->last ? stack->last->next : stack->root;
 	SwapCurrent(stack, atom);
 	stack->redoDepth += 1;
@@ -542,7 +544,7 @@ TkTextUndoSetMaxStackDepth(
 
 	    if (0 <= maxRedoDepth && maxRedoDepth < stack->maxRedoDepth) {
 		deleteRedos = MIN(stack->redoDepth,
-			MAX(deleteRedos, stack->maxRedoDepth - maxRedoDepth));
+			MAX(deleteRedos, (unsigned) stack->maxRedoDepth - maxRedoDepth));
 	    }
 
 	    stack->redoDepth -= deleteRedos;
@@ -948,7 +950,7 @@ TkTextUndoStackIsFull(
 	return true;
     }
     if (stack->doingUndo) {
-	return stack->maxRedoDepth >= 0 && stack->redoDepth >= stack->maxRedoDepth;
+	return stack->maxRedoDepth >= 0 && (int) stack->redoDepth >= stack->maxRedoDepth;
     }
     return stack->maxUndoDepth > 0 && stack->undoDepth >= stack->maxUndoDepth;
 }
@@ -1040,34 +1042,33 @@ TkTextUndoNextRedoAtom(
 }
 
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
-#define inline extern
-inline void TkTextUndoSetContext(TkTextUndoStack stack, TkTextUndoContext context);
-inline TkTextUndoContext TkTextUndoGetContext(const TkTextUndoStack stack);
-inline unsigned TkTextUndoGetMaxUndoDepth(const TkTextUndoStack stack);
-inline int TkTextUndoGetMaxRedoDepth(const TkTextUndoStack stack);
-inline unsigned TkTextUndoGetMaxSize(const TkTextUndoStack stack);
-inline unsigned TkTextUndoGetCurrentDepth(const TkTextUndoStack stack);
-inline unsigned TkTextUndoGetCurrentSize(const TkTextUndoStack stack);
-inline unsigned TkTextUndoGetCurrentUndoStackDepth(const TkTextUndoStack stack);
-inline unsigned TkTextUndoGetCurrentRedoStackDepth(const TkTextUndoStack stack);
-inline unsigned TkTextUndoCountUndoItems(const TkTextUndoStack stack);
-inline unsigned TkTextUndoCountRedoItems(const TkTextUndoStack stack);
-inline unsigned TkTextUndoGetCurrentUndoSize(const TkTextUndoStack stack);
-inline unsigned TkTextUndoGetCurrentRedoSize(const TkTextUndoStack stack);
-inline unsigned TkTextUndoCountCurrentUndoItems(const TkTextUndoStack stack);
-inline unsigned TkTextUndoCountCurrentRedoItems(const TkTextUndoStack stack);
-inline bool TkTextUndoContentIsIrreversible(const TkTextUndoStack stack);
-inline bool TkTextUndoContentIsModified(const TkTextUndoStack stack);
-inline bool TkTextUndoIsPerformingUndo(const TkTextUndoStack stack);
-inline bool TkTextUndoIsPerformingRedo(const TkTextUndoStack stack);
-inline bool TkTextUndoIsPerformingUndoRedo(const TkTextUndoStack stack);
-inline const TkTextUndoAtom *TkTextUndoCurrentUndoAtom(const TkTextUndoStack stack);
-inline const TkTextUndoAtom *TkTextUndoCurrentRedoAtom(const TkTextUndoStack stack);
-inline const TkTextUndoSubAtom *TkTextUndoGetLastUndoSubAtom(const TkTextUndoStack stack);
-inline bool TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
-inline bool TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
+extern void TkTextUndoSetContext(TkTextUndoStack stack, TkTextUndoContext context);
+extern TkTextUndoContext TkTextUndoGetContext(const TkTextUndoStack stack);
+extern unsigned TkTextUndoGetMaxUndoDepth(const TkTextUndoStack stack);
+extern int TkTextUndoGetMaxRedoDepth(const TkTextUndoStack stack);
+extern unsigned TkTextUndoGetMaxSize(const TkTextUndoStack stack);
+extern unsigned TkTextUndoGetCurrentDepth(const TkTextUndoStack stack);
+extern unsigned TkTextUndoGetCurrentSize(const TkTextUndoStack stack);
+extern unsigned TkTextUndoGetCurrentUndoStackDepth(const TkTextUndoStack stack);
+extern unsigned TkTextUndoGetCurrentRedoStackDepth(const TkTextUndoStack stack);
+extern unsigned TkTextUndoCountUndoItems(const TkTextUndoStack stack);
+extern unsigned TkTextUndoCountRedoItems(const TkTextUndoStack stack);
+extern unsigned TkTextUndoGetCurrentUndoSize(const TkTextUndoStack stack);
+extern unsigned TkTextUndoGetCurrentRedoSize(const TkTextUndoStack stack);
+extern unsigned TkTextUndoCountCurrentUndoItems(const TkTextUndoStack stack);
+extern unsigned TkTextUndoCountCurrentRedoItems(const TkTextUndoStack stack);
+extern bool TkTextUndoContentIsIrreversible(const TkTextUndoStack stack);
+extern bool TkTextUndoContentIsModified(const TkTextUndoStack stack);
+extern bool TkTextUndoIsPerformingUndo(const TkTextUndoStack stack);
+extern bool TkTextUndoIsPerformingRedo(const TkTextUndoStack stack);
+extern bool TkTextUndoIsPerformingUndoRedo(const TkTextUndoStack stack);
+extern const TkTextUndoAtom *TkTextUndoCurrentUndoAtom(const TkTextUndoStack stack);
+extern const TkTextUndoAtom *TkTextUndoCurrentRedoAtom(const TkTextUndoStack stack);
+extern const TkTextUndoSubAtom *TkTextUndoGetLastUndoSubAtom(const TkTextUndoStack stack);
+extern bool TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
+extern bool TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
 #endif /* __STDC_VERSION__ >= 199901L */
 
 /* vi:set ts=8 sw=4: */

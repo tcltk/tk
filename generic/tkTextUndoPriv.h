@@ -105,7 +105,7 @@ TkTextUndoUndoStackIsFull(const TkTextUndoStack stack)
 
 inline bool
 TkTextUndoRedoStackIsFull(const TkTextUndoStack stack)
-{ return !stack || (stack->maxRedoDepth >= 0 && stack->redoDepth >= stack->maxRedoDepth); }
+{ return !stack || (stack->maxRedoDepth >= 0 && (int) stack->redoDepth >= stack->maxRedoDepth); }
 
 inline unsigned
 TkTextUndoCountCurrentUndoItems(const TkTextUndoStack stack)

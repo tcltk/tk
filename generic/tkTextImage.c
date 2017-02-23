@@ -17,14 +17,7 @@
 #include "tkTextUndo.h"
 #include <assert.h>
 
-#ifndef MIN
-# define MIN(a,b) ((a) < (b) ? a : b)
-#endif
-#ifndef MAX
-# define MAX(a,b) ((a) < (b) ? b : a)
-#endif
-
-#if NDEBUG
+#ifdef NDEBUG
 # define DEBUG(expr)
 #else
 # define DEBUG(expr) expr
@@ -357,7 +350,7 @@ Displayed(
     const TkTextEmbImage *img,
     const TkText *peer)
 {
-    return peer->pixelReference < img->numClients
+    return peer->pixelReference < (int) img->numClients
 	    && !TkQTreeRectIsEmpty(&img->bbox[peer->pixelReference]);
 }
 
@@ -635,7 +628,7 @@ TkTextImageAddClient(
 	TkTextSegment *eiPtr = Tcl_GetHashValue(hPtr);
 	TkTextEmbImage *img = &eiPtr->body.ei;
 
-	if (img->numClients > textPtr->pixelReference) {
+	if ((int) img->numClients > textPtr->pixelReference) {
 	    memset(&img->bbox[textPtr->pixelReference], 0, sizeof(img->bbox[0]));
 	}
     }
@@ -1226,7 +1219,7 @@ EmbImageDisplayProc(
 	textPtr->configureBboxTree = false;
     }
 
-    if (img->numClients <= textPtr->pixelReference) {
+    if ((int) img->numClients <= textPtr->pixelReference) {
 	unsigned numClients = textPtr->pixelReference + 1;
 
 	assert((img->numClients == 0) == !img->bbox);

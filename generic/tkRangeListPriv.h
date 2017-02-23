@@ -19,12 +19,6 @@
 #include <stddef.h>
 #include <assert.h>
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
 
 inline
 int
@@ -164,6 +158,7 @@ TkRangeListNext(
     assert(ranges->items <= item && item < ranges->items + ranges->size);
     return ++item == ranges->items + ranges->size ? NULL : item;
 }
+
 
 #undef _TK_NEED_IMPLEMENTATION
 #endif /* _TK_NEED_IMPLEMENTATION */

@@ -34,12 +34,6 @@ MODULE_SCOPE bool TkIntSetIsEqual__(
 
 #include <assert.h>
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
 
 extern TkIntSetType *
 TkIntSetLowerBound(
@@ -276,6 +270,7 @@ TkIntSetAddOrErase(
     assert(set);
     return add ? TkIntSetAdd(set, n) : TkIntSetErase(set, n);
 }
+
 
 #undef _TK_NEED_IMPLEMENTATION
 #endif /* _TK_NEED_IMPLEMENTATION */

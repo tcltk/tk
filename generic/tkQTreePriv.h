@@ -18,12 +18,6 @@
 
 #include <assert.h>
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
 
 inline
 bool
@@ -159,6 +153,7 @@ TkQTreeRectTranslate(
 
     return rect;
 }
+
 
 #undef _TK_NEED_IMPLEMENTATION
 #endif /* _TK_NEED_IMPLEMENTATION */

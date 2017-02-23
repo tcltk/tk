@@ -15,8 +15,19 @@
 #include "tkInt.h"
 #include "tkText.h"
 #include "tk3d.h"
-#include <inttypes.h>
 #include <assert.h>
+
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#elif !defined(PRIx32)
+# define PRIx64 "llx"
+# define PRIx32 "lx"
+#endif
+
+#ifdef MSC_VER
+/* earlier versions of MSCV don't knows snprintf, but _snprintf is compatible. */
+# define snprintf _snprintf
+#endif
 
 #ifndef MAX
 # define MAX(a,b) ((a) < (b) ? b : a)
@@ -25,7 +36,7 @@
 # define MIN(a,b) ((a) < (b) ? a : b)
 #endif
 
-#if NDEBUG
+#ifdef NDEBUG
 # define DEBUG(expr)
 #else
 # define DEBUG(expr) expr
@@ -226,7 +237,7 @@ typedef union {
 #define GET_HPTR(seg)		((Tcl_HashEntry *) seg->body.mark.ptr)
 #define PTR_TO_INT(ptr)		((uintptr_t) ptr)
 
-#if !NDEBUG
+#ifndef NDEBUG
 
 # undef GET_HPTR
 # undef GET_NAME
@@ -237,7 +248,7 @@ static Tcl_HashEntry *GET_HPTR(const TkTextSegment *markPtr)
 static char *GET_NAME(const TkTextSegment *markPtr)
 { assert(IS_PRESERVED(markPtr)); return (char *) GET_POINTER(markPtr->body.mark.ptr); }
 
-#endif /* !NDEBUG */
+#endif /* NDEBUG */
 
 DEBUG_ALLOC(extern unsigned tkTextCountNewSegment);
 DEBUG_ALLOC(extern unsigned tkTextCountDestroySegment);
@@ -1631,9 +1642,9 @@ SetMark(
     if (!markPtr) {
 	if (name[0] == '#' && name[1] == '#' && name[2] == 'I') {
 #ifdef TCL_WIDE_INT_IS_LONG
-	    static const int length = 32 + 2*sizeof(uint64_t);
+	    static const size_t length = 32 + 2*sizeof(uint64_t);
 #else /* ifndef TCL_WIDE_INT_IS_LONG */
-	    static const int length = 32 + 2*sizeof(uint32_t);
+	    static const size_t length = 32 + 2*sizeof(uint32_t);
 #endif /* TCL_WIDE_INT_IS_LONG */
 
 	    void *sPtr, *tPtr;

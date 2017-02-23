@@ -16,6 +16,7 @@
 
 #include "tkBitField.h"
 #include "tkIntSet.h"
+#include "tkBool.h"
 
 #include <stdint.h>
 
@@ -23,12 +24,6 @@
 # define __warn_unused__ __attribute__((warn_unused_result))
 #else
 # define __warn_unused__
-#endif
-
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
 #endif
 
 
@@ -159,7 +154,7 @@ inline unsigned TkTextTagSetRangeSize(const TkTextTagSet *ts);
 inline const unsigned char *TkTextTagSetData(const TkTextTagSet *ts);
 inline unsigned TkTextTagSetByteSize(const TkTextTagSet *ts);
 
-# if !NDEBUG
+# ifndef NDEBUG
 void TkTextTagSetPrint(const TkTextTagSet *set);
 # endif
 
@@ -276,11 +271,9 @@ inline unsigned TkTextTagSetByteSize(const TkIntSet *ts);
 
 #undef __warn_unused__
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextTagSetPriv.h"
-# undef _TK_NEED_IMPLEMENTATION
 #endif
-
 #endif /* _TKTEXTTAGSET */
 /* vi:set ts=8 sw=4: */

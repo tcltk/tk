@@ -25,7 +25,7 @@
 #include <ctype.h>
 #include <assert.h>
 
-#if !(__STDC_VERSION__ >= 199901L)
+#ifndef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextPriv.h"
 #endif
@@ -37,7 +37,7 @@
 # define MIN(a,b) ((a) < (b) ? a : b)
 #endif
 
-#if NDEBUG
+#ifdef NDEBUG
 # define DEBUG(expr)
 #else
 # define DEBUG(expr) expr
@@ -760,7 +760,7 @@ SendVirtualEvent(
  *--------------------------------------------------------------
  */
 
-static unsigned
+static int
 GetByteLength(
     Tcl_Obj *objPtr)
 {
@@ -2050,7 +2050,7 @@ TextWidgetObjCmd(
 
 	for (; i < objc; i += 2) {
 	    TkTextIndex index1, index2;
-            Tcl_Obj *get;
+	    Tcl_Obj *get;
 
 	    if (!TkTextGetIndexFromObj(interp, textPtr, objv[i], &index1)) {
 		if (objPtr) {
@@ -4262,7 +4262,8 @@ TkTextParseHyphenRules(
 {
     int rules = 0;
     Tcl_Obj **argv;
-    int argc, i, k;
+    int argc, i;
+    unsigned k;
 
     assert(rulesPtr);
 
@@ -5389,7 +5390,7 @@ CountIndices(
 	return 0;
     }
     if (compare > 0) {
-	return -((int)TkTextIndexCount(textPtr, indexPtr2, indexPtr1, type));
+	return -((int) TkTextIndexCount(textPtr, indexPtr2, indexPtr1, type));
     }
     return TkTextIndexCount(textPtr, indexPtr1, indexPtr2, type);
 }
@@ -5971,7 +5972,7 @@ TextBlinkProc(
     ClientData clientData)	/* Pointer to record describing text. */
 {
     TkText *textPtr = clientData;
-    int oldFlags = textPtr->flags;
+    unsigned oldFlags = textPtr->flags;
 
     if (textPtr->state == TK_TEXT_STATE_DISABLED
 	    || !(textPtr->flags & HAVE_FOCUS)
@@ -6129,7 +6130,7 @@ TextInsertCmd(
 	    }
 
 	    if (tagPtr) {
-		unsigned i;
+		int i;
 
 		if (Tcl_ListObjGetElements(interp, tagPtr, &numTags, &tagNamePtrs) != TCL_OK) {
 		    rc = TCL_ERROR;
@@ -6138,7 +6139,7 @@ TextInsertCmd(
 
 		    tagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
 
-		    for (i = 0; i < (unsigned)numTags; ++i) {
+		    for (i = 0; i < numTags; ++i) {
 			tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(tagNamePtrs[i]), NULL);
 #if !TK_TEXT_DONT_USE_BITFIELDS
 			if (tagPtr->index >= TkTextTagSetSize(tagInfoPtr)) {
@@ -6764,7 +6765,7 @@ TextSearchFoundMatch(
 
 	for ( ; leftToScan >= 0 && segPtr; segPtr = segPtr->nextPtr) {
 	    if (segPtr->typePtr == &tkTextCharType) {
-		int size = searchSpecPtr->exact ? segPtr->size : CountCharsInSeg(segPtr);
+		int size = searchSpecPtr->exact ? segPtr->size : (int) CountCharsInSeg(segPtr);
 
 		if (!searchSpecPtr->searchElide && TkTextSegmentIsElided(textPtr, segPtr)) {
 		    matchOffset += size;
@@ -7105,14 +7106,15 @@ GetDumpFlags(
 	DUMP_INSERT_MARK, DUMP_MARK, DUMP_NESTED, DUMP_NODE, DUMP_TEXT_CONFIGS,
 	DUMP_TAG, DUMP_TEXT, DUMP_WIN
     };
-    static const int dumpFlags[] = {
+    static const unsigned dumpFlags[] = {
 	0, TK_DUMP_TAG_BINDINGS, TK_DUMP_CHARS, 0, TK_DUMP_TAG_CONFIGS, TK_DUMP_DISCARD_SEL,
 	TK_DUMP_DISPLAY_CHARS, TK_DUMP_DISPLAY_TEXT, TK_DUMP_DONT_RESOLVE, TK_DUMP_ELIDE, TK_DUMP_IMG,
 	TK_DUMP_INSERT_MARK, TK_DUMP_MARK, TK_DUMP_NESTED, TK_DUMP_NODE, TK_DUMP_TEXT_CONFIGS,
 	TK_DUMP_TAG, TK_DUMP_TEXT, TK_DUMP_WIN
     };
 
-    int arg, i;
+    int arg;
+    unsigned i;
     unsigned flags = 0;
     const char *myOptStrings[sizeof(optStrings)/sizeof(optStrings[0])];
     int myOptIndices[sizeof(optStrings)/sizeof(optStrings[0])];
@@ -7873,7 +7875,7 @@ DumpSegment(
 	Tcl_DecrRefCount(tuple);
 	return true;
     } else {
-	int oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
+	unsigned oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
 	Tcl_DString buf;
 	int code;
 
@@ -7916,7 +7918,7 @@ ObjIsEqual(
     Tcl_Obj *obj2)
 {
     char const *b1, *b2;
-    unsigned i, length;
+    int i, length;
 
     assert(obj1);
     assert(obj2);
@@ -8515,18 +8517,19 @@ InspectRetainedUndoItems(
 {
     if (sharedTextPtr->undoTagListCount > 0 || sharedTextPtr->undoMarkListCount > 0) {
 	Tcl_Obj *resultPtr = Tcl_NewObj();
-	int i;
+	unsigned i;
+	int len;
 
-	for (i = 0; i < (int)sharedTextPtr->undoTagListCount; ++i) {
+	for (i = 0; i < sharedTextPtr->undoTagListCount; ++i) {
 	    TkTextInspectUndoTagItem(sharedTextPtr, sharedTextPtr->undoTagList[i], resultPtr);
 	}
 
-	for (i = 0; i < (int)sharedTextPtr->undoMarkListCount; ++i) {
+	for (i = 0; i < sharedTextPtr->undoMarkListCount; ++i) {
 	    TkTextInspectUndoMarkItem(sharedTextPtr, &sharedTextPtr->undoMarkList[i], resultPtr);
 	}
 
-	Tcl_ListObjLength(NULL, resultPtr, &i);
-	if (i == 0) {
+	Tcl_ListObjLength(NULL, resultPtr, &len);
+	if (len == 0) {
 	    Tcl_IncrRefCount(resultPtr);
 	    Tcl_DecrRefCount(resultPtr);
 	} else {
@@ -8983,6 +8986,7 @@ MakeEditInfo(
     Tcl_Obj *name[INFO_LAST];
     Tcl_Obj *value[INFO_LAST];
     int usedTags, i;
+    unsigned k;
 
     name[INFO_UNDOSTACKSIZE ] = Tcl_NewStringObj("undostacksize", -1);
     name[INFO_REDOSTACKSIZE ] = Tcl_NewStringObj("redostacksize", -1);
@@ -9094,8 +9098,8 @@ MakeEditInfo(
     value[INFO_LINESPERNODE  ] = Tcl_NewIntObj(TkBTreeLinesPerNode(sharedTextPtr->tree));
 
     Tcl_UnsetVar(interp, Tcl_GetString(var), 0);
-    for (i = 0; i < sizeof(name)/sizeof(name[0]); ++i) {
-	Tcl_ObjSetVar2(interp, var, name[i], value[i], 0);
+    for (k = 0; k < sizeof(name)/sizeof(name[0]); ++k) {
+	Tcl_ObjSetVar2(interp, var, name[k], value[k], 0);
     }
 
     return var;
@@ -9175,7 +9179,8 @@ TextGetText(
 
     if (segPtr == lastPtr) {
 	if (segPtr->typePtr == &tkTextCharType) {
-	    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset1, MIN((int)maxBytes, offset2 - offset1));
+	    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset1,
+		    MIN(maxBytes, (unsigned) (offset2 - offset1)));
 	}
     } else {
 	TkTextLine *linePtr = segPtr->sectionPtr->linePtr;
@@ -9183,7 +9188,7 @@ TextGetText(
 	TkTextIndexClear(&index, textPtr);
 
 	if (segPtr->typePtr == &tkTextCharType) {
-	    unsigned nbytes = MIN((int)maxBytes, segPtr->size - offset1);
+	    unsigned nbytes = MIN(maxBytes, (unsigned) segPtr->size - offset1);
 	    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset1, nbytes);
 	    if ((maxBytes -= nbytes) == 0) {
 		return resultPtr;
@@ -9191,7 +9196,7 @@ TextGetText(
 	} else if (segPtr->typePtr == &tkTextHyphenType) {
 	    if (includeHyphens) {
 		Tcl_AppendToObj(resultPtr, "\xc2\xad", 2); /* U+002D */
-		if ((maxBytes -= MIN(maxBytes, 2)) == 0) {
+		if ((maxBytes -= MIN(maxBytes, 2u)) == 0) {
 		    return resultPtr;
 		}
 	    }
@@ -9211,7 +9216,7 @@ TextGetText(
 	}
 	while (segPtr != lastPtr) {
 	    if (segPtr->typePtr == &tkTextCharType) {
-		unsigned nbytes = MIN((int)maxBytes, segPtr->size);
+		unsigned nbytes = MIN(maxBytes, (unsigned) segPtr->size);
 		Tcl_AppendToObj(resultPtr, segPtr->body.chars, nbytes);
 		if ((maxBytes -= nbytes) == 0) {
 		    if (lastIndexPtr) {
@@ -9223,7 +9228,7 @@ TextGetText(
 	    } else if (segPtr->typePtr == &tkTextHyphenType) {
 		if (includeHyphens) {
 		    Tcl_AppendToObj(resultPtr, "\xc2\xad", 2); /* U+002D */
-		    if ((maxBytes -= MIN(maxBytes, 2)) == 0) {
+		    if ((maxBytes -= MIN(maxBytes, 2u)) == 0) {
 			return resultPtr;
 		    }
 		}
@@ -9243,7 +9248,7 @@ TextGetText(
 	    }
 	}
 	if (offset2 > 0) {
-	    Tcl_AppendToObj(resultPtr, segPtr->body.chars, MIN((int)maxBytes, offset2));
+	    Tcl_AppendToObj(resultPtr, segPtr->body.chars, MIN(maxBytes, (unsigned) offset2));
 	}
     }
 
@@ -11347,7 +11352,7 @@ TkpTesttextCmd(
 
 #endif /* TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION > 5 */
 
-#if !NDEBUG
+#ifndef NDEBUG
 /*
  *----------------------------------------------------------------------
  *
@@ -11386,7 +11391,7 @@ TkpTextInspect(
     Tcl_IncrRefCount(objv[7] = Tcl_NewStringObj("-mark", -1));
     Tcl_IncrRefCount(objv[8] = Tcl_NewStringObj("-tag", -1));
     TextInspectCmd(textPtr, textPtr->interp, sizeof(objv)/sizeof(objv[0]), objv);
-    for (i = 0; i < sizeof(objv)/sizeof(objv[0]); ++i) {
+    for (i = 0; i < (int) (sizeof(objv)/sizeof(objv[0])); ++i) {
 	Tcl_DecrRefCount(objv[i]);
     }
     Tcl_ListObjGetElements(textPtr->interp, Tcl_GetObjResult(textPtr->interp), &argc, &argv);
@@ -11397,7 +11402,7 @@ TkpTextInspect(
     Tcl_DecrRefCount(resultPtr);
 }
 
-#endif /* !NDEBUG */
+#endif /* NDEBUG */
 
 /*
  *----------------------------------------------------------------------
@@ -11415,7 +11420,7 @@ TkpTextInspect(
  *
  *----------------------------------------------------------------------
  */
-#if !NDEBUG
+#ifndef NDEBUG
 
 void
 TkpTextDump(
@@ -11434,7 +11439,7 @@ TkpTextDump(
     Tcl_IncrRefCount(objv[2] = Tcl_NewStringObj("begin", -1));
     Tcl_IncrRefCount(objv[3] = Tcl_NewStringObj("end", -1));
     TextDumpCmd(textPtr, textPtr->interp, sizeof(objv)/sizeof(objv[0]), objv);
-    for (i = 0; i < sizeof(objv)/sizeof(objv[0]); ++i) {
+    for (i = 0; i < (int) (sizeof(objv)/sizeof(objv[0])); ++i) {
 	Tcl_DecrRefCount(objv[i]);
     }
 
@@ -11493,47 +11498,46 @@ TkpTextDump(
     Tcl_DecrRefCount(resultPtr);
 }
 
-#endif /* !NDEBUG */
+#endif /* NDEBUG */
 
 
-#if __STDC_VERSION__ >= 199901L
+#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
-#define inline extern
-inline TkSharedText *	TkBTreeGetShared(TkTextBTree tree);
-inline int		TkBTreeGetNumberOfDisplayLines(const TkTextPixelInfo *pixelInfo);
-inline TkTextPixelInfo *TkBTreeLinePixelInfo(const TkText *textPtr, TkTextLine *linePtr);
-inline unsigned		TkBTreeEpoch(TkTextBTree tree);
-inline unsigned		TkBTreeIncrEpoch(TkTextBTree tree);
-inline struct Node	*TkBTreeGetRoot(TkTextBTree tree);
-inline TkTextLine *	TkBTreePrevLogicalLine(const TkSharedText *sharedTextPtr,
+extern TkSharedText *	TkBTreeGetShared(TkTextBTree tree);
+extern int		TkBTreeGetNumberOfDisplayLines(const TkTextPixelInfo *pixelInfo);
+extern TkTextPixelInfo *TkBTreeLinePixelInfo(const TkText *textPtr, TkTextLine *linePtr);
+extern unsigned		TkBTreeEpoch(TkTextBTree tree);
+extern unsigned		TkBTreeIncrEpoch(TkTextBTree tree);
+extern struct Node	*TkBTreeGetRoot(TkTextBTree tree);
+extern TkTextLine *	TkBTreePrevLogicalLine(const TkSharedText *sharedTextPtr,
 			    const TkText *textPtr, TkTextLine *linePtr);
-inline TkTextTag *	TkBTreeGetTags(const TkTextIndex *indexPtr);
-inline TkTextLine *	TkBTreeGetStartLine(const TkText *textPtr);
-inline TkTextLine *	TkBTreeGetLastLine(const TkText *textPtr);
-inline TkTextLine *	TkBTreeNextLine(const TkText *textPtr, TkTextLine *linePtr);
-inline TkTextLine *	TkBTreePrevLine(const TkText *textPtr, TkTextLine *linePtr);
-inline unsigned		TkBTreeCountLines(const TkTextBTree tree, const TkTextLine *linePtr1,
+extern TkTextTag *	TkBTreeGetTags(const TkTextIndex *indexPtr);
+extern TkTextLine *	TkBTreeGetStartLine(const TkText *textPtr);
+extern TkTextLine *	TkBTreeGetLastLine(const TkText *textPtr);
+extern TkTextLine *	TkBTreeNextLine(const TkText *textPtr, TkTextLine *linePtr);
+extern TkTextLine *	TkBTreePrevLine(const TkText *textPtr, TkTextLine *linePtr);
+extern unsigned		TkBTreeCountLines(const TkTextBTree tree, const TkTextLine *linePtr1,
 			    const TkTextLine *linePtr2);
-inline bool		TkTextIsDeadPeer(const TkText *textPtr);
-inline bool		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
-inline bool		TkTextIsSpecialMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsPrivateMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsNormalMark(const TkTextSegment *segPtr);
-inline bool		TkTextIsStableMark(const TkTextSegment *segPtr);
-inline void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, unsigned epoch);
-inline void		TkTextIndexUpdateEpoch(TkTextIndex *indexPtr, unsigned epoch);
-inline void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
-inline void		TkTextIndexSetToLastChar2(TkTextIndex *indexPtr, TkTextLine *linePtr);
-inline void		TkTextIndexInvalidate(TkTextIndex *indexPtr);
-inline TkTextLine *	TkTextIndexGetLine(const TkTextIndex *indexPtr);
-inline TkTextSegment *	TkTextIndexGetSegment(const TkTextIndex *indexPtr);
-inline TkSharedText *	TkTextIndexGetShared(const TkTextIndex *indexPtr);
-inline bool		TkTextIndexSameLines(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
-inline void		TkTextIndexSave(TkTextIndex *indexPtr);
+extern bool		TkTextIsDeadPeer(const TkText *textPtr);
+extern bool		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
+extern bool		TkTextIsSpecialMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsPrivateMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsNormalMark(const TkTextSegment *segPtr);
+extern bool		TkTextIsStableMark(const TkTextSegment *segPtr);
+extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, unsigned epoch);
+extern void		TkTextIndexUpdateEpoch(TkTextIndex *indexPtr, unsigned epoch);
+extern void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
+extern void		TkTextIndexSetToLastChar2(TkTextIndex *indexPtr, TkTextLine *linePtr);
+extern void		TkTextIndexInvalidate(TkTextIndex *indexPtr);
+extern TkTextLine *	TkTextIndexGetLine(const TkTextIndex *indexPtr);
+extern TkTextSegment *	TkTextIndexGetSegment(const TkTextIndex *indexPtr);
+extern TkSharedText *	TkTextIndexGetShared(const TkTextIndex *indexPtr);
+extern bool		TkTextIndexSameLines(const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2);
+extern void		TkTextIndexSave(TkTextIndex *indexPtr);
 # if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7 && TCL_UTF_MAX <= 4
-inline int		TkUtfToUniChar(const char *src, int *chPtr);
+extern int		TkUtfToUniChar(const char *src, int *chPtr);
 # endif
 #endif /* __STDC_VERSION__ >= 199901L */
 

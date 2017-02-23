@@ -248,8 +248,8 @@ TkTextComputeBreakLocations(
 		 * (a suggestion from Wu Yongwei).
 		 */
 
-		if (lastBreakablePos >= i - 2
-			|| (i > 40 && lastBreakablePos >= i - 7 && text[i - 1] == '/')) {
+		if (lastBreakablePos >= (int) i - 2
+			|| (i > 40u && lastBreakablePos >= (int) i - 7 && text[i - 1] == '/')) {
 		    continue;
 		}
 
@@ -891,7 +891,7 @@ ComputeBreakLocations(
 	     * Tcl/Tk team, but the response was ignorance.
 	     */
 
-	    int k;
+	    unsigned k;
 	    const char *p = (const char *) text + i;
 
 	    pcls = AI;
