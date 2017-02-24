@@ -168,6 +168,8 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"center", -1, Tk_Offset(TkTextEmbWindow, align), 0, alignStrings, 0},
     {TK_OPTION_STRING, "-create", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BOOLEAN, "-owner", NULL, NULL,
+	"1", -1, Tk_Offset(TkTextEmbWindow, isOwner), 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
 	"0", -1, Tk_Offset(TkTextEmbWindow, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
@@ -623,6 +625,7 @@ MakeWindow(
     ewPtr->refCount = 1;
     ewPtr->body.ew.sharedTextPtr = textPtr->sharedTextPtr;
     ewPtr->body.ew.align = ALIGN_CENTER;
+    ewPtr->body.ew.isOwner = true;
     ewPtr->body.ew.optionTable = Tk_CreateOptionTable(textPtr->interp, optionSpecs);
     DEBUG_ALLOC(tkTextCountNewSegment++);
 
@@ -1028,7 +1031,9 @@ TkTextWinFreeClient(
 
     if (client->tkwin) {
 	Tk_DeleteEventHandler(client->tkwin, StructureNotifyMask, EmbWinStructureProc, client);
-	Tk_DestroyWindow(client->tkwin);
+	if (client->parent->body.ew.isOwner) {
+	    Tk_DestroyWindow(client->tkwin);
+	}
     }
     Tcl_CancelIdleCall(EmbWinDelayedUnmap, client);
 
@@ -1163,7 +1168,9 @@ DestroyOrUnmapWindow(
 	Tcl_CancelIdleCall(EmbWinDelayedUnmap, client);
 	if (client->tkwin && ewPtr->body.ew.create) {
 	    Tk_DeleteEventHandler(client->tkwin, StructureNotifyMask, EmbWinStructureProc, client);
-	    Tk_DestroyWindow(client->tkwin);
+	    if (ewPtr->body.ew.isOwner) {
+		Tk_DestroyWindow(client->tkwin);
+	    }
 	    client->tkwin = NULL;
 	    ewPtr->body.ew.tkwin = NULL;
 	} else {
