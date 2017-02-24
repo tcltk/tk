@@ -20,6 +20,7 @@
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
 #elif !defined(PRIx32)
+/* work-around for ancient MSVC versions */
 # define PRIx64 "llx"
 # define PRIx32 "lx"
 #endif

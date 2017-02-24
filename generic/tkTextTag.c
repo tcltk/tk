@@ -1772,7 +1772,7 @@ TkTextCreateTag(
 	TkBitSet(sharedTextPtr->selectionTags, index);
 	TkBitSet(sharedTextPtr->dontUndoTags, index);
     } else {
-	CLANG_ASSERT(hPtr);
+	assert(hPtr);
 	Tcl_SetHashValue(hPtr, tagPtr);
     }
     tagPtr->optionTable = Tk_CreateOptionTable(textPtr->interp, tagOptionSpecs);

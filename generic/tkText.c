@@ -1129,7 +1129,7 @@ CreateWidget(
      */
 
     textPtr->selTagPtr = TkTextCreateTag(textPtr, "sel", NULL);
-    textPtr->selTagPtr->reliefString = malloc(sizeof(DEF_TEXT_SELECT_RELIEF));
+    textPtr->selTagPtr->reliefString = malloc(strlen(DEF_TEXT_SELECT_RELIEF) + 1);
     strcpy(textPtr->selTagPtr->reliefString, DEF_TEXT_SELECT_RELIEF);
     Tk_GetRelief(interp, DEF_TEXT_SELECT_RELIEF, &textPtr->selTagPtr->relief);
     textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &startIndex);
@@ -1296,15 +1296,23 @@ AppendScript(
     const char *oldScript,
     const char *script)
 {
+    char buffer[1024];
     int lenOfNew = strlen(script);
     int lenOfOld = strlen(oldScript);
-    int totalLen = lenOfOld + lenOfNew + 1;
-    char *newScript = malloc(totalLen + 1);
+    size_t totalLen = lenOfOld + lenOfNew + 1;
+    char *newScript = buffer;
+    Tcl_Obj *newScriptObj;
+
+    if (totalLen + 2 > sizeof(buffer)) {
+	newScript = malloc(totalLen + 1);
+    }
 
     memcpy(newScript, oldScript, lenOfOld);
     newScript[lenOfOld] = '\n';
     memcpy(newScript + lenOfOld + 1, script, lenOfNew + 1);
-    return Tcl_NewStringObj(newScript, totalLen);
+    newScriptObj = Tcl_NewStringObj(newScript, totalLen);
+    if (newScript != buffer) { free(newScript); }
+    return newScriptObj;
 }
 
 static int
@@ -1937,6 +1945,7 @@ TextWidgetObjCmd(
 		}
 	    }
 	    free(indices);
+	    free(useIdx);
 	}
 
 	if (!ok) {
@@ -3817,7 +3826,8 @@ TkConfigureText(
 
     if (sharedTextPtr->steadyMarks != textPtr->steadyMarks) {
 	if (!IsClean(sharedTextPtr, NULL, true)) {
-	    ErrorNotAllowed(interp, "setting this option is possible only if the widget is clean");
+	    ErrorNotAllowed(interp, "setting this option is possible only if the widget "
+		    "is overall clean");
 	    Tk_RestoreSavedOptions(&savedOptions);
 	    tkTextDebug = oldTextDebug;
 	    return TCL_ERROR;
@@ -8487,6 +8497,7 @@ TextInspectCmd(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(Tcl_DStringValue(str), Tcl_DStringLength(str)));
     Tcl_DStringFree(str);
     Tcl_DStringFree(opts);
+    free(tagArray);
 
     textPtr->selTagPtr->textPtr = textPtr; /* restore */
     sharedTextPtr->inspectEpoch = epoch;
@@ -10135,7 +10146,7 @@ SearchCore(
 	    int maxExtraLines = 0;
 	    const char *startOfLine = Tcl_GetString(theLine);
 
-	    CLANG_ASSERT(pattern);
+	    assert(pattern);
 	    do {
 		int ch;
 		const char *p;
