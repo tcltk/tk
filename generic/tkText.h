@@ -381,6 +381,9 @@ typedef struct TkTextEmbWindow {
     int padX, padY;		/* Padding to leave around each side of window, in pixels. */
     bool stretch;		/* Should window stretch to fill vertical space of line
     				 * (except for pady)? */
+    bool isOwner;		/* Should destroy the window when un-embed? This will only be
+				 * done if the text widget is the owner. Default is true
+				 * (this is compatible to older versions). */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
     TkTextEmbWindowClient *clients;
 				/* Linked list of peer-widget specific information for this

@@ -165,7 +165,7 @@ test textWind-2.11 {TkTextWindowCmd procedure} -setup {
     .t window configure .f
 } -cleanup {
     destroy .f
-} -result  {{-align {} {} center baseline} {-create {} {} {} foo} {-padx {} {} 0 1} {-pady {} {} 0 2} {-stretch {} {} 0 0} {-window {} {} {} .f}}
+} -result  {{-align {} {} center baseline} {-create {} {} {} foo} {-owner {} {} 1 1} {-padx {} {} 0 1} {-pady {} {} 0 2} {-stretch {} {} 0 0} {-window {} {} {} .f}}
 test textWind-2.12 {TkTextWindowCmd procedure} -setup {
 # I kept this as it "influenced" the test case in previous releases
     destroy .f
@@ -225,7 +225,7 @@ test textWind-2.17 {TkTextWindowCmd procedure} -setup {
     .t delete 1.0 end
 } -body {
     list [catch {.t window create 1.0} msg] $msg [.t window configure 1.0]
-} -result {0 {} {{-align {} {} center center} {-create {} {} {} {}} {-padx {} {} 0 0} {-pady {} {} 0 0} {-stretch {} {} 0 0} {-window {} {} {} {}}}}
+} -result {0 {} {{-align {} {} center center} {-create {} {} {} {}} {-owner {} {} 1 1} {-padx {} {} 0 0} {-pady {} {} 0 0} {-stretch {} {} 0 0} {-window {} {} {} {}}}}
 test textWind-2.18 {TkTextWindowCmd procedure} -setup {
 # I kept this as it "influenced" the test case in previous releases
     destroy .f
