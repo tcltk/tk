@@ -30,6 +30,7 @@
 #ifndef _TKTEXTUNDO
 #define _TKTEXTUNDO
 
+#include "tkInt.h"
 #include "tkBool.h"
 #include <stdint.h>
 

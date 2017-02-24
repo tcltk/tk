@@ -85,6 +85,28 @@
 #endif
 
 /*
+ * C99 inline support macros for the text widget.
+ */
+
+#ifdef _MSC_VER
+# if defined(include)
+#  define TK_C99_INLINE_SUPPORT
+# elif _MSC_VER >= 1400
+#  define inline __inline
+#  define TK_C99_INLINE_SUPPORT
+#  define TK_C99_INLINE_DEFINED
+# else
+#  define inline
+#  define TK_C99_INLINE_DEFINED
+# endif
+#elif __STDC_VERSION__ >= 199901L
+# define TK_C99_INLINE_SUPPORT
+#else
+# define inline
+# define TK_C99_INLINE_DEFINED
+#endif
+
+/*
  * Opaque type declarations:
  */
 

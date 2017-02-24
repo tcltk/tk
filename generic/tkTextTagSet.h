@@ -14,6 +14,7 @@
 #ifndef _TKTEXTTAGSET
 #define _TKTEXTTAGSET
 
+#include "tkInt.h"
 #include "tkBitField.h"
 #include "tkIntSet.h"
 #include "tkBool.h"
