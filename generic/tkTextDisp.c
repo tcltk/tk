@@ -5310,9 +5310,6 @@ UpdateDisplayInfo(
 
 	if (topLine) {
 	    dInfoPtr->dLinePtr = topLine;
-	    textPtr->topIndex = topLine->index;
-	    assert(textPtr->topIndex.textPtr);
-	    TkTextIndexToByteIndex(&textPtr->topIndex);
 	    y = dInfoPtr->y - dInfoPtr->newTopPixelOffset;
 	    for (dlPtr = topLine; dlPtr; dlPtr = dlPtr->nextPtr) {
 		assert(y <= dInfoPtr->maxY);
@@ -5321,7 +5318,7 @@ UpdateDisplayInfo(
 	    }
 	}
     }
-
+    
     /*
      * If the old top or bottom line has scrolled elsewhere on the screen, we
      * may not be able to re-use its old contents by copying bits (e.g., a
@@ -5329,9 +5326,14 @@ UpdateDisplayInfo(
      * drawn when the line is in the middle and its neighbor has a matching
      * background). Similarly, if the new top or bottom line came from
      * somewhere else on the screen, we may not be able to copy the old bits.
+     *
+     * And don't forget to update the top index.
      */
 
     if (topLine) {
+	textPtr->topIndex = topLine->index;
+	assert(textPtr->topIndex.textPtr);
+	TkTextIndexToByteIndex(&textPtr->topIndex);
 	dInfoPtr->maxLength = MAX(dInfoPtr->maxLength, topLine->length);
 
 	if ((topLine->flags & (TOP_LINE|HAS_3D_BORDER)) == HAS_3D_BORDER) {
@@ -5374,6 +5376,8 @@ UpdateDisplayInfo(
 	dInfoPtr->topPixelOffset = dInfoPtr->newTopPixelOffset;
 	dInfoPtr->curYPixelOffset = GetYPixelCount(textPtr, topLine);
 	dInfoPtr->curYPixelOffset += dInfoPtr->topPixelOffset;
+    } else {
+	TkTextIndexSetupToStartOfText(&textPtr->topIndex, textPtr, textPtr->sharedTextPtr->tree);
     }
 
     dInfoPtr->lastDLinePtr = bottomLine;

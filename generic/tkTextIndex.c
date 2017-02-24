@@ -2590,7 +2590,7 @@ TkTextIndexPrint(
      *
      * The user of the Tk text widget is encouraged to work with marks,
      * in this way the expensive mappings between char indices and byte
-     * indices can be avoided.
+     * indices can be avoided in many cases.
      */
 
     if (indexPtr->priv.segPtr && !indexPtr->priv.isCharSegment) {

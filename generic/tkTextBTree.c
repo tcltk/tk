@@ -4502,6 +4502,25 @@ TkBTreeInsertChars(
 	     * tagoff information of this node.
 	     */
 
+#if 1 /* This is much faster with integer sets. */
+
+	    TkTextTagSet *newTagonPtr = nodePtr->tagonPtr;
+
+	    TkTextTagSetIncrRefCount(newTagonPtr);
+	    newTagonPtr = TkTextTagSetRemove(newTagonPtr, nodePtr->tagoffPtr);
+
+	    for (i = TkTextTagSetFindFirst(newTagonPtr);
+		    i != TK_TEXT_TAG_SET_NPOS;
+		    i = TkTextTagSetFindNext(newTagonPtr, i)) {
+		if (!TkTextTagSetTest(myTagInfoPtr, i)) {
+		    AddTagToNode(nodePtr, sharedTextPtr->tagLookup[i], true);
+		}
+	    }
+
+	    TkTextTagSetDecrRefCount(newTagonPtr);
+
+#else /* In general very slow with integer sets. */
+
 	    for (i = TkTextTagSetFindFirst(nodePtr->tagonPtr);
 		    i != TK_TEXT_TAG_SET_NPOS;
 		    i = TkTextTagSetFindNext(nodePtr->tagonPtr, i)) {
@@ -4509,6 +4528,8 @@ TkBTreeInsertChars(
 		    AddTagToNode(nodePtr, sharedTextPtr->tagLookup[i], true);
 		}
 	    }
+
+#endif
 	}
     }
 
