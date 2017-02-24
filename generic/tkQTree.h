@@ -12,10 +12,7 @@
 #ifndef _TKQTREE
 #define _TKQTREE
 
-#ifndef _TKINT
-#include "tkInt.h"
-#endif
-
+#include "tkInt.h" /* required for inline support */
 #include "tkBool.h"
 #include <stdint.h>
 

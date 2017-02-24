@@ -16,6 +16,7 @@
 #include "tk.h"
 #endif
 
+#include "tkInt.h" /* required for inline support */
 #include "tkBool.h"
 #include <stdint.h>
 

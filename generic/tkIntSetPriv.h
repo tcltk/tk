@@ -26,8 +26,6 @@ MODULE_SCOPE bool TkIntSetDisjunctive__(
 MODULE_SCOPE bool TkIntSetIsEqual__(
     const TkIntSetType *set1, const TkIntSetType *end1,
     const TkIntSetType *set2, const TkIntSetType *end2);
-MODULE_SCOPE unsigned TkIntSetRefCount(
-    const TkIntSet *set);
 
 #endif /* _TKINTSETPRIV */
 
