@@ -27,29 +27,5 @@ enum { true = (int) 1, false = (int) 0 };
 } /* extern "C" */
 #endif
 
-
-/*
- * For the text widget stuff (and related files) this is a basic header
- * file, so it's the appropriate place for the C99 inline support macros.
- */
-
-#ifdef _MSC_VER
-# if defined(include)
-#  define TK_C99_INLINE_SUPPORT
-# elif _MSC_VER >= 1400
-#  define inline __inline
-#  define TK_C99_INLINE_SUPPORT
-#  define TK_C99_INLINE_DEFINED
-# else
-#  define inline
-#  define TK_C99_INLINE_DEFINED
-# endif
-#elif __STDC_VERSION__ >= 199901L
-# define TK_C99_INLINE_SUPPORT
-#else
-# define inline
-# define TK_C99_INLINE_DEFINED
-#endif
-
 #endif /* _TK_BOOL */
 /* vi:set ts=8 sw=4: */

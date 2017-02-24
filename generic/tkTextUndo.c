@@ -10,7 +10,6 @@
  */
 
 #include "tkTextUndo.h"
-#include "tkInt.h"
 #include "tkAlloc.h"
 #include <assert.h>
 
