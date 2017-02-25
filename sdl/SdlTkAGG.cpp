@@ -1444,6 +1444,7 @@ SdlTkGfxAllocFontStruct(_Font *_f)
     if (feng) {
 	(void) feng->load_font(_f->file, _f->index, agg::glyph_ren_agg_gray8,
 		(const char *) XGetFTStream(_f->file, _f->file_size));
+	feng->char_map(FT_ENCODING_UNICODE);
 	feng->flip_y(true);
 	feng->height(_f->size);
 	fs->ascent = (int) (feng->ascender() + 0.5);

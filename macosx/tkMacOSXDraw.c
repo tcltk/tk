@@ -1527,12 +1527,6 @@ TkScrollWindow(
 	    srcRect = CGRectMake(x, y, width, height);
 	    dstRect = CGRectOffset(srcRect, dx, dy);
 
-	    /* Expand the rectangles slightly to avoid degeneracies. */
-	    srcRect.origin.y -= 1;
-	    srcRect.size.height += 2;
-	    dstRect.origin.y += 1;
-	    dstRect.size.height -= 2;
-
 	    /* Compute the damage. */
   	    dmgRgn = HIShapeCreateMutableWithRect(&srcRect);
  	    extraRgn = HIShapeCreateWithRect(&dstRect);
@@ -1571,9 +1565,6 @@ TkScrollWindow(
 	    int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
 	    [view generateExposeEvents:dmgRgn childrenOnly:1];
 	    Tcl_SetServiceMode(oldMode);
-
-	    /* Belt and suspenders: make the AppKit request a redraw
-	       when it gets control again. */
   	}
     } else {
 	dmgRgn = HIShapeCreateEmpty();

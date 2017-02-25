@@ -412,16 +412,7 @@ UpdateClipboard(
     OpenClipboard(hwnd);
     EmptyClipboard();
 
-    /*
-     * CF_UNICODETEXT is only supported on NT, but it it is prefered when
-     * possible.
-     */
-
-    if (TkWinGetPlatformId() != VER_PLATFORM_WIN32_WINDOWS) {
-	SetClipboardData(CF_UNICODETEXT, NULL);
-    } else {
-	SetClipboardData(CF_TEXT, NULL);
-    }
+    SetClipboardData(CF_UNICODETEXT, NULL);
     CloseClipboard();
     TkWinUpdatingClipboard(FALSE);
 }

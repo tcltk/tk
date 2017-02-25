@@ -518,11 +518,11 @@ TkGetBitmapData(
 
 	if (Tcl_SetChannelOption(interp, pi.chan, "-translation", "binary")
 		!= TCL_OK) {
-	    return NULL;
+	    goto errorCleanup;
 	}
 	if (Tcl_SetChannelOption(interp, pi.chan, "-encoding", "binary")
 		!= TCL_OK) {
-	    return NULL;
+	    goto errorCleanup;
 	}
     } else {
 	pi.chan = NULL;

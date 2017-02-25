@@ -75,6 +75,7 @@ variable F	;# miscellaneous platform-specific font parameters
 switch -- [tk windowingsystem] {
     win32 {
         # In safe interps there is no osVersion element.
+        set F(families) [font families]
 	if {[info exists tcl_platform(osVersion)]} {
             if {$tcl_platform(osVersion) >= 5.0} {
                 set F(family) "Tahoma"
@@ -82,7 +83,7 @@ switch -- [tk windowingsystem] {
                 set F(family) "MS Sans Serif"
             }
         } else {
-            if {[lsearch -exact [font families] Tahoma] != -1} {
+            if {[lsearch -exact $F(families) Tahoma] != -1} {
                 set F(family) "Tahoma"
             } else {
                 set F(family) "MS Sans Serif"
@@ -96,7 +97,11 @@ switch -- [tk windowingsystem] {
 	font configure TkCaptionFont -family $F(family) -size $F(size) \
 	    -weight bold
 	font configure TkTooltipFont -family $F(family) -size $F(size)
-	font configure TkFixedFont   -family Courier -size 10
+	if {[lsearch -exact $F(families) Consolas] != -1} {
+	    font configure TkFixedFont -family Consolas -size $F(size)
+	} else {
+	    font configure TkFixedFont -family Courier -size 10
+	}
 	font configure TkIconFont    -family $F(family) -size $F(size)
 	font configure TkMenuFont    -family $F(family) -size $F(size)
 	font configure TkSmallCaptionFont -family $F(family) -size $F(size)
@@ -177,6 +182,21 @@ switch -- [tk windowingsystem] {
 	font configure TkIconFont    -family $F(family) -size $F(size)
 	font configure TkMenuFont    -family $F(family) -size $F(size)
 	font configure TkSmallCaptionFont -family $F(family) -size $F(ttsize)
+    }
+}
+unset -nocomplain F
+} else {
+variable F	;# miscellaneous platform-specific font parameters
+# Try to improve the TkFixedFont on Windows
+switch -- [tk windowingsystem] {
+    win32 {
+	if {[font configure TkFixedFont -family] eq "Courier New"} {
+	    set F(families) [font families]
+	    set F(size) [font configure TkDefaultFont -size]
+	    if {[lsearch -exact $F(families) Consolas] != -1} {
+		font configure TkFixedFont -family Consolas -size $F(size)
+	    }
+	}
     }
 }
 unset -nocomplain F

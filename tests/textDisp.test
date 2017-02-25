@@ -39,7 +39,7 @@ option add *Text.highlightThickness $twht
 
 catch {destroy .f .t}
 frame .f -width 100 -height 20
-pack append . .f left
+pack .f -side left
 
 set fixedFont {Courier -12}
 # 15 on XP, 13 on Solaris 8
@@ -65,7 +65,7 @@ set bigAscent [font metrics $bigFont -ascent]
 set ascentDiff [expr {$bigAscent - $fixedAscent}]
 
 text .t -font $fixedFont -width 20 -height 10 -yscrollcommand scroll
-pack append . .t {top expand fill}
+pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
 .t debug on
 wm geometry . {}
@@ -599,7 +599,7 @@ test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
 	wm overrideredirect . 1
     }
     frame .f2 -width 20 -height 100
-    pack before .f .f2 top
+    pack .f2 -before .f
     wm geom . 103x103
     update
     .t configure -wrap none -borderwidth 2
@@ -1952,13 +1952,15 @@ test textDisp-15.8 {Scrolling near end of window} {
 	.tf.f.t insert end "\nLine $i"
     }
     update ; after 1000 ; update
+    set refind [.tf.f.t index @0,[winfo height .tf.f.t]]
     # Should scroll and should not crash!
     .tf.f.t yview scroll 1 unit
     # Check that it has scrolled
-    set res [.tf.f.t index @0,[expr [winfo height .tf.f.t] - 15]]
+    set newind [.tf.f.t index @0,[winfo height .tf.f.t]]
+    set res [.tf.f.t compare $newind > $refind]
     destroy .tf
     set res
-} {12.0}
+} {1}
 
 .t configure -wrap char
 .t delete 1.0 end
@@ -2871,28 +2873,28 @@ for {set i 2} {$i <= 200} {incr i} {
 .t configure -wrap word
 .t delete 50.0 51.0
 .t insert 50.0 "This is a long line, one that will wrap around twice.\n"
-test textDisp-20.1 {FindDLine} {textfonts} {
+test textDisp-20.1 {FindDLine} {
     .t yview 48.0
     list [.t dlineinfo 46.0] [.t dlineinfo 47.0] [.t dlineinfo 49.0] \
 	    [.t dlineinfo 58.0]
 } [list {} {} [list 3 [expr {$fixedDiff + 16}] 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
-test textDisp-20.2 {FindDLine} {textfonts} {
+test textDisp-20.2 {FindDLine} { 
     .t yview 100.0
     .t yview -pickplace 53.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.14] [.t dlineinfo 50.21]
 } [list [list 3 [expr {-1 - $fixedDiff/2}] 140 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {-1 - $fixedDiff/2}] 140 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {12 + $fixedDiff/2}] 133 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]]]
-test textDisp-20.3 {FindDLine} {textfonts} {
+test textDisp-20.3 {FindDLine} {
     .t yview 100.0
     .t yview 49.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.24] [.t dlineinfo 57.0]
 } [list [list 3 [expr {$fixedDiff + 16}] 140 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {2*$fixedDiff + 29}] 133 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
-test textDisp-20.4 {FindDLine} {textfonts} {
+test textDisp-20.4 {FindDLine} {
     .t yview 100.0
     .t yview 42.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.24] [.t dlineinfo 50.40]
 } [list [list 3 [expr {8*$fixedDiff + 107}] 140 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {9*$fixedDiff + 120}] 133 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
 .t config -wrap none
-test textDisp-20.5 {FindDLine} {textfonts} {
+test textDisp-20.5 {FindDLine} {
     .t yview 100.0
     .t yview 48.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.20] [.t dlineinfo 50.40]

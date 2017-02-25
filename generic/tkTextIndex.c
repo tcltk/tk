@@ -87,7 +87,7 @@ FreeTextIndexInternalRep(
     TkTextIndex *indexPtr = GET_TEXTINDEX(indexObjPtr);
 
     if (indexPtr->textPtr != NULL) {
-	if (--indexPtr->textPtr->refCount == 0) {
+	if (indexPtr->textPtr->refCount-- <= 1) {
 	    /*
 	     * The text widget has been deleted and we need to free it now.
 	     */

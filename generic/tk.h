@@ -832,6 +832,9 @@ typedef struct Tk_FakeWin {
     int minReqWidth;
     int minReqHeight;
     char *dummy20;		/* geometryMaster */
+#ifdef TK_USE_INPUT_METHODS
+    int dummy21;
+#endif /* TK_USE_INPUT_METHODS */
 } Tk_FakeWin;
 
 /*

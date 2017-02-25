@@ -413,7 +413,17 @@ ControlUtfProc(
 	    wDst[4] = hexChars[(ch >> 4) & 0xf];
 	    wDst[5] = hexChars[ch & 0xf];
 	    wDst += 6;
+	} else if (ch <= 0x10ffff) {
+	    wDst[1] = 'U';
+	    wDst[2] = hexChars[(ch >> 20) & 0xf];
+	    wDst[3] = hexChars[(ch >> 16) & 0xf];
+	    wDst[4] = hexChars[(ch >> 12) & 0xf];
+	    wDst[5] = hexChars[(ch >> 8) & 0xf];
+	    wDst[6] = hexChars[(ch >> 4) & 0xf];
+	    wDst[7] = hexChars[ch & 0xf];
+	    wDst += 8;
 	} else {
+	    /* Should not happen. */
 	    wDst[1] = 'U';
 	    wDst[2] = hexChars[(ch >> 28) & 0xf];
 	    wDst[3] = hexChars[(ch >> 24) & 0xf];
@@ -856,7 +866,7 @@ Tk_MeasureChars(
 {
     UnixFont *fontPtr;
     SubFont *lastSubFontPtr;
-    int curX, curByte;
+    int curX, curByte, fontSize = 0;
 
     /*
      * Unix does not use kerning or fractional character widths when
@@ -896,9 +906,17 @@ Tk_MeasureChars(
 		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			p - source, &runString);
+		if (lastSubFontPtr == &fontPtr->controlSubFont) {
+		    fontSize =
+			SdlTkFontShrink(lastSubFontPtr->fontStructPtr,
+				2, NULL);
+		}
 		curX += XTextWidth(lastSubFontPtr->fontStructPtr,
 			    Tcl_DStringValue(&runString),
 			    Tcl_DStringLength(&runString));
+		if (lastSubFontPtr == &fontPtr->controlSubFont) {
+		    SdlTkFontRestore(lastSubFontPtr->fontStructPtr, fontSize);
+		}
 		Tcl_DStringFree(&runString);
 		lastSubFontPtr = thisSubFontPtr;
 		source = p;
@@ -908,9 +926,16 @@ Tk_MeasureChars(
 	familyPtr = lastSubFontPtr->familyPtr;
 	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
 		&runString);
+	if (lastSubFontPtr == &fontPtr->controlSubFont) {
+	    fontSize = SdlTkFontShrink(lastSubFontPtr->fontStructPtr,
+				2, NULL);
+	}
 	curX += XTextWidth(lastSubFontPtr->fontStructPtr,
 		    Tcl_DStringValue(&runString),
 		    Tcl_DStringLength(&runString));
+	if (lastSubFontPtr == &fontPtr->controlSubFont) {
+	    SdlTkFontRestore(lastSubFontPtr->fontStructPtr, fontSize);
+	}
 	Tcl_DStringFree(&runString);
 	curByte = numBytes;
     } else {
@@ -944,8 +969,16 @@ Tk_MeasureChars(
 		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, 0,
 		    NULL, buf, sizeof(buf), NULL, &dstWrote, NULL);
+		if (lastSubFontPtr == &fontPtr->controlSubFont) {
+		    fontSize =
+			SdlTkFontShrink(lastSubFontPtr->fontStructPtr,
+				2, NULL);
+		}
 		chWidth = XTextWidth(lastSubFontPtr->fontStructPtr, buf,
 				     dstWrote);
+		if (lastSubFontPtr == &fontPtr->controlSubFont) {
+		    SdlTkFontRestore(lastSubFontPtr->fontStructPtr, fontSize);
+		}
 		newX += chWidth;
 		if ((dstWrote <= sizeof(unsigned int)) &&
 		    (ch < BASE_CHARS) && (chWidth < 255)) {
@@ -1110,7 +1143,7 @@ DrawChars(
     int xStart, window_width;
     Tcl_UniChar ch;
     FontFamily *familyPtr;
-    int rx, ry;
+    int rx, ry, fontSize = 0;
     unsigned width, height, border_width, depth;
     Drawable root;
 
@@ -1140,16 +1173,25 @@ DrawChars(
 	if ((thisSubFontPtr != lastSubFontPtr)
 		|| (p == end) || (p-source > 200)) {
 	    if (p > source) {
-		familyPtr = lastSubFontPtr->familyPtr;
+		int yoff = 0;
 
+		familyPtr = lastSubFontPtr->familyPtr;
 		Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			p - source, &runString);
-		XDrawString(display, drawable, gc, x, y,
+		if (lastSubFontPtr == &fontPtr->controlSubFont) {
+		    fontSize =
+			SdlTkFontShrink(lastSubFontPtr->fontStructPtr,
+				2, &yoff);
+		}
+		XDrawString(display, drawable, gc, x, y - yoff,
 			    Tcl_DStringValue(&runString),
 			    Tcl_DStringLength(&runString));
 		x += XTextWidth(lastSubFontPtr->fontStructPtr,
 			    Tcl_DStringValue(&runString),
 			    Tcl_DStringLength(&runString));
+		if (lastSubFontPtr == &fontPtr->controlSubFont) {
+		    SdlTkFontRestore(lastSubFontPtr->fontStructPtr, fontSize);
+		}
 		Tcl_DStringFree(&runString);
 	    }
 	    lastSubFontPtr = thisSubFontPtr;
@@ -2803,7 +2845,7 @@ TkDrawAngledChars(
 	SubFont *thisSubFontPtr, *lastSubFontPtr;
 	Tcl_DString runString;
 	const char *p, *end, *next;
-	int xStart, yStart;
+	int xStart, yStart, fontSize = 0;
 	Tcl_UniChar ch;
 	FontFamily *familyPtr;
         double sinA = sin(angle*PI/180), cosA = cos(angle*PI/180), dy;
@@ -2825,17 +2867,28 @@ TkDrawAngledChars(
 	    if ((thisSubFontPtr != lastSubFontPtr)
 		    || (p == end) || (p-source > 200)) {
 		if (p > source) {
-		    int xret = x, yret = y;
+		    int xoff = 0, yoff = 0, xret = x, yret = y;
 
 		    familyPtr = lastSubFontPtr->familyPtr;
 
 		    Tcl_UtfToExternalDString(familyPtr->encoding, source,
 					     p - source, &runString);
-		    XDrawStringAngle(display, drawable, gc, x, y,
+		    if (lastSubFontPtr == &fontPtr->controlSubFont) {
+			fontSize =
+			    SdlTkFontShrink(lastSubFontPtr->fontStructPtr,
+				2, &yoff);
+			xoff = ROUND16(yoff*sinA);
+			yoff = ROUND16(yoff*cosA);
+		    }
+		    XDrawStringAngle(display, drawable, gc, x - xoff, y - yoff,
 			Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString), angle, &xret, &yret);
-		    x = xret;
-		    y = yret;
+		    if (lastSubFontPtr == &fontPtr->controlSubFont) {
+			SdlTkFontRestore(lastSubFontPtr->fontStructPtr,
+				fontSize);
+		    }
+		    x = xret + xoff;
+		    y = yret + yoff;
 		}
 		lastSubFontPtr = thisSubFontPtr;
 		source = p;

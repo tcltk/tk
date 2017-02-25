@@ -1903,14 +1903,27 @@ Tk_SetCaretPos(
  *----------------------------------------------------------------------
  */
 
+typedef BOOL WINAPI (GetLastInputInfoProc)(LASTINPUTINFO *);
+
 long
 Tk_GetUserInactiveTime(
      Display *dpy)		/* Ignored on Windows */
 {
     LASTINPUTINFO li;
+    static int initialized = 0;
+    static GetLastInputInfoProc *pGetLastInputInfo = NULL;
 
     li.cbSize = sizeof(li);
-    if (!(BOOL)GetLastInputInfo(&li)) {
+    if (!initialized) {
+	HMODULE dllH = GetModuleHandle(TEXT("USER32"));
+
+	initialized = 1;
+	if (dllH != NULL) {
+	    pGetLastInputInfo = (GetLastInputInfoProc *)
+		    GetProcAddress(dllH, "GetLastInputInfo");
+	}
+    }
+    if ((pGetLastInputInfo == NULL) || !pGetLastInputInfo(&li)) {
 	return -1;
     }
 

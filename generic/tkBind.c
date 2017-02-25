@@ -1280,7 +1280,7 @@ Tk_BindEvent(
      */
 
     if ((eventPtr->type >= TK_LASTEVENT) || !flagArray[eventPtr->type]) {
-       return;
+	return;
     }
 
     dispPtr = ((TkWindow *) tkwin)->dispPtr;

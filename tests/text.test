@@ -910,7 +910,7 @@ test text-2.7 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {flat}
@@ -919,7 +919,7 @@ test text-2.8 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {flat}
@@ -928,7 +928,7 @@ test text-2.9 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {raised}
@@ -2016,7 +2016,7 @@ Line 7"
     .t tag configure elide -elide 1
     .t tag add elide 5.2 5.4
     .t window create 5.4
-    .t delete 5.4 
+    .t delete 5.4
     .t tag add elide 5.5 5.6
     .t get -displaychars 5.2 5.8
 } -cleanup {
@@ -2631,7 +2631,7 @@ test text-10.37 {TextWidgetCmd procedure, "count" option} -setup {
 } -result {3}
 test text-10.38 {TextWidgetCmd procedure, "count" option} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
 } -body {
     .t configure -width 20 -height 10
     update
@@ -2727,7 +2727,7 @@ test text-9.2.47 {TextWidgetCmd procedure, "count" option} -setup {
 
 test text-11.1 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
 } -body {
     .t insert end "hello"
     .t configure -wrap none
@@ -2744,7 +2744,7 @@ test text-11.1 {counting with tag priority eliding} -setup {
 } -result {0 1 2 3 4 5 5 6}
 test text-11.2 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
 } -body {
     .t insert end "hello"
     .t tag configure elide1 -elide 0
@@ -2856,7 +2856,7 @@ test text-11.7 {counting with tag priority eliding}  -setup {
 } -result {5 5}
 test text-11.8 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     set res {}
 } -body {
     .t insert end "hello"
@@ -2882,7 +2882,7 @@ test text-11.8 {counting with tag priority eliding} -setup {
 } -result {0 0 0 0 3 2 1 1}
 test text-11.9 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     set res {}
 } -body {
     .t tag configure WELCOME -elide 1
@@ -2898,7 +2898,7 @@ test text-11.9 {counting with tag priority eliding} -setup {
     lappend res [.t index "1.0 +1 indices"]
     lappend res [.t index "1.0 +1 display indices"]
     lappend res [.t index "1.0 +1 display chars"]
-    lappend res [.t index end] 
+    lappend res [.t index end]
     lappend res [.t index "end -1 indices"]
     lappend res [.t index "end -1 display indices"]
     lappend res [.t index "end -1 display chars"]
@@ -3070,7 +3070,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     vwait res  ; # event dealt with by the event loop, with %d==0 i.e. we're out of sync
     # ensure the test is relevant
     lappend res "Pending:[.top.yt pendingsync]"
-    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs 
+    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs
     # - there is no more any pending sync after running 'sync'
     .top.yt sync
     vwait res  ; # event dealt with by the event loop, with %d==1 i.e. we're in sync again
@@ -3089,7 +3089,7 @@ test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
     toplevel .top
     pack [text .top.t]
     for {set i 1} {$i < 10000} {incr i} {
-        .top.t insert end "Hello world!\n" 
+        .top.t insert end "Hello world!\n"
     }
     bind .top.t <<WidgetViewSync>> {destroy .top.t}
     .top.t tag add mytag 1.5 8000.8    ; # shall not crash
@@ -3292,11 +3292,11 @@ test text-14.5 {ConfigureText procedure} -setup {
     .t configure -tabs {30 foo}
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad tab alignment "foo": must be left, right, center, or numeric} 
+} -returnCodes {error} -result {bad tab alignment "foo": must be left, right, center, or numeric}
 test text-14.6 {ConfigureText procedure} -setup {
     text .t
 } -body {
-    catch {.t configure -tabs {30 foo}} 
+    catch {.t configure -tabs {30 foo}}
     .t configure -tabs {10 20 30}
     return $errorInfo
 } -cleanup {
@@ -3315,7 +3315,7 @@ test text-14.7 {ConfigureText procedure} -setup {
     destroy .t
 } -result {}
 test text-14.8 {ConfigureText procedure} -setup {
-   text .t 
+   text .t
 } -body {
     .t configure -wrap bogus
 } -cleanup {
@@ -3341,7 +3341,7 @@ test text-14.10 {ConfigureText procedure} -setup {
     destroy .t
 } -result {}
 test text-14.11 {ConfigureText procedure} -setup {
-    text .t 
+    text .t
 } -body {
     .t configure -selectborderwidth foo
 } -cleanup {
@@ -3431,8 +3431,8 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
-    .top.t configure -width 20 -height 10 
-    pack append .top .top.t top
+    .top.t configure -width 20 -height 10
+    pack .top.t
     update
     set geom [wm geometry .top]
     set x [string range $geom 0 [string first + $geom]]
@@ -3449,7 +3449,7 @@ test text-14.19 {ConfigureText procedure} -setup {
 } -body {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     update
     wm geometry .top
@@ -3466,7 +3466,7 @@ test text-14.20 {ConfigureText procedure} -setup {
 } -body {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     update
     set result [wm geometry .top]
@@ -3520,7 +3520,7 @@ test text-17.1 {TextCmdDeletedProc procedure} -body {
 test text-17.2 {TextCmdDeletedProc procedure, disabling -setgrid} -constraints {
     fonts
 } -body {
-   toplevel .top 
+   toplevel .top
    text .top.t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold} \
     -setgrid 1 -width 20 -height 10
    pack .top.t
@@ -3756,7 +3756,7 @@ Line 4
 test text-19.11 {DeleteChars procedure} -body {
     toplevel .top
     text .top.t -width 20 -height 5
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     .top.t insert 1.0 "abc\n123\nx\ny\nz\nq\nr\ns"
     update
@@ -3768,7 +3768,7 @@ test text-19.11 {DeleteChars procedure} -body {
 test text-19.12 {DeleteChars procedure} -body {
     toplevel .top
     text .top.t -width 20 -height 5
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     .top.t insert 1.0 "abc\n123\nx\ny\nz\nq\nr\ns"
     .top.t yview 3.0
@@ -3841,7 +3841,7 @@ test text-19.16 {DeleteChars procedure, updates affecting topIndex} -setup {
 
 test text-20.1 {TextFetchSelection procedure} -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3856,7 +3856,7 @@ b.0b.1b.2b.3b.4
 c.0c}
 test text-20.2 {TextFetchSelection procedure} -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3876,7 +3876,7 @@ b.0b.1b.2b.3b.4
 c.0c}
 test text-20.3 {TextFetchSelection procedure}  -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3890,7 +3890,7 @@ test text-20.3 {TextFetchSelection procedure}  -setup {
 } -result {m}
 test text-20.4 {TextFetchSelection procedure}  -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3910,7 +3910,7 @@ test text-20.4 {TextFetchSelection procedure}  -setup {
 cj.0j.1j.2j.3j.4m}
 test text-20.5 {TextFetchSelection procedure, long selections} -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
     set x ""
 } -body {
@@ -4912,7 +4912,7 @@ test text-22.118 {TextSearchCmd, multiline matching end of window} -body {
 test text-22.119 {TextSearchCmd, multiline regexp matching} -body {
     pack [text .t]
     .t insert 1.0 {    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -4929,7 +4929,7 @@ test text-22.120 {TextSearchCmd, multiline regexp matching} -body {
     pack [text .t]
     .t insert 1.0 {static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -4943,7 +4943,7 @@ test text-22.121 {TextSearchCmd, multiline regexp matching} -body {
     .t insert 1.0 {
 static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -5936,7 +5936,7 @@ test text-23.7 {TkTextGetTabs procedure} -setup {
 test text-24.1 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump
 } -cleanup {
     destroy .t
@@ -5944,7 +5944,7 @@ test text-24.1 {TextDumpCmd procedure, bad args} -body {
 test text-24.2 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -all
 } -cleanup {
     destroy .t
@@ -5952,7 +5952,7 @@ test text-24.2 {TextDumpCmd procedure, bad args} -body {
 test text-24.3 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -command
 } -cleanup {
     destroy .t
@@ -5960,7 +5960,7 @@ test text-24.3 {TextDumpCmd procedure, bad args} -body {
 test text-24.4 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -bogus
 } -cleanup {
     destroy .t
@@ -5968,7 +5968,7 @@ test text-24.4 {TextDumpCmd procedure, bad args} -body {
 test text-24.5 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump bogus
 } -cleanup {
     destroy .t
@@ -6005,7 +6005,7 @@ test text-24.9 {TextDumpCmd procedure, same indices} -body {
 test text-24.10 {TextDumpCmd procedure, negative range} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump 1.5 1.0
 } -cleanup {
     destroy .t
@@ -6889,7 +6889,7 @@ test text-31.14 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     lappend res [.t tag prevrange sel 1.0]
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
@@ -6910,7 +6910,7 @@ test text-31.15 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
@@ -6930,7 +6930,7 @@ test text-31.16 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	.t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
@@ -6975,7 +6975,7 @@ test text-31.18 {peer widgets} -setup {
     return $res
 } -cleanup {
     destroy .t
-} -result {1.0 11.0} 
+} -result {1.0 11.0}
 test text-31.19 {peer widgets} -body {
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
@@ -7020,7 +7020,7 @@ test text-32.1 {line heights on creation} -setup {
     update
     set after [$w count -ypixels 1.0 2.0]
     destroy .g
-    expr {$before eq $after} 
+    expr {$before eq $after}
 } -cleanup {
     destroy .t
 } -result {1}
