@@ -395,6 +395,15 @@ static Tcl_ThreadDataKey dataKey;
 static int initialized;		/* Flag indicating whether module has been
 				 * initialized. */
 
+typedef DWORD * WINAPI (SHGetFileInfoProc)(LPCTSTR pszPath,
+		DWORD dwFileAttributes, SHFILEINFO* psfi, UINT cbFileInfo,
+		UINT uFlags);
+typedef BOOL WINAPI (SetLayeredWindowAttributesProc)(HWND hwnd, COLORREF crKey,
+		BYTE bAlpha, DWORD dwFlags);
+
+static SHGetFileInfoProc *pSHGetFileInfo = NULL;
+static SetLayeredWindowAttributesProc *pSetLayeredWindowAttributes = NULL;
+
 TCL_DECLARE_MUTEX(winWmMutex)
 
 #if (_WIN32_WINNT >= 0x0601)
@@ -919,8 +928,21 @@ InitWindowClass(
 	Tcl_MutexLock(&winWmMutex);
 	if (!initialized) {
 	    WNDCLASS class;
+	    HMODULE dllH;
 
 	    initialized = 1;
+
+	    dllH = GetModuleHandle(TEXT("SHELL32"));
+	    if (dllH != NULL) {
+		pSHGetFileInfo = (SHGetFileInfoProc *)
+			GetProcAddress(dllH, "SHGetFileInfo");
+	    }
+
+	    dllH = GetModuleHandle(TEXT("USER32"));
+	    if (dllH != NULL) {
+		pSetLayeredWindowAttributes = (SetLayeredWindowAttributesProc *)
+			GetProcAddress(dllH, "SetLayeredWindowAttributes");
+	    }
 
 	    /*
 	     * The only difference between WNDCLASSW and WNDCLASSA are in
@@ -954,23 +976,21 @@ InitWindowClass(
 		Tcl_Panic("Unable to register TkTopLevel class");
 	    }
 #if (_WIN32_WINNT >= 0x0601)
-	    {
-		HANDLE lib = GetModuleHandleA("USER32");
+	    dllH = GetModuleHandle(TEXT("USER32"));
 
-		if (lib != NULL) {
-		    pCloseTouchInputHandle = (CloseTouchInputHandleProc *)
-			GetProcAddress(lib, "CloseTouchInputHandle");
-		    pGetTouchInputInfo = (GetTouchInputInfoProc *)
-			GetProcAddress(lib, "GetTouchInputInfo");
-		    pRegisterTouchWindow = (RegisterTouchWindowProc *)
-			GetProcAddress(lib, "RegisterTouchWindow");
-		    pUnregisterTouchWindow = (UnregisterTouchWindowProc *)
-			GetProcAddress(lib, "UnregisterTouchWindow");
-		    pGetGestureInfo = (GetGestureInfoProc *)
-			GetProcAddress(lib, "GetGestureInfo");
-		    pSetGestureConfig = (SetGestureConfigProc *)
-			GetProcAddress(lib, "SetGestureConfig");
-		}
+	    if (dllH != NULL) {
+		pCloseTouchInputHandle = (CloseTouchInputHandleProc *)
+			GetProcAddress(dllH, "CloseTouchInputHandle");
+		pGetTouchInputInfo = (GetTouchInputInfoProc *)
+			GetProcAddress(dllH, "GetTouchInputInfo");
+		pRegisterTouchWindow = (RegisterTouchWindowProc *)
+			GetProcAddress(dllH, "RegisterTouchWindow");
+		pUnregisterTouchWindow = (UnregisterTouchWindowProc *)
+			GetProcAddress(dllH, "UnregisterTouchWindow");
+		pGetGestureInfo = (GetGestureInfoProc *)
+			GetProcAddress(dllH, "GetGestureInfo");
+		pSetGestureConfig = (SetGestureConfigProc *)
+			GetProcAddress(dllH, "SetGestureConfig");
 	    }
 #endif
 	}
@@ -1310,7 +1330,7 @@ ReadIconFromFile(
     if (lpIR == NULL) {
 	SHFILEINFO sfiSM;
 	Tcl_DString ds, ds2;
-	DWORD *res;
+	DWORD *res = 0;
 	const char *file;
 
 	file = Tcl_TranslateFileName(interp, Tcl_GetString(fileName), &ds);
@@ -1319,15 +1339,17 @@ ReadIconFromFile(
 	}
 	Tcl_WinUtfToTChar(file, -1, &ds2);
 	Tcl_DStringFree(&ds);
-	res = (DWORD *)SHGetFileInfo((TCHAR *)Tcl_DStringValue(&ds2), 0, &sfiSM,
-		sizeof(SHFILEINFO), SHGFI_SMALLICON|SHGFI_ICON);
 
+	if (pSHGetFileInfo != NULL) {
+	    res = pSHGetFileInfo((TCHAR *)Tcl_DStringValue(&ds2), 0, &sfiSM,
+		sizeof(SHFILEINFO), SHGFI_SMALLICON|SHGFI_ICON);
+	}
 	if (res != 0) {
 	    SHFILEINFO sfi;
 	    unsigned size;
 
 	    Tcl_ResetResult(interp);
-	    res = (DWORD *)SHGetFileInfo((TCHAR *)Tcl_DStringValue(&ds2), 0, &sfi,
+	    res = pSHGetFileInfo((TCHAR *)Tcl_DStringValue(&ds2), 0, &sfi,
 		    sizeof(SHFILEINFO), SHGFI_ICON);
 
 	    /*
@@ -2209,14 +2231,15 @@ UpdateWrapper(
 	SetWindowLongPtr(wmPtr->wrapper, GWLP_USERDATA, (LONG_PTR) winPtr);
 	tsdPtr->createWindow = NULL;
 
-	if (wmPtr->exStyleConfig & WS_EX_LAYERED) {
+	if ((wmPtr->exStyleConfig & WS_EX_LAYERED) &&
+	    (pSetLayeredWindowAttributes != NULL)) {
 	    /*
 	     * The user supplies a double from [0..1], but Windows wants an
 	     * int (transparent) 0..255 (opaque), so do the translation. Add
 	     * the 0.5 to round the value.
 	     */
 
-	    SetLayeredWindowAttributes((HWND) wmPtr->wrapper,
+	    pSetLayeredWindowAttributes((HWND) wmPtr->wrapper,
 		    wmPtr->colorref, (BYTE) (wmPtr->alpha * 255 + 0.5),
 		    (unsigned)(LWA_ALPHA | (wmPtr->crefObj?LWA_COLORKEY:0)));
 	} else {
@@ -3257,7 +3280,8 @@ WmAttributesCmd(
 		if ((wmPtr->alpha < 1.0) || (wmPtr->crefObj != NULL)) {
 		    *stylePtr |= styleBit;
 		}
-		if (wmPtr->wrapper != NULL) {
+		if ((wmPtr->wrapper != NULL) &&
+		    (pSetLayeredWindowAttributes != NULL)) {
 		    /*
 		     * Set the window directly regardless of UpdateWrapper.
 		     * The user supplies a double from [0..1], but Windows
@@ -3269,7 +3293,7 @@ WmAttributesCmd(
 			SetWindowLongPtr(wmPtr->wrapper, GWL_EXSTYLE,
 				*stylePtr);
 		    }
-		    SetLayeredWindowAttributes((HWND) wmPtr->wrapper,
+		    pSetLayeredWindowAttributes((HWND) wmPtr->wrapper,
 			    wmPtr->colorref, (BYTE) (wmPtr->alpha * 255 + 0.5),
 			    (unsigned) (LWA_ALPHA |
 				    (wmPtr->crefObj ? LWA_COLORKEY : 0)));
@@ -6800,10 +6824,18 @@ Tk_GetVRootGeometry(
     int *widthPtr, int *heightPtr)
 				/* Store dimensions of virtual root here. */
 {
+    int width, height;
+
     *xPtr = GetSystemMetrics(SM_XVIRTUALSCREEN);
     *yPtr = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    *widthPtr = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    *heightPtr = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    if ((width == 0) || (height == 0)) {
+	width = GetSystemMetrics(SM_CXSCREEN);
+	height = GetSystemMetrics(SM_CYSCREEN);
+    }
+    *widthPtr = width;
+    *heightPtr = height;
 }
 
 /*

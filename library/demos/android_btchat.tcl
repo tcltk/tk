@@ -4,10 +4,9 @@ set uuid "edc4e9ef-9c92-4293-9f56-d7154928ead5"
 
 proc tput {text} {
     .text configure -state normal
-    .text insert end $text
-    .text insert end "\n"
+    .text insert 1.0 $text {} "\n"
     .text configure -state disabled
-    .text yview -pickplace end
+    .text yview 1.0
 }
 
 proc tclear {} {
@@ -38,10 +37,13 @@ proc connect {} {
     .top.btlist configure -values [lsort -ascii $ndevs]
     if {[info exists found]} {
 	.top.btlist set $cdev
-	if {[catch {rfcomm -async [list $found $::uuid] 0} sock]} {
+	if {!$::spp} {
+	    lappend found $::uuid
+	}
+	if {[catch {rfcomm -async $found 0} sock]} {
 	    tput $sock
 	} else {
-	    tput "connecting to $found"
+	    tput "connecting to [lindex $found 0]"
 	    .top.conn configure -text Disconnect
 	    fconfigure $sock -blocking 0 -buffering line
 	    fileevent $sock readable [list receive $sock]
@@ -116,11 +118,14 @@ wm attributes . -fullscreen 1
 bind all <Key-Break> exit
 bind . <<Bluetooth>> btstat
 frame .top
+::ttk::button .top.conn -text Connect -width 12 -command connect
 ::ttk::combobox .top.btlist -state readonly
-button .top.conn -text Connect -width 12 -command connect
+set spp 0
+::ttk::checkbutton .top.spp -text SPP -variable spp
 pack .top -side top -fill x
 pack .top.conn -side left -padx 10 -pady 10
 pack .top.btlist -side left -fill x -expand 1 -padx 10 -pady 10
+pack .top.spp -side left -padx 10 -pady 10
 
 ::ttk::entry .send
 pack .send -side top -fill x -padx 10 -pady 10

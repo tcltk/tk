@@ -1171,8 +1171,19 @@ SdlTkCreateWindow(Display *display, Window parent, int x, int y,
 {
     _Window *_parent = (_Window *) parent;
     _Window *_w;
+    int nwmin;
 
-    _w = (SdlTkX.nwfree >= 16) ? SdlTkX.wfree : NULL;
+    /*
+     * Window ids are direct adresses to _Window structs.
+     * The SdlTkX.wfree queue keeps already allocated but
+     * destroyed windows and tries to delay recycling.
+     */
+
+    nwmin = SdlTkX.nwtotal - SdlTkX.nwfree;
+    if (nwmin < 128) {
+	nwmin = 128;
+    }
+    _w = (SdlTkX.nwfree >= nwmin) ? SdlTkX.wfree : NULL;
     if (_w == NULL) {
 	_w = (_Window *) ckalloc(sizeof (_Window));
 	memset(_w, 0, sizeof (_Window));

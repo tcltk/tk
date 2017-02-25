@@ -125,9 +125,10 @@ proc ::tk::ConsoleInit {} {
     # See if we can find a better font than the TkFixedFont
     catch {font create TkConsoleFont {*}[font configure TkFixedFont]}
     set families [font families]
+    set size [font configure TkDefaultFont -size]
     switch -exact -- [tk windowingsystem] {
-        aqua { set preferred {Monaco 10} }
-        win32 { set preferred {ProFontWindows 8 Consolas 8} }
+        aqua { set preferred [list Monaco $size] }
+        win32 { set preferred [list Consolas $size] }
         default { set preferred {} }
     }
     foreach {family size} $preferred {

@@ -60,9 +60,10 @@ typedef struct ThreadSpecificData {
     HICON hSmallIcon;		/* icons used by a parent to be used in */
     HICON hBigIcon;		/* the message box */
     int   newFileDialogsState;
-#define FDLG_STATE_INIT 0       /* Uninitialized */
+#define FDLG_STATE_INIT    0    /* Uninitialized */
 #define FDLG_STATE_USE_NEW 1    /* Use the new dialogs */
 #define FDLG_STATE_USE_OLD 2    /* Use the old dialogs */
+#define FDLG_STATE_USE_NT4 3    /* Use the old dialogs NT4 */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -1224,12 +1225,24 @@ error_return:                   /* interp should already hold error */
 static int VistaFileDialogsAvailable()
 {
     HRESULT hr;
+    OSVERSIONINFOW os;
     IFileDialog *fdlgPtr = NULL;
     ThreadSpecificData *tsdPtr =
         Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->newFileDialogsState == FDLG_STATE_INIT) {
         tsdPtr->newFileDialogsState = FDLG_STATE_USE_OLD;
+	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+	GetVersionExW(&os);
+	if (os.dwMajorVersion < 5) {
+	    /* Win NT 4 */
+	    tsdPtr->newFileDialogsState = FDLG_STATE_USE_NT4;
+	    goto done;
+	}
+	if ((os.dwMajorVersion == 5) && (os.dwMinorVersion < 1)) {
+	    /* Win 2000 */
+	    goto done;
+	}
         LoadShellProcs();
         if (ShellProcs.SHCreateItemFromParsingName != NULL) {
             hr = CoInitialize(0);
@@ -1254,7 +1267,7 @@ static int VistaFileDialogsAvailable()
             }
         }
     }
-
+done:
     return (tsdPtr->newFileDialogsState == FDLG_STATE_USE_NEW);
 }
 
@@ -1613,7 +1626,11 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
     hWnd = Tk_GetHWND(Tk_WindowId(optsPtr->tkwin));
 
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
-    ofn.lStructSize = sizeof(OPENFILENAME);
+    if (tsdPtr->newFileDialogsState == FDLG_STATE_USE_NT4) {
+	ofn.lStructSize = sizeof(OPENFILENAME_NT4);
+    } else {
+	ofn.lStructSize = sizeof(OPENFILENAME);
+    }
     ofn.hwndOwner = hWnd;
     ofn.hInstance = TkWinGetHInstance(ofn.hwndOwner);
     ofn.lpstrFile = optsPtr->file;

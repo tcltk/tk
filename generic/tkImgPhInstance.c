@@ -726,8 +726,7 @@ TkImgPhotoFree(
     PhotoInstance *instancePtr = clientData;
     ColorTable *colorPtr;
 
-    instancePtr->refCount -= 1;
-    if (instancePtr->refCount > 0) {
+    if (instancePtr->refCount-- > 1) {
 	return;
     }
 

@@ -359,6 +359,7 @@ CreateXIC(
 	/* XCreateIC failed. */
 	return;
     }
+    winPtr->ximGeneration = dispPtr->ximGeneration;
 
     /*
      * Adjust the window's event mask if the IM requires it.
@@ -1301,6 +1302,14 @@ Tk_HandleEvent(
      */
 
 #ifdef TK_USE_INPUT_METHODS
+    /*
+     * If the XIC has been invalidated, it must be recreated.
+     */
+    if (winPtr->dispPtr->ximGeneration != winPtr->ximGeneration) {
+	winPtr->flags &= ~TK_CHECKED_IC;
+	winPtr->inputContext = NULL;
+    }
+
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)) {
 	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
 	    winPtr->flags |= TK_CHECKED_IC;
@@ -1308,7 +1317,9 @@ Tk_HandleEvent(
 		CreateXIC(winPtr);
 	    }
 	}
-	if (eventPtr->type == FocusIn && winPtr->inputContext != NULL) {
+	if ((eventPtr->type == FocusIn) &&
+		(winPtr->dispPtr->inputMethod != NULL) &&
+		(winPtr->inputContext != NULL)) {
 	    XSetICFocus(winPtr->inputContext);
 	}
     }

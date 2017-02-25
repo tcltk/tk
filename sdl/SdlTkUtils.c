@@ -358,6 +358,7 @@ SdlTkLoadGlyphHash(GlyphIndexHash *ghash, FileFaceKey *ffKey, int fsize)
     if (fterr != 0) {
 	Tcl_Panic("loading freetype font failed");
     }
+    FT_Select_Charmap(face, FT_ENCODING_UNICODE);
     charcode = FT_Get_First_Char(face, &gindex);
     while (gindex != 0) {
 	hPtr = Tcl_CreateHashEntry(&ghash->hash,
@@ -478,6 +479,35 @@ SdlTkFontLoadXLFD(const char *xlfd)
     Tcl_MutexUnlock(&fontMutex);
     FNTLOG("FONTLOAD: '%s' -> '%s'", xlfd, _f->file);
     return (Font) _f;
+}
+
+int
+SdlTkFontShrink(XFontStruct *fontStructPtr, int n, int *offsPtr)
+{
+    _Font *_f = (_Font *) fontStructPtr->fid;
+    int offset, ret = _f->size;
+
+    if (ret && (ret / n > 4)) {
+	_f->size = ret / n;
+    }
+    offset = (ret - _f->size - fontStructPtr->descent) / 2;
+    if (offset < 0) {
+	offset = 0;
+    }
+    if (offsPtr != NULL) {
+	*offsPtr = offset;
+    }
+    return ret;
+}
+
+int
+SdlTkFontRestore(XFontStruct *fontStructPtr, int n)
+{
+    _Font *_f = (_Font *) fontStructPtr->fid;
+    int ret = _f->size;
+
+    _f->size = n;
+    return ret;
 }
 
 int
@@ -761,19 +791,25 @@ SdlTkReadFTStream(FT_Stream ftstr, unsigned long offs, unsigned char *buf,
 	 * all threads, the channel is spliced into the current
 	 * thread here.
 	 */
-	Tcl_SpliceChannel((Tcl_Channel) ftstr->descriptor.pointer);
+	chan = (Tcl_Channel) ftstr->descriptor.pointer;
+	Tcl_SpliceChannel(chan);
     }
-    if ((ftstr->descriptor.pointer != NULL) && count) {
+    if (chan != NULL) {
 	Tcl_WideInt wOffs;
 	int n;
 
-	chan = (Tcl_Channel) ftstr->descriptor.pointer;
 	wOffs = offs;
 	wOffs = Tcl_Seek(chan, wOffs, SEEK_SET);
 	if (wOffs == -1) {
 	    FNTLOG("FONTSTREAM: seek '%s' @%ld failed",
 		   (char *) ftstr->pathname.pointer, offs);
+	    if (count == 0) {
+		ret = (unsigned long) -1;	/* indicate seek error */
+	    }
 	    goto done;
+	}
+	if (count == 0) {
+	    goto done;				/* seek operation, no read needed */
 	}
 	n = Tcl_Read(chan, (char *) buf, count);
 	if (n != -1) {
@@ -784,16 +820,18 @@ SdlTkReadFTStream(FT_Stream ftstr, unsigned long offs, unsigned char *buf,
 	    FNTLOG("FONTSTREAM: read '%s' @%ld failed (%ld)",
 		   (char *) ftstr->pathname.pointer, offs, count);
 	}
+    } else if (count == 0) {
+	ret = (unsigned long) -1;		/* indicate seek error */
     }
 done:
-    if (ftstr->descriptor.pointer != NULL) {
+    if (chan != NULL) {
 	/*
 	 * Since there's a singleton font manager/font cache in
 	 * the AGG based drawing functions which is shared among
 	 * all threads, the channel is cut from the current
 	 * thread here.
 	 */
-	Tcl_CutChannel((Tcl_Channel) ftstr->descriptor.pointer);
+	Tcl_CutChannel(chan);
     }
     return ret;
 }
@@ -959,7 +997,9 @@ AddSysFontFiles(Tcl_Obj *list)
 	    Tcl_WinTCharToUtf(Tcl_DStringValue(&ds), -1, &fname);
 	    p = Tcl_DStringValue(&fname);
 	    q = strrchr(p, '.');
-	    if ((q != NULL) && (strcasecmp(q, ".ttf") == 0)) {
+	    if ((q != NULL) && ((strcasecmp(q, ".ttf") == 0) ||
+				(strcasecmp(q, ".ttc") == 0) ||
+				(strcasecmp(q, ".otf") == 0))) {
 		q = p;
 		while (*q != '\0') {
 		    if (*q == '\\') {
@@ -1032,8 +1072,8 @@ SdlTkFontInit(Tcl_Interp *interp)
     result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
 		"[file join $tk_library fonts] *] "
 		"[glob -nocomplain -directory [file normalize ~/.fonts] "
-		"-types f *.ttf] "
-		"[glob -nocomplain -directory /system/fonts *.ttf"
+		"-types f *.ttf *.ttc *.otf] "
+		"[glob -nocomplain -directory /system/fonts *.ttf *.ttc *.otf"
 		" -types f]",
 		-1, TCL_EVAL_GLOBAL);
 #else
@@ -1046,7 +1086,7 @@ SdlTkFontInit(Tcl_Interp *interp)
 	result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
 		    "[file join $tk_library fonts] *] "
 		    "[glob -nocomplain -directory [file normalize ~/.fonts] "
-		    "-types f *.ttf]",
+		    "-types f *.ttf *.ttc *.otf]",
 		    -1, TCL_EVAL_GLOBAL);
 #else
 	/*
@@ -1056,11 +1096,11 @@ SdlTkFontInit(Tcl_Interp *interp)
 	result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
 		    "[file join $tk_library fonts] *] "
 		    "[glob -nocomplain -directory [file normalize ~/.fonts] "
-		    "-types f *.ttf] "
+		    "-types f *.ttf *.ttc *.otf] "
 		    "[glob -nocomplain -directory /usr/share/fonts"
-		    " -types f */*.ttf] "
+		    " -types f */*.ttf */*.ttc */*.otf] "
 		    "[glob -nocomplain -directory /usr/share/fonts/truetype"
-		    " -types f */*.ttf]",
+		    " -types f */*.ttf */*.ttc */*.otf]",
 		    -1, TCL_EVAL_GLOBAL);
 #endif
     }
@@ -1113,6 +1153,7 @@ fonterr:
 	    if (!(face->face_flags & FT_FACE_FLAG_SCALABLE)) {
 	        goto nextface;
 	    }
+	    FT_Select_Charmap(face, FT_ENCODING_UNICODE);
 	    if ((face->num_charmaps < 1) || !face->charmap ||
 		(face->charmap->encoding != FT_ENCODING_UNICODE)) {
 		goto nextface;
@@ -1272,6 +1313,7 @@ SdlTkFontAdd(Tcl_Interp *interp, const char *fname)
 	if (!(face->face_flags & FT_FACE_FLAG_SCALABLE)) {
 	    goto nextface;
 	}
+	FT_Select_Charmap(face, FT_ENCODING_UNICODE);
 	if ((face->num_charmaps < 1) || !face->charmap ||
 	    (face->charmap->encoding != FT_ENCODING_UNICODE)) {
 	    goto nextface;

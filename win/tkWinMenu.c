@@ -900,7 +900,7 @@ TkWinMenuProc(
     LRESULT lResult;
 
     if (!TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &lResult)) {
-	lResult = DefWindowProcA(hwnd, message, wParam, lParam);
+	lResult = DefWindowProc(hwnd, message, wParam, lParam);
     }
     return lResult;
 }
@@ -999,7 +999,7 @@ TkWinEmbeddedMenuProc(
 	}
 
     default:
-	lResult = DefWindowProcA(hwnd, message, wParam, lParam);
+	lResult = DefWindowProc(hwnd, message, wParam, lParam);
 	break;
     }
     return lResult;
@@ -2043,33 +2043,33 @@ TkWinMenuKeyObjCmd(
     if (eventPtr->type == KeyPress) {
 	switch (keySym) {
 	case XK_Alt_L:
-	    scanCode = MapVirtualKeyA(VK_LMENU, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_LMENU, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_MENU,
 		    (int) (scanCode << 16) | (1 << 29));
 	    break;
 	case XK_Alt_R:
-	    scanCode = MapVirtualKeyA(VK_RMENU, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_RMENU, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_MENU,
 		    (int) (scanCode << 16) | (1 << 29) | (1 << 24));
 	    break;
 	case XK_F10:
-	    scanCode = MapVirtualKeyA(VK_F10, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_F10, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_F10, (int) (scanCode << 16));
 	    break;
 	default:
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
-	    scanCode = MapVirtualKeyA(virtualKey, 0);
+	    scanCode = MapVirtualKey(virtualKey, 0);
 	    if (0 != scanCode) {
 		XKeyEvent xkey = eventPtr->xkey;
-		CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYDOWN, virtualKey,
 			(int) ((scanCode << 16) | (1 << 29)));
 		if (xkey.nbytes > 0) {
 		    for (i = 0; i < xkey.nbytes; i++) {
-			CallWindowProcA(DefWindowProcA,
+			CallWindowProc(DefWindowProc,
 				Tk_GetHWND(Tk_WindowId(tkwin)), WM_SYSCHAR,
 				xkey.trans_chars[i],
 				(int) ((scanCode << 16) | (1 << 29)));
@@ -2080,28 +2080,28 @@ TkWinMenuKeyObjCmd(
     } else if (eventPtr->type == KeyRelease) {
 	switch (keySym) {
 	case XK_Alt_L:
-	    scanCode = MapVirtualKeyA(VK_LMENU, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_LMENU, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16)
 		    | (1 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_Alt_R:
-	    scanCode = MapVirtualKeyA(VK_RMENU, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_RMENU, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16) | (1 << 24)
 		    | (0x111 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_F10:
-	    scanCode = MapVirtualKeyA(VK_F10, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_F10, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_F10,
 		    (int) (scanCode << 16) | (1 << 30) | (1 << 31));
 	    break;
 	default:
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
-	    scanCode = MapVirtualKeyA(virtualKey, 0);
+	    scanCode = MapVirtualKey(virtualKey, 0);
 	    if (0 != scanCode) {
-		CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYUP, virtualKey, (int) ((scanCode << 16)
 			| (1 << 29) | (1 << 30) | (1 << 31)));
 	    }
@@ -3206,7 +3206,7 @@ SetDefaults(
     HDC scratchDC;
     int bold = 0;
     int italic = 0;
-    TEXTMETRICA tm;
+    TEXTMETRIC tm;
     int pointSize;
     HFONT menuFont;
     /* See: [Bug #3239768] tk8.4.19 (and later) WIN32 menu font support */
@@ -3246,7 +3246,7 @@ SetDefaults(
 	    &nc.metrics, 0);
     menuFont = CreateFontIndirect(&nc.metrics.lfMenuFont);
     SelectObject(scratchDC, menuFont);
-    GetTextMetricsA(scratchDC, &tm);
+    GetTextMetrics(scratchDC, &tm);
     GetTextFaceA(scratchDC, LF_FACESIZE, faceName);
     pointSize = MulDiv(tm.tmHeight - tm.tmInternalLeading,
 	    72, GetDeviceCaps(scratchDC, LOGPIXELSY));
@@ -3302,9 +3302,7 @@ SetDefaults(
      */
 
     showMenuAccelerators = TRUE;
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
-	SystemParametersInfoA(SPI_GETKEYBOARDCUES, 0, &showMenuAccelerators, 0);
-    }
+    SystemParametersInfo(SPI_GETKEYBOARDCUES, 0, &showMenuAccelerators, 0);
 }
 
 /*

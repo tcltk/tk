@@ -389,6 +389,8 @@ extern int SdlTkFontInit(Tcl_Interp *interp);
 extern int SdlTkFontAdd(Tcl_Interp *interp, const char *fileName);
 extern int SdlTkFontList(Tcl_Interp *interp);
 extern void SdlTkFontFreeFont(XFontStruct *fontStructPtr);
+extern int SdlTkFontShrink(XFontStruct *fontStructPtr, int n, int *offsPtr);
+extern int SdlTkFontRestore(XFontStruct *fontStructPtr, int n);
 extern int SdlTkFontIsFixedWidth(XFontStruct *fontStructPtr);
 extern int SdlTkFontHasChar(XFontStruct *fontStructPtr, char *buf);
 extern int SdlTkFontCanDisplayChar(char *xlfd, TkFontAttributes *faPtr, int ch);
