@@ -15,6 +15,7 @@
 #include "tkText.h"
 #include "tkTextTagSet.h"
 #include "tkTextUndo.h"
+#include "tkAlloc.h"
 #include <assert.h>
 
 #ifdef NDEBUG
@@ -157,7 +158,6 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
-DEBUG_ALLOC(extern unsigned tkTextCountDestroySegment);
 DEBUG_ALLOC(extern unsigned tkTextCountNewUndoToken);
 DEBUG_ALLOC(extern unsigned tkTextCountNewSegment);
 
@@ -925,9 +925,7 @@ ReleaseImage(
     if (img->bbox) {
 	free(img->bbox);
     }
-    TkTextTagSetDecrRefCount(eiPtr->tagInfoPtr);
-    FREE_SEGMENT(eiPtr);
-    DEBUG_ALLOC(tkTextCountDestroySegment++);
+    TkBTreeFreeSegment(eiPtr);
 }
 
 /*
@@ -954,9 +952,12 @@ EmbImageDeleteProc(
     TkTextSegment *eiPtr,	/* Segment being deleted. */
     int flags)			/* Flags controlling the deletion. */
 {
-    TkTextEmbImage *img = &eiPtr->body.ei;
+    TkTextEmbImage *img;
 
+    assert(eiPtr->typePtr);
     assert(eiPtr->refCount > 0);
+
+    img = &eiPtr->body.ei;
 
     if (img->hPtr) {
 	img->sharedTextPtr->numImages -= 1;
@@ -997,8 +998,10 @@ EmbImageDeleteProc(
 	}
     }
 
-    if (--eiPtr->refCount == 0) {
+    if (eiPtr->refCount == 1) {
 	ReleaseImage(eiPtr);
+    } else {
+	eiPtr->refCount -= 1;
     }
 
     return true;

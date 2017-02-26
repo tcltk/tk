@@ -14,6 +14,7 @@
 
 #include "tkInt.h"
 #include "tkText.h"
+#include "tkAlloc.h"
 #include "tk3d.h"
 #include <assert.h>
 

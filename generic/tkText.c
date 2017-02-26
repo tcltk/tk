@@ -21,6 +21,7 @@
 #include "tkTextUndo.h"
 #include "tkTextTagSet.h"
 #include "tkBitField.h"
+#include "tkAlloc.h"
 #include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
@@ -1129,9 +1130,6 @@ CreateWidget(
      */
 
     textPtr->selTagPtr = TkTextCreateTag(textPtr, "sel", NULL);
-    textPtr->selTagPtr->reliefString = malloc(strlen(DEF_TEXT_SELECT_RELIEF) + 1);
-    strcpy(textPtr->selTagPtr->reliefString, DEF_TEXT_SELECT_RELIEF);
-    Tk_GetRelief(interp, DEF_TEXT_SELECT_RELIEF, &textPtr->selTagPtr->relief);
     textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &startIndex);
     textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &startIndex);
     textPtr->currentMarkIndex = startIndex;
@@ -4970,6 +4968,7 @@ InsertChars(
     if (undoInfoPtr) {
 	const TkTextUndoSubAtom *subAtom;
 	bool triggerStackEvent = false;
+	bool pushToken;
 
 	assert(undoInfo.byteSize == 0);
 
@@ -4978,10 +4977,19 @@ InsertChars(
 	    TkTextUndoPushSeparator(sharedTextPtr->undoStack, true);
 	    sharedTextPtr->lastUndoTokenType = -1;
 	}
-	if (sharedTextPtr->lastUndoTokenType != TK_TEXT_UNDO_INSERT
+
+	pushToken = sharedTextPtr->lastUndoTokenType != TK_TEXT_UNDO_INSERT
 		|| !((subAtom = TkTextUndoGetLastUndoSubAtom(sharedTextPtr->undoStack))
 			&& (triggerStackEvent = TkBTreeJoinUndoInsert(
-				subAtom->item, subAtom->size, undoInfo.token, undoInfo.byteSize)))) {
+				subAtom->item, subAtom->size, undoInfo.token, undoInfo.byteSize)));
+
+	assert(undoInfo.token->undoType->rangeProc);
+	sharedTextPtr->prevUndoStartIndex = ((TkTextUndoTokenRange *) undoInfo.token)->startIndex;
+	sharedTextPtr->prevUndoEndIndex = ((TkTextUndoTokenRange *) undoInfo.token)->endIndex;
+	sharedTextPtr->lastUndoTokenType = TK_TEXT_UNDO_INSERT;
+	sharedTextPtr->lastEditMode = TK_TEXT_EDIT_INSERT;
+
+	if (pushToken) {
 	    TkTextPushUndoToken(sharedTextPtr, undoInfo.token, undoInfo.byteSize);
 	} else {
 	    assert(!undoInfo.token->undoType->destroyProc);
@@ -4991,11 +4999,6 @@ InsertChars(
 	if (triggerStackEvent) {
 	    sharedTextPtr->undoStackEvent = true; /* TkBTreeJoinUndoInsert didn't trigger */
 	}
-	assert(undoInfo.token->undoType->rangeProc);
-	sharedTextPtr->prevUndoStartIndex = ((TkTextUndoTokenRange *) undoInfo.token)->startIndex;
-	sharedTextPtr->prevUndoEndIndex = ((TkTextUndoTokenRange *) undoInfo.token)->endIndex;
-	sharedTextPtr->lastUndoTokenType = TK_TEXT_UNDO_INSERT;
-	sharedTextPtr->lastEditMode = TK_TEXT_EDIT_INSERT;
     }
 
     *index2Ptr = *index1Ptr;
@@ -7432,7 +7435,7 @@ DumpLine(
 	TkBTreeMoveBackward(&index, 1);
 	segPtr = TkTextIndexGetContentSegment(&index, NULL);
 	assert(segPtr);
-	tagPtr = TkBTreeGetSegmentTags(textPtr->sharedTextPtr, segPtr, textPtr);
+	tagPtr = TkBTreeGetSegmentTags(textPtr->sharedTextPtr, segPtr, textPtr, NULL);
 	for (tPtr = tagPtr; tPtr; tPtr = tPtr->nextPtr) {
 	    tPtr->flag = epoch; /* mark as open */
 	}
@@ -7467,7 +7470,7 @@ DumpLine(
 
 	if (offset + MAX(1, currentSize) > startByte) {
 	    if ((what & TK_DUMP_TAG) && segPtr->tagInfoPtr) {
-		TkTextTag *tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr);
+		TkTextTag *tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr, NULL);
 		unsigned epoch = sharedTextPtr->inspectEpoch;
 		unsigned nextEpoch = epoch + 1;
 		TkTextTag *tPtr;
@@ -8355,7 +8358,7 @@ TextInspectCmd(
 		    type = "break";
 		    printTags = !!(what & TK_DUMP_TAG);
 		    tagPtr = TkBTreeGetSegmentTags(sharedTextPtr,
-			    segPtr->sectionPtr->linePtr->lastPtr, textPtr);
+			    segPtr->sectionPtr->linePtr->lastPtr, textPtr, NULL);
 		    nextPtr = segPtr; /* repeat this mark */
 		} else {
 		    nextPtr = NULL; /* finished */
@@ -8387,7 +8390,7 @@ TextInspectCmd(
 			tagPtr = prevTagPtr;
 			segPtr->body.chars[segPtr->size - 1] = '\n';
 		    } else if (type && printTags) {
-			tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr);
+			tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr, NULL);
 		    }
 		} else {
 		    type = "text";
@@ -8397,7 +8400,7 @@ TextInspectCmd(
 		    }
 		    value = segPtr->body.chars;
 		    if (printTags) {
-			tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr);
+			tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr, NULL);
 		    }
 		}
 	    } else if (!nextPtr) {
