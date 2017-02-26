@@ -17,6 +17,7 @@
 #include "tkText.h"
 #include "tkTextTagSet.h"
 #include "tkTextUndo.h"
+#include "tkAlloc.h"
 #include <assert.h>
 
 #ifdef NDEBUG
@@ -181,7 +182,6 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
-DEBUG_ALLOC(extern unsigned tkTextCountDestroySegment);
 DEBUG_ALLOC(extern unsigned tkTextCountNewSegment);
 DEBUG_ALLOC(extern unsigned tkTextCountNewUndoToken);
 
@@ -799,8 +799,7 @@ EmbWinConfigure(
 		 * Have to make the new client.
 		 */
 
-		client = malloc(sizeof(TkTextEmbWindowClient));
-		memset(client, 0, sizeof(TkTextEmbWindowClient));
+		client = memset(malloc(sizeof(TkTextEmbWindowClient)), 0, sizeof(TkTextEmbWindowClient));
 		client->next = ewPtr->body.ew.clients;
 		client->textPtr = textPtr;
 		client->parent = ewPtr;
@@ -956,6 +955,7 @@ EmbWinLostSlaveProc(
     assert(client->tkwin);
     client->displayed = false;
     Tk_DeleteEventHandler(client->tkwin, StructureNotifyMask, EmbWinStructureProc, client);
+    Tcl_CancelIdleCall(EmbWinDelayedUnmap, client);
     EmbWinDelayedUnmap(client);
     if (client->hPtr) {
 	ewPtr->body.ew.sharedTextPtr->numWindows -= 1;
@@ -1128,9 +1128,7 @@ ReleaseWindow(
     }
     ewPtr->body.ew.clients = NULL;
     Tk_FreeConfigOptions((char *) &ewPtr->body.ew, ewPtr->body.ew.optionTable, NULL);
-    TkTextTagSetDecrRefCount(ewPtr->tagInfoPtr);
-    FREE_SEGMENT(ewPtr);
-    DEBUG_ALLOC(tkTextCountDestroySegment++);
+    TkBTreeFreeSegment(ewPtr);
 }
 
 /*
@@ -1202,10 +1200,12 @@ EmbWinDeleteProc(
     int flags)			/* Flags controlling the deletion. */
 {
     assert(ewPtr->typePtr);
+    assert(ewPtr->refCount > 0);
 
-    if (--ewPtr->refCount == 0) {
+    if (ewPtr->refCount == 1) {
 	ReleaseWindow(ewPtr);
     } else {
+	ewPtr->refCount -= 1;
 	DestroyOrUnmapWindow(ewPtr);
     }
     return true;
@@ -1402,8 +1402,7 @@ EmbWinLayoutProc(
 	     * now need to add to our client list.
 	     */
 
-	    client = malloc(sizeof(TkTextEmbWindowClient));
-	    memset(client, 0, sizeof(TkTextEmbWindowClient));
+	    client = memset(malloc(sizeof(TkTextEmbWindowClient)), 0, sizeof(TkTextEmbWindowClient));
 	    client->next = ewPtr->body.ew.clients;
 	    client->textPtr = textPtr;
 	    client->parent = ewPtr;

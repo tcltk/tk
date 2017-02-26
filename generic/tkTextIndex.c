@@ -14,6 +14,7 @@
 #include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
+#include "tkAlloc.h"
 #include <stdlib.h>
 #include <assert.h>
 
@@ -1230,13 +1231,12 @@ TkTextIndexGetFirstSegment(
     assert(segPtr->sectionPtr->linePtr == indexPtr->priv.linePtr);
 
     if (myOffset == 0) {
-	TkTextIndex *iPtr;
+	TkTextIndex *iPtr = (TkTextIndex *) indexPtr; /* mutable due to concept */
 
 	while ((prevPtr = segPtr->prevPtr) && prevPtr->size == 0) {
 	    segPtr = prevPtr;
 	}
 
-	iPtr = (TkTextIndex *) indexPtr; /* mutable due to concept */
 	iPtr->priv.segPtr = segPtr;
 	iPtr->priv.isCharSegment = segPtr->typePtr == &tkTextCharType;
     }

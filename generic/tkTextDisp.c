@@ -17,6 +17,7 @@
 #include "tkText.h"
 #include "tkTextTagSet.h"
 #include "tkRangeList.h"
+#include "tkAlloc.h"
 #include "tkInt.h"
 
 #ifdef _WIN32
@@ -1803,15 +1804,15 @@ TkTextResetDInfo(
 static TextStyle *
 MakeStyle(
     TkText *textPtr,
-    TkTextTag *tagPtr)
+    TkTextTag *tagPtr,
+    bool containsSelection)
 {
     StyleValues styleValues;
     TextStyle *stylePtr;
     Tcl_HashEntry *hPtr;
-    int isNew;
-    bool isSelected;
     XGCValues gcValues;
     unsigned long mask;
+    bool isNew;
 
     /*
      * The variables below keep track of the highest-priority specification
@@ -1853,8 +1854,6 @@ MakeStyle(
     styleValues.lang = textPtr->lang;
     styleValues.hyphenRules = textPtr->hyphenRulesPtr ? textPtr->hyphenRules : TK_TEXT_HYPHEN_MASK;
 
-    isSelected = false;
-
     for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
 	Tk_3DBorder border;
         XColor *fgColor;
@@ -1883,10 +1882,10 @@ MakeStyle(
 	    border = textPtr->inactiveSelBorder;
 	}
 
-        if (tagPtr->selBorder && isSelected) {
+        if (tagPtr->selBorder && containsSelection) {
             border = tagPtr->selBorder;
         }
-        if (tagPtr->selFgColor != None && isSelected) {
+        if (tagPtr->selFgColor != None && containsSelection) {
             fgColor = tagPtr->selFgColor;
         }
 	if (border && priority > borderPrio) {
@@ -1899,7 +1898,7 @@ MakeStyle(
 	    styleValues.borderWidth = tagPtr->borderWidth;
 	    borderWidthPrio = priority;
 	}
-	if (tagPtr->reliefString && priority > reliefPrio) {
+	if (tagPtr->reliefPtr && priority > reliefPrio) {
 	    if (!styleValues.border) {
 		styleValues.border = textPtr->border;
 	    }
@@ -2094,9 +2093,11 @@ GetStyle(
 {
     TextStyle *stylePtr;
     TkTextTag *tagPtr;
+    bool containsSelection;
 
-    if (segPtr && (tagPtr = TkBTreeGetSegmentTags(textPtr->sharedTextPtr, segPtr, textPtr))) {
-	stylePtr = MakeStyle(textPtr, tagPtr);
+    if (segPtr && (tagPtr = TkBTreeGetSegmentTags(
+		    textPtr->sharedTextPtr, segPtr, textPtr, &containsSelection))) {
+	stylePtr = MakeStyle(textPtr, tagPtr, containsSelection);
     } else {
 	/*
 	 * Take into account that this function can be called before UpdateDefaultStyle
@@ -2133,7 +2134,7 @@ static void
 UpdateDefaultStyle(
     TkText *textPtr)
 {
-    TextStyle *stylePtr = MakeStyle(textPtr, NULL);
+    TextStyle *stylePtr = MakeStyle(textPtr, NULL, false);
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
     if (stylePtr != dInfoPtr->defaultStyle) {

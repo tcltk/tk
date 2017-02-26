@@ -25,7 +25,6 @@
 #include "tkTextUndo.h"
 #include "tkQTree.h"
 #include "tkBool.h"
-#include "tkAlloc.h"
 #include <stdint.h>
 
 #ifdef MAC_OSX_TK
@@ -804,7 +803,7 @@ typedef struct TkTextTag {
     Tk_3DBorder border;		/* Used for drawing background. NULL means no value specified here. */
     int borderWidth;		/* Width of 3-D border for background. */
     Tcl_Obj *borderWidthPtr;	/* Width of 3-D border for background. */
-    char *reliefString;		/* -relief option string (malloc-ed). NULL means option not specified. */
+    Tcl_Obj *reliefPtr;		/* -relief option object. NULL means option not specified. */
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means no value specified here. */
     char *indentBgString;	/* Background will be indented accordingly to the -lmargin1, and
@@ -1737,7 +1736,7 @@ MODULE_SCOPE TkTextSegment * TkBTreeFindEndOfElidedRange(const TkSharedText *sha
 			    const TkText *textPtr, const TkTextSegment *segPtr);
 inline TkTextTag *	TkBTreeGetTags(const TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextTag * TkBTreeGetSegmentTags(const TkSharedText *sharedTextPtr,
-			    const TkTextSegment *segPtr, const TkText *textPtr);
+			    const TkTextSegment *segPtr, const TkText *textPtr, bool *containsSelection);
 MODULE_SCOPE const char * TkBTreeGetLang(const TkText *textPtr, const TkTextSegment *segPtr);
 MODULE_SCOPE void	TkBTreeInsertChars(TkTextBTree tree, TkTextIndex *indexPtr, const char *string,
 			    STRUCT TkTextTagSet *tagInfoPtr, TkTextTag *hyphenTagPtr,
