@@ -25,7 +25,16 @@
 #include "tkTextUndo.h"
 #include "tkQTree.h"
 #include "tkBool.h"
-#include <stdint.h>
+
+#if HAVE_STDINT_H
+# include <stdint.h>
+#elif defined(_MSC_VER) && _MSC_VER < 1600
+/* work around for the support of ancient compilers */
+# include "tkWinStdInt.h"
+#else
+/* this is not expected with compilers from this century, except MSVC (handled above) */
+# error "C99 support is required - can't find stdint.h"
+#endif
 
 #ifdef MAC_OSX_TK
 /* required for TK_LAYOUT_WITH_BASE_CHUNKS */
