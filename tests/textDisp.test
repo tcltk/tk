@@ -4280,7 +4280,7 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     lappend res [expr {[lindex $fr1 0] == [lindex $fr2 0]}]
     lappend res [expr {[lindex $fr1 1] == [lindex $fr2 1]}]
 } -cleanup {
-    .t debug off ;# re-enable debugging
+    .t debug on ;# re-enable debugging
     destroy .t1
 } -result {1 1}
 
