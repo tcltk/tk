@@ -39,6 +39,7 @@
 #define SELECT_BG		"systemHighlight"
 #define SELECT_FG		None
 #define INACTIVE_SELECT_BG	"systemHighlightSecondary"
+#define INACTIVE_SELECT_FG	"systemDialogActiveText"
 #define TROUGH			"#c3c3c3"
 #define INDICATOR		"#b03060"
 #define DISABLED		"#a3a3a3"
@@ -528,7 +529,8 @@
 #define DEF_TEXT_PADX			"1"
 #define DEF_TEXT_PADY			"1"
 #define DEF_TEXT_RELIEF			"flat"
-#define DEF_TEXT_INACTIVE_SELECT_COLOR	INACTIVE_SELECT_BG
+#define DEF_TEXT_INACTIVE_SELECT_BG_COLOR INACTIVE_SELECT_BG
+#define DEF_TEXT_INACTIVE_SELECT_FG_COLOR INACTIVE_SELECT_FG
 #define DEF_TEXT_SELECT_COLOR		SELECT_BG
 #define DEF_TEXT_SELECT_MONO		BLACK
 #define DEF_TEXT_SELECT_BD_COLOR	"1"

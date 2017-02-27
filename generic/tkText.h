@@ -1319,6 +1319,9 @@ typedef struct TkText {
     Tcl_Obj *selBorderWidthPtr;	/* Width of border around selection. */
     XColor *selFgColorPtr;	/* Foreground color for selected text. This is a copy of
     				 * information in *selTagPtr, so it shouldn't be explicitly freed. */
+    XColor *inactiveSelFgColorPtr;
+    				/* Foreground color for selected characters when they don't have
+				 * the focus. */
     bool exportSelection;	/* Non-zero means tie "sel" tag to X selection. */
     TkTextSearch selSearch;	/* Used during multi-pass selection retrievals. */
     TkTextIndex selIndex;	/* Used during multi-pass selection retrievals. This index

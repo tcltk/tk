@@ -1880,14 +1880,18 @@ MakeStyle(
 	    }
 #endif
 	    border = textPtr->inactiveSelBorder;
+	    fgColor = textPtr->inactiveSelFgColorPtr;
 	}
-
-        if (tagPtr->selBorder && containsSelection) {
-            border = tagPtr->selBorder;
-        }
-        if (tagPtr->selFgColor != None && containsSelection) {
-            fgColor = tagPtr->selFgColor;
-        }
+	if (containsSelection) {
+	    if (tagPtr->selBorder) {
+		border = tagPtr->selBorder;
+	    }
+	    if (tagPtr->selFgColor != None) {
+		fgColor = tagPtr->selFgColor;
+	    } else if (fgColor == None) {
+		fgColor = textPtr->selFgColorPtr;
+	    }
+	}
 	if (border && priority > borderPrio) {
 	    styleValues.border = border;
 	    borderPrio = priority;
