@@ -4264,6 +4264,11 @@ test textDisp-34.1 {Line heights recalculation problem: bug 2677890} -setup {
 
 test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -setup {
     pack [text .t1] -fill both -expand y -side left
+    # We don't want debug for this test case, because it takes some hours
+    # if valgrind check is fully enabled. In this test case only the scrollbar
+    # behavior is relevant, all other involved functions (insert, see, ...) are
+    # already tested with debug mode in other test cases.
+    .t debug off
     .t insert end "[string repeat a\nb\nc\n 500000]THE END\n"
     set res {}
 } -body {
@@ -4275,6 +4280,7 @@ test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -s
     lappend res [expr {[lindex $fr1 0] == [lindex $fr2 0]}]
     lappend res [expr {[lindex $fr1 1] == [lindex $fr2 1]}]
 } -cleanup {
+    .t debug off ;# re-enable debugging
     destroy .t1
 } -result {1 1}
 
