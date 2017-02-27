@@ -89,9 +89,9 @@
  */
 
 #ifdef _MSC_VER
-# if defined(include)
+# if defined(inline)
 #  define TK_C99_INLINE_SUPPORT
-# elif _MSC_VER >= 1400
+# elif _MSC_VER >= 1200
 #  define inline __inline
 #  define TK_C99_INLINE_SUPPORT
 #  define TK_C99_INLINE_DEFINED
