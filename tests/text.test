@@ -6560,7 +6560,7 @@ test text-27.2 {TextEditCmd procedure, argument parsing} -body {
     .t edit gorp
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad edit option "gorp": must be altered, info, inspect, irreversible, modified, recover, redo, reset, separator, or undo}
+} -returnCodes {error} -result {bad edit option "gorp": must be altered, canredo, canundo, info, inspect, irreversible, modified, recover, redo, reset, separator, or undo}
 test text-27.3 {TextEditUndo procedure, undoing changes} -body {
     text .t -undo 1
     pack .t
