@@ -263,8 +263,11 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-hyphens", "hyphens", "Hyphens",
 	"0", -1, Tk_Offset(TkText, hyphens), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_BORDER, "-inactiveselectbackground", "inactiveSelectBackground", "Foreground",
-	DEF_TEXT_INACTIVE_SELECT_COLOR, -1, Tk_Offset(TkText, inactiveSelBorder),
+	DEF_TEXT_INACTIVE_SELECT_BG_COLOR, -1, Tk_Offset(TkText, inactiveSelBorder),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_MONO, 0},
+    {TK_OPTION_COLOR, "-inactiveselectforeground", "inactiveSelectForeground",
+	"Background", DEF_TEXT_INACTIVE_SELECT_FG_COLOR, -1,
+	Tk_Offset(TkText, inactiveSelFgColorPtr), TK_OPTION_NULL_OK, DEF_TEXT_SELECT_FG_MONO, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_TEXT_INSERT_BG, -1, Tk_Offset(TkText, insertBorder), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
@@ -4500,7 +4503,8 @@ ProcessFocusInOut(
 	    TkTextIndexForwChars(textPtr, &index, 1, &index2, COUNT_INDICES);
 	    TkTextChanged(NULL, textPtr, &index, &index2);
 	}
-	if (textPtr->inactiveSelBorder != textPtr->selBorder) {
+	if (textPtr->inactiveSelBorder != textPtr->selBorder
+		|| textPtr->inactiveSelFgColorPtr != textPtr->selFgColorPtr) {
 	    TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, false);
 	}
 	if (textPtr->highlightWidth > 0) {
