@@ -9974,9 +9974,7 @@ YScrollByPixels(
 	return;
     }
 
-    assert(TkTextIndexIsEndOfText(&textPtr->topIndex) ?
-	dInfoPtr->newTopPixelOffset == 0 :
-	dInfoPtr->newTopPixelOffset < CalculateDisplayLineHeight(textPtr, &textPtr->topIndex, NULL));
+    assert(dInfoPtr->newTopPixelOffset < CalculateDisplayLineHeight(textPtr, &textPtr->topIndex, NULL));
 
     DisplayTextWhenIdle(textPtr);
     dInfoPtr->flags |= DINFO_OUT_OF_DATE|REPICK_NEEDED;
