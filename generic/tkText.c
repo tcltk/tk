@@ -15,6 +15,11 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#if defined(_MSC_VER ) && _MSC_VER < 1500
+/* suppress wrong warnings to support ancient compilers */
+#pragma warning (disable : 4305)
+#endif
+
 #include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
