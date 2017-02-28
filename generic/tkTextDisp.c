@@ -7550,6 +7550,7 @@ CalculateDisplayLineHeight(
 {
     DisplayInfo info;
 
+    assert(!TkTextIndexIsEndOfText(indexPtr));
     assert(IsAtStartOfDisplayLine(indexPtr));
 
     /*
