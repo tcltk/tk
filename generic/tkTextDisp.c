@@ -4722,6 +4722,7 @@ ComputeDisplayLineInfo(
 	DLine *dlPtr;
 
 	if (dInfoPtr->lastMetricDLinePtr
+		&& pixelInfo->epoch == dInfoPtr->lineMetricUpdateEpoch
 		&& TkTextIndexIsEqual(&info->index, &dInfoPtr->lastMetricDLinePtr->index)) {
 	    dlPtr = dInfoPtr->lastMetricDLinePtr;
 	    dInfoPtr->lastMetricDLinePtr = NULL;
