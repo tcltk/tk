@@ -9511,8 +9511,7 @@ MeasureDown(
     linePtr = TkTextIndexGetLine(srcPtr);
     lastLinePtr = TkBTreeGetLastLine(textPtr);
 
-    // XXX
-    if (0 && TkRangeListIsEmpty(textPtr->dInfoPtr->lineMetricUpdateRanges)) {
+    if (TkRangeListIsEmpty(textPtr->dInfoPtr->lineMetricUpdateRanges)) {
 	int pixelHeight;
 
 	/*
