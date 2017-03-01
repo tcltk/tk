@@ -9511,7 +9511,8 @@ MeasureDown(
     linePtr = TkTextIndexGetLine(srcPtr);
     lastLinePtr = TkBTreeGetLastLine(textPtr);
 
-    if (TkRangeListIsEmpty(textPtr->dInfoPtr->lineMetricUpdateRanges)) {
+    // XXX
+    if (0 && TkRangeListIsEmpty(textPtr->dInfoPtr->lineMetricUpdateRanges)) {
 	int pixelHeight;
 
 	/*
@@ -9578,6 +9579,7 @@ MeasureDown(
 
 	    if (TkTextIndexGetLine(&info.index) == lastLinePtr) {
 		byteOffset = 0;
+		distance = *overlap;
 		break;
 	    }
 	    linePtr = TkTextIndexGetLine(&info.index);
