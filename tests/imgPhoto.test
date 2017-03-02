@@ -58,6 +58,9 @@ set README [makeFile {
 # find the teapot.ppm file for use in these tests
 set teapotPhotoFile [file join [file dirname [info script]] teapot.ppm]
 testConstraint hasTeapotPhoto [file exists $teapotPhotoFile]
+# let's see if we have the semi-transparent one as well
+set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTransparent.png]
+testConstraint hasTranspTeapotPhoto [file exists $transpTeapotPhotoFile]
 
 # ----------------------------------------------------------------------
 
@@ -246,7 +249,7 @@ test imgPhoto-4.10 {ImgPhotoCmd procedure: copy option} -constraints {
     list [image width photo1] [image height photo1] [photo1 get 100 100]
 } -cleanup {
     image delete photo1 photo2
-} -result {256 256 {169 117 90}}
+} -result {256 256 {169 117 90 255}}
 test imgPhoto-4.11 {ImgPhotoCmd procedure: copy option} -setup {
     image create photo photo1
 } -body {
@@ -288,7 +291,7 @@ test imgPhoto-4.15 {ImgPhotoCmd procedure: copy option} -constraints {
     list [image width photo1] [image height photo1] [photo1 get 20 10]
 } -cleanup {
     image delete photo1 photo2
-} -result {60 50 {215 154 120}}
+} -result {60 50 {215 154 120 255}}
 test imgPhoto-4.16 {ImgPhotoCmd procedure: copy option} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -299,7 +302,7 @@ test imgPhoto-4.16 {ImgPhotoCmd procedure: copy option} -constraints {
     list [image width photo1] [image height photo1] [photo1 get 40 80]
 } -cleanup {
     image delete photo1 photo2
-} -result {80 100 {19 92 192}}
+} -result {80 100 {19 92 192 255}}
 test imgPhoto-4.17 {ImgPhotoCmd procedure: copy option} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -310,7 +313,7 @@ test imgPhoto-4.17 {ImgPhotoCmd procedure: copy option} -constraints {
     list [image width photo1] [image height photo1] [photo1 get 80 60]
 } -cleanup {
     image delete photo1 photo2
-} -result {100 100 {215 154 120}}
+} -result {100 100 {215 154 120 255}}
 test imgPhoto-4.18 {ImgPhotoCmd procedure: copy option} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -321,7 +324,7 @@ test imgPhoto-4.18 {ImgPhotoCmd procedure: copy option} -constraints {
     list [image width photo1] [image height photo1] [photo1 get 100 50]
 } -cleanup {
     image delete photo1 photo2
-} -result {120 100 {169 99 47}}
+} -result {120 100 {169 99 47 255}}
 test imgPhoto-4.19 {ImgPhotoCmd procedure: copy option} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -332,7 +335,7 @@ test imgPhoto-4.19 {ImgPhotoCmd procedure: copy option} -constraints {
     list [image width photo1] [image height photo1] [photo1 get 100 50]
 } -cleanup {
     image delete photo1 photo2
-} -result {120 100 {169 99 47}}
+} -result {120 100 {169 99 47 255}}
 test imgPhoto-4.20 {ImgPhotoCmd procedure: copy option} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -343,7 +346,7 @@ test imgPhoto-4.20 {ImgPhotoCmd procedure: copy option} -constraints {
     list [image width photo1] [image height photo1] [photo1 get 50 30]
 } -cleanup {
     image delete photo1 photo2
-} -result {90 80 {207 146 112}}
+} -result {90 80 {207 146 112 255}}
 test imgPhoto-4.21 {ImgPhotoCmd procedure: copy option} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -368,15 +371,15 @@ test imgPhoto-4.21 {ImgPhotoCmd procedure: copy option} -constraints {
     image delete photo1 photo2
 } -result {256 256 49 51 49 51 49 51 10 51 10 10}
 test imgPhoto-4.22 {ImgPhotoCmd procedure: get option} -constraints {
-    hasTeapotPhoto
+    hasTranspTeapotPhoto
 } -setup {
     image create photo photo1
 } -body {
-    photo1 read $teapotPhotoFile
+    photo1 read $transpTeapotPhotoFile
     list [photo1 get 100 100] [photo1 get 150 100] [photo1 get 100 150]
 } -cleanup {
     image delete photo1
-} -result {{169 117 90} {172 115 84} {35 35 35}}
+} -result {{175 71 0 162} {179 73 0 168} {14 8 0 219}}
 test imgPhoto-4.23 {ImgPhotoCmd procedure: get option} -setup {
     image create photo photo1
 } -body {
@@ -411,7 +414,7 @@ test imgPhoto-4.27 {ImgPhotoCmd procedure: put option} -setup {
     photo1 put {{white} {white white}}
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {all elements of color list must have the same number of elements}
+} -result {invalid row # 1: all rows must have the same number of elements}
 test imgPhoto-4.28 {ImgPhotoCmd procedure: put option} -setup {
     image create photo photo1
 } -body {
@@ -422,11 +425,16 @@ test imgPhoto-4.28 {ImgPhotoCmd procedure: put option} -setup {
 test imgPhoto-4.29 {ImgPhotoCmd procedure: put option} -setup {
     image create photo photo1
 } -body {
-    photo1 put -to 10 10 20 20 {{white}}
+    # SB: odd thing - this test passed with tk 8.6.6, even if the data
+    # is in the wrong position!
+    #photo1 put -to 10 10 20 20 {{white}}
+    # this is how it's supposed to be:
+    photo1 put {{white}} -to 10 10 20 20
     photo1 get 19 19
 } -cleanup {
     image delete photo1
-} -result {255 255 255}
+} -result {255 255 255 255}
+# more tests for image put: 4.90-4.94
 test imgPhoto-4.30 {ImgPhotoCmd procedure: read option} -setup {
     image create photo photo1
 } -body {
@@ -475,7 +483,7 @@ test imgPhoto-4.35 {ImgPhotoCmd procedure: read option} -constraints {
     list [image width photo1] [image height photo1] [photo1 get 120 120]
 } -cleanup {
     image delete photo1
-} -result {256 256 {161 109 82}}
+} -result {256 256 {161 109 82 255}}
 test imgPhoto-4.36 {ImgPhotoCmd procedure: read option} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -485,7 +493,7 @@ test imgPhoto-4.36 {ImgPhotoCmd procedure: read option} -constraints {
     list [image width photo1] [image height photo1] [photo1 get 29 19]
 } -cleanup {
     image delete photo1
-} -result {70 60 {244 180 144}}
+} -result {70 60 {244 180 144 255}}
 test imgPhoto-4.37 {ImgPhotoCmd procedure: redither option} -setup {
     image create photo photo1
 } -body {
@@ -521,21 +529,21 @@ test imgPhoto-4.41 {ImgPhotoCmd procedure: transparency get option} -setup {
     photo1 transparency get
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency get x y"}
+} -result {wrong # args: should be "photo1 transparency get x y ?-option?"}
 test imgPhoto-4.42 {ImgPhotoCmd procedure: transparency get option} -setup {
     image create photo photo1
 } -body {
     photo1 transparency get 0
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency get x y"}
+} -result {wrong # args: should be "photo1 transparency get x y ?-option?"}
 test imgPhoto-4.43 {ImgPhotoCmd procedure: transparency get option} -setup {
     image create photo photo1
 } -body {
-    photo1 transparency get 0 0 0
+    photo1 transparency get 0 0 -boolean 0
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency get x y"}
+} -result {wrong # args: should be "photo1 transparency get x y ?-option?"}
 test imgPhoto-4.44 {ImgPhotoCmd procedure: transparency get option} -setup {
     image create photo photo1
 } -body {
@@ -595,34 +603,35 @@ test imgPhoto-4.51 {ImgPhotoCmd procedure: transparency get option} -setup {
 } -cleanup {
     image delete photo1
 } -result 1
+# more tests for transparency get: 4.65, 4.66, 4.75-4.80
 test imgPhoto-4.52 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
     photo1 transparency set
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency set x y boolean"}
+} -result {wrong # args: should be "photo1 transparency set x y ?-option? newVal"}
 test imgPhoto-4.53 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
     photo1 transparency set 0
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency set x y boolean"}
+} -result {wrong # args: should be "photo1 transparency set x y ?-option? newVal"}
 test imgPhoto-4.54 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
     photo1 transparency set 0 0
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency set x y boolean"}
+} -result {wrong # args: should be "photo1 transparency set x y ?-option? newVal"}
 test imgPhoto-4.55 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
-    photo1 transparency set 0 0 0 0
+    photo1 transparency set 0 0 -boolean 0 0
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency set x y boolean"}
+} -result {wrong # args: should be "photo1 transparency set x y ?-option? newVal"}
 test imgPhoto-4.56 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
@@ -690,6 +699,7 @@ test imgPhoto-4.64 {ImgPhotoCmd procedure: transparency set option} -setup {
 } -cleanup {
     image delete photo1
 } -result 1
+# more tests for transparency set: 4.67, 4.68, 4.81-4.88
 # Now for some heftier testing, checking that setting and resetting of pixels'
 # transparency status doesn't "leak" with any one-off errors.
 test imgPhoto-4.65 {ImgPhotoCmd procedure: transparency get option} -setup {
@@ -815,6 +825,243 @@ test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constrain
     file delete ./-teapotPhotoFile
 } -result {}
 
+test imgPhoto-4.75 {ImgPhotoCmd procedure: transparancy get} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 1 1
+    photo1 transparency get 0 0 -alpha -boolean
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {wrong # args: should be "photo1 transparency get x y ?-option?"}
+test imgPhoto-4.76 {ImgPhotoCmd procedure: transparency get} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 1 1
+    photo1 transparency get 0 0 -bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {unknown option "-bogus": must be -alpha or -boolean}
+test imgPhoto-4.77 {ImgPhotoCmd procedure: transparency get} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 1 1
+    set result [photo1 transparency get 0 0 -boolean]
+    lappend result [photo1 transparency get 0 0 -alpha]
+} -cleanup {
+    imageCleanup
+} -result {0 255}
+test imgPhoto-4.78 {ImgPhotoCmd procedure: transparency get} -constraints {
+    hasTranspTeapotPhoto
+} -setup {
+    image create photo photo1 -file $transpTeapotPhotoFile
+    set result {}
+} -body {
+    set pixelCoords {{156 239} {76 207} {153 213} {139 43} {75 112}}
+    foreach coord $pixelCoords {
+	lappend result [photo1 transparency get {*}$coord]
+    }
+    set result
+} -cleanup {
+    imageCleanup
+} -result {0 1 0 0 0}
+test imgPhoto-4.79 {ImgPhotoCmd procedure: transparency get} -constraints {
+    hasTranspTeapotPhoto
+} -setup {
+    image create photo photo1 -file $transpTeapotPhotoFile
+    set result {}
+} -body {
+    set pixelCoords {{156 239} {76 207} {153 213} {139 43} {75 112}}
+    foreach coord $pixelCoords {
+	lappend result [photo1 transparency get {*}$coord -boolean]
+    }
+    set result
+} -cleanup {
+    imageCleanup
+} -result {0 1 0 0 0}
+test imgPhoto-4.80 {ImgPhotoCmd procedure: transparency get} -constraints {
+    hasTranspTeapotPhoto
+} -setup {
+    image create photo photo1 -file $transpTeapotPhotoFile
+    set result {}
+} -body {
+    set pixelCoords {{156 239} {76 207} {153 213} {139 43} {75 112}}
+    foreach coord $pixelCoords {
+	lappend result [photo1 transparency get {*}$coord -alpha]
+    }
+    set result
+} -cleanup {
+    imageCleanup
+} -result {255 0 1 254 206}
+test imgPhoto-4.81 {ImgPhotoCmd procedure: transparency set} -setup {
+    image create photo photo1
+} -body {
+    photo1 transparency set 0 0 -alpha -boolean 1
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {wrong # args: should be "photo1 transparency set x y ?-option? newVal"}
+test imgPhoto-4.82 {ImgPhotoCmd procedure: transparency set} -setup {
+    image create photo photo1
+} -body {
+    photo1 transparency set 0 0 -bogus 0
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {unknown option "-bogus": must be -alpha or -boolean}
+test imgPhoto-4.83 {ImgPhotoCmd procedure: transparency set} -setup {
+    image create photo photo1
+} -body {
+    photo1 transparency set 0 0 -alpha bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {expected integer but got "bogus"}
+test imgPhoto-4.84 {ImgPhotoCmd procedure: transparency set} -setup {
+    image create photo photo1
+} -body {
+    photo1 transparency set 0 0 -alpha -1
+} -returnCodes error -result \
+    {invalid alpha value "-1": must be integer between 0 and 255}
+test imgPhoto-4.85 {ImgPhotoCmd procedure: transparency set} -setup {
+    image create photo photo1
+} -body {
+    photo1 transparency set 0 0 -alpha 256
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid alpha value "256": must be integer between 0 and 255}
+test imgPhoto-4.86 {ImgPhotoCmd procedure: transparency set} -setup {
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 2 1
+    photo1 transparency set 0 0 0
+    photo1 transparency set 1 0 1
+    list [photo1 transparency get 0 0 -alpha] [photo1 transparency get 1 0 -alpha]
+} -cleanup {
+    imageCleanup
+} -result {255 0}
+test imgPhoto-4.87 {ImgPhotoCmd procedure: transparency set} -setup {
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 2 1
+    photo1 transparency set 0 0 -boolean 0
+    photo1 transparency set 1 0 -boolean 1
+    list [photo1 transparency get 0 0 -alpha] [photo1 transparency get 1 0 -alpha]
+} -cleanup {
+    imageCleanup
+} -result {255 0}
+test imgPhoto-4.88 {ImgPhotoCmd procedure: transparency set} -setup {
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 2 2
+    photo1 transparency set 0 0 -alpha 0
+    photo1 transparency set 1 0 -alpha 1
+    photo1 transparency set 0 1 -alpha 254
+    photo1 transparency set 1 1 -alpha 255
+    list [photo1 transparency get 0 0] [photo1 transparency get 1 0] \
+	[photo1 transparency get 0 1] [photo1 transparency get 1 1]
+} -cleanup {
+    imageCleanup
+} -result {1 0 0 0}
+test imgPhoto-4.89 {ImgPhotoCmd procdeure: put option} -constraints {
+    hasTeapotPhoto
+} -setup {
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2
+} -body {
+    # put data in a registered format
+    set imgdata [photo1 data -format ppm]
+    photo2 put $imgdata -format ppm
+    set result {}
+    if {[image width photo1] != [image width photo2] \
+	    || [image height photo1] != [image height photo2]} {
+	lappend result [list [image width photo2] [image height photo2]]
+    } else {
+	lappend result 1
+    }
+    foreach point {{206 125} {67 12} {13 46} {19 184}} {
+	if {[photo1 get {*}$point] ne [photo2 get {*}$point]} {
+	    lappend result [photo2 get {*}$point]
+	} else {
+	    lappend result 1
+	}
+    }
+    set result
+} -cleanup {
+    imageCleanup
+} -result {1 1 1 1 1}
+test imgPhoto-4.90 {ImgPhotoCmd procedure: put option} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    # unknown format
+    photo1 put {no real data} -format bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {image format "bogus" is not supported}
+test imgPhoto-4.91 {ImgPhotoCmd procedure: put option} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    # default format, invalid data error case
+    photo1 put "not a \{ proper list" 
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {unmatched open brace in list}
+test imgPhoto-4.92 {ImgPhotoCmd procedure: put option} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    # no -to option, image size is data size
+    photo1 put {{red green blue} {blue red green}}
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    imageCleanup
+} -result {3 2}
+test imgPhoto-4.93 {ImgPhotoCmd procedure: put option} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    # two coordinates for -to option
+    photo1 put {{"alice blue" "blanched almond"}
+		{"deep sky blue" "ghost white"}
+		{#AABBCC #AABBCCDD}} -to 5 6
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    imageCleanup
+} -result {7 9}
+test imgPhoto-4.94 {ImgPhotoCmd procedure: put option} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    # 4 coordinates for -to option, data gets tiled
+    photo1 put {{#123 #456 #678} {#9AB #CDE #F01}} -to 1 2 20 21
+    set result {}
+    lappend result [photo1 get 19 20]
+    lappend result [string equal \
+	[photo1 data -from 1 2 4 4] [photo1 data -from 4 2 7 4]]
+    lappend result [string equal \
+	[photo1 data -from 10 12 13 14] [photo1 data -from 16 16 19 18]]
+    set result
+} -cleanup {
+    imageCleanup
+} -result {{17 34 51 255} 1 1}
+test imgPhoto-4.95 {ImgPhotoCmd procedure: put option} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    # empty data does not cause changes
+    photo1 put {{brown blue} {cyan coral}}
+    set imgData [photo1 data]
+    photo1 put {}
+    string equal $imgData [photo1 data]
+} -cleanup {
+    imageCleanup
+} -result {1}
+    
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -952,7 +1199,7 @@ test imgPhoto-10.1 {Tk_ImgPhotoPutBlock procedure} -setup {
     photo1 put "{#ff0000 #ff0000 #ff0000 #ff0000 #ff0000 #ff0000 #ff0000 #ff0000}" -to 0 0
     photo1 put "{#00ff00 #00ff00}" -to 2 0
     list [photo1 get 2 0] [photo1 get 3 0] [photo1 get 4 0]
-} -result {{0 255 0} {0 255 0} {255 0 0}}
+} -result {{0 255 0 255} {0 255 0 255} {255 0 0 255}}
 
 test imgPhoto-11.1 {Tk_FindPhoto} -setup {
     imageCleanup
@@ -971,7 +1218,7 @@ test imgPhoto-12.1 {Tk_PhotoPutZoomedBlock} -constraints hasTeapotPhoto -body {
     lappend result [image width p3] [image height p3] [p3 get 100 100]
 } -cleanup {
     image delete p3
-} -result {{19 92 192} {169 117 90} 512 512 {19 92 192}}
+} -result {{19 92 192 255} {169 117 90 255} 512 512 {19 92 192 255}}
 
 test imgPhoto-13.1 {check separation of images in different interpreters} -setup {
     imageCleanup
@@ -1169,6 +1416,363 @@ test imgPhoto-17.3 {photo write: format guessing from filename} -setup {
     catch {removeFile $f}
 } -result "P6\n"
 
+test imgPhoto-18.1 {ImgStringMatch: data is not a list} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {not a " proper list}
+    # " (this comment is here only for editor highlighting)
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {unmatched open quote in list}
+# empty data case tested with imgPhoto-4.95
+test imgPhoto-18.2 {ImgStringMatch: list element not a proper list} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{red white} {not "} {blue green}}
+    # "
+} -cleanup {
+    imageCleanup 
+} -returnCodes error -result {unmatched open quote in list} 
+test imgPhoto-18.3 {ImgStringMatch: sublists with differen lengths} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{#001122 #334455 #667788} 
+		{#99AABB #CCDDEE} 
+		{#FF0011 #223344 #556677}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid row # 1: all rows must have the same number of elements}
+test imgPhoto-18.4 {ImgStringMatch: valid data} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{blue green}
+		{yellow magenta} 
+		{#000000 #FFFFFFFF}}
+    list [image width photo1] [image height photo1] [photo1 get 0 2]
+} -cleanup {
+    imageCleanup
+} -result {2 3 {0 0 0 255}}
+# ImgStringRead: most of the error cases cannot be tested with current code, 
+# as the errors are detected by ImgStringMatch
+test imgPhoto-19.1 {ImgStringRead: normal use case} -constraints {
+    hasTeapotPhoto
+} -setup {
+    imageCleanup
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2
+} -body {
+    set imgData [photo1 data]
+    photo2 put $imgData
+    string equal [photo1 data] [photo2 data]
+} -cleanup {
+    imageCleanup
+    unset imgData
+} -result {1}
+test imgPhoto-19.2 {ImgStringRead: correct compositing rule} -constraints {
+    hasTranspTeapotPhoto
+} -setup {
+    imageCleanup
+    image create photo photo1 -file $transpTeapotPhotoFile
+    image create photo photo2
+} -body {
+    # currently, this test is pointless, as [imageName data] does not include 
+    # transparency information. To be considered as a placeholder.
+    photo2 put #FF0000 -to 0 0 50 50
+    photo2 put [photo1 data] -to 10 10 40 40
+    list [photo2 get 0 0] [photo2 get 20 25] [photo2 get 49 49]
+} -cleanup {
+    imageCleanup
+} -result {{255 0 0 255} {0 78 185 255} {255 0 0 255}}
+test imgPhoto-20.1 {ImgStringWrite: test some pixels} -constraints { 
+    hasTeapotPhoto
+} -setup {
+    set result {}
+    imageCleanup
+    image create photo photo1 -file $teapotPhotoFile
+} -body {
+    set imgData [photo1 data]
+    # note: with [lindex], the coords are inverted (y x)
+    lappend result [lindex $imgData 3 2]
+    lappend result [lindex $imgData 107 53]
+    lappend result [lindex $imgData 203 157]
+    set result 
+} -cleanup {
+    unset result
+    unset imgData
+    imageCleanup
+} -result {{#135cc0} #a06d52 #e1c8ba}
+test imgPhoto-21.1 {ImgPhotoParseColor: valid suffixes} -setup {
+    imageCleanup
+    image create photo photo1 
+    set result {}
+} -body {
+    photo1 put {{blue@0.711 #114433#C} {#8D4#1A magenta}}
+    lappend result [photo1 get 0 0]
+    lappend result [photo1 get 1 0]
+    lappend result [photo1 get 0 1]
+    lappend result [photo1 get 1 1]
+    set result
+} -cleanup {
+    unset result
+    imageCleanup
+} -result {{0 0 255 181} {17 68 51 204} {136 221 68 26} {255 0 255 255}}
+test imgPhoto-21.2 {ImgPhotoParseColor: valid suffixes, no suffix} -setup {
+    imageCleanup
+    image create photo photo1
+    set result {}
+} -body {
+    photo1 put {{#52D8a0 #2B5} {#E47@0.01 maroon#4}}
+    lappend result [photo1 get 0 0]
+    lappend result [photo1 get 1 0]
+    lappend result [photo1 get 0 1]
+    lappend result [photo1 get 1 1]
+    set result
+} -cleanup {
+    unset result
+    imageCleanup
+} -result {{82 216 160 255} {34 187 85 255} {238 68 119 3} {128 0 0 68}}
+test imgPhoto-21.3 {ImgPhotoParseColor: # suffix, no hex digits} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{black#}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid alpha suffix "#"}
+test imgPhoto-21.4 {ImgPhotoParseColor: # suffix, too many digists} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{#ABC#123}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid alpha suffix "#123"}
+test imgPhoto-21.5 {ImgPhotoParseColor: wrong digit count for color} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{#00}}
+} -returnCodes error -result {invalid color name "#00"}
+test imgPhoto-21.6 {ImgPhotoParseColor: invalid hex digit #1} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put #ABCDEG@.99
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid color name "#ABCDEG"}
+test imgPhoto-21.7 {ImgPhotoParseColor: invalid hex digit #2} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {#ABCZ}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid color name "#ABCZ"}
+test imgPhoto-21.8 {ImgPhotoParseColor: valid #ARGB color} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{#0d9bd502 #F7ac}}
+    list [photo1 get 0 0] [photo1 get 1 0]
+} -cleanup {
+    imageCleanup
+} -result {{155 213 2 13} {119 170 204 255}}
+test imgPhoto-21.9 {ImgPhotoParseColor: empty string} -setup {
+    imageCleanup
+    image create photo photo1
+    set result {}
+} -body {
+    photo1 put {{"" ""} {"" ""}}
+    lappend result [image width photo1]
+    lappend result [image height photo1]
+    lappend result [photo1 get 1 1]
+    set result
+} -cleanup {
+    unset result
+    imageCleanup
+} -result {2 2 {0 0 0 0}}
+test imgPhoto-21.10 {ImgPhotoParsecolor: empty string, mixed} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{black white} {{} white}}
+    list [photo1 get 0 0] [photo1 get 0 1]
+} -cleanup {
+    imageCleanup
+} -result {{0 0 0 255} {0 0 0 0}}
+test imgPhoto-21.9 {ImgPhotoParseColor: list form, invalid list} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{{123 45 67 "}}}
+    # "
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {can't parse color "123 45 67 ""}
+test imgPhoto-21.10 {ImgPhotoParseColor: too few elements in list} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{{0 255}}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {can't parse color "0 255"}
+test imgPhoto-21.11 {ImgPhotoParseColor: too many elements in list} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{{0 100 200 255 0}}}
+} -returnCodes error -result {can't parse color "0 100 200 255 0"}
+test imgPhoto-21.12 {ImgPhotoParseColor: not an integer value} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{{9 0xf3 87 65} {43 21 10 1.0}}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {expected integer but got "1.0"}
+test imgPhoto-21.13 {ImgPhotoParseColor: negative value in list} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{{121 121 -1}}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid color "121 121 -1": expected integers in the range from 0 to 255}
+test imgPhoto-21.14 {ImgPhotoParseColor: value in list too large} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{{254 255 256}}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+   {invalid color "254 255 256": expected integers in the range from 0 to 255}
+test imgPhoto-21.15 {ImgPhotoParseColor: valid list form} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{{0x0 0x10 0xfe 0xff} {0 100 254}}
+		{{30 30 30 0} {1 1 254 1}}}
+    list [photo1 get 0 0] [photo1 get 1 0] [photo1 get 0 1] [photo1 get 1 1]
+} -cleanup {
+    imageCleanup
+} -result {{0 16 254 255} {0 100 254 255} {30 30 30 0} {1 1 254 1}}
+test imgPhoto-21.16 {ImgPhotoParseColor: suffix not allowed #1} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put #ABCD@0.5
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid color "#ABCD@0.5": format does not allow alpha suffix}
+test imgPhoto-21.17 {ImgPhotoParseColor: suffix not allowed #2} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{{100 100 100#FE}}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid color "100 100 100#FE": format does not allow alpha suffix}
+test ImgPoto-21.18 {ImgPhotoParseColor: suffix not allowed #3} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put #1111#1
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid color "#1111#1": format does not allow alpha suffix}
+test imgPhoto-21.19 {ImgPhotoParseColor: @A, not a float} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put blue@bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid alpha suffix "@bogus": expected floating-point value}
+test imgPhoto-21.20 {ImgPhotoParseColor: @A, value too low} -setup {
+    imageCleanup
+    image create photo photo1 
+} -body {
+    photo1 put green@-0.1
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid alpha suffix "@-0.1": value must be in the range from 0 to 1}
+test imgPhoto-21.21 {ImgPhotoParseColor: @A, value too high} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put #000000@1.0001
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid alpha suffix "@1.0001": value must be in the range from 0 to 1}
+test imgPhoto-21.22 {ImgPhotoParseColor: @A, edge values} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{yellow@1e-22 yellow@0.12352941 yellow@0.12352942 \
+		 yellow@0.9999999}}
+    list [photo1 get 0 0] [photo1 get 1 0] [photo1 get 2 0] [photo1 get 3 0]
+} -cleanup {
+    imageCleanup
+} -result {{255 255 0 0} {255 255 0 31} {255 255 0 32} {255 255 0 255}}
+test imgPhoto-21.23 {ImgPhotoParseColor: invalid digit in #X suffix} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put #000#g
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid alpha suffix "#g": expected hex digit}
+test imgPhoto-21.24 {ImgPhotoParseColor: invalid digit in #XX suffix} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put green#2W
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid alpha suffix "#2W": expected hex digit}
+test imgPhoto-21.25 {ImgPhotoParseColor: overall test - all color / suffix 
+	combinations} -setup {
+    imageCleanup
+    image create photo photo1
+    set result {}
+} -body {
+    photo1 put {
+	{snow@0.5 snow#80 snow#8 #fffffafafafa@0.5 #fffffabbfacc#8}
+	{#fffffafffaff#80 #ffffaafaa@.5 #ffffaafaa#8 #ffffaafaa#80 #fee#8}
+	{#fee#80 #fee@0.5 #fffafa@0.5 #fffafa#8 #fffafa#80}
+	{{0xff 250 0xfa 128} {255 250 250} #8fee #80fffafa snow}}
+    for {set y 0} {$y < 4} {incr y} {
+	for {set x 0} {$x < 5} {incr x} {
+	    lappend result [photo1 get $x $y]
+	}
+    }
+    set result
+} -cleanup {
+    imageCleanup
+    unset result
+} -result \
+{{255 250 250 128} {255 250 250 128} {255 250 250 136} {255 250 250 128}\
+{255 250 250 136} {255 250 250 128} {255 250 250 128} {255 250 250 136}\
+{255 250 250 128} {255 238 238 136} {255 238 238 128} {255 238 238 128}\
+{255 250 250 128} {255 250 250 136} {255 250 250 128} {255 250 250 128}\
+{255 250 250 255} {255 238 238 136} {255 250 250 128} {255 250 250 255}}
+    
 # ----------------------------------------------------------------------
 
 catch {rename foreachPixel {}}

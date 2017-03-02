@@ -182,9 +182,19 @@ static int		ImgPhotoConfigureMaster(Tcl_Interp *interp,
 static int		ToggleComplexAlphaIfNeeded(PhotoMaster *mPtr);
 static int		ImgPhotoSetSize(PhotoMaster *masterPtr, int width,
 			    int height);
+static int		ImgStringMatch(Tcl_Obj *data, Tcl_Obj *format,
+			    int *widthPtr, int *heightPtr, Tcl_Interp *interp);
+static int		ImgStringRead(Tcl_Interp *interp, Tcl_Obj *data,
+			    Tcl_Obj *format, Tk_PhotoHandle imageHandle,
+			    int destX, int destY, int width, int height,
+			    int srcX, int srcY);
 static int		ImgStringWrite(Tcl_Interp *interp,
 			    Tcl_Obj *formatString,
 			    Tk_PhotoImageBlock *blockPtr);
+static int		ImgPhotoParseColor(Tcl_Interp *interp, 
+			    Tcl_Obj *specObj, unsigned char *redPtr, 
+			    unsigned char *greenPtr, unsigned char *bluePtr,
+			    unsigned char *alphaPtr);
 static char *		ImgGetPhoto(PhotoMaster *masterPtr,
 			    Tk_PhotoImageBlock *blockPtr,
 			    struct SubcommandOptions *optPtr);
@@ -402,12 +412,10 @@ ImgPhotoCmd(
     };
 
     PhotoMaster *masterPtr = clientData;
-    int result, index, x, y, width, height, dataWidth, dataHeight, listObjc;
+    int result, index, x, y, width, height;
     struct SubcommandOptions options;
-    Tcl_Obj **listObjv, **srcObjv;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
-    Tk_Window tkwin;
     Tk_PhotoImageFormat *imageFormat;
     size_t length;
     int imageWidth, imageHeight, matched, oldformat = 0;
@@ -782,7 +790,7 @@ ImgPhotoCmd(
 	 * photo get command - first parse and check parameters.
 	 */
 
-	Tcl_Obj *channels[3];
+	Tcl_Obj *channels[4];
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "x y");
@@ -803,14 +811,15 @@ ImgPhotoCmd(
 	}
 
 	/*
-	 * Extract the value of the desired pixel and format it as a string.
+	 * Extract the value of the desired pixel and format it as a list.
 	 */
 
 	pixelPtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
 	channels[0] = Tcl_NewIntObj(pixelPtr[0]);
 	channels[1] = Tcl_NewIntObj(pixelPtr[1]);
 	channels[2] = Tcl_NewIntObj(pixelPtr[2]);
-	Tcl_SetObjResult(interp, Tcl_NewListObj(3, channels));
+	channels[3] = Tcl_NewIntObj(pixelPtr[3]);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(4, channels));
 	return TCL_OK;
     }
 
@@ -830,6 +839,10 @@ ImgPhotoCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "data ?-option value ...?");
 	    return TCL_ERROR;
 	}
+	
+	/*
+	 * See if there's a format that can read the data
+	 */
 
 	if (MatchStringFormat(interp, options.name ? objv[2]:NULL,
 		options.format, &imageFormat, &imageWidth,
@@ -854,150 +867,44 @@ ImgPhotoCmd(
 		}
 		data = (Tcl_Obj *) Tcl_GetString(data);
 	    }
+
 	    if (imageFormat->stringReadProc(interp, data, format,
 		    (Tk_PhotoHandle) masterPtr, options.toX, options.toY,
 		    imageWidth, imageHeight, 0, 0) != TCL_OK) {
 		return TCL_ERROR;
 	    }
+	    /*
+	     * SB: is the next line really needed? The stringReadProc 
+	     * writes image data with Tk_PhotoPutBlock(), which in turn
+	     * takes care to notify the changed image.
+	     */
 	    masterPtr->flags |= IMAGE_CHANGED;
 	    return TCL_OK;
 	}
+	
+	/*
+	 * Try with the default format
+	 */
 	if (options.options & OPT_FORMAT) {
 	    return TCL_ERROR;
 	}
 	Tcl_ResetResult(interp);
-	if (Tcl_ListObjGetElements(interp, options.name,
-		&dataHeight, &srcObjv) != TCL_OK) {
+	if ( ! ImgStringMatch(objv[2], NULL, &imageWidth, &imageHeight,
+		interp)) {
+	    return TCL_ERROR;	    
+	}
+	if (!(options.options & OPT_TO) || (options.toX2 < 0)) {
+	    options.toX2 = options.toX + imageWidth;
+	    options.toY2 = options.toY + imageHeight;
+	}
+	if (ImgStringRead(interp, objv[2], NULL, (Tk_PhotoHandle) masterPtr,
+		options.toX, options.toY, 
+		options.toX2 - options.toX, 
+		options.toY2 - options.toY, 0, 0) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	tkwin = Tk_MainWindow(interp);
-	block.pixelPtr = NULL;
-	dataWidth = 0;
-	pixelPtr = NULL;
-	for (y = 0; y < dataHeight; ++y) {
-	    if (Tcl_ListObjGetElements(interp, srcObjv[y],
-		    &listObjc, &listObjv) != TCL_OK) {
-		break;
-	    }
-
-	    if (y == 0) {
-		if (listObjc == 0) {
-		    /*
-		     * Lines must be non-empty...
-		     */
-
-		    break;
-		}
-		dataWidth = listObjc;
-		/*
- 		 * Memory allocation overflow protection.
- 		 * May not be able to trigger/ demo / test this.
- 		 */
-
-		if (dataWidth > (int)((UINT_MAX/3) / dataHeight)) {
-		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"photo image dimensions exceed Tcl memory limits", -1));
-		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			"OVERFLOW", NULL);
-		    break;
-		}
-
-		pixelPtr = ckalloc(dataWidth * dataHeight * 3);
-		block.pixelPtr = pixelPtr;
-	    } else if (listObjc != dataWidth) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"all elements of color list must have the same"
-			" number of elements", -1));
-		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			"NON_RECTANGULAR", NULL);
-		break;
-	    }
-
-	    for (x = 0; x < dataWidth; ++x) {
-		const char *colorString = Tcl_GetString(listObjv[x]);
-		XColor color;
-		int tmpr, tmpg, tmpb;
-
-		/*
-		 * We do not use Tk_GetColorFromObj() because we absolutely do
-		 * not want to invoke the fallback code.
-		 */
-
-		if (colorString[0] == '#') {
-		    if (isxdigit(UCHAR(colorString[1])) &&
-			    isxdigit(UCHAR(colorString[2])) &&
-			    isxdigit(UCHAR(colorString[3]))) {
-			if (colorString[4] == '\0') {
-			    /* Got #rgb */
-			    sscanf(colorString+1, "%1x%1x%1x",
-				    &tmpr, &tmpg, &tmpb);
-			    *pixelPtr++ = tmpr * 0x11;
-			    *pixelPtr++ = tmpg * 0x11;
-			    *pixelPtr++ = tmpb * 0x11;
-			    continue;
-			} else if (isxdigit(UCHAR(colorString[4])) &&
-				isxdigit(UCHAR(colorString[5])) &&
-				isxdigit(UCHAR(colorString[6])) &&
-				colorString[7] == '\0') {
-			    /* Got #rrggbb */
-			    sscanf(colorString+1, "%2x%2x%2x",
-				    &tmpr, &tmpg, &tmpb);
-			    *pixelPtr++ = tmpr;
-			    *pixelPtr++ = tmpg;
-			    *pixelPtr++ = tmpb;
-			    continue;
-			}
-		    }
-		}
-
-		if (!TkParseColor(Tk_Display(tkwin), Tk_Colormap(tkwin),
-			colorString, &color)) {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "can't parse color \"%s\"", colorString));
-		    Tcl_SetErrorCode(interp, "TK", "VALUE", "COLOR", NULL);
-		    break;
-		}
-		*pixelPtr++ = color.red >> 8;
-		*pixelPtr++ = color.green >> 8;
-		*pixelPtr++ = color.blue >> 8;
-	    }
-	    if (x < dataWidth) {
-		break;
-	    }
-	}
-	if (y < dataHeight || dataHeight == 0 || dataWidth == 0) {
-	    if (block.pixelPtr != NULL) {
-		ckfree(block.pixelPtr);
-	    }
-	    if (y < dataHeight) {
-		return TCL_ERROR;
-	    }
-	    return TCL_OK;
-	}
-
-	/*
-	 * Fill in default values for the -to option, then copy the block in
-	 * using Tk_PhotoPutBlock.
-	 */
-
-	if (!(options.options & OPT_TO) || (options.toX2 < 0)) {
-	    options.toX2 = options.toX + dataWidth;
-	    options.toY2 = options.toY + dataHeight;
-	}
-	block.width = dataWidth;
-	block.height = dataHeight;
-	block.pitch = dataWidth * 3;
-	block.pixelSize = 3;
-	block.offset[0] = 0;
-	block.offset[1] = 1;
-	block.offset[2] = 2;
-	block.offset[3] = 0;
-	result = Tk_PhotoPutBlock(interp, masterPtr, &block,
-		options.toX, options.toY, options.toX2 - options.toX,
-		options.toY2 - options.toY,
-		TK_PHOTO_COMPOSITE_SET);
-	ckfree(block.pixelPtr);
-	return result;
+	
+	return TCL_OK;
 
     case PHOTO_READ: {
 	Tcl_Obj *format;
@@ -1168,16 +1075,31 @@ ImgPhotoCmd(
 
 	switch ((enum transOptions) index) {
 	case PHOTO_TRANS_GET: {
-	    XRectangle testBox;
-	    TkRegion testRegion;
-
-	    if (objc != 5) {
-		Tcl_WrongNumArgs(interp, 3, objv, "x y");
+	    const char *arg;
+	    int boolMode, strLength;
+	    
+	    if (objc > 6 || objc < 5) {
+		Tcl_WrongNumArgs(interp, 3, objv, "x y ?-option?");
 		return TCL_ERROR;
 	    }
 	    if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
 		    || (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)) {
 		return TCL_ERROR;
+	    }
+	    boolMode = 1;
+	    if (objc == 6) {
+		arg = Tcl_GetStringFromObj(objv[5], &strLength);
+		if (strncmp(arg, "-boolean", (unsigned)strLength) == 0) {
+		    boolMode = 1;
+		} else if (strncmp(arg, "-alpha", (unsigned)strLength) == 0) {
+		    boolMode = 0;
+		} else {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"unknown option \"%s\": must be -alpha or -boolean",
+			Tcl_GetString(objv[5])));
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", NULL);
+		    return TCL_ERROR;
+		}
 	    }
 	    if ((x < 0) || (x >= masterPtr->width)
 		    || (y < 0) || (y >= masterPtr->height)) {
@@ -1189,36 +1111,70 @@ ImgPhotoCmd(
 		return TCL_ERROR;
 	    }
 
-	    testBox.x = x;
-	    testBox.y = y;
-	    testBox.width = 1;
-	    testBox.height = 1;
 	    /* What a way to do a test! */
-	    testRegion = TkCreateRegion();
-	    TkUnionRectWithRegion(&testBox, testRegion, testRegion);
-	    TkIntersectRegion(testRegion, masterPtr->validRegion, testRegion);
-	    TkClipBox(testRegion, &testBox);
-	    TkDestroyRegion(testRegion);
-
-	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		    testBox.width==0 && testBox.height==0));
+	    /* SB: indeed! Why don't we just get the information from image data? */
+	    /*
+		testRegion = TkCreateRegion();
+		TkUnionRectWithRegion(&testBox, testRegion, testRegion);
+		TkIntersectRegion(testRegion, masterPtr->validRegion, testRegion);
+		TkClipBox(testRegion, &testBox);
+		TkDestroyRegion(testRegion);
+	    */
+	    pixelPtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
+	    if (boolMode) {
+		Tcl_SetObjResult(interp, Tcl_NewBooleanObj( ! pixelPtr[3]));
+	    } else {
+		Tcl_SetObjResult(interp, Tcl_NewIntObj(pixelPtr[3]));
+	    }
 	    return TCL_OK;
 	}
 
 	case PHOTO_TRANS_SET: {
-	    int transFlag;
+	    int newVal, boolMode, strLength;
+	    const char *arg;
 	    XRectangle setBox;
+	    TkRegion modRegion;
 
-	    if (objc != 6) {
-		Tcl_WrongNumArgs(interp, 3, objv, "x y boolean");
+	    if (objc < 6 || objc > 7) {
+		Tcl_WrongNumArgs(interp, 3, objv, "x y ?-option? newVal");
 		return TCL_ERROR;
 	    }
 	    if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
-		    || (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)
-		    || (Tcl_GetBooleanFromObj(interp, objv[5],
-		    &transFlag) != TCL_OK)) {
+		    || (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)) {
 		return TCL_ERROR;
 	    }
+	    boolMode = 1;
+	    if (objc == 7) {
+		arg = Tcl_GetStringFromObj(objv[5], &strLength);
+		if (strncmp(arg, "-boolean", (unsigned) strLength) == 0) {
+		    boolMode = 1;
+		} else if (strncmp(arg, "-alpha", (unsigned) strLength) == 0) {
+		    boolMode = 0;
+		} else {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"unknown option \"%s\": must be -alpha or -boolean",
+			Tcl_GetString(objv[5])));
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", NULL);
+		    return TCL_ERROR;
+		}
+	    }
+	    if (boolMode) {
+		if (Tcl_GetBooleanFromObj(interp, objv[objc-1], &newVal) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+	    } else {
+		if (Tcl_GetIntFromObj(interp, objv[objc-1], &newVal) != TCL_OK) {
+		    return TCL_ERROR;
+		}
+		if (newVal < 0 || newVal > 255) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"invalid alpha value \"%d\": must be integer between 0 and 255",
+			newVal));
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_VALUE", NULL);
+		    return TCL_ERROR;
+		}
+	    }
+	    
 	    if ((x < 0) || (x >= masterPtr->width)
 		|| (y < 0) || (y >= masterPtr->height)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -1229,38 +1185,33 @@ ImgPhotoCmd(
 		return TCL_ERROR;
 	    }
 
+	    /*
+	     * Set new alpha value for the pixel
+	     */
+	    pixelPtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
+	    if (boolMode) {
+		pixelPtr[3] = newVal ? 0 : 255;
+	    } else {
+		pixelPtr[3] = newVal;
+	    }
+	    
+	    /*
+	     * Update the validRegion of the image
+	     */
 	    setBox.x = x;
 	    setBox.y = y;
 	    setBox.width = 1;
 	    setBox.height = 1;
-	    pixelPtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
-
-	    if (transFlag) {
-		/*
-		 * Make pixel transparent.
-		 */
-
-		TkRegion clearRegion = TkCreateRegion();
-
-		TkUnionRectWithRegion(&setBox, clearRegion, clearRegion);
-		TkSubtractRegion(masterPtr->validRegion, clearRegion,
-			masterPtr->validRegion);
-		TkDestroyRegion(clearRegion);
-
-		/*
-		 * Set the alpha value correctly.
-		 */
-
-		pixelPtr[3] = 0;
-	    } else {
-		/*
-		 * Make pixel opaque.
-		 */
-
+	    modRegion = TkCreateRegion();
+	    TkUnionRectWithRegion(&setBox, modRegion, modRegion);
+	    if (pixelPtr[3]) {
 		TkUnionRectWithRegion(&setBox, masterPtr->validRegion,
 			masterPtr->validRegion);
-		pixelPtr[3] = 255;
+	    } else {
+		TkSubtractRegion(masterPtr->validRegion, modRegion,
+			masterPtr->validRegion);
 	    }
+	    TkDestroyRegion(modRegion);
 
 	    /*
 	     * Inform the generic image code that the image
@@ -3848,6 +3799,233 @@ ImgGetPhoto(
     return NULL;
 }
 
+/*
+ *----------------------------------------------------------------------
+ * 
+ * Default Photo Image Format
+ * ===========================
+ * 
+ * We have a default (or fallback) image format that is used for the 
+ * "<img> put", "<img> get", and "<img> data" commands. Image data is
+ * specified as a list of lists of pixel data. For details see the description
+ * of the "<img> put" command in the documentation of photo(n). 
+ * 
+ * This default image format cannot read/write files, it is meant for string
+ * data only. 
+ * 
+ * The default format is not registerd with Tk_CreatePhotoImageFromat()
+ * 
+ *----------------------------------------------------------------------
+ */
+ 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ImgStringMatch --
+ *
+ *	Default string match function. Test if image data in string form 
+ * 	appears to be in the default list-of-list-of-pixel-data format
+ * 	accepted by the "<img> put" command.
+ *
+ * Results:
+ *	If thte data is in the default format, writes the size of the image 
+ *	to widthPtr and heightPtr and returns 1. Otherwise, leaves an error 
+ * 	messate in interp (if not NULL) and returns 0.
+ *	Note that this function does not parse all data points. A return 
+ *	value of 1 does not guarantee that the data can be read without 
+ * 	errors.
+ *
+ * Side effects:
+ *	None
+ *----------------------------------------------------------------------
+ */
+static int
+ImgStringMatch(
+    Tcl_Obj *data,	/* The data to check */
+    Tcl_Obj *format, 	/* Value of the -format option, - NULL for this format */
+    int *widthPtr, 
+    int *heightPtr,	/* Size of the image in *data is written here */
+    Tcl_Interp *interp) /* ... */
+{
+    int y, rowCount, colCount, curColCount;
+    Tcl_Obj **rowListPtr;
+
+    /*
+     * See if data is a nonempty list and if each element has the same 
+     * length.
+     */
+
+    if (Tcl_ListObjGetElements(interp, data, &rowCount, &rowListPtr) 
+	    != TCL_OK) {
+	return 0;
+    }
+    if (rowCount == 0) {
+	/* empty list is actually valid data */
+	*widthPtr = 0; 
+	*heightPtr = 0;
+	return 1;
+    }
+    colCount = -1;
+    for (y = 0; y < rowCount; y++) {
+	if (Tcl_ListObjLength(interp, rowListPtr[y], &curColCount) != TCL_OK) {
+	    return 0;
+	}
+	if (colCount < 0) {
+	    colCount = curColCount;
+	} else if (curColCount != colCount) {
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid row # %d: "
+			"all rows must have the same number of elements", y));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+			"INVALID_DATA", NULL);
+	    }
+	    return 0;
+	}
+    }
+    
+    /*
+     * Looks like we have valid data for this format.
+     * We do not check any pixel values - that's the job of ImgStringRead()
+     */
+    
+    *widthPtr = colCount;
+    *heightPtr = rowCount;
+    
+    return 1;
+	    
+}
+ 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ImgStringRead --
+ *
+ *	Default string read function. The data is formatted in the default
+ *	format as accepted by the "<img> put" command.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ * 	If the data has valid format, write it to the image identified by 
+ * 	imageHandle.
+ * 	If the image data cannot be parsed, an error message is left in 
+ *	interp.
+ * 	See documentation for Tk_CreatePhotoImageFormat for further details.
+ *
+ *----------------------------------------------------------------------
+*/
+
+static int
+ImgStringRead(
+    Tcl_Interp *interp,			/* leave error messages here */
+    Tcl_Obj *data,			/* the data to parse */
+    Tcl_Obj *format, 			/* value of the -format option */
+    Tk_PhotoHandle imageHandle,		/* write data to this image */
+    int destX, int destY,		/* start writing data at this point
+					 * in destination image*/
+    int width, int height,		/* dimensions of area to write to */
+    int srcX, int srcY)			/* start reading source data at these
+					 * coordinates */ 
+{
+    Tcl_Obj **rowListPtr, **colListPtr;
+    unsigned char *curPixelPtr;
+    int x, y, rowCount, colCount, curColCount;
+    Tk_PhotoImageBlock srcBlock;
+   
+    /*
+     * Check if we have valid input data
+     */
+    
+    if (Tcl_ListObjGetElements(interp, data, &rowCount, &rowListPtr)
+	    != TCL_OK ) {
+	return TCL_ERROR;
+    }
+    if ( rowCount > 0 && Tcl_ListObjLength(interp, rowListPtr[0], &colCount) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (width <= 0 || height <= 0 || colCount == 0 || rowCount == 0) {
+	/*
+	 * No changes with zero sized input or zero sized output region
+	 */
+	return TCL_OK;
+    }
+    if (srcX < 0 || srcY < 0 || srcX >= rowCount || srcY >= colCount) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("source coordinates out of range"));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "COORDINATES", NULL);
+	return TCL_ERROR;
+    }
+    
+    /*
+     * Memory allocation overflow protection.
+     * May not be able to trigger/ demo / test this.
+     */
+    
+    if (colCount > (int)(UINT_MAX / 4 / rowCount)) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"photo image dimensions exceed Tcl memory limits"));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		"OVERFLOW", NULL);
+	return TCL_OK;
+    }
+    
+    /*
+     * Read data and put it to imageHandle
+     */
+    
+    srcBlock.width = colCount - srcX;
+    srcBlock.height = rowCount - srcY;
+    srcBlock.pixelSize = 4;
+    srcBlock.pitch = srcBlock.width * 4;
+    srcBlock.offset[0] = 0;
+    srcBlock.offset[1] = 1;
+    srcBlock.offset[2] = 2;
+    srcBlock.offset[3] = 3;
+    srcBlock.pixelPtr = attemptckalloc(srcBlock.pitch * srcBlock.height);
+    if (srcBlock.pixelPtr == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(TK_PHOTO_ALLOC_FAILURE_MESSAGE));
+	Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+	return TCL_ERROR;
+    }
+    curPixelPtr = srcBlock.pixelPtr;
+    for (y = srcY; y < rowCount; y++) {
+	/*
+	 * We don't test the length of row, as that's been done in
+	 * ImgStringMatch()
+	 */
+	if (Tcl_ListObjGetElements(interp, rowListPtr[y], &curColCount, 
+		&colListPtr) != TCL_OK) {
+	    goto errorExit;
+	}
+	for (x = srcX; x < colCount; x++) {
+	    if (ImgPhotoParseColor(interp, colListPtr[x], curPixelPtr, 
+		    curPixelPtr + 1, curPixelPtr + 2, curPixelPtr + 3) 
+		    != TCL_OK) {
+		goto errorExit;
+	    }
+	    curPixelPtr += 4;
+	}
+    }
+    
+    /*
+     * Write image data to destHandle
+     */
+    
+    if (Tk_PhotoPutBlock(interp, imageHandle, &srcBlock, destX, destY,
+	    width, height, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
+	goto errorExit;
+    }
+    
+    ckfree(srcBlock.pixelPtr);
+    
+    return TCL_OK;		    
+	    
+  errorExit:
+    ckfree(srcBlock.pixelPtr);
+    
+    return TCL_ERROR;
+}
+ 
 /*
  *----------------------------------------------------------------------
  *
@@ -3857,10 +4035,11 @@ ImgGetPhoto(
  *	format as accepted by the "<img> put" command.
  *
  * Results:
- *	A standard Tcl result.
+ *	The converted data is set as the result of interp. Returns a standard 
+ * 	Tcl result.
  *
  * Side effects:
- *	See the user documentation.
+ *	None.
  *
  *----------------------------------------------------------------------
  */
@@ -3898,7 +4077,271 @@ ImgStringWrite(
     Tcl_SetObjResult(interp, data);
     return TCL_OK;
 }
-
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ImgPhotoParseColor --
+ *
+ *	This function extracts color and alpha values from a string. It 
+ *	understands standard Tk color formats, alpha suffixes and the color 
+ *	formats specific to photo images, which include alpha data.
+ *
+ * Results:
+ *	On success, writes red, green, blue and alpha values to the 
+ *	corresponding pointers. If the color spec contains no alpha 
+ *	information, 255 is taken as transparency value. 
+ * 	If the input cannot be parsed, leaves an error message in 
+ *	interp. Returns a standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+static int
+ImgPhotoParseColor(
+    Tcl_Interp *interp,		/* error messages go there */
+    Tcl_Obj *specObj,		/* the color data to parse */
+    unsigned char *redPtr, 	/* the result is written to these pointers */
+    unsigned char *greenPtr,
+    unsigned char *bluePtr,
+    unsigned char *alphaPtr)
+{
+    const char *specString, *suffixString, *colorString;
+    Tcl_Obj *colorObj = NULL;
+    char *tmpString;
+    unsigned int i, charCount;
+    double fracAlpha;
+    unsigned int colorAlpha, suffixAlpha;
+    XColor parsedColor;
+    Display *display;
+    Colormap colormap;
+    enum FormatType {
+	PHOTO_COLORFORMAT_TKCOLOR,
+	PHOTO_COLORFORMAT_EMPTYSTRING,
+	PHOTO_COLORFORMAT_LIST,
+	PHOTO_COLORFORMAT_ARGB1,
+	PHOTO_COLORFORMAT_ARGB2
+    } formatType;
+
+    /*
+     * Split color data string in color and suffix parts
+     */
+    
+    specString = Tcl_GetString(specObj);
+    if ((suffixString = strrchr(specString, '@')) == NULL
+	    && ((suffixString = strrchr(specString, '#')) == NULL
+	    || suffixString == specString)) {
+	suffixString = specString + strlen(specString);
+    }
+    colorObj = Tcl_NewStringObj(specString, suffixString - specString);
+    colorString = Tcl_GetString(colorObj);
+    
+    /*
+     * Parse the color.
+     * 
+     * We don't use Tk_GetColor() et al. here, as those functions
+     * migth return a color that does not exaxtly match the given name
+     * if the colormap is full. Also, we don't really want the color to be 
+     * added to the colormap.
+     */
+    
+    display = Tk_Display(Tk_MainWindow(interp));
+    colormap = Tk_Colormap(Tk_MainWindow(interp));
+    if (TkParseColor(display, colormap, colorString, &parsedColor)) {
+	formatType = PHOTO_COLORFORMAT_TKCOLOR;
+	parsedColor.red >>= 8;
+	parsedColor.green >>= 8;
+	parsedColor.blue >>= 8;
+    } else if (colorString[0] == '#') {
+	charCount = strlen(colorString);
+	if (charCount - 1 != 4 && charCount - 1 != 8) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "invalid color name \"%s\"", colorString));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+		    "INVALID_COLOR", NULL);
+	    goto errorExit;
+	}
+	for (i = 1; i < charCount; i++) {
+	    if ( ! isxdigit(UCHAR(colorString[i]))) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"invalid color name \"%s\"", colorString));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+			"INVALID_COLOR", NULL);
+		goto errorExit;
+	    }
+	}
+	switch (charCount - 1) {
+	    case 4:
+		/* #ARGB format */
+		formatType = PHOTO_COLORFORMAT_ARGB1;
+		sscanf(colorString, "#%1x%1hx%1hx%1hx", &colorAlpha,
+			&parsedColor.red, &parsedColor.green, 
+			&parsedColor.blue);
+		parsedColor.red *= 0x11;
+		parsedColor.green *= 0x11;
+		parsedColor.blue *= 0x11;
+		colorAlpha *= 0x11;
+		break;
+	    case 8:
+		/* #AARRGGBB format */
+		formatType = PHOTO_COLORFORMAT_ARGB2;
+		sscanf(colorString, "#%2x%2hx%2hx%2hx", &colorAlpha,
+			&parsedColor.red, &parsedColor.green, 
+			&parsedColor.blue);
+		break;
+	    default:
+		Tcl_Panic("unexpected switch fallthrough");
+	}
+    } else if (strlen(colorString) == 0) {
+	formatType = PHOTO_COLORFORMAT_EMPTYSTRING;
+	parsedColor.red = 0;
+	parsedColor.green = 0;
+	parsedColor.blue = 0;
+	colorAlpha = 0;
+    } else {
+	int listLen;
+	int values[4];
+	Tcl_Obj *curValue;
+	
+	/* 
+	 * Last, try to interpret color as a tcl list 
+	 */
+	
+	if (Tcl_ListObjLength(interp, colorObj, &listLen) != TCL_OK
+		|| listLen < 3 || listLen > 4) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't parse color \"%s\"", colorString));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+		    "INVALID_COLOR", NULL);
+	    goto errorExit;
+	}
+	values[3] = -1;
+	for (i = 0; i < (unsigned)listLen; i++) {
+	    if (Tcl_ListObjIndex(interp, colorObj, i, &curValue) != TCL_OK) {
+		goto errorExit;
+	    }
+	    if (Tcl_GetIntFromObj(interp, curValue, values + i) != TCL_OK) {
+		goto errorExit;
+	    }
+	    if (values[i] < 0 || values[i] > 255) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"invalid color \"%s\": expected integers "
+			"in the range from 0 to 255", colorString));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+			"INVALID_COLOR", NULL);
+		goto errorExit;
+	    }
+	}
+	formatType = PHOTO_COLORFORMAT_LIST;
+	parsedColor.red = values[0];
+	parsedColor.green = values[1];
+	parsedColor.blue = values[2];
+	if (values[3] != -1) {
+	    colorAlpha = values[3];
+	} else {
+	    colorAlpha = 255;
+	}
+    }
+    
+    /*
+     * parse the Suffix
+     */
+    if (formatType != PHOTO_COLORFORMAT_TKCOLOR
+	    && suffixString[0] != '\0') {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid color \"%s\": "
+		"format does not allow alpha suffix", specString));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+		"INVALID_COLOR", NULL);
+	goto errorExit;
+    }
+    switch (suffixString[0]) {
+	case '\0': 
+	    suffixAlpha = 255;
+	    break;
+	case '@':
+	    fracAlpha = strtod(suffixString + 1, &tmpString);
+	    if (*tmpString != '\0') {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid alpha "
+			"suffix \"%s\": expected floating-point value", 
+			suffixString));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+			"INVALID COLOR", NULL);
+		goto errorExit;
+	    }
+	    if (fracAlpha < 0 || fracAlpha > 1) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid alpha suffix" 
+			" \"%s\": value must be in the range from 0 to 1", 
+			suffixString));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			"INVALID_COLOR", NULL);
+		goto errorExit;
+	    }
+	    suffixAlpha = round(fracAlpha * 255);
+	    break;
+	case '#':
+	    if (strlen(suffixString + 1) < 1 || strlen(suffixString + 1)> 2) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"invalid alpha suffix \"%s\"", suffixString));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+			"INVALID_COLOR", NULL);
+		goto errorExit;
+	    }
+	    for (i = 1; i <= strlen(suffixString + 1); i++) {
+		if ( ! isxdigit(UCHAR(suffixString[i]))) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "invalid alpha suffix \"%s\": expected hex digit",
+			    suffixString));
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			    "INVALID_COLOR", NULL);
+		    goto errorExit;
+		}
+	    }
+	    if (strlen(suffixString + 1) == 1) {
+		sscanf(suffixString, "#%1x", &suffixAlpha);
+		suffixAlpha *= 0x11;
+	    } else {
+		sscanf(suffixString, "#%2x", &suffixAlpha);
+	    }
+	    break;
+	default:
+	    Tcl_Panic("unexpected switch fallthrough");
+    }
+    
+    /*
+     * Put the pieces togegher and clean up
+     */
+    
+    *redPtr = parsedColor.red;
+    *greenPtr = parsedColor.green;
+    *bluePtr = parsedColor.blue;
+    if (formatType == PHOTO_COLORFORMAT_TKCOLOR) {
+	/* 
+	 * there was no alpha value in the color spec. use the one
+	 * from suffix, which is 255 if no suffix was passed.
+	 */
+	
+	*alphaPtr = suffixAlpha;
+    } else {
+	*alphaPtr = colorAlpha;
+    }
+    
+    if (colorObj != NULL) {
+	Tcl_DecrRefCount(colorObj);
+    }
+    
+    return TCL_OK;
+    
+  errorExit:
+    if (colorObj != NULL) {
+	Tcl_DecrRefCount(colorObj);
+    }
+    
+    return TCL_ERROR;
+    
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -3944,7 +4387,7 @@ Tk_PhotoGetImage(
 /*
  *--------------------------------------------------------------
  *
- * TkPostscriptPhoto --
+ * ImgPostscriptPhoto --
  *
  *	This function is called to output the contents of a photo image in
  *	Postscript by calling the Tk_PostscriptPhoto function.
