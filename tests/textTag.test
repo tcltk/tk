@@ -30,7 +30,7 @@ testConstraint haveFontSizes [expr {
 destroy .t
 text .t -width 20 -height 10
 
-pack append . .t {top expand fill}
+pack .t -expand 1 -fill both
 update
 .t debug on
 
