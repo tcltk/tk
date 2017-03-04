@@ -2908,28 +2908,28 @@ for {set i 2} {$i <= 200} {incr i} {
 .t configure -wrap word
 .t delete 50.0 51.0
 .t insert 50.0 "This is a long line, one that will wrap around twice.\n"
-test textDisp-20.1 {FindDLine} {textfonts} {
+test textDisp-20.1 {FindDLine} {
     .t yview 48.0
     list [.t dlineinfo 46.0] [.t dlineinfo 47.0] [.t dlineinfo 49.0] \
 	    [.t dlineinfo 58.0]
 } [list {} {} [list 3 [expr {$fixedDiff + 16}] 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
-test textDisp-20.2 {FindDLine} {textfonts} {
+test textDisp-20.2 {FindDLine} {
     .t yview 100.0
     .t yview -pickplace 53.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.14] [.t dlineinfo 50.15]
 } [list [list 3 [expr {-1 - $fixedDiff/2}] 105 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {-1 - $fixedDiff/2}] 105 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {12 + $fixedDiff/2}] 140 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]]]
-test textDisp-20.3 {FindDLine} {textfonts} {
+test textDisp-20.3 {FindDLine} {
     .t yview 100.0
     .t yview 49.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.20] [.t dlineinfo 57.0]
 } [list [list 3 [expr {$fixedDiff + 16}] 105 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {2*$fixedDiff + 29}] 140 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
-test textDisp-20.4 {FindDLine} {textfonts} {
+test textDisp-20.4 {FindDLine} {
     .t yview 100.0
     .t yview 42.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.20] [.t dlineinfo 50.40]
 } [list [list 3 [expr {8*$fixedDiff + 107}] 105 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {9*$fixedDiff + 120}] 140 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
 .t config -wrap none
-test textDisp-20.5 {FindDLine} {textfonts} {
+test textDisp-20.5 {FindDLine} {
     .t yview 100.0
     .t yview 48.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.20] [.t dlineinfo 50.40]
