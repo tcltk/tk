@@ -78,7 +78,7 @@ static void	        EmbWinDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr
 static void		EmbWinUndisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr);
 static TkTextEmbWindowClient *EmbWinGetClient(const TkText *textPtr, TkTextSegment *ewPtr);
 static TkTextSegment *	MakeWindow(TkText *textPtr);
-static void		ReleaseWindow(TkTextSegment *ewPtr);
+static void		ReleaseEmbeddedWindow(TkTextSegment *ewPtr);
 static void		DestroyOrUnmapWindow(TkTextSegment *ewPtr);
 
 static const TkTextDispChunkProcs layoutWindowProcs = {
@@ -285,7 +285,7 @@ UndoLinkSegmentDestroy(
     assert(!reused);
 
     if (--token->segPtr->refCount == 0) {
-	ReleaseWindow(token->segPtr);
+	ReleaseEmbeddedWindow(token->segPtr);
     }
 }
 
@@ -550,7 +550,7 @@ TkTextWindowCmd(
 	    TkBTreeUnlinkSegment(sharedTextPtr, ewPtr);
 	    TkTextWinFreeClient(NULL, client);
 	    ewPtr->body.ew.clients = NULL;
-	    ReleaseWindow(ewPtr);
+	    ReleaseEmbeddedWindow(ewPtr);
 	    return TCL_ERROR;
 	}
 	TextChanged(sharedTextPtr, &index);
@@ -676,7 +676,7 @@ TkTextMakeWindow(
     } else {
 	TkTextWinFreeClient(NULL, ewPtr->body.ew.clients);
 	ewPtr->body.ew.clients = NULL;
-	ReleaseWindow(ewPtr);
+	ReleaseEmbeddedWindow(ewPtr);
 	ewPtr = NULL;
     }
 
@@ -1097,7 +1097,7 @@ EmbWinInspectProc(
 /*
  *--------------------------------------------------------------
  *
- * ReleaseWindow --
+ * ReleaseEmbeddedWindow --
  *
  *	Free embedded window
  *
@@ -1112,7 +1112,7 @@ EmbWinInspectProc(
  */
 
 static void
-ReleaseWindow(
+ReleaseEmbeddedWindow(
     TkTextSegment *ewPtr)
 {
     TkTextEmbWindowClient *client = ewPtr->body.ew.clients;
@@ -1188,7 +1188,7 @@ DestroyOrUnmapWindow(
  *	Returns true to indicate that the deletion has been accepted.
  *
  * Side effects:
- *	Depends on the action, see ReleaseWindow and DestroyOrUnmapWindow.
+ *	Depends on the action, see ReleaseEmbeddedWindow and DestroyOrUnmapWindow.
  *
  *--------------------------------------------------------------
  */
@@ -1203,7 +1203,7 @@ EmbWinDeleteProc(
     assert(ewPtr->refCount > 0);
 
     if (ewPtr->refCount == 1) {
-	ReleaseWindow(ewPtr);
+	ReleaseEmbeddedWindow(ewPtr);
     } else {
 	ewPtr->refCount -= 1;
 	DestroyOrUnmapWindow(ewPtr);
