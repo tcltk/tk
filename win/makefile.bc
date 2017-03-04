@@ -160,6 +160,7 @@ TKOBJS = \
 	$(TMPDIR)\tkArgv.obj \
 	$(TMPDIR)\tkAtom.obj \
 	$(TMPDIR)\tkBind.obj \
+	$(TMPDIR)\tkBitField.obj \
 	$(TMPDIR)\tkBitmap.obj \
 	$(TMPDIR)\tkBusy.obj \
 	$(TMPDIR)\tkButton.obj \
@@ -197,6 +198,7 @@ TKOBJS = \
 	$(TMPDIR)\tkImgPhoto.obj \
 	$(TMPDIR)\tkImgPhInstance.obj \
 	$(TMPDIR)\tkImgUtil.obj \
+	$(TMPDIR)\tkIntSet.obj \
 	$(TMPDIR)\tkListbox.obj \
 	$(TMPDIR)\tkMacWinMenu.obj \
 	$(TMPDIR)\tkMain.obj \
@@ -204,13 +206,15 @@ TKOBJS = \
 	$(TMPDIR)\tkMenubutton.obj \
 	$(TMPDIR)\tkMenuDraw.obj \
 	$(TMPDIR)\tkMessage.obj \
-	$(TMP_DIR)\tkPanedWindow.obj \
+	$(TMPDIR)\tkPanedWindow.obj \
 	$(TMPDIR)\tkObj.obj \
 	$(TMPDIR)\tkOldConfig.obj \
 	$(TMPDIR)\tkOption.obj \
 	$(TMPDIR)\tkPack.obj \
 	$(TMPDIR)\tkPlace.obj \
 	$(TMPDIR)\tkPointer.obj \
+	$(TMPDIR)\tkQTree.obj \
+	$(TMPDIR)\tkRangeList.obj \
 	$(TMPDIR)\tkRectOval.obj \
 	$(TMPDIR)\tkScale.obj \
 	$(TMPDIR)\tkScrollbar.obj \
@@ -220,8 +224,11 @@ TKOBJS = \
 	$(TMPDIR)\tkTextDisp.obj \
 	$(TMPDIR)\tkTextImage.obj \
 	$(TMPDIR)\tkTextIndex.obj \
+	$(TMPDIR)\tkTextIndexLineBreak.obj \
 	$(TMPDIR)\tkTextMark.obj \
 	$(TMPDIR)\tkTextTag.obj \
+	$(TMPDIR)\tkTextTagSet.obj \
+	$(TMPDIR)\tkTextUndo.obj \
 	$(TMPDIR)\tkTextWind.obj \
 	$(TMPDIR)\tkTrig.obj \
 	$(TMPDIR)\tkUtil.obj \
