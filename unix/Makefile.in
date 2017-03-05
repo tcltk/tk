@@ -1490,7 +1490,7 @@ $(TTK_DIR)/ttkStubInit.c: $(TTK_DIR)/ttk.decls
 genstubs:
 	$(TCL_EXE) $(TOOL_DIR)/genStubs.tcl $(GENERIC_DIR) \
 		$(GENERIC_DIR)/tk.decls $(GENERIC_DIR)/tkInt.decls
-	$(TCL_EXE) $(TTK_DIR)/ttkGenStubs.tcl $(TTK_DIR) $(TTK_DIR)/ttk.decls
+	$(TCL_EXE) $(TOOL_DIR)/genStubs.tcl $(TTK_DIR) $(TTK_DIR)/ttk.decls
 
 #
 # Target to check that all exported functions have an entry in the stubs
