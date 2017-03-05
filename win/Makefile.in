@@ -736,7 +736,7 @@ genstubs:
 	    "$(GENERIC_DIR_NATIVE)" \
 	    "$(GENERIC_DIR_NATIVE)/tk.decls" \
 	    "$(GENERIC_DIR_NATIVE)/tkInt.decls"
-	$(TCL_EXE) "$(TTK_DIR)/ttkGenStubs.tcl" \
+	$(TCL_EXE) "$(TCL_TOOL_DIR)/genStubs.tcl" \
 	    "$(TTK_DIR)" \
 	    "$(TTK_DIR)/ttk.decls"
 
