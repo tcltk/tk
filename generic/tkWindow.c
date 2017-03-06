@@ -355,6 +355,9 @@ CreateTopLevelWindow(
      * Set the flags specified in the call.
      */
 
+#ifdef TK_USE_INPUT_METHODS
+    winPtr->ximGeneration = 0;
+#endif /*TK_USE_INPUT_METHODS*/
     winPtr->flags |= flags;
 
     /*
@@ -650,6 +653,7 @@ TkAllocWindow(
     winPtr->flags = 0;
     winPtr->handlerList = NULL;
 #ifdef TK_USE_INPUT_METHODS
+    winPtr->ximGeneration = 0;
     winPtr->inputContext = NULL;
 #endif /* TK_USE_INPUT_METHODS */
     winPtr->tagPtr = NULL;
@@ -1442,10 +1446,11 @@ Tk_DestroyWindow(
     UnlinkWindow(winPtr);
     TkEventDeadWindow(winPtr);
 #ifdef TK_USE_INPUT_METHODS
-    if (winPtr->inputContext != NULL) {
+    if (winPtr->inputContext != NULL &&
+	    winPtr->ximGeneration == winPtr->dispPtr->ximGeneration) {
 	XDestroyIC(winPtr->inputContext);
-	winPtr->inputContext = NULL;
     }
+    winPtr->inputContext = NULL;
 #endif /* TK_USE_INPUT_METHODS */
     if (winPtr->tagPtr != NULL) {
 	TkFreeBindingTags(winPtr);
