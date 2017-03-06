@@ -14,6 +14,14 @@
 #include <X11/Xft/Xft.h>
 #include <ctype.h>
 
+/* needed for backport to 8.5 */
+#ifndef ROUND16
+# define ROUND16(x) ((short) floor((x) + 0.5))
+#endif
+#ifndef PI
+# define PI 3.14159265358979323846
+#endif
+
 #define MAX_CACHED_COLORS 16
 
 typedef struct {
