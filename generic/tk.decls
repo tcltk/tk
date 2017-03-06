@@ -326,7 +326,7 @@ declare 75 {
 declare 76 {
     void Tk_FreeTextLayout(Tk_TextLayout textLayout)
 }
-declare 77 {
+declare 77 deprecated {
     void Tk_FreeXId(Display *display, XID xid)
 }
 declare 78 {

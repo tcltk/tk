@@ -1260,6 +1260,16 @@ Tk_BindEvent(
 	}
     }
 
+    /*
+     * Ignore event types which are not in flagArray and all zeroes there.
+     * Most notably, NoExpose events can fill the ring buffer and disturb
+     * (thus masking out) event sequences of interest.
+     */
+
+    if ((eventPtr->type >= TK_LASTEVENT) || !flagArray[eventPtr->type]) {
+       return;
+    }
+
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
     bindInfoPtr = winPtr->mainPtr->bindInfo;
 
@@ -3460,7 +3470,7 @@ HandleEventGenerate(
 	    Tcl_DoWhenIdle(DoWarp, dispPtr);
 	    dispPtr->flags |= TK_DISPLAY_IN_WARP;
 	}
-	dispPtr->warpWindow = Tk_IdToWindow(Tk_Display(mainWin),
+	dispPtr->warpWindow = Tk_IdToWindow(dispPtr->display,
 		event.general.xmotion.window);
 	dispPtr->warpMainwin = mainWin;
 	dispPtr->warpX = event.general.xmotion.x;
