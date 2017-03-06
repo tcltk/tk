@@ -2245,10 +2245,10 @@ ApplyAlpha(
 	p += offset;
 
 	if (16 == pngPtr->bitDepth) {
-	    register int channel;
+	    register unsigned int channel;
 
 	    while (p < endPtr) {
-		channel = (unsigned char)
+		channel = (unsigned int)
 			(((p[0] << 8) | p[1]) * pngPtr->alpha);
 
 		*p++ = (unsigned char) (channel >> 8);
