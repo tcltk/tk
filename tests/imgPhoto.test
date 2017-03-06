@@ -797,6 +797,23 @@ test imgPhoto-4.73 {ImgPhotoCmd procedure: copy with -compositingrule} -setup {
 } -cleanup {
     image delete photo1 photo2
 } -result {0,2 1,1 2,0}
+test imgPhoto-4.74 {ImgPhotoCmd procedure: put option error handling} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{white}} -to 10 10 20 20 {{white}}
+} -cleanup {
+    image delete photo1
+} -returnCodes 1 -result {wrong # args: should be "photo1 put data ?-option value ...?"}
+test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constraints {
+    hasTeapotPhoto
+} -body {
+    file copy -force $teapotPhotoFile -teapotPhotoFile
+    image create photo photo1
+    photo1 read -teapotPhotoFile
+} -cleanup {
+    image delete photo1
+    file delete ./-teapotPhotoFile
+} -result {}
 
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -constraints {
     hasTeapotPhoto
