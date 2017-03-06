@@ -63,7 +63,8 @@ namespace eval ttk::theme::alt {
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure TCombobox -padding 1
 	ttk::style map TCombobox -fieldbackground \
-		[list readonly $colors(-frame) disabled $colors(-frame)]
+		[list readonly $colors(-frame) disabled $colors(-frame)] \
+		-arrowcolor [list disabled $colors(-disabledfg)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
