@@ -409,7 +409,8 @@ ImgPhotoCmd(
     Tk_PhotoImageBlock block;
     Tk_Window tkwin;
     Tk_PhotoImageFormat *imageFormat;
-    int imageWidth, imageHeight, matched, length, oldformat = 0;
+    size_t length;
+    int imageWidth, imageHeight, matched, oldformat = 0;
     Tcl_Channel chan;
     Tk_PhotoHandle srcHandle;
     ThreadSpecificData *tsdPtr =
@@ -446,12 +447,13 @@ ImgPhotoCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    return TCL_ERROR;
 	}
-	arg = Tcl_GetStringFromObj(objv[2], &length);
-	if (strncmp(arg,"-data", (unsigned) length) == 0) {
+	arg = Tcl_GetString(objv[2]);
+	length = objv[2]->length;
+	if (strncmp(arg,"-data", length) == 0) {
 	    if (masterPtr->dataString) {
 		Tcl_SetObjResult(interp, masterPtr->dataString);
 	    }
-	} else if (strncmp(arg,"-format", (unsigned) length) == 0) {
+	} else if (strncmp(arg,"-format", length) == 0) {
 	    if (masterPtr->format) {
 		Tcl_SetObjResult(interp, masterPtr->format);
 	    }
@@ -495,9 +497,10 @@ ImgPhotoCmd(
 	    return TCL_OK;
 
 	} else if (objc == 3) {
-	    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
+	    const char *arg = Tcl_GetString(objv[2]);
 
-	    if (length > 1 && !strncmp(arg, "-data", (unsigned) length)) {
+	    length = objv[2]->length;
+	    if (length > 1 && !strncmp(arg, "-data", length)) {
 		Tcl_AppendResult(interp, "-data {} {} {}", NULL);
 		if (masterPtr->dataString) {
 		    /*
@@ -511,7 +514,7 @@ ImgPhotoCmd(
 		}
 		return TCL_OK;
 	    } else if (length > 1 &&
-		    !strncmp(arg, "-format", (unsigned) length)) {
+		    !strncmp(arg, "-format", length)) {
 		Tcl_AppendResult(interp, "-format {} {} {}", NULL);
 		if (masterPtr->format) {
 		    /*
@@ -1489,7 +1492,8 @@ ParseSubcommandOptions(
 				 * TK_PHOTO_COMPOSITE_* constants. */
 	NULL
     };
-    int index, c, bit, currentBit, length;
+    size_t length;
+    int index, c, bit, currentBit;
     int values[4], numValues, maxValues, argIndex;
     const char *option, *expandedOption, *needed;
     const char *const *listPtr;
@@ -1501,7 +1505,8 @@ ParseSubcommandOptions(
 	 * optPtr->name.
 	 */
 
-	expandedOption = option = Tcl_GetStringFromObj(objv[index], &length);
+	expandedOption = option = Tcl_GetString(objv[index]);
+	length = objv[index]->length;
 	if (option[0] != '-') {
 	    if (optPtr->name == NULL) {
 		optPtr->name = objv[index];
@@ -1519,7 +1524,7 @@ ParseSubcommandOptions(
 	currentBit = 1;
 	for (listPtr = optionNames; *listPtr != NULL; ++listPtr) {
 	    if ((c == *listPtr[0])
-		    && (strncmp(option, *listPtr, (size_t) length) == 0)) {
+		    && (strncmp(option, *listPtr, length) == 0)) {
 		expandedOption = *listPtr;
 		if (bit != 0) {
 		    goto unknownOrAmbiguousOption;
@@ -1535,7 +1540,11 @@ ParseSubcommandOptions(
 	 */
 
 	if (!(allowedOptions & bit)) {
-	    goto unknownOrAmbiguousOption;
+	    if (optPtr->name != NULL) {
+		goto unknownOrAmbiguousOption;
+	    }
+	    optPtr->name = objv[index];
+	    continue;
 	}
 
 	/*
@@ -1765,7 +1774,8 @@ ImgPhotoConfigureMaster(
     const char *oldFileString, *oldPaletteString;
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL;
     Tcl_Obj *tempdata, *tempformat;
-    int length, i, j, result, imageWidth, imageHeight, oldformat;
+    size_t length;
+    int i, j, result, imageWidth, imageHeight, oldformat;
     double oldGamma;
     Tcl_Channel chan;
     Tk_PhotoImageFormat *imageFormat;
@@ -1773,10 +1783,11 @@ ImgPhotoConfigureMaster(
 
     args = ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
-	args[j] = Tcl_GetStringFromObj(objv[i], &length);
+	args[j] = Tcl_GetString(objv[i]);
+	length = objv[i]->length;
 	if ((length > 1) && (args[j][0] == '-')) {
 	    if ((args[j][1] == 'd') &&
-		    !strncmp(args[j], "-data", (size_t) length)) {
+		    !strncmp(args[j], "-data", length)) {
 		if (++i < objc) {
 		    data = objv[i];
 		    j--;
@@ -1789,7 +1800,7 @@ ImgPhotoConfigureMaster(
 		    return TCL_ERROR;
 		}
 	    } else if ((args[j][1] == 'f') &&
-		    !strncmp(args[j], "-format", (size_t) length)) {
+		    !strncmp(args[j], "-format", length)) {
 		if (++i < objc) {
 		    format = objv[i];
 		    j--;
@@ -1852,9 +1863,10 @@ ImgPhotoConfigureMaster(
 	 * Force into ByteArray format, which most (all) image handlers will
 	 * use anyway. Empty length means ignore the -data option.
 	 */
+	int bytesize;
 
-	(void) Tcl_GetByteArrayFromObj(data, &length);
-	if (length) {
+	(void) Tcl_GetByteArrayFromObj(data, &bytesize);
+	if (bytesize) {
 	    Tcl_IncrRefCount(data);
 	} else {
 	    data = NULL;
@@ -1870,8 +1882,8 @@ ImgPhotoConfigureMaster(
 	 * object.
 	 */
 
-	(void) Tcl_GetStringFromObj(format, &length);
-	if (length) {
+	(void) Tcl_GetString(format);
+	if (format->length) {
 	    Tcl_IncrRefCount(format);
 	} else {
 	    format = NULL;

@@ -1215,13 +1215,11 @@
 		F966BC9808F27A3E005CB29B /* makefile.bc */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = makefile.bc; sourceTree = "<group>"; };
 		F966BC9908F27A3E005CB29B /* Makefile.in */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile.in; sourceTree = "<group>"; };
 		F966BC9A08F27A3E005CB29B /* makefile.vc */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = makefile.vc; sourceTree = "<group>"; };
-		F966BC9B08F27A3E005CB29B /* mkd.bat */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mkd.bat; sourceTree = "<group>"; };
 		F966BC9C08F27A3E005CB29B /* nmakehlp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nmakehlp.c; sourceTree = "<group>"; };
 		F966BCEE08F27A3E005CB29B /* tk.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tk.rc; sourceTree = "<group>"; };
 		F966BCEF08F27A3E005CB29B /* tk_base.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = tk_base.rc; sourceTree = "<group>"; };
 		F966BCF208F27A3E005CB29B /* wish.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = wish.rc; sourceTree = "<group>"; };
 		F966BCF308F27A3E005CB29B /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
-		F966BCF408F27A3E005CB29B /* rmd.bat */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rmd.bat; sourceTree = "<group>"; };
 		F966BCF508F27A3F005CB29B /* rules.vc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rules.vc; sourceTree = "<group>"; };
 		F966BCF608F27A3F005CB29B /* stubs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stubs.c; sourceTree = "<group>"; };
 		F966BCF708F27A3F005CB29B /* tcl.m4 */ = {isa = PBXFileReference; explicitFileType = text.script.sh; fileEncoding = 4; path = tcl.m4; sourceTree = "<group>"; };
@@ -2794,11 +2792,9 @@
 				F966BC9808F27A3E005CB29B /* makefile.bc */,
 				F966BC9908F27A3E005CB29B /* Makefile.in */,
 				F966BC9A08F27A3E005CB29B /* makefile.vc */,
-				F966BC9B08F27A3E005CB29B /* mkd.bat */,
 				F966BC9C08F27A3E005CB29B /* nmakehlp.c */,
 				F966BC9D08F27A3E005CB29B /* rc */,
 				F966BCF308F27A3E005CB29B /* README */,
-				F966BCF408F27A3E005CB29B /* rmd.bat */,
 				F966BCF508F27A3F005CB29B /* rules.vc */,
 				F966BCF608F27A3F005CB29B /* stubs.c */,
 				F966BCF708F27A3F005CB29B /* tcl.m4 */,

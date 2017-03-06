@@ -227,7 +227,7 @@ Tktest_Init(
 {
     static int initialized = 0;
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	return TCL_ERROR;
     }
     if (Tk_InitStubs(interp, TK_VERSION, 0) == NULL) {
@@ -452,7 +452,7 @@ TestcursorObjCmd(
  *	A standard Tcl result.
  *
  * Side effects:
- *	All the intepreters created by previous calls to "testnewapp" get
+ *	All the interpreters created by previous calls to "testnewapp" get
  *	deleted.
  *
  *----------------------------------------------------------------------

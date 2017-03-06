@@ -105,6 +105,10 @@ extern "C" {
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS	DLLEXPORT
+#else
+# ifndef TCL_STORAGE_CLASS
+#   define TCL_STORAGE_CLASS DLLIMPORT
+# endif
 #endif
 
 /*
@@ -414,7 +418,9 @@ typedef enum {
 #define TK_CONFIG_COLOR_ONLY		(1 << 1)
 #define TK_CONFIG_MONO_ONLY		(1 << 2)
 #define TK_CONFIG_DONT_SET_DEFAULT	(1 << 3)
-#define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
+#if !defined(TK_NO_DEPRECATED) || defined(BUILD_tk)
+#  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
+#endif
 #define TK_CONFIG_USER_BIT		0x100
 #endif /* __NO_OLD_CONFIG */
 
@@ -746,9 +752,10 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
     (((Tk_FakeWin *) (tkwin))->flags & TK_WM_MANAGEABLE)
 #define Tk_ReqWidth(tkwin)	(((Tk_FakeWin *) (tkwin))->reqWidth)
 #define Tk_ReqHeight(tkwin)	(((Tk_FakeWin *) (tkwin))->reqHeight)
-/* Tk_InternalBorderWidth is deprecated */
+#ifndef TK_NO_DEPRECATED
 #define Tk_InternalBorderWidth(tkwin) \
     (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
+#endif /* !TK_NO_DEPRECATED */
 #define Tk_InternalBorderLeft(tkwin) \
     (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
 #define Tk_InternalBorderRight(tkwin) \
@@ -814,6 +821,9 @@ typedef struct Tk_FakeWin {
     int minReqWidth;
     int minReqHeight;
     char *dummy20;		/* geometryMaster */
+#ifdef TK_USE_INPUT_METHODS
+    int dummy21;
+#endif /* TK_USE_INPUT_METHODS */
 } Tk_FakeWin;
 
 /*

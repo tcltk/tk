@@ -16,18 +16,18 @@ tcltest::loadTestedCommands
 
 option add *Text.borderWidth 2
 option add *Text.highlightThickness 2
-option add *Text.font {Courier -12}
+option add *Text.font {"Courier New" -12}
 
 
 deleteWindows
 # Widget used in tests 1.* - 16.*
 text .t -width 30 -height 6 -bd 2 -highlightthickness 2
-pack append . .t {top expand fill}
+pack .t -expand 1 -fill both
 update
 .t debug on
 
 # 15 on XP, 13 on Solaris 8
-set fixedHeight [font metrics {Courier -12} -linespace]
+set fixedHeight [font metrics {"Courier New" -12} -linespace]
 set fixedDiff [expr {$fixedHeight - 13}] ;# 2 on XP
 set color [expr {[winfo depth .t] > 1 ? "green" : "black"}]
 

@@ -1403,7 +1403,7 @@ test pack-15.1 {managing geometry with -in option} -setup {
     pack .pack.b -in .pack.f.f2
     update
     set result [winfo geom .pack.b]
-    pack unpack .pack.a
+    pack forget .pack.a
     update
     lappend result [winfo geom .pack.b]
 } -cleanup {
@@ -1441,7 +1441,7 @@ test pack-15.3 {managing geometry with -in option} -setup {
     pack .pack.b -in .pack.f.f2
     update
     set result [winfo ismapped .pack.b]
-    pack unpack .pack.f
+    pack forget .pack.f
     update
     lappend result [winfo ismapped .pack.b]
 } -cleanup {
