@@ -227,6 +227,10 @@ void TtkFillArrow(
     ArrowPoints(b, dir, points);
     XFillPolygon(display, d, gc, points, 3, Convex, CoordModeOrigin);
     XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(PLATFORM_SDL)
+    /* Fix for ticket [77527326]. */
+    XDrawPoint(display, d, gc, points[2].x, points[2].y);
+#endif
 }
 
 /*public*/
@@ -236,6 +240,10 @@ void TtkDrawArrow(
     XPoint points[4];
     ArrowPoints(b, dir, points);
     XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(PLATFORM_SDL)
+    /* Fix for ticket [77527326]. */
+    XDrawPoint(display, d, gc, points[2].x, points[2].y);
+#endif
 }
 
 /*
