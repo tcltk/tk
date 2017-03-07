@@ -1,5 +1,4 @@
 win/buildall.vc.bat
-win/makefile.bc
 win/makefile.vc
 win/mkd.bat
 win/rmd.bat
