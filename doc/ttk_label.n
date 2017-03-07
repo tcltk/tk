@@ -19,7 +19,7 @@ The label may be linked to a Tcl variable
 to automatically change the displayed text.
 .SO ttk_widget
 \-class	\-compound	\-cursor
-\-image	\-style	\-takefocus
+\-image	\-justify	\-style	\-takefocus
 \-text	\-textvariable	\-underline
 \-width
 .SE
@@ -38,11 +38,6 @@ Font to use for label text.
 .OP \-foreground textColor TextColor
 The widget's foreground color.
 If unspecified, the theme default is used.
-.OP \-justify justify Justify
-If there are multiple lines of text, specifies how
-the lines are laid out relative to one another.
-One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
-See also \fB\-anchor\fR.
 .OP \-padding padding Padding
 Specifies the amount of extra space to allocate for the widget.
 The padding is a list of up to four length specifications
