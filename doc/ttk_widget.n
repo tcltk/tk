@@ -71,6 +71,11 @@ See the description of \fB\-xscrollcommand\fR above for details.
 .SH "LABEL OPTIONS"
 The following options are supported by labels, buttons,
 and other button-like widgets:
+.OP \-justify justify Justify
+If there are multiple lines of text, specifies how
+the lines are laid out relative to one another.
+One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
+See also \fB\-anchor\fR (for widgets supporting this option).
 .OP \-text text Text
 Specifies a text string to be displayed inside the widget
 (unless overridden by \fB\-textvariable\fR).
