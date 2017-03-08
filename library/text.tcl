@@ -1054,9 +1054,9 @@ proc ::tk::TextScrollPages {w count} {
 	# This may happen if a character is spanning the entire view,
 	# ensure that at least one line will change.
 	if {$count < 0} {
-	    set newPos [$w index "insert linestart -1 line"]
+	    set newPos [$w index "insert -1 line lineend"]
 	} else {
-	    set newPos [$w index "insert linestart +1 line"]
+	    set newPos [$w index "insert +1 line linestart"]
 	}
     }
     return $newPos
