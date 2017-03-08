@@ -1046,9 +1046,20 @@ proc ::tk::TextScrollPages {w count} {
     set bbox [$w bbox insert]
     $w yview scroll $count pages
     if {[llength $bbox] == 0} {
-	return [$w index @[expr {[winfo height $w]/2}],0]
+	set newPos [$w index @[expr {[winfo height $w]/2}],0]
+    } else {
+	set newPos [$w index @[lindex $bbox 0],[lindex $bbox 1]]
     }
-    return [$w index @[lindex $bbox 0],[lindex $bbox 1]]
+    if {[$w compare insert == $newPos]} {
+	# This may happen if a character is spanning the entire view,
+	# ensure that at least one line will change.
+	if {$count < 0} {
+	    set newPos [$w index "insert linestart -1 line"]
+	} else {
+	    set newPos [$w index "insert linestart +1 line"]
+	}
+    }
+    return $newPos
 }
 
 # ::tk::TextTranspose --
