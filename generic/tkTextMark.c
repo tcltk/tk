@@ -1572,10 +1572,9 @@ TkTextPushUndoMarkTokens(
  *	this function will always return non-NULL in case of setting the
  *	"insert" mark).
  *
- *	The footprint of this function is public, so we cannot extend it
- *	without changing tkIntDecls.h, and I will not touch this file. So
- *	I gave parameter 'name' an additional flag: if this parameter is
- *	marked, then it's a private mark.
+ *	Note that parameter indexPtr may be adjusted if the position
+ *	is outside of visible test, and we are setting the "insert"
+ *	mark.
  *
  * Results:
  *	The return value is a pointer to the mark that was just set.

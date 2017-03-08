@@ -11246,7 +11246,7 @@ TkpTesttextCmd(
     TkText *textPtr;
     size_t len;
     int lineIndex, byteIndex, byteOffset;
-    TkTextIndex index;
+    TkTextIndex index, insIndex;
     char buf[TK_POS_CHARS];
     Tcl_CmdInfo info;
     Tcl_Obj *watchCmd;
@@ -11296,7 +11296,8 @@ TkpTesttextCmd(
 
     watchCmd = textPtr->watchCmd;
     textPtr->watchCmd = NULL;
-    TkTextSetMark(textPtr, "insert", &index);
+    insIndex = index; /* because TkTextSetMark may modify position */
+    TkTextSetMark(textPtr, "insert", &insIndex);
     textPtr->watchCmd = watchCmd;
 
     TkTextPrintIndex(textPtr, &index, buf);
