@@ -4421,7 +4421,7 @@ TkBTreeInsertChars(
 	assert(prevPtr);
 	lastSegPtr = segPtr;
 	string = strEnd + (chunkSize == 0 ? 2 : 0);
-	TkTextIndexAddToByteIndex(indexPtr, MAX(chunkSize, 1));
+	TkTextIndexAddToByteIndex(indexPtr, MAX(chunkSize, 1u));
 
 	if (!isNewline) {
 	    continue;

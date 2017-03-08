@@ -57,17 +57,6 @@ static const char *CONST wrapStrings[] = {
 };
 
 /*
- * The 'TkTextSpaceMode' enum in tkText.h is used to define a type for the -spacing
- * option of tags in a Text widget. These values are used as indices into the
- * string table below. Tags are allowed an empty wrap value, but the widget as
- * a whole is not.
- */
-
-static const char *const spaceModeStrings[] = {
-    "none", "exact", "trim", NULL
-};
-
-/*
  * The 'TkTextTabStyle' enum in tkText.h is used to define a type for the
  * -tabstyle option of the Text widget. These values are used as indices into
  * the string table below. Tags are allowed an empty wrap value, but the
