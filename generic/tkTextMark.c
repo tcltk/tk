@@ -1573,7 +1573,7 @@ TkTextPushUndoMarkTokens(
  *	"insert" mark).
  *
  *	Note that parameter indexPtr may be adjusted if the position
- *	is outside of visible test, and we are setting the "insert"
+ *	is outside of visible text, and we are setting the "insert"
  *	mark.
  *
  * Results:
