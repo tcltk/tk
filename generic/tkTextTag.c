@@ -2967,7 +2967,7 @@ TkTextPickCurrent(
 		textPtr->imageBboxTree,
 		eventPtr->xmotion.x + dx,
 		eventPtr->xmotion.y + dy,
-		ImageHitCallback,
+		&ImageHitCallback,
 		(TkQTreeClientData) &eiListPtr);
 	for (i = 0; i < textPtr->hoveredImageArrSize; ++i) {
 	    textPtr->hoveredImageArr[i]->hovered = false;
