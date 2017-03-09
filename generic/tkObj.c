@@ -1141,7 +1141,6 @@ TkRegisterObjTypes(void)
     Tcl_RegisterObjType(&pixelObjType);
     Tcl_RegisterObjType(&tkStateKeyObjType);
     Tcl_RegisterObjType(&windowObjType);
-    Tcl_RegisterObjType(&tkTextIndexType);
 }
 
 /*
