@@ -1412,19 +1412,33 @@ TextWidgetObjCmd(
 	break;
     }
     case TEXT_BBOX: {
-	int x, y, width, height;
+	int x, y, width, height, argc = 2;
+	bool discardPartial = false;
 	TkTextIndex index;
 
-	if (objc != 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "index");
+	if (objc == 4) {
+	    const char* option = Tcl_GetString(objv[2]);
+
+	    if (strcmp(option, "-discardpartial") == 0) {
+		discardPartial = true;
+		argc += 1;
+	    } else if (*option != '-') {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad option \"%s\": must be -discardpartial", option));
+		result = TCL_ERROR;
+		goto done;
+	    }
+	}
+	if (objc - argc + 2 != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-discardpartial? index");
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (!TkTextGetIndexFromObj(interp, textPtr, objv[2], &index)) {
+	if (!TkTextGetIndexFromObj(interp, textPtr, objv[argc], &index)) {
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (TkTextIndexBbox(textPtr, &index, &x, &y, &width, &height, NULL) == 0) {
+	if (TkTextIndexBbox(textPtr, &index, discardPartial, &x, &y, &width, &height, NULL)) {
 	    Tcl_Obj *listObj = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewIntObj(x));
@@ -6032,7 +6046,7 @@ TextBlinkProc(
 
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 
-	if (TkTextIndexBbox(textPtr, &index, &x, &y, &w, &h, &charWidth) == 0) {
+	if (TkTextIndexBbox(textPtr, &index, false, &x, &y, &w, &h, &charWidth)) {
 	    if (textPtr->blockCursorType) { /* Block cursor */
 		x -= textPtr->width/2;
 		w = charWidth + textPtr->insertWidth/2;

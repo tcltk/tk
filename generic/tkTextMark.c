@@ -2489,7 +2489,7 @@ TkTextGetCursorWidth(
 
     if (textPtr->blockCursorType) {
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-	TkTextIndexBbox(textPtr, &index, &ix, &iy, &iw, &ih, &charWidth);
+	TkTextIndexBbox(textPtr, &index, false, &ix, &iy, &iw, &ih, &charWidth);
 
 	/*
 	 * Don't draw the full lengh of a tab, in this case we are drawing

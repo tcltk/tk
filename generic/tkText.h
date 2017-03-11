@@ -1812,8 +1812,8 @@ MODULE_SCOPE int	TkConfigureText(Tcl_Interp *interp, TkText *textPtr, int objc,
 MODULE_SCOPE bool	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
 			    const char *index1, const char *index2, const char *arg, bool userFlag);
 MODULE_SCOPE void	TkTextUpdateAlteredFlag(TkSharedText *sharedTextPtr);
-MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
-			    const TkTextIndex *indexPtr, int *xPtr, int *yPtr,
+MODULE_SCOPE bool	TkTextIndexBbox(TkText *textPtr,
+			    const TkTextIndex *indexPtr, bool discardPartial, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int byteOffset, int maxX, int maxBytes, bool noCharsYet,

@@ -1043,6 +1043,19 @@ proc ::tk::TextNextPara {w start} {
 #		to scroll backwards.
 
 proc ::tk::TextScrollPages {w count} {
+    if {$count > 0} {
+	if {[llength [$w dlineinfo end-1c]] && [llength [$w bbox -discardpartial @first,last]]} {
+	    # First character on last display line of very last line is entirely visible,
+	    # nothing to do.
+	    return insert
+	}
+    } else {
+	if {[llength [$w dlineinfo 1.0]] && [llength [$w bbox -discardpartial @first,0]]} {
+	    # First character on first display line of very first line is entirely visible,
+	    # nothing to do.
+	    return insert
+	}
+    }
     set bbox [$w bbox insert]
     $w yview scroll $count pages
     if {[llength $bbox] == 0} {
@@ -1053,11 +1066,8 @@ proc ::tk::TextScrollPages {w count} {
     if {[$w compare insert == $newPos]} {
 	# This may happen if a character is spanning the entire view,
 	# ensure that at least one line will change.
-	if {$count < 0} {
-	    set newPos [$w index "insert -1 line lineend"]
-	} else {
-	    set newPos [$w index "insert +1 line linestart"]
-	}
+	set idx [expr {$count > 0 ? "insert +1 displayline" : "insert -1 displayline"}]
+	set newPos [$w index $idx]
     }
     return $newPos
 }
