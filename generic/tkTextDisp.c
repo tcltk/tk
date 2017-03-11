@@ -9728,6 +9728,9 @@ MeasureUp(
  *	command for text widgets. See the user documentation for details on
  *	what it does.
  *
+ *	TODO: the current implementation does not consider that the position
+ *	has to be fully visible.
+ *
  * Results:
  *	A standard Tcl result.
  *
@@ -11579,8 +11582,8 @@ DLineXOfIndex(
  *	the entity (character, window, image) at that index.
  *
  * Results:
- *	Zero is returned if the index is on the screen. -1 means the index is
- *	not on the screen. If the return value is 0, then the bounding box of
+ *	'True' is returned if the index is on the screen. 'False' means the index
+ *	is not on the screen. If the return value is 0, then the bounding box of
  *	the part of the index that's visible on the screen is returned to
  *	*xPtr, *yPtr, *widthPtr, and *heightPtr.
  *
@@ -11590,10 +11593,12 @@ DLineXOfIndex(
  *----------------------------------------------------------------------
  */
 
-int
+bool
 TkTextIndexBbox(
     TkText *textPtr,		/* Widget record for text widget. */
     const TkTextIndex *indexPtr,/* Index whose bounding box is desired. */
+    bool discardPartial,	/* Ignore indices which are not fully visible (vertically), as if this
+    				 * character is not on screen. */
     int *xPtr, int *yPtr,	/* Filled with index's upper-left coordinate. */
     int *widthPtr, int *heightPtr,
 				/* Filled in with index's dimensions. */
@@ -11630,7 +11635,7 @@ TkTextIndexBbox(
      */
 
     if (!dlPtr || !dlPtr->chunkPtr || TkTextIndexCompare(&dlPtr->index, indexPtr) > 0) {
-	return -1;
+	return false;
     }
 
     /*
@@ -11647,7 +11652,7 @@ TkTextIndexBbox(
     while (byteCount >= sectionPtr->numBytes) {
 	byteCount -= sectionPtr->numBytes;
 	if (!(sectionPtr = sectionPtr->nextPtr)) {
-	    return -1;
+	    return false;
 	}
     }
 
@@ -11656,7 +11661,7 @@ TkTextIndexBbox(
     while (byteCount >= chunkPtr->numBytes) {
 	byteCount -= chunkPtr->numBytes;
 	if (!(chunkPtr = chunkPtr->nextPtr)) {
-	    return -1;
+	    return false;
 	}
     }
 
@@ -11702,29 +11707,46 @@ TkTextIndexBbox(
 	 */
 
 	if (*xPtr < dInfoPtr->x) {
-	    return -1;
+	    return false;
 	}
-    } else {
-	if (*xPtr + *widthPtr <= dInfoPtr->x) {
-	    return -1;
-	}
+    } else if (*xPtr + *widthPtr <= dInfoPtr->x) {
+	return false;
     }
 
     if (*xPtr + *widthPtr > dInfoPtr->maxX) {
-	*widthPtr = dInfoPtr->maxX - *xPtr;
-	if (*widthPtr <= 0) {
-	    return -1;
+	if ((*widthPtr = dInfoPtr->maxX - *xPtr) <= 0) {
+	    return false;
+	}
+    }
+
+    if (discardPartial) {
+	int ypixels = TkBTreePixelsTo(textPtr, TkTextIndexGetLine(indexPtr));
+	int maxPixels;
+	int inset;
+
+	if (ypixels < dInfoPtr->curYPixelOffset) {
+	    return false;
+	}
+
+	maxPixels = ypixels + *heightPtr;
+	inset = textPtr->borderWidth + textPtr->highlightWidth;
+
+	/* XXX TODO: I'm including the inset, because otherwise there is a difference of 2 pixels.
+	 * But this cannot be correlated with the inset. Something is odd.
+	 */
+
+	if (maxPixels >= dInfoPtr->curYPixelOffset + dInfoPtr->maxY + dInfoPtr->topPixelOffset - inset) {
+	    return false;
 	}
     }
 
     if (*yPtr + *heightPtr > dInfoPtr->maxY) {
-	*heightPtr = dInfoPtr->maxY - *yPtr;
-	if (*heightPtr <= 0) {
-	    return -1;
+	if ((*heightPtr = dInfoPtr->maxY - *yPtr) <= 0) {
+	    return false;
 	}
     }
 
-    return 0;
+    return true;
 }
 
 /*
@@ -13393,6 +13415,9 @@ GetForegroundGC(
     const TkTextDispChunk *chunkPtr)
 {
     const TkTextSegment *segPtr = ((const CharInfo *) chunkPtr->clientData)->segPtr;
+
+    assert(chunkPtr->stylePtr);
+    assert(chunkPtr->stylePtr->refCount > 0);
 
     if (segPtr == textPtr->dInfoPtr->endOfLineSegPtr) {
 	if (chunkPtr->stylePtr->eolGC != None) {
