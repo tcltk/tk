@@ -1197,7 +1197,7 @@ MakeChangeItem(
 
     if (!changePtr) {
 	if (sharedTextPtr->undoMarkListCount == sharedTextPtr->undoMarkListSize) {
-	    sharedTextPtr->undoMarkListSize = MAX(20, 2*sharedTextPtr->undoMarkListSize);
+	    sharedTextPtr->undoMarkListSize = MAX(20u, 2*sharedTextPtr->undoMarkListSize);
 	    sharedTextPtr->undoMarkList = realloc(sharedTextPtr->undoMarkList,
 		    sharedTextPtr->undoMarkListSize * sizeof(sharedTextPtr->undoMarkList[0]));
 	}

@@ -696,7 +696,7 @@ typedef enum {
 /*
  * We don't want less than 10 chunks per display section.
  */
-#define MIN_CHUNKS_PER_SECTION 10
+#define MIN_CHUNKS_PER_SECTION 10u
 
 /*
  * We don't want more than 20 sections per display line.
@@ -1920,7 +1920,6 @@ MakeStyle(
 	    bgStipplePrio = priority;
 	}
 	if (tagPtr->indentBgString != None && priority > indentBgPrio) {
-	    assert(tagPtr->indentBg <= 1);
 	    styleValues.indentBg = tagPtr->indentBg;
 	    indentBgPrio = priority;
 	}
@@ -1958,7 +1957,6 @@ MakeStyle(
 	    offsetPrio = priority;
 	}
 	if (tagPtr->overstrikeString && priority > overstrikePrio) {
-	    assert(tagPtr->overstrike <= 1);
 	    styleValues.overstrike = tagPtr->overstrike;
 	    overstrikePrio = priority;
             if (tagPtr->overstrikeColor != None) {
@@ -2005,7 +2003,6 @@ MakeStyle(
 	    hyphenColorPrio = priority;
 	}
 	if (tagPtr->underlineString && priority > underlinePrio) {
-	    assert(tagPtr->underline <= 1);
 	    styleValues.underline = tagPtr->underline;
 	    underlinePrio = priority;
             if (tagPtr->underlineColor != None) {
@@ -2015,7 +2012,6 @@ MakeStyle(
             }
 	}
 	if (tagPtr->elideString && priority > elidePrio) {
-	    assert(tagPtr->elide <= 1);
 	    styleValues.elide = tagPtr->elide;
 	    elidePrio = priority;
 	}
@@ -3458,7 +3454,7 @@ LayoutHyphen(
     } else {
 	SetupHyphenChars(segPtr, 0);
 	rc = LayoutChars(data, segPtr, segPtr->body.hyphen.textSize, 0);
-	data->chunkPtr->numBytes = MIN(1, data->chunkPtr->numBytes);
+	data->chunkPtr->numBytes = MIN(1u, data->chunkPtr->numBytes);
     }
 
     data->chunkPtr->breakIndex = data->chunkPtr->numBytes;
@@ -12089,7 +12085,7 @@ AdjustForTab(
 
 	unsigned tabWidth = textPtr->charWidth*8;
 
-	tabWidth = MAX(1, tabWidth);
+	tabWidth = MAX(1u, tabWidth);
 
 	if (textPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR) {
 	    desired = tabWidth*(tabIndex + 1);
@@ -13512,7 +13508,7 @@ DrawChars(
     Drawable dst)		/* Pixmap or window in which to draw chunk. */
 {
     const TkTextDispChunk *baseChunkPtr;
-    unsigned numBytes;
+    int numBytes;
 
     assert(chunkPtr->baseChunkPtr);
 
