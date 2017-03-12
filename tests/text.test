@@ -1171,14 +1171,14 @@ test text-4.1 {TextWidgetCmd procedure, "bbox" option} -setup {
     .t bbox
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {wrong # args: should be ".t bbox index"}
+} -returnCodes {error} -result {wrong # args: should be ".t bbox ?-discardpartial? index"}
 test text-4.2 {TextWidgetCmd procedure, "bbox" option} -setup {
     text .t
 } -body {
     .t bbox a b
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {wrong # args: should be ".t bbox index"}
+} -returnCodes {error} -result {wrong # args: should be ".t bbox ?-discardpartial? index"}
 test text-4.3 {TextWidgetCmd procedure, "bbox" option} -setup {
     text .t
 } -body {

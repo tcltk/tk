@@ -2967,7 +2967,7 @@ TkTextPickCurrent(
 		textPtr->imageBboxTree,
 		eventPtr->xmotion.x + dx,
 		eventPtr->xmotion.y + dy,
-		&ImageHitCallback,
+		ImageHitCallback,
 		(TkQTreeClientData) &eiListPtr);
 	for (i = 0; i < textPtr->hoveredImageArrSize; ++i) {
 	    textPtr->hoveredImageArr[i]->hovered = false;
@@ -2986,7 +2986,7 @@ TkTextPickCurrent(
 	}
 	textPtr->hoveredImageArrSize = 0;
 	if (countHoveredImages > textPtr->hoveredImageArrCapacity) {
-	    textPtr->hoveredImageArrCapacity = MAX(4, 2*textPtr->hoveredImageArrCapacity);
+	    textPtr->hoveredImageArrCapacity = MAX(4u, 2u*textPtr->hoveredImageArrCapacity);
 	    textPtr->hoveredImageArr = realloc(textPtr->hoveredImageArr,
 		textPtr->hoveredImageArrCapacity * sizeof(textPtr->hoveredImageArr[0]));
 	}

@@ -2691,12 +2691,12 @@ ForwBack(
 	p++;
     }
     length = p - units;
-    if (*units == 'd' && strncmp(units, "display", MIN(length, 7)) == 0) {
+    if (*units == 'd' && strncmp(units, "display", MIN(length, 7u)) == 0) {
 	modifier = TKINDEX_DISPLAY;
 	if (length > 7) {
 	    p -= (length - 7);
 	}
-    } else if (*units == 'a' && strncmp(units, "any", MIN(length, 3)) == 0) {
+    } else if (*units == 'a' && strncmp(units, "any", MIN(length, 3u)) == 0) {
 	modifier = TKINDEX_CHAR;
 	if (length > 3) {
 	    p -= (length - 3);
@@ -3725,13 +3725,13 @@ StartEnd(
     }
     length = p - string;
 
-    if (*string == 'd' && strncmp(string, "display", MIN(length, 7)) == 0) {
+    if (*string == 'd' && strncmp(string, "display", MIN(length, 7u)) == 0) {
 	modifier = TKINDEX_DISPLAY;
 	mode = COUNT_DISPLAY_INDICES;
 	if (length > 7) {
 	    p -= (length - 7);
 	}
-    } else if (*string == 'a' && strncmp(string, "any", MIN(length, 3)) == 0) {
+    } else if (*string == 'a' && strncmp(string, "any", MIN(length, 3u)) == 0) {
 	modifier = TKINDEX_CHAR;
 	mode = COUNT_CHARS;
 	if (length > 3) {

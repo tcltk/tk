@@ -1422,7 +1422,7 @@ TextWidgetObjCmd(
 	    if (strcmp(option, "-discardpartial") == 0) {
 		discardPartial = true;
 		argc += 1;
-	    } else if (*option != '-') {
+	    } else if (*option == '-') {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -discardpartial", option));
 		result = TCL_ERROR;

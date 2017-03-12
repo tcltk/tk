@@ -6851,7 +6851,7 @@ DeleteRange(
 	    byteSize += segPtr->size;
 	    if (undoInfo && !TkTextIsSpecialOrPrivateMark(segPtr)) {
 		if (numSegments == maxSegments) {
-		    maxSegments = MAX(50, numSegments * 2);
+		    maxSegments = MAX(50u, numSegments * 2u);
 		    segments = realloc(segments, maxSegments * sizeof(TkTextSegment *));
 		}
 		if (segPtr->tagInfoPtr) {
@@ -9681,7 +9681,7 @@ ClearTagsFromLine(
 			    TkTextTagSetDecrRefCount(tagInfoPtr);
 			} else {
 			    if (undoToken->changeListSize == data->capacity) {
-				data->capacity = MAX(2*data->capacity, 50);
+				data->capacity = MAX(2u*data->capacity, 50u);
 				undoToken->changeList = realloc(undoToken->changeList,
 					data->capacity * sizeof(undoToken->changeList[0]));
 			    }
