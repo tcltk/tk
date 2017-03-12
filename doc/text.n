@@ -1371,7 +1371,7 @@ tk_textReplace - replace a range of characters inside a text widget regarding so
 .TP
 SYNOPSYS
 .
-\fBtk_textReplace\fR \fIpathName\fR ?\fB-hyphentags \fItagList\fR? \fIindex chars\fI ?\fItagList chars tagList ...\fR?
+\fBtk_textReplace\fR \fIpathName\fR ?\fB\-hyphentags\fR \fItagList\fR? \fIindex chars\fR ?\fItagList chars tagList ...\fR?
 .TP
 DESCRIPTION
 .
@@ -3543,7 +3543,7 @@ modification triggers, a number of arguments are appended to
 \fIcommandPrefix\fR so that the actual command is as follows:
 .PP
 .CS
-\fIcommandPrefix\fI pathName op index1 index2 info userFlag
+\fIcommandPrefix... pathName op index1 index2 info userFlag\fR
 .CE
 .PP
 \fIUserFlag\fR informs whether this is a user (GUI) modification. Note that
