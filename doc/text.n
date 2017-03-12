@@ -10,13 +10,19 @@
 .BS
 '\" Note: do not modify the .SH NAME line immediately below!
 .SH NAME
-text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate 'text' hypertext editing widgets
+text, tk_mergeRange, tk_textCopy, tk_textCut, tk_textInsert, tk_textPaste,
+tk_textRebindMouseWheel, tk_textReplace \- Create and manipulate 'text'
+hypertext editing widgets
 .SH SYNOPSIS
 .nf
 \fBtext\fR \fIpathName \fR?\fIoptions\fR?
+\fBtk_mergeRange \fIvarName range\fR
 \fBtk_textCopy\fR \fIpathName\fR
 \fBtk_textCut\fR \fIpathName\fR
+\fBtk_textInsert\fR \fIpathName ?-hyphentags tagList? index chars ?tagList chars tagList ...?\fR
 \fBtk_textPaste\fR \fIpathName\fR
+\fBtk_textRebindMouseWheel\fR  >>>>> TODO: Function prototype must be here <<<<<
+\fBtk_textReplace\fR \fIpathName\fR ?\fB\-hyphentags\fR \fItagList\fR? \fIindex chars\fR ?\fItagList chars tagList ...\fR?
 .SO
 \-background	\-highlightthickness	\-relief
 \-borderwidth	\-insertbackground	\-selectbackground
@@ -1367,6 +1373,19 @@ will additionally be associated with all soft hyphens in new text; combined
 with the inherited tags, or the specified tags. This is especially useful
 for hiding/showing soft hyphens (see tag option \fB\-elide\fR).
 .RE
+.SS "REBIND MOUSE WHEEL EVENT"
+.TP
+NAME
+.
+tk_textRebindMouseWheel - rebind the mouse wheel event.
+.TP
+SYNOPSYS
+.
+\fBtk_textRebindMouseWheel\fR  >>>>> TODO: Describe prototype here <<<<<
+.TP
+DESCRIPTION
+.
+>>>>>TODO: Describe the function here.<<<<<
 .SS "REPLACE TEXT"
 .TP
 NAME
