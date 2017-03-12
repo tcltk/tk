@@ -5232,6 +5232,30 @@ TextUndoRedoCallback(
 	    }
 	    TkTextPushUndoToken(sharedTextPtr, redoInfo.token, redoInfo.byteSize);
 	}
+	if (textPosition) {
+	    /*
+	     * Take into account that the cursor position may change, we have to
+	     * update the old cursor position, otherwise some artefacts may remain.
+	     */
+
+	    for (k = 0; k < countPeers; ++k) {
+		TkText *tPtr = peers[k];
+
+		if (tPtr->state == TK_TEXT_STATE_NORMAL) {
+		    TkTextIndex insIndex[2];
+
+		    TkTextMarkSegToIndex(tPtr, tPtr->insertMarkPtr, &insIndex[0]);
+		    if (TkTextIndexForwChars(tPtr, &insIndex[0], 1, &insIndex[1], COUNT_INDICES)) {
+			/*
+			 * TODO: this will do too much, but currently the implementation
+			 * lacks on an efficient redraw functioniality especially designed
+			 * for cursor updates.
+			 */
+			TkTextChanged(NULL, tPtr, &insIndex[0], &insIndex[1]);
+		    }
+		}
+	    }
+	}
 	if (!isDelete && sharedTextPtr->triggerWatchCmd) {
 	    TriggerWatchUndoRedo(sharedTextPtr, token, subAtom->redo, i == 0, peers, countPeers);
 	}
