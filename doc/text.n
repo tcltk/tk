@@ -61,6 +61,10 @@ font given by the \fB\-font\fR option. Must be at least one.
 Specifies the colour to use for the selection (the \fBsel\fR tag) when the
 window does not have the input focus. If empty, \fB{}\fR, then no selection is
 shown when the window does not have the focus.
+.OP \-inactiveselectforeground inactiveSelectForeground Foreground
+Specifies the foreground colour to use for the selection (the \fBsel\fR tag)
+when the window does not have the input focus. If empty, \fB{}\fR, then the
+colour specified with widget option \fB\-selectforeground\fR will be used.
 .OP \-hyphenrules hyphenRules HyphenRules
 Specifies a list of spelling change rules for hyphenated words, given by the
 identifier of the rules. Only the rules given with this set will be used for
@@ -1750,15 +1754,16 @@ operations on the widget. It has the following general form:
 widget's path name. \fIOption\fR and the \fIarg\fRs determine the exact
 behavior of the command. The following commands are possible for text widgets:
 .TP
-\fIpathName \fBbbox \fIindex\fR
+\fIpathName \fBbbox \fIindex\fR \fI?-discardpartial\fR?
 .
 Returns a list of four elements describing the screen area of the character
 given by \fIindex\fR. The first two elements of the list give the x and y
 coordinates of the upper-left corner of the area occupied by the character,
 and the last two elements give the width and height of the area. If the
 character is only partially visible on the screen, then the return value
-reflects just the visible part. If the character is not visible on the screen
-then the return value is an empty list.
+reflects just the visible part, except if the \fB-discardpartial\fR option
+is given, in which case the return value is an empty list. If the character
+is not visible on the screen then the return value is an empty list.
 .TP
 \fIpathName \fBbrks\fR \fIstring\fR \fI?lang\fR?
 .
@@ -1962,7 +1967,7 @@ indices that are redrawn. The values of these variables are tested by Tk's
 test suite.
 .RE
 .TP
-\fIpathName \fBdelete ?\fIoptions\fR? \fIindex1\fR ?\fIindex2 ...\fR?
+\fIpathName \fBdelete \fI?options\fR? \fIindex1\fR ?\fIindex2 ...\fR?
 .
 Delete a range of characters from the text. If both \fIindex1\fR and
 \fIindex2\fR are specified, then delete all the characters starting with the
