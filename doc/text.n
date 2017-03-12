@@ -4019,29 +4019,7 @@ be displayed and no text modifications will take place.
 The behavior of texts can be changed by defining new bindings for individual
 widgets or by redefining the class bindings.
 .SH "KNOWN ISSUES"
-.SS "ISSUES CONCERNING CHARS AND INDICES"
-.PP
-Before Tk 8.5, the widget used the string
-.QW chars
-to refer to index positions (which included characters, embedded windows and
-embedded images). As of Tk 8.5 the text widget deals separately and correctly
-with
-.QW chars
-and
-.QW indices .
-For backwards compatibility, however, the index modifiers
-.QW "+N chars"
-and
-.QW "\-N chars"
-continue to refer to indices. One must use any of the full forms
-.QW "+N any chars"
-or
-.QW "\-N any chars"
-etc. to refer to actual character indices. This confusion may be fixed in a
-future release by making the widget correctly interpret
-.QW "+N chars"
-as a synonym for
-.QW "+N any chars" .
+.SS "ISSUES CONCERNING INDICES"
 .PP
 Currently the special index specifier \fBbegin\fR has the lowest precedence,
 although it should have the same precedence as the special index special
