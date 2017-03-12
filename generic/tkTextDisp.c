@@ -1506,8 +1506,8 @@ TkTextCreateDInfo(
 
     dInfoPtr = memset(malloc(sizeof(TextDInfo)), 0, sizeof(TextDInfo));
     Tcl_InitHashTable(&dInfoPtr->styleTable, sizeof(StyleValues)/sizeof(int));
-    dInfoPtr->copyGC = None;
     gcValues.graphics_exposures = True;
+    dInfoPtr->copyGC = None;
     dInfoPtr->scrollGC = Tk_GetGC(textPtr->tkwin, GCGraphicsExposures, &gcValues);
     dInfoPtr->insertFgGC = None;
     dInfoPtr->xScrollFirst = -1;
@@ -5974,6 +5974,13 @@ DisplayDLine(
 		}
 		if (IsCharChunk(chunkPtr) && cxMin <= x + chunkPtr->width) {
 		    GC fgGC = chunkPtr->stylePtr->fgGC;
+		    XGCValues gcValues;
+		    unsigned long mask;
+
+		    /* Setup graphic context with font of this chunk. */
+		    mask = GCFont;
+		    gcValues.font = Tk_FontId(chunkPtr->stylePtr->sValuePtr->tkfont);
+		    XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
 
 		    chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
 		    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x, yBase, height,
@@ -6008,6 +6015,13 @@ DisplayDLine(
 		}
 		if (IsCharChunk(chunkPtr)) {
 		    GC fgGC = chunkPtr->stylePtr->fgGC;
+		    XGCValues gcValues;
+		    unsigned long mask;
+
+		    /* Setup graphic context with font of this chunk. */
+		    mask = GCFont;
+		    gcValues.font = Tk_FontId(chunkPtr->stylePtr->sValuePtr->tkfont);
+		    XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
 
 		    chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
 		    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x - cxMin, 0,

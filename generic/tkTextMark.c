@@ -1720,6 +1720,11 @@ SetMark(
 		     * to call TkTextInvalidateLineMetrics.
 		     */
 
+		    /*
+		     * TODO: this will do too much, but currently the implementation
+		     * lacks on an efficient redraw functioniality especially designed
+		     * for cursor updates.
+		     */
 		    TkTextChanged(NULL, textPtr, &oldIndex, &index2);
 		}
 	    }
@@ -1809,6 +1814,7 @@ SetMark(
 	     * Instead of inserting a cursor chunk (not needed) we want to overlay
 	     * with a cursor. This would speed up cursor movement.
 	     */
+
 	    TkTextChanged(NULL, textPtr, indexPtr, &index2);
 
 	    /*
