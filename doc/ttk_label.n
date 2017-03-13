@@ -19,7 +19,7 @@ The label may be linked to a Tcl variable
 to automatically change the displayed text.
 .SO ttk_widget
 \-anchor	\-class	\-compound	\-cursor
-\-foreground
+\-font	\-foreground
 \-image	\-justify	\-style	\-takefocus
 \-text	\-textvariable	\-underline
 \-width	\-wraplength
@@ -28,8 +28,6 @@ to automatically change the displayed text.
 .OP \-background frameColor FrameColor
 The widget's background color.
 If unspecified, the theme default is used.
-.OP \-font font Font
-Font to use for label text.
 .OP \-padding padding Padding
 Specifies the amount of extra space to allocate for the widget.
 The padding is a list of up to four length specifications
