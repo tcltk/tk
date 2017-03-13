@@ -130,9 +130,9 @@ If zero or unspecified, the natural width of the text label is used.
 Note that some themes may specify a non-zero \fB\-width\fR
 in the style.
 .OP \-wraplength wrapLength WrapLength
-Specifies the maximum line length (in pixels).
-If this option is less than or equal to zero,
-then automatic wrapping is not performed; otherwise
+Specifies the maximum line length. The value may have any of the forms
+acceptable to \fBTk_GetPixels\fR. If this option is less than or equal
+to zero, then automatic wrapping is not performed; otherwise
 the text is split into lines such that no line is longer
 than the specified value.
 .SH "COMPATIBILITY OPTIONS"
