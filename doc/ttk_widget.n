@@ -96,6 +96,8 @@ Display image above, below, left of, or right of the text, respectively.
 .IP none
 The default; display the image if present, otherwise the text.
 .RE
+.OP \-font font Font
+Font to use for the text displayed by the widget.
 .OP \-foreground textColor TextColor
 The widget's foreground color.
 If unspecified, the theme default is used.
