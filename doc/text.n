@@ -1380,11 +1380,23 @@ tk_textRebindMouseWheel \- rebind the mouse wheel event.
 .TP
 SYNOPSYS
 .
-\fBtk_textRebindMouseWheel\fR  >>>>> TODO: Describe prototype here <<<<<
+\fBtk_textRebindMouseWheel\fR \fIpathName\fR ?\fIpathName ...\fR?
 .TP
 DESCRIPTION
 .
->>>>>TODO: Describe the function here.<<<<<
+This procedure provides a portable way to rebind the mouse wheel events of
+embedded windows, so that the text widget will receive the events, as if
+the embedded windows are transparent for mouse wheel events. Without rebinding
+only the embedded window may receive the mouse wheel events, this might break
+the expected scroll behavior of the text widget.
+.RS
+.PP
+The first \fBpathName\fR is the receiver of the mouse wheel events, i.e. the
+text widget which contains the embedded windows. If no further argument is
+specified, then all currently embedded windows will be rebound. Otherwise only
+the specified embedded windows, starting with the second provided argument,
+will be rebound.
+.RE
 .SS "REPLACE TEXT"
 .TP
 NAME
