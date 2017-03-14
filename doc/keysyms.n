@@ -15,7 +15,9 @@ Tk recognizes many keysyms when specifying key bindings (e.g.,
 .QW "\fBbind\fR \fB. <Key-\fR\fIkeysym\fR\fB>\fR" ).
 The following list enumerates the
 keysyms that will be recognized by Tk.  Note that not all keysyms will
-be valid on all platforms.  For example, on Unix systems, the presence
+be valid on all platforms, and some keysyms are also available on
+platforms that have a different native name for that key.
+For example, on Unix systems, the presence
 of a particular keysym is dependant on the configuration of the
 keyboard modifier map.  This list shows keysyms along with their
 decimal and hexadecimal values.
