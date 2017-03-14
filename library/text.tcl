@@ -445,11 +445,9 @@ bind Text <B2-Motion> {
 }
 set ::tk::Priv(prevPos) {}
 
-# The MouseWheel will typically only fire on Windows and MacOS X.
-# However, someone could use the "event generate" command to produce one
-# on other platforms.  We must be careful not to round -ve values of %D
-# down to zero.
-
+# The MouseWheel events:
+# We must be careful not to round -ve values of %D down to zero.
+ 
 if {[tk windowingsystem] eq "aqua"} {
     bind Text <MouseWheel> {
 	%W yview scroll [expr {-15 * (%D)}] pixels
@@ -471,18 +469,10 @@ if {[tk windowingsystem] eq "aqua"} {
     #     (int)-1/3 = -1
     # The following code ensure equal +/- behaviour.
     bind Text <MouseWheel> {
-	if {%D >= 0} {
-	    %W yview scroll [expr {-%D/3}] pixels
-	} else {
-	    %W yview scroll [expr {(2-%D)/3}] pixels
-	}
+	%W yview scroll [expr {%D >= 0 ? -%D/3 : (2-%D)/3}] pixels
     }
     bind Text <Shift-MouseWheel> {
-	if {%D >= 0} {
-	    %W xview scroll [expr {-%D/3}] pixels
-	} else {
-	    %W xview scroll [expr {(2-%D)/3}] pixels
-	}
+	%W xview scroll [expr {%D >= 0 ? -%D/3 : (2-%D)/3}] pixels
     }
 }
 
@@ -492,24 +482,16 @@ if {"x11" eq [tk windowingsystem]} {
     # Linux configuration info at:
     #	http://www.inria.fr/koala/colas/mouse-wheel-scroll/
     bind Text <4> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll -50 pixels
-	}
+	if {!$tk_strictMotif} { %W yview scroll -50 pixels }
     }
     bind Text <5> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll 50 pixels
-	}
+	if {!$tk_strictMotif} { %W yview scroll +50 pixels }
     }
     bind Text <Shift-4> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -50 pixels
-	}
+	if {!$tk_strictMotif} { %W xview scroll -50 pixels }
     }
     bind Text <Shift-5> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 50 pixels
-	}
+	if {!$tk_strictMotif} { %W xview scroll +50 pixels }
     }
 }
 
@@ -1320,8 +1302,8 @@ proc ::tk::TextInsertSelection {w selection} {
 # args -	Arguments for text insertion.
 
 proc ::tk_textInsert {w args} {
-   # Use an internal command:
-   uplevel [list $w tk_textInsert {*}$args]
+    # Use an internal command:
+    uplevel [list $w tk_textInsert {*}$args]
 }
 
 # ::tk_textReplace --
@@ -1332,8 +1314,39 @@ proc ::tk_textInsert {w args} {
 # args -	Arguments for text insertion.
 
 proc ::tk_textReplace {w args} {
-   # Use an internal command:
-   uplevel [list $w tk_textReplace {*}$args]
+    # Use an internal command:
+    uplevel [list $w tk_textReplace {*}$args]
+}
+
+# ::tk_textRebindMouseWheel --
+# This procedure is rebinding the mouse wheel events of the embedded
+# window to the container (the text widget). This is a quite important
+# convenience function, because the user might not be interested in
+# the internal handlings.
+#
+# Arguments:
+# text -	The container (text widget), send mouse wheel events
+#		to this container.
+# args -	Zero or more embedded windows. If none is specified,
+#		then rebind all the windows that are currently embedded.
+
+proc tk_textRebindMouseWheel {w args} {
+    if {[llength $args] == 0} {
+	set args [$w window names]
+    }
+    foreach ew $args {
+	set cls [winfo class $w]
+	foreach ev {MouseWheel Option-MouseWheel Shift-MouseWheel Shift-Option-MouseWheel} {
+	    if {[string length [bind $w <$ev>]] || [string length [bind $cls <$ev>]]} {
+		bind $ew <$ev> [list event generate $w <$ev> -delta %D]
+	    }
+	}
+	foreach ev {4 5 Shift-4 Shift-5} {
+	    if {[string length [bind $w <$ev>]] || [string length [bind $cls <$ev>]]} {
+		bind $ew <$ev> [list event generate $w <$ev>]
+	    }
+	}
+    }
 }
 
 # ::tk_mergeRange --
