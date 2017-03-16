@@ -1026,16 +1026,28 @@ proc ::tk::TextNextPara {w start} {
 
 proc ::tk::TextScrollPages {w count} {
     if {$count > 0} {
-	if {[llength [$w dlineinfo end-1c]] && [llength [$w bbox -discardpartial @first,last]]} {
-	    # First character on last display line of very last line is entirely visible,
-	    # nothing to do.
-	    return insert
+	if {[llength [$w dlineinfo end-1c]]} {
+	    # Last display line of very last line is visible.
+	    if {[llength [set res [$w dlineinfo -extents @first,last]]]} {
+		if {[lindex $res 3] == 0} {
+		    # Line is fully visible (vertically), no dothing to do.
+		    return insert
+		}
+		# Line is only partially visible, so jump to this line.
+		return [$w index "insert +[$w count -displaylines insert end-1c] displayline"]
+	    }
 	}
     } else {
-	if {[llength [$w dlineinfo 1.0]] && [llength [$w bbox -discardpartial @first,0]]} {
-	    # First character on first display line of very first line is entirely visible,
-	    # nothing to do.
-	    return insert
+	if {[llength [$w dlineinfo 1.0]]} {
+	    # First display line of very first line is visible.
+	    if {[llength [set res [$w dlineinfo -extents @first,0]]]} {
+		if {[lindex $res 1] == 0} {
+		    # Line is fully visible (vertically), so nothing to do.
+		    return insert
+		}
+		# Line is not fully visible, so jump to first line.
+		return [$w index "insert -[$w count -displaylines 1.0 insert] displayline"]
+	    }
 	}
     }
     set bbox [$w bbox insert]
@@ -1048,8 +1060,7 @@ proc ::tk::TextScrollPages {w count} {
     if {[$w compare insert == $newPos]} {
 	# This may happen if a character is spanning the entire view,
 	# ensure that at least one line will change.
-	set idx [expr {$count > 0 ? "insert +1 displayline" : "insert -1 displayline"}]
-	set newPos [$w index $idx]
+	set newPos [$w index "[expr {$count > 0 ? "insert +1" : "insert -1"}] displayline"]
     }
     return $newPos
 }

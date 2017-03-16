@@ -1722,7 +1722,7 @@ SetMark(
 
 		    /*
 		     * TODO: this will do too much, but currently the implementation
-		     * lacks on an efficient redraw functioniality especially designed
+		     * lacks on an efficient redraw functionality especially designed
 		     * for cursor updates.
 		     */
 		    TkTextChanged(NULL, textPtr, &oldIndex, &index2);

@@ -724,6 +724,8 @@ static DLine *		FreeDLines(TkText *textPtr, DLine *firstPtr, DLine *lastPtr,
 static void		FreeStyle(TkText *textPtr, TextStyle *stylePtr);
 static TextStyle *	GetStyle(TkText *textPtr, TkTextSegment *segPtr);
 static void		UpdateDefaultStyle(TkText *textPtr);
+static int		GetBbox(TkText *textPtr, const DLine *dlPtr, const TkTextIndex *indexPtr,
+			    int *xPtr, int *yPtr, int *widthPtr, int *heightPtr, bool *isLastCharInLine);
 static void		GetXView(Tcl_Interp *interp, TkText *textPtr, bool report);
 static void		GetYView(Tcl_Interp *interp, TkText *textPtr, bool report);
 static unsigned		GetYPixelCount(TkText *textPtr, DLine *dlPtr);
@@ -7943,6 +7945,7 @@ DisplayText(
     Pixmap pixmap;
     int maxHeight, borders;
     int bottomY = 0;		/* Initialization needed only to stop compiler warnings. */
+    int cursorExtent;
     Tcl_Interp *interp;
 
 #ifdef MAC_OSX_TK
@@ -8004,6 +8007,12 @@ DisplayText(
 
     UpdateDisplayInfo(textPtr);
     dInfoPtr->dLinesInvalidated = false;
+
+    /*
+     * TkScrollWindow must consider the insertion cursor.
+     */
+
+    cursorExtent = MIN(textPtr->padX, textPtr->insertWidth/2);
 
     /*
      * See if it's possible to bring some parts of the screen up-to-date by
@@ -8125,8 +8134,8 @@ DisplayText(
 	 */
 
 	damageRgn = TkCreateRegion();
-	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x,
-		oldY, dInfoPtr->maxX - dInfoPtr->x, height, 0, y - oldY, damageRgn)) {
+	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x - cursorExtent,
+		oldY, dInfoPtr->maxX - dInfoPtr->x + 2*cursorExtent, height, 0, y - oldY, damageRgn)) {
 #ifdef MAC_OSX_TK
 	    /* the processing of the Expose event is damaging the region on Mac */
 #else
@@ -9259,32 +9268,50 @@ TkTextSetYView(
     if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
 	UpdateDisplayInfo(textPtr);
     }
-    dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr);
-    if (dlPtr) {
+
+    if ((dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr))) {
+	int x, y, width, height;
+
+	if (TkTextIndexCompare(&dlPtr->index, indexPtr) <= 0
+		&& GetBbox(textPtr, dlPtr, indexPtr, &x, &y, &width, &height, NULL)) {
+	    if (dInfoPtr->y <= y && y + height <= dInfoPtr->maxY - dInfoPtr->y) {
+		/*
+		 * This character is fully visible, so we don't need to scroll.
+		 */
+		return;
+	    }
+	    if (dlPtr->height > dInfoPtr->maxY - dInfoPtr->y) {
+		/*
+		 * This line has more height than the view, so either center the char,
+		 * or position at top of view.
+		 */
+		textPtr->topIndex = *indexPtr;
+		dInfoPtr->newTopPixelOffset = MAX(0, y - dlPtr->y - (dInfoPtr->maxY - height)/2);
+		goto scheduleUpdate;
+	    }
+	}
 	if (dlPtr->y + dlPtr->height > dInfoPtr->maxY) {
 	    /*
 	     * Part of the line hangs off the bottom of the screen; pretend
 	     * the whole line is off-screen.
 	     */
-
 	    dlPtr = NULL;
-        } else {
-            if (TkTextIndexCompare(&dlPtr->index, indexPtr) <= 0) {
-                if (dInfoPtr->dLinePtr == dlPtr && dInfoPtr->topPixelOffset != 0) {
-                    /*
-                     * It is on the top line, but that line is hanging off the top
-                     * of the screen. Change the top overlap to zero and update.
-                     */
-
-                    dInfoPtr->newTopPixelOffset = 0;
-                    goto scheduleUpdate;
+	} else {
+	    if (TkTextIndexCompare(&dlPtr->index, indexPtr) <= 0) {
+		if (dInfoPtr->dLinePtr == dlPtr && dInfoPtr->topPixelOffset != 0) {
+		    /*
+		     * It is on the top line, but that line is hanging off the top
+		     * of the screen. Change the top overlap to zero and update.
+		     */
+		    dInfoPtr->newTopPixelOffset = 0;
+		    goto scheduleUpdate;
 		}
-                /*
-                 * The line is already on screen, with no need to scroll.
-                 */
-                return;
-            }
-        }
+		/*
+		 * The line is already on screen, with no need to scroll.
+		 */
+		return;
+	    }
+	}
     }
 
     /*
@@ -9296,68 +9323,91 @@ TkTextSetYView(
      */
 
     tmpIndex = *indexPtr;
-    TkTextFindDisplayLineStartEnd(textPtr, &tmpIndex, DISP_LINE_START);
+    FindDisplayLineStartEnd(textPtr, &tmpIndex, DISP_LINE_START, DLINE_METRIC);
     lineHeight = CalculateDisplayLineHeight(textPtr, &tmpIndex, NULL);
 
-    /*
-     * It would be better if 'bottomY' were calculated using the actual height
-     * of the given line, not 'textPtr->lineHeight'.
-     */
-
-    bottomY = (dInfoPtr->y + dInfoPtr->maxY + lineHeight)/2;
-    close = (dInfoPtr->maxY - dInfoPtr->y)/3;
-    if (close < 3*textPtr->lineHeight) {
-	close = 3*textPtr->lineHeight;
-    }
-    if (dlPtr) {
+    if (lineHeight > dInfoPtr->maxY - dInfoPtr->y) {
+	int x, y, width, height;
+	DisplayInfo info;
 
 	/*
-	 * The desired line is above the top of screen. If it is "close" to
-	 * the top of the window then make it the top line on the screen.
-	 * MeasureUp counts from the bottom of the given index upwards, so we
-	 * add an extra half line to be sure we count far enough.
+	 * In this case we have either to center the char, or to bring it to
+	 * the top position, otherwise it may happen that it will not be visible.
 	 */
 
-	MeasureUp(textPtr, &textPtr->topIndex, close + textPtr->lineHeight/2, &tmpIndex, &overlap);
-	if (TkTextIndexCompare(&tmpIndex, indexPtr) <= 0) {
-	    textPtr->topIndex = *indexPtr;
-	    TkTextIndexSetPeer(&textPtr->topIndex, textPtr);
-	    TkTextIndexToByteIndex(&textPtr->topIndex);
-	    TkTextFindDisplayLineStartEnd(textPtr, &textPtr->topIndex, DISP_LINE_START);
-	    dInfoPtr->newTopPixelOffset = 0;
-	    goto scheduleUpdate;
+	FreeDLines(textPtr, dInfoPtr->dLinePtr, NULL, DLINE_UNLINK); /* not needed anymore */
+	ComputeDisplayLineInfo(textPtr, indexPtr, &info);
+	if (!info.dLinePtr) {
+	    tmpIndex = *indexPtr;
+	    TkTextIndexBackBytes(textPtr, &tmpIndex, info.byteOffset, &tmpIndex);
+	    dlPtr = info.dLinePtr = info.lastDLinePtr = LayoutDLine(&tmpIndex, info.displayLineNo);
+	    SaveDisplayLines(textPtr, &info, true);
 	}
+	GetBbox(textPtr, dlPtr, indexPtr, &x, &y, &width, &height, NULL);
+	dInfoPtr->newTopPixelOffset = MAX(0, y - dlPtr->y - (dInfoPtr->maxY - height)/2);
+	textPtr->topIndex = *indexPtr;
     } else {
 	/*
-	 * The desired line is below the bottom of the screen. If it is
-	 * "close" to the bottom of the screen then position it at the bottom
-	 * of the screen.
+	 * It would be better if 'bottomY' were calculated using the actual height
+	 * of the given line, not 'textPtr->lineHeight'.
 	 */
 
-	MeasureUp(textPtr, indexPtr, close + lineHeight - textPtr->lineHeight/2, &tmpIndex, &overlap);
-	if (FindDLine(textPtr, dInfoPtr->dLinePtr, &tmpIndex)) {
-	    bottomY = dInfoPtr->maxY - dInfoPtr->y;
+	bottomY = (dInfoPtr->y + dInfoPtr->maxY + lineHeight)/2;
+	close = (dInfoPtr->maxY - dInfoPtr->y)/3;
+	if (close < 3*textPtr->lineHeight) {
+	    close = 3*textPtr->lineHeight;
 	}
+	if (dlPtr) {
+
+	    /*
+	     * The desired line is above the top of screen. If it is "close" to
+	     * the top of the window then make it the top line on the screen.
+	     * MeasureUp counts from the bottom of the given index upwards, so we
+	     * add an extra half line to be sure we count far enough.
+	     */
+
+	    MeasureUp(textPtr, &textPtr->topIndex, close + textPtr->lineHeight/2, &tmpIndex, &overlap);
+	    if (TkTextIndexCompare(&tmpIndex, indexPtr) <= 0) {
+		textPtr->topIndex = *indexPtr;
+		TkTextIndexSetPeer(&textPtr->topIndex, textPtr);
+		TkTextIndexToByteIndex(&textPtr->topIndex);
+		TkTextFindDisplayLineStartEnd(textPtr, &textPtr->topIndex, DISP_LINE_START);
+		dInfoPtr->newTopPixelOffset = 0;
+		goto scheduleUpdate;
+	    }
+	} else {
+	    /*
+	     * The desired line is below the bottom of the screen. If it is
+	     * "close" to the bottom of the screen then position it at the bottom
+	     * of the screen.
+	     */
+
+	    MeasureUp(textPtr, indexPtr, close + lineHeight - textPtr->lineHeight/2, &tmpIndex,
+		    &overlap);
+	    if (FindDLine(textPtr, dInfoPtr->dLinePtr, &tmpIndex)) {
+		bottomY = dInfoPtr->maxY - dInfoPtr->y;
+	    }
+	}
+
+	/*
+	 * If the window height is smaller than the line height, prefer to make
+	 * the top of the line visible.
+	 */
+
+	if (dInfoPtr->maxY - dInfoPtr->y < lineHeight) {
+	    bottomY = lineHeight;
+	}
+
+	/*
+	 * Our job now is to arrange the display so that indexPtr appears as low
+	 * on the screen as possible but with its bottom no lower than bottomY.
+	 * BottomY is the bottom of the window if the desired line is just below
+	 * the current screen, otherwise it is a half-line lower than the center
+	 * of the window.
+	 */
+
+	MeasureUp(textPtr, indexPtr, bottomY, &textPtr->topIndex, &dInfoPtr->newTopPixelOffset);
     }
-
-    /*
-     * If the window height is smaller than the line height, prefer to make
-     * the top of the line visible.
-     */
-
-    if (dInfoPtr->maxY - dInfoPtr->y < lineHeight) {
-        bottomY = lineHeight;
-    }
-
-    /*
-     * Our job now is to arrange the display so that indexPtr appears as low
-     * on the screen as possible but with its bottom no lower than bottomY.
-     * BottomY is the bottom of the window if the desired line is just below
-     * the current screen, otherwise it is a half-line lower than the center
-     * of the window.
-     */
-
-    MeasureUp(textPtr, indexPtr, bottomY, &textPtr->topIndex, &dInfoPtr->newTopPixelOffset);
 
   scheduleUpdate:
     topLineNo = TkTextIndexGetLineNumber(&textPtr->topIndex, NULL);
@@ -9728,6 +9778,91 @@ MeasureUp(
     TkTextIndexForwBytes(textPtr, dstPtr, byteOffset, dstPtr);
     return true;
 }
+/*
+ *--------------------------------------------------------------
+ *
+ * GetBbox --
+ *
+ *	Given an index, find the bounding box of the screen area occupied by
+ *	the entity (character, window, image) at that index.
+ *
+ * Results:
+ *	The byte count inside the chunk is returned if the index is on the screen.
+ *	-1 means the index is not on the screen. If the return value is >= 0, then
+ *	the bounding box of the part of the index that's visible on the screen is
+ *	returned to *xPtr, *yPtr, *widthPtr, and *heightPtr.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static int
+GetBbox(
+    TkText *textPtr,		/* Information about text widget. */
+    const DLine *dlPtr,		/* Display line for given index. */
+    const TkTextIndex *indexPtr,/* Index whose bounding box is desired. */
+    int *xPtr, int *yPtr,	/* Filled with index's upper-left coordinate. */
+    int *widthPtr, int *heightPtr,
+				/* Filled in with index's dimensions. */
+    bool *isLastCharInLine)	/* Last char in display line? Can be NULL. */
+{
+    TkTextDispChunkSection *sectionPtr;
+    TkTextDispChunk *chunkPtr;
+    unsigned byteCount;
+
+    assert(xPtr);
+    assert(yPtr);
+    assert(widthPtr);
+    assert(heightPtr);
+
+    /*
+     * Find the chunk within the display line that contains the desired
+     * index. The chunks making the display line are skipped up to but not
+     * including the one crossing indexPtr. Skipping is done based on
+     * a byteCount offset possibly spanning several logical lines in case
+     * they are elided.
+     */
+
+    byteCount = TkTextIndexCountBytes(&dlPtr->index, indexPtr);
+    sectionPtr = dlPtr->chunkPtr->sectionPtr;
+
+    while (byteCount >= sectionPtr->numBytes) {
+	byteCount -= sectionPtr->numBytes;
+	if (!(sectionPtr = sectionPtr->nextPtr)) {
+	    return false;
+	}
+    }
+
+    chunkPtr = sectionPtr->chunkPtr;
+
+    while (byteCount >= chunkPtr->numBytes) {
+	byteCount -= chunkPtr->numBytes;
+	if (!(chunkPtr = chunkPtr->nextPtr)) {
+	    return false;
+	}
+    }
+
+    /*
+     * Call a chunk-specific function to find the horizontal range of the
+     * character within the chunk, then fill in the vertical range. The
+     * x-coordinate returned by bboxProc is a coordinate within a line, not a
+     * coordinate on the screen. Translate it to reflect horizontal scrolling.
+     */
+
+    chunkPtr->layoutProcs->bboxProc(
+	    textPtr, chunkPtr, byteCount,
+	    dlPtr->y + dlPtr->spaceAbove,
+	    dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
+	    dlPtr->baseline - dlPtr->spaceAbove,
+	    xPtr, yPtr, widthPtr, heightPtr);
+
+    if (isLastCharInLine) {
+	*isLastCharInLine = (byteCount == chunkPtr->numBytes - 1 && !chunkPtr->nextPtr);
+    }
+    return true;
+}
 
 /*
  *--------------------------------------------------------------
@@ -9761,9 +9896,8 @@ TkTextSeeCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextIndex index;
     int x, y, width, height, oneThird, delta;
-    unsigned lineWidth, byteCount;
+    unsigned lineWidth;
     DLine *dlPtr;
-    TkTextDispChunk *chunkPtr;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -9815,34 +9949,7 @@ TkTextSeeCmd(
 	return TCL_OK;
     }
 
-    /*
-     * Find the chunk within the display line that contains the desired
-     * index. The chunks making the display line are skipped up to but not
-     * including the one crossing index. Skipping is done based on a
-     * byteCount offset possibly spanning several logical lines in case
-     * they are elided.
-     */
-
-    byteCount = TkTextIndexCountBytes(&dlPtr->index, &index);
-    for (chunkPtr = dlPtr->chunkPtr;
-	    chunkPtr && byteCount >= chunkPtr->numBytes;
-	    chunkPtr = chunkPtr->nextPtr) {
-	byteCount -= chunkPtr->numBytes;
-    }
-
-    /*
-     * Call a chunk-specific function to find the horizontal range of the
-     * character within the chunk. chunkPtr is NULL if trying to see in elided
-     * region.
-     */
-
-    if (chunkPtr) {
-        chunkPtr->layoutProcs->bboxProc(
-		textPtr, chunkPtr, byteCount,
-                dlPtr->y + dlPtr->spaceAbove,
-                dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
-                dlPtr->baseline - dlPtr->spaceAbove,
-		&x, &y, &width, &height);
+    if (GetBbox(textPtr, dlPtr, &index, &x, &y, &width, &height, NULL)) {
         delta = x - dInfoPtr->curXPixelOffset;
         oneThird = lineWidth/3;
         if (delta < 0) {
@@ -9863,6 +9970,7 @@ TkTextSeeCmd(
             }
         }
     }
+
     dInfoPtr->flags |= DINFO_OUT_OF_DATE;
     DisplayTextWhenIdle(textPtr);
     return TCL_OK;
@@ -11593,8 +11701,8 @@ DLineXOfIndex(
  *
  * Results:
  *	'True' is returned if the index is on the screen. 'False' means the index
- *	is not on the screen. If the return value is 0, then the bounding box of
- *	the part of the index that's visible on the screen is returned to
+ *	is not on the screen. If the return value is 'true', then the bounding box
+ *	of the part of the index that's visible on the screen is returned to
  *	*xPtr, *yPtr, *widthPtr, and *heightPtr.
  *
  * Side effects:
@@ -11607,8 +11715,8 @@ bool
 TkTextIndexBbox(
     TkText *textPtr,		/* Widget record for text widget. */
     const TkTextIndex *indexPtr,/* Index whose bounding box is desired. */
-    bool discardPartial,	/* Ignore indices which are not fully visible (vertically), as if this
-    				 * character is not on screen. */
+    bool extents,		/* Return the extents of the bbox (the overflow, not visible on
+    				 * screen). */
     int *xPtr, int *yPtr,	/* Filled with index's upper-left coordinate. */
     int *widthPtr, int *heightPtr,
 				/* Filled in with index's dimensions. */
@@ -11617,10 +11725,8 @@ TkTextIndexBbox(
 				 * width actually desired by the index. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+    bool isLastCharInLine;
     DLine *dlPtr;
-    TkTextDispChunk *chunkPtr;
-    TkTextDispChunkSection *sectionPtr;
-    unsigned byteCount;
 
     /*
      * Make sure that all of the screen layout information is up to date.
@@ -11648,111 +11754,64 @@ TkTextIndexBbox(
 	return false;
     }
 
-    /*
-     * Find the chunk within the display line that contains the desired
-     * index. The chunks making the display line are skipped up to but not
-     * including the one crossing indexPtr. Skipping is done based on
-     * a byteCount offset possibly spanning several logical lines in case
-     * they are elided.
-     */
-
-    byteCount = TkTextIndexCountBytes(&dlPtr->index, indexPtr);
-    sectionPtr = dlPtr->chunkPtr->sectionPtr;
-
-    while (byteCount >= sectionPtr->numBytes) {
-	byteCount -= sectionPtr->numBytes;
-	if (!(sectionPtr = sectionPtr->nextPtr)) {
-	    return false;
-	}
-    }
-
-    chunkPtr = sectionPtr->chunkPtr;
-
-    while (byteCount >= chunkPtr->numBytes) {
-	byteCount -= chunkPtr->numBytes;
-	if (!(chunkPtr = chunkPtr->nextPtr)) {
-	    return false;
-	}
-    }
-
-    /*
-     * Call a chunk-specific function to find the horizontal range of the
-     * character within the chunk, then fill in the vertical range. The
-     * x-coordinate returned by bboxProc is a coordinate within a line, not a
-     * coordinate on the screen. Translate it to reflect horizontal scrolling.
-     */
-
-    chunkPtr->layoutProcs->bboxProc(textPtr, chunkPtr, byteCount,
-	    dlPtr->y + dlPtr->spaceAbove,
-	    dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
-	    dlPtr->baseline - dlPtr->spaceAbove, xPtr, yPtr, widthPtr,
-	    heightPtr);
-    *xPtr = *xPtr + dInfoPtr->x - dInfoPtr->curXPixelOffset;
-
-    if (byteCount == chunkPtr->numBytes - 1 && !chunkPtr->nextPtr) {
-	/*
-	 * Last character in display line. Give it all the space up to the line.
-	 */
-
-	if (charWidthPtr) {
-	    *charWidthPtr = dInfoPtr->maxX - *xPtr;
-            if (*charWidthPtr > textPtr->charWidth) {
-                *charWidthPtr = textPtr->charWidth;
-            }
-	}
-	if (*xPtr > dInfoPtr->maxX) {
-	    *xPtr = dInfoPtr->maxX;
-	}
-	*widthPtr = dInfoPtr->maxX - *xPtr;
-    } else {
-	if (charWidthPtr) {
-	    *charWidthPtr = *widthPtr;
-	}
-    }
-
-    if (*widthPtr == 0) {
-	/*
-	 * With zero width (e.g. elided text) we just need to make sure it is
-	 * onscreen, where the '=' case here is ok.
-	 */
-
-	if (*xPtr < dInfoPtr->x) {
-	    return false;
-	}
-    } else if (*xPtr + *widthPtr <= dInfoPtr->x) {
+    if (!GetBbox(textPtr, dlPtr, indexPtr, xPtr, yPtr, widthPtr, heightPtr, &isLastCharInLine)) {
 	return false;
     }
 
-    if (*xPtr + *widthPtr > dInfoPtr->maxX) {
-	if ((*widthPtr = dInfoPtr->maxX - *xPtr) <= 0) {
+    *xPtr -= dInfoPtr->curXPixelOffset;
+
+    if (extents) {
+	*widthPtr = MAX(0, *xPtr + *widthPtr - dInfoPtr->maxX);
+	*heightPtr = MAX(0, *yPtr + *heightPtr - dInfoPtr->maxY);
+	*xPtr = MAX(0, -*xPtr);
+	*yPtr = MAX(0, -*yPtr);
+    } else {
+	*xPtr = *xPtr + dInfoPtr->x;
+
+	if (isLastCharInLine) {
+	    /*
+	     * Last character in display line. Give it all the space up to the line.
+	     */
+
+	    if (charWidthPtr) {
+		*charWidthPtr = dInfoPtr->maxX - *xPtr;
+		if (*charWidthPtr > textPtr->charWidth) {
+		    *charWidthPtr = textPtr->charWidth;
+		}
+	    }
+	    if (*xPtr > dInfoPtr->maxX) {
+		*xPtr = dInfoPtr->maxX;
+	    }
+	    *widthPtr = dInfoPtr->maxX - *xPtr;
+	} else {
+	    if (charWidthPtr) {
+		*charWidthPtr = *widthPtr;
+	    }
+	}
+
+	if (*widthPtr == 0) {
+	    /*
+	     * With zero width (e.g. elided text) we just need to make sure it is
+	     * onscreen, where the '=' case here is ok.
+	     */
+
+	    if (*xPtr < dInfoPtr->x) {
+		return false;
+	    }
+	} else if (*xPtr + *widthPtr <= dInfoPtr->x) {
 	    return false;
 	}
-    }
 
-    if (discardPartial) {
-	int ypixels = TkBTreePixelsTo(textPtr, TkTextIndexGetLine(indexPtr));
-	int maxPixels;
-	int inset;
-
-	if (ypixels < dInfoPtr->curYPixelOffset) {
-	    return false;
+	if (*xPtr + *widthPtr > dInfoPtr->maxX) {
+	    if ((*widthPtr = dInfoPtr->maxX - *xPtr) <= 0) {
+		return false;
+	    }
 	}
 
-	maxPixels = ypixels + *heightPtr;
-	inset = textPtr->borderWidth + textPtr->highlightWidth;
-
-	/* XXX TODO: I'm including the inset, because otherwise there is a difference of 2 pixels.
-	 * But this cannot be correlated with the inset. Something is odd.
-	 */
-
-	if (maxPixels >= dInfoPtr->curYPixelOffset + dInfoPtr->maxY + dInfoPtr->topPixelOffset - inset) {
-	    return false;
-	}
-    }
-
-    if (*yPtr + *heightPtr > dInfoPtr->maxY) {
-	if ((*heightPtr = dInfoPtr->maxY - *yPtr) <= 0) {
-	    return false;
+	if (*yPtr + *heightPtr > dInfoPtr->maxY) {
+	    if ((*heightPtr = dInfoPtr->maxY - *yPtr) <= 0) {
+		return false;
+	    }
 	}
     }
 
@@ -11783,11 +11842,13 @@ bool
 TkTextGetDLineInfo(
     TkText *textPtr,		/* Widget record for text widget. */
     const TkTextIndex *indexPtr,/* Index of character whose bounding box is desired. */
+    bool extents,		/* Return the extents of the bbox (the overflow, not visible on
+    				 * screen). */
     int *xPtr, int *yPtr,	/* Filled with line's upper-left coordinate. */
     int *widthPtr, int *heightPtr,
 				/* Filled in with line's dimensions. */
-    int *basePtr)		/* Filled in with the baseline position,
-				 * measured as an offset down from *yPtr. */
+    int *basePtr)		/* Filled in with the baseline position, measured as an offset down
+    				 * from *yPtr. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     DLine *dlPtr;
@@ -11823,11 +11884,19 @@ TkTextGetDLineInfo(
     *xPtr = dInfoPtr->x - dInfoPtr->curXPixelOffset + dlx;
     *widthPtr = dlPtr->length - dlx;
     *yPtr = dlPtr->y;
-    if (dlPtr->y + dlPtr->height > dInfoPtr->maxY) {
-	*heightPtr = dInfoPtr->maxY - dlPtr->y;
+    *heightPtr = dlPtr->height;
+
+    if (extents) {
+	*widthPtr = MAX(0, *xPtr + *widthPtr - dInfoPtr->maxX);
+	*heightPtr = MAX(0, *yPtr + *heightPtr - dInfoPtr->maxY);
+	*xPtr = MIN(0, *xPtr);
+	*yPtr = MIN(0, *yPtr);
     } else {
-	*heightPtr = dlPtr->height;
+	if (dlPtr->y + dlPtr->height > dInfoPtr->maxY) {
+	    *heightPtr = dInfoPtr->maxY - dlPtr->y;
+	}
     }
+
     *basePtr = dlPtr->baseline;
     return true;
 }
@@ -11969,11 +12038,12 @@ CharBboxProc(
 		unsigned remaining = chunkPtr->additionalWidth;
 
 		do {
-		    unsigned space = (remaining + numSpaces - 1)/numSpaces;
+		    unsigned space;
 
+		    assert(numSpaces > 0);
+		    space = (remaining + numSpaces - 1)/numSpaces;
 		    *widthPtr += space;
 		    remaining -= space;
-		    assert(numSpaces > 0);
 		    numSpaces -= 1;
 		    if (base == q) {
 			break;

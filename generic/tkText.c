@@ -15,11 +15,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#if defined(_MSC_VER ) && _MSC_VER < 1500
-/* suppress wrong warnings to support ancient compilers */
-#pragma warning (disable : 4305)
-#endif
-
 #include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
@@ -34,6 +29,11 @@
 #ifndef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextPriv.h"
+#endif
+
+#if defined(_MSC_VER ) && _MSC_VER < 1500
+/* suppress wrong warnings to support ancient compilers */
+# pragma warning (disable : 4305)
 #endif
 
 #ifndef MAX
@@ -68,10 +68,8 @@
  */
 
 #if TK_MAJOR_VERSION < 9
-#define _TK_ALLOW_DECREASING_TABS
+# define _TK_ALLOW_DECREASING_TABS
 #endif
-
-#include "tkText.h"
 
 /*
  * Used to avoid having to allocate and deallocate arrays on the fly for
@@ -1413,24 +1411,23 @@ TextWidgetObjCmd(
     }
     case TEXT_BBOX: {
 	int x, y, width, height, argc = 2;
-	bool discardPartial = false;
+	bool extents = false;
 	TkTextIndex index;
 
 	if (objc == 4) {
 	    const char* option = Tcl_GetString(objv[2]);
 
-	    if (strcmp(option, "-discardpartial") == 0) {
-		discardPartial = true;
+	    if (strcmp(option, "-extents") == 0) {
+		extents = true;
 		argc += 1;
 	    } else if (*option == '-') {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"bad option \"%s\": must be -discardpartial", option));
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad option \"%s\": must be -extents", option));
 		result = TCL_ERROR;
 		goto done;
 	    }
 	}
 	if (objc - argc + 2 != 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "?-discardpartial? index");
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-extents? index");
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1438,7 +1435,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (TkTextIndexBbox(textPtr, &index, discardPartial, &x, &y, &width, &height, NULL)) {
+	if (TkTextIndexBbox(textPtr, &index, extents, &x, &y, &width, &height, NULL)) {
 	    Tcl_Obj *listObj = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewIntObj(x));
@@ -1974,19 +1971,32 @@ TextWidgetObjCmd(
 	break;
     }
     case TEXT_DLINEINFO: {
-	int x, y, width, height, base;
+	int x, y, width, height, base, argc = 2;
+	bool extents = false;
 	TkTextIndex index;
 
-	if (objc != 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "index");
+	if (objc == 4) {
+	    const char* option = Tcl_GetString(objv[2]);
+
+	    if (strcmp(option, "-extents") == 0) {
+		extents = true;
+		argc += 1;
+	    } else if (*option == '-') {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad option \"%s\": must be -extents", option));
+		result = TCL_ERROR;
+		goto done;
+	    }
+	}
+	if (objc - argc + 2 != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "?-extents? index");
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (!TkTextGetIndexFromObj(interp, textPtr, objv[2], &index)) {
+	if (!TkTextGetIndexFromObj(interp, textPtr, objv[argc], &index)) {
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (TkTextGetDLineInfo(textPtr, &index, &x, &y, &width, &height, &base)) {
+	if (TkTextGetDLineInfo(textPtr, &index, extents, &x, &y, &width, &height, &base)) {
 	    Tcl_Obj *listObj = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewIntObj(x));
@@ -5232,30 +5242,6 @@ TextUndoRedoCallback(
 	    }
 	    TkTextPushUndoToken(sharedTextPtr, redoInfo.token, redoInfo.byteSize);
 	}
-	if (textPosition) {
-	    /*
-	     * Take into account that the cursor position may change, we have to
-	     * update the old cursor position, otherwise some artefacts may remain.
-	     */
-
-	    for (k = 0; k < countPeers; ++k) {
-		TkText *tPtr = peers[k];
-
-		if (tPtr->state == TK_TEXT_STATE_NORMAL) {
-		    TkTextIndex insIndex[2];
-
-		    TkTextMarkSegToIndex(tPtr, tPtr->insertMarkPtr, &insIndex[0]);
-		    if (TkTextIndexForwChars(tPtr, &insIndex[0], 1, &insIndex[1], COUNT_INDICES)) {
-			/*
-			 * TODO: this will do too much, but currently the implementation
-			 * lacks on an efficient redraw functioniality especially designed
-			 * for cursor updates.
-			 */
-			TkTextChanged(NULL, tPtr, &insIndex[0], &insIndex[1]);
-		    }
-		}
-	    }
-	}
 	if (!isDelete && sharedTextPtr->triggerWatchCmd) {
 	    TriggerWatchUndoRedo(sharedTextPtr, token, subAtom->redo, i == 0, peers, countPeers);
 	}
@@ -6070,16 +6056,46 @@ TextBlinkProc(
 
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 
-	if (TkTextIndexBbox(textPtr, &index, false, &x, &y, &w, &h, &charWidth)) {
-	    if (textPtr->blockCursorType) { /* Block cursor */
-		x -= textPtr->width/2;
-		w = charWidth + textPtr->insertWidth/2;
-	    } else { /* I-beam cursor */
-		x -= textPtr->insertWidth/2;
-		w = textPtr->insertWidth;
+	if (!TkTextIndexBbox(textPtr, &index, false, &x, &y, &w, &h, &charWidth)) {
+	    int base;
+
+	    /*
+	     * To test whether the cursor is visible is not trivial, see this
+	     * example:
+	     *
+	     * ~~~~~~~~~~~~~~~~
+	     * |   +-----+
+	     * |   |     |
+	     * |~~~|~~~~~|~~~~~
+	     * |   |     |
+	     * | a |     |
+	     * |   |     |
+	     * |   +-----+
+	     *
+	     * At left side we have the visible cursor, then char "a", then a window.
+	     * The region between the tilde bars is the visible screen. The cursor
+	     * is positioned before char "a", and the bbox of char "a" is outside of
+	     * the visible screen, so a simple test with TkTextIndexBbox() at char
+	     * position "a" fails here. We have to test now with the display line.
+	     */
+
+	    if (!TkTextGetDLineInfo(textPtr, &index, false, &x, &y, &w, &h, &base)) {
+		return; /* cursor is not visible at all */
 	    }
-	    TkTextRedrawRegion(textPtr, x, y, w, h);
+
+	    /* This char is outside of the screen, so use a default. */
+	    charWidth = textPtr->charWidth;
 	}
+
+	if (textPtr->blockCursorType) { /* Block cursor */
+	    x -= textPtr->width/2;
+	    w = charWidth + textPtr->insertWidth/2;
+	} else { /* I-beam cursor */
+	    x -= textPtr->insertWidth/2;
+	    w = textPtr->insertWidth;
+	}
+
+	TkTextRedrawRegion(textPtr, x, y, w, h);
     }
 }
 
