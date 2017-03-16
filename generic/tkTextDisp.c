@@ -11889,8 +11889,8 @@ TkTextGetDLineInfo(
     if (extents) {
 	*widthPtr = MAX(0, *xPtr + *widthPtr - dInfoPtr->maxX);
 	*heightPtr = MAX(0, *yPtr + *heightPtr - dInfoPtr->maxY);
-	*xPtr = MIN(0, -*xPtr);
-	*yPtr = MIN(0, -*yPtr);
+	*xPtr = MAX(0, -*xPtr);
+	*yPtr = MAX(0, -*yPtr);
     } else {
 	if (dlPtr->y + dlPtr->height > dInfoPtr->maxY) {
 	    *heightPtr = dInfoPtr->maxY - dlPtr->y;
