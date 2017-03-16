@@ -19,7 +19,7 @@ text, tk_mergeRange, tk_textCopy, tk_textCut, tk_textInsert, tk_textPaste, tk_te
 \fBtk_textCut\fR \fIpathName\fR
 \fBtk_textInsert\fR \fIpathName\fR ?\fB\-hyphentags\fI tagList\fR? \fIindex chars\fR ?\fItagList chars tagList ...\fR?
 \fBtk_textPaste\fR \fIpathName\fR
-\fBtk_textRebindMouseWheel\fR  >>>>> TODO: Function prototype must be here <<<<<
+\fBtk_textRebindMouseWheel\fR \fIpathName\fR ?\fIpathName ...\fR?
 \fBtk_textReplace\fR \fIpathName\fR ?\fB\-hyphentags\fR \fItagList\fR? \fIindex chars\fR ?\fItagList chars tagList ...\fR?
 .SO
 \-background	\-highlightthickness	\-relief
@@ -1784,16 +1784,24 @@ operations on the widget. It has the following general form:
 widget's path name. \fIOption\fR and the \fIarg\fRs determine the exact
 behavior of the command. The following commands are possible for text widgets:
 .TP
-\fIpathName \fBbbox \fIindex\fR ?\fB\-discardpartial\fR?
+\fIpathName \fBbbox\fR ?\fB-extents\fR? \fIindex\fR
 .
 Returns a list of four elements describing the screen area of the character
 given by \fIindex\fR. The first two elements of the list give the x and y
 coordinates of the upper-left corner of the area occupied by the character,
 and the last two elements give the width and height of the area. If the
 character is only partially visible on the screen, then the return value
-reflects just the visible part, except if the \fB-discardpartial\fR option
-is given, in which case the return value is an empty list. If the character
-is not visible on the screen then the return value is an empty list.
+reflects just the visible part. If the character is not visible on the screen
+then the return value is an empty list.
+.RS
+.PP
+If option \fB-extents\fR is specified then a list of four elements describing
+the invisible extents of the bounding box will returned. If x/y (first/second
+value) is not zero, then the first x/y pixels are not visible on screen. If
+width/height (third/fourth value) is not zero, then the last width/height
+pixels are not visible on screen. If the line which contains this character
+is not visible on the screen, then the return value is an empty list.
+.RE
 .TP
 \fIpathName \fBbrks\fR \fIstring\fR \fI?lang\fR?
 .
@@ -2045,7 +2053,7 @@ deleted (provided that the concerned mark is neither a special mark \- \fBinsert
 or \fBcurrent\fR, \- nor a generated mark).
 .RE
 .TP
-\fIpathName \fBdlineinfo \fIindex\fR
+\fIpathName \fBdlineinfo\fR ?\fB-extents\fR? \fIindex\fR
 .
 Returns a list with five elements describing the area occupied by the display
 line containing \fIindex\fR. The first two elements of the list give the x and
@@ -2060,6 +2068,16 @@ width of the window then the area returned reflects just the portion of the
 line that is occupied by characters and embedded windows. If the display line
 containing \fIindex\fR is not visible on the screen then the return value is
 an empty list.
+.RS
+.PP
+If option \fB-extents\fR is specified then a list of four elements describing
+the invisible extents of the bounding box will returned, plus a fifth value
+for the baseline position. If x/y (first/second value) is not zero, then the
+first x/y pixels are not visible on screen. If width/height (third/fourth
+value) is not zero, then the last width/height pixels are not visible on
+screen. If the display line containing \fIindex\fR is not visible on the
+screen then the return value is an empty list.
+.RE
 .TP
 \fIpathName \fBdump \fR?\fIswitches\fR? \fIindex1 \fR?\fIindex2\fR?
 .

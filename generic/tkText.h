@@ -1813,14 +1813,15 @@ MODULE_SCOPE bool	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
 			    const char *index1, const char *index2, const char *arg, bool userFlag);
 MODULE_SCOPE void	TkTextUpdateAlteredFlag(TkSharedText *sharedTextPtr);
 MODULE_SCOPE bool	TkTextIndexBbox(TkText *textPtr,
-			    const TkTextIndex *indexPtr, bool discardPartial, int *xPtr, int *yPtr,
+			    const TkTextIndex *indexPtr, bool extents, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int byteOffset, int maxX, int maxBytes, bool noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
-MODULE_SCOPE bool	TkTextGetDLineInfo(TkText *textPtr, const TkTextIndex *indexPtr, int *xPtr,
-			    int *yPtr, int *widthPtr, int *heightPtr, int *basePtr);
+MODULE_SCOPE bool	TkTextGetDLineInfo(TkText *textPtr, const TkTextIndex *indexPtr,
+			    bool extents, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr,
+			    int *basePtr);
 MODULE_SCOPE int	TkTextBindEvent(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
 			     TkSharedText *sharedTextPtr, Tk_BindingTable *bindingTablePtr,
 			     const char *name);
