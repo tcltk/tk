@@ -724,7 +724,7 @@ static DLine *		FreeDLines(TkText *textPtr, DLine *firstPtr, DLine *lastPtr,
 static void		FreeStyle(TkText *textPtr, TextStyle *stylePtr);
 static TextStyle *	GetStyle(TkText *textPtr, TkTextSegment *segPtr);
 static void		UpdateDefaultStyle(TkText *textPtr);
-static int		GetBbox(TkText *textPtr, const DLine *dlPtr, const TkTextIndex *indexPtr,
+static bool		GetBbox(TkText *textPtr, const DLine *dlPtr, const TkTextIndex *indexPtr,
 			    int *xPtr, int *yPtr, int *widthPtr, int *heightPtr, bool *isLastCharInLine);
 static void		GetXView(Tcl_Interp *interp, TkText *textPtr, bool report);
 static void		GetYView(Tcl_Interp *interp, TkText *textPtr, bool report);
@@ -9274,11 +9274,9 @@ TkTextSetYView(
 
 	if (TkTextIndexCompare(&dlPtr->index, indexPtr) <= 0
 		&& GetBbox(textPtr, dlPtr, indexPtr, &x, &y, &width, &height, NULL)) {
+	    assert(TkTextIndexCountBytes(&dlPtr->index, indexPtr) <= dlPtr->byteCount);
 	    if (dInfoPtr->y <= y && y + height <= dInfoPtr->maxY - dInfoPtr->y) {
-		/*
-		 * This character is fully visible, so we don't need to scroll.
-		 */
-		return;
+		return; /* this character is fully visible, so we don't need to scroll */
 	    }
 	    if (dlPtr->height > dInfoPtr->maxY - dInfoPtr->y) {
 		/*
@@ -9306,10 +9304,7 @@ TkTextSetYView(
 		    dInfoPtr->newTopPixelOffset = 0;
 		    goto scheduleUpdate;
 		}
-		/*
-		 * The line is already on screen, with no need to scroll.
-		 */
-		return;
+		return; /* the line is already on screen, with no need to scroll */
 	    }
 	}
     }
@@ -9788,9 +9783,9 @@ MeasureUp(
  *
  * Results:
  *	The byte count inside the chunk is returned if the index is on the screen.
- *	-1 means the index is not on the screen. If the return value is >= 0, then
- *	the bounding box of the part of the index that's visible on the screen is
- *	returned to *xPtr, *yPtr, *widthPtr, and *heightPtr.
+ *	'false' means the index is not on the screen. If the return value is true,
+ *	then the bounding box of the part of the index that's visible on the screen
+ *	is returned to *xPtr, *yPtr, *widthPtr, and *heightPtr.
  *
  * Side effects:
  *	None.
@@ -9798,7 +9793,7 @@ MeasureUp(
  *--------------------------------------------------------------
  */
 
-static int
+static bool
 GetBbox(
     TkText *textPtr,		/* Information about text widget. */
     const DLine *dlPtr,		/* Display line for given index. */
