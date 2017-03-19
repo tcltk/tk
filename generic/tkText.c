@@ -745,7 +745,7 @@ SendVirtualEvent(
 	event.general.xany.display = Tk_Display(tkwin);
 	event.virtual.name = Tk_GetUid(eventName);
 	event.virtual.user_data = detail;
-	Tk_HandleEvent(&event.general);
+	Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
     }
 #endif
 }
