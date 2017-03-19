@@ -253,8 +253,8 @@ test textDisp-2.5 {LayoutDLine, word wrap} {textfonts} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "This isx some sample text for testing."
-    list [.t bbox 1.13] [.t bbox 1.14] [.t bbox 1.19]
-} [list [list 96 5 49 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 40 [expr {$fixedDiff + 18}] 7 $fixedHeight]]
+    list [.t bbox 1.13] [.t bbox 1.19] [.t bbox 1.20] [.t bbox 1.21]
+} [list [list 96 5 $fixedWidth $fixedHeight] [list 138 5 $fixedWidth $fixedHeight] [list 145 5 0  $fixedHeight] [list 5 [expr {$fixedDiff + 18}] $fixedWidth $fixedHeight]]
 test textDisp-2.6 {LayoutDLine, word wrap} {
     .t configure -wrap word
     .t delete 1.0 end
@@ -353,16 +353,16 @@ test textDisp-2.16 {LayoutDLine, justification} {textfonts} {
     .t tag configure x -justify center
     .t tag add x 1.1 1.20
     .t tag add x 1.21 1.end
-    list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.36] [.t bbox 2.0]
-} [list [list 5 5 7 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 43 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
+    list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.41] [.t bbox 2.0]
+} [list [list 5 5 7 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 61 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
 test textDisp-2.17 {LayoutDLine, justification} {textfonts} {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert 1.0 "Lots of long words, enough to force word wrap\nThen\nmore lines"
     .t tag configure x -justify center
     .t tag add x 1.20
-    list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.36] [.t bbox 2.0]
-} [list [list 5 5 7 $fixedHeight] [list 19 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 5 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
+    list [.t bbox 1.0] [.t bbox 1.20] [.t bbox 1.41] [.t bbox 2.0]
+} [list [list 5 5 7 $fixedHeight] [list 5 [expr {$fixedDiff + 18}] 7 $fixedHeight] [list 5 [expr {2*$fixedDiff + 31}] 7 $fixedHeight] [list 5 [expr {3*$fixedDiff + 44}] 7 $fixedHeight]]
 test textDisp-2.18 {LayoutDLine, justification} {textfonts} {
     .t configure -wrap none
     .t delete 1.0 end
