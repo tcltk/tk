@@ -168,7 +168,7 @@ static bool		TagAddRemove(TkText *textPtr, const TkTextIndex *index1Ptr,
 static void		FindTags(Tcl_Interp *interp, TkText *textPtr, const TkTextSegment *segPtr,
 			    bool discardSelection);
 static void		AppendTags(Tcl_Interp *interp, unsigned numTags, TkTextTag **tagArray);
-static void		GrabSelection(TkText *textPtr, const TkTextTag *tagPtr, bool add);
+static void		GrabSelection(TkText *textPtr, const TkTextTag *tagPtr, bool add, bool changed);
 static TkTextTag *	FindTag(Tcl_Interp *interp, const TkText *textPtr, Tcl_Obj *tagName);
 static int		EnumerateTags(Tcl_Interp *interp, TkText *textPtr, int objc,
 			    Tcl_Obj *const *objv);
@@ -340,10 +340,10 @@ TkTextTagCmd(
 		anyChanges = true;
 	    }
 	}
+	if (tagPtr == textPtr->selTagPtr) {
+	    GrabSelection(textPtr, tagPtr, addTag, anyChanges);
+	}
 	if (anyChanges) {
-	    if (tagPtr == textPtr->selTagPtr) {
-		GrabSelection(textPtr, tagPtr, addTag);
-	    }
 	    if (tagPtr->undo) {
 		TkTextUpdateAlteredFlag(sharedTextPtr);
 	    }
@@ -440,7 +440,7 @@ TkTextTagCmd(
 			arrayPtr[countTags++] = tagPtr;
 
 			if (tagPtr == textPtr->selTagPtr) {
-			    GrabSelection(textPtr, tagPtr, false);
+			    GrabSelection(textPtr, tagPtr, false, true);
 			}
 			if (tagPtr->undo) {
 			    anyChanges = true;
@@ -1422,7 +1422,7 @@ TkTextTagChangedUndoRedo(
     }
     if (tagPtr && tagPtr->textPtr) {
 	assert(tagPtr == textPtr->selTagPtr);
-	GrabSelection(tagPtr->textPtr, tagPtr, TkTextTestTag(indexPtr1, tagPtr));
+	GrabSelection(tagPtr->textPtr, tagPtr, TkTextTestTag(indexPtr1, tagPtr), true);
     }
     return true;
 }
@@ -1452,24 +1452,31 @@ static void
 GrabSelection(
     TkText *textPtr,		/* Info about overall widget. */
     const TkTextTag *tagPtr,	/* Tag which has been modified. */
-    bool add)			/* 'true' means that we have added this tag;
-				 * 'false' means we have removed this tag. */
+    bool add,			/* 'true' means that we have added the "sel" tag;
+				 * 'false' means we have removed the "sel" tag. */
+    bool changed)		/* 'false' means that the selection has not changed, nevertheless
+    				 * the text widget should become the owner again. */
 {
+    bool ownSelection = add && textPtr->exportSelection && !(textPtr->flags & GOT_SELECTION);
+
     assert(tagPtr == textPtr->selTagPtr);
 
-    /*
-     * Send an event that the selection changed. This is
-     * equivalent to:
-     *	   event generate $textWidget <<Selection>>
-     */
+    if (changed || ownSelection) {
+	/*
+	 * Send an event that the selection changed. This is
+	 * equivalent to:
+	 *	   event generate $textWidget <<Selection>>
+	 */
 
-    TkTextSelectionEvent(textPtr);
-
-    if (add && textPtr->exportSelection && !(textPtr->flags & GOT_SELECTION)) {
+	TkTextSelectionEvent(textPtr);
+    }
+    if (ownSelection) {
 	Tk_OwnSelection(textPtr->tkwin, XA_PRIMARY, TkTextLostSelection, textPtr);
 	textPtr->flags |= GOT_SELECTION;
     }
-    textPtr->abortSelections = true;
+    if (changed) {
+	textPtr->abortSelections = true;
+    }
 }
 
 /*
