@@ -667,8 +667,8 @@ test textDisp-4.10 {UpdateDisplayInfo, filling in extra vertical space} {
     .t delete 13.0 end
     update
     list [.t index @0,0] $tk_textRelayout $tk_textRedraw
-    # Note, the results of wish8.7 are wrong, because wish8.7 is not deleting the last
-    # line, this is a bug, so the results have been changed.
+    # Note, the results of old text widget implementation are wrong, because it is
+    # not deleting the last line, this is a bug, so the results have been changed.
 } {6.0 {13.0 7.0 6.40 6.20 6.0} {6.0 6.20 6.40 7.0 13.0}}
 test textDisp-4.11 {UpdateDisplayInfo, filling in extra vertical space} {
     .t delete 1.0 end

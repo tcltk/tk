@@ -12390,7 +12390,6 @@ NextTabStop(
 
     assert(tabWidth > 0);
 
-    tabWidth *= 8;
     x += tabWidth;
     if ((rem = (x - tabOrigin) % tabWidth) < 0) {
 	rem += tabWidth;
