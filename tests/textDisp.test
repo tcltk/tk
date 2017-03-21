@@ -3856,7 +3856,7 @@ test textDisp-29.2.5 {miscellaneous: can show last character} {
     set iWidth [lindex [.t2.t bbox end-2c] 2]
     .t2.t xview scroll 2 units
     set iWidth2 [lindex [.t2.t bbox end-2c] 2]
- 
+
     if {($iWidth == $iWidth2) && $iWidth >= 2} {
 	set result "correct"
     } else {

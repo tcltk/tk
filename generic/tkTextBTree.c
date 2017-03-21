@@ -4566,7 +4566,7 @@ TkBTreeInsertChars(
 
     TkTextInvalidateLineMetrics(sharedTextPtr, NULL, firstLinePtr,
 	    changeToLineCount, TK_TEXT_INVALIDATE_INSERT);
- 
+
     /*
      * Next step: update elision states if needed.
      */

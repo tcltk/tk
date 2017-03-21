@@ -2544,7 +2544,7 @@ ChangeTagPriority(
 	 * only the relevant changes will be pushed as soon as a separator will be
 	 * pushed.
 	 */
-	
+
 	if (!tagPtr->recentChangePriorityToken) {
 	    tagPtr->savedPriority = tagPtr->priority;
 	    token = malloc(sizeof(UndoTokenTagPriority));
@@ -3127,7 +3127,7 @@ AddSet(
     const TkTextTagSet *src)
 {
     TkBitField *compl = TkTextTagSetToBits(src, TkBitSize(sharedTextPtr->usedTags));
-    
+
     dst = AddBits(dst, compl);
     TkBitDecrRefCount(compl);
     return dst;
@@ -3140,7 +3140,7 @@ AddComplementSet(
     const TkTextTagSet *src)
 {
     TkBitField *compl = TkTextTagSetToBits(src, TkBitSize(sharedTextPtr->usedTags));
-    
+
     dst = AddComplementBits(dst, compl);
     TkBitDecrRefCount(compl);
     return dst;

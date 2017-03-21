@@ -619,7 +619,7 @@ extern unsigned tkQTreeCountNewElement;
 extern unsigned tkQTreeCountDestroyElement;
 
 typedef struct WatchShared {
-    TkSharedText *sharedTextPtr; 
+    TkSharedText *sharedTextPtr;
     struct WatchShared *nextPtr;
 } WatchShared;
 
