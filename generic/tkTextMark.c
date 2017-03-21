@@ -644,14 +644,8 @@ TkTextMarkCmd(
 	TkTextIndexClear(&index, textPtr);
 	TkTextIndexSetSegment(&index, textPtr->startMarker);
 	/* ensure fixed length (depending on pointer size) */
-	snprintf(uniqName, sizeof(uniqName),
-#ifdef TCL_WIDE_INT_IS_LONG
-	    "##ID##0x%016"PRIx64"##0x%016"PRIx64"##%08u##", /* we're on a real 64-bit system */
-	    (uint64_t) textPtr, (uint64_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter);
-#else /* ifndef TCL_WIDE_INT_IS_LONG */
-	    "##ID##0x%08"PRIx32"##0x%08"PRIx32"##%08u##",   /* we're on a 32-bit system */
-	    (uint32_t) textPtr, (uint32_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter);
-#endif /* TCL_WIDE_INT_IS_LONG */
+	snprintf(uniqName, sizeof(uniqName), "##ID##%p##%p##%08u##",
+	    textPtr, textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter);
 	assert(!TkTextFindMark(textPtr, uniqName));
     	markPtr = TkTextMakeMark(textPtr, uniqName);
     	markPtr->privateMarkFlag = true;
