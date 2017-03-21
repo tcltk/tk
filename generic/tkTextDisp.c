@@ -5327,7 +5327,7 @@ UpdateDisplayInfo(
 	    }
 	}
     }
-    
+
     /*
      * If the old top or bottom line has scrolled elsewhere on the screen, we
      * may not be able to re-use its old contents by copying bits (e.g., a

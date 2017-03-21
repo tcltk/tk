@@ -53,7 +53,7 @@
  * The struct below is using C inheritance, this is portable due to C99 section
  * 6.7.2.1 bullet point 13:
  *
- *	Within a structure object, the non-bit-field members and the units 
+ *	Within a structure object, the non-bit-field members and the units
  *	in which bit-fields reside have addresses that increase in the order
  *	in which they are declared. A pointer to a structure object, suitably
  *	converted, points to its initial member (or if that member is a

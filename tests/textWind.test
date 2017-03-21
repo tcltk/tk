@@ -32,7 +32,7 @@ set fixedDiff [expr {$fixedHeight - 13}] ;# 2 on XP
 set color [expr {[winfo depth .t] > 1 ? "green" : "black"}]
 
 wm geometry . {}
- 
+
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
 

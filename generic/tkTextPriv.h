@@ -581,7 +581,7 @@ TkTextIndexSetPeer(
     TkText *textPtr)
 {
     assert(indexPtr->tree);
-    
+
     indexPtr->textPtr = textPtr;
     indexPtr->priv.lineNoRel = -1;
 }

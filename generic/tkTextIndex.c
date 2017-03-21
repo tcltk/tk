@@ -1222,7 +1222,7 @@ TkTextIndexGetFirstSegment(
     if (offset) {
 	*offset = myOffset;
     }
- 
+
     return segPtr;
 }
 
@@ -2231,7 +2231,7 @@ GetIndex(
      * Furthermore the documentation says:
      *
      *	If the base could match more than one of the above forms, such as a mark and imageName
-     *	both having the same value, then the form earlier in the above list takes precedence. 
+     *	both having the same value, then the form earlier in the above list takes precedence.
      */
 
 #if BEGIN_DOES_NOT_BELONG_TO_BASE
@@ -2451,7 +2451,7 @@ GetIndex(
 	TkTextIndexSetupToEndOfText(indexPtr, textPtr, sharedTextPtr->tree);
 	goto gotBase;
     }
-    
+
     /*
      * See if the base position is the name of a mark.
      */
@@ -3441,7 +3441,7 @@ TkTextIndexBackBytes(
 	/*
 	 * Special case: this is the first line, and we have to consider the start marker.
 	 */
-	
+
 	if ((byteIndex -= byteCount) < SegToIndex(linePtr, textPtr->startMarker)) {
 	    TkTextIndexSetupToStartOfText(dstPtr, (TkText *) textPtr, textPtr->sharedTextPtr->tree);
 	    return 1;

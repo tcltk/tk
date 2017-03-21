@@ -349,7 +349,7 @@ UndoMoveMarkPerform(
 	redoInfo->token = undoInfo->token;
 	redoInfo->token->undoType = isRedo ? &undoTokenMoveMarkType : &redoTokenMoveMarkType;
     }
- 
+
     TkBTreeUnlinkSegment(sharedTextPtr, token->markPtr);
     TkBTreeReInsertSegment(sharedTextPtr, &index, token->markPtr);
 }
@@ -2564,7 +2564,7 @@ TkTextInsertDisplayProc(
 	 * HACK: We are drawing into a tailored pixmap, because Tk has no clipping;
 	 * see DisplayDLine().
 	 */
-	
+
 	x = y = 0;
     }
 

@@ -447,7 +447,7 @@ set ::tk::Priv(prevPos) {}
 
 # The MouseWheel events:
 # We must be careful not to round -ve values of %D down to zero.
- 
+
 if {[tk windowingsystem] eq "aqua"} {
     bind Text <MouseWheel> {
 	%W yview scroll [expr {-15 * (%D)}] pixels
