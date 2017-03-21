@@ -16,11 +16,7 @@
 #include "tkInt.h" /* needed for inline support */
 #include "tkBool.h"
 
-#ifdef TCL_WIDE_INT_IS_LONG
-typedef uint64_t TkBitWord;
-#else
-typedef uint32_t TkBitWord;
-#endif
+typedef size_t TkBitWord;
 
 #define TK_BIT_NBITS (sizeof(TkBitWord)*8) /* Number of bits in one word. */
 
