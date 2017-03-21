@@ -209,6 +209,9 @@ void TtkFillArrow(
     ArrowPoints(b, dir, points);
     XFillPolygon(display, d, gc, points, 3, Convex, CoordModeOrigin);
     XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
+
+    /* Work around bug [77527326e5] - ttk artifacts on Ubuntu */
+    XDrawPoint(display, d, gc, points[2].x, points[2].y);
 }
 
 /*public*/
@@ -218,6 +221,9 @@ void TtkDrawArrow(
     XPoint points[4];
     ArrowPoints(b, dir, points);
     XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
+
+    /* Work around bug [77527326e5] - ttk artifacts on Ubuntu */
+    XDrawPoint(display, d, gc, points[2].x, points[2].y);
 }
 
 /*
