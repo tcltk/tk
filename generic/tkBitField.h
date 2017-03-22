@@ -16,7 +16,13 @@
 #include "tkInt.h" /* needed for inline support */
 #include "tkBool.h"
 
-typedef size_t TkBitWord;
+#ifdef TCL_WIDE_INT_IS_LONG
+/* It is important to use 64 bit integers for performance resaons. */
+typedef uint64_t TkBitWord;
+#else
+/* On 32 bit platforms the use of 64 bit integers would slowing down. */
+typedef uint32_t TkBitWord;
+#endif
 
 #define TK_BIT_NBITS (sizeof(TkBitWord)*8) /* Number of bits in one word. */
 
