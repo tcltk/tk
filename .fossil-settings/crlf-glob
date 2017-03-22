@@ -1,4 +1,3 @@
 win/buildall.vc.bat
-win/makefile.bc
 win/makefile.vc
 win/rules.vc
