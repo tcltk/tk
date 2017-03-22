@@ -82,4 +82,43 @@ test progressbar-end "Cleanup" -body {
     destroy .pb
 }
 
+# check existence and default value of each non-core option of the widget
+test progressbar-3.1 "progressbar non-core options" -setup {
+    set res {}
+    ttk::progressbar .defaultpb
+} -body {
+    foreach option {-anchor -foreground -justify -style -text -wraplength \
+                    -length -maximum -mode -orient -phase -value -variable} {
+        lappend res [.defaultpb cget $option]
+    }
+    set res
+} -cleanup {
+    unset res
+    destroy .defaultpb
+} -result {w black left {} {} 0 100 100 determinate horizontal 0 0.0 {}}
+
+test progressbar-3.2 "TIP #442 options are taken into account" -setup {
+    set res {}
+    pack [ttk::progressbar .p -value 0 -maximum 50 -orient horizontal -mode determinate -length 500]
+    set thefont [font actual {Arial 10}]
+} -body {
+    .p configure -anchor c -foreground blue -justify right \
+            -text "TIP #442\noptions are now tested" -wraplength 100
+    update
+    .p step 10
+    .p configure -anchor e -font $thefont -foreground green -justify center \
+            -text "Changing the value of each option\nfrom TIP #442" -wraplength 250
+    update
+    .p step 20
+    .p configure -orient vertical -text "Cannot be seen"
+    update
+    foreach option {-anchor -foreground -justify -text -wraplength} {
+        lappend res [list $option [.p cget $option]]
+    }
+    set res
+} -cleanup {
+    unset res thefont
+    destroy .p
+} -result {{-anchor e} {-foreground green} {-justify center} {-text {Cannot be seen}} {-wraplength 250}}
+
 tcltest::cleanupTests
