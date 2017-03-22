@@ -23,6 +23,7 @@ typedef struct
      * Text element resources:
      */
     Tcl_Obj *textObj;
+    Tcl_Obj *justifyObj;
     Tcl_Obj *textVariableObj;
     Tcl_Obj *underlineObj;
     Tcl_Obj *widthObj;
@@ -56,6 +57,9 @@ typedef struct
 
 static Tk_OptionSpec BaseOptionSpecs[] =
 {
+    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
+        "left", Tk_Offset(Base,base.justifyObj), -1,
+        TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	Tk_Offset(Base,base.textObj), -1,
 	0,0,GEOMETRY_CHANGED },

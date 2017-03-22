@@ -17,7 +17,7 @@ A \fBttk::button\fR widget displays a textual label and/or image,
 and evaluates a command when pressed.
 .SO ttk_widget
 \-class	\-compound	\-cursor
-\-image	\-state	\-style
+\-image	\-justify	\-state	\-style
 \-takefocus	\-text	\-textvariable
 \-underline	\-width
 .SE
@@ -39,13 +39,6 @@ The default is \fBnormal\fR.
 Depending on the theme, the default button may be displayed
 with an extra highlight ring, or with a different border color.
 .RE
-.OP \-width width Width
-If greater than zero, specifies how much space, in character widths,
-to allocate for the text label.
-If less than zero, specifies a minimum width.
-If zero or unspecified, the natural width of the text label is used.
-Note that some themes may specify a non-zero \fB\-width\fR
-in the style.
 .\" Not documented -- may go away
 .\" .OP \-padding padding Padding
 .\" .OP \-foreground foreground Foreground
