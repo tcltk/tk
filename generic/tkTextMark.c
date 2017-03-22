@@ -18,6 +18,14 @@
 #include "tk3d.h"
 #include <assert.h>
 
+#if HAVE_INTTYPES_H
+# include <inttypes.h>
+#elif !defined(PRIx32)
+/* work-around for ancient MSVC versions */
+# define PRIx64 "llx"
+# define PRIx32 "lx"
+#endif
+
 #ifndef MAX
 # define MAX(a,b) ((a) < (b) ? b : a)
 #endif
@@ -635,9 +643,16 @@ TkTextMarkCmd(
 
 	TkTextIndexClear(&index, textPtr);
 	TkTextIndexSetSegment(&index, textPtr->startMarker);
-	/* ensure fixed length (depending on pointer size) */
-	snprintf(uniqName, sizeof(uniqName), "##ID##%p##%p##%08u##",
-	    textPtr, textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter);
+	/* IMPORTANT NOTE: ensure fixed length (depending on pointer size) */
+	snprintf(uniqName, sizeof(uniqName),
+#ifdef TCL_WIDE_INT_IS_LONG
+	    "##ID##0x%016"PRIx64"##0x%016"PRIx64"##%08u##", /* we're on a real 64-bit system */
+	    (uint64_t) textPtr, (uint64_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
+#else /* ifndef TCL_WIDE_INT_IS_LONG */
+	    "##ID##0x%08"PRIx32"##0x%08"PRIx32"##%08u##",   /* we're on a 32-bit system */
+	    (uint32_t) textPtr, (uint32_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
+#endif /* TCL_WIDE_INT_IS_LONG */
+	);
 	assert(!TkTextFindMark(textPtr, uniqName));
     	markPtr = TkTextMakeMark(textPtr, uniqName);
     	markPtr->privateMarkFlag = true;
@@ -1622,11 +1637,17 @@ SetMark(
     }
 
     if (!markPtr) {
-	if (name[0] == '#' && name[1] == '#' && name[2] == 'I' && name[3] == 'D' && name[4] == '#' && name[5] == '#') {
+	if (name[0] == '#' && name[1] == '#' && name[2] == 'I') {
+#ifdef TCL_WIDE_INT_IS_LONG
+	    static const size_t length = 32 + 2*sizeof(uint64_t);
+#else /* ifndef TCL_WIDE_INT_IS_LONG */
+	    static const size_t length = 32 + 2*sizeof(uint32_t);
+#endif /* TCL_WIDE_INT_IS_LONG */
+
 	    void *sPtr, *tPtr;
 	    unsigned num;
 
-	    if ((strlen(name)>=24) && sscanf(name+6, "%p##%p##%u##", &sPtr, &tPtr, &num) == 3) {
+	    if (strlen(name) == length && sscanf(name, "##ID##%p##%p##%u##", &sPtr, &tPtr, &num) == 3) {
 		assert(hPtr);
 		Tcl_DeleteHashEntry(hPtr);
 		return NULL; /* this is an expired generated mark */
