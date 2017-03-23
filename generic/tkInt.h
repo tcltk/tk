@@ -95,7 +95,7 @@
 #   include "tkWinStdInt.h"
 #else
 /* this is not expected with compilers from this century, except MSVC (handled above) */
-#   error "C99 support is required - can't find stdint.h"
+#   error "C99 support is required - can't include stdint.h"
 #endif
 
 /*

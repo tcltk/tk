@@ -20,10 +20,12 @@
 
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
-#elif !defined(PRIx32)
+#elif defined(_WIN32) || defined(_WIN64)
 /* work-around for ancient MSVC versions */
-# define PRIx64 "llx"
-# define PRIx32 "lx"
+# define PRIx64 "I64x"
+# define PRIx32 "x"
+#else
+# error "configure failed - can't include inttypes.h"
 #endif
 
 #ifndef MAX
