@@ -85,35 +85,60 @@
 #endif
 
 /*
+ * Standard integer support (C99).
+ */
+
+#if HAVE_STDINT_H
+#   include <stdint.h>
+#elif defined(_MSC_VER) && _MSC_VER < 1600
+/* work around for the support of ancient compilers */
+#   include "tkWinStdInt.h"
+#else
+/* this is not expected with compilers from this century, except MSVC (handled above) */
+#   error "C99 support is required - can't find stdint.h"
+#endif
+
+/*
+ * Support of 64 bit architectures.
+ * Unluckily the constant TCL_WIDE_INT_IS_LONG cannot be used.
+ */
+
+#if HAVE_STDINT_H
+#   if (UINTPTR_MAX == 0xffffffffu)
+#	define TK_IS_32_BIT_ARCH
+#   elif (UINTPTR_MAX == 0xffffffffffffffffu)
+#	define TK_IS_64_BIT_ARCH
+#   else
+#	error "unsupported architecture"
+#   endif
+#elif defined(_WIN64) /* ancient compiler support */
+#   define TK_IS_64_BIT_ARCH
+#elif defined(_WIN32) /* ancient compiler support */
+#   define TK_IS_32_BIT_ARCH
+#else
+#   error "cannot detect architecture"
+#endif /* HAVE_STDINT_H */
+
+/*
  * C99 inline support macros for the text widget.
  */
 
 #ifdef _MSC_VER
-# if defined(inline)
-#  define TK_C99_INLINE_SUPPORT
-# elif _MSC_VER >= 1200
-#  define inline __inline
-#  define TK_C99_INLINE_SUPPORT
-#  define TK_C99_INLINE_DEFINED
-# else
-#  define inline
-#  define TK_C99_INLINE_DEFINED
-# endif
+#   if defined(inline)
+#	define TK_C99_INLINE_SUPPORT
+#   elif _MSC_VER >= 1200
+#	define inline __inline
+#	define TK_C99_INLINE_SUPPORT
+#	define TK_C99_INLINE_DEFINED
+#   else
+#	define inline
+#	define TK_C99_INLINE_DEFINED
+#   endif
 #elif __STDC_VERSION__ >= 199901L
-# define TK_C99_INLINE_SUPPORT
+#	define TK_C99_INLINE_SUPPORT
 #else
-# define inline
-# define TK_C99_INLINE_DEFINED
-#endif
-
-#if HAVE_STDINT_H
-# include <stdint.h>
-#elif defined(_MSC_VER) && _MSC_VER < 1600
-/* work around for the support of ancient compilers */
-# include "tkWinStdInt.h"
-#else
-/* this is not expected with compilers from this century, except MSVC (handled above) */
-# error "C99 support is required - can't find stdint.h"
+#	define inline
+#	define TK_C99_INLINE_DEFINED
 #endif
 
 /*

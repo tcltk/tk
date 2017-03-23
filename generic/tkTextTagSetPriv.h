@@ -28,7 +28,7 @@
  * The constant TK_TEXT_SET_MAX_BIT_SIZE must be a multiple of TK_BIT_NBITS.
  */
 
-#ifdef TCL_WIDE_INT_IS_LONG
+#ifdef TK_IS_64_BIT_ARCH
 
 /*
  * On 64 bit systems this is the optimal size and it is not recommended to
@@ -36,7 +36,7 @@
  */
 # define TK_TEXT_SET_MAX_BIT_SIZE (((512 + TK_BIT_NBITS - 1)/TK_BIT_NBITS)*TK_BIT_NBITS)
 
-#else /* TCL_WIDE_INT_IS_LONG */
+#else /* TK_IS_64_BIT_ARCH */
 
 /*
  * On 32 bit systems the current size (512) might be too large. If so it should
@@ -45,7 +45,7 @@
  */
 # define TK_TEXT_SET_MAX_BIT_SIZE (((512 + TK_BIT_NBITS - 1)/TK_BIT_NBITS)*TK_BIT_NBITS)
 
-#endif /* TCL_WIDE_INT_IS_LONG */
+#endif /* TK_IS_64_BIT_ARCH */
 
 
 MODULE_SCOPE bool TkTextTagSetIsEqual_(const TkTextTagSet *ts1, const TkTextTagSet *ts2);

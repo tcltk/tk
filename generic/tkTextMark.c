@@ -645,13 +645,13 @@ TkTextMarkCmd(
 	TkTextIndexSetSegment(&index, textPtr->startMarker);
 	/* IMPORTANT NOTE: ensure fixed length (depending on pointer size) */
 	snprintf(uniqName, sizeof(uniqName),
-#ifdef TCL_WIDE_INT_IS_LONG
+#ifdef TK_IS_64_BIT_ARCH
 	    "##ID##0x%016"PRIx64"##0x%016"PRIx64"##%08u##", /* we're on a real 64-bit system */
 	    (uint64_t) textPtr, (uint64_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
-#else /* ifndef TCL_WIDE_INT_IS_LONG */
+#else /* if defined(TK_IS_32_BIT_ARCH) */
 	    "##ID##0x%08"PRIx32"##0x%08"PRIx32"##%08u##",   /* we're on a 32-bit system */
 	    (uint32_t) textPtr, (uint32_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
-#endif /* TCL_WIDE_INT_IS_LONG */
+#endif /* TK_IS_64_BIT_ARCH */
 	);
 	assert(!TkTextFindMark(textPtr, uniqName));
     	markPtr = TkTextMakeMark(textPtr, uniqName);
@@ -1638,11 +1638,11 @@ SetMark(
 
     if (!markPtr) {
 	if (name[0] == '#' && name[1] == '#' && name[2] == 'I') {
-#ifdef TCL_WIDE_INT_IS_LONG
+#ifdef TK_IS_64_BIT_ARCH
 	    static const size_t length = 32 + 2*sizeof(uint64_t);
-#else /* ifndef TCL_WIDE_INT_IS_LONG */
+#else /* if defined(TK_IS_32_BIT_ARCH) */
 	    static const size_t length = 32 + 2*sizeof(uint32_t);
-#endif /* TCL_WIDE_INT_IS_LONG */
+#endif /* TK_IS_64_BIT_ARCH */
 
 	    void *sPtr, *tPtr;
 	    unsigned num;
