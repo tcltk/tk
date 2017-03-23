@@ -467,6 +467,7 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
+    TkDebugPhotoStringMatchDef, /* 185 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
