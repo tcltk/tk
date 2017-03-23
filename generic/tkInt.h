@@ -99,17 +99,19 @@
 #endif
 
 /*
- * Support of 64 bit architectures.
- * Unluckily the constant TCL_WIDE_INT_IS_LONG cannot be used.
+ * Detection of >=64 bit architectures, which supports the use of
+ * the appropriate integer types.
+ * Unluckily the constant TCL_WIDE_INT_IS_LONG cannot be used
+ * (not useful outside of Tcl Core).
  */
 
 #if HAVE_STDINT_H
 #   if (UINTPTR_MAX == 0xffffffffu)
 #	define TK_IS_32_BIT_ARCH
-#   elif (UINTPTR_MAX == 0xffffffffffffffffu)
+#   elif (UINTPTR_MAX >= 0xffffffffffffffffu)
 #	define TK_IS_64_BIT_ARCH
 #   else
-#	error "unsupported architecture"
+#	error "unsupported architecture" /* should never happen */
 #   endif
 #elif defined(_WIN64) /* ancient compiler support */
 #   define TK_IS_64_BIT_ARCH
