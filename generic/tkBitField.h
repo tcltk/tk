@@ -13,10 +13,10 @@
 #define _TKBITFIELD
 
 #include "tk.h"
-#include "tkInt.h" /* needed for inline support */
+#include "tkInt.h" /* needed for inline support and 64 bit support */
 #include "tkBool.h"
 
-#ifdef TCL_WIDE_INT_IS_LONG
+#ifdef TK_IS_64_BIT_ARCH
 /* It is important to use 64 bit integers for performance resaons. */
 typedef uint64_t TkBitWord;
 #else

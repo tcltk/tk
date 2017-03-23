@@ -49,7 +49,7 @@ DEBUG_ALLOC(unsigned tkBitCountNew = 0);
 DEBUG_ALLOC(unsigned tkBitCountDestroy = 0);
 
 
-#ifdef TCL_WIDE_INT_IS_LONG
+#ifdef TK_IS_64_BIT_ARCH
 
 /* ****************************************************************************/
 /*                 64 bit implementation                                      */
@@ -109,7 +109,7 @@ PopCount(uint64_t x)
     return (x * UINT64_C(0x0101010101010101)) >> 56;
 }
 
-#else /* TCL_WIDE_INT_IS_LONG */
+#else /* TK_IS_64_BIT_ARCH */
 
 /* ****************************************************************************/
 /*                 32 bit implementation                                      */
@@ -183,7 +183,7 @@ PopCount(uint32_t x)
     return (x*0x01010101) >> 24;
 }
 
-#endif /* !TCL_WIDE_INT_IS_LONG */
+#endif /* !TK_IS_64_BIT_ARCH */
 
 
 #if TK_CHECK_ALLOCS
