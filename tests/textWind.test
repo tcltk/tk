@@ -693,7 +693,7 @@ test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} -const
 } -cleanup {
     destroy .t.f
     rename bgerror {}
-} -result [list {{can't embed .t.f.f relative to .t}} {{window name "f" already exists in parent}} [list 40 [expr {11+$fixedDiff/2}] 0 0] 1]
+} -result [list {{can't embed .t.f.f relative to .t}} [list 40 [expr {11+$fixedDiff/2}] 0 0] 1]
 test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} -constraints {
     textfonts
 } -setup {
@@ -763,17 +763,13 @@ test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -const
     lappend msg [.t bbox 1.5]
 } -cleanup {
     rename bgerror {}
-} -result [list {{can't embed .t2 relative to .t}} {{window name "t2" already exists in parent}} [list 40 [expr {11+$fixedDiff/2}] 0 0]]
+} -result [list {{can't embed .t2 relative to .t}} [list 40 [expr {11+$fixedDiff/2}] 0 0]]
 test textWind-10.8 {EmbWinLayoutProc procedure, error in creating window} -setup {
     .t delete 1.0 end
     destroy .t2
     proc bgerror args {
         global msg
-# in prior versions the message {window name "t2" already exists in parent}
-# has been received, but not anymore since 8.5.
-        if {[lsearch -exact $msg $args] == -1} {
-            lappend msg $args
-        }
+	lappend msg $args
     }
 } -body {
     .t insert 1.0 "Some sample text"
