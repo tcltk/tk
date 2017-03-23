@@ -508,12 +508,9 @@ TkTextWindowCmd(
 	    return TCL_ERROR;
 	}
 
-	if (textPtr->state == TK_TEXT_STATE_DISABLED) {
-#if !SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("attempt to modify disabled widget"));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NOT_ALLOWED", NULL);
+	if (textPtr->state == TK_TEXT_STATE_DISABLED &&
+		TkTextAttemptToModifyDisabledWidget(interp) != TCL_OK) {
 	    return TCL_ERROR;
-#endif /* SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET */
 	}
 
 	/*
@@ -521,14 +518,7 @@ TkTextWindowCmd(
 	 */
 
 	if (!TkTextIndexEnsureBeforeLastChar(&index)) {
-#if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
-		return TCL_OK;
-#else
-		Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(
-			"cannot insert window into dead peer", -1));
-		Tcl_SetErrorCode(textPtr->interp, "TK", "TEXT", "WINDOW_CREATE_USAGE", NULL);
-		return TCL_ERROR;
-#endif
+	    return TkTextAttemptToModifyDeadWidget(interp);
 	}
 
 	/*
