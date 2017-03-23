@@ -1206,6 +1206,83 @@ UpdateLineMetrics(
 /*
  *--------------------------------------------------------------
  *
+ * TkTextAttemptToModifyDisabledWidget --
+ *
+ *	The GUI tries to modify a disabled text widget, so an
+ *	error will be thrown.
+ *
+ * Results:
+ *	Returns TCL_ERROR.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+ErrorNotAllowed(
+    Tcl_Interp *interp,
+    const char *text)
+{
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(text, -1));
+    Tcl_SetErrorCode(interp, "TK", "TEXT", "NOT_ALLOWED", NULL);
+}
+
+int
+TkTextAttemptToModifyDisabledWidget(
+    Tcl_Interp *interp)
+{
+#if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
+    static bool showWarning = true;
+    if (showWarning) {
+	fprintf(stderr, "attempt to modify a disabled widget is deprecated\n");
+	showWarning = false;
+    }
+    return TCL_OK;
+#else /* if !SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET */
+    ErrorNotAllowed(interp, "attempt to modify disabled widget");
+    return TCL_ERROR;
+#endif
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkTextAttemptToModifyDeadWidget --
+ *
+ *	The GUI tries to modify a dead text widget, so an
+ *	error will be thrown.
+ *
+ * Results:
+ *	Returns TCL_ERROR.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+int
+TkTextAttemptToModifyDeadWidget(
+    Tcl_Interp *interp)
+{
+#if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
+    static bool showWarning = true;
+    if (showWarning) {
+	fprintf(stderr, "attempt to modify a dead widget is deprecated\n");
+	showWarning = false;
+    }
+    return TCL_OK;
+#else /* if !SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET */
+    ErrorNotAllowed(interp, "attempt to modify dead widget");
+    return TCL_ERROR;
+#endif
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * TextWidgetObjCmd --
  *
  *	This function is invoked to process the Tcl command that corresponds
@@ -1220,15 +1297,6 @@ UpdateLineMetrics(
  *
  *--------------------------------------------------------------
  */
-
-static void
-ErrorNotAllowed(
-    Tcl_Interp *interp,
-    const char *text)
-{
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(text, -1));
-    Tcl_SetErrorCode(interp, "TK", "TEXT", "NOT_ALLOWED", NULL);
-}
 
 static bool
 TestIfTriggerUserMod(
@@ -1267,14 +1335,11 @@ TestIfDisabled(
 {
     assert(result);
 
-    if (textPtr->state == TK_TEXT_STATE_DISABLED) {
-#if !SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
-	ErrorNotAllowed(interp, "attempt to modify disabled widget");
-	*result = TCL_ERROR;
-#endif
-	return true;
+    if (textPtr->state != TK_TEXT_STATE_DISABLED) {
+	return false;
     }
-    return false;
+    *result = TkTextAttemptToModifyDisabledWidget(interp);
+    return true;
 }
 
 static bool
@@ -1285,14 +1350,11 @@ TestIfDead(
 {
     assert(result);
 
-    if (TkTextIsDeadPeer(textPtr)) {
-#if !SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
-	ErrorNotAllowed(interp, "attempt to modify dead widget");
-	*result = TCL_ERROR;
-#endif
-	return true;
+    if (!TkTextIsDeadPeer(textPtr)) {
+	return false;
     }
-    return false;
+    *result = TkTextAttemptToModifyDeadWidget(interp);
+    return true;
 }
 
 static Tcl_Obj *

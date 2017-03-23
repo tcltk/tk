@@ -1863,6 +1863,8 @@ MODULE_SCOPE void	TkTextReleaseTag(TkSharedText *sharedTextPtr, TkTextTag *tagPt
 			    Tcl_HashEntry *hPtr);
 MODULE_SCOPE void	TkTextFontHeightChanged(TkText *textPtr);
 MODULE_SCOPE int	TkTextTestRelation(Tcl_Interp *interp, int relation, const char *op);
+MODULE_SCOPE int	TkTextAttemptToModifyDisabledWidget(Tcl_Interp *interp);
+MODULE_SCOPE int	TkTextAttemptToModifyDeadWidget(Tcl_Interp *interp);
 MODULE_SCOPE bool	TkTextReleaseIfDestroyed(TkText *textPtr);
 MODULE_SCOPE bool	TkTextDecrRefCountAndTestIfDestroyed(TkText *textPtr);
 MODULE_SCOPE void	TkTextFreeAllTags(TkText *textPtr);
