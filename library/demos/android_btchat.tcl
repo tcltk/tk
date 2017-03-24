@@ -1,5 +1,8 @@
 # Example: chat over Bluetooth
 
+package require Borg
+package require Rfcomm
+
 set uuid "edc4e9ef-9c92-4293-9f56-d7154928ead5"
 
 proc tput {text} {

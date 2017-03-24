@@ -1,7 +1,9 @@
 # Android demo for camera: simple webcam over wifi
 
-set ::port 8080
+package require Borg
 package require tkpath
+
+set ::port 8080
 sdltk screensaver 0
 wm attributes . -fullscreen 1
 . configure -bg "#202020"

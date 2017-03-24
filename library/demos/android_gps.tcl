@@ -2,6 +2,7 @@
 
 package require Tcl 8.5
 package require Tk
+package require Borg
 catch {package require vu}
 
 proc make_items c {

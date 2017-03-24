@@ -3,6 +3,7 @@
 
 package require Tcl 8.5
 package require Tk
+package require Borg
 
 namespace eval ::Eliza {
 
