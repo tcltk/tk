@@ -1,5 +1,7 @@
 # Android demo for accelerometer buffer
 
+package require Borg
+
 borg screenorientation landscape
 sdltk screensaver 0
 wm attributes . -fullscreen 1

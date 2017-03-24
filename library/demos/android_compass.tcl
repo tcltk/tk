@@ -1,5 +1,7 @@
 # Simple compass demo using orientation sensor
 
+package require Borg
+
 wm attributes . -fullscreen 1
 . configure -bg black
 

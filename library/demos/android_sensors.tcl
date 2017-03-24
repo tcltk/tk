@@ -1,5 +1,7 @@
 # Android demo for <<Sensor>> events
 
+package require Borg
+
 proc mksensor {data} {
     array set sensor $data
     set i $sensor(index)
