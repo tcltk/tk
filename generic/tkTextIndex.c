@@ -3725,21 +3725,29 @@ StartEnd(
     }
     length = p - string;
 
-    if (*string == 'd' && strncmp(string, "display", MIN(length, 7u)) == 0) {
-	modifier = TKINDEX_DISPLAY;
-	mode = COUNT_DISPLAY_INDICES;
-	if (length > 7) {
-	    p -= (length - 7);
-	}
-    } else if (*string == 'a' && strncmp(string, "any", MIN(length, 3u)) == 0) {
-	modifier = TKINDEX_CHAR;
-	mode = COUNT_CHARS;
-	if (length > 3) {
-	    p -= (length - 3);
-	}
-    } else {
-	modifier = TKINDEX_NONE;
-	mode = COUNT_INDICES;
+    switch (string[0]) {
+	case 'd':
+	    if (strncmp(string, "display", MIN(length, 7u)) == 0) {
+		modifier = TKINDEX_DISPLAY;
+		mode = COUNT_DISPLAY_INDICES;
+		if (length > 7) {
+		    p -= (length - 7);
+		}
+	    }
+	    break;
+	case 'a':
+	    if (strncmp(string, "any", MIN(length, 3u)) == 0) {
+		modifier = TKINDEX_CHAR;
+		mode = COUNT_CHARS;
+		if (length > 3) {
+		    p -= (length - 3);
+		}
+	    }
+	    break;
+	default:
+	    modifier = TKINDEX_NONE;
+	    mode = COUNT_INDICES;
+	    break;
     }
 
     /*
@@ -3757,118 +3765,153 @@ StartEnd(
 	length = p - string;
     }
 
-    if (*string == 'l' && strncmp(string, "lineend", length) == 0 && length >= 5) {
-	if (modifier == TKINDEX_DISPLAY) {
-	    TkTextFindDisplayLineStartEnd(textPtr, indexPtr, DISP_LINE_END);
-	} else {
-	    TkTextIndexSetToLastChar(indexPtr);
-	}
-    } else if (*string == 'l' && strncmp(string, "linestart", length) == 0 && length >= 5) {
-	if (modifier == TKINDEX_DISPLAY) {
-	    TkTextFindDisplayLineStartEnd(textPtr, indexPtr, DISP_LINE_START);
-	} else {
-	    TkTextIndexSetToStartOfLine(indexPtr);
-	}
-    } else if (*string == 'w' && strncmp(string, "wordend", length) == 0 && length >= 5) {
-	int firstChar = 1;
-	int offset;
-
-	/*
-	 * If the current character isn't part of a word then just move
-	 * forward one character. Otherwise move forward until finding a
-	 * character that isn't part of a word and stop there.
-	 */
-
-	if (modifier == TKINDEX_DISPLAY) {
-	    TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr, COUNT_DISPLAY_INDICES);
-	}
-	segPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
-	while (true) {
-	    int chSize = 1;
-
-	    if (segPtr->typePtr == &tkTextCharType) {
-		int ch;
-
-		chSize = TkUtfToUniChar(segPtr->body.chars + offset, &ch);
-		if (!Tcl_UniCharIsWordChar(ch)) {
-		    break;
-		}
-		firstChar = 0;
-	    }
-	    offset += chSize;
-	    indexPtr->priv.byteIndex += chSize;
-	    if (offset >= segPtr->size) {
-		do {
-		    segPtr = segPtr->nextPtr;
-		} while (segPtr->size == 0);
-		offset = 0;
-	    }
-	}
-	if (firstChar) {
-	    TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, mode);
-	}
-    } else if (*string == 'w' && strncmp(string, "wordstart", length) == 0 && length >= 5) {
-	int firstChar = 1;
-	int offset;
-
-	if (modifier == TKINDEX_DISPLAY) {
-	    /*
-	     * Skip elided region.
-	     */
-	    TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr, COUNT_DISPLAY_INDICES);
-	}
-
-	/*
-	 * Starting with the current character, look for one that's not part
-	 * of a word and keep moving backward until you find one. Then if the
-	 * character found wasn't the first one, move forward again one
-	 * position.
-	 */
-
-	segPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
-	while (true) {
-	    int chSize = 1;
-
-	    if (segPtr->typePtr == &tkTextCharType) {
-		int ch;
-
-		TkUtfToUniChar(segPtr->body.chars + offset, &ch);
-		if (!Tcl_UniCharIsWordChar(ch)) {
-		    break;
-		}
-		if (offset > 0) {
-		    const char *prevPtr = Tcl_UtfPrev(segPtr->body.chars + offset, segPtr->body.chars);
-		    chSize = segPtr->body.chars + offset - prevPtr;
-		}
-		firstChar = 0;
-	    }
-            if (offset == 0) {
-		TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr, mode);
-		segPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
-
-		if (offset < chSize && indexPtr->priv.byteIndex == 0) {
+    if (length >= 5) {
+	switch (string[0]) {
+	case 'l':
+	    switch (string[4]) {
+	    case 'e':
+		if (strncmp(string, "lineend", length) == 0) {
+		    if (modifier == TKINDEX_DISPLAY) {
+			TkTextFindDisplayLineStartEnd(textPtr, indexPtr, DISP_LINE_END);
+		    } else {
+			TkTextIndexSetToLastChar(indexPtr);
+		    }
 		    return p;
 		}
-            } else if ((indexPtr->priv.byteIndex -= chSize) == 0) {
-		return p;
-	    } else if ((offset -= chSize) < 0) {
-		assert(indexPtr->priv.byteIndex > 0);
-		do {
-		    segPtr = segPtr->prevPtr;
-		    assert(segPtr);
-		} while (segPtr->size == 0);
-		offset = 0;
+		break;
+	    case 's':
+		if (strncmp(string, "linestart", length) == 0) {
+		    if (modifier == TKINDEX_DISPLAY) {
+			TkTextFindDisplayLineStartEnd(textPtr, indexPtr, DISP_LINE_START);
+		    } else {
+			TkTextIndexSetToStartOfLine(indexPtr);
+		    }
+		    return p;
+		}
+		break;
 	    }
-	}
+	    break;
+	case 'w':
+	    switch (string[4]) {
+	    case 'e':
+		if (strncmp(string, "wordend", length) == 0) {
+		    bool firstChar = true;
+		    int offset;
 
-	if (!firstChar) {
-	    TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, mode);
+		    /*
+		     * If the current character isn't part of a word then just move
+		     * forward one character. Otherwise move forward until finding a
+		     * character that isn't part of a word and stop there.
+		     */
+
+		    if (modifier == TKINDEX_DISPLAY) {
+			TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr, COUNT_DISPLAY_INDICES);
+		    }
+		    segPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
+
+		    while (true) {
+			int chSize = 1;
+
+			if (segPtr->typePtr == &tkTextCharType) {
+			    int ch;
+
+			    chSize = TkUtfToUniChar(segPtr->body.chars + offset, &ch);
+			    if (!Tcl_UniCharIsWordChar(ch)) {
+				break;
+			    }
+			    firstChar = false;
+			}
+			offset += chSize;
+			indexPtr->priv.byteIndex += chSize;
+			if (offset >= segPtr->size) {
+			    do {
+				segPtr = segPtr->nextPtr;
+			    } while (segPtr->size == 0);
+			    offset = 0;
+			}
+		    }
+		    assert(segPtr->typePtr == &tkTextCharType);
+		    indexPtr->priv.segPtr = segPtr;
+		    indexPtr->priv.isCharSegment = true;
+		    if (firstChar) {
+			TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, mode);
+		    }
+		    return p;
+		}
+		break;
+	    case 's':
+		if (strncmp(string, "wordstart", length) == 0) {
+		    bool firstChar = true;
+		    int offset;
+
+		    if (modifier == TKINDEX_DISPLAY) {
+			/*
+			 * Skip elided region.
+			 */
+			TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr, COUNT_DISPLAY_INDICES);
+		    }
+
+		    /*
+		     * Starting with the current character, look for one that's not part
+		     * of a word and keep moving backward until you find one. Then if the
+		     * character found wasn't the first one, move forward again one
+		     * position.
+		     */
+
+		    segPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
+
+		    while (true) {
+			int chSize = 1;
+
+			if (segPtr->typePtr == &tkTextCharType) {
+			    int ch;
+
+			    TkUtfToUniChar(segPtr->body.chars + offset, &ch);
+			    if (!Tcl_UniCharIsWordChar(ch)) {
+				break;
+			    }
+			    if (offset > 0) {
+				const char *prevPtr;
+				prevPtr = Tcl_UtfPrev(segPtr->body.chars + offset, segPtr->body.chars);
+				chSize = segPtr->body.chars + offset - prevPtr;
+			    }
+			    firstChar = false;
+			}
+			if (offset == 0) {
+			    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr, mode);
+			    segPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
+			    if (offset < chSize && indexPtr->priv.byteIndex == 0) {
+				return p;
+			    }
+			} else if ((indexPtr->priv.byteIndex -= chSize) == 0) {
+			    assert(segPtr->typePtr == &tkTextCharType);
+			    indexPtr->priv.segPtr = segPtr;
+			    indexPtr->priv.isCharSegment = true;
+			    return p;
+			} else if ((offset -= chSize) < 0) {
+			    do {
+				segPtr = segPtr->prevPtr;
+				assert(segPtr);
+			    } while (segPtr->size == 0);
+			    offset = 0;
+			}
+		    }
+
+		    assert(segPtr->typePtr == &tkTextCharType);
+		    indexPtr->priv.segPtr = segPtr;
+		    indexPtr->priv.isCharSegment = true;
+		    if (!firstChar) {
+			TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, mode);
+		    }
+		    return p;
+		}
+		break;
+	    }
+	    break;
 	}
-    } else {
-	p = NULL;
     }
 
-    return p;
+    return NULL;
 }
 
 /*
