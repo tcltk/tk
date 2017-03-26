@@ -3830,9 +3830,8 @@ StartEnd(
 			    offset = 0;
 			}
 		    }
-		    assert(segPtr->typePtr == &tkTextCharType);
 		    indexPtr->priv.segPtr = segPtr;
-		    indexPtr->priv.isCharSegment = true;
+		    indexPtr->priv.isCharSegment = segPtr->typePtr == &tkTextCharType;
 		    if (firstChar) {
 			TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, mode);
 		    }
@@ -3884,9 +3883,8 @@ StartEnd(
 				return p;
 			    }
 			} else if ((indexPtr->priv.byteIndex -= chSize) == 0) {
-			    assert(segPtr->typePtr == &tkTextCharType);
 			    indexPtr->priv.segPtr = segPtr;
-			    indexPtr->priv.isCharSegment = true;
+			    indexPtr->priv.isCharSegment = segPtr->typePtr == &tkTextCharType;
 			    return p;
 			} else if ((offset -= chSize) < 0) {
 			    do {
@@ -3897,9 +3895,8 @@ StartEnd(
 			}
 		    }
 
-		    assert(segPtr->typePtr == &tkTextCharType);
 		    indexPtr->priv.segPtr = segPtr;
-		    indexPtr->priv.isCharSegment = true;
+		    indexPtr->priv.isCharSegment = segPtr->typePtr == &tkTextCharType;
 		    if (!firstChar) {
 			TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, mode);
 		    }
