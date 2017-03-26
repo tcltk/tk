@@ -134,8 +134,8 @@ test ttk-selfdestruct-ok-1 "Intentional self-destruction" -body {
 #
 # Basic tests.
 #
-test ttk-1.1 "Create button" -body {
-    pack [ttk::button .t] -expand true -fill both
+test ttk-1.1 "Create multiline button showing justified text" -body {
+    pack [ttk::button .t -text "Hello\nWorld!!" -justify center] -expand true -fill both
     update
 }
 
