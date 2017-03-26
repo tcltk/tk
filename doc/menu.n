@@ -101,7 +101,7 @@ textual field is displayed to the right of the label.  The accelerator
 typically describes a keystroke sequence that may be used in the
 application to cause the same result as invoking the menu entry.
 This is a display option, it does not actually set the corresponding
-binding (which can be achieved using the \fBbind\fR command). 
+binding (which can be achieved using the \fBbind\fR command).
 The third field is an \fIindicator\fR.  The indicator is present only for
 checkbutton or radiobutton entries.  It indicates whether the entry
 is selected or not, and is displayed to the left of the entry's
