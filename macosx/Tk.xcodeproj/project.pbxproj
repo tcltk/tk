@@ -1212,7 +1212,6 @@
 		F966BC9508F27A3D005CB29B /* buildall.vc.bat */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = buildall.vc.bat; sourceTree = "<group>"; };
 		F966BC9608F27A3E005CB29B /* configure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = configure; sourceTree = "<group>"; };
 		F966BC9708F27A3E005CB29B /* configure.in */ = {isa = PBXFileReference; explicitFileType = text.script.sh; fileEncoding = 4; path = configure.in; sourceTree = "<group>"; };
-		F966BC9808F27A3E005CB29B /* makefile.bc */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = makefile.bc; sourceTree = "<group>"; };
 		F966BC9908F27A3E005CB29B /* Makefile.in */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile.in; sourceTree = "<group>"; };
 		F966BC9A08F27A3E005CB29B /* makefile.vc */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = makefile.vc; sourceTree = "<group>"; };
 		F966BC9B08F27A3E005CB29B /* mkd.bat */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mkd.bat; sourceTree = "<group>"; };
@@ -1987,7 +1986,6 @@
 		F96D447308F272BA004A47F5 /* coffbase.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = coffbase.txt; sourceTree = "<group>"; };
 		F96D447408F272BA004A47F5 /* configure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = configure; sourceTree = "<group>"; };
 		F96D447508F272BA004A47F5 /* configure.in */ = {isa = PBXFileReference; explicitFileType = text.script.sh; fileEncoding = 4; path = configure.in; sourceTree = "<group>"; };
-		F96D447608F272BA004A47F5 /* makefile.bc */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = makefile.bc; sourceTree = "<group>"; };
 		F96D447708F272BA004A47F5 /* Makefile.in */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile.in; sourceTree = "<group>"; };
 		F96D447808F272BA004A47F5 /* makefile.vc */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = makefile.vc; sourceTree = "<group>"; };
 		F96D447908F272BA004A47F5 /* nmakehlp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = nmakehlp.c; sourceTree = "<group>"; };
@@ -2791,7 +2789,6 @@
 				F966BC9508F27A3D005CB29B /* buildall.vc.bat */,
 				F966BC9608F27A3E005CB29B /* configure */,
 				F966BC9708F27A3E005CB29B /* configure.in */,
-				F966BC9808F27A3E005CB29B /* makefile.bc */,
 				F966BC9908F27A3E005CB29B /* Makefile.in */,
 				F966BC9A08F27A3E005CB29B /* makefile.vc */,
 				F966BC9B08F27A3E005CB29B /* mkd.bat */,
@@ -3822,7 +3819,6 @@
 				F96D447308F272BA004A47F5 /* coffbase.txt */,
 				F96D447408F272BA004A47F5 /* configure */,
 				F96D447508F272BA004A47F5 /* configure.in */,
-				F96D447608F272BA004A47F5 /* makefile.bc */,
 				F96D447708F272BA004A47F5 /* Makefile.in */,
 				F96D447808F272BA004A47F5 /* makefile.vc */,
 				F96D447908F272BA004A47F5 /* nmakehlp.c */,
