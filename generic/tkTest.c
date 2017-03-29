@@ -1903,10 +1903,9 @@ TestpropObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TestpropObjCmd --
+ * TestprintfObjCmd --
  *
- *	This function implements the "testprop" command. It fetches and prints
- *	the value of a property on a window.
+ *	This function implements the "testprintf" command.
  *
  * Results:
  *	A standard Tcl result.
@@ -1926,12 +1925,13 @@ TestprintfObjCmd(
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     char buffer[256];
-    Tcl_WideInt wideInt;
 #ifdef _WIN32
-    __int64 longLongInt;
+    __int64 wideInt;
 #else
-    long long longLongInt;
+    long long wideInt;
 #endif
+    size_t size;
+    size_t ssize;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "wideint");
@@ -1940,7 +1940,12 @@ TestprintfObjCmd(
     if (Tcl_GetWideIntFromObj(interp, objv[1], &wideInt) != TCL_OK) {
 	return TCL_ERROR;
     }
-    longLongInt = wideInt;
+    /* Store wideInt, truncated to 32-bit, in two forms: with and without
+     * sign, followed by extension to the size of (platform-dependant)
+     * size_t. This way we can test both the signed and unsigned form
+     * of TCL_Z_MODIFIER, still giving platform-independant results. */
+    size = (size_t) (unsigned int) wideInt;
+    ssize = (size_t) (int) wideInt;
 
     /* Just add a lot of arguments to sprintf. Reason: on AMD64, the first
      * 4 or 6 arguments (we assume 8, just in case) might be put in registers,
@@ -1948,8 +1953,9 @@ TestprintfObjCmd(
      * test-case to fail if the 64-bit value is printed as truncated to 32-bit.
      */
     sprintf(buffer, "%s%s%s%s%s%s%s%s%" TCL_LL_MODIFIER "d %"
-	    TCL_LL_MODIFIER "u", "", "", "", "", "", "", "", "",
-	    (Tcl_WideInt)longLongInt, (Tcl_WideUInt)longLongInt);
+	    TCL_LL_MODIFIER "u %" TCL_Z_MODIFIER "d %" TCL_Z_MODIFIER "u",
+	    "", "", "", "", "", "", "", "",
+	    wideInt, wideInt, ssize, size);
     Tcl_AppendResult(interp, buffer, NULL);
     return TCL_OK;
 }
