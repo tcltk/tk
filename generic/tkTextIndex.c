@@ -3711,7 +3711,7 @@ StartEnd(
     const char *p;
     size_t length;
     TkTextSegment *segPtr;
-    int modifier;
+    int modifier = TKINDEX_NONE;
     int mode;
 
     assert(textPtr);
