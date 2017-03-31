@@ -2673,6 +2673,15 @@ keymap_init(void)
 	keymap[SDL_SCANCODE_NUMLOCKCLEAR] = XK_Num_Lock;
 	keymap[SDL_SCANCODE_SCROLLLOCK] = XK_Scroll_Lock;
 
+	/* TIP#464 multimedia keys */
+	keymap[SDL_SCANCODE_VOLUMEUP] = XK_XF86AudioRaiseVolume;
+	keymap[SDL_SCANCODE_VOLUMEDOWN] = XK_XF86AudioLowerVolume;
+	keymap[SDL_SCANCODE_AUDIONEXT] = XK_XF86AudioNext;
+	keymap[SDL_SCANCODE_AUDIOPREV] = XK_XF86AudioPrev;
+	keymap[SDL_SCANCODE_AUDIOSTOP] = XK_XF86AudioStop;
+	keymap[SDL_SCANCODE_AUDIOPLAY] = XK_XF86AudioPlay;
+	keymap[SDL_SCANCODE_AUDIOMUTE] = XK_XF86AudioMute;
+
 	keymap_initialized = 1;
     }
 }

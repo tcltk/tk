@@ -2301,6 +2301,9 @@ CanUseFallback(
 	if (TkFontParseXLFD(nameList[nameIdx], &got.fa, &got.xa) != TCL_OK) {
 	    goto crossout;
 	}
+	if (got.fa.family == NULL) {
+	    goto crossout;
+	}
 	if (!SdlTkFontCanDisplayChar(nameList[nameIdx], &got.fa, ch)) {
 	    goto crossout;
 	}
