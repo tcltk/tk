@@ -437,16 +437,7 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 /* SqueezeTabs --
  *	Squeeze or stretch tabs to fit within the tab area parcel.
  *
- *	All tabs are adjusted by an equal amount, but will not be made
- *	smaller than the minimum width.  (If all the tabs still do
- *	not fit in the available space, the rightmost ones will
- *	be further squozen by PlaceTabs()).
- *
- *	The algorithm does not always yield an optimal layout, but does
- *	have the important property that decreasing the available width
- *	by one pixel will cause at most one tab to shrink by one pixel;
- *	this means that tabs resize "smoothly" when the window shrinks
- *	and grows.
+ *	All tabs are adjusted by an equal amount.
  *
  * @@@ <<NOTE-TABPOSITION>> bug: only works for horizontal orientations
  * @@@ <<NOTE-SQUEEZE-HIDDEN>> does not account for hidden tabs.
@@ -458,25 +449,17 @@ static void SqueezeTabs(
     int nTabs = Ttk_NumberSlaves(nb->notebook.mgr);
 
     if (nTabs > 0) {
-	int difference = available - needed,
-	    delta = difference / nTabs,
-	    remainder = difference % nTabs,
-	    slack = 0;
+	int difference = available - needed;
+	double delta = (double)difference / needed;
+	double slack = 0;
 	int i;
 
-	if (remainder < 0) { remainder += nTabs; --delta; }
-
+        /* Ignore minTabWidth; it's ignored in TabRowSize() too. */
 	for (i = 0; i < nTabs; ++i) {
 	    Tab *tab = Ttk_SlaveData(nb->notebook.mgr,i);
-	    int adj = delta + (i < remainder) + slack;
-
-	    if (tab->width + adj >= minTabWidth) {
-		tab->width += adj;
-		slack = 0;
-	    } else {
-		slack = adj - (minTabWidth - tab->width);
-		tab->width = minTabWidth;
-	    }
+	    double ad = slack + tab->width * delta;
+	    tab->width += (int)ad;
+	    slack = ad - (int)ad;
 	}
     }
 }
