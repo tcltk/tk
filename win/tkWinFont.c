@@ -1947,8 +1947,7 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-
-    if ((ch < BASE_CHARS) || (ch >= 0x10000)) {
+    if (ch < BASE_CHARS) {
 	return &fontPtr->subFontArray[0];
     }
 

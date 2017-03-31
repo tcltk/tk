@@ -1439,6 +1439,7 @@ TkBTreeDeleteIndexRange(
 		    prevNodePtr->nextPtr = curNodePtr->nextPtr;
 		}
 		parentPtr->numChildren--;
+		ckfree(curNodePtr->numPixels);
 		ckfree(curNodePtr);
 		curNodePtr = parentPtr;
 	    }
@@ -4185,6 +4186,7 @@ Rebalance(
 		    treePtr->rootPtr = nodePtr->children.nodePtr;
 		    treePtr->rootPtr->parentPtr = NULL;
 		    DeleteSummaries(nodePtr->summaryPtr);
+		    ckfree(nodePtr->numPixels);
 		    ckfree(nodePtr);
 		}
 		return;
@@ -4274,6 +4276,7 @@ Rebalance(
 		nodePtr->nextPtr = otherPtr->nextPtr;
 		nodePtr->parentPtr->numChildren--;
 		DeleteSummaries(otherPtr->summaryPtr);
+		ckfree(otherPtr->numPixels);
 		ckfree(otherPtr);
 		continue;
 	    }
