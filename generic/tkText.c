@@ -62,6 +62,20 @@
 #endif
 
 /*
+ * Support of tk8.6/8.5.
+ */
+#ifndef DEF_TEXT_INACTIVE_SELECT_FG_COLOR
+# if defined(MAC_OSX_TK)
+#  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR "systemDialogActiveText"
+# elif defined(_WIN32)
+#  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR "SystemHighlightText"
+# else /* X11 */
+#  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR BLACK
+# endif
+# define DEF_TEXT_INACTIVE_SELECT_BG_COLOR DEF_TEXT_INACTIVE_SELECT_COLOR
+#endif
+
+/*
  * For compatibility with Tk 4.0 through 8.4.x, we allow tabs to be
  * mis-specified with non-increasing values. These are converted into tabs
  * which are the equivalent of at least a character width apart.
@@ -104,6 +118,15 @@ static const char *CONST taggingStrings[] = {
 
 static const char *CONST justifyStrings[] = {
     "left", "right", "full", "center", NULL
+};
+
+/*
+ * The 'transitionMode' enum in tkText.h is used to define the types of the possible
+ * transition modes with mouse hovering.
+ */
+
+static const char *CONST transitionModeString[] = {
+    "none", "displayline", NULL
 };
 
 /*
@@ -150,11 +173,14 @@ static const char *CONST insertUnfocussedStrings[] = {
  * The 'TkTextHyphenRule' enum in tkText.h is used to define a type for the
  * -hyphenrules option of the Text widget. These values are used for applying
  * hyphen rules to soft hyphens.
+ *
+ * NOTE: Don't forget to update function ParseHyphens() if this array will be
+ * modified.
  */
 
 static const char *const hyphenRuleStrings[] = {
     "ck", "doubledigraph", "doublevowel", "gemination", "repeathyphen", "trema",
-    "tripleconsonant" /* don't appebd a trailing NULL */
+    "tripleconsonant" /* don't append a trailing NULL */
 };
 
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
@@ -322,6 +348,8 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"0", -1, Tk_Offset(TkText, showInsertFgColor), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-spacemode", "spaceMode", "SpaceMode",
 	"none", -1, Tk_Offset(TkText, spaceMode), 0, spaceModeStrings, TK_TEXT_LINE_GEOMETRY},
+    {TK_OPTION_STRING_TABLE, "-transitionmode", "transitionMode", "TransitionMode",
+	"none", -1, Tk_Offset(TkText, transitionMode), 0, transitionModeString, 0},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",
 	DEF_TEXT_SPACING1, -1, Tk_Offset(TkText, spacing1), 0, 0 , TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-spacing2", "spacing2", "Spacing",
@@ -1236,7 +1264,7 @@ TkTextAttemptToModifyDisabledWidget(
 #if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
     static bool showWarning = true;
     if (showWarning) {
-	fprintf(stderr, "attempt to modify a disabled widget is deprecated\n");
+	fprintf(stderr, "Attempt to modify a disabled widget is deprecated\n");
 	showWarning = false;
     }
     return TCL_OK;
@@ -1270,7 +1298,7 @@ TkTextAttemptToModifyDeadWidget(
 #if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
     static bool showWarning = true;
     if (showWarning) {
-	fprintf(stderr, "attempt to modify a dead widget is deprecated\n");
+	fprintf(stderr, "Attempt to modify a dead widget is deprecated\n");
 	showWarning = false;
     }
     return TCL_OK;
@@ -6122,8 +6150,8 @@ TextBlinkProc(
 	    int base;
 
 	    /*
-	     * To test whether the cursor is visible is not trivial, see this
-	     * example:
+	     * Testing whether the cursor is visible is not as trivial at it seems,
+	     * see this example:
 	     *
 	     * ~~~~~~~~~~~~~~~~
 	     * |   +-----+
@@ -9334,8 +9362,11 @@ TextGetText(
 	    }
 	} else if (segPtr->typePtr == &tkTextHyphenType) {
 	    if (includeHyphens) {
+		if (maxBytes < 2) {
+		    return resultPtr;
+		}
 		Tcl_AppendToObj(resultPtr, "\xc2\xad", 2); /* U+002D */
-		if ((maxBytes -= MIN(maxBytes, 2u)) == 0) {
+		if ((maxBytes -= 2u) == 0) {
 		    return resultPtr;
 		}
 	    }
@@ -9366,8 +9397,11 @@ TextGetText(
 		}
 	    } else if (segPtr->typePtr == &tkTextHyphenType) {
 		if (includeHyphens) {
+		    if (maxBytes < 2) {
+			return resultPtr;
+		    }
 		    Tcl_AppendToObj(resultPtr, "\xc2\xad", 2); /* U+002D */
-		    if ((maxBytes -= MIN(maxBytes, 2u)) == 0) {
+		    if ((maxBytes -= 2) == 0) {
 			return resultPtr;
 		    }
 		}
@@ -11388,7 +11422,7 @@ TkpTesttextCmd(
 	if (objc != 5) {
 	    return TCL_ERROR;
 	}
-	if (TkTextGetIndex(interp, textPtr, Tcl_GetString(objv[3]), &index) != TCL_OK) {
+	if (!TkTextGetIndexFromObj(interp, textPtr, objv[3], &index)) {
 	    return TCL_ERROR;
 	}
 	byteOffset = atoi(Tcl_GetString(objv[4]));
@@ -11397,7 +11431,7 @@ TkpTesttextCmd(
 	if (objc != 5) {
 	    return TCL_ERROR;
 	}
-	if (TkTextGetIndex(interp, textPtr, Tcl_GetString(objv[3]), &index) != TCL_OK) {
+	if (!TkTextGetIndexFromObj(interp, textPtr, objv[3], &index)) {
 	    return TCL_ERROR;
 	}
 	byteOffset = atoi(Tcl_GetString(objv[4]));
@@ -11658,6 +11692,8 @@ extern TkTextLine *	TkBTreeNextLine(const TkText *textPtr, TkTextLine *linePtr);
 extern TkTextLine *	TkBTreePrevLine(const TkText *textPtr, TkTextLine *linePtr);
 extern unsigned		TkBTreeCountLines(const TkTextBTree tree, const TkTextLine *linePtr1,
 			    const TkTextLine *linePtr2);
+extern bool		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
+			    TkTextIndex *indexPtr);
 extern bool		TkTextIsDeadPeer(const TkText *textPtr);
 extern bool		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
 extern bool		TkTextIsSpecialMark(const TkTextSegment *segPtr);

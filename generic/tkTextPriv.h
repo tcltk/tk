@@ -42,6 +42,10 @@ struct TkTextMyBTree {
     				 * list of all B-tree clients. */
 };
 
+
+MODULE_SCOPE bool TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPtr, TkText *textPtr,
+			    const char *string, unsigned lenOfString, TkTextIndex *indexPtr);
+
 #endif /* _TKTEXTPRIV */
 
 #ifdef _TK_NEED_IMPLEMENTATION
@@ -741,6 +745,40 @@ TkTextIndexGetSegment(
     assert(!segPtr || segPtr->sectionPtr->linePtr == indexPtr->priv.linePtr);
 
     return segPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkTextGetIndexFromObj --
+ *
+ *	Create new text index from given position.
+ *
+ * Results:
+ *	Returns true if and only if the index could be created.
+ *
+ * Side effects:
+ *	Store the new text index in 'indexPtr'.
+ *
+ *----------------------------------------------------------------------
+ */
+
+inline
+bool
+TkTextGetIndexFromObj(
+    Tcl_Interp *interp,		/* Use this for error reporting. */
+    TkText *textPtr,		/* Information about text widget, can be NULL. */
+    Tcl_Obj *objPtr,		/* Object containing description of position. */
+    TkTextIndex *indexPtr)	/* Store the result here. */
+{
+    int length;
+    const char *s;
+
+    assert(textPtr);
+    assert(objPtr);
+
+    s = Tcl_GetStringFromObj(objPtr, &length);
+    return TkpTextGetIndex(interp, textPtr->sharedTextPtr, textPtr, s, length, indexPtr);
 }
 
 /*

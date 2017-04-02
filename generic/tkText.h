@@ -690,6 +690,16 @@ typedef enum {
 } TkTextSpaceMode;
 
 /*
+ * The transition mode of mouse hovering:
+ */
+
+typedef enum {
+    TEXT_TRANSMODE_NONE,	/* Default mode, do not enter/leave between same tags. */
+    TEXT_TRANSMODE_DISPLAYLINE,	/* Send enter/leave when leaving/entering display line. */
+    TEXT_TRANSMODE_NULL		/* Identical to TEXT_TRANSMODE_NONE. */
+} TkTextTransitionMode;
+
+/*
  * The justification modes:
  */
 
@@ -762,7 +772,7 @@ typedef struct TkTextTag {
     uint32_t priority;		/* Priority of this tag within widget. 0 means lowest priority.
     				 * Exactly one tag has each integer value between 0 and numTags-1. */
     uint32_t index;		/* Unique index for fast tag lookup. It is guaranteed that the index
-    				 * number is less or equal than 'TkBitSize(sharedTextPtr->usedTags)'.*/
+    				 * number is less than 'TkBitSize(sharedTextPtr->usedTags)'.*/
     unsigned refCount;		/* Number of objects referring to us. */
     bool isDisabled;		/* This tag is disabled? */
 
@@ -876,6 +886,10 @@ typedef struct TkTextTag {
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag. Must be TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, TEXT_WRAPMODE_CODEPOINT, or
 				 * TEXT_WRAPMODE_NULL to use wrapmode for whole widget. */
+    TkTextTransitionMode transitionMode;
+    				/* How to handle transitions when mouse is hovering text associated with
+				 * this tag. Must be one of TEXT_TRANSMODE_NONE,
+				 * TEXT_TRANSMODE_DISPLAYLINE, or TEXT_TRANSMODE_NULL. */
     TkTextSpaceMode spaceMode;	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NULL,
     				 * TEXT_SPACEMODE_NONE, TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
     Tcl_Obj *hyphenRulesPtr;	/* The hyphen rules string. */
@@ -1288,6 +1302,9 @@ typedef struct TkText {
     				 * TEXT_WRAPMODE_WORD, TEXT_WRAPMODE_CODEPOINT, or TEXT_WRAPMODE_NONE. */
     TkTextSpaceMode spaceMode;	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NONE,
     				 * TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
+    TkTextTransitionMode transitionMode;
+    				/* The transition mode when mouse is hovering tagged text. Must be one
+				 * of TEXT_TRANSMODE_NONE, or TEXT_TRANSMODE_DISPLAYLINE. */
     bool hyphens;		/* Indicating the hypenation support. */
     bool hyphenate;		/* Indicating whether the soft hyphens will be used for line breaks
     				 * (if not in state TK_TEXT_STATE_NORMAL). */
@@ -1387,6 +1404,7 @@ typedef struct TkText {
     TkTextTag **curTagArrayPtr;
     				/* Pointer to array of tags for current mark, or NULL if none. */
     bool currNearbyFlag;	/* The 'nearby' flag of last pick event. */
+    int lastY;			/* Cache y coordinate of last mouse hovering. */
 
     /*
      * Information used for event bindings associated with images:
@@ -1825,6 +1843,10 @@ MODULE_SCOPE bool	TkTextGetDLineInfo(TkText *textPtr, const TkTextIndex *indexPt
 MODULE_SCOPE int	TkTextBindEvent(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
 			     TkSharedText *sharedTextPtr, Tk_BindingTable *bindingTablePtr,
 			     const char *name);
+MODULE_SCOPE void	TkTextTagFindStartOfRange(TkText *textPtr, const TkTextTag *tagPtr,
+			    const TkTextIndex *currentPtr, TkTextIndex *resultPtr);
+MODULE_SCOPE void	TkTextTagFindEndOfRange(TkText *textPtr, const TkTextTag *tagPtr,
+			    const TkTextIndex *currentPtr, TkTextIndex *resultPtr);
 MODULE_SCOPE TkTextTag * TkTextClearTags(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2,
 			    bool discardSelection);
@@ -1868,7 +1890,7 @@ MODULE_SCOPE int	TkTextAttemptToModifyDeadWidget(Tcl_Interp *interp);
 MODULE_SCOPE bool	TkTextReleaseIfDestroyed(TkText *textPtr);
 MODULE_SCOPE bool	TkTextDecrRefCountAndTestIfDestroyed(TkText *textPtr);
 MODULE_SCOPE void	TkTextFreeAllTags(TkText *textPtr);
-MODULE_SCOPE bool	TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
+inline bool		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
 			    TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextTabArray * TkTextGetTabs(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *stringPtr);
 MODULE_SCOPE void	TkTextInspectOptions(TkText *textPtr, const void *recordPtr,
@@ -1954,8 +1976,8 @@ MODULE_SCOPE int	TkTextGetLastXPixel(const TkText *textPtr);
 MODULE_SCOPE int	TkTextGetLastYPixel(const TkText *textPtr);
 MODULE_SCOPE unsigned	TkTextCountVisibleImages(const TkText *textPtr);
 MODULE_SCOPE unsigned	TkTextCountVisibleWindows(const TkText *textPtr);
-MODULE_SCOPE bool	TkTextPixelIndex(TkText *textPtr, int x, int y,
-			    TkTextIndex *indexPtr, bool *nearest);
+MODULE_SCOPE bool	TkTextPixelIndex(TkText *textPtr, int x, int *y, TkTextIndex *indexPtr,
+			    bool *nearest);
 MODULE_SCOPE Tcl_Obj *	TkTextNewIndexObj(const TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextRedrawRegion(TkText *textPtr, int x, int y, int width, int height);
 MODULE_SCOPE bool	TkTextRedrawTag(const TkSharedText *sharedTextPtr, TkText *textPtr,
@@ -1987,6 +2009,8 @@ MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr, TkTextEmbWindowClient
 MODULE_SCOPE void	TkTextIndexSetPosition(TkTextIndex *indexPtr,
 			    int byteIndex, TkTextSegment *segPtr);
 MODULE_SCOPE int	TkTextSegToIndex(const TkTextSegment *segPtr);
+MODULE_SCOPE bool	TkTextIndexGetFromString(Tcl_Interp *interp, struct TkText *textPtr,
+			    const char *string, unsigned lengthOfString, struct TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexPrint(const TkSharedText *sharedTextPtr, const TkText *textPtr,
 				const struct TkTextIndex *indexPtr, char *string);
 MODULE_SCOPE void	TkTextIndexSetByteIndex(TkTextIndex *indexPtr, int byteIndex);
