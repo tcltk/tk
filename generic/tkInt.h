@@ -101,8 +101,6 @@
 /*
  * Detection of >=64 bit architectures, which supports the use of
  * the appropriate integer types.
- * Unluckily the constant TCL_WIDE_INT_IS_LONG cannot be used
- * (not useful outside of Tcl Core).
  */
 
 #if HAVE_STDINT_H

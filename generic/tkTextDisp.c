@@ -11276,7 +11276,8 @@ TkTextCountVisibleWindows(
  *	The index at *indexPtr is modified to refer to the character on the
  *	display that is closest to (x,y). It returns whether we have found
  *	the same chunk as before, this implies that the tags belonging to
- *	this chunk did not change.
+ *	this chunk did not change. The 'y' coordinate will be updated with
+ *	real coordinate from display line.
  *
  * Side effects:
  *	None.
@@ -11287,7 +11288,8 @@ TkTextCountVisibleWindows(
 bool
 TkTextPixelIndex(
     TkText *textPtr,		/* Widget record for text widget. */
-    int x, int y,		/* Pixel coordinates of point in widget's window. */
+    int x, int *y,		/* Pixel coordinates of point in widget's window, update the
+    				 * y coordinate with real position from display line. */
     TkTextIndex *indexPtr,	/* This index gets filled in with the index of the character
     				 * nearest to (x,y). */
     bool *nearest)		/* If non-NULL then gets set to false if (x,y) is actually over the
@@ -11316,8 +11318,8 @@ TkTextPixelIndex(
      * side or the other, then adjust to the closest side.
      */
 
-    if (y < dInfoPtr->y) {
-	y = dInfoPtr->y;
+    if (*y < dInfoPtr->y) {
+	*y = dInfoPtr->y;
 	nearby = true;
     }
     if (x >= dInfoPtr->maxX) {
@@ -11349,7 +11351,7 @@ TkTextPixelIndex(
 
 	assert(currChunkPtr->stylePtr); /* otherwise the chunk has been expired */
 
-	if (currDLinePtr->y <= y && y < currDLinePtr->y + currDLinePtr->height) {
+	if (currDLinePtr->y <= *y && *y < currDLinePtr->y + currDLinePtr->height) {
 	    int rx = x - dInfoPtr->x + dInfoPtr->curXPixelOffset;
 
 	    if (currChunkPtr->x <= rx && rx < currChunkPtr->x + currChunkPtr->width) {
@@ -11358,6 +11360,7 @@ TkTextPixelIndex(
 		 */
 
 		*indexPtr = dInfoPtr->currChunkIndex;
+		*y = currDLinePtr->y;
 		DLineIndexOfX(textPtr, currChunkPtr, x, indexPtr);
 		if (nearest) {
 		    *nearest = nearby;
@@ -11372,7 +11375,7 @@ TkTextPixelIndex(
     if (!dlPtr) {
 	DLine *validDlPtr = dInfoPtr->dLinePtr;
 
-	for (dlPtr = validDlPtr; y >= dlPtr->y + dlPtr->height; dlPtr = dlPtr->nextPtr) {
+	for (dlPtr = validDlPtr; *y >= dlPtr->y + dlPtr->height; dlPtr = dlPtr->nextPtr) {
 	    if (dlPtr->chunkPtr) {
 		validDlPtr = dlPtr;
 	    }
@@ -11387,6 +11390,7 @@ TkTextPixelIndex(
 		}
 		dInfoPtr->currChunkPtr = NULL;
 		*indexPtr = dlPtr->index;
+		*y = dlPtr->y;
 		assert(dlPtr->byteCount > 0);
 		TkTextIndexForwBytes(textPtr, indexPtr, dlPtr->byteCount - 1, indexPtr);
 		return false;
@@ -11398,6 +11402,7 @@ TkTextPixelIndex(
     }
 
     currChunkPtr = DLineChunkOfX(textPtr, dlPtr, x, indexPtr, &nearby);
+    *y = dlPtr->y;
 
     if (nearest) {
 	*nearest = nearby;

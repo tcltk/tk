@@ -53,7 +53,16 @@
  */
 
 static const char *CONST wrapStrings[] = {
-    "char", "none", "word", "", NULL
+    "char", "none", "word", "codepoint", NULL
+};
+
+/*
+ * The 'transitionMode' enum in tkText.h is used to define the types of the possible
+ * transition modes with mouse hovering.
+ */
+
+static const char *CONST transitionModeString[] = {
+    "none", "displayline", NULL
 };
 
 /*
@@ -134,6 +143,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, Tk_Offset(TkTextTag, tabStringPtr), -1, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, tabStyle), TK_OPTION_NULL_OK, tabStyleStrings, 0},
+    {TK_OPTION_STRING_TABLE, "-transitionmode", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, transitionMode), TK_OPTION_NULL_OK, transitionModeString, 0},
     {TK_OPTION_STRING, "-underline", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, underlineString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-underlinecolor", NULL, NULL,
@@ -561,38 +572,32 @@ TkTextTagCmd(
 	break;
     }
     case TAG_GETRANGE: {
-	TkTextIndex index1, index2;
+	TkTextIndex index;
 
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "tagName index");
 	    return TCL_ERROR;
 	}
-	if (!TkTextGetIndexFromObj(interp, textPtr, objv[4], &index1)) {
+	if (!TkTextGetIndexFromObj(interp, textPtr, objv[4], &index)) {
 	    return TCL_ERROR;
 	}
 	if (!(tagPtr = FindTag(interp, textPtr, objv[3]))) {
 	    return TCL_ERROR;
 	}
-	if (tagPtr->rootPtr && TkBTreeCharTagged(&index1, tagPtr)) {
-	    char buf[2][TK_POS_CHARS];
-	    TkTextSearch tSearch;
+	if (tagPtr->rootPtr && TkBTreeCharTagged(&index, tagPtr)) {
+	    TkTextIndex result;
+	    char buf[TK_POS_CHARS];
 
-	    TkTextIndexForwChars(textPtr, &index1, 1, &index1, COUNT_INDICES);
-	    TkTextIndexSetupToEndOfText(&index2, textPtr, sharedTextPtr->tree);
-	    TkBTreeStartSearch(&index1, &index2, tagPtr, &tSearch, SEARCH_EITHER_TAGON_TAGOFF);
-	    TkBTreeNextTag(&tSearch);
-	    assert(tSearch.segPtr); /* last search must not fail */
-	    assert(!tSearch.tagon); /* must be tagoff */
-	    TkTextPrintIndex(textPtr, &tSearch.curIndex, buf[1]);
+	    /* point to position after index */
+	    TkTextIndexForwChars(textPtr, &index, 1, &index, COUNT_INDICES);
 
-	    TkTextIndexSetupToStartOfText(&index2, textPtr, sharedTextPtr->tree);
-	    TkBTreeStartSearchBack(&index1, &index2, tagPtr, &tSearch, SEARCH_NEXT_TAGON);
-	    TkBTreePrevTag(&tSearch);
-	    assert(tSearch.segPtr); /* last search must not fail */
-	    TkTextPrintIndex(textPtr, &tSearch.curIndex, buf[0]);
+	    TkTextTagFindStartOfRange(textPtr, tagPtr, &index, &result);
+	    TkTextPrintIndex(textPtr, &result, buf);
+	    Tcl_AppendElement(interp, buf);
 
-	    Tcl_AppendElement(interp, buf[0]);
-	    Tcl_AppendElement(interp, buf[1]);
+	    TkTextTagFindEndOfRange(textPtr, tagPtr, &index, &result);
+	    TkTextPrintIndex(textPtr, &result, buf);
+	    Tcl_AppendElement(interp, buf);
 	}
 	break;
     }
@@ -821,7 +826,86 @@ TkTextTagCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TkTextClearTags --
+ * TkTextTagFindStartOfRange --
+ *
+ *	Find the start of the range which is marked by given tag. This
+ *	functions requires that the given start index for the search
+ *	is marked by this tag.
+ *
+ * Results:
+ *	Returns the end index in '*resultPtr'.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkTextTagFindStartOfRange(
+    TkText *textPtr,			/* Info about overall widget. */
+    const TkTextTag *tagPtr,		/* Search for this tag. */
+    const TkTextIndex *currentPtr,	/* Start search after this position. */
+    TkTextIndex *resultPtr)		/* Returns end of tagged range. */
+{
+    TkTextSearch tSearch;
+    TkTextIndex stopIndex;
+
+    assert(textPtr);
+    assert(currentPtr);
+    assert(resultPtr);
+
+    TkTextIndexSetupToStartOfText(&stopIndex, textPtr, textPtr->sharedTextPtr->tree);
+    TkBTreeStartSearchBack(currentPtr, &stopIndex, tagPtr, &tSearch, SEARCH_NEXT_TAGON);
+    TkBTreePrevTag(&tSearch);
+    assert(tSearch.segPtr); /* last search must not fail */
+    *resultPtr = tSearch.curIndex;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkTextTagFindEndOfRange --
+ *
+ *	Find the end of the range which is marked by given tag. This
+ *	functions requires that the given start index for the search
+ *	is marked by this tag.
+ *
+ * Results:
+ *	Returns the end index in '*resultPtr'.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkTextTagFindEndOfRange(
+    TkText *textPtr,			/* Info about overall widget. */
+    const TkTextTag *tagPtr,		/* Search for this tag. */
+    const TkTextIndex *currentPtr,	/* Start search at this position. */
+    TkTextIndex *resultPtr)		/* Returns end of tagged range. */
+{
+    TkTextSearch tSearch;
+    TkTextIndex stopIndex;
+
+    assert(textPtr);
+    assert(currentPtr);
+    assert(resultPtr);
+
+    TkTextIndexSetupToEndOfText(&stopIndex, textPtr, textPtr->sharedTextPtr->tree);
+    TkBTreeStartSearch(currentPtr, &stopIndex, tagPtr, &tSearch, SEARCH_EITHER_TAGON_TAGOFF);
+    TkBTreeNextTag(&tSearch);
+    assert(tSearch.segPtr); /* last search must not fail */
+    assert(!tSearch.tagon); /* must be tagoff */
+    *resultPtr = tSearch.curIndex;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkTextClearSelection --
  *
  *	Clear the selection in specified range.
  *
@@ -1757,6 +1841,7 @@ TkTextCreateTag(
     tagPtr->justify = TK_TEXT_JUSTIFY_LEFT;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NONE;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
+    tagPtr->transitionMode = TEXT_TRANSMODE_NULL;
     tagPtr->undo = !isSelTag;
     tagPtr->sharedTextPtr = sharedTextPtr;
     tagPtr->undoTagListIndex = -1;
@@ -2744,6 +2829,7 @@ TkTextPickCurrent(
     unsigned numOldTags, numNewTags, i, size, epoch;
     bool sameChunkWithUnchangedTags = false;
     bool nearby = false;
+    int currentY;
     XEvent event;
 
     /*
@@ -2802,6 +2888,7 @@ TkTextPickCurrent(
     }
 
     if (textPtr->dontRepick) {
+	/* The widget is scrolling, so avoid repicking until the scroll operation stops. */
 	return;
     }
 
@@ -2813,8 +2900,20 @@ TkTextPickCurrent(
     newArrayPtr = NULL;
 
     if (textPtr->pickEvent.type != LeaveNotify) {
+	currentY = textPtr->pickEvent.xcrossing.y;
 	sameChunkWithUnchangedTags = TkTextPixelIndex(textPtr,
-		textPtr->pickEvent.xcrossing.x, textPtr->pickEvent.xcrossing.y, &index, &nearby);
+		textPtr->pickEvent.xcrossing.x, &currentY, &index, &nearby);
+
+	/*
+	 * We want to avoid that a cursor movement is constantly splitting and
+	 * joining char segments. So we postpone the insertion of the "current"
+	 * mark until TextWidgetObjCmd will be executed.
+	 */
+
+	textPtr->currentMarkIndex = index;
+	TkTextIndexToByteIndex(&textPtr->currentMarkIndex);
+	textPtr->haveToSetCurrentMark = true;
+	sharedTextPtr->haveToSetCurrentMark = true;
 
 	if (textPtr->currNearbyFlag != nearby) {
 	    sameChunkWithUnchangedTags = false;
@@ -2862,17 +2961,27 @@ TkTextPickCurrent(
 	    memcpy(copyArrayPtr, newArrayPtr, size);
 
 	    /*
-	     * Omit common tags. Note that the complexity of this algorithm is linear,
-	     * the complexity of old implementation (wish8.6) was quadratic.
+	     * Now exclude common tags, but don't do this if the display line has changed
+	     * and this change has to be triggered.
 	     */
 
 	    for (i = 0; i < textPtr->numCurTags; ++i) {
-		if (textPtr->curTagArrayPtr[i]->flag) {
+		const TkTextTag *tagPtr = textPtr->curTagArrayPtr[i];
+
+		if (tagPtr->flag &&
+			(textPtr->lastY == currentY ||
+			    (tagPtr->transitionMode != TEXT_TRANSMODE_DISPLAYLINE &&
+				textPtr->transitionMode != TEXT_TRANSMODE_DISPLAYLINE))) {
 		    textPtr->curTagArrayPtr[i] = NULL;
 		}
 	    }
 	    for (i = 0; i < numNewTags; ++i) {
-		if (copyArrayPtr[i]->flag) {
+		const TkTextTag *tagPtr = copyArrayPtr[i];
+
+		if (tagPtr->flag &&
+			(textPtr->lastY == currentY ||
+			    (tagPtr->transitionMode != TEXT_TRANSMODE_DISPLAYLINE &&
+				textPtr->transitionMode != TEXT_TRANSMODE_DISPLAYLINE))) {
 		    copyArrayPtr[i] = NULL;
 		}
 	    }
@@ -2910,6 +3019,8 @@ TkTextPickCurrent(
 	}
     }
 
+    textPtr->lastY = currentY;
+
     if (textPtr->flags & DESTROYED) {
 	return;
     }
@@ -2921,8 +3032,20 @@ TkTextPickCurrent(
      * appeared.
      */
 
-    TkTextPixelIndex(textPtr, textPtr->pickEvent.xcrossing.x, textPtr->pickEvent.xcrossing.y,
-	    &index, &nearby);
+    currentY = textPtr->pickEvent.xcrossing.y;
+    TkTextPixelIndex(textPtr, textPtr->pickEvent.xcrossing.x, &currentY, &index, &nearby);
+
+    /*
+     * We want to avoid that a cursor movement is constantly splitting and
+     * joining char segments. So we postpone the insertion of the "current"
+     * mark until TextWidgetObjCmd will be executed.
+     */
+
+    textPtr->currentMarkIndex = index;
+    TkTextIndexToByteIndex(&textPtr->currentMarkIndex);
+    textPtr->haveToSetCurrentMark = true;
+    sharedTextPtr->haveToSetCurrentMark = true;
+    textPtr->lastY = currentY;
 
     if (numNewTags > 0) {
 	if (sharedTextPtr->tagBindingTable) {
@@ -2941,21 +3064,11 @@ TkTextPickCurrent(
 	return;
     }
 
-    /*
-     * We want to avoid that a cursor movement is constantly splitting and
-     * joining char segments. So we postpone the insertion of the "current"
-     * mark until TextWidgetObjCmd will be executed.
-     */
-
-    textPtr->currentMarkIndex = index;
-    TkTextIndexToByteIndex(&textPtr->currentMarkIndex);
-    textPtr->haveToSetCurrentMark = true;
-    sharedTextPtr->haveToSetCurrentMark = true;
-
     if (textPtr->imageBboxTree && sharedTextPtr->imageBindingTable) {
 	/*
 	 * Trigger the Enter and Leave events for embedded images.
 	 * It's quite unlikely, but we have to consider that some images are overlapping.
+	 * TODO: Oops, overlapping is not possible, so we can simplify this algorithm.
 	 */
 
 	TkTextEmbImage *eiListPtr = NULL, *eiPtr;

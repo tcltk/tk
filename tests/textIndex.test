@@ -267,6 +267,31 @@ test textIndex-4.8 {TkTextGetIndex, tags} {
     .t tag delete z
     set result
 } {1.0 1.1}
+test textIndex-4.9 {TkTextGetIndex, tags} {
+    .t tag add "" 1.0
+    set result [.t index .first]
+    .t tag delete ""
+    set result
+} {1.0}
+test textIndex-4.10 {TkTextGetIndex, tags} {
+    .t mark set current x.first
+    .t index x.current.first
+} {2.8}
+test textIndex-4.11 {TkTextGetIndex, tags} {
+    .t mark set current x.first
+    .t index x.current.last
+} {2.11}
+test textIndex-4.12 {TkTextGetIndex, tags} {
+    .t mark set current 1.0
+    list [catch {.t index x.current.first} msg] $msg
+} {1 {character at current position isn't tagged with "x"}}
+test textIndex-4.13 {TkTextGetIndex, tags} {
+    .t tag add "" 1.0
+    .t mark set current 1.0
+    set result [.t index .current.first]
+    .t tag delete ""
+    set result
+} {1.0}
 
 test textIndex-5.1 {TkTextGetIndex, "@"} {nonPortable fonts} {
     .t index @12,9

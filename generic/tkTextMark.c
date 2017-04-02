@@ -54,7 +54,7 @@ static int		MarkLayoutProc(const TkTextIndex *indexPtr,
 			    TkTextSegment *segPtr, int offset, int maxX,
 			    int maxChars, bool noCharsYet, TkWrapMode wrapMode,
 			    TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
-static int		MarkFindNext(Tcl_Interp *interp, TkText *textPtr, const char *markName,
+static int		MarkFindNext(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj* markObj,
 			    bool forward);
 static void		ChangeGravity(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    TkTextSegment *markPtr, const Tk_SegType *newTypePtr,
@@ -689,7 +689,7 @@ TkTextMarkCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, -1));
 	    return TCL_OK;
 	}
-	str = Tcl_GetStringFromObj(objv[4],&length);
+	str = Tcl_GetStringFromObj(objv[4], &length);
 	if (strncmp(str, "left", length) == 0) {
 	    newTypePtr = &tkTextLeftMarkType;
 	} else if (strncmp(str, "right", length) == 0) {
@@ -748,13 +748,13 @@ TkTextMarkCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "index");
 	    return TCL_ERROR;
 	}
-	return MarkFindNext(interp, textPtr, Tcl_GetString(objv[3]), true);
+	return MarkFindNext(interp, textPtr, objv[3], true);
     case MARK_PREVIOUS:
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "index");
 	    return TCL_ERROR;
 	}
-	return MarkFindNext(interp, textPtr, Tcl_GetString(objv[3]), false);
+	return MarkFindNext(interp, textPtr, objv[3], false);
     case MARK_SET: {
 	const Tk_SegType *typePtr = NULL;
 	const char *name;
@@ -2653,19 +2653,23 @@ static int
 MarkFindNext(
     Tcl_Interp *interp,		/* For error reporting */
     TkText *textPtr,		/* The widget */
-    const char *string,		/* The starting index or mark name */
+    Tcl_Obj* markObj,		/* The mark name. */
     bool forward)		/* Search forward. */
 {
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
+    const char *string;
 
     assert(textPtr);
+    assert(markObj);
 
     if (TkTextIsDeadPeer(textPtr)) {
 	return TCL_OK;
     }
+
+    string = Tcl_GetString(markObj);
 
     if (strcmp(string, "insert") == 0) {
 	segPtr = textPtr->insertMarkPtr;
@@ -2695,7 +2699,7 @@ MarkFindNext(
 	     * return any marks that are right at the index.
 	     */
 
-	    if (TkTextGetIndex(interp, textPtr, string, &index) != TCL_OK) {
+	    if (!TkTextGetIndexFromObj(interp, textPtr, markObj, &index)) {
 		return TCL_ERROR;
 	    }
 	    segPtr = TkTextIndexGetFirstSegment(&index, NULL);
