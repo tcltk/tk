@@ -325,6 +325,8 @@ static Ttk_State TabState(Notebook *nb, int index)
 /* TabrowSize --
  *	Compute max height and total width of all tabs (horizontal layouts)
  *	or total height and max width (vertical layouts).
+ *	The -mintabwidth style option is taken into account (for the width
+ *	only).
  *
  * Side effects:
  * 	Sets width and height fields for all tabs.
@@ -334,7 +336,7 @@ static Ttk_State TabState(Notebook *nb, int index)
  * 	(max height/width) but not parallel (total width/height).
  */
 static void TabrowSize(
-    Notebook *nb, Ttk_Orient orient, int *widthPtr, int *heightPtr)
+    Notebook *nb, Ttk_Orient orient, int minTabWidth, int *widthPtr, int *heightPtr)
 {
     Ttk_Layout tabLayout = nb->notebook.tabLayout;
     int tabrowWidth = 0, tabrowHeight = 0;
@@ -346,6 +348,7 @@ static void TabrowSize(
 
 	Ttk_RebindSublayout(tabLayout, tab);
 	Ttk_LayoutSize(tabLayout,tabState,&tab->width,&tab->height);
+        tab->width = MAX(tab->width, minTabWidth);
 
 	if (orient == TTK_ORIENT_HORIZONTAL) {
 	    tabrowHeight = MAX(tabrowHeight, tab->height);
@@ -406,7 +409,7 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 
     /* Tab row:
      */
-    TabrowSize(nb, nbstyle.tabOrient, &tabrowWidth, &tabrowHeight);
+    TabrowSize(nb, nbstyle.tabOrient, nbstyle.minTabWidth, &tabrowWidth, &tabrowHeight);
     tabrowHeight += Ttk_PaddingHeight(nbstyle.tabMargins);
     tabrowWidth += Ttk_PaddingWidth(nbstyle.tabMargins);
 
@@ -436,6 +439,7 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 
 /* SqueezeTabs --
  *	Squeeze or stretch tabs to fit within the tab area parcel.
+ *	This happens independently of the -mintabwidth style option.
  *
  *	All tabs are adjusted by an equal amount.
  *
@@ -444,7 +448,7 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
  */
 
 static void SqueezeTabs(
-    Notebook *nb, int needed, int available, int minTabWidth)
+    Notebook *nb, int needed, int available)
 {
     int nTabs = Ttk_NumberSlaves(nb->notebook.mgr);
 
@@ -454,7 +458,6 @@ static void SqueezeTabs(
 	double slack = 0;
 	int i;
 
-        /* Ignore minTabWidth; it's ignored in TabRowSize() too. */
 	for (i = 0; i < nTabs; ++i) {
 	    Tab *tab = Ttk_SlaveData(nb->notebook.mgr,i);
 	    double ad = slack + tab->width * delta;
@@ -522,8 +525,13 @@ static void NotebookDoLayout(void *recordPtr)
     Ttk_PlaceLayout(nb->core.layout, nb->core.state, Ttk_WinBox(nbwin));
 
     /* Place tabs:
+     * Note: TabrowSize() takes into account -mintabwidth, but the tabs will
+     * actually have this minimum size when displayed only if there is enough
+     * space to draw the tabs with this width. Otherwise some of the tabs can
+     * be squeezed to a size smaller than -mintabwidth because we prefer
+     * displaying all tabs than than honoring -mintabwidth for all of them.
      */
-    TabrowSize(nb, nbstyle.tabOrient, &tabrowWidth, &tabrowHeight);
+    TabrowSize(nb, nbstyle.tabOrient, nbstyle.minTabWidth, &tabrowWidth, &tabrowHeight);
     tabrowBox = Ttk_PadBox(
 		    Ttk_PositionBox(&cavity,
 			tabrowWidth + Ttk_PaddingWidth(nbstyle.tabMargins),
@@ -531,7 +539,7 @@ static void NotebookDoLayout(void *recordPtr)
 			nbstyle.tabPosition),
 		    nbstyle.tabMargins);
 
-    SqueezeTabs(nb, tabrowWidth, tabrowBox.width, nbstyle.minTabWidth);
+    SqueezeTabs(nb, tabrowWidth, tabrowBox.width);
     PlaceTabs(nb, tabrowBox, nbstyle.tabPlacement);
 
     /* Layout for client area frame:
