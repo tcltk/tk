@@ -13,6 +13,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tclInt.h"	/* for TclpGetMonotonicTime() */
 #include "tkSDLInt.h"
 #include "SdlTkX.h"
 #include "SdlTkInt.h"
@@ -5268,7 +5269,7 @@ WaitForEvent(
     info.foundEvent = 0;
     prevProc = Tk_RestrictEvents(WaitRestrictProc, &info, &prevArg);
 
-    Tcl_GetTime(&timeout);
+    TclpGetMonotonicTime(&timeout);
     timeout.sec += 2;
 
     while (!info.foundEvent) {

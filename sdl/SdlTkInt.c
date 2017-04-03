@@ -398,10 +398,11 @@ SdlTkScreenRefresh(void)
 #ifdef ANDROID
 
 static int
-AddToAccelRing(int time, short value, int axis)
+AddToAccelRing(long time, short value, int axis)
 {
     AccelRing *rp;
-    int i, imax, dt, dv = 0;
+    int i, imax, dv = 0;
+    long dt;
 
     if ((axis < 0) || (axis > 2)) {
 	return dv;
@@ -4228,9 +4229,9 @@ StatObjCmd(ClientData clientData, Tcl_Interp *interp,
     Tcl_DStringInit(&ds);
     SdlTkLock(NULL);
     rgnCounts = SdlTkRgnPoolStat();
-    sprintf(buffer, "frame_count %d", SdlTkX.frame_count);
+    sprintf(buffer, "frame_count %ld", SdlTkX.frame_count);
     Tcl_DStringAppend(&ds, buffer, -1);
-    sprintf(buffer, " time_count %d", SdlTkX.time_count);
+    sprintf(buffer, " time_count %ld", SdlTkX.time_count);
     Tcl_DStringAppend(&ds, buffer, -1);
     sprintf(buffer, " window_free %d", SdlTkX.nwfree);
     Tcl_DStringAppend(&ds, buffer, -1);
@@ -4518,11 +4519,8 @@ TkInitSdltkCmd(Tcl_Interp *interp, ClientData clientData)
 unsigned long
 TkpGetMS(void)
 {
-    Tcl_Time now;
-    extern void TclpGetTime(Tcl_Time *);
-
-    TclpGetTime(&now);
-    return now.usec / 1000;
+    /* Used for XEvent time stamps. */
+    return SdlTkX.time_count;
 }
 
 /* NOTE: If this changes, update XAllocColor */

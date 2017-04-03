@@ -10,6 +10,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tclInt.h"	/* for TclpGetMonotonicTime() */
 #include "tkSDLInt.h"
 #ifdef _WIN32
 #include <windows.h>
@@ -544,7 +545,7 @@ handleEvents:
 	 */
 
 	if (timePtr) {
-	    Tcl_GetTime(&now);
+	    TclpGetMonotonicTime(&now);
 	    if ((now.sec > timePtr->sec) ||
 		((now.sec == timePtr->sec) && (now.usec > timePtr->usec))) {
 		return 0;
