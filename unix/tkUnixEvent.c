@@ -10,6 +10,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tclInt.h"	/* for TclpGetMonotonicTime() */
 #include "tkUnixInt.h"
 #include <signal.h>
 #ifdef HAVE_XKBKEYCODETOKEYSYM
@@ -548,7 +549,7 @@ TkpDoOneXEvent(
      */
 
     if (timePtr) {
-	Tcl_GetTime(&now);
+	TclpGetMonotonicTime(&now);
 	blockTime.tv_sec = timePtr->sec;
 	blockTime.tv_usec = timePtr->usec - now.usec;
 	if (blockTime.tv_usec < 0) {
@@ -621,7 +622,7 @@ TkpDoOneXEvent(
      */
 
     if (timePtr) {
-	Tcl_GetTime(&now);
+	TclpGetMonotonicTime(&now);
 	if ((now.sec > timePtr->sec) || ((now.sec == timePtr->sec)
 		&& (now.usec > timePtr->usec))) {
 	    return 0;

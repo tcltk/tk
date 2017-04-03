@@ -12,6 +12,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tclInt.h"	/* for TclpGetMonotonicTime() */
 #include "tkUnixInt.h"
 
 /*
@@ -1136,7 +1137,7 @@ Tk_SendObjCmd(
      */
 
     prevProc = Tk_RestrictEvents(SendRestrictProc, NULL, &prevArg);
-    Tcl_GetTime(&timeout);
+    TclpGetMonotonicTime(&timeout);
     timeout.sec += 2;
     while (!pending.gotResponse) {
 	if (!TkpDoOneXEvent(&timeout)) {
@@ -1161,7 +1162,7 @@ Tk_SendObjCmd(
 		strcpy(pending.result, msg);
 		pending.gotResponse = 1;
 	    } else {
-		Tcl_GetTime(&timeout);
+		TclpGetMonotonicTime(&timeout);
 		timeout.sec += 2;
 	    }
 	}

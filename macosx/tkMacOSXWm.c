@@ -15,6 +15,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#include "tclInt.h"	/* for TclpGetMonotonicTime() */
 #include "tkMacOSXPrivate.h"
 #include "tkScrollbar.h"
 #include "tkMacOSXWm.h"
@@ -5975,7 +5976,7 @@ TkpGetMS(void)
 {
     Tcl_Time now;
 
-    Tcl_GetTime(&now);
+    TclpGetMonotonicTime(&now);
     return (long) now.sec * 1000 + now.usec / 1000;
 }
 

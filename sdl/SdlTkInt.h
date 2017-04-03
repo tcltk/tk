@@ -136,7 +136,7 @@ struct _Window {
 /* Ring buffer for the last second of accelerometer values */
 typedef struct {
     int index;
-    int time;
+    long time;
     short values[SDLTK_FRAMERATE];
 } AccelRing;
 
@@ -163,8 +163,8 @@ struct _XSQEvent {
 typedef struct SdlTkXInfo {
 
     /* Counters */
-    int frame_count;
-    int time_count;
+    long frame_count;
+    long time_count;
 
     /* SDL elements for rendering */
     SDL_Window *sdlscreen;
