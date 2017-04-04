@@ -2829,7 +2829,7 @@ TkTextPickCurrent(
     unsigned numOldTags, numNewTags, i, size, epoch;
     bool sameChunkWithUnchangedTags = false;
     bool nearby = false;
-    int currentY;
+    int currentY = -1;
     XEvent event;
 
     /*
