@@ -237,6 +237,7 @@ ParseFormatOptions(
         
         switch (1 << optIndex) {
         case OPT_COLORFORMAT:
+            /*TODO: what if there's not value for option??? (->test!!!) */
             *indexPtr = ++index;
             if (Tcl_GetIndexFromObj(NULL, objv[index], colorFormatNames, "",
                     TCL_EXACT, &typeIndex) != TCL_OK
@@ -639,10 +640,11 @@ StringWriteDef(
     
     if (blockPtr->offset[3] < 0) {
         hasAlpha = 0;
+        alphaOffset = 0;
     } else {
         hasAlpha = 1;
+        alphaOffset = blockPtr->offset[3] - blockPtr->offset[0];        
     }
-    alphaOffset = blockPtr->offset[3] - blockPtr->offset[0];
 
     data = Tcl_NewObj();
     if ((blockPtr->width > 0) && (blockPtr->height > 0)) {
@@ -665,9 +667,9 @@ StringWriteDef(
                  * We don't build lines as a list for #ARGB and #RGB. Since 
                  * these color formats look like comments, the first element
                  * of the list would get quoted with an additional {} . 
-                 * While this is would not be a problem if the data is used as
-                 * a list, it will cause problems if someone decides to parse
-                 * it as a string.
+                 * While this is not a problem if the data is used as
+                 * a list, it would cause problems if someone decides to parse
+                 * it as a string (and it looks kinda strange)
                  */
 
                 switch (opts.colorFormat) {
@@ -740,7 +742,7 @@ ParseColor(
 {
     const char *specString, *suffixString, *colorString;
     Tcl_Obj *colorObj = NULL;
-    unsigned int i, charCount;
+    unsigned int i, charCount, colorVals[4];
     XColor parsedColor;
     int parsedAsList;
     
@@ -782,21 +784,32 @@ ParseColor(
         }
         
         if (hexDigitsOnly) {
+            /*
+             * Bug 7c49a7f5:
+             * As tempting as it may be, don't use the 'hh' modifier in the 
+             * format string for sscanf here. It is a C99 addition, and can
+             * cause buffer overruns with some older compilers.
+             */
+            
             switch (charCount - 1) {
             case 4:
                 /* #ARGB format */
-                sscanf(specString, "#%1hhx%1hhx%1hhx%1hhx", alphaPtr,
-                        redPtr, greenPtr, bluePtr);
-                *redPtr *= 0x11;
-                *greenPtr *= 0x11;
-                *bluePtr *= 0x11;
-                *alphaPtr *= 0x11;
+                sscanf(specString, "#%1x%1x%1x%1x", colorVals + 3,
+                        colorVals, colorVals + 1, colorVals + 2);
+                *redPtr = (unsigned char) colorVals[0] * 0x11;
+                *greenPtr = (unsigned char) colorVals[1] * 0x11;
+                *bluePtr = (unsigned char) colorVals[2] * 0x11;
+                *alphaPtr = (unsigned char) colorVals[3] * 0x11;
                 goto okExit;
                 break;
             case 8:
                 /* #AARRGGBB format */
-                sscanf(specString, "#%2hhx%2hhx%2hhx%2hhx", alphaPtr, redPtr,
-                        greenPtr, bluePtr);
+                sscanf(specString, "#%2x%2x%2x%2x", colorVals + 3,
+                        colorVals, colorVals + 1, colorVals + 2);
+                *redPtr = (unsigned char) colorVals[0];
+                *greenPtr = (unsigned char) colorVals[1];
+                *bluePtr = (unsigned char) colorVals[2];
+                *alphaPtr = (unsigned char) colorVals[3];
                 goto okExit;
                 break;
             default:
@@ -834,10 +847,6 @@ ParseColor(
         double fracAlpha;
         unsigned int suffixAlpha;
     
-        parsedColor.red >>= 8;
-        parsedColor.green >>= 8;
-        parsedColor.blue >>= 8;
-    
         /*
          * parse the Suffix
          */
@@ -864,7 +873,7 @@ ParseColor(
                         "INVALID_COLOR", NULL);
                 goto errorExit;
             }
-            suffixAlpha = round(fracAlpha * 255);
+            suffixAlpha = (unsigned int) floor(fracAlpha * 255 + 0.5);
             break;
         case '#':
             if (strlen(suffixString + 1) < 1 || strlen(suffixString + 1)> 2) {
@@ -894,10 +903,10 @@ ParseColor(
         default:
             Tcl_Panic("unexpected switch fallthrough");
         }
-        *redPtr = parsedColor.red;
-        *greenPtr = parsedColor.green;
-        *bluePtr = parsedColor.blue;
-        *alphaPtr = suffixAlpha;
+        *redPtr = (unsigned char) (parsedColor.red >> 8);
+        *greenPtr = (unsigned char) (parsedColor.green >> 8);
+        *bluePtr = (unsigned char) (parsedColor.blue >> 8);
+        *alphaPtr = (unsigned char) suffixAlpha;
 
         goto okExit;
     }
