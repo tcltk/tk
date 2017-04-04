@@ -1138,7 +1138,6 @@ ImgPhotoCmd(
 
 	case PHOTO_TRANS_SET: {
 	    int newVal, boolMode;
-	    //const char *arg;
 	    XRectangle setBox;
 	    TkRegion modRegion;
 
