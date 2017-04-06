@@ -10362,12 +10362,12 @@ TkBTreeClearTags(
  *
  * FindTagStart --
  *
- *	Find the start of the first range of a tag.
+ *	Find the start of the next range of a tag.
  *
  * Results:
- *	The return value is a pointer to the first tag toggle segment for the
- *	tag. This can be either a tagon or tagoff segment. Sets *indexPtr to be
- *	the index of the tag toggle.
+ *	The return value is a pointer to the first segment which is associated
+ *	with given tag when searching forward. The values of 'searchPtr' will
+ *	be set according to the search result.
  *
  * Side effects:
  *	None.
@@ -10596,12 +10596,12 @@ FindTagStart(
  *
  * FindTagEnd --
  *
- *	Find the end of the last range of a tag.
+ *	Find the start of the current range of a tag.
  *
  * Results:
- *	The return value is a pointer to the last tag toggle segment for the
- *	tag. This can be either a tagon or tagoff segment. Sets *indexPtr to be
- *	the index of the tag toggle.
+ *	The return value is a pointer to the first segment which is associated
+ *	with given tag when searching backward. The values of 'searchPtr' will
+ *	be set according to the search result.
  *
  * Side effects:
  *	None.
@@ -10665,9 +10665,6 @@ FindTagEndInLine(
 		if (prevPtr) {
 		    TkTextIndexSetByteIndex2(indexPtr, linePtr, offset);
 		    return prevPtr;
-		}
-		if (testTagon) {
-		    prevPtr = segPtr;
 		}
 		firstPtr = segPtr;
 	    } else if (firstPtr) {
