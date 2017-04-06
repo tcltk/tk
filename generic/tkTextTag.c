@@ -3010,11 +3010,6 @@ TkTextPickCurrent(
 	    movedToLeft = textPtr->pickEvent.xcrossing.x + sx <= lastX;
 	    nextDispChunkPtr = newDispChunkPtr;
 
-	    // TODO: we have to update index when searching for chunk
-	    // Problem: how can we find offset in newDispChunkPtr?
-	    // Solution: use chunkPtr->byteOffset.
-	    // Use chunkPtr->numBytes for index shift.
-
 	    if (movedToLeft) {
 		/*
 		 * Setup nextDispChunkPtr to predecessor of last chunk.
