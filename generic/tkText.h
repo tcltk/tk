@@ -582,8 +582,6 @@ typedef struct TkTextDispChunkProcs {
     Tk_ChunkBboxProc *bboxProc;	/* Procedure to find bounding box of character in chunk. */
 } TkTextDispChunkProcs;
 
-struct TkTextDispChunkSection;
-
 struct TkTextDispChunk {
     /*
      * The fields below are set by the type-independent code before calling
@@ -591,6 +589,10 @@ struct TkTextDispChunk {
      * segment-type-specific code.
      */
 
+    const struct TkTextDispLine *dlPtr;
+    				/* Pointer to display line of this chunk. We need this for the retrieval
+				 * of the y position.
+				 */
     struct TkTextDispChunk *nextPtr;
 				/* Next chunk in the display line or NULL for the end of the list. */
     struct TkTextDispChunk *prevPtr;
@@ -601,7 +603,9 @@ struct TkTextDispChunk {
     struct TkTextDispChunkSection *sectionPtr;
     				/* The section of this chunk. The section structure allows fast search
 				 * for x positions, and character positions. */
-    struct TextStyle *stylePtr;	/* Display information, known only to tkTextDisp.c. */
+    struct TextStyle *stylePtr;	/* Display information, known only to tkTextDisp.c. This attribute
+    				 * is set iff the associated segment has tag information AND is not
+				 * elided. */
 
     /*
      * The fields below are set by the layoutProc that creates the chunk.
@@ -690,16 +694,6 @@ typedef enum {
 } TkTextSpaceMode;
 
 /*
- * The transition mode of mouse hovering:
- */
-
-typedef enum {
-    TEXT_TRANSMODE_NONE,	/* Default mode, do not enter/leave between same tags. */
-    TEXT_TRANSMODE_DISPLAYLINE,	/* Send enter/leave when leaving/entering display line. */
-    TEXT_TRANSMODE_NULL		/* Identical to TEXT_TRANSMODE_NONE. */
-} TkTextTransitionMode;
-
-/*
  * The justification modes:
  */
 
@@ -773,7 +767,8 @@ typedef struct TkTextTag {
     				 * Exactly one tag has each integer value between 0 and numTags-1. */
     uint32_t index;		/* Unique index for fast tag lookup. It is guaranteed that the index
     				 * number is less than 'TkBitSize(sharedTextPtr->usedTags)'.*/
-    unsigned refCount;		/* Number of objects referring to us. */
+    uint32_t tagEpoch;		/* Epoch of creation time. */
+    uint32_t refCount;		/* Number of objects referring to us. */
     bool isDisabled;		/* This tag is disabled? */
 
     /*
@@ -886,10 +881,6 @@ typedef struct TkTextTag {
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag. Must be TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, TEXT_WRAPMODE_CODEPOINT, or
 				 * TEXT_WRAPMODE_NULL to use wrapmode for whole widget. */
-    TkTextTransitionMode transitionMode;
-    				/* How to handle transitions when mouse is hovering text associated with
-				 * this tag. Must be one of TEXT_TRANSMODE_NONE,
-				 * TEXT_TRANSMODE_DISPLAYLINE, or TEXT_TRANSMODE_NULL. */
     TkTextSpaceMode spaceMode;	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NULL,
     				 * TEXT_SPACEMODE_NONE, TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
     Tcl_Obj *hyphenRulesPtr;	/* The hyphen rules string. */
@@ -1026,6 +1017,7 @@ typedef struct TkSharedText {
     unsigned numImages;		/* Number of embedded images; for information only. */
     unsigned numWindows;	/* Number of embedded windows; for information only. */
     unsigned tagInfoSize;	/* The required index size for tag info sets. */
+    unsigned tagEpoch;		/* Increase whenever a new tag has been created. */
     struct TkBitField *usedTags;
 				/* Bit set of used tag indices. */
     struct TkBitField *elisionTags;
@@ -1302,9 +1294,6 @@ typedef struct TkText {
     				 * TEXT_WRAPMODE_WORD, TEXT_WRAPMODE_CODEPOINT, or TEXT_WRAPMODE_NONE. */
     TkTextSpaceMode spaceMode;	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NONE,
     				 * TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
-    TkTextTransitionMode transitionMode;
-    				/* The transition mode when mouse is hovering tagged text. Must be one
-				 * of TEXT_TRANSMODE_NONE, or TEXT_TRANSMODE_DISPLAYLINE. */
     bool hyphens;		/* Indicating the hypenation support. */
     bool hyphenate;		/* Indicating whether the soft hyphens will be used for line breaks
     				 * (if not in state TK_TEXT_STATE_NORMAL). */
@@ -1400,11 +1389,14 @@ typedef struct TkText {
     XEvent pickEvent;		/* The event from which the current character was chosen.
     				 * Must be saved so that we can repick after modifications
 				 * to the text. */
-    unsigned numCurTags;	/* Number of tags associated with character at current mark. */
-    TkTextTag **curTagArrayPtr;
-    				/* Pointer to array of tags for current mark, or NULL if none. */
+    STRUCT TkTextTagSet *curTagInfoPtr;
+    				/* Set of tags associated with character at current mark. */
     bool currNearbyFlag;	/* The 'nearby' flag of last pick event. */
-    int lastY;			/* Cache y coordinate of last mouse hovering. */
+    const TkTextDispChunk *lastTextDispChunkPtr;
+    				/* Cache display chunk of last mouse hovering. Only use for pointer
+				 * comparison, because the content may be out-of-date. */
+    int32_t lastX;		/* Cache x coordinate of last mouse hovering. */
+    int32_t lastLineY;		/* Cache y coordinate of the display line of last mouse hovering. */
 
     /*
      * Information used for event bindings associated with images:
@@ -1970,14 +1962,19 @@ MODULE_SCOPE unsigned	TkTextGetCursorWidth(TkText *textPtr, int *x, int *offs);
 MODULE_SCOPE void	TkTextEventuallyRepick(TkText *textPtr);
 MODULE_SCOPE bool	TkTextPendingSync(const TkText *textPtr);
 MODULE_SCOPE void	TkTextPickCurrent(TkText *textPtr, XEvent *eventPtr);
+MODULE_SCOPE STRUCT TkTextTagSet * TkTextGetTagSetFromChunk(const TkTextDispChunk *chunkPtr);
+MODULE_SCOPE int	TkTextGetXPixelFromChunk(const TkText *textPtr,
+			    const TkTextDispChunk *chunkPtr);
+MODULE_SCOPE int	TkTextGetYPixelFromChunk(const TkText *textPtr,
+			    const TkTextDispChunk *chunkPtr);
 MODULE_SCOPE int	TkTextGetFirstXPixel(const TkText *textPtr);
 MODULE_SCOPE int	TkTextGetFirstYPixel(const TkText *textPtr);
 MODULE_SCOPE int	TkTextGetLastXPixel(const TkText *textPtr);
 MODULE_SCOPE int	TkTextGetLastYPixel(const TkText *textPtr);
 MODULE_SCOPE unsigned	TkTextCountVisibleImages(const TkText *textPtr);
 MODULE_SCOPE unsigned	TkTextCountVisibleWindows(const TkText *textPtr);
-MODULE_SCOPE bool	TkTextPixelIndex(TkText *textPtr, int x, int *y, TkTextIndex *indexPtr,
-			    bool *nearest);
+MODULE_SCOPE const TkTextDispChunk * TkTextPixelIndex(TkText *textPtr, int x, int y,
+			    TkTextIndex *indexPtr, bool *nearest);
 MODULE_SCOPE Tcl_Obj *	TkTextNewIndexObj(const TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextRedrawRegion(TkText *textPtr, int x, int y, int width, int height);
 MODULE_SCOPE bool	TkTextRedrawTag(const TkSharedText *sharedTextPtr, TkText *textPtr,
@@ -2129,12 +2126,12 @@ MODULE_SCOPE void	TkTextInsertDisplayProc(struct TkText *textPtr, struct TkTextD
 
 #endif /* TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 5 */
 
-#undef STRUCT
-
 #ifdef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextPriv.h"
 #endif
+
+#undef STRUCT
 #endif /* _TKTEXT */
 /*
  * Local Variables:

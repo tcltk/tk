@@ -121,15 +121,6 @@ static const char *CONST justifyStrings[] = {
 };
 
 /*
- * The 'transitionMode' enum in tkText.h is used to define the types of the possible
- * transition modes with mouse hovering.
- */
-
-static const char *CONST transitionModeString[] = {
-    "none", "displayline", NULL
-};
-
-/*
  * The 'TkWrapMode' enum in tkText.h is used to define a type for the -wrap
  * option of the Text widget. These values are used as indices into the string
  * table below.
@@ -348,8 +339,6 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"0", -1, Tk_Offset(TkText, showInsertFgColor), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-spacemode", "spaceMode", "SpaceMode",
 	"none", -1, Tk_Offset(TkText, spaceMode), 0, spaceModeStrings, TK_TEXT_LINE_GEOMETRY},
-    {TK_OPTION_STRING_TABLE, "-transitionmode", "transitionMode", "TransitionMode",
-	"none", -1, Tk_Offset(TkText, transitionMode), 0, transitionModeString, 0},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",
 	DEF_TEXT_SPACING1, -1, Tk_Offset(TkText, spacing1), 0, 0 , TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-spacing2", "spacing2", "Spacing",
@@ -1140,6 +1129,8 @@ CreateWidget(
     textPtr->hyphens = -1;
     textPtr->currNearbyFlag = -1;
     textPtr->prevSyncState = -1;
+    textPtr->lastLineY = INT_MAX;
+    TkTextTagSetIncrRefCount(textPtr->curTagInfoPtr = sharedTextPtr->emptyTagInfoPtr);
 
     /*
      * This will add refCounts to textPtr.
@@ -3245,6 +3236,7 @@ ClearText(
 	tPtr->configureBboxTree = false;
 	tPtr->hoveredImageArrSize = 0;
 	tPtr->currNearbyFlag = -1;
+	textPtr->lastLineY = INT_MAX;
 	tPtr->refCount -= 1;
 	tPtr->startLine = NULL;
 	tPtr->endLine = NULL;
@@ -3523,6 +3515,11 @@ DestroyText(
 		nextPtr = nextPtr->next;
 	    }
 	}
+
+	if (textPtr->refCount == 1) {
+	    /* Don't forget to release the current tag info. */
+	    TkTextTagSetDecrRefCount(textPtr->curTagInfoPtr);
+	}
     } else {
 	/* Prevent that this resource will be released too early. */
 	textPtr->refCount += 1;
@@ -3612,10 +3609,7 @@ DestroyText(
 
     textPtr->tkwin = NULL;
     Tcl_DeleteCommandFromToken(textPtr->interp, textPtr->widgetCmd);
-    if (--textPtr->refCount == 0) {
-	free(textPtr);
-    }
-
+    TkTextReleaseIfDestroyed(textPtr);
     tkBTreeDebug = debug;
     DEBUG_ALLOC(tkTextCountDestroyPeer++);
 }
@@ -6312,7 +6306,7 @@ TextInsertCmd(
 			    tagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
 			}
 #endif
-			tagInfoPtr = TkTextTagSetAdd(tagInfoPtr, tagPtr->index);
+			tagInfoPtr = TkTextTagSetAddToThis(tagInfoPtr, tagPtr->index);
 		    }
 		}
 	    }

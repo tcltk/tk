@@ -173,15 +173,17 @@ typedef struct BreakInfo {
  * either part or all of one line of the text.
  */
 
-typedef struct DLine {
+typedef struct TkTextDispLine {
     TkTextIndex index;		/* Identifies first character in text that is displayed on this line. */
-    struct DLine *nextPtr;	/* Next in list of all display lines for this window. The list is
+    struct TkTextDispLine *nextPtr;
+    				/* Next in list of all display lines for this window. The list is
     				 * sorted in order from top to bottom. Note: the next DLine doesn't
 				 * always correspond to the next line of text: (a) can have multiple
 				 * DLines for one text line (wrapping), (b) can have elided newlines,
 				 * and (c) can have gaps where DLine's have been deleted because
 				 * they're out of date. */
-    struct DLine *prevPtr;	/* Previous in list of all display lines for this window. */
+    struct TkTextDispLine *prevPtr;
+    				/* Previous in list of all display lines for this window. */
     TkTextDispChunk *chunkPtr;	/* Pointer to first chunk in list of all of those that are displayed
     				 * on this line of the screen. */
     TkTextDispChunk *firstCharChunkPtr;
@@ -212,7 +214,9 @@ typedef struct DLine {
     				 * of spacing options. This is included in height. */
     uint32_t length;		/* Total length of line, in pixels. */
     uint32_t flags;		/* Various flag bits: see below for values. */
-} DLine;
+} TkTextDispLine;
+
+typedef struct TkTextDispLine DLine;
 
 /*
  * Flag bits for DLine structures:
@@ -538,6 +542,7 @@ typedef struct TkTextDispChunkSection {
 
 typedef struct LayoutData {
     TkText *textPtr;
+    DLine *dlPtr;		/* Current display line. */
     TkTextDispChunk *chunkPtr;	/* Start of chunk chain. */
     TkTextDispChunk *tabChunkPtr;
 				/* Pointer to the chunk containing the previous tab stop. */
@@ -3044,6 +3049,7 @@ LayoutMakeNewChunk(
 	DEBUG_ALLOC(tkTextCountNewChunk++);
     }
     memset(newChunkPtr, 0, sizeof(TkTextDispChunk));
+    newChunkPtr->dlPtr = data->dlPtr;
     newChunkPtr->prevPtr = data->lastChunkPtr;
     newChunkPtr->prevCharChunkPtr = data->lastCharChunkPtr;
     newChunkPtr->stylePtr = GetStyle(data->textPtr, NULL);
@@ -4090,6 +4096,7 @@ LayoutDLine(
      */
 
     memset(&data, 0, sizeof(data));
+    data.dlPtr = dlPtr;
     data.index = dlPtr->index;
     data.justify = textPtr->justify;
     data.tabIndex = -1;
@@ -7625,6 +7632,103 @@ TkTextGetViewOffset(
 	*x = 0;
 	*y = 0;
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkTextGetXPixelFromChunk --
+ *
+ *	Return the left most x pixel index from given chunk.
+ *
+ * Results:
+ *	Returns the left most x pixel index from given chunk.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkTextGetXPixelFromChunk(
+    const TkText *textPtr,
+    const TkTextDispChunk *chunkPtr)
+{
+    const TextDInfo *dInfoPtr;
+
+    assert(textPtr);
+    assert(chunkPtr);
+
+    dInfoPtr = textPtr->dInfoPtr;
+    return chunkPtr->x + dInfoPtr->x + dInfoPtr->curYPixelOffset;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkTextGetYPixelFromChunk --
+ *
+ *	Return the top most y pixel index from given chunk.
+ *
+ * Results:
+ *	Returns the top most y pixel index from given chunk.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkTextGetYPixelFromChunk(
+    const TkText *textPtr,
+    const TkTextDispChunk *chunkPtr)
+{
+    const DLine *dlPtr;
+
+    assert(textPtr);
+    assert(chunkPtr);
+
+    dlPtr = chunkPtr->dlPtr;
+    /* Note that dInfoPtr->y is already included in dlPtr->y. */
+    return dlPtr->y + textPtr->dInfoPtr->curYPixelOffset;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkTextGetTagSetFromChunk --
+ *
+ *	This function returns the tag information from given chunk.
+ *	It must be ensured that this chunk contains any content
+ *	(character, hyphen, image, window).
+ *
+ * Results:
+ *	The tag information of this chunk.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkTextTagSet *
+TkTextGetTagSetFromChunk(
+    const TkTextDispChunk *chunkPtr)
+{
+    assert(chunkPtr);
+
+    switch (chunkPtr->layoutProcs->type) {
+    case TEXT_DISP_CHAR:   /* fallthru */
+    case TEXT_DISP_HYPHEN: return CHAR_CHUNK_GET_SEGMENT(chunkPtr)->tagInfoPtr;
+    case TEXT_DISP_IMAGE:  /* fallthru */
+    case TEXT_DISP_WINDOW: return ((TkTextSegment *) chunkPtr->clientData)->tagInfoPtr;
+    case TEXT_DISP_ELIDED: /* fallthru */
+    case TEXT_DISP_CURSOR: return NULL;
+    }
+
+    return NULL;
 }
 
 /*
@@ -11274,10 +11378,8 @@ TkTextCountVisibleWindows(
  *
  * Results:
  *	The index at *indexPtr is modified to refer to the character on the
- *	display that is closest to (x,y). It returns whether we have found
- *	the same chunk as before, this implies that the tags belonging to
- *	this chunk did not change. The 'y' coordinate will be updated with
- *	real coordinate from display line.
+ *	display that is closest to (x,y). It returns the affected display
+ *	chunk.
  *
  * Side effects:
  *	None.
@@ -11285,11 +11387,10 @@ TkTextCountVisibleWindows(
  *----------------------------------------------------------------------
  */
 
-bool
+const TkTextDispChunk *
 TkTextPixelIndex(
     TkText *textPtr,		/* Widget record for text widget. */
-    int x, int *y,		/* Pixel coordinates of point in widget's window, update the
-    				 * y coordinate with real position from display line. */
+    int x, int y,		/* Pixel coordinates of point in widget's window. */
     TkTextIndex *indexPtr,	/* This index gets filled in with the index of the character
     				 * nearest to (x,y). */
     bool *nearest)		/* If non-NULL then gets set to false if (x,y) is actually over the
@@ -11318,8 +11419,8 @@ TkTextPixelIndex(
      * side or the other, then adjust to the closest side.
      */
 
-    if (*y < dInfoPtr->y) {
-	*y = dInfoPtr->y;
+    if (y < dInfoPtr->y) {
+	y = dInfoPtr->y;
 	nearby = true;
     }
     if (x >= dInfoPtr->maxX) {
@@ -11340,7 +11441,7 @@ TkTextPixelIndex(
 	    *nearest = true;
 	}
 	*indexPtr = textPtr->topIndex;
-	return true;
+	return NULL;
     }
 
     epoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
@@ -11351,7 +11452,7 @@ TkTextPixelIndex(
 
 	assert(currChunkPtr->stylePtr); /* otherwise the chunk has been expired */
 
-	if (currDLinePtr->y <= *y && *y < currDLinePtr->y + currDLinePtr->height) {
+	if (currDLinePtr->y <= y && y < currDLinePtr->y + currDLinePtr->height) {
 	    int rx = x - dInfoPtr->x + dInfoPtr->curXPixelOffset;
 
 	    if (currChunkPtr->x <= rx && rx < currChunkPtr->x + currChunkPtr->width) {
@@ -11360,12 +11461,11 @@ TkTextPixelIndex(
 		 */
 
 		*indexPtr = dInfoPtr->currChunkIndex;
-		*y = currDLinePtr->y;
 		DLineIndexOfX(textPtr, currChunkPtr, x, indexPtr);
 		if (nearest) {
 		    *nearest = nearby;
 		}
-		return true;
+		return currChunkPtr;
 	    }
 
 	    dlPtr = currDLinePtr;
@@ -11375,7 +11475,7 @@ TkTextPixelIndex(
     if (!dlPtr) {
 	DLine *validDlPtr = dInfoPtr->dLinePtr;
 
-	for (dlPtr = validDlPtr; *y >= dlPtr->y + dlPtr->height; dlPtr = dlPtr->nextPtr) {
+	for (dlPtr = validDlPtr; y >= dlPtr->y + dlPtr->height; dlPtr = dlPtr->nextPtr) {
 	    if (dlPtr->chunkPtr) {
 		validDlPtr = dlPtr;
 	    }
@@ -11390,10 +11490,9 @@ TkTextPixelIndex(
 		}
 		dInfoPtr->currChunkPtr = NULL;
 		*indexPtr = dlPtr->index;
-		*y = dlPtr->y;
 		assert(dlPtr->byteCount > 0);
 		TkTextIndexForwBytes(textPtr, indexPtr, dlPtr->byteCount - 1, indexPtr);
-		return false;
+		return NULL;
 	    }
 	}
 	if (!dlPtr->chunkPtr) {
@@ -11402,7 +11501,6 @@ TkTextPixelIndex(
     }
 
     currChunkPtr = DLineChunkOfX(textPtr, dlPtr, x, indexPtr, &nearby);
-    *y = dlPtr->y;
 
     if (nearest) {
 	*nearest = nearby;
@@ -11422,7 +11520,7 @@ TkTextPixelIndex(
     }
 
     DLineIndexOfX(textPtr, currChunkPtr, x, indexPtr);
-    return false;
+    return currChunkPtr;;
 }
 
 /*
@@ -13728,6 +13826,79 @@ DisplayChars(
     offsetBytes = (x >= 0) ? CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, x, 0, 0, &offsetX) : 0;
     DrawChars(textPtr, chunkPtr, x, y + baseline, offsetX, offsetBytes, display, dst);
 }
+
+#ifndef NDEBUG
+/*
+ *--------------------------------------------------------------
+ *
+ * TkpTextPrintDispChunk --
+ *
+ *	This function is for debugging only, printing the content of
+ *	the given tag display chunk.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkpTextPrintDispChunk(
+    const TkText *textPtr,
+    const TkTextDispChunk *chunkPtr)
+{
+    const DLine *dlPtr;
+    int x, y, width, height;
+
+    switch (chunkPtr->layoutProcs->type) {
+    case TEXT_DISP_CHAR:
+	printf("CHAR=");
+	if (chunkPtr->clientData) {
+	    const CharInfo *ciPtr = (const CharInfo *) chunkPtr->clientData;
+	    int i;
+
+	    for (i = 0; i < ciPtr->numBytes; ++i) {
+		char c = ciPtr->u.chars[i];
+
+		switch (c) {
+		case '\t': printf("\\t"); break;
+		case '\n': printf("\\n"); break;
+		case '\v': printf("\\v"); break;
+		case '\f': printf("\\f"); break;
+		case '\r': printf("\\r"); break;
+
+		default:
+		    if (UCHAR(c) < 0x80 && isprint(c)) {
+			printf("%c", c);
+		    } else {
+			printf("\\x%02u", (unsigned) UCHAR(c));
+		    }
+		    break;
+		}
+	    }
+	} else {
+	    printf("<not yet displayed>");
+	}
+	break;
+
+    case TEXT_DISP_HYPHEN: printf("HYPHEN"); break;
+    case TEXT_DISP_IMAGE:  printf("IMAGE"); break;
+    case TEXT_DISP_WINDOW: printf("WINDOW"); break;
+    case TEXT_DISP_ELIDED: printf("ELIDED"); break;
+    case TEXT_DISP_CURSOR: printf("CURSOR"); break;
+    }
+
+    dlPtr = chunkPtr->dlPtr;
+    x = chunkPtr->x + textPtr->dInfoPtr->x;
+    y = dlPtr->y + dlPtr->spaceAbove;
+    width = chunkPtr->width;
+    height = dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow;
+    printf(" [%d,%d-%d,%d]\n", x, y, x + width, y + height);
+}
+#endif /* !NDEBUG */
 
 /*
  * Local Variables:

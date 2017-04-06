@@ -772,13 +772,13 @@ TkTextGetIndexFromObj(
     TkTextIndex *indexPtr)	/* Store the result here. */
 {
     int length;
-    const char *s;
 
     assert(textPtr);
     assert(objPtr);
 
-    s = Tcl_GetStringFromObj(objPtr, &length);
-    return TkpTextGetIndex(interp, textPtr->sharedTextPtr, textPtr, s, length, indexPtr);
+    Tcl_GetStringFromObj(objPtr, &length);
+    return TkpTextGetIndex(interp, textPtr->sharedTextPtr, textPtr,
+	    Tcl_GetStringFromObj(objPtr, &length), length, indexPtr);
 }
 
 /*
