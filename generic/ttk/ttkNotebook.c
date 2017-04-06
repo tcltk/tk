@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <tk.h>
 
@@ -454,15 +455,17 @@ static void SqueezeTabs(
 
     if (nTabs > 0) {
 	int difference = available - needed;
-	double delta = (double)difference / needed;
+	double fraction = (double)difference / needed;
 	double slack = 0;
+	double ad;
 	int i;
 
 	for (i = 0; i < nTabs; ++i) {
 	    Tab *tab = Ttk_SlaveData(nb->notebook.mgr,i);
-	    double ad = slack + tab->width * delta;
+
+	    ad = slack + tab->width * fraction;
 	    tab->width += (int)ad;
-	    slack = ad - (int)ad;
+	    slack = ad - floor(ad);
 	}
     }
 }
