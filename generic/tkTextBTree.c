@@ -3541,7 +3541,8 @@ LoadMakeTagInfo(
 	TkTextTagSetIncrRefCount(*tagInfoPtr = textPtr->sharedTextPtr->emptyTagInfoPtr);
     }
     for (i = 0; i < objc; ++i) {
-	*tagInfoPtr = TagSetAdd(*tagInfoPtr, TkTextCreateTag(textPtr, Tcl_GetString(objv[i]), NULL));
+	TkTextTag *tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[i]), NULL);
+	*tagInfoPtr = TkTextTagSetAddToThis(*tagInfoPtr, tagPtr->index);
     }
     return true;
 }
@@ -3561,7 +3562,8 @@ LoadRemoveTags(
 	return false;
     }
     for (i = 0; i < objc; ++i) {
-	*tagInfoPtr = TagSetErase(*tagInfoPtr, TkTextCreateTag(textPtr, Tcl_GetString(objv[i]), NULL));
+	TkTextTag *tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[i]), NULL);
+	*tagInfoPtr = TkTextTagSetEraseFromThis(*tagInfoPtr, tagPtr->index);
     }
     return true;
 }
@@ -4357,6 +4359,7 @@ TkBTreeInsertChars(
 		    info.tagInfoPtr = tagInfoPtr;
 		}
 		for (tagPtr = hyphenTagPtr; tagPtr; tagPtr = tagPtr->nextPtr) {
+		    // XXX use destructive add
 		    segPtr->tagInfoPtr = TagSetAdd(segPtr->tagInfoPtr, tagPtr);
 		}
 		hyphenTagInfoPtr = segPtr->tagInfoPtr;
@@ -9398,7 +9401,14 @@ TkBTreeTag(
     data.lengths = data.lengthsBuf;
     data.capacityOfLengths = sizeof(data.lengthsBuf)/sizeof(data.lengthsBuf[0]);
 
-    TreeTagNode(rootPtr, &data, 0, firstPtr, lastPtr, tagPtr->affectsDisplay);
+    /*
+     * NOTE: the display must be redrawn even if this tag is not affecting the
+     * display, otherwise the triggering of tag events may not work properly.
+     * This means that we cannot use 'tagPtr->affectsDisplay' here for the
+     * decision.
+     */
+
+    TreeTagNode(rootPtr, &data, 0, firstPtr, lastPtr, true);
 
     if (add && tagPtr->elideString) {
 	/*

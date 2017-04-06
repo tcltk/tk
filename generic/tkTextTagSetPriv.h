@@ -386,6 +386,42 @@ TkTextTagSetAddOrErase(
 
 
 inline
+TkTextTagSet *
+TkTextTagSetAddToThis(
+    TkTextTagSet *ts,
+    unsigned n)
+{
+    assert(ts);
+    assert(n < TkTextTagSetSize(ts));
+
+    if (ts->base.isSetFlag) {
+	ts = (TkTextTagSet *) TkIntSetAdd(&ts->set, n);
+    } else {
+	TkBitSet(&ts->bf, n);
+    }
+    return ts;
+}
+
+
+inline
+TkTextTagSet *
+TkTextTagSetEraseFromThis(
+    TkTextTagSet *ts,
+    unsigned n)
+{
+    assert(ts);
+    assert(n < TkTextTagSetSize(ts));
+
+    if (ts->base.isSetFlag) {
+	ts = (TkTextTagSet *) TkIntSetErase(&ts->set, n);
+    } else {
+	TkBitUnset(&ts->bf, n);
+    }
+    return ts;
+}
+
+
+inline
 const unsigned char *
 TkTextTagSetData(
     const TkTextTagSet *ts)
@@ -476,6 +512,12 @@ inline unsigned TkTextTagSetFindFirstInIntersection(const TkIntSet *ts, const Tk
 
 inline TkIntSet *TkTextTagSetAddOrErase(TkIntSet *ts, unsigned n, bool value)
 { return value ? TkTextTagSetAdd(ts, n) : TkTextTagSetErase(ts, n); }
+
+inline TkIntSet * TkTextTagSetAddToThis(TkIntSet *ts, unsigned n)
+{ assert(ts); return TkIntSetAdd(ts, n); }
+
+inline TkIntSet *TkTextTagSetEraseFromThis(TkIntSet *ts, unsigned n)
+{ assert(ts); return TkIntSetErase(ts, n); }
 
 inline TkIntSet *TkTextTagSetClear(TkIntSet *ts) { return TkIntSetClear(ts); }
 

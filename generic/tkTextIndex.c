@@ -2316,7 +2316,6 @@ TkpTextGetIndex(
 	    assert(!textPtr->haveToSetCurrentMark);
 
 	    segPtr = textPtr->currentMarkPtr;
-
 	    do {
 		segPtr = segPtr->nextPtr;
 	    } while (!segPtr->tagInfoPtr);
@@ -2428,7 +2427,7 @@ TkpTextGetIndex(
 		goto noBaseFound;
 	    }
 	}
-	TkTextPixelIndex(textPtr, x, &y, indexPtr, NULL);
+	TkTextPixelIndex(textPtr, x, y, indexPtr, NULL);
 	endOfBase = end;
 	goto gotBase;
     }

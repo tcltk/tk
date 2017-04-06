@@ -1694,6 +1694,8 @@ extern bool TkTextTagSetIntersectsBits(const TkTextTagSet *ts, const TkBitField 
 extern unsigned TkTextTagSetFindFirst(const TkTextTagSet *ts);
 extern unsigned TkTextTagSetFindNext(const TkTextTagSet *ts, unsigned prev);
 extern TkTextTagSet *TkTextTagSetAddOrErase(TkTextTagSet *ts, unsigned n, bool value);
+extern TkTextTagSet *TkTextTagSetAddToThis(TkTextTagSet *ts, unsigned n);
+extern TkTextTagSet *TkTextTagSetEraseFromThis(TkTextTagSet *ts, unsigned n);
 extern unsigned TkTextTagSetRangeSize(const TkTextTagSet *ts);
 extern const unsigned char *TkTextTagSetData(const TkTextTagSet *ts);
 extern unsigned TkTextTagSetByteSize(const TkTextTagSet *ts);
@@ -1728,6 +1730,8 @@ extern unsigned TkTextTagSetFindNext(const TkIntSet *ts, unsigned prev);
 extern unsigned TkTextTagSetFindFirstInIntersection(const TkIntSet *ts, const TkBitField *bf);
 extern TkIntSet *TkTextTagSetAddOrErase(TkIntSet *ts, unsigned n, bool value);
 extern TkIntSet *TkTextTagSetClear(TkIntSet *ts);
+extern TkIntSet *TkTextTagSetAddToThis(TkTextTagSet *ts, unsigned n);
+extern TkIntSet *TkTextTagSetEraseFromThis(TkTextTagSet *ts, unsigned n);
 extern unsigned TkTextTagSetRangeSize(const TkIntSet *ts);
 extern const unsigned char *TkTextTagSetData(const TkIntSet *ts);
 extern unsigned TkTextTagSetByteSize(const TkIntSet *ts);

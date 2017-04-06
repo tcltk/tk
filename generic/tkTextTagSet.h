@@ -148,6 +148,9 @@ TkTextTagSet *TkTextTagSetTestAndSet(TkTextTagSet *ts, unsigned n) __warn_unused
 TkTextTagSet *TkTextTagSetTestAndUnset(TkTextTagSet *ts, unsigned n) __warn_unused__;
 TkTextTagSet *TkTextTagSetClear(TkTextTagSet *ts) __warn_unused__;
 
+inline TkTextTagSet *TkTextTagSetAddToThis(TkTextTagSet *ts, unsigned n);
+inline TkTextTagSet *TkTextTagSetEraseFromThis(TkTextTagSet *ts, unsigned n);
+
 inline unsigned TkTextTagSetRangeSize(const TkTextTagSet *ts);
 
 inline const unsigned char *TkTextTagSetData(const TkTextTagSet *ts);
@@ -259,6 +262,9 @@ inline TkIntSet *TkTextTagSetAddOrErase(TkIntSet *ts, unsigned n, bool value) __
 TkIntSet *TkTextTagSetTestAndSet(TkIntSet *ts, unsigned n) __warn_unused__;
 TkIntSet *TkTextTagSetTestAndUnset(TkIntSet *ts, unsigned n) __warn_unused__;
 inline TkIntSet *TkTextTagSetClear(TkIntSet *ts) __warn_unused__;
+
+inline TkIntSet *TkTextTagSetAddToThis(TkIntSet *ts, unsigned n);
+inline TkIntSet *TkTextTagSetEraseFromThis(TkIntSet *ts, unsigned n);
 
 inline unsigned TkTextTagSetRangeSize(const TkIntSet *ts);
 

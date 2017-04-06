@@ -1382,7 +1382,11 @@ test textTag-16.3 {TkTextPickCurrent procedure} -setup {
     return $x
 } -cleanup {
     .t tag delete {*}[.t tag names]
-} -result {enter-a enter-b | leave-b enter-c | leave-a leave-c}
+# NOTE:
+# Old result is {enter-a enter-b | leave-b enter-c | leave-a leave-c},
+# this has changed because now it will be considered that the display
+# line is changing, and this is triggering Leave in any case.
+} -result {enter-a enter-b | leave-a leave-b enter-a enter-c | leave-a leave-c}
 
 test textTag-16.4 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
@@ -1408,7 +1412,11 @@ test textTag-16.4 {TkTextPickCurrent procedure} -setup {
     return $x
 } -cleanup {
     .t tag delete {*}[.t tag names]
-} -result {enter-a enter-b enter-c | leave-c leave-b}
+# NOTE:
+# Old result is {enter-a enter-b enter-c | leave-c leave-b},
+# this has changed because now it will be considered that the display
+# line is changing, and this is triggering Leave in any case.
+} -result {enter-a enter-b enter-c | leave-c leave-a leave-b enter-a}
 
 test textTag-16.5 {TkTextPickCurrent procedure} -constraints {
     haveFontSizes
@@ -1515,6 +1523,23 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
 } -cleanup {
     destroy .t
 } -result {Enter {25 25 tag-Enter} {20 20 tag-Leave} {25 25 tag-Enter}}
+
+
+test textTag-19.1 {Repick after tag removal} -setup {
+    destroy .t
+} -body {
+    pack [text .t]
+    .t insert end "123" x
+    set res {}
+    .t tag bind x <Leave> { lappend res leave }
+    event generate .t <Motion> -x 5 -y 5
+    update
+    .t tag remove x begin end
+    update
+    set res
+} -cleanup {
+    destroy .t
+} -result {leave}
 
 destroy .t
 
