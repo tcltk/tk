@@ -4359,7 +4359,6 @@ TkBTreeInsertChars(
 		    info.tagInfoPtr = tagInfoPtr;
 		}
 		for (tagPtr = hyphenTagPtr; tagPtr; tagPtr = tagPtr->nextPtr) {
-		    // XXX use destructive add
 		    segPtr->tagInfoPtr = TagSetAdd(segPtr->tagInfoPtr, tagPtr);
 		}
 		hyphenTagInfoPtr = segPtr->tagInfoPtr;

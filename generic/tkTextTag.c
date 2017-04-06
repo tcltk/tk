@@ -3209,7 +3209,7 @@ TkTextPickCurrent(
  *	name of the tags as the binding table element.
  *
  * Results:
- *	Returns false iff the text widget has been destroyed.
+ *	None.
  *
  * Side effects:
  *	Almost anything can be triggered by tag bindings, including deletion
