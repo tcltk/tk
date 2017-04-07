@@ -1641,7 +1641,7 @@ TkTextBindEvent(
     TkSharedText *sharedTextPtr,/* Shared text resource. */
     Tk_BindingTable *bindingTablePtr,
     				/* Pointer to binding table. */
-    const char *name)		/* Name of the resource (tag, or image) */
+    const char *name)		/* Bind event to this resource (tag or image). */
 {
     static const unsigned motionMask = ButtonMotionMask|Button1MotionMask
 		|Button2MotionMask|Button3MotionMask|Button4MotionMask
@@ -1657,7 +1657,7 @@ TkTextBindEvent(
 
     if (objc == 2) {
 	bool append = false;
-	unsigned mask;
+	unsigned long mask;
 	const char *eventString = Tcl_GetString(objv[0]);
 	const char *fifth = Tcl_GetString(objv[1]);
 
@@ -1670,6 +1670,16 @@ TkTextBindEvent(
 	}
 	mask = Tk_CreateBinding(interp, *bindingTablePtr, (ClientData) name, eventString, fifth, append);
 	if (mask == 0) {
+	    return TCL_ERROR;
+	}
+	if (mask & (unsigned) ~(motionMask|ButtonPressMask|ButtonReleaseMask|EnterWindowMask
+		|LeaveWindowMask|KeyPressMask|KeyReleaseMask|VirtualEventMask)) {
+	    Tk_DeleteBinding(interp, *bindingTablePtr, (ClientData) name, eventString);
+	    Tcl_ResetResult(interp);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "requested illegal events; only key, button, motion,"
+		    " enter, leave, and virtual events may be used", -1));
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "TAG_BIND_EVENT",NULL);
 	    return TCL_ERROR;
 	}
 	if (mask & motionMask) {
@@ -1685,16 +1695,6 @@ TkTextBindEvent(
 	     * of interest.
 	     */
 	    sharedTextPtr->numMotionEventBindings = 1;
-	}
-	if (mask & (unsigned) ~(motionMask|ButtonPressMask|ButtonReleaseMask|EnterWindowMask
-		|LeaveWindowMask|KeyPressMask|KeyReleaseMask|VirtualEventMask)) {
-	    Tk_DeleteBinding(interp, *bindingTablePtr, (ClientData) name, eventString);
-	    Tcl_ResetResult(interp);
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "requested illegal events; only key, button, motion,"
-		    " enter, leave, and virtual events may be used", -1));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "TAG_BIND_EVENT",NULL);
-	    return TCL_ERROR;
 	}
     } else if (objc == 1) {
 	const char *command;
@@ -2689,6 +2689,7 @@ TkTextBindProc(
     enum { AnyButtonMask = Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask };
 
     TkText *textPtr = clientData;
+    bool dontRepick = textPtr->dontRepick;
     bool repick = false;
 
     textPtr->refCount += 1;
@@ -2714,6 +2715,9 @@ TkTextBindProc(
 	if ((eventPtr->xbutton.state & AnyButtonMask) == mask) {
 	    textPtr->flags &= ~BUTTON_DOWN;
 	    repick = true;
+	    if (eventPtr->xbutton.state & (Button1|Button2|Button3)) {
+		textPtr->dontRepick = false; /* in case of button clicks we must repick */
+	    }
 	}
     } else if (eventPtr->type == EnterNotify || eventPtr->type == LeaveNotify) {
 	if (eventPtr->xcrossing.state & AnyButtonMask) {
@@ -2751,19 +2755,17 @@ TkTextBindProc(
     }
     if (repick) {
 	unsigned oldState = eventPtr->xbutton.state;
-	bool dontRepick = textPtr->dontRepick;
 
 	oldState = eventPtr->xbutton.state;
-	textPtr->dontRepick = false; /* in case of button events we must repick */
 	eventPtr->xbutton.state &= ~(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask);
 	if (!(textPtr->flags & DESTROYED)) {
 	    TkTextPickCurrent(textPtr, eventPtr);
 	}
 	eventPtr->xbutton.state = oldState;
-	textPtr->dontRepick = dontRepick;
     }
 
   done:
+    textPtr->dontRepick = dontRepick;
     TkTextReleaseIfDestroyed(textPtr);
 }
 
@@ -2830,7 +2832,7 @@ TkTextPickCurrent(
     const TkTextDispChunk *newDispChunkPtr = NULL;
     bool nearby = false;
     bool sentEvents = false;
-    int lastLineY = INT_MIN;
+    int newLineY = TK_TEXT_IS_NEARBY;
     TkTextIndex index;
     XEvent event;
     unsigned tagEpoch;
@@ -2914,10 +2916,10 @@ TkTextPickCurrent(
 		textPtr->pickEvent.xcrossing.x, textPtr->pickEvent.xcrossing.y, &index, &nearby);
 
 	if (newDispChunkPtr) {
-	    lastLineY = TkTextGetYPixelFromChunk(textPtr, newDispChunkPtr);
-	    sameChunkWithUnchangedTags = (newDispChunkPtr == textPtr->lastTextDispChunkPtr);
-	} else {
-	    assert(nearby);
+	    if (!nearby) {
+		newLineY = TkTextGetYPixelFromChunk(textPtr, newDispChunkPtr);
+	    }
+	    sameChunkWithUnchangedTags = (newDispChunkPtr->uniqID == textPtr->lastChunkID);
 	}
 
 	/*
@@ -2931,9 +2933,9 @@ TkTextPickCurrent(
 	textPtr->haveToSetCurrentMark = true;
 	sharedTextPtr->haveToSetCurrentMark = true;
 
-	if (textPtr->currNearbyFlag != nearby) {
+	if (textPtr->lastLineY == TK_TEXT_NEARBY_IS_UNDETERMINED
+		|| (textPtr->lastLineY == TK_TEXT_IS_NEARBY) != nearby) {
 	    sameChunkWithUnchangedTags = false;
-	    textPtr->currNearbyFlag = nearby;
 	} else if (nearby) {
 	    sameChunkWithUnchangedTags = true;
 	} else if (eventPtr->type != MotionNotify || sharedTextPtr->numMotionEventBindings > 0) {
@@ -2955,25 +2957,18 @@ TkTextPickCurrent(
 	     */
 
 	    TkTextTagSetIncrRefCount(newTagInfoPtr = TkTextGetTagSetFromChunk(newDispChunkPtr));
-	    leaveTags = TkTextTagSetRemove(TkTextTagSetCopy(textPtr->curTagInfoPtr), newTagInfoPtr);
-	    enterTags = TkTextTagSetRemove(TkTextTagSetCopy(newTagInfoPtr), leaveTags);
-	    enterTags = TkTextTagSetRemove(enterTags, textPtr->curTagInfoPtr);
+	    leaveTags = TkTextTagSetCopy(textPtr->curTagInfoPtr);
+	    leaveTags = TkTextTagSetRemoveFromThis(leaveTags, newTagInfoPtr);
+	    enterTags = TkTextTagSetRemoveFromThis(TkTextTagSetCopy(newTagInfoPtr), leaveTags);
+	    enterTags = TkTextTagSetRemoveFromThis(enterTags, textPtr->curTagInfoPtr);
 	}
     }
 
-    if (sharedTextPtr->tagBindingTable && !sameChunkWithUnchangedTags) {
-	if (textPtr->lastLineY != lastLineY) {
-	    /*
-	     * The display line has changed, so we have to send leave/enter events
-	     * for all the affected tags, otherwise the event handling would depend
-	     * on the contingencies of the layout, and this must not happen.
-	     */
-
-	    TkTextTagSetDecrRefCount(leaveTags);
-	    TkTextTagSetDecrRefCount(enterTags);
-	    TkTextTagSetIncrRefCount(leaveTags = textPtr->curTagInfoPtr);
-	    TkTextTagSetIncrRefCount(enterTags = newTagInfoPtr);
-	} else if (newDispChunkPtr) {
+    if (newLineY != TK_TEXT_IS_NEARBY
+	    && textPtr->lastLineY != TK_TEXT_IS_NEARBY
+	    && !sameChunkWithUnchangedTags
+	    && sharedTextPtr->tagBindingTable) {
+	if (textPtr->lastLineY == newLineY) {
 	    /*
 	     * We have to work-around a severe problem: per default the event handler is
 	     * collapsing mouse motion events. This must not happen, a collapse of motion
@@ -3061,6 +3056,95 @@ TkTextPickCurrent(
 		leaveTags = TkTextTagSetIntersect(leaveTags, textPtr->curTagInfoPtr);
 		enterTags = TkTextTagSetIntersect(enterTags, newTagInfoPtr);
 	    }
+	} else if (textPtr->lastLineY != TK_TEXT_NEARBY_IS_UNDETERMINED) {
+	    const TkTextDispChunk *chunkPtr, *cPtr;
+	    const TkTextTagSet *tPtr;
+	    TkTextTagSet *commonTags = TkTextTagSetCopy(newTagInfoPtr);
+
+	    /*
+	     * The display line has changed, so we have to send leave/enter events
+	     * for all the affected tags, otherwise the event handling would depend
+	     * on the contingencies of the layout, and this must not happen.
+	     *
+	     * But do not track a change of the display line if the new display chunk
+	     * belongs to the same region as old display chunk.
+	     */
+
+	    if (newLineY < textPtr->lastLineY) {
+		/*
+		 * Mouse pointer has moved to any predecessing display line.
+		 */
+
+		for (chunkPtr = newDispChunkPtr, cPtr = newDispChunkPtr;
+			chunkPtr && textPtr->lastLineY > TkTextGetYPixelFromChunk(textPtr, chunkPtr);
+			cPtr = chunkPtr = TkTextGetFirstChunkOfNextDispLine(chunkPtr)) {
+		    assert(TkTextGetTagSetFromChunk(cPtr));
+
+		    if (!TkTextTagSetIntersects(newTagInfoPtr, TkTextGetTagSetFromChunk(cPtr))) {
+			TkTextTagSetDecrRefCount(commonTags);
+			TkTextTagSetIncrRefCount(commonTags = sharedTextPtr->emptyTagInfoPtr);
+			cPtr = NULL;
+			break;
+		    }
+		    for ( ; cPtr; cPtr = cPtr->nextPtr) {
+			if ((tPtr = TkTextGetTagSetFromChunk(cPtr))) {
+			    commonTags = TkTextTagSetIntersectThis(commonTags, tPtr);
+			}
+		    }
+		}
+		if (cPtr) {
+		    int x = textPtr->lastX;
+
+		    for ( ; cPtr; cPtr = cPtr->nextPtr) {
+			if ((tPtr = TkTextGetTagSetFromChunk(cPtr))) {
+			    commonTags = TkTextTagSetIntersectThis(commonTags, tPtr);
+			}
+			if (DispChunkContainsX(textPtr, cPtr, x)) {
+			    break;
+			}
+		    }
+		}
+	    } else {
+		/*
+		 * Mouse pointer has moved to any successing display line.
+		 */
+
+		for (chunkPtr = newDispChunkPtr, cPtr = newDispChunkPtr;
+			chunkPtr && textPtr->lastLineY < TkTextGetYPixelFromChunk(textPtr, chunkPtr);
+			cPtr = chunkPtr = TkTextGetLastChunkOfPrevDispLine(chunkPtr)) {
+		    assert(TkTextGetTagSetFromChunk(cPtr));
+
+		    if (!TkTextTagSetIntersects(newTagInfoPtr, TkTextGetTagSetFromChunk(cPtr))) {
+			TkTextTagSetDecrRefCount(commonTags);
+			TkTextTagSetIncrRefCount(commonTags = sharedTextPtr->emptyTagInfoPtr);
+			cPtr = NULL;
+			break;
+		    }
+		    for ( ; cPtr; cPtr = cPtr->prevPtr) {
+			if ((tPtr = TkTextGetTagSetFromChunk(cPtr))) {
+			    commonTags = TkTextTagSetIntersectThis(commonTags, tPtr);
+			}
+		    }
+		}
+		if (cPtr) {
+		    int x = textPtr->lastX;
+
+		    for ( ; cPtr; cPtr = cPtr->prevPtr) {
+			if ((tPtr = TkTextGetTagSetFromChunk(cPtr))) {
+			    commonTags = TkTextTagSetIntersectThis(commonTags, tPtr);
+			}
+			if (DispChunkContainsX(textPtr, cPtr, x)) {
+			    break;
+			}
+		    }
+		}
+	    }
+
+	    TkTextTagSetDecrRefCount(enterTags);
+	    TkTextTagSetDecrRefCount(leaveTags);
+	    enterTags = TkTextTagSetRemoveFromThis(TkTextTagSetCopy(newTagInfoPtr), commonTags);
+	    leaveTags = TkTextTagSetRemoveFromThis(TkTextTagSetCopy(textPtr->curTagInfoPtr), commonTags);
+	    TkTextTagSetDecrRefCount(commonTags);
 	}
     }
 
@@ -3096,15 +3180,10 @@ TkTextPickCurrent(
 	     * mark until TextWidgetObjCmd will be executed.
 	     */
 
-	    newDispChunkPtr = TkTextPixelIndex(textPtr, textPtr->pickEvent.xcrossing.x,
-		    textPtr->pickEvent.xcrossing.y, &index, &nearby);
-	    if (newDispChunkPtr) {
-		lastLineY = TkTextGetYPixelFromChunk(textPtr, newDispChunkPtr);
-	    } else {
-		assert(nearby);
-		lastLineY = INT_MIN;
-	    }
+	    newDispChunkPtr = TkTextPixelIndex(textPtr,
+		    textPtr->pickEvent.xcrossing.x, textPtr->pickEvent.xcrossing.y, &index, &nearby);
 
+	    newLineY = nearby ? TK_TEXT_IS_NEARBY : TkTextGetYPixelFromChunk(textPtr, newDispChunkPtr);
 	    textPtr->currentMarkIndex = index;
 	    TkTextIndexToByteIndex(&textPtr->currentMarkIndex);
 	    textPtr->haveToSetCurrentMark = true;
@@ -3131,9 +3210,11 @@ TkTextPickCurrent(
 	TkTextTagSetIncrRefCount(textPtr->curTagInfoPtr = newTagInfoPtr);
 
 	TkTextGetViewOffset(textPtr, &sx, &sy);
-	textPtr->lastLineY = lastLineY;
+	textPtr->lastLineY = newLineY;
 	textPtr->lastX = textPtr->pickEvent.xcrossing.x + sx;
-	textPtr->lastTextDispChunkPtr = newDispChunkPtr;
+	if (newDispChunkPtr) {
+	    textPtr->lastChunkID = newDispChunkPtr->uniqID;
+	}
     }
 
     TkTextTagSetDecrRefCount(leaveTags);

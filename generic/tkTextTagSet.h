@@ -148,8 +148,10 @@ TkTextTagSet *TkTextTagSetTestAndSet(TkTextTagSet *ts, unsigned n) __warn_unused
 TkTextTagSet *TkTextTagSetTestAndUnset(TkTextTagSet *ts, unsigned n) __warn_unused__;
 TkTextTagSet *TkTextTagSetClear(TkTextTagSet *ts) __warn_unused__;
 
-inline TkTextTagSet *TkTextTagSetAddToThis(TkTextTagSet *ts, unsigned n);
-inline TkTextTagSet *TkTextTagSetEraseFromThis(TkTextTagSet *ts, unsigned n);
+inline TkTextTagSet *TkTextTagSetAddToThis(TkTextTagSet *ts, unsigned n) __warn_unused__;
+inline TkTextTagSet *TkTextTagSetEraseFromThis(TkTextTagSet *ts, unsigned n) __warn_unused__;
+TkTextTagSet *TkTextTagSetRemoveFromThis(TkTextTagSet *dst, const TkTextTagSet *src) __warn_unused__;
+TkTextTagSet *TkTextTagSetIntersectThis(TkTextTagSet *dst, const TkTextTagSet *src) __warn_unused__;
 
 inline unsigned TkTextTagSetRangeSize(const TkTextTagSet *ts);
 

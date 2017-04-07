@@ -158,63 +158,15 @@
  * Structure for line break information:
  */
 
-typedef struct BreakInfo {
+typedef struct TkTextBreakInfo {
     uint32_t refCount;	/* Reference counter, destroy if this counter is going to zero. */
     char *brks;		/* Array of break info, has exactly the char length of the logical line,
     			 * each cell is one of LINEBREAK_NOBREAK, LINEBREAK_ALLOWBREAK,
 			 * LINEBREAK_MUSTBREAK, or LINEBREAK_INSIDEACHAR. */
-    struct BreakInfo *nextPtr;
+    struct TkTextBreakInfo *nextPtr;
     			/* Pointer to break information of successor line. Will only be used
     			 * when caching the break information while redrawing tags. */
-} BreakInfo;
-
-/*
- * The following structure describes one line of the display, which may be
- * either part or all of one line of the text.
- */
-
-typedef struct TkTextDispLine {
-    TkTextIndex index;		/* Identifies first character in text that is displayed on this line. */
-    struct TkTextDispLine *nextPtr;
-    				/* Next in list of all display lines for this window. The list is
-    				 * sorted in order from top to bottom. Note: the next DLine doesn't
-				 * always correspond to the next line of text: (a) can have multiple
-				 * DLines for one text line (wrapping), (b) can have elided newlines,
-				 * and (c) can have gaps where DLine's have been deleted because
-				 * they're out of date. */
-    struct TkTextDispLine *prevPtr;
-    				/* Previous in list of all display lines for this window. */
-    TkTextDispChunk *chunkPtr;	/* Pointer to first chunk in list of all of those that are displayed
-    				 * on this line of the screen. */
-    TkTextDispChunk *firstCharChunkPtr;
-    				/* Pointer to first chunk in list containing chars, window, or image. */
-    TkTextDispChunk *lastChunkPtr;
-    				/* Pointer to last chunk in list containing chars. */
-    TkTextDispChunk *cursorChunkPtr;
-    				/* Pointer to chunk which displays the insert cursor. */
-    BreakInfo *breakInfo;	/* Line break information of logical line. */
-    uint32_t displayLineNo;	/* The number of this display line relative to the related logical
-    				 * line. */
-    uint32_t hyphenRule;	/* Hyphenation rule applied to last char chunk (only if hyphenation
-    				 * has been applied). */
-    uint32_t byteCount;		/* Number of bytes accounted for by this display line, including a
-    				 * trailing space or newline that isn't actually displayed. */
-    int32_t y;			/* Y-position at which line is supposed to be drawn (topmost pixel
-    				 * of rectangular area occupied by line). */
-    int32_t oldY;		/* Y-position at which line currently appears on display. This is
-    				 * used to move lines by scrolling rather than re-drawing. If 'flags'
-				 * have the OLD_Y_INVALID bit set, then we will never examine this
-				 * field (which means line isn't currently visible on display and
-				 * must be redrawn). */
-    int32_t height;		/* Height of line, in pixels. */
-    int32_t baseline;		/* Offset of text baseline from y, in pixels. */
-    int32_t spaceAbove;		/* How much extra space was added to the top of the line because of
-    				 * spacing options. This is included in height and baseline. */
-    int32_t spaceBelow;		/* How much extra space was added to the bottom of the line because
-    				 * of spacing options. This is included in height. */
-    uint32_t length;		/* Total length of line, in pixels. */
-    uint32_t flags;		/* Various flag bits: see below for values. */
-} TkTextDispLine;
+} TkTextBreakInfo;
 
 typedef struct TkTextDispLine DLine;
 
@@ -457,6 +409,7 @@ typedef struct TextDInfo {
     struct TkTextDispChunkSection *sectionPoolPtr;
     				/* Pointer to first free section. */
     CharInfo *charInfoPoolPtr;	/* Pointer to first free char info. */
+    unsigned chunkCounter;	/* Used for the unique chunk ID. */
 
     /*
      * Miscellaneous information:
@@ -559,7 +512,7 @@ typedef struct LayoutData {
     TkTextDispChunk *cursorChunkPtr;
 				/* Pointer to the insert cursor chunk. */
     TkTextLine *logicalLinePtr;	/* Pointer to the logical line. */
-    BreakInfo *breakInfo;	/* Line break information of logical line. */
+    TkTextBreakInfo *breakInfo;	/* Line break information of logical line. */
     const char *brks;		/* Buffer for line break information (for TEXT_WRAPMODE_CODEPOINT). */
     TkTextIndex index;		/* Current index. */
     unsigned countChunks;	/* Number of chunks in current display line. */
@@ -625,7 +578,8 @@ typedef struct DisplayInfo {
     TkTextLine *linePtr;	/* Logical line, where computation has started. */
     const TkTextPixelInfo *pixelInfo;
     				/* Pixel information of logical line. */
-    BreakInfo *lineBreakInfo;	/* We have to cache the line break information (for
+    TkTextBreakInfo *lineBreakInfo;
+    				/* We have to cache the line break information (for
     				 * TEXT_WRAPMODE_CODEPOINT), to avoid repeated computations when
 				 * scrolling. */
 
@@ -1613,7 +1567,7 @@ TkTextDeleteBreakInfoTableEntries(
     assert(breakInfoTable);
 
     for (hPtr = Tcl_FirstHashEntry(breakInfoTable, &search); hPtr; hPtr = Tcl_NextHashEntry(&search)) {
-	BreakInfo *breakInfo = Tcl_GetHashValue(hPtr);
+	TkTextBreakInfo *breakInfo = Tcl_GetHashValue(hPtr);
 
 	assert(breakInfo->brks);
 	free(breakInfo->brks);
@@ -3050,6 +3004,7 @@ LayoutMakeNewChunk(
     }
     memset(newChunkPtr, 0, sizeof(TkTextDispChunk));
     newChunkPtr->dlPtr = data->dlPtr;
+    newChunkPtr->uniqID = dInfoPtr->chunkCounter++;
     newChunkPtr->prevPtr = data->lastChunkPtr;
     newChunkPtr->prevCharChunkPtr = data->lastCharChunkPtr;
     newChunkPtr->stylePtr = GetStyle(data->textPtr, NULL);
@@ -3092,14 +3047,14 @@ LayoutSetupChunk(
 
 	if (!data->brks) {
 	    Tcl_HashEntry *hPtr;
-	    BreakInfo *breakInfo;
+	    TkTextBreakInfo *breakInfo;
 	    int new;
 
 	    hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->breakInfoTable,
 		    (void *) data->logicalLinePtr, &new);
 
 	    if (new) {
-		breakInfo = malloc(sizeof(BreakInfo));
+		breakInfo = malloc(sizeof(TkTextBreakInfo));
 		breakInfo->refCount = 1;
 		breakInfo->brks = NULL;
 		data->logicalLinePtr->changed = false;
@@ -7661,7 +7616,7 @@ TkTextGetXPixelFromChunk(
     assert(chunkPtr);
 
     dInfoPtr = textPtr->dInfoPtr;
-    return chunkPtr->x + dInfoPtr->x + dInfoPtr->curYPixelOffset;
+    return chunkPtr->x + dInfoPtr->x + dInfoPtr->curXPixelOffset;
 }
 
 /*
@@ -11520,7 +11475,7 @@ TkTextPixelIndex(
     }
 
     DLineIndexOfX(textPtr, currChunkPtr, x, indexPtr);
-    return currChunkPtr;;
+    return currChunkPtr;
 }
 
 /*

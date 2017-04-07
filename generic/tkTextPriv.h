@@ -648,6 +648,58 @@ TkBTreeGetTags(
 /*
  *----------------------------------------------------------------------
  *
+ * TkTextGetFirstChunkOfNextDispLine --
+ *
+ *	This function returns the first chunk of succeeding display line
+ *	which contains characters.
+ *
+ * Results:
+ *	Returns the first chunk of succeeding display line which contains
+ *	characters.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+inline
+const TkTextDispChunk *
+TkTextGetFirstChunkOfNextDispLine(
+    const TkTextDispChunk *chunkPtr)
+{
+    return chunkPtr->dlPtr->nextPtr ? chunkPtr->dlPtr->nextPtr->firstCharChunkPtr : NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkTextGetLastChunkOfPrevDispLine --
+ *
+ *	This function returns the last chunk of predecessing display line
+ *	which contains characters.
+ *
+ * Results:
+ *	Returns the last chunk of predecessing display line which contains
+ *	characters.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+inline
+const TkTextDispChunk *
+TkTextGetLastChunkOfPrevDispLine(
+    const TkTextDispChunk *chunkPtr)
+{
+    return chunkPtr->dlPtr->prevPtr ? chunkPtr->dlPtr->prevPtr->lastChunkPtr : NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkTextIndexGetLine --
  *
  *	Get the line pointer of this index.
