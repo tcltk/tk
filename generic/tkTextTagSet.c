@@ -496,6 +496,46 @@ TkTextTagSetIntersect(
 
 
 TkTextTagSet *
+TkTextTagSetIntersectThis(
+    TkTextTagSet *dst,
+    const TkTextTagSet *src)
+{
+    assert(src);
+    assert(dst);
+
+    if (src == dst || TkTextTagSetIsEmpty(dst)) {
+	return dst;
+    }
+    if (src->base.isSetFlag | dst->base.isSetFlag) {
+	TkBitField *bf, *tmp;
+
+	assert(dst->base.refCount > 0);
+
+	if (src->base.isSetFlag) {
+	    if (dst->base.isSetFlag) {
+		return (TkTextTagSet *) TkIntSetIntersect(&dst->set, &src->set);
+	    }
+
+	    tmp = TkBitFromSet(&src->set, TkBitSize(&dst->bf));
+	    TkBitIntersect(&dst->bf, tmp);
+	    TkBitDestroy(&tmp);
+	    return dst;
+	}
+
+	bf = TkBitCopy(&src->bf, -1);
+	tmp = TkBitFromSet(&dst->set, TkBitSize(&src->bf));
+	TkBitIntersect(bf, tmp);
+	TkBitDestroy(&tmp);
+	TkIntSetDecrRefCount(&dst->set);
+	return (TkTextTagSet *) bf;
+    }
+
+    TkBitIntersect(&dst->bf, &src->bf);
+    return dst;
+}
+
+
+TkTextTagSet *
 TkTextTagSetIntersectBits(
     TkTextTagSet *dst,
     const TkBitField *src)
@@ -574,6 +614,48 @@ TkTextTagSetRemove(
     }
 
     dst = MakeBitCopyIfNeeded(dst);
+    TkBitRemove(&dst->bf, &src->bf);
+    return dst;
+}
+
+
+TkTextTagSet *
+TkTextTagSetRemoveFromThis(
+    TkTextTagSet *dst,
+    const TkTextTagSet *src)
+{
+    assert(src);
+    assert(dst);
+
+    if (TkTextTagSetIsEmpty(src) || TkTextTagSetIsEmpty(dst)) {
+	return dst;
+    }
+    if (src == dst) {
+	if (dst->base.isSetFlag) {
+	    return (TkTextTagSet *) TkIntSetClear(&dst->set);
+	}
+	TkBitClear(&dst->bf);
+	return dst;
+    }
+
+    if (src->base.isSetFlag | dst->base.isSetFlag) {
+	TkBitField *bf;
+
+	assert(dst->base.refCount > 0);
+
+	if (dst->base.isSetFlag) {
+	    if (src->base.isSetFlag) {
+		return Convert((TkTextTagSet *) TkIntSetRemove(&dst->set, &src->set));
+	    }
+	    return Convert((TkTextTagSet *) TkIntSetRemoveBits(&dst->set, &src->bf));
+	}
+
+	bf = TkBitFromSet(&src->set, TkBitSize(&dst->bf));
+	TkBitRemove(&dst->bf, bf);
+	TkBitDestroy(&bf);
+	return dst;
+    }
+
     TkBitRemove(&dst->bf, &src->bf);
     return dst;
 }

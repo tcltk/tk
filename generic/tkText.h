@@ -606,6 +606,7 @@ struct TkTextDispChunk {
     struct TextStyle *stylePtr;	/* Display information, known only to tkTextDisp.c. This attribute
     				 * is set iff the associated segment has tag information AND is not
 				 * elided. */
+    unsigned uniqID;		/* Unique identifier for this chunk, used by TkTextPickCurrent. */
 
     /*
      * The fields below are set by the layoutProc that creates the chunk.
@@ -667,6 +668,56 @@ struct TkTextDispChunk {
 
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 };
+
+/*
+ * The following structure describes one line of the display, which may be
+ * either part or all of one line of the text. This structure will be defined
+ * here because we want to provide inlined functions.
+ */
+
+typedef struct TkTextDispLine {
+    TkTextIndex index;		/* Identifies first character in text that is displayed on this line. */
+    struct TkTextDispLine *nextPtr;
+    				/* Next in list of all display lines for this window. The list is
+    				 * sorted in order from top to bottom. Note: the next DLine doesn't
+				 * always correspond to the next line of text: (a) can have multiple
+				 * DLines for one text line (wrapping), (b) can have elided newlines,
+				 * and (c) can have gaps where DLine's have been deleted because
+				 * they're out of date. */
+    struct TkTextDispLine *prevPtr;
+    				/* Previous in list of all display lines for this window. */
+    TkTextDispChunk *chunkPtr;	/* Pointer to first chunk in list of all of those that are displayed
+    				 * on this line of the screen. */
+    TkTextDispChunk *firstCharChunkPtr;
+    				/* Pointer to first chunk in list containing chars, window, or image. */
+    TkTextDispChunk *lastChunkPtr;
+    				/* Pointer to last chunk in list containing chars. */
+    TkTextDispChunk *cursorChunkPtr;
+    				/* Pointer to chunk which displays the insert cursor. */
+    struct TkTextBreakInfo *breakInfo;
+    				/* Line break information of logical line. */
+    uint32_t displayLineNo;	/* The number of this display line relative to the related logical
+    				 * line. */
+    uint32_t hyphenRule;	/* Hyphenation rule applied to last char chunk (only if hyphenation
+    				 * has been applied). */
+    uint32_t byteCount;		/* Number of bytes accounted for by this display line, including a
+    				 * trailing space or newline that isn't actually displayed. */
+    int32_t y;			/* Y-position at which line is supposed to be drawn (topmost pixel
+    				 * of rectangular area occupied by line). */
+    int32_t oldY;		/* Y-position at which line currently appears on display. This is
+    				 * used to move lines by scrolling rather than re-drawing. If 'flags'
+				 * have the OLD_Y_INVALID bit set, then we will never examine this
+				 * field (which means line isn't currently visible on display and
+				 * must be redrawn). */
+    int32_t height;		/* Height of line, in pixels. */
+    int32_t baseline;		/* Offset of text baseline from y, in pixels. */
+    int32_t spaceAbove;		/* How much extra space was added to the top of the line because of
+    				 * spacing options. This is included in height and baseline. */
+    int32_t spaceBelow;		/* How much extra space was added to the bottom of the line because
+    				 * of spacing options. This is included in height. */
+    uint32_t length;		/* Total length of line, in pixels. */
+    uint32_t flags;		/* Various flag bits: see below for values. */
+} TkTextDispLine;
 
 /*
  * One data structure of the following type is used for each tag in a text
@@ -748,6 +799,14 @@ typedef enum {
  * Mask of all defined hyphen rules.
  */
 #define TK_TEXT_HYPHEN_MASK		((1 << (TK_TEXT_HYPHEN_TRIPLE_CONSONANT + 1)) - 1)
+
+/*
+ * Some constants for the mouse hovering:
+ */
+
+#define TK_TEXT_NEARBY_IS_UNDETERMINED	INT_MAX /* is not yet determined */
+#define TK_TEXT_IS_NEARBY		INT_MIN /* is on border */
+
 
 typedef struct TkTextTag {
     const char *name;		/* Name of this tag. This field is actually a pointer to the key
@@ -1391,12 +1450,12 @@ typedef struct TkText {
 				 * to the text. */
     STRUCT TkTextTagSet *curTagInfoPtr;
     				/* Set of tags associated with character at current mark. */
-    bool currNearbyFlag;	/* The 'nearby' flag of last pick event. */
-    const TkTextDispChunk *lastTextDispChunkPtr;
-    				/* Cache display chunk of last mouse hovering. Only use for pointer
-				 * comparison, because the content may be out-of-date. */
+    uint32_t lastChunkID;	/* Cache chunk ID of last mouse hovering. */
     int32_t lastX;		/* Cache x coordinate of last mouse hovering. */
-    int32_t lastLineY;		/* Cache y coordinate of the display line of last mouse hovering. */
+    int32_t lastLineY;		/* Cache y coordinate of the display line of last mouse hovering.
+    				 * If lastLineY == INT_MAX then it is undetermined (initialized).
+				 * If lastLineY == INT_MIN then it is on the border.
+				 * Otherwise it's inside a display chunk. */
 
     /*
      * Information used for event bindings associated with images:
@@ -1816,7 +1875,6 @@ MODULE_SCOPE unsigned	TkBTreeLinesPerNode(const TkTextBTree tree);
 MODULE_SCOPE const STRUCT TkTextTagSet * TkBTreeRootTagInfo(const TkTextBTree tree);
 MODULE_SCOPE void	TkTextBindProc(ClientData clientData, XEvent *eventPtr);
 MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
-MODULE_SCOPE void	TkTextAllocStatistic();
 MODULE_SCOPE int	TkConfigureText(Tcl_Interp *interp, TkText *textPtr, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE bool	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
@@ -1967,6 +2025,8 @@ MODULE_SCOPE int	TkTextGetXPixelFromChunk(const TkText *textPtr,
 			    const TkTextDispChunk *chunkPtr);
 MODULE_SCOPE int	TkTextGetYPixelFromChunk(const TkText *textPtr,
 			    const TkTextDispChunk *chunkPtr);
+inline const TkTextDispChunk * TkTextGetFirstChunkOfNextDispLine(const TkTextDispChunk *chunkPtr);
+inline const TkTextDispChunk * TkTextGetLastChunkOfPrevDispLine(const TkTextDispChunk *chunkPtr);
 MODULE_SCOPE int	TkTextGetFirstXPixel(const TkText *textPtr);
 MODULE_SCOPE int	TkTextGetFirstYPixel(const TkText *textPtr);
 MODULE_SCOPE int	TkTextGetLastXPixel(const TkText *textPtr);

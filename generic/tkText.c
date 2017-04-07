@@ -993,17 +993,17 @@ CreateWidget(
 	Tcl_InitHashTable(&sharedTextPtr->markTable, TCL_STRING_KEYS);
 	Tcl_InitHashTable(&sharedTextPtr->windowTable, TCL_STRING_KEYS);
 	Tcl_InitHashTable(&sharedTextPtr->imageTable, TCL_STRING_KEYS);
-	sharedTextPtr->usedTags = TkBitResize(NULL, 256);
-	sharedTextPtr->elisionTags = TkBitResize(NULL, 256);
-	sharedTextPtr->selectionTags = TkBitResize(NULL, 256);
-	sharedTextPtr->dontUndoTags = TkBitResize(NULL, 256);
-	sharedTextPtr->affectDisplayTags = TkBitResize(NULL, 256);
-	sharedTextPtr->notAffectDisplayTags = TkBitResize(NULL, 256);
-	sharedTextPtr->affectDisplayNonSelTags = TkBitResize(NULL, 256);
-	sharedTextPtr->affectGeometryTags = TkBitResize(NULL, 256);
-	sharedTextPtr->affectGeometryNonSelTags = TkBitResize(NULL, 256);
-	sharedTextPtr->affectLineHeightTags = TkBitResize(NULL, 256);
-	sharedTextPtr->tagLookup = malloc(256*sizeof(TkTextTag *));
+	sharedTextPtr->usedTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
+	sharedTextPtr->elisionTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
+	sharedTextPtr->selectionTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
+	sharedTextPtr->dontUndoTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
+	sharedTextPtr->affectDisplayTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
+	sharedTextPtr->notAffectDisplayTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
+	sharedTextPtr->affectDisplayNonSelTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
+	sharedTextPtr->affectGeometryTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
+	sharedTextPtr->affectGeometryNonSelTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
+	sharedTextPtr->affectLineHeightTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
+	sharedTextPtr->tagLookup = malloc(TK_TEXT_SET_MAX_BIT_SIZE*sizeof(TkTextTag *));
 	sharedTextPtr->emptyTagInfoPtr = TkTextTagSetResize(NULL, 0);
 	sharedTextPtr->maxRedoDepth = -1;
 	sharedTextPtr->autoSeparators = true;
@@ -1016,7 +1016,7 @@ CreateWidget(
 	sharedTextPtr->protectionMark[0]->typePtr = &tkTextProtectionMarkType;
 	sharedTextPtr->protectionMark[1]->typePtr = &tkTextProtectionMarkType;
 
-	DEBUG(memset(sharedTextPtr->tagLookup, 0, 256*sizeof(TkTextTag *)));
+	DEBUG(memset(sharedTextPtr->tagLookup, 0, TK_TEXT_SET_MAX_BIT_SIZE*sizeof(TkTextTag *)));
 
 	sharedTextPtr->mainPeer = memset(malloc(sizeof(TkText)), 0, sizeof(TkText));
 	sharedTextPtr->mainPeer->startMarker = sharedTextPtr->startMarker;
@@ -1127,9 +1127,8 @@ CreateWidget(
     textPtr->prevWidth = Tk_Width(newWin);
     textPtr->prevHeight = Tk_Height(newWin);
     textPtr->hyphens = -1;
-    textPtr->currNearbyFlag = -1;
     textPtr->prevSyncState = -1;
-    textPtr->lastLineY = INT_MAX;
+    textPtr->lastLineY = TK_TEXT_NEARBY_IS_UNDETERMINED;
     TkTextTagSetIncrRefCount(textPtr->curTagInfoPtr = sharedTextPtr->emptyTagInfoPtr);
 
     /*
@@ -3235,8 +3234,7 @@ ClearText(
 	tPtr->abortSelections = true;
 	tPtr->configureBboxTree = false;
 	tPtr->hoveredImageArrSize = 0;
-	tPtr->currNearbyFlag = -1;
-	textPtr->lastLineY = INT_MAX;
+	textPtr->lastLineY = TK_TEXT_NEARBY_IS_UNDETERMINED;
 	tPtr->refCount -= 1;
 	tPtr->startLine = NULL;
 	tPtr->endLine = NULL;
@@ -11696,6 +11694,8 @@ extern bool		TkTextIsSpecialOrPrivateMark(const TkTextSegment *segPtr);
 extern bool		TkTextIsNormalOrSpecialMark(const TkTextSegment *segPtr);
 extern bool		TkTextIsNormalMark(const TkTextSegment *segPtr);
 extern bool		TkTextIsStableMark(const TkTextSegment *segPtr);
+extern const TkTextDispChunk *TkTextGetFirstChunkOfNextDispLine(const TkTextDispChunk *chunkPtr);
+extern const TkTextDispChunk *TkTextGetLastChunkOfPrevDispLine(const TkTextDispChunk *chunkPtr);
 extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, unsigned epoch);
 extern void		TkTextIndexUpdateEpoch(TkTextIndex *indexPtr, unsigned epoch);
 extern void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
