@@ -3075,17 +3075,9 @@ TkTextPickCurrent(
 		 * Mouse pointer has moved to any predecessing display line.
 		 */
 
-		for (chunkPtr = newDispChunkPtr, cPtr = newDispChunkPtr;
+		for (cPtr = chunkPtr = newDispChunkPtr;
 			chunkPtr && textPtr->lastLineY > TkTextGetYPixelFromChunk(textPtr, chunkPtr);
 			cPtr = chunkPtr = TkTextGetFirstChunkOfNextDispLine(chunkPtr)) {
-		    assert(TkTextGetTagSetFromChunk(cPtr));
-
-		    if (!TkTextTagSetIntersects(newTagInfoPtr, TkTextGetTagSetFromChunk(cPtr))) {
-			TkTextTagSetDecrRefCount(commonTags);
-			TkTextTagSetIncrRefCount(commonTags = sharedTextPtr->emptyTagInfoPtr);
-			cPtr = NULL;
-			break;
-		    }
 		    for ( ; cPtr; cPtr = cPtr->nextPtr) {
 			if ((tPtr = TkTextGetTagSetFromChunk(cPtr))) {
 			    commonTags = TkTextTagSetIntersectThis(commonTags, tPtr);
@@ -3109,17 +3101,9 @@ TkTextPickCurrent(
 		 * Mouse pointer has moved to any successing display line.
 		 */
 
-		for (chunkPtr = newDispChunkPtr, cPtr = newDispChunkPtr;
+		for (cPtr = chunkPtr = newDispChunkPtr;
 			chunkPtr && textPtr->lastLineY < TkTextGetYPixelFromChunk(textPtr, chunkPtr);
 			cPtr = chunkPtr = TkTextGetLastChunkOfPrevDispLine(chunkPtr)) {
-		    assert(TkTextGetTagSetFromChunk(cPtr));
-
-		    if (!TkTextTagSetIntersects(newTagInfoPtr, TkTextGetTagSetFromChunk(cPtr))) {
-			TkTextTagSetDecrRefCount(commonTags);
-			TkTextTagSetIncrRefCount(commonTags = sharedTextPtr->emptyTagInfoPtr);
-			cPtr = NULL;
-			break;
-		    }
 		    for ( ; cPtr; cPtr = cPtr->prevPtr) {
 			if ((tPtr = TkTextGetTagSetFromChunk(cPtr))) {
 			    commonTags = TkTextTagSetIntersectThis(commonTags, tPtr);
