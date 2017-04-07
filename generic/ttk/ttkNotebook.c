@@ -289,13 +289,14 @@ static void ActivateTab(Notebook *nb, int index)
  * TabState --
  * 	Return the state of the specified tab, based on
  * 	notebook state, currentIndex, activeIndex, and user-specified tab state.
- *	The USER1 bit is set for the leftmost tab, and USER2
- * 	is set for the rightmost tab.
+ *	The USER1 bit is set for the leftmost visible tab, and USER2
+ * 	is set for the rightmost visible tab.
  */
 static Ttk_State TabState(Notebook *nb, int index)
 {
     Ttk_State state = nb->core.state;
     Tab *tab = Ttk_SlaveData(nb->notebook.mgr, index);
+    int i = 0;
 
     if (index == nb->notebook.currentIndex) {
 	state |= TTK_STATE_SELECTED;
@@ -306,11 +307,25 @@ static Ttk_State TabState(Notebook *nb, int index)
     if (index == nb->notebook.activeIndex) {
 	state |= TTK_STATE_ACTIVE;
     }
-    if (index == 0) {
-    	state |= TTK_STATE_USER1;
+    for (i = 0; i < Ttk_NumberSlaves(nb->notebook.mgr); ++i) {
+	Tab *tab = Ttk_SlaveData(nb->notebook.mgr, i);
+	if (tab->state == TAB_STATE_HIDDEN) {
+	    continue;
+	}
+	if (index == i) {
+	    state |= TTK_STATE_USER1;
+	}
+	break;
     }
-    if (index == Ttk_NumberSlaves(nb->notebook.mgr) - 1) {
-    	state |= TTK_STATE_USER2;
+    for (i = Ttk_NumberSlaves(nb->notebook.mgr) - 1; i >= 0; --i) {
+	Tab *tab = Ttk_SlaveData(nb->notebook.mgr, i);
+	if (tab->state == TAB_STATE_HIDDEN) {
+	    continue;
+	}
+	if (index == i) {
+	    state |= TTK_STATE_USER2;
+	}
+	break;
     }
     if (tab->state == TAB_STATE_DISABLED) {
 	state |= TTK_STATE_DISABLED;
