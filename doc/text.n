@@ -466,13 +466,6 @@ commonly used in some text editors.
 .
 The new text will not receive any tags from surrounded text.
 .RE
-.OP \-transitionmode transitionMode TransitionMode
-Per default (mode \fBnone\fR) an Enter/Leave event triggers for a tag when
-the mouse first becomes hovering a region of characters associated by this
-tag, or when leaving a region of characters associated by this tag. It may
-be desired to receive a Leave/Enter pair if the mouse pointer is changing
-the display line even without leaving such a region, this can be
-accomplished with transition mode \fBdisplayline\fR.
 .OP \-undo undo Undo
 Specifies a boolean that says whether the undo mechanism is active or not.
 .OP \-width width Width
@@ -1035,16 +1028,6 @@ tabbing to use for the text widget. This option only applies to a display line
 if it applies to the first non-elided character on that display line. If this
 option is specified as an empty string, it cancels the option, leaving it
 unspecified for the tag (the default).
-.TP
-\fB-transitionmode \fImode\fR
-.
-This tag option overrules the global option \fB-transitionmode\fR when set.
-If this mode is set to \fInone\fR then an Enter/Leave event triggers for a
-tag when the mouse first becomes hovering a region of characters associated
-by this tag, or when leaving a region of characters associated by this tag.
-It may be desired to receive a Leave/Enter pair if the mouse pointer is
-changing the display line even without leaving such a region, this can be
-accomplished with transition mode \fIdisplayline\fR.
 .TP
 \fB\-underline \fIboolean\fR
 .
