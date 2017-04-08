@@ -2744,14 +2744,6 @@ TkTextBindProc(
 		return;
 	    }
 	}
-	if (textPtr->hoveredImageArrSize && sharedTextPtr->imageBindingTable) {
-	    unsigned i;
-
-	    for (i = 0; i < textPtr->hoveredImageArrSize; ++i) {
-		Tk_BindEvent(sharedTextPtr->imageBindingTable, eventPtr, textPtr->tkwin, 1,
-			(ClientData *) &textPtr->hoveredImageArr[i]->name);
-	    }
-	}
     }
     if (repick) {
 	unsigned oldState = eventPtr->xbutton.state;
@@ -2794,21 +2786,6 @@ TkTextBindProc(
  */
 
 static bool
-ImageHitCallback(
-    TkQTreeUid uid,
-    const TkQTreeRect *rect,
-    TkQTreeState *state,
-    TkQTreeClientData arg)
-{
-    TkTextEmbImage **eiListPtr = (TkTextEmbImage **) arg;
-    TkTextEmbImage *eiPtr = (TkTextEmbImage *) uid;
-
-    eiPtr->nextPtr = *eiListPtr;
-    *eiListPtr = eiPtr;
-    return true;
-}
-
-static bool
 DispChunkContainsX(
     TkText *textPtr,
     const TkTextDispChunk *chunkPtr,
@@ -2836,7 +2813,6 @@ TkTextPickCurrent(
     TkTextIndex index;
     XEvent event;
     unsigned tagEpoch;
-    unsigned i;
 
     assert(!(textPtr->flags & DESTROYED));
 
@@ -3204,64 +3180,6 @@ TkTextPickCurrent(
     TkTextTagSetDecrRefCount(leaveTags);
     TkTextTagSetDecrRefCount(enterTags);
     TkTextTagSetDecrRefCount(newTagInfoPtr);
-
-    if (textPtr->imageBboxTree && sharedTextPtr->imageBindingTable && !(textPtr->flags & DESTROYED)) {
-	/*
-	 * Trigger the Enter and Leave events for embedded images.
-	 * It's quite unlikely, but we have to consider that some images are overlapping.
-	 * TODO: Oops, overlapping is not possible, so we can simplify this algorithm.
-	 */
-
-	TkTextEmbImage *eiListPtr = NULL, *eiPtr;
-	unsigned countHoveredImages = 0;
-	int dx, dy;
-
-	event = textPtr->pickEvent;
-	switch (event.type) {
-	case EnterNotify: /* fallthru */
-	case LeaveNotify: event.xcrossing.detail = NotifyAncestor; break;
-	case FocusIn:     /* fallthru */
-	case FocusOut:    event.xfocus.detail = NotifyAncestor; break;
-	}
-	TkTextGetViewOffset(textPtr, &dx, &dy);
-	TkQTreeSearch(
-		textPtr->imageBboxTree,
-		eventPtr->xmotion.x + dx,
-		eventPtr->xmotion.y + dy,
-		ImageHitCallback,
-		(TkQTreeClientData) &eiListPtr);
-	for (i = 0; i < textPtr->hoveredImageArrSize; ++i) {
-	    textPtr->hoveredImageArr[i]->hovered = false;
-	}
-	for (eiPtr = eiListPtr; eiPtr; eiPtr = eiPtr->nextPtr, ++countHoveredImages) {
-	    eiPtr->hovered = true;
-	}
-	for (i = 0; i < textPtr->hoveredImageArrSize; ++i) {
-	    eiPtr = textPtr->hoveredImageArr[i];
-	    if (!eiPtr->hovered) {
-		assert(eiPtr->image);
-		event.type = LeaveNotify;
-		Tk_BindEvent(sharedTextPtr->imageBindingTable, &event,
-			textPtr->tkwin, 1, (ClientData *) &eiPtr->name);
-	    }
-	}
-	textPtr->hoveredImageArrSize = 0;
-	if (countHoveredImages > textPtr->hoveredImageArrCapacity) {
-	    textPtr->hoveredImageArrCapacity = MAX(4u, 2u*textPtr->hoveredImageArrCapacity);
-	    textPtr->hoveredImageArr = realloc(textPtr->hoveredImageArr,
-		textPtr->hoveredImageArrCapacity * sizeof(textPtr->hoveredImageArr[0]));
-	}
-	for (eiPtr = eiListPtr; eiPtr; eiPtr = eiPtr->nextPtr) {
-	    if (eiPtr->hovered) {
-		assert(eiPtr->image);
-		event.type = EnterNotify;
-		event.xcrossing.detail = NotifyAncestor;
-		Tk_BindEvent(sharedTextPtr->imageBindingTable, &event,
-			textPtr->tkwin, 1, (ClientData *) &eiPtr->name);
-		textPtr->hoveredImageArr[textPtr->hoveredImageArrSize++] = eiPtr;
-	    }
-	}
-    }
 }
 
 /*

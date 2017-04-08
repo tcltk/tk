@@ -5396,7 +5396,6 @@ UpdateDisplayInfo(
 	for (dlPtr = topLine; dlPtr; dlPtr = dlPtr->nextPtr) {
 	    dlPtr->flags |= OLD_Y_INVALID;
 	}
-	textPtr->configureBboxTree = true;
     }
 }
 
@@ -8203,10 +8202,6 @@ DisplayText(
 	}
 	DEBUG(stats.numCopies += 1);
 	TkDestroyRegion(damageRgn);
-
-	if (y != oldY) {
-	    textPtr->configureBboxTree = true;
-	}
     }
 
     /*

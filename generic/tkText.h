@@ -23,7 +23,6 @@
 #endif
 
 #include "tkTextUndo.h"
-#include "tkQTree.h"
 #include "tkBool.h"
 
 #ifdef MAC_OSX_TK
@@ -402,12 +401,8 @@ typedef struct TkTextEmbImage {
     				 * May be unique-ified. */
     char *name;			/* Name used in the hash table. Used by "image names" to
     				 * identify this instance of the image. */
-    struct TkTextEmbImage *nextPtr;
-    				/* Will be used in TkTextPickCurrent. */
-    bool hovered;		/* Will be used in TkTextPickCurrent. */
     bool haveBindings;		/* Flag whether this image has bindings. */
     uint32_t numClients;	/* Size of bbox array. */
-    TkQTreeRect *bbox;		/* Bounding box of this image, one bbox for every peer. */
     Tk_Image image;		/* Image for this segment. NULL means that the image hasn't
     				 * been created yet. */
     int imgHeight;		/* Height of displayed image. */
@@ -1458,20 +1453,6 @@ typedef struct TkText {
 				 * Otherwise it's inside a display chunk. */
 
     /*
-     * Information used for event bindings associated with images:
-     */
-
-    bool configureBboxTree;	/* Flag whether we have to resize the image bounding box tree. */
-    TkQTree imageBboxTree;	/* Lookup of points in a set of rectangles, for fast mouse
-    				 * hovering lookup. */
-    TkTextEmbImage **hoveredImageArr;
-    				/* This is the array of currently hovered image. */
-    unsigned hoveredImageArrSize;
-    				/* Number of entries in 'hoveredImageArrSize'. */
-    unsigned hoveredImageArrCapacity;
-    				/* Capacity of 'hoveredImageArr'. */
-
-    /*
      * Miscellaneous additional information:
      */
 
@@ -2053,7 +2034,6 @@ MODULE_SCOPE int	TkTextTagCmd(TkText *textPtr, Tcl_Interp *interp,
 MODULE_SCOPE int	TkTextImageCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE bool	TkTextImageIndex(TkText *textPtr, const char *name, TkTextIndex *indexPtr);
-MODULE_SCOPE void	TkTextImageAddClient(TkSharedText *sharedTextPtr, TkText *textPtr);
 MODULE_SCOPE TkTextSegment * TkTextMakeImage(TkText *textPtr, Tcl_Obj *options);
 MODULE_SCOPE int	TkTextWindowCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
