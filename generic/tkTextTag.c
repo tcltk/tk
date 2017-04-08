@@ -163,12 +163,7 @@ static bool		ChangeTagPriority(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    unsigned newPriority, bool undo);
 static void		TagBindEvent(TkText *textPtr, XEvent *eventPtr, TkTextTagSet *tagInfoPtr,
 			    unsigned epoch);
-static bool		TagAddRemove(TkText *textPtr, const TkTextIndex *index1Ptr,
-			    const TkTextIndex *index2Ptr, TkTextTag *tagPtr, bool add);
-static void		FindTags(Tcl_Interp *interp, TkText *textPtr, const TkTextSegment *segPtr,
-			    bool discardSelection);
 static void		AppendTags(Tcl_Interp *interp, unsigned numTags, TkTextTag **tagArray);
-static void		GrabSelection(TkText *textPtr, const TkTextTag *tagPtr, bool add, bool changed);
 static TkTextTag *	FindTag(Tcl_Interp *interp, const TkText *textPtr, Tcl_Obj *tagName);
 static int		EnumerateTags(Tcl_Interp *interp, TkText *textPtr, int objc,
 			    Tcl_Obj *const *objv);
@@ -336,12 +331,12 @@ TkTextTagCmd(
 	    } else {
 		TkTextIndexForwChars(textPtr, &index1, 1, &index2, COUNT_INDICES);
 	    }
-	    if (TagAddRemove(textPtr, &index1, &index2, tagPtr, addTag)) {
+	    if (TkTextTagAddRemove(textPtr, &index1, &index2, tagPtr, addTag)) {
 		anyChanges = true;
 	    }
 	}
 	if (tagPtr == textPtr->selTagPtr) {
-	    GrabSelection(textPtr, tagPtr, addTag, anyChanges);
+	    TkTextGrabSelection(textPtr, tagPtr, addTag, anyChanges);
 	}
 	if (anyChanges) {
 	    if (tagPtr->undo) {
@@ -440,7 +435,7 @@ TkTextTagCmd(
 			arrayPtr[countTags++] = tagPtr;
 
 			if (tagPtr == textPtr->selTagPtr) {
-			    GrabSelection(textPtr, tagPtr, false, true);
+			    TkTextGrabSelection(textPtr, tagPtr, false, true);
 			}
 			if (tagPtr->undo) {
 			    anyChanges = true;
@@ -1424,7 +1419,7 @@ AppendTags(
 /*
  *----------------------------------------------------------------------
  *
- * FindTags --
+ * TkTextFindTags --
  *
  *	This function is appending the tags from given char segment to the
  *	interpreter.
@@ -1438,8 +1433,8 @@ AppendTags(
  *----------------------------------------------------------------------
  */
 
-static void
-FindTags(
+void
+TkTextFindTags(
     Tcl_Interp *interp,		/* Current interpreter. */
     TkText *textPtr,		/* Info about overall widget. */
     const TkTextSegment *segPtr,/* Tags from this segment. */
@@ -1495,7 +1490,7 @@ TkTextTagChangedUndoRedo(
     }
     if (tagPtr && tagPtr->textPtr) {
 	assert(tagPtr == textPtr->selTagPtr);
-	GrabSelection(tagPtr->textPtr, tagPtr, TkTextTestTag(indexPtr1, tagPtr), true);
+	TkTextGrabSelection(tagPtr->textPtr, tagPtr, TkTextTestTag(indexPtr1, tagPtr), true);
     }
     return true;
 }
@@ -1503,7 +1498,7 @@ TkTextTagChangedUndoRedo(
 /*
  *----------------------------------------------------------------------
  *
- * GrabSelection --
+ * TkTextGrabSelection --
  * 	Grab the selection if we're supposed to export it and don't already
  * 	have it.
  *
@@ -1521,8 +1516,8 @@ TkTextTagChangedUndoRedo(
  *----------------------------------------------------------------------
  */
 
-static void
-GrabSelection(
+void
+TkTextGrabSelection(
     TkText *textPtr,		/* Info about overall widget. */
     const TkTextTag *tagPtr,	/* Tag which has been modified. */
     bool add,			/* 'true' means that we have added the "sel" tag;
@@ -1555,7 +1550,7 @@ GrabSelection(
 /*
  *----------------------------------------------------------------------
  *
- * TagAddRemove --
+ * TkTextTagAddRemove --
  *	This functions adds or removes a tag (or all tags) from the characters
  *	between given index range.
  *
@@ -1576,8 +1571,8 @@ UndoTagOperation(
     return sharedTextPtr->undoStack && (!tagPtr || tagPtr->undo);
 }
 
-static bool
-TagAddRemove(
+bool
+TkTextTagAddRemove(
     TkText *textPtr,		/* Info about overall widget. */
     const TkTextIndex *index1Ptr,
 				/* Indicates first character in range. */
@@ -3428,7 +3423,7 @@ EnumerateTags(
 	segPtr = TkTextIndexGetContentSegment(&index, NULL);
 
 	if (!includeBits && !discardBits) {
-	    FindTags(interp, textPtr, segPtr, discardSelection);
+	    TkTextFindTags(interp, textPtr, segPtr, discardSelection);
 	    return TCL_OK;
 	}
 

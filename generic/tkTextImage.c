@@ -155,6 +155,8 @@ static const Tk_OptionSpec optionSpecs[] = {
 	NULL, -1, Tk_Offset(TkTextEmbImage, imageString), TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-name", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextEmbImage, imageName), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-tags", NULL, NULL,
+	NULL, -1, -1, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -345,6 +347,23 @@ RedoLinkSegmentGetRange(
  *--------------------------------------------------------------
  */
 
+static bool
+MatchTagsOption(
+    const char *opt)
+{
+    static const char *pattern = "-tags";
+    const char *p = pattern;
+    const char *start = opt;
+
+    for ( ; *opt; ++p, ++opt) {
+	if (*p != *opt) {
+	    return opt > start && *p == '\0';
+	}
+    }
+
+    return true;
+}
+
 int
 TkTextImageCmd(
     TkText *textPtr,		/* Information about text widget. */
@@ -359,10 +378,10 @@ TkTextImageCmd(
     TkSharedText *sharedTextPtr;
     TkTextIndex index;
     static const char *CONST optionStrings[] = {
-	"bind", "cget", "configure", "create", "names", NULL
+	"cget", "configure", "create", "names", NULL
     };
     enum opts {
-	CMD_BIND, CMD_CGET, CMD_CONF, CMD_CREATE, CMD_NAMES
+	CMD_CGET, CMD_CONF, CMD_CREATE, CMD_NAMES
     };
 
     if (objc < 3) {
@@ -376,32 +395,7 @@ TkTextImageCmd(
     sharedTextPtr = textPtr->sharedTextPtr;
 
     switch ((enum opts) idx) {
-    case CMD_BIND: {
-	TkTextEmbImage *img;
-	int rc;
-
-	if (objc < 4 || objc > 6) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "index ?sequence? ?command?");
-	    return TCL_ERROR;
-	}
-	if (!TkTextGetIndexFromObj(interp, textPtr, objv[3], &index)) {
-	    return TCL_ERROR;
-	}
-	eiPtr = TkTextIndexGetContentSegment(&index, NULL);
-	if (eiPtr->typePtr != &tkTextEmbImageType) {
-	    Tcl_AppendResult(interp, "no embedded image at index \"",
-		    Tcl_GetString(objv[3]), "\"", NULL);
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", NULL);
-	    return TCL_ERROR;
-	}
-	img = &eiPtr->body.ei;
-	rc = TkTextBindEvent(interp, objc - 4, objv + 4, sharedTextPtr,
-		&sharedTextPtr->imageBindingTable, img->name);
-	return rc;
-    }
-    case CMD_CGET: {
-	Tcl_Obj *objPtr;
-
+    case CMD_CGET:
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "index option");
 	    return TCL_ERROR;
@@ -415,15 +409,17 @@ TkTextImageCmd(
 		    Tcl_GetString(objv[3]), "\"", NULL);
 	    return TCL_ERROR;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *) &eiPtr->body.ei,
-		eiPtr->body.ei.optionTable, objv[4], textPtr->tkwin);
-	if (!objPtr) {
-	    return TCL_ERROR;
+	if (MatchTagsOption(Tcl_GetString(objv[4]))) {
+	    TkTextFindTags(interp, textPtr, eiPtr, false);
 	} else {
+	    Tcl_Obj *objPtr = Tk_GetOptionValue(interp, (char *) &eiPtr->body.ei,
+		    eiPtr->body.ei.optionTable, objv[4], textPtr->tkwin);
+	    if (!objPtr) {
+		return TCL_ERROR;
+	    }
 	    Tcl_SetObjResult(interp, objPtr);
-	    return TCL_OK;
 	}
-    }
+	return TCL_OK;
     case CMD_CONF:
 	if (objc < 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "index ?option value ...?");
@@ -439,16 +435,33 @@ TkTextImageCmd(
 	    return TCL_ERROR;
 	}
 	if (objc <= 5) {
+	    Tcl_Obj **objs;
+	    int objn = 0, i;
+
 	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp,
 		    (char *) &eiPtr->body.ei, eiPtr->body.ei.optionTable,
 		    objc == 5 ? objv[4] : NULL, textPtr->tkwin);
-
 	    if (!objPtr) {
 		return TCL_ERROR;
-	    } else {
-		Tcl_SetObjResult(interp, objPtr);
-		return TCL_OK;
 	    }
+
+	    Tcl_ListObjGetElements(NULL, objPtr, &objn, &objs);
+	    for (i = 0; i < objn; ++i) {
+		Tcl_Obj **objv;
+		int objc = 0;
+
+		Tcl_ListObjGetElements(NULL, objs[i], &objc, &objv);
+		if (objc == 5 && strcmp(Tcl_GetString(objv[0]), "-tags") == 0) {
+		    Tcl_Obj *valuePtr;
+
+		    /* { argvName, dbName, dbClass, defValue, current value } */
+		    TkTextFindTags(interp, textPtr, eiPtr, false);
+		    valuePtr = Tcl_GetObjResult(interp);
+		    Tcl_ListObjReplace(NULL, objs[i], 4, 1, 1, &valuePtr);
+		}
+	    }
+	    Tcl_SetObjResult(interp, objPtr);
+	    return TCL_OK;
 	} else {
 	    int mask;
 	    int rc = EmbImageConfigure(textPtr, eiPtr, &mask, objc - 4, objv + 4);
@@ -470,7 +483,6 @@ TkTextImageCmd(
 	    if (!TkTextGetIndexFromObj(interp, textPtr, objv[3], &index)) {
 		return TCL_ERROR;
 	    }
-
 	    if (textPtr->state == TK_TEXT_STATE_DISABLED &&
 		    TkTextAttemptToModifyDisabledWidget(interp) != TCL_OK) {
 		return TCL_ERROR;
@@ -688,7 +700,8 @@ EmbImageConfigure(
 {
     Tk_Image image;
     char *name;
-    int width;
+    int width, i;
+    TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextEmbImage *img = &eiPtr->body.ei;
 
     if (maskPtr) {
@@ -698,6 +711,105 @@ EmbImageConfigure(
     if (Tk_SetOptions(textPtr->interp, (char *) img, img->optionTable, objc, objv, textPtr->tkwin,
 		NULL, maskPtr) != TCL_OK) {
 	return TCL_ERROR;
+    }
+
+    for (i = 0; i < objc; i += 2) {
+	if (MatchTagsOption(Tcl_GetString(objv[i]))) {
+	    TkTextTagSet *newTagInfoPtr;
+	    TkTextTagSet *oldTagInfoPtr;
+	    TkTextTag *tagArrBuf[128];
+	    TkTextTag **tagArrPtr = tagArrBuf;
+	    TkTextTag *tagPtr;
+	    TkTextIndex index[2];
+	    TkTextTag *selTagPtr = NULL;
+	    bool altered = false;
+	    bool anyChanges = false;
+	    Tcl_Obj **objs;
+	    int objn = 0, k;
+	    unsigned j;
+
+	    Tcl_ListObjGetElements(NULL, objv[i + 1], &objn, &objs);
+	    TkTextIndexClear(&index[0], textPtr);
+	    TkTextIndexSetSegment(&index[0], eiPtr);
+	    TkTextIndexForwBytes(textPtr, &index[0], 1, &index[1]);
+	    TkTextTagSetIncrRefCount(oldTagInfoPtr = eiPtr->tagInfoPtr);
+
+	    if (objn > (int) (sizeof(tagArrBuf)/sizeof(tagArrBuf[0]))) {
+		tagArrPtr = malloc(objn*sizeof(tagArrPtr[0]));
+	    }
+
+	    for (k = 0; k < objn; ++k) {
+		tagArrPtr[k] = TkTextCreateTag(textPtr, Tcl_GetString(objs[k]), NULL);
+	    }
+
+	    newTagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
+
+	    for (k = 0; k < objn; ++k) {
+		newTagInfoPtr = TkTextTagSetAddToThis(newTagInfoPtr, tagArrPtr[k]->index);
+	    }
+
+	    /*
+	     * Remove the deleted tags.
+	     */
+
+	    for (j = TkTextTagSetFindFirst(oldTagInfoPtr);
+		    j != TK_TEXT_TAG_SET_NPOS;
+		    j = TkTextTagSetFindNext(oldTagInfoPtr, j)) {
+		if (!TkTextTagSetTest(newTagInfoPtr, j)) {
+		    tagPtr = sharedTextPtr->tagLookup[j];
+		    assert(eiPtr->tagInfoPtr != sharedTextPtr->emptyTagInfoPtr);
+		    if (TkTextTagAddRemove(textPtr, &index[0], &index[1], tagPtr, false)) {
+			anyChanges = true;
+			if (tagPtr->undo) {
+			    altered = true;
+			}
+		    }
+		    if (tagPtr == textPtr->selTagPtr) {
+			selTagPtr = tagPtr;
+			selTagPtr->flag = false;
+		    }
+		}
+	    }
+
+	    /*
+	     * Add new tags.
+	     */
+
+	    for (j = TkTextTagSetFindFirst(newTagInfoPtr);
+		    j != TK_TEXT_TAG_SET_NPOS;
+		    j = TkTextTagSetFindNext(newTagInfoPtr, j)) {
+		if (!TkTextTagSetTest(eiPtr->tagInfoPtr, j)) {
+		    tagPtr = sharedTextPtr->tagLookup[j];
+		    if (TkTextTagAddRemove(textPtr, &index[0], &index[1], tagPtr, true)) {
+			anyChanges = true;
+			if (tagPtr->undo) {
+			    altered = true;
+			}
+		    }
+		    if (tagPtr == textPtr->selTagPtr) {
+			selTagPtr = tagPtr;
+			selTagPtr->flag = true;
+		    }
+		}
+	    }
+
+	    TkTextTagSetDecrRefCount(oldTagInfoPtr);
+	    TkTextTagSetDecrRefCount(newTagInfoPtr);
+
+	    if (selTagPtr) {
+		TkTextGrabSelection(textPtr, selTagPtr, selTagPtr->flag, true);
+	    }
+	    if (anyChanges) {
+		/* still need to trigger enter/leave events on tags that have changed */
+		TkTextEventuallyRepick(textPtr);
+	    }
+	    if (altered) {
+		TkTextUpdateAlteredFlag(sharedTextPtr);
+	    }
+	    if (tagArrPtr != tagArrBuf) {
+		free(tagArrPtr);
+	    }
+	}
     }
 
     /*
@@ -816,9 +928,6 @@ ReleaseImage(
 
     if (img->image) {
 	Tk_FreeImage(img->image);
-    }
-    if (img->sharedTextPtr->imageBindingTable) {
-	Tk_DeleteAllBindings(img->sharedTextPtr->imageBindingTable, (ClientData) img->name);
     }
 
     /*
