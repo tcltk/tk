@@ -345,15 +345,6 @@ RedoLinkSegmentGetRange(
  *--------------------------------------------------------------
  */
 
-static bool
-Displayed(
-    const TkTextEmbImage *img,
-    const TkText *peer)
-{
-    return peer->pixelReference < (int) img->numClients
-	    && !TkQTreeRectIsEmpty(&img->bbox[peer->pixelReference]);
-}
-
 int
 TkTextImageCmd(
     TkText *textPtr,		/* Information about text widget. */
@@ -406,36 +397,6 @@ TkTextImageCmd(
 	img = &eiPtr->body.ei;
 	rc = TkTextBindEvent(interp, objc - 4, objv + 4, sharedTextPtr,
 		&sharedTextPtr->imageBindingTable, img->name);
-	if (rc == TCL_OK && !img->haveBindings) {
-	    img->haveBindings = true;
-
-	    if (!textPtr->imageBboxTree) {
-		TkText *peer;
-
-		for (peer = sharedTextPtr->peers; peer; peer = peer->next) {
-		    if (Displayed(img, peer)) {
-			TkQTreeRect bbox;
-			int dx, dy;
-
-			/*
-			 * This image is already displayed, so we have to insert the bounding
-			 * box of this image in the lookup tree, but this tree must be
-			 * configured before we can add the bbox.
-			 */
-
-			TkTextGetViewOffset(peer, &dx, &dy);
-			TkQTreeRectSet(&bbox, dx, dy,
-				Tk_Width(peer->tkwin) + dx, Tk_Height(peer->tkwin) + dy);
-			TkQTreeConfigure(&peer->imageBboxTree, &bbox);
-			peer->configureBboxTree = false;
-			TkQTreeInsertRect(peer->imageBboxTree, &img->bbox[peer->pixelReference],
-				(TkQTreeUid) img, 0);
-		    } else if (!peer->imageBboxTree) {
-			peer->configureBboxTree = true;
-		    }
-		}
-	    }
-	}
 	return rc;
     }
     case CMD_CGET: {
@@ -578,50 +539,6 @@ TkTextImageCmd(
     }
     assert(!"unexpected switch fallthrough");
     return TCL_ERROR; /* shouldn't be reached */
-}
-
-/*
- *--------------------------------------------------------------
- *
- * TkTextImageAddClient --
- *
- *	This function is called to provide the image binding
- *	support of a client.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *--------------------------------------------------------------
- */
-
-void
-TkTextImageAddClient(
-    TkSharedText *sharedTextPtr,
-    TkText *textPtr)
-{
-    Tcl_HashSearch search;
-    Tcl_HashEntry *hPtr;
-    TkText *peer;
-
-    for (peer = sharedTextPtr->peers; peer; peer = peer->next) {
-	if (peer != textPtr && (peer->imageBboxTree || peer->configureBboxTree)) {
-	    textPtr->configureBboxTree = true;
-	}
-    }
-
-    for (hPtr = Tcl_FirstHashEntry(&sharedTextPtr->imageTable, &search);
-	    hPtr;
-	    hPtr = Tcl_NextHashEntry(&search)) {
-	TkTextSegment *eiPtr = Tcl_GetHashValue(hPtr);
-	TkTextEmbImage *img = &eiPtr->body.ei;
-
-	if ((int) img->numClients > textPtr->pixelReference) {
-	    memset(&img->bbox[textPtr->pixelReference], 0, sizeof(img->bbox[0]));
-	}
-    }
 }
 
 /*
@@ -912,9 +829,6 @@ ReleaseImage(
     if (img->name) {
 	free(img->name);
     }
-    if (img->bbox) {
-	free(img->bbox);
-    }
     TkBTreeFreeSegment(eiPtr);
 }
 
@@ -953,39 +867,6 @@ EmbImageDeleteProc(
 	img->sharedTextPtr->numImages -= 1;
 	Tcl_DeleteHashEntry(img->hPtr);
 	img->hPtr = NULL;
-    }
-
-    /*
-     * Remove this image from bounding box tree in all peers, and clear
-     * the information about the currently hovered image if necessary.
-     */
-
-    if (img->haveBindings) {
-	TkText *peer = img->sharedTextPtr->peers;
-
-	for ( ; peer; peer = peer->next) {
-	    if (!(peer->flags & DESTROYED && Displayed(img, peer))) {
-		if (peer->hoveredImageArrSize) {
-		    unsigned i;
-
-		    for (i = 0; i < peer->hoveredImageArrSize; ++i) {
-			if (peer->hoveredImageArr[i] == img) {
-			    /*
-			     * One problem here, the mouse leave event will not be
-			     * triggered anymore. The user should avoid this situation.
-			     */
-			    memmove(peer->hoveredImageArr + i, peer->hoveredImageArr + i + 1,
-				    --peer->hoveredImageArrSize - i);
-			    break;
-			}
-		    }
-		}
-		if (peer->imageBboxTree) {
-		    TkQTreeDeleteRect(peer->imageBboxTree, &img->bbox[peer->pixelReference],
-			    (TkQTreeUid) img);
-		}
-	    }
-	}
     }
 
     if (eiPtr->refCount == 1) {
@@ -1028,9 +909,6 @@ EmbImageRestoreProc(
 	img->sharedTextPtr->numImages += 1;
 	assert(isNew);
 	Tcl_SetHashValue(img->hPtr, eiPtr);
-    }
-    if (img->bbox) {
-	memset(img->bbox, 0, img->numClients * sizeof(img->bbox[0]));
     }
 }
 
@@ -1179,76 +1057,23 @@ EmbImageDisplayProc(
 {
     TkTextSegment *eiPtr = chunkPtr->clientData;
     TkTextEmbImage *img = &eiPtr->body.ei;
-    int lineX, imageX, imageY, width, height;
-    TkQTreeRect oldBbox;
-    TkQTreeRect *bbox;
     Tk_Image image;
-    int dx, dy;
 
-    if (!(image = img->image)) {
-	return;
-    }
-
-    /*
-     * Compute the image's location and size in the text widget, taking into
-     * account the align value for the image.
-     */
-
-    EmbImageBboxProc(textPtr, chunkPtr, 0, y, lineHeight, baseline, &lineX, &imageY, &width, &height);
-    imageX = lineX - chunkPtr->x + x;
-
-    TkTextGetViewOffset(textPtr, &dx, &dy);
-
-    if (textPtr->configureBboxTree) {
-	TkQTreeRect bbox;
+    if ((image = img->image) && x + chunkPtr->width > 0) {
+	int lineX, imageY, width, height;
 
 	/*
-	 * The view of the widget has changed. This is the appropriate place to
-	 * re-configure the bounding box tree.
+	 * Compute the image's location and size in the text widget, taking into
+	 * account the align value for the image.
 	 */
 
-	TkQTreeRectSet(&bbox, dx, dy, Tk_Width(textPtr->tkwin) + dx, Tk_Height(textPtr->tkwin) + dy);
-	TkQTreeConfigure(&textPtr->imageBboxTree, &bbox);
-	textPtr->configureBboxTree = false;
-    }
+	EmbImageBboxProc(textPtr, chunkPtr, 0, y, lineHeight, baseline, &lineX,
+		&imageY, &width, &height);
 
-    if ((int) img->numClients <= textPtr->pixelReference) {
-	unsigned numClients = textPtr->pixelReference + 1;
-
-	assert((img->numClients == 0) == !img->bbox);
-	img->bbox = realloc(img->bbox, numClients * sizeof(img->bbox[0]));
-	memset(img->bbox + img->numClients, 0, (numClients - img->numClients) * sizeof(img->bbox[0]));
-	img->numClients = numClients;
-    }
-
-    /*
-     * Update the bounding box, used for detection of mouse hovering.
-     */
-
-    bbox = &img->bbox[textPtr->pixelReference];
-    oldBbox = *bbox;
-    bbox->xmin = imageX + dx;
-    bbox->xmax = bbox->xmin + width;
-    bbox->ymin = screenY + imageY + dy;
-    bbox->ymax = bbox->ymin + height;
-
-    if (img->haveBindings && textPtr->imageBboxTree) {
-	const TkQTreeRect *oldBboxPtr = TkQTreeRectIsEmpty(&oldBbox) ? NULL : &oldBbox;
-
-	if (!TkQTreeRectIsEmpty(bbox)) {
-	    TkQTreeUpdateRect(textPtr->imageBboxTree, oldBboxPtr, bbox, (TkQTreeUid) img, 0);
-	} else if (oldBboxPtr) {
-	    /* Possibly this case is not possible at all, but we want to be sure. */
-	    TkQTreeDeleteRect(textPtr->imageBboxTree, oldBboxPtr, (TkQTreeUid) img);
+	if (x + chunkPtr->width > 0) {
+	    int imageX = lineX - chunkPtr->x + x;
+	    Tk_RedrawImage(image, 0, 0, width, height, dst, imageX, imageY);
 	}
-    }
-
-    if (x + chunkPtr->width > 0) {
-	/*
-	 * Finally, redraw the image if inside widget area.
-	 */
-
-	Tk_RedrawImage(image, 0, 0, width, height, dst, imageX, imageY);
     }
 }
 

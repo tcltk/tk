@@ -626,14 +626,6 @@ extern unsigned tkIntSetCountDestroy;
 extern unsigned tkIntSetCountNew;
 extern unsigned tkBitCountNew;
 extern unsigned tkBitCountDestroy;
-extern unsigned tkQTreeCountNewTree;
-extern unsigned tkQTreeCountDestroyTree;
-extern unsigned tkQTreeCountNewNode;
-extern unsigned tkQTreeCountDestroyNode;
-extern unsigned tkQTreeCountNewItem;
-extern unsigned tkQTreeCountDestroyItem;
-extern unsigned tkQTreeCountNewElement;
-extern unsigned tkQTreeCountDestroyElement;
 
 typedef struct WatchShared {
     TkSharedText *sharedTextPtr;
@@ -674,10 +666,6 @@ AllocStatistic()
     printf("PixelInfo:    %8u - %8u\n", tkTextCountNewPixelInfo, tkTextCountDestroyPixelInfo);
     printf("BitField:     %8u - %8u\n", tkBitCountNew, tkBitCountDestroy);
     printf("IntSet:       %8u - %8u\n", tkIntSetCountNew, tkIntSetCountDestroy);
-    printf("Tree:         %8u - %8u\n", tkQTreeCountNewTree, tkQTreeCountDestroyTree);
-    printf("Tree-Node:    %8u - %8u\n", tkQTreeCountNewNode, tkQTreeCountDestroyNode);
-    printf("Tree-Item:    %8u - %8u\n", tkQTreeCountNewItem, tkQTreeCountDestroyItem);
-    printf("Tree-Element: %8u - %8u\n", tkQTreeCountNewElement, tkQTreeCountDestroyElement);
     printf("--------------------------------\n");
 
     if (tkTextCountNewShared != tkTextCountDestroyShared
@@ -691,10 +679,6 @@ AllocStatistic()
 	    || tkTextCountNewPixelInfo != tkTextCountDestroyPixelInfo
 	    || tkBitCountNew != tkBitCountDestroy
 	    || tkIntSetCountNew != tkIntSetCountDestroy
-	    || tkQTreeCountNewTree != tkQTreeCountDestroyTree
-	    || tkQTreeCountNewElement != tkQTreeCountDestroyElement
-	    || tkQTreeCountNewNode != tkQTreeCountDestroyNode
-	    || tkQTreeCountNewItem != tkQTreeCountDestroyItem) {
 	printf("*** memory leak detected ***\n");
 	printf("----------------------------\n");
 	/* TkBitCheckAllocs(); */
@@ -1110,13 +1094,6 @@ CreateWidget(
      */
 
     TkBTreeAddClient(sharedTextPtr->tree, textPtr, textPtr->lineHeight);
-
-    /*
-     * Also the image binding support has to be enabled if required.
-     * This has to be done after TkBTreeAddClient has been called.
-     */
-
-    TkTextImageAddClient(sharedTextPtr, textPtr);
 
     textPtr->state = TK_TEXT_STATE_NORMAL;
     textPtr->relief = TK_RELIEF_FLAT;
@@ -3226,14 +3203,11 @@ ClearText(
 	if (clearTags) {
 	    TkTextFreeAllTags(tPtr);
 	}
-	TkQTreeDestroy(&tPtr->imageBboxTree);
 	FreeEmbeddedWindows(tPtr);
 	TkTextFreeDInfo(tPtr);
 	textPtr->dInfoPtr = NULL;
 	textPtr->dontRepick = false;
 	tPtr->abortSelections = true;
-	tPtr->configureBboxTree = false;
-	tPtr->hoveredImageArrSize = 0;
 	textPtr->lastLineY = TK_TEXT_NEARBY_IS_UNDETERMINED;
 	tPtr->refCount -= 1;
 	tPtr->startLine = NULL;
@@ -3414,13 +3388,7 @@ DestroyText(
      * Always clean up the widget-specific tags first. Common tags (i.e. most)
      * will only be cleaned up when the shared structure is cleaned up.
      *
-     * At first clean up the array of bounding boxes for the images.
-     */
-
-    TkQTreeDestroy(&textPtr->imageBboxTree);
-
-    /*
-     * Unset all the variables bound to this widget.
+     * Firstly unset all the variables bound to this widget.
      */
 
     listPtr = textPtr->varBindingList;
@@ -4543,10 +4511,6 @@ ProcessConfigureNotify(
 
     textPtr->prevWidth = Tk_Width(textPtr->tkwin);
     textPtr->prevHeight = Tk_Height(textPtr->tkwin);
-
-    if (textPtr->imageBboxTree) {
-	textPtr->configureBboxTree = true;
-    }
 }
 
 static void
