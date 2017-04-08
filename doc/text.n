@@ -2551,46 +2551,6 @@ command depends on the \fIoption\fR argument that follows the \fBtag\fR
 argument. The following forms of the command are currently supported:
 .RS
 .TP
-\fIpathName \fBimage bind\fR \fIindex\fR \fI?sequence\fR? \fI?script\fR?
-.
-This command associates \fIscript\fR with the image indentified by
-\fIindex\fR. Whenever the event sequence given by sequence occurs for this
-image, the \fIscript\fR will be invoked. This widget command is similar to
-the bind command except that it operates on a single image than entire
-widgets. See the bind manual entry for complete details on the syntax of
-sequence and the substitutions performed on \fIscript\fR before invoking it.
-If all arguments are specified then a new binding is created, replacing any
-existing binding for the same sequence and image (if the first character of
-\fIscript\fR is
-.QW +
-then \fIscript\fR augments an existing binding rather
-than replacing it). In this case the return value is an empty string. If
-\fIscript\fR is omitted then the command returns the script associated with
-\fIindex\fR and sequence (an error occurs if there is no such binding). If
-both \fIscript\fR and \fIsequence\fR are omitted then the command returns a
-list of all the sequences for which bindings have been defined for this
-image.
-.RS
-.PP
-The only events for which bindings may be specified are those related to the
-mouse and keyboard (such as \fBEnter\fR, \fBLeave\fR, \fBButtonPress\fR,
-\fBMotion\fR, and \fBKeyPress\fR) or virtual events. Event bindings for a
-text widget use the current mark described under MARKS above. An \fBEnter\fR
-event triggers for an image when the image first becomes present on the
-current cursor position, and a \fBLeave\fR event triggers for an image when
-it ceases to be present on the current cursor. \fBEnter\fR and \fBLeave\fR
-events can happen either because the current mark moved or because the image
-at that position appears or disappears. Note that these events are different
-than \fBEnter\fR and \fBLeave\fR events for windows. Mouse and keyboard
-events are directed to the current cursor. If a virtual event is used in a
-binding, that binding can trigger only if the virtual event is defined by an
-underlying mouse-related or keyboard-related event.
-.PP
-If bindings are created for the widget as a whole using the bind command,
-then those bindings will supplement the image bindings. The image bindings
-will be invoked first, followed by bindings for the window as a whole.
-.RE
-.TP
 \fIpathName \fBimage cget \fIindex option\fR
 .
 Returns the value of a configuration option for an embedded image. \fIIndex\fR
