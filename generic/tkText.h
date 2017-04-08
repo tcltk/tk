@@ -829,10 +829,10 @@ typedef struct TkTextTag {
 
     struct TkTextTag *nextPtr;	/* Will be set by TkBTreeGetTags, TkBTreeClearTags, and TextInsertCmd. */
     struct TkTextTag *succPtr;	/* Only TextInspectCmd will use this attribute. */
-    uint32_t flag;		/* Only for temporary usage (currently only TextInspectCmd and
-    				 * TkTextPickCurrent will use this attribute). */
-    uint32_t epoch;		/* Only TkBTreeGetTags, TkBTreeGetSegmentTags, TkBTreeClearTags,
-    				 * and TkTextPickCurrent will use this attribute. */
+    uint32_t flag;		/* Only for temporary usage (currently only TextInspectCmd, and
+    				 * EmbImageConfigure will use this attribute). */
+    uint32_t epoch;		/* Only TkBTreeGetTags, TkBTreeGetSegmentTags, and TkBTreeClearTags
+    				 * will use this attribute. */
 
     /*
      * Information for undo/redo.
@@ -1108,11 +1108,6 @@ typedef struct TkSharedText {
 				 * NULL means that no bindings exist, so the table hasn't been
 				 * created. Each "object" used for this table is the name of a
 				 * tag. */
-    Tk_BindingTable imageBindingTable;
-				/* Table of all image bindings currently defined for this widget.
-				 * NULL means that no bindings exist, so the table hasn't been
-				 * created. Each "object" used for this table is the name of an
-				 * image. */
     TkTextSegment *startMarker;	/* The start marker, the content of this widget starts after this
     				 * merker. */
     TkTextSegment *endMarker;	/* If the end marker is at byte index zero, then the next newline
@@ -1909,6 +1904,12 @@ MODULE_SCOPE void	TkTextInspectUndoMarkItem(const TkSharedText *sharedTextPtr,
 MODULE_SCOPE bool	TkTextTagChangedUndoRedo(const TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
 			    const TkTextTag *tagPtr, bool affectsDisplayGeometry);
+MODULE_SCOPE void	TkTextGrabSelection(TkText *textPtr, const TkTextTag *tagPtr, bool add,
+			    bool changed);
+MODULE_SCOPE bool	TkTextTagAddRemove(TkText *textPtr, const TkTextIndex *index1Ptr,
+			    const TkTextIndex *index2Ptr, TkTextTag *tagPtr, bool add);
+MODULE_SCOPE void	TkTextFindTags(Tcl_Interp *interp, TkText *textPtr, const TkTextSegment *segPtr,
+			    bool discardSelection);
 MODULE_SCOPE bool	TkTextDeleteTag(TkText *textPtr, TkTextTag *tagPtr, Tcl_HashEntry *hPtr);
 MODULE_SCOPE void	TkTextReleaseTag(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    Tcl_HashEntry *hPtr);

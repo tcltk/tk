@@ -3239,10 +3239,6 @@ ClearText(
     Tcl_DeleteHashTable(&sharedTextPtr->imageTable);
     Tcl_DeleteHashTable(&sharedTextPtr->windowTable);
 
-    if (sharedTextPtr->imageBindingTable) {
-	Tk_DeleteBindingTable(sharedTextPtr->imageBindingTable);
-    }
-
     if (clearTags) {
 	Tcl_DeleteHashTable(&sharedTextPtr->tagTable);
 	if (sharedTextPtr->tagBindingTable) {
@@ -3268,7 +3264,6 @@ ClearText(
     TkBitClear(sharedTextPtr->affectGeometryTags);
     TkBitClear(sharedTextPtr->affectGeometryNonSelTags);
     TkBitClear(sharedTextPtr->affectLineHeightTags);
-    sharedTextPtr->imageBindingTable = NULL;
     sharedTextPtr->isAltered = false;
     sharedTextPtr->isModified = false;
     sharedTextPtr->isIrreversible = false;
@@ -3528,9 +3523,6 @@ DestroyText(
 
 	if (sharedTextPtr->tagBindingTable) {
 	    Tk_DeleteBindingTable(sharedTextPtr->tagBindingTable);
-	}
-	if (sharedTextPtr->imageBindingTable) {
-	    Tk_DeleteBindingTable(sharedTextPtr->imageBindingTable);
 	}
 	if (sharedTextPtr->stillExisting) {
 	    *sharedTextPtr->stillExisting = false;
