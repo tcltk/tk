@@ -401,8 +401,6 @@ typedef struct TkTextEmbImage {
     				 * May be unique-ified. */
     char *name;			/* Name used in the hash table. Used by "image names" to
     				 * identify this instance of the image. */
-    bool haveBindings;		/* Flag whether this image has bindings. */
-    uint32_t numClients;	/* Size of bbox array. */
     Tk_Image image;		/* Image for this segment. NULL means that the image hasn't
     				 * been created yet. */
     int imgHeight;		/* Height of displayed image. */
