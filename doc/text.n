@@ -1287,6 +1287,13 @@ distance.
 \fIPixels\fR specifies the amount of extra space to leave on the top and on
 the bottom of the embedded image. It may have any of the usual forms defined
 for a screen distance.
+.TP
+\fB\-tags \fItagList\fR
+.
+Specifies a set of tags to apply to the image. \fITagList\fR consists of a list
+of tag names, which replace any existing tags for the image. \fITagList\fR may
+be an empty list. Note that it is not possible to add or remove the special
+selection tag \fBsel\fR, it will be ignored with this option.
 .SH "EXTRA FUNCTIONS"
 .SS "MERGE RANGE"
 .TP
@@ -2695,7 +2702,7 @@ Include all the tag configurations.
 \fB\-discardselection\fR
 .
 This option makes sense only if also option \fB\-tag\fR (or \fB\-all\fR) is
-specified. With this option the selection tag sel will be discarded from the
+specified. With this option the selection tag \fBsel\fR will be discarded from the
 result.
 .TP
 \fB\-displaychars\fR

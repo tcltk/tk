@@ -721,7 +721,6 @@ EmbImageConfigure(
 	    TkTextTag **tagArrPtr = tagArrBuf;
 	    TkTextTag *tagPtr;
 	    TkTextIndex index[2];
-	    TkTextTag *selTagPtr = NULL;
 	    bool altered = false;
 	    bool anyChanges = false;
 	    Tcl_Obj **objs;
@@ -749,7 +748,7 @@ EmbImageConfigure(
 	    }
 
 	    /*
-	     * Remove the deleted tags.
+	     * Remove the deleted tags, but ignore the "sel" tag.
 	     */
 
 	    for (j = TkTextTagSetFindFirst(oldTagInfoPtr);
@@ -757,22 +756,18 @@ EmbImageConfigure(
 		    j = TkTextTagSetFindNext(oldTagInfoPtr, j)) {
 		if (!TkTextTagSetTest(newTagInfoPtr, j)) {
 		    tagPtr = sharedTextPtr->tagLookup[j];
-		    assert(eiPtr->tagInfoPtr != sharedTextPtr->emptyTagInfoPtr);
-		    if (TkTextTagAddRemove(textPtr, &index[0], &index[1], tagPtr, false)) {
+		    if (tagPtr != textPtr->selTagPtr
+			    && TkTextTagAddRemove(textPtr, &index[0], &index[1], tagPtr, false)) {
 			anyChanges = true;
 			if (tagPtr->undo) {
 			    altered = true;
 			}
 		    }
-		    if (tagPtr == textPtr->selTagPtr) {
-			selTagPtr = tagPtr;
-			selTagPtr->flag = false;
-		    }
 		}
 	    }
 
 	    /*
-	     * Add new tags.
+	     * Add new tags, but ignore the "sel" tag.
 	     */
 
 	    for (j = TkTextTagSetFindFirst(newTagInfoPtr);
@@ -780,15 +775,12 @@ EmbImageConfigure(
 		    j = TkTextTagSetFindNext(newTagInfoPtr, j)) {
 		if (!TkTextTagSetTest(eiPtr->tagInfoPtr, j)) {
 		    tagPtr = sharedTextPtr->tagLookup[j];
-		    if (TkTextTagAddRemove(textPtr, &index[0], &index[1], tagPtr, true)) {
+		    if (tagPtr != textPtr->selTagPtr
+			    && TkTextTagAddRemove(textPtr, &index[0], &index[1], tagPtr, true)) {
 			anyChanges = true;
 			if (tagPtr->undo) {
 			    altered = true;
 			}
-		    }
-		    if (tagPtr == textPtr->selTagPtr) {
-			selTagPtr = tagPtr;
-			selTagPtr->flag = true;
 		    }
 		}
 	    }
@@ -796,9 +788,6 @@ EmbImageConfigure(
 	    TkTextTagSetDecrRefCount(oldTagInfoPtr);
 	    TkTextTagSetDecrRefCount(newTagInfoPtr);
 
-	    if (selTagPtr) {
-		TkTextGrabSelection(textPtr, selTagPtr, selTagPtr->flag, true);
-	    }
 	    if (anyChanges) {
 		/* still need to trigger enter/leave events on tags that have changed */
 		TkTextEventuallyRepick(textPtr);

@@ -167,6 +167,7 @@ static void		AppendTags(Tcl_Interp *interp, unsigned numTags, TkTextTag **tagArr
 static TkTextTag *	FindTag(Tcl_Interp *interp, const TkText *textPtr, Tcl_Obj *tagName);
 static int		EnumerateTags(Tcl_Interp *interp, TkText *textPtr, int objc,
 			    Tcl_Obj *const *objv);
+static void		GrabSelection(TkText *textPtr, const TkTextTag *tagPtr, bool add, bool changed);
 
 /*
  * We need some private undo/redo stuff.
@@ -336,7 +337,7 @@ TkTextTagCmd(
 	    }
 	}
 	if (tagPtr == textPtr->selTagPtr) {
-	    TkTextGrabSelection(textPtr, tagPtr, addTag, anyChanges);
+	    GrabSelection(textPtr, tagPtr, addTag, anyChanges);
 	}
 	if (anyChanges) {
 	    if (tagPtr->undo) {
@@ -435,7 +436,7 @@ TkTextTagCmd(
 			arrayPtr[countTags++] = tagPtr;
 
 			if (tagPtr == textPtr->selTagPtr) {
-			    TkTextGrabSelection(textPtr, tagPtr, false, true);
+			    GrabSelection(textPtr, tagPtr, false, true);
 			}
 			if (tagPtr->undo) {
 			    anyChanges = true;
@@ -1471,7 +1472,7 @@ TkTextFindTags(
  *	None.
  *
  * Side effects:
- *	See TkTextRedrawTag, and TkTextGrabSelection.
+ *	See TkTextRedrawTag, and GrabSelection.
  *
  *----------------------------------------------------------------------
  */
@@ -1490,7 +1491,7 @@ TkTextTagChangedUndoRedo(
     }
     if (tagPtr && tagPtr->textPtr) {
 	assert(tagPtr == textPtr->selTagPtr);
-	TkTextGrabSelection(tagPtr->textPtr, tagPtr, TkTextTestTag(indexPtr1, tagPtr), true);
+	GrabSelection(tagPtr->textPtr, tagPtr, TkTextTestTag(indexPtr1, tagPtr), true);
     }
     return true;
 }
@@ -1498,7 +1499,7 @@ TkTextTagChangedUndoRedo(
 /*
  *----------------------------------------------------------------------
  *
- * TkTextGrabSelection --
+ * GrabSelection --
  * 	Grab the selection if we're supposed to export it and don't already
  * 	have it.
  *
@@ -1516,8 +1517,8 @@ TkTextTagChangedUndoRedo(
  *----------------------------------------------------------------------
  */
 
-void
-TkTextGrabSelection(
+static void
+GrabSelection(
     TkText *textPtr,		/* Info about overall widget. */
     const TkTextTag *tagPtr,	/* Tag which has been modified. */
     bool add,			/* 'true' means that we have added the "sel" tag;
