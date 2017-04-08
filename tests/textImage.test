@@ -41,7 +41,7 @@ test textImage-1.2 {basic argument checking} -setup {
     .t image c
 } -cleanup {
     destroy .t
-} -returnCodes error -result {ambiguous option "c": must be bind, cget, configure, create, or names}
+} -returnCodes error -result {ambiguous option "c": must be cget, configure, create, or names}
 
 test textImage-1.3 {cget argument checking} -setup {
     destroy .t
@@ -167,7 +167,7 @@ test textImage-1.14 {basic argument checking} -setup {
     .t image huh
 } -cleanup {
     destroy .t
-} -returnCodes error -result {bad option "huh": must be bind, cget, configure, create, or names}
+} -returnCodes error -result {bad option "huh": must be cget, configure, create, or names}
 
 test textImage-1.15 {align argument checking} -setup {
     destroy .t
@@ -196,7 +196,7 @@ test textImage-1.16 {configure} -setup {
 } -cleanup {
     destroy .t
     image delete small
-} -result {{-align {} {} center center} {-padx {} {} 0 0} {-pady {} {} 0 0} {-image {} {} {} small} {-name {} {} {} {}}}
+} -result {{-align {} {} center center} {-padx {} {} 0 0} {-pady {} {} 0 0} {-image {} {} {} small} {-name {} {} {} {}} {-tags {} {} {} {}}}
 
 test textImage-1.17 {basic cget options} -setup {
     destroy .t
@@ -229,7 +229,7 @@ test textImage-1.18 {basic configure options} -setup {
     }
     setup
     .t image create end -image small
-    foreach {option value}  {align top padx 5 pady 7 image large name none} {
+    foreach {option value}  {align top padx 5 pady 7 image large name none tags {tag1 tag2}} {
         .t image configure small -$option $value
     }
     update
@@ -237,7 +237,7 @@ test textImage-1.18 {basic configure options} -setup {
 } -cleanup {
     destroy .t
     image delete small large
-} -result {{-align {} {} center top} {-padx {} {} 0 5} {-pady {} {} 0 7} {-image {} {} {} large} {-name {} {} {} none}}
+} -result {{-align {} {} center top} {-padx {} {} 0 5} {-pady {} {} 0 7} {-image {} {} {} large} {-name {} {} {} none} {-tags {} {} {} {tag1 tag2}}}
 
 test textImage-1.19 {basic image naming} -setup {
     destroy .t
