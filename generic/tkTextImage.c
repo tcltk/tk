@@ -410,7 +410,7 @@ TkTextImageCmd(
 	    return TCL_ERROR;
 	}
 	if (MatchTagsOption(Tcl_GetString(objv[4]))) {
-	    TkTextFindTags(interp, textPtr, eiPtr, false);
+	    TkTextFindTags(interp, textPtr, eiPtr, true);
 	} else {
 	    Tcl_Obj *objPtr = Tk_GetOptionValue(interp, (char *) &eiPtr->body.ei,
 		    eiPtr->body.ei.optionTable, objv[4], textPtr->tkwin);
@@ -455,7 +455,7 @@ TkTextImageCmd(
 		    Tcl_Obj *valuePtr;
 
 		    /* { argvName, dbName, dbClass, defValue, current value } */
-		    TkTextFindTags(interp, textPtr, eiPtr, false);
+		    TkTextFindTags(interp, textPtr, eiPtr, true);
 		    valuePtr = Tcl_GetObjResult(interp);
 		    Tcl_ListObjReplace(NULL, objs[i], 4, 1, 1, &valuePtr);
 		}
