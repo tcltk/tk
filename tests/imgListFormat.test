@@ -54,7 +54,12 @@ test imgListFormat-1.4 {ParseFormatOptions: option not allowed} -setup {
     imageCleanup
 } -returnCodes error -result \
     {bad format option "-colorformat": no options allowed}
-test imgListFormat-1.5 {ParseFormatOptions: bad -colorformat val #1} -setup {
+test imgListFormat-1.5 {ParseFormatOptions: no -colorformat value} -setup {
+    image create photo photo1 -data black
+} -body {
+    photo1 data -format {default -colorformat}
+} -returnCodes error -result {the "-colorformat" option requires a value}     
+test imgListFormat-1.6 {ParseFormatOptions: bad -colorformat val #1} -setup {
     image create photo photo1
 } -body {
     photo1 put yellow
@@ -63,19 +68,19 @@ test imgListFormat-1.5 {ParseFormatOptions: bad -colorformat val #1} -setup {
     imageCleanup
 } -returnCodes error -result \
     {bad color format "bogus": must be rgb, argb, or list}
-test imgListFormat-1.6 {ParseFormatOptions: bad -colorformat val #2} -setup {
+test imgListFormat-1.7 {ParseFormatOptions: bad -colorformat val #2} -setup {
     image create photo photo1
 } -body {
     photo1 data -format {default -colorformat tkcolor}
 } -returnCodes error -result \
     {bad color format "tkcolor": must be rgb, argb, or list}
-test imgListFormat-1.7 {ParseFormatOptions: bad -colorformat #3} -setup {
+test imgListFormat-1.8 {ParseFormatOptions: bad -colorformat #3} -setup {
     image create photo photo1
 } -body {
     photo1 data -format {default -colorformat emptystring}
 } -returnCodes error -result \
     {bad color format "emptystring": must be rgb, argb, or list}
-test imgListFormat-1.8 {ParseFormatOptions: bad -colorformat #4} -setup {
+test imgListFormat-1.9 {ParseFormatOptions: bad -colorformat #4} -setup {
     image create photo photo1
 } -body {
     photo1 data -format {default -colorformat rgb-short}
@@ -83,13 +88,13 @@ test imgListFormat-1.8 {ParseFormatOptions: bad -colorformat #4} -setup {
     imageCleanup
 } -returnCodes error -result \
     {bad color format "rgb-short": must be rgb, argb, or list}
-test imgListFormat-1.9 {ParseFormatOptions: bad -colorformat #5} -setup {
+test imgListFormat-1.10 {ParseFormatOptions: bad -colorformat #5} -setup {
     image create photo photo1
 } -body {
     photo1 data -format {default -colorformat argb-short}
 } -returnCodes error -result \
     {bad color format "argb-short": must be rgb, argb, or list}
-test imgListFormat-1.10 {valid colorformats} -setup {
+test imgListFormat-1.11 {valid colorformats} -setup {
     image create photo photo1
 } -body {
     photo1 put white#78
@@ -322,23 +327,7 @@ test imgListFormat-5.10 {StringWriteDef: test some pixels #5} -constraints {
     imageCleanup
 } -result {{0 78 185 225} {161 65 0 170} {255 202 159 175}}
 
-test imgListFormat-6.1 {ParseColor: list format} -setup {
-    image create photo photo1
-} -body {
-    photo1 put [list [list [list 255 255 255]]]
-    photo1 get 0 0 -withalpha
-} -cleanup {
-    imageCleanup
-} -result {255 255 255 255}
-test imgListFormat-6.2 {ParseColor: string format in list rep} -setup {
-    image create photo photo1
-} -body {
-    photo1 put [list [list [list white]]]
-    photo1 get 0 0 -withalpha
-} -cleanup {
-    imageCleanup
-} -result {255 255 255 255}
-test imgListFormat-6.3 {ParseColor: empty string} -setup {
+test imgListFormat-6.1 {ParseColor: empty string} -setup {
     image create photo photo1
     set result {}
 } -body {
@@ -351,7 +340,7 @@ test imgListFormat-6.3 {ParseColor: empty string} -setup {
     unset result
     imageCleanup
 } -result {2 2 {0 0 0 0}}
-test imgListFormat-6.4 {ImgPhotoParsecolor: empty string, mixed} -setup {
+test imgListFormat-6.2 {ParseColor: empty string, mixed} -setup {
     image create photo photo1
 } -body {
     photo1 put {{black white} {{} white}}
@@ -359,158 +348,50 @@ test imgListFormat-6.4 {ImgPhotoParsecolor: empty string, mixed} -setup {
 } -cleanup {
     imageCleanup
 } -result {{0 0 0 255} {0 0 0 0}}
-test imgListFormat-6.5 {ParseColor: invalid hex digit} -setup {
+test imgListFormat-6.3 {ParseColor: color name too long} -setup {
+    image create photo photo1
+    set longstr {}
+    for {set i 1} {$i <= 100} {incr i} {
+        append longstr "z"
+    }
+} -body {
+    photo1 put [list [list blue] [list $longstr]]
+} -cleanup {
+    imageCleanup
+    unset longstr
+} -returnCodes error -result {invalid color}
+test imgListFormat-6.4 {ParseColor: #XXX color, different forms} -setup {
     image create photo photo1
 } -body {
-    photo1 put {#ABCD #ABCZ}
+    photo1 put {{#A123 #334455} {#012 #fffefd#00}}
+    photo1 data -format {default -colorformat argb}
 } -cleanup {
     imageCleanup
-} -returnCodes error -result {invalid color name "#ABCZ"}
-test imgListFormat-6.6 {ParseColor: valid #ARGB color} -setup {
+} -result {{#aa112233 #ff334455} {#ff001122 #00fffefd}}        
+test imgListFormat-6.5 {ParseColor: list format} -setup {
     image create photo photo1
 } -body {
-    photo1 put {{#0d9bd502 #F7ac}}
-    list [photo1 get 0 0 -withalpha] [photo1 get 1 0 -withalpha]
+    photo1 put [list [list [list 255 255 255]]]
+    photo1 get 0 0 -withalpha
 } -cleanup {
     imageCleanup
-} -result {{155 213 2 13} {119 170 204 255}}
-test imgListFormat-6.7 {ParseColor: Tk color, valid suffixes} -setup {
-    image create photo photo1 
-    set result {}
-} -body {
-    photo1 put {{blue@0.711 #114433#C} {#8D4#1A magenta}}
-    lappend result [photo1 get 0 0 -withalpha]
-    lappend result [photo1 get 1 0 -withalpha]
-    lappend result [photo1 get 0 1 -withalpha]
-    lappend result [photo1 get 1 1 -withalpha]
-    set result
-} -cleanup {
-    unset result
-    imageCleanup
-} -result {{0 0 255 181} {17 68 51 204} {136 221 68 26} {255 0 255 255}}
-test imgListFormat-6.8 {ParseColor: Tk color with and w/o suffixes} -setup {
-    image create photo photo1
-    set result {}
-} -body {
-    photo1 put {{#52D8a0 #2B5} {#E47@0.01 maroon#4}}
-    lappend result [photo1 get 0 0 -withalpha]
-    lappend result [photo1 get 1 0 -withalpha]
-    lappend result [photo1 get 0 1 -withalpha]
-    lappend result [photo1 get 1 1 -withalpha]
-    set result
-} -cleanup {
-    unset result
-    imageCleanup
-} -result {{82 216 160 255} {34 187 85 255} {238 68 119 3} {128 0 0 68}}
-test imgListFormat-6.9 {ParseColor: @A suffix, not a float} -setup {
+} -result {255 255 255 255}
+test imgListFormat-6.6 {ParseColor: string format} -setup {
     image create photo photo1
 } -body {
-    photo1 put {{blue@0.5 blue@bogus}}
+    photo1 put [list [list [list white]]]
+    photo1 get 0 0 -withalpha
 } -cleanup {
     imageCleanup
-} -returnCodes error -result \
-    {invalid alpha suffix "@bogus": expected floating-point value}
-test imgListFormat-6.10 {ParseColor: @A, value too low} -setup {
-    image create photo photo1 
-} -body {
-    photo1 put {green@.1 green@-0.1}
-} -cleanup {
-    imageCleanup
-} -returnCodes error -result \
-    {invalid alpha suffix "@-0.1": value must be in the range from 0 to 1}
-test imgListFormat-6.11 {ParseColor: @A, value too high} -setup {
+} -result {255 255 255 255}
+test imgListFormat-6.7 {ParseColor: invalid color} -setup {
     image create photo photo1
 } -body {
-    photo1 put {#000000@0 #000000@1.0001}
+    photo1 put {{blue red} {green bogus}}
 } -cleanup {
     imageCleanup
-} -returnCodes error -result \
-    {invalid alpha suffix "@1.0001": value must be in the range from 0 to 1}
-test imgListFormat-6.12 {ParseColor: @A suffix, edge values} -setup {
-    imageCleanup
-    image create photo photo1
-} -body {
-    photo1 put {{yellow@1e-22 yellow@0.12352941 yellow@0.12352942 \
-		 yellow@0.9999999}}
-    list [photo1 get 0 0 -withalpha] [photo1 get 1 0 -withalpha] \
-	[photo1 get 2 0 -withalpha] [photo1 get 3 0 -withalpha]
-} -cleanup {
-    imageCleanup
-} -result {{255 255 0 0} {255 255 0 31} {255 255 0 32} {255 255 0 255}}
-test imgListFormat-6.13 {ParseColor: # suffix, no hex digits} -setup {
-    image create photo photo1
-} -body {
-    photo1 put {{black#f} {black#}}
-} -cleanup {
-    imageCleanup
-} -returnCodes error -result {invalid alpha suffix "#"}
-test imgListFormat-6.14 {ParseColor: # suffix, too many digits} -setup {
-    image create photo photo1
-} -body {
-    photo1 put {{#ABC#12 #ABC#123}}
-} -cleanup {
-    imageCleanup
-} -returnCodes error -result \
-    {invalid alpha suffix "#123"}
-test imgListFormat-6.15 {ParseColor: invalid digit in #X suffix} -setup {
-    image create photo photo1
-} -body {
-    photo1 put {#000#a #000#g}
-} -cleanup {
-    imageCleanup
-} -returnCodes error -result {invalid alpha suffix "#g": expected hex digit}
-test imgListFormat-6.16 {ParseColor: invalid digit in #XX suffix} -setup {
-    image create photo photo1
-} -body {
-    photo1 put {green#2 green#2W}
-} -cleanup {
-    imageCleanup
-} -returnCodes error -result {invalid alpha suffix "#2W": expected hex digit}
-test imgListFormat-6.17 {ParseColor: list format, string rep} -setup {
-	image create photo photo1
-} -body {
-	photo1 put {{"111 222 33 44"}}
-	photo1 get 0 0 -withalpha
-} -cleanup {
-	imageCleanup
-} -result {111 222 33 44}
-test imgListFormat-6.18 {ParseColor: invalid color: wrong digit #} -setup {
-    image create photo photo1
-} -body {
-    photo1 put {{#000 #00}}
-} -returnCodes error -result {invalid color name "#00"}
-test imgListFormat-6.19 {ParseColor: invalid color: not a hex digit} -setup {
-    image create photo photo1
-} -body {
-    photo1 put {#ABCDEF@.99 #ABCDEG@.99}
-} -cleanup {
-    imageCleanup
-} -returnCodes error -result {invalid color name "#ABCDEG@.99"}
-test imgListFormat-6.20 {ParseColor: suffix not allowed #1} -setup {
-    image create photo photo1
-} -body {
-    photo1 put {#ABC@.5 #ABCD@0.5}
-} -cleanup {
-    imageCleanup
-} -returnCodes error -result \
-    {invalid color name "#ABCD@0.5"}
-test imgListFormat-6.21 {ParseColor: suffix not allowed #2} -setup {
-    image create photo photo1
-} -body {
-    photo1 put {{{100 100 100} {100 100 100#FE}}}
-} -cleanup {
-    imageCleanup
-} -returnCodes error -result \
-    {invalid color name "100 100 100#FE"}
-test imgListFormat-6.22 {ParseColor: suffix not allowed #3} -setup {
-    image create photo photo1
-} -body {
-    photo1 put {#1111 #1111#1}
-} -cleanup {
-    imageCleanup
-} -returnCodes error -result \
-    {invalid color name "#1111#1"}
-test imgListFormat-6.23 {ParseColor: overall test} -setup {
+} -returnCodes error -result {invalid color name "bogus"}
+test imgListFormat-6.8 {ParseColor: overall test} -setup {
     image create photo photo1
     set result {}
 } -body {
@@ -535,9 +416,10 @@ test imgListFormat-6.23 {ParseColor: overall test} -setup {
 {255 250 250 128} {255 250 250 136} {255 250 250 128} {255 250 250 128}\
 {255 250 250 255} {255 238 238 136} {255 250 250 128} {255 250 250 255}}
 
-# Note: the error messages from ParseColorAsList are currently discarded. All
-# we'll ever get is a "invalid color mame xx" message.
-test imgListFormat-7.1 {ParseColorAsListAsList: invalid list} -setup {
+# Note: these tests were written for an earlier implementation of
+# ParseColorAsList. For this reason, their order and layout do not follow the
+# current code very well. Test coverage is pretty good, nevertheless.
+test imgListFormat-7.1 {ParseColorAsList: invalid list} -setup {
     image create photo photo1
 } -body {
     photo1 put {{{123 45 67 89} {123 45 " 67}}}
@@ -579,7 +461,14 @@ test imgListFormat-7.6 {ParseColorAsList: value in list too large} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result {invalid color name "254 255 256"}
-test imgListFormat-7.7 {ParseColorAsList: valid list form} -setup {
+test imgListFormat-7.7 {ParseColorAsList: suffix not allowed} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{{100 100 100} {100 100 100#FE}}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid color name "100 100 100#FE"}
+test imgListFormat-7.8 {ParseColorAsList: valid list form} -setup {
     image create photo photo1
 } -body {
     photo1 put {{{0x0 0x10 0xfe 0xff} {0 100 254}}
@@ -589,6 +478,178 @@ test imgListFormat-7.7 {ParseColorAsList: valid list form} -setup {
 } -cleanup {
     imageCleanup
 } -result {{0 16 254 255} {0 100 254 255} {30 30 30 0} {1 1 254 1}}
+test imgListFormat-7.9 {ParseColorAsList: additional spaces in list} -setup {
+    image create photo photo1
+} -body {
+    photo1 put { { { 1 2 3} {1  2	 3} } { {1 2 3  } {  1  2  3   4  }  } }
+    photo1 data -format {default -colorformat argb}
+} -cleanup {
+    imageCleanup
+} -result {{#ff010203 #ff010203} {#ff010203 #04010203}}
+test imgListFormat-7.10 {ParseColorAsList: list format, string rep} -setup {
+	image create photo photo1
+} -body {
+	photo1 put {{"111 222 33 44"}}
+	photo1 get 0 0 -withalpha
+} -cleanup {
+	imageCleanup
+} -result {111 222 33 44}
+
+test imgListFormat-8.1 {ParseColorAsHex: RGB format} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{#010 #001100}}
+    photo1 data
+} -cleanup {
+    imageCleanup
+} -result {{#001100 #001100}}        
+test imgListFormat-8.2 {ParseColorAsHex: invalid hex digit} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {#ABCD #ABCZ}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid color name "#ABCZ"}
+test imgListFormat-8.3 {ParseColorAsHex: RGB with suffix, 8 chars} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{#FFfFFf #AbCdef#0}}
+    photo1 data
+} -cleanup {
+    imageCleanup
+} -result {{#ffffff #abcdef}}
+test imgListFormat-8.4 {ParseColor: valid #ARGB color} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{#0d9bd502 #F7ac}}
+    list [photo1 get 0 0 -withalpha] [photo1 get 1 0 -withalpha]
+} -cleanup {
+    imageCleanup
+} -result {{155 213 2 13} {119 170 204 255}}
+
+test imgListFormat-9.1 {ParseColorAsStandard:
+        Tk color, valid suffixes} -setup {
+    image create photo photo1 
+    set result {}
+} -body {
+    photo1 put {{blue@0.711 #114433#C} {#8D4#1A magenta}}
+    lappend result [photo1 get 0 0 -withalpha]
+    lappend result [photo1 get 1 0 -withalpha]
+    lappend result [photo1 get 0 1 -withalpha]
+    lappend result [photo1 get 1 1 -withalpha]
+    set result
+} -cleanup {
+    unset result
+    imageCleanup
+} -result {{0 0 255 181} {17 68 51 204} {136 221 68 26} {255 0 255 255}}
+test imgListFormat-9.2 {ParseColorAsStandard:
+        Tk color with and w/o suffixes} -setup {
+    image create photo photo1
+    set result {}
+} -body {
+    photo1 put {{#52D8a0 #2B5} {#E47@0.01 maroon#4}}
+    lappend result [photo1 get 0 0 -withalpha]
+    lappend result [photo1 get 1 0 -withalpha]
+    lappend result [photo1 get 0 1 -withalpha]
+    lappend result [photo1 get 1 1 -withalpha]
+    set result
+} -cleanup {
+    unset result
+    imageCleanup
+} -result {{82 216 160 255} {34 187 85 255} {238 68 119 3} {128 0 0 68}}
+test imgListFormat-9.3 {ParseColorAsStandard: wrong digit count} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{#000 #00}}
+} -returnCodes error -result {invalid color name "#00"}
+test imgListFormat-9.4 {ParseColorAsStandard: @A suffix, not a float} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{blue@0.5 blue@bogus}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid alpha suffix "@bogus": expected floating-point value}
+test imgListFormat-9.5 {ParseColorAsStandard: @A, value too low} -setup {
+    image create photo photo1 
+} -body {
+    photo1 put {green@.1 green@-0.1}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid alpha suffix "@-0.1": value must be in the range from 0 to 1}
+test imgListFormat-9.6 {ParseColorAsStandard: @A, value too high} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {#000000@0 #000000@1.0001}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid alpha suffix "@1.0001": value must be in the range from 0 to 1}
+test imgListFormat-9.7 {ParseColorAsStandard: @A suffix, edge values} -setup {
+    imageCleanup
+    image create photo photo1
+} -body {
+    photo1 put {{yellow@1e-22 yellow@0.12352941 yellow@0.12352942 \
+		 yellow@0.9999999}}
+    list [photo1 get 0 0 -withalpha] [photo1 get 1 0 -withalpha] \
+	[photo1 get 2 0 -withalpha] [photo1 get 3 0 -withalpha]
+} -cleanup {
+    imageCleanup
+} -result {{255 255 0 0} {255 255 0 31} {255 255 0 32} {255 255 0 255}}
+test imgListFormat-9.8 {ParseColorAsStandard: # suffix, no hex digits} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{black#f} {black#}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid alpha suffix "#"}
+test imgListFormat-9.9 {ParseColorAsStandard:
+        '#' suffix, too many digits} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{#ABC#12 #ABC#123}}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid alpha suffix "#123"}
+test imgListFormat-9.10 {ParseColorAsStandard:
+        invalid digit in #X suffix} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {#000#a #000#g}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid alpha suffix "#g": expected hex digit}
+test imgListFormat-9.11 {ParseColorAsStandard:
+        invalid digit in #XX suffix} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {green#2 green#2W}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid alpha suffix "#2W": expected hex digit}
+test imgListFormat-9.12 {ParseColorAsStandard:
+        invalid color: not a hex digit} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {#ABCDEF@.99 #ABCDEG@.99}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid color name "#ABCDEG@.99"}
+test imgListFormat-9.13 {ParseColorAsStandard: suffix not allowed #1} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {#ABC@.5 #ABCD@0.5}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid color name "#ABCD@0.5"}
+test imgListFormat-9.14 {ParseColorAsStandard: suffix not allowed #2} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {#1111 #1111#1}
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {invalid color name "#1111#1"}
 
 
 # ---------------------------------------------------------------------
