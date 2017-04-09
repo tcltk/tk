@@ -370,7 +370,7 @@ GENERIC_OBJS = tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBitField.o \
 	tkBusy.o tkClipboard.o tkCmds.o tkColor.o tkConfig.o tkConsole.o \
 	tkCursor.o tkError.o tkEvent.o tkFocus.o tkFont.o tkGet.o tkGC.o \
 	tkGeometry.o tkGrab.o tkGrid.o tkIntSet.o tkMain.o tkObj.o tkOldConfig.o \
-	tkOption.o tkPack.o tkPlace.o tkQTree.o tkRangeList.o tkSelect.o tkStyle.o \
+	tkOption.o tkPack.o tkPlace.o tkRangeList.o tkSelect.o tkStyle.o \
 	tkUtil.o tkVisual.o tkWindow.o
 
 TTK_OBJS = \
@@ -452,7 +452,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkImgBmap.c $(GENERIC_DIR)/tkImgGIF.c \
 	$(GENERIC_DIR)/tkImgPNG.c $(GENERIC_DIR)/tkImgPPM.c \
 	$(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhInstance.c \
-	$(GENERIC_DIR)/tkQTree.c $(GENERIC_DIR)/tkRangeList.c \
+	$(GENERIC_DIR)/tkRangeList.c \
 	$(GENERIC_DIR)/tkText.c $(GENERIC_DIR)/tkTextBTree.c \
 	$(GENERIC_DIR)/tkTextDisp.c $(GENERIC_DIR)/tkTextImage.c \
 	$(GENERIC_DIR)/tkTextIndex.c $(GENERIC_DIR)/tkTextLineBreak.c \
@@ -1129,9 +1129,6 @@ tkImgPhInstance.o: $(GENERIC_DIR)/tkImgPhInstance.c $(GENERIC_DIR)/tkImgPhoto.h
 
 tkOldTest.o: $(GENERIC_DIR)/tkOldTest.c
 	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkOldTest.c
-
-tkQTree.o: $(GENERIC_DIR)/tkQTree.c
-	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkQTree.c
 
 tkRangeList.o: $(GENERIC_DIR)/tkRangeList.c
 	$(CC) -std=c99 -c $(CC_SWITCHES) $(GENERIC_DIR)/tkRangeList.c
