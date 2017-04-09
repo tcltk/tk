@@ -925,7 +925,7 @@ ParseColorAsHex(
     unsigned char *alphaPtr)
 {
     int i;
-    long int colorValue = 0;
+    unsigned long int colorValue = 0;
         
     if (colorStrLen - 1 != 4 && colorStrLen - 1 != 8) {
         return ParseColorAsStandard(interp, colorString, colorStrLen,
@@ -943,7 +943,7 @@ ParseColorAsHex(
         }
     }
     
-    colorValue = strtol(colorString + 1, NULL, 16);
+    colorValue = strtoul(colorString + 1, NULL, 16);
     switch (colorStrLen - 1) {
     case 4:
         /* #ARGB format */
