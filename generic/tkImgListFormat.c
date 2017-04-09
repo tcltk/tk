@@ -621,7 +621,7 @@ StringWriteDef(
     Tk_PhotoImageBlock *blockPtr)       /* The image data to convert */
 {
     int greenOffset, blueOffset, alphaOffset, hasAlpha;
-    Tcl_Obj *data, **objv = NULL;
+    Tcl_Obj *result, **objv = NULL;
     int objc, allowedOpts, optIndex;
     struct FormatOptions opts;
     
@@ -661,18 +661,18 @@ StringWriteDef(
         alphaOffset = blockPtr->offset[3] - blockPtr->offset[0];        
     }
 
-    data = Tcl_NewObj();
     if ((blockPtr->width > 0) && (blockPtr->height > 0)) {
         int row, col;
-        Tcl_Obj *line, *colorList[4];
+        Tcl_DString data, line;
+        char colorBuf[11];
         unsigned char *pixelPtr;
         unsigned char alphaVal = 255;
-        
+
+        Tcl_DStringInit(&data);
         for (row=0; row<blockPtr->height; row++) {
-            line = Tcl_NewObj();
             pixelPtr = blockPtr->pixelPtr + blockPtr->offset[0]
                     + row * blockPtr->pitch;
-
+            Tcl_DStringInit(&line);
             for (col=0; col<blockPtr->width; col++) {
                 if (hasAlpha) {
                     alphaVal = pixelPtr[alphaOffset];
@@ -689,36 +689,52 @@ StringWriteDef(
 
                 switch (opts.colorFormat) {
                 case COLORFORMAT_RGB2:
-                    Tcl_AppendPrintfToObj(line, "%s#%02x%02x%02x", 
-                            col == 0 ? "" : " ", pixelPtr[0],
+                    sprintf(colorBuf, "#%02x%02x%02x ",  pixelPtr[0],
                             pixelPtr[greenOffset], pixelPtr[blueOffset]);
+                    Tcl_DStringAppend(&line, colorBuf, -1);
                     break;
                 case COLORFORMAT_ARGB2:
-                    Tcl_AppendPrintfToObj(line, "%s#%02x%02x%02x%02x",
-                            col == 0 ? "" : " ", alphaVal, pixelPtr[0],
-                            pixelPtr[greenOffset], pixelPtr[blueOffset]);
+                    sprintf(colorBuf, "#%02x%02x%02x%02x ",  alphaVal,
+                            pixelPtr[0], pixelPtr[greenOffset],
+                            pixelPtr[blueOffset]);
+                    Tcl_DStringAppend(&line, colorBuf, -1);
                     break;
                 case COLORFORMAT_LIST:
-                    colorList[0] = Tcl_NewIntObj(pixelPtr[0]);
-                    colorList[1] = Tcl_NewIntObj(pixelPtr[greenOffset]);
-                    colorList[2] = Tcl_NewIntObj(pixelPtr[blueOffset]);
-                    colorList[3] = Tcl_NewIntObj(alphaVal);
-                    if (Tcl_ListObjAppendElement(interp, line,
-                            Tcl_NewListObj(4, colorList)) != TCL_OK) {
-                        return TCL_ERROR;
-                    }
+                    Tcl_DStringStartSublist(&line);
+                    sprintf(colorBuf, "%d", pixelPtr[0]);
+                    Tcl_DStringAppendElement(&line, colorBuf);
+                    sprintf(colorBuf, "%d", pixelPtr[greenOffset]);
+                    Tcl_DStringAppendElement(&line, colorBuf);
+                    sprintf(colorBuf, "%d", pixelPtr[blueOffset]);
+                    Tcl_DStringAppendElement(&line, colorBuf);
+                    sprintf(colorBuf, "%d", alphaVal);
+                    Tcl_DStringAppendElement(&line, colorBuf);
+                    Tcl_DStringEndSublist(&line);
                     break;
                 default:
                     Tcl_Panic("unexpected switch fallthrough");
                 }
                 pixelPtr += blockPtr->pixelSize;
             }
-            if (Tcl_ListObjAppendElement(interp, data, line) != TCL_OK) {
-                return TCL_ERROR;
+            if (opts.colorFormat != COLORFORMAT_LIST) {
+                /*
+                 * For the #XXX formats, we need to remvoe the last
+                 * whitespace.
+                 */
+                
+                *(Tcl_DStringValue(&line) + Tcl_DStringLength(&line) - 1)
+                        = '\0';
             }
+            Tcl_DStringAppendElement(&data, Tcl_DStringValue(&line));
+            Tcl_DStringFree(&line);
         }
+        result = Tcl_NewStringObj(Tcl_DStringValue(&data), -1);
+        Tcl_DStringFree(&data);
+    } else {
+        result = Tcl_NewObj();
     }
-    Tcl_SetObjResult(interp, data);
+    
+    Tcl_SetObjResult(interp, result);
     return TCL_OK;
 }
 
@@ -868,10 +884,10 @@ ParseColorAsList(
         values[3] = 255;
     }
     
-    *redPtr = values[0];
-    *greenPtr = values[1];
-    *bluePtr = values[2];
-    *alphaPtr = values[3];
+    *redPtr = (unsigned char) values[0];
+    *greenPtr = (unsigned char) values[1];
+    *bluePtr = (unsigned char) values[2];
+    *alphaPtr = (unsigned char) values[3];
     
     return TCL_OK;
 }
@@ -909,7 +925,7 @@ ParseColorAsHex(
     unsigned char *alphaPtr)
 {
     int i;
-    unsigned int colorVals[4];
+    long int colorValue = 0;
         
     if (colorStrLen - 1 != 4 && colorStrLen - 1 != 8) {
         return ParseColorAsStandard(interp, colorString, colorStrLen,
@@ -926,32 +942,22 @@ ParseColorAsHex(
                     display, colormap, redPtr, greenPtr, bluePtr, alphaPtr);
         }
     }
-
-    /*
-     * Bug 7c49a7f5:
-     * As tempting as it may be, don't use the 'hh' modifier in the 
-     * format string for sscanf here. It is a C99 addition, and can
-     * cause buffer overruns with some older compilers.
-     */
     
+    colorValue = strtol(colorString + 1, NULL, 16);
     switch (colorStrLen - 1) {
     case 4:
         /* #ARGB format */
-        sscanf(colorString, "#%1x%1x%1x%1x", colorVals + 3,
-                colorVals, colorVals + 1, colorVals + 2);
-        *redPtr = (unsigned char) colorVals[0] * 0x11;
-        *greenPtr = (unsigned char) colorVals[1] * 0x11;
-        *bluePtr = (unsigned char) colorVals[2] * 0x11;
-        *alphaPtr = (unsigned char) colorVals[3] * 0x11;
+        *alphaPtr = (unsigned char) ((colorValue >> 12) * 0x11);
+        *redPtr = (unsigned char) (((colorValue >> 8) & 0xf) * 0x11);
+        *greenPtr = (unsigned char) (((colorValue >> 4) & 0xf) * 0x11);
+        *bluePtr = (unsigned char) ((colorValue & 0xf) * 0x11);
         return TCL_OK;
     case 8:
         /* #AARRGGBB format */
-        sscanf(colorString, "#%2x%2x%2x%2x", colorVals + 3,
-                colorVals, colorVals + 1, colorVals + 2);
-        *redPtr = (unsigned char) colorVals[0];
-        *greenPtr = (unsigned char) colorVals[1];
-        *bluePtr = (unsigned char) colorVals[2];
-        *alphaPtr = (unsigned char) colorVals[3];
+        *alphaPtr = (unsigned char) (colorValue >> 24);
+        *redPtr = (unsigned char) ((colorValue >> 16) & 0xff);
+        *greenPtr = (unsigned char) ((colorValue >> 8) & 0xff);
+        *bluePtr = (unsigned char) (colorValue & 0xff);
         return TCL_OK;
     default:
         Tcl_Panic("unexpected switch fallthrough");
