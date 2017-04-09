@@ -340,7 +340,6 @@ TK_OBJS = \
 	tkPack.$(OBJEXT) \
 	tkPlace.$(OBJEXT) \
 	tkPointer.$(OBJEXT) \
-	tkQTree.$(OBJEXT) \
 	tkRangeList.$(OBJEXT) \
 	tkRectOval.$(OBJEXT) \
 	tkScale.$(OBJEXT) \
