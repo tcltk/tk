@@ -1293,7 +1293,8 @@ for a screen distance.
 Specifies a set of tags to apply to the embedded image. \fITagList\fR consists
 of a list of tag names, which replace any existing tags for the embedded image.
 \fITagList\fR may be an empty list. Note that it is not possible to add or
-remove the special selection tag \fBsel\fR, it will be ignored with this option.
+remove the special selection tag \fBsel\fR, it will be left untouched with this
+option.
 .SH "EXTRA FUNCTIONS"
 .SS "MERGE RANGE"
 .TP
@@ -2170,6 +2171,14 @@ text that contains no marks or tag transitions will still be dumped as a set
 of text segments that each end with a newline. The newline is part of the
 value. Note that soft hyphens (Unicode point U+00AD) do not belong to this
 result.
+.TP
+\fB\-tags \fItagList\fR
+.
+Specifies a set of tags to apply to the embedded window. \fITagList\fR consists
+of a list of tag names, which replace any existing tags for the embedded window.
+\fITagList\fR may be an empty list. Note that it is not possible to add or
+remove the special selection tag \fBsel\fR, it will be left untouched with this
+option.
 .TP
 \fB\-window\fR
 .
