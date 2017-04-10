@@ -3531,6 +3531,79 @@ GetAttributeInfoObj(
 /*
  *---------------------------------------------------------------------------
  *
+ * TkFontGetDescription --
+ *
+ *	Return information about the font description as a Tcl list. One
+ *	possible result is "{{DejaVu Sans} -16 bold underline}".
+ *
+ * Results:
+ *	The list of descriptions.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+Tcl_Obj *
+TkFontGetDescription(
+    Tk_Font tkfont)		/* Font whose description is desired. */
+{
+    const TkFontAttributes *faPtr = GetFontAttributes(tkfont);
+    Tcl_Obj *resultPtr = Tcl_NewObj();
+    const char *str;
+    int i;
+
+    for (i = 0; i < FONT_NUMFIELDS; i++) {
+	Tcl_Obj *valuePtr = NULL;
+	switch (i) {
+	case FONT_FAMILY:
+	    str = faPtr->family;
+	    valuePtr = Tcl_NewStringObj(str, str ? -1 : 0);
+	    break;
+
+	case FONT_SIZE:
+	    valuePtr = Tcl_NewIntObj(faPtr->size);
+	    break;
+
+	case FONT_WEIGHT:
+	    if (faPtr->weight != TK_FW_NORMAL) {
+		str = TkFindStateString(weightMap, faPtr->weight);
+		valuePtr = Tcl_NewStringObj(str, -1);
+	    }
+	    break;
+
+	case FONT_SLANT:
+	    if (faPtr->slant != TK_FS_ROMAN) {
+		str = TkFindStateString(slantMap, faPtr->slant);
+		valuePtr = Tcl_NewStringObj(str, -1);
+	    }
+	    break;
+
+	case FONT_UNDERLINE:
+	    if (faPtr->underline) {
+		str = TkFindStateString(underlineMap, faPtr->underline);
+		valuePtr = Tcl_NewStringObj(str, -1);
+	    }
+	    break;
+
+	case FONT_OVERSTRIKE:
+	    if (faPtr->overstrike) {
+		str = TkFindStateString(overstrikeMap, faPtr->overstrike);
+		valuePtr = Tcl_NewStringObj(str, -1);
+	    }
+	    break;
+	}
+	if (valuePtr) {
+	    Tcl_ListObjAppendElement(NULL, resultPtr, valuePtr);
+	}
+    }
+    return resultPtr;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * ParseFontNameObj --
  *
  *	Converts a object into a set of font attributes that can be used to
