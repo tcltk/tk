@@ -8062,7 +8062,7 @@ ObjIsEqual(
     return true;
 }
 
-#if TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7
+#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
 
 static Tcl_Obj *
 GetFontAttrs(
@@ -8145,7 +8145,7 @@ GetFontAttrs(
     return objPtr;
 }
 
-#endif /* TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7 */
+#endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 
 void
 TkTextInspectOptions(
@@ -8162,22 +8162,22 @@ TkTextInspectOptions(
     Tcl_DStringTrunc(result, 0);
 
     if ((objPtr = Tk_GetOptionInfo(interp, (char *) recordPtr, optionTable, NULL, textPtr->tkwin))) {
-#if TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7
+#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
 	Tcl_Obj *font = NULL;   /* shut up compiler */
 	Tcl_Obj *actual = NULL; /* shut up compiler */
-#endif /* TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7 */
+#endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 	Tcl_Obj **objv;
 	int objc = 0;
 	int i;
 
 	Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
 
-#if TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7
+#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
 	if (resolveFontNames) {
 	    Tcl_IncrRefCount(font = Tcl_NewStringObj("font", -1));
 	    Tcl_IncrRefCount(actual = Tcl_NewStringObj("actual", -1));
 	}
-#endif /* TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7 */
+#endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 
 	for (i = 0; i < objc; ++i) {
 	    Tcl_Obj **argv;
@@ -8221,7 +8221,7 @@ TkTextInspectOptions(
 			if (len < 7
 				|| strncmp(s, "Tk", 2) != 0
 				|| strncmp(s + len - 4, "Font", 4) != 0) {
-#if TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7
+#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
 			    Tcl_Obj *args[3];
 			    Tcl_Obj *result;
 
@@ -8236,14 +8236,14 @@ TkTextInspectOptions(
 			    if ((result = GetFontAttrs(textPtr, 3, args))) {
 				value = result;
 			    }
-#else /* TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7 */
+#else /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 			    Tk_Font tkfont = Tk_AllocFontFromObj(interp, textPtr->tkwin, val);
 
 			    if (tkfont) {
 				Tcl_IncrRefCount(value = TkFontGetDescription(tkfont));
 				Tk_FreeFont(tkfont);
 			    }
-#endif /* TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7 */
+#endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 			}
 		    }
 
@@ -8256,12 +8256,12 @@ TkTextInspectOptions(
 	    }
 	}
 
-#if TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7
+#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
 	if (resolveFontNames) {
 	    Tcl_DecrRefCount(actual);
 	    Tcl_DecrRefCount(font);
 	}
-#endif /* TCL_MAJOR_VERSION < 8 || TCL_MINOR_VERSION < 7 */
+#endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
     }
 }
 
@@ -11485,7 +11485,7 @@ TkpTesttextCmd(
     return TCL_OK;
 }
 
-#endif /* TCL_MAJOR_VERSION > 8 || TCL_MINOR_VERSION > 5 */
+#endif /* TK_MAJOR_VERSION > 8 || (TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION > 5) */
 
 #ifndef NDEBUG
 /*
