@@ -23,7 +23,9 @@ with the \fB\-textvariable\fR option.
 Entry widgets support horizontal scrolling with the
 standard \fB\-xscrollcommand\fR option and \fBxview\fR widget command.
 .SO ttk_widget
-\-class	\-cursor	\-style
+\-class	\-cursor
+\-font	\-foreground
+\-style
 \-takefocus	\-xscrollcommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
@@ -34,8 +36,6 @@ If the selection is exported, then selecting in the widget deselects
 the current X selection, selecting outside the widget deselects any
 widget selection, and the widget will respond to selection retrieval
 requests when it has a selection.
-.\" MAYBE: .OP \-font font Font
-.\" MAYBE: .OP \-foreground foreground Foreground
 .\" MAYBE: .OP \-insertbackground insertBackground Foreground
 .\" MAYBE: .OP \-insertwidth insertWidth InsertWidth
 .OP \-invalidcommand invalidCommand InvalidCommand

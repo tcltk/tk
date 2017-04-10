@@ -33,7 +33,7 @@ namespace import -force tcltest::test
 
 # The set of hidden commands is platform dependent:
 
-set hidden_cmds {bell cd clipboard encoding exec exit fconfigure glob grab load menu open pwd selection socket source toplevel unload wm}
+set hidden_cmds {bell cd clipboard encoding exec exit fconfigure glob grab load menu open pwd selection socket source tcl:encoding:dirs toplevel unload wm}
 lappend hidden_cmds {*}[apply {{} {
     foreach cmd {
 	atime attributes copy delete dirname executable exists extension
