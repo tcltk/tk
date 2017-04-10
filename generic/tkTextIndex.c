@@ -2197,7 +2197,7 @@ TkpTextGetIndex(
      *
      *	The base for an index must have one of the following forms:
      *
-     *		<line.<char>
+     *		<line>.<char>
      *		@<x>,<y>
      *		begin
      *		end
@@ -2241,11 +2241,10 @@ TkpTextGetIndex(
     TkTextIndexClear(indexPtr, textPtr);
 
     /*
-     * First look for the form "tag.first", "tag.last", "tag.current.first" or
-     * "tag.current.last", where "tag" is the name of a valid tag. Try to use
-     * up as much as possible of the string in this check. Doing the check now,
-     * and in this way, allows tag names to include funny characters like "@"
-     * or "+1c".
+     * First look for the form "tag.first", "tag.last", and then for "tag.current.first"
+     * or "tag.current.last", where "tag" is the name of a valid tag. Try to use up as
+     * much as possible of the string in this check. Doing the check now, and in this way,
+     * allows tag names to include funny characters like "@" or "+1c".
      */
 
     Tcl_DStringInit(&copy);
@@ -2282,29 +2281,33 @@ TkpTextGetIndex(
     }
 
     skipMark = true;
+    wantCurrent = false;
 
-    if (lenOfString >= 8 && p[-8] == '.' && strncmp(p - 7, "current", 7) == 0) {
-	wantCurrent = true;
-	lenOfString -= 8;
-    } else {
-	wantCurrent = false;
-    }
-
-    if (lenOfString == 3 && strncmp(myString, "sel", 3) == 0) {
-	/*
-	 * Special case for sel tag which is not stored in the hash table.
-	 */
-	tagPtr = textPtr->selTagPtr;
-	hPtr = NULL;
-    } else {
-	myString[lenOfString] = '\0';
-	hPtr = Tcl_FindHashEntry(&sharedTextPtr->tagTable, myString);
-	myString[lenOfString] = '.';
-	if (!hPtr) {
-	    goto tryxy;
+    do {
+	if (lenOfString == 3 && strncmp(myString, "sel", 3) == 0) {
+	    /*
+	     * Special case for sel tag which is not stored in the hash table.
+	     */
+	    tagPtr = textPtr->selTagPtr;
+	    hPtr = NULL;
+	} else {
+	    myString[lenOfString] = '\0';
+	    hPtr = Tcl_FindHashEntry(&sharedTextPtr->tagTable, myString);
+	    myString[lenOfString] = '.';
+	    if (hPtr) {
+		tagPtr = Tcl_GetHashValue(hPtr);
+	    } else if (!wantCurrent
+		    && lenOfString >= 8
+		    && p[-8] == '.'
+		    && strncmp(p - 7, "current", 7) == 0) {
+		tagPtr = NULL;
+		wantCurrent = true;
+		lenOfString -= 8;
+	    } else {
+		goto tryxy;
+	    }
 	}
-	tagPtr = Tcl_GetHashValue(hPtr);
-    }
+    } while (!tagPtr);
 
     if (wantCurrent) {
 	bool tagFound = false;
@@ -2335,7 +2338,7 @@ TkpTextGetIndex(
 		    TkTextLine *linePtr = textPtr->currentMarkPtr->sectionPtr->linePtr->prevPtr;
 		    segPtr = linePtr ? linePtr->lastPtr : NULL;
 		}
-		if (segPtr) {
+		if (segPtr && TkTextTagSetTest(segPtr->tagInfoPtr, tagPtr->index)) {
 		    if (wantLast) {
 			/* in this case we've already found the end of the range */
 			TkTextIndexClear(indexPtr, textPtr);
@@ -2361,7 +2364,7 @@ TkpTextGetIndex(
 	    const char *tagName = hPtr ? Tcl_GetHashKey(&sharedTextPtr->tagTable, hPtr) : "sel";
 
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "character at current position isn't tagged with \"%s\"", tagName));
+		    "character near current position isn't tagged with \"%s\"", tagName));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", tagName, NULL);
 	    Tcl_DStringFree(&copy);
 	    return false;
