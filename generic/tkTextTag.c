@@ -161,6 +161,8 @@ DEBUG_ALLOC(extern unsigned tkTextCountDestroyUndoToken);
 
 static bool		ChangeTagPriority(TkSharedText *sharedTextPtr, TkTextTag *tagPtr,
 			    unsigned newPriority, bool undo);
+static bool		TagAddRemove(TkText *textPtr, const TkTextIndex *index1Ptr,
+			    const TkTextIndex *index2Ptr, TkTextTag *tagPtr, bool add);
 static void		TagBindEvent(TkText *textPtr, XEvent *eventPtr, TkTextTagSet *tagInfoPtr,
 			    unsigned epoch);
 static void		AppendTags(Tcl_Interp *interp, unsigned numTags, TkTextTag **tagArray);
@@ -332,7 +334,7 @@ TkTextTagCmd(
 	    } else {
 		TkTextIndexForwChars(textPtr, &index1, 1, &index2, COUNT_INDICES);
 	    }
-	    if (TkTextTagAddRemove(textPtr, &index1, &index2, tagPtr, addTag)) {
+	    if (TagAddRemove(textPtr, &index1, &index2, tagPtr, addTag)) {
 		anyChanges = true;
 	    }
 	}
@@ -1420,6 +1422,121 @@ AppendTags(
 /*
  *----------------------------------------------------------------------
  *
+ * TkTextReplaceTags --
+ *
+ *	This function is replacing the tag information of given segment
+ *	with provided list of tags.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkTextReplaceTags(
+    TkText *textPtr,		/* Info about overall window. */
+    TkTextSegment *segPtr,	/* Setup tag info of this segment. */
+    Tcl_Obj *tagListPtr)	/* List of tags. */
+{
+    TkTextTagSet *newTagInfoPtr;
+    TkTextTagSet *oldTagInfoPtr;
+    TkSharedText *sharedTextPtr;
+    TkTextTag *tagArrBuf[TK_TEXT_SET_MAX_BIT_SIZE];
+    TkTextTag **tagArrPtr = tagArrBuf;
+    TkTextTag *tagPtr;
+    TkTextIndex index[2];
+    bool altered = false;
+    bool anyChanges = false;
+    Tcl_Obj **objs;
+    int objn = 0, k;
+    unsigned j;
+
+    assert(textPtr);
+    assert(segPtr);
+    assert(segPtr->tagInfoPtr);
+    assert(tagListPtr);
+
+    Tcl_ListObjGetElements(NULL, tagListPtr, &objn, &objs);
+    TkTextIndexClear(&index[0], textPtr);
+    TkTextIndexSetSegment(&index[0], segPtr);
+    TkTextIndexForwBytes(textPtr, &index[0], 1, &index[1]);
+    TkTextTagSetIncrRefCount(oldTagInfoPtr = segPtr->tagInfoPtr);
+
+    if (objn > (int) (sizeof(tagArrBuf)/sizeof(tagArrBuf[0]))) {
+	tagArrPtr = malloc(objn*sizeof(tagArrPtr[0]));
+    }
+
+    for (k = 0; k < objn; ++k) {
+	tagArrPtr[k] = TkTextCreateTag(textPtr, Tcl_GetString(objs[k]), NULL);
+    }
+
+    sharedTextPtr = textPtr->sharedTextPtr;
+    newTagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
+
+    for (k = 0; k < objn; ++k) {
+	newTagInfoPtr = TkTextTagSetAddToThis(newTagInfoPtr, tagArrPtr[k]->index);
+    }
+
+    /*
+     * Remove the deleted tags, but ignore the "sel" tag.
+     */
+
+    for (j = TkTextTagSetFindFirst(oldTagInfoPtr);
+	    j != TK_TEXT_TAG_SET_NPOS;
+	    j = TkTextTagSetFindNext(oldTagInfoPtr, j)) {
+	if (!TkTextTagSetTest(newTagInfoPtr, j)) {
+	    tagPtr = sharedTextPtr->tagLookup[j];
+	    if (tagPtr != textPtr->selTagPtr
+		    && TagAddRemove(textPtr, &index[0], &index[1], tagPtr, false)) {
+		anyChanges = true;
+		if (tagPtr->undo) {
+		    altered = true;
+		}
+	    }
+	}
+    }
+
+    /*
+     * Add new tags, but ignore the "sel" tag.
+     */
+
+    for (j = TkTextTagSetFindFirst(newTagInfoPtr);
+	    j != TK_TEXT_TAG_SET_NPOS;
+	    j = TkTextTagSetFindNext(newTagInfoPtr, j)) {
+	if (!TkTextTagSetTest(segPtr->tagInfoPtr, j)) {
+	    tagPtr = sharedTextPtr->tagLookup[j];
+	    if (tagPtr != textPtr->selTagPtr
+		    && TagAddRemove(textPtr, &index[0], &index[1], tagPtr, true)) {
+		anyChanges = true;
+		if (tagPtr->undo) {
+		    altered = true;
+		}
+	    }
+	}
+    }
+
+    TkTextTagSetDecrRefCount(oldTagInfoPtr);
+    TkTextTagSetDecrRefCount(newTagInfoPtr);
+
+    if (anyChanges) {
+	/* still need to trigger enter/leave events on tags that have changed */
+	TkTextEventuallyRepick(textPtr);
+    }
+    if (altered) {
+	TkTextUpdateAlteredFlag(sharedTextPtr);
+    }
+    if (tagArrPtr != tagArrBuf) {
+	free(tagArrPtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkTextFindTags --
  *
  *	This function is appending the tags from given char segment to the
@@ -1551,7 +1668,7 @@ GrabSelection(
 /*
  *----------------------------------------------------------------------
  *
- * TkTextTagAddRemove --
+ * TagAddRemove --
  *	This functions adds or removes a tag (or all tags) from the characters
  *	between given index range.
  *
@@ -1572,8 +1689,8 @@ UndoTagOperation(
     return sharedTextPtr->undoStack && (!tagPtr || tagPtr->undo);
 }
 
-bool
-TkTextTagAddRemove(
+static bool
+TagAddRemove(
     TkText *textPtr,		/* Info about overall widget. */
     const TkTextIndex *index1Ptr,
 				/* Indicates first character in range. */

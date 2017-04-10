@@ -1904,8 +1904,8 @@ MODULE_SCOPE void	TkTextInspectUndoMarkItem(const TkSharedText *sharedTextPtr,
 MODULE_SCOPE bool	TkTextTagChangedUndoRedo(const TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
 			    const TkTextTag *tagPtr, bool affectsDisplayGeometry);
-MODULE_SCOPE bool	TkTextTagAddRemove(TkText *textPtr, const TkTextIndex *index1Ptr,
-			    const TkTextIndex *index2Ptr, TkTextTag *tagPtr, bool add);
+MODULE_SCOPE void	TkTextReplaceTags(TkText *textPtr, TkTextSegment *segPtr,
+			    Tcl_Obj *tagListPtr);
 MODULE_SCOPE void	TkTextFindTags(Tcl_Interp *interp, TkText *textPtr, const TkTextSegment *segPtr,
 			    bool discardSelection);
 MODULE_SCOPE bool	TkTextDeleteTag(TkText *textPtr, TkTextTag *tagPtr, Tcl_HashEntry *hPtr);

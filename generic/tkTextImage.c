@@ -444,7 +444,6 @@ TkTextImageCmd(
 	    if (!objPtr) {
 		return TCL_ERROR;
 	    }
-
 	    Tcl_ListObjGetElements(NULL, objPtr, &objn, &objs);
 	    for (i = 0; i < objn; ++i) {
 		Tcl_Obj **objv;
@@ -701,7 +700,6 @@ EmbImageConfigure(
     Tk_Image image;
     char *name;
     int width, i;
-    TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextEmbImage *img = &eiPtr->body.ei;
 
     if (maskPtr) {
@@ -713,91 +711,9 @@ EmbImageConfigure(
 	return TCL_ERROR;
     }
 
-    for (i = 0; i < objc; i += 2) {
+    for (i = 0; i + 1 < objc; i += 2) {
 	if (MatchTagsOption(Tcl_GetString(objv[i]))) {
-	    TkTextTagSet *newTagInfoPtr;
-	    TkTextTagSet *oldTagInfoPtr;
-	    TkTextTag *tagArrBuf[128];
-	    TkTextTag **tagArrPtr = tagArrBuf;
-	    TkTextTag *tagPtr;
-	    TkTextIndex index[2];
-	    bool altered = false;
-	    bool anyChanges = false;
-	    Tcl_Obj **objs;
-	    int objn = 0, k;
-	    unsigned j;
-
-	    Tcl_ListObjGetElements(NULL, objv[i + 1], &objn, &objs);
-	    TkTextIndexClear(&index[0], textPtr);
-	    TkTextIndexSetSegment(&index[0], eiPtr);
-	    TkTextIndexForwBytes(textPtr, &index[0], 1, &index[1]);
-	    TkTextTagSetIncrRefCount(oldTagInfoPtr = eiPtr->tagInfoPtr);
-
-	    if (objn > (int) (sizeof(tagArrBuf)/sizeof(tagArrBuf[0]))) {
-		tagArrPtr = malloc(objn*sizeof(tagArrPtr[0]));
-	    }
-
-	    for (k = 0; k < objn; ++k) {
-		tagArrPtr[k] = TkTextCreateTag(textPtr, Tcl_GetString(objs[k]), NULL);
-	    }
-
-	    newTagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
-
-	    for (k = 0; k < objn; ++k) {
-		newTagInfoPtr = TkTextTagSetAddToThis(newTagInfoPtr, tagArrPtr[k]->index);
-	    }
-
-	    /*
-	     * Remove the deleted tags, but ignore the "sel" tag.
-	     */
-
-	    for (j = TkTextTagSetFindFirst(oldTagInfoPtr);
-		    j != TK_TEXT_TAG_SET_NPOS;
-		    j = TkTextTagSetFindNext(oldTagInfoPtr, j)) {
-		if (!TkTextTagSetTest(newTagInfoPtr, j)) {
-		    tagPtr = sharedTextPtr->tagLookup[j];
-		    if (tagPtr != textPtr->selTagPtr
-			    && TkTextTagAddRemove(textPtr, &index[0], &index[1], tagPtr, false)) {
-			anyChanges = true;
-			if (tagPtr->undo) {
-			    altered = true;
-			}
-		    }
-		}
-	    }
-
-	    /*
-	     * Add new tags, but ignore the "sel" tag.
-	     */
-
-	    for (j = TkTextTagSetFindFirst(newTagInfoPtr);
-		    j != TK_TEXT_TAG_SET_NPOS;
-		    j = TkTextTagSetFindNext(newTagInfoPtr, j)) {
-		if (!TkTextTagSetTest(eiPtr->tagInfoPtr, j)) {
-		    tagPtr = sharedTextPtr->tagLookup[j];
-		    if (tagPtr != textPtr->selTagPtr
-			    && TkTextTagAddRemove(textPtr, &index[0], &index[1], tagPtr, true)) {
-			anyChanges = true;
-			if (tagPtr->undo) {
-			    altered = true;
-			}
-		    }
-		}
-	    }
-
-	    TkTextTagSetDecrRefCount(oldTagInfoPtr);
-	    TkTextTagSetDecrRefCount(newTagInfoPtr);
-
-	    if (anyChanges) {
-		/* still need to trigger enter/leave events on tags that have changed */
-		TkTextEventuallyRepick(textPtr);
-	    }
-	    if (altered) {
-		TkTextUpdateAlteredFlag(sharedTextPtr);
-	    }
-	    if (tagArrPtr != tagArrBuf) {
-		free(tagArrPtr);
-	    }
+	    TkTextReplaceTags(textPtr, eiPtr, objv[i + 1]);
 	}
     }
 

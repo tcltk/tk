@@ -177,6 +177,8 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"0", -1, Tk_Offset(TkTextEmbWindow, padY), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-stretch", NULL, NULL,
 	"0", -1, Tk_Offset(TkTextEmbWindow, stretch), 0, 0, 0},
+    {TK_OPTION_STRING, "-tags", NULL, NULL,
+	NULL, -1, -1, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_WINDOW, "-window", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextEmbWindow, tkwin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
@@ -372,6 +374,23 @@ RedoLinkSegmentGetRange(
  *--------------------------------------------------------------
  */
 
+static bool
+MatchTagsOption(
+    const char *opt)
+{
+    static const char *pattern = "-tags";
+    const char *p = pattern;
+    const char *start = opt;
+
+    for ( ; *opt; ++p, ++opt) {
+	if (*p != *opt) {
+	    return opt > start && *p == '\0';
+	}
+    }
+
+    return true;
+}
+
 int
 TkTextWindowCmd(
     TkText *textPtr,		/* Information about text widget. */
@@ -433,12 +452,16 @@ TkTextWindowCmd(
 	    ewPtr->body.ew.tkwin = NULL;
 	}
 
-	objPtr = Tk_GetOptionValue(interp, (char *) &ewPtr->body.ew,
-		ewPtr->body.ew.optionTable, objv[4], textPtr->tkwin);
-	if (!objPtr) {
-	    return TCL_ERROR;
+	if (MatchTagsOption(Tcl_GetString(objv[4]))) {
+	    TkTextFindTags(interp, textPtr, ewPtr, true);
+	} else {
+	    objPtr = Tk_GetOptionValue(interp, (char *) &ewPtr->body.ew,
+		    ewPtr->body.ew.optionTable, objv[4], textPtr->tkwin);
+	    if (!objPtr) {
+		return TCL_ERROR;
+	    }
+	    Tcl_SetObjResult(interp, objPtr);
 	}
-	Tcl_SetObjResult(interp, objPtr);
 	return TCL_OK;
     }
     case WIND_CONFIGURE: {
@@ -462,6 +485,8 @@ TkTextWindowCmd(
 	if (objc <= 5) {
 	    TkTextEmbWindowClient *client;
 	    Tcl_Obj *objPtr;
+	    Tcl_Obj **objs;
+	    int objn = 0, i;
 
 	    /*
 	     * Copy over client specific value before querying.
@@ -481,6 +506,21 @@ TkTextWindowCmd(
 		    textPtr->tkwin);
 	    if (!objPtr) {
 		return TCL_ERROR;
+	    }
+	    Tcl_ListObjGetElements(NULL, objPtr, &objn, &objs);
+	    for (i = 0; i < objn; ++i) {
+		Tcl_Obj **objv;
+		int objc = 0;
+
+		Tcl_ListObjGetElements(NULL, objs[i], &objc, &objv);
+		if (objc == 5 && strcmp(Tcl_GetString(objv[0]), "-tags") == 0) {
+		    Tcl_Obj *valuePtr;
+
+		    /* { argvName, dbName, dbClass, defValue, current value } */
+		    TkTextFindTags(interp, textPtr, ewPtr, true);
+		    valuePtr = Tcl_GetObjResult(interp);
+		    Tcl_ListObjReplace(NULL, objs[i], 4, 1, 1, &valuePtr);
+		}
 	    }
 	    Tcl_SetObjResult(interp, objPtr);
 	    return TCL_OK;
@@ -714,6 +754,7 @@ EmbWinConfigure(
 {
     Tk_Window oldWindow;
     TkTextEmbWindowClient *client;
+    int i;
 
     assert(textPtr);
 
@@ -728,6 +769,12 @@ EmbWinConfigure(
     if (Tk_SetOptions(textPtr->interp, (char *) &ewPtr->body.ew,
 	    ewPtr->body.ew.optionTable, objc, objv, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;
+    }
+
+    for (i = 0; i + 1 < objc; i += 2) {
+	if (MatchTagsOption(Tcl_GetString(objv[i]))) {
+	    TkTextReplaceTags(textPtr, ewPtr, objv[i + 1]);
+	}
     }
 
     if (oldWindow != ewPtr->body.ew.tkwin && (!oldWindow || !IsPreservedWindow(client))) {
