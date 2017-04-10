@@ -21,7 +21,9 @@
 #include "tkTextUndo.h"
 #include "tkTextTagSet.h"
 #include "tkBitField.h"
+#if TCL_MAJOR_VERSION > 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION >= 7)
 #include "tkFont.h"
+#endif
 #include "tkAlloc.h"
 #include <stdlib.h>
 #include <ctype.h>
