@@ -693,15 +693,12 @@ TagSetAdd(
     TkTextTagSet *tagInfoPtr,
     const TkTextTag *tagPtr)
 {
-#if !TK_TEXT_DONT_USE_BITFIELDS
     unsigned size = TkTextTagSetSize(tagInfoPtr);
 
     if (tagPtr->index >= size) {
 	assert(tagPtr->index < tagPtr->sharedTextPtr->tagInfoSize);
 	tagInfoPtr = TagSetResize(tagInfoPtr, tagPtr->sharedTextPtr->tagInfoSize);
     }
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
-
     return TkTextTagSetAdd(tagInfoPtr, tagPtr->index);
 }
 
@@ -772,10 +769,6 @@ TagSetJoinNonIntersection(
     const TkTextTagSet *otherInfoPtr2,
     const TkSharedText *sharedTextPtr)
 {
-#if !TK_TEXT_DONT_USE_BITFIELDS
-    unsigned size;
-#endif
-
     assert(tagInfoPtr);
     assert(otherInfoPtr1);
     assert(otherInfoPtr2);
@@ -785,12 +778,10 @@ TagSetJoinNonIntersection(
 	return tagInfoPtr;
     }
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
-    if ((size = TkTextTagSetSize(tagInfoPtr)) < sharedTextPtr->tagInfoSize) {
+    if (TkTextTagSetSize(tagInfoPtr) < sharedTextPtr->tagInfoSize) {
 	unsigned maxSize = MAX(TkTextTagSetSize(otherInfoPtr1), TkTextTagSetSize(otherInfoPtr2));
 	tagInfoPtr = TagSetResize(tagInfoPtr, MAX(maxSize, sharedTextPtr->tagInfoSize));
     }
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
     tagInfoPtr = TkTextTagSetJoinNonIntersection(tagInfoPtr, otherInfoPtr1, otherInfoPtr2);
 
@@ -849,13 +840,9 @@ TagSetJoinComplementTo(
     if (otherInfoPtr2 == sharedTextPtr->emptyTagInfoPtr) {
 	return tagInfoPtr;
     }
-
-#if !TK_TEXT_DONT_USE_BITFIELDS
     if (TkTextTagSetSize(tagInfoPtr) < sharedTextPtr->tagInfoSize) {
 	tagInfoPtr = TagSetResize(tagInfoPtr, sharedTextPtr->tagInfoSize);
     }
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
-
     if (TkTextTagSetIsEmpty(
 	    tagInfoPtr = TkTextTagSetJoinComplementTo(tagInfoPtr, otherInfoPtr1, otherInfoPtr2))) {
 	TagSetAssign(&tagInfoPtr, sharedTextPtr->emptyTagInfoPtr);
@@ -870,12 +857,9 @@ TagSetJoinOfDifferences(
     const TkTextTagSet *otherInfoPtr2,
     const TkSharedText *sharedTextPtr)
 {
-#if !TK_TEXT_DONT_USE_BITFIELDS
     if (TkTextTagSetSize(tagInfoPtr) < sharedTextPtr->tagInfoSize) {
 	tagInfoPtr = TagSetResize(tagInfoPtr, sharedTextPtr->tagInfoSize);
     }
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
-
     return TkTextTagSetJoinOfDifferences(tagInfoPtr, otherInfoPtr1, otherInfoPtr2);
 }
 
@@ -886,12 +870,9 @@ TagSetTestAndSet(
 {
     unsigned tagIndex = tagPtr->index;
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
     if (tagPtr->index >= TkTextTagSetSize(tagInfoPtr)) {
 	return TkTextTagSetAdd(TagSetResize(tagInfoPtr, tagPtr->sharedTextPtr->tagInfoSize), tagIndex);
     }
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
-
     return TkTextTagSetTestAndSet(tagInfoPtr, tagIndex);
 }
 
@@ -13411,7 +13392,6 @@ RebalanceNodeJoinTagInfo(
     } else if (srcPtr->tagonPtr == sharedTextPtr->emptyTagInfoPtr) {
 	dstPtr->tagoffPtr = TkTextTagSetJoin2(dstPtr->tagoffPtr, srcPtr->tagoffPtr, dstPtr->tagonPtr);
     } else {
-#if !TK_TEXT_DONT_USE_BITFIELDS
 	unsigned size1 = TkTextTagSetSize(dstPtr->tagonPtr);
 	unsigned size2 = TkTextTagSetSize(srcPtr->tagonPtr);
 	unsigned minSize = MAX(TkTextTagSetSize(srcPtr->tagoffPtr), MAX(size1, size2));
@@ -13424,7 +13404,6 @@ RebalanceNodeJoinTagInfo(
 	} else if (size2 < size1) {
 	    srcPtr->tagonPtr = TagSetResize(srcPtr->tagonPtr, size1);
 	}
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
 	dstPtr->tagoffPtr = TkTextTagSetJoin2ComplementToIntersection(
 		dstPtr->tagoffPtr, srcPtr->tagoffPtr, dstPtr->tagonPtr, srcPtr->tagonPtr);

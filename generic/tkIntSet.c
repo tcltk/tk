@@ -87,8 +87,6 @@ TkIntSetIsEqual__(
 }
 
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
-
 unsigned
 TkIntSetFindFirstInIntersection(
     const TkIntSet *set,
@@ -113,8 +111,6 @@ TkIntSetFindFirstInIntersection(
 
     return TK_SET_NPOS;
 }
-
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
 
 TkIntSetType *
@@ -149,8 +145,6 @@ TkIntSetNew()
 }
 
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
-
 TkIntSet *
 TkIntSetFromBits(
     const TkBitField *bf)
@@ -172,8 +166,6 @@ TkIntSetFromBits(
 
     return set;
 }
-
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
 
 void
@@ -313,8 +305,6 @@ JoinBits(
 }
 
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
-
 TkIntSet *
 TkIntSetJoinBits(
     TkIntSet *dst,
@@ -354,8 +344,6 @@ TkIntSetJoinBits(
     set->isSetFlag = true;
     return set;
 }
-
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
 
 static TkIntSetType *
@@ -525,8 +513,6 @@ IntersectBits(
 }
 
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
-
 TkIntSet *
 TkIntSetIntersectBits(
     TkIntSet *dst,
@@ -565,8 +551,6 @@ TkIntSetIntersectBits(
     set->isSetFlag = true;
     return set;
 }
-
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
 
 static TkIntSetType *
@@ -659,8 +643,6 @@ RemoveBits(
 }
 
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
-
 TkIntSet *
 TkIntSetRemoveBits(
     TkIntSet *dst,
@@ -696,8 +678,6 @@ TkIntSetRemoveBits(
     set->isSetFlag = true;
     return set;
 }
-
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
 
 static TkIntSetType *
@@ -777,8 +757,6 @@ ComplementToBits(
 }
 
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
-
 TkIntSet *
 TkIntSetComplementToBits(
     TkIntSet *dst,
@@ -814,8 +792,6 @@ TkIntSetComplementToBits(
     set->isSetFlag = true;
     return set;
 }
-
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
 
 static TkIntSetType *
@@ -1207,8 +1183,6 @@ TkIntSetIsContainedBits(
 }
 
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
-
 bool
 TkIntSetIntersectionIsEqual(
     const TkIntSet *set1,
@@ -1284,8 +1258,6 @@ TkIntSetIntersectionIsEqualBits(
     TkBitDestroy(&cp);
     return test;
 }
-
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
 
 static TkIntSet *
@@ -1467,8 +1439,6 @@ TkIntSetClear(
 }
 
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
-
 bool
 TkIntSetIsEqualBits(
     const TkIntSet *set,
@@ -1555,8 +1525,6 @@ TkIntSetDisjunctiveBits(
 
     return true;
 }
-
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 
 
 #ifndef NDEBUG

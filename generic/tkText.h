@@ -64,13 +64,6 @@
 
 #endif /* TK_MAJOR_VERSION < 9 */
 
-#if TK_TEXT_DONT_USE_BITFIELDS
-# define TkTextTagSet TkIntSet
-# define STRUCT struct
-#else
-# define STRUCT union
-#endif /* TK_TEXT_DONT_USE_BITFIELDS < 9 */
-
 #ifdef _MSC_VER
 /* earlier versions of MSVC don't know snprintf, but _snprintf is compatible. */
 # define snprintf _snprintf
@@ -83,7 +76,7 @@
 struct TkTextUndoStack;
 struct TkBitField;
 struct TkTextUndoToken;
-STRUCT TkTextTagSet;
+union TkTextTagSet;
 
 /* We need a backport to version 8.5 */
 #if TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 5
@@ -147,9 +140,9 @@ typedef struct TkTextLine {
 				/* First in ordered list of segments that make up the line. */
     struct TkTextSegment *lastPtr;
 				/* Last in ordered list of segments that make up the line. */
-    STRUCT TkTextTagSet *tagonPtr;
+    union TkTextTagSet *tagonPtr;
 				/* This set contains all tags used in this line. */
-    STRUCT TkTextTagSet *tagoffPtr;
+    union TkTextTagSet *tagoffPtr;
     				/* This set contains tag t if and only if at least one segment in
 				 * this line does not use tag t, provided that tag t is also included
 				 * in tagonPtr. */
@@ -438,7 +431,7 @@ typedef struct TkTextSegment {
 				 * of list. */
     struct TkTextSection *sectionPtr;
     				/* The section where this segment belongs. */
-    STRUCT TkTextTagSet *tagInfoPtr;
+    union TkTextTagSet *tagInfoPtr;
 				/* Tag information for this segment, needed for testing whether
 				 * this content is tagged with a specific tag. Used only if size > 0.
 				 * (In case of segments with size == 0 memory will be wasted - these
@@ -1113,7 +1106,7 @@ typedef struct TkSharedText {
     TkTextSegment *endMarker;	/* If the end marker is at byte index zero, then the next newline
 				 * does not belong to this widget, otherwise the next newline
 				 * also belongs to this widget. */
-    STRUCT TkTextTagSet *emptyTagInfoPtr;
+    union TkTextTagSet *emptyTagInfoPtr;
     				/* Empty tag information. */
     unsigned numMotionEventBindings;
 				/* Number of tags with bindings to motion events. */
@@ -1436,7 +1429,7 @@ typedef struct TkText {
     XEvent pickEvent;		/* The event from which the current character was chosen.
     				 * Must be saved so that we can repick after modifications
 				 * to the text. */
-    STRUCT TkTextTagSet *curTagInfoPtr;
+    union TkTextTagSet *curTagInfoPtr;
     				/* Set of tags associated with character at current mark. */
     uint32_t lastChunkID;	/* Cache chunk ID of last mouse hovering. */
     int32_t lastX;		/* Cache x coordinate of last mouse hovering. */
@@ -1784,10 +1777,10 @@ MODULE_SCOPE TkTextTag * TkBTreeGetSegmentTags(const TkSharedText *sharedTextPtr
 			    const TkTextSegment *segPtr, const TkText *textPtr, bool *containsSelection);
 MODULE_SCOPE const char * TkBTreeGetLang(const TkText *textPtr, const TkTextSegment *segPtr);
 MODULE_SCOPE void	TkBTreeInsertChars(TkTextBTree tree, TkTextIndex *indexPtr, const char *string,
-			    STRUCT TkTextTagSet *tagInfoPtr, TkTextTag *hyphenTagPtr,
+			    union TkTextTagSet *tagInfoPtr, TkTextTag *hyphenTagPtr,
 			    TkTextUndoInfo *undoInfo);
 MODULE_SCOPE TkTextSegment *TkBTreeMakeCharSegment(const char *string, unsigned length,
-			    STRUCT TkTextTagSet *tagInfoPtr);
+			    union TkTextTagSet *tagInfoPtr);
 MODULE_SCOPE void	TkBTreeMakeUndoIndex(const TkSharedText *sharedTextPtr,
 			    TkTextSegment *segPtr, TkTextUndoIndex *indexPtr);
 MODULE_SCOPE void	TkBTreeUndoIndexToIndex(const TkSharedText *sharedTextPtr,
@@ -1846,7 +1839,7 @@ MODULE_SCOPE void	TkBTreeFreeSegment(TkTextSegment *segPtr);
 MODULE_SCOPE unsigned	TkBTreeChildNumber(const TkTextBTree tree, const TkTextLine *linePtr,
 			    unsigned *depth);
 MODULE_SCOPE unsigned	TkBTreeLinesPerNode(const TkTextBTree tree);
-MODULE_SCOPE const STRUCT TkTextTagSet * TkBTreeRootTagInfo(const TkTextBTree tree);
+MODULE_SCOPE const union TkTextTagSet * TkBTreeRootTagInfo(const TkTextBTree tree);
 MODULE_SCOPE void	TkTextBindProc(ClientData clientData, XEvent *eventPtr);
 MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
 MODULE_SCOPE int	TkConfigureText(Tcl_Interp *interp, TkText *textPtr, int objc,
@@ -1998,7 +1991,7 @@ MODULE_SCOPE unsigned	TkTextGetCursorWidth(TkText *textPtr, int *x, int *offs);
 MODULE_SCOPE void	TkTextEventuallyRepick(TkText *textPtr);
 MODULE_SCOPE bool	TkTextPendingSync(const TkText *textPtr);
 MODULE_SCOPE void	TkTextPickCurrent(TkText *textPtr, XEvent *eventPtr);
-MODULE_SCOPE STRUCT TkTextTagSet * TkTextGetTagSetFromChunk(const TkTextDispChunk *chunkPtr);
+MODULE_SCOPE union TkTextTagSet * TkTextGetTagSetFromChunk(const TkTextDispChunk *chunkPtr);
 MODULE_SCOPE int	TkTextGetXPixelFromChunk(const TkText *textPtr,
 			    const TkTextDispChunk *chunkPtr);
 MODULE_SCOPE int	TkTextGetYPixelFromChunk(const TkText *textPtr,
@@ -2168,7 +2161,6 @@ MODULE_SCOPE void	TkTextInsertDisplayProc(struct TkText *textPtr, struct TkTextD
 # include "tkTextPriv.h"
 #endif
 
-#undef STRUCT
 #endif /* _TKTEXT */
 /*
  * Local Variables:

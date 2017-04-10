@@ -6255,11 +6255,9 @@ TextInsertCmd(
 
 		    for (i = 0; i < numTags; ++i) {
 			tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(tagNamePtrs[i]), NULL);
-#if !TK_TEXT_DONT_USE_BITFIELDS
 			if (tagPtr->index >= TkTextTagSetSize(tagInfoPtr)) {
 			    tagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
 			}
-#endif
 			tagInfoPtr = TkTextTagSetAddToThis(tagInfoPtr, tagPtr->index);
 		    }
 		}
