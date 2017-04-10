@@ -60,9 +60,7 @@ typedef struct TkIntSet {
 
 
 TkIntSet *TkIntSetNew();
-#if !TK_TEXT_DONT_USE_BITFIELDS
 TkIntSet *TkIntSetFromBits(const struct TkBitField *bf);
-#endif
 void TkIntSetDestroy(TkIntSet **setPtr);
 
 inline unsigned TkIntSetByteSize(const TkIntSet *set);
@@ -74,13 +72,11 @@ TkIntSet *TkIntSetJoin(TkIntSet *dst, const TkIntSet *src) __warn_unused__;
 TkIntSet *TkIntSetIntersect(TkIntSet *dst, const TkIntSet *src) __warn_unused__;
 TkIntSet *TkIntSetRemove(TkIntSet *dst, const TkIntSet *src) __warn_unused__;
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
 TkIntSet *TkIntSetJoinBits(TkIntSet *dst, const struct TkBitField *src) __warn_unused__;
 TkIntSet *TkIntSetIntersectBits(TkIntSet *dst, const struct TkBitField *src) __warn_unused__;
 TkIntSet *TkIntSetRemoveBits(TkIntSet *dst, const struct TkBitField *src) __warn_unused__;
 /* dst := src - dst */
 TkIntSet *TkIntSetComplementToBits(TkIntSet *dst, const struct TkBitField *src) __warn_unused__;
-#endif
 
 /* dst := dst + set1 + set2 */
 TkIntSet *TkIntSetJoin2(TkIntSet *dst, const TkIntSet *set1, const TkIntSet *set2) __warn_unused__;
@@ -118,7 +114,6 @@ inline bool TkIntSetContains(const TkIntSet *set1, const TkIntSet *set2);
 inline bool TkIntSetDisjunctive(const TkIntSet *set1, const TkIntSet *set2);
 inline bool TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
 bool TkIntSetIntersectionIsEqual(const TkIntSet *set1, const TkIntSet *set2,
     const struct TkBitField *del);
 bool TkIntSetIsEqualBits(const TkIntSet *set, const struct TkBitField *bf);
@@ -127,14 +122,11 @@ bool TkIntSetDisjunctiveBits(const TkIntSet *set, const struct TkBitField *bf);
 bool TkIntSetIntersectionIsEqualBits(const TkIntSet *set, const struct TkBitField *bf,
     const struct TkBitField *del);
 bool TkIntSetIsContainedBits(const TkIntSet *set, const struct TkBitField *bf);
-#endif
 
 inline unsigned TkIntSetFindFirst(const TkIntSet *set);
 inline unsigned TkIntSetFindNext(const TkIntSet *set);
 
-#if !TK_TEXT_DONT_USE_BITFIELDS
 unsigned TkIntSetFindFirstInIntersection(const TkIntSet *set, const struct TkBitField *bf);
-#endif
 
 TkIntSet *TkIntSetAdd(TkIntSet *set, unsigned n) __warn_unused__;
 TkIntSet *TkIntSetErase(TkIntSet *set, unsigned n) __warn_unused__;

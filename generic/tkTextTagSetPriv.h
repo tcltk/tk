@@ -17,8 +17,6 @@
 #ifndef _TKTEXTTAGSETPRIV
 #define _TKTEXTTAGSETPRIV
 
-#if !TK_TEXT_DONT_USE_BITFIELDS /* shared implementation ****************************/
-
 /*
  * The constant TK_TEXT_SET_MAX_BIT_SIZE is defining the upper bound of
  * the bit size in bit fields. This means that if more than TK_TEXT_SET_MAX_BIT_SIZE
@@ -54,7 +52,6 @@ MODULE_SCOPE bool TkTextTagSetDisjunctive_(const TkTextTagSet *ts1, const TkText
 MODULE_SCOPE bool TkTextTagSetIntersectionIsEqual_(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
 		    const TkBitField *bf);
 
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 #endif /* _TKTEXTTAGSETPRIV */
 
 
@@ -66,8 +63,6 @@ MODULE_SCOPE bool TkTextTagSetIntersectionIsEqual_(const TkTextTagSet *ts1, cons
 
 #include <assert.h>
 
-
-#if !TK_TEXT_DONT_USE_BITFIELDS /* shared implementation ****************************/
 
 inline
 TkTextTagSet *
@@ -440,98 +435,6 @@ TkTextTagSetByteSize(
     return ts->base.isSetFlag ? TkIntSetByteSize(&ts->set) : TkBitByteSize(&ts->bf);
 }
 
-#else /* integer set only implementation **************************************/
-
-inline TkIntSet *TkTextTagSetNew(unsigned size) { return TkIntSetNew(); }
-
-inline TkIntSet *TkTextTagSetResize(TkIntSet *ts, unsigned newSize)
-{ if (!ts) { (ts = TkIntSetNew())->refCount = 1; }; return ts; }
-
-inline void TkTextTagSetDestroy(TkIntSet **tsPtr) { TkIntSetDestroy(tsPtr); }
-
-inline unsigned TkTextTagSetRefCount(const TkIntSet *ts) { return TkIntSetRefCount(ts); }
-
-inline void TkTextTagSetIncrRefCount(TkIntSet *ts) { TkIntSetIncrRefCount(ts); }
-
-inline unsigned TkTextTagSetDecrRefCount(TkIntSet *ts) { return TkIntSetDecrRefCount(ts); }
-
-inline TkIntSet *TkTextTagSetCopy(const TkIntSet *src) { return TkIntSetCopy(src); }
-
-inline bool TkTextTagSetIsEmpty(const TkIntSet *ts) { return TkIntSetIsEmpty(ts); }
-
-inline bool TkTextTagSetIsBitField(const TkIntSet *ts) { assert(ts); return true; }
-
-inline unsigned TkTextTagSetSize(const TkIntSet *ts) { return TK_TEXT_TAG_SET_NPOS - 1; }
-
-inline unsigned TkTextTagSetCount(const TkIntSet *ts) { return TkIntSetSize(ts); }
-
-inline bool TkTextTagSetTest(const TkIntSet *ts, unsigned n) { return TkIntSetTest(ts, n); }
-
-inline bool TkTextTagSetNone(const TkIntSet *ts) { return TkIntSetNone(ts); }
-
-inline bool TkTextTagSetAny(const TkIntSet *ts) { return TkIntSetAny(ts); }
-
-inline bool TkTextTagSetIsEqual(const TkIntSet *ts1, const TkIntSet *ts2)
-{ return TkIntSetIsEqual(ts1, ts2); }
-
-inline bool TkTextTagSetContains(const TkIntSet *ts1, const TkIntSet *ts2)
-{ return TkIntSetContains(ts1, ts2); }
-
-inline bool TkTextTagSetDisjunctive(const TkIntSet *ts1, const TkIntSet *ts2)
-{ return TkIntSetDisjunctive(ts1, ts2); }
-
-inline bool TkTextTagSetIntersects(const TkIntSet *ts1, const TkIntSet *ts2)
-{ return TkIntSetIntersects(ts1, ts2); }
-
-inline bool TkTextTagSetIntersectionIsEqual(const TkIntSet *ts1, const TkIntSet *ts2,
-    const TkBitField *src)
-{ return TkIntSetIntersectionIsEqual(ts1, ts2, src); }
-
-inline bool TkTextTagBitContainsSet(const TkBitField *bf, const TkIntSet *ts)
-{ return TkIntSetIsContainedBits(ts, bf); }
-
-inline bool TkTextTagSetIsEqualBits(const TkIntSet *ts, const TkBitField *bf)
-{ return TkIntSetIsEqualBits(ts, bf); }
-
-inline bool TkTextTagSetContainsBits(const TkIntSet *ts, const TkBitField *bf)
-{ return TkIntSetContainsBits(ts, bf); }
-
-inline bool TkTextTagSetDisjunctiveBits(const TkIntSet *ts, const TkBitField *bf)
-{ return TkIntSetDisjunctiveBits(ts, bf); }
-
-inline bool TkTextTagSetIntersectsBits(const TkIntSet *ts, const TkBitField *bf)
-{ return !TkTextTagSetDisjunctiveBits(ts, bf); }
-
-inline unsigned TkTextTagSetFindFirst(const TkIntSet *ts) { return TkIntSetFindFirst(ts); }
-
-inline unsigned TkTextTagSetFindNext(const TkIntSet *ts, unsigned prev)
-{ return TkIntSetFindNext(ts); }
-
-inline unsigned TkTextTagSetFindFirstInIntersection(const TkIntSet *ts, const TkBitField *bf)
-{ return TkIntSetFindFirstInIntersection(ts, bf); }
-
-inline TkIntSet *TkTextTagSetAddOrErase(TkIntSet *ts, unsigned n, bool value)
-{ return value ? TkTextTagSetAdd(ts, n) : TkTextTagSetErase(ts, n); }
-
-inline TkIntSet * TkTextTagSetAddToThis(TkIntSet *ts, unsigned n)
-{ assert(ts); return TkIntSetAdd(ts, n); }
-
-inline TkIntSet *TkTextTagSetEraseFromThis(TkIntSet *ts, unsigned n)
-{ assert(ts); return TkIntSetErase(ts, n); }
-
-inline TkIntSet *TkTextTagSetClear(TkIntSet *ts) { return TkIntSetClear(ts); }
-
-inline unsigned TkTextTagSetRangeSize(const TkIntSet *ts)
-{ return TkIntSetIsEmpty(ts) ? 0 : TkIntSetMax(ts) + 1; }
-
-inline unsigned char *TkTextTagSetData(const TkTextTagSet *ts)
-{ assert(ts); return TkIntSetData(&ts->set); }
-
-inline unsigned
-TkTextTagSetByteSize(const TkTextTagSet *ts)
-{ assert(ts); return TkIntSetByteSize(&ts->set); }
-
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
 #undef _TK_NEED_IMPLEMENTATION
 #endif /* _TK_NEED_IMPLEMENTATION */
 /* vi:set ts=8 sw=4: */

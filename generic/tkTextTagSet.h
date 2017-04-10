@@ -38,16 +38,11 @@
  *
  * NOTE: The bit field implementation shouldn't be removed, even if this implementation
  * will not be used, because it is required for testing the integer set (TkIntSet).
- *
- * We will use the compiler constant TK_TEXT_DONT_USE_BITFIELDS for the choice (with or
- * without bitfields).
  */
 
 /* This is common to both implementations. */
 # define TK_TEXT_TAG_SET_NPOS TK_SET_NPOS
 
-
-#if !TK_TEXT_DONT_USE_BITFIELDS /* shared implementation ****************************/
 
 /*
  * The struct below is using C inheritance, this is portable due to C99 section
@@ -162,7 +157,6 @@ inline unsigned TkTextTagSetByteSize(const TkTextTagSet *ts);
 void TkTextTagSetPrint(const TkTextTagSet *set);
 # endif
 
-
 # if 0
 
 /*
@@ -190,91 +184,6 @@ bool TkTextTagSetInnerJoinDifferenceIsEqual(const TkTextTagSet *ts1, const TkTex
     const TkTextTagSet *add, const TkTextTagSet *sub);
 
 # endif /* 0 */
-
-#else /* integer set only implementation **************************************/
-
-# define TkTextTagSet TkIntSet
-
-inline TkIntSet *TkTextTagSetNew(unsigned size) __warn_unused__;
-inline TkIntSet *TkTextTagSetResize(TkIntSet *ts, unsigned newSize) __warn_unused__;
-inline void TkTextTagSetDestroy(TkIntSet **tsPtr);
-
-inline unsigned TkTextTagSetRefCount(const TkIntSet *ts);
-inline void TkTextTagSetIncrRefCount(TkIntSet *ts);
-inline unsigned TkTextTagSetDecrRefCount(TkIntSet *ts);
-
-inline TkIntSet *TkTextTagSetCopy(const TkIntSet *src) __warn_unused__;
-TkBitField *TkTextTagSetToBits(const TkTextTagSet *src, int size) __warn_unused__;
-
-TkIntSet *TkTextTagSetJoin(TkIntSet *dst, const TkIntSet *src) __warn_unused__;
-TkIntSet *TkTextTagSetIntersect(TkIntSet *dst, const TkIntSet *src) __warn_unused__;
-TkIntSet *TkTextTagSetRemove(TkIntSet *dst, const TkIntSet *src) __warn_unused__;
-
-TkIntSet *TkTextTagSetIntersectBits(TkIntSet *dst, const TkBitField *src) __warn_unused__;
-TkIntSet *TkTextTagSetRemoveBits(TkIntSet *dst, const TkBitField *src) __warn_unused__;
-
-/* dst := dst + ts1 + ts2 */
-TkIntSet *TkTextTagSetJoin2(TkIntSet *dst, const TkIntSet *ts1, const TkIntSet *ts2) __warn_unused__;
-/* dst := src - dst */
-TkIntSet *TkTextTagSetComplementTo(TkIntSet *dst, const TkIntSet *src) __warn_unused__;
-/* dst := dst + (bf2 - bf1) */
-TkIntSet *TkTextTagSetJoinComplementTo(TkIntSet *dst, const TkIntSet *ts1, const TkIntSet *ts2)
-    __warn_unused__;
-/* dst := dst + (set1 - set2) + (set2 - set1) */
-TkIntSet *TkTextTagSetJoinNonIntersection(TkIntSet *dst, const TkIntSet *ts1, const TkIntSet *ts2)
-    __warn_unused__;
-/* dst := dst + add + ((ts1 + ts2) - (ts1 & ts2)) */
-TkIntSet *TkTextTagSetJoin2ComplementToIntersection(TkIntSet *dst, const TkIntSet *add,
-    const TkIntSet *ts1, const TkIntSet *ts2) __warn_unused__;
-/* dst := (dst - ts1) + (ts1 - ts2) */
-TkIntSet *TkTextTagSetJoinOfDifferences(TkIntSet *dst, const TkIntSet *ts1, const TkIntSet *ts2)
-    __warn_unused__;
-
-inline bool TkTextTagSetIsEmpty(const TkIntSet *ts);
-inline bool TkTextTagSetIsBitField(const TkIntSet *ts);
-
-inline unsigned TkTextTagSetSize(const TkIntSet *ts);
-inline unsigned TkTextTagSetCount(const TkIntSet *ts);
-
-inline bool TkTextTagSetTest(const TkIntSet *ts, unsigned n);
-inline bool TkTextTagSetNone(const TkIntSet *ts);
-inline bool TkTextTagSetAny(const TkIntSet *ts);
-
-inline bool TkTextTagSetIsEqual(const TkIntSet *ts1, const TkIntSet *ts2);
-inline bool TkTextTagSetContains(const TkIntSet *ts1, const TkIntSet *ts2);
-inline bool TkTextTagSetDisjunctive(const TkIntSet *ts1, const TkIntSet *ts2);
-inline bool TkTextTagSetIntersects(const TkIntSet *ts1, const TkIntSet *ts2);
-/* (ts1 & bf) == (ts2 & bf) */
-inline bool TkTextTagSetIntersectionIsEqual(const TkIntSet *ts1, const TkIntSet *ts2,
-    const TkBitField *bf);
-inline bool TkTextTagBitContainsSet(const TkBitField *bf, const TkIntSet *ts);
-
-inline bool TkTextTagSetIsEqualBits(const TkIntSet *ts, const TkBitField *bf);
-inline bool TkTextTagSetContainsBits(const TkIntSet *ts, const TkBitField *bf);
-inline bool TkTextTagSetDisjunctiveBits(const TkIntSet *ts, const TkBitField *bf);
-inline bool TkTextTagSetIntersectsBits(const TkIntSet *ts, const TkBitField *bf);
-
-inline unsigned TkTextTagSetFindFirst(const TkIntSet *ts);
-inline unsigned TkTextTagSetFindNext(const TkIntSet *ts, unsigned prev);
-inline unsigned TkTextTagSetFindFirstInIntersection(const TkIntSet *ts, const TkBitField *bf);
-
-TkIntSet *TkTextTagSetAdd(TkIntSet *ts, unsigned n) __warn_unused__;
-TkIntSet *TkTextTagSetErase(TkIntSet *ts, unsigned n) __warn_unused__;
-inline TkIntSet *TkTextTagSetAddOrErase(TkIntSet *ts, unsigned n, bool value) __warn_unused__;
-TkIntSet *TkTextTagSetTestAndSet(TkIntSet *ts, unsigned n) __warn_unused__;
-TkIntSet *TkTextTagSetTestAndUnset(TkIntSet *ts, unsigned n) __warn_unused__;
-inline TkIntSet *TkTextTagSetClear(TkIntSet *ts) __warn_unused__;
-
-inline TkIntSet *TkTextTagSetAddToThis(TkIntSet *ts, unsigned n);
-inline TkIntSet *TkTextTagSetEraseFromThis(TkIntSet *ts, unsigned n);
-
-inline unsigned TkTextTagSetRangeSize(const TkIntSet *ts);
-
-inline const unsigned char *TkTextTagSetData(const TkIntSet *ts);
-inline unsigned TkTextTagSetByteSize(const TkIntSet *ts);
-
-#endif /* !TK_TEXT_DONT_USE_BITFIELDS */
-
 
 #undef __warn_unused__
 
