@@ -157,7 +157,7 @@ inline unsigned TkTextTagSetByteSize(const TkTextTagSet *ts);
 void TkTextTagSetPrint(const TkTextTagSet *set);
 # endif
 
-# if 0
+# if TK_UNUSED_TAGSET_FUNCTIONS
 
 /*
  * These functions are not needed anymore, but shouldn't be removed, because sometimes
@@ -183,7 +183,7 @@ bool TkTextTagSetIsEqualToInnerJoinDifference(const TkTextTagSet *ts1, const TkT
 bool TkTextTagSetInnerJoinDifferenceIsEqual(const TkTextTagSet *ts1, const TkTextTagSet *ts2,
     const TkTextTagSet *add, const TkTextTagSet *sub);
 
-# endif /* 0 */
+# endif /* TK_UNUSED_TAGSET_FUNCTIONS */
 
 #undef __warn_unused__
 

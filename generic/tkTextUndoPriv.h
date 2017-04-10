@@ -60,13 +60,6 @@ struct TkTextUndoStack {
 
 #include <assert.h>
 
-#ifndef _MSC_VER
-# if __STDC_VERSION__ < 199901L
-#  define inline /* we are not C99 conform */
-# endif
-#endif
-
-
 inline unsigned
 TkTextUndoGetMaxUndoDepth(const TkTextUndoStack stack)
 { assert(stack); return stack->maxUndoDepth; }

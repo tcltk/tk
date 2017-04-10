@@ -11680,7 +11680,7 @@ extern void		TkTextIndexSave(TkTextIndex *indexPtr);
 # if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7 && TCL_UTF_MAX <= 4
 extern int		TkUtfToUniChar(const char *src, int *chPtr);
 # endif
-#endif /* __STDC_VERSION__ >= 199901L */
+#endif /* TK_C99_INLINE_SUPPORT */
 
 
 /*

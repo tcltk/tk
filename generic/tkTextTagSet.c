@@ -1098,7 +1098,7 @@ TkTextTagSetPrint(
 
 #endif /* NDEBUG */
 
-#if 0
+#if TK_UNUSED_TAGSET_FUNCTIONS
 
 /*
  * These functions are not needed anymore, but shouldn't be removed, because sometimes
@@ -1417,7 +1417,7 @@ TkTextTagSetInnerJoinDifferenceIsEqual(
     return isEqual;
 }
 
-#endif /* 0 */
+#endif /* TK_UNUSED_TAGSET_FUNCTIONS */
 
 #ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
@@ -1452,6 +1452,6 @@ extern TkTextTagSet *TkTextTagSetEraseFromThis(TkTextTagSet *ts, unsigned n);
 extern unsigned TkTextTagSetRangeSize(const TkTextTagSet *ts);
 extern const unsigned char *TkTextTagSetData(const TkTextTagSet *ts);
 extern unsigned TkTextTagSetByteSize(const TkTextTagSet *ts);
-#endif /* __STDC_VERSION__ >= 199901L */
+#endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */

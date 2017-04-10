@@ -117,13 +117,6 @@ typedef struct TkTextPixelInfo {
 } TkTextPixelInfo;
 
 /*
- * Macro that determines how much space to allocate:
- */
-
-#define TEXT_DISPLINEINFO_SIZE(numDispLines) (Tk_Offset(TkTextDispLineInfo, entry) + \
-	(numDispLines)*sizeof(((TkTextDispLineInfo *) 0)->entry[0]))
-
-/*
  * The data structure below defines a single logical line of text (from
  * newline to newline, not necessarily what appears on one display line of the
  * screen).

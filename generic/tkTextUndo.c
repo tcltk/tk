@@ -1070,6 +1070,6 @@ extern const TkTextUndoAtom *TkTextUndoCurrentRedoAtom(const TkTextUndoStack sta
 extern const TkTextUndoSubAtom *TkTextUndoGetLastUndoSubAtom(const TkTextUndoStack stack);
 extern bool TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
 extern bool TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
-#endif /* __STDC_VERSION__ >= 199901L */
+#endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */
