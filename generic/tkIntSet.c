@@ -2113,6 +2113,6 @@ extern bool TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
 extern unsigned TkIntSetFindFirst(const TkIntSet *set);
 extern unsigned TkIntSetFindNext(const TkIntSet *set);
 extern TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, bool add);
-#endif /* __STDC_VERSION__ >= 199901L */
+#endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */

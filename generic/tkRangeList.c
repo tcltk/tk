@@ -684,6 +684,6 @@ extern const TkRange *TkRangeListNext(const TkRangeList *ranges, const TkRange *
 extern bool TkRangeListIsEmpty(const TkRangeList *ranges);
 extern bool TkRangeListContains(const TkRangeList *ranges, int value);
 extern bool TkRangeListContainsRange(const TkRangeList *ranges, int low, int high);
-#endif /* __STDC_VERSION__ >= 199901L */
+#endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */

@@ -622,6 +622,13 @@ typedef enum {
 #define MAX_CACHED_DISPLAY_LINES 8
 
 /*
+ * Macro that determines how much space to allocate for TkTextDispLineInfo:
+ */
+
+#define TEXT_DISPLINEINFO_SIZE(numDispLines) (Tk_Offset(TkTextDispLineInfo, entry) + \
+	(numDispLines)*sizeof(((TkTextDispLineInfo *) 0)->entry[0]))
+
+/*
  * We will also mark logical lines with current line metric epoch even if the computation
  * has been done only partial. In this case we add a special bit to mark it as partially
  * computed.
