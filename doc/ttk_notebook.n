@@ -171,7 +171,8 @@ Otherwise, sets the \fI\-option\fRs to the corresponding \fIvalue\fRs.
 See \fBTAB OPTIONS\fR for the available options.
 .TP
 \fIpathname \fBtabs\fR
-Returns the list of windows managed by the notebook.
+Returns the list of windows managed by the notebook, in the index order of
+their associated tabs.
 .SH "KEYBOARD TRAVERSAL"
 To enable keyboard traversal for a toplevel window
 containing a notebook widget \fI$nb\fR, call:
