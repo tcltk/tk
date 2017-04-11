@@ -3466,12 +3466,28 @@ HandleEventGenerate(
     if ((warp != 0) && Tk_IsMapped(tkwin)) {
 	TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
+	/*
+	 * TODO: No protection is in place to handle dispPtr destruction
+	 * before DoWarp is called back.
+	 */
+
+	Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display,
+		event.general.xmotion.window);
+
 	if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
 	    Tcl_DoWhenIdle(DoWarp, dispPtr);
 	    dispPtr->flags |= TK_DISPLAY_IN_WARP;
 	}
-	dispPtr->warpWindow = Tk_IdToWindow(dispPtr->display,
-		event.general.xmotion.window);
+
+	if (warpWindow != dispPtr->warpWindow) {
+	    if (warpWindow) {
+		Tcl_Preserve(warpWindow);
+	    }
+	    if (dispPtr->warpWindow) {
+		Tcl_Release(dispPtr->warpWindow);
+	    }
+	    dispPtr->warpWindow = warpWindow;
+	}
 	dispPtr->warpMainwin = mainWin;
 	dispPtr->warpX = event.general.xmotion.x;
 	dispPtr->warpY = event.general.xmotion.y;
@@ -3558,6 +3574,11 @@ DoWarp(
             && (Tk_WindowId(dispPtr->warpWindow) != None))) {
         TkpWarpPointer(dispPtr);
         XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+    }
+
+    if (dispPtr->warpWindow) {
+	Tcl_Release(dispPtr->warpWindow);
+	dispPtr->warpWindow = None;
     }
     dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }
