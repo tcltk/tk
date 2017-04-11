@@ -91,7 +91,8 @@ If one \fI\-option\fR is specified, returns the value of that \fIoption\fR.
 Otherwise, sets the \fI\-option\fRs to the corresponding \fIvalue\fRs.
 .TP
 \fIpathname \fBpanes\fR
-Returns the list of all windows managed by the widget.
+Returns the list of all windows managed by the widget, in the index order of
+their associated panes.
 .TP
 \fIpathname \fBsashpos \fIindex\fR ?\fInewpos\fR?
 If \fInewpos\fR is specified, sets the position
