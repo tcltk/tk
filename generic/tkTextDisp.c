@@ -5774,6 +5774,7 @@ DisplayDLine(
     StyleValues *sValuePtr;
     int lineHeight, yOffs;
     int yBase, height, baseline, screenY, xOffs;
+    int extent1, extent2;
     int xIndent, rMargin;
     bool delayBlockCursorDrawing;
 
@@ -6013,10 +6014,11 @@ DisplayDLine(
      * and we want to get as much of the cursor as possible.
      */
 
-    xOffs = MIN(textPtr->padX, textPtr->insertWidth/2);
+    extent1 = MIN(textPtr->padX, textPtr->insertWidth/2);
+    extent2 = MIN(textPtr->padX, (textPtr->insertWidth + 1)/2);
     XCopyArea(display, pixmap, Tk_WindowId(textPtr->tkwin), dInfoPtr->copyGC,
-	    dInfoPtr->x - xOffs, yOffs, dInfoPtr->maxX - dInfoPtr->x + 2*xOffs, lineHeight,
-	    dInfoPtr->x - xOffs, dlPtr->y + yOffs);
+	    dInfoPtr->x - extent1, yOffs, dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, lineHeight,
+	    dInfoPtr->x - extent1, dlPtr->y + yOffs);
 
     DEBUG(stats.linesRedrawn += 1);
 }
