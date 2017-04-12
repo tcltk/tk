@@ -2469,6 +2469,97 @@ TkTextDrawBlockCursor(
 /*
  *--------------------------------------------------------------
  *
+ * TkTextGetCursorBbox --
+ *
+ *	This function computes the cursor dimensions.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+bool
+TkTextGetCursorBbox(
+    TkText *textPtr,		/* The current text widget. */
+    int *x, int *y,		/* X/Y coordinate. */
+    int *w, int *h)		/* Width/height of cursor. */
+{
+    TkTextIndex index;
+    Tcl_UniChar thisChar;
+    int cursorExtent;
+    int charWidth = -1;
+
+    assert(textPtr);
+    assert(x);
+    assert(y);
+    assert(w);
+    assert(h);
+
+    cursorExtent = MIN(textPtr->padX, textPtr->insertWidth/2);
+    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
+
+    if (!TkTextIndexBbox(textPtr, &index, false, x, y, w, h, &charWidth, &thisChar)) {
+	int base, ix, iw;
+
+	/*
+	 * Testing whether the cursor is visible is not as trivial at it seems,
+	 * see this example:
+	 *
+	 * ~~~~~~~~~~~~~~~~
+	 * |   +-----+
+	 * |   |     |
+	 * |~~~|~~~~~|~~~~~
+	 * |   |     |
+	 * | a |     |
+	 * |   |     |
+	 * |   +-----+
+	 *
+	 * At left side we have the visible cursor, then char "a", then a window.
+	 * The region between the tilde bars is the visible screen. The cursor
+	 * is positioned before char "a", and the bbox of char "a" is outside of
+	 * the visible screen, so a simple test with TkTextIndexBbox() at char
+	 * position "a" fails here. We have to test now with the display line.
+	 */
+
+	if (!TkTextGetDLineInfo(textPtr, &index, false, &ix, y, &iw, h, &base)) {
+	    return false; /* cursor is not visible at all */
+	}
+
+	if (charWidth == -1) {
+	    /* This char is outside of the screen, so use a default. */
+	    charWidth = textPtr->charWidth;
+	}
+    }
+
+    /*
+     * Don't draw the full lengh of a tab, in this case we are drawing
+     * a cursor at the right boundary with a standard with.
+     */
+
+    if (thisChar == '\t') {
+	*x += charWidth;
+	charWidth = MIN(textPtr->charWidth, charWidth);
+	*x -= charWidth;
+    }
+
+    if (textPtr->blockCursorType) {
+	/* NOTE: the block cursor extent is always rounded towards zero. */
+	*w = charWidth + 2*cursorExtent;
+    } else {
+	*w = MIN(textPtr->insertWidth, textPtr->padX + cursorExtent);
+    }
+
+    *x -= cursorExtent;
+    return true;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * TkTextGetCursorWidth --
  *
  *	This function computes the cursor dimensions.
@@ -2486,33 +2577,26 @@ unsigned
 TkTextGetCursorWidth(
     TkText *textPtr,		/* The current text widget. */
     int *x,			/* Shift x coordinate, can be NULL. */
-    int *offs)			/* Offset in x-direction, can be NULL. */
+    int *extent)		/* Extent of cursor to left side, can be NULL. */
 {
-    TkTextIndex index;
-    int ix = 0, iy = 0, iw = 0, ih = 0;
-    int charWidth = 0;
+    int width;
+    int cursorExtent = MIN(textPtr->padX, textPtr->insertWidth/2);
 
-    if (offs) {
-	*offs = -(textPtr->insertWidth/2);
+    if (extent) {
+	*extent = -cursorExtent;
     }
 
     if (textPtr->blockCursorType) {
-	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-	TkTextIndexBbox(textPtr, &index, false, &ix, &iy, &iw, &ih, &charWidth);
+	int ix, iy, ih;
 
-	/*
-	 * Don't draw the full lengh of a tab, in this case we are drawing
-	 * a cursor at the right boundary with a standard with.
-	 */
-
-	if (TkTextIndexGetChar(&index) == '\t') {
-	    if (x) { *x += charWidth; }
-	    charWidth = MIN(textPtr->charWidth, charWidth);
-	    if (x) { *x -= charWidth; }
+	if (!TkTextGetCursorBbox(textPtr, &ix, &iy, &width, &ih)) {
+	    return 0; /* cursor is not visible at all */
 	}
+    } else {
+	width = MIN(textPtr->insertWidth, textPtr->padX + cursorExtent);
     }
 
-    return charWidth + textPtr->insertWidth;
+    return width;
 }
 
 /*
