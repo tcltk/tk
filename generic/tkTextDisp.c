@@ -8013,7 +8013,7 @@ DisplayText(
     Pixmap pixmap;
     int maxHeight, borders;
     int bottomY = 0;		/* Initialization needed only to stop compiler warnings. */
-    int cursorExtent;
+    int extent1, extent2;
     Tcl_Interp *interp;
 
 #ifdef MAC_OSX_TK
@@ -8080,7 +8080,8 @@ DisplayText(
      * TkScrollWindow must consider the insertion cursor.
      */
 
-    cursorExtent = MIN(textPtr->padX, textPtr->insertWidth/2);
+    extent1 = MIN(textPtr->padX, textPtr->insertWidth/2);
+    extent2 = MIN(textPtr->padX, (textPtr->insertWidth + 1)/2);
 
     /*
      * See if it's possible to bring some parts of the screen up-to-date by
@@ -8202,8 +8203,8 @@ DisplayText(
 	 */
 
 	damageRgn = TkCreateRegion();
-	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x - cursorExtent,
-		oldY, dInfoPtr->maxX - dInfoPtr->x + 2*cursorExtent, height, 0, y - oldY, damageRgn)) {
+	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x - extent1, oldY,
+		dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, height, 0, y - oldY, damageRgn)) {
 #ifdef MAC_OSX_TK
 	    /* the processing of the Expose event is damaging the region on Mac */
 #else
