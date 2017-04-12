@@ -254,7 +254,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_TEXT_CURSOR, -1, Tk_Offset(TkText, cursor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_CUSTOM, "-endindex", NULL, NULL,
-	 NULL, -1, Tk_Offset(TkText, newEndIndex), 0, &startEndMarkOption, TK_TEXT_INDEX_RANGE},
+	 NULL, -1, Tk_Offset(TkText, newEndIndex), TK_OPTION_NULL_OK, &startEndMarkOption, TK_TEXT_INDEX_RANGE},
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
     {TK_OPTION_CUSTOM, "-endline", NULL, NULL,
 	 NULL, -1, Tk_Offset(TkText, endLine), TK_OPTION_NULL_OK, &lineOption, TK_TEXT_LINE_RANGE},
@@ -349,7 +349,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-spacing3", "spacing3", "Spacing",
 	DEF_TEXT_SPACING3, -1, Tk_Offset(TkText, spacing3), 0, 0 , TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_CUSTOM, "-startindex", NULL, NULL,
-	 NULL, -1, Tk_Offset(TkText, newStartIndex), 0, &startEndMarkOption, TK_TEXT_INDEX_RANGE},
+	 NULL, -1, Tk_Offset(TkText, newStartIndex), TK_OPTION_NULL_OK, &startEndMarkOption, TK_TEXT_INDEX_RANGE},
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
     {TK_OPTION_CUSTOM, "-startline", NULL, NULL,
 	 NULL, -1, Tk_Offset(TkText, startLine), TK_OPTION_NULL_OK, &lineOption, TK_TEXT_LINE_RANGE},
