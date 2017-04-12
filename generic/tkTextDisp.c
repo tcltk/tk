@@ -691,7 +691,8 @@ static void		FreeStyle(TkText *textPtr, TextStyle *stylePtr);
 static TextStyle *	GetStyle(TkText *textPtr, TkTextSegment *segPtr);
 static void		UpdateDefaultStyle(TkText *textPtr);
 static bool		GetBbox(TkText *textPtr, const DLine *dlPtr, const TkTextIndex *indexPtr,
-			    int *xPtr, int *yPtr, int *widthPtr, int *heightPtr, bool *isLastCharInLine);
+			    int *xPtr, int *yPtr, int *widthPtr, int *heightPtr, bool *isLastCharInLine,
+			    Tcl_UniChar *thisChar);
 static void		GetXView(Tcl_Interp *interp, TkText *textPtr, bool report);
 static void		GetYView(Tcl_Interp *interp, TkText *textPtr, bool report);
 static unsigned		GetYPixelCount(TkText *textPtr, DLine *dlPtr);
@@ -9334,7 +9335,7 @@ TkTextSetYView(
 	int x, y, width, height;
 
 	if (TkTextIndexCompare(&dlPtr->index, indexPtr) <= 0
-		&& GetBbox(textPtr, dlPtr, indexPtr, &x, &y, &width, &height, NULL)) {
+		&& GetBbox(textPtr, dlPtr, indexPtr, &x, &y, &width, &height, NULL, NULL)) {
 	    assert(TkTextIndexCountBytes(&dlPtr->index, indexPtr) <= dlPtr->byteCount);
 	    if (dInfoPtr->y <= y && y + height <= dInfoPtr->maxY - dInfoPtr->y) {
 		return; /* this character is fully visible, so we don't need to scroll */
@@ -9399,7 +9400,7 @@ TkTextSetYView(
 	    dlPtr = info.dLinePtr = info.lastDLinePtr = LayoutDLine(&tmpIndex, info.displayLineNo);
 	    SaveDisplayLines(textPtr, &info, true);
 	}
-	GetBbox(textPtr, dlPtr, indexPtr, &x, &y, &width, &height, NULL);
+	GetBbox(textPtr, dlPtr, indexPtr, &x, &y, &width, &height, NULL, NULL);
 	dInfoPtr->newTopPixelOffset = MAX(0, y - dlPtr->y - (dInfoPtr->maxY - height)/2);
 	textPtr->topIndex = *indexPtr;
     } else {
@@ -9862,7 +9863,9 @@ GetBbox(
     int *xPtr, int *yPtr,	/* Filled with index's upper-left coordinate. */
     int *widthPtr, int *heightPtr,
 				/* Filled in with index's dimensions. */
-    bool *isLastCharInLine)	/* Last char in display line? Can be NULL. */
+    bool *isLastCharInLine,	/* Last char in display line? Can be NULL. */
+    Tcl_UniChar *thisChar)	/* The character at specified position, can be NULL. Will be zero if
+    				 * this is not a char chunk. */
 {
     TkTextDispChunkSection *sectionPtr;
     TkTextDispChunk *chunkPtr;
@@ -9887,6 +9890,7 @@ GetBbox(
     while (byteCount >= sectionPtr->numBytes) {
 	byteCount -= sectionPtr->numBytes;
 	if (!(sectionPtr = sectionPtr->nextPtr)) {
+	    if (thisChar) { *thisChar = 0; }
 	    return false;
 	}
     }
@@ -9896,6 +9900,7 @@ GetBbox(
     while (byteCount >= chunkPtr->numBytes) {
 	byteCount -= chunkPtr->numBytes;
 	if (!(chunkPtr = chunkPtr->nextPtr)) {
+	    if (thisChar) { *thisChar = 0; }
 	    return false;
 	}
     }
@@ -9917,6 +9922,17 @@ GetBbox(
     if (isLastCharInLine) {
 	*isLastCharInLine = (byteCount == chunkPtr->numBytes - 1 && !chunkPtr->nextPtr);
     }
+
+    if (thisChar) {
+	if (IsCharChunk(chunkPtr)) {
+	    const TkTextSegment *segPtr = CHAR_CHUNK_GET_SEGMENT(chunkPtr);
+	    assert((int) byteCount < segPtr->size);
+	    Tcl_UtfToUniChar(segPtr->body.chars + byteCount, thisChar);
+	} else {
+	    *thisChar = 0;
+	}
+    }
+
     return true;
 }
 
@@ -10005,7 +10021,7 @@ TkTextSeeCmd(
 	return TCL_OK;
     }
 
-    if (GetBbox(textPtr, dlPtr, &index, &x, &y, &width, &height, NULL)) {
+    if (GetBbox(textPtr, dlPtr, &index, &x, &y, &width, &height, NULL, NULL)) {
         delta = x - dInfoPtr->curXPixelOffset;
         oneThird = lineWidth/3;
         if (delta < 0) {
@@ -11775,9 +11791,11 @@ TkTextIndexBbox(
     int *xPtr, int *yPtr,	/* Filled with index's upper-left coordinate. */
     int *widthPtr, int *heightPtr,
 				/* Filled in with index's dimensions. */
-    int *charWidthPtr)		/* If the 'index' is at the end of a display line and therefore
+    int *charWidthPtr,		/* If the 'index' is at the end of a display line and therefore
     				 * takes up a very large width, this is used to return the smaller
 				 * width actually desired by the index. */
+    Tcl_UniChar *thisChar)	/* Character at given position, can be NULL. Zero will be returned
+    				 * if this is not a char chunk, or if outside of screen. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     bool isLastCharInLine;
@@ -11806,10 +11824,12 @@ TkTextIndexBbox(
      */
 
     if (!dlPtr || !dlPtr->chunkPtr || TkTextIndexCompare(&dlPtr->index, indexPtr) > 0) {
+	if (thisChar) { *thisChar = 0; }
 	return false;
     }
 
-    if (!GetBbox(textPtr, dlPtr, indexPtr, xPtr, yPtr, widthPtr, heightPtr, &isLastCharInLine)) {
+    if (!GetBbox(textPtr, dlPtr, indexPtr, xPtr, yPtr, widthPtr, heightPtr,
+	    &isLastCharInLine, thisChar)) {
 	return false;
     }
 

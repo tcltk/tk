@@ -1495,7 +1495,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (TkTextIndexBbox(textPtr, &index, extents, &x, &y, &width, &height, NULL)) {
+	if (TkTextIndexBbox(textPtr, &index, extents, &x, &y, &width, &height, NULL, NULL)) {
 	    Tcl_Obj *listObj = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewIntObj(x));
@@ -6092,51 +6092,12 @@ TextBlinkProc(
     }
 
     if (oldFlags != textPtr->flags) {
-	TkTextIndex index;
-	int x, y, w, h, charWidth;
+	int x, y, w, h;
 
-	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-
-	if (!TkTextIndexBbox(textPtr, &index, false, &x, &y, &w, &h, &charWidth)) {
-	    int base;
-
-	    /*
-	     * Testing whether the cursor is visible is not as trivial at it seems,
-	     * see this example:
-	     *
-	     * ~~~~~~~~~~~~~~~~
-	     * |   +-----+
-	     * |   |     |
-	     * |~~~|~~~~~|~~~~~
-	     * |   |     |
-	     * | a |     |
-	     * |   |     |
-	     * |   +-----+
-	     *
-	     * At left side we have the visible cursor, then char "a", then a window.
-	     * The region between the tilde bars is the visible screen. The cursor
-	     * is positioned before char "a", and the bbox of char "a" is outside of
-	     * the visible screen, so a simple test with TkTextIndexBbox() at char
-	     * position "a" fails here. We have to test now with the display line.
-	     */
-
-	    if (!TkTextGetDLineInfo(textPtr, &index, false, &x, &y, &w, &h, &base)) {
-		return; /* cursor is not visible at all */
-	    }
-
-	    /* This char is outside of the screen, so use a default. */
-	    charWidth = textPtr->charWidth;
+	if (TkTextGetCursorBbox(textPtr, &x, &y, &w, &h)) {
+	    int inset = textPtr->borderWidth + textPtr->highlightWidth;
+	    TkTextRedrawRegion(textPtr, x + inset, y + inset, w, h);
 	}
-
-	if (textPtr->blockCursorType) { /* Block cursor */
-	    x -= textPtr->width/2;
-	    w = charWidth + textPtr->insertWidth/2;
-	} else { /* I-beam cursor */
-	    x -= textPtr->insertWidth/2;
-	    w = textPtr->insertWidth;
-	}
-
-	TkTextRedrawRegion(textPtr, x, y, w, h);
     }
 }
 

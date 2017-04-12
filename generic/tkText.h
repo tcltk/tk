@@ -1842,7 +1842,7 @@ MODULE_SCOPE bool	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
 MODULE_SCOPE void	TkTextUpdateAlteredFlag(TkSharedText *sharedTextPtr);
 MODULE_SCOPE bool	TkTextIndexBbox(TkText *textPtr,
 			    const TkTextIndex *indexPtr, bool extents, int *xPtr, int *yPtr,
-			    int *widthPtr, int *heightPtr, int *charWidthPtr);
+			    int *widthPtr, int *heightPtr, int *charWidthPtr, Tcl_UniChar *thisChar);
 MODULE_SCOPE int	TkTextCharLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int byteOffset, int maxX, int maxBytes, bool noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
@@ -1980,6 +1980,7 @@ MODULE_SCOPE void	TkTextSaveCursorIndex(TkText *textPtr);
 MODULE_SCOPE bool	TkTextTriggerWatchCursor(TkText *textPtr);
 MODULE_SCOPE void	TkTextInsertGetBBox(TkText *textPtr, int x, int y, int height, XRectangle *bbox);
 MODULE_SCOPE bool	TkTextDrawBlockCursor(TkText *textPtr);
+MODULE_SCOPE bool	TkTextGetCursorBbox(TkText *textPtr, int *x, int *y, int *w, int *h);
 MODULE_SCOPE unsigned	TkTextGetCursorWidth(TkText *textPtr, int *x, int *offs);
 MODULE_SCOPE void	TkTextEventuallyRepick(TkText *textPtr);
 MODULE_SCOPE bool	TkTextPendingSync(const TkText *textPtr);
