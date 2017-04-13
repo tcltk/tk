@@ -188,15 +188,7 @@ test imgPhoto-1.12 {option -alpha, normal use} -setup {
 } -cleanup {
     imageCleanup
 } -result {255}
-test imgPhoto-1.13 {option -boolean, normal use} -setup {
-    image create photo photo1
-} -body {
-    photo1 put "green" -to 0 0 
-    photo1 transparency set 0 0 1 -boolean
-} -cleanup {
-    imageCleanup
-} -result {}
-test imgPhoto-1.14 {option -withalpha, normal use} -setup {
+test imgPhoto-1.13 {option -withalpha, normal use} -setup {
     image create photo photo1
 } -body {
     photo1 put {{blue green}}
@@ -672,7 +664,7 @@ test imgPhoto-4.42 {ImgPhotoCmd procedure: transparency get option} -setup {
 test imgPhoto-4.43 {ImgPhotoCmd procedure: transparency get option} -setup {
     image create photo photo1
 } -body {
-    photo1 transparency get 0 0 0 -boolean
+    photo1 transparency get 0 0 0 -alpha
 } -returnCodes error -cleanup {
     image delete photo1
 } -result {wrong # args: should be "photo1 transparency get x y ?-option?"}
@@ -763,7 +755,7 @@ test imgPhoto-4.54 {ImgPhotoCmd procedure: transparency set option} -setup {
 test imgPhoto-4.55 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
-    photo1 transparency set 0 0 0 0 -boolean
+    photo1 transparency set 0 0 0 0 -alpha
 } -returnCodes error -cleanup {
     image delete photo1
 } -result \
@@ -965,7 +957,7 @@ test imgPhoto-4.76 {ImgPhotoCmd, transparancy get: too many options} -setup {
     image create photo photo1
 } -body {
     photo1 put white -to 0 0 1 1
-    photo1 transparency get 0 0 -alpha -boolean
+    photo1 transparency get 0 0 -alpha -bogus
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
@@ -978,12 +970,12 @@ test imgPhoto-4.77 {ImgPhotoCmd, transparency get: invalid option} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
-    {unrecognized option "-bogus": must be -alpha, or -boolean}
+    {unrecognized option "-bogus": must be -alpha}
 test imgPhoto-4.78 {ImgPhotoCmd, transparency get: normal use} -setup {
     image create photo photo1
 } -body {
     photo1 put white -to 0 0 1 1
-    set result [photo1 transparency get 0 0 -boolean]
+    set result [photo1 transparency get 0 0]
     lappend result [photo1 transparency get 0 0 -alpha]
 } -cleanup {
     imageCleanup
@@ -1002,21 +994,7 @@ test imgPhoto-4.79 {ImgPhotoCmd, transparency get: no option} -constraints {
 } -cleanup {
     imageCleanup
 } -result {0 1 0 0 0}
-test imgPhoto-4.80 {ImgPhotoCmd, transparency get: -boolean option\
-} -constraints {
-    hasTranspTeapotPhoto
-} -setup {
-    image create photo photo1 -file $transpTeapotPhotoFile
-    set result {}
-} -body {
-    set pixelCoords {{156 239} {76 207} {153 213} {139 43} {75 112}}
-    foreach coord $pixelCoords {
-	lappend result [photo1 transparency get {*}$coord -boolean]
-    }
-    set result
-} -cleanup {
-    imageCleanup
-} -result {0 1 0 0 0}
+# test imgPhoto-4.80: deleted (was transparency get: -boolean)
 test imgPhoto-4.81 {ImgPhotoCmd, transparency get: -alpha} -constraints {
     hasTranspTeapotPhoto
 } -setup {
@@ -1034,7 +1012,7 @@ test imgPhoto-4.81 {ImgPhotoCmd, transparency get: -alpha} -constraints {
 test imgPhoto-4.82 {ImgPhotoCmd, transparency set: too many opts} -setup {
     image create photo photo1
 } -body {
-    photo1 transparency set 0 0 -alpha -boolean 1
+    photo1 transparency set 0 0 -alpha -bogus 1
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
@@ -1046,7 +1024,7 @@ test imgPhoto-4.83 {ImgPhotoCmd, transparency set: invalid opt} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
-    {unrecognized option "-bogus": must be -alpha, or -boolean}
+    {unrecognized option "-bogus": must be -alpha}
 test imgPhoto-4.84 {ImgPhotoCmd, transparency set: invalid newVal} -setup {
     image create photo photo1 -data white
 } -body {
@@ -1079,17 +1057,7 @@ test imgPhoto-4.87 {ImgPhotoCmd, transparency set: no opt} -setup {
 } -cleanup {
     imageCleanup
 } -result {255 0}
-test imgPhoto-4.88 {ImgPhotoCmd, transparency set: -boolean} -setup {
-    image create photo photo1
-} -body {
-    photo1 put white -to 0 0 2 1
-    photo1 transparency set 0 0 0 -boolean
-    photo1 transparency set 1 0 1 -boolean
-    list [photo1 transparency get 0 0 -alpha] \
-        [photo1 transparency get 1 0 -alpha]
-} -cleanup {
-    imageCleanup
-} -result {255 0}
+# deleted: test imgPhoto-4.88 {ImgPhotoCmd, transparency set: -boolean}
 test imgPhoto-4.89 {ImgPhotoCmd, transparency set: -alpha} -setup {
     image create photo photo1
 } -body {
