@@ -86,9 +86,7 @@ hyphen. This supports simpler hyphenators, not knowing spelling changes.
 This is the way how the hyphen rules will be applied (
 .QW "\e+"
 denotes the soft hyphen character):
-.TP
-\fBck\fR
-.
+.IP "\fBck\fR"
 If the soft hyphen is the right neighbor of character
 .QW c , and the right
 neighbor is character
@@ -97,18 +95,14 @@ applied to this hyphen. Example: the German word
 .QW Druc\e+ker
 hyphenates into
 .QW Druk-ker . This rule belongs to language German (de).
-.TP
-\fBgemination\fR
-.
+.IP "\fBgemination\fR"
 If the soft hyphen is the left neighbor of a geminated letter 'l' (or 'L'),
 then the \fBgemination\fR hyphenation rule will be applied. Example: the
 Catalan word
 .QW para\e+llel
 hyphenates into
 .QW paral-lel . This rule belongs to the Catalan language (ca).
-.TP
-\fBdoublevowel\fR
-.
+.IP "\fBdoublevowel\fR"
 If the soft hyphen is the right neighbor of any vowel, and the right
 neighbor is the same vowel, then the \fBdoublevowel\fR hyphenation rule will
 be applied to this hyphen. If this vowel is an
@@ -120,9 +114,7 @@ hyphenates into
 .QW cafee\e+tje
 becomes
 .QW caf\['e]-tje . This rule belongs to the Dutch language (nl).
-.TP
-\fBdoubledigraph\fR
-.
+.IP "\fBdoubledigraph\fR"
 In Polish language the following spelling change will be applied with this
 rule:
 .QW c\e+cs
@@ -146,26 +138,20 @@ becomes
 .QW s\e+sz
 becomes
 .QW sz-sz .
-.TP
-\fBrepeathyphen\fR
-.
+.IP "\fBrepeathyphen\fR"
 In Polish the hyphen will be repeated after line break, this means for
 example that
 .QW tech\e+nik
 becomes
 .QW "tech- -nik" .
-.TP
-\fBtrema\fR
-.
+.IP "\fBtrema\fR"
 If the soft hyphen is the right neighbor of any vowel, and the right neighbor
 of any vowel with trema (umlaut), then the \fBtrema\fR hyphenation rule will
 be applied to this hyphen. Example: the Dutch word
 .QW re\e+\[:e]el
 hyphenates into
 .QW re-eel . This rule belongs to the Dutch language (nl).
-.TP
-\fBtripleconsonant\fR
-.
+.IP "\fBtripleconsonant\fR"
 If the soft hyphen is the right neighbor of a double consonant, and the
 right neighbor is the same consonant, and this consonant is followed by a
 vowel (or by letter
@@ -217,22 +203,14 @@ individual lines.
 .RS
 .PP
 The following styles are possible:
-.TP
-\fBleft\fR
-.
+.IP "\fBleft\fR"
 The text is aligned along the left margin. This is the default.
-.TP
-\fBright\fR
-.
+.IP "\fBright\fR"
 The text is aligned along the right margin.
-.TP
-\fBfull\fR
-.
+.IP "\fBfull\fR"
 The text is aligned along the left margin, and word-spacing is adjusted so
 that the text flush with both margins.
-.TP
-\fBcenter\fR
-.
+.IP "\fBcenter\fR"
 The text is aligned to neither the left nor the right margin, there is an
 even gap on each side of each line.
 .RE
@@ -442,18 +420,14 @@ explicit tagging information.
 .RS
 .PP
 The following modes are defined:
-.TP
-\fBwithin\fR
-.
+.IP "\fBwithin\fR"
 The new text will receive any tags that are present on both before and after
 the insertion point, regardless whether it's a character (including the
 invisible newline), an embedded window, or an embedded image; if a tag is
 present on only one of these characters (windows, or images) then it will
 not be applied to the new text. This is the default tagging mode (and the
 way how the older versions of the text widget worked).
-.TP
-\fBgravity\fR
-.
+.IP "\fBgravity\fR"
 The new text will receive any tags that are present at one side of the
 insertion point: if the insert cursor has right gravity then the text will
 receive the tags of the character after the insertion point (including the
@@ -461,9 +435,7 @@ invisible newline), otherwise, if the insertion cursor has left gravity, it
 will receive the tags of the character before the insertion point (Arabian
 mode), but only if a preceding character exists in this line. This mode is
 commonly used in some text editors.
-.TP
-\fBnone\fR
-.
+.IP "\fBnone\fR"
 The new text will not receive any tags from surrounded text.
 .RE
 .OP \-undo undo Undo
@@ -2253,59 +2225,82 @@ This command returns the array name \fIarray\fR, or an empty string (unnamed
 variable) if \fIarray\fR is not specified.
 .PP
 This is the available information related to this widget:
-.TP
+.IP
 \fBbytesize\fR
 .
+.RS
 Current byte size, only characters have been counted (a character may have
 more than one byte).
-.TP
+.RE
+.IP
 \fBlines\fR
 .
+.RS
 Current number of lines.
-.TP
+.RE
+.IP
 \fBvisibleimages\fR
 .
+.RS
 Number of visible embedded images.
-.TP
+.RE
+.IP
 \fBvisiblewindows\fR
 .
+.RS
 Number of visible embedded windows.
+.RE
 .PP
 This is the available information related to whole content:
-.TP
+.IP
 \fBtotalbytesize\fR
 .
+.RS
 Current byte size, only characters have been counted (a character may have
 more than one byte).
-.TP
+.RE
+.IP
 \fBundodepth\fR
 .
+.RS
 The depth (number of undoable actions) of the undo stack.
-.TP
+.RE
+.IP
 \fBredodepth\fR
 .
+.RS
 The depth (number of redoable actions) of the redo stack.
-.TP
+.RE
+.IP
 \fBundostacksize\fR
 .
+.RS
 Current number of items on undo stack.
-.TP
+.RE
+.IP
 \fBredostacksize\fR
 .
+.RS
 Current number of items on redo stack.
-.TP
+.RE
+.IP
 \fBundobytesize\fR
 .
+.RS
 Current number of bytes on the undo stack, only characters have been counted
 (a character may have more than one byte).
-.TP
+.RE
+.IP
 \fBredobytesize\fR
 .
+.RS
 Current number of bytes on the redo stack, only characters have been counted
 (a character may have more than one byte).
-.TP
+.RE
+.IP
 \fBundocommands\fR
 .
+.RS
 If the current undo stack action does not contain an undo atom, then this
 information is empty. Otherwise it contains the list of commands that have
 been pushed for undoing onto the stack since last inserted separator. A
@@ -2315,50 +2310,69 @@ command is one of: \fIdelete\fR, \fIimage\fR, \fIinsert\fR, \fImark\fR,
 pushing either \fIdelete\fR and \fIinsert\fR. Further note that this list
 contains all edit operations of the current undo atom, this means that some
 commands can occur repeatedly.
-.TP
+.RE
+.IP
 \fBredocommands\fR
 .
+.RS
 If the current undo stack action does not contain an redo atom, then this
 information is empty. Otherwise it contains the list of commands that have
 been undone with current undo command, see \fBundocommands\fR for more
 details.
-.TP
+.RE
+.IP
 \fBtotallines\fR
 .
+.RS
 Current number of lines.
-.TP
+.RE
+.IP
 \fBimages\fR
 .
+.RS
 Number of embedded images.
-.TP
+.RE
+.IP
 \fBwindows\fR
 .
+.RS
 Number of embedded windows.
-.TP
+.RE
+.IP
 \fBtags\fR
 .
+.RS
 Number of currently defined tags.
-.TP
+.RE
+.IP
 \fBusedtags\fR
 .
+.RS
 Number of tags currently used.
-.TP
+.RE
+.IP
 \fBmarks\fR
 .
+.RS
 Number of currently defined marks, this does not include the special marks
 \fIinsert\fR and \fIcurrent\fR, nor the generated marks (see
 \fBmark generate\fR).
-.TP
+.RE
+.IP
 \fBgeneratedmarks\fR
 .
+.RS
 Number of generated marks currently defined (see \fBmark generate\fR).
+.RE
 .PP
 This information is unrelated to the content:
-.TP
+.IP
 \fBlinespernode\fR
 .
+.RS
 Minimal number of lines per node in B-Tree, this information is only useful
 for testing.
+.RE
 .PP
 In the future the information might be extended. Note that embedded windows
 and images will each be count with byte size one.
@@ -2375,82 +2389,100 @@ first element of the list (at least) describes the nature of the sub-atom.
 .RS
 .PP
 This is an informal description about the sub-atom content:
-.TP
+.PP
 {\fBclear\fR}
-.
+.RS
 Redo clearing tag associations (\fBtag clear\fR).
-.TP
-{\fBclear \fItag-list skip length ...\fR}
-.
+.RE
+.PP
+{\fBclear \fItag-list skip length\fR ...}
+.RS
 Undo clearing tag associations (\fBtag clear\fR).
-.TP
+.RE
+.PP
 {\fBdelete\fR}
-.
+.RS
 Redo the deletion either of characters, hyphen, embedded image, or embedded
 window (\fBdelete\fR).
-.TP
+.RE
+.PP
 {\fBdelete character \fIstring tag-list\fR}
-.
+.RS
 Undo the deletion of characters (\fBdelete\fR), does not contain soft
 hyphens.
-.TP
+.RE
+.PP
 {\fBdelete hyphen \fItag-list\fR}
-.
+.RS
 Undo the deletion of a soft hyphen (\fBdelete\fR).
-.TP
+.RE
+.PP
 {\fBdelete image \fItag-list image-options\fR}
-.
+.RS
 Undo the deletion of an embedded image (\fBdelete\fR).
-.TP
+.RE
+.PP
 {\fBdelete window \fItag-list window-options\fR}
-.
+.RS
 Undo the deletion of an embedded window (\fBdelete\fR).
-.TP
+.RE
+.PP
 {\fBinsert\fR}
-.
+.RS
 Undo an \fBinsert\fR operation; either characters, hyphen, embedded image,
 or embedded window.
-.TP
+.RE
+.PP
 {\fBinsert character \fIstring tag-list\fR}
-.
+.RS
 Redo an \fBinsert\fR operation of characters.
-.TP
+.RE
+.PP
 {\fBinsert hyphen \fItag-list\fR}
-.
+.RS
 Redo an \fBinsert\fR operation of a soft hyphen.
-.TP
+.RE
+.PP
 {\fBinsert image \fItag-list image-options\fR}
-.
+.RS
 Redo an \fBinsert\fR operation of an embedded image.
-.TP
+.RE
+.PP
 {\fBinsert window \fItag-list window-options\fR}
-.
+.RS
 Redo an \fBinsert\fR operation of an embedded window.
-.TP
+.RE
+.PP
 {\fBmark gravity \fIname\fR}
-.
+.RS
 Undo/redo toggling the gravity of a mark; either from \fIleft\fR to
 \fIright\fR, or from \fIright\fR to \fIleft\fR (\fBtag gravity\fR).
-.TP
+.RE
+.PP
 {\fBmark set \fIname\fB left\fR}
-.
+.RS
 Undo/redo setting a mark with left gravity (\fBmark set\fR).
-.TP
+.RE
+.PP
 {\fBmark set \fIname\fB right\fR}
-.
+.RS
 Undo/redo setting a mark with right gravity (\fBmark set\fR).
-.TP
+.RE
+.PP
 {\fBmark unset \fIname\fR}
-.
+.RS
 Undo/redo unsetting a mark (\fBmark unset\fR).
-.TP
+.RE
+.PP
 {\fBtag add \fItag\fR}
-.
+.RS
 Undo/redo adding an association with tags (\fBtag add\fR).
-.TP
+.RE
+.PP
 {\fBtag remove \fItag\fR}
-.
+.RS
 Undo/redo removing an association with tags (\fBtag delete\fR).
+.RE
 .RE
 .TP
 \fIpathName \fBedit irreversible\fR
@@ -2632,7 +2664,8 @@ a list, end END denotes the end of the list; white spaces will not be taken
 into consideration):
 .RS
 .RS 3
-.nf
+.PP
+.CS
 \fIInspect\fR       = BEG, \fISetup\fR?, \fIConfigure\fR?, \fISegment\fR+, END;
 \fISetup\fR         = BEG, "\fBsetup\fR", \fIPathName\fR, \fITextOptions\fR, END;
 \fIConfigure\fR     = BEG, "\fBconfigure\fR", \fITagName\fR, (BEG, \fITagOptions\fR, END)?, END;
@@ -2657,33 +2690,62 @@ into consideration):
 \fIPathName\fR      = ?Any valid widget pathname?;
 \fITagName\fR       = ?Any tag name?;
 \fIMarkName\fR      = ?Any mark name?;
-.fi
+.CE
 .RE
 .PP
 We will also provide an informal description of the items; note that
 the optional tagList will be provided only if option \fB\-nested\fR is
 specified:
-.IP "{\fBsetup\fR \fIpathName configurationList\fR}"
+.PP
+{\fBsetup\fR \fIpathName configurationList\fR}
+.RS
 Provides the overall information about the inspected widget, notably its
 \fIpathName\fR and configuration options.
-.IP "{\fBconfigure\fR \fItagName\fR ?\fIconfigurationList\fR?}"
+.RE
+.PP
+{\fBconfigure\fR \fItagName\fR ?\fIconfigurationList\fR?}
+.RS
 Describes the configuration of a particular tag.
-.IP "{\fBbind\fR \fItagName event script\fR}"
+.RE
+.PP
+{\fBbind\fR \fItagName event script\fR}
+.RS
 Describes a binding applied to a tag
-.IP "{\fBtext\fR \fIcontent tagList\fR ?\fItagList\fR?}"
+.RE
+.PP
+{\fBtext\fR \fIcontent tagList\fR ?\fItagList\fR?}
+.RS
 Describes a character sequence, including what tags were applied to it.
-.IP "{\fBbreak\fR \fItagList\fR ?\fItagList\fR?}"
-.IP "{\fBhyphen\fR \fItagList\fR ?\fItagList\fR?}"
-.IP "{\fBimage\fR \fIimageOptions tagList\fR ?\fItagList\fR?}"
+.RE
+.PP
+{\fBbreak\fR \fItagList\fR ?\fItagList\fR?}
+.PP
+{\fBhyphen\fR \fItagList\fR ?\fItagList\fR?}
+.PP
+{\fBimage\fR \fIimageOptions tagList\fR ?\fItagList\fR?}
+.RS
 Describes an image that was embedded.
-.IP "{\fBwindow\fR \fIwindowOptions tagList\fR ?\fItagList\fR?}"
+.RE
+.PP
+{\fBwindow\fR \fIwindowOptions tagList\fR ?\fItagList\fR?}
+.RS
 Describes a window that was embedded.
-.IP "{\fBleft\fR \fImarkName\fR}"
+.RE
+.PP
+{\fBleft\fR \fImarkName\fR}
+.RS
 Describes a mark with left gravity.
-.IP "{\fBright\fR \fImarkName\fR}"
+.RE
+.PP
+{\fBright\fR \fImarkName\fR}
+.RS
 Describes a mark with right gravity.
-.IP "{\fBelide\fR \fBon\fR|\fBoff\fR}"
+.RE
+.PP
+{\fBelide\fR \fBon\fR|\fBoff\fR}
+.RS
 Describes whether elision is turned on or off at the current handling point.
+.RE
 .PP
 One or more of the following switches (or abbreviations thereof) may be
 specified to control the extraction:
