@@ -5903,105 +5903,107 @@ DisplayDLine(
 	cxMin = dlPtr->cursorChunkPtr->x + xOffs;
 	cWidth = TkTextGetCursorWidth(textPtr, &cxMin, &cOffs);
 
-	if ((bgGC = dlPtr->cursorChunkPtr->stylePtr->bgGC) == None) {
-	    Tk_3DBorder border;
+	if (cWidth > 0) {
+	    if ((bgGC = dlPtr->cursorChunkPtr->stylePtr->bgGC) == None) {
+		Tk_3DBorder border;
 
-	    if (!(border = dlPtr->cursorChunkPtr->stylePtr->sValuePtr->border)) {
-		border = textPtr->border;
+		if (!(border = dlPtr->cursorChunkPtr->stylePtr->sValuePtr->border)) {
+		    border = textPtr->border;
+		}
+		bgGC = Tk_GCForColor(Tk_3DBorderColor(border), Tk_WindowId(textPtr->tkwin));
 	    }
-	    bgGC = Tk_GCForColor(Tk_3DBorderColor(border), Tk_WindowId(textPtr->tkwin));
-	}
 
-	cxMin += cOffs;
-	cxMax = cxMin + cWidth;
+	    cxMin += cOffs;
+	    cxMax = cxMin + cWidth;
 
 #if CLIPPING_IS_WORKING
-	/*
-	 * This is the right implementation if XSetClipRectangles would work; still untested.
-	 */
-	{
-	    XRectangle crect;
+	    /*
+	     * This is the right implementation if XSetClipRectangles would work; still untested.
+	     */
+	    {
+		XRectangle crect;
 
-	    crect.x = cxMin;
-	    crect.y = yBase;
-	    crect.width = cWidth;
-	    crect.height = height;
+		crect.x = cxMin;
+		crect.y = yBase;
+		crect.width = cWidth;
+		crect.height = height;
 
-	    XFillRectangle(display, pixmap, bgGC, crect.x, crect.y, crect.width, crect.height);
-	    dlPtr->cursorChunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, cxMin, yBase, height,
-		    baseline, display, pixmap, screenY);
+		XFillRectangle(display, pixmap, bgGC, crect.x, crect.y, crect.width, crect.height);
+		dlPtr->cursorChunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, cxMin, yBase, height,
+			baseline, display, pixmap, screenY);
 
-	    /* for any reason this doesn't work with the Tk lib even under X11 */
-	    XSetClipRectangles(display, dInfoPtr->insertFgGC, 0, 0, &crect, 1, Unsorted);
+		/* for any reason this doesn't work with the Tk lib even under X11 */
+		XSetClipRectangles(display, dInfoPtr->insertFgGC, 0, 0, &crect, 1, Unsorted);
 
-	    for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
-		int x = chunkPtr->x + xOffs;
+		for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
+		    int x = chunkPtr->x + xOffs;
 
-		if (x >= cxMax) {
-		    break;
-		}
-		if (IsCharChunk(chunkPtr) && cxMin <= x + chunkPtr->width) {
-		    GC fgGC = chunkPtr->stylePtr->fgGC;
-		    XGCValues gcValues;
-		    unsigned long mask;
+		    if (x >= cxMax) {
+			break;
+		    }
+		    if (IsCharChunk(chunkPtr) && cxMin <= x + chunkPtr->width) {
+			GC fgGC = chunkPtr->stylePtr->fgGC;
+			XGCValues gcValues;
+			unsigned long mask;
 
-		    /* Setup graphic context with font of this chunk. */
-		    mask = GCFont;
-		    gcValues.font = Tk_FontId(chunkPtr->stylePtr->sValuePtr->tkfont);
-		    XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
+			/* Setup graphic context with font of this chunk. */
+			mask = GCFont;
+			gcValues.font = Tk_FontId(chunkPtr->stylePtr->sValuePtr->tkfont);
+			XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
 
-		    chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
-		    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x, yBase, height,
-			    baseline, display, pixmap, screenY);
-		    chunkPtr->stylePtr->fgGC = fgGC;
+			chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
+			chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x, yBase, height,
+				baseline, display, pixmap, screenY);
+			chunkPtr->stylePtr->fgGC = fgGC;
+		    }
 		}
 	    }
-	}
 #else /* if !CLIPPING_IS_WORKING */
-	/*
-	 * We don't have clipping, so we need a different approach.
-	 */
-	{
-	    Pixmap pm = Tk_GetPixmap(display, Tk_WindowId(textPtr->tkwin),
-		    cWidth, height, Tk_Depth(textPtr->tkwin));
+	    /*
+	     * We don't have clipping, so we need a different approach.
+	     */
+	    {
+		Pixmap pm = Tk_GetPixmap(display, Tk_WindowId(textPtr->tkwin),
+			cWidth, height, Tk_Depth(textPtr->tkwin));
 
-	    XFillRectangle(display, pm, bgGC, 0, 0, cWidth, height);
-	    chunkPtr = dlPtr->cursorChunkPtr;
+		XFillRectangle(display, pm, bgGC, 0, 0, cWidth, height);
+		chunkPtr = dlPtr->cursorChunkPtr;
 
-	    /* we are using a (pointer) hack in TkTextInsertDisplayProc */
-	    chunkPtr->layoutProcs->displayProc(textPtr, MarkPointer(chunkPtr),
-		    cxMin, yBase, height, baseline, display, pm, screenY);
+		/* we are using a (pointer) hack in TkTextInsertDisplayProc */
+		chunkPtr->layoutProcs->displayProc(textPtr, MarkPointer(chunkPtr),
+			cxMin, yBase, height, baseline, display, pm, screenY);
 
-	    while (chunkPtr->prevPtr && chunkPtr->x + xOffs + chunkPtr->width > cxMin) {
-		chunkPtr = chunkPtr->prevPtr;
-	    }
-	    for ( ; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
-		int x = chunkPtr->x + xOffs;
-
-		if (x >= cxMax) {
-		    break;
+		while (chunkPtr->prevPtr && chunkPtr->x + xOffs + chunkPtr->width > cxMin) {
+		    chunkPtr = chunkPtr->prevPtr;
 		}
-		if (IsCharChunk(chunkPtr)) {
-		    GC fgGC = chunkPtr->stylePtr->fgGC;
-		    XGCValues gcValues;
-		    unsigned long mask;
+		for ( ; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
+		    int x = chunkPtr->x + xOffs;
 
-		    /* Setup graphic context with font of this chunk. */
-		    mask = GCFont;
-		    gcValues.font = Tk_FontId(chunkPtr->stylePtr->sValuePtr->tkfont);
-		    XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
+		    if (x >= cxMax) {
+			break;
+		    }
+		    if (IsCharChunk(chunkPtr)) {
+			GC fgGC = chunkPtr->stylePtr->fgGC;
+			XGCValues gcValues;
+			unsigned long mask;
 
-		    chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
-		    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x - cxMin, 0,
-			    height, baseline, display, pm, screenY);
-		    chunkPtr->stylePtr->fgGC = fgGC;
+			/* Setup graphic context with font of this chunk. */
+			mask = GCFont;
+			gcValues.font = Tk_FontId(chunkPtr->stylePtr->sValuePtr->tkfont);
+			XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
+
+			chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
+			chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x - cxMin, 0,
+				height, baseline, display, pm, screenY);
+			chunkPtr->stylePtr->fgGC = fgGC;
+		    }
 		}
-	    }
 
-	    XCopyArea(display, pm, pixmap, dInfoPtr->copyGC, 0, 0, cWidth, height, cxMin, yBase);
-	    Tk_FreePixmap(display, pm);
-	}
+		XCopyArea(display, pm, pixmap, dInfoPtr->copyGC, 0, 0, cWidth, height, cxMin, yBase);
+		Tk_FreePixmap(display, pm);
+	    }
 #endif /* CLIPPING_IS_WORKING */
+	}
     }
 
     /*
