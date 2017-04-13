@@ -50,7 +50,6 @@ struct SubcommandOptions {
  *
  * OPT_ALPHA:			Set if -alpha option allowed/specified.
  * OPT_BACKGROUND:		Set if -format option allowed/specified.
- * OPT_BOOLEAN:			Set if -boolean option allowed/specified.
  * OPT_COMPOSITE:		Set if -compositingrule option allowed/spec'd.
  * OPT_FORMAT:			Set if -format option allowed/specified.
  * OPT_FROM:			Set if -from option allowed/specified.
@@ -64,16 +63,15 @@ struct SubcommandOptions {
 
 #define OPT_ALPHA	1
 #define OPT_BACKGROUND	2
-#define OPT_BOOLEAN	4
-#define OPT_COMPOSITE	8
-#define OPT_FORMAT	0x10
-#define OPT_FROM	0x20
-#define OPT_GRAYSCALE	0x40
-#define OPT_SHRINK	0x80
-#define OPT_SUBSAMPLE	0x100
-#define OPT_TO		0x200
-#define OPT_WITHALPHA	0x400
-#define OPT_ZOOM	0x800
+#define OPT_COMPOSITE	4
+#define OPT_FORMAT	8
+#define OPT_FROM	0x10
+#define OPT_GRAYSCALE	0x20
+#define OPT_SHRINK	0x40
+#define OPT_SUBSAMPLE	0x80
+#define OPT_TO		0x100
+#define OPT_WITHALPHA	0x200
+#define OPT_ZOOM	0x400
 
 /*
  * List of option names. The order here must match the order of declarations
@@ -83,7 +81,6 @@ struct SubcommandOptions {
 static const char *const optionNames[] = {
     "-alpha",
     "-background",
-    "-boolean",
     "-compositingrule",
     "-format",
     "-from",
@@ -1098,12 +1095,12 @@ ImgPhotoCmd(
 	    index = 4;
 	    memset(&options, 0, sizeof(options));
 	    if (ParseSubcommandOptions(&options, interp,
-		    OPT_ALPHA | OPT_BOOLEAN, &index, objc, objv) != TCL_OK) {
+		    OPT_ALPHA, &index, objc, objv) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (index < objc) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"unknown option \"%s\": must be -alpha, or -boolean",
+			"unknown option \"%s\": must be -alpha",
 			Tcl_GetString(objv[index])));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION",
 			NULL);
@@ -1157,12 +1154,12 @@ ImgPhotoCmd(
 	    index = 5;
 	    memset(&options, 0, sizeof(options));
 	    if (ParseSubcommandOptions(&options, interp,
-		    OPT_ALPHA | OPT_BOOLEAN, &index, objc, objv) != TCL_OK) {
+		    OPT_ALPHA, &index, objc, objv) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (index < objc) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"unknown option \"%s\": must be -alpha, or -boolean",
+			"unknown option \"%s\": must be -alpha",
 			Tcl_GetString(objv[index])));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION",
 			NULL);
