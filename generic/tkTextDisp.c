@@ -5984,6 +5984,7 @@ DisplayDLine(
 		    }
 		    if (IsCharChunk(chunkPtr)) {
 			GC fgGC = chunkPtr->stylePtr->fgGC;
+			GC eolGC = chunkPtr->stylePtr->eolGC;
 			XGCValues gcValues;
 			unsigned long mask;
 
@@ -5993,9 +5994,11 @@ DisplayDLine(
 			XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
 
 			chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
+			chunkPtr->stylePtr->eolGC = dInfoPtr->insertFgGC;
 			chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x - cxMin, 0,
 				height, baseline, display, pm, screenY);
 			chunkPtr->stylePtr->fgGC = fgGC;
+			chunkPtr->stylePtr->eolGC = eolGC;
 		    }
 		}
 
@@ -13446,8 +13449,6 @@ CharDisplayProc(
     Drawable dst,		/* Pixmap or window in which to draw chunk. */
     int screenY)		/* Y-coordinate in text window that corresponds to y. */
 {
-    assert(chunkPtr->width == 0 || !chunkPtr->stylePtr->sValuePtr->elide);
-
     if (chunkPtr->width > 0 && x + chunkPtr->width > 0) {
 	/* The chunk has displayable content, and is not off-screen. */
 	DisplayChars(textPtr, chunkPtr, x, y, baseline, display, dst);
