@@ -3810,13 +3810,11 @@ TkConfigureText(
 	    if (startLineObj && startIndexObj) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "cannot use both, -startindex, and deprecated -startline", -1));
-		Tk_RestoreSavedOptions(&savedOptions);
 		rc = TCL_ERROR;
 	    }
 	    if (endLineObj && endIndexObj) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "cannot use both, -endindex, and deprecated -endline", -1));
-		Tk_RestoreSavedOptions(&savedOptions);
 		rc = TCL_ERROR;
 	    }
 	}
@@ -3829,8 +3827,7 @@ TkConfigureText(
 	free(myObjv);
 
 	if (rc != TCL_OK) {
-	    tkTextDebug = oldTextDebug;
-	    return rc;
+	    goto error;
 	}
     }
 
@@ -3849,9 +3846,7 @@ TkConfigureText(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "-startline must be less than or equal to -endline", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", NULL);
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    tkTextDebug = oldTextDebug;
-	    return TCL_ERROR;
+	    goto error;
 	}
 
 	if (textPtr->endLine && textPtr->endLine != sharedTextPtr->endMarker->sectionPtr->linePtr) {
@@ -3903,9 +3898,7 @@ TkConfigureText(
 	if (!IsClean(sharedTextPtr, NULL, true)) {
 	    ErrorNotAllowed(interp, "setting this option is possible only if the widget "
 		    "is overall clean");
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    tkTextDebug = oldTextDebug;
-	    return TCL_ERROR;
+	    goto error;
 	}
     }
 
@@ -3923,9 +3916,7 @@ TkConfigureText(
 
     if (textPtr->undo != sharedTextPtr->undo) {
 	if (TestIfPerformingUndoRedo(interp, sharedTextPtr, NULL)) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    tkTextDebug = oldTextDebug;
-	    return TCL_ERROR;
+	    goto error;
 	}
 
 	assert(sharedTextPtr->undo == !!sharedTextPtr->undoStack);
@@ -3999,9 +3990,7 @@ TkConfigureText(
 
     if (textPtr->hyphenRulesPtr) {
 	if (TkTextParseHyphenRules(textPtr, textPtr->hyphenRulesPtr, &textPtr->hyphenRules) != TCL_OK) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    tkTextDebug = oldTextDebug;
-	    return TCL_ERROR;
+	    goto error;
 	}
     } else {
 	textPtr->hyphenRules = 0;
@@ -4022,9 +4011,7 @@ TkConfigureText(
 	textPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr, textPtr->tabOptionPtr);
 	if (!textPtr->tabArrayPtr) {
 	    Tcl_AddErrorInfo(interp, "\n    (while processing -tabs option)");
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    tkTextDebug = oldTextDebug;
-	    return TCL_ERROR;
+	    goto error;
 	}
     }
 
@@ -4034,9 +4021,7 @@ TkConfigureText(
 
     if (textPtr->langPtr) {
 	if (!TkTextTestLangCode(interp, textPtr->langPtr)) {
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    tkTextDebug = oldTextDebug;
-	    return TCL_ERROR;
+	    goto error;
 	}
 	memcpy(textPtr->lang, Tcl_GetString(textPtr->langPtr), 3);
     } else {
@@ -4059,25 +4044,19 @@ TkConfigureText(
 	if (textPtr->newStartIndex) {
 	    if (!TkTextGetIndexFromObj(interp, sharedTextPtr->mainPeer,
 		    textPtr->newStartIndex, &start)) {
-		Tk_RestoreSavedOptions(&savedOptions);
-		tkTextDebug = oldTextDebug;
-		return TCL_ERROR;
+		goto error;
 	    }
 	}
 	if (textPtr->newEndIndex) {
 	    if (!TkTextGetIndexFromObj(interp, sharedTextPtr->mainPeer, textPtr->newEndIndex, &end)) {
-		Tk_RestoreSavedOptions(&savedOptions);
-		tkTextDebug = oldTextDebug;
-		return TCL_ERROR;
+		goto error;
 	    }
 	}
 	if (TkTextIndexCompare(&start, &end) > 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "-startindex must be less than or equal to -endindex", -1));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", NULL);
-	    Tk_RestoreSavedOptions(&savedOptions);
-	    tkTextDebug = oldTextDebug;
-	    return TCL_ERROR;
+	    goto error;
 	}
 
 	start.textPtr = NULL;
@@ -4321,6 +4300,11 @@ TkConfigureText(
     TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
 
     return TCL_OK;
+
+error:
+    Tk_RestoreSavedOptions(&savedOptions);
+    tkTextDebug = oldTextDebug;
+    return TCL_ERROR;
 }
 
 /*
