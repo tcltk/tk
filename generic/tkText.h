@@ -1503,6 +1503,7 @@ typedef struct TkText {
  * NEED_REPICK			This appears unused and should probably be ignored.
  * OPTIONS_FREED		The widget's options have been freed.
  * DESTROYED			The widget is going away.
+ * MEM_RELEASED			The memory of text widget has been released (only for debugging).
  */
 
 #define GOT_SELECTION		(1 << 0)
@@ -1513,6 +1514,7 @@ typedef struct TkText {
 #define NEED_REPICK		(1 << 5)
 #define OPTIONS_FREED		(1 << 6)
 #define DESTROYED		(1 << 7)
+#define MEM_RELEASED		(1 << 8)
 
 /*
  * The categories of segment types:

@@ -2599,6 +2599,7 @@ TkBTreeDestroy(
      */
 
     DestroyNode(tree, treePtr->rootPtr);
+    free(treePtr->pixelInfoBuffer);
     free(treePtr);
 }
 
