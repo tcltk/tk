@@ -218,6 +218,7 @@ typedef struct StyleValues {
 				 * draw solid. */
     XColor *fgColor;		/* Foreground color for text. */
     XColor *eolColor;		/* Foreground color for end of line symbol, can be NULL. */
+    XColor *eotColor;		/* Foreground color for end of text symbol, can be NULL. */
     XColor *hyphenColor;	/* Foreground color for soft hyphens, can be NULL. */
     Tk_Font tkfont;		/* Font for displaying text. */
     Pixmap fgStipple;		/* Stipple bitmap for text and other foreground stuff. None means
@@ -264,6 +265,7 @@ typedef struct TextStyle {
     GC ulGC;			/* Graphics context for underline. */
     GC ovGC;			/* Graphics context for overstrike. */
     GC eolGC;			/* Graphics context for end of line symbol. */
+    GC eotGC;			/* Graphics context for end of text symbol. */
     GC hyphenGC;		/* Graphics context for soft hyphen character. */
     uint32_t refCount;		/* Number of times this structure is referenced in Chunks. */
 } TextStyle;
@@ -330,6 +332,8 @@ typedef struct TextDInfo {
     int32_t curYPixelOffset;	/* Y offset of the current view. */
     TkTextSegment *endOfLineSegPtr;
     				/* Holds the end of line symbol (option -showendOfline). */
+    TkTextSegment *endOfTextSegPtr;
+    				/* Holds the end of text symbol (option -showendOftext). */
 
     /*
      * Cache for single lines:
@@ -1452,7 +1456,9 @@ SetupEolSegment(
     const char *p = textPtr->eolCharPtr ? Tcl_GetString(textPtr->eolCharPtr) : NULL;
     int len;
 
-    if (!p || !*p) { p = "\xc2\xb6"; /* U+00B6 = PILCROW SIGN */ }
+    if (!p || !*p) {
+	p = "\xc2\xb6"; /* U+00B6 = PILCROW SIGN */
+    }
     len = Tcl_UtfToUniChar(p, &uc);
     strcpy(eolChar, p);
     strcpy(eolChar + len, "\n");
@@ -1461,6 +1467,34 @@ SetupEolSegment(
     }
     dInfoPtr->endOfLineSegPtr = TkBTreeMakeCharSegment(
 	    eolChar, len + 1, textPtr->sharedTextPtr->emptyTagInfoPtr);
+}
+
+static void
+SetupEotSegment(
+    TkText *textPtr,
+    TextDInfo *dInfoPtr)
+{
+    char eotChar[10];
+    Tcl_UniChar uc;
+    const char *p = textPtr->eotCharPtr ? Tcl_GetString(textPtr->eotCharPtr) : NULL;
+    int len;
+
+    if (!p || !*p) {
+	if (textPtr->eolCharPtr) {
+	    p = Tcl_GetString(textPtr->eolCharPtr);
+	}
+	if (!p || !*p) {
+	    p = "\xc2\xb6"; /* U+00B6 = PILCROW SIGN */
+	}
+    }
+    len = Tcl_UtfToUniChar(p, &uc);
+    strcpy(eotChar, p);
+    strcpy(eotChar + len, "\n");
+    if (dInfoPtr->endOfTextSegPtr) {
+	TkBTreeFreeSegment(dInfoPtr->endOfTextSegPtr);
+    }
+    dInfoPtr->endOfTextSegPtr = TkBTreeMakeCharSegment(
+	    eotChar, len + 1, textPtr->sharedTextPtr->emptyTagInfoPtr);
 }
 
 void
@@ -1495,6 +1529,7 @@ TkTextCreateDInfo(
     TkTextIndexClear(&dInfoPtr->metricIndex, textPtr);
     TkTextIndexClear(&dInfoPtr->currChunkIndex, textPtr);
     SetupEolSegment(textPtr, dInfoPtr);
+    SetupEotSegment(textPtr, dInfoPtr);
 
     if (textPtr->state == TK_TEXT_STATE_NORMAL
 	    && textPtr->blockCursorType
@@ -1697,6 +1732,7 @@ TkTextFreeDInfo(
     Tcl_DeleteHashTable(&dInfoPtr->styleTable);
     TkRangeListDestroy(&dInfoPtr->lineMetricUpdateRanges);
     TkBTreeFreeSegment(dInfoPtr->endOfLineSegPtr);
+    TkBTreeFreeSegment(dInfoPtr->endOfTextSegPtr);
     free(dInfoPtr->strBuffer);
     free(dInfoPtr);
 }
@@ -1814,6 +1850,7 @@ MakeStyle(
     styleValues.relief = TK_RELIEF_FLAT;
     styleValues.fgColor = textPtr->fgColor;
     styleValues.eolColor = textPtr->eolColor;
+    styleValues.eotColor = textPtr->eotColor ? textPtr->eotColor : textPtr->eolColor;
     styleValues.hyphenColor = textPtr->hyphenColor;
     styleValues.underlineColor = textPtr->fgColor;
     styleValues.overstrikeColor = textPtr->fgColor;
@@ -2035,6 +2072,12 @@ MakeStyle(
     } else {
 	stylePtr->eolGC = None;
     }
+    if (styleValues.eotColor) {
+	gcValues.foreground = styleValues.eotColor->pixel;
+	stylePtr->eotGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
+    } else {
+	stylePtr->eotGC = None;
+    }
     if (styleValues.hyphenColor) {
 	gcValues.foreground = styleValues.hyphenColor->pixel;
 	stylePtr->hyphenGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
@@ -2162,6 +2205,9 @@ FreeStyle(
 	}
 	if (stylePtr->eolGC != None) {
 	    Tk_FreeGC(textPtr->display, stylePtr->eolGC);
+	}
+	if (stylePtr->eotGC != None) {
+	    Tk_FreeGC(textPtr->display, stylePtr->eotGC);
 	}
 	if (stylePtr->hyphenGC != None) {
 	    Tk_FreeGC(textPtr->display, stylePtr->hyphenGC);
@@ -2410,10 +2456,15 @@ LayoutUpdateLineHeightInformation(
 	    lineHeight = dlPtr->height;
 	    numDispLines = lineHeight > 0;
 	}
-	nextLogicalLinePtr = TkBTreeNextLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr);
-	mergedLines = TkBTreeCountLines(textPtr->sharedTextPtr->tree, linePtr, nextLogicalLinePtr);
-	if (mergedLines > 0) {
-	    mergedLines -= 1; /* subtract first line */
+	if (linePtr->nextPtr) {
+	    nextLogicalLinePtr = TkBTreeNextLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr);
+	    mergedLines = TkBTreeCountLines(textPtr->sharedTextPtr->tree, linePtr, nextLogicalLinePtr);
+	    if (mergedLines > 0) {
+		mergedLines -= 1; /* subtract first line */
+	    }
+	} else {
+	    /* This may happen if we show the end of text symbol. */
+	    mergedLines = 0;
 	}
 	if (pixelInfo->height != lineHeight || mergedLines > 0 || numDispLines != oldNumDispLines) {
 	    /*
@@ -3155,7 +3206,6 @@ LayoutChars(
     const char *base = segPtr->body.chars + byteOffset;
     TkTextDispChunk *chunkPtr;
     bool gotTab = false;
-    bool finished = true;
     unsigned maxBytes;
     unsigned numBytes;
 
@@ -3171,7 +3221,8 @@ LayoutChars(
 
     if (data->textPtr->showEndOfLine
 	    && base[maxBytes - 1] == '\n'
-	    && segPtr->sectionPtr->linePtr->nextPtr != TkBTreeGetLastLine(data->textPtr)) {
+	    && (data->textPtr->showEndOfText
+		|| segPtr->sectionPtr->linePtr->nextPtr != TkBTreeGetLastLine(data->textPtr))) {
 	maxBytes -= 1; /* now may beome zero */
     }
 
@@ -3180,12 +3231,17 @@ LayoutChars(
 	 * Can only happen if we are at end of logical line.
 	 */
 
-	segPtr = data->textPtr->dInfoPtr->endOfLineSegPtr;
+	if (segPtr->sectionPtr->linePtr->nextPtr != TkBTreeGetLastLine(data->textPtr)) {
+	    segPtr = data->textPtr->dInfoPtr->endOfLineSegPtr;
+	} else {
+	    segPtr = data->textPtr->dInfoPtr->endOfTextSegPtr;
+	}
 	base = segPtr->body.chars;
 	maxBytes = segPtr->size;
+	chunkPtr->endOfLineSymbol = 1;
 	byteOffset = 0;
     } else if (segPtr->typePtr != &tkTextHyphenType
-    		&& segPtr->sectionPtr) { /* ignore artifical segments (spelling changes) */
+		&& segPtr->sectionPtr) { /* ignore artifical segments (spelling changes) */
 	if (data->wrapMode == TEXT_WRAPMODE_CODEPOINT) {
 	    const char *brks = chunkPtr->brks;
 	    unsigned i;
@@ -3202,7 +3258,7 @@ LayoutChars(
 	    }
 	}
 
-	if (data->textPtr->hyphenate && finished) {
+	if (data->textPtr->hyphenate) {
 	    const char *p = base;
 
 	    /*
@@ -3398,7 +3454,7 @@ LayoutChars(
 	}
     }
 
-    return finished;
+    return true;
 }
 
 static bool
@@ -3580,7 +3636,8 @@ LayoutLogicalLine(
 		}
 		assert(data->chunkPtr);
 		byteIndex += data->chunkPtr->numBytes;
-		if ((byteOffset += data->chunkPtr->numBytes) == segPtr->size) {
+		/* NOTE: byteOffset may become larger than segPtr->size because of end of line symbol. */
+		if ((byteOffset += data->chunkPtr->numBytes) >= segPtr->size) {
 		    segPtr = segPtr->nextPtr;
 		    byteOffset = 0;
 		}
@@ -4103,7 +4160,7 @@ LayoutDLine(
 	 * line, so we can live with that.
 	 */
 
-	if (TkTextIndexIsEndOfText(&data.index)) {
+	if (!textPtr->showEndOfText && TkTextIndexIsEndOfText(&data.index)) {
 	    assert(data.chunkPtr);
 	    assert(!data.chunkPtr->nextPtr);
 	    dlPtr->byteCount = data.chunkPtr->numBytes;
@@ -5985,6 +6042,7 @@ DisplayDLine(
 		    if (IsCharChunk(chunkPtr)) {
 			GC fgGC = chunkPtr->stylePtr->fgGC;
 			GC eolGC = chunkPtr->stylePtr->eolGC;
+			GC eotGC = chunkPtr->stylePtr->eotGC;
 			XGCValues gcValues;
 			unsigned long mask;
 
@@ -5995,10 +6053,12 @@ DisplayDLine(
 
 			chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
 			chunkPtr->stylePtr->eolGC = dInfoPtr->insertFgGC;
+			chunkPtr->stylePtr->eotGC = dInfoPtr->insertFgGC;
 			chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x - cxMin, 0,
 				height, baseline, display, pm, screenY);
 			chunkPtr->stylePtr->fgGC = fgGC;
 			chunkPtr->stylePtr->eolGC = eolGC;
+			chunkPtr->stylePtr->eotGC = eotGC;
 		    }
 		}
 
@@ -9157,6 +9217,7 @@ TkTextRelayoutWindow(
     if (mask & TK_TEXT_LINE_GEOMETRY) {
 	/* Setup end of line segment. */
 	SetupEolSegment(textPtr, dInfoPtr);
+	SetupEotSegment(textPtr, dInfoPtr);
     }
 
     asyncLineCalculation = false;
@@ -12041,6 +12102,9 @@ CharMeasureProc(
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired coord. */
     int x)			/* X-coordinate, in same coordinate system as chunkPtr->x. */
 {
+    if (chunkPtr->endOfLineSymbol) {
+	return 0;
+    }
     return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes - 1, chunkPtr->x, x, 0, NULL);
 }
 
@@ -13579,13 +13643,17 @@ GetForegroundGC(
     assert(chunkPtr->stylePtr);
     assert(chunkPtr->stylePtr->refCount > 0);
 
-    if (segPtr == textPtr->dInfoPtr->endOfLineSegPtr) {
+    if (segPtr->typePtr == &tkTextHyphenType) {
+	if (chunkPtr->stylePtr->hyphenGC != None) {
+	    return chunkPtr->stylePtr->hyphenGC;
+	}
+    } else if (segPtr == textPtr->dInfoPtr->endOfLineSegPtr) {
 	if (chunkPtr->stylePtr->eolGC != None) {
 	    return chunkPtr->stylePtr->eolGC;
 	}
-    } else if (segPtr->typePtr == &tkTextHyphenType) {
-	if (chunkPtr->stylePtr->hyphenGC != None) {
-	    return chunkPtr->stylePtr->hyphenGC;
+    } else if (segPtr == textPtr->dInfoPtr->endOfTextSegPtr) {
+	if (chunkPtr->stylePtr->eotGC != None) {
+	    return chunkPtr->stylePtr->eotGC;
 	}
     }
     return chunkPtr->stylePtr->fgGC;
