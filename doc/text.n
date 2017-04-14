@@ -50,11 +50,11 @@ the foreground color (set with \fB\-foreground\fR; this is the default).
 .OP \-eotchar eotChar EotChar
 Specifies the character to use when displaying the end of text symbol
 (see option \fB\-showendoftext\fR). An empty argument will force the use of
-the same symbol used for showing the end of line (see \fB\-eolchar\fR).
+the same symbol as used for showing the end of line (see \fB\-eolchar\fR).
 .OP \-eotcolor eotColor EotColor
 Specifies the foreground color to use when displaying the end of text symbol
 (see option \fB\-showendoftext\fR). An empty argument will force the use
-the same color as the end of line symbol (see \fB\-eolcolor\fR).
+of the same color as used for the end of line symbol (see \fB\-eolcolor\fR).
 .OP \-hyphencolor hyphenColor HyphenColor
 Specifies the foreground color to use when displaying the soft hyphen
 character (U+00AD). An empty argument will force the use of the foreground
@@ -281,7 +281,7 @@ end of line symbol will not be shown.
 .OP \-showendoftext showEndOfText ShowEndOfText
 If this option is enabled the end of the text (after end of very last line)
 will be emphasized with an end of text symbol (per default this is the end of
-line symbol).  This symbol does not belong to the text content and cannot
+line symbol). This symbol does not belong to the text content and cannot
 be edited or selected. Per default the end of text symbol will not be shown.
 .OP \-showinsertforeground showInsertForeground ShowInsertForeground
 Use color option \fB\-insertforeground\fR for the foreground of characters
