@@ -1599,7 +1599,7 @@ TkpTextIndexDump(
 {
     char buf[TK_POS_CHARS];
     TkTextIndexPrint(TkTextIndexGetShared(indexPtr), textPtr, indexPtr, buf);
-    printf("%s\n", buf);
+    fprintf(stdout, "%s\n", buf);
 }
 
 #endif /* NDEBUG */

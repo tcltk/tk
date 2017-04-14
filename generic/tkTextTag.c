@@ -2155,9 +2155,7 @@ TkTextReleaseTag(
      */
 
     if (tagPtr->textPtr) {
-	if (--((TkText *) tagPtr->textPtr)->refCount == 0) {
-	    free(tagPtr->textPtr);
-	}
+	TkTextDecrRefCountAndTestIfDestroyed((TkText *) tagPtr->textPtr);
 	tagPtr->textPtr = NULL;
     }
 
@@ -2854,6 +2852,7 @@ TkTextBindProc(
 	if (sharedTextPtr->tagBindingTable && !TkTextTagSetIsEmpty(textPtr->curTagInfoPtr)) {
 	    TagBindEvent(textPtr, eventPtr, textPtr->curTagInfoPtr, sharedTextPtr->tagEpoch);
 	    if (textPtr->flags & DESTROYED) {
+		TkTextDecrRefCountAndTestIfDestroyed(textPtr);
 		return;
 	    }
 	}
@@ -2871,7 +2870,7 @@ TkTextBindProc(
 
   done:
     textPtr->dontRepick = dontRepick;
-    TkTextReleaseIfDestroyed(textPtr);
+    TkTextDecrRefCountAndTestIfDestroyed(textPtr);
 }
 
 /*

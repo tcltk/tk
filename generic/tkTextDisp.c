@@ -834,16 +834,16 @@ PerfStatistic()
 	return;
     }
 
-    printf("PERFORMANCE -------------------\n");
-    printf("Calls to DisplayText:    %6u\n", stats.numRedisplays);
-    printf("Calls to DisplayDLine:   %6u\n", stats.linesRedrawn);
-    printf("Calls to LayoutDLine:    %6u\n", stats.numLayouted);
-    printf("Calls to XCopyArea:      %6u\n", stats.numCopies);
-    printf("Re-used display lines:   %6u\n", stats.numReused);
-    printf("Cached display lines:    %6u\n", stats.numCached);
-    printf("Found in cache:          %6u\n", stats.numHits);
-    printf("Line metric calculation: %6u\n", stats.lineHeightsRecalculated);
-    printf("Break info computation:  %6u\n", stats.breakInfo);
+    fprintf(stderr, "PERFORMANCE -------------------\n");
+    fprintf(stderr, "Calls to DisplayText:    %6u\n", stats.numRedisplays);
+    fprintf(stderr, "Calls to DisplayDLine:   %6u\n", stats.linesRedrawn);
+    fprintf(stderr, "Calls to LayoutDLine:    %6u\n", stats.numLayouted);
+    fprintf(stderr, "Calls to XCopyArea:      %6u\n", stats.numCopies);
+    fprintf(stderr, "Re-used display lines:   %6u\n", stats.numReused);
+    fprintf(stderr, "Cached display lines:    %6u\n", stats.numCached);
+    fprintf(stderr, "Found in cache:          %6u\n", stats.numHits);
+    fprintf(stderr, "Line metric calculation: %6u\n", stats.lineHeightsRecalculated);
+    fprintf(stderr, "Break info computation:  %6u\n", stats.breakInfo);
 }
 #endif /* NDEBUG */
 
@@ -885,20 +885,20 @@ AllocStatistic()
 	return;
     }
 
-    printf("--------------------------------\n");
-    printf("ALLOCATION:       new    destroy\n");
-    printf("--------------------------------\n");
-    printf("DLine:       %8u - %8u\n", tkTextCountNewDLine, tkTextCountDestroyDLine);
-    printf("Chunk:       %8u - %8u\n", tkTextCountNewChunk, tkTextCountDestroyChunk);
-    printf("Section:     %8u - %8u\n", tkTextCountNewSection, tkTextCountDestroySection);
-    printf("CharInfo:    %8u - %8u\n", tkTextCountNewCharInfo, tkTextCountDestroyCharInfo);
-    printf("DispInfo:    %8u - %8u\n", tkTextCountNewDispInfo, tkTextCountDestroyDispInfo);
-    printf("BreakInfo:   %8u - %8u\n", tkTextCountNewBreakInfo, tkTextCountDestroyBreakInfo);
+    fprintf(stderr, "--------------------------------\n");
+    fprintf(stderr, "ALLOCATION:       new    destroy\n");
+    fprintf(stderr, "--------------------------------\n");
+    fprintf(stderr, "DLine:       %8u - %8u\n", tkTextCountNewDLine, tkTextCountDestroyDLine);
+    fprintf(stderr, "Chunk:       %8u - %8u\n", tkTextCountNewChunk, tkTextCountDestroyChunk);
+    fprintf(stderr, "Section:     %8u - %8u\n", tkTextCountNewSection, tkTextCountDestroySection);
+    fprintf(stderr, "CharInfo:    %8u - %8u\n", tkTextCountNewCharInfo, tkTextCountDestroyCharInfo);
+    fprintf(stderr, "DispInfo:    %8u - %8u\n", tkTextCountNewDispInfo, tkTextCountDestroyDispInfo);
+    fprintf(stderr, "BreakInfo:   %8u - %8u\n", tkTextCountNewBreakInfo, tkTextCountDestroyBreakInfo);
 #if TK_LAYOUT_WITH_BASE_CHUNKS
-    printf("BaseChars:   %8u - %8u\n", tkTextCountNewBaseChars, tkTextCountDestroyBaseChars);
+    fprintf(stderr, "BaseChars:   %8u - %8u\n", tkTextCountNewBaseChars, tkTextCountDestroyBaseChars);
 #endif
-    printf("Style:       %8u - %8u\n", tkTextCountNewStyle, tkTextCountDestroyStyle);
-    printf("RangeList:   %8u - %8u\n", tkRangeListCountNew, tkRangeListCountDestroy);
+    fprintf(stderr, "Style:       %8u - %8u\n", tkTextCountNewStyle, tkTextCountDestroyStyle);
+    fprintf(stderr, "RangeList:   %8u - %8u\n", tkRangeListCountNew, tkRangeListCountDestroy);
 
     if (tkTextCountNewDLine != tkTextCountDestroyDLine
 	    || tkTextCountNewChunk != tkTextCountDestroyChunk
@@ -910,7 +910,7 @@ AllocStatistic()
 #endif
 	    || tkTextCountNewStyle != tkTextCountDestroyStyle
 	    || tkRangeListCountNew != tkRangeListCountDestroy) {
-	printf("*** memory leak detected ***\n");
+	fprintf(stderr, "*** memory leak detected ***\n");
     }
 }
 #endif /* TK_CHECK_ALLOCS */
@@ -1386,11 +1386,11 @@ InvokeAsyncUpdateYScrollbar(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
     assert(!dInfoPtr->scrollbarTimer);
+    textPtr->refCount += 1;
 
     if (textPtr->syncTime == 0) {
 	AsyncUpdateYScrollbar(textPtr);
     } else {
-	textPtr->refCount += 1;
 	dInfoPtr->scrollbarTimer = Tcl_CreateTimerHandler(textPtr->syncTime,
 		AsyncUpdateYScrollbar, textPtr);
     }
@@ -6493,7 +6493,7 @@ DisplayLineBackground(
  *----------------------------------------------------------------------
  *
  * AsyncUpdateLineMetrics --
- *
+ 
  *	This function is invoked as a background handler to update the pixel-
  *	height calculations of individual lines in an asychronous manner.
  *
@@ -6517,52 +6517,50 @@ AsyncUpdateLineMetrics(
     ClientData clientData)	/* Information about widget. */
 {
     TkText *textPtr = clientData;
-    TextDInfo *dInfoPtr;
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+
+    dInfoPtr->lineUpdateTimer = NULL;
 
     if (TkTextReleaseIfDestroyed(textPtr)) {
 	return;
     }
 
-    dInfoPtr = textPtr->dInfoPtr;
-    dInfoPtr->lineUpdateTimer = NULL;
-
     if (!textPtr->sharedTextPtr->allowUpdateLineMetrics) {
-	return; /* not yet configured */
-    }
-
-    if (dInfoPtr->flags & REDRAW_PENDING) {
+	/* not yet configured */
+    } else if (dInfoPtr->flags & REDRAW_PENDING) {
 	dInfoPtr->flags |= ASYNC_PENDING|ASYNC_UPDATE;
-	return;
-    }
-
-    /*
-     * Update the lines in blocks of about 24 recalculations, or 250+ lines
-     * examined, so we pass in 256 for 'doThisMuch'.
-     */
-
-    UpdateLineMetrics(textPtr, 256);
-    TK_TEXT_DEBUG(LogTextInvalidateLine(textPtr, 0));
-
-    if (TkRangeListIsEmpty(dInfoPtr->lineMetricUpdateRanges)) {
-	/*
-	 * We have looped over all lines, so we're done. We must release our
-	 * refCount on the widget (the timer token was already set to NULL
-	 * above). If there is a registered aftersync command, run that first.
-	 */
-
-	if (!dInfoPtr->pendingUpdateLineMetricsFinished) {
-	    UpdateLineMetricsFinished(textPtr, false);
-	    GetYView(textPtr->interp, textPtr, true);
-	}
-	TkTextDecrRefCountAndTestIfDestroyed(textPtr);
     } else {
 	/*
-	 * Re-arm the timer. We already have a refCount on the text widget so no
-	 * need to adjust that.
+	 * Update the lines in blocks of about 24 recalculations, or 250+ lines
+	 * examined, so we pass in 256 for 'doThisMuch'.
 	 */
 
-	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1, AsyncUpdateLineMetrics, textPtr);
+	UpdateLineMetrics(textPtr, 256);
+	TK_TEXT_DEBUG(LogTextInvalidateLine(textPtr, 0));
+
+	if (TkRangeListIsEmpty(dInfoPtr->lineMetricUpdateRanges)) {
+	    /*
+	     * We have looped over all lines, so we're done. We must release our
+	     * refCount on the widget (the timer token was already set to NULL
+	     * above). If there is a registered aftersync command, run that first.
+	     */
+
+	    if (!dInfoPtr->pendingUpdateLineMetricsFinished) {
+		UpdateLineMetricsFinished(textPtr, false);
+		GetYView(textPtr->interp, textPtr, true);
+	    }
+	} else {
+	    /*
+	     * Re-arm the timer. We already have a refCount on the text widget so no
+	     * need to adjust that.
+	     */
+
+	    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1, AsyncUpdateLineMetrics, textPtr);
+	    return;
+	}
     }
+
+    TkTextDecrRefCountAndTestIfDestroyed(textPtr);
 }
 
 /*
@@ -10497,7 +10495,7 @@ Repick(
 {
     TkText *textPtr = (TkText *) clientData;
 
-    if (!TkTextReleaseIfDestroyed(textPtr)) {
+    if (!TkTextDecrRefCountAndTestIfDestroyed(textPtr)) {
 	textPtr->dInfoPtr->flags &= ~REPICK_NEEDED;
 	textPtr->dInfoPtr->currChunkPtr = NULL;
 	textPtr->dInfoPtr->repickTimer = NULL;
@@ -11109,14 +11107,12 @@ AsyncUpdateYScrollbar(
     ClientData clientData)	/* Information about widget. */
 {
     TkText *textPtr = clientData;
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
-    if (!TkTextReleaseIfDestroyed(textPtr)) {
-	TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+    dInfoPtr->scrollbarTimer = NULL;
 
-	if (!dInfoPtr->insideLineMetricUpdate) {
-	    textPtr->dInfoPtr->scrollbarTimer = NULL;
-	    GetYView(textPtr->interp, textPtr, true);
-	}
+    if (!TkTextDecrRefCountAndTestIfDestroyed(textPtr) && !dInfoPtr->insideLineMetricUpdate) {
+	GetYView(textPtr->interp, textPtr, true);
     }
 }
 
@@ -13906,7 +13902,7 @@ TkpTextPrintDispChunk(
 
     switch (chunkPtr->layoutProcs->type) {
     case TEXT_DISP_CHAR:
-	printf("CHAR=");
+	fprintf(stdout, "CHAR=");
 	if (chunkPtr->clientData) {
 	    const CharInfo *ciPtr = (const CharInfo *) chunkPtr->clientData;
 	    int i;
@@ -13915,31 +13911,31 @@ TkpTextPrintDispChunk(
 		char c = ciPtr->u.chars[i];
 
 		switch (c) {
-		case '\t': printf("\\t"); break;
-		case '\n': printf("\\n"); break;
-		case '\v': printf("\\v"); break;
-		case '\f': printf("\\f"); break;
-		case '\r': printf("\\r"); break;
+		case '\t': fprintf(stdout, "\\t"); break;
+		case '\n': fprintf(stdout, "\\n"); break;
+		case '\v': fprintf(stdout, "\\v"); break;
+		case '\f': fprintf(stdout, "\\f"); break;
+		case '\r': fprintf(stdout, "\\r"); break;
 
 		default:
 		    if (UCHAR(c) < 0x80 && isprint(c)) {
-			printf("%c", c);
+			fprintf(stdout, "%c", c);
 		    } else {
-			printf("\\x%02u", (unsigned) UCHAR(c));
+			fprintf(stdout, "\\x%02u", (unsigned) UCHAR(c));
 		    }
 		    break;
 		}
 	    }
 	} else {
-	    printf("<not yet displayed>");
+	    fprintf(stdout, "<not yet displayed>");
 	}
 	break;
 
-    case TEXT_DISP_HYPHEN: printf("HYPHEN"); break;
-    case TEXT_DISP_IMAGE:  printf("IMAGE"); break;
-    case TEXT_DISP_WINDOW: printf("WINDOW"); break;
-    case TEXT_DISP_ELIDED: printf("ELIDED"); break;
-    case TEXT_DISP_CURSOR: printf("CURSOR"); break;
+    case TEXT_DISP_HYPHEN: fprintf(stdout, "HYPHEN"); break;
+    case TEXT_DISP_IMAGE:  fprintf(stdout, "IMAGE"); break;
+    case TEXT_DISP_WINDOW: fprintf(stdout, "WINDOW"); break;
+    case TEXT_DISP_ELIDED: fprintf(stdout, "ELIDED"); break;
+    case TEXT_DISP_CURSOR: fprintf(stdout, "CURSOR"); break;
     }
 
     dlPtr = chunkPtr->dlPtr;
@@ -13947,7 +13943,7 @@ TkpTextPrintDispChunk(
     y = dlPtr->y + dlPtr->spaceAbove;
     width = chunkPtr->width;
     height = dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow;
-    printf(" [%d,%d-%d,%d]\n", x, y, x + width, y + height);
+    fprintf(stdout, " [%d,%d-%d,%d]\n", x, y, x + width, y + height);
 }
 #endif /* !NDEBUG */
 

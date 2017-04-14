@@ -657,25 +657,25 @@ AllocStatistic()
 	const TkText *peer;
 
 	for (peer = wShared->sharedTextPtr->peers; peer; peer = peer->next) {
-	    printf("Unreleased text widget %d\n", peer->widgetNumber);
+	    fprintf(stderr, "Unreleased text widget %d\n", peer->widgetNumber);
 	}
     }
 
-    printf("---------------------------------\n");
-    printf("ALLOCATION:        new    destroy\n");
-    printf("---------------------------------\n");
-    printf("Shared:       %8u - %8u\n", tkTextCountNewShared, tkTextCountDestroyShared);
-    printf("Peer:         %8u - %8u\n", tkTextCountNewPeer, tkTextCountDestroyPeer);
-    printf("Segment:      %8u - %8u\n", tkTextCountNewSegment, tkTextCountDestroySegment);
-    printf("Tag:          %8u - %8u\n", tkTextCountNewTag, tkTextCountDestroyTag);
-    printf("UndoToken:    %8u - %8u\n", tkTextCountNewUndoToken, tkTextCountDestroyUndoToken);
-    printf("Node:         %8u - %8u\n", tkTextCountNewNode, tkTextCountDestroyNode);
-    printf("Line:         %8u - %8u\n", tkTextCountNewLine, tkTextCountDestroyLine);
-    printf("Section:      %8u - %8u\n", tkTextCountNewSection, tkTextCountDestroySection);
-    printf("PixelInfo:    %8u - %8u\n", tkTextCountNewPixelInfo, tkTextCountDestroyPixelInfo);
-    printf("BitField:     %8u - %8u\n", tkBitCountNew, tkBitCountDestroy);
-    printf("IntSet:       %8u - %8u\n", tkIntSetCountNew, tkIntSetCountDestroy);
-    printf("--------------------------------\n");
+    fprintf(stderr, "---------------------------------\n");
+    fprintf(stderr, "ALLOCATION:        new    destroy\n");
+    fprintf(stderr, "---------------------------------\n");
+    fprintf(stderr, "Shared:       %8u - %8u\n", tkTextCountNewShared, tkTextCountDestroyShared);
+    fprintf(stderr, "Peer:         %8u - %8u\n", tkTextCountNewPeer, tkTextCountDestroyPeer);
+    fprintf(stderr, "Segment:      %8u - %8u\n", tkTextCountNewSegment, tkTextCountDestroySegment);
+    fprintf(stderr, "Tag:          %8u - %8u\n", tkTextCountNewTag, tkTextCountDestroyTag);
+    fprintf(stderr, "UndoToken:    %8u - %8u\n", tkTextCountNewUndoToken, tkTextCountDestroyUndoToken);
+    fprintf(stderr, "Node:         %8u - %8u\n", tkTextCountNewNode, tkTextCountDestroyNode);
+    fprintf(stderr, "Line:         %8u - %8u\n", tkTextCountNewLine, tkTextCountDestroyLine);
+    fprintf(stderr, "Section:      %8u - %8u\n", tkTextCountNewSection, tkTextCountDestroySection);
+    fprintf(stderr, "PixelInfo:    %8u - %8u\n", tkTextCountNewPixelInfo, tkTextCountDestroyPixelInfo);
+    fprintf(stderr, "BitField:     %8u - %8u\n", tkBitCountNew, tkBitCountDestroy);
+    fprintf(stderr, "IntSet:       %8u - %8u\n", tkIntSetCountNew, tkIntSetCountDestroy);
+    fprintf(stderr, "--------------------------------\n");
 
     if (tkTextCountNewShared != tkTextCountDestroyShared
 	    || tkTextCountNewPeer != tkTextCountDestroyPeer
@@ -687,9 +687,9 @@ AllocStatistic()
 	    || tkTextCountNewSection != tkTextCountDestroySection
 	    || tkTextCountNewPixelInfo != tkTextCountDestroyPixelInfo
 	    || tkBitCountNew != tkBitCountDestroy
-	    || tkIntSetCountNew != tkIntSetCountDestroy
-	printf("*** memory leak detected ***\n");
-	printf("----------------------------\n");
+	    || tkIntSetCountNew != tkIntSetCountDestroy)  {
+	fprintf(stderr, "*** memory leak detected ***\n");
+	fprintf(stderr, "----------------------------\n");
 	/* TkBitCheckAllocs(); */
     }
 }
@@ -1015,7 +1015,6 @@ CreateWidget(
 	sharedTextPtr->mainPeer->startMarker = sharedTextPtr->startMarker;
 	sharedTextPtr->mainPeer->endMarker = sharedTextPtr->endMarker;
 	sharedTextPtr->mainPeer->sharedTextPtr = sharedTextPtr;
-	DEBUG_ALLOC(tkTextCountNewPeer++);
 
 #if TK_CHECK_ALLOCS
 	if (tkTextCountNewShared++ == 0) {
@@ -2588,7 +2587,9 @@ TextWidgetObjCmd(
     if (--textPtr->refCount == 0) {
 	bool sharedIsReleased = textPtr->sharedIsReleased;
 
+	assert(textPtr->flags & MEM_RELEASED);
 	free(textPtr);
+	DEBUG_ALLOC(tkTextCountDestroyPeer++);
 	if (sharedIsReleased) {
 	    return result;
 	}
@@ -3528,7 +3529,7 @@ DestroyText(
 	TkTextDeleteBreakInfoTableEntries(&sharedTextPtr->breakInfoTable);
 	Tcl_DeleteHashTable(&sharedTextPtr->breakInfoTable);
 	free(sharedTextPtr->mainPeer);
-	DEBUG_ALLOC(tkTextCountDestroyPeer++);
+	free(sharedTextPtr->tagLookup);
 
 	if (sharedTextPtr->tagBindingTable) {
 	    Tk_DeleteBindingTable(sharedTextPtr->tagBindingTable);
@@ -3576,9 +3577,10 @@ DestroyText(
 
     textPtr->tkwin = NULL;
     Tcl_DeleteCommandFromToken(textPtr->interp, textPtr->widgetCmd);
+    assert(textPtr->flags & DESTROYED);
+    DEBUG(textPtr->flags |= MEM_RELEASED);
     TkTextReleaseIfDestroyed(textPtr);
     tkBTreeDebug = debug;
-    DEBUG_ALLOC(tkTextCountDestroyPeer++);
 }
 
 /*
@@ -3605,7 +3607,9 @@ TkTextDecrRefCountAndTestIfDestroyed(
 {
     if (--textPtr->refCount == 0) {
 	assert(textPtr->flags & DESTROYED);
+	assert(textPtr->flags & MEM_RELEASED);
 	free(textPtr);
+	DEBUG_ALLOC(tkTextCountDestroyPeer++);
 	return true;
     }
     return !!(textPtr->flags & DESTROYED);
@@ -3634,10 +3638,13 @@ TkTextReleaseIfDestroyed(
     TkText *textPtr)
 {
     if (!(textPtr->flags & DESTROYED)) {
+	assert(textPtr->refCount > 0);
 	return false;
     }
     if (--textPtr->refCount == 0) {
+	assert(textPtr->flags & MEM_RELEASED);
 	free(textPtr);
+	DEBUG_ALLOC(tkTextCountDestroyPeer++);
     }
     return true;
 }
@@ -5308,9 +5315,7 @@ TextUndoRedoCallback(
 		TkTextIndexClear(&tPtr->insertIndex, tPtr);
 		TkTextTriggerWatchCursor(tPtr);
 	    }
-	    if (--tPtr->refCount == 0) {
-		free(tPtr);
-	    }
+	    TkTextDecrRefCountAndTestIfDestroyed(tPtr);
 	}
     }
 
@@ -9491,9 +9496,7 @@ TriggerWatchEdit(
 	    }
 	}
 
-	if (--tPtr->refCount == 0) {
-	    free(tPtr);
-	}
+	TkTextDecrRefCountAndTestIfDestroyed(tPtr);
     }
 
     if (peers != peerArr) {
@@ -9728,7 +9731,7 @@ TkTextRunAfterSyncCmd(
     }
     Tcl_DecrRefCount(afterSyncCmd);
     Tcl_Release((ClientData) textPtr->interp);
-    TkTextReleaseIfDestroyed(textPtr);
+    TkTextDecrRefCountAndTestIfDestroyed(textPtr);
 }
 
 /*
@@ -11484,7 +11487,7 @@ TkpTextInspect(
     }
     Tcl_ListObjGetElements(textPtr->interp, Tcl_GetObjResult(textPtr->interp), &argc, &argv);
     for (i = 0; i < argc; ++i) {
-	printf("%s\n", Tcl_GetString(argv[i]));
+	fprintf(stdout, "%s\n", Tcl_GetString(argv[i]));
     }
     Tcl_SetObjResult(textPtr->interp, resultPtr);
     Tcl_DecrRefCount(resultPtr);
@@ -11537,33 +11540,33 @@ TkpTextDump(
 	char const *text = Tcl_GetString(argv[i + 1]);
 	char const *indx = Tcl_GetString(argv[i + 2]);
 
-	printf("%s ", indx);
-	printf("%s ", type);
+	fprintf(stdout, "%s ", indx);
+	fprintf(stdout, "%s ", type);
 
 	if (strcmp(type, "text") == 0) {
 	    int len = strlen(text), i;
 
-	    printf("\"");
+	    fprintf(stdout, "\"");
 	    for (i = 0; i < len; ++i) {
 		char c = text[i];
 
 		switch (c) {
-		case '\t': printf("\\t"); break;
-		case '\n': printf("\\n"); break;
-		case '\v': printf("\\v"); break;
-		case '\f': printf("\\f"); break;
-		case '\r': printf("\\r"); break;
+		case '\t': fprintf(stdout, "\\t"); break;
+		case '\n': fprintf(stdout, "\\n"); break;
+		case '\v': fprintf(stdout, "\\v"); break;
+		case '\f': fprintf(stdout, "\\f"); break;
+		case '\r': fprintf(stdout, "\\r"); break;
 
 		default:
 		    if (UCHAR(c) < 0x80 && isprint(c)) {
-			printf("%c", c);
+			fprintf(stdout, "%c", c);
 		    } else {
-			printf("\\x%02u", (unsigned) UCHAR(c));
+			fprintf(stdout, "\\x%02u", (unsigned) UCHAR(c));
 		    }
 		    break;
 		}
 	    }
-	    printf("\"\n");
+	    fprintf(stdout, "\"\n");
 	} else if (strcmp(type, "mark") == 0) {
 	    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable, text);
 	    const TkTextSegment *markPtr = NULL;
@@ -11575,10 +11578,11 @@ TkpTextDump(
 		if (strcmp(text, "current") == 0) { markPtr = textPtr->currentMarkPtr; }
 	    }
 	    if (markPtr) {
-		printf("%s (%s)\n", text, markPtr->typePtr == &tkTextLeftMarkType ? "left" : "right");
+		fprintf(stdout, "%s (%s)\n", text,
+			markPtr->typePtr == &tkTextLeftMarkType ? "left" : "right");
 	    }
 	} else {
-	    printf("%s\n", text);
+	    fprintf(stdout, "%s\n", text);
 	}
     }
 
