@@ -2456,15 +2456,11 @@ LayoutUpdateLineHeightInformation(
 	    lineHeight = dlPtr->height;
 	    numDispLines = lineHeight > 0;
 	}
-	if (linePtr->nextPtr) {
-	    nextLogicalLinePtr = TkBTreeNextLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr);
-	    mergedLines = TkBTreeCountLines(textPtr->sharedTextPtr->tree, linePtr, nextLogicalLinePtr);
-	    if (mergedLines > 0) {
-		mergedLines -= 1; /* subtract first line */
-	    }
-	} else {
-	    /* This may happen if we show the end of text symbol. */
-	    mergedLines = 0;
+	assert(linePtr->nextPtr);
+	nextLogicalLinePtr = TkBTreeNextLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr);
+	mergedLines = TkBTreeCountLines(textPtr->sharedTextPtr->tree, linePtr, nextLogicalLinePtr);
+	if (mergedLines > 0) {
+	    mergedLines -= 1; /* subtract first line */
 	}
 	if (pixelInfo->height != lineHeight || mergedLines > 0 || numDispLines != oldNumDispLines) {
 	    /*
