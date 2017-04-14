@@ -622,7 +622,7 @@ struct TkTextDispChunk {
 				 * or extra space at end of line. */
     int32_t additionalWidth;	/* Additional width when expanding spaces for full justification. */
     int32_t hyphenRules;	/* Allowed hyphenation rules for this (hyphen) chunk. */
-    int32_t breakIndex:29;	/* Index within chunk of last acceptable position for a line
+    int32_t breakIndex:28;	/* Index within chunk of last acceptable position for a line
     				 * (break just before this byte index). <= 0 means don't break
 				 * during or immediately after this chunk. */
     uint32_t wrappedAtSpace:1;	/* This flag will be set when the a chunk has been wrapped while
@@ -631,6 +631,8 @@ struct TkTextDispChunk {
     				 * this chunk will be followed by a hyphen segment. */
     uint32_t skipFirstChar:1;	/* This flag will be set if the first byte has to be skipped due
     				 * to a spelling change. */
+    uint32_t endOfLineSymbol:1;	/* This flag will be set if this chunk contains (only) the end of
+    				 * line symbol. */
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
 
@@ -1296,7 +1298,10 @@ typedef struct TkText {
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
     XColor *fgColor;		/* Default foreground color for text. */
     XColor *eolColor;		/* Foreground color for end of line symbol, can be NULL. */
+    XColor *eotColor;		/* Foreground color for end of text symbol, can be NULL. */
     Tcl_Obj *eolCharPtr;	/* Use this character for displaying end of line. Can be NULL or empty,
+    				 * in this case the default char U+00B6 (pilcrow) will be used. */
+    Tcl_Obj *eotCharPtr;	/* Use this character for displaying end of text. Can be NULL or empty,
     				 * in this case the default char U+00B6 (pilcrow) will be used. */
     XColor *hyphenColor;	/* Foreground color for soft hyphens, can be NULL. */
     Tk_Font tkfont;		/* Default font for displaying text. */
@@ -1339,6 +1344,7 @@ typedef struct TkText {
     struct TextDInfo *dInfoPtr;	/* Information maintained by tkTextDisp.c. */
     bool showEndOfLine;		/* Flag whether the end of line symbol will be shown at end of
     				 * each logical line. */
+    bool showEndOfText;		/* Flag whether the end of text symbol will be shown at end of text. */
     bool syncTime;		/* Synchronization timeout, used for line metric calculation, default is
     				 * 200. */
 
