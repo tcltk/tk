@@ -8719,6 +8719,12 @@ TextChanged(
 
 		lastPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &rounded);
 
+#if 0
+		/*
+		 * NOTE: In revised implementation this seems not to be useful,
+		 * it is only causing superfluous redrawings.
+		 */
+
 		/*
 		 * At least one display line is supposed to change. This makes the
 		 * redisplay OK in case the display line we expect to get here was
@@ -8732,6 +8738,7 @@ TextChanged(
 		if (lastPtr && lastPtr == firstPtr) {
 		    lastPtr = lastPtr->nextPtr;
 		}
+#endif
 	    }
 	}
     }
