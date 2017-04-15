@@ -38,7 +38,8 @@ the undo stack. Only meaningful when the \fB\-undo\fR option is true.
 .OP \-blockcursor blockCursor BlockCursor
 Specifies a boolean that says whether the blinking insertion cursor should be
 drawn as a character-sized rectangular block. If false (the default) a thin
-vertical line is used for the insertion cursor.
+vertical line is used for the insertion cursor. See section \fBTHE INSERTION CURSOR\fR
+for more details.
 .OP \-eolchar eolChar EolChar
 Specifies the character to use when displaying the end of line symbol
 (see option \fB\-showendofline\fR). An empty argument will force the use of
@@ -50,7 +51,7 @@ the foreground color (set with \fB\-foreground\fR; this is the default).
 .OP \-eotchar eotChar EotChar
 Specifies the character to use when displaying the end of text symbol
 (see option \fB\-showendoftext\fR). An empty argument will force the use of
-the same symbol as used for showing the end of line (see \fB\-eolchar\fR).
+the same symbol as used for showing the end of line symbol (see \fB\-eolchar\fR).
 .OP \-eotcolor eotColor EotColor
 Specifies the foreground color to use when displaying the end of text symbol
 (see option \fB\-showendoftext\fR). An empty argument will force the use
@@ -59,13 +60,26 @@ of the same color as used for the end of line symbol (see \fB\-eolcolor\fR).
 Specifies the foreground color to use when displaying the soft hyphen
 character (U+00AD). An empty argument will force the use of the foreground
 color (set with \fB\-foreground\fR; this is the default).
+.OP \-endindex endIndex EndIndex
+Specifies an index representing the end of the underlying textual data store
+that should be contained in the widget. This allows a text widget to reflect
+only a portion of a larger piece of text. Instead of an index, the empty string
+can be provided to this configuration option, which will configure the widget
+to the end index in the textual data store. Instead of an empty string the
+special index specifier \fBend\fR can be used.
 .OP \-endline endLine EndLine
+Note that this option is deprecated, option \fB\-endindex\fR should be used
+instead. For compatibility reasons this option still will be supported, but
+may be removed in a future version.
+.PP
+.RS
 Specifies an integer line index representing the line of the underlying
 textual data store that should be just after the last line contained in
 the widget. This allows a text widget to reflect only a portion of a
 larger piece of text. Instead of an integer, the empty string can be
 provided to this configuration option, which will configure the widget
 to end at the very last line in the textual data store.
+.RE
 .OP \-height height Height
 Specifies the desired height for the window, in units of characters in the
 font given by the \fB\-font\fR option. Must be at least one.
@@ -84,7 +98,7 @@ spelling changes. Per default the set of rules is empty, this means that all
 rules are allowed. The rules are important when command \fBtk_textInsert\fR
 (or \fBtk_textReplace\fR) will be used with automatic spelling changes. An
 exception will be thrown if one of the given rules is not defined. See
-section \fBHYPHENATION RULES\fR for the defined rules.
+section for more details \fBHYPHENATION RULES\fR about the defined rules.
 .RS
 .PP
 If also option \fB\-lang\fR is specified for a particular soft hyphen, then
@@ -169,13 +183,14 @@ hyphenation rule will be applied when \fBnot\fR hyphenating at this point.
 Examples: the German word
 .QW Schiff\e+fahrt
 hyphenates into
-.QW Schiff-fahrt , but will be written
+.QW Schiff-fahrt ,
+but will be written
 .QW Schiffahrt
 when no hyphenation will be done. The Swedish word
 .QW tugg\e+gummi
 becomes
-.QW tuggummi , and
-the Norwegian word
+.QW tuggummi ,
+and the Norwegian word
 .QW buss\e+sj\[oa]f\[/o]r
 becomes
 .QW "bussj\[oa]f\[/o]r" .
@@ -291,7 +306,7 @@ default this option is disabled.
 .OP \-spacemode spaceMode SpaceMode
 Specifies the mode how spaces (U+0020) will be displayed. Default is
 \fBnone\fR, this means that spaces will be displayed like any character, but
-when breaking lines at a space this space will be gobbled, if option
+when breaking lines at a space this space will be gobbled if option
 \fB\-wrap\fR is set to \fBword\fR or \fBcodepoint\fR (this is the common
 behavior of text editors). When setting to \fBexact\fR, no space character
 will be gobbled at all, even when breaking lines. Mode \fBtrim\fR may be
@@ -316,19 +331,31 @@ Requests additional space below each text line in the widget, using any of the
 standard forms for screen distances. If a line wraps, this option only applies
 to the last line on the display. This option may be overridden with
 \fB\-spacing3\fR options in tags.
-
+.OP \-startindex startIndex StartIndex
+Specifies an index representing the start of the underlying textual data store
+that should be contained in the widget. This allows a text widget to reflect only
+a portion of a larger piece of text. Instead of an index, the empty string can be
+provided to this configuration option, which will configure the widget to the
+start index in the textual data store. Instead of an empty string the special
+index specifier \fBbegin\fR can be used.
 .OP \-startline startLine StartLine
+Note that this option is deprecated, option \fB\-startindex\fR should be used
+instead. For compatibility reasons this option still will be supported, but
+may be removed in a future version.
+.PP
+.RS
 Specifies an integer line index representing the first line of the underlying
 textual data store that should be contained in the widget. This allows a text
 widget to reflect only a portion of a larger piece of text. Instead of an
 integer, the empty string can be provided to this configuration option, which
 will configure the widget to start at the very first line in the textual data
 store.
+.RE
 .OP \-state state State
 Specifies one of three states for the text: \fBnormal\fR, \fBdisabled\fR, or
 \fBreadonly\fR. If the text is disabled then characters may not be inserted
 or deleted and no insertion cursor will be displayed, even if the input
-focus is in the widget. If the state is read-only then characters can be
+focus is in the widget. If the state is readonly then characters can be
 inserted and deleted, but the widget does not receive any modifications from
 GUI, the user cannot delete or insert, and no insertion cursor will be
 displayed.
@@ -341,10 +368,10 @@ without the use of soft hyphens for line break. Switching the state back to
 soft hyphens for possible line breaks.
 .RE
 .OP \-steadymarks steadyMarks SteadyMarks
-This option, if activated, will change the behavior of marks. Any mark now
-behaves simultaneously as an invisible character. One of the side effects is
+This option, if activated, will change the behavior of marks. Every mark now
+behaves simultaneously as an invisible character. One side effect is
 that the gravity will also apply to the insertion of marks. Another side
-effect is that any reference specified by a mark now will reference the
+effect is that every reference specified by a mark now will reference the
 pseudo-character position of that mark. (But it is important to mention
 that the real character position count will not be affected.)
 .RS
@@ -359,7 +386,7 @@ widget is not overall clean, this may cause errors in the order of the
 marks, therefore this is forbidden.)
 .PP
 This option is facilitating programmed editor control, because the shuffle
-effect is eliminated, any mark now has a defined order relative to other
+effect is eliminated, any every mark now has a defined order relative to other
 marks, this order is not changing as long as the mark will not be moved with
 \fBmark set\fR. Note that the handling of marks, especially the change of
 the gravity, will be performed more performant when this option is
@@ -379,7 +406,7 @@ When set to zero the line metrics update will be performed synchronous; this
 means the whole update will be performed immediately; with most applications
 this behavior would cause performance problems. When set to 1 the
 computation is already asynchronous, but the computation starts with each
-event loop cycle.
+event loop cycle (this may also cause performance problems).
 .RE
 .OP \-tabs tabs Tabs
 Specifies a set of tab stops for the window. The option's value consists of a
@@ -436,10 +463,10 @@ The following modes are defined:
 .IP "\fBwithin\fR"
 The new text will receive any tags that are present on both before and after
 the insertion point, regardless whether it's a character (including the
-invisible newline), an embedded window, or an embedded image; if a tag is
-present on only one of these characters (windows, or images) then it will
-not be applied to the new text. This is the default tagging mode (and the
-way how the older versions of the text widget worked).
+invisible newline), a soft hyphen, an embedded window, or an embedded image;
+if a tag is present on only one of these characters (windows, or images)
+then it will not be applied to the new text. This is the default tagging
+mode (and the way how the older versions of the text widget worked).
 .IP "\fBgravity\fR"
 The new text will receive any tags that are present at one side of the
 insertion point: if the insert cursor has right gravity then the text will
@@ -758,11 +785,12 @@ string that is associated with some of the characters in a text. Tags may
 contain arbitrary characters, but it is probably best to avoid using the
 characters
 .QW " "
-(space), \fB+\fR, or \fB\-\fR: these characters have special meaning in
-indices, so tags containing them cannot be used as indices. There may be any
-number of tags associated with characters in a text. Each tag may refer to a
-single character, a range of characters, or several ranges of characters. An
-individual character may have any number of tags associated with it.
+(space), \fB@\fR, \fB.\fR, \fB+\fR, or \fB\-\fR: these characters have special
+meaning in indices, so tags containing them cannot be used as indices. There
+may be any number of tags associated with characters in a text. Each tag may
+refer to a single character, a range of characters, or several ranges of
+characters. An individual character may have any number of tags associated
+with it.
 .PP
 A priority order is defined among tags, and this order is used in implementing
 some of the tag-related functions described below. When a tag is defined (by
@@ -906,8 +934,8 @@ contain characters because they are indented by \fB\-lmargin1\fR or
 \fB\-lmargin2\fR. It may have any of the forms accepted by
 \fBTk_GetColor\fR. If \fIcolor\fR has not been specified, or if it is
 specified as an empty string, then the color used is specified by the
-\fB-background\fR tag option (or, if this is also unspecified, by the
-\fB-background\fR widget option).
+\fB\-background\fR tag option (or, if this is also unspecified, by the
+\fB\-background\fR widget option).
 .TP
 \fB\-offset \fIpixels\fR
 .
@@ -960,8 +988,8 @@ character of that display line.
 contain characters because they are indented by \fB\-rmargin1\fR. It may
 have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
-used is specified by the \fB-background\fR tag option (or, if this is also
-unspecified, by the \fB-background\fR widget option).
+used is specified by the \fB\-background\fR tag option (or, if this is also
+unspecified, by the \fB\-background\fR widget option).
 .TP
 \fB\-selectbackground \fIcolor\fR
 \fIColor\fR specifies the background color to use when displaying selected
@@ -1073,7 +1101,12 @@ such widget. The \fBsel\fR tag exists separately and independently in each
 peer text widget (but any tag bindings to \fBsel\fR are shared).
 .SH MARKS
 .PP
-The second form of annotation in text widgets is a mark. Marks are used for
+The second form of annotation in text widgets is a mark. The name of a mark
+may contain arbitrary characters, but it is probably best to avoid using the
+characters
+.QW " "
+(space), \fB@\fR, \fB.\fR, \fB+\fR, or \fB\-\fR: these characters have special
+meaning in indices. Marks are used for
 remembering particular places in a text. They are something like tags, in that
 they have names and they refer to places in the file, but a mark is not
 associated with particular characters. Instead, a mark is associated with the
@@ -1110,6 +1143,15 @@ down; the update will be deferred until all mouse buttons have been released).
 Neither of these special marks may be deleted. With the exception of these two
 special marks, all marks are shared between peer text widgets, and may be
 manipulated on an equal basis from any peer.
+.PP
+Generated marks (created with command \fBmark generate\fR) have a special meaning.
+They will be discarded by the undo mechanism (relevant only if widget option
+\fB\-steadymarks\fR is enabled). Furthermore these marks are
+.QW invisible ,
+only command \fBdump\fR is showing generated marks, the commands \fBmark names\fR,
+\fBmark next\fR, and \fBmark previous\fR, cannot
+.QW see
+generated marks.
 .SH "EMBEDDED WINDOWS"
 .PP
 The third form of annotation in text widgets is an embedded window. Each
@@ -1124,14 +1166,16 @@ modified or scrolled, and it will be mapped and unmapped as it moves into and
 out of the visible area of the text widget. Each embedded window occupies one
 unit's worth of index space in the text widget, and it may be referred to
 either by the name of its embedded window or by its position in the widget's
-index space. If the range of text containing the embedded window is deleted
-then the window is destroyed. Similarly if the text widget as a whole is
-deleted, then the window is destroyed.
+index space. If the range of text containing the embedded window is deleted,
+and this range is not saved on undo stack, then the window is destroyed.
+Similarly if the text widget as a whole is deleted, then the window is
+destroyed. If this automatic destroy behavior is not wanted then option
+\fB\-owner\fR should be set accordingly.
 .PP
 Eliding an embedded window immediately after scheduling it for creation via
-\fIpathName \fBwindow create \fIindex \fB-create\fR will prevent it from being
+\fIpathName \fBwindow create \fIindex \fB\-create\fR will prevent it from being
 effectively created. Uneliding an elided embedded window scheduled for creation
-via \fIpathName \fBwindow create \fIindex \fB-create\fR will automatically
+via \fIpathName \fBwindow create \fIindex \fB\-create\fR will automatically
 trigger the associated creation script. After destroying an elided embedded
 window, the latter won't get automatically recreated.
 .PP
@@ -1212,18 +1256,18 @@ The embedded image's position on the screen will be updated as the text is
 modified or scrolled. Each embedded image occupies one unit's worth of index
 space in the text widget, and it may be referred to either by its position in
 the widget's index space, or the name it is assigned when the image is inserted
-into the text widget with \fIpathName \fBimage create\fR. If the range of text
+into the text widget with \fIpathName \fB\&image create\fR. If the range of text
 containing the embedded image is deleted then that copy of the image is removed
 from the screen.
 .PP
 Eliding an embedded image immediately after scheduling it for creation via
-\fIpathName \fBimage create \fIindex \fB-create\fR will prevent it from being
+\fIpathName \fB\&image create \fIindex \fB\-create\fR will prevent it from being
 effectively created. Uneliding an elided embedded image scheduled for creation
-via \fIpathName \fBimage create \fIindex \fB-create\fR will automatically
+via \fIpathName \fB\&image create \fIindex \fB\-create\fR will automatically
 trigger the associated creation script. After destroying an elided embedded
 image, the latter won't get automatically recreated.
 .PP
-When an embedded image is added to a text widget with the \fIpathName \fBimage
+When an embedded image is added to a text widget with the \fIpathName \fB\&image
 create\fR widget command, a name unique to this instance of the image is
 returned. This name may then be used to refer to this image instance. The name
 is taken to be the value of the \fB\-name\fR option (described below). If the
@@ -1232,12 +1276,12 @@ If the \fIimageName\fR is already in use in the text widget, then \fB#\fInn\fR
 is added to the end of the \fIimageName\fR, where \fInn\fR is an arbitrary
 integer. This insures the \fIimageName\fR is unique. Once this name is
 assigned to this instance of the image, it does not change, even though the
-\fB\-image\fR or \fB\-name\fR values can be changed with \fIpathName \fBimage
+\fB\-image\fR or \fB\-name\fR values can be changed with \fIpathName \fB\&image
 configure\fR.
 .PP
-When an embedded image is added to a text widget with the \fIpathName \fBimage
+When an embedded image is added to a text widget with the \fIpathName \fB\&image
 create\fR widget command, several configuration options may be associated with
-it. These options may be modified later with the \fIpathName \fBimage
+it. These options may be modified later with the \fIpathName \fB\&image
 configure\fR widget command. The following options are currently supported:
 .TP
 \fB\-align \fIwhere\fR
@@ -1249,10 +1293,10 @@ of the values \fBtop\fR (align the top of the image with the top of the line),
 (align the bottom of the image with the bottom of the line's area), or
 \fBbaseline\fR (align the bottom of the image with the baseline of the line).
 .TP
-\fB\-image \fIimage\fR
+\fB\-image \fI\&image\fR
 .
 Specifies the name of the Tk image to display in the annotation. If
-\fIimage\fR is not a valid Tk image, then an error is returned.
+\fI\&image\fR is not a valid Tk image, then an error is returned.
 .TP
 \fB\-name \fIImageName\fR
 .
@@ -1530,14 +1574,14 @@ In Polish the hyphen will be repeated after line break, this means for
 example that
 .QW tech-nik
 becomes
-.QW "tech- -nik" .
+.QW tech- -nik .
 The name of this rule is \fBrepeathyphen\fR.
 .PP
 Applying hyphenation rule \fIRULE\fR (which may result into spelling
 changes) will be done automatically in the following cases:
 .IP [1] 4
 The hyphen is tagged with hyphenation rule \fIRULE\fR (tag option
-\fB-hyphenrules\fR includes \fIRULE\fR).
+\fB\-hyphenrules\fR includes \fIRULE\fR).
 .IP [2] 4
 The widget option \fB\-hyphenrules\fR contains rule \fIRULE\fR, and no tag
 (attached to this hyphen) is overruling.
@@ -1584,18 +1628,51 @@ with the
 widget command. The \fBinsert\fR mark represents the position of the insertion
 cursor, and the insertion cursor will automatically be drawn at this point
 whenever the text widget has the input focus.
+.PP
+The cursor shape (vertical line or rectangular block) can be specified with
+option \fB\-blockcursor\fR. But note that in general the block cursor is
+useful only if also the options \fB\-showendofline\fR and \fB\-showendoftext\fR
+are enabled (otherwise the cursor handling is unsatisfying). With a block
+cursor the optimal width (option \fB\-insertwidth\fR) is 2, and with a bar
+cursor (vertical line) the optimal width is 2 as well, or even 1 if the cursor
+is blinking. When disabling the blinking, or when setting a block cursor shape,
+it is recommended to specify the cursor width (option \fB\-insertwidth\fR)
+explicitly. Of course, in most cases the default settings for the cursor will
+be preferred.
 .SH "THE MODIFIED FLAG"
 .PP
-The text widget can keep track of changes to the content of the widget by
-means of the modified flag. Inserting or deleting text will set this flag. The
-flag can be queried, set and cleared programmatically as well. Whenever the
-flag changes state a \fB<<Modified>>\fR virtual event is generated. See the
-\fIpathName \fBedit modified\fR widget command for more details.
+The text widget can keep track of changes to the textual content of the widget
+by means of the modified flag. Inserting or deleting text will set this flag.
+The flag can be queried, set and cleared programmatically as well. Whenever
+the flag changes state a \fB<<Modified>>\fR virtual event is generated. See
+the \fIpathName \fBedit modified\fR widget command for more details.
+.SH "THE ALTERED FLAG"
+.PP
+It's possible to keep track of any change which has an affect on text content,
+even if only the representation is affected. Also any change in tag associations
+will be seen as a change in the representation. If option \fB\-steadymarks\fR is
+enabled, also the mark operations may have effects on the text content (although
+indirectly). Whenever the flag changes state a \fB<<Altered>>\fR virtual event
+is generated. See the \fIpathName \fBedit altered\fR widget command for more
+details.
+.SH "THE IRREVERSIBLE FLAG"
+.PP
+As a supplement to the
+.QW altered
+flag also the
+.QW irreversible
+flag will be provided. This flag reflects informs whether the original content
+(before any modification/operation has been performed) can be restored. Whenever
+the state of this flag is changing the virtual event \fB<<Irreversible>>\fR will
+be fired. For more details see widget command \fIpathName \fBedit irreversible\fR.
 .SH "THE UNDO MECHANISM"
 .PP
 The text widget has an unlimited undo and redo mechanism (when the
 \fB\-undo\fR widget option is true) which records every insert and delete
-action on a stack.
+action on a stack, including the insertion and deletion of embedded window and
+embedded images. Furthermore any change of tag associations will be recorded.
+If option \fB\-steadymarks\fR is enabled even operations on marks will push
+an undo operation on the stack.
 .PP
 Boundaries (called
 .QW separators )
@@ -1611,15 +1688,22 @@ Separators are inserted automatically when the \fB\-autoseparators\fR widget
 option is true. You can insert separators programmatically as well. If a
 separator is already present at the top of the undo stack no other will be
 inserted. That means that two separators on the undo stack are always
-separated by at least one insert or delete action.
+separated by at least one undoable action.
 .PP
 The \fB<<UndoStack>>\fR virtual event is generated every time the undo stack
-or the redo stack becomes empty or unempty.
+or the redo stack is changing.
 .PP
-The undo mechanism is also linked to the modified flag. This means that
-undoing or redoing changes can take a modified text widget back to the
-unmodified state or vice versa. The modified flag will be set automatically to
-the appropriate state. This automatic coupling does not work when the modified
+The undo mechanism is also linked to the
+.QW modified
+and
+.QW altered
+flag. This means that undoing or redoing changes can take a modified/altered
+text widget back to the unmodified/unaltered state or vice versa. The
+modified/altered flag will be set automatically to the appropriate state. The
+automatic coupling of the
+.QW modified
+flag does not work when the
+.QW modified
 flag has been set by the user, until the flag has been reset again.
 .PP
 See below for the \fIpathName \fBedit\fR widget command that controls the undo
@@ -1648,8 +1732,9 @@ arbitrary other widgets, cannot be shared between peers. This means the
 peer to create its own embedded windows as needed). Fourth, all of the
 configuration options of each peer (e.g. \fB\-font\fR, etc) can be set
 independently, with the exception of \fB\-undo\fR, \fB\-maxundo\fR,
-\fB\-autoseparators\fR (i.e. all undo, redo and modified state issues are
-shared).
+\fB\-maxundosize\fR, \fB\-maxredo\fR, \fB\-autoseparators\fR (i.e. all undo,
+redo and modified state issues are shared). Also option \fB\-steadymarks\fR
+cannot be set independently.
 .PP
 Finally any single peer need not contain the whole content from the
 underlying data store. When creating a peer, a contiguous range (e.g. only
@@ -1664,7 +1749,7 @@ content is after last newline, as a result of a deletion from another
 widget), then it is impossible for new content to be inserted. The peer will
 simply become an empty shell (dead peer) on which the background can be
 configured, but which will never show any content (without manual
-econfiguration of the start and end range). Note that a peer which does not
+reconfiguration of the start and end range). Note that a peer which does not
 contain all of the underlying data store still has indices numbered from
 .QW 1.0
 to
@@ -1674,8 +1759,8 @@ outside the contained range is not accessible to the peer. This means that
 the command \fIpeerName \fBindex end\fR may return quite different values in
 different peers. Similarly, commands like \fIpeerName \fBtag ranges\fR will not
 return index ranges outside that which is meaningful to the peer. The
-configuration options \fB\-startindex\fR and \fB\-endindex\fR may be used to control how
-much of the underlying data is contained in any given text widget.
+configuration options \fB\-startindex\fR and \fB\-endindex\fR may be used to
+control how much of the underlying data is contained in any given text widget.
 .PP
 Note that peers are really peers. Deleting the
 .QW original
@@ -1700,6 +1785,9 @@ does not really matter compared to execution speed.
 In case accurate result is needed (and if the text widget is managed by a
 geometry manager), one can resort to \fIpathName \fBsync\fR and \fIpathName
 \fBpendingsync\fR to control the synchronization of the view of text widgets.
+Alternatively, in very special cases (in general this would cause performance
+problem), setting widget option \fB\-synctime\fR to zero provides accurate
+results at any time.
 .PP
 The \fB<<WidgetViewSync>>\fR virtual event fires when the line heights of the
 text widget become obsolete (due to some editing command or configuration
@@ -1793,7 +1881,7 @@ operations on the widget. It has the following general form:
 widget's path name. \fIOption\fR and the \fIarg\fRs determine the exact
 behavior of the command. The following commands are possible for text widgets:
 .TP
-\fIpathName \fBbbox\fR ?\fB-extents\fR? \fIindex\fR
+\fIpathName \fBbbox\fR ?\fB\-extents\fR? \fIindex\fR
 .
 Returns a list of four elements describing the screen area of the character
 given by \fIindex\fR. The first two elements of the list give the x and y
@@ -1804,7 +1892,7 @@ reflects just the visible part. If the character is not visible on the screen
 then the return value is an empty list.
 .RS
 .PP
-If option \fB-extents\fR is specified then a list of four elements describing
+If option \fB\-extents\fR is specified then a list of four elements describing
 the invisible extents of the bounding box will returned. If x/y (first/second
 value) is not zero, then the first x/y pixels are not visible on screen. If
 width/height (third/fourth value) is not zero, then the last width/height
@@ -2053,7 +2141,11 @@ otherwise the deletion ends just before last character position (specified
 with \fIindex2\fR). If \fIindex2\fR is unspecified then \fIindex2\fR will be
 assumed as equal to "$index1+1c". This option is especially intended for
 programmed editor control, if option \fB\-steadymarks\fR is activated. Note
-that the special marks insert and current, and also generated marks (see
+that the special marks
+.QW insert
+and
+.QW current ,
+and also generated marks (see
 \fBmark generate\fR), will not be deleted.
 .IP \fB\-inclusive\fR
 This option is useful only if combined with option \fB\-marks\fR. It causes
@@ -2062,7 +2154,7 @@ deleted (provided that the concerned mark is neither a special mark \- \fBinsert
 or \fBcurrent\fR, \- nor a generated mark).
 .RE
 .TP
-\fIpathName \fBdlineinfo\fR ?\fB-extents\fR? \fIindex\fR
+\fIpathName \fBdlineinfo\fR ?\fB\-extents\fR? \fIindex\fR
 .
 Returns a list with five elements describing the area occupied by the display
 line containing \fIindex\fR. The first two elements of the list give the x and
@@ -2079,7 +2171,7 @@ containing \fIindex\fR is not visible on the screen then the return value is
 an empty list.
 .RS
 .PP
-If option \fB-extents\fR is specified then a list of four elements describing
+If option \fB\-extents\fR is specified then a list of four elements describing
 the invisible extents of the bounding box will returned, plus a fifth value
 for the baseline position. If x/y (first/second value) is not zero, then the
 first x/y pixels are not visible on screen. If width/height (third/fourth
@@ -2100,7 +2192,7 @@ the following format:
 \fIkey1 value1 index1 key2 value2 index2\fR ...
 .LP
 The possible \fIkey\fR values are \fBtext\fR, \fBhyphen\fR, \fBmark\fR,
-\fBtagon\fR, \fBtagoff\fR, \fBimage\fR, \fBwindow\fR and \fBnode\fR. The
+\fBtagon\fR, \fBtagoff\fR, \fB\&image\fR, \fBwindow\fR and \fBnode\fR. The
 corresponding \fIvalue\fR is the text, mark name, tag name, image name,
 window name or node identifier, the hyphen has no value (this means the
 value is empty). The \fIindex\fR information is the index of the start of
@@ -2211,7 +2303,7 @@ This flag will be false before any of these operations have been done. It
 can never be false if \fBedit irreversible\fR reports true. It will be true
 after \fBclear\fR and \fBload\fR, and it will be true again if all changes
 have been undone (with \fBedit undo\fR). Also enabling the undo stack (via
-widget option \fB-undo\fR) will reset this state to false.
+widget option \fB\-undo\fR) will reset this state to false.
 .PP
 Any change of this state, if caused by an operation with (eventual) effects
 on the (representation of the) text content, will trigger the virtual event
@@ -2220,13 +2312,25 @@ on the (representation of the) text content, will trigger the virtual event
 .TP
 \fIpathName \fBedit canredo\fR
 .
+Note that this command is deprecated, command \fIpathName\fR \fBedit info\fR
+should be used instead. For compatibility reasons this command still will be
+supported, but may be removed in a future version.
+.RS
+.PP
 Returns a boolean true if redo is possible, i.e. when the redo stack is not
 empty. Otherwise returns false.
+.RE
 .TP
 \fIpathName \fBedit canundo\fR
 .
+Note that this command is deprecated, command \fIpathName\fR \fBedit info\fR
+should be used instead. For compatibility reasons this command still will be
+supported, but may be removed in a future version.
+.RS
+.PP
 Returns a boolean true if undo is possible, i.e. when the undo stack is not
 empty. Otherwise returns false.
+.RE
 .TP
 \fIpathName \fBedit info\fR \fI?array\fR?
 .
@@ -2317,7 +2421,7 @@ Current number of bytes on the redo stack, only characters have been counted
 If the current undo stack action does not contain an undo atom, then this
 information is empty. Otherwise it contains the list of commands that have
 been pushed for undoing onto the stack since last inserted separator. A
-command is one of: \fIdelete\fR, \fIimage\fR, \fIinsert\fR, \fImark\fR,
+command is one of: \fIdelete\fR, \fI\&image\fR, \fIinsert\fR, \fImark\fR,
 \fItag\fR, or \fIwindow\fR. Note that \fImark\fR can only occur when option
 \fB\-steadymarks\fR is enabled. Also note that the \fBreplace\fR command is
 pushing either \fIdelete\fR and \fIinsert\fR. Further note that this list
@@ -2531,7 +2635,7 @@ redo stack is empty. Does nothing when the \fB\-undo\fR option is false.
 .
 If \fIstack\fR is not specified, then clear the undo and redo stacks.
 Otherwise only clear the specified stack. The specified stack must be either
-undo or redo, otherwise an error will be thrown.
+\fBundo\fR or \fBredo\fR, otherwise an error will be thrown.
 .TP
 \fIpathName \fBedit separator\fR ?\fB\-immediately\fR?
 .
@@ -2556,7 +2660,7 @@ empty. Does nothing when the \fB\-undo\fR option is false, or when
 .RS
 .PP
 The marks are not influencing the display, thus operations on marks will not
-be recorded, except if option \fB-steadymarks\fR is enabled: this is the
+be recorded, except if option \fB\-steadymarks\fR is enabled: this is the
 appropriate mode for programmed editor control, and here the recovery of the
 marks (position and gravity) is essential. But operations on the special
 marks \fBinsert\fR and \fBcurrent\fR, as well as operations on generated
@@ -2605,21 +2709,21 @@ returned. This may have the effect that some of the returned ranges are
 empty strings.
 .RE
 .TP
-\fIpathName \fBimage \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fB\&image \fIoption \fR?\fIarg arg ...\fR?
 .
 This command is used to manipulate embedded images. The behavior of the
 command depends on the \fIoption\fR argument that follows the \fBtag\fR
 argument. The following forms of the command are currently supported:
 .RS
 .TP
-\fIpathName \fBimage cget \fIindex option\fR
+\fIpathName \fB\&image cget \fIindex option\fR
 .
 Returns the value of a configuration option for an embedded image. \fIIndex\fR
 identifies the embedded image, and \fIoption\fR specifies a particular
 configuration option, which must be one of the ones listed in the section
 \fBEMBEDDED IMAGES\fR.
 .TP
-\fIpathName \fBimage configure \fIindex\fR ?\fIoption value ...\fR?
+\fIpathName \fB\&image configure \fIindex\fR ?\fIoption value ...\fR?
 .
 Query or modify the configuration options for an embedded image. If no
 \fIoption\fR is specified, returns a list describing all of the available
@@ -2632,7 +2736,7 @@ pairs are specified, then the command modifies the given option(s) to have the
 given value(s); in this case the command returns an empty string. See
 \fBEMBEDDED IMAGES\fR for information on the options that are supported.
 .TP
-\fIpathName \fBimage create \fIindex\fR ?\fIoption value ...\fR?
+\fIpathName \fB\&image create \fIindex\fR ?\fIoption value ...\fR?
 .
 This command creates a new image annotation, which will appear in the text at
 the position given by \fIindex\fR. Any number of \fIoption\-value\fR pairs may
@@ -2641,7 +2745,7 @@ be used as an index to refer to this image. See \fBEMBEDDED IMAGES\fR for
 information on the options that are supported, and a description of the
 identifier returned.
 .TP
-\fIpathName \fBimage names\fR
+\fIpathName \fB\&image names\fR
 .
 Returns a list whose elements are the names of all image instances currently
 embedded in \fIwindow\fR.
@@ -2707,7 +2811,7 @@ into consideration):
 .RE
 .PP
 We will also provide an informal description of the items; note that
-the optional tagList will be provided only if option \fB\-nested\fR is
+the optional \fItagList\fR will be provided only if option \fB\-nested\fR is
 specified:
 .PP
 {\fBsetup\fR \fIpathName configurationList\fR}
@@ -2721,7 +2825,7 @@ Provides the overall information about the inspected widget, notably its
 Describes the configuration of a particular tag.
 .RE
 .PP
-{\fBbind\fR \fItagName event script\fR}
+{\fB\&bind\fR \fItagName event script\fR}
 .RS
 Describes a binding applied to a tag
 .RE
@@ -2735,7 +2839,7 @@ Describes a character sequence, including what tags were applied to it.
 .PP
 {\fBhyphen\fR \fItagList\fR ?\fItagList\fR?}
 .PP
-{\fBimage\fR \fIimageOptions tagList\fR ?\fItagList\fR?}
+{\fB\&image\fR \fIimageOptions tagList\fR ?\fItagList\fR?}
 .RS
 Describes an image that was embedded.
 .RE
@@ -3252,7 +3356,7 @@ the view just enough to make \fIindex\fR visible at the edge of the window.
 If \fIindex\fR is far out of view, then the command centers \fIindex\fR in the
 window.
 .TP
-\fIpathName \fBsync\fR ?\fB-command \fIcommand\fR?
+\fIpathName \fBsync\fR ?\fB\-command \fIcommand\fR?
 .
 Controls the synchronization of the view of the text widget.
 .RS
@@ -3282,7 +3386,7 @@ metrics computation, the scheduling is immediate (as if the line metrics
 computation will finish now). \fIbgerror\fR is called on \fIcommand\fR
 failure. This command returns an empty string.
 .PP
-If a command is given (with \fB-command\fR \fIcommand\fR) then it is ensured
+If a command is given (with \fB\-command\fR \fIcommand\fR) then it is ensured
 that \fIcommand\fR will be called only when all line height values currently
 are up-to-date. When waiting for event \fB<<WidgetViewSync>>\fR it is possible
 that some race conditions will affect the received state.
@@ -3310,8 +3414,8 @@ is less than or equal to \fIindex1\fR) then the command has no effect.
 This command associates \fIscript\fR with the tag given by \fItagName\fR.
 Whenever the event sequence given by \fIsequence\fR occurs for a character
 that has been tagged with \fItagName\fR, the script will be invoked. This
-widget command is similar to the \fBbind\fR command except that it operates on
-characters in a text rather than entire widgets. See the \fBbind\fR manual
+widget command is similar to the \fB\&bind\fR command except that it operates on
+characters in a text rather than entire widgets. See the \fB\&bind\fR manual
 entry for complete details on the syntax of \fIsequence\fR and the
 substitutions performed on \fIscript\fR before invoking it. If all arguments
 are specified then a new binding is created, replacing any existing binding
@@ -3344,12 +3448,12 @@ It is possible for the current character to have multiple tags, and for each
 of them to have a binding for a particular event sequence. When this occurs,
 one binding is invoked for each tag, in order from lowest-priority to highest
 priority. If there are multiple matching bindings for a single tag, then the
-most specific binding is chosen (see the manual entry for the \fBbind\fR
+most specific binding is chosen (see the manual entry for the \fB\&bind\fR
 command for details). \fBcontinue\fR and \fBbreak\fR commands within binding
 scripts are processed in the same way as for bindings created with the
-\fBbind\fR command.
+\fB\&bind\fR command.
 .PP
-If bindings are created for the widget as a whole using the \fBbind\fR
+If bindings are created for the widget as a whole using the \fB\&bind\fR
 command, then those bindings will supplement the tag bindings. The tag
 bindings will be invoked first, followed by bindings for the window as a
 whole.
@@ -3546,6 +3650,11 @@ of the range and the index of the character just after the last one in the
 range. If no matching range is found then the return value is an empty string.
 If \fIindex2\fR is not given then it defaults to the beginning of the text.
 .TP
+\fIpathName \fBtag priority \fItagName\fR
+.
+Returns the priority (an positive integer value, or zero) of the specified tag.
+This allows to compare the priority of tags.
+.TP
 \fIpathName\fB tag raise \fItagName \fR?\fIaboveThis\fR?
 .
 Changes the priority of tag \fItagName\fR so that it is just higher in
@@ -3621,7 +3730,7 @@ change:
 .IP \(bu 3
 \fIpathName \fBedit redo\fR|\fBundo\fR
 .IP \(bu 3
-\fIpathName \fBimage configure\fR|\fBcreate\fR
+\fIpathName \fB\&image configure\fR|\fBcreate\fR
 .IP \(bu 3
 \fIpathName \fBmark gravity\fR|\fBset\fR|\fBunset\fR
 .IP \(bu 3
@@ -3743,7 +3852,7 @@ specifies the pixel position of the upper left corner in the form @x,y, and
 \fBundo\fR
 .
 An undo action has been performed. \fIInfo\fR contains two elements. The
-first is the performed undo command, one of: \fIdelete\fR, \fIimage\fR,
+first is the performed undo command, one of: \fIdelete\fR, \fI\&image\fR,
 \fIinsert\fR, \fImark\fR, \fItag\fR, or \fIwindow\fR. The second is a
 boolean flag indicating whether this is the final part of a multi-undo
 action.
@@ -3756,7 +3865,7 @@ reset the undo/redo stack, an error will be thrown.
 \fBredo\fR
 .
 A redo action has been performed. \fIInfo\fR contains two elements. The
-first is the performed redo command, one of: \fIdelete\fR, \fIimage\fR,
+first is the performed redo command, one of: \fIdelete\fR, \fI\&image\fR,
 \fIinsert\fR, \fImark\fR, \fItag\fR, or \fIwindow\fR. The second is a
 boolean flag indicating whether this is the final part of a multi-redo
 action.
@@ -4128,12 +4237,9 @@ same properties. In contrast, there is no problem with having thousands of
 distinct tags if their overall ranges are localized and spread uniformly
 throughout the text.
 .PP
-Very long text lines can be expensive, especially if they have many marks and
-tags within them.
-.PP
 The display line with the insert cursor is redrawn each time the cursor
 blinks, which causes a steady stream of graphics traffic. Set the
-\fB\-insertofftime\fR attribute to 0 avoid this.
+\fB\-insertofftime\fR attribute to zero for avoiding this.
 .SS "KNOWN BUGS"
 .PP
 The \fIpathName \fBsearch \-regexp\fR sub-command attempts to perform
