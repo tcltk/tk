@@ -951,19 +951,22 @@ Specifies whether or not to draw a horizontal rule through the middle of
 characters. \fIBoolean\fR may have any of the forms accepted by
 \fBTcl_GetBoolean\fR.
 .TP
-\fB\-overstrikecolor\fR
+\fB\-overstrikecolor\fR \fIcolor\fR
 .
-Color specifies the color to use when displaying the overstrike. It may have
+\fIColor\fR specifies the color to use when displaying the overstrike. It may have
 any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not been specified,
 or if it is specified as an empty string, then the color specified by the
 \fB\-foreground\fR tag option is used.
 .TP
 \fB\-overstrikefg \fIcolor\fR
 .
-\fIColor\fR specifies the color to use when displaying the overstrike. It may
-have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
-been specified, or if it is specified as an empty string, then the color
-specified by the \fB\-foreground\fR tag option is used.
+Note that this option is deprecated, option \fB\-overstrikecolor\fR should be used
+instead. For compatibility reasons this option still will be supported, but
+may be removed in a future version.
+.PP
+.RS
+See equivalent tag option \fB\-overstrikecolor\fR for a description.
+.RE
 .TP
 \fB\-relief \fIrelief\fR
 .
@@ -1047,19 +1050,22 @@ unspecified for the tag (the default).
 \fIBoolean\fR specifies whether or not to draw an underline underneath
 characters. It may have any of the forms accepted by \fBTcl_GetBoolean\fR.
 .TP
-\fB\-underlinecolor\fR
+\fB\-underlinecolor\fR \fIcolor\fR
 .
-Color specifies the color to use when displaying the underline. It may have
+\fIColor\fR specifies the color to use when displaying the underline. It may have
 any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not been specified,
 or if it is specified as an empty string, then the color specified by the
 \fB\-foreground\fR tag option is used.
 .TP
 \fB\-underlinefg \fIcolor\fR
 .
-\fIColor\fR specifies the color to use when displaying the underline. It may
-have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
-been specified, or if it is specified as an empty string, then the color
-specified by the \fB\-foreground\fR tag option is used.
+Note that this option is deprecated, option \fB\-underlinecolor\fR should be used
+instead. For compatibility reasons this option still will be supported, but
+may be removed in a future version.
+.PP
+.RS
+See equivalent tag option \fB\-underlinecolor\fR for a description.
+.RE
 .TP
 \fB\-undo \fIboolean\fR
 .
