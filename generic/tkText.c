@@ -7851,24 +7851,24 @@ TextChecksumCmd(
 	switch ((int) segPtr->typePtr->group) {
 	case SEG_GROUP_CHAR:
 	    if (what & SEG_GROUP_CHAR) {
-		crc = ComputeChecksum(crc, "\xff\x01", 0);
+		crc = ComputeChecksum(crc, "\xff\x01", 2);
 		crc = ComputeChecksum(crc, segPtr->body.chars, segPtr->size);
 	    }
 	    break;
 	case SEG_GROUP_HYPHEN:
 	    if (what & SEG_GROUP_HYPHEN) {
-		crc = ComputeChecksum(crc, "\xff\x02", 0);
+		crc = ComputeChecksum(crc, "\xff\x02", 2);
 	    }
 	    break;
 	case SEG_GROUP_WINDOW:
 	    if ((what & SEG_GROUP_WINDOW)) {
-		crc = ComputeChecksum(crc, "\xff\x03", 0);
+		crc = ComputeChecksum(crc, "\xff\x03", 2);
 		crc = ComputeChecksum(crc, Tk_PathName(segPtr->body.ew.tkwin), 0);
 	    }
 	    break;
 	case SEG_GROUP_IMAGE:
 	    if ((what & SEG_GROUP_IMAGE) && segPtr->body.ei.name) {
-		crc = ComputeChecksum(crc, "\xff\x04", 0);
+		crc = ComputeChecksum(crc, "\xff\x04", 2);
 		crc = ComputeChecksum(crc, segPtr->body.ei.name, 0);
 	    }
 	    break;
@@ -7879,7 +7879,7 @@ TextChecksumCmd(
 
 		name = TkTextMarkName(sharedTextPtr, NULL, segPtr);
 		signature = (segPtr->typePtr == &tkTextRightMarkType) ? "\xff\x05" : "\xff\x06";
-		crc = ComputeChecksum(crc, signature, 0);
+		crc = ComputeChecksum(crc, signature, 2);
 		crc = ComputeChecksum(crc, name, 0);
 	    }
 	    break;
