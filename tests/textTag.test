@@ -318,7 +318,7 @@ test textTag-2.1 {TkTextTagCmd - "add" option} -body {
 } -returnCodes error -result {wrong # args: should be ".t tag option ?arg arg ...?"}
 test textTag-2.2 {TkTextTagCmd - "add" option} -body {
     .t tag gorp
-} -returnCodes error -result {bad tag option "gorp": must be add, bind, cget, clear, configure, delete, findnext, findprev, getrange, lower, names, nextrange, prevrange, raise, ranges, or remove}
+} -returnCodes error -result {bad tag option "gorp": must be add, bind, cget, clear, configure, delete, findnext, findprev, getrange, lower, names, nextrange, prevrange, priority, raise, ranges, or remove}
 test textTag-2.3 {TkTextTagCmd - "add" option} -body {
     .t tag add foo
 } -returnCodes error -result {wrong # args: should be ".t tag add tagName index1 ?index2 index1 index2 ...?"}
