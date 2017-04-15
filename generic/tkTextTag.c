@@ -276,13 +276,13 @@ TkTextTagCmd(
 {
     static const char *const tagOptionStrings[] = {
 	"add", "bind", "cget", "clear", "configure", "delete", "findnext", "findprev",
-	"getrange", "lower", "names", "nextrange", "prevrange", "raise", "ranges",
-	"remove", NULL
+	"getrange", "lower", "names", "nextrange", "prevrange", "priority", "raise",
+	"ranges", "remove", NULL
     };
     enum tagOptions {
 	TAG_ADD, TAG_BIND, TAG_CGET, TAG_CLEAR, TAG_CONFIGURE, TAG_DELETE, TAG_FINDNEXT, TAG_FINDPREV,
-	TAG_GETRANGE, TAG_LOWER, TAG_NAMES, TAG_NEXTRANGE, TAG_PREVRANGE, TAG_RAISE, TAG_RANGES,
-	TAG_REMOVE
+	TAG_GETRANGE, TAG_LOWER, TAG_NAMES, TAG_NEXTRANGE, TAG_PREVRANGE, TAG_PRIORITY, TAG_RAISE,
+	TAG_RANGES, TAG_REMOVE
     };
     int optionIndex, i;
     TkTextTag *tagPtr;
@@ -744,6 +744,16 @@ TkTextTagCmd(
 	}
 	break;
     }
+    case TAG_PRIORITY:
+	if (objc != 4) {
+	    Tcl_WrongNumArgs(interp, 3, objv, "tagName");
+	    return TCL_ERROR;
+	}
+	if (!(tagPtr = FindTag(interp, textPtr, objv[3]))) {
+	    return TCL_ERROR;
+	}
+	Tcl_SetObjResult(interp, Tcl_NewIntObj(tagPtr->priority));
+	break;
     case TAG_RAISE: {
 	TkTextTag *tagPtr2;
 	unsigned newPriority;
