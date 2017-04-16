@@ -206,7 +206,7 @@ TkTextComputeBreakLocations(
 		     * Fix the problem with the contextual hyphen-minus sign, the implementation of
 		     * libunibreak has (possibly) forgotten this case.
 		     *
-		     * The hyphen-minus (U+002D) needs special context treatment. For simplicity we
+		     * The HYPHEN-MINUS (U+002D) needs special context treatment. For simplicity we
 		     * will only check whether we have two preceding, and two succeeding letters.
 		     * TODO: Is there a better method for the decision?
 		     */
@@ -927,7 +927,7 @@ ComputeBreakLocations(
 		char brk = BrkPairTable[cls][HY];
 
 	    	/*
-		 * The hyphen-minus (U+002D) needs special context treatment. For simplicity we
+		 * The HYPHEN-MINUS (U+002D) needs special context treatment. For simplicity we
 		 * will only check whether we have two preceding, and two succeeding letters.
 		 * TODO: Is there a better method for the decision?
 		 */
