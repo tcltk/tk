@@ -131,8 +131,28 @@ GetLineBreakFunc(
     Tcl_Interp *interp,
     char const *lang)
 {
-#if TCL_UTF_MAX <= 4 /* exlcude non-standard encodings */
-# ifdef __UNIX__
+#if TCL_UTF_MAX > 4 /* exclude non-standard encodings */
+    /*
+     * IMPORTANT NOTE:
+     *
+     * TCL_UTF_MAX > 4 is a severe violation of the standard. It's not possible
+     * anymore to use external libraries.
+     *
+     * Furthermore it is causing security problems for all systems, even for
+     * TCL themself. Example: the user of the Tcl libraries stores the binary
+     * UTF-8 string in a database (with TCL_UTF_MAX > 4). Any other application
+     * is reading this string from database, and is crashing, because it is
+     * expecting proper UTF-8 strings. It is possible that with the introduction
+     * of TCL_UTF_MAX > 4 the TCL library will get the general assesment to be a
+     * safety-endagering system.
+     *
+     * With TCL_UTF_MAX > 4 the return value of function Tcl_UtfToUniChar has changed
+     * from correct type 'Tcl_UniChar' to 'int', this is amateur stuff.
+     * 
+     */
+    return NULL;
+#endif /* TCL_UTF_MAX > 4 */
+#ifdef __UNIX__
     if (lang) {
 	static bool loaded = false;
 
@@ -140,7 +160,6 @@ GetLineBreakFunc(
 	    LoadLibUnibreak(interp);
 	}
     }
-# endif
 #endif
     return libLinebreakFunc;
 }
