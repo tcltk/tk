@@ -1529,7 +1529,12 @@ TextWidgetObjCmd(
 		goto done;
 	    }
 	    if (!TkTextComputeBreakLocations(interp, "", 0, "en", buf)) {
+#if TCL_UTF_MAX > 4
+		ErrorNotAllowed(interp, "external library libunibreak/liblinebreak cannot "
+			"be used with non-standard encodings");
+#else
 		ErrorNotAllowed(interp, "external library libunibreak/liblinebreak is not available");
+#endif
 		result = TCL_ERROR;
 		goto done;
 	    }

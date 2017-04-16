@@ -131,7 +131,8 @@ GetLineBreakFunc(
     Tcl_Interp *interp,
     char const *lang)
 {
-#ifdef __UNIX__
+#if TCL_UTF_MAX <= 4 /* exlcude non-standard encodings */
+# ifdef __UNIX__
     if (lang) {
 	static bool loaded = false;
 
@@ -139,6 +140,7 @@ GetLineBreakFunc(
 	    LoadLibUnibreak(interp);
 	}
     }
+# endif
 #endif
     return libLinebreakFunc;
 }
@@ -859,31 +861,17 @@ ComputeBreakLocations(
 	    brks[i + 0] = LINEBREAK_INSIDEACHAR;
 	    brks[i + 1] = LINEBREAK_INSIDEACHAR;
 	    brks[i + 2] = LINEBREAK_INSIDEACHAR;
-#if TCL_UTF_MAX > 4
-	/*
-	 * NOTE: For any reason newer TCL versions will allow > 4 bytes. I cannot
-	 * understand this decision, this is not conform to UTF-8 standard.
-	 * Moreover this decision is introducing severe compatibility problems.
-	 */
-	} else if ((ch & 0xf8) == 0xf8) {
-	    pcls = AI;
-	    nbytes = 5;
-	    brks[i + 0] = LINEBREAK_INSIDEACHAR;
-	    brks[i + 1] = LINEBREAK_INSIDEACHAR;
-	    brks[i + 2] = LINEBREAK_INSIDEACHAR;
-	    brks[i + 3] = LINEBREAK_INSIDEACHAR;
-# if TCL_UTF_MAX > 5
-	} else if ((ch & 0xf8) == 0xfe) {
-	    pcls = AI;
-	    nbytes = 6;
-	    brks[i + 0] = LINEBREAK_INSIDEACHAR;
-	    brks[i + 1] = LINEBREAK_INSIDEACHAR;
-	    brks[i + 2] = LINEBREAK_INSIDEACHAR;
-	    brks[i + 3] = LINEBREAK_INSIDEACHAR;
-	    brks[i + 4] = LINEBREAK_INSIDEACHAR;
-# endif /*  TCL_UTF_MAX > 5 */
-#endif  /*  TCL_UTF_MAX > 4 */
 	} else {
+#if TCL_UTF_MAX > 4
+	    /*
+	     * NOTE: For any reason newer TCL versions will allow > 4 bytes. I cannot
+	     * understand this decision, this is not conform to UTF-8 standard.
+	     * Moreover this decision is introducing severe compatibility problems.
+	     * BTW: TCL_UTF_MAX>4 nothing else than a bad hack. If TCL want's to support
+	     * full Unicode range, a proper implementation is required.
+	     * This corrupted encoding will use the fallback handling.
+	     */
+#endif /* TCL_UTF_MAX > 4 */
 	    /*
 	     * This fallback is required, because ths current character conversion
 	     * algorithm in Tcl library is producing overlong sequences (a violation
