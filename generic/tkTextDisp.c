@@ -12924,9 +12924,10 @@ ComputeBreakIndex(
 	     * text. What we actually want is only the ASCII space characters, so
 	     * use them explicitly...
 	     *
-	     * NOTE: don't break at hyphen character (U+002D), because the meaning
-	     * of this character is contextual. The user has to use the "codepoint"
-	     * wrap mode if he want's line breaking at hard hyphen characters.
+	     * NOTE: don't break at HYPHEN-MINUS character (U+002D), because the
+	     * meaning of this character is contextual. The user has to use the
+	     * "codepoint" wrap mode if he want's line breaking at hard hyphen
+	     * characters.
 	     */
 
 	    for ( ; count > 0; --count, --p) {

@@ -3860,7 +3860,7 @@ TkBTreeLoad(
 			    i, 1, -1, tagInfoPtr);
 		case 0xc2:
 		    if (UCHAR(s[1]) == 0xad) {
-			return LoadError(interp, "soft hyphen (U+002D) not allowed in text content",
+			return LoadError(interp, "soft hyphen (U+00AD) not allowed in text content",
 				i, 1, -1, tagInfoPtr);
 		    }
 		    break;
@@ -4311,7 +4311,7 @@ TkBTreeInsertChars(
 		break;
 	    case 0xc2:
 		if (UCHAR(s[1]) == 0xad) {
-		    /* soft hyphen (U+002D) */
+		    /* soft hyphen (U+00AD) */
 		    strEnd = s;
 		    hyphenRules = 0;
 		}

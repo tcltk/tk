@@ -6686,7 +6686,7 @@ TextSearchAddNextLine(
 		    Tcl_AppendToObj(theLine, segPtr->body.chars, segPtr->size);
 		    nothingYet = false;
 		} else {
-		    Tcl_AppendToObj(theLine, "\xc2\xad", 2); /* U+002D */
+		    Tcl_AppendToObj(theLine, "\xc2\xad", 2); /* U+00AD */
 		    nothingYet = false;
 		}
 	    }
@@ -9284,7 +9284,7 @@ TextGetText(
 		if (maxBytes < 2) {
 		    return resultPtr;
 		}
-		Tcl_AppendToObj(resultPtr, "\xc2\xad", 2); /* U+002D */
+		Tcl_AppendToObj(resultPtr, "\xc2\xad", 2); /* U+00AD */
 		if ((maxBytes -= 2u) == 0) {
 		    return resultPtr;
 		}
@@ -9319,7 +9319,7 @@ TextGetText(
 		    if (maxBytes < 2) {
 			return resultPtr;
 		    }
-		    Tcl_AppendToObj(resultPtr, "\xc2\xad", 2); /* U+002D */
+		    Tcl_AppendToObj(resultPtr, "\xc2\xad", 2); /* U+00AD */
 		    if ((maxBytes -= 2) == 0) {
 			return resultPtr;
 		    }
