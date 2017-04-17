@@ -1879,8 +1879,6 @@ TkTextMakeCharIndex(
     while (segPtr != lastPtr) {
 	if (segPtr->tagInfoPtr) {
 	    if (segPtr->typePtr == &tkTextCharType) {
-		int ch;
-
 		/*
 		 * Turn character offset into a byte offset.
 		 */
@@ -1894,7 +1892,26 @@ TkTextMakeCharIndex(
 			return indexPtr;
 		    }
 		    charIndex -= 1;
-		    offset = TkUtfToUniChar(p, &ch);
+		    { /* local scope */
+#if TCL_UTF_MAX > 4
+			/*
+			 * HACK: Support of pseudo UTF-8 strings. Needed because of this
+			 * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
+			 * (See function GetLineBreakFunc() about the very severe problems
+			 * with TCL_UTF_MAX > 4).
+			 */
+
+			int ch;
+			offset = TkUtfToUniChar(p, &ch);
+#else
+			/*
+			 * Proper implementation for UTF-8 strings:
+			 */
+
+			Tcl_UniChar ch;
+			offset = Tcl_UtfToUniChar(p, &ch);
+#endif
+		    }
 		    index += offset;
 		}
 	    } else if (charIndex < segPtr->size) {
@@ -3101,9 +3118,11 @@ TkTextIndexForwChars(
 		    const char *start = segPtr->body.chars + byteOffset;
 		    const char *end = segPtr->body.chars + segPtr->size;
 		    const char *p = start;
-		    int ch, n;
+		    int n;
 
 		    for (p = start; p < end; p += n) {
+			Tcl_UniChar ch;
+
 			if (charCount <= 0) {
 			    if (skipSpaces) {
 				while (*p == ' ') {
@@ -3116,7 +3135,26 @@ TkTextIndexForwChars(
 			    dstPtr->priv.byteIndex += (p - start);
 			    goto forwardCharDone;
 			}
-			n = TkUtfToUniChar(p, &ch);
+			{ /* local scope */
+#if TCL_UTF_MAX > 4
+			    /*
+			     * HACK: Support of pseudo UTF-8 strings. Needed because of this
+			     * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
+			     * (See function GetLineBreakFunc() about the very severe problems
+			     * with TCL_UTF_MAX > 4).
+			     */
+
+			    int c;
+			    n = TkUtfToUniChar(p, &c);
+			    ch = c;
+#else
+			    /*
+			     * Proper implementation for UTF-8 strings:
+			     */
+
+			    n = Tcl_UtfToUniChar(p, &ch);
+#endif
+			}
 			if (ch == ' ') {
 			    if (!skipSpaces) {
 				skipSpaces = trimmed;
@@ -3281,11 +3319,35 @@ TkTextIndexGetChar(
 {
     TkTextSegment *segPtr;
     int byteOffset;
-    int ch;
+    const char *s;
 
     segPtr = TkTextIndexGetContentSegment(indexPtr, &byteOffset);
-    TkUtfToUniChar(segPtr->body.chars + byteOffset, &ch);
-    return ch;
+    s = segPtr->body.chars + byteOffset;
+
+    { /* local scope */
+#if TCL_UTF_MAX > 4
+	/*
+	 * HACK: Support of pseudo UTF-8 strings. Needed because of this
+	 * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
+	 * (See function GetLineBreakFunc() about the very severe problems
+	 * with TCL_UTF_MAX > 4).
+	 */
+
+	int ch;
+	TkUtfToUniChar(s, &ch);
+	return ch;
+#else
+	/*
+	 * Proper implementation for UTF-8 strings:
+	 */
+
+	Tcl_UniChar ch;
+	Tcl_UtfToUniChar(s, &ch);
+	return ch;
+#endif
+    }
+
+    return 0; /* never reached */
 }
 
 /*
@@ -3860,9 +3922,27 @@ StartEnd(
 			int chSize = 1;
 
 			if (segPtr->typePtr == &tkTextCharType) {
-			    int ch;
+			    const char *s = segPtr->body.chars + offset;
 
-			    chSize = TkUtfToUniChar(segPtr->body.chars + offset, &ch);
+#if TCL_UTF_MAX > 4
+			    /*
+			     * HACK: Support of pseudo UTF-8 strings. Needed because of this
+			     * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
+			     * (See function GetLineBreakFunc() about the very severe problems
+			     * with TCL_UTF_MAX > 4).
+			     */
+
+			    int ch;
+			    chSize = TkUtfToUniChar(s, &ch);
+#else
+			    /*
+			     * Proper implementation for UTF-8 strings:
+			     */
+
+			    Tcl_UniChar ch;
+			    chSize = Tcl_UtfToUniChar(s, &ch);
+#endif
+
 			    if (!Tcl_UniCharIsWordChar(ch)) {
 				break;
 			    }
@@ -3910,9 +3990,32 @@ StartEnd(
 			int chSize = 1;
 
 			if (segPtr->typePtr == &tkTextCharType) {
-			    int ch;
+			    Tcl_UniChar ch;
+			    const char *p = segPtr->body.chars + offset;
 
-			    TkUtfToUniChar(segPtr->body.chars + offset, &ch);
+#if TCL_UTF_MAX > 4
+			    /*
+			     * HACK: Support of pseudo UTF-8 strings. Needed because of this
+			     * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
+			     * (See function GetLineBreakFunc() about the very severe problems
+			     * with TCL_UTF_MAX > 4).
+			     */
+
+			    int c;
+			    TkUtfToUniChar(p, &c);
+			    ch = c;
+#else
+			    /*
+			     * Proper implementation for UTF-8 strings:
+			     */
+
+			    Tcl_UtfToUniChar(p, &ch);
+#endif
+
+#if TCL_UTF_MAX > 4
+# error "With TCL_UTF_MAX > 4 function TkUtfToUniChar() may return wrong values, the text widget cannot be provided when TCL_UTF_MAX > 4. The author of this TCL_UTF_MAX > 4 stuff has to develop his private text widget version, which can handle pseudo UTF-8 strings without the use of The Tcl_Uni* functions. The author of the text widget is not willing to re-implement the Tcl_Uni* for these psuedo UTF-8 strings. See also function GetLineBreakFunc() about the severe problems with this TCL_UTF_MAX > 4 hack."
+#endif
+
 			    if (!Tcl_UniCharIsWordChar(ch)) {
 				break;
 			    }

@@ -6993,7 +6993,6 @@ TkTextGetTabs(
     Tcl_Obj **objv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
-    int ch;
     double prevStop, lastStop;
     /*
      * Map these strings to TkTextTabAlign values.
@@ -7093,9 +7092,28 @@ TkTextGetTabs(
 	 * There may be a more efficient way of getting this.
 	 */
 
-	TkUtfToUniChar(Tcl_GetString(objv[i + 1]), &ch);
-	if (!Tcl_UniCharIsAlpha(ch)) {
-	    continue;
+	{ /* local scope */
+#if TCL_UTF_MAX > 4
+	    /*
+	     * HACK: Support of pseudo UTF-8 strings. Needed because of this
+	     * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
+	     * (See function GetLineBreakFunc() about the very severe problems
+	     * with TCL_UTF_MAX > 4).
+	     */
+
+	    int ch;
+	    TkUtfToUniChar(Tcl_GetString(objv[i + 1]), &ch);
+#else
+	    /*
+	     * Proper implementation for UTF-8 strings:
+	     */
+
+	    Tcl_UniChar ch;
+	    Tcl_UtfToUniChar(Tcl_GetString(objv[i + 1]), &ch);
+#endif
+	    if (!Tcl_UniCharIsAlpha(ch)) {
+		continue;
+	    }
 	}
 	i += 1;
 
@@ -10232,7 +10250,6 @@ SearchCore(
 
 	    assert(pattern);
 	    do {
-		int ch;
 		const char *p;
 		int lastFullLine = lastOffset;
 
@@ -10457,7 +10474,28 @@ SearchCore(
 			    break;
 			}
 		    } else {
-			firstOffset = p - startOfLine + TkUtfToUniChar(startOfLine + matchOffset, &ch);
+			int len;
+			const char *s = startOfLine + matchOffset;
+
+#if TCL_UTF_MAX > 4
+			/*
+			 * HACK: Support of pseudo UTF-8 strings. Needed because of this
+			 * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
+			 * (See function GetLineBreakFunc() about the very severe problems
+			 * with TCL_UTF_MAX > 4).
+			 */
+
+			int ch;
+			len = TkUtfToUniChar(s, &ch);
+#else
+			/*
+			 * Proper implementation for UTF-8 strings:
+			 */
+
+			Tcl_UniChar ch;
+			len = Tcl_UtfToUniChar(s, &ch);
+#endif
+			firstOffset = (p - startOfLine) + len;
 		    }
 		}
 	    } while (searchSpecPtr->all);
