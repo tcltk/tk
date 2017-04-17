@@ -4013,6 +4013,20 @@ StartEnd(
 #endif
 
 #if TCL_UTF_MAX > 4
+/*
+ * At this place I like to state that the replacement of Tcl_UtfToUniChar
+ * with TkUtfToUniChar has introduced an unreliable system, it's not a
+ * new problem with revised version.
+ *
+ * Also note that the implementation of tkFont.c is also affected, here
+ * the following code will be used:
+ *    src += TkUtfToUniChar(src, &ch);
+ *    ...
+ *    ch = Tcl_UniCharToUpper(ch);
+ *
+ * But in general Tcl_UniCharToUpper will deliver wrong results here,
+ * because of the truncation of 32 bit to 16 bit.
+ */
 # error "With TCL_UTF_MAX > 4 function TkUtfToUniChar() may return wrong values, the text widget cannot be provided when TCL_UTF_MAX > 4. The author of this TCL_UTF_MAX > 4 stuff has to develop his private text widget version, which can handle pseudo UTF-8 strings without the use of The Tcl_Uni* functions. The author of the text widget is not willing to re-implement the Tcl_Uni* for these psuedo UTF-8 strings. See also function GetLineBreakFunc() about the severe problems with this TCL_UTF_MAX > 4 hack."
 #endif
 

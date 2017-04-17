@@ -1530,6 +1530,9 @@ TextWidgetObjCmd(
 	    }
 	    if (!TkTextComputeBreakLocations(interp, "", 0, "en", buf)) {
 #if TCL_UTF_MAX > 4
+# ifdef __unix__
+#  error "The use of external libraries with a proprietary pseudo UTF-8 encoding is safety-endagering and may result in invalid computationial results. This means: TCL_UTF_MAX > 4 cannot be supported here."
+#endif
 		ErrorNotAllowed(interp, "external library libunibreak/liblinebreak cannot "
 			"be used with non-standard encodings");
 #else
@@ -4843,6 +4846,10 @@ ParseHyphens(
     const char *end,
     char *buffer)
 {
+#if TCL_UTF_MAX > 4
+# error "The text widget is designed for UTF-8, this applies also to the legacy code. Undocumented pseudo UTF-8 strings cannot be processed with this function, because it relies on the UTF-8 specification."
+#endif
+
     /*
      * Preparing a string for hyphenation support. Note that 0xff is not allowed in
      * UTF-8 strings, so we can use this value for special purposes.
