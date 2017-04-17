@@ -13417,7 +13417,26 @@ TkTextCharLayoutProc(
 
     if (bytesThatFit < maxBytes) {
 	if (bytesThatFit == 0 && noCharsYet) {
-	    int ch, chLen = TkUtfToUniChar(p, &ch);
+	    int chLen;
+
+#if TCL_UTF_MAX > 4
+	    /*
+	     * HACK: Support of pseudo UTF-8 strings. Needed because of this
+	     * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
+	     * (See function GetLineBreakFunc() about the very severe problems
+	     * with TCL_UTF_MAX > 4).
+	     */
+
+	    int ch;
+	    chLen = TkUtfToUniChar(p, &ch);
+#else
+	    /*
+	     * Proper implementation for UTF-8 strings:
+	     */
+
+	    Tcl_UniChar ch;
+	    chLen = Tcl_UtfToUniChar(p, &ch);
+#endif
 
 	    /*
 	     * At least one character should be contained in current display line.
