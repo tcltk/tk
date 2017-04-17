@@ -45,6 +45,7 @@ and [\fBxy\fR]\fBview\fR widget commands.
 .SO ttk_widget
 \-class	\-cursor	\-takefocus
 \-style	\-xscrollcommand	\-yscrollcommand
+\-padding
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-columns columns Columns
@@ -63,10 +64,6 @@ all columns are shown in the order given.
 Specifies the number of rows which should be visible.
 Note:
 the requested width is determined from the sum of the column widths.
-.OP \-padding padding Padding
-Specifies the internal padding for the widget.
-The padding is a list of up to four length specifications;
-see \fBTtk_GetPaddingFromObj()\fR for details.
 .OP \-selectmode selectMode SelectMode
 Controls how the built-in class bindings manage the selection.
 One of \fBextended\fR, \fBbrowse\fR, or \fBnone\fR.
