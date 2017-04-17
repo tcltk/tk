@@ -19,7 +19,7 @@ The label may be linked to a Tcl variable
 to automatically change the displayed text.
 .SO ttk_widget
 \-class	\-compound	\-cursor
-\-image	\-style	\-takefocus
+\-image	\-padding	\-style	\-takefocus
 \-text	\-textvariable	\-underline
 \-width
 .SE
@@ -43,14 +43,6 @@ If there are multiple lines of text, specifies how
 the lines are laid out relative to one another.
 One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 See also \fB\-anchor\fR.
-.OP \-padding padding Padding
-Specifies the amount of extra space to allocate for the widget.
-The padding is a list of up to four length specifications
-\fIleft top right bottom\fR.
-If fewer than four elements are specified,
-\fIbottom\fR defaults to \fItop\fR,
-\fIright\fR defaults to \fIleft\fR, and
-\fItop\fR defaults to \fIleft\fR.
 .OP \-relief relief Relief
 .\" Rewrite this:
 Specifies the 3-D effect desired for the widget border.
