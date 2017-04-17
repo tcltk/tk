@@ -114,6 +114,17 @@ If there are multiple lines of text, specifies how
 the lines are laid out relative to one another.
 One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 See also \fB\-anchor\fR (for widgets supporting this option).
+.OP \-padding padding Padding
+Specifies the internal padding for the widget.
+The padding is a list of up to four length specifications
+\fIleft top right bottom\fR.
+If fewer than four elements are specified,
+\fIbottom\fR defaults to \fItop\fR,
+\fIright\fR defaults to \fIleft\fR, and
+\fItop\fR defaults to \fIleft\fR.
+In other words, a list of three numbers specify the left, vertical, and right padding;
+a list of two numbers specify the horizontal and the vertical padding;
+a single number specifies the same padding all the way around the widget.
 .OP \-text text Text
 Specifies a text string to be displayed inside the widget
 (unless overridden by \fB\-textvariable\fR for the widgets supporting this option).
