@@ -1667,15 +1667,15 @@ As a supplement to the
 .QW altered
 flag also the
 .QW irreversible
-flag will be provided. This flag reflects informs whether the original content
+flag is provided. This flag informs whether the original content
 (before any modification/operation has been performed) can be restored. Whenever
-the state of this flag is changing the virtual event \fB<<Irreversible>>\fR will
-be fired. For more details see widget command \fIpathName \fBedit irreversible\fR.
+the state of this flag is changing, the virtual event \fB<<Irreversible>>\fR is
+fired. For more details see the \fIpathName \fBedit irreversible\fR widget command.
 .SH "THE UNDO MECHANISM"
 .PP
 The text widget has an unlimited undo and redo mechanism (when the
 \fB\-undo\fR widget option is true) which records every insert and delete
-action on a stack, including the insertion and deletion of embedded window and
+action on a stack, including the insertion and deletion of embedded windows and
 embedded images. Furthermore any change of tag associations will be recorded.
 If option \fB\-steadymarks\fR is enabled even operations on marks will push
 an undo operation on the stack.
@@ -3658,7 +3658,7 @@ If \fIindex2\fR is not given then it defaults to the beginning of the text.
 .TP
 \fIpathName \fBtag priority \fItagName\fR
 .
-Returns the priority (an positive integer value, or zero) of the specified tag.
+Returns the priority (a positive integer value, or zero) of the specified tag.
 This allows to compare the priority of tags.
 .TP
 \fIpathName\fB tag raise \fItagName \fR?\fIaboveThis\fR?
