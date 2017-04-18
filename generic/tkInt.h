@@ -479,6 +479,7 @@ typedef struct TkDisplay {
     XIM inputMethod;		/* Input method for this display. */
     XIMStyle inputStyle;	/* Input style selected for this display. */
     XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
+    XIC inputContext;		/* XIM input context. */
 #endif /* TK_USE_INPUT_METHODS */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
@@ -735,7 +736,7 @@ typedef struct TkWindow {
     TkEventHandler *handlerList;/* First in list of event handlers declared
 				 * for this window, or NULL if none. */
 #ifdef TK_USE_INPUT_METHODS
-    XIC inputContext;		/* XIM input context. */
+    XIC inputContext;		/* XIM input context (not used). */
 #endif /* TK_USE_INPUT_METHODS */
 
     /*
@@ -1232,6 +1233,7 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
+MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);

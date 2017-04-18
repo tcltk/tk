@@ -4458,6 +4458,9 @@ HandlePanZoom(struct PanZoomRequest *pz)
 	SdlTkX.viewport.h = vh;
 	SdlTkX.draw_later |= SDLTKX_RENDCLR | SDLTKX_PRESENT;
 	SdlTkSendViewportUpdate();
+#ifndef ANDROID
+	SdlTkResetCaretPos(1);
+#endif
 	ret = 1;
     }
     ow = (int) SDL_ceil(vw * SdlTkX.scale);

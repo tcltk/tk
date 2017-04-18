@@ -129,7 +129,11 @@ struct _Window {
  * Frame rate (and timer) for periodic timer events.
  * Used for screen updates and in time stamps in X events.
  */
+#ifdef ANDROID
 #define SDLTK_FRAMERATE 50
+#else
+#define SDLTK_FRAMERATE 100
+#endif
 
 #ifdef ANDROID
 
@@ -258,6 +262,13 @@ typedef struct SdlTkXInfo {
     SDL_GLContext gl_context;
 #endif
 
+    /* Caret position for IME */
+#ifndef ANDROID
+    int caret_x;
+    int caret_y;
+    int caret_height;
+    SDL_Rect caret_rect;
+#endif
 } SdlTkXInfo;
 
 extern SdlTkXInfo SdlTkX;
@@ -304,6 +315,11 @@ extern void SdlTkDirtyRegion(Window w, Region rgn);
 extern int SdlTkGrabCheck(_Window *_w, int *othergrab);
 extern void SdlTkSetCursor(TkpCursor cursor);
 extern void SdlTkClearPointer(_Window *w);
+#ifndef ANDROID
+extern void SdlTkSetCaretPos(int x, int y, int height);
+extern void SdlTkSetCaretPosUnlocked(int x, int y, int height);
+extern void SdlTkResetCaretPos(int locked);
+#endif
 
 /* SdlTkX.c */
 extern void SdlTkLock(Display *display);

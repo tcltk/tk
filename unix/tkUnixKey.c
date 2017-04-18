@@ -72,15 +72,15 @@ Tk_SetCaretPos(
 #ifdef TK_USE_INPUT_METHODS
     if ((dispPtr->flags & TK_DISPLAY_USE_IM)
 	    && (dispPtr->inputStyle & XIMPreeditPosition)
-	    && (winPtr->inputContext != NULL)) {
+	    && (dispPtr->inputContext != NULL)) {
 	XVaNestedList preedit_attr;
 	XPoint spot;
 
 	spot.x = dispPtr->caret.x;
 	spot.y = dispPtr->caret.y + dispPtr->caret.height;
 	preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
-	XSetICValues(winPtr->inputContext, XNPreeditAttributes, preedit_attr,
-		NULL);
+	XSetICValues(dispPtr->inputContext, XNPreeditAttributes,
+		preedit_attr, NULL);
 	XFree(preedit_attr);
     }
 #endif
@@ -127,13 +127,14 @@ TkpGetString(
 
 #ifdef TK_USE_INPUT_METHODS
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
-	    && (winPtr->inputContext != NULL)
+	    && (winPtr->dispPtr->inputContext != NULL)
 	    && (eventPtr->type == KeyPress)) {
 	Status status;
 
 #if X_HAVE_UTF8_STRING
 	Tcl_DStringSetLength(dsPtr, TCL_DSTRING_STATIC_SIZE-1);
-	len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
+	len = Xutf8LookupString(winPtr->dispPtr->inputContext,
+		&eventPtr->xkey,
 		Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
 		&kePtr->keysym, &status);
 
@@ -143,7 +144,8 @@ TkpGetString(
 	     */
 
 	    Tcl_DStringSetLength(dsPtr, len);
-	    len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
+	    len = Xutf8LookupString(winPtr->dispPtr->inputContext,
+		    &eventPtr->xkey,
 		    Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
 		    &kePtr->keysym, &status);
 	}
@@ -158,7 +160,7 @@ TkpGetString(
 
 	Tcl_DStringInit(&buf);
 	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
-	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
+	len = XmbLookupString(winPtr->dispPtr->inputContext, &eventPtr->xkey,
 		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf),
                 &kePtr->keysym, &status);
 
@@ -168,7 +170,8 @@ TkpGetString(
 
 	if (status == XBufferOverflow) {
 	    Tcl_DStringSetLength(&buf, len);
-	    len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
+	    len = XmbLookupString(winPtr->dispPtr->inputContext,
+		    &eventPtr->xkey,
 		    Tcl_DStringValue(&buf), len, &kePtr->keysym, &status);
 	}
 	if ((status != XLookupChars) && (status != XLookupBoth)) {

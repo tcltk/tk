@@ -393,7 +393,7 @@ TransferXEventsToTcl(
 #ifdef TK_USE_INPUT_METHODS
 	    if (event.type == KeyPress && dispPtr &&
 		    (dispPtr->flags & TK_DISPLAY_USE_IM)) {
-		if (dispPtr->focusPtr && dispPtr->focusPtr->inputContext) {
+		if (dispPtr->focusPtr && dispPtr->inputContext) {
 		    Tcl_DString ds;
 
 		    Tcl_DStringInit(&ds);
@@ -729,6 +729,7 @@ OpenIM(
 
     ++dispPtr->ximGeneration;
     dispPtr->inputMethod = XOpenIM(dispPtr->display, NULL, NULL, NULL);
+    dispPtr->inputContext = NULL;
     if (dispPtr->inputMethod == NULL) {
 	return;
     }
