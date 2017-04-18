@@ -7313,3 +7313,8 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2016-07-21 (bug)[450bb0] Aqua: memory corruption from [tk busy] (porter)
 
 --- Released 8.6.6, July 27, 2016 --- http://core.tcl.tk/tk/ for details
+
+
+
+
+--- Released 8.6.7, April 30, 2017 --- http://core.tcl.tk/tk/ for details
