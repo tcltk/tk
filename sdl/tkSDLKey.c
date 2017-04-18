@@ -38,18 +38,18 @@ Tk_SetCaretPos(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
-
-    if ((dispPtr->caret.winPtr == winPtr)
-	    && (dispPtr->caret.x == x)
-	    && (dispPtr->caret.y == y)
-	    && (dispPtr->caret.height == height)) {
-	return;
-    }
+#ifndef ANDROID
+    int root_x, root_y;
+#endif
 
     dispPtr->caret.winPtr = winPtr;
     dispPtr->caret.x = x;
     dispPtr->caret.y = y;
     dispPtr->caret.height = height;
+#ifndef ANDROID
+    Tk_GetRootCoords(tkwin, &root_x, &root_y);
+    SdlTkSetCaretPos(root_x + x, root_y + y, height);
+#endif
 }
 
 /*

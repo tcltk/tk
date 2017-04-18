@@ -1297,10 +1297,6 @@ skipTranslation:
 	    EVLOG("      KEYUP:  CODE=0x%02X  MOD=0x%X",
 		  sdl_event->key.keysym.scancode,
 		  sdl_event->key.keysym.mod);
-	} else if (sdl_event->type == SDL_TEXTEDITING) {
-	    EVLOG("      KEYUP:  CODE=0x%02X  MOD=0x%X",
-		  sdl_event->key.keysym.scancode,
-		  sdl_event->key.keysym.mod);
 	}
 #endif
 
@@ -3653,6 +3649,61 @@ SdlTkDirtyRegion(Window w, Region rgn)
     XUnionRegion(top->dirtyRgn, r, top->dirtyRgn);
     SdlTkRgnPoolFree(r);
 }
+
+#ifndef ANDROID
+void
+SdlTkSetCaretPosUnlocked(int x, int y, int height)
+{
+    SDL_Rect r;
+
+    SdlTkX.caret_x = x;
+    SdlTkX.caret_y = y;
+    SdlTkX.caret_height = height;
+    TranslatePointer(1, &x, &y);
+    if (x < 0) {
+	x = 0;
+    }
+    if (y < 0) {
+	y = 0;
+    }
+    r.x = x;
+    r.y = y + height;
+    r.w = 32;
+    r.h = 4;
+    if ((r.x != SdlTkX.caret_rect.x) ||
+	(r.y != SdlTkX.caret_rect.y) ||
+	(r.w != SdlTkX.caret_rect.w) ||
+	(r.h != SdlTkX.caret_rect.h)) {
+#ifdef SDL_TEXTINPUT_WITH_HINTS
+	SDL_SetTextInputRect(&r, 0);
+#else
+	SDL_SetTextInputRect(&r);
+#endif
+	SdlTkX.caret_rect = r;
+    }
+}
+
+void
+SdlTkSetCaretPos(int x, int y, int height)
+{
+    SdlTkLock(NULL);
+    SdlTkSetCaretPosUnlocked(x, y, height);
+    SdlTkUnlock(NULL);
+}
+
+void
+SdlTkResetCaretPos(int locked)
+{
+    if (!locked) {
+	SdlTkLock(NULL);
+    }
+    SdlTkSetCaretPosUnlocked(SdlTkX.caret_x, SdlTkX.caret_y,
+			     SdlTkX.caret_height);
+    if (!locked) {
+	SdlTkUnlock(NULL);
+    }
+}
+#endif
 
 static int
 AccelbufferObjCmd(ClientData clientData, Tcl_Interp *interp,

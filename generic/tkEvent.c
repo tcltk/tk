@@ -333,6 +333,11 @@ CreateXIC(
     const char *preedit_attname = NULL;
     XVaNestedList preedit_attlist = NULL;
 
+    if (dispPtr->inputContext != NULL) {
+	/* Already created. */
+	goto setup;
+    }
+
     if (dispPtr->inputStyle & XIMPreeditPosition) {
 	XPoint spot = {0, 0};
 
@@ -343,7 +348,7 @@ CreateXIC(
 		NULL);
     }
 
-    winPtr->inputContext = XCreateIC(dispPtr->inputMethod,
+    dispPtr->inputContext = XCreateIC(dispPtr->inputMethod,
 	    XNInputStyle, dispPtr->inputStyle,
 	    XNClientWindow, winPtr->window,
 	    XNFocusWindow, winPtr->window,
@@ -354,17 +359,18 @@ CreateXIC(
 	XFree(preedit_attlist);
     }
 
-
-    if (winPtr->inputContext == NULL) {
+    if (dispPtr->inputContext == NULL) {
 	/* XCreateIC failed. */
 	return;
     }
+
+setup:
     winPtr->ximGeneration = dispPtr->ximGeneration;
 
     /*
      * Adjust the window's event mask if the IM requires it.
      */
-    XGetICValues(winPtr->inputContext, XNFilterEvents, &im_event_mask, NULL);
+    XGetICValues(dispPtr->inputContext, XNFilterEvents, &im_event_mask, NULL);
     if ((winPtr->atts.event_mask & im_event_mask) != im_event_mask) {
 	winPtr->atts.event_mask |= im_event_mask;
 	XSelectInput(winPtr->display, winPtr->window, winPtr->atts.event_mask);
@@ -1307,23 +1313,34 @@ Tk_HandleEvent(
      */
     if (winPtr->dispPtr->ximGeneration != winPtr->ximGeneration) {
 	winPtr->flags &= ~TK_CHECKED_IC;
-	winPtr->inputContext = NULL;
     }
 
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)) {
+	TkDisplay *dispPtr = winPtr->dispPtr;
+
 	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
 	    winPtr->flags |= TK_CHECKED_IC;
-	    if (winPtr->dispPtr->inputMethod != NULL) {
-		CreateXIC(winPtr);
-	    }
+	    CreateXIC(winPtr);
 	}
 	if ((eventPtr->type == FocusIn) &&
-		(winPtr->dispPtr->inputMethod != NULL) &&
-		(winPtr->inputContext != NULL)) {
-	    XSetICFocus(winPtr->inputContext);
+		(dispPtr->inputMethod != NULL) &&
+		(dispPtr->inputContext != NULL)) {
+	    XUnsetICFocus(dispPtr->inputContext);
+	    /* Keep order, the second may fail. */
+	    XSetICValues(dispPtr->inputContext,
+		XNFocusWindow, winPtr->window, NULL);
+	    XSetICValues(dispPtr->inputContext,
+		XNClientWindow, winPtr->window, NULL);
+	    XSetICFocus(dispPtr->inputContext);
 	}
     }
 #endif /*TK_USE_INPUT_METHODS*/
+
+#if defined(PLATFORM_SDL) && !defined(ANDROID)
+    if (eventPtr->type == FocusIn) {
+	Tk_SetCaretPos((Tk_Window) winPtr, 0, 0, 0);
+    }
+#endif
 
     /*
      * For events where it hasn't already been done, update the current time

@@ -320,6 +320,8 @@ TkCloseDisplay(
 {
     TkClipCleanup(dispPtr);
 
+    TkpCancelWarp(dispPtr);
+
     if (dispPtr->name != NULL) {
 	ckfree(dispPtr->name);
     }
@@ -1538,13 +1540,6 @@ Tk_DestroyWindow(
     }
     UnlinkWindow(winPtr);
     TkEventDeadWindow(winPtr);
-#ifdef TK_USE_INPUT_METHODS
-    if (winPtr->inputContext != NULL &&
-	    winPtr->ximGeneration == winPtr->dispPtr->ximGeneration) {
-	XDestroyIC(winPtr->inputContext);
-    }
-    winPtr->inputContext = NULL;
-#endif /* TK_USE_INPUT_METHODS */
     if (winPtr->tagPtr != NULL) {
 	TkFreeBindingTags(winPtr);
     }
