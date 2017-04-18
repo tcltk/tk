@@ -41,6 +41,9 @@ If fewer than four elements are specified,
 \fIbottom\fR defaults to \fItop\fR,
 \fIright\fR defaults to \fIleft\fR, and
 \fItop\fR defaults to \fIleft\fR.
+In other words, a list of three numbers specify the left, vertical, and right padding;
+a list of two numbers specify the horizontal and the vertical padding;
+a single number specifies the same padding all the way around the widget.
 .OP \-width width Width
 If present and greater than zero,
 specifies the desired width of the pane area
