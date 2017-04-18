@@ -8603,6 +8603,7 @@ TextInvalidateRegion(
     DLine *dlPtr;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int maxY, inset;
+    int extent1, extent2;
     XRectangle rect;
 
     /*
@@ -8627,9 +8628,11 @@ TextInvalidateRegion(
      */
 
     inset = textPtr->borderWidth + textPtr->highlightWidth;
-    if (rect.x < inset + textPtr->padX
+    extent1 = MIN(textPtr->padX, textPtr->insertWidth/2);
+    extent2 = MIN(textPtr->padX, (textPtr->insertWidth + 1)/2);
+    if (rect.x < inset + textPtr->padX - extent1
 	    || rect.y < inset + textPtr->padY
-	    || (int) (rect.x + rect.width) > Tk_Width(textPtr->tkwin) - inset - textPtr->padX
+	    || (int) (rect.x + rect.width) > Tk_Width(textPtr->tkwin) - inset - textPtr->padX + extent1 + extent2
 	    || maxY > Tk_Height(textPtr->tkwin) - inset - textPtr->padY) {
 	dInfoPtr->flags |= REDRAW_BORDERS;
     }
