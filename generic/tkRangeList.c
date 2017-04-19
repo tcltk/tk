@@ -660,10 +660,11 @@ TkRangeListPrint(
 {
     unsigned i;
 
+    printf("RangeList(%d):", ranges->count);
     for (i = 0; i < ranges->size; ++i) {
-	printf("{%d,%d} ", ranges->items[i].low, ranges->items[i].high);
+	printf(" {%d,%d}", ranges->items[i].low, ranges->items[i].high);
     }
-    printf("(%d)\n", ranges->count);
+    printf("\n");
 }
 
 #endif /* NDEBUG */
