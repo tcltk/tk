@@ -358,13 +358,13 @@ static Tcl_Obj *UndoTagGetCommand(const TkSharedText *, const TkTextUndoToken *)
 
 static void UndoClearTagsPerform(TkSharedText *, TkTextUndoInfo *, TkTextUndoInfo *, bool);
 static void RedoClearTagsPerform(TkSharedText *, TkTextUndoInfo *, TkTextUndoInfo *, bool);
-static void UndoClearTagsDestroy(TkSharedText *, TkTextUndoToken *token, bool);
+static void UndoClearTagsDestroy(TkSharedText *, TkTextUndoToken *, bool);
 static Tcl_Obj *UndoClearTagsGetCommand(const TkSharedText *, const TkTextUndoToken *);
 static Tcl_Obj *UndoClearTagsInspect(const TkSharedText *, const TkTextUndoToken *);
 
 static void UndoDeletePerform(TkSharedText *, TkTextUndoInfo *, TkTextUndoInfo *, bool);
 static void RedoDeletePerform(TkSharedText *, TkTextUndoInfo *, TkTextUndoInfo *, bool);
-static void UndoDeleteDestroy(TkSharedText *, TkTextUndoToken *token, bool);
+static void UndoDeleteDestroy(TkSharedText *, TkTextUndoToken *, bool);
 static Tcl_Obj *UndoDeleteGetCommand(const TkSharedText *, const TkTextUndoToken *);
 static Tcl_Obj *UndoDeleteInspect(const TkSharedText *, const TkTextUndoToken *);
 static Tcl_Obj *RedoDeleteInspect(const TkSharedText *, const TkTextUndoToken *);
