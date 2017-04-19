@@ -176,6 +176,7 @@ static void		GrabSelection(TkText *textPtr, const TkTextTag *tagPtr, bool add, b
  */
 
 static void UndoChangeTagPriorityPerform(TkSharedText *, TkTextUndoInfo *, TkTextUndoInfo *, bool);
+static void UndoChangeTagPriorityDestroy(TkSharedText *, TkTextUndoToken *, bool);
 static Tcl_Obj *UndoChangeTagPriorityGetCommand(const TkSharedText *, const TkTextUndoToken *);
 static Tcl_Obj *UndoChangeTagPriorityInspect(const TkSharedText *, const TkTextUndoToken *);
 
@@ -183,7 +184,7 @@ static const Tk_UndoType undoTokenTagPriorityType = {
     TK_TEXT_UNDO_TAG_PRIORITY,		/* action */
     UndoChangeTagPriorityGetCommand,	/* commandProc */
     UndoChangeTagPriorityPerform,	/* undoProc */
-    NULL,				/* destroyProc */
+    UndoChangeTagPriorityDestroy,	/* destroyProc */
     NULL,				/* rangeProc */
     UndoChangeTagPriorityInspect	/* inspectProc */
 };
@@ -192,7 +193,7 @@ static const Tk_UndoType redoTokenTagPriorityType = {
     TK_TEXT_REDO_TAG_PRIORITY,		/* action */
     UndoChangeTagPriorityGetCommand,	/* commandProc */
     UndoChangeTagPriorityPerform,	/* undoProc */
-    NULL,				/* destroyProc */
+    UndoChangeTagPriorityDestroy,	/* destroyProc */
     NULL,				/* rangeProc */
     UndoChangeTagPriorityInspect	/* inspectProc */
 };
@@ -246,6 +247,16 @@ UndoChangeTagPriorityPerform(
 	redoInfo->token->undoType = &redoTokenTagPriorityType;
 	token->priority = oldPriority;
     }
+}
+
+static void
+UndoChangeTagPriorityDestroy(
+    TkSharedText *sharedTextPtr,
+    TkTextUndoToken *item,
+    bool isRedo)
+{
+    UndoTokenTagPriority *token = (UndoTokenTagPriority *) item;
+    TkTextReleaseTag(sharedTextPtr, token->tagPtr, NULL);
 }
 
 /*

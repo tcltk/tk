@@ -5209,7 +5209,7 @@ TextUndoRedoCallback(
 	bool isInsert = token->undoType->action == TK_TEXT_UNDO_DELETE
 		|| token->undoType->action == TK_TEXT_REDO_INSERT;
 
-	if (!isInsert) {
+	if (isDelete) {
 	    token->undoType->rangeProc(sharedTextPtr, token, &index1, &index2);
 	}
 
