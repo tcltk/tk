@@ -7097,10 +7097,8 @@ TkTextInvalidateLineMetrics(
     				 * delete, or simple). */
 {
     if (!sharedTextPtr) {
-	if (textPtr->sharedTextPtr->allowUpdateLineMetrics) {
-	    TextInvalidateLineMetrics(textPtr, linePtr, lineCount, action);
-	}
-    } else if (sharedTextPtr->allowUpdateLineMetrics) {
+	TextInvalidateLineMetrics(textPtr, linePtr, lineCount, action);
+    } else {
 	textPtr = sharedTextPtr->peers;
 
 	while (textPtr) {
