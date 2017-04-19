@@ -5814,6 +5814,23 @@ FreeDLines(
  */
 
 static void
+ComputeCursorExtents(
+    TkText *textPtr,	/* Text widget in which to draw line. */
+    int *extent1,	/* extent of left border (leak into padding area) */
+    int *extent2)	/* extent of right border (leak into padding area) */
+{
+    /*
+     * TODO: is it possible to set the extents to zero when state=READONLY.
+     * We have to test whether the cursor artefacts (in padding area) are
+     * already eliminated, otherwise we cannot do this optimization.
+     */
+
+    *extent1 = MIN(textPtr->padX, textPtr->insertWidth/2);
+    *extent2 = MIN(textPtr->padX, (textPtr->insertWidth + 1)/2);
+}
+
+
+static void
 DisplayDLine(
     TkText *textPtr,	/* Text widget in which to draw line. */
     DLine *dlPtr,	/* Information about line to draw. */
@@ -6075,8 +6092,7 @@ DisplayDLine(
      * and we want to get as much of the cursor as possible.
      */
 
-    extent1 = MIN(textPtr->padX, textPtr->insertWidth/2);
-    extent2 = MIN(textPtr->padX, (textPtr->insertWidth + 1)/2);
+    ComputeCursorExtents(textPtr, &extent1, &extent2);
     XCopyArea(display, pixmap, Tk_WindowId(textPtr->tkwin), dInfoPtr->copyGC,
 	    dInfoPtr->x - extent1, yOffs, dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, lineHeight,
 	    dInfoPtr->x - extent1, dlPtr->y + yOffs);
@@ -8137,8 +8153,7 @@ DisplayText(
      * TkScrollWindow must consider the insertion cursor.
      */
 
-    extent1 = MIN(textPtr->padX, textPtr->insertWidth/2);
-    extent2 = MIN(textPtr->padX, (textPtr->insertWidth + 1)/2);
+    ComputeCursorExtents(textPtr, &extent1, &extent2);
 
     /*
      * See if it's possible to bring some parts of the screen up-to-date by
@@ -8593,45 +8608,92 @@ TkTextRedrawRegion(
  *----------------------------------------------------------------------
  */
 
+/*
+ * XRectangle is rectricted to 16 bit, so we need a private rectangle struct.
+ */
+struct MyRect {
+    int x, y;
+    int width, height;
+};
+
+static bool RectIsEmpty(const XRectangle *rect) { return rect->width == 0 || rect->height == 0; }
+
+static bool
+RectIntersects(
+    const XRectangle *rect1,
+    const struct MyRect *rect2)
+{
+    return (int) rect1->x < rect2->x + rect2->width
+	&& rect2->x < (int) rect1->x + (int) rect1->width
+	&& (int) rect1->y < rect2->y + rect2->height
+	&& rect2->y < (int) rect1->y + (int) rect1->height;
+}
+
+static bool
+RectContainsRect(
+    const struct MyRect *rect1,	/* this rectangle */
+    const XRectangle *rect2)	/* contains this one? */
+{
+    return rect1->x <= (int) rect2->x
+    	&& (int) rect2->x + (int) rect2->width <= rect1->x + rect1->width
+	&& rect1->y <= (int) rect2->y
+	&& (int) rect2->y + (int) rect2->height <= rect1->y + rect1->height;
+}
+
 static void
 TextInvalidateRegion(
     TkText *textPtr,		/* Widget record for text widget. */
     TkRegion region)		/* Region of area to redraw. */
 {
     DLine *dlPtr;
-    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
-    int maxY, inset;
-    int extent1, extent2;
-    XRectangle rect;
+    TextDInfo *dInfoPtr;
+    int inset, extent1, extent2, maxY;
+    XRectangle clipRect;
+    struct MyRect textRect;	/* includes cursor extents */
+
+    TkClipBox(region, &clipRect);
+    if (RectIsEmpty(&clipRect)) {
+	return;
+    }
+
+    dInfoPtr = textPtr->dInfoPtr;
+    ComputeCursorExtents(textPtr, &extent1, &extent2);
+    inset = textPtr->borderWidth + textPtr->highlightWidth;
+
+    textRect.x = inset + textPtr->padX - extent1;
+    textRect.width = Tk_Width(textPtr->tkwin) + extent1 + extent2;
+    textRect.y = inset + textPtr->padY;
+    textRect.height = Tk_Height(textPtr->tkwin);
 
     /*
      * Find all lines that overlap the given region and mark them for redisplay.
      */
 
-    TkClipBox(region, &rect);
-    maxY = rect.y + rect.height;
-    for (dlPtr = dInfoPtr->dLinePtr; dlPtr; dlPtr = dlPtr->nextPtr) {
-	if (!(dlPtr->flags & OLD_Y_INVALID)
-		&& TkRectInRegion(region, rect.x, dlPtr->y, rect.width, dlPtr->height) != RectangleOut) {
-	    dlPtr->flags |= OLD_Y_INVALID;
+    if (RectIntersects(&clipRect, &textRect)) {
+	for (dlPtr = dInfoPtr->dLinePtr; dlPtr; dlPtr = dlPtr->nextPtr) {
+	    if (!(dlPtr->flags & OLD_Y_INVALID)) {
+		int test = TkRectInRegion(region, clipRect.x, dlPtr->y, clipRect.width, dlPtr->height);
+
+		if (test != RectangleOut) {
+		    dlPtr->flags |= OLD_Y_INVALID;
+		}
+	    }
 	}
     }
-    if (dInfoPtr->topOfEof < maxY) {
+
+    if (dInfoPtr->topOfEof < (maxY = clipRect.y + clipRect.height)) {
 	dInfoPtr->topOfEof = maxY;
     }
-    dInfoPtr->currChunkPtr = NULL;
 
     /*
-     * Schedule the redisplay operation if there isn't one already scheduled.
+     * Also figure out whether the border needs a redraw.
+     *
+     * TODO: is it really neccessary to refresh the padding area, otherwise
+     * we could simply check the border zone. But probably this part has to
+     * consider a possible increasement of the padding area.
      */
 
-    inset = textPtr->borderWidth + textPtr->highlightWidth;
-    extent1 = MIN(textPtr->padX, textPtr->insertWidth/2);
-    extent2 = MIN(textPtr->padX, (textPtr->insertWidth + 1)/2);
-    if (rect.x < inset + textPtr->padX - extent1
-	    || rect.y < inset + textPtr->padY
-	    || (int) (rect.x + rect.width) > Tk_Width(textPtr->tkwin) - inset - textPtr->padX + extent1 + extent2
-	    || maxY > Tk_Height(textPtr->tkwin) - inset - textPtr->padY) {
+    if (!RectContainsRect(&textRect, &clipRect)) {
 	dInfoPtr->flags |= REDRAW_BORDERS;
     }
 }
