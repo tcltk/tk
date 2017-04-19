@@ -110,20 +110,23 @@ This is the way how the hyphen rules will be applied (
 denotes the soft hyphen character):
 .IP "\fBck\fR"
 If the soft hyphen is the right neighbor of character
-.QW c , and the right
-neighbor is character
-.QW k , then the \fBck\fR hyphenation rule will be
+.QW c ,
+and the right neighbor is character
+.QW k ,
+then the \fBck\fR hyphenation rule will be
 applied to this hyphen. Example: the German word
 .QW Druc\e+ker
 hyphenates into
-.QW Druk-ker . This rule belongs to language German (de).
+.QW Druk-ker .
+This rule belongs to language German (de).
 .IP "\fBgemination\fR"
 If the soft hyphen is the left neighbor of a geminated letter 'l' (or 'L'),
 then the \fBgemination\fR hyphenation rule will be applied. Example: the
 Catalan word
 .QW para\e+llel
 hyphenates into
-.QW paral-lel . This rule belongs to the Catalan language (ca).
+.QW paral-lel .
+This rule belongs to the Catalan language (ca).
 .IP "\fBdoublevowel\fR"
 If the soft hyphen is the right neighbor of any vowel, and the right
 neighbor is the same vowel, then the \fBdoublevowel\fR hyphenation rule will
@@ -132,10 +135,12 @@ be applied to this hyphen. If this vowel is an
 then a conversion to e-acute will be done. Example: the Dutch word
 .QW opaa\e+tje
 hyphenates into
-.QW opa-tje , and
+.QW opa-tje ,
+and
 .QW cafee\e+tje
 becomes
-.QW caf\['e]-tje . This rule belongs to the Dutch language (nl).
+.QW caf\['e]-tje .
+This rule belongs to the Dutch language (nl).
 .IP "\fBdoubledigraph\fR"
 In Polish language the following spelling change will be applied with this
 rule:
@@ -156,7 +161,8 @@ becomes
 .QW ty-ty ,
 .QW z\e+zs
 becomes
-.QW zs-zs , and
+.QW zs-zs ,
+and
 .QW s\e+sz
 becomes
 .QW sz-sz .
@@ -172,7 +178,8 @@ of any vowel with trema (umlaut), then the \fBtrema\fR hyphenation rule will
 be applied to this hyphen. Example: the Dutch word
 .QW re\e+\[:e]el
 hyphenates into
-.QW re-eel . This rule belongs to the Dutch language (nl).
+.QW re-eel .
+This rule belongs to the Dutch language (nl).
 .IP "\fBtripleconsonant\fR"
 If the soft hyphen is the right neighbor of a double consonant, and the
 right neighbor is the same consonant, and this consonant is followed by a
@@ -1262,18 +1269,18 @@ The embedded image's position on the screen will be updated as the text is
 modified or scrolled. Each embedded image occupies one unit's worth of index
 space in the text widget, and it may be referred to either by its position in
 the widget's index space, or the name it is assigned when the image is inserted
-into the text widget with \fIpathName \fB\&image create\fR. If the range of text
+into the text widget with \fIpathName \fBimage create\fR. If the range of text
 containing the embedded image is deleted then that copy of the image is removed
 from the screen.
 .PP
 Eliding an embedded image immediately after scheduling it for creation via
-\fIpathName \fB\&image create \fIindex \fB\-create\fR will prevent it from being
+\fIpathName \fBimage create \fIindex \fB\-create\fR will prevent it from being
 effectively created. Uneliding an elided embedded image scheduled for creation
-via \fIpathName \fB\&image create \fIindex \fB\-create\fR will automatically
+via \fIpathName \fBimage create \fIindex \fB\-create\fR will automatically
 trigger the associated creation script. After destroying an elided embedded
 image, the latter won't get automatically recreated.
 .PP
-When an embedded image is added to a text widget with the \fIpathName \fB\&image
+When an embedded image is added to a text widget with the \fIpathName \fBimage
 create\fR widget command, a name unique to this instance of the image is
 returned. This name may then be used to refer to this image instance. The name
 is taken to be the value of the \fB\-name\fR option (described below). If the
@@ -1282,12 +1289,12 @@ If the \fIimageName\fR is already in use in the text widget, then \fB#\fInn\fR
 is added to the end of the \fIimageName\fR, where \fInn\fR is an arbitrary
 integer. This insures the \fIimageName\fR is unique. Once this name is
 assigned to this instance of the image, it does not change, even though the
-\fB\-image\fR or \fB\-name\fR values can be changed with \fIpathName \fB\&image
+\fB\-image\fR or \fB\-name\fR values can be changed with \fIpathName \fBimage
 configure\fR.
 .PP
-When an embedded image is added to a text widget with the \fIpathName \fB\&image
+When an embedded image is added to a text widget with the \fIpathName \fBimage
 create\fR widget command, several configuration options may be associated with
-it. These options may be modified later with the \fIpathName \fB\&image
+it. These options may be modified later with the \fIpathName \fBimage
 configure\fR widget command. The following options are currently supported:
 .TP
 \fB\-align \fIwhere\fR
@@ -1299,10 +1306,10 @@ of the values \fBtop\fR (align the top of the image with the top of the line),
 (align the bottom of the image with the bottom of the line's area), or
 \fBbaseline\fR (align the bottom of the image with the baseline of the line).
 .TP
-\fB\-image \fI\&image\fR
+\fB\-image \fIimage\fR
 .
 Specifies the name of the Tk image to display in the annotation. If
-\fI\&image\fR is not a valid Tk image, then an error is returned.
+\fIimage\fR is not a valid Tk image, then an error is returned.
 .TP
 \fB\-name \fIImageName\fR
 .
@@ -2198,7 +2205,7 @@ the following format:
 \fIkey1 value1 index1 key2 value2 index2\fR ...
 .LP
 The possible \fIkey\fR values are \fBtext\fR, \fBhyphen\fR, \fBmark\fR,
-\fBtagon\fR, \fBtagoff\fR, \fB\&image\fR, \fBwindow\fR and \fBnode\fR. The
+\fBtagon\fR, \fBtagoff\fR, \fBimage\fR, \fBwindow\fR and \fBnode\fR. The
 corresponding \fIvalue\fR is the text, mark name, tag name, image name,
 window name or node identifier, the hyphen has no value (this means the
 value is empty). The \fIindex\fR information is the index of the start of
@@ -2427,7 +2434,7 @@ Current number of bytes on the redo stack, only characters have been counted
 If the current undo stack action does not contain an undo atom, then this
 information is empty. Otherwise it contains the list of commands that have
 been pushed for undoing onto the stack since last inserted separator. A
-command is one of: \fIdelete\fR, \fI\&image\fR, \fIinsert\fR, \fImark\fR,
+command is one of: \fIdelete\fR, \fIimage\fR, \fIinsert\fR, \fImark\fR,
 \fItag\fR, or \fIwindow\fR. Note that \fImark\fR can only occur when option
 \fB\-steadymarks\fR is enabled. Also note that the \fBreplace\fR command is
 pushing either \fIdelete\fR and \fIinsert\fR. Further note that this list
@@ -2715,21 +2722,21 @@ returned. This may have the effect that some of the returned ranges are
 empty strings.
 .RE
 .TP
-\fIpathName \fB\&image \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBimage \fIoption \fR?\fIarg arg ...\fR?
 .
 This command is used to manipulate embedded images. The behavior of the
 command depends on the \fIoption\fR argument that follows the \fBtag\fR
 argument. The following forms of the command are currently supported:
 .RS
 .TP
-\fIpathName \fB\&image cget \fIindex option\fR
+\fIpathName \fBimage cget \fIindex option\fR
 .
 Returns the value of a configuration option for an embedded image. \fIIndex\fR
 identifies the embedded image, and \fIoption\fR specifies a particular
 configuration option, which must be one of the ones listed in the section
 \fBEMBEDDED IMAGES\fR.
 .TP
-\fIpathName \fB\&image configure \fIindex\fR ?\fIoption value ...\fR?
+\fIpathName \fBimage configure \fIindex\fR ?\fIoption value ...\fR?
 .
 Query or modify the configuration options for an embedded image. If no
 \fIoption\fR is specified, returns a list describing all of the available
@@ -2742,7 +2749,7 @@ pairs are specified, then the command modifies the given option(s) to have the
 given value(s); in this case the command returns an empty string. See
 \fBEMBEDDED IMAGES\fR for information on the options that are supported.
 .TP
-\fIpathName \fB\&image create \fIindex\fR ?\fIoption value ...\fR?
+\fIpathName \fBimage create \fIindex\fR ?\fIoption value ...\fR?
 .
 This command creates a new image annotation, which will appear in the text at
 the position given by \fIindex\fR. Any number of \fIoption\-value\fR pairs may
@@ -2751,7 +2758,7 @@ be used as an index to refer to this image. See \fBEMBEDDED IMAGES\fR for
 information on the options that are supported, and a description of the
 identifier returned.
 .TP
-\fIpathName \fB\&image names\fR
+\fIpathName \fBimage names\fR
 .
 Returns a list whose elements are the names of all image instances currently
 embedded in \fIwindow\fR.
@@ -2831,7 +2838,7 @@ Provides the overall information about the inspected widget, notably its
 Describes the configuration of a particular tag.
 .RE
 .PP
-{\fB\&bind\fR \fItagName event script\fR}
+{\fBbind\fR \fItagName event script\fR}
 .RS
 Describes a binding applied to a tag
 .RE
@@ -2845,7 +2852,7 @@ Describes a character sequence, including what tags were applied to it.
 .PP
 {\fBhyphen\fR \fItagList\fR ?\fItagList\fR?}
 .PP
-{\fB\&image\fR \fIimageOptions tagList\fR ?\fItagList\fR?}
+{\fBimage\fR \fIimageOptions tagList\fR ?\fItagList\fR?}
 .RS
 Describes an image that was embedded.
 .RE
@@ -3420,8 +3427,9 @@ is less than or equal to \fIindex1\fR) then the command has no effect.
 This command associates \fIscript\fR with the tag given by \fItagName\fR.
 Whenever the event sequence given by \fIsequence\fR occurs for a character
 that has been tagged with \fItagName\fR, the script will be invoked. This
-widget command is similar to the \fB\&bind\fR command except that it operates on
-characters in a text rather than entire widgets. See the \fB\&bind\fR manual
+'\" TODO how can we include the "bind" ref explicitly?
+widget command is similar to the \fBbind\fR command except that it operates on
+characters in a text rather than entire widgets. See the \fBbind\fR manual
 entry for complete details on the syntax of \fIsequence\fR and the
 substitutions performed on \fIscript\fR before invoking it. If all arguments
 are specified then a new binding is created, replacing any existing binding
@@ -3454,12 +3462,12 @@ It is possible for the current character to have multiple tags, and for each
 of them to have a binding for a particular event sequence. When this occurs,
 one binding is invoked for each tag, in order from lowest-priority to highest
 priority. If there are multiple matching bindings for a single tag, then the
-most specific binding is chosen (see the manual entry for the \fB\&bind\fR
+most specific binding is chosen (see the manual entry for the \fBbind\fR
 command for details). \fBcontinue\fR and \fBbreak\fR commands within binding
 scripts are processed in the same way as for bindings created with the
-\fB\&bind\fR command.
+\fBbind\fR command.
 .PP
-If bindings are created for the widget as a whole using the \fB\&bind\fR
+If bindings are created for the widget as a whole using the \fBbind\fR
 command, then those bindings will supplement the tag bindings. The tag
 bindings will be invoked first, followed by bindings for the window as a
 whole.
@@ -3736,7 +3744,7 @@ change:
 .IP \(bu 3
 \fIpathName \fBedit redo\fR|\fBundo\fR
 .IP \(bu 3
-\fIpathName \fB\&image configure\fR|\fBcreate\fR
+\fIpathName \fBimage configure\fR|\fBcreate\fR
 .IP \(bu 3
 \fIpathName \fBmark gravity\fR|\fBset\fR|\fBunset\fR
 .IP \(bu 3
@@ -3858,7 +3866,7 @@ specifies the pixel position of the upper left corner in the form @x,y, and
 \fBundo\fR
 .
 An undo action has been performed. \fIInfo\fR contains two elements. The
-first is the performed undo command, one of: \fIdelete\fR, \fI\&image\fR,
+first is the performed undo command, one of: \fIdelete\fR, \fIimage\fR,
 \fIinsert\fR, \fImark\fR, \fItag\fR, or \fIwindow\fR. The second is a
 boolean flag indicating whether this is the final part of a multi-undo
 action.
@@ -3871,7 +3879,7 @@ reset the undo/redo stack, an error will be thrown.
 \fBredo\fR
 .
 A redo action has been performed. \fIInfo\fR contains two elements. The
-first is the performed redo command, one of: \fIdelete\fR, \fI\&image\fR,
+first is the performed redo command, one of: \fIdelete\fR, \fIimage\fR,
 \fIinsert\fR, \fImark\fR, \fItag\fR, or \fIwindow\fR. The second is a
 boolean flag indicating whether this is the final part of a multi-redo
 action.
@@ -4266,8 +4274,8 @@ practice this is a rare problem, but it can occur, for example:
 .PP
 .CS
 pack [\fBtext\fR .t]
-\&.t insert 1.0 "aaaa\enbbbb\encccc\enbbbb\enaaaa\en"
-\&.t search \-regexp \-\- {(a+|b+\enc+\enb+)+\ena+} 1.0
+\%.t insert 1.0 "aaaa\enbbbb\encccc\enbbbb\enaaaa\en"
+\%.t search \-regexp \-\- {(a+|b+\enc+\enb+)+\ena+} 1.0
 .CE
 .PP
 will not find a match when one exists of 19 characters starting from the first
@@ -4284,8 +4292,8 @@ portions of the widget. For example:
 .PP
 .CS
 pack [\fBtext\fR .t]
-\&.t insert 1.0 "aaaa\enbbbb\enbbbb\enbbbb\enbbbb\\n"
-\&.t search \-regexp \-backward \-\- {b+\en|a+\en(b+\en)+} end
+\%.t insert 1.0 "aaaa\enbbbb\enbbbb\enbbbb\enbbbb\\n"
+\%.t search \-regexp \-backward \-\- {b+\en|a+\en(b+\en)+} end
 .CE
 .PP
 matches at
