@@ -5209,10 +5209,6 @@ TextUndoRedoCallback(
 	bool isInsert = token->undoType->action == TK_TEXT_UNDO_DELETE
 		|| token->undoType->action == TK_TEXT_REDO_INSERT;
 
-	if (isDelete) {
-	    token->undoType->rangeProc(sharedTextPtr, token, &index1, &index2);
-	}
-
 	if (isInsert || isDelete) {
 	    const TkTextUndoTokenRange *range = (const TkTextUndoTokenRange *) token;
 
@@ -5232,6 +5228,7 @@ TextUndoRedoCallback(
 		TkTextChanged(sharedTextPtr, NULL, &index1, &index1);
 		FindNewTopPosition(sharedTextPtr, textPosition, &index1, NULL, subAtom->size);
 	    } else {
+		token->undoType->rangeProc(sharedTextPtr, token, &index1, &index2);
 		TkTextChanged(sharedTextPtr, NULL, &index1, &index2);
 		FindNewTopPosition(sharedTextPtr, textPosition, &index1, &index2, 0);
 	    }
@@ -5264,9 +5261,6 @@ TextUndoRedoCallback(
 
 	if (token->undoType->action == TK_TEXT_UNDO_TAG) {
 	    eventuallyRepick = true;
-	}
-	if (isInsert) {
-	    token->undoType->rangeProc(sharedTextPtr, token, &index1, &index2);
 	}
 	if (redoInfoPtr) {
 	    if (redoInfo.token == token) {
