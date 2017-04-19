@@ -20,7 +20,7 @@ to automatically change the displayed text.
 .SO ttk_widget
 \-anchor	\-class	\-compound	\-cursor
 \-font	\-foreground
-\-image	\-justify	\-style	\-takefocus
+\-image	\-justify	\-padding	\-style	\-takefocus
 \-text	\-textvariable	\-underline
 \-width	\-wraplength
 .SE
@@ -28,14 +28,6 @@ to automatically change the displayed text.
 .OP \-background frameColor FrameColor
 The widget's background color.
 If unspecified, the theme default is used.
-.OP \-padding padding Padding
-Specifies the amount of extra space to allocate for the widget.
-The padding is a list of up to four length specifications
-\fIleft top right bottom\fR.
-If fewer than four elements are specified,
-\fIbottom\fR defaults to \fItop\fR,
-\fIright\fR defaults to \fIleft\fR, and
-\fItop\fR defaults to \fIleft\fR.
 .OP \-relief relief Relief
 .\" Rewrite this:
 Specifies the 3-D effect desired for the widget border.

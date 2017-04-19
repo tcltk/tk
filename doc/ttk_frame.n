@@ -17,8 +17,8 @@ ttk::frame \- Simple container widget
 A \fBttk::frame\fR widget is a container, used to group other widgets
 together.
 .SO ttk_widget
-\-class	\-cursor	\-takefocus
-\-style
+\-class	\-cursor	\-padding	\-style
+\-takefocus
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-borderwidth borderWidth BorderWidth
@@ -28,8 +28,6 @@ One of the standard Tk border styles:
 \fBflat\fR, \fBgroove\fR, \fBraised\fR, \fBridge\fR,
 \fBsolid\fR, or \fBsunken\fR.
 Defaults to \fBflat\fR.
-.OP \-padding padding Padding
-Additional padding to include inside the border.
 .OP \-width width Width
 If specified, the widget's requested width in pixels.
 .OP \-height height Height
