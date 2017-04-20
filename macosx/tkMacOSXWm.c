@@ -1,5 +1,5 @@
 /*
- * tkMacOSXWm.c --
+ * tkMacOSXWm.c -- 
  *
  *	This module takes care of the interactions between a Tk-based
  *	application and the window manager. Among other things, it implements
@@ -2893,17 +2893,20 @@ WmProtocolCmd(
 	    } else {
 		prevPtr->nextPtr = protPtr->nextPtr;
 	    }
+	    if (protPtr->command)
+		ckfree(protPtr->command);
 	    Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
 	    break;
 	}
     }
     cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
-	protPtr = ckalloc(HANDLER_SIZE(cmdLength));
+	protPtr = ckalloc(sizeof(ProtocolHandler));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
 	protPtr->interp = interp;
+	protPtr->command = ckalloc(cmdLength+1);
 	strcpy(protPtr->command, cmd);
     }
     return TCL_OK;
