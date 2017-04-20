@@ -1,5 +1,5 @@
 /*
- * tkMacOSXWm.c -- 
+ * tkMacOSXWm.c --
  *
  *	This module takes care of the interactions between a Tk-based
  *	application and the window manager. Among other things, it implements
