@@ -285,8 +285,8 @@ TkpComputeScrollbarGeometry(
 
 }
 
- 
-   
+
+
 
 /*
  *----------------------------------------------------------------------
@@ -527,7 +527,7 @@ UpdateControlValues(
  *      <EnterNotify>, and <LeaveNotify> events. Scrollbar appearance is modified.
  *
  *--------------------------------------------------------------
- */ 
+ */
 
 static int
 ScrollbarPress(TkScrollbar *scrollPtr, XEvent *eventPtr)
