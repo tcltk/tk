@@ -11,7 +11,7 @@
  */
 
 #ifndef _TKMACWM
-#define _TKMACWM 
+#define _TKMACWM
 
 #include "tkMacOSXInt.h"
 #include "tkMenu.h"
