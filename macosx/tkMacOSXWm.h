@@ -29,15 +29,13 @@ typedef struct ProtocolHandler {
 				 * same top-level window, or NULL for end of
 				 * list. */
     Tcl_Interp *interp;		/* Interpreter in which to invoke command. */
-    char command[];		/* Tcl command to invoke when a client message
+    char* command;		/* Tcl command to invoke when a client message
 				 * for this protocol arrives. The actual size
 				 * of the structure varies to accommodate the
 				 * needs of the actual command. THIS MUST BE
 				 * THE LAST FIELD OF THE STRUCTURE. */
 } ProtocolHandler;
 
-#define HANDLER_SIZE(cmdLength) \
-((unsigned) (sizeof(ProtocolHandler) + cmdLength + 1))
 
 /*
  * A data structure of the following type holds window-manager-related
