@@ -18,8 +18,8 @@ A \fBttk::labelframe\fR widget is a container used to group other widgets
 together.  It has an optional label, which may be a plain text string or
 another widget.
 .SO ttk_widget
-\-class	\-cursor	\-takefocus
-\-style
+\-class	\-cursor	\-padding	\-style
+\-takefocus
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .\" XXX: Currently included, but may go away:
@@ -48,8 +48,6 @@ underline in the text string.
 The underlined character is used for mnemonic activation.
 Mnemonic activation for a \fBttk::labelframe\fR
 sets the keyboard focus to the first child of the \fBttk::labelframe\fR widget.
-.OP \-padding padding Padding
-Additional padding to include inside the border.
 .OP \-labelwidget labelWidget LabelWidget
 The name of a widget to use for the label.
 If set, overrides the \fB\-text\fR option.

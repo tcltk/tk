@@ -44,7 +44,6 @@ with an extra highlight ring, or with a different border color.
 .\" .OP \-foreground foreground Foreground
 .\" .OP \-font font Font
 .\" .OP \-anchor anchor Anchor
-.\" .OP \-padding padding Padding
 .\" .OP \-relief relief Relief
 .SH "WIDGET COMMAND"
 .PP
