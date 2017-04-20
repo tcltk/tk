@@ -7314,6 +7314,14 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 --- Released 8.6.6, July 27, 2016 --- http://core.tcl.tk/tk/ for details
 
+
+
+
+
+
+
+
+
 2016-08-23 (bug)[a2abc4] Wrong warp cursor position on 2nd display (vogel)
 
 
