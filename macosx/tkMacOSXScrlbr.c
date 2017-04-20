@@ -19,6 +19,13 @@
 
 #define MIN_SCROLLBAR_VALUE		0
 
+/*
+ * Minimum slider length, in pixels (designed to make sure that the slider is
+ * always easy to grab with the mouse).
+ */
+
+#define MIN_SLIDER_LENGTH	5
+
 /*Borrowed from ttkMacOSXTheme.c to provide appropriate scaling of scrollbar values.*/
 #ifdef __LP64__
 #define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
@@ -60,16 +67,14 @@ typedef struct ScrollbarMetrics {
 } ScrollbarMetrics;
 
 static ScrollbarMetrics metrics[2] = {
-    {15, 54, 26, 14, 14, NSRegularControlSize}, /* kThemeScrollBarMedium */
-    {11, 40, 20, 10, 10, NSSmallControlSize},  /* kThemeScrollBarSmall  */
+    {15, 54, 26, 14, 14, kControlSizeNormal}, /* kThemeScrollBarMedium */
+    {11, 40, 20, 10, 10, kControlSizeSmall},  /* kThemeScrollBarSmall  */
 };
-
 HIThemeTrackDrawInfo info = {
     .version = 0,
     .min = 0.0,
     .max = 100.0,
     .attributes = kThemeTrackShowThumb,
-    .kind = kThemeScrollBarMedium,
 };
 
 
@@ -107,7 +112,7 @@ TkpCreateScrollbar(
     scrollPtr->troughGC = None;
     scrollPtr->copyGC = None;
 
-    Tk_CreateEventHandler(tkwin,ExposureMask|StructureNotifyMask|FocusChangeMask|ButtonPressMask|VisibilityChangeMask, ScrollbarEventProc, scrollPtr);
+    Tk_CreateEventHandler(tkwin,ExposureMask|StructureNotifyMask|FocusChangeMask|ButtonPressMask|ButtonReleaseMask|EnterWindowMask|LeaveWindowMask|VisibilityChangeMask, ScrollbarEventProc, scrollPtr);
 
     return (TkScrollbar *) scrollPtr;
 }
@@ -212,7 +217,8 @@ TkpDisplayScrollbar(
  *----------------------------------------------------------------------
  */
 
-extern void
+
+ extern void
 TkpComputeScrollbarGeometry(
 			    register TkScrollbar *scrollPtr)
 /* Scrollbar whose geometry may have
@@ -259,14 +265,12 @@ TkpComputeScrollbarGeometry(
     if (scrollPtr->sliderLast > fieldLength) {
     	scrollPtr->sliderLast = fieldLength;
     }
-    if (!(MOUNTAIN_LION_STYLE)) {
-      scrollPtr->sliderFirst += scrollPtr->inset +
-	metrics[variant].topArrowHeight;
-      scrollPtr->sliderLast += scrollPtr->inset +
-	metrics[variant].bottomArrowHeight;
-    }
-    /*
-     * Register the desired geometry for the window (leave enough space
+
+    scrollPtr->sliderFirst += scrollPtr->arrowLength + scrollPtr->inset;
+    scrollPtr->sliderLast += scrollPtr->arrowLength + scrollPtr->inset;
+
+
+    /* Register the desired geometry for the window (leave enough space
      * for the two arrows plus a minimum-size slider, plus border around
      * the whole window, if any). Then arrange for the window to be
      * redisplayed.
@@ -280,6 +284,9 @@ TkpComputeScrollbarGeometry(
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
 
 }
+
+ 
+   
 
 /*
  *----------------------------------------------------------------------
@@ -376,21 +383,22 @@ TkpScrollbarPosition(
     register const int arrowSize = scrollPtr->arrowLength + inset;
 
     if (scrollPtr->vertical) {
-	length = Tk_Height(scrollPtr->tkwin);
-	fieldlength = length - 2 * arrowSize;
-	width = Tk_Width(scrollPtr->tkwin);
+  	length = Tk_Height(scrollPtr->tkwin);
+  	fieldlength = length - 2 * arrowSize;
+  	width = Tk_Width(scrollPtr->tkwin);
     } else {
-	tmp = x;
-	x = y;
-	y = tmp;
-	length = Tk_Width(scrollPtr->tkwin);
-	fieldlength = length - 2 * arrowSize;
-	width = Tk_Height(scrollPtr->tkwin);
+  	tmp = x;
+  	x = y;
+  	y = tmp;
+  	length = Tk_Width(scrollPtr->tkwin);
+  	fieldlength = length - 2 * arrowSize;
+  	width = Tk_Height(scrollPtr->tkwin);
     }
+
     fieldlength = fieldlength < 0 ? 0 : fieldlength;
 
     if (x<inset || x>=width-inset || y<inset || y>=length-inset) {
-	return OUTSIDE;
+  	return OUTSIDE;
     }
 
     /*
@@ -399,18 +407,19 @@ TkpScrollbarPosition(
      */
 
     if (y < scrollPtr->sliderFirst) {
-	return TOP_GAP;
+  	return TOP_GAP;
     }
     if (y < scrollPtr->sliderLast) {
-	return SLIDER;
+  	return SLIDER;
     }
     if (y < fieldlength){
-	return BOTTOM_GAP;
+  	return BOTTOM_GAP;
     }
     if (y < fieldlength + arrowSize) {
-	return TOP_ARROW;
+  	return TOP_ARROW;
     }
     return BOTTOM_ARROW;
+
 }
 
 /*
@@ -458,7 +467,7 @@ UpdateControlValues(
     width = contrlRect.size.width;
     height = contrlRect.size.height;
 
-    variant = contrlRect.size.width < metrics[0].width ? 1 : 0;
+   variant = contrlRect.size.width < metrics[0].width ? 1 : 0;
 
     /*
      * Ensure we set scrollbar control bounds only once all size adjustments
@@ -514,8 +523,8 @@ UpdateControlValues(
  *
  * ScrollbarPress --
  *
- *	This procedure is invoked in response to <ButtonPress> events.
- *	Enters a modal loop to handle scrollbar interactions.
+ *	This procedure is invoked in response to <ButtonPress>, <ButtonRelease>,
+ *      <EnterNotify>, and <LeaveNotify> events. Scrollbar appearance is modified.
  *
  *--------------------------------------------------------------
  */
@@ -526,6 +535,13 @@ ScrollbarPress(TkScrollbar *scrollPtr, XEvent *eventPtr)
 
   if (eventPtr->type == ButtonPress) {
     UpdateControlValues(scrollPtr);
+    info.trackInfo.scrollbar.pressState = 1;
+  }
+   if (eventPtr->type == EnterNotify) {
+    info.trackInfo.scrollbar.pressState = 1;
+  }
+  if (eventPtr->type == ButtonRelease || eventPtr->type == LeaveNotify) {
+    info.trackInfo.scrollbar.pressState = 0;
   }
   return TCL_OK;
 }
@@ -566,6 +582,9 @@ ScrollbarEventProc(
 	TkScrollbarEventuallyRedraw(scrollPtr);
 	break;
     case ButtonPress:
+    case ButtonRelease:
+    case EnterNotify:
+    case LeaveNotify:
     	ScrollbarPress(clientData, eventPtr);
 	break;
     default:
