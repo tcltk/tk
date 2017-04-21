@@ -3543,8 +3543,8 @@ LoadMakeTagInfo(
 	TkTextTagSetIncrRefCount(*tagInfoPtr = textPtr->sharedTextPtr->emptyTagInfoPtr);
     }
     for (i = 0; i < objc; ++i) {
-	TkTextTag *tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[i]), NULL);
-	*tagInfoPtr = TkTextTagSetAddToThis(*tagInfoPtr, tagPtr->index);
+	/* TODO: insert list of indices */
+	*tagInfoPtr = TagSetAdd(*tagInfoPtr, TkTextCreateTag(textPtr, Tcl_GetString(objv[i]), NULL));
     }
     return true;
 }
@@ -3564,8 +3564,8 @@ LoadRemoveTags(
 	return false;
     }
     for (i = 0; i < objc; ++i) {
-	TkTextTag *tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[i]), NULL);
-	*tagInfoPtr = TkTextTagSetEraseFromThis(*tagInfoPtr, tagPtr->index);
+	/* TODO: remove list of indices */
+	*tagInfoPtr = TagSetErase(*tagInfoPtr, TkTextCreateTag(textPtr, Tcl_GetString(objv[i]), NULL));
     }
     return true;
 }

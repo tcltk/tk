@@ -1499,6 +1499,7 @@ TkTextReplaceTags(
     newTagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
 
     for (k = 0; k < objn; ++k) {
+	/* TODO: insert list of indices */
 	newTagInfoPtr = TkTextTagSetAddToThis(newTagInfoPtr, tagArrPtr[k]->index);
     }
 
