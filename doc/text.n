@@ -123,7 +123,7 @@ This rule belongs to language German (de).
 If the soft hyphen is the left neighbor of a geminated letter 'l' (or 'L'),
 then the \fBgemination\fR hyphenation rule will be applied. Example: the
 Catalan word
-.QW para\e+llel
+.QW para\e+l\N'183'lel
 hyphenates into
 .QW paral-lel .
 This rule belongs to the Catalan language (ca).
@@ -792,7 +792,13 @@ string that is associated with some of the characters in a text. Tags may
 contain arbitrary characters, but it is probably best to avoid using the
 characters
 .QW " "
-(space), \fB@\fR, \fB.\fR, \fB+\fR, or \fB\-\fR: these characters have special
+(space),
+.QW \fC@\fR ,
+.QW \fC.\fR ,
+.QW \fC+\fR ,
+or
+.QW \fC\-\fR :
+these characters have special
 meaning in indices, so tags containing them cannot be used as indices. There
 may be any number of tags associated with characters in a text. Each tag may
 refer to a single character, a range of characters, or several ranges of
@@ -1118,7 +1124,13 @@ The second form of annotation in text widgets is a mark. The name of a mark
 may contain arbitrary characters, but it is probably best to avoid using the
 characters
 .QW " "
-(space), \fB@\fR, \fB.\fR, \fB+\fR, or \fB\-\fR: these characters have special
+(space),
+.QW \fC@\fR ,
+.QW \fC.\fR ,
+.QW \fC+\fR ,
+or
+.QW \fC\-\fR :
+these characters have special
 meaning in indices. Marks are used for
 remembering particular places in a text. They are something like tags, in that
 they have names and they refer to places in the file, but a mark is not
@@ -1398,11 +1410,11 @@ error will be thrown if the specified rule is not defined, or if the
 trailing colon is missing.
 .IP \(bu 3
 Any other escaped character (not
-.QW \- ,
+.QW \fC\-\fR ,
 nor
-.QW + ,
+.QW \fC+\fR ,
 nor
-.QW :
+.QW \fC:\fR
 ) will be replaced by this character; this means that the former escape
 character will be removed.
 .PP
@@ -1578,7 +1590,7 @@ becomes
 This rule is named \fBdoubledigraph\fR.
 .IP [6] 4
 In Catalan, a geminated consonant can be split: the word
-.QW paral\(bulel
+.QW paral\N'183'lel
 hyphenates into
 .QW paral-lel .
 The name for this rule is \fBgemination\fR.
@@ -3393,7 +3405,7 @@ calculation is up-to-date, or an empty string if no command is available.
 Schedules \fIcommand\fR to be executed (by the event loop) exactly once as soon
 as all line heights are up-to-date. A new script will replace any existing
 script, but if the first character is
-.QW +
+.QW \fC+\fR
 then the new script augments an existing script. If there is no pending line
 metrics computation, the scheduling is immediate (as if the line metrics
 computation will finish now). \fIbgerror\fR is called on \fIcommand\fR
@@ -3435,7 +3447,7 @@ substitutions performed on \fIscript\fR before invoking it. If all arguments
 are specified then a new binding is created, replacing any existing binding
 for the same \fIsequence\fR and \fItagName\fR (if the first character of
 \fIscript\fR is
-.QW +
+.QW \fC+\fR
 then \fIscript\fR augments an existing binding rather than replacing it). In
 this case the return value is an empty string. If \fIscript\fR is omitted then
 the command returns the \fIscript\fR associated with \fItagName\fR and
@@ -3744,7 +3756,7 @@ change:
 .IP \(bu 3
 \fIpathName \fBedit redo\fR|\fBundo\fR
 .IP \(bu 3
-\fIpathName \fBimage configure\fR|\fBcreate\fR
+\fIpathName \fBimage\fR \fBconfigure\fR|\fBcreate\fR
 .IP \(bu 3
 \fIpathName \fBmark gravity\fR|\fBset\fR|\fBunset\fR
 .IP \(bu 3
@@ -3899,7 +3911,7 @@ at first, but the order of triggering other peers is unspecified.
 If \fIcommandPrefix\fR is not specified, then the watch of modifications
 will be terminated. Otherwise it will replace any existing script, but if
 the first character is
-.QW +
+.QW \fC+\fR
 then the new script augments an existing script.
 .PP
 This command returns the command prefix which has been set before this call,
