@@ -6223,6 +6223,7 @@ TextInsertCmd(
 			if (tagPtr->index >= TkTextTagSetSize(tagInfoPtr)) {
 			    tagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
 			}
+			/* TODO: insert list of indices */
 			tagInfoPtr = TkTextTagSetAddToThis(tagInfoPtr, tagPtr->index);
 		    }
 		}
