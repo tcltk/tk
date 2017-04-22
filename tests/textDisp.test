@@ -2362,7 +2362,7 @@ test textDisp-17.9 {TkTextScanCmd procedure} {textfonts} {
     .t scan dragto 10 0
     .t scan dragto 14 5
     .t index @0,0
-} {18.44}
+} {14.44}
 .t configure -wrap word
 test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {textfonts} {
     .t yview 10.0
