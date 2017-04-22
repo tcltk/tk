@@ -396,7 +396,7 @@ This option is facilitating programmed editor control, because the shuffle
 effect is eliminated, any every mark now has a defined order relative to other
 marks, this order is not changing as long as the mark will not be moved with
 \fBmark set\fR. Note that the handling of marks, especially the change of
-the gravity, will be performed more performant when this option is
+the gravity, will be performed more efficiently when this option is
 activated.
 .RE
 .OP \-synctime syncTime SyncTime
@@ -3151,12 +3151,21 @@ reverse order as the mark information returned by the \fIpathName \fBdump\fR
 operation. An empty string is returned if there are no marks before
 \fIindex\fR.
 .TP
-\fIpathName \fBmark set \fImarkName index\fR
+\fIpathName \fBmark set \fImarkName index\fR ?\fIdirection\fR?
 .
 Sets the mark named \fImarkName\fR to a position just before the character at
 \fIindex\fR. If \fImarkName\fR already exists, it is moved from its old
-position; if it does not exist, a new mark is created. This command returns an
-empty string.
+position; if it does not exist, a new mark is created. If the third parameter
+\fIdirection\fR is specified - it must be \fBleft\fR or \fBright\fR - the
+gravity of \fImarkName\fR is set to the given value (the gravity for a mark
+defaults to \fBright\fR). This command returns an empty string.
+.RS
+.PP
+If widget option \fB\-steadymarks\fR is enabled, and \fIindex\fR is the name
+of an existing mark, then \fImarkName\fR will be set left or right from
+\fIindex\fR (but at the same numerical position), according to the gravity of
+\fIindex\fR.
+.RE
 .TP
 \fIpathName \fBmark unset \fImarkName \fR?\fImarkName markName ...\fR?
 .
