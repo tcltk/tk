@@ -2685,8 +2685,7 @@ test textDisp-19.11.17 {TextWidgetCmd procedure, "index +displaylines"} -constra
       [.t index "12.0 +2d lines"] [.t index "11.0 +2d lines"] \
       [.t index "13.0 +2d lines"] [.t index "13.1 +3d lines"] \
       [.t index "13.0 +4d lines"]
-# under X11 we get the result {15.5 15.0 15.0 15.0 16.0 16.15}
-} -result {15.5 16.0 15.0 16.0 16.15 16.33}
+} -result {15.5 16.0 15.0 16.0 16.18 16.39}
 test textDisp-19.11.18 {TextWidgetCmd procedure, "index +displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.0" "14.0"
@@ -2707,8 +2706,7 @@ test textDisp-19.11.20 {TextWidgetCmd procedure, "index +displaylines"} -constra
       [.t index "12.0 +2d lines"] [.t index "11.0 +2d lines"] \
       [.t index "13.0 +2d lines"] [.t index "13.0 +3d lines"] \
       [.t index "13.0 +4d lines"]
-} -result {16.38 16.50 16.33 16.50 16.67 17.0}
-# under X11 we get the result {16.38 16.33 16.33 16.33 16.50 16.67}
+} -result {16.44 16.56 16.39 16.56 16.73 17.0}
 test textDisp-19.11.21 {TextWidgetCmd procedure, "index +displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.0" "16.0 +1displaylines"
@@ -3322,8 +3320,8 @@ test textDisp-24.18 {TkTextCharLayoutProc, -wrap word} {textfonts} {
     .t insert 1.0 "xThis is a line that wraps around"
     wm geom . {}
     update
-    list [.t bbox 1.14] [.t bbox 1.15] [.t bbox 1.16]
-} [list [list 101 3 7 $fixedHeight] [list 108 3 35 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
+    list [.t bbox 1.14] [.t bbox 1.15] [.t bbox 1.16] [.t bbox 1.21]
+} [list [list 101 3 7 $fixedHeight] [list 108 3 7 $fixedHeight] [list 115 3 7 $fixedHeight] [list 3 [expr {3 + $fixedHeight}] 7 $fixedHeight]]
 test textDisp-24.19 {TkTextCharLayoutProc, -wrap word} {textfonts} {
     .t configure -wrap word
     .t delete 1.0 end
