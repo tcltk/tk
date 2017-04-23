@@ -1232,7 +1232,7 @@ test textDisp-9.3 {TkTextRedrawTag} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.4 {TkTextRedrawTag} -constraints win -body {
+test textDisp-9.4 {TkTextRedrawTag} -constraints textfonts -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1243,8 +1243,7 @@ test textDisp-9.4 {TkTextRedrawTag} -constraints win -body {
     update
     list $tk_textRelayout $tk_textRedraw
 } -result {{2.0 2.20} {2.0 2.20 eof}}
-# under X11 we get the result {2.0 2.20 4.0} {2.0 2.20 4.0 eof}
-test textDisp-9.5 {TkTextRedrawTag} -constraints win -body {
+test textDisp-9.5 {TkTextRedrawTag} -constraints textfonts -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1255,7 +1254,6 @@ test textDisp-9.5 {TkTextRedrawTag} -constraints win -body {
     update
     list $tk_textRelayout $tk_textRedraw
 } -result {{2.0 2.20} {2.0 2.20 eof}}
-# under X11 we get the result {2.0 2.20 3.0 4.0} {2.0 2.20 3.0 4.0 eof}
 test textDisp-9.6 {TkTextRedrawTag} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1322,7 +1320,7 @@ test textDisp-9.11 {TkTextRedrawTag} {
 	 # operation is not changing anything, so it won't do any redraw,
 	 # thus the result is "none".
 } {none}
-test textDisp-9.12 {TkTextRedrawTag} -constraints win -body {
+test textDisp-9.12 {TkTextRedrawTag} -constraints textfonts -body {
     .t configure -wrap char
     .t delete 1.0 end
     for {set i 1} {$i < 5} {incr i} {
@@ -1335,7 +1333,6 @@ test textDisp-9.12 {TkTextRedrawTag} -constraints win -body {
     update
     list $tk_textRelayout $tk_textRedraw
 } -result {2.0 {2.0 eof}}
-# under X11 we get the result {1.0 2.0} {1.0 2.0 eof}
 test textDisp-9.13 {TkTextRedrawTag} {
     .t configure -wrap none
     .t delete 1.0 end
@@ -1998,13 +1995,12 @@ for {set i 2} {$i <= 200} {incr i} {
 .t insert 151.end { has a lot of extra text, so that it wraps around on the screen several times over.}
 .t insert 153.end { also has enoug extra text to wrap.}
 update ; .t sync; update
-test textDisp-16.1 {TkTextYviewCmd procedure} -constraints win -body {
+test textDisp-16.1 {TkTextYviewCmd procedure} -constraints textfonts -body {
     .t yview 21.0
     set x [.t yview]
     .t yview 1.0
     list [expr {int([lindex $x 0]*100)}] [expr {int ([lindex $x 1] * 100)}]
 } -result {9 14}
-# under X11 we get the result {9 13}
 test textDisp-16.2 {TkTextYviewCmd procedure} {
     list [catch {.t yview 2 3} msg] $msg
 } {1 {bad option "2": must be moveto or scroll}}
@@ -2037,11 +2033,10 @@ test textDisp-16.9 {TkTextYviewCmd procedure, "moveto" option} {
 test textDisp-16.10 {TkTextYviewCmd procedure, "moveto" option} {
     list [catch {.t yview moveto gorp} msg] $msg
 } {1 {expected floating-point number but got "gorp"}}
-test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} -constraints win -body {
+test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} -constraints textfonts -body {
     .t yview moveto 0.5
     .t index @0,0
 } -result {103.0}
-# under X11 we get the result {102.0}
 test textDisp-16.12 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto -1
     .t index @0,0
@@ -2050,27 +2045,24 @@ test textDisp-16.13 {TkTextYviewCmd procedure, "moveto" option} {
     .t yview moveto 1.1
     .t index @0,0
 } {191.0}
-test textDisp-16.14 {TkTextYviewCmd procedure, "moveto" option} -constraints win -body {
+test textDisp-16.14 {TkTextYviewCmd procedure, "moveto" option} -constraints textfonts -body {
     .t yview moveto .75
     .t index @0,0
 } -result {151.60}
-# under X11 we get the result {151.20}
-test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} -constraints win -body {
+test textDisp-16.15 {TkTextYviewCmd procedure, "moveto" option} -constraints textfonts -body {
     .t yview moveto .752
     .t index @0,0
 } -result {151.60}
-# under X11 we get the result {151.20}
 test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {textfonts} {
     set count [expr {5 * $bigHeight + 150 * $fixedHeight}]
     set extra [expr {0.04 * double($fixedDiff * 150) / double($count)}]
     .t yview moveto [expr {.753 - $extra}]
     .t index @0,0
 } {151.60}
-test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} -constraints win -body {
+test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} -constraints textfonts -body {
     .t yview moveto .755
     .t index @0,0
 } -result {151.80}
-# under X11 we get the result {151.40}
 test textDisp-16.18 {TkTextYviewCmd procedure, "moveto" roundoff} {textfonts} {
     catch {destroy .top1}
     toplevel .top1
@@ -2118,7 +2110,7 @@ test textDisp-16.24 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     .t yview scroll -3 pa
     .t index @0,0
 } {1.0}
-test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} -constraints win -body {
+test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} -body {
     .t configure -height 1
     update
     .t yview 50.0
@@ -2129,7 +2121,6 @@ test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} -con
     update
     set x
 } -result {49.0}
-# under X11 we get the result {48.0}
 test textDisp-16.26 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview 50.0
     update
@@ -2679,7 +2670,7 @@ test textDisp-19.11.16 {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag add elide "12.0" "14.0"
     .t count -displaylines 12.0 16.0
 } {2}
-test textDisp-19.11.17 {TextWidgetCmd procedure, "index +displaylines"} -constraints win -body {
+test textDisp-19.11.17 {TextWidgetCmd procedure, "index +displaylines"} -constraints textfonts -body {
     .t tag remove elide 1.0 end
     .t tag add elide "12.0" "14.0"
     list [.t index "11.5 +2d lines"] \
@@ -2700,7 +2691,7 @@ test textDisp-19.11.19 {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag add elide "12.0" "16.0 +1displaylines"
     .t count -displaylines 12.0 17.0
 } {4}
-test textDisp-19.11.20 {TextWidgetCmd procedure, "index +displaylines"} -constraints win -body {
+test textDisp-19.11.20 {TextWidgetCmd procedure, "index +displaylines"} -constraints textfonts -body {
     .t tag remove elide 1.0 end
     .t tag add elide "12.0" "16.0 +1displaylines"
     list [.t index "11.5 +2d lines"] \
@@ -3927,7 +3918,7 @@ test textDisp-31.2 {line update index shifting} {
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
 
-test textDisp-31.3 {line update index shifting} -constraints win -body {
+test textDisp-31.3 {line update index shifting} -constraints textfonts -body {
     # Should do exactly the same as the above, as long
     # as we are correctly tagging the correct lines for
     # recalculation.  The 'update' and 'delay' must be
@@ -4005,7 +3996,7 @@ test textDisp-31.6 {line update index shifting} {
     set res
 } [list [expr {100 + $fixedHeight * 6}] [expr {100 + $fixedHeight * 8}] [expr {$fixedHeight * 9}] [expr {$fixedHeight * 7}] [expr {100 + $fixedHeight * 6}]]
 
-test textDisp-31.7 {line update index shifting, elided} -constraints win -body {
+test textDisp-31.7 {line update index shifting, elided} -constraints textfonts -body {
     # The 'update' and 'delay' must be long enough to ensure all
     # asynchronous updates have been performed.
     set res {}
@@ -4047,7 +4038,7 @@ test textDisp-32.1 {everything elided} {
     update ; update ; update ; update
     destroy .tt
 } {}
-test textDisp-32.2 {elide and tags} -constraints win -body {
+test textDisp-32.2 {elide and tags} -constraints textfonts -body {
     pack [text .tt -height 30 -width 100 -bd 0 \
       -highlightthickness 0 -padx 0]
     .tt insert end \
