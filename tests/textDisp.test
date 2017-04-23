@@ -3240,7 +3240,7 @@ test textDisp-24.9 {TkTextCharLayoutProc, line ends with space} {textfonts} {
     wm geom . [expr $width-6]x$height
     update
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 136 3 5 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
+} [list [list 3 [expr {$fixedDiff + 16}] $fixedWidth $fixedHeight] [list [expr {3 + $fixedWidth}] [expr {$fixedDiff + 16}] 7 $fixedHeight]]
 test textDisp-24.10 {TkTextCharLayoutProc, line ends with space} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -3248,18 +3248,18 @@ test textDisp-24.10 {TkTextCharLayoutProc, line ends with space} {textfonts} {
     wm geom . [expr $width-7]x$height
     update
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list 136 3 4 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
+} [list [list 3 [expr {$fixedDiff + 16}] $fixedWidth $fixedHeight] [list [expr {3 + $fixedWidth}] [expr {$fixedDiff + 16}] 7 $fixedHeight]]
 test textDisp-24.11 {TkTextCharLayoutProc, line ends with space that doesn't quite fit} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
-    .t insert 1.0 "01234567890123456789 \nabcdefg"
+    .t insert 1.0 "0123456789012345678 \nabcdefg"
     wm geom . [expr $width-2]x$height
     update
     set result {}
     lappend result [.t bbox 1.21] [.t bbox 2.0]
     .t mark set insert 1.21
     lappend result [.t bbox 1.21] [.t bbox 2.0]
-} [list [list 145 3 0 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight] [list 145 3 0 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
+} [list [list 143 3 2 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight] [list 143 3 2 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
 test textDisp-24.12 {TkTextCharLayoutProc, tab causes wrap} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
