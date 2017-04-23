@@ -2360,19 +2360,19 @@ test textDisp-17.9 {TkTextScanCmd procedure} {textfonts} {
     .t xview scroll 100 units
     .t scan mark 90 60
     .t scan dragto 10 0
-    update
     .t scan dragto 14 5
     .t index @0,0
 } {14.44}
 .t configure -wrap word
 test textDisp-17.10 {TkTextScanCmd procedure, word wrapping} {textfonts} {
     .t yview 10.0
+    update
     .t scan mark -10 60
     .t scan dragto -5 65
     set x [.t index @0,0]
     .t scan dragto 0 [expr {70 + $fixedDiff}]
     list $x [.t index @0,0]
-} {9.21 8.0}
+} {9.0 8.0}
 .t configure -xscrollcommand scroll -yscrollcommand {}
 test textDisp-18.1 {GetXView procedure} {
     .t configure -wrap none
