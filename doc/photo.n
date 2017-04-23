@@ -73,7 +73,9 @@ option takes precedence.
 .
 Specifies the name of the file format for the data specified with the
 \fB\-data\fR or \fB\-file\fR option and optional arguments passed to
-the format handler.
+the format handler. Note: the value of this option must be a Tcl list.
+This means that the braces may be omitted if the argument has only one
+word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-file \fIname\fR
 .
@@ -241,8 +243,8 @@ Returns image data in the form of a string.
 .VS 8.7
 The format of the string depends on the format handler. By default, a
 human readable format as a list of lists of pixel data is used, other
-formats can be chosen with the \fB-format\fR option. See \fBIMAGE
-FORMATS\fR below for details.
+formats can be chosen with the \fB-format\fR option.
+See \fBIMAGE FORMATS\fR below for details.
 .VE 8.7
 The following options may be specified:
 .RS
@@ -267,6 +269,9 @@ per pixel/column) of colors in
 .QW \fB#\fIrrggbb\fR
 format (see \fBIMAGE FORMATS\fR below).
 .VE 8.7
+Note: the value of this option must be a Tcl list.
+This means that the braces may be omitted if the argument has only one
+word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-from \fIx1 y1 x2 y2\fR
 .
@@ -283,8 +288,8 @@ whole image.
 If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
 .RE
-.TP
 .VS 8.7
+.TP
 \fIimageName \fBget\fR \fIx y\fR ?\fB-withalpha\fR?
 .
 Returns the color of the pixel at coordinates (\fIx\fR,\fIy\fR) in the
@@ -314,6 +319,9 @@ arguments to be passed to the format handler.
 Specifically, only image file format handlers whose names begin with
 \fIformat-name\fR will be used while searching for an image data
 format handler to read the data.
+Note: the value of this option must be a Tcl list.
+This means that the braces may be omitted if the argument has only one
+word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-to \fIx1 y1\fR ?\fIx2 y2\fR?
 .
@@ -339,13 +347,16 @@ in \fIfilename\fR, and then reads the image in \fIfilename\fR into
 specified:
 .RS
 .TP
-\fB\-format \fIformat-name\fR
+\fB\-format {\fIformat-name\fR ?\fIoption value ..\fR?}
 .
 Specifies the format of the image data in \fIfilename\fR and,
 optionally, additional options to the format handler.
 Specifically, only image file format handlers whose names begin with
 \fIformat-name\fR will be used while searching for an image data
 format handler to read the data.
+Note: the value of this option must be a Tcl list.
+This means that the braces may be omitted if the argument has only one
+word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-from \fIx1 y1 x2 y2\fR
 .
@@ -388,46 +399,26 @@ displayed.
 Allows examination and manipulation of the transparency information in
 the photo image.  Several subcommands are available:
 .RS
-.TP
 .VS 8.7
-\fIimageName \fBtransparency get \fIx y\fR ?\fIoption\fR?
-.
-Returns information about the transparency of the pixel at (\fIx\fR,\fIy\fR).
-At most one of the following options may be specified. If no option is
-passed, \fB-boolean\fR is implied:
-.RS
 .TP
-\fB-alpha\fR
+\fIimageName \fBtransparency get \fIx y\fR ?\fB-alpha\fR?
 .
-The return value is the integral alpha value (in the range 0 to 255) for 
-the specified pixel.
-.TP
-\fB-boolean\fR
-.
-The return value is a boolean indicating if the specified pixel is fully
-transparent.
+Returns true if the pixel at (\fIx\fR,\fIy\fR) is fully transparent,
+false otherwise.  If the option \fB-alpha\fR is passed, returns the
+alpha value of the pixel instead, as an integer in the range 0 to 255.
 .VE 8.7
-.RE
-.TP
+
 .VS 8.7
-\fIimageName \fBtransparency set \fIx y\fR \fInewVal\fR ?\fIoption\fR?
-.
-Change the transparency of the pixel at (\fIx\fR,\fIy\fR).
-At most one of the following options may be specified. If no option is 
-passed, \fB-boolean\fR is implied:
-.RS
 .TP
-\fB-alpha\fR
+\fIimageName \fBtransparency set \fIx y\fR \fInewVal\fR ?\fB-alpha\fR?
 .
-Set the transparency of the specified pixel to \fInewVal\fR, which must be
-an integral value in the range 0 to 255.
-.TP
-\fB-boolean\fR
-.
-\fInewVal\fR will be interpreted as a boolean. If true, make the specified 
-pixel fully transparent, opaque otherwise.
+Change the transparency of the pixel at (\fIx\fR,\fIy\fR) to
+\fInewVal.\fR If no additional option is passed, \fInewVal\fR is
+interpreted as a boolean and the pixel is made fully transparent if
+that value is true, fully opaque otherwise.  If the \fB-alpha\fR
+option is passed, \fInewVal\fR is interpreted as an integral alpha
+value for the pixel, which must be in the range 0 to 255.
 .VE 8.7
-.RE
 .RE
 .TP
 \fIimageName \fBwrite \fIfilename\fR ?\fIoption value(s) ...\fR?
@@ -452,6 +443,9 @@ and which has the capability to write an image file.  If this option
 is not given, the format is guessed from the file extension. If that
 cannot be determined, this subcommand uses the first handler that has
 the capability to write an image file.
+Note: the value of this option must be a Tcl list.
+This means that the braces may be omitted if the argument has only one
+word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-from \fIx1 y1 x2 y2\fR
 .
@@ -504,7 +498,7 @@ Note that not all image handlers may support writing transparency data
 to a file, even where the target image format does.
 .VS 8.7
 .SS "THE DEFAULT IMAGE HANDLER"
-.pp
+.PP
 The \fBdefault\fR image handler cannot be used to read or write data
 from/to a file. Its sole purpose is to encode and decode image data in
 string form in a clear text, human readable, form. The \fIimageName\fR
@@ -517,20 +511,20 @@ Image data in the \fBdefault\fR string format is a (top-to-bottom)
 list of scan-lines, with each scan-line being a (left-to-right) list
 of pixel data. Every scan-line has the same length. The color
 and, optionally, alpha value of each pixel is specified in any of
-the forms described in the \fBCOLOR/ALPHA FORMAT\fR section below.
+the forms described in the \fBCOLOR FORMATS\fR section below.
 .VE 8.7
 
 .SS "FORMAT SUBOPTIONS"
 .PP
 .VS 8.6
-Image formats may support sub-options, which ahre specified using
+Image formats may support sub-options, wich ahre specified using
 additional words in the value to the \fB\-format\fR option. These
 suboptions can affect how image data is read or written to file or
 string. The nature and values of these options is up to the format
 handler.
 The built-in handlers support these suboptions:
-.TP
 .VS 8.7
+.TP
 \fBdefault \-colorformat\fI formatType\fR
 .
 The option is allowed when writing image data to a string with
@@ -538,7 +532,7 @@ The option is allowed when writing image data to a string with
 string of each pixel. \fIformatType\fR may be one of: \fBrgb\fR to
 encode pixel data in the form \fB#\fIRRGGBB\fR, \fBargb\fR to encode
 pixel data in the form \fB#\fIAARRGGBB\fR or \fBlist\fR to encode
-pixel data as a list with four elements. See \fBCOLOR/ALPHA FORMAT\fR
+pixel data as a list with four elements. See \fBCOLOR FORMATS\fR
 below for details. The default is \fBrgb\fR.
 .VE 8.7
 .TP
@@ -559,7 +553,7 @@ usually also has the effect of desaturating the image.  The
 \fIalphaValue\fR must be between 0.0 and 1.0.
 .VE 8.6
 .VS 8.7
-.SH "COLOR/ALPHA FORMAT"
+.SH "COLOR FORMATS"
 .PP
 The default image handler can represent/parse color and alpha values
 of a pixel in one of the formats listed below. If a color format does
@@ -593,7 +587,7 @@ specify an integer alpha value in the range 0 (fully transparent) to 255
 .RE
 .IP \(bu 3
 A Tcl list with three or four integers in the range 0 to 255, 
-specifying the values for the red, green, bule and (optionally) 
+specifying the values for the red, green, blue and (optionally) 
 alpha channels respectively.
 .IP \(bu 3
 \fB#\fR\fIARGB\fR format: a \fB#\fR followed by four hexadecimal digits,
