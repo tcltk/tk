@@ -691,13 +691,14 @@ typedef struct TkTextDispLine {
 				 * have the OLD_Y_INVALID bit set, then we will never examine this
 				 * field (which means line isn't currently visible on display and
 				 * must be redrawn). */
+    int32_t width;		/* Width of line, in pixels, not including any indent. */
     int32_t height;		/* Height of line, in pixels. */
     int32_t baseline;		/* Offset of text baseline from y, in pixels. */
     int32_t spaceAbove;		/* How much extra space was added to the top of the line because of
     				 * spacing options. This is included in height and baseline. */
     int32_t spaceBelow;		/* How much extra space was added to the bottom of the line because
     				 * of spacing options. This is included in height. */
-    uint32_t length;		/* Total length of line, in pixels. */
+    uint32_t length;		/* Total length of line, in pixels, including possible left indent. */
     uint32_t flags;		/* Various flag bits: see below for values. */
 } TkTextDispLine;
 

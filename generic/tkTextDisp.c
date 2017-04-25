@@ -4308,6 +4308,7 @@ LayoutDLine(
 	ascent = MAX(ascent, chunkPtr->minAscent);
 	descent = MAX(descent, chunkPtr->minDescent);
 	dlPtr->height = MAX(dlPtr->height, chunkPtr->minHeight);
+	dlPtr->width += chunkPtr->width;
 	sValPtr = chunkPtr->stylePtr->sValuePtr;
 	if (sValPtr->borderWidth > 0 && sValPtr->relief != TK_RELIEF_FLAT) {
 	    dlPtr->flags |= HAS_3D_BORDER;
@@ -12116,7 +12117,7 @@ TkTextGetDLineInfo(
 
     dlx = dlPtr->chunkPtr ? dlPtr->chunkPtr->x : 0;
     *xPtr = dInfoPtr->x - dInfoPtr->curXPixelOffset + dlx;
-    *widthPtr = dlPtr->length - dlx;
+    *widthPtr = dlPtr->width;
     *yPtr = dlPtr->y;
     *heightPtr = dlPtr->height;
 
