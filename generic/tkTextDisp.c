@@ -12122,7 +12122,7 @@ TkTextGetDLineInfo(
     *heightPtr = dlPtr->height;
 
     if (extents) {
-	*widthPtr = MAX(0, *xPtr + *widthPtr - dInfoPtr->maxX);
+	*widthPtr = MAX(0, *xPtr + dlPtr->length - dInfoPtr->maxX);
 	*heightPtr = MAX(0, *yPtr + *heightPtr - dInfoPtr->maxY);
 	*xPtr = MAX(0, -*xPtr);
 	*yPtr = MAX(0, -*yPtr);
