@@ -1652,6 +1652,7 @@ TextWidgetObjCmd(
 	    }
 	    Tcl_SetObjResult(interp, objPtr);
 	} else {
+	    /* TODO: invalidate start/endline in case of start/endindex */
 	    result = TkConfigureText(interp, textPtr, objc - 2, objv + 2);
 	}
 	break;
@@ -1840,6 +1841,7 @@ TextWidgetObjCmd(
 	goto done;
     }
     case TEXT_DEBUG:
+#ifndef TK_IGNORE_TEXT_DEBUG
 	if (objc > 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "boolean");
 	    result = TCL_ERROR;
@@ -1854,6 +1856,7 @@ TextWidgetObjCmd(
 	    }
 	    tkTextDebug = tkBTreeDebug;
 	}
+#endif
 	break;
     case TEXT_DELETE: {
 	int i, flags = 0;
@@ -4133,7 +4136,7 @@ TkConfigureText(
 	 * first displayed line and arrange for re-layout.
 	 */
 
-	TkBTreeClientRangeChanged(textPtr, textPtr->lineHeight);
+	TkBTreeClientRangeChanged(textPtr, MAX(0, textPtr->lineHeight));
 	TkTextMakeByteIndex(tree, NULL, TkTextIndexGetLineNumber(&textPtr->topIndex, NULL), 0, &current);
 
 	if (TkTextIndexCompare(&current, &start) < 0 || TkTextIndexCompare(&end, &current) < 0) {
@@ -5089,6 +5092,7 @@ InsertChars(
     UpdateModifiedFlag(sharedTextPtr, true);
     TkTextUpdateAlteredFlag(sharedTextPtr);
     SetNewTopPosition(sharedTextPtr, textPtr, textPosition, viewUpdate);
+
     if (textPosition != textPosBuf) {
 	free(textPosition);
     }
@@ -5486,6 +5490,98 @@ CountIndices(
 /*
  *----------------------------------------------------------------------
  *
+ * TkTextGetUndeletableNewline --
+ *
+ *	Return pointer to undeletable newline. The search will start at
+ *	start of deletion. See comments in function about the properties
+ *	of an undeletable newline.
+ *
+ *	Note that this functions expects that the deletions end on very
+ *	last line in B-Tree, otherwise the newline is always deletable.
+ *
+ * Results:
+ *	Returns the undeletable newline, or NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+const TkTextSegment *
+TkTextGetUndeletableNewline(
+    const TkTextLine *lastLinePtr)	/* last line of deletion, must be last line of B-Tree */
+{
+    assert(lastLinePtr);
+    assert(!lastLinePtr->nextPtr);
+
+#if 0 /* THIS IS OLD IMPLEMENTATION */
+    const TkTextSegment *segPtr = TkTextIndexGetContentSegment(&index1, NULL);
+
+    /*
+     * Advance to next character.
+     */
+
+    while (segPtr->size == 0) {
+	segPtr = segPtr->nextPtr;
+	assert(segPtr);
+    }
+
+    /*
+     * Assume the following text content:
+     *
+     *    {"1" "\n"} {"\n"} {"2" "\n"} {"\n"}
+     *      A   B      C      D   E      F
+     *
+     * Segment E is the last newline (F belongs to addtional empty line).
+     * We have two cases where the last newline has to be preserved.
+     *
+     * 1. Deletion is starting in first line, then we have to preserve the
+     *    last newline, return segment E.
+     *
+     * 2. Deletion is not starting at the first character in this line, then
+     *    we have to preserve the last newline, return segment E.
+     *
+     * In all other cases return NULL.
+     */
+
+    if (segPtr->sectionPtr->linePtr->prevPtr && SegIsAtStartOfLine(segPtr)) {
+	return NULL;
+    }
+#endif
+
+    /*
+     * The old implementation is erroneous, and has been changed:
+     *
+     * 1. Test the following script with old implementation:
+     *	    text .t
+     *      .t insert end "1\n2"
+     *      .t delete 2.0 end
+     *      .t insert end "2"
+     *    The result of [.t get begin end] -> "12\n" is unexpected, the expected result is "1\n2\n".
+     *
+     * 2. The mathematical consistency now will be preserved:
+     *      - The newly created text widget is clean and contains "\e"
+     *        (\e is the always existing final newline in last line).
+     *      - After insertion of "1\n2" at 'begin' we have "1\n2\e".
+     *      - After [.t delete 2.0 end] the deletion starts with inserted character "2",
+     *        and not with the inserted newline. Thus from mathematical point of view
+     *        the result must be "1\n\e" (this means: the always existing final newline
+     *        will never be deleted).
+     *      - After [.t insert end "2"] the string "2" has been inserted at end, this means
+     *        before "\e", so the new result is "1\n2\e".
+     *
+     * 3. It's a clean concept if the artificial newline is undeletable, the old concept is
+     *    hard to understand for a user, and error-prone.
+     */
+
+    assert(lastLinePtr->prevPtr);
+    return lastLinePtr->prevPtr->lastPtr; /* return final newline \e */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * DeleteIndexRange --
  *
  *	This function implements most of the functionality of the "delete"
@@ -5512,91 +5608,38 @@ CountIndices(
  */
 
 static bool
-DetectUndoTag(
-    const TkTextTag *tagPtr)
+DeleteOnLastLine(
+    TkSharedText *sharedTextPtr,
+    const TkTextLine *lastLinePtr,
+    int flags) /* deletion flags */
 {
-    for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
-	if (!TkBitTest(tagPtr->sharedTextPtr->dontUndoTags, tagPtr->index)) {
-	    return true;
+    assert(lastLinePtr);
+    assert(!lastLinePtr->nextPtr);
+
+    if (flags & DELETE_MARKS) {
+	const TkTextSegment *segPtr = lastLinePtr->segPtr;
+
+	while (segPtr->size == 0) {
+	    if ((flags & DELETE_MARKS) && TkTextIsNormalMark(segPtr)) {
+		return true;
+	    }
+	    segPtr = segPtr->nextPtr;
 	}
     }
+
     return false;
 }
 
 static bool
-HaveMarksInRange(
-    const TkTextIndex *indexPtr1,
-    const TkTextIndex *indexPtr2,
+DeleteEndMarker(
+    const TkTextIndex *indexPtr,
     int flags)
 {
-    const TkTextSegment *segPtr1;
-    const TkTextSegment *segPtr2;
+    const TkTextSegment *segPtr;
 
-    assert(TkTextIndexIsEqual(indexPtr1, indexPtr2));
-
-    segPtr2 = TkTextIndexGetSegment(indexPtr2);
-    if (!segPtr2) {
-	return false;
-    }
-    if (flags & DELETE_INCLUSIVE) {
-	segPtr2 = segPtr2->nextPtr;
-	assert(segPtr2);
-    }
-
-    segPtr1 = TkTextIndexGetSegment(indexPtr1);
-    if (!segPtr1 || !TkTextIsStableMark(segPtr1)) {
-	segPtr1 = TkTextIndexGetFirstSegment(indexPtr1, NULL);
-    } else if (!(flags & DELETE_INCLUSIVE)) {
-	segPtr1 = segPtr1->nextPtr;
-	assert(segPtr1);
-    }
-
-    for ( ; segPtr1 && segPtr1->size == 0; segPtr1 = segPtr1->nextPtr) {
-	if (TkTextIsNormalMark(segPtr1)) {
-	    return true;
-	}
-	if (segPtr1 == segPtr2) {
-	    return false;
-	}
-    }
-    return false;
-}
-
-static bool
-DeleteMarksOnLastLine(
-    TkText *textPtr,
-    TkTextSegment *segPtr,
-    TkTextSegment *endPtr,
-    int flags)
-{
-    bool rc;
-
-    assert(endPtr);
-
-    if (flags & DELETE_INCLUSIVE) {
-	endPtr = endPtr->nextPtr;
-	assert(endPtr);
-    }
-
-    if (!segPtr) {
-	segPtr = endPtr->sectionPtr->linePtr->segPtr;
-    } else if (!(flags & DELETE_INCLUSIVE)) {
-	segPtr = segPtr->nextPtr;
-    }
-
-    rc = false;
-    while (segPtr != endPtr) {
-	TkTextSegment *nextPtr = segPtr->nextPtr;
-
-	if (TkTextIsNormalMark(segPtr)) {
-	    TkTextUnsetMark(textPtr, segPtr);
-	    rc = true;
-	}
-
-	segPtr = nextPtr;
-    }
-
-    return rc;
+    return (flags & DELETE_MARKS)
+	    && (segPtr = TkTextIndexGetSegment(indexPtr))
+	    && TkTextIsNormalMark(segPtr);
 }
 
 static bool
@@ -5622,9 +5665,7 @@ DeleteIndexRange(
     TkTextPosition textPosBuf[PIXEL_CLIENTS];
     TkTextUndoInfo undoInfo;
     TkTextUndoInfo *undoInfoPtr;
-    bool deleteOnLastLine;
-    bool altered;
-    int cmp;
+    TkTextLine *lastLinePtr;
 
     if (!sharedTextPtr) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -5634,42 +5675,52 @@ DeleteIndexRange(
 	TkTextIndexToByteIndex((TkTextIndex *) indexPtr1); /* mutable due to concept */
     }
 
+    if (TkTextIndexIsEndOfText(indexPtr1)) {
+	return true; /* nothing to delete */
+    }
+
     /*
      * Prepare the starting and stopping indices.
      */
 
-    index1 = *indexPtr1;
-
     if (indexPtr2) {
-	if ((cmp = TkTextIndexCompare(&index1, indexPtr2)) > 0) {
+	if (TkTextIndexCompare(indexPtr1, indexPtr2) >= 0) {
 	    return true; /* there is nothing to delete */
 	}
+	index1 = *indexPtr1;
 	index2 = *indexPtr2;
-    } else if (!TkTextIndexForwChars(textPtr, &index1, 1, &index2, COUNT_INDICES)) {
-	cmp = 0;
+    } else if (!TkTextIndexForwChars(textPtr, indexPtr1, 1, &index2, COUNT_INDICES)) {
+	return true;
     } else {
-	cmp = -1;
+	index1 = *indexPtr1;
     }
 
-    if (cmp == 0) {
-	bool isTagged;
+    index3 = index2;
 
-	deleteOnLastLine = (flags & DELETE_MARKS) && HaveMarksInRange(&index1, &index2, flags);
-	isTagged = TkTextIndexBackChars(textPtr, &index2, 1, &index3, COUNT_INDICES)
-		&& TkBTreeCharTagged(&index3, NULL);
+    if (!TkTextIndexGetLine(&index2)->nextPtr
+	    && !DeleteEndMarker(&index2, flags)
+	    && TkTextGetUndeletableNewline(lastLinePtr = TkTextIndexGetLine(&index2))
+	    && !DeleteOnLastLine(sharedTextPtr, lastLinePtr, flags)) {
+	/*
+	 * This is a very special case. If the last newline is undeletable, we do not
+	 * have a deletable marker at end of range, and there is no deletable mark on
+	 * last line, then decrement the end of range.
+	 */
 
-	if (!deleteOnLastLine && !isTagged) {
-	    return true; /* there is nothing to delete */
+	TkTextIndexBackBytes(textPtr, &index2, 1, &index2);
+
+	if (TkTextIndexIsEqual(&index1, &index2)) {
+	    if (lastLinePtr->prevPtr) {
+		if (lastLinePtr->prevPtr->lastPtr->tagInfoPtr != sharedTextPtr->emptyTagInfoPtr) {
+		    /* we have to delete tags on previous newline, that's all */
+		    TkTextClearSelection(sharedTextPtr, &index1, &index3);
+		    TkTextClearTags(sharedTextPtr, textPtr, &index1, &index3, false);
+		} else {
+		    assert(TkTextTagSetIsEmpty(lastLinePtr->prevPtr->lastPtr->tagInfoPtr));
+		}
+	    }
+	    return true; /* nothing to do */
 	}
-    } else if (TkTextIndexIsEndOfText(&index1)) {
-	if (!TkTextIndexBackChars(textPtr, &index2, 1, &index3, COUNT_INDICES)
-		|| TkTextIndexIsStartOfText(&index3)
-		|| !TkBTreeCharTagged(&index3, NULL)) {
-	    return true; /* there is nothing to delete */
-	}
-	deleteOnLastLine = (flags & DELETE_MARKS) && HaveMarksInRange(&index1, &index2, flags);
-    } else {
-	deleteOnLastLine = false;
     }
 
     /*
@@ -5699,122 +5750,74 @@ DeleteIndexRange(
 	}
     }
 
-    if (cmp < 0) {
-	TkTextClearSelection(sharedTextPtr, &index1, &index2);
-    }
+    TkTextClearSelection(sharedTextPtr, &index1, &index3);
 
-    altered = (cmp < 0);
+    /*
+     * Tell the display what's about to happen, so it can discard obsolete
+     * display information, then do the deletion. Also, if the deletion
+     * involves the top line on the screen, then we have to reset the view
+     * (the deletion will invalidate textPtr->topIndex). Compute what the new
+     * first character will be, then do the deletion, then reset the view.
+     */
 
-    if (deleteOnLastLine) {
-	/*
-	 * Some marks on last line have to be deleted. We are doing this separately,
-	 * because we won't delete the last line.
-	 *
-	 * The alternative is to insert a newly last newline instead, so we can remove
-	 * the last line, but this is more complicated than doing this separate removal
-	 * (consider undo, or the problem with end markers).
-	 */
+    TkTextChanged(sharedTextPtr, NULL, &index1, &index2);
 
-	if (DeleteMarksOnLastLine(textPtr, TkTextIndexGetSegment(&index1),
-		TkTextIndexGetSegment(&index2), flags)) {
-	    altered = true;
-	}
-    }
-
-    if (TkTextIndexIsEndOfText(&index2)) {
-	TkTextIndexGetByteIndex(&index2);
-	index3 = index2;
-
-	TkTextIndexBackChars(textPtr, &index2, 1, &index3, COUNT_INDICES);
-
-	if (!textPtr->endMarker->sectionPtr->linePtr->nextPtr) {
-	    /*
-	     * We're about to delete the very last (empty) newline, and this must not
-	     * happen. Instead of deleting the newline we will remove all tags from
-	     * this newline character (as if we delete this newline, and afterwards
-	     * a fresh newline will be appended).
-	     */
-
-	    if (DetectUndoTag(TkTextClearTags(sharedTextPtr, textPtr, &index3, &index2, false))) {
-		altered = true;
-	    }
-	    assert(altered);
-	}
+    if (sharedTextPtr->numPeers > sizeof(textPosBuf)/sizeof(textPosBuf[0])) {
+	textPosition = malloc(sizeof(textPosition[0])*sharedTextPtr->numPeers);
     } else {
-	index3 = index2;
+	textPosition = textPosBuf;
     }
+    InitPosition(sharedTextPtr, textPosition);
+    FindNewTopPosition(sharedTextPtr, textPosition, &index1, &index2, 0);
 
-    if (cmp < 0 && !TkTextIndexIsEqual(&index1, &index3)) {
-	/*
-	 * Tell the display what's about to happen, so it can discard obsolete
-	 * display information, then do the deletion. Also, if the deletion
-	 * involves the top line on the screen, then we have to reset the view
-	 * (the deletion will invalidate textPtr->topIndex). Compute what the new
-	 * first character will be, then do the deletion, then reset the view.
-	 */
+    undoInfoPtr = TkTextUndoStackIsFull(sharedTextPtr->undoStack) ? NULL : &undoInfo;
+    TkBTreeDeleteIndexRange(sharedTextPtr, &index1, &index2, flags, undoInfoPtr);
 
-	TkTextChanged(sharedTextPtr, NULL, &index1, &index3);
+    /*
+     * Push the deletion onto the undo stack, and update the modified status of the widget.
+     * Try to join with previously pushed undo token, if possible.
+     */
 
-	if (sharedTextPtr->numPeers > sizeof(textPosBuf)/sizeof(textPosBuf[0])) {
-	    textPosition = malloc(sizeof(textPosition[0])*sharedTextPtr->numPeers);
+    if (undoInfoPtr) {
+	const TkTextUndoSubAtom *subAtom;
+
+	if (sharedTextPtr->autoSeparators && sharedTextPtr->lastEditMode != TK_TEXT_EDIT_DELETE) {
+	    PushRetainedUndoTokens(sharedTextPtr);
+	    TkTextUndoPushSeparator(sharedTextPtr->undoStack, true);
+	    sharedTextPtr->lastUndoTokenType = -1;
+	}
+
+	if (TkTextUndoGetMaxSize(sharedTextPtr->undoStack) == 0
+		|| TkTextUndoGetCurrentSize(sharedTextPtr->undoStack) + undoInfo.byteSize
+			<= TkTextUndoGetMaxSize(sharedTextPtr->undoStack)) {
+	    if (sharedTextPtr->lastUndoTokenType != TK_TEXT_UNDO_DELETE
+		    || !((subAtom = TkTextUndoGetLastUndoSubAtom(sharedTextPtr->undoStack))
+			    && TkBTreeJoinUndoDelete(subAtom->item, subAtom->size,
+				    undoInfo.token, undoInfo.byteSize))) {
+		TkTextPushUndoToken(sharedTextPtr, undoInfo.token, undoInfo.byteSize);
+	    }
+	    sharedTextPtr->lastUndoTokenType = TK_TEXT_UNDO_DELETE;
+	    sharedTextPtr->prevUndoStartIndex =
+		    ((TkTextUndoTokenRange *) undoInfo.token)->startIndex;
+	    sharedTextPtr->prevUndoEndIndex = ((TkTextUndoTokenRange *) undoInfo.token)->endIndex;
+	    /* stack has changed anyway, but TkBTreeJoinUndoDelete didn't trigger */
+	    sharedTextPtr->undoStackEvent = true;
 	} else {
-	    textPosition = textPosBuf;
-	}
-	InitPosition(sharedTextPtr, textPosition);
-	FindNewTopPosition(sharedTextPtr, textPosition, &index1, &index2, 0);
-
-	undoInfoPtr = TkTextUndoStackIsFull(sharedTextPtr->undoStack) ? NULL : &undoInfo;
-	TkBTreeDeleteIndexRange(sharedTextPtr, &index1, &index3, flags, undoInfoPtr);
-
-	/*
-	 * Push the deletion onto the undo stack, and update the modified status of the widget.
-	 * Try to join with previously pushed undo token, if possible.
-	 */
-
-	if (undoInfoPtr) {
-	    const TkTextUndoSubAtom *subAtom;
-
-	    if (sharedTextPtr->autoSeparators && sharedTextPtr->lastEditMode != TK_TEXT_EDIT_DELETE) {
-		PushRetainedUndoTokens(sharedTextPtr);
-		TkTextUndoPushSeparator(sharedTextPtr->undoStack, true);
-		sharedTextPtr->lastUndoTokenType = -1;
-	    }
-
-	    if (TkTextUndoGetMaxSize(sharedTextPtr->undoStack) == 0
-		    || TkTextUndoGetCurrentSize(sharedTextPtr->undoStack) + undoInfo.byteSize
-			    <= TkTextUndoGetMaxSize(sharedTextPtr->undoStack)) {
-		if (sharedTextPtr->lastUndoTokenType != TK_TEXT_UNDO_DELETE
-			|| !((subAtom = TkTextUndoGetLastUndoSubAtom(sharedTextPtr->undoStack))
-				&& TkBTreeJoinUndoDelete(subAtom->item, subAtom->size,
-					undoInfo.token, undoInfo.byteSize))) {
-		    TkTextPushUndoToken(sharedTextPtr, undoInfo.token, undoInfo.byteSize);
-		}
-		sharedTextPtr->lastUndoTokenType = TK_TEXT_UNDO_DELETE;
-		sharedTextPtr->prevUndoStartIndex =
-			((TkTextUndoTokenRange *) undoInfo.token)->startIndex;
-		sharedTextPtr->prevUndoEndIndex = ((TkTextUndoTokenRange *) undoInfo.token)->endIndex;
-		/* stack has changed anyway, but TkBTreeJoinUndoDelete didn't trigger */
-		sharedTextPtr->undoStackEvent = true;
-	    } else {
-		assert(undoInfo.token->undoType->destroyProc);
-		undoInfo.token->undoType->destroyProc(sharedTextPtr, undoInfo.token, false);
-		free(undoInfo.token);
-		DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
-	    }
-
-	    sharedTextPtr->lastEditMode = TK_TEXT_EDIT_DELETE;
+	    assert(undoInfo.token->undoType->destroyProc);
+	    undoInfo.token->undoType->destroyProc(sharedTextPtr, undoInfo.token, false);
+	    free(undoInfo.token);
+	    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	}
 
-	UpdateModifiedFlag(sharedTextPtr, true);
-
-	SetNewTopPosition(sharedTextPtr, textPtr, textPosition, viewUpdate);
-	if (textPosition != textPosBuf) {
-	    free(textPosition);
-	}
+	sharedTextPtr->lastEditMode = TK_TEXT_EDIT_DELETE;
     }
 
-    if (altered) {
-	TkTextUpdateAlteredFlag(sharedTextPtr);
+    UpdateModifiedFlag(sharedTextPtr, true);
+    TkTextUpdateAlteredFlag(sharedTextPtr);
+    SetNewTopPosition(sharedTextPtr, textPtr, textPosition, viewUpdate);
+
+    if (textPosition != textPosBuf) {
+	free(textPosition);
     }
 
     /*
@@ -6223,7 +6226,6 @@ TextInsertCmd(
 			if (tagPtr->index >= TkTextTagSetSize(tagInfoPtr)) {
 			    tagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
 			}
-			/* TODO: insert list of indices */
 			tagInfoPtr = TkTextTagSetAddToThis(tagInfoPtr, tagPtr->index);
 		    }
 		}

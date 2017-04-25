@@ -47,8 +47,8 @@ static Tcl_Obj *	EmbImageInspectProc(const TkSharedText *sharedTextPtr,
 static void		EmbImageBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int index, int y,
 			    int lineHeight, int baseline, int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr);
-static int		EmbImageConfigure(TkText *textPtr, TkTextSegment *eiPtr, int *maskPtr, int objc,
-			    Tcl_Obj *const objv[]);
+static int		EmbImageConfigure(TkText *textPtr, TkTextSegment *eiPtr, int *maskPtr,
+			    bool undoable, int objc, Tcl_Obj *const objv[]);
 static bool		EmbImageDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int treeGone);
 static void		EmbImageRestoreProc(TkTextSegment *segPtr);
 static void		EmbImageDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int x, int y,
@@ -463,7 +463,7 @@ TkTextImageCmd(
 	    return TCL_OK;
 	} else {
 	    int mask;
-	    int rc = EmbImageConfigure(textPtr, eiPtr, &mask, objc - 4, objv + 4);
+	    int rc = EmbImageConfigure(textPtr, eiPtr, &mask, true, objc - 4, objv + 4);
 	    TextChanged(sharedTextPtr, &index, mask);
 	    return rc;
 	}
@@ -507,7 +507,7 @@ TkTextImageCmd(
 	     */
 
 	    TkBTreeLinkSegment(sharedTextPtr, eiPtr, &index);
-	    if (EmbImageConfigure(textPtr, eiPtr, &mask, objc - 4, objv + 4) != TCL_OK) {
+	    if (EmbImageConfigure(textPtr, eiPtr, &mask, false, objc - 4, objv + 4) != TCL_OK) {
 		TkBTreeUnlinkSegment(sharedTextPtr, eiPtr);
 		EmbImageDeleteProc(sharedTextPtr->tree, eiPtr, 0);
 		return TCL_ERROR;
@@ -620,7 +620,7 @@ TkTextMakeImage(
 
     eiPtr = MakeImage(textPtr);
 
-    if (EmbImageConfigure(textPtr, eiPtr, NULL, objc, objv) == TCL_OK) {
+    if (EmbImageConfigure(textPtr, eiPtr, NULL, false, objc, objv) == TCL_OK) {
 	Tcl_ResetResult(textPtr->interp);
     } else {
 	EmbImageDeleteProc(textPtr->sharedTextPtr->tree, eiPtr, 0);
@@ -694,6 +694,7 @@ EmbImageConfigure(
     TkTextSegment *eiPtr,	/* Embedded image to be configured. */
     int *maskPtr,		/* Return the bit-wise OR of the typeMask fields of affected options,
     				 * can be NULL. */
+    bool undoable,		/* Replacement of tags is undoable? */
     int objc,			/* Number of strings in objv. */
     Tcl_Obj *const objv[])	/* Array of strings describing configuration options. */
 {
@@ -713,7 +714,7 @@ EmbImageConfigure(
 
     for (i = 0; i + 1 < objc; i += 2) {
 	if (MatchTagsOption(Tcl_GetString(objv[i]))) {
-	    TkTextReplaceTags(textPtr, eiPtr, objv[i + 1]);
+	    TkTextReplaceTags(textPtr, eiPtr, undoable, objv[i + 1]);
 	}
     }
 

@@ -63,7 +63,7 @@ static void		EmbWinBboxProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr, int index, int y,
 			    int lineHeight, int baseline, int *xPtr,int *yPtr,
 			    int *widthPtr, int *heightPtr);
-static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr,
+static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr, bool undoable,
 			    int objc, Tcl_Obj *const objv[]);
 static void		EmbWinDelayedUnmap(ClientData clientData);
 static bool		EmbWinDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int treeGone);
@@ -125,11 +125,13 @@ static const Tk_UndoType redoTokenLinkSegmentType = {
 typedef struct UndoTokenLinkSegment {
     const Tk_UndoType *undoType;
     TkTextSegment *segPtr;
+    TkTextEmbWindowClient *client;
 } UndoTokenLinkSegment;
 
 typedef struct RedoTokenLinkSegment {
     const Tk_UndoType *undoType;
     TkTextSegment *segPtr;
+    TkTextEmbWindowClient *client;
     TkTextUndoIndex index;
 } RedoTokenLinkSegment;
 
@@ -193,10 +195,11 @@ DEBUG_ALLOC(extern unsigned tkTextCountNewUndoToken);
 
 static void
 TextChanged(
-    TkSharedText *sharedTextPtr,
     TkTextIndex *indexPtr)
 {
-    TkTextChanged(sharedTextPtr, NULL, indexPtr, indexPtr);
+    assert(indexPtr->textPtr);
+
+    TkTextChanged(NULL, indexPtr->textPtr, indexPtr, indexPtr);
 
     /*
      * TODO: It's probably not true that all window configuration can change
@@ -204,7 +207,7 @@ TextChanged(
      * when necessary.
      */
 
-    TkTextInvalidateLineMetrics(sharedTextPtr, NULL,
+    TkTextInvalidateLineMetrics(NULL, indexPtr->textPtr,
 	    TkTextIndexGetLine(indexPtr), 0, TK_TEXT_INVALIDATE_ONLY);
 }
 
@@ -263,6 +266,7 @@ UndoLinkSegmentPerform(
 	RedoTokenLinkSegment *redoToken;
 	redoToken = malloc(sizeof(RedoTokenLinkSegment));
 	redoToken->undoType = &redoTokenLinkSegmentType;
+	redoToken->client = token->client;
 	TkBTreeMakeUndoIndex(sharedTextPtr, segPtr, &redoToken->index);
 	redoInfo->token = (TkTextUndoToken *) redoToken;
 	(redoToken->segPtr = segPtr)->refCount += 1;
@@ -270,7 +274,8 @@ UndoLinkSegmentPerform(
     }
 
     GetIndex(sharedTextPtr, segPtr, &index);
-    TextChanged(sharedTextPtr, &index);
+    index.textPtr = token->client->textPtr;
+    TextChanged(&index);
     TkBTreeUnlinkSegment(sharedTextPtr, segPtr);
     EmbWinDeleteProc(sharedTextPtr->tree, segPtr, 0);
     TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
@@ -340,7 +345,8 @@ RedoLinkSegmentPerform(
     }
 
     GetIndex(sharedTextPtr, token->segPtr, &index);
-    TextChanged(sharedTextPtr, &index);
+    index.textPtr = token->client->textPtr;
+    TextChanged(&index);
     token->segPtr->refCount += 1;
     TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
 }
@@ -525,8 +531,8 @@ TkTextWindowCmd(
 	    Tcl_SetObjResult(interp, objPtr);
 	    return TCL_OK;
 	} else {
-	    TextChanged(textPtr->sharedTextPtr, &index);
-	    return EmbWinConfigure(textPtr, ewPtr, objc - 4, objv + 4);
+	    TextChanged(&index);
+	    return EmbWinConfigure(textPtr, ewPtr, true, objc - 4, objv + 4);
 	}
     }
     case WIND_CREATE: {
@@ -574,7 +580,7 @@ TkTextWindowCmd(
 	 */
 
 	TkBTreeLinkSegment(sharedTextPtr, ewPtr, &index);
-	res = EmbWinConfigure(textPtr, ewPtr, objc - 4, objv + 4);
+	res = EmbWinConfigure(textPtr, ewPtr, false, objc - 4, objv + 4);
 	client->tkwin = ewPtr->body.ew.tkwin;
 	if (res != TCL_OK) {
 	    TkBTreeUnlinkSegment(sharedTextPtr, ewPtr);
@@ -583,7 +589,7 @@ TkTextWindowCmd(
 	    ReleaseEmbeddedWindow(ewPtr);
 	    return TCL_ERROR;
 	}
-	TextChanged(sharedTextPtr, &index);
+	TextChanged(&index);
 
 	if (!TkTextUndoStackIsFull(sharedTextPtr->undoStack)) {
 	    UndoTokenLinkSegment *token;
@@ -594,6 +600,7 @@ TkTextWindowCmd(
 	    token = malloc(sizeof(UndoTokenLinkSegment));
 	    token->undoType = &undoTokenLinkSegmentType;
 	    token->segPtr = ewPtr;
+	    token->client = client;
 	    ewPtr->refCount += 1;
 	    DEBUG_ALLOC(tkTextCountNewUndoToken++);
 
@@ -701,7 +708,7 @@ TkTextMakeWindow(
 
     ewPtr = MakeWindow(textPtr);
 
-    if (EmbWinConfigure(textPtr, ewPtr, objc, objv) == TCL_OK) {
+    if (EmbWinConfigure(textPtr, ewPtr, false, objc, objv) == TCL_OK) {
 	Tcl_ResetResult(textPtr->interp);
     } else {
 	TkTextWinFreeClient(NULL, ewPtr->body.ew.clients);
@@ -749,6 +756,7 @@ EmbWinConfigure(
     TkText *textPtr,		/* Information about text widget that contains
 				 * embedded window. */
     TkTextSegment *ewPtr,	/* Embedded window to be configured. */
+    bool undoable,		/* Replacement of tags is undoable? */
     int objc,			/* Number of strings in objv. */
     Tcl_Obj *const objv[])	/* Array of objects describing configuration options. */
 {
@@ -773,7 +781,7 @@ EmbWinConfigure(
 
     for (i = 0; i + 1 < objc; i += 2) {
 	if (MatchTagsOption(Tcl_GetString(objv[i]))) {
-	    TkTextReplaceTags(textPtr, ewPtr, objv[i + 1]);
+	    TkTextReplaceTags(textPtr, ewPtr, undoable, objv[i + 1]);
 	}
     }
 
@@ -953,7 +961,7 @@ EmbWinRequestProc(
 	assert(ewPtr->sectionPtr);
 	TkTextIndexClear(&index, client->textPtr);
 	TkTextIndexSetSegment(&index, ewPtr);
-	TextChanged(ewPtr->body.ew.sharedTextPtr, &index);
+	TextChanged(&index);
     }
 }
 
@@ -1019,7 +1027,7 @@ EmbWinLostSlaveProc(
 
     TkTextIndexClear(&index, textPtr);
     TkTextIndexSetSegment(&index, ewPtr);
-    TextChanged(ewPtr->body.ew.sharedTextPtr, &index);
+    TextChanged(&index);
 }
 
 /*

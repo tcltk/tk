@@ -969,7 +969,7 @@ TkTextClearSelection(
 TkTextTag *
 TkTextClearTags(
     TkSharedText *sharedTextPtr,
-    TkText *textPtr,
+    TkText *textPtr,			/* can be NULL */
     const TkTextIndex *indexPtr1,
     const TkTextIndex *indexPtr2,
     bool discardSelection)
@@ -1461,6 +1461,7 @@ void
 TkTextReplaceTags(
     TkText *textPtr,		/* Info about overall window. */
     TkTextSegment *segPtr,	/* Setup tag info of this segment. */
+    bool undoable,		/* Replacement of tags is undoable? */
     Tcl_Obj *tagListPtr)	/* List of tags. */
 {
     TkTextTagSet *newTagInfoPtr;
@@ -1469,6 +1470,7 @@ TkTextReplaceTags(
     TkTextTag *tagArrBuf[TK_TEXT_SET_MAX_BIT_SIZE];
     TkTextTag **tagArrPtr = tagArrBuf;
     TkTextTag *tagPtr;
+    TkTextUndoStack undoStack;
     TkTextIndex index[2];
     bool altered = false;
     bool anyChanges = false;
@@ -1499,8 +1501,12 @@ TkTextReplaceTags(
     newTagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
 
     for (k = 0; k < objn; ++k) {
-	/* TODO: insert list of indices */
 	newTagInfoPtr = TkTextTagSetAddToThis(newTagInfoPtr, tagArrPtr[k]->index);
+    }
+
+    undoStack = sharedTextPtr->undoStack;
+    if (!undoable) {
+	sharedTextPtr->undoStack = NULL; /* disable undo temporarily */
     }
 
     /*
@@ -1543,6 +1549,7 @@ TkTextReplaceTags(
 
     TkTextTagSetDecrRefCount(oldTagInfoPtr);
     TkTextTagSetDecrRefCount(newTagInfoPtr);
+    sharedTextPtr->undoStack = undoStack;
 
     if (anyChanges) {
 	/* still need to trigger enter/leave events on tags that have changed */

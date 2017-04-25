@@ -520,6 +520,7 @@ typedef struct LayoutData {
     const char *brks;		/* Buffer for line break information (for TEXT_WRAPMODE_CODEPOINT). */
     TkTextIndex index;		/* Current index. */
     unsigned countChunks;	/* Number of chunks in current display line. */
+    unsigned countVisibleChunks;/* Number of visible (width > 0) chunks in current display line. */
     unsigned numBytesSoFar;	/* The number of processed bytes (so far). */
     unsigned byteOffset;	/* The byte offset to start of logical line. */
     unsigned dispLineOffset;	/* The byte offset to start of display line. */
@@ -2960,6 +2961,10 @@ LayoutFreeChunk(
     data->chunkPtr = NULL;
     assert(data->countChunks > 0);
     data->countChunks -= 1;
+    if (chunkPtr->width > 0) {
+	assert(data->countVisibleChunks > 0);
+	data->countVisibleChunks -= 1;
+    }
 }
 
 static void
@@ -3390,7 +3395,7 @@ LayoutChars(
     numBytes = LayoutMakeCharInfo(data, segPtr, byteOffset, maxBytes);
 
     if (segPtr->typePtr->layoutProc(&data->index, segPtr, byteOffset,
-	    data->maxX - data->tabSize, numBytes, data->numBytesSoFar == 0,
+	    data->maxX - data->tabSize, numBytes, data->countVisibleChunks == 0,
 	    data->wrapMode, data->textPtr->spaceMode, chunkPtr) == 0) {
 	/*
 	 * No characters from this segment fit in the window: this means
@@ -3425,6 +3430,7 @@ LayoutChars(
 
     data->numBytesSoFar += chunkPtr->numBytes;
     data->numSpaces += chunkPtr->numSpaces;
+    data->countVisibleChunks += 1;
 
     if (chunkPtr->numBytes != maxBytes + chunkPtr->skipFirstChar) {
 	return false;
@@ -3466,6 +3472,7 @@ LayoutHyphen(
 	LayoutMakeNewChunk(data);
 	LayoutSetupChunk(data, segPtr);
 	data->numBytesSoFar += segPtr->size;
+	data->countVisibleChunks += 1;
 	segPtr->body.hyphen.textSize = 0;
 	data->chunkPtr->layoutProcs = &layoutHyphenProcs;
 	data->chunkPtr->clientData = segPtr;
@@ -3489,12 +3496,15 @@ LayoutEmbedded(
     LayoutData *data,
     TkTextSegment *segPtr)
 {
+    TkTextDispChunk *chunkPtr;
+
     assert(segPtr->typePtr->layoutProc);
 
     LayoutMakeNewChunk(data);
+    chunkPtr = data->chunkPtr;
 
     if (segPtr->typePtr->layoutProc(&data->index, segPtr, 0, data->maxX - data->tabSize, 0,
-	    data->numBytesSoFar == 0, data->wrapMode, data->textPtr->spaceMode, data->chunkPtr) != 1) {
+	    data->countVisibleChunks == 0, data->wrapMode, data->textPtr->spaceMode, chunkPtr) != 1) {
 	return false;
     }
 
@@ -3502,8 +3512,17 @@ LayoutEmbedded(
     data->baseChunkPtr = NULL;
 #endif
     LayoutSetupChunk(data, segPtr);
-    data->numBytesSoFar += data->chunkPtr->numBytes;
-    data->x += data->chunkPtr->width;
+    data->numBytesSoFar += chunkPtr->numBytes;
+
+    if (chunkPtr->width > 0) {
+	data->x += chunkPtr->width;
+	data->countVisibleChunks += 1;
+	assert(chunkPtr->minHeight + chunkPtr->minAscent + chunkPtr->minDescent > 0);
+    } else {
+	assert(chunkPtr->minHeight == 0);
+	assert(chunkPtr->minAscent == 0);
+	assert(chunkPtr->minDescent == 0);
+    }
 
     if (segPtr->typePtr->group == SEG_GROUP_IMAGE) {
 	data->textPtr->dInfoPtr->countImages += 1;
@@ -3526,7 +3545,7 @@ LayoutMark(
     }
     LayoutMakeNewChunk(data);
     segPtr->typePtr->layoutProc(&data->index, segPtr, 0, data->maxX - data->tabSize, 0,
-	    data->numBytesSoFar == 0, data->wrapMode, data->textPtr->spaceMode, data->chunkPtr);
+	    data->countVisibleChunks == 0, data->wrapMode, data->textPtr->spaceMode, data->chunkPtr);
     return true;
 }
 
@@ -3737,6 +3756,9 @@ LayoutDestroyChunks(
 	data->dispLineOffset -= chunkPtr->numBytes;
 	data->numBytesSoFar -= chunkPtr->numBytes;
 	data->countChunks -= 1;
+	if (chunkPtr->width > 0) {
+	    data->countVisibleChunks -= 1;
+	}
 
 	if (chunkPtr == data->cursorChunkPtr) {
 	    data->cursorChunkPtr = NULL;
@@ -4216,6 +4238,7 @@ LayoutDLine(
     dlPtr->cursorChunkPtr = data.cursorChunkPtr;
     dlPtr->firstCharChunkPtr = data.firstCharChunkPtr;
     dlPtr->breakInfo = data.breakInfo;
+    dlPtr->invisible = data.countVisibleChunks == 0;
 
     /*
      * Make tab adjustments for the last tab stop, if there is one.
@@ -6898,7 +6921,7 @@ TextInvalidateLineMetrics(
 
     assert(linePtr || action == TK_TEXT_INVALIDATE_ONLY);
     assert(TkBTreeLinesTo(textPtr->sharedTextPtr->tree, textPtr, linePtr, NULL) + lineCount
-	    < totalLines + (action == TK_TEXT_INVALIDATE_INSERT));
+	    < totalLines + (action == TK_TEXT_INVALIDATE_INSERT || action == TK_TEXT_INVALIDATE_DELETE));
 
     if (linePtr) {
 	int deviation;
@@ -6911,8 +6934,7 @@ TextInvalidateLineMetrics(
 	if (deviation) {
 	    lineCount -= MIN((int) lineCount, deviation);
 	}
-
-	if (action != TK_TEXT_INVALIDATE_ONLY
+	if (action == TK_TEXT_INVALIDATE_INSERT
 	    	&& !isMonospaced
 		&& linePtr == TkBTreeGetStartLine(textPtr)
 		&& lineCount + 1 >= totalLines) {
@@ -6949,8 +6971,11 @@ TextInvalidateLineMetrics(
 	    if (isMonospaced) {
 		TkBTreeUpdatePixelHeights(textPtr, linePtr, lineCount, epoch);
 	    } else {
+		TkTextLine *logicalLinePtr;
+
 		ranges = TkRangeListAdd(ranges, lineNum, lineNum + lineCount);
-		ResetPixelInfo(TkBTreeLinePixelInfo(textPtr, linePtr));
+		logicalLinePtr = TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr);
+		ResetPixelInfo(TkBTreeLinePixelInfo(textPtr, logicalLinePtr));
 
 		if (!TkRangeListContainsRange(ranges, lineNum + 1, lineNum + counter)) {
 		    /*
@@ -6963,7 +6988,10 @@ TextInvalidateLineMetrics(
 		     */
 
 		    for ( ; counter > 0; --counter) {
-			ResetPixelInfo(TkBTreeLinePixelInfo(textPtr, linePtr = linePtr->nextPtr));
+			linePtr = linePtr->nextPtr;
+			if (linePtr->logicalLine) {
+			    ResetPixelInfo(TkBTreeLinePixelInfo(textPtr, linePtr));
+			}
 		    }
 		}
 	    }
@@ -7050,7 +7078,11 @@ TextInvalidateLineMetrics(
 		    FreeDLines(textPtr, dlPtr, FindDLine(textPtr, dlPtr, &index), DLINE_UNLINK);
 		}
 	    }
-	    ranges = TkRangeListAdd(ranges, lineNum, lineNum);
+	    if (lineNum + lineCount < totalLines) {
+		ranges = TkRangeListAdd(ranges, lineNum, lineNum);
+	    } else {
+		TkRangeListTruncateAtEnd(ranges, lineNum - 1);
+	    }
 	    ResetPixelInfo(TkBTreeLinePixelInfo(textPtr, linePtr));
 	    break;
 	case TK_TEXT_INVALIDATE_INSERT:
@@ -7076,15 +7108,10 @@ TextInvalidateLineMetrics(
 	 */
 
 	textPtr->dInfoPtr->lineMetricUpdateEpoch += 1;
-	if (action == TK_TEXT_INVALIDATE_DELETE) {
-	    TkRangeListClear(ranges);
-	    FreeDLines(textPtr, textPtr->dInfoPtr->dLinePtr, NULL, DLINE_UNLINK);
-	    totalLines -= lineCount;
-	    textPtr->dInfoPtr->lastLineNo -= lineCount;
-	} else if (action == TK_TEXT_INVALIDATE_INSERT) {
-	    textPtr->dInfoPtr->lastLineNo += lineCount;
+	textPtr->dInfoPtr->lastLineNo += lineCount;
+	if (totalLines > 0) {
+	    ranges = TkRangeListAdd(ranges, 0, totalLines - 1);
 	}
-	ranges = TkRangeListAdd(ranges, 0, totalLines - 1);
     }
 
     FreeDLines(textPtr, NULL, NULL, DLINE_CACHE);  /* clear cache */
@@ -13131,15 +13158,36 @@ CheckLineMetricConsistency(
 
     reference = textPtr->pixelReference;
 
+    if (!lastLinePtr->nextPtr) {
+	const TkTextPixelInfo *pixelInfo = lastLinePtr->pixelInfo + reference;
+
+	if (pixelInfo->epoch & PARTIAL_COMPUTED_BIT) {
+	    Tcl_Panic("CheckLineMetricConsistency: partial flag shouldn't be set in last line (%d)",
+		    TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, lastLinePtr, NULL));
+	}
+	if (pixelInfo->dispLineInfo) {
+	    Tcl_Panic("CheckLineMetricConsistency: last line (%d) should not have display line info",
+		    TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, lastLinePtr, NULL));
+	}
+	if (pixelInfo->height > 0) {
+	    Tcl_Panic("CheckLineMetricConsistency: last line (%d) should not have a height",
+		    TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, lastLinePtr, NULL));
+	}
+    }
+
     while (linePtr != lastLinePtr) {
 	const TkTextPixelInfo *pixelInfo = linePtr->pixelInfo + reference;
 	const TkTextDispLineInfo *dispLineInfo = pixelInfo->dispLineInfo;
+	const TkTextLine *logicalLinePtr = linePtr;
+	unsigned logicalLineNum = lineNum;
 
 	if ((pixelInfo->epoch & EPOCH_MASK) != epoch) {
-	    Tcl_Panic("CheckLineMetricConsistency: line metric info is not up-to-date");
+	    Tcl_Panic("CheckLineMetricConsistency: line metric info (%d) is not up-to-date",
+		    TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, linePtr, NULL));
 	}
 	if (pixelInfo->epoch & PARTIAL_COMPUTED_BIT) {
-	    Tcl_Panic("CheckLineMetricConsistency: computation of this line is not yet complete");
+	    Tcl_Panic("CheckLineMetricConsistency: computation of this line (%d) is not yet complete",
+		    TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, linePtr, NULL));
 	}
 
 	linePtr = linePtr->nextPtr;
@@ -13149,34 +13197,25 @@ CheckLineMetricConsistency(
 	    const TkTextPixelInfo *pixelInfo = linePtr->pixelInfo + reference;
 
 	    if ((pixelInfo->epoch & EPOCH_MASK) != epoch) {
-		Tcl_Panic("CheckLineMetricConsistency: line metric info is not up-to-date");
+		Tcl_Panic("CheckLineMetricConsistency: line metric info (%d) is not up-to-date",
+			TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, linePtr, NULL));
 	    }
 	    if (pixelInfo->epoch & PARTIAL_COMPUTED_BIT) {
-		Tcl_Panic("CheckLineMetricConsistency: partial flag shouldn't be set");
+		Tcl_Panic("CheckLineMetricConsistency: partial flag shouldn't be set (line %d)",
+			TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, linePtr, NULL));
 	    }
 	    if (pixelInfo->dispLineInfo) {
-		Tcl_Panic("CheckLineMetricConsistency: merged line should not have display line info");
+		Tcl_Panic("CheckLineMetricConsistency: "
+			"merged line (%d) should not have display line info",
+			TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, linePtr, NULL));
 	    }
 	    if (pixelInfo->height > 0) {
-		Tcl_Panic("CheckLineMetricConsistency: merged line should not have a height");
+		Tcl_Panic("CheckLineMetricConsistency: merged line (%d) should not have a height",
+			TkBTreeLinesTo(textPtr->sharedTextPtr->tree, NULL, linePtr, NULL));
 	    }
 
 	    linePtr = linePtr->nextPtr;
 	    lineNum += 1;
-	}
-
-	if (!lastLinePtr->nextPtr) {
-	    const TkTextPixelInfo *pixelInfo = lastLinePtr->pixelInfo + reference;
-
-	    if (pixelInfo->epoch & PARTIAL_COMPUTED_BIT) {
-		Tcl_Panic("CheckLineMetricConsistency: partial flag shouldn't be set in last line");
-	    }
-	    if (pixelInfo->dispLineInfo) {
-		Tcl_Panic("CheckLineMetricConsistency: last line should not have display line info");
-	    }
-	    if (pixelInfo->height > 0) {
-		Tcl_Panic("CheckLineMetricConsistency: last line should not have a height");
-	    }
 	}
 
 	if (dispLineInfo) {
@@ -13190,22 +13229,40 @@ CheckLineMetricConsistency(
 		const TkTextDispLineEntry *entry = dispLineInfo->entry + k;
 
 		if (k == 0 && entry->byteOffset != 0) {
-		    Tcl_Panic("CheckLineMetricConsistency: first display line (line %d) should "
-			    "have byte offset zero", lineNum);
+		    Tcl_Panic("CheckLineMetricConsistency: first display line (line %d.%u) should "
+			    "have byte offset zero", logicalLineNum, k);
 		}
 		if ((entry + 1)->byteOffset <= entry->byteOffset) {
-		    Tcl_Panic("CheckLineMetricConsistency: display line (line %d) has invalid byte "
-			    "offset %d (previous is %d)", lineNum, (entry + 1)->byteOffset,
+		    Tcl_Panic("CheckLineMetricConsistency: display line (line %d.%u) has invalid byte "
+			    "offset %d (previous is %d)", logicalLineNum, k, (entry + 1)->byteOffset,
 			    entry->byteOffset);
 		}
 		if (entry->height == 0) {
-		    Tcl_Panic("CheckLineMetricConsistency: display line (%d) has zero height", lineNum);
+		    TkTextIndex index;
+		    const TkTextDispLine *dlPtr;
+
+		    /*
+		     * Zero height is invalid, except in very seldom cases, if the line
+		     * only contains unrealized embedded images/windows. We test this
+		     * explicitly, the corresponding display line contains this information.
+		     */
+
+		    TkTextIndexClear(&index, (TkText *) textPtr);
+		    TkTextIndexSetToStartOfLine2(&index, (TkTextLine *) logicalLinePtr);
+		    TkTextIndexForwBytes(textPtr, &index, entry->byteOffset, &index);
+		    dlPtr = FindDLine((TkText *) textPtr, textPtr->dInfoPtr->dLinePtr, &index);
+		    assert(dlPtr);
+
+		    if (!dlPtr->invisible) {
+			Tcl_Panic("CheckLineMetricConsistency: display line (%d.%u) has zero height",
+				logicalLineNum, k);
+		    }
 		}
 		pixels += entry->height;
 	    }
 	    if (pixels != pixelInfo->height) {
 		Tcl_Panic("CheckLineMetricConsistency: sum of display line pixels is wrong (line %d)",
-			lineNum);
+			logicalLineNum);
 	    }
 	}
     }
