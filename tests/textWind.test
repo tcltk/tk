@@ -653,14 +653,6 @@ test textWind-10.3 {EmbWinLayoutProc procedure, error in creating window} -const
 } -cleanup {
     rename bgerror {}
 } -result {{{bad window path name "gorp"}} {40 11 0 0}}
-    .t delete 1.0 end
-    destroy .t.f
-    proc bgerror args {
-        global msg
-        if {[lsearch -exact $msg $args] == -1} {
-            lappend msg $args
-        }
-    }
 
 test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} -constraints {
     textfonts
@@ -669,9 +661,7 @@ test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} -const
     destroy .t.f
     proc bgerror args {
         global msg
-        if {[lsearch -exact $msg $args] == -1} {
-            lappend msg $args
-        }
+	lappend msg $args
     }
 } -body {
     .t insert 1.0 "Some sample text"
@@ -701,9 +691,7 @@ test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} -const
     destroy .t.f
     proc bgerror args {
         global msg
-        if {[lsearch -exact $msg $args] == -1} {
-            lappend msg $args
-        }
+	lappend msg $args
     }
 } -body {
     .t insert 1.0 "Some sample text"
@@ -725,9 +713,7 @@ test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} -const
     .t delete 1.0 end
     proc bgerror args {
         global msg
-        if {[lsearch -exact $msg $args] == -1} {
-            lappend msg $args
-        }
+	lappend msg $args
     }
 } -body {
     .t insert 1.0 "Some sample text"
@@ -747,9 +733,7 @@ test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -const
     destroy .t2
     proc bgerror args {
         global msg
-        if {[lsearch -exact $msg $args] == -1} {
-            lappend msg $args
-        }
+	lappend msg $args
     }
 } -body {
     .t insert 1.0 "Some sample text"

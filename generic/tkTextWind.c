@@ -1401,14 +1401,13 @@ EmbWinLayoutProc(
 	 */
 
 	if (dsPtr) {
-	    Tcl_DStringAppend(dsPtr, before, (int) (string-before));
+	    Tcl_DStringAppend(dsPtr, before, string - before);
 	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), -1, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(dsPtr);
 	} else {
 	    code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, -1, TCL_EVAL_GLOBAL);
 	}
 	if (code != TCL_OK) {
-	createError:
 	    Tcl_BackgroundException(textPtr->interp, code);
 	    goto gotWindow;
 	}
@@ -1418,7 +1417,8 @@ EmbWinLayoutProc(
 	ewPtr->body.ew.tkwin = Tk_NameToWindow(textPtr->interp, Tcl_DStringValue(&name), textPtr->tkwin);
 	Tcl_DStringFree(&name);
 	if (!ewPtr->body.ew.tkwin) {
-	    goto createError;
+	    Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
+	    goto gotWindow;
 	}
 
 	for (ancestor = textPtr->tkwin; ; ancestor = Tk_Parent(ancestor)) {
