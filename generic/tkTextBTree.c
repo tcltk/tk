@@ -5102,7 +5102,7 @@ LinkSwitch(
  *
  *	This function adds a new segment to a B-tree at given location.
  *	Note that this function is not updating the tag information of
- *	the line.
+ *	the line. It is also not propagating to B-Tree.
  *
  * Results:
  *	None.
@@ -5209,7 +5209,8 @@ UnlinkSegmentAndCleanup(
  * UnlinkSegment --
  *
  *	This function removes a segment from a B-tree. This function will
- *	not propagate to removal to the B-Tree.
+ *	not propagate to the B-Tree. The line information will not be
+ *	updated.
  *
  * Results:
  *	The predecessor of the unlinked segment.

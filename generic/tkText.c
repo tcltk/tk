@@ -1841,7 +1841,6 @@ TextWidgetObjCmd(
 	goto done;
     }
     case TEXT_DEBUG:
-#ifndef TK_IGNORE_TEXT_DEBUG
 	if (objc > 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "boolean");
 	    result = TCL_ERROR;
@@ -1856,7 +1855,6 @@ TextWidgetObjCmd(
 	    }
 	    tkTextDebug = tkBTreeDebug;
 	}
-#endif
 	break;
     case TEXT_DELETE: {
 	int i, flags = 0;

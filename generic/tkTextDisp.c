@@ -7083,7 +7083,8 @@ TextInvalidateLineMetrics(
 	    } else {
 		TkRangeListTruncateAtEnd(ranges, lineNum - 1);
 	    }
-	    ResetPixelInfo(TkBTreeLinePixelInfo(textPtr, linePtr));
+	    ResetPixelInfo(TkBTreeLinePixelInfo(textPtr,
+		    TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr)));
 	    break;
 	case TK_TEXT_INVALIDATE_INSERT:
 	    if (lineCount > 0 && lineNum + 1 < totalLines) {
