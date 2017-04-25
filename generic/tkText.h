@@ -683,6 +683,7 @@ typedef struct TkTextDispLine {
     				 * has been applied). */
     uint32_t byteCount;		/* Number of bytes accounted for by this display line, including a
     				 * trailing space or newline that isn't actually displayed. */
+    bool invisible;		/* Whether this display line is invisible (no chunk with width > 0). */
     int32_t y;			/* Y-position at which line is supposed to be drawn (topmost pixel
     				 * of rectangular area occupied by line). */
     int32_t oldY;		/* Y-position at which line currently appears on display. This is
@@ -1845,6 +1846,7 @@ MODULE_SCOPE void	TkTextBindProc(ClientData clientData, XEvent *eventPtr);
 MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
 MODULE_SCOPE int	TkConfigureText(Tcl_Interp *interp, TkText *textPtr, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE const TkTextSegment * TkTextGetUndeletableNewline(const TkTextLine *lastLinePtr);
 MODULE_SCOPE bool	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
 			    const char *index1, const char *index2, const char *arg, bool userFlag);
 MODULE_SCOPE void	TkTextUpdateAlteredFlag(TkSharedText *sharedTextPtr);
@@ -1898,7 +1900,7 @@ MODULE_SCOPE void	TkTextInspectUndoMarkItem(const TkSharedText *sharedTextPtr,
 MODULE_SCOPE bool	TkTextTagChangedUndoRedo(const TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
 			    const TkTextTag *tagPtr, bool affectsDisplayGeometry);
-MODULE_SCOPE void	TkTextReplaceTags(TkText *textPtr, TkTextSegment *segPtr,
+MODULE_SCOPE void	TkTextReplaceTags(TkText *textPtr, TkTextSegment *segPtr, bool undoable,
 			    Tcl_Obj *tagListPtr);
 MODULE_SCOPE void	TkTextFindTags(Tcl_Interp *interp, TkText *textPtr, const TkTextSegment *segPtr,
 			    bool discardSelection);
@@ -2089,11 +2091,16 @@ MODULE_SCOPE bool	TkTextIndexEnsureBeforeLastChar(TkTextIndex *indexPtr);
 MODULE_SCOPE bool	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
 
 /*
- * Debugging info macro:
+ * Debugging info macros:
  */
 
-#define TK_TEXT_DEBUG(expr)	{ if (tkTextDebug) { expr; } }
-#define TK_BTREE_DEBUG(expr)	{ if (tkBTreeDebug) { expr; } }
+#ifdef TK_TEXT_NDEBUG
+# define TK_TEXT_DEBUG(expr)
+# define TK_BTREE_DEBUG(expr)
+#else
+# define TK_TEXT_DEBUG(expr)	{ if (tkTextDebug) { expr; } }
+# define TK_BTREE_DEBUG(expr)	{ if (tkBTreeDebug) { expr; } }
+#endif
 
 /*
  * Backport definitions for Tk 8.6/8.5.

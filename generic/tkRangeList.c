@@ -45,14 +45,24 @@ DEBUG_ALLOC(unsigned tkRangeListCountDestroy = 0);
 #ifndef NDEBUG
 
 static unsigned
-ComputeRangeSize(
+CountIntegers(
     const TkRangeList *ranges)
 {
-    unsigned i;
     int count = 0;
 
-    for (i = 0; i < ranges->size; ++i) {
-	count += TkRangeSpan(ranges->items + i);
+    if (ranges->size > 0) {
+	const TkRange *r = ranges->items;
+	unsigned i;
+
+	assert(r->low <= r->high);
+	count += TkRangeSpan(r);
+
+	for (i = 1; i < ranges->size; ++i) {
+	    r = ranges->items + i;
+	    assert(r->low <= r->high);
+	    assert((r - 1)->high + 1 < r->low);
+	    count += TkRangeSpan(r);
+	}
     }
 
     return count;
@@ -168,7 +178,7 @@ Amalgamate(
 	curr->high = MAX((next - 1)->high, high);
 	memmove(curr + 1, next, (last - next)*sizeof(TkRange));
 	ranges->size -= (next - curr) - 1;
-	assert(ComputeRangeSize(ranges) == ranges->count);
+	assert(CountIntegers(ranges) == ranges->count);
     }
 }
 
@@ -289,7 +299,7 @@ TkRangeListTruncateAtFront(
 	ranges->size -= curr - ranges->items;
     }
 
-    assert(ComputeRangeSize(ranges) == ranges->count);
+    assert(CountIntegers(ranges) == ranges->count);
 }
 
 
@@ -324,7 +334,7 @@ TkRangeListTruncateAtEnd(
 	ranges->count -= TkRangeSpan(curr);
     }
 
-    assert(ComputeRangeSize(ranges) == ranges->count);
+    assert(CountIntegers(ranges) == ranges->count);
 }
 
 
@@ -488,7 +498,7 @@ TkRangeListInsert(
     }
 
     ranges->count += span;
-    assert(ComputeRangeSize(ranges) == ranges->count);
+    assert(CountIntegers(ranges) == ranges->count);
     return ranges;
 }
 
@@ -571,7 +581,7 @@ TkRangeListRemove(
 	}
     }
 
-    assert(ComputeRangeSize(ranges) == ranges->count);
+    assert(CountIntegers(ranges) == ranges->count);
     return ranges;
 }
 
@@ -584,8 +594,9 @@ TkRangeListDelete(
 {
     TkRange *curr;
     TkRange *last;
+    TkRange *next;
+    unsigned size;
     int span;
-    int lower;
 
     assert(ranges);
     assert(low <= high);
@@ -596,58 +607,79 @@ TkRangeListDelete(
 
     last = ranges->items + ranges->size;
     span = high - low + 1;
-    low = MAX(low, TkRangeListLow(ranges));
-    high = MIN(high, TkRangeListHigh(ranges));
     curr = LowerBound(ranges->items, last, low);
-    lower = high;
+    assert(curr != last);
 
-    if (curr != last) {
-	TkRange *next;
-	unsigned size;
+    while (curr != last && curr->high < low) {
+	curr += 1;
+    }
 
-	if (curr->low < low && low <= curr->high) {
-	    /* Example: cur:{1,7} - arg:{2,5} -> {1,3} */
-	    /* Example: cur:{1,3} - arg:{3,6} -> {1,2} */
-	    /* Example: cur:{1,1} - arg:{2,5} -> {1,1} */
-	    int high = MAX(low - 1, curr->high - span);
-	    ranges->count -= curr->high - high;
-	    curr->high = high;
-	    next = curr + 1;
-	    if (next != last && curr->high + 1 >= next->low - span) {
-		/* Example: curr:{0,3}{8,9}{29,33} - arg:{1,30} -> {0,3} */
-		lower = curr->low;
-	    } else {
-		curr = next;
-	    }
-	} else if (curr->high < low) {
-	    curr += 1;
-	}
+    /* we have: low <= curr->high */
 
-	for (next = curr; next != last && next->high <= high; ++next) {
-	    ranges->count -= TkRangeSpan(next);
-	}
-
-	memmove(curr, next, (last - next)*sizeof(TkRange));
-	ranges->size -= (size = next - curr);
-	last -= size;
-
-	if (curr != last) {
-	    if (lower < curr->low) {
-		lower += span;
-		ranges->count -= lower - curr->low;
-		curr->low = lower;
-	    } else if (curr->low <= high) {
-		ranges->count -= high + 1 - curr->low;
-		curr->low = high + 1;
-	    }
-	    for (next = curr; next != last; next += 1) {
-		next->low -= span;
-		next->high -= span;
-	    }
+    for ( ; curr != last && curr->low < low; ++curr) {
+	if (curr->high <= high) {
+	    ranges->count -= TkRangeSpan(curr);
+	    curr->high = curr->low;
+	    ranges->count += 1;
+	} else {
+	    ranges->count -= span;
+	    curr->high -= span;
 	}
     }
 
-    assert(ComputeRangeSize(ranges) == ranges->count);
+    /* we have: low <= curr->low AND low <= curr->high */
+
+    for (next = curr; next != last && next->high <= high; ++next) {
+	ranges->count -= TkRangeSpan(next);
+    }
+    memmove(curr, next, (last - next)*sizeof(TkRange));
+    ranges->size -= (size = next - curr);
+    last -= size;
+
+    if (curr != last) {
+	/* we have: low <= curr->low AND high < curr->high */
+
+	if (curr->low <= high) {
+	    ranges->count -= TkRangeSpan(curr);
+	    if (curr->low <= high) {
+		curr->low = high + 1 - span;
+	    } else {
+		curr->low -= span;
+	    }
+	    curr->high -= span;
+	    assert(curr->low <= curr->high);
+	    ranges->count += TkRangeSpan(curr);
+
+	    /* possibly we have to amalgamate with previous */
+
+	    if (curr > ranges->items) {
+		TkRange *prev = curr - 1;
+
+		if (prev->high + 1 >= curr->low) {
+		    ranges->count -= TkRangeSpan(curr);
+		    ranges->count -= TkRangeSpan(prev);
+		    prev->high = curr->high;
+		    ranges->count += TkRangeSpan(prev);
+		    next = curr + 1;
+		    memmove(curr, next, (last - curr)*sizeof(TkRange));
+		    ranges->size -= 1;
+		    last -= 1;
+		}
+	    } else {
+		curr += 1;
+	    }
+	}
+
+	/* reduce the rest by span: */
+
+	for ( ; curr != last; ++curr) {
+	    assert(curr->low > high);
+	    curr->low -= span;
+	    curr->high -= span;
+	}
+    }
+
+    assert(CountIntegers(ranges) == ranges->count);
     return ranges;
 }
 

@@ -13,7 +13,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#if defined(_MSC_VER ) && _MSC_VER < 1500
+#if defined(_MSC_VER) && _MSC_VER < 1500
 /* suppress wrong warnings to support ancient compilers */
 #pragma warning (disable : 4018)
 #endif
@@ -455,6 +455,7 @@ typedef struct UndoTokenDelete {
     TkTextSegment **segments;	/* Array containing the deleted segments. */
     uint32_t numSegments:31;	/* Number of segments. */
     uint32_t inclusive:1;	/* Inclusive bounds? */
+    uint32_t surrogate:1;	/* Did we insert a surrogate newline? */
 } UndoTokenDelete;
 
 /* Derivation of TkTextUndoTokenRange */
@@ -482,7 +483,8 @@ typedef struct UndoTokenTagClear {
     TkTextUndoIndex startIndex;	/* Start of clearing range. */
     TkTextUndoIndex endIndex;	/* End of clearing range. */
     UndoTagChange *changeList;
-    unsigned changeListSize;
+    uint32_t changeListSize:31;
+    uint32_t discardSelection:1;
 } UndoTokenTagClear;
 
 /* Derivation of TkTextUndoTokenRange */
@@ -490,6 +492,7 @@ typedef struct RedoTokenClearTags {
     const Tk_UndoType *undoType;
     TkTextUndoIndex startIndex;	/* Start of clearing range. */
     TkTextUndoIndex endIndex;	/* End of clearing range. */
+    uint8_t discardSelection;
 } RedoTokenClearTags;
 
 /*
@@ -540,10 +543,15 @@ static bool
 SegIsAtStartOfLine(
     const TkTextSegment *segPtr)
 {
-    while (segPtr && segPtr->size == 0) {
-	segPtr = segPtr->prevPtr;
+    while (true) {
+	if (!(segPtr = segPtr->prevPtr)) {
+	    return true;
+	}
+	if (segPtr->size > 0) {
+	    return false;
+	}
     }
-    return !segPtr;
+    return true; /* never reached */
 }
 
 static bool
@@ -1127,10 +1135,12 @@ SetLineHasChanged(
     const TkSharedText *sharedTextPtr,
     TkTextLine *linePtr)
 {
-    if (!linePtr->logicalLine) {
-	 linePtr = TkBTreeGetLogicalLine(sharedTextPtr, NULL, linePtr);
+    if (linePtr->nextPtr) {
+	if (!linePtr->logicalLine) {
+	     linePtr = TkBTreeGetLogicalLine(sharedTextPtr, NULL, linePtr);
+	}
+	linePtr->changed = true;
     }
-    linePtr->changed = true;
 }
 
 /*
@@ -1269,15 +1279,16 @@ UndoDeletePerform(
     TkTextTagSet *tagoffPtr;
     TkTextTagSet *additionalTagoffPtr;
     unsigned numSegments = undoToken->numSegments - 1;
-    unsigned changeToLineCount = 0;
-    unsigned changeToLogicalLineCount = 0;
-    unsigned changeToBranchCount = 0;
-    unsigned size = 0;
+    int changeToLineCount = 0;
+    int changeToLogicalLineCount = 0;
+    int changeToBranchCount = 0;
     bool reinsertFirstSegment = true;
+    int size = 0;
     unsigned i;
 
     assert(segments);
     assert(segments[0]);
+    assert(sharedTextPtr->endMarker->sectionPtr->linePtr->prevPtr);
 
     changeToPixelInfo = treePtr->pixelInfoBuffer;
     memset(changeToPixelInfo, 0, sizeof(changeToPixelInfo[0])*treePtr->numPixelReferences);
@@ -1287,13 +1298,16 @@ UndoDeletePerform(
 	prevPtr = undoToken->startIndex.u.markPtr;
 	linePtr = prevPtr->sectionPtr->linePtr;
 	reinsertFirstSegment = false;
+	assert(prevPtr->sectionPtr);
     } else {
 	linePtr = TkBTreeFindLine(sharedTextPtr->tree, NULL, undoToken->startIndex.lineIndex);
     }
 
     startLinePtr = linePtr;
     nodePtr = startLinePtr->parentPtr;
-    firstPtr = segPtr = *segments++;
+    segPtr = *segments++;
+    firstPtr = segPtr;
+    UNMARK_POINTER(firstPtr);
     firstPtr->protectionFlag = true;
     prevSegPtr = NULL;
 
@@ -1310,30 +1324,33 @@ UndoDeletePerform(
 
     while (segPtr) {
 	if (POINTER_IS_MARKED(segPtr)) {
-	    TkTextSection *sectionPtr;
-
 	    UNMARK_POINTER(segPtr);
 
-	    assert(segPtr->typePtr != &tkTextCharType);
-	    assert(segPtr->sectionPtr);
+	    if (prevPtr != segPtr) {
+		TkTextSection *sectionPtr;
 
-	    /*
-	     * This is a re-inserted segment, it will move.
-	     */
+		assert(segPtr->typePtr != &tkTextCharType);
+		assert(segPtr->sectionPtr);
 
-	    sectionPtr = segPtr->sectionPtr;
-	    UNMARK_POINTER(segPtr);
-	    UnlinkSegment(segPtr);
-	    JoinSections(sectionPtr);
+		/*
+		 * This is a re-inserted segment, it will move.
+		 */
+
+		sectionPtr = segPtr->sectionPtr;
+		UNMARK_POINTER(segPtr);
+		UnlinkSegment(segPtr);
+		JoinSections(sectionPtr);
+	    }
 	} else {
 	    size += segPtr->size;
 	}
 	lastPtr = segPtr;
-	DEBUG(segPtr->sectionPtr = NULL);
 	if (reinsertFirstSegment) {
+	    DEBUG(segPtr->sectionPtr = NULL);
 	    ReInsertSegment(sharedTextPtr, &undoToken->startIndex, segPtr, false);
 	    reinsertFirstSegment = false;
-	} else {
+	} else if (prevPtr != segPtr) {
+	    DEBUG(segPtr->sectionPtr = NULL);
 	    LinkSegment(linePtr, prevPtr, segPtr);
 	}
 	if (segPtr->typePtr == &tkTextCharType) {
@@ -1452,10 +1469,8 @@ UndoDeletePerform(
      * insertion point, then rebalance the tree if necessary.
      */
 
-	/* MSVC cannot implicitly convert unsigned to signed. */
-    SubtractPixelCount2(treePtr, nodePtr, -((int) changeToLineCount),
-	    -((int) changeToLogicalLineCount), -((int) changeToBranchCount),
-	    -((int) size), changeToPixelInfo);
+    SubtractPixelCount2(treePtr, nodePtr, -changeToLineCount, -changeToLogicalLineCount,
+	    -changeToBranchCount, -size, changeToPixelInfo);
     linePtr->parentPtr->numChildren += changeToLineCount;
 
     if (nodePtr->numChildren > MAX_CHILDREN) {
@@ -1463,13 +1478,31 @@ UndoDeletePerform(
     }
 
     /*
-     * This line now needs to have its height recalculated. This has to be done after Rebalance.
+     * This line now needs to have its height recalculated.
+     * This has to be done after Rebalance.
      */
 
     TkTextInvalidateLineMetrics(sharedTextPtr, NULL,
 	    startLinePtr, changeToLineCount, TK_TEXT_INVALIDATE_INSERT);
 
     TK_BTREE_DEBUG(TkBTreeCheck((TkTextBTree) treePtr));
+
+    if (undoToken->surrogate) {
+	TkTextSegment *surrogatePtr = sharedTextPtr->endMarker->sectionPtr->linePtr->prevPtr->lastPtr;
+	TkTextIndex index1, index2;
+
+	assert(TkBTreeGetRoot(sharedTextPtr->tree)->numLines > 2);
+
+	/*
+	 * We have to delete the surrogate newline.
+	 */
+	
+	TkTextIndexClear2(&index1, NULL, sharedTextPtr->tree);
+	TkTextIndexSetSegment(&index1, surrogatePtr);
+	TkTextIndexForwBytes(NULL, &index1, surrogatePtr->size - 1, &index1);
+	TkTextIndexForwBytes(NULL, &index1, 1, &index2);
+	DeleteIndexRange(sharedTextPtr, &index1, &index2, 0, NULL, NULL);
+    }
 }
 
 static void
@@ -1875,6 +1908,7 @@ UndoClearTagsPerform(
 	redoToken->undoType = &redoTokenClearTagsType;
 	redoToken->startIndex = token->startIndex;
 	redoToken->endIndex = token->endIndex;
+	redoToken->discardSelection = token->discardSelection;
 	redoInfo->token = (TkTextUndoToken *) redoToken;
 	DEBUG_ALLOC(tkTextCountNewUndoToken++);
     }
@@ -1913,7 +1947,8 @@ RedoClearTagsPerform(
 
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->startIndex, &index1);
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->endIndex, &index2);
-    TkBTreeClearTags(sharedTextPtr, NULL, &index1, &index2, redoInfo, true, TkTextTagChangedUndoRedo);
+    TkBTreeClearTags(sharedTextPtr, NULL, &index1, &index2, redoInfo, token->discardSelection,
+	    TkTextTagChangedUndoRedo);
 }
 
 /*
@@ -2318,22 +2353,14 @@ AdjustPixelClient(
     } else {
 	TkTextLine *linePtr = nodePtr->linePtr;
 	TkTextLine *lastPtr = nodePtr->lastPtr->nextPtr;
-	unsigned height = 0;
-	unsigned epoch = 1;
 
 	for ( ; linePtr != lastPtr; linePtr = linePtr->nextPtr) {
-	    if (linePtr == startLine) {
-		height = defaultHeight;
-		epoch = 0;
-	    } else if (linePtr == endLine) {
-		height = 0;
-		epoch = 1;
-	    }
-
 	    /*
 	     * Notice that for the very last line, we are never counting and
-	     * therefore this always has a height of 0 and an epoch of 1.
+	     * therefore this always has a height of zero.
 	     */
+
+	    unsigned height = (linePtr == endLine) ? 0 : defaultHeight;
 
 	    if (newPixelReferences > treePtr->numPixelReferences) {
 		DEBUG_ALLOC(if (!linePtr->pixelInfo) tkTextCountNewPixelInfo++);
@@ -2346,7 +2373,7 @@ AdjustPixelClient(
 		DEBUG_ALLOC(tkTextCountDestroyDispInfo++);
 	    }
 
-	    linePtr->pixelInfo[useReference].epoch = epoch;
+	    assert((int) height >= 0);
 	    pixelCount += (linePtr->pixelInfo[useReference].height = height);
 	    numDispLines += GetDisplayLines(linePtr, useReference);
 	}
@@ -2357,6 +2384,7 @@ AdjustPixelClient(
 	nodePtr->pixelInfo = realloc(nodePtr->pixelInfo,
 		sizeof(nodePtr->pixelInfo[0])*newPixelReferences);
     }
+    assert((int) pixelCount >= 0);
     nodePtr->pixelInfo[useReference].pixels = pixelCount;
     nodePtr->pixelInfo[useReference].numDispLines = numDispLines;
     if (numDispLinesPtr) {
@@ -2741,6 +2769,7 @@ PropagateDispLineChange(
     if (subtractFromDispLines != 0 || subtractFromPixels != 0) {
 	for ( ; nodePtr; nodePtr = nodePtr->parentPtr) {
 	    NodePixelInfo *pixelInfo = nodePtr->pixelInfo + pixelReference;
+	    assert((int) pixelInfo->pixels >= 0);
 	    pixelInfo->numDispLines -= subtractFromDispLines;
 	    pixelInfo->pixels -= subtractFromPixels;
 	}
@@ -2817,6 +2846,7 @@ PropagatePixelCountChange(
     for ( ; nodePtr; nodePtr = nodePtr->parentPtr) {
 	NodePixelInfo *pixelInfo = nodePtr->pixelInfo + pixelReference;
 
+	assert((int) pixelInfo->pixels >= 0);
 	pixelInfo->pixels += changeToPixels;
 	pixelInfo->numDispLines += changeToDispLines;
     }
@@ -2845,6 +2875,7 @@ TkBTreeAdjustPixelHeight(
 	 * Do this before updating the line height.
 	 */
 
+	assert((int) linePtr->pixelInfo[pixelReference].height >= 0);
 	changeToDispLines += (int) numDispLines - (int) GetDisplayLines(linePtr, pixelReference);
 	changeToPixels += newPixelHeight - linePtr->pixelInfo[pixelReference].height;
 
@@ -2990,6 +3021,8 @@ SubtractPixelInfo(
 	nodePtr->size -= linePtr->size;
 
 	for (ref = 0; ref < treePtr->numPixelReferences; ++ref, ++dst) {
+	    assert((int) dst->pixels >= 0);
+	    assert((int) linePtr->pixelInfo[ref].height >= 0);
 	    dst->pixels -= linePtr->pixelInfo[ref].height;
 	    dst->numDispLines -= GetDisplayLines(linePtr, ref);
 	}
@@ -3041,6 +3074,7 @@ SubtractPixelCount2(
 	    nodePtr->size -= changeToSize;
 
 	    for (ref = 0; ref < treePtr->numPixelReferences; ++ref, ++dst, ++src) {
+		assert((int) dst->pixels >= 0);
 		dst->pixels -= src->pixels;
 		dst->numDispLines -= src->numDispLines;
 	    }
@@ -3388,11 +3422,13 @@ MakeTagInfo(
     TkText *textPtr,
     TkTextSegment *segPtr)	/* The first inserted text segment. */
 {
-    TkTextTagSet *tagInfoPtr = textPtr->sharedTextPtr->emptyTagInfoPtr;
+    TkTextTagSet *tagInfoPtr;
 
     assert(segPtr);
     assert(textPtr);
     assert(textPtr->insertMarkPtr);
+
+    tagInfoPtr = textPtr->sharedTextPtr->emptyTagInfoPtr;
 
     switch (textPtr->tagging) {
     case TK_TEXT_TAGGING_WITHIN: {
@@ -3543,7 +3579,6 @@ LoadMakeTagInfo(
 	TkTextTagSetIncrRefCount(*tagInfoPtr = textPtr->sharedTextPtr->emptyTagInfoPtr);
     }
     for (i = 0; i < objc; ++i) {
-	/* TODO: insert list of indices */
 	*tagInfoPtr = TagSetAdd(*tagInfoPtr, TkTextCreateTag(textPtr, Tcl_GetString(objv[i]), NULL));
     }
     return true;
@@ -3564,7 +3599,6 @@ LoadRemoveTags(
 	return false;
     }
     for (i = 0; i < objc; ++i) {
-	/* TODO: remove list of indices */
 	*tagInfoPtr = TagSetErase(*tagInfoPtr, TkTextCreateTag(textPtr, Tcl_GetString(objv[i]), NULL));
     }
     return true;
@@ -4221,11 +4255,10 @@ TkBTreeInsertChars(
     bool split = true;
     SplitInfo info;
     unsigned chunkSize = 0; /* satisifies the compiler */
-    unsigned size = 0;
+    int size = 0;
     int hyphenRules = 0;
 
     assert(*string); /* otherwise tag information might become erroneous */
-    assert(indexPtr->textPtr);
 
     sharedTextPtr = treePtr->sharedTextPtr;
 
@@ -4273,6 +4306,8 @@ TkBTreeInsertChars(
     if (hyphenTagPtr) {
 	int highestPriority = -1;
 	TkText *textPtr = indexPtr->textPtr;
+
+	assert(textPtr);
 
 	for (tagPtr = hyphenTagPtr; tagPtr; tagPtr = tagPtr->nextPtr) {
 	    if (!TkTextTagSetTest(linePtr->parentPtr->tagonPtr, tagPtr->index)) {
@@ -4556,9 +4591,8 @@ TkBTreeInsertChars(
      * insertion point, then rebalance the tree if necessary.
      */
 
-	/* MSVC cannot implicitly convert unsigned to signed. */
-    SubtractPixelCount2(treePtr, linePtr->parentPtr, -((int) changeToLineCount),
-	    -((int) changeToLogicalLineCount), 0, -((int) size), changeToPixelInfo);
+    SubtractPixelCount2(treePtr, linePtr->parentPtr, -changeToLineCount,
+	    -changeToLogicalLineCount, 0, -size, changeToPixelInfo);
 
     if ((linePtr->parentPtr->numChildren += changeToLineCount) > MAX_CHILDREN) {
 	Rebalance(treePtr, linePtr->parentPtr);
@@ -4582,6 +4616,8 @@ TkBTreeInsertChars(
 	TkTextTag *tagPtr = NULL;
 	TkText *textPtr = indexPtr->textPtr;
 	unsigned i = TkTextTagSetFindFirst(tagInfoPtr);
+
+	assert(textPtr);
 
 	/*
 	 * We have to update the elision info, but only for the tag with the highest
@@ -5172,7 +5208,8 @@ UnlinkSegmentAndCleanup(
  *
  * UnlinkSegment --
  *
- *	This function removes a segment from a B-tree.
+ *	This function removes a segment from a B-tree. This function will
+ *	not propagate to removal to the B-Tree.
  *
  * Results:
  *	The predecessor of the unlinked segment.
@@ -6251,6 +6288,7 @@ CanInsertLeft(
     assert(segPtr->tagInfoPtr);
 
     if (!TkTextTagSetIsEmpty(segPtr->tagInfoPtr)) {
+	assert(textPtr);
 	switch (textPtr->tagging) {
 	    case TK_TEXT_TAGGING_GRAVITY:
 		return offset > 0 || textPtr->insertMarkPtr->typePtr == &tkTextLeftMarkType;
@@ -6279,15 +6317,19 @@ CanInsertRight(
 {
     assert(prevPtr->tagInfoPtr);
 
-    switch (textPtr->tagging) {
-	case TK_TEXT_TAGGING_GRAVITY:
-	    return textPtr->insertMarkPtr->typePtr == &tkTextRightMarkType;
-	case TK_TEXT_TAGGING_WITHIN:
-	    return TkTextTagSetContains(GetNextTagInfoSegment(segPtr)->tagInfoPtr, prevPtr->tagInfoPtr);
-	case TK_TEXT_TAGGING_NONE:
-	    return TkTextTagSetIsEmpty(prevPtr->tagInfoPtr);
+    if (textPtr) {
+	switch (textPtr->tagging) {
+	    case TK_TEXT_TAGGING_GRAVITY:
+		return textPtr->insertMarkPtr->typePtr == &tkTextRightMarkType;
+	    case TK_TEXT_TAGGING_WITHIN:
+		return TkTextTagSetContains(GetNextTagInfoSegment(segPtr)->tagInfoPtr,
+			prevPtr->tagInfoPtr);
+	    case TK_TEXT_TAGGING_NONE:
+		return TkTextTagSetIsEmpty(prevPtr->tagInfoPtr);
+	}
     }
-    return false; /* never reached */
+    assert(TkTextTagSetIsEmpty(segPtr->tagInfoPtr));
+    return TkTextTagSetIsEmpty(prevPtr->tagInfoPtr);
 }
 
 static TkTextSegment *
@@ -6307,8 +6349,6 @@ SplitSeg(
 	assert(splitInfo->increase != 0);
 	assert(!splitInfo->splitted);
     }
-
-    assert(indexPtr->textPtr || !splitInfo);
 
     if (TkTextIndexGetShared(indexPtr)->steadyMarks) {
 	/*
@@ -6680,12 +6720,13 @@ DeleteRange(
     				 * also firstSegPtr and lastSegPtr will be deleted. */
     TkTextUndoInfo *undoInfo)	/* Store undo information, can be NULL. */
 {
-    BTree *treePtr;
+    const TkTextSegment *lastNewline;
     TkTextSegment *prevPtr;
     TkTextSegment *nextPtr;
     TkTextSegment *segPtr;
     TkTextSegment **segments;
     TkTextSegment *prevLinkPtr;
+    TkTextSegment *beforeSurrogate;
     TkTextSection *firstSectionPtr;
     TkTextSection *prevSectionPtr;
     TkTextSection *lastSectionPtr;
@@ -6697,11 +6738,14 @@ DeleteRange(
     Node *curNodePtr;
     Node *nodePtr1;
     Node *nodePtr2;
+    BTree *treePtr;
     unsigned numSegments;
     unsigned maxSegments;
     unsigned byteSize;
     unsigned lineDiff;
     bool steadyMarks;
+    bool insertSurrogate;
+    bool deleteFirst;
     unsigned lineNo1;
     unsigned lineNo2;
 
@@ -6756,6 +6800,10 @@ DeleteRange(
     steadyMarks = sharedTextPtr->steadyMarks;
     numSegments = 0;
     segments = NULL;
+    insertSurrogate = false;
+    assert(firstSegPtr->size == 0);
+    beforeSurrogate = firstSegPtr->prevPtr;
+    deleteFirst = (flags & DELETE_INCLUSIVE) && TkTextIsStableMark(firstSegPtr);
 
     linePtr1 = sectionPtr->linePtr;
     linePtr2 = lastSegPtr->sectionPtr->linePtr;
@@ -6770,9 +6818,21 @@ DeleteRange(
 	SetLineHasChanged(sharedTextPtr, linePtr2);
     }
 
+    if ((lastNewline = linePtr2->nextPtr ? NULL : TkTextGetUndeletableNewline(linePtr2))) {
+	while (beforeSurrogate && TkTextIsSpecialOrPrivateMark(beforeSurrogate)) {
+	    beforeSurrogate = beforeSurrogate->prevPtr;
+	}
+	if (!beforeSurrogate) {
+	    TkTextLine *prevLinePtr = linePtr1->prevPtr;
+	    if (prevLinePtr) {
+		beforeSurrogate = prevLinePtr->lastPtr;
+	    }
+	}
+    }
+
     if (undoInfo) {
 	/* reserve the first entry if needed */
-	numSegments = (flags & DELETE_INCLUSIVE) && TkTextIsStableMark(firstSegPtr) ? 1 : 0;
+	numSegments = deleteFirst ? 1 : 0;
 	maxSegments = 100;
 	segments = malloc(maxSegments * sizeof(TkTextSegment *));
 	DEBUG(segments[0] = NULL);
@@ -6835,7 +6895,8 @@ DeleteRange(
 		     */
 		    SubtractPixelInfo(treePtr, curLinePtr);
 		    if (curLinePtr->numBranches) {
-			PropagateChangeOfNumBranches(curLinePtr->parentPtr, -(int) curLinePtr->numBranches);
+			PropagateChangeOfNumBranches(curLinePtr->parentPtr,
+				-(int) curLinePtr->numBranches);
 		    }
 		}
 
@@ -6865,7 +6926,15 @@ DeleteRange(
 		segments[numSegments++] = segPtr;
 		segPtr->refCount += 1;
 	    }
-	    if (!segPtr->typePtr->deleteProc((TkTextBTree) treePtr, segPtr, flags)) {
+	    if (segPtr == lastNewline) {
+		/*
+		 * Do not only delete last newline, instead replace it with a surrogate newline,
+		 * and link this newline at same position.
+		 */
+
+		segPtr->typePtr->deleteProc((TkTextBTree) treePtr, segPtr, flags);
+		insertSurrogate = true;
+	    } else if (!segPtr->typePtr->deleteProc((TkTextBTree) treePtr, segPtr, flags)) {
 		assert(segPtr->typePtr); /* really still living? */
 		assert(segPtr->typePtr->group == SEG_GROUP_MARK
 			|| segPtr->typePtr->group == SEG_GROUP_BRANCH);
@@ -6927,13 +6996,26 @@ DeleteRange(
 		    assert(segPtr->prevPtr);
 		    segPtr->sectionPtr = segPtr->prevPtr->sectionPtr;
 
+		    if (!insertSurrogate) {
+			/*
+			 * What's the right position of the surrogate newline?
+			 * Assume the following text content:
+			 *    {"1" mark "\n"} {"\n"}
+			 * If we delete the whole text, then two results are conceivable:
+			 *    1. {mark "\n"} {"\n"}
+			 *    2. {"\n"} {mark "\n"}
+			 * Both results are okay, but we prefer the first result.
+			 */
+			beforeSurrogate = segPtr;
+		    }
+
 		    if (segments && !TkTextIsSpecialOrPrivateMark(segPtr)) {
 			/* Mark this segment as re-inserted. */
 			MARK_POINTER(segments[numSegments - 1]);
 		    }
 
 		    /*
-		     * Prevent an overflow of the section length, because this may happen
+		     * Prevent overflow of the section length, because this may happen
 		     * when deleting segments. The section length doesn't matter here,
 		     * because the section structure will be rebuilt later. But LinkSegment
 		     * will trap into an assertion if we do not prevent this.
@@ -7130,7 +7212,8 @@ DeleteRange(
     if (undoInfo) {
 	UndoTokenDelete *undoToken = (UndoTokenDelete *) undoInfo->token;
 
-	assert(numSegments == 0 || segments[0]);
+	assert(numSegments > 0);
+	assert(segments[0]);
 
 	if (numSegments + 1 != maxSegments) {
 	    segments = realloc(segments, (numSegments + 1)*sizeof(TkTextSegment *));
@@ -7138,6 +7221,7 @@ DeleteRange(
 	undoToken->segments = segments;
 	undoToken->numSegments = numSegments;
 	undoToken->inclusive = !!(flags & DELETE_INCLUSIVE);
+	undoToken->surrogate = insertSurrogate;
 	undoInfo->byteSize = byteSize;
     }
 
@@ -7207,11 +7291,31 @@ DeleteRange(
     }
 
     /*
-     * Lastly, rebalance the first node of the range.
+     * Rebalance the first node of the range.
      */
 
     if (linePtr1 != linePtr2) {
 	Rebalance(treePtr, nodePtr1);
+    }
+
+    if (insertSurrogate) {
+	DEBUG(bool oldTreeDebug = tkBTreeDebug);
+	TkTextIndex index;
+
+	/*
+	 * We have to insert a surrogate newline.
+	 */
+	
+	if (beforeSurrogate) {
+	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
+	    TkTextIndexSetSegment(&index, beforeSurrogate);
+	} else {
+	    TkTextIndexSetupToStartOfText(&index, NULL, sharedTextPtr->tree);
+	}
+	DEBUG(tkBTreeDebug = false); /* otherwise protected segment will be complained */
+	TkBTreeInsertChars(sharedTextPtr->tree, &index, "\n",
+		sharedTextPtr->emptyTagInfoPtr, NULL, NULL);
+	DEBUG(tkBTreeDebug = oldTreeDebug);
     }
 }
 
@@ -9334,9 +9438,9 @@ TkBTreeTag(
     assert(indexPtr1);
     assert(indexPtr2);
     assert(TkTextIndexCompare(indexPtr1, indexPtr2) <= 0);
-    /* assert(changedProc); */	/* MSVC erroneously triggers warning C4550: expression
-				 * evaluates to a function which is missing an argument list
-				 */
+#ifndef _MSC_VER /* MSVC erroneously triggers warning C4550 */
+    assert(changedProc);
+#endif
 
     if (!add && !tagPtr->rootPtr) {
 	return false;
@@ -9707,7 +9811,7 @@ ClearTagsFromLine(
 		}
 
 		if (discardSelection) {
-		    segPtr->tagInfoPtr = TagSetIntersectBits(segPtr->tagInfoPtr,
+		    segPtr->tagInfoPtr = TagSetRemoveBits(segPtr->tagInfoPtr,
 			    sharedTextPtr->selectionTags, sharedTextPtr);
 		} else {
 		    TagSetAssign(&segPtr->tagInfoPtr, sharedTextPtr->emptyTagInfoPtr);
@@ -10134,9 +10238,9 @@ TkBTreeClearTags(
     unsigned i;
 
     assert(TkTextIndexCompare(indexPtr1, indexPtr2) <= 0);
-    /* assert(changedProc); */	/* MSVC erroneously triggers warning C4550: expression
-				 * evaluates to a function which is missing an argument list
-				 */
+#ifndef _MSC_VER /* MSVC erroneously triggers warning C4550 */
+    assert(changedProc);
+#endif
 
     if (TkTextIndexIsEqual(indexPtr1, indexPtr2)) {
 	return NULL;
@@ -10262,6 +10366,7 @@ TkBTreeClearTags(
 		undoToken->undoType = &undoTokenClearTagsType;
 		undoToken->changeList = NULL;
 		undoToken->changeListSize = 0;
+		undoToken->discardSelection = discardSelection;
 		DEBUG_ALLOC(tkTextCountNewUndoToken++);
 	    }
 
@@ -10295,7 +10400,7 @@ TkBTreeClearTags(
 			data.lastSegPtr = data.lastSegPtr->sectionPtr->linePtr->nextPtr->segPtr;
 		    }
 		    if (data.lastSegPtr->sectionPtr->linePtr == GetLastLine(sharedTextPtr, textPtr)) {
-			data.lastSegPtr = textPtr->endMarker;
+			data.lastSegPtr = textPtr ? textPtr->endMarker : sharedTextPtr->endMarker;
 		    }
 		    MakeUndoIndex(sharedTextPtr, &index1, &undoToken->startIndex, GRAVITY_LEFT);
 		    MakeUndoIndex(sharedTextPtr, &index2, &undoToken->endIndex, GRAVITY_RIGHT);
@@ -12555,9 +12660,11 @@ TkBTreeCheck(
 	if (!peer->endMarker->sectionPtr) {
 	    Tcl_Panic("TkBTreeCheck: end marker of is not linked");
 	}
+#if 0 /* TODO */
 	if (!peer->startMarker->sectionPtr->linePtr->nextPtr) {
 	    Tcl_Panic("TkBTreeCheck: start marker is on very last line");
 	}
+#endif
 	if (peer->startMarker->sectionPtr->linePtr == peer->endMarker->sectionPtr->linePtr) {
 	    const TkTextSegment *segPtr = peer->startMarker;
 	    while (segPtr && segPtr != peer->endMarker) {
@@ -12792,6 +12899,9 @@ CheckNodeConsistency(
 	    CheckSegmentItems(sharedTextPtr, linePtr);
 	    CheckSections(linePtr);
 	    for (i = 0; i < references; ++i) {
+		if ((int) linePtr->pixelInfo[i].height < 0) {
+		    Tcl_Panic("CheckNodeConsistency: negative pixel count in line");
+		}
 		pixelInfo[i].pixels += linePtr->pixelInfo[i].height;
 		pixelInfo[i].numDispLines += GetDisplayLines(linePtr, i);
 	    }
@@ -12851,6 +12961,9 @@ CheckNodeConsistency(
 		}
 	    }
 	    for (i = 0; i < references; i++) {
+		if ((int) childNodePtr->pixelInfo[i].pixels < 0) {
+		    Tcl_Panic("CheckNodeConsistency: negative pixel count in node");
+		}
 		pixelInfo[i].pixels += childNodePtr->pixelInfo[i].pixels;
 		pixelInfo[i].numDispLines += childNodePtr->pixelInfo[i].numDispLines;
 	    }
@@ -12965,6 +13078,8 @@ DeleteEmptyNode(
 	NodePixelInfo *dst = changeToPixelInfo;
 
 	for (ref = 0; ref < treePtr->numPixelReferences; ++ref, ++dst) {
+	    assert((int) dst->pixels >= 0);
+	    assert((int) linePtr->pixelInfo[ref].height >= 0);
 	    dst->pixels += linePtr->pixelInfo[ref].height;
 	    dst->numDispLines += GetDisplayLines(linePtr, ref);
 	}
@@ -13070,6 +13185,7 @@ RebalanceAddLinePixels(
     const TkTextPixelInfo *e = srcPixelInfo + numRefs;
 
     for ( ; srcPixelInfo < e; ++srcPixelInfo, ++dstPixels) {
+	assert((int) dstPixels->pixels >= 0);
 	dstPixels->pixels += srcPixelInfo->height;
 	dstPixels->numDispLines += TkBTreeGetNumberOfDisplayLines(srcPixelInfo);
     }
@@ -13084,6 +13200,8 @@ RebalanceAddNodePixels(
     const NodePixelInfo *e = srcPixels + numRefs;
 
     for ( ; srcPixels < e; ++srcPixels, ++dstPixels) {
+	assert((int) dstPixels->pixels >= 0);
+	assert((int) srcPixels->pixels >= 0);
 	dstPixels->pixels += srcPixels->pixels;
 	dstPixels->numDispLines += srcPixels->numDispLines;
     }
@@ -13098,6 +13216,8 @@ RebalanceSubtractNodePixels(
     const NodePixelInfo *e = srcPixels + numRefs;
 
     for ( ; srcPixels < e; ++srcPixels, ++dstPixels) {
+	assert((int) dstPixels->pixels >= 0);
+	assert((int) srcPixels->pixels >= 0);
 	dstPixels->pixels -= srcPixels->pixels;
 	dstPixels->numDispLines -= srcPixels->numDispLines;
     }
