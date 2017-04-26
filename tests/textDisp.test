@@ -2110,7 +2110,7 @@ test textDisp-16.24 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     .t yview scroll -3 pa
     .t index @0,0
 } {1.0}
-test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} -body {
+test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} -constraints textfonts -body {
     .t configure -height 1
     update
     .t yview 50.0
