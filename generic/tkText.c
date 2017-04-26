@@ -539,7 +539,7 @@ static int		TextPeerCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static int		TextWatchCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
-static bool		TriggerWatchEdit(TkText *textPtr, const char *operation,
+static bool		TriggerWatchEdit(TkText *textPtr, bool userFlag, const char *operation,
 			    const TkTextIndex *indexPtr1, const TkTextIndex *indexPtr2,
 			    const char *info, bool final);
 static void		TriggerUndoStackEvent(TkSharedText *sharedTextPtr);
@@ -1901,7 +1901,7 @@ TextWidgetObjCmd(
 
 	    TkTextIndex index1, index2, *index2Ptr;
 	    bool triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[2]);
-	    bool triggerWatch = triggerUserMod || textPtr->triggerAlways;
+	    bool triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
 
 	    if (triggerWatch) {
 		TkTextSaveCursorIndex(textPtr);
@@ -2020,7 +2020,7 @@ TextWidgetObjCmd(
 	    for (i = 0; i < objc && ok; i += 2) {
 		if (useIdx[i]) {
 		    bool triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[i]);
-		    bool triggerWatch = triggerUserMod || textPtr->triggerAlways;
+		    bool triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
 
 		    if (triggerWatch) {
 			TkTextSaveCursorIndex(textPtr);
@@ -2260,7 +2260,7 @@ TextWidgetObjCmd(
 	}
 
 	triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[2]);
-	triggerWatch = triggerUserMod || textPtr->triggerAlways;
+	triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
 
 	if (triggerWatch) {
 	    TkTextSaveCursorIndex(textPtr);
@@ -2402,7 +2402,7 @@ TextWidgetObjCmd(
 
 	destroyed = false;
 	triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[2]);
-	triggerWatch = triggerUserMod || textPtr->triggerAlways;
+	triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
 
 	/*
 	 * The 'replace' operation is quite complex to do correctly,
@@ -2851,13 +2851,20 @@ TextWatchCmd(
 	TkText *tPtr;
 
 	if (textPtr->watchCmd) {
+	    Tcl_DecrRefCount(textPtr->watchCmd);
 	    textPtr->triggerAlways = false;
 	    textPtr->watchCmd = NULL;
 	}
+
 	sharedTextPtr->triggerWatchCmd = false;
+	sharedTextPtr->triggerAlways = false;
+
 	for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
 	    if (tPtr->watchCmd) {
 		sharedTextPtr->triggerWatchCmd = true;
+		if (tPtr->triggerAlways) {
+		    sharedTextPtr->triggerAlways = true;
+		}
 	    }
 	}
     } else {
@@ -2873,6 +2880,7 @@ TextWatchCmd(
 		return TCL_ERROR;
 	    }
 	    textPtr->triggerAlways = true;
+	    textPtr->sharedTextPtr->triggerAlways = true;
 	    argnum = 3;
 	}
 
@@ -2887,7 +2895,17 @@ TextWatchCmd(
 		cmd = Tcl_NewStringObj(script, -1);
 	    }
 	} else if (argnum == 2) {
+	    TkText *tPtr;
+
 	    textPtr->triggerAlways = false;
+	    textPtr->sharedTextPtr->triggerAlways = false;
+
+	    for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
+		if (tPtr->triggerAlways) {
+		    assert(tPtr->watchCmd);
+		    sharedTextPtr->triggerWatchCmd = true;
+		}
+	    }
 	}
 
 	textPtr->sharedTextPtr->triggerWatchCmd = true;
@@ -5736,7 +5754,7 @@ DeleteIndexRange(
 	TkTextIndexSave(&index1);
 	TkTextIndexSave(&index2);
 	Tcl_IncrRefCount(delObj);
-	rc = TriggerWatchEdit(textPtr, "delete", &index1, &index2, deleted, final);
+	rc = TriggerWatchEdit(textPtr, userFlag, "delete", &index1, &index2, deleted, final);
 	Tcl_DecrRefCount(delObj);
 	unchanged = TkTextIndexRebuild(&index1) && TkTextIndexRebuild(&index2);
 
@@ -5824,7 +5842,7 @@ DeleteIndexRange(
      */
 
     if (triggerWatchInsert) {
-	if (!TriggerWatchEdit(textPtr, "insert", indexPtr1, indexPtr1, NULL, final)) {
+	if (!TriggerWatchEdit(textPtr, userFlag, "insert", indexPtr1, indexPtr1, NULL, final)) {
 	    return false; /* widget has been destroyed */
 	}
     }
@@ -6202,7 +6220,7 @@ TextInsertCmd(
 
 	    if (triggerWatchDelete) {
 		TkTextIndexSave(&index1);
-		if (!TriggerWatchEdit(textPtr, "delete", &index1, &index1, NULL, final)) {
+		if (!TriggerWatchEdit(textPtr, userFlag, "delete", &index1, &index1, NULL, final)) {
 		    *destroyed = true;
 		    return rc;
 		}
@@ -6241,7 +6259,7 @@ TextInsertCmd(
 	     */
 
 	    if (triggerWatchInsert) {
-		if (!TriggerWatchEdit(textPtr, "insert", &index1, &index2, string, final)) {
+		if (!TriggerWatchEdit(textPtr, userFlag, "insert", &index1, &index2, string, final)) {
 		    *destroyed = true;
 		    return rc;
 		}
@@ -9405,6 +9423,7 @@ AppendTags(
 static bool
 TriggerWatchEdit(
     TkText *textPtr,			/* Information about text widget. */
+    bool userFlag,			/* Trigger due to user modification? */
     const char *operation,		/* The triggering operation. */
     const TkTextIndex *indexPtr1,	/* Start index for deletion / insert. */
     const TkTextIndex *indexPtr2,	/* End index after insert / before deletion. */
@@ -9445,7 +9464,7 @@ TriggerWatchEdit(
     for (i = 0; i < sharedTextPtr->numPeers; ++i) {
 	TkText *tPtr = peers[i];
 
-	if (!(tPtr->flags & DESTROYED) && tPtr->watchCmd) {
+	if (!(tPtr->flags & DESTROYED) && tPtr->watchCmd && (!userFlag || tPtr->triggerAlways)) {
 	    TkTextIndex index[4];
 
 	    if (indexPtr1) {
@@ -9506,7 +9525,7 @@ TriggerWatchEdit(
 		    Tcl_DStringAppendElement(&buf, final ? "yes" : "no");
 		    arg = Tcl_DStringValue(&buf);
 
-		    if (!TkTextTriggerWatchCmd(tPtr, operation, idx[0], idx[1], arg, true)
+		    if (!TkTextTriggerWatchCmd(tPtr, operation, idx[0], idx[1], arg, userFlag)
 			    && tPtr == textPtr) {
 			rc = false; /* this widget has been destroyed */
 		    }
@@ -9514,7 +9533,7 @@ TriggerWatchEdit(
 		    Tcl_DStringFree(&buf);
 		}
 	    } else {
-		if (!TkTextTriggerWatchCmd(textPtr, operation, NULL, NULL, NULL, true)
+		if (!TkTextTriggerWatchCmd(textPtr, operation, NULL, NULL, NULL, userFlag)
 			&& tPtr == textPtr) {
 		    rc = false; /* this widget has been destroyed */
 		}
