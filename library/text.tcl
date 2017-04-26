@@ -1030,7 +1030,7 @@ proc ::tk::TextScrollPages {w count} {
 	    # Last display line of very last line is visible.
 	    if {[llength [set res [$w dlineinfo -extents @first,last]]]} {
 		if {[lindex $res 3] == 0} {
-		    # Line is fully visible (vertically), no dothing to do.
+		    # Line is fully visible (vertically), so nothing to do.
 		    return insert
 		}
 		# Line is only partially visible, so jump to this line.
@@ -1389,20 +1389,20 @@ proc tk_mergeRange {rangeListVar newRange} {
 	lassign [split $s1 .] sline1 scol1
 	lassign [split $e1 .] eline1 ecol1
 
-	# [$w compare "$e+1i" < $s1]
+	# compare "$e+1i" < $s1
 	if {$eline < $sline1 || ($eline == $sline1 && $ecol + 1 < $scol1)} {
 	    lappend newRangeList [list $s $e]
 	    lappend newRangeList {*}[lrange $ranges $i end]
 	    set ranges $newRangeList
 	    return $newRangeList
 	}
-	# [$w compare $s <= "$e1+1i"]
+	# compare $s <= "$e1+1i"
 	if {$sline < $eline1 || ($sline == $eline1 && $scol <= $ecol1 + 1)} {
 	    # [$w compare $s > $s1]
 	    if {$sline > $sline1 || ($sline == $sline1 && $scol > $scol1)} {
 		set s $s1; set sline $sline1; set scol $scol1
 	    }
-	    # [$w compare $e < $e1]
+	    # compare $e < $e1
 	    if {$eline < $eline1 || ($eline == $eline1 && $ecol < $ecol1)} {
 		set e $e1; set eline $eline1; set ecol $ecol1
 	    }
