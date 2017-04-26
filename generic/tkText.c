@@ -1652,7 +1652,6 @@ TextWidgetObjCmd(
 	    }
 	    Tcl_SetObjResult(interp, objPtr);
 	} else {
-	    /* TODO: invalidate start/endline in case of start/endindex */
 	    result = TkConfigureText(interp, textPtr, objc - 2, objv + 2);
 	}
 	break;
@@ -3871,7 +3870,7 @@ TkConfigureText(
 	}
     }
 
-    if ((mask & TK_TEXT_LINE_RANGE) == TK_TEXT_LINE_RANGE) {
+    if ((mask & TK_TEXT_INDEX_RANGE) == TK_TEXT_LINE_RANGE) {
 	TkTextIndexClear2(&start, NULL, tree);
 	TkTextIndexClear2(&end, NULL, tree);
 	TkTextIndexSetToStartOfLine2(&start, textPtr->startLine ?
@@ -4086,11 +4085,17 @@ TkConfigureText(
 		    textPtr->newStartIndex, &start)) {
 		goto error;
 	    }
+	} else {
+	    TkTextIndexClear(&start, textPtr);
+	    TkTextIndexSetSegment(&start, textPtr->startMarker);
 	}
 	if (textPtr->newEndIndex) {
 	    if (!TkTextGetIndexFromObj(interp, sharedTextPtr->mainPeer, textPtr->newEndIndex, &end)) {
 		goto error;
 	    }
+	} else {
+	    TkTextIndexClear(&end, textPtr);
+	    TkTextIndexSetSegment(&end, textPtr->endMarker);
 	}
 	if (TkTextIndexCompare(&start, &end) > 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
