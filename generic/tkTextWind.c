@@ -751,6 +751,25 @@ IsPreservedWindow(
     return client && !client->hPtr;
 }
 
+static void
+TriggerWatchCmd(
+    TkText *textPtr,
+    TkTextSegment *ewPtr,
+    Tk_Window tkwin,
+    const char *arg1,
+    const char *arg2)
+{
+    if (!(textPtr->flags & DESTROYED)) {
+	TkTextIndex index;
+	char buf[TK_POS_CHARS];
+
+	TkTextIndexClear(&index, textPtr);
+	TkTextIndexSetSegment(&index, ewPtr);
+	TkTextPrintIndex(textPtr, &index, buf);
+	TkTextTriggerWatchCmd(textPtr, "window", buf, buf, Tk_PathName(tkwin), arg1, arg2, false);
+    }
+}
+
 static int
 EmbWinConfigure(
     TkText *textPtr,		/* Information about text widget that contains
@@ -799,6 +818,13 @@ EmbWinConfigure(
 		Tk_UnmaintainGeometry(oldWindow, textPtr->tkwin);
 	    } else {
 		Tk_UnmapWindow(oldWindow);
+	    }
+	    if (textPtr->watchCmd) {
+		textPtr->refCount += 1;
+		TriggerWatchCmd(textPtr, ewPtr, oldWindow, NULL, NULL);
+		if (TkTextDecrRefCountAndTestIfDestroyed(textPtr)) {
+		    return TCL_OK;
+		}
 	    }
 	}
 	if (client) {
@@ -905,16 +931,18 @@ EmbWinStructureProc(
 {
     TkTextEmbWindowClient *client = clientData;
     TkTextSegment *ewPtr;
+    Tk_Window tkwin;
 
     if (eventPtr->type != DestroyNotify || !client->hPtr) {
 	return;
     }
 
     ewPtr = client->parent;
+    tkwin = client->tkwin;
 
     assert(ewPtr->typePtr);
     assert(client->hPtr == Tcl_FindHashEntry(&ewPtr->body.ew.sharedTextPtr->windowTable,
-	    Tk_PathName(client->tkwin)));
+	    Tk_PathName(tkwin)));
 
     /*
      * This may not exist if the entire widget is being deleted.
@@ -926,6 +954,10 @@ EmbWinStructureProc(
     client->tkwin = NULL;
     client->hPtr = NULL;
     EmbWinRequestProc(client, NULL);
+
+    if (client->textPtr->watchCmd) {
+	TriggerWatchCmd(client->textPtr, ewPtr, tkwin, NULL, NULL);
+    }
 }
 
 /*
@@ -1028,6 +1060,10 @@ EmbWinLostSlaveProc(
     TkTextIndexClear(&index, textPtr);
     TkTextIndexSetSegment(&index, ewPtr);
     TextChanged(&index);
+
+    if (textPtr->watchCmd) {
+	TriggerWatchCmd(textPtr, ewPtr, tkwin, NULL, NULL);
+    }
 }
 
 /*
@@ -1618,9 +1654,22 @@ EmbWinDisplayProc(
 		|| Tk_ReqWidth(tkwin) != Tk_Width(tkwin)
 		|| height != Tk_Height(tkwin)) {
 	    Tk_MoveResizeWindow(tkwin, windowX, windowY, width, height);
+
+	    if (textPtr->watchCmd && Tk_IsMapped(tkwin)) {
+		char w[100], h[100];
+
+		snprintf(h, sizeof(h), "%d", Tk_Height(tkwin));
+		snprintf(w, sizeof(w), "%d", Tk_Width(tkwin));
+
+		TriggerWatchCmd(textPtr, ewPtr, tkwin, w, h);
+	    }
 	}
-	if (!client->displayed) {
+	if (!Tk_IsMapped(tkwin)) {
 	    Tk_MapWindow(tkwin);
+
+	    if (textPtr->watchCmd) {
+		TriggerWatchCmd(textPtr, ewPtr, tkwin, NULL, NULL);
+	    }
 	}
     } else {
 	Tk_MaintainGeometry(tkwin, textPtr->tkwin, windowX, windowY, width, height);
@@ -1769,6 +1818,12 @@ EmbWinDelayedUnmap(
 	    Tk_UnmaintainGeometry(client->tkwin, client->textPtr->tkwin);
 	} else {
 	    Tk_UnmapWindow(client->tkwin);
+	}
+
+	assert(client->textPtr);
+
+	if (client->textPtr->watchCmd) {
+	    TriggerWatchCmd(client->textPtr, client->parent, client->tkwin, NULL, NULL);
 	}
     }
 }

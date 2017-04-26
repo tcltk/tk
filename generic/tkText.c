@@ -497,11 +497,11 @@ static int		TextIndexSortProc(const void *first, const void *second);
 static int		TextInsertCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[], const TkTextIndex *indexPtr,
 			    bool viewUpdate, bool triggerWatchDelete, bool triggerWatchInsert,
-			    bool userFlag, bool *destroyed, bool parseHyphens);
+			    bool userFlag, bool parseHyphens);
 static int		TextReplaceCmd(TkText *textPtr, Tcl_Interp *interp,
 			    const TkTextIndex *indexFromPtr, const TkTextIndex *indexToPtr,
 			    int objc, Tcl_Obj *const objv[], bool viewUpdate, bool triggerWatch,
-			    bool userFlag, bool *destroyed, bool parseHyphens);
+			    bool userFlag, bool parseHyphens);
 static int		TextSearchCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static int		TextEditCmd(TkText *textPtr, Tcl_Interp *interp,
@@ -2238,7 +2238,6 @@ TextWidgetObjCmd(
     case TEXT_TK_TEXTINSERT: {
 	TkTextIndex index;
 	bool triggerUserMod, triggerWatch;
-	bool destroyed;
 
 	if (objc < 4) {
 	    const char *args = (commandIndex == TEXT_TK_TEXTINSERT) ?
@@ -2265,10 +2264,7 @@ TextWidgetObjCmd(
 	    TkTextSaveCursorIndex(textPtr);
 	}
 	result = TextInsertCmd(textPtr, interp, objc - 3, objv + 3, &index, true, triggerWatch,
-		triggerWatch, triggerUserMod, &destroyed, commandIndex == TEXT_TK_TEXTINSERT);
-	if (destroyed) {
-	    return result; /* widget has been destroyed */
-	}
+		triggerWatch, triggerUserMod, commandIndex == TEXT_TK_TEXTINSERT);
 	break;
     }
     case TEXT_INSPECT:
@@ -2375,7 +2371,6 @@ TextWidgetObjCmd(
     case TEXT_TK_TEXTREPLACE: {
 	TkTextIndex indexFrom, indexTo, index;
 	bool triggerUserMod, triggerWatch;
-	bool destroyed;
 
 	if (objc < 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index1 index2 chars ?tagList chars tagList ...?");
@@ -2399,7 +2394,6 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 
-	destroyed = false;
 	triggerUserMod = TestIfTriggerUserMod(sharedTextPtr, objv[2]);
 	triggerWatch = triggerUserMod || sharedTextPtr->triggerAlways;
 
@@ -2449,8 +2443,10 @@ TextWidgetObjCmd(
 	    }
 
 	    result = TextReplaceCmd(textPtr, interp, &indexFrom, &indexTo, objc, objv, false,
-		    triggerWatch, triggerUserMod, &destroyed, commandIndex == TEXT_TK_TEXTREPLACE);
-	    if (destroyed) { return result; /* widget has been destroyed */ }
+		    triggerWatch, triggerUserMod, commandIndex == TEXT_TK_TEXTREPLACE);
+	    if (textPtr->flags & DESTROYED) {
+		return result;
+	    }
 
 	    if (result == TCL_OK) {
 		/*
@@ -2464,8 +2460,10 @@ TextWidgetObjCmd(
 	    }
 	} else {
 	    result = TextReplaceCmd(textPtr, interp, &indexFrom, &indexTo, objc, objv, false,
-		    triggerWatch, triggerUserMod, &destroyed, commandIndex == TEXT_TK_TEXTREPLACE);
-	    if (destroyed) { return result; /* widget has been destroyed */ }
+		    triggerWatch, triggerUserMod, commandIndex == TEXT_TK_TEXTREPLACE);
+	    if (textPtr->flags & DESTROYED) {
+		return result;
+	    }
 	}
 	if (result == TCL_OK) {
 	    /*
@@ -2850,12 +2848,11 @@ TextWatchCmd(
 	TkText *tPtr;
 
 	if (textPtr->watchCmd) {
-	    Tcl_DecrRefCount(textPtr->watchCmd);
 	    textPtr->triggerAlways = false;
 	    textPtr->watchCmd = NULL;
 	}
 
-	sharedTextPtr->triggerWatchCmd = false;
+	sharedTextPtr->triggerWatchCmd = false; /* do not trigger recursively */
 	sharedTextPtr->triggerAlways = false;
 
 	for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
@@ -3016,24 +3013,17 @@ TextReplaceCmd(
     bool viewUpdate,		/* Update vertical view if set. */
     bool triggerWatch,		/* Should we trigger the watch command? */
     bool userFlag,		/* Trigger due to user modification? */
-    bool *destroyed,		/* Store whether the widget has been destroyed. */
     bool parseHyphens)		/* Should we parse hyphens (tk_textReplace)? */
 {
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
-    bool *stillExisting = sharedTextPtr->stillExisting;
     int origAutoSep = sharedTextPtr->autoSeparators;
     int result = TCL_OK;
     TkTextIndex indexTmp;
     bool notDestroyed;
-    bool existing;
 
-    assert(destroyed);
     assert(!TkTextIsDeadPeer(textPtr));
 
-    if (!stillExisting) {
-	sharedTextPtr->stillExisting = &existing;
-	existing = true;
-    }
+    textPtr->refCount += 1;
 
     /*
      * Perform the deletion and insertion, but ensure no undo-separator is
@@ -3062,24 +3052,15 @@ TextReplaceCmd(
     if (notDestroyed) {
 	TkTextIndexRebuild(&indexTmp);
 	result = TextInsertCmd(textPtr, interp, objc - 4, objv + 4, &indexTmp,
-		viewUpdate, false, triggerWatch, userFlag, destroyed, parseHyphens);
-	if (*destroyed) {
-	    notDestroyed = false;
-	}
-    } else {
-	*destroyed = true;
+		viewUpdate, false, triggerWatch, userFlag, parseHyphens);
     }
 
-    if (*sharedTextPtr->stillExisting) {
-	if (sharedTextPtr->undoStack) {
-	    sharedTextPtr->lastEditMode = TK_TEXT_EDIT_REPLACE;
-	    sharedTextPtr->autoSeparators = origAutoSep;
-	}
-	if (sharedTextPtr->stillExisting == &existing) {
-	    sharedTextPtr->stillExisting = NULL;
-	}
+    if (sharedTextPtr->undoStack) {
+	sharedTextPtr->lastEditMode = TK_TEXT_EDIT_REPLACE;
+	sharedTextPtr->autoSeparators = origAutoSep;
     }
 
+    TkTextReleaseIfDestroyed(textPtr);
     return result;
 }
 
@@ -3559,9 +3540,6 @@ DestroyText(
 
 	if (sharedTextPtr->tagBindingTable) {
 	    Tk_DeleteBindingTable(sharedTextPtr->tagBindingTable);
-	}
-	if (sharedTextPtr->stillExisting) {
-	    *sharedTextPtr->stillExisting = false;
 	}
 	free(sharedTextPtr);
 	DEBUG_ALLOC(tkTextCountDestroyShared++);
@@ -5161,32 +5139,32 @@ TriggerWatchUndoRedo(
 {
     TkTextIndex index1, index2;
     Tcl_Obj *cmdPtr;
-    char arg[100];
+    char buf[100];
     int i;
 
     assert(sharedTextPtr->triggerWatchCmd);
     assert(token->undoType->rangeProc);
     assert(token->undoType->commandProc);
 
-    sharedTextPtr->triggerWatchCmd = false;
+    sharedTextPtr->triggerWatchCmd = false; /* do not trigger recursively */
     token->undoType->rangeProc(sharedTextPtr, token, &index1, &index2);
     Tcl_IncrRefCount(cmdPtr = token->undoType->commandProc(sharedTextPtr, token));
-    snprintf(arg, sizeof(arg), "{%s} %s", Tcl_GetString(cmdPtr), isFinal ? "yes" : "no");
-    Tcl_DecrRefCount(cmdPtr);
+    snprintf(buf, sizeof(buf), "%s", isFinal ? "yes" : "no");
 
     for (i = 0; i < numPeers; ++i) {
 	TkText *tPtr = peers[i];
 
-	if (!(tPtr->flags & DESTROYED)) {
+	if (tPtr->watchCmd && !(tPtr->flags & DESTROYED)) {
 	    char idx[2][TK_POS_CHARS];
 	    const char *info = isRedo ? "redo" : "undo";
 
 	    TkTextPrintIndex(tPtr, &index1, idx[0]);
 	    TkTextPrintIndex(tPtr, &index2, idx[1]);
-	    TkTextTriggerWatchCmd(tPtr, info, idx[0], idx[1], arg, false);
+	    TkTextTriggerWatchCmd(tPtr, info, idx[0], idx[1], Tcl_GetString(cmdPtr), buf, NULL, false);
 	}
     }
 
+    Tcl_DecrRefCount(cmdPtr);
     sharedTextPtr->triggerWatchCmd = true;
 }
 
@@ -6157,7 +6135,6 @@ TextInsertCmd(
     bool triggerWatchDelete,	/* Should we trigger the watch command for deletion? */
     bool triggerWatchInsert,	/* Should we trigger the watch command for insertion? */
     bool userFlag,		/* Trigger user modification? */
-    bool *destroyed,		/* Store whether the widget has been destroyed. */
     bool parseHyphens)		/* Should we parse hyphens? (tk_textInsert) */
 {
     TkTextIndex index1, index2;
@@ -6167,11 +6144,9 @@ TextInsertCmd(
     int j;
 
     assert(textPtr);
-    assert(destroyed);
     assert(!TkTextIsDeadPeer(textPtr));
 
     sharedTextPtr = textPtr->sharedTextPtr;
-    *destroyed = false;
 
     if (parseHyphens && objc > 1 && *Tcl_GetString(objv[0]) == '-') {
 	int argc;
@@ -6226,7 +6201,6 @@ TextInsertCmd(
 	    if (triggerWatchDelete) {
 		TkTextIndexSave(&index1);
 		if (!TriggerWatchEdit(textPtr, userFlag, "delete", &index1, &index1, NULL, final)) {
-		    *destroyed = true;
 		    return rc;
 		}
 		TkTextIndexRebuild(&index1);
@@ -6265,7 +6239,6 @@ TextInsertCmd(
 
 	    if (triggerWatchInsert) {
 		if (!TriggerWatchEdit(textPtr, userFlag, "insert", &index1, &index2, string, final)) {
-		    *destroyed = true;
 		    return rc;
 		}
 	    }
@@ -9532,7 +9505,8 @@ TriggerWatchEdit(
 		    Tcl_DStringAppendElement(&buf, final ? "yes" : "no");
 		    arg = Tcl_DStringValue(&buf);
 
-		    if (!TkTextTriggerWatchCmd(tPtr, operation, idx[0], idx[1], arg, userFlag)
+		    if (!TkTextTriggerWatchCmd(tPtr, operation, idx[0], idx[1],
+				arg, NULL, NULL, userFlag)
 			    && tPtr == textPtr) {
 			rc = false; /* this widget has been destroyed */
 		    }
@@ -9540,7 +9514,7 @@ TriggerWatchEdit(
 		    Tcl_DStringFree(&buf);
 		}
 	    } else {
-		if (!TkTextTriggerWatchCmd(textPtr, operation, NULL, NULL, NULL, userFlag)
+		if (!TkTextTriggerWatchCmd(textPtr, operation, NULL, NULL, NULL, NULL, NULL, userFlag)
 			&& tPtr == textPtr) {
 		    rc = false; /* this widget has been destroyed */
 		}
@@ -9560,6 +9534,98 @@ TriggerWatchEdit(
     }
 
     return rc;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkTextPerformWatchCmd --
+ *
+ *	This function is performs triggering of the watch
+ *	command for all peers.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	See function TkTextTriggerWatchCmd.
+ *
+ *--------------------------------------------------------------
+ */
+
+typedef void (*TkTextWatchGetIndexProc)(TkText *textPtr, TkTextIndex *indexPtr, void *clientData);
+
+void
+TkTextPerformWatchCmd(
+    TkSharedText *sharedTextPtr,
+    TkText *textPtr,			/* Firstly trigger watch command of this peer, can be NULL. */
+    const char *operation,		/* The trigger operation. */
+    TkTextWatchGetIndexProc index1Proc,	/* Function pointer for fst index, can be NULL. */
+    ClientData index1ProcData,		/* Client data for index1Proc. */
+    TkTextWatchGetIndexProc index2Proc,	/* Function pointer for snd index, can be NULL. */
+    ClientData index2ProcData,		/* Client data for index2Proc. */
+    const char *arg1,			/* 3rd argument for watch command, can be NULL. */
+    const char *arg2,			/* 3rd argument for watch command, can be NULL. */
+    const char *arg3,			/* 3rd argument for watch command, can be NULL. */
+    bool userFlag)			/* 4rd argument for watch command. */
+{
+    TkText *peerArr[20];
+    TkText **peers = peerArr;
+    TkText *tPtr;
+    unsigned numPeers = 0;
+    unsigned i;
+
+    assert(sharedTextPtr);
+    assert(sharedTextPtr->triggerWatchCmd);
+    assert(operation);
+    assert(!index2Proc || index1Proc);
+
+    sharedTextPtr->triggerWatchCmd = false; /* do not trigger recursively */
+
+    if (sharedTextPtr->numPeers > sizeof(peerArr) / sizeof(peerArr[0])) {
+	peers = malloc(sharedTextPtr->numPeers * sizeof(peerArr[0]));
+    }
+    if (textPtr) {
+	peers[numPeers++] = textPtr;
+	textPtr->refCount += 1;
+    }
+    for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
+	if (tPtr != textPtr && tPtr->watchCmd) {
+	    peers[numPeers++] = tPtr;
+	    tPtr->refCount += 1;
+	}
+    }
+    for (i = 0; i < numPeers; ++i) {
+	tPtr = peers[i];
+
+	if (!(tPtr->flags & DESTROYED)) {
+	    char idx[2][TK_POS_CHARS];
+	    TkTextIndex index[2];
+
+	    if (index1Proc) {
+		index1Proc(tPtr, &index[0], index1ProcData);
+		TkTextPrintIndex(tPtr, &index[0], idx[0]);
+
+		if (index2Proc) {
+		    index2Proc(tPtr, &index[1], index2ProcData);
+		    TkTextPrintIndex(tPtr, &index[1], idx[1]);
+		} else {
+		    memcpy(idx[1], idx[0], TK_POS_CHARS);
+		}
+	    }
+
+	    TkTextTriggerWatchCmd(tPtr, operation, idx[0], idx[1], arg1, arg2, arg3, false);
+	}
+    }
+
+    sharedTextPtr->triggerWatchCmd = true;
+
+    for (i = 0; i < numPeers; ++i) {
+	TkTextDecrRefCountAndTestIfDestroyed(peers[i]);
+    }
+    if (peers != peerArr) {
+	free(peers);
+    }
 }
 
 /*
@@ -9584,9 +9650,11 @@ bool
 TkTextTriggerWatchCmd(
     TkText *textPtr,		/* Information about text widget. */
     const char *operation,	/* The trigger operation. */
-    const char *index1,		/* 1st argument for watch command. */
-    const char *index2,		/* 2nd argument for watch command. */
-    const char *arg,		/* 3rd argument for watch command. */
+    const char *index1,		/* 1st argument for watch command, can be NULL. */
+    const char *index2,		/* 2nd argument for watch command, can be NULL. */
+    const char *arg1,		/* 3rd argument for watch command, can be NULL. */
+    const char *arg2,		/* 3rd argument for watch command, can be NULL. */
+    const char *arg3,		/* 3rd argument for watch command, can be NULL. */
     bool userFlag)		/* 4rd argument for watch command. */
 {
     Tcl_DString cmd;
@@ -9601,8 +9669,12 @@ TkTextTriggerWatchCmd(
     Tcl_DStringAppendElement(&cmd, operation);
     Tcl_DStringAppendElement(&cmd, index1 ? index1 : "");
     Tcl_DStringAppendElement(&cmd, index2 ? index2 : "");
-    Tcl_DStringAppendElement(&cmd, arg ? arg : "");
-    Tcl_DStringAppendElement(&cmd, userFlag ? "1" : "0");
+    Tcl_DStringStartSublist(&cmd);
+    if (arg1) { Tcl_DStringAppendElement(&cmd, arg1); }
+    if (arg2) { Tcl_DStringAppendElement(&cmd, arg2); }
+    if (arg3) { Tcl_DStringAppendElement(&cmd, arg3); }
+    Tcl_DStringEndSublist(&cmd);
+    Tcl_DStringAppendElement(&cmd, userFlag ? "yes" : "no");
 
     textPtr->refCount += 1;
 

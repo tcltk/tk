@@ -3718,7 +3718,6 @@ characters in the specified range (e.g. \fIindex1\fR is past the end of the
 file or \fIindex2\fR is less than or equal to \fIindex1\fR) then the command
 has no effect. This command returns an empty string.
 .RE
-'\" JIMA BEGIN
 .TP
 \fIpathName\fR \fBwatch\fR ?\fB\-always\fR? ?\fIcommandPrefix\fR?
 .
@@ -3755,6 +3754,13 @@ replacement) is specified with
 .IP \(bu 3
 \fBedit undo\fR|\fBredo\fR will trigger the corresponding
 \fBundo\fR|\fBredo\fR event.
+.IP \(bu 3
+A resize or content change of a displayed image will trigger event \fBimage\fR.
+.IP \(bu 3
+Any change of a displayed window (resize, map, or unmap) will trigger
+event \fBwindow\fR.
+.RE
+.RS
 .PP
 Additionally any of the following commands may trigger because the view may
 change:
@@ -3779,8 +3785,7 @@ change:
 .IP \(bu 3
 \fIpathName \fByview\fR \fIarg\fR...
 .PP
-Also destroying an embedded window, or embedded image, may trigger due to a
-changed view.
+Also destroying an embedded window may trigger due to a changed view.
 .PP
 Note that the \fBdelete\fR, and the \fBinsert\fR operation will be handled
 in the same way as the \fBreplace\fR operation, this means that firstly the
@@ -3909,6 +3914,21 @@ action.
 It is not allowed to perform any textual modification, nor is it allowed to
 reset the undo/redo stack, an error will be thrown.
 .RE
+.TP
+\fBimage\fR
+.
+An image has been resized, or the content has changed. \fIInfo\fR contains
+the name of the affected image as first element. In case of a change in
+size the width and height of the image before resizing will be the second
+and third element of \fIinfo\fR.
+.TP
+\fBwindow\fR
+.
+Either a window has changed the display state (mapped or unmapped), or the
+size of the window has changed. \fIInfo\fR contains the name of the affected
+window as first element. And if the size of the window has changed, then
+\fIinfo\fR will provide the old width and height with a second and third
+element.
 .PP
 \fIPathName\fR is the name of the widget where the modification has been
 done. In case of \fBinsert\fR/\fBdelete\fR also the modifications in a
@@ -3926,7 +3946,6 @@ then the new script augments an existing script.
 This command returns the command prefix which has been set before this call,
 this can be empty if a command prefix was not set.
 .RE
-'\" JIMA END
 .TP
 \fIpathName \fBwindow \fIoption \fR?\fIarg arg ...\fR?
 .

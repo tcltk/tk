@@ -6961,6 +6961,8 @@ test text-27.25 {<<UndoStack>> virtual event} -setup {
 test text-27.26 {edit undo and edit redo provides ranges} -setup {
     destroy .t
     set res {}
+    set undo {}
+    set redo {}
 } -body {
     proc watch {w op idx1 idx2 info userFlag} {
 	switch $op {
@@ -6996,8 +6998,7 @@ test text-27.26 {edit undo and edit redo provides ranges} -setup {
     lappend res $redo
 } -cleanup {
     destroy .t
-    unset undo
-    unset redo
+    unset undo redo res
 } -result {{{{1.6 2.19}} {{1.6 1.7} {1.9 1.10}} {{1.6 1.12} {2.8 2.26}}}\
            {{{1.6 2.19}} {{1.6 1.7} {1.9 1.10}} {{1.6 1.12} {2.8 2.26}}}}
 test text-27.27 {undo with empty text, and tagged newline} -body {
