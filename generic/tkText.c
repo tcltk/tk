@@ -9435,6 +9435,7 @@ TriggerWatchEdit(
     TkText **peers = peerArr;
     TkText *tPtr;
     unsigned i, n = 0;
+    unsigned numPeers;
     bool rc = true;
 
     assert(textPtr->sharedTextPtr->triggerWatchCmd);
@@ -9442,7 +9443,8 @@ TriggerWatchEdit(
     assert(strcmp(operation, "insert") == 0 || strcmp(operation, "delete") == 0);
 
     sharedTextPtr = textPtr->sharedTextPtr;
-    sharedTextPtr->triggerWatchCmd = false;
+    sharedTextPtr->triggerWatchCmd = false; /* do not trigger recursively */
+    numPeers = sharedTextPtr->numPeers;
 
     if (sharedTextPtr->numPeers > sizeof(peerArr) / sizeof(peerArr[0])) {
 	peers = malloc(sharedTextPtr->numPeers * sizeof(peerArr[0]));
@@ -9464,7 +9466,7 @@ TriggerWatchEdit(
     for (i = 0; i < sharedTextPtr->numPeers; ++i) {
 	TkText *tPtr = peers[i];
 
-	if (!(tPtr->flags & DESTROYED) && tPtr->watchCmd && (!userFlag || tPtr->triggerAlways)) {
+	if (tPtr->watchCmd && (userFlag || tPtr->triggerAlways) && !(tPtr->flags & DESTROYED)) {
 	    TkTextIndex index[4];
 
 	    if (indexPtr1) {
@@ -9540,14 +9542,18 @@ TriggerWatchEdit(
 	    }
 	}
 
-	TkTextDecrRefCountAndTestIfDestroyed(tPtr);
+	if (TkTextDecrRefCountAndTestIfDestroyed(tPtr)) {
+	    numPeers -= 1;
+	}
     }
 
     if (peers != peerArr) {
 	free(peers);
     }
+    if (numPeers > 0) { /* otherwise sharedTextPtr is not valid anymore */
+	sharedTextPtr->triggerWatchCmd = true;
+    }
 
-    sharedTextPtr->triggerWatchCmd = true;
     return rc;
 }
 
