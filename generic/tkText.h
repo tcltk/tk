@@ -1122,6 +1122,7 @@ typedef struct TkSharedText {
     unsigned imageCount;	/* Used for creating unique image names. */
     unsigned countEmbWindows;	/* Used for counting embedded windows. */
     bool triggerWatchCmd;	/* Whether we should trigger the watch command for any peer. */
+    bool triggerAlways;		/* Whether we should always trigger the watch command for any peer. */
     bool haveToSetCurrentMark;	/* Flag whether a position change of the "current" mark has
     				 * been postponed in any peer. */
 
