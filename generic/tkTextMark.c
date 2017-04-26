@@ -1444,7 +1444,8 @@ TriggerWatchCursor(
 	free(tagArrayPtr);
     }
 
-    rc = TkTextTriggerWatchCmd(textPtr, "cursor", idx[0], idx[1], Tcl_DStringValue(&buf), false);
+    rc = TkTextTriggerWatchCmd(textPtr, "cursor", idx[0], idx[1], Tcl_DStringValue(&buf),
+	    NULL, NULL, false);
     Tcl_DStringFree(&buf);
     return rc;
 }

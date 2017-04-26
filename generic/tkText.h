@@ -389,6 +389,7 @@ typedef struct TkTextEmbImage {
     				 * identify this instance of the image. */
     Tk_Image image;		/* Image for this segment. NULL means that the image hasn't
     				 * been created yet. */
+    int imgWidth;		/* Width of displayed image. */
     int imgHeight;		/* Height of displayed image. */
     Tcl_HashEntry *hPtr;	/* Pointer to hash table entry for image
     				 * (in sharedTextPtr->imageTable).*/
@@ -1196,13 +1197,6 @@ typedef struct TkSharedText {
 
     struct TkText *peers;
     unsigned numPeers;
-
-    /*
-     * Hook for watching the existence of this struct. Do never use dynamic memory,
-     * only stack pointers shall be hooked.
-     */
-
-    bool *stillExisting;
 } TkSharedText;
 
 /*
@@ -1730,6 +1724,12 @@ typedef bool TkTextTagChangedProc(
     bool affectsDisplayGeometry);
 
 /*
+ * Callback function for TkTextPerformWatchCmd().
+ */
+
+typedef void (*TkTextWatchGetIndexProc)(TkText *textPtr, TkTextIndex *indexPtr, void *clientData);
+
+/*
  * Declarations for procedures that are used by the text-related files but
  * shouldn't be used anywhere else in Tk (or by Tk clients):
  */
@@ -1849,8 +1849,14 @@ MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
 MODULE_SCOPE int	TkConfigureText(Tcl_Interp *interp, TkText *textPtr, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE const TkTextSegment * TkTextGetUndeletableNewline(const TkTextLine *lastLinePtr);
+MODULE_SCOPE void	TkTextPerformWatchCmd(TkSharedText *sharedTextPtr, TkText *textPtr,
+			    const char *operation,
+			    TkTextWatchGetIndexProc index1Proc, ClientData index1ProcData,
+			    TkTextWatchGetIndexProc index2Proc, ClientData index2ProcData,
+			    const char *arg1, const char *arg2, const char *arg3, bool userFlag);
 MODULE_SCOPE bool	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
-			    const char *index1, const char *index2, const char *arg, bool userFlag);
+			    const char *index1, const char *index2, const char *arg1, const char *arg2,
+			    const char *arg3, bool userFlag);
 MODULE_SCOPE void	TkTextUpdateAlteredFlag(TkSharedText *sharedTextPtr);
 MODULE_SCOPE bool	TkTextIndexBbox(TkText *textPtr,
 			    const TkTextIndex *indexPtr, bool extents, int *xPtr, int *yPtr,
@@ -2097,12 +2103,12 @@ MODULE_SCOPE bool	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
  */
 
 #ifdef TK_TEXT_NDEBUG
-# define TK_TEXT_DEBUG(expr)
 # define TK_BTREE_DEBUG(expr)
 #else
-# define TK_TEXT_DEBUG(expr)	{ if (tkTextDebug) { expr; } }
 # define TK_BTREE_DEBUG(expr)	{ if (tkBTreeDebug) { expr; } }
 #endif
+
+#define TK_TEXT_DEBUG(expr)	{ if (tkTextDebug) { expr; } }
 
 /*
  * Backport definitions for Tk 8.6/8.5.

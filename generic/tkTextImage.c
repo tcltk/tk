@@ -700,7 +700,7 @@ EmbImageConfigure(
 {
     Tk_Image image;
     char *name;
-    int width, i;
+    int i;
     TkTextEmbImage *img = &eiPtr->body.ei;
 
     if (maskPtr) {
@@ -737,7 +737,7 @@ EmbImageConfigure(
 	Tk_FreeImage(img->image);
     }
     if ((img->image = image)) {
-	Tk_SizeOfImage(image, &width, &img->imgHeight);
+	Tk_SizeOfImage(image, &img->imgWidth, &img->imgHeight);
     }
 
     if (!img->name) {
@@ -971,9 +971,11 @@ EmbImageLayoutProc(
     if (!img->image) {
 	width = 0;
 	height = 0;
+	img->imgWidth = 0;
 	img->imgHeight = 0;
     } else {
 	Tk_SizeOfImage(img->image, &width, &height);
+	img->imgWidth = width;
 	img->imgHeight = height;
 	width += 2*img->padX;
 	height += 2*img->padY;
@@ -1211,6 +1213,16 @@ TkTextImageIndex(
  */
 
 static void
+GetIndexForWatch(
+    TkText* textPtr,
+    TkTextIndex *indexPtr,
+    void *clientData)
+{
+    TkTextIndexClear(indexPtr, textPtr);
+    TkTextIndexSetSegment(indexPtr, clientData);
+}
+
+static void
 EmbImageProc(
     ClientData clientData,	/* Pointer to widget record. */
     int x, int y,		/* Upper left pixel (within image) that must be redisplayed. */
@@ -1222,13 +1234,30 @@ EmbImageProc(
     TkTextEmbImage *img = &eiPtr->body.ei;
 
     if (img->hPtr) {
+	TkSharedText *sharedTextPtr = img->sharedTextPtr;
 	TkTextIndex index;
 	int mask;
 
 	assert(img->image);
-	GetIndex(img->sharedTextPtr, eiPtr, &index);
+	GetIndex(sharedTextPtr, eiPtr, &index);
 	mask = (img->imgHeight == imgHeight) ? 0 : TK_TEXT_LINE_GEOMETRY;
-	TextChanged(img->sharedTextPtr, &index, mask);
+	TextChanged(sharedTextPtr, &index, mask);
+
+	if (sharedTextPtr->triggerWatchCmd) {
+	    const char *w = NULL;
+	    const char *h = NULL;
+	    char buf[2][100];
+
+	    if (img->imgHeight != imgHeight || img->imgWidth != imgWidth) {
+		snprintf(buf[0], sizeof(buf[0]), "%d", img->imgWidth);
+		snprintf(buf[1], sizeof(buf[1]), "%d", img->imgHeight);
+		w = buf[0];
+		h = buf[1];
+	    }
+
+	    TkTextPerformWatchCmd(sharedTextPtr, NULL, "image", GetIndexForWatch, eiPtr, NULL, NULL,
+		    img->name, w, h, false);
+	}
     }
 }
 

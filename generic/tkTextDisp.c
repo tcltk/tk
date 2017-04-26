@@ -4373,7 +4373,7 @@ TriggerWatchCursor(
 		    dInfoPtr->curPixelPos.xFirst, dInfoPtr->curPixelPos.yFirst);
 	    snprintf(buf[1], sizeof(buf[1]), "@%d,%d",
 		    dInfoPtr->curPixelPos.xLast, dInfoPtr->curPixelPos.yLast);
-	    TkTextTriggerWatchCmd(textPtr, "view", buf[0], buf[1], NULL, false);
+	    TkTextTriggerWatchCmd(textPtr, "view", buf[0], buf[1], NULL, NULL, NULL, false);
 	    memcpy(&textPtr->dInfoPtr->prevPixelPos, &textPtr->dInfoPtr->curPixelPos, sizeof(PixelPos));
 	    textPtr->sharedTextPtr->triggerWatchCmd = true;
 	}
