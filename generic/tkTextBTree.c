@@ -1254,23 +1254,16 @@ UndoDeleteInspect(
     const TkTextSegment *segPtr = numSegments > 0 ? *segments++ : NULL;
 
     while (segPtr) {
-	TkTextSegment *nextPtr;
-
-	if (segPtr->nextPtr && !segPtr->sectionPtr) {
-	    nextPtr = segPtr->nextPtr;
-	} else if (segments == lastSegment) {
-	    nextPtr = NULL;
-	} else {
-	    nextPtr = *segments++;
-	}
-
-	if (!nextPtr && token->surrogate) {
-	    break; // TODO: how to show the replacement of tags?
-	}
-
 	assert(segPtr->typePtr->inspectProc);
 	Tcl_ListObjAppendElement(NULL, objPtr, segPtr->typePtr->inspectProc(sharedTextPtr, segPtr));
-	segPtr = nextPtr;
+
+	if (segPtr->nextPtr && !segPtr->sectionPtr) {
+	    segPtr = segPtr->nextPtr;
+	} else if (segments == lastSegment) {
+	    segPtr = NULL;
+	} else {
+	    segPtr = *segments++;
+	}
     }
 
     return objPtr;
