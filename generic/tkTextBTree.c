@@ -1247,13 +1247,30 @@ UndoDeleteInspect(
     const TkTextUndoToken *item)
 {
     Tcl_Obj *objPtr = UndoDeleteGetCommand(sharedTextPtr, item);
-    TkTextSegment **segments = ((const UndoTokenDelete *) item)->segments;
-    unsigned numSegments = ((const UndoTokenDelete *) item)->numSegments;
-    const TkTextSegment *segPtr;
+    const UndoTokenDelete *token = (const UndoTokenDelete *) item;
+    unsigned numSegments = token->numSegments;
+    TkTextSegment **segments = token->segments;
+    TkTextSegment **lastSegment = segments + numSegments;
+    const TkTextSegment *segPtr = numSegments > 0 ? *segments++ : NULL;
 
-    for (segPtr = *segments++; numSegments > 0; segPtr = *segments++, --numSegments) {
+    while (segPtr) {
+	TkTextSegment *nextPtr;
+
+	if (segPtr->nextPtr && !segPtr->sectionPtr) {
+	    nextPtr = segPtr->nextPtr;
+	} else if (segments == lastSegment) {
+	    nextPtr = NULL;
+	} else {
+	    nextPtr = *segments++;
+	}
+
+	if (!nextPtr && token->surrogate) {
+	    break; // TODO: how to show the replacement of tags?
+	}
+
 	assert(segPtr->typePtr->inspectProc);
 	Tcl_ListObjAppendElement(NULL, objPtr, segPtr->typePtr->inspectProc(sharedTextPtr, segPtr));
+	segPtr = nextPtr;
     }
 
     return objPtr;
@@ -1307,11 +1324,13 @@ UndoDeletePerform(
     nodePtr = startLinePtr->parentPtr;
     segPtr = *segments++;
     firstPtr = segPtr;
-    UNMARK_POINTER(firstPtr);
     firstPtr->protectionFlag = true;
     prevSegPtr = NULL;
 
-    if (numSegments > 0) {
+    if (segPtr->nextPtr && !segPtr->sectionPtr) {
+	assert(!segPtr->sectionPtr);
+	nextPtr = segPtr->nextPtr;
+    } else if (numSegments > 0) {
 	nextPtr = *segments++;
 	numSegments -= 1;
     } else {
@@ -1323,21 +1342,17 @@ UndoDeletePerform(
     additionalTagoffPtr = NULL;
 
     while (segPtr) {
-	if (POINTER_IS_MARKED(segPtr)) {
-	    UNMARK_POINTER(segPtr);
-
+	if (segPtr->sectionPtr) {
 	    if (prevPtr != segPtr) {
 		TkTextSection *sectionPtr;
 
 		assert(segPtr->typePtr != &tkTextCharType);
-		assert(segPtr->sectionPtr);
 
 		/*
 		 * This is a re-inserted segment, it will move.
 		 */
 
 		sectionPtr = segPtr->sectionPtr;
-		UNMARK_POINTER(segPtr);
 		UnlinkSegment(segPtr);
 		JoinSections(sectionPtr);
 	    }
@@ -1389,7 +1404,9 @@ UndoDeletePerform(
 	}
 	prevPtr = segPtr;
 	if ((segPtr = nextPtr)) {
-	    if (numSegments > 0) {
+	    if (nextPtr->nextPtr && !nextPtr->sectionPtr) {
+		nextPtr = nextPtr->nextPtr;
+	    } else if (numSegments > 0) {
 		nextPtr = *segments++;
 		numSegments -= 1;
 	    } else {
@@ -1520,7 +1537,6 @@ UndoDeleteDestroy(
 	TkTextSegment *segPtr;
 
 	for (segPtr = *segments++; numSegments > 0; segPtr = *segments++, --numSegments) {
-	    UNMARK_POINTER(segPtr);
 	    assert(segPtr->typePtr);
 	    assert(segPtr->typePtr->deleteProc);
 	    segPtr->typePtr->deleteProc(sharedTextPtr->tree, segPtr, DELETE_BRANCHES | DELETE_MARKS);
@@ -1641,7 +1657,6 @@ RedoInsertInspect(
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("insert", -1));
 
     for (segPtr = *segments++; numSegments > 0; segPtr = *segments++, --numSegments) {
-	UNMARK_POINTER(segPtr);
 	assert(segPtr->typePtr->inspectProc);
 	Tcl_ListObjAppendElement(NULL, objPtr, segPtr->typePtr->inspectProc(sharedTextPtr, segPtr));
     }
@@ -6741,13 +6756,14 @@ DeleteRange(
     				 * also firstSegPtr and lastSegPtr will be deleted. */
     TkTextUndoInfo *undoInfo)	/* Store undo information, can be NULL. */
 {
-    const TkTextSegment *lastNewline;
+    const TkTextSegment *lastNewlineSegPtr;
     TkTextSegment *prevPtr;
     TkTextSegment *nextPtr;
     TkTextSegment *segPtr;
     TkTextSegment **segments;
     TkTextSegment *prevLinkPtr;
     TkTextSegment *beforeSurrogate;
+    TkTextSegment *prevSavePtr;
     TkTextSection *firstSectionPtr;
     TkTextSection *prevSectionPtr;
     TkTextSection *lastSectionPtr;
@@ -6839,24 +6855,33 @@ DeleteRange(
 	SetLineHasChanged(sharedTextPtr, linePtr2);
     }
 
-    if ((lastNewline = linePtr2->nextPtr ? NULL : TkTextGetUndeletableNewline(linePtr2))) {
-	while (beforeSurrogate && TkTextIsSpecialOrPrivateMark(beforeSurrogate)) {
-	    beforeSurrogate = beforeSurrogate->prevPtr;
-	}
-	if (!beforeSurrogate) {
-	    TkTextLine *prevLinePtr = linePtr1->prevPtr;
-	    if (prevLinePtr) {
-		beforeSurrogate = prevLinePtr->lastPtr;
+    if ((lastNewlineSegPtr = linePtr2->nextPtr ? NULL : TkTextGetUndeletableNewline(linePtr2))) {
+	if (lastNewlineSegPtr->tagInfoPtr == sharedTextPtr->emptyTagInfoPtr) {
+	    lastNewlineSegPtr = NULL;
+	} else {
+	    while (beforeSurrogate && TkTextIsSpecialOrPrivateMark(beforeSurrogate)) {
+		beforeSurrogate = beforeSurrogate->prevPtr;
+	    }
+	    if (!beforeSurrogate) {
+		TkTextLine *prevLinePtr = linePtr1->prevPtr;
+		if (prevLinePtr) {
+		    beforeSurrogate = prevLinePtr->lastPtr;
+		}
 	    }
 	}
     }
 
     if (undoInfo) {
 	/* reserve the first entry if needed */
-	numSegments = deleteFirst ? 1 : 0;
-	maxSegments = 100;
+	prevSavePtr = NULL;
+	numSegments = 0;
+	maxSegments = 32;
 	segments = malloc(maxSegments * sizeof(TkTextSegment *));
 	DEBUG(segments[0] = NULL);
+	if (deleteFirst) {
+	    segments[numSegments++] = prevSavePtr = firstSegPtr;
+	    firstSegPtr->refCount += 1;
+	}
     } else {
 	flags |= DELETE_BRANCHES;
     }
@@ -6931,34 +6956,24 @@ DeleteRange(
 	    firstSectionPtr = curLinePtr->segPtr->sectionPtr;
 	    lastSectionPtr = curLinePtr->lastPtr->sectionPtr;
 	} else {
+	    TkTextSegment *savePtr;
+	    bool reInserted;
+
+	    if ((savePtr = undoInfo && !TkTextIsSpecialOrPrivateMark(segPtr) ? segPtr : NULL)) {
+		savePtr->refCount += 1;
+		reInserted = false;
+	    }
+
 	    assert(segPtr->sectionPtr->linePtr == curLinePtr);
 	    assert(segPtr->typePtr->deleteProc);
 	    nextPtr = segPtr->nextPtr;
 	    byteSize += segPtr->size;
-	    if (undoInfo && !TkTextIsSpecialOrPrivateMark(segPtr)) {
-		if (numSegments == maxSegments) {
-		    maxSegments = MAX(50u, numSegments * 2u);
-		    segments = realloc(segments, maxSegments * sizeof(TkTextSegment *));
-		}
-		if (segPtr->tagInfoPtr) {
-		    segPtr->tagInfoPtr = TagSetRemoveBits(segPtr->tagInfoPtr,
-			    sharedTextPtr->dontUndoTags, sharedTextPtr);
-		}
-		segments[numSegments++] = segPtr;
-		segPtr->refCount += 1;
-	    }
-	    if (segPtr == lastNewline) {
-		/*
-		 * Do not only delete last newline, instead replace it with a surrogate newline,
-		 * and link this newline at same position.
-		 */
 
-		segPtr->typePtr->deleteProc((TkTextBTree) treePtr, segPtr, flags);
-		insertSurrogate = true;
-	    } else if (!segPtr->typePtr->deleteProc((TkTextBTree) treePtr, segPtr, flags)) {
+	    if (!segPtr->typePtr->deleteProc((TkTextBTree) treePtr, segPtr, flags)) {
 		assert(segPtr->typePtr); /* really still living? */
 		assert(segPtr->typePtr->group == SEG_GROUP_MARK
 			|| segPtr->typePtr->group == SEG_GROUP_BRANCH);
+		assert(segPtr != lastNewlineSegPtr);
 
 		if (prevLinkPtr && segPtr->typePtr == &tkTextBranchType) {
 		    /*
@@ -7030,9 +7045,9 @@ DeleteRange(
 			beforeSurrogate = segPtr;
 		    }
 
-		    if (segments && !TkTextIsSpecialOrPrivateMark(segPtr)) {
-			/* Mark this segment as re-inserted. */
-			MARK_POINTER(segments[numSegments - 1]);
+		    if (savePtr) {
+			assert(!TkTextIsSpecialOrPrivateMark(segPtr));
+			reInserted = true;
 		    }
 
 		    /*
@@ -7043,7 +7058,38 @@ DeleteRange(
 		     */
 		    DEBUG(segPtr->sectionPtr->length = 0);
 		}
+	    } else if (segPtr == lastNewlineSegPtr) {
+		/*
+		 * Do not only delete last newline, instead replace it with a surrogate newline,
+		 * and link this newline at same position.
+		 */
+
+		insertSurrogate = true;
 	    }
+
+	    if (savePtr) {
+		if (savePtr->tagInfoPtr) {
+		    savePtr->tagInfoPtr = TagSetRemoveBits(savePtr->tagInfoPtr,
+			    sharedTextPtr->dontUndoTags, sharedTextPtr);
+		}
+		if (prevSavePtr) {
+		    assert(!prevSavePtr->sectionPtr);
+		    prevSavePtr->nextPtr = savePtr;
+		} else {
+		    if (numSegments == maxSegments) {
+			maxSegments *= 2u;
+			segments = realloc(segments, maxSegments * sizeof(TkTextSegment *));
+		    }
+		    segments[numSegments++] = savePtr;
+		}
+		if (reInserted) {
+		    prevSavePtr = NULL;
+		} else {
+		    (prevSavePtr = savePtr)->nextPtr = NULL;
+		    savePtr->sectionPtr = NULL;
+		}
+	    }
+
 	    segPtr = nextPtr;
 	}
     }
@@ -7176,11 +7222,8 @@ DeleteRange(
 	    assert(firstSegPtr->typePtr->deleteProc);
 	    if (!firstSegPtr->typePtr->deleteProc((TkTextBTree) treePtr, firstSegPtr, flags)) {
 		assert(!"mark refuses to die"); /* this should not happen */
-	    } else if (segments && TkTextIsStableMark(firstSegPtr)) {
-		firstSegPtr->refCount += 1;
-		assert(!segments[0]); /* this slot must be reserved */
-		segments[0] = firstSegPtr;
 	    }
+	    firstSegPtr->sectionPtr = NULL;
 	    countChanges += 1;
 	}
 	if (!TkTextIsSpecialOrPrivateMark(lastSegPtr)) {
@@ -7188,12 +7231,19 @@ DeleteRange(
 	    assert(lastSegPtr->typePtr->deleteProc);
 	    if (!lastSegPtr->typePtr->deleteProc((TkTextBTree) treePtr, lastSegPtr, flags)) {
 		assert(!"mark refuses to die"); /* this should not happen */
-	    } else if (segments && TkTextIsStableMark(lastSegPtr)) {
-		if (numSegments == maxSegments) {
-		    maxSegments += 2;
-		    segments = realloc(segments, maxSegments * sizeof(TkTextSegment *));
+	    } else if (undoInfo && TkTextIsStableMark(lastSegPtr)) {
+		assert(lastSegPtr->typePtr); /* not deleted */
+		if (prevSavePtr) {
+		    prevSavePtr->nextPtr = lastSegPtr;
+		} else {
+		    if (numSegments == maxSegments) {
+			maxSegments += 1;
+			segments = realloc(segments, maxSegments * sizeof(TkTextSegment *));
+		    }
+		    segments[numSegments++] = lastSegPtr;
 		}
-		segments[numSegments++] = lastSegPtr;
+		lastSegPtr->sectionPtr = NULL;
+		lastSegPtr->nextPtr = NULL;
 		lastSegPtr->refCount += 1;
 	    }
 	    countChanges += 1;
@@ -7234,9 +7284,9 @@ DeleteRange(
 	UndoTokenDelete *undoToken = (UndoTokenDelete *) undoInfo->token;
 
 	assert(numSegments > 0);
-	assert(segments[0]);
+	assert(deleteFirst == (segments[0] == firstSegPtr));
 
-	if (numSegments + 1 != maxSegments) {
+	if (numSegments != maxSegments) {
 	    segments = realloc(segments, (numSegments + 1)*sizeof(TkTextSegment *));
 	}
 	undoToken->segments = segments;

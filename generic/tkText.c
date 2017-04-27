@@ -5722,8 +5722,14 @@ DeleteIndexRange(
 	}
 
 	if (lastLinePtr->prevPtr->lastPtr->tagInfoPtr != sharedTextPtr->emptyTagInfoPtr) {
-	    /* last newline is tagged, so we have to re-include this character */
-	    index2 = index3;
+	    if (!TkTextTagBitContainsSet(sharedTextPtr->selectionTags,
+		    lastLinePtr->prevPtr->lastPtr->tagInfoPtr)) {
+		/*
+		 * Last newline is tagged with any non-selection tag, so we have to
+		 * re-include this character.
+		 */
+		index2 = index3;
+	    }
 	}
     }
 
