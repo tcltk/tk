@@ -1565,6 +1565,20 @@ RedoDeletePerform(
 	TkTextSegment *segPtr2 = token->endIndex.u.markPtr;
 	int flags = token->inclusive ? DELETE_INCLUSIVE : 0;
 
+	if (redoInfo) {
+	    UndoTokenDelete *redoToken;
+
+	    redoToken = malloc(sizeof(UndoTokenDelete));
+	    redoToken->undoType = &undoTokenDeleteType;
+	    redoToken->segments = NULL;
+	    redoToken->numSegments = 0;
+	    redoToken->startIndex = token->startIndex;
+	    redoToken->endIndex = token->endIndex;
+	    redoInfo->token = (TkTextUndoToken *) redoToken;
+	    redoInfo->byteSize = 0;
+	    DEBUG_ALLOC(tkTextCountNewUndoToken++);
+	}
+
 	DeleteRange(sharedTextPtr, segPtr1, segPtr2, flags, redoInfo);
 
 	assert(segPtr1 != segPtr2);
@@ -2792,6 +2806,7 @@ TkBTreeResetDisplayLineCounts(
     for ( ; numLines > 0; --numLines) {
 	TkTextPixelInfo *pixelInfo = TkBTreeLinePixelInfo(textPtr, linePtr);
 
+	pixelInfo = TkBTreeLinePixelInfo(textPtr, linePtr);
 	changeToDispLines += (int) GetDisplayLines(linePtr, pixelReference);
 	changeToPixels += pixelInfo->height;
 	pixelInfo->epoch = 0;
@@ -2804,6 +2819,11 @@ TkBTreeResetDisplayLineCounts(
 	    DEBUG_ALLOC(tkTextCountDestroyDispInfo++);
 	}
 
+	if (!linePtr) {
+	    assert(numLines == 1);
+	    break;
+	}
+	
 	if (nodePtr != linePtr->parentPtr) {
 	    PropagateDispLineChange(nodePtr, pixelReference, changeToDispLines, changeToPixels);
 	    changeToDispLines = 0;
@@ -7316,6 +7336,9 @@ DeleteRange(
 	DEBUG(tkBTreeDebug = false); /* otherwise protected segment will be complained */
 	TkBTreeInsertChars(sharedTextPtr->tree, &index, "\n",
 		sharedTextPtr->emptyTagInfoPtr, NULL, NULL);
+	/* don't forget to reset pixel info of very last line */
+	TkTextInvalidateLineMetrics(treePtr->sharedTextPtr, NULL,
+		sharedTextPtr->endMarker->sectionPtr->linePtr, 0, TK_TEXT_INVALIDATE_REINSERTED);
 	DEBUG(tkBTreeDebug = oldTreeDebug);
     }
 }
