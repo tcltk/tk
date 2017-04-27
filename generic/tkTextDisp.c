@@ -6922,14 +6922,15 @@ TextInvalidateLineMetrics(
 
     assert(linePtr || action == TK_TEXT_INVALIDATE_ONLY);
     assert(TkBTreeLinesTo(textPtr->sharedTextPtr->tree, textPtr, linePtr, NULL) + lineCount
-	    < totalLines + (action == TK_TEXT_INVALIDATE_INSERT || action == TK_TEXT_INVALIDATE_DELETE));
+	    < totalLines + (action == TK_TEXT_INVALIDATE_INSERT
+			    || action == TK_TEXT_INVALIDATE_DELETE
+			    || action == TK_TEXT_INVALIDATE_REINSERTED));
 
     if (linePtr) {
 	int deviation;
 
 	lineNum = TkBTreeLinesTo(textPtr->sharedTextPtr->tree, textPtr, linePtr, &deviation);
 
-	assert(lineNum < totalLines);
 	assert(deviation >= 0);
 
 	if (deviation) {
@@ -6966,6 +6967,16 @@ TextInvalidateLineMetrics(
 	}
 
 	switch (action) {
+	case TK_TEXT_INVALIDATE_REINSERTED: {
+	    /*
+	     * Special case: the very last line has been re-inserted.
+	     */
+	    assert(lineNum == totalLines);
+	    assert(lineNum > 0);
+	    TkRangeListTruncateAtEnd(ranges, lineNum - 1);
+	    TkBTreeResetDisplayLineCounts(textPtr, linePtr, 1);
+	    break;
+	}
 	case TK_TEXT_INVALIDATE_ONLY: {
 	    int counter = MIN(lineCount, totalLines - lineNum);
 
@@ -7083,6 +7094,8 @@ TextInvalidateLineMetrics(
 		ranges = TkRangeListAdd(ranges, lineNum, lineNum);
 	    } else {
 		TkRangeListTruncateAtEnd(ranges, lineNum - 1);
+		ResetPixelInfo(TkBTreeLinePixelInfo(textPtr,
+			textPtr->sharedTextPtr->endMarker->sectionPtr->linePtr));
 	    }
 	    ResetPixelInfo(TkBTreeLinePixelInfo(textPtr,
 		    TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr)));

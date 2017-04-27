@@ -7778,8 +7778,8 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
 test text-37.1 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
-} -body {
     set res {}
+} -body {
     .t delete begin end
     lappend res [.t inspect -chars -tag]
     .t edit undo
@@ -7791,13 +7791,13 @@ test text-37.1 {deletion - newline behavior - undo/redo behavior} -setup {
     destroy .t
     unset res
 } -result {{{break {}}}\
-{{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
-{{break {}}}}
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
+    {{break {}}}}
 test text-37.2 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
-} -body {
     set res {}
+} -body {
     .t delete 2.0 end
     lappend res [.t inspect -chars -tag]
     .t edit undo
@@ -7809,13 +7809,13 @@ test text-37.2 {deletion - newline behavior - undo/redo behavior} -setup {
     destroy .t
     unset res
 } -result {{{text 1 {}} {break {n1}} {break {}}}\
-{{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
-{{text 1 {}} {break {n1}} {break {}}}}
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
+    {{text 1 {}} {break {n1}} {break {}}}}
 test text-37.3 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
-} -body {
     set res {}
+} -body {
     .t delete 1.end end
     lappend res [.t inspect -chars -tag]
     .t edit undo
@@ -7827,13 +7827,13 @@ test text-37.3 {deletion - newline behavior - undo/redo behavior} -setup {
     destroy .t
     unset res
 } -result {{{text 1 {}} {break {}}}\
-{{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
-{{text 1 {}} {break {}}}}
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
+    {{text 1 {}} {break {}}}}
 test text-37.4 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
-} -body {
     set res {}
+} -body {
     .t delete 2.end end
     lappend res [.t inspect -chars -tag]
     .t edit undo
@@ -7844,12 +7844,14 @@ test text-37.4 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{text 1 {}} {break {n1}} {text 2 {}} {break {}}} {{break {}}} {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}}
+} -result {{{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
+    {{break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}}
 test text-37.5 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
-} -body {
     set res {}
+} -body {
     .t delete begin end
     lappend res [.t inspect -chars -tag]
     .t edit undo
@@ -7860,12 +7862,14 @@ test text-37.5 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{break {}}} {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}} {{break {}}}}
+} -result {{{break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
+    {{break {}}}}
 test text-37.6 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
-} -body {
     set res {}
+} -body {
     .t delete 2.0 end
     lappend res [.t inspect -chars -tag]
     .t edit undo
@@ -7877,13 +7881,13 @@ test text-37.6 {deletion - newline behavior - undo/redo behavior} -setup {
     destroy .t
     unset res
 } -result {{{text 1 {}} {break {n1}} {break {}}}\
-{{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
-{{text 1 {}} {break {n1}} {break {}}}}
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
+    {{text 1 {}} {break {n1}} {break {}}}}
 test text-37.7 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
-} -body {
     set res {}
+} -body {
     .t delete 1.end end
     lappend res [.t inspect -chars -tag]
     .t edit undo
@@ -7894,12 +7898,14 @@ test text-37.7 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{text 1 {}} {break {}}} {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}} {{text 1 {}} {break {}}}}
+} -result {{{text 1 {}} {break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
+    {{text 1 {}} {break {}}}}
 test text-37.8 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
-} -body {
     set res {}
+} -body {
     .t delete 2.end end
     lappend res [.t inspect -chars -tag]
     .t edit undo
@@ -7910,13 +7916,15 @@ test text-37.8 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{text 1 {}} {break {n1}} {text 2 {}} {break {}}} {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}} {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}}
+} -result {{{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
+    {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}}
 test text-37.9 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t tag add n begin
     .t edit separator -immediately
-} -body {
     set res {}
+} -body {
     .t delete begin end
     lappend res [.t inspect -chars -tag]
     .t edit undo
@@ -7927,11 +7935,13 @@ test text-37.9 {deletion - newline behavior - undo/redo behavior} -setup {
 } -cleanup {
     destroy .t
     unset res
-} -result {{{break {}}} {{break {n}}} {{break {}}}}
+} -result {{{break {}}}\
+    {{break {n}}}\
+    {{break {}}}}
 test text-37.10 {deletion - clean widget} -setup {
     text .t -undo on
-} -body {
     set res {}
+} -body {
     lappend res [.t inspect -chars -tag]
     .t delete begin end
     lappend res [.t inspect -chars -tag]
@@ -7943,7 +7953,8 @@ test text-37.10 {deletion - clean widget} -setup {
 } -cleanup {
    destroy .t
    unset res
-} -result {{{break {}}} {{break {}}}}
+} -result {{{break {}}}\
+    {{break {}}}}
 test text-37.11 {deletion - test optimization} -setup {
     text .t -undo on
     .t tag add n begin
@@ -7954,6 +7965,26 @@ test text-37.11 {deletion - test optimization} -setup {
 } -cleanup {
     destroy .t
 } -result {{{{tag clear {n 0 1}}} {{tag add n}}} {}}
+test text-37.12 {deletion - newline behavior - undo/redo behavior} -setup {
+    text .t -undo on
+    .t insert end "1"
+    .t tag add n begin end
+    .t edit separator -immediately
+    set res {}
+} -body {
+    .t delete begin end
+    lappend res [.t inspect -chars -tag]
+    .t edit undo
+    lappend res [.t inspect -chars -tag]
+    .t edit redo
+    lappend res [.t inspect -chars -tag]
+    set res
+} -cleanup {
+    destroy .t
+    unset res
+} -result {{{break {}}}\
+    {{break {}} {text 1 {n}} {break {n}}}\
+    {{break {}}}}
 
 # cleanup
 cleanupTests

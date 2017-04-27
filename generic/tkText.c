@@ -2417,8 +2417,8 @@ TextWidgetObjCmd(
 	}
 
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
-	if (TkTextIndexCompare(&indexFrom, &index) < 0
-		&& TkTextIndexCompare(&index, &indexTo) <= 0) {
+
+	if (TkTextIndexCompare(&indexFrom, &index) < 0 && TkTextIndexCompare(&index, &indexTo) <= 0) {
 	    /*
 	     * The insertion point is inside the range to be replaced, so
 	     * we have to do some calculations to ensure it doesn't move
@@ -5719,6 +5719,11 @@ DeleteIndexRange(
 		}
 	    }
 	    return true; /* nothing to do */
+	}
+
+	if (lastLinePtr->prevPtr->lastPtr->tagInfoPtr != sharedTextPtr->emptyTagInfoPtr) {
+	    /* last newline is tagged, so we have to re-include this character */
+	    index2 = index3;
 	}
     }
 
