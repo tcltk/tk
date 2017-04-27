@@ -7983,7 +7983,27 @@ test text-37.12 {deletion - newline behavior - undo/redo behavior} -setup {
     destroy .t
     unset res
 } -result {{{break {}}}\
-    {{break {}} {text 1 {n}} {break {n}}}\
+    {{text 1 {n}} {break {n}}}\
+    {{break {}}}}
+test text-37.13 {deletion - newline behavior - undo/redo behavior} -setup {
+    text .t -undo on
+    .t tag add n begin
+    .t edit separator -immediately
+    .t insert end "1"
+    set res {}
+} -body {
+    .t delete begin end
+    lappend res [.t inspect -chars -tag]
+    .t edit undo
+    lappend res [.t inspect -chars -tag]
+    .t edit redo
+    lappend res [.t inspect -chars -tag]
+    set res
+} -cleanup {
+    destroy .t
+    unset res
+} -result {{{break {}}}\
+    {{text 1 {}} {break {n}}}\
     {{break {}}}}
 
 # cleanup
