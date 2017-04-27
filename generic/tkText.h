@@ -1613,6 +1613,7 @@ typedef enum {
 #define DELETE_INCLUSIVE	(1 << 3)
 #define DELETE_CLEANUP		(1 << 4)
 #define DELETE_PRESERVE		(1 << 5)
+#define DELETE_LASTLINE		(1 << 6)
 
 /*
  * The following definition specifies the maximum number of characters needed

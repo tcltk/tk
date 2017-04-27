@@ -1568,11 +1568,19 @@ RedoDeletePerform(
     bool isRedo)
 {
     const UndoTokenDelete *token = (const UndoTokenDelete *) undoInfo->token;
+    int flags = 0;
+
+    if (token->surrogate) {
+	flags = DELETE_LASTLINE;
+    }
 
     if (token->startIndex.lineIndex == -1 && token->endIndex.lineIndex == -1) {
 	TkTextSegment *segPtr1 = token->startIndex.u.markPtr;
 	TkTextSegment *segPtr2 = token->endIndex.u.markPtr;
-	int flags = token->inclusive ? DELETE_INCLUSIVE : 0;
+
+	if (token->inclusive) {
+	    flags |= DELETE_INCLUSIVE;
+	}
 
 	if (redoInfo) {
 	    UndoTokenDelete *redoToken;
@@ -1603,7 +1611,7 @@ RedoDeletePerform(
 
 	TkBTreeUndoIndexToIndex(sharedTextPtr, &token->startIndex, &index1);
 	TkBTreeUndoIndexToIndex(sharedTextPtr, &token->endIndex, &index2);
-	DeleteIndexRange(sharedTextPtr, &index1, &index2, 0, (UndoTokenInsert *) token, redoInfo);
+	DeleteIndexRange(sharedTextPtr, &index1, &index2, flags, (UndoTokenInsert *) token, redoInfo);
     }
 }
 
@@ -6832,7 +6840,6 @@ DeleteRange(
     segments = NULL;
     insertSurrogate = false;
     assert(firstSegPtr->size == 0);
-    beforeSurrogate = firstSegPtr->prevPtr;
     deleteFirst = (flags & DELETE_INCLUSIVE) && TkTextIsStableMark(firstSegPtr);
 
     linePtr1 = sectionPtr->linePtr;
@@ -6848,18 +6855,17 @@ DeleteRange(
 	SetLineHasChanged(sharedTextPtr, linePtr2);
     }
 
-    if ((lastNewlineSegPtr = linePtr2->nextPtr ? NULL : TkTextGetUndeletableNewline(linePtr2))) {
-	if (lastNewlineSegPtr->tagInfoPtr == sharedTextPtr->emptyTagInfoPtr) {
-	    lastNewlineSegPtr = NULL;
-	} else {
-	    while (beforeSurrogate && TkTextIsSpecialOrPrivateMark(beforeSurrogate)) {
-		beforeSurrogate = beforeSurrogate->prevPtr;
-	    }
-	    if (!beforeSurrogate) {
-		TkTextLine *prevLinePtr = linePtr1->prevPtr;
-		if (prevLinePtr) {
-		    beforeSurrogate = prevLinePtr->lastPtr;
-		}
+    if (flags & DELETE_LASTLINE) {
+	lastNewlineSegPtr = TkTextGetUndeletableNewline(linePtr2);
+	beforeSurrogate = firstSegPtr->prevPtr;
+
+	while (beforeSurrogate && TkTextIsSpecialOrPrivateMark(beforeSurrogate)) {
+	    beforeSurrogate = beforeSurrogate->prevPtr;
+	}
+	if (!beforeSurrogate) {
+	    TkTextLine *prevLinePtr = linePtr1->prevPtr;
+	    if (prevLinePtr) {
+		beforeSurrogate = prevLinePtr->lastPtr;
 	    }
 	}
     }

@@ -5728,6 +5728,7 @@ DeleteIndexRange(
 		 * Last newline is tagged with any non-selection tag, so we have to
 		 * re-include this character.
 		 */
+		flags |= DELETE_LASTLINE;
 		index2 = index3;
 	    }
 	}
