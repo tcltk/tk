@@ -50,7 +50,7 @@ static void		EmbImageBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int in
 static int		EmbImageConfigure(TkText *textPtr, TkTextSegment *eiPtr, int *maskPtr,
 			    bool undoable, int objc, Tcl_Obj *const objv[]);
 static bool		EmbImageDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int treeGone);
-static void		EmbImageRestoreProc(TkTextSegment *segPtr);
+static void		EmbImageRestoreProc(TkTextBTree tree, TkTextSegment *segPtr);
 static void		EmbImageDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int x, int y,
 			    int lineHeight, int baseline, Display *display, Drawable dst, int screenY);
 static int		EmbImageLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
@@ -913,6 +913,7 @@ EmbImageDeleteProc(
 
 static void
 EmbImageRestoreProc(
+    TkTextBTree tree,		/* Information about tree. */
     TkTextSegment *eiPtr)	/* Segment to reuse. */
 {
     TkTextEmbImage *img = &eiPtr->body.ei;

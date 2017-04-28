@@ -229,12 +229,12 @@ static unsigned		CountSegments(const TkTextSection *sectionPtr);
 static unsigned		ComputeSectionSize(const TkTextSegment *segPtr);
 static void		BranchCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static bool		BranchDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int flags);
-static void		BranchRestoreProc(TkTextSegment *segPtr);
+static void		BranchRestoreProc(TkTextBTree tree, TkTextSegment *segPtr);
 static Tcl_Obj *	BranchInspectProc(const TkSharedText *sharedTextPtr,
 			    const TkTextSegment *segPtr);
 static void		LinkCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static bool		LinkDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int flags);
-static void		LinkRestoreProc(TkTextSegment *segPtr);
+static void		LinkRestoreProc(TkTextBTree tree, TkTextSegment *segPtr);
 static Tcl_Obj *	LinkInspectProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static bool		ProtectionMarkDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int flags);
 static void		ProtectionMarkCheckProc(const TkSharedText *sharedTextPtr,
@@ -1390,7 +1390,7 @@ UndoDeletePerform(
 		if (segPtr->typePtr == &tkTextBranchType) {
 		    changeToBranchCount += 1;
 		}
-		segPtr->typePtr->restoreProc(segPtr);
+		segPtr->typePtr->restoreProc(sharedTextPtr->tree, segPtr);
 	    }
 	    prevSegPtr = NULL;
 	}
@@ -1407,6 +1407,7 @@ UndoDeletePerform(
 	}
     }
 
+    SetLineHasChanged(sharedTextPtr, linePtr);
     RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
     tagonPtr = TkTextTagSetJoin(tagonPtr, linePtr->tagonPtr);
     tagoffPtr = TkTextTagSetJoin(tagoffPtr, linePtr->tagoffPtr);
@@ -4026,7 +4027,7 @@ TkBTreeLoad(
 	    }
 	    if (isInsert) {
 		UnlinkSegment(nextSegPtr = textPtr->insertMarkPtr);
-	    } else if (!(nextSegPtr = TkTextMakeNewMark(textPtr, name))) {
+	    } else if (!(nextSegPtr = TkTextMakeNewMark(sharedTextPtr, name))) {
 		return LoadError(interp, "mark already exists", i, 1, -1, tagInfoPtr);
 	    }
 	    nextSegPtr->typePtr = &tkTextLeftMarkType;
@@ -4062,7 +4063,7 @@ TkBTreeLoad(
 	    }
 	    if (isInsert) {
 		UnlinkSegment(nextSegPtr = textPtr->insertMarkPtr);
-	    } else if (!(nextSegPtr = TkTextMakeNewMark(textPtr, name))) {
+	    } else if (!(nextSegPtr = TkTextMakeNewMark(sharedTextPtr, name))) {
 		return LoadError(interp, "mark already exists", i, 1, -1, tagInfoPtr);
 	    }
 	    assert(nextSegPtr->typePtr == &tkTextRightMarkType);
@@ -15582,6 +15583,7 @@ BranchDeleteProc(
 
 static void
 BranchRestoreProc(
+    TkTextBTree tree,		/* Information about tree. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
     /* Restore old relationship. */
@@ -15729,7 +15731,7 @@ BranchCheckProc(
 
 static bool
 LinkDeleteProc(
-    TkTextBTree tree,
+    TkTextBTree tree,		/* Information about tree. */
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
@@ -15768,6 +15770,7 @@ LinkDeleteProc(
 
 static void
 LinkRestoreProc(
+    TkTextBTree tree,		/* Information about tree. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
     /* Restore old relationship (misuse of an unused pointer). */
@@ -15932,7 +15935,7 @@ ProtectionMarkCheckProc(
 
 static bool
 ProtectionMarkDeleteProc(
-    TkTextBTree tree,
+    TkTextBTree tree,		/* Information about tree. */
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
