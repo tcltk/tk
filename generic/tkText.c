@@ -556,34 +556,37 @@ static TkTextUndoStackContentChangedProc TextUndoStackContentChangedCallback;
  */
 
 enum {
-    TK_DUMP_TEXT           = SEG_GROUP_CHAR,
-    TK_DUMP_CHARS          = TK_DUMP_TEXT|SEG_GROUP_HYPHEN,
-    TK_DUMP_MARK           = SEG_GROUP_MARK,
-    TK_DUMP_ELIDE          = SEG_GROUP_BRANCH,
-    TK_DUMP_TAG            = SEG_GROUP_TAG,
-    TK_DUMP_WIN            = SEG_GROUP_WINDOW,
-    TK_DUMP_IMG            = SEG_GROUP_IMAGE,
-    TK_DUMP_NODE           = 1 << 20,
-    TK_DUMP_DUMP_ALL       = TK_DUMP_TEXT|TK_DUMP_CHARS|TK_DUMP_MARK|TK_DUMP_TAG|TK_DUMP_WIN|TK_DUMP_IMG,
+    TK_DUMP_TEXT                = SEG_GROUP_CHAR,
+    TK_DUMP_CHARS               = TK_DUMP_TEXT|SEG_GROUP_HYPHEN,
+    TK_DUMP_MARK                = SEG_GROUP_MARK,
+    TK_DUMP_ELIDE               = SEG_GROUP_BRANCH,
+    TK_DUMP_TAG                 = SEG_GROUP_TAG,
+    TK_DUMP_WIN                 = SEG_GROUP_WINDOW,
+    TK_DUMP_IMG                 = SEG_GROUP_IMAGE,
+    TK_DUMP_NODE                = 1 << 20,
+    TK_DUMP_DUMP_ALL            = TK_DUMP_TEXT|TK_DUMP_CHARS|TK_DUMP_MARK|TK_DUMP_TAG|
+                                  TK_DUMP_WIN|TK_DUMP_IMG,
 
-    TK_DUMP_DISPLAY        = 1 << 21,
-    TK_DUMP_DISPLAY_CHARS  = TK_DUMP_CHARS|TK_DUMP_DISPLAY,
-    TK_DUMP_DISPLAY_TEXT   = TK_DUMP_TEXT|TK_DUMP_DISPLAY,
-    TK_DUMP_CRC_DFLT       = TK_DUMP_TEXT|SEG_GROUP_WINDOW|SEG_GROUP_IMAGE,
-    TK_DUMP_CRC_ALL        = TK_DUMP_TEXT|TK_DUMP_CHARS|TK_DUMP_DISPLAY_TEXT|SEG_GROUP_WINDOW|
-			     SEG_GROUP_IMAGE|TK_DUMP_MARK|TK_DUMP_TAG,
+    TK_DUMP_DISPLAY             = 1 << 21,
+    TK_DUMP_DISPLAY_CHARS       = TK_DUMP_CHARS|TK_DUMP_DISPLAY,
+    TK_DUMP_DISPLAY_TEXT        = TK_DUMP_TEXT|TK_DUMP_DISPLAY,
+    TK_DUMP_CRC_DFLT            = TK_DUMP_TEXT|SEG_GROUP_WINDOW|SEG_GROUP_IMAGE,
+    TK_DUMP_CRC_ALL             = TK_DUMP_TEXT|TK_DUMP_CHARS|TK_DUMP_DISPLAY_TEXT|SEG_GROUP_WINDOW|
+			          SEG_GROUP_IMAGE|TK_DUMP_MARK|TK_DUMP_TAG,
 
-    TK_DUMP_NESTED         = 1 << 22,
-    TK_DUMP_TEXT_CONFIGS   = 1 << 23,
-    TK_DUMP_TAG_CONFIGS    = 1 << 24,
-    TK_DUMP_TAG_BINDINGS   = 1 << 25,
-    TK_DUMP_INSERT_MARK    = 1 << 26,
-    TK_DUMP_DISCARD_SEL    = 1 << 27,
-    TK_DUMP_DONT_RESOLVE   = 1 << 28,
-    TK_DUMP_INSPECT_DFLT   = TK_DUMP_DUMP_ALL|TK_DUMP_TEXT_CONFIGS|TK_DUMP_TAG_CONFIGS,
-    TK_DUMP_INSPECT_ALL    = TK_DUMP_INSPECT_DFLT|TK_DUMP_CHARS|TK_DUMP_TAG_BINDINGS|
-			     TK_DUMP_DISPLAY_TEXT|TK_DUMP_DISCARD_SEL|TK_DUMP_INSERT_MARK|
-			     TK_DUMP_DONT_RESOLVE|TK_DUMP_NESTED|TK_DUMP_ELIDE
+    TK_DUMP_NESTED              = 1 << 22,
+    TK_DUMP_TEXT_CONFIGS        = 1 << 23,
+    TK_DUMP_TAG_CONFIGS         = 1 << 24,
+    TK_DUMP_TAG_BINDINGS        = 1 << 25,
+    TK_DUMP_INSERT_MARK         = 1 << 26,
+    TK_DUMP_DISCARD_SEL         = 1 << 27,
+    TK_DUMP_DONT_RESOLVE_COLORS = 1 << 28,
+    TK_DUMP_DONT_RESOLVE_FONTS  = 1 << 29,
+    TK_DUMP_INSPECT_DFLT        = TK_DUMP_DUMP_ALL|TK_DUMP_TEXT_CONFIGS|TK_DUMP_TAG_CONFIGS,
+    TK_DUMP_INSPECT_ALL         = TK_DUMP_INSPECT_DFLT|TK_DUMP_CHARS|TK_DUMP_TAG_BINDINGS|
+			          TK_DUMP_DISPLAY_TEXT|TK_DUMP_DISCARD_SEL|TK_DUMP_INSERT_MARK|
+			          TK_DUMP_DONT_RESOLVE_COLORS|TK_DUMP_DONT_RESOLVE_FONTS|
+                                  TK_DUMP_NESTED|TK_DUMP_ELIDE
 };
 
 /*
@@ -7200,21 +7203,21 @@ GetDumpFlags(
 {
     static const char *const optStrings[] = {
 	"-all", "-bindings", "-chars", "-command", "-configurations", "-discardselection",
-	"-displaychars", "-displaytext", "-dontresolve", "-elide", "-image",
-	"-insertmark", "-mark", "-nested", "-node", "-setup",
-	"-tag", "-text", "-window", NULL
+	"-displaychars", "-displaytext", "-dontresolvecolors",
+	"-dontresolvefonts", "-elide", "-image", "-insertmark", "-mark",
+	"-nested", "-node", "-setup", "-tag", "-text", "-window", NULL
     };
     enum opts {
 	DUMP_ALL, DUMP_TAG_BINDINGS, DUMP_CHARS, DUMP_CMD, DUMP_TAG_CONFIGS, DUMP_DISCARD_SEL,
-	DUMP_DISPLAY_CHARS, DUMP_DISPLAY_TEXT, DUMP_DONT_RESOLVE, DUMP_ELIDE, DUMP_IMG,
-	DUMP_INSERT_MARK, DUMP_MARK, DUMP_NESTED, DUMP_NODE, DUMP_TEXT_CONFIGS,
-	DUMP_TAG, DUMP_TEXT, DUMP_WIN
+	DUMP_DISPLAY_CHARS, DUMP_DISPLAY_TEXT, DUMP_DONT_RESOLVE_COLORS,
+	DUMP_DONT_RESOLVE_FONTS, DUMP_ELIDE, DUMP_IMG, DUMP_INSERT_MARK, DUMP_MARK,
+	DUMP_NESTED, DUMP_NODE, DUMP_TEXT_CONFIGS, DUMP_TAG, DUMP_TEXT, DUMP_WIN
     };
     static const unsigned dumpFlags[] = {
 	0, TK_DUMP_TAG_BINDINGS, TK_DUMP_CHARS, 0, TK_DUMP_TAG_CONFIGS, TK_DUMP_DISCARD_SEL,
-	TK_DUMP_DISPLAY_CHARS, TK_DUMP_DISPLAY_TEXT, TK_DUMP_DONT_RESOLVE, TK_DUMP_ELIDE, TK_DUMP_IMG,
-	TK_DUMP_INSERT_MARK, TK_DUMP_MARK, TK_DUMP_NESTED, TK_DUMP_NODE, TK_DUMP_TEXT_CONFIGS,
-	TK_DUMP_TAG, TK_DUMP_TEXT, TK_DUMP_WIN
+	TK_DUMP_DISPLAY_CHARS, TK_DUMP_DISPLAY_TEXT, TK_DUMP_DONT_RESOLVE_COLORS,
+	TK_DUMP_DONT_RESOLVE_FONTS, TK_DUMP_ELIDE, TK_DUMP_IMG, TK_DUMP_INSERT_MARK, TK_DUMP_MARK,
+	TK_DUMP_NESTED, TK_DUMP_NODE, TK_DUMP_TEXT_CONFIGS, TK_DUMP_TAG, TK_DUMP_TEXT, TK_DUMP_WIN
     };
 
     int arg;
@@ -7277,7 +7280,8 @@ GetDumpFlags(
 	CASE(TEXT_CONFIGS);
 	CASE(TAG_BINDINGS);
 	CASE(TAG_CONFIGS);
-	CASE(DONT_RESOLVE);
+	CASE(DONT_RESOLVE_COLORS);
+	CASE(DONT_RESOLVE_FONTS);
 	CASE(IMG);
 	CASE(WIN);
 #undef CASE
@@ -8138,6 +8142,18 @@ GetFontAttrs(
 
 #endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
 
+static bool
+IsPossibleColorOption(
+    const char *s)
+{
+    unsigned len = strlen(s);
+
+    assert(s[0] == '-');
+
+    return (len >= 6 && strcmp(s + len - 5, "color") == 0)
+	    || (len >= 7 && strcmp(s + len - 6, "ground") == 0);
+}
+
 void
 TkTextInspectOptions(
     TkText *textPtr,
@@ -8145,6 +8161,7 @@ TkTextInspectOptions(
     Tk_OptionTable optionTable,
     Tcl_DString *result,	/* should be already initialized */
     bool resolveFontNames,
+    bool resolveColorNames,
     bool discardDefaultValues)
 {
     Tcl_Obj *objPtr;
@@ -8182,7 +8199,6 @@ TkTextInspectOptions(
 		if (GetByteLength(val) > 0) {
 		    Tcl_Obj *value = val;
 		    Tcl_Obj *name;
-		    int len;
 
 		    if (discardDefaultValues) {
 			Tcl_Obj *dflt = argv[3];
@@ -8199,9 +8215,7 @@ TkTextInspectOptions(
 		    Tcl_DStringAppend(result, Tcl_GetString(name), GetByteLength(name));
 		    Tcl_DStringAppend(result, " ", 1);
 
-		    if (resolveFontNames
-			    && strcmp(Tcl_GetString(name), "-font") == 0
-			    && (Tcl_ListObjLength(interp, val, &len) != TCL_OK || len == 1)) {
+		    if (resolveFontNames && strcmp(Tcl_GetString(name), "-font") == 0) {
 			const char *s = Tcl_GetString(val);
 			unsigned len = GetByteLength(val);
 
@@ -8235,6 +8249,17 @@ TkTextInspectOptions(
 				Tk_FreeFont(tkfont);
 			    }
 #endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
+			}
+		    } else if (resolveColorNames && IsPossibleColorOption(Tcl_GetString(name))) {
+			const char *colorName = Tcl_GetString(val);
+
+			if (toupper(colorName[0]) == 'S' && strncmp(colorName + 1, "ystem", 5) == 0) {
+			    XColor *col = Tk_GetColorFromObj(textPtr->tkwin, val);
+
+			    if (col) {
+				value = Tcl_ObjPrintf("#%02x%02x%02x", col->red, col->green, col->blue);
+				Tk_FreeColor(col);
+			    }
 			}
 		    }
 
@@ -8369,7 +8394,7 @@ TextInspectCmd(
 
     if (what & TK_DUMP_TEXT_CONFIGS) {
 	TkTextInspectOptions(textPtr, textPtr, textPtr->optionTable, opts,
-		!(what & TK_DUMP_DONT_RESOLVE), false);
+		!(what & TK_DUMP_DONT_RESOLVE_FONTS), !(what & TK_DUMP_DONT_RESOLVE_COLORS), false);
 	Tcl_DStringStartSublist(str);
 	Tcl_DStringAppendElement(str, "setup");
 	Tcl_DStringAppendElement(str, Tk_PathName(textPtr->tkwin));
@@ -8387,7 +8412,8 @@ TextInspectCmd(
 
 	    if (tagPtr && (!(what & TK_DUMP_DISCARD_SEL) || tagPtr != textPtr->selTagPtr)) {
 		TkTextInspectOptions(textPtr, tagPtr, tagPtr->optionTable, opts,
-			!(what & TK_DUMP_DONT_RESOLVE), true);
+			!(what & TK_DUMP_DONT_RESOLVE_FONTS), !(what & TK_DUMP_DONT_RESOLVE_COLORS),
+			true);
 		    Tcl_DStringStartSublist(str);
 		    Tcl_DStringAppendElement(str, "configure");
 		    Tcl_DStringAppendElement(str, tagPtr->name);
@@ -8440,7 +8466,7 @@ TextInspectCmd(
 	    }
 	    type = "image";
 	    TkTextInspectOptions(textPtr, &segPtr->body.ei, segPtr->body.ei.optionTable, opts,
-		    false, false);
+		    false, false, false);
 	    value = Tcl_DStringValue(opts);
 	    printTags = !!(what & TK_DUMP_TAG);
 	    break;
@@ -8450,7 +8476,7 @@ TextInspectCmd(
 	    }
 	    type = "window";
 	    TkTextInspectOptions(textPtr, &segPtr->body.ew, segPtr->body.ew.optionTable, opts,
-		    false, false);
+		    false, false, false);
 	    value = Tcl_DStringValue(opts);
 	    printTags = !!(what & TK_DUMP_TAG);
 	    break;

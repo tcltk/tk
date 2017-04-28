@@ -1929,7 +1929,7 @@ inline bool		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj 
 MODULE_SCOPE TkTextTabArray * TkTextGetTabs(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *stringPtr);
 MODULE_SCOPE void	TkTextInspectOptions(TkText *textPtr, const void *recordPtr,
 			    Tk_OptionTable optionTable, Tcl_DString *result, bool resolveFontNames,
-			    bool discardDefaultValues);
+			    bool resolveColorNames, bool discardDefaultValues);
 MODULE_SCOPE void	TkTextFindDisplayLineStartEnd(TkText *textPtr, TkTextIndex *indexPtr, bool end);
 MODULE_SCOPE unsigned	TkTextCountDisplayLines(TkText *textPtr, const TkTextIndex *indexFrom,
 			    const TkTextIndex *indexTo);
