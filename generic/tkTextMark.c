@@ -48,7 +48,7 @@
 static void		InsertUndisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr);
 static bool		MarkDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int flags);
 static Tcl_Obj *	MarkInspectProc(const TkSharedText *textPtr, const TkTextSegment *segPtr);
-static void		MarkRestoreProc(TkTextSegment *segPtr);
+static void		MarkRestoreProc(TkTextBTree tree, TkTextSegment *segPtr);
 static void		MarkCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static int		MarkLayoutProc(const TkTextIndex *indexPtr,
 			    TkTextSegment *segPtr, int offset, int maxX,
@@ -958,38 +958,44 @@ TkTextFreeMarks(
 {
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr = Tcl_FirstHashEntry(&sharedTextPtr->markTable, &search);
-    TkTextSegment *chainPtr = NULL;
+    TkTextSegment *deletePtr = NULL;
+    TkTextSegment *retainedPtr = NULL;
+    TkTextSegment *markPtr;
 
     for ( ; hPtr; hPtr = Tcl_NextHashEntry(&search)) {
 	TkTextSegment *markPtr = Tcl_GetHashValue(hPtr);
 
 	if (!retainPrivateMarks || !TkTextIsPrivateMark(markPtr)) {
-	    MarkDeleteProc(sharedTextPtr->tree, markPtr, DELETE_CLEANUP);
+	    markPtr->nextPtr = deletePtr;
+	    markPtr->prevPtr = NULL;
+	    deletePtr = markPtr;
 	} else {
 	    const char *name = Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
 	    char *dup;
 
-	    MarkDeleteProc(sharedTextPtr->tree, markPtr, 0);
-	    markPtr->nextPtr = NULL;
-	    markPtr->prevPtr = NULL;
 	    markPtr->sectionPtr = NULL;
-	    markPtr->nextPtr = chainPtr;
+	    markPtr->prevPtr = NULL;
+	    markPtr->nextPtr = retainedPtr;
 	    dup = malloc(strlen(name) + 1);
 	    markPtr->body.mark.ptr = PTR_TO_INT(strcpy(dup, name));
 	    MAKE_PRESERVED(markPtr);
-	    chainPtr = markPtr;
+	    retainedPtr = markPtr;
 	}
+    }
+
+    for (markPtr = deletePtr; markPtr; markPtr = markPtr->nextPtr) {
+	assert(TkTextIsSpecialMark(markPtr) || markPtr->refCount == 1);
+	MarkDeleteProc(sharedTextPtr->tree, markPtr, DELETE_CLEANUP);
     }
 
     Tcl_DeleteHashTable(&sharedTextPtr->markTable);
     sharedTextPtr->numMarks = 0;
 
     if (retainPrivateMarks) {
-	TkTextSegment *markPtr;
-
 	Tcl_InitHashTable(&sharedTextPtr->markTable, TCL_STRING_KEYS);
 
-	for (markPtr = chainPtr; markPtr; markPtr = markPtr->nextPtr) {
+	for (markPtr = retainedPtr; markPtr; markPtr = markPtr->nextPtr) {
+	    MarkDeleteProc(sharedTextPtr->tree, markPtr, 0);
 	    ReactivateMark(sharedTextPtr, markPtr);
 	    markPtr->refCount += 1;
 	}
@@ -997,7 +1003,7 @@ TkTextFreeMarks(
 	sharedTextPtr->numPrivateMarks = 0;
     }
 
-    return chainPtr;
+    return retainedPtr;
 }
 
 /*
@@ -1149,26 +1155,25 @@ TkTextMakeMark(
 
 TkTextSegment *
 TkTextMakeNewMark(
-    TkText *textPtr,		/* Text widget in which to create mark. */
-    const char *name)		/* Name of this mark. */
+    TkSharedText *sharedTextPtr,	/* Shared text resource. */
+    const char *name)			/* Name of this mark. */
 {
     TkTextSegment *markPtr;
     Tcl_HashEntry *hPtr;
     bool isNew;
 
-    assert(textPtr);
     assert(name);
 
-    hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->markTable, name, (int *) &isNew);
+    hPtr = Tcl_CreateHashEntry(&sharedTextPtr->markTable, name, (int *) &isNew);
 
     if (!isNew) {
 	return NULL;
     }
 
-    markPtr = MakeMark(textPtr);
+    markPtr = MakeMark(NULL);
     markPtr->body.mark.ptr = PTR_TO_INT(hPtr);
     Tcl_SetHashValue(hPtr, markPtr);
-    textPtr->sharedTextPtr->numMarks += 1;
+    sharedTextPtr->numMarks += 1;
 
     return markPtr;
 }
@@ -1657,12 +1662,11 @@ SetMark(
 	    }
 	}
 
-	markPtr = MakeMark(textPtr);
-
 	if (widgetSpecific) {
 	    /*
 	     * This is a special mark.
 	     */
+	    markPtr = MakeMark(textPtr);
 	    if (*name == 'i') { /* "insert" */
 		textPtr->insertMarkPtr = markPtr;
 		markPtr->insertMarkFlag = true;
@@ -1672,6 +1676,7 @@ SetMark(
 	    }
 	    pushUndoToken = false;
 	} else {
+	    markPtr = MakeMark(NULL);
 	    markPtr->body.mark.ptr = PTR_TO_INT(hPtr);
 	    markPtr->normalMarkFlag = true;
 	    Tcl_SetHashValue(hPtr, markPtr);
@@ -2190,13 +2195,13 @@ MarkDeleteProc(
     assert(segPtr->refCount > 0);
 
     if (TkTextIsPrivateMark(segPtr)) {
-	if (!(flags & (DELETE_CLEANUP))) {
+	if (!(flags & DELETE_CLEANUP)) {
 	    return false;
 	}
 	if (--segPtr->refCount == 0) {
 	    if (segPtr->body.mark.ptr) {
 		Tcl_DeleteHashEntry(GET_HPTR(segPtr));
-		segPtr->body.mark.textPtr->sharedTextPtr->numPrivateMarks -= 1;
+		TkBTreeGetShared(tree)->numPrivateMarks -= 1;
 	    }
 	    FREE_SEGMENT(segPtr);
 	    DEBUG_ALLOC(tkTextCountDestroySegment++);
@@ -2209,9 +2214,8 @@ MarkDeleteProc(
     }
 
     assert(segPtr->body.mark.ptr);
-    assert(segPtr->body.mark.textPtr);
 
-    sharedTextPtr = segPtr->body.mark.textPtr->sharedTextPtr;
+    sharedTextPtr = TkBTreeGetShared(tree);
 
     if (segPtr->body.mark.changePtr) {
 	unsigned index;
@@ -2267,12 +2271,13 @@ MarkDeleteProc(
 
 static void
 MarkRestoreProc(
+    TkTextBTree tree,		/* Information about tree. */
     TkTextSegment *segPtr)	/* Segment to restore. */
 {
     assert(TkTextIsNormalMark(segPtr));
 
     if (IS_PRESERVED(segPtr)) {
-	TkSharedText *sharedTextPtr = segPtr->body.mark.textPtr->sharedTextPtr;
+	TkSharedText *sharedTextPtr = TkBTreeGetShared(tree);
 	Tcl_HashEntry *hPtr;
 	int isNew;
 

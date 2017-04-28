@@ -160,6 +160,8 @@
 
 typedef struct TkTextBreakInfo {
     uint32_t refCount;	/* Reference counter, destroy if this counter is going to zero. */
+    DEBUG(uint32_t brksSize);
+    			/* Size of break info array, only needed for debugging. */
     char *brks;		/* Array of break info, has exactly the char length of the logical line,
     			 * each cell is one of LINEBREAK_NOBREAK, LINEBREAK_ALLOWBREAK,
 			 * LINEBREAK_MUSTBREAK, or LINEBREAK_INSIDEACHAR. */
@@ -1614,6 +1616,7 @@ TkTextDeleteBreakInfoTableEntries(
 	TkTextBreakInfo *breakInfo = Tcl_GetHashValue(hPtr);
 
 	assert(breakInfo->brks);
+	DEBUG(memset(breakInfo->brks, 0xff, breakInfo->brksSize));
 	free(breakInfo->brks);
 	free(breakInfo);
 	DEBUG_ALLOC(tkTextCountDestroyBreakInfo++);
@@ -1826,20 +1829,26 @@ MakeStyle(
     bool isNew;
 
     /*
-     * The variables below keep track of the highest-priority specification
+     * The array below keeps track of the highest-priority specification
      * that has occurred for each of the various fields of the StyleValues.
      */
 
-    int borderPrio = -1, borderWidthPrio = -1, reliefPrio = -1;
-    int bgStipplePrio = -1, indentBgPrio = -1;
-    int fgPrio = -1, fontPrio = -1, fgStipplePrio = -1;
-    int underlinePrio = -1, elidePrio = -1, justifyPrio = -1, offsetPrio = -1;
-    int lMargin1Prio = -1, lMargin2Prio = -1, rMarginPrio = -1;
-    int lMarginColorPrio = -1, rMarginColorPrio = -1;
-    int spacing1Prio = -1, spacing2Prio = -1, spacing3Prio = -1;
-    int overstrikePrio = -1, tabPrio = -1, tabStylePrio = -1;
-    int wrapPrio = -1, langPrio = -1, hyphenRulesPrio = -1;
-    int eolColorPrio = -1, hyphenColorPrio = -1;
+    enum {
+	PRIO_BG_STIPPLE, PRIO_BORDER, PRIO_BORDER_WIDTH, PRIO_ELIDE, PRIO_EOL_COLOR, PRIO_FG,
+	PRIO_FG_STIPPLE, PRIO_FONT, PRIO_HYPHEN_COLOR, PRIO_HYPHEN_RULES, PRIO_INDENT_BG,
+	PRIO_JUSTIFY, PRIO_LANG, PRIO_LMARGIN_1, PRIO_LMARGIN_2, PRIO_LMARGIN_COLOR,
+	PRIO_OFFSET, PRIO_OVERSTRIKE, PRIO_RELIEF, PRIO_RMARGIN, PRIO_RMARGIN_COLOR,
+	PRIO_SPACING_1, PRIO_SPACING_2, PRIO_SPACING_3, PRIO_TAB, PRIO_TAB_STYLE,
+	PRIO_UNDERLINE, PRIO_WRAP,
+	PRIO_LAST /* must be last element */
+    };
+
+    int prio[PRIO_LAST] = {
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+	-1, -1, -1, -1, -1, -1, -1, -1 };
+
+    assert(prio[PRIO_LAST - 1] == -1);
 
     /*
      * Find out what tags are present for the character, then compute a
@@ -1904,136 +1913,136 @@ MakeStyle(
 		fgColor = textPtr->selFgColorPtr;
 	    }
 	}
-	if (border && priority > borderPrio) {
+	if (border && priority > prio[PRIO_BORDER]) {
 	    styleValues.border = border;
-	    borderPrio = priority;
+	    prio[PRIO_BORDER] = priority;
 	}
 	if (tagPtr->borderWidthPtr
 		&& Tcl_GetString(tagPtr->borderWidthPtr)[0] != '\0'
-		&& priority > borderWidthPrio) {
+		&& priority > prio[PRIO_BORDER_WIDTH]) {
 	    styleValues.borderWidth = tagPtr->borderWidth;
-	    borderWidthPrio = priority;
+	    prio[PRIO_BORDER_WIDTH] = priority;
 	}
-	if (tagPtr->reliefPtr && priority > reliefPrio) {
+	if (tagPtr->reliefPtr && priority > prio[PRIO_RELIEF]) {
 	    if (!styleValues.border) {
 		styleValues.border = textPtr->border;
 	    }
 	    assert(tagPtr->relief < 8);
 	    styleValues.relief = tagPtr->relief;
-	    reliefPrio = priority;
+	    prio[PRIO_RELIEF] = priority;
 	}
-	if (tagPtr->bgStipple != None && priority > bgStipplePrio) {
+	if (tagPtr->bgStipple != None && priority > prio[PRIO_BG_STIPPLE]) {
 	    styleValues.bgStipple = tagPtr->bgStipple;
-	    bgStipplePrio = priority;
+	    prio[PRIO_BG_STIPPLE] = priority;
 	}
-	if (tagPtr->indentBgString != None && priority > indentBgPrio) {
+	if (tagPtr->indentBgString != None && priority > prio[PRIO_INDENT_BG]) {
 	    styleValues.indentBg = tagPtr->indentBg;
-	    indentBgPrio = priority;
+	    prio[PRIO_INDENT_BG] = priority;
 	}
-	if (fgColor != None && priority > fgPrio) {
+	if (fgColor != None && priority > prio[PRIO_FG]) {
 	    styleValues.fgColor = fgColor;
-	    fgPrio = priority;
+	    prio[PRIO_FG] = priority;
 	}
-	if (tagPtr->tkfont != None && priority > fontPrio) {
+	if (tagPtr->tkfont != None && priority > prio[PRIO_FONT]) {
 	    styleValues.tkfont = tagPtr->tkfont;
-	    fontPrio = priority;
+	    prio[PRIO_FONT] = priority;
 	}
-	if (tagPtr->fgStipple != None && priority > fgStipplePrio) {
+	if (tagPtr->fgStipple != None && priority > prio[PRIO_FG_STIPPLE]) {
 	    styleValues.fgStipple = tagPtr->fgStipple;
-	    fgStipplePrio = priority;
+	    prio[PRIO_FG_STIPPLE] = priority;
 	}
-	if (tagPtr->justifyString && priority > justifyPrio) {
+	if (tagPtr->justifyString && priority > prio[PRIO_JUSTIFY]) {
 	    /* assert(tagPtr->justify < 8); always true due to range */
 	    styleValues.justify = tagPtr->justify;
-	    justifyPrio = priority;
+	    prio[PRIO_JUSTIFY] = priority;
 	}
-	if (tagPtr->lMargin1String && priority > lMargin1Prio) {
+	if (tagPtr->lMargin1String && priority > prio[PRIO_LMARGIN_1]) {
 	    styleValues.lMargin1 = tagPtr->lMargin1;
-	    lMargin1Prio = priority;
+	    prio[PRIO_LMARGIN_1] = priority;
 	}
-	if (tagPtr->lMargin2String && priority > lMargin2Prio) {
+	if (tagPtr->lMargin2String && priority > prio[PRIO_LMARGIN_2]) {
 	    styleValues.lMargin2 = tagPtr->lMargin2;
-	    lMargin2Prio = priority;
+	    prio[PRIO_LMARGIN_2] = priority;
 	}
-	if (tagPtr->lMarginColor && priority > lMarginColorPrio) {
+	if (tagPtr->lMarginColor && priority > prio[PRIO_LMARGIN_COLOR]) {
 	    styleValues.lMarginColor = tagPtr->lMarginColor;
-	    lMarginColorPrio = priority;
+	    prio[PRIO_LMARGIN_COLOR] = priority;
 	}
-	if (tagPtr->offsetString && priority > offsetPrio) {
+	if (tagPtr->offsetString && priority > prio[PRIO_OFFSET]) {
 	    styleValues.offset = tagPtr->offset;
-	    offsetPrio = priority;
+	    prio[PRIO_OFFSET] = priority;
 	}
-	if (tagPtr->overstrikeString && priority > overstrikePrio) {
+	if (tagPtr->overstrikeString && priority > prio[PRIO_OVERSTRIKE]) {
 	    styleValues.overstrike = tagPtr->overstrike;
-	    overstrikePrio = priority;
+	    prio[PRIO_OVERSTRIKE] = priority;
             if (tagPtr->overstrikeColor != None) {
                  styleValues.overstrikeColor = tagPtr->overstrikeColor;
             } else if (fgColor != None) {
                  styleValues.overstrikeColor = fgColor;
             }
 	}
-	if (tagPtr->rMarginString && priority > rMarginPrio) {
+	if (tagPtr->rMarginString && priority > prio[PRIO_RMARGIN]) {
 	    styleValues.rMargin = tagPtr->rMargin;
-	    rMarginPrio = priority;
+	    prio[PRIO_RMARGIN] = priority;
 	}
-	if (tagPtr->rMarginColor && priority > rMarginColorPrio) {
+	if (tagPtr->rMarginColor && priority > prio[PRIO_RMARGIN_COLOR]) {
 	    styleValues.rMarginColor = tagPtr->rMarginColor;
-	    rMarginColorPrio = priority;
+	    prio[PRIO_RMARGIN_COLOR] = priority;
 	}
-	if (tagPtr->spacing1String && priority > spacing1Prio) {
+	if (tagPtr->spacing1String && priority > prio[PRIO_SPACING_1]) {
 	    styleValues.spacing1 = tagPtr->spacing1;
-	    spacing1Prio = priority;
+	    prio[PRIO_SPACING_1] = priority;
 	}
-	if (tagPtr->spacing2String && priority > spacing2Prio) {
+	if (tagPtr->spacing2String && priority > prio[PRIO_SPACING_2]) {
 	    styleValues.spacing2 = tagPtr->spacing2;
-	    spacing2Prio = priority;
+	    prio[PRIO_SPACING_2] = priority;
 	}
-	if (tagPtr->spacing3String && priority > spacing3Prio) {
+	if (tagPtr->spacing3String && priority > prio[PRIO_SPACING_3]) {
 	    styleValues.spacing3 = tagPtr->spacing3;
-	    spacing3Prio = priority;
+	    prio[PRIO_SPACING_3] = priority;
 	}
-	if (tagPtr->tabStringPtr && priority > tabPrio) {
+	if (tagPtr->tabStringPtr && priority > prio[PRIO_TAB]) {
 	    styleValues.tabArrayPtr = tagPtr->tabArrayPtr;
-	    tabPrio = priority;
+	    prio[PRIO_TAB] = priority;
 	}
-	if (tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE && priority > tabStylePrio) {
+	if (tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE && priority > prio[PRIO_TAB_STYLE]) {
 	    assert(tagPtr->tabStyle < 8);
 	    styleValues.tabStyle = tagPtr->tabStyle;
-	    tabStylePrio = priority;
+	    prio[PRIO_TAB_STYLE] = priority;
 	}
-	if (tagPtr->eolColor && priority > eolColorPrio) {
+	if (tagPtr->eolColor && priority > prio[PRIO_EOL_COLOR]) {
 	    styleValues.eolColor = tagPtr->eolColor;
-	    eolColorPrio = priority;
+	    prio[PRIO_EOL_COLOR] = priority;
 	}
-	if (tagPtr->hyphenColor && priority > hyphenColorPrio) {
+	if (tagPtr->hyphenColor && priority > prio[PRIO_HYPHEN_COLOR]) {
 	    styleValues.hyphenColor = tagPtr->hyphenColor;
-	    hyphenColorPrio = priority;
+	    prio[PRIO_HYPHEN_COLOR] = priority;
 	}
-	if (tagPtr->underlineString && priority > underlinePrio) {
+	if (tagPtr->underlineString && priority > prio[PRIO_UNDERLINE]) {
 	    styleValues.underline = tagPtr->underline;
-	    underlinePrio = priority;
+	    prio[PRIO_UNDERLINE] = priority;
             if (tagPtr->underlineColor != None) {
 		styleValues.underlineColor = tagPtr->underlineColor;
             } else if (fgColor != None) {
 		styleValues.underlineColor = fgColor;
             }
 	}
-	if (tagPtr->elideString && priority > elidePrio) {
+	if (tagPtr->elideString && priority > prio[PRIO_ELIDE]) {
 	    styleValues.elide = tagPtr->elide;
-	    elidePrio = priority;
+	    prio[PRIO_ELIDE] = priority;
 	}
-	if (tagPtr->langPtr && priority > langPrio) {
+	if (tagPtr->langPtr && priority > prio[PRIO_LANG]) {
 	    styleValues.lang = tagPtr->lang;
-	    langPrio = priority;
+	    prio[PRIO_LANG] = priority;
 	}
-	if (tagPtr->hyphenRulesPtr && priority > hyphenRulesPrio) {
+	if (tagPtr->hyphenRulesPtr && priority > prio[PRIO_HYPHEN_RULES]) {
 	    styleValues.hyphenRules = tagPtr->hyphenRules;
-	    hyphenRulesPrio = priority;
+	    prio[PRIO_HYPHEN_RULES] = priority;
 	}
-	if (tagPtr->wrapMode != TEXT_WRAPMODE_NULL && priority > wrapPrio) {
+	if (tagPtr->wrapMode != TEXT_WRAPMODE_NULL && priority > prio[PRIO_WRAP]) {
 	    /* assert(tagPtr->wrapMode < 8); always true due to range */
 	    styleValues.wrapMode = tagPtr->wrapMode;
-	    wrapPrio = priority;
+	    prio[PRIO_WRAP] = priority;
 	}
     }
 
@@ -2067,19 +2076,19 @@ MakeStyle(
     mask = GCFont;
     gcValues.font = Tk_FontId(styleValues.tkfont);
     mask |= GCForeground;
-    if (styleValues.eolColor) {
+    if (styleValues.eolColor && textPtr->showEndOfLine) {
 	gcValues.foreground = styleValues.eolColor->pixel;
 	stylePtr->eolGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     } else {
 	stylePtr->eolGC = None;
     }
-    if (styleValues.eotColor) {
+    if (styleValues.eotColor && textPtr->showEndOfText) {
 	gcValues.foreground = styleValues.eotColor->pixel;
 	stylePtr->eotGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     } else {
 	stylePtr->eotGC = None;
     }
-    if (styleValues.hyphenColor) {
+    if (styleValues.hyphenColor && textPtr->hyphenate) {
 	gcValues.foreground = styleValues.hyphenColor->pixel;
 	stylePtr->hyphenGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     } else {
@@ -2564,10 +2573,6 @@ LayoutComputeBreakLocations(
 			break;
 		    }
 		}
-		if (size + 1 >= capacity) {
-		    assert(2*capacity > size + 1);
-		    str = realloc(str, capacity *= 2);
-		}
 
 		/*
 		 * Use TAB (U+0009) instead of SHY (U+00AD), because SHY needs two bytes,
@@ -2579,8 +2584,7 @@ LayoutComputeBreakLocations(
 		 * of this character is contextual.
 		 */
 
-		str[size++] = '\t';
-		break;
+		/* FALLTHRU */
 	    case SEG_GROUP_IMAGE:
 	    case SEG_GROUP_WINDOW:
 		/* The language variable doesn't matter here. */
@@ -3103,8 +3107,6 @@ LayoutSetupChunk(
     chunkPtr->stylePtr = stylePtr = GetStyle(textPtr, segPtr);
 
     if (data->wrapMode == TEXT_WRAPMODE_CODEPOINT) {
-	const TkTextPixelInfo *pixelInfo = TkBTreeLinePixelInfo(textPtr, data->logicalLinePtr);
-
 	if (!data->brks) {
 	    Tcl_HashEntry *hPtr;
 	    TkTextBreakInfo *breakInfo;
@@ -3119,6 +3121,7 @@ LayoutSetupChunk(
 		breakInfo->brks = NULL;
 		data->logicalLinePtr->changed = false;
 		Tcl_SetHashValue(hPtr, breakInfo);
+		DEBUG(breakInfo->brksSize = 0);
 		DEBUG_ALLOC(tkTextCountNewBreakInfo++);
 	    } else {
 		breakInfo = Tcl_GetHashValue(hPtr);
@@ -3152,6 +3155,7 @@ LayoutSetupChunk(
 		brksSize = LayoutComputeBreakLocations(data);
 		breakInfo->brks = realloc(breakInfo->brks, brksSize);
 		memcpy(breakInfo->brks, textPtr->brksBuffer, brksSize);
+		DEBUG(breakInfo->brksSize = brksSize);
 		DEBUG(stats.breakInfo += 1);
 	    }
 
@@ -3160,15 +3164,7 @@ LayoutSetupChunk(
 	}
 
 	if (segPtr->sectionPtr) {
-	    chunkPtr->brks = data->brks;
-	    if (data->displayLineNo > 0) {
-		assert(pixelInfo->dispLineInfo);
-		chunkPtr->brks += pixelInfo->dispLineInfo->entry[data->displayLineNo].byteOffset;
-	    } else {
-		/* Consider that inside peers the line may start after byte index zero. */
-		chunkPtr->brks += data->byteOffset;
-	    }
-	    chunkPtr->brks += data->dispLineOffset;
+	    chunkPtr->brks = data->brks + data->byteOffset + chunkPtr->byteOffset;
 	} else {
 	    /* This is an artificial chunk for the realization of spelling changes. */
 	    assert(chunkPtr->numBytes <= sizeof(doNotBreakAtAll));
@@ -3239,7 +3235,7 @@ LayoutChars(
 	}
 	base = segPtr->body.chars;
 	maxBytes = segPtr->size;
-	chunkPtr->endOfLineSymbol = 1;
+	chunkPtr->endOfLineSymbol = true;
 	byteOffset = 0;
     } else if (segPtr->typePtr != &tkTextHyphenType
 		&& segPtr->sectionPtr) { /* ignore artifical segments (spelling changes) */
@@ -3248,8 +3244,10 @@ LayoutChars(
 	    unsigned i;
 
 	    assert(brks);
+	    assert(brks + maxBytes <= data->brks + data->breakInfo->brksSize);
 
 	    for (i = 1; i < maxBytes; ++i) {
+		assert(brks[i] <= LINEBREAK_INSIDEACHAR);
 		if (brks[i] == LINEBREAK_MUSTBREAK) {
 		    if (i < maxBytes - 2 && base[i] != '\n') {
 			maxBytes = i + 1;
@@ -3382,13 +3380,13 @@ LayoutChars(
 	/*
 	 * In seldom cases, if hyphenation is activated, we may have an empty
 	 * chunk here, caused by the "tripleconsonant" rule. This chunk has to
-	 * consume one character.
+	 * consume the skipped character.
 	 */
 
 	assert(size == 1);
 	assert(chunkPtr->skipFirstChar);
 	data->chunkPtr->layoutProcs = &layoutElideProcs;
-	data->chunkPtr->numBytes = 1;
+	data->chunkPtr->numBytes = 1; /* must have size 1, see above */
 	return true;
     }
 
@@ -3420,10 +3418,13 @@ LayoutChars(
     LayoutFinalizeCharInfo(data, gotTab);
     data->x += chunkPtr->width;
 
-    if (segPtr == data->textPtr->dInfoPtr->endOfLineSegPtr) {
-	chunkPtr->numBytes = (chunkPtr->numBytes == maxBytes) ? 1 : 0;
+    if (!segPtr->sectionPtr && segPtr->typePtr != &tkTextHyphenType) {
+	assert(segPtr == data->textPtr->dInfoPtr->endOfLineSegPtr
+		|| segPtr == data->textPtr->dInfoPtr->endOfTextSegPtr);
+	maxBytes = Tcl_UtfNext(base) - base;
+	chunkPtr->numBytes = (chunkPtr->numBytes == maxBytes) ? maxBytes : 0;
 	chunkPtr->breakIndex = chunkPtr->numBytes;
-	maxBytes = 1;
+	chunkPtr->brks = NULL;
     } else {
 	chunkPtr->numBytes += chunkPtr->skipFirstChar;
     }
@@ -3435,6 +3436,10 @@ LayoutChars(
     if (chunkPtr->numBytes != maxBytes + chunkPtr->skipFirstChar) {
 	return false;
     }
+
+    assert(!chunkPtr->brks
+	    || (data->brks <= chunkPtr->brks
+		&& chunkPtr->brks + chunkPtr->numBytes <= data->brks + data->breakInfo->brksSize));
 
     /*
      * If we're at a new tab, adjust the layout for all the chunks pertaining to the
@@ -5580,12 +5585,15 @@ ReleaseLines(
 		    && --dlPtr->breakInfo->refCount == 0) {
 		assert(dlPtr->breakInfo->brks);
 		free(dlPtr->breakInfo->brks);
+		DEBUG(dlPtr->breakInfo->brks = NULL);
+		DEBUG(dlPtr->breakInfo->brksSize = 0);
 		free(dlPtr->breakInfo);
 		Tcl_DeleteHashEntry(Tcl_FindHashEntry(
 			&textPtr->sharedTextPtr->breakInfoTable,
 			(void *) TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr,
 			    TkTextIndexGetLine(&dlPtr->index))));
 		DEBUG_ALLOC(tkTextCountDestroyBreakInfo++);
+		DEBUG(dlPtr->breakInfo = NULL);
 	    }
 
 	    dlPtr->lastChunkPtr->nextPtr = dInfoPtr->chunkPoolPtr;
@@ -8175,6 +8183,12 @@ DisplayText(
      */
 
     if (dInfoPtr->flags & REPICK_NEEDED) {
+	/*
+	 * TODD XXX
+	 * Either this is the wrong place, or a repick should also happen after
+	 * the text has been redisplayed, because the repick function is working
+	 * on the displayed chunks.
+	 */
 	textPtr->refCount += 1;
 	dInfoPtr->flags &= ~REPICK_NEEDED;
 	dInfoPtr->currChunkPtr = NULL;
@@ -13054,19 +13068,22 @@ ComputeBreakIndex(
 		return count; /* catch special case end of line */
 	    }
 
-	    brks = chunkPtr->brks;
-	    i = count - 1;
+	    /*
+	     * Note: it may happen that the chunk only contains the end of line/text
+	     * symbol, in this case the break info is NULL.
+	     */
 
-	    /* In this case the break locations must be already computed. */
-	    assert(brks);
+	    if ((brks = chunkPtr->brks)) {
+		i = count - 1;
 
-	    for ( ; i >= 0; --i, --p) {
-		if (brks[i] == LINEBREAK_ALLOWBREAK) {
-		    if (*p == ' ' && spaceMode == TEXT_SPACEMODE_EXACT) {
-			return -1;
+		for ( ; i >= 0; --i, --p) {
+		    assert(brks[i] <= LINEBREAK_INSIDEACHAR);
+		    if (brks[i] == LINEBREAK_ALLOWBREAK) {
+			return (*p == ' ' && spaceMode == TEXT_SPACEMODE_EXACT) ? -1 : i + 1;
 		    }
-		    return i + 1;
 		}
+	    } else {
+		assert(chunkPtr->endOfLineSymbol);
 	    }
 	}
 	break;
@@ -13243,10 +13260,12 @@ CheckLineMetricConsistency(
 	    for (k = 0; k < dispLineInfo->numDispLines; ++k) {
 		const TkTextDispLineEntry *entry = dispLineInfo->entry + k;
 
+#if 0 /* not valid if -startindex is set */
 		if (k == 0 && entry->byteOffset != 0) {
 		    Tcl_Panic("CheckLineMetricConsistency: first display line (line %d.%u) should "
 			    "have byte offset zero", logicalLineNum, k);
 		}
+#endif
 		if ((entry + 1)->byteOffset <= entry->byteOffset) {
 		    Tcl_Panic("CheckLineMetricConsistency: display line (line %d.%u) has invalid byte "
 			    "offset %d (previous is %d)", logicalLineNum, k, (entry + 1)->byteOffset,

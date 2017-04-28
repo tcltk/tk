@@ -2423,7 +2423,7 @@ TagSortProc(
     const void *first,
     const void *second)		/* Elements to be compared. */
 {
-    return (*(TkTextTag **) first)->priority - (*(TkTextTag **) second)->priority;
+    return (int) (*(TkTextTag **) first)->priority - (int) (*(TkTextTag **) second)->priority;
 }
 
 void
@@ -3364,7 +3364,7 @@ TagBindEvent(
 	TkTextTag *tagPtr;
 
 	/*
-	 * Take into account that same tags have been gone in the meanwhile.
+	 * Take into account that some tags have been gone in the meanwhile.
 	 */
 
 	if (i >= maxTags) {

@@ -288,7 +288,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_COLOR, "-hyphencolor", "hyphenColor", "HyphenColor",
 	DEF_TEXT_FG, -1, Tk_Offset(TkText, hyphenColor), TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_REDRAW},
     {TK_OPTION_BOOLEAN, "-hyphens", "hyphens", "Hyphens",
-	"0", -1, Tk_Offset(TkText, hyphens), 0, 0, TK_TEXT_LINE_GEOMETRY},
+	"0", -1, Tk_Offset(TkText, useHyphenSupport), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_BORDER, "-inactiveselectbackground", "inactiveSelectBackground", "Foreground",
 	DEF_TEXT_INACTIVE_SELECT_BG_COLOR, -1, Tk_Offset(TkText, inactiveSelBorder),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_MONO, 0},
@@ -1111,7 +1111,7 @@ CreateWidget(
     textPtr->lineHeight = -1;
     textPtr->prevWidth = Tk_Width(newWin);
     textPtr->prevHeight = Tk_Height(newWin);
-    textPtr->hyphens = -1;
+    textPtr->useHyphenSupport = -1;
     textPtr->prevSyncState = -1;
     textPtr->lastLineY = TK_TEXT_NEARBY_IS_UNDETERMINED;
     TkTextTagSetIncrRefCount(textPtr->curTagInfoPtr = sharedTextPtr->emptyTagInfoPtr);
@@ -3994,7 +3994,7 @@ TkConfigureText(
      * Check soft hyphen support.
      */
 
-    textPtr->hyphenate = textPtr->hyphens
+    textPtr->hyphenate = textPtr->useHyphenSupport
 	    && textPtr->state != TK_TEXT_STATE_NORMAL
 	    && (textPtr->wrapMode == TEXT_WRAPMODE_WORD || textPtr->wrapMode == TEXT_WRAPMODE_CODEPOINT);
     if (didHyphenate != textPtr->hyphenate) {

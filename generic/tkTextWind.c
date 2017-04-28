@@ -67,7 +67,7 @@ static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr, bool undoable
 			    int objc, Tcl_Obj *const objv[]);
 static void		EmbWinDelayedUnmap(ClientData clientData);
 static bool		EmbWinDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int treeGone);
-static void		EmbWinRestoreProc(TkTextSegment *segPtr);
+static void		EmbWinRestoreProc(TkTextBTree tree, TkTextSegment *segPtr);
 static int		EmbWinLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars, bool noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
@@ -1312,6 +1312,7 @@ EmbWinDeleteProc(
 
 static void
 EmbWinRestoreProc(
+    TkTextBTree tree,		/* Information about tree. */
     TkTextSegment *ewPtr)	/* Segment to reuse. */
 {
     bool isNew;

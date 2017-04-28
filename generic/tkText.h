@@ -1329,7 +1329,7 @@ typedef struct TkText {
     				 * TEXT_WRAPMODE_WORD, TEXT_WRAPMODE_CODEPOINT, or TEXT_WRAPMODE_NONE. */
     TkTextSpaceMode spaceMode;	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NONE,
     				 * TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
-    bool hyphens;		/* Indicating the hypenation support. */
+    bool useHyphenSupport;	/* Indicating the hypenation support. */
     bool hyphenate;		/* Indicating whether the soft hyphens will be used for line breaks
     				 * (if not in state TK_TEXT_STATE_NORMAL). */
     bool useUniBreak;		/* Use library libunibreak for line break computation, otherwise the
@@ -1534,7 +1534,7 @@ typedef enum {
  */
 
 typedef bool Tk_SegDeleteProc(TkTextBTree tree, struct TkTextSegment *segPtr, int flags);
-typedef void Tk_SegReuseProc(struct TkTextSegment *segPtr);
+typedef void Tk_SegReuseProc(TkTextBTree tree, struct TkTextSegment *segPtr);
 typedef int Tk_SegLayoutProc(const struct TkTextIndex *indexPtr, TkTextSegment *segPtr,
 		    int offset, int maxX, int maxChars, bool noCharsYet, TkWrapMode wrapMode,
 		    TkTextSpaceMode spaceMode, struct TkTextDispChunk *chunkPtr);
@@ -1984,7 +1984,7 @@ MODULE_SCOPE void	TkTextMarkSegToIndex(TkText *textPtr,
 			    TkTextSegment *markPtr, TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment * TkTextMakeStartEndMark(TkText *textPtr, Tk_SegType const *typePtr);
 MODULE_SCOPE TkTextSegment * TkTextMakeMark(TkText *textPtr, const char *name);
-MODULE_SCOPE TkTextSegment * TkTextMakeNewMark(TkText *textPtr, const char *name);
+MODULE_SCOPE TkTextSegment * TkTextMakeNewMark(TkSharedText *sharedTextPtr, const char *name);
 MODULE_SCOPE void	TkTextUnsetMark(TkText *textPtr, TkTextSegment *markPtr);
 inline bool		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
 inline bool		TkTextIsSpecialMark(const TkTextSegment *segPtr);
