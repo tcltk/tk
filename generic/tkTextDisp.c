@@ -3421,10 +3421,10 @@ LayoutChars(
     if (!segPtr->sectionPtr && segPtr->typePtr != &tkTextHyphenType) {
 	assert(segPtr == data->textPtr->dInfoPtr->endOfLineSegPtr
 		|| segPtr == data->textPtr->dInfoPtr->endOfTextSegPtr);
-	maxBytes = Tcl_UtfNext(base) - base;
-	chunkPtr->numBytes = (chunkPtr->numBytes == maxBytes) ? maxBytes : 0;
+	chunkPtr->numBytes = (chunkPtr->numBytes == maxBytes) ? 1 : 0;
 	chunkPtr->breakIndex = chunkPtr->numBytes;
 	chunkPtr->brks = NULL;
+	maxBytes = 1;
     } else {
 	chunkPtr->numBytes += chunkPtr->skipFirstChar;
     }
