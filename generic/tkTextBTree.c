@@ -6868,6 +6868,8 @@ DeleteRange(
 		beforeSurrogate = prevLinePtr->lastPtr;
 	    }
 	}
+    } else {
+	lastNewlineSegPtr = NULL;
     }
 
     if (undoInfo) {
