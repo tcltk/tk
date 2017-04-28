@@ -8167,7 +8167,7 @@ TkTextInspectOptions(
     Tcl_Obj *objPtr;
     Tcl_Interp *interp = textPtr->interp;
 
-    Tcl_DStringTrunc(result, 0);
+    Tcl_DStringSetLength(result, 0);
 
     if ((objPtr = Tk_GetOptionInfo(interp, (char *) recordPtr, optionTable, NULL, textPtr->tkwin))) {
 #if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
@@ -8327,7 +8327,7 @@ GetBindings(
 	Tcl_DStringAppendElement(str, name);
 	Tcl_DStringAppendElement(str, event);
 
-	Tcl_DStringTrunc(&str2, 0);
+	Tcl_DStringSetLength(&str2, 0);
 	p = strchr(binding, '\n');
 	while (p) {
 	    Tcl_DStringAppend(&str2, binding, p - binding);
