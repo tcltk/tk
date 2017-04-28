@@ -2931,7 +2931,14 @@ If this option is given, then only those characters which are not elided
 will be included into the result of the text element. Note that soft hyphens
 (Unicode point U+00AD) do not belong to this result.
 .TP
-\fB\-dontresolve\fR
+\fB\-dontresolvecolors\fR
+.
+Do not resolve system color names (this is affecting the content of \fB\-setup\fR,
+and \fB\-configurations\fR). Resolving system color names is required for
+portability, but in case of system dependent use (if all system color names will be
+resolvable) it is not required. Per default system color names will be resolved.
+.TP
+\fB\-dontresolvefonts\fR
 .
 Do not resolve font names (this is affecting the content of \fB\-setup\fR,
 and \fB\-configurations\fR). Resolving font names is required for
