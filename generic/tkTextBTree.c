@@ -1321,7 +1321,6 @@ UndoDeletePerform(
     prevSegPtr = NULL;
 
     if (segPtr->nextPtr && !segPtr->sectionPtr) {
-	assert(!segPtr->sectionPtr);
 	nextPtr = segPtr->nextPtr;
     } else if (numSegments > 0) {
 	nextPtr = *segments++;
