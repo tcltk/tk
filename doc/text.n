@@ -2321,6 +2321,8 @@ commands can set this flag to true:
 .IP [5] 4
 \fIpathName \fBtag add|clear|lower|raise|remove\fR
 (but not if \fB\-undo\fR of affected tag is false)
+.IP [6] 4
+\fIpathName \fBinsert\fR
 .RE
 .RS
 .PP
