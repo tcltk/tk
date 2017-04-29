@@ -160,7 +160,7 @@
 
 typedef struct TkTextBreakInfo {
     uint32_t refCount;	/* Reference counter, destroy if this counter is going to zero. */
-    DEBUG(uint32_t brksSize);
+    DEBUG(uint32_t brksSize;)
     			/* Size of break info array, only needed for debugging. */
     char *brks;		/* Array of break info, has exactly the char length of the logical line,
     			 * each cell is one of LINEBREAK_NOBREAK, LINEBREAK_ALLOWBREAK,

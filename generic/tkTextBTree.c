@@ -7371,8 +7371,8 @@ DeleteRange(
     }
 
     if (insertSurrogate) {
-	DEBUG(bool oldTreeDebug = tkBTreeDebug);
 	TkTextIndex index;
+	DEBUG(bool oldTreeDebug = tkBTreeDebug);
 
 	/*
 	 * We have to insert a surrogate newline.
