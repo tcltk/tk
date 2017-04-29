@@ -11581,6 +11581,7 @@ TkTextPixelIndex(
 
     if (y < dInfoPtr->y) {
 	y = dInfoPtr->y;
+	x = dInfoPtr->x; /* we want a line-based result, not a geometrical result */
 	nearby = true;
     }
     if (x >= dInfoPtr->maxX) {
