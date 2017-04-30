@@ -3012,7 +3012,7 @@ default a configuration option will be included only if the value is neither
 equal to the default value, nor equal to the system value, nor equal to the
 value from option database. This can be modified with options
 \fB\-includedefaultconfig\fR, \fB\-includesysconfig\fR, and
-\fR\-includedbconfig\fR.
+\fB\-includedbconfig\fR.
 .TP
 \fB\-tag\fR
 .
