@@ -1732,6 +1732,17 @@ typedef bool TkTextTagChangedProc(
 typedef void (*TkTextWatchGetIndexProc)(TkText *textPtr, TkTextIndex *indexPtr, void *clientData);
 
 /*
+ * These flages are needed for TkTextInspectOptions():
+ */
+
+#define INSPECT_DONT_RESOLVE_COLORS     (1 << 0)
+#define INSPECT_DONT_RESOLVE_FONTS      (1 << 1)
+#define INSPECT_INCLUDE_DATABASE_CONFIG (1 << 2)
+#define INSPECT_INCLUDE_SYSTEM_CONFIG   (1 << 3)
+#define INSPECT_INCLUDE_DEFAULT_CONFIG  (1 << 4)
+#define INSPECT_INCLUDE_SYSTEM_COLORS   (1 << 5)
+
+/*
  * Declarations for procedures that are used by the text-related files but
  * shouldn't be used anywhere else in Tk (or by Tk clients):
  */
@@ -1754,7 +1765,7 @@ MODULE_SCOPE void	TkBTreeAddClient(TkTextBTree tree, TkText *textPtr, int defaul
 MODULE_SCOPE void	TkBTreeClientRangeChanged(TkText *textPtr, unsigned defaultHeight);
 MODULE_SCOPE void	TkBTreeRemoveClient(TkTextBTree tree, TkText *textPtr);
 MODULE_SCOPE void	TkBTreeDestroy(TkTextBTree tree);
-MODULE_SCOPE int	TkBTreeLoad(TkText *textPtr, Tcl_Obj *content);
+MODULE_SCOPE int	TkBTreeLoad(TkText *textPtr, Tcl_Obj *content, bool validOptions);
 MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkSharedText *sharedTextPtr,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
 			    int flags, TkTextUndoInfo *undoInfo);
@@ -1928,8 +1939,7 @@ inline bool		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj 
 			    TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextTabArray * TkTextGetTabs(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *stringPtr);
 MODULE_SCOPE void	TkTextInspectOptions(TkText *textPtr, const void *recordPtr,
-			    Tk_OptionTable optionTable, Tcl_DString *result, bool resolveFontNames,
-			    bool resolveColorNames, bool discardDefaultValues);
+			    Tk_OptionTable optionTable, Tcl_DString *result, int flags);
 MODULE_SCOPE void	TkTextFindDisplayLineStartEnd(TkText *textPtr, TkTextIndex *indexPtr, bool end);
 MODULE_SCOPE unsigned	TkTextCountDisplayLines(TkText *textPtr, const TkTextIndex *indexFrom,
 			    const TkTextIndex *indexTo);

@@ -796,7 +796,7 @@ EmbImageInspectProc(
 
     Tcl_DStringInit(&opts);
     TkTextInspectOptions(sharedTextPtr->peers, &segPtr->body.ei, segPtr->body.ei.optionTable,
-	    &opts, false, false, false);
+	    &opts, 0);
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(img->name, -1));

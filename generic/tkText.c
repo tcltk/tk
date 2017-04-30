@@ -556,37 +556,43 @@ static TkTextUndoStackContentChangedProc TextUndoStackContentChangedCallback;
  */
 
 enum {
-    TK_DUMP_TEXT                = SEG_GROUP_CHAR,
-    TK_DUMP_CHARS               = TK_DUMP_TEXT|SEG_GROUP_HYPHEN,
-    TK_DUMP_MARK                = SEG_GROUP_MARK,
-    TK_DUMP_ELIDE               = SEG_GROUP_BRANCH,
-    TK_DUMP_TAG                 = SEG_GROUP_TAG,
-    TK_DUMP_WIN                 = SEG_GROUP_WINDOW,
-    TK_DUMP_IMG                 = SEG_GROUP_IMAGE,
-    TK_DUMP_NODE                = 1 << 20,
-    TK_DUMP_DUMP_ALL            = TK_DUMP_TEXT|TK_DUMP_CHARS|TK_DUMP_MARK|TK_DUMP_TAG|
-                                  TK_DUMP_WIN|TK_DUMP_IMG,
+    TK_DUMP_TEXT                    = SEG_GROUP_CHAR,
+    TK_DUMP_CHARS                   = TK_DUMP_TEXT|SEG_GROUP_HYPHEN,
+    TK_DUMP_MARK                    = SEG_GROUP_MARK,
+    TK_DUMP_ELIDE                   = SEG_GROUP_BRANCH,
+    TK_DUMP_TAG                     = SEG_GROUP_TAG,
+    TK_DUMP_WIN                     = SEG_GROUP_WINDOW,
+    TK_DUMP_IMG                     = SEG_GROUP_IMAGE,
+    TK_DUMP_NODE                    = 1 << 18,
+    TK_DUMP_DUMP_ALL                = TK_DUMP_TEXT|TK_DUMP_CHARS|TK_DUMP_MARK|TK_DUMP_TAG|
+                                      TK_DUMP_WIN|TK_DUMP_IMG,
 
-    TK_DUMP_DISPLAY             = 1 << 21,
-    TK_DUMP_DISPLAY_CHARS       = TK_DUMP_CHARS|TK_DUMP_DISPLAY,
-    TK_DUMP_DISPLAY_TEXT        = TK_DUMP_TEXT|TK_DUMP_DISPLAY,
-    TK_DUMP_CRC_DFLT            = TK_DUMP_TEXT|SEG_GROUP_WINDOW|SEG_GROUP_IMAGE,
-    TK_DUMP_CRC_ALL             = TK_DUMP_TEXT|TK_DUMP_CHARS|TK_DUMP_DISPLAY_TEXT|SEG_GROUP_WINDOW|
-			          SEG_GROUP_IMAGE|TK_DUMP_MARK|TK_DUMP_TAG,
+    TK_DUMP_DISPLAY                 = 1 << 19,
+    TK_DUMP_DISPLAY_CHARS           = TK_DUMP_CHARS|TK_DUMP_DISPLAY,
+    TK_DUMP_DISPLAY_TEXT            = TK_DUMP_TEXT|TK_DUMP_DISPLAY,
+    TK_DUMP_CRC_DFLT                = TK_DUMP_TEXT|SEG_GROUP_WINDOW|SEG_GROUP_IMAGE,
+    TK_DUMP_CRC_ALL                 = TK_DUMP_TEXT|TK_DUMP_CHARS|TK_DUMP_DISPLAY_TEXT|SEG_GROUP_WINDOW|
+			              SEG_GROUP_IMAGE|TK_DUMP_MARK|TK_DUMP_TAG,
 
-    TK_DUMP_NESTED              = 1 << 22,
-    TK_DUMP_TEXT_CONFIGS        = 1 << 23,
-    TK_DUMP_TAG_CONFIGS         = 1 << 24,
-    TK_DUMP_TAG_BINDINGS        = 1 << 25,
-    TK_DUMP_INSERT_MARK         = 1 << 26,
-    TK_DUMP_DISCARD_SEL         = 1 << 27,
-    TK_DUMP_DONT_RESOLVE_COLORS = 1 << 28,
-    TK_DUMP_DONT_RESOLVE_FONTS  = 1 << 29,
-    TK_DUMP_INSPECT_DFLT        = TK_DUMP_DUMP_ALL|TK_DUMP_TEXT_CONFIGS|TK_DUMP_TAG_CONFIGS,
-    TK_DUMP_INSPECT_ALL         = TK_DUMP_INSPECT_DFLT|TK_DUMP_CHARS|TK_DUMP_TAG_BINDINGS|
-			          TK_DUMP_DISPLAY_TEXT|TK_DUMP_DISCARD_SEL|TK_DUMP_INSERT_MARK|
-			          TK_DUMP_DONT_RESOLVE_COLORS|TK_DUMP_DONT_RESOLVE_FONTS|
-                                  TK_DUMP_NESTED|TK_DUMP_ELIDE
+    TK_DUMP_NESTED                  = 1 << 20,
+    TK_DUMP_TEXT_CONFIGS            = 1 << 21,
+    TK_DUMP_TAG_CONFIGS             = 1 << 22,
+    TK_DUMP_TAG_BINDINGS            = 1 << 23,
+    TK_DUMP_INSERT_MARK             = 1 << 24,
+    TK_DUMP_INCLUDE_SEL             = 1 << 25,
+    TK_DUMP_DONT_RESOLVE_COLORS     = 1 << 26,
+    TK_DUMP_DONT_RESOLVE_FONTS      = 1 << 27,
+    TK_DUMP_INCLUDE_DATABASE_CONFIG = 1 << 28,
+    TK_DUMP_INCLUDE_SYSTEM_CONFIG   = 1 << 29,
+    TK_DUMP_INCLUDE_DEFAULT_CONFIG  = 1 << 30,
+    TK_DUMP_INCLUDE_SYSTEM_COLORS   = 1 << 31,
+    TK_DUMP_INSPECT_DFLT            = TK_DUMP_DUMP_ALL|TK_DUMP_TEXT_CONFIGS|TK_DUMP_TAG_CONFIGS,
+    TK_DUMP_INSPECT_ALL             = TK_DUMP_INSPECT_DFLT|TK_DUMP_CHARS|TK_DUMP_TAG_BINDINGS|
+			              TK_DUMP_DISPLAY_TEXT|TK_DUMP_INCLUDE_SEL|TK_DUMP_INSERT_MARK|
+			              TK_DUMP_DONT_RESOLVE_COLORS|TK_DUMP_DONT_RESOLVE_FONTS|
+				      TK_DUMP_INCLUDE_DATABASE_CONFIG|TK_DUMP_INCLUDE_SYSTEM_CONFIG|
+                                      TK_DUMP_INCLUDE_DEFAULT_CONFIG|TK_DUMP_INCLUDE_SYSTEM_COLORS|
+				      TK_DUMP_NESTED|TK_DUMP_ELIDE
 };
 
 /*
@@ -2337,17 +2343,35 @@ TextWidgetObjCmd(
 	break;
     }
     case TEXT_LOAD: {
-	if (objc != 3) {
+	Tcl_Obj *contentObjPtr;
+	bool validOptions = false;
+
+	if (objc != 3 && objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "textcontent");
 	    result = TCL_ERROR;
 	    goto done;
+	}
+	if (objc == 4) {
+	    const char *opt = Tcl_GetString(objv[2]);
+
+	    if (strcmp(opt, "-validconfig") != 0) {
+		Tcl_SetObjResult(interp,
+			Tcl_ObjPrintf("bad option \"%s\": must be -validconfig", opt));
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		result = TCL_ERROR;
+		goto done;
+	    }
+	    validOptions = true;
+	    contentObjPtr = objv[3];
+	} else {
+	    contentObjPtr = objv[2];
 	}
 	if (TestIfPerformingUndoRedo(interp, sharedTextPtr, &result)) {
 	    goto done;
 	}
 	ClearText(textPtr, false);
 	TkTextRelayoutWindow(textPtr, TK_TEXT_LINE_GEOMETRY);
-	if ((result = TkBTreeLoad(textPtr, objv[2])) != TCL_OK) {
+	if ((result = TkBTreeLoad(textPtr, contentObjPtr, validOptions)) != TCL_OK) {
 	    ClearText(textPtr, false);
 	}
 	break;
@@ -7202,22 +7226,29 @@ GetDumpFlags(
     Tcl_Obj **command)		/* Store command here, can be NULL. */
 {
     static const char *const optStrings[] = {
-	"-all", "-bindings", "-chars", "-command", "-configurations", "-discardselection",
-	"-displaychars", "-displaytext", "-dontresolvecolors",
-	"-dontresolvefonts", "-elide", "-image", "-insertmark", "-mark",
-	"-nested", "-node", "-setup", "-tag", "-text", "-window", NULL
+	"-all", "-bindings", "-chars", "-command", "-configurations", "-displaychars",
+	"-displaytext", "-dontresolvecolors", "-dontresolvefonts", "-elide",
+	"-image", "-includedbconfig", "-includedefaultconfig",
+	"-includeselection", "-includesyscolors", "-includesysconfig",
+	"-insertmark", "-mark", "-nested", "-node", "-setup",
+	"-tag", "-text", "-window",
+	NULL
     };
     enum opts {
-	DUMP_ALL, DUMP_TAG_BINDINGS, DUMP_CHARS, DUMP_CMD, DUMP_TAG_CONFIGS, DUMP_DISCARD_SEL,
-	DUMP_DISPLAY_CHARS, DUMP_DISPLAY_TEXT, DUMP_DONT_RESOLVE_COLORS,
-	DUMP_DONT_RESOLVE_FONTS, DUMP_ELIDE, DUMP_IMG, DUMP_INSERT_MARK, DUMP_MARK,
-	DUMP_NESTED, DUMP_NODE, DUMP_TEXT_CONFIGS, DUMP_TAG, DUMP_TEXT, DUMP_WIN
+	DUMP_ALL, DUMP_TAG_BINDINGS, DUMP_CHARS, DUMP_CMD, DUMP_TAG_CONFIGS, DUMP_DISPLAY_CHARS,
+	DUMP_DISPLAY_TEXT, DUMP_DONT_RESOLVE_COLORS, DUMP_DONT_RESOLVE_FONTS, DUMP_ELIDE,
+	DUMP_IMG, DUMP_INCLUDE_DATABASE_CONFIG, DUMP_INCLUDE_DEFAULT_CONFIG,
+	DUMP_INCLUDE_SEL, DUMP_INCLUDE_SYSTEM_CONFIG, DUMP_INCLUDE_SYSTEM_COLORS,
+	DUMP_INSERT_MARK, DUMP_MARK, DUMP_NESTED, DUMP_NODE, DUMP_TEXT_CONFIGS,
+	DUMP_TAG, DUMP_TEXT, DUMP_WIN
     };
     static const unsigned dumpFlags[] = {
-	0, TK_DUMP_TAG_BINDINGS, TK_DUMP_CHARS, 0, TK_DUMP_TAG_CONFIGS, TK_DUMP_DISCARD_SEL,
-	TK_DUMP_DISPLAY_CHARS, TK_DUMP_DISPLAY_TEXT, TK_DUMP_DONT_RESOLVE_COLORS,
-	TK_DUMP_DONT_RESOLVE_FONTS, TK_DUMP_ELIDE, TK_DUMP_IMG, TK_DUMP_INSERT_MARK, TK_DUMP_MARK,
-	TK_DUMP_NESTED, TK_DUMP_NODE, TK_DUMP_TEXT_CONFIGS, TK_DUMP_TAG, TK_DUMP_TEXT, TK_DUMP_WIN
+	0, TK_DUMP_TAG_BINDINGS, TK_DUMP_CHARS, 0, TK_DUMP_TAG_CONFIGS, TK_DUMP_DISPLAY_CHARS,
+	TK_DUMP_DISPLAY_TEXT, TK_DUMP_DONT_RESOLVE_COLORS, TK_DUMP_DONT_RESOLVE_FONTS, TK_DUMP_ELIDE,
+	TK_DUMP_IMG, TK_DUMP_INCLUDE_DATABASE_CONFIG, TK_DUMP_INCLUDE_DEFAULT_CONFIG,
+	TK_DUMP_INCLUDE_SEL, TK_DUMP_INCLUDE_SYSTEM_CONFIG, TK_DUMP_INCLUDE_SYSTEM_COLORS,
+	TK_DUMP_INSERT_MARK, TK_DUMP_MARK, TK_DUMP_NESTED, TK_DUMP_NODE, TK_DUMP_TEXT_CONFIGS,
+	TK_DUMP_TAG, TK_DUMP_TEXT, TK_DUMP_WIN
     };
 
     int arg;
@@ -7275,13 +7306,17 @@ GetDumpFlags(
 	CASE(ELIDE);
 	CASE(NESTED);
 	CASE(NODE);
-	CASE(DISCARD_SEL);
+	CASE(INCLUDE_SEL);
 	CASE(INSERT_MARK);
 	CASE(TEXT_CONFIGS);
 	CASE(TAG_BINDINGS);
 	CASE(TAG_CONFIGS);
 	CASE(DONT_RESOLVE_COLORS);
 	CASE(DONT_RESOLVE_FONTS);
+	CASE(INCLUDE_DEFAULT_CONFIG);
+	CASE(INCLUDE_DATABASE_CONFIG);
+	CASE(INCLUDE_SYSTEM_CONFIG);
+	CASE(INCLUDE_SYSTEM_COLORS);
 	CASE(IMG);
 	CASE(WIN);
 #undef CASE
@@ -8021,39 +8056,46 @@ DumpSegment(
  */
 
 static bool
-ObjIsEqual(
-    Tcl_Obj *obj1,
-    Tcl_Obj *obj2)
+MatchColors(
+    const char *name,
+    int len,
+    const char *hexColor,
+    const char *colorName)
 {
-    char const *b1, *b2;
-    int i, length;
+    assert(strlen(hexColor) == 7);
+    assert(strlen(colorName) == 5);
 
-    assert(obj1);
-    assert(obj2);
-
-    b1 = Tcl_GetString(obj1);
-    b2 = Tcl_GetString(obj2);
-
-    if (strcmp(b1, "#ffffff") == 0) {
-	return strcmp(b2, "#ffffff") == 0 || strcmp(b2, "white") == 0;
+    switch (len) {
+    case 5: return strncmp(name, colorName, 5) == 0;
+    case 7: return strncmp(name, hexColor, 7) == 0;
     }
 
-    if (strcmp(b1, "#000000") == 0) {
-	return strcmp(b2, "#000000") == 0 || strcmp(b2, "black") == 0;
+    return false;
+}
+
+static bool
+TestIfEqual(
+    const char *opt1,
+    int opt1Len,
+    const char *opt2,
+    int opt2Len)
+{
+    int i;
+
+    if (MatchColors(opt1, opt1Len, "#ffffff", "white")) {
+	return MatchColors(opt2, opt2Len, "#ffffff", "white");
     }
-
-    length = GetByteLength(obj1);
-
-    if (length != GetByteLength(obj2)) {
+    if (MatchColors(opt1, opt1Len, "#000000", "black")) {
+	return MatchColors(opt2, opt2Len, "#000000", "black");
+    }
+    if (opt1Len != opt2Len) {
 	return false;
     }
-
-    for (i = 0; i < length; ++i) {
-	if (b1[i] != b2[i]) {
+    for (i = 0; i < opt1Len; ++i) {
+	if (opt1[i] != opt2[i]) {
 	    return false;
 	}
     }
-
     return true;
 }
 
@@ -8160,9 +8202,7 @@ TkTextInspectOptions(
     const void *recordPtr,
     Tk_OptionTable optionTable,
     Tcl_DString *result,	/* should be already initialized */
-    bool resolveFontNames,
-    bool resolveColorNames,
-    bool discardDefaultValues)
+    int flags)
 {
     Tcl_Obj *objPtr;
     Tcl_Interp *interp = textPtr->interp;
@@ -8181,7 +8221,7 @@ TkTextInspectOptions(
 	Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
 
 #if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
-	if (resolveFontNames) {
+	if (!(flags & INSPECT_DONT_RESOLVE_FONTS)) {
 	    Tcl_IncrRefCount(font = Tcl_NewStringObj("font", -1));
 	    Tcl_IncrRefCount(actual = Tcl_NewStringObj("actual", -1));
 	}
@@ -8194,86 +8234,142 @@ TkTextInspectOptions(
 	    Tcl_ListObjGetElements(interp, objv[i], &argc, &argv);
 
 	    if (argc >= 5) { /* only if this option has a non-default value */
-		Tcl_Obj *val = argv[4];
+		Tcl_Obj *valObj = argv[4];
+		Tcl_Obj *myValObj;
+		Tcl_Obj *nameObj;
+		int myFlags = flags;
 
-		if (GetByteLength(val) > 0) {
-		    Tcl_Obj *value = val;
-		    Tcl_Obj *name;
+		if (GetByteLength(valObj) == 0) {
+		    continue;
+		}
 
-		    if (discardDefaultValues) {
-			Tcl_Obj *dflt = argv[3];
+		if (!(myFlags & INSPECT_INCLUDE_DATABASE_CONFIG)
+			|| myFlags & (INSPECT_INCLUDE_SYSTEM_CONFIG|INSPECT_INCLUDE_DEFAULT_CONFIG)) {
+		    const char *name = Tcl_GetString(argv[1]);
+		    const char *cls = Tcl_GetString(argv[2]);
+		    Tk_Uid dfltUid = Tk_GetOption(textPtr->tkwin, name, cls);
 
-			if (ObjIsEqual(dflt, val)) {
-			    continue;
+		    if (dfltUid) {
+			const char *value = Tcl_GetString(valObj);
+			int valueLen = GetByteLength(valObj);
+
+			if (TestIfEqual(dfltUid, strlen(dfltUid), value, valueLen)) {
+			    if (!(myFlags & INSPECT_INCLUDE_DATABASE_CONFIG)) {
+				continue;
+			    }
+			    myFlags |= INSPECT_INCLUDE_SYSTEM_CONFIG|INSPECT_INCLUDE_DEFAULT_CONFIG;
 			}
 		    }
+		}
 
-		    name = argv[0];
-		    if (Tcl_DStringLength(result) > 0) {
-			Tcl_DStringAppend(result, " ", 1);
+		if (!(myFlags & INSPECT_INCLUDE_SYSTEM_CONFIG)
+			|| myFlags & INSPECT_INCLUDE_DEFAULT_CONFIG) {
+		    const char *name = Tcl_GetString(argv[1]);
+		    const char *cls = Tcl_GetString(argv[2]);
+		    Tcl_Obj *dfltObj;
+
+		    dfltObj = TkpGetSystemDefault(textPtr->tkwin, name, cls);
+
+		    if (dfltObj) {
+			const char *dflt = Tcl_GetString(dfltObj);
+			const char *value = Tcl_GetString(valObj);
+			int dfltLen = GetByteLength(dfltObj);
+			int valueLen = GetByteLength(valObj);
+
+			if (TestIfEqual(dflt, dfltLen, value, valueLen)) {
+			    if (!(myFlags & INSPECT_INCLUDE_SYSTEM_CONFIG)) {
+				continue;
+			    }
+			    myFlags |= INSPECT_INCLUDE_DEFAULT_CONFIG;
+			}
 		    }
-		    Tcl_DStringAppend(result, Tcl_GetString(name), GetByteLength(name));
-		    Tcl_DStringAppend(result, " ", 1);
+		}
 
-		    if (resolveFontNames && strcmp(Tcl_GetString(name), "-font") == 0) {
-			const char *s = Tcl_GetString(val);
-			unsigned len = GetByteLength(val);
+		if (!(myFlags & INSPECT_INCLUDE_DEFAULT_CONFIG)) {
+		    const char *dflt = Tcl_GetString(argv[3]);
+		    const char *value = Tcl_GetString(valObj);
+		    int dfltLen = GetByteLength(argv[3]);
+		    int valueLen = GetByteLength(valObj);
+
+		    if (TestIfEqual(dflt, dfltLen, value, valueLen)) {
+			continue;
+		    }
+		}
+
+		myValObj = valObj;
+		nameObj = argv[0];
+		if (Tcl_DStringLength(result) > 0) {
+		    Tcl_DStringAppend(result, " ", 1);
+		}
+		Tcl_DStringAppend(result, Tcl_GetString(nameObj), GetByteLength(nameObj));
+		Tcl_DStringAppend(result, " ", 1);
+
+		if (!(flags & INSPECT_DONT_RESOLVE_FONTS)
+			&& strcmp(Tcl_GetString(nameObj), "-font") == 0) {
+		    const char *s = Tcl_GetString(valObj);
+		    unsigned len = GetByteLength(valObj);
+
+		    /*
+		     * Don't resolve font names like TkFixedFont, TkTextFont, etc.
+		     */
+
+		    if (len < 7
+			    || strncmp(s, "Tk", 2) != 0
+			    || strncmp(s + len - 4, "Font", 4) != 0) {
+#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
+			Tcl_Obj *args[3];
+			Tcl_Obj *result;
 
 			/*
-			 * Don't resolve font names like TkFixedFont, TkTextFont, etc.
+			 * Try to resolve the font name to the actual font attributes.
 			 */
 
-			if (len < 7
-				|| strncmp(s, "Tk", 2) != 0
-				|| strncmp(s + len - 4, "Font", 4) != 0) {
-#if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
-			    Tcl_Obj *args[3];
-			    Tcl_Obj *result;
+			args[0] = font;
+			args[1] = actual;
+			args[2] = valObj;
 
-			    /*
-			     * Try to resolve the font name to the actual font attributes.
-			     */
-
-			    args[0] = font;
-			    args[1] = actual;
-			    args[2] = val;
-
-			    if ((result = GetFontAttrs(textPtr, 3, args))) {
-				value = result;
-			    }
+			if ((result = GetFontAttrs(textPtr, 3, args))) {
+			    myValObj = result;
+			}
 #else /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
-			    Tk_Font tkfont = Tk_AllocFontFromObj(interp, textPtr->tkwin, val);
+			Tk_Font tkfont = Tk_AllocFontFromObj(interp, textPtr->tkwin, valObj);
 
-			    if (tkfont) {
-				Tcl_IncrRefCount(value = TkFontGetDescription(tkfont));
-				Tk_FreeFont(tkfont);
-			    }
+			if (tkfont) {
+			    Tcl_IncrRefCount(myValObj = TkFontGetDescription(tkfont));
+			    Tk_FreeFont(tkfont);
+			}
 #endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
-			}
-		    } else if (resolveColorNames && IsPossibleColorOption(Tcl_GetString(name))) {
-			const char *colorName = Tcl_GetString(val);
+		    }
+		} else if ((flags & (INSPECT_DONT_RESOLVE_COLORS|INSPECT_INCLUDE_SYSTEM_COLORS)) !=
+			    (INSPECT_DONT_RESOLVE_COLORS|INSPECT_INCLUDE_SYSTEM_COLORS)
+			&& IsPossibleColorOption(Tcl_GetString(nameObj))) {
+		    const char *colorName = Tcl_GetString(valObj);
 
-			if (toupper(colorName[0]) == 'S' && strncmp(colorName + 1, "ystem", 5) == 0) {
-			    XColor *col = Tk_GetColorFromObj(textPtr->tkwin, val);
+		    if (toupper(colorName[0]) == 'S' && strncmp(colorName + 1, "ystem", 5) == 0) {
+			XColor *col = Tk_GetColorFromObj(textPtr->tkwin, valObj);
 
-			    if (col) {
-				value = Tcl_ObjPrintf("#%02x%02x%02x", col->red, col->green, col->blue);
+			if (col) {
+			    if (!(flags & INSPECT_INCLUDE_SYSTEM_COLORS)) {
 				Tk_FreeColor(col);
+				continue;
 			    }
+			    myValObj = Tcl_ObjPrintf("#%02x%02x%02x", col->red, col->green, col->blue);
+			    Tcl_IncrRefCount(myValObj);
+			    Tk_FreeColor(col);
 			}
 		    }
+		}
 
-		    Tcl_DStringAppendElement(result, Tcl_GetString(value));
+		Tcl_DStringAppendElement(result, Tcl_GetString(myValObj));
 
-		    if (value != val) {
-			Tcl_DecrRefCount(value);
-		    }
+		if (myValObj != valObj) {
+		    Tcl_DecrRefCount(myValObj);
 		}
 	    }
 	}
 
 #if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
-	if (resolveFontNames) {
+	if (!(flags & INSPECT_DONT_RESOLVE_FONTS)) {
 	    Tcl_DecrRefCount(actual);
 	    Tcl_DecrRefCount(font);
 	}
@@ -8367,6 +8463,7 @@ TextInspectCmd(
     unsigned what;
     bool closeSubList;
     int result;
+    int flags;
 
     result = GetDumpFlags(textPtr, interp, objc, objv, TK_DUMP_INSPECT_ALL, TK_DUMP_INSPECT_DFLT,
 	    &what, NULL, NULL, NULL, NULL);
@@ -8385,16 +8482,24 @@ TextInspectCmd(
     prevPtr = NULL;
     tagArrSize = 128;
     tagArray = malloc(tagArrSize * sizeof(tagArray[0]));
+    flags = 0;
+
+    if (what & TK_DUMP_DONT_RESOLVE_FONTS)      { flags |= INSPECT_DONT_RESOLVE_FONTS; }
+    if (what & TK_DUMP_DONT_RESOLVE_COLORS)     { flags |= INSPECT_DONT_RESOLVE_COLORS; }
+    if (what & TK_DUMP_INCLUDE_DATABASE_CONFIG) { flags |= INSPECT_INCLUDE_DATABASE_CONFIG; }
+    if (what & TK_DUMP_INCLUDE_SYSTEM_CONFIG)   { flags |= INSPECT_INCLUDE_SYSTEM_CONFIG; }
+    if (what & TK_DUMP_INCLUDE_DEFAULT_CONFIG)  { flags |= INSPECT_INCLUDE_DEFAULT_CONFIG; }
+    if (what & TK_DUMP_INCLUDE_SYSTEM_COLORS)   { flags |= INSPECT_INCLUDE_SYSTEM_COLORS; }
 
     assert(textPtr->selTagPtr->textPtr == textPtr);
-    if (what & TK_DUMP_DISCARD_SEL) {
+
+    if (!(what & TK_DUMP_INCLUDE_SEL)) {
 	/* this little trick is discarding the "sel" tag */
 	textPtr->selTagPtr->textPtr = (TkText *) textPtr->selTagPtr;
     }
 
     if (what & TK_DUMP_TEXT_CONFIGS) {
-	TkTextInspectOptions(textPtr, textPtr, textPtr->optionTable, opts,
-		!(what & TK_DUMP_DONT_RESOLVE_FONTS), !(what & TK_DUMP_DONT_RESOLVE_COLORS), false);
+	TkTextInspectOptions(textPtr, textPtr, textPtr->optionTable, opts, flags);
 	Tcl_DStringStartSublist(str);
 	Tcl_DStringAppendElement(str, "setup");
 	Tcl_DStringAppendElement(str, Tk_PathName(textPtr->tkwin));
@@ -8410,17 +8515,15 @@ TextInspectCmd(
 	for (i = 0; i < n; ++i) {
 	    TkTextTag *tagPtr = tags[i];
 
-	    if (tagPtr && (!(what & TK_DUMP_DISCARD_SEL) || tagPtr != textPtr->selTagPtr)) {
-		TkTextInspectOptions(textPtr, tagPtr, tagPtr->optionTable, opts,
-			!(what & TK_DUMP_DONT_RESOLVE_FONTS), !(what & TK_DUMP_DONT_RESOLVE_COLORS),
-			true);
-		    Tcl_DStringStartSublist(str);
-		    Tcl_DStringAppendElement(str, "configure");
-		    Tcl_DStringAppendElement(str, tagPtr->name);
-		    if (Tcl_DStringLength(opts) > 2) {
-			Tcl_DStringAppendElement(str, Tcl_DStringValue(opts));
-		    }
-		    Tcl_DStringEndSublist(str);
+	    if (tagPtr && ((what & TK_DUMP_INCLUDE_SEL) || tagPtr != textPtr->selTagPtr)) {
+		TkTextInspectOptions(textPtr, tagPtr, tagPtr->optionTable, opts, flags);
+		Tcl_DStringStartSublist(str);
+		Tcl_DStringAppendElement(str, "configure");
+		Tcl_DStringAppendElement(str, tagPtr->name);
+		if (Tcl_DStringLength(opts) > 2) {
+		    Tcl_DStringAppendElement(str, Tcl_DStringValue(opts));
+		}
+		Tcl_DStringEndSublist(str);
 	    }
 	}
     }
@@ -8433,7 +8536,7 @@ TextInspectCmd(
 	for (i = 0; i < n; ++i) {
 	    TkTextTag *tagPtr = tags[i];
 
-	    if (tagPtr && (!(what & TK_DUMP_DISCARD_SEL) || tagPtr != textPtr->selTagPtr)) {
+	    if (tagPtr && ((what & TK_DUMP_INCLUDE_SEL) || tagPtr != textPtr->selTagPtr)) {
 		GetBindings(textPtr, tagPtr->name, sharedTextPtr->tagBindingTable, str);
 	    }
 	}
@@ -8465,18 +8568,16 @@ TextInspectCmd(
 		continue;
 	    }
 	    type = "image";
-	    TkTextInspectOptions(textPtr, &segPtr->body.ei, segPtr->body.ei.optionTable, opts,
-		    false, false, false);
+	    TkTextInspectOptions(textPtr, &segPtr->body.ei, segPtr->body.ei.optionTable, opts, 0);
 	    value = Tcl_DStringValue(opts);
 	    printTags = !!(what & TK_DUMP_TAG);
 	    break;
 	case SEG_GROUP_WINDOW:
-	    if (!(what & SEG_GROUP_WINDOW) || !segPtr->body.ew.tkwin) {
+	    if (!(what & SEG_GROUP_WINDOW)) {
 		continue;
 	    }
 	    type = "window";
-	    TkTextInspectOptions(textPtr, &segPtr->body.ew, segPtr->body.ew.optionTable, opts,
-		    false, false, false);
+	    TkTextInspectOptions(textPtr, &segPtr->body.ew, segPtr->body.ew.optionTable, opts, 0);
 	    value = Tcl_DStringValue(opts);
 	    printTags = !!(what & TK_DUMP_TAG);
 	    break;

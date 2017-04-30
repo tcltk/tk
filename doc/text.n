@@ -2914,12 +2914,6 @@ Include information about characters and soft hyphens in the dump results. The c
 .
 Include all the tag configurations.
 .TP
-\fB\-discardselection\fR
-.
-This option makes sense only if also option \fB\-tag\fR (or \fB\-all\fR) is
-specified. With this option the selection tag \fBsel\fR will be discarded from the
-result.
-.TP
 \fB\-displaychars\fR
 .
 If this option is given, then only those characters and soft hyphens which
@@ -2956,6 +2950,42 @@ will ignore these elements.
 Include information about images in the result. The content of the image is
 a list containing the image options.
 .TP
+\fB\-includedbconfig\fR
+.
+This option makes sense only if also option \fB\-setup\fR (or \fB\-all\fR) is
+specified. With this option a configuration option will be included into the
+list of configuration even if the value of this option is equal to the value
+from option database (per default database values are excluded).
+.TP
+\fB\-includedefaultconfig\fR
+.
+This option makes sense only if also option \fB\-setup\fR (or \fB\-all\fR) is
+specified. With this option a configuration option will be included into the
+list of configuration even if the value of this option is equal to the default
+value (per default the default values are excluded). Note that the options
+\fB\-includedbconfig\fR and \fB\-includesysconfig\fR have higher priority.
+.TP
+\fB\-includeselection\fR
+.
+This option makes sense only if also option \fB\-tag\fR (or \fB\-all\fR) is
+specified. With this option the selection tag \fBsel\fR will be included into the
+result. Per default the selection will be discarded when inspecting the content.
+.TP
+\fB\-includesyscolors\fR
+.
+When inspecting widget or tag option values normally system colors (like
+.QW SystemHighlight, or
+.QW systemHighlight )
+will be discarded, except if option \fB\-includesyscolors\fR is specified.
+.TP
+\fB\-includesysconfig\fR
+.
+This option makes sense only if also option \fB\-setup\fR (or \fB\-all\fR) is
+specified. With this option a configuration option will be included into the
+list of configuration even if the value of this option is equal to the system
+value (per default the system values are excluded). Note that option
+\fB\-includedbconfig\fR has a higher priority.
+.TP
 \fB\-insertmark\fR
 .
 Include information about the
@@ -2977,7 +3007,12 @@ see description of switch \fB\-tag\fR below.
 .TP
 \fB\-setup\fR
 .
-Include the pathname of the widget, and a list of configuration options.
+Include the pathname of the widget, and a list of configuration options. Per
+default a configuration option will be included only if the value is neither
+equal to the default value, nor equal to the system value, nor equal to the
+value from option database. This can be modified with options
+\fB\-includedefaultconfig\fR, \fB\-includesysconfig\fR, and
+\fR\-includedbconfig\fR.
 .TP
 \fB\-tag\fR
 .
@@ -3001,8 +3036,7 @@ result.
 \fB\-window\fR
 .
 Include information about embedded windows in the result. The content of a
-window is a list containing the window options. If a window has not been
-created yet, then it will not appear in the result of command \fBinspect\fR.
+window is a list containing the window options.
 .RE
 .PP
 The result of this command can be used for loading a widget with a snapshot
@@ -3044,12 +3078,16 @@ only if option \fB\-startline\fR/\fB\-endline\fR is involved), then 0 (zero)
 will be returned.
 .RE
 .TP
-\fIpathName \fBload\fR \fIserialContent\fR
+\fIpathName \fBload\fR ?\fI\-validconfig\fR? \fIserialContent\fR
 .
 Load the text widget with given content \fIserialContent\fR. The widget will
 be cleared before the load will be done, this includes all marks, but not
-the tag definitions.  The format of \fIserialContent\fR is described in the
-\fBinspect\fR subcommand, which produces it.
+the tag definitions. The format of \fIserialContent\fR is described in the
+\fBinspect\fR subcommand, which produces it. Normally invalid configuaration
+options will be skipped, except if option \fI\-validconfig\fR is specified,
+in this case an error will be thrown if an invalid option value will be
+encountered. Normally the latter only may happen if the given content is
+produced under a different system.
 .RS
 .PP
 For a complete recovery of the text widget content the following is
