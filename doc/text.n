@@ -3079,13 +3079,13 @@ only if option \fB\-startline\fR/\fB\-endline\fR is involved), then 0 (zero)
 will be returned.
 .RE
 .TP
-\fIpathName \fBload\fR ?\fI\-validconfig\fR? \fIserialContent\fR
+\fIpathName \fBload\fR ?\fB\-validconfig\fR? \fIserialContent\fR
 .
 Load the text widget with given content \fIserialContent\fR. The widget will
 be cleared before the load will be done, this includes all marks, but not
 the tag definitions. The format of \fIserialContent\fR is described in the
 \fBinspect\fR subcommand, which produces it. Normally invalid configuaration
-options will be skipped, except if option \fI\-validconfig\fR is specified,
+options will be skipped, except if option \fB\-validconfig\fR is specified,
 in this case an error will be thrown if an invalid option value will be
 encountered. Normally the latter only may happen if the given content is
 produced under a different system.
@@ -3615,7 +3615,7 @@ than the tag whose name is \fIbelowThis\fR. If \fIbelowThis\fR is omitted,
 then \fItagName\fR's priority is changed to make it lowest priority of all
 tags.
 .TP
-\fIpathName \fBtag names\fR \fI?options\fR? \fI?index\fR?
+\fIpathName \fBtag names\fR \fI?switches\fR? \fI?index\fR?
 .
 Returns a list whose elements are the names of all the tags that are active at
 the character position given by \fIindex\fR. If \fIindex\fR is omitted, then
