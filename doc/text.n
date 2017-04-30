@@ -2974,7 +2974,8 @@ result. Per default the selection will be discarded when inspecting the content.
 \fB\-includesyscolors\fR
 .
 When inspecting widget or tag option values normally system colors (like
-.QW SystemHighlight, or
+.QW SystemHighlight ,
+or 
 .QW systemHighlight )
 will be discarded, except if option \fB\-includesyscolors\fR is specified.
 .TP
