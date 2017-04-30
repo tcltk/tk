@@ -1261,6 +1261,14 @@ window should be stretched vertically to fill its line. If the \fB\-pady\fR
 option has been specified as well, then the requested padding will be retained
 even if the window is stretched.
 .TP
+\fB\-tags \fItagList\fR
+.
+Specifies a set of tags to apply to the embedded window. \fITagList\fR consists
+of a list of tag names, which replace any existing tags for the embedded window.
+\fITagList\fR may be an empty list. Note that it is not possible to add or
+remove the special selection tag \fBsel\fR, it will be left untouched with this
+option.
+.TP
 \fB\-window \fIpathName\fR
 .
 Specifies the name of a window to display in the annotation. Note that if a
