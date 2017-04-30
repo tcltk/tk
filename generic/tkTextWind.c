@@ -1164,7 +1164,7 @@ EmbWinInspectProc(
 
     Tcl_DStringInit(&opts);
     TkTextInspectOptions(sharedTextPtr->peers, &segPtr->body.ew, segPtr->body.ew.optionTable,
-	    &opts, false, false, false);
+	    &opts, 0);
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
     Tcl_ListObjAppendElement(NULL, objPtr, objPtr2);

@@ -110,9 +110,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-overstrikecolor", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, overstrikeColor), TK_OPTION_NULL_OK, 0, 0},
 #if SUPPORT_DEPRECATED_TAG_OPTIONS
-    {TK_OPTION_COLOR, "-overstrikefg", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, overstrikeColor), TK_OPTION_NULL_OK, 0,
-	TK_TEXT_DEPRECATED_OVERSTRIKE_FG},
+    {TK_OPTION_SYNONYM, "-overstrikefg", NULL, NULL,
+	NULL, 0, -1, TK_OPTION_NULL_OK, "-overstrikecolor", TK_TEXT_DEPRECATED_OVERSTRIKE_FG},
 #endif /* SUPPORT_DEPRECATED_TAG_OPTIONS */
     {TK_OPTION_STRING, "-relief", NULL, NULL,
 	NULL, Tk_Offset(TkTextTag, reliefPtr), -1, TK_OPTION_NULL_OK, 0, 0},
@@ -139,9 +138,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-underlinecolor", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, underlineColor), TK_OPTION_NULL_OK, 0, 0},
 #if SUPPORT_DEPRECATED_TAG_OPTIONS
-    {TK_OPTION_COLOR, "-underlinefg", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, underlineColor), TK_OPTION_NULL_OK, 0,
-	TK_TEXT_DEPRECATED_UNDERLINE_FG},
+    {TK_OPTION_SYNONYM, "-underlinefg", NULL, NULL,
+	NULL, 0, -1, TK_OPTION_NULL_OK, "-underlinecolor", 0},
 #endif /* SUPPORT_DEPRECATED_TAG_OPTIONS */
     {TK_OPTION_BOOLEAN, "-undo", NULL, NULL,
 	"1", -1, Tk_Offset(TkTextTag, undo), 0, 0, 0},

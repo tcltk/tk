@@ -3682,8 +3682,9 @@ LoadPerformElision(
 
 int
 TkBTreeLoad(
-    TkText *textPtr,		/* Information about text widget. */
-    Tcl_Obj *content)		/* New content of this text widget. */
+    TkText *textPtr,	/* Information about text widget. */
+    Tcl_Obj *content,	/* New content of this text widget. */
+    bool validOptions)	/* Do we report errors in case of invalid option values? */
 {
     enum {
 	STATE_START        = 1 << 0,
@@ -3780,7 +3781,7 @@ TkBTreeLoad(
 	     */
 
 	    Tcl_Obj **objv;
-	    int objc;
+	    int objc, k;
 
 	    if (strcmp(type, "setup") != 0) {
 		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
@@ -3791,9 +3792,13 @@ TkBTreeLoad(
 	    if (argc != 3) {
 		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
 	    }
-	    if (Tcl_ListObjGetElements(interp, argv[2], &objc, &objv) != TCL_OK
-		    || TkConfigureText(interp, textPtr, objc, objv) != TCL_OK) {
+	    if (Tcl_ListObjGetElements(interp, argv[2], &objc, &objv) != TCL_OK) {
 		return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
+	    }
+	    for (k = 0; k < objc - 1; k += 2) {
+		if (TkConfigureText(interp, textPtr, 2, &objv[k]) != TCL_OK && validOptions) {
+		    return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
+		}
 	    }
 	    textState = textPtr->state;
 	    textPtr->state = TK_TEXT_STATE_READONLY;
@@ -3887,7 +3892,7 @@ TkBTreeLoad(
 	     */
 
 	    Tcl_Obj **objv;
-	    int objc;
+	    int objc, k;
 
 	    if (strcmp(type, "configure") != 0) {
 		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
@@ -3899,9 +3904,15 @@ TkBTreeLoad(
 		TkTextCreateTag(textPtr, Tcl_GetString(argv[1]), NULL);
 	    } else if (argc != 3) {
 		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
-	    } else if (Tcl_ListObjGetElements(interp, argv[2], &objc, &objv) != TCL_OK
-		    && TkConfigureTag(interp, textPtr, Tcl_GetString(argv[1]), objc, objv) != TCL_OK) {
+	    } else if (Tcl_ListObjGetElements(interp, argv[2], &objc, &objv) != TCL_OK) {
 		return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
+	    } else {
+		for (k = 0; k < objc - 1; k += 2) {
+		    if (TkConfigureTag(interp, textPtr, Tcl_GetString(argv[1]), 2, &objv[k]) != TCL_OK
+			    && !validOptions) {
+			return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
+		    }
+		}
 	    }
 	    state = STATE_CONFIG;
 	    break;
