@@ -30,7 +30,7 @@ static const char *const wrapStrings[] = {
 /*
  * The 'TkTextTabStyle' enum in tkText.h is used to define a type for the
  * -tabstyle option of the Text widget. These values are used as indices into
- * the string table below. Tags are allowed an empty wrap value, but the
+ * the string table below. Tags are allowed an empty tabstyle value, but the
  * widget as a whole is not.
  */
 
@@ -1258,8 +1258,7 @@ TkTextFreeTag(
 	if (textPtr != tagPtr->textPtr) {
 	    Tcl_Panic("Tag being deleted from wrong widget");
 	}
-	textPtr->refCount--;
-	if (textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	}
 	tagPtr->textPtr = NULL;
@@ -1522,7 +1521,7 @@ TkTextBindProc(
     }
 
   done:
-    if (--textPtr->refCount == 0) {
+    if (textPtr->refCount-- <= 1) {
 	ckfree(textPtr);
     }
 }

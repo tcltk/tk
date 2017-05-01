@@ -1222,6 +1222,7 @@ test listbox-4.1 {ConfigureListbox procedure} -constraints {
     pack .l
     update
 } -body {
+    update
     set x [getsize .]
     .l configure -setgrid 0
     update
@@ -2306,7 +2307,7 @@ test listbox-13.3 {ListboxScanTo procedure} -constraints {
     .l scan dragto [expr 5+$width] [expr 10+$height]
     update
     lappend x [format {%.6g %.6g} {*}[.l xview]] [format {%.6g %.6g} {*}[.l yview]]
-} -result {{0.8 1} {0.75 1} {0.64 0.84} {0.25 0.5}}
+} -result {{0.8 1} {0.75 1} {0.6 0.8} {0.25 0.5}}
 
 
 test listbox-14.1 {NearestListboxElement procedure, partial last line} -body {

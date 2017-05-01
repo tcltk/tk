@@ -34,6 +34,13 @@ Valid \fIoptions\fR are:
 Specify the element's interior padding.
 \fIpadding\fR is a list of up to four integers specifying
 the left, top, right and bottom padding quantities respectively.
+If fewer than four elements are specified,
+\fIbottom\fR defaults to \fItop\fR,
+\fIright\fR defaults to \fIleft\fR, and
+\fItop\fR defaults to \fIleft\fR.
+In other words, a list of three numbers specify the left, vertical, and right padding;
+a list of two numbers specify the horizontal and the vertical padding;
+a single number specifies the same padding all the way around the widget.
 This option may not be mixed with any other options.
 .TP
 \fB\-margins \fIpadding\fR
@@ -61,7 +68,7 @@ corresponding Visual Styles API state value.
 This permits the element appearance to respond to changes in the
 widget state such as becoming active or being pressed. The list should
 be as described for the \fBttk::style map\fR command but note that the
-last pair in the list should be the default state and is typically and
+last pair in the list should be the default state and is typically an
 empty list and 1. Unfortunately all the Visual Styles parts have
 different state values and these must be looked up either in the
 Microsoft documentation or more likely in the header files. The

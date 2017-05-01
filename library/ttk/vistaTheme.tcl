@@ -133,7 +133,7 @@ namespace eval ttk::theme::vista {
                 Spinbox.background -sticky news -children {
                     Spinbox.padding -sticky news -children {
                         Spinbox.innerbg -sticky news -children {
-                            Spinbox.textarea -expand 1 -sticky {}
+                            Spinbox.textarea -expand 1
                         }
                     }
                     Spinbox.uparrow -side top -sticky ens
@@ -182,6 +182,7 @@ namespace eval ttk::theme::vista {
         ttk::style layout Horizontal.TProgressbar {
             Horizontal.Progressbar.trough -sticky nswe -children {
                 Horizontal.Progressbar.pbar -side left -sticky ns
+                Horizontal.Progressbar.text -sticky nesw
             }
         }
         ttk::style element create Vertical.Progressbar.pbar vsapi \

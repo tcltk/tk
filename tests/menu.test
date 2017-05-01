@@ -3878,6 +3878,35 @@ test menu-37.1 {menubar menues cannot be posted - bug 2160206} -setup {
     destroy .m
 } -result {1 {a menubar menu cannot be posted}}
 
+test menu-38.1 {Can't dismiss ttk::menubutton menu until mouse has hovered over it - bug fa32290898} -setup {
+} -constraints {macOrUnix} -body {
+    toplevel .top
+    ttk::menubutton .top.mb -text "Some menu";
+    menu .top.mb.m;
+    .top.mb.m add command -label "Item 1";
+    .top.mb.m add command -label "Item 2";
+    .top.mb configure -menu .top.mb.m;
+    pack .top.mb
+    update
+    # simulate mouse click on the menubutton, which posts its menu
+    event generate .top.mb <ButtonPress-1> -warp 1
+    update
+    after 50
+    event generate .top.mb <ButtonRelease-1>
+    update
+    # simulate mouse click on the menu again, i.e. without
+    # entering/leaving the posted menu
+    event generate .top.mb <ButtonPress-1>
+    update
+    after 50
+    event generate .top.mb <ButtonRelease-1>
+    update
+    # the menu shall have been unposted by the second click
+    winfo ismapped .top.mb.m
+} -cleanup {
+    destroy .top.mb.m .top.m .top
+} -result {0}
+
 
 # cleanup
 imageFinish

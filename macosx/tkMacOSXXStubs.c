@@ -528,7 +528,7 @@ XClearWindow(
 }
 
 /*
-void
+int
 XDrawPoint(
     Display* display,
     Drawable d,
@@ -538,7 +538,7 @@ XDrawPoint(
 {
 }
 
-void
+int
 XDrawPoints(
     Display* display,
     Drawable d,
@@ -681,14 +681,6 @@ XForceScreenSaver(
     display->request++;
 }
 
-void
-Tk_FreeXId(
-    Display *display,
-    XID xid)
-{
-    /* no-op function needed for stubs implementation. */
-}
-
 int
 XSync(
     Display *display,
@@ -805,6 +797,10 @@ XCreateImage(
     ximage->format = format;
     ximage->data = data;
     ximage->obdata = NULL;
+    /* The default pixelpower is 0.  This must be explicitly set to 1 in the
+     * case of an XImage extracted from a Retina display.
+     */
+    ximage->pixelpower = 0;
 
     if (format == ZPixmap) {
 	ximage->bits_per_pixel = 32;
@@ -856,7 +852,8 @@ XCreateImage(
  * Results:
  *	Returns a newly allocated XImage containing the data from the given
  *	rectangle of the given drawable, or NULL if the XImage could not be
- *     constructed.
+ *	constructed.  NOTE: If we are copying from a window on a Retina
+ *	display, the dimensions of the XImage will be 2*width x 2*height.
  *
  * Side effects:
  *	None.
@@ -885,7 +882,19 @@ XGetImage(
     int	        bitmap_pad = 0;
     int	        bytes_per_row = 4*width;
     int                size;
-    TkMacOSXDbgMsg("XGetImage");
+    MacDrawable *macDraw = (MacDrawable *) d;
+    NSWindow *win = TkMacOSXDrawableWindow(d);
+    /* This code assumes that backing scale factors are integers.  Currently
+     * Retina displays use a scale factor of 2.0 and normal displays use 1.0.
+     * We do not support any other values here.
+     */
+    int scalefactor = 1;
+    if (win && [win respondsToSelector:@selector(backingScaleFactor)]) {
+	scalefactor = ([win backingScaleFactor] == 2.0) ? 2 : 1;
+    }
+    int scaled_height = height * scalefactor;
+    int scaled_width = width * scalefactor;
+
     if (format == ZPixmap) {
 	if (width == 0 || height == 0) {
 	    /* This happens all the time.
@@ -894,7 +903,7 @@ XGetImage(
 	    return NULL;
 	}
 
-	bitmap_rep =  BitmapRepFromDrawableRect(d, x, y,width, height);
+	bitmap_rep =  BitmapRepFromDrawableRect(d, x, y, width, height);
 	bitmap_fmt = [bitmap_rep bitmapFormat];
 
 	if ( bitmap_rep == Nil                        ||
@@ -913,7 +922,9 @@ XGetImage(
 	if ( [bitmap_rep isPlanar ] == 0 &&
 	     [bitmap_rep samplesPerPixel] == 4 ) {
 	    bytes_per_row = [bitmap_rep bytesPerRow];
-	    size = bytes_per_row*height;
+	    assert(bytes_per_row == 4 * scaled_width);
+	    assert([bitmap_rep bytesPerPlane] == bytes_per_row * scaled_height);
+	    size = bytes_per_row*scaled_height;
 	    image_data = (char*)[bitmap_rep bitmapData];
 	    if ( image_data ) {
 		int row, n, m;
@@ -924,7 +935,7 @@ XGetImage(
 		*/
 		if (bitmap_fmt == 0) {
 		    /* BGRA */
-		    for (row=0, n=0; row<height; row++, n+=bytes_per_row) {
+		    for (row=0, n=0; row<scaled_height; row++, n+=bytes_per_row) {
 			for (m=n; m<n+bytes_per_row; m+=4) {
 			    *(bitmap+m)   = *(image_data+m+2);
 			    *(bitmap+m+1) = *(image_data+m+1);
@@ -934,7 +945,7 @@ XGetImage(
 		    }
 		} else {
 		    /* ABGR */
-		    for (row=0, n=0; row<height; row++, n+=bytes_per_row) {
+		    for (row=0, n=0; row<scaled_height; row++, n+=bytes_per_row) {
 			for (m=n; m<n+bytes_per_row; m+=4) {
 			    *(bitmap+m)   = *(image_data+m+3);
 			    *(bitmap+m+1) = *(image_data+m+2);
@@ -947,7 +958,11 @@ XGetImage(
 	}
 	if (bitmap) {
 	    imagePtr = XCreateImage(display, NULL, depth, format, offset,
-				    (char*)bitmap, width, height, bitmap_pad, bytes_per_row);
+				    (char*)bitmap, scaled_width, scaled_height,
+				    bitmap_pad, bytes_per_row);
+	    if (scalefactor == 2) {
+	    	imagePtr->pixelpower = 1;
+	     }
 	    [ns_image removeRepresentation:bitmap_rep]; /*releases the rep*/
 	    [ns_image release];
 	}

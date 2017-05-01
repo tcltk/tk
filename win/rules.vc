@@ -33,7 +33,6 @@ _INSTALLDIR	= $(INSTALLDIR:/=\)
 # "delete all" method.
 #----------------------------------------------------------
 
-!if "$(OS)" == "Windows_NT"
 RMDIR	= rmdir /S /Q
 ERRNULL  = 2>NUL
 !if ![ver | find "4.0" > nul]
@@ -42,13 +41,6 @@ COPY	= copy >NUL
 !else
 CPY	= xcopy /i /y >NUL
 COPY	= copy /y >NUL
-!endif
-!else # "$(OS)" != "Windows_NT"
-CPY	= xcopy /i >_JUNK.OUT # On Win98 NUL does not work here.
-COPY	= copy >_JUNK.OUT # On Win98 NUL does not work here.
-RMDIR	= deltree /Y
-NULL    = \NUL # Used in testing directory existence
-ERRNULL = >NUL # Win9x shell cannot redirect stderr
 !endif
 MKDIR   = mkdir
 
@@ -159,7 +151,7 @@ DEBUGFLAGS     = $(DEBUGFLAGS) -RTC1
 DEBUGFLAGS     = $(DEBUGFLAGS) -GZ
 !endif
 
-COMPILERFLAGS  =-W3 -DUNICODE -D_UNICODE
+COMPILERFLAGS  =-W3 /DUNICODE /D_UNICODE /D_ATL_XP_TARGETING
 
 # In v13 -GL and -YX are incompatible.
 !if [nmakehlp -c -YX]
@@ -230,6 +222,10 @@ STATIC_BUILD	= 1
 !else
 STATIC_BUILD	= 0
 !endif
+!if [nmakehlp -f $(OPTS) "nomsvcrt"]
+!message *** Doing nomsvcrt
+MSVCRT		= 0
+!else
 !if [nmakehlp -f $(OPTS) "msvcrt"]
 !message *** Doing msvcrt
 MSVCRT		= 1
@@ -238,6 +234,7 @@ MSVCRT		= 1
 MSVCRT		= 1
 !else
 MSVCRT		= 0
+!endif
 !endif
 !endif
 !if [nmakehlp -f $(OPTS) "staticpkg"] && $(STATIC_BUILD)
@@ -400,14 +397,14 @@ TCL_COMPILE_DEBUG   = 0
 #----------------------------------------------------------
 
 !if "$(CHECKS)" == "" || [nmakehlp -f "$(CHECKS)" "none"]
-TCL_NO_DEPRECATED	    = 0
+TK_NO_DEPRECATED	    = 0
 WARNINGS		    = -W3
 !else
 !if [nmakehlp -f $(CHECKS) "nodep"]
 !message *** Doing nodep check
-TCL_NO_DEPRECATED	    = 1
+TK_NO_DEPRECATED	    = 1
 !else
-TCL_NO_DEPRECATED	    = 0
+TK_NO_DEPRECATED	    = 0
 !endif
 !if [nmakehlp -f $(CHECKS) "fullwarn"]
 !message *** Doing full warnings check
@@ -446,7 +443,7 @@ This compiler does not support profile guided optimization.
 # Set our defines now armed with our options.
 #----------------------------------------------------------
 
-OPTDEFINES	= -DTCL_CFGVAL_ENCODING=$(CFG_ENCODING) -DSTDC_HEADERS
+OPTDEFINES	= -DTCL_CFGVAL_ENCODING=$(CFG_ENCODING) -DSTDC_HEADERS -DTCL_NO_DEPRECATED
 
 !if $(TCL_MEM_DEBUG)
 OPTDEFINES	= $(OPTDEFINES) -DTCL_MEM_DEBUG
@@ -463,8 +460,8 @@ OPTDEFINES	= $(OPTDEFINES) -DUSE_THREAD_ALLOC=1
 !if $(STATIC_BUILD)
 OPTDEFINES	= $(OPTDEFINES) -DSTATIC_BUILD
 !endif
-!if $(TCL_NO_DEPRECATED)
-OPTDEFINES	= $(OPTDEFINES) -DTCL_NO_DEPRECATED
+!if $(TK_NO_DEPRECATED)
+OPTDEFINES	= $(OPTDEFINES) -DTK_NO_DEPRECATED
 !endif
 
 !if !$(DEBUG)

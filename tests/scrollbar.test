@@ -396,10 +396,10 @@ test scrollbar-3.70 {ScrollbarWidgetCmd procedure, "set" option} {
 } {100 50 30 30}
 test scrollbar-3.71 {ScrollbarWidgetCmd procedure, "set" option} {
     list [catch {.s set 1 2 3} msg] $msg
-} {1 {wrong # args: should be ".s set firstFraction lastFraction" or ".s set totalUnits windowUnits firstUnit lastUnit"}}
+} {1 {wrong # args: should be ".s set firstFraction lastFraction"}}
 test scrollbar-3.72 {ScrollbarWidgetCmd procedure, "set" option} {
     list [catch {.s set 1 2 3 4 5} msg] $msg
-} {1 {wrong # args: should be ".s set firstFraction lastFraction" or ".s set totalUnits windowUnits firstUnit lastUnit"}}
+} {1 {wrong # args: should be ".s set firstFraction lastFraction"}}
 test scrollbar-3.73 {ScrollbarWidgetCmd procedure} {
     list [catch {.s bogus} msg] $msg
 } {1 {bad option "bogus": must be activate, cget, configure, delta, fraction, get, identify, or set}}
