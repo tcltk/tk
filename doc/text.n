@@ -491,9 +491,10 @@ second and later display lines for a text line.
 \fIColor\fR specifies the background color to use in regions that do not
 contain characters because they are indented by \fB\-lmargin1\fR or
 \fB\-lmargin2\fR. It may have any of the forms accepted by
-\fBTk_GetColor\fR.If \fIcolor\fR has not been specified, or if it is
-specified as an empty string, then the color specified by the
-\fB-background\fR widget option is used.
+\fBTk_GetColor\fR. If \fIcolor\fR has not been specified, or if it is
+specified as an empty string, then the color used is specified by the
+\fB-background\fR tag option (or, if this is also unspecified, by the
+\fB-background\fR widget option).
 .TP
 \fB\-offset \fIpixels\fR
 .
@@ -537,9 +538,10 @@ character of that display line.
 .
 \fIColor\fR specifies the background color to use in regions that do not
 contain characters because they are indented by \fB\-rmargin1\fR. It may
-have any of the forms accepted by \fBTk_GetColor\fR.If \fIcolor\fR has not
+have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
-specified by the \fB-background\fR widget option is used.
+used is specified by the \fB-background\fR tag option (or, if this is also
+unspecified, by the \fB-background\fR widget option).
 .TP
 \fB\-selectbackground \fIcolor\fR
 \fIColor\fR specifies the background color to use when displaying selected
@@ -607,9 +609,11 @@ specified by the \fB\-foreground\fR tag option is used.
 \fB\-wrap \fImode\fR
 .
 \fIMode\fR specifies how to handle lines that are wider than the text's
-window. It has the same legal values as the \fB\-wrap\fR option for the text
-widget: \fBnone\fR, \fBchar\fR, or \fBword\fR. If this tag option is
-specified, it overrides the \fB\-wrap\fR option for the text widget.
+window. This option only applies to a display line if it applies to the
+first non-elided character on that display line. It has the same legal
+values as the \fB\-wrap\fR option for the text widget: \fBnone\fR,
+\fBchar\fR, or \fBword\fR. If this tag option is specified, it
+overrides the \fB\-wrap\fR option for the text widget.
 .PP
 If a character has several tags associated with it, and if their display
 options conflict, then the options of the highest priority tag are used. If a
@@ -1305,8 +1309,9 @@ of the widget to \fIboolean\fR.
 \fIpathName \fBedit redo\fR
 .
 When the \fB\-undo\fR option is true, reapplies the last undone edits provided
-no other edits were done since then. Generates an error when the redo stack is
-empty. Does nothing when the \fB\-undo\fR option is false.
+no other edits were done since then, and returns a list of indices indicating
+what ranges were changed by the redo operation. Generates an error when the
+redo stack is empty. Does nothing when the \fB\-undo\fR option is false.
 .TP
 \fIpathName \fBedit reset\fR
 .
@@ -1319,9 +1324,10 @@ Inserts a separator (boundary) on the undo stack. Does nothing when the
 .TP
 \fIpathName \fBedit undo\fR
 .
-Undoes the last edit action when the \fB\-undo\fR option is true. An edit
-action is defined as all the insert and delete commands that are recorded on
-the undo stack in between two separators. Generates an error when the undo
+Undoes the last edit action when the \fB\-undo\fR option is true, and returns a
+list of indices indicating what ranges were changed by the undo operation. An
+edit action is defined as all the insert and delete commands that are recorded
+on the undo stack in between two separators. Generates an error when the undo
 stack is empty. Does nothing when the \fB\-undo\fR option is false.
 .RE
 .TP

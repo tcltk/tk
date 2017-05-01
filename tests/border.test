@@ -127,16 +127,18 @@ test border-2.2 {Tk_Free3DBorder - unlinking from list} -constraints {
     destroy .b .t2 .t3 .t
 } -result {{{4 1} {3 0} {2 0} {1 0}} {{4 1} {2 0} {1 0}} {{4 1} {2 0}} {{2 0}} {}}
 
+
 test border-3.1 {FreeBorderObjProc} -constraints {
     testborder
 } -setup {
     set result {}
+    proc copy {s} {return [string index $s 0][string range $s 1 end]}
 } -body {
-    set x [join purple]
+    set x [copy purple]
     button .b -bg $x -text .b1
-    set y [join purple]
+    set y [copy purple]
     .b configure -bg $y
-    set z [join purple]
+    set z [copy purple]
     .b configure -bg $z
     lappend result [testborder purple]
     set x red
@@ -148,6 +150,7 @@ test border-3.1 {FreeBorderObjProc} -constraints {
     set y bogus
     return $result
 } -cleanup {
+    rename copy {}
     destroy .b
 } -result {{{1 3}} {{1 2}} {{1 1}} {}}
 

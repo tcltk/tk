@@ -1033,7 +1033,7 @@ Tk_WmObjCmd(
 	WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT, WMOPT_POSITIONFROM,
 	WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM, WMOPT_STACKORDER,
 	WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT, WMOPT_WITHDRAW };
-    int index, length;
+    int index;
     const char *argv1;
     TkWindow *winPtr;
     Tk_Window targetWin;
@@ -1045,9 +1045,9 @@ Tk_WmObjCmd(
 	return TCL_ERROR;
     }
 
-    argv1 = Tcl_GetStringFromObj(objv[1], &length);
-    if ((argv1[0] == 't') && (strncmp(argv1, "tracing", (size_t) length) == 0)
-	    && (length >= 3)) {
+    argv1 = Tcl_GetString(objv[1]);
+    if ((argv1[0] == 't') && (strncmp(argv1, "tracing", objv[1]->length) == 0)
+	    && (objv[1]->length >= 3)) {
 	int wmTracing;
 
 	if ((objc != 2) && (objc != 3)) {
@@ -1457,7 +1457,6 @@ WmClientCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    int length;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name?");
@@ -1470,7 +1469,7 @@ WmClientCmd(
 	}
 	return TCL_OK;
     }
-    argv3 = Tcl_GetStringFromObj(objv[3], &length);
+    argv3 = Tcl_GetString(objv[3]);
     if (argv3[0] == 0) {
 	if (wmPtr->clientMachine != NULL) {
 	    ckfree(wmPtr->clientMachine);
@@ -1486,7 +1485,7 @@ WmClientCmd(
     if (wmPtr->clientMachine != NULL) {
 	ckfree(wmPtr->clientMachine);
     }
-    wmPtr->clientMachine = ckalloc(length + 1);
+    wmPtr->clientMachine = ckalloc(objv[3]->length + 1);
     strcpy(wmPtr->clientMachine, argv3);
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	XTextProperty textProp;
@@ -2072,7 +2071,6 @@ WmGroupCmd(
     Tk_Window tkwin2;
     WmInfo *wmPtr2;
     const char *argv3;
-    int length;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?pathName?");
@@ -2084,7 +2082,7 @@ WmGroupCmd(
 	}
 	return TCL_OK;
     }
-    argv3 = Tcl_GetStringFromObj(objv[3], &length);
+    argv3 = Tcl_GetString(objv[3]);
     if (*argv3 == '\0') {
 	wmPtr->hints.flags &= ~WindowGroupHint;
 	if (wmPtr->leaderName != NULL) {
@@ -2112,7 +2110,7 @@ WmGroupCmd(
 	}
 	wmPtr->hints.window_group = Tk_WindowId(wmPtr2->wrapperPtr);
 	wmPtr->hints.flags |= WindowGroupHint;
-	wmPtr->leaderName = ckalloc(length + 1);
+	wmPtr->leaderName = ckalloc(objv[3]->length + 1);
 	strcpy(wmPtr->leaderName, argv3);
     }
     UpdateHints(winPtr);
@@ -2334,7 +2332,6 @@ WmIconnameCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    int length;
 
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newName?");
@@ -2349,8 +2346,8 @@ WmIconnameCmd(
 	if (wmPtr->iconName != NULL) {
 	    ckfree(wmPtr->iconName);
 	}
-	argv3 = Tcl_GetStringFromObj(objv[3], &length);
-	wmPtr->iconName = ckalloc(length + 1);
+	argv3 = Tcl_GetString(objv[3]);
+	wmPtr->iconName = ckalloc(objv[3]->length + 1);
 	strcpy(wmPtr->iconName, argv3);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	    UpdateTitle(winPtr);
@@ -3471,7 +3468,6 @@ WmTitleCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    int length;
 
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newTitle?");
@@ -3487,8 +3483,8 @@ WmTitleCmd(
 	if (wmPtr->title != NULL) {
 	    ckfree(wmPtr->title);
 	}
-	argv3 = Tcl_GetStringFromObj(objv[3], &length);
-	wmPtr->title = ckalloc(length + 1);
+	argv3 = Tcl_GetString(objv[3]);
+	wmPtr->title = ckalloc(objv[3]->length + 1);
 	strcpy(wmPtr->title, argv3);
 
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {

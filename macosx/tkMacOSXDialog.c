@@ -24,6 +24,9 @@
 #define modalOther  -1
 #define modalError  -2
 
+/*Vars for filtering in "open file" dialog.*/
+NSMutableArray *openFileTypes;
+NSOpenPanel *openpanel;
 
 static const char *const colorOptionStrings[] = {
     "-initialcolor", "-parent", "-title", NULL
@@ -212,6 +215,7 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
     }
 }
 
+
 - (void) tkAlertDidEnd: (NSAlert *) alert returnCode: (NSInteger) returnCode
 	contextInfo: (void *) contextInfo
 {
@@ -247,6 +251,17 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 	ckfree(callbackInfo);
     }
 }
+
+- (void)selectFormat:(id)sender  {
+    NSPopUpButton *button                 = (NSPopUpButton *)sender;
+    NSInteger      selectedItemIndex      = [button indexOfSelectedItem];
+    openFileTypes = nil;
+    openFileTypes = [NSMutableArray array];
+    [openFileTypes addObject:[button titleOfSelectedItem]];
+    [openpanel setAllowedFileTypes:openFileTypes];
+
+}
+
 @end
 
 #pragma mark -
@@ -395,8 +410,8 @@ Tk_GetOpenFileObjCmd(
     NSString *directory = nil, *filename = nil;
     NSString *message, *title, *type;
     NSWindow *parent;
-    NSMutableArray *fileTypes = nil;
-    NSOpenPanel *panel = [NSOpenPanel openPanel];
+    //  NSOpenPanel *panel = [NSOpenPanel openPanel];
+    openpanel =  [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
 
@@ -432,12 +447,13 @@ Tk_GetOpenFileObjCmd(
 	    if (len) {
 		filename = [[[NSString alloc] initWithUTF8String:str]
 			autorelease];
+		[openpanel setNameFieldStringValue:filename];
 	    }
 	    break;
 	case OPEN_MESSAGE:
 	    message = [[NSString alloc] initWithUTF8String:
 		    Tcl_GetString(objv[i + 1])];
-	    [panel setMessage:message];
+	    [openpanel setMessage:message];
 	    [message release];
 	    break;
 	case OPEN_MULTIPLE:
@@ -457,7 +473,7 @@ Tk_GetOpenFileObjCmd(
 	case OPEN_TITLE:
 	    title = [[NSString alloc] initWithUTF8String:
 		    Tcl_GetString(objv[i + 1])];
-	    [panel setTitle:title];
+	    [openpanel setTitle:title];
 	    [title release];
 	    break;
 	case OPEN_TYPEVARIABLE:
@@ -468,9 +484,9 @@ Tk_GetOpenFileObjCmd(
 	    break;
 	}
     }
-    [panel setAllowsMultipleSelection:multiple];
+    [openpanel setAllowsMultipleSelection:multiple];
     if (fl.filters) {
-	fileTypes = [NSMutableArray array];
+	openFileTypes = [NSMutableArray array];
 	for (FileFilter *filterPtr = fl.filters; filterPtr;
 		filterPtr = filterPtr->next) {
 	    for (FileFilterClause *clausePtr = filterPtr->clauses; clausePtr;
@@ -483,8 +499,8 @@ Tk_GetOpenFileObjCmd(
 		    }
 		    if (*str) {
 			type = [[NSString alloc] initWithUTF8String:str];
-			if (![fileTypes containsObject:type]) {
-			    [fileTypes addObject:type];
+			if (![openFileTypes containsObject:type]) {
+			    [openFileTypes addObject:type];
 			}
 			[type release];
 		    }
@@ -493,15 +509,33 @@ Tk_GetOpenFileObjCmd(
 			mfPtr = mfPtr->next) {
 		    if (mfPtr->type) {
 			type = NSFileTypeForHFSTypeCode(mfPtr->type);
-			if (![fileTypes containsObject:type]) {
-			    [fileTypes addObject:type];
+			if (![openFileTypes containsObject:type]) {
+			    /*Do nothing here, type and creator codes now ignored on macOS.*/
 			}
 		    }
 		}
 	    }
 	}
     }
-    [panel setAllowedFileTypes:fileTypes];
+
+    /*Accessory view for file filtering. Adapted from http://codefromabove.com/2015/01/nssavepanel-adding-an-accessory-view/ */
+    NSView  *accessoryView = [[NSView alloc] initWithFrame:NSMakeRect(0.0, 0.0, 200, 32.0)];
+    NSTextField *label = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 60, 22)];
+    [label setEditable:NO];
+    [label setStringValue:@"Enable:"];
+    [label setBordered:NO];
+    [label setBezeled:NO];
+    [label setDrawsBackground:NO];
+
+    NSPopUpButton *popupButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(50.0, 2, 140, 22.0) pullsDown:NO];
+    [popupButton addItemsWithTitles:openFileTypes];
+    [popupButton setAction:@selector(selectFormat:)];
+
+    [accessoryView addSubview:label];
+    [accessoryView addSubview:popupButton];
+    [openpanel setAllowedFileTypes:openFileTypes];
+
+    [openpanel setAccessoryView:accessoryView];
     if (cmdObj) {
 	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
@@ -516,33 +550,33 @@ Tk_GetOpenFileObjCmd(
     if (haveParentOption && parent && ![parent attachedSheet]) {
 	    parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	[panel beginSheetForDirectory:directory
+	[openpanel beginSheetForDirectory:directory
 	       file:filename
-	       types:fileTypes
+	       types:openFileTypes
 	       modalForWindow:parent
 	       modalDelegate:NSApp
 	       didEndSelector:
 		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
 	       contextInfo:callbackInfo];
 #else
-	[panel setAllowedFileTypes:fileTypes];
-	[panel setDirectoryURL:getFileURL(directory, filename)];
-	[panel beginSheetModalForWindow:parent
+	[openpanel setAllowedFileTypes:openFileTypes];
+	[openpanel setDirectoryURL:getFileURL(directory, filename)];
+	[openpanel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
-	       { [NSApp tkFilePanelDidEnd:panel
+	       { [NSApp tkFilePanelDidEnd:openpanel
 		       returnCode:returnCode
 		       contextInfo:callbackInfo ]; } ];
 #endif
-	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:panel];
+	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:openpanel];
     } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	modalReturnCode = [panel runModalForDirectory:directory
+	modalReturnCode = [openpanel runModalForDirectory:directory
 				 file:filename];
 #else
-	[panel setDirectoryURL:getFileURL(directory, filename)];
-	modalReturnCode = [panel runModal];
+	[openpanel setDirectoryURL:getFileURL(directory, filename)];
+	modalReturnCode = [openpanel runModal];
 #endif
-	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
+	[NSApp tkFilePanelDidEnd:openpanel returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
@@ -562,6 +596,7 @@ Tk_GetOpenFileObjCmd(
     TkFreeFileFilters(&fl);
     return result;
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -643,6 +678,7 @@ Tk_GetSaveFileObjCmd(
 	    if (len) {
 		filename = [[[NSString alloc] initWithUTF8String:str]
 			autorelease];
+		[panel setNameFieldStringValue:filename];
 	    }
 	    break;
 	case SAVE_MESSAGE:
