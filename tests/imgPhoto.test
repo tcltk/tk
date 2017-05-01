@@ -953,6 +953,44 @@ test imgPhoto-10.1 {Tk_ImgPhotoPutBlock procedure} -setup {
     photo1 put "{#00ff00 #00ff00}" -to 2 0
     list [photo1 get 2 0] [photo1 get 3 0] [photo1 get 4 0]
 } -result {{0 255 0} {0 255 0} {255 0 0}}
+test imgPhoto-10.2 {Tk_ImgPhotoPutBlock, same source and dest img} -constraints {
+    hasTeapotPhoto
+} -setup {
+    imageCleanup
+} -body {
+    # Test for bug e4336bef5d
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2 -file $teapotPhotoFile
+    photo2 copy photo1 -to 1 2
+    photo1 copy photo1 -to 1 2
+    string equal [photo1 data] [photo2 data]
+} -cleanup {
+    imageCleanup
+} -result {1}
+test imgPhoto-10.3 {Tk_ImgPhotoPutBlock, same source and dest img} -constraints {
+    hasTeapotPhoto
+} -setup {
+    imageCleanup
+} -body {
+    # Test for bug e4336bef5d
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2 -file $teapotPhotoFile
+    photo2 copy photo1 -from 2 1 -to 4 5 300 300
+    photo1 copy photo1 -from 2 1 -to 4 5 300 300
+    string equal [photo1 data] [photo2 data]
+} -cleanup {
+    imageCleanup
+} -result {1}
+test imgPhoto-10.4 {Tk_ImgPhotoPutBlock, empty image} -setup {
+    imageCleanup
+} -body {
+    image create photo photo1
+    photo1 copy photo1 -to 0 5 10 20
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    imageCleanup
+} -result {0 0}
+
 
 test imgPhoto-11.1 {Tk_FindPhoto} -setup {
     imageCleanup
@@ -972,6 +1010,41 @@ test imgPhoto-12.1 {Tk_PhotoPutZoomedBlock} -constraints hasTeapotPhoto -body {
 } -cleanup {
     image delete p3
 } -result {{19 92 192} {169 117 90} 512 512 {19 92 192}}
+test imgPhoto-12.2 {Tk_ImgPhotoPutZoomedBlock, same source and dest img} -constraints {
+    hasTeapotPhoto
+} -setup {
+    imageCleanup
+} -body {
+    # Test for bug e4336bef5d
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2 -file $teapotPhotoFile
+    photo2 copy photo1 -to 0 1 200 200 -zoom 2 3
+    photo1 copy photo1 -to 0 1 200 200 -zoom 2 3
+    string equal [photo1 data] [photo2 data]
+} -cleanup {
+    imageCleanup
+} -result {1}
+test imgPhoto-12.3 {Tk_ImgPhotoPutZoomedBlock, same source and dest img} -setup {
+    imageCleanup
+} -body {
+    # Test for bug e4336bef5d
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2 -file $teapotPhotoFile
+    photo2 copy photo1 -from 1 0 -to 4 5 300 300 -zoom 1 2
+    photo1 copy photo1 -from 1 0 -to 4 5 300 300 -zoom 1 2
+    string equal [photo1 data] [photo2 data]
+} -cleanup {
+    imageCleanup
+} -result {1}
+test imgPhoto-12.4 {Tk_ImgPhotoPutZoomedBlock, empty image} -setup {
+    imageCleanup
+} -body {
+    image create photo photo1
+    photo1 copy photo1 -to 0 5 10 20
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    imageCleanup
+} -result {0 0}
 
 test imgPhoto-13.1 {check separation of images in different interpreters} -setup {
     imageCleanup
