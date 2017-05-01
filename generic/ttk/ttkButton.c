@@ -23,6 +23,7 @@ typedef struct
      * Text element resources:
      */
     Tcl_Obj *textObj;
+    Tcl_Obj *justifyObj;
     Tcl_Obj *textVariableObj;
     Tcl_Obj *underlineObj;
     Tcl_Obj *widthObj;
@@ -56,6 +57,9 @@ typedef struct
 
 static Tk_OptionSpec BaseOptionSpecs[] =
 {
+    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
+        "left", Tk_Offset(Base,base.justifyObj), -1,
+        TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	Tk_Offset(Base,base.textObj), -1,
 	0,0,GEOMETRY_CHANGED },
@@ -136,6 +140,15 @@ BaseCleanup(void *recordPtr)
     	TtkFreeImageSpec(basePtr->base.imageSpec);
 }
 
+static void
+BaseImageChanged(
+	ClientData clientData, int x, int y, int width, int height,
+	int imageWidth, int imageHeight)
+{
+    Base *basePtr = (Base *)clientData;
+    TtkResizeWidget(&basePtr->core);
+}
+
 static int BaseConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
     Base *basePtr = recordPtr;
@@ -149,8 +162,8 @@ static int BaseConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     }
 
     if (basePtr->base.imageObj) {
-	imageSpec = TtkGetImageSpec(
-	    interp, basePtr->core.tkwin, basePtr->base.imageObj);
+	imageSpec = TtkGetImageSpecEx(
+	    interp, basePtr->core.tkwin, basePtr->base.imageObj, BaseImageChanged, basePtr);
 	if (!imageSpec) {
 	    goto error;
 	}

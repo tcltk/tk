@@ -282,15 +282,16 @@ static char *EntryDisplayString(const char *showChar, int numChars)
 {
     char *displayString, *p;
     int size;
-    Tcl_UniChar ch;
-    char buf[TCL_UTF_MAX];
+    int ch;
+    char buf[6];
 
-    Tcl_UtfToUniChar(showChar, &ch);
-    size = Tcl_UniCharToUtf(ch, buf);
+    TkUtfToUniChar(showChar, &ch);
+    size = TkUniCharToUtf(ch, buf);
     p = displayString = ckalloc(numChars * size + 1);
 
     while (numChars--) {
-	p += Tcl_UniCharToUtf(ch, p);
+	memcpy(p, buf, size);
+	p += size;
     }
     *p = '\0';
 
@@ -405,7 +406,7 @@ ExpandPercents(
     int number, length;
     const char *string;
     int stringLength;
-    Tcl_UniChar ch;
+    int ch;
     char numStorage[2*TCL_INTEGER_SPACE];
 
     while (*template) {
@@ -429,7 +430,7 @@ ExpandPercents(
 	 */
 	++template; /* skip over % */
 	if (*template != '\0') {
-	    template += Tcl_UtfToUniChar(template, &ch);
+	    template += TkUtfToUniChar(template, &ch);
 	} else {
 	    ch = '%';
 	}
@@ -479,7 +480,7 @@ ExpandPercents(
 		string = Tk_PathName(entryPtr->core.tkwin);
 		break;
 	    default:
-		length = Tcl_UniCharToUtf(ch, numStorage);
+		length = TkUniCharToUtf(ch, numStorage);
 		numStorage[length] = '\0';
 		string = numStorage;
 		break;

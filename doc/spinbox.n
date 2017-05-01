@@ -219,15 +219,19 @@ were editing the spinbox widget from).  It is also recommended to not set an
 associated \fB\-textvariable\fR during validation, as that can cause the
 spinbox widget to become out of sync with the \fB\-textvariable\fR.
 .PP
-Also, the \fBvalidate\fR option will set itself to \fBnone\fR when the
-spinbox value gets changed because of adjustment of \fBfrom\fR or \fBto\fR
-and the \fBvalidateCommand\fR returns false. For instance
+Also, the \fB-validate\fR option will set itself to \fBnone\fR when the
+spinbox value gets changed because of adjustment of \fB-from\fR or \fB-to\fR
+and the \fB-validatecommand\fR returns false. For instance
 .CS
      \fIspinbox pathName \-from 1 \-to 10 \-validate all \-vcmd {return 0}\fR
 .CE
-will in fact set the \fBvalidate\fR option to \fBnone\fR because the default
-value for the spinbox gets changed (due to the \fBfrom\fR and \fBto\fR
+will in fact set the \fB-validate\fR option to \fBnone\fR because the default
+value for the spinbox gets changed (due to the \fB-from\fR and \fB-to\fR
 options) to a value not accepted by the validation script.
+.PP
+Moreover, forced validation is performed when invoking any spinbutton of
+the spinbox. If the validation script returns false in this situation,
+then the \fB-validate\fR option will be automatically set to \fBnone\fR.
 .SH "WIDGET COMMAND"
 .PP
 The \fBspinbox\fR command creates a new Tcl command whose

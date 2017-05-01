@@ -192,6 +192,9 @@ static void		CustomOptionFree(ClientData clientData,
 static int		TestpropObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
+static int		TestprintfObjCmd(ClientData dummy,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj * const objv[]);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int		TestwrapperObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
@@ -227,7 +230,7 @@ Tktest_Init(
 {
     static int initialized = 0;
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	return TCL_ERROR;
     }
     if (Tk_InitStubs(interp, TK_VERSION, 0) == NULL) {
@@ -239,7 +242,7 @@ Tktest_Init(
      */
 
     if (Tcl_PkgProvideEx(interp, "Tktest", TK_PATCH_LEVEL, NULL) == TCL_ERROR) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     Tcl_CreateObjCommand(interp, "square", SquareObjCmd, NULL, NULL);
@@ -263,6 +266,7 @@ Tktest_Init(
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testprop", TestpropObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 
@@ -452,7 +456,7 @@ TestcursorObjCmd(
  *	A standard Tcl result.
  *
  * Side effects:
- *	All the intepreters created by previous calls to "testnewapp" get
+ *	All the interpreters created by previous calls to "testnewapp" get
  *	deleted.
  *
  *----------------------------------------------------------------------
@@ -1893,6 +1897,60 @@ TestpropObjCmd(
     if (property != NULL) {
 	XFree(property);
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestpropObjCmd --
+ *
+ *	This function implements the "testprop" command. It fetches and prints
+ *	the value of a property on a window.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+	/* ARGSUSED */
+static int
+TestprintfObjCmd(
+    ClientData clientData,	/* Not used */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    char buffer[256];
+    Tcl_WideInt wideInt;
+#ifdef _WIN32
+    __int64 longLongInt;
+#else
+    long long longLongInt;
+#endif
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "wideint");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetWideIntFromObj(interp, objv[1], &wideInt) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    longLongInt = wideInt;
+
+    /* Just add a lot of arguments to sprintf. Reason: on AMD64, the first
+     * 4 or 6 arguments (we assume 8, just in case) might be put in registers,
+     * which still woudn't tell if the assumed size is correct: We want this
+     * test-case to fail if the 64-bit value is printed as truncated to 32-bit.
+     */
+    sprintf(buffer, "%s%s%s%s%s%s%s%s%" TCL_LL_MODIFIER "d %"
+	    TCL_LL_MODIFIER "u", "", "", "", "", "", "", "", "",
+	    (Tcl_WideInt)longLongInt, (Tcl_WideUInt)longLongInt);
+    Tcl_AppendResult(interp, buffer, NULL);
     return TCL_OK;
 }
 
