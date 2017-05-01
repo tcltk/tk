@@ -1572,12 +1572,12 @@ Tk_PostscriptPhoto(
 	    width, height, bpc, height, decode, displayOperation);
 
     /*
-     * Check the PhotoImageBlock information. We assume that:
-     *     if pixelSize is 1,2 or 4, the image is R,G,B,A;
-     *     if pixelSize is 3, the image is R,G,B and offset[3] is bogus.
+     * Check the PhotoImageBlock information.
      */
 
-    if (blockPtr->pixelSize == 3) {
+    if ((blockPtr->offset[3] == blockPtr->offset[0])
+	    || (blockPtr->offset[3] == blockPtr->offset[1])
+	    || (blockPtr->offset[3] == blockPtr->offset[2]) || ) {
 	/*
 	 * No alpha information: the whole image is opaque.
 	 */
