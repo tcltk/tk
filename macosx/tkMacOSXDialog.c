@@ -517,7 +517,7 @@ Tk_GetOpenFileObjCmd(
 	    }
 	}
     }
- 
+
     /*Accessory view for file filtering. Adapted from http://codefromabove.com/2015/01/nssavepanel-adding-an-accessory-view/ */
     NSView  *accessoryView = [[NSView alloc] initWithFrame:NSMakeRect(0.0, 0.0, 200, 32.0)];
     NSTextField *label = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 60, 22)];
@@ -526,15 +526,15 @@ Tk_GetOpenFileObjCmd(
     [label setBordered:NO];
     [label setBezeled:NO];
     [label setDrawsBackground:NO];
- 
+
     NSPopUpButton *popupButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(50.0, 2, 140, 22.0) pullsDown:NO];
     [popupButton addItemsWithTitles:openFileTypes];
     [popupButton setAction:@selector(selectFormat:)];
- 
+
     [accessoryView addSubview:label];
     [accessoryView addSubview:popupButton];
     [openpanel setAllowedFileTypes:openFileTypes];
- 
+
     [openpanel setAccessoryView:accessoryView];
     if (cmdObj) {
 	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
