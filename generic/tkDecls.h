@@ -18,9 +18,9 @@
 #endif
 
 #if defined(TK_NO_DEPRECATED) && defined(BUILD_tk)
-# define TK_DEPRECATED MODULE_SCOPE
+# define TK_DEPRECATED(msg) MODULE_SCOPE
 #else
-# define TK_DEPRECATED EXTERN
+# define TK_DEPRECATED(msg) EXTERN TCL_DEPRECATED_API(msg)
 #endif
 
 /*
@@ -287,7 +287,9 @@ EXTERN void		Tk_FreePixmap(Display *display, Pixmap pixmap);
 /* 76 */
 EXTERN void		Tk_FreeTextLayout(Tk_TextLayout textLayout);
 /* 77 */
-TK_DEPRECATED void	Tk_FreeXId(Display *display, XID xid);
+TK_DEPRECATED("function does nothing, call can be removed")
+void Tk_FreeXId(
+				Display *display, XID xid);
 /* 78 */
 EXTERN GC		Tk_GCForColor(XColor *colorPtr, Drawable drawable);
 /* 79 */
@@ -477,11 +479,14 @@ EXTERN int		Tk_ParseArgv(Tcl_Interp *interp, Tk_Window tkwin,
 				int *argcPtr, CONST84 char **argv,
 				const Tk_ArgvInfo *argTable, int flags);
 /* 144 */
-EXTERN void		Tk_PhotoPutBlock_NoComposite(Tk_PhotoHandle handle,
+TK_DEPRECATED("function signature changed")
+void Tk_PhotoPutBlock_NoComposite(
+				Tk_PhotoHandle handle,
 				Tk_PhotoImageBlock *blockPtr, int x, int y,
 				int width, int height);
 /* 145 */
-EXTERN void		Tk_PhotoPutZoomedBlock_NoComposite(
+TK_DEPRECATED("function signature changed")
+void Tk_PhotoPutZoomedBlock_NoComposite(
 				Tk_PhotoHandle handle,
 				Tk_PhotoImageBlock *blockPtr, int x, int y,
 				int width, int height, int zoomX, int zoomY,
@@ -492,14 +497,16 @@ EXTERN int		Tk_PhotoGetImage(Tk_PhotoHandle handle,
 /* 147 */
 EXTERN void		Tk_PhotoBlank(Tk_PhotoHandle handle);
 /* 148 */
-EXTERN void		Tk_PhotoExpand_Panic(Tk_PhotoHandle handle,
-				int width, int height);
+TK_DEPRECATED("function signature changed")
+void Tk_PhotoExpand_Panic(
+				Tk_PhotoHandle handle, int width, int height);
 /* 149 */
 EXTERN void		Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr,
 				int *heightPtr);
 /* 150 */
-EXTERN void		Tk_PhotoSetSize_Panic(Tk_PhotoHandle handle,
-				int width, int height);
+TK_DEPRECATED("function signature changed")
+void Tk_PhotoSetSize_Panic(
+				Tk_PhotoHandle handle, int width, int height);
 /* 151 */
 EXTERN int		Tk_PointToChar(Tk_TextLayout layout, int x, int y);
 /* 152 */
@@ -782,11 +789,15 @@ EXTERN void		Tk_SetMinimumRequestSize(Tk_Window tkwin,
 EXTERN void		Tk_SetCaretPos(Tk_Window tkwin, int x, int y,
 				int height);
 /* 246 */
-EXTERN void		Tk_PhotoPutBlock_Panic(Tk_PhotoHandle handle,
+TK_DEPRECATED("function signature changed")
+void Tk_PhotoPutBlock_Panic(
+				Tk_PhotoHandle handle,
 				Tk_PhotoImageBlock *blockPtr, int x, int y,
 				int width, int height, int compRule);
 /* 247 */
-EXTERN void		Tk_PhotoPutZoomedBlock_Panic(Tk_PhotoHandle handle,
+TK_DEPRECATED("function signature changed")
+void Tk_PhotoPutZoomedBlock_Panic(
+				Tk_PhotoHandle handle,
 				Tk_PhotoImageBlock *blockPtr, int x, int y,
 				int width, int height, int zoomX, int zoomY,
 				int subsampleX, int subsampleY, int compRule);
@@ -959,7 +970,7 @@ typedef struct TkStubs {
     void (*tk_FreeOptions) (const Tk_ConfigSpec *specs, char *widgRec, Display *display, int needFlags); /* 74 */
     void (*tk_FreePixmap) (Display *display, Pixmap pixmap); /* 75 */
     void (*tk_FreeTextLayout) (Tk_TextLayout textLayout); /* 76 */
-    void (*tk_FreeXId) (Display *display, XID xid); /* 77 */
+    TCL_DEPRECATED_API("function does nothing, call can be removed") void (*tk_FreeXId) (Display *display, XID xid); /* 77 */
     GC (*tk_GCForColor) (XColor *colorPtr, Drawable drawable); /* 78 */
     void (*tk_GeometryRequest) (Tk_Window tkwin, int reqWidth, int reqHeight); /* 79 */
     Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid colorName); /* 80 */
@@ -1026,13 +1037,13 @@ typedef struct TkStubs {
     Tk_Window (*tk_NameToWindow) (Tcl_Interp *interp, const char *pathName, Tk_Window tkwin); /* 141 */
     void (*tk_OwnSelection) (Tk_Window tkwin, Atom selection, Tk_LostSelProc *proc, ClientData clientData); /* 142 */
     int (*tk_ParseArgv) (Tcl_Interp *interp, Tk_Window tkwin, int *argcPtr, CONST84 char **argv, const Tk_ArgvInfo *argTable, int flags); /* 143 */
-    void (*tk_PhotoPutBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height); /* 144 */
-    void (*tk_PhotoPutZoomedBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY); /* 145 */
+    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoPutBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height); /* 144 */
+    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoPutZoomedBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY); /* 145 */
     int (*tk_PhotoGetImage) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr); /* 146 */
     void (*tk_PhotoBlank) (Tk_PhotoHandle handle); /* 147 */
-    void (*tk_PhotoExpand_Panic) (Tk_PhotoHandle handle, int width, int height); /* 148 */
+    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoExpand_Panic) (Tk_PhotoHandle handle, int width, int height); /* 148 */
     void (*tk_PhotoGetSize) (Tk_PhotoHandle handle, int *widthPtr, int *heightPtr); /* 149 */
-    void (*tk_PhotoSetSize_Panic) (Tk_PhotoHandle handle, int width, int height); /* 150 */
+    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoSetSize_Panic) (Tk_PhotoHandle handle, int width, int height); /* 150 */
     int (*tk_PointToChar) (Tk_TextLayout layout, int x, int y); /* 151 */
     int (*tk_PostscriptFontName) (Tk_Font tkfont, Tcl_DString *dsPtr); /* 152 */
     void (*tk_PreserveColormap) (Display *display, Colormap colormap); /* 153 */
@@ -1128,8 +1139,8 @@ typedef struct TkStubs {
     void (*tk_SetInternalBorderEx) (Tk_Window tkwin, int left, int right, int top, int bottom); /* 243 */
     void (*tk_SetMinimumRequestSize) (Tk_Window tkwin, int minWidth, int minHeight); /* 244 */
     void (*tk_SetCaretPos) (Tk_Window tkwin, int x, int y, int height); /* 245 */
-    void (*tk_PhotoPutBlock_Panic) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int compRule); /* 246 */
-    void (*tk_PhotoPutZoomedBlock_Panic) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule); /* 247 */
+    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoPutBlock_Panic) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int compRule); /* 246 */
+    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoPutZoomedBlock_Panic) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule); /* 247 */
     int (*tk_CollapseMotionEvents) (Display *display, int collapse); /* 248 */
     Tk_StyleEngine (*tk_RegisterStyleEngine) (const char *name, Tk_StyleEngine parent); /* 249 */
     Tk_StyleEngine (*tk_GetStyleEngine) (const char *name); /* 250 */
@@ -1735,6 +1746,16 @@ extern const TkStubs *tkStubsPtr;
     EXTERN void Tk_MainExW(int argc, wchar_t **argv,
 	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 #endif
+
+
+#ifdef TK_NO_DEPRECATED
+#undef Tk_PhotoPutBlock_NoComposite
+#undef Tk_PhotoPutZoomedBlock_NoComposite
+#undef Tk_PhotoExpand_Panic
+#undef Tk_PhotoPutBlock_Panic
+#undef Tk_PhotoPutZoomedBlock_Panic
+#undef Tk_PhotoSetSize_Panic
+#endif /* TK_NO_DEPRECATED */
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

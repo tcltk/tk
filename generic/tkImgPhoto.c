@@ -4063,7 +4063,7 @@ ImgPhotoPostscript(
  *
  *----------------------------------------------------------------------
  */
-
+#ifndef TK_NO_DEPRECATED
 void
 Tk_PhotoPutBlock_NoComposite(
     Tk_PhotoHandle handle,
@@ -4149,6 +4149,7 @@ Tk_PhotoSetSize_Panic(
 	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
     }
 }
+#endif /* TK_NO_DEPRECATED */
 
 /*
  * Local Variables:
