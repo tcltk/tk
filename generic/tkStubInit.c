@@ -43,6 +43,12 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 #ifdef TK_NO_DEPRECATED
 #define Tk_FreeXId 0
+#define Tk_PhotoPutBlock_NoComposite 0
+#define Tk_PhotoPutZoomedBlock_NoComposite 0
+#define Tk_PhotoExpand_Panic 0
+#define Tk_PhotoPutBlock_Panic 0
+#define Tk_PhotoPutZoomedBlock_Panic 0
+#define Tk_PhotoSetSize_Panic 0
 #else
 static void
 doNothing(void)
