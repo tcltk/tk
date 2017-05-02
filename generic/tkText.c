@@ -9692,8 +9692,6 @@ TriggerWatchEdit(
  *--------------------------------------------------------------
  */
 
-typedef void (*TkTextWatchGetIndexProc)(TkText *textPtr, TkTextIndex *indexPtr, void *clientData);
-
 void
 TkTextPerformWatchCmd(
     TkSharedText *sharedTextPtr,
