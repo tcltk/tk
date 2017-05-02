@@ -1242,10 +1242,14 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #   define TkUtfToUniChar Tcl_UtfToUniChar
 #   define TkUniCharToUtf Tcl_UniCharToUtf
 #   define TkUtfCharComplete Tcl_UtfCharComplete
+#   define TkUtfPrev Tcl_UtfPrev
+#   define TkUtfNext Tcl_UtfNext
 #else
     MODULE_SCOPE int TkUtfToUniChar(const char *, int *);
     MODULE_SCOPE int TkUniCharToUtf(int, char *);
     MODULE_SCOPE int TkUtfCharComplete(const char *, int);
+    MODULE_SCOPE const char *TkUtfPrev(const char *, const char *);
+    MODULE_SCOPE const char *TkUtfNext(const char *);
 #endif
 
 /*

@@ -1090,7 +1090,7 @@ Tk_MeasureChars(
     } else {
 	const char *p, *end, *next, *term;
 	int newX, termX, sawNonSpace, dstWrote;
-	Tcl_UniChar ch;
+	int ch;
 	FontFamily *familyPtr;
 	XChar2b buf[8];
 
@@ -1100,7 +1100,7 @@ Tk_MeasureChars(
 	 * individually.
 	 */
 
-	next = source + Tcl_UtfToUniChar(source, &ch);
+	next = source + TkUtfToUniChar(source, &ch);
 	newX = curX = termX = 0;
 
 	term = source;
@@ -1135,7 +1135,7 @@ Tk_MeasureChars(
 		break;
 	    }
 
-	    next += Tcl_UtfToUniChar(next, &ch);
+	    next += TkUtfToUniChar(next, &ch);
 	    if ((ch < 256) && isspace(ch)) {
 		if (sawNonSpace) {
 		    term = p;
@@ -1160,13 +1160,13 @@ Tk_MeasureChars(
 	     */
 
 	    curX = newX;
-	    p += Tcl_UtfToUniChar(p, &ch);
+	    p += TkUtfToUniChar(p, &ch);
 	}
 	if ((flags & TK_AT_LEAST_ONE) && (term == source) && (p < end)) {
 	    term = p;
 	    termX = curX;
 	    if (term == source) {
-		term += Tcl_UtfToUniChar(term, &ch);
+		term += TkUtfToUniChar(term, &ch);
 		termX = newX;
 	    }
 	} else if ((p >= end) || !(flags & TK_WHOLE_WORDS)) {
@@ -1279,7 +1279,7 @@ Tk_DrawChars(
     Tcl_DString runString;
     const char *p, *end, *next;
     int xStart, needWidth, window_width, do_width;
-    Tcl_UniChar ch;
+    int ch;
     FontFamily *familyPtr;
 #ifdef TK_DRAW_CHAR_XWINDOW_CHECK
     int rx, ry;
@@ -1314,7 +1314,7 @@ Tk_DrawChars(
     needWidth = fontPtr->font.fa.underline + fontPtr->font.fa.overstrike;
     for (p = source; p <= end; ) {
 	if (p < end) {
-	    next = p + Tcl_UtfToUniChar(p, &ch);
+	    next = p + TkUtfToUniChar(p, &ch);
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	} else {
 	    next = p + 1;
