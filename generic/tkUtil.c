@@ -1270,6 +1270,19 @@ int TkUniCharToUtf(int ch, char *buf)
     return size;
 }
 
+int TkUtfCharComplete(const char *source, int numBytes) {
+    if (Tcl_UtfCharComplete(source, numBytes) == 0) {
+	return 0;
+    }
+    /* There are enough bytes for a high surrogate. If the first
+     * 3 bytes form a high surrogate, this function should check
+     * whether there are enough bytes for a low surrogate too. */
+    if (((source[0]&0xFF) == 0xEB) && ((source[1]&0xF0) == 0xA0)
+	    && ((source[2]&0xC0) == 0x80)) {
+	return Tcl_UtfCharComplete(source+3, numBytes-3);
+    }
+    return 1;
+}
 
 #endif
 /*

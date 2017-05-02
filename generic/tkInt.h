@@ -1241,9 +1241,11 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #if TCL_UTF_MAX > 4
 #   define TkUtfToUniChar Tcl_UtfToUniChar
 #   define TkUniCharToUtf Tcl_UniCharToUtf
+#   define TkUtfCharComplete Tcl_UtfCharComplete
 #else
     MODULE_SCOPE int TkUtfToUniChar(const char *, int *);
     MODULE_SCOPE int TkUniCharToUtf(int, char *);
+    MODULE_SCOPE int TkUtfCharComplete(const char *, int);
 #endif
 
 /*
