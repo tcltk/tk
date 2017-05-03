@@ -1270,6 +1270,24 @@ int TkUniCharToUtf(int ch, char *buf)
     return size;
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfCharComplete --
+ *
+ *	Almost the same as Tcl_UtfCharComplete but check for surrogates if
+ *	TCL_UTF_MAX==3. So, up to 6 bytes might be required.
+ *
+ * Results:
+ *	return true if there are enough bytes in the buffer to form either
+ *	a single unicode character or a high/low surrogate pair.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
 int TkUtfCharComplete(const char *source, int numBytes) {
     if (Tcl_UtfCharComplete(source, numBytes) == 0) {
 	return 0;
@@ -1283,6 +1301,23 @@ int TkUtfCharComplete(const char *source, int numBytes) {
     }
     return 1;
 }
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfPrev --
+ *
+ *	Almost the same as Tcl_UtfPrev but check for surrogates if
+ *	TCL_UTF_MAX==3. So, the pointer might move up to 6 bytes.
+ *
+ * Results:
+ *	return a pointer to the previous unicode character.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
 
 const char *TkUtfPrev(const char *start, const char *source) {
     const char *p = Tcl_UtfPrev(start, source);
@@ -1298,6 +1333,23 @@ const char *TkUtfPrev(const char *start, const char *source) {
     }
     return p;
 }
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfNext --
+ *
+ *	Almost the same as Tcl_UtfNext but check for surrogates if
+ *	TCL_UTF_MAX==3. So, the pointer might move up to 6 bytes.
+ *
+ * Results:
+ *	return a pointer to the next unicode character.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
 
 const char *TkUtfNext(const char *source) {
     const char *p = Tcl_UtfNext(source);
