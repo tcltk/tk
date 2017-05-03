@@ -665,21 +665,11 @@ Tk_MeasureChars(
     curX = 0;
     curByte = 0;
     sawNonSpace = 0;
-    while (numBytes > 0) {
+    while (numBytes > 0 && TkUtfCharComplete(source, numBytes)
 	int unichar;
 
 	clen = TkUtfToUniChar(source, &unichar);
 	c = (FcChar32) unichar;
-
-	if (clen <= 0) {
-	    /*
-	     * This can't happen (but see #1185640)
-	     */
-
-	    *lengthPtr = curX;
-	    return curByte;
-	}
-
 	source += clen;
 	numBytes -= clen;
 	if (c < 256 && isspace(c)) {		/* I18N: ??? */

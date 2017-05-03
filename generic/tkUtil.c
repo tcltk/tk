@@ -1295,7 +1295,7 @@ int TkUtfCharComplete(const char *source, int numBytes) {
     /* There are enough bytes for a high surrogate. If the first
      * 3 bytes form a high surrogate, this function should check
      * whether there are enough bytes for a low surrogate too. */
-    if (((source[0]&0xFF) == 0xEB) && ((source[1]&0xF0) == 0xA0)
+    if (((source[0]&0xFF) == 0xED) && ((source[1]&0xF0) == 0xA0)
 	    && ((source[2]&0xC0) == 0x80)) {
 	return Tcl_UtfCharComplete(source+3, numBytes-3);
     }
@@ -1321,12 +1321,12 @@ int TkUtfCharComplete(const char *source, int numBytes) {
 
 const char *TkUtfPrev(const char *start, const char *source) {
     const char *p = Tcl_UtfPrev(start, source);
-    if (((source[0]&0xFF) == 0xEB) && ((source[1]&0xF0) == 0xB0)
+    if (((source[0]&0xFF) == 0xED) && ((source[1]&0xF0) == 0xB0)
 	    && ((source[2]&0xC0) == 0x80)) {
 	/* We are pointing to a low surrogate. If the previous
 	 * codepoint is a high surrogate, we want that in stead. */
 	const char *q = Tcl_UtfPrev(start, p);
-	if (((q[0]&0xFF) == 0xEB) && ((q[1]&0xF0) == 0xA0)
+	if (((q[0]&0xFF) == 0xED) && ((q[1]&0xF0) == 0xA0)
 		&& ((q[2]&0xC0) == 0x80)) {
 	    p = q;
 	}
@@ -1353,12 +1353,12 @@ const char *TkUtfPrev(const char *start, const char *source) {
 
 const char *TkUtfNext(const char *source) {
     const char *p = Tcl_UtfNext(source);
-    if (((source[0]&0xFF) == 0xEB) && ((source[1]&0xF0) == 0xA0)
+    if (((source[0]&0xFF) == 0xED) && ((source[1]&0xF0) == 0xA0)
 	    && ((source[2]&0xC0) == 0x80)) {
 	const char *q = Tcl_UtfNext(p);
 	/* We are pointing to a high surrogate. If the next
 	 * codepoint is a low surrogate, we want that in stead. */
-	if (((q[0]&0xFF) == 0xEB) && ((q[1]&0xF0) == 0xB0)
+	if (((q[0]&0xFF) == 0xED) && ((q[1]&0xF0) == 0xB0)
 		&& ((q[2]&0xC0) == 0x80)) {
 	    p = q;
 	}
