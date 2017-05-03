@@ -80,7 +80,7 @@ TkpFontPkgInit(
 static XftFont *
 GetFont(
     UnixFtFont *fontPtr,
-    FcChar32 ucs4,
+    int ucs4,
     double angle)
 {
     int i;
@@ -89,7 +89,7 @@ GetFont(
 	for (i = 0; i < fontPtr->nfaces; i++) {
 	    FcCharSet *charset = fontPtr->faces[i].charset;
 
-	    if (charset && FcCharSetHasChar(charset, ucs4)) {
+	    if (charset && FcCharSetHasChar(charset, (FcChar32)ucs4)) {
 		break;
 	    }
 	}
@@ -620,9 +620,7 @@ TkpGetFontAttrsForChar(
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
 				/* Structure describing the logical font */
-    FcChar32 ucs4 = (FcChar32) c;
-				/* UCS-4 character to map */
-    XftFont *ftFont = GetFont(fontPtr, ucs4, 0.0);
+    XftFont *ftFont = GetFont(fontPtr, c, 0.0);
 				/* Actual font used to render the character */
 
     GetTkFontAttributes(ftFont, faPtr);
@@ -667,21 +665,11 @@ Tk_MeasureChars(
     curX = 0;
     curByte = 0;
     sawNonSpace = 0;
-    while (numBytes > 0) {
+    while (numBytes > 0 && TkUtfCharComplete(source, numBytes)
 	Tcl_UniChar unichar;
 
 	clen = Tcl_UtfToUniChar(source, &unichar);
 	c = (FcChar32) unichar;
-
-	if (clen <= 0) {
-	    /*
-	     * This can't happen (but see #1185640)
-	     */
-
-	    *lengthPtr = curX;
-	    return curByte;
-	}
-
 	source += clen;
 	numBytes -= clen;
 	if (c < 256 && isspace(c)) {		/* I18N: ??? */
@@ -876,18 +864,12 @@ Tk_DrawChars(
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
     nspec = 0;
-    while (numBytes > 0 && x <= maxCoord && y <= maxCoord) {
+    while (numBytes > 0 && TkUtfCharComplete(source, numBytes)
+	    && x <= maxCoord && y <= maxCoord) {
 	XftFont *ftFont;
-	FcChar32 c;
+	int c;
 
-	clen = FcUtf8ToUcs4((FcChar8 *) source, &c, numBytes);
-	if (clen <= 0) {
-	    /*
-	     * This should not happen, but it can.
-	     */
-
-	    goto doUnderlineStrikeout;
-	}
+	clen = TkUtfToUniChar(source, &c);
 	source += clen;
 	numBytes -= clen;
 
@@ -913,7 +895,6 @@ Tk_DrawChars(
 	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
     }
 
-  doUnderlineStrikeout:
     if (tsdPtr->clipRegion != None) {
 	XftDrawSetClip(fontPtr->ftDraw, None);
     }
@@ -1008,19 +989,12 @@ TkDrawAngledChars(
     currentFtFont = NULL;
     originX = originY = 0;		/* lint */
 
-    while (numBytes > 0 && x <= maxCoord && x >= minCoord && y <= maxCoord
-	    && y >= minCoord) {
+    while (numBytes > 0 && TkUtfCharComplete(source, numBytes)
+	    && x <= maxCoord && x >= minCoord && y <= maxCoord && y >= minCoord) {
 	XftFont *ftFont;
-	FcChar32 c;
+	int c;
 
-	clen = FcUtf8ToUcs4((FcChar8 *) source, &c, numBytes);
-	if (clen <= 0) {
-	    /*
-	     * This should not happen, but it can.
-	     */
-
-	    goto doUnderlineStrikeout;
-	}
+	clen = TkUtfToUniChar(source, &c);
 	source += clen;
 	numBytes -= clen;
 
@@ -1084,19 +1058,12 @@ TkDrawAngledChars(
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
     nspec = 0;
-    while (numBytes > 0 && x <= maxCoord && x >= minCoord
-	    && y <= maxCoord && y >= minCoord) {
+    while (numBytes > 0 && TkUtfCharComplete(source, numBytes)
+	    && x <= maxCoord && x >= minCoord && y <= maxCoord && y >= minCoord) {
 	XftFont *ftFont, *ft0Font;
-	FcChar32 c;
+	int c;
 
-	clen = FcUtf8ToUcs4((FcChar8 *) source, &c, numBytes);
-	if (clen <= 0) {
-	    /*
-	     * This should not happen, but it can.
-	     */
-
-	    goto doUnderlineStrikeout;
-	}
+	clen = TkUtfToUniChar(source, &c);
 	source += clen;
 	numBytes -= clen;
 
@@ -1124,7 +1091,6 @@ TkDrawAngledChars(
     }
 #endif /* XFT_HAS_FIXED_ROTATED_PLACEMENT */
 
-  doUnderlineStrikeout:
     if (tsdPtr->clipRegion != None) {
 	XftDrawSetClip(fontPtr->ftDraw, None);
     }

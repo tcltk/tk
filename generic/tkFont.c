@@ -2803,7 +2803,7 @@ Tk_CharBbox(
 		x += chunkPtr->x;
 	    }
 	    if (widthPtr != NULL) {
-		Tk_MeasureChars(tkfont, end, Tcl_UtfNext(end) - end,
+		Tk_MeasureChars(tkfont, end, TkUtfNext(end) - end,
 			-1, 0, &w);
 	    }
 	    goto check;

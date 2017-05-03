@@ -741,6 +741,20 @@ ImgPhotoCmd(
 	}
 
 	/*
+	 * Set the destination image size if the -shrink option was specified.
+	 */
+
+	if (options.options & OPT_SHRINK) {
+	    if (ImgPhotoSetSize(masterPtr, options.toX2,
+		    options.toY2) != TCL_OK) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
+		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+		return TCL_ERROR;
+	    }
+	}
+
+	/*
 	 * Copy the image data over using Tk_PhotoPutZoomedBlock.
 	 */
 
@@ -755,22 +769,6 @@ ImgPhotoCmd(
 		    options.subsampleX, options.subsampleY,
 		    options.compositingRule);
 	
-	/*
-	 * Set the destination image size if the -shrink option was specified.
-	 * This has to be done _after_ copying the data. Otherwise, if source 
-	 * and destination are the same image, block.pixelPtr would point to
-	 * an invalid memory block (bug 5239fd749b)
-	 */
-
-	if (options.options & OPT_SHRINK) {
-	    if (ImgPhotoSetSize(masterPtr, options.toX2,
-		    options.toY2) != TCL_OK) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
-		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
-		return TCL_ERROR;
-	    }
-	}
 
 	if (options.background) {
 	    Tk_FreeColor(options.background);
@@ -2943,7 +2941,7 @@ Tk_PhotoPutBlock(
 {
     register PhotoMaster *masterPtr = (PhotoMaster *) handle;
     Tk_PhotoImageBlock sourceBlock;
-    unsigned char *memToFree = NULL;
+    unsigned char *memToFree;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
     int wLeft, hLeft, wCopy, hCopy, pitch;
     unsigned char *srcPtr, *srcLinePtr, *destPtr, *destLinePtr;
@@ -2973,23 +2971,24 @@ Tk_PhotoPutBlock(
 
     /*
      * Fix for bug e4336bef5d:
-     * 
+     *
      * Make a local copy of *blockPtr, as we might have to change some
      * of its fields and don't want to interfere with the caller's data.
-     * 
-     * If source and destination are the same image, create a copy  of the 
+     *
+     * If source and destination are the same image, create a copy  of the
      * source data in our local sourceBlock.
-     * 
+     *
      * To find out, just comparing the pointers is not enough - they might have
      * different values and still point to the same block of memory. (e.g.
      * if the -from option was passed to [imageName copy])
      */
     sourceBlock = *blockPtr;
-    if (sourceBlock.pixelPtr >= masterPtr->pix32 
+    memToFree = NULL;
+    if (sourceBlock.pixelPtr >= masterPtr->pix32
 	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
 	    * masterPtr->height * 4) {
-	sourceBlock.pixelPtr = (unsigned char *)
-	    attemptckalloc(sourceBlock.height * sourceBlock.pitch);
+	sourceBlock.pixelPtr = attemptckalloc(sourceBlock.height
+		* sourceBlock.pitch);
 	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2999,9 +2998,10 @@ Tk_PhotoPutBlock(
 	    return TCL_ERROR;
 	}
 	memToFree = sourceBlock.pixelPtr;
-	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, sourceBlock.height 
+	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, sourceBlock.height
 	    * sourceBlock.pitch);
     }
+
 
     xEnd = x + width;
     yEnd = y + height;
@@ -3316,15 +3316,14 @@ Tk_PhotoPutBlock(
 
     Tk_ImageChanged(masterPtr->tkMaster, x, y, width, height,
 	    masterPtr->width, masterPtr->height);
-    if (memToFree != NULL) {
-	ckfree((char *) memToFree);
-    }
+
+    if (memToFree) ckfree(memToFree);
+
     return TCL_OK;
 
-errorExit:
-    if (memToFree != NULL) {
-	ckfree(memToFree);
-    }
+  errorExit:
+    if (memToFree) ckfree(memToFree);
+
     return TCL_ERROR;
 }
 
@@ -3367,8 +3366,8 @@ Tk_PhotoPutZoomedBlock(
 				 * transparent pixels. */
 {
     register PhotoMaster *masterPtr = (PhotoMaster *) handle;
-    Tk_PhotoImageBlock sourceBlock;
-    unsigned char *memToFree = NULL;
+    register Tk_PhotoImageBlock sourceBlock;
+    unsigned char *memToFree;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
     int wLeft, hLeft, wCopy, hCopy, blockWid, blockHt;
     unsigned char *srcPtr, *srcLinePtr, *srcOrigPtr, *destPtr, *destLinePtr;
@@ -3409,20 +3408,21 @@ Tk_PhotoPutZoomedBlock(
      * Fix for Bug e4336bef5d:
      * Make a local copy of *blockPtr, as we might have to change some
      * of its fields and don't want to interfere with the caller's data.
-     * 
-     * If source and destination are the same image, create a copy  of the 
+     *
+     * If source and destination are the same image, create a copy  of the
      * source data in our local sourceBlock.
-     * 
+     *
      * To find out, just comparing the pointers is not enough - they might have
      * different values and still point to the same block of memory. (e.g.
      * if the -from option was passed to [imageName copy])
      */
     sourceBlock = *blockPtr;
-    if (sourceBlock.pixelPtr >= masterPtr->pix32 
+    memToFree = NULL;
+    if (sourceBlock.pixelPtr >= masterPtr->pix32
 	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
 	    * masterPtr->height * 4) {
-	sourceBlock.pixelPtr = (unsigned char *)
-	    attemptckalloc(sourceBlock.height * sourceBlock.pitch);
+	sourceBlock.pixelPtr = attemptckalloc(sourceBlock.height
+		* sourceBlock.pitch);
 	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3432,7 +3432,7 @@ Tk_PhotoPutZoomedBlock(
 	    return TCL_ERROR;
 	}
 	memToFree = sourceBlock.pixelPtr;
-	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, sourceBlock.height 
+	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, sourceBlock.height
 	    * sourceBlock.pitch);
     }
 
@@ -3660,15 +3660,14 @@ Tk_PhotoPutZoomedBlock(
 
     Tk_ImageChanged(masterPtr->tkMaster, x, y, width, height, masterPtr->width,
 	    masterPtr->height);
-    if (memToFree != NULL) {
-	ckfree((char *) memToFree);
-    }
+
+    if (memToFree) ckfree(memToFree);
+
     return TCL_OK;
 
-errorExit:
-    if (memToFree != NULL) {
-	ckfree((char *) memToFree);
-    }
+  errorExit:
+    if (memToFree) ckfree(memToFree);
+
     return TCL_ERROR;
 }
 

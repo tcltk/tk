@@ -527,7 +527,7 @@ GetEntryText(
 	    if (*p == '&') {
 		Tcl_DStringAppend(&itemString, "&", 1);
 	    }
-	    next = Tcl_UtfNext(p);
+	    next = TkUtfNext(p);
 	    Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	}
 	if (mePtr->accelLength > 0) {
@@ -536,7 +536,7 @@ GetEntryText(
 		if (*p == '&') {
 		    Tcl_DStringAppend(&itemString, "&", 1);
 		}
-		next = Tcl_UtfNext(p);
+		next = TkUtfNext(p);
 		Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	    }
 	}
@@ -1972,7 +1972,7 @@ DrawMenuUnderline(
 
 	    label = Tcl_GetString(mePtr->labelPtr);
 	    start = Tcl_UtfAtIndex(label, mePtr->underline);
-	    end = Tcl_UtfNext(start);
+	    end = TkUtfNext(start);
 	    Tk_UnderlineChars(menuPtr->display, d,
 		    gc, tkfont, label, x + mePtr->indicatorSpace,
 		    y + (height + fmPtr->ascent - fmPtr->descent) / 2,

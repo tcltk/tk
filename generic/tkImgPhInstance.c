@@ -1266,7 +1266,7 @@ AllocateColors(
 		}
 	    } else {
 		/*
-		 * Monochrome display - allocate the shades of grey we want.
+		 * Monochrome display - allocate the shades of gray we want.
 		 */
 
 		for (i = 0; i < numColors; ++i) {

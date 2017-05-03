@@ -814,18 +814,6 @@ test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constrain
     image delete photo1
     file delete ./-teapotPhotoFile
 } -result {}
-test imgPhoto-4.76 {ImgPhotoCmd procedure: copy to same image} -constraints {
-    hasTeapotPhoto 
-} -setup {
-    imageCleanup
-    image create photo photo1 -file $teapotPhotoFile
-} -body {
-    # regression test for bug 5239fd749b
-    photo1 copy photo1 -to 0 0 2000 1000
-    photo1 copy photo1 -subsample 2 2 -shrink
-} -cleanup {
-    imageCleanup
-} -result {}
 
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -constraints {
     hasTeapotPhoto
@@ -965,6 +953,44 @@ test imgPhoto-10.1 {Tk_ImgPhotoPutBlock procedure} -setup {
     photo1 put "{#00ff00 #00ff00}" -to 2 0
     list [photo1 get 2 0] [photo1 get 3 0] [photo1 get 4 0]
 } -result {{0 255 0} {0 255 0} {255 0 0}}
+test imgPhoto-10.2 {Tk_ImgPhotoPutBlock, same source and dest img} -constraints {
+    hasTeapotPhoto
+} -setup {
+    imageCleanup
+} -body {
+    # Test for bug e4336bef5d
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2 -file $teapotPhotoFile
+    photo2 copy photo1 -to 1 2
+    photo1 copy photo1 -to 1 2
+    string equal [photo1 data] [photo2 data]
+} -cleanup {
+    imageCleanup
+} -result {1}
+test imgPhoto-10.3 {Tk_ImgPhotoPutBlock, same source and dest img} -constraints {
+    hasTeapotPhoto
+} -setup {
+    imageCleanup
+} -body {
+    # Test for bug e4336bef5d
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2 -file $teapotPhotoFile
+    photo2 copy photo1 -from 2 1 -to 4 5 300 300
+    photo1 copy photo1 -from 2 1 -to 4 5 300 300
+    string equal [photo1 data] [photo2 data]
+} -cleanup {
+    imageCleanup
+} -result {1}
+test imgPhoto-10.4 {Tk_ImgPhotoPutBlock, empty image} -setup {
+    imageCleanup
+} -body {
+    image create photo photo1
+    photo1 copy photo1 -to 0 5 10 20
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    imageCleanup
+} -result {0 0}
+
 
 test imgPhoto-11.1 {Tk_FindPhoto} -setup {
     imageCleanup
