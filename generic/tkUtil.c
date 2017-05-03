@@ -1270,6 +1270,101 @@ int TkUniCharToUtf(int ch, char *buf)
     return size;
 }
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfCharComplete --
+ *
+ *	Almost the same as Tcl_UtfCharComplete but check for surrogates if
+ *	TCL_UTF_MAX==3. So, up to 6 bytes might be required.
+ *
+ * Results:
+ *	return true if there are enough bytes in the buffer to form either
+ *	a single unicode character or a high/low surrogate pair.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int TkUtfCharComplete(const char *source, int numBytes) {
+    if (Tcl_UtfCharComplete(source, numBytes) == 0) {
+	return 0;
+    }
+    /* There are enough bytes for a high surrogate. If the first
+     * 3 bytes form a high surrogate, this function should check
+     * whether there are enough bytes for a low surrogate too. */
+    if (((source[0]&0xFF) == 0xED) && ((source[1]&0xF0) == 0xA0)
+	    && ((source[2]&0xC0) == 0x80)) {
+	return Tcl_UtfCharComplete(source+3, numBytes-3);
+    }
+    return 1;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfPrev --
+ *
+ *	Almost the same as Tcl_UtfPrev but check for surrogates if
+ *	TCL_UTF_MAX==3. So, the pointer might move up to 6 bytes.
+ *
+ * Results:
+ *	return a pointer to the previous unicode character.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+const char *TkUtfPrev(const char *start, const char *source) {
+    const char *p = Tcl_UtfPrev(start, source);
+    if (((source[0]&0xFF) == 0xED) && ((source[1]&0xF0) == 0xB0)
+	    && ((source[2]&0xC0) == 0x80)) {
+	/* We are pointing to a low surrogate. If the previous
+	 * codepoint is a high surrogate, we want that in stead. */
+	const char *q = Tcl_UtfPrev(start, p);
+	if (((q[0]&0xFF) == 0xED) && ((q[1]&0xF0) == 0xA0)
+		&& ((q[2]&0xC0) == 0x80)) {
+	    p = q;
+	}
+    }
+    return p;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkUtfNext --
+ *
+ *	Almost the same as Tcl_UtfNext but check for surrogates if
+ *	TCL_UTF_MAX==3. So, the pointer might move up to 6 bytes.
+ *
+ * Results:
+ *	return a pointer to the next unicode character.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+const char *TkUtfNext(const char *source) {
+    const char *p = Tcl_UtfNext(source);
+    if (((source[0]&0xFF) == 0xED) && ((source[1]&0xF0) == 0xA0)
+	    && ((source[2]&0xC0) == 0x80)) {
+	const char *q = Tcl_UtfNext(p);
+	/* We are pointing to a high surrogate. If the next
+	 * codepoint is a low surrogate, we want that in stead. */
+	if (((q[0]&0xFF) == 0xED) && ((q[1]&0xF0) == 0xB0)
+		&& ((q[2]&0xC0) == 0x80)) {
+	    p = q;
+	}
+    }
+    return p;
+}
 
 #endif
 /*
