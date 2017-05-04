@@ -1393,6 +1393,35 @@ AppendScript(
     return newScriptObj;
 }
 
+#if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
+static bool
+MatchOpt(
+    const char *opt,
+    const char *pattern,
+    unsigned minMatchLen)
+{
+    if (strncmp(opt, pattern, minMatchLen) != 0) {
+	return false;
+    }
+    opt += minMatchLen;
+    pattern += minMatchLen;
+    while (true) {
+	if (*opt == '\0') {
+	    return true;
+	}
+	if (*pattern == '\0') {
+	    return false;
+	}
+	if (*opt != *pattern) {
+	    return false;
+	}
+	opt += 1;
+	pattern += 1;
+    }
+    return false; /* never reached */
+}
+#endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
+
 static int
 TextWidgetObjCmd(
     ClientData clientData,	/* Information about text widget. */
@@ -1586,14 +1615,15 @@ TextWidgetObjCmd(
 #if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
 
 	    Tcl_Obj *objPtr, *optionObj = NULL;
+	    const char *opt = Tcl_GetString(objv[2]);
 
-	    if (strcmp(Tcl_GetString(objv[2]), "-start") == 0) {
+	    if (strcmp(opt, "-start") == 0) {
 		optionObj = Tcl_NewStringObj(textPtr->startLine ? "-startline" : "-startindex", -1);
-	    } else if (strncmp(Tcl_GetString(objv[2]), "-startl", 7) == 0) {
+	    } else if (MatchOpt(opt, "-startline", 7)) {
 		optionObj = Tcl_NewStringObj("-startline", -1);
-	    } else if (strcmp(Tcl_GetString(objv[2]), "-end") == 0) {
+	    } else if (strcmp(opt, "-end") == 0) {
 		optionObj = Tcl_NewStringObj(textPtr->endLine ? "-endline" : "-endindex", -1);
-	    } else if (strncmp(Tcl_GetString(objv[2]), "-endl", 5) == 0) {
+	    } else if (MatchOpt(opt, "-endline", 5)) {
 		optionObj = Tcl_NewStringObj("-endline", -1);
 	    } else {
 		Tcl_IncrRefCount(optionObj = objv[2]);
@@ -3807,13 +3837,13 @@ TkConfigureText(
 			}
 			obj = startIndexObj;
 		    }
-		} else if (strncmp(Tcl_GetString(objv[i]), "-startl", 7) == 0) {
+		} else if (MatchOpt(Tcl_GetString(objv[i]), "-startline", 7)) {
 		    if (!startLineObj) {
 			Tcl_IncrRefCount(startLineObj = Tcl_NewStringObj("-startline", -1));
 		    }
 		    obj = startLineObj;
 		    WarnAboutDeprecatedStartLineOption();
-		} else if (strncmp(Tcl_GetString(objv[i]), "-starti", 7) == 0) {
+		} else if (MatchOpt(Tcl_GetString(objv[i]), "-startindex", 7)) {
 		    if (!startIndexObj) {
 			Tcl_IncrRefCount(startIndexObj = Tcl_NewStringObj("-startindex", -1));
 		    }
@@ -3831,13 +3861,13 @@ TkConfigureText(
 			}
 			obj = endIndexObj;
 		    }
-		} else if (strncmp(Tcl_GetString(objv[i]), "-endl", 5) == 0) {
+		} else if (MatchOpt(Tcl_GetString(objv[i]), "-endline", 5)) {
 		    if (!endLineObj) {
 			Tcl_IncrRefCount(endLineObj = Tcl_NewStringObj("-endline", -1));
 		    }
 		    obj = endLineObj;
 		    WarnAboutDeprecatedEndLineOption();
-		} else if (strncmp(Tcl_GetString(objv[i]), "-endi", 5) == 0) {
+		} else if (MatchOpt(Tcl_GetString(objv[i]), "-endindex", 5)) {
 		    if (!endIndexObj) {
 			Tcl_IncrRefCount(endIndexObj = Tcl_NewStringObj("-endindex", -1));
 		    }
