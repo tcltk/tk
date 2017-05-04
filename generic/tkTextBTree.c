@@ -6850,6 +6850,8 @@ DeleteRange(
     numSegments = 0;
     segments = NULL;
     insertSurrogate = false;
+    beforeSurrogate = NULL;	/* prevent compiler warning */
+    prevSavePtr = NULL;		/* prevent compiler warning */
     assert(firstSegPtr->size == 0);
     deleteFirst = (flags & DELETE_INCLUSIVE) && TkTextIsStableMark(firstSegPtr);
 
@@ -6885,7 +6887,6 @@ DeleteRange(
 
     if (undoInfo) {
 	/* reserve the first entry if needed */
-	prevSavePtr = NULL;
 	numSegments = 0;
 	maxSegments = 32;
 	segments = malloc(maxSegments * sizeof(TkTextSegment *));
@@ -6969,11 +6970,10 @@ DeleteRange(
 	    lastSectionPtr = curLinePtr->lastPtr->sectionPtr;
 	} else {
 	    TkTextSegment *savePtr;
-	    bool reInserted;
+	    bool reInserted = false;
 
 	    if ((savePtr = undoInfo && !TkTextIsSpecialOrPrivateMark(segPtr) ? segPtr : NULL)) {
 		savePtr->refCount += 1;
-		reInserted = false;
 	    }
 
 	    assert(segPtr->sectionPtr->linePtr == curLinePtr);
