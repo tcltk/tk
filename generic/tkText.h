@@ -2068,7 +2068,6 @@ MODULE_SCOPE void	TkTextIndexSetByteIndex(TkTextIndex *indexPtr, int byteIndex);
 MODULE_SCOPE void	TkTextIndexSetByteIndex2(TkTextIndex *indexPtr,
 			    TkTextLine *linePtr, int byteIndex);
 inline void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, unsigned epoch);
-inline void		TkTextIndexUpdateEpoch(TkTextIndex *indexPtr, unsigned epoch);
 MODULE_SCOPE void	TkTextIndexSetSegment(TkTextIndex *indexPtr, TkTextSegment *segPtr);
 inline void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
 MODULE_SCOPE bool	TkTextIndexIsEmpty(const TkTextIndex *indexPtr);
@@ -2094,7 +2093,7 @@ MODULE_SCOPE void	TkTextIndexClear(TkTextIndex *indexPtr, TkText *textPtr);
 MODULE_SCOPE void	TkTextIndexClear2(TkTextIndex *indexPtr, TkText *textPtr, TkTextBTree tree);
 inline void		TkTextIndexInvalidate(TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextIndexToByteIndex(TkTextIndex *indexPtr);
-MODULE_SCOPE void	TkTextIndexMakeShared(TkTextIndex *indexPtr);
+inline void		TkTextIndexMakePersistent(TkTextIndex *indexPtr);
 MODULE_SCOPE bool	TkTextIndexIsZero(const TkTextIndex *indexPtr);
 MODULE_SCOPE bool	TkTextIndexIsStartOfLine(const TkTextIndex *indexPtr);
 MODULE_SCOPE bool	TkTextIndexIsEndOfLine(const TkTextIndex *indexPtr);
