@@ -481,9 +481,8 @@ TkTextIndexSetToStartOfLine(
     assert(indexPtr->priv.linePtr->parentPtr); /* expired? */
     assert(CheckLine(indexPtr, indexPtr->priv.linePtr));
 
-    indexPtr->stateEpoch = TkBTreeEpoch(indexPtr->tree);
-    indexPtr->priv.segPtr = NULL;
     indexPtr->priv.byteIndex = FindStartByteIndex(indexPtr);
+    TkTextIndexSetEpoch(indexPtr, TkBTreeEpoch(indexPtr->tree));
 }
 
 /*
@@ -582,6 +581,8 @@ TkTextIndexSetToLastChar(
     indexPtr->stateEpoch = TkBTreeEpoch(indexPtr->tree);
     indexPtr->priv.byteIndex = FindEndByteIndex(indexPtr);
     indexPtr->priv.segPtr = NULL;
+    indexPtr->priv.lineNo = -1;
+    indexPtr->priv.lineNoRel = -1;
 
     assert(CheckLine(indexPtr, indexPtr->priv.linePtr));
 }
@@ -3209,7 +3210,7 @@ TkTextIndexForwChars(
     }
 
   forwardCharDone:
-    dstPtr->stateEpoch = TkBTreeEpoch(dstPtr->tree);
+    TkTextIndexSetEpoch(dstPtr, TkBTreeEpoch(dstPtr->tree));
     return true;
 }
 
@@ -3753,7 +3754,7 @@ TkTextIndexBackChars(
 	    dstPtr->priv.segPtr = segPtr;
 	    dstPtr->priv.isCharSegment = false;
 	    if (TkTextIndexRestrictToStartRange(dstPtr) <= 0) {
-		dstPtr->stateEpoch = TkBTreeEpoch(dstPtr->tree);
+		TkTextIndexSetEpoch(dstPtr, TkBTreeEpoch(dstPtr->tree));
 		return true;
 	    }
 	    TkTextIndexToByteIndex(dstPtr);
@@ -3789,8 +3790,8 @@ TkTextIndexBackChars(
     }
 
   backwardCharDone:
-    dstPtr->stateEpoch = TkBTreeEpoch(dstPtr->tree);
     dstPtr->priv.byteIndex = byteIndex;
+    TkTextIndexSetEpoch(dstPtr, TkBTreeEpoch(dstPtr->tree));
     return true;
 }
 

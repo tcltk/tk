@@ -565,6 +565,30 @@ TkBTreeCountLines(
 /*
  *----------------------------------------------------------------------
  *
+ * TkTextIndexMakePersistent --
+ *
+ *	Make given index persistent.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+inline
+void
+TkTextIndexMakePersistent(
+    TkTextIndex *indexPtr)
+{
+    TkTextIndexToByteIndex(indexPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkTextIndexSetPeer --
  *
  *	Set this index to the start of the line.
@@ -892,37 +916,6 @@ TkTextIndexSameLines(
 /*
  *----------------------------------------------------------------------
  *
- * TkTextIndexSetEpoch --
- *
- *	Update epoch of given index, don't clear the segment pointer.
- *	Use this function with care, it must be ensured that the
- *	segment pointer is still valid.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-inline
-void
-TkTextIndexUpdateEpoch(
-    TkTextIndex *indexPtr,
-    unsigned epoch)
-{
-    assert(indexPtr->priv.linePtr);
-    assert(indexPtr->priv.linePtr->parentPtr); /* expired? */
-
-    indexPtr->stateEpoch = epoch;
-    indexPtr->priv.lineNo = -1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkTextIndexInvalidate --
  *
  *	Clear position attributes: segPtr, and byteIndex.
@@ -973,9 +966,11 @@ TkTextIndexSetEpoch(
     assert(indexPtr->priv.linePtr->parentPtr); /* expired? */
 
     if (indexPtr->stateEpoch != epoch) {
+	assert(indexPtr->priv.byteIndex >= 0);
 	indexPtr->stateEpoch = epoch;
-	indexPtr->priv.segPtr = NULL;
 	indexPtr->priv.lineNo = -1;
+	indexPtr->priv.lineNoRel = -1;
+	indexPtr->priv.segPtr = NULL;
     }
 }
 

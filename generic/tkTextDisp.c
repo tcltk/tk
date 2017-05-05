@@ -4131,6 +4131,7 @@ LayoutDLine(
     dlPtr = memset(dlPtr, 0, sizeof(DLine));
     dlPtr->flags = NEW_LAYOUT|OLD_Y_INVALID;
     dlPtr->index = *indexPtr;
+    TkTextIndexMakePersistent(&dlPtr->index);
     dlPtr->displayLineNo = displayLineNo;
     TkTextIndexToByteIndex(&dlPtr->index);
     isStartOfLine = TkTextIndexIsStartOfLine(&dlPtr->index);
@@ -9473,6 +9474,7 @@ TkTextSetYView(
 
     if (TkTextIsDeadPeer(textPtr)) {
 	textPtr->topIndex = *indexPtr;
+	TkTextIndexMakePersistent(&textPtr->topIndex);
 	TkTextIndexSetPeer(&textPtr->topIndex, textPtr);
 	return;
     }
@@ -9502,8 +9504,8 @@ TkTextSetYView(
 	 */
 
 	textPtr->topIndex = *indexPtr;
+	TkTextIndexMakePersistent(&textPtr->topIndex);
 	TkTextIndexSetPeer(&textPtr->topIndex, textPtr);
-	TkTextIndexToByteIndex(&textPtr->topIndex);
         if (!IsStartOfNotMergedLine(indexPtr)) {
             TkTextFindDisplayLineStartEnd(textPtr, &textPtr->topIndex, DISP_LINE_START);
         }
@@ -9536,6 +9538,7 @@ TkTextSetYView(
 		 * or position at top of view.
 		 */
 		textPtr->topIndex = *indexPtr;
+		TkTextIndexMakePersistent(&textPtr->topIndex);
 		dInfoPtr->newTopPixelOffset = MAX(0, y - dlPtr->y - (dInfoPtr->maxY - height)/2);
 		goto scheduleUpdate;
 	    }
@@ -9593,6 +9596,7 @@ TkTextSetYView(
 	GetBbox(textPtr, dlPtr, indexPtr, &x, &y, &width, &height, NULL, NULL);
 	dInfoPtr->newTopPixelOffset = MAX(0, y - dlPtr->y - (dInfoPtr->maxY - height)/2);
 	textPtr->topIndex = *indexPtr;
+	TkTextIndexMakePersistent(&textPtr->topIndex);
     } else {
 	/*
 	 * It would be better if 'bottomY' were calculated using the actual height
@@ -9616,8 +9620,8 @@ TkTextSetYView(
 	    MeasureUp(textPtr, &textPtr->topIndex, close + textPtr->lineHeight/2, &tmpIndex, &overlap);
 	    if (TkTextIndexCompare(&tmpIndex, indexPtr) <= 0) {
 		textPtr->topIndex = *indexPtr;
+		TkTextIndexMakePersistent(&textPtr->topIndex);
 		TkTextIndexSetPeer(&textPtr->topIndex, textPtr);
-		TkTextIndexToByteIndex(&textPtr->topIndex);
 		TkTextFindDisplayLineStartEnd(textPtr, &textPtr->topIndex, DISP_LINE_START);
 		dInfoPtr->newTopPixelOffset = 0;
 		goto scheduleUpdate;
