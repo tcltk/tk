@@ -2528,7 +2528,7 @@ TkTextGetCursorBbox(
 	 * The region between the tilde bars is the visible screen. The cursor
 	 * is positioned before char "a", and the bbox of char "a" is outside of
 	 * the visible screen, so a simple test with TkTextIndexBbox() at char
-	 * position "a" fails here. We have to test now with the display line.
+	 * position "a" fails here. Now we have to test with the display line.
 	 */
 
 	if (!TkTextGetDLineInfo(textPtr, &index, false, &ix, y, &iw, h, &base)) {
@@ -2543,7 +2543,7 @@ TkTextGetCursorBbox(
 
     /*
      * Don't draw the full lengh of a tab, in this case we are drawing
-     * a cursor at the right boundary with a standard with.
+     * a cursor at the right boundary with a standard width.
      */
 
     if (thisChar == '\t') {
