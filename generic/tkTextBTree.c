@@ -843,17 +843,20 @@ static TkTextTagSet *
 TagSetJoinComplementTo(
     TkTextTagSet *tagInfoPtr,
     const TkTextTagSet *otherInfoPtr1,
-    const TkTextTagSet *otherInfoPtr2,
+    TkTextTagSet **otherInfoPtr2,
     const TkSharedText *sharedTextPtr)
 {
-    if (otherInfoPtr2 == sharedTextPtr->emptyTagInfoPtr) {
+    if (*otherInfoPtr2 == sharedTextPtr->emptyTagInfoPtr) {
 	return tagInfoPtr;
     }
     if (TkTextTagSetSize(tagInfoPtr) < sharedTextPtr->tagInfoSize) {
 	tagInfoPtr = TagSetResize(tagInfoPtr, sharedTextPtr->tagInfoSize);
     }
+    if (TkTextTagSetSize(*otherInfoPtr2) < TkTextTagSetSize(otherInfoPtr1)) {
+	*otherInfoPtr2 = TkTextTagSetResize(*otherInfoPtr2, sharedTextPtr->tagInfoSize);
+    }
     if (TkTextTagSetIsEmpty(
-	    tagInfoPtr = TkTextTagSetJoinComplementTo(tagInfoPtr, otherInfoPtr1, otherInfoPtr2))) {
+	    tagInfoPtr = TkTextTagSetJoinComplementTo(tagInfoPtr, otherInfoPtr1, *otherInfoPtr2))) {
 	TagSetAssign(&tagInfoPtr, sharedTextPtr->emptyTagInfoPtr);
     }
     return tagInfoPtr;
@@ -1413,7 +1416,7 @@ UndoDeletePerform(
     tagonPtr = TkTextTagSetJoin(tagonPtr, linePtr->tagonPtr);
     tagoffPtr = TkTextTagSetJoin(tagoffPtr, linePtr->tagoffPtr);
     additionalTagoffPtr = TagSetIntersect(additionalTagoffPtr, linePtr->tagonPtr, sharedTextPtr);
-    tagoffPtr = TagSetJoinComplementTo(tagoffPtr, additionalTagoffPtr, tagonPtr, sharedTextPtr);
+    tagoffPtr = TagSetJoinComplementTo(tagoffPtr, additionalTagoffPtr, &tagonPtr, sharedTextPtr);
     tagoffPtr = TkTextTagSetRemove(tagoffPtr, nodePtr->tagoffPtr);
     tagonPtr = TkTextTagSetRemove(tagonPtr, nodePtr->tagonPtr);
     tagonPtr = TkTextTagSetRemove(tagonPtr, tagoffPtr);
@@ -5716,7 +5719,6 @@ JoinSections(
 
 	    if (lengthLHS < NUM_TEXT_SEGS) {
 		shift = MIN(length - NUM_TEXT_SEGS, NUM_TEXT_SEGS - lengthLHS);
-		assert(shift < length);
 		if (shift > 0) {
 		    segPtr = sectionPtr->segPtr;
 		    for ( ; shift > 0; --shift, --length) {
@@ -6617,7 +6619,7 @@ UpdateNodeTags(
 
     if (!TkTextTagSetIsEqual(tagonPtr, nodeTagonPtr) || !TkTextTagSetIsEqual(tagoffPtr, nodeTagoffPtr)) {
 	if (additionalTagoffPtr) {
-	    tagoffPtr = TagSetJoinComplementTo(tagoffPtr, additionalTagoffPtr, tagonPtr, sharedTextPtr);
+	    tagoffPtr = TagSetJoinComplementTo(tagoffPtr, additionalTagoffPtr, &tagonPtr, sharedTextPtr);
 	    TkTextTagSetDecrRefCount(additionalTagoffPtr);
 	} else {
 	    TagSetAssign(&tagoffPtr, tagonPtr);
@@ -10241,7 +10243,7 @@ ClearTagsFromNode(
 
     if (additionalTagoffPtr) {
 	nodePtr->tagoffPtr = TagSetJoinComplementTo(
-		nodePtr->tagoffPtr, additionalTagoffPtr, nodePtr->tagonPtr, sharedTextPtr);
+		nodePtr->tagoffPtr, additionalTagoffPtr, &nodePtr->tagonPtr, sharedTextPtr);
 	TkTextTagSetDecrRefCount(additionalTagoffPtr);
     } else {
 	TagSetAssign(&nodePtr->tagoffPtr, nodePtr->tagonPtr);
@@ -13368,7 +13370,7 @@ RebalanceRecomputeNodeTagInfo(
      */
 
     nodePtr->tagoffPtr = TagSetJoinComplementTo(
-	    nodePtr->tagoffPtr, additionalTagoffPtr, nodePtr->tagonPtr, sharedTextPtr);
+	    nodePtr->tagoffPtr, additionalTagoffPtr, &nodePtr->tagonPtr, sharedTextPtr);
     TkTextTagSetDecrRefCount(additionalTagoffPtr);
 }
 
