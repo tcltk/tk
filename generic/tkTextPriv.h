@@ -944,8 +944,7 @@ TkTextIndexInvalidate(
  *
  * TkTextIndexSetEpoch --
  *
- *	Set epoch of given index, and clear the segment pointer if
- *	the new epoch is different from last epoch.
+ *	Set epoch of given index, and clear the cached values.
  *
  * Results:
  *	None.
@@ -965,13 +964,13 @@ TkTextIndexSetEpoch(
     assert(indexPtr->priv.linePtr);
     assert(indexPtr->priv.linePtr->parentPtr); /* expired? */
 
-    if (indexPtr->stateEpoch != epoch) {
-	assert(indexPtr->priv.byteIndex >= 0);
-	indexPtr->stateEpoch = epoch;
-	indexPtr->priv.lineNo = -1;
-	indexPtr->priv.lineNoRel = -1;
-	indexPtr->priv.segPtr = NULL;
-    }
+    assert(indexPtr->priv.byteIndex >= 0);
+    indexPtr->stateEpoch = epoch;
+
+    /* clear the cached values in any case */
+    indexPtr->priv.lineNo = -1;
+    indexPtr->priv.lineNoRel = -1;
+    indexPtr->priv.segPtr = NULL;
 }
 
 /*

@@ -1533,13 +1533,13 @@ typedef enum {
  * of procedures that may be called to manipulate segments of that type.
  */
 
-typedef bool Tk_SegDeleteProc(TkTextBTree tree, struct TkTextSegment *segPtr, int flags);
-typedef void Tk_SegReuseProc(TkTextBTree tree, struct TkTextSegment *segPtr);
+typedef bool Tk_SegDeleteProc(TkSharedText *sharedTextPtr, struct TkTextSegment *segPtr, int flags);
+typedef void Tk_SegReuseProc(TkSharedText *sharedTextPtr, struct TkTextSegment *segPtr);
 typedef int Tk_SegLayoutProc(const struct TkTextIndex *indexPtr, TkTextSegment *segPtr,
 		    int offset, int maxX, int maxChars, bool noCharsYet, TkWrapMode wrapMode,
 		    TkTextSpaceMode spaceMode, struct TkTextDispChunk *chunkPtr);
 typedef void Tk_SegCheckProc(const struct TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
-typedef Tcl_Obj *Tk_SegInspectProc(const TkSharedText *textPtr, const TkTextSegment *segPtr);
+typedef Tcl_Obj *Tk_SegInspectProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 
 typedef struct Tk_SegType {
     const char *name;		/* Name of this kind of segment. */
@@ -2109,11 +2109,19 @@ MODULE_SCOPE int	TkTextIndexRestrictToEndRange(TkTextIndex *indexPtr);
 MODULE_SCOPE bool	TkTextIndexEnsureBeforeLastChar(TkTextIndex *indexPtr);
 MODULE_SCOPE bool	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
 
+#if TK_TEXT_NDEBUG
+MODULE_SCOPE void	TkTextMarkCheckTable(TkSharedText *sharedTextPtr);
+#endif
+
 /*
  * Debugging info macros:
  */
 
 #ifdef TK_TEXT_NDEBUG
+# ifdef NDEBUG
+#  error "Do not define TK_TEXT_NDEBUG when NDEBUG is also defined"
+# endif
+
 # define TK_BTREE_DEBUG(expr)
 #else
 # define TK_BTREE_DEBUG(expr)	{ if (tkBTreeDebug) { expr; } }
