@@ -559,11 +559,12 @@ TkBitJoinComplementTo(
     assert(bf2);
     assert(TkBitSize(dst) >= TkBitSize(bf1));
     assert(TkBitSize(dst) >= TkBitSize(bf2));
-    assert(TkBitSize(bf2) >= TkBitSize(bf1));
 
     if (dst == bf2 || bf2->size == 0) {
 	return;
     }
+
+    assert(TkBitSize(bf2) >= TkBitSize(bf1));
 
     words2 = NWORDS(bf2->size);
     words = MIN(NWORDS(bf1->size), words2);

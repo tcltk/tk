@@ -3109,12 +3109,6 @@ TkTextPickCurrent(
 	    bool movedToLeft;
 	    int sx, sy; /* translation to current scroll position */
 
-	    if (TkTextTagSetSize(leaveTags) < sharedTextPtr->tagInfoSize) {
-		leaveTags = TkTextTagSetResize(leaveTags, sharedTextPtr->tagInfoSize);
-	    }
-	    if (TkTextTagSetSize(enterTags) < sharedTextPtr->tagInfoSize) {
-		enterTags = TkTextTagSetResize(enterTags, sharedTextPtr->tagInfoSize);
-	    }
 
 	    TkTextGetViewOffset(textPtr, &sx, &sy);
 	    movedToLeft = textPtr->pickEvent.xcrossing.x + sx <= lastX;
@@ -3153,19 +3147,35 @@ TkTextPickCurrent(
 	    }
 
 	    if (nextDispChunkPtr != newDispChunkPtr) {
-		do {
-		    const TkTextTagSet *chunkTagInfoPtr;
-
-		    if ((chunkTagInfoPtr = TkTextGetTagSetFromChunk(nextDispChunkPtr))) {
-			leaveTags = TkTextTagSetJoinComplementTo(leaveTags,
-				chunkTagInfoPtr, textPtr->curTagInfoPtr);
-			enterTags = TkTextTagSetJoinComplementTo(enterTags,
-				chunkTagInfoPtr, textPtr->curTagInfoPtr);
+		if (textPtr->curTagInfoPtr != sharedTextPtr->emptyTagInfoPtr) {
+		    /*
+		     * TkTextTagSetJoinComplementTo() requires this:
+		     */
+		    if (TkTextTagSetSize(textPtr->curTagInfoPtr) < sharedTextPtr->tagInfoSize) {
+			textPtr->curTagInfoPtr = TkTextTagSetResize(
+				textPtr->curTagInfoPtr, sharedTextPtr->tagInfoSize);
+		    }
+		    if (TkTextTagSetSize(leaveTags) < sharedTextPtr->tagInfoSize) {
+			leaveTags = TkTextTagSetResize(leaveTags, sharedTextPtr->tagInfoSize);
+		    }
+		    if (TkTextTagSetSize(enterTags) < sharedTextPtr->tagInfoSize) {
+			enterTags = TkTextTagSetResize(enterTags, sharedTextPtr->tagInfoSize);
 		    }
 
-		    nextDispChunkPtr = movedToLeft ?
-			    nextDispChunkPtr->prevPtr : nextDispChunkPtr->nextPtr;
-		} while (nextDispChunkPtr != newDispChunkPtr);
+		    do {
+			const TkTextTagSet *chunkTagInfoPtr;
+
+			if ((chunkTagInfoPtr = TkTextGetTagSetFromChunk(nextDispChunkPtr))) {
+			    leaveTags = TkTextTagSetJoinComplementTo(leaveTags,
+				    chunkTagInfoPtr, textPtr->curTagInfoPtr);
+			    enterTags = TkTextTagSetJoinComplementTo(enterTags,
+				    chunkTagInfoPtr, textPtr->curTagInfoPtr);
+			}
+
+			nextDispChunkPtr = movedToLeft ?
+				nextDispChunkPtr->prevPtr : nextDispChunkPtr->nextPtr;
+		    } while (nextDispChunkPtr != newDispChunkPtr);
+		}
 
 		/* Delete intermediate enter/leave pairs. */
 		leaveTags = TkTextTagSetIntersect(leaveTags, textPtr->curTagInfoPtr);
@@ -3249,7 +3259,7 @@ TkTextPickCurrent(
 
     tagEpoch = sharedTextPtr->tagEpoch;
 
-    if (sharedTextPtr->tagBindingTable && leaveTags != sharedTextPtr->emptyTagInfoPtr) {
+    if (sharedTextPtr->tagBindingTable && !TkTextTagSetIsEmpty(leaveTags)) {
 	/*
 	 * Invoke the binding system with a LeaveNotify event for all of the tags
 	 * that have gone away.
@@ -3289,7 +3299,7 @@ TkTextPickCurrent(
 	    sharedTextPtr->haveToSetCurrentMark = true;
 	}
 
-	if (sharedTextPtr->tagBindingTable && enterTags != sharedTextPtr->emptyTagInfoPtr) {
+	if (sharedTextPtr->tagBindingTable && !TkTextTagSetIsEmpty(enterTags)) {
 	    /*
 	     * Invoke the binding system with a EnterNotify event for all of the tags
 	     * that have just appeared.
@@ -3306,7 +3316,8 @@ TkTextPickCurrent(
 	}
 
 	TkTextTagSetDecrRefCount(textPtr->curTagInfoPtr);
-	TkTextTagSetIncrRefCount(textPtr->curTagInfoPtr = newTagInfoPtr);
+	TkTextTagSetIncrRefCount(textPtr->curTagInfoPtr = TkTextTagSetIsEmpty(newTagInfoPtr) ?
+		sharedTextPtr->emptyTagInfoPtr : newTagInfoPtr);
 
 	TkTextGetViewOffset(textPtr, &sx, &sy);
 	textPtr->lastLineY = newLineY;
