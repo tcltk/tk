@@ -725,6 +725,7 @@ Tk_GetSaveFileObjCmd(
 	}
     }
     if (fl.filters || defaultType) {
+	saveFileTypes = [NSMutableArray array];
 	for (FileFilter *filterPtr = fl.filters; filterPtr;
 		filterPtr = filterPtr->next) {
 	    for (FileFilterClause *clausePtr = filterPtr->clauses; clausePtr;
@@ -733,8 +734,8 @@ Tk_GetSaveFileObjCmd(
 			globPtr = globPtr->next) {
 		    str = globPtr->pattern;
 		    while (*str && (*str == '*' || *str == '.')) {
-			str++;
-		    }
+		    	str++;
+		     }
 		    if (*str) {
 			type = [[NSString alloc] initWithUTF8String:str];
 			if (![saveFileTypes containsObject:type]) {
