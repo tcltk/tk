@@ -66,8 +66,8 @@ static void		EmbWinBboxProc(TkText *textPtr,
 static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr, bool undoable,
 			    int objc, Tcl_Obj *const objv[]);
 static void		EmbWinDelayedUnmap(ClientData clientData);
-static bool		EmbWinDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int treeGone);
-static void		EmbWinRestoreProc(TkTextBTree tree, TkTextSegment *segPtr);
+static bool		EmbWinDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
+static void		EmbWinRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static int		EmbWinLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars, bool noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
@@ -277,7 +277,7 @@ UndoLinkSegmentPerform(
     index.textPtr = token->client->textPtr;
     TextChanged(&index);
     TkBTreeUnlinkSegment(sharedTextPtr, segPtr);
-    EmbWinDeleteProc(sharedTextPtr->tree, segPtr, 0);
+    EmbWinDeleteProc(sharedTextPtr, segPtr, 0);
     TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
 }
 
@@ -1276,7 +1276,7 @@ DestroyOrUnmapWindow(
 
 static bool
 EmbWinDeleteProc(
-    TkTextBTree tree,
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *ewPtr,	/* Segment being deleted. */
     int flags)			/* Flags controlling the deletion. */
 {
@@ -1312,7 +1312,7 @@ EmbWinDeleteProc(
 
 static void
 EmbWinRestoreProc(
-    TkTextBTree tree,		/* Information about tree. */
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *ewPtr)	/* Segment to reuse. */
 {
     bool isNew;

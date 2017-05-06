@@ -11780,7 +11780,7 @@ TkpTextInspect(
     TkText *textPtr)
 {
     Tcl_Obj *resultPtr;
-    Tcl_Obj *objv[9];
+    Tcl_Obj *objv[8];
     Tcl_Obj **argv;
     int argc, i;
 
@@ -11788,13 +11788,12 @@ TkpTextInspect(
     Tcl_ResetResult(textPtr->interp);
     Tcl_IncrRefCount(objv[0] = Tcl_NewStringObj(Tk_PathName(textPtr->tkwin), -1));
     Tcl_IncrRefCount(objv[1] = Tcl_NewStringObj("inspect", -1));
-    Tcl_IncrRefCount(objv[2] = Tcl_NewStringObj("-discardselection", -1));
-    Tcl_IncrRefCount(objv[3] = Tcl_NewStringObj("-elide", -1));
-    Tcl_IncrRefCount(objv[4] = Tcl_NewStringObj("-chars", -1));
-    Tcl_IncrRefCount(objv[5] = Tcl_NewStringObj("-image", -1));
-    Tcl_IncrRefCount(objv[6] = Tcl_NewStringObj("-window", -1));
-    Tcl_IncrRefCount(objv[7] = Tcl_NewStringObj("-mark", -1));
-    Tcl_IncrRefCount(objv[8] = Tcl_NewStringObj("-tag", -1));
+    Tcl_IncrRefCount(objv[2] = Tcl_NewStringObj("-elide", -1));
+    Tcl_IncrRefCount(objv[3] = Tcl_NewStringObj("-chars", -1));
+    Tcl_IncrRefCount(objv[4] = Tcl_NewStringObj("-image", -1));
+    Tcl_IncrRefCount(objv[5] = Tcl_NewStringObj("-window", -1));
+    Tcl_IncrRefCount(objv[6] = Tcl_NewStringObj("-mark", -1));
+    Tcl_IncrRefCount(objv[7] = Tcl_NewStringObj("-tag", -1));
     TextInspectCmd(textPtr, textPtr->interp, sizeof(objv)/sizeof(objv[0]), objv);
     for (i = 0; i < (int) (sizeof(objv)/sizeof(objv[0])); ++i) {
 	Tcl_DecrRefCount(objv[i]);

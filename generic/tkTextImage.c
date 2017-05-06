@@ -49,8 +49,9 @@ static void		EmbImageBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int in
 			    int *heightPtr);
 static int		EmbImageConfigure(TkText *textPtr, TkTextSegment *eiPtr, int *maskPtr,
 			    bool undoable, int objc, Tcl_Obj *const objv[]);
-static bool		EmbImageDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int treeGone);
-static void		EmbImageRestoreProc(TkTextBTree tree, TkTextSegment *segPtr);
+static bool		EmbImageDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr,
+			    int flags);
+static void		EmbImageRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static void		EmbImageDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int x, int y,
 			    int lineHeight, int baseline, Display *display, Drawable dst, int screenY);
 static int		EmbImageLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
@@ -245,7 +246,7 @@ UndoLinkSegmentPerform(
     GetIndex(sharedTextPtr, segPtr, &index);
     TextChanged(sharedTextPtr, &index, TK_TEXT_LINE_GEOMETRY);
     TkBTreeUnlinkSegment(sharedTextPtr, segPtr);
-    EmbImageDeleteProc(sharedTextPtr->tree, segPtr, 0);
+    EmbImageDeleteProc(sharedTextPtr, segPtr, 0);
     TK_BTREE_DEBUG(TkBTreeCheck(sharedTextPtr->tree));
 }
 
@@ -509,7 +510,7 @@ TkTextImageCmd(
 	    TkBTreeLinkSegment(sharedTextPtr, eiPtr, &index);
 	    if (EmbImageConfigure(textPtr, eiPtr, &mask, false, objc - 4, objv + 4) != TCL_OK) {
 		TkBTreeUnlinkSegment(sharedTextPtr, eiPtr);
-		EmbImageDeleteProc(sharedTextPtr->tree, eiPtr, 0);
+		EmbImageDeleteProc(sharedTextPtr, eiPtr, 0);
 		return TCL_ERROR;
 	    }
 	    TextChanged(sharedTextPtr, &index, mask);
@@ -623,7 +624,7 @@ TkTextMakeImage(
     if (EmbImageConfigure(textPtr, eiPtr, NULL, false, objc, objv) == TCL_OK) {
 	Tcl_ResetResult(textPtr->interp);
     } else {
-	EmbImageDeleteProc(textPtr->sharedTextPtr->tree, eiPtr, 0);
+	EmbImageDeleteProc(textPtr->sharedTextPtr, eiPtr, 0);
 	eiPtr = NULL;
     }
 
@@ -867,7 +868,7 @@ ReleaseImage(
 
 static bool
 EmbImageDeleteProc(
-    TkTextBTree tree,
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *eiPtr,	/* Segment being deleted. */
     int flags)			/* Flags controlling the deletion. */
 {
@@ -913,16 +914,18 @@ EmbImageDeleteProc(
 
 static void
 EmbImageRestoreProc(
-    TkTextBTree tree,		/* Information about tree. */
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *eiPtr)	/* Segment to reuse. */
 {
     TkTextEmbImage *img = &eiPtr->body.ei;
     int isNew;
 
+    assert(img->sharedTextPtr == sharedTextPtr);
+
     if (img->image) {
 	assert(!img->hPtr);
-	img->hPtr = Tcl_CreateHashEntry(&img->sharedTextPtr->imageTable, img->name, &isNew);
-	img->sharedTextPtr->numImages += 1;
+	img->hPtr = Tcl_CreateHashEntry(&sharedTextPtr->imageTable, img->name, &isNew);
+	sharedTextPtr->numImages += 1;
 	assert(isNew);
 	Tcl_SetHashValue(img->hPtr, eiPtr);
     }

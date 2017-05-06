@@ -446,6 +446,7 @@ TkTextIndexSetSegment(
     indexPtr->priv.segPtr = segPtr;
 
     if (segPtr->typePtr == &tkTextCharType) {
+	/* this segment is volatile, thus we need the byte index. */
 	indexPtr->priv.byteIndex = SegToIndex(indexPtr->priv.linePtr, segPtr);
 	indexPtr->priv.isCharSegment = true;
     } else {
@@ -3104,9 +3105,11 @@ TkTextIndexForwChars(
 
     segPtr = TkTextIndexGetFirstSegment(dstPtr, &byteOffset);
     endPtr = textPtr ? textPtr->endMarker : sharedTextPtr->endMarker;
-    TkTextIndexToByteIndex(dstPtr);
     trimmed = textPtr && textPtr->spaceMode == TEXT_SPACEMODE_TRIM && !!(type & COUNT_DISPLAY);
     skipSpaces = false;
+
+    TkTextIndexToByteIndex(dstPtr);
+    dstPtr->priv.segPtr = NULL;
 
     while (true) {
 	/*
@@ -3182,14 +3185,15 @@ TkTextIndexForwChars(
 	    } else if (checkElided && segPtr->typePtr == &tkTextBranchType) {
 		TkTextIndexSetSegment(dstPtr, segPtr = segPtr->body.branch.nextPtr);
 		if (TkTextIndexRestrictToEndRange(dstPtr) >= 0) {
-		    goto forwardCharDone;
+		    return true;
 		}
 		TkTextIndexToByteIndex(dstPtr);
 	    } else if (segPtr == endPtr) {
-		if (charCount > 0) {
-		    TkTextIndexSetupToEndOfText(dstPtr, (TkText *) textPtr, srcPtr->tree);
+		if (charCount <= 0) {
+		    goto forwardCharDone;
 		}
-		goto forwardCharDone;
+		TkTextIndexSetupToEndOfText(dstPtr, (TkText *) textPtr, srcPtr->tree);
+		return true;
 	    }
 	}
 
@@ -3200,7 +3204,7 @@ TkTextIndexForwChars(
 
 	if (!(linePtr = TkBTreeNextLine(textPtr, dstPtr->priv.linePtr))) {
 	    TkTextIndexSetToLastChar(dstPtr);
-	    goto forwardCharDone;
+	    return true;
 	}
 	dstPtr->priv.linePtr = linePtr;
 	dstPtr->priv.byteIndex = 0;
@@ -3209,8 +3213,8 @@ TkTextIndexForwChars(
 	segPtr = linePtr->segPtr;
     }
 
-  forwardCharDone:
-    TkTextIndexSetEpoch(dstPtr, TkBTreeEpoch(dstPtr->tree));
+forwardCharDone:
+    dstPtr->stateEpoch = TkBTreeEpoch(dstPtr->tree);
     return true;
 }
 
@@ -3751,18 +3755,14 @@ TkTextIndexBackChars(
 	    }
 	} else if (checkElided && segPtr->typePtr == &tkTextLinkType) {
 	    TkTextIndexSetSegment(dstPtr, segPtr = segPtr->body.link.prevPtr);
-	    dstPtr->priv.segPtr = segPtr;
-	    dstPtr->priv.isCharSegment = false;
 	    if (TkTextIndexRestrictToStartRange(dstPtr) <= 0) {
-		TkTextIndexSetEpoch(dstPtr, TkBTreeEpoch(dstPtr->tree));
 		return true;
 	    }
 	    TkTextIndexToByteIndex(dstPtr);
 	    byteIndex = TkTextIndexGetByteIndex(dstPtr);
 	} else if (segPtr == startPtr) {
 	    TkTextIndexSetSegment(dstPtr, segPtr = startPtr);
-	    byteIndex = TkTextIndexGetByteIndex(dstPtr);
-	    goto backwardCharDone;
+	    return true;
 	}
 
 	/*
@@ -3778,8 +3778,7 @@ TkTextIndexBackChars(
 	    assert(linePtr);
 
 	    dstPtr->priv.linePtr = linePtr;
-	    dstPtr->priv.lineNo = -1;
-	    dstPtr->priv.lineNoRel = -1;
+	    dstPtr->priv.lineNo = dstPtr->priv.lineNoRel = -1;
 	    byteIndex = linePtr->size;
 	    segPtr = linePtr->lastPtr;
 	} else {
@@ -3791,7 +3790,7 @@ TkTextIndexBackChars(
 
   backwardCharDone:
     dstPtr->priv.byteIndex = byteIndex;
-    TkTextIndexSetEpoch(dstPtr, TkBTreeEpoch(dstPtr->tree));
+    dstPtr->stateEpoch = TkBTreeEpoch(dstPtr->tree);
     return true;
 }
 

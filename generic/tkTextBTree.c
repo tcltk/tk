@@ -180,10 +180,10 @@ static unsigned		AdjustPixelClient(BTree *treePtr, unsigned defaultHeight, Node 
 static TkTextSegment *	JoinCharSegments(const TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static void		CleanupSplitPoint(TkTextSegment *segPtr, TkSharedText *sharedTextPtr);
 static void		CharCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
-static bool		CharDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int flags);
+static bool		CharDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
 static Tcl_Obj *	CharInspectProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static TkTextSegment *	CleanupCharSegments(const TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
-static bool		HyphenDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int flags);
+static bool		HyphenDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
 static void		HyphenCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static Tcl_Obj *	HyphenInspectProc(const TkSharedText *sharedTextPtr,
 			    const TkTextSegment *segPtr);
@@ -228,15 +228,16 @@ static void		UnlinkSegmentAndCleanup(const TkSharedText *sharedTextPtr,
 static unsigned		CountSegments(const TkTextSection *sectionPtr);
 static unsigned		ComputeSectionSize(const TkTextSegment *segPtr);
 static void		BranchCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
-static bool		BranchDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int flags);
-static void		BranchRestoreProc(TkTextBTree tree, TkTextSegment *segPtr);
+static bool		BranchDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
+static void		BranchRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static Tcl_Obj *	BranchInspectProc(const TkSharedText *sharedTextPtr,
 			    const TkTextSegment *segPtr);
 static void		LinkCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
-static bool		LinkDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int flags);
-static void		LinkRestoreProc(TkTextBTree tree, TkTextSegment *segPtr);
+static bool		LinkDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
+static void		LinkRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static Tcl_Obj *	LinkInspectProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
-static bool		ProtectionMarkDeleteProc(TkTextBTree tree, TkTextSegment *segPtr, int flags);
+static bool		ProtectionMarkDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr,
+			    int flags);
 static void		ProtectionMarkCheckProc(const TkSharedText *sharedTextPtr,
 			    const TkTextSegment *segPtr);
 static void		AddPixelCount(BTree *treePtr, TkTextLine *linePtr,
@@ -1366,7 +1367,7 @@ UndoDeletePerform(
 	    if (prevSegPtr) {
 		if ((prevSegPtr = CleanupCharSegments(sharedTextPtr, prevSegPtr))->nextPtr != segPtr) {
 		    segPtr = prevSegPtr;
-		    lastPtr = lastPtr->nextPtr;
+		    lastPtr = segPtr->nextPtr;
 		}
 	    }
 
@@ -1390,7 +1391,7 @@ UndoDeletePerform(
 		if (segPtr->typePtr == &tkTextBranchType) {
 		    changeToBranchCount += 1;
 		}
-		segPtr->typePtr->restoreProc(sharedTextPtr->tree, segPtr);
+		segPtr->typePtr->restoreProc(sharedTextPtr, segPtr);
 	    }
 	    prevSegPtr = NULL;
 	}
@@ -1450,8 +1451,11 @@ UndoDeletePerform(
      * Cleanup char segments.
      */
 
-    CleanupSplitPoint(firstPtr, sharedTextPtr);
-    if (firstPtr != lastPtr) {
+    if (firstPtr == lastPtr) {
+	CleanupSplitPoint(firstPtr, sharedTextPtr);
+    } else {
+	lastPtr->protectionFlag = true;
+	CleanupSplitPoint(firstPtr, sharedTextPtr);
 	CleanupSplitPoint(lastPtr, sharedTextPtr);
     }
 
@@ -1532,7 +1536,7 @@ UndoDeleteDestroy(
 	for (segPtr = *segments++; numSegments > 0; segPtr = *segments++, --numSegments) {
 	    assert(segPtr->typePtr);
 	    assert(segPtr->typePtr->deleteProc);
-	    segPtr->typePtr->deleteProc(sharedTextPtr->tree, segPtr, DELETE_BRANCHES | DELETE_MARKS);
+	    segPtr->typePtr->deleteProc(sharedTextPtr, segPtr, DELETE_BRANCHES | DELETE_MARKS);
 	}
 
 	free(((UndoTokenDelete *) token)->segments);
@@ -2754,7 +2758,7 @@ DestroyNode(
 		assert(segPtr->typePtr); /* still existing? */
 		assert(segPtr->sectionPtr->linePtr == linePtr);
 		assert(segPtr->typePtr->deleteProc);
-		segPtr->typePtr->deleteProc(tree, segPtr, TREE_GONE);
+		segPtr->typePtr->deleteProc(TkBTreeGetShared(tree), segPtr, TREE_GONE);
 		segPtr = nextPtr;
 	    }
 	    FreeSections(sectionPtr);
@@ -4279,7 +4283,7 @@ TkBTreeInsertChars(
     				 * this is a list of tags connected via 'nextPtr'. */
     TkTextUndoInfo *undoInfo)	/* Undo information, can be NULL. */
 {
-    TkSharedText *sharedTextPtr;
+    TkSharedText *sharedTextPtr;/* Handle to shared text resource. */
     TkTextSegment *prevPtr;	/* The segment just before the first new segment (NULL means new
     				 * segment is at beginning of line). */
     TkTextLine *linePtr;	/* Current line (new segments are added to this line). */
@@ -5791,7 +5795,7 @@ PropagateChangeOfNumBranches(
 
 static void
 RebuildSections(
-    TkSharedText *sharedTextPtr,
+    TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     TkTextLine *linePtr,		/* Pointer to existing line */
     bool propagateChangeOfNumBranches)	/* Should we propagate a change in number of branches
     					 * to B-Tree? */
@@ -6853,7 +6857,9 @@ DeleteRange(
     beforeSurrogate = NULL;	/* prevent compiler warning */
     prevSavePtr = NULL;		/* prevent compiler warning */
     assert(firstSegPtr->size == 0);
-    deleteFirst = (flags & DELETE_INCLUSIVE) && TkTextIsStableMark(firstSegPtr);
+    deleteFirst = (flags & DELETE_INCLUSIVE)
+	    && firstSegPtr->typePtr != &tkTextProtectionMarkType
+	    && !TkTextIsSpecialOrPrivateMark(firstSegPtr);
 
     linePtr1 = sectionPtr->linePtr;
     linePtr2 = lastSegPtr->sectionPtr->linePtr;
@@ -6981,11 +6987,12 @@ DeleteRange(
 	    nextPtr = segPtr->nextPtr;
 	    byteSize += segPtr->size;
 
-	    if (!segPtr->typePtr->deleteProc((TkTextBTree) treePtr, segPtr, flags)) {
+	    if (!segPtr->typePtr->deleteProc(sharedTextPtr, segPtr, flags)) {
 		assert(segPtr->typePtr); /* really still living? */
 		assert(segPtr->typePtr->group == SEG_GROUP_MARK
 			|| segPtr->typePtr->group == SEG_GROUP_BRANCH);
 		assert(segPtr != lastNewlineSegPtr);
+		assert(!TkTextIsNormalMark(segPtr) || !(flags & DELETE_MARKS));
 
 		if (prevLinkPtr && segPtr->typePtr == &tkTextBranchType) {
 		    /*
@@ -7085,7 +7092,7 @@ DeleteRange(
 			    sharedTextPtr->dontUndoTags, sharedTextPtr);
 		}
 		if (prevSavePtr) {
-		    assert(!prevSavePtr->sectionPtr);
+		    assert(!prevSavePtr->sectionPtr || prevSavePtr == firstSegPtr);
 		    prevSavePtr->nextPtr = savePtr;
 		} else {
 		    if (numSegments == maxSegments) {
@@ -7232,7 +7239,7 @@ DeleteRange(
 	if (!TkTextIsSpecialOrPrivateMark(firstSegPtr)) {
 	    UnlinkSegment(firstSegPtr);
 	    assert(firstSegPtr->typePtr->deleteProc);
-	    if (!firstSegPtr->typePtr->deleteProc((TkTextBTree) treePtr, firstSegPtr, flags)) {
+	    if (!firstSegPtr->typePtr->deleteProc(sharedTextPtr, firstSegPtr, flags)) {
 		assert(!"mark refuses to die"); /* this should not happen */
 	    }
 	    firstSegPtr->sectionPtr = NULL;
@@ -7241,7 +7248,7 @@ DeleteRange(
 	if (!TkTextIsSpecialOrPrivateMark(lastSegPtr)) {
 	    UnlinkSegment(lastSegPtr);
 	    assert(lastSegPtr->typePtr->deleteProc);
-	    if (!lastSegPtr->typePtr->deleteProc((TkTextBTree) treePtr, lastSegPtr, flags)) {
+	    if (!lastSegPtr->typePtr->deleteProc(sharedTextPtr, lastSegPtr, flags)) {
 		assert(!"mark refuses to die"); /* this should not happen */
 	    } else if (undoInfo && TkTextIsStableMark(lastSegPtr)) {
 		assert(lastSegPtr->typePtr); /* not deleted */
@@ -12620,6 +12627,14 @@ TkBTreeCheck(
     }
 
     /*
+     * Check mark table, but only if debugging is enabled.
+     */
+
+#if TK_TEXT_NDEBUG
+    TkTextMarkCheckTable(treePtr->sharedTextPtr);
+#endif
+
+    /*
      * Check line pointers.
      */
 
@@ -13430,7 +13445,7 @@ static void
 RebalanceRecomputeTagRootsAfterMerge(
     Node *resultPtr,		/* The node as the result of the merge. */
     const Node *mergePtr,	/* The node which has been merged into resultPtr. */
-    TkSharedText *sharedTextPtr)
+    TkSharedText *sharedTextPtr)/* Handle to shared text resource. */
 {
     unsigned i;
 
@@ -15370,7 +15385,7 @@ CleanupCharSegments(
 
 static bool
 CharDeleteProc(
-    TkTextBTree tree,
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr,	/* Segment to delete. */
     int flags)			/* Flags controlling the deletion. */
 {
@@ -15473,7 +15488,7 @@ CharCheckProc(
 
 static bool
 HyphenDeleteProc(
-    TkTextBTree tree,
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
@@ -15557,7 +15572,7 @@ HyphenCheckProc(
 
 static bool
 BranchDeleteProc(
-    TkTextBTree tree,
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
@@ -15596,7 +15611,7 @@ BranchDeleteProc(
 
 static void
 BranchRestoreProc(
-    TkTextBTree tree,		/* Information about tree. */
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
     /* Restore old relationship. */
@@ -15744,7 +15759,7 @@ BranchCheckProc(
 
 static bool
 LinkDeleteProc(
-    TkTextBTree tree,		/* Information about tree. */
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
@@ -15783,7 +15798,7 @@ LinkDeleteProc(
 
 static void
 LinkRestoreProc(
-    TkTextBTree tree,		/* Information about tree. */
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
     /* Restore old relationship (misuse of an unused pointer). */
@@ -15948,7 +15963,7 @@ ProtectionMarkCheckProc(
 
 static bool
 ProtectionMarkDeleteProc(
-    TkTextBTree tree,		/* Information about tree. */
+    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
