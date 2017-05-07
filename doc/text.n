@@ -10,7 +10,7 @@
 .BS
 '\" Note: do not modify the .SH NAME line immediately below!
 .SH NAME
-text, tk_mergeRange, tk_textCopy, tk_textCut, tk_textInsert, tk_textPaste, tk_textRebindMouseWheel, tk_textReplace \- Create and manipulate 'text' hypertext editing widgets
+text, \%tk_mergeRange, \%tk_textCopy, \%tk_textCut, \%tk_textInsert, \%tk_textPaste, \%tk_textRebindMouseWheel, \%tk_textReplace \- Create and manipulate 'text' hypertext editing widgets
 .SH SYNOPSIS
 .nf
 \fBtext\fR \fIpathName \fR?\fIoptions\fR?
@@ -95,8 +95,8 @@ colour specified with widget option \fB\-selectforeground\fR will be used.
 Specifies a list of spelling change rules for hyphenated words, given by the
 identifier of the rules. Only the rules given with this set will be used for
 spelling changes. Per default the set of rules is empty, this means that all
-rules are allowed. The rules are important when command \fBtk_textInsert\fR
-(or \fBtk_textReplace\fR) will be used with automatic spelling changes. An
+rules are allowed. The rules are important when command \%\fBtk_textInsert\fR
+(or \%\fBtk_textReplace\fR) will be used with automatic spelling changes. An
 exception will be thrown if one of the given rules is not defined. See
 section for more details \fBHYPHENATION RULES\fR about the defined rules.
 .RS
@@ -1388,7 +1388,7 @@ This procedure is especially supporting the predefined spelling changes
 (see section \fBHYPHENATION RULES\fR).
 .RS
 .PP
-The procedure \fBtk_textInsert\fR inserts all of the \fIchars\fR arguments just
+The procedure \%\fBtk_textInsert\fR inserts all of the \fIchars\fR arguments just
 before the character at \fIindex\fR in the specified text widget, see
 command \fBinsert\fR of the text widget for a detailed description. This
 procedure will pre-parse the \fIchars\fR arguments before it calls command
@@ -1499,7 +1499,7 @@ This procedure is especially supporting the predefined spelling changes (see
 section \fBHYPHENATION RULES\fR).
 .RS
 .PP
-The procedure \fBtk_textReplace\fR replaces the range of characters between
+The procedure \%\fBtk_textReplace\fR replaces the range of characters between
 \fIindex1\fR and \fIindex2\fR, see command \fBreplace\fR for a detailed
 description. This procedure will pre-parse the \fIchars\fR arguments before
 it calls command \fBreplace\fR of \fIpathName\fR for the execution of the
@@ -1508,14 +1508,14 @@ replacement. The parser is recognizing the escape sequences
 .QW \e+ ,
 and
 .QW \e:RULE: ,
-see procedure \fBtk_textInsert\fR which works in a similar way.
+see procedure \%\fBtk_textInsert\fR which works in a similar way.
 .PP
 If option \fB\-hyphentags\fR is specified then the associated \fItagList\fR
 will additionally be associated with all soft hyphens in new text; combined
 with the inherited tags, or the specified tags. This is especially useful
 for hiding/showing soft hyphens (see tag option \fB\-elide\fR).
 .RE
-.SS "HYPHENATION RULES"
+.SH "HYPHENATION RULES"
 .PP
 The rules are:
 .IP [1] 4
@@ -1607,7 +1607,7 @@ In Polish the hyphen will be repeated after line break, this means for
 example that
 .QW tech-nik
 becomes
-.QW tech- -nik .
+.QW "tech- -nik" .
 The name of this rule is \fBrepeathyphen\fR.
 .PP
 Applying hyphenation rule \fIRULE\fR (which may result into spelling
@@ -1618,6 +1618,76 @@ The hyphen is tagged with hyphenation rule \fIRULE\fR (tag option
 .IP [2] 4
 The widget option \fB\-hyphenrules\fR contains rule \fIRULE\fR, and no tag
 (attached to this hyphen) is overruling.
+.SH "INSERTING TEXT WITH SOFT HYPHENS"
+.PP
+When spelling changes are involved it might be convenient to use the helper
+functions \%\fBtk_textInsert\fR and \%\fBtk_textReplace\fR. 
+These functions are providing a simple way to insert hyphenated text
+regarding the spelling changes based on rules. Example:
+.PP
+.CS
+\fBtk_textInsert end .t "Nach dem Ein\\\\-le\\\\-gen des Pa\\\\-piers soll\\\\-ten\\\fR
+    \fBdie Druc\\\\+ker\\\\-ein\\\\-stel\\\\-lun\\\\-gen \[:u]ber\\\\-pr\[:u]ft wer\\\\-den."\fR
+.CE
+.PP
+This text in German may be hyphenated and displayed in the following way:
+.PP
+.CS
+Nach dem Einlegen des Papiers sollten die Druk-
+kereinstellungen \[:u]berpr\[:u]ft werden.
+.CE
+.PP
+Second example:
+.PP
+.CS
+\fBtk_textInsert end .t "Nach dem Ein\\\\-le\\\\-gen des Pa\\\\-piers soll\\\\-ten\\\fR
+    \fBdie Druc\\\\:ck:ker\\\\-ein\\\\-stel\\\\-lun\\\\-gen \[:u]ber\\\\-pr\[:u]ft wer\\\\-den."\fR
+.CE
+.PP
+This gives the same result, but here the \fBck\fR rule is explictly specified.
+.PP
+.CS
+\fBtk_textInsert end .t "Nach dem Ein\\\\+le\\\\+gen des Pa\\\\+piers soll\\\\+ten\\\fR
+    \fBdie Druc\\\\+ker\\\\+ein\\\\+stel\\\\+lun\\\\+gen \[:u]ber\\\\+pr\[:u]ft wer\\\\+den."\fR
+.CE
+.PP
+This will also give the same result, because only the \fBck\fR rule will be detected
+for spelling changes.
+.PP
+.CS
+\fBtk_textInsert end .t "Nach dem Ein\\\\-le\\\\-gen des Pa\\\\-piers soll\\\\-ten\\\fR
+    \fBdie Druc\\\\-ker\\\\-ein\\\\-stel\\\\-lun\\\\-gen \[:u]ber\\\\-pr\[:u]ft wer\\\\-den." ck\fR
+\fB.t tag configure ck -hyphenrules {ck}\fR
+.CE
+.PP
+The same result as before, because the \fBck\fR rule is applied explictly
+(to all soft hyphens).
+.PP
+.CS
+\fBtk_textInsert end .t {Nach dem Ein\\-le\\-gen des Pa\\-piers soll\\-ten\\\fR
+    \fBdie Druc\\-ker\\-ein\\-stel\\-lun\\-gen \[:u]ber\\-pr\[:u]ft wer\\-den.} trema\fR
+\fB.t tag configure trema -hyphenrules {trema}\fR
+.CE
+.PP
+In this case only the \fBtrema\fR rule will be applied to the text - the \fBck\fR
+rule is missing - thus we cannot get here the correct result, this text may be
+(wrongly) hyphenated in the following way:
+.PP
+.CS
+Nach dem Einlegen des Papiers sollten die Druc-
+kereinstellungen \[:u]berpr\[:u]ft werden.
+.CE
+.PP
+The explicit specification of the hyphenation rule is the preferred method (second
+example), however it depends on the quality of the hyphenator which method will be
+used. For instance, the TeX hyphenator does not know about spelling changes, and here
+the method with the use of
+.QW "\\\\+"
+(for any hyphenation point like in the third example) may give fairly good results.
+Of course, the use of
+.QW "\\\\+"
+is (currently) only useful for the languages Catalan, Dutch, German, Hungarian,
+Norwegian, Polish, and Swedish.
 .SH "THE SELECTION"
 .PP
 Selection support is implemented via tags. If the \fB\-exportselection\fR option
@@ -1902,6 +1972,60 @@ if {![\fB$w pendingsync\fR]} {
     lappend todo($w) [list $w yview moveto $fraction]
 }
 .CE
+.SH "IMPROVING THE PERFORMANCE WITH TAGS"
+.PP
+The use of thousands of different tags when inserting text is a bit slow.
+Often such a large number of different tags can be avoided. Example:
+.PP
+.CS
+set n 0
+foreach i $items {
+    $w insert insert $i item:[incr n] " "
+    $w tag bind item:$n <Enter> [list Hilite $w $n yellow]
+    $w tag bind item:$n <Leave> [list Hilite $w $n {}]
+    $w tag bind item:$n <1> [list Action $w $n]
+}
+proc Hilite {w n bg} {
+    $w tag configure item:$n -background $bg
+}
+proc Action {w n} {
+    # do any action based on number $n
+}
+.CE
+.PP
+This piece of code assigns an unique tag to each item, used for
+highlighting and identifying the item. But this can be solved in a
+different way, with only two tags:
+.PP
+.CS
+set n 0
+foreach i $items {
+    $w mark set [incr n] insert left
+    $w insert end $i item " "
+}
+$w tag configure hilite -background yellow
+$w tag bind item <Enter> [list Enter $w]
+$w tag bind item <Leave> [list Leave $w]
+$w tag bind item <1> [list Action $w]
+
+proc Enter {w} {
+    $w tag add hilite item.current.first item.current.last
+}
+proc Leave {w} {
+    $w tag remove hilite begin end
+}
+proc Action {w} {
+    set n item.current.last
+    while {![string is integer -strict [set n [$w mark prev $n]]]} {}
+    # do any action based on number $n
+}
+.CE
+.PP
+The latter method may improve the performance of text insertion
+significantly, because marks are very efficient, even if thousands
+of marks are in usage. Also the number of bindings will be reduced,
+so the overall consumption of resources is improved.
+.PP
 .SH "WIDGET COMMAND"
 .PP
 The \fBtext\fR command creates a new Tcl command whose name is the same as the
@@ -2130,7 +2254,7 @@ the consistency checks may cause a noticeable slow-down.
 .RS
 .PP
 When debugging is turned on, the drawing routines of the text widget set the
-global variables \fBtk_textRedraw\fR and \fBtk_textRelayout\fR to the lists of
+global variables \%\fBtk_textRedraw\fR and \%\fBtk_textRelayout\fR to the lists of
 indices that are redrawn. The values of these variables are tested by Tk's
 test suite.
 .RE
@@ -4266,16 +4390,16 @@ Control-\e clears any selection in the widget.
 .IP [20]
 The F16 key (labelled Copy on many Sun workstations) or Meta-w copies the
 selection in the widget to the clipboard, if there is a selection. This
-action is carried out by the command \fBtk_textCopy\fR.
+action is carried out by the command \%\fBtk_textCopy\fR.
 .IP [21]
 The F20 key (labelled Cut on many Sun workstations) or Control-w copies the
 selection in the widget to the clipboard and deletes the selection. This
-action is carried out by the command \fBtk_textCut\fR. If there is no
+action is carried out by the command \%\fBtk_textCut\fR. If there is no
 selection in the widget then these keys have no effect.
 .IP [22]
 The F18 key (labelled Paste on many Sun workstations) or Control-y inserts the
 contents of the clipboard at the position of the insertion cursor. This action
-is carried out by the command \fBtk_textPaste\fR.
+is carried out by the command \%\fBtk_textPaste\fR.
 .IP [23]
 The Delete key deletes the selection, if there is one in the widget. If there
 is no selection, it deletes the character to the right of the insertion
