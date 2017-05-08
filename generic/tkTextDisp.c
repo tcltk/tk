@@ -281,7 +281,7 @@ typedef struct TextStyle {
 typedef struct CharInfo {
     union {
 	const char *chars;	/* UTF characters to display. Actually points into the baseChars of
-				 * it points points into the baseChars of the base chunk. */
+				 * the base chunk. */
 	struct CharInfo *next;	/* Pointer to next free info struct. */
     } u;
     int32_t numBytes;		/* Number of bytes that belong to this chunk. */
