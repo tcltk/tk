@@ -314,7 +314,6 @@ Tk_FreeGC(
     gcPtr = Tcl_GetHashValue(idHashPtr);
     gcPtr->refCount--;
     if (gcPtr->refCount == 0) {
-	Tk_FreeXId(gcPtr->display, (XID) XGContextFromGC(gcPtr->gc));
 	XFreeGC(gcPtr->display, gcPtr->gc);
 	Tcl_DeleteHashEntry(gcPtr->valueHashPtr);
 	Tcl_DeleteHashEntry(idHashPtr);
@@ -350,12 +349,6 @@ TkGCCleanup(
     for (entryPtr = Tcl_FirstHashEntry(&dispPtr->gcIdTable, &search);
 	    entryPtr != NULL; entryPtr = Tcl_NextHashEntry(&search)) {
 	gcPtr = Tcl_GetHashValue(entryPtr);
-
-	/*
-	 * This call is not needed, as it is only used on Unix to restore the
-	 * Id to the stack pool, and we don't want to use them anymore.
-	 *   Tk_FreeXId(gcPtr->display, (XID) XGContextFromGC(gcPtr->gc));
-	 */
 
 	XFreeGC(gcPtr->display, gcPtr->gc);
 	Tcl_DeleteHashEntry(gcPtr->valueHashPtr);
