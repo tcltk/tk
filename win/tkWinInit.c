@@ -181,6 +181,9 @@ TkWin32ErrorObj(
     LPTSTR lpBuffer = NULL, p = NULL;
     TCHAR  sBuffer[30];
     Tcl_Obj* errPtr = NULL;
+#ifdef _UNICODE
+    Tcl_DString ds;
+#endif
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, (DWORD)hrError,
@@ -196,7 +199,9 @@ TkWin32ErrorObj(
     }
 
 #ifdef _UNICODE
-    errPtr = Tcl_NewUnicodeObj(lpBuffer, (int)wcslen(lpBuffer));
+    Tcl_WinTCharToUtf(lpBuffer, (int)wcslen(lpBuffer) * sizeof (WCHAR), &ds);
+    errPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    Tcl_DStringFree(&ds);
 #else
     errPtr = Tcl_NewStringObj(lpBuffer, (int)strlen(lpBuffer));
 #endif /* _UNICODE */
