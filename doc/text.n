@@ -2015,8 +2015,7 @@ proc Leave {w} {
     $w tag remove hilite begin end
 }
 proc Action {w} {
-    set n item.current.last
-    while {![string is integer -strict [set n [$w mark prev $n]]]} {}
+    set n [$w mark previous item.current.last {[0-9]*}]
     # do any action based on number $n
 }
 .CE
@@ -3299,12 +3298,17 @@ indicate which of its adjacent characters \fImarkName\fR is attached to. If
 \fIdirection\fR is specified, it must be \fBleft\fR or \fBright\fR; the
 gravity of \fImarkName\fR is set to the given value.
 .TP
-\fIpathName \fBmark names\fR
+\fIpathName \fBmark names\fR ?\fB\-discardspecial\fR? ?\fIpattern\fR?
 .
 Returns a list whose elements are the names of all the marks that are
-currently set.
+currently set. If an optional \fIpattern\fR is specified, then only
+the names matching this pattern will be included in the result; see
+\fBstring match\fR about the rules of pattern matching. If option
+\fB\-discardspecial\fR is specified, then exclude the special marks
+\fBinsert\fR and \fBcurrent\fR from result, even when matching the
+given \fIpattern\fR.
 .TP
-\fIpathName \fBmark next \fIindex\fR
+\fIpathName \fBmark next\fR ?\fB-discardspecial\fR? \fIindex\fR ?\fIpattern\fR?
 .
 Returns the name of the next mark at or after \fIindex\fR. If \fIindex\fR is
 specified in numerical form, then the search for the next mark begins at that
@@ -3317,8 +3321,17 @@ in a text widget in the same order as the mark information returned by the
 \fBend\fR index, then it appears to be \fIafter\fR \fBend\fR with respect to
 the \fIpathName \fBmark next\fR operation. An empty string is returned if
 there are no marks after \fIindex\fR.
+.RS
+.PP
+If an optional \fIpattern\fR is specified, then skip all the marks not matching
+this pattern during the search; see \fBstring match\fR about the rules of pattern
+matching.
+.PP
+If option \fB\-discardspecial\fR is specified, then skip the special marks
+\fBinsert\fR and \fBcurrent\fR during the search.
+.RE
 .TP
-\fIpathName \fBmark previous \fIindex\fR
+\fIpathName \fBmark previous\fR ?\fB\-discardspecial\fR? \fIindex\fR ?\fIpattern\fR?
 .
 Returns the name of the mark at or before \fIindex\fR. If \fIindex\fR is
 specified in numerical form, then the search for the previous mark begins with
@@ -3330,6 +3343,15 @@ operation can be used to step through all the marks in a text widget in the
 reverse order as the mark information returned by the \fIpathName \fBdump\fR
 operation. An empty string is returned if there are no marks before
 \fIindex\fR.
+.RS
+.PP
+If an optional \fIpattern\fR is specified, then skip all the marks not matching
+this pattern during the search; see \fBstring match\fR about the rules of pattern
+matching.
+.PP
+If option \fB\-discardspecial\fR is specified, then skip the special marks
+\fBinsert\fR and \fBcurrent\fR during the search.
+.RE
 .TP
 \fIpathName \fBmark set \fImarkName index\fR ?\fIdirection\fR?
 .

@@ -54,8 +54,8 @@ static int		MarkLayoutProc(const TkTextIndex *indexPtr,
 			    TkTextSegment *segPtr, int offset, int maxX,
 			    int maxChars, bool noCharsYet, TkWrapMode wrapMode,
 			    TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
-static int		MarkFindNext(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj* markObj,
-			    bool forward);
+static int		MarkFindNext(Tcl_Interp *interp, TkText *textPtr, bool discardSpecial,
+			    Tcl_Obj* indexObj, const char *pattern, bool forward);
 static void		ChangeGravity(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    TkTextSegment *markPtr, const Tk_SegType *newTypePtr,
 			    TkTextUndoInfo *redoInfo);
@@ -719,16 +719,37 @@ TkTextMarkCmd(
 	break;
     }
     case MARK_NAMES: {
+	bool discardSpecial = false;
+	int numArgs = 3;
+	const char *pattern;
 	Tcl_Obj *resultObj;
 
-	if (objc != 3) {
-	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
+	if (objc > 4 && *Tcl_GetString(objv[3]) == '-') {
+	    if (strcmp(Tcl_GetString(objv[3]), "-discardspecial") == 0) {
+		discardSpecial = true;
+		numArgs = 4;
+	    } else {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad option \"%s\": must be -discardspecial", Tcl_GetString(objv[3])));
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		return TCL_ERROR;
+	    }
+	}
+
+	if (objc != numArgs && objc != numArgs + 1) {
+	    Tcl_WrongNumArgs(interp, 3, objv, "?-discardspecial? ?pattern?");
 	    return TCL_ERROR;
 	}
 
+	pattern = objc > numArgs ? Tcl_GetString(objv[numArgs]) : NULL;
 	resultObj = Tcl_NewObj();
-	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("insert", -1));
-	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("current", -1));
+
+	if (!discardSpecial && (!pattern || Tcl_StringMatch("insert", pattern))) {
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("insert", -1));
+	}
+	if (!discardSpecial && (!pattern || Tcl_StringMatch("current", pattern))) {
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("current", -1));
+	}
 
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->markTable, &search);
 		hPtr;
@@ -736,26 +757,67 @@ TkTextMarkCmd(
 	    TkTextSegment *markPtr = Tcl_GetHashValue(hPtr);
 
 	    if (!markPtr->privateMarkFlag && !markPtr->startEndMarkFlag) {
-		Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-			Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr), -1));
+		const char *name = Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr);
+
+		if (!pattern || Tcl_StringMatch(name, pattern)) {
+		    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(name, -1));
+		}
 	    }
 	}
 
 	Tcl_SetObjResult(interp, resultObj);
 	break;
     }
-    case MARK_NEXT:
-	if (objc != 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "index");
+    case MARK_NEXT: {
+	bool discardSpecial = false;
+	int numArgs = 4;
+	const char *pattern;
+
+	if (objc > 4 && *Tcl_GetString(objv[3]) == '-') {
+	    if (strcmp(Tcl_GetString(objv[3]), "-discardspecial") == 0) {
+		discardSpecial = true;
+		numArgs = 5;
+	    } else {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad option \"%s\": must be -discardspecial", Tcl_GetString(objv[3])));
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		return TCL_ERROR;
+	    }
+	}
+
+	if (objc != numArgs && objc != numArgs + 1) {
+	    Tcl_WrongNumArgs(interp, 3, objv, "?-discardspecial? index ?pattern?");
 	    return TCL_ERROR;
 	}
-	return MarkFindNext(interp, textPtr, objv[3], true);
-    case MARK_PREVIOUS:
-	if (objc != 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "index");
+
+	pattern = objc > numArgs ? Tcl_GetString(objv[numArgs]) : NULL;
+	return MarkFindNext(interp, textPtr, discardSpecial, objv[numArgs - 1], pattern, true);
+    }
+    case MARK_PREVIOUS: {
+	bool discardSpecial = false;
+	int numArgs = 4;
+	const char *pattern;
+
+	if (objc > 4 && *Tcl_GetString(objv[3]) == '-') {
+	    if (strcmp(Tcl_GetString(objv[3]), "-discardspecial") == 0) {
+		discardSpecial = true;
+		numArgs = 5;
+	    } else {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad option \"%s\": must be -discardspecial", Tcl_GetString(objv[3])));
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		return TCL_ERROR;
+	    }
+	}
+
+	if (objc != numArgs && objc != numArgs + 1) {
+	    Tcl_WrongNumArgs(interp, 3, objv, "?-discardspecial? index ?pattern?");
 	    return TCL_ERROR;
 	}
-	return MarkFindNext(interp, textPtr, objv[3], false);
+
+	pattern = objc > numArgs ? Tcl_GetString(objv[numArgs]) : NULL;
+	return MarkFindNext(interp, textPtr, discardSpecial, objv[numArgs - 1], pattern, false);
+    }
     case MARK_SET: {
 	const Tk_SegType *typePtr = NULL;
 	const char *name;
@@ -2755,34 +2817,36 @@ static int
 MarkFindNext(
     Tcl_Interp *interp,		/* For error reporting */
     TkText *textPtr,		/* The widget */
-    Tcl_Obj* markObj,		/* The mark name. */
+    bool discardSpecial,	/* Discard marks "insert" and "current" when searching= */
+    Tcl_Obj* indexObj,		/* Start search at this index. */
+    const char *pattern,	/* Result must match this pattern, can be NULL. */
     bool forward)		/* Search forward. */
 {
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
-    const char *string;
+    const char *indexStr;
 
     assert(textPtr);
-    assert(markObj);
+    assert(indexObj);
 
     if (TkTextIsDeadPeer(textPtr)) {
 	return TCL_OK;
     }
 
-    string = Tcl_GetString(markObj);
+    indexStr = Tcl_GetString(indexObj);
 
-    if (strcmp(string, "insert") == 0) {
+    if (strcmp(indexStr, "insert") == 0) {
 	segPtr = textPtr->insertMarkPtr;
 	linePtr = segPtr->sectionPtr->linePtr;
 	segPtr = forward ? segPtr->nextPtr : segPtr->prevPtr;
-    } else if (strcmp(string, "current") == 0) {
+    } else if (strcmp(indexStr, "current") == 0) {
 	segPtr = textPtr->currentMarkPtr;
 	linePtr = segPtr->sectionPtr->linePtr;
 	segPtr = forward ? segPtr->nextPtr : segPtr->prevPtr;
     } else {
-	if ((hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable, string))) {
+	if ((hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable, indexStr))) {
 	    /*
 	     * If given a mark name, return the next/prev mark in the list of segments, even
 	     * if it happens to be at the same character position.
@@ -2790,7 +2854,7 @@ MarkFindNext(
 
 	    segPtr = Tcl_GetHashValue(hPtr);
 	    if (!MarkToIndex(textPtr, segPtr, &index)) {
-		return SetResultNoMarkNamed(interp, string);
+		return SetResultNoMarkNamed(interp, indexStr);
 	    }
 	    linePtr = segPtr->sectionPtr->linePtr;
 	    segPtr = forward ? segPtr->nextPtr : segPtr->prevPtr;
@@ -2801,7 +2865,7 @@ MarkFindNext(
 	     * return any marks that are right at the index.
 	     */
 
-	    if (!TkTextGetIndexFromObj(interp, textPtr, markObj, &index)) {
+	    if (!TkTextGetIndexFromObj(interp, textPtr, indexObj, &index)) {
 		return TCL_ERROR;
 	    }
 	    segPtr = TkTextIndexGetFirstSegment(&index, NULL);
@@ -2839,14 +2903,12 @@ MarkFindNext(
 		if (TkTextIsNormalOrSpecialMark(segPtr)) {
 		    const char *name = TkTextMarkName(textPtr->sharedTextPtr, textPtr, segPtr);
 
-		    if (name) {
+		    if (name /* otherwise it's a special mark not belonging to this widget */
+			    && (!discardSpecial || !TkTextIsSpecialMark(segPtr))
+			    && (!pattern || Tcl_StringMatch(name, pattern))) {
 			Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
 			return TCL_OK;
 		    }
-
-		    /*
-		     * It's a special mark not belonging to this widget, so ignore it.
-		     */
 		}
 	    }
 
@@ -2879,14 +2941,12 @@ MarkFindNext(
 		if (TkTextIsNormalOrSpecialMark(segPtr)) {
 		    const char *name = TkTextMarkName(textPtr->sharedTextPtr, textPtr, segPtr);
 
-		    if (name) {
+		    if (name /* otherwise it's a special mark not belonging to this widget */
+			    && (!discardSpecial || !TkTextIsSpecialMark(segPtr))
+			    && (!pattern || Tcl_StringMatch(name, pattern))) {
 			Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
 			return TCL_OK;
 		    }
-
-		    /*
-		     * It's a special mark not belonging to this widget, so ignore it.
-		     */
 		}
 	    }
 

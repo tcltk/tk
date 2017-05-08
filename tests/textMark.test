@@ -71,8 +71,8 @@ test textMark-1.8 {TkTextMarkCmd - "gravity" option} -returnCodes error -body {
 } -result {wrong # args: should be ".t mark gravity markName ?gravity?"}
 
 test textMark-2.1 {TkTextMarkCmd - "names" option} -body {
-    .t mark names 2
-} -returnCodes error -result {wrong # args: should be ".t mark names"}
+    .t mark names 2 2
+} -returnCodes error -result {wrong # args: should be ".t mark names ?-discardspecial? ?pattern?"}
 test textMark-2.2 {TkTextMarkCmd - "names" option} -setup {
     .t mark unset {*}[.t mark names]
 } -body {
@@ -85,6 +85,15 @@ test textMark-2.3 {TkTextMarkCmd - "names" option} -setup {
     .t mark set "b c" 2.3
     lsort [.t mark names]
 } -result {a {b c} current insert}
+test textMark-2.4 {TkTextMarkCmd - "names" option} -body {
+    .t mark names -discardspecial
+} -result {}
+test textMark-2.5 {TkTextMarkCmd - "names" option} -body {
+    .t mark names ins*
+} -result {insert}
+test textMark-2.6 {TkTextMarkCmd - "names" option} -body {
+    .t mark names -discardspecial ins*
+} -result {}
 
 test textMark-3.1 {TkTextMarkCmd - "set" option} -returnCodes error -body {
     .t mark set a
@@ -239,6 +248,27 @@ test textMark-7.9 {MarkFindNext - mark set in a text widget and retrieved from a
     .t mark set mymark 1.0
     lsort [list [.pt mark next 1.0] [.pt mark next mymark] [.pt mark next current]]
 } -result {current insert mymark}
+test textMark-7.9 {MarkFindNext - discard special marks} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set current 1.0
+    .t mark set insert 3.0
+    .t mark next -discardspecial begin
+} -result {}
+test textMark-7.10 {MarkFindNext - match pattern} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set current 1.0
+    .t mark set insert 3.0
+    .t mark next begin ins*
+} -result {insert}
+test textMark-7.11 {MarkFindNext - match pattern - discard special marks} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set current 1.0
+    .t mark set insert 3.0
+    .t mark next -discardspecial begin ins*
+} -result {}
 
 test textMark-8.1 {MarkFindPrev - invalid mark name} -body {
     .t mark prev bogus
@@ -296,6 +326,27 @@ test textMark-8.9 {MarkFindPrev - mark set in a text widget and retrieved from a
     .t mark set mymark 1.0
     lsort [list [.pt mark prev end] [.pt mark prev current] [.pt mark prev insert]]
 } -result {current insert mymark}
+test textMark-8.9 {MarkFindPrev - discard special marks} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set insert 3.0
+    .t mark set current end
+    .t mark prev -discardspecial end
+} -result {}
+test textMark-8.10 {MarkFindPrev - match pattern} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set insert 3.0
+    .t mark set current 2.0
+    .t mark prev end ins*
+} -result {insert}
+test textMark-8.11 {MarkFindPrev - match pattern - discard special marks} -setup {
+    .t mark unset {*}[.t mark names]
+} -body {
+    .t mark set insert 3.0
+    .t mark set current 2.0
+    .t mark prev -discardspecial end ins*
+} -result {}
 
 destroy .pt
 destroy .t
