@@ -2123,7 +2123,7 @@ of the image will be used for the checksum computation.
 The computation considers all marks. In case of a mark the name of the mark
 and his gravity will be used for the checksum computation. Note that the
 computation discards generated marks, and it discards the special marks
-\fBcurrent\fR, \fBinsert\fR, and \fBsel\fR.
+\fBcurrent\fR, and \fBinsert\fR.
 .IP \fB\-tag\fR
 Consider tag information in the checksum computation. The name of the tags
 associated to this data (characters, soft hyphen, image, or window) will be
