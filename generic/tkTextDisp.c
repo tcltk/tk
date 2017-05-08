@@ -7566,7 +7566,7 @@ TkTextCharLayoutProc(
 	ciPtr = &bciPtr->ci;
     } else {
 	bciPtr = baseCharChunkPtr->clientData;
-	ciPtr = ckalloc(sizeof(CharInfo));
+	ciPtr = ckalloc(Tk_Offset(CharInfo, chars) + 1);
 	baseString = &bciPtr->baseChars;
     }
 
