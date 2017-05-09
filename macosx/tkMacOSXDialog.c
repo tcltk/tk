@@ -755,15 +755,15 @@ Tk_GetSaveFileObjCmd(
     [label setBordered:NO];
     [label setBezeled:NO];
     [label setDrawsBackground:NO];
- 
+
     NSPopUpButton *popupButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(50.0, 2, 140, 22.0) pullsDown:NO];
     [popupButton addItemsWithTitles:saveFileTypes];
     [popupButton setAction:@selector(saveFormat:)];
- 
+
     [accessoryView addSubview:label];
     [accessoryView addSubview:popupButton];
     [savepanel setAllowedFileTypes:saveFileTypes];
- 
+
     [savepanel setAccessoryView:accessoryView];
     [savepanel setAllowsOtherFileTypes:YES];
     }
