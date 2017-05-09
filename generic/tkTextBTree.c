@@ -8117,8 +8117,6 @@ TkBTreeUnlinkSegment(
 	    nodePtr->size -= segPtr->size;
 	}
     }
-
-    TK_BTREE_DEBUG(if (!segPtr->startEndMarkFlag) TkBTreeCheck(sharedTextPtr->tree));
 }
 
 /*
@@ -12639,9 +12637,7 @@ TkBTreeCheck(
      * Check mark table, but only if debugging is enabled.
      */
 
-#if TK_TEXT_NDEBUG
     TkTextMarkCheckTable(treePtr->sharedTextPtr);
-#endif
 
     /*
      * Check line pointers.
@@ -12736,25 +12732,28 @@ TkBTreeCheck(
     }
 
     for (peer = treePtr->sharedTextPtr->peers; peer; peer = peer->next) {
-	if (peer->currentMarkPtr && peer->currentMarkPtr->sectionPtr) {
+	if (peer->currentMarkPtr) {
+	    if (!peer->currentMarkPtr->sectionPtr) {
+		Tcl_Panic("TkBTreeCheck: current mark is not linked");
+	    }
 	    if ((peer->currentMarkPtr->prevPtr && !peer->currentMarkPtr->prevPtr->typePtr)
 		|| (peer->currentMarkPtr->nextPtr && !peer->currentMarkPtr->nextPtr->typePtr)
-		|| (peer->currentMarkPtr->sectionPtr
-		    && (!peer->currentMarkPtr->sectionPtr->linePtr
-			|| !peer->currentMarkPtr->sectionPtr->linePtr->parentPtr))) {
+		|| (!peer->currentMarkPtr->sectionPtr->linePtr
+			|| !peer->currentMarkPtr->sectionPtr->linePtr->parentPtr)) {
 		Tcl_Panic("TkBTreeCheck: current mark is expired");
 	    }
 	}
-	if (peer->insertMarkPtr && peer->insertMarkPtr->sectionPtr) {
+	if (peer->insertMarkPtr) {
+	    if (!peer->insertMarkPtr->sectionPtr) {
+		Tcl_Panic("TkBTreeCheck: insert mark is not linked");
+	    }
 	    if ((peer->insertMarkPtr->prevPtr && !peer->insertMarkPtr->prevPtr->typePtr)
 		|| (peer->insertMarkPtr->nextPtr && !peer->insertMarkPtr->nextPtr->typePtr)
-		|| (peer->insertMarkPtr->sectionPtr
-		    && (!peer->insertMarkPtr->sectionPtr->linePtr
-			|| !peer->insertMarkPtr->sectionPtr->linePtr->parentPtr))) {
+		|| (!peer->insertMarkPtr->sectionPtr->linePtr
+			|| !peer->insertMarkPtr->sectionPtr->linePtr->parentPtr)) {
 		Tcl_Panic("TkBTreeCheck: insert mark is expired");
 	    }
 	}
-#if 0 /* cannot be used, because also TkBTreeUnlinkSegment is calling TreeCheck */
 	if (peer->startMarker != treePtr->sharedTextPtr->startMarker) {
 	    if (!peer->startMarker->sectionPtr) {
 		Tcl_Panic("TkBTreeCheck: start marker is not linked");
@@ -12763,7 +12762,6 @@ TkBTreeCheck(
 		Tcl_Panic("TkBTreeCheck: end marker is not linked");
 	    }
 	}
-#endif
 	if (!peer->startMarker->sectionPtr) {
 	    Tcl_Panic("TkBTreeCheck: start marker of is not linked");
 	}
