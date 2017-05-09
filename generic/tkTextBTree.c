@@ -1537,9 +1537,16 @@ UndoDeleteDestroy(
 	TkTextSegment *segPtr;
 
 	for (segPtr = *segments++; numSegments > 0; segPtr = *segments++, --numSegments) {
-	    assert(segPtr->typePtr);
-	    assert(segPtr->typePtr->deleteProc);
-	    segPtr->typePtr->deleteProc(sharedTextPtr, segPtr, DELETE_BRANCHES | DELETE_MARKS);
+	    while (segPtr) {
+		TkTextSegment *nextPtr;
+
+		assert(segPtr->typePtr);
+		assert(segPtr->typePtr->deleteProc);
+
+		nextPtr = (segPtr->nextPtr && !segPtr->sectionPtr) ? segPtr->nextPtr : NULL;
+		segPtr->typePtr->deleteProc(sharedTextPtr, segPtr, DELETE_BRANCHES | DELETE_MARKS);
+		segPtr = nextPtr;
+	    }
 	}
 
 	free(((UndoTokenDelete *) token)->segments);
@@ -6980,7 +6987,7 @@ DeleteRange(
 	    TkTextSegment *savePtr;
 	    bool reInserted = false;
 
-	    if ((savePtr = undoInfo && !TkTextIsSpecialOrPrivateMark(segPtr) ? segPtr : NULL)) {
+	    if ((savePtr = (undoInfo && !TkTextIsSpecialOrPrivateMark(segPtr)) ? segPtr : NULL)) {
 		savePtr->refCount += 1;
 	    }
 
