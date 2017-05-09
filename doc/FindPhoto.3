@@ -263,7 +263,7 @@ The \fBTk_PhotoImageBlock\fR structure used to provide image data to
 data (e.g. separate planes for the red, green, blue and alpha
 channels).  Unfortunately, the implementation fails to hold this
 promise.  The problem is that the \fIpixelSize\fR field is
-(incorrectly) used to determine wehter the image has an alpha channel.
+(incorrectly) used to determine whether the image has an alpha channel.
 Currently, if the offset for the alpha channel is greater or equal than
 \fIpixelSize\fR, \fBtk_PhotoPutblock\fR assumes no alpha data is
 present and makes the image fully opaque.  This means that for layouts

@@ -3481,14 +3481,6 @@ HandleEventGenerate(
 	Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display,
 		event.general.xmotion.window);
 
-	/*
-	 * TODO: No protection is in place to handle dispPtr destruction
-	 * before DoWarp is called back.
-	 */
-
-	Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display,
-		event.general.xmotion.window);
-
 	if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
 	    Tcl_DoWhenIdle(DoWarp, dispPtr);
 	    dispPtr->flags |= TK_DISPLAY_IN_WARP;
