@@ -2044,6 +2044,11 @@ TkTextMarkSegToIndex(
 {
     assert(textPtr);
     assert(markPtr);
+#ifndef NDEBUG /* XXX preliminary, as long as we are searching for bug [283d52f41] */
+    if (!markPtr->sectionPtr) {
+	printf("mark '%s' is not linked\n", TkTextMarkName(textPtr->sharedTextPtr, textPtr, markPtr));
+    }
+#endif
     assert(markPtr->sectionPtr); /* otherwise not linked */
 
     TkTextIndexClear(indexPtr, textPtr);
@@ -2321,7 +2326,7 @@ MarkDeleteProc(
 	assert(segPtr->sectionPtr); /* still linked? */
     } else /*if (flags & DELETE_CLEANUP)*/ {
 	/*
-	 * This case only happen if the mark is saved on undo/redo stack. We have
+	 * This case can only happen if the mark is saved on undo/redo stack. We have
 	 * nothing to do here, because the mark will be deleted later.
 	 */
     }
@@ -3019,8 +3024,6 @@ TkTextMarkName(
  * ------------------------------------------------------------------------
  */
 
-#ifdef TK_TEXT_NDEBUG
-
 void
 TkTextMarkCheckTable(
     TkSharedText *sharedTextPtr)
@@ -3034,13 +3037,11 @@ TkTextMarkCheckTable(
 	if (markPtr->body.mark.changePtr == (void *) 0xdeadbeef) {
 	    Tcl_Panic("TkTextMarkCheckTable: deleted mark in table");
 	}
-	if (!IS_PRESERVED(markPtr) && !markPtr->sectionPtr) {
-	    Tcl_Panic("TkTextMarkCheckTable: unlinked mark in table");
+	if (IS_PRESERVED(markPtr)) {
+	    Tcl_Panic("TkTextMarkCheckTable: preserved mark in table");
 	}
     }
 }
-
-#endif /* TK_TEXT_NDEBUG */
 
 /*
  * Local Variables:

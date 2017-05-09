@@ -2648,6 +2648,17 @@ TextWidgetObjCmd(
     }
 
   done:
+#ifndef NDEBUG /* XXX preliminary, as long as we are searching for bug [283d52f41] */
+    if (!textPtr->insertMarkPtr->sectionPtr || !textPtr->currentMarkPtr->sectionPtr) {
+	int i;
+	printf("%s mark is not linked after:", textPtr->insertMarkPtr->sectionPtr ?
+	    "current" : "insert");
+	for (i = 0; i < objc; ++i) {
+	    printf(" %s", Tcl_GetString(objv[i]));
+	}
+	printf("\n");
+    }
+#endif
     if (--textPtr->refCount == 0) {
 	bool sharedIsReleased = textPtr->sharedIsReleased;
 
@@ -3118,7 +3129,7 @@ TextReplaceCmd(
 	sharedTextPtr->autoSeparators = origAutoSep;
     }
 
-    TkTextReleaseIfDestroyed(textPtr);
+    TkTextDecrRefCountAndTestIfDestroyed(textPtr);
     return result;
 }
 

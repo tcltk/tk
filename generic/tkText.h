@@ -2108,20 +2108,13 @@ MODULE_SCOPE int	TkTextIndexRestrictToStartRange(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexRestrictToEndRange(TkTextIndex *indexPtr);
 MODULE_SCOPE bool	TkTextIndexEnsureBeforeLastChar(TkTextIndex *indexPtr);
 MODULE_SCOPE bool	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
-
-#if TK_TEXT_NDEBUG
 MODULE_SCOPE void	TkTextMarkCheckTable(TkSharedText *sharedTextPtr);
-#endif
 
 /*
  * Debugging info macros:
  */
 
-#ifdef TK_TEXT_NDEBUG
-# ifdef NDEBUG
-#  error "Do not define TK_TEXT_NDEBUG when NDEBUG is also defined"
-# endif
-
+#if defined(NDEBUG) || defined(TK_TEXT_NDEBUG)
 # define TK_BTREE_DEBUG(expr)
 #else
 # define TK_BTREE_DEBUG(expr)	{ if (tkBTreeDebug) { expr; } }
