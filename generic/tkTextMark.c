@@ -852,7 +852,7 @@ TkTextMarkCmd(
 	    static bool printWarning = true;
 
 	    if (printWarning) {
-		fprintf(stderr, "\"begin\" is a reserved index identifier and shouldn't "
+		fprintf(stderr, "tk::text: \"begin\" is a reserved index identifier and shouldn't "
 			"be used for mark names anymore.\n");
 		printWarning = false;
 	    }

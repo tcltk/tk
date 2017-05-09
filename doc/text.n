@@ -4463,6 +4463,69 @@ be displayed and no text modifications will take place.
 .PP
 The behavior of texts can be changed by defining new bindings for individual
 widgets or by redefining the class bindings.
+.SH "DEPRECIATION WARNINGS"
+.PP
+Some functions/options now are marked as deprecated and will be removed in a
+later version. Here is an overview about all possible depreciation warnings,
+with possible solutions:
+.PP
+.IP \(bu 3
+\fBtk::text: Option "-startline" is deprecated, please use option "-startindex".\fR
+.IP
+Replace all occurrences of
+.QW "\fB$w -startline 4\fR"
+with
+.QW "\fB$w -startindex 4.0\fR".
+.IP \(bu 3
+\fBtk::text: Option "-endline" is deprecated, please use option "-endindex".\fR
+.IP
+Replace all occurrences of
+.QW "\fB$w -endline 4\fR"
+with
+.QW "\fB$w -endindex 3.end\fR" .
+.IP \(bu 3
+\fBtk::text: Attempt to modify a disabled widget is deprecated.\fR
+.IP
+Remove this useless expression, a disabled widget cannot be
+modified.
+.IP \(bu 3
+\fBtk::text: Attempt to modify a dead widget is deprecated.\fR
+.IP
+Remove this useless expression, a dead widget (does not contains
+linesand do not show an insertion cursor) cannot be modified.
+.IP \(bu 3
+\fBtk::text: Command "edit canredo" is deprecated, please use "edit info".\fR
+.IP
+Replace all occurrences
+.QW "\fB[$w edit canredo]\fR"
+with
+.QW "\fB[set [$w edit info](redodepth)]\fR" .
+.IP \(bu 3
+\fBtk::text: Command "edit canundo" is deprecated, please use "edit info".\fR
+.IP
+Replace all occurrences
+.QW "\fB[$w edit canundo]\fR"
+with
+.QW "\fB[set [$w edit info](undodepth)]\fR" .
+.IP \(bu 3
+\fBtk::text: "begin" is a reserved index identifier and shouldn't be used for mark names anymore.\fR
+.IP
+Replace this mark name with a different mark name,
+but do this at all places where \fBbegin\fR is used as a name for a mark.
+.IP \(bu 3
+\fBtk::text: Tag option "-overstrikefg" is deprecated, please use option "-overstrikecolor".\fR
+.IP
+Replace all occurrences
+.QW "\fB$w tag configure -overstrikefg black\fR"
+with
+.QW "\fB$w tag configure -overstrikecolor black\fR" .
+.IP \(bu 3
+\fBtk::text: Tag option "-underlinefg" is deprecated, please use option "-underlinecolor".\fR
+.IP
+Replace all occurrences
+.QW "\fB$w tag configure -underlinefg black\fR"
+with
+.QW "\fB$w tag configure -underlinecolor black\fR" .
 .SH "KNOWN ISSUES"
 .SS "ISSUES CONCERNING INDICES"
 .PP
