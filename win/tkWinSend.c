@@ -619,7 +619,6 @@ BuildMoniker(
 	LPMONIKER pmkItem = NULL;
 	Tcl_DString dString;
 
-	Tcl_DStringInit(&dString);
 	Tcl_WinUtfToTChar(name, -1, &dString);
 	hr = CreateFileMoniker((LPOLESTR)Tcl_DStringValue(&dString), &pmkItem);
 	Tcl_DStringFree(&dString);
