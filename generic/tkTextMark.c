@@ -2320,7 +2320,10 @@ MarkDeleteProc(
 	assert(!IS_PRESERVED(segPtr));
 	assert(segPtr->sectionPtr); /* still linked? */
     } else /*if (flags & DELETE_CLEANUP)*/ {
-	assert(!"should not happen");
+	/*
+	 * This case only happen if the mark is saved on undo/redo stack. We have
+	 * nothing to do here, because the mark will be deleted later.
+	 */
     }
 
     return true;
