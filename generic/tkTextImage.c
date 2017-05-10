@@ -51,7 +51,7 @@ static int		EmbImageConfigure(TkText *textPtr, TkTextSegment *eiPtr, int *maskPt
 			    bool undoable, int objc, Tcl_Obj *const objv[]);
 static bool		EmbImageDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr,
 			    int flags);
-static void		EmbImageRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
+static bool		EmbImageRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static void		EmbImageDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int x, int y,
 			    int lineHeight, int baseline, Display *display, Drawable dst, int screenY);
 static int		EmbImageLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
@@ -912,7 +912,7 @@ EmbImageDeleteProc(
  *--------------------------------------------------------------
  */
 
-static void
+static bool
 EmbImageRestoreProc(
     TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *eiPtr)	/* Segment to reuse. */
@@ -929,6 +929,8 @@ EmbImageRestoreProc(
 	assert(isNew);
 	Tcl_SetHashValue(img->hPtr, eiPtr);
     }
+
+    return true;
 }
 
 /*

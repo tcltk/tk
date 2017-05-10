@@ -67,7 +67,7 @@ static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr, bool undoable
 			    int objc, Tcl_Obj *const objv[]);
 static void		EmbWinDelayedUnmap(ClientData clientData);
 static bool		EmbWinDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
-static void		EmbWinRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
+static bool		EmbWinRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static int		EmbWinLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars, bool noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
@@ -1310,7 +1310,7 @@ EmbWinDeleteProc(
  *--------------------------------------------------------------
  */
 
-static void
+static bool
 EmbWinRestoreProc(
     TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *ewPtr)	/* Segment to reuse. */
@@ -1337,6 +1337,8 @@ EmbWinRestoreProc(
 	    }
 	}
     }
+
+    return true;
 }
 
 /*

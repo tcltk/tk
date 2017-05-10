@@ -229,12 +229,12 @@ static unsigned		CountSegments(const TkTextSection *sectionPtr);
 static unsigned		ComputeSectionSize(const TkTextSegment *segPtr);
 static void		BranchCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static bool		BranchDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
-static void		BranchRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
+static bool		BranchRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static Tcl_Obj *	BranchInspectProc(const TkSharedText *sharedTextPtr,
 			    const TkTextSegment *segPtr);
 static void		LinkCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static bool		LinkDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
-static void		LinkRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
+static bool		LinkRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static Tcl_Obj *	LinkInspectProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static bool		ProtectionMarkDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr,
 			    int flags);
@@ -1299,6 +1299,7 @@ UndoDeletePerform(
     bool reinsertFirstSegment = true;
     int size = 0;
     unsigned i;
+    DEBUG(bool hasZeroSize);
 
     assert(segments);
     assert(segments[0]);
@@ -1345,7 +1346,7 @@ UndoDeletePerform(
 		assert(segPtr->typePtr != &tkTextCharType);
 
 		/*
-		 * This is a re-inserted segment, it will move.
+		 * This is a re-inserted segment, it will move, or even deleted.
 		 */
 
 		sectionPtr = segPtr->sectionPtr;
@@ -1356,49 +1357,55 @@ UndoDeletePerform(
 	    size += segPtr->size;
 	}
 	lastPtr = segPtr;
-	if (reinsertFirstSegment) {
-	    DEBUG(segPtr->sectionPtr = NULL);
-	    ReInsertSegment(sharedTextPtr, &undoToken->startIndex, segPtr, false);
-	    reinsertFirstSegment = false;
-	} else if (prevPtr != segPtr) {
-	    DEBUG(segPtr->sectionPtr = NULL);
-	    LinkSegment(linePtr, prevPtr, segPtr);
-	}
-	if (segPtr->typePtr == &tkTextCharType) {
-	    assert(!segPtr->typePtr->restoreProc);
-
-	    if (prevSegPtr) {
-		if ((prevSegPtr = CleanupCharSegments(sharedTextPtr, prevSegPtr))->nextPtr != segPtr) {
-		    segPtr = prevSegPtr;
-		    lastPtr = segPtr->nextPtr;
-		}
-	    }
-
-	    if (segPtr->body.chars[segPtr->size - 1] == '\n') {
-		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, segPtr->nextPtr);
-		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
-		changeToLineCount += 1;
-		changeToLogicalLineCount += linePtr->logicalLine;
-		RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
-		tagonPtr = TkTextTagSetJoin(tagonPtr, linePtr->tagonPtr);
-		tagoffPtr = TkTextTagSetJoin(tagoffPtr, linePtr->tagoffPtr);
-		additionalTagoffPtr = TagSetIntersect(additionalTagoffPtr,
-			linePtr->tagonPtr, sharedTextPtr);
-		linePtr = newLinePtr;
-		segPtr = NULL;
-	    }
-
-	    prevSegPtr = segPtr;
+	DEBUG(hasZeroSize = segPtr->size == 0);
+	if (segPtr->typePtr->restoreProc && !segPtr->typePtr->restoreProc(sharedTextPtr, segPtr)) {
+	    /*
+	     * This segment couldn't be restored and has been deleted. Momently this is
+	     * possible only if this segment is a mark.
+	     */
+	    assert(hasZeroSize); /* otherwise we have to adjust 'size' */
 	} else {
-	    if (segPtr->typePtr->restoreProc) {
-		if (segPtr->typePtr == &tkTextBranchType) {
-		    changeToBranchCount += 1;
-		}
-		segPtr->typePtr->restoreProc(sharedTextPtr, segPtr);
+	    if (reinsertFirstSegment) {
+		DEBUG(segPtr->sectionPtr = NULL);
+		ReInsertSegment(sharedTextPtr, &undoToken->startIndex, segPtr, false);
+		reinsertFirstSegment = false;
+	    } else if (prevPtr != segPtr) {
+		DEBUG(segPtr->sectionPtr = NULL);
+		LinkSegment(linePtr, prevPtr, segPtr);
 	    }
-	    prevSegPtr = NULL;
+	    if (segPtr->typePtr == &tkTextCharType) {
+		assert(!segPtr->typePtr->restoreProc);
+
+		if (prevSegPtr) {
+		    prevSegPtr = CleanupCharSegments(sharedTextPtr, prevSegPtr);
+
+		    if (prevSegPtr->nextPtr != segPtr) {
+			segPtr = prevSegPtr;
+			lastPtr = segPtr->nextPtr;
+		    }
+		}
+
+		if (segPtr->body.chars[segPtr->size - 1] == '\n') {
+		    newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr,
+			    linePtr, segPtr->nextPtr);
+		    AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
+		    changeToLineCount += 1;
+		    changeToLogicalLineCount += linePtr->logicalLine;
+		    RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
+		    tagonPtr = TkTextTagSetJoin(tagonPtr, linePtr->tagonPtr);
+		    tagoffPtr = TkTextTagSetJoin(tagoffPtr, linePtr->tagoffPtr);
+		    additionalTagoffPtr = TagSetIntersect(additionalTagoffPtr,
+			    linePtr->tagonPtr, sharedTextPtr);
+		    linePtr = newLinePtr;
+		    segPtr = NULL;
+		}
+
+		prevSegPtr = segPtr;
+	    } else {
+		prevSegPtr = NULL;
+	    }
+	    prevPtr = segPtr;
 	}
-	prevPtr = segPtr;
 	if ((segPtr = nextPtr)) {
 	    if (nextPtr->nextPtr && !nextPtr->sectionPtr) {
 		nextPtr = nextPtr->nextPtr;
@@ -5324,6 +5331,7 @@ UnlinkSegment(
 	segPtr->sectionPtr->size -= segPtr->size;
     }
     segPtr->sectionPtr = NULL;
+    segPtr->nextPtr = NULL; /* this is needed for undo mechanism */
     return prevPtr;
 }
 
@@ -12634,12 +12642,6 @@ TkBTreeCheck(
     }
 
     /*
-     * Check mark table, but only if debugging is enabled.
-     */
-
-    TkTextMarkCheckTable(treePtr->sharedTextPtr);
-
-    /*
      * Check line pointers.
      */
 
@@ -15616,7 +15618,7 @@ BranchDeleteProc(
  *--------------------------------------------------------------
  */
 
-static void
+static bool
 BranchRestoreProc(
     TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
@@ -15625,6 +15627,7 @@ BranchRestoreProc(
     segPtr->body.branch.nextPtr = (TkTextSegment *) segPtr->tagInfoPtr;
     assert(segPtr->body.branch.nextPtr->typePtr == &tkTextLinkType);
     segPtr->tagInfoPtr = NULL;
+    return true;
 }
 
 /*
@@ -15803,7 +15806,7 @@ LinkDeleteProc(
  *--------------------------------------------------------------
  */
 
-static void
+static bool
 LinkRestoreProc(
     TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
@@ -15812,6 +15815,7 @@ LinkRestoreProc(
     segPtr->body.link.prevPtr = (TkTextSegment *) segPtr->tagInfoPtr;
     assert(segPtr->body.link.prevPtr->typePtr == &tkTextBranchType);
     segPtr->tagInfoPtr = NULL;
+    return true;
 }
 
 /*
