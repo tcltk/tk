@@ -1267,7 +1267,7 @@ Tk_BindEvent(
      */
 
     if ((eventPtr->type >= TK_LASTEVENT) || !flagArray[eventPtr->type]) {
-       return;
+	return;
     }
 
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -3466,12 +3466,7 @@ HandleEventGenerate(
     if ((warp != 0) && Tk_IsMapped(tkwin)) {
 	TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
-	/*
-	 * TODO: No protection is in place to handle dispPtr destruction
-	 * before DoWarp is called back.
-	 */
-
-	Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display,
+Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display,
 		event.general.xmotion.window);
 
 	if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
@@ -4318,6 +4313,33 @@ TkpGetBindingXEvent(
    BindingTable *bindPtr = winPtr->mainPtr->bindingTable;
 
    return &(bindPtr->eventRing[bindPtr->curEvent]);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpCancelWarp --
+ *
+ *	This function cancels an outstanding pointer warp and
+ *	is called during tear down of the display.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCancelWarp(
+    TkDisplay *dispPtr)
+{
+    if (dispPtr->flags & TK_DISPLAY_IN_WARP) {
+	Tcl_CancelIdleCall(DoWarp, dispPtr);
+	dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
+    }
 }
 
 /*
