@@ -1980,13 +1980,13 @@ Often such a large number of different tags can be avoided. Example:
 .CS
 set n 0
 foreach i $items {
-    $w insert insert $i item:[incr n] " "
-    $w tag bind item:$n <Enter> [list Hilite $w $n yellow]
-    $w tag bind item:$n <Leave> [list Hilite $w $n {}]
-    $w tag bind item:$n <1> [list Action $w $n]
+    $w insert insert $i [incr n] " "
+    $w tag bind $n <Enter> [list Hilite $w $n yellow]
+    $w tag bind $n <Leave> [list Hilite $w $n {}]
+    $w tag bind $n <1> [list Action $w $n]
 }
 proc Hilite {w n bg} {
-    $w tag configure item:$n -background $bg
+    $w tag configure $n -background $bg
 }
 proc Action {w n} {
     # do any action based on number $n
@@ -2004,9 +2004,9 @@ foreach i $items {
     $w insert end $i item " "
 }
 $w tag configure hilite -background yellow
-$w tag bind item <Enter> [list Enter $w]
-$w tag bind item <Leave> [list Leave $w]
-$w tag bind item <1> [list Action $w]
+$w tag bind item <Enter> {Enter %W}
+$w tag bind item <Leave> {Leave %W}
+$w tag bind item <1> {Action %W}
 
 proc Enter {w} {
     $w tag add hilite item.current.first item.current.last
