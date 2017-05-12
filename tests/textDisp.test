@@ -2110,16 +2110,28 @@ test textDisp-16.24 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     .t yview scroll -3 pa
     .t index @0,0
 } {1.0}
-test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} -constraints textfonts -body {
-    .t configure -height 1
+test textDisp-16.25 {TkTextYviewCmd procedure, "scroll" option, back pages} -setup {
+    # On some (Linux) platforms, the window manager prevents the window height
+    # to be reduced to as small as what happens to be one line (with the font
+    # size we would normally use).
+    # The scrolling alrgorithm tested here depends on whether a single line is
+    # more or less than a quarter of the display.
+    # The test is prevented from erroneously failing by using a large pixel size
+    # font, which should always be taller than the minimum height of the window,
+    # while still testing what we want to test (which is scrolling up 1 page
+    # when the window height is just 1 line tall.
+    set savedFont [.t cget -font]
+    .t configure -height 1 -font $bigFont
     update
+} -body {
     .t yview 50.0
     update
     .t yview scroll -1 pages
     set x [.t index @0,0]
-    .t configure -height 10
-    update
     set x
+} -cleanup {
+    .t configure -height 10 -font $savedFont
+    update
 } -result {49.0}
 test textDisp-16.26 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview 50.0
