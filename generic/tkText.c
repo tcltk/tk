@@ -1489,6 +1489,11 @@ TextWidgetObjCmd(
 	TkTextUpdateCurrentMark(sharedTextPtr);
     }
 
+    if (CATCH_ASSERTION_FAILED) {
+	result = TCL_ERROR;
+	goto done;
+    }
+
     switch ((enum options) commandIndex) {
     case TEXT_TK_BINDVAR: {
 	TkTextStringList *listPtr;

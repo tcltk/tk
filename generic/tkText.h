@@ -22,6 +22,9 @@
 # include "tkInt.h"
 #endif
 
+/* Support of assertion handler. */
+#define CATCH_ASSERTION_FAILED 0
+
 #include "tkTextUndo.h"
 #include "tkBool.h"
 
