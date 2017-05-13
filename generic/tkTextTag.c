@@ -3071,7 +3071,10 @@ TkTextPickCurrent(
 	     * the content of the B-Tree.
 	     */
 
-	    TkTextTagSetIncrRefCount(newTagInfoPtr = TkTextGetTagSetFromChunk(newDispChunkPtr));
+	    if (!(newTagInfoPtr = TkTextGetTagSetFromChunk(newDispChunkPtr))) {
+	    	newTagInfoPtr = sharedTextPtr->emptyTagInfoPtr;
+	    }
+	    TkTextTagSetIncrRefCount(newTagInfoPtr);
 	    leaveTags = TkTextTagSetCopy(textPtr->curTagInfoPtr);
 	    leaveTags = TkTextTagSetRemoveFromThis(leaveTags, newTagInfoPtr);
 	    enterTags = TkTextTagSetRemoveFromThis(TkTextTagSetCopy(newTagInfoPtr), leaveTags);

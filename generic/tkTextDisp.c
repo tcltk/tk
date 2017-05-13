@@ -11552,6 +11552,24 @@ TkTextCountVisibleWindows(
  *----------------------------------------------------------------------
  */
 
+static TkTextDispChunk *
+FindNextTagInfoChunk(
+    TkTextDispChunk *chunkPtr)
+{
+    for ( ; chunkPtr->nextPtr; chunkPtr = chunkPtr->nextPtr) {
+	switch (chunkPtr->layoutProcs->type) {
+	case TEXT_DISP_CHAR:   /* fallthru */
+	case TEXT_DISP_HYPHEN: /* fallthru */
+	case TEXT_DISP_IMAGE:  /* fallthru */
+	case TEXT_DISP_WINDOW: return chunkPtr;
+	case TEXT_DISP_ELIDED: /* fallthru */
+	case TEXT_DISP_CURSOR: break;
+	}
+    }
+
+    return chunkPtr;
+}
+
 const TkTextDispChunk *
 TkTextPixelIndex(
     TkText *textPtr,		/* Widget record for text widget. */
@@ -11631,7 +11649,7 @@ TkTextPixelIndex(
 		if (nearest) {
 		    *nearest = nearby;
 		}
-		return currChunkPtr;
+		return FindNextTagInfoChunk(currChunkPtr);
 	    }
 
 	    dlPtr = currDLinePtr;
@@ -11686,7 +11704,7 @@ TkTextPixelIndex(
     }
 
     DLineIndexOfX(textPtr, currChunkPtr, x, indexPtr);
-    return currChunkPtr;
+    return FindNextTagInfoChunk(currChunkPtr);
 }
 
 /*
