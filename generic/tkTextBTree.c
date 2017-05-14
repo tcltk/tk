@@ -11346,18 +11346,18 @@ TkBTreeStartSearchBack(
 	 * In this case indexPtr1 points to start of last line, but we need
 	 * content segment before end marker.
 	 */
-	if (!(segPtr = GetPrevTagInfoSegment(indexPtr1->textPtr->endMarker))) {
-	    return;
-	}
+	segPtr = indexPtr1->textPtr->endMarker;
 	offset = 0;
     } else {
 	segPtr = TkTextIndexGetContentSegment(indexPtr1, &offset);
-	if (offset == 0) {
-	    segPtr = GetPrevTagInfoSegment(segPtr);
-	    TkTextIndexSetSegment(&searchPtr->curIndex, segPtr);
-	} else {
-	    TkTextIndexAddToByteIndex(&searchPtr->curIndex, -offset);
+    }
+    if (offset == 0) {
+	if (!(segPtr = GetPrevTagInfoSegment(segPtr))) {
+	    return;
 	}
+	TkTextIndexSetSegment(&searchPtr->curIndex, segPtr);
+    } else {
+	TkTextIndexAddToByteIndex(&searchPtr->curIndex, -offset);
     }
 
     lastPtr = searchPtr->lastPtr = TkTextIndexGetContentSegment(indexPtr2, &offset);
