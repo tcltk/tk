@@ -716,7 +716,7 @@ TkTextTagCmd(
 	TkBTreeStartSearchBack(&index1, &index2, tagPtr, &tSearch, SEARCH_EITHER_TAGON_TAGOFF);
 
 	if (TkBTreePrevTag(&tSearch)) {
-	    assert(TkTextIndexCompare(&tSearch.curIndex, &index1) < 0);
+	    assert(TkTextIndexCompare(&tSearch.curIndex, &index1) <= 0);
 	    assert(TkTextIndexCompare(&tSearch.curIndex, &index2) >= 0);
 	    index1 = tSearch.curIndex;
 	    if (tSearch.tagon) {

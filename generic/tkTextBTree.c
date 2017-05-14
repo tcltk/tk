@@ -544,6 +544,8 @@ static bool
 SegIsAtStartOfLine(
     const TkTextSegment *segPtr)
 {
+    /* NOTE: we do not consider elided segments here. */
+
     while (true) {
 	if (!(segPtr = segPtr->prevPtr)) {
 	    return true;
@@ -559,6 +561,8 @@ static bool
 SegIsAtEndOfLine(
     const TkTextSegment *segPtr)
 {
+    /* NOTE: we do not consider elided segments here. */
+
     while (segPtr && segPtr->size == 0) {
 	segPtr = segPtr->nextPtr;
     }
@@ -571,8 +575,9 @@ GetPrevTagInfoSegment(
 {
     TkTextLine *linePtr;
 
-    assert(segPtr);
+    /* NOTE: we do not consider elided segments here. */
 
+    assert(segPtr);
     linePtr = segPtr->sectionPtr->linePtr;
 
     for (segPtr = segPtr->prevPtr; segPtr; segPtr = segPtr->prevPtr) {
@@ -588,6 +593,8 @@ static TkTextSegment *
 GetNextTagInfoSegment(
     TkTextSegment *segPtr)
 {
+    /* NOTE: we do not consider elided segments here. */
+
     assert(segPtr);
 
     for ( ; !segPtr->tagInfoPtr; segPtr = segPtr->nextPtr) {
@@ -602,6 +609,8 @@ GetFirstTagInfoSegment(
     const TkTextLine *linePtr)
 {
     TkTextSegment *segPtr;
+
+    /* NOTE: we do not consider elided segments here. */
 
     assert(linePtr);
 
@@ -3485,6 +3494,8 @@ MakeTagInfo(
     assert(textPtr);
     assert(textPtr->insertMarkPtr);
 
+    /* NOTE: we do not consider elided segments here. */
+
     tagInfoPtr = textPtr->sharedTextPtr->emptyTagInfoPtr;
 
     switch (textPtr->tagging) {
@@ -6354,25 +6365,27 @@ CanInsertLeft(
 {
     TkTextSegment *prevPtr;
 
+    /* NOTE: we do not consider elided segments here. */
+
     assert(segPtr->tagInfoPtr);
 
     if (!TkTextTagSetIsEmpty(segPtr->tagInfoPtr)) {
 	assert(textPtr);
 	switch (textPtr->tagging) {
-	    case TK_TEXT_TAGGING_GRAVITY:
-		return offset > 0 || textPtr->insertMarkPtr->typePtr == &tkTextLeftMarkType;
-	    case TK_TEXT_TAGGING_WITHIN:
-		if (offset > 0) {
-		    return true; /* inserting into a char segment */
-		}
-		prevPtr = GetPrevTagInfoSegment(segPtr);
-		return prevPtr && TkTextTagSetContains(prevPtr->tagInfoPtr, segPtr->tagInfoPtr);
-	    case TK_TEXT_TAGGING_NONE:
-		if (offset == 0) {
-		    return false;
-		}
-		prevPtr = GetPrevTagInfoSegment(segPtr);
-		return !prevPtr || TkTextTagSetIsEmpty(prevPtr->tagInfoPtr);
+	case TK_TEXT_TAGGING_GRAVITY:
+	    return offset > 0 || textPtr->insertMarkPtr->typePtr == &tkTextLeftMarkType;
+	case TK_TEXT_TAGGING_WITHIN:
+	    if (offset > 0) {
+		return true; /* inserting into a char segment */
+	    }
+	    prevPtr = GetPrevTagInfoSegment(segPtr);
+	    return prevPtr && TkTextTagSetContains(prevPtr->tagInfoPtr, segPtr->tagInfoPtr);
+	case TK_TEXT_TAGGING_NONE:
+	    if (offset == 0) {
+		return false;
+	    }
+	    prevPtr = GetPrevTagInfoSegment(segPtr);
+	    return !prevPtr || TkTextTagSetIsEmpty(prevPtr->tagInfoPtr);
 	}
     }
     return true;
@@ -6384,17 +6397,19 @@ CanInsertRight(
     TkTextSegment *prevPtr,
     TkTextSegment *segPtr)
 {
+    /* NOTE: we do not consider elided segments here. */
+
     assert(prevPtr->tagInfoPtr);
 
     if (textPtr) {
 	switch (textPtr->tagging) {
-	    case TK_TEXT_TAGGING_GRAVITY:
-		return textPtr->insertMarkPtr->typePtr == &tkTextRightMarkType;
-	    case TK_TEXT_TAGGING_WITHIN:
-		return TkTextTagSetContains(GetNextTagInfoSegment(segPtr)->tagInfoPtr,
-			prevPtr->tagInfoPtr);
-	    case TK_TEXT_TAGGING_NONE:
-		return TkTextTagSetIsEmpty(prevPtr->tagInfoPtr);
+	case TK_TEXT_TAGGING_GRAVITY:
+	    return textPtr->insertMarkPtr->typePtr == &tkTextRightMarkType;
+	case TK_TEXT_TAGGING_WITHIN:
+	    return TkTextTagSetContains(GetNextTagInfoSegment(segPtr)->tagInfoPtr,
+		    prevPtr->tagInfoPtr);
+	case TK_TEXT_TAGGING_NONE:
+	    return TkTextTagSetIsEmpty(prevPtr->tagInfoPtr);
 	}
     }
     assert(TkTextTagSetIsEmpty(segPtr->tagInfoPtr));
@@ -10708,9 +10723,6 @@ FindTagStart(
 
 	segPtr = TkTextIndexGetContentSegment(&searchPtr->curIndex, NULL);
 
-	if (!TkTextTagSetTest(testTagon ? linePtr->tagoffPtr : linePtr->tagonPtr, tagIndex)) {
-	    return segPtr;
-	}
 	if (searchPtr->mode == SEARCH_EITHER_TAGON_TAGOFF) {
 	    sPtr = GetFirstTagInfoSegment(searchPtr->textPtr, linePtr);
 	    for ( ; sPtr != segPtr; sPtr = sPtr->nextPtr) {
@@ -11331,20 +11343,21 @@ TkBTreeStartSearchBack(
 
     if (indexPtr1->textPtr && TkTextIndexIsEndOfText(indexPtr1)) {
 	/*
-	 * In this case indexPtr2 points to start of last line, but we need
-	 * next content segment after end marker.
+	 * In this case indexPtr1 points to start of last line, but we need
+	 * content segment before end marker.
 	 */
-	segPtr = GetNextTagInfoSegment(indexPtr1->textPtr->endMarker);
+	if (!(segPtr = GetPrevTagInfoSegment(indexPtr1->textPtr->endMarker))) {
+	    return;
+	}
 	offset = 0;
     } else {
 	segPtr = TkTextIndexGetContentSegment(indexPtr1, &offset);
-    }
-
-    if (offset == 0) {
-	segPtr = GetPrevTagInfoSegment(segPtr);
-	TkTextIndexSetSegment(&searchPtr->curIndex, segPtr);
-    } else {
-	TkTextIndexAddToByteIndex(&searchPtr->curIndex, -offset);
+	if (offset == 0) {
+	    segPtr = GetPrevTagInfoSegment(segPtr);
+	    TkTextIndexSetSegment(&searchPtr->curIndex, segPtr);
+	} else {
+	    TkTextIndexAddToByteIndex(&searchPtr->curIndex, -offset);
+	}
     }
 
     lastPtr = searchPtr->lastPtr = TkTextIndexGetContentSegment(indexPtr2, &offset);
