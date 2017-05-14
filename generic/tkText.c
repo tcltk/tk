@@ -71,7 +71,7 @@
 # if defined(MAC_OSX_TK)
 #  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR "systemDialogActiveText"
 # elif defined(_WIN32)
-#  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR "SystemHighlightText"
+#  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR "SystemWindowText"
 # else /* X11 */
 #  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR BLACK
 # endif
