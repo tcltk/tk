@@ -1642,7 +1642,7 @@ InitFont(
     fmPtr->fixed = fixed;
 
     fontPtr->display = display;
-    fontPtr->pixelSize = TkFontGetPixels(tkwin, fa.fa.size);
+    fontPtr->pixelSize = (int)(TkFontGetPixels(tkwin, fa.fa.size) + 0.5);
     fontPtr->xa = fa.xa;
 
     fontPtr->numSubFonts = 1;
@@ -2773,7 +2773,7 @@ GetScreenFont(
 	}
 	*str = '\0';
 	sprintf(buf, "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
-		-wantPtr->fa.size, rest);
+		(int)(-wantPtr->fa.size-0.5), rest);
 	*str = '-';
 	fontStructPtr = XLoadQueryFont(display, buf);
 	bestScore[1] = INT_MAX;
