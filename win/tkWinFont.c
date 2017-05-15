@@ -562,7 +562,7 @@ TkpGetFontFromAttributes(
     ReleaseDC(hwnd, hdc);
 
     hFont = GetScreenFont(faPtr, faceName,
-	    TkFontGetPixels(tkwin, faPtr->size), 0.0);
+	    (int)(TkFontGetPixels(tkwin, faPtr->size) + 0.5), 0.0);
     if (tkFontPtr == NULL) {
 	fontPtr = ckalloc(sizeof(WinFont));
     } else {
