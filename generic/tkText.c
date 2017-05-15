@@ -4915,6 +4915,8 @@ ParseHyphens(
 # error "The text widget is designed for UTF-8, this applies also to the legacy code. Undocumented pseudo UTF-8 strings cannot be processed with this function, because it relies on the UTF-8 specification."
 #endif
 
+    assert(TK_TEXT_HYPHEN_MASK < 256); /* otherwise does not fit into char */
+
     /*
      * Preparing a string for hyphenation support. Note that 0xff is not allowed in
      * UTF-8 strings, so we can use this value for special purposes.
@@ -4941,7 +4943,7 @@ ParseHyphens(
 		case 'c':
 		    if (strncmp(string, ":ck:", 4) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_CK;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_CK);
 			string += 4;
 			break;
 		    }
@@ -4950,25 +4952,25 @@ ParseHyphens(
 		case 'd':
 		    if (strncmp(string, ":dd:", 4) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_DOUBLE_DIGRAPH;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_DOUBLE_DIGRAPH);
 			string += 4;
 			break;
 		    }
 		    if (strncmp(string, ":dv:", 4) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_DOUBLE_VOWEL;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_DOUBLE_VOWEL);
 			string += 4;
 			break;
 		    }
 		    if (strncmp(string, ":doubledigraph:", 15) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_DOUBLE_DIGRAPH;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_DOUBLE_DIGRAPH);
 			string += 15;
 			break;
 		    }
 		    if (strncmp(string, ":doublevowel:", 13) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_DOUBLE_VOWEL;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_DOUBLE_VOWEL);
 			string += 13;
 			break;
 		    }
@@ -4977,13 +4979,13 @@ ParseHyphens(
 		case 'g':
 		    if (strncmp(string, ":ge:", 4) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_GEMINATION;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_GEMINATION);
 			string += 4;
 			break;
 		    }
 		    if (strncmp(string, ":gemination:", 12) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_GEMINATION;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_GEMINATION);
 			string += 12;
 			break;
 		    }
@@ -4992,13 +4994,13 @@ ParseHyphens(
 		case 'r':
 		    if (strncmp(string, ":rh:", 4) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_REPEAT;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_REPEAT);
 			string += 4;
 			break;
 		    }
 		    if (strncmp(string, ":repeathyphen:", 14) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_REPEAT;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_REPEAT);
 			string += 14;
 			break;
 		    }
@@ -5007,25 +5009,25 @@ ParseHyphens(
 		case 't':
 		    if (strncmp(string, ":tr:", 4) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_TREMA;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_TREMA);
 			string += 4;
 			break;
 		    }
 		    if (strncmp(string, ":tc:", 4) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_TRIPLE_CONSONANT;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_TRIPLE_CONSONANT);
 			string += 4;
 			break;
 		    }
 		    if (strncmp(string, ":trema:", 7) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_TREMA;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_TREMA);
 			string += 7;
 			break;
 		    }
 		    if (strncmp(string, ":tripleconsonant:", 17) == 0) {
 			*buffer++ = 0xff;
-			*buffer++ = 1 << TK_TEXT_HYPHEN_TRIPLE_CONSONANT;
+			*buffer++ = (char) (1 << TK_TEXT_HYPHEN_TRIPLE_CONSONANT);
 			string += 17;
 			break;
 		    }
