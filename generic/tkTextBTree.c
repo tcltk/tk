@@ -8927,13 +8927,27 @@ typedef struct {
 } TreeTagData;
 
 static void
+ResizeLengths(
+    TreeTagData *data,
+    unsigned capacity)
+{
+    unsigned bufSize = capacity * sizeof(data->lengths[0]);
+
+    if (data->lengths == data->lengthsBuf) {
+	data->lengths = malloc(bufSize);
+	memcpy(data->lengths, data->lengthsBuf, bufSize);
+    } else {
+	data->lengths = realloc(data->lengths, bufSize);
+    }
+    data->capacityOfLengths = capacity;
+}
+
+static void
 SaveLength(
     TreeTagData *data)
 {
     if (++data->sizeOfLengths == data->capacityOfLengths) {
-	unsigned newCapacity = 2*data->capacityOfLengths;
-	data->lengths = realloc(data->lengths == data->lengthsBuf ? NULL : data->lengths, newCapacity);
-	data->capacityOfLengths = newCapacity;
+	ResizeLengths(data, 2*data->capacityOfLengths);
     }
 
     data->lengths[data->sizeOfLengths - 1] = data->currLength;
@@ -9723,12 +9737,7 @@ TkBTreeTag(
 	    MakeUndoIndex(sharedTextPtr, &index1, &undoToken->startIndex, GRAVITY_LEFT);
 	    MakeUndoIndex(sharedTextPtr, &index2, &undoToken->endIndex, GRAVITY_RIGHT);
 	    if (data.sizeOfLengths > 0) {
-		if (data.lengths == data.lengthsBuf) {
-		    data.lengths = malloc(data.sizeOfLengths * sizeof(data.lengths[0]));
-		    memcpy(data.lengths, data.lengthsBuf, data.sizeOfLengths * sizeof(data.lengths[0]));
-		} else {
-		    data.lengths = realloc(data.lengths, data.sizeOfLengths * sizeof(data.lengths[0]));
-		}
+		ResizeLengths(&data, data.sizeOfLengths);
 		undoToken->lengths = data.lengths;
 		data.lengths = data.lengthsBuf;
 	    } else {
