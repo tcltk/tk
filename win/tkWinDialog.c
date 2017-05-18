@@ -2808,7 +2808,7 @@ Tk_MessageBoxObjCmd(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_DString titleBuf, tmpBuf;
-    WCHAR *titlePtr, *tmpPtr;
+    const WCHAR *titlePtr, *tmpPtr;
     const char *src;
 
     defaultBtn = -1;
