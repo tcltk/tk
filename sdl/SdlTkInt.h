@@ -204,7 +204,6 @@ typedef struct SdlTkXInfo {
     int mouse_x;
     int mouse_y;
     int sdlfocus;
-    int keyuc;
     int cursor_change;
 #ifndef ANDROID
     Tcl_HashTable sdlcursors;
