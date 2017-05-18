@@ -100,20 +100,26 @@
 
 /*
  * Detection of >=64 bit architectures, which supports the use of
- * the appropriate integer types.
+ * the appropriate integer types. It's possible that we are detecting
+ * a 32 bit architecture although it's a 64 bit architecture, in this
+ * case a 32 bit system is installed on a 64 bit architecture.
  */
 
 #if HAVE_STDINT_H
 #   if (UINTPTR_MAX == 0xffffffffu)
+    /* This is quite likely a 32 bit architecture. */
 #	define TK_IS_32_BIT_ARCH
 #   elif (UINTPTR_MAX >= 0xffffffffffffffffu)
+    /* This is a real 64 bit architecture. */
 #	define TK_IS_64_BIT_ARCH
 #   else
 #	error "unsupported architecture" /* should never happen */
 #   endif
 #elif defined(_WIN64) /* ancient compiler support */
+    /* This is a real 64 bit architecture. */
 #   define TK_IS_64_BIT_ARCH
 #elif defined(_WIN32) /* ancient compiler support */
+    /* This is quite likely a 32 bit architecture. */
 #   define TK_IS_32_BIT_ARCH
 #else
 #   error "cannot detect architecture"
