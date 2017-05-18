@@ -692,19 +692,6 @@ TkClipCleanup(
     TkDisplay *dispPtr)		/* Display associated with clipboard. */
 {
     if (dispPtr->clipWindow != NULL) {
-	/*
-	 * Force the clipboard to be rendered if we are the clipboard owner.
-	 */
-
-	HWND hwnd = Tk_GetHWND(Tk_WindowId(dispPtr->clipWindow));
-
-	if (GetClipboardOwner() == hwnd) {
-	    OpenClipboard(hwnd);
-	    EmptyClipboard();
-	    TkWinClipboardRender(dispPtr, CF_TEXT);
-	    CloseClipboard();
-	}
-
 	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
 		dispPtr->applicationAtom);
 	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
@@ -879,6 +866,23 @@ Tk_TranslateWinEvent(
 	    TkWinClipboardRender(winPtr->dispPtr, wParam);
 	}
 	return 1;
+    }
+
+    case WM_RENDERALLFORMATS: {
+        TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
+
+        if (winPtr && OpenClipboard(hwnd)) {
+            /*
+             * Make sure that nobody had taken ownership of the clipboard
+             * before we opened it.
+             */
+
+            if (GetClipboardOwner() == hwnd) {
+                TkWinClipboardRender(winPtr->dispPtr, CF_TEXT);
+            }
+            CloseClipboard();
+        }
+        return 1;
     }
 
     case WM_COMMAND:
