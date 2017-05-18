@@ -2773,7 +2773,7 @@ GetScreenFont(
 	}
 	*str = '\0';
 	sprintf(buf, "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
-		(int)(-wantPtr->fa.size-0.5), rest);
+		(int)(-wantPtr->fa.size+0.5), rest);
 	*str = '-';
 	fontStructPtr = XLoadQueryFont(display, buf);
 	bestScore[1] = INT_MAX;
