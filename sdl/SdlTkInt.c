@@ -770,12 +770,26 @@ static int
 ProcessTextInput(XEvent *event, int no_rel, int sdl_mod,
 		 const char *text, int len)
 {
-    int i, n, n2, ulen = Tcl_NumUtfChars(text, len);
+    int ret, i, n, ulen;
     char buf[TCL_UTF_MAX];
+#if TCL_UTF_MAX < 4
+    Tcl_DString ubuf;
+    Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "utf-8");
 
+    /*
+     * This should make UTF-8 into WTF-8.
+     */
+    Tcl_DStringInit(&ubuf);
+    Tcl_ExternalToUtfDString(encoding, text, len, &ubuf);
+    if (encoding) {
+	Tcl_FreeEncoding(encoding);
+    }
+    text = Tcl_DStringValue(&ubuf);
+#endif
+    ulen = Tcl_NumUtfChars(text, len);
     if (ulen <= 0) {
-	SdlTkX.keyuc = 0;
-	return 0;
+	ret = 0;
+	goto done;
     }
     if (sdl_mod & KMOD_RALT) {
 	event->xkey.state &= ~Mod4Mask;
@@ -784,61 +798,6 @@ ProcessTextInput(XEvent *event, int no_rel, int sdl_mod,
 	Tcl_UniChar ch;
 
 	n = Tcl_UtfToUniChar(text, &ch);
-	n2 = 0;
-
-	/* Deal with surrogate pairs */
-#if TCL_UTF_MAX > 4
-	if ((ch >= 0xd800) && (ch <= 0xdbff)) {
-	    Tcl_UniChar ch2;
-
-	    if (i + 1 < ulen) {
-		n2 = Tcl_UtfToUniChar(text + n, &ch2);
-		if ((ch2 >= 0xdc00) && (ch2 <= 0xdfff)) {
-		    ch = ((ch & 0x3ff) << 10) | (ch2 & 0x3ff);
-		    ch += 0x10000;
-		    ++i;
-		} else {
-		    ch = 0xfffd;
-		    n2 = 0;
-		}
-	    } else {
-		SdlTkX.keyuc = ch;
-		return -1;
-	    }
-	} else if ((ch >= 0xdc00) && (ch <= 0xdfff)) {
-	    if (SdlTkX.keyuc) {
-		ch = ((SdlTkX.keyuc & 0x3ff) << 10) | (ch & 0x3ff);
-		ch += 0x10000;
-	    } else {
-		ch = 0xfffd;
-	    }
-	    SdlTkX.keyuc = 0;
-	} else if ((ch == 0xfffe) || (ch == 0xffff)) {
-	    ch = 0xfffd;
-	    SdlTkX.keyuc = 0;
-	} else {
-	    SdlTkX.keyuc = 0;
-	}
-#else
-	if ((ch >= 0xd800) && (ch <= 0xdbff)) {
-	    Tcl_UniChar ch2;
-
-	    if (i + 1 < ulen) {
-		n2 = Tcl_UtfToUniChar(text + n, &ch2);
-		if ((ch2 >= 0xdc00) && (ch2 <= 0xdfff)) {
-		    ++i;
-		} else {
-		    n2 = 0;
-		}
-	    }
-	    ch = 0xfffd;
-	} else if ((ch >= 0xdc00) && (ch <= 0xdfff)) {
-	    ch = 0xfffd;
-	} else if ((ch == 0xfffe) || (ch == 0xffff)) {
-	    ch = 0xfffd;
-	}
-	SdlTkX.keyuc = 0;
-#endif
 	event->xkey.nbytes = Tcl_UniCharToUtf(ch, buf);
 	event->xkey.time = SdlTkX.time_count;
 	if (event->xkey.nbytes > sizeof (event->xkey.trans_chars)) {
@@ -850,7 +809,7 @@ ProcessTextInput(XEvent *event, int no_rel, int sdl_mod,
 	} else {
 	    event->xkey.keycode = -1;
 	}
-	text += n + n2;
+	text += n;
 
 	/* Queue the KeyPress */
 	EVLOG("   KEYPRESS:  CODE=0x%02X  UC=0x%X", event->xkey.keycode, ch);
@@ -865,7 +824,11 @@ ProcessTextInput(XEvent *event, int no_rel, int sdl_mod,
 	    }
 	}
     }
-    return 1;
+done:
+#if TCL_UTF_MAX < 4
+    Tcl_DStringFree(&ubuf);
+#endif
+    return ret;
 }
 
 /*
