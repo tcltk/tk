@@ -566,7 +566,7 @@ TkpGetFontFromAttributes(
     ReleaseDC(hwnd, hdc);
 
     hFont = GetScreenFont(faPtr, faceName,
-	    TkFontGetPixels(tkwin, faPtr->size), 0.0);
+	    (int)(TkFontGetPixels(tkwin, faPtr->size) + 0.5), 0.0);
     if (tkFontPtr == NULL) {
 	fontPtr = ckalloc(sizeof(WinFont));
     } else {
@@ -767,7 +767,7 @@ TkpGetFontAttrsForChar(
     ReleaseDC(fontPtr->hwnd, hdc);
     faPtr->family = familyPtr->faceName;
     faPtr->size = TkFontGetPoints(tkwin,
-	    tm.tmInternalLeading - tm.tmHeight);
+	    (double)(tm.tmInternalLeading - tm.tmHeight));
     faPtr->weight = (tm.tmWeight > FW_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
     faPtr->slant = tm.tmItalic ? TK_FS_ITALIC : TK_FS_ROMAN;
     faPtr->underline = (tm.tmUnderlined != 0);
@@ -1604,7 +1604,7 @@ InitFont(
     faPtr->family	= Tk_GetUid(Tcl_DStringValue(&faceString));
 
     faPtr->size =
-	TkFontGetPoints(tkwin,  -(fontPtr->pixelSize));
+	TkFontGetPoints(tkwin,  (double)-(fontPtr->pixelSize));
     faPtr->weight =
 	    (tm.tmWeight > FW_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
     faPtr->slant	= (tm.tmItalic != 0) ? TK_FS_ITALIC : TK_FS_ROMAN;

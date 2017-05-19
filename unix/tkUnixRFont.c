@@ -170,18 +170,21 @@ GetTkFontAttributes(
 {
     const char *family = "Unknown";
     const char *const *familyPtr = &family;
-    int weight, slant, size, pxsize;
-    double ptsize;
+    int weight, slant, pxsize;
+    double size, ptsize;
 
     (void) XftPatternGetString(ftFont->pattern, XFT_FAMILY, 0, familyPtr);
     if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0,
 	    &ptsize) == XftResultMatch) {
-	size = (int) ptsize;
+	size = ptsize;
+    } else if (XftPatternGetDouble(ftFont->pattern, XFT_PIXEL_SIZE, 0,
+	    &ptsize) == XftResultMatch) {
+	size = -ptsize;
     } else if (XftPatternGetInteger(ftFont->pattern, XFT_PIXEL_SIZE, 0,
 	    &pxsize) == XftResultMatch) {
-	size = -pxsize;
+	size = (double)-pxsize;
     } else {
-	size = 12;
+	size = 12.0;
     }
     if (XftPatternGetInteger(ftFont->pattern, XFT_WEIGHT, 0,
 	    &weight) != XftResultMatch) {
@@ -194,7 +197,7 @@ GetTkFontAttributes(
 
 #if DEBUG_FONTSEL
     printf("family %s size %d weight %d slant %d\n",
-	    family, size, weight, slant);
+	    family, (int)size, weight, slant);
 #endif /* DEBUG_FONTSEL */
 
     faPtr->family = Tk_GetUid(family);
@@ -441,10 +444,10 @@ TkpGetFontFromAttributes(
     if (faPtr->family) {
 	XftPatternAddString(pattern, XFT_FAMILY, faPtr->family);
     }
-    if (faPtr->size > 0) {
-	XftPatternAddDouble(pattern, XFT_SIZE, (double)faPtr->size);
-    } else if (faPtr->size < 0) {
-	XftPatternAddInteger(pattern, XFT_PIXEL_SIZE, -faPtr->size);
+    if (faPtr->size > 0.0) {
+	XftPatternAddDouble(pattern, XFT_SIZE, faPtr->size);
+    } else if (faPtr->size < 0.0) {
+	XftPatternAddDouble(pattern, XFT_PIXEL_SIZE, -faPtr->size);
     } else {
 	XftPatternAddDouble(pattern, XFT_SIZE, 12.0);
     }
@@ -665,7 +668,7 @@ Tk_MeasureChars(
     curX = 0;
     curByte = 0;
     sawNonSpace = 0;
-    while (numBytes > 0 && TkUtfCharComplete(source, numBytes)
+    while (numBytes > 0 && TkUtfCharComplete(source, numBytes)) {
 	Tcl_UniChar unichar;
 
 	clen = Tcl_UtfToUniChar(source, &unichar);
