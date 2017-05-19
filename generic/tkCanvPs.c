@@ -835,7 +835,7 @@ Tk_PostscriptFont(
     fontname = Tcl_DStringValue(&ds);
     Tcl_AppendPrintfToObj(GetPostscriptBuffer(interp),
 	    "/%s findfont %d scalefont%s setfont\n",
-	    fontname, TkFontGetPoints(psInfoPtr->tkwin, points),
+	    fontname, (int)(TkFontGetPoints(psInfoPtr->tkwin, points) + 0.5),
 	    strncasecmp(fontname, "Symbol", 7) ? " ISOEncode" : "");
     Tcl_CreateHashEntry(&psInfoPtr->fontTable, Tcl_DStringValue(&ds), &i);
     Tcl_DStringFree(&ds);

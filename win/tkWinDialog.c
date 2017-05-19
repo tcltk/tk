@@ -3512,7 +3512,7 @@ FontchooserShowCmd(
 		LF_FACESIZE-1);
 	Tcl_DStringFree(&ds);
 	lf.lfFaceName[LF_FACESIZE-1] = 0;
-	lf.lfHeight = -MulDiv(TkFontGetPoints(tkwin, fontPtr->fa.size),
+	lf.lfHeight = -MulDiv((int)(TkFontGetPoints(tkwin, fontPtr->fa.size) + 0.5),
 	    GetDeviceCaps(hdc, LOGPIXELSY), 72);
 	if (fontPtr->fa.weight == TK_FW_BOLD) {
 	    lf.lfWeight = FW_BOLD;

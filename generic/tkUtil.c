@@ -1220,13 +1220,14 @@ TkUtfToUniChar(
 			 * the UTF-8 string. */
 {
     Tcl_UniChar uniChar = 0;
-
     int len = Tcl_UtfToUniChar(src, &uniChar);
+
     if ((uniChar & 0xfc00) == 0xd800) {
-	Tcl_UniChar high = uniChar;
+	int high = uniChar;
 	/* This can only happen if Tcl is compiled with TCL_UTF_MAX=4,
 	 * or when a high surrogate character is detected in UTF-8 form */
 	int len2 = Tcl_UtfToUniChar(src+len, &uniChar);
+
 	if ((uniChar & 0xfc00) == 0xdc00) {
 	    *chPtr = (((high & 0x3ff) << 10) | (uniChar & 0x3ff)) + 0x10000;
 	    len += len2;
@@ -1257,7 +1258,10 @@ TkUtfToUniChar(
  *---------------------------------------------------------------------------
  */
 
-int TkUniCharToUtf(int ch, char *buf)
+int
+TkUniCharToUtf(
+    int ch,
+    char *buf)
 {
     int size = Tcl_UniCharToUtf(ch, buf);
     if ((ch > 0xffff) && (ch <= 0x10ffff) && (size < 4)) {
@@ -1279,7 +1283,7 @@ int TkUniCharToUtf(int ch, char *buf)
  *	TCL_UTF_MAX==3. So, up to 6 bytes might be required.
  *
  * Results:
- *	return true if there are enough bytes in the buffer to form either
+ *	Return true if there are enough bytes in the buffer to form either
  *	a single unicode character or a high/low surrogate pair.
  *
  * Side effects:
@@ -1288,7 +1292,11 @@ int TkUniCharToUtf(int ch, char *buf)
  *---------------------------------------------------------------------------
  */
 
-int TkUtfCharComplete(const char *source, int numBytes) {
+int
+TkUtfCharComplete(
+    const char *source,
+    int numBytes)
+{
     if (Tcl_UtfCharComplete(source, numBytes) == 0) {
 	return 0;
     }
@@ -1311,7 +1319,7 @@ int TkUtfCharComplete(const char *source, int numBytes) {
  *	TCL_UTF_MAX==3. So, the pointer might move up to 6 bytes.
  *
  * Results:
- *	return a pointer to the previous unicode character.
+ *	Return a pointer to the previous unicode character.
  *
  * Side effects:
  *	None.
@@ -1319,13 +1327,19 @@ int TkUtfCharComplete(const char *source, int numBytes) {
  *---------------------------------------------------------------------------
  */
 
-const char *TkUtfPrev(const char *start, const char *source) {
+const char *
+TkUtfPrev(
+    const char *start,
+    const char *source)
+{
     const char *p = Tcl_UtfPrev(start, source);
+
     if (((source[0]&0xFF) == 0xED) && ((source[1]&0xF0) == 0xB0)
 	    && ((source[2]&0xC0) == 0x80)) {
 	/* We are pointing to a low surrogate. If the previous
 	 * codepoint is a high surrogate, we want that in stead. */
 	const char *q = Tcl_UtfPrev(start, p);
+
 	if (((q[0]&0xFF) == 0xED) && ((q[1]&0xF0) == 0xA0)
 		&& ((q[2]&0xC0) == 0x80)) {
 	    p = q;
@@ -1343,7 +1357,7 @@ const char *TkUtfPrev(const char *start, const char *source) {
  *	TCL_UTF_MAX==3. So, the pointer might move up to 6 bytes.
  *
  * Results:
- *	return a pointer to the next unicode character.
+ *	Return a pointer to the next unicode character.
  *
  * Side effects:
  *	None.
@@ -1351,11 +1365,16 @@ const char *TkUtfPrev(const char *start, const char *source) {
  *---------------------------------------------------------------------------
  */
 
-const char *TkUtfNext(const char *source) {
+const char *
+TkUtfNext(
+    const char *source)
+{
     const char *p = Tcl_UtfNext(source);
+
     if (((source[0]&0xFF) == 0xED) && ((source[1]&0xF0) == 0xA0)
 	    && ((source[2]&0xC0) == 0x80)) {
 	const char *q = Tcl_UtfNext(p);
+
 	/* We are pointing to a high surrogate. If the next
 	 * codepoint is a low surrogate, we want that in stead. */
 	if (((q[0]&0xFF) == 0xED) && ((q[1]&0xF0) == 0xB0)
