@@ -1800,7 +1800,7 @@ Tk_PostscriptFontName(
 	}
     }
 
-    return fontPtr->fa.size;
+    return (int)(fontPtr->fa.size + 0.5);
 }
 
 /*
@@ -3375,7 +3375,6 @@ ConfigAttributesObj(
     int i, n, index;
     Tcl_Obj *optionPtr, *valuePtr;
     const char *value;
-    double d;
 
     for (i = 0; i < objc; i += 2) {
 	optionPtr = objv[i];
@@ -3407,10 +3406,10 @@ ConfigAttributesObj(
 	    faPtr->family = Tk_GetUid(value);
 	    break;
 	case FONT_SIZE:
-	    if (Tcl_GetDoubleFromObj(interp, valuePtr, &d) != TCL_OK) {
+	    if (Tcl_GetIntFromObj(interp, valuePtr, &n) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    faPtr->size = d;
+	    faPtr->size = (double)n;
 	    break;
 	case FONT_WEIGHT:
 	    n = TkFindStateNumObj(interp, optionPtr, weightMap, valuePtr);
@@ -3651,11 +3650,10 @@ ParseFontNameObj(
 
     faPtr->family = Tk_GetUid(Tcl_GetString(objv[0]));
     if (objc > 1) {
-	double d;
-	if (Tcl_GetDoubleFromObj(interp, objv[1], &d) != TCL_OK) {
+	if (Tcl_GetIntFromObj(interp, objv[1], &n) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	faPtr->size = d;
+	faPtr->size = (double)n;
     }
 
     i = 2;
@@ -3914,9 +3912,9 @@ TkFontParseXLFD(
 	     */
 
 	    faPtr->size = atof(field[XLFD_POINT_SIZE] + 1);
-	} else if (Tcl_GetDouble(NULL, field[XLFD_POINT_SIZE],
-		&faPtr->size) == TCL_OK) {
-	    faPtr->size /= 10;
+	} else if (Tcl_GetInt(NULL, field[XLFD_POINT_SIZE],
+		&i) == TCL_OK) {
+	    faPtr->size = i/10.0;
 	} else {
 	    return TCL_ERROR;
 	}
@@ -3939,8 +3937,9 @@ TkFontParseXLFD(
 	     */
 
 	    faPtr->size = atof(field[XLFD_PIXEL_SIZE] + 1);
-	} else if (Tcl_GetDouble(NULL, field[XLFD_PIXEL_SIZE],
-		&faPtr->size) != TCL_OK) {
+	} else if (Tcl_GetInt(NULL, field[XLFD_PIXEL_SIZE],
+		&i) != TCL_OK) {
+	    faPtr->size = (double)i;
 	    return TCL_ERROR;
 	}
     }
@@ -4019,11 +4018,11 @@ FieldSpecified(
 double
 TkFontGetPixels(
     Tk_Window tkwin,		/* For point->pixel conversion factor. */
-    double size)			/* Font size. */
+    double size)		/* Font size. */
 {
     double d;
 
-    if (size < 0) {
+    if (size <= 0.0) {
 	return -size;
     }
 
@@ -4057,7 +4056,7 @@ TkFontGetPoints(
 {
     double d;
 
-    if (size >= 0) {
+    if (size >= 0.0) {
 	return size;
     }
 
