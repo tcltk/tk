@@ -182,7 +182,7 @@ GetTkFontAttributes(
 	size = -ptsize;
     } else if (XftPatternGetInteger(ftFont->pattern, XFT_PIXEL_SIZE, 0,
 	    &pxsize) == XftResultMatch) {
-	size = -pxsize;
+	size = (double)-pxsize;
     } else {
 	size = 12.0;
     }
