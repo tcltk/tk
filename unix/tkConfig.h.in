@@ -136,6 +136,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* What encoding should be used for embedded configuration info? */
+#undef TCL_CFGVAL_ENCODING
+
 /* Is this a 64-bit build? */
 #undef TCL_CFG_DO64BIT
 
