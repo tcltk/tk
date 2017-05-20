@@ -766,6 +766,7 @@ with_tcl
 enable_man_symlinks
 enable_man_compression
 enable_man_suffix
+with_encoding
 enable_threads
 enable_shared
 enable_64bit
@@ -1430,6 +1431,8 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-tcl              directory containing tcl configuration
                           (tclConfig.sh)
+  --with-encoding         encoding for configuration values (default:
+                          iso8859-1)
   --with-x                use the X Window System
 
 Some influential environment variables:
@@ -3948,6 +3951,31 @@ $as_echo "$tcl_cv_cc_pipe" >&6; }
 	CFLAGS="$CFLAGS -pipe"
     fi
 fi
+
+#------------------------------------------------------------------------
+# Embedded configuration information, encoding to use for the values, TIP #59
+#------------------------------------------------------------------------
+
+
+
+# Check whether --with-encoding was given.
+if test "${with_encoding+set}" = set; then :
+  withval=$with_encoding; with_tcencoding=${withval}
+fi
+
+
+    if test x"${with_tcencoding}" != x ; then
+
+cat >>confdefs.h <<_ACEOF
+#define TCL_CFGVAL_ENCODING "${with_tcencoding}"
+_ACEOF
+
+    else
+
+$as_echo "#define TCL_CFGVAL_ENCODING \"iso8859-1\"" >>confdefs.h
+
+    fi
+
 
 #------------------------------------------------------------------------
 # Threads support - this auto-enables if Tcl was compiled threaded

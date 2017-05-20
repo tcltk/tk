@@ -369,8 +369,9 @@ GENERIC_OBJS = tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBusy.o \
 	tkClipboard.o \
 	tkCmds.o tkColor.o tkConfig.o tkConsole.o tkCursor.o tkError.o \
 	tkEvent.o tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o \
-	tkGrid.o tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o tkPlace.o \
-	tkSelect.o tkStyle.o tkUndo.o tkUtil.o tkVisual.o tkWindow.o
+	tkGrid.o tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o \
+	tkPkgConfig.o tkPlace.o	tkSelect.o tkStyle.o tkUndo.o tkUtil.o \
+	tkVisual.o tkWindow.o
 
 TTK_OBJS = \
 	ttkBlink.o ttkButton.o ttkCache.o ttkClamTheme.o ttkClassicTheme.o \
@@ -431,6 +432,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkGrid.c $(GENERIC_DIR)/tkConsole.c \
 	$(GENERIC_DIR)/tkMain.c $(GENERIC_DIR)/tkOption.c \
 	$(GENERIC_DIR)/tkPack.c $(GENERIC_DIR)/tkPlace.c \
+	$(GENERIC_DIR)/tkPkgConfig.c \
 	$(GENERIC_DIR)/tkSelect.c $(GENERIC_DIR)/tkStyle.c \
 	$(GENERIC_DIR)/tkUndo.c $(GENERIC_DIR)/tkUtil.c \
 	$(GENERIC_DIR)/tkVisual.c $(GENERIC_DIR)/tkWindow.c \
@@ -1008,6 +1010,32 @@ tkOption.o: $(GENERIC_DIR)/tkOption.c
 
 tkPack.o: $(GENERIC_DIR)/tkPack.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPack.c
+
+# TIP #59, embedding of configuration information into the binary library.
+#
+# Part of Tk's configuration information are the paths where it was installed
+# and where it will look for its libraries (which can be different). We derive
+# this information from the variables which can be overridden by the user. As
+# every path can be configured separately we do not remember one general
+# prefix/exec_prefix but all the different paths individually.
+
+tkPkgConfig.o: $(GENERIC_DIR)/tkPkgConfig.c
+	$(CC) -c $(CC_SWITCHES)					\
+		-DCFG_INSTALL_LIBDIR="\"$(LIB_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_BINDIR="\"$(BIN_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_SCRDIR="\"$(SCRIPT_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_INCDIR="\"$(INCLUDE_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_DOCDIR="\"$(MAN_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		\
+		-DCFG_RUNTIME_LIBDIR="\"$(libdir)\"" \
+		-DCFG_RUNTIME_BINDIR="\"$(bindir)\"" \
+		-DCFG_RUNTIME_SCRDIR="\"$(TK_LIBRARY)\"" \
+		-DCFG_RUNTIME_INCDIR="\"$(includedir)\"" \
+		-DCFG_RUNTIME_DOCDIR="\"$(mandir)\"" \
+		-DCFG_RUNTIME_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		\
+		$(GENERIC_DIR)/tkPkgConfig.c
 
 tkPlace.o: $(GENERIC_DIR)/tkPlace.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPlace.c

@@ -57,24 +57,13 @@ static Tcl_ThreadDataKey dataKey;
 
 /*
  * Package initialization:
- * 	Nothing to do here except register the fact that we're using Xft in
- * 	the TIP 59 configuration database.
+ * 	Nothing to do!
  */
-
-#ifndef TCL_CFGVAL_ENCODING
-#define TCL_CFGVAL_ENCODING "ascii"
-#endif
 
 void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    static const Tcl_Config cfg[] = {
-	{ "fontsystem", "xft" },
-	{ 0,0 }
-    };
-
-    Tcl_RegisterConfig(mainPtr->interp, "tk", cfg, TCL_CFGVAL_ENCODING);
 }
 
 static XftFont *

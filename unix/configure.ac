@@ -111,6 +111,12 @@ if test -z "$no_pipe" && test -n "$GCC"; then
 fi
 
 #------------------------------------------------------------------------
+# Embedded configuration information, encoding to use for the values, TIP #59
+#------------------------------------------------------------------------
+
+SC_TCL_CFG_ENCODING
+
+#------------------------------------------------------------------------
 # Threads support - this auto-enables if Tcl was compiled threaded
 #------------------------------------------------------------------------
 

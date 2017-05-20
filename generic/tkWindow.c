@@ -3052,6 +3052,12 @@ Initialize(
     }
 
     /*
+     * TIP #59: Make embedded configuration information available.
+     */
+
+    TkInitEmbeddedConfigurationInformation(interp);
+
+    /*
      * Ensure that our obj-types are registered with the Tcl runtime.
      */
 
