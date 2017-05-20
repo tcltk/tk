@@ -789,6 +789,16 @@ TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
 
 #------------------------------------------------------------------------
+# Demo dir
+#------------------------------------------------------------------------
+
+AS_IF([test x"${DEMO_DIR}" = x], [DEMO_DIR='$(TK_LIBRARY)/demos'])
+eval "TK_DEMO_DIR=\"`echo ${DEMO_DIR} | tr '()' '{}'`\""
+eval "TK_DEMO_DIR=\"`echo ${TK_DEMO_DIR} | tr '()' '{}'`\""
+AC_SUBST(DEMO_DIR)
+AC_SUBST(TK_DEMO_DIR)
+
+#------------------------------------------------------------------------
 # tkConfig.sh refers to this by a different name
 #------------------------------------------------------------------------
 
