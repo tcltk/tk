@@ -9756,6 +9756,7 @@ TkBTreeTag(
 
 	if (data.lengths != data.lengthsBuf) {
 	    free(data.lengths);
+	    DEBUG(data.lengths = data.lengthsBuf);
 	}
     }
 
