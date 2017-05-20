@@ -95,7 +95,7 @@ HTML_INSTALL_DIR	= $(INSTALL_ROOT)$(HTML_DIR)
 CONFIG_INSTALL_DIR	= $(INSTALL_ROOT)$(libdir)
 
 # Directory in which to install the demo files:
-DEMO_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)/demos
+DEMO_INSTALL_DIR	= $(INSTALL_ROOT)@DEMO_DIR@
 
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
