@@ -2146,7 +2146,7 @@ It's like a reset to the initial state, without resetting the options of the
 widget, and without clearing widget bindings. Also the states
 \fBedit modified\fR, \fBedit altered\fR, and \fBedit irreversible\fR will be
 resetted to false. The widget now will be overall clean (see command
-\fBisclean \-overall\fR). Note that this operation cannot be undone
+\fBisclean \-overall\fR). Note that this operation cannot be undone.
 .TP
 \fIpathName \fBcompare\fR \fIindex1 op index2\fR
 .
@@ -2800,10 +2800,10 @@ Otherwise only clear the specified stack. The specified stack must be either
 Inserts a separator (boundary) on the undo stack. Does nothing when the
 \fB\-undo\fR option is false. Per default the insertion of the separator
 will be postponed until the next
-\fBinsert\fR/\fBdelete\fR/\fBedit undo\fR/\fBedit redo\fR command will be
-performed. If option \fB\-immediately\fR is specified then the separator will
-be pushed immediately; this is required if mark or tag operations should be
-separated.
+\fBinsert\fR/\fBdelete\fR//\fBreplace\fR/\fBedit undo\fR/\fBedit redo\fR
+command will be performed. If option \fB\-immediately\fR is specified then
+the separator will be pushed immediately; this is required if mark or tag
+operations should be separated.
 .TP
 \fIpathName \fBedit undo\fR
 .
@@ -3205,7 +3205,7 @@ Returns the line number corresponding to \fIindex\fR. \fIIndex\fR may have
 any of the forms described under \fBINDICES\fR above.
 .RS
 .PP
-If the widget is dead (i.e., does not contains any lines, which is possible
+If the widget is dead (i.e., does not contain lines, which is possible
 only if option \fB\-startline\fR/\fB\-endline\fR is involved), then 0 (zero)
 will be returned.
 .RE
@@ -4491,8 +4491,8 @@ modified.
 .IP \(bu 3
 \fBtk::text: Attempt to modify a dead widget is deprecated.\fR
 .PP
-Remove this useless expression, a dead widget (does not contains
-linesand do not show an insertion cursor) cannot be modified.
+Remove this useless expression, a dead widget (does not contain
+lines and does not show an insertion cursor) cannot be modified.
 .IP \(bu 3
 \fBtk::text: Command "edit canredo" is deprecated, please use "edit info".\fR
 .PP
