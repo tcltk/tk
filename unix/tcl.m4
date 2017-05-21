@@ -1476,10 +1476,12 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    esac
 	    SHLIB_LD='${CC} -shared ${SHLIB_CFLAGS}'
 	    SHLIB_SUFFIX=".so"
+	    DL_OBJS="tclLoadDl.o"
+	    DL_LIBS=""
 	    AS_IF([test $doRpath = yes], [
 		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'])
 	    LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
-	    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.so${SHLIB_VERSION}'
+	    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.so.${SHLIB_VERSION}'
 	    LDFLAGS="-Wl,-export-dynamic"
 	    CFLAGS_OPTIMIZE="-O2"
 	    AS_IF([test "${TCL_THREADS}" = "1"], [
@@ -2683,7 +2685,7 @@ AC_DEFUN([SC_TCL_CFG_ENCODING], [
 #	advancedTest - the advanced test to run if the function is present
 #
 # Results:
-#	Might cause compatability versions of the function to be used.
+#	Might cause compatibility versions of the function to be used.
 #	Might affect the following vars:
 #		USE_COMPAT	(implicit)
 #
