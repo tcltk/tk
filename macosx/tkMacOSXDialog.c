@@ -6,7 +6,7 @@
  * Copyright (c) 1996-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017 Christian Gollwitzer. 
+ * Copyright (c) 2017 Christian Gollwitzer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -34,7 +34,7 @@ typedef struct {
     NSMutableArray *fileTypeExtensions; // array of allowed extensions per name, e.g. "txt", "doc"
     NSMutableArray *fileTypeLabels; // displayed string, e.g. "Text document (.txt, .doc)"
     NSMutableArray *allAllowedExtensions; // set of all allowed extensions
-    NSInteger fileTypeIndex; // index of currently selected filter 
+    NSInteger fileTypeIndex; // index of currently selected filter
 } filepanelFilterInfo;
 
 filepanelFilterInfo filterInfo;
@@ -413,7 +413,7 @@ int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVar
     }
 
     filterInfo.doFileTypes = (fl.filters != NULL);
-    
+
     filterInfo.fileTypeIndex = 0;
     filterInfo.fileTypeExtensions = [NSMutableArray array];
     filterInfo.fileTypeNames = [NSMutableArray array];
@@ -442,7 +442,7 @@ int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVar
 			if (![filterInfo.allAllowedExtensions containsObject:extension]) {
 			    [filterInfo.allAllowedExtensions addObject:extension];
 			}
-			
+
 			[clauseextensions addObject:extension];
 			[displayextensions addObject:[@"." stringByAppendingString:extension]];
 
@@ -458,7 +458,7 @@ int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVar
 	    [label appendString:@")"];
 	    [filterInfo.fileTypeLabels addObject:label];
 	    [label release];
-	    
+
 	}
 
 	/* Check if the typevariable exists and matches one of the names */
@@ -467,21 +467,21 @@ int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVar
 	if (typeVariablePtr) {
 	    /* extract the variable content as a NSString */
 	    Tcl_Obj *selectedFileTypeObj = Tcl_ObjGetVar2(interp, typeVariablePtr, NULL, TCL_GLOBAL_ONLY);
-	    
+
 	    /* check that the typevariable exists */
-	    if (selectedFileTypeObj != NULL) {	
+	    if (selectedFileTypeObj != NULL) {
 		const char *selectedFileType = Tcl_GetString(selectedFileTypeObj);
 		NSString *selectedFileTypeStr = [[NSString alloc] initWithUTF8String:selectedFileType];
 		NSUInteger index = [filterInfo.fileTypeNames indexOfObject:selectedFileTypeStr];
-		
+
 		if (index != NSNotFound) {
 		    filterInfo.fileTypeIndex = index;
 		    filterInfo.preselectFilter = true;
 		}
 	    }
-	}	
+	}
 
-    } 
+    }
 
     TkFreeFileFilters(&fl);
     return TCL_OK;
@@ -587,9 +587,9 @@ Tk_GetOpenFileObjCmd(
 	    break;
 	}
     }
-    
-    /* From OSX 10.11, the title string is silently ignored. 
-     * Prepend the title to the message 
+
+    /* From OSX 10.11, the title string is silently ignored.
+     * Prepend the title to the message
      * NOTE should be conditional on OSX version, but
      * -mmacosx-version-min does not revert this behaviour*/
     if (title) {
@@ -610,7 +610,7 @@ Tk_GetOpenFileObjCmd(
     }
 
     [openpanel setAllowsMultipleSelection:multiple];
-    
+
     if (parseFileFilters(interp, fileTypesPtr, typeVariablePtr) != TCL_OK) {
 	goto end;
     }
@@ -630,19 +630,19 @@ Tk_GetOpenFileObjCmd(
 
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
-	
+
 	if (filterInfo.preselectFilter) {
-	    /* A specific filter was selected from the typevariable. Select it and 
+	    /* A specific filter was selected from the typevariable. Select it and
 	     * open the accessory view */
 	    [popupButton selectItemAtIndex:filterInfo.fileTypeIndex];
-	    /* on OSX > 10.11, the optons are not visible by default. Ergo allow all file types 
+	    /* on OSX > 10.11, the optons are not visible by default. Ergo allow all file types
 	    [openpanel setAllowedFileTypes:filterInfo.fileTypeExtensions[filterInfo.fileTypeIndex]];
 	    */
 	    [openpanel setAllowedFileTypes:filterInfo.allAllowedExtensions];
 	} else {
 	    [openpanel setAllowedFileTypes:filterInfo.allAllowedExtensions];
 	}
-	
+
 	[openpanel setAllowsOtherFileTypes:NO];
 
 	[openpanel setAccessoryView:accessoryView];
@@ -658,7 +658,7 @@ Tk_GetOpenFileObjCmd(
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
-    
+
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = multiple;
@@ -698,8 +698,8 @@ Tk_GetOpenFileObjCmd(
     if (parentIsKey) {
 	[parent makeKeyWindow];
     }
-    
-    if ((typeVariablePtr && (modalReturnCode == NSOKButton)) && 
+
+    if ((typeVariablePtr && (modalReturnCode == NSOKButton)) &&
 	filterInfo.doFileTypes && filterInfo.userHasSelectedFilter) {
 	/*
 	 * The -typevariable must be set to the selected file type, if the dialog was not cancelled
@@ -712,7 +712,7 @@ Tk_GetOpenFileObjCmd(
 		Tcl_NewStringObj([selectedFilter UTF8String], -1), TCL_GLOBAL_ONLY);
     }
 
- 
+
   end:
     return result;
 }
@@ -826,7 +826,7 @@ Tk_GetSaveFileObjCmd(
 		break;
 	}
     }
-    
+
     if (title) {
 	[savepanel setTitle:title];
 	if (message) {
@@ -866,7 +866,7 @@ Tk_GetSaveFileObjCmd(
 	[accessoryView addSubview:popupButton];
 
 	[savepanel setAccessoryView:accessoryView];
-	
+
 	[savepanel setAllowedFileTypes:filterInfo.fileTypeExtensions[filterInfo.fileTypeIndex]];
 	[savepanel setAllowsOtherFileTypes:NO];
     } else if (defaultType) {
@@ -930,7 +930,7 @@ Tk_GetSaveFileObjCmd(
     if (parentIsKey) {
 	[parent makeKeyWindow];
     }
-    
+
     if ((typeVariablePtr && (modalReturnCode == NSOKButton)) && filterInfo.doFileTypes) {
 	/*
 	 * The -typevariable must be set to the selected file type, if the dialog was not cancelled
