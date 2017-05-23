@@ -56,6 +56,9 @@
 #else
 #   include "../compat/unistd.h"
 #endif
+#ifdef TK_USE_POLL
+#   include <poll.h>
+#endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>

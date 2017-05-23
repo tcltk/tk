@@ -36,7 +36,7 @@ static void		DisplayExitHandler(ClientData clientData);
 static void		DisplayFileProc(ClientData clientData, int flags);
 #endif
 static void		DisplaySetupProc(ClientData clientData, int flags);
-static void		TransferXEventsToTcl(Display *display);
+static int		TransferXEventsToTcl(Display *display);
 
 /*
  *----------------------------------------------------------------------
@@ -264,7 +264,7 @@ DisplaySetupProc(
  *	Transfer events from the X event queue to the Tk event queue.
  *
  * Results:
- *	None.
+ *	Number of events transferred.
  *
  * Side effects:
  *	Moves queued X events onto the Tcl event queue.
@@ -272,7 +272,7 @@ DisplaySetupProc(
  *----------------------------------------------------------------------
  */
 
-static void
+static int
 TransferXEventsToTcl(
     Display *display)
 {
@@ -281,7 +281,7 @@ TransferXEventsToTcl(
 	XEvent x;
 	TkKeyEvent k;
     } event;
-    int numFound;
+    int numFound, count = 0;
 
     numFound = XEventsQueued(display, QueuedAlready);
 
@@ -294,9 +294,11 @@ TransferXEventsToTcl(
 	XNextEvent(display, &event.x);
 	if (event.type != PointerUpdate) {
 	    Tk_QueueWindowEvent(&event.x, TCL_QUEUE_TAIL);
+	    count++;
 	}
 	numFound--;
     }
+    return count;
 }
 
 /*
@@ -417,6 +419,99 @@ TkpDoOneXEvent(
     Tcl_Time *timePtr)		/* Specifies the absolute time when the call
 				 * should time out. */
 {
+#ifdef TK_USE_POLL
+    TkDisplay *dispPtr;
+    Tcl_Time now;
+    int done = 0;
+    struct pollfd *pollFds;
+    int blockTime, fd, index, numFound, numFds;
+
+    /*
+     * Look for queued events first.
+     */
+
+    if (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
+	return 1;
+    }
+
+    /*
+     * Set up the poll array for all of the displays. If a display has data
+     * pending, then we want to poll instead of blocking.
+     */
+
+    blockTime = 20;
+    for (dispPtr = TkGetDisplayListExt(&pollFds), index = 0; dispPtr != NULL;
+	    dispPtr = dispPtr->nextPtr) {
+	XFlush(dispPtr->display);
+	if (XEventsQueued(dispPtr->display, QueuedAlready) > 0) {
+	    done = 1;
+	    blockTime = 0;
+	}
+	fd = ConnectionNumber(dispPtr->display);
+	if (fd < 0) {
+	    continue;
+	}
+	pollFds[index].fd = fd;
+	pollFds[index].events = POLLIN;
+	pollFds[index].revents = 0;
+	index++;
+    }
+    numFds = index;
+
+    do {
+	numFound = poll(pollFds, numFds, blockTime);
+
+	/*
+	 * Process any new events on the display connections.
+	 */
+
+	for (dispPtr = TkGetDisplayList(), index = 0; dispPtr != NULL;
+	     dispPtr = dispPtr->nextPtr) {
+	    fd = ConnectionNumber(dispPtr->display);
+	    if (fd < 0) {
+		if (XEventsQueued(dispPtr->display, QueuedAlready) > 0) {
+		    DisplayFileProc(dispPtr, TCL_READABLE);
+		    done = 1;
+		    break;
+		}
+		continue;
+	    }
+	    if ((pollFds[index].revents & POLLIN) ||
+		(XEventsQueued(dispPtr->display, QueuedAlready) > 0)) {
+		DisplayFileProc(dispPtr, TCL_READABLE);
+		done = 1;
+		break;
+	    }
+	    index++;
+	}
+	if (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
+	    return 1;
+	}
+	if (done) {
+	    break;
+	}
+
+	/*
+	 * Check to see if we timed out.
+	 */
+
+	if (timePtr) {
+	    TclpGetMonotonicTime(&now);
+	    if ((now.sec - timePtr->sec > 0) ||
+		((now.sec == timePtr->sec) && (now.usec > timePtr->usec))) {
+		return 0;
+	    }
+	}
+	blockTime = 20;
+    } while (!done);
+
+    /*
+     * We had an event but we did not generate a Tcl event from it. Behave as
+     * though we dealt with it. (JYL&SS)
+     */
+
+    return 1;
+#else
     TkDisplay *dispPtr;
     Tcl_Time now;
     int done = 0;
@@ -494,7 +589,9 @@ TkpDoOneXEvent(
 handleEvents:
 	for (dispPtr = TkGetDisplayList(); dispPtr != NULL;
 	     dispPtr = dispPtr->nextPtr) {
-	    TransferXEventsToTcl(dispPtr->display);
+	    if (TransferXEventsToTcl(dispPtr->display)) {
+		done = 1;
+	    }
 	}
 #else
 	numFound = select(numFdBits, (SELECT_MASK *) readMaskPtr, NULL, NULL,
@@ -532,12 +629,12 @@ handleEvents:
 		break;
 	    }
 	}
-	if (done) {
-	    break;
-	}
 #endif
 	if (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
 	    return 1;
+	}
+	if (done) {
+	    break;
 	}
 
 	/*
@@ -546,7 +643,7 @@ handleEvents:
 
 	if (timePtr) {
 	    TclpGetMonotonicTime(&now);
-	    if ((now.sec > timePtr->sec) ||
+	    if ((now.sec - timePtr->sec > 0) ||
 		((now.sec == timePtr->sec) && (now.usec > timePtr->usec))) {
 		return 0;
 	    }
@@ -563,6 +660,7 @@ handleEvents:
      */
 
     return 1;
+#endif
 }
 
 /*

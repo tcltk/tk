@@ -8986,13 +8986,13 @@ RemoveFromBaseChunk(
 
     bciPtr = baseCharChunkPtr->clientData;
 
+#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
     if ((ciPtr->baseOffset + ciPtr->numBytes)
 	    != Tcl_DStringLength(&bciPtr->baseChars)) {
-#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
 	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk "
 		"(not last)\n");
-#endif
     }
+#endif
 
     Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
 

@@ -1,4 +1,4 @@
-/* ../unix/tkConfig.h.in.  Generated from configure.ac by autoheader.  */
+/* ../sdl/tkConfig.h.in.  Generated from ? by autoheader.  */
 
 
     #ifndef _TKCONFIG
@@ -21,9 +21,6 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
-
-/* Do we have <limits.h>? */
-#undef HAVE_LIMITS_H
 
 /* Define to 1 if you have the `lseek64' function. */
 #undef HAVE_LSEEK64
@@ -109,9 +106,6 @@
 /* Do we have fd_set? */
 #undef NO_FD_SET
 
-/* Do we have <limits.h>? */
-#undef NO_LIMITS_H
-
 /* Do we have <stdlib.h>? */
 #undef NO_STDLIB_H
 
@@ -174,6 +168,9 @@
 
 /* Are TkAqua debug messages enabled? */
 #undef TK_MAC_DEBUG
+
+/* Do we have poll()? */
+#undef TK_USE_POLL
 
 /* Do we want to use the threaded memory allocator? */
 #undef USE_THREAD_ALLOC
@@ -238,7 +235,7 @@
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
 /* Do we want to use the strtod() in compat? */

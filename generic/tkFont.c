@@ -4011,8 +4011,9 @@ TkFontParseXLFD(
 
 	    faPtr->size = atof(field[XLFD_PIXEL_SIZE] + 1);
 	} else if (Tcl_GetInt(NULL, field[XLFD_PIXEL_SIZE],
-		&i) != TCL_OK) {
+		&i) == TCL_OK) {
 	    faPtr->size = (double)i;
+	} else {
 	    return TCL_ERROR;
 	}
     }
