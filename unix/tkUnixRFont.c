@@ -447,7 +447,7 @@ TkpGetFontFromAttributes(
     if (faPtr->size > 0.0) {
 	XftPatternAddDouble(pattern, XFT_SIZE, faPtr->size);
     } else if (faPtr->size < 0.0) {
-	XftPatternAddDouble(pattern, XFT_PIXEL_SIZE, -faPtr->size);
+	XftPatternAddDouble(pattern, XFT_SIZE, TkFontGetPoints(tkwin, faPtr->size));
     } else {
 	XftPatternAddDouble(pattern, XFT_SIZE, 12.0);
     }

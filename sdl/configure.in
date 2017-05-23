@@ -25,7 +25,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".4"
+TK_PATCH_LEVEL=".6"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -190,6 +190,23 @@ if test $tk_ok = no; then
 fi
 
 #------------------------------------------------------------------------------
+#       Find out if poll(2) is available.
+#------------------------------------------------------------------------------
+
+AC_CACHE_CHECK([for poll(2)], tcl_cv_poll, [
+    AC_TRY_COMPILE([#include <poll.h>], [
+#ifdef __APPLE__
+#error poll broken depending on OS version
+#endif
+	struct pollfd pfd[1];
+	int ret = poll(pfd, 1, 0);
+    ], tk_cv_poll=yes, tk_cv_poll=no)])
+tk_ok=$tk_cv_poll
+if test $tk_ok = yes; then
+    AC_DEFINE(TK_USE_POLL, 1, [Do we have poll()?])
+fi
+
+#------------------------------------------------------------------------------
 #       Find out all about time handling differences.
 #------------------------------------------------------------------------------
 
@@ -330,8 +347,8 @@ fi
 
 case ${TCL_DEFS} in
     *ZIPFS_IN_TCL=1*)
-        EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES -DZIPFS_IN_TCL=1"
-        ;;
+	EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES -DZIPFS_IN_TCL=1"
+	;;
 esac
 
 #--------------------------------------------------------------------

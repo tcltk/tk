@@ -1902,7 +1902,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".4"
+TK_PATCH_LEVEL=".6"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -6092,47 +6092,24 @@ fi
 	OpenBSD-*)
 	    arch=`arch -s`
 	    case "$arch" in
-	    vax)
-		# Equivalent using configure option --disable-load
-		# Step 4 will set the necessary variables
-		DL_OBJS=""
-		SHLIB_LD_LIBS=""
-		LDFLAGS=""
+	    alpha|sparc64)
+		SHLIB_CFLAGS="-fPIC"
 		;;
 	    *)
-		case "$arch" in
-		alpha|sparc|sparc64)
-		    SHLIB_CFLAGS="-fPIC"
-		    ;;
-		*)
-		    SHLIB_CFLAGS="-fpic"
-		    ;;
-		esac
-		SHLIB_LD='${CC} -shared ${SHLIB_CFLAGS}'
-		SHLIB_SUFFIX=".so"
-		DL_OBJS="tclLoadDl.o"
-		DL_LIBS=""
-		if test $doRpath = yes; then
+		SHLIB_CFLAGS="-fpic"
+		;;
+	    esac
+	    SHLIB_LD='${CC} -shared ${SHLIB_CFLAGS}'
+	    SHLIB_SUFFIX=".so"
+	    if test $doRpath = yes; then
 
-		    CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
+		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 fi
 
-		LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
-		SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.so.${SHLIB_VERSION}'
-		LDFLAGS="-Wl,-export-dynamic"
-		;;
-	    esac
-	    case "$arch" in
-	    vax)
-		CFLAGS_OPTIMIZE="-O1"
-		;;
-	    sh)
-		CFLAGS_OPTIMIZE="-O0"
-		;;
-	    *)
-		CFLAGS_OPTIMIZE="-O2"
-		;;
-	    esac
+	    LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
+	    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.so${SHLIB_VERSION}'
+	    LDFLAGS="-Wl,-export-dynamic"
+	    CFLAGS_OPTIMIZE="-O2"
 	    if test "${TCL_THREADS}" = "1"; then
 
 		# On OpenBSD:	Compile with -pthread
@@ -8890,6 +8867,76 @@ _ACEOF
 fi
 
 #------------------------------------------------------------------------------
+#       Find out if poll(2) is available.
+#------------------------------------------------------------------------------
+
+{ $as_echo "$as_me:$LINENO: checking for poll(2)" >&5
+$as_echo_n "checking for poll(2)... " >&6; }
+if test "${tcl_cv_poll+set}" = set; then
+  $as_echo_n "(cached) " >&6
+else
+
+    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <poll.h>
+int
+main ()
+{
+
+#ifdef __APPLE__
+#error poll broken depending on OS version
+#endif
+	struct pollfd pfd[1];
+	int ret = poll(pfd, 1, 0);
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:$LINENO: $ac_try_echo\""
+$as_echo "$ac_try_echo") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  $as_echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  tk_cv_poll=yes
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	tk_cv_poll=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:$LINENO: result: $tcl_cv_poll" >&5
+$as_echo "$tcl_cv_poll" >&6; }
+tk_ok=$tk_cv_poll
+if test $tk_ok = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define TK_USE_POLL 1
+_ACEOF
+
+fi
+
+#------------------------------------------------------------------------------
 #       Find out all about time handling differences.
 #------------------------------------------------------------------------------
 
@@ -10196,8 +10243,8 @@ fi
 
 case ${TCL_DEFS} in
     *ZIPFS_IN_TCL=1*)
-        EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES -DZIPFS_IN_TCL=1"
-        ;;
+	EXTRA_CC_SWITCHES="$EXTRA_CC_SWITCHES -DZIPFS_IN_TCL=1"
+	;;
 esac
 
 #--------------------------------------------------------------------

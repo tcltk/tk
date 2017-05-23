@@ -1327,6 +1327,9 @@ CreateClosestFont(
 	want.fa.family = Tk_GetUid("fixed");
     }
     want.fa.size = -TkFontGetPixels(tkwin, faPtr->size);
+    if (want.fa.size == 0.0) {
+	want.fa.size = 12.0;
+    }
     if (want.xa.charset == NULL || *want.xa.charset == '\0') {
 	want.xa.charset = Tk_GetUid("ucs-4");	/* locale. */
     }
@@ -1388,7 +1391,7 @@ CreateClosestFont(
 	    continue;
 	}
 	IdentifySymbolEncodings(&got);
-	scalable = (got.fa.size == 0);
+	scalable = (got.fa.size == 0.0);
 	score = RankAttributes(&want, &got);
 	if (score < bestScore[scalable]) {
 	    bestIdx[scalable] = nameIdx;
@@ -1478,7 +1481,7 @@ InitFont(
     fmPtr->fixed = SdlTkFontIsFixedWidth(fontStructPtr);
 
     fontPtr->display = display;
-    fontPtr->pixelSize = TkFontGetPixels(tkwin, fa.fa.size);
+    fontPtr->pixelSize = (int)(TkFontGetPixels(tkwin, fa.fa.size) + 0.5);
     fontPtr->xa = fa.xa;
 
     fontPtr->numSubFonts = 1;
@@ -2259,7 +2262,7 @@ CanUseFallback(
     want.xa = fontPtr->xa;
 
     want.fa.family = Tk_GetUid(faceName);
-    want.fa.size = -fontPtr->pixelSize;
+    want.fa.size = (double)-fontPtr->pixelSize;
 
     numEncodings = 0;
     Tcl_DStringInit(&dsEncodings);
@@ -2290,7 +2293,7 @@ CanUseFallback(
 	 * D. Rank each name and pick the best match.
 	 */
 
-	scalable = (got.fa.size == 0);
+	scalable = (got.fa.size == 0.0);
 	score = RankAttributes(&want, &got);
 	if (score < bestScore[scalable]) {
 	    bestIdx[scalable] = nameIdx;
@@ -2424,7 +2427,7 @@ RankAttributes(
 	penalty += 1000;
     }
 
-    if (gotPtr->fa.size == 0) {
+    if (gotPtr->fa.size == 0.0) {
 	/*
 	 * A scalable font is almost always acceptable, but the corresponding
 	 * bitmapped font would be better.
@@ -2438,14 +2441,14 @@ RankAttributes(
 	 * It's worse to be too large than to be too small.
 	 */
 
-	diff = (-gotPtr->fa.size - -wantPtr->fa.size);
+	diff = (int) (150 * (-gotPtr->fa.size - -wantPtr->fa.size));
 	if (diff > 0) {
 	    penalty += 600;
 	} else if (diff < 0) {
 	    penalty += 150;
 	    diff = -diff;
 	}
-	penalty += 150 * diff;
+	penalty += diff;
     }
     if (gotPtr->xa.charset != wantPtr->xa.charset) {
 	int i;
@@ -2532,7 +2535,7 @@ GetScreenFont(
 	}
 	*str = '\0';
 	sprintf(buf, "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
-		-wantPtr->fa.size, rest);
+		(int)(-wantPtr->fa.size+0.5), rest);
 	*str = '-';
 	fontStructPtr = XLoadQueryFont(display, buf);
 	bestScore[1] = INT_MAX;
