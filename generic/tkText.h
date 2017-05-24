@@ -1626,7 +1626,7 @@ typedef enum {
 } TkTextSortMethod;
 
 /*
- * Flags nneded for function TkBTreeGetSegmentTags().
+ * Flags needed for function TkBTreeGetSegmentTags().
  */
 
 #define TK_TEXT_IS_ELIDED	(1 << 0)
