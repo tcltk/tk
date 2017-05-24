@@ -1497,7 +1497,7 @@ TriggerWatchCursor(
     numTags = 0;
     tagArrayPtr = tagArrayBuffer;
     tagArraySize = sizeof(tagArrayBuffer)/sizeof(tagArrayBuffer[0]);
-    tagPtr = TkBTreeGetTags(&index);
+    tagPtr = TkBTreeGetTags(&index, TK_TEXT_SORT_ASCENDING, NULL);
     for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
 	if (numTags == tagArraySize) {
 	    tagArraySize *= 2;
@@ -1505,7 +1505,6 @@ TriggerWatchCursor(
 	}
 	tagArrayPtr[numTags++] = tagPtr;
     }
-    TkTextSortTags(numTags, tagArrayPtr);
     for (i = 0; i < numTags; ++i) {
 	Tcl_DStringAppendElement(&buf, tagArrayPtr[i]->name);
     }

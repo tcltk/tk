@@ -1804,7 +1804,8 @@ TkTextResetDInfo(
  * GetStyle --
  *
  *	This function creates all the information needed to display text at a
- *	particular location.
+ *	particular location. We know that the given chain of tags is sorted
+ *	in ascending order.
  *
  * Results:
  *	The return value is a pointer to a TextStyle structure that
@@ -1828,28 +1829,6 @@ MakeStyle(
     XGCValues gcValues;
     unsigned long mask;
     bool isNew;
-
-    /*
-     * The array below keeps track of the highest-priority specification
-     * that has occurred for each of the various fields of the StyleValues.
-     */
-
-    enum {
-	PRIO_BG_STIPPLE, PRIO_BORDER, PRIO_BORDER_WIDTH, PRIO_ELIDE, PRIO_EOL_COLOR, PRIO_FG,
-	PRIO_FG_STIPPLE, PRIO_FONT, PRIO_HYPHEN_COLOR, PRIO_HYPHEN_RULES, PRIO_INDENT_BG,
-	PRIO_JUSTIFY, PRIO_LANG, PRIO_LMARGIN_1, PRIO_LMARGIN_2, PRIO_LMARGIN_COLOR,
-	PRIO_OFFSET, PRIO_OVERSTRIKE, PRIO_RELIEF, PRIO_RMARGIN, PRIO_RMARGIN_COLOR,
-	PRIO_SPACING_1, PRIO_SPACING_2, PRIO_SPACING_3, PRIO_TAB, PRIO_TAB_STYLE,
-	PRIO_UNDERLINE, PRIO_WRAP,
-	PRIO_LAST /* must be last element */
-    };
-
-    int prio[PRIO_LAST] = {
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	-1, -1, -1, -1, -1, -1, -1, -1 };
-
-    assert(prio[PRIO_LAST - 1] == -1);
 
     /*
      * Find out what tags are present for the character, then compute a
@@ -1877,13 +1856,8 @@ MakeStyle(
     styleValues.hyphenRules = textPtr->hyphenRulesPtr ? textPtr->hyphenRules : TK_TEXT_HYPHEN_MASK;
 
     for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
-	Tk_3DBorder border;
-        XColor *fgColor;
-	int priority;
-
-	border = tagPtr->border;
-        fgColor = tagPtr->fgColor;
-	priority = tagPtr->priority;
+	Tk_3DBorder border = tagPtr->border;
+        XColor *fgColor = tagPtr->fgColor;
 
 	/*
 	 * If this is the selection tag, and inactiveSelBorder is NULL (the
@@ -1914,136 +1888,106 @@ MakeStyle(
 		fgColor = textPtr->selFgColorPtr;
 	    }
 	}
-	if (border && priority > prio[PRIO_BORDER]) {
+	if (border) {
 	    styleValues.border = border;
-	    prio[PRIO_BORDER] = priority;
 	}
-	if (tagPtr->borderWidthPtr
-		&& Tcl_GetString(tagPtr->borderWidthPtr)[0] != '\0'
-		&& priority > prio[PRIO_BORDER_WIDTH]) {
+	if (tagPtr->borderWidthPtr && Tcl_GetString(tagPtr->borderWidthPtr)[0] != '\0') {
 	    styleValues.borderWidth = tagPtr->borderWidth;
-	    prio[PRIO_BORDER_WIDTH] = priority;
 	}
-	if (tagPtr->reliefPtr && priority > prio[PRIO_RELIEF]) {
+	if (tagPtr->reliefPtr) {
 	    if (!styleValues.border) {
 		styleValues.border = textPtr->border;
 	    }
 	    assert(tagPtr->relief < 8);
 	    styleValues.relief = tagPtr->relief;
-	    prio[PRIO_RELIEF] = priority;
 	}
-	if (tagPtr->bgStipple != None && priority > prio[PRIO_BG_STIPPLE]) {
+	if (tagPtr->bgStipple != None) {
 	    styleValues.bgStipple = tagPtr->bgStipple;
-	    prio[PRIO_BG_STIPPLE] = priority;
 	}
-	if (tagPtr->indentBgString != None && priority > prio[PRIO_INDENT_BG]) {
+	if (tagPtr->indentBgString != None) {
 	    styleValues.indentBg = tagPtr->indentBg;
-	    prio[PRIO_INDENT_BG] = priority;
 	}
-	if (fgColor != None && priority > prio[PRIO_FG]) {
+	if (fgColor != None) {
 	    styleValues.fgColor = fgColor;
-	    prio[PRIO_FG] = priority;
 	}
-	if (tagPtr->tkfont != None && priority > prio[PRIO_FONT]) {
+	if (tagPtr->tkfont != None) {
 	    styleValues.tkfont = tagPtr->tkfont;
-	    prio[PRIO_FONT] = priority;
 	}
-	if (tagPtr->fgStipple != None && priority > prio[PRIO_FG_STIPPLE]) {
+	if (tagPtr->fgStipple != None) {
 	    styleValues.fgStipple = tagPtr->fgStipple;
-	    prio[PRIO_FG_STIPPLE] = priority;
 	}
-	if (tagPtr->justifyString && priority > prio[PRIO_JUSTIFY]) {
+	if (tagPtr->justifyString) {
 	    /* assert(tagPtr->justify < 8); always true due to range */
 	    styleValues.justify = tagPtr->justify;
-	    prio[PRIO_JUSTIFY] = priority;
 	}
-	if (tagPtr->lMargin1String && priority > prio[PRIO_LMARGIN_1]) {
+	if (tagPtr->lMargin1String) {
 	    styleValues.lMargin1 = tagPtr->lMargin1;
-	    prio[PRIO_LMARGIN_1] = priority;
 	}
-	if (tagPtr->lMargin2String && priority > prio[PRIO_LMARGIN_2]) {
+	if (tagPtr->lMargin2String) {
 	    styleValues.lMargin2 = tagPtr->lMargin2;
-	    prio[PRIO_LMARGIN_2] = priority;
 	}
-	if (tagPtr->lMarginColor && priority > prio[PRIO_LMARGIN_COLOR]) {
+	if (tagPtr->lMarginColor) {
 	    styleValues.lMarginColor = tagPtr->lMarginColor;
-	    prio[PRIO_LMARGIN_COLOR] = priority;
 	}
-	if (tagPtr->offsetString && priority > prio[PRIO_OFFSET]) {
+	if (tagPtr->offsetString) {
 	    styleValues.offset = tagPtr->offset;
-	    prio[PRIO_OFFSET] = priority;
 	}
-	if (tagPtr->overstrikeString && priority > prio[PRIO_OVERSTRIKE]) {
+	if (tagPtr->overstrikeString) {
 	    styleValues.overstrike = tagPtr->overstrike;
-	    prio[PRIO_OVERSTRIKE] = priority;
             if (tagPtr->overstrikeColor != None) {
                  styleValues.overstrikeColor = tagPtr->overstrikeColor;
             } else if (fgColor != None) {
                  styleValues.overstrikeColor = fgColor;
             }
 	}
-	if (tagPtr->rMarginString && priority > prio[PRIO_RMARGIN]) {
+	if (tagPtr->rMarginString) {
 	    styleValues.rMargin = tagPtr->rMargin;
-	    prio[PRIO_RMARGIN] = priority;
 	}
-	if (tagPtr->rMarginColor && priority > prio[PRIO_RMARGIN_COLOR]) {
+	if (tagPtr->rMarginColor) {
 	    styleValues.rMarginColor = tagPtr->rMarginColor;
-	    prio[PRIO_RMARGIN_COLOR] = priority;
 	}
-	if (tagPtr->spacing1String && priority > prio[PRIO_SPACING_1]) {
+	if (tagPtr->spacing1String) {
 	    styleValues.spacing1 = tagPtr->spacing1;
-	    prio[PRIO_SPACING_1] = priority;
 	}
-	if (tagPtr->spacing2String && priority > prio[PRIO_SPACING_2]) {
+	if (tagPtr->spacing2String) {
 	    styleValues.spacing2 = tagPtr->spacing2;
-	    prio[PRIO_SPACING_2] = priority;
 	}
-	if (tagPtr->spacing3String && priority > prio[PRIO_SPACING_3]) {
+	if (tagPtr->spacing3String) {
 	    styleValues.spacing3 = tagPtr->spacing3;
-	    prio[PRIO_SPACING_3] = priority;
 	}
-	if (tagPtr->tabStringPtr && priority > prio[PRIO_TAB]) {
+	if (tagPtr->tabStringPtr) {
 	    styleValues.tabArrayPtr = tagPtr->tabArrayPtr;
-	    prio[PRIO_TAB] = priority;
 	}
-	if (tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE && priority > prio[PRIO_TAB_STYLE]) {
+	if (tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE) {
 	    assert(tagPtr->tabStyle < 8);
 	    styleValues.tabStyle = tagPtr->tabStyle;
-	    prio[PRIO_TAB_STYLE] = priority;
 	}
-	if (tagPtr->eolColor && priority > prio[PRIO_EOL_COLOR]) {
+	if (tagPtr->eolColor) {
 	    styleValues.eolColor = tagPtr->eolColor;
-	    prio[PRIO_EOL_COLOR] = priority;
 	}
-	if (tagPtr->hyphenColor && priority > prio[PRIO_HYPHEN_COLOR]) {
+	if (tagPtr->hyphenColor) {
 	    styleValues.hyphenColor = tagPtr->hyphenColor;
-	    prio[PRIO_HYPHEN_COLOR] = priority;
 	}
-	if (tagPtr->underlineString && priority > prio[PRIO_UNDERLINE]) {
+	if (tagPtr->underlineString) {
 	    styleValues.underline = tagPtr->underline;
-	    prio[PRIO_UNDERLINE] = priority;
             if (tagPtr->underlineColor != None) {
 		styleValues.underlineColor = tagPtr->underlineColor;
             } else if (fgColor != None) {
 		styleValues.underlineColor = fgColor;
             }
 	}
-	if (tagPtr->elideString && priority > prio[PRIO_ELIDE]) {
+	if (tagPtr->elideString) {
 	    styleValues.elide = tagPtr->elide;
-	    prio[PRIO_ELIDE] = priority;
 	}
-	if (tagPtr->langPtr && priority > prio[PRIO_LANG]) {
+	if (tagPtr->langPtr) {
 	    styleValues.lang = tagPtr->lang;
-	    prio[PRIO_LANG] = priority;
 	}
-	if (tagPtr->hyphenRulesPtr && priority > prio[PRIO_HYPHEN_RULES]) {
+	if (tagPtr->hyphenRulesPtr) {
 	    styleValues.hyphenRules = tagPtr->hyphenRules;
-	    prio[PRIO_HYPHEN_RULES] = priority;
 	}
-	if (tagPtr->wrapMode != TEXT_WRAPMODE_NULL && priority > prio[PRIO_WRAP]) {
+	if (tagPtr->wrapMode != TEXT_WRAPMODE_NULL) {
 	    /* assert(tagPtr->wrapMode < 8); always true due to range */
 	    styleValues.wrapMode = tagPtr->wrapMode;
-	    prio[PRIO_WRAP] = priority;
 	}
     }
 
@@ -2121,11 +2065,11 @@ GetStyle(
 {
     TextStyle *stylePtr;
     TkTextTag *tagPtr;
-    bool containsSelection;
+    int flags;
 
     if (segPtr && (tagPtr = TkBTreeGetSegmentTags(
-		    textPtr->sharedTextPtr, segPtr, textPtr, &containsSelection))) {
-	stylePtr = MakeStyle(textPtr, tagPtr, containsSelection);
+		    textPtr->sharedTextPtr, segPtr, textPtr, TK_TEXT_SORT_ASCENDING, &flags))) {
+	stylePtr = MakeStyle(textPtr, tagPtr, !!(flags & TK_TEXT_IS_SELECTED));
     } else {
 	/*
 	 * Take into account that this function can be called before UpdateDefaultStyle

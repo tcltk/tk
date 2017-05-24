@@ -3154,8 +3154,8 @@ the tags starting with this content, and secondly all the tags ending after
 this content (similar to the \fItagon\fR and \fItagoff\fR ranges in the
 \fBdump\fR format). Without the \fB\-nested\fR option (this is the default) only
 one list will be provided, namely all the tags associated to this segment
-content. The tag list will be written in decreasing order, sorted by the
-priority of the tag.
+content. The tag list will be sorted in order from lowest priority to highest
+priority.
 .TP
 \fB\-text\fR
 .

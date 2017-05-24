@@ -1586,22 +1586,21 @@ TkTextFindTags(
     bool discardSelection)	/* "sel" tag will be discarded? */
 {
     TkTextTag *tagPtr;
-    TkTextTag **tagArray;
-    unsigned count;
+    Tcl_Obj *listObj;
 
     assert(segPtr);
 
-    tagArray = malloc(textPtr->sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
-    tagPtr = TkBTreeGetSegmentTags(textPtr->sharedTextPtr, segPtr, textPtr, NULL);
+    tagPtr = TkBTreeGetSegmentTags(textPtr->sharedTextPtr, segPtr, textPtr,
+	    TK_TEXT_SORT_ASCENDING, NULL);
+    listObj = Tcl_NewObj();
 
-    for (count = 0; tagPtr; tagPtr = tagPtr->nextPtr) {
+    for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
 	if (!discardSelection || tagPtr != textPtr->selTagPtr) {
-	    tagArray[count++] = tagPtr;
+	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(tagPtr->name, -1));
 	}
     }
 
-    AppendTags(interp, count, tagArray);
-    free(tagArray);
+    Tcl_SetObjResult(interp, listObj);
 }
 
 /*
