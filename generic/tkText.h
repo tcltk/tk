@@ -1617,6 +1617,22 @@ typedef enum {
 #define DELETE_LASTLINE		(1 << 5)
 
 /*
+ * Flags for sorting.
+ */
+
+typedef enum {
+    TK_TEXT_SORT_NONE,
+    TK_TEXT_SORT_ASCENDING
+} TkTextSortMethod;
+
+/*
+ * Flags nneded for function TkBTreeGetSegmentTags().
+ */
+
+#define TK_TEXT_IS_ELIDED	(1 << 0)
+#define TK_TEXT_IS_SELECTED	(1 << 1)
+
+/*
  * The following definition specifies the maximum number of characters needed
  * in a string to hold a position specifier.
  */
@@ -1790,9 +1806,11 @@ MODULE_SCOPE TkTextSegment * TkBTreeFindStartOfElidedRange(const TkSharedText *s
 			    const TkText *textPtr, const TkTextSegment *segPtr);
 MODULE_SCOPE TkTextSegment * TkBTreeFindEndOfElidedRange(const TkSharedText *sharedTextPtr,
 			    const TkText *textPtr, const TkTextSegment *segPtr);
-inline TkTextTag *	TkBTreeGetTags(const TkTextIndex *indexPtr);
+inline TkTextTag *	TkBTreeGetTags(const TkTextIndex *indexPtr, TkTextSortMethod sortMeth,
+			    int *flags);
 MODULE_SCOPE TkTextTag * TkBTreeGetSegmentTags(const TkSharedText *sharedTextPtr,
-			    const TkTextSegment *segPtr, const TkText *textPtr, bool *containsSelection);
+			    const TkTextSegment *segPtr, const TkText *textPtr,
+			    TkTextSortMethod sortMeth, int *flags);
 MODULE_SCOPE const char * TkBTreeGetLang(const TkText *textPtr, const TkTextSegment *segPtr);
 MODULE_SCOPE void	TkBTreeInsertChars(TkTextBTree tree, TkTextIndex *indexPtr, const char *string,
 			    union TkTextTagSet *tagInfoPtr, TkTextTag *hyphenTagPtr,

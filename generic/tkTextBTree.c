@@ -3245,28 +3245,18 @@ TkTextTestTag(
  *----------------------------------------------------------------------
  */
 
-static bool
-TestIfElided(
-    const TkTextTag *tagPtr)
-{
-    int highestPriority = -1;
-    bool elide = false;
-
-    for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
-	if (tagPtr->elideString && (int) tagPtr->priority > highestPriority) {
-	    elide = tagPtr->elide;
-	    highestPriority = tagPtr->priority;
-	}
-    }
-
-    return elide;
-}
-
 bool
 TkTextIsElided(
     const TkTextIndex *indexPtr)/* The character in the text for which display information is wanted. */
 {
-    return TkBTreeGetRoot(indexPtr->tree)->numBranches > 0 && TestIfElided(TkBTreeGetTags(indexPtr));
+    int flags;
+
+    if (TkBTreeGetRoot(indexPtr->tree)->numBranches == 0) {
+	return false;
+    }
+
+    TkBTreeGetTags(indexPtr, TK_TEXT_SORT_NONE, &flags);
+    return !!(flags & TK_TEXT_IS_ELIDED);
 }
 
 /*
@@ -3291,10 +3281,16 @@ SegmentIsElided(
     const TkTextSegment *segPtr,
     const TkText *textPtr)		/* can be NULL */
 {
+    int flags;
+
     assert(segPtr->tagInfoPtr);
 
-    return TkTextTagSetIntersectsBits(segPtr->tagInfoPtr, sharedTextPtr->elisionTags)
-	    && TestIfElided(TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr, NULL));
+    if (!TkTextTagSetIntersectsBits(segPtr->tagInfoPtr, sharedTextPtr->elisionTags)) {
+	return false;
+    }
+
+    TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr, TK_TEXT_SORT_NONE, &flags);
+    return !!(flags & TK_TEXT_IS_ELIDED);
 }
 
 /*
@@ -12524,18 +12520,25 @@ TkBTreeGetSegmentTags(
     const TkTextSegment *segPtr,	/* Get tags from this segment. */
     const TkText *textPtr,		/* If non-NULL, then only return tags for this text widget
     					 * (when there are peer widgets). */
-    bool *containsSelection)		/* If non-NULL, return whether this chain contains the
-    					 * "sel" tag. */
+    TkTextSortMethod sortMeth,		/* Sort tags according to this method. */
+    int *flags)				/* If non-NULL, return whether this chain contains the
+    					 * "sel" tag (TK_TEXT_IS_SELECTED), or if this chain is elided
+					 * (TK_TEXT_IS_ELIDED). */
 {
     const TkTextTagSet *tagInfoPtr;
-    TkTextTag *chainPtr = NULL;
+    TkTextTag *tagBuf[256];
+    TkTextTag **tagArray = tagBuf;
+    TkTextTag *tagPtr;
+    int highestPriority = -1;
+    unsigned count = 0;
+    unsigned i;
 
     assert(segPtr->tagInfoPtr);
 
     tagInfoPtr = segPtr->tagInfoPtr;
 
-    if (containsSelection) {
-	*containsSelection = false;
+    if (flags) {
+	*flags = 0;
     }
 
     if (tagInfoPtr != sharedTextPtr->emptyTagInfoPtr) {
@@ -12547,23 +12550,63 @@ TkBTreeGetSegmentTags(
 	    assert(tagPtr);
 	    assert(!tagPtr->isDisabled);
 
-	    if (!textPtr || !tagPtr->textPtr) {
-		tagPtr->nextPtr = chainPtr;
+	    if (!textPtr || !tagPtr->textPtr || tagPtr->textPtr == textPtr) {
 		tagPtr->epoch = 0;
-		chainPtr = tagPtr;
-	    } else if (tagPtr->textPtr == textPtr) {
-		tagPtr->nextPtr = chainPtr;
-		tagPtr->epoch = 0;
-		chainPtr = tagPtr;
 
-		if (tagPtr == textPtr->selTagPtr && containsSelection) {
-		    *containsSelection = true;
+		if (flags) {
+		    if (textPtr && tagPtr == textPtr->selTagPtr && textPtr == tagPtr->textPtr) {
+			*flags |= TK_TEXT_IS_SELECTED;
+		    }
+		    if (tagPtr->elideString && (int) tagPtr->priority > highestPriority) {
+			if (tagPtr->elide) {
+			    *flags |= TK_TEXT_IS_ELIDED;
+			} else {
+			    *flags &= ~TK_TEXT_IS_ELIDED;
+			}
+			highestPriority = tagPtr->priority;
+		    }
 		}
+		if (count == sizeof(tagBuf)/sizeof(tagBuf[0])) {
+		    tagArray = malloc(TkTextTagSetCount(tagInfoPtr) * sizeof(tagArray[0]));
+		    memcpy(tagArray, tagBuf, sizeof(tagBuf));
+		}
+		tagArray[count++] = tagPtr;
 	    }
 	}
     }
 
-    return chainPtr;
+    /*
+     * Catch the most frequent cases.
+     */
+
+    switch (count) {
+    case 0:
+	return NULL;
+    case 1:
+	tagArray[0]->nextPtr = NULL;
+	return tagArray[0];
+    }
+
+    switch (sortMeth) {
+    case TK_TEXT_SORT_NONE:
+	break;
+    case TK_TEXT_SORT_ASCENDING:
+	TkTextSortTags(count, tagArray);
+	break;
+    }
+
+    tagPtr = tagArray[0];
+    for (i = 1; i < count; ++i) {
+	tagPtr = tagPtr->nextPtr = tagArray[i];
+    }
+    tagPtr->nextPtr = NULL;
+    tagPtr = tagArray[0];
+
+    if (tagArray != tagBuf) {
+	free(tagArray);
+    }
+
+    return tagPtr;
 }
 
 /*

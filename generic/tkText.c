@@ -71,7 +71,7 @@
 # if defined(MAC_OSX_TK)
 #  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR "systemDialogActiveText"
 # elif defined(_WIN32)
-#  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR "SystemWindowText"
+#  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR NULL
 # else /* X11 */
 #  define DEF_TEXT_INACTIVE_SELECT_FG_COLOR BLACK
 # endif
@@ -292,9 +292,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-inactiveselectbackground", "inactiveSelectBackground", "Foreground",
 	DEF_TEXT_INACTIVE_SELECT_BG_COLOR, -1, Tk_Offset(TkText, inactiveSelBorder),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_MONO, 0},
-    {TK_OPTION_COLOR, "-inactiveselectforeground", "inactiveSelectForeground",
-	"Background", DEF_TEXT_INACTIVE_SELECT_FG_COLOR, -1,
-	Tk_Offset(TkText, inactiveSelFgColorPtr), TK_OPTION_NULL_OK, DEF_TEXT_SELECT_FG_MONO, 0},
+    {TK_OPTION_COLOR, "-inactiveselectforeground", "inactiveSelectForeground", "Background",
+    	DEF_TEXT_INACTIVE_SELECT_FG_COLOR, -1, Tk_Offset(TkText, inactiveSelFgColorPtr),
+	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_FG_MONO, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_TEXT_INSERT_BG, -1, Tk_Offset(TkText, insertBorder), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
@@ -7460,7 +7460,7 @@ TextDumpCmd(
     prevByteIndex = index1;
     if (TkTextIndexBackBytes(textPtr, &index1, 1, &prevByteIndex) == 0) {
 	unsigned epoch = textPtr->sharedTextPtr->inspectEpoch + 1;
-	tagPtr = TkBTreeGetTags(&prevByteIndex);
+	tagPtr = TkBTreeGetTags(&prevByteIndex, TK_TEXT_SORT_NONE, NULL);
 	for (tPtr = tagPtr; tPtr; tPtr = tPtr->nextPtr) { tPtr->epoch = epoch; }
     } else {
 	tagPtr = NULL;
@@ -7603,7 +7603,7 @@ DumpLine(
 	TkBTreeMoveBackward(&index, 1);
 	segPtr = TkTextIndexGetContentSegment(&index, NULL);
 	assert(segPtr);
-	tagPtr = TkBTreeGetSegmentTags(textPtr->sharedTextPtr, segPtr, textPtr, NULL);
+	tagPtr = TkBTreeGetSegmentTags(textPtr->sharedTextPtr, segPtr, textPtr, TK_TEXT_SORT_NONE, NULL);
 	for (tPtr = tagPtr; tPtr; tPtr = tPtr->nextPtr) {
 	    tPtr->flag = epoch; /* mark as open */
 	}
@@ -7638,7 +7638,8 @@ DumpLine(
 
 	if (offset + MAX(1, currentSize) > startByte) {
 	    if ((what & TK_DUMP_TAG) && segPtr->tagInfoPtr) {
-		TkTextTag *tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr, NULL);
+		TkTextTag *tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr,
+			TK_TEXT_SORT_ASCENDING, NULL);
 		unsigned epoch = sharedTextPtr->inspectEpoch;
 		unsigned nextEpoch = epoch + 1;
 		TkTextTag *tPtr;
@@ -8627,8 +8628,8 @@ TextInspectCmd(
 		    /* print newline before finishing */
 		    type = "break";
 		    printTags = !!(what & TK_DUMP_TAG);
-		    tagPtr = TkBTreeGetSegmentTags(sharedTextPtr,
-			    segPtr->sectionPtr->linePtr->lastPtr, textPtr, NULL);
+		    tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr->sectionPtr->linePtr->lastPtr,
+			    textPtr, TK_TEXT_SORT_ASCENDING, NULL);
 		    nextPtr = segPtr; /* repeat this mark */
 		} else {
 		    nextPtr = NULL; /* finished */
@@ -8660,7 +8661,8 @@ TextInspectCmd(
 			tagPtr = prevTagPtr;
 			segPtr->body.chars[segPtr->size - 1] = '\n';
 		    } else if (type && printTags) {
-			tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr, NULL);
+			tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr,
+				TK_TEXT_SORT_ASCENDING, NULL);
 		    }
 		} else {
 		    type = "text";
@@ -8670,7 +8672,8 @@ TextInspectCmd(
 		    }
 		    value = segPtr->body.chars;
 		    if (printTags) {
-			tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr, NULL);
+			tagPtr = TkBTreeGetSegmentTags(sharedTextPtr, segPtr, textPtr,
+				TK_TEXT_SORT_ASCENDING, NULL);
 		    }
 		}
 	    } else if (!nextPtr) {
@@ -8705,7 +8708,6 @@ TextInspectCmd(
 		}
 
 		Tcl_DStringStartSublist(str);
-		TkTextSortTags(numTags, tagArray);
 		for (i = 0; i < numTags; ++i) {
 		    Tcl_DStringAppendElement(str, tagArray[i]->name);
 		}
@@ -8756,7 +8758,6 @@ TextInspectCmd(
 		}
 
 		Tcl_DStringStartSublist(str);
-		TkTextSortTags(numTags, tagArray);
 		for (i = 0; i < numTags; ++i) {
 		    Tcl_DStringAppendElement(str, tagArray[i]->name);
 		}
@@ -9669,15 +9670,16 @@ TriggerWatchEdit(
 
 		    tagPtr = NULL;
 		    if (TkTextIndexBackChars(tPtr, &index[0], 1, &myIndex, COUNT_CHARS)) {
-			tagPtr = TkBTreeGetTags(&myIndex);
+			tagPtr = TkBTreeGetTags(&myIndex, TK_TEXT_SORT_ASCENDING, NULL);
 		    }
 		    AppendTags(&buf, tagPtr);
-		    AppendTags(&buf, TkBTreeGetTags(&index[1]));
-		    AppendTags(&buf, cmp == 0 ? NULL : TkBTreeGetTags(&index[0]));
+		    AppendTags(&buf, TkBTreeGetTags(&index[1], TK_TEXT_SORT_ASCENDING, NULL));
+		    AppendTags(&buf, cmp == 0 ? NULL :
+			    TkBTreeGetTags(&index[0], TK_TEXT_SORT_ASCENDING, NULL));
 		    if (*operation == 'd') {
 			tagPtr = NULL;
 			if (cmp && TkTextIndexBackChars(tPtr, &index[1], 1, &myIndex, COUNT_CHARS)) {
-			    tagPtr = TkBTreeGetTags(&myIndex);
+			    tagPtr = TkBTreeGetTags(&myIndex, TK_TEXT_SORT_ASCENDING, NULL);
 			}
 			AppendTags(&buf, tagPtr);
 		    }
@@ -11926,7 +11928,8 @@ extern unsigned		TkBTreeIncrEpoch(TkTextBTree tree);
 extern struct Node	*TkBTreeGetRoot(TkTextBTree tree);
 extern TkTextLine *	TkBTreePrevLogicalLine(const TkSharedText *sharedTextPtr,
 			    const TkText *textPtr, TkTextLine *linePtr);
-extern TkTextTag *	TkBTreeGetTags(const TkTextIndex *indexPtr);
+extern TkTextTag *	TkBTreeGetTags(const TkTextIndex *indexPtr, TkTextSortMethod sortMeth,
+			    int *flags);
 extern TkTextLine *	TkBTreeGetStartLine(const TkText *textPtr);
 extern TkTextLine *	TkBTreeGetLastLine(const TkText *textPtr);
 extern TkTextLine *	TkBTreeNextLine(const TkText *textPtr, TkTextLine *linePtr);
