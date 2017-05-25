@@ -1470,6 +1470,31 @@ XMaxRequestSize(
 /*
  *----------------------------------------------------------------------
  *
+ * TkpDrawingIsDisabled --
+ *
+ *	Query whether the given window is disabled, in this case drawing
+ *	is also disabled.
+ *
+ * Results:
+ *	Whether the drawing is disabled.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpDrawingIsDisabled(
+   Tk_Window tkwin)
+{
+    MacDrawable *macWin = ((TkWindow *) tkwin)->privatePtr;
+    return macWin && !!(macWin->flags & TK_DO_NOT_DRAW);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkScrollWindow --
  *
  *	Scroll a rectangle of the specified window and accumulate
@@ -1506,8 +1531,7 @@ TkScrollWindow(
     if ( view ) {
   	/*  Get the scroll area in NSView coordinates (origin at bottom left). */
   	bounds = [view bounds];
- 	scrollSrc = NSMakeRect(
-			       macDraw->xOff + x,
+ 	scrollSrc = NSMakeRect(macDraw->xOff + x,
 			       bounds.size.height - height - (macDraw->yOff + y),
 			       width, height);
  	scrollDst = NSOffsetRect(scrollSrc, dx, -dy);
@@ -1561,10 +1585,12 @@ TkScrollWindow(
 		}
 	    }
 
+#if 0 /* Don't queue Expose event, otherwise it is not compatible to UNIX and Windows version. */
 	    /* Queue up Expose events for the damage region. */
 	    int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
 	    [view generateExposeEvents:dmgRgn childrenOnly:1];
 	    Tcl_SetServiceMode(oldMode);
+#endif
   	}
     } else {
 	dmgRgn = HIShapeCreateEmpty();
