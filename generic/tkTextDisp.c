@@ -37,6 +37,13 @@
 # ifndef TK_DO_NOT_DRAW
 #  define TK_DO_NOT_DRAW 0x80
 # endif
+# ifndef DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED
+#  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "1"
+# endif
+#else /* for partability to 8.5/6 */
+# ifndef DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED
+#  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "0"
+# endif
 #endif
 
 #include <stdlib.h>
@@ -1865,20 +1872,19 @@ MakeStyle(
 	 * focus.
 	 */
 
-	if (tagPtr == textPtr->selTagPtr && !(textPtr->flags & HAVE_FOCUS)) {
-	    if (!textPtr->inactiveSelBorder) {
-		continue;
-	    }
-#ifdef MAC_OSX_TK
-	    /* Don't show inactive selection in disabled widgets. */
-	    if (textPtr->state == TK_TEXT_STATE_DISABLED) {
-		continue;
-	    }
-#endif
-	    border = textPtr->inactiveSelBorder;
-	    fgColor = textPtr->inactiveSelFgColorPtr;
-	}
 	if (containsSelection) {
+	    if (tagPtr == textPtr->selTagPtr && !(textPtr->flags & HAVE_FOCUS)) {
+		if (textPtr->state == TK_TEXT_STATE_DISABLED
+			&& *DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED == '1') {
+		    /* Don't show inactive selection in disabled widgets. */
+		    continue;
+		}
+		if (!textPtr->inactiveSelBorder) {
+		    continue;
+		}
+		border = textPtr->inactiveSelBorder;
+		fgColor = textPtr->inactiveSelFgColorPtr;
+	    }
 	    if (tagPtr->selBorder) {
 		border = tagPtr->selBorder;
 	    }
@@ -8085,13 +8091,14 @@ DisplayText(
     int extent1, extent2;
     Tcl_Interp *interp;
 
-#ifdef MAC_OSX_TK
-    /*
-     * If drawing is disabled, all we need to do is clear the REDRAW_PENDING flag.
-     */
-    TkWindow *winPtr = (TkWindow *)(textPtr->tkwin);
-    MacDrawable *macWin = winPtr->privatePtr;
-    if (macWin && (macWin->flags & TK_DO_NOT_DRAW)) {
+    if (textPtr->flags & DESTROYED) {
+	return; /* the widget has been deleted */
+    }
+
+    if (TkpDrawingIsDisabled(textPtr->tkwin)) {
+	/*
+	 * If drawing is disabled, all we need to do is clear the REDRAW_PENDING flag.
+	 */
 	dInfoPtr->flags &= ~REDRAW_PENDING;
 	if (dInfoPtr->flags & ASYNC_PENDING) {
 	    assert(dInfoPtr->flags & ASYNC_UPDATE);
@@ -8100,11 +8107,6 @@ DisplayText(
 	    InvokeAsyncUpdateLineMetrics(textPtr);
 	}
 	return;
-    }
-#endif /* MAC_OSX_TK */
-
-    if (textPtr->flags & DESTROYED) {
-	return; /* the widget has been deleted */
     }
 
     interp = textPtr->interp;
@@ -8279,11 +8281,7 @@ DisplayText(
 	damageRgn = TkCreateRegion();
 	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x - extent1, oldY,
 		dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, height, 0, y - oldY, damageRgn)) {
-#ifdef MAC_OSX_TK
-	    /* the processing of the Expose event is damaging the region on Mac */
-#else
 	    TextInvalidateRegion(textPtr, damageRgn);
-#endif
 	}
 	DEBUG(stats.numCopies += 1);
 	TkDestroyRegion(damageRgn);
