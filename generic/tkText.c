@@ -290,10 +290,10 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-hyphens", "hyphens", "Hyphens",
 	"0", -1, Tk_Offset(TkText, useHyphenSupport), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_BORDER, "-inactiveselectbackground", "inactiveSelectBackground", "Foreground",
-	DEF_TEXT_INACTIVE_SELECT_BG_COLOR, -1, Tk_Offset(TkText, inactiveSelBorder),
+	DEF_TEXT_INACTIVE_SELECT_BG_COLOR, -1, Tk_Offset(TkText, selAttrs.inactiveBorder),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_MONO, 0},
     {TK_OPTION_COLOR, "-inactiveselectforeground", "inactiveSelectForeground", "Background",
-    	DEF_TEXT_INACTIVE_SELECT_FG_COLOR, -1, Tk_Offset(TkText, inactiveSelFgColorPtr),
+    	DEF_TEXT_INACTIVE_SELECT_FG_COLOR, -1, Tk_Offset(TkText, selAttrs.inactiveFgColor),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_FG_MONO, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_TEXT_INSERT_BG, -1, Tk_Offset(TkText, insertBorder), 0, 0, 0},
@@ -301,7 +301,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"BorderWidth", DEF_TEXT_INSERT_BD_COLOR, -1, Tk_Offset(TkText, insertBorderWidth), 0,
 	(ClientData) DEF_TEXT_INSERT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-insertforeground", "insertForeground", "InsertForeground",
-	DEF_TEXT_BG_COLOR, -1, Tk_Offset(TkText, insertFgColorPtr), 0, 0, 0},
+	DEF_TEXT_BG_COLOR, -1, Tk_Offset(TkText, insertFgColor), 0, 0, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
 	DEF_TEXT_INSERT_OFF_TIME, -1, Tk_Offset(TkText, insertOffTime), 0, 0, 0},
     {TK_OPTION_INT, "-insertontime", "insertOnTime", "OnTime",
@@ -331,12 +331,13 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_INT, "-responsiveness", "responsiveness", "Responsiveness",
 	"50", -1, Tk_Offset(TkText, responsiveness), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
-	DEF_TEXT_SELECT_COLOR, -1, Tk_Offset(TkText, selBorder), 0, DEF_TEXT_SELECT_MONO, 0},
+	DEF_TEXT_SELECT_COLOR, -1, Tk_Offset(TkText, selAttrs.border),
+	0, DEF_TEXT_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth", "BorderWidth",
-	DEF_TEXT_SELECT_BD_COLOR, Tk_Offset(TkText, selBorderWidthPtr),
-	Tk_Offset(TkText, selBorderWidth), TK_OPTION_NULL_OK, DEF_TEXT_SELECT_BD_MONO, 0},
+	DEF_TEXT_SELECT_BD_COLOR, Tk_Offset(TkText, selAttrs.borderWidthPtr),
+	Tk_Offset(TkText, selAttrs.borderWidth), TK_OPTION_NULL_OK, DEF_TEXT_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
-	DEF_TEXT_SELECT_FG_COLOR, -1, Tk_Offset(TkText, selFgColorPtr),
+	DEF_TEXT_SELECT_FG_COLOR, -1, Tk_Offset(TkText, selAttrs.fgColor),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_FG_MONO, 0},
     {TK_OPTION_BOOLEAN, "-setgrid", "setGrid", "SetGrid",
 	DEF_TEXT_SET_GRID, -1, Tk_Offset(TkText, setGrid), 0, 0, 0},
@@ -713,7 +714,8 @@ AllocStatistic()
 static void WarnAboutDeprecatedStartLineOption() {
     static bool printWarning = true;
     if (printWarning) {
-	fprintf(stderr, "Option \"-startline\" is deprecated, please use option \"-startindex\".\n");
+	fprintf(stderr, "tk::text: Option \"-startline\" is deprecated, "
+		"please use option \"-startindex\".\n");
 	printWarning = false;
     }
 }
@@ -1122,6 +1124,7 @@ CreateWidget(
     textPtr->prevWidth = Tk_Width(newWin);
     textPtr->prevHeight = Tk_Height(newWin);
     textPtr->useHyphenSupport = -1;
+    textPtr->hyphenRules = TK_TEXT_HYPHEN_MASK;
     textPtr->prevSyncState = -1;
     textPtr->lastLineY = TK_TEXT_NEARBY_IS_UNDETERMINED;
     TkTextTagSetIncrRefCount(textPtr->curTagInfoPtr = sharedTextPtr->emptyTagInfoPtr);
@@ -1178,6 +1181,9 @@ CreateWidget(
 	Tk_DestroyWindow(textPtr->tkwin);
 	return TCL_ERROR;
     }
+    textPtr->textConfigAttrs = textPtr->selAttrs;
+    textPtr->selTagPtr->attrs = textPtr->selAttrs;
+
     if (TkConfigureText(interp, textPtr, objc - 2, objv + 2) != TCL_OK) {
 	Tk_DestroyWindow(textPtr->tkwin);
 	return TCL_ERROR;
@@ -3883,6 +3889,7 @@ TkConfigureText(
 	    myObjv[i] = obj;
 	}
 
+	textPtr->selAttrs = textPtr->textConfigAttrs;
 	rc = Tk_SetOptions(interp, (char *) textPtr, textPtr->optionTable,
 		objc, myObjv, textPtr->tkwin, &savedOptions, &mask);
 
@@ -3966,8 +3973,10 @@ TkConfigureText(
 
 #else /* if !SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
+    textPtr->selAttrs = textPtr->textConfigAttrs;
     if (Tk_SetOptions(interp, (char *) textPtr, textPtr->optionTable,
 	    objc, objv, textPtr->tkwin, &savedOptions, &mask) != TCL_OK) {
+	textPtr->selAttrs = textPtr->selTagPtr->attrs;
 	tkTextDebug = oldTextDebug;
 	return TCL_ERROR;
     }
@@ -4073,7 +4082,7 @@ TkConfigureText(
 	    goto error;
 	}
     } else {
-	textPtr->hyphenRules = 0;
+	textPtr->hyphenRules = TK_TEXT_HYPHEN_MASK;
     }
     if (oldHyphenRules != textPtr->hyphenRules && textPtr->hyphenate) {
 	mask |= TK_TEXT_LINE_GEOMETRY;
@@ -4263,49 +4272,41 @@ TkConfigureText(
     }
 
     /*
-     * Don't allow negative spacings.
+     * Don't allow negative values for specific attributes.
      */
 
     textPtr->spacing1 = MAX(textPtr->spacing1, 0);
     textPtr->spacing2 = MAX(textPtr->spacing2, 0);
     textPtr->spacing3 = MAX(textPtr->spacing3, 0);
-
-    /*
-     * Also the following widths shouldn't be negative.
-     */
-
     textPtr->highlightWidth = MAX(textPtr->highlightWidth, 0);
-    textPtr->selBorderWidth = MAX(textPtr->selBorderWidth, 0);
     textPtr->borderWidth = MAX(textPtr->borderWidth, 0);
     textPtr->insertWidth = MAX(textPtr->insertWidth, 0);
-
-    /*
-     * Don't allow negative sync timeout.
-     */
-
     textPtr->syncTime = MAX(0, textPtr->syncTime);
+    textPtr->selAttrs.borderWidth = MAX(textPtr->selAttrs.borderWidth, 0);
 
     /*
      * Make sure that configuration options are properly mirrored between the
-     * widget record and the "sel" tags. NOTE: we don't have to free up
-     * information during the mirroring; old information was freed when it was
-     * replaced in the widget record.
+     * widget record and the "sel" tags.
      */
 
-    if (textPtr->selTagPtr->selBorder) {
-	textPtr->selTagPtr->selBorder = textPtr->selBorder;
-    } else {
-	textPtr->selTagPtr->border = textPtr->selBorder;
+    if (textPtr->selAttrs.border != textPtr->textConfigAttrs.border) {
+	textPtr->selTagPtr->attrs.border = textPtr->selAttrs.border;
     }
-    if (textPtr->selTagPtr->borderWidthPtr != textPtr->selBorderWidthPtr) {
-	textPtr->selTagPtr->borderWidthPtr = textPtr->selBorderWidthPtr;
-	textPtr->selTagPtr->borderWidth = textPtr->selBorderWidth;
+    if (textPtr->selAttrs.inactiveBorder != textPtr->textConfigAttrs.inactiveBorder) {
+	textPtr->selTagPtr->attrs.inactiveBorder = textPtr->selAttrs.inactiveBorder;
     }
-    if (textPtr->selTagPtr->selFgColor) {
-	textPtr->selTagPtr->selFgColor = textPtr->selFgColorPtr;
-    } else {
-	textPtr->selTagPtr->fgColor = textPtr->selFgColorPtr;
+    if (textPtr->selAttrs.fgColor != textPtr->textConfigAttrs.fgColor) {
+	textPtr->selTagPtr->attrs.fgColor = textPtr->selAttrs.fgColor;
     }
+    if (textPtr->selAttrs.inactiveFgColor != textPtr->textConfigAttrs.inactiveFgColor) {
+	textPtr->selTagPtr->attrs.inactiveFgColor = textPtr->selAttrs.inactiveFgColor;
+    }
+    if (textPtr->selAttrs.borderWidthPtr != textPtr->textConfigAttrs.borderWidthPtr) {
+	textPtr->selTagPtr->attrs.borderWidthPtr = textPtr->selAttrs.borderWidthPtr;
+	textPtr->selTagPtr->attrs.borderWidth = textPtr->selAttrs.borderWidth;
+    }
+    textPtr->textConfigAttrs = textPtr->selAttrs;
+    textPtr->selAttrs = textPtr->selTagPtr->attrs;
     TkTextUpdateTagDisplayFlags(textPtr->selTagPtr);
     TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, false);
 
@@ -4389,6 +4390,7 @@ TkConfigureText(
 
 error:
     Tk_RestoreSavedOptions(&savedOptions);
+    textPtr->selAttrs = textPtr->selTagPtr->attrs;
     tkTextDebug = oldTextDebug;
     return TCL_ERROR;
 }
@@ -4582,23 +4584,13 @@ static void
 ProcessDestroyNotify(
     TkText *textPtr)
 {
-    /*
-     * NOTE: we must zero out selBorder, selBorderWidthPtr and
-     * selFgColorPtr: they are duplicates of information in the "sel" tag,
-     * which will be freed up when we delete all tags. Hence we don't want
-     * the automatic config options freeing process to delete them as
-     * well.
-     */
-
-    textPtr->selBorder = NULL;
-    textPtr->selBorderWidthPtr = NULL;
-    textPtr->selBorderWidth = 0;
-    textPtr->selFgColorPtr = NULL;
     if (textPtr->setGrid) {
 	Tk_UnsetGrid(textPtr->tkwin);
 	textPtr->setGrid = false;
     }
     if (!(textPtr->flags & OPTIONS_FREED)) {
+	/* Restore the original attributes. */
+	textPtr->selAttrs = textPtr->textConfigAttrs;
 	Tk_FreeConfigOptions((char *) textPtr, textPtr->optionTable, textPtr->tkwin);
 	textPtr->flags |= OPTIONS_FREED;
     }
@@ -4643,8 +4635,8 @@ ProcessFocusInOut(
 	    TkTextIndexForwChars(textPtr, &index, 1, &index2, COUNT_INDICES);
 	    TkTextChanged(NULL, textPtr, &index, &index2);
 	}
-	if (textPtr->inactiveSelBorder != textPtr->selBorder
-		|| textPtr->inactiveSelFgColorPtr != textPtr->selFgColorPtr) {
+	if (textPtr->selAttrs.inactiveBorder != textPtr->selAttrs.border
+		|| textPtr->selAttrs.inactiveFgColor != textPtr->selAttrs.fgColor) {
 	    TkTextRedrawTag(NULL, textPtr, NULL, NULL, textPtr->selTagPtr, false);
 	}
 	if (textPtr->highlightWidth > 0) {
@@ -8554,7 +8546,7 @@ TextInspectCmd(
 	for (i = 0; i < n; ++i) {
 	    TkTextTag *tagPtr = tags[i];
 
-	    if (tagPtr && ((what & TK_DUMP_INCLUDE_SEL) || tagPtr != textPtr->selTagPtr)) {
+	    if (tagPtr && ((what & TK_DUMP_INCLUDE_SEL) || !tagPtr->isSelTag)) {
 		TkTextInspectOptions(textPtr, tagPtr, tagPtr->optionTable, opts, flags);
 		Tcl_DStringStartSublist(str);
 		Tcl_DStringAppendElement(str, "configure");
@@ -8575,7 +8567,7 @@ TextInspectCmd(
 	for (i = 0; i < n; ++i) {
 	    TkTextTag *tagPtr = tags[i];
 
-	    if (tagPtr && ((what & TK_DUMP_INCLUDE_SEL) || tagPtr != textPtr->selTagPtr)) {
+	    if (tagPtr && ((what & TK_DUMP_INCLUDE_SEL) || !tagPtr->isSelTag)) {
 		GetBindings(textPtr, tagPtr->name, sharedTextPtr->tagBindingTable, str);
 	    }
 	}

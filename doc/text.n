@@ -899,6 +899,42 @@ For the definition of hyphenation rules see widget option
 \fB\-hyphenrules\fR.
 .RE
 .TP
+\fB\-inactivebackground \fIcolor\fR
+.
+Color specifies the background color to use for characters associated with the
+tag, when the window does not have the focus.
+It may have any of the forms accepted by Tk_GetColor.
+If specified then it will overrule the \fB\-background\fR option of the
+\fBsel\fR tag, provided that the actual tag has a higher priority.
+.TP
+\fB\-inactiveforeground \fIcolor\fR
+.
+Color specifies the color to use when drawing text and other foreground
+information such as underlines, when the window does not have the focus.
+It may have any of the forms accepted by Tk_GetColor.
+If specified then it will overrule the \fB\-foreground\fR option of the
+\fBsel\fR tag, provided that the actual tag has a higher priority.
+.TP
+\fB\-inactiveselectbackground \fIcolor\fR
+.
+\fIColor\fR specifies the background color to use when displaying selected
+items, when the window does not have the focus.
+It may have any of the forms accepted by \fBTk_GetColor\fR.
+If \fIcolor\fR has not been specified, or if it is specified as an empty string,
+then the color specified by the \fB\-selectbackground\fR tag option is used.
+If specified then it will overrule the \fB\-inactivebackground\fR option of the
+\fBsel\fR tag, provided that the actual tag has a higher priority.
+.TP
+\fB\-inactiveselectforeground \fIcolor\fR
+.
+\fIColor\fR specifies the foreground color to use when displaying selected
+items, when the window does not have the focus.
+It may have any of the forms accepted by \fBTk_GetColor\fR.
+If \fIcolor\fR has not been specified, or if it is specified as an empty string,
+then the color specified by the \fB\-selectforeground\fR tag option is used.
+If specified then it will overrule the \fB\-inactiveforeground\fR option of the
+\fBsel\fR tag, provided that the actual tag has a higher priority.
+.TP
 \fB\-indentbackground \fIboolean\fR
 .
 If true then the background, set with \fB\-background\fR tag option, will be
@@ -976,10 +1012,7 @@ or if it is specified as an empty string, then the color specified by the
 Note that this option is deprecated, option \fB\-overstrikecolor\fR should be used
 instead. For compatibility reasons this option still will be supported, but
 may be removed in a future version.
-.PP
-.RS
 See equivalent tag option \fB\-overstrikecolor\fR for a description.
-.RE
 .TP
 \fB\-relief \fIrelief\fR
 .
@@ -1075,10 +1108,7 @@ or if it is specified as an empty string, then the color specified by the
 Note that this option is deprecated, option \fB\-underlinecolor\fR should be used
 instead. For compatibility reasons this option still will be supported, but
 may be removed in a future version.
-.PP
-.RS
 See equivalent tag option \fB\-underlinecolor\fR for a description.
-.RE
 .TP
 \fB\-undo \fIboolean\fR
 .
@@ -1093,8 +1123,8 @@ for the special selection flag \fBsel\fR, the default for this tag is \fIfalse\f
 window. This option only applies to a display line if it applies to the
 first non-elided character on that display line. It has the same legal
 values as the \fB\-wrap\fR option for the text widget: \fBnone\fR,
-\fBchar\fR, or \fBword\fR. If this tag option is specified, it
-overrides the \fB\-wrap\fR option for the text widget.
+\fBchar\fR, \fBword\fR, or \fBcodepoint\fR. If this tag option is specified,
+it overrides the \fB\-wrap\fR option for the text widget.
 .PP
 If a character has several tags associated with it, and if their display
 options conflict, then the options of the highest priority tag are used. If a
@@ -1711,17 +1741,35 @@ The \fBsel\fR tag is automatically defined when a text widget is created, and
 it may not be deleted with the
 .QW "\fIpathName \fBtag delete\fR"
 widget command. Furthermore, the \fB\-selectbackground\fR,
-\fB\-selectborderwidth\fR, and \fB\-selectforeground\fR options for the text
-widget are tied to the \fB\-background\fR, \fB\-borderwidth\fR, and
-\fB\-foreground\fR options for the \fBsel\fR tag: changes in either will
-automatically be reflected in the other. Also the
-\fB\-inactiveselectbackground\fR option for the text widget is used instead of
-\fB\-selectbackground\fR when the text widget does not have the focus. This
-allows programmatic control over the visualization of the \fBsel\fR tag for
-foreground and background windows, or to have \fBsel\fR not shown at all (when
-\fB\-inactiveselectbackground\fR is empty) for background windows. Each peer
-text widget has its own \fBsel\fR tag which can be separately configured and
-set.
+\fB\-selectborderwidth\fR, \fB\-selectforeground\fR,
+\fB\-inactiveselectbackground\fR, \fB\-inactiveselectforeground\fR, and
+\fB\-selectborderwidth\fR options for the text widget are tied to the
+\fB\-background\fR, \fB\-borderwidth\fR, \fB\-foreground\fR,
+\fB\-inactiveselectbackground\fR, \fB\-inactiveselectforeground\fR, and
+\fB\-borderwidth\fR options for the \fBsel\fR tag: changes
+in either will automatically be reflected in the other. This allows
+programmatic control over the visualization of the \fBsel\fR tag for
+foreground and background windows, or to have \fBsel\fR not shown at all
+for background windows. Each peer text widget has its own \fBsel\fR tag
+which can be separately configured and set.
+.PP
+The \fBsel\fR tag is overruling all other tags, except if a tag with higher
+priority has explicitly defined the selection attributes
+(\fB\-selectbackground\fR and \fB\-selectforeground\fR if the window is
+active; \fB\-inactiveselectbackground\fR and \fB\-inactiveselectforeground\fR
+if the window is inactive).
+.PP
+Note the specific behavior if \fB\-inactiveselectbackground\fR is not defined
+(empty): if the window does not have the focus, then the selection attributes
+of the text widget and all the attributes of the \fBsel\fR tag will not be
+regarded; this means that in general no selection will be shown, this is the
+default behavior on Windows.
+.PP
+Note the specific behavior on Mac: if the window does not have the focus, and
+does not have state \fBnormal\fR (see widget option \fB\-state\fR),
+then the selection attributes of the text widget and all the attributes of
+the \fBsel\fR tag will not be regarded; this means that per default no selection
+will be shown.
 .SH "THE INSERTION CURSOR"
 .PP
 The mark named \fBinsert\fR has special significance in text widgets. It is

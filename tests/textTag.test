@@ -656,7 +656,7 @@ test textTag-5.22 {TkTextTagCmd - "configure" option} -body {
 } -result {}
 test textTag-5.23 {TkTextTagCmd - "configure" option} -body {
     set x {}
-    # when [.t tag cget sel -selectbackground] == "", mirroring happens between
+    # Mirroring happens between
     #     the text widget option -selectbackground
     # and the tag         option -background
     .t tag configure sel -selectbackground {}
@@ -666,20 +666,7 @@ test textTag-5.23 {TkTextTagCmd - "configure" option} -body {
     .t tag configure sel -background orange
     .t configure -selectbackground blue
     lappend x [.t tag cget sel -background]
-    # when [.t tag cget sel -selectbackground] != "", mirroring happens between
-    #     the text widget option -selectbackground
-    # and the tag         option -selectbackground
-    .t tag configure sel -selectbackground green
-    .t configure -selectbackground red
-    lappend x [.t tag cget sel -selectbackground]
-    .t configure -selectbackground black
-    .t tag configure sel -selectbackground white
-    lappend x [.t cget -selectbackground]
-    return $x
-} -result {yellow blue red white}
-test textTag-5.24 {TkTextTagCmd - "configure" option} -body {
-    set x {}
-    # when [.t tag cget sel -selectforeground] == "", mirroring happens between
+    # Mirroring happens between
     #     the text widget option -selectforeground
     # and the tag         option -foreground
     .t tag configure sel -selectforeground {}
@@ -689,17 +676,38 @@ test textTag-5.24 {TkTextTagCmd - "configure" option} -body {
     .t tag configure sel -foreground orange
     .t configure -selectforeground blue
     lappend x [.t tag cget sel -foreground]
-    # when [.t tag cget sel -selectforeground] != "", mirroring happens between
-    #     the text widget option -selectforeground
-    # and the tag         option -selectforeground
-    .t tag configure sel -selectforeground green
-    .t configure -selectforeground red
-    lappend x [.t tag cget sel -selectforeground]
-    .t configure -selectforeground black
-    .t tag configure sel -selectforeground white
-    lappend x [.t cget -selectforeground]
+    # Mirroring happens between
+    #     the text widget option -inactiveselectbackground
+    # and the tag         option -inactivebackground
+    .t tag configure sel -inactiveselectbackground {}
+    .t configure -inactiveselectbackground black
+    .t tag configure sel -inactivebackground yellow
+    lappend x [.t cget -inactiveselectbackground]
+    .t tag configure sel -inactivebackground orange
+    .t configure -inactiveselectbackground blue
+    lappend x [.t tag cget sel -inactivebackground]
+    # Mirroring happens between
+    #     the text widget option -inactiveselectforeground
+    # and the tag         option -inactiveforeground
+    .t tag configure sel -inactiveselectforeground {}
+    .t configure -inactiveselectforeground black
+    .t tag configure sel -inactiveforeground yellow
+    lappend x [.t cget -inactiveselectforeground]
+    .t tag configure sel -inactiveforeground orange
+    .t configure -inactiveselectforeground blue
+    lappend x [.t tag cget sel -inactiveforeground]
+    # Mirroring happens between
+    #     the text widget option -selectborderwidth
+    # and the tag         option -borderwidth
+    .t tag configure sel -borderwidth 0
+    .t configure -selectborderwidth 1
+    .t tag configure sel -borderwidth 2
+    lappend x [.t cget -selectborderwidth]
+    .t tag configure sel -borderwidth 3
+    .t configure -selectborderwidth 4
+    lappend x [.t tag cget sel -borderwidth]
     return $x
-} -result {yellow blue red white}
+} -result {yellow blue yellow blue yellow blue yellow blue 2 4}
 
 test textTag-6.1 {TkTextTagCmd - "delete" option} -body {
     .t tag delete

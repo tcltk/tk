@@ -12554,7 +12554,7 @@ TkBTreeGetSegmentTags(
 		tagPtr->epoch = 0;
 
 		if (flags) {
-		    if (textPtr && tagPtr == textPtr->selTagPtr && textPtr == tagPtr->textPtr) {
+		    if (textPtr && tagPtr->isSelTag && textPtr == tagPtr->textPtr) {
 			*flags |= TK_TEXT_IS_SELECTED;
 		    }
 		    if (tagPtr->elideString && (int) tagPtr->priority > highestPriority) {

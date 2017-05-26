@@ -1546,7 +1546,7 @@ TkTextCreateDInfo(
 	    && textPtr->blockCursorType
 	    && textPtr->showInsertFgColor) {
 	XGCValues gcValues;
-	gcValues.foreground = textPtr->insertFgColorPtr->pixel;
+	gcValues.foreground = textPtr->insertFgColor->pixel;
 	dInfoPtr->insertFgGC = Tk_GetGC(textPtr->tkwin, GCForeground, &gcValues);
     }
 
@@ -1824,6 +1824,96 @@ TkTextResetDInfo(
  *----------------------------------------------------------------------
  */
 
+static int
+FillStyle(
+    const TkTextTag *tagPtr,
+    StyleValues *stylePtr,
+    bool haveFocus,
+    bool containsSelection)
+{
+    int selBorderPrio = -1;
+
+    Tk_3DBorder border = tagPtr->attrs.border;
+    XColor *fgColor    = tagPtr->attrs.fgColor;
+
+    if (!haveFocus) {
+	if (tagPtr->attrs.inactiveBorder)  { border = tagPtr->attrs.inactiveBorder; }
+	if (tagPtr->attrs.inactiveFgColor) { fgColor = tagPtr->attrs.inactiveFgColor; }
+    }
+
+    if (containsSelection) {
+	if (tagPtr->selBorder) {
+	    border = tagPtr->selBorder;
+	    if (haveFocus) {
+		selBorderPrio = tagPtr->priority;
+	    }
+	}
+	if (tagPtr->selFgColor) {
+	    fgColor = tagPtr->selFgColor;
+	}
+	if (!haveFocus) {
+	    if (tagPtr->inactiveSelBorder) {
+		border = tagPtr->inactiveSelBorder;
+		selBorderPrio = tagPtr->priority;
+	    }
+	    if (tagPtr->inactiveSelFgColor) {
+		fgColor = tagPtr->inactiveSelFgColor;
+	    }
+	}
+    }
+
+    if (border)                         { stylePtr->border = border; }
+    if (fgColor != None)                { stylePtr->fgColor = fgColor; }
+    if (tagPtr->reliefPtr)              { stylePtr->relief = tagPtr->relief; }
+    if (tagPtr->bgStipple != None)      { stylePtr->bgStipple = tagPtr->bgStipple; }
+    if (tagPtr->indentBgString != None) { stylePtr->indentBg = tagPtr->indentBg; }
+    if (tagPtr->tkfont != None)         { stylePtr->tkfont = tagPtr->tkfont; }
+    if (tagPtr->fgStipple != None)      { stylePtr->fgStipple = tagPtr->fgStipple; }
+    if (tagPtr->justifyString)          { stylePtr->justify = tagPtr->justify; }
+    if (tagPtr->lMargin1String)         { stylePtr->lMargin1 = tagPtr->lMargin1; }
+    if (tagPtr->lMargin2String)         { stylePtr->lMargin2 = tagPtr->lMargin2; }
+    if (tagPtr->lMarginColor)           { stylePtr->lMarginColor = tagPtr->lMarginColor; }
+    if (tagPtr->offsetString)           { stylePtr->offset = tagPtr->offset; }
+    if (tagPtr->rMarginString)          { stylePtr->rMargin = tagPtr->rMargin; }
+    if (tagPtr->rMarginColor)           { stylePtr->rMarginColor = tagPtr->rMarginColor; }
+    if (tagPtr->spacing1String)         { stylePtr->spacing1 = tagPtr->spacing1; }
+    if (tagPtr->spacing2String)         { stylePtr->spacing2 = tagPtr->spacing2; }
+    if (tagPtr->spacing3String)         { stylePtr->spacing3 = tagPtr->spacing3; }
+    if (tagPtr->tabStringPtr)           { stylePtr->tabArrayPtr = tagPtr->tabArrayPtr; }
+    if (tagPtr->eolColor)               { stylePtr->eolColor = tagPtr->eolColor; }
+    if (tagPtr->hyphenColor)            { stylePtr->hyphenColor = tagPtr->hyphenColor; }
+    if (tagPtr->elideString)            { stylePtr->elide = tagPtr->elide; }
+    if (tagPtr->langPtr)                { stylePtr->lang = tagPtr->lang; }
+    if (tagPtr->hyphenRulesPtr)         { stylePtr->hyphenRules = tagPtr->hyphenRules; }
+
+    if (tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE) { stylePtr->tabStyle = tagPtr->tabStyle; }
+    if (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)    { stylePtr->wrapMode = tagPtr->wrapMode; }
+
+    if (tagPtr->attrs.borderWidthPtr && Tcl_GetString(tagPtr->attrs.borderWidthPtr)[0] != '\0') {
+	stylePtr->borderWidth = tagPtr->attrs.borderWidth;
+    }
+
+    if (tagPtr->overstrikeString) {
+	stylePtr->overstrike = tagPtr->overstrike;
+	if (tagPtr->overstrikeColor != None) {
+	     stylePtr->overstrikeColor = tagPtr->overstrikeColor;
+	} else if (tagPtr->attrs.fgColor != None) {
+	     stylePtr->overstrikeColor = tagPtr->attrs.fgColor;
+	}
+    }
+
+    if (tagPtr->underlineString) {
+	stylePtr->underline = tagPtr->underline;
+	if (tagPtr->underlineColor != None) {
+	    stylePtr->underlineColor = tagPtr->underlineColor;
+	} else if (tagPtr->attrs.fgColor != None) {
+	    stylePtr->underlineColor = tagPtr->attrs.fgColor;
+	}
+    }
+
+    return selBorderPrio;
+}
+
 static TextStyle *
 MakeStyle(
     TkText *textPtr,
@@ -1835,6 +1925,8 @@ MakeStyle(
     Tcl_HashEntry *hPtr;
     XGCValues gcValues;
     unsigned long mask;
+    int borderPrio;
+    bool haveFocus;
     bool isNew;
 
     /*
@@ -1845,12 +1937,12 @@ MakeStyle(
 
     memset(&styleValues, 0, sizeof(StyleValues));
     styleValues.relief = TK_RELIEF_FLAT;
-    styleValues.fgColor = textPtr->fgColor;
+    styleValues.fgColor = None;
+    styleValues.underlineColor = textPtr->fgColor;
+    styleValues.overstrikeColor = textPtr->fgColor;
     styleValues.eolColor = textPtr->eolColor;
     styleValues.eotColor = textPtr->eotColor ? textPtr->eotColor : textPtr->eolColor;
     styleValues.hyphenColor = textPtr->hyphenColor;
-    styleValues.underlineColor = textPtr->fgColor;
-    styleValues.overstrikeColor = textPtr->fgColor;
     styleValues.tkfont = textPtr->tkfont;
     styleValues.justify = textPtr->justify;
     styleValues.spacing1 = textPtr->spacing1;
@@ -1860,141 +1952,71 @@ MakeStyle(
     styleValues.tabStyle = textPtr->tabStyle;
     styleValues.wrapMode = textPtr->wrapMode;
     styleValues.lang = textPtr->lang;
-    styleValues.hyphenRules = textPtr->hyphenRulesPtr ? textPtr->hyphenRules : TK_TEXT_HYPHEN_MASK;
+    styleValues.hyphenRules = textPtr->hyphenRules;
+
+    haveFocus = !!(textPtr->flags & HAVE_FOCUS);
+    borderPrio = -1;
 
     for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
-	Tk_3DBorder border = tagPtr->border;
-        XColor *fgColor = tagPtr->fgColor;
+	if (!tagPtr->isSelTag) {
+	    borderPrio = MAX(borderPrio, FillStyle(tagPtr, &styleValues, haveFocus, containsSelection));
+	}
+    }
 
-	/*
-	 * If this is the selection tag, and inactiveSelBorder is NULL (the
-	 * default on Windows), then we need to skip it if we don't have the
-	 * focus.
-	 */
+    /*
+     * Setup attributes in case of selected text.
+     */
 
-	if (containsSelection) {
-	    if (tagPtr == textPtr->selTagPtr && !(textPtr->flags & HAVE_FOCUS)) {
-		if (textPtr->state == TK_TEXT_STATE_DISABLED
-			&& *DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED == '1') {
-		    /* Don't show inactive selection in disabled widgets. */
-		    continue;
+    if (containsSelection) {
+	TkTextTag *tagPtr = textPtr->selTagPtr;
+
+	if ((int) tagPtr->priority > borderPrio
+		&& (haveFocus
+		    /*
+		     * If this is the selection tag, and selAttrs.inactiveBorder is NULL
+		     * (the default on Windows), then we need to skip it if we don't have
+		     * the focus.
+		     */
+		    || (textPtr->selAttrs.inactiveBorder
+		    /*
+		     * Don't show inactive selection in readonly widgets.
+		     */
+		    && !(textPtr->state != TK_TEXT_STATE_NORMAL
+			&& *DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED == '1')))) {
+	    borderPrio = FillStyle(tagPtr, &styleValues, haveFocus, containsSelection);
+
+	    if (borderPrio == -1) {
+		if (textPtr->selAttrs.border)  { styleValues.border = textPtr->selAttrs.border; }
+		if (textPtr->selAttrs.fgColor) { styleValues.fgColor = textPtr->selAttrs.fgColor; }
+	    
+		if (!haveFocus) {
+		    if (textPtr->selAttrs.inactiveBorder) {
+			styleValues.border = textPtr->selAttrs.inactiveBorder;
+		    }
+		    if (textPtr->selAttrs.inactiveFgColor) {
+			styleValues.fgColor = textPtr->selAttrs.inactiveFgColor;
+		    }
 		}
-		if (!textPtr->inactiveSelBorder) {
-		    continue;
+	    }
+	    
+	    if (!styleValues.fgColor) {
+		styleValues.fgColor = textPtr->selAttrs.fgColor;
+		if (!haveFocus && textPtr->selAttrs.inactiveFgColor) {
+		    styleValues.fgColor = textPtr->selAttrs.inactiveFgColor;
 		}
-		border = textPtr->inactiveSelBorder;
-		fgColor = textPtr->inactiveSelFgColorPtr;
-	    }
-	    if (tagPtr->selBorder) {
-		border = tagPtr->selBorder;
-	    }
-	    if (tagPtr->selFgColor != None) {
-		fgColor = tagPtr->selFgColor;
-	    } else if (fgColor == None) {
-		fgColor = textPtr->selFgColorPtr;
 	    }
 	}
-	if (border) {
-	    styleValues.border = border;
-	}
-	if (tagPtr->borderWidthPtr && Tcl_GetString(tagPtr->borderWidthPtr)[0] != '\0') {
-	    styleValues.borderWidth = tagPtr->borderWidth;
-	}
-	if (tagPtr->reliefPtr) {
-	    if (!styleValues.border) {
-		styleValues.border = textPtr->border;
-	    }
-	    assert(tagPtr->relief < 8);
-	    styleValues.relief = tagPtr->relief;
-	}
-	if (tagPtr->bgStipple != None) {
-	    styleValues.bgStipple = tagPtr->bgStipple;
-	}
-	if (tagPtr->indentBgString != None) {
-	    styleValues.indentBg = tagPtr->indentBg;
-	}
-	if (fgColor != None) {
-	    styleValues.fgColor = fgColor;
-	}
-	if (tagPtr->tkfont != None) {
-	    styleValues.tkfont = tagPtr->tkfont;
-	}
-	if (tagPtr->fgStipple != None) {
-	    styleValues.fgStipple = tagPtr->fgStipple;
-	}
-	if (tagPtr->justifyString) {
-	    /* assert(tagPtr->justify < 8); always true due to range */
-	    styleValues.justify = tagPtr->justify;
-	}
-	if (tagPtr->lMargin1String) {
-	    styleValues.lMargin1 = tagPtr->lMargin1;
-	}
-	if (tagPtr->lMargin2String) {
-	    styleValues.lMargin2 = tagPtr->lMargin2;
-	}
-	if (tagPtr->lMarginColor) {
-	    styleValues.lMarginColor = tagPtr->lMarginColor;
-	}
-	if (tagPtr->offsetString) {
-	    styleValues.offset = tagPtr->offset;
-	}
-	if (tagPtr->overstrikeString) {
-	    styleValues.overstrike = tagPtr->overstrike;
-            if (tagPtr->overstrikeColor != None) {
-                 styleValues.overstrikeColor = tagPtr->overstrikeColor;
-            } else if (fgColor != None) {
-                 styleValues.overstrikeColor = fgColor;
-            }
-	}
-	if (tagPtr->rMarginString) {
-	    styleValues.rMargin = tagPtr->rMargin;
-	}
-	if (tagPtr->rMarginColor) {
-	    styleValues.rMarginColor = tagPtr->rMarginColor;
-	}
-	if (tagPtr->spacing1String) {
-	    styleValues.spacing1 = tagPtr->spacing1;
-	}
-	if (tagPtr->spacing2String) {
-	    styleValues.spacing2 = tagPtr->spacing2;
-	}
-	if (tagPtr->spacing3String) {
-	    styleValues.spacing3 = tagPtr->spacing3;
-	}
-	if (tagPtr->tabStringPtr) {
-	    styleValues.tabArrayPtr = tagPtr->tabArrayPtr;
-	}
-	if (tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE) {
-	    assert(tagPtr->tabStyle < 8);
-	    styleValues.tabStyle = tagPtr->tabStyle;
-	}
-	if (tagPtr->eolColor) {
-	    styleValues.eolColor = tagPtr->eolColor;
-	}
-	if (tagPtr->hyphenColor) {
-	    styleValues.hyphenColor = tagPtr->hyphenColor;
-	}
-	if (tagPtr->underlineString) {
-	    styleValues.underline = tagPtr->underline;
-            if (tagPtr->underlineColor != None) {
-		styleValues.underlineColor = tagPtr->underlineColor;
-            } else if (fgColor != None) {
-		styleValues.underlineColor = fgColor;
-            }
-	}
-	if (tagPtr->elideString) {
-	    styleValues.elide = tagPtr->elide;
-	}
-	if (tagPtr->langPtr) {
-	    styleValues.lang = tagPtr->lang;
-	}
-	if (tagPtr->hyphenRulesPtr) {
-	    styleValues.hyphenRules = tagPtr->hyphenRules;
-	}
-	if (tagPtr->wrapMode != TEXT_WRAPMODE_NULL) {
-	    /* assert(tagPtr->wrapMode < 8); always true due to range */
-	    styleValues.wrapMode = tagPtr->wrapMode;
-	}
+    }
+
+    /*
+     * Setup with fallback values if needed.
+     */
+
+    if (styleValues.fgColor == None) {
+	styleValues.fgColor = textPtr->fgColor;
+    }
+    if (styleValues.relief != TK_RELIEF_FLAT && !styleValues.border) {
+	styleValues.border = textPtr->border;
     }
 
     /*
@@ -9213,7 +9235,7 @@ TkTextRelayoutWindow(
     if (textPtr->state == TK_TEXT_STATE_NORMAL
 	    && textPtr->blockCursorType
 	    && textPtr->showInsertFgColor) {
-	gcValues.foreground = textPtr->insertFgColorPtr->pixel;
+	gcValues.foreground = textPtr->insertFgColor->pixel;
 	dInfoPtr->insertFgGC = Tk_GetGC(textPtr->tkwin, GCForeground, &gcValues);
     }
 

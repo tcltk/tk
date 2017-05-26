@@ -2535,7 +2535,7 @@ TkTextDrawBlockCursor(
 {
     if (textPtr->blockCursorType) {
 	if (textPtr->flags & HAVE_FOCUS) {
-	    if ((textPtr->flags & INSERT_ON) || textPtr->selBorder == textPtr->insertBorder) {
+	    if ((textPtr->flags & INSERT_ON) || textPtr->selAttrs.border == textPtr->insertBorder) {
 		return true;
 	    }
 	} else if (textPtr->insertUnfocussed == TK_TEXT_INSERT_NOFOCUS_SOLID) {
@@ -2746,7 +2746,7 @@ TkTextInsertDisplayProc(
 	if (textPtr->flags & INSERT_ON) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder, x, y,
 		    width, height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
-	} else if (textPtr->selBorder == textPtr->insertBorder) {
+	} else if (textPtr->selAttrs.border == textPtr->insertBorder) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->border, x, y,
 		    width, height, 0, TK_RELIEF_FLAT);
 	}

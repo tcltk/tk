@@ -794,6 +794,14 @@ typedef enum {
 #define TK_TEXT_NEARBY_IS_UNDETERMINED	INT_MAX /* is not yet determined */
 #define TK_TEXT_IS_NEARBY		INT_MIN /* is on border */
 
+typedef struct TkTextSharedAttrs {
+    Tk_3DBorder border;		/* Used for drawing background. NULL means no value specified here. */
+    Tk_3DBorder inactiveBorder;	/* Used for drawing background. NULL means no value specified here. */
+    XColor *fgColor;		/* Foreground color for text. NULL means no value specified here. */
+    XColor *inactiveFgColor;	/* Foreground color for text. NULL means no value specified here. */
+    Tcl_Obj *borderWidthPtr;	/* Width of 3-D border for background. */
+    int borderWidth;		/* Width of 3-D border for background. */
+} TkTextSharedAttrs;
 
 typedef struct TkTextTag {
     const char *name;		/* Name of this tag. This field is actually a pointer to the key
@@ -816,6 +824,7 @@ typedef struct TkTextTag {
     uint32_t tagEpoch;		/* Epoch of creation time. */
     uint32_t refCount;		/* Number of objects referring to us. */
     bool isDisabled;		/* This tag is disabled? */
+    bool isSelTag;		/* This tag is the special "sel" tag? */
 
     /*
      * Information for tag collection [TkBTreeGetTags, TextInspectCmd, TkTextPickCurrent].
@@ -850,9 +859,9 @@ typedef struct TkTextTag {
      * specifies an override.
      */
 
-    Tk_3DBorder border;		/* Used for drawing background. NULL means no value specified here. */
-    int borderWidth;		/* Width of 3-D border for background. */
-    Tcl_Obj *borderWidthPtr;	/* Width of 3-D border for background. */
+    TkTextSharedAttrs attrs;	/* Contains the following attributes: border, inactiveBorder,
+				 * fgColor, inactiveFgColor, and borderWidth. These attributes will
+				 * be shared with attributes from "sel" tag. */
     Tcl_Obj *reliefPtr;		/* -relief option object. NULL means option not specified. */
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means no value specified here. */
@@ -860,7 +869,6 @@ typedef struct TkTextTag {
     				 * -lmargin2 options. */
     bool indentBg;		/* Background will be indented accordingly to the -lmargin1, and
     				 * -lmargin2 options. */
-    XColor *fgColor;		/* Foreground color for text. NULL means no value specified here. */
     Tk_Font tkfont;		/* Font for displaying text. NULL means no value specified here. */
     Pixmap fgStipple;		/* Stipple bitmap for text and other foreground stuff. None means
     				 * no value specified here.*/
@@ -898,6 +906,11 @@ typedef struct TkTextTag {
 				 * NULL means no value specified here. */
     XColor *selFgColor;		/* Foreground color for selected text. NULL means no value specified
     				 * here. */
+    Tk_3DBorder inactiveSelBorder;
+    				/* Used for drawing background for inactive selected text.
+				 * NULL means no value specified here. */
+    XColor *inactiveSelFgColor;	/* Foreground color for inactive selected text. NULL means no value
+    				 * specified here. */
     char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL means option not
     				 * specified. */
     int spacing1;		/* Extra spacing above first display line for text line. Only valid
@@ -1352,21 +1365,15 @@ typedef struct TkText {
      * Information related to selection.
      */
 
+    TkTextSharedAttrs selAttrs;	/* Contains the following attributes: border, inactiveBorder,
+				 * fgColor, inactiveFgColor, and borderWidth. These attributes will
+				 * be shared with attributes from "sel" tag. */
+    TkTextSharedAttrs textConfigAttrs;
+    				/* Contains the original attributes of the text widget. */
+    TkTextSharedAttrs selTagConfigAttrs;
+    				/* Contains the original attributes of the "sel" tag. */
     TkTextTag *selTagPtr;	/* Pointer to "sel" tag. Used to tell when a new selection
     				 * has been made. */
-    Tk_3DBorder selBorder;	/* Border and background for selected characters. This is
-    				 * a copy of information in *selTagPtr, so it shouldn't be
-				 * explicitly freed. */
-    Tk_3DBorder inactiveSelBorder;
-				/* Border and background for selected characters when they
-				 * don't have the focus. */
-    int selBorderWidth;		/* Width of border around selection. */
-    Tcl_Obj *selBorderWidthPtr;	/* Width of border around selection. */
-    XColor *selFgColorPtr;	/* Foreground color for selected text. This is a copy of
-    				 * information in *selTagPtr, so it shouldn't be explicitly freed. */
-    XColor *inactiveSelFgColorPtr;
-    				/* Foreground color for selected characters when they don't have
-				 * the focus. */
     bool exportSelection;	/* Non-zero means tie "sel" tag to X selection. */
     TkTextSearch selSearch;	/* Used during multi-pass selection retrievals. */
     TkTextIndex selIndex;	/* Used during multi-pass selection retrievals. This index
@@ -1380,9 +1387,9 @@ typedef struct TkText {
     TkTextSegment *insertMarkPtr;
 				/* Points to segment for "insert" mark. */
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion cursor. */
-    XColor *insertFgColorPtr;	/* Foreground color for text behind a block cursor.
+    XColor *insertFgColor;	/* Foreground color for text behind a block cursor.
     				 * NULL means no value specified here. */
-    bool showInsertFgColor;	/* Flag whether insertFgColorPtr is relevant. */
+    bool showInsertFgColor;	/* Flag whether insertFgColor is relevant. */
     int insertWidth;		/* Total width of insert cursor. */
     int insertBorderWidth;	/* Width of 3-D border around insert cursor */
     TkTextInsertUnfocussed insertUnfocussed;
