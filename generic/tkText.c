@@ -6288,7 +6288,7 @@ TextInsertCmd(
 		    for (i = 0; i < numTags; ++i) {
 			tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(tagNamePtrs[i]), NULL);
 			if (tagPtr->index >= TkTextTagSetSize(tagInfoPtr)) {
-			    tagInfoPtr = TkTextTagSetResize(NULL, sharedTextPtr->tagInfoSize);
+			    tagInfoPtr = TkTextTagSetResize(tagInfoPtr, sharedTextPtr->tagInfoSize);
 			}
 			tagInfoPtr = TkTextTagSetAddToThis(tagInfoPtr, tagPtr->index);
 		    }
