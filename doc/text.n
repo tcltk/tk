@@ -711,6 +711,7 @@ position on the last line of the text. Then, if the line is not long enough
 to contain a character at the indicated position, adjust the character position
 to refer to the last character of the line (the newline). Spaces on either side
 of \fIcount\fR are optional.
+.RS
 .PP
 If the \fBdisplay\fR submodifier is given, then each visual display line is
 counted separately, and in this case the position is determined by the
@@ -719,6 +720,7 @@ current pixel position.
 Otherwise, if \fBany\fR (or no modifier) is given, then each logical line
 (no matter how many times it is visually wrapped) counts just once, and the
 position is determined by the character position.
+.RE
 .TP
 \fB\- \fIcount\fR ?\fIsubmodifier\fR? \fBlines\fR
 .
@@ -729,6 +731,7 @@ same position on the first line of the text. Then, if the line is not long
 enough to contain a character at the indicated position, adjust the character
 position to refer to the last character of the line (the newline). Spaces
 on either side of \fIcount\fR are optional.
+.RS
 .PP
 If the \fBdisplay\fR submodifier is given, then each visual display line is
 counted separately, and in this case the character position is determined
@@ -737,6 +740,7 @@ by the current pixel position.
 Otherwise, if \fBany\fR (or no modifier) is given, then each logical line
 (no matter how many times it is visually wrapped) counts just once, and the
 character position is determined by the index position.
+.RE
 .TP
 ?\fIsubmodifier\fR? \fBlinestart\fR
 .
