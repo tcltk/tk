@@ -42,7 +42,8 @@ enum { TKINDEX_NONE, TKINDEX_DISPLAY, TKINDEX_CHAR };
  * Forward declarations for functions defined later in this file:
  */
 
-static const char *	ForwBack(TkText *textPtr, const char *string, TkTextIndex *indexPtr);
+static const char *	ForwBack(TkText *textPtr, const char *string, TkTextIndex *indexPtr,
+			    int charCount);
 static const char *	StartEnd(TkText *textPtr, const char *string, TkTextIndex *indexPtr);
 static TkTextSegment *	IndexToSeg(const TkTextIndex *indexPtr, int *offsetPtr);
 static int		SegToIndex(const TkTextLine *linePtr, const TkTextSegment *segPtr);
@@ -2207,6 +2208,7 @@ TkpTextGetIndex(
     bool wantLast;
     bool wantCurrent;
     bool result;
+    int charCount = -1;
 
     assert(textPtr);
     assert(sharedTextPtr);
@@ -2470,10 +2472,10 @@ TkpTextGetIndex(
 	    charIndex = INT_MAX;
 	    endOfBase = p + 3;
 	} else if (*p == 'b' && strncmp(p, "begin", 5) == 0) {
-	    charIndex = 0;
+	    charCount = charIndex = 0;
 	    endOfBase = p + 5;
 	} else {
-	    charIndex = strtol(p, &end, 0);
+	    charCount = charIndex = strtol(p, &end, 0);
 	    if (end == p) {
 		goto noBaseFound;
 	    }
@@ -2578,7 +2580,7 @@ TkpTextGetIndex(
 	    break;
 	}
 	if (*cp == '+' || *cp == '-') {
-	    cp = ForwBack(textPtr, cp, indexPtr);
+	    cp = ForwBack(textPtr, cp, indexPtr, charCount);
 	} else {
 	    cp = StartEnd(textPtr, cp, indexPtr);
 	}
@@ -2721,7 +2723,8 @@ ForwBack(
     const char *string,		/* String to parse for additional info about
 				 * modifier (count and units). Points to "+"
 				 * or "-" that starts modifier. */
-    TkTextIndex *indexPtr)	/* Index to update as specified in string. */
+    TkTextIndex *indexPtr,	/* Index to update as specified in string. */
+    int charCount)		/* The character position in this line, -1 if not yet determined. */
 {
     const char *p, *units;
     char *end;
@@ -2901,38 +2904,28 @@ ForwBack(
 		TkTextSkipElidedRegion(indexPtr);
 	    }
 	} else {
+	    int newLineIndex;
+
 	    lineIndex = TkBTreeLinesTo(indexPtr->tree, textPtr, indexPtr->priv.linePtr, NULL);
 	    if (*string == '+') {
-		lineIndex += count;
+		newLineIndex = MIN(TkBTreeNumLines(indexPtr->tree, textPtr), lineIndex + count);
 	    } else {
-		lineIndex -= count;
+		newLineIndex = MAX(0, lineIndex - count);
+	    }
+	    if (newLineIndex != lineIndex) {
+		TkTextLine *linePtr = TkBTreeFindLine(indexPtr->tree, textPtr, newLineIndex);
 
-		/*
-		 * The check below retains the character position, even if the
-		 * line runs off the start of the file. Without it, the
-		 * character position will get reset to 0 by TkTextMakeIndex.
-		 */
-
-		if (lineIndex < 0) {
-		    lineIndex = 0;
+		if (charCount == -1) {
+		    TkTextIndex lineStart = *indexPtr;
+		    TkTextIndexSetToStartOfLine(&lineStart);
+		    charCount = TkTextIndexCount(textPtr, &lineStart, indexPtr, COUNT_CHARS);
+		}
+		TkTextIndexSetToStartOfLine2(indexPtr, linePtr);
+		TkTextIndexForwChars(textPtr, indexPtr, charCount, indexPtr, COUNT_CHARS);
+		if (linePtr != TkTextIndexGetLine(indexPtr)) {
+		    TkTextIndexSetToEndOfLine2(indexPtr, linePtr);
 		}
 	    }
-
-	    /*
-	     * This doesn't work quite right if using a proportional font or
-	     * UTF-8 characters with varying numbers of bytes, or if there are
-	     * embedded windows, images, etc. The cursor will bop around,
-	     * keeping a constant number of bytes (not characters) from the
-	     * left edge (but making sure not to split any UTF-8 characters),
-	     * regardless of the x-position the index corresponds to. The
-	     * proper way to do this is to get the x-position of the index and
-	     * then pick the character at the same x-position in the new line.
-	     */
-
-	    if (textPtr->startMarker != textPtr->sharedTextPtr->startMarker) {
-		indexPtr->priv.byteIndex += TkTextSegToIndex(textPtr->startMarker);
-	    }
-	    TkTextMakeByteIndex(indexPtr->tree, textPtr, lineIndex, indexPtr->priv.byteIndex, indexPtr);
 	}
     } else {
 	return NULL;
@@ -3428,6 +3421,7 @@ TkTextIndexCount(
 		}
 	    } else if (segPtr->typePtr == &tkTextHyphenType) {
 		if (type & (COUNT_HYPHENS|COUNT_INDICES)) {
+		    assert(segPtr->size == 1);
 		    count += 1;
 		}
 	    } else if (type & COUNT_INDICES) {
@@ -3448,10 +3442,11 @@ TkTextIndexCount(
 	    }
 	} else if (lastPtr->typePtr == &tkTextHyphenType) {
 	    if (type & (COUNT_HYPHENS|COUNT_INDICES)) {
+		assert(lastPtr->size == 1);
 		count += 1;
 	    }
 	} else if (type & COUNT_INDICES) {
-	    assert(segPtr->size <= 1);
+	    assert(lastPtr->size == 1);
 	    count += 1;
 	}
     }
