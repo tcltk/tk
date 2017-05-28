@@ -854,7 +854,7 @@ test textIndex-19.14 {Display lines + lines with Unicode text} {
     destroy .t
     pack [text .t -font {Courier -24}]
     update
-    .t insert end "abcdefgh\nабвгґдеє\n一伊依医咿噫欹泆"
+    .t insert end "abcdefgh\n\u0430\u0431\u0432\u0433\u0491\u0434\u0435\u0454\n\u4E00\u4F0A\u4F9D\u533B\u54BF\u566B\u6B39\u6CC6"
     .t sync
     set res {}
     lappend res [.t index "1.4 +1lines"] [.t index "1.4 +2lines"]
