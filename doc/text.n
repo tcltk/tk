@@ -669,11 +669,7 @@ the text if necessary. If there are fewer than \fIcount\fR characters in the
 text after the current index, then set the index to the last index in the
 text. Spaces on either side of \fIcount\fR are optional. If the \fBdisplay\fR
 submodifier is given, elided characters are skipped over without being
-counted. If \fBany\fR is given, then all characters are counted. For
-historical reasons, if neither modifier is given then the count actually takes
-place in units of index positions (see \fBINDICES\fR for details). This
-behaviour may be changed in a future major release, so if you need an index
-count, you are encouraged to use \fBindices\fR instead wherever possible.
+counted. If \fBany\fR is given, then all characters are counted.
 .TP
 \fB\- \fIcount\fR ?\fIsubmodifier\fR? \fBchars\fR
 .
@@ -682,11 +678,7 @@ in the text if necessary. If there are fewer than \fIcount\fR characters in
 the text before the current index, then set the index to the first index in
 the text (1.0). Spaces on either side of \fIcount\fR are optional. If the
 \fBdisplay\fR submodifier is given, elided characters are skipped over without
-being counted. If \fBany\fR is given, then all characters are counted. For
-historical reasons, if neither modifier is given then the count actually takes
-place in units of index positions (see \fBINDICES\fR for details). This
-behavior may be changed in a future major release, so if you need an index
-count, you are encouraged to use \fBindices\fR instead wherever possible.
+being counted. If \fBany\fR is given, then all characters are counted.
 .TP
 \fB+ \fIcount\fR ?\fIsubmodifier\fR? \fBindices\fR
 .
@@ -712,33 +704,39 @@ are counted; this is also the default behaviour if no modifier is given.
 .TP
 \fB+ \fIcount\fR ?\fIsubmodifier\fR? \fBlines\fR
 .
-Adjust the index forward by \fIcount\fR lines, retaining the same character
-position within the line. If there are fewer than \fIcount\fR lines after the
+Adjust the index forward by \fIcount\fR lines, retaining the same position
+within the line. If there are fewer than \fIcount\fR lines after the
 line containing the current index, then set the index to refer to the same
-character position on the last line of the text. Then, if the line is not long
-enough to contain a character at the indicated character position, adjust the
-character position to refer to the last character of the line (the newline).
-Spaces on either side of \fIcount\fR are optional. If the \fBdisplay\fR
-submodifier is given, then each visual display line is counted separately.
-Otherwise, if \fBany\fR (or no modifier) is given, then each logical line (no
-matter how many times it is visually wrapped) counts just once. If the
-relevant lines are not wrapped, then these two methods of counting are
-equivalent.
+position on the last line of the text. Then, if the line is not long enough
+to contain a character at the indicated position, adjust the character position
+to refer to the last character of the line (the newline). Spaces on either side
+of \fIcount\fR are optional.
+.PP
+If the \fBdisplay\fR submodifier is given, then each visual display line is
+counted separately, and in this case the position is determined by the
+current pixel position.
+.PP
+Otherwise, if \fBany\fR (or no modifier) is given, then each logical line
+(no matter how many times it is visually wrapped) counts just once, and the
+position is determined by the character position.
 .TP
 \fB\- \fIcount\fR ?\fIsubmodifier\fR? \fBlines\fR
 .
 Adjust the index backward by \fIcount\fR logical lines, retaining the same
-character position within the line. If there are fewer than \fIcount\fR lines
-before the line containing the current index, then set the index to refer to
-the same character position on the first line of the text. Then, if the line
-is not long enough to contain a character at the indicated character position,
-adjust the character position to refer to the last character of the line (the
-newline). Spaces on either side of \fIcount\fR are optional. If the
-\fBdisplay\fR submodifier is given, then each visual display line is counted
-separately. Otherwise, if \fBany\fR (or no modifier) is given, then each
-logical line (no matter how many times it is visually wrapped) counts just
-once. If the relevant lines are not wrapped, then these two methods of
-counting are equivalent.
+position within the line. If there are fewer than \fIcount\fR lines before
+the line containing the current index, then set the index to refer to the
+same position on the first line of the text. Then, if the line is not long
+enough to contain a character at the indicated position, adjust the character
+position to refer to the last character of the line (the newline). Spaces
+on either side of \fIcount\fR are optional.
+.PP
+If the \fBdisplay\fR submodifier is given, then each visual display line is
+counted separately, and in this case the character position is determined
+by the current pixel position.
+.PP
+Otherwise, if \fBany\fR (or no modifier) is given, then each logical line
+(no matter how many times it is visually wrapped) counts just once, and the
+character position is determined by the index position.
 .TP
 ?\fIsubmodifier\fR? \fBlinestart\fR
 .

@@ -850,6 +850,20 @@ test textIndex-19.13 {Display lines} {
     destroy .txt .sbar
 } {}
 
+test textIndex-19.14 {Display lines + lines with Unicode text} {
+    destroy .t
+    pack [text .t -font {Courier -24}]
+    update
+    .t insert end "abcdefgh\nабвгґдеє\n一伊依医咿噫欹泆"
+    .t sync
+    set res {}
+    lappend res [.t index "1.4 +1lines"] [.t index "1.4 +2lines"]
+    lappend res [.t index "1.4 +1displaylines"] [.t index "1.4 +2displaylines"]
+    lappend res [.t index "3.4 -1lines"] [.t index "3.4 -2lines"]
+    lappend res [.t index "3.4 -1displaylines"] [.t index "3.4 -2displaylines"]
+    set res
+} {2.4 3.4 2.4 3.2 2.4 1.4 2.6 1.6}
+
 proc text_test_word {startend chars start} {
     destroy .t
     text .t
