@@ -1249,14 +1249,14 @@ TkConfigureTag(
 		tagPtr->spacing2String, &tagPtr->spacing2) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
-	tagPtr->spacing2 = MAX(0, tagPtr->spacing1);
+	tagPtr->spacing2 = MAX(0, tagPtr->spacing2);
     }
     if (tagPtr->spacing3String) {
 	if (Tk_GetPixels(interp, textPtr->tkwin,
 		tagPtr->spacing3String, &tagPtr->spacing3) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
-	tagPtr->spacing3 = MAX(0, tagPtr->spacing1);
+	tagPtr->spacing3 = MAX(0, tagPtr->spacing3);
     }
     if (tagPtr->tabArrayPtr) {
 	free(tagPtr->tabArrayPtr);
