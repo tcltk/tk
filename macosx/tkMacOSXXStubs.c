@@ -882,16 +882,18 @@ XGetImage(
     int	        bitmap_pad = 0;
     int	        bytes_per_row = 4*width;
     int                size;
-    MacDrawable *macDraw = (MacDrawable *) d;
+    MacDrawable *macDraw = (MacDrawable *) d; // Where is this variable used? May it be removed?
+    int scalefactor = 1;
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     NSWindow *win = TkMacOSXDrawableWindow(d);
     /* This code assumes that backing scale factors are integers.  Currently
      * Retina displays use a scale factor of 2.0 and normal displays use 1.0.
      * We do not support any other values here.
      */
-    int scalefactor = 1;
     if (win && [win respondsToSelector:@selector(backingScaleFactor)]) {
 	scalefactor = ([win backingScaleFactor] == 2.0) ? 2 : 1;
     }
+#endif
     int scaled_height = height * scalefactor;
     int scaled_width = width * scalefactor;
 
