@@ -1377,6 +1377,7 @@ GetTranslatedKey(
     UINT type)
 {
     MSG msg;
+    WPARAM AwParam;
 
     xkey->nbytes = 0;
 
@@ -1385,8 +1386,8 @@ GetTranslatedKey(
 	if (msg.message != type) {
 	    break;
 	}
-
-	GetMessageA(&msg, NULL, type, type);
+	AwParam = msg.wParam;
+	GetMessage(&msg, NULL, type, type);
 
 	/*
 	 * If this is a normal character message, we may need to strip off the
@@ -1398,10 +1399,8 @@ GetTranslatedKey(
 	if ((msg.message == WM_CHAR) && (msg.lParam & 0x20000000)) {
 	    xkey->state = 0;
 	}
-	xkey->trans_chars[xkey->nbytes] = (char) msg.wParam;
-	xkey->nbytes++;
 
-	if (((unsigned short) msg.wParam) > ((unsigned short) 0xff)) {
+	if ((unsigned short) AwParam > (unsigned short) 0xff) {
 	    /*
 	     * Some "addon" input devices, such as the popular PenPower
 	     * Chinese writing pad, generate 16 bit values in WM_CHAR messages
@@ -1409,8 +1408,11 @@ GetTranslatedKey(
 	     * containing two 8-bit values.
 	     */
 
-	    xkey->trans_chars[xkey->nbytes] = (char) (msg.wParam >> 8);
-	    xkey->nbytes ++;
+	    xkey->trans_chars[xkey->nbytes++] = (char) AwParam;
+	    xkey->trans_chars[xkey->nbytes++] = (char) (msg.wParam >> 8);
+	} else if (((unsigned short) msg.wParam) > ((unsigned short) 0xff)) {
+	    xkey->keycode = (unsigned short) msg.wParam;
+	    xkey->send_event = -3;
 	}
     }
 }
