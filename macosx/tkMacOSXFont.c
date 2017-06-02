@@ -515,7 +515,7 @@ TkpGetFontFromAttributes(
 				/* Set of attributes to match. */
 {
     MacFont *fontPtr;
-    int points = TkFontGetPoints(tkwin, faPtr->size);
+    int points = (int)(TkFontGetPoints(tkwin, faPtr->size) + 0.5);
     NSFontTraitMask traits = GetNSFontTraitsFromTkFontAttributes(faPtr);
     NSInteger weight = (faPtr->weight == TK_FW_BOLD ? 9 : 5);
     NSFont *nsFont;
