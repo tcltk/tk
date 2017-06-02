@@ -1789,10 +1789,18 @@ ArrangePanes(
 	 */
 
 	if (horizontal) {
-	    paneSize = slavePtr->paneWidth;
+            if (slavePtr->width > 0) {
+                paneSize = slavePtr->width;
+            } else {
+                paneSize = slavePtr->paneWidth;
+            }
 	    stretchReserve -= paneSize + (2 * slavePtr->padx);
 	} else {
-	    paneSize = slavePtr->paneHeight;
+            if (slavePtr->height > 0) {
+                paneSize = slavePtr->height;
+            } else {
+                paneSize = slavePtr->paneHeight;
+            }
 	    stretchReserve -= paneSize + (2 * slavePtr->pady);
 	}
 	if (IsStretchable(slavePtr->stretch,i,first,last)
@@ -1842,10 +1850,18 @@ ArrangePanes(
 	 */
 
 	if (horizontal) {
-	    paneSize = slavePtr->paneWidth;
+            if (slavePtr->width > 0) {
+                paneSize = slavePtr->width;
+            } else {
+                paneSize = slavePtr->paneWidth;
+            }
 	    pwSize = pwWidth;
 	} else {
-	    paneSize = slavePtr->paneHeight;
+            if (slavePtr->height > 0) {
+                paneSize = slavePtr->height;
+            } else {
+                paneSize = slavePtr->paneHeight;
+            }
 	    pwSize = pwHeight;
 	}
 	if (IsStretchable(slavePtr->stretch, i, first, last)) {
