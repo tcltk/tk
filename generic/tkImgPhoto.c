@@ -2713,7 +2713,7 @@ Tk_PhotoPutBlock(
 				 * messages, or NULL. */
     Tk_PhotoHandle handle,	/* Opaque handle for the photo image to be
 				 * updated. */
-    register Tk_PhotoImageBlock *blockPtr,
+    Tk_PhotoImageBlock *blockPtr,
 				/* Pointer to a structure describing the pixel
 				 * data to be copied into the image. */
     int x, int y,		/* Coordinates of the top-left pixel to be
@@ -2724,6 +2724,8 @@ Tk_PhotoPutBlock(
 				 * transparent pixels. */
 {
     register PhotoMaster *masterPtr = (PhotoMaster *) handle;
+    Tk_PhotoImageBlock sourceBlock;
+    unsigned char *memToFree;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
     int wLeft, hLeft, wCopy, hCopy, pitch;
     unsigned char *srcPtr, *srcLinePtr, *destPtr, *destLinePtr;
@@ -2751,13 +2753,27 @@ Tk_PhotoPutBlock(
 	return TCL_OK;
     }
 
-    xEnd = x + width;
-    yEnd = y + height;
-    if ((xEnd > masterPtr->width) || (yEnd > masterPtr->height)) {
-	int sameSrc = (blockPtr->pixelPtr == masterPtr->pix32);
-
-	if (ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
-		MAX(yEnd, masterPtr->height)) == TCL_ERROR) {
+    /*
+     * Fix for bug e4336bef5d:
+     *
+     * Make a local copy of *blockPtr, as we might have to change some
+     * of its fields and don't want to interfere with the caller's data.
+     *
+     * If source and destination are the same image, create a copy  of the
+     * source data in our local sourceBlock.
+     *
+     * To find out, just comparing the pointers is not enough - they might have
+     * different values and still point to the same block of memory. (e.g.
+     * if the -from option was passed to [imageName copy])
+     */
+    sourceBlock = *blockPtr;
+    memToFree = NULL;
+    if (sourceBlock.pixelPtr >= masterPtr->pix32
+	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
+	    * masterPtr->height * 4) {
+	sourceBlock.pixelPtr = attemptckalloc(sourceBlock.height
+		* sourceBlock.pitch);
+	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
@@ -2765,9 +2781,23 @@ Tk_PhotoPutBlock(
 	    }
 	    return TCL_ERROR;
 	}
-	if (sameSrc) {
-	    blockPtr->pixelPtr = masterPtr->pix32;
-	    blockPtr->pitch = masterPtr->width * 4;
+	memToFree = sourceBlock.pixelPtr;
+	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, sourceBlock.height
+	    * sourceBlock.pitch);
+    }
+
+
+    xEnd = x + width;
+    yEnd = y + height;
+    if ((xEnd > masterPtr->width) || (yEnd > masterPtr->height)) {
+	if (ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
+		MAX(yEnd, masterPtr->height)) == TCL_ERROR) {
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
+		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+	    }
+	    goto errorExit;
 	}
     }
 
@@ -2786,14 +2816,14 @@ Tk_PhotoPutBlock(
      * components, mark it as a color image.
      */
 
-    greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
-    blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
-    alphaOffset = blockPtr->offset[3];
-    if ((alphaOffset >= blockPtr->pixelSize) || (alphaOffset < 0)) {
+    greenOffset = sourceBlock.offset[1] - sourceBlock.offset[0];
+    blueOffset = sourceBlock.offset[2] - sourceBlock.offset[0];
+    alphaOffset = sourceBlock.offset[3];
+    if ((alphaOffset >= sourceBlock.pixelSize) || (alphaOffset < 0)) {
 	alphaOffset = 0;
 	sourceIsSimplePhoto = 1;
     } else {
-	alphaOffset -= blockPtr->offset[0];
+	alphaOffset -= sourceBlock.offset[0];
     }
     if ((greenOffset != 0) || (blueOffset != 0)) {
 	masterPtr->flags |= COLOR_IMAGE;
@@ -2813,13 +2843,13 @@ Tk_PhotoPutBlock(
      * pixelSize == 3 and alphaOffset == 0. Maybe other cases too.
      */
 
-    if ((blockPtr->pixelSize == 4)
+    if ((sourceBlock.pixelSize == 4)
 	    && (greenOffset == 1) && (blueOffset == 2) && (alphaOffset == 3)
-	    && (width <= blockPtr->width) && (height <= blockPtr->height)
+	    && (width <= sourceBlock.width) && (height <= sourceBlock.height)
 	    && ((height == 1) || ((x == 0) && (width == masterPtr->width)
-		&& (blockPtr->pitch == pitch)))
+		&& (sourceBlock.pitch == pitch)))
 	    && (compRule == TK_PHOTO_COMPOSITE_SET)) {
-	memmove(destLinePtr, blockPtr->pixelPtr + blockPtr->offset[0],
+	memmove(destLinePtr, sourceBlock.pixelPtr + sourceBlock.offset[0],
 		((size_t)height * width * 4));
 
 	/*
@@ -2835,11 +2865,11 @@ Tk_PhotoPutBlock(
      */
 
     for (hLeft = height; hLeft > 0;) {
-	int pixelSize = blockPtr->pixelSize;
+	int pixelSize = sourceBlock.pixelSize;
 	int compRuleSet = (compRule == TK_PHOTO_COMPOSITE_SET);
 
-	srcLinePtr = blockPtr->pixelPtr + blockPtr->offset[0];
-	hCopy = MIN(hLeft, blockPtr->height);
+	srcLinePtr = sourceBlock.pixelPtr + sourceBlock.offset[0];
+	hCopy = MIN(hLeft, sourceBlock.height);
 	hLeft -= hCopy;
 	for (; hCopy > 0; --hCopy) {
 	    /*
@@ -2850,10 +2880,10 @@ Tk_PhotoPutBlock(
 
 	    if ((pixelSize == 4) && (greenOffset == 1)
 		    && (blueOffset == 2) && (alphaOffset == 3)
-		    && (width <= blockPtr->width)
+		    && (width <= sourceBlock.width)
 		    && compRuleSet) {
 		memcpy(destLinePtr, srcLinePtr, ((size_t)width * 4));
-		srcLinePtr += blockPtr->pitch;
+		srcLinePtr += sourceBlock.pitch;
 		destLinePtr += pitch;
 		continue;
 	    }
@@ -2864,7 +2894,7 @@ Tk_PhotoPutBlock(
 
 	    destPtr = destLinePtr;
 	    for (wLeft = width; wLeft > 0;) {
-		wCopy = MIN(wLeft, blockPtr->width);
+		wCopy = MIN(wLeft, sourceBlock.width);
 		wLeft -= wCopy;
 		srcPtr = srcLinePtr;
 
@@ -2954,7 +2984,7 @@ Tk_PhotoPutBlock(
 		    destPtr += 4;
 		}
 	    }
-	    srcLinePtr += blockPtr->pitch;
+	    srcLinePtr += sourceBlock.pitch;
 	    destLinePtr += pitch;
 	}
     }
@@ -3070,7 +3100,15 @@ Tk_PhotoPutBlock(
 
     Tk_ImageChanged(masterPtr->tkMaster, x, y, width, height,
 	    masterPtr->width, masterPtr->height);
+
+    if (memToFree) ckfree(memToFree);
+
     return TCL_OK;
+
+  errorExit:
+    if (memToFree) ckfree(memToFree);
+
+    return TCL_ERROR;
 }
 
 /*
@@ -3097,7 +3135,7 @@ Tk_PhotoPutZoomedBlock(
 				 * messages, or NULL. */
     Tk_PhotoHandle handle,	/* Opaque handle for the photo image to be
 				 * updated. */
-    register Tk_PhotoImageBlock *blockPtr,
+    Tk_PhotoImageBlock *blockPtr,
 				/* Pointer to a structure describing the pixel
 				 * data to be copied into the image. */
     int x, int y,		/* Coordinates of the top-left pixel to be
@@ -3112,6 +3150,8 @@ Tk_PhotoPutZoomedBlock(
 				 * transparent pixels. */
 {
     register PhotoMaster *masterPtr = (PhotoMaster *) handle;
+    register Tk_PhotoImageBlock sourceBlock;
+    unsigned char *memToFree;
     int xEnd, yEnd, greenOffset, blueOffset, alphaOffset;
     int wLeft, hLeft, wCopy, hCopy, blockWid, blockHt;
     unsigned char *srcPtr, *srcLinePtr, *srcOrigPtr, *destPtr, *destLinePtr;
@@ -3148,13 +3188,26 @@ Tk_PhotoPutZoomedBlock(
 	return TCL_OK;
     }
 
-    xEnd = x + width;
-    yEnd = y + height;
-    if ((xEnd > masterPtr->width) || (yEnd > masterPtr->height)) {
-	int sameSrc = (blockPtr->pixelPtr == masterPtr->pix32);
-
-	if (ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
-		MAX(yEnd, masterPtr->height)) == TCL_ERROR) {
+    /*
+     * Fix for Bug e4336bef5d:
+     * Make a local copy of *blockPtr, as we might have to change some
+     * of its fields and don't want to interfere with the caller's data.
+     *
+     * If source and destination are the same image, create a copy  of the
+     * source data in our local sourceBlock.
+     *
+     * To find out, just comparing the pointers is not enough - they might have
+     * different values and still point to the same block of memory. (e.g.
+     * if the -from option was passed to [imageName copy])
+     */
+    sourceBlock = *blockPtr;
+    memToFree = NULL;
+    if (sourceBlock.pixelPtr >= masterPtr->pix32
+	    && sourceBlock.pixelPtr <= masterPtr->pix32 + masterPtr->width
+	    * masterPtr->height * 4) {
+	sourceBlock.pixelPtr = attemptckalloc(sourceBlock.height
+		* sourceBlock.pitch);
+	if (sourceBlock.pixelPtr == NULL) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
@@ -3162,9 +3215,22 @@ Tk_PhotoPutZoomedBlock(
 	    }
 	    return TCL_ERROR;
 	}
-	if (sameSrc) {
-	    blockPtr->pixelPtr = masterPtr->pix32;
-	    blockPtr->pitch = masterPtr->width * 4;
+	memToFree = sourceBlock.pixelPtr;
+	memcpy(sourceBlock.pixelPtr, blockPtr->pixelPtr, sourceBlock.height
+	    * sourceBlock.pitch);
+    }
+
+    xEnd = x + width;
+    yEnd = y + height;
+    if ((xEnd > masterPtr->width) || (yEnd > masterPtr->height)) {
+	if (ImgPhotoSetSize(masterPtr, MAX(xEnd, masterPtr->width),
+		MAX(yEnd, masterPtr->height)) == TCL_ERROR) {
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
+		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+	    }
+	    goto errorExit;
 	}
     }
 
@@ -3183,14 +3249,14 @@ Tk_PhotoPutZoomedBlock(
      * components, mark it as a color image.
      */
 
-    greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
-    blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
-    alphaOffset = blockPtr->offset[3];
-    if ((alphaOffset >= blockPtr->pixelSize) || (alphaOffset < 0)) {
+    greenOffset = sourceBlock.offset[1] - sourceBlock.offset[0];
+    blueOffset = sourceBlock.offset[2] - sourceBlock.offset[0];
+    alphaOffset = sourceBlock.offset[3];
+    if ((alphaOffset >= sourceBlock.pixelSize) || (alphaOffset < 0)) {
 	alphaOffset = 0;
 	sourceIsSimplePhoto = 1;
     } else {
-	alphaOffset -= blockPtr->offset[0];
+	alphaOffset -= sourceBlock.offset[0];
     }
     if ((greenOffset != 0) || (blueOffset != 0)) {
 	masterPtr->flags |= COLOR_IMAGE;
@@ -3201,21 +3267,21 @@ Tk_PhotoPutZoomedBlock(
      * subsampling and zooming.
      */
 
-    blockXSkip = subsampleX * blockPtr->pixelSize;
-    blockYSkip = subsampleY * blockPtr->pitch;
+    blockXSkip = subsampleX * sourceBlock.pixelSize;
+    blockYSkip = subsampleY * sourceBlock.pitch;
     if (subsampleX > 0) {
-	blockWid = ((blockPtr->width + subsampleX - 1) / subsampleX) * zoomX;
+	blockWid = ((sourceBlock.width + subsampleX - 1) / subsampleX) * zoomX;
     } else if (subsampleX == 0) {
 	blockWid = width;
     } else {
-	blockWid = ((blockPtr->width - subsampleX - 1) / -subsampleX) * zoomX;
+	blockWid = ((sourceBlock.width - subsampleX - 1) / -subsampleX) * zoomX;
     }
     if (subsampleY > 0) {
-	blockHt = ((blockPtr->height + subsampleY - 1) / subsampleY) * zoomY;
+	blockHt = ((sourceBlock.height + subsampleY - 1) / subsampleY) * zoomY;
     } else if (subsampleY == 0) {
 	blockHt = height;
     } else {
-	blockHt = ((blockPtr->height - subsampleY - 1) / -subsampleY) * zoomY;
+	blockHt = ((sourceBlock.height - subsampleY - 1) / -subsampleY) * zoomY;
     }
 
     /*
@@ -3223,12 +3289,12 @@ Tk_PhotoPutZoomedBlock(
      */
 
     destLinePtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
-    srcOrigPtr = blockPtr->pixelPtr + blockPtr->offset[0];
+    srcOrigPtr = sourceBlock.pixelPtr + sourceBlock.offset[0];
     if (subsampleX < 0) {
-	srcOrigPtr += (blockPtr->width - 1) * blockPtr->pixelSize;
+	srcOrigPtr += (sourceBlock.width - 1) * sourceBlock.pixelSize;
     }
     if (subsampleY < 0) {
-	srcOrigPtr += (blockPtr->height - 1) * blockPtr->pitch;
+	srcOrigPtr += (sourceBlock.height - 1) * sourceBlock.pitch;
     }
 
     pitch = masterPtr->width * 4;
@@ -3378,7 +3444,15 @@ Tk_PhotoPutZoomedBlock(
 
     Tk_ImageChanged(masterPtr->tkMaster, x, y, width, height, masterPtr->width,
 	    masterPtr->height);
+
+    if (memToFree) ckfree(memToFree);
+
     return TCL_OK;
+
+  errorExit:
+    if (memToFree) ckfree(memToFree);
+
+    return TCL_ERROR;
 }
 
 /*
@@ -3953,7 +4027,7 @@ ImgPhotoPostscript(
  *
  *----------------------------------------------------------------------
  */
-
+#ifndef TK_NO_DEPRECATED
 void
 Tk_PhotoPutBlock_NoComposite(
     Tk_PhotoHandle handle,
@@ -4039,6 +4113,7 @@ Tk_PhotoSetSize_Panic(
 	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
     }
 }
+#endif /* TK_NO_DEPRECATED */
 
 /*
  * Local Variables:

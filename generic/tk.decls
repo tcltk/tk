@@ -326,7 +326,7 @@ declare 75 {
 declare 76 {
     void Tk_FreeTextLayout(Tk_TextLayout textLayout)
 }
-declare 77 deprecated {
+declare 77 {deprecated {function does nothing, call can be removed}} {
     void Tk_FreeXId(Display *display, XID xid)
 }
 declare 78 {
@@ -564,12 +564,12 @@ declare 143 {
 	    Tk_Window tkwin, int *argcPtr, CONST84 char **argv,
 	    const Tk_ArgvInfo *argTable, int flags)
 }
-declare 144 {
+declare 144 {deprecated {function signature changed}} {
     void Tk_PhotoPutBlock_NoComposite(Tk_PhotoHandle handle,
 	    Tk_PhotoImageBlock *blockPtr, int x, int y,
 	    int width, int height)
 }
-declare 145 {
+declare 145 {deprecated {function signature changed}} {
     void Tk_PhotoPutZoomedBlock_NoComposite(Tk_PhotoHandle handle,
 	    Tk_PhotoImageBlock *blockPtr, int x, int y,
 	    int width, int height, int zoomX, int zoomY,
@@ -581,13 +581,13 @@ declare 146 {
 declare 147 {
     void Tk_PhotoBlank(Tk_PhotoHandle handle)
 }
-declare 148 {
+declare 148 {deprecated {function signature changed}} {
     void Tk_PhotoExpand_Panic(Tk_PhotoHandle handle, int width, int height )
 }
 declare 149 {
     void Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr, int *heightPtr)
 }
-declare 150 {
+declare 150 {deprecated {function signature changed}} {
     void Tk_PhotoSetSize_Panic(Tk_PhotoHandle handle, int width, int height)
 }
 declare 151 {
@@ -943,12 +943,12 @@ declare 244 {
 declare 245 {
     void Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 }
-declare 246 {
+declare 246 {deprecated {function signature changed}} {
     void Tk_PhotoPutBlock_Panic(Tk_PhotoHandle handle,
 	    Tk_PhotoImageBlock *blockPtr, int x, int y,
 	    int width, int height, int compRule)
 }
-declare 247 {
+declare 247 {deprecated {function signature changed}} {
     void Tk_PhotoPutZoomedBlock_Panic(Tk_PhotoHandle handle,
 	    Tk_PhotoImageBlock *blockPtr, int x, int y,
 	    int width, int height, int zoomX, int zoomY,
