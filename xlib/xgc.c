@@ -560,7 +560,7 @@ XDrawSegments(
     XSegment *segments,
     int nsegments)
 {
-    return Success;
+    return BadDrawable;
 }
 #endif
 

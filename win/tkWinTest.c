@@ -515,6 +515,7 @@ TestgetwindowinfoObjCmd(
     Tcl_Obj *childrenObj = NULL;
     TCHAR buf[512];
     int cch, cchBuf = 256;
+    Tcl_DString ds;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "hwnd");
@@ -542,7 +543,9 @@ TestgetwindowinfoObjCmd(
 	Tcl_NewWideIntObj(GetWindowLongPtr((HWND)(size_t)hwnd, GWL_ID)));
 
     cch = GetWindowText((HWND)(size_t)hwnd, (LPTSTR)buf, cchBuf);
-    textObj = Tcl_NewUnicodeObj((LPCWSTR)buf, cch);
+    Tcl_WinTCharToUtf(buf, cch * sizeof (WCHAR), &ds);
+    textObj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    Tcl_DStringFree(&ds);
 
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("text", 4), textObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("parent", 6),
