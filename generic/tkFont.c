@@ -3567,7 +3567,11 @@ TkFontGetDescription(
 	    break;
 
 	case FONT_SIZE:
-	    valuePtr = Tcl_NewIntObj(faPtr->size);
+	    if (faPtr->size >= 0.0) {
+		valuePtr = Tcl_NewIntObj((int)(faPtr->size + 0.5));
+	    } else {
+		valuePtr = Tcl_NewIntObj(-(int)(-faPtr->size + 0.5));
+	    }
 	    break;
 
 	case FONT_WEIGHT:
