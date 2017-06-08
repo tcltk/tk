@@ -25,6 +25,11 @@
 #include "tkAlloc.h"
 #include <assert.h>
 
+/* this ugly work-around is needed for Mac */
+#ifndef bool
+# define bool tkbool_t
+#endif
+
 #ifndef MIN
 # define MIN(a,b) (((int) a) < ((int) b) ? a : b)
 #endif

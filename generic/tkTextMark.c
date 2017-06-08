@@ -28,6 +28,11 @@
 # error "configure failed - can't include inttypes.h"
 #endif
 
+/* this ugly work-around is needed for Mac */
+#ifndef bool
+# define bool tkbool_t
+#endif
+
 #ifndef MAX
 # define MAX(a,b) ((a) < (b) ? b : a)
 #endif

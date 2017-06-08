@@ -23,6 +23,11 @@
 #include <assert.h>
 #include <stdlib.h>
 
+/* this ugly work-around is needed for Mac */
+#ifndef bool
+# define bool tkbool_t
+#endif
+
 #ifndef MAX
 # define MAX(a,b) (((int) a) < ((int) b) ? b : a)
 #endif

@@ -12,28 +12,18 @@
 #ifndef _TK_BOOL
 #define _TK_BOOL
 
-#if 0 /* TODO: we need a different solution */
 #ifdef __cplusplus
 extern "C" {
 #endif
-#endif
 
-/* does not work on all platforms...
-typedef int bool;
-*/
-
-/* ...so we need a different approach: */
-#define bool int
+typedef int tkbool_t;
 
 #ifndef __cplusplus
-enum { true = (bool) 1, false = (bool) 0 };
+enum { true = (tkbool_t) 1, false = (tkbool_t) 0 };
 #endif
 
-#if 0 /* TODO: we need a different solution */
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-#endif
-
 #endif /* _TK_BOOL */
 /* vi:set ts=8 sw=4: */

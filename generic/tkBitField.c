@@ -15,6 +15,11 @@
 #include <string.h>
 #include <assert.h>
 
+/* this ugly work-around is needed for Mac */
+#ifndef bool
+# define bool tkbool_t
+#endif
+
 #ifndef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkBitFieldPriv.h"
