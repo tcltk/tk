@@ -2424,16 +2424,18 @@ MarkCheckProc(
      */
 
     if (markPtr->body.mark.ptr) {
-	void *hPtr;
-
 	if (IS_PRESERVED(markPtr)) {
-	    Tcl_Panic("MarkCheckProc: detected preserved mark outside of the undo chain");
+	    Tcl_Panic("MarkCheckProc: detected preserved mark '%s' outside of the undo chain",
+		    GET_NAME(markPtr));
+	} else {
+	    void *hPtr;
+	    hPtr = Tcl_GetHashKey(&sharedTextPtr->markTable, (Tcl_HashEntry *) markPtr->body.mark.ptr);
+	    if (!hPtr) {
+		Tcl_Panic("MarkCheckProc: couldn't find hash table entry for mark");
+	    }
 	}
-
-	hPtr = Tcl_GetHashKey(&sharedTextPtr->markTable, (Tcl_HashEntry *) markPtr->body.mark.ptr);
-	if (!hPtr) {
-	    Tcl_Panic("MarkCheckProc: couldn't find hash table entry for mark");
-	}
+    } else if (!markPtr->insertMarkFlag && !markPtr->currentMarkFlag && !markPtr->startEndMarkFlag) {
+	Tcl_Panic("MarkCheckProc: mark is not in hash table, though it's not a special mark");
     }
 
     if (markPtr->startEndMarkFlag) {
