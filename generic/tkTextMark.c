@@ -1025,8 +1025,6 @@ TkTextFreeMarks(
     TkTextSegment *retainedPtr = NULL;
     TkTextSegment *markPtr;
 
-    assert(!retainPrivateMarks || sharedTextPtr->steadyMarks);
-
     for ( ; hPtr; hPtr = Tcl_NextHashEntry(&search)) {
 	markPtr = Tcl_GetHashValue(hPtr);
 
