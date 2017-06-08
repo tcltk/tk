@@ -49,6 +49,11 @@
 #include <stdlib.h>
 #include <assert.h>
 
+/* this ugly work-around is needed for Mac */
+#ifndef bool
+# define bool tkbool_t
+#endif
+
 #ifndef MIN
 # define MIN(a,b) (a < b ? a : b)
 #endif

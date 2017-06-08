@@ -12,6 +12,11 @@
 #include "tkRangeList.h"
 #include "tkAlloc.h"
 
+/* this ugly work-around is needed for Mac */
+#ifndef bool
+# define bool tkbool_t
+#endif
+
 #include <tk.h>
 #include <string.h>
 #include <assert.h>

@@ -18,6 +18,11 @@
 #include "tkAlloc.h"
 #include <assert.h>
 
+/* this ugly work-around is needed for Mac */
+#ifndef bool
+# define bool tkbool_t
+#endif
+
 #ifdef NDEBUG
 # define DEBUG(expr)
 #else

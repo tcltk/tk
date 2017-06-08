@@ -33,6 +33,8 @@
 # include "tkMacOSXInt.h"
 #endif
 
+#define bool tkbool_t /* this ugly work-around is needed for Mac */
+
 #ifdef BUILD_tk
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
@@ -2215,6 +2217,7 @@ MODULE_SCOPE void	TkTextInsertDisplayProc(struct TkText *textPtr, struct TkTextD
 # include "tkTextPriv.h"
 #endif
 
+#undef bool /* this ugly work-around is needed for Mac */
 #endif /* _TKTEXT */
 /*
  * Local Variables:

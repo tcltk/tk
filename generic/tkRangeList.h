@@ -18,6 +18,8 @@
 #include "tkInt.h" /* required for inline support */
 #include "tkBool.h"
 
+#define bool tkbool_t /* this ugly work-around is needed for Mac */
+
 #if defined(__GNUC__) || defined(__clang__)
 # define __warn_unused__ __attribute__((warn_unused_result))
 #else
@@ -198,5 +200,7 @@ void TkRangeListPrint(const TkRangeList *ranges);
 # define _TK_NEED_IMPLEMENTATION
 # include "tkRangeListPriv.h"
 #endif
+
+#undef bool /* this ugly work-around is needed for Mac */
 #endif /* _TKRANGELIST */
 /* vi:set ts=8 sw=4: */
