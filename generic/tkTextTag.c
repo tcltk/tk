@@ -1173,7 +1173,7 @@ TkConfigureTag(
 	memset(tagPtr->lang, 0, 3);
     }
     if (tagPtr->indentBgString) {
-	if (Tcl_GetBoolean(interp, tagPtr->indentBgString, (int *) &tagPtr->indentBg) != TCL_OK) {
+	if (Tcl_GetBoolean(interp, tagPtr->indentBgString, &tagPtr->indentBg) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
     }
@@ -1227,7 +1227,7 @@ TkConfigureTag(
 	}
     }
     if (tagPtr->overstrikeString) {
-	if (Tcl_GetBoolean(interp, tagPtr->overstrikeString, (int *) &tagPtr->overstrike) != TCL_OK) {
+	if (Tcl_GetBoolean(interp, tagPtr->overstrikeString, &tagPtr->overstrike) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
     }
@@ -1278,7 +1278,7 @@ TkConfigureTag(
 	}
     }
     if (tagPtr->underlineString) {
-	if (Tcl_GetBoolean(interp, tagPtr->underlineString, (int *) &tagPtr->underline) != TCL_OK) {
+	if (Tcl_GetBoolean(interp, tagPtr->underlineString, &tagPtr->underline) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
     }
@@ -1302,7 +1302,7 @@ TkConfigureTag(
 	    rc = TCL_ERROR;
 	}
 
-	if (Tcl_GetBoolean(interp, tagPtr->elideString, (int *) &tagPtr->elide) != TCL_OK) {
+	if (Tcl_GetBoolean(interp, tagPtr->elideString, &tagPtr->elide) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
 
@@ -1962,7 +1962,7 @@ TkTextCreateTag(
 	}
 	name = "sel";
     } else {
-	hPtr = Tcl_CreateHashEntry(&sharedTextPtr->tagTable, tagName, (int *) &isNew);
+	hPtr = Tcl_CreateHashEntry(&sharedTextPtr->tagTable, tagName, &isNew);
 	if (newTag) {
 	    *newTag = isNew;
 	}

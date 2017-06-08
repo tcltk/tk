@@ -1899,7 +1899,7 @@ TextWidgetObjCmd(
 	if (objc == 2) {
 	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(tkBTreeDebug));
 	} else {
-	    if (Tcl_GetBooleanFromObj(interp, objv[2], (int *) &tkBTreeDebug) != TCL_OK) {
+	    if (Tcl_GetBooleanFromObj(interp, objv[2], &tkBTreeDebug) != TCL_OK) {
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -9036,7 +9036,7 @@ TextEditCmd(
 	} else if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "?boolean?");
 	    return TCL_ERROR;
-	} else if (Tcl_GetBooleanFromObj(interp, objv[3], (int *) &setModified) != TCL_OK) {
+	} else if (Tcl_GetBooleanFromObj(interp, objv[3], &setModified) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
