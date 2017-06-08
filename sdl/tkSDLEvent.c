@@ -424,7 +424,7 @@ TkpDoOneXEvent(
     Tcl_Time now;
     int done = 0;
     struct pollfd *pollFds;
-    int blockTime, fd, index, numFound, numFds;
+    int blockTime, fd, index, numFds;
 
     /*
      * Look for queued events first.
@@ -459,7 +459,7 @@ TkpDoOneXEvent(
     numFds = index;
 
     do {
-	numFound = poll(pollFds, numFds, blockTime);
+	(void) poll(pollFds, numFds, blockTime);
 
 	/*
 	 * Process any new events on the display connections.

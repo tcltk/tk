@@ -48,6 +48,8 @@ TkSelGetSelection(
 {
     int result;
     char *data;
+    Tcl_Encoding encoding;
+    Tcl_DString buffer;
 
     if (!SDL_HasClipboardText()) {
 empty:
@@ -58,7 +60,11 @@ empty:
     if (data == NULL) {
 	goto empty;
     }
-    result = proc(clientData, interp, data);
+    encoding = Tcl_GetEncoding(NULL, "utf-8");
+    Tcl_ExternalToUtfDString(encoding, data, -1, &buffer);
+    result = proc(clientData, interp, Tcl_DStringValue(&buffer));
+    Tcl_FreeEncoding(encoding);
+    Tcl_DStringFree(&buffer);
     SDL_free(data);
     return result;
 }
@@ -162,7 +168,8 @@ TkSelUpdateClipboard(
 {
     if ((targetPtr != NULL) && (targetPtr->format == XA_STRING) &&
 	(targetPtr->firstBufferPtr != NULL)) {
-	Tcl_DString buffer;
+	Tcl_DString buffer, buffer2;
+	Tcl_Encoding encoding;
 	TkClipboardBuffer *bufPtr = targetPtr->firstBufferPtr;
 
         Tcl_DStringInit(&buffer);
@@ -170,8 +177,13 @@ TkSelUpdateClipboard(
 	    Tcl_DStringAppend(&buffer, bufPtr->buffer, bufPtr->length);
 	    bufPtr = bufPtr->nextPtr;
 	}
-	SDL_SetClipboardText(Tcl_DStringValue(&buffer));
+	encoding = Tcl_GetEncoding(NULL, "utf-8");
+	Tcl_UtfToExternalDString(encoding, Tcl_DStringValue(&buffer),
+		Tcl_DStringLength(&buffer), &buffer2);
+	SDL_SetClipboardText(Tcl_DStringValue(&buffer2));
+	Tcl_FreeEncoding(encoding);
 	Tcl_DStringFree(&buffer);
+	Tcl_DStringFree(&buffer2);
     }
 }
 /*
