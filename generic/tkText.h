@@ -33,8 +33,6 @@
 # include "tkMacOSXInt.h"
 #endif
 
-#define bool tkbool_t /* this ugly work-around is needed for Mac */
-
 #ifdef BUILD_tk
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLEXPORT
@@ -367,9 +365,9 @@ typedef struct TkTextEmbWindow {
     int align;			/* How to align window in vertical space. See definitions in
     				 * tkTextWind.c. */
     int padX, padY;		/* Padding to leave around each side of window, in pixels. */
-    bool stretch;		/* Should window stretch to fill vertical space of line
+    int stretch;		/* Should window stretch to fill vertical space of line
     				 * (except for pady)? */
-    bool isOwner;		/* Should destroy the window when un-embed? This will only be
+    int isOwner;		/* Should destroy the window when un-embed? This will only be
 				 * done if the text widget is the owner. Default is true
 				 * (this is compatible to older versions). */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
@@ -869,7 +867,7 @@ typedef struct TkTextTag {
     Pixmap bgStipple;		/* Stipple bitmap for background. None means no value specified here. */
     char *indentBgString;	/* Background will be indented accordingly to the -lmargin1, and
     				 * -lmargin2 options. */
-    bool indentBg;		/* Background will be indented accordingly to the -lmargin1, and
+    int indentBg;		/* Background will be indented accordingly to the -lmargin1, and
     				 * -lmargin2 options. */
     Tk_Font tkfont;		/* Font for displaying text. NULL means no value specified here. */
     Pixmap fgStipple;		/* Stipple bitmap for text and other foreground stuff. None means
@@ -895,7 +893,7 @@ typedef struct TkTextTag {
 				 * non-NULL. */
     char *overstrikeString;	/* -overstrike option string (malloc-ed). NULL means option not
     				 * specified. */
-    bool overstrike;		/* True means draw horizontal line through middle of text. Only
+    int overstrike;		/* True means draw horizontal line through middle of text. Only
     				 * valid if overstrikeString is non-NULL. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same color as foreground. */
     char *rMarginString;	/* -rmargin option string (malloc-ed). NULL means option not
@@ -932,7 +930,7 @@ typedef struct TkTextTag {
     int tabStyle;		/* One of TABULAR or WORDPROCESSOR or NONE (if not specified). */
     char *underlineString;	/* -underline option string (malloc-ed). NULL means option not
     				 * specified. */
-    bool underline;		/* True means draw underline underneath text. Only valid if
+    int	 underline;		/* True means draw underline underneath text. Only valid if
     				 * underlineString is non-NULL. */
     XColor *underlineColor;     /* Color for the underline. NULL means same color as foreground. */
     XColor *eolColor;		/* Color for the end of line symbol. NULL means same color as
@@ -950,8 +948,8 @@ typedef struct TkTextTag {
     char lang[3];		/* The specified language for the text content, only enabled if not
     				 * NUL. */
     char *elideString;		/* -elide option string (malloc-ed). NULL means option not specified. */
-    bool elide;			/* True means that data under this tag should not be displayed. */
-    bool undo;			/* True means that any change of tagging with this tag will be pushed
+    int elide;			/* True means that data under this tag should not be displayed. */
+    int undo;			/* True means that any change of tagging with this tag will be pushed
     				 * on the undo stack (if undo stack is enabled), otherwise this tag
 				 * will not regarded in the undo/redo process. */
 
@@ -1179,7 +1177,7 @@ typedef struct TkSharedText {
     				 * maximum number of compound statements. */
     int maxUndoSize;		/* The maximum number of bytes kept on the undo stack. */
     bool undo;			/* Non-zero means the undo/redo behaviour is enabled. */
-    bool autoSeparators;	/* Non-zero means the separators will be inserted automatically. */
+    int autoSeparators;		/* Non-zero means the separators will be inserted automatically. */
     bool isModified;		/* Flag indicating the computed 'modified' state of the text widget. */
     bool isAltered;		/* Flag indicating the computed 'altered' state of the text widget. */
     bool isIrreversible;	/* Flag indicating the computed 'irreversible' flag. Value
@@ -1347,20 +1345,20 @@ typedef struct TkText {
     				 * TEXT_WRAPMODE_WORD, TEXT_WRAPMODE_CODEPOINT, or TEXT_WRAPMODE_NONE. */
     TkTextSpaceMode spaceMode;	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NONE,
     				 * TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
-    bool useHyphenSupport;	/* Indicating the hypenation support. */
+    int useHyphenSupport;	/* Indicating the hypenation support. */
     bool hyphenate;		/* Indicating whether the soft hyphens will be used for line breaks
     				 * (if not in state TK_TEXT_STATE_NORMAL). */
-    bool useUniBreak;		/* Use library libunibreak for line break computation, otherwise the
+    int useUniBreak;		/* Use library libunibreak for line break computation, otherwise the
     				 * internal algorithm will be used. */
     int width, height;		/* Desired dimensions for window, measured in characters. */
-    bool setGrid;		/* Non-zero means pass gridding information to window manager. */
+    int setGrid;		/* Non-zero means pass gridding information to window manager. */
     int prevWidth, prevHeight;	/* Last known dimensions of window; used to detect changes in size. */
     TkTextIndex topIndex;	/* Identifies first character in top display line of window. */
     struct TextDInfo *dInfoPtr;	/* Information maintained by tkTextDisp.c. */
-    bool showEndOfLine;		/* Flag whether the end of line symbol will be shown at end of
+    int showEndOfLine;		/* Flag whether the end of line symbol will be shown at end of
     				 * each logical line. */
-    bool showEndOfText;		/* Flag whether the end of text symbol will be shown at end of text. */
-    bool syncTime;		/* Synchronization timeout, used for line metric calculation, default is
+    int showEndOfText;		/* Flag whether the end of text symbol will be shown at end of text. */
+    int syncTime;		/* Synchronization timeout, used for line metric calculation, default is
     				 * 200. */
 
     /*
@@ -1376,7 +1374,7 @@ typedef struct TkText {
     				/* Contains the original attributes of the "sel" tag. */
     TkTextTag *selTagPtr;	/* Pointer to "sel" tag. Used to tell when a new selection
     				 * has been made. */
-    bool exportSelection;	/* Non-zero means tie "sel" tag to X selection. */
+    int exportSelection;	/* Non-zero means tie "sel" tag to X selection. */
     TkTextSearch selSearch;	/* Used during multi-pass selection retrievals. */
     TkTextIndex selIndex;	/* Used during multi-pass selection retrievals. This index
     				 * identifies the next character to be returned from the
@@ -1391,7 +1389,7 @@ typedef struct TkText {
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion cursor. */
     XColor *insertFgColor;	/* Foreground color for text behind a block cursor.
     				 * NULL means no value specified here. */
-    bool showInsertFgColor;	/* Flag whether insertFgColor is relevant. */
+    int showInsertFgColor;	/* Flag whether insertFgColor is relevant. */
     int insertWidth;		/* Total width of insert cursor. */
     int insertBorderWidth;	/* Width of 3-D border around insert cursor */
     TkTextInsertUnfocussed insertUnfocussed;
@@ -1459,7 +1457,7 @@ typedef struct TkText {
     unsigned flags;		/* Miscellaneous flags; see below for definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
     unsigned refCount;		/* Number of objects referring to us. */
-    bool blockCursorType;	/* false = standard insertion cursor, true = block cursor. */
+    int blockCursorType;	/* false = standard insertion cursor, true = block cursor. */
     bool accelerateTagSearch;	/* Update B-Tree tag information for search? */
     int responsiveness;		/* The delay in ms before repick the mouse position (behavior when
 				 * scrolling the widget). */
@@ -1473,20 +1471,20 @@ typedef struct TkText {
      * Copies of information from the shared section relating to the editor control mode:
      */
 
-    bool steadyMarks;		/* false = behavior of original implementation,
+    int steadyMarks;		/* false = behavior of original implementation,
     				 * true  = new editor control mode. */
 
     /*
      * Copies of information from the shared section relating to the undo/redo functonality:
      */
 
-    bool undo;			/* Non-zero means the undo/redo behaviour is enabled. */
+    int undo;			/* Non-zero means the undo/redo behaviour is enabled. */
     int maxUndoDepth;		/* The maximum depth of the undo stack expressed as the
     				 * maximum number of compound statements. */
     int maxRedoDepth;		/* The maximum depth of the redo stack expressed as the
     				 * maximum number of compound statements. */
     int maxUndoSize;		/* The maximum number of bytes kept on the undo stack. */
-    bool autoSeparators;	/* Non-zero means the separators will be inserted automatically. */
+    int autoSeparators;		/* Non-zero means the separators will be inserted automatically. */
 
     /*
      * Support of sync command:
@@ -1711,8 +1709,8 @@ typedef enum {
  * Declarations for variables shared among the text-related files:
  */
 
-MODULE_SCOPE bool tkBTreeDebug;
-MODULE_SCOPE bool tkTextDebug;
+MODULE_SCOPE int tkBTreeDebug;
+MODULE_SCOPE int tkTextDebug;
 MODULE_SCOPE const Tk_SegType tkTextCharType;
 MODULE_SCOPE const Tk_SegType tkTextBranchType;
 MODULE_SCOPE const Tk_SegType tkTextLinkType;
@@ -2216,8 +2214,6 @@ MODULE_SCOPE void	TkTextInsertDisplayProc(struct TkText *textPtr, struct TkTextD
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextPriv.h"
 #endif
-
-#undef bool /* this ugly work-around is needed for Mac */
 #endif /* _TKTEXT */
 /*
  * Local Variables:

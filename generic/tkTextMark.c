@@ -28,11 +28,6 @@
 # error "configure failed - can't include inttypes.h"
 #endif
 
-/* this ugly work-around is needed for Mac */
-#ifndef bool
-# define bool tkbool_t
-#endif
-
 #ifndef MAX
 # define MAX(a,b) ((a) < (b) ? b : a)
 #endif
@@ -986,7 +981,7 @@ ReactivateMark(
 {
     Tcl_HashEntry *hPtr;
     char *name;
-    bool isNew;
+    int isNew;
 
     assert(IS_PRESERVED(markPtr));
 
@@ -1183,7 +1178,7 @@ TkTextMakeMark(
 {
     TkTextSegment *markPtr;
     Tcl_HashEntry *hPtr;
-    bool isNew;
+    int isNew;
 
     assert(!name || textPtr);
     assert(!name || strcmp(name, "insert") != 0);
@@ -1232,7 +1227,7 @@ TkTextMakeNewMark(
 {
     TkTextSegment *markPtr;
     Tcl_HashEntry *hPtr;
-    bool isNew;
+    int isNew;
 
     assert(name);
 

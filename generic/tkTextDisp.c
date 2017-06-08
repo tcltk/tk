@@ -49,11 +49,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-/* this ugly work-around is needed for Mac */
-#ifndef bool
-# define bool tkbool_t
-#endif
-
 #ifndef MIN
 # define MIN(a,b) (a < b ? a : b)
 #endif
@@ -1932,7 +1927,7 @@ MakeStyle(
     unsigned long mask;
     int borderPrio;
     bool haveFocus;
-    bool isNew;
+    int isNew;
 
     /*
      * Find out what tags are present for the character, then compute a

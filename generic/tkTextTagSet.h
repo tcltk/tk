@@ -19,8 +19,6 @@
 #include "tkIntSet.h"
 #include "tkBool.h"
 
-#define bool tkbool_t /* this ugly work-around is needed for Mac */
-
 #if defined(__GNUC__) || defined(__clang__)
 # define __warn_unused__ __attribute__((warn_unused_result))
 #else
@@ -193,7 +191,5 @@ bool TkTextTagSetInnerJoinDifferenceIsEqual(const TkTextTagSet *ts1, const TkTex
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextTagSetPriv.h"
 #endif
-
-#undef bool /* this ugly work-around is needed for Mac */
 #endif /* _TKTEXTTAGSET */
 /* vi:set ts=8 sw=4: */

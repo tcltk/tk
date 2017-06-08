@@ -25,11 +25,6 @@
 #include "tkAlloc.h"
 #include <assert.h>
 
-/* this ugly work-around is needed for Mac */
-#ifndef bool
-# define bool tkbool_t
-#endif
-
 #ifndef MIN
 # define MIN(a,b) (((int) a) < ((int) b) ? a : b)
 #endif
@@ -144,7 +139,7 @@ typedef struct TkTextMyBTree BTree; /* see TkTextPriv.h */
  * Variable that indicates whether to enable consistency checks for debugging.
  */
 
-bool tkBTreeDebug = false;
+int tkBTreeDebug = false;
 
 /*
  * Macros that determine how much space to allocate for new segments:

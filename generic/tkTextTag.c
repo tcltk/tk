@@ -23,11 +23,6 @@
 #include <assert.h>
 #include <stdlib.h>
 
-/* this ugly work-around is needed for Mac */
-#ifndef bool
-# define bool tkbool_t
-#endif
-
 #ifndef MAX
 # define MAX(a,b) (((int) a) < ((int) b) ? b : a)
 #endif
@@ -1949,7 +1944,8 @@ TkTextCreateTag(
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextTag *tagPtr;
     Tcl_HashEntry *hPtr = NULL;
-    bool isNew, isSelTag;
+    int isNew;
+    bool isSelTag;
     const char *name;
     unsigned index;
 

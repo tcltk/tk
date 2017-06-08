@@ -16,8 +16,6 @@
 #include "tkInt.h" /* needed for inline support and 64 bit support */
 #include "tkBool.h"
 
-#define bool tkbool_t /* this ugly work-around is needed for Mac */
-
 #ifdef TK_IS_64_BIT_ARCH
 /* It is important to use 64 bit integers for performance resaons. */
 typedef uint64_t TkBitWord;
@@ -171,7 +169,5 @@ bool TkBitInnerJoinDifferenceIsEqual(const TkBitField *bf1, const TkBitField *bf
 # define _TK_NEED_IMPLEMENTATION
 # include "tkBitFieldPriv.h"
 #endif
-
-#undef bool /* this ugly work-around is needed for Mac */
 #endif /* _TKBITFIELD */
 /* vi:set ts=8 sw=4: */

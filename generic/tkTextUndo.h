@@ -33,8 +33,6 @@
 #include "tkInt.h"
 #include "tkBool.h"
 
-#define bool tkbool_t /* this ugly work-around is needed for Mac */
-
 /*
  * Our (private) stack type.
  */
@@ -243,7 +241,5 @@ int TkTextUndoDoRedo(TkTextUndoStack stack);
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextUndoPriv.h"
 #endif
-
-#undef bool /* this ugly work-around is needed for Mac */
 #endif /* _TKTEXTUNDO */
 /* vi:set ts=8 sw=4: */
