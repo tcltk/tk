@@ -1025,6 +1025,8 @@ TkTextFreeMarks(
     TkTextSegment *retainedPtr = NULL;
     TkTextSegment *markPtr;
 
+    assert(!retainPrivateMarks || sharedTextPtr->steadyMarks);
+
     for ( ; hPtr; hPtr = Tcl_NextHashEntry(&search)) {
 	markPtr = Tcl_GetHashValue(hPtr);
 
@@ -2279,6 +2281,7 @@ MarkDeleteProc(
     if (segPtr->body.mark.changePtr) {
 	unsigned index;
 
+	assert(sharedTextPtr->steadyMarks);
 	index = segPtr->body.mark.changePtr - sharedTextPtr->undoMarkList;
 	TkTextReleaseUndoMarkTokens(sharedTextPtr, segPtr->body.mark.changePtr);
 	memmove(sharedTextPtr->undoMarkList + index, sharedTextPtr->undoMarkList + index + 1,
@@ -2288,6 +2291,7 @@ MarkDeleteProc(
 
     if (--segPtr->refCount == 0) {
 	if (IS_PRESERVED(segPtr)) {
+	    assert(sharedTextPtr->steadyMarks);
 	    free(GET_NAME(segPtr));
 	} else {
 	    Tcl_DeleteHashEntry(GET_HPTR(segPtr));
