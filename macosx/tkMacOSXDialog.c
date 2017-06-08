@@ -159,22 +159,6 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     [TYPE_YESNOCANCEL] =	{5, 6, 4},
 };
 
-/*
- * Construct a file URL from directory and filename.  Either may
- * be nil.  If both are nil, returns nil.
- */
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 1050
-static NSURL *getFileURL(NSString *directory, NSString *filename) {
-    NSURL *url = nil;
-    if (directory) {
-	url = [NSURL fileURLWithPath:directory];
-    }
-    if (filename) {
-	url = [NSURL URLWithString:filename relativeToURL:url];
-    }
-    return url;
-}
-#endif
 
 #pragma mark TKApplication(TKDialog)
 
@@ -675,7 +659,10 @@ Tk_GetOpenFileObjCmd(
 		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
 	       contextInfo:callbackInfo];
 #else
-	[openpanel setDirectoryURL:getFileURL(directory, filename)];
+	if (directory) {
+	    [openpanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
+	}
+	[openpanel setNameFieldStringValue:filename];
 	[openpanel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
 	       { [NSApp tkFilePanelDidEnd:openpanel
@@ -688,7 +675,10 @@ Tk_GetOpenFileObjCmd(
 	modalReturnCode = [openpanel runModalForDirectory:directory
 				 file:filename];
 #else
-	[openpanel setDirectoryURL:getFileURL(directory, filename)];
+	if (directory) {
+	    [openpanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
+	}
+	[openpanel setNameFieldStringValue:filename];
 	modalReturnCode = [openpanel runModal];
 #endif
 	[NSApp tkFilePanelDidEnd:openpanel returnCode:modalReturnCode
@@ -905,7 +895,10 @@ Tk_GetSaveFileObjCmd(
 		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
 	       contextInfo:callbackInfo];
 #else
-	[savepanel setDirectoryURL:getFileURL(directory, filename)];
+	if (directory) {
+	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
+	}
+	[savepanel setNameFieldStringValue:filename];
 	[savepanel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
 	       { [NSApp tkFilePanelDidEnd:savepanel
@@ -917,7 +910,10 @@ Tk_GetSaveFileObjCmd(
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 	modalReturnCode = [savepanel runModalForDirectory:directory file:filename];
 #else
-	[savepanel setDirectoryURL:getFileURL(directory, filename)];
+	if (directory) {
+	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
+	}
+	[savepanel setNameFieldStringValue:filename];
 	modalReturnCode = [savepanel runModal];
 	#if 0
 	NSLog(@"modal: %li", modalReturnCode);
@@ -980,7 +976,7 @@ Tk_ChooseDirectoryObjCmd(
     Tcl_Obj *cmdObj = NULL;
     FilePanelCallbackInfo callbackInfoStruct;
     FilePanelCallbackInfo *callbackInfo = &callbackInfoStruct;
-    NSString *directory = nil, *filename = nil;
+    NSString *directory = nil;
     NSString *message, *title;
     NSWindow *parent;
     NSOpenPanel *panel = [NSOpenPanel openPanel];
@@ -1056,13 +1052,13 @@ Tk_ChooseDirectoryObjCmd(
       parentIsKey = [parent isKeyWindow];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 	[panel beginSheetForDirectory:directory
-		file:filename
+		file:nil
 		modalForWindow:parent
 		modalDelegate:NSApp
 		didEndSelector: @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
 		contextInfo:callbackInfo];
 #else
-	[panel setDirectoryURL:getFileURL(directory, filename)];
+	[panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	[panel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
 	       { [NSApp tkFilePanelDidEnd:panel
@@ -1074,7 +1070,7 @@ Tk_ChooseDirectoryObjCmd(
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 	modalReturnCode = [panel runModalForDirectory:directory file:nil];
 #else
-	[panel setDirectoryURL:getFileURL(directory, filename)];
+	[panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	modalReturnCode = [panel runModal];
 #endif
 	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
