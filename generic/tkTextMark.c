@@ -2425,8 +2425,14 @@ MarkCheckProc(
 
     if (markPtr->body.mark.ptr) {
 	if (IS_PRESERVED(markPtr)) {
-	    Tcl_Panic("MarkCheckProc: detected preserved mark '%s' outside of the undo chain",
-		    GET_NAME(markPtr));
+	    if (!sharedTextPtr->steadyMarks) {
+		Tcl_Panic("MarkCheckProc: preserved mark detected, though we don't have steady marks");
+	    }
+	    else
+	    {
+		Tcl_Panic("MarkCheckProc: detected preserved mark '%s' outside of the undo chain",
+			GET_NAME(markPtr));
+	    }
 	} else {
 	    void *hPtr;
 	    hPtr = Tcl_GetHashKey(&sharedTextPtr->markTable, (Tcl_HashEntry *) markPtr->body.mark.ptr);
