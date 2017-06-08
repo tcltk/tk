@@ -2299,19 +2299,34 @@ MarkDeleteProc(
 	FREE_SEGMENT(segPtr);
 	DEBUG_ALLOC(tkTextCountDestroySegment++);
     } else if (!IS_PRESERVED(segPtr)) {
-	/*
-	 * This case can only happen if this mark belongs to undo/redo stack.
-	 * We have to preserve the mark if not already preserved.
-	 */
+	if (sharedTextPtr->steadyMarks) {
+	    /*
+	     * This case should only happen if this mark belongs to undo/redo stack.
+	     * We have to preserve the mark if not already preserved.
+	     */
 
-	Tcl_HashEntry *hPtr = GET_HPTR(segPtr);
-	const char *name = Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
-	unsigned size = strlen(name) + 1;
+	    Tcl_HashEntry *hPtr = GET_HPTR(segPtr);
+	    const char *name = Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
+	    unsigned size = strlen(name) + 1;
 
-	segPtr->body.mark.ptr = PTR_TO_INT(memcpy(malloc(size), name, size));
-	MAKE_PRESERVED(segPtr);
-	Tcl_DeleteHashEntry(hPtr);
-	sharedTextPtr->numMarks -= 1;
+	    assert(sharedTextPtr->steadyMarks);
+	    segPtr->body.mark.ptr = PTR_TO_INT(memcpy(malloc(size), name, size));
+	    MAKE_PRESERVED(segPtr);
+	    Tcl_DeleteHashEntry(hPtr);
+	    sharedTextPtr->numMarks -= 1;
+	} else {
+	    /*
+	     * It seems that we have a bug with reference counting. So print a warning
+	     * and delete it anyway.
+	     */
+
+	    fprintf(stderr, "reference count of mark '%s' is %d (should be zero)\n",
+		    TkTextMarkName(sharedTextPtr, NULL, segPtr), segPtr->refCount);
+	    Tcl_DeleteHashEntry(GET_HPTR(segPtr));
+	    sharedTextPtr->numMarks -= 1;
+	    FREE_SEGMENT(segPtr);
+	    DEBUG_ALLOC(tkTextCountDestroySegment++);
+	}
     }
 
     return true;
