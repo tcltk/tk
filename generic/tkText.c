@@ -29,11 +29,6 @@
 #include <ctype.h>
 #include <assert.h>
 
-/* this ugly work-around is needed for Mac */
-#ifndef bool
-# define bool tkbool_t
-#endif
-
 #ifndef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
 # include "tkTextPriv.h"
@@ -470,7 +465,7 @@ typedef struct TkTextStringList {
  * Boolean variable indicating whether or not special debugging code should be executed.
  */
 
-bool tkTextDebug = false;
+int tkTextDebug = false;
 
 typedef const TkTextUndoAtom * (*InspectUndoStackProc)(TkTextUndoStack stack);
 
@@ -8899,7 +8894,8 @@ TextEditCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index;
-    bool setModified, oldModified;
+    int setModified;
+    bool oldModified;
     TkSharedText *sharedTextPtr;
     static const char *const editOptionStrings[] = {
 	"altered",

@@ -12,18 +12,22 @@
 #ifndef _TK_BOOL
 #define _TK_BOOL
 
-#ifdef __cplusplus
+#if HAVE_STDINT_H && (__STDC_VERSION__ >= 199901L)
+
+# include <stdbool.h>
+
+#else /* support of ancient compilers */
+
+# ifndef __cplusplus
 extern "C" {
-#endif
 
-typedef int tkbool_t;
+typedef int bool;
 
-#ifndef __cplusplus
-enum { true = (tkbool_t) 1, false = (tkbool_t) 0 };
-#endif
+enum { true = (bool) 1, false = (bool) 0 };
 
-#ifdef __cplusplus
 } /* extern "C" */
-#endif
+# endif // __cplusplus
+
+#endif /* HAVE_STDINT_H */
 #endif /* _TK_BOOL */
 /* vi:set ts=8 sw=4: */

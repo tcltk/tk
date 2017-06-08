@@ -20,11 +20,6 @@
 #include "tkAlloc.h"
 #include <assert.h>
 
-/* this ugly work-around is needed for Mac */
-#ifndef bool
-# define bool tkbool_t
-#endif
-
 #ifdef NDEBUG
 # define DEBUG(expr)
 #else
@@ -839,7 +834,7 @@ EmbWinConfigure(
 	if (ewPtr->body.ew.tkwin) {
 	    Tk_Window ancestor, parent;
 	    bool cantEmbed = false;
-	    bool isNew;
+	    int isNew;
 
 	    /*
 	     * Make sure that the text is either the parent of the embedded
@@ -1320,7 +1315,7 @@ EmbWinRestoreProc(
     TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *ewPtr)	/* Segment to reuse. */
 {
-    bool isNew;
+    int isNew;
 
     if (ewPtr->body.ew.create) {
 	/*
@@ -1390,7 +1385,7 @@ EmbWinLayoutProc(
 
     if (!ewPtr->body.ew.tkwin && ewPtr->body.ew.create) {
 	int code;
-	bool isNew;
+	int isNew;
 	Tk_Window ancestor;
 	const char *before, *string;
 	Tcl_DString name, buf, *dsPtr = NULL;
