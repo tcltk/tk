@@ -3321,7 +3321,7 @@ ClearText(
     sharedTextPtr->startMarker->nextPtr = sharedTextPtr->startMarker->prevPtr = NULL;
     sharedTextPtr->endMarker->nextPtr = sharedTextPtr->endMarker->prevPtr = NULL;
     TkBTreeDestroy(sharedTextPtr->tree);
-    retainedMarks = TkTextFreeMarks(sharedTextPtr, sharedTextPtr->steadyMarks);
+    retainedMarks = TkTextFreeMarks(sharedTextPtr, true);
     Tcl_DeleteHashTable(&sharedTextPtr->imageTable);
     Tcl_DeleteHashTable(&sharedTextPtr->windowTable);
 
