@@ -897,7 +897,7 @@ EmbWinConfigure(
 	    client->hPtr = Tcl_CreateHashEntry(
 		    &textPtr->sharedTextPtr->windowTable,
 		    Tk_PathName(ewPtr->body.ew.tkwin),
-		    (int *) &isNew);
+		    &isNew);
 	    Tcl_SetHashValue(client->hPtr, ewPtr);
 	    textPtr->sharedTextPtr->numWindows += 1;
 	}
@@ -1330,7 +1330,7 @@ EmbWinRestoreProc(
 		client->hPtr = Tcl_CreateHashEntry(
 			&ewPtr->body.ew.sharedTextPtr->windowTable,
 			Tk_PathName(client->tkwin),
-			(int *) &isNew);
+			&isNew);
 		assert(isNew);
 		Tcl_SetHashValue(client->hPtr, ewPtr);
 		ewPtr->body.ew.sharedTextPtr->numWindows += 1;
@@ -1505,7 +1505,7 @@ EmbWinLayoutProc(
 	 */
 
 	client->hPtr = Tcl_CreateHashEntry(
-		&textPtr->sharedTextPtr->windowTable, Tk_PathName(client->tkwin), (int *) &isNew);
+		&textPtr->sharedTextPtr->windowTable, Tk_PathName(client->tkwin), &isNew);
 	Tcl_SetHashValue(client->hPtr, ewPtr);
 	ewPtr->body.ew.sharedTextPtr->numWindows += 1;
     }

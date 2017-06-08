@@ -2023,7 +2023,7 @@ MakeStyle(
      * Use an existing style if there's one around that matches.
      */
 
-    hPtr = Tcl_CreateHashEntry(&textPtr->dInfoPtr->styleTable, (char *) &styleValues, (int *) &isNew);
+    hPtr = Tcl_CreateHashEntry(&textPtr->dInfoPtr->styleTable, (char *) &styleValues, &isNew);
     if (!isNew) {
 	return Tcl_GetHashValue(hPtr);
     }

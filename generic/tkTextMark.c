@@ -986,7 +986,7 @@ ReactivateMark(
     assert(IS_PRESERVED(markPtr));
 
     name = GET_NAME(markPtr);
-    hPtr = Tcl_CreateHashEntry(&sharedTextPtr->markTable, name, (int *) &isNew);
+    hPtr = Tcl_CreateHashEntry(&sharedTextPtr->markTable, name, &isNew);
     assert(isNew);
     free(name);
     Tcl_SetHashValue(hPtr, markPtr);
@@ -1188,7 +1188,7 @@ TkTextMakeMark(
 	return MakeMark(textPtr);
     }
 
-    hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->markTable, name, (int *) &isNew);
+    hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->markTable, name, &isNew);
 
     if (isNew) {
 	markPtr = MakeMark(textPtr);
@@ -1231,7 +1231,7 @@ TkTextMakeNewMark(
 
     assert(name);
 
-    hPtr = Tcl_CreateHashEntry(&sharedTextPtr->markTable, name, (int *) &isNew);
+    hPtr = Tcl_CreateHashEntry(&sharedTextPtr->markTable, name, &isNew);
 
     if (!isNew) {
 	return NULL;
