@@ -18,15 +18,12 @@
 
 #else /* support of ancient compilers */
 
-# ifndef __cplusplus
-extern "C" {
+# ifdef __cplusplus
+#  error "cannot compile with ancient C++ compilers - C99 is required"
+# endif
 
 typedef int bool;
-
 enum { true = (bool) 1, false = (bool) 0 };
-
-} /* extern "C" */
-# endif // __cplusplus
 
 #endif /* HAVE_STDINT_H */
 #endif /* _TK_BOOL */
