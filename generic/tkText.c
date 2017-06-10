@@ -8827,8 +8827,7 @@ InspectRetainedUndoItems(
 
 	Tcl_ListObjLength(NULL, resultPtr, &len);
 	if (len == 0) {
-	    Tcl_IncrRefCount(resultPtr);
-	    Tcl_GuardedDecrRefCount(resultPtr);
+	    Tcl_DecrRefCount(resultPtr);
 	} else {
 	    Tcl_ListObjAppendElement(NULL, objPtr, resultPtr);
 	}
