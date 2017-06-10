@@ -3080,8 +3080,8 @@ specified to control the extraction:
 .
 Return information about all elements: text (characters and soft hyphens),
 tags, images, and windows. This is the default, and includes the following
-switches: \fB\-text\fR, \fB\-image\fR, \fB\-window\fR, \fB\-tag\fR,
-\fB\-configurations\fR.
+switches: \fB\-text\fR, \fB\-image\fR, \fB\-window\fR, \fB\-tag\fR, and
+\fB\-mark\fR.
 .TP
 \fB\-bindings\fR
 .
