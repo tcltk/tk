@@ -1518,7 +1518,7 @@ TkTextCreateDInfo(
     XGCValues gcValues;
     bool isMonospaced;
 
-    dInfoPtr = memset(malloc(sizeof(TextDInfo)), 0, sizeof(TextDInfo));
+    dInfoPtr = calloc(1, sizeof(TextDInfo));
     Tcl_InitHashTable(&dInfoPtr->styleTable, sizeof(StyleValues)/sizeof(int));
     gcValues.graphics_exposures = True;
     dInfoPtr->copyGC = None;

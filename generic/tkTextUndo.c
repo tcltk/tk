@@ -417,7 +417,7 @@ TkTextUndoCreateStack(
     assert(undoProc);
 #endif
 
-    stack = memset(malloc(sizeof(*stack)), 0, sizeof(*stack));
+    stack = calloc(1, sizeof(*stack));
     stack->undoProc = undoProc;
     stack->freeProc = freeProc;
     stack->contentChangedProc = contentChangedProc;
