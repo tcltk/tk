@@ -588,12 +588,13 @@ enum {
     TK_DUMP_INCLUDE_DEFAULT_CONFIG  = 1 << 30,
     TK_DUMP_INCLUDE_SYSTEM_COLORS   = 1 << 31,
     TK_DUMP_INSPECT_DFLT            = TK_DUMP_DUMP_ALL,
-    TK_DUMP_INSPECT_ALL             = TK_DUMP_INSPECT_DFLT|TK_DUMP_TAG_BINDINGS|TK_DUMP_TEXT_CONFIGS|
-    			              TK_DUMP_TAG_CONFIGS|TK_DUMP_DISPLAY_TEXT|TK_DUMP_INCLUDE_SEL|
-				      TK_DUMP_INSERT_MARK|TK_DUMP_DONT_RESOLVE_COLORS|
-				      TK_DUMP_DONT_RESOLVE_FONTS|TK_DUMP_INCLUDE_DATABASE_CONFIG|
-				      TK_DUMP_INCLUDE_SYSTEM_CONFIG|TK_DUMP_INCLUDE_DEFAULT_CONFIG|
-				      TK_DUMP_INCLUDE_SYSTEM_COLORS|TK_DUMP_NESTED|TK_DUMP_ELIDE
+    TK_DUMP_INSPECT_COMPLETE        = TK_DUMP_INSPECT_DFLT|TK_DUMP_TAG_BINDINGS|TK_DUMP_TEXT_CONFIGS|
+    			              TK_DUMP_TAG_CONFIGS|TK_DUMP_INCLUDE_SEL|TK_DUMP_INSERT_MARK|
+				      TK_DUMP_INCLUDE_DATABASE_CONFIG|TK_DUMP_INCLUDE_SYSTEM_CONFIG|
+				      TK_DUMP_INCLUDE_DEFAULT_CONFIG|TK_DUMP_ELIDE,
+    TK_DUMP_INSPECT_ALL             = TK_DUMP_INSPECT_COMPLETE|TK_DUMP_DISPLAY_TEXT|
+    			              TK_DUMP_DONT_RESOLVE_COLORS|TK_DUMP_DONT_RESOLVE_FONTS|
+				      TK_DUMP_NESTED|TK_DUMP_INCLUDE_SYSTEM_COLORS,
 };
 
 /*
@@ -7269,6 +7270,7 @@ GetDumpFlags(
     Tcl_Obj *const objv[],	/* Argument objects. */
     unsigned allowed,		/* Which options are allowed? */
     unsigned dflt,		/* Default options (-all) */
+    unsigned complete,		/* Complete options (-complete) */
     unsigned *what,		/* Store flags here. */
     int *lastArg,		/* Store index of last used argument, can be NULL. */
     TkTextIndex *index1,	/* Store first index here. */
@@ -7276,29 +7278,29 @@ GetDumpFlags(
     Tcl_Obj **command)		/* Store command here, can be NULL. */
 {
     static const char *const optStrings[] = {
-	"-all", "-bindings", "-chars", "-command", "-configurations", "-displaychars",
-	"-displaytext", "-dontresolvecolors", "-dontresolvefonts", "-elide",
-	"-image", "-includedbconfig", "-includedefaultconfig",
-	"-includeselection", "-includesyscolors", "-includesysconfig",
-	"-insertmark", "-mark", "-nested", "-node", "-setup",
-	"-tag", "-text", "-window",
+	"-all", "-bindings", "-chars", "-command", "-complete", "-configurations",
+	"-displaychars", "-displaytext", "-dontresolvecolors",
+	"-dontresolvefonts", "-elide", "-image", "-includedbconfig",
+	"-includedefaultconfig", "-includeselection", "-includesyscolors",
+	"-includesysconfig", "-insertmark", "-mark", "-nested", "-node",
+	"-setup", "-tag", "-text", "-window",
 	NULL
     };
     enum opts {
-	DUMP_ALL, DUMP_TAG_BINDINGS, DUMP_CHARS, DUMP_CMD, DUMP_TAG_CONFIGS, DUMP_DISPLAY_CHARS,
-	DUMP_DISPLAY_TEXT, DUMP_DONT_RESOLVE_COLORS, DUMP_DONT_RESOLVE_FONTS, DUMP_ELIDE,
-	DUMP_IMG, DUMP_INCLUDE_DATABASE_CONFIG, DUMP_INCLUDE_DEFAULT_CONFIG,
-	DUMP_INCLUDE_SEL, DUMP_INCLUDE_SYSTEM_CONFIG, DUMP_INCLUDE_SYSTEM_COLORS,
-	DUMP_INSERT_MARK, DUMP_MARK, DUMP_NESTED, DUMP_NODE, DUMP_TEXT_CONFIGS,
-	DUMP_TAG, DUMP_TEXT, DUMP_WIN
+	DUMP_ALL, DUMP_TAG_BINDINGS, DUMP_CHARS, DUMP_CMD, DUMP_COMPLETE, DUMP_TAG_CONFIGS,
+	DUMP_DISPLAY_CHARS, DUMP_DISPLAY_TEXT, DUMP_DONT_RESOLVE_COLORS,
+	DUMP_DONT_RESOLVE_FONTS, DUMP_ELIDE, DUMP_IMG, DUMP_INCLUDE_DATABASE_CONFIG,
+	DUMP_INCLUDE_DEFAULT_CONFIG, DUMP_INCLUDE_SEL, DUMP_INCLUDE_SYSTEM_COLORS,
+	DUMP_INCLUDE_SYSTEM_CONFIG, DUMP_INSERT_MARK, DUMP_MARK, DUMP_NESTED, DUMP_NODE,
+	DUMP_TEXT_CONFIGS, DUMP_TAG, DUMP_TEXT, DUMP_WIN
     };
     static const unsigned dumpFlags[] = {
-	0, TK_DUMP_TAG_BINDINGS, TK_DUMP_CHARS, 0, TK_DUMP_TAG_CONFIGS, TK_DUMP_DISPLAY_CHARS,
-	TK_DUMP_DISPLAY_TEXT, TK_DUMP_DONT_RESOLVE_COLORS, TK_DUMP_DONT_RESOLVE_FONTS, TK_DUMP_ELIDE,
-	TK_DUMP_IMG, TK_DUMP_INCLUDE_DATABASE_CONFIG, TK_DUMP_INCLUDE_DEFAULT_CONFIG,
-	TK_DUMP_INCLUDE_SEL, TK_DUMP_INCLUDE_SYSTEM_CONFIG, TK_DUMP_INCLUDE_SYSTEM_COLORS,
-	TK_DUMP_INSERT_MARK, TK_DUMP_MARK, TK_DUMP_NESTED, TK_DUMP_NODE, TK_DUMP_TEXT_CONFIGS,
-	TK_DUMP_TAG, TK_DUMP_TEXT, TK_DUMP_WIN
+	0, TK_DUMP_TAG_BINDINGS, TK_DUMP_CHARS, 0, TK_DUMP_INSPECT_COMPLETE, TK_DUMP_TAG_CONFIGS,
+	TK_DUMP_DISPLAY_CHARS, TK_DUMP_DISPLAY_TEXT, TK_DUMP_DONT_RESOLVE_COLORS,
+	TK_DUMP_DONT_RESOLVE_FONTS, TK_DUMP_ELIDE, TK_DUMP_IMG, TK_DUMP_INCLUDE_DATABASE_CONFIG,
+	TK_DUMP_INCLUDE_DEFAULT_CONFIG, TK_DUMP_INCLUDE_SEL, TK_DUMP_INCLUDE_SYSTEM_COLORS,
+	TK_DUMP_INCLUDE_SYSTEM_CONFIG, TK_DUMP_INSERT_MARK, TK_DUMP_MARK, TK_DUMP_NESTED, TK_DUMP_NODE,
+	TK_DUMP_TEXT_CONFIGS, TK_DUMP_TAG, TK_DUMP_TEXT, TK_DUMP_WIN
     };
 
     int arg;
@@ -7311,6 +7313,7 @@ GetDumpFlags(
     assert(what);
     assert(!index1 == !index2);
     assert(DUMP_ALL == 0); /* otherwise next loop is wrong */
+    assert(!complete || (complete & dflt) == dflt);
 
     /* We know that option -all is allowed in any case. */
     myOptStrings[0] = optStrings[DUMP_ALL];
@@ -7372,6 +7375,11 @@ GetDumpFlags(
 #undef CASE
 	case DUMP_ALL:
 	    *what = dflt;
+	    break;
+	case DUMP_COMPLETE:
+	    if (!complete)
+		goto wrongArgs;
+	    *what = complete;
 	    break;
 	case DUMP_CMD:
 	    arg += 1;
@@ -7459,7 +7467,7 @@ TextDumpCmd(
     assert(textPtr);
 
     result = GetDumpFlags(textPtr, interp, objc, objv, TK_DUMP_DUMP_ALL|TK_DUMP_NODE, TK_DUMP_DUMP_ALL,
-	    &what, &lastArg, &index1, &index2, &command);
+	    0, &what, &lastArg, &index1, &index2, &command);
     if (result != TCL_OK) {
 	return result;
     }
@@ -7928,7 +7936,7 @@ TextChecksumCmd(
 
     assert(textPtr);
 
-    result = GetDumpFlags(textPtr, interp, objc, objv, TK_DUMP_CRC_ALL, TK_DUMP_CRC_DFLT,
+    result = GetDumpFlags(textPtr, interp, objc, objv, TK_DUMP_CRC_ALL, TK_DUMP_CRC_DFLT, 0,
 	    &what, NULL, NULL, NULL, NULL);
 
     if (result != TCL_OK) {
@@ -8517,7 +8525,7 @@ TextInspectCmd(
     int flags;
 
     result = GetDumpFlags(textPtr, interp, objc, objv, TK_DUMP_INSPECT_ALL, TK_DUMP_INSPECT_DFLT,
-	    &what, NULL, NULL, NULL, NULL);
+	    TK_DUMP_INSPECT_COMPLETE, &what, NULL, NULL, NULL, NULL);
     if (result != TCL_OK) {
 	return result;
     }
@@ -8550,6 +8558,7 @@ TextInspectCmd(
     }
 
     if (what & TK_DUMP_TEXT_CONFIGS) {
+	assert(textPtr->optionTable);
 	TkTextInspectOptions(textPtr, textPtr, textPtr->optionTable, opts, flags);
 	Tcl_DStringStartSublist(str);
 	Tcl_DStringAppendElement(str, "setup");
@@ -8567,6 +8576,7 @@ TextInspectCmd(
 	    TkTextTag *tagPtr = tags[i];
 
 	    if (tagPtr && ((what & TK_DUMP_INCLUDE_SEL) || !tagPtr->isSelTag)) {
+		assert(tagPtr->optionTable);
 		TkTextInspectOptions(textPtr, tagPtr, tagPtr->optionTable, opts, flags);
 		Tcl_DStringStartSublist(str);
 		Tcl_DStringAppendElement(str, "configure");
@@ -8587,7 +8597,9 @@ TextInspectCmd(
 	for (i = 0; i < n; ++i) {
 	    TkTextTag *tagPtr = tags[i];
 
-	    if (tagPtr && ((what & TK_DUMP_INCLUDE_SEL) || !tagPtr->isSelTag)) {
+	    if (tagPtr
+		    && sharedTextPtr->tagBindingTable
+		    && ((what & TK_DUMP_INCLUDE_SEL) || !tagPtr->isSelTag)) {
 		GetBindings(textPtr, tagPtr->name, sharedTextPtr->tagBindingTable, str);
 	    }
 	}
@@ -8619,6 +8631,7 @@ TextInspectCmd(
 		continue;
 	    }
 	    type = "image";
+	    assert(segPtr->body.ei.optionTable);
 	    TkTextInspectOptions(textPtr, &segPtr->body.ei, segPtr->body.ei.optionTable, opts, 0);
 	    value = Tcl_DStringValue(opts);
 	    printTags = !!(what & TK_DUMP_TAG);
@@ -8628,6 +8641,7 @@ TextInspectCmd(
 		continue;
 	    }
 	    type = "window";
+	    assert(segPtr->body.ew.optionTable);
 	    TkTextInspectOptions(textPtr, &segPtr->body.ew, segPtr->body.ew.optionTable, opts, 0);
 	    value = Tcl_DStringValue(opts);
 	    printTags = !!(what & TK_DUMP_TAG);
