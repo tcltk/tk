@@ -178,6 +178,27 @@ static int		EnumerateTags(Tcl_Interp *interp, TkText *textPtr, int objc,
 static void		GrabSelection(TkText *textPtr, const TkTextTag *tagPtr, bool add, bool changed);
 
 /*
+ * Helper for guarded release of objects.
+ */
+
+static void
+Tcl_GuardedDecrRefCount(Tcl_Obj *objPtr)
+{
+#ifndef NDEBUG
+    /*
+     * Tcl does not provide any function for querying the reference count.
+     * So we need a work-around. Why does Tcl not provide a guarded version
+     * for such a dangerous function?
+     */
+    assert(objPtr);
+    Tcl_IncrRefCount(objPtr);
+    assert(Tcl_IsShared(objPtr));
+    Tcl_DecrRefCount(objPtr);
+#endif
+    Tcl_DecrRefCount(objPtr);
+}
+
+/*
  * We need some private undo/redo stuff.
  */
 
@@ -1082,7 +1103,7 @@ SetupDefaultRelief(
     if (tagPtr->isSelTag) {
 	Tk_GetRelief(textPtr->interp, DEF_TEXT_SELECT_RELIEF, &tagPtr->relief);
 	assert(strcmp(Tk_NameOfRelief(tagPtr->relief), DEF_TEXT_SELECT_RELIEF) == 0);
-	if (tagPtr->reliefPtr) { Tcl_DecrRefCount(tagPtr->reliefPtr); }
+	if (tagPtr->reliefPtr) { Tcl_GuardedDecrRefCount(tagPtr->reliefPtr); }
 	Tcl_IncrRefCount(tagPtr->reliefPtr = Tcl_NewStringObj(DEF_TEXT_SELECT_RELIEF, -1));
     } else {
 	tagPtr->relief = TK_RELIEF_FLAT;
