@@ -731,6 +731,27 @@ static void WarnAboutDeprecatedEndLineOption() {
 #endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
 /*
+ * Helper for guarded release of objects.
+ */
+
+static void
+Tcl_GuardedDecrRefCount(Tcl_Obj *objPtr)
+{
+#ifndef NDEBUG
+    /*
+     * Tcl does not provide any function for querying the reference count.
+     * So we need a work-around. Why does Tcl not provide a guarded version
+     * for such a dangerous function?
+     */
+    assert(objPtr);
+    Tcl_IncrRefCount(objPtr);
+    assert(Tcl_IsShared(objPtr));
+    Tcl_DecrRefCount(objPtr);
+#endif
+    Tcl_DecrRefCount(objPtr);
+}
+
+/*
  * Wee need a helper for sending virtual events, because in newer Tk version
  * the footprint of TkSendVirtualEvent has changed. (Note that this source has
  * backports for 8.5, and older versions of 8.6).
@@ -1644,7 +1665,7 @@ TextWidgetObjCmd(
 	    Tcl_IncrRefCount(optionObj);
 	    objPtr = Tk_GetOptionValue(interp, (char *) textPtr,
 		    textPtr->optionTable, optionObj, textPtr->tkwin);
-	    Tcl_DecrRefCount(optionObj);
+	    Tcl_GuardedDecrRefCount(optionObj);
 
 #else /* if !SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
@@ -2217,7 +2238,7 @@ TextWidgetObjCmd(
 
 	    if (!TkTextGetIndexFromObj(interp, textPtr, objv[i], &index1)) {
 		if (objPtr) {
-		    Tcl_DecrRefCount(objPtr);
+		    Tcl_GuardedDecrRefCount(objPtr);
 		}
 		result = TCL_ERROR;
 		goto done;
@@ -2228,7 +2249,7 @@ TextWidgetObjCmd(
 	    } else {
 		if (!TkTextGetIndexFromObj(interp, textPtr, objv[i + 1], &index2)) {
 		    if (objPtr) {
-			Tcl_DecrRefCount(objPtr);
+			Tcl_GuardedDecrRefCount(objPtr);
 		    }
 		    result = TCL_ERROR;
 		    goto done;
@@ -2610,7 +2631,7 @@ TextWidgetObjCmd(
 		    }
 		    Tcl_IncrRefCount(cmd);
 		}
-		Tcl_DecrRefCount(textPtr->afterSyncCmd);
+		Tcl_GuardedDecrRefCount(textPtr->afterSyncCmd);
 		textPtr->afterSyncCmd = cmd;
 	    }
 	    if (!textPtr->pendingAfterSync) {
@@ -2643,7 +2664,7 @@ TextWidgetObjCmd(
 	result = TextWatchCmd(textPtr, interp, objc, objv);
 	if (cmd) {
 	    Tcl_SetObjResult(interp, cmd);
-	    Tcl_DecrRefCount(cmd);
+	    Tcl_GuardedDecrRefCount(cmd);
 	}
     	break;
     }
@@ -3449,7 +3470,7 @@ DestroyText(
 	textPtr->pendingFireEvent = false;
     }
     if (textPtr->afterSyncCmd) {
-	Tcl_DecrRefCount(textPtr->afterSyncCmd);
+	Tcl_GuardedDecrRefCount(textPtr->afterSyncCmd);
     }
 
     /*
@@ -3477,7 +3498,7 @@ DestroyText(
 	TkTextStringList *nextPtr = listPtr->nextPtr;
 
 	Tcl_UnsetVar2(textPtr->interp, Tcl_GetString(listPtr->strObjPtr), NULL, TCL_GLOBAL_ONLY);
-	Tcl_DecrRefCount(listPtr->strObjPtr);
+	Tcl_GuardedDecrRefCount(listPtr->strObjPtr);
 	free(listPtr);
 	listPtr = nextPtr;
     }
@@ -3487,7 +3508,7 @@ DestroyText(
      */
 
     if (textPtr->watchCmd) {
-	Tcl_DecrRefCount(textPtr->watchCmd);
+	Tcl_GuardedDecrRefCount(textPtr->watchCmd);
     }
     TextWatchCmd(textPtr, NULL, 0, NULL);
 
@@ -3906,10 +3927,10 @@ TkConfigureText(
 	    }
 	}
 
-	if (startLineObj)  { Tcl_DecrRefCount(startLineObj); }
-	if (endLineObj)    { Tcl_DecrRefCount(endLineObj); }
-	if (startIndexObj) { Tcl_DecrRefCount(startIndexObj); }
-	if (endIndexObj)   { Tcl_DecrRefCount(endIndexObj); }
+	if (startLineObj)  { Tcl_GuardedDecrRefCount(startLineObj); }
+	if (endLineObj)    { Tcl_GuardedDecrRefCount(endLineObj); }
+	if (startIndexObj) { Tcl_GuardedDecrRefCount(startIndexObj); }
+	if (endIndexObj)   { Tcl_GuardedDecrRefCount(endIndexObj); }
 
 	free(myObjv);
 
@@ -4176,7 +4197,7 @@ TkConfigureText(
 		}
 		TkBTreeLinkSegment(sharedTextPtr, textPtr->endMarker, &end);
 	    }
-	    Tcl_DecrRefCount(textPtr->newEndIndex);
+	    Tcl_GuardedDecrRefCount(textPtr->newEndIndex);
 	    textPtr->newEndIndex = NULL;
 	}
 
@@ -4198,7 +4219,7 @@ TkConfigureText(
 		}
 		TkBTreeLinkSegment(sharedTextPtr, textPtr->startMarker, &start);
 	    }
-	    Tcl_DecrRefCount(textPtr->newStartIndex);
+	    Tcl_GuardedDecrRefCount(textPtr->newStartIndex);
 	    textPtr->newStartIndex = NULL;
 	}
 
@@ -5221,7 +5242,7 @@ TriggerWatchUndoRedo(
 	}
     }
 
-    Tcl_DecrRefCount(cmdPtr);
+    Tcl_GuardedDecrRefCount(cmdPtr);
     sharedTextPtr->triggerWatchCmd = true;
 }
 
@@ -5807,7 +5828,7 @@ DeleteIndexRange(
 	TkTextIndexSave(&index2);
 	Tcl_IncrRefCount(delObj);
 	rc = TriggerWatchEdit(textPtr, userFlag, "delete", &index1, &index2, deleted, final);
-	Tcl_DecrRefCount(delObj);
+	Tcl_GuardedDecrRefCount(delObj);
 	unchanged = TkTextIndexRebuild(&index1) && TkTextIndexRebuild(&index2);
 
 	if (!rc) { return false; } /* the receiver has destroyed this widget */
@@ -6021,7 +6042,7 @@ TextFetchSelection(
 
     numBytes = GetByteLength(selTextPtr);
     memcpy(buffer, Tcl_GetString(selTextPtr), numBytes);
-    Tcl_DecrRefCount(selTextPtr);
+    Tcl_GuardedDecrRefCount(selTextPtr);
     return numBytes;
 }
 
@@ -6519,15 +6540,14 @@ TextSearchCmd(
 
     if (searchSpec.resPtr) {
 	Tcl_SetObjResult(interp, searchSpec.resPtr);
-	searchSpec.resPtr = NULL;
     }
 
   cleanup:
     if (searchSpec.countPtr) {
-	Tcl_DecrRefCount(searchSpec.countPtr);
+	Tcl_GuardedDecrRefCount(searchSpec.countPtr);
     }
     if (searchSpec.resPtr) {
-	Tcl_DecrRefCount(searchSpec.resPtr);
+	Tcl_GuardedDecrRefCount(searchSpec.resPtr);
     }
     return code;
 }
@@ -6960,11 +6980,11 @@ TextSearchFoundMatch(
 
     if (searchSpecPtr->all) {
 	if (!searchSpecPtr->resPtr) {
-	    searchSpecPtr->resPtr = Tcl_NewObj();
+	    Tcl_IncrRefCount(searchSpecPtr->resPtr = Tcl_NewObj());
 	}
 	Tcl_ListObjAppendElement(NULL, searchSpecPtr->resPtr, TkTextNewIndexObj(&foundIndex));
     } else {
-	searchSpecPtr->resPtr = TkTextNewIndexObj(&foundIndex);
+	Tcl_IncrRefCount(searchSpecPtr->resPtr = TkTextNewIndexObj(&foundIndex));
     }
 
     /*
@@ -8043,10 +8063,10 @@ DumpSegment(
     values[0] = Tcl_NewStringObj(key, -1);
     values[1] = Tcl_NewStringObj(value, -1);
     values[2] = Tcl_NewStringObj(buffer, -1);
-    tuple = Tcl_NewListObj(3, values);
+    Tcl_IncrRefCount(tuple = Tcl_NewListObj(3, values));
     if (!command) {
 	Tcl_ListObjAppendList(NULL, Tcl_GetObjResult(interp), tuple);
-	Tcl_DecrRefCount(tuple);
+	Tcl_GuardedDecrRefCount(tuple);
 	return true;
     } else {
 	unsigned oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
@@ -8063,7 +8083,7 @@ DumpSegment(
 	    Tcl_AddErrorInfo(interp, "\n    (segment dumping command executed by text)");
 	    Tcl_BackgroundException(interp, code);
 	}
-	Tcl_DecrRefCount(tuple);
+	Tcl_GuardedDecrRefCount(tuple);
 	return !(textPtr->flags & DESTROYED)
 		&& TkBTreeEpoch(textPtr->sharedTextPtr->tree) == oldStateEpoch;
     }
@@ -8394,15 +8414,15 @@ TkTextInspectOptions(
 		Tcl_DStringAppendElement(result, Tcl_GetString(myValObj));
 
 		if (myValObj != valObj) {
-		    Tcl_DecrRefCount(myValObj);
+		    Tcl_GuardedDecrRefCount(myValObj);
 		}
 	    }
 	}
 
 #if TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7)
 	if (!(flags & INSPECT_DONT_RESOLVE_FONTS)) {
-	    Tcl_DecrRefCount(actual);
-	    Tcl_DecrRefCount(font);
+	    Tcl_GuardedDecrRefCount(actual);
+	    Tcl_GuardedDecrRefCount(font);
 	}
 #endif /* TCL_MAJOR_VERSION < 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7) */
     }
@@ -8808,7 +8828,7 @@ InspectRetainedUndoItems(
 	Tcl_ListObjLength(NULL, resultPtr, &len);
 	if (len == 0) {
 	    Tcl_IncrRefCount(resultPtr);
-	    Tcl_DecrRefCount(resultPtr);
+	    Tcl_GuardedDecrRefCount(resultPtr);
 	} else {
 	    Tcl_ListObjAppendElement(NULL, objPtr, resultPtr);
 	}
@@ -10028,7 +10048,7 @@ TkTextRunAfterSyncCmd(
 	    error = true;
 	}
     }
-    Tcl_DecrRefCount(afterSyncCmd);
+    Tcl_GuardedDecrRefCount(afterSyncCmd);
     Tcl_Release((ClientData) textPtr->interp);
     TkTextDecrRefCountAndTestIfDestroyed(textPtr);
 }
@@ -11299,8 +11319,8 @@ SearchCore(
      * Free up the cached line and pattern.
      */
 
-    Tcl_DecrRefCount(theLine);
-    Tcl_DecrRefCount(patObj);
+    Tcl_GuardedDecrRefCount(theLine);
+    Tcl_GuardedDecrRefCount(patObj);
 
     /*
      * Free up any extra space we allocated.
@@ -11477,7 +11497,7 @@ FreeTextStartEnd(
     Tcl_Obj *objPtr = *(Tcl_Obj **) internalPtr;
 
     if (objPtr) {
-	Tcl_DecrRefCount(objPtr);
+	Tcl_GuardedDecrRefCount(objPtr);
     }
 }
 
@@ -11801,14 +11821,14 @@ TkpTextInspect(
     Tcl_IncrRefCount(objv[7] = Tcl_NewStringObj("-tag", -1));
     TextInspectCmd(textPtr, textPtr->interp, sizeof(objv)/sizeof(objv[0]), objv);
     for (i = 0; i < (int) (sizeof(objv)/sizeof(objv[0])); ++i) {
-	Tcl_DecrRefCount(objv[i]);
+	Tcl_GuardedDecrRefCount(objv[i]);
     }
     Tcl_ListObjGetElements(textPtr->interp, Tcl_GetObjResult(textPtr->interp), &argc, &argv);
     for (i = 0; i < argc; ++i) {
 	fprintf(stdout, "%s\n", Tcl_GetString(argv[i]));
     }
     Tcl_SetObjResult(textPtr->interp, resultPtr);
-    Tcl_DecrRefCount(resultPtr);
+    Tcl_GuardedDecrRefCount(resultPtr);
 }
 
 #endif /* NDEBUG */
@@ -11849,7 +11869,7 @@ TkpTextDump(
     Tcl_IncrRefCount(objv[3] = Tcl_NewStringObj("end", -1));
     TextDumpCmd(textPtr, textPtr->interp, sizeof(objv)/sizeof(objv[0]), objv);
     for (i = 0; i < (int) (sizeof(objv)/sizeof(objv[0])); ++i) {
-	Tcl_DecrRefCount(objv[i]);
+	Tcl_GuardedDecrRefCount(objv[i]);
     }
 
     Tcl_ListObjGetElements(textPtr->interp, Tcl_GetObjResult(textPtr->interp), &argc, &argv);
@@ -11905,7 +11925,7 @@ TkpTextDump(
     }
 
     Tcl_SetObjResult(textPtr->interp, resultPtr);
-    Tcl_DecrRefCount(resultPtr);
+    Tcl_GuardedDecrRefCount(resultPtr);
 }
 
 #endif /* NDEBUG */

@@ -42,6 +42,27 @@ static void ComputeBreakLocations(
 static ComputeBreakLocationsFunc libLinebreakFunc = ComputeBreakLocations;
 
 /*
+ * Helper for guarded release of objects.
+ */
+
+static void
+Tcl_GuardedDecrRefCount(Tcl_Obj *objPtr)
+{
+#ifndef NDEBUG
+    /*
+     * Tcl does not provide any function for querying the reference count.
+     * So we need a work-around. Why does Tcl not provide a guarded version
+     * for such a dangerous function?
+     */
+    assert(objPtr);
+    Tcl_IncrRefCount(objPtr);
+    assert(Tcl_IsShared(objPtr));
+    Tcl_DecrRefCount(objPtr);
+#endif
+    Tcl_DecrRefCount(objPtr);
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * GetLineBreakFunc --
@@ -111,7 +132,7 @@ LoadLibUnibreak(
 	 */
 
 	Tcl_ResetResult(interp);
-	Tcl_DecrRefCount(pathPtr);
+	Tcl_GuardedDecrRefCount(pathPtr);
 	pathPtr = Tcl_NewStringObj("liblinebreak.so.2", -1);
 	rc = LoadFile(interp, pathPtr, &handle, Symbols, Funcs);
     }
@@ -121,7 +142,7 @@ LoadLibUnibreak(
     } else {
 	Tcl_ResetResult(interp);
     }
-    Tcl_DecrRefCount(pathPtr);
+    Tcl_GuardedDecrRefCount(pathPtr);
 }
 
 #endif /* __UNIX__ */

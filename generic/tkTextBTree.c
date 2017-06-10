@@ -267,7 +267,28 @@ static TkTextLine *	GetStartLine(const TkSharedText *sharedTextPtr, const TkText
 static TkTextLine *	GetLastLine(const TkSharedText *sharedTextPtr, const TkText *textPtr);
 static void		ReInsertSegment(const TkSharedText *sharedTextPtr,
 			    const TkTextUndoIndex *indexPtr, TkTextSegment *segPtr, bool updateNode);
+
+/*
+ * Helper for guarded release of objects.
+ */
 
+static void
+Tcl_GuardedDecrRefCount(Tcl_Obj *objPtr)
+{
+#ifndef NDEBUG
+    /*
+     * Tcl does not provide any function for querying the reference count.
+     * So we need a work-around. Why does Tcl not provide a guarded version
+     * for such a dangerous function?
+     */
+    assert(objPtr);
+    Tcl_IncrRefCount(objPtr);
+    assert(Tcl_IsShared(objPtr));
+    Tcl_DecrRefCount(objPtr);
+#endif
+    Tcl_DecrRefCount(objPtr);
+}
+
 /*
  * Type record for character segments:
  */
@@ -3622,7 +3643,7 @@ LoadError(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("error while loading%s: %s", buf, msg));
     Tcl_SetErrorCode(interp, "TK", "TEXT", "LOAD", NULL);
     if (errObjPtr) {
-	Tcl_DecrRefCount(errObjPtr);
+	Tcl_GuardedDecrRefCount(errObjPtr);
     }
     return TCL_ERROR;
 }
