@@ -3044,8 +3044,14 @@ Describes a character sequence, including what tags were applied to it.
 .RE
 .PP
 {\fBbreak\fR \fItagList\fR ?\fItagList\fR?}
+.RS
+Describes a newline character, including what tags were applied to it.
+.RE
 .PP
 {\fBhyphen\fR \fItagList\fR ?\fItagList\fR?}
+.RS
+Describes a soft hyphen, including what tags were applied to it.
+.RE
 .PP
 {\fBimage\fR \fIimageOptions tagList\fR ?\fItagList\fR?}
 .RS
@@ -3079,9 +3085,16 @@ specified to control the extraction:
 \fB\-all\fR
 .
 Return information about all elements: text (characters and soft hyphens),
-marks, tags, images, and windows. This is the default, and includes the
-following switches: \fB\-text\fR, \fB\-image\fR, \fB\-window\fR, \fB\-tag\fR,
-and \fB\-mark\fR.
+tags, images, and windows. This is the default, and includes the following
+switches: \fB\-chars\fR, \fB\-image\fR, \fB\-window\fR, \fB\-tag\fR, and
+\fB\-mark\fR.
+.TP
+\fB\-complete\fR
+.
+Return complete information, this includes the following switches:
+\fB\-all\fR, \fB\-bindings\fR, \fB\-configurations\fR, \fB\-elide\fR,
+\fB\-includedbconfig\fR, \fB\-includedefaultconfig\fR, \fB\-includeselection\fR,
+\fB\-includesysconfig\fR, \fB\-insertmark\fR, and \fB\-setup\fR.
 .TP
 \fB\-bindings\fR
 .
