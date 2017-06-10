@@ -1728,13 +1728,17 @@ MODULE_SCOPE const Tk_SegType tkTextProtectionMarkType;
 enum { DISP_LINE_START = false, DISP_LINE_END = true };
 
 /*
- * Helper for guarded deallocation.
+ * Helper for guarded allocation/deallocation.
  */
 
 #define FREE_SEGMENT(ptr) { \
+    /* printf("destroy(%p) %s:%d\n", ptr, __FILE__, __LINE__); */ \
     assert(ptr->typePtr); \
     assert(!(ptr->typePtr = NULL)); \
     free(ptr); }
+
+#define NEW_SEGMENT(ptr) \
+    /* printf("alloc(%p) %s:%d\n", ptr, __FILE__, __LINE__) */
 
 /*
  * We need a callback function for tag changes. The return value informs whether
@@ -1923,7 +1927,7 @@ MODULE_SCOPE void	TkTextUpdateTagDisplayFlags(TkTextTag *tagPtr);
 MODULE_SCOPE TkTextTag * TkTextCreateTag(TkText *textPtr, const char *tagName, bool *newTag);
 MODULE_SCOPE TkTextTag * TkTextFindTag(const TkText *textPtr, const char *tagName);
 MODULE_SCOPE int	TkConfigureTag(Tcl_Interp *interp, TkText *textPtr, const char *tagName,
-			    int objc, Tcl_Obj *const objv[]);
+			    bool redraw, int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE void	TkTextEnableTag(TkSharedText *sharedTextPtr, TkTextTag *tagPtr);
 MODULE_SCOPE void	TkTextSortTags(unsigned numTags, TkTextTag **tagArrayPtr);
 MODULE_SCOPE void	TkTextFreeDInfo(TkText *textPtr);
@@ -2022,6 +2026,7 @@ MODULE_SCOPE TkTextSegment * TkTextMakeStartEndMark(TkText *textPtr, Tk_SegType 
 MODULE_SCOPE TkTextSegment * TkTextMakeMark(TkText *textPtr, const char *name);
 MODULE_SCOPE TkTextSegment * TkTextMakeNewMark(TkSharedText *sharedTextPtr, const char *name);
 MODULE_SCOPE void	TkTextUnsetMark(TkText *textPtr, TkTextSegment *markPtr);
+inline bool		TkTextIsMark(const TkTextSegment *segPtr);
 inline bool		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
 inline bool		TkTextIsSpecialMark(const TkTextSegment *segPtr);
 inline bool		TkTextIsPrivateMark(const TkTextSegment *segPtr);

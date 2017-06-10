@@ -498,7 +498,7 @@ TkTextTagCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "tagName ?option? ?value? ?option value ...?");
 	    return TCL_ERROR;
 	}
-	return TkConfigureTag(interp, textPtr, Tcl_GetString(objv[3]), objc - 4, objv + 4);
+	return TkConfigureTag(interp, textPtr, Tcl_GetString(objv[3]), true, objc - 4, objv + 4);
     case TAG_DELETE: {
 	Tcl_HashEntry *hPtr;
 	bool anyChanges = false;
@@ -1115,6 +1115,7 @@ TkConfigureTag(
     Tcl_Interp *interp,		/* Current interpreter. */
     TkText *textPtr,		/* Info about overall widget. */
     char const *tagName,	/* Name of affected tag. */
+    bool redraw,		/* Redraw the affected text if required? */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Remaining argument objects. */
 {
@@ -1404,7 +1405,7 @@ TkConfigureTag(
 	TkBTreeUpdateElideInfo(textPtr, tagPtr);
     }
 
-    if (!newTag && affectsDisplay) {
+    if (redraw && !newTag && affectsDisplay) {
 	/*
 	 * This line is not necessary if this is a new tag, since it can't possibly have
 	 * been applied to anything yet.
@@ -2023,7 +2024,7 @@ TkTextCreateTag(
      * to it to the hash table entry.
      */
 
-    tagPtr = memset(malloc(sizeof(TkTextTag)), 0, sizeof(TkTextTag));
+    tagPtr = calloc(1, sizeof(TkTextTag));
     tagPtr->name = name;
     tagPtr->index = index;
     tagPtr->priority = textPtr->sharedTextPtr->numEnabledTags;

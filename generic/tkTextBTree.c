@@ -1191,7 +1191,8 @@ MakeSegment(
 
     assert(segType != &tkTextCharType);
 
-    segPtr = memset(malloc(segByteSize), 0, segByteSize);
+    segPtr = calloc(1, segByteSize);
+    NEW_SEGMENT(segPtr);
     segPtr->typePtr = segType;
     segPtr->size = contentSize;
     segPtr->refCount = 1;
@@ -2070,10 +2071,10 @@ TkBTreeCreate(
      * pointers are simply NULL.
      */
 
-    rootPtr = memset(malloc(sizeof(Node)), 0, sizeof(Node));
+    rootPtr = calloc(1, sizeof(Node));
     DEBUG_ALLOC(tkTextCountNewNode++);
 
-    treePtr = memset(malloc(sizeof(BTree)), 0, sizeof(BTree));
+    treePtr = calloc(1, sizeof(BTree));
     treePtr->rootPtr = rootPtr;
     treePtr->sharedTextPtr = sharedTextPtr;
     treePtr->stateEpoch = epoch;
@@ -2803,6 +2804,7 @@ DestroyNode(
 	    while (segPtr) {
 		TkTextSegment *nextPtr = segPtr->nextPtr;
 		assert(segPtr->typePtr); /* still existing? */
+		assert(segPtr->sectionPtr);
 		assert(segPtr->sectionPtr->linePtr == linePtr);
 		assert(segPtr->typePtr->deleteProc);
 		segPtr->typePtr->deleteProc(TkBTreeGetShared(tree), segPtr, TREE_GONE);
@@ -3401,7 +3403,7 @@ InsertNewLine(
 	segPtr->prevPtr = NULL;
     }
 
-    newLinePtr = memset(malloc(sizeof(TkTextLine)), 0, sizeof(TkTextLine));
+    newLinePtr = calloc(1, sizeof(TkTextLine));
     newLinePtr->parentPtr = nodePtr;
     newLinePtr->prevPtr = prevLinePtr;
     newLinePtr->segPtr = segPtr;
@@ -3807,6 +3809,8 @@ TkBTreeLoad(
     while (segPtr->nextPtr->typePtr != &tkTextCharType) {
 	segPtr = segPtr->nextPtr;
     }
+    TkBTreeFreeSegment(segPtr->nextPtr);
+    segPtr->nextPtr = NULL;
     charSegPtr = NULL;
 
     for (i = 0; i < objc; ++i) {
@@ -3897,6 +3901,7 @@ TkBTreeLoad(
 		    }
 		}
 		changeToLineCount += 1;
+
 		if (!isElided) {
 		    changeToLogicalLineCount += 1;
 		}
@@ -3957,7 +3962,8 @@ TkBTreeLoad(
 		return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
 	    } else {
 		for (k = 0; k < objc - 1; k += 2) {
-		    if (TkConfigureTag(interp, textPtr, Tcl_GetString(argv[1]), 2, &objv[k]) != TCL_OK
+		    if (TkConfigureTag(interp, textPtr, Tcl_GetString(argv[1]),
+					false, 2, &objv[k]) != TCL_OK
 			    && !validOptions) {
 			return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
 		    }
@@ -4270,10 +4276,10 @@ TkBTreeLoad(
 		linePtr = newLinePtr;
 	    }
 	}
-	size += 1;
 	RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
     } else {
 	changeToLineCount -= 1;
+	size -= 1;
 	if (!isElided) {
 	    changeToLogicalLineCount -= 1;
 	}
@@ -5867,7 +5873,7 @@ RebuildSections(
 	if (!sectionPtr) {
 	    TkTextSection *newSectionPtr;
 
-	    newSectionPtr = memset(malloc(sizeof(TkTextSection)), 0, sizeof(TkTextSection));
+	    newSectionPtr = calloc(1, sizeof(TkTextSection));
 	    if (prevSectionPtr) {
 		prevSectionPtr->nextPtr = newSectionPtr;
 	    } else {
@@ -6072,7 +6078,8 @@ MakeCharSeg(
     assert(length <= newSize);
 
     capacity = CSEG_CAPACITY(newSize);
-    newPtr = memset(malloc(CSEG_SIZE(capacity)), 0, SEG_SIZE(0));
+    newPtr = calloc(1, CSEG_SIZE(capacity));
+    NEW_SEGMENT(newPtr);
     newPtr->typePtr = &tkTextCharType;
     newPtr->sectionPtr = sectionPtr;
     newPtr->size = newSize;
@@ -6568,7 +6575,8 @@ TkBTreeMakeCharSegment(
     assert(string);
     assert(tagInfoPtr);
 
-    newPtr = memset(malloc(memsize), 0, memsize);
+    newPtr = calloc(1, memsize);
+    NEW_SEGMENT(newPtr);
     newPtr->typePtr = &tkTextCharType;
     newPtr->size = length;
     newPtr->refCount = 1;
@@ -7027,8 +7035,11 @@ DeleteRange(
 	    TkTextSegment *savePtr;
 	    bool reInserted = false;
 
-	    if ((savePtr = (undoInfo && !TkTextIsSpecialOrPrivateMark(segPtr)) ? segPtr : NULL)) {
-		savePtr->refCount += 1;
+	    if (undoInfo
+		    && !(steadyMarks ? TkTextIsSpecialOrPrivateMark(segPtr) : TkTextIsMark(segPtr))) {
+		(savePtr = segPtr)->refCount += 1;
+	    } else {
+		savePtr = NULL;
 	    }
 
 	    assert(segPtr->sectionPtr->linePtr == curLinePtr);
@@ -13804,7 +13815,7 @@ Rebalance(
 		newPtr->numBranches = nodePtr->numBranches;
 		nodePtr->nextPtr = newPtr;
 		nodePtr->numChildren = MIN_CHILDREN;
-		nodePtr->pixelInfo = memset(malloc(pixelSize), 0, pixelSize);
+		nodePtr->pixelInfo = calloc(1, pixelSize);
 		TagSetAssign(&nodePtr->tagonPtr, treePtr->sharedTextPtr->emptyTagInfoPtr);
 		TagSetAssign(&nodePtr->tagoffPtr, treePtr->sharedTextPtr->emptyTagInfoPtr);
 		DEBUG_ALLOC(tkTextCountNewNode++);

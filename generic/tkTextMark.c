@@ -1163,7 +1163,8 @@ MakeMark(
 {
     TkTextSegment *markPtr;
 
-    markPtr = memset(malloc(SEG_SIZE(TkTextMark)), 0, SEG_SIZE(TkTextMark));
+    markPtr = calloc(1, SEG_SIZE(TkTextMark));
+    NEW_SEGMENT(markPtr);
     markPtr->typePtr = &tkTextRightMarkType;
     markPtr->refCount = 1;
     markPtr->body.mark.textPtr = textPtr;
@@ -1239,6 +1240,7 @@ TkTextMakeNewMark(
 
     markPtr = MakeMark(NULL);
     markPtr->body.mark.ptr = PTR_TO_INT(hPtr);
+    markPtr->normalMarkFlag = true;
     Tcl_SetHashValue(hPtr, markPtr);
     sharedTextPtr->numMarks += 1;
 
@@ -1301,7 +1303,7 @@ MakeUndoToggleGravity(
 	TkTextMarkChange *changePtr = MakeChangeItem(sharedTextPtr, markPtr);
 	UndoTokenToggleGravity *token;
 
-	token = memset(malloc(sizeof(UndoTokenToggleGravity)), 0, sizeof(UndoTokenToggleGravity));
+	token = calloc(1, sizeof(UndoTokenToggleGravity));
 	token->undoType = &undoTokenToggleGravityType;
 	(token->markPtr = markPtr)->refCount += 1;
 	DEBUG_ALLOC(tkTextCountNewUndoToken++);

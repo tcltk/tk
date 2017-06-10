@@ -656,7 +656,8 @@ MakeWindow(
     TkTextSegment *ewPtr;
     TkTextEmbWindowClient *client;
 
-    ewPtr = memset(malloc(SEG_SIZE(TkTextEmbWindow)), 0, SEG_SIZE(TkTextEmbWindow));
+    ewPtr = calloc(1, SEG_SIZE(TkTextEmbWindow));
+    NEW_SEGMENT(ewPtr);
     ewPtr->typePtr = &tkTextEmbWindowType;
     ewPtr->size = 1;
     ewPtr->refCount = 1;
@@ -666,7 +667,7 @@ MakeWindow(
     ewPtr->body.ew.optionTable = Tk_CreateOptionTable(textPtr->interp, optionSpecs);
     DEBUG_ALLOC(tkTextCountNewSegment++);
 
-    client = memset(malloc(sizeof(TkTextEmbWindowClient)), 0, sizeof(TkTextEmbWindowClient));
+    client = calloc(1, sizeof(TkTextEmbWindowClient));
     client->textPtr = textPtr;
     client->parent = ewPtr;
     ewPtr->body.ew.clients = client;
@@ -870,7 +871,7 @@ EmbWinConfigure(
 		 * Have to make the new client.
 		 */
 
-		client = memset(malloc(sizeof(TkTextEmbWindowClient)), 0, sizeof(TkTextEmbWindowClient));
+		client = calloc(1, sizeof(TkTextEmbWindowClient));
 		client->next = ewPtr->body.ew.clients;
 		client->textPtr = textPtr;
 		client->parent = ewPtr;
@@ -1486,7 +1487,7 @@ EmbWinLayoutProc(
 	     * now need to add to our client list.
 	     */
 
-	    client = memset(malloc(sizeof(TkTextEmbWindowClient)), 0, sizeof(TkTextEmbWindowClient));
+	    client = calloc(1, sizeof(TkTextEmbWindowClient));
 	    client->next = ewPtr->body.ew.clients;
 	    client->textPtr = textPtr;
 	    client->parent = ewPtr;

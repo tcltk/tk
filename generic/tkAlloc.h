@@ -22,6 +22,7 @@
 #include <tcl.h>
 #include <tclDecls.h> /* needed for the Tcl_Alloc macros */
 #include <stdlib.h>
+#include <string.h>
 
 
 #if TK_VALGRIND /* ===========================================================*/
@@ -64,12 +65,13 @@
 
 /*
  * If valgrind mode is disabled, then we use the Tcl allocations functions.
- * This means that malloc/realloc/free are simply wrappers to the Tcl
+ * This means that malloc/calloc/realloc/free are simply wrappers to the Tcl
  * functions ckalloc/ckrealloc/ckfree.
  */
 
 /* the main reason for these definitions is portability to 8.5 */
 # define malloc(size)		((void *) (ckalloc(size)))
+# define calloc(nmemb, size)	((void *) (memset(ckalloc(nmemb*size), 0, nmemb*size)))
 # define realloc(ptr, size)	((void *) (ckrealloc((char *) (ptr), size)))
 # define free(ptr)		ckfree((char *) (ptr))
 

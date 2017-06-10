@@ -575,7 +575,8 @@ MakeImage(
 {
     TkTextSegment *eiPtr;
 
-    eiPtr = memset(malloc(SEG_SIZE(TkTextEmbImage)), 0, SEG_SIZE(TkTextEmbImage));
+    eiPtr = calloc(1, SEG_SIZE(TkTextEmbImage));
+    NEW_SEGMENT(eiPtr);
     eiPtr->typePtr = &tkTextEmbImageType;
     eiPtr->size = 1;
     eiPtr->refCount = 1;

@@ -1013,7 +1013,7 @@ CreateWidget(
     }
 
     if (!sharedTextPtr) {
-	sharedTextPtr = memset(malloc(sizeof(TkSharedText)), 0, sizeof(TkSharedText));
+	sharedTextPtr = calloc(1, sizeof(TkSharedText));
 
 	Tcl_InitHashTable(&sharedTextPtr->tagTable, TCL_STRING_KEYS);
 	Tcl_InitHashTable(&sharedTextPtr->markTable, TCL_STRING_KEYS);
@@ -1044,7 +1044,7 @@ CreateWidget(
 
 	DEBUG(memset(sharedTextPtr->tagLookup, 0, TK_TEXT_SET_MAX_BIT_SIZE*sizeof(TkTextTag *)));
 
-	sharedTextPtr->mainPeer = memset(malloc(sizeof(TkText)), 0, sizeof(TkText));
+	sharedTextPtr->mainPeer = calloc(1, sizeof(TkText));
 	sharedTextPtr->mainPeer->startMarker = sharedTextPtr->startMarker;
 	sharedTextPtr->mainPeer->endMarker = sharedTextPtr->endMarker;
 	sharedTextPtr->mainPeer->sharedTextPtr = sharedTextPtr;
@@ -1079,7 +1079,7 @@ CreateWidget(
      * and 'insert', 'current' mark pointers are all NULL to start.
      */
 
-    textPtr = memset(malloc(sizeof(TkText)), 0, sizeof(TkText));
+    textPtr = calloc(1, sizeof(TkText));
     textPtr->tkwin = newWin;
     textPtr->display = Tk_Display(newWin);
     textPtr->interp = interp;
@@ -11951,6 +11951,7 @@ extern unsigned		TkBTreeCountLines(const TkTextBTree tree, const TkTextLine *lin
 extern bool		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
 			    TkTextIndex *indexPtr);
 extern bool		TkTextIsDeadPeer(const TkText *textPtr);
+extern bool		TkTextIsMark(const TkTextSegment *segPtr);
 extern bool		TkTextIsStartEndMarker(const TkTextSegment *segPtr);
 extern bool		TkTextIsSpecialMark(const TkTextSegment *segPtr);
 extern bool		TkTextIsPrivateMark(const TkTextSegment *segPtr);
