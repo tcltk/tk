@@ -3085,9 +3085,8 @@ specified to control the extraction:
 \fB\-all\fR
 .
 Return information about all elements: text (characters and soft hyphens),
-tags, images, and windows. This is the default, and includes the following
-switches: \fB\-chars\fR, \fB\-image\fR, \fB\-window\fR, \fB\-tag\fR, and
-\fB\-mark\fR.
+marks, tags, images, and windows. This is the default, and includes the following
+switches: \fB\-chars\fR, \fB\-mark\fR \fB\-tag\fR, \fB\-image\fR, and \fB\-window\fR.
 .TP
 \fB\-complete\fR
 .
