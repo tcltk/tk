@@ -6652,6 +6652,7 @@ test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
     text .t
     pack .t
     set ::retval {}
+    update
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
 # Shouldn't require [update idle] to trigger event [Bug 1809538]
