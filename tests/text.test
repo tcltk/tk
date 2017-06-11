@@ -6696,7 +6696,7 @@ test text-27.14 {<<Modified>> virtual event - delete before Modified} -body {
     .t insert end "nothing special"
     .t edit modified 0
     .t delete 1.0 1.2
-	 update
+    update
     set ::retval
 } -cleanup {
     destroy .t
@@ -6723,7 +6723,7 @@ test text-27.15 {<<Selection>> virtual event} -body {
     update idletasks
     .t insert end "nothing special\n"
     .t tag add sel 1.0 1.1
-	 update
+    update
     set ::retval
 } -cleanup {
     destroy .t
