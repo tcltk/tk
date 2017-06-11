@@ -8128,12 +8128,13 @@ MatchColors(
     const char *hexColor,
     const char *colorName)
 {
-    assert(strlen(hexColor) == 7);
+    assert(strlen(hexColor) == 13);
     assert(strlen(colorName) == 5);
 
     switch (len) {
-    case 5: return strncmp(name, colorName, 5) == 0;
-    case 7: return strncmp(name, hexColor, 7) == 0;
+    case 5:  return strncasecmp(name, colorName, 5) == 0;
+    case 7:  return strncasecmp(name, hexColor,  7) == 0;
+    case 13: return strncasecmp(name, hexColor, 12) == 0;
     }
 
     return false;
@@ -8148,11 +8149,11 @@ TestIfEqual(
 {
     int i;
 
-    if (MatchColors(opt1, opt1Len, "#ffffff", "white")) {
-	return MatchColors(opt2, opt2Len, "#ffffff", "white");
+    if (MatchColors(opt1, opt1Len, "#ffffffffffff", "white")) {
+	return MatchColors(opt2, opt2Len, "#ffffffffffff", "white");
     }
-    if (MatchColors(opt1, opt1Len, "#000000", "black")) {
-	return MatchColors(opt2, opt2Len, "#000000", "black");
+    if (MatchColors(opt1, opt1Len, "#000000000000", "black")) {
+	return MatchColors(opt2, opt2Len, "#000000000000", "black");
     }
     if (opt1Len != opt2Len) {
 	return false;
