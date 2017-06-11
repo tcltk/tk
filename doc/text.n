@@ -3093,7 +3093,8 @@ switches: \fB\-chars\fR, \fB\-mark\fR \fB\-tag\fR, \fB\-image\fR, and \fB\-windo
 Return complete information, this includes the following switches:
 \fB\-all\fR, \fB\-bindings\fR, \fB\-configurations\fR, \fB\-elide\fR,
 \fB\-includedbconfig\fR, \fB\-includedefaultconfig\fR, \fB\-includeselection\fR,
-\fB\-includesysconfig\fR, \fB\-insertmark\fR, and \fB\-setup\fR.
+\fB\-includesyscolors\fR, \fB\-includesysconfig\fR, \fB\-insertmark\fR, and
+\fB\-setup\fR.
 .TP
 \fB\-bindings\fR
 .
