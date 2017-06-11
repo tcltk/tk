@@ -8134,7 +8134,7 @@ MatchColors(
     switch (len) {
     case 5:  return strncasecmp(name, colorName, 5) == 0;
     case 7:  return strncasecmp(name, hexColor,  7) == 0;
-    case 13: return strncasecmp(name, hexColor, 12) == 0;
+    case 13: return strncasecmp(name, hexColor, 13) == 0;
     }
 
     return false;
