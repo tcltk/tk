@@ -591,10 +591,11 @@ enum {
     TK_DUMP_INSPECT_COMPLETE        = TK_DUMP_INSPECT_DFLT|TK_DUMP_TAG_BINDINGS|TK_DUMP_TEXT_CONFIGS|
     			              TK_DUMP_TAG_CONFIGS|TK_DUMP_INCLUDE_SEL|TK_DUMP_INSERT_MARK|
 				      TK_DUMP_INCLUDE_DATABASE_CONFIG|TK_DUMP_INCLUDE_SYSTEM_CONFIG|
-				      TK_DUMP_INCLUDE_DEFAULT_CONFIG|TK_DUMP_ELIDE,
+				      TK_DUMP_INCLUDE_DEFAULT_CONFIG|TK_DUMP_ELIDE|
+				      TK_DUMP_INCLUDE_SYSTEM_COLORS,
     TK_DUMP_INSPECT_ALL             = TK_DUMP_INSPECT_COMPLETE|TK_DUMP_DISPLAY_TEXT|
     			              TK_DUMP_DONT_RESOLVE_COLORS|TK_DUMP_DONT_RESOLVE_FONTS|
-				      TK_DUMP_NESTED|TK_DUMP_INCLUDE_SYSTEM_COLORS,
+				      TK_DUMP_NESTED,
 };
 
 /*
@@ -8404,17 +8405,37 @@ TkTextInspectOptions(
 			&& IsPossibleColorOption(Tcl_GetString(nameObj))) {
 		    const char *colorName = Tcl_GetString(valObj);
 
-		    if (toupper(colorName[0]) == 'S' && strncmp(colorName + 1, "ystem", 5) == 0) {
-			XColor *col = Tk_GetColorFromObj(textPtr->tkwin, valObj);
+		    if (tolower(colorName[0]) == 's' && strncmp(colorName + 1, "ystem", 5) == 0) {
+			char buffer[512];
+			XColor *col;
+
+			if (!(flags & INSPECT_INCLUDE_SYSTEM_COLORS)) {
+			    continue;
+			}
+
+			/*
+			 * The color lookup expects a lowercase "system", but the defaults
+			 * are providing the uppercase form "System", so we need to build
+			 * a lowercase form.
+			 */
+
+			strncpy(buffer, colorName, MIN(strlen(colorName), sizeof(buffer)));
+			buffer[sizeof(buffer) - 1] = '\0';
+			buffer[0] = 's';
+			col = Tk_GetColor(interp, textPtr->tkwin, buffer);
 
 			if (col) {
-			    if (!(flags & INSPECT_INCLUDE_SYSTEM_COLORS)) {
-				Tk_FreeColor(col);
-				continue;
-			    }
 			    myValObj = Tcl_ObjPrintf("#%02x%02x%02x", col->red, col->green, col->blue);
 			    Tcl_IncrRefCount(myValObj);
 			    Tk_FreeColor(col);
+			} else {
+			    /*
+			     * This should not happen. We will clear the error result, and
+			     * print a warning.
+			     */
+			    Tcl_SetObjResult(interp, Tcl_NewObj());
+			    Tcl_SetObjErrorCode(interp, Tcl_NewObj());
+			    fprintf(stderr, "tk::text: couldn't resolve system color '%s'\n", colorName);
 			}
 		    }
 		}
