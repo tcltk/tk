@@ -1167,6 +1167,7 @@ test textTag-13.3 {TkTextTagCmd - "remove" option} -setup {
     selection get
 } -cleanup {
     destroy .t.e
+    .t tag remove sel 1.0 end 
 } -result {Text}
 
 
