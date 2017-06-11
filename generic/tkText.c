@@ -26,8 +26,14 @@
 #endif
 #include "tkAlloc.h"
 #include <stdlib.h>
-#include <ctype.h>
 #include <assert.h>
+
+/* needed for strncasecmp */
+#if defined(_WIN32) && !defined(__GNUC__)
+# define strncasecmp _strnicmp
+#else
+# include <strings.h>
+#endif
 
 #ifndef TK_C99_INLINE_SUPPORT
 # define _TK_NEED_IMPLEMENTATION
@@ -8405,8 +8411,7 @@ TkTextInspectOptions(
 			&& IsPossibleColorOption(Tcl_GetString(nameObj))) {
 		    const char *colorName = Tcl_GetString(valObj);
 
-		    if (tolower(colorName[0]) == 's' && strncmp(colorName + 1, "ystem", 5) == 0) {
-			char buffer[512];
+		    if (strncasecmp(colorName, "system", 6) == 0) {
 			XColor *col;
 
 			if (!(flags & INSPECT_INCLUDE_SYSTEM_COLORS)) {
@@ -8419,10 +8424,7 @@ TkTextInspectOptions(
 			 * a lowercase form.
 			 */
 
-			strncpy(buffer, colorName, MIN(strlen(colorName), sizeof(buffer)));
-			buffer[sizeof(buffer) - 1] = '\0';
-			buffer[0] = 's';
-			col = Tk_GetColor(interp, textPtr->tkwin, buffer);
+			col = Tk_GetColor(interp, textPtr->tkwin, colorName);
 
 			if (col) {
 			    myValObj = Tcl_ObjPrintf("#%02x%02x%02x", col->red, col->green, col->blue);
