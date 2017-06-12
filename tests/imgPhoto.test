@@ -758,7 +758,7 @@ test imgPhoto-18.1 {Reject corrupted GIF (binary string)} -constraints {
     image create photo gif1 -data $data
 } -cleanup {
     catch {image delete gif1}
-} -returnCodes error -result {error reading color map}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
 test imgPhoto-18.2 {Reject corrupted GIF (base 64 string)} -constraints {
     SegfaultOn8.5
 } -setup {
@@ -770,7 +770,7 @@ test imgPhoto-18.2 {Reject corrupted GIF (base 64 string)} -constraints {
     image create photo gif1 -data $data
 } -cleanup {
     catch {image delete gif1}
-} -returnCodes error -result {error reading color map}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
 test imgPhoto-18.3 {Reject corrupted GIF (file)} -constraints {
     SegfaultOn8.5
 } -setup {
@@ -779,7 +779,7 @@ test imgPhoto-18.3 {Reject corrupted GIF (file)} -constraints {
     image create photo gif1 -file $fileName
 } -cleanup {
     catch {image delete gif1}
-} -returnCodes error -result {error reading color map}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
 test imgPhoto-18.4 {Reject truncated GIF (binary string)} -constraints {
     SegfaultOn8.5 base64PackageNeeded
 } -setup {
@@ -824,7 +824,7 @@ test imgPhoto-18.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
     image create photo gif1 -data $data
 } -cleanup {
     catch {image delete gif1}
-} -returnCodes error -result {not enough free memory for image buffer}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
 test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints {
     SegfaultOn8.5
 } -setup {
@@ -836,7 +836,7 @@ test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints 
     image create photo gif1 -data $data
 } -cleanup {
     catch {image delete gif1}
-} -returnCodes error -result {not enough free memory for image buffer}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
 test imgPhoto-18.9 {Reject corrupted GIF (> 4Gb) (file)} -constraints {
     SegfaultOn8.5
 } -setup {
@@ -845,7 +845,7 @@ test imgPhoto-18.9 {Reject corrupted GIF (> 4Gb) (file)} -constraints {
     image create photo gif1 -file $fileName
 } -cleanup {
     catch {image delete gif1}
-} -returnCodes error -result {not enough free memory for image buffer}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
 test imgPhoto-18.10 {Valid GIF (binary string)} -constraints {
     base64PackageNeeded
 } -setup {
