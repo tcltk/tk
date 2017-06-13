@@ -887,7 +887,8 @@ EntryWidgetObjCmd(
 		entryPtr->selectLast = index2;
 	    }
 	    if (!(entryPtr->flags & GOT_SELECTION)
-		    && (entryPtr->exportSelection)) {
+		    && (entryPtr->exportSelection)
+		    && (!Tcl_IsSafe(entryPtr->interp))) {
 		Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY,
 			EntryLostSelection, entryPtr);
 		entryPtr->flags |= GOT_SELECTION;
@@ -1122,7 +1123,7 @@ ConfigureEntry(
      * value.
      */
 
-    oldExport = entryPtr->exportSelection;
+    oldExport = (entryPtr->exportSelection) && (!Tcl_IsSafe(entryPtr->interp));
     if (entryPtr->type == TK_SPINBOX) {
 	oldValues = sbPtr->valueStr;
 	oldFormat = sbPtr->reqFormat;
@@ -1276,6 +1277,7 @@ ConfigureEntry(
 	 */
 
 	if (entryPtr->exportSelection && (!oldExport)
+		&& (!Tcl_IsSafe(entryPtr->interp))
 		&& (entryPtr->selectFirst != -1)
 		&& !(entryPtr->flags & GOT_SELECTION)) {
 	    Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, EntryLostSelection,
@@ -2745,7 +2747,8 @@ EntrySelectTo(
      * Grab the selection if we don't own it already.
      */
 
-    if (!(entryPtr->flags & GOT_SELECTION) && (entryPtr->exportSelection)) {
+    if (!(entryPtr->flags & GOT_SELECTION) && (entryPtr->exportSelection)
+	    && (!Tcl_IsSafe(entryPtr->interp))) {
 	Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, EntryLostSelection,
 		entryPtr);
 	entryPtr->flags |= GOT_SELECTION;
@@ -2812,7 +2815,8 @@ EntryFetchSelection(
     const char *string;
     const char *selStart, *selEnd;
 
-    if ((entryPtr->selectFirst < 0) || !(entryPtr->exportSelection)) {
+    if ((entryPtr->selectFirst < 0) || (!entryPtr->exportSelection)
+	    || Tcl_IsSafe(entryPtr->interp)) {
 	return -1;
     }
     string = entryPtr->displayString;
@@ -2865,7 +2869,8 @@ EntryLostSelection(
      */
 
     if (TkpAlwaysShowSelection(entryPtr->tkwin)
-	    && (entryPtr->selectFirst >= 0) && entryPtr->exportSelection) {
+	    && (entryPtr->selectFirst >= 0) && entryPtr->exportSelection
+	    && (!Tcl_IsSafe(entryPtr->interp))) {
 	entryPtr->selectFirst = -1;
 	entryPtr->selectLast = -1;
 	EventuallyRedraw(entryPtr);
@@ -4034,7 +4039,8 @@ SpinboxWidgetObjCmd(
 		entryPtr->selectLast = index2;
 	    }
 	    if (!(entryPtr->flags & GOT_SELECTION)
-		    && entryPtr->exportSelection) {
+		    && entryPtr->exportSelection
+		    && (!Tcl_IsSafe(entryPtr->interp))) {
 		Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY,
 			EntryLostSelection, entryPtr);
 		entryPtr->flags |= GOT_SELECTION;
