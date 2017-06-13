@@ -6511,7 +6511,7 @@ DisplayLineBackground(
  *----------------------------------------------------------------------
  *
  * AsyncUpdateLineMetrics --
- 
+ *
  *	This function is invoked as a background handler to update the pixel-
  *	height calculations of individual lines in an asychronous manner.
  *
@@ -7548,6 +7548,10 @@ FindDisplayLineStartEnd(
 	 * We don't want an offset inside a multi-byte sequence, so find the start
 	 * of the current character.
 	 */
+
+#if TCL_UTF_MAX > 4
+# error "The text widget is designed for UTF-8, this applies also to the legacy code. Undocumented pseudo UTF-8 strings cannot be processed with this function, because it relies on the UTF-8 specification."
+#endif
 
 	while (p > segPtr->body.chars && (*p & 0xc0) == 0x80) {
 	    p -= 1;
@@ -9938,7 +9942,9 @@ MeasureUp(
 	return false;
     }
 
-    *dstPtr = *srcPtr;
+    if (dstPtr != srcPtr) {
+	*dstPtr = *srcPtr;
+    }
     startLinePtr = TkBTreeGetStartLine(textPtr);
     linePtr = TkTextIndexGetLine(srcPtr);
 
@@ -13248,12 +13254,13 @@ CheckLineMetricConsistency(
 	    for (k = 0; k < dispLineInfo->numDispLines; ++k) {
 		const TkTextDispLineEntry *entry = dispLineInfo->entry + k;
 
-#if 0 /* not valid if -startindex is set */
-		if (k == 0 && entry->byteOffset != 0) {
+		if (k == 0
+			&& entry->byteOffset != 0
+			/* this check does not work if -startindex is set */
+			&& textPtr->startMarker == textPtr->sharedTextPtr->startMarker) {
 		    Tcl_Panic("CheckLineMetricConsistency: first display line (line %d.%u) should "
 			    "have byte offset zero", logicalLineNum, k);
 		}
-#endif
 		if ((entry + 1)->byteOffset <= entry->byteOffset) {
 		    Tcl_Panic("CheckLineMetricConsistency: display line (line %d.%u) has invalid byte "
 			    "offset %d (previous is %d)", logicalLineNum, k, (entry + 1)->byteOffset,
