@@ -62,6 +62,21 @@
 # define DEBUG(expr) expr
 #endif
 
+// Portability to 8.5/8.6
+#if TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7
+# ifdef MAC_OSX_TK
+static int
+TkpDrawingIsDisabled(
+   Tk_Window tkwin)
+{
+    MacDrawable *macWin = ((TkWindow *) tkwin)->privatePtr;
+    return macWin && !!(macWin->flags & TK_DO_NOT_DRAW);
+}
+#else
+static int TkpDrawingIsDisabled(Tk_Window tkwin) { return 0; }
+#endif
+#endif /* TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7 */
+
 /*
  * "Calculations of line pixel heights and the size of the vertical
  * scrollbar."
