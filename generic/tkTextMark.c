@@ -1760,7 +1760,7 @@ SetMark(
 	    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr, COUNT_INDICES);
 	}
 
-	if (sharedTextPtr->steadyMarks
+	if (!sharedTextPtr->steadyMarks
 		&& (!typePtr || typePtr == markPtr->typePtr)
 		&& TkTextIndexIsEqual(&oldIndex, indexPtr)) {
 	    return markPtr; /* this mark did not change the position */
