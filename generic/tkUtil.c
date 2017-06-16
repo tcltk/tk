@@ -1334,14 +1334,14 @@ TkUtfPrev(
 {
     const char *p = Tcl_UtfPrev(start, source);
 
-    if (((source[0]&0xFF) == 0xED) && ((source[1]&0xF0) == 0xB0)
-	    && ((source[2]&0xC0) == 0x80)) {
+    if ((p == source-3) && ((p[0]&0xFF) == 0xED)
+	    && ((p[1]&0xF0) == 0xB0) && ((p[2]&0xC0) == 0x80)) {
 	/* We are pointing to a low surrogate. If the previous
 	 * codepoint is a high surrogate, we want that in stead. */
-	const char *q = Tcl_UtfPrev(start, p);
+	const char *q = p - 3;
 
-	if (((q[0]&0xFF) == 0xED) && ((q[1]&0xF0) == 0xA0)
-		&& ((q[2]&0xC0) == 0x80)) {
+	if ((q >= start) && ((q[0]&0xFF) == 0xED)
+		&& ((q[1]&0xF0) == 0xA0) && ((q[2]&0xC0) == 0x80)) {
 	    p = q;
 	}
     }
@@ -1371,15 +1371,13 @@ TkUtfNext(
 {
     const char *p = Tcl_UtfNext(source);
 
-    if (((source[0]&0xFF) == 0xED) && ((source[1]&0xF0) == 0xA0)
-	    && ((source[2]&0xC0) == 0x80)) {
-	const char *q = Tcl_UtfNext(p);
-
-	/* We are pointing to a high surrogate. If the next
-	 * codepoint is a low surrogate, we want that in stead. */
-	if (((q[0]&0xFF) == 0xED) && ((q[1]&0xF0) == 0xB0)
-		&& ((q[2]&0xC0) == 0x80)) {
-	    p = q;
+    if ((p == source+3) && ((source[0]&0xFF) == 0xED)
+	    && ((source[1]&0xF0) == 0xA0) && ((source[2]&0xC0) == 0x80)) {
+	/* We were pointing to a high surrogate. If the next
+	 * codepoint is a low surrogate, we want to advance one more. */
+	if (((p[0]&0xFF) == 0xED) && ((p[1]&0xF0) == 0xB0)
+		&& ((p[2]&0xC0) == 0x80)) {
+	    p += 3;
 	}
     }
     return p;
