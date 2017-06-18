@@ -530,8 +530,8 @@ The built-in handlers support these suboptions:
 The option is allowed when writing image data to a string with
 \fIimageName\fR \fBdata\fR. Specifies the format to use for the color
 string of each pixel. \fIformatType\fR may be one of: \fBrgb\fR to
-encode pixel data in the form \fB#\fIRRGGBB\fR, \fBargb\fR to encode
-pixel data in the form \fB#\fIAARRGGBB\fR or \fBlist\fR to encode
+encode pixel data in the form \fB#\fIRRGGBB\fR, \fBrgba\fR to encode
+pixel data in the form \fB#\fIRRGGBBAA\fR or \fBlist\fR to encode
 pixel data as a list with four elements. See \fBCOLOR FORMATS\fR
 below for details. The default is \fBrgb\fR.
 .VE 8.7
@@ -590,14 +590,14 @@ A Tcl list with three or four integers in the range 0 to 255,
 specifying the values for the red, green, blue and (optionally) 
 alpha channels respectively.
 .IP \(bu 3
-\fB#\fR\fIARGB\fR format: a \fB#\fR followed by four hexadecimal digits,
-where each digit is the value for the alpha, red, green and blue 
+\fB#\fR\fIRGBA\fR format: a \fB#\fR followed by four hexadecimal digits,
+where each digit is the value for the red, green, blue and alpha
 channels respectively. Each digit will be expanded internally to 
-8-bits by multiplication by 0x11.
+8 bits by multiplication by 0x11.
 .IP \(bu 3
-\fB#\fR\fIAARRGGBB\fR format: \fB#\fR followed by eight hexadecimal digits,
-where two subsequent digits represent the value for the alpha, red, green
-and blue channels respectively.
+\fB#\fR\fIRRGGBBAA\fR format: \fB#\fR followed by eight hexadecimal digits,
+where each pair of  subsequent digits represents the value for the red,
+green, blue and alpha channels respectively.
 .VE 8.7
 .SH "COLOR ALLOCATION"
 .PP

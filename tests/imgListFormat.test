@@ -2,7 +2,7 @@
 # ("list format") implementend in the file tkImgListFormat.c.
 # It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) ???
+# Copyright (c) 2017 Simon Bachmann
 # All rights reserved.
 #
 # Author: Simon Bachmann (simonbachmann@bluewin.ch)
@@ -67,19 +67,19 @@ test imgListFormat-1.6 {ParseFormatOptions: bad -colorformat val #1} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
-    {bad color format "bogus": must be rgb, argb, or list}
+    {bad color format "bogus": must be rgb, rgba, or list}
 test imgListFormat-1.7 {ParseFormatOptions: bad -colorformat val #2} -setup {
     image create photo photo1
 } -body {
     photo1 data -format {default -colorformat tkcolor}
 } -returnCodes error -result \
-    {bad color format "tkcolor": must be rgb, argb, or list}
+    {bad color format "tkcolor": must be rgb, rgba, or list}
 test imgListFormat-1.8 {ParseFormatOptions: bad -colorformat #3} -setup {
     image create photo photo1
 } -body {
     photo1 data -format {default -colorformat emptystring}
 } -returnCodes error -result \
-    {bad color format "emptystring": must be rgb, argb, or list}
+    {bad color format "emptystring": must be rgb, rgba, or list}
 test imgListFormat-1.9 {ParseFormatOptions: bad -colorformat #4} -setup {
     image create photo photo1
 } -body {
@@ -87,26 +87,26 @@ test imgListFormat-1.9 {ParseFormatOptions: bad -colorformat #4} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
-    {bad color format "rgb-short": must be rgb, argb, or list}
+    {bad color format "rgb-short": must be rgb, rgba, or list}
 test imgListFormat-1.10 {ParseFormatOptions: bad -colorformat #5} -setup {
     image create photo photo1
 } -body {
-    photo1 data -format {default -colorformat argb-short}
+    photo1 data -format {default -colorformat rgba-short}
 } -returnCodes error -result \
-    {bad color format "argb-short": must be rgb, argb, or list}
+    {bad color format "rgba-short": must be rgb, rgba, or list}
 test imgListFormat-1.11 {valid colorformats} -setup {
     image create photo photo1
 } -body {
     photo1 put white#78
     set result {}
     lappend result [photo1 data -format {default -colorformat rgb}]
-    lappend result [photo1 data -format {default -colorformat argb}]
+    lappend result [photo1 data -format {default -colorformat rgba}]
     lappend result [photo1 data -format {default -colorformat list}]
     set result
 } -cleanup {
     imageCleanup
     unset result
-} -result {{{#ffffff}} {{#78ffffff}} {{{255 255 255 120}}}}
+} -result {{{#ffffff}} {{#ffffff78}} {{{255 255 255 120}}}}
 
 # GetBadOptMsg: only use case already tested with imgListFormat-1.4
     
@@ -195,7 +195,7 @@ test imgListFormat-4.5 {StringReadDef: correct compositing rule} -constraints {
     image create photo photo2
 } -body {
     photo2 put #FF0000 -to 0 0 50 50
-    photo2 put [photo1 data -format {default -colorformat argb}] -to 10 10 40 40
+    photo2 put [photo1 data -format {default -colorformat rgba}] -to 10 10 40 40
     list [photo2 get 0 0 -withalpha] [photo2 get 20 25 -withalpha] \
 	[photo2 get 49 49 -withalpha]
 } -cleanup {
@@ -227,7 +227,7 @@ test imgListFormat-5.3 {StringWriteDef: non-option arg in format} -setup {
 test imgListFormat-5.4 {StringWriteDef: empty image} -setup {
     image create photo photo1
 } -body {
-    photo1 data -format {default -colorformat argb}
+    photo1 data -format {default -colorformat rgba}
 } -cleanup {
     imageCleanup
 } -result {}
@@ -266,7 +266,7 @@ test imgListFormat-5.7 {StringWriteDef: test some pixels #2} -constraints {
     set result {}
     image create photo photo1 -file $teapotPhotoFile
 } -body {
-    set imgData [photo1 data -format {default -colorformat argb}]
+    set imgData [photo1 data -format {default -colorformat rgba}]
     # note: with [lindex], the coords are inverted (y x)
     lappend result [lindex $imgData 0 0]
     lappend result [lindex $imgData 3 2]
@@ -278,7 +278,7 @@ test imgListFormat-5.7 {StringWriteDef: test some pixels #2} -constraints {
     unset result
     unset imgData
     imageCleanup
-} -result {{#ff135cc0} #ff135cc0 #ffa06d52 #ffe1c8ba #ff135cc0}
+} -result {{#135cc0ff} #135cc0ff #a06d52ff #e1c8baff #135cc0ff}
 test imgListFormat-5.8 {StringWriteDef: test some pixels #3} -constraints {
     hasTranspTeapotPhoto
 } -setup {
@@ -300,7 +300,7 @@ test imgListFormat-5.9 {StringWriteDef: test some pixels #4} -constraints {
 } -setup {
     image create photo photo1 -file $transpTeapotPhotoFile
 } -body {
-    set imgData [photo1 data -format {default -colorformat argb}]
+    set imgData [photo1 data -format {default -colorformat rgba}]
     set result [lindex $imgData 3 2]
     lappend result [lindex $imgData 107 53]
     lappend result [lindex $imgData 203 157]
@@ -309,7 +309,7 @@ test imgListFormat-5.9 {StringWriteDef: test some pixels #4} -constraints {
     unset result
     unset imgData
     imageCleanup
-} -result {{#e1004eb9} #aaa14100 #afffca9f}
+} -result {{#004eb9e1} #a14100aa #ffca9faf}
 test imgListFormat-5.10 {StringWriteDef: test some pixels #5} -constraints {
     hasTranspTeapotPhoto
 } -setup {
@@ -364,10 +364,10 @@ test imgListFormat-6.4 {ParseColor: #XXX color, different forms} -setup {
     image create photo photo1
 } -body {
     photo1 put {{#A123 #334455} {#012 #fffefd#00}}
-    photo1 data -format {default -colorformat argb}
+    photo1 data -format {default -colorformat rgba}
 } -cleanup {
     imageCleanup
-} -result {{#aa112233 #ff334455} {#ff001122 #00fffefd}}        
+} -result {{#aa112233 #334455ff} {#001122ff #fffefd00}}        
 test imgListFormat-6.5 {ParseColor: list format} -setup {
     image create photo photo1
 } -body {
@@ -399,7 +399,7 @@ test imgListFormat-6.8 {ParseColor: overall test} -setup {
 		{snow@0.5 snow#80 snow#8 #fffffafafafa@0.5 #fffffabbfacc#8}
 		{#fffffafffaff#80 #ffffaafaa@.5 #ffffaafaa#8 #ffffaafaa#80 #fee#8}
 		{#fee#80 #fee@0.5 #fffafa@0.5 #fffafa#8 #fffafa#80}
-		{{0xff 250 0xfa 128} {255 250 250} #8fee #80fffafa snow}}
+		{{0xff 250 0xfa 128} {255 250 250} #fee8 #fffafa80 snow}}
     for {set y 0} {$y < 4} {incr y} {
 		for {set x 0} {$x < 5} {incr x} {
 			lappend result [photo1 get $x $y -withalpha]
@@ -482,10 +482,10 @@ test imgListFormat-7.9 {ParseColorAsList: additional spaces in list} -setup {
     image create photo photo1
 } -body {
     photo1 put { { { 1 2 3} {1  2	 3} } { {1 2 3  } {  1  2  3   4  }  } }
-    photo1 data -format {default -colorformat argb}
+    photo1 data -format {default -colorformat rgba}
 } -cleanup {
     imageCleanup
-} -result {{#ff010203 #ff010203} {#ff010203 #04010203}}
+} -result {{#010203ff #010203ff} {#010203ff #01020304}}
 test imgListFormat-7.10 {ParseColorAsList: list format, string rep} -setup {
 	image create photo photo1
 } -body {
@@ -518,10 +518,10 @@ test imgListFormat-8.3 {ParseColorAsHex: RGB with suffix, 8 chars} -setup {
 } -cleanup {
     imageCleanup
 } -result {{#ffffff #abcdef}}
-test imgListFormat-8.4 {ParseColor: valid #ARGB color} -setup {
+test imgListFormat-8.4 {ParseColor: valid #RGBA color} -setup {
     image create photo photo1
 } -body {
-    photo1 put {{#0d9bd502 #F7ac}}
+    photo1 put {{#9bd5020d #7acF}}
     list [photo1 get 0 0 -withalpha] [photo1 get 1 0 -withalpha]
 } -cleanup {
     imageCleanup

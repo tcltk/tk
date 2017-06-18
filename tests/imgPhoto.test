@@ -1144,8 +1144,8 @@ test imgPhoto-4.96 {ImgPhotoCmd put: "default" handler is selected} -setup {
     lappend result [list [image width photo1] [image height photo1]]
     lappend result [list [image width photo2] [image height photo2]]
     lappend result [string equal \
-        [photo1 data -format "default -colorformat argb"] \
-        [photo2 data -format "default -colorformat argb"]]
+        [photo1 data -format "default -colorformat rgba"] \
+        [photo2 data -format "default -colorformat rgba"]]
     set result
 } -cleanup {
     imageCleanup
@@ -1312,11 +1312,11 @@ test imgPhoto-4.115 {ImgPhotoCmd data: rgb colorformat} -setup {
 } -body {
     photo1 data -format {default -colorformat rgb}
 } -result {{#ff0000 #008000} {#0000ff #ffffff}}
-test imgPhoto-4.116 {ImgPhotoCmd data: argb colorformat} -setup {
+test imgPhoto-4.116 {ImgPhotoCmd data: rgba colorformat} -setup {
     image create photo photo1 -data {{red green} {blue white}}
 } -body {
-    photo1 data -format {default -colorformat argb}
-} -result {{#ffff0000 #ff008000} {#ff0000ff #ffffffff}}
+    photo1 data -format {default -colorformat rgba}
+} -result {{#ff0000ff #008000ff} {#0000ffff #ffffffff}}
 test imgPhoto-4.117 {ImgPhotoCmd data: list colorformat} -setup {
     image create photo photo1 -data {{red#a green} {blue#c white#d}}
 } -body {
@@ -1336,7 +1336,7 @@ test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
     set result {}
     # We don't test gif here, as there seems to be a problem with 
     # <imgName> data and gif format ("too many colors", probably a bug)
-    foreach fmt {ppm png {default -colorformat argb} \
+    foreach fmt {ppm png {default -colorformat rgba} \
             {default -colorformat list}} {
         set imgData [teapotTransp data -format $fmt]
         photo1 blank
