@@ -47,7 +47,7 @@
 #define TK_PHOTO_MAX_COLOR_CHARS 99
 
 /*
- * "Names" for the different formats of a color string.
+ * Symbols for the different formats of a color string.
  */
 
 enum ColorFormatType {
@@ -56,8 +56,8 @@ enum ColorFormatType {
     COLORFORMAT_LIST,
     COLORFORMAT_RGB1,
     COLORFORMAT_RGB2,
-    COLORFORMAT_ARGB1,
-    COLORFORMAT_ARGB2
+    COLORFORMAT_RGBA1,
+    COLORFORMAT_RGBA2
 };
 
 /*
@@ -71,8 +71,8 @@ static const char *const colorFormatNames[] = {
     "list",
     "rgb-short",
     "rgb",
-    "argb-short",
-    "argb",
+    "rgba-short",
+    "rgba",
     NULL
 };
 
@@ -259,9 +259,9 @@ ParseFormatOptions(
                     TCL_EXACT, &typeIndex) != TCL_OK
                     || (typeIndex != COLORFORMAT_LIST
                     && typeIndex != COLORFORMAT_RGB2
-                    && typeIndex != COLORFORMAT_ARGB2) ) {
+                    && typeIndex != COLORFORMAT_RGBA2) ) {
                 Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad color format "
-                        "\"%s\": must be rgb, argb, or list",
+                        "\"%s\": must be rgb, rgba, or list",
                         Tcl_GetString(objv[index])));
                 Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
                         "BAD_COLOR_FORMAT", NULL);
@@ -565,7 +565,7 @@ StringReadDef(
          */
         
         if (Tcl_ListObjGetElements(interp, rowListPtr[y], &curColCount, 
-                        &colListPtr) != TCL_OK) {
+                &colListPtr) != TCL_OK) {
             goto errorExit;
         }
         for (x = srcX; x < colCount; x++) {
@@ -679,7 +679,7 @@ StringWriteDef(
                 }
 
                 /*
-                 * We don't build lines as a list for #ARGB and #RGB. Since 
+                 * We don't build lines as a list for #RGBA and #RGB. Since 
                  * these color formats look like comments, the first element
                  * of the list would get quoted with an additional {} . 
                  * While this is not a problem if the data is used as
@@ -693,10 +693,10 @@ StringWriteDef(
                             pixelPtr[greenOffset], pixelPtr[blueOffset]);
                     Tcl_DStringAppend(&line, colorBuf, -1);
                     break;
-                case COLORFORMAT_ARGB2:
-                    sprintf(colorBuf, "#%02x%02x%02x%02x ",  alphaVal,
+                case COLORFORMAT_RGBA2:
+                    sprintf(colorBuf, "#%02x%02x%02x%02x ",
                             pixelPtr[0], pixelPtr[greenOffset],
-                            pixelPtr[blueOffset]);
+                            pixelPtr[blueOffset], alphaVal);
                     Tcl_DStringAppend(&line, colorBuf, -1);
                     break;
                 case COLORFORMAT_LIST:
@@ -718,7 +718,7 @@ StringWriteDef(
             }
             if (opts.colorFormat != COLORFORMAT_LIST) {
                 /*
-                 * For the #XXX formats, we need to remvoe the last
+                 * For the #XXX formats, we need to remove the last
                  * whitespace.
                  */
                 
@@ -775,7 +775,7 @@ ParseColor(
     int charCount;
     
     /*
-     * Try to guess the color format
+     * Find out which color format we have
      */
     
     specString = Tcl_GetStringFromObj(specObj, &charCount);
@@ -899,7 +899,7 @@ ParseColorAsList(
  *
  *      This function extracts color and alpha values from a string
  *      starting with '#', followed by hex digits. It undestands both
- *      the #ARGB form and the #RBG (with optional suffix)
+ *      the #RGBA form and the #RBG (with optional suffix)
  *
  * Results:
  *      On success, writes red, green, blue and alpha values to the 
@@ -946,18 +946,18 @@ ParseColorAsHex(
     colorValue = strtoul(colorString + 1, NULL, 16);
     switch (colorStrLen - 1) {
     case 4:
-        /* #ARGB format */
-        *alphaPtr = (unsigned char) ((colorValue >> 12) * 0x11);
-        *redPtr = (unsigned char) (((colorValue >> 8) & 0xf) * 0x11);
-        *greenPtr = (unsigned char) (((colorValue >> 4) & 0xf) * 0x11);
-        *bluePtr = (unsigned char) ((colorValue & 0xf) * 0x11);
+        /* #RGBA format */
+        *redPtr = (unsigned char) ((colorValue >> 12) * 0x11);
+        *greenPtr = (unsigned char) (((colorValue >> 8) & 0xf) * 0x11);
+        *bluePtr = (unsigned char) (((colorValue >> 4) & 0xf) * 0x11);
+        *alphaPtr = (unsigned char) ((colorValue & 0xf) * 0x11);
         return TCL_OK;
     case 8:
-        /* #AARRGGBB format */
-        *alphaPtr = (unsigned char) (colorValue >> 24);
-        *redPtr = (unsigned char) ((colorValue >> 16) & 0xff);
-        *greenPtr = (unsigned char) ((colorValue >> 8) & 0xff);
-        *bluePtr = (unsigned char) (colorValue & 0xff);
+        /* #RRGGBBAA format */
+        *redPtr = (unsigned char) (colorValue >> 24);
+        *greenPtr = (unsigned char) ((colorValue >> 16) & 0xff);
+        *bluePtr = (unsigned char) ((colorValue >> 8) & 0xff);
+        *alphaPtr = (unsigned char) (colorValue & 0xff);
         return TCL_OK;
     default:
         Tcl_Panic("unexpected switch fallthrough");
