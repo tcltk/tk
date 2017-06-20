@@ -2850,7 +2850,7 @@ Otherwise only clear the specified stack. The specified stack must be either
 Inserts a separator (boundary) on the undo stack. Does nothing when the
 \fB\-undo\fR option is false. Per default the insertion of the separator
 will be postponed until the next
-\fBinsert\fR/\fBdelete\fR//\fBreplace\fR/\fBedit undo\fR/\fBedit redo\fR
+\fBinsert\fR/\fBdelete\fR/\fBreplace\fR/\fBedit undo\fR/\fBedit redo\fR
 command will be performed. If option \fB\-immediately\fR is specified then
 the separator will be pushed immediately; this is required if mark or tag
 operations should be separated.
