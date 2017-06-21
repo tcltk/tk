@@ -1130,7 +1130,7 @@ typedef struct TkSharedText {
 				 * event has been accepted. */
 
     /*
-     * Miscellanous information.
+     * Miscellaneous information.
      */
 
     bool steadyMarks;		/* This option causes that any mark now simultaneous behaves like
@@ -1176,8 +1176,8 @@ typedef struct TkSharedText {
     int maxRedoDepth;		/* The maximum depth of the redo stack expressed as the
     				 * maximum number of compound statements. */
     int maxUndoSize;		/* The maximum number of bytes kept on the undo stack. */
-    bool undo;			/* Non-zero means the undo/redo behaviour is enabled. */
     int autoSeparators;		/* Non-zero means the separators will be inserted automatically. */
+    bool undo;			/* Non-zero means the undo/redo behaviour is enabled. */
     bool isModified;		/* Flag indicating the computed 'modified' state of the text widget. */
     bool isAltered;		/* Flag indicating the computed 'altered' state of the text widget. */
     bool isIrreversible;	/* Flag indicating the computed 'irreversible' flag. Value
@@ -1187,6 +1187,8 @@ typedef struct TkSharedText {
     				 * Value 'true' is superseding the computed value, but value
 				 * 'false' is only clearing to the initial state of this flag. */
     bool undoStackEvent;	/* Flag indicating whether <<UndoStack>> is already triggered. */
+    bool pushSeparator;		/* Flag indicating whether a separator has to be pushed before next
+    				 * insert/delete item. */
     unsigned undoLevel;		/* The undo level which corresponds to the unmodified state. */
     TkTextEditMode lastEditMode;/* Keeps track of what the last edit mode was. */
     int lastUndoTokenType;	/* Type of newest undo token on stack. */

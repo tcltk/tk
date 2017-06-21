@@ -551,6 +551,8 @@ static bool		TriggerWatchEdit(TkText *textPtr, bool userFlag, const char *operat
 			    const char *info, bool final);
 static void		TriggerUndoStackEvent(TkSharedText *sharedTextPtr);
 static void		PushRetainedUndoTokens(TkSharedText *sharedTextPtr);
+static void		PushUndoSeparatorIfNeeded(TkSharedText *sharedTextPtr, bool autoSeparators,
+			    TkTextEditMode currentEditMode);
 static bool		IsEmpty(const TkSharedText *sharedTextPtr, const TkText *textPtr);
 static bool		IsClean(const TkSharedText *sharedTextPtr, const TkText *textPtr,
 			    bool discardSelection);
@@ -942,7 +944,9 @@ TkTextPushUndoToken(
 	sharedTextPtr->insertDeleteUndoTokenCount += 1;
     }
 
+    // XXX but before the separator
     PushRetainedUndoTokens(sharedTextPtr);
+    // XXX after the separator
     TkTextUndoPushItem(sharedTextPtr->undoStack, token, byteSize);
 }
 
@@ -3080,6 +3084,39 @@ TextPeerCmd(
 /*
  *----------------------------------------------------------------------
  *
+ * PushUndoSeparatorIfNeeded --
+ *
+ *	Push undo separator if needed.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	May push a separator onto undo stack.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+PushUndoSeparatorIfNeeded(
+    TkSharedText *sharedTextPtr,
+    bool autoSeparators,
+    TkTextEditMode currentEditMode)
+{
+    assert(sharedTextPtr->undoStack);
+
+    if (sharedTextPtr->pushSeparator
+	    || (autoSeparators && sharedTextPtr->lastEditMode != currentEditMode)) {
+	PushRetainedUndoTokens(sharedTextPtr);
+	TkTextUndoPushSeparator(sharedTextPtr->undoStack, true);
+	sharedTextPtr->pushSeparator = false;
+	sharedTextPtr->lastUndoTokenType = -1;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TextReplaceCmd --
  *
  *	This function is invoked to process part of the "replace" widget
@@ -3133,11 +3170,7 @@ TextReplaceCmd(
 
     if (sharedTextPtr->undoStack) {
 	sharedTextPtr->autoSeparators = false;
-	if (origAutoSep && sharedTextPtr->lastEditMode != TK_TEXT_EDIT_REPLACE) {
-	    PushRetainedUndoTokens(sharedTextPtr);
-	    TkTextUndoPushSeparator(sharedTextPtr->undoStack, true);
-	    sharedTextPtr->lastUndoTokenType = -1;
-	}
+	PushUndoSeparatorIfNeeded(sharedTextPtr, origAutoSep, TK_TEXT_EDIT_REPLACE);
     }
 
     /* The line and segment storage may change when deleting. */
@@ -3385,6 +3418,7 @@ ClearText(
     sharedTextPtr->userHasSetModifiedFlag = false;
     sharedTextPtr->haveToSetCurrentMark = false;
     sharedTextPtr->undoLevel = 0;
+    sharedTextPtr->pushSeparator = false;
     sharedTextPtr->imageCount = 0;
     sharedTextPtr->tree = TkBTreeCreate(sharedTextPtr, oldEpoch + 1);
     sharedTextPtr->insertDeleteUndoTokenCount = 0;
@@ -4051,6 +4085,7 @@ TkConfigureText(
 		    TextUndoStackContentChangedCallback);
 	    TkTextUndoSetContext(sharedTextPtr->undoStack, sharedTextPtr);
 	    sharedTextPtr->undoLevel = 0;
+	    sharedTextPtr->pushSeparator = false;
 	    sharedTextPtr->isIrreversible = false;
 	    sharedTextPtr->isAltered = false;
 	} else {
@@ -5143,11 +5178,7 @@ InsertChars(
 
 	assert(undoInfo.byteSize == 0);
 
-	if (sharedTextPtr->autoSeparators && sharedTextPtr->lastEditMode != TK_TEXT_EDIT_INSERT) {
-	    PushRetainedUndoTokens(sharedTextPtr);
-	    TkTextUndoPushSeparator(sharedTextPtr->undoStack, true);
-	    sharedTextPtr->lastUndoTokenType = -1;
-	}
+	PushUndoSeparatorIfNeeded(sharedTextPtr, sharedTextPtr->autoSeparators, TK_TEXT_EDIT_INSERT);
 
 	pushToken = sharedTextPtr->lastUndoTokenType != TK_TEXT_UNDO_INSERT
 		|| !((subAtom = TkTextUndoGetLastUndoSubAtom(sharedTextPtr->undoStack))
@@ -5878,11 +5909,7 @@ DeleteIndexRange(
     if (undoInfoPtr) {
 	const TkTextUndoSubAtom *subAtom;
 
-	if (sharedTextPtr->autoSeparators && sharedTextPtr->lastEditMode != TK_TEXT_EDIT_DELETE) {
-	    PushRetainedUndoTokens(sharedTextPtr);
-	    TkTextUndoPushSeparator(sharedTextPtr->undoStack, true);
-	    sharedTextPtr->lastUndoTokenType = -1;
-	}
+	PushUndoSeparatorIfNeeded(sharedTextPtr, sharedTextPtr->autoSeparators, TK_TEXT_EDIT_DELETE);
 
 	if (TkTextUndoGetMaxSize(sharedTextPtr->undoStack) == 0
 		|| TkTextUndoGetCurrentSize(sharedTextPtr->undoStack) + undoInfo.byteSize
@@ -9190,6 +9217,7 @@ TextEditCmd(
 
 		TkTextUndoClearStack(sharedTextPtr->undoStack);
 		sharedTextPtr->undoLevel = 0;
+		sharedTextPtr->pushSeparator = false;
 		sharedTextPtr->isAltered = false;
 		sharedTextPtr->isIrreversible = false;
 		TkTextUpdateAlteredFlag(sharedTextPtr);
@@ -9221,6 +9249,7 @@ TextEditCmd(
 		if (stack[0] == 'u') {
 		    TkTextUndoClearUndoStack(sharedTextPtr->undoStack);
 		    sharedTextPtr->undoLevel = 0;
+		    sharedTextPtr->pushSeparator = false;
 		    sharedTextPtr->isAltered = false;
 		    sharedTextPtr->isIrreversible = false;
 		    TkTextUpdateAlteredFlag(sharedTextPtr);
@@ -9247,11 +9276,12 @@ TextEditCmd(
 	    return TCL_ERROR;
 	}
 	if (sharedTextPtr->undoStack) {
+	    sharedTextPtr->pushSeparator = true;
 	    if (immediately) {
-		PushRetainedUndoTokens(sharedTextPtr);
+		/* last two args are meaningless here */
+		PushUndoSeparatorIfNeeded(sharedTextPtr, sharedTextPtr->autoSeparators,
+			TK_TEXT_EDIT_OTHER);
 	    }
-	    TkTextUndoPushSeparator(sharedTextPtr->undoStack, immediately);
-	    sharedTextPtr->lastUndoTokenType = -1;
 	}
 	break;
     }
