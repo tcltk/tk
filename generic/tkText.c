@@ -944,9 +944,7 @@ TkTextPushUndoToken(
 	sharedTextPtr->insertDeleteUndoTokenCount += 1;
     }
 
-    // XXX but before the separator
     PushRetainedUndoTokens(sharedTextPtr);
-    // XXX after the separator
     TkTextUndoPushItem(sharedTextPtr->undoStack, token, byteSize);
 }
 
