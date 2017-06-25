@@ -13430,8 +13430,7 @@ CharChunkMeasureChars(
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
 
-    const TkTextDispChunk* baseChunkPtr = chunkPtr->baseChunkPtr;
-    int widthUntilStart = 0;
+    const TkTextDispChunk *baseChunkPtr = chunkPtr->baseChunkPtr;
 
     assert(baseChunkPtr);
 
@@ -13459,17 +13458,20 @@ CharChunkMeasureChars(
 	 */
 
 	if (start == (int) baseChunkPtr->numBytes) {
-	    startX -= baseChunkPtr->width;
+	    startX -= chunkPtr->x - baseChunkPtr->x;
 	} else {
 	    TkTextDispChunk *charChunkPtr;
+	    TkTextDispChunk *lastChunkPtr = chunkPtr;
 
 	    for (charChunkPtr = chunkPtr->prevCharChunkPtr;
 		    charChunkPtr && charChunkPtr->baseChunkPtr == baseChunkPtr;
 		    charChunkPtr = charChunkPtr->prevCharChunkPtr) {
-		startX -= charChunkPtr->width;
+		lastChunkPtr = charChunkPtr;
 	    }
+	    startX -= chunkPtr->x - lastChunkPtr->x;
 	}
     } else {
+	int widthUntilStart;
 	MeasureChars(tkfont, chars, charsLen, 0, start, 0, -1, 0, &widthUntilStart);
 	startX -= widthUntilStart;
     }
