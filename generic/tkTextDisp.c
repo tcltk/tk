@@ -13457,19 +13457,7 @@ CharChunkMeasureChars(
 	 * This is a very frequent case, and MeasureChars() is not needed here.
 	 */
 
-	if (start == (int) baseChunkPtr->numBytes) {
-	    startX -= chunkPtr->x - baseChunkPtr->x;
-	} else {
-	    TkTextDispChunk *charChunkPtr;
-	    TkTextDispChunk *lastChunkPtr = chunkPtr;
-
-	    for (charChunkPtr = chunkPtr->prevCharChunkPtr;
-		    charChunkPtr && charChunkPtr->baseChunkPtr == baseChunkPtr;
-		    charChunkPtr = charChunkPtr->prevCharChunkPtr) {
-		lastChunkPtr = charChunkPtr;
-	    }
-	    startX -= chunkPtr->x - lastChunkPtr->x;
-	}
+	startX -= chunkPtr->x - baseChunkPtr->x;
     } else {
 	int widthUntilStart;
 	MeasureChars(tkfont, chars, charsLen, 0, start, 0, -1, 0, &widthUntilStart);
