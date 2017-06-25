@@ -63,7 +63,7 @@
 #endif
 
 // Portability to 8.5/8.6
-#if TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION < 7
+#if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7
 # ifdef MAC_OSX_TK
 static int
 TkpDrawingIsDisabled(
