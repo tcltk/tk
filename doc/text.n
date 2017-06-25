@@ -2493,6 +2493,8 @@ commands can set this flag to true:
 .IP [1] 4
 \fIpathName \fBdelete\fR
 .IP [2] 4
+\fIpathName \fBedit recover\fR
+.IP [2] 4
 \fIpathName \fBedit redo\fR
 .IP [3] 4
 \fIpathName \fBinsert\fR
@@ -2829,9 +2831,23 @@ will be enabled.
 \fIpathName \fBedit modified \fR?\fIboolean\fR?
 .
 If \fIboolean\fR is not specified, returns the modified flag of the widget.
-The insert, delete, edit undo and edit redo commands or the user can set or
-clear the modified flag. If \fIboolean\fR is specified, sets the modified flag
-of the widget to \fIboolean\fR.
+The \fBinsert\fR, \fBdelete\fR, \fBedit undo\fR, \fBedit redo\fR and
+\fBedit recover\fR commands or the user can set or clear the modified flag.
+If \fIboolean\fR is specified, sets the modified flag of the widget to
+\fIboolean\fR.
+.TP
+\fIpathName \fBedit recover\fR
+.
+Applies all undo items, without adding redo items. The initial text (before
+any modification has been done since the undo stack is enabled) will be
+recovered. The undo stack is empty afterwards.
+.RS
+.PP
+Note: If \fBedit irreversible\fR returns true (before calling this function),
+then it's not possible to recover the initial text, in this case it will be
+recovered as much as possible. If \fBedit irreversible\fR returns false (before
+calling this function), then the state \fBedit altered\fR will change to false.
+.RE
 .TP
 \fIpathName \fBedit redo\fR
 .
