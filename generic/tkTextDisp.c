@@ -13430,12 +13430,13 @@ CharChunkMeasureChars(
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
 
+    const TkTextDispChunk* baseChunkPtr = chunkPtr->baseChunkPtr;
     int widthUntilStart = 0;
 
-    assert(chunkPtr->baseChunkPtr);
+    assert(baseChunkPtr);
 
     if (!chars) {
-	const Tcl_DString *baseChars = &chunkPtr->baseChunkPtr->baseChars;
+	const Tcl_DString *baseChars = &baseChunkPtr->baseChars;
 
 	chars = Tcl_DStringValue(baseChars);
 	charsLen = Tcl_DStringLength(baseChars);
@@ -13452,11 +13453,27 @@ CharChunkMeasureChars(
 	}
     }
 
-    if (start != ciPtr->baseOffset) {
+    if (start == ciPtr->baseOffset) {
+	/*
+	 * This is a very frequent case, and MeasureChars() is not needed here.
+	 */
+
+	if (start == (int) baseChunkPtr->numBytes) {
+	    startX -= baseChunkPtr->width;
+	} else {
+	    TkTextDispChunk *charChunkPtr;
+
+	    for (charChunkPtr = chunkPtr->prevCharChunkPtr;
+		    charChunkPtr && charChunkPtr->baseChunkPtr == baseChunkPtr;
+		    charChunkPtr = charChunkPtr->prevCharChunkPtr) {
+		startX -= charChunkPtr->width;
+	    }
+	}
+    } else {
 	MeasureChars(tkfont, chars, charsLen, 0, start, 0, -1, 0, &widthUntilStart);
+	startX -= widthUntilStart;
     }
 
-    startX = chunkPtr->baseChunkPtr->x + (startX - widthUntilStart - chunkPtr->x);
     rangeStart = 0;
 
 #else
