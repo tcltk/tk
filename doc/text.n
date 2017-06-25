@@ -2493,8 +2493,6 @@ commands can set this flag to true:
 .IP [1] 4
 \fIpathName \fBdelete\fR
 .IP [2] 4
-\fIpathName \fBedit recover\fR
-.IP [2] 4
 \fIpathName \fBedit redo\fR
 .IP [3] 4
 \fIpathName \fBinsert\fR
@@ -2512,8 +2510,8 @@ commands can set this flag to true:
 This flag will be false before any of these operations have been done. It
 can never be false if \fBedit irreversible\fR reports true. It will be true
 after \fBclear\fR and \fBload\fR, and it will be true again if all changes
-have been undone (with \fBedit undo\fR). Also enabling the undo stack (via
-widget option \fB\-undo\fR) will reset this state to false.
+have been undone (with \fBedit undo\fR or \fBedit recover\fR). Also enabling
+the undo stack (via widget option \fB\-undo\fR) will reset this state to false.
 .PP
 Any change of this state, if caused by an operation with (eventual) effects
 on the (representation of the) text content, will trigger the virtual event
@@ -2866,7 +2864,7 @@ Otherwise only clear the specified stack. The specified stack must be either
 Inserts a separator (boundary) on the undo stack. Does nothing when the
 \fB\-undo\fR option is false. Per default the insertion of the separator
 will be postponed until the next
-\fBinsert\fR/\fBdelete\fR/\fBreplace\fR/\fBedit undo\fR/\fBedit redo\fR
+\fBinsert\fR/\fBdelete\fR/\fBreplace\fR/\fBedit undo\fR/\fBedit redo\fR/\fBedit recover\fR
 command will be performed. If option \fB\-immediately\fR is specified then
 the separator will be pushed immediately; this is required if mark or tag
 operations should be separated.
@@ -4033,7 +4031,7 @@ replacement) is specified with
 .QW insert
 (the insertion cursor).
 .IP \(bu 3
-\fBedit undo\fR|\fBredo\fR will trigger the corresponding
+\fBedit undo\fR|\fBredo\fR|\fBrecover\fR will trigger the corresponding
 \fBundo\fR|\fBredo\fR event.
 .IP \(bu 3
 A resize or content change of a displayed image will trigger event \fBimage\fR.
@@ -4050,7 +4048,7 @@ change:
 .IP \(bu 3
 \fIpathName \fBconfigure\fR
 .IP \(bu 3
-\fIpathName \fBedit redo\fR|\fBundo\fR
+\fIpathName \fBedit recover\fR|\fBredo\fR|\fBundo\fR
 .IP \(bu 3
 \fIpathName \fBimage\fR \fBconfigure\fR|\fBcreate\fR
 .IP \(bu 3
