@@ -1791,7 +1791,17 @@ test text-8.26 {TextWidgetCmd procedure, "replace" option crash} -setup {
 } -cleanup {
     destroy .tt
 } -result {}
-test text-8.27 {"delete" tagged newline} -setup {
+test text-8.27 {TextWidgetCmd procedure, "replace" option crash} -setup {
+    text .tt
+} -body {
+    .tt insert 0.0 \na
+    for {set i 0} {$i < 2} {incr i} {
+        .tt replace 2.0 3.0 b
+    }
+} -cleanup {
+    destroy .tt
+} -result {}
+test text-8.28 {"delete" tagged newline} -setup {
     text .tt
 } -body {
     .tt insert end \n tag1
