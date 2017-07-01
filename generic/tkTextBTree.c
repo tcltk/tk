@@ -7567,7 +7567,10 @@ DeleteIndexRange(
 	    redoToken->startIndex = undoToken->startIndex;
 	    redoToken->endIndex = undoToken->endIndex;
 	} else {
-	    if (segPtr1 && TkTextIsStableMark(segPtr1) && !(flags & DELETE_MARKS)) {
+	    if (sharedTextPtr->steadyMarks
+		    && segPtr1
+		    && TkTextIsStableMark(segPtr1)
+		    && !(flags & DELETE_MARKS)) {
 		redoToken->startIndex.u.markPtr = segPtr1;
 		redoToken->startIndex.lineIndex = -1;
 	    } else {
@@ -7575,7 +7578,10 @@ DeleteIndexRange(
 		TkTextIndexSetSegment(&index, firstPtr);
 		MakeUndoIndex(sharedTextPtr, &index, &redoToken->startIndex, GRAVITY_LEFT);
 	    }
-	    if (segPtr2 && TkTextIsStableMark(segPtr2) && !(flags & DELETE_MARKS)) {
+	    if (sharedTextPtr->steadyMarks
+		    && segPtr2
+		    && TkTextIsStableMark(segPtr2)
+		    && !(flags & DELETE_MARKS)) {
 		redoToken->endIndex.u.markPtr = segPtr2;
 		redoToken->endIndex.lineIndex = -1;
 	    } else {
