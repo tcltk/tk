@@ -7022,6 +7022,22 @@ test text-27.27 {undo with empty text, and tagged newline} -body {
 } -cleanup {
     destroy .t
 } -result {1.0 2.0}
+test text-27.28 {Bug e32292c454704f7defd1cb335b5663f9c4f245d4 \
+                 undo is undoing too much} -setup {
+    pack [text .t -undo 1]
+} -body {
+    .t insert end "Line 1\nLine 2\n"
+    .t tag configure number -foreground red
+    .t tag add number 1.5
+    .t tag add number 2.5
+    .t edit separator
+    .t insert 1.0 "    "
+    .t edit separator
+    .t edit undo
+    .t tag getrange number 2.5    ; # shall not be {}
+} -cleanup {
+    destroy .t
+} -result {2.5 2.6}
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
@@ -8016,6 +8032,234 @@ test text-37.13 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{break {}}}\
     {{text 1 {}} {break {n}}}\
     {{break {}}}}
+
+# non-regression regarding miscellaneous bugs, especially crashes and failed assertions
+
+test text-38.1 "Bug 83632316b9cc27a2bfc743e049f078419480871e \
+                Crash with -showinsertforeground and -blockcursor" -setup {
+} -body {
+    set w [text .t \
+        -showinsertforeground yes \
+        -blockcursor on ]
+    focus $w
+    grid $w
+    $w insert end "Bug"
+    update                ; # this used to crash
+} -cleanup {
+    destroy $w
+} -result {}
+test text-38.2 "Bug 5cfd9dfe0d60f6a78fbdb07e1a0d385216160bd6 \
+                -startindex and -endindex defaults cannot be re-eaten by the text widget" -setup {
+    text .t
+} -body {
+    .t configure -startindex [.t cget -startindex]    ; # used to error:  bad text index ""
+    .t configure -endindex [.t cget -endindex]        ; # used to error:  bad text index ""
+} -cleanup {
+    destroy .t
+} -result {}
+test text-38.3 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
+                Segfaults in revised_text - Case 1 (early measurements)" -setup {
+    set message {    When wish is built with "--enable-symbols", this demo 
+                     causes wish to fail an assertion, and to segfault, at startup.
+
+      The code tries to measure the text widget before it has been drawn.  
+      This may be unwise, but <Configure> bindings often use measurement code 
+      like this, and it is better if the widget returns default results than 
+      if it fails: then the first <Configure> event after Tk draws the window 
+      will do the calculation correctly.  The "traditional" text widget appears 
+      to work this way.
+    }
+    # This procedure measures things that may not be defined before
+    # the widget is drawn.
+    # Arguments:
+    # textWidget -   text widget to be examined
+    # index -        index in the logical line to be examined
+    proc HowMuchIndent {textWidget index} {
+        set newWrapRegexp   {[^[:space:]]}
+        set lineStart [$textWidget index "$index linestart"]
+        set secondDispLineStart [$textWidget index "$lineStart + 1 display line"]
+        set indentTo  [$textWidget search -regexp -count matchLen -- \
+        $newWrapRegexp $lineStart $secondDispLineStart]
+        if {$indentTo eq {}} {
+            set pix 0
+        } else {
+            set indentTo [$textWidget index "$indentTo + $matchLen chars - 1 char"]
+            set pix [$textWidget count -xpixels $lineStart $indentTo]
+        }
+        return $pix
+    }
+    pack [text .t] -padx 2
+} -body {
+    .t configure -wrap word -undo 1
+    .t configure -width 42 -height 26 -font {{Courier} -15} -bg white
+    .t insert end $message
+    # Either one of the following commands is OK. Both together used to cause a failed
+    # assertion and a segfault.
+    HowMuchIndent .t 1.0
+    HowMuchIndent .t 2.0
+} -cleanup {
+    destroy .t
+    unset message
+} -result {0}
+test text-38.4 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
+                Segfaults in revised_text - Case 2 (undo after tag lower)" -setup {
+    pack [text .t] -padx 2
+} -body {
+    .t configure -wrap word -undo 1
+    .t insert end "Line 1\nLine2"
+    .t edit separator
+    # Now add a tag, after the edit separator
+    .t tag configure foo -undo 1
+    .t tag add foo 1.0 2.0
+    .t tag lower foo
+    # The undo operation should remove the tag "foo" from the first line,
+    # but instead the application used to segfault
+    .t edit undo
+} -cleanup {
+    destroy .t
+} -result {}
+test text-38.5 "Bug 0d630132f2fb8043fc68e18cbb981a10ab27154c \
+                Assertion failed in tkTextIndex.c" -setup {
+    pack [text .t]
+} -body {
+    .t insert end "a\nb\n\n"
+    .t mark set insert 1.0
+    update
+    for {set i 1} {$i <= 2} {incr i} {
+        .t insert insert "\n"
+        set winfoheight [winfo height .t]
+        set curheight 1
+        while {$curheight <= $winfoheight} {
+            set pos [.t index "@0,$curheight linestart"]
+            incr curheight 11
+        }
+    }
+} -cleanup {
+    destroy .t
+} -result {}
+test text-38.6 "Bug 3f1d48e263ee057743e98b7279bdbe0940515546 \
+                Assertion failed in tkTextIndex.c" -setup {
+    pack [text .t]
+} -body {
+    .t insert end "re"
+    .t mark set inset 1.1
+    update
+    .t mark set p1 {insert linestart}  ; # assertion used to fail
+} -cleanup {
+    destroy .t
+} -result {}
+test text-38.7 "Bug c3e31d8f981a95a0d7c4d936134e27a9ae5160ed \
+                Assertion failed in tkTextMark.c" -setup {
+    pack [text .t -undo 1]
+} -body {
+    .t insert end "a\nb\nc\nd\ne\nf\ng\n"
+    .t mark set unsavedmodifiedline1 5.0
+    .t mark set unsavedmodifiedline2 6.0
+    .t edit undo
+    foreach amark [.t mark names] {
+      if {[string match *savedmodifiedline* $amark]} {
+        .t mark unset $amark
+      }
+    }
+} -cleanup {
+    destroy .t
+} -result {}
+test text-38.8 "Bug 73175271f22560fda74194bb5ca73daacb139c85 \
+                Assertion failed in tkTextTagSetPriv.h" -setup {
+    text .t
+} -body {
+    .t load {{text 0 {number}}}
+} -cleanup {
+    destroy .t
+} -result {}
+test text-38.9 "Bug 283d52f41f455ac383a95ba688a7e217e9b8755d \
+                Assertion failed in tkTextMark.c" -setup {
+    pack [text .t -undo 1]
+} -body {
+    .t insert end "a\nb\nc\nd\ne\nf\ng\n"
+    .t mark set unsavedmodifiedline1 5.0
+    .t mark set unsavedmodifiedline2 6.0
+    .t edit undo
+    foreach amark [.t mark names] {
+      if {[string match *savedmodifiedline* $amark]} {
+        .t mark unset $amark
+      }
+    }
+    .t index unsavedmodifiedline2    ; # assertion used to fail
+} -cleanup {
+    destroy .t
+} -returnCodes {error} -result {bad text index "unsavedmodifiedline2"}
+test text-38.10 "Bug 3cd0454c1d3b205157b5fa6bf226d3ad4c4bb8d2 \
+                 Assertion failed in tkTextBTree.c" -setup {
+    pack [text .t -undo 1]
+} -body {
+    .t tag configure t -foreground darkred
+    for {set i 0} {$i < 2000} {incr i} {
+        set c [expr {2*$i}]
+        lappend ranges 1.$c
+        lappend ranges 1.[incr c]
+    }
+    .t insert end [string repeat "a" 4000]
+    .t tag add t {*}$ranges
+    .t tag remove t begin end    ; # used to crash
+} -cleanup {
+    destroy .t
+} -result {}
+test text-38.11 "Bug 0bc9df5fe388558fa4f666799c631b9bfd4fc053 \
+                 Assertion failed in tkTextMark.c" -setup {
+    text .t -undo 1
+} -body {
+    .t load [list   {right stop} \
+                    {break {}} \
+                    {break {}} ]
+    update
+    .t delete 1.0 end
+    .t edit reset
+    .t mark next 1.0    ; # used to crash
+ } -cleanup {
+    destroy .t
+} -result {stop}
+test text-38.12 "Bug 2563b9689e415e496bcb86314cdb13387e919d92 \
+                 inspect subcommand, option -complete" -setup {
+    text .t
+} -body {
+    .t inspect -complete    ; # used to panic
+} -cleanup {
+    destroy .t
+} -match glob -result {*}
+test text-38.13 "Bug fc24165111709d5add5fb7532e30bb18233c0404 \
+                 bbox does not return {} for off-screen characters" -setup {
+    pack [text .t -width 10 -height 10 -wrap char]
+} -body {
+    .t insert 1.0 "abcd\nefg hijkl mnop qrstuv wxyz"
+    .t tag configure y -wrap none
+    update
+    .t tag add y 1.end 2.2
+    .t bbox 2.20
+} -cleanup {
+    destroy .t
+} -result {}
+test text-38.14 "Bug 9ffb79059bacafe3796bc3ab3ae701f402f4c813 \
+                 Assertion failed in tkTextIndex.c" -setup {
+    pack [text .t -undo 1]
+} -body {
+    .t insert end "Line 1\nLine 2\n"
+    .t edit separator
+    .t tag configure number -foreground red
+    .t tag add number 1.5
+    .t tag add number 2.5
+    .t edit separator
+
+    .t tag add sel 1.0 2.0
+    .t mark set leftbound 1.0
+    .t mark gravity leftbound left
+    .t delete 1.0 1.6
+    .t mark unset leftbound 1.6
+    .t edit undo    ; # used to crash
+} -cleanup {
+    destroy .t
+} -result {}
+
 
 # cleanup
 cleanupTests
