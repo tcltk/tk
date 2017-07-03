@@ -1589,6 +1589,16 @@ test text-8.26 {TextWidgetCmd procedure, "replace" option crash} -setup {
 } -cleanup {
     destroy .tt
 } -result {}
+test text-8.27 {TextWidgetCmd procedure, "replace" option crash} -setup {
+    text .tt
+} -body {
+    .tt insert 0.0 \na
+    for {set i 0} {$i < 2} {incr i} {
+        .tt replace 2.0 3.0 b
+    }
+} -cleanup {
+    destroy .tt
+} -result {}
 
 
 test text-9.1 {TextWidgetCmd procedure, "get" option} -setup {
@@ -6333,6 +6343,7 @@ test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
     text .t
     pack .t
     set ::retval {}
+    update
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
 # Shouldn't require [update idle] to trigger event [Bug 1809538]
