@@ -1228,7 +1228,7 @@ Tk_AllocFontFromObj(
 
     descent = fontPtr->fm.descent;
     fontPtr->underlinePos = descent / 2;
-    fontPtr->underlineHeight = TkFontGetPixels(tkwin, fontPtr->fa.size) / 10;
+    fontPtr->underlineHeight = (int) (TkFontGetPixels(tkwin, fontPtr->fa.size) / 10 + 0.5);
     if (fontPtr->underlineHeight == 0) {
 	fontPtr->underlineHeight = 1;
     }
@@ -1795,7 +1795,7 @@ Tk_PostscriptFontName(
 	}
     }
 
-    return fontPtr->fa.size;
+    return (int)(fontPtr->fa.size + 0.5);
 }
 
 /*
@@ -3404,7 +3404,7 @@ ConfigAttributesObj(
 	    if (Tcl_GetIntFromObj(interp, valuePtr, &n) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    faPtr->size = n;
+	    faPtr->size = (double)n;
 	    break;
 	case FONT_WEIGHT:
 	    n = TkFindStateNumObj(interp, optionPtr, weightMap, valuePtr);
@@ -3495,7 +3495,11 @@ GetAttributeInfoObj(
 	    break;
 
 	case FONT_SIZE:
-	    valuePtr = Tcl_NewIntObj(faPtr->size);
+	    if (faPtr->size >= 0.0) {
+		valuePtr = Tcl_NewIntObj((int)(faPtr->size + 0.5));
+	    } else {
+		valuePtr = Tcl_NewIntObj(-(int)(-faPtr->size + 0.5));
+	    }
 	    break;
 
 	case FONT_WEIGHT:
@@ -3644,7 +3648,7 @@ ParseFontNameObj(
 	if (Tcl_GetIntFromObj(interp, objv[1], &n) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	faPtr->size = n;
+	faPtr->size = (double)n;
     }
 
     i = 2;
@@ -3888,7 +3892,7 @@ TkFontParseXLFD(
      * historical compatibility.
      */
 
-    faPtr->size = 12;
+    faPtr->size = 12.0;
 
     if (FieldSpecified(field[XLFD_POINT_SIZE])) {
 	if (field[XLFD_POINT_SIZE][0] == '[') {
@@ -3902,10 +3906,10 @@ TkFontParseXLFD(
 	     * the purpose of, so I ignore them.
 	     */
 
-	    faPtr->size = atoi(field[XLFD_POINT_SIZE] + 1);
+	    faPtr->size = atof(field[XLFD_POINT_SIZE] + 1);
 	} else if (Tcl_GetInt(NULL, field[XLFD_POINT_SIZE],
-		&faPtr->size) == TCL_OK) {
-	    faPtr->size /= 10;
+		&i) == TCL_OK) {
+	    faPtr->size = i/10.0;
 	} else {
 	    return TCL_ERROR;
 	}
@@ -3927,9 +3931,11 @@ TkFontParseXLFD(
 	     * ignore them.
 	     */
 
-	    faPtr->size = atoi(field[XLFD_PIXEL_SIZE] + 1);
+	    faPtr->size = atof(field[XLFD_PIXEL_SIZE] + 1);
 	} else if (Tcl_GetInt(NULL, field[XLFD_PIXEL_SIZE],
-		&faPtr->size) != TCL_OK) {
+		&i) == TCL_OK) {
+	    faPtr->size = (double)i;
+	} else {
 	    return TCL_ERROR;
 	}
     }
@@ -4005,21 +4011,21 @@ FieldSpecified(
  *---------------------------------------------------------------------------
  */
 
-int
+double
 TkFontGetPixels(
     Tk_Window tkwin,		/* For point->pixel conversion factor. */
-    int size)			/* Font size. */
+    double size)		/* Font size. */
 {
     double d;
 
-    if (size < 0) {
+    if (size <= 0.0) {
 	return -size;
     }
 
     d = size * 25.4 / 72.0;
     d *= WidthOfScreen(Tk_Screen(tkwin));
     d /= WidthMMOfScreen(Tk_Screen(tkwin));
-    return (int) (d + 0.5);
+    return d;
 }
 
 /*
@@ -4039,21 +4045,21 @@ TkFontGetPixels(
  *---------------------------------------------------------------------------
  */
 
-int
+double
 TkFontGetPoints(
     Tk_Window tkwin,		/* For pixel->point conversion factor. */
-    int size)			/* Font size. */
+    double size)		/* Font size. */
 {
     double d;
 
-    if (size >= 0) {
+    if (size >= 0.0) {
 	return size;
     }
 
     d = -size * 72.0 / 25.4;
     d *= WidthMMOfScreen(Tk_Screen(tkwin));
     d /= WidthOfScreen(Tk_Screen(tkwin));
-    return (int) (d + 0.5);
+    return d;
 }
 
 /*
