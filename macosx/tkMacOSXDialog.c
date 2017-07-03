@@ -915,7 +915,6 @@ Tk_GetSaveFileObjCmd(
 	} else {
 	    [savepanel setNameFieldStringValue:@""];
 	}
-	[savepanel setNameFieldStringValue:filename];
 	[savepanel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
 	       { [NSApp tkFilePanelDidEnd:savepanel
