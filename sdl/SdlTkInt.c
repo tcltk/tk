@@ -730,7 +730,9 @@ MkTransChars(XKeyEvent *ev)
     int ch = 0;
 
     if ((ev->keycode >= SDL_SCANCODE_A) && (ev->keycode <= SDL_SCANCODE_Z)) {
-	ev->trans_chars[0] = ev->keycode - SDL_SCANCODE_A + 'a';
+	int a = (ev->state & (ShiftMask | LockMask)) ? 'A' : 'a';
+
+	ev->trans_chars[0] = ev->keycode - SDL_SCANCODE_A + a;
 	ev->nbytes = 1;
 	return 1;
     }
@@ -1253,13 +1255,15 @@ skipTranslation:
 	} else if (sdl_event->type == SDL_TEXTEDITING) {
 	    EVLOG("TEXTEDITING:  '%s'", sdl_event->edit.text);
 	} else if (sdl_event->type == SDL_KEYDOWN) {
-	    EVLOG("    KEYDOWN:  CODE=0x%02X  MOD=0x%X",
+	    EVLOG("    KEYDOWN:  CODE=0x%02X  MOD=0x%X  SYM=0x%X",
 		  sdl_event->key.keysym.scancode,
-		  sdl_event->key.keysym.mod);
+		  sdl_event->key.keysym.mod,
+		  sdl_event->key.keysym.sym);
 	} else if (sdl_event->type == SDL_KEYUP) {
-	    EVLOG("      KEYUP:  CODE=0x%02X  MOD=0x%X",
+	    EVLOG("      KEYUP:  CODE=0x%02X  MOD=0x%X  SYM=0x%X",
 		  sdl_event->key.keysym.scancode,
-		  sdl_event->key.keysym.mod);
+		  sdl_event->key.keysym.mod,
+		  sdl_event->key.keysym.sym);
 	}
 #endif
 
@@ -1414,6 +1418,8 @@ doNormalKeyEvent:
 	    } else if (event->xkey.keycode == SDL_SCANCODE_SPACE) {
 		event->xkey.nbytes = 1;
 		event->xkey.trans_chars[0] = ' ';
+	    } else if (sdl_event->key.keysym.sym & SDLK_SCANCODE_MASK) {
+		/* most likely compose key, ignore it */
 	    } else {
 		MkTransChars(&event->xkey);
 	    }
