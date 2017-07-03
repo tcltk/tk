@@ -170,6 +170,7 @@ bind Menu <<NextLine>> {
 }
 bind Menu <KeyPress> {
     tk::TraverseWithinMenu %W %A
+    break
 }
 
 # The following bindings apply to all windows, and are used to
