@@ -3313,21 +3313,7 @@ LayoutChars(
 	 * characters up to (and including) the tab.
 	 */
 
-	if (data->justify == TK_TEXT_JUSTIFY_LEFT) {
-	    const char *p = base;
-	    unsigned i;
-
-	    /* TODO: also TK_TEXT_JUSTIFY_RIGHT should support tabs */
-	    /* TODO: direction of tabs should depend on gravity of insert mark?! */
-
-	    for (i = 0; i < maxBytes; ++i, ++p) {
-		if (*p == '\t') {
-		    maxBytes = i + 1;
-		    gotTab = true;
-		    break;
-		}
-	    }
-	} else if (data->justify == TK_TEXT_JUSTIFY_FULL) {
+	if (data->justify == TK_TEXT_JUSTIFY_FULL) {
 	    const char *p = base;
 	    const char *e = p + maxBytes;
 
@@ -3360,6 +3346,19 @@ LayoutChars(
 		} while (IsExpandableSpace(p));
 
 		maxBytes = p - base;
+	    }
+	} else {
+	    const char *p = base;
+	    unsigned i;
+
+	    /* TODO: direction of tabs should depend on gravity of insert mark?! */
+
+	    for (i = 0; i < maxBytes; ++i, ++p) {
+		if (*p == '\t') {
+		    maxBytes = i + 1;
+		    gotTab = true;
+		    break;
+		}
 	    }
 	}
     }
