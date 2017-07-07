@@ -2385,6 +2385,7 @@ LayoutUpdateLineHeightInformation(
 
     assert(dlPtr->byteCount > 0);
     assert(linePtr->logicalLine);
+    assert(TkTextIndexGetLine(&dlPtr->index));
     assert(linePtr == TkBTreeGetLogicalLine(
 	    textPtr->sharedTextPtr, textPtr, TkTextIndexGetLine(&dlPtr->index)));
 
@@ -4096,6 +4097,8 @@ LayoutDLine(
     assert(displayLineNo >= 0);
     assert((displayLineNo == 0) ==
 	    (IsStartOfNotMergedLine(indexPtr) || TkTextIndexIsStartOfText(indexPtr)));
+    assert(indexPtr);
+    assert(TkTextIndexGetLine(indexPtr));
 
     DEBUG(stats.numLayouted += 1);
 
@@ -4665,6 +4668,7 @@ ComputeDisplayLineInfo(
     unsigned viewHeight;
 
     assert(info);
+    assert(TkTextIndexGetLine(indexPtr));
 
     linePtr = TkTextIndexGetLine(indexPtr);
     logicalLinePtr = TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr);
@@ -6651,6 +6655,8 @@ UpdateLineMetrics(
 	int lineNum = range->low;
 	int high = range->high;
 
+	assert(lineNum < TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr));
+
 	linePtr = TkBTreeFindLine(textPtr->sharedTextPtr->tree, textPtr, lineNum);
 	logicalLinePtr = TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr);
 
@@ -6772,6 +6778,7 @@ TkTextUpdateLineMetrics(
 
 	lineNum = range->low;
 	endLine = MIN((int) endLine, TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr) - 1);
+	assert((int) lineNum < TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr));
 
 	while (true) {
 	    const TkTextPixelInfo *pixelInfo;
@@ -7455,6 +7462,8 @@ TkTextCountDisplayLines(
 
     assert(TkTextIndexCompare(indexFrom, indexTo) <= 0);
     assert(textPtr->sharedTextPtr->allowUpdateLineMetrics);
+    assert(TkTextIndexGetLine(indexFrom));
+    assert(TkTextIndexGetLine(indexTo));
 
     TkTextUpdateLineMetrics(textPtr, TkTextIndexGetLineNumber(indexFrom, textPtr),
 	    TkTextIndexGetLineNumber(indexTo, textPtr));
@@ -7848,6 +7857,8 @@ GetPixelsTo(
     TkTextIndex index;
     unsigned byteOffset;
 
+    assert(TkTextIndexGetLine(indexPtr));
+
     logicalLinePtr = TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr,
 	    TkTextIndexGetLine(indexPtr));
     if (logicalLinePtr == TkBTreeGetLastLine(textPtr)) {
@@ -7969,6 +7980,7 @@ UpdateOneLine(
     unsigned pixelHeight;
 
     assert(linePtr != TkBTreeGetLastLine(textPtr));
+    assert(TkTextIndexGetLine(indexPtr));
 
     if (!indexPtr) {
 	TkTextIndexClear(&index, textPtr);
@@ -8776,6 +8788,8 @@ TextChanged(
     DLine *lastPtr= NULL;
     TkTextIndex rounded;
     TkTextLine *linePtr;
+
+    assert(TkTextIndexGetLine(index1Ptr));
 
     /*
      * Find the DLines corresponding to index1Ptr and index2Ptr. There is one
@@ -10591,6 +10605,7 @@ MakePixelIndex(
 	TkTextIndexSetByteIndex2(indexPtr, linePtr, byteOffset);
     } else {
 	assert(lastLinePtr->prevPtr); /* MakePixelIndex will not be called if peer is empty */
+	assert(linePtr->prevPtr);
 	linePtr = TkBTreeGetLogicalLine(textPtr->sharedTextPtr, textPtr, linePtr->prevPtr);
 	TkTextIndexSetToLastChar2(indexPtr, linePtr);
 	FindDisplayLineStartEnd(textPtr, indexPtr, DISP_LINE_START, DLINE_CACHE);
