@@ -7830,6 +7830,7 @@ TkBTreePixelsTo(
 
     assert(textPtr);
     assert(textPtr->pixelReference != -1);
+    assert(linePtr);
 
     if (linePtr == TkBTreeGetStartLine(textPtr)) {
 	return 0;
