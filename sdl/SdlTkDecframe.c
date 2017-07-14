@@ -90,18 +90,11 @@ struct {
 static void
 GetButtonBounds(_Window *_w, int button, int *x, int *y, int *w, int *h)
 {
-#ifdef ANDROID
     int fw = SdlTkX.dec_frame_width - 1;
     int buttonSize = SdlTkX.dec_title_height - fw;
 
     *x = _w->atts.width - (fw + buttonSize) * button;
     *y = SdlTkX.dec_frame_width / 2;
-#else
-    int buttonSize = SdlTkX.dec_title_height - 6;
-
-    *x = _w->atts.width - (5 + buttonSize) * button;
-    *y = 3;
-#endif
     *w = *h = buttonSize;
 }
 
@@ -712,9 +705,7 @@ SdlTkDecDrawFrame(_Window *_w)
 
     /* Close box */
     {
-#ifdef ANDROID
 	int lw2 = SdlTkX.dec_line_width + 2;
-#endif
         XPoint points[2];
 
 	GetButtonBounds(_w, DEC_BUTTON_CLOSE, &buttonX, &buttonY,
@@ -739,7 +730,6 @@ SdlTkDecDrawFrame(_Window *_w)
 	SdlTkGfxDrawRect(d, lightGC, buttonX, buttonY, buttonW - 1,
 			 buttonH - 1);
 
-#ifdef ANDROID
 	lightGC->line_width = SdlTkX.dec_line_width;
 
 	points[0].x = buttonX + lw2;
@@ -753,21 +743,7 @@ SdlTkDecDrawFrame(_Window *_w)
 	points[1].x = buttonX + lw2;
 	points[1].y = buttonY + buttonH - lw2;
 	SdlTkGfxDrawLines(d, lightGC, points, 2, CoordModeOrigin);
-#else
-	lightGC->line_width = 2;
 
-	points[0].x = buttonX + 3;
-	points[0].y = buttonY + 3;
-	points[1].x = buttonX + buttonW - 3;
-	points[1].y = buttonY + buttonH - 3;
-	SdlTkGfxDrawLines(d, lightGC, points, 2, CoordModeOrigin);
-
-	points[0].x = buttonX + buttonW - 3;
-	points[0].y = buttonY + 3;
-	points[1].x = buttonX + 3;
-	points[1].y = buttonY + buttonH - 3;
-	SdlTkGfxDrawLines(d, lightGC, points, 2, CoordModeOrigin);
-#endif
 	lightGC->line_width = 1;
     }
 
