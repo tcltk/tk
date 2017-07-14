@@ -5549,7 +5549,7 @@ ctxRetry:
 	if (dpi < 140) {
 	    /* keep X11 defaults */
 	} else if (dpi < 190) {
-	    SdlTkX.dec_frame_width = 8;
+	    SdlTkX.dec_frame_width = 9;
 	    SdlTkX.dec_title_height = 30;
 	    SdlTkX.dec_font_size = 14;
 	    SdlTkX.dec_line_width = 3;
@@ -5561,19 +5561,19 @@ ctxRetry:
 	    SdlTkX.dec_line_width = 4;
 	    SdlTkX.nearby_pixels = 15;
 	} else if (dpi < 320) {
-	    SdlTkX.dec_frame_width = 16;
+	    SdlTkX.dec_frame_width = 15;
 	    SdlTkX.dec_title_height = 46;
 	    SdlTkX.dec_font_size = 24;
 	    SdlTkX.dec_line_width = 5;
 	    SdlTkX.nearby_pixels = 20;
 	} else if (dpi < 420) {
-	    SdlTkX.dec_frame_width = 20;
+	    SdlTkX.dec_frame_width = 21;
 	    SdlTkX.dec_title_height = 60;
 	    SdlTkX.dec_font_size = 32;
 	    SdlTkX.dec_line_width = 7;
 	    SdlTkX.nearby_pixels = 27;
 	} else {
-	    SdlTkX.dec_frame_width = 26;
+	    SdlTkX.dec_frame_width = 27;
 	    SdlTkX.dec_title_height = 78;
 	    SdlTkX.dec_font_size = 40;
 	    SdlTkX.dec_line_width = 9;
