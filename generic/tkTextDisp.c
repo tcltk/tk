@@ -10067,6 +10067,8 @@ GetBbox(
     assert(yPtr);
     assert(widthPtr);
     assert(heightPtr);
+    assert(dlPtr);
+    assert(TkTextIndexCompare(&dlPtr->index, indexPtr) <= 0);
 
     /*
      * Find the chunk within the display line that contains the desired
@@ -10209,7 +10211,8 @@ TkTextSeeCmd(
      * It's also possible that the widget is not yet mapped.
      */
 
-    if (!(dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &index))) {
+    if (!(dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, &index))
+	    || TkTextIndexCompare(&dInfoPtr->dLinePtr->index, &index) > 0) {
 	return TCL_OK;
     }
 
