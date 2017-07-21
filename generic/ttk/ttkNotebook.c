@@ -595,8 +595,12 @@ static void NotebookPlaceSlaves(void *recordPtr)
     Notebook *nb = recordPtr;
     int currentIndex = nb->notebook.currentIndex;
     if (currentIndex >= 0) {
+	int activeIndex = nb->notebook.activeIndex;
+	int index = (activeIndex >= 0) ? activeIndex : currentIndex;
 	NotebookDoLayout(nb);
-	NotebookPlaceSlave(nb, currentIndex);
+	if (index >= 0) {
+	    NotebookPlaceSlave(nb, index);
+	}
     }
 }
 
