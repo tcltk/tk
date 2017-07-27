@@ -317,6 +317,11 @@ typedef struct PixelPos {
     int32_t yFirst, yLast;	/* Vertical pixel position. */
 } PixelPos;
 
+typedef struct DRegion {
+    int y1;
+    int y2;
+} DRegion;
+
 /*
  * Overall display information for a text widget:
  */
@@ -359,6 +364,8 @@ typedef struct TextDInfo {
     				/* Holds the end of line symbol (option -showendOfline). */
     TkTextSegment *endOfTextSegPtr;
     				/* Holds the end of text symbol (option -showendOftext). */
+    DRegion invalidRegion;	/* This regions contains the invalidated regions, because these
+    				 * regions cannot be scrolled. */
 
     /*
      * Cache for single lines:
@@ -948,6 +955,67 @@ AllocStatistic()
 static const char doNotBreakAtAll[8] = {
     LINEBREAK_NOBREAK, LINEBREAK_NOBREAK, LINEBREAK_NOBREAK, LINEBREAK_NOBREAK,
     LINEBREAK_NOBREAK, LINEBREAK_NOBREAK, LINEBREAK_NOBREAK, LINEBREAK_NOBREAK };
+
+/* XRectangle is rectricted to 16 bit, so we need a private rectangle struct. */
+typedef struct DRect {
+    int x, y;
+    int width, height;
+} DRect;
+
+static bool RectIsEmpty(const XRectangle *rect) { return rect->width == 0 || rect->height == 0; }
+
+static bool
+RectIntersects(
+    const XRectangle *rect1,
+    const DRect *rect2)
+{
+    return (int) rect1->x < rect2->x + rect2->width
+	&& rect2->x < (int) rect1->x + (int) rect1->width
+	&& (int) rect1->y < rect2->y + rect2->height
+	&& rect2->y < (int) rect1->y + (int) rect1->height;
+}
+
+static bool
+RectContainsRect(
+    const DRect *rect1,		/* this rectangle */
+    const XRectangle *rect2)	/* contains this one? */
+{
+    return rect1->x <= (int) rect2->x
+    	&& (int) rect2->x + (int) rect2->width <= rect1->x + rect1->width
+	&& rect1->y <= (int) rect2->y
+	&& (int) rect2->y + (int) rect2->height <= rect1->y + rect1->height;
+}
+
+static bool RegionIsEmpty(const DRegion *region) { return region->y1 >= region->y2; }
+
+static void
+RegionUnion(
+    DRegion* region,
+    int y1,
+    int y2)
+{
+    if (RegionIsEmpty(region))
+    {
+	region->y1 = y1;
+	region->y2 = y2;
+    }
+    else
+    {
+	region->y1 = MIN(region->y1, y1);
+	region->y2 = MAX(region->y2, y2);
+    }
+}
+
+static bool
+RegionIntersects(
+    const DRegion* region,
+    int y1,
+    int y2)
+{
+    return y1 < region->y2 && region->y1 <= y2;
+}
+
+static void ClearRegion(DRegion* region) { region->y1 = region->y2 = 0; }
 
 static bool IsPowerOf2(unsigned n) { return !(n & (n - 1)); }
 
@@ -1552,6 +1620,7 @@ TkTextCreateDInfo(
     dInfoPtr->lineMetricUpdateEpoch = 1;
     dInfoPtr->strBufferSize = 512;
     dInfoPtr->strBuffer = malloc(dInfoPtr->strBufferSize);
+    ClearRegion(&dInfoPtr->invalidRegion);
     TkTextIndexClear(&dInfoPtr->metricIndex, textPtr);
     TkTextIndexClear(&dInfoPtr->currChunkIndex, textPtr);
     SetupEolSegment(textPtr, dInfoPtr);
@@ -4926,6 +4995,45 @@ ComputeMissingMetric(
  *----------------------------------------------------------------------
  */
 
+static Tk_RestrictAction
+UpdateRestrictProc(
+    ClientData arg,
+    XEvent *eventPtr)
+{
+    TkText* textPtr = (TkText *) arg;
+
+    /*
+     * Defer events which aren't for the specified window.
+     */
+
+    if (eventPtr->xany.display == textPtr->display
+	    && eventPtr->xany.window == Tk_WindowId(textPtr->tkwin)) {
+	if (eventPtr->type == NoExpose) {
+	    /*
+	     * We handle this case although we do not expect this type of event.
+	     */
+	    return TK_DISCARD_EVENT;
+	}
+	if (eventPtr->type == GraphicsExpose) {
+	    /*
+	     * We handle this case although we do not expect this type of event.
+	     */
+	    TkTextRedrawRegion(textPtr,
+		    eventPtr->xgraphicsexpose.x, eventPtr->xgraphicsexpose.y,
+		    eventPtr->xgraphicsexpose.width, eventPtr->xgraphicsexpose.height);
+	    return TK_DISCARD_EVENT;
+	}
+	if (eventPtr->type == Expose) {
+	    TkTextRedrawRegion(textPtr,
+		    eventPtr->xexpose.x, eventPtr->xexpose.y,
+		    eventPtr->xexpose.width, eventPtr->xexpose.height);
+	    return TK_DISCARD_EVENT;
+	}
+    }
+
+    return TK_DEFER_EVENT;
+}
+
 static bool
 LineIsUpToDate(
     TkText *textPtr,
@@ -4960,11 +5068,45 @@ UpdateDisplayInfo(
     int y, maxY, xPixelOffset, maxOffset;
     unsigned displayLineNo;
     unsigned epoch;
+    Tk_RestrictProc* prevRestrictProc;
+    ClientData prevRestrictArg;
 
     if (!(dInfoPtr->flags & DINFO_OUT_OF_DATE)) {
 	return;
     }
     dInfoPtr->flags &= ~DINFO_OUT_OF_DATE;
+
+    /*
+     * Before doing any change in display lines we have to process all the dangling
+     * exposure events in event queue for this widget, because these events are
+     * belonging to the state before updating the display lines.
+     *
+     * Consider the following situation:
+     * A dialog window is triggering a deletion of a B-Tree line, and concurrently
+     * the dialog disappears (closed). The basic graphic layer (e.g. X11) will
+     * push exposure events because a region has been unobscured. But a motion
+     * event is preceding the exposure events, and this motion events is triggering
+     * TkTextPixelIndex() which needs updated display lines, and calls UpdateDisplayInfo()
+     * before the exposure events has been processed. When processing the exposure
+     * events afterwards function TextInvalidateRegion() will flag the wrong display
+     * lines as changed, because of the deletion of display lines the y position of
+     * some display lines has changed, but the exposure belongs to the old y positions.
+     * Such a situation has to be avoided, especially in combination with tooltips
+     * graphical glitches are very likely if we do not process the exposure events
+     * at the right time. Currently many widgets in the Tk library are suffering from
+     * this problem.
+     *
+     * TODO:
+     * This handling is still a work-around, because we have the problem that other
+     * events like motion events eventually are belonging to a different graphical
+     * state. But our handling is not worsen the situation. It seems that the whole
+     * library needs a clean basic concept how to handle events synchronously, but
+     * still efficient. Currently the concepts of the Tk library are a bit simple.
+     */
+
+    prevRestrictProc = Tk_RestrictEvents(UpdateRestrictProc, textPtr, &prevRestrictArg);
+    while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
+    Tk_RestrictEvents(prevRestrictProc, prevRestrictArg, &prevRestrictArg);
 
     /*
      * At first, update the default style, and reset cached chunk.
@@ -8142,6 +8284,7 @@ DisplayText(
     int bottomY = 0;		/* Initialization needed only to stop compiler warnings. */
     int extent1, extent2;
     Tcl_Interp *interp;
+    DRegion* invalidRegion = &dInfoPtr->invalidRegion;
 
     if (textPtr->flags & DESTROYED) {
 	return; /* the widget has been deleted */
@@ -8152,6 +8295,7 @@ DisplayText(
 	 * If drawing is disabled, all we need to do is clear the REDRAW_PENDING flag.
 	 */
 	dInfoPtr->flags &= ~REDRAW_PENDING;
+	ClearRegion(invalidRegion);
 	if (dInfoPtr->flags & ASYNC_PENDING) {
 	    assert(dInfoPtr->flags & ASYNC_UPDATE);
 	    dInfoPtr->flags &= ~ASYNC_PENDING;
@@ -8169,6 +8313,7 @@ DisplayText(
     if (!Tk_IsMapped(textPtr->tkwin) || dInfoPtr->maxX <= dInfoPtr->x || dInfoPtr->maxY <= dInfoPtr->y) {
 	UpdateDisplayInfo(textPtr);
 	dInfoPtr->flags &= ~REDRAW_PENDING;
+	ClearRegion(invalidRegion);
 	goto doScrollbars;
     }
     DEBUG(stats.numRedisplays += 1);
@@ -8231,6 +8376,7 @@ DisplayText(
 	 * 2. If the line hasn't moved
 	 * 3. If the line overlaps the bottom of the window and we are scrolling up.
 	 * 4. If the line overlaps the top of the window and we are scrolling down.
+	 * 5. If the line overlaps any invalidated region.
 	 *
 	 * If any of these tests are true, then we can't scroll this line's
 	 * part of the display.
@@ -8244,7 +8390,8 @@ DisplayText(
 	if ((dlPtr->flags & OLD_Y_INVALID)
 		|| dlPtr->y == dlPtr->oldY
 		|| ((dlPtr->oldY + dlPtr->height) > dInfoPtr->maxY && dlPtr->y < dlPtr->oldY)
-		|| (dlPtr->oldY < dInfoPtr->y && dlPtr->y > dlPtr->oldY)) {
+		|| (dlPtr->oldY < dInfoPtr->y && dlPtr->y > dlPtr->oldY)
+		|| RegionIntersects(invalidRegion, dlPtr->oldY, dlPtr->oldY + dlPtr->height)) {
 	    continue;
 	}
 
@@ -8260,7 +8407,8 @@ DisplayText(
 	for (dlPtr2 = dlPtr->nextPtr; dlPtr2; dlPtr2 = dlPtr2->nextPtr) {
 	    if ((dlPtr2->flags & OLD_Y_INVALID)
 		    || dlPtr2->oldY + offset != dlPtr2->y
-		    || dlPtr2->oldY + dlPtr2->height > dInfoPtr->maxY) {
+		    || dlPtr2->oldY + dlPtr2->height > dInfoPtr->maxY
+		    || RegionIntersects(invalidRegion, dlPtr2->oldY, dlPtr2->oldY + dlPtr2->height)){
 		break;
 	    }
 	    height += dlPtr2->height;
@@ -8349,6 +8497,13 @@ DisplayText(
      */
 
     dInfoPtr->flags &= ~REDRAW_PENDING;
+
+    /*
+     * Also clear the region of invalidated lines, no longer needed, scrolling has
+     * been done.
+     */
+
+    ClearRegion(invalidRegion);
 
     /*
      * Redraw the borders if that's needed.
@@ -8660,38 +8815,6 @@ TkTextRedrawRegion(
  *----------------------------------------------------------------------
  */
 
-/*
- * XRectangle is rectricted to 16 bit, so we need a private rectangle struct.
- */
-struct MyRect {
-    int x, y;
-    int width, height;
-};
-
-static bool RectIsEmpty(const XRectangle *rect) { return rect->width == 0 || rect->height == 0; }
-
-static bool
-RectIntersects(
-    const XRectangle *rect1,
-    const struct MyRect *rect2)
-{
-    return (int) rect1->x < rect2->x + rect2->width
-	&& rect2->x < (int) rect1->x + (int) rect1->width
-	&& (int) rect1->y < rect2->y + rect2->height
-	&& rect2->y < (int) rect1->y + (int) rect1->height;
-}
-
-static bool
-RectContainsRect(
-    const struct MyRect *rect1,	/* this rectangle */
-    const XRectangle *rect2)	/* contains this one? */
-{
-    return rect1->x <= (int) rect2->x
-    	&& (int) rect2->x + (int) rect2->width <= rect1->x + rect1->width
-	&& rect1->y <= (int) rect2->y
-	&& (int) rect2->y + (int) rect2->height <= rect1->y + rect1->height;
-}
-
 static void
 TextInvalidateRegion(
     TkText *textPtr,		/* Widget record for text widget. */
@@ -8701,7 +8824,7 @@ TextInvalidateRegion(
     TextDInfo *dInfoPtr;
     int inset, extent1, extent2, maxY;
     XRectangle clipRect;
-    struct MyRect textRect;	/* includes cursor extents */
+    DRect textRect;	/* includes cursor extents */
 
     TkClipBox(region, &clipRect);
     if (RectIsEmpty(&clipRect)) {
@@ -8728,6 +8851,7 @@ TextInvalidateRegion(
 
 		if (test != RectangleOut) {
 		    dlPtr->flags |= OLD_Y_INVALID;
+		    RegionUnion(&dInfoPtr->invalidRegion, dlPtr->y, dlPtr->y + dlPtr->height);
 		}
 	    }
 	}
