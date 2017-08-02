@@ -7370,7 +7370,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-03-11 (bug)[775273] artifacts on Ubuntu 16.10+ (nemethi)
 
-2017-03-26 (TIP 464) Win multimedia keys support (fassel,vogel)
+2n017-03-26 (TIP 464) Win multimedia keys support (fassel,vogel)
 
 2017-03-29 (bug)[28a3c3] test BTree memleaks plugged (anonymous)
 
@@ -7391,5 +7391,21 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2017-05-06 (bug) OSX file dialog type filters (walzer)
 
 2017-05-10 (bug)[a5ba1c] race condition on Win clipboard cleanup (donchenko)
+
+2017-05-18 (bug)[2433781] center image on button (cramer)
+
+2017-05-19 (bug)[434d29] type mismatch with recent Xft (nijtmans,werner)
+
+2017-06-02 (bug)[bc43fd] paneconfigure get pane heights right (vogel)
+
+2017-06-21 (bug)[adc028] menu avoid unreleasable global grab (nash)
+
+2017-06-30 (bug)[92e028,c5eb90] User switch forced theme reset (lanam)
+
+2017-06-30 (bug)[62c5b7] segfault in [text] replace (werner)
+
+2017-07-03 (bug)[8afc6c] OSX crash in save/open dialogs (simpson,walzer)
+
+2017-08-02 (bug)[b601ce] Resource exhaustion processing corrupt GIF (nash)
 
 --- Released 8.6.7, August 4, 2017 --- http://core.tcl.tk/tk/ for details
