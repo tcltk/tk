@@ -7408,4 +7408,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-08-02 (bug)[b601ce] Resource exhaustion processing corrupt GIF (nash)
 
+2017-08-03 (bug)[9eab54] Fix -initialdir for OSX file dialogs (gollwitzer)
+
 --- Released 8.6.7, August 4, 2017 --- http://core.tcl.tk/tk/ for details
