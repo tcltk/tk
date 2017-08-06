@@ -538,7 +538,7 @@ Tk_GetOpenFileObjCmd(
 	    if (len) {
 		filename = [[[NSString alloc] initWithUTF8String:str]
 			autorelease];
-		[openpanel setNameFieldStringValue:filename];
+	       	[openpanel setNameFieldStringValue:filename];
 	    }
 	    break;
 	case OPEN_MESSAGE:
@@ -662,7 +662,12 @@ Tk_GetOpenFileObjCmd(
 	if (directory) {
 	    [openpanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	}
+	/*check for file name, otherwise set to empty string; crashes with uncaught exception if set to nil*/
+	if (filename) {
 	[openpanel setNameFieldStringValue:filename];
+	} else {
+	    [openpanel setNameFieldStringValue:@""];
+	}
 	[openpanel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
 	       { [NSApp tkFilePanelDidEnd:openpanel
@@ -678,7 +683,13 @@ Tk_GetOpenFileObjCmd(
 	if (directory) {
 	    [openpanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	}
-	[openpanel setNameFieldStringValue:filename];
+	/*check for file name, otherwise set to empty string; crashes with uncaught exception if set to nil*/
+	if (filename) {
+	    [openpanel setNameFieldStringValue:filename];
+	} else {
+	    [openpanel setNameFieldStringValue:@""];
+	}
+
 	modalReturnCode = [openpanel runModal];
 #endif
 	[NSApp tkFilePanelDidEnd:openpanel returnCode:modalReturnCode
@@ -898,7 +909,12 @@ Tk_GetSaveFileObjCmd(
 	if (directory) {
 	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	}
-	[savepanel setNameFieldStringValue:filename];
+	   /*check for file name, otherwise set to empty string; crashes with uncaught exception if set to nil*/
+	if (filename) {
+	    [savepanel setNameFieldStringValue:filename];
+	} else {
+	    [savepanel setNameFieldStringValue:@""];
+	}
 	[savepanel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
 	       { [NSApp tkFilePanelDidEnd:savepanel
@@ -913,7 +929,12 @@ Tk_GetSaveFileObjCmd(
 	if (directory) {
 	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	}
-	[savepanel setNameFieldStringValue:filename];
+	 /*check for file name, otherwise set to empty string; crashes with uncaught exception if set to nil*/
+	if (filename) {
+	    [savepanel setNameFieldStringValue:filename];
+	} else {
+	    [savepanel setNameFieldStringValue:@""];
+	}
 	modalReturnCode = [savepanel runModal];
 	#if 0
 	NSLog(@"modal: %li", modalReturnCode);
@@ -1047,6 +1068,10 @@ Tk_ChooseDirectoryObjCmd(
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = 0;
+    /*check for directory value, set to root if not specified; otherwise crashes with exception because of nil string parameter*/
+    if (!directory) {
+	directory = @"/";
+    }
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
       parentIsKey = [parent isKeyWindow];
