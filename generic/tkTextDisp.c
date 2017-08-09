@@ -13628,11 +13628,21 @@ CharChunkMeasureChars(
 	end = charsLen;
     }
 
-    if (spaceMode == TEXT_SPACEMODE_TRIM && end > rangeStart && chars[end] == '\n') {
-	/* Don't measure trailing spaces. */
-	end -= 1;
-	while (end > rangeStart && IsBlank(chars[end - 1])) {
+    if (spaceMode == TEXT_SPACEMODE_TRIM && end > rangeStart) {
+	/*
+	 * Don't measure trimmed spaces.
+	 */
+	if (chars[end] == '\n') {
 	    end -= 1;
+	    while (end > rangeStart && IsBlank(chars[end - 1])) {
+		end -= 1;
+	    }
+	} else if (IsBlank(chars[end - 1])) {
+	    end -= 1;
+	    while (end > rangeStart && IsBlank(chars[end - 1])) {
+		end -= 1;
+	    }
+	    end += 1;
 	}
     }
 
