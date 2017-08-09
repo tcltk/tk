@@ -3125,6 +3125,9 @@ TkTextIndexForwChars(
 				while (*p == ' ') {
 				    ++p;
 				}
+				if (*p == '\n') {
+				    ++p;
+				}
 				if (p == end) {
 				    break;
 				}
@@ -3734,7 +3737,7 @@ TkTextIndexBackChars(
 			    charCount -= 1;
 			}
 		    } else {
-			skipSpaces = false;
+			skipSpaces = trimmed && *p == '\n';
 			charCount -= (type & COUNT_INDICES) ? q - p : 1;
 		    }
 		}
