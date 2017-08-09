@@ -7410,4 +7410,8 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-08-03 (bug)[9eab54] Fix -initialdir for OSX file dialogs (gollwitzer)
 
---- Released 8.6.7, August 4, 2017 --- http://core.tcl.tk/tk/ for details
+2017-08-08 (bug)[28d0b8] Follow ICCCM advice on X selection protocol (donchenko)
+
+2017-08-08 (bug)[4966ca] Scidb race in notebook tab selection (cramer)
+
+--- Released 8.6.7, August 9, 2017 --- http://core.tcl.tk/tk/ for details
