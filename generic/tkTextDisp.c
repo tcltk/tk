@@ -779,7 +779,8 @@ static int		ComputeBreakIndex(TkText *textPtr, const TkTextDispChunk *chunkPtr,
 			    TkTextSegment *segPtr, int byteOffset, TkWrapMode wrapMode,
 			    TkTextSpaceMode spaceMode);
 static int		CharChunkMeasureChars(TkTextDispChunk *chunkPtr, const char *chars, int charsLen,
-			    int start, int end, int startX, int maxX, int flags, int *nextXPtr);
+			    int start, int end, int startX, int maxX, TkTextSpaceMode spaceMode,
+			    int flags, int *nextXPtr);
 static void		CharDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int x, int y,
 			    int height, int baseline, Display *display, Drawable dst, int screenY);
 static void		CharUndisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr);
@@ -3043,7 +3044,7 @@ LayoutDoWidthAdjustmentForContextDrawing(
     if (IsCharChunk(chunkPtr)) {
 	int newWidth;
 
-	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, 0, -1, 0, &newWidth);
+	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, 0, -1, data->textPtr->spaceMode, 0, &newWidth);
 	chunkPtr->xAdjustment = newWidth - chunkPtr->width;
 	chunkPtr->width = newWidth;
     }
@@ -12373,7 +12374,9 @@ CharMeasureProc(
     if (chunkPtr->endOfLineSymbol) {
 	return 0;
     }
-    return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes - 1, chunkPtr->x, x, 0, NULL);
+    assert(chunkPtr->dlPtr->index.textPtr);
+    return CharChunkMeasureChars(chunkPtr, NULL, 0, 0, chunkPtr->numBytes - 1, chunkPtr->x, x,
+	    chunkPtr->dlPtr->index.textPtr->spaceMode, 0, NULL);
 }
 
 /*
@@ -12416,7 +12419,7 @@ CharBboxProc(
     int maxX = chunkPtr->width + chunkPtr->x;
     int nextX;
 
-    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex, chunkPtr->x, -1, 0, xPtr);
+    CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex, chunkPtr->x, -1, textPtr->spaceMode, 0, xPtr);
 
     if (byteIndex >= ciPtr->numBytes) {
 	/*
@@ -12434,7 +12437,8 @@ CharBboxProc(
 
 	*widthPtr = maxX - *xPtr;
     } else {
-	CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex + 1, *xPtr, -1, 0, &nextX);
+	CharChunkMeasureChars(chunkPtr, NULL, 0, byteIndex, byteIndex + 1, *xPtr, -1,
+		textPtr->spaceMode, 0, &nextX);
 
 	if (nextX >= maxX) {
 	    *widthPtr = maxX - *xPtr;
@@ -12625,7 +12629,7 @@ AdjustForTab(
 		int curX;
 
 		CharChunkMeasureChars(decimalChunkPtr, NULL, 0, 0, decimal,
-			decimalChunkPtr->x, -1, 0, &curX);
+			decimalChunkPtr->x, -1, data->textPtr->spaceMode, 0, &curX);
 		desired = tabX - (curX - x);
 	    } else {
 		/*
@@ -13561,6 +13565,8 @@ CharChunkMeasureChars(
     				 * additional chars). */
     int startX,			/* Starting x coordinate where the measured span will begin. */
     int maxX,			/* Maximum pixel width of the span. May be -1 for unlimited. */
+    TkTextSpaceMode spaceMode,	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NONE,
+    				 * TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
     int flags,			/* Flags to pass to MeasureChars. */
     int *nextXPtr)		/* The function puts the newly calculated right border x-position of
     				 * the span here; can be NULL. */
@@ -13620,6 +13626,14 @@ CharChunkMeasureChars(
 
     if (end == -1) {
 	end = charsLen;
+    }
+
+    if (spaceMode == TEXT_SPACEMODE_TRIM && end > rangeStart && chars[end] == '\n') {
+	/* Don't measure trailing spaces. */
+	end -= 1;
+	while (end > rangeStart && IsBlank(chars[end - 1])) {
+	    end -= 1;
+	}
     }
 
     fit = MeasureChars(tkfont, chars, charsLen, rangeStart, end - rangeStart,
@@ -13720,12 +13734,7 @@ TkTextCharLayoutProc(
     p = segPtr->body.chars + byteOffset;
 
     bytesThatFit = CharChunkMeasureChars(chunkPtr, ciPtr->u.chars, ciPtr->baseOffset + maxBytes,
-	    ciPtr->baseOffset, -1, chunkPtr->x, maxX, TK_ISOLATE_END, &nextX);
-
-    /*
-     * NOTE: do not trim white spaces at the end of line, it would be impossible
-     * for the user to see typos like mistakenly typing two consecutive spaces.
-     */
+	    ciPtr->baseOffset, -1, chunkPtr->x, maxX, spaceMode, TK_ISOLATE_END, &nextX);
 
     if (bytesThatFit < maxBytes) {
 	if (bytesThatFit == 0 && noCharsYet) {
@@ -13755,7 +13764,7 @@ TkTextCharLayoutProc(
 	     */
 
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, ciPtr->u.chars, ciPtr->baseOffset + chLen,
-		    ciPtr->baseOffset, -1, chunkPtr->x, -1, 0, &nextX);
+		    ciPtr->baseOffset, -1, chunkPtr->x, -1, spaceMode, 0, &nextX);
 	}
 	if (spaceMode == TEXT_SPACEMODE_TRIM) {
 	    while (IsBlank(p[bytesThatFit])) {
@@ -14205,7 +14214,8 @@ DisplayChars(
      */
 
     offsetX = x;
-    offsetBytes = (x >= 0) ? CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, x, 0, 0, &offsetX) : 0;
+    offsetBytes = (x >= 0) ? CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, x, 0,
+	    textPtr->spaceMode, 0, &offsetX) : 0;
     DrawChars(textPtr, chunkPtr, x, y + baseline, offsetX, offsetBytes, display, dst);
 }
 
