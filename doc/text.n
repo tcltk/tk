@@ -2098,6 +2098,9 @@ reflects just the visible part. If the character is not visible on the screen
 then the return value is an empty list.
 .RS
 .PP
+If space mode \fBtrim\fR is set (see option \fB\-spacemode\fR) then the trimmed
+spaces will be measured with a width of zero.
+.PP
 If option \fB\-extents\fR is specified then a list of four elements describing
 the invisible extents of the bounding box will returned. If x/y (first/second
 value) is not zero, then the first x/y pixels are not visible on screen. If
