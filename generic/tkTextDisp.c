@@ -12765,6 +12765,7 @@ ComputeSizeOfTab(
 
     case RIGHT:
 	data->tabSize = 0;
+	data->x = tabX;
 	break;
 
     case LEFT:
