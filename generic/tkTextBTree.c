@@ -3612,14 +3612,23 @@ MakeTagInfo(
  *----------------------------------------------------------------------
  */
 
+typedef struct
+{
+    TkSharedText  *sharedTextPtr;
+    TkTextLine    *linePtr;
+    TkTextTagSet  *tagInfoPtr;
+    TkTextSegment *lastPtr;
+}
+LoadData;
+
 static int
 LoadError(
-    Tcl_Interp *interp,		/* Current interpreter. */
-    const char *msg,		/* Error message, can be NULL. */
-    int index0,			/* List index at level 0. */
-    int index1,			/* List index at level 1, is -1 if undefined. */
-    int index2,			/* List index at level 2, is -1 if undefined. */
-    TkTextTagSet *tagInfoPtr)	/* Decrement reference count if not NULL. */
+    Tcl_Interp *interp,	/* Current interpreter. */
+    const char *msg,	/* Error message, can be NULL. */
+    int index0,		/* List index at level 0. */
+    int index1,		/* List index at level 1, -1 means undefined. */
+    int index2,		/* List index at level 2, -1 means undefined. */
+    LoadData *loadData)	/* Release this data. */
 {
     char buf[100] = { '\0' };
     Tcl_Obj *errObjPtr = NULL;
@@ -3628,8 +3637,15 @@ LoadError(
 	Tcl_IncrRefCount(errObjPtr = Tcl_GetObjResult(interp));
 	msg = Tcl_GetString(errObjPtr);
     }
-    if (tagInfoPtr) {
-	TkTextTagSetDecrRefCount(tagInfoPtr);
+    if (loadData->tagInfoPtr) {
+	TkTextTagSetDecrRefCount(loadData->tagInfoPtr);
+    }
+    if (loadData->lastPtr && (!loadData->linePtr || loadData->linePtr->lastPtr != loadData->lastPtr)) {
+	TkBTreeFreeSegment(loadData->lastPtr);
+    }
+    if (loadData->linePtr) {
+	/* needed for destroying the segments */
+	RebuildSections(loadData->sharedTextPtr, loadData->linePtr, true);
     }
     if (index0 >= 0) {
 	if (index1 >= 0) {
@@ -3707,12 +3723,14 @@ LoadPerformElision(
 
 	if (elide) {
 	    nextPtr = *branchPtr = MakeBranch();
-	    (*branchPtr)->nextPtr = segPtr;
-	    segPtr->prevPtr = *branchPtr;
+	    nextPtr->nextPtr = segPtr;
+	    segPtr->prevPtr = nextPtr;
+	    nextPtr->sectionPtr = segPtr->sectionPtr;
 	} else {
 	    assert(*branchPtr);
 	    linkPtr = MakeLink();
 	    linkPtr->body.link.prevPtr = *branchPtr;
+	    linkPtr->sectionPtr = segPtr->sectionPtr;
 	    (*branchPtr)->body.branch.nextPtr = linkPtr;
 	    if (contentPtr) {
 		linkPtr->nextPtr = contentPtr->nextPtr;
@@ -3757,6 +3775,7 @@ TkBTreeLoad(
     TkTextSegment *segPtr;
     TkTextSegment *charSegPtr;
     TkTextSegment *nextSegPtr;
+    TkTextSegment *lastPtr;
     TkTextSegment *branchPtr;
     TkTextSegment *hyphPtr;
     TkTextSegment *embPtr;
@@ -3778,6 +3797,7 @@ TkBTreeLoad(
     int size;
     bool isElided;
     bool isInsert;
+    LoadData data;
 
     if (Tcl_ListObjGetElements(interp, content, &objc, &objv) != TCL_OK) {
 	return LoadError(interp, "list of items expected", -1, -1, -1, NULL);
@@ -3809,9 +3829,13 @@ TkBTreeLoad(
     while (segPtr->nextPtr->typePtr != &tkTextCharType) {
 	segPtr = segPtr->nextPtr;
     }
-    TkBTreeFreeSegment(segPtr->nextPtr);
-    segPtr->nextPtr = NULL;
     charSegPtr = NULL;
+    lastPtr = segPtr->nextPtr;
+
+    data.sharedTextPtr = textPtr->sharedTextPtr;
+    data.tagInfoPtr = NULL;
+    data.lastPtr = lastPtr;
+    data.linePtr = linePtr;
 
     for (i = 0; i < objc; ++i) {
 	const char *type;
@@ -3822,7 +3846,7 @@ TkBTreeLoad(
 	    return TCL_ERROR;
 	}
 	if (argc == 0) {
-	    return LoadError(interp, "empty item", i, 0, -1, tagInfoPtr);
+	    return LoadError(interp, "empty item", i, 0, -1, &data);
 	}
 
 	type = Tcl_GetString(argv[0]);
@@ -3837,20 +3861,20 @@ TkBTreeLoad(
 	    int objc, k;
 
 	    if (strcmp(type, "setup") != 0) {
-		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 	    }
 	    if (state != STATE_START) {
-		return LoadError(interp, "unexpected \"setup\" item", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "unexpected \"setup\" item", i, -1, -1, &data);
 	    }
 	    if (argc != 3) {
-		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
 	    if (Tcl_ListObjGetElements(interp, argv[2], &objc, &objv) != TCL_OK) {
-		return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
+		return LoadError(interp, NULL, i, 2, -1, &data);
 	    }
 	    for (k = 0; k < objc - 1; k += 2) {
 		if (TkConfigureText(interp, textPtr, 2, &objv[k]) != TCL_OK && validOptions) {
-		    return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
+		    return LoadError(interp, NULL, i, 2, -1, &data);
 		}
 	    }
 	    textState = textPtr->state;
@@ -3866,24 +3890,26 @@ TkBTreeLoad(
 		 */
 
 		if (strcmp(type, "break") != 0) {
-		    return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		    return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 		}
 		if (tagInfoCount == 0) {
 		    tagInfoCount = argc - 1;
 		}
 		if (argc < 2 || 3 < argc || argc - tagInfoCount != 1) {
-		    return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		    return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 		}
 		if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[1])) {
-		    return LoadError(interp, "list of tag names expected", i, 1, -1, tagInfoPtr);
+		    return LoadError(interp, "list of tag names expected", i, 1, -1, &data);
 		}
 		if (charSegPtr && TkTextTagSetIsEqual(tagInfoPtr, charSegPtr->tagInfoPtr)) {
 		    charSegPtr = IncreaseCharSegment(charSegPtr, charSegPtr->size, 1);
 		    charSegPtr->body.chars[charSegPtr->size - 1] = '\n';
+		    charSegPtr->nextPtr = NULL;
 		    linePtr->lastPtr = charSegPtr;
 		    RebuildSections(sharedTextPtr, linePtr, true);
 		} else {
 		    nextSegPtr = charSegPtr = MakeCharSeg(NULL, tagInfoPtr, 1, "\n", 1);
+		    nextSegPtr->sectionPtr = linePtr->segPtr->sectionPtr;
 		    if (sharedTextPtr->numElisionTags > 0) {
 			nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr,
 				&isElided);
@@ -3897,11 +3923,10 @@ TkBTreeLoad(
 			newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr,
 				linePtr, nextSegPtr);
 			AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
-			linePtr = newLinePtr;
+			data.linePtr = linePtr = newLinePtr;
 		    }
 		}
 		changeToLineCount += 1;
-
 		if (!isElided) {
 		    changeToLogicalLineCount += 1;
 		}
@@ -3912,9 +3937,9 @@ TkBTreeLoad(
 		RecomputeLineTagInfo(linePtr, NULL, sharedTextPtr);
 		if (argc != 3) {
 		    TkTextTagSetDecrRefCount(tagInfoPtr);
-		    tagInfoPtr = NULL;
+		    data.tagInfoPtr = tagInfoPtr = NULL;
 		} else if (!LoadRemoveTags(textPtr, &tagInfoPtr, argv[2])) {
-		    return LoadError(interp, "list of tag names expected", i, 2, -1, tagInfoPtr);
+		    return LoadError(interp, "list of tag names expected", i, 2, -1, &data);
 		}
 		break;
 	    case 'i': {
@@ -3925,15 +3950,15 @@ TkBTreeLoad(
 		 */
 
 		if (strcmp(type, "bind") != 0) {
-		    return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		    return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 		}
 		if (argc != 4) {
-		    return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		    return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 		}
 		tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(argv[1]), NULL);
 		if (TkTextBindEvent(interp, argc - 2, argv + 2, textPtr->sharedTextPtr,
 			&sharedTextPtr->tagBindingTable, tagPtr->name) != TCL_OK) {
-		    return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
+		    return LoadError(interp, NULL, i, 2, -1, &data);
 		}
 		state = STATE_TEXT;
 		break;
@@ -3949,23 +3974,23 @@ TkBTreeLoad(
 	    int objc, k;
 
 	    if (strcmp(type, "configure") != 0) {
-		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 	    }
 	    if (!(state & (STATE_START|STATE_SETUP|STATE_CONFIG))) {
-		return LoadError(interp, "unexpected \"configure\" item", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "unexpected \"configure\" item", i, -1, -1, &data);
 	    }
 	    if (argc == 2) {
 		TkTextCreateTag(textPtr, Tcl_GetString(argv[1]), NULL);
 	    } else if (argc != 3) {
-		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    } else if (Tcl_ListObjGetElements(interp, argv[2], &objc, &objv) != TCL_OK) {
-		return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
+		return LoadError(interp, NULL, i, 2, -1, &data);
 	    } else {
 		for (k = 0; k < objc - 1; k += 2) {
 		    if (TkConfigureTag(interp, textPtr, Tcl_GetString(argv[1]),
 					false, 2, &objv[k]) != TCL_OK
 			    && !validOptions) {
-			return LoadError(interp, NULL, i, 2, -1, tagInfoPtr);
+			return LoadError(interp, NULL, i, 2, -1, &data);
 		    }
 		}
 	    }
@@ -3978,26 +4003,28 @@ TkBTreeLoad(
 	     */
 
 	    if (strcmp(type, "text") != 0) {
-		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 	    }
 	    if (tagInfoCount == 0) {
 		tagInfoCount = argc - 2;
 	    }
 	    if (argc < 3 || 4 < argc || argc - tagInfoCount != 2) {
-		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
 	    if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[2])) {
-		return LoadError(interp, "list of tag names expected", i, 2, -1, tagInfoPtr);
+		return LoadError(interp, "list of tag names expected", i, 2, -1, &data);
 	    }
 	    for (s = Tcl_GetString(argv[1]); *s; ++s) {
 		switch (UCHAR(*s)) {
 		case 0x0a:
-		    return LoadError(interp, "newline not allowed in text content",
-			    i, 1, -1, tagInfoPtr);
+		    return LoadError(interp, "newline not allowed in text content", i, 1, -1, &data);
+		case 0x0d:
+		    return LoadError(interp, "carriage return not allowed in text content",
+			    i, 1, -1, &data);
 		case 0xc2:
 		    if (UCHAR(s[1]) == 0xad) {
 			return LoadError(interp, "soft hyphen (U+00AD) not allowed in text content",
-				i, 1, -1, tagInfoPtr);
+				i, 1, -1, &data);
 		    }
 		    break;
 		}
@@ -4010,6 +4037,7 @@ TkBTreeLoad(
 	    } else {
 		nextSegPtr = charSegPtr = MakeCharSeg(NULL, tagInfoPtr,
 			byteLength, Tcl_GetString(argv[1]), byteLength);
+		nextSegPtr->sectionPtr = linePtr->segPtr->sectionPtr;
 		if (sharedTextPtr->numElisionTags > 0) {
 		    nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr,
 			    &isElided);
@@ -4017,10 +4045,13 @@ TkBTreeLoad(
 		if (segPtr) {
 		    segPtr->nextPtr = nextSegPtr;
 		    nextSegPtr->prevPtr = segPtr;
+		    nextSegPtr->nextPtr = lastPtr;
+		    lastPtr->prevPtr = nextSegPtr;
+		    lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 		} else {
 		    newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		    AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
-		    linePtr = newLinePtr;
+		    data.linePtr = linePtr = newLinePtr;
 		}
 	    }
 	    size += byteLength;
@@ -4028,9 +4059,9 @@ TkBTreeLoad(
 	    state = STATE_TEXT;
 	    if (argc != 4) {
 		TkTextTagSetDecrRefCount(tagInfoPtr);
-		tagInfoPtr = NULL;
+		data.tagInfoPtr = tagInfoPtr = NULL;
 	    } else if (!LoadRemoveTags(textPtr, &tagInfoPtr, argv[3])) {
-		return LoadError(interp, "list of tag names expected", i, 3, -1, tagInfoPtr);
+		return LoadError(interp, "list of tag names expected", i, 3, -1, &data);
 	    }
 	    break;
 	case 'h':
@@ -4039,38 +4070,43 @@ TkBTreeLoad(
 	     */
 
 	    if (strcmp(type, "hyphen") != 0) {
-		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 	    }
 	    if (tagInfoCount == 0) {
 		tagInfoCount = argc - 1;
 	    }
 	    if (argc < 2 || 3 < argc || argc - tagInfoCount != 1) {
-		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
 	    if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[1])) {
-		return LoadError(interp, "list of tag names expected", i, 1, -1, tagInfoPtr);
+		return LoadError(interp, "list of tag names expected", i, 1, -1, &data);
 	    }
 	    nextSegPtr = hyphPtr = MakeHyphen();
 	    TkTextTagSetIncrRefCount(hyphPtr->tagInfoPtr = tagInfoPtr);
+	    nextSegPtr->sectionPtr = linePtr->segPtr->sectionPtr;
 	    if (sharedTextPtr->numElisionTags > 0) {
 		nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr, &isElided);
 	    }
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
+		nextSegPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = nextSegPtr;
+		lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
-		linePtr = newLinePtr;
+		data.linePtr = linePtr = newLinePtr;
 	    }
 	    size += 1;
 	    contentPtr = segPtr = hyphPtr;
+	    charSegPtr = NULL;
 	    state = STATE_TEXT;
 	    if (argc != 3) {
 		TkTextTagSetDecrRefCount(tagInfoPtr);
-		tagInfoPtr = NULL;
+		data.tagInfoPtr = tagInfoPtr = NULL;
 	    } else if (!LoadRemoveTags(textPtr, &tagInfoPtr, argv[2])) {
-		return LoadError(interp, "list of tag names expected", i, 2, -1, tagInfoPtr);
+		return LoadError(interp, "list of tag names expected", i, 2, -1, &data);
 	    }
 	    break;
 	case 'l':
@@ -4079,34 +4115,37 @@ TkBTreeLoad(
 	     */
 
 	    if (strcmp(type, "left") != 0) {
-		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 	    }
 	    name = Tcl_GetString(argv[1]);
 	    isInsert = (strcmp(name, "insert") == 0);
 	    if (sharedTextPtr->steadyMarks
 		    ? state == STATE_RIGHT_INSERT || (isInsert && state == STATE_LEFT)
 		    : state == STATE_RIGHT) {
-		return LoadError(interp, "unexpected \"left\" item", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "unexpected \"left\" item", i, -1, -1, &data);
 	    }
 	    if (argc != 2) {
-		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
 	    if (isInsert) {
 		UnlinkSegment(nextSegPtr = textPtr->insertMarkPtr);
 	    } else if (!(nextSegPtr = TkTextMakeNewMark(sharedTextPtr, name))) {
-		return LoadError(interp, "mark already exists", i, 1, -1, tagInfoPtr);
+		return LoadError(interp, "mark already exists", i, 1, -1, &data);
 	    }
 	    nextSegPtr->typePtr = &tkTextLeftMarkType;
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
+		nextSegPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = nextSegPtr;
+		lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
-		linePtr = newLinePtr;
+		data.linePtr = linePtr = newLinePtr;
 	    }
 	    segPtr = nextSegPtr;
-	    contentPtr = NULL;
+	    contentPtr = charSegPtr = NULL;
 	    state = isInsert ? STATE_LEFT_INSERT : STATE_LEFT;
 	    break;
 	case 'r':
@@ -4115,34 +4154,37 @@ TkBTreeLoad(
 	     */
 
 	    if (strcmp(type, "right") != 0) {
-		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 	    }
 	    if (argc != 2) {
-		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
 	    name = Tcl_GetString(argv[1]);
 	    isInsert = (strcmp(name, "insert") == 0);
 	    if (isInsert
 		    && sharedTextPtr->steadyMarks
 		    && (state & (STATE_LEFT|STATE_RIGHT))) {
-		return LoadError(interp, "unexpected \"insert\" mark", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "unexpected \"insert\" mark", i, -1, -1, &data);
 	    }
 	    if (isInsert) {
 		UnlinkSegment(nextSegPtr = textPtr->insertMarkPtr);
 	    } else if (!(nextSegPtr = TkTextMakeNewMark(sharedTextPtr, name))) {
-		return LoadError(interp, "mark already exists", i, 1, -1, tagInfoPtr);
+		return LoadError(interp, "mark already exists", i, 1, -1, &data);
 	    }
 	    assert(nextSegPtr->typePtr == &tkTextRightMarkType);
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
+		nextSegPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = nextSegPtr;
+		lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
-		linePtr = newLinePtr;
+		data.linePtr = linePtr = newLinePtr;
 	    }
 	    segPtr = nextSegPtr;
-	    contentPtr = NULL;
+	    contentPtr = charSegPtr = NULL;
 	    state = isInsert ? STATE_RIGHT_INSERT : STATE_RIGHT;
 	    break;
 	case 'e':
@@ -4152,14 +4194,14 @@ TkBTreeLoad(
 	     */
 
 	    if (strcmp(type, "elide") != 0) {
-		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 	    }
 	    if (argc != 2) {
-		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
 	    if (strcmp(Tcl_GetString(argv[1]), "on") != 0
 		    && strcmp(Tcl_GetString(argv[1]), "off") != 0) {
-		return LoadError(interp, "\"on\" or \"off\" expected", i, 0, -1, tagInfoPtr);
+		return LoadError(interp, "\"on\" or \"off\" expected", i, 0, -1, &data);
 	    }
 	    state = STATE_TEXT;
 	    break;
@@ -4169,40 +4211,45 @@ TkBTreeLoad(
 	     */
 
 	    if (strcmp(type, "image") != 0) {
-		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 	    }
 	    if (tagInfoCount == 0) {
 		tagInfoCount = argc - 2;
 	    }
 	    if (argc < 3 || 4 < argc || argc - tagInfoCount != 2) {
-		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
 	    if (!(embPtr = TkTextMakeImage(textPtr, argv[1]))) {
-		return LoadError(interp, Tcl_GetString(Tcl_GetObjResult(interp)), i, 1, -1, tagInfoPtr);
+		return LoadError(interp, Tcl_GetString(Tcl_GetObjResult(interp)), i, 1, -1, &data);
 	    }
 	    if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[2])) {
-		return LoadError(interp, "list of tag names expected", i, 2, -1, tagInfoPtr);
+		return LoadError(interp, "list of tag names expected", i, 2, -1, &data);
 	    }
 	    TkTextTagSetIncrRefCount((nextSegPtr = embPtr)->tagInfoPtr = tagInfoPtr);
 	    if (sharedTextPtr->numElisionTags > 0) {
 		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, contentPtr, &isElided);
 	    }
+	    nextSegPtr->sectionPtr = linePtr->segPtr->sectionPtr;
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
+		nextSegPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = nextSegPtr;
+		lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
-		linePtr = newLinePtr;
+		data.linePtr = linePtr = newLinePtr;
 	    }
 	    size += 1;
 	    contentPtr = segPtr = embPtr;
+	    charSegPtr = NULL;
 	    state = STATE_TEXT;
 	    if (argc != 4) {
 		TkTextTagSetDecrRefCount(tagInfoPtr);
-		tagInfoPtr = NULL;
+		data.tagInfoPtr = tagInfoPtr = NULL;
 	    } else if (!LoadRemoveTags(textPtr, &tagInfoPtr, argv[3])) {
-		return LoadError(interp, "list of tag names expected", i, 3, -1, tagInfoPtr);
+		return LoadError(interp, "list of tag names expected", i, 3, -1, &data);
 	    }
 	    break;
 	case 'w':
@@ -4211,44 +4258,49 @@ TkBTreeLoad(
 	     */
 
 	    if (strcmp(type, "window") != 0) {
-		return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+		return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 	    }
 	    if (tagInfoCount == 0) {
 		tagInfoCount = argc - 2;
 	    }
 	    if (argc < 3 || 4 < argc || argc - tagInfoCount != 2) {
-		return LoadError(interp, "wrong number of items", i, -1, -1, tagInfoPtr);
+		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
-	    if (!(embPtr = TkTextMakeImage(textPtr, argv[1]))) {
-		return LoadError(interp, Tcl_GetString(Tcl_GetObjResult(interp)), i, 1, -1, tagInfoPtr);
+	    if (!(embPtr = TkTextMakeWindow(textPtr, argv[1]))) {
+		return LoadError(interp, Tcl_GetString(Tcl_GetObjResult(interp)), i, 1, -1, &data);
 	    }
 	    if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[2])) {
-		return LoadError(interp, "list of tag names expected", i, 2, -1, tagInfoPtr);
+		return LoadError(interp, "list of tag names expected", i, 2, -1, &data);
 	    }
 	    TkTextTagSetIncrRefCount((nextSegPtr = embPtr)->tagInfoPtr = tagInfoPtr);
+	    nextSegPtr->sectionPtr = linePtr->segPtr->sectionPtr;
 	    if (sharedTextPtr->numElisionTags > 0) {
 		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, contentPtr, &isElided);
 	    }
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
+		nextSegPtr->nextPtr = lastPtr;
+		lastPtr->prevPtr = nextSegPtr;
+		lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
-		linePtr = newLinePtr;
+		data.linePtr = linePtr = newLinePtr;
 	    }
 	    size += 1;
 	    contentPtr = segPtr = embPtr;
+	    charSegPtr = NULL;
 	    state = STATE_TEXT;
 	    if (argc != 4) {
 		TkTextTagSetDecrRefCount(tagInfoPtr);
-		tagInfoPtr = NULL;
+		data.tagInfoPtr = tagInfoPtr = NULL;
 	    } else if (!LoadRemoveTags(textPtr, &tagInfoPtr, argv[3])) {
-		return LoadError(interp, "list of tag names expected", i, 3, -1, tagInfoPtr);
+		return LoadError(interp, "list of tag names expected", i, 3, -1, &data);
 	    }
 	    break;
 	default:
-	    return LoadError(interp, "invalid item identifier", i, 0, -1, tagInfoPtr);
+	    return LoadError(interp, "invalid item identifier", i, 0, -1, &data);
 	}
     }
 
@@ -4260,6 +4312,7 @@ TkBTreeLoad(
 	if (charSegPtr && TkTextTagSetIsEmpty(charSegPtr->tagInfoPtr)) {
 	    charSegPtr = IncreaseCharSegment(charSegPtr, charSegPtr->size, 1);
 	    charSegPtr->body.chars[charSegPtr->size - 1] = '\n';
+	    charSegPtr->nextPtr = NULL;
 	    linePtr->lastPtr = charSegPtr;
 	    RebuildSections(sharedTextPtr, linePtr, true);
 	} else {
@@ -4285,6 +4338,7 @@ TkBTreeLoad(
 	}
     }
 
+    TkBTreeFreeSegment(lastPtr);
     textPtr->state = textState;
 
     if (tagInfoPtr) {
@@ -6067,7 +6121,7 @@ FreeLine(
 static TkTextSegment *
 MakeCharSeg(
     TkTextSection *sectionPtr,	/* Section of new segment, can be NULL. */
-    TkTextTagSet *tagInfoPtr,	/* Tga information for new segment, can be NULL. */
+    TkTextTagSet *tagInfoPtr,	/* Tag information for new segment, can be NULL. */
     unsigned newSize,		/* Character size of the new segment. */
     const char *string,		/* New text content. */
     unsigned length)		/* Number of characters to copy. */

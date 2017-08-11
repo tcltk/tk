@@ -1984,6 +1984,7 @@ IndexToSeg(
 	segPtr = linePtr->segPtr;
 	while (segPtr->size == 0) {
 	    segPtr = segPtr->nextPtr;
+	    assert(segPtr);
 	}
 	if (offsetPtr) {
 	    *offsetPtr = 0;

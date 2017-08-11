@@ -699,7 +699,8 @@ TkTextMakeWindow(
 {
     TkTextSegment *ewPtr;
     Tcl_Obj **objv;
-    int objc;
+    Tcl_Obj **argv;
+    int objc, i;
 
     assert(options);
 
@@ -707,9 +708,23 @@ TkTextMakeWindow(
 	return NULL;
     }
 
+    argv = malloc(objc*sizeof(argv[0]));
+    memcpy(argv, objv, objc*sizeof(argv[0]));
+    for (i = 0; i < objc; i += 2) {
+	if (strncmp(Tcl_GetString(argv[i]), "-w", 2) == 0) {
+	    if (!Tk_NameToWindow(textPtr->interp, Tcl_GetString(argv[i + 1]), textPtr->tkwin)) {
+		/*
+		 * The specified window (given with option -window) does not exist, so
+		 * set the value to NULL.
+		 */
+		argv[i + 1] = NULL;
+	    }
+	}
+    }
+
     ewPtr = MakeWindow(textPtr);
 
-    if (EmbWinConfigure(textPtr, ewPtr, false, objc, objv) == TCL_OK) {
+    if (EmbWinConfigure(textPtr, ewPtr, false, objc, argv) == TCL_OK) {
 	Tcl_ResetResult(textPtr->interp);
     } else {
 	TkTextWinFreeClient(NULL, ewPtr->body.ew.clients);
