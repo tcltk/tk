@@ -3999,7 +3999,7 @@ TkBTreeLoad(
 	}
 	case 't':
 	    /*
-	     * {"text" content taginfo ?taginfo?}
+	     * {"text" content ?taginfo ?taginfo??}
 	     */
 
 	    if (strcmp(type, "text") != 0) {
@@ -4008,19 +4008,18 @@ TkBTreeLoad(
 	    if (tagInfoCount == 0) {
 		tagInfoCount = argc - 2;
 	    }
-	    if (argc < 3 || 4 < argc || argc - tagInfoCount != 2) {
+	    if (argc < 2 || 4 < argc || argc - tagInfoCount != 2) {
 		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
-	    if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[2])) {
+	    if (argc == 2) {
+		TkTextTagSetIncrRefCount(tagInfoPtr = textPtr->sharedTextPtr->emptyTagInfoPtr);
+	    } else if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[2])) {
 		return LoadError(interp, "list of tag names expected", i, 2, -1, &data);
 	    }
 	    for (s = Tcl_GetString(argv[1]); *s; ++s) {
 		switch (UCHAR(*s)) {
 		case 0x0a:
 		    return LoadError(interp, "newline not allowed in text content", i, 1, -1, &data);
-		case 0x0d:
-		    return LoadError(interp, "carriage return not allowed in text content",
-			    i, 1, -1, &data);
 		case 0xc2:
 		    if (UCHAR(s[1]) == 0xad) {
 			return LoadError(interp, "soft hyphen (U+00AD) not allowed in text content",
@@ -4066,7 +4065,7 @@ TkBTreeLoad(
 	    break;
 	case 'h':
 	    /*
-	     * {"hyphen" taginfo ?taginfo?}
+	     * {"hyphen" ?taginfo ?taginfo??}
 	     */
 
 	    if (strcmp(type, "hyphen") != 0) {
@@ -4075,10 +4074,12 @@ TkBTreeLoad(
 	    if (tagInfoCount == 0) {
 		tagInfoCount = argc - 1;
 	    }
-	    if (argc < 2 || 3 < argc || argc - tagInfoCount != 1) {
+	    if (3 < argc || argc - tagInfoCount != 1) {
 		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
-	    if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[1])) {
+	    if (argc == 1) {
+		TkTextTagSetIncrRefCount(tagInfoPtr = textPtr->sharedTextPtr->emptyTagInfoPtr);
+	    } else if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[1])) {
 		return LoadError(interp, "list of tag names expected", i, 1, -1, &data);
 	    }
 	    nextSegPtr = hyphPtr = MakeHyphen();
@@ -4207,7 +4208,7 @@ TkBTreeLoad(
 	    break;
 	case 'i':
 	    /*
-	     * {"image" options tagInfo ?tagInfo?}
+	     * {"image" options ?tagInfo ?tagInfo??}
 	     */
 
 	    if (strcmp(type, "image") != 0) {
@@ -4216,13 +4217,15 @@ TkBTreeLoad(
 	    if (tagInfoCount == 0) {
 		tagInfoCount = argc - 2;
 	    }
-	    if (argc < 3 || 4 < argc || argc - tagInfoCount != 2) {
+	    if (4 < argc || argc - tagInfoCount != 2) {
 		return LoadError(interp, "wrong number of items", i, -1, -1, &data);
 	    }
 	    if (!(embPtr = TkTextMakeImage(textPtr, argv[1]))) {
 		return LoadError(interp, Tcl_GetString(Tcl_GetObjResult(interp)), i, 1, -1, &data);
 	    }
-	    if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[2])) {
+	    if (argc == 2) {
+		TkTextTagSetIncrRefCount(tagInfoPtr = textPtr->sharedTextPtr->emptyTagInfoPtr);
+	    } else if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[2])) {
 		return LoadError(interp, "list of tag names expected", i, 2, -1, &data);
 	    }
 	    TkTextTagSetIncrRefCount((nextSegPtr = embPtr)->tagInfoPtr = tagInfoPtr);
@@ -4254,7 +4257,7 @@ TkBTreeLoad(
 	    break;
 	case 'w':
 	    /*
-	     * {"window" options tagInfo ?tagInfo?}
+	     * {"window" options ?tagInfo ?tagInfo??}
 	     */
 
 	    if (strcmp(type, "window") != 0) {
@@ -4269,7 +4272,9 @@ TkBTreeLoad(
 	    if (!(embPtr = TkTextMakeWindow(textPtr, argv[1]))) {
 		return LoadError(interp, Tcl_GetString(Tcl_GetObjResult(interp)), i, 1, -1, &data);
 	    }
-	    if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[2])) {
+	    if (argc == 2) {
+		TkTextTagSetIncrRefCount(tagInfoPtr = textPtr->sharedTextPtr->emptyTagInfoPtr);
+	    } else if (!LoadMakeTagInfo(textPtr, &tagInfoPtr, argv[2])) {
 		return LoadError(interp, "list of tag names expected", i, 2, -1, &data);
 	    }
 	    TkTextTagSetIncrRefCount((nextSegPtr = embPtr)->tagInfoPtr = tagInfoPtr);

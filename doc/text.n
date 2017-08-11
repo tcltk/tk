@@ -3021,7 +3021,7 @@ into consideration):
 \fIMark\fR          = \fIGravity\fR, \fIMarkName\fR;
 \fIGravity\fR       = "\fBleft\fR" | "\fBright\fR";
 \fIElide\fR         = "\fBelide\fR", ("\fBon\fR" | "\fBoff\fR");
-\fITagInfo\fR       = \fITags\fR, \fITags\fR?;
+\fITagInfo\fR       = (\fITags\fR, \fITags\fR?)?;
 \fITags\fR          = BEG, \fITagName\fR* , END;
 \fICharacter\fR     = ?Any character except newline?;
 \fINewline\fR       = ?The newline character?;
@@ -3055,9 +3055,9 @@ Describes the configuration of a particular tag.
 Describes a binding applied to a tag
 .RE
 .PP
-{\fBtext\fR \fIcontent tagList\fR ?\fItagList\fR?}
+{\fBtext\fR \fIcontent ?tagList\fR ?\fItagList\fR??}
 .RS
-Describes a character sequence, including what tags were applied to it.
+Describes a character sequence, optionally including what tags were applied to it.
 .RE
 .PP
 {\fBbreak\fR \fItagList\fR ?\fItagList\fR?}
@@ -3070,14 +3070,14 @@ Describes a newline character, including what tags were applied to it.
 Describes a soft hyphen, including what tags were applied to it.
 .RE
 .PP
-{\fBimage\fR \fIimageOptions tagList\fR ?\fItagList\fR?}
+{\fBimage\fR \fIimageOptions ?tagList\fR ?\fItagList\fR??}
 .RS
-Describes an image that was embedded.
+Describes an image that was embedded, optionally including what tags were applied to it.
 .RE
 .PP
-{\fBwindow\fR \fIwindowOptions tagList\fR ?\fItagList\fR?}
+{\fBwindow\fR \fIwindowOptions ?tagList\fR ?\fItagList\fR??}
 .RS
-Describes a window that was embedded.
+Describes a window that was embedded, optionally including what tags were applied to it.
 .RE
 .PP
 {\fBleft\fR \fImarkName\fR}
