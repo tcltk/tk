@@ -3909,7 +3909,6 @@ TkBTreeLoad(
 		    RebuildSections(sharedTextPtr, linePtr, true);
 		} else {
 		    nextSegPtr = charSegPtr = MakeCharSeg(NULL, tagInfoPtr, 1, "\n", 1);
-		    nextSegPtr->sectionPtr = linePtr->segPtr->sectionPtr;
 		    if (sharedTextPtr->numElisionTags > 0) {
 			nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr,
 				&isElided);
@@ -4036,7 +4035,6 @@ TkBTreeLoad(
 	    } else {
 		nextSegPtr = charSegPtr = MakeCharSeg(NULL, tagInfoPtr,
 			byteLength, Tcl_GetString(argv[1]), byteLength);
-		nextSegPtr->sectionPtr = linePtr->segPtr->sectionPtr;
 		if (sharedTextPtr->numElisionTags > 0) {
 		    nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr,
 			    &isElided);
@@ -4046,7 +4044,6 @@ TkBTreeLoad(
 		    nextSegPtr->prevPtr = segPtr;
 		    nextSegPtr->nextPtr = lastPtr;
 		    lastPtr->prevPtr = nextSegPtr;
-		    lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 		} else {
 		    newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		    AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
@@ -4084,7 +4081,6 @@ TkBTreeLoad(
 	    }
 	    nextSegPtr = hyphPtr = MakeHyphen();
 	    TkTextTagSetIncrRefCount(hyphPtr->tagInfoPtr = tagInfoPtr);
-	    nextSegPtr->sectionPtr = linePtr->segPtr->sectionPtr;
 	    if (sharedTextPtr->numElisionTags > 0) {
 		nextSegPtr = LoadPerformElision(textPtr, charSegPtr, &branchPtr, contentPtr, &isElided);
 	    }
@@ -4093,7 +4089,6 @@ TkBTreeLoad(
 		nextSegPtr->prevPtr = segPtr;
 		nextSegPtr->nextPtr = lastPtr;
 		lastPtr->prevPtr = nextSegPtr;
-		lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
@@ -4139,7 +4134,6 @@ TkBTreeLoad(
 		nextSegPtr->prevPtr = segPtr;
 		nextSegPtr->nextPtr = lastPtr;
 		lastPtr->prevPtr = nextSegPtr;
-		lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
@@ -4178,7 +4172,6 @@ TkBTreeLoad(
 		nextSegPtr->prevPtr = segPtr;
 		nextSegPtr->nextPtr = lastPtr;
 		lastPtr->prevPtr = nextSegPtr;
-		lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
@@ -4232,13 +4225,11 @@ TkBTreeLoad(
 	    if (sharedTextPtr->numElisionTags > 0) {
 		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, contentPtr, &isElided);
 	    }
-	    nextSegPtr->sectionPtr = linePtr->segPtr->sectionPtr;
 	    if (segPtr) {
 		segPtr->nextPtr = nextSegPtr;
 		nextSegPtr->prevPtr = segPtr;
 		nextSegPtr->nextPtr = lastPtr;
 		lastPtr->prevPtr = nextSegPtr;
-		lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
@@ -4278,7 +4269,6 @@ TkBTreeLoad(
 		return LoadError(interp, "list of tag names expected", i, 2, -1, &data);
 	    }
 	    TkTextTagSetIncrRefCount((nextSegPtr = embPtr)->tagInfoPtr = tagInfoPtr);
-	    nextSegPtr->sectionPtr = linePtr->segPtr->sectionPtr;
 	    if (sharedTextPtr->numElisionTags > 0) {
 		nextSegPtr = LoadPerformElision(textPtr, embPtr, &branchPtr, contentPtr, &isElided);
 	    }
@@ -4287,7 +4277,6 @@ TkBTreeLoad(
 		nextSegPtr->prevPtr = segPtr;
 		nextSegPtr->nextPtr = lastPtr;
 		lastPtr->prevPtr = nextSegPtr;
-		lastPtr->sectionPtr = nextSegPtr->sectionPtr;
 	    } else {
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
