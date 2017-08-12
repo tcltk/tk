@@ -2894,7 +2894,7 @@ undoing the operation on a mark is essential.
 .RE
 .RE
 .TP
-\fIpathName \fBget\fR ?\fB\-switch\fR? ?\fB\-\-\fR? \fIindex1\fR ?\fIindex2 ...\fR?
+\fIpathName \fBget\fR ?\fIswitch\fR? ?\fB\-\-\fR? \fIindex1\fR ?\fIindex2 ...\fR?
 .
 Return a range of characters from the text. The return value will be all the
 characters in the text starting with the one whose index is \fIindex1\fR and
@@ -2907,8 +2907,8 @@ returned. If the specified range contains embedded windows, no information
 about them is included in the returned string. If multiple index pairs are
 given, multiple ranges of text will be returned in a list. Invalid ranges
 will not be represented with empty strings in the list. The ranges are
-returned in the order passed to \fIpathName \fBget\fR. The switch will be
-interpreted as follows:
+returned in the order passed to \fIpathName \fBget\fR. The \fIswitch\fR will
+be interpreted as follows:
 .RS
 .TP
 \fB\-chars\fR
@@ -3375,7 +3375,7 @@ the generated name of the mark.
 .
 If \fIdirection\fR is not specified, returns \fBleft\fR or \fBright\fR to
 indicate which of its adjacent characters \fImarkName\fR is attached to. If
-\fIdirection\fR is specified, it must be \fBleft\fR or \fBright\fR; the
+\fIdirection\fR is specified, it must be \fBleft\fR or \fBright\fR, the
 gravity of \fImarkName\fR is set to the given value.
 .TP
 \fIpathName \fBmark names\fR ?\fB\-discardspecial\fR? ?\fIpattern\fR?
