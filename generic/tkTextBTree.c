@@ -4173,6 +4173,7 @@ TkBTreeLoad(
 		nextSegPtr->nextPtr = lastPtr;
 		lastPtr->prevPtr = nextSegPtr;
 	    } else {
+		nextSegPtr->prevPtr = NULL;
 		newLinePtr = InsertNewLine(sharedTextPtr, linePtr->parentPtr, linePtr, nextSegPtr);
 		AddPixelCount(treePtr, newLinePtr, linePtr, changeToPixelInfo);
 		data.linePtr = linePtr = newLinePtr;
