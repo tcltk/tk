@@ -1386,12 +1386,14 @@ EmbWinLayoutProc(
     				 * TEXT_WRAPMODE_WORD, or TEXT_WRAPMODE_CODEPOINT. */
     TkTextSpaceMode spaceMode,	/* Not used. */
     TkTextDispChunk *chunkPtr)	/* Structure to fill in with information about this chunk. The x
-    				 * field has already been set by the caller. */
+    				 * field has already been set by the caller. This argument may be
+				 * NULL. */
 {
     int width, height;
     TkTextEmbWindowClient *client;
     TkText *textPtr = indexPtr->textPtr;
     bool cantEmbed = false;
+    int x;
 
     assert(indexPtr->textPtr);
     assert(offset == 0);
@@ -1538,31 +1540,44 @@ EmbWinLayoutProc(
 	width = Tk_ReqWidth(ewPtr->body.ew.tkwin) + 2*ewPtr->body.ew.padX;
 	height = Tk_ReqHeight(ewPtr->body.ew.tkwin) + 2*ewPtr->body.ew.padY;
     }
-    if (width > maxX - chunkPtr->x && !noCharsYet && textPtr->wrapMode != TEXT_WRAPMODE_NONE) {
+
+    x = chunkPtr ? chunkPtr->x : 0;
+
+    if (width > maxX - x && !noCharsYet && textPtr->wrapMode != TEXT_WRAPMODE_NONE) {
 	return 0;
     }
 
-    /*
-     * Fill in the chunk structure.
-     */
+    if (chunkPtr) {
+	/*
+	 * Fill in the chunk structure.
+	 */
 
-    chunkPtr->layoutProcs = &layoutWindowProcs;
-    chunkPtr->numBytes = 1;
-    if (ewPtr->body.ew.align == ALIGN_BASELINE) {
-	chunkPtr->minAscent = height - ewPtr->body.ew.padY;
-	chunkPtr->minDescent = ewPtr->body.ew.padY;
-	chunkPtr->minHeight = 0;
-    } else {
-	chunkPtr->minAscent = 0;
-	chunkPtr->minDescent = 0;
-	chunkPtr->minHeight = height;
+	chunkPtr->layoutProcs = &layoutWindowProcs;
+	chunkPtr->numBytes = 1;
+	if (ewPtr->body.ew.align == ALIGN_BASELINE) {
+	    chunkPtr->minAscent = height - ewPtr->body.ew.padY;
+	    chunkPtr->minDescent = ewPtr->body.ew.padY;
+	    chunkPtr->minHeight = 0;
+	} else {
+	    chunkPtr->minAscent = 0;
+	    chunkPtr->minDescent = 0;
+	    chunkPtr->minHeight = height;
+	}
+	chunkPtr->width = width;
+	chunkPtr->breakIndex = (wrapMode == TEXT_WRAPMODE_NONE) ? -1 : 1;
+	chunkPtr->clientData = ewPtr;
     }
-    chunkPtr->width = width;
-    chunkPtr->breakIndex = (wrapMode == TEXT_WRAPMODE_NONE) ? -1 : 1;
-    chunkPtr->clientData = ewPtr;
+    
     if (client) {
 	client->chunkCount += 1;
+
+	if (!chunkPtr) {
+	    TkTextDispChunk chunk;
+	    chunk.clientData = ewPtr;
+	    EmbWinUndisplayProc(textPtr, &chunk);
+	}
     }
+
     return 1;
 }
 
