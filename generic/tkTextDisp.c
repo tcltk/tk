@@ -13105,12 +13105,10 @@ IsStartOfNumeric(
     if (offset > 0) {
 	return segPtr->body.chars[offset - 1] == '\t';
     }
-
     for ( ; segPtr; segPtr = segPtr->prevPtr) {
 	switch (segPtr->typePtr->group) {
-	case SEG_GROUP_CHAR: {
+	case SEG_GROUP_CHAR:
 	    return segPtr->body.chars[segPtr->size - 1] == '\t';
-	}
 	case SEG_GROUP_HYPHEN:
 	case SEG_GROUP_IMAGE:
 	case SEG_GROUP_WINDOW:
@@ -13126,7 +13124,6 @@ IsStartOfNumeric(
 	    break;
 	}
     }
-
     return true;
 }
 
