@@ -1051,7 +1051,6 @@ static bool IsPowerOf2(unsigned n) { return !(n & (n - 1)); }
 
 static bool IsBlank(int ch) { return ch == ' ' || ch == '\t'; }
 static bool IsDecimalPoint(int ch) { return ch == '.' || ch == ','; }
-static bool IsDecimal(int ch) { return IsDecimalPoint(ch) || isdigit(ch); }
 
 static unsigned
 NextPowerOf2(uint32_t n)
@@ -13103,19 +13102,28 @@ IsStartOfNumeric(
     TkTextSegment *segPtr,
     int offset)
 {
-    TkTextSegment *lastSegPtr = segPtr;
+    if (offset > 0) {
+	return segPtr->body.chars[offset - 1] == '\t';
+    }
 
     for ( ; segPtr; segPtr = segPtr->prevPtr) {
-	if (segPtr->typePtr->group == SEG_GROUP_CHAR) {
-	    const char *p = segPtr->body.chars + ((segPtr == lastSegPtr ? offset : segPtr->size) - 1);
-
-	    if (p >= segPtr->body.chars) {
-		return !IsDecimal(*p);
-	    }
-	} else if (segPtr->typePtr->group == SEG_GROUP_BRANCH) {
+	switch (segPtr->typePtr->group) {
+	case SEG_GROUP_CHAR: {
+	    return segPtr->body.chars[segPtr->size - 1] == '\t';
+	}
+	case SEG_GROUP_HYPHEN:
+	case SEG_GROUP_IMAGE:
+	case SEG_GROUP_WINDOW:
+	    return false;
+	case SEG_GROUP_BRANCH:
 	    if (segPtr->typePtr == &tkTextLinkType) {
 		segPtr = segPtr->body.link.prevPtr;
 	    }
+	    break;
+	case SEG_GROUP_MARK:
+	case SEG_GROUP_PROTECT:
+	case SEG_GROUP_TAG:
+	    break;
 	}
     }
 
