@@ -12827,7 +12827,9 @@ AdjustForTab(
 	     * it to pick a desired location.
 	     */
 
-	    tabX = MIN(tabX, data->maxX);
+	    if (data->maxX >= 0) {
+		tabX = MIN(tabX, data->maxX);
+	    }
 	    width = 0;
 	    for (chPtr = nextChunkPtr; chPtr; chPtr = chPtr->nextPtr) {
 		width += chPtr->width;
@@ -12844,7 +12846,11 @@ AdjustForTab(
 	    for (chPtr = nextChunkPtr; chPtr && !chPtr->integralPart; chPtr = chPtr->nextPtr) {
 		width += chPtr->width;
 	    }
-	    desired = MIN(tabX, data->maxX) - width;
+	    if (tabX >= 0) {
+		desired = MIN(tabX, data->maxX) - width;
+	    } else {
+		desired = data->maxX - width;
+	    }
 	    break;
 	}
     }
