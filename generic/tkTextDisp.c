@@ -577,6 +577,7 @@ typedef struct LayoutData {
     int tabSize;		/* Number of pixels consumed by current tab stop. */
     int tabX;			/* Position of next tab, needed for alignment of numerical tabs. */
     int tabIndex;		/* Index of the current tab stop. */
+    TkTextTabAlign tabAlignment;/* Alignment of current active tab. */
     unsigned tabWidth;		/* Default tab width of this widget. */
     unsigned numSpaces;		/* Number of expandable space (needed for full justification). */
     unsigned shiftToNextLine;	/* Shift this number of characters to next line for adjustment of
@@ -736,7 +737,7 @@ typedef enum {
  */
 
 static void		AdjustForTab(LayoutData *data);
-static int		ComputeSizeOfTab(LayoutData *data, TkTextSegment *segPtr, int offset);
+static void		ComputeSizeOfTab(LayoutData *data, TkTextSegment *segPtr, int offset);
 static void		ComputeShiftForNumericTab(LayoutData *data, TkTextSegment *firstSegPtr,
 			    int offset);
 static void		ComputeShiftForRightTab(LayoutData *data, TkTextSegment *segPtr, int offset);
@@ -3279,7 +3280,7 @@ LayoutSetupChunk(
 
 	chunkPtr->x = data->x;
 
-	if (data->tabIndex >= 0) {
+	if (data->tabIndex >= 0 && (data->tabAlignment == RIGHT || data->tabAlignment == NUMERIC)) {
 	    data->tabChunkPtr = chunkPtr;
 	}
 	if (data->cursorChunkPtr) {
@@ -3675,8 +3676,6 @@ LayoutChars(
      */
 
     if (gotTab) {
-	int alignment;
-
 	data->isNumericTab = false;
 	if (data->tabIndex >= 0) {
 	    if (data->lastChunkPtr) {
@@ -3689,18 +3688,30 @@ LayoutChars(
 	    data->tabChunkPtr = false;
 	}
 	data->tabChunkPtr = chunkPtr;
-	alignment = ComputeSizeOfTab(data, segPtr, chunkPtr->numBytes + byteOffset);
+	ComputeSizeOfTab(data, segPtr, chunkPtr->numBytes + byteOffset);
 
 	if (data->maxX >= 0) {
-	    if (alignment == RIGHT && data->tabX > data->maxX) {
-		ComputeShiftForRightTab(data, segPtr, chunkPtr->numBytes + byteOffset);
-		return true;
-	    }
-	    if (data->tabSize > data->maxX - data->x) {
-		if (!data->isNumericTab) {
+	    switch (data->tabAlignment) {
+	    case LEFT:
+	    case CENTER:
+		if (data->tabSize >= data->maxX - data->x) {
 		    return false; /* end of display line reached */
 		}
-		ComputeShiftForNumericTab(data, segPtr, chunkPtr->numBytes + byteOffset);
+		break;
+	    case RIGHT:
+		if (data->tabX > data->maxX) {
+		    ComputeShiftForRightTab(data, segPtr, chunkPtr->numBytes + byteOffset);
+		    return true;
+		}
+		// fallthru
+	    case NUMERIC:
+		if (data->tabSize > data->maxX - data->x) {
+		    if (!data->isNumericTab) {
+			return false; /* end of display line reached */
+		    }
+		    ComputeShiftForNumericTab(data, segPtr, chunkPtr->numBytes + byteOffset);
+		}
+		break;
 	    }
 	}
     }
@@ -3826,7 +3837,6 @@ LayoutLogicalLine(
 	    const StyleValues *sValuePtr;
 	    TextStyle *stylePtr;
 	    int byteOffset;
-	    int alignment;
 
 	    segPtr = TkTextIndexGetContentSegment(&data->index, &byteOffset);
 	    stylePtr = GetStyle(data->textPtr, segPtr);
@@ -3839,10 +3849,17 @@ LayoutLogicalLine(
 	    data->maxX = MAX(data->width, data->x);
 	    data->x += data->displayLineNo*data->maxX;
 	    FreeStyle(data->textPtr, stylePtr);
-	    alignment = ComputeSizeOfTab(data, segPtr, byteOffset);
-	    if (alignment == RIGHT) {
+	    ComputeSizeOfTab(data, segPtr, byteOffset);
+
+	    switch (data->tabAlignment) {
+	    case LEFT:
+	    case CENTER:
+	    	data->tabSize = 0;
+		break;
+	    case RIGHT:
 		data->adjustFirstChunk = true;
-	    } else if (alignment == NUMERIC) {
+		break;
+	    case NUMERIC:
 		if (IsDecimalPointPos(data, segPtr, byteOffset)) {
 		    data->tabSize = 0;
 		    data->isNumericTab = false;
@@ -3854,6 +3871,7 @@ LayoutLogicalLine(
 			data->shiftToNextLine = 0;
 		    }
 		}
+		break;
 	    }
 	}
 
@@ -13224,7 +13242,7 @@ FindDecimalPoint(
     }
 }
 
-static int
+static void
 ComputeSizeOfTab(
     LayoutData *data,
     TkTextSegment *segPtr,
@@ -13233,7 +13251,6 @@ ComputeSizeOfTab(
     TkText *textPtr;
     TkTextTabArray *tabArrayPtr;
     unsigned tabWidth;
-    TkTextTabAlign alignment;
 
     textPtr = data->textPtr;
     tabArrayPtr = data->tabArrayPtr;
@@ -13261,10 +13278,10 @@ ComputeSizeOfTab(
 	     */
 
 	    data->tabX = tabWidth*(data->tabIndex + 1);
-	    alignment = LEFT;
+	    data->tabAlignment = LEFT;
 	} else if (data->tabIndex < tabArrayPtr->numTabs) {
 	    data->tabX = tabArrayPtr->tabs[data->tabIndex].location;
-	    alignment = tabArrayPtr->tabs[data->tabIndex].alignment;
+	    data->tabAlignment = tabArrayPtr->tabs[data->tabIndex].alignment;
 	} else {
 	    /*
 	     * Ran out of tab stops; compute a tab position by extrapolating.
@@ -13273,7 +13290,7 @@ ComputeSizeOfTab(
 	    data->tabX = (int) (tabArrayPtr->lastTab
 		    + (data->tabIndex + 1 - tabArrayPtr->numTabs)*tabArrayPtr->tabIncrement
 		    + 0.5);
-	    alignment = tabArrayPtr->tabs[tabArrayPtr->numTabs - 1].alignment;
+	    data->tabAlignment = tabArrayPtr->tabs[tabArrayPtr->numTabs - 1].alignment;
 	}
 
 	/*
@@ -13297,7 +13314,7 @@ ComputeSizeOfTab(
      * Inform our caller of how many tab stops we've used up.
      */
 
-    switch (alignment) {
+    switch (data->tabAlignment) {
     case CENTER:
 	/*
 	 * Be very careful in the arithmetic below, because maxX may be the
@@ -13326,6 +13343,7 @@ ComputeSizeOfTab(
 	data->shiftToNextLinePos.segPtr = NULL;
 	FindDecimalPoint(data, segPtr, offset);
 	if (data->decimalPointPos.segPtr) {
+	    data->lastNumericalPos = data->decimalPointPos;
 	    data->isNumericTab = true;
 	} else if (!FindDecimalPointBackwards(segPtr, offset)) {
 	    data->isNumericTab = true;
@@ -13339,7 +13357,6 @@ ComputeSizeOfTab(
     }
 
     data->tabSize = MAX(data->tabSize, textPtr->spaceWidth);
-    return alignment;
 }
 
 /*
