@@ -963,7 +963,8 @@ EmbImageLayoutProc(
 				 * TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, or TEXT_WRAPMODE_WORD. */
     TkTextSpaceMode spaceMode,	/* Not used. */
     TkTextDispChunk *chunkPtr)	/* Structure to fill in with information about this chunk. The x
-				 * field has already been set by the caller. */
+				 * field has already been set by the caller. This argument may be
+				 * NULL. */
 {
     TkTextEmbImage *img = &eiPtr->body.ei;
     int width, height;
@@ -987,30 +988,33 @@ EmbImageLayoutProc(
 	width += 2*img->padX;
 	height += 2*img->padY;
     }
-    if ((width > maxX - chunkPtr->x)
+    if ((width > maxX - (chunkPtr ? chunkPtr->x : 0))
 	    && !noCharsYet
 	    && (indexPtr->textPtr->wrapMode != TEXT_WRAPMODE_NONE)) {
 	return 0;
     }
 
-    /*
-     * Fill in the chunk structure.
-     */
+    if (chunkPtr) {
+	/*
+	 * Fill in the chunk structure.
+	 */
 
-    chunkPtr->layoutProcs = &layoutImageProcs;
-    chunkPtr->numBytes = 1;
-    if (img->align == ALIGN_BASELINE) {
-	chunkPtr->minAscent = height - img->padY;
-	chunkPtr->minDescent = img->padY;
-	chunkPtr->minHeight = 0;
-    } else {
-	chunkPtr->minAscent = 0;
-	chunkPtr->minDescent = 0;
-	chunkPtr->minHeight = height;
+	chunkPtr->layoutProcs = &layoutImageProcs;
+	chunkPtr->numBytes = 1;
+	if (img->align == ALIGN_BASELINE) {
+	    chunkPtr->minAscent = height - img->padY;
+	    chunkPtr->minDescent = img->padY;
+	    chunkPtr->minHeight = 0;
+	} else {
+	    chunkPtr->minAscent = 0;
+	    chunkPtr->minDescent = 0;
+	    chunkPtr->minHeight = height;
+	}
+	chunkPtr->width = width;
+	chunkPtr->breakIndex = (wrapMode == TEXT_WRAPMODE_NONE) ? -1 : 1;
+	chunkPtr->clientData = eiPtr;
     }
-    chunkPtr->width = width;
-    chunkPtr->breakIndex = (wrapMode == TEXT_WRAPMODE_NONE) ? -1 : 1;
-    chunkPtr->clientData = eiPtr;
+
     return 1;
 }
 

@@ -94,7 +94,9 @@ typedef struct TkTextDispLineEntry {
     uint32_t height;		/* Height of display line in pixels. */
     uint32_t pixels;		/* Accumulated height of display lines. In last entry this attribute
     				 * will contain the old number of display lines. */
-    uint32_t byteOffset:24;	/* Byte offet relative to logical line. */
+    uint32_t byteOffset;	/* Byte offet relative to logical line. */
+    uint32_t tabIndex:24;	/* Unfinished (wrapped) tab index applied to last char chunk of this
+    				 * display line. */
     uint32_t hyphenRule:8;	/* Hyphenation rule applied to last char chunk of this display line. */
 } TkTextDispLineEntry;
 
@@ -626,17 +628,18 @@ struct TkTextDispChunk {
 				 * or extra space at end of line. */
     int32_t additionalWidth;	/* Additional width when expanding spaces for full justification. */
     int32_t hyphenRules;	/* Allowed hyphenation rules for this (hyphen) chunk. */
-    int32_t breakIndex:28;	/* Index within chunk of last acceptable position for a line
+    int32_t breakIndex;		/* Index within chunk of last acceptable position for a line
     				 * (break just before this byte index). <= 0 means don't break
 				 * during or immediately after this chunk. */
-    uint32_t wrappedAtSpace:1;	/* This flag will be set when the a chunk has been wrapped while
+    bool wrappedAtSpace;	/* This flag will be set when the a chunk has been wrapped while
     				 * gobbling a trailing space. */
-    uint32_t endsWithSyllable:1;/* This flag will be set when the corresponding sgement for
+    bool endsWithSyllable;	/* This flag will be set when the corresponding sgement for
     				 * this chunk will be followed by a hyphen segment. */
-    uint32_t skipFirstChar:1;	/* This flag will be set if the first byte has to be skipped due
+    bool skipFirstChar;		/* This flag will be set if the first byte has to be skipped due
     				 * to a spelling change. */
-    uint32_t endOfLineSymbol:1;	/* This flag will be set if this chunk contains (only) the end of
+    bool endOfLineSymbol;	/* This flag will be set if this chunk contains (only) the end of
     				 * line symbol. */
+    bool integralPart;		/* This chunk contains the start of the integral part of a numeric. */
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
 
