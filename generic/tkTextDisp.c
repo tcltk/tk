@@ -3685,6 +3685,7 @@ LayoutChars(
 		data->lastChunkPtr->nextPtr = NULL; /* restore */
 	    }
 	    data->tabChunkPtr = false;
+	    data->x = chunkPtr->x + chunkPtr->width;
 	}
 	data->tabChunkPtr = chunkPtr;
 	ComputeSizeOfTab(data, segPtr, chunkPtr->numBytes + byteOffset);
