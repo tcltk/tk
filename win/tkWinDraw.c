@@ -763,7 +763,8 @@ RenderObject(
     int npoints,
     int mode,
     HPEN pen,
-    WinDrawFunc func)
+    WinDrawFunc func)        /* Name of the Windows GDI drawing function:
+                                this is either Polyline or Polygon. */
 {
     RECT rect = {0,0,0,0};
     HPEN oldPen;
@@ -861,7 +862,24 @@ RenderObject(
 
 	SetPolyFillMode(dc, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
+        BeginPath(dc);
 	func(dc, winPoints, npoints);
+        /*
+         * In the case of closed polylines, the first and last points
+         * are the same. We want miter or bevel join be rendered also
+         * at this point, this needs telling the Windows GDI that the
+         * path is closed.
+         */
+        if ((points[0].x == points[npoints-1].x) &&
+                (points[0].y == points[npoints-1].y)) {
+            CloseFigure(dc);
+        }
+        EndPath(dc);
+        if (func == Polygon) {
+            StrokeAndFillPath(dc);
+        } else {
+            StrokePath(dc);
+        }
 	SelectObject(dc, oldPen);
     }
     DeleteObject(SelectObject(dc, oldBrush));
