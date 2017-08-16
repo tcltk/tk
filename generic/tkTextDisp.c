@@ -599,7 +599,6 @@ typedef struct LayoutData {
     bool isRightTab;		/* We are processing a right tab. */
     bool adjustFirstChunk;	/* Start adjustment of chunks with first chunk, needed for line wrapping
     				 * with right tabs. */
-    bool tabLineJustification;	/* Do line justification? Only affects right and centered adjustment. */
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
     /*
@@ -3850,10 +3849,6 @@ LayoutLogicalLine(
 	    data->x = data->paragraphStart ? sValuePtr->lMargin1 : sValuePtr->lMargin2;
 	    data->maxX = MAX(data->width, data->x);
 	    data->x += data->displayLineNo*data->maxX;
-#if 0
-	    /* TODO: Do we still right/center adjust if we break in the middle of a word? */
-	    data->tabLineJustification = IsStartOfTab(segPtr, byteOffset);
-#endif
 	    FreeStyle(data->textPtr, stylePtr);
 	    ComputeSizeOfTab(data, segPtr, byteOffset);
 
@@ -4463,7 +4458,6 @@ LayoutDLine(
     data.tabStyle = TK_TEXT_TABSTYLE_TABULAR;
     data.wrapMode = textPtr->wrapMode;
     data.paragraphStart = displayLineNo == 0;
-    data.tabLineJustification = true;
     data.trimSpaces = textPtr->spaceMode == TEXT_SPACEMODE_TRIM;
     data.displayLineNo = displayLineNo;
     data.textPtr = textPtr;
@@ -4592,9 +4586,7 @@ LayoutDLine(
     	/* no action */
 	break;
     case TK_TEXT_JUSTIFY_RIGHT:
-	if (data.tabLineJustification) {
-	    jIndent = data.maxX - length;
-	}
+	jIndent = data.maxX - length;
 	break;
     case TK_TEXT_JUSTIFY_FULL:
 	if (!endOfLogicalLine) {
@@ -4602,9 +4594,7 @@ LayoutDLine(
 	}
 	break;
     case TK_TEXT_JUSTIFY_CENTER:
-	if (data.tabLineJustification) {
-	    jIndent = (data.maxX - length)/2;
-	}
+	jIndent = (data.maxX - length)/2;
 	break;
     }
 
