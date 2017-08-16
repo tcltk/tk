@@ -3855,7 +3855,7 @@ LayoutLogicalLine(
 	    switch (data->tabAlignment) {
 	    case LEFT:
 	    case CENTER:
-	    	data->tabSize = 0;
+		data->tabSize = 0;
 		break;
 	    case RIGHT:
 		data->adjustFirstChunk = true;
@@ -4649,6 +4649,9 @@ LayoutDLine(
     /* line length may have changed because of justification */
     dlPtr->length = data.lastChunkPtr->x + jIndent + data.lastChunkPtr->width;
 
+    if (data.tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR) {
+	data.tabIndex = -1;
+    }
     LayoutUpdateLineHeightInformation(&data, dlPtr, data.logicalLinePtr,
 	    endOfLogicalLine, data.hyphenRule, data.tabIndex + 1);
 
@@ -13339,7 +13342,7 @@ ComputeSizeOfTab(
 	 */
     } while (data->tabX <= data->x && data->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR);
 
-    if (data->displayLineNo > 0 && data->tabX > 0) {
+    if (data->displayLineNo > 0 && data->tabX > 0 && data->tabStyle != TK_TEXT_TABSTYLE_WORDPROCESSOR) {
 	if ((data->tabX %= data->maxX) == 0) {
 	    data->tabX = data->maxX;
 	}
