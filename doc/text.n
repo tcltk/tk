@@ -3455,12 +3455,12 @@ Remove the mark corresponding to each of the \fImarkName\fR arguments. The
 removed marks will not be usable in indices and will not be returned by future
 calls to
 .QW "\fIpathName \fBmark names\fR" ,
-.QW "\fIpathName \fBmark next\fR"
+.QW "\fIpathName \fBmark next\fR" ,
 and
-.QW "\fIpathName \fBmark previous\fR" . When removing a generated mark (see
-\fBmark generate\fR) a future call of \fBmark set\fR with this mark will
-throw an error (even after clearing the widget). This command returns an
-empty string.
+.QW "\fIpathName \fBmark previous\fR" .
+When removing a generated mark (see \fBmark generate\fR) a future call of
+\fBmark set\fR with this mark will throw an error (even after clearing the widget).
+This command returns an empty string.
 .RE
 .TP
 \fIpathName \fBpeer \fIoption args\fR
