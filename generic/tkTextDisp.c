@@ -3685,7 +3685,7 @@ LayoutChars(
 	    if (data->lastChunkPtr) {
 		data->lastChunkPtr->nextPtr = NULL; /* restore */
 	    }
-	    data->tabChunkPtr = false;
+	    data->tabChunkPtr = NULL;
 	    data->x = chunkPtr->x + chunkPtr->width;
 	}
 	data->tabChunkPtr = chunkPtr;
