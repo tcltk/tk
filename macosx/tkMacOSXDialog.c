@@ -159,6 +159,23 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     [TYPE_YESNOCANCEL] =	{5, 6, 4},
 };
 
+/*
+ * Construct a file URL from directory and filename.  Either may
+ * be nil.  If both are nil, returns nil.
+ */
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1050
+static NSURL *getFileURL(NSString *directory, NSString *filename) {
+    NSURL *url = nil;
+    if (directory) {
+	url = [NSURL fileURLWithPath:directory isDirectory:YES];
+    }
+    if (filename) {
+	url = [NSURL URLWithString:filename relativeToURL:url];
+    }
+    return url;
+}
+#endif
+ 
 
 #pragma mark TKApplication(TKDialog)
 
@@ -538,7 +555,6 @@ Tk_GetOpenFileObjCmd(
 	    if (len) {
 		filename = [[[NSString alloc] initWithUTF8String:str]
 			autorelease];
-		[openpanel setNameFieldStringValue:filename];
 	    }
 	    break;
 	case OPEN_MESSAGE:
@@ -572,12 +588,14 @@ Tk_GetOpenFileObjCmd(
 	}
     }
 
-    /* From OSX 10.11, the title string is silently ignored.
-     * Prepend the title to the message
-     * NOTE should be conditional on OSX version, but
-     * -mmacosx-version-min does not revert this behaviour*/
     if (title) {
 	[openpanel setTitle:title];
+
+	/* From OSX 10.11, the title string is silently ignored in the open panel.
+	 * Prepend the title to the message in this case
+	 * NOTE should be conditional on OSX version, but
+	 * -mmacosx-version-min does not revert this behaviour*/
+
 	if (message) {
 	    NSString *fullmessage = [[NSString alloc] initWithFormat:@"%@\n%@",title,message];
 	    [message release];
@@ -659,10 +677,11 @@ Tk_GetOpenFileObjCmd(
 		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
 	       contextInfo:callbackInfo];
 #else
-	if (directory) {
-	    [openpanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
+	if (directory || filename ) {
+	    NSURL * fileURL = getFileURL(directory, filename);
+	    [openpanel setDirectoryURL:fileURL];
 	}
-	[openpanel setNameFieldStringValue:filename];
+
 	[openpanel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
 	       { [NSApp tkFilePanelDidEnd:openpanel
@@ -675,10 +694,11 @@ Tk_GetOpenFileObjCmd(
 	modalReturnCode = [openpanel runModalForDirectory:directory
 				 file:filename];
 #else
-	if (directory) {
-	    [openpanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
+	if (directory || filename ) {
+	    NSURL * fileURL = getFileURL(directory, filename);
+	    [openpanel setDirectoryURL:fileURL];
 	}
-	[openpanel setNameFieldStringValue:filename];
+
 	modalReturnCode = [openpanel runModal];
 #endif
 	[NSApp tkFilePanelDidEnd:openpanel returnCode:modalReturnCode
@@ -819,13 +839,20 @@ Tk_GetSaveFileObjCmd(
 
     if (title) {
 	[savepanel setTitle:title];
-	if (message) {
-	    NSString *fullmessage = [[NSString alloc] initWithFormat:@"%@\n%@",title,message];
-	    [message release];
-	    [title release];
-	    message = fullmessage;
-	} else {
-	    message = title;
+
+	/* From OSX 10.11, the title string is silently ignored, if the save panel is a sheet.
+	 * Prepend the title to the message in this case
+	 * NOTE should be conditional on OSX version, but
+	 * -mmacosx-version-min does not revert this behaviour*/
+	if (haveParentOption) {
+	    if (message) {
+		NSString *fullmessage = [[NSString alloc] initWithFormat:@"%@\n%@",title,message];
+		[message release];
+		[title release];
+		message = fullmessage;
+	    } else {
+		message = title;
+	    }
 	}
     }
 
@@ -898,7 +925,12 @@ Tk_GetSaveFileObjCmd(
 	if (directory) {
 	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	}
-	[savepanel setNameFieldStringValue:filename];
+	   /*check for file name, otherwise set to empty string; crashes with uncaught exception if set to nil*/
+	if (filename) {
+	    [savepanel setNameFieldStringValue:filename];
+	} else {
+	    [savepanel setNameFieldStringValue:@""];
+	}
 	[savepanel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
 	       { [NSApp tkFilePanelDidEnd:savepanel
@@ -913,7 +945,12 @@ Tk_GetSaveFileObjCmd(
 	if (directory) {
 	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	}
-	[savepanel setNameFieldStringValue:filename];
+	 /*check for file name, otherwise set to empty string; crashes with uncaught exception if set to nil*/
+	if (filename) {
+	    [savepanel setNameFieldStringValue:filename];
+	} else {
+	    [savepanel setNameFieldStringValue:@""];
+	}
 	modalReturnCode = [savepanel runModal];
 	#if 0
 	NSLog(@"modal: %li", modalReturnCode);
@@ -1047,6 +1084,10 @@ Tk_ChooseDirectoryObjCmd(
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = 0;
+    /*check for directory value, set to root if not specified; otherwise crashes with exception because of nil string parameter*/
+    if (!directory) {
+	directory = @"/";
+    }
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
       parentIsKey = [parent isKeyWindow];
