@@ -599,6 +599,7 @@ typedef struct LayoutData {
     bool isRightTab;		/* We are processing a right tab. */
     bool adjustFirstChunk;	/* Start adjustment of chunks with first chunk, needed for line wrapping
     				 * with right tabs. */
+    bool tabLineJustification;	/* Do line justification? Only affects right and centered adjustment. */
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
     /*
@@ -741,6 +742,7 @@ static void		ComputeSizeOfTab(LayoutData *data, TkTextSegment *segPtr, int offse
 static void		ComputeShiftForNumericTab(LayoutData *data, TkTextSegment *firstSegPtr,
 			    int offset);
 static void		ComputeShiftForRightTab(LayoutData *data, TkTextSegment *segPtr, int offset);
+static bool		IsStartOfTab(TkTextSegment *segPtr, int offset);
 static void		ElideBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int index, int y,
 			    int lineHeight, int baseline, int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr);
@@ -3848,6 +3850,10 @@ LayoutLogicalLine(
 	    data->x = data->paragraphStart ? sValuePtr->lMargin1 : sValuePtr->lMargin2;
 	    data->maxX = MAX(data->width, data->x);
 	    data->x += data->displayLineNo*data->maxX;
+#if 0
+	    /* TODO: Do we still right/center adjust if we break in the middle of a word? */
+	    data->tabLineJustification = IsStartOfTab(segPtr, byteOffset);
+#endif
 	    FreeStyle(data->textPtr, stylePtr);
 	    ComputeSizeOfTab(data, segPtr, byteOffset);
 
@@ -4457,6 +4463,7 @@ LayoutDLine(
     data.tabStyle = TK_TEXT_TABSTYLE_TABULAR;
     data.wrapMode = textPtr->wrapMode;
     data.paragraphStart = displayLineNo == 0;
+    data.tabLineJustification = true;
     data.trimSpaces = textPtr->spaceMode == TEXT_SPACEMODE_TRIM;
     data.displayLineNo = displayLineNo;
     data.textPtr = textPtr;
@@ -4585,7 +4592,9 @@ LayoutDLine(
     	/* no action */
 	break;
     case TK_TEXT_JUSTIFY_RIGHT:
-	jIndent = data.maxX - length;
+	if (data.tabLineJustification) {
+	    jIndent = data.maxX - length;
+	}
 	break;
     case TK_TEXT_JUSTIFY_FULL:
 	if (!endOfLogicalLine) {
@@ -4593,7 +4602,9 @@ LayoutDLine(
 	}
 	break;
     case TK_TEXT_JUSTIFY_CENTER:
-	jIndent = (data.maxX - length)/2;
+	if (data.tabLineJustification) {
+	    jIndent = (data.maxX - length)/2;
+	}
 	break;
     }
 
@@ -12797,6 +12808,10 @@ AdjustForTab(
 	} else {
 	    desired = NextTabStop(tabWidth, x, 0);
 	}
+
+	if (desired > 0 && (data->wrapMode != TEXT_WRAPMODE_NULL)) {
+	    desired %= data->maxX;
+	}
     } else {
 	if (tabIndex < tabArrayPtr->numTabs) {
 	    alignment = tabArrayPtr->tabs[tabIndex].alignment;
@@ -13089,14 +13104,13 @@ ComputeShiftForRightTab(
 /*
  *----------------------------------------------------------------------
  *
- * ComputeShiftForNumericTab --
+ * IsStartOfTab --
  *
- *	This estimates the amount of characters we have to shift to next
- *	line for adjustment of numeric tabs. The computation is a bit tricky,
- *	because we have to measure backwards.
+ *	Determine whether the given offset in segment is immediately after
+ *	tab character.
  *
  * Results:
- *	Store the number of characters for next line in 'data->shiftToNextLine'.
+ *	Whether given offset in segment is immediately after tab character.
  *
  * Side effects:
  *	None.
@@ -13105,7 +13119,7 @@ ComputeShiftForRightTab(
  */
 
 static bool
-IsStartOfNumeric(
+IsStartOfTab(
     TkTextSegment *segPtr,
     int offset)
 {
@@ -13133,6 +13147,25 @@ IsStartOfNumeric(
     }
     return true;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ComputeShiftForNumericTab --
+ *
+ *	This estimates the amount of characters we have to shift to next
+ *	line for adjustment of numeric tabs. The computation is a bit tricky,
+ *	because we have to measure backwards.
+ *
+ * Results:
+ *	Store the number of characters for next line in 'data->shiftToNextLine'.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
 
 static void
 ComputeShiftForNumericTab(
@@ -13142,7 +13175,7 @@ ComputeShiftForNumericTab(
 {
     TkTextSegment *lastSegPtr = data->lastNumericalPos.segPtr;
 
-    if (!lastSegPtr || !IsStartOfNumeric(firstSegPtr, offset)) {
+    if (!lastSegPtr || !IsStartOfTab(firstSegPtr, offset)) {
 	return;
     }
 
