@@ -3677,6 +3677,7 @@ LayoutChars(
 
     if (gotTab) {
 	data->isNumericTab = false;
+
 	if (data->tabIndex >= 0) {
 	    if (data->lastChunkPtr) {
 		data->lastChunkPtr->nextPtr = data->chunkPtr; /* we need the complete chain. */
@@ -3688,31 +3689,18 @@ LayoutChars(
 	    data->tabChunkPtr = NULL;
 	    data->x = chunkPtr->x + chunkPtr->width;
 	}
+
 	data->tabChunkPtr = chunkPtr;
 	ComputeSizeOfTab(data, segPtr, chunkPtr->numBytes + byteOffset);
 
 	if (data->maxX >= 0) {
-	    switch (data->tabAlignment) {
-	    case LEFT:
-	    case CENTER:
-		if (data->tabSize >= data->maxX - data->x) {
+	    if (data->tabSize >= data->maxX - data->x) {
+		if (!data->isNumericTab) {
 		    return false; /* end of display line reached */
 		}
-		break;
-	    case RIGHT:
-		if (data->tabX > data->maxX) {
-		    ComputeShiftForRightTab(data, segPtr, chunkPtr->numBytes + byteOffset);
-		    return true;
-		}
-		// fallthru
-	    case NUMERIC:
-		if (data->tabSize > data->maxX - data->x) {
-		    if (!data->isNumericTab) {
-			return false; /* end of display line reached */
-		    }
-		    ComputeShiftForNumericTab(data, segPtr, chunkPtr->numBytes + byteOffset);
-		}
-		break;
+		ComputeShiftForNumericTab(data, segPtr, chunkPtr->numBytes + byteOffset);
+	    } else if (data->tabAlignment == RIGHT && data->tabX > data->maxX) {
+		ComputeShiftForRightTab(data, segPtr, chunkPtr->numBytes + byteOffset);
 	    }
 	}
     }
@@ -3859,6 +3847,7 @@ LayoutLogicalLine(
 		break;
 	    case RIGHT:
 		data->adjustFirstChunk = true;
+		data->tabSize = 0;
 		break;
 	    case NUMERIC:
 		if (IsDecimalPointPos(data, segPtr, byteOffset)) {
