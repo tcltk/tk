@@ -545,9 +545,9 @@ typedef struct LayoutData {
     TkTextDispChunk *lastChunkPtr;
 				/* Pointer to the current chunk. */
     TkTextDispChunk *firstCharChunkPtr;
-				/* Pointer to the first char/window/image chunk in chain. */
+				/* Pointer to the first char/hyphen/window/image chunk in chain. */
     TkTextDispChunk *lastCharChunkPtr;
-				/* Pointer to the last char/window/image chunk in chain. */
+				/* Pointer to the last char/hyphen/window/image chunk in chain. */
     TkTextDispChunk *breakChunkPtr;
 				/* Chunk containing best word break point, if any. */
     TkTextDispChunk *cursorChunkPtr;
@@ -576,7 +576,10 @@ typedef struct LayoutData {
     int tabStyle;		/* One of TABULAR or WORDPROCESSOR. */
     int tabSize;		/* Number of pixels consumed by current tab stop. */
     int tabX;			/* Position of next tab, needed for alignment of numerical tabs. */
+    int tabShift;		/* Position of first tab in display line, if first tab is LEFT,
+    				 * zero otherwise. */
     int tabIndex;		/* Index of the current tab stop. */
+    int tabOverhang;		/* Overhang from computed line break. */
     TkTextTabAlign tabAlignment;/* Alignment of current active tab. */
     unsigned tabWidth;		/* Default tab width of this widget. */
     unsigned numSpaces;		/* Number of expandable space (needed for full justification). */
@@ -599,6 +602,7 @@ typedef struct LayoutData {
     bool isRightTab;		/* We are processing a right tab. */
     bool adjustFirstChunk;	/* Start adjustment of chunks with first chunk, needed for line wrapping
     				 * with right tabs. */
+    bool tabApplied;		/* Current tab has been already applied? */
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
     /*
@@ -2476,7 +2480,8 @@ LayoutUpdateLineHeightInformation(
     TkTextLine *linePtr,	/* The corresponding logical line. */
     bool finished,		/* Did we finish the layout of a complete logical line? */
     int hyphenRule,		/* Applied hyphen rule; zero if no rule has been applied. */
-    int tabIndex)		/* Applied tab index; zero if no tab has been applied. */
+    int tabIndex,		/* Tab index of last chunk in line; zero if no tab. */
+    bool tabApplied)		/* Tab index of last chunk in line has been already applied? */
 {
     TkText *textPtr = data->textPtr;
     unsigned epoch = textPtr->dInfoPtr->lineMetricUpdateEpoch;
@@ -2535,6 +2540,7 @@ LayoutUpdateLineHeightInformation(
 	dispLineEntry->byteOffset = data->byteOffset;
 	dispLineEntry->hyphenRule = hyphenRule;
 	dispLineEntry->tabIndex = tabIndex;
+	dispLineEntry->tabApplied = tabApplied;
     } else if (!finished) {
 	LayoutSetupDispLineInfo(pixelInfo);
 	dispLineInfo = pixelInfo->dispLineInfo;
@@ -2543,6 +2549,7 @@ LayoutUpdateLineHeightInformation(
 	dispLineInfo->entry[0].byteOffset = data->byteOffset;
 	dispLineInfo->entry[0].hyphenRule = hyphenRule;
 	dispLineInfo->entry[0].tabIndex = tabIndex;
+	dispLineInfo->entry[0].tabApplied = tabApplied;
 	dispLineInfo->entry[1].byteOffset = data->byteOffset + dlPtr->byteCount;
     }
 
@@ -3280,7 +3287,7 @@ LayoutSetupChunk(
 
 	chunkPtr->x = data->x;
 
-	if (data->tabIndex >= 0 && (data->tabAlignment == RIGHT || data->tabAlignment == NUMERIC)) {
+	if (data->tabIndex >= 0 && !data->tabApplied) {
 	    data->tabChunkPtr = chunkPtr;
 	}
 	if (data->cursorChunkPtr) {
@@ -3365,7 +3372,7 @@ LayoutChars(
 	    && base[maxBytes - 1] == '\n'
 	    && (data->textPtr->showEndOfText
 		|| segPtr->sectionPtr->linePtr->nextPtr != TkBTreeGetLastLine(data->textPtr))) {
-	maxBytes -= 1; /* now may beome zero */
+	maxBytes -= 1; /* now may become zero */
     }
 
     if (maxBytes == 0) {
@@ -3592,6 +3599,9 @@ LayoutChars(
 		&& (int) (maxBytes + byteOffset) > data->shiftToNextLinePos.offset) {
 	    int n = MIN(maxBytes + byteOffset - data->shiftToNextLinePos.offset, data->shiftToNextLine);
 
+	    if (gotTab) {
+		n += 1;
+	    }
 	    if (n > 0) {
 		data->shiftToNextLine -= n;
 		n = MIN(n, (int) maxBytes);
@@ -3694,13 +3704,32 @@ LayoutChars(
 	ComputeSizeOfTab(data, segPtr, chunkPtr->numBytes + byteOffset);
 
 	if (data->maxX >= 0) {
-	    if (data->tabSize >= data->maxX - data->x) {
-		if (!data->isNumericTab) {
+	    switch (data->tabAlignment) {
+	    case LEFT:
+	    case CENTER:
+		if (data->tabSize >= data->maxX - data->x) {
 		    return false; /* end of display line reached */
 		}
-		ComputeShiftForNumericTab(data, segPtr, chunkPtr->numBytes + byteOffset);
-	    } else if (data->tabAlignment == RIGHT && data->tabX > data->maxX) {
-		ComputeShiftForRightTab(data, segPtr, chunkPtr->numBytes + byteOffset);
+		break;
+	    case RIGHT:
+		if (data->tabSize > data->maxX - data->x) {
+		    return false; /* end of display line reached */
+		}
+		if (data->displayLineNo == 0 && data->tabX >= 2*data->maxX) {
+		    return false; /* end of display line reached */
+		}
+		if (data->tabX > data->maxX) {
+		    ComputeShiftForRightTab(data, segPtr, chunkPtr->numBytes + byteOffset);
+		}
+	    	break;
+	    case NUMERIC:
+		if (data->tabSize - data->maxX + data->x >= data->maxX) {
+		    return false; /* end of display line reached */
+		}
+		if (data->tabSize >= data->maxX - data->x) {
+		    ComputeShiftForNumericTab(data, segPtr, chunkPtr->numBytes + byteOffset);
+		}
+		break;
 	    }
 	}
     }
@@ -3836,29 +3865,38 @@ LayoutLogicalLine(
 	    data->width = dInfoPtr->maxX - dInfoPtr->x - data->rMargin;
 	    data->x = data->paragraphStart ? sValuePtr->lMargin1 : sValuePtr->lMargin2;
 	    data->maxX = MAX(data->width, data->x);
-	    data->x += data->displayLineNo*data->maxX;
 	    FreeStyle(data->textPtr, stylePtr);
 	    ComputeSizeOfTab(data, segPtr, byteOffset);
+	    data->tabApplied = dispLineEntry->tabApplied;
 
 	    switch (data->tabAlignment) {
 	    case LEFT:
-	    case CENTER:
 		data->tabSize = 0;
+		data->tabApplied = true;
+		break;
+	    case CENTER:
+		if (data->tabApplied) {
+		    data->tabSize = 0;
+		}
 		break;
 	    case RIGHT:
-		data->adjustFirstChunk = true;
 		data->tabSize = 0;
+		if (data->tabApplied) {
+		    data->adjustFirstChunk = false;
+		}
 		break;
 	    case NUMERIC:
-		if (IsDecimalPointPos(data, segPtr, byteOffset)) {
-		    data->tabSize = 0;
-		    data->isNumericTab = false;
-		}
-		if (data->maxX >= 0 && data->tabSize > data->maxX - data->x) {
-		    data->tabX += data->maxX;
-		    ComputeShiftForNumericTab(data, segPtr, byteOffset);
-		    if (data->lengthOfFractional == data->shiftToNextLine) {
-			data->shiftToNextLine = 0;
+		if (!data->tabApplied) {
+		    if (IsDecimalPointPos(data, segPtr, byteOffset)) {
+			data->tabSize = 0;
+			data->isNumericTab = false;
+		    }
+		    if (data->maxX >= 0 && data->tabSize >= data->maxX - data->x) {
+			data->tabX += data->maxX;
+			ComputeShiftForNumericTab(data, segPtr, byteOffset);
+			if (data->lengthOfFractional == data->shiftToNextLine) {
+			    data->shiftToNextLine = 0;
+			}
 		    }
 		}
 		break;
@@ -4489,7 +4527,7 @@ LayoutDLine(
 	    assert(!data.chunkPtr->nextPtr);
 	    dlPtr->byteCount = data.chunkPtr->numBytes;
 	    LayoutFreeChunk(&data);
-	    LayoutUpdateLineHeightInformation(&data, dlPtr, data.logicalLinePtr, true, 0, 0);
+	    LayoutUpdateLineHeightInformation(&data, dlPtr, data.logicalLinePtr, true, 0, 0, false);
 	    return dlPtr;
 	}
     }
@@ -4642,7 +4680,7 @@ LayoutDLine(
 	data.tabIndex = -1;
     }
     LayoutUpdateLineHeightInformation(&data, dlPtr, data.logicalLinePtr,
-	    endOfLogicalLine, data.hyphenRule, data.tabIndex + 1);
+	    endOfLogicalLine, data.hyphenRule, data.tabIndex + 1, data.tabApplied);
 
     return dlPtr;
 }
@@ -12748,7 +12786,6 @@ AdjustForTab(
     TkTextTabArray *tabArrayPtr;
     TkText *textPtr;
     int tabX, tabIndex;
-    TkTextTabAlign alignment;
 
     assert(data->tabIndex >= 0);
 
@@ -12764,6 +12801,8 @@ AdjustForTab(
 	return;
     }
 
+    data->tabApplied = true;
+    tabX = data->tabX;
     tabIndex = data->tabIndex;
     textPtr = data->textPtr;
     tabArrayPtr = data->tabArrayPtr;
@@ -12791,48 +12830,37 @@ AdjustForTab(
 	    desired = NextTabStop(tabWidth, x, 0);
 	}
 
-	if (desired > 0 && (data->wrapMode != TEXT_WRAPMODE_NULL)) {
-	    desired %= data->maxX;
-	}
+	desired %= data->maxX;
     } else {
-	if (tabIndex < tabArrayPtr->numTabs) {
-	    alignment = tabArrayPtr->tabs[tabIndex].alignment;
-	    tabX = tabArrayPtr->tabs[tabIndex].location;
-	} else {
-	    /*
-	     * Ran out of tab stops; compute a tab position by extrapolating from
-	     * the last two tab positions.
-	     */
-
-	    tabX = (int) (tabArrayPtr->lastTab +
-		    (tabIndex + 1 - tabArrayPtr->numTabs)*tabArrayPtr->tabIncrement + 0.5);
-	    alignment = tabArrayPtr->tabs[tabArrayPtr->numTabs - 1].alignment;
-	}
-
-	if (data->displayLineNo > 0 && tabX > 0) {
-	    tabX %= data->maxX;
-	}
-
-	switch (alignment) {
+	switch (data->tabAlignment) {
 	case LEFT:
 	    desired = tabX;
 	    break;
 
 	case CENTER:
+	    /*
+	     * Compute the width of all the information in the tab group, then use
+	     * it to pick a desired location.
+	     */
+
+	    width = 0;
+	    for (chPtr = nextChunkPtr; chPtr; chPtr = chPtr->nextPtr) {
+		width += chPtr->width;
+	    }
+	    desired = MIN(tabX, data->maxX) - width/2;
+	    break;
+
 	case RIGHT:
 	    /*
 	     * Compute the width of all the information in the tab group, then use
 	     * it to pick a desired location.
 	     */
 
-	    if (data->maxX >= 0) {
-		tabX = MIN(tabX, data->maxX);
-	    }
 	    width = 0;
 	    for (chPtr = nextChunkPtr; chPtr; chPtr = chPtr->nextPtr) {
 		width += chPtr->width;
 	    }
-	    desired = tabX - (alignment == CENTER ? width/2 : width);
+	    desired = MIN(tabX, data->maxX - data->tabOverhang) - width;
 	    break;
 
 	case NUMERIC:
@@ -12844,14 +12872,13 @@ AdjustForTab(
 	    for (chPtr = nextChunkPtr; chPtr && !chPtr->integralPart; chPtr = chPtr->nextPtr) {
 		width += chPtr->width;
 	    }
-	    if (tabX >= 0) {
-		desired = MIN(tabX, data->maxX) - width;
-	    } else {
-		desired = data->maxX - width;
-	    }
+	    desired = MIN(tabX, data->maxX - data->tabOverhang) - width;
+	    data->tabApplied = false;
 	    break;
 	}
     }
+
+    desired += data->tabShift;
 
     /*
      * Shift all of the chunks to the right so that the left edge is at the
@@ -12860,7 +12887,7 @@ AdjustForTab(
      */
 
     delta = desired - x;
-    if (!data->adjustFirstChunk || !nextChunkPtr) {
+    if (data->tabAlignment == LEFT) {
 	delta = MAX(textPtr->spaceWidth, delta);
     }
 
@@ -12945,6 +12972,12 @@ MeasureBackwards(
 			str, length, 0, length, 0, maxX, 0, &nextX);
 		FreeStyle(data->textPtr, stylePtr);
 
+		if (fit < (int) length && maxX - nextX > 0)
+		{
+		    int x;
+		    MeasureChars(stylePtr->sValuePtr->tkfont, str + fit, 1, 0, 1, 0, -1, 0, &x);
+		    data->tabOverhang = MAX(0, x - (maxX - nextX));
+		}
 		if (fit) {
 		    if (*e == '\n') {
 			fit += 1;
@@ -13281,6 +13314,8 @@ ComputeSizeOfTab(
 
     textPtr = data->textPtr;
     tabArrayPtr = data->tabArrayPtr;
+    data->tabApplied = false;
+    data->tabOverhang = 0;
 
     if (!tabArrayPtr || tabArrayPtr->numTabs == 0) {
 	/*
@@ -13331,10 +13366,14 @@ ComputeSizeOfTab(
 	 */
     } while (data->tabX <= data->x && data->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR);
 
-    if (data->displayLineNo > 0 && data->tabX > 0 && data->tabStyle != TK_TEXT_TABSTYLE_WORDPROCESSOR) {
-	if ((data->tabX %= data->maxX) == 0) {
-	    data->tabX = data->maxX;
+    if (data->displayLineNo > 0 && data->tabStyle != TK_TEXT_TABSTYLE_WORDPROCESSOR) {
+	int tabX = data->tabX - ((int) data->displayLineNo)*data->maxX;
+
+	if (data->tabAlignment == LEFT && data->x == 0) {
+	    data->tabShift = tabX;
 	}
+
+	data->tabX = MAX(0, tabX + data->tabShift);
     }
 
     /*
@@ -13343,11 +13382,14 @@ ComputeSizeOfTab(
 
     switch (data->tabAlignment) {
     case CENTER:
+	if (data->displayLineNo > 0 && data->x == 0) {
+	    data->tabSize = 0;
+	    return;
+	}
 	/*
 	 * Be very careful in the arithmetic below, because maxX may be the
 	 * largest positive number: watch out for integer overflow.
 	 */
-
 	if (data->maxX - data->tabX < data->tabX - data->x) {
 	    data->tabSize = data->maxX - data->x - 2*(data->maxX - data->tabX);
 	} else {
@@ -13357,7 +13399,7 @@ ComputeSizeOfTab(
 
     case RIGHT:
 	data->isRightTab = false; /* will only be set when wrapping line */
-	data->tabSize = 0;
+	data->tabSize = data->maxX - data->tabX - data->x;
 	break;
 
     case NUMERIC:
@@ -13378,12 +13420,13 @@ ComputeSizeOfTab(
 	/* fallthru */
 
     case LEFT:
-	data->tabSize = data->tabX - (data->x % data->maxX);
+	data->tabSize = data->tabX - data->x;
 	assert(textPtr->spaceWidth > 0); /* ensure positive size */
+	data->tabSize = MAX(data->tabSize, textPtr->spaceWidth);
     	break;
     }
 
-    data->tabSize = MAX(data->tabSize, textPtr->spaceWidth);
+    data->tabSize = MAX(0, data->tabSize);
 }
 
 /*

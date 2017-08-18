@@ -95,9 +95,9 @@ typedef struct TkTextDispLineEntry {
     uint32_t pixels;		/* Accumulated height of display lines. In last entry this attribute
     				 * will contain the old number of display lines. */
     uint32_t byteOffset;	/* Byte offet relative to logical line. */
-    uint32_t tabIndex:24;	/* Unfinished (wrapped) tab index applied to last char chunk of this
-    				 * display line. */
-    uint32_t hyphenRule:8;	/* Hyphenation rule applied to last char chunk of this display line. */
+    uint32_t tabIndex:24;	/* Tab index of last char chunk of this display line. */
+    uint32_t hyphenRule:7;	/* Hyphenation rule applied to last char chunk of this display line. */
+    uint32_t tabApplied:1;	/* Tab index of last char chunk has been already applied? */
 } TkTextDispLineEntry;
 
 typedef struct TkTextDispLineInfo {
