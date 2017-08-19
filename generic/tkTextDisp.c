@@ -13308,7 +13308,7 @@ ComputeSizeOfTab(
     TkText *textPtr;
     TkTextTabArray *tabArrayPtr;
     unsigned tabWidth;
-    int min;
+    int min = 0; /* shut up the compiler */
 
     textPtr = data->textPtr;
     tabArrayPtr = data->tabArrayPtr;
