@@ -12886,10 +12886,7 @@ AdjustForTab(
      * that the tab occupies at least the width of a space character.
      */
 
-    delta = desired - x;
-    if (data->tabAlignment == LEFT) {
-	delta = MAX(textPtr->spaceWidth, delta);
-    }
+    delta = MAX(textPtr->spaceWidth, desired - x);
 
     if (nextChunkPtr) {
 	for (chPtr = nextChunkPtr; chPtr; chPtr = chPtr->nextPtr) {
@@ -13311,6 +13308,7 @@ ComputeSizeOfTab(
     TkText *textPtr;
     TkTextTabArray *tabArrayPtr;
     unsigned tabWidth;
+    int min;
 
     textPtr = data->textPtr;
     tabArrayPtr = data->tabArrayPtr;
@@ -13392,14 +13390,16 @@ ComputeSizeOfTab(
 	 */
 	if (data->maxX - data->tabX < data->tabX - data->x) {
 	    data->tabSize = data->maxX - data->x - 2*(data->maxX - data->tabX);
+	    min = textPtr->spaceWidth;
 	} else {
-	    data->tabSize = 0;
+	    min = 0;
 	}
 	break;
 
     case RIGHT:
 	data->isRightTab = false; /* will only be set when wrapping line */
 	data->tabSize = data->maxX - data->tabX - data->x;
+	min = (data->x == 0) ? 0 : textPtr->spaceWidth;
 	break;
 
     case NUMERIC:
@@ -13417,16 +13417,17 @@ ComputeSizeOfTab(
 	} else if (!FindDecimalPointBackwards(segPtr, offset)) {
 	    data->isNumericTab = true;
 	}
+	min = 0;
 	/* fallthru */
 
     case LEFT:
 	data->tabSize = data->tabX - data->x;
 	assert(textPtr->spaceWidth > 0); /* ensure positive size */
-	data->tabSize = MAX(data->tabSize, textPtr->spaceWidth);
+	min = (data->x == 0) ? 0 : textPtr->spaceWidth;
     	break;
     }
 
-    data->tabSize = MAX(0, data->tabSize);
+    data->tabSize = MAX(min, data->tabSize);
 }
 
 /*
