@@ -1870,7 +1870,12 @@ TextWidgetObjCmd(
 		    if (update) {
 			from = TkTextIndexGetLineNumber(&indexFrom, textPtr);
 			to = TkTextIndexGetLineNumber(&indexTo, textPtr);
-			UpdateLineMetrics(textPtr, from, to);
+			if (from != to) {
+			    if (from > to) {
+				int tmp = from; from = to; to = from;
+			    }
+			    UpdateLineMetrics(textPtr, from, to);
+			}
 		    }
 		    from = TkTextIndexYPixels(textPtr, &indexFrom);
 		    to = TkTextIndexYPixels(textPtr, &indexTo);
