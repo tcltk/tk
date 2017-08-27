@@ -1872,7 +1872,7 @@ TextWidgetObjCmd(
 			to = TkTextIndexGetLineNumber(&indexTo, textPtr);
 			if (from != to) {
 			    if (from > to) {
-				int tmp = from; from = to; to = from;
+				int tmp = from; from = to; to = tmp;
 			    }
 			    UpdateLineMetrics(textPtr, from, to);
 			}
