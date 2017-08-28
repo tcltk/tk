@@ -206,6 +206,9 @@ static int		TrivialConfigObjCmd(ClientData dummy,
 			    Tcl_Obj * const objv[]);
 static void		TrivialEventProc(ClientData clientData,
 			    XEvent *eventPtr);
+static int              TestPhotoStringMatchCmd(ClientData dummy,
+                            Tcl_Interp *interp, int objc, 
+                            Tcl_Obj * const objv[]);
 
 /*
  *----------------------------------------------------------------------
@@ -269,6 +272,9 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand(interp, "testphotostringmatch", 
+            TestPhotoStringMatchCmd, (ClientData) Tk_MainWindow(interp),
+            NULL);
 
 #if defined(_WIN32) || defined(MAC_OSX_TK)
     Tcl_CreateObjCommand(interp, "testmetrics", TestmetricsObjCmd,
@@ -2124,6 +2130,54 @@ CustomOptionFree(
 	ckfree(*(char **)internalPtr);
     }
 }
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestPhotoStringMatchCmd --
+ *
+ *	This function implements the "testphotostringmatch" command. It
+ *	provides a way from Tcl to call the string match function for the
+ *	default image handler directly.
+ *
+ * Results:
+ *	A standard Tcl result. If data is in the proper format, the result in
+ *	interp will contain width and height as a list. If the data cannot be
+ *	parsed as default image format, returns TCL_ERROR and leaves an
+ *	appropriate error message in interp.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+	/* ARGSUSED */
+static int
+TestPhotoStringMatchCmd(
+    ClientData clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
+{
+    Tcl_Obj *dummy = NULL;
+    Tcl_Obj *resultObj[2];
+    int width, height;
+
+    if (objc != 2) {
+        Tcl_WrongNumArgs(interp, 1, objv, "imageData");
+        return TCL_ERROR;
+    }
+    if (TkDebugPhotoStringMatchDef(interp, objv[1], dummy, &width, &height)) {
+        resultObj[0] = Tcl_NewIntObj(width);
+        resultObj[1] = Tcl_NewIntObj(height);
+        Tcl_SetObjResult(interp, Tcl_NewListObj(2, resultObj));
+        return TCL_OK;
+    } else {
+        return TCL_ERROR;
+    }
+}
+            
+    
 
 /*
  * Local Variables:
