@@ -637,7 +637,7 @@ declare 184 {
 
 # Debugging / testing functions for photo images
 declare 185 {
-    int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data, 
+    int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
             Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
 }
 
