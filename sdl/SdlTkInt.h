@@ -204,6 +204,7 @@ typedef struct SdlTkXInfo {
     int mouse_x;
     int mouse_y;
     int sdlfocus;
+    int keyuc;
     int cursor_change;
 #ifndef ANDROID
     Tcl_HashTable sdlcursors;
@@ -268,6 +269,9 @@ typedef struct SdlTkXInfo {
     int caret_height;
     SDL_Rect caret_rect;
 #endif
+
+    /* Control for SDL_RenderPresent() and VR headsets */
+    int vr_mode;
 } SdlTkXInfo;
 
 extern SdlTkXInfo SdlTkX;

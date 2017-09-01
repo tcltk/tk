@@ -6160,7 +6160,7 @@ fi
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
-	    LDFLAGS=""
+	    LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
 	    if test $doRpath = yes; then
 
 		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
@@ -8877,7 +8877,7 @@ fi
 
 { $as_echo "$as_me:$LINENO: checking for poll(2)" >&5
 $as_echo_n "checking for poll(2)... " >&6; }
-if test "${tcl_cv_poll+set}" = set; then
+if test "${tk_cv_poll+set}" = set; then
   $as_echo_n "(cached) " >&6
 else
 
@@ -8930,8 +8930,8 @@ fi
 
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
-{ $as_echo "$as_me:$LINENO: result: $tcl_cv_poll" >&5
-$as_echo "$tcl_cv_poll" >&6; }
+{ $as_echo "$as_me:$LINENO: result: $tk_cv_poll" >&5
+$as_echo "$tk_cv_poll" >&6; }
 tk_ok=$tk_cv_poll
 if test $tk_ok = yes; then
 

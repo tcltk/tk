@@ -1573,6 +1573,7 @@ Fread(
 	}
 	memcpy(dst, handle->data, (size_t) (hunk * count));
 	handle->data += hunk * count;
+	handle->length -= hunk * count;
 	return (int)(hunk * count);
     }
 

@@ -280,6 +280,8 @@ SdlTkScreenRefresh(void)
 	} else {
 	    return;
 	}
+	SDL_SetTextureBlendMode(SdlTkX.sdltex, SdlTkX.vr_mode ?
+		SDL_BLENDMODE_NONE_BD : SDL_BLENDMODE_NONE);
     } else if (SdlTkX.gl_context == NULL) {
 	SdlTkX.gl_context = currgl;
     }
@@ -465,7 +467,33 @@ AddToAccelRing(long time, short value, int axis)
 static void
 TranslatePointer(int rev, int *x, int *y)
 {
-    if (SdlTkX.draw_later & SDLTKX_SCALED) {
+    if (SdlTkX.vr_mode) {
+	int w, h, sw, sh;
+
+	/* Align this code with SdlTkGfxUpdateRegion() */
+
+	w = SdlTkX.sdlsurf->w;
+	h = SdlTkX.sdlsurf->h;
+	SDL_GetWindowSize(SdlTkX.sdlscreen, &sw, &sh);
+	if (rev) {
+	    /* X to screen */
+	   *x = (int) (*x * ((float) sw / w));
+	   *y = (int) (*y * ((float) sh / h));
+	   if (SdlTkX.vr_mode == 1) {
+		*x /= 2;
+	   }
+	} else {
+	    /* screen to X */
+	   if (*x > sw / 2) {
+		*x -= sw / 2;
+	   }
+	   *x = (int) (*x * ((float) w / sw));
+	   *y = (int) (*y * ((float) h / sh));
+	   if (SdlTkX.vr_mode == 1) {
+		*x *= 2;
+	   }
+	}
+    } else if (SdlTkX.draw_later & SDLTKX_SCALED) {
 	if (rev) {
 	    /* X to screen */
 	    *x = (int) ((*x - SdlTkX.viewport.x) * SdlTkX.scale);
@@ -772,26 +800,12 @@ static int
 ProcessTextInput(XEvent *event, int no_rel, int sdl_mod,
 		 const char *text, int len)
 {
-    int ret, i, n, ulen;
+    int i, n, n2, ulen = Tcl_NumUtfChars(text, len);
     char buf[TCL_UTF_MAX];
-#if TCL_UTF_MAX < 4
-    Tcl_DString ubuf;
-    Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "utf-8");
 
-    /*
-     * This should make UTF-8 into WTF-8.
-     */
-    Tcl_DStringInit(&ubuf);
-    Tcl_ExternalToUtfDString(encoding, text, len, &ubuf);
-    if (encoding) {
-	Tcl_FreeEncoding(encoding);
-    }
-    text = Tcl_DStringValue(&ubuf);
-#endif
-    ulen = Tcl_NumUtfChars(text, len);
     if (ulen <= 0) {
-	ret = 0;
-	goto done;
+	SdlTkX.keyuc = 0;
+	return 0;
     }
     if (sdl_mod & KMOD_RALT) {
 	event->xkey.state &= ~Mod4Mask;
@@ -800,6 +814,61 @@ ProcessTextInput(XEvent *event, int no_rel, int sdl_mod,
 	Tcl_UniChar ch;
 
 	n = Tcl_UtfToUniChar(text, &ch);
+	n2 = 0;
+
+	/* Deal with surrogate pairs */
+#if TCL_UTF_MAX > 4
+	if ((ch >= 0xd800) && (ch <= 0xdbff)) {
+	    Tcl_UniChar ch2;
+
+	    if (i + 1 < ulen) {
+		n2 = Tcl_UtfToUniChar(text + n, &ch2);
+		if ((ch2 >= 0xdc00) && (ch2 <= 0xdfff)) {
+		    ch = ((ch & 0x3ff) << 10) | (ch2 & 0x3ff);
+		    ch += 0x10000;
+		    ++i;
+		} else {
+		    ch = 0xfffd;
+		    n2 = 0;
+		}
+	    } else {
+		SdlTkX.keyuc = ch;
+		return -1;
+	    }
+	} else if ((ch >= 0xdc00) && (ch <= 0xdfff)) {
+	    if (SdlTkX.keyuc) {
+		ch = ((SdlTkX.keyuc & 0x3ff) << 10) | (ch & 0x3ff);
+		ch += 0x10000;
+	    } else {
+		ch = 0xfffd;
+	    }
+	    SdlTkX.keyuc = 0;
+	} else if ((ch == 0xfffe) || (ch == 0xffff)) {
+	    ch = 0xfffd;
+	    SdlTkX.keyuc = 0;
+	} else {
+	    SdlTkX.keyuc = 0;
+	}
+#else
+	if ((ch >= 0xd800) && (ch <= 0xdbff)) {
+	    Tcl_UniChar ch2;
+
+	    if (i + 1 < ulen) {
+		n2 = Tcl_UtfToUniChar(text + n, &ch2);
+		if ((ch2 >= 0xdc00) && (ch2 <= 0xdfff)) {
+		    ++i;
+		} else {
+		    n2 = 0;
+		}
+	    }
+	    ch = 0xfffd;
+	} else if ((ch >= 0xdc00) && (ch <= 0xdfff)) {
+	    ch = 0xfffd;
+	} else if ((ch == 0xfffe) || (ch == 0xffff)) {
+	    ch = 0xfffd;
+	}
+	SdlTkX.keyuc = 0;
+#endif
 	event->xkey.nbytes = Tcl_UniCharToUtf(ch, buf);
 	event->xkey.time = SdlTkX.time_count;
 	if (event->xkey.nbytes > sizeof (event->xkey.trans_chars)) {
@@ -811,7 +880,7 @@ ProcessTextInput(XEvent *event, int no_rel, int sdl_mod,
 	} else {
 	    event->xkey.keycode = -1;
 	}
-	text += n;
+	text += n + n2;
 
 	/* Queue the KeyPress */
 	EVLOG("   KEYPRESS:  CODE=0x%02X  UC=0x%X", event->xkey.keycode, ch);
@@ -826,11 +895,7 @@ ProcessTextInput(XEvent *event, int no_rel, int sdl_mod,
 	    }
 	}
     }
-done:
-#if TCL_UTF_MAX < 4
-    Tcl_DStringFree(&ubuf);
-#endif
-    return ret;
+    return 1;
 }
 
 /*
@@ -2209,6 +2274,10 @@ doNormalKeyEvent:
 		if (ydpi == 0) {
 		    ydpi = xdpi;
 		}
+#ifdef ANDROID
+		SDL_SetTextureBlendMode(SdlTkX.sdltex, SdlTkX.vr_mode ?
+			SDL_BLENDMODE_NONE_BD : SDL_BLENDMODE_NONE);
+#endif
 #if defined(ANDROID) && defined(SDL_HAS_GETWINDOWDPI)
 		if (xdpi == 0) {
 		    SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
@@ -4445,6 +4514,69 @@ ViewportObjCmd(ClientData clientData, Tcl_Interp *interp,
 }
 
 static int
+VRModeObjCmd(ClientData clientData, Tcl_Interp *interp,
+	    int objc, Tcl_Obj *const objv[])
+{
+    int mode;
+    float distortion = 0.25, rescale = 0.9;
+
+    if (objc > 4) {
+wrongArgs:
+	Tcl_WrongNumArgs(interp, 1, objv, "?mode ?distortion rescale??");
+	return TCL_ERROR;
+    }
+    if (objc > 1) {
+	if (Tcl_GetIntFromObj(interp, objv[1], &mode) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if ((mode < 0) || (mode > 3)) {
+	    Tcl_SetResult(interp, "illegal mode, must be 0, 1, 2, or 3",
+			  TCL_STATIC);
+	    return TCL_ERROR;
+	}
+	if (objc == 4) {
+	    double tmp;
+
+	    if (Tcl_GetDoubleFromObj(interp, objv[2], &tmp) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    distortion = tmp;
+	    if (Tcl_GetDoubleFromObj(interp, objv[3], &tmp) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    rescale = tmp;
+	} else if (objc != 2) {
+	    goto wrongArgs;
+	}
+#ifdef ANDROID
+	SdlTkLock(NULL);
+	SdlTkX.vr_mode = mode;
+	SDL_SetTextureBlendMode(SdlTkX.sdltex, SdlTkX.vr_mode ?
+		SDL_BLENDMODE_NONE_BD : SDL_BLENDMODE_NONE);
+	if (objc == 4) {
+	    SDL_SetBarrelDistortion(SdlTkX.sdlrend, distortion, rescale);
+	}
+	SdlTkX.draw_later |= (SDLTKX_DRAW | SDLTKX_DRAWALL | SDLTKX_PRESENT);
+	SdlTkUnlock(NULL);
+#endif
+    } else {
+	Tcl_Obj *objs[3];
+
+	SdlTkLock(NULL);
+	mode = SdlTkX.vr_mode;
+#ifdef ANDROID
+	SDL_GetBarrelDistortion(SdlTkX.sdlrend, &distortion, &rescale);
+#endif
+	SdlTkUnlock(NULL);
+	objs[0] = Tcl_NewIntObj(mode);
+	objs[1] = Tcl_NewDoubleObj(distortion);
+	objs[2] = Tcl_NewDoubleObj(rescale);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(3, objs));
+    }
+    return TCL_OK;
+}
+
+static int
 VsyncObjCmd(ClientData clientData, Tcl_Interp *interp,
 	    int objc, Tcl_Obj *const objv[])
 {
@@ -4507,6 +4639,7 @@ static const TkEnsemble sdltkCmdMap[] = {
     { "textinput", TextinputObjCmd, NULL },
     { "touchtranslate", TouchtranslateObjCmd, NULL },
     { "viewport", ViewportObjCmd, NULL },
+    { "vrmode", VRModeObjCmd, NULL },
     { "vsync", VsyncObjCmd, NULL },
     { "withdraw", WithdrawObjCmd, NULL },
     { NULL, NULL, NULL }
@@ -4627,7 +4760,7 @@ TkpSetCaptureEx(Display *display, TkWindow *winPtr)
 void
 SdlTkSetCursor(TkpCursor cursor)
 {
-#ifndef ANDROID
+#if !defined(ANDROID) && !defined(__HAIKU__)
     _Cursor *_c = (_Cursor *) cursor;
     long shape = SDL_SYSTEM_CURSOR_ARROW;
     SDL_Cursor *sc = NULL;
@@ -4658,7 +4791,7 @@ SdlTkSetCursor(TkpCursor cursor)
 void
 TkpSetCursor(TkpCursor cursor)
 {
-#ifndef ANDROID
+#if !defined(ANDROID) && !defined(__HAIKU__)
     SdlTkLock(NULL);
     if (SdlTkX.cursor_change) {
 	SdlTkSetCursor(cursor);

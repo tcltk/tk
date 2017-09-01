@@ -4233,6 +4233,10 @@ SdlTkPanInt(int dx, int dy)
 {
     int x, y, w, h, sw, sh;
 
+    if (SdlTkX.vr_mode != 0) {
+	return;
+    }
+
     SDL_GetWindowSize(SdlTkX.sdlscreen, &sw, &sh);
     if (SdlTkX.root_w) {
 	w = SdlTkX.root_w;
@@ -4268,6 +4272,10 @@ SdlTkZoomInt(int x, int y, float z)
 {
     float scale = SdlTkX.scale * z;
     int vw, vh, sw, sh, ow, oh, ret = 0;
+
+    if (SdlTkX.vr_mode != 0) {
+	return -1;
+    }
 
     if (scale - 0.0001 < SdlTkX.scale_min) {
 	scale = SdlTkX.scale_min;
@@ -4366,6 +4374,10 @@ HandlePanZoom(struct PanZoomRequest *pz)
 {
     int x, y, vw, vh, sw, sh, ow, oh, ret = 0;
     float aspReal, aspSpec, scale;
+
+    if (SdlTkX.vr_mode != 0) {
+	goto done;
+    }
 
     SDL_GetWindowSize(SdlTkX.sdlscreen, &sw, &sh);
     x = pz->r.x;
@@ -4485,6 +4497,7 @@ HandlePanZoom(struct PanZoomRequest *pz)
 	SdlTkX.draw_later |= SDLTKX_SCALED;
     }
     SdlTkX.draw_later |= SDLTKX_DRAW | SDLTKX_DRAWALL;
+done:
     if (pz->running) {
 	pz->running = 0;
 	Tcl_ConditionNotify(&xlib_cond);
@@ -4605,6 +4618,10 @@ HandleRootSize(struct RootSizeRequest *r)
 	if (ydpi == 0) {
 	    ydpi = xdpi;
 	}
+#ifdef ANDROID
+	SDL_SetTextureBlendMode(SdlTkX.sdltex, SdlTkX.vr_mode ?
+		SDL_BLENDMODE_NONE_BD : SDL_BLENDMODE_NONE);
+#endif
 #if defined(ANDROID) && defined(SDL_HAS_GETWINDOWDPI)
 	if (xdpi == 0) {
 	    SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
@@ -5107,7 +5124,6 @@ PerformSDLInit(int *root_width, int *root_height)
     agg_custom_alloc = (void *(*)(unsigned int)) Tcl_Alloc;
     agg_custom_free = (void (*)(void *)) Tcl_Free;
 #endif
-
     if (SdlTkX.arg_sdllog) {
 	SDL_LogSetAllPriority(SdlTkX.arg_sdllog);
     }
@@ -5531,6 +5547,10 @@ ctxRetry:
     if (ydpi == 0) {
 	ydpi = xdpi;
     }
+#ifdef ANDROID
+    SDL_SetTextureBlendMode(SdlTkX.sdltex, SdlTkX.vr_mode ?
+	    SDL_BLENDMODE_NONE_BD : SDL_BLENDMODE_NONE);
+#endif
 #if defined(ANDROID) && defined(SDL_HAS_GETWINDOWDPI)
     if (xdpi == 0) {
 	SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
@@ -6023,7 +6043,13 @@ EventThreadExitHandler(ClientData clientData)
     if (event_tid) {
 	SdlTkX.event_tid = NULL;
 	SdlTkX.sdlscreen = NULL;
+#ifndef __HAIKU__
+	/*
+	 * For unknown reasons this crashes terribly on
+	 * Haiku although the thread was created joinable.
+	 */
 	Tcl_JoinThread(event_tid, &state);
+#endif
     }
 }
 

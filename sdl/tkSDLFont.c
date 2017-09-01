@@ -33,8 +33,13 @@ static const char *const encodingList[] = { "ucs-4", NULL };
  * family": the foundry, face name, and charset.
  */
 
+#if TCL_UTF_MAX > 3
 #define FONTMAP_SHIFT		12
 #define FONTMAP_PAGES		(1 << (21 - FONTMAP_SHIFT))
+#else
+#define FONTMAP_SHIFT		10
+#define FONTMAP_PAGES		(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
+#endif
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
 
 typedef struct FontFamily {
@@ -87,7 +92,11 @@ typedef struct SubFont {
  */
 
 #define SUBFONT_SPACE		3
+#if TCL_UTF_MAX > 3
 #define BASE_CHARS		4096
+#else
+#define BASE_CHARS		2048
+#endif
 
 typedef struct UnixFont {
     TkFont font;		/* Stuff used by generic font package. Must be
@@ -360,7 +369,8 @@ ControlUtfProc(
     const char *srcStart, *srcEnd;
     char *dstStart, *dstEnd;
     unsigned int *wDst;
-    int ch, result;
+    Tcl_UniChar ch;
+    int result;
     static char hexChars[] = "0123456789abcdef";
     static char mapChars[] = {
 	0, 0, 0, 0, 0, 0, 0,
@@ -373,7 +383,11 @@ ControlUtfProc(
     srcEnd = src + srcLen;
 
     dstStart = dst;
+#if TCL_UTF_MAX > 3
     dstEnd = dst + dstLen - 10 * sizeof(unsigned int);
+#else
+    dstEnd = dst + dstLen - 6 * sizeof(unsigned int);
+#endif
     wDst = (unsigned int *) dst;
 
     for ( ; src < srcEnd; ) {
@@ -381,7 +395,7 @@ ControlUtfProc(
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
 	}
-	src += TkUtfToUniChar(src, &ch);
+	src += Tcl_UtfToUniChar(src, &ch);
 	wDst[0] = '\\';
 	if ((ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
 	    wDst[1] = mapChars[ch];
@@ -391,6 +405,7 @@ ControlUtfProc(
 	    wDst[2] = hexChars[(ch >> 4) & 0xf];
 	    wDst[3] = hexChars[ch & 0xf];
 	    wDst += 4;
+#if TCL_UTF_MAX > 3
 	} else if (ch < 0x10000)  {
 	    wDst[1] = 'u';
 	    wDst[2] = hexChars[(ch >> 12) & 0xf];
@@ -419,6 +434,15 @@ ControlUtfProc(
 	    wDst[8] = hexChars[(ch >> 4) & 0xf];
 	    wDst[9] = hexChars[ch & 0xf];
 	    wDst += 10;
+#else
+	} else {
+	    wDst[1] = 'u';
+	    wDst[2] = hexChars[(ch >> 12) & 0xf];
+	    wDst[3] = hexChars[(ch >> 8) & 0xf];
+	    wDst[4] = hexChars[(ch >> 4) & 0xf];
+	    wDst[5] = hexChars[ch & 0xf];
+	    wDst += 6;
+#endif
 	}
     }
     *srcReadPtr = src - srcStart;
@@ -860,7 +884,7 @@ Tk_MeasureChars(
 	curByte = 0;
     } else if (maxLength < 0) {
 	const char *p, *end, *next;
-	int ch;
+	Tcl_UniChar ch;
 	SubFont *thisSubFontPtr;
 	FontFamily *familyPtr;
 	Tcl_DString runString;
@@ -876,7 +900,7 @@ Tk_MeasureChars(
 	curX = 0;
 	end = source + numBytes;
 	for (p = source; p < end; ) {
-	    next = p + TkUtfToUniChar(p, &ch);
+	    next = p + Tcl_UtfToUniChar(p, &ch);
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
@@ -916,7 +940,8 @@ Tk_MeasureChars(
 	curByte = numBytes;
     } else {
 	const char *p, *end, *next, *term;
-	int newX, termX, sawNonSpace, dstWrote, ch;
+	int newX, termX, sawNonSpace, dstWrote;
+	Tcl_UniChar ch;
 	FontFamily *familyPtr;
 	char buf[64];
 
@@ -926,7 +951,7 @@ Tk_MeasureChars(
 	 * individually.
 	 */
 
-	next = source + TkUtfToUniChar(source, &ch);
+	next = source + Tcl_UtfToUniChar(source, &ch);
 	newX = curX = termX = 0;
 
 	term = source;
@@ -972,7 +997,7 @@ Tk_MeasureChars(
 		break;
 	    }
 
-	    next += TkUtfToUniChar(next, &ch);
+	    next += Tcl_UtfToUniChar(next, &ch);
 	    if ((ch < 256) && isspace(ch)) {
 		if (sawNonSpace) {
 		    term = p;
@@ -997,13 +1022,13 @@ Tk_MeasureChars(
 	     */
 
 	    curX = newX;
-	    p += TkUtfToUniChar(p, &ch);
+	    p += Tcl_UtfToUniChar(p, &ch);
 	}
 	if ((flags & TK_AT_LEAST_ONE) && (term == source) && (p < end)) {
 	    term = p;
 	    termX = curX;
 	    if (term == source) {
-		term += TkUtfToUniChar(term, &ch);
+		term += Tcl_UtfToUniChar(term, &ch);
 		termX = newX;
 	    }
 	} else if ((p >= end) || !(flags & TK_WHOLE_WORDS)) {
@@ -1115,7 +1140,8 @@ DrawChars(
     SubFont *thisSubFontPtr, *lastSubFontPtr;
     Tcl_DString runString;
     const char *p, *end, *next;
-    int xStart, window_width, ch;
+    int xStart, window_width;
+    Tcl_UniChar ch;
     FontFamily *familyPtr;
     int rx, ry, fontSize = 0;
     unsigned width, height, border_width, depth;
@@ -1138,7 +1164,7 @@ DrawChars(
     end = source + numBytes;
     for (p = source; p <= end; ) {
 	if (p < end) {
-	    next = p + TkUtfToUniChar(p, &ch);
+	    next = p + Tcl_UtfToUniChar(p, &ch);
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	} else {
 	    next = p + 1;
@@ -1678,9 +1704,7 @@ AllocFontFamily(
 	if ((familyPtr->faceName == fa.fa.family)
 		&& (familyPtr->foundry == fa.xa.foundry)
 		&& (familyPtr->encoding == encoding)) {
-	    if (encoding) {
-		Tcl_FreeEncoding(encoding);
-	    }
+	    Tcl_FreeEncoding(encoding);
 	    familyPtr->refCount++;
 	    return familyPtr;
 	}
@@ -1750,9 +1774,7 @@ FreeFontFamily(
     if (familyPtr->refCount > 0) {
 	return;
     }
-    if (familyPtr->encoding) {
-	Tcl_FreeEncoding(familyPtr->encoding);
-    }
+    Tcl_FreeEncoding(familyPtr->encoding);
     for (i = 0; i < FONTMAP_PAGES; i++) {
 	if (familyPtr->fontMap[i] != NULL) {
 	    ckfree(familyPtr->fontMap[i]);
@@ -2074,7 +2096,7 @@ FontMapLoadPage(
 	if ((i >= 0xD800) && (i <= 0xDFFF)) {
 	    continue;
 	}
-	if (Tcl_UtfToExternal(NULL, encoding, src, TkUniCharToUtf(i, src),
+	if (Tcl_UtfToExternal(NULL, encoding, src, Tcl_UniCharToUtf(i, src),
 		TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
 	    continue;
@@ -2112,7 +2134,7 @@ static SubFont *
 CanUseFallbackWithAliases(
     UnixFont *fontPtr,		/* The font object that will own the new
 				 * screen font. */
-    const char *faceName,	/* Desired face name for new screen font. */
+    const char *faceName,		/* Desired face name for new screen font. */
     int ch,			/* The Unicode character that the new screen
 				 * font must be able to display. */
     Tcl_DString *nameTriedPtr,	/* Records face names that have already been
@@ -2829,7 +2851,8 @@ TkDrawAngledChars(
 	SubFont *thisSubFontPtr, *lastSubFontPtr;
 	Tcl_DString runString;
 	const char *p, *end, *next;
-	int xStart, yStart, fontSize = 0, ch;
+	int xStart, yStart, fontSize = 0;
+	Tcl_UniChar ch;
 	FontFamily *familyPtr;
         double sinA = sin(angle*PI/180), cosA = cos(angle*PI/180), dy;
         XPoint points[5];
@@ -2841,7 +2864,7 @@ TkDrawAngledChars(
 	end = source + numBytes;
 	for (p = source; p <= end; ) {
 	    if (p < end) {
-		next = p + TkUtfToUniChar(p, &ch);
+		next = p + Tcl_UtfToUniChar(p, &ch);
 		thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    } else {
 		next = p + 1;

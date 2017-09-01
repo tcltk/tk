@@ -631,9 +631,12 @@ static void SelectTab(Notebook *nb, int index)
 	Ttk_UnmapSlave(nb->notebook.mgr, currentIndex);
     }
 
-    NotebookPlaceSlave(nb, index);
-
+    /* Must be set before calling NotebookPlaceSlave(), otherwise it may
+     * happen that NotebookPlaceSlaves(), triggered by an interveaning
+     * geometry request, will swap to old index. */
     nb->notebook.currentIndex = index;
+
+    NotebookPlaceSlave(nb, index);
     TtkRedisplayWidget(&nb->core);
 
     TtkSendVirtualEvent(nb->core.tkwin, "NotebookTabChanged");
