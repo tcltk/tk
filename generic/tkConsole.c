@@ -329,7 +329,7 @@ Tk_InitConsoleChannels(
  * Tk_CreateConsoleWindow --
  *
  *	Initialize the console. This code actually creates a new application
- *	and associated interpreter. This effectivly hides the implementation
+ *	and associated interpreter. This effectively hides the implementation
  *	from the main application.
  *
  * Results:
@@ -375,10 +375,14 @@ Tk_CreateConsoleWindow(
     }
 
     if (Tcl_Init(consoleInterp) != TCL_OK) {
+	Tcl_Obj *result_obj = Tcl_GetObjResult(consoleInterp);
+	Tcl_SetObjResult(interp, result_obj);
 	goto error;
     }
 
     if (Tk_Init(consoleInterp) != TCL_OK) {
+	Tcl_Obj *result_obj = Tcl_GetObjResult(consoleInterp);
+	Tcl_SetObjResult(interp, result_obj);
 	goto error;
     }
 

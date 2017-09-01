@@ -565,7 +565,70 @@ SdlTkGfxUpdateRegion(SDL_Renderer *rend, SDL_Texture *tex,
 	SDL_SetRenderDrawColor(SdlTkX.sdlrend, 0, 0, 0, 255);
 	SDL_RenderClear(SdlTkX.sdlrend);
     }
-    SDL_RenderCopy(rend, tex, &SdlTkX.viewport, SdlTkX.outrect);
+    if (SdlTkX.vr_mode == 3) {
+	int w, h;
+	SDL_Rect in, out;
+
+	SDL_GetWindowSize(SdlTkX.sdlscreen, &w, &h);
+	in.x = 0;
+	in.y = 0;
+	in.w = surf->w / 2;
+	in.h = surf->h;
+	out.x = 0;
+	out.y = 0;
+	out.w = w / 2;
+	out.h = h;
+        SDL_RenderCopy(rend, tex, &in, &out);
+	out.x = w / 2;
+	out.y = 0;
+	out.w = w / 2;
+	out.h = h;
+        SDL_RenderCopy(rend, tex, &in, &out);
+    } else if (SdlTkX.vr_mode == 2) {
+	int w, h;
+	SDL_Rect in, out;
+
+	SDL_GetWindowSize(SdlTkX.sdlscreen, &w, &h);
+	in.x = 0;
+	in.y = 0;
+	in.w = surf->w / 2;
+	in.h = surf->h;
+	out.x = 0;
+	out.y = 0;
+	out.w = w / 2;
+	out.h = h;
+        SDL_RenderCopy(rend, tex, &in, &out);
+	in.x = surf->w / 2;
+	in.y = 0;
+	in.w = surf->w / 2;
+	in.h = surf->h;
+	out.x = w / 2;
+	out.y = 0;
+	out.w = w / 2;
+	out.h = h;
+        SDL_RenderCopy(rend, tex, &in, &out);
+    } else if (SdlTkX.vr_mode == 1) {
+	int w, h;
+	SDL_Rect in, out;
+
+	SDL_GetWindowSize(SdlTkX.sdlscreen, &w, &h);
+	in.x = 0;
+	in.y = 0;
+	in.w = surf->w;
+	in.h = surf->h;
+	out.x = 0;
+	out.y = 0;
+	out.w = w / 2;
+	out.h = h;
+        SDL_RenderCopy(rend, tex, &in, &out);
+	out.x = w / 2;
+	out.y = 0;
+	out.w = w / 2;
+	out.h = h;
+        SDL_RenderCopy(rend, tex, &in, &out);
+    } else {
+        SDL_RenderCopy(rend, tex, &SdlTkX.viewport, SdlTkX.outrect);
+    }
     SDL_RenderPresent(rend);
 #else
     long i;

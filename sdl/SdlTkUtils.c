@@ -645,27 +645,13 @@ Ucs4ToUtfProc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
     dstEnd = dst + dstLen - TCL_UTF_MAX;
 
     for (numChars = 0; wSrc < wSrcEnd; numChars++) {
-	int uch;
         Tcl_UniChar ch;
 
 	if (dst > dstEnd) {
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
 	}
-	uch = *wSrc++;
-	ch = uch;
-#if TCL_UTF_MAX < 4
-	if (uch > 0xFFFF && uch < 0x10FFFF) {
-	    uch -= 0x10000;
-	    ch = (uch & 0x3FF) | 0xDC00;
-	    dst += Tcl_UniCharToUtf((Tcl_UniChar)((uch >> 10) | 0xD800), dst);
-	    if (dst >= dstEnd) {
-		result = TCL_CONVERT_NOSPACE;
-		break;
-	    }
-	    numChars++;
-	}
-#endif
+	ch = *wSrc++;
 	dst += Tcl_UniCharToUtf(ch, dst);
     }
 
@@ -736,8 +722,7 @@ UtfToUcs4Proc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 
     result = TCL_OK;
     for (numChars = 0; src < srcEnd; numChars++) {
-	int ch, len;
-	Tcl_UniChar ucs, ucs2;
+	Tcl_UniChar ucs2;
 
 	if ((src > srcClose) && (!Tcl_UtfCharComplete(src, srcEnd - src))) {
 	    /*
@@ -752,25 +737,15 @@ UtfToUcs4Proc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
         }
-	src += Tcl_UtfToUniChar(src, &ucs);
-	ch = ucs;
-	if ((ucs & 0xFFFFFC00) == 0xD800) {
-	    if (Tcl_UtfCharComplete(src, srcEnd - src)) {
-		len = Tcl_UtfToUniChar(src, &ucs2);
-		if ((ucs2 & 0xFFFFFC00) == 0xDC00) {
-		    src += len;
-		    ch = (((ucs&0x3FF)<<10) | (ucs2&0x3FF)) + 0x10000;
-		}
-	    }
-	}
+	src += Tcl_UtfToUniChar(src, &ucs2);
 #ifdef USE_SYMBOLA_CTRL
-	if ((ch >= 0x00) && (ch < 0x20)) {
-	    ch += 0x2400;
-	} else if (ch == 0x7F) {
-	    ch = 0x2421;
+	if ((ucs2 >= 0x00) && (ucs2 < 0x20)) {
+	    ucs2 += 0x2400;
+	} else if (ucs2 == 0x7F) {
+	    ucs2 = 0x2421;
 	}
 #endif
-	*wDst++ = ch;
+	*wDst++ = ucs2;
     }
     *srcReadPtr = src - srcStart;
     *dstWrotePtr = (char *) wDst - (char *) wDstStart;
@@ -1116,16 +1091,23 @@ SdlTkFontInit(Tcl_Interp *interp)
 #else
 	/*
 	 * Needs more effort, currently tries /usr/share/fonts/... which
-	 * should work on most modern Linuxen.
+	 * should work on most modern Linuxen and other POSIX platforms.
 	 */
 	result = Tcl_EvalEx(interp, "concat [glob -nocomplain -directory "
 		    "[file join $tk_library fonts] *] "
 		    "[glob -nocomplain -directory [file normalize ~/.fonts] "
 		    "-types f *.ttf *.ttc *.otf] "
+#ifdef __HAIKU__
+		    "[glob -nocomplain -directory /system/data/fonts"
+		    " -types f */*.ttf */*.ttc */*.otf]",
+#else
 		    "[glob -nocomplain -directory /usr/share/fonts"
 		    " -types f */*.ttf */*.ttc */*.otf] "
 		    "[glob -nocomplain -directory /usr/share/fonts/truetype"
+		    " -types f */*.ttf */*.ttc */*.otf] "
+		    "[glob -nocomplain -directory /usr/share/fonts/TrueType"
 		    " -types f */*.ttf */*.ttc */*.otf]",
+#endif
 		    -1, TCL_EVAL_GLOBAL);
 #endif
     }

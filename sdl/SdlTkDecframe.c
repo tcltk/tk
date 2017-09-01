@@ -696,9 +696,7 @@ SdlTkDecDrawFrame(_Window *_w)
 		p += sizeof (unsigned int);
 	    }
 
-	    if (encoding) {
-		Tcl_FreeEncoding(encoding);
-	    }
+	    Tcl_FreeEncoding(encoding);
 	    Tcl_DStringFree(&ds);
 	}
     }

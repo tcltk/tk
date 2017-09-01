@@ -193,7 +193,7 @@ fi
 #       Find out if poll(2) is available.
 #------------------------------------------------------------------------------
 
-AC_CACHE_CHECK([for poll(2)], tcl_cv_poll, [
+AC_CACHE_CHECK([for poll(2)], tk_cv_poll, [
     AC_TRY_COMPILE([#include <poll.h>], [
 #ifdef __APPLE__
 #error poll broken depending on OS version
