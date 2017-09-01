@@ -634,6 +634,13 @@ declare 184 {
 	    Tk_Font tkfont, const char *source, int numBytes, double x,
 	    double y, double angle)
 }
+
+# Debugging / testing functions for photo images
+declare 185 {
+    int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
+            Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
+}
+
 
 ##############################################################################
 
