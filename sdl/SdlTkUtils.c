@@ -1100,6 +1100,11 @@ SdlTkFontInit(Tcl_Interp *interp)
 #ifdef __HAIKU__
 		    "[glob -nocomplain -directory /system/data/fonts"
 		    " -types f */*.ttf */*.ttc */*.otf]",
+#elif defined(__APPLE__)
+		    "[glob -nocomplain -directory /Library/Fonts"
+		    " -types f *.ttf *.ttc *.otf] "
+		    "[glob -nocomplain -directory /System/Library/Fonts"
+		    " -types f *.ttf *.ttc *.otf]",
 #else
 		    "[glob -nocomplain -directory /usr/share/fonts"
 		    " -types f */*.ttf */*.ttc */*.otf] "

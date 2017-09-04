@@ -66,6 +66,13 @@ MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, char ***argv);
 #undef Tcl_ObjSetVar2
 #undef Tcl_NewStringObj
 
+#ifdef __APPLE__
+struct ThreadStartup {
+    int argc;
+    char **argv;
+};
+#endif
+
 
 /*
  *----------------------------------------------------------------------
@@ -299,6 +306,28 @@ GetOBBDir(void)
 }
 #endif
 
+#ifdef __APPLE__
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMainThread --
+ *
+ *	This is the thread body of the main program for the application.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Tcl_ThreadCreateType
+TkMainThread(ClientData clientData)
+{
+    struct ThreadStartup *stPtr = (struct ThreadStartup *) clientData;
+
+    Tk_MainEx(stPtr->argc, stPtr->argv, TK_LOCAL_APPINIT, Tcl_CreateInterp());
+    exit(4);
+    TCL_THREAD_CREATE_RETURN;
+}
+#endif
+
 /*
  *----------------------------------------------------------------------
  *
@@ -324,6 +353,11 @@ main(
 #if defined(ANDROID) && defined(PLATFORM_SDL)
     const char *path, *temp;
 #endif
+#ifdef __APPLE__
+    Tcl_ThreadId thrId;
+    struct ThreadStartup startup;
+    extern void SdlTkEventThread(void);
+#endif    
 
 #ifdef TK_LOCAL_MAIN_HOOK
     TK_LOCAL_MAIN_HOOK(&argc, &argv);
@@ -434,7 +468,28 @@ main(
 #else
     Tcl_FindExecutable(argv[0]);
 #endif
+#ifdef __APPLE__
+    /*
+     * We need the SDL event handling run in the main thread,
+     * which seems to be a Cocoa requirement. Therefore Tk_MainEx()
+     * is run in a seperate thread which is started now.
+     */
+
+    startup.argc = argc;
+    startup.argv = argv;
+    if (Tcl_CreateThread(&thrId, TkMainThread, &startup,
+	    TCL_THREAD_STACK_DEFAULT, TCL_THREAD_NOFLAGS) != TCL_OK) {
+	Tcl_Panic("unable to start Tk main thread");
+    }
+
+    /*
+     * Perform SDL event handling, screen refresh, etc.
+     */
+
+    SdlTkEventThread();
+#else
     Tk_MainEx(argc, argv, TK_LOCAL_APPINIT, Tcl_CreateInterp());
+#endif
     return 0;			/* Needed only to prevent compiler warning. */
 }
 

@@ -99,6 +99,9 @@ static Tcl_Condition xlib_cond;
 static Tcl_Condition time_cond;
 static int timer_enabled = 0;
 static int num_displays = 0;
+#ifdef __APPLE__
+struct EventThreadStartup evt_startup = { 0, NULL, NULL };
+#endif
 
 static void SdlTkDestroyWindow(Display *display, Window w);
 static void SdlTkMapWindow(Display *display, Window w);
@@ -143,6 +146,12 @@ void
 SdlTkWaitVSync(void)
 {
     Tcl_ConditionWait(&time_cond, &xlib_lock, NULL);
+}
+
+static void
+SdlTkNotify(void)
+{
+    Tcl_ConditionNotify(&xlib_cond);
 }
 
 /*
@@ -621,7 +630,7 @@ XCloseDisplay(Display *display)
     }
 
     xlib_grab = NULL;
-    Tcl_ConditionNotify(&xlib_cond);
+    SdlTkNotify();
     SdlTkUnlock(display);
 
     memset(display, 0, sizeof (Display));
@@ -4500,7 +4509,7 @@ HandlePanZoom(struct PanZoomRequest *pz)
 done:
     if (pz->running) {
 	pz->running = 0;
-	Tcl_ConditionNotify(&xlib_cond);
+	SdlTkNotify();
     }
     return ret;
 }
@@ -4741,7 +4750,7 @@ HandleRootSize(struct RootSizeRequest *r)
 done:
     if (r->running) {
 	r->running = 0;
-	Tcl_ConditionNotify(&xlib_cond);
+	SdlTkNotify();
     }
 }
 
@@ -4859,7 +4868,7 @@ HandleWindowFlags(struct WindowFlagsRequest *r)
 done:
     if (r->running) {
 	r->running = 0;
-	Tcl_ConditionNotify(&xlib_cond);
+	SdlTkNotify();
     }
 }
 #endif
@@ -5387,6 +5396,12 @@ retry:
 	goto fatal;
     }
 #ifndef ANDROID
+#ifdef __APPLE__
+    /*
+     * Do not create a GL context here, otherwise something internal
+     * to SDL2 goes terribly wrong that the root remains black.
+     */
+#else
     if (!SdlTkX.arg_nogl) {
 	/* check for OpenGL >= 2.x, otherwise fall back to SW renderer */
 	int glvernum = -1;
@@ -5457,6 +5472,7 @@ ctxRetry:
 	SdlTkX.arg_nogl = (glvernum < 1) || !hasFBO;
 #endif
     }
+#endif
     if (pfmt->BitsPerPixel == 15) {
 	tfmt = SDL_PIXELFORMAT_RGB555;
     } else if (pfmt->BitsPerPixel == 16) {
@@ -5875,8 +5891,13 @@ ctxRetry:
  *----------------------------------------------------------------------
  */
 
+#ifdef __APPLE__
+void
+SdlTkEventThread(void)
+#else
 static Tcl_ThreadCreateType
 EventThread(ClientData clientData)
+#endif
 {
     SDL_Event sdl_event;
     XEvent event;
@@ -5890,16 +5911,28 @@ EventThread(ClientData clientData)
 				   Uint16 rate, Uint16 delay);
     extern int SDL_SendKeyboardText(const char *text);
 #endif
+#ifdef __APPLE__
+    struct EventThreadStartup *evs = &evt_startup;
+#else
     struct EventThreadStartup *evs = (struct EventThreadStartup *) clientData;
+#endif
 
     EVLOG("EventThread start");
 #ifdef ANDROID
     Android_JNI_SetupThread();
 #endif
     SdlTkLock(NULL);
+#ifdef __APPLE__
+    while (evs->root_width == NULL && evs->root_height == NULL) {
+	SdlTkWaitLock();
+    }
+#endif
     initSuccess = PerformSDLInit(evs->root_width, evs->root_height);
     evs->init_done = 1;
-    Tcl_ConditionNotify(&xlib_cond);
+#ifdef __APPLE__
+    evs->root_width = evs->root_height = NULL;
+#endif
+    SdlTkNotify();
     if (!initSuccess) {
 	SdlTkUnlock(NULL);
 	goto eventThreadEnd;
@@ -6031,9 +6064,14 @@ EventThread(ClientData clientData)
     /* tear down font manager/engine */
     SdlTkGfxDeinitFC();
 eventThreadEnd:
+#ifdef __APPLE__
+    exit(3);
+#else
     TCL_THREAD_CREATE_RETURN;
+#endif
 }
 
+#ifndef __APPLE__
 static void
 EventThreadExitHandler(ClientData clientData)
 {
@@ -6052,25 +6090,43 @@ EventThreadExitHandler(ClientData clientData)
 #endif
     }
 }
+#endif
 
 static void
 OpenVeryFirstDisplay(int *root_width, int *root_height)
 {
-    struct EventThreadStartup evs;
+#ifdef __APPLE__
+    struct EventThreadStartup *evs = &evt_startup;
+#else
+    struct EventThreadStartup evs0, *evs = &evs0;
+#endif
 
+    evs->init_done = 0;
+    evs->root_width = root_width;
+    evs->root_height = root_height;
+#ifdef __APPLE__
+    /*
+     * Rendezvous with already running event thread, which
+     * in MacOSX is the main thread.
+     */
+
+    SdlTkNotify();
+    while (!evs->init_done) {
+	SdlTkWaitLock();
+    }
+#else
     /*
      * Run thread to startup SDL, to collect SDL events,
      * and to perform screen updates.
      */
-    evs.init_done = 0;
-    evs.root_width = root_width;
-    evs.root_height = root_height;
-    Tcl_CreateThread(&SdlTkX.event_tid, EventThread, &evs,
+
+    Tcl_CreateThread(&SdlTkX.event_tid, EventThread, evs,
 		     TCL_THREAD_STACK_DEFAULT, TCL_THREAD_NOFLAGS);
-    while (!evs.init_done) {
+    while (!evs->init_done) {
 	SdlTkWaitLock();
     }
     Tcl_CreateExitHandler(EventThreadExitHandler, NULL);
+#endif
 }
 
 Display *
@@ -7307,7 +7363,7 @@ XUngrabServer(Display *display)
     SdlTkLock(display);
     display->request++;
     xlib_grab = NULL;
-    Tcl_ConditionNotify(&xlib_cond);
+    SdlTkNotify();
     SdlTkUnlock(display);
     return 0;
 }

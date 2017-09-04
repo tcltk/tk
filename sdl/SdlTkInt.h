@@ -355,6 +355,9 @@ extern void SdlTkGLXReleaseCurrent(Display *display, Window w, void *ctx);
 extern void SdlTkGLXSwapBuffers(Display *display, Window w);
 #endif
 extern void SdlTkDumpXEvent(XEvent *eventPtr);
+#ifdef __APPLE__
+extern void SdlTkEventThread(void);
+#endif
 
 /* SdlTkAGG.c */
 extern void SdlTkGfxDrawArc(Drawable d, GC gc, int x, int y,
