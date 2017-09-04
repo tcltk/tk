@@ -492,6 +492,20 @@ switch -exact -- [tk windowingsystem] {
 }
 
 # ----------------------------------------------------------------------
+# Setup flags/vars for SDL, screen dpi, and Android.
+# ----------------------------------------------------------------------
+
+namespace eval ::tk {
+    variable sdltk [expr {[info command "sdltk"] eq "sdltk"}]
+    variable dpi
+    set dpi [expr int((25.4 * [winfo screenwidth .]) / [winfo screenmmwidth .])]
+    variable android 0
+    if {$sdltk} {
+	set android [sdltk android]
+    }
+}
+
+# ----------------------------------------------------------------------
 # Read in files that define all of the class bindings.
 # ----------------------------------------------------------------------
 
@@ -500,12 +514,7 @@ if {$::tk_library ne ""} {
         namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
-	variable sdltk [expr {[info command "sdltk"] eq "sdltk"}]
-	variable dpi
-	set dpi [expr int((25.4 * [winfo screenwidth .]) / [winfo screenmmwidth .])]
-	variable android 0
 	if {$sdltk} {
-	    set android [sdltk android]
 	    if {$dpi < 140} {
 		SourceLibFile icons
 	    } elseif {$dpi < 240} {
@@ -702,9 +711,9 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
-if {[info command "sdltk"] eq "sdltk"} {
+if {$::tk::sdltk} {
     # Android hardware keyboard handling
-    if {[sdltk android]} {
+    if {$::tk::android} {
 	if {[package versions Borg] ne {}} {
 	    package require Borg
 	}

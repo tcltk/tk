@@ -555,6 +555,7 @@ which may not be the order originally given. Also the coordinates are always
 returned in screen units with no units (that is, in pixels). So if the
 original coordinates were specified for instance in centimeters or inches,
 the returned values will nevertheless be in pixels.
+.RE
 .TP
 \fIpathName \fBcreate \fItype x y \fR?\fIx y ...\fR? ?\fIoption value ...\fR?
 .TP
