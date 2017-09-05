@@ -7431,4 +7431,12 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-04-13 \u escaped content in msg files converted to true utf-8 (nijtmans)
 
---- Released 8.7a1, August ??, 2017 --- http://core.tcl.tk/tk/ for details
+2017-08-24 (bug)[f1a3ca] Memleak in text operations (hume)
+
+2017-08-24 (bug)[ee40fd] Error reporting from failed console init (the)
+
+2017-08-24 (bug)[3295446] Keep console cursor visible when using history (goth)
+
+2017-08-28 (TIP 166) Extended color notation for alpha channel (bachmann)
+
+--- Released 8.7a1, September 8, 2017 --- http://core.tcl.tk/tk/ for details
