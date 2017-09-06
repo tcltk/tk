@@ -10,14 +10,82 @@
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
 
+#
+# This file is somewhat caothic: the order of the tests does not
+# really follow the order of the corresponding functions in
+# tkImgPhoto.c. Probably, because early versions had only a few tests
+# and over time test cases were added in bits and pieces.
+# To be noted, also, that this file is not complete: large portions of
+# code in tkImgPhoto.c have no test coverage.
+#
+# To help keeping the overview, the table below lists where to find
+# tests for each of the functions in tkImgPhoto.c. The function are
+# listed in the order as they appear in the source file.
+# 
+
+#
+# Function name                         Tests for function
+#--------------------------------------------------------------------------
+# PhotoFormatThreadExitProc             no tests
+# Tk_Create*PhotoImageFormat            no tests
+# ImgPhotoCreate                        imgPhoto-2.*
+# ImgPhotoCmd                           imgPhoto-4.*, imgPhoto-17.*
+# GetExtension:                         no tests
+# ParseSubcommandOptions:               imgPhoto-1.*
+# ImgPhotoConfigureMaster:              imgPhoto-3.*, imgPhoto-15.*
+# toggleComplexAlphaIfNeeded:           no tests
+# ImgPhotoDelete:                       imgPhoto-8.*
+# ImgPhotoCmdDeleteProc:                imgPhoto-9.*
+# ImgPhotoSetSize:                      no tests
+# MatchFileFormat:                      imgPhoto-18.*
+# MatchSringFormat:                     imgPhoto-19.*
+# Tk_FindPhoto:                         imgPhoto-11.*
+# Tk_PhotoPutBlock:                     imgPhoto-10.*, imgPhoto-16.*
+# Tk_PhotoPutZoomedBlock:               imgPhoto-12.*
+# Tk_DitherPhoto:                       no tets
+# Tk_PhotoBlank:                        no tests
+# Tk_PhotoExpand:                       no tests
+# Tk_PhotoGetSize:                      no tests
+# Tk_PhotoSetSize:                      no tests
+# TkGetPhotoValidRegion:                no tests
+# ImgGetPhoto:                          no tests
+# Tk_PhotoGetImage                      no tests
+# ImgPostscriptPhoto                    no tests
+# Tk_PhotoPutBlock_NoComposite          no tests, probably none needed
+# Tk_PhotoPutZoomedBlock_NoComposite    no tests, probably none needed
+# Tk_PhotoExpand_Panic                  no tests, probably none needed
+# Tk_PhotoPutBlock_Panic                no tests, probably none needed
+# Tk_PhotoPutZoomedBlock_Panic          no tests, probably none needed
+# Tk_PhotoSetSize_Panic                 no tests, probably none needed
+#--------------------------------------------------------------------------
+#
+
+#
+# Some tests are not specific to a function in tkImgPhoto.c. They are:
+#
+
+#
+# Test name(s)          Description
+#--------------------------------------------------------------------------
+# imgPhoto-5.*          Do not really belong to this file. ImgPhotoGet and
+#                       ImgPhotoFree are defined in tkImgPhInstance.c.
+# imgPhoto-6.*          Do not really belong to this file. ImgPhotoDisplay
+#                       is defined in tkImgPhInstance.c.
+# imgPhoto-7.*          Do not really belong to this file. ImgPhotoFree is
+#                       defined in tkImgPhInstance.c.
+# imgPhoto-13.*         Tests for separation in different interpreters
+# imgPhoto-14.*         Test GIF format. Would belong to imgGIF.test
+#                       - which does not exist.
+#
+
 package require tcltest 2.2
 namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
-
-# Used for 4.65 - 4.73 tests
-# Now for some heftier testing, checking that setting and resetting of pixels'
-# transparency status doesn't "leak" with any one-off errors.
+
+# 
+# Used for imgPhoto-4.65 - imgPhoto-4.73
+#
 proc foreachPixel {img xVar yVar script} {
     upvar 1 $xVar x $yVar y
     set width [image width $img]
@@ -58,8 +126,17 @@ set README [makeFile {
 # find the teapot.ppm file for use in these tests
 set teapotPhotoFile [file join [file dirname [info script]] teapot.ppm]
 testConstraint hasTeapotPhoto [file exists $teapotPhotoFile]
+# let's see if we have the semi-transparent one as well
+set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTransparent.png]
+testConstraint hasTranspTeapotPhoto [file exists $transpTeapotPhotoFile]
+
+proc base64ok {} {
+    expr {
+        ![catch {package require base64}]
+    }
+}
 
-# ----------------------------------------------------------------------
+testConstraint base64PackageNeeded [base64ok]
 
 test imgPhoto-1.1 {options for photo images} -body {
     image create photo photo1 -width 79 -height 83
@@ -109,7 +186,23 @@ test imgPhoto-1.10 {options for photo images - error case} -body {
 test imgPhoto-1.11 {options for photo images - error case} -body {
     image create photo photo1 -format
 } -returnCodes error -result {value for "-format" missing}
-
+test imgPhoto-1.12 {option -alpha, normal use} -setup {
+    image create photo photo1
+} -body {
+    photo1 put "white" -to 0 0
+    photo1 transparency get 0 0 -alpha
+} -cleanup {
+    imageCleanup
+} -result {255}
+test imgPhoto-1.13 {option -withalpha, normal use} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{blue green}}
+    photo1 get 1 0 -withalpha
+} -cleanup {
+    imageCleanup
+} -result {0 128 0 255}
+
 test imgPhoto-2.1 {ImgPhotoCreate procedure} -setup {
     imageCleanup
 } -body {
@@ -132,7 +225,7 @@ test imgPhoto-2.2 {ImgPhotoCreate procedure} -setup {
 #     photo1 copy photo2
 #     set msg
 # } {couldn't open "bogus.img": no such file or directory}
-
+
 test imgPhoto-3.1 {ImgPhotoConfigureMaster procedure} -constraints {
     hasTeapotPhoto
 } -body {
@@ -168,7 +261,40 @@ test imgPhoto-3.3 {ImgPhotoConfigureMaster procedure} -constraints {
     destroy .c
     image delete photo1
 } -result {256 256 {10 10 266 266} {300 10 556 266}}
-
+test imgPhoto-3.4 {ImgPhotoConfigureMaster: -data <ppm>} -constraints {
+    hasTeapotPhoto
+} -setup {
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2
+} -body {
+    photo2 configure -data [photo1 data -format ppm -from 100 100 120 120]
+    list [image width photo2] [image height photo2]
+} -cleanup {
+    imageCleanup
+} -result {20 20}
+test imgPhoto-3.5 {ImgPhotoConfigureMaster: -data <png>} -constraints {
+    hasTeapotPhoto
+} -setup {
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2
+} -body {
+    photo2 configure -data [photo1 data -format png -from 120 120 140 140]
+    list [image width photo2] [image height photo2]
+} -cleanup {
+    imageCleanup
+} -result {20 20}
+test imgPhoto-3.6 {ImgPhotoConfigureMaster: -data <default>} -constraints {
+    hasTeapotPhoto
+} -setup {
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2
+} -body {
+    photo2 configure -data [photo1 data -from 80 90 100 110]
+    list [image width photo2] [image height photo2]
+} -cleanup {
+    imageCleanup
+} -result {20 20}
+
 test imgPhoto-4.1 {ImgPhotoCmd procedure} -setup {
     image create photo photo1
 } -body {
@@ -367,16 +493,19 @@ test imgPhoto-4.21 {ImgPhotoCmd procedure: copy option} -constraints {
 } -cleanup {
     image delete photo1 photo2
 } -result {256 256 49 51 49 51 49 51 10 51 10 10}
+# tests for <imageName> data: imgPhoto-4.
 test imgPhoto-4.22 {ImgPhotoCmd procedure: get option} -constraints {
-    hasTeapotPhoto
+    hasTranspTeapotPhoto
 } -setup {
     image create photo photo1
 } -body {
-    photo1 read $teapotPhotoFile
-    list [photo1 get 100 100] [photo1 get 150 100] [photo1 get 100 150]
+    photo1 read $transpTeapotPhotoFile
+    list [photo1 get 100 100 -withalpha] \
+	[photo1 get 150 100 -withalpha] \
+	[photo1 get 100 150] [photo1 get 150 150]
 } -cleanup {
     image delete photo1
-} -result {{169 117 90} {172 115 84} {35 35 35}}
+} -result {{175 71 0 162} {179 73 0 168} {14 8 0} {0 0 0}}
 test imgPhoto-4.23 {ImgPhotoCmd procedure: get option} -setup {
     image create photo photo1
 } -body {
@@ -394,10 +523,12 @@ test imgPhoto-4.24 {ImgPhotoCmd procedure: get option} -setup {
 test imgPhoto-4.25 {ImgPhotoCmd procedure: get option} -setup {
     image create photo photo1
 } -body {
-    photo1 get
+    photo1 get 0
 } -cleanup {
     image delete photo1
-} -returnCodes error -result {wrong # args: should be "photo1 get x y"}
+} -returnCodes error -result \
+    {wrong # args: should be "photo1 get x y ?-withalpha?"}
+# more test for image get: 4.101-4.102
 test imgPhoto-4.26 {ImgPhotoCmd procedure: put option} -setup {
     image create photo photo1
 } -body {
@@ -411,22 +542,28 @@ test imgPhoto-4.27 {ImgPhotoCmd procedure: put option} -setup {
     photo1 put {{white} {white white}}
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {all elements of color list must have the same number of elements}
+} -result {couldn't recognize image data}
 test imgPhoto-4.28 {ImgPhotoCmd procedure: put option} -setup {
     image create photo photo1
 } -body {
     photo1 put {{blahgle}}
 } -cleanup {
     image delete photo1
-} -returnCodes error -result {can't parse color "blahgle"}
+} -returnCodes error -result {couldn't recognize image data}
 test imgPhoto-4.29 {ImgPhotoCmd procedure: put option} -setup {
     image create photo photo1
 } -body {
-    photo1 put -to 10 10 20 20 {{white}}
+    # SB: odd thing - this test passed with tk 8.6.6, even if the data
+    # is in the wrong position:
+    #photo1 put -to 10 10 20 20 {{white}}
+
+    # this is how it's supposed to be:
+    photo1 put {{white}} -to 10 10 20 20
     photo1 get 19 19
 } -cleanup {
     image delete photo1
 } -result {255 255 255}
+# more tests for image put: 4.90-4.100
 test imgPhoto-4.30 {ImgPhotoCmd procedure: read option} -setup {
     image create photo photo1
 } -body {
@@ -508,6 +645,7 @@ test imgPhoto-4.39 {ImgPhotoCmd procedure: write option} -setup {
 } -cleanup {
     image delete photo1
 } -returnCodes error -result {image file format "bogus" is unknown}
+# more tests on "imageName write": imgPhoto-17.*
 test imgPhoto-4.40 {ImgPhotoCmd procedure: transparency option} -setup {
     image create photo photo1
 } -body {
@@ -521,21 +659,21 @@ test imgPhoto-4.41 {ImgPhotoCmd procedure: transparency get option} -setup {
     photo1 transparency get
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency get x y"}
+} -result {wrong # args: should be "photo1 transparency get x y ?-option?"}
 test imgPhoto-4.42 {ImgPhotoCmd procedure: transparency get option} -setup {
     image create photo photo1
 } -body {
     photo1 transparency get 0
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency get x y"}
+} -result {wrong # args: should be "photo1 transparency get x y ?-option?"}
 test imgPhoto-4.43 {ImgPhotoCmd procedure: transparency get option} -setup {
     image create photo photo1
 } -body {
-    photo1 transparency get 0 0 0
+    photo1 transparency get 0 0 0 -alpha
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency get x y"}
+} -result {wrong # args: should be "photo1 transparency get x y ?-option?"}
 test imgPhoto-4.44 {ImgPhotoCmd procedure: transparency get option} -setup {
     image create photo photo1
 } -body {
@@ -595,34 +733,39 @@ test imgPhoto-4.51 {ImgPhotoCmd procedure: transparency get option} -setup {
 } -cleanup {
     image delete photo1
 } -result 1
+# more tests for transparency get: 4.65, 4.66, 4.76-4.81
 test imgPhoto-4.52 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
     photo1 transparency set
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency set x y boolean"}
+} -result \
+    {wrong # args: should be "photo1 transparency set x y newVal ?-option?"}
 test imgPhoto-4.53 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
     photo1 transparency set 0
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency set x y boolean"}
+} -result \
+    {wrong # args: should be "photo1 transparency set x y newVal ?-option?"}
 test imgPhoto-4.54 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
     photo1 transparency set 0 0
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency set x y boolean"}
+} -result \
+    {wrong # args: should be "photo1 transparency set x y newVal ?-option?"}
 test imgPhoto-4.55 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
-    photo1 transparency set 0 0 0 0
+    photo1 transparency set 0 0 0 0 -alpha
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {wrong # args: should be "photo1 transparency set x y boolean"}
+} -result \
+    {wrong # args: should be "photo1 transparency set x y newVal ?-option?"}
 test imgPhoto-4.56 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
 } -body {
@@ -639,6 +782,7 @@ test imgPhoto-4.57 {ImgPhotoCmd procedure: transparency set option} -setup {
 } -returnCodes error -result {expected integer but got "bogus"}
 test imgPhoto-4.58 {ImgPhotoCmd procedure: transparency set option} -setup {
     image create photo photo1
+    photo1 put blue
 } -body {
     photo1 transparency set 0 0 bogus
 } -cleanup {
@@ -690,6 +834,7 @@ test imgPhoto-4.64 {ImgPhotoCmd procedure: transparency set option} -setup {
 } -cleanup {
     image delete photo1
 } -result 1
+# more tests for transparency set: 4.67, 4.68, 4.82-4.89
 # Now for some heftier testing, checking that setting and resetting of pixels'
 # transparency status doesn't "leak" with any one-off errors.
 test imgPhoto-4.65 {ImgPhotoCmd procedure: transparency get option} -setup {
@@ -814,7 +959,411 @@ test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constrain
     image delete photo1
     file delete ./-teapotPhotoFile
 } -result {}
-
+test imgPhoto-4.76 {ImgPhotoCmd, transparancy get: too many options} -setup {
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 1 1
+    photo1 transparency get 0 0 -alpha -bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {wrong # args: should be "photo1 transparency get x y ?-option?"}
+test imgPhoto-4.77 {ImgPhotoCmd, transparency get: invalid option} -setup {
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 1 1
+    photo1 transparency get 0 0 -bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {unrecognized option "-bogus": must be -alpha}
+test imgPhoto-4.78 {ImgPhotoCmd, transparency get: normal use} -setup {
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 1 1
+    set result [photo1 transparency get 0 0]
+    lappend result [photo1 transparency get 0 0 -alpha]
+} -cleanup {
+    imageCleanup
+} -result {0 255}
+test imgPhoto-4.79 {ImgPhotoCmd, transparency get: no option} -constraints {
+    hasTranspTeapotPhoto
+} -setup {
+    image create photo photo1 -file $transpTeapotPhotoFile
+    set result {}
+} -body {
+    set pixelCoords {{156 239} {76 207} {153 213} {139 43} {75 112}}
+    foreach coord $pixelCoords {
+	lappend result [photo1 transparency get {*}$coord]
+    }
+    set result
+} -cleanup {
+    imageCleanup
+} -result {0 1 0 0 0}
+# test imgPhoto-4.80: deleted (was transparency get: -boolean)
+test imgPhoto-4.81 {ImgPhotoCmd, transparency get: -alpha} -constraints {
+    hasTranspTeapotPhoto
+} -setup {
+    image create photo photo1 -file $transpTeapotPhotoFile
+    set result {}
+} -body {
+    set pixelCoords {{156 239} {76 207} {153 213} {139 43} {75 112}}
+    foreach coord $pixelCoords {
+	lappend result [photo1 transparency get {*}$coord -alpha]
+    }
+    set result
+} -cleanup {
+    imageCleanup
+} -result {255 0 1 254 206}
+test imgPhoto-4.82 {ImgPhotoCmd, transparency set: too many opts} -setup {
+    image create photo photo1
+} -body {
+    photo1 transparency set 0 0 -alpha -bogus 1
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {wrong # args: should be "photo1 transparency set x y newVal ?-option?"}
+test imgPhoto-4.83 {ImgPhotoCmd, transparency set: invalid opt} -setup {
+    image create photo photo1 -data black
+} -body {
+    photo1 transparency set 0 0 0 -bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {unrecognized option "-bogus": must be -alpha}
+test imgPhoto-4.84 {ImgPhotoCmd, transparency set: invalid newVal} -setup {
+    image create photo photo1 -data white
+} -body {
+    photo1 transparency set 0 0 bogus -alpha
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {expected integer but got "bogus"}
+test imgPhoto-4.85 {ImgPhotoCmd, transparency set: invalid newVal} -setup {
+    image create photo photo1 -data red
+} -body {
+    photo1 transparency set 0 0 -1 -alpha
+} -returnCodes error -result \
+    {invalid alpha value "-1": must be integer between 0 and 255}
+test imgPhoto-4.86 {ImgPhotoCmd, transparency set: invalid newVal} -setup {
+    image create photo photo1 -data green
+} -body {
+    photo1 transparency set 0 0 256 -alpha
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {invalid alpha value "256": must be integer between 0 and 255}
+test imgPhoto-4.87 {ImgPhotoCmd, transparency set: no opt} -setup {
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 2 1
+    photo1 transparency set 0 0 0
+    photo1 transparency set 1 0 1
+    list [photo1 transparency get 0 0 -alpha] \
+        [photo1 transparency get 1 0 -alpha]
+} -cleanup {
+    imageCleanup
+} -result {255 0}
+# deleted: test imgPhoto-4.88 {ImgPhotoCmd, transparency set: -boolean}
+test imgPhoto-4.89 {ImgPhotoCmd, transparency set: -alpha} -setup {
+    image create photo photo1
+} -body {
+    photo1 put white -to 0 0 2 2
+    photo1 transparency set 0 0 0 -alpha 
+    photo1 transparency set 1 0 1 -alpha
+    photo1 transparency set 0 1 254 -alpha
+    photo1 transparency set 1 1 255 -alpha
+    list [photo1 transparency get 0 0] [photo1 transparency get 1 0] \
+	[photo1 transparency get 0 1] [photo1 transparency get 1 1]
+} -cleanup {
+    imageCleanup
+} -result {1 0 0 0}
+test imgPhoto-4.90 {ImgPhotoCmd put: existing but not allowed opt} -setup {
+    image create photo photo1
+} -body {
+    photo1 put yellow -from 0 0 1 1
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {unrecognized option "-from": must be -format, or -to}
+test imgPhoto-4.91 {ImgPhotoCmd put: invalid option} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{0 1 2 3}} -bogus x
+} -returnCodes error -result \
+    {unrecognized option "-bogus": must be -format, or -to}
+test imgPhoto-4.92 {ImgPhotocmd put: missing data} -setup {
+    image create photo photo1
+} -body {
+    photo1 put -to 0 0
+} -returnCodes error -result \
+    {wrong # args: should be "photo1 put data ?-option value ...?"}
+test imgPhoto-4.93 {ImgPhotoCmd put: data in ppm format} -constraints {
+    hasTeapotPhoto
+} -setup {
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2
+} -body {
+    set imgdata [photo1 data -format ppm]
+    photo2 put $imgdata -format ppm
+    set result {}
+    if {[image width photo1] != [image width photo2] \
+            || [image height photo1] != [image height photo2]} {
+        lappend result [list [image width photo2] [image height photo2]]
+    } else {
+        lappend result 1
+    }
+    foreach point {{206 125} {67 12} {13 46} {19 184}} {
+        if {[photo1 get {*}$point] ne [photo2 get {*}$point]} {
+            lappend result [photo2 get {*}$point]
+        } else {
+            lappend result 1
+        }
+    }
+    set result
+} -cleanup {
+    imageCleanup
+} -result {1 1 1 1 1}
+test imgPhoto-4.94 {ImgPhotoCmd put: unknown format} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {no real data} -format bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {image format "bogus" is not supported}
+test imgPhoto-4.95 {ImgPhotoCmd put: default fmt, invalid data} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{red green blue} {red " blue}}
+    #"
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {couldn't recognize image data}
+test imgPhoto-4.96 {ImgPhotoCmd put: "default" handler is selected} -setup {
+    image create photo photo1
+    image create photo photo2
+    set imgData {{{1 2 3 4} {5 6 7 8} {9 10 11 12}}
+        {{13 14 15 15} {17 18 19 20} {21 22 23 24}}}
+} -body {
+    photo1 put $imgData
+    photo2 put $imgData -format default
+    set result {}
+    lappend result [list [image width photo1] [image height photo1]]
+    lappend result [list [image width photo2] [image height photo2]]
+    lappend result [string equal \
+        [photo1 data -format "default -colorformat rgba"] \
+        [photo2 data -format "default -colorformat rgba"]]
+    set result
+} -cleanup {
+    imageCleanup
+    unset result
+    unset imgData
+} -result {{3 2} {3 2} 1}
+test imgPhoto-4.97 {ImgPhotoCmd put: image size} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{red green blue} {blue red green}}
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    imageCleanup
+} -result {3 2}
+test imgPhoto-4.98 {ImgPhotoCmd put: -to with 2 coords} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{"alice blue" "blanched almond"}
+		{"deep sky blue" "ghost white"}
+		{#AABBCC #AABBCCDD}} -to 5 6
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    imageCleanup
+} -result {7 9}
+test imgPhoto-4.99 {ImgPhotoCmd put: -to with 4 coords} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{#123 #456 #678} {#9AB #CDE #F01}} -to 1 2 20 21
+    set result {}
+    lappend result [photo1 get 19 20 -withalpha]
+    lappend result [string equal \
+	[photo1 data -from 1 2 4 4] [photo1 data -from 4 2 7 4]]
+    lappend result [string equal \
+	[photo1 data -from 10 12 13 14] [photo1 data -from 16 16 19 18]]
+    set result
+} -cleanup {
+    imageCleanup
+} -result {{17 34 51 255} 1 1}
+test imgPhoto-4.100 {ImgPhotoCmd put: no changes on empty data} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{brown blue} {cyan coral}}
+    set imgData [photo1 data]
+    photo1 put {}
+    string equal $imgData [photo1 data]
+} -cleanup {
+    imageCleanup
+} -result {1}
+test imgPhoto-4.101 {ImgPhotoCmd get: too many args} -setup {
+    image create photo photo1
+} -body {
+    photo1 get 0 0 -withalpha bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {wrong # args: should be "photo1 get x y ?-withalpha?"}
+test imgPhoto-4.102 {ImgPhotoCmd get: invalid option} -setup {
+    image create photo photo1
+} -body {
+    photo1 get 0 0 -bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {unrecognized option "-bogus": must be -withalpha}
+test imgPhoto-4.103 {ImgPhotoCmd data: accepted opts} -setup {
+    image create photo photo1 -data black
+} -body {
+    photo1 data -format default -from 0 0 -grayscale -background blue
+} -cleanup {
+    imageCleanup
+} -result {{#000000}}
+test imgPhoto-4.104 {ImgPhotoCmd data: existing but not accepted opt} -setup {
+    image create photo photo1
+} -body {
+    photo1 data -to
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+{unrecognized option "-to": must be -background, -format, -from, or -grayscale}
+test imgPhoto-4.105 {ImgPhotoCmd data: invalid option} -setup {
+    image create photo photo1
+} -body {
+    photo1 data -bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+{unrecognized option "-bogus": must be -background, -format, -from, or -grayscale}
+test imgPhoto-4.106 {ImgPhotoCmd data: extra arg before options} -setup {
+    image create photo photo1 
+} -body {
+    photo1 data bogus -grayscale
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {wrong # args: should be "photo1 data ?-option value ...?"}
+test imgPhoto-4.107 {ImgPhotoCmd data: extra arg after options} -setup {
+    image create photo photo1
+} -body {
+    photo1 data -format default bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {wrong # args: should be "photo1 data ?-option value ...?"}
+test imgPhoto-4.108 {ImgPhotoCmd data: invalid -from coords #1} -setup {
+    image create photo photo1 -data blue
+} -body {
+    photo1 data -from 2 0
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {coordinates for -from option extend outside image}
+test imgPhoto-4.109 {ImgPhotoCmd data: invalid -from coords #2} -setup {
+    image create photo photo1 -data blue
+} -body {
+    photo1 data -from 0 2
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {coordinates for -from option extend outside image}
+test imgPhoto-4.110 {ImgPhotoCmd data: invalid -from coords #3} -setup {
+    image create photo photo1 -data blue
+} -body {
+    photo1 data -from 0 0 2 1
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {coordinates for -from option extend outside image}
+test imgPhoto-4.111 {ImgPhotoCmd data: invalid -from coords #4} -setup {
+    image create photo photo1 -data blue
+} -body {
+    photo1 data -from 0 0 1 2
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result \
+    {coordinates for -from option extend outside image}
+test imgPhoto-4.112 {ImgPhotoCmd data: -from with 2 coords} -setup {
+    image create photo photo1 -data {
+        {black black black black black}
+        {white white white white white}
+        {green green green green green}}
+} -body {
+    set imgData [photo1 data -from 2 1]
+    list [llength [lindex $imgData 0]] [llength $imgData]
+} -cleanup {
+    imageCleanup
+    unset imgData
+} -result {3 2}
+test imgPhoto-4.113 {ImgPhotoCmd data: default is rgb format} -setup {
+    image create photo photo1 -data red
+} -body {
+    photo1 data
+} -cleanup {
+    imageCleanup
+} -result {{#ff0000}}
+test imgPhoto-4.114 {ImgPhotoCmd data: unknown format} -setup {
+    image create photo photo1
+} -body {
+    photo1 data -format bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {image string format "bogus" is unknown}
+test imgPhoto-4.115 {ImgPhotoCmd data: rgb colorformat} -setup {
+    image create photo photo1 -data {{red#a green#b} {blue#c white}}
+} -body {
+    photo1 data -format {default -colorformat rgb}
+} -result {{#ff0000 #008000} {#0000ff #ffffff}}
+test imgPhoto-4.116 {ImgPhotoCmd data: rgba colorformat} -setup {
+    image create photo photo1 -data {{red green} {blue white}}
+} -body {
+    photo1 data -format {default -colorformat rgba}
+} -result {{#ff0000ff #008000ff} {#0000ffff #ffffffff}}
+test imgPhoto-4.117 {ImgPhotoCmd data: list colorformat} -setup {
+    image create photo photo1 -data {{red#a green} {blue#c white#d}}
+} -body {
+    photo1 data -format {default -colorformat list}
+} -result {{{255 0 0 170} {0 128 0 255}} {{0 0 255 204} {255 255 255 221}}}
+test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image 
+    results in same image as orignial } -constraints {
+        hasTeapotPhoto
+        hasTranspTeapotPhoto
+} -setup {
+    image create photo teapot -file $teapotPhotoFile
+    teapot copy teapot -from 50 60 70 80 -shrink
+    image create photo teapotTransp -file $transpTeapotPhotoFile
+    teapotTransp copy teapotTransp -from 100 110 120 130 -shrink
+    image create photo photo1
+} -body {
+    set result {}
+    # We don't test gif here, as there seems to be a problem with 
+    # <imgName> data and gif format ("too many colors", probably a bug)
+    foreach fmt {ppm png {default -colorformat rgba} \
+            {default -colorformat list}} {
+        set imgData [teapotTransp data -format $fmt]
+        photo1 blank
+        photo1 put $imgData
+        if { ! [string equal [photo1 data] [teapotTransp data]]} {
+            lappend result $fmt
+        }
+    }
+    set imgData [teapot data -format default]
+    photo1 blank
+    photo1 put $imgData
+    if { ! [string equal [photo1 data] [teapot data]]} {
+        lappend result default
+    }
+    set result
+} -cleanup {
+    unset imgData
+    unset result
+    imageCleanup
+} -result {}
+
 test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -837,7 +1386,7 @@ test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -constraints {
 } -cleanup {
     destroy .c
 } -result {}
-
+
 test imgPhoto-6.1 {ImgPhotoDisplay procedure, blank display} -setup {
     destroy .c
     pack [canvas .c]
@@ -851,7 +1400,7 @@ test imgPhoto-6.1 {ImgPhotoDisplay procedure, blank display} -setup {
     destroy .c
     image delete photo1
 } -result {}
-
+
 test imgPhoto-7.1 {ImgPhotoFree procedure, resource freeing} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -912,7 +1461,7 @@ test imgPhoto-7.3 {ImgPhotoFree procedures, multiple visuals} -constraints {
     destroy .f
     image delete photo1
 } -result {}
-
+
 test imgPhoto-8.1 {ImgPhotoDelete procedure} -constraints hasTeapotPhoto -body {
     image create photo photo2 -file $teapotPhotoFile
     image delete photo2
@@ -936,7 +1485,7 @@ test imgPhoto-8.3 {ImgPhotoDelete procedure, name cleanup} -body {
 } -returnCodes error -cleanup {
     imageCleanup
 } -result {image "photo2" doesn't exist or is not a photo image}
-
+
 test imgPhoto-9.1 {ImgPhotoCmdDeletedProc procedure} -constraints {
     hasTeapotPhoto
 } -body {
@@ -944,7 +1493,7 @@ test imgPhoto-9.1 {ImgPhotoCmdDeletedProc procedure} -constraints {
     rename photo2 {}
     list [lsearch -exact [imageNames] photo2] [catch {photo2 foo} msg] $msg
 } -result {-1 1 {invalid command name "photo2"}}
-
+
 test imgPhoto-10.1 {Tk_ImgPhotoPutBlock procedure} -setup {
     imageCleanup
 } -body {
@@ -991,7 +1540,6 @@ test imgPhoto-10.4 {Tk_ImgPhotoPutBlock, empty image} -setup {
     imageCleanup
 } -result {0 0}
 
-
 test imgPhoto-11.1 {Tk_FindPhoto} -setup {
     imageCleanup
 } -body {
@@ -1001,7 +1549,7 @@ test imgPhoto-11.1 {Tk_FindPhoto} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result {image "i1" doesn't exist or is not a photo image}
-
+
 test imgPhoto-12.1 {Tk_PhotoPutZoomedBlock} -constraints hasTeapotPhoto -body {
     image create photo p3 -file $teapotPhotoFile
     set result [list [p3 get 50 50] [p3 get 100 100]]
@@ -1090,7 +1638,7 @@ test imgPhoto-13.1 {check separation of images in different interpreters} -setup
     interp delete x1
     interp delete x2
 } -result T1_data
-
+
 test imgPhoto-14.1 {GIF writes work correctly} -setup {
     set data {
 	R0lGODlhYwA5APcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgAysnGy8hKzM
@@ -1183,7 +1731,7 @@ test imgPhoto-14.4 {GIF buffer overflow} -setup {
 } -cleanup {
     image delete $i
 } -returnCodes error -result {malformed image}
-
+
 test imgPhoto-15.1 {photo images can fail to allocate memory gracefully} -constraints {
     nonPortable
 } -body {
@@ -1191,7 +1739,7 @@ test imgPhoto-15.1 {photo images can fail to allocate memory gracefully} -constr
     # free memory available...
     image create photo -width 32000 -height 32000
 } -returnCodes error -result {not enough free memory for image buffer}
-
+
 test imgPhoto-16.1 {copying to self doesn't access freed memory} -setup {
     set i [image create photo]
 } -body {
@@ -1202,7 +1750,7 @@ test imgPhoto-16.1 {copying to self doesn't access freed memory} -setup {
 } -cleanup {
     image delete $i
 } -result {}
-
+
 # Check that we can guess our supported output formats [Bug 2983824]
 test imgPhoto-17.1 {photo write: format guessing from filename} -setup {
     set i [image create photo -width 3 -height 3]
@@ -1241,8 +1789,250 @@ test imgPhoto-17.3 {photo write: format guessing from filename} -setup {
     image delete $i
     catch {removeFile $f}
 } -result "P6\n"
+test imgPhoto-17.4 {photo write: default format not supported} -setup {
+    image create photo photo1 -data {{blue blue} {red red} {green green}}
+    set f [makeFile {} test.txt]
+} -body {
+    photo1 write $f -format default
+} -cleanup {
+    imageCleanup
+    catch {removeFile $f}
+    unset f
+} -returnCodes error -result \
+    {image file format "default" has no file writing capability}
+test imgPhoto-17.5 {photo write: file with extension .default} -setup {
+    image create photo photo1 -data {{black}}
+    set f [makeFile {} test.default]
+} -body {
+    photo1 write $f
+} -cleanup {
+    imageCleanup
+    catch {removeFile $f}
+    unset f
+} -returnCodes error -result \
+    {image file format "default" has no file writing capability}
+
+test imgPhoto-18.1 {MatchFileFormat: "default" format not supported} -setup {
+    image create photo photo1
+    set f [makeFile {} test.txt]
+} -body {
+    photo1 read $f -format default
+} -cleanup {
+    imageCleanup
+    catch {removeFile $f}
+    unset f
+} -returnCodes error -result {-file option isn't supported for default images}
+
+test imgPhoto-19.1 {MatchStringFormat: with "-format default"} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {{red blue red} {yellow green yellow}} -format default
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    imageCleanup
+} -result {3 2}
+test imgPhoto-19.2 {MatchStringFormat: without -format option,
+        default fmt} -body {
+    image create photo photo1 
+    photo1 put {{red} {green}}
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    imageCleanup
+} -result {1 2}
+test imgPhoto-19.3 {MatchStringFormat: "-format ppm"} -setup {
+    image create photo photo1
+    image create photo photo2
+    photo2 put {cyan cyan}
+    set imgData [photo2 data -format ppm]
+} -body {
+    photo1 put $imgData -format ppm
+    list [image width photo1] [image height photo1]
+} -cleanup {
+    unset imgData
+    imageCleanup
+} -result {1 2}
+test imgPhoto-19.4 {MatchStringFormat: ppm fmt, without opt} -constraints {
+    hasTeapotPhoto
+} -setup {
+    image create photo photo1 -file $teapotPhotoFile
+    image create photo photo2 
+} -body {
+    set imgData [photo1 data -format ppm]
+    photo2 put $imgData
+    list [image width photo2] [image height photo2]
+} -cleanup {
+    imageCleanup
+    unset imgData
+} -result {256 256}
+test imgPhoto-19.5 {MatchStirngFormat: unknown -format} -setup {
+    image create photo photo1
+} -body {
+    photo1 put {} -format bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {image format "bogus" is not supported}
+test imgPhoto-19.6 {MatchStringFormat: invalid data for default} -setup {
+    image create photo photo1
+} -body {
+    photo1 put bogus
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {couldn't recognize image data}
+test imgPhoto-19.7 {MatchStringFormat: invalid data for default} -setup {
+    image create photo photo1
+} -body {
+    photo1 put bogus -format dEFault
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {couldn't recognize image data}
+test imgPhoto-19.8 {MatchStirngFormat: invalid data for gif} -setup {
+    image create photo photo1
+} -body {
+    photo1 put bogus -format giF
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {couldn't recognize image data}
 
-# ----------------------------------------------------------------------
+# Reject corrupted or truncated image [Bug b601ce3ab1].
+# WARNING - tests 18.1-18.9 will cause a segfault on 8.5.19 and lower,
+#           and on 8.6.6 and lower.
+test imgPhoto-18.1 {Reject corrupted GIF (binary string)} -constraints {
+    base64PackageNeeded
+} -setup {
+    package require base64
+    set data [base64::decode {
+	R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
+	5qpraXIvM1JlNyAgOw==
+    }]
+} -body {
+    image create photo gif1 -data $data
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
+test imgPhoto-18.2 {Reject corrupted GIF (base 64 string)} -setup {
+    set data {
+	R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
+	5qpraXIvM1JlNyAgOw==
+    }
+} -body {
+    image create photo gif1 -data $data
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
+test imgPhoto-18.3 {Reject corrupted GIF (file)} -setup {
+    set fileName [file join [file dirname [info script]] corruptMangled.gif]
+} -body {
+    image create photo gif1 -file $fileName
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
+test imgPhoto-18.4 {Reject truncated GIF (binary string)} -constraints {
+    base64PackageNeeded
+} -setup {
+    package require base64
+    set data [base64::decode {
+	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP///8=
+    }]
+} -body {
+    image create photo gif1 -data $data
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {error reading color map}
+test imgPhoto-18.5 {Reject truncated GIF (base 64 string)} -setup {
+    set data {
+	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP///8=
+    }
+} -body {
+    image create photo gif1 -data $data
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {error reading color map}
+test imgPhoto-18.6 {Reject truncated GIF (file)} -setup {
+    set fileName [file join [file dirname [info script]] corruptTruncated.gif]
+} -body {
+    image create photo gif1 -file $fileName
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {error reading color map}
+test imgPhoto-18.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
+    base64PackageNeeded nonPortable
+} -setup {
+    # About the non portability constraint of this test: see ticket [cc42cc18a5]
+    # If there is insufficient memory, the error message
+    # {not enough free memory for image buffer} should be returned.
+    # Instead, some systems (e.g. FreeBSD 11.1) terminate the test interpreter.
+    package require base64
+    set data [base64::decode {
+	R0lGODlhwmYz//8zM/8z/zP/MzP/////M////yH5Ciwhe
+	LrcLTBCd6Tv2qW16tdK4jhV5qpraXIvM1JlNyAgOw==
+    }]
+} -body {
+    image create photo gif1 -data $data
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
+test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints {
+    nonPortable
+} -setup {
+    # About the non portability constraint of this test: see ticket [cc42cc18a5]
+    # If there is insufficient memory, the error message
+    # {not enough free memory for image buffer} should be returned.
+    # Instead, some systems (e.g. FreeBSD 11.1) terminate the test interpreter.
+    set data {
+	R0lGODlhwmYz//8zM/8z/zP/MzP/////M////yH5Ciwhe
+	LrcLTBCd6Tv2qW16tdK4jhV5qpraXIvM1JlNyAgOw==
+    }
+} -body {
+    image create photo gif1 -data $data
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
+test imgPhoto-18.9 {Reject corrupted GIF (> 4Gb) (file)} -constraints {
+    nonPortable
+} -setup {
+    # About the non portability constraint of this test: see ticket [cc42cc18a5]
+    # If there is insufficient memory, the error message
+    # {not enough free memory for image buffer} should be returned.
+    # Instead, some systems (e.g. FreeBSD 11.1) terminate the test interpreter.
+    set fileName [file join [file dirname [info script]] corruptMangled4G.gif]
+} -body {
+    image create photo gif1 -file $fileName
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
+test imgPhoto-18.10 {Valid GIF (binary string)} -constraints {
+    base64PackageNeeded
+} -setup {
+    # Test the binary string reader with a valid GIF.
+    # This is not tested elsewhere.
+    # Tests 18.11, 18.12, with matching data, are included for completeness.
+    package require base64
+    set data [base64::decode {
+	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP/////M////yH5BAEKAAcALAAA
+	AAAQABAAAAMheLrcLTBCd6QV79qlterXB0riOFXmmapraXIvM1IdZTcJADs=
+    }]
+} -body {
+    image create photo gif1 -data $data
+} -cleanup {
+    catch {image delete gif1}
+} -result gif1
+test imgPhoto-18.11 {Valid GIF (base 64 string)} -setup {
+    set data {
+	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP/////M////yH5BAEKAAcALAAA
+	AAAQABAAAAMheLrcLTBCd6QV79qlterXB0riOFXmmapraXIvM1IdZTcJADs=
+    }
+} -body {
+    image create photo gif1 -data $data
+} -cleanup {
+    catch {image delete gif1}
+} -result gif1
+test imgPhoto-18.12 {Valid GIF (file)} -setup {
+    set fileName [file join [file dirname [info script]] red.gif]
+} -body {
+    image create photo gif1 -file $fileName
+} -cleanup {
+    catch {image delete gif1}
+} -result gif1
 
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}
