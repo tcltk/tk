@@ -1568,7 +1568,7 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 	rm -f $(DISTDIR)/generic/blt*.[ch]
 	mkdir $(DISTDIR)/generic/ttk
 	cp -p $(TTK_DIR)/*.[ch] $(TTK_DIR)/ttk.decls \
-		$(TTK_DIR)/ttkGenStubs.tcl $(DISTDIR)/generic/ttk
+		$(DISTDIR)/generic/ttk
 	mkdir $(DISTDIR)/win
 	cp $(TOP_DIR)/win/Makefile.in $(DISTDIR)/win
 	cp $(TOP_DIR)/win/configure.ac \
