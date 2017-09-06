@@ -166,6 +166,13 @@ TkSelGetSelection(
     pendingRetrievals = &retr;
 
     /*
+     * Delete the property to indicate that no parameters are supplied for
+     * the conversion request.
+     */
+
+    XDeleteProperty(winPtr->display, retr.winPtr->window, retr.property);
+
+    /*
      * Initiate the request for the selection. Note: can't use TkCurrentTime
      * for the time. If we do, and this application hasn't received any X
      * events in a long time, the current time will be way in the past and
