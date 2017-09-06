@@ -17,10 +17,12 @@
 #define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
-#if defined(TK_NO_DEPRECATED) && defined(BUILD_tk)
+#if !defined(BUILD_tk)
+# define TK_DEPRECATED(msg) EXTERN TCL_DEPRECATED_API(msg)
+#elif defined(TK_NO_DEPRECATED)
 # define TK_DEPRECATED(msg) MODULE_SCOPE
 #else
-# define TK_DEPRECATED(msg) EXTERN TCL_DEPRECATED_API(msg)
+# define TK_DEPRECATED(msg) EXTERN
 #endif
 
 /*
@@ -288,8 +290,7 @@ EXTERN void		Tk_FreePixmap(Display *display, Pixmap pixmap);
 EXTERN void		Tk_FreeTextLayout(Tk_TextLayout textLayout);
 /* 77 */
 TK_DEPRECATED("function does nothing, call can be removed")
-void Tk_FreeXId(
-				Display *display, XID xid);
+void			Tk_FreeXId(Display *display, XID xid);
 /* 78 */
 EXTERN GC		Tk_GCForColor(XColor *colorPtr, Drawable drawable);
 /* 79 */
@@ -480,13 +481,12 @@ EXTERN int		Tk_ParseArgv(Tcl_Interp *interp, Tk_Window tkwin,
 				const Tk_ArgvInfo *argTable, int flags);
 /* 144 */
 TK_DEPRECATED("function signature changed")
-void Tk_PhotoPutBlock_NoComposite(
-				Tk_PhotoHandle handle,
+void			Tk_PhotoPutBlock_NoComposite(Tk_PhotoHandle handle,
 				Tk_PhotoImageBlock *blockPtr, int x, int y,
 				int width, int height);
 /* 145 */
 TK_DEPRECATED("function signature changed")
-void Tk_PhotoPutZoomedBlock_NoComposite(
+void			Tk_PhotoPutZoomedBlock_NoComposite(
 				Tk_PhotoHandle handle,
 				Tk_PhotoImageBlock *blockPtr, int x, int y,
 				int width, int height, int zoomX, int zoomY,
@@ -498,15 +498,15 @@ EXTERN int		Tk_PhotoGetImage(Tk_PhotoHandle handle,
 EXTERN void		Tk_PhotoBlank(Tk_PhotoHandle handle);
 /* 148 */
 TK_DEPRECATED("function signature changed")
-void Tk_PhotoExpand_Panic(
-				Tk_PhotoHandle handle, int width, int height);
+void			Tk_PhotoExpand_Panic(Tk_PhotoHandle handle,
+				int width, int height);
 /* 149 */
 EXTERN void		Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr,
 				int *heightPtr);
 /* 150 */
 TK_DEPRECATED("function signature changed")
-void Tk_PhotoSetSize_Panic(
-				Tk_PhotoHandle handle, int width, int height);
+void			Tk_PhotoSetSize_Panic(Tk_PhotoHandle handle,
+				int width, int height);
 /* 151 */
 EXTERN int		Tk_PointToChar(Tk_TextLayout layout, int x, int y);
 /* 152 */
@@ -790,14 +790,12 @@ EXTERN void		Tk_SetCaretPos(Tk_Window tkwin, int x, int y,
 				int height);
 /* 246 */
 TK_DEPRECATED("function signature changed")
-void Tk_PhotoPutBlock_Panic(
-				Tk_PhotoHandle handle,
+void			Tk_PhotoPutBlock_Panic(Tk_PhotoHandle handle,
 				Tk_PhotoImageBlock *blockPtr, int x, int y,
 				int width, int height, int compRule);
 /* 247 */
 TK_DEPRECATED("function signature changed")
-void Tk_PhotoPutZoomedBlock_Panic(
-				Tk_PhotoHandle handle,
+void			Tk_PhotoPutZoomedBlock_Panic(Tk_PhotoHandle handle,
 				Tk_PhotoImageBlock *blockPtr, int x, int y,
 				int width, int height, int zoomX, int zoomY,
 				int subsampleX, int subsampleY, int compRule);
