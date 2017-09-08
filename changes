@@ -7266,3 +7266,177 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
 Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 --- Released 8.6.5, February 29, 2016 --- http://core.tcl.tk/tk/ for details
+
+2016-03-07 (bug)[3137232] spinbox teardown hygiene (vogel)
+
+2016-03-07 (bug)[2981253] spinbox rapid button action (vogel)
+
+2016-03-07 (bug)[2262543] scale initialization callbacks (vogel)
+
+2016-03-07 (bug)[e9112e] incomplete [wm forget] (vogel)
+
+2016-03-11 (bug)[d95e5d] <Map> from hidden panes (vogel)
+
+2016-03-20 (TIP 443) More configuration options for text tags (vogel)
+
+2016-03-20 (bug)[487861] menu: cascade/accelerator appearance (vogel)
+
+2016-03-27 (bug)[1192095] active index from toplevel menus (vogel)
+
+2016-03-27 (bug)[18c08d] revised final newline behavior in [text] (vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2016-04-29 (bug)[fd3a4d] <<Modified>> delivery to text peers (vogel)
+
+2016-05-03 (bug)[b36218,011706] event reentrancy / widget destruction (vogel)
+
+2016-05-12 (bug)[64261b] mouse events after double click (nadmarki,nijtmans)
+
+2016-05-18 (bug)[545f10] Xft color font speed (bonfield,davies,girffin,vogel)
+
+2016-05-25 (bug)[109865] event reentrancy / widget destruction (vogel)
+
+2016-05-30 (TIP 446)[1273358] [$text edit (canundo|canredo)] (vogel)
+
+2016-05-30 (bug)[79549a] crash in mouse pointer warping (vogel)
+
+2016-06-22 (bug)[787adc] Modernize Tk_Init() (porter)
+
+2016-07-06 (bug) Aqua: excess lable padding (lanam,walzer)
+
+2016-07-08 (bug) Aqua: bitmap distortion (culler,walzer)
+
+2016-07-15 (bug) Aqua/Retina: fix alpha rendering of images (culler,walzer)
+
+2016-07-17 (bug)[c84f66] Aqua: crash: overflow in geometry calc (culler,walzer)
+
+2016-07-21 (bug)[450bb0] Aqua: memory corruption from [tk busy] (porter)
+
+--- Released 8.6.6, July 27, 2016 --- http://core.tcl.tk/tk/ for details
+
+2016-08-23 (bug)[a2abc4] Wrong warp cursor position on 2nd display (vogel)
+
+2016-08-29 (bug)[fa3229] menu-38.1 (calvo,vogel)
+
+2016-08-29 (bug)[2cf3d6] button-5.24 (vogel)
+
+2016-09-04 (bug)[1534455,2945130] Key release events get _L vs _R right. (vogel)
+
+2016-09-10 (bug)[8c4216] listbox-4.1 (vogel)
+
+2016-09-10 (bug)[eb2681] listbox-13.1 (vogel)
+
+2016-09-21 (bug)[3126428] ttk::button react to image change (thoyts)
+
+2016-10-09 (bug)[1082213] wrapped text don't start lines with whitespace (vogel)
+
+2016-10-12 (bug)[3217462] tri-state button on non-native theme (vogel)
+
+2016-10-30 (bug)[3588460] Fix file dialog -typevariable (vogel)
+
+2016-11-01 (bug)[e36963] event generate .e <diaeresis> (matthias,vogel)
+
+2016-11-05 (bug)[6aea69] grid-23 (danckaert,vogel)
+
+2016-11-18 (bug)[f60c54] combobox-3 (panza,vogel)
+
+2017-01-03 (bug)[f32502] crash drawing many dashed objects (reithofer,werner)
+
+2017-01-05 (bug)[dac92f] text-2.[89] (vogel)
+
+2017-01-07 (bug)[3df559] OSX: Negative bbox width (vogel)
+
+2017-01-07 (bug)[28a453] OSX: text widget index OBOE (vogel)
+
+2017-01-07 (bug)[c12af7] OSX: text-21.1 (vogel)
+
+2017-01-08 (bug)[7a838c] X11 ring buffer overflow (werner)
+
+2017-01-11 (bug)[d4fb4e] imgPhoto-4.75 (nijtmans)
+
+2017-01-18 (bug)[fab5fe] OSX: repair textDisp failures (vogel)
+
+2017-01-23 (bug)[89a638] OSX: textDisp-15.8 (vogel)
+
+2017-01-25 (bug)[1403ea] Limits on text line size on Windows (spjuth)
+
+2017-02-05 (bug)[ae32eb] textDisp fails in text custom config (vogel)
+
+2017-02-05 (bug)[7d967c] crash after IME restart (lanam,nijtmans)
+
+2017-02-22 (bug)[c492c9] disabled combobox arrow appearance (danckaert)
+
+2017-03-06 (bug)[6b3644] Fix -alpha for 16-bit color PNG (LemonMan)
+
+2017-03-11 (bug)[775273] artifacts on Ubuntu 16.10+ (nemethi)
+
+2017-03-26 (TIP 464) Win multimedia keys support (fassel,vogel)
+
+2017-03-29 (bug)[28a3c3] test BTree memleaks plugged (anonymous)
+
+2017-04-06 (bug)[db8c54] Stop freed mem access in warp pointer callback (porter)
+
+2017-04-07 (bugs) Fix calculation of ttk::notebook tab widths (vogel)
+
+2017-04-07 (bug)[291296] notebook tab management (decoster)
+
+2017-04-08 (bug)[f0188a] Win reject invalid hex color codes (bachmann)
+
+2017-04-10 (bug)[3f323b] variable struct size on XCode 8.3.1 (auriocus)
+
+2017-04-20 (bug)[061bf9] OSX scrollbar draw position (reincke,walzer,joye)
+
+2017-05-01 (bug) restore -initialfile for OSX file dialogs (reincke,gollwitzer)
+
+2017-05-06 (bug) OSX file dialog type filters (walzer)
+
+2017-05-10 (bug)[a5ba1c] race condition on Win clipboard cleanup (donchenko)
+
+2017-05-18 (bug)[2433781] center image on button (cramer)
+
+2017-05-19 (bug)[434d29] type mismatch with recent Xft (nijtmans,werner)
+
+2017-06-02 (bug)[bc43fd] paneconfigure get pane heights right (vogel)
+
+2017-06-21 (bug)[adc028] menu avoid unreleasable global grab (nash)
+
+2017-06-30 (bug)[92e028,c5eb90] User switch forced theme reset (lanam)
+
+2017-06-30 (bug)[62c5b7] segfault in [text] replace (werner)
+
+2017-07-03 (bug)[8afc6c] OSX crash in save/open dialogs (simpson,walzer)
+
+2017-08-02 (bug)[b601ce] Resource exhaustion processing corrupt GIF (nash)
+
+2017-08-03 (bug)[9eab54] Fix -initialdir for OSX file dialogs (gollwitzer)
+
+2017-08-08 (bug)[28d0b8] Follow ICCCM advice on X selection protocol (donchenko)
+
+2017-08-08 (bug)[4966ca] Scidb race in notebook tab selection (cramer)
+
+--- Released 8.6.7, August 9, 2017 --- http://core.tcl.tk/tk/ for details
+
+2016-03-07 (feature)[841280] spinbox autoswap -to/-from to get ordering (vogel)
+
+2016-03-27 (feature)[38dc27] Support <Button-6> & <Button-7> (nijtmans)
+
+2016-08-29 (TIP 449) [text] undo/redo return character range (vogel)
+
+2016-11-02 (feature) Removed undocumented command [tk_getFileType] (vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2017-02-05 (bug)[c0dbdd] Compatibility fonts shadowed system fonts (vogel)
+
+2017-03-21 (TIP 442) display text in a progressbar (zaumseil)
+
+2017-04-13 \u escaped content in msg files converted to true utf-8 (nijtmans)
+
+2017-08-24 (bug)[f1a3ca] Memleak in text operations (hume)
+
+2017-08-24 (bug)[ee40fd] Error reporting from failed console init (the)
+
+2017-08-24 (bug)[3295446] Keep console cursor visible when using history (goth)
+
+2017-08-28 (TIP 166) Extended color notation for alpha channel (bachmann)
+
+--- Released 8.7a1, September 8, 2017 --- http://core.tcl.tk/tk/ for details
