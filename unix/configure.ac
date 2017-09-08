@@ -25,7 +25,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=8.7
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a0"
+TK_PATCH_LEVEL="a2"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
