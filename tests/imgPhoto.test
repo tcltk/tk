@@ -1256,7 +1256,7 @@ test imgPhoto-18.1 {Reject corrupted GIF (binary string)} -constraints {
 } -setup {
     package require base64
     set data [base64::decode {
-	R0lGODlhwjMz//8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
+	R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
 	5qpraXIvM1JlNyAgOw==
     }]
 } -body {
@@ -1266,7 +1266,7 @@ test imgPhoto-18.1 {Reject corrupted GIF (binary string)} -constraints {
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
 test imgPhoto-18.2 {Reject corrupted GIF (base 64 string)} -setup {
     set data {
-	R0lGODlhwjMz//8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
+	R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
 	5qpraXIvM1JlNyAgOw==
     }
 } -body {
@@ -1310,8 +1310,12 @@ test imgPhoto-18.6 {Reject truncated GIF (file)} -setup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map}
 test imgPhoto-18.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
-    base64PackageNeeded
+    base64PackageNeeded nonPortable
 } -setup {
+    # About the non portability constraint of this test: see ticket [cc42cc18a5]
+    # If there is insufficient memory, the error message
+    # {not enough free memory for image buffer} should be returned.
+    # Instead, some systems (e.g. FreeBSD 11.1) terminate the test interpreter.
     package require base64
     set data [base64::decode {
 	R0lGODlhwmYz//8zM/8z/zP/MzP/////M////yH5Ciwhe
@@ -1322,7 +1326,13 @@ test imgPhoto-18.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -setup {
+test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints {
+    nonPortable
+} -setup {
+    # About the non portability constraint of this test: see ticket [cc42cc18a5]
+    # If there is insufficient memory, the error message
+    # {not enough free memory for image buffer} should be returned.
+    # Instead, some systems (e.g. FreeBSD 11.1) terminate the test interpreter.
     set data {
 	R0lGODlhwmYz//8zM/8z/zP/MzP/////M////yH5Ciwhe
 	LrcLTBCd6Tv2qW16tdK4jhV5qpraXIvM1JlNyAgOw==
@@ -1332,7 +1342,13 @@ test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.9 {Reject corrupted GIF (> 4Gb) (file)} -setup {
+test imgPhoto-18.9 {Reject corrupted GIF (> 4Gb) (file)} -constraints {
+    nonPortable
+} -setup {
+    # About the non portability constraint of this test: see ticket [cc42cc18a5]
+    # If there is insufficient memory, the error message
+    # {not enough free memory for image buffer} should be returned.
+    # Instead, some systems (e.g. FreeBSD 11.1) terminate the test interpreter.
     set fileName [file join [file dirname [info script]] corruptMangled4G.gif]
 } -body {
     image create photo gif1 -file $fileName
