@@ -511,7 +511,7 @@ StringReadDef(
             != TCL_OK) {
         return TCL_ERROR;
     }
-    if (width <= 0 || height <= 0 || colCount == 0 || rowCount == 0) {
+    if (width <= 0 || height <= 0 || rowCount == 0 || colCount == 0) {
         /*
          * No changes with zero sized input or zero sized output region
          */
