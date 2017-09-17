@@ -1801,6 +1801,7 @@ CanvasWidgetCmd(
     case CANV_RCHARS: {
 	int first, last;
 	int x1,x2,y1,y2;
+	int dontRedraw1, dontRedraw2;
 
 	if (objc != 6) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId first last string");
@@ -1831,12 +1832,16 @@ CanvasWidgetCmd(
 
 	    x1 = itemPtr->x1; y1 = itemPtr->y1;
 	    x2 = itemPtr->x2; y2 = itemPtr->y2;
-	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 
+            itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    ItemDelChars(canvasPtr, itemPtr, first, last);
-	    ItemInsert(canvasPtr, itemPtr, first, objv[5]);
+	    dontRedraw1 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
 
-	    if (!(itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW)) {
+            itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+	    ItemInsert(canvasPtr, itemPtr, first, objv[5]);
+	    dontRedraw2 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
+
+            if (!(dontRedraw1 && dontRedraw2)) {
 		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
 			x1, y1, x2, y2);
 		EventuallyRedrawItem(canvasPtr, itemPtr);
