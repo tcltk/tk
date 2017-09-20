@@ -68,11 +68,18 @@ VCVER=0
     && ![echo $(_HASH)endif >> vercl.x] \
     && ![cl -nologo -TC -P vercl.x $(ERRNULL)]
 !include vercl.i
+!if $(VCVERSION) < 1900
 !if ![echo VCVER= ^\> vercl.vc] \
     && ![set /a $(VCVERSION) / 100 - 6 >> vercl.vc]
 !include vercl.vc
 !endif
+!else
+# The simple calculation above does not apply to new Visual Studio releases
+# Keep the compiler version in its native form.
+VCVER = $(VCVERSION)
 !endif
+!endif
+
 !if ![del $(ERRNUL) /q/f vercl.x vercl.i vercl.vc]
 !endif
 
@@ -113,35 +120,35 @@ CFG_ENCODING	= \"cp1252\"
 #----------------------------------------------------------
 
 ### test for optimizations
-!if [nmakehlp -c -Ot]
+# /O2 optimization includes /Og /Oi /Ot /Oy /Ob2 /Gs /GF /Gy as per
+# documentation. Note we do NOT want /Gs as that inserts a _chkstk
+# stack probe at *every* function entry, not just those with more than
+# a page of stack allocation resulting in a performance hit.  However,
+# /O2 documentation is misleading as its stack probes are simply the
+# default page size locals allocation probes and not what is implied
+# by an explicit /Gs option.
+
+!if [nmakehlp -c -O2]
 !message *** Compiler has 'Optimizations'
 OPTIMIZING	= 1
+OPTIMIZATIONS   = -O2
 !else
 !message *** Compiler does not have 'Optimizations'
 OPTIMIZING	= 0
+OPTIMIZATIONS   = 
 !endif
 
-OPTIMIZATIONS   =
-
-!if [nmakehlp -c -Ot]
-OPTIMIZATIONS  = $(OPTIMIZATIONS) -Ot
-!endif
-
-!if [nmakehlp -c -Oi]
-OPTIMIZATIONS  = $(OPTIMIZATIONS) -Oi
-!endif
-
+# -Op improves float consistency. Note only needed for older compilers
+# Newer compilers do not need or support this option.
 !if [nmakehlp -c -Op]
 OPTIMIZATIONS  = $(OPTIMIZATIONS) -Op
 !endif
 
+# Strict floating point semantics - present in newer compilers in lieu of -Op
 !if [nmakehlp -c -fp:strict]
 OPTIMIZATIONS  = $(OPTIMIZATIONS) -fp:strict
 !endif
 
-!if [nmakehlp -c -Gs]
-OPTIMIZATIONS  = $(OPTIMIZATIONS) -Gs
-!endif
 
 !if [nmakehlp -c -GS]
 OPTIMIZATIONS  = $(OPTIMIZATIONS) -GS
