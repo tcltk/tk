@@ -326,6 +326,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkGrid.obj \
 	$(TMP_DIR)\tkImage.obj \
 	$(TMP_DIR)\tkImgBmap.obj \
+	$(TMP_DIR)\tkImgListFormat.obj \
 	$(TMP_DIR)\tkImgGIF.obj \
 	$(TMP_DIR)\tkImgPNG.obj \
 	$(TMP_DIR)\tkImgPPM.obj \

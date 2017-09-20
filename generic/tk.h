@@ -75,10 +75,10 @@ extern "C" {
 #define TK_MAJOR_VERSION	8
 #define TK_MINOR_VERSION	7
 #define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL	0
+#define TK_RELEASE_SERIAL	2
 
 #define TK_VERSION		"8.7"
-#define TK_PATCH_LEVEL		"8.7a0"
+#define TK_PATCH_LEVEL		"8.7a2"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -1566,12 +1566,13 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
  *----------------------------------------------------------------------
  *
  * Allow users to say that they don't want to alter their source to add extra
- * arguments to Tk_PhotoPutBlock() et al; DO NOT DEFINE THIS WHEN BUILDING TK.
+ * arguments to Tk_PhotoPutBlock() et al.
  *
  * This goes after the inclusion of the stubbed-decls so that the declarations
  * of what is actually there can be correct.
  */
 
+#if !defined(TK_NO_DEPRECATED) && !defined(BUILD_tk)
 #ifdef USE_COMPOSITELESS_PHOTO_PUT_BLOCK
 #   ifdef Tk_PhotoPutBlock
 #	undef Tk_PhotoPutBlock
@@ -1604,6 +1605,7 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 #   endif
 #   define Tk_PhotoSetSize		Tk_PhotoSetSize_Panic
 #endif /* USE_PANIC_ON_PHOTO_ALLOC_FAILURE */
+#endif /* !TK_NO_DEPRECATED && !BUILD_tk */
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
