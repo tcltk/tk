@@ -318,6 +318,7 @@ TK_OBJS = \
 	tkGrid.$(OBJEXT) \
 	tkImage.$(OBJEXT) \
 	tkImgBmap.$(OBJEXT) \
+	tkImgListFormat.$(OBJEXT) \
 	tkImgGIF.$(OBJEXT) \
 	tkImgPNG.$(OBJEXT) \
 	tkImgPPM.$(OBJEXT) \
