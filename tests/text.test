@@ -7305,7 +7305,22 @@ test text-35.3 {widget dump -command destroys widget} -setup {
 } -result {ok}
 
 
-test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
+test text-36.1 "bug #dd9667635d: text anchor not set" -setup {
+    destroy .t
+    pack [text .t]
+} -body {
+    .t insert end "Hello world!"
+    .t tag add sel 1.0 end
+    # this line shall not trigger error:
+    #     bad text index "tk::anchor1"
+    event generate .t <<SelectPrevLine>>
+    update
+} -cleanup {
+    destroy .t
+} -result {}
+
+
+test text-37.1 "bug #1777362: event handling with hyphenated windows" -setup {
     proc bgerror {m} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t-1]]
@@ -7318,7 +7333,7 @@ test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
 } -cleanup {
     destroy .t-1
 } -result {}
-test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
+test text-37.2 "bug #1777362: event handling with hyphenated windows" -setup {
     proc bgerror {m} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t+1]]
@@ -7331,7 +7346,7 @@ test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
 } -cleanup {
     destroy $w
 } -result {}
-test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
+test text-37.3 "bug #1777362: event handling with hyphenated windows" -setup {
     proc bgerror {m} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t*1]]
