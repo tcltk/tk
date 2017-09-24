@@ -959,6 +959,18 @@ test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constrain
     image delete photo1
     file delete ./-teapotPhotoFile
 } -result {}
+test imgPhoto-4.76 {ImgPhotoCmd procedure: copy to same image} -constraints {
+    hasTeapotPhoto 
+} -setup {
+    imageCleanup
+    image create photo photo1 -file $teapotPhotoFile
+} -body {
+    # non-regression test for bug [5239fd749b] - shall just not crash
+    photo1 copy photo1 -to 0 0 2000 1000
+    photo1 copy photo1 -subsample 2 2 -shrink
+} -cleanup {
+    imageCleanup
+} -result {}
 test imgPhoto-4.76 {ImgPhotoCmd, transparancy get: too many options} -setup {
     image create photo photo1
 } -body {
