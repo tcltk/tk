@@ -416,11 +416,6 @@ TK_CFLAGS	= $(pkgcflags)
 
 WISH_CFLAGS	= $(appcflags_nostubs)
 
-
-
-tcllibs    = $(TCLSTUBLIB) $(TCLIMPLIB)
-
-
 # Avoid 'unresolved external symbol __security_cookie' errors.
 # c.f. http://support.microsoft.com/?id=894573
 !if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
@@ -550,27 +545,26 @@ $**
 
 
 $(TKSTUBLIB): $(TKSTUBOBJS)
-	$(lib32) -nologo -nodefaultlib -out:$@ $**
+	$(MAKELIBCMD) -nodefaultlib $**
 
 
 $(WISH): $(WISHOBJS) $(TKSTUBLIB) $(TKIMPLIB)
-	$(link32) $(guilflags) -stack:2300000 -out:$@ $(guilibs) $(tcllibs) $**
+	$(MAKEGUICMD) -stack:2300000 $**
 	$(_VC_MANIFEST_EMBED_EXE)
 
 
 $(WISHC): $(WISHOBJS) $(TKSTUBLIB) $(TKIMPLIB)
-	$(link32) $(conlflags) -stack:2300000 -out:$@ $(guilibs) $(tcllibs) $**
+	$(MAKECONCMD) -stack:2300000 $**
 	$(_VC_MANIFEST_EMBED_EXE)
 
 
 $(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TKIMPLIB)
-	$(link32) $(guilflags) -stack:2300000 -out:$@ $(guilibs) $(tcllibs) $**
+	$(MAKEGUICMD) -stack:2300000 $**
 	$(_VC_MANIFEST_EMBED_EXE)
 
 
 $(CAT32): $(_TCLDIR)\win\cat.c
-	$(cc32) $(cflags) $(crt) -DCONSOLE -Fo$(TMP_DIR)\ $?
-	$(MAKECONCMD) -stack:16384 $(TMP_DIR)\cat.obj
+	$(MAKECONCMD) -DCONSOLE -stack:16384 $(TMP_DIR)\cat.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
@@ -818,13 +812,6 @@ $<
 	$(cc32) $(pkgcflags) -Fo$(TMP_DIR)\ @<<
 $<
 <<
-
-{$(RCDIR)}.rc{$(TMP_DIR)}.res:
-	$(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TMP_DIR)" $(TCL_INCLUDES) \
-	    -d DEBUG=$(DEBUG) -d UNCHECKED=$(UNCHECKED) \
-	    -d TCL_THREADS=$(TCL_THREADS) \
-	    -d STATIC_BUILD=$(STATIC_BUILD) \
-	    $<
 
 $(TMP_DIR)\tk.res: $(TMP_DIR)\wish.exe.manifest
 $(TMP_DIR)\wish.res: $(TMP_DIR)\wish.exe.manifest
