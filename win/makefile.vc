@@ -567,7 +567,11 @@ genstubs:
 
 # NOTE: you can define HHC on the command-line to override this
 !ifndef HHC
-HHC=""%ProgramFiles%\HTML Help Workshop\hhc.exe""
+!if exist("$(PROGRAMFILES_X86)\HTML Help Workshop\hhc.exe")
+HHC=$(PROGRAMFILES_X86)\HTML Help Workshop\hhc.exe
+!else
+HHC=hhc.exe
+!endif
 !endif
 HTMLDIR=$(ROOT)\html
 HTMLBASE=TclTk$(VERSION)
@@ -579,7 +583,7 @@ htmlhelp: chmsetup $(CHMFILE)
 $(CHMFILE): $(DOCDIR)\*
 	@$(TCLSH) $(TCLTOOLSDIR)\tcltk-man2html.tcl
 	@echo Compiling HTML help project
-	@$(HHC) <<$(HHPFILE) >NUL
+	@"$(HHC)" <<$(HHPFILE) >NUL
 [OPTIONS]
 Compatibility=1.1 or later
 Compiled file=$(HTMLBASE).chm
@@ -601,95 +605,12 @@ UserCmd
 chmsetup:
 	@if not exist $(HTMLDIR)\nul mkdir $(HTMLDIR)
 
-#-------------------------------------------------------------------------
-# Build the old-style Windows .hlp file
-#-------------------------------------------------------------------------
-
-HLPBASE		= $(PROJECT)$(TK_VERSION)
-HELPFILE	= $(OUT_DIR)\$(HLPBASE).hlp
-HELPCNT		= $(OUT_DIR)\$(HLPBASE).cnt
-DOCTMP_DIR	= $(OUT_DIR)\$(PROJECT)_docs
-HELPRTF		= $(DOCTMP_DIR)\$(PROJECT).rtf
-MAN2HELP	= $(DOCTMP_DIR)\man2help.tcl
-MAN2HELP2	= $(DOCTMP_DIR)\man2help2.tcl
-INDEX		= $(DOCTMP_DIR)\index.tcl
-BMP		= $(DOCTMP_DIR)\lamp.bmp
-BMP_NOPATH	= lamp.bmp
-MAN2TCL		= $(DOCTMP_DIR)\man2tcl.exe
-
-winhelp: docsetup $(HELPFILE)
-
-docsetup:
-	@if not exist $(DOCTMP_DIR)\nul mkdir $(DOCTMP_DIR)
-
-$(MAN2HELP) $(MAN2HELP2) $(INDEX): $(TCLTOOLSDIR)\$$(@F)
-	$(CPY) $(TCLTOOLSDIR)\$(@F) $(@D)
-
-$(BMP):
-	$(CPY) $(WINDIR)\rc\$(@F) $(@D)
-
-$(HELPFILE): $(HELPRTF) $(BMP)
-	cd $(DOCTMP_DIR)
-	start /wait hcrtf.exe -x <<$(PROJECT).hpj
-[OPTIONS]
-COMPRESS=12 Hall Zeck
-LCID=0x409 0x0 0x0 ; English (United States)
-TITLE=Tk Reference Manual
-BMROOT=.
-CNT=$(@B).cnt
-HLP=$(@B).hlp
-
-[FILES]
-$(PROJECT).rtf
-
-[WINDOWS]
-main="Tcl/Tk Reference Manual",,27648,(r15263976),(r4227327)
-
-[CONFIG]
-BrowseButtons()
-CreateButton(1, "Web", ExecFile("http://www.tcl.tk"))
-CreateButton(2, "SF", ExecFile("http://sf.net/projects/tcl"))
-CreateButton(3, "Wiki", ExecFile("http://wiki.tcl.tk"))
-CreateButton(4, "FAQ", ExecFile("http://www.purl.org/NET/Tcl-FAQ/"))
-<<
-	cd $(MAKEDIR)
-	@$(CPY) "$(DOCTMP_DIR)\$(@B).hlp" "$(OUT_DIR)"
-	@$(CPY) "$(DOCTMP_DIR)\$(@B).cnt" "$(OUT_DIR)"
-
-$(MAN2TCL): $(TCLTOOLSDIR)\$$(@B).c
-	$(cc32) $(pkgcflags) -Fo$(@D)\ $(TCLTOOLSDIR)\$(@B).c
-	$(MAKECONCMD) -stack:16384 $(@D)\man2tcl.obj
-	$(_VC_MANIFEST_EMBED_EXE)
-
-$(HELPRTF): $(MAN2TCL) $(MAN2HELP) $(MAN2HELP2) $(INDEX)
-	$(TCLSH) $(MAN2HELP) -bitmap $(BMP_NOPATH) $(PROJECT) $(TK_VERSION) $(DOCDIR:\=/)
-
 install-docs:
-!if exist($(HELPFILE))
-	$(CPY) "$(HELPFILE)" "$(DOC_INSTALL_DIR)\"
-	$(CPY) "$(HELPCNT)" "$(DOC_INSTALL_DIR)\"
-	$(TCLSH) <<
-puts "Installing $(PROJECT)'s helpfile contents into Tcl's ..."
-set f [open "$(DOC_INSTALL_DIR:\=/)/tcl$(TK_VERSION).cnt" r]
-while {![eof $$f]} {
-    if {[regexp {:Include $(PROJECT)([0-9]{2}).cnt} [gets $$f] dummy ver]} {
-	if {$$ver == $(TK_VERSION)} {
-	    puts "Already installed."
-	    exit
-	} else {
-	    # do something here logical to remove (or replace) it.
-	    puts "$$ver != $(TK_VERSION), unfinished code path, die, die!"
-	    exit 1
-	}
-    }
-}
-close $$f
-set f [open "$(DOC_INSTALL_DIR:\=/)/tcl$(TK_VERSION).cnt" a]
-puts $$f {:Include $(HLPBASE).cnt}
-close $$f
-<<
-	start /wait winhlp32 -g $(DOC_INSTALL_DIR)\tcl$(TK_VERSION).hlp
+!if exist("$(CHMFILE)")
+	@echo Installing compiled HTML help
+	@$(CPY) "$(CHMFILE)" "$(DOC_INSTALL_DIR)\"
 !endif
+# "emacs font-lock highlighting fix
 
 #---------------------------------------------------------------------
 # Special case object file targets
