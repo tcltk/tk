@@ -411,11 +411,6 @@ PRJ_DEFINES	= -DBUILD_ttk $(CONFIG_DEFS) -Dinline=__inline -D _CRT_SECURE_NO_DEP
 # Additional Link libraries needed beyond those in rules.vc
 PRJ_LIBS   = user32.lib userenv.lib
 
-
-TK_CFLAGS	= $(pkgcflags)
-
-WISH_CFLAGS	= $(appcflags_nostubs)
-
 # Avoid 'unresolved external symbol __security_cookie' errors.
 # c.f. http://support.microsoft.com/?id=894573
 !if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
@@ -716,24 +711,24 @@ close $$f
 #---------------------------------------------------------------------
 
 $(TMP_DIR)\testMain.obj: $(WINDIR)\winMain.c
-	$(cc32) $(WISH_CFLAGS) -DTK_TEST \
+	$(cc32) $(appcflags_nostubs) -DTK_TEST \
 	    -DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
-	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
+	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
 $(TMP_DIR)\tkOldTest.obj: $(GENERICDIR)\tkOldTest.c
-	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
+	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
 $(TMP_DIR)\tkWinTest.obj: $(WINDIR)\tkWinTest.c
-	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
+	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
 $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
-	$(cc32) $(WISH_CFLAGS) -Fo$@ $?
+	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
 $(TMP_DIR)\winMain.obj: $(WINDIR)\winMain.c
-	$(cc32) $(WISH_CFLAGS) \
+	$(cc32) $(appcflags_nostubs) \
 	    -DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
 	    -Fo$@ $?
 
