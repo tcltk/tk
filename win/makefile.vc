@@ -11,37 +11,28 @@
 # Copyright (c) 2001-2005 ActiveState Corporation.
 # Copyright (c) 2001-2004 David Gravereaux.
 # Copyright (c) 2003-2008 Pat Thoyts.
+# Copyright (c) 2017 Ashok P. Nadkarni
 #------------------------------------------------------------------------------
-
-# Check to see we are configured to build with MSVC (MSDEVDIR, MSVCDIR or
-# VCINSTALLDIR) or with the MS Platform SDK (MSSDK or WindowsSDKDir)
-!if !defined(MSDEVDIR) && !defined(MSVCDIR) && !defined(VCINSTALLDIR) && !defined(MSSDK) && !defined(WINDOWSSDKDIR)
-MSG = ^
-You need to run vcvars32.bat from Developer Studio or setenv.bat from the^
-Platform SDK first to setup the environment.  Jump to this line to read^
-the build instructions.
-!error $(MSG)
-!endif
 
 #------------------------------------------------------------------------------
 # HOW TO USE this makefile:
 #
-# 1)  It is now necessary to have MSVCDir, MSDevDir or MSSDK set in the
-#     environment.  This is used as a check to see if vcvars32.bat had been
-#     run prior to running nmake or during the installation of Microsoft
-#     Visual C++, MSVCDir had been set globally and the PATH adjusted.
-#     Either way is valid.
+# 1)  It is necessary to have the appropriate Visual C++ environment
+#     set up before invoking nmake. The steps required depend on which
+#     version of Visual Studio and/or the Windows SDK you are building
+#     against and are not described here. With Visual Studio, the simplest
+#     is to start a command shell using one of the installed short cuts.
+#     An alternative is to run vcvars32.bat, vcvars64.bat, vcvarsamd64_x86.bat
+#     etc. depending on the host and target architectures. If compiling
+#     with the Windows SDK instead, run (again depending on the SDK version)
+#     the setenv.bat or equivalent batch file from the command prompt.
 #
-#     You'll need to run vcvars32.bat contained in the MsDev's vc(98)/bin
-#     directory to setup the proper environment, if needed, for your
-#     current setup.  This is a needed bootstrap requirement and allows the
-#     swapping of different environments to be easier.
-#
-# 2)  To use the Platform SDK (not expressly needed), run setenv.bat after
+#     NOTE: For older (Visual C++ 6 or the 2003 SDK), to use the Platform
+#     SDK (not expressly needed), run setenv.bat after
 #     vcvars32.bat according to the instructions for it.  This can also
 #     turn on the 64-bit compiler, if your SDK has it.
 #
-# 3)  Targets are:
+# 2)  Targets are:
 #	release  -- Builds the core, the shell and the dlls. (default)
 #	dlls     -- Just builds the windows extensions.
 #	shell    -- Just builds the shell and the core.
@@ -62,13 +53,11 @@ the build instructions.
 #		    troff manual pages found in $(ROOT)\doc. You need to
 #		    have installed the HTML Help Compiler package from Microsoft
 #		    to produce the .chm file.
-#	winhelp  -- Builds the windows .hlp file for Tcl from the troff man
-#		    files found in $(ROOT)\doc.
 #
 # 4)  Macros usable on the commandline:
 #	TCLDIR=<path>
-#		Sets the location for where to find the Tcl headers and
-#		libraries.  The install point is assumed when not specified.
+#		Sets the location for where to find the Tcl source headers and
+#		libraries.  The path ../../tcl is assumed when not specified.
 #		Tk does need the source directory, though.  Tk comes very close
 #		to not needing the sources, but does, in fact, require them.
 #
@@ -76,18 +65,17 @@ the build instructions.
 #		Sets where to install Tcl from the built binaries.
 #		C:\Progra~1\Tcl is assumed when not specified.
 #
-#	OPTS=loimpact,msvcrt,nothreads,noxp,pdbs,profile,square,static,staticpkg,symbols,unchecked,none
+#	OPTS=loimpact,msvcrt,noxp,pdbs,profile,square,static,staticpkg,symbols,unchecked,none
 #		Sets special options for the core.  The default is for none.
 #		Any combination of the above may be used (comma separated).
 #		'none' will over-ride everything to nothing.
 #
 #		loimpact = Adds a flag for how NT treats the heap to keep memory
-#			   in use, low.  This is said to impact alloc performance.
+#			   in use, low. Said to impact alloc performance.
 #		msvcrt   = Affects the static option only to switch it from
 #			   using libcmt(d) as the C runtime [by default] to
 #			   msvcrt(d). This is useful for static embedding
 #			   support.
-#		nothreads= Turns off full multithreading support.
 #		noxp     = If you do not have the uxtheme.h header then you
 #                          cannot include support for XP themeing.
 #		square   = Include the demo square widget.
@@ -124,19 +112,19 @@ the build instructions.
 #		nodep	 = Turns off compatability macros to ensure the core
 #			    isn't being built with deprecated functions.
 #
-#	MACHINE=(ALPHA|AMD64|IA64|IX86)
+#	MACHINE=(AMD64|IX86)
 #		Set the machine type used for the compiler, linker, and
 #		resource compiler.  This hook is needed to tell the tools
-#		when alternate platforms are requested.  IX86 is the default
-#		when not specified. If the CPU environment variable has been
-#		set (ie: recent Platform SDK) then MACHINE is set from CPU.
+#		when alternate platforms are requested. THIS SHOULD NORMALLY
+#               NOT BE SET AS IT IS AUTOMATICALLY DETECTED BASED ON THE
+#               COMPILER IN USE.
 #
 #	TMP_DIR=<path>
 #	OUT_DIR=<path>
 #		Hooks to allow the intermediate and output directories to be
 #		changed.  $(OUT_DIR) is assumed to be
-#		$(BINROOT)\(Release|Debug) based on if symbols are requested.
-#		$(TMP_DIR) will de $(OUT_DIR)\<buildtype> by default.
+#               .\(Release|Debug) based on if symbols are requested.
+#		$(TMP_DIR) will be $(OUT_DIR)\<buildtype> by default.
 #
 #	TESTPAT=<file>
 #		Reads the tests requested to be run from this file.
@@ -146,18 +134,13 @@ the build instructions.
 #	Basic syntax of calling nmake looks like this:
 #	nmake [-nologo] -f makefile.vc [target|macrodef [target|macrodef] [...]]
 #
-#                        Standard (no frills)
-#       c:\tk_src\win\>c:\progra~1\micros~1\vc98\bin\vcvars32.bat
-#       Setting environment for using Microsoft Visual C++ tools.
+#                        Standard (no frills, assumes Tcl source in ../../tcl)
 #       c:\tk_src\win\>nmake -f makefile.vc release
 #       c:\tk_src\win\>nmake -f makefile.vc install INSTALLDIR=c:\progra~1\tcl
 #
-#                         Building for Win64
-#       c:\tk_src\win\>c:\progra~1\micros~1\vc98\bin\vcvars32.bat
-#       Setting environment for using Microsoft Visual C++ tools.
-#       c:\tk_src\win\>c:\progra~1\platfo~1\setenv.bat /pre64 /RETAIL
-#       Targeting Windows pre64 RETAIL
-#       c:\tk_src\win\>nmake -f makefile.vc MACHINE=IA64
+#                        Standard (release symbols, specifies Tcl source)
+#       c:\tk_src\win\>nmake -f makefile.vc release TCLDIR=c:\src\tcl OPTS=pdbs
+#       c:\tk_src\win\>nmake -f makefile.vc install TCLDIR=c:\src\tcl INSTALLDIR=c:\progra~1\tcl
 #
 #------------------------------------------------------------------------------
 #==============================================================================
@@ -182,16 +165,29 @@ Please `cd` to its location first.
 !error $(MSG)
 !endif
 
+# The PROJECT macro is used by rules.vc for generating appropriate
+# macros and rules.
 PROJECT = tk
-!include "rules.vc"
+# Default target to build if no target is specified. If unspecified, the
+# rules.vc file will set up "all" as the target.
+DEFAULT_BUILD_TARGET = release
 
+# The rules.vc file does much of the hard work in terms of defining
+# the build configuration, macros, output directories etc.
+!include "../../tcl/win/rules.vc"
+
+TK_DOTVERSION	= $(TK_MAJOR_VERSION).$(TK_MINOR_VERSION)
+TK_VERSION	= $(TK_MAJOR_VERSION)$(TK_MINOR_VERSION)
+
+# TCLINSTALL is set to 1 by rules.vc to indicate we are building against
+# an installed Tcl and 0 if building against Tcl source. Tk needs the latter.
 !if $(TCLINSTALL)
 !message *** Warning: Tk requires the source distribution of Tcl to build from,
 !message ***    at this time, sorry.  Please set the TCLDIR macro to point to the
 !message ***    Tcl sources.
 !endif
 
-# Extra makefile options processing...
+# Extra makefile options processing for non-standard OPTS values ...
 !if "$(OPTS)" == "" || [nmakehlp -f "$(OPTS)" "none"]
 HAVE_UXTHEME_H    = 1
 TTK_SQUARE_WIDGET = 0
@@ -210,32 +206,12 @@ TTK_SQUARE_WIDGET   = 0
 !endif
 !endif
 
-STUBPREFIX = $(PROJECT)stub
-WISHNAMEPREFIX = wish
-
-BINROOT		= $(MAKEDIR)     # originally .
-ROOT		= $(MAKEDIR)\..  # originally ..
 
 TK_LIBRARY	= $(ROOT)\library
-
-TKIMPLIB	= "$(OUT_DIR)\$(PROJECT)$(TK_VERSION)$(SUFX).lib"
-TKLIBNAME	= $(PROJECT)$(TK_VERSION)$(SUFX).$(EXT)
-TKLIB		= "$(OUT_DIR)\$(TKLIBNAME)"
-
-TKSTUBLIBNAME	= $(STUBPREFIX)$(TK_VERSION).lib
-TKSTUBLIB	= "$(OUT_DIR)\$(TKSTUBLIBNAME)"
-
-WISH 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)$(TK_VERSION)$(SUFX).exe"
 WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(TK_VERSION)$(SUFX).exe"
 
 TKTEST		= "$(OUT_DIR)\$(PROJECT)test.exe"
 CAT32		= "$(OUT_DIR)\cat32.exe"
-
-LIB_INSTALL_DIR		= $(_INSTALLDIR)\lib
-BIN_INSTALL_DIR		= $(_INSTALLDIR)\bin
-DOC_INSTALL_DIR		= $(_INSTALLDIR)\doc
-SCRIPT_INSTALL_DIR	= $(_INSTALLDIR)\lib\$(PROJECT)$(TK_DOTVERSION)
-INCLUDE_INSTALL_DIR	= $(_INSTALLDIR)\include
 
 WISHOBJS = \
 	$(TMP_DIR)\winMain.obj \
@@ -409,17 +385,15 @@ TKSTUBOBJS = \
 	$(TMP_DIR)\tkStubLib.obj \
 	$(TMP_DIR)\ttkStubLib.obj
 
-
-WINDIR          = $(ROOT)\win
-GENERICDIR	= $(ROOT)\generic
+### The following paths CANNOT have spaces in them as they appear on
+### the left side of implicit rules.
 XLIBDIR		= $(ROOT)\xlib
 TTKDIR		= $(ROOT)\generic\ttk
 BITMAPDIR	= $(ROOT)\bitmaps
-DOCDIR		= $(ROOT)\doc
-RCDIR		= $(WINDIR)\rc
 
-TK_INCLUDES	= -I"$(WINDIR)" -I"$(GENERICDIR)" -I"$(BITMAPDIR)" -I"$(XLIBDIR)" \
-			$(TCL_INCLUDES)
+# Additional include and C macro definitions for the implicit rules
+# defined in rules.vc
+PRJ_INCLUDES	= -I"$(BITMAPDIR)" -I"$(XLIBDIR)"
 
 CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
 		 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 \
@@ -432,90 +406,21 @@ CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
 		 -DTTK_SQUARE_WIDGET=1 \
 !endif
 
-TK_DEFINES	=-DBUILD_ttk $(OPTDEFINES)  $(CONFIG_DEFS) -Dinline=__inline
+PRJ_DEFINES	= -DBUILD_ttk $(CONFIG_DEFS) -Dinline=__inline -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
 
-#---------------------------------------------------------------------
-# Compile flags
-#---------------------------------------------------------------------
-
-!if !$(DEBUG)
-!if $(OPTIMIZING)
-### This cranks the optimization level to maximize speed
-###  We can't use -O2 because sometimes it causes problems.
-cdebug	= $(OPTIMIZATIONS)
-!else
-cdebug	=
-!endif
-!if $(SYMBOLS)
-cdebug	= $(cdebug) -Zi
-!endif
-!else if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
-### Warnings are too many, can't support warnings into errors.
-cdebug	= -Zi -Od $(DEBUGFLAGS)
-!else
-cdebug	= -Zi -WX $(DEBUGFLAGS)
-!endif
-
-### Declarations common to all compiler options
-cwarn = $(WARNINGS) -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
-cflags = -nologo -c $(COMPILERFLAGS) $(cwarn) -Fp$(TMP_DIR)^\
-
-!if $(MSVCRT)
-!if $(DEBUG) && !$(UNCHECKED)
-crt = -MDd
-!else
-crt = -MD
-!endif
-!else
-!if $(DEBUG) && !$(UNCHECKED)
-crt = -MTd
-!else
-crt = -MT
-!endif
-!endif
-
-BASE_CFLAGS	= $(cdebug) $(cflags) $(crt) $(TK_INCLUDES)
-TK_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES) -DUSE_TCL_STUBS
-CON_CFLAGS	= $(cdebug) $(cflags) $(crt) -DCONSOLE
-WISH_CFLAGS	= $(BASE_CFLAGS) $(TK_DEFINES)
-STUB_CFLAGS     = $(cflags) $(cdebug) $(TK_DEFINES)
+# Additional Link libraries needed beyond those in rules.vc
+PRJ_LIBS   = user32.lib userenv.lib
 
 
-#---------------------------------------------------------------------
-# Link flags
-#---------------------------------------------------------------------
+TK_CFLAGS	= $(pkgcflags)
 
-!if $(DEBUG)
-ldebug	= -debug -debugtype:cv
-!else
-ldebug	= -release -opt:ref -opt:icf,3
-!if $(SYMBOLS)
-ldebug	= $(ldebug) -debug -debugtype:cv
-!endif
-!endif
+WISH_CFLAGS	= $(appcflags_nostubs)
 
-### Declarations common to all linker options
-lflags	= -nologo -machine:$(MACHINE) $(LINKERFLAGS) $(ldebug)
 
-!if $(PROFILE)
-lflags	= $(lflags) -profile
-!endif
-
-!if $(MSVCRT) && !($(DEBUG) && !$(UNCHECKED)) && $(VCVERSION) >= 1900
-lflags	= $(lflags) -nodefaultlib:libucrt.lib
-!endif
-
-!if $(LOIMPACT)
-lflags	= $(lflags) -ws:aggressive
-!endif
-
-dlllflags = $(lflags) -dll
-conlflags = $(lflags) -subsystem:console
-guilflags = $(lflags) -subsystem:windows
 
 tcllibs    = $(TCLSTUBLIB) $(TCLIMPLIB)
 
-baselibs   = netapi32.lib kernel32.lib user32.lib advapi32.lib userenv.lib ws2_32.lib
+
 # Avoid 'unresolved external symbol __security_cookie' errors.
 # c.f. http://support.microsoft.com/?id=894573
 !if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
@@ -664,8 +569,8 @@ $(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 
 
 $(CAT32): $(_TCLDIR)\win\cat.c
-	$(cc32) $(CON_CFLAGS) -Fo$(TMP_DIR)\ $?
-	$(link32) $(conlflags) -out:$@ -stack:16384 $(TMP_DIR)\cat.obj $(baselibs)
+	$(cc32) $(cflags) $(crt) -DCONSOLE -Fo$(TMP_DIR)\ $?
+	$(MAKECONCMD) -stack:16384 $(TMP_DIR)\cat.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
@@ -778,7 +683,7 @@ CreateButton(4, "FAQ", ExecFile("http://www.purl.org/NET/Tcl-FAQ/"))
 	@$(CPY) "$(DOCTMP_DIR)\$(@B).cnt" "$(OUT_DIR)"
 
 $(MAN2TCL): $(TCLTOOLSDIR)\$$(@B).c
-	$(cc32) $(TK_CFLAGS) -Fo$(@D)\ $(TCLTOOLSDIR)\$(@B).c
+	$(cc32) $(pkgcflags) -Fo$(@D)\ $(TCLTOOLSDIR)\$(@B).c
 	$(link32) $(conlflags) -out:$@ -stack:16384 $(@D)\man2tcl.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
@@ -839,14 +744,14 @@ $(TMP_DIR)\winMain.obj: $(WINDIR)\winMain.c
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -DTK_ASCII_MAIN -Fo$@ $?
+	$(cc32) $(pkgcflags) -DTK_ASCII_MAIN -Fo$@ $?
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
 # and no reference made to a C runtime.
 
 $(TMP_DIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
-	$(cc32) $(STUB_CFLAGS) $(TK_INCLUDES) -Zl -DSTATIC_BUILD -Fo$@ $?
+	$(cc32) $(stubscflags) -Fo$@ $?
 
 
 $(TMP_DIR)\wish.exe.manifest: $(WINDIR)\wish.exe.manifest.in
@@ -900,27 +805,17 @@ $(TMP_DIR)\tk.res: \
 #---------------------------------------------------------------------
 
 {$(XLIBDIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
-$<
-<<
-
-{$(GENERICDIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+	$(cc32) $(pkgcflags) -Fo$(TMP_DIR)\ @<<
 $<
 <<
 
 {$(TTKDIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
-$<
-<<
-
-{$(WINDIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+	$(cc32) $(pkgcflags) -Fo$(TMP_DIR)\ @<<
 $<
 <<
 
 {$(ROOT)\unix}.c{$(TMP_DIR)}.obj::
-	$(cc32) -DBUILD_tk $(TK_CFLAGS) -Fo$(TMP_DIR)\ @<<
+	$(cc32) $(pkgcflags) -Fo$(TMP_DIR)\ @<<
 $<
 <<
 
@@ -945,7 +840,7 @@ $(TMP_DIR)\wish.res: $(TMP_DIR)\wish.exe.manifest
 install-binaries:
 	@echo installing binaries
 	@$(CPY) "$(WISH)" "$(BIN_INSTALL_DIR)\"
-!if $(TKLIB) != $(TKIMPLIB)
+!if "$(TKLIB)" != "$(TKIMPLIB)"
 	@$(CPY) "$(TKLIB)" "$(BIN_INSTALL_DIR)\"
 !endif
 	@$(CPY) "$(TKIMPLIB)" "$(LIB_INSTALL_DIR)\"
@@ -992,7 +887,7 @@ install-libraries:
 #---------------------------------------------------------------------
 
 tidy:
-!if $(TKLIB) != $(TKIMPLIB)
+!if "$(TKLIB)" != "$(TKIMPLIB)"
 	@echo Removing $(TKLIB) ...
 	@if exist $(TKLIB) del $(TKLIB)
 !endif
@@ -1005,24 +900,3 @@ tidy:
 	@echo Removing $(TKSTUBLIB) ...
 	@if exist $(TKSTUBLIB) del $(TKSTUBLIB)
 
-clean:
-	@echo Cleaning $(TMP_DIR)\* ...
-	@if exist $(TMP_DIR)\nul $(RMDIR) $(TMP_DIR)
-	@echo Cleaning $(WINDIR)\nmakehlp.obj ...
-	@if exist $(WINDIR)\nmakehlp.obj del $(WINDIR)\nmakehlp.obj
-	@echo Cleaning $(WINDIR)\nmakehlp.exe ...
-	@if exist $(WINDIR)\nmakehlp.exe del $(WINDIR)\nmakehlp.exe
-	@echo Cleaning $(WINDIR)\_junk.pch ...
-	@if exist $(WINDIR)\_junk.pch del $(WINDIR)\_junk.pch
-	@echo Cleaning $(WINDIR)\vercl.x ...
-	@if exist $(WINDIR)\vercl.x del $(WINDIR)\vercl.x
-	@echo Cleaning $(WINDIR)\vercl.i ...
-	@if exist $(WINDIR)\vercl.i del $(WINDIR)\vercl.i
-	@echo Cleaning $(WINDIR)\versions.vc ...
-	@if exist $(WINDIR)\versions.vc del $(WINDIR)\versions.vc
-
-realclean: hose
-
-hose:
-	@echo Hosing $(OUT_DIR)\* ...
-	@if exist $(OUT_DIR)\nul $(RMDIR) $(OUT_DIR)
