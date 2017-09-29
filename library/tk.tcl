@@ -611,7 +611,7 @@ proc ::tk::AmpMenuArgs {widget add type args} {
 	    lappend options $opt $val
 	}
     }
-    $widget add $type {*}$options
+    $widget $add $type {*}$options
 }
 
 # ::tk::FindAltKeyTarget --
