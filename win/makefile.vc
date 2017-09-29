@@ -206,7 +206,6 @@ TTK_SQUARE_WIDGET   = 0
 !endif
 !endif
 
-
 TK_LIBRARY	= $(ROOT)\library
 WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(TK_VERSION)$(SUFX).exe"
 
@@ -409,20 +408,7 @@ CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= -DBUILD_ttk $(CONFIG_DEFS) -Dinline=__inline -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-PRJ_LIBS   = user32.lib userenv.lib
-
-# Avoid 'unresolved external symbol __security_cookie' errors.
-# c.f. http://support.microsoft.com/?id=894573
-!if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
-!if $(VCVERSION) > 1399 && $(VCVERSION) < 1500
-baselibs   = $(baselibs) bufferoverflowU.lib
-!endif
-!endif
-!if $(MSVCRT) && !($(DEBUG) && !$(UNCHECKED)) && $(VCVERSION) >= 1900
-baselibs   = $(baselibs) ucrt.lib
-!endif
-
-guilibs	  = $(baselibs) gdi32.lib
+PRJ_LIBS   = gdi32.lib user32.lib userenv.lib
 
 
 #---------------------------------------------------------------------
@@ -526,12 +512,11 @@ $(TKIMPLIB): $(TKLIB)
 
 $(TKLIB): $(TKOBJS)
 !if $(STATIC_BUILD)
-	$(lib32) -nologo -out:$@ @<<
+	$(MAKELIBCMD) @<<
 $**
 <<
 !else
-	$(link32) $(dlllflags) -out:$@ $(guilibs) \
-		$(TCLSTUBLIB) @<<
+	$(MAKEDLLCMD) @<<
 $**
 <<
 	$(_VC_MANIFEST_EMBED_DLL)
@@ -673,7 +658,7 @@ CreateButton(4, "FAQ", ExecFile("http://www.purl.org/NET/Tcl-FAQ/"))
 
 $(MAN2TCL): $(TCLTOOLSDIR)\$$(@B).c
 	$(cc32) $(pkgcflags) -Fo$(@D)\ $(TCLTOOLSDIR)\$(@B).c
-	$(link32) $(conlflags) -out:$@ -stack:16384 $(@D)\man2tcl.obj
+	$(MAKECONCMD) -stack:16384 $(@D)\man2tcl.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
 $(HELPRTF): $(MAN2TCL) $(MAN2HELP) $(MAN2HELP2) $(INDEX)
