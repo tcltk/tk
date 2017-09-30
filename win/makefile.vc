@@ -206,7 +206,6 @@ TTK_SQUARE_WIDGET   = 0
 !endif
 !endif
 
-TK_LIBRARY	= $(ROOT)\library
 WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(TK_VERSION)$(SUFX).exe"
 
 TKTEST		= "$(OUT_DIR)\$(PROJECT)test.exe"
@@ -436,7 +435,7 @@ test: test-classic test-ttk
 
 test-classic: setup $(TKTEST) $(TKLIB) $(CAT32)
 	@set TCL_LIBRARY=$(TCL_LIBRARY:\=/)
-	@set TK_LIBRARY=$(TK_LIBRARY:\=/)
+	@set TK_LIBRARY=$(LIBDIR:\=/)
 	@set TCLLIBPATH=
 !if $(TCLINSTALL)
 	@set PATH=$(_TCLDIR)\bin;$(PATH)
@@ -447,7 +446,7 @@ test-classic: setup $(TKTEST) $(TKLIB) $(CAT32)
 
 test-ttk: setup $(TKTEST) $(TKLIB) $(CAT32)
 	@set TCL_LIBRARY=$(TCL_LIBRARY:\=/)
-	@set TK_LIBRARY=$(TK_LIBRARY:\=/)
+	@set TK_LIBRARY=$(LIBDIR:\=/)
 	@set TCLLIBPATH=
 !if $(TCLINSTALL)
 	@set PATH=$(_TCLDIR)\bin;$(PATH)
@@ -458,7 +457,7 @@ test-ttk: setup $(TKTEST) $(TKLIB) $(CAT32)
 
 runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
 	@set TCL_LIBRARY=$(TCL_LIBRARY:\=/)
-	@set TK_LIBRARY=$(TK_LIBRARY:\=/)
+	@set TK_LIBRARY=$(LIBDIR:\=/)
 	@set TCLLIBPATH=
 !if $(TCLINSTALL)
 	@set PATH=$(_TCLDIR)\bin;$(PATH)
@@ -469,7 +468,7 @@ runtest: setup $(TKTEST) $(TKLIB) $(CAT32)
 
 rundemo: setup $(TKTEST) $(TKLIB) $(CAT32)
 	@set TCL_LIBRARY=$(TCL_LIBRARY:\=/)
-	@set TK_LIBRARY=$(TK_LIBRARY:\=/)
+	@set TK_LIBRARY=$(LIBDIR:\=/)
 	@set TCLLIBPATH=
 !if $(TCLINSTALL)
 	@set PATH=$(_TCLDIR)\bin;$(PATH)
@@ -480,7 +479,7 @@ rundemo: setup $(TKTEST) $(TKLIB) $(CAT32)
 
 shell: setup $(WISH)
 	@set TCL_LIBRARY=$(TCL_LIBRARY:\=/)
-	@set TK_LIBRARY=$(TK_LIBRARY:\=/)
+	@set TK_LIBRARY=$(LIBDIR:\=/)
 	@set TCLLIBPATH=
 !if $(TCLINSTALL)
 	@set PATH=$(_TCLDIR)\bin;$(PATH)
@@ -493,7 +492,7 @@ shell: setup $(WISH)
 
 dbgshell: setup $(WISH)
 	@set TCL_LIBRARY=$(TCL_LIBRARY:\=/)
-	@set TK_LIBRARY=$(TK_LIBRARY:\=/)
+	@set TK_LIBRARY=$(LIBDIR:\=/)
 	@set TCLLIBPATH=
 !if $(TCLINSTALL)
 	@set PATH=$(_TCLDIR)\bin;$(PATH)
@@ -757,16 +756,16 @@ install-libraries:
 	@$(CPY) "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
 	@echo installing script library
-	@$(CPY) "$(ROOT)\library\*" "$(SCRIPT_INSTALL_DIR)\"
+	@$(CPY) "$(LIBDIR)\*" "$(SCRIPT_INSTALL_DIR)\"
 	@echo installing theme library
-	@$(CPY) "$(ROOT)\library\ttk\*" "$(SCRIPT_INSTALL_DIR)\ttk\"
-	@echo installing demos
-	@$(CPY) "$(ROOT)\library\demos\*" "$(SCRIPT_INSTALL_DIR)\demos\"
-	@$(CPY) "$(ROOT)\library\demos\images\*" "$(SCRIPT_INSTALL_DIR)\demos\images\"
+	@$(CPY) "$(LIBDIR)\ttk\*" "$(SCRIPT_INSTALL_DIR)\ttk\"
 	@echo installing images
-	@$(CPY) "$(ROOT)\library\images\*" "$(SCRIPT_INSTALL_DIR)\images\"
+	@$(CPY) "$(LIBDIR)\images\*" "$(SCRIPT_INSTALL_DIR)\images\"
 	@echo installing language files
-	@$(CPY) "$(ROOT)\library\msgs\*" "$(SCRIPT_INSTALL_DIR)\msgs\"
+	@$(CPY) "$(LIBDIR)\msgs\*" "$(SCRIPT_INSTALL_DIR)\msgs\"
+	@echo installing demos
+	@$(CPY) "$(DEMODIR)\*" "$(DEMO_INSTALL_DIR)\"
+	@$(CPY) "$(DEMODIR)\images\*" "$(DEMO_INSTALL_DIR)\images\"
 
 #"
 
