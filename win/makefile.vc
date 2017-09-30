@@ -407,7 +407,7 @@ CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= -DBUILD_ttk $(CONFIG_DEFS) -Dinline=__inline -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-PRJ_LIBS   = gdi32.lib user32.lib userenv.lib
+PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib
 
 
 #---------------------------------------------------------------------
@@ -501,27 +501,16 @@ dbgshell: setup $(WISH)
 !endif
 	windbg $(WISH)
 
-setup:
-	@if not exist $(OUT_DIR)\nul mkdir $(OUT_DIR)
-	@if not exist $(TMP_DIR)\nul mkdir $(TMP_DIR)
-
 !if !$(STATIC_BUILD)
 $(TKIMPLIB): $(TKLIB)
 !endif
 
 $(TKLIB): $(TKOBJS)
-!if $(STATIC_BUILD)
-	$(MAKELIBCMD) @<<
-$**
-<<
-!else
-	$(MAKEDLLCMD) @<<
+	$(MAKEBINCMD) @<<
 $**
 <<
 	$(_VC_MANIFEST_EMBED_DLL)
-	-@del $*.exp
-!endif
-
+	@if exist $*.exp del $*.exp
 
 $(TKSTUBLIB): $(TKSTUBOBJS)
 	$(MAKELIBCMD) -nodefaultlib $**
