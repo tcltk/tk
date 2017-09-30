@@ -37,7 +37,8 @@ _RULES_VC = 1
 # 11. Construct the paths where the package is to be installed
 # 12. Set up the actual options passed to compiler and linker based
 #     on the information gathered above.
-# 13. Define some standard build targets and implicit rules.
+# 13. Define some standard build targets and implicit rules. These may
+#     be optionally disabled by the parent makefile.
 # 14. (For extensions only.) Compare the configuration of the target
 #     Tcl and the extensions and warn against discrepancies.
 #
@@ -134,6 +135,16 @@ GENERICDIR	= $(ROOT)\generic
 !ifndef TOOLSDIR
 TOOLSDIR	= $(ROOT)\tools
 !endif
+!ifndef LIBDIR
+LIBDIR          = $(ROOT)\library
+!endif
+!ifndef DEMODIR
+!if exist("$(LIBDIR)\demos")
+DEMODIR		= $(LIBDIR)\demos
+!else
+DEMODIR		= $(ROOT)\demos
+!endif
+!endif # ifndef DEMODIR
 # Do NOT enclose WINDIR in a !ifndef because Windows always defines
 # WINDIR env var to point to c:\windows!
 # TBD - This is a potentially dangerous conflict, rename WINDIR to
@@ -937,37 +948,36 @@ TCLSH_NATIVE	= $(TCLSH)
 !endif
 
 # Do the same for Tk and Tk extensions that require the Tk libraries
-!if "$(PROJECT)" == "tk"
-
+!if "$(PROJECT)" == "tk" || defined(PROJECT_REQUIRES_TK)
 WISHNAMEPREFIX = wish
-WISH 		= $(OUT_DIR)\$(WISHNAMEPREFIX)$(TK_VERSION)$(SUFX).exe
-TKSTUBLIBNAME	= $(STUBPREFIX)$(TK_VERSION).lib
-TKSTUBLIB	= $(OUT_DIR)\$(TKSTUBLIBNAME)
-TKIMPLIB	= $(OUT_DIR)\$(PROJECT)$(TK_VERSION)$(SUFX).lib
+WISHNAME = $(WISHNAMEPREFIX)$(TK_VERSION)$(SUFX).exe
 TKLIBNAME	= $(PROJECT)$(TK_VERSION)$(SUFX).$(EXT)
+TKSTUBLIBNAME	= tkstub$(TK_VERSION).lib
+TKIMPLIBNAME	= tk$(TK_VERSION)$(SUFX).lib
+
+!if "$(PROJECT)" == "tk"
+WISH 		= $(OUT_DIR)\$(WISHNAME)
+TKSTUBLIB	= $(OUT_DIR)\$(TKSTUBLIBNAME)
+TKIMPLIB	= $(OUT_DIR)\$(TKIMPLIBNAME)
 TKLIB		= $(OUT_DIR)\$(TKLIBNAME)
 TK_INCLUDES    = -I"$(WINDIR)" -I"$(GENERICDIR)"
 
-!elseif defined(PROJECT_REQUIRES_TK)
+!else # effectively PROJECT_REQUIRES_TK
 
 !if $(TKINSTALL) # Building against installed Tk
-
-WISH		= $(_TKDIR)\bin\wish$(TK_VERSION)$(SUFX).exe
-TKSTUBLIB	= $(_TKDIR)\lib\tkstub$(TK_VERSION).lib
-TKIMPLIB	= $(_TKDIR)\lib\tk$(TK_VERSION)$(SUFX).lib
+WISH		= $(_TKDIR)\bin\$(WISHNAME)
+TKSTUBLIB	= $(_TKDIR)\lib\$(TKSTUBLIBNAME)
+TKIMPLIB	= $(_TKDIR)\lib\$(TKIMPLIBNAME)
 TK_INCLUDES     = -I"$(_TKDIR)\include"
-
 !else # Building against Tk sources
-
-WISH		= $(_TKDIR)\win\$(BUILDDIRTOP)\wish$(TCL_VERSION)$(SUFX).exe
-TKSTUBLIB	= $(_TKDIR)\win\$(BUILDDIRTOP)\tkstub$(TCL_VERSION).lib
-TKIMPLIB	= $(_TKDIR)\win\$(BUILDDIRTOP)\tk$(TCL_VERSION)$(SUFX).lib
+WISH		= $(_TKDIR)\win\$(BUILDDIRTOP)\$(WISHNAME)
+TKSTUBLIB	= $(_TKDIR)\win\$(BUILDDIRTOP)\$(TKSTUBLIBNAME)
+TKIMPLIB	= $(_TKDIR)\win\$(BUILDDIRTOP)\$(TKIMPLIBNAME)
 TK_INCLUDES     = -I"$(_TKDIR)\generic" -I"$(_TKDIR)\win" -I"$(_TKDIR)\xlib"
-
 !endif # TKINSTALL
 
-!endif # PROJECT_REQUIRES_TK
-
+!endif # $(PROJECT) == tk
+!endif # $(PROJECT) == tk || PROJECT_REQUIRES_TK
 
 ###################################################################
 # 11. Construct the paths for the installation directories
@@ -977,6 +987,9 @@ TK_INCLUDES     = -I"$(_TKDIR)\generic" -I"$(_TKDIR)\win" -I"$(_TKDIR)\xlib"
 # DOC_INSTALL_DIR - where documentation should be installed
 # SCRIPT_INSTALL_DIR - where scripts should be installed
 # INCLUDE_INSTALL_DIR - where C include files should be installed
+# DEMO_INSTALL_DIR - where demos should be installed
+# PRJ_INSTALL_DIR - where package will be installed (not set for tcl and tk)
+
 !if "$(PROJECT)" == "tcl" || "$(PROJECT)" == "tk"
 LIB_INSTALL_DIR		= $(_INSTALLDIR)\lib
 BIN_INSTALL_DIR		= $(_INSTALLDIR)\bin
@@ -986,14 +999,19 @@ SCRIPT_INSTALL_DIR	= $(_INSTALLDIR)\lib\$(PROJECT)$(TCL_MAJOR_VERSION).$(TCL_MIN
 !else
 SCRIPT_INSTALL_DIR	= $(_INSTALLDIR)\lib\$(PROJECT)$(TK_MAJOR_VERSION).$(TK_MINOR_VERSION)
 !endif
+DEMO_INSTALL_DIR	= $(SCRIPT_INSTALL_DIR)\demos
 INCLUDE_INSTALL_DIR	= $(_INSTALLDIR)\include
+
 !else
+
 PRJ_INSTALL_DIR         = $(_INSTALLDIR)\$(PROJECT)$(DOTVERSION)
 LIB_INSTALL_DIR		= $(PRJ_INSTALL_DIR)
 BIN_INSTALL_DIR		= $(PRJ_INSTALL_DIR)
 DOC_INSTALL_DIR		= $(PRJ_INSTALL_DIR)
 SCRIPT_INSTALL_DIR	= $(PRJ_INSTALL_DIR)
+DEMO_INSTALL_DIR	= $(PRJ_INSTALL_DIR)\demos
 INCLUDE_INSTALL_DIR	= $(_TCLDIR)\include
+
 !endif
 
 ###################################################################
@@ -1204,7 +1222,20 @@ baselibs   = $(baselibs) ucrt.lib
 !endif
 
 ################################################################
-# 3. Define common make targets and implicit rules
+# 3. Define standard commands, common make targets and implicit rules
+
+MAKELIBCMD = $(lib32) -nologo $(LINKERFLAGS) -out:$@
+MAKEDLLCMD = $(link32) $(dlllflags) -out:$@ $(baselibs) $(tcllibs)
+MAKECONCMD = $(link32) $(conlflags) -out:$@ $(baselibs) $(tcllibs)
+MAKEGUICMD = $(link32) $(guilflags) -out:$@ $(baselibs) $(tcllibs)
+MAKERESCMD  = $(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TMP_DIR)" \
+	    $(TCL_INCLUDES) \
+	    -d DEBUG=$(DEBUG) -d UNCHECKED=$(UNCHECKED) \
+	    -d TCL_THREADS=$(TCL_THREADS) \
+	    -d STATIC_BUILD=$(STATIC_BUILD) \
+	    $<
+
+!ifndef DISABLE_DEFAULT_TARGETS
 
 !ifndef DEFAULT_BUILD_TARGET
 DEFAULT_BUILD_TARGET = all
@@ -1233,8 +1264,11 @@ hose:
 	@echo Hosing $(OUT_DIR)\* ...
 	@if exist $(OUT_DIR)\nul $(RMDIR) $(OUT_DIR)
 
-# Implicit rule definitions - only for building library objects. For stubs and main
-# application, the master makefile should define explicit rules.
+!endif
+
+!ifndef DISABLE_IMPLICIT_RULES
+# Implicit rule definitions - only for building library objects. For stubs and
+# main application, the master makefile should define explicit rules.
 
 {$(WINDIR)}.c{$(TMP_DIR)}.obj::
 	$(cc32) $(pkgcflags) -Fo$(TMP_DIR)\ @<<
@@ -1260,17 +1294,7 @@ $<
 .SUFFIXES:
 .SUFFIXES:.c .rc
 
-MAKELIBCMD = $(lib32) -nologo $(LINKERFLAGS) -out:$@
-MAKEDLLCMD = $(link32) $(dlllflags) -out:$@ $(baselibs) $(tcllibs)
-MAKECONCMD = $(link32) $(conlflags) -out:$@ $(baselibs) $(tcllibs)
-MAKEGUICMD = $(link32) $(guilflags) -out:$@ $(baselibs) $(tcllibs)
-MAKERESCMD  = $(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TMP_DIR)" \
-	    $(TCL_INCLUDES) \
-	    -d DEBUG=$(DEBUG) -d UNCHECKED=$(UNCHECKED) \
-	    -d TCL_THREADS=$(TCL_THREADS) \
-	    -d STATIC_BUILD=$(STATIC_BUILD) \
-	    $<
-
+!endif
 
 ################################################################
 # 14. Sanity check selected options against Tcl build options
