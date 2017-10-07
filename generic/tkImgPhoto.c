@@ -626,7 +626,24 @@ ImgPhotoCmd(
 	}
 
 	/*
+	 * Copy the image data over using Tk_PhotoPutZoomedBlock.
+	 */
+
+	block.pixelPtr += options.fromX * block.pixelSize
+		+ options.fromY * block.pitch;
+	block.width = options.fromX2 - options.fromX;
+	block.height = options.fromY2 - options.fromY;
+	result = Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) masterPtr,
+		&block, options.toX, options.toY, options.toX2 - options.toX,
+		options.toY2 - options.toY, options.zoomX, options.zoomY,
+		options.subsampleX, options.subsampleY,
+		options.compositingRule);
+	
+	/*
 	 * Set the destination image size if the -shrink option was specified.
+	 * This has to be done _after_ copying the data. Otherwise, if source 
+	 * and destination are the same image, block.pixelPtr would point to
+	 * an invalid memory block (bug [5239fd749b]).
 	 */
 
 	if (options.options & OPT_SHRINK) {
@@ -638,20 +655,9 @@ ImgPhotoCmd(
 		return TCL_ERROR;
 	    }
 	}
-
-	/*
-	 * Copy the image data over using Tk_PhotoPutZoomedBlock.
-	 */
-
-	block.pixelPtr += options.fromX * block.pixelSize
-		+ options.fromY * block.pitch;
-	block.width = options.fromX2 - options.fromX;
-	block.height = options.fromY2 - options.fromY;
-	return Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) masterPtr,
-		&block, options.toX, options.toY, options.toX2 - options.toX,
-		options.toY2 - options.toY, options.zoomX, options.zoomY,
-		options.subsampleX, options.subsampleY,
-		options.compositingRule);
+	Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
+		masterPtr->width, masterPtr->height);
+	return result;
 
     case PHOTO_DATA: {
         char *data = NULL;
