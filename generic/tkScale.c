@@ -677,9 +677,9 @@ ConfigureScale(
 	} else {
 	    char varString[TCL_DOUBLE_SPACE], scaleString[TCL_DOUBLE_SPACE];
 
-	    sprintf(varString, scalePtr->format, varValue);
-	    sprintf(scaleString, scalePtr->format, scalePtr->value);
-	    if (strcmp(varString, scaleString)) {
+            Tcl_PrintDouble(NULL, varValue, varString);
+            Tcl_PrintDouble(NULL, scalePtr->value, scaleString);
+            if (strcmp(varString, scaleString)) {
 		ScaleSetVariable(scalePtr);
 	    }
 	}
