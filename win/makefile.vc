@@ -174,13 +174,11 @@ DEFAULT_BUILD_TARGET = release
 
 # The rules.vc file does much of the hard work in terms of defining
 # the build configuration, macros, output directories etc.
-!include "../../tcl/win/rules.vc"
-
-TK_DOTVERSION	= $(TK_MAJOR_VERSION).$(TK_MINOR_VERSION)
-TK_VERSION	= $(TK_MAJOR_VERSION)$(TK_MINOR_VERSION)
+!include "rules-ext.vc"
 
 # TCLINSTALL is set to 1 by rules.vc to indicate we are building against
 # an installed Tcl and 0 if building against Tcl source. Tk needs the latter.
+!message TCLINSTALL=$(TCLINSTALL)
 !if $(TCLINSTALL)
 !message *** Warning: Tk requires the source distribution of Tcl to build from,
 !message ***    at this time, sorry.  Please set the TCLDIR macro to point to the
@@ -206,7 +204,7 @@ TTK_SQUARE_WIDGET   = 0
 !endif
 !endif
 
-WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(TK_VERSION)$(SUFX).exe"
+WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
 
 TKTEST		= "$(OUT_DIR)\$(PROJECT)test.exe"
 CAT32		= "$(OUT_DIR)\cat32.exe"
@@ -419,6 +417,7 @@ TESTFLAGS = $(TESTFLAGS) -file $(TESTPAT)
 !endif
 
 
+!include targets.vc
 #---------------------------------------------------------------------
 # Project specific targets
 #---------------------------------------------------------------------
@@ -562,7 +561,7 @@ HHC=hhc.exe
 !endif
 !endif
 HTMLDIR=$(ROOT)\html
-HTMLBASE=TclTk$(VERSION)
+HTMLBASE=TclTk$(TCL_VERSION)
 HHPFILE=$(HTMLDIR)\$(HTMLBASE).hhp
 CHMFILE=$(HTMLDIR)\$(HTMLBASE).chm
 
@@ -578,7 +577,7 @@ Compiled file=$(HTMLBASE).chm
 Display compile progress=no
 Error log file=$(HTMLBASE).log
 Language=0x409 English (United States)
-Title=Tcl/Tk $(DOT_VERSION) Help
+Title=Tcl/Tk $(TCL_DOTVERSION) Help
 [FILES]
 contents.htm
 docs.css
@@ -640,7 +639,7 @@ $(TMP_DIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
 $(TMP_DIR)\wish.exe.manifest: $(WINDIR)\wish.exe.manifest.in
 	@nmakehlp -s << $** >$@
 @MACHINE@	  $(MACHINE:IX86=X86)
-@TK_WIN_VERSION@  $(TK_DOTVERSION).0.0
+@TK_WIN_VERSION@  $(DOTVERSION).0.0
 <<
 
 #---------------------------------------------------------------------
@@ -727,7 +726,7 @@ install-binaries:
 if {[catch {package present Tcl 8.6.0}]} { return }
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(TK_DOTVERSION).dll] Tk]
+    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(DOTVERSION).dll] Tk]
 } else {
     package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk]
 }
