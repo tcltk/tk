@@ -7306,7 +7306,8 @@ test text-35.3 {widget dump -command destroys widget} -setup {
 
 
 test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    interp bgerror {} returnerror-36.1
+    proc returnerror-36.1 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t-1]]
 } -body {
@@ -7317,9 +7318,11 @@ test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy .t-1
+    rename returnerror-36.1 ""
 } -result {}
 test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    interp bgerror {} returnerror-36.2
+    proc returnerror-36.2 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t+1]]
 } -body {
@@ -7330,9 +7333,11 @@ test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy $w
+    rename returnerror-36.2 ""
 } -result {}
 test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    interp bgerror {} returnerror-36.3
+    proc returnerror-36.3 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t*1]]
 } -body {
@@ -7343,6 +7348,26 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy $w
+    rename returnerror-36.3 ""
+} -result {}
+
+
+test text-37.1 "bug #dd9667635d: text anchor not set" -setup {
+    interp bgerror {} returnerror-37.1
+    proc returnerror-37.1 {m opts} {set ::my_error $m}
+    destroy .t
+    pack [text .t]
+} -body {
+    .t insert end "Hello world!"
+    .t tag add sel 1.0 end
+    # this line shall not trigger error:
+    #     bad text index "tk::anchorN"
+    event generate .t <<SelectPrevLine>>
+    update
+    set ::my_error
+} -cleanup {
+    destroy .t
+    rename returnerror-37.1 ""
 } -result {}
 
 # cleanup
