@@ -416,8 +416,6 @@ PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib
 TESTFLAGS = $(TESTFLAGS) -file $(TESTPAT)
 !endif
 
-
-!include targets.vc
 #---------------------------------------------------------------------
 # Project specific targets
 #---------------------------------------------------------------------
@@ -429,6 +427,7 @@ cwish:	  $(WISHC)
 install:  install-binaries install-libraries install-docs
 tktest:	  setup $(TKTEST) $(CAT32)
 
+setup: default-setup
 
 test: test-classic test-ttk
 
@@ -761,6 +760,9 @@ install-libraries:
 # Clean up
 #---------------------------------------------------------------------
 
+clean: default-clean
+realclean: hose
+hose: default-hose
 tidy:
 !if "$(TKLIB)" != "$(TKIMPLIB)"
 	@echo Removing $(TKLIB) ...
