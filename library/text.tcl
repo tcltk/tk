@@ -768,6 +768,9 @@ proc ::tk::TextKeySelect {w new} {
 	}
 	$w mark set $anchorname insert
     } else {
+        if {[catch {$w index $anchorname}]} {
+            $w mark set $anchorname insert
+        }
 	if {[$w compare $new < $anchorname]} {
 	    set first $new
 	    set last $anchorname
