@@ -175,7 +175,7 @@ Tk_ZipMain(
 {
     Tcl_Obj *path, *argvPtr, *appName;
     const char *encodingName;
-    int code, nullStdin = 0;
+    int code, nullStdin = 0, interactive;
     Tcl_Channel chan;
     InteractiveState is;
     const char *zipFile = NULL;
@@ -218,7 +218,7 @@ Tk_ZipMain(
      * encoding.
      */
 
-    if (NULL == Tcl_GetStartupScript(NULL)) {
+    if (Tcl_GetStartupScript(NULL) == NULL) {
 	size_t length;
 
 	/*
@@ -304,8 +304,9 @@ Tk_ZipMain(
 	nullStdin = fstat(0, &st) || (S_ISCHR(st.st_mode) && !st.st_blocks);
     }
 #endif
+    interactive = (!path && (is.tty || nullStdin));
     Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
-	    Tcl_NewIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
+	    Tcl_NewIntObj(interactive), TCL_GLOBAL_ONLY);
 
     zipOk = Tclzipfs_Init(interp);
     if (zipOk == TCL_OK) {
@@ -713,6 +714,13 @@ Tk_ZipMain(
 	}
 #endif
 doit:
+	is.tty = 0;
+	if (interactive) {
+	    interactive = 0;
+	    Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
+		    Tcl_NewIntObj(interactive), TCL_GLOBAL_ONLY);
+	    Tcl_EvalEx(interp, "console hide", -1, TCL_EVAL_GLOBAL);
+	}
 	Tcl_ResetResult(interp);
 	code = Tcl_FSEvalFileEx(interp, path, encodingName);
 	if (code != TCL_OK) {
@@ -727,7 +735,6 @@ doit:
 	    Tcl_DeleteInterp(interp);
 	    Tcl_Exit(1);
 	}
-	is.tty = 0;
     } else {
 
 	/*

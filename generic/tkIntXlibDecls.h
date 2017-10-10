@@ -394,7 +394,7 @@ EXTERN Window		XCreateWindow(Display *display, Window parent, int x,
 EXTERN int		SdlTkGLXAvailable(Display *display);
 /* 124 */
 EXTERN void *		SdlTkGLXCreateContext(Display *display, Window w,
-				struct Tk_Window_ *tkwin);
+				struct Tk_Window_ *tkwin, int flags);
 /* 125 */
 EXTERN void		SdlTkGLXDestroyContext(Display *display, Window w,
 				void *ctx);
@@ -433,6 +433,10 @@ EXTERN int		XReparentWindow(Display *d, Window w, Window p,
 EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 				int sx, int sy, int dx, int dy,
 				unsigned int w, unsigned int h);
+/* 138 */
+EXTERN Region		XPolygonRegion(XPoint *pts, int n, int rule);
+/* 139 */
+EXTERN int		XPointInRegion(Region rgn, int x, int y);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -828,7 +832,7 @@ typedef struct TkIntXlibStubs {
     int (*xUnionRegion) (Region srca, Region srcb, Region dr_return); /* 121 */
     Window (*xCreateWindow) (Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int clazz, Visual *visual, unsigned long value_mask, XSetWindowAttributes *attributes); /* 122 */
     int (*sdlTkGLXAvailable) (Display *display); /* 123 */
-    void * (*sdlTkGLXCreateContext) (Display *display, Window w, struct Tk_Window_ *tkwin); /* 124 */
+    void * (*sdlTkGLXCreateContext) (Display *display, Window w, struct Tk_Window_ *tkwin, int flags); /* 124 */
     void (*sdlTkGLXDestroyContext) (Display *display, Window w, void *ctx); /* 125 */
     void (*sdlTkGLXMakeCurrent) (Display *display, Window w, void *ctx); /* 126 */
     void (*sdlTkGLXReleaseCurrent) (Display *display, Window w, void *ctx); /* 127 */
@@ -842,6 +846,8 @@ typedef struct TkIntXlibStubs {
     int (*xDrawPoints) (Display *d, Drawable dr, GC gc, XPoint *p, int n, int m); /* 135 */
     int (*xReparentWindow) (Display *d, Window w, Window p, int x, int y); /* 136 */
     int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
+    Region (*xPolygonRegion) (XPoint *pts, int n, int rule); /* 138 */
+    int (*xPointInRegion) (Region rgn, int x, int y); /* 139 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -1227,6 +1233,10 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xReparentWindow) /* 136 */
 #define XPutImage \
 	(tkIntXlibStubsPtr->xPutImage) /* 137 */
+#define XPolygonRegion \
+	(tkIntXlibStubsPtr->xPolygonRegion) /* 138 */
+#define XPointInRegion \
+	(tkIntXlibStubsPtr->xPointInRegion) /* 139 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #define XSetDashes \

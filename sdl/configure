@@ -1902,7 +1902,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".6"
+TK_PATCH_LEVEL=".7"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -10424,6 +10424,17 @@ fi
 $as_echo "$GCC_LIBS" >&6; }
 
 #------------------------------------------------------------------------
+# MacOSX specifics
+#------------------------------------------------------------------------
+if test "`uname -s`" = "Darwin" ; then
+    EXTRA_WISH_LIBS="-sectcreate __TEXT __info_plist undroidwish-Info.plist"
+fi
+for i in ${LOCALES}; do
+    CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$i</string>"
+done
+TK_YEAR="`date +%Y`"
+
+#------------------------------------------------------------------------
 # sdl2tkConfig.sh refers to this by a different name
 #------------------------------------------------------------------------
 
@@ -10482,7 +10493,7 @@ TK_SHARED_BUILD=${SHARED_BUILD}
 
 
 
-ac_config_files="$ac_config_files Makefile:../sdl/Makefile.in sdl2tkConfig.sh:../sdl/sdl2tkConfig.sh.in sdl2tk.pc:../sdl/sdl2tk.pc.in agg-2.4/src/Makefile:../sdl/agg-2.4/src/Makefile.in agg-2.4/font_freetype/Makefile:../sdl/agg-2.4/font_freetype/Makefile.in agg-2.4/agg2d/Makefile:../sdl/agg-2.4/agg2d/Makefile.in"
+ac_config_files="$ac_config_files Makefile:../sdl/Makefile.in sdl2tkConfig.sh:../sdl/sdl2tkConfig.sh.in sdl2tk.pc:../sdl/sdl2tk.pc.in agg-2.4/src/Makefile:../sdl/agg-2.4/src/Makefile.in agg-2.4/font_freetype/Makefile:../sdl/agg-2.4/font_freetype/Makefile.in agg-2.4/agg2d/Makefile:../sdl/agg-2.4/agg2d/Makefile.in undroidwish-Info.plist:../sdl/undroidwish-Info.plist.in"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -11100,6 +11111,7 @@ do
     "agg-2.4/src/Makefile") CONFIG_FILES="$CONFIG_FILES agg-2.4/src/Makefile:../sdl/agg-2.4/src/Makefile.in" ;;
     "agg-2.4/font_freetype/Makefile") CONFIG_FILES="$CONFIG_FILES agg-2.4/font_freetype/Makefile:../sdl/agg-2.4/font_freetype/Makefile.in" ;;
     "agg-2.4/agg2d/Makefile") CONFIG_FILES="$CONFIG_FILES agg-2.4/agg2d/Makefile:../sdl/agg-2.4/agg2d/Makefile.in" ;;
+    "undroidwish-Info.plist") CONFIG_FILES="$CONFIG_FILES undroidwish-Info.plist:../sdl/undroidwish-Info.plist.in" ;;
 
   *) { { $as_echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 $as_echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

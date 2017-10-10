@@ -20,10 +20,7 @@
 
 #ifdef PLATFORM_SDL
 #include "tkSDLInt.h"
-/* TODO: This needs further toughts */
-#undef  _TKINTXLIBDECLS
-#include "SdlTkInt.h"
-#define _TKINTXLIBDECLS
+#include "SdlTk.h"
 #endif
 
 #if defined(_WIN32) && !defined(PLATFORM_SDL)
@@ -57,6 +54,8 @@
 #define SdlTkGLXMakeCurrent 0
 #define SdlTkGLXReleaseCurrent 0
 #define SdlTkGLXSwapBuffers 0
+#define XPolygonRegion 0
+#define XPointInRegion 0
 #endif
 
 static const TkIntStubs tkIntStubs;
@@ -768,6 +767,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XDrawPoints, /* 135 */
     XReparentWindow, /* 136 */
     XPutImage, /* 137 */
+    XPolygonRegion, /* 138 */
+    XPointInRegion, /* 139 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */

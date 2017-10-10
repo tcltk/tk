@@ -377,7 +377,7 @@ SDL_OBJS = tkSDL.o tkSDL3d.o tkSDLButton.o tkSDLColor.o tkSDLConfig.o \
 	tkSDLMenubu.o tkSDLScale.o tkSDLScrlbr.o tkSDLSelect.o \
 	tkSDLSend.o tkSDLWm.o tkSDLXId.o tkPointer.o tkImgUtil.o \
 	SdlTkDecframe.o SdlTkGfx.o SdlTkInt.o SdlTkUtils.o SdlTkX.o \
-	Region.o SdlTkAGG.o xcolors.o
+	Region.o PolyReg.o SdlTkAGG.o xcolors.o
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
 	$(STUB_OBJS) $(TTK_OBJS) \
@@ -484,6 +484,7 @@ SDL_SRCS = \
 	$(SDL_DIR)/tkSDLSend.c $(SDL_DIR)/tkSDLWm.c \
 	$(SDL_DIR)/tkSDLXId.c \
 	$(SDL_DIR)/Region.c \
+	$(SDL_DIR)/PolyReg.c \
 	$(SDL_DIR)/SdlTkAGG.cpp \
 	$(SDL_DIR)/SdlTkDecframe.c \
 	$(SDL_DIR)/SdlTkGfx.c \
@@ -1289,6 +1290,9 @@ tkSDLXId.o: $(SDL_DIR)/tkSDLXId.c
 
 Region.o: $(SDL_DIR)/Region.c
 	$(CC) -c $(CC_SWITCHES) $(SDL_DIR)/Region.c
+
+PolyReg.o: $(SDL_DIR)/PolyReg.c
+	$(CC) -c $(CC_SWITCHES) $(SDL_DIR)/PolyReg.c
 
 SdlTkAGG.o: $(SDL_DIR)/SdlTkAGG.cpp
 	$(CXX) -c $(CC_SWITCHES) $(SDL_DIR)/SdlTkAGG.cpp

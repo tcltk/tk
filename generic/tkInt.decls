@@ -1484,7 +1484,8 @@ declare 123 win {
     int SdlTkGLXAvailable(Display *display)
 }
 declare 124 win {
-    void *SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
+    void *SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin,
+	    int flags)
 }
 declare 125 win {
     void SdlTkGLXDestroyContext(Display *display, Window w, void *ctx)
@@ -1528,6 +1529,12 @@ declare 137 win {
     int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 	    int sx, int sy, int dx, int dy,
 	    unsigned int w, unsigned int h)
+}
+declare 138 win {
+    Region XPolygonRegion(XPoint *pts, int n, int rule);
+}
+declare 139 win {
+    int XPointInRegion(Region rgn, int x, int y);
 }
 
 ################################

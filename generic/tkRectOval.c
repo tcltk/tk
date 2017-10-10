@@ -759,11 +759,103 @@ DisplayRectOval(
 	    &x1, &y1);
     Tk_CanvasDrawableCoords(canvas, rectOvalPtr->bbox[2],rectOvalPtr->bbox[3],
 	    &x2, &y2);
-    if (x2 <= x1) {
-	x2 = x1+1;
+    if (x2 == x1) {
+
+        /*
+         * The width of the bounding box corresponds to less than one pixel
+         * on screen. Adjustment is needed to avoid drawing attempts with zero
+         * width items (which would draw nothing). The bounding box spans
+         * either 1 or 2 pixels. Select which pixel will be drawn.
+         */
+
+        short ix1 = (short) (rectOvalPtr->bbox[0]);
+        short ix2 = (short) (rectOvalPtr->bbox[2]);
+
+        if (ix1 == ix2) {
+
+            /*
+             * x1 and x2 are "within the same pixel". Use this pixel.
+             * Note: the degenerated case (bbox[0]==bbox[2]) of a completely
+             * flat box results in arbitrary selection of the pixel at the
+             * right (with positive coordinate) or left (with negative
+             * coordinate) of the box. There is no "best choice" here.
+             */
+
+            if (ix1 > 0) {
+                x2 += 1;
+            } else {
+                x1 -= 1;
+            }
+        } else {
+
+            /*
+             * (x1,x2) span two pixels. Select the one with the larger
+             * covered "area".
+             */
+
+            if (ix1 > 0) {
+                if ((rectOvalPtr->bbox[2] - ix2) > (ix2 - rectOvalPtr->bbox[0])) {
+                    x2 += 1;
+                } else {
+                    x1 -= 1;
+                }
+            } else {
+                if ((rectOvalPtr->bbox[2] - ix1) > (ix1 - rectOvalPtr->bbox[0])) {
+                    x2 += 1;
+                } else {
+                    x1 -= 1;
+                }
+            }
+        }
     }
-    if (y2 <= y1) {
-	y2 = y1+1;
+    if (y2 == y1) {
+
+        /*
+         * The height of the bounding box corresponds to less than one pixel
+         * on screen. Adjustment is needed to avoid drawing attempts with zero
+         * height items (which would draw nothing). The bounding box spans
+         * either 1 or 2 pixels. Select which pixel will be drawn.
+         */
+
+        short iy1 = (short) (rectOvalPtr->bbox[1]);
+        short iy2 = (short) (rectOvalPtr->bbox[3]);
+
+        if (iy1 == iy2) {
+
+            /*
+             * y1 and y2 are "within the same pixel". Use this pixel.
+             * Note: the degenerated case (bbox[1]==bbox[3]) of a completely
+             * flat box results in arbitrary selection of the pixel below
+             * (with positive coordinate) or above (with negative coordinate)
+             * the box. There is no "best choice" here.
+             */
+
+            if (iy1 > 0) {
+                y2 += 1;
+            } else {
+                y1 -= 1;
+            }
+        } else {
+
+            /*
+             * (y1,y2) span two pixels. Select the one with the larger
+             * covered "area".
+             */
+
+            if (iy1 > 0) {
+                if ((rectOvalPtr->bbox[3] - iy2) > (iy2 - rectOvalPtr->bbox[1])) {
+                    y2 += 1;
+                } else {
+                    y1 -= 1;
+                }
+            } else {
+                if ((rectOvalPtr->bbox[3] - iy1) > (iy1 - rectOvalPtr->bbox[1])) {
+                    y2 += 1;
+                } else {
+                    y1 -= 1;
+                }
+            }
+        }
     }
 
     /*

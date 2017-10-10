@@ -81,6 +81,10 @@ struct EventThreadStartup {
     int init_done;
     int *root_width;
     int *root_height;
+#ifdef __APPLE__
+    int want_startup_script;
+    char *startup_script;
+#endif
 };
 
 struct prop_key {
@@ -100,7 +104,7 @@ static Tcl_Condition time_cond;
 static int timer_enabled = 0;
 static int num_displays = 0;
 #ifdef __APPLE__
-struct EventThreadStartup evt_startup = { 0, NULL, NULL };
+struct EventThreadStartup evt_startup = { 0, NULL, NULL, 0, NULL };
 #endif
 
 static void SdlTkDestroyWindow(Display *display, Window w);
@@ -5179,6 +5183,7 @@ fatal:
 #else
     if (!SdlTkX.arg_nogl) {
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     }
 #endif
 
@@ -5928,10 +5933,24 @@ EventThread(ClientData clientData)
     }
 #endif
     initSuccess = PerformSDLInit(evs->root_width, evs->root_height);
-    evs->init_done = 1;
 #ifdef __APPLE__
     evs->root_width = evs->root_height = NULL;
+    SDL_PumpEvents();
+    if (evs->want_startup_script) {
+	SDL_Event drop_event;
+
+	if (SDL_PeepEvents(&drop_event, 1, SDL_PEEKEVENT,
+			   SDL_DROPFILE, SDL_DROPFILE) == 1) {
+	    SDL_PeepEvents(&drop_event, 1, SDL_GETEVENT,
+			   SDL_DROPFILE, SDL_DROPFILE);
+	    evs->startup_script = drop_event.drop.file;
+	} else {
+	    evs->startup_script = NULL;
+	}
+	evs->want_startup_script = 0;
+    }
 #endif
+    evs->init_done = 1;
     SdlTkNotify();
     if (!initSuccess) {
 	SdlTkUnlock(NULL);
@@ -6107,13 +6126,21 @@ OpenVeryFirstDisplay(int *root_width, int *root_height)
 #ifdef __APPLE__
     /*
      * Rendezvous with already running event thread, which
-     * in MacOSX is the main thread.
+     * in MacOSX must be the main thread.
      */
 
+    evs->want_startup_script = (Tcl_GetStartupScript(NULL) == NULL);
+    evs->startup_script = NULL;
     SdlTkNotify();
     while (!evs->init_done) {
 	SdlTkWaitLock();
     }
+    if (evs->startup_script != NULL) {
+	Tcl_SetStartupScript(Tcl_NewStringObj(evs->startup_script, -1), NULL);
+	SDL_free(evs->startup_script);
+	evs->startup_script = NULL;
+    }
+    evs->want_startup_script = 0;
 #else
     /*
      * Run thread to startup SDL, to collect SDL events,
@@ -7555,12 +7582,12 @@ SdlTkGLXAvailable(Display *display)
  */
 
 void *
-SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
+SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin, int flags)
 {
     _Window *_w = (_Window *) w;
 #ifdef SDL_RENDERER_HAS_TARGET_3D
 #ifdef ANDROID
-    int depth;
+    int depth, stencil;
 #else
     SDL_GLContext ctx;
 #endif
@@ -7579,7 +7606,9 @@ SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
 	Tcl_ConditionWait(&time_cond, &xlib_lock, NULL);
     }
     SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth);
+    SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencil);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     if (display->gl_rend == NULL) {
 	display->gl_rend = SDL_CreateRendererGLES1(SdlTkX.sdlscreen);
     }
@@ -7588,14 +7617,21 @@ SdlTkGLXCreateContext(Display *display, Window w, Tk_Window tkwin)
 
 	tex = SDL_CreateTexture((SDL_Renderer *) display->gl_rend,
 				SDL_PIXELFORMAT_ABGR8888,
-				SDL_TEXTUREACCESS_TARGET_3D,
+				flags ? SDL_TEXTUREACCESS_TARGET_SB :
+					SDL_TEXTUREACCESS_TARGET_3D,
 				_w->atts.width, _w->atts.height);
 	if (tex != NULL) {
 	    SDL_SetRenderTarget((SDL_Renderer *) display->gl_rend, tex);
 	    _w->gl_tex = tex;
+	    if (flags) {
+		_w->gl_flags |= 2;
+	    } else {
+		_w->gl_flags &= ~2;
+	    }
 	}
     }
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depth);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, stencil);
 #else
     if (SdlTkX.arg_nogl) {
 	goto done;
@@ -7824,14 +7860,19 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
     memset(&xgc, 0, sizeof (xgc));
     if (_w->gl_tex != NULL) {
 	int width, height;
+	int target = SDL_TEXTUREACCESS_TARGET_3D;
 	SDL_Surface *surf;
 
+#ifdef ANDROID
+	if (_w->gl_flags & 2) {
+	    target = SDL_TEXTUREACCESS_TARGET_SB;
+	}
+#endif
 	SDL_QueryTexture(_w->gl_tex, NULL, NULL, &width, &height);
 	if ((width != _w->atts.width) || (height != _w->atts.height)) {
 	    SDL_Texture *tex;
 
-	    tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_ABGR8888,
-				    SDL_TEXTUREACCESS_TARGET_3D,
+	    tex = SDL_CreateTexture(rend, SDL_PIXELFORMAT_ABGR8888, target,
 				    _w->atts.width, _w->atts.height);
 	    if (tex != NULL) {
 		SDL_SetRenderTarget(rend, tex);

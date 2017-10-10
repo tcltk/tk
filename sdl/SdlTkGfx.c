@@ -568,7 +568,10 @@ SdlTkGfxUpdateRegion(SDL_Renderer *rend, SDL_Texture *tex,
     if (SdlTkX.vr_mode == 3) {
 	int w, h;
 	SDL_Rect in, out;
+	float distortion, rescale, center[2], clip[4];
 
+	SDL_GetBarrelDistortion(SdlTkX.sdlrend, &distortion, &rescale,
+				NULL, NULL);
 	SDL_GetWindowSize(SdlTkX.sdlscreen, &w, &h);
 	in.x = 0;
 	in.y = 0;
@@ -578,16 +581,30 @@ SdlTkGfxUpdateRegion(SDL_Renderer *rend, SDL_Texture *tex,
 	out.y = 0;
 	out.w = w / 2;
 	out.h = h;
+	center[0] = 0.25;
+	center[1] = 0.5;
+	clip[0] = 0.0;
+	clip[1] = 0.0;
+	clip[2] = 0.5;
+	clip[3] = 1.0;
+	SDL_SetBarrelDistortion(SdlTkX.sdlrend, distortion, rescale,
+				center, clip);
         SDL_RenderCopy(rend, tex, &in, &out);
 	out.x = w / 2;
 	out.y = 0;
 	out.w = w / 2;
 	out.h = h;
         SDL_RenderCopy(rend, tex, &in, &out);
+	/* restore center */
+	SDL_SetBarrelDistortion(SdlTkX.sdlrend, distortion, rescale,
+				NULL, NULL);
     } else if (SdlTkX.vr_mode == 2) {
 	int w, h;
 	SDL_Rect in, out;
+	float distortion, rescale, center[2], clip[4];
 
+	SDL_GetBarrelDistortion(SdlTkX.sdlrend, &distortion, &rescale,
+				NULL, NULL);
 	SDL_GetWindowSize(SdlTkX.sdlscreen, &w, &h);
 	in.x = 0;
 	in.y = 0;
@@ -597,6 +614,14 @@ SdlTkGfxUpdateRegion(SDL_Renderer *rend, SDL_Texture *tex,
 	out.y = 0;
 	out.w = w / 2;
 	out.h = h;
+	center[0] = 0.25;
+	center[1] = 0.5;
+	clip[0] = 0.0;
+	clip[1] = 0.0;
+	clip[2] = 0.5;
+	clip[3] = 1.0;
+	SDL_SetBarrelDistortion(SdlTkX.sdlrend, distortion, rescale,
+				center, clip);
         SDL_RenderCopy(rend, tex, &in, &out);
 	in.x = surf->w / 2;
 	in.y = 0;
@@ -606,7 +631,18 @@ SdlTkGfxUpdateRegion(SDL_Renderer *rend, SDL_Texture *tex,
 	out.y = 0;
 	out.w = w / 2;
 	out.h = h;
+	center[0] = 0.75;
+	center[1] = 0.5;
+	clip[0] = 0.5;
+	clip[1] = 0.0;
+	clip[2] = 1.0;
+	clip[3] = 1.0;
+	SDL_SetBarrelDistortion(SdlTkX.sdlrend, distortion, rescale,
+				center, clip);
         SDL_RenderCopy(rend, tex, &in, &out);
+	/* restore center */
+	SDL_SetBarrelDistortion(SdlTkX.sdlrend, distortion, rescale,
+				NULL, NULL);
     } else if (SdlTkX.vr_mode == 1) {
 	int w, h;
 	SDL_Rect in, out;

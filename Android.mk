@@ -168,6 +168,7 @@ LOCAL_SRC_FILES := \
 	sdl/SdlTkUtils.c \
 	sdl/SdlTkX.c \
 	sdl/Region.c \
+	sdl/PolyReg.c \
 	sdl/SdlTkAGG.cpp \
 	sdl/agg-2.4/src/agg_arc.cpp \
 	sdl/agg-2.4/src/agg_bezier_arc.cpp \

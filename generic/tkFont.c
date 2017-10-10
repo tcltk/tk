@@ -3224,14 +3224,13 @@ TkIntersectAngledTextLayout(
 	cy[0] = cy[1] = chunkPtr->y - fontPtr->fm.ascent;
 	cx[1] = cx[2] = chunkPtr->x + chunkPtr->displayWidth;
 	cy[2] = cy[3] = chunkPtr->y + fontPtr->fm.descent;
-	if (	!PointInQuadrilateral(cx, cy, rx[0], ry[0]) ||
-		!PointInQuadrilateral(cx, cy, rx[1], ry[1]) ||
-		!PointInQuadrilateral(cx, cy, rx[2], ry[2]) ||
-		!PointInQuadrilateral(cx, cy, rx[3], ry[3])) {
-	    goto notReverseInside;
-	}
+	if (	PointInQuadrilateral(cx, cy, rx[0], ry[0]) &&
+		PointInQuadrilateral(cx, cy, rx[1], ry[1]) &&
+		PointInQuadrilateral(cx, cy, rx[2], ry[2]) &&
+		PointInQuadrilateral(cx, cy, rx[3], ry[3])) {
+            return 0;
+        }
     }
-    return 0;
 
     /*
      * If we're overlapping now, we must be partially in and out of at least
@@ -3239,7 +3238,6 @@ TkIntersectAngledTextLayout(
      * rectangle that is touching or crossing a line segment of a chunk.
      */
 
-  notReverseInside:
     chunkPtr = layoutPtr->chunks;
 
     for (i=0 ; i<layoutPtr->numChunks ; i++,chunkPtr++) {

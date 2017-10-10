@@ -1111,6 +1111,8 @@ SdlTkFontInit(Tcl_Interp *interp)
 		    "[glob -nocomplain -directory /usr/share/fonts/truetype"
 		    " -types f */*.ttf */*.ttc */*.otf] "
 		    "[glob -nocomplain -directory /usr/share/fonts/TrueType"
+		    " -types f */*.ttf */*.ttc */*.otf] "
+		    "[glob -nocomplain -directory /usr/local/share/fonts"
 		    " -types f */*.ttf */*.ttc */*.otf]",
 #endif
 		    -1, TCL_EVAL_GLOBAL);
