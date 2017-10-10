@@ -345,15 +345,6 @@ extern void SdlTkSetInputFocus(Display *display, Window focus, int revert_to,
     Time time);
 extern void SdlTkSetSelectionOwner(Display *display, Atom selection,
    Window owner, Time time);
-#ifndef _TKINTXLIBDECLS
-extern int SdlTkGLXAvailable(Display *display);
-extern void *SdlTkGLXCreateContext(Display *display, Window w,
-   Tk_Window tkwin);
-extern void SdlTkGLXDestroyContext(Display *display, Window w, void *ctx);
-extern void SdlTkGLXMakeCurrent(Display *display, Window w, void *ctx);
-extern void SdlTkGLXReleaseCurrent(Display *display, Window w, void *ctx);
-extern void SdlTkGLXSwapBuffers(Display *display, Window w);
-#endif
 extern void SdlTkDumpXEvent(XEvent *eventPtr);
 #ifdef __APPLE__
 extern void SdlTkEventThread(void);

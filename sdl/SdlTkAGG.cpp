@@ -12,9 +12,7 @@ extern "C" {
 #include "agg_conv_curve.h"
 #include "agg_ellipse.h"
 #include "agg_font_freetype.h"
-#ifndef AGG23
 #include "agg_image_accessors.h"
-#endif
 #include "agg_pixfmt_rgb.h"
 #include "agg_pixfmt_rgb_packed.h"
 #include "agg_pixfmt_rgba.h"
@@ -33,70 +31,6 @@ extern "C" {
 #include "agg_conv_dash.h"
 #include "agg_vcgen_stroke.h"
 #include "agg_vcgen_dash.h"
-
-#ifdef AGG23
-
-/*
- * This is a span generator. It is used when drawing text and primitives
- * using a Bitmap as a stipple pattern.
- */
-template<class ColorT,
-	class Order, 
-	class WrapModeX,
-	class WrapModeY,
-	class Allocator = agg::span_allocator<ColorT> > 
-class span_stipple : public agg::span_pattern_rgba<ColorT, Order, WrapModeX, WrapModeY, Allocator>
-{
-public:
-    typedef ColorT color_type;
-    typedef Order order_type;
-    typedef Allocator alloc_type;
-    typedef agg::span_pattern_rgba<color_type, order_type, WrapModeX, WrapModeY, alloc_type> base_type;
-    typedef typename color_type::value_type value_type;
-
-    span_stipple(alloc_type& alloc,
-	const agg::rendering_buffer& src, 
-	unsigned offset_x, unsigned offset_y) :
-            base_type(alloc, src, offset_x, offset_y),
-            m_wrap_mode_x(src.width()),
-            m_wrap_mode_y(src.height())
-    {}
-
-    //--------------------------------------------------------------------
-    color_type* generate(int x, int y, unsigned len)
-    {   
-	color_type* span = base_type::allocator().span();
-	unsigned sx = m_wrap_mode_x(x - base_type::offset_x());
-	const value_type* row_ptr = 
-	    (const value_type*)base_type::base_type::source_image().row(
-		m_wrap_mode_y(
-		    y - base_type::offset_y()));
-	do
-	{
-	    const value_type* p = row_ptr + sx; /* 1 byte-per-pixel */
-	    if (p[0]) {
-		*span = m_color;
-	    } else {
-		span->clear();
-	    }
-	    sx = ++m_wrap_mode_x;
-	    ++span;
-	}
-	while(--len);
-	return base_type::allocator().span();
-    }
-
-    //---------------------------------------------------------------------
-    void color(const color_type& c) { m_color = c; }
-    const color_type& color() const { return m_color; }
-
-private:
-    color_type m_color;
-    WrapModeX m_wrap_mode_x;
-    WrapModeY m_wrap_mode_y;
-};
-
-#else
 
 /* Needed since stipple bitmap is 1 byte per pixel */
 
@@ -201,8 +135,6 @@ private:
     unsigned     m_offset_y;
 };
 
-#endif
-
 template<class PixelFormat>
 void
 doDrawArc(Drawable d, GC gc, int x, int y,
@@ -212,6 +144,8 @@ doDrawArc(Drawable d, GC gc, int x, int y,
     int xOff = 0, yOff = 0;
     long i;
     REGION *rgn = 0;
+    Region tmpRgn = 0;
+    TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
 
     if (IS_WINDOW(d)) {
 	rgn = SdlTkGetVisibleRegion((_Window *) d);
@@ -268,6 +202,22 @@ doDrawArc(Drawable d, GC gc, int x, int y,
     /* Scanline needed by the rasterizer -> renderer */
     agg::scanline_u8 scanline;
 
+    /*
+     * If the clipping region is specified, intersect it with the visible
+     * region of the window, or if this is a pixmap then use the clipping
+     * region unmodified.
+     */
+    if (clipPtr && clipPtr->type == TKP_CLIP_REGION) {
+	Region clipRgn = (Region) clipPtr->value.region;
+	if (rgn) {
+	    tmpRgn = SdlTkRgnPoolGet();
+	    XIntersectRegion(rgn, clipRgn, tmpRgn);
+	    rgn = tmpRgn;
+	} else {
+	    rgn = clipRgn;
+	}
+    }
+
     if (rgn) {
 	for (i = 0; i < rgn->numRects; i++) {
 	    BoxPtr box = &rgn->rects[i];
@@ -291,17 +241,6 @@ doDrawArc(Drawable d, GC gc, int x, int y,
 	agg::span_allocator<agg::rgba8> span_allocator;
 
 	/* Generates spans (lines of pixels) from a source buffer */
-#ifdef AGG23
-	typedef span_stipple<agg::rgba8, agg::order_argb,
-	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> t_span_stipple;
-	t_span_stipple span_stipple(span_allocator, stipple_buf, gc->ts_x_origin, gc->ts_y_origin);
-	span_stipple.color(c);
-
-	typedef agg::renderer_scanline_aa<t_renderer_mclip, t_span_stipple> t_renderer_scanline_aa;
-	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_stipple);
-
-	agg::render_scanlines(rasterizer, scanline, ren_scanline_aa);
-#else
 	typedef agg::image_accessor_wrap_gray8<PixelFormat,
 	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> img_src_type;
 	PixelFormat src_pixf(stipple_buf);
@@ -316,12 +255,15 @@ doDrawArc(Drawable d, GC gc, int x, int y,
 	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_allocator, span_stipple);
 
 	agg::render_scanlines(rasterizer, scanline, ren_scanline_aa);
-#endif
     } else {
 	agg::renderer_scanline_aa_solid<t_renderer_mclip> ren_scanline(ren_mclip);
 	ren_scanline.color(c);
 
 	agg::render_scanlines(rasterizer, scanline, ren_scanline);
+    }
+
+    if (tmpRgn) {
+	SdlTkRgnPoolFree(tmpRgn);
     }
 
     /* Unlock surface */
@@ -600,6 +542,8 @@ doDrawLines(Drawable d, GC gc, XPoint *points, int npoints, int mode)
     int xOff = 0, yOff = 0;
     long i;
     REGION *rgn = 0;
+    Region tmpRgn = 0;
+    TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
 
     if (IS_WINDOW(d)) {
 	rgn = SdlTkGetVisibleRegion((_Window *) d);
@@ -725,6 +669,22 @@ doDrawLines(Drawable d, GC gc, XPoint *points, int npoints, int mode)
     /* Scanline needed by the rasterizer -> renderer */
     agg::scanline_u8 scanline;
 
+    /*
+     * If the clipping region is specified, intersect it with the visible
+     * region of the window, or if this is a pixmap then use the clipping
+     * region unmodified.
+     */
+    if (clipPtr && clipPtr->type == TKP_CLIP_REGION) {
+	Region clipRgn = (Region) clipPtr->value.region;
+	if (rgn) {
+	    tmpRgn = SdlTkRgnPoolGet();
+	    XIntersectRegion(rgn, clipRgn, tmpRgn);
+	    rgn = tmpRgn;
+	} else {
+	    rgn = clipRgn;
+	}
+    }
+
     if (rgn) {
 	for (i = 0; i < rgn->numRects; i++) {
 	    BoxPtr box = &rgn->rects[i];
@@ -747,17 +707,6 @@ doDrawLines(Drawable d, GC gc, XPoint *points, int npoints, int mode)
 	agg::span_allocator<agg::rgba8> span_allocator;
 
 	/* Generates spans (lines of pixels) from a source buffer */
-#ifdef AGG23
-	typedef span_stipple<agg::rgba8, agg::order_argb,
-	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> t_span_stipple;
-	t_span_stipple span_stipple(span_allocator, stipple_buf, gc->ts_x_origin, gc->ts_y_origin);
-	span_stipple.color(c);
-
-	typedef agg::renderer_scanline_aa<t_renderer_mclip, t_span_stipple> t_renderer_scanline_aa;
-	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_stipple);
-
-	agg::render_scanlines(rasterizer, scanline, ren_scanline_aa);
-#else
 	typedef agg::image_accessor_wrap_gray8<PixelFormat,
 	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> img_src_type;
 	PixelFormat src_pixf(stipple_buf);
@@ -772,13 +721,16 @@ doDrawLines(Drawable d, GC gc, XPoint *points, int npoints, int mode)
 	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_allocator, span_stipple);
 
 	agg::render_scanlines(rasterizer, scanline, ren_scanline_aa);
-#endif
     } else {
 	typedef agg::renderer_scanline_aa_solid<t_renderer_mclip> t_renderer_scanline_aa_solid;
 	t_renderer_scanline_aa_solid ren_scanline(ren_mclip);
 	ren_scanline.color(c);
 
 	agg::render_scanlines(rasterizer, scanline, ren_scanline);
+    }
+
+    if (tmpRgn) {
+	SdlTkRgnPoolFree(tmpRgn);
     }
 
     /* Unlock surface */
@@ -1001,7 +953,6 @@ doDrawRect(Drawable d, GC gc, int x, int y, int w, int h)
     SDL_GetRGB(gc->foreground, SdlTkX.sdlsurf->format, &r, &g, &b);
     agg::rgba8 c(r, g, b);
 
-#if 1
     /*
      * If the clipping region is specified, intersect it with the visible
      * region of the window, or if this is a pixmap then use the clipping
@@ -1026,6 +977,7 @@ doDrawRect(Drawable d, GC gc, int x, int y, int w, int h)
 	}
     }
 
+#if 1
     /*
      * A 1-pixel thick line is inside the top-left, but outside the
      * bottom-right (that is what Tk expects and how Win32 draws it)
@@ -1063,6 +1015,7 @@ doDrawRect(Drawable d, GC gc, int x, int y, int w, int h)
     }
 
 #else /* aa */
+
     typedef agg::renderer_scanline_aa_solid<t_renderer_mclip> t_renderer_scanline_aa_solid;
     t_renderer_scanline_aa_solid ren_scanline(ren_mclip);
     ren_scanline.color(c);
@@ -1090,30 +1043,6 @@ doDrawRect(Drawable d, GC gc, int x, int y, int w, int h)
     /* Scanline needed by the rasterizer -> renderer */
     agg::scanline_u8 scanline;
 
-    /*
-     * If the clipping region is specified, intersect it with the visible
-     * region of the window, or if this is a pixmap then use the clipping
-     * region unmodified.
-     */
-    if (clipPtr && clipPtr->type == TKP_CLIP_REGION) {
-	Region clipRgn = (Region) clipPtr->value.region;
-	if (rgn) {
-	    tmpRgn = SdlTkRgnPoolGet();
-	    XIntersectRegion(rgn, clipRgn, tmpRgn);
-	    rgn = tmpRgn;
-	} else {
-	    rgn = clipRgn;
-	}
-    }
-
-    if (rgn) {
-	for (i = 0; i < rgn->numRects; i++) {
-	    BoxPtr box = &rgn->rects[i];
-	    ren_mclip.add_clip_box(xOff + box->x1, yOff + box->y1,
-		xOff + box->x2 - 1, yOff + box->y2 - 1);
-	}
-    }
-
     agg::render_scanlines(rasterizer, scanline, ren_scanline);
 #endif
 
@@ -1135,9 +1064,6 @@ class pixfmt_3Bpp_xor
 {
 public:
     typedef agg::rendering_buffer::row_data row_data;
-#ifdef AGG23
-    typedef agg::rendering_buffer::span_data span_data;
-#endif
     typedef agg::rgba8 color_type;
 
     //--------------------------------------------------------------------
@@ -1152,11 +1078,7 @@ public:
     //--------------------------------------------------------------------
     void copy_pixel(int x, int y, const color_type& c)
     {
-#ifdef AGG23
-	Uint8* p = (Uint8*)m_rbuf->row(y) + x;
-#else
 	Uint8* p = (Uint8*)m_rbuf->row_ptr(y) + x;
-#endif
 	p[0] ^= 0xFF;
 	p[1] ^= 0xFF;
 	p[2] ^= 0xFF;
@@ -1167,11 +1089,7 @@ public:
 			    unsigned len, 
 			    const color_type& c)
     {
-#ifdef AGG23
-	Uint8* p = (Uint8*)m_rbuf->row(y) + x + x + x;
-#else
 	Uint8* p = (Uint8*)m_rbuf->row_ptr(y) + x + x + x;
-#endif
 	do {
 	    p[0] ^= 0xFF;
 	    p[1] ^= 0xFF;
@@ -1186,11 +1104,7 @@ public:
 		    const color_type& c,
 		    agg::int8u cover)
     {
-#ifdef AGG23
-	Uint8* p = (Uint8*)m_rbuf->row(y) + x + x + x;
-#else
 	Uint8* p = (Uint8*)m_rbuf->row_ptr(y) + x + x + x;
-#endif
 	do {
 	    p[0] ^= 0xFF;
 	    p[1] ^= 0xFF;
@@ -1205,20 +1119,12 @@ public:
 		    const color_type& c,
 		    agg::int8u cover)
     {
-#ifdef AGG23
-	Uint8* p = (Uint8*)m_rbuf->row(y) + x + x + x;
-#else
 	Uint8* p = (Uint8*)m_rbuf->row_ptr(y) + x + x + x;
-#endif
 	do {
 	    p[0] ^= 0xFF;
 	    p[1] ^= 0xFF;
 	    p[2] ^= 0xFF;
-#ifdef AGG23
-	    p = (Uint8*)m_rbuf->next_row(p);
-#else
 	    p += m_rbuf->stride();
-#endif
 	} while(--len);
     }
 
@@ -1234,9 +1140,6 @@ template<class Type> class pixfmt_1_2_4Bpp_xor
 {
 public:
     typedef agg::rendering_buffer::row_data row_data;
-#ifdef AGG23
-    typedef agg::rendering_buffer::span_data span_data;
-#endif
     typedef agg::rgba8 color_type;
 
     //--------------------------------------------------------------------
@@ -1251,11 +1154,7 @@ public:
     //--------------------------------------------------------------------
     void copy_pixel(int x, int y, const color_type& c)
     {
-#ifdef AGG23
-	Type* p = (Type*)m_rbuf->row(y) + x;
-#else
 	Type* p = (Type*)m_rbuf->row_ptr(y) + x;
-#endif
 	*p ^= 0xFFFFFFFF;
     }
 
@@ -1264,11 +1163,7 @@ public:
 		    unsigned len, 
 		    const color_type& c)
     {
-#ifdef AGG23
-	Type* p = (Type*)m_rbuf->row(y) + x;
-#else
 	Type* p = (Type*)m_rbuf->row_ptr(y) + x;
-#endif
 	do {
 	    *p ^= 0xFFFFFFFF;
 	    p += 1;
@@ -1281,11 +1176,7 @@ public:
 		    const color_type& c,
 		    agg::int8u cover)
     {
-#ifdef AGG23
-	Type* p = (Type*)m_rbuf->row(y) + x;
-#else
 	Type* p = (Type*)m_rbuf->row_ptr(y) + x;
-#endif
 	do {
 	    *p ^= 0xFFFFFFFF;
 	    p += 1;
@@ -1298,19 +1189,11 @@ public:
 		    const color_type& c,
 		    agg::int8u cover)
     {
-#ifdef AGG23
-	Type* p = (Type*)m_rbuf->row(y) + x;
-#else
 	Type* p = (Type*)m_rbuf->row_ptr(y) + x;
-#endif
 	do {
 	    *p ^= 0xFFFFFFFF;
-#ifdef AGG23
-	    p = (Type*)m_rbuf->next_row(p);
-#else
 	    y++;
 	    p = (Type*)m_rbuf->row_ptr(y) + x;
-#endif
 	} while(--len);
     }
 
@@ -1600,26 +1483,6 @@ doDrawString(Drawable d, GC gc, int x, int y, const char *string,
 	agg::span_allocator<agg::rgba8> span_allocator;
 
 	/* Generates spans (lines of pixels) from a source buffer */
-#ifdef AGG23
-	typedef span_stipple<agg::rgba8, agg::order_argb,
-	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> t_span_stipple;
-	/* FIXME: stippled text doesn't line up with other stippled primitives. */
-	t_span_stipple span_stipple(span_allocator, stipple_buf, gc->ts_x_origin + 1, gc->ts_y_origin);
-	span_stipple.color(c);
-
-	typedef agg::renderer_scanline_aa<t_renderer_mclip, t_span_stipple> t_renderer_scanline_aa;
-	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_stipple);
-
-	for (i = 0; i < length; i++) {
-	    const agg::glyph_cache *glyph = fman->glyph(SdlTkGetNthGlyphIndex(_f, string, i));
-	    if (glyph) {
-		fman->init_embedded_adaptors(glyph, fx, fy);
-		agg::render_scanlines(fman->gray8_adaptor(), fman->gray8_scanline(), ren_scanline_aa);
-		fx += glyph->advance_x;
-		fy += glyph->advance_y;
-	    }
-	}
-#else
 	typedef agg::image_accessor_wrap_gray8<PixelFormat,
 	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> img_src_type;
 	PixelFormat src_pixf(stipple_buf);
@@ -1643,7 +1506,6 @@ doDrawString(Drawable d, GC gc, int x, int y, const char *string,
 		fy += glyph->advance_y;
 	    }
 	}
-#endif
     } else {
 	typedef agg::renderer_scanline_aa_solid<t_renderer_mclip> t_renderer_scanline_aa_solid;
 	t_renderer_scanline_aa_solid ren_aa(ren_mclip);
@@ -1894,6 +1756,8 @@ doFillArc(Drawable d, GC gc, int x, int y,
     int xOff = 0, yOff = 0;
     long i;
     REGION *rgn = 0;
+    Region tmpRgn = 0;
+    TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
 
     if (IS_WINDOW(d)) {
 	rgn = SdlTkGetVisibleRegion((_Window *) d);
@@ -1945,6 +1809,22 @@ doFillArc(Drawable d, GC gc, int x, int y,
     /* Scanline needed by the rasterizer -> renderer */
     agg::scanline_u8 scanline;
 
+    /*
+     * If the clipping region is specified, intersect it with the visible
+     * region of the window, or if this is a pixmap then use the clipping
+     * region unmodified.
+     */
+    if (clipPtr && clipPtr->type == TKP_CLIP_REGION) {
+	Region clipRgn = (Region) clipPtr->value.region;
+	if (rgn) {
+	    tmpRgn = SdlTkRgnPoolGet();
+	    XIntersectRegion(rgn, clipRgn, tmpRgn);
+	    rgn = tmpRgn;
+	} else {
+	    rgn = clipRgn;
+	}
+    }
+
     if (rgn) {
 	for (i = 0; i < rgn->numRects; i++) {
 	    BoxPtr box = &rgn->rects[i];
@@ -1968,17 +1848,6 @@ doFillArc(Drawable d, GC gc, int x, int y,
 	agg::span_allocator<agg::rgba8> span_allocator;
 
 	/* Generates spans (lines of pixels) from a source buffer */
-#ifdef AGG23
-	typedef span_stipple<agg::rgba8, agg::order_argb,
-	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> t_span_stipple;
-	t_span_stipple span_stipple(span_allocator, stipple_buf, gc->ts_x_origin, gc->ts_y_origin);
-	span_stipple.color(c);
-
-	typedef agg::renderer_scanline_aa<t_renderer_mclip, t_span_stipple> t_renderer_scanline_aa;
-	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_stipple);
-
-	agg::render_scanlines(rasterizer, scanline, ren_scanline_aa);
-#else
 	typedef agg::image_accessor_wrap_gray8<PixelFormat,
 	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> img_src_type;
 	PixelFormat src_pixf(stipple_buf);
@@ -1993,13 +1862,16 @@ doFillArc(Drawable d, GC gc, int x, int y,
 	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_allocator, span_stipple);
 
 	agg::render_scanlines(rasterizer, scanline, ren_scanline_aa);
-#endif
     } else {
 	typedef agg::renderer_scanline_aa_solid<t_renderer_mclip> t_renderer_scanline_aa_solid;
 	t_renderer_scanline_aa_solid ren_scanline(ren_mclip);
 	ren_scanline.color(c);
 
 	agg::render_scanlines(rasterizer, scanline, ren_scanline);
+    }
+
+    if (tmpRgn) {
+	SdlTkRgnPoolFree(tmpRgn);
     }
 
     /* Unlock surface */
@@ -2061,6 +1933,8 @@ doFillPolygon(Drawable d, GC gc, XPoint *points, int npoints, int shape, int mod
     int xOff = 0, yOff = 0;
     long i;
     REGION *rgn = 0;
+    Region tmpRgn = 0;
+    TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
 
     if (IS_WINDOW(d)) {
 	rgn = SdlTkGetVisibleRegion((_Window *) d);
@@ -2110,6 +1984,22 @@ doFillPolygon(Drawable d, GC gc, XPoint *points, int npoints, int shape, int mod
     /* Scanline needed by the rasterizer -> renderer */
     agg::scanline_u8 scanline;
 
+    /*
+     * If the clipping region is specified, intersect it with the visible
+     * region of the window, or if this is a pixmap then use the clipping
+     * region unmodified.
+     */
+    if (clipPtr && clipPtr->type == TKP_CLIP_REGION) {
+	Region clipRgn = (Region) clipPtr->value.region;
+	if (rgn) {
+	    tmpRgn = SdlTkRgnPoolGet();
+	    XIntersectRegion(rgn, clipRgn, tmpRgn);
+	    rgn = tmpRgn;
+	} else {
+	    rgn = clipRgn;
+	}
+    }
+
     if (rgn) {
 	for (i = 0; i < rgn->numRects; i++) {
 	    BoxPtr box = &rgn->rects[i];
@@ -2133,17 +2023,6 @@ doFillPolygon(Drawable d, GC gc, XPoint *points, int npoints, int shape, int mod
 	agg::span_allocator<agg::rgba8> span_allocator;
 
 	/* Generates spans (lines of pixels) from a source buffer */
-#ifdef AGG23
-	typedef span_stipple<agg::rgba8, agg::order_argb,
-	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> t_span_stipple;
-	t_span_stipple span_stipple(span_allocator, stipple_buf, gc->ts_x_origin, gc->ts_y_origin);
-	span_stipple.color(c);
-
-	typedef agg::renderer_scanline_aa<t_renderer_mclip, t_span_stipple> t_renderer_scanline_aa;
-	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_stipple);
-
-	agg::render_scanlines(rasterizer, scanline, ren_scanline_aa);
-#else
 	typedef agg::image_accessor_wrap_gray8<PixelFormat,
 	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> img_src_type;
 	PixelFormat src_pixf(stipple_buf);
@@ -2158,7 +2037,14 @@ doFillPolygon(Drawable d, GC gc, XPoint *points, int npoints, int shape, int mod
 	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_allocator, span_stipple);
 
 	agg::render_scanlines(rasterizer, scanline, ren_scanline_aa);
-#endif
+    } else if (shape == ConvexNoAA) {
+	/* Thing that renders the scanlines */
+	typedef agg::renderer_scanline_bin_solid<t_renderer_mclip> t_renderer_scanline_bin_solid;
+	t_renderer_scanline_bin_solid ren_scanline(ren_mclip);
+	ren_scanline.color(c);
+
+	/* Thing that calculates the scanlines that make up the shape */
+	agg::render_scanlines(rasterizer, scanline, ren_scanline);
     } else {
 	/* Thing that renders the scanlines */
 	typedef agg::renderer_scanline_aa_solid<t_renderer_mclip> t_renderer_scanline_aa_solid;
@@ -2167,6 +2053,10 @@ doFillPolygon(Drawable d, GC gc, XPoint *points, int npoints, int shape, int mod
 
 	/* Thing that calculates the scanlines that make up the shape */
 	agg::render_scanlines(rasterizer, scanline, ren_scanline);
+    }
+
+    if (tmpRgn) {
+	SdlTkRgnPoolFree(tmpRgn);
     }
 
     /* Unlock surface */
@@ -2303,11 +2193,7 @@ doFillRect(Drawable d, GC gc, int x, int y, int w, int h)
 	agg::wrap_mode_repeat wrap_y(stipple_buf.height());
 	unsigned wy = wrap_y(y - gc->ts_y_origin);
 	while (h--) {
-#ifdef AGG23
-	    agg::int8u *row_ptr = stipple_buf.row(wy);
-#else
 	    agg::int8u *row_ptr = stipple_buf.row_ptr(wy);
-#endif
 	    unsigned x1 = x;
 	    unsigned wx = wrap_x(x - gc->ts_x_origin);
 	    unsigned w1 = w;
@@ -2327,15 +2213,6 @@ doFillRect(Drawable d, GC gc, int x, int y, int w, int h)
 	agg::span_allocator<agg::rgba8> span_allocator;
 
 	/* Generates spans (lines of pixels) from a source buffer */
-#ifdef AGG23
-	typedef span_stipple<agg::rgba8, agg::order_argb,
-	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> t_span_stipple;
-	t_span_stipple span_stipple(span_allocator, stipple_buf, gc->ts_x_origin, gc->ts_y_origin);
-	span_stipple.color(c);
-
-	typedef agg::renderer_scanline_aa<t_renderer_mclip, t_span_stipple> t_renderer_scanline_aa;
-	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_stipple);
-#else
 	typedef agg::image_accessor_wrap_gray8<PixelFormat,
 	    agg::wrap_mode_repeat, agg::wrap_mode_repeat> img_src_type;
 	PixelFormat src_pixf(stipple_buf);
@@ -2350,7 +2227,6 @@ doFillRect(Drawable d, GC gc, int x, int y, int w, int h)
 	t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_allocator, span_stipple);
 
 	agg::render_scanlines(rasterizer, scanline, ren_scanline_aa);
-#endif
 
 	VertexSource_XRectangle vertexSrc(x, y, w, h);
 	agg::rasterizer_scanline_aa<> rasterizer;
@@ -2366,8 +2242,9 @@ doFillRect(Drawable d, GC gc, int x, int y, int w, int h)
 	ren_mclip.copy_bar(x, y, x + w - 1, y + h - 1, c);
     }
 
-    if (tmpRgn)
+    if (tmpRgn) {
 	SdlTkRgnPoolFree(tmpRgn);
+    }
 
     /* Unlock surface */
     if (SDL_MUSTLOCK(sdl)) {
@@ -2434,8 +2311,6 @@ SdlTkGfxFillRect(Drawable d, GC gc, int x, int y, int w, int h)
 	break;
     }
 }
-
-#ifndef AGG23
 
 #undef JoinMiter
 #undef JoinRound
@@ -2513,8 +2388,6 @@ SdlTkXGetAgg2D(Display *display, Drawable d)
     }
     return display->agg2d;
 }
-
-#endif
 
 /*
  * Local Variables:

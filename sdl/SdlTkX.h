@@ -185,8 +185,7 @@ extern "C" {
 #define XDestroyAgg2D SdlTkXDestroyAgg2D
 #define XGetFontFile SdlTkXGetFontFile
 #define XGetFTStream SdlTkXGetFTStream
-#define XOffsetRegion SdlTkXOffsetRegion
-#define XUnionRegion SdlTkXUnionRegion
+#define XPolygonRegion SdlTkXPolygonRegion
 
 Status XAllocColor(Display *d, Colormap c, XColor *xp);
 Status XAllocNamedColor(Display *display, Colormap colormap,
@@ -427,7 +426,9 @@ void *XGetFTStream(const char *pathname, int size);
 
 /* for "tktreectrl" */
 int XOffsetRegion(Region rgn, int dx, int dy);
-int XUnionRegion(Region srca, Region srcb, Region dr_return);
+
+/* for "tkzinc" */
+Region XPolygonRegion(XPoint *pts, int count, int rule);
 
 #endif /* !USE_TK_STUBS */
 

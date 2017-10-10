@@ -516,6 +516,7 @@ are reserved in the protocol for errors and replies. */
 #define Complex			0	/* paths may intersect */
 #define Nonconvex		1	/* no paths intersect, but not convex */
 #define Convex			2	/* wholly convex */
+#define ConvexNoAA              99      /* SDL/AGG no anti-aliasing */
 
 /* Arc modes for PolyFillArc */
 

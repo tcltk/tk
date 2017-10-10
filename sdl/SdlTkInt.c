@@ -23,6 +23,26 @@ SdlTkXInfo SdlTkX = { 0, 0, NULL };
 static int translate_zoom = 1;
 #endif
 
+/* Force presence of Region functions */
+
+void *SdlTkXRegionFuncs[] = {
+    SdlTkXCreateRegion,
+    SdlTkXDestroyRegion,
+    SdlTkXEmptyRegion,
+    SdlTkXEqualRegion,
+    SdlTkXIntersectRegion,
+    SdlTkXOffsetRegion,
+    SdlTkXPointInRegion,
+    SdlTkXRectInRegion,
+    SdlTkXSetRegion,
+    SdlTkXShrinkRegion,
+    SdlTkXSubtractRegion,
+    SdlTkXUnionRectWithRegion,
+    SdlTkXXorRegion,
+    SdlTkXUnionRegion,
+    SdlTkXPolygonRegion
+};
+
 #define TRANSLATE_RMB    1
 #define TRANSLATE_PTZ    2
 #define TRANSLATE_ZOOM   4
@@ -1806,7 +1826,7 @@ doNormalKeyEvent:
 	    SendAppEvent(event, &nsent,
 			 ((_Window *) SdlTkX.screen->root)->child);
 	return nsent > 0;
-	}
+    }
 
     case SDL_USEREVENT: {
 	int nsent = 0;
@@ -4550,12 +4570,17 @@ wrongArgs:
 	}
 #ifdef ANDROID
 	SdlTkLock(NULL);
-	SdlTkX.vr_mode = mode;
+	if (SdlTkX.vr_mode != mode) {
+	    SdlTkX.vr_mode = mode;
+	    SdlTkX.draw_later |= SDLTKX_RENDCLR;
+	}
+	if (objc == 4) {
+	    SDL_SetBarrelDistortion(SdlTkX.sdlrend, distortion, rescale,
+		    NULL, NULL);
+	    SdlTkX.draw_later |= SDLTKX_RENDCLR;
+	}
 	SDL_SetTextureBlendMode(SdlTkX.sdltex, SdlTkX.vr_mode ?
 		SDL_BLENDMODE_NONE_BD : SDL_BLENDMODE_NONE);
-	if (objc == 4) {
-	    SDL_SetBarrelDistortion(SdlTkX.sdlrend, distortion, rescale);
-	}
 	SdlTkX.draw_later |= (SDLTKX_DRAW | SDLTKX_DRAWALL | SDLTKX_PRESENT);
 	SdlTkUnlock(NULL);
 #endif
@@ -4565,7 +4590,8 @@ wrongArgs:
 	SdlTkLock(NULL);
 	mode = SdlTkX.vr_mode;
 #ifdef ANDROID
-	SDL_GetBarrelDistortion(SdlTkX.sdlrend, &distortion, &rescale);
+	SDL_GetBarrelDistortion(SdlTkX.sdlrend, &distortion, &rescale,
+		NULL, NULL);
 #endif
 	SdlTkUnlock(NULL);
 	objs[0] = Tcl_NewIntObj(mode);

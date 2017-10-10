@@ -1198,8 +1198,8 @@ CanvasWidgetCmd(
 
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto doneImove) {
 	    int index;
-	    int x1,x2,y1,y2;
-	    int dontRedraw1,dontRedraw2;
+	    int x1, x2, y1, y2;
+	    int dontRedraw1, dontRedraw2;
 
 	    /*
 	     * The TK_MOVABLE_POINTS flag should only be set for types that
@@ -1229,11 +1229,11 @@ CanvasWidgetCmd(
 
 	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    ItemDelChars(canvasPtr, itemPtr, index, index);
-	    dontRedraw1=itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
+	    dontRedraw1 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
 
 	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    ItemInsert(canvasPtr, itemPtr, index, tmpObj);
-	    dontRedraw2=itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
+	    dontRedraw2 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
 
 	    if (!(dontRedraw1 && dontRedraw2)) {
 		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
@@ -1346,7 +1346,7 @@ CanvasWidgetCmd(
     }
     case CANV_DCHARS: {
 	int first, last;
-	int x1,x2,y1,y2;
+	int x1, x2, y1, y2;
 
 	if ((objc != 4) && (objc != 5)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId first ?last?");
@@ -1374,7 +1374,7 @@ CanvasWidgetCmd(
 	    /*
 	     * Redraw both item's old and new areas: it's possible that a
 	     * delete could result in a new area larger than the old area.
-	     * Except if the insertProc sets the TK_ITEM_DONT_REDRAW flag,
+	     * Except if the dCharsProc sets the TK_ITEM_DONT_REDRAW flag,
 	     * nothing more needs to be done.
 	     */
 
@@ -1584,7 +1584,7 @@ CanvasWidgetCmd(
     }
     case CANV_INSERT: {
 	int beforeThis;
-	int x1,x2,y1,y2;
+	int x1, x2, y1, y2;
 
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId beforeThis string");
@@ -1812,7 +1812,8 @@ CanvasWidgetCmd(
     }
     case CANV_RCHARS: {
 	int first, last;
-	int x1,x2,y1,y2;
+	int x1, x2, y1, y2;
+	int dontRedraw1, dontRedraw2;
 
 	if (objc != 6) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId first last string");
@@ -1843,12 +1844,16 @@ CanvasWidgetCmd(
 
 	    x1 = itemPtr->x1; y1 = itemPtr->y1;
 	    x2 = itemPtr->x2; y2 = itemPtr->y2;
-	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 
+            itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    ItemDelChars(canvasPtr, itemPtr, first, last);
-	    ItemInsert(canvasPtr, itemPtr, first, objv[5]);
+	    dontRedraw1 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
 
-	    if (!(itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW)) {
+            itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+	    ItemInsert(canvasPtr, itemPtr, first, objv[5]);
+	    dontRedraw2 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
+
+            if (!(dontRedraw1 && dontRedraw2)) {
 		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
 			x1, y1, x2, y2);
 		EventuallyRedrawItem(canvasPtr, itemPtr);

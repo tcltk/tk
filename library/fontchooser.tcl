@@ -10,8 +10,6 @@
 
 namespace eval ::tk::fontchooser {
     variable S
-    variable font
-    variable style
 
     set S(W) .__tk__fontchooser
     set S(fonts) [lsort -dictionary [font families]]
@@ -31,6 +29,10 @@ namespace eval ::tk::fontchooser {
     set S(-title) [::msgcat::mc "Font"]
     set S(-command) ""
     set S(-font) TkDefaultFont
+}
+
+proc ::tk::fontchooser::Setup {} {
+    variable S
 
     # Canonical versions of font families, styles, etc. for easier searching
     set S(fonts,lcase) {}
@@ -53,10 +55,8 @@ namespace eval ::tk::fontchooser {
         hide ::tk::fontchooser::Hide
         configure ::tk::fontchooser::Configure
     }
-
-    unset font
-    unset style
 }
+::tk::fontchooser::Setup
 
 proc ::tk::fontchooser::Show {} {
     variable S
@@ -65,6 +65,9 @@ proc ::tk::fontchooser::Show {} {
         wm transient $S(W) [winfo toplevel $S(-parent)]
         tk::PlaceWindow $S(W) widget $S(-parent)
     }
+    set S(fonts) [lsort -dictionary [font families]]
+    set S(fonts,lcase) {}
+    foreach font $S(fonts) { lappend S(fonts,lcase) [string tolower $font]}
     wm deiconify $S(W)
 }
 

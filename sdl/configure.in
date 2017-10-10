@@ -25,7 +25,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".6"
+TK_PATCH_LEVEL=".7"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -462,6 +462,17 @@ fi
 AC_MSG_RESULT([$GCC_LIBS])
 
 #------------------------------------------------------------------------
+# MacOSX specifics
+#------------------------------------------------------------------------
+if test "`uname -s`" = "Darwin" ; then
+    EXTRA_WISH_LIBS="-sectcreate __TEXT __info_plist undroidwish-Info.plist"
+fi
+for i in ${LOCALES}; do
+    CFBUNDLELOCALIZATIONS="${CFBUNDLELOCALIZATIONS}<string>$i</string>"
+done
+TK_YEAR="`date +%Y`"
+
+#------------------------------------------------------------------------
 # sdl2tkConfig.sh refers to this by a different name
 #------------------------------------------------------------------------
 
@@ -527,6 +538,7 @@ AC_CONFIG_FILES([
     agg-2.4/src/Makefile:../sdl/agg-2.4/src/Makefile.in
     agg-2.4/font_freetype/Makefile:../sdl/agg-2.4/font_freetype/Makefile.in
     agg-2.4/agg2d/Makefile:../sdl/agg-2.4/agg2d/Makefile.in
+    undroidwish-Info.plist:../sdl/undroidwish-Info.plist.in
 ])
 AC_OUTPUT
 

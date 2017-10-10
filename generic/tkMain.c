@@ -197,7 +197,7 @@ Tk_MainEx(
 {
     Tcl_Obj *path, *argvPtr, *appName;
     const char *encodingName;
-    int code, nullStdin = 0;
+    int code, nullStdin = 0, interactive;
     Tcl_Channel chan;
     InteractiveState is;
 
@@ -260,7 +260,7 @@ Tk_MainEx(
      * encoding.
      */
 
-    if (NULL == Tcl_GetStartupScript(NULL)) {
+    if (Tcl_GetStartupScript(NULL) == NULL) {
 	size_t length;
 
 	/*
@@ -328,8 +328,9 @@ Tk_MainEx(
 	nullStdin = fstat(0, &st) || (S_ISCHR(st.st_mode) && !st.st_blocks);
     }
 #endif
+    interactive = (!path && (is.tty || nullStdin));
     Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
-	    Tcl_NewIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
+	    Tcl_NewIntObj(interactive), TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
@@ -347,6 +348,13 @@ Tk_MainEx(
 
     path = Tcl_GetStartupScript(&encodingName);
     if (path != NULL) {
+	is.tty = 0;
+	if (interactive) {
+	    interactive = 0;
+	    Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
+		    Tcl_NewIntObj(interactive), TCL_GLOBAL_ONLY);
+	    Tcl_EvalEx(interp, "console hide", -1, TCL_EVAL_GLOBAL);
+	}
 	Tcl_ResetResult(interp);
 	code = Tcl_FSEvalFileEx(interp, path, encodingName);
 	if (code != TCL_OK) {
@@ -361,7 +369,6 @@ Tk_MainEx(
 	    Tcl_DeleteInterp(interp);
 	    Tcl_Exit(1);
 	}
-	is.tty = 0;
     } else {
 
 	/*

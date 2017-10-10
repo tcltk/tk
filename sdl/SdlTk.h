@@ -53,4 +53,30 @@ EXTERN void		TkpSetMenubar(Tk_Window tkwin,
 
 #endif
 
+#ifdef PLATFORM_SDL
+
+#if (!defined(_WIN32) && !defined(__CYGWIN__)) || defined(BUILD_tk)
+
+/* These are in the Xlib stubs for Windows. */
+
+EXTERN int		SdlTkGLXAvailable(Display *display);
+
+EXTERN void *		SdlTkGLXCreateContext(Display *display, Window w,
+				Tk_Window tkwin, int flags);
+
+EXTERN void		SdlTkGLXDestroyContext(Display *display, Window w,
+				void *ctx);
+
+EXTERN void		SdlTkGLXMakeCurrent(Display *display, Window w,
+				void *ctx);
+
+EXTERN void		SdlTkGLXReleaseCurrent(Display *display, Window w,
+				void *ctx);
+
+EXTERN void		SdlTkGLXSwapBuffers(Display *display, Window w);
+
+#endif
+
+#endif
+
 #endif
