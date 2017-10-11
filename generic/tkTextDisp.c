@@ -4120,8 +4120,8 @@ DisplayText(
     MacDrawable *macWin = winPtr->privatePtr;
     if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
 	dInfoPtr->flags &= ~REDRAW_PENDING;
-	return;
-    }
+    	return;
+     }
 #endif
 
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {

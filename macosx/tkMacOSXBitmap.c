@@ -12,7 +12,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-
+#include "tkMacOSXConstants.h"
 /*
  * This structure holds information about native bitmaps.
  */
