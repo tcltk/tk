@@ -7809,7 +7809,27 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
 } -result {}
 
 
-test text-37.1 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-37.1 "Bug dd9667635d4d286858b1237835502a1d8bd07a82 \
+                text anchor not set" -setup {
+    interp bgerror {} returnerror-38.15
+    proc returnerror-38.15 {m opts} {set ::my_error $m}
+    destroy .t
+    pack [text .t]
+} -body {
+    .t insert end "Hello world!"
+    .t tag add sel 1.0 end
+    # this line shall not trigger error:
+    #     bad text index "tk::anchorN"
+    event generate .t <<SelectPrevLine>>
+    update
+    set ::my_error
+} -cleanup {
+    destroy .t
+    rename returnerror-38.15 ""
+} -result {}
+
+
+test text-38.1 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
     set res {}
@@ -7827,7 +7847,7 @@ test text-37.1 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{break {}}}\
     {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
     {{break {}}}}
-test text-37.2 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-38.2 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
     set res {}
@@ -7845,7 +7865,7 @@ test text-37.2 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{text 1 {}} {break {n1}} {break {}}}\
     {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
     {{text 1 {}} {break {n1}} {break {}}}}
-test text-37.3 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-38.3 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
     set res {}
@@ -7863,7 +7883,7 @@ test text-37.3 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{text 1 {}} {break {}}}\
     {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
     {{text 1 {}} {break {}}}}
-test text-37.4 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-38.4 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {}
     set res {}
@@ -7881,7 +7901,7 @@ test text-37.4 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
     {{break {}}}\
     {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}}
-test text-37.5 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-38.5 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
     set res {}
@@ -7899,7 +7919,7 @@ test text-37.5 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{break {}}}\
     {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
     {{break {}}}}
-test text-37.6 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-38.6 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
     set res {}
@@ -7917,7 +7937,7 @@ test text-37.6 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{text 1 {}} {break {n1}} {break {}}}\
     {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
     {{text 1 {}} {break {n1}} {break {}}}}
-test text-37.7 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-38.7 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
     set res {}
@@ -7935,7 +7955,7 @@ test text-37.7 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{text 1 {}} {break {}}}\
     {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
     {{text 1 {}} {break {}}}}
-test text-37.8 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-38.8 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1" {} "\n" n1 "2" {} "\n" {n2}
     set res {}
@@ -7953,7 +7973,7 @@ test text-37.8 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{text 1 {}} {break {n1}} {text 2 {}} {break {}}}\
     {{text 1 {}} {break {n1}} {text 2 {}} {break {n2}} {break {}}}\
     {{text 1 {}} {break {n1}} {text 2 {}} {break {}}}}
-test text-37.9 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-38.9 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t tag add n begin
     .t edit separator -immediately
@@ -7972,7 +7992,7 @@ test text-37.9 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{break {}}}\
     {{break {n}}}\
     {{break {}}}}
-test text-37.10 {deletion - clean widget} -setup {
+test text-38.10 {deletion - clean widget} -setup {
     text .t -undo on
     set res {}
 } -body {
@@ -7989,7 +8009,7 @@ test text-37.10 {deletion - clean widget} -setup {
    unset res
 } -result {{{break {}}}\
     {{break {}}}}
-test text-37.11 {deletion - test optimization} -setup {
+test text-38.11 {deletion - test optimization} -setup {
     text .t -undo on
     .t tag add n begin
     .t edit separator -immediately
@@ -7999,7 +8019,7 @@ test text-37.11 {deletion - test optimization} -setup {
 } -cleanup {
     destroy .t
 } -result {{{{tag clear {n 0 1}}} {{tag add n}}} {}}
-test text-37.12 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-38.12 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t insert end "1"
     .t tag add n begin end
@@ -8019,7 +8039,7 @@ test text-37.12 {deletion - newline behavior - undo/redo behavior} -setup {
 } -result {{{break {}}}\
     {{text 1 {n}} {break {n}}}\
     {{break {}}}}
-test text-37.13 {deletion - newline behavior - undo/redo behavior} -setup {
+test text-38.13 {deletion - newline behavior - undo/redo behavior} -setup {
     text .t -undo on
     .t tag add n begin
     .t edit separator -immediately
@@ -8042,7 +8062,7 @@ test text-37.13 {deletion - newline behavior - undo/redo behavior} -setup {
 
 # non-regression regarding miscellaneous bugs, especially crashes and failed assertions
 
-test text-38.1 "Bug 83632316b9cc27a2bfc743e049f078419480871e \
+test text-39.1 "Bug 83632316b9cc27a2bfc743e049f078419480871e \
                 Crash with -showinsertforeground and -blockcursor" -setup {
 } -body {
     set w [text .t \
@@ -8055,7 +8075,7 @@ test text-38.1 "Bug 83632316b9cc27a2bfc743e049f078419480871e \
 } -cleanup {
     destroy $w
 } -result {}
-test text-38.2 "Bug 5cfd9dfe0d60f6a78fbdb07e1a0d385216160bd6 \
+test text-39.2 "Bug 5cfd9dfe0d60f6a78fbdb07e1a0d385216160bd6 \
                 -startindex and -endindex defaults cannot be re-eaten by the text widget" -setup {
     text .t
 } -body {
@@ -8064,7 +8084,7 @@ test text-38.2 "Bug 5cfd9dfe0d60f6a78fbdb07e1a0d385216160bd6 \
 } -cleanup {
     destroy .t
 } -result {}
-test text-38.3 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
+test text-39.3 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
                 Segfaults in revised_text - Case 1 (early measurements)" -setup {
     set message {    When wish is built with "--enable-symbols", this demo 
                      causes wish to fail an assertion, and to segfault, at startup.
@@ -8108,7 +8128,7 @@ test text-38.3 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
     destroy .t
     unset message
 } -result {0}
-test text-38.4 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
+test text-39.4 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
                 Segfaults in revised_text - Case 2 (undo after tag lower)" -setup {
     pack [text .t] -padx 2
 } -body {
@@ -8125,7 +8145,7 @@ test text-38.4 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
 } -cleanup {
     destroy .t
 } -result {}
-test text-38.5 "Bug 0d630132f2fb8043fc68e18cbb981a10ab27154c \
+test text-39.5 "Bug 0d630132f2fb8043fc68e18cbb981a10ab27154c \
                 Assertion failed in tkTextIndex.c" -setup {
     pack [text .t]
 } -body {
@@ -8144,7 +8164,7 @@ test text-38.5 "Bug 0d630132f2fb8043fc68e18cbb981a10ab27154c \
 } -cleanup {
     destroy .t
 } -result {}
-test text-38.6 "Bug 3f1d48e263ee057743e98b7279bdbe0940515546 \
+test text-39.6 "Bug 3f1d48e263ee057743e98b7279bdbe0940515546 \
                 Assertion failed in tkTextIndex.c" -setup {
     pack [text .t]
 } -body {
@@ -8155,7 +8175,7 @@ test text-38.6 "Bug 3f1d48e263ee057743e98b7279bdbe0940515546 \
 } -cleanup {
     destroy .t
 } -result {}
-test text-38.7 "Bug c3e31d8f981a95a0d7c4d936134e27a9ae5160ed \
+test text-39.7 "Bug c3e31d8f981a95a0d7c4d936134e27a9ae5160ed \
                 Assertion failed in tkTextMark.c" -setup {
     pack [text .t -undo 1]
 } -body {
@@ -8171,7 +8191,7 @@ test text-38.7 "Bug c3e31d8f981a95a0d7c4d936134e27a9ae5160ed \
 } -cleanup {
     destroy .t
 } -result {}
-test text-38.8 "Bug 73175271f22560fda74194bb5ca73daacb139c85 \
+test text-39.8 "Bug 73175271f22560fda74194bb5ca73daacb139c85 \
                 Assertion failed in tkTextTagSetPriv.h" -setup {
     text .t
 } -body {
@@ -8179,7 +8199,7 @@ test text-38.8 "Bug 73175271f22560fda74194bb5ca73daacb139c85 \
 } -cleanup {
     destroy .t
 } -result {}
-test text-38.9 "Bug 283d52f41f455ac383a95ba688a7e217e9b8755d \
+test text-39.9 "Bug 283d52f41f455ac383a95ba688a7e217e9b8755d \
                 Assertion failed in tkTextMark.c" -setup {
     pack [text .t -undo 1]
 } -body {
@@ -8196,7 +8216,7 @@ test text-38.9 "Bug 283d52f41f455ac383a95ba688a7e217e9b8755d \
 } -cleanup {
     destroy .t
 } -returnCodes {error} -result {bad text index "unsavedmodifiedline2"}
-test text-38.10 "Bug 3cd0454c1d3b205157b5fa6bf226d3ad4c4bb8d2 \
+test text-39.10 "Bug 3cd0454c1d3b205157b5fa6bf226d3ad4c4bb8d2 \
                  Assertion failed in tkTextBTree.c" -setup {
     pack [text .t -undo 1]
 } -body {
@@ -8212,7 +8232,7 @@ test text-38.10 "Bug 3cd0454c1d3b205157b5fa6bf226d3ad4c4bb8d2 \
 } -cleanup {
     destroy .t
 } -result {}
-test text-38.11 "Bug 0bc9df5fe388558fa4f666799c631b9bfd4fc053 \
+test text-39.11 "Bug 0bc9df5fe388558fa4f666799c631b9bfd4fc053 \
                  Assertion failed in tkTextMark.c" -setup {
     text .t -undo 1
 } -body {
@@ -8226,7 +8246,7 @@ test text-38.11 "Bug 0bc9df5fe388558fa4f666799c631b9bfd4fc053 \
  } -cleanup {
     destroy .t
 } -result {stop}
-test text-38.12 "Bug 2563b9689e415e496bcb86314cdb13387e919d92 \
+test text-39.12 "Bug 2563b9689e415e496bcb86314cdb13387e919d92 \
                  inspect subcommand, option -complete" -setup {
     text .t
 } -body {
@@ -8234,7 +8254,7 @@ test text-38.12 "Bug 2563b9689e415e496bcb86314cdb13387e919d92 \
 } -cleanup {
     destroy .t
 } -match glob -result {*}
-test text-38.13 "Bug fc24165111709d5add5fb7532e30bb18233c0404 \
+test text-39.13 "Bug fc24165111709d5add5fb7532e30bb18233c0404 \
                  bbox does not return {} for off-screen characters" -setup {
     pack [text .t -width 10 -height 10 -wrap char]
 } -body {
@@ -8246,7 +8266,7 @@ test text-38.13 "Bug fc24165111709d5add5fb7532e30bb18233c0404 \
 } -cleanup {
     destroy .t
 } -result {}
-test text-38.14 "Bug 9ffb79059bacafe3796bc3ab3ae701f402f4c813 \
+test text-39.14 "Bug 9ffb79059bacafe3796bc3ab3ae701f402f4c813 \
                  Assertion failed in tkTextIndex.c" -setup {
     pack [text .t -undo 1]
 } -body {
@@ -8265,24 +8285,6 @@ test text-38.14 "Bug 9ffb79059bacafe3796bc3ab3ae701f402f4c813 \
     .t edit undo    ; # used to crash
 } -cleanup {
     destroy .t
-} -result {}
-test text-38.15 "Bug dd9667635d4d286858b1237835502a1d8bd07a82 \
-                 text anchor not set" -setup {
-    interp bgerror {} returnerror-38.15
-    proc returnerror-38.15 {m opts} {set ::my_error $m}
-    destroy .t
-    pack [text .t]
-} -body {
-    .t insert end "Hello world!"
-    .t tag add sel 1.0 end
-    # this line shall not trigger error:
-    #     bad text index "tk::anchorN"
-    event generate .t <<SelectPrevLine>>
-    update
-    set ::my_error
-} -cleanup {
-    destroy .t
-    rename returnerror-38.15 ""
 } -result {}
 
 
