@@ -7811,8 +7811,8 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
 
 test text-37.1 "Bug dd9667635d4d286858b1237835502a1d8bd07a82 \
                 text anchor not set" -setup {
-    interp bgerror {} returnerror-38.15
-    proc returnerror-38.15 {m opts} {set ::my_error $m}
+    interp bgerror {} returnerror-37.1
+    proc returnerror-37.1 {m opts} {set ::my_error $m}
     destroy .t
     pack [text .t]
 } -body {
@@ -7825,7 +7825,7 @@ test text-37.1 "Bug dd9667635d4d286858b1237835502a1d8bd07a82 \
     set ::my_error
 } -cleanup {
     destroy .t
-    rename returnerror-38.15 ""
+    rename returnerror-37.1 ""
 } -result {}
 
 
