@@ -685,7 +685,7 @@ GetCGContextForDrawable(
 	    bitsPerPixel = 8;
 	    bitmapInfo = (CGBitmapInfo)kCGImageAlphaOnly;
 	} else {
-	    colorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+	    colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
 	    bitsPerPixel = 32;
 	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
 	}
