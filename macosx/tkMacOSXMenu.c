@@ -19,6 +19,7 @@
 #include "tkFont.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXConstants.h"
 
 /*
 #ifdef TK_MAC_DEBUG

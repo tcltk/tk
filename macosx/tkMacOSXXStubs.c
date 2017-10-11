@@ -890,7 +890,6 @@ XGetImage(
     int	        bitmap_pad = 0;
     int	        bytes_per_row = 4*width;
     int                size;
-    MacDrawable *macDraw = (MacDrawable *) d; // Where is this variable used? May it be removed?
     int scalefactor = 1;
 #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     NSWindow *win = TkMacOSXDrawableWindow(d);
@@ -1369,7 +1368,7 @@ void
 Tk_ResetUserInactiveTime(
     Display *dpy)
 {
-    IOGPoint loc;
+    IOGPoint loc = {0, 0};
     kern_return_t kr;
     NXEvent nullEvent = {NX_NULLEVENT, {0, 0}, 0, -1, 0};
     enum { kNULLEventPostThrottle = 10 };
