@@ -278,14 +278,17 @@ VISIBILITY_HIDDEN
     NSAutoreleasePool *_mainPool;
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
-    BOOL _poolProtected;
+    int _poolLock;
 #endif
 }
-@property BOOL poolProtected;
+@property BOOL poolLock;
+
 @end
 @interface TKApplication(TKInit)
 - (NSString *)tkFrameworkImagePath:(NSString*)image;
 - (void)_resetAutoreleasePool;
+- (void)_lockAutoreleasePool;
+- (void)_unlockAutoreleasePool;
 @end
 @interface TKApplication(TKEvent)
 - (NSEvent *)tkProcessEvent:(NSEvent *)theEvent;
