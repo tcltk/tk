@@ -375,7 +375,7 @@ Tk_ChooseColorObjCmd(
     returnCode = [NSApp runModalForWindow:colorPanel];
     if (returnCode == modalOK) {
 	color = [[colorPanel color] colorUsingColorSpace:
-		[NSColorSpace genericRGBColorSpace]];
+		[NSColorSpace deviceRGBColorSpace]];
 	numberOfComponents = [color numberOfComponents];
     }
     if (color && numberOfComponents >= 3 && numberOfComponents <= 4) {
