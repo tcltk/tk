@@ -57,10 +57,10 @@ Photos support the following \fIoptions\fR:
 .TP
 \fB\-data \fIstring\fR
 .
-Specifies the contents of the image as a string.  
+Specifies the contents of the image as a string.
 .VS 8.7
 The string should
-contain data in the default list-of-lists form, 
+contain data in the default list-of-lists form,
 .VE 8.7
 binary data or, for some formats, base64-encoded data (this is
 currently guaranteed to be supported for PNG and GIF images). The
@@ -239,7 +239,7 @@ the source image is used as-is.  The default compositing rule is
 .TP
 \fIimageName \fBdata\fR ?\fIoption value(s) ...\fR?
 .
-Returns image data in the form of a string. 
+Returns image data in the form of a string.
 .VS 8.7
 The format of the string depends on the format handler. By default, a
 human readable format as a list of lists of pixel data is used, other
@@ -261,7 +261,7 @@ Specifies the name of the image file format handler to use and,
 optionally, arguments to the format handler.  Specifically, this
 subcommand searches for the first handler whose name matches an
 initial substring of \fIformat-name\fR and which has the capability to
-write a string containing this image data.  
+write a string containing this image data.
 .VS 8.7
 If this option is not given, this subcommand uses the default format
 that consists of a list (one element per row) of lists (one element
@@ -468,10 +468,10 @@ image file formats to be added easily.  The photo image code maintains
 a list of these handlers.  Handlers are added to the list by
 registering them with a call to \fBTk_CreatePhotoImageFormat\fR.  The
 standard Tk distribution comes with handlers for PPM/PGM, PNG and GIF
-formats, 
+formats,
 .VS 8.7
 as well as the \fBdefault\fR handler to encode/decode image
-data in a human readable form. 
+data in a human readable form.
 .VE 8.7
 These handlers are automatically registered on initialization.
 .PP
@@ -569,30 +569,30 @@ alpha suffix. The alpha suffix may be one of:
 .TP
 \fB@\fR\fIA\fR
 .
-The alpha value \fIA\fR must be a fractional value in the range  0.0 
+The alpha value \fIA\fR must be a fractional value in the range  0.0
 (fully transparent) to 1.0 (fully opaque).
 .TP
 \fB#\fR\fIX\fR
 .
 The alpha value \fIX\fR is a hexadecimal digit that specifies an integer
-alpha value in the range 0 (fully transparent) to 255 (fully opaque). 
-This is expanded in range from 4 bits wide to 8 bits wide by 
+alpha value in the range 0 (fully transparent) to 255 (fully opaque).
+This is expanded in range from 4 bits wide to 8 bits wide by
 multiplication by 0x11.
 .TP
 \fB#\fR\fIXX\fR
 .
-The alpha value \fIXX\fR is passed as two hexadecimal digits that 
-specify an integer alpha value in the range 0 (fully transparent) to 255 
-(fully opaque). 
+The alpha value \fIXX\fR is passed as two hexadecimal digits that
+specify an integer alpha value in the range 0 (fully transparent) to 255
+(fully opaque).
 .RE
 .IP \(bu 3
-A Tcl list with three or four integers in the range 0 to 255, 
-specifying the values for the red, green, blue and (optionally) 
+A Tcl list with three or four integers in the range 0 to 255,
+specifying the values for the red, green, blue and (optionally)
 alpha channels respectively.
 .IP \(bu 3
 \fB#\fR\fIRGBA\fR format: a \fB#\fR followed by four hexadecimal digits,
 where each digit is the value for the red, green, blue and alpha
-channels respectively. Each digit will be expanded internally to 
+channels respectively. Each digit will be expanded internally to
 8 bits by multiplication by 0x11.
 .IP \(bu 3
 \fB#\fR\fIRRGGBBAA\fR format: \fB#\fR followed by eight hexadecimal digits,

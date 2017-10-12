@@ -21,7 +21,7 @@
 # To help keeping the overview, the table below lists where to find
 # tests for each of the functions in tkImgPhoto.c. The function are
 # listed in the order as they appear in the source file.
-# 
+#
 
 #
 # Function name                         Tests for function
@@ -83,7 +83,7 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
-# 
+#
 # Used for imgPhoto-4.65 - imgPhoto-4.73
 #
 proc foreachPixel {img xVar yVar script} {
@@ -960,7 +960,7 @@ test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constrain
     file delete ./-teapotPhotoFile
 } -result {}
 test imgPhoto-4.76 {ImgPhotoCmd procedure: copy to same image} -constraints {
-    hasTeapotPhoto 
+    hasTeapotPhoto
 } -setup {
     imageCleanup
     image create photo photo1 -file $teapotPhotoFile
@@ -1080,7 +1080,7 @@ test imgPhoto-4.89 {ImgPhotoCmd, transparency set: -alpha} -setup {
     image create photo photo1
 } -body {
     photo1 put white -to 0 0 2 2
-    photo1 transparency set 0 0 0 -alpha 
+    photo1 transparency set 0 0 0 -alpha
     photo1 transparency set 1 0 1 -alpha
     photo1 transparency set 0 1 254 -alpha
     photo1 transparency set 1 1 255 -alpha
@@ -1252,7 +1252,7 @@ test imgPhoto-4.105 {ImgPhotoCmd data: invalid option} -setup {
 } -returnCodes error -result \
 {unrecognized option "-bogus": must be -background, -format, -from, or -grayscale}
 test imgPhoto-4.106 {ImgPhotoCmd data: extra arg before options} -setup {
-    image create photo photo1 
+    image create photo photo1
 } -body {
     photo1 data bogus -grayscale
 } -cleanup {
@@ -1340,7 +1340,7 @@ test imgPhoto-4.117 {ImgPhotoCmd data: list colorformat} -setup {
 } -body {
     photo1 data -format {default -colorformat list}
 } -result {{{255 0 0 170} {0 128 0 255}} {{0 0 255 204} {255 255 255 221}}}
-test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image 
+test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
     results in same image as orignial } -constraints {
         hasTeapotPhoto
         hasTranspTeapotPhoto
@@ -1352,7 +1352,7 @@ test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
     image create photo photo1
 } -body {
     set result {}
-    # We don't test gif here, as there seems to be a problem with 
+    # We don't test gif here, as there seems to be a problem with
     # <imgName> data and gif format ("too many colors", probably a bug)
     foreach fmt {ppm png {default -colorformat rgba} \
             {default -colorformat list}} {
@@ -1845,7 +1845,7 @@ test imgPhoto-19.1 {MatchStringFormat: with "-format default"} -setup {
 } -result {3 2}
 test imgPhoto-19.2 {MatchStringFormat: without -format option,
         default fmt} -body {
-    image create photo photo1 
+    image create photo photo1
     photo1 put {{red} {green}}
     list [image width photo1] [image height photo1]
 } -cleanup {
@@ -1867,7 +1867,7 @@ test imgPhoto-19.4 {MatchStringFormat: ppm fmt, without opt} -constraints {
     hasTeapotPhoto
 } -setup {
     image create photo photo1 -file $teapotPhotoFile
-    image create photo photo2 
+    image create photo photo2
 } -body {
     set imgData [photo1 data -format ppm]
     photo2 put $imgData

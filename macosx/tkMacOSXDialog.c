@@ -176,7 +176,6 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
     return url;
 }
 #endif
- 
 
 #pragma mark TKApplication(TKDialog)
 

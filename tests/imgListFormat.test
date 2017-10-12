@@ -58,7 +58,7 @@ test imgListFormat-1.5 {ParseFormatOptions: no -colorformat value} -setup {
     image create photo photo1 -data black
 } -body {
     photo1 data -format {default -colorformat}
-} -returnCodes error -result {the "-colorformat" option requires a value}     
+} -returnCodes error -result {the "-colorformat" option requires a value}
 test imgListFormat-1.6 {ParseFormatOptions: bad -colorformat val #1} -setup {
     image create photo photo1
 } -body {
@@ -109,7 +109,7 @@ test imgListFormat-1.11 {valid colorformats} -setup {
 } -result {{{#ffffff}} {{#ffffff78}} {{{255 255 255 120}}}}
 
 # GetBadOptMsg: only use case already tested with imgListFormat-1.4
-    
+
 test imgListFormat-3.1 {StringMatchDef: data is not a list} -body {
     testphotostringmatch {not a " proper list}
     # " (this comment is here only for editor highlighting)
@@ -119,11 +119,11 @@ test imgListFormat-3.2 {StringMatchDef: \
         list element not a proper list} -body {
     testphotostringmatch {{red white} {not "} {blue green}}
     # "
-} -returnCodes error -result {unmatched open quote in list} 
+} -returnCodes error -result {unmatched open quote in list}
 test imgListFormat-3.3 {StringMatchDef: \
         sublists with differen lengths} -body {
-    testphotostringmatch {{#001122 #334455 #667788} 
-		{#99AABB #CCDDEE} 
+    testphotostringmatch {{#001122 #334455 #667788}
+		{#99AABB #CCDDEE}
 		{#FF0011 #223344 #556677}}
 } -returnCodes error -result \
     {invalid row # 1: all rows must have the same number of elements}
@@ -144,7 +144,7 @@ test imgListFormat-3.5 {StringMatchDef: valid data} -setup {
     image create photo photo1
 } -body {
     photo1 put {{blue green}
-		{yellow magenta} 
+		{yellow magenta}
 	        {#000000 #FFFFFFFF}}
     list [image width photo1] [image height photo1] \
 	[photo1 get 0 2 -withalpha]
@@ -152,8 +152,8 @@ test imgListFormat-3.5 {StringMatchDef: valid data} -setup {
     imageCleanup
 } -result {2 3 {0 0 0 255}}
 
-# ImgStringRead: most of the error cases cannot be tested with current code, 
-# as the errors are detected by StringMatchDef	
+# ImgStringRead: most of the error cases cannot be tested with current code,
+# as the errors are detected by StringMatchDef
 test imgListFormat-4.1 {StringReadDef: use with -format opt} -setup {
     image create photo photo1
 } -body {
@@ -254,7 +254,7 @@ test imgListFormat-5.6 {StringWriteDef: test some pixels #1} -constraints {
     lappend result [lindex $imgData 107 53]
     lappend result [lindex $imgData 203 157]
     lappend result [lindex $imgData 255 255]
-    set result 
+    set result
 } -cleanup {
     unset result
     unset imgData
@@ -273,7 +273,7 @@ test imgListFormat-5.7 {StringWriteDef: test some pixels #2} -constraints {
     lappend result [lindex $imgData 107 53]
     lappend result [lindex $imgData 203 157]
     lappend result [lindex $imgData 255 255]
-    set result 
+    set result
 } -cleanup {
     unset result
     unset imgData
@@ -367,7 +367,7 @@ test imgListFormat-6.4 {ParseColor: #XXX color, different forms} -setup {
     photo1 data -format {default -colorformat rgba}
 } -cleanup {
     imageCleanup
-} -result {{#aa112233 #334455ff} {#001122ff #fffefd00}}        
+} -result {{#aa112233 #334455ff} {#001122ff #fffefd00}}
 test imgListFormat-6.5 {ParseColor: list format} -setup {
     image create photo photo1
 } -body {
@@ -502,7 +502,7 @@ test imgListFormat-8.1 {ParseColorAsHex: RGB format} -setup {
     photo1 data
 } -cleanup {
     imageCleanup
-} -result {{#001100 #001100}}        
+} -result {{#001100 #001100}}
 test imgListFormat-8.2 {ParseColorAsHex: invalid hex digit} -setup {
     image create photo photo1
 } -body {
@@ -529,7 +529,7 @@ test imgListFormat-8.4 {ParseColor: valid #RGBA color} -setup {
 
 test imgListFormat-9.1 {ParseColorAsStandard:
         Tk color, valid suffixes} -setup {
-    image create photo photo1 
+    image create photo photo1
     set result {}
 } -body {
     photo1 put {{blue@0.711 #114433#C} {#8D4#1A magenta}}
@@ -571,7 +571,7 @@ test imgListFormat-9.4 {ParseColorAsStandard: @A suffix, not a float} -setup {
 } -returnCodes error -result \
     {invalid alpha suffix "@bogus": expected floating-point value}
 test imgListFormat-9.5 {ParseColorAsStandard: @A, value too low} -setup {
-    image create photo photo1 
+    image create photo photo1
 } -body {
     photo1 put {green@.1 green@-0.1}
 } -cleanup {

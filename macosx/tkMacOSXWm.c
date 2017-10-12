@@ -249,7 +249,7 @@ confuses Tk window geometry.
     if ([self isZoomed]) {
 	TkMacOSXZoomToplevel(self, inZoomIn);
     } else {
-	TkMacOSXZoomToplevel(self, inZoomOut);	 
+	TkMacOSXZoomToplevel(self, inZoomOut);
     }
 }
 
@@ -5180,7 +5180,7 @@ TkMacOSXZoomToplevel(
 	return false;
     }
       [window zoom:NSApp];
-  
+
      wmPtr->hints.initial_state =
     	    (zoomPart == inZoomIn ? NormalState : ZoomState);
     return true;
