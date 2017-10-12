@@ -1500,6 +1500,12 @@ declare 137 win {
 	    int sx, int sy, int dx, int dy,
 	    unsigned int w, unsigned int h)
 }
+declare 138 win {
+    Region XPolygonRegion(XPoint *pts, int n, int rule)
+}
+declare 139 win {
+    int XPointInRegion(Region rgn, int x, int y)
+}
 
 ################################
 # X functions for Aqua
