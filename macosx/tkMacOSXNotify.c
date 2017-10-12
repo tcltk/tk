@@ -216,8 +216,7 @@ TkMacOSXEventsSetupProc(
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
-    //    fprintf(stderr, "SetupProc (%s)", [runloopMode UTF8String]);
-    /* runloopMode will be nil if we are in the Tcl event loop. */
+    /* runloopMode will be nil if we are in a Tcl event loop. */
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
 	static const Tcl_Time zeroBlockTime = { 0, 0 };
 	[NSApp _resetAutoreleasePool];
@@ -258,14 +257,15 @@ TkMacOSXEventsCheckProc(
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
-    /* runloopMode will be nil if we are in the Tcl event loop. */
+    /* runloopMode will be nil if we are in a Tcl event loop. */
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
 	NSEvent *currentEvent = nil;
 	NSModalSession modalSession;
 	/* It is possible for the SetupProc to be called before this function
 	 * returns.  This happens, for example, when we process an event which
-	 * opens a modal windows.  To prevent premature release of our
-	 * application-wide autorelease pool, we must lock it here.
+	 * opens a modal window.  To prevent premature release of our
+	 * application-wide autorelease pool by a nested call to the SetupProc,
+	 * we must lock it here.
 	 */
 	[NSApp _lockAutoreleasePool];
 	do {
