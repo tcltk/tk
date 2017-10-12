@@ -207,7 +207,7 @@ static int		TrivialConfigObjCmd(ClientData dummy,
 static void		TrivialEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static int              TestPhotoStringMatchCmd(ClientData dummy,
-                            Tcl_Interp *interp, int objc, 
+                            Tcl_Interp *interp, int objc,
                             Tcl_Obj * const objv[]);
 
 /*
@@ -272,7 +272,7 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand(interp, "testphotostringmatch", 
+    Tcl_CreateObjCommand(interp, "testphotostringmatch",
             TestPhotoStringMatchCmd, (ClientData) Tk_MainWindow(interp),
             NULL);
 
@@ -2176,8 +2176,8 @@ TestPhotoStringMatchCmd(
         return TCL_ERROR;
     }
 }
-            
-    
+
+
 
 /*
  * Local Variables:
