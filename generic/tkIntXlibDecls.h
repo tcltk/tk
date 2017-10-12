@@ -421,6 +421,10 @@ EXTERN int		XReparentWindow(Display *d, Window w, Window p,
 EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 				int sx, int sy, int dx, int dy,
 				unsigned int w, unsigned int h);
+/* 138 */
+EXTERN Region		XPolygonRegion(XPoint *pts, int n, int rule);
+/* 139 */
+EXTERN int		XPointInRegion(Region rgn, int x, int y);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -830,6 +834,8 @@ typedef struct TkIntXlibStubs {
     int (*xDrawPoints) (Display *d, Drawable dr, GC gc, XPoint *p, int n, int m); /* 135 */
     int (*xReparentWindow) (Display *d, Window w, Window p, int x, int y); /* 136 */
     int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
+    Region (*xPolygonRegion) (XPoint *pts, int n, int rule); /* 138 */
+    int (*xPointInRegion) (Region rgn, int x, int y); /* 139 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -1204,6 +1210,10 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xReparentWindow) /* 136 */
 #define XPutImage \
 	(tkIntXlibStubsPtr->xPutImage) /* 137 */
+#define XPolygonRegion \
+	(tkIntXlibStubsPtr->xPolygonRegion) /* 138 */
+#define XPointInRegion \
+	(tkIntXlibStubsPtr->xPointInRegion) /* 139 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #define XSetDashes \
