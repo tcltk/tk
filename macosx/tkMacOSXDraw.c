@@ -483,7 +483,7 @@ CreateCGImageWithXImage(
 	 * Color image
 	 */
 
-	CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
@@ -685,7 +685,7 @@ GetCGContextForDrawable(
 	    bitsPerPixel = 8;
 	    bitmapInfo = (CGBitmapInfo)kCGImageAlphaOnly;
 	} else {
-	    colorspace = CGColorSpaceCreateWithName(kCGColorSpace
+	    colorspace = CGColorSpaceCreateDeviceRGB();
 	    bitsPerPixel = 32;
 	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
 	}
