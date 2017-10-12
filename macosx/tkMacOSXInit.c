@@ -60,7 +60,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 @synthesize poolLock = _poolLock;
 @end
 
-/* 
+/*
  * #define this to see a message on stderr whenever _resetAutoreleasePool is
  * called while the pool is locked.
  */
