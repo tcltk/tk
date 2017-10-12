@@ -14,6 +14,7 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkFileFilter.h"
+#include "tkMacOSXConstants.h"
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
 #define modalOK     NSOKButton
@@ -175,7 +176,6 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
     return url;
 }
 #endif
- 
 
 #pragma mark TKApplication(TKDialog)
 
@@ -190,7 +190,7 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 {
     FilePanelCallbackInfo *callbackInfo = contextInfo;
 
-    if (returnCode == NSFileHandlingPanelOKButton) {
+    if (returnCode == modalOK) {
 	Tcl_Obj *resultObj;
 
 	if (callbackInfo->multiple) {
@@ -218,7 +218,7 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 	} else {
 	    Tcl_SetObjResult(callbackInfo->interp, resultObj);
 	}
-    } else if (returnCode == NSFileHandlingPanelCancelButton) {
+    } else if (returnCode == modalCancel) {
 	Tcl_ResetResult(callbackInfo->interp);
     }
     if (panel == [NSApp modalWindow]) {

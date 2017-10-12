@@ -20,6 +20,7 @@
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXConstants.h"
 
 #define DEBUG_ZOMBIES 0
 
@@ -56,6 +57,8 @@
 /*Objects for use in setting background color and opacity of window.*/
 NSColor *colorName = NULL;
 BOOL opaqueTag = FALSE;
+extern CGImageRef CreateCGImageWithXImage(
+			XImage *image);
 
 static const struct {
     const UInt64 validAttrs, defaultAttrs, forceOnAttrs, forceOffAttrs;
@@ -232,8 +235,27 @@ static int windowHashInit = false;
     pointrect.size.height = 0;
     return [self convertRectFromScreen:pointrect].origin;
 }
-@end
 #endif
+
+/*Override automatic fullscreen button on 10.13 because system fullscreen API
+confuses Tk window geometry.
+*/
+#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
+- (void)toggleFullScreen:(id)sender
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    Tk_Window win_Ptr=(Tk_Window) winPtr;
+    Tcl_Interp *interp = Tk_Interp(win_Ptr);
+    if ([self isZoomed]) {
+	TkMacOSXZoomToplevel(self, inZoomIn);
+    } else {
+	TkMacOSXZoomToplevel(self, inZoomOut);
+    }
+}
+
+#endif
+@end
+
 
 #pragma mark -
 
@@ -5092,8 +5114,8 @@ TkMacOSXGetTkWindow(
  *
  * TkMacOSXIsWindowZoomed --
  *
- *	Ask Carbon if the given window is in the zoomed out state. Because
- *	dragging & growing a window can change the Carbon zoom state, we
+ *	Ask Cocoa if the given window is in the zoomed out state. Because
+ *	dragging & growing a window can change the Cocoa zoom state, we
  *	cannot rely on wmInfoPtr->hints.initial_state for this information.
  *
  * Results:
@@ -5111,6 +5133,7 @@ TkMacOSXIsWindowZoomed(
 {
     return [TkMacOSXDrawableWindow(winPtr->window) isZoomed];
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -5153,12 +5176,13 @@ TkMacOSXZoomToplevel(
      * Do nothing if already in desired zoom state.
      */
 
-    if (![window isZoomed] == (zoomPart == inZoomIn)) {
+    if ((![window isZoomed] == (zoomPart == inZoomIn))) {
 	return false;
     }
-    [window zoom:NSApp];
-    wmPtr->hints.initial_state =
-	    (zoomPart == inZoomIn ? NormalState : ZoomState);
+      [window zoom:NSApp];
+
+     wmPtr->hints.initial_state =
+    	    (zoomPart == inZoomIn ? NormalState : ZoomState);
     return true;
 }
 
@@ -6501,6 +6525,7 @@ TkMacOSXMakeFullscreen(
 	    result = TCL_ERROR;
 	    wmPtr->flags &= ~WM_FULLSCREEN;
 	} else {
+	    Tk_UnmapWindow((Tk_Window) winPtr);
 	    NSRect bounds = [window contentRectForFrameRect:[window frame]];
 	    NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
 
@@ -6532,6 +6557,7 @@ TkMacOSXMakeFullscreen(
 	[window setStyleMask: NSBorderlessWindowMask];
 	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
 	                          | NSApplicationPresentationAutoHideMenuBar];
+	Tk_MapWindow((Tk_Window) winPtr);
 #endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;
@@ -6543,6 +6569,7 @@ TkMacOSXMakeFullscreen(
     }
 
     if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {
+	Tk_UnmapWindow((Tk_Window) winPtr);
 	UInt64 oldAttributes = wmPtr->attributes;
 	NSRect bounds = NSMakeRect(wmPtr->configX, tkMacOSXZeroScreenHeight -
 		(wmPtr->configY + wmPtr->yInParent + wmPtr->configHeight),
@@ -6556,6 +6583,7 @@ TkMacOSXMakeFullscreen(
 	wmPtr->flags |= WM_SYNC_PENDING;
 	[window setFrame:[window frameRectForContentRect:bounds] display:YES];
 	wmPtr->flags &= ~WM_SYNC_PENDING;
+       Tk_MapWindow((Tk_Window) winPtr);
     }
     return result;
 }

@@ -15,8 +15,8 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
+#include "tkMacOSXConstants.h"
 #include <tclInt.h>
-#include <pthread.h>
 #import <objc/objc-auto.h>
 
 /* This is not used for anything at the moment. */
@@ -140,7 +140,7 @@ Tk_MacOSXSetupTkNotifier(void)
 	 */
 
 	if (CFRunLoopGetMain() == CFRunLoopGetCurrent()) {
-	    if (!pthread_main_np()) {
+	    if (![NSThread isMainThread]) {
 		/*
 		 * Panic if main runloop is not on the main application thread.
 		 */
@@ -150,7 +150,7 @@ Tk_MacOSXSetupTkNotifier(void)
 	    }
 	    Tcl_CreateEventSource(TkMacOSXEventsSetupProc,
 				  TkMacOSXEventsCheckProc,
-				  GetMainEventQueue());
+				  NULL);
 	    TkCreateExitHandler(TkMacOSXNotifyExitHandler, NULL);
 	    Tcl_SetServiceMode(TCL_SERVICE_ALL);
 	    TclMacOSXNotifierAddRunLoopMode(NSEventTrackingRunLoopMode);
@@ -184,7 +184,7 @@ TkMacOSXNotifyExitHandler(
 
     Tcl_DeleteEventSource(TkMacOSXEventsSetupProc,
 			  TkMacOSXEventsCheckProc,
-			  GetMainEventQueue());
+			  NULL);
     tsdPtr->initialized = 0;
 }
 
@@ -216,9 +216,11 @@ TkMacOSXEventsSetupProc(
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
+    //    fprintf(stderr, "SetupProc (%s)", [runloopMode UTF8String]);
     /* runloopMode will be nil if we are in the Tcl event loop. */
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
 	static const Tcl_Time zeroBlockTime = { 0, 0 };
+	[NSApp _resetAutoreleasePool];
 	/* Call this with dequeue=NO -- just checking if the queue is empty. */
 	NSEvent *currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 				       untilDate:[NSDate distantPast]
@@ -259,26 +261,15 @@ TkMacOSXEventsCheckProc(
     /* runloopMode will be nil if we are in the Tcl event loop. */
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
 	NSEvent *currentEvent = nil;
-	NSEvent *testEvent = nil;
 	NSModalSession modalSession;
-
+	/* It is possible for the SetupProc to be called before this function
+	 * returns.  This happens, for example, when we process an event which
+	 * opens a modal windows.  To prevent premature release of our
+	 * application-wide autorelease pool, we must lock it here.
+	 */
+	[NSApp _lockAutoreleasePool];
 	do {
-	    [NSApp _resetAutoreleasePool];
 	    modalSession = TkMacOSXGetModalSession();
-	    testEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
-					      untilDate:[NSDate distantPast]
-						 inMode:GetRunLoopMode(modalSession)
-						dequeue:NO];
-	    /* We must not steal any events during LiveResize. */
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
-	    if (testEvent && [[testEvent window] inLiveResize]) {
-		break;
-	    }
-#else
-	    if (testEvent && [[[testEvent window] contentView] inLiveResize]) {
-		break;
-	    }
-#endif
 	    currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 					      untilDate:[NSDate distantPast]
 						 inMode:GetRunLoopMode(modalSession)
@@ -303,6 +294,8 @@ TkMacOSXEventsCheckProc(
 		break;
 	    }
 	} while (1);
+	/* Now we can unlock the pool. */
+	[NSApp _unlockAutoreleasePool];
     }
 }
 
