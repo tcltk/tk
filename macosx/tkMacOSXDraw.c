@@ -1535,6 +1535,7 @@ TkScrollWindow(
 
 	    /* Convert to Tk coordinates. */
 	    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
+            TkMacOSXOffsetRegion(damageRgn, -macDraw->xOff, -macDraw->yOff);
 	    if (extraRgn) {
 		CFRelease(extraRgn);
 	    }
