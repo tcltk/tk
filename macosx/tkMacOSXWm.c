@@ -2336,8 +2336,7 @@ WmIconnameCmd(
  * WmIconphotoCmd --
  *
  *	This procedure is invoked to process the "wm iconphoto" Tcl command.
- *	See the user documentation for details on what it does. Not yet
- *	implemented for OS X.
+ *	See the user documentation for details on what it does. 
  *
  * Results:
  *	A standard Tcl result.
@@ -2347,6 +2346,7 @@ WmIconnameCmd(
  *
  *----------------------------------------------------------------------
  */
+
 static int
 WmIconphotoCmd(
     Tk_Window tkwin,		/* Main window of the application. */
@@ -2355,48 +2355,43 @@ WmIconphotoCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_PhotoHandle photo;
+   
+    Tk_Image tk_icon;
     int i, width, height, isDefault = 0;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
-		"window ?-default? image1 ?image2 ...?");
+			 "window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
     }
+
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	isDefault = 1;
 	if (objc == 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "window ?-default? image1 ?image2 ...?");
+			     "window ?-default? image1 ?image2 ...?");
 	    return TCL_ERROR;
 	}
     }
 
-    /*
-     * Iterate over all images to retrieve their sizes, in order to allocate a
-     * buffer large enough to hold all images.
-     */
-
-    for (i = 3 + isDefault; i < objc; i++) {
-	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
-	if (photo == NULL) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't use \"%s\" as iconphoto: not a photo image",
-		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
-	    return TCL_ERROR;
-	}
-	Tk_PhotoGetSize(photo, &width, &height);
+    char *icon; 
+    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
+	icon = Tcl_GetString(objv[4]);
+    }	else {
+	icon = Tcl_GetString(objv[3]);
     }
-
-    /*
-     * TODO: This requires implementation for OS X, but we silently return for
-     * now.
-     */
-
+     
+    tk_icon = Tk_GetImage(interp, winPtr, icon, NULL, NULL);
+    Tk_SizeOfImage(tk_icon, &width, &height);
+	
+    NSImage *newIcon;
+    newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon, width, height);
+    [NSApp setApplicationIconImage: newIcon];
+	   
+    Tk_FreeImage(tk_icon);
     return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
