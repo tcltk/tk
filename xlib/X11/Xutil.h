@@ -543,22 +543,6 @@ extern int XOffsetRegion(
 #endif
 );
 
-extern Bool XPointInRegion(
-#if NeedFunctionPrototypes
-    Region		/* r */,
-    int			/* x */,
-    int			/* y */
-#endif
-);
-
-extern Region XPolygonRegion(
-#if NeedFunctionPrototypes
-    XPoint*		/* points */,
-    int			/* n */,
-    int			/* fill_rule */
-#endif
-);
-
 extern int XRectInRegion(
 #if NeedFunctionPrototypes
     Region		/* r */,
