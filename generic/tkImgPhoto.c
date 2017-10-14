@@ -638,10 +638,10 @@ ImgPhotoCmd(
 		options.toY2 - options.toY, options.zoomX, options.zoomY,
 		options.subsampleX, options.subsampleY,
 		options.compositingRule);
-	
+
 	/*
 	 * Set the destination image size if the -shrink option was specified.
-	 * This has to be done _after_ copying the data. Otherwise, if source 
+	 * This has to be done _after_ copying the data. Otherwise, if source
 	 * and destination are the same image, block.pixelPtr would point to
 	 * an invalid memory block (bug [5239fd749b]).
 	 */
@@ -807,7 +807,7 @@ ImgPhotoCmd(
 
 	Tcl_Obj *channels[4];
 	int channelCount = 3;
-    
+
         index = 3;
         memset(&options, 0, sizeof(options));
         options.name = NULL;
@@ -822,7 +822,7 @@ ImgPhotoCmd(
         if (options.options & OPT_WITHALPHA) {
             channelCount = 4;
         }
- 
+
 	if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
 		|| (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)) {
 	    return TCL_ERROR;
@@ -873,7 +873,7 @@ ImgPhotoCmd(
 	/*
 	 * See if there's a format that can read the data
 	 */
-	
+
 	if (MatchStringFormat(interp, objv[2], options.format, &imageFormat,
 		&imageWidth, &imageHeight, &oldformat) != TCL_OK) {
 	    return TCL_ERROR;
@@ -900,18 +900,18 @@ ImgPhotoCmd(
 
 	if (imageFormat->stringReadProc(interp, data, format,
 		(Tk_PhotoHandle) masterPtr, options.toX, options.toY,
-		options.toX2 - options.toX, 
+		options.toX2 - options.toX,
 		options.toY2 - options.toY, 0, 0) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	/*
-	 * SB: is the next line really needed? The stringReadProc 
+	 * SB: is the next line really needed? The stringReadProc
 	 * writes image data with Tk_PhotoPutBlock(), which in turn
 	 * takes care to notify the changed image and to set/unset the
 	 * IMAGE_CHANGED bit.
 	 */
 	masterPtr->flags |= IMAGE_CHANGED;
-       
+
 	return TCL_OK;
     }
     case PHOTO_READ: {
@@ -1088,7 +1088,7 @@ ImgPhotoCmd(
 	    /*
 	     * parse fixed args and option
 	     */
-	    
+
 	    if (objc > 6 || objc < 5) {
 		Tcl_WrongNumArgs(interp, 3, objv, "x y ?-option?");
 		return TCL_ERROR;
@@ -1127,7 +1127,7 @@ ImgPhotoCmd(
 		return TCL_ERROR;
 	    }
 
-	    /* 
+	    /*
 	     * Extract and return the desired value
 	     */
 	    pixelPtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
@@ -1144,10 +1144,10 @@ ImgPhotoCmd(
 	    XRectangle setBox;
 	    TkRegion modRegion;
 
-	    /* 
+	    /*
 	     * Parse args and option, check for valid values
 	     */
-	    
+
 	    if (objc < 6 || objc > 7) {
 		Tcl_WrongNumArgs(interp, 3, objv, "x y newVal ?-option?");
 		return TCL_ERROR;
@@ -1203,18 +1203,18 @@ ImgPhotoCmd(
 		    return TCL_ERROR;
 		}
 	    }
-	   
+
 	    /*
 	     * Set new alpha value for the pixel
 	     */
-	    
+
 	    pixelPtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
 	    if (boolMode) {
 		pixelPtr[3] = newVal ? 0 : 255;
 	    } else {
 		pixelPtr[3] = newVal;
 	    }
-	    
+
 	    /*
 	     * Update the validRegion of the image
 	     */
@@ -1570,7 +1570,7 @@ ParseSubcommandOptions(
 		return TCL_ERROR;
 	    }
 	    *optIndexPtr = index;
-	} else if (bit == OPT_TO || bit == OPT_FROM 
+	} else if (bit == OPT_TO || bit == OPT_FROM
 		|| bit == OPT_SUBSAMPLE || bit == OPT_ZOOM) {
 	    const char *val;
 
@@ -2552,7 +2552,7 @@ MatchStringFormat(
 		== 0) {
 	    defaultFormatPtr = formatPtr;
 	}
-      
+
 	if (formatObj != NULL) {
 	    if (strncasecmp(formatString,
 		    formatPtr->name, strlen(formatPtr->name)) != 0) {
@@ -2568,12 +2568,12 @@ MatchStringFormat(
 		return TCL_ERROR;
 	    }
 	}
-	
+
 	/*
 	 * If this is the default format, and it was not passed as -format
 	 * option, skip the stringMatchProc test. It'll be done later
 	 */
-	
+
 	if (formatObj == NULL && formatPtr == defaultFormatPtr) {
 	    continue;
 	}
@@ -2615,9 +2615,9 @@ MatchStringFormat(
 	    }
 	}
     }
-    
+
     if (formatPtr == NULL) {
-	/* 
+	/*
 	 * Try the default format as last resort (only if no -format option
 	 * was passed).
 	 */
@@ -2625,7 +2625,7 @@ MatchStringFormat(
 	if ( formatObj == NULL && defaultFormatPtr == NULL) {
 	    Tcl_Panic("default image format handler not registered");
 	}
-	if ( formatObj == NULL 
+	if ( formatObj == NULL
 		&& defaultFormatPtr->stringMatchProc != NULL
 		&& defaultFormatPtr->stringReadProc != NULL
 		&& defaultFormatPtr->stringMatchProc(data, formatObj,
@@ -2649,7 +2649,7 @@ MatchStringFormat(
 
     *imageFormatPtr = formatPtr;
     *oldformat = useoldformat;
-    
+
     /*
      * Some stringMatchProc might have left error messages and error codes in
      * interp.	Clear them before return.
