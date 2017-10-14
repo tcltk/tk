@@ -7763,6 +7763,7 @@ test text-35.3 {widget dump -command destroys widget} -setup {
 
 
 test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
+    set save [interp bgerror {}]
     interp bgerror {} returnerror-36.1
     proc returnerror-36.1 {m opts} {set ::my_error $m}
     set ::my_error {}
@@ -7776,8 +7777,11 @@ test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
 } -cleanup {
     destroy .t-1
     rename returnerror-36.1 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
 } -result {}
 test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
+    set save [interp bgerror {}]
     interp bgerror {} returnerror-36.2
     proc returnerror-36.2 {m opts} {set ::my_error $m}
     set ::my_error {}
@@ -7791,8 +7795,11 @@ test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
 } -cleanup {
     destroy $w
     rename returnerror-36.2 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
 } -result {}
 test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
+    set save [interp bgerror {}]
     interp bgerror {} returnerror-36.3
     proc returnerror-36.3 {m opts} {set ::my_error $m}
     set ::my_error {}
@@ -7806,11 +7813,14 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
 } -cleanup {
     destroy $w
     rename returnerror-36.3 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
 } -result {}
 
 
 test text-37.1 "Bug dd9667635d4d286858b1237835502a1d8bd07a82 \
                 text anchor not set" -setup {
+    set save [interp bgerror {}]
     interp bgerror {} returnerror-37.1
     proc returnerror-37.1 {m opts} {set ::my_error $m}
     destroy .t
@@ -7826,6 +7836,8 @@ test text-37.1 "Bug dd9667635d4d286858b1237835502a1d8bd07a82 \
 } -cleanup {
     destroy .t
     rename returnerror-37.1 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error
 } -result {}
 
 

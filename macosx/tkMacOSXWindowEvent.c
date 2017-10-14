@@ -17,6 +17,7 @@
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXConstants.h"
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -357,8 +358,8 @@ GenerateUpdates(
     event.xany.window = Tk_WindowId(winPtr);
     event.xany.display = Tk_Display(winPtr);
     event.type = Expose;
-    event.xexpose.x = damageBounds.origin.x;
-    event.xexpose.y = damageBounds.origin.y;
+    event.xexpose.x = damageBounds.origin.x - bounds.origin.x;
+    event.xexpose.y = damageBounds.origin.y - bounds.origin.y;
     event.xexpose.width = damageBounds.size.width;
     event.xexpose.height = damageBounds.size.height;
     event.xexpose.count = 0;
@@ -858,7 +859,7 @@ ConfigureRestrictProc(
 	 * Since it calls Tcl_DoOneEvent, we need to make sure we
 	 * don't clobber the AutoreleasePool set up by the caller.
 	 */
-	[NSApp setPoolProtected:YES];
+	[NSApp _lockAutoreleasePool];
 
 	/*
 	 * Try to prevent flickers and flashes.
@@ -889,7 +890,7 @@ ConfigureRestrictProc(
 	[w enableFlushWindow];
 	[w flushWindowIfNeeded];
 	NSEnableScreenUpdates();
-	[NSApp setPoolProtected:NO];
+	[NSApp _unlockAutoreleasePool];
     }
 }
 

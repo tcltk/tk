@@ -7,9 +7,9 @@
  *      The default format consits of a list of scan lines (rows) with each
  *      list element being itself a list of pixels (or columns). For details,
  *      see the manpage photo.n
- * 
+ *
  *      This image format cannot read/write files, it is meant for string
- *      data only. 
+ *      data only.
  *
  *
  * Copyright (c) 1994 The Australian National University.
@@ -20,7 +20,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * Authors: 
+ * Authors:
  *      Paul Mackerras (paulus@cs.anu.edu.au),
  *              Department of Computer Science,
  *              Australian National University.
@@ -89,7 +89,7 @@ struct FormatOptions {
                          /* The color format type given with the
                           * -colorformat option */
 };
-    
+
 /*
  * Bit definitions for use with ParseFormatOptions: each bit is set in the
  * allowedOptions parameter on a call to ParseFormatOptions if that option
@@ -171,12 +171,12 @@ Tk_PhotoImageFormat tkImgFmtDefault = {
  * Results:
  *      On success, the structure pointed to by optPtr is filled with the
  *      values passed or with the defaults and TCL_OK returned.
- *      If an error occurs, leaves an error message in interp and returns 
+ *      If an error occurs, leaves an error message in interp and returns
  *      TCL_ERROR.
  *
- * Side effects: 
+ * Side effects:
  *      The value in *indexPtr is updated to the index of the fist
- *      element in argv[] that does not look like an option/value, or to 
+ *      element in argv[] that does not look like an option/value, or to
  *      argc if parsing reached the end of argv[].
  *
  *----------------------------------------------------------------------
@@ -188,12 +188,12 @@ ParseFormatOptions(
                                        * to be considered allowed */
     int objc,                         /* Number of elements in argv[] */
     Tcl_Obj *const objv[],            /* The arguments to parse */
-    int *indexPtr,                    /* Index giving the first element to 
+    int *indexPtr,                    /* Index giving the first element to
                                        * parse. The value is updated to the
                                        * index where parsing ended */
     struct FormatOptions *optPtr)     /* Parsed option values are written to
                                        * this struct */
-   
+
 {
     int index, optIndex, typeIndex, first;
     const char *option;
@@ -224,11 +224,11 @@ ParseFormatOptions(
             }
         }
         first = 0;
-        
-        /* 
+
+        /*
          * Check if option is known and allowed
          */
-        
+
         optionExists = 1;
         if (Tcl_GetIndexFromObj(NULL, objv[index], formatOptionNames,
                 "format option", 0, &optIndex) != TCL_OK) {
@@ -244,7 +244,7 @@ ParseFormatOptions(
         /*
          * Option-specific checks
          */
-        
+
         switch (1 << optIndex) {
         case OPT_COLORFORMAT:
             *indexPtr = ++index;
@@ -278,7 +278,7 @@ ParseFormatOptions(
          */
         optPtr->options |= (1 << optIndex);
     }
-    
+
     return TCL_OK;
 }
 
@@ -291,7 +291,7 @@ ParseFormatOptions(
  *      "xx": must be y, or z", based on the bits set in allowedOpts.
  *
  * Results:
- *      A Tcl Object containig the error message. 
+ *      A Tcl Object containig the error message.
  *
  * Side effects:
  *      None
@@ -313,7 +313,7 @@ GetBadOptMsg(
         for (i = 0; formatOptionNames[i] != NULL; i++) {
             if (allowedOpts & bit) {
                 if (allowedOpts & (bit -1)) {
-                    /* 
+                    /*
                      * not the first option
                      */
                     if (allowedOpts & ~((bit << 1) - 1)) {
@@ -338,16 +338,16 @@ GetBadOptMsg(
  *
  * StringMatchDef --
  *
- *      Default string match function. Test if image data in string form 
+ *      Default string match function. Test if image data in string form
  *      appears to be in the default list-of-list-of-pixel-data format
  *      accepted by the "<img> put" command.
  *
  * Results:
- *      If thte data is in the default format, writes the size of the image 
- *      to widthPtr and heightPtr and returns 1. Otherwise, leaves an error 
+ *      If thte data is in the default format, writes the size of the image
+ *      to widthPtr and heightPtr and returns 1. Otherwise, leaves an error
  *      message in interp (if not NULL) and returns 0.
- *      Note that this function does not parse all data points. A return 
- *      value of 1 does not guarantee that the data can be read without 
+ *      Note that this function does not parse all data points. A return
+ *      value of 1 does not guarantee that the data can be read without
  *      errors.
  *
  * Side effects:
@@ -376,11 +376,11 @@ StringMatchDef(
         return 0;
     }
     if (rowCount == 0) {
-        /* 
-         * empty list is valid data 
+        /*
+         * empty list is valid data
          */
-        
-        *widthPtr = 0; 
+
+        *widthPtr = 0;
         *heightPtr = 0;
         return 1;
     }
@@ -423,14 +423,14 @@ StringMatchDef(
      * Looks like we have valid data for this format.
      * We do not check any pixel values - that's the job of ImgStringRead()
      */
-    
+
     *widthPtr = colCount;
     *heightPtr = rowCount;
-    
+
     return 1;
-    
+
 }
- 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -443,9 +443,9 @@ StringMatchDef(
  *      A standard Tcl result.
  *
  * Side effects:
- *      If the data has valid format, write it to the image identified by 
+ *      If the data has valid format, write it to the image identified by
  *      imageHandle.
- *      If the image data cannot be parsed, an error message is left in 
+ *      If the image data cannot be parsed, an error message is left in
  *      interp.
  *
  *----------------------------------------------------------------------
@@ -461,7 +461,7 @@ StringReadDef(
                                  * in destination image*/
     int width, int height,      /* dimensions of area to write to */
     int srcX, int srcY)         /* start reading source data at these
-                                 * coordinates */ 
+                                 * coordinates */
 {
     Tcl_Obj **rowListPtr, **colListPtr;
     Tcl_Obj **objv;
@@ -473,9 +473,9 @@ StringReadDef(
     Colormap colormap;
     struct FormatOptions opts;
     int optIndex;
-    
+
     /*
-     * Parse format suboptions 
+     * Parse format suboptions
      * We don't use any format suboptions, but we still need to provide useful
      * error messages if suboptions were specified.
      */
@@ -523,12 +523,12 @@ StringReadDef(
         Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "COORDINATES", NULL);
         return TCL_ERROR;
     }
-    
+
     /*
      * Memory allocation overflow protection.
      * May not be able to trigger/ demo / test this.
      */
-    
+
     if (colCount > (int)(UINT_MAX / 4 / rowCount)) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
                         "photo image dimensions exceed Tcl memory limits"));
@@ -536,11 +536,11 @@ StringReadDef(
                 "OVERFLOW", NULL);
         return TCL_OK;
     }
-    
+
     /*
      * Read data and put it to imageHandle
      */
-    
+
     srcBlock.width = colCount - srcX;
     srcBlock.height = rowCount - srcY;
     srcBlock.pixelSize = 4;
@@ -563,8 +563,8 @@ StringReadDef(
          * We don't test the length of row, as that's been done in
          * ImgStringMatch()
          */
-        
-        if (Tcl_ListObjGetElements(interp, rowListPtr[y], &curColCount, 
+
+        if (Tcl_ListObjGetElements(interp, rowListPtr[y], &curColCount,
                 &colListPtr) != TCL_OK) {
             goto errorExit;
         }
@@ -577,7 +577,7 @@ StringReadDef(
             curPixelPtr += 4;
         }
     }
-    
+
     /*
      * Write image data to destHandle
      */
@@ -589,13 +589,13 @@ StringReadDef(
     ckfree(srcBlock.pixelPtr);
 
     return TCL_OK;
-    
+
   errorExit:
     ckfree(srcBlock.pixelPtr);
-    
+
     return TCL_ERROR;
 }
- 
+
 /*
  *----------------------------------------------------------------------
  *
@@ -605,7 +605,7 @@ StringReadDef(
  *      documentation for details.
  *
  * Results:
- *      The converted data is set as the result of interp. Returns a standard 
+ *      The converted data is set as the result of interp. Returns a standard
  *      Tcl result.
  *
  * Side effects:
@@ -624,7 +624,7 @@ StringWriteDef(
     Tcl_Obj *result, **objv = NULL;
     int objc, allowedOpts, optIndex;
     struct FormatOptions opts;
-    
+
     /*
      * Parse format suboptions
      */
@@ -644,7 +644,7 @@ StringWriteDef(
         Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_OPTION", NULL);
         return TCL_ERROR;
     }
-    
+
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
     blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
 
@@ -652,13 +652,13 @@ StringWriteDef(
      * A negative alpha offset signals that the image is fully opaque.
      * That's not really documented anywhere, but it's the way it is!
      */
-    
+
     if (blockPtr->offset[3] < 0) {
         hasAlpha = 0;
         alphaOffset = 0;
     } else {
         hasAlpha = 1;
-        alphaOffset = blockPtr->offset[3] - blockPtr->offset[0];        
+        alphaOffset = blockPtr->offset[3] - blockPtr->offset[0];
     }
 
     if ((blockPtr->width > 0) && (blockPtr->height > 0)) {
@@ -679,9 +679,9 @@ StringWriteDef(
                 }
 
                 /*
-                 * We don't build lines as a list for #RGBA and #RGB. Since 
+                 * We don't build lines as a list for #RGBA and #RGB. Since
                  * these color formats look like comments, the first element
-                 * of the list would get quoted with an additional {} . 
+                 * of the list would get quoted with an additional {} .
                  * While this is not a problem if the data is used as
                  * a list, it would cause problems if someone decides to parse
                  * it as a string (and it looks kinda strange)
@@ -721,7 +721,7 @@ StringWriteDef(
                  * For the #XXX formats, we need to remove the last
                  * whitespace.
                  */
-                
+
                 *(Tcl_DStringValue(&line) + Tcl_DStringLength(&line) - 1)
                         = '\0';
             }
@@ -733,7 +733,7 @@ StringWriteDef(
     } else {
         result = Tcl_NewObj();
     }
-    
+
     Tcl_SetObjResult(interp, result);
     return TCL_OK;
 }
@@ -743,15 +743,15 @@ StringWriteDef(
  *
  * ParseColor --
  *
- *      This function extracts color and alpha values from a string. It 
- *      understands standard Tk color formats, alpha suffixes and the color 
+ *      This function extracts color and alpha values from a string. It
+ *      understands standard Tk color formats, alpha suffixes and the color
  *      formats specific to photo images, which include alpha data.
  *
  * Results:
- *      On success, writes red, green, blue and alpha values to the 
- *      corresponding pointers. If the color spec contains no alpha 
- *      information, 255 is taken as transparency value. 
- *      If the input cannot be parsed, leaves an error message in 
+ *      On success, writes red, green, blue and alpha values to the
+ *      corresponding pointers. If the color spec contains no alpha
+ *      information, 255 is taken as transparency value.
+ *      If the input cannot be parsed, leaves an error message in
  *      interp. Returns a standard Tcl result.
  *
  * Side effects:
@@ -765,7 +765,7 @@ ParseColor(
     Tcl_Obj *specObj,           /* the color data to parse */
     Display *display,           /* display of main window, needed to parse
                                  * standard Tk colors */
-    Colormap colormap,          /* colormap of current display */ 
+    Colormap colormap,          /* colormap of current display */
     unsigned char *redPtr,      /* the result is written to these pointers */
     unsigned char *greenPtr,
     unsigned char *bluePtr,
@@ -773,13 +773,13 @@ ParseColor(
 {
     const char *specString;
     int charCount;
-    
+
     /*
      * Find out which color format we have
      */
-    
+
     specString = Tcl_GetStringFromObj(specObj, &charCount);
-    
+
     if (charCount == 0) {
         /* Empty string */
         *redPtr = *greenPtr = *bluePtr = *alphaPtr = 0;
@@ -804,7 +804,7 @@ ParseColor(
      * Parsing the color as standard Tk color always is the last option tried
      * because TkParseColor() is very slow with values it cannot parse.
      */
-    
+
     Tcl_ResetResult(interp);
     return ParseColorAsStandard(interp, specString, charCount, display,
             colormap, redPtr, greenPtr, bluePtr, alphaPtr);
@@ -820,16 +820,16 @@ ParseColor(
  *      integers (the list color format).
  *
  * Results:
- *      On success, writes red, green, blue and alpha values to the 
- *      corresponding pointers. If the color spec contains no alpha 
- *      information, 255 is taken as transparency value. 
+ *      On success, writes red, green, blue and alpha values to the
+ *      corresponding pointers. If the color spec contains no alpha
+ *      information, 255 is taken as transparency value.
  *      Returns a standard Tcl result.
  *
  * Side effects:
  *      Does *not* leave error messages in interp. The reason is that
  *      it is not always possible to tell if the list format was even
  *      intended and thus it is hard to return meaningful messages.
- *      A general error message from the caller is probably the best 
+ *      A general error message from the caller is probably the best
  *      alternative.
  *
  *----------------------------------------------------------------------
@@ -844,8 +844,8 @@ ParseColorAsList(
     unsigned char *bluePtr,
     unsigned char *alphaPtr)
 {
-    
-    /* 
+
+    /*
      * This is kinda ugly. The code would be certainly nicer if it
      * used Tcl_ListObjGetElements() and Tcl_GetIntFromObj(). But with
      * strtol() it's *much* faster.
@@ -883,12 +883,12 @@ ParseColorAsList(
     if (i < 4) {
         values[3] = 255;
     }
-    
+
     *redPtr = (unsigned char) values[0];
     *greenPtr = (unsigned char) values[1];
     *bluePtr = (unsigned char) values[2];
     *alphaPtr = (unsigned char) values[3];
-    
+
     return TCL_OK;
 }
 
@@ -902,9 +902,9 @@ ParseColorAsList(
  *      the #RGBA form and the #RBG (with optional suffix)
  *
  * Results:
- *      On success, writes red, green, blue and alpha values to the 
- *      corresponding pointers. If the color spec contains no alpha 
- *      information, 255 is taken as transparency value. 
+ *      On success, writes red, green, blue and alpha values to the
+ *      corresponding pointers. If the color spec contains no alpha
+ *      information, 255 is taken as transparency value.
  *      Returns a standard Tcl result.
  *
  * Side effects:
@@ -926,7 +926,7 @@ ParseColorAsHex(
 {
     int i;
     unsigned long int colorValue = 0;
-        
+
     if (colorStrLen - 1 != 4 && colorStrLen - 1 != 8) {
         return ParseColorAsStandard(interp, colorString, colorStrLen,
                 display, colormap, redPtr, greenPtr, bluePtr, alphaPtr);
@@ -937,12 +937,12 @@ ParseColorAsHex(
              * There still is a chance that this is a Tk color with
              * an alpha suffix
              */
-            
+
             return ParseColorAsStandard(interp, colorString, colorStrLen,
                     display, colormap, redPtr, greenPtr, bluePtr, alphaPtr);
         }
     }
-    
+
     colorValue = strtoul(colorString + 1, NULL, 16);
     switch (colorStrLen - 1) {
     case 4:
@@ -977,9 +977,9 @@ ParseColorAsHex(
  *      color part is treated as regular Tk color.
  *
  * Results:
- *      On success, writes red, green, blue and alpha values to the 
- *      corresponding pointers. If the color spec contains no alpha 
- *      information, 255 is taken as transparency value. 
+ *      On success, writes red, green, blue and alpha values to the
+ *      corresponding pointers. If the color spec contains no alpha
+ *      information, 255 is taken as transparency value.
  *      Returns a standard Tcl result.
  *
  * Side effects:
@@ -1006,11 +1006,11 @@ ParseColorAsStandard(
     double fracAlpha;
     unsigned int suffixAlpha;
     int i;
-        
+
     /*
      * Split color data string in color and suffix parts
      */
- 
+
     if ((suffixString = strrchr(specString, '@')) == NULL
             && ((suffixString = strrchr(specString, '#')) == NULL
                     || suffixString == specString)) {
@@ -1024,42 +1024,42 @@ ParseColorAsStandard(
 
     /*
      * Try to parse as standard Tk color.
-     * 
+     *
      * We don't use Tk_GetColor() et al. here, as those functions
      * migth return a color that does not exaxtly match the given name
-     * if the colormap is full. Also, we don't really want the color to be 
+     * if the colormap is full. Also, we don't really want the color to be
      * added to the colormap.
      */
 
     if ( ! TkParseColor(display, colormap, colorString, &parsedColor)) {
          Tcl_SetObjResult(interp, Tcl_ObjPrintf(
             "invalid color name \"%s\"", specString));
-         Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+         Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
                  "INVALID_COLOR", NULL);
          return TCL_ERROR;
     }
-        
+
     /*
      * parse the Suffix
      */
 
     switch (suffixString[0]) {
-    case '\0': 
+    case '\0':
         suffixAlpha = 255;
         break;
     case '@':
         fracAlpha = strtod(suffixString + 1, &tmpString);
         if (*tmpString != '\0') {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid alpha "
-                    "suffix \"%s\": expected floating-point value", 
+                    "suffix \"%s\": expected floating-point value",
                     suffixString));
-            Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+            Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
                     "INVALID COLOR", NULL);
             return TCL_ERROR;
         }
         if (fracAlpha < 0 || fracAlpha > 1) {
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid alpha suffix" 
-                    " \"%s\": value must be in the range from 0 to 1", 
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid alpha suffix"
+                    " \"%s\": value must be in the range from 0 to 1",
                     suffixString));
             Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
                     "INVALID_COLOR", NULL);
@@ -1071,7 +1071,7 @@ ParseColorAsStandard(
         if (strlen(suffixString + 1) < 1 || strlen(suffixString + 1)> 2) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
                     "invalid alpha suffix \"%s\"", suffixString));
-            Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", 
+            Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
                     "INVALID_COLOR", NULL);
             return TCL_ERROR;
         }
@@ -1095,7 +1095,7 @@ ParseColorAsStandard(
     default:
         Tcl_Panic("unexpected switch fallthrough");
     }
-    
+
     *redPtr = (unsigned char) (parsedColor.red >> 8);
     *greenPtr = (unsigned char) (parsedColor.green >> 8);
     *bluePtr = (unsigned char) (parsedColor.blue >> 8);
@@ -1126,7 +1126,7 @@ TkDebugPhotoStringMatchDef(
     Tcl_Obj *data,          /* The data to check */
     Tcl_Obj *formatString,  /* Value of the -format option, not used here */
     int *widthPtr,          /* Width of image is written to this location */
-    int *heightPtr)         /* Height of image is written to this location */    
+    int *heightPtr)         /* Height of image is written to this location */
 {
     return StringMatchDef(data, formatString, widthPtr, heightPtr, interp);
 }

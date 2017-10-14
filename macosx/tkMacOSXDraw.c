@@ -483,7 +483,7 @@ CreateCGImageWithXImage(
 	 * Color image
 	 */
 
-	CGColorSpaceRef colorspace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
@@ -685,7 +685,7 @@ GetCGContextForDrawable(
 	    bitsPerPixel = 8;
 	    bitmapInfo = (CGBitmapInfo)kCGImageAlphaOnly;
 	} else {
-	    colorspace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+	    colorspace = CGColorSpaceCreateDeviceRGB();
 	    bitsPerPixel = 32;
 	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
 	}
@@ -1511,7 +1511,7 @@ TkpDrawingIsDisabled(
  *	a damage region.
  *
  * Results:
- *	Returns 0 if the scroll genereated no additional damage.
+ *	Returns 0 if the scroll generated no additional damage.
  *	Otherwise, sets the region that needs to be repainted after
  *	scrolling and returns 1.
  *
@@ -1551,7 +1551,6 @@ TkScrollWindow(
  	scrollSrc = NSIntersectionRect(scrollSrc, visRect);
  	scrollDst = NSIntersectionRect(scrollDst, visRect);
  	if ( !NSIsEmptyRect(scrollSrc) && !NSIsEmptyRect(scrollDst) ) {
-
   	    /*
   	     * Mark the difference between source and destination as damaged.
 	     * This region is described in NSView coordinates (y=0 at the bottom)
@@ -1569,6 +1568,7 @@ TkScrollWindow(
 
 	    /* Convert to Tk coordinates. */
 	    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
+	    TkMacOSXOffsetRegion(damageRgn, -macDraw->xOff, -macDraw->yOff);
 	    if (extraRgn) {
 		CFRelease(extraRgn);
 	    }
