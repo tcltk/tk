@@ -19,6 +19,8 @@
 */tktest*
 */versions.vc
 doc/man.macros
-win/Debug_VC*
-win/Release_VC*
+win/Debug*
+win/Release*
+win/nmhlp-out.txt
 unix/tk.pc
+html/*

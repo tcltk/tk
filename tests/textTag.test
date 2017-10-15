@@ -17,7 +17,7 @@ testConstraint haveCourier12 [expr {[catch {
     .t configure -font {Courier 12}
 }] == 0}]
 
-pack append . .t {top expand fill}
+pack .t -expand 1 -fill both
 update
 .t debug on
 

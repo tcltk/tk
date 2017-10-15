@@ -71,24 +71,6 @@ See the description of \fB\-xscrollcommand\fR above for details.
 .SH "LABEL OPTIONS"
 The following options are supported by labels, buttons,
 and other button-like widgets:
-.OP \-text text Text
-Specifies a text string to be displayed inside the widget
-(unless overridden by \fB\-textvariable\fR).
-.OP \-textvariable textVariable Variable
-Specifies the name of a global variable whose value will be used
-in place of the \fB\-text\fR resource.
-.OP \-underline underline Underline
-If set, specifies the integer index (0-based) of a character to underline
-in the text string.
-The underlined character is used for mnemonic activation.
-.OP \-image image Image
-Specifies an image to display.
-This is a list of 1 or more elements.
-The first element is the default image name.
-The rest of the list is a sequence of \fIstatespec / value\fR pairs
-as per \fBstyle map\fR, specifying different images to use when
-the widget is in a particular state or combination of states.
-All images in the list should have the same size.
 .OP \-compound compound Compound
 Specifies how to display the image relative to the text,
 in the case both \fB\-text\fR and \fB\-image\fR are present.
@@ -108,6 +90,35 @@ Display image above, below, left of, or right of the text, respectively.
 .IP none
 The default; display the image if present, otherwise the text.
 .RE
+.OP \-image image Image
+Specifies an image to display.
+This is a list of 1 or more elements.
+The first element is the default image name.
+The rest of the list is a sequence of \fIstatespec / value\fR pairs
+as per \fBstyle map\fR, specifying different images to use when
+the widget is in a particular state or combination of states.
+All images in the list should have the same size.
+.OP \-padding padding Padding
+Specifies the internal padding for the widget.
+The padding is a list of up to four length specifications
+\fIleft top right bottom\fR.
+If fewer than four elements are specified,
+\fIbottom\fR defaults to \fItop\fR,
+\fIright\fR defaults to \fIleft\fR, and
+\fItop\fR defaults to \fIleft\fR.
+In other words, a list of three numbers specify the left, vertical, and right padding;
+a list of two numbers specify the horizontal and the vertical padding;
+a single number specifies the same padding all the way around the widget.
+.OP \-text text Text
+Specifies a text string to be displayed inside the widget
+(unless overridden by \fB\-textvariable\fR).
+.OP \-textvariable textVariable Variable
+Specifies the name of a global variable whose value will be used
+in place of the \fB\-text\fR resource.
+.OP \-underline underline Underline
+If set, specifies the integer index (0-based) of a character to underline
+in the text string.
+The underlined character is used for mnemonic activation.
 .OP \-width width Width
 If greater than zero, specifies how much space, in character widths,
 to allocate for the text label.
