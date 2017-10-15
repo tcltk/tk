@@ -1557,10 +1557,12 @@ TkScrollWindow(
 			    macChild->xOff += dx;
 			    childPtr->changes.y = macChild->yOff;
 			    childPtr->changes.x = macChild->xOff;
+			    TkMacOSXInvalidateWindow(macChild, TK_PARENT_WINDOW);
 			}
 		    }
 		}
 	    }
+	    TkMacOSXInvalidateWindow(macDraw, TK_WINDOW_ONLY);
 
 	    /* Queue up Expose events for the damage region. */
 	    int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
