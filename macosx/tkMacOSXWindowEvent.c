@@ -17,6 +17,7 @@
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXConstants.h"
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -858,7 +859,7 @@ ConfigureRestrictProc(
 	 * Since it calls Tcl_DoOneEvent, we need to make sure we
 	 * don't clobber the AutoreleasePool set up by the caller.
 	 */
-	[NSApp setPoolProtected:YES];
+	[NSApp _lockAutoreleasePool];
 
 	/*
 	 * Try to prevent flickers and flashes.
@@ -889,7 +890,7 @@ ConfigureRestrictProc(
 	[w enableFlushWindow];
 	[w flushWindowIfNeeded];
 	NSEnableScreenUpdates();
-	[NSApp setPoolProtected:NO];
+	[NSApp _unlockAutoreleasePool];
     }
 }
 
