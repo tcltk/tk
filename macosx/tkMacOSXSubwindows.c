@@ -247,13 +247,14 @@ XUnmapWindow(
     Window window)		/* Window. */
 {
     MacDrawable *macWin = (MacDrawable *) window;
+    TkWindow *winPtr = macWin->winPtr;
+    TkWindow *parentPtr = winPtr->parentPtr;
     XEvent event;
 
     display->request++;
-    macWin->winPtr->flags &= ~TK_MAPPED;
-    if (Tk_IsTopLevel(macWin->winPtr)) {
-	if (!Tk_IsEmbedded(macWin->winPtr) &&
-		macWin->winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
+    if (Tk_IsTopLevel(winPtr)) {
+	if (!Tk_IsEmbedded(winPtr) &&
+		winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    NSWindow *win = TkMacOSXDrawableWindow(window);
 
 	    if ([win isVisible]) {
@@ -261,7 +262,7 @@ XUnmapWindow(
 		[win orderOut:NSApp];
 	    }
 	}
-	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
+	TkMacOSXInvalClipRgns((Tk_Window) winPtr);
 
 	/*
 	 * We only need to send the UnmapNotify event for toplevel windows.
@@ -278,12 +279,17 @@ XUnmapWindow(
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     } else {
 	/*
-	 * Generate damage for that area of the window.
+	 * Rebuild the visRgn clip region for the parent so it will be allowed
+	 * to draw in the space from which this subwindow was removed.
 	 */
-
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
-	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
+	if (parentPtr && parentPtr->privatePtr->visRgn) {
+	    TkMacOSXInvalidateViewRegion(TkMacOSXDrawableView(parentPtr->privatePtr),
+					 parentPtr->privatePtr->visRgn);
+	}
+	TkMacOSXInvalClipRgns((Tk_Window) parentPtr);
+	TkMacOSXUpdateClipRgn(parentPtr);
     }
+    winPtr->flags &= ~TK_MAPPED;
 }
 
 /*
@@ -769,8 +775,8 @@ TkMacOSXUpdateClipRgn(
 	     */
 
 	    if (!Tk_IsTopLevel(winPtr)) {
-		TkMacOSXUpdateClipRgn(winPtr->parentPtr);
 		if (winPtr->parentPtr) {
+		    TkMacOSXUpdateClipRgn(winPtr->parentPtr);
 		    ChkErr(HIShapeIntersect,
 			    winPtr->parentPtr->privatePtr->aboveVisRgn,
 			    rgn, rgn);

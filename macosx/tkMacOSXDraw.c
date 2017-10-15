@@ -1590,10 +1590,12 @@ TkScrollWindow(
 			    macChild->xOff += dx;
 			    childPtr->changes.y = macChild->yOff;
 			    childPtr->changes.x = macChild->xOff;
+			    TkMacOSXInvalidateWindow(macChild, TK_PARENT_WINDOW);
 			}
 		    }
 		}
 	    }
+	    TkMacOSXInvalidateWindow(macDraw, TK_WINDOW_ONLY);
 
 #if 0 /* Don't queue Expose event, otherwise it is not compatible to UNIX and Windows version. */
 	    /* Queue up Expose events for the damage region. */
