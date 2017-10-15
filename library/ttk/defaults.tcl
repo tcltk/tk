@@ -77,7 +77,8 @@ namespace eval ttk::theme::default {
 
 	ttk::style configure TCombobox -arrowsize 12 -padding 1
 	ttk::style map TCombobox -fieldbackground \
-	    [list readonly $colors(-frame) disabled $colors(-frame)]
+	    [list readonly $colors(-frame) disabled $colors(-frame)] \
+	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox -fieldbackground \
