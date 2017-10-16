@@ -260,6 +260,7 @@ TkMacOSXEventsCheckProc(
     /* runloopMode will be nil if we are in a Tcl event loop. */
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
 	NSEvent *currentEvent = nil;
+	NSEvent *testEvent = nil;
 	NSModalSession modalSession;
 	/* It is possible for the SetupProc to be called before this function
 	 * returns.  This happens, for example, when we process an event which
@@ -270,6 +271,20 @@ TkMacOSXEventsCheckProc(
 	[NSApp _lockAutoreleasePool];
 	do {
 	    modalSession = TkMacOSXGetModalSession();
+	    	    testEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+					      untilDate:[NSDate distantPast]
+						 inMode:GetRunLoopMode(modalSession)
+						dequeue:NO];
+	    /* We must not steal any events during LiveResize. */
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
+	    if (testEvent && [[testEvent window] inLiveResize]) {
+		break;
+	    }
+#else
+	    if (testEvent && [[[testEvent window] contentView] inLiveResize]) {
+		break;
+	    }
+#endif
 	    currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 					      untilDate:[NSDate distantPast]
 						 inMode:GetRunLoopMode(modalSession)
