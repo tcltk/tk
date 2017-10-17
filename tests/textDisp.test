@@ -647,7 +647,7 @@ test textDisp-4.8 {UpdateDisplayInfo, filling in extra vertical space} {
     .t yview 16.0
     update
     .t delete 5.0 14.0
-    update
+    update idletasks
     set x [list [.t index @0,0] $tk_textRelayout $tk_textRedraw]
 } {1.0 {5.0 4.0 3.0 2.0 1.0} {1.0 2.0 3.0 4.0 5.0 eof}}
 test textDisp-4.9 {UpdateDisplayInfo, filling in extra vertical space} {textfonts} {
@@ -664,7 +664,7 @@ test textDisp-4.10 {UpdateDisplayInfo, filling in extra vertical space} {
     .t yview end
     update
     .t delete 13.0 end
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRelayout $tk_textRedraw
 } {5.0 {12.0 7.0 6.40 6.20 6.0 5.0} {5.0 6.0 6.20 6.40 7.0 12.0}}
 test textDisp-4.11 {UpdateDisplayInfo, filling in extra vertical space} {
@@ -673,7 +673,7 @@ test textDisp-4.11 {UpdateDisplayInfo, filling in extra vertical space} {
     .t yview end
     update
     .t delete 14.0 end
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRelayout $tk_textRedraw
 } {6.40 {13.0 7.0 6.80 6.60 6.40} {6.40 6.60 6.80 7.0 13.0}}
 test textDisp-4.12 {UpdateDisplayInfo, filling in extra vertical space} {
@@ -701,7 +701,7 @@ test textDisp-4.13 {UpdateDisplayInfo, special handling for top/bottom lines} {
     .t yview 1.0
     update
     .t yview scroll 3 units
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{11.0 12.0 13.0} {4.0 10.0 11.0 12.0 13.0}}
 test textDisp-4.14 {UpdateDisplayInfo, special handling for top/bottom lines} {
@@ -709,7 +709,7 @@ test textDisp-4.14 {UpdateDisplayInfo, special handling for top/bottom lines} {
     .t yview 1.0
     update
     .t yview scroll 3 units
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{11.0 12.0 13.0} {11.0 12.0 13.0}}
 test textDisp-4.15 {UpdateDisplayInfo, special handling for top/bottom lines} {
@@ -717,7 +717,7 @@ test textDisp-4.15 {UpdateDisplayInfo, special handling for top/bottom lines} {
     .t yview 4.0
     update
     .t yview scroll -2 units
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 3.0} {2.0 3.0 4.0 11.0}}
 test textDisp-4.16 {UpdateDisplayInfo, special handling for top/bottom lines} {
@@ -725,7 +725,7 @@ test textDisp-4.16 {UpdateDisplayInfo, special handling for top/bottom lines} {
     .t yview 4.0
     update
     .t yview scroll -2 units
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 3.0} {2.0 3.0}}
 test textDisp-4.17 {UpdateDisplayInfo, horizontal scrolling} {textfonts} {
@@ -845,7 +845,7 @@ test textDisp-6.1 {scrolling in DisplayText, scroll up} {
     }
     update
     .t delete 2.0 3.0
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 10.0} {2.0 10.0}}
 test textDisp-6.2 {scrolling in DisplayText, scroll down} {
@@ -856,7 +856,7 @@ test textDisp-6.2 {scrolling in DisplayText, scroll down} {
     }
     update
     .t insert 2.0 "New Line 2\n"
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 3.0} {2.0 3.0}}
 test textDisp-6.3 {scrolling in DisplayText, multiple scrolls} {
@@ -869,7 +869,7 @@ test textDisp-6.3 {scrolling in DisplayText, multiple scrolls} {
     update
     .t insert 2.end "is so long that it wraps"
     .t insert 4.end "is so long that it wraps"
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 4.0 4.20} {2.0 2.20 4.0 4.20}}
 test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
@@ -882,7 +882,7 @@ test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
     update
     .t insert 2.end "is so long that it wraps around, not once but three times"
     .t insert 4.end "is so long that it wraps"
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 2.40 2.60 4.0 4.20} {2.0 2.20 2.40 2.60 4.0 4.20 6.0}}
 test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {nonPortable} {
@@ -1108,7 +1108,7 @@ test textDisp-8.7 {TkTextChanged} {
     }
     update
     .t delete 1.2 1.end
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {1.0 9.0 10.0}}
 test textDisp-8.8 {TkTextChanged} {
@@ -1130,7 +1130,7 @@ test textDisp-8.9 {TkTextChanged} {
     }
     update
     .t delete 2.0 3.0
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 8.0} {2.0 8.0}}
 test textDisp-8.10 {TkTextChanged} {
@@ -1140,7 +1140,7 @@ test textDisp-8.10 {TkTextChanged} {
     .t tag add big 2.19
     update
     .t delete 2.19
-    update
+    update idletasks
     set tk_textRedraw
 } {2.0 2.20 eof}
 test textDisp-8.11 {TkTextChanged, scrollbar notification when changes are off-screen} {
@@ -1197,7 +1197,7 @@ test textDisp-9.1 {TkTextRedrawTag} {
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
     update
     .t tag add big 2.2 2.4
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.18} {2.0 2.18}}
 test textDisp-9.2 {TkTextRedrawTag} {textfonts} {
@@ -1217,7 +1217,7 @@ test textDisp-9.3 {TkTextRedrawTag} {
     .t tag add big 2.2 2.4
     update
     .t tag remove big 1.0 end
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
 test textDisp-9.4 {TkTextRedrawTag} {
@@ -1228,7 +1228,7 @@ test textDisp-9.4 {TkTextRedrawTag} {
     .t tag add big 2.2 2.20
     update
     .t tag remove big 1.0 end
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
 test textDisp-9.5 {TkTextRedrawTag} {
@@ -1239,7 +1239,7 @@ test textDisp-9.5 {TkTextRedrawTag} {
     .t tag add big 2.2 2.end
     update
     .t tag remove big 1.0 end
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
 test textDisp-9.6 {TkTextRedrawTag} {
@@ -1260,7 +1260,7 @@ test textDisp-9.7 {TkTextRedrawTag} {
     .t tag add big 2.19
     update
     .t tag remove big 2.19
-    update
+    update idletasks
     set tk_textRedraw
 } {2.0 2.20 eof}
 test textDisp-9.8 {TkTextRedrawTag} {textfonts} {
@@ -1301,7 +1301,7 @@ test textDisp-9.11 {TkTextRedrawTag} {
     .t tag add big 1.0 2.0
     update
     .t tag add big 1.0 2.0
-    update
+    update idletasks
     set tk_textRedraw
 } {}
 test textDisp-9.12 {TkTextRedrawTag} {
@@ -1314,7 +1314,7 @@ test textDisp-9.12 {TkTextRedrawTag} {
     .t tag add hidden 2.6 3.6
     update
     .t tag add hidden 3.11 4.6
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {2.0 {2.0 eof}}
 test textDisp-9.13 {TkTextRedrawTag} {
@@ -1329,7 +1329,7 @@ test textDisp-9.13 {TkTextRedrawTag} {
     .t tag configure hidden -elide true
     update
     .t tag configure hidden -elide false
-    update
+    update idletasks
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 6.0 7.0} {2.0 6.0 7.0}}
 test textDisp-9.14 {TkTextRedrawTag} {
@@ -1397,21 +1397,21 @@ test textDisp-11.2 {TkTextSetYView} {
     .t yview 30.0
     update
     .t yview 32.0
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {32.0 {40.0 41.0}}
 test textDisp-11.3 {TkTextSetYView} {
     .t yview 30.0
     update
     .t yview 28.0
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {28.0 {28.0 29.0}}
 test textDisp-11.4 {TkTextSetYView} {
     .t yview 30.0
     update
     .t yview 31.4
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {31.0 40.0}
 test textDisp-11.5 {TkTextSetYView} {
@@ -1419,7 +1419,7 @@ test textDisp-11.5 {TkTextSetYView} {
     update
     set tk_textRedraw {}
     .t yview -pickplace 31.0
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {30.0 {}}
 test textDisp-11.6 {TkTextSetYView} {
@@ -1427,7 +1427,7 @@ test textDisp-11.6 {TkTextSetYView} {
     update
     set tk_textRedraw {}
     .t yview -pickplace 28.0
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {28.0 {28.0 29.0}}
 test textDisp-11.7 {TkTextSetYView} {
@@ -1435,7 +1435,7 @@ test textDisp-11.7 {TkTextSetYView} {
     update ; update
     set tk_textRedraw {}
     .t yview -pickplace 26.0
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {21.0 {21.0 22.0 23.0 24.0 25.0 26.0 27.0 28.0 29.0}}
 test textDisp-11.8 {TkTextSetYView} {
@@ -1443,7 +1443,7 @@ test textDisp-11.8 {TkTextSetYView} {
     update
     set tk_textRedraw {}
     .t yview -pickplace 41.0
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {32.0 {40.0 41.0}}
 test textDisp-11.9 {TkTextSetYView} {
@@ -1451,7 +1451,7 @@ test textDisp-11.9 {TkTextSetYView} {
     update
     set tk_textRedraw {}
     .t yview -pickplace 43.0
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {38.0 {40.0 41.0 42.0 43.0 44.0 45.0 46.0 47.0 48.0}}
 test textDisp-11.10 {TkTextSetYView} {
@@ -1459,7 +1459,7 @@ test textDisp-11.10 {TkTextSetYView} {
     update
     set tk_textRedraw {}
     .t yview 10000.0
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {191.0 {191.0 192.0 193.0 194.0 195.0 196.0 197.0 198.0 199.0 200.0}}
 test textDisp-11.11 {TkTextSetYView} {
@@ -1467,7 +1467,7 @@ test textDisp-11.11 {TkTextSetYView} {
     update
     set tk_textRedraw {}
     .t yview 197.0
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {191.0 {191.0 192.0 193.0 194.0 195.0 196.0}}
 test textDisp-11.12 {TkTextSetYView, wrapped line is off-screen} {
@@ -1476,7 +1476,7 @@ test textDisp-11.12 {TkTextSetYView, wrapped line is off-screen} {
     update
     set tk_textRedraw {}
     .t see 10.30
-    update
+    update idletasks
     list [.t index @0,0] $tk_textRedraw
 } {2.0 10.20}
 .t delete 10.0 11.0
@@ -1498,7 +1498,7 @@ test textDisp-11.13 {TkTestSetYView, partially visible last line} {
     update
     set tk_textRedraw {}
     .top.t see 5.0
-    update
+    update idletasks
     # Note, with smooth scrolling, the results of this test
     # have changed, and the old '2.0 {5.0 6.0}' is quite wrong.
     list [.top.t index @0,0] $tk_textRedraw
