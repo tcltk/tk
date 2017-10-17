@@ -915,16 +915,10 @@ ConfigureRestrictProc(
  */
 - (void) generateExposeEvents: (HIShapeRef) shape
 {
-    [self generateExposeEvents:shape childrenOnly:0];
-}
-
-- (void) generateExposeEvents: (HIShapeRef) shape
-		 childrenOnly: (int) childrenOnly
-{
-    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     unsigned long serial;
     CGRect updateBounds;
     int updatesNeeded;
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
 
     if (!winPtr) {
 		return;

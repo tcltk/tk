@@ -344,7 +344,6 @@ VISIBILITY_HIDDEN
 @interface TKContentView(TKWindowEvent)
 - (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIShapeRef) shape;
-- (void) generateExposeEvents: (HIShapeRef) shape childrenOnly: (int) childrenOnly;
 - (void) viewDidEndLiveResize;
 - (void) tkToolbarButton: (id) sender;
 - (BOOL) isOpaque;

@@ -1508,7 +1508,8 @@ TkScrollWindow(
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable;
     TKContentView *view = (TKContentView *)TkMacOSXDrawableView(macDraw);
-    CGRect srcRect, dstRect;
+    TkWindow *winPtr = (TkWindow *)tkwin, *childPtr;
+    CGRect srcRect, dstRect, childBounds;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
     int result = 0;
@@ -1541,9 +1542,8 @@ TkScrollWindow(
  	    ChkErr(HIShapeDifference, dmgRgn, extraRgn, (HIMutableShapeRef) dmgRgn);
 	    result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
 
-	    /* Convert to Tk coordinates. */
+	    /* Convert to Tk coordinates, offset by the window origin. */
 	    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
-	    TkMacOSXOffsetRegion(damageRgn, -macDraw->xOff, -macDraw->yOff);
 	    if (extraRgn) {
 		CFRelease(extraRgn);
 	    }
@@ -1552,9 +1552,6 @@ TkScrollWindow(
  	    [view scrollRect:scrollSrc by:NSMakeSize(dx, -dy)];
 
 	    /* Shift the Tk children which meet the source rectangle. */
-	    TkWindow *winPtr = (TkWindow *)tkwin;
-	    TkWindow *childPtr;
-	    CGRect childBounds;
 	    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
 		if (Tk_IsMapped(childPtr) && !Tk_IsTopLevel(childPtr)) {
 		    TkMacOSXWinCGBounds(childPtr, &childBounds);
@@ -1571,11 +1568,6 @@ TkScrollWindow(
 		}
 	    }
 	    TkMacOSXInvalidateWindow(macDraw, TK_WINDOW_ONLY);
-
-	    /* Queue up Expose events for the damage region. */
-	    int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
-	    [view generateExposeEvents:dmgRgn childrenOnly:1];
-	    Tcl_SetServiceMode(oldMode);
   	}
     } else {
 	dmgRgn = HIShapeCreateEmpty();
