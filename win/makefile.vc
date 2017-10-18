@@ -191,6 +191,15 @@ PROJECT = tk
 !message ***    Tcl sources.
 !endif
 
+# Can we run what we build? IX86 runs on all architectures.
+!ifndef TCLSH_NATIVE
+!if "$(MACHINE)" == "IX86" || "$(MACHINE)" == "$(NATIVE_ARCH)"
+TCLSH_NATIVE	= $(TCLSH)
+!else
+!error You must explicitly set TCLSH_NATIVE for cross-compilation
+!endif
+!endif
+
 # Extra makefile options processing...
 !if "$(OPTS)" == "" || [nmakehlp -f "$(OPTS)" "none"]
 HAVE_UXTHEME_H    = 1
@@ -690,11 +699,11 @@ $(CAT32): $(_TCLDIR)\win\cat.c
 #---------------------------------------------------------------------
 
 genstubs:
-!if !exist($(TCLSH))
+!if !exist($(TCLSH_NATIVE))
 	@echo Build tclsh first!
 !else
 	set TCL_LIBRARY=$(TCL_LIBRARY)
-	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
+	$(TCLSH_NATIVE) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
 !endif
 
@@ -715,7 +724,7 @@ CHMFILE=$(HTMLDIR)\$(HTMLBASE).chm
 htmlhelp: chmsetup $(CHMFILE)
 
 $(CHMFILE): $(DOCDIR)\*
-	@$(TCLSH) $(TCLTOOLSDIR)\tcltk-man2html.tcl
+	@$(TCLSH_NATIVE) $(TCLTOOLSDIR)\tcltk-man2html.tcl
 	@echo Compiling HTML help project
 	@$(HHC) <<$(HHPFILE) >NUL
 [OPTIONS]
@@ -800,13 +809,13 @@ $(MAN2TCL): $(TCLTOOLSDIR)\$$(@B).c
 	$(_VC_MANIFEST_EMBED_EXE)
 
 $(HELPRTF): $(MAN2TCL) $(MAN2HELP) $(MAN2HELP2) $(INDEX)
-	$(TCLSH) $(MAN2HELP) -bitmap $(BMP_NOPATH) $(PROJECT) $(TK_VERSION) $(DOCDIR:\=/)
+	$(TCLSH_NATIVE) $(MAN2HELP) -bitmap $(BMP_NOPATH) $(PROJECT) $(TK_VERSION) $(DOCDIR:\=/)
 
 install-docs:
 !if exist($(HELPFILE))
 	$(CPY) "$(HELPFILE)" "$(DOC_INSTALL_DIR)\"
 	$(CPY) "$(HELPCNT)" "$(DOC_INSTALL_DIR)\"
-	$(TCLSH) <<
+	$(TCLSH_NATIVE) <<
 puts "Installing $(PROJECT)'s helpfile contents into Tcl's ..."
 set f [open "$(DOC_INSTALL_DIR:\=/)/tcl$(TK_VERSION).cnt" r]
 while {![eof $$f]} {
@@ -881,11 +890,11 @@ $(TMP_DIR)\wish.exe.manifest: $(WINDIR)\wish.exe.manifest.in
 #---------------------------------------------------------------------
 
 depend:
-!if !exist($(TCLSH))
+!if !exist($(TCLSH_NATIVE))
 	@echo Build tclsh first!
 !else
 	set TCL_LIBRARY=$(TCL_LIBRARY)
-	$(TCLSH) $(TCLTOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
+	$(TCLSH_NATIVE) $(TCLTOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
 		-passthru:"-DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
 		$(WINDIR),$$(WINDIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) \
 		$(BITMAPDIR),$$(BITMAPDIR) @<<
