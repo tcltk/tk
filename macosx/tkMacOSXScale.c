@@ -171,7 +171,10 @@ TkpDisplayScale(
     Tcl_Preserve((ClientData) scalePtr);
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
 	Tcl_Preserve((ClientData) interp);
-	sprintf(string, scalePtr->format, scalePtr->value);
+        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
+                scalePtr->value) < 0) {
+            string[TCL_DOUBLE_SPACE - 1] = '\0';
+        }
 	Tcl_DStringInit(&buf);
 	Tcl_DStringAppend(&buf, scalePtr->command, -1);
 	Tcl_DStringAppend(&buf, " ", -1);
