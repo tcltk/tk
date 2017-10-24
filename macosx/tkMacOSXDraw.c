@@ -1480,6 +1480,31 @@ XMaxRequestSize(
 /*
  *----------------------------------------------------------------------
  *
+ * TkpDrawingIsDisabled --
+ *
+ *	Query whether the given window is disabled, in this case drawing
+ *	is also disabled.
+ *
+ * Results:
+ *	Whether the drawing is disabled.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpDrawingIsDisabled(
+   Tk_Window tkwin)
+{
+    MacDrawable *macWin = ((TkWindow *) tkwin)->privatePtr;
+    return macWin && !!(macWin->flags & TK_DO_NOT_DRAW);
+}
+ 
+/*
+ *----------------------------------------------------------------------
+ *
  * TkScrollWindow --
  *
  *	Scroll a rectangle of the specified window and accumulate
@@ -1508,8 +1533,8 @@ TkScrollWindow(
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable;
     TKContentView *view = (TKContentView *)TkMacOSXDrawableView(macDraw);
-    TkWindow *winPtr = (TkWindow *)tkwin, *childPtr;
-    CGRect srcRect, dstRect, childBounds;
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
     int result = 0;
@@ -1551,23 +1576,23 @@ TkScrollWindow(
  	    /* Scroll the rectangle. */
  	    [view scrollRect:scrollSrc by:NSMakeSize(dx, -dy)];
 
-	    /* Shift the Tk children which meet the source rectangle. */
-	    for (childPtr = winPtr->childList; childPtr != NULL; childPtr = childPtr->nextPtr) {
-		if (Tk_IsMapped(childPtr) && !Tk_IsTopLevel(childPtr)) {
-		    TkMacOSXWinCGBounds(childPtr, &childBounds);
-		    if (CGRectIntersectsRect(srcRect, childBounds)) {
-			MacDrawable *macChild = childPtr->privatePtr;
-			if (macChild) {
-			    macChild->yOff += dy;
-			    macChild->xOff += dx;
-			    childPtr->changes.y = macChild->yOff;
-			    childPtr->changes.x = macChild->xOff;
-			    TkMacOSXInvalidateWindow(macChild, TK_PARENT_WINDOW);
-			}
-		    }
-		}
+	    /* 
+	     * If there are any subwindows we invalidate the window, in order
+	     * to generate an expose event for the entire window.  This is
+	     * needed because the Text widget, which is the only one that calls
+	     * TkScrollWindow, does not maintain correct position data or
+	     * correctly map and unmap its subwindows while it is scrolling.
+	     * This makes it impossible for us to maintain valid clipping
+	     * regions for the Text widget, leading to "ghost windows"
+	     * appearing in former locations of subwindows where drawing is
+	     * still clipped after the subwindow has been moved somewhere else.
+	     * It seems that the only way to bring the subwindow position data
+	     * back into sync is to force a redraw of the entire window with
+	     * the expose event that will be issued here.
+	     */
+	    if (winPtr->childList != NULL) {
+	     	TkMacOSXInvalidateWindow(macDraw, TK_WINDOW_ONLY);
 	    }
-	    TkMacOSXInvalidateWindow(macDraw, TK_WINDOW_ONLY);
   	}
     } else {
 	dmgRgn = HIShapeCreateEmpty();
