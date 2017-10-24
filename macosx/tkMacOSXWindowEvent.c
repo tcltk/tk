@@ -363,7 +363,7 @@ GenerateUpdates(
     event.xexpose.width = damageBounds.size.width;
     event.xexpose.height = damageBounds.size.height;
     event.xexpose.count = 0;
-    Tk_HandleEvent(&event);
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
 #ifdef TK_MAC_DEBUG_DRAWING
     NSLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
