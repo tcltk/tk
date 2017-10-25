@@ -4452,15 +4452,12 @@ DisplayText(
 		 * old position. In other words, a "ghost window" will appear.
 		 *
 		 * Perhaps all platforms should do this, rather than allow the
-		 * embedded window to have incorrect values for Tk_X and TK_Y.
+		 * embedded window to have incorrect values for Tk_X and Tk_Y.
 		 * But apparently this is not known to cause problems.
 		 */
 #else
 	    } else if (dlPtr->chunkPtr != NULL && ((dlPtr->y < 0)
 		    || (dlPtr->y + dlPtr->height > dInfoPtr->maxY))) {
-#endif
-		register TkTextDispChunk *chunkPtr;
-
 		/* 
 		 * On platforms other than the Mac:
 		 *
@@ -4477,6 +4474,8 @@ DisplayText(
 		 * So, we loop through all the chunks, calling the display
 		 * proc of embedded windows only.
 		 */
+#endif
+		register TkTextDispChunk *chunkPtr;
 
 		for (chunkPtr = dlPtr->chunkPtr; (chunkPtr != NULL);
 			chunkPtr = chunkPtr->nextPtr) {
