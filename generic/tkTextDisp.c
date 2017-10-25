@@ -4471,7 +4471,7 @@ DisplayText(
 		 * Otherwise, everything else moves, but the embedded window
 		 * doesn't!
 		 *
-		 * So, we loop through all the chunks, calling the displa
+		 * So, we loop through all the chunks, calling the display
 		 * proc of embedded windows only.
 		 */
 #endif
