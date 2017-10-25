@@ -4452,7 +4452,7 @@ DisplayText(
 		 * old position. In other words, a "ghost window" will appear.
 		 *
 		 * Perhaps all platforms should do this, rather than allow the
-		 * embedded window to have incorrect values for Tk_X and Tk_Y.
+		 * embedded windows to have incorrect values for Tk_X and Tk_Y.
 		 * But apparently this is not known to cause problems.
 		 */
 #else
@@ -4471,7 +4471,7 @@ DisplayText(
 		 * Otherwise, everything else moves, but the embedded window
 		 * doesn't!
 		 *
-		 * So, we loop through all the chunks, calling the display
+		 * So, we loop through all the chunks, calling the displa
 		 * proc of embedded windows only.
 		 */
 #endif
