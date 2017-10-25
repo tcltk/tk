@@ -1533,7 +1533,6 @@ TkScrollWindow(
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable;
     TKContentView *view = (TKContentView *)TkMacOSXDrawableView(macDraw);
-    TkWindow *winPtr = (TkWindow *)tkwin;
     CGRect srcRect, dstRect;
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
@@ -1575,24 +1574,6 @@ TkScrollWindow(
 
  	    /* Scroll the rectangle. */
  	    [view scrollRect:scrollSrc by:NSMakeSize(dx, -dy)];
-
-	    /* 
-	     * If there are any subwindows we invalidate the window, in order
-	     * to generate an expose event for the entire window.  This is
-	     * needed because the Text widget, which is the only one that calls
-	     * TkScrollWindow, does not maintain correct position data or
-	     * correctly map and unmap its subwindows while it is scrolling.
-	     * This makes it impossible for us to maintain valid clipping
-	     * regions for the Text widget, leading to "ghost windows"
-	     * appearing in former locations of subwindows where drawing is
-	     * still clipped after the subwindow has been moved somewhere else.
-	     * It seems that the only way to bring the subwindow position data
-	     * back into sync is to force a redraw of the entire window with
-	     * the expose event that will be issued here.
-	     */
-	    if (winPtr->childList != NULL) {
-	     	TkMacOSXInvalidateWindow(macDraw, TK_WINDOW_ONLY);
-	    }
   	}
     } else {
 	dmgRgn = HIShapeCreateEmpty();
