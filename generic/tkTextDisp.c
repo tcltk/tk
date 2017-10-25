@@ -4274,7 +4274,6 @@ DisplayText(
 	    }
 	    dlPtr = dlPtr->nextPtr;
 	}
-
 	/*
 	 * Scan through the lines following the copied ones to see if we are
 	 * going to overwrite them with the copy operation. If so, mark them
@@ -4440,11 +4439,31 @@ DisplayText(
 		}
 		dlPtr->oldY = dlPtr->y;
 		dlPtr->flags &= ~(NEW_LAYOUT | OLD_Y_INVALID);
+#ifdef MAC_OSX_TK
+	    } else if (dlPtr->chunkPtr != NULL) {
+		/*
+		 * On the Mac we need to redisplay all embedded windows which
+		 * were moved in order to make sure that the clipping region
+		 * for the Text widget is maintained correctly.  If an embedded
+		 * window is moved but its bounding rectangle is not added back
+		 * to the clipping region of the Text widget then drawing into
+		 * the old bounding rectangle will not be allowed, causing an
+		 * image of the embedded window to remain on the screen in the
+		 * old position. In other words, a "ghost window" will appear.
+		 *
+		 * Perhaps all platforms should do this, rather than allow the
+		 * embedded window to have incorrect values for Tk_X and TK_Y.
+		 * But apparently this is not known to cause problems.
+		 */
+#else
 	    } else if (dlPtr->chunkPtr != NULL && ((dlPtr->y < 0)
 		    || (dlPtr->y + dlPtr->height > dInfoPtr->maxY))) {
+#endif
 		register TkTextDispChunk *chunkPtr;
 
-		/*
+		/* 
+		 * On platforms other than the Mac:
+		 *
 		 * It's the first or last DLine which are also overlapping the
 		 * top or bottom of the window, but we decided above it wasn't
 		 * necessary to display them (we were able to update them by
@@ -4486,7 +4505,6 @@ DisplayText(
 			    dlPtr->baseline - dlPtr->spaceAbove, NULL,
 			    (Drawable) None, dlPtr->y + dlPtr->spaceAbove);
 		}
-
 	    }
 	}
 #ifndef TK_NO_DOUBLE_BUFFERING
