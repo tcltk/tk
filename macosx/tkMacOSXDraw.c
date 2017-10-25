@@ -1480,31 +1480,6 @@ XMaxRequestSize(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawingIsDisabled --
- *
- *	Query whether the given window is disabled, in this case drawing
- *	is also disabled.
- *
- * Results:
- *	Whether the drawing is disabled.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkpDrawingIsDisabled(
-   Tk_Window tkwin)
-{
-    MacDrawable *macWin = ((TkWindow *) tkwin)->privatePtr;
-    return macWin && !!(macWin->flags & TK_DO_NOT_DRAW);
-}
- 
-/*
- *----------------------------------------------------------------------
- *
  * TkScrollWindow --
  *
  *	Scroll a rectangle of the specified window and accumulate
