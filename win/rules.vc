@@ -1,8 +1,13 @@
 #------------------------------------------------------------- -*- makefile -*-
 # rules.vc --
 #
-#	Microsoft Visual C++ makefile include for decoding the commandline
-#	macros.  This file does not need editing to build Tcl.
+# Part of the nmake based build system for Tcl and its extensions.
+# This file does all the hard work in terms of parsing build options,
+# compiler switches, defining common targets and macros. The Tcl makefile
+# directly includes this. Extensions include it via "rules-ext.vc".
+#
+# See TIP 477 (https://core.tcl.tk/tips/doc/trunk/tip/477.md) for
+# detailed documentation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -16,6 +21,8 @@
 _RULES_VC = 1
 
 # The following macros define the version of the rules.vc nmake build system
+# For modifications that are not backward-compatible, you *must* change
+# the major version.
 RULES_VERSION_MAJOR = 1
 RULES_VERSION_MINOR = 0
 
@@ -30,6 +37,23 @@ DOING_TK  = 0
 DOING_TCL = 1
 !elseif "$(PROJECT)" == "tk"
 DOING_TK = 1
+!endif
+
+!ifndef NEED_TK
+# Backwards compatibility
+!ifdef PROJECT_REQUIRES_TK
+NEED_TK = $(PROJECT_REQUIRES_TK)
+!else
+NEED_TK = 0
+!endif
+!endif
+
+!ifndef NEED_TCL_SOURCE
+NEED_TCL_SOURCE = 0
+!endif
+
+!ifndef NEED_TK_SOURCE
+NEED_TK_SOURCE = 0
 !endif
 
 ################################################################
@@ -66,6 +90,14 @@ DOING_TK = 1
 # changing them for consistency or clarity.
 
 # 0. Sanity check compiler environment
+
+!if !exist("rules-ext.vc")
+MSG = ^
+You must run nmake from the directory containing the makefile and rules-ext.vc.^
+Please `cd` to its location first.
+!error $(MSG)
+!endif
+
 # Check to see we are configured to build with MSVC (MSDEVDIR, MSVCDIR or
 # VCINSTALLDIR) or with the MS Platform SDK (MSSDK or WindowsSDKDir)
 
@@ -73,14 +105,6 @@ DOING_TK = 1
 MSG = ^
 Visual C++ compiler environment not initialized.
 !error $(MSG)
-!endif
-
-# Defaults for built-in internal settings defined in parent makefile
-!ifndef DISABLE_STANDARD_TARGETS
-DISABLE_STANDARD_TARGETS = 0
-!endif
-!ifndef DISABLE_CLEAN_TARGETS
-DISABLE_CLEAN_TARGETS = 0
 !endif
 
 ################################################################
@@ -95,6 +119,7 @@ DISABLE_CLEAN_TARGETS = 0
 RMDIR	= rmdir /S /Q
 ERRNULL  = 2>NUL
 CPY	= xcopy /i /y >NUL
+CPYDIR  = xcopy /e /i /y >NUL
 COPY	= copy /y >NUL
 MKDIR   = mkdir
 
@@ -115,6 +140,7 @@ MKDIR   = mkdir
 # DOCDIR - source directory containing documentation files
 # GENERICDIR - platform-independent source directory
 # WINDIR - Windows-specific source directory
+# TESTDIR - directory containing test files
 # TOOLSDIR - directory containing build tools
 # _TCLDIR - root of the Tcl installation OR the Tcl sources. Not set
 #    when building Tcl itself.
@@ -149,8 +175,15 @@ GENERICDIR	= $(ROOT)\generic
 !ifndef TOOLSDIR
 TOOLSDIR	= $(ROOT)\tools
 !endif
+!ifndef TESTDIR
+TESTDIR	= $(ROOT)\tests
+!endif
 !ifndef LIBDIR
+!if exist("$(ROOT)\library")
 LIBDIR          = $(ROOT)\library
+!else
+LIBDIR          = $(ROOT)\lib
+!endif
 !endif
 !ifndef DEMODIR
 !if exist("$(LIBDIR)\demos")
@@ -165,8 +198,13 @@ DEMODIR		= $(ROOT)\demos
 # something else
 WINDIR		= $(ROOT)\win
 !ifndef RCDIR
+!if exist("$(WINDIR)\rc")
 RCDIR           = $(WINDIR)\rc
+!else
+RCDIR           = $(WINDIR)
 !endif
+!endif
+RCDIR = $(RCDIR:/=\)
 
 # The target directory where the built packages and binaries will be installed.
 # INSTALLDIR is the (optional) path specified by the user.
@@ -176,7 +214,7 @@ RCDIR           = $(WINDIR)\rc
 _INSTALLDIR	= $(INSTALLDIR:/=\)
 !else
 ### Assume the normal default.
-_INSTALLDIR	= C:\Program Files\Tcl
+_INSTALLDIR	= $(HOMEDRIVE)\Tcl
 !endif
 
 !if $(DOING_TCL)
@@ -248,7 +286,7 @@ Failed to find tcl.h. The TCLDIR macro is set incorrectly or is not set and defa
 !endif
 
 # Now do the same to locate Tk headers and libs if project requires Tk
-!ifdef PROJECT_REQUIRES_TK
+!if $(NEED_TK)
 
 !ifdef TKDIR
 
@@ -283,7 +321,24 @@ Failed to find tk.h. The TKDIR macro is set incorrectly or is not set and defaul
 !error $(MSG)
 !endif
 
-!endif # PROJECT_REQUIRES_TK
+!endif # NEED_TK
+
+!if $(NEED_TCL_SOURCE) && $(TCLINSTALL)
+MSG = ^
+*** Warning: This extension requires the source distribution of Tcl.^
+*** Please set the TCLDIR macro to point to the Tcl sources.
+!error $(MSG)
+!endif
+
+!if $(NEED_TK_SOURCE)
+!if $(TKINSTALL)
+MSG = ^
+*** Warning: This extension requires the source distribution of Tk.^
+*** Please set the TKDIR macro to point to the Tk sources.
+!error $(MSG)
+!endif
+!endif
+
 
 # If INSTALLDIR set to tcl installation root dir then reset to the
 # lib dir for installing extensions 
@@ -528,7 +583,7 @@ DEBUGFLAGS     = $(DEBUGFLAGS) -GZ
 # They are not passed through to the actual application / extension
 # link rules.
 !ifndef LINKER_TESTFLAGS
-LINKER_TESTFLAGS = /DLL /NOENTRY /OUT:nmhlp-out.txt
+LINKER_TESTFLAGS = /DLL /NOENTRY /OUT:nmakehlp.out
 !endif
 
 LINKERFLAGS     =
@@ -555,8 +610,6 @@ LINKERFLAGS     = $(LINKERFLAGS) -ltcg
 # MSVCRT  - 1 -> link to dynamic C runtime even when building static Tcl build
 #           0 -> link to static C runtime for static Tcl build.
 #           Does not impact shared Tcl builds (STATIC_BUILD == 0)
-# LOIMPACT - 1 -> Ask Windows loader to aggressively trim the working set.
-#           Will reduce physical memory use at cost of performance.
 # TCL_USE_STATIC_PACKAGES - 1 -> statically link the registry and dde extensions
 #           in the Tcl shell. 0 -> keep them as shared libraries
 #           Does not impact shared Tcl builds.
@@ -577,7 +630,6 @@ SYMBOLS		= 0
 PROFILE		= 0
 PGO		= 0
 MSVCRT		= 1
-LOIMPACT	= 0
 TCL_USE_STATIC_PACKAGES	= 0
 USE_THREAD_ALLOC = 1
 UNCHECKED	= 0
@@ -663,10 +715,7 @@ PGO		= 0
 !endif
 
 !if [nmakehlp -f $(OPTS) "loimpact"]
-!message *** Doing loimpact
-LOIMPACT	= 1
-!else
-LOIMPACT	= 0
+!message *** Warning: ignoring option "loimpact" - deprecated on modern Windows.
 !endif
 
 # TBD - should get rid of this option
@@ -675,9 +724,8 @@ LOIMPACT	= 0
 USE_THREAD_ALLOC = 1
 !endif
 
-# TBD - should get rid of this option
 !if [nmakehlp -f $(OPTS) "tclalloc"]
-!message *** Doing tclalloc
+!error *** Option `tclalloc` is 
 USE_THREAD_ALLOC = 0
 !endif
 
@@ -848,9 +896,9 @@ VERSION = $(TK_VERSION)
 # first from a configure.in file, and then from configure.ac
 !ifndef DOTVERSION
 !if [echo DOTVERSION = \> versions.vc] \
-   || [nmakehlp -V ..\configure.in AC_INIT >> versions.vc]
+   || [nmakehlp -V $(ROOT)\configure.in ^[$(PROJECT)^] >> versions.vc]
 !if [echo DOTVERSION = \> versions.vc] \
-   || [nmakehlp -V ..\configure.ac AC_INIT >> versions.vc]
+   || [nmakehlp -V $(ROOT)\configure.ac ^[$(PROJECT)^] >> versions.vc]
 !error *** Could not figure out extension version. Please define DOTVERSION in parent makefile before including rules.vc.
 !endif
 !endif
@@ -887,6 +935,7 @@ VERSION         = $(DOTVERSION:.=)
 # PRJLIB     - output path of generated project library
 # PRJSTUBLIBNAME - name of the generated project stubs library
 # PRJSTUBLIB - output path of the generated project stubs library
+# RESFILE - output resource file (only if not static build)
 
 SUFX	    = tsgx
 
@@ -939,6 +988,17 @@ OUT_DIR	    = .\$(BUILDDIRTOP)
 OUT_DIR	    = $(TMP_DIR)
 !endif
 !endif
+
+# Relative paths -> absolute
+!if [echo OUT_DIR = \> nmakehlp.out] \
+   || [nmakehlp -Q "$(OUT_DIR)" >> nmakehlp.out]
+!error *** Could not fully qualify path OUT_DIR=$(OUT_DIR)
+!endif
+!if [echo TMP_DIR = \>> nmakehlp.out] \
+   || [nmakehlp -Q "$(TMP_DIR)" >> nmakehlp.out]
+!error *** Could not fully qualify path TMP_DIR=$(TMP_DIR)
+!endif
+!include nmakehlp.out
 
 # The name of the stubs library for the project being built
 STUBPREFIX      = $(PROJECT)stub
@@ -1003,7 +1063,7 @@ TCLSH_NATIVE	= $(TCLSH)
 !endif
 
 # Do the same for Tk and Tk extensions that require the Tk libraries
-!if $(DOING_TK) || defined(PROJECT_REQUIRES_TK)
+!if $(DOING_TK) || $(NEED_TK)
 WISHNAMEPREFIX = wish
 WISHNAME = $(WISHNAMEPREFIX)$(TK_VERSION)$(SUFX).exe
 TKLIBNAME	= $(PROJECT)$(TK_VERSION)$(SUFX).$(EXT)
@@ -1017,7 +1077,7 @@ TKIMPLIB	= $(OUT_DIR)\$(TKIMPLIBNAME)
 TKLIB		= $(OUT_DIR)\$(TKLIBNAME)
 TK_INCLUDES    = -I"$(WINDIR)" -I"$(GENERICDIR)"
 
-!else # effectively PROJECT_REQUIRES_TK
+!else # effectively NEED_TK
 
 !if $(TKINSTALL) # Building against installed Tk
 WISH		= $(_TKDIR)\bin\$(WISHNAME)
@@ -1030,9 +1090,10 @@ TKSTUBLIB	= $(_TKDIR)\win\$(BUILDDIRTOP)\$(TKSTUBLIBNAME)
 TKIMPLIB	= $(_TKDIR)\win\$(BUILDDIRTOP)\$(TKIMPLIBNAME)
 TK_INCLUDES     = -I"$(_TKDIR)\generic" -I"$(_TKDIR)\win" -I"$(_TKDIR)\xlib"
 !endif # TKINSTALL
+tklibs = "$(TKSTUBLIB)" "$(TKIMPLIB)"
 
 !endif # $(DOING_TK)
-!endif # $(DOING_TK) || PROJECT_REQUIRES_TK
+!endif # $(DOING_TK) || $(NEED_TK)
 
 # Various output paths
 PRJIMPLIB	= $(OUT_DIR)\$(PROJECT)$(VERSION)$(SUFX).lib
@@ -1041,6 +1102,16 @@ PRJLIB		= $(OUT_DIR)\$(PRJLIBNAME)
 
 PRJSTUBLIBNAME	= $(STUBPREFIX)$(VERSION).lib
 PRJSTUBLIB	= $(OUT_DIR)\$(PRJSTUBLIBNAME)
+
+# If extension parent makefile has not defined a resource definition file,
+# we will generate one from standard template.
+!if !$(DOING_TCL) && !$(DOING_TK) && !$(STATIC_BUILD)
+!ifdef PRJ_RCFILE
+RESFILE = $(TMP_DIR)\$(PRJ_RCFILE:.rc=.res)
+!else
+RESFILE = $(TMP_DIR)\$(PROJECT).res
+!endif
+!endif
 
 ###################################################################
 # 11. Construct the paths for the installation directories
@@ -1124,7 +1195,7 @@ OPTDEFINES	= $(OPTDEFINES) -DTCL_NO_DEPRECATED
 # test targets in tk do not use stubs
 !if ! $(DOING_TCL)
 USE_STUBS_DEFS  = -DUSE_TCL_STUBS -DUSE_TCLOO_STUBS
-!ifdef PROJECT_REQUIRES_TK
+!if $(NEED_TK)
 USE_STUBS_DEFS  = $(USE_STUBS_DEFS) -DUSE_TK_STUBS
 !endif
 !endif
@@ -1220,6 +1291,11 @@ cwarn = $(cwarn) -wd4311 -wd4312
 cwarn = $(cwarn) -WX
 !endif
 
+INCLUDES = $(TCL_INCLUDES) $(TK_INCLUDES) $(PRJ_INCLUDES)
+!if !$(DOING_TCL) && !$(DOING_TK)
+INCLUDES = $(INCLUDES) -I$(GENERICDIR) -I$(WINDIR) -I(COMPATDIR)
+!endif
+
 # These flags are defined roughly in the order of the pre-reform
 # rules.vc/makefile.vc to help visually compare that the pre- and
 # post-reform build logs
@@ -1233,8 +1309,8 @@ cflags = -nologo -c $(COMPILERFLAGS) $(cwarn) -Fp$(TMP_DIR)^\ $(cdebug)
 # BUILD_$(PROJECT) macro which should be defined only for the shared
 # library *implementation* and not for its caller interface
 
-appcflags = $(cflags) $(crt) $(TCL_INCLUDES) $(TK_INCLUDES) $(PRJ_INCLUDES) $(TCL_DEFINES) $(PRJ_DEFINES) $(OPTDEFINES) $(USE_STUBS_DEFS)
-appcflags_nostubs = $(cflags) $(crt) $(TCL_INCLUDES) $(TK_INCLUDES) $(PRJ_INCLUDES) $(TCL_DEFINES) $(PRJ_DEFINES) $(OPTDEFINES)
+appcflags = $(cflags) $(crt) $(INCLUDES) $(TCL_DEFINES) $(PRJ_DEFINES) $(OPTDEFINES) $(USE_STUBS_DEFS)
+appcflags_nostubs = $(cflags) $(crt) $(INCLUDES) $(TCL_DEFINES) $(PRJ_DEFINES) $(OPTDEFINES)
 pkgcflags = $(appcflags) $(PKGNAMEFLAGS) -DBUILD_$(PROJECT)
 pkgcflags_nostubs = $(appcflags_nostubs) $(PKGNAMEFLAGS) -DBUILD_$(PROJECT)
 
@@ -1243,8 +1319,13 @@ pkgcflags_nostubs = $(appcflags_nostubs) $(PKGNAMEFLAGS) -DBUILD_$(PROJECT)
 # $(OPTDEFINES) only if the OPTS configuration indicates a static
 # library. However the stubs library is ALWAYS static hence included
 # here irrespective of the OPTS setting.
-
-stubscflags = $(cflags) $(PRJ_DEFINES) $(OPTDEFINES) -Zl -DSTATIC_BUILD $(TCL_INCLUDES) $(TK_INCLUDES) $(PRJ_INCLUDES)
+#
+# TBD - tclvfs has a comment that stubs libs should not be compiled with -GL
+# without stating why. Tcl itself compiled stubs libs with this flag.
+# so we do not remove it from cflags. -GL may prevent extensions
+# compiled with one VC version to fail to link against stubs library
+# compiled with another VC version. Check for this and fix accordingly.
+stubscflags = $(cflags) $(PRJ_DEFINES) $(OPTDEFINES) -Zl -DSTATIC_BUILD $(INCLUDES)
 
 # Link flags 
 
@@ -1281,10 +1362,6 @@ lflags	= $(lflags) -opt:nowin98
 !endif
 !endif
 
-!if $(LOIMPACT)
-lflags	= $(lflags) -ws:aggressive
-!endif
-
 dlllflags = $(lflags) -dll
 conlflags = $(lflags) -subsystem:console
 guilflags = $(lflags) -subsystem:windows
@@ -1292,6 +1369,10 @@ guilflags = $(lflags) -subsystem:windows
 # Libraries that are required for every image.
 # Extensions should define any additional libraries with $(PRJ_LIBS)
 winlibs   = kernel32.lib advapi32.lib
+
+!if $(NEED_TK)
+winlibs = $(winlibs) gdi32.lib user32.lib uxtheme.lib
+!endif
 
 # Avoid 'unresolved external symbol __security_cookie' errors.
 # c.f. http://support.microsoft.com/?id=894573
@@ -1308,19 +1389,18 @@ baselibs   = $(baselibs) ucrt.lib
 !endif
 
 ################################################################
-# 3. Define standard commands, common make targets and implicit rules
+# 13. Define standard commands, common make targets and implicit rules
 
-MAKELIBCMD = $(lib32) -nologo $(LINKERFLAGS) -out:$@
-MAKEDLLCMD = $(link32) $(dlllflags) -out:$@ $(baselibs) $(tcllibs) 
+CCPKGCMD = $(cc32) $(pkgcflags) -Fo$(TMP_DIR)^\
+CCAPPCMD = $(cc32) $(appcflags) -Fo$(TMP_DIR)^\
+CCSTUBSCMD = $(cc32) $(stubscflags) -Fo$(TMP_DIR)^\
 
-!if $(STATIC_BUILD)
-MAKEBINCMD = $(MAKELIBCMD)
-!else
-MAKEBINCMD = $(MAKEDLLCMD)
-!endif
-MAKECONCMD = $(link32) $(conlflags) -out:$@ $(baselibs) $(tcllibs)
-MAKEGUICMD = $(link32) $(guilflags) -out:$@ $(baselibs) $(tcllibs)
-MAKERESCMD  = $(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TMP_DIR)" \
+LIBCMD = $(lib32) -nologo $(LINKERFLAGS) -out:$@
+DLLCMD = $(link32) $(dlllflags) -out:$@ $(baselibs) $(tcllibs) $(tklibs)
+
+CONEXECMD = $(link32) $(conlflags) -out:$@ $(baselibs) $(tcllibs) $(tklibs)
+GUIEXECMD = $(link32) $(guilflags) -out:$@ $(baselibs) $(tcllibs) $(tklibs)
+RESCMD  = $(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TMP_DIR)" \
 	    $(TCL_INCLUDES) \
 	    -DDEBUG=$(DEBUG) -d UNCHECKED=$(UNCHECKED) \
 	    -DCOMMAVERSION=$(DOTVERSION:.=,),0 \
@@ -1328,9 +1408,7 @@ MAKERESCMD  = $(rc32) -fo $@ -r -i "$(GENERICDIR)" -i "$(TMP_DIR)" \
 	    -DVERSION=\"$(VERSION)\" \
 	    -DSUFX=\"$(SUFX)\" \
             -DPROJECT=\"$(PROJECT)\" \
-            -DPRJLIBNAME=\"$(PRJLIBNAME)\" \
-	    $<
-
+            -DPRJLIBNAME=\"$(PRJLIBNAME)\" 
 
 !ifndef DEFAULT_BUILD_TARGET
 DEFAULT_BUILD_TARGET = $(PROJECT)
@@ -1363,12 +1441,28 @@ default-install-libraries: $(OUT_DIR)\pkgIndex.tcl
 	@echo Installing package index in '$(SCRIPT_INSTALL_DIR)'
 	@$(CPY) $(OUT_DIR)\pkgIndex.tcl $(SCRIPT_INSTALL_DIR)
 
+default-install-docs-html:
+	@echo Installing documentation files to '$(DOC_INSTALL_DIR)'
+	@if not exist "$(DOC_INSTALL_DIR)" mkdir "$(DOC_INSTALL_DIR)"
+	@if exist $(DOCDIR) for %f in ("$(DOCDIR)\*.html" "$(DOCDIR)\*.css" "$(DOCDIR)\*.png") do @$(COPY) %f "$(DOC_INSTALL_DIR)"
+
+default-install-docs-n:
+	@echo Installing documentation files to '$(DOC_INSTALL_DIR)'
+	@if not exist "$(DOC_INSTALL_DIR)" mkdir "$(DOC_INSTALL_DIR)"
+	@if exist $(DOCDIR) for %f in ("$(DOCDIR)\*.n") do @$(COPY) %f "$(DOC_INSTALL_DIR)"
+
+default-install-demos:
+	@echo Installing demos to '$(DEMO_INSTALL_DIR)'
+	@if not exist "$(DEMO_INSTALL_DIR)" mkdir "$(DEMO_INSTALL_DIR)"
+	@if exist $(DEMODIR) $(CPYDIR) "$(DEMODIR)" "$(DEMO_INSTALL_DIR)"
+
 default-clean:
 	@echo Cleaning $(TMP_DIR)\* ...
 	@if exist $(TMP_DIR)\nul $(RMDIR) $(TMP_DIR)
 	@echo Cleaning $(WINDIR)\nmakehlp.obj, nmakehlp.exe ...
 	@if exist $(WINDIR)\nmakehlp.obj del $(WINDIR)\nmakehlp.obj
 	@if exist $(WINDIR)\nmakehlp.exe del $(WINDIR)\nmakehlp.exe
+	@if exist $(WINDIR)\nmakehlp.out del $(WINDIR)\nmakehlp.out
 	@echo Cleaning $(WINDIR)\_junk.pch ...
 	@if exist $(WINDIR)\_junk.pch del $(WINDIR)\_junk.pch
 	@echo Cleaning $(WINDIR)\vercl.x, vercl.i ...
@@ -1390,7 +1484,32 @@ default-setup:
 	@if not exist $(OUT_DIR)\nul mkdir $(OUT_DIR)
 	@if not exist $(TMP_DIR)\nul mkdir $(TMP_DIR)
 
-default-rc:
+!if "$(TESTPAT)" != ""
+TESTFLAGS = $(TESTFLAGS) -file $(TESTPAT)
+!endif
+
+default-test: default-setup $(PROJECT)
+	@set TCLLIBPATH=$(OUT_DIR:\=/)
+	@if exist $(LIBDIR) for %f in ("$(LIBDIR)\*.tcl") do @$(COPY) %f "$(OUT_DIR)"
+	cd "$(TESTDIR)" && $(DEBUGGER) $(TCLSH) all.tcl $(TESTFLAGS)
+
+default-shell: default-setup $(PROJECT)
+	@set TCLLIBPATH=$(OUT_DIR:\=/)
+	@if exist $(LIBDIR) for %f in ("$(LIBDIR)\*.tcl") do @$(COPY) %f "$(OUT_DIR)"
+	$(DEBUGGER) $(TCLSH)
+
+# Generation of Windows version resource 
+!ifdef PRJ_RCFILE
+
+$(TMP_DIR)\$(PROJECT).res: $(RCDIR)\$(PROJECT).rc
+	$(RESCMD) $**
+!else
+
+# If parent makefile has not defined a resource definition file,
+# we will generate one from standard template.
+$(TMP_DIR)\$(PROJECT).res: $(TMP_DIR)\$(PROJECT).rc
+
+$(TMP_DIR)\$(PROJECT).rc:
 	@$(COPY) << $(TMP_DIR)\$(PROJECT).rc
 #include <winver.h>
 
@@ -1426,34 +1545,44 @@ END
 
 <<
 
+!endif # ifdef PRJ_RCFILE
 
 !ifndef DISABLE_IMPLICIT_RULES
+DISABLE_IMPLICIT_RULES = 0
+!endif
+
+!if !$(DISABLE_IMPLICIT_RULES)
 # Implicit rule definitions - only for building library objects. For stubs and
 # main application, the master makefile should define explicit rules.
 
+{$(ROOT)}.c{$(TMP_DIR)}.obj::
+	$(CCPKGCMD) @<<
+$<
+<<
+
 {$(WINDIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) $(pkgcflags) -Fo$(TMP_DIR)\ @<<
+	$(CCPKGCMD) @<<
 $<
 <<
 
 {$(GENERICDIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) $(pkgcflags) -Fo$(TMP_DIR)\ @<<
+	$(CCPKGCMD) @<<
 $<
 <<
 
 {$(COMPATDIR)}.c{$(TMP_DIR)}.obj::
-	$(cc32) $(pkgcflags) -Fo$(TMP_DIR)\ @<<
+	$(CCPKGCMD) @<<
 $<
 <<
 
 {$(RCDIR)}.rc{$(TMP_DIR)}.res:
-	$(MAKERESCMD)
+	$(RESCMD) $<
 
 {$(WINDIR)}.rc{$(TMP_DIR)}.res:
-	$(MAKERESCMD)
+	$(RESCMD) $<
 
 {$(TMP_DIR)}.rc{$(TMP_DIR)}.res:
-	$(MAKERESCMD)
+	$(RESCMD) $<
 
 .SUFFIXES:
 .SUFFIXES:.c .rc
