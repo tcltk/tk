@@ -5801,12 +5801,22 @@ ctxRetry:
 	    SdlTkX.sdlfocus = 1;
 	}
 #endif
-#ifdef linux
-	if ((wminfo.subsystem == SDL_SYSWM_WAYLAND) && !SdlTkX.arg_nogl) {
-	    /* Wayland? Try to pre-load libGL.so for 3D canvas. */
-	    dlopen("libGL.so.1", RTLD_NOW | RTLD_GLOBAL);
+#if defined(linux) || defined(__FreeBSD__)
+	if (wminfo.subsystem == SDL_SYSWM_WAYLAND) {
+	    if (!SdlTkX.arg_nogl) {
+		/* Wayland? Try to pre-load libGL.so for 3D canvas. */
+		dlopen("libGL.so.1", RTLD_NOW | RTLD_GLOBAL);
+	    }
 	    /* Add hit test function for move/resize. */
 	    SDL_SetWindowHitTest(SdlTkX.sdlscreen, HitTestProc, NULL);
+	}
+#endif
+#ifdef SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS
+	if ((wminfo.subsystem == SDL_SYSWM_WAYLAND) ||
+	    (wminfo.subsystem == SDL_SYSWM_X11)) {
+	    /* Fullscreen mode without minimize trickery. */
+	    SDL_SetHintWithPriority(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS,
+				    "0", SDL_HINT_OVERRIDE);
 	}
 #endif
     } else {
