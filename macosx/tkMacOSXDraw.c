@@ -1486,7 +1486,7 @@ XMaxRequestSize(
  *	a damage region.
  *
  * Results:
- *	Returns 0 if the scroll genereated no additional damage.
+ *	Returns 0 if the scroll generated no additional damage.
  *	Otherwise, sets the region that needs to be repainted after
  *	scrolling and returns 1.
  *
@@ -1516,8 +1516,7 @@ TkScrollWindow(
     if ( view ) {
   	/*  Get the scroll area in NSView coordinates (origin at bottom left). */
   	bounds = [view bounds];
- 	scrollSrc = NSMakeRect(
-			       macDraw->xOff + x,
+ 	scrollSrc = NSMakeRect(macDraw->xOff + x,
 			       bounds.size.height - height - (macDraw->yOff + y),
 			       width, height);
  	scrollDst = NSOffsetRect(scrollSrc, dx, -dy);
@@ -1527,7 +1526,6 @@ TkScrollWindow(
  	scrollSrc = NSIntersectionRect(scrollSrc, visRect);
  	scrollDst = NSIntersectionRect(scrollDst, visRect);
  	if ( !NSIsEmptyRect(scrollSrc) && !NSIsEmptyRect(scrollDst) ) {
-
   	    /*
   	     * Mark the difference between source and destination as damaged.
 	     * This region is described in NSView coordinates (y=0 at the bottom)
@@ -1545,6 +1543,7 @@ TkScrollWindow(
 
 	    /* Convert to Tk coordinates. */
 	    TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
+	    TkMacOSXOffsetRegion(damageRgn, -macDraw->xOff, -macDraw->yOff);
 	    if (extraRgn) {
 		CFRelease(extraRgn);
 	    }
@@ -1566,10 +1565,12 @@ TkScrollWindow(
 			    macChild->xOff += dx;
 			    childPtr->changes.y = macChild->yOff;
 			    childPtr->changes.x = macChild->xOff;
+			    TkMacOSXInvalidateWindow(macChild, TK_PARENT_WINDOW);
 			}
 		    }
 		}
 	    }
+	    TkMacOSXInvalidateWindow(macDraw, TK_WINDOW_ONLY);
 
 	    /* Queue up Expose events for the damage region. */
 	    int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
