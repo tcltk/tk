@@ -1504,6 +1504,26 @@ test scale-20.8 {Bug [2262543fff] - Scale widget unexpectedly fires command call
     destroy .s
 } -result {10 10}
 
+test scale-21.1 {Bug [55b95f578a] - Associating variable with bignum value with scale crashes it} -setup {
+    catch {destroy .s}
+} -body {
+    pack [scale .s]
+    set foo 5.79e99
+    # non-regression test for bug [55b95f578a] - shall just not crash
+    .s configure -variable foo
+} -cleanup {
+    destroy .s
+} -result {}
+test scale-21.2 {Bug [55b95f578a] again - Bignum value for -from/-to with scale crashes it} -setup {
+    catch {destroy .s}
+} -body {
+    pack [scale .s]
+    # non-regression test for bug [55b95f578a] - shall just not crash
+    .s configure -from -6.8e99 -to 8.8e99
+} -cleanup {
+    destroy .s
+} -result {}
+
 option clear
 
 # cleanup

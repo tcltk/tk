@@ -753,10 +753,10 @@ ImgPhotoCmd(
 		options.toY2 - options.toY, options.zoomX, options.zoomY,
 		options.subsampleX, options.subsampleY,
 		options.compositingRule);
-	
+
 	/*
 	 * Set the destination image size if the -shrink option was specified.
-	 * This has to be done _after_ copying the data. Otherwise, if source 
+	 * This has to be done _after_ copying the data. Otherwise, if source
 	 * and destination are the same image, block.pixelPtr would point to
 	 * an invalid memory block (bug [5239fd749b]).
 	 */
