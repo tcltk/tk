@@ -2082,7 +2082,7 @@ TkWinMenuKeyObjCmd(
 	    scanCode = MapVirtualKey(VK_RMENU, 0);
 	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16) | (1 << 24)
-		    | (0x111 << 29) | (1 << 30) | (1 << 31));
+		    | (1 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_F10:
 	    scanCode = MapVirtualKey(VK_F10, 0);
