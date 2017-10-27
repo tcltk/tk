@@ -4148,6 +4148,7 @@ DisplayText(
     numRedisplays++;
     if (tkTextDebug) {
 	Tcl_SetVar2(interp, "tk_textRedraw", NULL, "", TCL_GLOBAL_ONLY);
+	Tcl_SetVar2(interp, "tk_textEmbWinDisplay", NULL, "", TCL_GLOBAL_ONLY);
     }
 
     /*
