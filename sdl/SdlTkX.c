@@ -1,4 +1,4 @@
-#ifdef linux
+#if defined(linux) || defined(__FreeBSD__)
 #define _BSD_SOURCE
 #if defined(__arm__) || defined(__aarch64__) || defined(ANDROID)
 #include <sys/eventfd.h>
@@ -5045,7 +5045,7 @@ RWIconClose(struct SDL_RWops *rwops)
 
 #endif
 
-#ifdef linux
+#if defined(linux) || defined(__FreeBSD__)
 
 /*
  *----------------------------------------------------------------------
