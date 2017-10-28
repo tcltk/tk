@@ -7366,6 +7366,7 @@ test text-37.1 "bug #dd9667635d: text anchor not set" -setup {
     interp bgerror {} returnerror-37.1
     proc returnerror-37.1 {m opts} {set ::my_error $m}
     destroy .t
+    set ::my_error {}
     pack [text .t]
 } -body {
     .t insert end "Hello world!"
