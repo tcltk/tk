@@ -1113,7 +1113,10 @@ TkTextEmbWinDisplayProc(
     }
 
     if (tkTextDebug) {
-	/* The variable tk_textEmbWinDisplay is cleared in DisplayText. */
+	/*
+         * The variable tk_textEmbWinDisplay is cleared in DisplayText.
+         */
+
 	Tcl_SetVar2(textPtr->interp, "tk_textEmbWinDisplay", NULL,
 		    Tk_PathName(tkwin),
 		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
