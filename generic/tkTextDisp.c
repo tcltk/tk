@@ -4148,7 +4148,6 @@ DisplayText(
     numRedisplays++;
     if (tkTextDebug) {
 	Tcl_SetVar2(interp, "tk_textRedraw", NULL, "", TCL_GLOBAL_ONLY);
-	Tcl_SetVar2(interp, "tk_textEmbWinDisplay", NULL, "", TCL_GLOBAL_ONLY);
     }
 
     /*
@@ -4508,6 +4507,12 @@ DisplayText(
 			 */
 
 			x = -chunkPtr->width;
+		    }
+		    if (tkTextDebug) {
+			char string[TK_POS_CHARS];
+
+			TkTextPrintIndex(textPtr, &dlPtr->index, string);
+			LOG("tk_textEmbWinDisplay", string);
 		    }
 		    TkTextEmbWinDisplayProc(textPtr, chunkPtr, x,
 			    dlPtr->spaceAbove,

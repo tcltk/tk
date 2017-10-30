@@ -1112,15 +1112,6 @@ TkTextEmbWinDisplayProc(
 	return;
     }
 
-    if (tkTextDebug) {
-	/*
-         * The variable tk_textEmbWinDisplay is cleared in DisplayText.
-         */
-
-	Tcl_SetVar2(textPtr->interp, "tk_textEmbWinDisplay", NULL,
-		    Tk_PathName(tkwin),
-		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
-    }
     if ((x + chunkPtr->width) <= 0) {
 	/*
 	 * The window is off-screen; just unmap it.
