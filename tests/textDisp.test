@@ -968,7 +968,7 @@ test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll.} {aqua
     .t delete 2.0 3.0
     update
     list $tk_textEmbWinDisplay
-} {{.t.button_one .t.button_two .t.button_three}}
+} {{4.0 6.0}}
 
 
 # The following group of tests is marked non-portable because
