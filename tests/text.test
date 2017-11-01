@@ -7824,6 +7824,7 @@ test text-37.1 "Bug dd9667635d4d286858b1237835502a1d8bd07a82 \
     interp bgerror {} returnerror-37.1
     proc returnerror-37.1 {m opts} {set ::my_error $m}
     destroy .t
+    set ::my_error {}
     pack [text .t]
 } -body {
     .t insert end "Hello world!"
