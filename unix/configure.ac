@@ -36,6 +36,7 @@ LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
 
+if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
 if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
     AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
 Found config for Tcl ${TCL_VERSION}])
@@ -43,6 +44,7 @@ fi
 if test "${TCL_MINOR_VERSION}" -lt 6 ; then
     AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
 Found config for Tcl ${TCL_VERSION}])
+fi
 fi
 
 SC_PROG_TCLSH
