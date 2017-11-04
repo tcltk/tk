@@ -1772,14 +1772,38 @@ test menu-3.65 {MenuWidgetCmd procedure, "yposition" option} -setup {
 } -cleanup {
 	destroy .m1
 } -returnCodes error -result {wrong # args: should be ".m1 yposition index"}
-test menu-3.66 {MenuWidgetCmd procedure, "yposition" option} -setup {
+test menu-3.66a {MenuWidgetCmd procedure, "yposition" option, no tearoff} -setup {
 	destroy .m1
 } -body {
+    menu .m1 -tearoff 0
+    .m1 yposition 1
+} -cleanup {
+	destroy .m1
+} -result {0}
+test menu-3.66b {MenuWidgetCmd procedure, "yposition" option, with tearoff} -constraints {
+    notAqua
+} -setup {
+	destroy .m1
+} -body {
+    # on Win or Linux, tearoff menus are supported
+    # see menu-3.66c for aqua
     menu .m1 -tearoff 1
     .m1 yposition 1
 } -cleanup {
 	destroy .m1
 } -result {1}
+test menu-3.66c {MenuWidgetCmd procedure, "yposition" option, with tearoff} -constraints {
+    aqua
+} -setup {
+	destroy .m1
+} -body {
+    # on OS X, tearoff menus are not supported
+    # see menu-3.66b for win or linux
+    menu .m1 -tearoff 1
+    .m1 yposition 1
+} -cleanup {
+	destroy .m1
+} -result {0}
 test menu-3.67 {MenuWidgetCmd procedure, bad option} -setup {
 	destroy .m1
 } -body {
