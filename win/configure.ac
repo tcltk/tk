@@ -81,11 +81,16 @@ SC_ENABLE_SHARED
 SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
 SC_LOAD_TCLCONFIG
 
-if test "${TCL_MAJOR_VERSION}" == "${TK_MAJOR_VERSION}"; then
-if test "${TCL_MINOR_VERSION}" -lt "${TK_MINOR_VERSION}"; then
+if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
+if test "${TCL_MAJOR_VERSION}" != "${TK_MAJOR_VERSION}"; then
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}.])
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better.])
+fi
+if test "${TCL_MINOR_VERSION}" -lt 6; then
+    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better.])
 fi
 fi
 
