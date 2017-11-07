@@ -196,6 +196,7 @@ DEMODIR		= $(ROOT)\demos
 # TBD - This is a potentially dangerous conflict, rename WINDIR to
 # something else
 WINDIR		= $(ROOT)\win
+
 !ifndef RCDIR
 !if exist("$(WINDIR)\rc")
 RCDIR           = $(WINDIR)\rc
@@ -1105,8 +1106,8 @@ PRJSTUBLIB	= $(OUT_DIR)\$(PRJSTUBLIBNAME)
 # If extension parent makefile has not defined a resource definition file,
 # we will generate one from standard template.
 !if !$(DOING_TCL) && !$(DOING_TK) && !$(STATIC_BUILD)
-!ifdef PRJ_RCFILE
-RESFILE = $(TMP_DIR)\$(PRJ_RCFILE:.rc=.res)
+!ifdef RCFILE
+RESFILE = $(TMP_DIR)\$(RCFILE:.rc=.res)
 !else
 RESFILE = $(TMP_DIR)\$(PROJECT).res
 !endif
@@ -1498,10 +1499,13 @@ default-shell: default-setup $(PROJECT)
 	$(DEBUGGER) $(TCLSH)
 
 # Generation of Windows version resource 
-!ifdef PRJ_RCFILE
+!ifdef RCFILE
 
+# Note: don't use $** in below rule because there may be other dependencies
+# and only the "master" rc must be passed to the resource compiler
 $(TMP_DIR)\$(PROJECT).res: $(RCDIR)\$(PROJECT).rc
-	$(RESCMD) $**
+	$(RESCMD) $(RCDIR)\$(PROJECT).rc
+
 !else
 
 # If parent makefile has not defined a resource definition file,
@@ -1544,7 +1548,7 @@ END
 
 <<
 
-!endif # ifdef PRJ_RCFILE
+!endif # ifdef RCFILE
 
 !ifndef DISABLE_IMPLICIT_RULES
 DISABLE_IMPLICIT_RULES = 0

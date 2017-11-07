@@ -76,9 +76,13 @@
 # The PROJECT macro is used by rules.vc for generating appropriate
 # macros and rules.
 PROJECT = tk
+
 # Default target to build if no target is specified. If unspecified, the
 # rules.vc file will set up "all" as the target.
 DEFAULT_BUILD_TARGET = release
+
+# We have a custom resource file
+RCFILE = tk.rc
 
 # The rules.vc file does much of the hard work in terms of defining
 # the build configuration, macros, output directories etc.
