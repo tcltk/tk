@@ -882,16 +882,17 @@ XGetImage(
     int	        bitmap_pad = 0;
     int	        bytes_per_row = 4*width;
     int                size;
-    MacDrawable *macDraw = (MacDrawable *) d;
+    int scalefactor = 1;
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     NSWindow *win = TkMacOSXDrawableWindow(d);
     /* This code assumes that backing scale factors are integers.  Currently
      * Retina displays use a scale factor of 2.0 and normal displays use 1.0.
      * We do not support any other values here.
      */
-    int scalefactor = 1;
     if (win && [win respondsToSelector:@selector(backingScaleFactor)]) {
 	scalefactor = ([win backingScaleFactor] == 2.0) ? 2 : 1;
     }
+#endif
     int scaled_height = height * scalefactor;
     int scaled_width = width * scalefactor;
 
@@ -1359,7 +1360,7 @@ void
 Tk_ResetUserInactiveTime(
     Display *dpy)
 {
-    IOGPoint loc;
+    IOGPoint loc = {0, 0};
     kern_return_t kr;
     NXEvent nullEvent = {NX_NULLEVENT, {0, 0}, 0, -1, 0};
     enum { kNULLEventPostThrottle = 10 };

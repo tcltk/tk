@@ -85,6 +85,8 @@ TkCreateXEventSource(void)
 #   define XCreateWindow 0
 #   define XOffsetRegion 0
 #   define XUnionRegion 0
+#   define XPolygonRegion 0
+#   define XPointInRegion 0
 #   define TkWmCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkSendCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkpTestsendCmd 0
@@ -473,6 +475,7 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
+    TkDebugPhotoStringMatchDef, /* 185 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
@@ -744,6 +747,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XDrawPoints, /* 135 */
     XReparentWindow, /* 136 */
     XPutImage, /* 137 */
+    XPolygonRegion, /* 138 */
+    XPointInRegion, /* 139 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */
