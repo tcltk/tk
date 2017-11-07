@@ -94,7 +94,11 @@
 #  define CFG_PROFILED		"0"
 #endif
 
-#ifdef HAVE_XFT
+#if defined(_WIN32) || defined(__CYGWIN__)
+#  define CFG_FONTSYSTEM	"gdi"
+#elif defined(MAC_OSX_TK)
+#  define CFG_FONTSYSTEM	"xft"
+#elif defined(HAVE_XFT)
 #  define CFG_FONTSYSTEM	"xft"
 #else
 #  define CFG_FONTSYSTEM	"x11"
