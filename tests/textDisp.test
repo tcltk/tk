@@ -960,6 +960,28 @@ test textDisp-6.9 {DisplayText, horizontal scrollbar updates} {
     update
     set scrollInfo
 } [list 0.0 [expr {4.0/11}]]
+test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll.} {aqua} {
+    .t configure -wrap char
+    .t delete 1.0 end
+    .t insert 1.0 "Line 1"
+    foreach i {2 3 4} {
+	.t insert end "\nLine $i"
+    }
+    .t insert end "\n"
+    .t window create end -create {
+	button %W.button_one -text "Button 1"}
+    .t insert end "\nLine 6\n"
+    .t window create end -create {
+	button %W.button_two -text "Button 2"}
+    .t insert end "\nLine 8\n"
+    .t window create end -create {
+	button %W.button_three -text "Button 3"}
+    update
+    .t delete 2.0 3.0
+    update
+    list $tk_textEmbWinDisplay
+} {{4.0 6.0}}
+
 
 # The following group of tests is marked non-portable because
 # they result in a lot of extra redisplay under Ultrix.  I don't
