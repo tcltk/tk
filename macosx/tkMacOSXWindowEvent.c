@@ -363,7 +363,7 @@ GenerateUpdates(
     event.xexpose.width = damageBounds.size.width;
     event.xexpose.height = damageBounds.size.height;
     event.xexpose.count = 0;
-    Tk_HandleEvent(&event);
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
 #ifdef TK_MAC_DEBUG_DRAWING
     NSLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
@@ -915,16 +915,10 @@ ConfigureRestrictProc(
  */
 - (void) generateExposeEvents: (HIShapeRef) shape
 {
-    [self generateExposeEvents:shape childrenOnly:0];
-}
-
-- (void) generateExposeEvents: (HIShapeRef) shape
-		 childrenOnly: (int) childrenOnly
-{
-    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     unsigned long serial;
     CGRect updateBounds;
     int updatesNeeded;
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
 
     if (!winPtr) {
 		return;
