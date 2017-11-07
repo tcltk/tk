@@ -21,6 +21,10 @@
 #include "tkInt.h"
 #include "tkScale.h"
 
+#if defined(_WIN32)
+#define snprintf _snprintf
+#endif
+
 /*
  * The following table defines the legal values for the -orient option. It is
  * used together with the "enum orient" declaration in tkScale.h.
@@ -677,9 +681,9 @@ ConfigureScale(
 	} else {
 	    char varString[TCL_DOUBLE_SPACE], scaleString[TCL_DOUBLE_SPACE];
 
-	    sprintf(varString, scalePtr->format, varValue);
-	    sprintf(scaleString, scalePtr->format, scalePtr->value);
-	    if (strcmp(varString, scaleString)) {
+            Tcl_PrintDouble(NULL, varValue, varString);
+            Tcl_PrintDouble(NULL, scalePtr->value, scaleString);
+            if (strcmp(varString, scaleString)) {
 		ScaleSetVariable(scalePtr);
 	    }
 	}
@@ -936,10 +940,16 @@ ComputeScaleGeometry(
      * whichever length is longer.
      */
 
-    sprintf(valueString, scalePtr->format, scalePtr->fromValue);
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format,
+            scalePtr->fromValue) < 0) {
+        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+    }
     valuePixels = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
 
-    sprintf(valueString, scalePtr->format, scalePtr->toValue);
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format,
+            scalePtr->toValue) < 0) {
+        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+    }
     tmp = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
     if (valuePixels < tmp) {
 	valuePixels = tmp;
@@ -1314,7 +1324,10 @@ ScaleSetVariable(
     if (scalePtr->varNamePtr != NULL) {
 	char string[TCL_DOUBLE_SPACE];
 
-	sprintf(string, scalePtr->format, scalePtr->value);
+        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
+                scalePtr->value) < 0) {
+            string[TCL_DOUBLE_SPACE - 1] = '\0';
+        }
 	scalePtr->flags |= SETTING_VAR;
 	Tcl_ObjSetVar2(scalePtr->interp, scalePtr->varNamePtr, NULL,
 		Tcl_NewStringObj(string, -1), TCL_GLOBAL_ONLY);

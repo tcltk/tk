@@ -1491,6 +1491,7 @@ TextWidgetObjCmd(
 		     * Move the insertion position to the correct place.
 		     */
 
+                    indexFromPtr = TkTextGetIndexFromObj(interp, textPtr, objv[2]);
 		    TkTextIndexForwChars(NULL, indexFromPtr,
 			    deleteInsertOffset, &index, COUNT_INDICES);
 		    TkBTreeUnlinkSegment(textPtr->insertMarkPtr,

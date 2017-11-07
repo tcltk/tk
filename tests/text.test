@@ -1589,6 +1589,16 @@ test text-8.26 {TextWidgetCmd procedure, "replace" option crash} -setup {
 } -cleanup {
     destroy .tt
 } -result {}
+test text-8.27 {TextWidgetCmd procedure, "replace" option crash} -setup {
+    text .tt
+} -body {
+    .tt insert 0.0 \na
+    for {set i 0} {$i < 2} {incr i} {
+        .tt replace 2.0 3.0 b
+    }
+} -cleanup {
+    destroy .tt
+} -result {}
 
 
 test text-9.1 {TextWidgetCmd procedure, "get" option} -setup {
@@ -6333,6 +6343,7 @@ test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
     text .t
     pack .t
     set ::retval {}
+    update
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
 # Shouldn't require [update idle] to trigger event [Bug 1809538]
@@ -7368,7 +7379,9 @@ test text-35.3 {widget dump -command destroys widget} -setup {
 
 
 test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-36.1
+    proc returnerror-36.1 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t-1]]
 } -body {
@@ -7379,9 +7392,14 @@ test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy .t-1
+    rename returnerror-36.1 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
 } -result {}
 test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-36.2
+    proc returnerror-36.2 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t+1]]
 } -body {
@@ -7392,9 +7410,14 @@ test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy $w
+    rename returnerror-36.2 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
 } -result {}
 test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-36.3
+    proc returnerror-36.3 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t*1]]
 } -body {
@@ -7405,6 +7428,32 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy $w
+    rename returnerror-36.3 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
+} -result {}
+
+
+test text-37.1 "bug #dd9667635d: text anchor not set" -setup {
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-37.1
+    proc returnerror-37.1 {m opts} {set ::my_error $m}
+    destroy .t
+    set ::my_error {}
+    pack [text .t]
+} -body {
+    .t insert end "Hello world!"
+    .t tag add sel 1.0 end
+    # this line shall not trigger error:
+    #     bad text index "tk::anchorN"
+    event generate .t <<SelectPrevLine>>
+    update
+    set ::my_error
+} -cleanup {
+    destroy .t
+    rename returnerror-37.1 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error
 } -result {}
 
 # cleanup
