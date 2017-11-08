@@ -57,8 +57,6 @@
 /*Objects for use in setting background color and opacity of window.*/
 NSColor *colorName = NULL;
 BOOL opaqueTag = FALSE;
-extern CGImageRef CreateCGImageWithXImage(
-			XImage *image);
 
 static const struct {
     const UInt64 validAttrs, defaultAttrs, forceOnAttrs, forceOffAttrs;
