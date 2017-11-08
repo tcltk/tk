@@ -155,8 +155,6 @@ XGetImage(
     NSUInteger        bitmap_fmt = 0;
     XImage*           imagePtr = NULL;
     char*  bitmap = NULL;
-    char*  image_data = NULL;
-    char*  image_ptr = NULL;
     int	   depth = 32, offset = 0, bitmap_pad = 0;
     int	   bytes_per_row, size, row, n, m;
     char   R, G, B, A;
@@ -231,7 +229,12 @@ XGetImage(
 	    imagePtr->pixelpower = 1;
 	}
     } else {
-	TkMacOSXDbgMsg("Could not extract image from drawable.");
+	/*
+	 * There are some calls to XGetImage in the generic Tk
+	 * code which pass an XYPixmap rather than a ZPixmap.
+	 * XYPixmaps should be handled here.
+	 */
+	TkMacOSXDbgMsg("XGetImage does not handle XYPixmaps at the moment.");
     }
     return imagePtr;
 }
