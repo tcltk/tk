@@ -106,8 +106,9 @@ TkMacOSXInitCGDrawing(
  *	Extract bitmap data from a MacOSX drawable as an NSBitmapImageRep.
  *
  * Results:
- *	Returns an autoreleased NSBitmapRep representing the image of the given
- *      rectangle of the given drawable.
+ *	Returns an NSBitmapRep representing the image of the given
+ *      rectangle of the given drawable.  This object is retained.
+ *      The caller is responsible for releasing it.
  *
  *      NOTE: The x,y coordinates should be relative to a coordinate system with
  *      origin at the top left, as used by XImage and CGImage, not bottom
@@ -133,15 +134,14 @@ TkMacOSXBitmapRepFromDrawableRect(
     NSView *view=NULL;
     if ( mac_drawable->flags & TK_IS_PIXMAP ) {
 	/*
-	   This means that the MacDrawable is functioning as a Tk Pixmap, so its view
-	   field is NULL.
+	 * This means that the MacDrawable is functioning as a
+	 * Tk Pixmap, so its view field is NULL.
 	*/
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
 	CGRect image_rect = CGRectMake(x, y, width, height);
 	cg_image = CGBitmapContextCreateImage( (CGContextRef) cg_context);
 	sub_cg_image = CGImageCreateWithImageInRect(cg_image, image_rect);
 	if ( sub_cg_image ) {
-	    /*This can be dealloc'ed prematurely if set for autorelease, causing crashes.*/
 	    bitmap_rep = [NSBitmapImageRep alloc];
 	    [bitmap_rep initWithCGImage:sub_cg_image];
 	}
@@ -149,14 +149,15 @@ TkMacOSXBitmapRepFromDrawableRect(
 	    CGImageRelease(cg_image);
 	}
     } else if ( (view = TkMacOSXDrawableView(mac_drawable)) ) {
-	/* convert top-left coordinates to NSView coordinates */
+	/*
+	 * Convert Tk top-left to NSView bottom-left coordinates.
+	 */
 	int view_height = [view bounds].size.height;
 	NSRect view_rect = NSMakeRect(x + mac_drawable->xOff,
-				      view_height - height - y - mac_drawable->yOff,
-				      width,height);
+			       view_height - height - y - mac_drawable->yOff,
+			       width, height);
 
 	if ( [view lockFocusIfCanDraw] ) {
-	    /*This can be dealloc'ed prematurely if set for autorelease, causing crashes.*/
 	    bitmap_rep = [NSBitmapImageRep alloc];
 	    bitmap_rep = [bitmap_rep initWithFocusedViewRect:view_rect];
 	    [view unlockFocus];
