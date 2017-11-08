@@ -136,11 +136,14 @@ TkMacOSXCreateCGImageWithXImage(
  *
  *----------------------------------------------------------------------
  */
+struct pixel_fmt {int r; int g; int b; int a;};
+static struct pixel_fmt bgra = {2, 1, 0, 3};
+static struct pixel_fmt abgr = {3, 2, 1, 0};
 
 XImage *
 XGetImage(
     Display *display,
-    Drawable d,
+    Drawable drawable,
     int x,
     int y,
     unsigned int width,
@@ -148,100 +151,84 @@ XGetImage(
     unsigned long plane_mask,
     int format)
 {
-    NSBitmapImageRep *bitmap_rep;
-    NSUInteger         bitmap_fmt;
-    XImage *       imagePtr = NULL;
-    char *           bitmap = NULL;
-    char *           image_data=NULL;
-    int	        depth = 32;
-    int	        offset = 0;
-    int	        bitmap_pad = 0;
-    int	        bytes_per_row = 4*width;
-    int                size;
-    int scalefactor = 1;
-#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
-    NSWindow *win = TkMacOSXDrawableWindow(d);
-    /* This code assumes that backing scale factors are integers.  Currently
-     * Retina displays use a scale factor of 2.0 and normal displays use 1.0.
-     * We do not support any other values here.
-     */
-    if (win && [win respondsToSelector:@selector(backingScaleFactor)]) {
-	scalefactor = ([win backingScaleFactor] == 2.0) ? 2 : 1;
+    NSBitmapImageRep* bitmap_rep = NULL;
+    NSUInteger        bitmap_fmt = 0;
+    XImage*           imagePtr = NULL;
+    char*  bitmap = NULL;
+    char*  image_data = NULL;
+    char*  image_ptr = NULL;
+    int	   depth = 32, offset = 0, bitmap_pad = 0;
+    int	   bytes_per_row, size, row, n, m;
+    char   R, G, B, A;
+    unsigned int scalefactor=1, scaled_height=height, scaled_width=width;
+    NSWindow *win = TkMacOSXDrawableWindow(drawable);
+    static enum {unknown, no, yes} supports_retina = unknown;
+
+    if (win && supports_retina == unknown) {
+	supports_retina = [win respondsToSelector:
+			       @selector(backingScaleFactor)]? yes: no;
     }
-#endif
-    int scaled_height = height * scalefactor;
-    int scaled_width = width * scalefactor;
+
+    if (supports_retina == yes) {
+	/*
+	 * We only allow scale factors 1 or 2, as Apple currently does.
+	 */
+	scalefactor = [win backingScaleFactor] == 2.0 ? 2 : 1;
+	scaled_height *= scalefactor;
+	scaled_width *= scalefactor;
+    }
 
     if (format == ZPixmap) {
 	if (width == 0 || height == 0) {
-	    /* This happens all the time.
-	    TkMacOSXDbgMsg("XGetImage: empty image requested");
-	    */
 	    return NULL;
 	}
-
-	bitmap_rep =  TkMacOSXBitmapRepFromDrawableRect(d, x, y, width, height);
-	bitmap_fmt = [bitmap_rep bitmapFormat];
-
-	if ( bitmap_rep == Nil                        ||
-	     (bitmap_fmt != 0 && bitmap_fmt != 1)     ||
-	     [bitmap_rep samplesPerPixel] != 4 ||
-	     [bitmap_rep isPlanar] != 0               ) {
+	bitmap_rep = TkMacOSXBitmapRepFromDrawableRect(drawable,
+		         x, y, width, height);
+	if (!bitmap_rep) {
 	    TkMacOSXDbgMsg("XGetImage: Failed to construct NSBitmapRep");
 	    return NULL;
 	}
+	bitmap_fmt = [bitmap_rep bitmapFormat];
+	size = [bitmap_rep bytesPerPlane];
+	bytes_per_row = [bitmap_rep bytesPerRow];
+	bitmap = ckalloc(size);
+	if (!bitmap                              ||
+	    (bitmap_fmt != 0 && bitmap_fmt != 1) ||
+	    [bitmap_rep samplesPerPixel] != 4    ||
+	    [bitmap_rep isPlanar] != 0           ||
+	    bytes_per_row != 4 * scaled_width    ||
+	    size != bytes_per_row*scaled_height  ) {
+	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
+	    CFRelease(bitmap_rep);
+	    return NULL;
+	}
+	memcpy(bitmap, (char *)[bitmap_rep bitmapData], size);
+	CFRelease(bitmap_rep);
+	
+	/*
+	 * When Apple extracts a bitmap from an NSView, it may be in
+	 * either BGRA or ABGR format.  For an XImage we need RGBA.
+	 */
+	struct pixel_fmt pixel = bitmap_fmt == 0 ? bgra : abgr;
 
-	NSSize image_size = NSMakeSize(width, height);
-	NSImage* ns_image = [[NSImage alloc]initWithSize:image_size];
-	[ns_image addRepresentation:bitmap_rep];
-
-	/* Assume premultiplied nonplanar data with 4 bytes per pixel.*/
-	if ( [bitmap_rep isPlanar ] == 0 &&
-	     [bitmap_rep samplesPerPixel] == 4 ) {
-	    bytes_per_row = [bitmap_rep bytesPerRow];
-	    assert(bytes_per_row == 4 * scaled_width);
-	    assert([bitmap_rep bytesPerPlane] == bytes_per_row * scaled_height);
-	    size = bytes_per_row*scaled_height;
-	    image_data = (char*)[bitmap_rep bitmapData];
-	    if ( image_data ) {
-		int row, n, m;
-		bitmap = ckalloc(size);
-		/*
-		  Oddly enough, the bitmap has the top row at the beginning,
-		  and the pixels are in BGRA or ABGR format.
-		*/
-		if (bitmap_fmt == 0) {
-		    /* BGRA */
-		    for (row=0, n=0; row<scaled_height; row++, n+=bytes_per_row) {
-			for (m=n; m<n+bytes_per_row; m+=4) {
-			    *(bitmap+m)   = *(image_data+m+2);
-			    *(bitmap+m+1) = *(image_data+m+1);
-			    *(bitmap+m+2) = *(image_data+m);
-			    *(bitmap+m+3) = *(image_data+m+3);
-			}
-		    }
-		} else {
-		    /* ABGR */
-		    for (row=0, n=0; row<scaled_height; row++, n+=bytes_per_row) {
-			for (m=n; m<n+bytes_per_row; m+=4) {
-			    *(bitmap+m)   = *(image_data+m+3);
-			    *(bitmap+m+1) = *(image_data+m+2);
-			    *(bitmap+m+2) = *(image_data+m+1);
-			    *(bitmap+m+3) = *(image_data+m);
-			}
-		    }
-		}
+	for (row=0, n=0; row<scaled_height; row++, n+=bytes_per_row) {
+	    for (m=n; m<n+bytes_per_row; m+=4) {
+		R = *(bitmap + m + pixel.r);
+		G = *(bitmap + m + pixel.g);
+		B = *(bitmap + m + pixel.b);
+		A = *(bitmap + m + pixel.a);
+		
+		*(bitmap + m)     = R;
+		*(bitmap + m + 1) = G;
+		*(bitmap + m + 2) = B;
+		*(bitmap + m + 3) = A;
 	    }
 	}
-	if (bitmap) {
-	    imagePtr = XCreateImage(display, NULL, depth, format, offset,
-				    (char*)bitmap, scaled_width, scaled_height,
-				    bitmap_pad, bytes_per_row);
-	    if (scalefactor == 2) {
-	    	imagePtr->pixelpower = 1;
-	     }
-	    [ns_image removeRepresentation:bitmap_rep]; /*releases the rep*/
-	    [ns_image release];
+	imagePtr = XCreateImage(display, NULL, depth, format, offset,
+				(char*)bitmap, scaled_width, scaled_height,
+				bitmap_pad, bytes_per_row);
+	if (scalefactor == 2) {
+	    imagePtr->pixelpower = 1;
 	}
     } else {
 	TkMacOSXDbgMsg("Could not extract image from drawable.");
@@ -556,4 +543,12 @@ TkPutImage(
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;
 }
-
+
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */
