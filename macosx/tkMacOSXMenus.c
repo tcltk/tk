@@ -287,6 +287,7 @@ EDIT_ACTION(redo, Redo)
  *----------------------------------------------------------------------
  */
 
+#if 0
 static Tcl_Obj *
 GetWidgetDemoPath(
     Tcl_Interp *interp)
@@ -306,6 +307,26 @@ GetWidgetDemoPath(
     }
     return result;
 }
+#else
+static Tcl_Obj *
+GetWidgetDemoPath(
+    Tcl_Interp *interp)
+{
+    Tcl_Obj *result = NULL;
+
+    if (Tcl_EvalEx(interp, "::tk::pkgconfig get demodir,runtime",
+		   -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+	Tcl_Obj *libpath, *demo[1] = { Tcl_NewStringObj("widget", 6) };
+
+	libpath = Tcl_GetObjResult(interp);
+	Tcl_IncrRefCount(libpath);
+	result = Tcl_FSJoinToPath(libpath, 1, demo);
+	Tcl_DecrRefCount(libpath);
+    }
+    Tcl_ResetResult(interp);
+    return result;
+}
+#endif
 
 /*
  *----------------------------------------------------------------------
