@@ -175,7 +175,7 @@ TkpOpenDisplay(
     {
 	int major, minor, patch;
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 10100
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
 	Gestalt(gestaltSystemVersionMajor, (SInt32*)&major);
 	Gestalt(gestaltSystemVersionMinor, (SInt32*)&minor);
 	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
