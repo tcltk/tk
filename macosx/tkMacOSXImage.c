@@ -160,14 +160,14 @@ XGetImage(
     char   R, G, B, A;
     unsigned int scalefactor=1, scaled_height=height, scaled_width=width;
     NSWindow *win = TkMacOSXDrawableWindow(drawable);
-    static enum {unknown, no, yes} supports_retina = unknown;
+    static enum {unknown, no, yes} has_retina = unknown;
 
-    if (win && supports_retina == unknown) {
-	supports_retina = [win respondsToSelector:
-			       @selector(backingScaleFactor)]? yes: no;
+    if (win && has_retina == unknown) {
+	has_retina = [win respondsToSelector:@selector(backingScaleFactor)]?
+	    yes : no;
     }
 
-    if (supports_retina == yes) {
+    if (has_retina == yes) {
 	/*
 	 * We only allow scale factors 1 or 2, as Apple currently does.
 	 */
