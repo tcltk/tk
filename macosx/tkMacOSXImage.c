@@ -163,15 +163,21 @@ XGetImage(
     static enum {unknown, no, yes} has_retina = unknown;
 
     if (win && has_retina == unknown) {
+#ifdef __clang__
 	has_retina = [win respondsToSelector:@selector(backingScaleFactor)]?
 	    yes : no;
+#else
+	has_retina = no;
+#endif
     }
 
     if (has_retina == yes) {
 	/*
 	 * We only allow scale factors 1 or 2, as Apple currently does.
 	 */
+#ifdef __clang__
 	scalefactor = [win backingScaleFactor] == 2.0 ? 2 : 1;
+#endif
 	scaled_height *= scalefactor;
 	scaled_width *= scalefactor;
     }
