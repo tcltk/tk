@@ -36,7 +36,7 @@ typedef struct KillEvent {
 static void tkMacOSXProcessFiles(NSAppleEventDescriptor* event,
 				 NSAppleEventDescriptor* replyEvent,
 				 Tcl_Interp *interp,
-				 char* procedure);
+				 const char* procedure);
 static int  MissedAnyParameters(const AppleEvent *theEvent);
 static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 
@@ -277,7 +277,7 @@ tkMacOSXProcessFiles(
     NSAppleEventDescriptor* event,
     NSAppleEventDescriptor* replyEvent,
     Tcl_Interp *interp,
-    char* procedure)
+    const char* procedure)
 {
     Tcl_Encoding utf8 = Tcl_GetEncoding(NULL, "utf-8");
     const AEDesc *fileSpecDesc = nil;
