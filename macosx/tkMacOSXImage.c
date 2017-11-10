@@ -152,12 +152,12 @@ XGetImage(
     int format)
 {
     NSBitmapImageRep* bitmap_rep = NULL;
-    NSUInteger        bitmap_fmt = 0;
-    XImage*           imagePtr = NULL;
-    char*  bitmap = NULL;
-    int	   depth = 32, offset = 0, bitmap_pad = 0;
-    int	   bytes_per_row, size, row, n, m;
-    char   R, G, B, A;
+    NSUInteger bitmap_fmt = 0;
+    XImage* imagePtr = NULL;
+    char* bitmap = NULL;
+    char R, G, B, A;
+    int depth = 32, offset = 0, bitmap_pad = 0;
+    unsigned int bytes_per_row, size, row, n, m;
     unsigned int scalefactor=1, scaled_height=height, scaled_width=width;
     NSWindow *win = TkMacOSXDrawableWindow(drawable);
     static enum {unknown, no, yes} has_retina = unknown;
