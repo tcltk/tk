@@ -270,7 +270,11 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 - (void)selectFormat:(id)sender  {
     NSPopUpButton *button                 = (NSPopUpButton *)sender;
     filterInfo.fileTypeIndex      = [button indexOfSelectedItem];
+#ifdef __clang__
     NSMutableArray *allowedtypes = filterInfo.fileTypeExtensions[filterInfo.fileTypeIndex];
+#else
+    NSMutableArray *allowedtypes = nil;
+#endif
     [openpanel setAllowedFileTypes:allowedtypes];
     filterInfo.userHasSelectedFilter = true;
 
@@ -279,7 +283,11 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 - (void)saveFormat:(id)sender  {
     NSPopUpButton *button                 = (NSPopUpButton *)sender;
     filterInfo.fileTypeIndex      = [button indexOfSelectedItem];
+#ifdef __clang__
     NSMutableArray *allowedtypes = filterInfo.fileTypeExtensions[filterInfo.fileTypeIndex];
+#else
+    NSMutableArray *allowedtypes = nil;
+#endif
     [savepanel setAllowedFileTypes:allowedtypes];
 }
 
@@ -717,7 +725,11 @@ Tk_GetOpenFileObjCmd(
 	#if 0
 	NSLog(@"result: %i modal: %li", result, (long)modalReturnCode);
 	#endif
+	#ifdef __clang__
 	NSString * selectedFilter = filterInfo.fileTypeNames[filterInfo.fileTypeIndex];
+	#else
+	NSString * selectedFilter = [NSString string];
+	#endif
 	Tcl_ObjSetVar2(interp, typeVariablePtr, NULL,
 		Tcl_NewStringObj([selectedFilter UTF8String], -1), TCL_GLOBAL_ONLY);
     }
@@ -884,8 +896,10 @@ Tk_GetSaveFileObjCmd(
 
 	[savepanel setAccessoryView:accessoryView];
 
+	#ifdef __clang__
 	[savepanel setAllowedFileTypes:filterInfo.fileTypeExtensions[filterInfo.fileTypeIndex]];
 	[savepanel setAllowsOtherFileTypes:NO];
+	#endif
     } else if (defaultType) {
 	/* If no filetypes are given, defaultextension is an alternative way
 	 * to specify the attached extension. Just propose this extension,
@@ -971,7 +985,11 @@ Tk_GetSaveFileObjCmd(
 	#if 0
 	NSLog(@"result: %i modal: %li", result, (long)modalReturnCode);
 	#endif
+	#ifdef __clang__
 	NSString * selectedFilter = filterInfo.fileTypeNames[filterInfo.fileTypeIndex];
+	#else
+	NSString * selectedFilter = [NSString string];
+	#endif
 	Tcl_ObjSetVar2(interp, typeVariablePtr, NULL,
 		Tcl_NewStringObj([selectedFilter UTF8String], -1), TCL_GLOBAL_ONLY);
     }
