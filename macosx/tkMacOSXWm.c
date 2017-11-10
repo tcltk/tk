@@ -57,8 +57,6 @@
 /*Objects for use in setting background color and opacity of window.*/
 NSColor *colorName = NULL;
 BOOL opaqueTag = FALSE;
-extern CGImageRef CreateCGImageWithXImage(
-			XImage *image);
 
 static const struct {
     const UInt64 validAttrs, defaultAttrs, forceOnAttrs, forceOffAttrs;
@@ -200,7 +198,6 @@ static Tcl_HashTable windowTable;
 static int windowHashInit = false;
 
 
-
 #pragma mark NSWindow(TKWm)
 
 /*
@@ -217,7 +214,6 @@ static int windowHashInit = false;
 {
     return [self convertScreenToBase:point];
 }
-@end
 #else
 - (NSPoint) convertPointToScreen: (NSPoint) point
 {
@@ -237,25 +233,7 @@ static int windowHashInit = false;
 }
 #endif
 
-/*Override automatic fullscreen button on 10.13 because system fullscreen API
-confuses Tk window geometry.
-*/
-#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
-- (void)toggleFullScreen:(id)sender
-{
-    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    Tk_Window win_Ptr=(Tk_Window) winPtr;
-    Tcl_Interp *interp = Tk_Interp(win_Ptr);
-    if ([self isZoomed]) {
-	TkMacOSXZoomToplevel(self, inZoomIn);
-    } else {
-	TkMacOSXZoomToplevel(self, inZoomOut);
-    }
-}
-
-#endif
 @end
-
 
 #pragma mark -
 
@@ -404,7 +382,22 @@ static void		RemapWindows(TkWindow *winPtr,
 }
 @end
 
-@implementation TKWindow
+
+@implementation TKWindow: NSWindow
+#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
+/*
+ * Override automatic fullscreen button on >10.12 because system fullscreen API
+ * confuses Tk window geometry.
+ */
+- (void)toggleFullScreen:(id)sender
+{
+    if ([self isZoomed]) {
+	TkMacOSXZoomToplevel(self, inZoomIn);
+    } else {
+	TkMacOSXZoomToplevel(self, inZoomOut);
+    }
+}
+#endif
 @end
 
 @implementation TKWindow(TKWm)
@@ -1957,7 +1950,7 @@ WmGridCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int reqWidth, reqHeight, widthInc, heightInc;
-    char *errorMsg;
+    const char *errorMsg;
 
     if ((objc != 3) && (objc != 7)) {
 	Tcl_WrongNumArgs(interp, 2, objv,
