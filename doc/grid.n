@@ -160,7 +160,8 @@ This space is added outside the slave(s) border.
 Insert the slave so that it occupies the \fIn\fRth row in the grid.
 Row numbers start with 0.  If this option is not supplied, then the
 slave is arranged on the same row as the previous slave specified on this
-call to \fBgrid\fR, or the first unoccupied row if this is the first slave.
+call to \fBgrid\fR, or the next row after the highest occupied row
+if this is the first slave.
 .TP
 \fB\-rowspan \fIn\fR
 .
