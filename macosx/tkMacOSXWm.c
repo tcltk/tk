@@ -2348,8 +2348,8 @@ WmIconphotoCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-     Tk_Image tk_icon;
-    int i, width, height, isDefault = 0;
+    Tk_Image tk_icon;
+    int width, height, isDefault = 0;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -2377,15 +2377,23 @@ WmIconphotoCmd(
     }
 
     /*Get image and convert to NSImage that can be displayed as icon.*/
-    tk_icon = Tk_GetImage(interp, winPtr, icon, NULL, NULL);
-    Tk_SizeOfImage(tk_icon, &width, &height);
+    tk_icon = Tk_GetImage(interp, tkwin, icon, NULL, NULL);
+    if (tk_icon == NULL) {
+    	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	      "can't use \"%s\" as iconphoto: not a photo image",
+	      icon));
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
+	return TCL_ERROR;
+    }
 	
     NSImage *newIcon;
+    Tk_SizeOfImage(tk_icon, &width, &height);
     newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon, width, height);
-    [NSApp setApplicationIconImage: newIcon];
-	   
     Tk_FreeImage(tk_icon);
-    
+    if (newIcon == NULL) {
+	return TCL_ERROR;
+    }
+    [NSApp setApplicationIconImage: newIcon];
     return TCL_OK;
 }
 
