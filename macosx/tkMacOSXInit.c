@@ -57,16 +57,34 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 @end
 
 @implementation TKApplication
-@synthesize poolProtected = _poolProtected;
+@synthesize poolLock = _poolLock;
 @end
+
+/*
+ * #define this to see a message on stderr whenever _resetAutoreleasePool is
+ * called while the pool is locked.
+ */
+#undef DEBUG_LOCK
 
 @implementation TKApplication(TKInit)
 - (void) _resetAutoreleasePool
 {
-    if(![self poolProtected]) {
+    if([self poolLock] == 0) {
 	[_mainPool drain];
 	_mainPool = [NSAutoreleasePool new];
+    } else {
+#ifdef DEBUG_LOCK
+	fprintf(stderr, "Pool is locked with count %d!!!!\n", [self poolLock]);
+#endif
     }
+}
+- (void) _lockAutoreleasePool
+{
+    [self setPoolLock:[self poolLock] + 1];
+}
+- (void) _unlockAutoreleasePool
+{
+    [self setPoolLock:[self poolLock] - 1];
 }
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 - (void) _postedNotification: (NSNotification *) notification
@@ -104,7 +122,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 {
     _eventInterp = interp;
     _mainPool = [NSAutoreleasePool new];
-    [NSApp setPoolProtected:NO];
+    [NSApp setPoolLock:0];
     _defaultMainMenu = nil;
     [self _setupMenus];
     [self setDelegate:self];
