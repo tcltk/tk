@@ -268,6 +268,7 @@ static int		ConfigureCanvas(Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, int argc,
 			    Tcl_Obj *const *argv, int flags);
 static void		DestroyCanvas(char *memPtr);
+static int              DrawCanvas(Tcl_Interp *interp, ClientData clientData, Tk_PhotoHandle photohandle, int subsample, int zoom);
 static void		DisplayCanvas(ClientData clientData);
 static void		DoItem(Tcl_Obj *accumObj,
 			    Tk_Item *itemPtr, Tk_Uid tag);
@@ -805,6 +806,7 @@ CanvasWidgetCmd(
 	"canvasy",	"cget",		"configure",	"coords",
 	"create",	"dchars",	"delete",	"dtag",
 	"find",		"focus",	"gettags",	"icursor",
+        "image",
 	"imove",	"index",	"insert",	"itemcget",
 	"itemconfigure",
 	"lower",	"move",		"moveto",	"postscript",
@@ -817,6 +819,7 @@ CanvasWidgetCmd(
 	CANV_CANVASY,	CANV_CGET,	CANV_CONFIGURE,	CANV_COORDS,
 	CANV_CREATE,	CANV_DCHARS,	CANV_DELETE,	CANV_DTAG,
 	CANV_FIND,	CANV_FOCUS,	CANV_GETTAGS,	CANV_ICURSOR,
+        CANV_IMAGE,
 	CANV_IMOVE,	CANV_INDEX,	CANV_INSERT,	CANV_ITEMCGET,
 	CANV_ITEMCONFIGURE,
 	CANV_LOWER,	CANV_MOVE,	CANV_MOVETO,	CANV_POSTSCRIPT,
@@ -1186,8 +1189,8 @@ CanvasWidgetCmd(
 
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto doneImove) {
 	    int index;
-	    int x1,x2,y1,y2;
-	    int dontRedraw1,dontRedraw2;
+	    int x1, x2, y1, y2;
+	    int dontRedraw1, dontRedraw2;
 
 	    /*
 	     * The TK_MOVABLE_POINTS flag should only be set for types that
@@ -1217,11 +1220,11 @@ CanvasWidgetCmd(
 
 	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    ItemDelChars(canvasPtr, itemPtr, index, index);
-	    dontRedraw1=itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
+	    dontRedraw1 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
 
 	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    ItemInsert(canvasPtr, itemPtr, index, tmpObj);
-	    dontRedraw2=itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
+	    dontRedraw2 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
 
 	    if (!(dontRedraw1 && dontRedraw2)) {
 		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
@@ -1334,7 +1337,7 @@ CanvasWidgetCmd(
     }
     case CANV_DCHARS: {
 	int first, last;
-	int x1,x2,y1,y2;
+	int x1, x2, y1, y2;
 
 	if ((objc != 4) && (objc != 5)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId first ?last?");
@@ -1362,7 +1365,7 @@ CanvasWidgetCmd(
 	    /*
 	     * Redraw both item's old and new areas: it's possible that a
 	     * delete could result in a new area larger than the old area.
-	     * Except if the insertProc sets the TK_ITEM_DONT_REDRAW flag,
+	     * Except if the dCharsProc sets the TK_ITEM_DONT_REDRAW flag,
 	     * nothing more needs to be done.
 	     */
 
@@ -1572,7 +1575,7 @@ CanvasWidgetCmd(
     }
     case CANV_INSERT: {
 	int beforeThis;
-	int x1,x2,y1,y2;
+	int x1, x2, y1, y2;
 
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId beforeThis string");
@@ -1800,7 +1803,8 @@ CanvasWidgetCmd(
     }
     case CANV_RCHARS: {
 	int first, last;
-	int x1,x2,y1,y2;
+	int x1, x2, y1, y2;
+	int dontRedraw1, dontRedraw2;
 
 	if (objc != 6) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId first last string");
@@ -1831,12 +1835,16 @@ CanvasWidgetCmd(
 
 	    x1 = itemPtr->x1; y1 = itemPtr->y1;
 	    x2 = itemPtr->x2; y2 = itemPtr->y2;
-	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 
+            itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    ItemDelChars(canvasPtr, itemPtr, first, last);
-	    ItemInsert(canvasPtr, itemPtr, first, objv[5]);
+	    dontRedraw1 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
 
-	    if (!(itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW)) {
+            itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+	    ItemInsert(canvasPtr, itemPtr, first, objv[5]);
+	    dontRedraw2 = itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW;
+
+            if (!(dontRedraw1 && dontRedraw2)) {
 		Tk_CanvasEventuallyRedraw((Tk_Canvas) canvasPtr,
 			x1, y1, x2, y2);
 		EventuallyRedrawItem(canvasPtr, itemPtr);
@@ -2126,6 +2134,45 @@ CanvasWidgetCmd(
 	CanvasSetOrigin(canvasPtr, canvasPtr->xOrigin, newY);
 	break;
     }
+  case CANV_IMAGE:
+    {
+      /* SVP 22SEP2017: New "image" command to draw the canvas into a given image. */
+      Tk_PhotoHandle photohandle;
+      int subsample = 1, zoom = 1;
+
+      if (objc < 3 && objc > 5) {
+        Tcl_WrongNumArgs(interp, 2, objv, "imagename | image imagename subsample | image imagename subsample zoom");
+        result = TCL_ERROR;
+        goto done;
+      }
+
+      /* Is the image valid? */
+      if ((photohandle = Tk_FindPhoto(interp, Tcl_GetString(objv[2]) )) == 0) {
+        result = TCL_ERROR;
+        goto done;
+      }
+
+      /* Set the image size to zero, which allows the DrawCanvas() function to expand the image automatically when
+       * it copies the pixmap into it. */
+      if (Tk_PhotoSetSize(interp, photohandle, 0, 0) != TCL_OK) {
+        result = TCL_ERROR;
+        goto done;
+      }
+
+      /* If we are given a subsample, then use it ... */
+      if (objc >= 4 && Tcl_GetIntFromObj(interp, objv[3], &subsample) != TCL_OK) {
+        result = TCL_ERROR;
+        goto done;
+      }
+
+      /* If we are given a zoom, then use it ... */
+      if (objc >= 5 && Tcl_GetIntFromObj(interp, objv[4], &zoom) != TCL_OK) {
+        result = TCL_ERROR;
+        goto done;
+      }
+                                    /* Now draw into it. */
+      result = DrawCanvas(interp, clientData, photohandle, subsample, zoom);
+    }
     }
 
   done:
@@ -2411,6 +2458,265 @@ CanvasWorldChanged(
 	    canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin));
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawCanvas --
+ *
+ * This function draws the contents of a canvas into the given Photo image.
+ * This function is called from the widget "image" subcommand.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *  Canvas contents are rendered into the Photo.
+ *  Photo size is set to the -scrollregion size or widget size.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int DrawCanvas(Tcl_Interp *interp, ClientData clientData, Tk_PhotoHandle photohandle, int subsample, int zoom)
+{
+  TkCanvas * canvasPtr = clientData;
+  Tk_Window tkwin;
+  Display *display;
+  Tk_PhotoImageBlock blockPtr;
+  unsigned char *npixelPtr = 0;       /* If we need to remap from 16 or 24bpp, the new pixelPtr is allocated here */
+  Window wid;
+  Tk_Item * itemPtr;
+  Pixmap pixmap = 0;
+  XImage *ximage = NULL;
+  GC xgc = 0;
+  XGCValues xgcvalues;
+  int canvasX1, canvasY1, canvasX2, canvasY2, cwidth, cheight;
+  int pixmapX1, pixmapY1, pixmapX2, pixmapY2, pmwidth, pmheight;
+  int bpp;
+  int x,y;
+  int result = TCL_OK;
+
+#define OVERDRAW_PIXELS 32
+
+  if ((tkwin = canvasPtr->tkwin) == NULL) {
+    Tcl_AppendResult(interp, "icanvas tkwin is NULL!", NULL);
+    result = TCL_ERROR;
+    goto done;
+  }
+  /* If this canvas is unmapped, then we won't have a window id, so we will try
+   * the parents of the canvas until we find a window that has a valid window id.
+   * The Tk_GetPixmap() call requires a valid window id. */
+  do {
+
+    /* Automatically fail if display is NULL */
+    if ((display = Tk_Display(tkwin)) == NULL) {
+      Tcl_AppendResult(interp, "icanvas (or parent) display is NULL!", NULL);
+      result = TCL_ERROR;
+      goto done;
+    }
+
+    /* IF we have a valid wid then bail out */
+    if ((wid = Tk_WindowId(tkwin)) != 0) {
+      continue;
+    }
+
+    /* Else look at the parent. */
+    if ((tkwin = Tk_Parent(tkwin)) == NULL) {
+      Tcl_AppendResult(interp, "icanvas has no parent with a valid window id! Is the toplevel window mapped?", NULL);
+      result = TCL_ERROR;
+      goto done;
+    }
+
+  } while (wid == 0);
+
+  /* Display depth? */
+  bpp = Tk_Depth(tkwin);
+  
+  /* Parameters ok? */
+  if (subsample == 0) {
+    Tcl_AppendResult(interp, "subsample cannot be zero", NULL);
+    result = TCL_ERROR;
+    goto done;
+  }
+
+  /*
+   * Scan through the item list, registering the bounding box for all items
+   * that didn't do that for the final coordinates yet. This can be
+   * determined by the FORCE_REDRAW flag.
+   */
+
+  for (itemPtr = canvasPtr -> firstItemPtr; itemPtr != NULL; itemPtr = itemPtr -> nextPtr) {
+    if (itemPtr -> redraw_flags & FORCE_REDRAW) {
+      itemPtr -> redraw_flags &= ~FORCE_REDRAW;
+      EventuallyRedrawItem(canvasPtr, itemPtr);
+      itemPtr -> redraw_flags &= ~FORCE_REDRAW;
+    }
+  }
+
+  /* The DisplayCanvas() will work out the region that needs redrawing, but we don't do this. We grab the whole
+   * scrollregion. Here we should calculate the size of the pixmap area we are going to render into, which should be larger
+   * around the edges than the drawing area. */
+  if (canvasPtr->scrollX1 != 0 || canvasPtr->scrollY1 != 0 || canvasPtr->scrollX2 != 0 || canvasPtr->scrollY2 != 0) {
+    /* The scroll region defines the valid canvas region */
+    canvasX1 = canvasPtr->scrollX1;
+    canvasY1 = canvasPtr->scrollY1;
+    canvasX2 = canvasPtr->scrollX2;
+    canvasY2 = canvasPtr->scrollY2;
+    cwidth = canvasX2 - canvasX1 + 1;
+    cheight = canvasY2 - canvasY1 + 1;
+  } else {
+    /* Use the window width and height with an origin of 0,0 */
+    cwidth = Tk_Width(tkwin);
+    cheight = Tk_Height(tkwin);
+    canvasX1 = 0;
+    canvasY1 = 0;
+    canvasX2 = canvasX1 + cwidth - 1;
+    canvasY2 = canvasY1 + cheight - 1;
+  }
+  
+  /* Allocate a pixmap to draw into */
+  pixmapX1 = canvasX1 - OVERDRAW_PIXELS;
+  pixmapY1 = canvasY1 - OVERDRAW_PIXELS;
+  pixmapX2 = canvasX2 + OVERDRAW_PIXELS;
+  pixmapY2 = canvasY2 + OVERDRAW_PIXELS;
+  pmwidth = pixmapX2 - pixmapX1 + 1;
+  pmheight = pixmapY2 - pixmapY1 + 1;
+  if ((pixmap = Tk_GetPixmap(display, Tk_WindowId(tkwin), pmwidth, pmheight, bpp)) == 0) {
+    Tcl_AppendResult(interp, "failed to create drawing Pixmap", NULL);
+    result = TCL_ERROR;
+    goto done;
+  }
+
+  /* Fill the pixmap with the canvas background colour */
+  xgcvalues.function = GXcopy;
+  xgcvalues.foreground = Tk_3DBorderColor(canvasPtr->bgBorder)->pixel;
+  xgc = XCreateGC(display, pixmap, GCFunction|GCForeground, &xgcvalues);
+  XFillRectangle(display,pixmap,xgc,0,0,pmwidth,pmheight);
+
+  /* Draw all items into the pixmap */
+  canvasPtr->drawableXOrigin = pixmapX1;
+  canvasPtr->drawableYOrigin = pixmapY1;
+  for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL; itemPtr = itemPtr->nextPtr) {
+    if ((itemPtr->x1 >= pixmapX2) || (itemPtr->y1 >= pixmapY2) || (itemPtr->x2 < pixmapX1) || (itemPtr->y2 < pixmapY1)) {
+      if (!AlwaysRedraw(itemPtr)) {
+        continue;
+      }
+    }
+    if (itemPtr -> state == TK_STATE_HIDDEN || (itemPtr -> state == TK_STATE_NULL && canvasPtr -> canvas_state == TK_STATE_HIDDEN)) {
+      continue;
+    }
+    ItemDisplay(canvasPtr, itemPtr, pixmap, pixmapX1, pixmapY1, pmwidth, pmheight);
+  }
+  
+  /* Copy the Pixmap into an ZPixmap format XImage so we can copy it across to the photo image.
+   * This seems to be the only way to get Pixmap image data out of an image. We have to account for the border width */
+  if ((ximage = XGetImage(display,pixmap,-pixmapX1,-pixmapY1,cwidth,cheight,AllPlanes,ZPixmap)) == NULL) {
+    Tcl_AppendResult(interp, "failed to copy Pixmap to XImage", NULL);
+    result = TCL_ERROR;
+    goto done;
+  }
+  
+  /* Copy the XImage to the Photo image. This will expand the photo from 0,0 to the real physical size */
+  /* The structure we have to fill in.....
+   * typedef struct {
+    unsigned char *pixelPtr;        The pixelPtr field points to the first pixel, that is, the top-left pixel in the block. 
+      int width;                    The width and height fields specify the dimensions of the block of pixels. 
+      int height;
+      int pitch;                    The pitch field specifies the address difference between two vertically adjacent pixels. 
+      int pixelSize;                The pixelSize field specifies the address difference between two horizontally adjacent pixels. Often it is 3 or 4, but it can have any value. 
+      int offset[4];                The offset array contains the offsets from the address of a pixel to the addresses of the bytes containing the red, green, blue and alpha
+                                    (transparency) components. These are normally 0, 1, 2 and 3, but can have other values, e.g., for images that are stored as separate red,
+                                    green and blue planes.
+    } Tk_PhotoImageBlock;
+
+  */
+  blockPtr.pixelPtr = (unsigned char *)(ximage->data);
+  blockPtr.width = cwidth;
+  blockPtr.height = cheight;
+  blockPtr.pixelSize = (ximage->bits_per_pixel+7)/8;
+  blockPtr.pitch = ximage->bytes_per_line;
+  blockPtr.offset[0] = 0;    /* TODO: Calculate real offsets. */
+  blockPtr.offset[1] = 1;     /* I worked out 0=blue, 1=cyan+yellow?(half green) 2=magenta+yellow+red 3=alpha*/
+  blockPtr.offset[2] = 2;
+  blockPtr.offset[3] = 0;
+
+  /* Convert the image from BGR to RGB */
+  switch (bpp) {
+    case 32 :
+      /* For the case of a 32 bit image we just swap the red and blue (only on MSWIndows) */
+      for (y = 0; y < blockPtr.height; ++y) {
+        for(x = 0; x < blockPtr.width; ++x) {
+          unsigned char temp = blockPtr.pixelPtr[blockPtr.pitch * y + x * blockPtr.pixelSize+2];
+          blockPtr.pixelPtr[blockPtr.pitch * y + x * blockPtr.pixelSize+2] = blockPtr.pixelPtr[blockPtr.pitch * y + x * blockPtr.pixelSize+0];
+          blockPtr.pixelPtr[blockPtr.pitch * y + x * blockPtr.pixelSize+0] = temp;
+        }
+      }
+      break;
+    case 24 :
+    {
+      /* Expand the image to a 32bit image and (on MSWindows) swap the red and blue colours */
+      npixelPtr = ckalloc(sizeof(unsigned long) * blockPtr.height * blockPtr.width);
+      for (y = 0; y < blockPtr.height; ++y) {
+        for(x = 0; x < blockPtr.width; ++x) {
+          unsigned long colour = *((unsigned long *)(blockPtr.pixelPtr + blockPtr.pitch * y + x * blockPtr.pixelSize));
+          npixelPtr[blockPtr.width * 4 * y + 4 * x+2] = (unsigned char)(colour & 0xFF);
+          npixelPtr[blockPtr.width * 4 * y + 4 * x+1] = (unsigned char)(colour >> 8 & 0xFF);
+          npixelPtr[blockPtr.width * 4 * y + 4 * x+0] = (unsigned char)(colour >> 16 & 0xFF);
+          npixelPtr[blockPtr.width * 4 * y + 4 * x+3] = 0;
+        }
+      }
+      blockPtr.pixelPtr = npixelPtr;
+      blockPtr.pixelSize = 4;
+      blockPtr.pitch = blockPtr.width * 4;
+      break;
+    }
+    case 16 :
+    {
+      /* Tk_PhotoPutBlock() expects a 32 bit image, so we need to expand this into a 32bpp image.
+       * Note that we still need to swap the red and blue colours on MSWindows. */
+      npixelPtr = ckalloc(sizeof(unsigned long) * blockPtr.height * blockPtr.width);
+      for (y = 0; y < blockPtr.height; ++y) {
+        for(x = 0; x < blockPtr.width; ++x) {
+          unsigned short colour = *((unsigned short *)(blockPtr.pixelPtr + blockPtr.pitch * y + x * blockPtr.pixelSize));
+          npixelPtr[blockPtr.width * 4 * y + 4 * x+2] = (unsigned char)(colour << 3 & 0xF8);
+          npixelPtr[blockPtr.width * 4 * y + 4 * x+1] = (unsigned char)(colour >> 2 & 0xF8);
+          npixelPtr[blockPtr.width * 4 * y + 4 * x+0] = (unsigned char)(colour >> 7 & 0xF8);
+          npixelPtr[blockPtr.width * 4 * y + 4 * x+3] = 0;
+        }
+      }
+      blockPtr.pixelPtr = npixelPtr;
+      blockPtr.pixelSize = 4;
+      blockPtr.pitch = blockPtr.width * 4;
+      break;
+    }
+    default :
+      Tcl_AppendResult(interp, "DrawCanvas only support depths 32 24 16", NULL);
+      result = TCL_ERROR;
+      goto done;
+  }
+  /* If either zoom or subsample are not 1, we use the zoom function ... */
+  if (subsample != 1 || zoom != 1) {
+    if ((result = Tk_PhotoPutZoomedBlock(interp, photohandle, &blockPtr, 0, 0, cwidth * zoom / subsample+1, cheight * zoom / subsample+1, zoom, zoom, subsample, subsample, TK_PHOTO_COMPOSITE_SET)) != TCL_OK) {
+      goto done;
+    }
+  } else {
+    if ((result = Tk_PhotoPutBlock(interp, photohandle, &blockPtr, 0, 0, cwidth, cheight, TK_PHOTO_COMPOSITE_SET)) != TCL_OK) {
+      goto done;
+    }
+  }
+
+done:
+  /* Clean up and exit */
+  if (npixelPtr)
+    ckfree(npixelPtr);
+  if (pixmap)
+    Tk_FreePixmap(Tk_Display(tkwin), pixmap);
+  if (ximage)
+    XDestroyImage(ximage);
+  if (xgc)
+    XFreeGC(display,xgc);
+  return result;
+}
+
 /*
  *----------------------------------------------------------------------
  *
