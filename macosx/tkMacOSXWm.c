@@ -2357,6 +2357,7 @@ WmIconphotoCmd(
 	return TCL_ERROR;
     }
 
+    /*Parse args.*/
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	isDefault = 1;
 	if (objc == 4) {
@@ -2366,13 +2367,16 @@ WmIconphotoCmd(
 	}
     }
 
+    /*Get icon name. We only use the first icon name because macOS does not
+      support multiple images in Tk photos.*/
     char *icon; 
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	icon = Tcl_GetString(objv[4]);
     }	else {
 	icon = Tcl_GetString(objv[3]);
     }
-     
+
+    /*Get image and convert to NSImage that can be displayed as icon.*/
     tk_icon = Tk_GetImage(interp, winPtr, icon, NULL, NULL);
     Tk_SizeOfImage(tk_icon, &width, &height);
 	
@@ -2381,6 +2385,7 @@ WmIconphotoCmd(
     [NSApp setApplicationIconImage: newIcon];
 	   
     Tk_FreeImage(tk_icon);
+    
     return TCL_OK;
 }
 
