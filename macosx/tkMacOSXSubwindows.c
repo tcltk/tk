@@ -154,6 +154,14 @@ XMapWindow(
 		[win makeKeyAndOrderFront:NSApp];
 	    }
 	    TkMacOSXApplyWindowAttributes(macWin->winPtr, win);
+	} else {
+	    /*
+	     * Rebuild the container's clipping region and display
+	     * the window.
+	     */
+	    TkWindow *contWinPtr = TkpGetOtherWindow(macWin->winPtr);
+	    TkMacOSXInvalClipRgns(contWinPtr);
+	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
 	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
 
@@ -172,7 +180,8 @@ XMapWindow(
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     } else {
 	/*
-	 * Generate damage for that area of the window.
+	 * Rebuild the parent's clipping region and display the window.
+	 *
 	 */
 
 	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
