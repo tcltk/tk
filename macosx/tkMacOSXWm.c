@@ -20,6 +20,7 @@
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXConstants.h"
 
 #define DEBUG_ZOMBIES 0
 
@@ -197,7 +198,6 @@ static Tcl_HashTable windowTable;
 static int windowHashInit = false;
 
 
-
 #pragma mark NSWindow(TKWm)
 
 /*
@@ -214,7 +214,6 @@ static int windowHashInit = false;
 {
     return [self convertScreenToBase:point];
 }
-@end
 #else
 - (NSPoint) convertPointToScreen: (NSPoint) point
 {
@@ -232,8 +231,9 @@ static int windowHashInit = false;
     pointrect.size.height = 0;
     return [self convertRectFromScreen:pointrect].origin;
 }
-@end
 #endif
+
+@end
 
 #pragma mark -
 
@@ -382,7 +382,22 @@ static void		RemapWindows(TkWindow *winPtr,
 }
 @end
 
-@implementation TKWindow
+
+@implementation TKWindow: NSWindow
+#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
+/*
+ * Override automatic fullscreen button on >10.12 because system fullscreen API
+ * confuses Tk window geometry.
+ */
+- (void)toggleFullScreen:(id)sender
+{
+    if ([self isZoomed]) {
+	TkMacOSXZoomToplevel(self, inZoomIn);
+    } else {
+	TkMacOSXZoomToplevel(self, inZoomOut);
+    }
+}
+#endif
 @end
 
 @implementation TKWindow(TKWm)
@@ -2314,8 +2329,7 @@ WmIconnameCmd(
  * WmIconphotoCmd --
  *
  *	This procedure is invoked to process the "wm iconphoto" Tcl command.
- *	See the user documentation for details on what it does. Not yet
- *	implemented for OS X.
+ *	See the user documentation for details on what it does. 
  *
  * Results:
  *	A standard Tcl result.
@@ -2323,9 +2337,9 @@ WmIconnameCmd(
  * Side effects:
  *	See the user documentation.
  *
+ *
  *----------------------------------------------------------------------
  */
-
 static int
 WmIconphotoCmd(
     Tk_Window tkwin,		/* Main window of the application. */
@@ -2334,45 +2348,44 @@ WmIconphotoCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_PhotoHandle photo;
+     Tk_Image tk_icon;
     int i, width, height, isDefault = 0;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
-		"window ?-default? image1 ?image2 ...?");
+			 "window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
     }
+
+    /*Parse args.*/
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	isDefault = 1;
 	if (objc == 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "window ?-default? image1 ?image2 ...?");
+			     "window ?-default? image1 ?image2 ...?");
 	    return TCL_ERROR;
 	}
     }
 
-    /*
-     * Iterate over all images to retrieve their sizes, in order to allocate a
-     * buffer large enough to hold all images.
-     */
-
-    for (i = 3 + isDefault; i < objc; i++) {
-	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
-	if (photo == NULL) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't use \"%s\" as iconphoto: not a photo image",
-		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
-	    return TCL_ERROR;
-	}
-	Tk_PhotoGetSize(photo, &width, &height);
+    /*Get icon name. We only use the first icon name because macOS does not
+      support multiple images in Tk photos.*/
+    char *icon; 
+    if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
+	icon = Tcl_GetString(objv[4]);
+    }	else {
+	icon = Tcl_GetString(objv[3]);
     }
 
-    /*
-     * TODO: This requires implementation for OS X, but we silently return for
-     * now.
-     */
-
+    /*Get image and convert to NSImage that can be displayed as icon.*/
+    tk_icon = Tk_GetImage(interp, winPtr, icon, NULL, NULL);
+    Tk_SizeOfImage(tk_icon, &width, &height);
+	
+    NSImage *newIcon;
+    newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon, width, height);
+    [NSApp setApplicationIconImage: newIcon];
+	   
+    Tk_FreeImage(tk_icon);
+    
     return TCL_OK;
 }
 
@@ -2893,17 +2906,20 @@ WmProtocolCmd(
 	    } else {
 		prevPtr->nextPtr = protPtr->nextPtr;
 	    }
+	    if (protPtr->command)
+		ckfree(protPtr->command);
 	    Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
 	    break;
 	}
     }
     cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
-	protPtr = ckalloc(HANDLER_SIZE(cmdLength));
+	protPtr = ckalloc(sizeof(ProtocolHandler));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
 	protPtr->interp = interp;
+	protPtr->command = ckalloc(cmdLength+1);
 	strcpy(protPtr->command, cmd);
     }
     return TCL_OK;
@@ -5089,8 +5105,8 @@ TkMacOSXGetTkWindow(
  *
  * TkMacOSXIsWindowZoomed --
  *
- *	Ask Carbon if the given window is in the zoomed out state. Because
- *	dragging & growing a window can change the Carbon zoom state, we
+ *	Ask Cocoa if the given window is in the zoomed out state. Because
+ *	dragging & growing a window can change the Cocoa zoom state, we
  *	cannot rely on wmInfoPtr->hints.initial_state for this information.
  *
  * Results:
@@ -5108,6 +5124,7 @@ TkMacOSXIsWindowZoomed(
 {
     return [TkMacOSXDrawableWindow(winPtr->window) isZoomed];
 }
+
 
 /*
  *----------------------------------------------------------------------
@@ -5150,12 +5167,13 @@ TkMacOSXZoomToplevel(
      * Do nothing if already in desired zoom state.
      */
 
-    if (![window isZoomed] == (zoomPart == inZoomIn)) {
+    if ((![window isZoomed] == (zoomPart == inZoomIn))) {
 	return false;
     }
-    [window zoom:NSApp];
-    wmPtr->hints.initial_state =
-	    (zoomPart == inZoomIn ? NormalState : ZoomState);
+      [window zoom:NSApp];
+
+     wmPtr->hints.initial_state =
+    	    (zoomPart == inZoomIn ? NormalState : ZoomState);
     return true;
 }
 
@@ -5603,6 +5621,7 @@ TkMacOSXMakeRealWindowExist(
     }
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
+    [window setColorSpace:[NSColorSpace deviceRGBColorSpace]];
     [window setContentView:contentView];
     [contentView release];
     [window setDelegate:NSApp];
@@ -6498,6 +6517,7 @@ TkMacOSXMakeFullscreen(
 	    result = TCL_ERROR;
 	    wmPtr->flags &= ~WM_FULLSCREEN;
 	} else {
+	    Tk_UnmapWindow((Tk_Window) winPtr);
 	    NSRect bounds = [window contentRectForFrameRect:[window frame]];
 	    NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
 
@@ -6529,6 +6549,7 @@ TkMacOSXMakeFullscreen(
 	[window setStyleMask: NSBorderlessWindowMask];
 	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
 	                          | NSApplicationPresentationAutoHideMenuBar];
+	Tk_MapWindow((Tk_Window) winPtr);
 #endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;
@@ -6540,6 +6561,7 @@ TkMacOSXMakeFullscreen(
     }
 
     if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {
+	Tk_UnmapWindow((Tk_Window) winPtr);
 	UInt64 oldAttributes = wmPtr->attributes;
 	NSRect bounds = NSMakeRect(wmPtr->configX, tkMacOSXZeroScreenHeight -
 		(wmPtr->configY + wmPtr->yInParent + wmPtr->configHeight),
@@ -6553,6 +6575,7 @@ TkMacOSXMakeFullscreen(
 	wmPtr->flags |= WM_SYNC_PENDING;
 	[window setFrame:[window frameRectForContentRect:bounds] display:YES];
 	wmPtr->flags &= ~WM_SYNC_PENDING;
+       Tk_MapWindow((Tk_Window) winPtr);
     }
     return result;
 }

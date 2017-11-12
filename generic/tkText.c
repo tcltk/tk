@@ -547,7 +547,7 @@ CreateWidget(
 	Tcl_InitHashTable(&sharedPtr->windowTable, TCL_STRING_KEYS);
 	Tcl_InitHashTable(&sharedPtr->imageTable, TCL_STRING_KEYS);
 	sharedPtr->undoStack = TkUndoInitStack(interp,0);
-	sharedPtr->undo = 1;
+	sharedPtr->undo = 0;
 	sharedPtr->isDirty = 0;
 	sharedPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
 	sharedPtr->autoSeparators = 1;
@@ -1491,6 +1491,7 @@ TextWidgetObjCmd(
 		     * Move the insertion position to the correct place.
 		     */
 
+                    indexFromPtr = TkTextGetIndexFromObj(interp, textPtr, objv[2]);
 		    TkTextIndexForwChars(NULL, indexFromPtr,
 			    deleteInsertOffset, &index, COUNT_INDICES);
 		    TkBTreeUnlinkSegment(textPtr->insertMarkPtr,
@@ -1570,8 +1571,7 @@ TextWidgetObjCmd(
     }
 
   done:
-    textPtr->refCount--;
-    if (textPtr->refCount == 0) {
+    if (textPtr->refCount-- <= 1) {
 	ckfree(textPtr);
     }
     return result;
@@ -1964,9 +1964,7 @@ DestroyText(
      * portion of the text widget.
      */
 
-    sharedTextPtr->refCount--;
-
-    if (sharedTextPtr->refCount > 0) {
+    if (sharedTextPtr->refCount-- > 1) {
 	TkBTreeRemoveClient(sharedTextPtr->tree, textPtr);
 
 	/*
@@ -2042,13 +2040,12 @@ DestroyText(
     }
 
     textPtr->tkwin = NULL;
-    textPtr->refCount--;
     Tcl_DeleteCommandFromToken(textPtr->interp, textPtr->widgetCmd);
     if (textPtr->afterSyncCmd){
 	Tcl_DecrRefCount(textPtr->afterSyncCmd);
 	textPtr->afterSyncCmd = NULL;
     }
-    if (textPtr->refCount == 0) {
+    if (textPtr->refCount-- <= 1) {
 	ckfree(textPtr);
     }
 }
@@ -3042,7 +3039,7 @@ CountIndices(
  *	If 'viewUpdate' is true, we may adjust the window contents'
  *	y-position, and scrollbar setting.
  *
- *	If 'viewUpdate' is false, true we can guarantee that textPtr->topIndex
+ *	If 'viewUpdate' is true we can guarantee that textPtr->topIndex
  *	points to a valid TkTextLine after this function returns. However, if
  *	'viewUpdate' is false, then there is no such guarantee (since
  *	topIndex.linePtr can be garbage). The caller is expected to take
@@ -4459,7 +4456,7 @@ TkTextGetTabs(
     Tcl_Obj **objv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
-    Tcl_UniChar ch;
+    int ch;
     double prevStop, lastStop;
     /*
      * Map these strings to TkTextTabAlign values.
@@ -4566,7 +4563,7 @@ TkTextGetTabs(
 	 * There may be a more efficient way of getting this.
 	 */
 
-	Tcl_UtfToUniChar(Tcl_GetString(objv[i+1]), &ch);
+	TkUtfToUniChar(Tcl_GetString(objv[i+1]), &ch);
 	if (!Tcl_UniCharIsAlpha(ch)) {
 	    continue;
 	}
@@ -5526,7 +5523,7 @@ RunAfterSyncCmd(
 	* The widget has been deleted. Don't do anything.
 	*/
 
-	if (--textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree((char *) textPtr);
 	}
 	return;
@@ -5880,7 +5877,7 @@ SearchCore(
 
 	    CLANG_ASSERT(pattern);
 	    do {
-		Tcl_UniChar ch;
+		int ch;
 		const char *p;
 		int lastFullLine = lastOffset;
 
@@ -6110,7 +6107,7 @@ SearchCore(
 			}
 		    } else {
 			firstOffset = p - startOfLine +
-				Tcl_UtfToUniChar(startOfLine+matchOffset,&ch);
+				TkUtfToUniChar(startOfLine+matchOffset,&ch);
 		    }
 		}
 	    } while (searchSpecPtr->all);

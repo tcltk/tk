@@ -87,7 +87,7 @@ FreeTextIndexInternalRep(
     TkTextIndex *indexPtr = GET_TEXTINDEX(indexObjPtr);
 
     if (indexPtr->textPtr != NULL) {
-	if (--indexPtr->textPtr->refCount == 0) {
+	if (indexPtr->textPtr->refCount-- <= 1) {
 	    /*
 	     * The text widget has been deleted and we need to free it now.
 	     */
@@ -2298,9 +2298,9 @@ StartEnd(
 	    int chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
-		Tcl_UniChar ch;
+		int ch;
 
-		chSize = Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
+		chSize = TkUtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
@@ -2343,9 +2343,9 @@ StartEnd(
 	    int chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
-		Tcl_UniChar ch;
 
-		Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
+		int ch;
+		TkUtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}

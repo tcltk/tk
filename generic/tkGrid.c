@@ -3314,6 +3314,9 @@ ConfigureSlaves(
     	}
 
 	if (slavePtr->masterPtr != NULL && slavePtr->masterPtr != masterPtr) {
+            if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
+                Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+            }
 	    Unlink(slavePtr);
 	    slavePtr->masterPtr = NULL;
 	}

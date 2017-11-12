@@ -29,6 +29,15 @@ test text-1.1 {configuration option: "autoseparators"} -setup {
 } -cleanup {
     destroy .t
 } -result {1}
+test text-1.1b {configuration option: "autoseparators", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -autoseparators
+} -cleanup {
+    destroy .t
+} -result {1}
 test text-1.2 {configuration option: "autoseparators"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -428,6 +437,15 @@ test text-1.43 {configuration option: "maxundo"} -setup {
 } -cleanup {
     destroy .t
 } -result {5}
+test text-1.43b {configuration option: "maxundo", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -maxundo
+} -cleanup {
+    destroy .t
+} -result {0}
 test text-1.44 {configuration option: "maxundo"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -732,6 +750,15 @@ test text-1.75 {configuration option: "undo"} -setup {
 } -cleanup {
     destroy .t
 } -result {1}
+test text-1.75b {configuration option: "undo", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -undo
+} -cleanup {
+    destroy .t
+} -result {0}
 test text-1.76 {configuration option: "undo"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -895,9 +922,9 @@ test text-2.8 {Tk_TextCmd procedure} -constraints {
     .t tag cget sel -relief 
 } -cleanup {
     destroy .t
-} -result {solid}
+} -result {flat}
 test text-2.9 {Tk_TextCmd procedure} -constraints {
-    unix
+    unix notAqua
 } -body {
     catch {destroy .t}
     text .t
@@ -1547,6 +1574,16 @@ test text-8.26 {TextWidgetCmd procedure, "replace" option crash} -setup {
 } -body {
     .tt insert 0.0 foo\n
     .tt replace end-1l end bar
+} -cleanup {
+    destroy .tt
+} -result {}
+test text-8.27 {TextWidgetCmd procedure, "replace" option crash} -setup {
+    text .tt
+} -body {
+    .tt insert 0.0 \na
+    for {set i 0} {$i < 2} {incr i} {
+        .tt replace 2.0 3.0 b
+    }
 } -cleanup {
     destroy .tt
 } -result {}
@@ -2604,7 +2641,7 @@ test text-10.37 {TextWidgetCmd procedure, "count" option} -setup {
 } -result {3}
 test text-10.38 {TextWidgetCmd procedure, "count" option} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
 } -body {
     .t configure -width 20 -height 10
     update
@@ -2700,7 +2737,7 @@ test text-9.2.47 {TextWidgetCmd procedure, "count" option} -setup {
 
 test text-11.1 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
 } -body {
     .t insert end "hello"
     .t configure -wrap none
@@ -2717,7 +2754,7 @@ test text-11.1 {counting with tag priority eliding} -setup {
 } -result {0 1 2 3 4 5 5 6}
 test text-11.2 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
 } -body {
     .t insert end "hello"
     .t tag configure elide1 -elide 0
@@ -2829,7 +2866,7 @@ test text-11.7 {counting with tag priority eliding}  -setup {
 } -result {5 5}
 test text-11.8 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     set res {}
 } -body {
     .t insert end "hello"
@@ -2855,7 +2892,7 @@ test text-11.8 {counting with tag priority eliding} -setup {
 } -result {0 0 0 0 3 2 1 1}
 test text-11.9 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     set res {}
 } -body {
     .t tag configure WELCOME -elide 1
@@ -3405,7 +3442,7 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
     .top.t configure -width 20 -height 10 
-    pack append .top .top.t top
+    pack .top.t
     update
     set geom [wm geometry .top]
     set x [string range $geom 0 [string first + $geom]]
@@ -3422,7 +3459,7 @@ test text-14.19 {ConfigureText procedure} -setup {
 } -body {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     update
     wm geometry .top
@@ -3439,7 +3476,7 @@ test text-14.20 {ConfigureText procedure} -setup {
 } -body {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     update
     set result [wm geometry .top]
@@ -3729,7 +3766,7 @@ Line 4
 test text-19.11 {DeleteChars procedure} -body {
     toplevel .top
     text .top.t -width 20 -height 5
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     .top.t insert 1.0 "abc\n123\nx\ny\nz\nq\nr\ns"
     update
@@ -3741,7 +3778,7 @@ test text-19.11 {DeleteChars procedure} -body {
 test text-19.12 {DeleteChars procedure} -body {
     toplevel .top
     text .top.t -width 20 -height 5
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     .top.t insert 1.0 "abc\n123\nx\ny\nz\nq\nr\ns"
     .top.t yview 3.0
@@ -3801,7 +3838,7 @@ test text-19.16 {DeleteChars procedure, updates affecting topIndex} -setup {
     wm geometry .top +0+0
     update
 } -body {
-    .top.t insert end "abc def\n01 2345 678 9101112\nLine 3\nLine 4\nLine 5\n6\n7\n8\n"
+    .top.t insert end "abc def\n01 2a345 678 9101112\nLine 3\nLine 4\nLine 5\n6\n7\n8\n"
     .top.t yview 2.4
     .top.t delete 2.5
     set x [.top.t index @0,0]
@@ -3814,7 +3851,7 @@ test text-19.16 {DeleteChars procedure, updates affecting topIndex} -setup {
 
 test text-20.1 {TextFetchSelection procedure} -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3829,7 +3866,7 @@ b.0b.1b.2b.3b.4
 c.0c}
 test text-20.2 {TextFetchSelection procedure} -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3849,7 +3886,7 @@ b.0b.1b.2b.3b.4
 c.0c}
 test text-20.3 {TextFetchSelection procedure}  -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3863,7 +3900,7 @@ test text-20.3 {TextFetchSelection procedure}  -setup {
 } -result {m}
 test text-20.4 {TextFetchSelection procedure}  -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3883,7 +3920,7 @@ test text-20.4 {TextFetchSelection procedure}  -setup {
 cj.0j.1j.2j.3j.4m}
 test text-20.5 {TextFetchSelection procedure, long selections} -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
     set x ""
 } -body {
@@ -3898,7 +3935,7 @@ test text-20.5 {TextFetchSelection procedure, long selections} -setup {
 } -result {1}
 
 
-test text-21.1 {TkTextLostSelection procedure} -constraints unix -setup {
+test text-21.1 {TkTextLostSelection procedure} -constraints {x11} -setup {
     text .t
     .t insert 1.0 "Line 1"
     entry .t.e
@@ -3913,7 +3950,7 @@ test text-21.1 {TkTextLostSelection procedure} -constraints unix -setup {
 } -cleanup {
     destroy .t .t2
 } -result {}
-test text-21.2 {TkTextLostSelection procedure} -constraints win -setup {
+test text-21.2 {TkTextLostSelection procedure} -constraints aquaOrWin32 -setup {
     text .t
     .t insert 1.0 "Line 1"
     entry .t.e
@@ -6396,8 +6433,23 @@ test text-27.16a {undo configuration options with peers} -body {
     lappend res [.t  edit canundo]
     lappend res [.tt edit canundo]
 } -cleanup {
-    destroy .t
+    destroy .t .tt
 } -result {1 1 0 0 100 100 1 1}
+test text-27.16b {undo configuration options with peers, defaults} -body {
+    text .t
+    .t peer create .tt
+    set res     [.t  cget -undo]
+    lappend res [.tt cget -undo]
+    lappend res [.t  cget -autoseparators]
+    lappend res [.tt cget -autoseparators]
+    lappend res [.t  cget -maxundo]
+    lappend res [.tt cget -maxundo]
+    .t insert end "The undo stack is common between peers"
+    lappend res [.t  edit canundo]
+    lappend res [.tt edit canundo]
+} -cleanup {
+    destroy .t .tt
+} -result {0 0 1 1 0 0 0 0}
 test text-27.17 {bug fix 1536735 - undo with empty text} -body {
     text .t -undo 1
     set r [.t edit modified]
@@ -7254,7 +7306,9 @@ test text-35.3 {widget dump -command destroys widget} -setup {
 
 
 test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-36.1
+    proc returnerror-36.1 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t-1]]
 } -body {
@@ -7265,9 +7319,14 @@ test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy .t-1
+    rename returnerror-36.1 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
 } -result {}
 test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-36.2
+    proc returnerror-36.2 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t+1]]
 } -body {
@@ -7278,9 +7337,14 @@ test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy $w
+    rename returnerror-36.2 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
 } -result {}
 test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-36.3
+    proc returnerror-36.3 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t*1]]
 } -body {
@@ -7291,6 +7355,32 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy $w
+    rename returnerror-36.3 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
+} -result {}
+
+
+test text-37.1 "bug #dd9667635d: text anchor not set" -setup {
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-37.1
+    proc returnerror-37.1 {m opts} {set ::my_error $m}
+    destroy .t
+    set ::my_error {}
+    pack [text .t]
+} -body {
+    .t insert end "Hello world!"
+    .t tag add sel 1.0 end
+    # this line shall not trigger error:
+    #     bad text index "tk::anchorN"
+    event generate .t <<SelectPrevLine>>
+    update
+    set ::my_error
+} -cleanup {
+    destroy .t
+    rename returnerror-37.1 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error
 } -result {}
 
 # cleanup

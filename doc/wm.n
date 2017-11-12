@@ -488,7 +488,14 @@ most modern window managers support.  A \fBwm iconbitmap\fR may exist
 simultaneously.  It is recommended to use not more than 2 icons, placing
 the larger icon first.
 .PP
-On Macintosh, this currently does nothing.
+On Macintosh, the first image called is loaded into an OSX-native icon
+format, and becomes the application icon in dialogs, the Dock, and
+other contexts. At present images loaded from PNG format lose their
+alpha channel, but GIF format preserves its alpha/transparency. At the
+script level the command will accept only the first image passed in the
+parameters as support for multiple sizes/resolutions on macOS is outside Tk's
+scope. Developers should use the largest icon they can support
+(preferably 512 pixels) to ensure smooth rendering on the Mac. 
 .RE
 .TP
 \fBwm iconposition \fIwindow\fR ?\fIx y\fR?
