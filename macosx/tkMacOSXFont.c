@@ -515,7 +515,7 @@ TkpGetFontFromAttributes(
 				/* Set of attributes to match. */
 {
     MacFont *fontPtr;
-    int points = TkFontGetPoints(tkwin, faPtr->size);
+    int points = (int)(TkFontGetPoints(tkwin, faPtr->size) + 0.5);
     NSFontTraitMask traits = GetNSFontTraitsFromTkFontAttributes(faPtr);
     NSInteger weight = (faPtr->weight == TK_FW_BOLD ? 9 : 5);
     NSFont *nsFont;
@@ -672,14 +672,14 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    Tcl_UniChar c,		/* Character of interest */
+    int c,         		/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
 {
     MacFont *fontPtr = (MacFont *) tkfont;
     NSFont *nsFont = fontPtr->nsFont;
     *faPtr = fontPtr->font.fa;
     if (nsFont && ![[nsFont coveredCharacterSet] characterIsMember:c]) {
-	UTF16Char ch = c;
+	UTF16Char ch = (UTF16Char) c;
 
 	nsFont = [nsFont bestMatchingFontForCharacters:&ch
 		length:1 attributes:nil actualCoveredLength:NULL];
@@ -870,7 +870,7 @@ TkpMeasureCharsInContext(
 	if (index <= start && !(flags & TK_WHOLE_WORDS)) {
 	    index = CTTypesetterSuggestClusterBreak(typesetter, start, maxWidth);
 	}
-	cs = (index < len || (flags & TK_WHOLE_WORDS)) ?
+	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
 	while (index > start &&
 		[cs characterIsMember:[string characterAtIndex:(index - 1)]]) {

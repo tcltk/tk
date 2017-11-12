@@ -75,10 +75,10 @@ extern "C" {
 #define TK_MAJOR_VERSION	8
 #define TK_MINOR_VERSION	6
 #define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL	5
+#define TK_RELEASE_SERIAL	7
 
 #define TK_VERSION		"8.6"
-#define TK_PATCH_LEVEL		"8.6.5"
+#define TK_PATCH_LEVEL		"8.6.7"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -814,6 +814,9 @@ typedef struct Tk_FakeWin {
     int minReqWidth;
     int minReqHeight;
     char *dummy20;		/* geometryMaster */
+#ifdef TK_USE_INPUT_METHODS
+    int dummy21;
+#endif /* TK_USE_INPUT_METHODS */
 } Tk_FakeWin;
 
 /*

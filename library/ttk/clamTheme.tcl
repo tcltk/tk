@@ -7,16 +7,18 @@
 namespace eval ttk::theme::clam {
     variable colors 
     array set colors {
-	-disabledfg	"#999999"
-	-frame  	"#dcdad5"
-	-window  	"#ffffff"
-	-dark		"#cfcdc8"
-	-darker 	"#bab5ab"
-	-darkest	"#9e9a91"
-	-lighter	"#eeebe7"
-	-lightest 	"#ffffff"
-	-selectbg	"#4a6984"
-	-selectfg	"#ffffff"
+	-disabledfg		"#999999"
+	-frame  		"#dcdad5"
+	-window  		"#ffffff"
+	-dark			"#cfcdc8"
+	-darker 		"#bab5ab"
+	-darkest		"#9e9a91"
+	-lighter		"#eeebe7"
+	-lightest 		"#ffffff"
+	-selectbg		"#4a6984"
+	-selectfg		"#ffffff"
+	-altindicator		"#5895bc"
+	-disabledaltindicator	"#a0a0a0"
     }
 
     ttk::style theme settings clam {
@@ -80,9 +82,15 @@ namespace eval ttk::theme::clam {
 	    -indicatormargin {1 1 4 1} \
 	    -padding 2 ;
 	ttk::style map TCheckbutton -indicatorbackground \
-	    [list  disabled $colors(-frame)  pressed $colors(-frame)]
+	    [list  pressed $colors(-frame) \
+			{!disabled alternate} $colors(-altindicator) \
+			{disabled alternate} $colors(-disabledaltindicator) \
+			disabled $colors(-frame)]
 	ttk::style map TRadiobutton -indicatorbackground \
-	    [list  disabled $colors(-frame)  pressed $colors(-frame)]
+	    [list  pressed $colors(-frame) \
+			{!disabled alternate} $colors(-altindicator) \
+			{disabled alternate} $colors(-disabledaltindicator) \
+			disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
 	    -width -11 -padding 5 -relief raised
@@ -102,7 +110,7 @@ namespace eval ttk::theme::clam {
 	    -fieldbackground [list {readonly focus} $colors(-selectbg) \
 				  readonly $colors(-frame)] \
 	    -foreground [list {readonly focus} $colors(-selectfg)] \
-	    ;
+	    -arrowcolor [list disabled $colors(-disabledfg)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 

@@ -12,7 +12,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-
+#include "tkMacOSXConstants.h"
 /*
  * This structure holds information about native bitmaps.
  */
@@ -298,7 +298,7 @@ TkpGetNativeAppBitmap(
 	string = [NSString stringWithUTF8String:name];
 	image = [NSImage imageNamed:string];
 	if (!image) {
-	    NSURL *url = [NSURL URLWithString:string];
+	    NSURL *url = [NSURL fileURLWithPath:string];
 	    if (url) {
 		image = [[[NSImage alloc] initWithContentsOfURL:url]
 			autorelease];

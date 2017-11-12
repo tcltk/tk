@@ -17,6 +17,7 @@
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXConstants.h"
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -362,12 +363,12 @@ GenerateUpdates(
     event.xexpose.width = damageBounds.size.width;
     event.xexpose.height = damageBounds.size.height;
     event.xexpose.count = 0;
-    Tk_HandleEvent(&event);
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-    #ifdef TK_MAC_DEBUG_DRAWING
+#ifdef TK_MAC_DEBUG_DRAWING
     NSLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
 	event.xexpose.y, event.xexpose.width, event.xexpose.height);
-    #endif
+#endif
 
     /*
      * Generate updates for the children of this window
@@ -858,7 +859,7 @@ ConfigureRestrictProc(
 	 * Since it calls Tcl_DoOneEvent, we need to make sure we
 	 * don't clobber the AutoreleasePool set up by the caller.
 	 */
-	[NSApp setPoolProtected:YES];
+	[NSApp _lockAutoreleasePool];
 
 	/*
 	 * Try to prevent flickers and flashes.
@@ -889,7 +890,7 @@ ConfigureRestrictProc(
 	[w enableFlushWindow];
 	[w flushWindowIfNeeded];
 	NSEnableScreenUpdates();
-	[NSApp setPoolProtected:NO];
+	[NSApp _unlockAutoreleasePool];
     }
 }
 
@@ -914,16 +915,10 @@ ConfigureRestrictProc(
  */
 - (void) generateExposeEvents: (HIShapeRef) shape
 {
-    [self generateExposeEvents:shape childrenOnly:0];
-}
-
-- (void) generateExposeEvents: (HIShapeRef) shape
-		 childrenOnly: (int) childrenOnly
-{
-    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     unsigned long serial;
     CGRect updateBounds;
     int updatesNeeded;
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
 
     if (!winPtr) {
 		return;

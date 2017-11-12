@@ -81,6 +81,7 @@ typedef struct ThreadSpecificData {
     TkDisplay *winDisplay;	/* TkDisplay structure that represents Windows
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
+    int surrogateBuffer;	/* Buffer for first of surrogate pair. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -91,7 +92,7 @@ static Tcl_ThreadDataKey dataKey;
 static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
-static void 		GetTranslatedKey(XKeyEvent *xkey);
+static void 		GetTranslatedKey(XKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
@@ -124,15 +125,12 @@ TkGetServerInfo(
     OSVERSIONINFOW os;
 
     if (!buffer[0]) {
-	HANDLE handle = LoadLibraryW(L"NTDLL");
+	HANDLE handle = GetModuleHandle(TEXT("NTDLL"));
 	int(__stdcall *getversion)(void *) =
 		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	if (!getversion || getversion(&os)) {
 	    GetVersionExW(&os);
-	}
-	if (handle) {
-	    FreeLibrary(handle);
 	}
 	/* Write the first character last, preventing multi-thread issues. */
 	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
@@ -688,19 +686,6 @@ TkClipCleanup(
     TkDisplay *dispPtr)		/* Display associated with clipboard. */
 {
     if (dispPtr->clipWindow != NULL) {
-	/*
-	 * Force the clipboard to be rendered if we are the clipboard owner.
-	 */
-
-	HWND hwnd = Tk_GetHWND(Tk_WindowId(dispPtr->clipWindow));
-
-	if (GetClipboardOwner() == hwnd) {
-	    OpenClipboard(hwnd);
-	    EmptyClipboard();
-	    TkWinClipboardRender(dispPtr, CF_TEXT);
-	    CloseClipboard();
-	}
-
 	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
 		dispPtr->applicationAtom);
 	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
@@ -877,6 +862,23 @@ Tk_TranslateWinEvent(
 	return 1;
     }
 
+    case WM_RENDERALLFORMATS: {
+        TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
+
+        if (winPtr && OpenClipboard(hwnd)) {
+            /*
+             * Make sure that nobody had taken ownership of the clipboard
+             * before we opened it.
+             */
+
+            if (GetClipboardOwner() == hwnd) {
+                TkWinClipboardRender(winPtr->dispPtr, CF_TEXT);
+            }
+            CloseClipboard();
+        }
+        return 1;
+    }
+
     case WM_COMMAND:
     case WM_NOTIFY:
     case WM_VSCROLL:
@@ -911,15 +913,24 @@ Tk_TranslateWinEvent(
 	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
 
+    case WM_SYSKEYDOWN:
+    case WM_KEYDOWN:
+	if (wParam == VK_PACKET) {
+	    /*
+	     * This will trigger WM_CHAR event(s) with unicode data.
+	     */
+	    *resultPtr =
+		PostMessageW(hwnd, message, HIWORD(lParam), LOWORD(lParam));
+	    return 1;
+	}
+	/* else fall through */
     case WM_CLOSE:
     case WM_SETFOCUS:
     case WM_KILLFOCUS:
     case WM_DESTROYCLIPBOARD:
     case WM_UNICHAR:
     case WM_CHAR:
-    case WM_SYSKEYDOWN:
     case WM_SYSKEYUP:
-    case WM_KEYDOWN:
     case WM_KEYUP:
     case WM_MOUSEWHEEL:
 	GenerateXEvent(hwnd, message, wParam, lParam);
@@ -1147,7 +1158,8 @@ GenerateXEvent(
 	    event.type = KeyPress;
 	    event.xany.send_event = -1;
 	    event.xkey.keycode = wParam;
-	    GetTranslatedKey(&event.xkey);
+	    GetTranslatedKey(&event.xkey, (message == WM_KEYDOWN) ? WM_CHAR :
+	            WM_SYSCHAR);
 	    break;
 
 	case WM_SYSKEYUP:
@@ -1197,17 +1209,35 @@ GenerateXEvent(
 	    event.type = KeyPress;
 	    event.xany.send_event = -1;
 	    event.xkey.keycode = 0;
-	    event.xkey.nbytes = 1;
-	    event.xkey.trans_chars[0] = (char) wParam;
+	    if ((int)wParam & 0xff00) {
+		int ch1 = wParam & 0xffff;
 
-	    if (IsDBCSLeadByte((BYTE) wParam)) {
-		MSG msg;
+		if ((ch1 & 0xfc00) == 0xd800) {
+		    tsdPtr->surrogateBuffer = ch1;
+		    return;
+		}
+		if ((ch1 & 0xfc00) == 0xdc00) {
+		    ch1 = ((tsdPtr->surrogateBuffer & 0x3ff) << 10) |
+			    (ch1 & 0x3ff) | 0x10000;
+		    tsdPtr->surrogateBuffer = 0;
+		}
+		event.xany.send_event = -3;
+		event.xkey.nbytes = 0;
+		event.xkey.keycode = ch1;
+	    } else {
+		event.xkey.nbytes = 1;
+		event.xkey.trans_chars[0] = (char) wParam;
 
-		if ((PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0)
-			&& (msg.message == WM_CHAR)) {
-		    GetMessage(&msg, NULL, 0, 0);
-		    event.xkey.nbytes = 2;
-		    event.xkey.trans_chars[1] = (char) msg.wParam;
+		if (IsDBCSLeadByte((BYTE) wParam)) {
+		    MSG msg;
+
+		    if ((PeekMessage(&msg, NULL, WM_CHAR, WM_CHAR,
+		            PM_NOREMOVE) != 0)
+			    && (msg.message == WM_CHAR)) {
+			GetMessage(&msg, NULL, WM_CHAR, WM_CHAR);
+			event.xkey.nbytes = 2;
+			event.xkey.trans_chars[1] = (char) msg.wParam;
+		   }
 		}
 	    }
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
@@ -1215,15 +1245,10 @@ GenerateXEvent(
 	    break;
 
 	case WM_UNICHAR: {
-	    char buffer[TCL_UTF_MAX+1];
-	    int i;
 	    event.type = KeyPress;
 	    event.xany.send_event = -3;
 	    event.xkey.keycode = wParam;
-	    event.xkey.nbytes = Tcl_UniCharToUtf((int)wParam, buffer);
-	    for (i=0; i<event.xkey.nbytes && i<TCL_UTF_MAX; ++i) {
-		event.xkey.trans_chars[i] = buffer[i];
-	    }
+	    event.xkey.nbytes = 0;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 	    event.type = KeyRelease;
 	    break;
@@ -1321,11 +1346,7 @@ GetState(
 	    state &= ~mask;
 	}
 	if (HIWORD(lParam) & KF_EXTENDED) {
-	    if (message == WM_SYSKEYDOWN || message == WM_KEYDOWN) {
-		state |= EXTENDED_MASK;
-	    } else {
-		state &= ~EXTENDED_MASK;
-	    }
+	    state |= EXTENDED_MASK;
 	}
     }
     return state;
@@ -1352,19 +1373,20 @@ GetState(
 
 static void
 GetTranslatedKey(
-    XKeyEvent *xkey)
+    XKeyEvent *xkey,
+    UINT type)
 {
     MSG msg;
 
     xkey->nbytes = 0;
 
     while ((xkey->nbytes < XMaxTransChars)
-	    && PeekMessageA(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-	if ((msg.message != WM_CHAR) && (msg.message != WM_SYSCHAR)) {
+	    && (PeekMessageA(&msg, NULL, type, type, PM_NOREMOVE) != 0)) {
+	if (msg.message != type) {
 	    break;
 	}
 
-	GetMessageA(&msg, NULL, 0, 0);
+	GetMessageA(&msg, NULL, type, type);
 
 	/*
 	 * If this is a normal character message, we may need to strip off the
@@ -1505,7 +1527,7 @@ TkWinGetUnicodeEncoding(void)
  *
  * HandleIMEComposition --
  *
- *	This function works around a definciency in some versions of Windows
+ *	This function works around a deficiency in some versions of Windows
  *	2000 to make it possible to entry multi-lingual characters under all
  *	versions of Windows 2000.
  *
@@ -1535,6 +1557,7 @@ HandleIMEComposition(
 {
     HIMC hIMC;
     int n;
+    int high = 0;
 
     if ((lParam & GCS_RESULTSTR) == 0) {
 	/*
@@ -1552,18 +1575,18 @@ HandleIMEComposition(
     n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
-	char *buff = ckalloc(n);
+	WCHAR *buff = (WCHAR *) ckalloc(n);
 	TkWindow *winPtr;
 	XEvent event;
 	int i;
 
-	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n);
+	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n) / 2;
 
 	/*
 	 * Set up the fields pertinent to key event.
 	 *
-	 * We set send_event to the special value of -2, so that TkpGetString
-	 * in tkWinKey.c knows that trans_chars[] already contains a UNICODE
+	 * We set send_event to the special value of -3, so that TkpGetString
+	 * in tkWinKey.c knows that keycode already contains a UNICODE
 	 * char and there's no need to do encoding conversion.
 	 *
 	 * Note that the event *must* be zeroed out first; Tk plays cunning
@@ -1574,7 +1597,7 @@ HandleIMEComposition(
 
 	memset(&event, 0, sizeof(XEvent));
 	event.xkey.serial = winPtr->display->request++;
-	event.xkey.send_event = -2;
+	event.xkey.send_event = -3;
 	event.xkey.display = winPtr->display;
 	event.xkey.window = winPtr->window;
 	event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
@@ -1582,8 +1605,6 @@ HandleIMEComposition(
 	event.xkey.state = TkWinGetModifierState();
 	event.xkey.time = TkpGetMS();
 	event.xkey.same_screen = True;
-	event.xkey.keycode = 0;
-	event.xkey.nbytes = 2;
 
 	for (i=0; i<n; ) {
 	    /*
@@ -1591,9 +1612,16 @@ HandleIMEComposition(
 	     * UNICODE character in the composition.
 	     */
 
-	    event.xkey.trans_chars[0] = (char) buff[i++];
-	    event.xkey.trans_chars[1] = (char) buff[i++];
+	    event.xkey.keycode = buff[i++];
 
+	    if ((event.xkey.keycode & 0xfc00) == 0xd800) {
+		high = ((event.xkey.keycode & 0x3ff) << 10) + 0x10000;
+		break;
+	    } else if (high && (event.xkey.keycode & 0xfc00) == 0xdc00) {
+		event.xkey.keycode &= 0x3ff;
+		event.xkey.keycode += high;
+		high = 0;
+	    }
 	    event.type = KeyPress;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 

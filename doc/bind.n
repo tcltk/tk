@@ -19,9 +19,10 @@ bind \- Arrange for X events to invoke Tcl scripts
 .PP
 The \fBbind\fR command associates Tcl scripts with X events.
 If all three arguments are specified, \fBbind\fR will
-arrange for \fIscript\fR (a Tcl script) to be evaluated whenever
-the event(s) given by \fIsequence\fR occur in the window(s)
-identified by \fItag\fR.
+arrange for \fIscript\fR (a Tcl script called the
+.QW "binding script")
+to be evaluated whenever the event(s) given by \fIsequence\fR
+occur in the window(s) identified by \fItag\fR.
 If \fIscript\fR is prefixed with a
 .QW + ,
 then it is appended to
@@ -387,7 +388,8 @@ For example, \fB<Control\-comma>\fR is equivalent to
 \fB<Control\-KeyPress\-comma>\fR.
 .SH "BINDING SCRIPTS AND SUBSTITUTIONS"
 .PP
-The \fIscript\fR argument to \fBbind\fR is a Tcl script,
+The \fIscript\fR argument to \fBbind\fR is a Tcl script, called the
+.QW "binding script",
 which will be executed whenever the given event sequence occurs.
 \fICommand\fR will be executed in the same interpreter that the
 \fBbind\fR command was executed in, and it will run at global
@@ -606,12 +608,20 @@ the window.
 .PP
 The \fBcontinue\fR and \fBbreak\fR commands may be used inside a
 binding script to control the processing of matching scripts.
-If \fBcontinue\fR is invoked, then the current binding script
-is terminated but Tk will continue processing binding scripts
-associated with other \fItag\fR's.
+If \fBcontinue\fR is invoked within a binding script, then this
+binding script, including all other
+.QW +
+appended scripts, is terminated but Tk will continue processing
+binding scripts associated with other \fItag\fR's.
 If the \fBbreak\fR command is invoked within a binding script,
 then that script terminates and no other scripts will be invoked
 for the event.
+.PP
+Within a script called from the binding script, \fBreturn\fR
+\fB-code ok\fR may be used to continue processing (including
+.QW +
+appended scripts), or \fBreturn\fR \fB-code break\fR may be used to
+stop processing all other binding scripts.
 .PP
 If more than one binding matches a particular event and they
 have the same \fItag\fR, then the most specific binding

@@ -38,6 +38,8 @@ static void		DisplayFileProc(ClientData clientData, int flags);
 static void		DisplaySetupProc(ClientData clientData, int flags);
 static void		TransferXEventsToTcl(Display *display);
 #ifdef TK_USE_INPUT_METHODS
+static void		InstantiateIMCallback(Display *, XPointer client_data, XPointer call_data);
+static void		DestroyIMCallback(XIM im, XPointer client_data, XPointer call_data);
 static void		OpenIM(TkDisplay *dispPtr);
 #endif
 
@@ -179,6 +181,8 @@ TkpOpenDisplay(
     dispPtr->flags |= use_xkb;
 #ifdef TK_USE_INPUT_METHODS
     OpenIM(dispPtr);
+    XRegisterIMInstantiateCallback(dispPtr->display, NULL, NULL, NULL,
+	    InstantiateIMCallback, (XPointer) dispPtr);
 #endif
     Tcl_CreateFileHandler(ConnectionNumber(display), TCL_READABLE,
 	    DisplayFileProc, dispPtr);
@@ -664,6 +668,35 @@ TkpSync(
 }
 #ifdef TK_USE_INPUT_METHODS
 
+static void
+InstantiateIMCallback(
+    Display      *display,
+    XPointer     client_data,
+    XPointer     call_data)
+{
+    TkDisplay    *dispPtr;
+
+    dispPtr = (TkDisplay *) client_data;
+    OpenIM(dispPtr);
+    XUnregisterIMInstantiateCallback(dispPtr->display, NULL, NULL, NULL,
+	    InstantiateIMCallback, (XPointer) dispPtr);
+}
+
+static void
+DestroyIMCallback(
+    XIM         im,
+    XPointer    client_data,
+    XPointer    call_data)
+{
+    TkDisplay   *dispPtr;
+
+    dispPtr = (TkDisplay *) client_data;
+    dispPtr->inputMethod = NULL;
+    ++dispPtr->ximGeneration;
+    XRegisterIMInstantiateCallback(dispPtr->display, NULL, NULL, NULL,
+	    InstantiateIMCallback, (XPointer) dispPtr);
+}
+
 /*
  *--------------------------------------------------------------
  *
@@ -693,9 +726,21 @@ OpenIM(
 	return;
     }
 
+    ++dispPtr->ximGeneration;
     dispPtr->inputMethod = XOpenIM(dispPtr->display, NULL, NULL, NULL);
     if (dispPtr->inputMethod == NULL) {
 	return;
+    }
+
+    /* Require X11R6 */
+    {
+	XIMCallback destroy_cb;
+
+	destroy_cb.callback = DestroyIMCallback;
+	destroy_cb.client_data = (XPointer) dispPtr;
+	if (XSetIMValues(dispPtr->inputMethod, XNDestroyCallback,
+		&destroy_cb, NULL))
+	    goto error;
     }
 
     if ((XGetIMValues(dispPtr->inputMethod, XNQueryInputStyle, &stylePtr,
@@ -744,6 +789,7 @@ error:
     if (dispPtr->inputMethod) {
 	XCloseIM(dispPtr->inputMethod);
 	dispPtr->inputMethod = NULL;
+	++dispPtr->ximGeneration;
     }
 }
 #endif /* TK_USE_INPUT_METHODS */

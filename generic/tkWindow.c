@@ -239,6 +239,8 @@ TkCloseDisplay(
 {
     TkClipCleanup(dispPtr);
 
+    TkpCancelWarp(dispPtr);
+
     if (dispPtr->name != NULL) {
 	ckfree(dispPtr->name);
     }
@@ -355,6 +357,9 @@ CreateTopLevelWindow(
      * Set the flags specified in the call.
      */
 
+#ifdef TK_USE_INPUT_METHODS
+    winPtr->ximGeneration = 0;
+#endif /*TK_USE_INPUT_METHODS*/
     winPtr->flags |= flags;
 
     /*
@@ -650,6 +655,7 @@ TkAllocWindow(
     winPtr->flags = 0;
     winPtr->handlerList = NULL;
 #ifdef TK_USE_INPUT_METHODS
+    winPtr->ximGeneration = 0;
     winPtr->inputContext = NULL;
 #endif /* TK_USE_INPUT_METHODS */
     winPtr->tagPtr = NULL;
@@ -1442,10 +1448,11 @@ Tk_DestroyWindow(
     UnlinkWindow(winPtr);
     TkEventDeadWindow(winPtr);
 #ifdef TK_USE_INPUT_METHODS
-    if (winPtr->inputContext != NULL) {
+    if (winPtr->inputContext != NULL &&
+	    winPtr->ximGeneration == winPtr->dispPtr->ximGeneration) {
 	XDestroyIC(winPtr->inputContext);
-	winPtr->inputContext = NULL;
     }
+    winPtr->inputContext = NULL;
 #endif /* TK_USE_INPUT_METHODS */
     if (winPtr->tagPtr != NULL) {
 	TkFreeBindingTags(winPtr);
@@ -1479,8 +1486,7 @@ Tk_DestroyWindow(
 
 	    winPtr->mainPtr->deletionEpoch++;
 	}
-	winPtr->mainPtr->refCount--;
-	if (winPtr->mainPtr->refCount == 0) {
+	if (winPtr->mainPtr->refCount-- <= 1) {
 	    register const TkCmd *cmdPtr;
 
 	    /*
@@ -2351,6 +2357,9 @@ Tk_IdToWindow(
 	    break;
 	}
     }
+    if (window == None) {
+	return NULL;
+    }
 
     hPtr = Tcl_FindHashEntry(&dispPtr->winTable, (char *) window);
     if (hPtr == NULL) {
@@ -3098,7 +3107,7 @@ Initialize(
 	Tcl_ListObjAppendElement(NULL, cmd,
 		Tcl_NewStringObj("::safe::TkInit", -1));
 	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(master));
-	
+
 	/*
 	 * Step 2 : Eval in the master. The argument is the *reversed* interp
 	 * path of the slave.

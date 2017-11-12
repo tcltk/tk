@@ -6,6 +6,7 @@
 *.lib
 *.o
 *.obj
+*.pdb
 *.res
 *.sl
 *.so
@@ -18,4 +19,8 @@
 */tktest*
 */versions.vc
 doc/man.macros
+win/Debug*
+win/Release*
+win/nmhlp-out.txt
 unix/tk.pc
+html/*

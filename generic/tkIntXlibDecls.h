@@ -23,7 +23,13 @@
 #   include <tcl.h>
 #endif
 
+/* Some (older) versions of X11/Xutil.h have a wrong signature of those
+   two functions, so move them out of the way temporarly. */
+#define XOffsetRegion _XOffsetRegion
+#define XUnionRegion _XUnionRegion
 #include "X11/Xutil.h"
+#undef XOffsetRegion
+#undef XUnionRegion
 
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
@@ -356,6 +362,57 @@ EXTERN XAfterFunction	XSynchronize(Display *display, Bool onoff);
 EXTERN int		XSync(Display *display, Bool discard);
 /* 114 */
 EXTERN VisualID		XVisualIDFromVisual(Visual *visual);
+/* Slot 115 is reserved */
+/* Slot 116 is reserved */
+/* Slot 117 is reserved */
+/* Slot 118 is reserved */
+/* Slot 119 is reserved */
+/* 120 */
+EXTERN int		XOffsetRegion(Region rgn, int dx, int dy);
+/* 121 */
+EXTERN int		XUnionRegion(Region srca, Region srcb,
+				Region dr_return);
+/* 122 */
+EXTERN Window		XCreateWindow(Display *display, Window parent, int x,
+				int y, unsigned int width,
+				unsigned int height,
+				unsigned int border_width, int depth,
+				unsigned int clazz, Visual *visual,
+				unsigned long value_mask,
+				XSetWindowAttributes *attributes);
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
+/* 129 */
+EXTERN int		XLowerWindow(Display *d, Window w);
+/* 130 */
+EXTERN int		XFillArcs(Display *d, Drawable dr, GC gc, XArc *a,
+				int n);
+/* 131 */
+EXTERN int		XDrawArcs(Display *d, Drawable dr, GC gc, XArc *a,
+				int n);
+/* 132 */
+EXTERN int		XDrawRectangles(Display *d, Drawable dr, GC gc,
+				XRectangle *r, int n);
+/* 133 */
+EXTERN int		XDrawSegments(Display *d, Drawable dr, GC gc,
+				XSegment *s, int n);
+/* 134 */
+EXTERN int		XDrawPoint(Display *d, Drawable dr, GC gc, int x,
+				int y);
+/* 135 */
+EXTERN int		XDrawPoints(Display *d, Drawable dr, GC gc,
+				XPoint *p, int n, int m);
+/* 136 */
+EXTERN int		XReparentWindow(Display *d, Window w, Window p,
+				int x, int y);
+/* 137 */
+EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+				int sx, int sy, int dx, int dy,
+				unsigned int w, unsigned int h);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -584,7 +641,7 @@ EXTERN void		XSetWMClientMachine(Display *display, Window w,
 EXTERN Status		XStringListToTextProperty(char **list, int count,
 				XTextProperty *text_prop_return);
 /* 80 */
-EXTERN void		XDrawSegments(Display *display, Drawable d, GC gc,
+EXTERN int		XDrawSegments(Display *display, Drawable d, GC gc,
 				XSegment *segments, int nsegments);
 /* 81 */
 EXTERN void		XForceScreenSaver(Display *display, int mode);
@@ -598,10 +655,10 @@ EXTERN int		XFillRectangle(Display *display, Drawable d, GC gc,
 /* 84 */
 EXTERN void		XClearWindow(Display *d, Window w);
 /* 85 */
-EXTERN void		XDrawPoint(Display *display, Drawable d, GC gc,
+EXTERN int		XDrawPoint(Display *display, Drawable d, GC gc,
 				int x, int y);
 /* 86 */
-EXTERN void		XDrawPoints(Display *display, Drawable d, GC gc,
+EXTERN int		XDrawPoints(Display *display, Drawable d, GC gc,
 				XPoint *points, int npoints, int mode);
 /* 87 */
 EXTERN int		XWarpPointer(Display *display, Window src_w,
@@ -742,6 +799,29 @@ typedef struct TkIntXlibStubs {
     XAfterFunction (*xSynchronize) (Display *display, Bool onoff); /* 112 */
     int (*xSync) (Display *display, Bool discard); /* 113 */
     VisualID (*xVisualIDFromVisual) (Visual *visual); /* 114 */
+    void (*reserved115)(void);
+    void (*reserved116)(void);
+    void (*reserved117)(void);
+    void (*reserved118)(void);
+    void (*reserved119)(void);
+    int (*xOffsetRegion) (Region rgn, int dx, int dy); /* 120 */
+    int (*xUnionRegion) (Region srca, Region srcb, Region dr_return); /* 121 */
+    Window (*xCreateWindow) (Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int clazz, Visual *visual, unsigned long value_mask, XSetWindowAttributes *attributes); /* 122 */
+    void (*reserved123)(void);
+    void (*reserved124)(void);
+    void (*reserved125)(void);
+    void (*reserved126)(void);
+    void (*reserved127)(void);
+    void (*reserved128)(void);
+    int (*xLowerWindow) (Display *d, Window w); /* 129 */
+    int (*xFillArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 130 */
+    int (*xDrawArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 131 */
+    int (*xDrawRectangles) (Display *d, Drawable dr, GC gc, XRectangle *r, int n); /* 132 */
+    int (*xDrawSegments) (Display *d, Drawable dr, GC gc, XSegment *s, int n); /* 133 */
+    int (*xDrawPoint) (Display *d, Drawable dr, GC gc, int x, int y); /* 134 */
+    int (*xDrawPoints) (Display *d, Drawable dr, GC gc, XPoint *p, int n, int m); /* 135 */
+    int (*xReparentWindow) (Display *d, Window w, Window p, int x, int y); /* 136 */
+    int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -824,13 +904,13 @@ typedef struct TkIntXlibStubs {
     XVisualInfo * (*xGetVisualInfo) (Display *display, long vinfo_mask, XVisualInfo *vinfo_template, int *nitems_return); /* 77 */
     void (*xSetWMClientMachine) (Display *display, Window w, XTextProperty *text_prop); /* 78 */
     Status (*xStringListToTextProperty) (char **list, int count, XTextProperty *text_prop_return); /* 79 */
-    void (*xDrawSegments) (Display *display, Drawable d, GC gc, XSegment *segments, int nsegments); /* 80 */
+    int (*xDrawSegments) (Display *display, Drawable d, GC gc, XSegment *segments, int nsegments); /* 80 */
     void (*xForceScreenSaver) (Display *display, int mode); /* 81 */
     int (*xDrawLine) (Display *d, Drawable dr, GC g, int x1, int y1, int x2, int y2); /* 82 */
     int (*xFillRectangle) (Display *display, Drawable d, GC gc, int x, int y, unsigned int width, unsigned int height); /* 83 */
     void (*xClearWindow) (Display *d, Window w); /* 84 */
-    void (*xDrawPoint) (Display *display, Drawable d, GC gc, int x, int y); /* 85 */
-    void (*xDrawPoints) (Display *display, Drawable d, GC gc, XPoint *points, int npoints, int mode); /* 86 */
+    int (*xDrawPoint) (Display *display, Drawable d, GC gc, int x, int y); /* 85 */
+    int (*xDrawPoints) (Display *display, Drawable d, GC gc, XPoint *points, int npoints, int mode); /* 86 */
     int (*xWarpPointer) (Display *display, Window src_w, Window dest_w, int src_x, int src_y, unsigned int src_width, unsigned int src_height, int dest_x, int dest_y); /* 87 */
     void (*xQueryColor) (Display *display, Colormap colormap, XColor *def_in_out); /* 88 */
     void (*xQueryColors) (Display *display, Colormap colormap, XColor *defs_in_out, int ncolors); /* 89 */
@@ -1081,6 +1161,41 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xSync) /* 113 */
 #define XVisualIDFromVisual \
 	(tkIntXlibStubsPtr->xVisualIDFromVisual) /* 114 */
+/* Slot 115 is reserved */
+/* Slot 116 is reserved */
+/* Slot 117 is reserved */
+/* Slot 118 is reserved */
+/* Slot 119 is reserved */
+#define XOffsetRegion \
+	(tkIntXlibStubsPtr->xOffsetRegion) /* 120 */
+#define XUnionRegion \
+	(tkIntXlibStubsPtr->xUnionRegion) /* 121 */
+#define XCreateWindow \
+	(tkIntXlibStubsPtr->xCreateWindow) /* 122 */
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
+#define XLowerWindow \
+	(tkIntXlibStubsPtr->xLowerWindow) /* 129 */
+#define XFillArcs \
+	(tkIntXlibStubsPtr->xFillArcs) /* 130 */
+#define XDrawArcs \
+	(tkIntXlibStubsPtr->xDrawArcs) /* 131 */
+#define XDrawRectangles \
+	(tkIntXlibStubsPtr->xDrawRectangles) /* 132 */
+#define XDrawSegments \
+	(tkIntXlibStubsPtr->xDrawSegments) /* 133 */
+#define XDrawPoint \
+	(tkIntXlibStubsPtr->xDrawPoint) /* 134 */
+#define XDrawPoints \
+	(tkIntXlibStubsPtr->xDrawPoints) /* 135 */
+#define XReparentWindow \
+	(tkIntXlibStubsPtr->xReparentWindow) /* 136 */
+#define XPutImage \
+	(tkIntXlibStubsPtr->xPutImage) /* 137 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #define XSetDashes \

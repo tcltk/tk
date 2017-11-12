@@ -368,7 +368,8 @@ proc ttk::combobox::PlacePopdown {cb popdown} {
     set y [winfo rooty $cb]
     set w [winfo width $cb]
     set h [winfo height $cb]
-    set postoffset [ttk::style lookup TCombobox -postoffset {} {0 0 0 0}]
+    set style [$cb cget -style]
+    set postoffset [ttk::style lookup $style -postoffset {} {0 0 0 0}]
     foreach var {x y w h} delta $postoffset {
     	incr $var $delta
     }

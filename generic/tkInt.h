@@ -508,6 +508,9 @@ typedef struct TkDisplay {
 
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
+#ifdef TK_USE_INPUT_METHODS
+    int ximGeneration;          /* Used to invalidate XIC */
+#endif /* TK_USE_INPUT_METHODS */
 } TkDisplay;
 
 /*
@@ -809,6 +812,9 @@ typedef struct TkWindow {
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
     char *geometryMaster;
+#ifdef TK_USE_INPUT_METHODS
+    int ximGeneration;          /* Used to invalidate XIC */
+#endif /* TK_USE_INPUT_METHODS */
 } TkWindow;
 
 /*
@@ -1196,7 +1202,7 @@ MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 			    const char *string, int numBytes, int x, int y,
 			    int firstByte, int lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
-			    Tcl_UniChar c, struct TkFontAttributes *faPtr);
+			    int c, struct TkFontAttributes *faPtr);
 MODULE_SCOPE Tcl_Obj *	TkNewWindowObj(Tk_Window tkwin);
 MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);
@@ -1217,6 +1223,7 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
+MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
@@ -1230,6 +1237,14 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #endif
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
+#endif
+
+#if TCL_UTF_MAX > 4
+#   define TkUtfToUniChar Tcl_UtfToUniChar
+#   define TkUniCharToUtf Tcl_UniCharToUtf
+#else
+    MODULE_SCOPE int TkUtfToUniChar(const char *, int *);
+    MODULE_SCOPE int TkUniCharToUtf(int, char *);
 #endif
 
 /*

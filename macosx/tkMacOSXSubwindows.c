@@ -153,9 +153,15 @@ XMapWindow(
 	    if ( [win canBecomeKeyWindow] ) {
 		[win makeKeyAndOrderFront:NSApp];
 	    }
-	    /* Why do we need this? (It is used by Carbon)*/
-	    [win windowRef];
 	    TkMacOSXApplyWindowAttributes(macWin->winPtr, win);
+	} else {
+	    /*
+	     * Rebuild the container's clipping region and display
+	     * the window.
+	     */
+	    TkWindow *contWinPtr = TkpGetOtherWindow(macWin->winPtr);
+	    TkMacOSXInvalClipRgns(contWinPtr);
+	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
 	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
 
@@ -174,7 +180,8 @@ XMapWindow(
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     } else {
 	/*
-	 * Generate damage for that area of the window.
+	 * Rebuild the parent's clipping region and display the window.
+	 *
 	 */
 
 	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
@@ -249,13 +256,14 @@ XUnmapWindow(
     Window window)		/* Window. */
 {
     MacDrawable *macWin = (MacDrawable *) window;
+    TkWindow *winPtr = macWin->winPtr;
+    TkWindow *parentPtr = winPtr->parentPtr;
     XEvent event;
 
     display->request++;
-    macWin->winPtr->flags &= ~TK_MAPPED;
-    if (Tk_IsTopLevel(macWin->winPtr)) {
-	if (!Tk_IsEmbedded(macWin->winPtr) &&
-		macWin->winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
+    if (Tk_IsTopLevel(winPtr)) {
+	if (!Tk_IsEmbedded(winPtr) &&
+		winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    NSWindow *win = TkMacOSXDrawableWindow(window);
 
 	    if ([win isVisible]) {
@@ -263,7 +271,7 @@ XUnmapWindow(
 		[win orderOut:NSApp];
 	    }
 	}
-	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
+	TkMacOSXInvalClipRgns((Tk_Window) winPtr);
 
 	/*
 	 * We only need to send the UnmapNotify event for toplevel windows.
@@ -280,12 +288,17 @@ XUnmapWindow(
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     } else {
 	/*
-	 * Generate damage for that area of the window.
+	 * Rebuild the visRgn clip region for the parent so it will be allowed
+	 * to draw in the space from which this subwindow was removed.
 	 */
-
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
-	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
+	if (parentPtr && parentPtr->privatePtr->visRgn) {
+	    TkMacOSXInvalidateViewRegion(TkMacOSXDrawableView(parentPtr->privatePtr),
+					 parentPtr->privatePtr->visRgn);
+	}
+	TkMacOSXInvalClipRgns((Tk_Window) parentPtr);
+	TkMacOSXUpdateClipRgn(parentPtr);
     }
+    winPtr->flags &= ~TK_MAPPED;
 }
 
 /*
@@ -316,7 +329,6 @@ XResizeWindow(
     display->request++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
-
 	if (w) {
 	    NSRect r = [w contentRectForFrameRect:[w frame]];
 	    r.origin.y += r.size.height - height;
@@ -360,10 +372,19 @@ XMoveResizeWindow(
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
 	if (w) {
-	    NSRect r = NSMakeRect(x + macWin->winPtr->wmInfoPtr->xInParent,
-		    tkMacOSXZeroScreenHeight - (y +
-		    macWin->winPtr->wmInfoPtr->yInParent + height),
-		    width, height);
+	    /* We explicitly convert everything to doubles so we don't get
+	     * surprised (again) by what happens when you do arithmetic with
+	     * unsigned ints.
+	     */
+	    CGFloat X = (CGFloat)x;
+	    CGFloat Y = (CGFloat)y;
+	    CGFloat Width = (CGFloat)width;
+	    CGFloat Height = (CGFloat)height;
+	    CGFloat XOff = (CGFloat)macWin->winPtr->wmInfoPtr->xInParent;
+	    CGFloat YOff = (CGFloat)macWin->winPtr->wmInfoPtr->yInParent;
+	    NSRect r = NSMakeRect(X + XOff,
+	    			  tkMacOSXZeroScreenHeight - Y - YOff - Height,
+	    			  Width, Height);
 	    [w setFrame:[w frameRectForContentRect:r] display:YES];
 	}
     } else {
@@ -763,8 +784,8 @@ TkMacOSXUpdateClipRgn(
 	     */
 
 	    if (!Tk_IsTopLevel(winPtr)) {
-		TkMacOSXUpdateClipRgn(winPtr->parentPtr);
 		if (winPtr->parentPtr) {
+		    TkMacOSXUpdateClipRgn(winPtr->parentPtr);
 		    ChkErr(HIShapeIntersect,
 			    winPtr->parentPtr->privatePtr->aboveVisRgn,
 			    rgn, rgn);
