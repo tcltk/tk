@@ -160,7 +160,27 @@ XGetImage(
     unsigned int bytes_per_row, size, row, n, m;
     unsigned int scalefactor=1, scaled_height=height, scaled_width=width;
     NSWindow *win = TkMacOSXDrawableWindow(drawable);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(win);
     static enum {unknown, no, yes} has_retina = unknown;
+
+    if (win && !winPtr) {
+	/*
+	 * If this drawable has an associated NSWindow but does not have an
+	 * associated Tk window then it must be a dock icon.  We are being
+	 * called by TkImgPhotoDisplay because it is displaying a photoimage
+	 * with an alpha channel, e.g. one generated from a png file, as the
+	 * dock icon.  It is asking us to create a pixmap for the rectangle
+	 * where the image will be drawn so that it can blend the photoimage
+	 * with its background using the alpha values.  But in the case of a
+	 * dock icon, that background will be black, not transparent as it
+	 * should be.
+	 *
+	 * By returning NULL here, we force TkImgPhotoDisplay to give up on
+	 * trying to blend, and just copy the image pixels to the screen.  That
+	 * does the right thing for a dock icon, as it happens.
+	 */ 
+	return NULL;
+    }
 
     if (win && has_retina == unknown) {
 #ifdef __clang__
