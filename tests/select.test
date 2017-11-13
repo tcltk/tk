@@ -1051,6 +1051,8 @@ test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
     lappend result [dobg {selection get}]
     cleanupbg
     lappend result $selInfo
+} -cleanup {
+    rename weirdHandler {}
 } -result {{PRIMARY selection doesn't exist or form "STRING" not defined} {STRING 0 4000}}
 
 ##############################################################################
@@ -1169,7 +1171,6 @@ test select-14.1 {Bug [73ba07efcd]: Use correct property type when handling MULT
     rename get_clip {}
 } -result {NULL abcd}
 
-catch {rename weirdHandler {}}
 
 # cleanup
 cleanupTests
