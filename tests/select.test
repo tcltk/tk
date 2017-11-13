@@ -1163,10 +1163,11 @@ test select-14.1 {Bug [73ba07efcd]: Use correct property type when handling MULT
 } -body {
     selection handle -selection CLIPBOARD . get_clip
     selection own -selection CLIPBOARD .
-    selection get -selection CLIPBOARD_MANAGER -type SAVE_TARGETS
+    set res [selection get -selection CLIPBOARD_MANAGER -type SAVE_TARGETS]
+    lappend res [clipboard get]
 } -cleanup {
     rename get_clip {}
-} -result {}
+} -result {NULL abcd}
 
 catch {rename weirdHandler {}}
 
