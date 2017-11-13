@@ -160,7 +160,7 @@ XMapWindow(
 	     * the window.
 	     */
 	    TkWindow *contWinPtr = TkpGetOtherWindow(macWin->winPtr);
-	    TkMacOSXInvalClipRgns(contWinPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window)contWinPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
 	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
