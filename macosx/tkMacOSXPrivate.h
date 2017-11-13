@@ -287,7 +287,7 @@ VISIBILITY_HIDDEN
     int _poolLock;
 #endif
 }
-@property BOOL poolLock;
+@property int poolLock;
 
 @end
 @interface TKApplication(TKInit)
