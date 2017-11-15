@@ -443,7 +443,7 @@ TkMacOSXGetNSImageWithTkImage(
     MacDrawable *macDraw = (MacDrawable *) pixmap;
     NSImage *nsImage;
 
-    macDraw->flags |= TK_DO_NOT_BLEND;
+    macDraw->flags |= TK_USE_XIMAGE_ALPHA;
     Tk_RedrawImage(image, 0, 0, width, height, pixmap, 0, 0);
     nsImage = CreateNSImageWithPixmap(pixmap, width, height);
     Tk_FreePixmap(display, pixmap);
