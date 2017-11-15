@@ -211,7 +211,8 @@ MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE EventModifiers TkMacOSXModifierState(void);
 MODULE_SCOPE NSBitmapImageRep* TkMacOSXBitmapRepFromDrawableRect(Drawable drawable,
 			    int x, int y, unsigned int width, unsigned int height);
-MODULE_SCOPE CGImageRef TkMacOSXCreateCGImageWithXImage(XImage *image);
+MODULE_SCOPE CGImageRef TkMacOSXCreateCGImageWithXImage(XImage *image,
+			    int use_ximage_alpha);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
 			    unsigned long imageBackground, CGRect imageBounds,
