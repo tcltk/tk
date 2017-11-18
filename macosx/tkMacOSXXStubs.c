@@ -200,6 +200,7 @@ TkpOpenDisplay(
     screen->root_visual = ckalloc(sizeof(Visual));
     screen->root_visual->visualid     = 0;
     screen->root_visual->class	      = TrueColor;
+    screen->root_visual->alpha_mask   = 0xFF000000;
     screen->root_visual->red_mask     = 0x00FF0000;
     screen->root_visual->green_mask   = 0x0000FF00;
     screen->root_visual->blue_mask    = 0x000000FF;
