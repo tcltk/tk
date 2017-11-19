@@ -259,6 +259,8 @@ TCL_STUB_LIB_FLAG	= @TCL_STUB_LIB_FLAG@
 TCL_STUB_LIB_FILE	= @TCL_STUB_LIB_FILE@
 
 TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
+TCL_ZIPFS_SUPPORT       = @TCL_ZIPFS_SUPPORT@
+TCL_ZIPFS_FLAG          = @TCL_ZIPFS_FLAG@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
@@ -922,7 +924,7 @@ tkTestInit.o: $(UNIX_DIR)/tkAppInit.c ${WISH_EXE}
 	    rm -f tkAppInit.sav; \
 	    mv tkAppInit.o tkAppInit.sav; \
 	fi;
-	$(CC) -c $(APP_CC_SWITCHES) -DTK_TEST $(UNIX_DIR)/tkAppInit.c
+	$(CC) -c $(APP_CC_SWITCHES) ${TCL_ZIPFS_FLAG} -DTK_TEST $(UNIX_DIR)/tkAppInit.c
 	rm -f tkTestInit.o
 	mv tkAppInit.o tkTestInit.o
 	@if test -f tkAppInit.sav ; then \
@@ -930,7 +932,7 @@ tkTestInit.o: $(UNIX_DIR)/tkAppInit.c ${WISH_EXE}
 	fi;
 
 tkAppInit.o: $(UNIX_DIR)/tkAppInit.c
-	$(CC) -c $(APP_CC_SWITCHES) $(UNIX_DIR)/tkAppInit.c
+	$(CC) -c $(APP_CC_SWITCHES) ${TCL_ZIPFS_FLAG} $(UNIX_DIR)/tkAppInit.c
 
 tk3d.o: $(GENERIC_DIR)/tk3d.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tk3d.c

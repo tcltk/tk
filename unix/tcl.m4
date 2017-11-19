@@ -2078,6 +2078,19 @@ dnl # preprocessing tests use only CPPFLAGS.
 		    [Defined when compiler supports casting to union type.])
 	fi
 
+    # ZIPFS Support
+    eval "TCL_ZIP_FILE=\"${TCL_ZIP_FILE}\""
+    if test ${TCL_ZIP_FILE} = "" ; then
+       TCL_ZIPFS_SUPPORT=0
+       TCL_ZIPFS_FLAG=
+    else
+       TCL_ZIPFS_SUPPORT=1
+       TCL_ZIPFS_FLAG=-DTCL_ZIPFS_SUPPORT
+    fi
+    AC_SUBST(TCL_ZIP_FILE)
+    AC_SUBST(TCL_ZIPFS_SUPPORT)
+    AC_SUBST(TCL_ZIPFS_FLAG)
+
     # FIXME: This subst was left in only because the TCL_DL_LIBS
     # entry in tclConfig.sh uses it. It is not clear why someone
     # would use TCL_DL_LIBS instead of TCL_LIBS.

@@ -73,6 +73,10 @@ main(
 {
 #ifdef TK_LOCAL_MAIN_HOOK
     TK_LOCAL_MAIN_HOOK(&argc, &argv);
+#else
+#ifdef TCL_ZIPFS_SUPPORT
+    TclZipfs_AppHook(&argc, &argv);
+#endif
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);
