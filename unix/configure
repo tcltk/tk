@@ -691,6 +691,9 @@ PLAT_SRCS
 PLAT_OBJS
 DL_OBJS
 DL_LIBS
+TCL_ZIPFS_FLAG
+TCL_ZIPFS_SUPPORT
+TCL_ZIP_FILE
 TCL_LIBS
 LIBOBJS
 AR
@@ -6346,6 +6349,19 @@ $as_echo "$tcl_cv_cast_to_union" >&6; }
 $as_echo "#define HAVE_CAST_TO_UNION 1" >>confdefs.h
 
 	fi
+
+    # ZIPFS Support
+    eval "TCL_ZIP_FILE=\"${TCL_ZIP_FILE}\""
+    if test ${TCL_ZIP_FILE} = "" ; then
+       TCL_ZIPFS_SUPPORT=0
+       TCL_ZIPFS_FLAG=
+    else
+       TCL_ZIPFS_SUPPORT=1
+       TCL_ZIPFS_FLAG=-DTCL_ZIPFS_SUPPORT
+    fi
+
+
+
 
     # FIXME: This subst was left in only because the TCL_DL_LIBS
     # entry in tclConfig.sh uses it. It is not clear why someone
