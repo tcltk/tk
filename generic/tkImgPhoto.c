@@ -576,6 +576,9 @@ ImgPhotoCmd(
 	if ((options.fromX2 > block.width) || (options.fromY2 > block.height)
 		|| (options.fromX2 > block.width)
 		|| (options.fromY2 > block.height)) {
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside source image",
 		    -1));
@@ -648,6 +651,9 @@ ImgPhotoCmd(
 	if (options.options & OPT_SHRINK) {
 	    if (ImgPhotoSetSize(masterPtr, options.toX2,
 		    options.toY2) != TCL_OK) {
+		if (options.background) {
+		    Tk_FreeColor(options.background);
+		}
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
 		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
@@ -656,6 +662,9 @@ ImgPhotoCmd(
 	}
 	Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
 		masterPtr->width, masterPtr->height);
+	if (options.background) {
+	    Tk_FreeColor(options.background);
+	}
 	return result;
 
     case PHOTO_DATA: {
