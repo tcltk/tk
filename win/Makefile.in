@@ -447,7 +447,7 @@ doc: $(ROOT_DIR)/doc/man.macros
 ${TK_ZIP_FILE}:
 	$(RMDIR) ${TK_VFS_ROOT}
 	$(MKDIR) ${TK_VFS_PATH}
-	$(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}
+	$(COPY) -a $(ROOT_DIR)/library/* ${TK_VFS_PATH}
 	cd  ${TK_VFS_ROOT} ; ${ZIP_PROG} ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}
 
 
@@ -710,7 +710,7 @@ ${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES) ${TCL_ZIPFS_OBJS}
 	@MAKE_DLL@ ${TK_OBJS} $(TK_RES) $(SHLIB_LD_LIBS)
 	@VC_MANIFEST_EMBED_DLL@
 ifeq (${TCL_ZIPFS_SUPPORT},1)
-	cat ${TK_ZIP_FILE} >> ${LIB_FILE}
+	cat ${TK_ZIP_FILE} >> ${TK_DLL_FILE}
 endif
 
 ${TK_LIB_FILE}: ${TK_OBJS}
