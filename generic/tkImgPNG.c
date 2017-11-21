@@ -35,7 +35,7 @@ static const int startLine[8] = {
  * Chunk type flags.
  */
 
-#define PNG_CF_ANCILLARY 0x10000000L	/* Non-critical chunk (can ignore). */
+#define PNG_CF_ANCILLARY 0x20000000L	/* Non-critical chunk (can ignore). */
 #define PNG_CF_PRIVATE   0x00100000L	/* Application-specific chunk. */
 #define PNG_CF_RESERVED  0x00001000L	/* Not used. */
 #define PNG_CF_COPYSAFE  0x00000010L	/* Opaque data safe for copying. */
