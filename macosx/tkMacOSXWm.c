@@ -10,6 +10,7 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2017 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -427,7 +428,6 @@ static void		RemapWindows(TkWindow *winPtr,
 
 - (id) autorelease
 {
-    static int xcount = 0;
     id result = [super autorelease];
     const char *title = [[self title] UTF8String];
     if (title == nil) {
@@ -892,11 +892,6 @@ TkWmDeadWindow(
 	if (parent) {
 	    [parent removeChildWindow:window];
 	}
-	[window close];
-	TkMacOSXUnregisterMacWindow(window);
-        if (winPtr->window) {
-            ((MacDrawable *) winPtr->window)->view = nil;
-        }
 #if DEBUG_ZOMBIES > 0
 	{
 	    const char *title = [[window title] UTF8String];
@@ -906,15 +901,61 @@ TkWmDeadWindow(
 	    printf(">>>> Closing <%s>. Count is: %lu\n", title, [window retainCount]);
 	}
 #endif
-        [window release];
+	[window close];
+	TkMacOSXUnregisterMacWindow(window);
+        if (winPtr->window) {
+            ((MacDrawable *) winPtr->window)->view = nil;
+        }
 	wmPtr->window = NULL;
+        [window release];
 
 	/* Activate the highest window left on the screen. */
 	NSArray *windows = [NSApp orderedWindows];
-	if ( [windows count] > 0 ) {
-	    NSWindow *front = [windows objectAtIndex:0];
-	    if ( front && [front canBecomeKeyWindow] ) {
-		[front makeKeyAndOrderFront:NSApp];
+	for (id nswindow in windows) {
+	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(nswindow);
+	    if (winPtr2 && nswindow != window) {
+		BOOL exclude = NO;
+		NSView *view = [nswindow contentView];
+		if (view) {
+		    NSRect bounds = [view bounds];
+		    exclude = bounds.size.width == 1.0 && bounds.size.height == 1.0 ? YES : NO;
+		}
+		if ([nswindow canBecomeKeyWindow]) {
+		    if ([nswindow isMiniaturized]) {
+			/* 
+			 * The next window is minimized, so we can't shift the
+			 * focus to it.  The dead window will not get
+			 * deallocated until one of the minimized windows is
+			 * displayed or a new window is opened.  In the mean
+			 * time, though, the dead window would be listed in the
+			 * Window menu and clicking its entry would bring up a
+			 * zombie.  So we exclude the dead window from the
+			 * Window menu and take it off the screen.  Note that
+			 * these operations must be done in this order.
+			 */
+			[window setExcludedFromWindowsMenu:YES];
+			[window orderOut:NSApp];
+
+			break;
+		    }
+		    if (exclude) {
+			/*
+			 * The next window can not be deiconified but it can be
+			 * made into a KeyWindow, and doing so causes the dead
+			 * window to be deallocated.  However, doing that also
+			 * adds a window to the Window menu which cannot be
+			 * deiconified, which is pretty confusing.  So we
+			 * exclude the iconless KeyWindow from the Window menu.
+			 */
+			[nswindow setExcludedFromWindowsMenu:YES];
+		    }
+		    /* 
+		     * Otherwise just bring the next window to front and
+		     * focus it.
+		     */
+		    [nswindow makeKeyAndOrderFront:NSApp];
+		    break;
+		}
 	    }
 	}
 	[NSApp _resetAutoreleasePool];
