@@ -913,64 +913,56 @@ TkWmDeadWindow(
 	NSArray *windows = [NSApp orderedWindows];
 	for (id nswindow in windows) {
 	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(nswindow);
+	    WmInfo *wmPtr = winPtr2->wmInfoPtr;
 	    if (winPtr2 && nswindow != window) {
-		BOOL hidden_forever = NO;
+		BOOL degenerate = NO;
 		NSView *view = [nswindow contentView];
 		if (view) {
 		    NSRect bounds = [view bounds];
-		    hidden_forever = (bounds.size.width == 1.0 && 
-				      bounds.size.height == 1.0) ? YES : NO;
+		    degenerate = (bounds.size.width == 1.0 && 
+				  bounds.size.height == 1.0) ? YES : NO;
 		}
+		BOOL minimized = (wmPtr->hints.initial_state == IconicState ||
+				  wmPtr->hints.initial_state == WithdrawnState);
 		if ([nswindow canBecomeKeyWindow]) {
-		    if ([nswindow isMiniaturized]) {
+		    if (minimized && !degenerate) {
 			/* 
-			 * No windows are on the screen and the next window is
-			 * minimized. We can't shift the focus to it because
-			 * that would map it to the screen.  The dead window
-			 * will not get deallocated until one of the minimized
-			 * windows is displayed or a new window is opened.  In
-			 * the mean time, though, the dead window would be
-			 * listed in the Window menu and clicking its entry
-			 * would bring up a zombie.  So we exclude the dead
-			 * window from the Window menu and forcibly take it off
-			 * the screen.  Note that these operations must be done
-			 * in this order.
+			 * No windows are left on the screen and the next
+			 * window is iconified or withdrawn. We don't want to
+			 * focus it because that would map it to the screen.
+			 * The dead window will not get deallocated until one
+			 * of the minimized windows is displayed or a new
+			 * window is opened.  In the mean time, though, the
+			 * dead window would be listed in the Window menu, and
+			 * clicking its entry would bring up a zombie.  So we
+			 * exclude the dead window from the Window menu and
+			 * forcibly take it off the screen.  Note that these
+			 * operations must be done in this order.
 			 */
 			[window setExcludedFromWindowsMenu:YES];
 			[window orderOut:NSApp];
 			break;
 		    }
-		    if (hidden_forever) {
+		    if (degenerate) {
 			/*
-			 * On the Macintosh it makes sense for the currently
-			 * active app to have no windows showing on the screen
-			 * and no minimized windows.  The user can see that the
-			 * app is active from the application menu at the top
-			 * of the display.  The application menu plays the role
-			 * of a "master window" which controls all of the
-			 * others.  When building such an app with Tk, one
-			 * wants to withdraw the root window, not displaying an
-			 * icon for it, not listing it in the Window menu and
-			 * not allowing the user to map it to the screen.
-			 * 
-			 * There seems to be no Tk flag which indicates that a
-			 * window is in this state, i.e. that it is iconified
-			 * but can not be deiconified.  Experiment indicates,
-			 * however, that a window in this state has an
-			 * underlying NSView of size 1x1.  A normal iconified
-			 * window with an icon has an NSView which is the same
-			 * size as the window was when it was iconified.  It
-			 * also has its isMiniaturized property set to YES.
+			 * This is a 1-line hack to work around some unintended
+			 * Mac-specific behavior.  If a window gets iconified
+			 * or withdrawn too quickly after it is created then it
+			 * will not have a dock icon and it will not appear in
+			 * the Window menu and it will not appear on the
+			 * screen.  It cannot really be displayed because the
+			 * bounding rectangle of its contentView will be a 1x1
+			 * rectangle.  But it turns out that it can be made
+			 * into a KeyWindow, and that doing so causes the dead
+			 * window to be deallocated just as if it were a normal
+			 * window.  Unfortunately, however, that has the side
+			 * effect of adding the degerate window to the Window
+			 * menu, which is inappropriate since it cannot be
+			 * opened by clicking its Window menu entry.  So we
+			 * just exclude the degenerate window from the Window
+			 * menu, returning it to the state we found it in.
 			 *
-			 * Here we handle the case where the next window is in
-			 * such a state.  It turns out that a window in this
-			 * state can be made into a KeyWindow, and doing so
-			 * causes the dead window to be deallocated.  However,
-			 * doing that also adds the iconified window to the
-			 * Window menu, which is inappropriate since it can not
-			 * be deiconified by clicking its Window menu entry.
-			 * So we exclude the iconless KeyWindow from the Window
-			 * menu.
+			 * This should be removed at some point.
 			 */
 			[nswindow setExcludedFromWindowsMenu:YES];
 		    }
