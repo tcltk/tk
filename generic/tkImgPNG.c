@@ -984,7 +984,7 @@ ReadChunkHeader(
 		     */
 
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "encountered an unsupported criticial chunk type",
+			    "encountered an unsupported critical chunk type",
 			    -1));
 		} else {
 		    char typeString[5];
@@ -995,7 +995,7 @@ ReadChunkHeader(
 		    typeString[3] = (char) (chunkType & 255);
 		    typeString[4] = '\0';
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "encountered an unsupported criticial chunk type"
+			    "encountered an unsupported critical chunk type"
 			    " \"%s\"", typeString));
 		}
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG",
