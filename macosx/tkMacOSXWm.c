@@ -975,6 +975,11 @@ TkWmDeadWindow(
 		}
 	    }
 	}
+	/*
+	 * Process all events immediately to get rid of potential zombies
+	 * as soon as possible.
+	 */
+	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
 	[NSApp _resetAutoreleasePool];
 
 #if DEBUG_ZOMBIES > 0
