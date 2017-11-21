@@ -10,6 +10,7 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2017 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -427,7 +428,6 @@ static void		RemapWindows(TkWindow *winPtr,
 
 - (id) autorelease
 {
-    static int xcount = 0;
     id result = [super autorelease];
     const char *title = [[self title] UTF8String];
     if (title == nil) {
@@ -892,11 +892,6 @@ TkWmDeadWindow(
 	if (parent) {
 	    [parent removeChildWindow:window];
 	}
-	[window close];
-	TkMacOSXUnregisterMacWindow(window);
-        if (winPtr->window) {
-            ((MacDrawable *) winPtr->window)->view = nil;
-        }
 #if DEBUG_ZOMBIES > 0
 	{
 	    const char *title = [[window title] UTF8String];
@@ -906,17 +901,39 @@ TkWmDeadWindow(
 	    printf(">>>> Closing <%s>. Count is: %lu\n", title, [window retainCount]);
 	}
 #endif
-        [window release];
+	[window close];
+	TkMacOSXUnregisterMacWindow(window);
+        if (winPtr->window) {
+            ((MacDrawable *) winPtr->window)->view = nil;
+        }
 	wmPtr->window = NULL;
+        [window release];
 
 	/* Activate the highest window left on the screen. */
 	NSArray *windows = [NSApp orderedWindows];
-	if ( [windows count] > 0 ) {
-	    NSWindow *front = [windows objectAtIndex:0];
-	    if ( front && [front canBecomeKeyWindow] ) {
-		[front makeKeyAndOrderFront:NSApp];
+	for (id nswindow in windows) {
+	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(nswindow);
+	    if (winPtr2 && nswindow != window) {
+		WmInfo *wmPtr = winPtr2->wmInfoPtr;
+		BOOL minimized = (wmPtr->hints.initial_state == IconicState ||
+				  wmPtr->hints.initial_state == WithdrawnState);
+		/* 
+		 * If no windows are left on the screen and the next
+		 * window is iconified or withdrawn, we don't want to
+		 * make it be the KeyWindow because that would cause
+		 * it to be displayed on the screen.
+		 */
+		if ([nswindow canBecomeKeyWindow] && !minimized) {
+		    [nswindow makeKeyAndOrderFront:NSApp];
+		    break;
+		}
 	    }
 	}
+	/*
+	 * Process all events immediately to force the closed window
+	 * to be deallocated.
+	 */
+	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
 	[NSApp _resetAutoreleasePool];
 
 #if DEBUG_ZOMBIES > 0
