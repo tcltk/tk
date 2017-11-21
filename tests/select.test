@@ -17,6 +17,13 @@ namespace import ::tk::test:loadTkCommand
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint cliboardManagerPresent 0
+if {![catch {selection get -selection CLIPBOARD_MANAGER -type TARGETS}]} {
+    if {"SAVE_TARGETS" in [selection get -selection CLIPBOARD_MANAGER -type TARGETS]} {
+        testConstraint cliboardManagerPresent 1
+    }
+}
+
 global longValue selValue selInfo
 
 set selValue {}
@@ -1044,6 +1051,8 @@ test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
     lappend result [dobg {selection get}]
     cleanupbg
     lappend result $selInfo
+} -cleanup {
+    rename weirdHandler {}
 } -result {{PRIMARY selection doesn't exist or form "STRING" not defined} {STRING 0 4000}}
 
 ##############################################################################
@@ -1148,8 +1157,20 @@ test select-13.1 {SelectionSize procedure, handler deleted} -constraints {
     cleanupbg
     lappend result $selInfo
 } -result {{PRIMARY selection doesn't exist or form "STRING" not defined} {.f1 STRING 0 4000 .f1 STRING 4000 4000}}
+
+test select-14.1 {Bug [73ba07efcd]: Use correct property type when handling MULTIPLE conversion requests} -constraints {
+    cliboardManagerPresent
+} -setup {
+    proc get_clip {offset maxChars} {return abcd}
+} -body {
+    selection handle -selection CLIPBOARD . get_clip
+    selection own -selection CLIPBOARD .
+    selection get -selection CLIPBOARD_MANAGER -type SAVE_TARGETS
+    clipboard get
+} -cleanup {
+    rename get_clip {}
+} -result {abcd}
 
-catch {rename weirdHandler {}}
 
 # cleanup
 cleanupTests
