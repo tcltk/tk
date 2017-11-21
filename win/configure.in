@@ -149,6 +149,8 @@ SC_EMBED_MANIFEST(wish.exe.manifest)
 SC_BUILD_TCLSH
 SC_PROG_TCLSH
 
+SC_ZIPFS_SUPPORT
+
 #------------------------------------------------------------------------
 # tkConfig.sh refers to this by a different name
 #------------------------------------------------------------------------

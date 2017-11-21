@@ -35,7 +35,7 @@ mandir			= @mandir@
 # to be different than those used for actually reference files at
 # run-time.  INSTALL_ROOT is prepended to $prefix and $exec_prefix
 # when installing files.
-INSTALL_ROOT		=
+INSTALL_ROOT		= $(DESTDIR)
 
 # Directory from which applications will reference the library of Tk
 # scripts (note: you can set the TK_LIBRARY environment variable at
@@ -409,6 +409,27 @@ SHELL_ENV = \
 	TK_LIBRARY="$(ROOT_DIR_NATIVE)/library"; export TK_LIBRARY; \
 	PATH="$(TCL_BIN_DIR):$(PATH)"; export PATH;
 
+###
+# Tip 430 - ZipFS Modifications
+###
+TK_ZIP_FILE		= libtk_${MAJOR_VERSION}_${MINOR_VERSION}_${PATCH_LEVEL}.zip
+TK_VFS_PATH		= libtk.vfs/tk_library
+TK_VFS_ROOT		= libtk.vfs
+TCL_ZIPFS_SUPPORT       = @TCL_ZIPFS_SUPPORT@
+TCL_ZIPFS_FLAG          = @TCL_ZIPFS_FLAG@
+TCL_ZIPFS_OBJS          =
+ZIP_PROG        = @ZIP_PROG@
+ZIP_PROG_OPTIONS		= @ZIP_PROG_OPTIONS@
+ZIP_PROG_VFSSEARCH  = @ZIP_PROG_VFSSEARCH@
+SHARED_BUILD		= @SHARED_BUILD@
+
+ifeq (${TCL_ZIPFS_SUPPORT},1)
+	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
+endif
+ifeq (${TCL_ZIPFS_SUPPORT},2)
+	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
+endif
+
 # Main targets.  The default target -- all -- builds the binaries,
 # performs any post processing on libraries or documents.
 
@@ -422,6 +443,13 @@ $(ROOT_DIR)/doc/man.macros:
 	$(INSTALL_DATA) "$(TCL_SRC_DIR)/doc/man.macros" "$(ROOT_DIR)/doc/man.macros"
 
 doc: $(ROOT_DIR)/doc/man.macros
+
+${TK_ZIP_FILE}:
+	$(RMDIR) ${TK_VFS_ROOT}
+	$(MKDIR) ${TK_VFS_PATH}
+	$(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}
+	cd  ${TK_VFS_ROOT} ; ${ZIP_PROG} ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}
+
 
 winhelp: $(TCL_SRC_DIR)/tools/man2help.tcl $(MAN2TCL)
 	$(TCL_EXE) "$(TCL_SRC_DIR_NATIVE)/tools/man2help.tcl" tcl "$(VER)" $(CORE_DOCS)
@@ -465,7 +493,20 @@ gdb: binaries
 	gdb ./$(WISH) --command=gdb.run
 	@$(RM) gdb.run
 
-install: all install-binaries install-libraries install-doc install-demos
+
+# Tip 430 - When we bump Tk, offer up only zipfile bundled Tk
+# For now, 8.6 needs to be able to load Tk, and it doesn't
+# have zipfs facilities
+#INSTALL_LIBRARIES       = @INSTALL_LIBRARIES@
+INSTALL_LIBRARIES = install-libraries
+INSTALL_BASE_TARGETS = install-binaries $(INSTALL_LIBRARIES)
+INSTALL_DOC_TARGETS = install-doc
+INSTALL_DEV_TARGETS = install-headers
+INSTALL_DEMO_TARGETS = install-demos
+INSTALL_TARGETS = $(INSTALL_BASE_TARGETS) $(INSTALL_DOC_TARGETS) \
+		$(INSTALL_DEMO_TARGETS)
+
+install: $(INSTALL_TARGETS)
 
 install-binaries: binaries
 	@for i in $(LIB_INSTALL_DIR) $(BIN_INSTALL_DIR) $(PKG_INSTALL_DIR); \
@@ -502,6 +543,25 @@ install-binaries: binaries
 		$(COPY) $$i "$(LIB_INSTALL_DIR)"; \
 	    fi; \
 	    done
+
+install-libraries-zipfs-shared: libraries
+	@for i in "$(SCRIPT_INSTALL_DIR)"; \
+	    do \
+	    if [ ! -d "$$i" ] ; then \
+		echo "Making directory $$i"; \
+		$(INSTALL_DATA_DIR) "$$i"; \
+		else true; \
+		fi; \
+	    done;
+	@echo "Installing library files to $(SCRIPT_INSTALL_DIR)/";
+	@for i in \
+		$(WIN_DIR)/tkAppInit.c; \
+	    do \
+	    $(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)"; \
+	    done;
+
+install-libraries-zipfs-static: install-libraries-zipfs-shared
+	$(INSTALL_DATA) ${TCL_ZIP_FILE} "$(LIB_INSTALL_DIR)" ;\
 
 install-libraries: libraries
 	@for i in $(INSTALL_ROOT)$(prefix)/lib \
@@ -645,10 +705,13 @@ ${TK_STUB_LIB_FILE}: ${STUB_OBJS}
 	@MAKE_STUB_LIB@ ${STUB_OBJS}
 	@POST_MAKE_LIB@
 
-${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES)
+${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES) ${TCL_ZIPFS_OBJS}
 	@$(RM) ${TK_DLL_FILE}
 	@MAKE_DLL@ ${TK_OBJS} $(TK_RES) $(SHLIB_LD_LIBS)
 	@VC_MANIFEST_EMBED_DLL@
+ifeq (${TCL_ZIPFS_SUPPORT},1)
+	cat ${TK_ZIP_FILE} >> ${LIB_FILE}
+endif
 
 ${TK_LIB_FILE}: ${TK_OBJS}
 	@$(RM) ${TK_LIB_FILE}
