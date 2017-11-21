@@ -1110,9 +1110,9 @@ test imgPNG-3.1 {reading image with unknown ancillary chunk - bug [1c659ef0f1]} 
     # the image contains an unknown chunk iDOT
     # since the name of this chunk starts with a lowercase letter,
     # it's an ancillary chunk that shall not trigger an error
-    catch {image create photo -file $fileName}
+    catch {set i [image create photo -file $fileName]}
 } -cleanup {
-    catch {image delete $im}
+    image delete $i
 } -result {0}
 
 }
