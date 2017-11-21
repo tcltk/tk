@@ -259,8 +259,6 @@ TCL_STUB_LIB_FLAG	= @TCL_STUB_LIB_FLAG@
 TCL_STUB_LIB_FILE	= @TCL_STUB_LIB_FILE@
 
 TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
-TCL_ZIPFS_SUPPORT       = @TCL_ZIPFS_SUPPORT@
-TCL_ZIPFS_FLAG          = @TCL_ZIPFS_FLAG@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
@@ -571,6 +569,27 @@ SHELL_ENV = \
 	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY;
 
+###
+# Tip 430 - ZipFS Modifications
+###
+TK_ZIP_FILE		= libtk_${MAJOR_VERSION}_${MINOR_VERSION}_${PATCH_LEVEL}.zip
+TK_VFS_PATH		= libtk.vfs/tk_library
+TK_VFS_ROOT		= libtk.vfs
+TCL_ZIPFS_SUPPORT       = @TCL_ZIPFS_SUPPORT@
+TCL_ZIPFS_FLAG          = @TCL_ZIPFS_FLAG@
+TCL_ZIPFS_OBJS          =
+ZIP_PROG        = @ZIP_PROG@
+ZIP_PROG_OPTIONS		= @ZIP_PROG_OPTIONS@
+ZIP_PROG_VFSSEARCH  = @ZIP_PROG_VFSSEARCH@
+SHARED_BUILD		= @SHARED_BUILD@
+
+ifeq (${TCL_ZIPFS_SUPPORT},1)
+	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
+endif
+ifeq (${TCL_ZIPFS_SUPPORT},2)
+	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
+endif
+
 all: binaries libraries doc
 
 binaries: ${LIB_FILE} ${WISH_EXE}
@@ -582,11 +601,21 @@ $(TOP_DIR)/doc/man.macros:
 
 doc: $(TOP_DIR)/doc/man.macros
 
+${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
+	rm -rf ${TK_VFS_ROOT}
+	mkdir -p ${TK_VFS_PATH}
+	cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}
+	cd  ${TK_VFS_ROOT} ; ${ZIP_PROG} ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}
+
+
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
-${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS}
+${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TCL_ZIPFS_OBJS}
 	rm -f $@
 	@MAKE_LIB@
+ifeq (${TCL_ZIPFS_SUPPORT},1)
+	cat ${TK_ZIP_FILE} >> ${LIB_FILE}
+endif
 
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
 	@if test "x${LIB_FILE}" = "xlibtk${MAJOR_VERSION}.${MINOR_VERSION}.dll"; then \
@@ -697,7 +726,12 @@ valgrind: $(TKTEST_EXE)
 valgrindshell: $(TKTEST_EXE)
 	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(SCRIPT)
 
-INSTALL_BASE_TARGETS = install-binaries install-libraries
+# Tip 430 - When we bump Tk, offer up only zipfile bundled Tk
+# For now, 8.6 needs to be able to load Tk, and it doesn't
+# have zipfs facilities
+#INSTALL_LIBRARIES       = @INSTALL_LIBRARIES@
+INSTALL_LIBRARIES = install-libraries
+INSTALL_BASE_TARGETS = install-binaries $(INSTALL_LIBRARIES)
 INSTALL_DOC_TARGETS = install-doc
 INSTALL_DEV_TARGETS = install-headers
 INSTALL_DEMO_TARGETS = install-demos
@@ -761,6 +795,25 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	@echo "Installing pkg-config file to $(LIB_INSTALL_DIR)/pkgconfig/"
 	@$(INSTALL_DATA_DIR) $(LIB_INSTALL_DIR)/pkgconfig
 	@$(INSTALL_DATA) tk.pc $(LIB_INSTALL_DIR)/pkgconfig/tk.pc
+
+install-libraries-zipfs-shared: libraries
+	@for i in "$(SCRIPT_INSTALL_DIR)"; \
+	    do \
+	    if [ ! -d "$$i" ] ; then \
+		echo "Making directory $$i"; \
+		$(INSTALL_DATA_DIR) "$$i"; \
+		else true; \
+		fi; \
+	    done;
+	@echo "Installing library files to $(SCRIPT_INSTALL_DIR)/";
+	@for i in \
+		$(UNIX_DIR)/tkAppInit.c; \
+	    do \
+	    $(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)"; \
+	    done;
+
+install-libraries-zipfs-static: install-libraries-zipfs-shared
+	$(INSTALL_DATA) ${TCL_ZIP_FILE} "$(LIB_INSTALL_DIR)" ;\
 
 install-libraries: libraries
 	@for i in "$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)/images" \
