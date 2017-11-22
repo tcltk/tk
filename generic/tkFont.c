@@ -41,7 +41,7 @@ typedef struct TkFontInfo {
  */
 
 typedef struct NamedFont {
-    int refCount;		/* Number of users of named font. */
+    size_t refCount;		/* Number of users of named font. */
     int deletePending;		/* Non-zero if font should be deleted when
 				 * last reference goes away. */
     TkFontAttributes fa;	/* Desired attributes for named font. */
@@ -1434,8 +1434,7 @@ Tk_FreeFont(
 	 */
 
 	nfPtr = Tcl_GetHashValue(fontPtr->namedHashPtr);
-	nfPtr->refCount--;
-	if ((nfPtr->refCount == 0) && nfPtr->deletePending) {
+	if ((nfPtr->refCount-- <= 1) && nfPtr->deletePending) {
 	    Tcl_DeleteHashEntry(fontPtr->namedHashPtr);
 	    ckfree(nfPtr);
 	}
@@ -1715,15 +1714,11 @@ Tk_PostscriptFontName(
 		upper = 1;
 	    }
 	    src += TkUtfToUniChar(src, &ch);
-	    if (ch <= 0xffff) {
-		if (upper) {
-		    ch = Tcl_UniCharToUpper(ch);
-		    upper = 0;
-		} else {
-		    ch = Tcl_UniCharToLower(ch);
-		}
-	    } else {
+	    if (upper) {
+		ch = Tcl_UniCharToUpper(ch);
 		upper = 0;
+	    } else {
+		ch = Tcl_UniCharToLower(ch);
 	    }
 	    dest += TkUniCharToUtf(ch, dest);
 	}

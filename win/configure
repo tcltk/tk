@@ -2138,10 +2138,10 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 # /bin/sh. The bash shell seems to suffer from some strange failures.
 SHELL=/bin/sh
 
-TK_VERSION=8.6
+TK_VERSION=8.7
 TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".7"
+TK_MINOR_VERSION=7
+TK_PATCH_LEVEL="a2"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -3938,15 +3938,17 @@ $as_echo "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
 
 
 
+if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
 if test "${TCL_MAJOR_VERSION}" != "${TK_MAJOR_VERSION}"; then
     as_fn_error $? "${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." "$LINENO" 5
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better." "$LINENO" 5
 fi
-if test "${TCL_MINOR_VERSION}" -lt "${TK_MINOR_VERSION}"; then
+if test "${TCL_MINOR_VERSION}" -lt 6; then
     as_fn_error $? "${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl ${TK_VERSION}.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl ${TK_VERSION}." "$LINENO" 5
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better." "$LINENO" 5
+fi
 fi
 
 #--------------------------------------------------------------------
@@ -4343,7 +4345,7 @@ $as_echo "using shared flags" >&6; }
 
 	CFLAGS_DEBUG=-g
 	CFLAGS_OPTIMIZE="-O2 -fomit-frame-pointer"
-	CFLAGS_WARNING="-Wall -Wdeclaration-after-statement"
+	CFLAGS_WARNING="-Wall -Wwrite-strings -Wsign-compare -Wdeclaration-after-statement"
 	LDFLAGS_DEBUG=
 	LDFLAGS_OPTIMIZE=
 

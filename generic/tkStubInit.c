@@ -38,6 +38,26 @@ MODULE_SCOPE const TkStubs tkStubs;
  */
 
 #undef Tk_MainEx
+#undef Tk_FreeXId
+
+
+#ifdef TK_NO_DEPRECATED
+#define Tk_FreeXId 0
+#define Tk_PhotoPutBlock_NoComposite 0
+#define Tk_PhotoPutZoomedBlock_NoComposite 0
+#define Tk_PhotoExpand_Panic 0
+#define Tk_PhotoPutBlock_Panic 0
+#define Tk_PhotoPutZoomedBlock_Panic 0
+#define Tk_PhotoSetSize_Panic 0
+#else
+static void
+doNothing(void)
+{
+    /* dummy implementation, no need to do anything */
+}
+
+#define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
+#endif
 
 #ifdef _WIN32
 
@@ -65,6 +85,8 @@ TkCreateXEventSource(void)
 #   define XCreateWindow 0
 #   define XOffsetRegion 0
 #   define XUnionRegion 0
+#   define XPolygonRegion 0
+#   define XPointInRegion 0
 #   define TkWmCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkSendCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkpTestsendCmd 0
@@ -453,6 +475,7 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
+    TkDebugPhotoStringMatchDef, /* 185 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
@@ -724,6 +747,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XDrawPoints, /* 135 */
     XReparentWindow, /* 136 */
     XPutImage, /* 137 */
+    XPolygonRegion, /* 138 */
+    XPointInRegion, /* 139 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */

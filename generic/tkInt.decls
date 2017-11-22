@@ -634,6 +634,13 @@ declare 184 {
 	    Tk_Font tkfont, const char *source, int numBytes, double x,
 	    double y, double angle)
 }
+
+# Debugging / testing functions for photo images
+declare 185 {
+    int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
+            Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
+}
+
 
 ##############################################################################
 
@@ -1492,6 +1499,12 @@ declare 137 win {
     int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 	    int sx, int sy, int dx, int dy,
 	    unsigned int w, unsigned int h)
+}
+declare 138 win {
+    Region XPolygonRegion(XPoint *pts, int n, int rule)
+}
+declare 139 win {
+    int XPointInRegion(Region rgn, int x, int y)
 }
 
 ################################

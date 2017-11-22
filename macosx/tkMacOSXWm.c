@@ -2357,6 +2357,7 @@ WmIconnameCmd(
  *
  *----------------------------------------------------------------------
  */
+
 static int
 WmIconphotoCmd(
     Tk_Window tkwin,		/* Main window of the application. */

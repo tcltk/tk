@@ -3975,7 +3975,7 @@ ParseEventDescription(
 	p = GetField(p, field, FIELD_SIZE);
     }
     if (*field != '\0') {
-	if ((*field >= '1') && (*field <= '5') && (field[1] == '\0')) {
+	if ((*field >= '1') && (*field <= '9') && (field[1] == '\0')) {
 	    if (eventFlags == 0) {
 		patPtr->eventType = ButtonPress;
 		eventMask = ButtonPressMask;

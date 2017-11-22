@@ -3,8 +3,8 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 
-AC_INIT([tk],[8.6])
-AC_PREREQ(2.59)
+AC_INIT([tk],[8.7])
+AC_PREREQ(2.69)
 
 dnl This is only used when included from macosx/configure.ac
 m4_ifdef([SC_USE_CONFIG_HEADERS], [
@@ -22,10 +22,10 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
     #endif /* _TKCONFIG */])
 ])
 
-TK_VERSION=8.6
+TK_VERSION=8.7
 TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".7"
+TK_MINOR_VERSION=7
+TK_PATCH_LEVEL="a2"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -36,6 +36,7 @@ LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
 
+if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
 if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
     AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
 Found config for Tcl ${TCL_VERSION}])
@@ -43,6 +44,7 @@ fi
 if test "${TCL_MINOR_VERSION}" -lt 6 ; then
     AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
 Found config for Tcl ${TCL_VERSION}])
+fi
 fi
 
 SC_PROG_TCLSH
@@ -109,6 +111,12 @@ if test -z "$no_pipe" && test -n "$GCC"; then
 	CFLAGS="$CFLAGS -pipe"
     fi
 fi
+
+#------------------------------------------------------------------------
+# Embedded configuration information, encoding to use for the values, TIP #59
+#------------------------------------------------------------------------
+
+SC_TCL_CFG_ENCODING
 
 #------------------------------------------------------------------------
 # Threads support - this auto-enables if Tcl was compiled threaded
@@ -794,6 +802,16 @@ TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 
 # Install time header dir can be set via --includedir
 eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
+
+#------------------------------------------------------------------------
+# Demo dir
+#------------------------------------------------------------------------
+
+AS_IF([test x"${DEMO_DIR}" = x], [DEMO_DIR='$(TK_LIBRARY)/demos'])
+eval "TK_DEMO_DIR=\"`echo ${DEMO_DIR} | tr '()' '{}'`\""
+eval "TK_DEMO_DIR=\"`echo ${TK_DEMO_DIR} | tr '()' '{}'`\""
+AC_SUBST(DEMO_DIR)
+AC_SUBST(TK_DEMO_DIR)
 
 #------------------------------------------------------------------------
 # tkConfig.sh refers to this by a different name

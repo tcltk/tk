@@ -276,7 +276,7 @@ destroy .m1
 # We need to test all of the options with all of the different types of
 # menu entries. The following code sets up .m1 with 6 items. It then
 # runs through the 2.31 - 2.228 tests below
-# index 0 is tearoff, 1 command, 2 cascade, 3 separator, 4 checkbutton, 
+# index 0 is tearoff, 1 command, 2 cascade, 3 separator, 4 checkbutton,
 # 5 radiobutton
 deleteWindows
 menu .m1 -tearoff 1
@@ -771,34 +771,34 @@ test menu-2.132 {entry configuration options 5 -image bogus radiobutton} -body {
 } -returnCodes error -result {image "bogus" doesn't exist}
 
 test menu-2.133 {entry configuration options 0 -image {} tearoff} -body {
-    .m1 entryconfigure 0 -image 
+    .m1 entryconfigure 0 -image
 } -returnCodes error -result {unknown option "-image"}
 
 test menu-2.134 {entry configuration options 1 -image {} command} -setup {
     .m1 entryconfigure 1 -image {}
 } -body {
-    .m1 entryconfigure 1 -image 
+    .m1 entryconfigure 1 -image
     lindex [.m1 entryconfigure 1 -image] 4
 } -result {}
 
 test menu-2.135 {entry configuration options 2 -image {} cascade} -setup {
     .m1 entryconfigure 2 -image {}
 } -body {
-    .m1 entryconfigure 2 -image 
+    .m1 entryconfigure 2 -image
     lindex [.m1 entryconfigure 2 -image] 4
 } -result {}
 
 test menu-2.136 {entry configuration options 3 -image {} separator} -body {
-    .m1 entryconfigure 3 -image 
+    .m1 entryconfigure 3 -image
 } -returnCodes error -result {unknown option "-image"}
 
 test menu-2.137 {entry configuration options 4 -image {} checkbutton} -body {
-    .m1 entryconfigure 4 -image 
+    .m1 entryconfigure 4 -image
     lindex [.m1 entryconfigure 4 -image] 4
 } -result {}
 
 test menu-2.138 {entry configuration options 5 -image {} radiobutton} -body {
-    .m1 entryconfigure 5 -image 
+    .m1 entryconfigure 5 -image
     lindex [.m1 entryconfigure 5 -image] 4
 } -result {}
 
@@ -1052,28 +1052,28 @@ test menu-2.192 {entry configuration options 5 -selectimage bogus radiobutton} -
 } -returnCodes error -result {image "bogus" doesn't exist}
 
 test menu-2.193 {entry configuration options 0 -selectimage {} tearoff} -body {
-    .m1 entryconfigure 0 -selectimage 
+    .m1 entryconfigure 0 -selectimage
 } -returnCodes error -result {unknown option "-selectimage"}
 
 test menu-2.194 {entry configuration options 1 -selectimage {} command} -body {
-    .m1 entryconfigure 1 -selectimage 
+    .m1 entryconfigure 1 -selectimage
 } -returnCodes error -result {unknown option "-selectimage"}
 
 test menu-2.195 {entry configuration options 2 -selectimage {} cascade} -body {
-    .m1 entryconfigure 2 -selectimage 
+    .m1 entryconfigure 2 -selectimage
 } -returnCodes error -result {unknown option "-selectimage"}
 
 test menu-2.196 {entry configuration options 3 -selectimage {} separator} -body {
-    .m1 entryconfigure 3 -selectimage 
+    .m1 entryconfigure 3 -selectimage
 } -returnCodes error -result {unknown option "-selectimage"}
 
 test menu-2.197 {entry configuration options 4 -selectimage {} checkbutton} -body {
-    .m1 entryconfigure 4 -selectimage 
+    .m1 entryconfigure 4 -selectimage
     lindex [.m1 entryconfigure 4 -selectimage] 4
 } -result {}
 
 test menu-2.198 {entry configuration options 5 -selectimage {} radiobutton} -body {
-    .m1 entryconfigure 5 -selectimage 
+    .m1 entryconfigure 5 -selectimage
     lindex [.m1 entryconfigure 5 -selectimage] 4
 } -result {}
 
@@ -1225,7 +1225,7 @@ test menu-3.1 {MenuWidgetCmd procedure} -setup {
 	destroy .m1
 } -returnCodes error -result {wrong # args: should be ".m1 option ?arg ...?"}
 test menu-3.2 {MenuWidgetCmd, Tcl_Preserve and Tcl_Release} -constraints {
-	nonUnixUserInteraction 
+	nonUnixUserInteraction
 } -setup {
     destroy .m1
 } -body  {
@@ -1237,7 +1237,7 @@ test menu-3.2 {MenuWidgetCmd, Tcl_Preserve and Tcl_Release} -constraints {
 } -returnCodes ok -result {}
 test menu-3.3 {MenuWidgetCmd procedure, "activate" option} -setup {
 	destroy .m1
-} -body {    
+} -body {
     menu .m1
     .m1 add command -label "test"
     .m1 activate
@@ -1414,7 +1414,7 @@ test menu-3.26 {MenuWidgetCmd procedure, "delete" option} -setup {
 } -body {
     menu .m1
     .m1 add command -label "foo"
-    .m1 delete 1 0 
+    .m1 delete 1 0
 } -cleanup {
 	destroy .m1
 } -result {}
@@ -1627,9 +1627,9 @@ test menu-3.50 {MenuWidgetCmd procedure, "post" option} -constraints {
 	nonUnixUserInteraction
 } -setup {
 	destroy .m1
-} -body { 
+} -body {
     menu .m1
-    .m1 add command -label "menu-3.53: hit Escape" -command "puts hello"
+    .m1 add command -label "menu-3.50: hit Escape" -command "puts hello"
     .m1 post 40 40
 } -cleanup {
 	destroy .m1
@@ -1654,9 +1654,9 @@ test menu-3.53 {MenuWidgetCmd procedure, "postcascade" option} -constraints {
 	nonUnixUserInteraction
 } -setup {
 	destroy .m1 .m2
-} -body { 
+} -body {
     menu .m1
-    .m1 add command -label "menu-3.56 - hit Escape"
+    .m1 add command -label "menu-3.53 - hit Escape"
     menu .m2
     .m1 post 40 40
     .m1 add cascade -menu .m2
@@ -1756,10 +1756,10 @@ test menu-3.64 {MenuWidgetCmd procedure, "unpost" option} -constraints {
 	nonUnixUserInteraction
 } -setup {
 	destroy .m1
-} -body { 
+} -body {
     menu .m1
-    .m1 add command -label "menu-3.68 - hit Escape"
-    .m1 post 40 40 
+    .m1 add command -label "menu-3.64 - hit Escape"
+    .m1 post 40 40
     .m1 unpost
 } -cleanup {
 	destroy .m1
@@ -1898,7 +1898,7 @@ test menu-4.5 {TkInvokeMenu: checkbutton array element} -setup {
 } -body {
     catch {unset foo}
     menu .m1
-    .m1 add checkbutton -label "test" -variable foo(1) -onvalue on 
+    .m1 add checkbutton -label "test" -variable foo(1) -onvalue on
     list [catch {.m1 invoke 1} msg] $msg [catch {set foo(1)} msg2] $msg2 [catch {unset foo} msg3] $msg3
 } -cleanup {
 	destroy .m1
@@ -1966,7 +1966,7 @@ test menu-4.11 {TkInvokeMenu} -setup {
 } -body {
     menu .m1
     .m1 add cascade -label "test" -menu .m1.m2
-    list [catch {.m1 invoke 1} msg] $msg 
+    list [catch {.m1 invoke 1} msg] $msg
 } -cleanup {
 	destroy .m1
 } -result {0 {}}
@@ -2123,7 +2123,7 @@ test menu-6.4 {TkDestroyMenu - reentrancy - clones} -setup {
     destroy .m1
 } -cleanup {
 	deleteWindows
-} -returnCodes ok 
+} -returnCodes ok
 test menu-6.5 {TkDestroyMenu} -setup {
     destroy .m1 .m2
 } -body {
@@ -2350,7 +2350,7 @@ test menu-8.4 {DestroyMenuEntry} -setup {
     menu .m1
     .m1 add checkbutton -variable foo
     list [.m1 delete 1] [destroy .m1]
-} -result {{} {}} 
+} -result {{} {}}
 test menu-8.5 {DestroyMenuEntry} -setup {
     destroy .m1
 } -body {
@@ -2382,7 +2382,7 @@ test menu-9.1 {ConfigureMenu} -setup {
     destroy .m1
 } -body {
     menu .m1
-    list [.m1 configure -postcommand "beep"] [.m1 cget -postcommand] 
+    list [.m1 configure -postcommand "beep"] [.m1 cget -postcommand]
 } -cleanup {
 	deleteWindows
 } -result {{} beep}
@@ -2515,7 +2515,7 @@ test menu-11.3 {ConfigureMenuEntry} -setup {
 test menu-11.4 {ConfigureMenuEntry} -setup {
 	deleteWindows
 } -body {
-    menu .m1 
+    menu .m1
     .m1 add command
     list [.m1 entryconfigure 1 -accel "S"] [.m1 entrycget 1 -accel]
 } -cleanup {
@@ -2589,13 +2589,13 @@ test menu-11.12 {ConfigureMenuEntry} -setup {
 	deleteWindows
 } -body {
     menu .m1
-    menu .m2 
+    menu .m2
     .m2 add cascade -menu .m1
-    menu .m3 
+    menu .m3
     .m3 add cascade -menu .m1
-    menu .m4 
+    menu .m4
     .m4 add cascade -menu .m1
-    menu .m5 
+    menu .m5
     .m5 add cascade
     .m5 entryconfigure 1 -label "test" -menu .m1
 } -cleanup {
@@ -2605,11 +2605,11 @@ test menu-11.13 {ConfigureMenuEntry} -setup {
 	deleteWindows
 } -body {
     menu .m1
-    menu .m2 
+    menu .m2
     .m2 add cascade -menu .m1
-    menu .m3 
+    menu .m3
     .m3 add cascade -menu .m1
-    menu .m4 
+    menu .m4
     .m4 add cascade -menu .m1
     .m3 entryconfigure 1 -label "test" -menu .m1
 } -cleanup {
@@ -3208,7 +3208,7 @@ test menu-18.4 {TkActivateMenuEntry} -setup {
 
 test menu-19.1 {TkPostCommand} -constraints nonUnixUserInteraction -setup {
 	deleteWindows
-} -body { 
+} -body {
     menu .m1 -postcommand "set menu_test menu-19.1"
     .m1 add command -label "menu-19.1 - hit Escape"
     list [.m1 post 40 40] [.m1 unpost] [set menu_test]
@@ -3217,7 +3217,7 @@ test menu-19.1 {TkPostCommand} -constraints nonUnixUserInteraction -setup {
 } -result {menu-19.1 {} menu-19.1}
 test menu-19.2 {TkPostCommand} -constraints nonUnixUserInteraction -setup {
 	deleteWindows
-} -body { 
+} -body {
     menu .m1
     .m1 add command -label "menu-19.2 - hit Escape"
     list [.m1 post 40 40] [.m1 unpost]
@@ -3738,7 +3738,7 @@ test menu-32.1 {DeleteMenuCloneEntries} -setup {
 test menu-32.2 {DeleteMenuCloneEntries} -setup {
 	deleteWindows
 } -body {
-    
+
     menu .m1
     .m1 add command -label one
     .m1 add command -label two

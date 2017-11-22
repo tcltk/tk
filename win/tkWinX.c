@@ -13,16 +13,6 @@
 
 #include "tkWinInt.h"
 
-/*
- * The w32api 1.1 package (included in Mingw 1.1) does not define _WIN32_IE by
- * default. Define it here to gain access to the InitCommonControlsEx API in
- * commctrl.h.
- */
-
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0550 /* IE 5.5 */
-#endif
-
 #include <commctrl.h>
 #ifdef _MSC_VER
 #   pragma comment (lib, "comctl32.lib")
@@ -1633,30 +1623,6 @@ HandleIMEComposition(
     }
     ImmReleaseContext(hwnd, hIMC);
     return 1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_FreeXId --
- *
- *	This interface is not needed under Windows.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_FreeXId(
-    Display *display,
-    XID xid)
-{
-    /* Do nothing */
 }
 
 /*

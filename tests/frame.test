@@ -60,7 +60,7 @@ test frame-1.1 {frame configuration options} -setup {
     .f configure -class
 } -cleanup {
     deleteWindows
-} -result {-class class Class Frame NewFrame} 
+} -result {-class class Class Frame NewFrame}
 test frame-1.2 {frame configuration options} -setup {
     deleteWindows
 } -body {
@@ -792,7 +792,7 @@ test frame-3.18 {TkCreateFrame procedure} -constraints {
 } -setup {
 	deleteWindows
 } -body {
-    toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343 
+    toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343
     wm geometry .t +0+0
     update
     colorsFree .t 131 131 131
@@ -836,7 +836,7 @@ test frame-3.21 {TkCreateFrame procedure} -constraints {
 	deleteWindows
 } -body {
     set x ok
-    toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343 
+    toplevel .t -visual {grayscale 8} -width 300 -height 200 -bg #434343
     wm geometry .t +0+0
     update
     colorsFree .t 131 131 131
@@ -1132,7 +1132,7 @@ test frame-12.2 {FrameWorldChanged procedure} -setup {
     place .f -x 0 -y 0 -width 100 -height 100
     pack [frame .f.f] -fill both -expand 1
 
-    set result {} 
+    set result {}
     foreach lp {nw n ne en e es se s sw ws w wn} {
         .f configure -labelanchor $lp
         update
