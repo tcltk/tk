@@ -8,6 +8,7 @@
 # Copyright (c) 1991-1993 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright (c) 2017 Stuart Cassoff <stwo@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -19,7 +20,12 @@ tcltest::loadTestedCommands
 
 test pkgconfig-1.1 {query keys} {
     lsort [::tk::pkgconfig list]
-} {64bit bindir,install bindir,runtime compile_debug compile_stats debug demodir,install demodir,runtime docdir,install docdir,runtime fontsystem includedir,install includedir,runtime libdir,install libdir,runtime mem_debug optimized profiled scriptdir,install scriptdir,runtime threaded}
+} [list \
+    64bit bindir,install bindir,runtime debug demodir,install demodir,runtime \
+    docdir,install docdir,runtime fontsystem includedir,install includedir,runtime \
+    libdir,install libdir,runtime mem_debug optimized profiled \
+    scriptdir,install scriptdir,runtime threaded \
+]
 test pkgconfig-1.2 {query keys multiple times} {
     string compare [::tk::pkgconfig list] [::tk::pkgconfig list]
 } 0
