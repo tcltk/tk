@@ -384,14 +384,14 @@ TCL_COMPILE_DEBUG   = 0
 #----------------------------------------------------------
 
 !if "$(CHECKS)" == "" || [nmakehlp -f "$(CHECKS)" "none"]
-TCL_NO_DEPRECATED	    = 0
+TK_NO_DEPRECATED	    = 0
 WARNINGS		    = -W3
 !else
 !if [nmakehlp -f $(CHECKS) "nodep"]
 !message *** Doing nodep check
-TCL_NO_DEPRECATED	    = 1
+TK_NO_DEPRECATED	    = 1
 !else
-TCL_NO_DEPRECATED	    = 0
+TK_NO_DEPRECATED	    = 0
 !endif
 !if [nmakehlp -f $(CHECKS) "fullwarn"]
 !message *** Doing full warnings check
@@ -430,7 +430,7 @@ This compiler does not support profile guided optimization.
 # Set our defines now armed with our options.
 #----------------------------------------------------------
 
-OPTDEFINES	= -DTCL_CFGVAL_ENCODING=$(CFG_ENCODING) -DSTDC_HEADERS
+OPTDEFINES	= -DTCL_CFGVAL_ENCODING=$(CFG_ENCODING) -DSTDC_HEADERS -DTCL_NO_DEPRECATED
 
 !if $(TCL_MEM_DEBUG)
 OPTDEFINES	= $(OPTDEFINES) -DTCL_MEM_DEBUG
@@ -447,8 +447,8 @@ OPTDEFINES	= $(OPTDEFINES) -DUSE_THREAD_ALLOC=1
 !if $(STATIC_BUILD)
 OPTDEFINES	= $(OPTDEFINES) -DSTATIC_BUILD
 !endif
-!if $(TCL_NO_DEPRECATED)
-OPTDEFINES	= $(OPTDEFINES) -DTCL_NO_DEPRECATED
+!if $(TK_NO_DEPRECATED)
+OPTDEFINES	= $(OPTDEFINES) -DTK_NO_DEPRECATED
 !endif
 
 !if !$(DEBUG)

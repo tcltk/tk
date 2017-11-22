@@ -1176,13 +1176,15 @@ ConfigureEntry(
 
 	if (entryPtr->type == TK_SPINBOX) {
 	    if (sbPtr->fromValue > sbPtr->toValue) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-to value must be greater than -from value",
-			-1));
-		Tcl_SetErrorCode(interp, "TK", "SPINBOX", "RANGE_SANITY",
-			NULL);
-		continue;
-	    }
+                /*
+                 * Swap -from and -to values.
+                 */
+
+                double tmpFromTo = sbPtr->fromValue;
+
+                sbPtr->fromValue = sbPtr->toValue;
+                sbPtr->toValue = tmpFromTo;
+            }
 
 	    if (sbPtr->reqFormat && (oldFormat != sbPtr->reqFormat)) {
 		/*

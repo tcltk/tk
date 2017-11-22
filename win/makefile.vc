@@ -325,6 +325,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkGrid.obj \
 	$(TMP_DIR)\tkImage.obj \
 	$(TMP_DIR)\tkImgBmap.obj \
+	$(TMP_DIR)\tkImgListFormat.obj \
 	$(TMP_DIR)\tkImgGIF.obj \
 	$(TMP_DIR)\tkImgPNG.obj \
 	$(TMP_DIR)\tkImgPPM.obj \
@@ -953,7 +954,7 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo creating package index
 	@type << > $(OUT_DIR)\pkgIndex.tcl
-if {[catch {package present Tcl 8.6.0}]} { return }
+if {[catch {package present Tcl 8.6-}]} { return }
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
     package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(TK_DOTVERSION).dll] Tk]

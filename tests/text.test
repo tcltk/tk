@@ -910,7 +910,7 @@ test text-2.7 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {flat}
@@ -919,7 +919,7 @@ test text-2.8 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {flat}
@@ -928,7 +928,7 @@ test text-2.9 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {raised}
@@ -1485,7 +1485,19 @@ Line 7"
     rename .t {}
     rename test.t .t
     destroy .t
-} -result {{edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} {insert 2.1 ef} {mark set insert 2.3} {see insert}}
+} -result [list {edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} \
+                {mark set tk::undoMarkL2 2.1} {mark set tk::undoMarkR2 2.4} \
+                {mark gravity tk::undoMarkL2 left} {mark gravity tk::undoMarkR2 right} \
+                {insert 2.1 ef} {mark set insert 2.3} {see insert} \
+                {mark set tk::undoMarkL1 2.1} {mark set tk::undoMarkR1 2.3} \
+                {mark gravity tk::undoMarkL1 left} {mark gravity tk::undoMarkR1 right} \
+                {mark names} \
+                {index tk::undoMarkL1} {index tk::undoMarkR1} \
+                {mark unset tk::undoMarkL1 tk::undoMarkR1} \
+                {index tk::undoMarkL2} {index tk::undoMarkR2} \
+                {mark unset tk::undoMarkL2 tk::undoMarkR2} \
+                {compare 2.1 > 2.3} {compare 2.6 > 2.3} ]
+
 test text-8.23 {TextWidgetCmd procedure, "replace" option with undo} -setup {
     text .t
 } -body {
@@ -2026,7 +2038,7 @@ Line 7"
     .t tag configure elide -elide 1
     .t tag add elide 5.2 5.4
     .t window create 5.4
-    .t delete 5.4 
+    .t delete 5.4
     .t tag add elide 5.5 5.6
     .t get -displaychars 5.2 5.8
 } -cleanup {
@@ -2908,7 +2920,7 @@ test text-11.9 {counting with tag priority eliding} -setup {
     lappend res [.t index "1.0 +1 indices"]
     lappend res [.t index "1.0 +1 display indices"]
     lappend res [.t index "1.0 +1 display chars"]
-    lappend res [.t index end] 
+    lappend res [.t index end]
     lappend res [.t index "end -1 indices"]
     lappend res [.t index "end -1 display indices"]
     lappend res [.t index "end -1 display chars"]
@@ -3080,7 +3092,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     vwait res  ; # event dealt with by the event loop, with %d==0 i.e. we're out of sync
     # ensure the test is relevant
     lappend res "Pending:[.top.yt pendingsync]"
-    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs 
+    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs
     # - there is no more any pending sync after running 'sync'
     .top.yt sync
     vwait res  ; # event dealt with by the event loop, with %d==1 i.e. we're in sync again
@@ -3099,7 +3111,7 @@ test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
     toplevel .top
     pack [text .top.t]
     for {set i 1} {$i < 10000} {incr i} {
-        .top.t insert end "Hello world!\n" 
+        .top.t insert end "Hello world!\n"
     }
     bind .top.t <<WidgetViewSync>> {destroy .top.t}
     .top.t tag add mytag 1.5 8000.8    ; # shall not crash
@@ -3302,11 +3314,11 @@ test text-14.5 {ConfigureText procedure} -setup {
     .t configure -tabs {30 foo}
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad tab alignment "foo": must be left, right, center, or numeric} 
+} -returnCodes {error} -result {bad tab alignment "foo": must be left, right, center, or numeric}
 test text-14.6 {ConfigureText procedure} -setup {
     text .t
 } -body {
-    catch {.t configure -tabs {30 foo}} 
+    catch {.t configure -tabs {30 foo}}
     .t configure -tabs {10 20 30}
     return $errorInfo
 } -cleanup {
@@ -3325,7 +3337,7 @@ test text-14.7 {ConfigureText procedure} -setup {
     destroy .t
 } -result {}
 test text-14.8 {ConfigureText procedure} -setup {
-   text .t 
+   text .t
 } -body {
     .t configure -wrap bogus
 } -cleanup {
@@ -3351,7 +3363,7 @@ test text-14.10 {ConfigureText procedure} -setup {
     destroy .t
 } -result {}
 test text-14.11 {ConfigureText procedure} -setup {
-    text .t 
+    text .t
 } -body {
     .t configure -selectborderwidth foo
 } -cleanup {
@@ -3441,7 +3453,7 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
-    .top.t configure -width 20 -height 10 
+    .top.t configure -width 20 -height 10
     pack .top.t
     update
     set geom [wm geometry .top]
@@ -3530,7 +3542,7 @@ test text-17.1 {TextCmdDeletedProc procedure} -body {
 test text-17.2 {TextCmdDeletedProc procedure, disabling -setgrid} -constraints {
     fonts
 } -body {
-   toplevel .top 
+   toplevel .top
    text .top.t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold} \
     -setgrid 1 -width 20 -height 10
    pack .top.t
@@ -4922,7 +4934,7 @@ test text-22.118 {TextSearchCmd, multiline matching end of window} -body {
 test text-22.119 {TextSearchCmd, multiline regexp matching} -body {
     pack [text .t]
     .t insert 1.0 {    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -4939,7 +4951,7 @@ test text-22.120 {TextSearchCmd, multiline regexp matching} -body {
     pack [text .t]
     .t insert 1.0 {static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -4953,7 +4965,7 @@ test text-22.121 {TextSearchCmd, multiline regexp matching} -body {
     .t insert 1.0 {
 static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -5946,7 +5958,7 @@ test text-23.7 {TkTextGetTabs procedure} -setup {
 test text-24.1 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump
 } -cleanup {
     destroy .t
@@ -5954,7 +5966,7 @@ test text-24.1 {TextDumpCmd procedure, bad args} -body {
 test text-24.2 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -all
 } -cleanup {
     destroy .t
@@ -5962,7 +5974,7 @@ test text-24.2 {TextDumpCmd procedure, bad args} -body {
 test text-24.3 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -command
 } -cleanup {
     destroy .t
@@ -5970,7 +5982,7 @@ test text-24.3 {TextDumpCmd procedure, bad args} -body {
 test text-24.4 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -bogus
 } -cleanup {
     destroy .t
@@ -5978,7 +5990,7 @@ test text-24.4 {TextDumpCmd procedure, bad args} -body {
 test text-24.5 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump bogus
 } -cleanup {
     destroy .t
@@ -6015,7 +6027,7 @@ test text-24.9 {TextDumpCmd procedure, same indices} -body {
 test text-24.10 {TextDumpCmd procedure, negative range} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump 1.5 1.0
 } -cleanup {
     destroy .t
@@ -6331,6 +6343,7 @@ test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
     text .t
     pack .t
     set ::retval {}
+    update
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
 # Shouldn't require [update idle] to trigger event [Bug 1809538]
@@ -6629,6 +6642,66 @@ test text-27.25 {<<UndoStack>> virtual event} -setup {
 } -cleanup {
     destroy .t
 } -result {0 0 1 2 3 4 4 5 6 6 7 8 8 9}
+test text-27.26 {edit undo and edit redo return ranges} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo true -autoseparators false
+    .t insert end "Hello "
+    .t edit separator
+    .t insert end "World!\n"
+    .t insert 1.6 "GREAT "
+    .t insert end "Another edit here!!"
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+    .t edit separator
+    .t delete 1.6
+    .t delete 1.9 1.10
+    .t insert 1.9 L
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+    .t replace 1.6 1.10 Tcl/Tk
+    .t replace 2.8 2.12 "one bites the dust"
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+} -cleanup {
+    destroy .t
+} -result [list {1.6 2.0}           \
+                {1.6 2.19}          \
+                {1.6 1.7 1.10 1.12} \
+                {1.6 1.7 1.9 1.11}  \
+                {1.6 1.16 2.8 2.19} \
+                {1.6 1.16 2.8 2.30} ]
+test text-27.27 {edit undo and edit redo return ranges} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo true -autoseparators false
+    for {set i 3} {$i >= 1} {incr i -1} {
+        .t insert 1.0 "Line $i\n"
+    }
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+} -cleanup {
+    destroy .t
+} -result [list {1.0 2.0} \
+                {1.0 4.0} ]
+test text-27.28 {edit undo and edit redo do not leave \
+                 spurious temporary marks behind them} -setup {
+    destroy .t
+    set res {}
+} -body {
+    pack [text .t -undo true -autoseparators false]
+    .t insert end "Hello World.\n"
+    .t edit separator
+    .t insert end "Again hello.\n"
+    .t edit undo
+    lappend res [lsearch [.t mark names] tk::undoMark*]
+    .t edit redo
+    lappend res [lsearch [.t mark names] tk::undoMark*]
+} -cleanup {
+    destroy .t
+} -result [list -1 -1]
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
@@ -6899,7 +6972,7 @@ test text-31.14 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     lappend res [.t tag prevrange sel 1.0]
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
@@ -6920,7 +6993,7 @@ test text-31.15 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
@@ -6940,7 +7013,7 @@ test text-31.16 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	.t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
@@ -6985,7 +7058,7 @@ test text-31.18 {peer widgets} -setup {
     return $res
 } -cleanup {
     destroy .t
-} -result {1.0 11.0} 
+} -result {1.0 11.0}
 test text-31.19 {peer widgets} -body {
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
@@ -7030,7 +7103,7 @@ test text-32.1 {line heights on creation} -setup {
     update
     set after [$w count -ypixels 1.0 2.0]
     destroy .g
-    expr {$before eq $after} 
+    expr {$before eq $after}
 } -cleanup {
     destroy .t
 } -result {1}

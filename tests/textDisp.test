@@ -41,7 +41,7 @@ catch {destroy .f .t}
 frame .f -width 100 -height 20
 pack .f -side left
 
-set fixedFont {Courier -12}
+set fixedFont {"Courier New" -12}
 # 15 on XP, 13 on Solaris 8
 set fixedHeight [font metrics $fixedFont -linespace]
 # 7 on all platforms
@@ -590,7 +590,7 @@ if {$tcl_platform(platform) == "windows"} {
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     # This test was failing on Windows because the title bar on .
     # was a certain minimum size and it was interfering with the size
-    # requested.  The "overrideredirect" gets rid of the titlebar so 
+    # requested.  The "overrideredirect" gets rid of the titlebar so
     # the toplevel can shrink to the appropriate size.  On Unix, setting
     # the overrideredirect on "." confuses the window manager and
     # causes subsequent tests to fail.
@@ -622,7 +622,7 @@ set hlth [.t cget -highlightthickness]
 test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     # This test was failing on Windows because the title bar on .
     # was a certain minimum size and it was interfering with the size
-    # requested.  The "overrideredirect" gets rid of the titlebar so 
+    # requested.  The "overrideredirect" gets rid of the titlebar so
     # the toplevel can shrink to the appropriate size.  On Unix, setting
     # the overrideredirect on "." confuses the window manager and
     # causes subsequent tests to fail.
@@ -638,7 +638,7 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     update
     set x [list [.t index @0,0] $tk_textRelayout $tk_textRedraw]
     wm overrideredirect . 0
-    update 
+    update
     set x
 } {8.0 {16.0 17.0 15.0 14.0 13.0 12.0 11.0 10.0 9.0 8.0} {8.0 9.0 10.0 11.0 12.0 13.0 14.0 15.0 16.0 17.0}}
 test textDisp-4.8 {UpdateDisplayInfo, filling in extra vertical space} {
@@ -1885,7 +1885,7 @@ test textDisp-14.14 {TkTextXviewCmd procedure} {
     .t insert end "a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 b0 b1 b2 b3 b4 b5 b6 b7 b8 b9 c0 c1 c2 c3 c4 c5 c6 c7 c8 c9 c0 c1 c2 c3 c4 c5 c6 c7 c8 c9\n"
     .t insert end "xxxx xxxxxxxxx xxxxxxxxxxxxx"
     .t xview moveto 0
-    .t xview scroll 21 u  
+    .t xview scroll 21 u
     set x [.t index @0,22]
     .t xview scroll -1 u
     lappend x [.t index @0,22]
@@ -2341,7 +2341,7 @@ test textDisp-17.8 {TkTextScanCmd procedure} {textfonts} {
     .t xview moveto 0
     .t scan mark 0 60
     .t scan dragto 30 100
-    .t scan dragto 25 95 
+    .t scan dragto 25 95
     .t index @0,0
 } {4.7}
 test textDisp-17.9 {TkTextScanCmd procedure} {textfonts} {
@@ -2900,7 +2900,7 @@ test textDisp-20.1 {FindDLine} {
     list [.t dlineinfo 46.0] [.t dlineinfo 47.0] [.t dlineinfo 49.0] \
 	    [.t dlineinfo 58.0]
 } [list {} {} [list 3 [expr {$fixedDiff + 16}] 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
-test textDisp-20.2 {FindDLine} { 
+test textDisp-20.2 {FindDLine} {
     .t yview 100.0
     .t yview -pickplace 53.0
     list [.t dlineinfo 50.0] [.t dlineinfo 50.14] [.t dlineinfo 50.21]
@@ -2949,7 +2949,7 @@ test textDisp-21.4 {count -displaylines regression} {
 Use the Up (cursor) key to scroll up one line at a time.  At the second press, the cursor either gets locked or jumps several lines.
 
 Connect with Tkcon.  The command
-.u count -displaylines \ 
+.u count -displaylines \
 3.10 2.173
 should give answer -1; it gives me 5.
 
@@ -3843,7 +3843,7 @@ test textDisp-29.2.5 {miscellaneous: can show last character} {
     set iWidth [lindex [.t2.t bbox end-2c] 2]
     .t2.t xview scroll 2 units
     set iWidth2 [lindex [.t2.t bbox end-2c] 2]
-    
+
     if {($iWidth == $iWidth2) && $iWidth >= 2} {
 	set result "correct"
     } else {
