@@ -364,7 +364,8 @@ TkpComputeButtonGeometry(
       height = butPtr->height > 0 ? butPtr->height : height;
 
     } else { /* Text only */
-        width = txtWidth + butPtr->indicatorSpace;
+      /*Add four pixels of padding to width for text-only buttons to improve appearance.*/
+        width = txtWidth + butPtr->indicatorSpace + 4;
 	height = txtHeight;
 	if (butPtr->width > 0) {
 	   width = butPtr->width * charWidth;
