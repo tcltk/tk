@@ -5,6 +5,7 @@
  *	binary library.
  *
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
+ * Copyright (c) 2017 Stuart Cassoff <stwo@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -16,16 +17,17 @@
  * OSCMa  = shortcut for "old style configuration macro activates"
  * NSCMdt = shortcut for "new style configuration macro declares that"
  *
- * - TCL_THREADS		OSCMa compilation as threaded core.
+ * - TCL_THREADS		OSCMa compilation as threaded.
  * - TCL_MEM_DEBUG		OSCMa memory debugging.
- * - TCL_COMPILE_DEBUG		OSCMa debugging of bytecode compiler.
- * - TCL_COMPILE_STATS		OSCMa bytecode compiler statistics.
  *
  * - TCL_CFG_DO64BIT		NSCMdt tk is compiled for a 64bit system.
  * - NDEBUG			NSCMdt tk is compiled with symbol info off.
  * - TCL_CFG_OPTIMIZED		NSCMdt tk is compiled with cc optimizations on
  * - TCL_CFG_PROFILED		NSCMdt tk is compiled with profiling info.
- * - HAVE_XFT			NSCMdt tk is compiled with xft font support.
+ *
+ * - _WIN32 || __CYGWIN__	The value for the fontsytem key will be
+ *   MAC_OSX_TK			chosen based on these macros/defines.
+ *   HAVE_XFT			NSCMdt xft font support was requested.
  *
  * - CFG_RUNTIME_*		Paths to various stuff at runtime.
  * - CFG_INSTALL_*		Paths to various stuff at installation time.
@@ -56,18 +58,6 @@
 #  define CFG_MEMDEBUG		"1"
 #else
 #  define CFG_MEMDEBUG		"0"
-#endif
-
-#ifdef TCL_COMPILE_DEBUG
-#  define CFG_COMPILE_DEBUG	"1"
-#else
-#  define CFG_COMPILE_DEBUG	"0"
-#endif
-
-#ifdef TCL_COMPILE_STATS
-#  define CFG_COMPILE_STATS	"1"
-#else
-#  define CFG_COMPILE_STATS	"0"
 #endif
 
 #ifdef TCL_CFG_DO64BIT
@@ -111,8 +101,6 @@ static Tcl_Config const cfg[] = {
     {"64bit",			CFG_64},
     {"optimized",		CFG_OPTIMIZED},
     {"mem_debug",		CFG_MEMDEBUG},
-    {"compile_debug",		CFG_COMPILE_DEBUG},
-    {"compile_stats",		CFG_COMPILE_STATS},
     {"fontsystem",		CFG_FONTSYSTEM},
 
     /* Runtime paths to various stuff */
