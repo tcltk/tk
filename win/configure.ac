@@ -122,17 +122,6 @@ if test $tcl_cv_strtoi64 = no; then
 fi
 
 #--------------------------------------------------------------------
-# Windows XP theme engine header for Ttk
-#--------------------------------------------------------------------
-
-AC_CHECK_HEADER([uxtheme.h], [AC_DEFINE(HAVE_UXTHEME_H)],
-	[AC_MSG_NOTICE([xpnative theme will be unavailable])],
-	[#include <windows.h>])
-AC_CHECK_HEADER([vssym32.h], [AC_DEFINE(HAVE_VSSYM32_H)], [],
-	[#include <windows.h>
-#include <uxtheme.h>])
-
-#--------------------------------------------------------------------
 # Set the default compiler switches based on the --enable-symbols
 # option.  This macro depends on C flags, and should be called
 # after SC_CONFIG_CFLAGS macro is called.
