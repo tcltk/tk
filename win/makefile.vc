@@ -76,7 +76,7 @@ the build instructions.
 #		Sets where to install Tcl from the built binaries.
 #		C:\Progra~1\Tcl is assumed when not specified.
 #
-#	OPTS=loimpact,msvcrt,nothreads,noxp,pdbs,profile,square,static,staticpkg,symbols,unchecked,none
+#	OPTS=loimpact,msvcrt,nothreads,pdbs,profile,square,static,staticpkg,symbols,unchecked,none
 #		Sets special options for the core.  The default is for none.
 #		Any combination of the above may be used (comma separated).
 #		'none' will over-ride everything to nothing.
@@ -88,8 +88,6 @@ the build instructions.
 #			   msvcrt(d). This is useful for static embedding
 #			   support.
 #		nothreads= Turns off full multithreading support.
-#		noxp     = If you do not have the uxtheme.h header then you
-#                          cannot include support for XP themeing.
 #		square   = Include the demo square widget.
 #		static   = Builds a static library of the core instead of a
 #			   dll.  The shell will be static (and large), as well.
@@ -192,22 +190,11 @@ PROJECT = tk
 !endif
 
 # Extra makefile options processing...
-!if "$(OPTS)" == "" || [nmakehlp -f "$(OPTS)" "none"]
-HAVE_UXTHEME_H    = 1
-TTK_SQUARE_WIDGET = 0
-!else
-!if [nmakehlp -f $(OPTS) "noxp"]
-!message *** Exclude support for XP theme
-HAVE_UXTHEME_H  = 0
-!else
-HAVE_UXTHEME_H  = 1
-!endif
 !if [nmakehlp -f "$(OPTS)" "square"]
 !message *** Include ttk square demo widget
 TTK_SQUARE_WIDGET   = 1
 !else
 TTK_SQUARE_WIDGET   = 0
-!endif
 !endif
 
 STUBPREFIX = $(PROJECT)stub

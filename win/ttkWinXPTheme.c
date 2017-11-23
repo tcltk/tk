@@ -16,135 +16,24 @@
  */
 
 #include <tkWinInt.h>
-#ifndef HAVE_UXTHEME_H
-/* Stub for platforms that lack the XP theme API headers: */
-int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
-#else
-
 #include <windows.h>
 #include <uxtheme.h>
-#if defined(HAVE_VSSYM32_H) || _MSC_VER > 1500
+#if defined(_MSC_VER) && _MSC_VER > 1500
 #   include <vssym32.h>
 #else
 #   include <tmschema.h>
 #endif
+#ifdef _MSC_VER
+#   pragma comment (lib, "uxtheme.lib")
+#endif
 
 #include "ttk/ttkTheme.h"
-
-typedef HTHEME  (STDAPICALLTYPE OpenThemeDataProc)(HWND hwnd,
-		 LPCWSTR pszClassList);
-typedef HRESULT (STDAPICALLTYPE CloseThemeDataProc)(HTHEME hTheme);
-typedef HRESULT (STDAPICALLTYPE DrawThemeBackgroundProc)(HTHEME hTheme,
-                 HDC hdc, int iPartId, int iStateId, const RECT *pRect,
-                 OPTIONAL const RECT *pClipRect);
-typedef HRESULT	(STDAPICALLTYPE GetThemePartSizeProc)(HTHEME,HDC,
-		 int iPartId, int iStateId,
-		 RECT *prc, enum THEMESIZE eSize, SIZE *psz);
-typedef int     (STDAPICALLTYPE GetThemeSysSizeProc)(HTHEME,int);
-/* GetThemeTextExtent and DrawThemeText only used with BROKEN_TEXT_ELEMENT */
-typedef HRESULT (STDAPICALLTYPE GetThemeTextExtentProc)(HTHEME hTheme, HDC hdc,
-		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
-		 DWORD dwTextFlags, const RECT *pBoundingRect, RECT *pExtent);
-typedef HRESULT (STDAPICALLTYPE DrawThemeTextProc)(HTHEME hTheme, HDC hdc,
-		 int iPartId, int iStateId, LPCWSTR pszText, int iCharCount,
-		 DWORD dwTextFlags, DWORD dwTextFlags2, const RECT *pRect);
-typedef BOOL    (STDAPICALLTYPE IsThemeActiveProc)(void);
-typedef BOOL    (STDAPICALLTYPE IsAppThemedProc)(void);
-
-typedef struct
-{
-    OpenThemeDataProc			*OpenThemeData;
-    CloseThemeDataProc			*CloseThemeData;
-    GetThemePartSizeProc		*GetThemePartSize;
-    GetThemeSysSizeProc			*GetThemeSysSize;
-    DrawThemeBackgroundProc		*DrawThemeBackground;
-    DrawThemeTextProc		        *DrawThemeText;
-    GetThemeTextExtentProc		*GetThemeTextExtent;
-    IsThemeActiveProc			*IsThemeActive;
-    IsAppThemedProc			*IsAppThemed;
-
-    HWND                                stubWindow;
-} XPThemeProcs;
-
-typedef struct
-{
-    HINSTANCE hlibrary;
-    XPThemeProcs *procs;
-} XPThemeData;
-
-/*
- *----------------------------------------------------------------------
- *
- * LoadXPThemeProcs --
- *	Initialize XP theming support.
- *
- *	XP theme support is included in UXTHEME.DLL
- *	We dynamically load this DLL at runtime instead of linking
- *	to it at build-time.
- *
- * Returns:
- *	A pointer to an XPThemeProcs table if successful, NULL otherwise.
- */
-
-static XPThemeProcs *
-LoadXPThemeProcs(HINSTANCE *phlib)
-{
-    /*
-     * Load the library "uxtheme.dll", where the native widget
-     * drawing routines are implemented.  This will only succeed
-     * if we are running at least on Windows XP.
-     */
-    HINSTANCE handle;
-    *phlib = handle = LoadLibrary(TEXT("uxtheme.dll"));
-    if (handle != 0)
-    {
-	/*
-	 * We have successfully loaded the library. Proceed in storing the
-	 * addresses of the functions we want to use.
-	 */
-	XPThemeProcs *procs = ckalloc(sizeof(XPThemeProcs));
-#define LOADPROC(name) \
-	(0 != (procs->name = (name ## Proc *)GetProcAddress(handle, #name) ))
-
-	if (   LOADPROC(OpenThemeData)
-	    && LOADPROC(CloseThemeData)
-	    && LOADPROC(GetThemePartSize)
-	    && LOADPROC(GetThemeSysSize)
-	    && LOADPROC(DrawThemeBackground)
-	    && LOADPROC(GetThemeTextExtent)
-	    && LOADPROC(DrawThemeText)
-	    && LOADPROC(IsThemeActive)
-	    && LOADPROC(IsAppThemed)
-	)
-	{
-	    return procs;
-	}
-#undef LOADPROC
-	ckfree(procs);
-    }
-    return 0;
-}
-
-/*
- * XPThemeDeleteProc --
- *
- *      Release any theme allocated resources.
- */
-
-static void
-XPThemeDeleteProc(void *clientData)
-{
-    XPThemeData *themeData = clientData;
-    FreeLibrary(themeData->hlibrary);
-    ckfree(clientData);
-}
 
 static int
 XPThemeEnabled(Ttk_Theme theme, void *clientData)
 {
-    XPThemeData *themeData = clientData;
-    int active = themeData->procs->IsThemeActive();
-    int themed = themeData->procs->IsAppThemed();
+    int active = IsThemeActive();
+    int themed = IsAppThemed();
     return (active && themed);
 }
 
@@ -392,7 +281,7 @@ typedef struct
      * Static data, initialized when element is registered:
      */
     ElementInfo	*info;
-    XPThemeProcs *procs;	/* Pointer to theme procedure table */
+    HWND stubWindow;
 
     /*
      * Dynamic data, allocated by InitElementData:
@@ -407,11 +296,11 @@ typedef struct
 } ElementData;
 
 static ElementData *
-NewElementData(XPThemeProcs *procs, ElementInfo *info)
+NewElementData(HWND stubWindow, ElementInfo *info)
 {
     ElementData *elementData = ckalloc(sizeof(ElementData));
 
-    elementData->procs = procs;
+    elementData->stubWindow = stubWindow;
     elementData->info = info;
     elementData->hTheme = elementData->hDC = 0;
 
@@ -454,10 +343,10 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
     if (win != None) {
 	elementData->hwnd = Tk_GetHWND(win);
     } else  {
-	elementData->hwnd = elementData->procs->stubWindow;
+	elementData->hwnd = elementData->stubWindow;
     }
 
-    elementData->hTheme = elementData->procs->OpenThemeData(
+    elementData->hTheme = OpenThemeData(
 	elementData->hwnd, elementData->info->className);
 
     if (!elementData->hTheme)
@@ -475,7 +364,7 @@ InitElementData(ElementData *elementData, Tk_Window tkwin, Drawable d)
 static void
 FreeElementData(ElementData *elementData)
 {
-    elementData->procs->CloseThemeData(elementData->hTheme);
+    CloseThemeData(elementData->hTheme);
     if (elementData->drawable != 0) {
 	TkWinReleaseDrawableDC(
 	    elementData->drawable, elementData->hDC, &elementData->dcState);
@@ -501,7 +390,7 @@ static void GenericElementSize(
 	return;
 
     if (!(elementData->info->flags & IGNORE_THEMESIZE)) {
-	result = elementData->procs->GetThemePartSize(
+	result = GetThemePartSize(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
@@ -541,7 +430,7 @@ static void GenericElementDraw(
     }
     rc = BoxToRect(b);
 
-    elementData->procs->DrawThemeBackground(
+    DrawThemeBackground(
 	elementData->hTheme,
 	elementData->hDC,
 	elementData->info->partId,
@@ -582,9 +471,9 @@ GenericSizedElementSize(
     GenericElementSize(clientData, elementRecord, tkwin,
 	widthPtr, heightPtr, paddingPtr);
 
-    *widthPtr = elementData->procs->GetThemeSysSize(NULL,
+    *widthPtr = GetThemeSysSize(NULL,
 	(elementData->info->flags >> 8) & 0xff);
-    *heightPtr = elementData->procs->GetThemeSysSize(NULL,
+    *heightPtr = GetThemeSysSize(NULL,
 	elementData->info->flags & 0xff);
     if (elementData->info->flags & HALF_HEIGHT)
 	*heightPtr /= 2;
@@ -652,7 +541,7 @@ static void ThumbElementDraw(
     if (!InitElementData(elementData, tkwin, d))
 	return;
 
-    elementData->procs->DrawThemeBackground(elementData->hTheme,
+    DrawThemeBackground(elementData->hTheme,
 	elementData->hDC, elementData->info->partId, stateId,
 	&rc, NULL);
 
@@ -726,7 +615,7 @@ static void TabElementDraw(
 	return;
     if (state & TTK_STATE_USER1)
 	partId = TABP_TABITEMLEFTEDGE;
-    elementData->procs->DrawThemeBackground(
+    DrawThemeBackground(
 	elementData->hTheme, elementData->hDC, partId,
 	Ttk_StateTableLookup(elementData->info->statemap, state), &rc, NULL);
     FreeElementData(elementData);
@@ -829,7 +718,7 @@ static void TextElementSize(
     if (!InitElementData(elementData, tkwin, 0))
 	return;
 
-    hr = elementData->procs->GetThemeTextExtent(
+    hr = GetThemeTextExtent(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
@@ -862,7 +751,7 @@ static void TextElementDraw(
     if (!InitElementData(elementData, tkwin, d))
 	return;
 
-    hr = elementData->procs->DrawThemeText(
+    hr = DrawThemeText(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
@@ -1095,7 +984,7 @@ Ttk_CreateVsapiElement(
     int objc,
     Tcl_Obj *const objv[])
 {
-    XPThemeData *themeData = clientData;
+    HWND stubWindow = clientData;
     ElementInfo *elementPtr = NULL;
     ClientData elementData;
     Tcl_UniChar *className;
@@ -1237,7 +1126,7 @@ Ttk_CreateVsapiElement(
     wcscpy(wname, className);
     elementPtr->className = wname;
 
-    elementData = NewElementData(themeData->procs, elementPtr);
+    elementData = NewElementData(stubWindow, elementPtr);
     Ttk_RegisterElementSpec(
 	theme, elementName, elementPtr->elementSpec, elementData);
 
@@ -1252,9 +1141,7 @@ Ttk_CreateVsapiElement(
 
 MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
-    XPThemeData *themeData;
-    XPThemeProcs *procs;
-    HINSTANCE hlibrary;
+    HWND stubWindow;
     Ttk_Theme themePtr, parentPtr, vistaPtr;
     ElementInfo *infoPtr;
     OSVERSIONINFOW os;
@@ -1262,10 +1149,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
     GetVersionExW(&os);
 
-    procs = LoadXPThemeProcs(&hlibrary);
-    if (!procs)
-	return TCL_ERROR;
-    procs->stubWindow = hwnd;
+    stubWindow = hwnd;
 
     /*
      * Create the new style engine.
@@ -1280,23 +1164,18 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * Set theme data and cleanup proc
      */
 
-    themeData = ckalloc(sizeof(XPThemeData));
-    themeData->procs = procs;
-    themeData->hlibrary = hlibrary;
-
-    Ttk_SetThemeEnabledProc(themePtr, XPThemeEnabled, themeData);
-    Ttk_RegisterCleanup(interp, themeData, XPThemeDeleteProc);
-    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, themeData);
+    Ttk_SetThemeEnabledProc(themePtr, XPThemeEnabled, stubWindow);
+    Ttk_RegisterElementFactory(interp, "vsapi", Ttk_CreateVsapiElement, stubWindow);
 
     /*
      * Create the vista theme on suitable platform versions and set the theme
      * enable function. The theme itself is defined in script.
      */
 
-    if (os.dwPlatformId == VER_PLATFORM_WIN32_NT && os.dwMajorVersion > 5) {
+    if (os.dwMajorVersion > 5) {
 	vistaPtr = Ttk_CreateTheme(interp, "vista", themePtr);
 	if (vistaPtr) {
-	    Ttk_SetThemeEnabledProc(vistaPtr, XPThemeEnabled, themeData);
+	    Ttk_SetThemeEnabledProc(vistaPtr, XPThemeEnabled, stubWindow);
 	}
     }
 
@@ -1304,7 +1183,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * New elements:
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
-	ClientData clientData = NewElementData(procs, infoPtr);
+	ClientData clientData = NewElementData(stubWindow, infoPtr);
 	Ttk_RegisterElementSpec(
 	    themePtr, infoPtr->elementName, infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
@@ -1321,5 +1200,3 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 
     return TCL_OK;
 }
-
-#endif /* HAVE_UXTHEME_H */
