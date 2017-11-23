@@ -42,7 +42,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkWinGetPlatformId
 
 
-#ifdef TK_NO_DEPRECATED
+#if defined(TK_NO_DEPRECATED) || TK_MAJOR_VERSION > 8
 #define Tk_FreeXId 0
 #define TkWinGetPlatformId 0
 #define Tk_PhotoPutBlock_NoComposite 0
@@ -59,14 +59,14 @@ doNothing(void)
 }
 
 #define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
-#endif
-
 #if defined(_WIN32) || defined(__CYGWIN__)
 #define TkWinGetPlatformId winGetPlatformId
 static int TkWinGetPlatformId() {
     return 2;
 }
-#endif
+#endif /* defined(_WIN32) || defined(__CYGWIN__) */
+#endif /* defined(TK_NO_DEPRECATED) || TK_MAJOR_VERSION > 8 */
+
 #ifdef _WIN32
 int
 TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
