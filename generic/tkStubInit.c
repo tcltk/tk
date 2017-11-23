@@ -39,6 +39,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 #undef Tk_MainEx
 #undef Tk_FreeXId
+#undef TkWinGetPlatformId
 
 
 #ifdef TK_NO_DEPRECATED

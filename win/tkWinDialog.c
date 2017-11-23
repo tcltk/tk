@@ -644,12 +644,7 @@ static void LoadShellProcs()
     if (shell32_handle != NULL)
         return; /* We have already been through here. */
 
-    /*
-     * XXX - Note we never call FreeLibrary. There is no point because
-     * shell32.dll is loaded at startup anyways and stays for the duration
-     * of the process so why bother with keeping track of when to unload
-     */
-    shell32_handle = LoadLibrary(TEXT("shell32.dll"));
+    shell32_handle = GetModuleHandle(TEXT("shell32.dll"));
     if (shell32_handle == NULL) /* Should never happen but check anyways. */
         return;
 
