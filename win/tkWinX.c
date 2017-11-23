@@ -304,30 +304,6 @@ TkWinXCleanup(
 /*
  *----------------------------------------------------------------------
  *
- * TkWinGetPlatformId --
- *
- *	Determines whether running under NT. Other than NT is no longer supported.
- *
- * Results:
- *	The return value is:
- *		VER_PLATFORM_WIN32_NT	Win32 on Windows XP, Vista, Windows 7, Windows 8
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-#undef TkWinGetPlatformId
-TkWinGetPlatformId(void)
-{
-    return VER_PLATFORM_WIN32_NT;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkWinGetPlatformTheme --
  *
  *	Return the Windows drawing style we should be using.
@@ -336,9 +312,6 @@ TkWinGetPlatformId(void)
  *	The return value is one of:
  *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
  *	    TK_THEME_WIN_XP		XP not in classic mode
- *
- * Side effects:
- *	Could invoke TkWinGetPlatformId.
  *
  *----------------------------------------------------------------------
  */
