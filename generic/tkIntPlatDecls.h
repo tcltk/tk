@@ -666,7 +666,6 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
-#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 #undef TkWinGetPlatformId
 #define TkWinGetPlatformId() (2) /* VER_PLATFORM_WIN32_NT */
 
