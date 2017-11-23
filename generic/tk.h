@@ -752,7 +752,7 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
     (((Tk_FakeWin *) (tkwin))->flags & TK_WM_MANAGEABLE)
 #define Tk_ReqWidth(tkwin)	(((Tk_FakeWin *) (tkwin))->reqWidth)
 #define Tk_ReqHeight(tkwin)	(((Tk_FakeWin *) (tkwin))->reqHeight)
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 #define Tk_InternalBorderWidth(tkwin) \
     (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
 #endif /* !TK_NO_DEPRECATED */
@@ -1572,7 +1572,7 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
  * of what is actually there can be correct.
  */
 
-#if !defined(TK_NO_DEPRECATED) && !defined(BUILD_tk)
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9 && !defined(BUILD_tk)
 #ifdef USE_COMPOSITELESS_PHOTO_PUT_BLOCK
 #   ifdef Tk_PhotoPutBlock
 #	undef Tk_PhotoPutBlock

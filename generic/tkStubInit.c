@@ -44,6 +44,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 #ifdef TK_NO_DEPRECATED
 #define Tk_FreeXId 0
+#define TkWinGetPlatformId 0
 #define Tk_PhotoPutBlock_NoComposite 0
 #define Tk_PhotoPutZoomedBlock_NoComposite 0
 #define Tk_PhotoExpand_Panic 0
@@ -60,8 +61,13 @@ doNothing(void)
 #define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
 #endif
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+#define TkWinGetPlatformId winGetPlatformId
+static int TkWinGetPlatformId() {
+    return 2;
+}
+#endif
 #ifdef _WIN32
-
 int
 TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 {
@@ -226,7 +232,6 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkWinSetForegroundWindow 0
 #	define TkWinDialogDebug 0
 #	define TkWinGetMenuSystemDefault 0
-#	define TkWinGetPlatformId 0
 #	define TkWinSetHINSTANCE 0
 #	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0
