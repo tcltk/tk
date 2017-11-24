@@ -110,12 +110,19 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 #endif
 }
 
-- (void) _setupEventLoop
+-(void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    [self finishLaunching];
-    [self setWindowsNeedUpdate:YES];
-    [pool drain];
+    /* Much of the NSApplication initialization should be moved here.*/ 
+}
+
+-(void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    /*
+     * It is not safe to force activation of the NSApp until this
+     * method is called.  Activating too early can cause the menu
+     * bar to be unresponsive.
+     */
+    [NSApp activateIgnoringOtherApps: YES];
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -126,6 +133,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
     _defaultMainMenu = nil;
     [self _setupMenus];
     [self setDelegate:self];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     [[NSNotificationCenter defaultCenter] addObserver:self
 	    selector:@selector(_postedNotification:) name:nil object:nil];
@@ -284,20 +292,19 @@ TkpInit(
 	    TkMacOSXDbgMsg("Tcl_MacOSXOpenVersionedBundleResources failed");
 	}
 #endif
-
-	{
-	    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-		[[NSUserDefaults standardUserDefaults] registerDefaults:
-		     [NSDictionary dictionaryWithObjectsAndKeys:
-		     [NSNumber numberWithBool:YES],
-		     @"_NSCanWrapButtonTitles",
-		     [NSNumber numberWithInt:-1],
-		     @"NSStringDrawingTypesetterBehavior",
-		     nil]];
-	    [TKApplication sharedApplication];
-	    [pool drain];
-	    [NSApp _setup:interp];
-	}
+	
+	NSAutoreleasePool *pool = [NSAutoreleasePool new];
+	[[NSUserDefaults standardUserDefaults] registerDefaults:
+		[NSDictionary dictionaryWithObjectsAndKeys:
+				  [NSNumber numberWithBool:YES],
+			      @"_NSCanWrapButtonTitles",
+				   [NSNumber numberWithInt:-1],
+			      @"NSStringDrawingTypesetterBehavior",
+			      nil]];
+	[TKApplication sharedApplication];
+	[pool drain];
+	[NSApp _setup:interp];
+	
 
 	/* Check whether we are a bundled executable: */
 	bundleRef = CFBundleGetMainBundle();
@@ -334,34 +341,18 @@ TkpInit(
 
 	if (!bundledExecutable) {
 	    /*
-	     * If we are loaded into an executable that is not a bundled
-	     * application, the window server does not let us come to the
-	     * foreground. For such an executable, notify the window server
-	     * that we are now a full GUI application.
-	     */
-
-	    OSStatus err = procNotFound;
-	    ProcessSerialNumber psn = { 0, kCurrentProcess };
-
-	    err = ChkErr(TransformProcessType, &psn,
-		    kProcessTransformToForegroundApplication);
-
-	    /*
 	     * Set application icon to generic Tk icon, do it at idle time
 	     * instead of now to ensure tk_library is setup.
 	     */
-
 	    Tcl_DoWhenIdle(SetApplicationIcon, NULL);
 	}
 
-	{
-	    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-	    [NSApp _setupEventLoop];
-	    TkMacOSXInitAppleEvents(interp);
-	    TkMacOSXUseAntialiasedText(interp, -1);
-	    TkMacOSXInitCGDrawing(interp, TRUE, 0);
-	    [pool drain];
-	}
+	pool = [NSAutoreleasePool new];
+	[NSApp finishLaunching];
+	TkMacOSXInitAppleEvents(interp);
+	TkMacOSXUseAntialiasedText(interp, -1);
+	TkMacOSXInitCGDrawing(interp, TRUE, 0);
+	[pool drain];
 
 	/*
 	 * FIXME: Close stdin & stdout for remote debugging otherwise we will
