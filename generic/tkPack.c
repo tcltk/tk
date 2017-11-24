@@ -122,7 +122,7 @@ static int		ConfigureSlaves(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
 static void		DestroyPacker(void *memPtr);
 static Packer *		GetPacker(Tk_Window tkwin);
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 static int		PackAfter(Tcl_Interp *interp, Packer *prevPtr,
 			    Packer *masterPtr, int objc,Tcl_Obj *const objv[]);
 #endif /* !TK_NO_DEPRECATED */
@@ -199,12 +199,12 @@ Tk_PackObjCmd(
     Tk_Window tkwin = clientData;
     const char *argv2;
     static const char *const optionStrings[] = {
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 	"after", "append", "before", "unpack",
 #endif /* !TK_NO_DEPRECATED */
 	"configure", "forget", "info", "propagate", "slaves", NULL };
     enum options {
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 	PACK_AFTER, PACK_APPEND, PACK_BEFORE, PACK_UNPACK,
 #endif /* !TK_NO_DEPRECATED */
 	PACK_CONFIGURE, PACK_FORGET, PACK_INFO, PACK_PROPAGATE, PACK_SLAVES };
@@ -224,7 +224,7 @@ Tk_PackObjCmd(
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 	/*
 	 * Call it again without the deprecated ones to get a proper error
 	 * message. This works well since there can't be any ambiguity between
@@ -240,7 +240,7 @@ Tk_PackObjCmd(
 
     argv2 = Tcl_GetString(objv[2]);
     switch ((enum options) index) {
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
     case PACK_AFTER: {
 	Packer *prevPtr;
 	Tk_Window tkwin2;
@@ -467,7 +467,7 @@ Tk_PackObjCmd(
 	Tcl_SetObjResult(interp, resultObj);
 	break;
     }
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
     case PACK_UNPACK: {
 	Tk_Window tkwin2;
 	Packer *packPtr;
@@ -1098,7 +1098,7 @@ GetPacker(
  *------------------------------------------------------------------------
  */
 
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 static int
 PackAfter(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
