@@ -418,7 +418,7 @@ typedef enum {
 #define TK_CONFIG_COLOR_ONLY		(1 << 1)
 #define TK_CONFIG_MONO_ONLY		(1 << 2)
 #define TK_CONFIG_DONT_SET_DEFAULT	(1 << 3)
-#if !defined(TK_NO_DEPRECATED) || defined(BUILD_tk)
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 #  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
 #endif
 #define TK_CONFIG_USER_BIT		0x100
