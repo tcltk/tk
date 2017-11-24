@@ -933,7 +933,9 @@ TkWmDeadWindow(
 	 * Process all events immediately to force the closed window
 	 * to be deallocated.
 	 */
-	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
+	if (winPtr->parentPtr) {
+	    while (Tk_DoOneEvent(TK_WINDOW_EVENTS|TK_DONT_WAIT)) {}
+	}
 	[NSApp _resetAutoreleasePool];
 
 #if DEBUG_ZOMBIES > 0
