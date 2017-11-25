@@ -15,11 +15,13 @@
  *  	shellcc/platform/commctls/userex/refentry.asp >
  */
 
-#include <tkWinInt.h>
 #ifndef HAVE_UXTHEME_H
 /* Stub for platforms that lack the XP theme API headers: */
+#include <tkWinInt.h>
 int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
+
+#define WINVER 0x0501	/* Requires Windows XP APIs */
 
 #include <windows.h>
 #include <uxtheme.h>
@@ -28,6 +30,8 @@ int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
 #   include <tmschema.h>
 #endif
+
+#include <tkWinInt.h>
 
 #include "ttk/ttkTheme.h"
 
