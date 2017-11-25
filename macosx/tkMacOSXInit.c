@@ -264,9 +264,6 @@ TkpInit(
      */
 
     if (!initialized) {
-	int bundledExecutable = 0;
-	CFBundleRef bundleRef;
-	CFURLRef bundleUrl = NULL;
 	struct utsname name;
 	struct stat st;
 
