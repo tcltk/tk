@@ -337,6 +337,7 @@ TK_OBJS = \
 	tkOldConfig.$(OBJEXT) \
 	tkOption.$(OBJEXT) \
 	tkPack.$(OBJEXT) \
+	tkPkgConfig.$(OBJEXT) \
 	tkPlace.$(OBJEXT) \
 	tkPointer.$(OBJEXT) \
 	tkRectOval.$(OBJEXT) \
@@ -732,6 +733,36 @@ tkTest.$(OBJEXT): tkTest.c
 
 tkOldTest.$(OBJEXT): tkOldTest.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
+
+
+# TIP #59, embedding of configuration information into the binary library.
+#
+# Part of Tk's configuration information are the paths where it was installed
+# and where it will look for its libraries (which can be different). We derive
+# this information from the variables which can be overridden by the user. As
+# every path can be configured separately we do not remember one general
+# prefix/exec_prefix but all the different paths individually.
+
+tkPkgConfig.$(OBJEXT): $(GENERIC_DIR)/tkPkgConfig.c
+	$(CC) -c $(CC_SWITCHES)					\
+		-DCFG_INSTALL_LIBDIR="\"$(LIB_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_BINDIR="\"$(BIN_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_SCRDIR="\"$(SCRIPT_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_INCDIR="\"$(INCLUDE_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_DOCDIR="\"$(MAN_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		\
+		-DCFG_RUNTIME_LIBDIR="\"$(libdir)\"" \
+		-DCFG_RUNTIME_BINDIR="\"$(bindir)\"" \
+		-DCFG_RUNTIME_SCRDIR="\"$(TK_LIBRARY)\"" \
+		-DCFG_RUNTIME_INCDIR="\"$(includedir)\"" \
+		-DCFG_RUNTIME_DOCDIR="\"$(mandir)\"" \
+		-DCFG_RUNTIME_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		-DCFG_RUNTIME_DLLFILE="\"$(TK_DLL_FILE)\"" \
+		-DCFG_RUNTIME_ZIPFILE="\"$(TK_ZIP_FILE)\"" \
+		\
+		$(GENERIC_DIR)/tkPkgConfig.c
+
 
 tkWinTest.$(OBJEXT): tkWinTest.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)

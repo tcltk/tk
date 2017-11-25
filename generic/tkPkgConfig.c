@@ -111,6 +111,8 @@ static Tcl_Config const cfg[] = {
     {"includedir,runtime",	CFG_RUNTIME_INCDIR},
     {"docdir,runtime",		CFG_RUNTIME_DOCDIR},
     {"demodir,runtime",		CFG_RUNTIME_DEMODIR},
+    {"dllfile,runtime",		CFG_RUNTIME_DLLFILE},
+    {"zipfile,runtime",		CFG_RUNTIME_ZIPFILE},
 
     /* Installation paths to various stuff */
 
@@ -130,6 +132,31 @@ TkInitEmbeddedConfigurationInformation(
     Tcl_Interp *interp)		/* Interpreter the configuration command is
 				 * registered in. */
 {
+#ifdef TCL_ZIPFS_SUPPORT
+#if defined(_WIN32) || defined(_WIN64)
+    HMODULE hModule = Tk_GetHINSTANCE();
+    WCHAR wName[MAX_PATH + LIBRARY_SIZE];
+    char dllname[(MAX_PATH + LIBRARY_SIZE) * TCL_UTF_MAX];
+    int mounted=0;
+
+    if (GetModuleFileNameW(hModule, wName, MAX_PATH) == 0) {
+        GetModuleFileNameA(hModule, dllname, MAX_PATH);
+    } else {
+        ToUtf(wName, dllname);
+    }
+    /* Mount zip file and dll before releasing to search */
+    if(TclZipfs_Mount(NULL, dllname, "lib/tk", NULL)==TCL_OK) {
+        return;
+    }
+#else
+    if(TclZipfs_Mount(NULL, CFG_RUNTIME_LIBDIR "/" CFG_RUNTIME_DLLFILE, "lib/tk", NULL)==TCL_OK) {
+        return;
+    }
+#endif
+    if(TclZipfs_Mount(NULL, CFG_RUNTIME_LIBDIR "/" CFG_RUNTIME_ZIPFILE, "lib/tk", NULL)==TCL_OK) {
+        return;
+    }
+#endif
     Tcl_RegisterConfig(interp, "tk", cfg, TCL_CFGVAL_ENCODING);
 }
 

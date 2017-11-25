@@ -315,6 +315,27 @@ TEST_DIR		= $(TOP_DIR)/tests
 MAC_OSX_DIR		= $(TOP_DIR)/macosx
 XLIB_DIR		= $(TOP_DIR)/xlib
 
+###
+# Tip 430 - ZipFS Modifications
+###
+TK_ZIP_FILE		= libtk_${MAJOR_VERSION}_${MINOR_VERSION}_${PATCH_LEVEL}.zip
+TK_VFS_PATH		= libtk.vfs/tk_library
+TK_VFS_ROOT		= libtk.vfs
+TCL_ZIPFS_SUPPORT       = @TCL_ZIPFS_SUPPORT@
+TCL_ZIPFS_FLAG          = @TCL_ZIPFS_FLAG@
+TCL_ZIPFS_OBJS          =
+ZIP_PROG        = @ZIP_PROG@
+ZIP_PROG_OPTIONS		= @ZIP_PROG_OPTIONS@
+ZIP_PROG_VFSSEARCH  = @ZIP_PROG_VFSSEARCH@
+SHARED_BUILD		= @SHARED_BUILD@
+
+ifeq (${TCL_ZIPFS_SUPPORT},1)
+	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
+endif
+ifeq (${TCL_ZIPFS_SUPPORT},2)
+	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
+endif
+
 #----------------------------------------------------------------
 # The information below should be usable as is.  The configure
 # script won't modify it and you shouldn't need to modify it
@@ -331,7 +352,7 @@ CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} -I${TCL_GENERIC_DIR} \
 -I${TCL_PLATFORM_DIR} ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${AC_FLAGS} \
 ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
+${NO_DEPRECATED_FLAGS} ${TCL_ZIPFS_FLAG} @EXTRA_CC_SWITCHES@
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -1090,6 +1111,8 @@ tkPkgConfig.o: $(GENERIC_DIR)/tkPkgConfig.c
 		-DCFG_RUNTIME_INCDIR="\"$(includedir)\"" \
 		-DCFG_RUNTIME_DOCDIR="\"$(mandir)\"" \
 		-DCFG_RUNTIME_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		-DCFG_RUNTIME_DLLFILE="\"$(TK_LIB_FILE)\"" \
+		-DCFG_RUNTIME_ZIPFILE="\"$(TK_ZIP_FILE)\"" \
 		\
 		$(GENERIC_DIR)/tkPkgConfig.c
 
