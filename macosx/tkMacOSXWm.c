@@ -930,8 +930,9 @@ TkWmDeadWindow(
 	    }
 	}
 	/*
-	 * Process all events immediately to force the closed window
-	 * to be deallocated.
+	 * Process all window events immediately to force the closed window to
+	 * be deallocated.  But don't do this for the root window as that is
+	 * unnecessary and can lead to segfaults.
 	 */
 	if (winPtr->parentPtr) {
 	    while (Tk_DoOneEvent(TK_WINDOW_EVENTS|TK_DONT_WAIT)) {}
