@@ -236,38 +236,6 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 /*
  *----------------------------------------------------------------------
  *
- * SetApplicationIcon --
- *
- *	Idle handler that sets the application icon to the generic Tk icon.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-SetApplicationIcon(
-    ClientData clientData)
-{
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    NSString *path = [NSApp tkFrameworkImagePath:@"Tk.icns"];
-    if (path) {
-	NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
-	if (image) {
-	    [NSApp setApplicationIconImage:image];
-	    [image release];
-	}
-    }
-    [pool drain];
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpInit --
  *
  *	Performs Mac-specific interpreter initialization related to the
