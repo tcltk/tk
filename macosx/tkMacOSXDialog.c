@@ -268,27 +268,35 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 }
 
 - (void)selectFormat:(id)sender  {
-    NSPopUpButton *button                 = (NSPopUpButton *)sender;
-    filterInfo.fileTypeIndex      = [button indexOfSelectedItem];
+    NSPopUpButton *button = (NSPopUpButton *)sender;
+    filterInfo.fileTypeIndex = [button indexOfSelectedItem];
 #ifdef __clang__
     NSMutableArray *allowedtypes = filterInfo.fileTypeExtensions[filterInfo.fileTypeIndex];
 #else
     NSMutableArray *allowedtypes = nil;
 #endif
-    [openpanel setAllowedFileTypes:allowedtypes];
+    if (allowedtypes && [allowedtypes count] > 0) {
+	[openpanel setAllowedFileTypes:allowedtypes];
+    } else {
+	[openpanel setAllowedFileTypes:nil];
+    }
     filterInfo.userHasSelectedFilter = true;
-
 }
 
 - (void)saveFormat:(id)sender  {
-    NSPopUpButton *button                 = (NSPopUpButton *)sender;
-    filterInfo.fileTypeIndex      = [button indexOfSelectedItem];
+    NSPopUpButton *button = (NSPopUpButton *)sender;
+    filterInfo.fileTypeIndex = [button indexOfSelectedItem];
 #ifdef __clang__
     NSMutableArray *allowedtypes = filterInfo.fileTypeExtensions[filterInfo.fileTypeIndex];
 #else
     NSMutableArray *allowedtypes = nil;
 #endif
-    [savepanel setAllowedFileTypes:allowedtypes];
+    if (allowedtypes && [allowedtypes count] > 0) {
+	[savepanel setAllowedFileTypes:allowedtypes];
+    } else {
+	[savepanel setAllowedFileTypes:nil];
+    }
+    filterInfo.userHasSelectedFilter = true;
 }
 
 @end
