@@ -3023,7 +3023,6 @@ Initialize(
     Tcl_Obj *useObj = NULL;
     Tcl_Obj *visualObj = NULL;
     Tcl_Obj *geometryObj = NULL;
-
     int sync = 0;
 
     const Tcl_ArgvInfo table[] = {
@@ -3047,11 +3046,15 @@ Initialize(
     /*
      * Ensure that we are getting a compatible version of Tcl.
      */
-
+#ifdef TCL_ZIPFS_SUPPORT
+    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
+	return TCL_ERROR;
+    }
+#else
     if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	return TCL_ERROR;
     }
-
+#endif
     /*
      * TIP #59: Make embedded configuration information available.
      */

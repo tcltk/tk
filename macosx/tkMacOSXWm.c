@@ -1967,7 +1967,7 @@ WmGridCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int reqWidth, reqHeight, widthInc, heightInc;
-    char *errorMsg;
+    const char *errorMsg;
 
     if ((objc != 3) && (objc != 7)) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -2375,7 +2375,7 @@ WmIconphotoCmd(
 	return TCL_ERROR;
     }
 
-    /*Parse args.*/
+     /*Parse args.*/
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	isDefault = 1;
 	if (objc == 4) {
@@ -2385,8 +2385,8 @@ WmIconphotoCmd(
 	}
     }
 
-    /*Get icon name. We only use the first icon name because macOS does not
-      support multiple images in Tk photos.*/
+     /*Get icon name. We only use the first icon name because macOS does not
+     support multiple images in Tk photos.*/
     char *icon; 
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	icon = Tcl_GetString(objv[4]);
