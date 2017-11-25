@@ -236,7 +236,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 /*
  *----------------------------------------------------------------------
  *
- * DoWindowActivate --
+ * SetApplicationIcon --
  *
  *	Idle handler that sets the application icon to the generic Tk icon.
  *
