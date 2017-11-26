@@ -189,7 +189,7 @@ static const Tk_GeomMgr wmMgrType = {
  * The following keeps state for Aqua dock icon bounce notification.
  */
 
-static int tkMacOSXWmAttrNotifyVal = 0;
+static int tkMacOSXWmAttrNotifyVal = 0; 
 
 /*
  * Hash table for Mac Window -> TkWindow mapping.
@@ -411,6 +411,8 @@ static void		RemapWindows(TkWindow *winPtr,
 	    kHelpWindowClass || winPtr->wmInfoPtr->attributes &
 	    kWindowNoActivatesAttribute)) ? NO : YES;
 }
+
+
 
 #if DEBUG_ZOMBIES
 - (id) retain
@@ -781,6 +783,10 @@ TkWmMapWindow(
      */
 
     XMapWindow(winPtr->display, winPtr->window);
+
+    /*Add window to Window menu.*/
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    [win setExcludedFromWindowsMenu:NO]; 
 
 }
 
@@ -3517,6 +3523,10 @@ WmWithdrawCmd(
 	return TCL_ERROR;
     }
     TkpWmSetState(winPtr, WithdrawnState);
+    /*Remove window from Window menu.*/
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    [win setExcludedFromWindowsMenu:YES]; 
+    
     return TCL_OK;
 }
 
