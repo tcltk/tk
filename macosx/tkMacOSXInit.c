@@ -264,9 +264,6 @@ TkpInit(
      */
 
     if (!initialized) {
-	int bundledExecutable = 0;
-	CFBundleRef bundleRef;
-	CFURLRef bundleUrl = NULL;
 	struct utsname name;
 	struct stat st;
 
@@ -319,6 +316,24 @@ TkpInit(
 	}
 
 	/*
+	 * Instantiate our NSApplication object. This needs to be
+	 * done before we check whether to open a console window.
+	 */
+	
+	NSAutoreleasePool *pool = [NSAutoreleasePool new];
+	[[NSUserDefaults standardUserDefaults] registerDefaults:
+		[NSDictionary dictionaryWithObjectsAndKeys:
+				  [NSNumber numberWithBool:YES],
+			      @"_NSCanWrapButtonTitles",
+				   [NSNumber numberWithInt:-1],
+			      @"NSStringDrawingTypesetterBehavior",
+			      nil]];
+	[TKApplication sharedApplication];
+	[pool drain];
+	[NSApp _setup:interp];
+	[NSApp finishLaunching];
+
+	/*
 	 * If we don't have a TTY and stdin is a special character file of
 	 * length 0, (e.g. /dev/null, which is what Finder sets when double
 	 * clicking Wish) then use the Tk based console interpreter.
@@ -351,22 +366,6 @@ TkpInit(
 	    }
 	}
 
-	/*
-	 * Instantiate our NSApplication object.
-	 */
-	
-	NSAutoreleasePool *pool = [NSAutoreleasePool new];
-	[[NSUserDefaults standardUserDefaults] registerDefaults:
-		[NSDictionary dictionaryWithObjectsAndKeys:
-				  [NSNumber numberWithBool:YES],
-			      @"_NSCanWrapButtonTitles",
-				   [NSNumber numberWithInt:-1],
-			      @"NSStringDrawingTypesetterBehavior",
-			      nil]];
-	[TKApplication sharedApplication];
-	[pool drain];
-	[NSApp _setup:interp];
-	[NSApp finishLaunching];
     }
 
     Tk_MacOSXSetupTkNotifier();
