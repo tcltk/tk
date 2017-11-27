@@ -872,8 +872,9 @@ ConvertSelection(
 	    goto refuse;
 	}
 	result = XGetWindowProperty(eventPtr->display, eventPtr->requestor,
-		eventPtr->property, 0, MAX_PROP_WORDS, False, XA_ATOM,
-		&type, &format, &incr.numConversions, &bytesAfter,
+		eventPtr->property, 0, MAX_PROP_WORDS, False,
+		winPtr->dispPtr->atomPairAtom, &type, &format,
+		&incr.numConversions, &bytesAfter,
 		(unsigned char **) multAtomsPtr);
 	if ((result != Success) || (bytesAfter != 0) || (format != 32)
 		|| (type == None)) {
@@ -1035,8 +1036,8 @@ ConvertSelection(
     }
     if (multiple) {
 	XChangeProperty(reply.xsel.display, reply.xsel.requestor,
-		reply.xsel.property, XA_ATOM, 32, PropModeReplace,
-		(unsigned char *) incr.multAtoms,
+		reply.xsel.property, winPtr->dispPtr->atomPairAtom,
+		32, PropModeReplace, (unsigned char *) incr.multAtoms,
 		(int) incr.numConversions*2);
     } else {
 	/*

@@ -34,12 +34,12 @@ For menu entries that are check buttons or radio buttons, this option
 specifies the color to display in the indicator when the check button
 or radio button is selected.
 .OP \-tearoff tearOff TearOff
-This option must have a proper boolean value, which specifies
-whether or not the menu should include a tear-off entry at the
-top.  If so, it will exist as entry 0 of the menu and the other
-entries will number starting at 1.  The default
-menu bindings arrange for the menu to be torn off when the tear-off
-entry is invoked.
+This option must have a proper boolean value (default is false),
+which specifies whether or not the menu should include a tear-off
+entry at the top.  If so, it will exist as entry 0 of the menu and
+the other entries will number starting at 1.  The default menu
+bindings arrange for the menu to be torn off when the tear-off entry
+is invoked.
 This option is ignored under Aqua/Mac OS X, where menus cannot
 be torn off.
 .OP \-tearoffcommand tearOffCommand TearOffCommand

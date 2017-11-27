@@ -394,8 +394,8 @@ X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
-	tkMacOSXEvent.o tkMacOSXFont.o tkMacOSXHLEvents.o tkMacOSXInit.o \
-	tkMacOSXKeyboard.o tkMacOSXKeyEvent.o tkMacOSXMenu.o \
+	tkMacOSXEvent.o tkMacOSXFont.o tkMacOSXHLEvents.o tkMacOSXImage.o \
+	tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o tkMacOSXMenu.o \
 	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
 	tkMacOSXNotify.o tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o \
 	tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
@@ -519,6 +519,7 @@ AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXDraw.c $(MAC_OSX_DIR)/tkMacOSXEmbed.c \
 	$(MAC_OSX_DIR)/tkMacOSXEntry.c $(MAC_OSX_DIR)/tkMacOSXEvent.c \
 	$(MAC_OSX_DIR)/tkMacOSXFont.c $(MAC_OSX_DIR)/tkMacOSXHLEvents.c \
+	$(MAC_OSX_DIR)/tkMacOSXImage.c \
 	$(MAC_OSX_DIR)/tkMacOSXInit.c $(MAC_OSX_DIR)/tkMacOSXKeyboard.c \
 	$(MAC_OSX_DIR)/tkMacOSXKeyEvent.c $(MAC_OSX_DIR)/tkMacOSXMenu.c \
 	$(MAC_OSX_DIR)/tkMacOSXMenubutton.c $(MAC_OSX_DIR)/tkMacOSXMenus.c \
@@ -1274,6 +1275,9 @@ tkMacOSXFont.o: $(MAC_OSX_DIR)/tkMacOSXFont.c
 
 tkMacOSXHLEvents.o: $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
+
+tkMacOSXImage.o: $(MAC_OSX_DIR)/tkMacOSXImage.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXImage.c
 
 tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c tkConfig.sh
 	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \
