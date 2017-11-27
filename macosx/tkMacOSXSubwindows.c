@@ -149,7 +149,15 @@ XMapWindow(
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
 	    NSWindow *win = TkMacOSXDrawableWindow(window);
-	    [NSApp activateIgnoringOtherApps:YES];
+	    /*
+	     * We want to activate Tk when a toplevel is mapped
+	     * but we must not supply YES here.  This is because
+	     * during Tk initialization the root window is mapped
+	     * before applicationDidFinishLaunching returns. Forcing
+	     * the app to activate too early can make the menu bar
+	     * unresponsive.
+	     */
+	    [NSApp activateIgnoringOtherApps:NO];
 	    if ( [win canBecomeKeyWindow] ) {
 		[win makeKeyAndOrderFront:NSApp];
 	    }
