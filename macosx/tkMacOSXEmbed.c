@@ -193,7 +193,7 @@ TkpMakeWindow(
 int
 TkpScanWindowId(
     Tcl_Interp *interp,
-    CONST char * string,
+    const char * string,
     Window *idPtr)
 {
     int code;
