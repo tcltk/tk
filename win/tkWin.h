@@ -18,20 +18,20 @@
  * the SystemParametersInfo API doesn't like to receive structures that
  * are larger than it expects which affects the font assignments.
  *
- * NTDDI_VERSION = 0x0600 means Windows Vista and above
+ * NTDDI_VERSION = 0x0501 means Windows XP and above
  */
 
 #ifndef NTDDI_VERSION
-#define NTDDI_VERSION 0x06000000
+#define NTDDI_VERSION 0x05010000
 #endif
 #ifndef WINVER
-#define WINVER 0x0600
+#define WINVER 0x0501
 #endif
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
+#define _WIN32_WINNT 0x0501
 #endif
 #ifndef _WIN32_IE
-#define _WIN32_IE 0x0600
+#define _WIN32_IE 0x0501
 #endif
 
 #ifndef _TK
