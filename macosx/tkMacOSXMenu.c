@@ -117,11 +117,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index;
 @end
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
 #define TKMenu_NSMenuDelegate <NSMenuDelegate>
-#else
-#define TKMenu_NSMenuDelegate
-#endif
 @interface TKMenu(TKMenuDelegate) TKMenu_NSMenuDelegate
 @end
 
