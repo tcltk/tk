@@ -365,17 +365,7 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-#define TK_GOT_AT_LEAST_SNOW_LEOPARD 1
-#endif
-
 #pragma mark TKWindow(TKWm)
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-@interface NSWindow(TkWm)
-- (void) setCanCycle: (BOOL) canCycleFlag;
-@end
-#endif
 
 @interface NSDrawerWindow : NSWindow
 {
@@ -5686,11 +5676,7 @@ TkMacOSXMakeRealWindowExist(
     }
 
     if (opaqueTag) {
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
     	[window setOpaque: opaqueTag];
-#else
-	[window setOpaque: YES];
-#endif
     }
 
     [window setDocumentEdited:NO];
@@ -6383,24 +6369,12 @@ ApplyWindowAttributeFlagChanges(
 	    } else if (newAttributes & tkMoveToActiveSpaceAttribute) {
 		b |= NSWindowCollectionBehaviorMoveToActiveSpace;
 	    }
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
 	    if (newAttributes & kWindowDoesNotCycleAttribute) {
 		b |= NSWindowCollectionBehaviorIgnoresCycle;
 	    } else {
 		b |= NSWindowCollectionBehaviorParticipatesInCycle;
 	    }
-#endif
 	    [macWindow setCollectionBehavior:b];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	    if (((changedAttributes & kWindowDoesNotCycleAttribute) || initial)
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
-		    && tkMacOSXMacOSXVersion < 1060
-#endif
-	    ) {
-		[macWindow setCanCycle:
-			!(newAttributes & kWindowDoesNotCycleAttribute)];
-	    }
-#endif
 	}
 	if ((wmPtr->flags & WM_TOPMOST) != (oldFlags & WM_TOPMOST)) {
 	    [macWindow setLevel:(wmPtr->flags & WM_TOPMOST) ?
@@ -6532,9 +6506,7 @@ TkMacOSXMakeFullscreen(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int result = TCL_OK, wasFullscreen = (wmPtr->flags & WM_FULLSCREEN);
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
     static unsigned long prevMask = 0, prevPres = 0;
-#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
 
     if (fullscreen) {
 	int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
@@ -6575,28 +6547,16 @@ TkMacOSXMakeFullscreen(
 	    wmPtr->flags |= WM_FULLSCREEN;
 	}
 
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
-	/*
-	 * We can't set these features on Leopard or earlier, as they don't
-	 * exist (neither options nor API that uses them). This formally means
-	 * that there's a bug with full-screen windows with Tk on old OSX, but
-	 * it isn't worth blocking a build just for this.
-	 */
-
 	prevMask = [window styleMask];
 	prevPres = [NSApp presentationOptions];
 	[window setStyleMask: NSBorderlessWindowMask];
 	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
 	                          | NSApplicationPresentationAutoHideMenuBar];
 	Tk_MapWindow((Tk_Window) winPtr);
-#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;
-
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
 	[NSApp setPresentationOptions: prevPres];
 	[window setStyleMask: prevMask];
-#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     }
 
     if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {
