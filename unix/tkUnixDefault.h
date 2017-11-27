@@ -287,7 +287,7 @@
 #define DEF_MENU_SELECT_COLOR		MENU_INDICATOR
 #define DEF_MENU_SELECT_MONO		BLACK
 #define DEF_MENU_TAKE_FOCUS		"0"
-#define DEF_MENU_TEAROFF		"1"
+#define DEF_MENU_TEAROFF		"0"
 #define DEF_MENU_TEAROFF_CMD		((char *) NULL)
 #define DEF_MENU_TITLE			""
 #define DEF_MENU_TYPE			"normal"
