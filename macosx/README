@@ -391,7 +391,7 @@ The Makefile variables TCL_FRAMEWORK_DIR and TCLSH_DIR were added with Tk 8.4.3.
 
 4. Details regarding the macOS port of Tk.
 -------------------------------------------
- 
+
 4.1 About the event loop
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
