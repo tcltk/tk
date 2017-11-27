@@ -189,7 +189,7 @@ static const Tk_GeomMgr wmMgrType = {
  * The following keeps state for Aqua dock icon bounce notification.
  */
 
-static int tkMacOSXWmAttrNotifyVal = 0; 
+static int tkMacOSXWmAttrNotifyVal = 0;
 
 /*
  * Hash table for Mac Window -> TkWindow mapping.
@@ -786,7 +786,7 @@ TkWmMapWindow(
 
     /*Add window to Window menu.*/
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win setExcludedFromWindowsMenu:NO]; 
+    [win setExcludedFromWindowsMenu:NO];
 
 }
 
@@ -923,7 +923,7 @@ TkWmDeadWindow(
 		WmInfo *wmPtr = winPtr2->wmInfoPtr;
 		BOOL minimized = (wmPtr->hints.initial_state == IconicState ||
 				  wmPtr->hints.initial_state == WithdrawnState);
-		/* 
+		/*
 		 * If no windows are left on the screen and the next
 		 * window is iconified or withdrawn, we don't want to
 		 * make it be the KeyWindow because that would cause
@@ -1976,7 +1976,7 @@ WmGridCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     int reqWidth, reqHeight, widthInc, heightInc;
-    char *errorMsg;
+    const char *errorMsg;
 
     if ((objc != 3) && (objc != 7)) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -2355,7 +2355,7 @@ WmIconnameCmd(
  * WmIconphotoCmd --
  *
  *	This procedure is invoked to process the "wm iconphoto" Tcl command.
- *	See the user documentation for details on what it does. 
+ *	See the user documentation for details on what it does.
  *
  * Results:
  *	A standard Tcl result.
@@ -2366,6 +2366,7 @@ WmIconnameCmd(
  *
  *----------------------------------------------------------------------
  */
+
 static int
 WmIconphotoCmd(
     Tk_Window tkwin,		/* Main window of the application. */
@@ -2395,7 +2396,7 @@ WmIconphotoCmd(
 
     /*Get icon name. We only use the first icon name because macOS does not
       support multiple images in Tk photos.*/
-    char *icon; 
+    char *icon;
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	icon = Tcl_GetString(objv[4]);
     }	else {
@@ -2411,7 +2412,7 @@ WmIconphotoCmd(
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
 	return TCL_ERROR;
     }
-	
+
     NSImage *newIcon;
     Tk_SizeOfImage(tk_icon, &width, &height);
     newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon, width, height);
@@ -3524,8 +3525,8 @@ WmWithdrawCmd(
     TkpWmSetState(winPtr, WithdrawnState);
     /*Remove window from Window menu.*/
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win setExcludedFromWindowsMenu:YES]; 
-    
+    [win setExcludedFromWindowsMenu:YES];
+
     return TCL_OK;
 }
 
