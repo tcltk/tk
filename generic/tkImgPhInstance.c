@@ -599,7 +599,7 @@ BlendComplexAlpha(
 		    g = ALPHA_BLEND(ga, g, alpha, unalpha);
 		    b = ALPHA_BLEND(ba, b, alpha, unalpha);
 		}
-#ifndef MAC_OSX_TK    
+#ifndef MAC_OSX_TK
 		XPutPixel(bgImg, x, y, RGB(r, g, b));
 #else
 		XPutPixel(bgImg, x, y, RGBA(r, g, b, alpha));

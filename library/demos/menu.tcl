@@ -115,7 +115,7 @@ $w.menu add cascade -label "Icons" -menu $m -underline 0
 menu $m -tearoff 0
 # Main widget program sets variable tk_demoDirectory
 image create photo lilearth -file [file join $tk_demoDirectory \
-images earthmenu.png] 
+images earthmenu.png]
 $m add command -image lilearth \
     -hidemargin 1 -command [list \
 	tk_dialog $w.pattern {Bitmap Menu Entry} \

@@ -212,7 +212,7 @@ XGetImage(
 	    CFRelease(bitmap_rep);
 	    return NULL;
 	}
-	
+
 	if (macDraw->flags & TK_USE_XIMAGE_ALPHA) {
 	    /*
 	     * When called by TkImgPhotoDisplay we are being asked to return a
@@ -230,7 +230,7 @@ XGetImage(
 	    memcpy(bitmap, (char *)[bitmap_rep bitmapData], size);
 	}
 	CFRelease(bitmap_rep);
-	
+
 	/*
 	 * When Apple extracts a bitmap from an NSView, it may be in
 	 * either BGRA or ABGR format.  For an XImage we need RGBA.
@@ -243,7 +243,7 @@ XGetImage(
 		G = *(bitmap + m + pixel.g);
 		B = *(bitmap + m + pixel.b);
 		A = *(bitmap + m + pixel.a);
-		
+
 		*(bitmap + m)     = R;
 		*(bitmap + m + 1) = G;
 		*(bitmap + m + 2) = B;
@@ -543,7 +543,7 @@ TkPutImage(
 {
     TkMacOSXDrawingContext dc;
     MacDrawable *macDraw = ((MacDrawable*)drawable);
-    
+
     display->request++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
 	return BadDrawable;
