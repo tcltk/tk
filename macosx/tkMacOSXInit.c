@@ -129,7 +129,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
      */
     _defaultMainMenu = nil;
     [self _setupMenus];
-    
+
     /*
      * Set the application icon.  This is unnecessary when running Wish.app
      * but it is easier than testing for that situation to just do it.
@@ -167,7 +167,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 
 - (void) _setup: (Tcl_Interp *) interp
 {
-    /* 
+    /*
      * Remember our interpreter.
      */
     _eventInterp = interp;
@@ -304,7 +304,7 @@ TkpInit(
 	    TkMacOSXDbgMsg("Tcl_MacOSXOpenVersionedBundleResources failed");
 	}
 #endif
-	
+
 	/*
 	 * FIXME: Close stdin & stdout for remote debugging otherwise we will
 	 * fight with gdb for stdin & stdout
@@ -319,7 +319,7 @@ TkpInit(
 	 * Instantiate our NSApplication object. This needs to be
 	 * done before we check whether to open a console window.
 	 */
-	
+
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	[[NSUserDefaults standardUserDefaults] registerDefaults:
 		[NSDictionary dictionaryWithObjectsAndKeys:
