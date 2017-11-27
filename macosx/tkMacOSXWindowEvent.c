@@ -48,8 +48,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #define NSWindowDidEndLiveResizeNotification  @"NSWindowDidEndLiveResizeNotification"
 #endif
 #endif
-
-extern BOOL opaqueTag;
+
 
 @implementation TKApplication(TKWindowEvent)
 
@@ -974,13 +973,8 @@ ConfigureRestrictProc(
 {
     NSWindow *w = [self window];
 
-    if (opaqueTag) {
-      return YES;
-	} else {
-
-     return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
+      return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
     	    ![w isOpaque]) ? NO : YES);
-    }
 }
 
 - (BOOL) wantsDefaultClipping

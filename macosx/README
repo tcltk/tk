@@ -179,9 +179,7 @@ Window attribute names:
     verticalZoom, closeBox, collapseBox, toolbarButton, sideTitlebar,
     noTitleBar, unifiedTitleAndToolbar, metal, hud, noShadow, doesNotCycle,
     noActivates, hideOnSuspend, inWindowMenu, ignoreClicks, doesNotHide,
-    canJoinAllSpaces, moveToActiveSpace, nonActivating, black, dark, light,
-    gray, red, green, blue, cyan, yellow, magenta, orange, purple,
-    brown, clear, opacity
+    canJoinAllSpaces, moveToActiveSpace, nonActivating
 
 Note that not all attributes are valid for all window classes.
 Support for the 3 argument form was added with the Cocoa-based Tk 8.5.7, at the
