@@ -189,7 +189,7 @@ static const Tk_GeomMgr wmMgrType = {
  * The following keeps state for Aqua dock icon bounce notification.
  */
 
-static int tkMacOSXWmAttrNotifyVal = 0;
+static int tkMacOSXWmAttrNotifyVal = 0; 
 
 /*
  * Hash table for Mac Window -> TkWindow mapping.
@@ -411,6 +411,8 @@ static void		RemapWindows(TkWindow *winPtr,
 	    kHelpWindowClass || winPtr->wmInfoPtr->attributes &
 	    kWindowNoActivatesAttribute)) ? NO : YES;
 }
+
+
 
 #if DEBUG_ZOMBIES
 - (id) retain
@@ -782,6 +784,10 @@ TkWmMapWindow(
 
     XMapWindow(winPtr->display, winPtr->window);
 
+    /*Add window to Window menu.*/
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    [win setExcludedFromWindowsMenu:NO]; 
+
 }
 
 /*
@@ -930,10 +936,13 @@ TkWmDeadWindow(
 	    }
 	}
 	/*
-	 * Process all events immediately to force the closed window
-	 * to be deallocated.
+	 * Process all window events immediately to force the closed window to
+	 * be deallocated.  But don't do this for the root window as that is
+	 * unnecessary and can lead to segfaults.
 	 */
-	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
+	if (winPtr->parentPtr) {
+	    while (Tk_DoOneEvent(TK_WINDOW_EVENTS|TK_DONT_WAIT)) {}
+	}
 	[NSApp _resetAutoreleasePool];
 
 #if DEBUG_ZOMBIES > 0
@@ -3514,6 +3523,10 @@ WmWithdrawCmd(
 	return TCL_ERROR;
     }
     TkpWmSetState(winPtr, WithdrawnState);
+    /*Remove window from Window menu.*/
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    [win setExcludedFromWindowsMenu:YES]; 
+    
     return TCL_OK;
 }
 
