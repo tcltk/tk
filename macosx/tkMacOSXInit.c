@@ -33,22 +33,11 @@ long tkMacOSXMacOSXVersion = 0;
 
 #pragma mark TKApplication(TKInit)
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-#define NSTextInputContextKeyboardSelectionDidChangeNotification @"NSTextInputContextKeyboardSelectionDidChangeNotification"
-static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-    [[NSNotificationCenter defaultCenter] postNotificationName:NSTextInputContextKeyboardSelectionDidChangeNotification object:nil userInfo:nil];
-}
-#endif
-
 @interface TKApplication(TKKeyboard)
 - (void) keyboardChanged: (NSNotification *) notification;
 @end
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
 #define TKApplication_NSApplicationDelegate <NSApplicationDelegate>
-#else
-#define TKApplication_NSApplicationDelegate
-#endif
 @interface TKApplication(TKWindowEvent) TKApplication_NSApplicationDelegate
 - (void) _setupWindowNotifications;
 @end
@@ -106,9 +95,6 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
     observe(NSApplicationDidChangeScreenParametersNotification, displayChanged:);
     observe(NSTextInputContextKeyboardSelectionDidChangeNotification, keyboardChanged:);
 #undef observe
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(), NULL, &keyboardChanged, kTISNotifySelectedKeyboardInputSourceChanged, NULL, CFNotificationSuspensionBehaviorCoalesce);
-#endif
 }
 
 -(void)applicationWillFinishLaunching:(NSNotification *)aNotification
@@ -273,8 +259,8 @@ TkpInit(
 	 * Initialize/check OS version variable for runtime checks.
 	 */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
-#   error Mac OS X 10.5 required
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#   error Mac OS X 10.6 required
 #endif
 
 	if (!uname(&name)) {

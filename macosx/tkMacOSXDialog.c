@@ -169,7 +169,6 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
  * Construct a file URL from directory and filename.  Either may
  * be nil.  If both are nil, returns nil.
  */
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 1050
 static NSURL *getFileURL(NSString *directory, NSString *filename) {
     NSURL *url = nil;
     if (directory) {
@@ -180,7 +179,6 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
     }
     return url;
 }
-#endif
 
 #pragma mark TKApplication(TKDialog)
 
@@ -716,17 +714,7 @@ Tk_GetOpenFileObjCmd(
     callbackInfo->multiple = multiple;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
-	    parentIsKey = [parent isKeyWindow];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	[openpanel beginSheetForDirectory:directory
-	       file:filename
-	       types:openFileTypes
-	       modalForWindow:parent
-	       modalDelegate:NSApp
-	       didEndSelector:
-		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
-	       contextInfo:callbackInfo];
-#else
+	parentIsKey = [parent isKeyWindow];
 	if (directory || filename ) {
 	    NSURL * fileURL = getFileURL(directory, filename);
 	    [openpanel setDirectoryURL:fileURL];
@@ -737,20 +725,14 @@ Tk_GetOpenFileObjCmd(
 	       { [NSApp tkFilePanelDidEnd:openpanel
 		       returnCode:returnCode
 		       contextInfo:callbackInfo ]; } ];
-#endif
 	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:openpanel];
     } else {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	modalReturnCode = [openpanel runModalForDirectory:directory
-				 file:filename];
-#else
 	if (directory || filename ) {
 	    NSURL * fileURL = getFileURL(directory, filename);
 	    [openpanel setDirectoryURL:fileURL];
 	}
 
 	modalReturnCode = [openpanel runModal];
-#endif
 	[NSApp tkFilePanelDidEnd:openpanel returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
@@ -1001,16 +983,7 @@ Tk_GetSaveFileObjCmd(
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
        parentIsKey = [parent isKeyWindow];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	[savepanel beginSheetForDirectory:directory
-	       file:filename
-	       modalForWindow:parent
-	       modalDelegate:NSApp
-	       didEndSelector:
-		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
-	       contextInfo:callbackInfo];
-#else
-	if (directory) {
+       if (directory) {
 	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	}
 	   /*check for file name, otherwise set to empty string; crashes with uncaught exception if set to nil*/
@@ -1024,12 +997,8 @@ Tk_GetSaveFileObjCmd(
 	       { [NSApp tkFilePanelDidEnd:savepanel
 		       returnCode:returnCode
 		       contextInfo:callbackInfo ]; } ];
-#endif
 	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:savepanel];
     } else {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	modalReturnCode = [savepanel runModalForDirectory:directory file:filename];
-#else
 	if (directory) {
 	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	}
@@ -1040,7 +1009,6 @@ Tk_GetSaveFileObjCmd(
 	    [savepanel setNameFieldStringValue:@""];
 	}
 	modalReturnCode = [savepanel runModal];
-#endif
 	[NSApp tkFilePanelDidEnd:savepanel returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
@@ -1172,30 +1140,17 @@ Tk_ChooseDirectoryObjCmd(
     }
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
-      parentIsKey = [parent isKeyWindow];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	[panel beginSheetForDirectory:directory
-		file:nil
-		modalForWindow:parent
-		modalDelegate:NSApp
-		didEndSelector: @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
-		contextInfo:callbackInfo];
-#else
+	parentIsKey = [parent isKeyWindow];
 	[panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	[panel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
 	       { [NSApp tkFilePanelDidEnd:panel
 		       returnCode:returnCode
 		       contextInfo:callbackInfo ]; } ];
-#endif
 	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:panel];
     } else {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	modalReturnCode = [panel runModalForDirectory:directory file:nil];
-#else
 	[panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	modalReturnCode = [panel runModal];
-#endif
 	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
