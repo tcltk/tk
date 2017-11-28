@@ -39,10 +39,15 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 #undef Tk_MainEx
 #undef Tk_FreeXId
+#undef Tk_FreeStyleFromObj
+#undef Tk_GetStyleFromObj
 
 
 #ifdef TK_NO_DEPRECATED
+#define Tk_MainEx 0
 #define Tk_FreeXId 0
+#define Tk_FreeStyleFromObj 0
+#define Tk_GetStyleFromObj 0
 #define Tk_PhotoPutBlock_NoComposite 0
 #define Tk_PhotoPutZoomedBlock_NoComposite 0
 #define Tk_PhotoExpand_Panic 0
@@ -55,8 +60,13 @@ doNothing(void)
 {
     /* dummy implementation, no need to do anything */
 }
-
 #define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
+#define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *)) doNothing)
+#define Tk_GetStyleFromObj getStyleFromObj
+static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
+{
+	return Tk_AllocStyleFromObj(NULL, obj);
+}
 #endif
 
 #ifdef _WIN32
