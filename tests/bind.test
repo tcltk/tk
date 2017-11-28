@@ -648,8 +648,8 @@ test bind-13.14 {Tk_BindEvent procedure: invalid key detail} -setup {
 } -body {
     bind .t.f <Key> "lappend x Key%K"
     bind .t.f <KeyRelease> "lappend x Release%K"
-    event generate .t.f <Key> -keycode 0
-    event generate .t.f <KeyRelease> -keycode 0
+    event generate .t.f <Key> -keycode -1
+    event generate .t.f <KeyRelease> -keycode -1
     return $x
 } -cleanup {
     destroy .t.f
