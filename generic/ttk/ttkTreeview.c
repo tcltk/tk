@@ -328,7 +328,7 @@ static const char *const showStrings[] = {
 static int GetEnumSetFromObj(
     Tcl_Interp *interp,
     Tcl_Obj *objPtr,
-    const char *table[],
+    const char *const table[],
     unsigned *resultPtr)
 {
     unsigned result = 0;
