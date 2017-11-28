@@ -32,7 +32,7 @@ available as an optional or default install on recent macOS).
 TkAqua and TkX11 can be distinguished at runtime via [tk windowingsystem].
 
 - At a minimum, macOS 10.3 is required to run Tcl and TkX11.
-TkAqua requires macOS 10.5 or later (starting with the Cocoa-based Tk 8.5.7).
+TkAqua requires macOS 10.6 or later.
 
 - Unless weak-linking is used, Tcl/Tk built on macOS 10.x will not run on
 10.y with y < x; on the other hand Tcl/Tk built on 10.y will always run on 10.x
@@ -62,8 +62,7 @@ the Resources/Scripts directory of the framework.
 - [load]able binary extensions can linked as either ordinary shared libraries
 (.dylib) or as MachO bundles (since 8.4.10/8.5a3); bundles have the advantage
 that they are [load]ed more efficiently from a tcl VFS (no temporary copy to the
-native filesystem required), and prior to macOS 10.5, only bundles can be
-[unload]ed.
+native filesystem required).
 
 - The 'deploy' target of macosx/GNUmakefile installs the html manpages into the
 standard documentation location in the Tcl/Tk frameworks:
@@ -179,48 +178,14 @@ Window attribute names:
     verticalZoom, closeBox, collapseBox, toolbarButton, sideTitlebar,
     noTitleBar, unifiedTitleAndToolbar, metal, hud, noShadow, doesNotCycle,
     noActivates, hideOnSuspend, inWindowMenu, ignoreClicks, doesNotHide,
-    canJoinAllSpaces, moveToActiveSpace, nonActivating, black, dark, light,
-    gray, red, green, blue, cyan, yellow, magenta, orange, purple,
-    brown, clear, opacity
+    canJoinAllSpaces, moveToActiveSpace, nonActivating
 
 Note that not all attributes are valid for all window classes.
 Support for the 3 argument form was added with the Cocoa-based Tk 8.5.7, at the
 same time support for some legacy Carbon-specific classes and attributes was
 removed (they are still accepted by the command but no longer have any effect).
 
-The color window attributes (black, dark, red, etc.) and the "opacity" allow  one to set the background and opacity of a textured ("metal") window. This allows a Tk window to implement a window without the dividing line between the titlebar and the rest of the window, or the "unified toolbar" effect, which is increasingly standard in Mac applications. An example:
-
-toplevel .f
-tk::unsupported::MacWindowStyle style .f document {metal light opaque closeBox collapseBox resizable standardDocument }
-
-pack [label .f.f -bg  #ababab -text "This is a textured window\nwith opacity and a gray background\nsimilar to other Mac applications"] -fill both -expand yes
-
-The color attributes correspond to system-defined NSColor constants (e.g., red is [NSColor redColor]. The "light" and "dark" attributes correspond to lightGrayColor and darkGrayColor, respectively (because of the way the attributes are parsed, using "lightgray" and "darkgray" would cause a conflict with the core "gray" attribute).
-
-Below are the corresponding hex and/or Tk-defined colors that can be used from Tk widgets to match the NSColor-based attributes:
-
-black	#000000
-dark	#545454
-light	#ababab
-white	#ffffff
-gray	#7f7f7f
-red 	#ff0000
-green	#00ff00
-blue	#0000ff
-cyan	#00ffff
-yellow	#ffff00
-magenta	#ff00ff
-orange	#ff8000
-purple 	#800080
-brown	#996633
-clear	systemTransparent
-
-- The Cocoa-based TkAqua can be distinguished from the older Carbon-based
-version via the [winfo server .] command, example output on macOS 10.5.7:
-    Cocoa-based:	CG409.3 Apple AppKit GC 949.46 macOS 1057
-    Carbon-based:	QD10R30 Apple 1057
-
-- If you want to use Remote Debugging with Xcode, you need to set the
+If you want to use Remote Debugging with Xcode, you need to set the
 environment variable XCNOSTDIN to 1 in the Executable editor for Wish. That will
 cause us to force closing stdin & stdout.  Otherwise, given how Xcode launches
 Wish remotely, they will be left open and then Wish & gdb will fight for stdin.
@@ -229,13 +194,12 @@ Wish remotely, they will be left open and then Wish & gdb will fight for stdin.
 3. Building Tcl/Tk on macOS
 ------------------------------
 
-- At least macOS 10.3 is required to build Tcl and TkX11, and macOS 10.5
-is required to build TkAqua.
-Apple's Xcode Developer Tools need to be installed (only the most recent version
-matching your OS release is supported), the Xcode installer is available on Mac
-OS X install media or may be present in /Applications/Installers on Macs that
-came with OS X preinstalled. The most recent version can always be downloaded
-from the ADC website http://connect.apple.com (free ADC membership required).
+- At least macOS 10.3 is required to build Tcl and TkX11, and macOS 10.6
+is required to build TkAqua.  The XCode application provides everything
+needed to build Tk, but it is not necessary to install the full XCode.
+It suffices to install the Command Line Tools package, which can be done
+by running the command:
+xcode-selecct --install
 
 - Tcl/Tk are most easily built as macOS frameworks via GNUmakefile in
 tcl/macosx and tk/macosx (see below for details), but can also be built with the
@@ -247,8 +211,9 @@ The macOS specific configure flags are --enable-aqua, --enable-framework and
 select based notifier). Note that --enable-aqua is incompatible with
 --disable-corefoundation (for both Tcl and Tk configure).
 
-- It is also possible to build with the Xcode IDE via the projects in
-tk/macosx, take care to use the project matching your DevTools and OS version:
+- It was once possible to build with the Xcode IDE via the projects in
+tk/macosx, but this has not been tested recently. Take care to use the
+project matching your DevTools and OS version:
 	Tk.xcode: 		    for Xcode 3.1 on 10.5
 	Tk.xcodeproj:		    for Xcode 3.2 on 10.6
 These have the following targets:
@@ -303,9 +268,9 @@ above, they will be [load]able by universal as well as thin binaries of Tcl.
 
 - To enable weak-linking, set the MACOSX_DEPLOYMENT_TARGET environment variable
 to the minimal OS version the binaries should be able to run on, e.g:
-	export MACOSX_DEPLOYMENT_TARGET=10.4
+	export MACOSX_DEPLOYMENT_TARGET=10.6
 This requires at least gcc 3.1; with gcc 4 or later, set/add to CFLAGS instead:
-	export CFLAGS="-mmacosx-version-min=10.4"
+	export CFLAGS="-mmacosx-version-min=10.6"
 Support for weak-linking was added with 8.4.14/8.5a5.
 
 Detailed Instructions for building with macosx/GNUmakefile
@@ -458,9 +423,10 @@ In order to carry out the job of managing autorelease pools, which
 would normally be handled by the [NSApp run] method, a private
 NSAUtoreleasePool* property is added to the TkApplication subclass of
 NSApplication. The TkpInit function calls [NSApp _setup] which
-initializes this property by creating an NSAutoreleasePool. A bit
-later on, TkpInit calls [NSAPP _setupEventLoop] which in turn calls
-the [NSApp finishLaunching] method.
+initializes this property by creating an NSAutoreleasePool prior to
+calling [NSApp finishLaunching].  This mimics the behavior of the
+[NSApp run] method, which calls [NSApp finishLaunching] just before
+starting the event loop.
 
 Since the CheckProc function gets called for every Tk event, it is an
 appropriate place to drain the main NSAutoreleasePool and replace it

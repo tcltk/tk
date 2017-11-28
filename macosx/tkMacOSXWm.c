@@ -55,9 +55,6 @@
 	| tkCanJoinAllSpacesAttribute	    | tkMoveToActiveSpaceAttribute \
 	| tkNonactivatingPanelAttribute	    | tkHUDWindowAttribute)
 
-/*Objects for use in setting background color and opacity of window.*/
-NSColor *colorName = NULL;
-BOOL opaqueTag = FALSE;
 
 static const struct {
     const UInt64 validAttrs, defaultAttrs, forceOnAttrs, forceOffAttrs;
@@ -365,17 +362,7 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-#define TK_GOT_AT_LEAST_SNOW_LEOPARD 1
-#endif
-
 #pragma mark TKWindow(TKWm)
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-@interface NSWindow(TkWm)
-- (void) setCanCycle: (BOOL) canCycleFlag;
-@end
-#endif
 
 @interface NSDrawerWindow : NSWindow
 {
@@ -5257,47 +5244,6 @@ TkUnsupported1ObjCmd(
 	return TCL_ERROR;
     }
 
-    /*
-     * Iterate through objc/objv to set correct background color and toggle
-     * opacity of window.
-     */
-
-    for (i= 0; i < objc; i++) {
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*black*")) {
-    	    colorName = [NSColor blackColor];	// use #000000 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*dark*")) {
-    	    colorName = [NSColor darkGrayColor]; //use #545454 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*light*")) {
-    	    colorName = [NSColor lightGrayColor]; //use #ababab in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*white*")) {
-    	    colorName = [NSColor whiteColor];	//use #ffffff in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "gray*")) {
-    	    colorName = [NSColor grayColor];	//use #7f7f7f in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*red*")) {
-    	    colorName = [NSColor redColor];	//use #ff0000 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*green*")) {
-    	    colorName = [NSColor greenColor];	//use #00ff00 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*blue*")) {
-    	    colorName = [NSColor blueColor];	//use #0000ff in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*cyan*")) {
-    	    colorName = [NSColor cyanColor];	//use #00ffff in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*yellow*")) {
-    	    colorName = [NSColor yellowColor];	//use #ffff00 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*magenta*")) {
-    	    colorName = [NSColor magentaColor];	//use #ff00ff in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*orange*")) {
-    	    colorName = [NSColor orangeColor];	//use #ff8000 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*purple*")) {
-    	    colorName = [NSColor purpleColor];	//use #800080 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*brown*")){
-    	    colorName = [NSColor brownColor];	//use #996633 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*clear*")) {
-    	    colorName = [NSColor clearColor];	//use systemTransparent in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*opacity*")) {
-    	    opaqueTag = YES;
-    	}
-    }
 
     winPtr = (TkWindow *)
 	    Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
@@ -5677,20 +5623,6 @@ TkMacOSXMakeRealWindowExist(
 	 *                               from opaque content.
 	 */
 	[window setMovableByWindowBackground:NO];
-    }
-
-
-    /* Set background color and opacity of window if those flags are set.  */
-    if (colorName != NULL) {
-    	[window setBackgroundColor: colorName];
-    }
-
-    if (opaqueTag) {
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
-    	[window setOpaque: opaqueTag];
-#else
-	[window setOpaque: YES];
-#endif
     }
 
     [window setDocumentEdited:NO];
@@ -6383,24 +6315,12 @@ ApplyWindowAttributeFlagChanges(
 	    } else if (newAttributes & tkMoveToActiveSpaceAttribute) {
 		b |= NSWindowCollectionBehaviorMoveToActiveSpace;
 	    }
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
 	    if (newAttributes & kWindowDoesNotCycleAttribute) {
 		b |= NSWindowCollectionBehaviorIgnoresCycle;
 	    } else {
 		b |= NSWindowCollectionBehaviorParticipatesInCycle;
 	    }
-#endif
 	    [macWindow setCollectionBehavior:b];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	    if (((changedAttributes & kWindowDoesNotCycleAttribute) || initial)
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
-		    && tkMacOSXMacOSXVersion < 1060
-#endif
-	    ) {
-		[macWindow setCanCycle:
-			!(newAttributes & kWindowDoesNotCycleAttribute)];
-	    }
-#endif
 	}
 	if ((wmPtr->flags & WM_TOPMOST) != (oldFlags & WM_TOPMOST)) {
 	    [macWindow setLevel:(wmPtr->flags & WM_TOPMOST) ?
@@ -6532,9 +6452,7 @@ TkMacOSXMakeFullscreen(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int result = TCL_OK, wasFullscreen = (wmPtr->flags & WM_FULLSCREEN);
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
     static unsigned long prevMask = 0, prevPres = 0;
-#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
 
     if (fullscreen) {
 	int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
@@ -6575,28 +6493,16 @@ TkMacOSXMakeFullscreen(
 	    wmPtr->flags |= WM_FULLSCREEN;
 	}
 
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
-	/*
-	 * We can't set these features on Leopard or earlier, as they don't
-	 * exist (neither options nor API that uses them). This formally means
-	 * that there's a bug with full-screen windows with Tk on old OSX, but
-	 * it isn't worth blocking a build just for this.
-	 */
-
 	prevMask = [window styleMask];
 	prevPres = [NSApp presentationOptions];
 	[window setStyleMask: NSBorderlessWindowMask];
 	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
 	                          | NSApplicationPresentationAutoHideMenuBar];
 	Tk_MapWindow((Tk_Window) winPtr);
-#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;
-
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
 	[NSApp setPresentationOptions: prevPres];
 	[window setStyleMask: prevMask];
-#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     }
 
     if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {

@@ -18,17 +18,18 @@
  * the SystemParametersInfo API doesn't like to receive structures that
  * are larger than it expects which affects the font assignments.
  *
- * WINVER = 0x0501 means Windows XP and above
+ * WINVER = 0x0600 means Windows Vista and above. Even though we still
+ * support Windows XP, but the Vista-specifics are tested at runtime.
  */
 
 #ifndef WINVER
-#   define WINVER 0x0501
+#   define WINVER 0x0600
 #endif
 #ifndef _WIN32_WINNT
-#   define _WIN32_WINNT 0x0501
+#   define _WIN32_WINNT 0x0600
 #endif
 #ifndef _WIN32_IE
-#   define _WIN32_IE 0x0600
+#   define _WIN32_IE 0x0700
 #endif
 
 #ifndef _TK
