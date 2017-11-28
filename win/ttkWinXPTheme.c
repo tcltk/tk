@@ -1108,7 +1108,7 @@ Ttk_CreateVsapiElement(
     LPWSTR wname;
     Ttk_ElementSpec *elementSpec = &GenericElementSpec;
 
-    static const char *optionStrings[] =
+    static const char *const optionStrings[] =
 	{ "-padding","-width","-height","-margins", "-syssize",
 	  "-halfheight", "-halfwidth", NULL };
     enum { O_PADDING, O_WIDTH, O_HEIGHT, O_MARGINS, O_SYSSIZE,
