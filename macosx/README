@@ -186,11 +186,6 @@ Support for the 3 argument form was added with the Cocoa-based Tk 8.5.7, at the
 same time support for some legacy Carbon-specific classes and attributes was
 removed (they are still accepted by the command but no longer have any effect).
 
-- The Cocoa-based TkAqua can be distinguished from the older Carbon-based
-version via the [winfo server .] command, example output on macOS 10.5.7:
-    Cocoa-based:	CG409.3 Apple AppKit GC 949.46 macOS 1057
-    Carbon-based:	QD10R30 Apple 1057
-
 - If you want to use Remote Debugging with Xcode, you need to set the
 environment variable XCNOSTDIN to 1 in the Executable editor for Wish. That will
 cause us to force closing stdin & stdout.  Otherwise, given how Xcode launches
