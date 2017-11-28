@@ -59,27 +59,6 @@
 	if (0) {
 #define tk_else_mac_os_x_no(...) \
 	} else { __VA_ARGS__
-/* Private mapping macros defined according to Mac OS X version requirements */
-/* 10.5 Leopard */
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
-#define tk_if_mac_os_x_min_10_5		tk_if_mac_os_x_yes
-#define tk_else_mac_os_x_min_10_5	tk_else_mac_os_x_yes
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
-#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_yes
-#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_yes
-#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
-#else /* MAC_OS_X_VERSION_MIN_REQUIRED */
-#define tk_if_mac_os_x_min_10_5		tk_if_mac_os_x_chk
-#define tk_else_mac_os_x_min_10_5	tk_else_mac_os_x_chk
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
-#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_chk
-#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_chk
-#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
-#endif /* MAC_OS_X_VERSION_MIN_REQUIRED */
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
-#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_no
-#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_no
-#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
 
 /*
  * Macros for DEBUG_ASSERT_MESSAGE et al from Debugging.h.

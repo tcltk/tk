@@ -715,7 +715,7 @@ static int PanedForgetCommand(
 static int PanedIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    static const char *whatTable[] = { "element", "sash", NULL };
+    static const char *const whatTable[] = { "element", "sash", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_SASH };
     int what = IDENTIFY_SASH;
     Paned *pw = recordPtr;
