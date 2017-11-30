@@ -800,7 +800,7 @@ ContainerEventProc(
     Tk_ErrorHandler errHandler;
 
     if (!firstContainerPtr) {
-	TKLog(@"Embedded window has nil container.");
+	TkMacOSXDbgMsg("Embedded window has nil container.");
 	return;
     }
     /*
