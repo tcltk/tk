@@ -4678,7 +4678,7 @@ TkWmRestackToplevel(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int macAboveBelow = (aboveBelow == Above ? NSWindowAbove : NSWindowBelow);
     int otherNumber = 0; /* 0 will be used when otherPtr is NULL. */
-    
+
     /*
      * If the Tk windows has no drawable, or is withdrawn do nothing.
      */
