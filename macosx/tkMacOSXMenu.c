@@ -770,8 +770,15 @@ TkpPostMenu(
     Drawable d = Tk_WindowId(root);
     NSView *rootview = TkMacOSXGetRootControl(d);
     NSWindow *win = [rootview window];
+    int result;
 
     inPostMenu = 1;
+    
+    result = TkPreprocessMenu(menuPtr);
+    if (result != TCL_OK) {
+        inPostMenu = 0;
+        return result;
+    }
 
     int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
     NSView *view = [win contentView];
