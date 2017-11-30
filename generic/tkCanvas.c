@@ -2799,7 +2799,7 @@ DrawCanvas(
      * If either zoom or subsample are not 1, we use the zoom function.
      */
     if (subsample != 1 || zoom != 1) {
-        if ((result = Tk_PhotoPutZoomedBlock(interp, photohandle, &blockPtr, 0, 0, cWidth * zoom / subsample+1, cHeight * zoom / subsample+1, zoom, zoom, subsample, subsample, TK_PHOTO_COMPOSITE_SET)) != TCL_OK) {
+        if ((result = Tk_PhotoPutZoomedBlock(interp, photohandle, &blockPtr, 0, 0, cWidth * zoom / subsample, cHeight * zoom / subsample, zoom, zoom, subsample, subsample, TK_PHOTO_COMPOSITE_SET)) != TCL_OK) {
             goto done;
         }
     } else {
