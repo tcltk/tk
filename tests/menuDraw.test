@@ -647,7 +647,7 @@ test menuDraw-16.4 {TkPostSubMenu} -setup {
 } -cleanup {
     deleteWindows
 } -result {}
-test menuDraw-16.5 {TkPostSubMenu} -constraints unix -setup {
+test menuDraw-16.5 {TkPostSubMenu} -setup {
     deleteWindows
 } -body {
     menu .m1
