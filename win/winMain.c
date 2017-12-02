@@ -12,10 +12,10 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tk.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
+#include "tk.h"
 #include <locale.h>
 #include <stdlib.h>
 #include <tchar.h>

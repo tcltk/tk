@@ -21,6 +21,7 @@
  *---------------------------------------------------------------------------
  */
 
+#include <windows.h>
 #include <wchar.h>
 #include <io.h>
 #include <stdlib.h>
