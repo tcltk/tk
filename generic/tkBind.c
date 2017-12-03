@@ -1738,10 +1738,10 @@ MatchPatterns(
 	    }
 	    if (psPtr->flags & PAT_NEARBY) {
 		XEvent *firstPtr = &bindPtr->eventRing[bindPtr->curEvent];
-		int timeDiff;
+		long timeDiff;
 
-		timeDiff = (int)((long)firstPtr->xkey.time -
-				 (long)eventPtr->xkey.time);
+		timeDiff = ((long)firstPtr->xkey.time -
+			    (long)eventPtr->xkey.time);
 		if ((firstPtr->xkey.x_root
 			    < (eventPtr->xkey.x_root - NEARBY_PIXELS))
 			|| (firstPtr->xkey.x_root
