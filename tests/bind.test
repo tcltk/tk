@@ -1395,8 +1395,8 @@ test bind-15.22 {MatchPatterns procedure, time wrap-around} -setup {
     pack .t.f
     focus -force .t.f
     update
-} -body {
     clearRingBuffer <Key>
+} -body {
     bind .t.f <Double-1> {set x 1}
     set x 0
     event generate .t.f <Button-1> -time -100
@@ -1411,8 +1411,8 @@ test bind-15.23 {MatchPatterns procedure, time wrap-around} -setup {
     pack .t.f
     focus -force .t.f
     update
-} -body {
     clearRingBuffer <Key>
+} -body {
     bind .t.f <Double-1> {set x 1}
     set x 0
     event generate .t.f <Button-1> -time -100
@@ -1428,8 +1428,8 @@ test bind-15.24 {MatchPatterns procedure, virtual event} -setup {
     focus -force .t.f
     update
     set x {}
-} -body {
     clearRingBuffer <Key>
+} -body {
     event add <<Paste>> <Button-1>
     bind .t.f <<Paste>> {lappend x paste}
     event generate .t.f <Button-1>
@@ -1445,8 +1445,8 @@ test bind-15.25 {MatchPatterns procedure, reject a  virtual event} -setup {
     focus -force .t.f
     update
     set x {}
-} -body {
     clearRingBuffer <Key>
+} -body {
     event add <<Paste>> <Shift-Button-1>
     bind .t.f <<Paste>> {lappend x paste}
     event generate .t.f <Button-1>
@@ -1462,8 +1462,8 @@ test bind-15.26 {MatchPatterns procedure, reject a virtual event} -setup {
     focus -force .t.f
     update
     set x {}
-} -body {
     clearRingBuffer <Key>
+} -body {
     event add <<V1>> <Button>
     event add <<V2>> <Button-1>
     event add <<V3>> <Shift-Button-1>
@@ -1489,8 +1489,8 @@ test bind-15.27 {MatchPatterns procedure, conflict resolution} -setup {
     pack .t.f
     focus -force .t.f
     update
-} -body {
     clearRingBuffer <Button>
+} -body {
     bind .t.f <KeyPress> {set x 0}
     bind .t.f 1 {set x 1}
     set x none
@@ -1504,8 +1504,8 @@ test bind-15.28 {MatchPatterns procedure, conflict resolution} -setup {
     pack .t.f
     focus -force .t.f
     update
-} -body {
     clearRingBuffer <Button>
+} -body {
     bind .t.f <KeyPress> {set x 0}
     bind .t.f 1 {set x 1}
     set x none
@@ -1519,8 +1519,8 @@ test bind-15.29 {MatchPatterns procedure, conflict resolution} -setup {
     pack .t.f
     focus -force .t.f
     update
-} -body {
     clearRingBuffer <Button>
+} -body {
     bind .t.f <KeyPress> {lappend x 0}
     bind .t.f 1 {lappend x 1}
     bind .t.f 21 {lappend x 2}
@@ -1537,8 +1537,8 @@ test bind-15.30 {MatchPatterns procedure, conflict resolution} -setup {
     pack .t.f
     focus -force .t.f
     update
-} -body {
     clearRingBuffer <Key>
+} -body {
     bind .t.f <ButtonPress> {set x 0}
     bind .t.f <1> {set x 1}
     set x none
@@ -1554,8 +1554,8 @@ test bind-15.31 {MatchPatterns procedure, conflict resolution} -setup {
     focus -force .t.f
     update
     set x {}
-} -body {
     clearRingBuffer <Button>
+} -body {
     bind .t.f <M1-Key> {set x 0}
     bind .t.f <M2-Key> {set x 1}
     event generate .t.f <Key-a> -state 0x18
@@ -1568,8 +1568,8 @@ test bind-15.32 {MatchPatterns procedure, conflict resolution} -setup {
     pack .t.f
     focus -force .t.f
     update
-} -body {
     clearRingBuffer <Button>
+} -body {
     bind .t.f <M2-Key> {set x 0}
     bind .t.f <M1-Key> {set x 1}
     set x none
@@ -1584,8 +1584,8 @@ test bind-15.33 {MatchPatterns procedure, conflict resolution} -setup {
     focus -force .t.f
     update
     set x {}
-} -body {
     clearRingBuffer <Key>
+} -body {
     bind .t.f <1> {lappend x single}
     bind Test <1> {lappend x single(Test)}
     bind Test <Double-1> {lappend x double(Test)}
@@ -2232,8 +2232,8 @@ test bind-16.46 {ExpandPercents procedure} -setup {
     focus -force .t.e
     foreach p [event info] {event delete $p}
     update
-} -body {
     clearRingBuffer <Button>
+} -body {
     bind all <Key> {set z "%M"}
     bind Entry <Key> {set y "%M"}
     bind .t.e <Key> {set x "%M"}
