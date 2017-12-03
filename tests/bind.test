@@ -1399,7 +1399,7 @@ test bind-15.22 {MatchPatterns procedure, time wrap-around} -setup {
     clearRingBuffer <Key>
     bind .t.f <Double-1> {set x 1}
     set x 0
-    event generate .t.f <Button-1> -time [expr -100]
+    event generate .t.f <Button-1> -time -100
     event generate .t.f <Button-1> -time 200
     event generate .t.f <ButtonRelease-1>
     return $x
