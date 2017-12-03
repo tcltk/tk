@@ -43,7 +43,7 @@ proc unsetBindings {} {
 # change.
 proc clearRingBuffer {{event}} {
     for {set i 0} {$i < 30} {incr i} {
-	event generate . $event ;
+	event generate . $event
     }
 }
 
@@ -1415,11 +1415,6 @@ test bind-15.23 {MatchPatterns procedure, time wrap-around} -setup {
     clearRingBuffer <Key>
     bind .t.f <Double-1> {set x 1}
     set x 0
-    # Make sure that no Button or ButtonRelease events are left in
-    # the pattern matcher's ring buffer.
-    for {set i 1} {$i < 50} {incr i} {
-	event generate .t.f <Key-a> ;
-    }
     event generate .t.f <Button-1> -time 1000
     event generate .t.f <Button-1> -time 1600
     event generate .t.f <ButtonRelease-1> -time 1500
