@@ -2238,6 +2238,7 @@ test bind-16.46 {ExpandPercents procedure} -setup {
     foreach p [event info] {event delete $p}
     update
 } -body {
+    clearRingBuffer <Button>
     bind all <Key> {set z "%M"}
     bind Entry <Key> {set y "%M"}
     bind .t.e <Key> {set x "%M"}
