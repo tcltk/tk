@@ -321,7 +321,7 @@ proc ttk::combobox::PopdownToplevel {w} {
 	aqua {
 	    $w configure -relief solid -borderwidth 0
 	    tk::unsupported::MacWindowStyle style $w \
-	    	help {noActivates hideOnSuspend}
+	    	help {noActivates}
 	    wm resizable $w 0 0
 	}
     }
