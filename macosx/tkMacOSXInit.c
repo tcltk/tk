@@ -116,18 +116,6 @@ long tkMacOSXMacOSXVersion = 0;
     _defaultMainMenu = nil;
     [self _setupMenus];
 
-    /*
-     * Set the application icon.  This is unnecessary when running Wish.app
-     * but it is easier than testing for that situation to just do it.
-     */
-    NSString *path = [NSApp tkFrameworkImagePath:@"Tk.icns"];
-    if (path) {
-	NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
-	if (image) {
-	    [NSApp setApplicationIconImage:image];
-	    [image release];
-	}
-    }
 
     /*
      * Initialize event processing.
