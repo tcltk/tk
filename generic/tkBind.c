@@ -1738,9 +1738,10 @@ MatchPatterns(
 	    }
 	    if (psPtr->flags & PAT_NEARBY) {
 		XEvent *firstPtr = &bindPtr->eventRing[bindPtr->curEvent];
-		int timeDiff;
+		long timeDiff;
 
-		timeDiff = (Time) firstPtr->xkey.time - eventPtr->xkey.time;
+		timeDiff = ((long)firstPtr->xkey.time -
+			    (long)eventPtr->xkey.time);
 		if ((firstPtr->xkey.x_root
 			    < (eventPtr->xkey.x_root - NEARBY_PIXELS))
 			|| (firstPtr->xkey.x_root
@@ -3333,9 +3334,9 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
-		event.general.xkey.time = (Time) number;
+		event.general.xkey.time = number;
 	    } else if (flags & PROP) {
-		event.general.xproperty.time = (Time) number;
+		event.general.xproperty.time = number;
 	    } else {
 		goto badopt;
 	    }
