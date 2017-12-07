@@ -1,13 +1,13 @@
-Tcl/Tk Mac OS X README
+Tcl/Tk macOS README
 ----------------------
 
-This is the README file for the Mac OS X/Darwin version of Tcl/Tk.
+This is the README file for the macOS/Darwin version of Tcl/Tk.
 
 1. Where to go for support
 --------------------------
 
 - The tcl-mac mailing list on sourceforge is the best place to ask questions
-specific to Tcl & Tk on Mac OS X:
+specific to Tcl & Tk on macOS:
 	http://lists.sourceforge.net/lists/listinfo/tcl-mac
 (this page also has a link to searchable archives of the list, please check them
 before asking on the list, many questions have already been answered).
@@ -15,26 +15,26 @@ before asking on the list, many questions have already been answered).
 - For general Tcl/Tk questions, the newsgroup comp.lang.tcl is your best bet:
 	http://groups.google.com/group/comp.lang.tcl/
 
-- The Tcl'ers Wiki also has many pages dealing with Tcl & Tk on Mac OS X, see
+- The Tcl'ers Wiki also has many pages dealing with Tcl & Tk on macOS, see
 	http://wiki.tcl.tk/_/ref?N=3753
 	http://wiki.tcl.tk/_/ref?N=8361
 
-- Please report bugs with Tk on Mac OS X to the tracker:
+- Please report bugs with Tk on macOS to the tracker:
 	http://core.tcl.tk/tk/reportlist
 
-2. Using Tcl/Tk on Mac OS X
+2. Using Tcl/Tk on macOS
 ---------------------------
 
-- There are two versions of Tk available on Mac OS X: TkAqua using the native
+- There are two versions of Tk available on macOS: TkAqua using the native
 aqua widgets and look&feel, and TkX11 using the traditional unix X11 wigets.
 TkX11 requires an X11 server to be installed, such as Apple's X11 (which is
-available as an optional or default install on recent Mac OS X).
+available as an optional or default install on recent macOS).
 TkAqua and TkX11 can be distinguished at runtime via [tk windowingsystem].
 
-- At a minimum, Mac OS X 10.3 is required to run Tcl and TkX11.
-TkAqua requires Mac OS X 10.5 or later (starting with the Cocoa-based Tk 8.5.7).
+- At a minimum, macOS 10.3 is required to run Tcl and TkX11.
+TkAqua requires macOS 10.6 or later.
 
-- Unless weak-linking is used, Tcl/Tk built on Mac OS X 10.x will not run on
+- Unless weak-linking is used, Tcl/Tk built on macOS 10.x will not run on
 10.y with y < x; on the other hand Tcl/Tk built on 10.y will always run on 10.x
 with y <= x (but without any of the fixes and optimizations that would be
 available in a binary built on 10.x).
@@ -62,8 +62,7 @@ the Resources/Scripts directory of the framework.
 - [load]able binary extensions can linked as either ordinary shared libraries
 (.dylib) or as MachO bundles (since 8.4.10/8.5a3); bundles have the advantage
 that they are [load]ed more efficiently from a tcl VFS (no temporary copy to the
-native filesystem required), and prior to Mac OS X 10.5, only bundles can be
-[unload]ed.
+native filesystem required).
 
 - The 'deploy' target of macosx/GNUmakefile installs the html manpages into the
 standard documentation location in the Tcl/Tk frameworks:
@@ -163,7 +162,7 @@ Support for the Window menu and [tk::mac::ShowHelp] was added with the
 Cocoa-based Tk 8.5.7.
 
 - The TkAqua-specific command [tk::unsupported::MacWindowStyle style] is used to
-get and set Mac OS X-specific toplevel window class and attributes. Note that
+get and set macOS-specific toplevel window class and attributes. Note that
 the window class and many attributes have to be set before the window is first
 mapped for the change to have any effect.
 The command has the following syntax:
@@ -179,76 +178,42 @@ Window attribute names:
     verticalZoom, closeBox, collapseBox, toolbarButton, sideTitlebar,
     noTitleBar, unifiedTitleAndToolbar, metal, hud, noShadow, doesNotCycle,
     noActivates, hideOnSuspend, inWindowMenu, ignoreClicks, doesNotHide,
-    canJoinAllSpaces, moveToActiveSpace, nonActivating, black, dark, light,
-    gray, red, green, blue, cyan, yellow, magenta, orange, purple,
-    brown, clear, opacity
+    canJoinAllSpaces, moveToActiveSpace, nonActivating
 
 Note that not all attributes are valid for all window classes.
 Support for the 3 argument form was added with the Cocoa-based Tk 8.5.7, at the
 same time support for some legacy Carbon-specific classes and attributes was
 removed (they are still accepted by the command but no longer have any effect).
 
-The color window attributes (black, dark, red, etc.) and the "opacity" allow  one to set the background and opacity of a textured ("metal") window. This allows a Tk window to implement a window without the dividing line between the titlebar and the rest of the window, or the "unified toolbar" effect, which is increasingly standard in Mac applications. An example:
-
-toplevel .f
-tk::unsupported::MacWindowStyle style .f document {metal light opaque closeBox collapseBox resizable standardDocument }
-
-pack [label .f.f -bg  #ababab -text "This is a textured window\nwith opacity and a gray background\nsimilar to other Mac applications"] -fill both -expand yes
-
-The color attributes correspond to system-defined NSColor constants (e.g., red is [NSColor redColor]. The "light" and "dark" attributes correspond to lightGrayColor and darkGrayColor, respectively (because of the way the attributes are parsed, using "lightgray" and "darkgray" would cause a conflict with the core "gray" attribute).
-
-Below are the corresponding hex and/or Tk-defined colors that can be used from Tk widgets to match the NSColor-based attributes:
-
-black	#000000
-dark	#545454
-light	#ababab
-white	#ffffff
-gray	#7f7f7f
-red 	#ff0000
-green	#00ff00
-blue	#0000ff
-cyan	#00ffff
-yellow	#ffff00
-magenta	#ff00ff
-orange	#ff8000
-purple 	#800080
-brown	#996633
-clear	systemTransparent
-
-- The Cocoa-based TkAqua can be distinguished from the older Carbon-based
-version via the [winfo server .] command, example output on Mac OS X 10.5.7:
-    Cocoa-based:	CG409.3 Apple AppKit GC 949.46 Mac OS X 1057
-    Carbon-based:	QD10R30 Apple 1057
-
-- If you want to use Remote Debugging with Xcode, you need to set the
+If you want to use Remote Debugging with Xcode, you need to set the
 environment variable XCNOSTDIN to 1 in the Executable editor for Wish. That will
 cause us to force closing stdin & stdout.  Otherwise, given how Xcode launches
 Wish remotely, they will be left open and then Wish & gdb will fight for stdin.
 
 
-3. Building Tcl/Tk on Mac OS X
+3. Building Tcl/Tk on macOS
 ------------------------------
 
-- At least Mac OS X 10.3 is required to build Tcl and TkX11, and Mac OS X 10.5
-is required to build TkAqua.
-Apple's Xcode Developer Tools need to be installed (only the most recent version
-matching your OS release is supported), the Xcode installer is available on Mac
-OS X install media or may be present in /Applications/Installers on Macs that
-came with OS X preinstalled. The most recent version can always be downloaded
-from the ADC website http://connect.apple.com (free ADC membership required).
+- At least macOS 10.3 is required to build Tcl and TkX11, and macOS 10.6
+is required to build TkAqua.  The XCode application provides everything
+needed to build Tk, but it is not necessary to install the full XCode.
+It suffices to install the Command Line Tools package, which can be done
+by running the command:
+xcode-selecct --install
 
-- Tcl/Tk are most easily built as Mac OS X frameworks via GNUmakefile in
+- Tcl/Tk are most easily built as macOS frameworks via GNUmakefile in
 tcl/macosx and tk/macosx (see below for details), but can also be built with the
 standard unix configure and make buildsystem in tcl/unix resp. tk/unix as on any
 other unix platform (indeed, the GNUmakefiles are just wrappers around the unix
 buildsystem).
-The Mac OS X specific configure flags are --enable-aqua, --enable-framework and
+The macOS specific configure flags are --enable-aqua, --enable-framework and
 --disable-corefoundation (which disables CF and notably reverts to the standard
 select based notifier). Note that --enable-aqua is incompatible with
 --disable-corefoundation (for both Tcl and Tk configure).
 
-- It is also possible to build with the Xcode IDE via the projects in
-tk/macosx, take care to use the project matching your DevTools and OS version:
+- It was once possible to build with the Xcode IDE via the projects in
+tk/macosx, but this has not been tested recently. Take care to use the
+project matching your DevTools and OS version:
 	Tk.xcode: 		    for Xcode 3.1 on 10.5
 	Tk.xcodeproj:		    for Xcode 3.2 on 10.6
 These have the following targets:
@@ -292,7 +257,7 @@ text editor.
 
 - To build universal binaries outside of the Xcode IDE, set CFLAGS as follows:
 	export CFLAGS="-arch i386 -arch x86_64 -arch ppc"
-This requires Mac OS X 10.4 and Xcode 2.4 (or Xcode 2.2 if -arch x86_64 is
+This requires macOS 10.4 and Xcode 2.4 (or Xcode 2.2 if -arch x86_64 is
 omitted, but _not_ Xcode 2.1) and will work on any architecture (on PowerPC
 Tiger you need to add "-isysroot /Developer/SDKs/MacOSX10.4u.sdk").
 Note that configure requires CFLAGS to contain a least one architecture that can
@@ -303,9 +268,9 @@ above, they will be [load]able by universal as well as thin binaries of Tcl.
 
 - To enable weak-linking, set the MACOSX_DEPLOYMENT_TARGET environment variable
 to the minimal OS version the binaries should be able to run on, e.g:
-	export MACOSX_DEPLOYMENT_TARGET=10.4
+	export MACOSX_DEPLOYMENT_TARGET=10.6
 This requires at least gcc 3.1; with gcc 4 or later, set/add to CFLAGS instead:
-	export CFLAGS="-mmacosx-version-min=10.4"
+	export CFLAGS="-mmacosx-version-min=10.6"
 Support for weak-linking was added with 8.4.14/8.5a5.
 
 Detailed Instructions for building with macosx/GNUmakefile
@@ -389,21 +354,29 @@ make overrides to the tk/macosx GNUmakefile, e.g.
 	    TCL_FRAMEWORK_DIR=$HOME/Library/Frameworks TCLSH_DIR=$HOME/usr/bin
 The Makefile variables TCL_FRAMEWORK_DIR and TCLSH_DIR were added with Tk 8.4.3.
 
-4. About the event loop in Tk for Mac OSX
------------------------------------------
+4. Details regarding the macOS port of Tk.
+-------------------------------------------
 
-The main program in a typical OSX application looks like this (see *)
+4.1 About the event loop
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The main program in a typical OSX application looks like this (see
+https://developer.apple.com/library/mac/documentation/Cocoa/\
+Reference/ApplicationKit/Classes/NSApplication_Class)
 
     void NSApplicationMain(int argc, char *argv[]) {
         [NSApplication sharedApplication];
         [NSBundle loadNibNamed:@"myMain" owner:NSApp];
         [NSApp run];
     }
+Here NSApp is a standard global variable, initialized by the OS, which
+points to an object in a subclass of NSApplication (called
+TKApplication in the case of the macOS port of Tk).
 
-The run method implements the event loop for the application.  There
-are three key steps in the run method.  First it calls
-[NSApp finishLaunching], which creates the bouncing application icon
-and does other mysterious things. Second it creates an
+The [NSApp run] method implements the event loop for a typical Mac
+application.  There are three key steps in the run method.  First it
+calls [NSApp finishLaunching], which creates the bouncing application
+icon and does other mysterious things. Second it creates an
 NSAutoreleasePool.  Third, it starts an event loop which drains the
 NSAutoreleasePool every time the queue is empty, and replaces the
 drained pool with a new one.  This third step is essential to
@@ -411,41 +384,180 @@ preventing memory leaks, since the internal methods of Appkit objects
 all assume that an autorelease pool is in scope and will be drained
 when the event processing cycle ends.
 
-Mac OSX Tk does not call the [NSApp run] method at all.  Instead it
-uses the event loop built in to Tk.  So we must take care to replicate
-the important features of the method ourselves.  Here is how this
-works in outline.
+The macOS Tk application does not call the [NSApp run] method at
+all.  Instead it uses the event loop built in to Tk.  So the
+application must take care to replicate the important features of the
+method ourselves.  The way that autorelease pools are handled is
+discussed in 4.2 below.  Here we discuss the event handling itself.
 
-We add a private NSAUtoreleasePool* property to our subclass of
-NSApplication.  (The subclass is called TKApplication but can be
-referenced with the global variable NSApp).  The TkpInit
-function calls [NSApp _setup] which initializes this property by
-creating an NSAutoreleasePool. A bit later on, TkpInit calls
-[NSAPP _setupEventLoop] which in turn calls the
-[NSApp finishLaunching] method.
+The Tcl event loop simply consists of repeated calls to TclDoOneEvent.
+Each call to TclDoOneEvent begins by collecting all pending events from
+an "event source", converting them to Tcl events and adding them
+to the Tcl event queue. For macOS, the event source is the NSApp
+object, which maintains an event queue even though its run method
+will never be called to process them.  The NSApp provides methods for
+inspecting the queue and removing events from it as well as the
+[NSApp sendevent] which sends an event to all of the application's
+NSWindows which can then send it to subwindows, etc.
 
-Each time that Tcl processes an event in its queue, it calls a
-platform specific function which, in the case of Mac OSX, is named
-TkMacOSXEventsCheckProc.  In the unix implementations of Tk, including
-the Mac OSX version, this function collects events from an "event
-source", and transfers them to the Tcl event queue.  In Mac OSX the
-event source is the NSApplication event queue.  Each NSEvent is
-converted to a Tcl event which is added to the Tcl event queue.  The
-NSEvent is also passed to [NSApp sendevent], which sends the event on
-to the application's NSWindows, which send it to their NSViews, etc.
+The event collection process consists of first calling a platform
+specific SetupProc and then a platform specific CheckProc.  In
+the macOS port, these are named TkMacOSXEventsSetupProc and
+TkMacOSXEventsCheckProc.
+
+It is important to understand that the Apple window manager does not
+have the concept of an expose event.  Their replacement for an expose
+event is to have the window manager call the [NSView drawRect] method
+in any situation where an expose event for that NSView would be
+generated in X11.  The [NSView drawRect] method is a no-op which is
+expected to be overridden by any application.  In the case of Tcl, the
+replacement [NSView drawRect] method creates a Tcl expose event
+for each dirty rectangle of the NSView, and then adds the expose
+event to the Tcl queue.
+
+
+4.2 Autorelease pools
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to carry out the job of managing autorelease pools, which
+would normally be handled by the [NSApp run] method, a private
+NSAUtoreleasePool* property is added to the TkApplication subclass of
+NSApplication. The TkpInit function calls [NSApp _setup] which
+initializes this property by creating an NSAutoreleasePool prior to
+calling [NSApp finishLaunching].  This mimics the behavior of the
+[NSApp run] method, which calls [NSApp finishLaunching] just before
+starting the event loop.
+
 Since the CheckProc function gets called for every Tk event, it is an
 appropriate place to drain the main NSAutoreleasePool and replace it
-with a new pool.  This is done by calling the method
-[NSApp _resetAutoreleasePool], where _resetAutoreleasePool is a method
-which we define for the subclass TKApplication.
+with a new pool.  This is done by calling the method [NSApp
+_resetAutoreleasePool], where _resetAutoreleasePool is a method which
+we define for the subclass.  Unfortunately, by itself this is not
+sufficient for safe memory managememt because, as was made painfully
+evident with the release of OS X 10.13, it is possible for calls to
+TclDoOneEvent, and hence to CheckProc, to be nested.  Draining the
+autorelease pool in a nested call leads to crashes as objects in use
+by the outer call can get freed by the inner call and then reused later.
+One particular situation where this happens is when a modal dialogue
+gets posted by a Tk Application.  To address this, the NSApp object
+also implements a semaphore to prevent draining the autorelease pool
+in nested calls to CheckProc.
 
-One minor caveat is that there are several steps of the Tk
-initialization which precede the call to TkpInit.  Notably, the font
-package is initialized first.  Since there is no NSAUtoreleasePool in
-scope prior to calling TkpInit, the functions called in these
-preliminary stages need to create and drain their own
+One additional minor caveat for developers is that there are several
+steps of the Tk initialization which precede the call to TkpInit.
+Notably, the font package is initialized first.  Since there is no
+NSAUtoreleasePool in scope prior to calling TkpInit, the functions
+called in these preliminary stages need to create and drain their own
 NSAutoreleasePools whenever they call methods of Appkit objects
 (e.g. NSFont).
 
-* https://developer.apple.com/library/mac/documentation/Cocoa/\
-Reference/ApplicationKit/Classes/NSApplication_Class
+4.3 Clipping regions and "ghost windows"
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Another unusual aspect of the macOS port is its use of clipping
+regions.  It was part of Daniel Steffen's original design that the
+TkWindowPrivate struct maintains three HIShapeRef regions, named
+visRgn, aboveVisRgn and drawRgn.  These regions are used as clipping
+masks whenever drawing into an NSView.  The visRgn is the bounding box
+of the window with a rectangle removed for each subwindow and for each
+sibling window at a higher stacking level.  The drawRgn is the
+intersection of the visRgn with the clipping rectangle of the
+window. (Normally, the clipping rectangle is the same as the bounding
+rectangle, but drawing can be clipped to a smaller rectangle by
+calling TkpClipDrawableToRect.) The aboveVisRgn is the intersection of
+the window's bounding rectangle with the bounding rectangle of the
+parent window.  Much of the code in tkMacOSXSubindows.c is devoted to
+rebuilding these clipping regions whenever something changes in the
+layout of the windows.  This turns out to be a tricky thing to do and
+it is extremely prone to errors which can be difficult to trace.
+
+It is not entirely clear what the original reason for using these
+clipping regions was.  But one benefit is that if they are correctly
+maintained then it allows windows to be drawn in any order.  You do
+not have to draw them in the order of the window hierarchy.  Each
+window can draw its entire rectangle through its own mask and never
+have to worry about drawing in the wrong place.  It is likely that
+the need for using clipping regions arose because, as Apple explicitly
+states in the documentation for [NSView subviews],
+
+    "The order of the subviews may be considered as being
+    back-to-front, but this does not imply invalidation and drawing
+    behavior."
+
+In the early versions of the macOS port, buttons were implemented as
+subviews of class TkButton.  This probably exacerbated the likelihood
+that Tk windows would need to be drawn in arbitrary order.
+
+The most obvious side effect caused by not maintaining the clipping
+regions is the appearance of so-called "ghost windows".  A common
+situation where these may arise is when a window containing buttons
+is being scrolled.  A user may see two images of the same button on
+the screen, one in the pre-scroll location and one in the post-scroll
+location.
+
+To see how these 'ghost windows' can arise, think about what happens if
+the clipping regions are not maintained correctly.  A window might
+have a rectangle missing from its clipping region because that
+rectangle is the bounding rectangle for a subwindow, say a button.
+The parent should not draw in the missing rectangle since doing so
+would trash the button.  The button is responsible for drawing
+there. Now imagine that the button gets moved, say by a scroll, but
+the missing rectangle in the parent's clipping region does not get
+moved correctly, or it gets moved later on, after the parent has
+redrawn itself.  The parent would still not be allowed to draw in the
+old rectangle, so the user would continue to see the image of the
+button in its old location, as well as another image in the new
+location.  This is a prototypical example of a "ghost window".
+Anytime you see a "ghost window", you should suspect problems with the
+updates to the clipping region visRgn.  It is natural to look for
+timing issues, race conditions, or other "event loop problems".  But
+in fact, the whole design of the code is to make those timing issues
+irrelevant.  As long as the clipping regions are correctly maintained
+the timing does not matter.  And if they are not correctly maintained
+then you will see "ghost windows".
+
+It is worth including a detailed description of one specific place
+where the failure to correctly maintain clipping regions caused "ghost
+window" artifacts that plagued the macOS port for years.  These
+occurred when scrolling a Text widget which contained embedded
+subwindows.  It involved some specific differences between the
+low-level behavior of Apple's window manager versus those of the other
+platforms, and the fix ultimately required changes in the generic Tk
+implementation (documented in the comments in the DisplayText
+function).
+
+The Text widget attempts to improve perfomance when scrolling by
+minimizing the number of text lines which need to be redisplayed.  It
+does this by calling the platform-specific TkScrollWindow function
+which uses a low-level routine to map one rectangle of the window to
+another.  The TkScrollWindow function returns a damage region which is
+then used by the Text widget's DisplayText function to determine which
+text lines need to be redrawn.  On the unix and win platforms, this
+damage region includes bounding rectangles for all embedded windows
+inside the Text widget.  The way that this works is system dependent.
+On unix, the low level scrolling is done by XCopyRegion, which
+generates a GraphicsExpose event for each embedded window.  These
+GraphicsExposed events are processsed within TkScrollWindow, using a
+special handler which adds the bounding rectangle of each subwindow to
+the damage region.  On the win platform the damage region is built by
+the low level function ScrollWindowEx, and it also includes bounding
+rectangles for all embedded windows.  This is possible because on X11
+and Windows every Tk widget is also known to the window manager as a
+window.  The situation is different on macOS.  The underlying object
+for a top level window on macOS is the NSView.  However, Apple
+explicitly warns in its documentation that performance degradation
+occurs when an NSView has more than about 100 subviews.  A Text widget
+with thousands of lines of text could easily contain more than 100
+embedded windows.  In fact, while the original Cocoa port of Tk did
+use the NSButton object, which is derived from NSView, as the basis
+for its Tk Buttons, that was changed in order to improve performance.
+Moreover, the low level routine used for scrolling on macOS, namely
+[NSView scrollrect:by], does not provide any damage information.  So
+TkScrollWindow needs to work differently on macOS.  Since it would be
+inefficient to iterate through all embedded windows in a Text widget,
+looking for those which meet the scrolling area, the damage region
+constructed by TkScrollWindow contains only the difference between the
+source and destination rectangles for the scrolling.  The embedded
+windows are redrawn within the DisplayText function by some
+conditional code which is only used for macOS.
+

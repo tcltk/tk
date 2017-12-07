@@ -7,6 +7,7 @@
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright (c) 2017 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -32,22 +33,11 @@ long tkMacOSXMacOSXVersion = 0;
 
 #pragma mark TKApplication(TKInit)
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-#define NSTextInputContextKeyboardSelectionDidChangeNotification @"NSTextInputContextKeyboardSelectionDidChangeNotification"
-static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-    [[NSNotificationCenter defaultCenter] postNotificationName:NSTextInputContextKeyboardSelectionDidChangeNotification object:nil userInfo:nil];
-}
-#endif
-
 @interface TKApplication(TKKeyboard)
 - (void) keyboardChanged: (NSNotification *) notification;
 @end
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
 #define TKApplication_NSApplicationDelegate <NSApplicationDelegate>
-#else
-#define TKApplication_NSApplicationDelegate
-#endif
 @interface TKApplication(TKWindowEvent) TKApplication_NSApplicationDelegate
 - (void) _setupWindowNotifications;
 @end
@@ -57,16 +47,34 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 @end
 
 @implementation TKApplication
-@synthesize poolProtected = _poolProtected;
+@synthesize poolLock = _poolLock;
 @end
+
+/*
+ * #define this to see a message on stderr whenever _resetAutoreleasePool is
+ * called while the pool is locked.
+ */
+#undef DEBUG_LOCK
 
 @implementation TKApplication(TKInit)
 - (void) _resetAutoreleasePool
 {
-    if(![self poolProtected]) {
+    if([self poolLock] == 0) {
 	[_mainPool drain];
 	_mainPool = [NSAutoreleasePool new];
+    } else {
+#ifdef DEBUG_LOCK
+	fprintf(stderr, "Pool is locked with count %d!!!!\n", [self poolLock]);
+#endif
     }
+}
+- (void) _lockAutoreleasePool
+{
+    [self setPoolLock:[self poolLock] + 1];
+}
+- (void) _unlockAutoreleasePool
+{
+    [self setPoolLock:[self poolLock] - 1];
 }
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 - (void) _postedNotification: (NSNotification *) notification
@@ -87,33 +95,89 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
     observe(NSApplicationDidChangeScreenParametersNotification, displayChanged:);
     observe(NSTextInputContextKeyboardSelectionDidChangeNotification, keyboardChanged:);
 #undef observe
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(), NULL, &keyboardChanged, kTISNotifySelectedKeyboardInputSourceChanged, NULL, CFNotificationSuspensionBehaviorCoalesce);
-#endif
 }
 
-- (void) _setupEventLoop
+-(void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    [self finishLaunching];
-    [self setWindowsNeedUpdate:YES];
-    [pool drain];
-}
 
-- (void) _setup: (Tcl_Interp *) interp
-{
-    _eventInterp = interp;
-    _mainPool = [NSAutoreleasePool new];
-    [NSApp setPoolProtected:NO];
-    _defaultMainMenu = nil;
-    [self _setupMenus];
-    [self setDelegate:self];
+    /*
+     * Initialize notifications.
+     */
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     [[NSNotificationCenter defaultCenter] addObserver:self
 	    selector:@selector(_postedNotification:) name:nil object:nil];
 #endif
     [self _setupWindowNotifications];
     [self _setupApplicationNotifications];
+
+    /*
+     * Construct the menu bar.
+     */
+    _defaultMainMenu = nil;
+    [self _setupMenus];
+
+
+    /*
+     * Initialize event processing.
+     */
+    TkMacOSXInitAppleEvents(_eventInterp);
+
+    /*
+     * Initialize the graphics context.
+     */
+    TkMacOSXUseAntialiasedText(_eventInterp, -1);
+    TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
+}
+
+-(void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    /*
+     * It is not safe to force activation of the NSApp until this
+     * method is called.  Activating too early can cause the menu
+     * bar to be unresponsive.
+     */
+    [NSApp activateIgnoringOtherApps: YES];
+}
+
+- (void) _setup: (Tcl_Interp *) interp
+{
+    /*
+     * Remember our interpreter.
+     */
+    _eventInterp = interp;
+
+    /*
+     * Install the global autoreleasePool.
+     */
+    _mainPool = [NSAutoreleasePool new];
+    [NSApp setPoolLock:0];
+
+    /*
+     * Be our own delegate.
+     */
+    [self setDelegate:self];
+
+    /*
+     * Make sure we are allowed to open windows.
+     */
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+    /*
+     * If no icon has been set from an Info.plist file, use the Wish icon from
+     * the Tk framework.
+     */
+    NSString *iconFile = [[NSBundle mainBundle] objectForInfoDictionaryKey:
+						    @"CFBundleIconFile"];
+    if (!iconFile) {
+	NSString *path = [NSApp tkFrameworkImagePath:@"Tk.icns"];
+	if (path) {
+	    NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
+	    if (image) {
+		[NSApp setApplicationIconImage:image];
+		[image release];
+	    }
+	}
+    }
 }
 
 - (NSString *) tkFrameworkImagePath: (NSString *) image
@@ -163,38 +227,6 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 /*
  *----------------------------------------------------------------------
  *
- * DoWindowActivate --
- *
- *	Idle handler that sets the application icon to the generic Tk icon.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-SetApplicationIcon(
-    ClientData clientData)
-{
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-    NSString *path = [NSApp tkFrameworkImagePath:@"Tk.icns"];
-    if (path) {
-	NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
-	if (image) {
-	    [NSApp setApplicationIconImage:image];
-	    [image release];
-	}
-    }
-    [pool drain];
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkpInit --
  *
  *	Performs Mac-specific interpreter initialization related to the
@@ -223,9 +255,6 @@ TkpInit(
      */
 
     if (!initialized) {
-	int bundledExecutable = 0;
-	CFBundleRef bundleRef;
-	CFURLRef bundleUrl = NULL;
 	struct utsname name;
 	struct stat st;
 
@@ -235,8 +264,8 @@ TkpInit(
 	 * Initialize/check OS version variable for runtime checks.
 	 */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
-#   error Mac OS X 10.5 required
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#   error Mac OS X 10.6 required
 #endif
 
 	if (!uname(&name)) {
@@ -263,87 +292,11 @@ TkpInit(
 	if (Tcl_MacOSXOpenVersionedBundleResources(interp,
 		"com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX,
 		tkLibPath) != TCL_OK) {
+            # if 0 /* This is not really an error.  Wish still runs fine. */
 	    TkMacOSXDbgMsg("Tcl_MacOSXOpenVersionedBundleResources failed");
+	    # endif
 	}
 #endif
-
-	{
-	    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-		[[NSUserDefaults standardUserDefaults] registerDefaults:
-		     [NSDictionary dictionaryWithObjectsAndKeys:
-		     [NSNumber numberWithBool:YES],
-		     @"_NSCanWrapButtonTitles",
-		     [NSNumber numberWithInt:-1],
-		     @"NSStringDrawingTypesetterBehavior",
-		     nil]];
-	    [TKApplication sharedApplication];
-	    [pool drain];
-	    [NSApp _setup:interp];
-	}
-
-	/* Check whether we are a bundled executable: */
-	bundleRef = CFBundleGetMainBundle();
-	if (bundleRef) {
-	    bundleUrl = CFBundleCopyBundleURL(bundleRef);
-	}
-	if (bundleUrl) {
-	    /*
-	     * A bundled executable is two levels down from its main bundle
-	     * directory (e.g. Wish.app/Contents/MacOS/Wish), whereas an
-	     * unbundled executable's main bundle directory is just the
-	     * directory containing the executable. So to check whether we are
-	     * bundled, we delete the last three path components of the
-	     * executable's url and compare the resulting url with the main
-	     * bundle url.
-	     */
-
-	    int j = 3;
-	    CFURLRef url = CFBundleCopyExecutableURL(bundleRef);
-
-	    while (url && j--) {
-		CFURLRef parent =
-			CFURLCreateCopyDeletingLastPathComponent(NULL, url);
-
-		CFRelease(url);
-		url = parent;
-	    }
-	    if (url) {
-		bundledExecutable = CFEqual(bundleUrl, url);
-		CFRelease(url);
-	    }
-	    CFRelease(bundleUrl);
-	}
-
-	if (!bundledExecutable) {
-	    /*
-	     * If we are loaded into an executable that is not a bundled
-	     * application, the window server does not let us come to the
-	     * foreground. For such an executable, notify the window server
-	     * that we are now a full GUI application.
-	     */
-
-	    OSStatus err = procNotFound;
-	    ProcessSerialNumber psn = { 0, kCurrentProcess };
-
-	    err = ChkErr(TransformProcessType, &psn,
-		    kProcessTransformToForegroundApplication);
-
-	    /*
-	     * Set application icon to generic Tk icon, do it at idle time
-	     * instead of now to ensure tk_library is setup.
-	     */
-
-	    Tcl_DoWhenIdle(SetApplicationIcon, NULL);
-	}
-
-	{
-	    NSAutoreleasePool *pool = [NSAutoreleasePool new];
-	    [NSApp _setupEventLoop];
-	    TkMacOSXInitAppleEvents(interp);
-	    TkMacOSXUseAntialiasedText(interp, -1);
-	    TkMacOSXInitCGDrawing(interp, TRUE, 0);
-	    [pool drain];
-	}
 
 	/*
 	 * FIXME: Close stdin & stdout for remote debugging otherwise we will
@@ -354,6 +307,24 @@ TkpInit(
 	    close(0);
 	    close(1);
 	}
+
+	/*
+	 * Instantiate our NSApplication object. This needs to be
+	 * done before we check whether to open a console window.
+	 */
+
+	NSAutoreleasePool *pool = [NSAutoreleasePool new];
+	[[NSUserDefaults standardUserDefaults] registerDefaults:
+		[NSDictionary dictionaryWithObjectsAndKeys:
+				  [NSNumber numberWithBool:YES],
+			      @"_NSCanWrapButtonTitles",
+				   [NSNumber numberWithInt:-1],
+			      @"NSStringDrawingTypesetterBehavior",
+			      nil]];
+	[TKApplication sharedApplication];
+	[pool drain];
+	[NSApp _setup:interp];
+	[NSApp finishLaunching];
 
 	/*
 	 * If we don't have a TTY and stdin is a special character file of
@@ -387,6 +358,7 @@ TkpInit(
 		return TCL_ERROR;
 	    }
 	}
+
     }
 
     Tk_MacOSXSetupTkNotifier();

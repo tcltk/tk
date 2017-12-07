@@ -15,6 +15,7 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
+#include "tkMacOSXConstants.h"
 
 /*
 #ifdef TK_MAC_DEBUG

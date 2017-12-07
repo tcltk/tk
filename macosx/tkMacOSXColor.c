@@ -266,13 +266,9 @@ GetThemeColor(
 	    break;
 	}
 
-        // this attempts to find something roughly fitting for any display
-//	*c = CGColorCreateGenericRGB(rgba[0], rgba[1], rgba[2], rgba[3]);
-
-        // may be off for non-main display but in most cases better than prev
 	static CGColorSpaceRef deviceRGBSpace = NULL;
 	if (!deviceRGBSpace) {
-	    deviceRGBSpace = CGDisplayCopyColorSpace(CGMainDisplayID());
+	    deviceRGBSpace = CGColorSpaceCreateDeviceRGB();
 	}
 	*c = CGColorCreate(deviceRGBSpace, rgba );
     }

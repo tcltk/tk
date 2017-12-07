@@ -14,6 +14,7 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXConstants.h"
 
 #pragma mark TKApplication(TKEvent)
 
@@ -88,7 +89,6 @@ enum {
 	}
     case NSCursorUpdate:
         break;
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
     case NSEventTypeGesture:
     case NSEventTypeMagnify:
     case NSEventTypeRotate:
@@ -96,7 +96,6 @@ enum {
     case NSEventTypeBeginGesture:
     case NSEventTypeEndGesture:
         break;
-#endif
 #endif
 
     default:

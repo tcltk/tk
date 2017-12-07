@@ -600,8 +600,9 @@ proc ::tk::AmpWidget {class path args} {
 # ::tk::AmpMenuArgs --
 #	Processes arguments for a menu entry, turning -label option into
 #	-label and -underline options, returned by ::tk::UnderlineAmpersand.
+#      The cmd argument is supposed to be either "add" or "entryconfigure"
 #
-proc ::tk::AmpMenuArgs {widget add type args} {
+proc ::tk::AmpMenuArgs {widget cmd type args} {
     set options {}
     foreach {opt val} $args {
 	if {$opt eq "-label"} {
@@ -611,7 +612,7 @@ proc ::tk::AmpMenuArgs {widget add type args} {
 	    lappend options $opt $val
 	}
     }
-    $widget add $type {*}$options
+    $widget $cmd $type {*}$options
 }
 
 # ::tk::FindAltKeyTarget --
