@@ -51,7 +51,6 @@ static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
 static int childClassInitialized;	/* Registered child class? */
 static WNDCLASS childClass;		/* Window class for child windows. */
-static int tkPlatformId = 0;		/* version of Windows platform */
 static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
 static Tcl_Encoding keyInputEncoding = NULL;
 					/* The current character encoding for
@@ -305,33 +304,26 @@ TkWinXCleanup(
 /*
  *----------------------------------------------------------------------
  *
- * TkWinGetPlatformId --
+ * TkWinGetPlatformTheme --
  *
- *	Determines whether running under NT, 95, or Win32s, to allow runtime
- *	conditional code. Win32s is no longer supported.
+ *	Return the Windows drawing style we should be using.
  *
  * Results:
  *	The return value is one of:
- *		VER_PLATFORM_WIN32s	   Win32s on Windows 3.1 (not supported)
- *		VER_PLATFORM_WIN32_WINDOWS Win32 on Windows 95, 98, ME (not supported)
- *		VER_PLATFORM_WIN32_NT	Win32 on Windows XP, Vista, Windows 7, Windows 8
- *		VER_PLATFORM_WIN32_CE	Win32 on Windows CE
- *
- * Side effects:
- *	None.
+ *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
+ *	    TK_THEME_WIN_XP		XP not in classic mode
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkWinGetPlatformId(void)
+TkWinGetPlatformTheme(void)
 {
-    if (tkPlatformId == 0) {
+    if (tkWinTheme == 0) {
 	OSVERSIONINFOW os;
 
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	GetVersionExW(&os);
-	tkPlatformId = os.dwPlatformId;
 
 	/*
 	 * Set tkWinTheme to be TK_THEME_WIN_XP or TK_THEME_WIN_CLASSIC. The
@@ -339,8 +331,7 @@ TkWinGetPlatformId(void)
 	 * windows classic theme was selected.
 	 */
 
-	if ((os.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
-		(os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
+	if ((os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
 	    HKEY hKey;
 	    LPCTSTR szSubKey = TEXT("Control Panel\\Appearance");
 	    LPCTSTR szCurrent = TEXT("Current");
@@ -363,33 +354,6 @@ TkWinGetPlatformId(void)
 	} else {
 	    tkWinTheme = TK_THEME_WIN_CLASSIC;
 	}
-    }
-    return tkPlatformId;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWinGetPlatformTheme --
- *
- *	Return the Windows drawing style we should be using.
- *
- * Results:
- *	The return value is one of:
- *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
- *	    TK_THEME_WIN_XP		XP not in classic mode
- *
- * Side effects:
- *	Could invoke TkWinGetPlatformId.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkWinGetPlatformTheme(void)
-{
-    if (tkPlatformId == 0) {
-	TkWinGetPlatformId();
     }
     return tkWinTheme;
 }
