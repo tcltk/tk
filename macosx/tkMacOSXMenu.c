@@ -19,6 +19,7 @@
 #include "tkFont.h"
 #include "tkMacOSXWm.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXConstants.h"
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -116,11 +117,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index;
 @end
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
 #define TKMenu_NSMenuDelegate <NSMenuDelegate>
-#else
-#define TKMenu_NSMenuDelegate
-#endif
 @interface TKMenu(TKMenuDelegate) TKMenu_NSMenuDelegate
 @end
 
@@ -773,8 +770,15 @@ TkpPostMenu(
     Drawable d = Tk_WindowId(root);
     NSView *rootview = TkMacOSXGetRootControl(d);
     NSWindow *win = [rootview window];
+    int result;
 
     inPostMenu = 1;
+    
+    result = TkPreprocessMenu(menuPtr);
+    if (result != TCL_OK) {
+        inPostMenu = 0;
+        return result;
+    }
 
     int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
     NSView *view = [win contentView];

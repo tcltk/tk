@@ -741,6 +741,52 @@ XFillRectangles(
 /*
  *----------------------------------------------------------------------
  *
+ * MakeAndStrokePath --
+ *
+ *	This function draws a shape using a list of points, a stipple pattern,
+ *	and the specified drawing function. It does it through creation of a
+ *	so-called 'path' (see GDI documentation on MSDN).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+static void
+MakeAndStrokePath(
+    HDC dc,
+    POINT *winPoints,
+    int npoints,
+    WinDrawFunc func)        /* Name of the Windows GDI drawing function:
+                                this is either Polyline or Polygon. */
+{
+    BeginPath(dc);
+    func(dc, winPoints, npoints);
+    /*
+     * In the case of closed polylines, the first and last points
+     * are the same. We want miter or bevel join be rendered also
+     * at this point, this needs telling the Windows GDI that the
+     * path is closed.
+     */
+    if (func == Polyline) {
+        if ((winPoints[0].x == winPoints[npoints-1].x) &&
+                (winPoints[0].y == winPoints[npoints-1].y)) {
+            CloseFigure(dc);
+        }
+        EndPath(dc);
+        StrokePath(dc);
+    } else {
+        EndPath(dc);
+        StrokeAndFillPath(dc);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * RenderObject --
  *
  *	This function draws a shape using a list of points, a stipple pattern,
@@ -833,7 +879,7 @@ RenderObject(
 	SetPolyFillMode(dcMem, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
 	oldMemBrush = SelectObject(dcMem, CreateSolidBrush(gc->foreground));
-	func(dcMem, winPoints, npoints);
+        MakeAndStrokePath(dcMem, winPoints, npoints, func);
 	BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0, COPYFG);
 
 	/*
@@ -845,7 +891,7 @@ RenderObject(
 	if (gc->fill_style == FillOpaqueStippled) {
 	    DeleteObject(SelectObject(dcMem,
 		    CreateSolidBrush(gc->background)));
-	    func(dcMem, winPoints, npoints);
+            MakeAndStrokePath(dcMem, winPoints, npoints, func);
 	    BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0,
 		    COPYBG);
 	}
@@ -861,7 +907,7 @@ RenderObject(
 
 	SetPolyFillMode(dc, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
-	func(dc, winPoints, npoints);
+        MakeAndStrokePath(dc, winPoints, npoints, func);
 	SelectObject(dc, oldPen);
     }
     DeleteObject(SelectObject(dc, oldBrush));

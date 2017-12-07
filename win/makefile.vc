@@ -521,14 +521,6 @@ lflags	= $(lflags) -profile
 lflags	= $(lflags) -nodefaultlib:libucrt.lib
 !endif
 
-!if $(ALIGN98_HACK) && !$(STATIC_BUILD)
-### Align sections for PE size savings.
-lflags	= $(lflags) -opt:nowin98
-!else if !$(ALIGN98_HACK) && $(STATIC_BUILD)
-### Align sections for speed in loading by choosing the virtual page size.
-lflags	= $(lflags) -align:4096
-!endif
-
 !if $(LOIMPACT)
 lflags	= $(lflags) -ws:aggressive
 !endif
@@ -661,7 +653,7 @@ $(TKLIB): $(TKOBJS)
 $**
 <<
 !else
-	$(link32) $(dlllflags) -base:@$(COFFBASE),tk -out:$@ $(guilibs) \
+	$(link32) $(dlllflags) -out:$@ $(guilibs) \
 		$(TCLSTUBLIB) @<<
 $**
 <<
