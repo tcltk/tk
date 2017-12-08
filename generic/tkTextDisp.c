@@ -8927,7 +8927,7 @@ DisplayText(
 		    && dlPtr->chunkPtr
 		    && (dlPtr->y < 0 || dlPtr->y + dlPtr->height > dInfoPtr->maxY)) {
 
-		/* 
+		/*
 		 * On platforms other than the Mac:
 		 *
 		 * It's the first or last DLine which are also overlapping the

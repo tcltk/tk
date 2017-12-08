@@ -351,7 +351,7 @@ const Tcl_ObjType tkFontObjType = {
     FreeFontObjProc,		/* freeIntRepProc */
     DupFontObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetFontFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*

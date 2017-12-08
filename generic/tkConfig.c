@@ -1642,8 +1642,6 @@ FreeResources(
 	if (internalFormExists) {
 	    Tk_FreeStyle(*((Tk_Style *) internalPtr));
 	    *((Tk_Style *) internalPtr) = NULL;
-	} else if (objPtr != NULL) {
-	    Tk_FreeStyleFromObj(objPtr);
 	}
 	break;
     case TK_OPTION_BITMAP:
