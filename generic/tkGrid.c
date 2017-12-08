@@ -3083,7 +3083,8 @@ ConfigureSlaves(
     }
 
     /*
-     * If no -row is given, use the first unoccupied row of the master.
+     * If no -row is given, use the next row after the highest occupied row
+     * of the master.
      */
 
     if (defaultRow < 0) {

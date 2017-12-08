@@ -39,10 +39,16 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 #undef Tk_MainEx
 #undef Tk_FreeXId
+#undef Tk_FreeStyleFromObj
+#undef Tk_GetStyleFromObj
+#undef TkWinGetPlatformId
 
-
-#ifdef TK_NO_DEPRECATED
+#if defined(TK_NO_DEPRECATED) || TK_MAJOR_VERSION > 8
+#define Tk_MainEx 0
 #define Tk_FreeXId 0
+#define Tk_FreeStyleFromObj 0
+#define Tk_GetStyleFromObj 0
+#define TkWinGetPlatformId 0
 #define Tk_PhotoPutBlock_NoComposite 0
 #define Tk_PhotoPutZoomedBlock_NoComposite 0
 #define Tk_PhotoExpand_Panic 0
@@ -55,9 +61,20 @@ doNothing(void)
 {
     /* dummy implementation, no need to do anything */
 }
-
 #define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
-#endif
+#define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *)) doNothing)
+#define Tk_GetStyleFromObj getStyleFromObj
+static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
+{
+	return Tk_AllocStyleFromObj(NULL, obj);
+}
+#if defined(_WIN32) || defined(__CYGWIN__)
+#define TkWinGetPlatformId winGetPlatformId
+static int TkWinGetPlatformId() {
+    return 2;
+}
+#endif /* defined(_WIN32) || defined(__CYGWIN__) */
+#endif /* defined(TK_NO_DEPRECATED) || TK_MAJOR_VERSION > 8 */
 
 #ifdef _WIN32
 
@@ -225,7 +242,6 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkWinSetForegroundWindow 0
 #	define TkWinDialogDebug 0
 #	define TkWinGetMenuSystemDefault 0
-#	define TkWinGetPlatformId 0
 #	define TkWinSetHINSTANCE 0
 #	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0

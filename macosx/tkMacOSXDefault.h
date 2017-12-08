@@ -326,11 +326,6 @@
 #define DEF_MENU_SELECT_COLOR		"systemMenuActive"
 #define DEF_MENU_SELECT_MONO		BLACK
 #define DEF_MENU_TAKE_FOCUS		"0"
-
-/*
- * FIXME: Turn the default back to 1 when we make tearoff menus work again.
- */
-
 #define DEF_MENU_TEAROFF		"0"
 #define DEF_MENU_TEAROFF_CMD		((char *) NULL)
 #define DEF_MENU_TITLE			""

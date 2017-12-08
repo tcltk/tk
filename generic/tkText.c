@@ -6417,10 +6417,10 @@ TextSearchCmd(
 	"-strictlimits", NULL
     };
     enum SearchSwitches {
-	SEARCH_HIDDEN,
-	SEARCH_END, SEARCH_ALL, SEARCH_BACK, SEARCH_COUNT, SEARCH_DISCARDHYPHENS, SEARCH_ELIDE,
-	SEARCH_EXACT, SEARCH_FWD, SEARCH_NOCASE, SEARCH_NOLINESTOP, SEARCH_OVERLAP, SEARCH_REGEXP,
-	SEARCH_STRICTLIMITS
+	TK_TEXT_SEARCH_HIDDEN, TK_TEXT_SEARCH_END, TK_TEXT_SEARCH_ALL, TK_TEXT_SEARCH_BACK,
+	TK_TEXT_SEARCH_COUNT, TK_TEXT_SEARCH_DISCARDHYPHENS, SEARCH_ELIDE, TK_TEXT_SEARCH_EXACT,
+	TK_TEXT_SEARCH_FWD, TK_TEXT_SEARCH_NOCASE, TK_TEXT_SEARCH_NOLINESTOP, TK_TEXT_SEARCH_OVERLAP,
+	TK_TEXT_SEARCH_REGEXP, TK_TEXT_SEARCH_STRICTLIMITS
     };
 
     /*
@@ -6471,16 +6471,16 @@ TextSearchCmd(
 	}
 
 	switch ((enum SearchSwitches) index) {
-	case SEARCH_END:
+	case TK_TEXT_SEARCH_END:
 	    i += 1;
 	    goto endOfSwitchProcessing;
-	case SEARCH_ALL:
+	case TK_TEXT_SEARCH_ALL:
 	    searchSpec.all = true;
 	    break;
-	case SEARCH_BACK:
+	case TK_TEXT_SEARCH_BACK:
 	    searchSpec.backwards = true;
 	    break;
-	case SEARCH_COUNT:
+	case TK_TEXT_SEARCH_COUNT:
 	    if (i >= objc - 1) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj("no value given for \"-count\" option", -1));
 		Tcl_SetErrorCode(interp, "TK", "TEXT", "VALUE", NULL);
@@ -6495,32 +6495,32 @@ TextSearchCmd(
 
 	    searchSpec.varPtr = objv[i];
 	    break;
-	case SEARCH_DISCARDHYPHENS:
+	case TK_TEXT_SEARCH_DISCARDHYPHENS:
 	    searchSpec.searchHyphens = false;
 	    break;
-	case SEARCH_ELIDE:
-	case SEARCH_HIDDEN:
+	case TK_TEXT_SEARCH_ELIDE:
+	case TK_TEXT_SEARCH_HIDDEN:
 	    searchSpec.searchElide = true;
 	    break;
-	case SEARCH_EXACT:
+	case TK_TEXT_SEARCH_EXACT:
 	    searchSpec.exact = true;
 	    break;
-	case SEARCH_FWD:
+	case TK_TEXT_SEARCH_FWD:
 	    searchSpec.backwards = false;
 	    break;
-	case SEARCH_NOCASE:
+	case TK_TEXT_SEARCH_NOCASE:
 	    searchSpec.noCase = true;
 	    break;
-	case SEARCH_NOLINESTOP:
+	case TK_TEXT_SEARCH_NOLINESTOP:
 	    searchSpec.noLineStop = true;
 	    break;
-	case SEARCH_OVERLAP:
+	case TK_TEXT_SEARCH_OVERLAP:
 	    searchSpec.overlap = true;
 	    break;
-	case SEARCH_STRICTLIMITS:
+	case TK_TEXT_SEARCH_STRICTLIMITS:
 	    searchSpec.strictLimits = true;
 	    break;
-	case SEARCH_REGEXP:
+	case TK_TEXT_SEARCH_REGEXP:
 	    searchSpec.exact = false;
 	    break;
 	default:
