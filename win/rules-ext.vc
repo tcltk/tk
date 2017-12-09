@@ -1,18 +1,27 @@
-#------------------------------------------------------------- -*- makefile -*-
-# rules-ext.vc --
-#
-# Part of the nmake based build system for Tcl and its extensions.
 # This file should only be included in makefiles for Tcl extensions,
 # NOT in the makefile for Tcl itself.
-# See TIP 477 (https://core.tcl.tk/tips/doc/trunk/tip/477.md) for docs.
 
 !ifndef _RULES_EXT_VC
 
-!if !exist("rules-ext.vc")
+# We need to run from the directory the parent makefile is located in.
+# nmake does not tell us what makefile was used to invoke it so parent
+# makefile has to set the MAKEFILEVC macro or we just make a guess and
+# warn if we think that is not the case.
+!if "$(MAKEFILEVC)" == ""
+
+!if exist("$(PROJECT).vc")
+MAKEFILEVC = $(PROJECT).vc
+!elseif exist("makefile.vc")
+MAKEFILEVC = makefile.vc
+!endif
+!endif # "$(MAKEFILEVC)" == ""
+
+!if !exist("$(MAKEFILEVC)")
 MSG = ^
-You must run this makefile only from the directory it is in.^
-Please `cd` to its location first.
-!error $(MSG)
+You must run nmake from the directory containing the project makefile.^
+If you are doing that and getting this message, set the MAKEFILEVC^
+macro to the name of the project makefile.
+!message WARNING: $(MSG)
 !endif
 
 !if "$(PROJECT)" == "tcl"
@@ -36,22 +45,26 @@ _RULESDIR = ..\..\tcl
 
 !endif # ifndef TCLDIR
 
-# Now look for the rules.vc file under the Tcl root
-!if exist("$(_RULESDIR)\lib\nmake\rules.vc") # Building against installed Tcl
+# Now look for the targets.vc file under the Tcl root. Note we check this
+# file and not rules.vc because the latter also exists on older systems.
+!if exist("$(_RULESDIR)\lib\nmake\targets.vc") # Building against installed Tcl
 _RULESDIR = $(_RULESDIR)\lib\nmake
-!elseif exist("$(_RULESDIR)\win\rules.vc")   # Building against Tcl sources
+!elseif exist("$(_RULESDIR)\win\targets.vc")   # Building against Tcl sources
 _RULESDIR = $(_RULESDIR)\win
 !else
-# If we have not located Tcl's rules file, most likely we are compiling
+# If we have not located Tcl's targets file, most likely we are compiling
 # against an older version of Tcl and so must use our own support files.
 _RULESDIR = .
 !endif
 
 !if "$(_RULESDIR)" != "."
-# Potentially using Tcl's support files. Need to compare the versions.
-# We extract version numbers using the nmakehlp program. For this
-# purpose, we use the version of nmakehlp that we have. 
-!if [$(CC) -nologo nmakehlp.c -link -subsystem:console > nul]
+# Potentially using Tcl's support files. If this extension has its own
+# nmake support files, need to compare the versions and pick newer.
+
+!if exist("rules.vc") # The extension has its own copy
+
+# We extract version numbers using the nmakehlp program.
+!if [$(CC) -nologo "$(_RULESDIR)\nmakehlp.c" -link -subsystem:console > nul]
 !endif
 
 !if [echo TCL_RULES_MAJOR = \> versions.vc] \
@@ -73,7 +86,9 @@ _RULESDIR = .
 _RULESDIR = .
 !endif
 
-!endif # $(_RULESDIR) != "."
+!endif # if exist("rules.vc")
+
+!endif # if $(_RULESDIR) != "."
 
 # Let rules.vc know what copy of nmakehlp.c to use.
 NMAKEHLPC = $(_RULESDIR)\nmakehlp.c
@@ -84,7 +99,11 @@ NMAKEHLPC = $(_RULESDIR)\nmakehlp.c
 !undef OUR_RULES_MAJOR
 !undef OUR_RULES_MINOR
 
+!if exist("$(_RULESDIR)\rules.vc")
 !message *** Using $(_RULESDIR)\rules.vc
 !include "$(_RULESDIR)\rules.vc"
+!else
+!error *** Could not locate rules.vc in $(_RULESDIR)
+!endif
 
 !endif # _RULES_EXT_VC
