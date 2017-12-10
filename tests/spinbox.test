@@ -526,7 +526,7 @@ test spinbox-1.44 {configuration option: "insertbackground" for spinbox} -setup 
 } -returnCodes {error} -result {unknown color name "bogus"}
 
 test spinbox-1.45 {configuration option: "insertborderwidth"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+        spinbox .e -borderwidth 2 -insertwidth 2 -highlightthickness 2 -font {Helvetica -12} \
         -relief sunken
     pack .e
     update
