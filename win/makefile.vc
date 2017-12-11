@@ -412,9 +412,14 @@ dbgshell: setup $(WISH)
 	windbg $(WISH)
 
 !if $(STATIC_BUILD)
+
 $(TKLIB): $(TKOBJS)
 	$(LIBCMD) @<<
+$**
+<<
+
 !else
+
 $(TKLIB): $(TKOBJS)
 	$(DLLCMD) @<<
 $**
@@ -423,7 +428,8 @@ $**
 	@if exist $*.exp del $*.exp
 
 $(TKIMPLIB): $(TKLIB)
-!endif
+
+!endif # $(STATIC_BUILD)
 
 $(TKSTUBLIB): $(TKSTUBOBJS)
 	$(LIBCMD) -nodefaultlib $**
