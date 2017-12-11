@@ -179,7 +179,7 @@ Tk_ScrollbarObjCmd(
     scrollPtr->sliderLast = 0;
     scrollPtr->activeField = 0;
     scrollPtr->activeRelief = TK_RELIEF_RAISED;
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
     scrollPtr->totalUnits = 0;
     scrollPtr->windowUnits = 0;
     scrollPtr->firstUnit = 0;
@@ -379,13 +379,13 @@ ScrollbarWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 1, objv, "get");
 	    goto error;
 	}
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 	if (scrollPtr->flags & NEW_STYLE_COMMANDS) {
 #endif /* TK_NO_DEPRECATED */
 	    resObjs[0] = Tcl_NewDoubleObj(scrollPtr->firstFraction);
 	    resObjs[1] = Tcl_NewDoubleObj(scrollPtr->lastFraction);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, resObjs));
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 	} else {
 	    resObjs[0] = Tcl_NewIntObj(scrollPtr->totalUnits);
 	    resObjs[1] = Tcl_NewIntObj(scrollPtr->windowUnits);
@@ -442,7 +442,7 @@ ScrollbarWidgetObjCmd(
 	    } else {
 		scrollPtr->lastFraction = last;
 	    }
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 	    scrollPtr->flags |= NEW_STYLE_COMMANDS;
 	} else if (objc == 6) {
 	    int totalUnits, windowUnits, firstUnit, lastUnit;

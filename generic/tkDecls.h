@@ -1751,7 +1751,7 @@ extern const TkStubs *tkStubsPtr;
 #endif
 
 
-#ifdef TK_NO_DEPRECATED
+#if defined(TK_NO_DEPRECATED) || TK_MAJOR_VERSION > 8
 #undef Tk_PhotoPutBlock_NoComposite
 #undef Tk_PhotoPutZoomedBlock_NoComposite
 #undef Tk_PhotoExpand_Panic
