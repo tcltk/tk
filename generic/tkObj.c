@@ -1123,7 +1123,7 @@ TkParsePadAmount(
  *	None
  *
  * Side effects:
- *	All instances of Tcl_ObjType structues used in Tk are registered with
+ *	All instances of Tcl_ObjType structures used in Tk are registered with
  *	Tcl.
  *
  *----------------------------------------------------------------------
@@ -1135,8 +1135,7 @@ TkParsePadAmount(
 void
 TkRegisterObjTypes(void)
 {
-    /* When running in Tcl 9, no need to Register the objTypes, and
-     * no need to provide fromAnyProc's. */
+    /* When running in Tcl 9, no need to Register the objTypes. */
 #if !defined(STATIC_BUILD)
     if ((*((&(tclStubsPtr->tcl_PkgProvideEx))[77])) != NULL) {
 	registerObjType(tkBorderObjType);
@@ -1152,10 +1151,6 @@ TkRegisterObjTypes(void)
 	return;
     }
 #endif
-    tkFontObjType.setFromAnyProc = NULL;
-    mmObjType.setFromAnyProc = NULL;
-    pixelObjType.setFromAnyProc = NULL;
-    windowObjType.setFromAnyProc = NULL;
 }
 
 /*
