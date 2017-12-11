@@ -346,12 +346,12 @@ static void		UpdateDependentFonts(TkFontInfo *fiPtr,
  * font object points to the TkFont structure for the font, or NULL.
  */
 
-Tcl_ObjType tkFontObjType = {
+const Tcl_ObjType tkFontObjType = {
     "font",			/* name */
     FreeFontObjProc,		/* freeIntRepProc */
     DupFontObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetFontFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*

@@ -117,19 +117,6 @@ long tkMacOSXMacOSXVersion = 0;
     [self _setupMenus];
 
     /*
-     * Set the application icon.  This is unnecessary when running Wish.app
-     * but it is easier than testing for that situation to just do it.
-     */
-    NSString *path = [NSApp tkFrameworkImagePath:@"Tk.icns"];
-    if (path) {
-	NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
-	if (image) {
-	    [NSApp setApplicationIconImage:image];
-	    [image release];
-	}
-    }
-
-    /*
      * Initialize event processing.
      */
     TkMacOSXInitAppleEvents(_eventInterp);
@@ -173,6 +160,23 @@ long tkMacOSXMacOSXVersion = 0;
      * Make sure we are allowed to open windows.
      */
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+    /*
+     * If no icon has been set from an Info.plist file, use the Wish icon from
+     * the Tk framework.
+     */
+    NSString *iconFile = [[NSBundle mainBundle] objectForInfoDictionaryKey:
+						    @"CFBundleIconFile"];
+    if (!iconFile) {
+	NSString *path = [NSApp tkFrameworkImagePath:@"Tk.icns"];
+	if (path) {
+	    NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
+	    if (image) {
+		[NSApp setApplicationIconImage:image];
+		[image release];
+	    }
+	}
+    }
 }
 
 - (NSString *) tkFrameworkImagePath: (NSString *) image
@@ -287,7 +291,9 @@ TkpInit(
 	if (Tcl_MacOSXOpenVersionedBundleResources(interp,
 		"com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX,
 		tkLibPath) != TCL_OK) {
+            # if 0 /* This is not really an error.  Wish still runs fine. */
 	    TkMacOSXDbgMsg("Tcl_MacOSXOpenVersionedBundleResources failed");
+	    # endif
 	}
 #endif
 

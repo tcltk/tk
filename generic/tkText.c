@@ -3804,10 +3804,10 @@ TextSearchCmd(
 	"-nocase", "-nolinestop", "-overlap", "-regexp", "-strictlimits", NULL
     };
     enum SearchSwitches {
-	SEARCH_HIDDEN,
-	SEARCH_END, SEARCH_ALL, SEARCH_BACK, SEARCH_COUNT, SEARCH_ELIDE,
-	SEARCH_EXACT, SEARCH_FWD, SEARCH_NOCASE,
-	SEARCH_NOLINESTOP, SEARCH_OVERLAP, SEARCH_REGEXP, SEARCH_STRICTLIMITS
+	TK_TEXT_SEARCH_HIDDEN,
+	TK_TEXT_SEARCH_END, TK_TEXT_SEARCH_ALL, TK_TEXT_SEARCH_BACK, TK_TEXT_SEARCH_COUNT, TK_TEXT_SEARCH_ELIDE,
+	TK_TEXT_SEARCH_EXACT, TK_TEXT_SEARCH_FWD, TK_TEXT_SEARCH_NOCASE,
+	TK_TEXT_SEARCH_NOLINESTOP, TK_TEXT_SEARCH_OVERLAP, TK_TEXT_SEARCH_REGEXP, TK_TEXT_SEARCH_STRICTLIMITS
     };
 
     /*
@@ -3857,16 +3857,16 @@ TextSearchCmd(
 	}
 
 	switch ((enum SearchSwitches) index) {
-	case SEARCH_END:
+	case TK_TEXT_SEARCH_END:
 	    i++;
 	    goto endOfSwitchProcessing;
-	case SEARCH_ALL:
+	case TK_TEXT_SEARCH_ALL:
 	    searchSpec.all = 1;
 	    break;
-	case SEARCH_BACK:
+	case TK_TEXT_SEARCH_BACK:
 	    searchSpec.backwards = 1;
 	    break;
-	case SEARCH_COUNT:
+	case TK_TEXT_SEARCH_COUNT:
 	    if (i >= objc-1) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"no value given for \"-count\" option", -1));
@@ -3882,29 +3882,29 @@ TextSearchCmd(
 
 	    searchSpec.varPtr = objv[i];
 	    break;
-	case SEARCH_ELIDE:
-	case SEARCH_HIDDEN:
+	case TK_TEXT_SEARCH_ELIDE:
+	case TK_TEXT_SEARCH_HIDDEN:
 	    searchSpec.searchElide = 1;
 	    break;
-	case SEARCH_EXACT:
+	case TK_TEXT_SEARCH_EXACT:
 	    searchSpec.exact = 1;
 	    break;
-	case SEARCH_FWD:
+	case TK_TEXT_SEARCH_FWD:
 	    searchSpec.backwards = 0;
 	    break;
-	case SEARCH_NOCASE:
+	case TK_TEXT_SEARCH_NOCASE:
 	    searchSpec.noCase = 1;
 	    break;
-	case SEARCH_NOLINESTOP:
+	case TK_TEXT_SEARCH_NOLINESTOP:
 	    searchSpec.noLineStop = 1;
 	    break;
-	case SEARCH_OVERLAP:
+	case TK_TEXT_SEARCH_OVERLAP:
 	    searchSpec.overlap = 1;
 	    break;
-	case SEARCH_STRICTLIMITS:
+	case TK_TEXT_SEARCH_STRICTLIMITS:
 	    searchSpec.strictLimits = 1;
 	    break;
-	case SEARCH_REGEXP:
+	case TK_TEXT_SEARCH_REGEXP:
 	    searchSpec.exact = 0;
 	    break;
 	default:

@@ -4674,44 +4674,50 @@ TkWmRestackToplevel(
 				 * below *all* siblings. */
 {
     NSWindow *macWindow;
-    NSInteger otherMacWindowNumber;
+    NSWindow *otherMacWindow;
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    int macAboveBelow = (aboveBelow == Above ? NSWindowAbove : NSWindowBelow);
+    int otherNumber = 0; /* 0 will be used when otherPtr is NULL. */
 
     /*
-     * Get the mac window. Make sure it exists & is mapped.
+     * If the Tk windows has no drawable, or is withdrawn do nothing.
      */
-
-    if (winPtr->window == None) {
-	Tk_MakeWindowExist((Tk_Window) winPtr);
-    }
-    if (winPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
-	/*
-	 * Can't set stacking order properly until the window is on the screen
-	 * (mapping it may give it a reparent window), so make sure it's on
-	 * the screen.
-	 */
-
-	TkWmMapWindow(winPtr);
+    if (winPtr->window == None ||
+	wmPtr == NULL          ||
+	wmPtr->hints.initial_state == WithdrawnState) {
+	return;
     }
     macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    if (macWindow == nil) {
+	return;
+    }
+    if (otherPtr) {
+	/*
+	 * When otherPtr is non-NULL, if the other window has no
+	 * drawable or is withdrawn, do nothing.
+	 */
+	WmInfo *otherWmPtr = otherPtr->wmInfoPtr;
+	if (winPtr->window == None ||
+	    otherWmPtr == NULL     ||
+	    otherWmPtr->hints.initial_state == WithdrawnState) {
+	return;
+	}
+	otherMacWindow = TkMacOSXDrawableWindow(otherPtr->window);
+	if (otherMacWindow == nil) {
+	    return;
+	} else {
+	    /*
+	     * If the other window is OK, get its number.
+	     */
+	    otherNumber = [otherMacWindow windowNumber];
+	}
+    }
 
     /*
-     * Get the window in which a raise or lower is in relation to.
+     * Just let the Mac window manager deal with all the subtleties
+     * of keeping track of off-screen windows, etc.
      */
-
-    if (otherPtr != NULL) {
-	if (otherPtr->window == None) {
-	    Tk_MakeWindowExist((Tk_Window) otherPtr);
-	}
-	if (otherPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
-	    TkWmMapWindow(otherPtr);
-	}
-	otherMacWindowNumber = [TkMacOSXDrawableWindow(otherPtr->window)
-		windowNumber];
-    } else {
-	otherMacWindowNumber = 0;
-    }
-    [macWindow orderWindow:(aboveBelow == Above ? NSWindowAbove : NSWindowBelow)
-	    relativeTo:otherMacWindowNumber];
+    [macWindow orderWindow:macAboveBelow relativeTo:otherNumber];
 }
 
 /*
@@ -5237,7 +5243,7 @@ TkUnsupported1ObjCmd(
     };
     Tk_Window tkwin = clientData;
     TkWindow *winPtr;
-    int index, i;
+    int index;
 
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option window ?arg ...?");

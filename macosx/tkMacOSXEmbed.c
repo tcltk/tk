@@ -800,9 +800,12 @@ ContainerEventProc(
     Tk_ErrorHandler errHandler;
 
     if (!firstContainerPtr) {
-	TKLog(@"Embedded window has nil container.");
+	/*
+	 * When the interpreter is being dismantled this can be nil.
+	 */
 	return;
     }
+    
     /*
      * Ignore any X protocol errors that happen in this procedure (almost any
      * operation could fail, for example, if the embedded application has
