@@ -1344,9 +1344,28 @@ SetUpGraphicsPort(
     } else {
 	LOGBRUSH lb;
 
-	lb.lbStyle = BS_SOLID;
-	lb.lbColor = gc->foreground;
-	lb.lbHatch = 0;
+	if ((gc->fill_style == FillStippled
+		|| gc->fill_style == FillOpaqueStippled)
+		&& gc->stipple != None) {
+		TkWinDrawable *twdPtr = (TkWinDrawable *)gc->stipple;
+		HBRUSH stipple;
+
+		if (twdPtr->type != TWD_BITMAP) {
+			Tcl_Panic("unexpected drawable type in stipple");
+		}
+
+		stipple = CreatePatternBrush(twdPtr->bitmap.handle);
+
+		GetObject(stipple, sizeof(lb), &lb);
+
+		DeleteObject(stipple);
+	}
+	else
+	{
+		lb.lbStyle = BS_SOLID;
+		lb.lbColor = gc->foreground;
+		lb.lbHatch = 0;
+	}
 
 	style |= PS_GEOMETRIC;
 	switch (gc->cap_style) {
