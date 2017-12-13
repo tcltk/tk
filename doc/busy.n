@@ -28,7 +28,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-busy \- confine pointer and keyboard events to a window sub-tree
+busy \- confine pointer events to a window sub-tree
 .SH SYNOPSIS
 \fBtk busy\fR \fIwindow \fR?\fIoptions\fR?
 .sp
@@ -44,9 +44,10 @@ busy \- confine pointer and keyboard events to a window sub-tree
 .BE
 .SH DESCRIPTION
 .PP
-The \fBtk busy\fR command provides a simple means to block keyboard, button,
-and pointer events from Tk widgets, while overriding the widget's cursor with
-a configurable busy cursor.
+The \fBtk busy\fR command provides a simple means to block pointer events from
+Tk widgets, while overriding the widget's cursor with a configurable busy
+cursor. Note this command does not prevent keyboard events from being sent to
+the widgets made busy.
 .SH INTRODUCTION
 .PP
 There are many times in applications where you want to temporarily restrict
@@ -68,8 +69,8 @@ that overrides the widget's normal cursor, providing feedback that the
 application (widget) is temporarily busy.
 .PP
 When a widget is made busy, the widget and all of its descendants will ignore
-events. It's easy to make an entire panel of widgets busy. You can simply make
-the toplevel widget (such as
+pointer events. It's easy to make an entire panel of widgets busy. You can
+simply make the toplevel widget (such as
 .QW . )
 busy. This is easier and far much more efficient than recursively traversing
 the widget hierarchy, disabling each widget and re-configuring its cursor.
@@ -240,20 +241,27 @@ widgets.
 .SS "KEYBOARD EVENTS"
 .PP
 When a widget is made busy, the widget is prevented from gaining the keyboard
-focus by the busy window. But if the widget already had focus, it still may
-received keyboard events. To prevent this, you must move focus to another
-window.
+focus by a user clicking on it by the busy window. But if the widget already had
+focus, it still may receive keyboard events. The widget can also still receive
+focus through keyboard traversal. To prevent this, you must move
+focus to another window and make sure the focus can not go back to the widgets
+made busy (e.g. but restricting focus to a cancel button).
 .PP
 .CS
+pack [frame .frame]
+pack [text .frame.text]
 \fBtk busy\fR hold .frame
-label .dummy
-focus .dummy
+pack [button .cancel -text "Cancel" -command exit]
+focus .cancel
+bind .cancel <Tab> {break}
+bind .cancel <Shift-Tab> {break}
 update
 .CE
 .PP
 The above example moves the focus from .frame immediately after invoking the
 \fBhold\fR so that no keyboard events will be sent to \fB.frame\fR or any of
-its descendants.
+its descendants. It also makes sure it's not possible to leave button
+\fB.cancel\fR using the keyboard.
 .SH PORTABILITY
 .PP
 Note that the \fBtk busy\fR command does not currently have any effect on OSX
