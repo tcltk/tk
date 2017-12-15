@@ -1266,14 +1266,12 @@ DrawOrFillArc(
     oldPen = SelectObject(dc, pen);
     if (!fill) {
 
-	if(gc->stipple != None && gc->foreground != 0)
-	{
-		SetBkMode(dc, OPAQUE);
-		SetBkColor(dc, gc->foreground);
+	if(gc->stipple != None && gc->foreground != 0) {
+	    SetBkMode(dc, OPAQUE);
+	    SetBkColor(dc, gc->foreground);
+	} else {
+	    SetBkMode(dc, TRANSPARENT);
 	}
-	else
-		SetBkMode(dc, TRANSPARENT);
-
 
 	/*
 	 * Note that this call will leave a gap of one pixel at the end of the
@@ -1356,24 +1354,22 @@ SetUpGraphicsPort(
 	if ((gc->fill_style == FillStippled
 		|| gc->fill_style == FillOpaqueStippled)
 		&& gc->stipple != None) {
-		TkWinDrawable *twdPtr = (TkWinDrawable *)gc->stipple;
-		HBRUSH stipple;
+	    TkWinDrawable *twdPtr = (TkWinDrawable *)gc->stipple;
+	    HBRUSH stipple;
 
-		if (twdPtr->type != TWD_BITMAP) {
-			Tcl_Panic("unexpected drawable type in stipple");
-		}
+	    if (twdPtr->type != TWD_BITMAP) {
+	        Tcl_Panic("unexpected drawable type in stipple");
+	    }
 
-		stipple = CreatePatternBrush(twdPtr->bitmap.handle);
+	    stipple = CreatePatternBrush(twdPtr->bitmap.handle);
 
-		GetObject(stipple, sizeof(lb), &lb);
+	    GetObject(stipple, sizeof(lb), &lb);
 
-		DeleteObject(stipple);
-	}
-	else
-	{
-		lb.lbStyle = BS_SOLID;
-		lb.lbColor = gc->foreground;
-		lb.lbHatch = 0;
+	    DeleteObject(stipple);
+	} else {
+	    lb.lbStyle = BS_SOLID;
+	    lb.lbColor = gc->foreground;
+	    lb.lbHatch = 0;
 	}
 
 	style |= PS_GEOMETRIC;
