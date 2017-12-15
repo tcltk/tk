@@ -1265,13 +1265,22 @@ DrawOrFillArc(
     pen = SetUpGraphicsPort(gc);
     oldPen = SelectObject(dc, pen);
     if (!fill) {
+
+	if(gc->stipple != None && gc->foreground != 0)
+	{
+		SetBkMode(dc, OPAQUE);
+		SetBkColor(dc, gc->foreground);
+	}
+	else
+		SetBkMode(dc, TRANSPARENT);
+
+
 	/*
 	 * Note that this call will leave a gap of one pixel at the end of the
 	 * arc for thin arcs. We can't use ArcTo because it's only supported
 	 * under Windows NT.
 	 */
 
-	SetBkMode(dc, TRANSPARENT);
 	Arc(dc, x, y, (int) (x+width+1), (int) (y+height+1), xstart, ystart,
 		xend, yend);
     } else {
