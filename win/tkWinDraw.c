@@ -1269,6 +1269,7 @@ DrawOrFillArc(
 	if(gc->stipple != None && gc->foreground != 0) {
 	    SetBkMode(dc, OPAQUE);
 	    SetBkColor(dc, gc->foreground);
+            SetTextColor(dc, gc->background);
 	} else {
 	    SetBkMode(dc, TRANSPARENT);
 	}
