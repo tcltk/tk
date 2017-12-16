@@ -1036,7 +1036,13 @@ XDrawRectangle(
     dc = TkWinGetDrawableDC(display, d, &state);
 
     pen = SetUpGraphicsPort(gc);
-    SetBkMode(dc, TRANSPARENT);
+    if(gc->stipple != None && gc->foreground != 0) {
+        SetBkMode(dc, OPAQUE);
+        SetBkColor(dc, gc->foreground);
+        SetTextColor(dc, gc->background);
+    } else {
+        SetBkMode(dc, TRANSPARENT);
+    }
     oldPen = SelectObject(dc, pen);
     oldBrush = SelectObject(dc, GetStockObject(NULL_BRUSH));
     SetROP2(dc, tkpWinRopModes[gc->function]);
@@ -1363,9 +1369,7 @@ SetUpGraphicsPort(
 	    }
 
 	    stipple = CreatePatternBrush(twdPtr->bitmap.handle);
-
 	    GetObject(stipple, sizeof(lb), &lb);
-
 	    DeleteObject(stipple);
 	} else {
 	    lb.lbStyle = BS_SOLID;
