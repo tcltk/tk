@@ -17,8 +17,8 @@
 #include "default.h"
 
 /*
- * Things about the busy system that may be configured. Note that currently on
- * OSX/Aqua, that's nothing at all.
+ * Things about the busy system that may be configured. Note that on some
+ * platforms this may or may not have an effect.
  */
 
 static const Tk_OptionSpec busyOptionSpecs[] = {
