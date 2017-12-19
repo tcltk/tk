@@ -7490,4 +7490,8 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-12-05 (bug)[3382424] Suppress noisy messages on macOS (culler)
 
---- Released 8.6.8, December XX, 2017 --- http://core.tcl.tk/tk/ for details
+2017-12-08 (new)[TIP 477] nmake build system reform (nadkarni)
+
+2017-12-18 (bug)[b77626] Make [tk busy -cursor] silent no-op on macOS (vogel)
+
+--- Released 8.6.8, December 22, 2017 --- http://core.tcl.tk/tk/ for details
