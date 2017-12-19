@@ -32,6 +32,8 @@ busy \- confine pointer events to a window sub-tree
 .SH SYNOPSIS
 \fBtk busy\fR \fIwindow \fR?\fIoptions\fR?
 .sp
+\fBtk busy busywindow \fIwindow\fR
+.sp
 \fBtk busy hold\fR \fIwindow \fR?\fIoptions\fR?
 .sp
 \fBtk busy configure \fIwindow\fR ?\fIoption value\fR?...
@@ -128,6 +130,11 @@ The following operations are available for the \fBtk busy\fR command:
 .
 Shortcut for \fBtk busy hold\fR command.
 .TP
+\fBtk busy busywindow \fIwindow\fR
+.
+Returns the pathname of the busy (transparent) window created by the
+\fBtk busy hold\fR command for \fIwindow\fR.
+.TP
 \fBtk busy hold \fIwindow\fR ?\fIoption value\fR?...
 .
 Makes the specified \fIwindow\fR (and its descendants in the Tk window
@@ -137,6 +144,7 @@ window is mapped the next time idle tasks are processed, and the specified
 window and its descendants will be blocked from user interactions. Normally
 \fBupdate\fR should be called immediately afterward to insure that the hold
 operation is in effect before the application starts its processing. The
+command returns the pathname of the busy (transparent) window created. The
 following configuration options are valid:
 .RS
 .TP
@@ -232,6 +240,15 @@ example, the pathname of the busy window is
 .CS
 \fBtk busy\fR hold .
 bind ._Busy <Enter> { ... }
+.CE
+.PP
+Note that these implementation details can be entirely ignored by using the
+return value of the \fBtk busy\fR command, or alternatively the
+\fBtk busy busywindow\fR command as follows:
+.PP
+.CS
+\fBtk busy\fR hold .frame.canvas
+bind [\fBtk busy\fR busywindow .frame.canvas] <Enter> { ... }
 .CE
 .SS "ENTER/LEAVE EVENTS"
 .PP
