@@ -93,25 +93,25 @@ test busy-2.11 {tk busy hold (shortcut) root window, cursor} -body {
 test busy-2.12 {tk busy hold root window, invalid cursor} -body {
     tk busy hold . -cursor nonExistingCursor
     update
-} -constraints tempNotMac -returnCodes error -cleanup {
+} -returnCodes error -cleanup {
     tk busy forget .
 } -result {bad cursor spec "nonExistingCursor"}
 test busy-2.13 {tk busy hold (shortcut) root window, invalid cursor} -body {
     tk busy . -cursor nonExistingCursor
     update
-} -constraints tempNotMac -returnCodes error -cleanup {
+} -returnCodes error -cleanup {
     tk busy forget .
 } -result {bad cursor spec "nonExistingCursor"}
 test busy-2.14 {tk busy hold root window, invalid option} -body {
     tk busy hold . -invalidOption 1
     update
-} -constraints tempNotMac -returnCodes error -cleanup {
+} -returnCodes error -cleanup {
     tk busy forget .
 } -result {unknown option "-invalidOption"}
 test busy-2.15 {tk busy hold (shortcut) root window, invalid option} -body {
     tk busy . -invalidOption 1
     update
-} -constraints tempNotMac -returnCodes error -cleanup {
+} -returnCodes error -cleanup {
     tk busy forget .
 } -result {unknown option "-invalidOption"}
 
@@ -170,7 +170,7 @@ test busy-3.7 {tk busy cget unix} -setup {
 } -cleanup {
     tk busy forget .f
     destroy .f
-} -result {hand1} -constraints tempNotMac
+} -result {hand1}
 
 test busy-4.1 {tk busy configure no window} -returnCodes error -body {
     tk busy configure
@@ -210,7 +210,7 @@ test busy-4.4-win {tk busy configure} -constraints {win} -setup {
     destroy .f
 } -result {{-cursor cursor Cursor wait wait}}
 
-test busy-4.5 {tk busy configure} -constraints {nonwin tempNotMac} -setup {
+test busy-4.5 {tk busy configure} -constraints {nonwin} -setup {
     pack [frame .f]
     tk busy hold .f -cursor hand2
     update
@@ -266,7 +266,7 @@ test busy-4.7-win {tk busy configure valid option} -constraints {win} -setup {
 } -result {-cursor cursor Cursor wait wait}
 
 test busy-4.8 {tk busy configure valid option} -constraints {
-    nonwin tempNotMac
+    nonwin
 } -setup {
     pack [frame .f]
     tk busy hold .f -cursor circle
@@ -299,7 +299,7 @@ test busy-4.9 {tk busy configure valid option with value} -setup {
 } -cleanup {
     tk busy forget .f
     destroy .f
-} -result {pencil} -constraints tempNotMac
+} -result {pencil}
 
 test busy-4.10 {tk busy configure valid option with invalid value} -setup {
     pack [frame .f]
@@ -307,7 +307,7 @@ test busy-4.10 {tk busy configure valid option with invalid value} -setup {
     update
 } -body {
     tk busy configure .f -cursor nonExistingCursor
-} -constraints tempNotMac -returnCodes error -cleanup {
+} -returnCodes error -cleanup {
     tk busy forget .f
     destroy .f
 } -result {bad cursor spec "nonExistingCursor"}
