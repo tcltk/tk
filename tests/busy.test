@@ -502,7 +502,7 @@ test busy-8.3 {tk busy busywindow with a nonexisting widget} -body {
     tk busy busywindow .nonExistingWidget
 } -cleanup {
     tk busy forget .
-} -returnCodes error -result {bad window path name ".nonExistingWidget"}
+} -result {}
 
 
 ::tcltest::cleanupTests
