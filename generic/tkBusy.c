@@ -834,7 +834,8 @@ Tk_BusyObjCmd(
 	}
 	busyPtr = GetBusy(interp, busyTablePtr, objv[2]);
 	if (busyPtr == NULL) {
-	    return TCL_ERROR;
+	    Tcl_ResetResult(interp);
+            return TCL_OK;
 	}
         Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), -1));
         return TCL_OK;
