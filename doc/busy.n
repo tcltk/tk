@@ -133,7 +133,8 @@ Shortcut for \fBtk busy hold\fR command.
 \fBtk busy busywindow \fIwindow\fR
 .
 Returns the pathname of the busy (transparent) window created by the
-\fBtk busy hold\fR command for \fIwindow\fR.
+\fBtk busy hold\fR command for \fIwindow\fR, or the empty string if
+\fIwindow\fR is not busy.
 .TP
 \fBtk busy hold \fIwindow\fR ?\fIoption value\fR?...
 .
