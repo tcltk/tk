@@ -2875,6 +2875,7 @@ GridStructureProc(
 	}
 	for (gridPtr2 = gridPtr->slavePtr; gridPtr2 != NULL;
 		gridPtr2 = nextPtr) {
+	    Tk_ManageGeometry(gridPtr2->tkwin, NULL, NULL);
 	    Tk_UnmapWindow(gridPtr2->tkwin);
 	    gridPtr2->masterPtr = NULL;
 	    nextPtr = gridPtr2->nextPtr;
