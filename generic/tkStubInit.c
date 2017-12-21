@@ -77,7 +77,7 @@ TkCreateXEventSource(void)
  */
 #   define XParseColor	TkParseColor
 
-#   ifdef __CYGWIN__
+#   if 0
 
 /*
  * Trick, so we don't have to include <windows.h> here, which in any
@@ -458,7 +458,7 @@ static const TkIntStubs tkIntStubs = {
 static const TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) /* WIN */
     TkAlignImageData, /* 0 */
     0, /* 1 */
     TkGenerateActivateEvents, /* 2 */
@@ -564,7 +564,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXDrawable, /* 54 */
     TkpScanWindowId, /* 55 */
 #endif /* AQUA */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
+#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
     0, /* 1 */
     0, /* 2 */
@@ -585,7 +585,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 static const TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -824,7 +824,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
 static const TkPlatStubs tkPlatStubs = {
     TCL_STUB_MAGIC,
     0,
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) /* WIN */
     Tk_AttachHWND, /* 0 */
     Tk_GetHINSTANCE, /* 1 */
     Tk_GetHWND, /* 2 */
