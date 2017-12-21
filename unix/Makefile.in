@@ -1652,7 +1652,7 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 		$(TCLDIR)/doc/man.macros $(DISTDIR)/doc
 	mkdir $(DISTDIR)/tests
 	cp -p $(TOP_DIR)/license.terms $(TEST_DIR)/*.{test,tcl} \
-		$(TEST_DIR)/README $(TEST_DIR)/*.{gif,ppm,xbm} \
+		$(TEST_DIR)/README $(TEST_DIR)/*.{gif,png,ppm,xbm} \
 		$(TEST_DIR)/option.file* $(DISTDIR)/tests
 	mkdir $(DISTDIR)/tests/ttk
 	cp -p $(TEST_DIR)/ttk/*.{test,tcl} $(DISTDIR)/tests/ttk
