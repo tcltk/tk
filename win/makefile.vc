@@ -90,7 +90,6 @@ RCFILE = tk.rc
 
 # TCLINSTALL is set to 1 by rules.vc to indicate we are building against
 # an installed Tcl and 0 if building against Tcl source. Tk needs the latter.
-!message TCLINSTALL=$(TCLINSTALL)
 !if $(TCLINSTALL)
 !message *** Warning: Tk requires the source distribution of Tcl to build from,
 !message ***    at this time, sorry.  Please set the TCLDIR macro to point to the
