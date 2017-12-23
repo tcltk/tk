@@ -1315,7 +1315,7 @@ ISO Latin-1 character set.
 result across the execution of binding scripts.  Otherwise if an event
 triggers in the middle of some other script (e.g. a destroy event during
 window creation, because there was an error in the creation command),
-the intepreter's result gets lost.
+the interpreter's result gets lost.
 
 2/19/94 (bug fix) Fixed bug in dealing with results of sent command
 that could cause them to get lost in some situations.
@@ -7370,7 +7370,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-03-11 (bug)[775273] artifacts on Ubuntu 16.10+ (nemethi)
 
-2n017-03-26 (TIP 464) Win multimedia keys support (fassel,vogel)
+2017-03-26 (TIP 464) Win multimedia keys support (fassel,vogel)
 
 2017-03-29 (bug)[28a3c3] test BTree memleaks plugged (anonymous)
 
