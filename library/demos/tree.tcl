@@ -41,7 +41,10 @@ proc populateTree {tree node} {
     set filelist {}
     catch {set filelist [lsort -dictionary [glob -nocomplain -dir $path *]]}
     foreach f $filelist {
-	set type [file type $f]
+	if {[catch {file type $f} type]} {
+	    set type "unknown"
+	}
+
 	set id [$tree insert $node end -text [file tail $f] \
 		-values [list $f $type]]
 

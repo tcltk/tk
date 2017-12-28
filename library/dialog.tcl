@@ -107,7 +107,8 @@ proc ::tk_dialog {w title text bitmap default args} {
 
     set i 0
     foreach but $args {
-	button $w.button$i -text $but -command [list set ::tk::Priv(button) $i]
+	ttk::button $w.button$i -text $but \
+	    -command [list set ::tk::Priv(button) $i]
 	if {$i == $default} {
 	    $w.button$i configure -default active
 	} else {

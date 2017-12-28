@@ -37,6 +37,7 @@
 #include "agg_conv_stroke.h"
 #include "agg_conv_transform.h"
 #include "agg_conv_curve.h"
+#include "agg_conv_dash.h"
 #include "agg_rendering_buffer.h"
 #include "agg_renderer_base.h"
 #include "agg_renderer_scanline.h"
@@ -137,7 +138,8 @@ class Agg2D
     typedef FontCacheManager::gray8_scanline_type FontScanline;
 
     typedef agg::conv_curve<agg::path_storage>    ConvCurve;
-    typedef agg::conv_stroke<ConvCurve>           ConvStroke;
+    typedef agg::conv_dash<ConvCurve>             ConvDash;
+    typedef agg::conv_stroke<ConvDash>            ConvStroke;
     typedef agg::conv_transform<ConvCurve>        PathTransform;
     typedef agg::conv_transform<ConvStroke>       StrokeTransform;
 
@@ -389,6 +391,9 @@ public:
     void fillEvenOdd(bool evenOddFlag);
     bool fillEvenOdd() const;
 
+    void setDash(const double* dashList, int size, double start = 0.0);
+    void setDash(const float* dashList, int size, double start = 0.0);
+
     // Transformations
     //-----------------------
     Transformations transformations() const;
@@ -403,7 +408,7 @@ public:
     void parallelogram(double x1, double y1, double x2, double y2, const double* para);
     void viewport(double worldX1,  double worldY1,  double worldX2,  double worldY2,
                   double screenX1, double screenY1, double screenX2, double screenY2,
-                  ViewportOption opt=XMidYMid);
+                  ViewportOption opt = XMidYMid);
 
     // Basic Shapes
     //-----------------------
@@ -638,6 +643,7 @@ private:
     agg::trans_affine               m_transform;
 
     ConvCurve                       m_convCurve;
+    ConvDash                        m_convDash;
     ConvStroke                      m_convStroke;
 
     PathTransform                   m_pathTransform;

@@ -207,6 +207,9 @@ typedef struct {
 	int class;		/* class of screen (monochrome, etc.) */
 #endif
 	unsigned long red_mask, green_mask, blue_mask;	/* mask values */
+#if defined(MAC_OSX_TK)
+        unsigned long alpha_mask;
+#endif
 	int bits_per_rgb;	/* log base 2 of distinct color values */
 	int map_entries;	/* color map entries */
 } Visual;
@@ -339,6 +342,7 @@ typedef struct _XImage {
     XPointer obdata;		/* hook for the object routines to hang on */
 #if defined(MAC_OSX_TK)
     int pixelpower;		/* n such that pixels are 2^n x 2^n blocks*/
+    unsigned long alpha_mask;
 #endif
     struct funcs {		/* image manipulation routines */
 	struct _XImage *(*create_image)();

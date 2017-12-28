@@ -764,15 +764,17 @@ ImgPhotoCmd(
 	if (options.options & OPT_SHRINK) {
 	    if (ImgPhotoSetSize(masterPtr, options.toX2,
 		    options.toY2) != TCL_OK) {
+		if (options.background) {
+		    Tk_FreeColor(options.background);
+		}
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
 		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
 		return TCL_ERROR;
 	    }
-	    Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
-		    masterPtr->width, masterPtr->height);
 	}
-
+	Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
+		masterPtr->width, masterPtr->height);
 	if (options.background) {
 	    Tk_FreeColor(options.background);
 	}

@@ -27,9 +27,9 @@ pack [addSeeDismiss $w.seeDismiss $w {enabled cheese tomato basil oregano happyn
 ## Add buttons for setting the theme
 ttk::labelframe $w.buttons -text "Buttons"
 foreach theme [ttk::themes] {
-    ttk::button $w.buttons.$theme -text $theme \
+    ttk::button $w.buttons.t_$theme -text $theme \
 	    -command [list ttk::setTheme $theme]
-    pack $w.buttons.$theme -pady 2
+    pack $w.buttons.t_$theme -pady 2
 }
 
 ## Helper procedure for the top checkbutton

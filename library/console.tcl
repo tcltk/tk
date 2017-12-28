@@ -54,6 +54,20 @@ proc ::tk::ConsoleInit {} {
     if {[catch {menu .menubar} err]} {
 	bgerror "INIT: $err"
     }
+    if {$::tk::sdltk && [sdltk android]} {
+	if {[consoleinterp eval {winfo children .}] eq {}} {
+	    set script {
+		bind . <Double-1> {
+		    bind . <Double-1> {}
+		    catch {
+			package require tkconclient
+			tkconclient::start 12345
+		    }
+		}
+	   }
+	   consoleinterp eval $script
+	}
+    }
     AmpMenuArgs .menubar add cascade -label [mc &File] -menu .menubar.file
     AmpMenuArgs .menubar add cascade -label [mc &Edit] -menu .menubar.edit
 

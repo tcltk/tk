@@ -4,7 +4,7 @@
  *	Macros which map the names of NS constants used in the Tk code to
  *      the new name that Apple came up with for subsequent versions of the
  *      operating system.  (Each new OS release seems to come with a new
- *      naming convention for the same old constants.) 
+ *      naming convention for the same old constants.)
  *
  * Copyright (c) 2017 Marc Culler
  *
@@ -53,7 +53,7 @@
 #define NSDeviceIndependentModifierFlagsMask NSEventModifierFlagDeviceIndependentFlagsMask
 #define NSCommandKeyMask NSEventModifierFlagCommand
 #define NSShiftKeyMask NSEventModifierFlagShift
-#define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock 
+#define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
 #define NSAlternateKeyMask NSEventModifierFlagOption
 #define NSControlKeyMask NSEventModifierFlagControl
 #define NSNumericPadKeyMask NSEventModifierFlagNumericPad

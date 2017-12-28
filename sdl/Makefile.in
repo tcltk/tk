@@ -553,9 +553,9 @@ objs: ${OBJS}
 
 # Make libagg.a
 libagg.a:
-	make CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/src all
-	make CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/font_freetype all
-	make CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/agg2d all
+	$(MAKE) CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/src all
+	$(MAKE) CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/font_freetype all
+	$(MAKE) CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/agg2d all
 
 
 ${WISH_EXE}: $(TK_STUB_LIB_FILE) $(WISH_OBJS) $(TK_LIB_FILE) @WISH_RES@
@@ -946,16 +946,16 @@ Makefile: $(SDL_DIR)/Makefile.in
 #	$(SHELL) config.status
 
 clean:
-	make CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/src clean
-	make CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/font_freetype clean
-	make CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/agg2d clean
+	$(MAKE) CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/src clean
+	$(MAKE) CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/font_freetype clean
+	$(MAKE) CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/agg2d clean
 	rm -f *.a *.o libsdl2tk* core errs *~ \#* TAGS *.E a.out \
 		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc
 
 distclean: clean
-	make CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/src distclean
-	make CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/font_freetype distclean
-	make CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/agg2d distclean
+	$(MAKE) CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/src distclean
+	$(MAKE) CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/font_freetype distclean
+	$(MAKE) CFLAGS="$(CC_SWITCHES)" -C $(AGG_DIR)/agg2d distclean
 	rm -rf Makefile config.status config.cache config.log sdl2tkConfig.sh \
 		tkConfig.h *.plist Tk.framework sdl2tk.pc \
 		$(AGG_DIR)/src/Makefile $(AGG_DIR)/font_freetype/Makefile \

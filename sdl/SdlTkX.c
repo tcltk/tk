@@ -107,6 +107,10 @@ static int num_displays = 0;
 struct EventThreadStartup evt_startup = { 0, NULL, NULL, 0, NULL };
 #endif
 
+#ifdef ANDROID
+extern void Android_JNI_SetupThread(void);
+#endif
+
 static void SdlTkDestroyWindow(Display *display, Window w);
 static void SdlTkMapWindow(Display *display, Window w);
 static void SdlTkUnmapWindow(Display *display, Window w);
@@ -4634,11 +4638,11 @@ HandleRootSize(struct RootSizeRequest *r)
 #ifdef ANDROID
 	SDL_SetTextureBlendMode(SdlTkX.sdltex, SdlTkX.vr_mode ?
 		SDL_BLENDMODE_NONE_BD : SDL_BLENDMODE_NONE);
-#endif
-#if defined(ANDROID) && defined(SDL_HAS_GETWINDOWDPI)
+#ifdef SDL_HAS_GETWINDOWDPI
 	if (xdpi == 0) {
 	    SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
 	}
+#endif
 #endif
 	if (xdpi && ydpi) {
 	    SdlTkX.screen->mwidth = (254 * width) / xdpi;
@@ -5154,7 +5158,7 @@ PerformSDLInit(int *root_width, int *root_height)
 
 	    for (i = 0; i < n; i++) {
 		if (strcmp(SDL_GetVideoDriver(i), "wayland") == 0) {
-		    putenv("SDL_VIDEODRIVER=wayland");
+		    setenv("SDL_VIDEODRIVER", "wayland", 1);
 		    break;
 		}
 	    }
@@ -5571,10 +5575,16 @@ ctxRetry:
 #ifdef ANDROID
     SDL_SetTextureBlendMode(SdlTkX.sdltex, SdlTkX.vr_mode ?
 	    SDL_BLENDMODE_NONE_BD : SDL_BLENDMODE_NONE);
-#endif
-#if defined(ANDROID) && defined(SDL_HAS_GETWINDOWDPI)
+#ifdef SDL_HAS_GETWINDOWDPI
     if (xdpi == 0) {
 	SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
+    }
+#endif
+    /*
+     * Android Wear device with small screen: force 160 dpi.
+     */
+    if ((screen->width < 480) || (screen->height < 480)) {
+	xdpi = ydpi = 160;
     }
 #endif
     if (xdpi && ydpi) {
