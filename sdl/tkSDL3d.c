@@ -122,6 +122,9 @@ Tk_3DVerticalBevel(
     GC left, right;
     Display *display = Tk_Display(tkwin);
 
+    if (width <= 0) {
+	return;
+    }
     if ((borderPtr->lightGC == None) && (relief != TK_RELIEF_FLAT)) {
 	TkpGetShadows(borderPtr, tkwin);
     }
@@ -218,6 +221,9 @@ Tk_3DHorizontalBevel(
 				/* Initializations needed only to prevent
 				 * compiler warnings. */
 
+    if (height <= 0) {
+	return;
+    }
     if ((borderPtr->lightGC == None) && (relief != TK_RELIEF_FLAT) &&
 	    (relief != TK_RELIEF_SOLID)) {
 	TkpGetShadows(borderPtr, tkwin);

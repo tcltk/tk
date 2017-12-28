@@ -123,7 +123,6 @@ public:
 	} while(--len);
     }
 
-
     //---------------------------------------------------------------------
     void color(const color_type& c) { m_color = c; }
     const color_type& color() const { return m_color; }
@@ -180,6 +179,16 @@ doDrawArc(Drawable d, GC gc, int x, int y,
     SDL_GetRGB(gc->foreground, SdlTkX.sdlsurf->format, &r, &g, &b);
     agg::rgba8 c(r, g, b);
 
+    bool nostroke = false;
+    if (((unsigned) gc->line_width >= width) ||
+        ((unsigned) gc->line_width >= height)) {
+	x -= gc->line_width / 2.0;
+	y -= gc->line_width / 2.0;
+	width += gc->line_width;
+	height += gc->line_width;
+	nostroke = true;
+    }
+
     /* Apparently agg::arc is deprecated */
     agg::bezier_arc arc(xOff + x + width / 2.0, yOff + y + height / 2.0,
 	width / 2.0, height / 2.0,
@@ -190,8 +199,7 @@ doDrawArc(Drawable d, GC gc, int x, int y,
     /* Thing that generates scanlines */
     agg::rasterizer_scanline_aa<> rasterizer;
     rasterizer.reset();
-    if (((unsigned) gc->line_width >= width / 2) ||
-        ((unsigned) gc->line_width >= height / 2)) {
+    if (nostroke) {
 	rasterizer.add_path(curve);
     } else {
 	agg::conv_stroke<t_conv_curve> stroke(curve);
@@ -977,74 +985,127 @@ doDrawRect(Drawable d, GC gc, int x, int y, int w, int h)
 	}
     }
 
+    /* FIXME: FillOpaqueStippled not implemented */
+    if ((gc->fill_style == FillStippled
+	    || gc->fill_style == FillOpaqueStippled)
+	    && gc->stipple != None) {
+
+	/* Scanline needed by the rasterizer -> renderer */
+	agg::scanline_u8 scanline;
+
+	/*
+	 * A 1-pixel thick line appears as 2-pixel thick anti-aliased line.
+	 * But that is outside the bounds of a canvas rect item.
+	 */
+	if (gc->line_width & 1) {
+	    x += 1;
+	    y += 1;
+	    w -= 2;
+	    h -= 2;
+	}
+
+	/* Thing that generates scanlines */
+	agg::rasterizer_scanline_aa<> rasterizer;
+
+	VertexSource_XRectangle vertexSrc(x, y, w, h);
+	agg::conv_stroke<VertexSource_XRectangle> stroke(vertexSrc);
+	stroke.width((double) gc->line_width);
+
+	rasterizer.reset();
+	rasterizer.add_path(stroke);
+
+	_Pixmap *stipple = (_Pixmap *) gc->stipple;
+
+	/* Rendering buffer that points to the bitmap */
+	agg::rendering_buffer stipple_buf((agg::int8u *) stipple->sdl->pixels,
+	    stipple->sdl->w, stipple->sdl->h, stipple->sdl->pitch);
+
+        /* A span allocator holds 1 line of pixels */
+        agg::span_allocator<agg::rgba8> span_allocator;
+
+        /* Generates spans (lines of pixels) from a source buffer */
+        typedef agg::image_accessor_wrap_gray8<PixelFormat,
+            agg::wrap_mode_repeat, agg::wrap_mode_repeat> img_src_type;
+        PixelFormat src_pixf(stipple_buf);
+        img_src_type img_src(src_pixf);
+
+        typedef span_stipple<img_src_type> t_span_stipple;
+        t_span_stipple span_stipple(img_src, gc->ts_x_origin, gc->ts_y_origin);
+        span_stipple.color(c);
+
+        typedef agg::renderer_scanline_aa<t_renderer_mclip,
+            agg::span_allocator<agg::rgba8>, t_span_stipple> t_renderer_scanline_aa;
+        t_renderer_scanline_aa ren_scanline_aa(ren_mclip, span_allocator, span_stipple);
+
+        agg::render_scanlines(rasterizer, scanline, ren_scanline_aa);
+     } else {
 #if 1
-    /*
-     * A 1-pixel thick line is inside the top-left, but outside the
-     * bottom-right (that is what Tk expects and how Win32 draws it)
-     */
-    if (gc->line_width == 1) {
-	agg::renderer_primitives<t_renderer_mclip> ren_prim(ren_mclip);
-	ren_prim.line_color(c);
-	ren_prim.rectangle(x, y, x + w, y + h);
+	/*
+	 * A 1-pixel thick line is inside the top-left, but outside the
+	 * bottom-right (that is what Tk expects and how Win32 draws it)
+	 */
+	if (gc->line_width == 1) {
+	    agg::renderer_primitives<t_renderer_mclip> ren_prim(ren_mclip);
+	    ren_prim.line_color(c);
+	    ren_prim.rectangle(x, y, x + w, y + h);
 
-    /* This handles 1-pixel thick lines correctly but is slower */
-    } else {
-	int thick = gc->line_width;
-	int half = thick / 2;
-	int noDups = thick; /* to avoid drawing pixels twice */
-	ren_mclip.copy_bar(
-	    x - half,
-	    y - half,
-	    x + w - half + thick - 1,
-	    y - half + thick - 1, c); /* top */
-	ren_mclip.copy_bar(
-	    x - half,
-	    y + h - half,
-	    x + w - half + thick - 1,
-	    y + h - half + thick - 1, c); /* bottom */
-	ren_mclip.copy_bar(
-	    x - half,
-	    y - half + noDups,
-	    x - half + thick - 1,
-	    y + h - half + thick - 1 - noDups, c); /* left */
-	ren_mclip.copy_bar(
-	    x + w - half,
-	    y - half + noDups,
-	    x + w - half + thick - 1,
-	    y + h - half + thick - 1 - noDups, c); /* right */
-    }
-
+	/* This handles 1-pixel thick lines correctly but is slower */
+	} else {
+	    int thick = gc->line_width;
+	    int half = thick / 2;
+	    int noDups = thick; /* to avoid drawing pixels twice */
+	    ren_mclip.copy_bar(
+			       x - half,
+			       y - half,
+			       x + w - half + thick - 1,
+			       y - half + thick - 1, c); /* top */
+	    ren_mclip.copy_bar(
+			       x - half,
+			       y + h - half,
+			       x + w - half + thick - 1,
+			       y + h - half + thick - 1, c); /* bottom */
+	    ren_mclip.copy_bar(
+			       x - half,
+			       y - half + noDups,
+			       x - half + thick - 1,
+			       y + h - half + thick - 1 - noDups, c); /* left */
+	    ren_mclip.copy_bar(
+			       x + w - half,
+			       y - half + noDups,
+			       x + w - half + thick - 1,
+			       y + h - half + thick - 1 - noDups, c); /* right */
+	}
 #else /* aa */
+	typedef agg::renderer_scanline_aa_solid<t_renderer_mclip> t_renderer_scanline_aa_solid;
+	t_renderer_scanline_aa_solid ren_scanline(ren_mclip);
+	ren_scanline.color(c);
 
-    typedef agg::renderer_scanline_aa_solid<t_renderer_mclip> t_renderer_scanline_aa_solid;
-    t_renderer_scanline_aa_solid ren_scanline(ren_mclip);
-    ren_scanline.color(c);
+	/*
+	 * A 1-pixel thick line appears as 2-pixel thick anti-aliased line.
+	 * But that is outside the bounds of a canvas rect item.
+	 */
+	if (gc->line_width & 1) {
+	    x += 1;
+	    y += 1;
+	    w -= 2;
+	    h -= 2;
+	}
 
-    /*
-     * A 1-pixel thick line appears as 2-pixel thick anti-aliased line.
-     * But that is outside the bounds of a canvas rect item.
-     */
-    if (gc->line_width & 1) {
-	x += 1;
-	y += 1;
-	w -= 2;
-	h -= 2;
-    }
+	VertexSource_XRectangle vertexSrc(x, y, w, h);
+	agg::conv_stroke<VertexSource_XRectangle> stroke(vertexSrc);
+	stroke.width((double) gc->line_width);
 
-    VertexSource_XRectangle vertexSrc(x, y, w, h);
-    agg::conv_stroke<VertexSource_XRectangle> stroke(vertexSrc);
-    stroke.width((double) gc->line_width);
+	/* Thing that generates scanlines */
+	agg::rasterizer_scanline_aa<> rasterizer;
+	rasterizer.reset();
+	rasterizer.add_path(stroke);
 
-    /* Thing that generates scanlines */
-    agg::rasterizer_scanline_aa<> rasterizer;
-    rasterizer.reset();
-    rasterizer.add_path(stroke);
+	/* Scanline needed by the rasterizer -> renderer */
+	agg::scanline_u8 scanline;
 
-    /* Scanline needed by the rasterizer -> renderer */
-    agg::scanline_u8 scanline;
-
-    agg::render_scanlines(rasterizer, scanline, ren_scanline);
+	agg::render_scanlines(rasterizer, scanline, ren_scanline);
 #endif
+    }
 
     if (tmpRgn) {
 	SdlTkRgnPoolFree(tmpRgn);
@@ -1065,6 +1126,8 @@ class pixfmt_3Bpp_xor
 public:
     typedef agg::rendering_buffer::row_data row_data;
     typedef agg::rgba8 color_type;
+    typedef int order_type;
+    typedef color_type::value_type value_type;
 
     //--------------------------------------------------------------------
     pixfmt_3Bpp_xor(agg::rendering_buffer& rb) :
@@ -1074,6 +1137,8 @@ public:
     //--------------------------------------------------------------------
     AGG_INLINE unsigned width()  const { return m_rbuf->width();  }
     AGG_INLINE unsigned height() const { return m_rbuf->height(); }
+    AGG_INLINE       agg::int8u* row_ptr(int y)       { return m_rbuf->row_ptr(y); }
+    AGG_INLINE const agg::int8u* row_ptr(int y) const { return m_rbuf->row_ptr(y); }
 
     //--------------------------------------------------------------------
     void copy_pixel(int x, int y, const color_type& c)
@@ -1128,6 +1193,15 @@ public:
 	} while(--len);
     }
 
+    //--------------------------------------------------------------------
+    void blend_color_hspan(int x, int y,
+			   unsigned len, 
+			   const color_type* colors,
+			   const agg::int8u* covers,
+			   agg::int8u cover)
+    {
+    }
+
 private:
     agg::rendering_buffer* m_rbuf;
 };
@@ -1141,6 +1215,8 @@ template<class Type> class pixfmt_1_2_4Bpp_xor
 public:
     typedef agg::rendering_buffer::row_data row_data;
     typedef agg::rgba8 color_type;
+    typedef int order_type;
+    typedef color_type::value_type value_type;
 
     //--------------------------------------------------------------------
     pixfmt_1_2_4Bpp_xor(agg::rendering_buffer& rb) :
@@ -1150,6 +1226,8 @@ public:
     //--------------------------------------------------------------------
     AGG_INLINE unsigned width()  const { return m_rbuf->width();  }
     AGG_INLINE unsigned height() const { return m_rbuf->height(); }
+    AGG_INLINE       agg::int8u* row_ptr(int y)       { return m_rbuf->row_ptr(y); }
+    AGG_INLINE const agg::int8u* row_ptr(int y) const { return m_rbuf->row_ptr(y); }
 
     //--------------------------------------------------------------------
     void copy_pixel(int x, int y, const color_type& c)
@@ -1195,6 +1273,15 @@ public:
 	    y++;
 	    p = (Type*)m_rbuf->row_ptr(y) + x;
 	} while(--len);
+    }
+
+    //--------------------------------------------------------------------
+    void blend_color_hspan(int x, int y,
+			   unsigned len, 
+			   const color_type* colors,
+			   const agg::int8u* covers,
+			   agg::int8u cover)
+    {
     }
 
 private:
@@ -2191,15 +2278,15 @@ doFillRect(Drawable d, GC gc, int x, int y, int w, int h)
 #if 1
 	agg::wrap_mode_repeat wrap_x(stipple_buf.width());
 	agg::wrap_mode_repeat wrap_y(stipple_buf.height());
-	unsigned wy = wrap_y(y - gc->ts_y_origin);
+	unsigned wy = wrap_y(y - gc->ts_y_origin + 2);
 	while (h--) {
 	    agg::int8u *row_ptr = stipple_buf.row_ptr(wy);
 	    unsigned x1 = x;
-	    unsigned wx = wrap_x(x - gc->ts_x_origin);
+	    unsigned wx = wrap_x(x - gc->ts_x_origin + 2);
 	    unsigned w1 = w;
 	    while (w1--) {
 		agg::int8u *p = row_ptr + wx;
-		if (!p[0]) {
+		if (p[0]) {
 		    ren_mclip.copy_pixel(x1, y, c);
 		}
 		wx = ++wrap_x;

@@ -739,7 +739,7 @@ UtfToUcs4Proc(clientData, src, srcLen, flags, statePtr, dst, dstLen,
         }
 	src += Tcl_UtfToUniChar(src, &ucs2);
 #ifdef USE_SYMBOLA_CTRL
-	if ((ucs2 >= 0x00) && (ucs2 < 0x20)) {
+	if (((int) ucs2 >= 0x00) && ((int) ucs2 < 0x20)) {
 	    ucs2 += 0x2400;
 	} else if (ucs2 == 0x7F) {
 	    ucs2 = 0x2421;

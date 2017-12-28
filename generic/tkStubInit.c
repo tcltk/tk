@@ -253,6 +253,7 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkSubtractRegion (void (*) (TkRegion, TkRegion, TkRegion)) XSubtractRegion
 #   endif
 
+#if !defined(MAC_OSX_TK)
 int
 TkPutImage(
     unsigned long *colors,	/* Array of pixel values used by this image.
@@ -270,6 +271,7 @@ TkPutImage(
     return XPutImage(display, d, gc, image, src_x, src_y,
 	    dest_x, dest_y, width, height);
 }
+#endif
 
 #endif /* !_WIN32 */
 

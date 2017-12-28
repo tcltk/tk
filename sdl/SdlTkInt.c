@@ -2297,11 +2297,11 @@ doNormalKeyEvent:
 #ifdef ANDROID
 		SDL_SetTextureBlendMode(SdlTkX.sdltex, SdlTkX.vr_mode ?
 			SDL_BLENDMODE_NONE_BD : SDL_BLENDMODE_NONE);
-#endif
-#if defined(ANDROID) && defined(SDL_HAS_GETWINDOWDPI)
+#ifdef SDL_HAS_GETWINDOWDPI
 		if (xdpi == 0) {
 		    SDL_GetWindowDPI(SdlTkX.sdlscreen, &xdpi, &ydpi);
 		}
+#endif
 #endif
 		if (xdpi && ydpi) {
 		    SdlTkX.screen->mwidth = (254 * width) / xdpi;

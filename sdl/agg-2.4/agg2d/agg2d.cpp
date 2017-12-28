@@ -101,7 +101,8 @@ Agg2D::Agg2D() :
     m_transform(),
 
     m_convCurve(m_path),
-    m_convStroke(m_convCurve),
+    m_convDash(m_convCurve),
+    m_convStroke(m_convDash),
 
     m_pathTransform(m_convCurve, m_transform),
     m_strokeTransform(m_convStroke, m_transform),
@@ -121,6 +122,7 @@ Agg2D::Agg2D() :
     lineCap(m_lineCap);
     lineJoin(m_lineJoin);
     m_linearGradientFunction = &m_GradientF_Pad;
+    setDash((double *) 0, 0);
 }
 
 
@@ -843,6 +845,70 @@ void Agg2D::miterLimit(double g)
 double Agg2D::miterLimit() const
 {
     return m_convStroke.miter_limit();
+}
+
+
+//------------------------------------------------------------------------
+void Agg2D::setDash(const double* dashList, int size, double start)
+{
+    m_convDash.remove_all_dashes();
+    if (dashList && size > 1)
+    {
+        int i;
+        double width = m_lineWidth;
+        if (width <= 0.0) {
+            width = 1.0;
+        }
+        for (i = 0; i < size - 1; i += 2)
+        {
+             m_convDash.add_dash(dashList[i] * width, dashList[i+1] * width);
+        }
+        if (size % 2) {
+             m_convDash.add_dash(dashList[size-1] * width, dashList[0] * width);
+             for (i = 1; i < size; i += 2)
+             {
+                  m_convDash.add_dash(dashList[i] * width, dashList[i+1] * width);
+             }
+        }
+        m_convDash.dash_start(start);
+    }
+    else
+    {
+        m_convDash.add_dash(1.0, 0.0);
+        m_convDash.dash_start(0.0);
+    }
+}
+
+
+//------------------------------------------------------------------------
+void Agg2D::setDash(const float* dashList, int size, double start)
+{
+    m_convDash.remove_all_dashes();
+    if (dashList && size > 1)
+    {
+        int i;
+        double width = m_lineWidth;
+        if (width <= 0.0) {
+            width = 1.0;
+        }
+        for (i = 0; i < size - 1; i += 2)
+        {
+             m_convDash.add_dash(dashList[i] * width, dashList[i+1] * width);
+        }
+        if (size % 2) {
+             m_convDash.add_dash(dashList[size-1] * width, dashList[0] * width);
+             for (i = 1; i < size; i += 2)
+             {
+                 m_convDash.add_dash(dashList[i] * width, dashList[i+1] * width);
+             }
+        }
+        m_convDash.dash_start(start);
+    }
+    else
+    {
+        m_convDash.add_dash(1.0, 0.0);
+        m_convDash.dash_start(0.0);
+    }
 }
 
 
