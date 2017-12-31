@@ -28,22 +28,32 @@ static Tk_Window clipboardOwner = NULL;
 
     if (dispPtr && dispPtr->clipboardActive &&
 	    [type isEqualToString:NSStringPboardType]) {
+	Tcl_Encoding utf8 = Tcl_GetEncoding(NULL, "utf-8");
+	Tcl_DString ds;
+
+	Tcl_DStringInit(&ds);
 	for (TkClipboardTarget *targetPtr = dispPtr->clipTargetPtr; targetPtr;
 		targetPtr = targetPtr->nextPtr) {
 	    if (targetPtr->type == XA_STRING ||
 		    targetPtr->type == dispPtr->utf8Atom) {
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
-		    NSString *s = [[NSString alloc] initWithBytesNoCopy:
-			    cbPtr->buffer length:cbPtr->length
+		    char *p = Tcl_UtfToExternalDString(utf8, cbPtr->buffer,
+			    cbPtr->length, &ds);
+		    int len = Tcl_DStringLength(&ds);
+		    NSString *s = [[NSString alloc] initWithBytesNoCopy:p
+			    length:len
 			    encoding:NSUTF8StringEncoding freeWhenDone:NO];
 
 		    [string appendString:s];
 		    [s release];
+		    Tcl_DStringSetLength(&ds, 0);
 		}
 		break;
 	    }
 	}
+	Tcl_DStringFree(&ds);
+	Tcl_FreeEncoding(utf8);
     }
     [sender setString:string forType:type];
     [string release];
@@ -131,11 +141,20 @@ TkSelGetSelection(
 	NSPasteboard *pb = [NSPasteboard generalPasteboard];
 	NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:
 		NSStringPboardType]];
+	Tcl_DString ds;
 
 	if (type) {
 	    string = [pb stringForType:type];
 	}
-	result = proc(clientData, interp, string ? [string UTF8String] : "");
+	Tcl_DStringInit(&ds);
+	if (string) {
+	    Tcl_Encoding utf8 = Tcl_GetEncoding(NULL, "utf-8");
+
+	    Tcl_ExternalToUtfDString(utf8, [string UTF8String], -1, &ds);
+	    Tcl_FreeEncoding(utf8);
+	}
+	result = proc(clientData, interp, Tcl_DStringValue(&ds));
+	Tcl_DStringFree(&ds);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"%s selection doesn't exist or form \"%s\" not defined",
