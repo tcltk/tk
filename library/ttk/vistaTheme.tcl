@@ -46,8 +46,12 @@ namespace eval ttk::theme::vista {
 	ttk::style configure Heading -font TkHeadingFont
 	ttk::style configure Treeview -background SystemWindow
 	ttk::style map Treeview \
-	    -background [list selected SystemHighlight] \
-	    -foreground [list selected SystemHighlightText] ;
+	    -background [list   disabled SystemButtonFace \
+				{!disabled !selected} SystemWindow \
+				selected SystemHighlight] \
+	    -foreground [list   disabled SystemGrayText \
+				{!disabled !selected} SystemWindowText \
+				selected SystemHighlightText]
 
         # Label and Toolbutton
 	ttk::style configure TLabelframe.Label -foreground "#0046d5"
