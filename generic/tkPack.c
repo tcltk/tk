@@ -1375,7 +1375,7 @@ Unlink(
      * handling it and should mark it as free.
      */
 
-    if (masterPtr->slavePtr == NULL && masterPtr->flags & ALLOCED_MASTER) {
+    if ((masterPtr->slavePtr == NULL) && (masterPtr->flags & ALLOCED_MASTER)) {
 	TkFreeGeometryMaster(masterPtr->tkwin, "pack");
 	masterPtr->flags &= ~ALLOCED_MASTER;
     }

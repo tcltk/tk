@@ -70,7 +70,7 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 }
 #if defined(_WIN32) || defined(__CYGWIN__)
 #define TkWinGetPlatformId winGetPlatformId
-static int TkWinGetPlatformId() {
+static int TkWinGetPlatformId(void) {
     return 2;
 }
 #endif /* defined(_WIN32) || defined(__CYGWIN__) */

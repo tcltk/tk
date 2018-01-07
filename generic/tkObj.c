@@ -104,7 +104,7 @@ static const Tcl_ObjType pixelObjType = {
     FreePixelInternalRep,	/* freeIntRepProc */
     DupPixelInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetPixelFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -118,7 +118,7 @@ static const Tcl_ObjType mmObjType = {
     FreeMMInternalRep,		/* freeIntRepProc */
     DupMMInternalRep,		/* dupIntRepProc */
     UpdateStringOfMM,		/* updateStringProc */
-    SetMMFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -131,7 +131,7 @@ static const Tcl_ObjType windowObjType = {
     FreeWindowInternalRep,	/* freeIntRepProc */
     DupWindowInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetWindowFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -1123,7 +1123,7 @@ TkParsePadAmount(
  *	None
  *
  * Side effects:
- *	All instances of Tcl_ObjType structues used in Tk are registered with
+ *	All instances of Tcl_ObjType structures used in Tk are registered with
  *	Tcl.
  *
  *----------------------------------------------------------------------
