@@ -1315,7 +1315,7 @@ ISO Latin-1 character set.
 result across the execution of binding scripts.  Otherwise if an event
 triggers in the middle of some other script (e.g. a destroy event during
 window creation, because there was an error in the creation command),
-the intepreter's result gets lost.
+the interpreter's result gets lost.
 
 2/19/94 (bug fix) Fixed bug in dealing with results of sent command
 that could cause them to get lost in some situations.
@@ -7370,7 +7370,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-03-11 (bug)[775273] artifacts on Ubuntu 16.10+ (nemethi)
 
-2n017-03-26 (TIP 464) Win multimedia keys support (fassel,vogel)
+2017-03-26 (TIP 464) Win multimedia keys support (fassel,vogel)
 
 2017-03-29 (bug)[28a3c3] test BTree memleaks plugged (anonymous)
 
@@ -7415,3 +7415,83 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2017-08-08 (bug)[4966ca] Scidb race in notebook tab selection (cramer)
 
 --- Released 8.6.7, August 9, 2017 --- http://core.tcl.tk/tk/ for details
+
+2017-08-24 (bug)[f1a3ca] Memory leak in [text] B-tree (edhume3)
+
+2017-08-24 (bug)[ee40fd] Report [console] init errors (the)
+
+2017-08-24 (bug)[3295446] Improve history visibility in [console] (goth)
+
+2017-08-24 (bug) canvas closed polylines fully honor -joinstyle (vogel)
+
+2017-08-24 (bug)[cc42cc] out of mem crash in tests imgPhoto-18.* (vogel)
+
+2017-09-16 (bug)[3406785] fix coords rounding when drawing canvas items (vogel)
+
+2017-09-24 (bug)[8277e1] linux fontchooser sync with available fonts (vogel)
+
+2017-09-24 (bug)[5239fd] Segfault copying a photo image to itself (bachmann)
+
+2017-09-24 (bug)[514ff6] canvas rotated text overlap detection (vogel)
+
+2017-09-24 (bug)[1e0db2] canvas rchars artifacts (bruchie,vogel)
+
+2017-10-07 (bug)[d9fdfa] display of Long non-wrapped lines in text (cramer)
+
+2017-10-07 (bug)[dd9667] text anchor not set (vogel)
+
+2017-10-11 (bugs) memleaks and other changes for macOS 10.13 support (culler)
+
+2017-10-11 (bug)[111de2] macOS colorspace improvement (walzer,culler)
+
+2017-10-13 (bug) macOS scrolling issues (culler)
+
+2017-10-15 (bug) clipping regions in scrolling and drawing on macOS (culler)
+
+2017-10-15 (bug) macOS redraw artifacts (culler)
+
+2017-10-22 (bug)[bb6b40] ::tk::AmpMenuArgs and 'entryconf' (vogel)
+
+2017-10-22 (bug)[55b95f] Crash [scale] with a bignum value (vogel)
+
+2017-10-28 (bug)[ce62c8] text-37.1 fails (vogel)
+
+2017-11-03 (bug)[0ef1c5] OS X - tests menu-22.[345] hang (vogel)
+
+2017-11-04 (bug)[c8c52b] repair OBOE in menu.test on macOS (vogel)
+
+2017-11-11 (feature) Implement [wm_iconphoto] on macOS (walzer)
+
+2017-11-11 (bug) display of embedded toplevels (culler)
+
+2017-11-19 (bug)[73ba07] Correct property type for MULTIPLE conversion (dpb)
+
+2017-11-20 (bug) Memory leak in tkImgPhoto.c. (werner)
+
+2017-11-21 (bug) Defeat zombie toplevels (culler)
+
+2017-11-25 (bug) macOS resposive menu bar for command line apps (culler)
+
+2017-11-25 (bug)[1c659e] support png from mac screenshots (vogel)
+
+2017-11-25 (bug)[de4af1] macOS file selector "all types" setting (culler)
+
+2017-11-26 (bug) [wm withdraw] on Window and Dock menus (walzer)
+
+2017-11-27 (feature) Drop support for macOS 10.5 (culler)
+
+2017-11-30 (bug)[164c1b] Fixes [raise] on macOS (culler)
+
+2017-11-30 (bug)[13d63d] macOS support of menu -postcommand (culler)
+
+2017-12-05 (bug) enable custom icon display on macOS (walzer)
+
+2017-12-05 (bug)[1088805,0feb63] macOS bind failures (culler)
+
+2017-12-05 (bug)[3382424] Suppress noisy messages on macOS (culler)
+
+2017-12-08 (new)[TIP 477] nmake build system reform (nadkarni)
+
+2017-12-18 (bug)[b77626] Make [tk busy -cursor] silent no-op on macOS (vogel)
+
+--- Released 8.6.8, December 22, 2017 --- http://core.tcl.tk/tk/ for details
