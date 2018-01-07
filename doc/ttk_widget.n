@@ -149,6 +149,9 @@ to zero, then automatic wrapping is not performed; otherwise
 the text is split into lines such that no line is longer
 than the specified value.
 .SH "COMPATIBILITY OPTIONS"
+This option is only available for themed widgets that have
+.QW corresponding
+traditional Tk widgets.
 .OP \-state state State
 May be set to \fBnormal\fR or \fBdisabled\fR
 to control the \fBdisabled\fR state bit.

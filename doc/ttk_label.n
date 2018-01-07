@@ -20,7 +20,7 @@ to automatically change the displayed text.
 .SO ttk_widget
 \-anchor	\-class	\-compound	\-cursor
 \-font	\-foreground
-\-image	\-justify	\-padding	\-style	\-takefocus
+\-image	\-justify	\-padding	\-state	\-style	\-takefocus
 \-text	\-textvariable	\-underline
 \-width	\-wraplength
 .SE
