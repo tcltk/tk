@@ -30,10 +30,6 @@ to a Tcl variable.
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command
 Specifies a Tcl command to be invoked whenever a spinbutton is invoked.
-.OP \-increment increment Increment
-A floating\-point value specifying the change in value to be applied each
-time one of the widget spin buttons is pressed. The up button applies a
-positive increment, the down button applies a negative increment.
 .OP \-format format Format
 Specifies an alternate format to use when setting the string value
 when using the \fB\-from\fR and \fB\-to\fR range.
@@ -43,6 +39,10 @@ as it will format a floating-point number.
 A floating\-point value specifying the lowest value for the spinbox. This is
 used in conjunction with \fB\-to\fR and \fB\-increment\fR to set a numerical
 range.
+.OP \-increment increment Increment
+A floating\-point value specifying the change in value to be applied each
+time one of the widget spin buttons is pressed. The up button applies a
+positive increment, the down button applies a negative increment.
 .OP \-to to To
 A floating\-point value specifying the highest permissible value for the
 widget. See also \fB\-from\fR and \fB\-increment\fR.
