@@ -553,10 +553,13 @@ CheckbuttonInvokeCommand(
     else
 	newValue = checkPtr->checkbutton.onValueObj;
 
-    if (Tcl_ObjSetVar2(interp,
-	    checkPtr->checkbutton.variableObj, NULL, newValue,
-	    TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
-	== NULL)
+    if (checkPtr->checkbutton.variableObj == NULL ||
+        *Tcl_GetString(checkPtr->checkbutton.variableObj) == '\0')
+        CheckbuttonVariableChanged(checkPtr, Tcl_GetString(newValue));
+    else if (Tcl_ObjSetVar2(interp,
+	        checkPtr->checkbutton.variableObj, NULL, newValue,
+	        TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
+	    == NULL)
 	return TCL_ERROR;
 
     if (WidgetDestroyed(corePtr))
