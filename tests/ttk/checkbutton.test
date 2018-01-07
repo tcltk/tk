@@ -65,6 +65,9 @@ test checkbutton-1.7 "Button destroyed by click" -body {
 test checkbutton-1.8 "Empty -variable" -body {
     # shall simply not crash
     ttk::checkbutton .cbev -variable {}
+    .cbev invoke
+} -cleanup {
+    destroy .cbev
 } -result {.cbev}
 
 tcltest::cleanupTests
