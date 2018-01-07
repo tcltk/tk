@@ -61,4 +61,13 @@ test checkbutton-1.7 "Button destroyed by click" -body {
     update  ; # shall not trigger error  invalid command name ".top.b"
 } -result {}
 
+# Bug [fa8de77936]
+test checkbutton-1.8 "Empty -variable" -body {
+    # shall simply not crash
+    ttk::checkbutton .cbev -variable {}
+    .cbev invoke
+} -cleanup {
+    destroy .cbev
+} -result {}
+
 tcltest::cleanupTests
