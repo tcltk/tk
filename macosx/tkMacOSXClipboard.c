@@ -45,8 +45,10 @@ static Tk_Window clipboardOwner = NULL;
 			    length:len
 			    encoding:NSUTF8StringEncoding freeWhenDone:NO];
 
-		    [string appendString:s];
-		    [s release];
+                    if (s) {
+                        [string appendString:s];
+		        [s release];
+                    }
 		    Tcl_DStringSetLength(&ds, 0);
 		}
 		break;
