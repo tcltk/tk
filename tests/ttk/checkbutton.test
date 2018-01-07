@@ -68,6 +68,6 @@ test checkbutton-1.8 "Empty -variable" -body {
     .cbev invoke
 } -cleanup {
     destroy .cbev
-} -result {.cbev}
+} -result {}
 
 tcltest::cleanupTests
