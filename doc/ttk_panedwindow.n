@@ -106,6 +106,14 @@ and the total size of the widget.
 .\" depending on which changed most recently.
 Returns the new position of sash number \fIindex\fR.
 .\" Full story: new position may be different than the requested position.
+.PP
+The panedwindow widget also supports the following generic \fBttk::widget\fR
+widget subcommands (see \fIttk::widget(n)\fR for details):
+.DS
+.ta 5.5c 11c
+\fBcget\fR	\fBconfigure\fR
+\fBinstate\fR	\fBstate\fR
+.DE
 .SH "VIRTUAL EVENTS"
 .PP
 The panedwindow widget generates an \fB<<EnteredChild>>\fR virtual event on
