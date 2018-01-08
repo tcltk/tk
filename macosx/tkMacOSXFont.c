@@ -455,7 +455,7 @@ InitFont(
     }
     fontPtr->nsFont = nsFont;
     // some don't like antialiasing on fixed-width even if bigger than limit
-    //dontAA = [nsFont isFixedPitch] && fontPtr->font.fa.size <= 10;
+    // dontAA = [nsFont isFixedPitch] && fontPtr->font.fa.size <= 10;
     if (antialiasedTextEnabled >= 0/* || dontAA*/) {
 	renderingMode = (antialiasedTextEnabled == 0/* || dontAA*/) ?
 		NSFontIntegerAdvancementsRenderingMode :
