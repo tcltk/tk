@@ -18,7 +18,7 @@ A \fBttk::sizegrip\fR widget (also known as a \fIgrow box\fR)
 allows the user to resize the containing toplevel window
 by pressing and dragging the grip.
 .SO ttk_widget
-\-class	\-cursor	\-state
+\-class	\-cursor
 \-style	\-takefocus
 .SE
 .SH "WIDGET COMMAND"
