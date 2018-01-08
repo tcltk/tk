@@ -134,7 +134,7 @@ static void DrawCharsInContext(Display *display, Drawable drawable, GC gc,
  *---------------------------------------------------------------------------
  */
 
-#if TCL_UTF_MAX == 3
+#if TCL_UTF_MAX <= 4
 
 /* No special code for BMP needed. */
 #define NumUTF16Chars Tcl_NumUtfChars
@@ -153,12 +153,10 @@ NumUTF16Chars(
     if (length < 0) {
 	while (*src != '\0') {
 	    src += Tcl_UtfToUniChar(src, &ch);
-#if TCL_UTF_MAX > 4
 	    if (ch > 0xFFFF) {
 		/* A surrogate pair in UTF16Char representation. */
 		i++;
 	    }
-#endif
             i++;
         }
 	if (i < 0) {
@@ -169,23 +167,19 @@ NumUTF16Chars(
 
 	while (src < endPtr) {
 	    src += Tcl_UtfToUniChar(src, &ch);
-#if TCL_UTF_MAX > 4
 	    if (ch > 0xFFFF) {
 		/* A surrogate pair in UTF16Char representation. */
 		i++;
 	    }
-#endif
 	    i++;
 	}
 	endPtr += TCL_UTF_MAX;
 	while ((src < endPtr) && Tcl_UtfCharComplete(src, endPtr - src)) {
 	    src += Tcl_UtfToUniChar(src, &ch);
-#if TCL_UTF_MAX > 4
 	    if (ch > 0xFFFF) {
 		/* A surrogate pair in UTF16Char representation. */
 		i++;
 	    }
-#endif
 	    i++;
 	}
 	if (src < endPtr) {
@@ -215,7 +209,7 @@ NumUTF16Chars(
  *---------------------------------------------------------------------------
  */
 
-#if TCL_UTF_MAX == 3
+#if TCL_UTF_MAX <= 4
 
 /* No special code for BMP needed. */
 #define UTF16CharAtIndex Tcl_UtfAtIndex
@@ -232,12 +226,10 @@ UTF16CharAtIndex(
     while (index > 0) {
 	--index;
 	src += Tcl_UtfToUniChar(src, &ch);
-#if TCL_UTF_MAX > 4
 	if (ch > 0xFFFF) {
 	    /* A surrogate pair in UTF16Char representation. */
 	    --index;
 	}
-#endif
     }
     return src;
 }
@@ -285,18 +277,8 @@ UtfToUTF16DString(
     while (src < end) {
 	int len = Tcl_UtfToUniChar(src, &ch);
 
-	utf16 = ch;
-#if TCL_UTF_MAX < 4
-	if (ch >= 0xD800 && ch <= 0xDFFF) {
-	    utf16 = 0xFFFD;
-	}
-#elif TCL_UTF_MAX == 4
-	if (ch >= 0xD800 && ch <= 0xDFFF) {
-	    if ((*src & 0xF8) != 0xF0) {
-		utf16 = 0xFFFD;
-	    }
-	}
-#else
+	utf16 = (UTF16Char)ch;
+#if TCL_UTF_MAX >= 4
 	if (ch >= 0xD800 && ch <= 0xDFFF) {
 	    utf16 = 0xFFFD;
 	} else if (ch > 0xFFFF) {
