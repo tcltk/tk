@@ -163,7 +163,7 @@ NumUTF16Chars(
 	    i = INT_MAX;
 	}
     } else {
-	const char *endPtr = src + length - TCL_UTF_MAX;
+	const char *endPtr = src + length - 4;
 
 	while (src < endPtr) {
 	    src += Tcl_UtfToUniChar(src, &ch);
@@ -173,7 +173,7 @@ NumUTF16Chars(
 	    }
 	    i++;
 	}
-	endPtr += TCL_UTF_MAX;
+	endPtr += 4;
 	while ((src < endPtr) && Tcl_UtfCharComplete(src, endPtr - src)) {
 	    src += Tcl_UtfToUniChar(src, &ch);
 	    if (ch > 0xFFFF) {
@@ -278,7 +278,7 @@ UtfToUTF16DString(
 	int len = Tcl_UtfToUniChar(src, &ch);
 
 	utf16 = (UTF16Char)ch;
-#if TCL_UTF_MAX >= 4
+#if TCL_UTF_MAX > 4
 	if (ch >= 0xD800 && ch <= 0xDFFF) {
 	    utf16 = 0xFFFD;
 	} else if (ch > 0xFFFF) {

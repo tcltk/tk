@@ -521,7 +521,7 @@ Ucs2beToUtfProc(
     srcEnd = src + srcLen;
 
     dstStart = dst;
-    dstEnd = dst + dstLen - TCL_UTF_MAX;
+    dstEnd = dst + dstLen - 4;
 
     for (numChars = 0; src < srcEnd; numChars++) {
 	if (dst > dstEnd) {
@@ -596,7 +596,7 @@ UtfToUcs2beProc(
     srcEnd = src + srcLen;
     srcClose = srcEnd;
     if (!(flags & TCL_ENCODING_END)) {
-	srcClose -= TCL_UTF_MAX;
+	srcClose -= 4;
     }
 
     dstStart = dst;
@@ -2213,7 +2213,7 @@ FontMapLoadPage(
     int row)			/* Index of the page to be loaded into the
 				 * cache. */
 {
-    char buf[16], src[TCL_UTF_MAX];
+    char buf[16], src[4];
     int minHi, maxHi, minLo, maxLo, scale, checkLo;
     int i, end, bitOffset, isTwoByteFont, n;
     Tcl_Encoding encoding;
@@ -2417,7 +2417,7 @@ CanUseFallback(
     unsigned bestScore[2];
     char **nameList;
     char **nameListOrig;
-    char src[TCL_UTF_MAX];
+    char src[4];
     FontAttributes want, got;
     Display *display;
     SubFont subFont;
