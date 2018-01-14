@@ -358,7 +358,7 @@ bind Text <Meta-b> {
     }
 }
 bind Text <Meta-d> {
-    if {!$tk_strictMotif && [%W compare end != insert+1c]} {
+    if {[%W cget -state] eq "normal" && !$tk_strictMotif && [%W compare end != insert+1c]} {
 	%W delete insert [tk::TextNextWord %W insert]
     }
 }
@@ -1058,13 +1058,13 @@ proc ::tk_textCut w {
         # make <<Cut>> an atomic operation on the Undo stack,
         # i.e. separate it from other delete operations on either side
 	set oldSeparator [$w cget -autoseparators]
-	if {$oldSeparator} {
+	if {([$w cget -state] eq "normal") && $oldSeparator} {
 	    $w edit separator
 	}
 	clipboard clear -displayof $w
 	clipboard append -displayof $w $data
 	$w delete sel.first sel.last
-	if {$oldSeparator} {
+	if {([$w cget -state] eq "normal") && $oldSeparator} {
 	    $w edit separator
 	}
     }
