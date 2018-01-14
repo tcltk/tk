@@ -1283,7 +1283,6 @@ proc ::tk::TextDelete {w start end} {
 #
 # Arguments:
 # w -		The text window.
-# x, y - 	Position of the mouse.
 # selection	atom name of the selection
 
 proc ::tk::TextInsertSelection {w selection} {
