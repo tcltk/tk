@@ -358,7 +358,7 @@ bind Text <Meta-b> {
     }
 }
 bind Text <Meta-d> {
-    if {[%W cget -state] eq "normal" && !$tk_strictMotif && [%W compare end != insert+1c]} {
+    if {!$tk_strictMotif && [%W compare end != insert+1c]} {
 	%W delete insert [tk::TextNextWord %W insert]
     }
 }
