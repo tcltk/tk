@@ -1200,10 +1200,10 @@ proc ::tk::TextNextPos {w start op} {
 # op -		Function to use to find next position.
 
 proc ::tk::TextPrevPos {w start op} {
-    set text ""
     set succ ""
     set cur $start
     while {[$w compare $cur > 1.0]} {
+	set text ""
 	append text [$w get -displaychars "$cur linestart - 1i" $cur] $succ
 	set pos [$op $text end]
 	if {$pos >= 0} {
