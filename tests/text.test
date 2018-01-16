@@ -6408,8 +6408,8 @@ test text-27.15 {<<Selection>> virtual event on sel tagging} -body {
     destroy .t
 } -result {selection_changed}
 test text-27.15a {<<Selection>> virtual event on <<PasteSelection>>} -body {
-    pack [text .t -exportselection 1]
-    .t insert end "There is a PRIMARY selection in this text widget, "
+    pack [text .t]
+    .t insert end "There is a selection in this text widget, "
     .t insert end "and it will be impacted by the <<PasteSelection>> event received.\n"
     .t insert end "Therefore a <<Selection>> event must fire back."
     .t tag add sel 1.0 1.28
@@ -6423,8 +6423,8 @@ test text-27.15a {<<Selection>> virtual event on <<PasteSelection>>} -body {
     destroy .t
 } -result {<<Selection>>_fired}
 test text-27.15b {<<Selection>> virtual event on <Delete>} -body {
-    pack [text .t -exportselection 1]
-    .t insert end "There is a PRIMARY selection in this text widget, "
+    pack [text .t]
+    .t insert end "There is a selection in this text widget, "
     .t insert end "and it will be impacted by the <Delete> event received.\n"
     .t insert end "Therefore a <<Selection>> event must fire back."
     .t tag add sel 1.0 1.28
@@ -6440,8 +6440,8 @@ test text-27.15b {<<Selection>> virtual event on <Delete>} -body {
     destroy .t
 } -result {<<Selection>>_fired}
 test text-27.15c {<<Selection>> virtual event on <<Cut>>} -body {
-    pack [text .t -exportselection 1]
-    .t insert end "There is a PRIMARY selection in this text widget, "
+    pack [text .t]
+    .t insert end "There is a selection in this text widget, "
     .t insert end "and it will be impacted by the <<Cut>> event received.\n"
     .t insert end "Therefore a <<Selection>> event must fire back."
     .t tag add sel 1.0 1.28
