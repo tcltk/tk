@@ -112,6 +112,7 @@ TkpChangeFocus(
     }
     XSetInputFocus(dispPtr->display, winPtr->window, RevertToParent,
 	    CurrentTime);
+    XSync(dispPtr->display, False);
     Tk_DeleteErrorHandler(errHandler);
 
     /*
