@@ -388,16 +388,7 @@ FinishedWithFont(
     if (fontPtr->fontset) {
 	FcFontSetDestroy(fontPtr->fontset);
     }
-
-    /*
-     * Synchronize with X server before dropping the error handler.
-     * This seems to catch sporadic RenderBadPicture errors on tear
-     * down of an application.
-     *
-     * See bugs [1821174fff] and [1938774fff].
-     */
     XSync(fontPtr->display, False);
-
     Tk_DeleteErrorHandler(handler);
 }
 
@@ -885,6 +876,7 @@ Tk_DrawChars(
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
 	XftDrawChange(fontPtr->ftDraw, drawable);
+        XSync(display, False);
 	Tk_DeleteErrorHandler(handler);
     }
     XGetGCValues(display, gc, GCForeground, &values);
@@ -1018,6 +1010,7 @@ TkDrawAngledChars(
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
 	XftDrawChange(fontPtr->ftDraw, drawable);
+        XSync(display, False);
 	Tk_DeleteErrorHandler(handler);
     }
 
@@ -1107,6 +1100,7 @@ TkDrawAngledChars(
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
 	XftDrawChange(fontPtr->ftDraw, drawable);
+        XSync(display, False);
 	Tk_DeleteErrorHandler(handler);
     }
     XGetGCValues(display, gc, GCForeground, &values);

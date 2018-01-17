@@ -4084,6 +4084,7 @@ ConfigureEvent(
     XMoveResizeWindow(winPtr->display, winPtr->window, 0,
 	    wmPtr->menuHeight, (unsigned) wrapperPtr->changes.width,
 	    (unsigned) (wrapperPtr->changes.height - wmPtr->menuHeight));
+    XSync(winPtr->display, False);
     Tk_DeleteErrorHandler(handler);
     if ((wmPtr->menubar != NULL)
 	    && ((Tk_Width(wmPtr->menubar) != wrapperPtr->changes.width)
@@ -4420,10 +4421,11 @@ WrapperEventProc(
 	     * Tk_DestroyWindow will try to destroy the window, but of course
 	     * it's already gone.
 	     */
+            Display *display = wmPtr->winPtr->display;
 
-	    handler = Tk_CreateErrorHandler(wmPtr->winPtr->display, -1, -1, -1,
-		    NULL, NULL);
+	    handler = Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 	    Tk_DestroyWindow((Tk_Window) wmPtr->winPtr);
+            XSync(display, False);
 	    Tk_DeleteErrorHandler(handler);
 	}
 	if (dispPtr->flags & TK_DISPLAY_WM_TRACING) {
@@ -5846,10 +5848,12 @@ Tk_CoordsToWindow(
 	     * deleted
 	     */
 
+            XSync(Tk_Display(tkwin), False);
 	    Tk_DeleteErrorHandler(handler);
 	    return NULL;
 	}
 	if (child == None) {
+            XSync(Tk_Display(tkwin), False);
 	    Tk_DeleteErrorHandler(handler);
 	    return NULL;
 	}
@@ -5879,6 +5883,7 @@ Tk_CoordsToWindow(
 	 * or below
 	 */
 
+        XSync(Tk_Display(tkwin), False);
 	Tk_DeleteErrorHandler(handler);
 	handler = NULL;
     }
