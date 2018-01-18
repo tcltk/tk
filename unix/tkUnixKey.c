@@ -243,6 +243,7 @@ TkpGetString(
      * from having to reenter the XIM engine. [Bug 1373712]
      */
 
+done:
     kePtr->charValuePtr = ckalloc(len + 1);
     kePtr->charValueLen = len;
     memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
