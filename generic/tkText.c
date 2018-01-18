@@ -2726,10 +2726,14 @@ InsertChars(
     }
 
     /*
-     * Invalidate any selection retrievals in progress.
+     * Invalidate any selection retrievals in progress, and send an event
+     * that the selection changed if that is the case.
      */
 
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {
+        if (TkBTreeCharTagged(indexPtr, tPtr->selTagPtr)) {
+            TkTextSelectionEvent(tPtr);
+        }
 	tPtr->abortSelections = 1;
     }
 
