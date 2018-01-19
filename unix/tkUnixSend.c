@@ -1748,7 +1748,6 @@ AppendPropCarefully(
 	    pendingPtr);
     XChangeProperty(display, window, property, XA_STRING, 8,
 	    PropModeAppend, (unsigned char *) value, length);
-    XSync(display, False);
     Tk_DeleteErrorHandler(handler);
 }
 
