@@ -472,7 +472,6 @@ ContainerEventProc(
 
 	Tk_DestroyWindow((Tk_Window) winPtr);
     }
-    XSync(eventPtr->xfocus.display, False);
     Tk_DeleteErrorHandler(errHandler);
 }
 
@@ -516,7 +515,6 @@ EmbedStructureProc(
 		    containerPtr->wrapper, 0, 0,
 		    (unsigned) Tk_Width((Tk_Window) containerPtr->parentPtr),
 		    (unsigned) Tk_Height((Tk_Window) containerPtr->parentPtr));
-            XSync(eventPtr->xfocus.display, False);
 	    Tk_DeleteErrorHandler(errHandler);
 	}
     } else if (eventPtr->type == DestroyNotify) {
@@ -566,7 +564,6 @@ EmbedFocusProc(
 		    -1, -1, NULL, NULL);
 	    XSetInputFocus(display, containerPtr->wrapper, RevertToParent,
 		    CurrentTime);
-            XSync(eventPtr->xfocus.display, False);
 	    Tk_DeleteErrorHandler(errHandler);
 	}
     }

@@ -388,7 +388,6 @@ FinishedWithFont(
     if (fontPtr->fontset) {
 	FcFontSetDestroy(fontPtr->fontset);
     }
-    XSync(fontPtr->display, False);
     Tk_DeleteErrorHandler(handler);
 }
 
@@ -876,7 +875,6 @@ Tk_DrawChars(
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
 	XftDrawChange(fontPtr->ftDraw, drawable);
-        XSync(display, False);
 	Tk_DeleteErrorHandler(handler);
     }
     XGetGCValues(display, gc, GCForeground, &values);
@@ -1010,7 +1008,6 @@ TkDrawAngledChars(
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
 	XftDrawChange(fontPtr->ftDraw, drawable);
-        XSync(display, False);
 	Tk_DeleteErrorHandler(handler);
     }
 
@@ -1100,7 +1097,6 @@ TkDrawAngledChars(
 		Tk_CreateErrorHandler(display, -1, -1, -1, NULL, NULL);
 
 	XftDrawChange(fontPtr->ftDraw, drawable);
-        XSync(display, False);
 	Tk_DeleteErrorHandler(handler);
     }
     XGetGCValues(display, gc, GCForeground, &values);
