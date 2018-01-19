@@ -94,7 +94,6 @@ TkpFreeColor(
 		-1, -1, -1, NULL, NULL);
 	XFreeColors(DisplayOfScreen(screen), tkColPtr->colormap,
 		&tkColPtr->color.pixel, 1, 0L);
-        XSync(DisplayOfScreen(screen), False);
 	Tk_DeleteErrorHandler(handler);
     }
     DeleteStressedCmap(DisplayOfScreen(screen), tkColPtr->colormap);

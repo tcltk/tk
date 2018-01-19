@@ -470,7 +470,6 @@ TkSelPropProc(
 		    ckfree(propPtr);
 		}
 	    }
-            XSync(eventPtr->xproperty.display, False);
 	    Tk_DeleteErrorHandler(errorHandler);
 
 	    /*
@@ -1049,7 +1048,6 @@ ConvertSelection(
 	reply.xsel.property = incr.multAtoms[1];
     }
     XSendEvent(reply.xsel.display, reply.xsel.requestor, False, 0, &reply.ev);
-    XSync(reply.xsel.display, False);
     Tk_DeleteErrorHandler(errorHandler);
 
     /*
@@ -1068,7 +1066,6 @@ ConvertSelection(
 	errorHandler = Tk_CreateErrorHandler(winPtr->display,
 		-1, -1, -1, (int (*)()) NULL, NULL);
 	XSelectInput(reply.xsel.display, reply.xsel.requestor, 0L);
-        XSync(winPtr->display, False);
 	Tk_DeleteErrorHandler(errorHandler);
 	if (tsdPtr->pendingIncrs == &incr) {
 	    tsdPtr->pendingIncrs = incr.nextPtr;
