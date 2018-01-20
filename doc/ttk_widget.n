@@ -125,6 +125,9 @@ to allocate for the text label.
 If less than zero, specifies a minimum width.
 If zero or unspecified, the natural width of the text label is used.
 .SH "COMPATIBILITY OPTIONS"
+This option is only available for themed widgets that have
+.QW corresponding
+traditional Tk widgets.
 .OP \-state state State
 May be set to \fBnormal\fR or \fBdisabled\fR
 to control the \fBdisabled\fR state bit.

@@ -110,7 +110,7 @@ TkpGetString(
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Initialized, empty string to hold result. */
 {
-    int len;
+    int len, mincode, maxcode;
     Tcl_DString buf;
     TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 
@@ -123,6 +123,32 @@ TkpGetString(
 	memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
 		(unsigned) kePtr->charValueLen+1);
 	return Tcl_DStringValue(dsPtr);
+    }
+
+    /*
+     * Only do this for KeyPress events, otherwise
+     * further Xlib function behavior might be undefined.
+     */
+
+    if (eventPtr->type != KeyPress) {
+	len = 0;
+	Tcl_DStringSetLength(dsPtr, len);
+	goto done;
+    }
+
+    /*
+     * Filter keycodes out of range, otherwise
+     * further Xlib function behavior might be undefined.
+     */
+
+    mincode = 0;
+    maxcode = -1;
+    XDisplayKeycodes(winPtr->dispPtr->display, &mincode, &maxcode);
+    if ((eventPtr->xkey.keycode < mincode) ||
+	(eventPtr->xkey.keycode > maxcode)) {
+	len = 0;
+	Tcl_DStringSetLength(dsPtr, len);
+	goto done;
     }
 
 #ifdef TK_USE_INPUT_METHODS
@@ -220,6 +246,7 @@ TkpGetString(
      * from having to reenter the XIM engine. [Bug 1373712]
      */
 
+done:
     kePtr->charValuePtr = ckalloc(len + 1);
     kePtr->charValueLen = len;
     memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
