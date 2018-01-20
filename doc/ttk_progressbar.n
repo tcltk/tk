@@ -33,8 +33,7 @@ is \fBvertical\fR then these options are ignored.
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-length length Length
 Specifies the length of the long axis of the progress bar
-(width if horizontal, height if vertical). The value may have any of the forms
-acceptable to \fBTk_GetPixels\fR.
+(width if horizontal, height if vertical).
 .OP \-maximum maximum Maximum
 A floating point number specifying the maximum \fB\-value\fR.
 Defaults to 100.

@@ -379,7 +379,6 @@ Tk_CreateConsoleWindow(
 	Tcl_SetObjResult(interp, result_obj);
 	goto error;
     }
-
     if (Tk_Init(consoleInterp) != TCL_OK) {
 	Tcl_Obj *result_obj = Tcl_GetObjResult(consoleInterp);
 	Tcl_SetObjResult(interp, result_obj);
