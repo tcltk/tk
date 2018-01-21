@@ -576,6 +576,9 @@ ImgPhotoCmd(
 	if ((options.fromX2 > block.width) || (options.fromY2 > block.height)
 		|| (options.fromX2 > block.width)
 		|| (options.fromY2 > block.height)) {
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside source image",
 		    -1));
@@ -625,20 +628,6 @@ ImgPhotoCmd(
 	}
 
 	/*
-	 * Set the destination image size if the -shrink option was specified.
-	 */
-
-	if (options.options & OPT_SHRINK) {
-	    if (ImgPhotoSetSize(masterPtr, options.toX2,
-		    options.toY2) != TCL_OK) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
-		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
-		return TCL_ERROR;
-	    }
-	}
-
-	/*
 	 * Copy the image data over using Tk_PhotoPutZoomedBlock.
 	 */
 
@@ -646,11 +635,37 @@ ImgPhotoCmd(
 		+ options.fromY * block.pitch;
 	block.width = options.fromX2 - options.fromX;
 	block.height = options.fromY2 - options.fromY;
-	return Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) masterPtr,
+	result = Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) masterPtr,
 		&block, options.toX, options.toY, options.toX2 - options.toX,
 		options.toY2 - options.toY, options.zoomX, options.zoomY,
 		options.subsampleX, options.subsampleY,
 		options.compositingRule);
+
+	/*
+	 * Set the destination image size if the -shrink option was specified.
+	 * This has to be done _after_ copying the data. Otherwise, if source
+	 * and destination are the same image, block.pixelPtr would point to
+	 * an invalid memory block (bug [5239fd749b]).
+	 */
+
+	if (options.options & OPT_SHRINK) {
+	    if (ImgPhotoSetSize(masterPtr, options.toX2,
+		    options.toY2) != TCL_OK) {
+		if (options.background) {
+		    Tk_FreeColor(options.background);
+		}
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
+		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+		return TCL_ERROR;
+	    }
+	}
+	Tk_ImageChanged(masterPtr->tkMaster, 0, 0, 0, 0,
+		masterPtr->width, masterPtr->height);
+	if (options.background) {
+	    Tk_FreeColor(options.background);
+	}
+	return result;
 
     case PHOTO_DATA: {
 	char *data;

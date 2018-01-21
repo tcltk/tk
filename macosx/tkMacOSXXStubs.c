@@ -53,14 +53,6 @@ static XID		MacXIdAlloc(Display *display);
 static int		DefaultErrorHandler(Display *display,
 			    XErrorEvent *err_evt);
 
-/*
- * Other declarations
- */
-
-static int		DestroyImage(XImage *image);
-static unsigned long	ImageGetPixel(XImage *image, int x, int y);
-static int		ImagePutPixel(XImage *image, int x, int y,
-			    unsigned long pixel);
 
 /*
  *----------------------------------------------------------------------
@@ -183,7 +175,7 @@ TkpOpenDisplay(
     {
 	int major, minor, patch;
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 10100
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
 	Gestalt(gestaltSystemVersionMajor, (SInt32*)&major);
 	Gestalt(gestaltSystemVersionMinor, (SInt32*)&minor);
 	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
@@ -208,6 +200,7 @@ TkpOpenDisplay(
     screen->root_visual = ckalloc(sizeof(Visual));
     screen->root_visual->visualid     = 0;
     screen->root_visual->class	      = TrueColor;
+    screen->root_visual->alpha_mask   = 0xFF000000;
     screen->root_visual->red_mask     = 0x00FF0000;
     screen->root_visual->green_mask   = 0x0000FF00;
     screen->root_visual->blue_mask    = 0x000000FF;
@@ -383,13 +376,6 @@ XGetAtomName(
     return NULL;
 }
 
-int
-_XInitImageFuncPtrs(
-    XImage *image)
-{
-    return 0;
-}
-
 XErrorHandler
 XSetErrorHandler(
     XErrorHandler handler)
@@ -763,388 +749,6 @@ TkGetServerInfo(
 	    buffer2, NULL);
 }
 
-#pragma mark XImage handling
-
-/*
- *----------------------------------------------------------------------
- *
- * XCreateImage --
- *
- *	Allocates storage for a new XImage.
- *
- * Results:
- *	Returns a newly allocated XImage.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-XImage *
-XCreateImage(
-    Display* display,
-    Visual* visual,
-    unsigned int depth,
-    int format,
-    int offset,
-    char* data,
-    unsigned int width,
-    unsigned int height,
-    int bitmap_pad,
-    int bytes_per_line)
-{
-    XImage *ximage;
-    display->request++;
-    ximage = ckalloc(sizeof(XImage));
-
-    ximage->height = height;
-    ximage->width = width;
-    ximage->depth = depth;
-    ximage->xoffset = offset;
-    ximage->format = format;
-    ximage->data = data;
-    ximage->obdata = NULL;
-    /* The default pixelpower is 0.  This must be explicitly set to 1 in the
-     * case of an XImage extracted from a Retina display.
-     */
-    ximage->pixelpower = 0;
-
-    if (format == ZPixmap) {
-	ximage->bits_per_pixel = 32;
-	ximage->bitmap_unit = 32;
-    } else {
-	ximage->bits_per_pixel = 1;
-	ximage->bitmap_unit = 8;
-    }
-    if (bitmap_pad) {
-	ximage->bitmap_pad = bitmap_pad;
-    } else {
-	/* Use 16 byte alignment for best Quartz perfomance */
-	ximage->bitmap_pad = 128;
-    }
-    if (bytes_per_line) {
-	ximage->bytes_per_line = bytes_per_line;
-    } else {
-	ximage->bytes_per_line = ((width * ximage->bits_per_pixel +
-		(ximage->bitmap_pad - 1)) >> 3) &
-		~((ximage->bitmap_pad >> 3) - 1);
-    }
-#ifdef WORDS_BIGENDIAN
-    ximage->byte_order = MSBFirst;
-    ximage->bitmap_bit_order = MSBFirst;
-#else
-    ximage->byte_order = LSBFirst;
-    ximage->bitmap_bit_order = LSBFirst;
-#endif
-    ximage->red_mask = 0x00FF0000;
-    ximage->green_mask = 0x0000FF00;
-    ximage->blue_mask = 0x000000FF;
-    ximage->f.create_image = NULL;
-    ximage->f.destroy_image = DestroyImage;
-    ximage->f.get_pixel = ImageGetPixel;
-    ximage->f.put_pixel = ImagePutPixel;
-    ximage->f.sub_image = NULL;
-    ximage->f.add_pixel = NULL;
-
-    return ximage;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XGetImage --
- *
- *	This function copies data from a pixmap or window into an XImage.
- *
- * Results:
- *	Returns a newly allocated XImage containing the data from the given
- *	rectangle of the given drawable, or NULL if the XImage could not be
- *	constructed.  NOTE: If we are copying from a window on a Retina
- *	display, the dimensions of the XImage will be 2*width x 2*height.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-XImage *
-XGetImage(
-    Display *display,
-    Drawable d,
-    int x,
-    int y,
-    unsigned int width,
-    unsigned int height,
-    unsigned long plane_mask,
-    int format)
-{
-    NSBitmapImageRep *bitmap_rep;
-    NSUInteger         bitmap_fmt;
-    XImage *       imagePtr = NULL;
-    char *           bitmap = NULL;
-    char *           image_data=NULL;
-    int	        depth = 32;
-    int	        offset = 0;
-    int	        bitmap_pad = 0;
-    int	        bytes_per_row = 4*width;
-    int                size;
-    MacDrawable *macDraw = (MacDrawable *) d; // Where is this variable used? May it be removed?
-    int scalefactor = 1;
-#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
-    NSWindow *win = TkMacOSXDrawableWindow(d);
-    /* This code assumes that backing scale factors are integers.  Currently
-     * Retina displays use a scale factor of 2.0 and normal displays use 1.0.
-     * We do not support any other values here.
-     */
-    if (win && [win respondsToSelector:@selector(backingScaleFactor)]) {
-	scalefactor = ([win backingScaleFactor] == 2.0) ? 2 : 1;
-    }
-#endif
-    int scaled_height = height * scalefactor;
-    int scaled_width = width * scalefactor;
-
-    if (format == ZPixmap) {
-	if (width == 0 || height == 0) {
-	    /* This happens all the time.
-	    TkMacOSXDbgMsg("XGetImage: empty image requested");
-	    */
-	    return NULL;
-	}
-
-	bitmap_rep =  BitmapRepFromDrawableRect(d, x, y, width, height);
-	bitmap_fmt = [bitmap_rep bitmapFormat];
-
-	if ( bitmap_rep == Nil                        ||
-	     (bitmap_fmt != 0 && bitmap_fmt != 1)     ||
-	     [bitmap_rep samplesPerPixel] != 4 ||
-	     [bitmap_rep isPlanar] != 0               ) {
-	    TkMacOSXDbgMsg("XGetImage: Failed to construct NSBitmapRep");
-	    return NULL;
-	}
-
-	NSSize image_size = NSMakeSize(width, height);
-	NSImage* ns_image = [[NSImage alloc]initWithSize:image_size];
-	[ns_image addRepresentation:bitmap_rep];
-
-	/* Assume premultiplied nonplanar data with 4 bytes per pixel.*/
-	if ( [bitmap_rep isPlanar ] == 0 &&
-	     [bitmap_rep samplesPerPixel] == 4 ) {
-	    bytes_per_row = [bitmap_rep bytesPerRow];
-	    assert(bytes_per_row == 4 * scaled_width);
-	    assert([bitmap_rep bytesPerPlane] == bytes_per_row * scaled_height);
-	    size = bytes_per_row*scaled_height;
-	    image_data = (char*)[bitmap_rep bitmapData];
-	    if ( image_data ) {
-		int row, n, m;
-		bitmap = ckalloc(size);
-		/*
-		  Oddly enough, the bitmap has the top row at the beginning,
-		  and the pixels are in BGRA or ABGR format.
-		*/
-		if (bitmap_fmt == 0) {
-		    /* BGRA */
-		    for (row=0, n=0; row<scaled_height; row++, n+=bytes_per_row) {
-			for (m=n; m<n+bytes_per_row; m+=4) {
-			    *(bitmap+m)   = *(image_data+m+2);
-			    *(bitmap+m+1) = *(image_data+m+1);
-			    *(bitmap+m+2) = *(image_data+m);
-			    *(bitmap+m+3) = *(image_data+m+3);
-			}
-		    }
-		} else {
-		    /* ABGR */
-		    for (row=0, n=0; row<scaled_height; row++, n+=bytes_per_row) {
-			for (m=n; m<n+bytes_per_row; m+=4) {
-			    *(bitmap+m)   = *(image_data+m+3);
-			    *(bitmap+m+1) = *(image_data+m+2);
-			    *(bitmap+m+2) = *(image_data+m+1);
-			    *(bitmap+m+3) = *(image_data+m);
-			}
-		    }
-		}
-	    }
-	}
-	if (bitmap) {
-	    imagePtr = XCreateImage(display, NULL, depth, format, offset,
-				    (char*)bitmap, scaled_width, scaled_height,
-				    bitmap_pad, bytes_per_row);
-	    if (scalefactor == 2) {
-	    	imagePtr->pixelpower = 1;
-	     }
-	    [ns_image removeRepresentation:bitmap_rep]; /*releases the rep*/
-	    [ns_image release];
-	}
-    } else {
-	TkMacOSXDbgMsg("Could not extract image from drawable.");
-    }
-    return imagePtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * DestroyImage --
- *
- *	Destroys storage associated with an image.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Deallocates the image.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-DestroyImage(
-    XImage *image)
-{
-    if (image) {
-	if (image->data) {
-	    ckfree(image->data);
-	}
-	ckfree(image);
-    }
-    return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * ImageGetPixel --
- *
- *	Get a single pixel from an image.
- *
- * Results:
- *	Returns the 32 bit pixel value.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static unsigned long
-ImageGetPixel(
-    XImage *image,
-    int x,
-    int y)
-{
-    unsigned char r = 0, g = 0, b = 0;
-
-    if (image && image->data) {
-	unsigned char *srcPtr = ((unsigned char*) image->data)
-		+ (y * image->bytes_per_line)
-		+ (((image->xoffset + x) * image->bits_per_pixel) / NBBY);
-
-	switch (image->bits_per_pixel) {
-	    case 32: {
-		r = (*((unsigned int*) srcPtr) >> 16) & 0xff;
-		g = (*((unsigned int*) srcPtr) >>  8) & 0xff;
-		b = (*((unsigned int*) srcPtr)      ) & 0xff;
-		/*if (image->byte_order == LSBFirst) {
-		    r = srcPtr[2]; g = srcPtr[1]; b = srcPtr[0];
-		} else {
-		    r = srcPtr[1]; g = srcPtr[2]; b = srcPtr[3];
-		}*/
-		break;
-	    }
-	    case 16:
-		r = (*((unsigned short*) srcPtr) >> 7) & 0xf8;
-		g = (*((unsigned short*) srcPtr) >> 2) & 0xf8;
-		b = (*((unsigned short*) srcPtr) << 3) & 0xf8;
-		break;
-	    case 8:
-		r = (*srcPtr << 2) & 0xc0;
-		g = (*srcPtr << 4) & 0xc0;
-		b = (*srcPtr << 6) & 0xc0;
-		r |= r >> 2 | r >> 4 | r >> 6;
-		g |= g >> 2 | g >> 4 | g >> 6;
-		b |= b >> 2 | b >> 4 | b >> 6;
-		break;
-	    case 4: {
-		unsigned char c = (x % 2) ? *srcPtr : (*srcPtr >> 4);
-		r = (c & 0x04) ? 0xff : 0;
-		g = (c & 0x02) ? 0xff : 0;
-		b = (c & 0x01) ? 0xff : 0;
-		break;
-		}
-	    case 1:
-		r = g = b = ((*srcPtr) & (0x80 >> (x % 8))) ? 0xff : 0;
-		break;
-	}
-    }
-    return (PIXEL_MAGIC << 24) | (r << 16) | (g << 8) | b;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * ImagePutPixel --
- *
- *	Set a single pixel in an image.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-ImagePutPixel(
-    XImage *image,
-    int x,
-    int y,
-    unsigned long pixel)
-{
-    if (image && image->data) {
-	unsigned char r = ((pixel & image->red_mask)   >> 16) & 0xff;
-	unsigned char g = ((pixel & image->green_mask) >>  8) & 0xff;
-	unsigned char b = ((pixel & image->blue_mask)       ) & 0xff;
-	unsigned char *dstPtr = ((unsigned char*) image->data)
-		+ (y * image->bytes_per_line)
-		+ (((image->xoffset + x) * image->bits_per_pixel) / NBBY);
-
-	switch (image->bits_per_pixel) {
-	    case 32:
-		*((unsigned int*) dstPtr) = (0xff << 24) | (r << 16) |
-			(g << 8) | b;
-		/*if (image->byte_order == LSBFirst) {
-		    dstPtr[3] = 0xff; dstPtr[2] = r; dstPtr[1] = g; dstPtr[0] = b;
-		} else {
-		    dstPtr[0] = 0xff; dstPtr[1] = r; dstPtr[2] = g; dstPtr[3] = b;
-		}*/
-		break;
-	    case 16:
-		*((unsigned short*) dstPtr) = ((r & 0xf8) << 7) |
-			((g & 0xf8) << 2) | ((b & 0xf8) >> 3);
-		break;
-	    case 8:
-		*dstPtr = ((r & 0xc0) >> 2) | ((g & 0xc0) >> 4) |
-			((b & 0xc0) >> 6);
-		break;
-	    case 4: {
-		unsigned char c = ((r & 0x80) >> 5) | ((g & 0x80) >> 6) |
-			((b & 0x80) >> 7);
-		*dstPtr = (x % 2) ? ((*dstPtr & 0xf0) | (c & 0x0f)) :
-			((*dstPtr & 0x0f) | ((c << 4) & 0xf0));
-		break;
-		}
-	    case 1:
-		*dstPtr = ((r|g|b) & 0x80) ? (*dstPtr | (0x80 >> (x % 8))) :
-			(*dstPtr & ~(0x80 >> (x % 8)));
-		break;
-	}
-    }
-    return 0;
-}
-
 /*
  *----------------------------------------------------------------------
  *
@@ -1369,7 +973,7 @@ void
 Tk_ResetUserInactiveTime(
     Display *dpy)
 {
-    IOGPoint loc;
+    IOGPoint loc = {0, 0};
     kern_return_t kr;
     NXEvent nullEvent = {NX_NULLEVENT, {0, 0}, 0, -1, 0};
     enum { kNULLEventPostThrottle = 10 };
