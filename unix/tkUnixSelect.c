@@ -166,6 +166,13 @@ TkSelGetSelection(
     pendingRetrievals = &retr;
 
     /*
+     * Delete the property to indicate that no parameters are supplied for
+     * the conversion request.
+     */
+
+    XDeleteProperty(winPtr->display, retr.winPtr->window, retr.property);
+
+    /*
      * Initiate the request for the selection. Note: can't use TkCurrentTime
      * for the time. If we do, and this application hasn't received any X
      * events in a long time, the current time will be way in the past and
@@ -865,8 +872,9 @@ ConvertSelection(
 	    goto refuse;
 	}
 	result = XGetWindowProperty(eventPtr->display, eventPtr->requestor,
-		eventPtr->property, 0, MAX_PROP_WORDS, False, XA_ATOM,
-		&type, &format, &incr.numConversions, &bytesAfter,
+		eventPtr->property, 0, MAX_PROP_WORDS, False,
+		winPtr->dispPtr->atomPairAtom, &type, &format,
+		&incr.numConversions, &bytesAfter,
 		(unsigned char **) multAtomsPtr);
 	if ((result != Success) || (bytesAfter != 0) || (format != 32)
 		|| (type == None)) {
@@ -1028,8 +1036,8 @@ ConvertSelection(
     }
     if (multiple) {
 	XChangeProperty(reply.xsel.display, reply.xsel.requestor,
-		reply.xsel.property, XA_ATOM, 32, PropModeReplace,
-		(unsigned char *) incr.multAtoms,
+		reply.xsel.property, winPtr->dispPtr->atomPairAtom,
+		32, PropModeReplace, (unsigned char *) incr.multAtoms,
 		(int) incr.numConversions*2);
     } else {
 	/*

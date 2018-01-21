@@ -193,7 +193,7 @@ TkpMakeWindow(
 int
 TkpScanWindowId(
     Tcl_Interp *interp,
-    CONST char * string,
+    const char * string,
     Window *idPtr)
 {
     int code;
@@ -799,6 +799,13 @@ ContainerEventProc(
     Container *containerPtr;
     Tk_ErrorHandler errHandler;
 
+    if (!firstContainerPtr) {
+	/*
+	 * When the interpreter is being dismantled this can be nil.
+	 */
+	return;
+    }
+    
     /*
      * Ignore any X protocol errors that happen in this procedure (almost any
      * operation could fail, for example, if the embedded application has

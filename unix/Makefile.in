@@ -394,8 +394,8 @@ X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
-	tkMacOSXEvent.o tkMacOSXFont.o tkMacOSXHLEvents.o tkMacOSXInit.o \
-	tkMacOSXKeyboard.o tkMacOSXKeyEvent.o tkMacOSXMenu.o \
+	tkMacOSXEvent.o tkMacOSXFont.o tkMacOSXHLEvents.o tkMacOSXImage.o \
+	tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o tkMacOSXMenu.o \
 	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
 	tkMacOSXNotify.o tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o \
 	tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
@@ -519,6 +519,7 @@ AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXDraw.c $(MAC_OSX_DIR)/tkMacOSXEmbed.c \
 	$(MAC_OSX_DIR)/tkMacOSXEntry.c $(MAC_OSX_DIR)/tkMacOSXEvent.c \
 	$(MAC_OSX_DIR)/tkMacOSXFont.c $(MAC_OSX_DIR)/tkMacOSXHLEvents.c \
+	$(MAC_OSX_DIR)/tkMacOSXImage.c \
 	$(MAC_OSX_DIR)/tkMacOSXInit.c $(MAC_OSX_DIR)/tkMacOSXKeyboard.c \
 	$(MAC_OSX_DIR)/tkMacOSXKeyEvent.c $(MAC_OSX_DIR)/tkMacOSXMenu.c \
 	$(MAC_OSX_DIR)/tkMacOSXMenubutton.c $(MAC_OSX_DIR)/tkMacOSXMenus.c \
@@ -1272,6 +1273,9 @@ tkMacOSXFont.o: $(MAC_OSX_DIR)/tkMacOSXFont.c
 tkMacOSXHLEvents.o: $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 
+tkMacOSXImage.o: $(MAC_OSX_DIR)/tkMacOSXImage.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXImage.c
+
 tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c tkConfig.sh
 	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \
 	    $(MAC_OSX_DIR)/tkMacOSXInit.c
@@ -1574,8 +1578,7 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 		$(TOP_DIR)/win/aclocal.m4 $(TOP_DIR)/win/tcl.m4 \
 		$(DISTDIR)/win
 	cp -p $(TOP_DIR)/win/*.[ch] $(TOP_DIR)/win/*.bat $(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/makefile.* $(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/rules.vc $(DISTDIR)/win
+	cp -p $(TOP_DIR)/win/*.vc $(DISTDIR)/win
 	cp -p $(TOP_DIR)/win/README $(DISTDIR)/win
 	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
 	mkdir $(DISTDIR)/win/rc
@@ -1649,7 +1652,7 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 		$(TCLDIR)/doc/man.macros $(DISTDIR)/doc
 	mkdir $(DISTDIR)/tests
 	cp -p $(TOP_DIR)/license.terms $(TEST_DIR)/*.{test,tcl} \
-		$(TEST_DIR)/README $(TEST_DIR)/*.{gif,ppm,xbm} \
+		$(TEST_DIR)/README $(TEST_DIR)/*.{gif,png,ppm,xbm} \
 		$(TEST_DIR)/option.file* $(DISTDIR)/tests
 	mkdir $(DISTDIR)/tests/ttk
 	cp -p $(TEST_DIR)/ttk/*.{test,tcl} $(DISTDIR)/tests/ttk

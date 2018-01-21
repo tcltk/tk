@@ -2495,6 +2495,11 @@ MenuVarProc(
     }
 
     menuPtr = mePtr->menuPtr;
+
+    if (menuPtr->menuFlags & MENU_DELETION_PENDING) {
+    	return NULL;
+    }
+
     name = Tcl_GetString(mePtr->namePtr);
 
     /*
