@@ -154,7 +154,7 @@ On Windows, the \fBPRIMARY\fR selection is not provided by the system, but only 
 .PP
 .SH SECURITY
 .PP
-An unsafe interpreter cannot read from the \fBPRIMARY\fR selection because its \fBselection\fR command is hidden.  For this reason the \fBPRIMARY\fR selection cannot be written to the Tk widgets of a safe interpreter.
+A safe interpreter cannot read from the \fBPRIMARY\fR selection because its \fBselection\fR command is hidden.  For this reason the \fBPRIMARY\fR selection cannot be written to the Tk widgets of a safe interpreter.
 .PP
 A Tk widget can have its option \fB\-exportselection\fR set to boolean \fBtrue\fR, but in a safe interpreter this option has no effect: writing from the widget to the \fBPRIMARY\fR selection is disabled.
 .PP
