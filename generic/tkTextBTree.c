@@ -799,6 +799,7 @@ RemovePixelClient(
 		nodePtr->numPixels[treePtr->pixelReferences-1];
     }
     if (treePtr->pixelReferences == 1) {
+	ckfree(nodePtr->numPixels);
 	nodePtr->numPixels = NULL;
     } else {
 	nodePtr->numPixels = ckrealloc(nodePtr->numPixels,
@@ -1439,6 +1440,7 @@ TkBTreeDeleteIndexRange(
 		    prevNodePtr->nextPtr = curNodePtr->nextPtr;
 		}
 		parentPtr->numChildren--;
+		DeleteSummaries(curNodePtr->summaryPtr);
 		ckfree(curNodePtr->numPixels);
 		ckfree(curNodePtr);
 		curNodePtr = parentPtr;

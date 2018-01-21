@@ -17,6 +17,7 @@
 #include "tkMacOSXWm.h"
 #include "tkMacOSXEvent.h"
 #include "tkMacOSXDebug.h"
+#include "tkMacOSXConstants.h"
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -41,14 +42,8 @@ static void		DoWindowActivate(ClientData clientData);
 extern NSString *NSWindowWillOrderOnScreenNotification;
 extern NSString *NSWindowDidOrderOnScreenNotification;
 extern NSString *NSWindowDidOrderOffScreenNotification;
+#endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-#define NSWindowWillStartLiveResizeNotification @"NSWindowWillStartLiveResizeNotification"
-#define NSWindowDidEndLiveResizeNotification  @"NSWindowDidEndLiveResizeNotification"
-#endif
-#endif
-
-extern BOOL opaqueTag;
 
 @implementation TKApplication(TKWindowEvent)
 
@@ -357,12 +352,12 @@ GenerateUpdates(
     event.xany.window = Tk_WindowId(winPtr);
     event.xany.display = Tk_Display(winPtr);
     event.type = Expose;
-    event.xexpose.x = damageBounds.origin.x;
-    event.xexpose.y = damageBounds.origin.y;
+    event.xexpose.x = damageBounds.origin.x - bounds.origin.x;
+    event.xexpose.y = damageBounds.origin.y - bounds.origin.y;
     event.xexpose.width = damageBounds.size.width;
     event.xexpose.height = damageBounds.size.height;
     event.xexpose.count = 0;
-    Tk_HandleEvent(&event);
+    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
 #ifdef TK_MAC_DEBUG_DRAWING
     NSLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
@@ -749,17 +744,7 @@ TkWmProtocolEventProc(
 int
 Tk_MacOSXIsAppInFront(void)
 {
-    Boolean isFrontProcess = true;
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-    ProcessSerialNumber frontPsn, ourPsn = {0, kCurrentProcess};
-
-    if (noErr == GetFrontProcess(&frontPsn)){
-	SameProcess(&frontPsn, &ourPsn, &isFrontProcess);
-    }
-#else
-    isFrontProcess = [NSRunningApplication currentApplication].active;
-#endif
-    return (isFrontProcess == true);
+    return ([NSRunningApplication currentApplication].active == true);
 }
 
 #pragma mark TKContentView
@@ -858,7 +843,7 @@ ConfigureRestrictProc(
 	 * Since it calls Tcl_DoOneEvent, we need to make sure we
 	 * don't clobber the AutoreleasePool set up by the caller.
 	 */
-	[NSApp setPoolProtected:YES];
+	[NSApp _lockAutoreleasePool];
 
 	/*
 	 * Try to prevent flickers and flashes.
@@ -889,7 +874,7 @@ ConfigureRestrictProc(
 	[w enableFlushWindow];
 	[w flushWindowIfNeeded];
 	NSEnableScreenUpdates();
-	[NSApp setPoolProtected:NO];
+	[NSApp _unlockAutoreleasePool];
     }
 }
 
@@ -914,16 +899,10 @@ ConfigureRestrictProc(
  */
 - (void) generateExposeEvents: (HIShapeRef) shape
 {
-    [self generateExposeEvents:shape childrenOnly:0];
-}
-
-- (void) generateExposeEvents: (HIShapeRef) shape
-		 childrenOnly: (int) childrenOnly
-{
-    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     unsigned long serial;
     CGRect updateBounds;
     int updatesNeeded;
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
 
     if (!winPtr) {
 		return;
@@ -979,13 +958,8 @@ ConfigureRestrictProc(
 {
     NSWindow *w = [self window];
 
-    if (opaqueTag) {
-      return YES;
-	} else {
-
-     return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
+      return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
     	    ![w isOpaque]) ? NO : YES);
-    }
 }
 
 - (BOOL) wantsDefaultClipping
