@@ -30,6 +30,38 @@ tcltest::loadTestedCommands
 
 namespace eval ::_test_tmp {}
 
+# ------------------------------------------------------------------------------
+#  Proc ::_test_tmp::unsafeInterp
+# ------------------------------------------------------------------------------
+# Command that creates an unsafe child interpreter and tries to load Tk.
+# - This is necessary for loading Tk if the tests are done in the build
+#   directory without installing Tk.  In that case the usual auto_path loading
+#   mechanism cannot work because the tk binary is not where pkgIndex.tcl says
+#   it is.
+# - This command is not needed for Safe Base slaves because safe::loadTk does
+#   something similar and works correctly.
+# - Based on scripts in winSend.test.
+# ------------------------------------------------------------------------------
+
+namespace eval ::_test_tmp {
+    variable TkLoadCmd
+}
+
+foreach pkg [info loaded] {
+    if {[lindex $pkg 1] eq "Tk"} {
+	set ::_test_tmp::TkLoadCmd [list load {*}$pkg]
+	break
+    }
+}
+
+proc ::_test_tmp::unsafeInterp {name} {
+    variable TkLoadCmd
+    interp create $name
+    $name eval [list set argv [list -name $name]]
+    catch {{*}$TkLoadCmd $name}
+}
+
+
 set ::_test_tmp::script {
     package require Tk
     namespace eval ::_test_tmp {}
@@ -305,7 +337,7 @@ test safePrimarySelection-2.1 {unsafe slave interpreter, text, no existing selec
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryText
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -322,7 +354,7 @@ test safePrimarySelection-2.2 {unsafe slave interpreter, entry, no existing sele
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryEntry
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -339,7 +371,7 @@ test safePrimarySelection-2.3 {unsafe slave interpreter, ttk::entry, no existing
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkEntry
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -356,7 +388,7 @@ test safePrimarySelection-2.4 {unsafe slave interpreter, listbox, no existing se
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryListbox
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -373,7 +405,7 @@ test safePrimarySelection-2.5 {unsafe slave interpreter, spinbox as entry, no ex
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 1
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -390,7 +422,7 @@ test safePrimarySelection-2.6 {unsafe slave interpreter, spinbox spun, no existi
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 2
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -407,7 +439,7 @@ test safePrimarySelection-2.7 {unsafe slave interpreter, spinbox spun/selected/s
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 3
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -424,7 +456,7 @@ test safePrimarySelection-2.8 {unsafe slave interpreter, ttk::spinbox as entry, 
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 1
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -441,7 +473,7 @@ test safePrimarySelection-2.9 {unsafe slave interpreter, ttk::spinbox spun, no e
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 2
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -458,7 +490,7 @@ test safePrimarySelection-2.10 {unsafe slave interpreter, ttk::spinbox spun/sele
     ::_test_tmp::clearPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 3
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -805,7 +837,7 @@ test safePrimarySelection-5.1 {unsafe slave interpreter, text, existing selectio
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryText
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -822,7 +854,7 @@ test safePrimarySelection-5.2 {unsafe slave interpreter, entry, existing selecti
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryEntry
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -839,7 +871,7 @@ test safePrimarySelection-5.3 {unsafe slave interpreter, ttk::entry, existing se
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkEntry
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -856,7 +888,7 @@ test safePrimarySelection-5.4 {unsafe slave interpreter, listbox, existing selec
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryListbox
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -873,7 +905,7 @@ test safePrimarySelection-5.5 {unsafe slave interpreter, spinbox as entry, exist
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 1
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -890,7 +922,7 @@ test safePrimarySelection-5.6 {unsafe slave interpreter, spinbox spun, existing 
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 2
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -907,7 +939,7 @@ test safePrimarySelection-5.7 {unsafe slave interpreter, spinbox spun/selected/s
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::trySpinbox 3
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -924,7 +956,7 @@ test safePrimarySelection-5.8 {unsafe slave interpreter, ttk::spinbox as entry, 
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 1
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -941,7 +973,7 @@ test safePrimarySelection-5.9 {unsafe slave interpreter, ttk::spinbox spun, exis
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 2
     $int2 eval ::_test_tmp::getPrimarySelection
@@ -958,7 +990,7 @@ test safePrimarySelection-5.10 {unsafe slave interpreter, ttk::spinbox spun/sele
     ::_test_tmp::setPrimarySelection
 } -body {
     set int2 slave2
-    interp create $int2
+    ::_test_tmp::unsafeInterp $int2
     $int2 eval $::_test_tmp::script
     $int2 eval ::_test_tmp::tryTtkSpinbox 3
     $int2 eval ::_test_tmp::getPrimarySelection
