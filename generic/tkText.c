@@ -2078,7 +2078,7 @@ ConfigureText(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_SavedOptions savedOptions;
-    int oldExport = textPtr->exportSelection;
+    int oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
     int mask = 0;
 
     if (Tk_SetOptions(interp, (char *) textPtr, textPtr->optionTable,
@@ -2307,7 +2307,7 @@ ConfigureText(
      * are tagged characters.
      */
 
-    if (textPtr->exportSelection && (!oldExport)) {
+    if (textPtr->exportSelection && (!oldExport) && (!Tcl_IsSafe(textPtr->interp))) {
 	TkTextSearch search;
 	TkTextIndex first, last;
 
@@ -3427,7 +3427,7 @@ TextFetchSelection(
     TkTextSearch search;
     TkTextSegment *segPtr;
 
-    if (!textPtr->exportSelection) {
+    if ((!textPtr->exportSelection) || Tcl_IsSafe(textPtr->interp)) {
 	return -1;
     }
 
@@ -3557,7 +3557,7 @@ TkTextLostSelection(
     if (TkpAlwaysShowSelection(textPtr->tkwin)) {
 	TkTextIndex start, end;
 
-	if (!textPtr->exportSelection) {
+	if ((!textPtr->exportSelection) || Tcl_IsSafe(textPtr->interp)) {
 	    return;
 	}
 
