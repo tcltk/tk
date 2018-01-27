@@ -17,16 +17,14 @@
 #include "default.h"
 
 /*
- * Things about the busy system that may be configured. Note that currently on
- * OSX/Aqua, that's nothing at all.
+ * Things about the busy system that may be configured. Note that on some
+ * platforms this may or may not have an effect.
  */
 
 static const Tk_OptionSpec busyOptionSpecs[] = {
-#ifndef MAC_OSX_TK
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUSY_CURSOR, -1, Tk_Offset(Busy, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
-#endif
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 

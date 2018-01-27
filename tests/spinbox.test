@@ -526,7 +526,7 @@ test spinbox-1.44 {configuration option: "insertbackground" for spinbox} -setup 
 } -returnCodes {error} -result {unknown color name "bogus"}
 
 test spinbox-1.45 {configuration option: "insertborderwidth"} -setup {
-        spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
+        spinbox .e -borderwidth 2 -insertwidth 2 -highlightthickness 2 -font {Helvetica -12} \
         -relief sunken
     pack .e
     update
@@ -2851,7 +2851,7 @@ test spinbox-13.9 {GetSpinboxIndex procedure} -setup {
     destroy .e
 } -result {1 6}
 
-test spinbox-13.10 {GetSpinboxIndex procedure} -constraints unix -body {
+test spinbox-13.10 {GetSpinboxIndex procedure} -constraints x11 -body {
 # On unix, when selection is cleared, spinbox widget's internal 
 # selection range is reset.
 # Previous settings:
@@ -2870,7 +2870,7 @@ test spinbox-13.10 {GetSpinboxIndex procedure} -constraints unix -body {
     destroy .e
 } -returnCodes error -result {selection isn't in widget .e}
 
-test spinbox-13.11 {GetSpinboxIndex procedure} -constraints win -body {
+test spinbox-13.11 {GetSpinboxIndex procedure} -constraints aquaOrWin32 -body {
 # On mac and pc, when selection is cleared, spinbox widget remembers
 # last selected range.  When selection ownership is restored to 
 # spinbox, the old range will be rehighlighted.
@@ -2891,7 +2891,7 @@ test spinbox-13.11 {GetSpinboxIndex procedure} -constraints win -body {
     destroy .e
 } -result {1}           
 
-test spinbox-13.12 {GetSpinboxIndex procedure} -constraints unix -body {
+test spinbox-13.12 {GetSpinboxIndex procedure} -constraints x11 -body {
 # Previous settings:
 	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
 	pack .e

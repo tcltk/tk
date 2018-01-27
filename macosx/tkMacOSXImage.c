@@ -46,7 +46,8 @@ static void ReleaseData(void *info, const void *data, size_t size) {
 
 CGImageRef
 TkMacOSXCreateCGImageWithXImage(
-    XImage *image)
+    XImage *image,
+    int use_ximage_alpha)
 {
     CGImageRef img = NULL;
     size_t bitsPerComponent, bitsPerPixel;
@@ -96,8 +97,12 @@ TkMacOSXCreateCGImageWithXImage(
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
 	bitmapInfo = (image->byte_order == MSBFirst ?
-		kCGBitmapByteOrder32Big : kCGBitmapByteOrder32Little) |
-		kCGImageAlphaNoneSkipFirst;
+		      kCGBitmapByteOrder32Big : kCGBitmapByteOrder32Little);
+	if (use_ximage_alpha) {
+	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
+	} else {
+	    bitmapInfo |= kCGImageAlphaNoneSkipFirst;
+	}
 	data = memcpy(ckalloc(len), image->data + image->xoffset, len);
 	if (data) {
 	    provider = CGDataProviderCreateWithData(data, data, len, releaseData);
@@ -160,6 +165,7 @@ XGetImage(
     unsigned int bytes_per_row, size, row, n, m;
     unsigned int scalefactor=1, scaled_height=height, scaled_width=width;
     NSWindow *win = TkMacOSXDrawableWindow(drawable);
+    MacDrawable *macDraw = ((MacDrawable*)drawable);
     static enum {unknown, no, yes} has_retina = unknown;
 
     if (win && has_retina == unknown) {
@@ -206,9 +212,25 @@ XGetImage(
 	    CFRelease(bitmap_rep);
 	    return NULL;
 	}
-	memcpy(bitmap, (char *)[bitmap_rep bitmapData], size);
+
+	if (macDraw->flags & TK_USE_XIMAGE_ALPHA) {
+	    /*
+	     * When called by TkImgPhotoDisplay we are being asked to return a
+	     * background image to be blended with the photoimage using its
+	     * alpha channel, if it has one.  Returning a black pixmap here
+	     * makes TkImgPhotoDisplay create an XImage with a premultiplied
+	     * alpha channel, as favored by Apple.  When TkImgPhotoDisplay
+	     * passes this XImage to TkPutImage, targeting a pixmap, it creates
+	     * an image with correct transparency.  This is used, for example,
+	     * when creating an iconphoto or a menu image from a PNG
+	     * photoimage.
+	     */
+	    bzero(bitmap, size);
+	} else {
+	    memcpy(bitmap, (char *)[bitmap_rep bitmapData], size);
+	}
 	CFRelease(bitmap_rep);
-	
+
 	/*
 	 * When Apple extracts a bitmap from an NSView, it may be in
 	 * either BGRA or ABGR format.  For an XImage we need RGBA.
@@ -221,7 +243,7 @@ XGetImage(
 		G = *(bitmap + m + pixel.g);
 		B = *(bitmap + m + pixel.b);
 		A = *(bitmap + m + pixel.a);
-		
+
 		*(bitmap + m)     = R;
 		*(bitmap + m + 1) = G;
 		*(bitmap + m + 2) = B;
@@ -367,23 +389,16 @@ ImagePutPixel(
     unsigned long pixel)
 {
     if (image && image->data) {
-	unsigned char r = ((pixel & image->red_mask)   >> 16) & 0xff;
-	unsigned char g = ((pixel & image->green_mask) >>  8) & 0xff;
-	unsigned char b = ((pixel & image->blue_mask)       ) & 0xff;
 	unsigned char *dstPtr = ((unsigned char*) image->data)
 		+ (y * image->bytes_per_line)
 		+ (((image->xoffset + x) * image->bits_per_pixel) / NBBY);
-
-	switch (image->bits_per_pixel) {
-	    case 32:
-		*((unsigned int*) dstPtr) = (0xff << 24) | (r << 16) |
-			(g << 8) | b;
-		/*if (image->byte_order == LSBFirst) {
-		    dstPtr[3] = 0xff; dstPtr[2] = r; dstPtr[1] = g; dstPtr[0] = b;
-		} else {
-		    dstPtr[0] = 0xff; dstPtr[1] = r; dstPtr[2] = g; dstPtr[3] = b;
-		}*/
-		break;
+	if (image->bits_per_pixel == 32) {
+	    *((unsigned int*) dstPtr) = pixel;
+	} else {
+	    unsigned char r = ((pixel & image->red_mask)   >> 16) & 0xff;
+	    unsigned char g = ((pixel & image->green_mask) >>  8) & 0xff;
+	    unsigned char b = ((pixel & image->blue_mask)       ) & 0xff;
+	    switch (image->bits_per_pixel) {
 	    case 16:
 		*((unsigned short*) dstPtr) = ((r & 0xf8) << 7) |
 			((g & 0xf8) << 2) | ((b & 0xf8) >> 3);
@@ -403,6 +418,7 @@ ImagePutPixel(
 		*dstPtr = ((r|g|b) & 0x80) ? (*dstPtr | (0x80 >> (x % 8))) :
 			(*dstPtr & ~(0x80 >> (x % 8)));
 		break;
+	    }
 	}
     }
     return 0;
@@ -513,31 +529,32 @@ XCreateImage(
 int
 TkPutImage(
     unsigned long *colors,	/* Unused on Macintosh. */
-    int ncolors,			/* Unused on Macintosh. */
+    int ncolors,		/* Unused on Macintosh. */
     Display* display,		/* Display. */
-    Drawable d,			/* Drawable to place image on. */
-    GC gc,				/* GC to use. */
+    Drawable drawable,		/* Drawable to place image on. */
+    GC gc,			/* GC to use. */
     XImage* image,		/* Image to place. */
     int src_x,			/* Source X & Y. */
     int src_y,
     int dest_x,			/* Destination X & Y. */
     int dest_y,
-    unsigned int width,	/* Same width & height for both */
+    unsigned int width,	        /* Same width & height for both */
     unsigned int height)	/* distination and source. */
 {
     TkMacOSXDrawingContext dc;
+    MacDrawable *macDraw = ((MacDrawable*)drawable);
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+    if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
 	return BadDrawable;
     }
     if (dc.context) {
-	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image);
-
+	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image,
+			     macDraw->flags & TK_USE_XIMAGE_ALPHA);
 	if (img) {
 	    /* If the XImage has big pixels, rescale the source dimensions.*/
 	    int pp = image->pixelpower;
-	    TkMacOSXDrawCGImage(d, gc, dc.context,
+	    TkMacOSXDrawCGImage(drawable, gc, dc.context,
 		    img, gc->foreground, gc->background,
 		    CGRectMake(0, 0, image->width<<pp, image->height<<pp),
 		    CGRectMake(src_x<<pp, src_y<<pp, width<<pp, height<<pp),
