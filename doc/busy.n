@@ -28,7 +28,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-busy \- confine pointer events to a window sub-tree
+busy \- Make Tk widgets busy, temporarily blocking user interactions
 .SH SYNOPSIS
 \fBtk busy\fR \fIwindow \fR?\fIoptions\fR?
 .sp
@@ -46,8 +46,8 @@ busy \- confine pointer events to a window sub-tree
 .BE
 .SH DESCRIPTION
 .PP
-The \fBtk busy\fR command provides a simple means to block pointer events from
-Tk widgets, while overriding the widget's cursor with a configurable busy
+The \fBtk busy\fR command provides a simple means to block mouse pointer events
+from Tk widgets, while overriding the widget's cursor with a configurable busy
 cursor. Note this command does not prevent keyboard events from being sent to
 the widgets made busy.
 .SH INTRODUCTION
