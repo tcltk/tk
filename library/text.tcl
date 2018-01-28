@@ -1119,7 +1119,7 @@ proc ::tk_textCut w {
     if {![catch {set data [$w get sel.first sel.last]}]} {
 	# make <<Cut>> an atomic operation on the Undo stack,
 	# i.e. separate it from other delete operations on either side
-	if {[$w cget -autoseparators]} {
+	if {[$w cget -autoseparators] && ([$w cget -state] eq "normal")} {
 	    $w edit separator
 	}
 	clipboard clear -displayof $w
@@ -1127,7 +1127,7 @@ proc ::tk_textCut w {
 	if {[$w cget -state] eq "normal"} {
 	    ::tk::TextDelete $w sel.first sel.last
 	}
-	if {[$w cget -autoseparators]} {
+	if {[$w cget -autoseparators] && ([$w cget -state] eq "normal")} {
 	    $w edit separator
 	}
     }
