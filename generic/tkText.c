@@ -3872,7 +3872,7 @@ TkConfigureText(
     unsigned currentEpoch;
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextBTree tree = sharedTextPtr->tree;
-    bool oldExport = textPtr->exportSelection;
+    bool oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
     bool oldTextDebug = tkTextDebug;
     bool didHyphenate = textPtr->hyphenate;
     int oldHyphenRules = textPtr->hyphenRules;
@@ -4382,7 +4382,7 @@ TkConfigureText(
      * are tagged characters.
      */
 
-    if (textPtr->exportSelection && !oldExport) {
+    if (textPtr->exportSelection && (!oldExport) && (!Tcl_IsSafe(textPtr->interp))) {
 	TkTextSearch search;
 	TkTextIndex first, last;
 
@@ -5217,10 +5217,14 @@ InsertChars(
     }
 
     /*
-     * Invalidate any selection retrievals in progress.
+     * Invalidate any selection retrievals in progress, and send an event
+     * that the selection changed if that is the case.
      */
 
     for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
+        if (TkBTreeCharTagged(index1Ptr, tPtr->selTagPtr)) {
+            TkTextSelectionEvent(tPtr);
+        }
 	tPtr->abortSelections = true;
     }
 
@@ -5995,7 +5999,7 @@ TextFetchSelection(
     Tcl_Obj *selTextPtr;
     int numBytes;
 
-    if (!textPtr->exportSelection) {
+    if ((!textPtr->exportSelection) || Tcl_IsSafe(textPtr->interp)) {
 	return -1;
     }
 
@@ -6141,7 +6145,7 @@ TkTextLostSelection(
     if (TkpAlwaysShowSelection(textPtr->tkwin)) {
 	TkTextIndex start, end;
 
-	if (!textPtr->exportSelection) {
+	if ((!textPtr->exportSelection) || Tcl_IsSafe(textPtr->interp)) {
 	    return;
 	}
 

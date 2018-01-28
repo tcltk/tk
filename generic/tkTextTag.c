@@ -964,15 +964,13 @@ TkTextClearSelection(
     for (textPtr = sharedTextPtr->peers; textPtr; textPtr = textPtr->next) {
 	if (TkBTreeTag(sharedTextPtr, textPtr, indexPtr1, indexPtr2, textPtr->selTagPtr,
 		false, NULL, TkTextRedrawTag)) {
-	    if (!textPtr->abortSelections) {
-		/*
-		 * Send an event that the selection changed. This is equivalent to:
-		 *	 event generate $textWidget <<Selection>>
-		 */
+	    /*
+	     * Send an event that the selection changed. This is equivalent to:
+	     *	 event generate $textWidget <<Selection>>
+	     */
 
-		TkTextSelectionEvent(textPtr); /* <<Selection>> will be received after deletion */
-		textPtr->abortSelections = true;
-	    }
+	    TkTextSelectionEvent(textPtr); /* <<Selection>> will be received after deletion */
+	    textPtr->abortSelections = true;
 	}
     }
 }
@@ -1745,7 +1743,7 @@ GrabSelection(
 
 	TkTextSelectionEvent(textPtr);
     }
-    if (ownSelection) {
+    if (ownSelection && (!Tcl_IsSafe(textPtr->interp))) {
 	Tk_OwnSelection(textPtr->tkwin, XA_PRIMARY, TkTextLostSelection, textPtr);
 	textPtr->flags |= GOT_SELECTION;
     }
