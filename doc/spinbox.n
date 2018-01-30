@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH spinbox n 8.4 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -54,7 +54,8 @@ as it will format a floating-point number.
 A floating-point value corresponding to the lowest value for a spinbox, to
 be used in conjunction with \fB\-to\fR and \fB\-increment\fR.  When all
 are specified correctly, the spinbox will use these values to control its
-contents.  This value must be less than the \fB\-to\fR option.
+contents. If this value is greater than the \fB\-to\fR option, then
+\fB\-from\fR and \fB\-to\fR values are automatically swapped.
 If \fB\-values\fR is specified, it supersedes this option.
 .OP "\-invalidcommand or \-invcmd" invalidCommand InvalidCommand
 Specifies a script to eval when \fB\-validatecommand\fR returns 0.  Setting
@@ -83,7 +84,8 @@ be displayed in a different color, depending on the values of the
 A floating-point value corresponding to the highest value for the spinbox,
 to be used in conjunction with \fB\-from\fR and \fB\-increment\fR.  When
 all are specified correctly, the spinbox will use these values to control
-its contents.  This value must be greater than the \fB\-from\fR option.
+its contents. If this value is less than the \fB\-from\fR option, then
+\fB\-from\fR and \fB\-to\fR values are automatically swapped.
 If \fB\-values\fR is specified, it supersedes this option.
 .OP \-validate validate Validate
 Specifies the mode in which validation should operate: \fBnone\fR,

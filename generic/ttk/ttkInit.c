@@ -62,7 +62,7 @@ int Ttk_GetOrientFromObj(
  * Recognized values for the -state compatibility option.
  * Other options are accepted and interpreted as synonyms for "normal".
  */
-static const char *ttkStateStrings[] = {
+static const char *const ttkStateStrings[] = {
     "normal", "readonly", "disabled", "active", NULL
 };
 enum {

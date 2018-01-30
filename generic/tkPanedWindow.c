@@ -1484,10 +1484,10 @@ DisplayPanedWindow(
      */
 
     if (horizontal) {
-	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderWidth(tkwin));
+	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
 	sashWidth = pwPtr->sashWidth;
     } else {
-	sashWidth = Tk_Width(tkwin) - (2 * Tk_InternalBorderWidth(tkwin));
+	sashWidth = Tk_Width(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
 	sashHeight = pwPtr->sashWidth;
     }
 
@@ -1754,7 +1754,7 @@ ArrangePanes(
      */
 
     paneDynSize = paneDynMinSize = 0;
-    internalBW = Tk_InternalBorderWidth(pwPtr->tkwin);
+    internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
     pwHeight = Tk_Height(pwPtr->tkwin) - (2 * internalBW);
     pwWidth = Tk_Width(pwPtr->tkwin) - (2 * internalBW);
     x = y = internalBW;
@@ -2200,7 +2200,7 @@ ComputeGeometry(
 
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
-    x = y = internalBw = Tk_InternalBorderWidth(pwPtr->tkwin);
+    x = y = internalBw = Tk_InternalBorderLeft(pwPtr->tkwin);
     reqWidth = reqHeight = 0;
 
     /*
@@ -2906,7 +2906,7 @@ PanedWindowProxyCommand(
 	    return TCL_ERROR;
 	}
 
-        internalBW = Tk_InternalBorderWidth(pwPtr->tkwin);
+        internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	    if (x < 0) {
 		x = 0;
@@ -2915,10 +2915,10 @@ PanedWindowProxyCommand(
             if (x > pwWidth) {
                 x = pwWidth;
             }
-            y = Tk_InternalBorderWidth(pwPtr->tkwin);
+            y = Tk_InternalBorderLeft(pwPtr->tkwin);
 	    sashWidth = pwPtr->sashWidth;
 	    sashHeight = Tk_Height(pwPtr->tkwin) -
-		    (2 * Tk_InternalBorderWidth(pwPtr->tkwin));
+		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
 	} else {
 	    if (y < 0) {
 		y = 0;
@@ -2927,10 +2927,10 @@ PanedWindowProxyCommand(
             if (y > pwHeight) {
                 y = pwHeight;
             }
-	    x = Tk_InternalBorderWidth(pwPtr->tkwin);
+	    x = Tk_InternalBorderLeft(pwPtr->tkwin);
 	    sashHeight = pwPtr->sashWidth;
 	    sashWidth = Tk_Width(pwPtr->tkwin) -
-		    (2 * Tk_InternalBorderWidth(pwPtr->tkwin));
+		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
 	}
 
 	if (sashWidth < 1) {
@@ -3069,7 +3069,7 @@ PanedWindowIdentifyCoords(
 	} else {
 	    sashHeight = Tk_ReqHeight(pwPtr->tkwin);
 	}
-	sashHeight -= 2 * Tk_InternalBorderWidth(pwPtr->tkwin);
+	sashHeight -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->showHandle && pwPtr->handleSize > pwPtr->sashWidth) {
 	    sashWidth = pwPtr->handleSize;
 	    lpad = (pwPtr->handleSize - pwPtr->sashWidth) / 2;
@@ -3097,7 +3097,7 @@ PanedWindowIdentifyCoords(
 	} else {
 	    sashWidth = Tk_ReqWidth(pwPtr->tkwin);
 	}
-	sashWidth -= 2 * Tk_InternalBorderWidth(pwPtr->tkwin);
+	sashWidth -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
 	lpad = rpad = 0;
     }
 

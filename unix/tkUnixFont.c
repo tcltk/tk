@@ -19,8 +19,8 @@
  * The preferred font encodings.
  */
 
-static const char *const encodingList[] = {
-    "iso8859-1", "jis0208", "jis0212", NULL
+static const char encodingList[][10] = {
+    "iso8859-1", "jis0208", "jis0212"
 };
 
 /*
@@ -35,14 +35,14 @@ static const char *const encodingList[] = {
  * family": the foundry, face name, and charset.
  */
 
-#define FONTMAP_SHIFT		10
+#define FONTMAP_SHIFT		12
 
-#define FONTMAP_PAGES		(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
+#define FONTMAP_PAGES		(1 << (21 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
-    int refCount;		/* How many SubFonts are referring to this
+    size_t refCount;		/* How many SubFonts are referring to this
 				 * FontFamily. When the refCount drops to
 				 * zero, this FontFamily may be freed. */
     /*
@@ -171,7 +171,7 @@ static Tcl_ThreadDataKey dataKey;
  * encodings into the names expected by the Tcl encoding package.
  */
 
-static EncodingAlias encodingAliases[] = {
+static const EncodingAlias encodingAliases[] = {
     {"gb2312-raw",	"gb2312*"},
     {"big5",		"big5*"},
     {"cns11643-1",	"cns11643*-1"},
@@ -408,8 +408,8 @@ ControlUtfProc(
     char *dstStart, *dstEnd;
     int ch;
     int result;
-    static char hexChars[] = "0123456789abcdef";
-    static char mapChars[] = {
+    static const char hexChars[] = "0123456789abcdef";
+    static const char mapChars[] = {
 	0, 0, 0, 0, 0, 0, 0,
 	'a', 'b', 't', 'n', 'v', 'f', 'r'
     };
@@ -521,7 +521,7 @@ Ucs2beToUtfProc(
     srcEnd = src + srcLen;
 
     dstStart = dst;
-    dstEnd = dst + dstLen - TCL_UTF_MAX;
+    dstEnd = dst + dstLen - 4;
 
     for (numChars = 0; src < srcEnd; numChars++) {
 	if (dst > dstEnd) {
@@ -596,7 +596,7 @@ UtfToUcs2beProc(
     srcEnd = src + srcLen;
     srcClose = srcEnd;
     if (!(flags & TCL_ENCODING_END)) {
-	srcClose -= TCL_UTF_MAX;
+	srcClose -= 4;
     }
 
     dstStart = dst;
@@ -954,7 +954,7 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,			/* Character of interest */
+    int c,         		/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
     FontAttributes atts;
@@ -1919,8 +1919,7 @@ FreeFontFamily(
     if (familyPtr == NULL) {
 	return;
     }
-    familyPtr->refCount--;
-    if (familyPtr->refCount > 0) {
+    if (familyPtr->refCount-- > 1) {
 	return;
     }
     Tcl_FreeEncoding(familyPtr->encoding);
@@ -2213,7 +2212,7 @@ FontMapLoadPage(
     int row)			/* Index of the page to be loaded into the
 				 * cache. */
 {
-    char buf[16], src[TCL_UTF_MAX];
+    char buf[16], src[4];
     int minHi, maxHi, minLo, maxLo, scale, checkLo;
     int i, end, bitOffset, isTwoByteFont, n;
     Tcl_Encoding encoding;
@@ -2417,7 +2416,7 @@ CanUseFallback(
     unsigned bestScore[2];
     char **nameList;
     char **nameListOrig;
-    char src[TCL_UTF_MAX];
+    char src[4];
     FontAttributes want, got;
     Display *display;
     SubFont subFont;
@@ -2689,7 +2688,7 @@ RankAttributes(
 	penalty += diff;
     }
     if (gotPtr->xa.charset != wantPtr->xa.charset) {
-	int i;
+	size_t i;
 	const char *gotAlias, *wantAlias;
 
 	penalty += 65000;
@@ -2697,7 +2696,7 @@ RankAttributes(
 	wantAlias = GetEncodingAlias(wantPtr->xa.charset);
 	if (strcmp(gotAlias, wantAlias) != 0) {
 	    penalty += 30000;
-	    for (i = 0; encodingList[i] != NULL; i++) {
+	    for (i = 0; i < sizeof(encodingList)/sizeof(encodingList[0]); i++) {
 		if (strcmp(gotAlias, encodingList[i]) == 0) {
 		    penalty -= 30000;
 		    break;
@@ -3015,7 +3014,7 @@ static const char *
 GetEncodingAlias(
     const char *name)		/* The name to look up. */
 {
-    EncodingAlias *aliasPtr;
+    const EncodingAlias *aliasPtr;
 
     for (aliasPtr = encodingAliases; aliasPtr->aliasPattern != NULL; ) {
 	if (Tcl_StringMatch(name, aliasPtr->aliasPattern)) {
