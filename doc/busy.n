@@ -132,29 +132,9 @@ Shortcut for \fBtk busy hold\fR command.
 .TP
 \fBtk busy busywindow \fIwindow\fR
 .
-Returns the pathname of the busy (transparent) window created by the
-\fBtk busy hold\fR command for \fIwindow\fR, or the empty string if
-\fIwindow\fR is not busy.
-.TP
-\fBtk busy hold \fIwindow\fR ?\fIoption value\fR?...
-.
-Makes the specified \fIwindow\fR (and its descendants in the Tk window
-hierarchy) appear busy. \fIWindow\fR must be a valid path name of a Tk widget.
-A transparent window is put in front of the specified window. This transparent
-window is mapped the next time idle tasks are processed, and the specified
-window and its descendants will be blocked from user interactions. Normally
-\fBupdate\fR should be called immediately afterward to insure that the hold
-operation is in effect before the application starts its processing. The
-command returns the pathname of the busy (transparent) window created. The
-following configuration options are valid:
-.RS
-.TP
-\fB\-cursor \fIcursorName\fR
-.
-Specifies the cursor to be displayed when the widget is made busy.
-\fICursorName\fR can be in any form accepted by \fBTk_GetCursor\fR. The
-default cursor is \fBwait\fR on Windows and \fBwatch\fR on other platforms.
-.RE
+Returns the pathname of the busy window (i.e. the transparent window
+shielding the window appearing busy) created by the \fBtk busy hold\fR
+command for \fIwindow\fR, or the empty string if \fIwindow\fR is not busy.
 .TP
 \fBtk busy cget \fIwindow\fR \fIoption\fR
 .
@@ -190,6 +170,12 @@ option add *Frame.BusyCursor gumby
 .CE
 .RE
 .TP
+.TP
+\fBtk busy current \fR?\fIpattern\fR?
+.
+Returns the pathnames of all widgets that are currently busy. If a
+\fIpattern\fR is given, only the path names of busy widgets matching
+\fIpattern\fR are returned.
 \fBtk busy forget \fIwindow\fR ?\fIwindow\fR?...
 .
 Releases resources allocated by the \fBtk busy\fR command for \fIwindow\fR,
@@ -198,11 +184,26 @@ including the transparent window. User events will again be received by
 \fIWindow\fR must be the name of a widget specified in the \fBhold\fR
 operation, otherwise an error is reported.
 .TP
-\fBtk busy current \fR?\fIpattern\fR?
+\fBtk busy hold \fIwindow\fR ?\fIoption value\fR?...
 .
-Returns the pathnames of all widgets that are currently busy. If a
-\fIpattern\fR is given, only the path names of busy widgets matching
-\fIpattern\fR are returned.
+Makes the specified \fIwindow\fR (and its descendants in the Tk window
+hierarchy) appear busy. \fIWindow\fR must be a valid path name of a Tk widget.
+A transparent window is put in front of the specified window. This transparent
+window is mapped the next time idle tasks are processed, and the specified
+window and its descendants will be blocked from user interactions. Normally
+\fBupdate\fR should be called immediately afterward to insure that the hold
+operation is in effect before the application starts its processing. The
+command returns the pathname of the busy window that was created (i.e. the
+transparent window shielding the window appearing busy). The following
+configuration options are valid:
+.RS
+.TP
+\fB\-cursor \fIcursorName\fR
+.
+Specifies the cursor to be displayed when the widget is made busy.
+\fICursorName\fR can be in any form accepted by \fBTk_GetCursor\fR. The
+default cursor is \fBwait\fR on Windows and \fBwatch\fR on other platforms.
+.RE
 .TP
 \fBtk busy status \fIwindow\fR
 .
@@ -243,8 +244,8 @@ example, the pathname of the busy window is
 bind ._Busy <Enter> { ... }
 .CE
 .PP
-Note that these implementation details can be entirely ignored by using the
-return value of the \fBtk busy\fR command, or alternatively the
+Note that these implementation details can (and should be) entirely ignored by
+using the return value of the \fBtk busy\fR command, or alternatively the
 \fBtk busy busywindow\fR command as follows:
 .PP
 .CS
