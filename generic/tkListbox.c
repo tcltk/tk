@@ -1565,7 +1565,7 @@ ConfigureListbox(
     Tcl_Obj *errorResult = NULL;
     int oldExport, error;
 
-    oldExport = listPtr->exportSelection;
+    oldExport = (listPtr->exportSelection) && (!Tcl_IsSafe(listPtr->interp));
     if (listPtr->listVarName != NULL) {
 	Tcl_UntraceVar2(interp, listPtr->listVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -1607,10 +1607,11 @@ ConfigureListbox(
 
 	/*
 	 * Claim the selection if we've suddenly started exporting it and
-	 * there is a selection to export.
+	 * there is a selection to export and this interp is unsafe.
 	 */
 
-	if (listPtr->exportSelection && !oldExport
+	if (listPtr->exportSelection && (!oldExport)
+		&& (!Tcl_IsSafe(listPtr->interp))
 		&& (listPtr->numSelected != 0)) {
 	    Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY,
 		    ListboxLostSelection, listPtr);
@@ -3079,7 +3080,8 @@ ListboxSelect(
 	EventuallyRedrawRange(listPtr, first, last);
     }
     if ((oldCount == 0) && (listPtr->numSelected > 0)
-	    && listPtr->exportSelection) {
+	    && (listPtr->exportSelection)
+	    && (!Tcl_IsSafe(listPtr->interp))) {
 	Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY,
 		ListboxLostSelection, listPtr);
     }
@@ -3125,7 +3127,7 @@ ListboxFetchSelection(
     const char *stringRep;
     Tcl_HashEntry *entry;
 
-    if (!listPtr->exportSelection) {
+    if ((!listPtr->exportSelection) || Tcl_IsSafe(listPtr->interp)) {
 	return -1;
     }
 
@@ -3196,7 +3198,8 @@ ListboxLostSelection(
 {
     register Listbox *listPtr = clientData;
 
-    if ((listPtr->exportSelection) && (listPtr->nElements > 0)) {
+    if ((listPtr->exportSelection) && (!Tcl_IsSafe(listPtr->interp))
+	    && (listPtr->nElements > 0)) {
 	ListboxSelect(listPtr, 0, listPtr->nElements-1, 0);
         GenerateListboxSelectEvent(listPtr);
     }

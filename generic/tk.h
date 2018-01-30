@@ -17,8 +17,8 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION < 6)
-#	error Tk 8.6 must be compiled with tcl.h from Tcl 8.6 or better
+#if (TCL_MAJOR_VERSION < 8) || (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
+#	error Tk 8.7 must be compiled with tcl.h from Tcl 8.6 or better
 #endif
 
 #ifndef CONST84
@@ -59,8 +59,8 @@ extern "C" {
  * and update the version numbers:
  *
  * library/tk.tcl	(1 LOC patch)
- * unix/configure.in	(2 LOC Major, 2 LOC minor, 1 LOC patch)
- * win/configure.in	(as above)
+ * unix/configure.ac	(2 LOC Major, 2 LOC minor, 1 LOC patch)
+ * win/configure.ac	(as above)
  * README		(sections 0 and 1)
  * macosx/Tk-Common.xcconfig (not patchlevel) 1 LOC
  * win/README		(not patchlevel)
@@ -73,12 +73,12 @@ extern "C" {
  */
 
 #define TK_MAJOR_VERSION	8
-#define TK_MINOR_VERSION	6
-#define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL	7
+#define TK_MINOR_VERSION	7
+#define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
+#define TK_RELEASE_SERIAL	2
 
-#define TK_VERSION		"8.6"
-#define TK_PATCH_LEVEL		"8.6.7"
+#define TK_VERSION		"8.7"
+#define TK_PATCH_LEVEL		"8.7a2"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -105,6 +105,10 @@ extern "C" {
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS	DLLEXPORT
+#else
+# ifndef TCL_STORAGE_CLASS
+#   define TCL_STORAGE_CLASS DLLIMPORT
+# endif
 #endif
 
 /*
@@ -414,7 +418,9 @@ typedef enum {
 #define TK_CONFIG_COLOR_ONLY		(1 << 1)
 #define TK_CONFIG_MONO_ONLY		(1 << 2)
 #define TK_CONFIG_DONT_SET_DEFAULT	(1 << 3)
-#define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
+#if !defined(TK_NO_DEPRECATED) || defined(BUILD_tk)
+#  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
+#endif
 #define TK_CONFIG_USER_BIT		0x100
 #endif /* __NO_OLD_CONFIG */
 
@@ -746,9 +752,10 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
     (((Tk_FakeWin *) (tkwin))->flags & TK_WM_MANAGEABLE)
 #define Tk_ReqWidth(tkwin)	(((Tk_FakeWin *) (tkwin))->reqWidth)
 #define Tk_ReqHeight(tkwin)	(((Tk_FakeWin *) (tkwin))->reqHeight)
-/* Tk_InternalBorderWidth is deprecated */
+#ifndef TK_NO_DEPRECATED
 #define Tk_InternalBorderWidth(tkwin) \
     (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
+#endif /* !TK_NO_DEPRECATED */
 #define Tk_InternalBorderLeft(tkwin) \
     (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
 #define Tk_InternalBorderRight(tkwin) \
@@ -1559,12 +1566,13 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
  *----------------------------------------------------------------------
  *
  * Allow users to say that they don't want to alter their source to add extra
- * arguments to Tk_PhotoPutBlock() et al; DO NOT DEFINE THIS WHEN BUILDING TK.
+ * arguments to Tk_PhotoPutBlock() et al.
  *
  * This goes after the inclusion of the stubbed-decls so that the declarations
  * of what is actually there can be correct.
  */
 
+#if !defined(TK_NO_DEPRECATED) && !defined(BUILD_tk)
 #ifdef USE_COMPOSITELESS_PHOTO_PUT_BLOCK
 #   ifdef Tk_PhotoPutBlock
 #	undef Tk_PhotoPutBlock
@@ -1597,6 +1605,7 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 #   endif
 #   define Tk_PhotoSetSize		Tk_PhotoSetSize_Panic
 #endif /* USE_PANIC_ON_PHOTO_ALLOC_FAILURE */
+#endif /* !TK_NO_DEPRECATED && !BUILD_tk */
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

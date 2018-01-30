@@ -23,7 +23,7 @@ test image-2.0 "Deletion of displayed image (label)" -setup {
 } -cleanup {
     destroy .ttk_image20
 } -result {}
-    
+
 test image-2.1 "Deletion of displayed image (checkbutton)" -setup {
      image create photo test.image -width 10 -height 10
 } -body {

@@ -26,9 +26,9 @@
  * Under Windows, a "font family" is uniquely identified by its face name.
  */
 
-#define FONTMAP_SHIFT	    10
+#define FONTMAP_SHIFT	    12
 
-#define FONTMAP_PAGES	    	(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
+#define FONTMAP_PAGES	    	(1 << (21 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
 
 typedef struct FontFamily {
@@ -1943,8 +1943,7 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-
-    if ((ch < BASE_CHARS) || (ch >= 0x10000)) {
+    if (ch < BASE_CHARS) {
 	return &fontPtr->subFontArray[0];
     }
 
@@ -2528,22 +2527,6 @@ FamilyExists(
 {
     int result;
     Tcl_DString faceString;
-
-    /*
-     * Just immediately rule out the following fonts, because they look so
-     * ugly on windows. The caller's fallback mechanism will cause the
-     * corresponding appropriate TrueType fonts to be selected.
-     */
-
-    if (strcasecmp(faceName, "Courier") == 0) {
-	return 0;
-    }
-    if (strcasecmp(faceName, "Times") == 0) {
-	return 0;
-    }
-    if (strcasecmp(faceName, "Helvetica") == 0) {
-	return 0;
-    }
 
     Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &faceString);
 

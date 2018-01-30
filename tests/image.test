@@ -33,14 +33,14 @@ test image-1.4 {Tk_ImageCmd procedure, "create" option} -body {
     image c bad_type
 } -returnCodes error -result {image type "bad_type" doesn't exist}
 test image-1.5 {Tk_ImageCmd procedure, "create" option} -constraints {
-    testImageType 
+    testImageType
 } -body {
     list [image create test myimage] [imageNames]
 } -cleanup {
     imageCleanup
 } -result {myimage myimage}
 test image-1.6 {Tk_ImageCmd procedure, "create" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     imageCleanup
 } -body {
@@ -53,7 +53,7 @@ test image-1.6 {Tk_ImageCmd procedure, "create" option} -constraints {
 } -result {1}
 
 test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     imageCleanup
 } -body {
@@ -69,7 +69,7 @@ test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
     imageCleanup
 } -result {{myimage free} {myimage free} {myimage delete} {myimage get} {myimage get} {myimage display 0 0 30 15 30 30} {myimage display 0 0 30 15 30 130}}
 test image-1.8 {Tk_ImageCmd procedure, "create" option} -constraints {
-	testImageType 
+	testImageType
 } -setup {
     .c delete all
     imageCleanup
@@ -88,12 +88,12 @@ test image-1.8 {Tk_ImageCmd procedure, "create" option} -constraints {
     imageCleanup
 } -result {{myimage get} {myimage get} {myimage display 0 0 30 15 30 30} {myimage display 0 0 30 15 30 130}}
 test image-1.9 {Tk_ImageCmd procedure, "create" option} -constraints {
-	testImageType 
+	testImageType
 } -body {
     image create test -badName foo
 } -returnCodes error -result {bad option name "-badName"}
 test image-1.10 {Tk_ImageCmd procedure, "create" option} -constraints {
-    testImageType 
+    testImageType
 } -body {
     catch {image create test -badName foo}
     imageNames
@@ -142,7 +142,7 @@ test image-2.1 {Tk_ImageCmd procedure, "delete" option} -body {
     image delete
 } -result {}
 test image-2.2 {Tk_ImageCmd procedure, "delete" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     imageCleanup
     set result {}
@@ -156,7 +156,7 @@ test image-2.2 {Tk_ImageCmd procedure, "delete" option} -constraints {
     imageCleanup
 } -result {{img2 myimage} {}}
 test image-2.3 {Tk_ImageCmd procedure, "delete" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     imageCleanup
 } -body {
@@ -167,7 +167,7 @@ test image-2.3 {Tk_ImageCmd procedure, "delete" option} -constraints {
     imageCleanup
 } -returnCodes error -result {image "gorp" doesn't exist}
 test image-2.4 {Tk_ImageCmd procedure, "delete" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     imageCleanup
 } -body {
@@ -190,7 +190,7 @@ test image-3.3 {Tk_ImageCmd procedure, "height" option} -body {
     image height foo
 } -returnCodes error -result {image "foo" doesn't exist}
 test image-3.4 {Tk_ImageCmd procedure, "height" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     imageCleanup
 } -body {
@@ -207,7 +207,7 @@ test image-4.1 {Tk_ImageCmd procedure, "names" option} -body {
     image names x
 } -returnCodes error -result {wrong # args: should be "image names"}
 test image-4.2 {Tk_ImageCmd procedure, "names" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     catch {interp delete testinterp}
 } -body {
@@ -249,7 +249,7 @@ test image-5.3 {Tk_ImageCmd procedure, "type" option} -body {
 } -returnCodes error -result {image "foo" doesn't exist}
 
 test image-5.4 {Tk_ImageCmd procedure, "type" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     imageCleanup
 } -body {
@@ -259,7 +259,7 @@ test image-5.4 {Tk_ImageCmd procedure, "type" option} -constraints {
     imageCleanup
 } -result {test}
 test image-5.5 {Tk_ImageCmd procedure, "type" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     imageCleanup
 } -body {
@@ -271,7 +271,7 @@ test image-5.5 {Tk_ImageCmd procedure, "type" option} -constraints {
     imageCleanup
 } -returnCodes error -result {image "myimage" doesn't exist}
 test image-5.6 {Tk_ImageCmd procedure, "type" option} -constraints {
-    testOldImageType 
+    testOldImageType
 } -setup {
     imageCleanup
 } -body {
@@ -281,7 +281,7 @@ test image-5.6 {Tk_ImageCmd procedure, "type" option} -constraints {
     imageCleanup
 } -result {oldtest}
 test image-5.7 {Tk_ImageCmd procedure, "type" option} -constraints {
-    testOldImageType 
+    testOldImageType
 } -setup {
     .c delete all
     imageCleanup
@@ -300,7 +300,7 @@ test image-6.1 {Tk_ImageCmd procedure, "types" option} -body {
     image types x
 } -returnCodes error -result {wrong # args: should be "image types"}
 test image-6.2 {Tk_ImageCmd procedure, "types" option} -constraints {
-    testImageType 
+    testImageType
 } -body {
     lsort [image types]
 } -result {bitmap oldtest photo test}
@@ -316,7 +316,7 @@ test image-7.3 {Tk_ImageCmd procedure, "width" option} -body {
     image width foo
 } -returnCodes error -result {image "foo" doesn't exist}
 test image-7.4 {Tk_ImageCmd procedure, "width" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     imageCleanup
 } -body {
@@ -330,7 +330,7 @@ test image-7.4 {Tk_ImageCmd procedure, "width" option} -constraints {
 
 
 test image-8.1 {Tk_ImageCmd procedure, "inuse" option} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     imageCleanup
     set res {}
@@ -344,7 +344,7 @@ test image-8.1 {Tk_ImageCmd procedure, "inuse" option} -constraints {
     imageCleanup
     catch {destroy .b}
 } -result [list 0 1]
-    
+
 
 test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     .c delete all
@@ -613,7 +613,7 @@ test image-15.1 {deleting image does not make widgets forget about it} -setup {
     .c delete all
     imageCleanup
 } -result {10 10 20 20 foo {} {10 10 30 30} foo}
-    
+
 destroy .c
 imageFinish
 

@@ -104,7 +104,7 @@ static const Tcl_ObjType pixelObjType = {
     FreePixelInternalRep,	/* freeIntRepProc */
     DupPixelInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetPixelFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -118,7 +118,7 @@ static const Tcl_ObjType mmObjType = {
     FreeMMInternalRep,		/* freeIntRepProc */
     DupMMInternalRep,		/* dupIntRepProc */
     UpdateStringOfMM,		/* updateStringProc */
-    SetMMFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -131,7 +131,7 @@ static const Tcl_ObjType windowObjType = {
     FreeWindowInternalRep,	/* freeIntRepProc */
     DupWindowInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetWindowFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -153,8 +153,19 @@ GetTypeCache(void)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->doubleTypePtr == NULL) {
-	tsdPtr->doubleTypePtr = Tcl_GetObjType("double");
-	tsdPtr->intTypePtr = Tcl_GetObjType("int");
+	/* Smart initialization of doubleTypePtr/intTypePtr without
+	 * hash-table lookup or creating complete Tcl_Obj's */
+	Tcl_Obj obj;
+	obj.length = 3;
+	obj.bytes = (char *)"0.0";
+	obj.typePtr = NULL;
+	Tcl_GetDoubleFromObj(NULL, &obj, &obj.internalRep.doubleValue);
+	tsdPtr->doubleTypePtr = obj.typePtr;
+	obj.bytes += 2;
+	obj.length = 1;
+	obj.typePtr = NULL;
+	Tcl_GetLongFromObj(NULL, &obj, &obj.internalRep.longValue);
+	tsdPtr->intTypePtr = obj.typePtr;
     }
     return tsdPtr;
 }

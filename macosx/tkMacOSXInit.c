@@ -116,7 +116,6 @@ long tkMacOSXMacOSXVersion = 0;
     _defaultMainMenu = nil;
     [self _setupMenus];
 
-
     /*
      * Initialize event processing.
      */
