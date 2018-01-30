@@ -3467,7 +3467,7 @@ HandleEventGenerate(
     if ((warp != 0) && Tk_IsMapped(tkwin)) {
 	TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
-Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display,
+	Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display,
 		event.general.xmotion.window);
 
 	if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
@@ -3976,7 +3976,7 @@ ParseEventDescription(
 	p = GetField(p, field, FIELD_SIZE);
     }
     if (*field != '\0') {
-	if ((*field >= '1') && (*field <= '5') && (field[1] == '\0')) {
+	if ((*field >= '1') && (*field <= '9') && (field[1] == '\0')) {
 	    if (eventFlags == 0) {
 		patPtr->eventType = ButtonPress;
 		eventMask = ButtonPressMask;
