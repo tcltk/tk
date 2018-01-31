@@ -2043,7 +2043,6 @@ TkpTestsendCmd(
 		    *p = 0;
 		}
 	    }
-
             handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
                     -1, -1, -1, NULL, NULL);
 	    XChangeProperty(winPtr->dispPtr->display, w, propName, XA_STRING,
