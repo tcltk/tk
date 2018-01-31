@@ -129,6 +129,15 @@ typedef struct {
 				 * only used by the Entry widget. */
 
     /*
+     * Fields used in displaying help text if entry value is empty
+     */
+    Tk_TextLayout emptyLayout;	/* Cached empty text layout information. */
+    char *emptyString;		/* String value of -emptytext */
+    int emptyChars;		/* Number of chars in -emptytext */
+    XColor *emptyColorPtr;	/* Color value of -emptyforeground */
+    GC emptyGC;			/* For drawing -emptytext text. */
+
+    /*
      * Fields whose values are derived from the current values of the
      * configuration settings above.
      */
