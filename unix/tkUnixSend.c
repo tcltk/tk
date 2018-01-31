@@ -1969,6 +1969,7 @@ TkpTestsendCmd(
 	"bogus",   "prop",   "serial",  NULL
     };
     TkWindow *winPtr = clientData;
+    Tk_ErrorHandler handler;
     int index;
 
     if (objc < 2) {
@@ -1982,11 +1983,14 @@ TkpTestsendCmd(
 	return TCL_ERROR;
     }
     if (index == TESTSEND_BOGUS) {
+        handler = Tk_CreateErrorHandler(winPtr->dispPtr->display, -1, -1, -1,
+                NULL, NULL);
 	XChangeProperty(winPtr->dispPtr->display,
 		RootWindow(winPtr->dispPtr->display, 0),
 		winPtr->dispPtr->registryProperty, XA_INTEGER, 32,
 		PropModeReplace,
 		(unsigned char *) "This is bogus information", 6);
+        Tk_DeleteErrorHandler(handler);
     } else if (index == TESTSEND_PROP) {
 	int result, actualFormat;
 	unsigned long length, bytesAfter;
@@ -2025,7 +2029,10 @@ TkpTestsendCmd(
 		XFree(property);
 	    }
 	} else if (Tcl_GetString(objv[4])[0] == 0) {
+            handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
+                    -1, -1, -1, NULL, NULL);
 	    XDeleteProperty(winPtr->dispPtr->display, w, propName);
+            Tk_DeleteErrorHandler(handler);
 	} else {
 	    Tcl_DString tmp;
 
@@ -2037,9 +2044,12 @@ TkpTestsendCmd(
 		}
 	    }
 
+            handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
+                    -1, -1, -1, NULL, NULL);
 	    XChangeProperty(winPtr->dispPtr->display, w, propName, XA_STRING,
 		    8, PropModeReplace, (unsigned char*)Tcl_DStringValue(&tmp),
 		    p-Tcl_DStringValue(&tmp));
+            Tk_DeleteErrorHandler(handler);
 	    Tcl_DStringFree(&tmp);
 	}
     } else if (index == TESTSEND_SERIAL) {
