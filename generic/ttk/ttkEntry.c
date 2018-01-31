@@ -73,6 +73,7 @@ static const char *const validateReasonStrings[] = {
 /* Style parameters:
  */
 typedef struct {
+    Tcl_Obj *emptyForegroundObj;/* Foreground color for empty text */
     Tcl_Obj *foregroundObj;	/* Foreground color for normal text */
     Tcl_Obj *backgroundObj;	/* Entry widget background color */
     Tcl_Obj *selBorderObj;	/* Border and background for selection */
@@ -118,6 +119,8 @@ typedef struct {
 
     Tcl_Obj *stateObj;		/* Compatibility option -- see CheckStateObj */
 
+    Tcl_Obj *emptyTextObj;	/* Text to display for empty text */
+
     /*
      * Derived resources:
      */
@@ -149,12 +152,16 @@ typedef struct {
  */
 #define DEF_SELECT_BG	"#000000"
 #define DEF_SELECT_FG	"#ffffff"
+#define DEF_EMPTY_FG	"#b3b3b3"
 #define DEF_INSERT_BG	"black"
 #define DEF_ENTRY_WIDTH	"20"
 #define DEF_ENTRY_FONT	"TkTextFont"
 #define DEF_LIST_HEIGHT	"10"
 
 static Tk_OptionSpec EntryOptionSpecs[] = {
+    {TK_OPTION_STRING, "-emptytext", "emptyText", "EmptyText",
+	NULL, Tk_Offset(Entry, entry.emptyTextObj), -1,
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
         "ExportSelection", "1", -1, Tk_Offset(Entry, entry.exportSelection),
 	0,0,0 },
@@ -191,6 +198,9 @@ static Tk_OptionSpec EntryOptionSpecs[] = {
 
     /* EntryStyleData options:
      */
+    {TK_OPTION_COLOR, "-emptyforeground", "emptyForeground", "EmptyForeground",
+	NULL, Tk_Offset(Entry, entry.styleData.emptyForegroundObj), -1,
+	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
 	NULL, Tk_Offset(Entry, entry.styleData.foregroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
@@ -216,6 +226,7 @@ static void EntryInitStyleDefaults(EntryStyleData *es)
 #define INIT(member, value) \
 	es->member = Tcl_NewStringObj(value, -1); \
 	Tcl_IncrRefCount(es->member);
+    INIT(emptyForegroundObj, DEF_EMPTY_FG)
     INIT(foregroundObj, DEFAULT_FOREGROUND)
     INIT(selBorderObj, DEF_SELECT_BG)
     INIT(selForegroundObj, DEF_SELECT_FG)
@@ -227,6 +238,7 @@ static void EntryInitStyleDefaults(EntryStyleData *es)
 
 static void EntryFreeStyleDefaults(EntryStyleData *es)
 {
+    Tcl_DecrRefCount(es->emptyForegroundObj);
     Tcl_DecrRefCount(es->foregroundObj);
     Tcl_DecrRefCount(es->selBorderObj);
     Tcl_DecrRefCount(es->selForegroundObj);
@@ -253,6 +265,7 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
 #   define INIT(member, name) \
     if ((tmp=Ttk_QueryOption(entryPtr->core.layout,name,state))) \
     	es->member=tmp;
+    INIT(emptyForegroundObj, "-emptyforeground");
     INIT(foregroundObj, "-foreground");
     INIT(selBorderObj, "-selectbackground")
     INIT(selBorderWidthObj, "-selectborderwidth")
@@ -263,6 +276,7 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
 
     /* Reacquire color & border resources from resource cache.
      */
+    es->emptyForegroundObj = Ttk_UseColor(cache, tkwin, es->emptyForegroundObj);
     es->foregroundObj = Ttk_UseColor(cache, tkwin, es->foregroundObj);
     es->selForegroundObj = Ttk_UseColor(cache, tkwin, es->selForegroundObj);
     es->insertColorObj = Ttk_UseColor(cache, tkwin, es->insertColorObj);
@@ -304,12 +318,23 @@ static char *EntryDisplayString(const char *showChar, int numChars)
  */
 static void EntryUpdateTextLayout(Entry *entryPtr)
 {
+    int length;
+    char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
-    entryPtr->entry.textLayout = Tk_ComputeTextLayout(
+    if (entryPtr->entry.numChars>0 || entryPtr->entry.emptyTextObj==NULL) {
+      entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    entryPtr->entry.displayString, entryPtr->entry.numChars,
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
+    } else {
+      text = Tcl_GetStringFromObj(entryPtr->entry.emptyTextObj,&length);
+      entryPtr->entry.textLayout = Tk_ComputeTextLayout(
+	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
+	    text,length,
+	    0/*wraplength*/, TK_JUSTIFY_LEFT, TK_IGNORE_NEWLINES,
+	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
+    }
 }
 
 /* EntryEditable --
@@ -1178,6 +1203,7 @@ static void EntryDisplay(void *clientData, Drawable d)
     Ttk_Box textarea;
     TkRegion clipRegion;
     XRectangle rect;
+    Tcl_Obj *foregroundObj;
 
     EntryInitStyleData(entryPtr, &es);
 
@@ -1266,7 +1292,19 @@ static void EntryDisplay(void *clientData, Drawable d)
 
     /* Draw the text:
      */
-    gc = EntryGetGC(entryPtr, es.foregroundObj, clipRegion);
+    if (*(entryPtr->entry.displayString) == '\0'
+		&& entryPtr->entry.emptyTextObj != NULL) {
+	/* When no display text and -emptytext given */
+	Tcl_GetStringFromObj(es.emptyForegroundObj,&rightIndex);
+	if (++rightIndex > 1) {
+	    foregroundObj = es.emptyForegroundObj;
+	} else {
+            foregroundObj = es.foregroundObj;
+	}
+    } else {
+        foregroundObj = es.foregroundObj;
+    }
+    gc = EntryGetGC(entryPtr, foregroundObj, clipRegion);
     Tk_DrawTextLayout(
 	Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
 	entryPtr->entry.layoutX, entryPtr->entry.layoutY,

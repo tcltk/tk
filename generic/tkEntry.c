@@ -56,6 +56,7 @@ enum validateType {
 };
 #define DEF_ENTRY_VALIDATE	"none"
 #define DEF_ENTRY_INVALIDCMD	""
+#define DEF_ENTRY_EMPTYTEXT	""
 
 /*
  * Information used for Entry objv parsing.
@@ -81,6 +82,11 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_ENTRY_DISABLED_FG, -1,
 	Tk_Offset(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-emptyforeground", "emptyForeground", "EmptyForeground",
+	"#b3b3b3", -1, Tk_Offset(Entry, emptyColorPtr), 0, 0, 0},
+    {TK_OPTION_STRING, "-emptytext", "emptyText", "EmptyText",
+	DEF_ENTRY_EMPTYTEXT, -1, Tk_Offset(Entry, emptyString),
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, -1,
 	Tk_Offset(Entry, exportSelection), 0, 0, 0},
@@ -537,6 +543,7 @@ Tk_EntryObjCmd(
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
 
+    entryPtr->emptyGC		= None;
     /*
      * Keep a hold of the associated tkwin until we destroy the entry,
      * otherwise Tk might free it while we still need it.
@@ -1487,8 +1494,20 @@ EntryWorldChanged(
     }
     entryPtr->textGC = gc;
 
+    if (entryPtr->emptyColorPtr != NULL) {
+	gcValues.foreground = entryPtr->emptyColorPtr->pixel;
+    }
+    mask = GCForeground | GCFont | GCGraphicsExposures;
+    gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
+    if (entryPtr->emptyGC != None) {
+	Tk_FreeGC(entryPtr->display, entryPtr->emptyGC);
+    }
+    entryPtr->emptyGC = gc;
+
     if (entryPtr->selFgColorPtr != NULL) {
 	gcValues.foreground = entryPtr->selFgColorPtr->pixel;
+    } else {
+        gcValues.foreground = colorPtr->pixel;
     }
     gcValues.font = Tk_FontId(entryPtr->tkfont);
     mask = GCForeground | GCFont;
@@ -1736,9 +1755,15 @@ DisplayEntry(
      * selected portion on top of it.
      */
 
-    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+    if (entryPtr->numChars || entryPtr->emptyChars == 0) {
+	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
 	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
 	    entryPtr->leftIndex, entryPtr->numChars);
+    } else {
+	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->emptyGC,
+	    entryPtr->emptyLayout, entryPtr->inset, entryPtr->layoutY,
+	    0, entryPtr->emptyChars);
+    }
 
     if (showSelection && (entryPtr->state != STATE_DISABLED)
 	    && (entryPtr->selTextGC != entryPtr->textGC)
@@ -1950,6 +1975,16 @@ EntryComputeGeometry(
 	}
 	*p = '\0';
     }
+
+    if (entryPtr->emptyString) {
+      entryPtr->emptyChars = strlen(entryPtr->emptyString);
+    } else {
+      entryPtr->emptyChars = 0;
+    }
+    Tk_FreeTextLayout(entryPtr->emptyLayout);
+    entryPtr->emptyLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
+	    entryPtr->emptyString, entryPtr->emptyChars, 0,
+	    entryPtr->justify, TK_IGNORE_NEWLINES, &totalLength, &height);
 
     Tk_FreeTextLayout(entryPtr->textLayout);
     entryPtr->textLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
@@ -3645,6 +3680,7 @@ Tk_SpinboxObjCmd(
     sbPtr->bdRelief		= TK_RELIEF_FLAT;
     sbPtr->buRelief		= TK_RELIEF_FLAT;
 
+    entryPtr->emptyGC		= None;
     /*
      * Keep a hold of the associated tkwin until we destroy the spinbox,
      * otherwise Tk might free it while we still need it.
