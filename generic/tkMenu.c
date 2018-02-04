@@ -2500,6 +2500,17 @@ MenuVarProc(
     	return NULL;
     }
 
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (mePtr->namePtr == NULL) {
+	Tcl_UntraceVar2(interp, name1, name2,
+		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		MenuVarProc, clientData);
+	return NULL;
+     }
+
     name = Tcl_GetString(mePtr->namePtr);
 
     /*
