@@ -56,7 +56,8 @@ enum validateType {
 };
 #define DEF_ENTRY_VALIDATE	"none"
 #define DEF_ENTRY_INVALIDCMD	""
-#define DEF_ENTRY_EMPTYTEXT	""
+#define DEF_ENTRY_PLACEHOLDERTEXT	""
+#define DEF_ENTRY_PLACEHOLDERFG	"#b3b3b3"
 
 /*
  * Information used for Entry objv parsing.
@@ -82,10 +83,10 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_ENTRY_DISABLED_FG, -1,
 	Tk_Offset(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_COLOR, "-emptyforeground", "emptyForeground", "EmptyForeground",
-	"#b3b3b3", -1, Tk_Offset(Entry, emptyColorPtr), 0, 0, 0},
-    {TK_OPTION_STRING, "-emptytext", "emptyText", "EmptyText",
-	DEF_ENTRY_EMPTYTEXT, -1, Tk_Offset(Entry, emptyString),
+    {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground", "PlaceholderForeground",
+	DEF_ENTRY_PLACEHOLDERFG, -1, Tk_Offset(Entry, placeholderColorPtr), 0, 0, 0},
+    {TK_OPTION_STRING, "-placeholdertext", "placeholderText", "PlaceholderText",
+	DEF_ENTRY_PLACEHOLDERTEXT, -1, Tk_Offset(Entry, placeholderString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, -1,
@@ -543,7 +544,7 @@ Tk_EntryObjCmd(
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
 
-    entryPtr->emptyGC		= None;
+    entryPtr->placeholderGC	= None;
     /*
      * Keep a hold of the associated tkwin until we destroy the entry,
      * otherwise Tk might free it while we still need it.
@@ -1494,15 +1495,15 @@ EntryWorldChanged(
     }
     entryPtr->textGC = gc;
 
-    if (entryPtr->emptyColorPtr != NULL) {
-	gcValues.foreground = entryPtr->emptyColorPtr->pixel;
+    if (entryPtr->placeholderColorPtr != NULL) {
+	gcValues.foreground = entryPtr->placeholderColorPtr->pixel;
     }
     mask = GCForeground | GCFont | GCGraphicsExposures;
     gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
-    if (entryPtr->emptyGC != None) {
-	Tk_FreeGC(entryPtr->display, entryPtr->emptyGC);
+    if (entryPtr->placeholderGC != None) {
+	Tk_FreeGC(entryPtr->display, entryPtr->placeholderGC);
     }
-    entryPtr->emptyGC = gc;
+    entryPtr->placeholderGC = gc;
 
     if (entryPtr->selFgColorPtr != NULL) {
 	gcValues.foreground = entryPtr->selFgColorPtr->pixel;
@@ -1755,14 +1756,14 @@ DisplayEntry(
      * selected portion on top of it.
      */
 
-    if (entryPtr->numChars || entryPtr->emptyChars == 0) {
+    if (entryPtr->numChars || entryPtr->placeholderChars == 0) {
 	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
 	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
 	    entryPtr->leftIndex, entryPtr->numChars);
     } else {
-	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->emptyGC,
-	    entryPtr->emptyLayout, entryPtr->inset, entryPtr->layoutY,
-	    0, entryPtr->emptyChars);
+	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->placeholderGC,
+	    entryPtr->placeholderLayout, entryPtr->inset, entryPtr->layoutY,
+	    0, entryPtr->placeholderChars);
     }
 
     if (showSelection && (entryPtr->state != STATE_DISABLED)
@@ -1976,14 +1977,14 @@ EntryComputeGeometry(
 	*p = '\0';
     }
 
-    if (entryPtr->emptyString) {
-      entryPtr->emptyChars = strlen(entryPtr->emptyString);
+    if (entryPtr->placeholderString) {
+      entryPtr->placeholderChars = strlen(entryPtr->placeholderString);
     } else {
-      entryPtr->emptyChars = 0;
+      entryPtr->placeholderChars = 0;
     }
-    Tk_FreeTextLayout(entryPtr->emptyLayout);
-    entryPtr->emptyLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
-	    entryPtr->emptyString, entryPtr->emptyChars, 0,
+    Tk_FreeTextLayout(entryPtr->placeholderLayout);
+    entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
+	    entryPtr->placeholderString, entryPtr->placeholderChars, 0,
 	    entryPtr->justify, TK_IGNORE_NEWLINES, &totalLength, &height);
 
     Tk_FreeTextLayout(entryPtr->textLayout);
@@ -3680,7 +3681,7 @@ Tk_SpinboxObjCmd(
     sbPtr->bdRelief		= TK_RELIEF_FLAT;
     sbPtr->buRelief		= TK_RELIEF_FLAT;
 
-    entryPtr->emptyGC		= None;
+    entryPtr->placeholderGC	= None;
     /*
      * Keep a hold of the associated tkwin until we destroy the spinbox,
      * otherwise Tk might free it while we still need it.

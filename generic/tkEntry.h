@@ -131,11 +131,11 @@ typedef struct {
     /*
      * Fields used in displaying help text if entry value is empty
      */
-    Tk_TextLayout emptyLayout;	/* Cached empty text layout information. */
-    char *emptyString;		/* String value of -emptytext */
-    int emptyChars;		/* Number of chars in -emptytext */
-    XColor *emptyColorPtr;	/* Color value of -emptyforeground */
-    GC emptyGC;			/* For drawing -emptytext text. */
+    Tk_TextLayout placeholderLayout;/* Cached placeholder text layout information. */
+    char *placeholderString;	/* String value of -placeholdertext */
+    int placeholderChars;	/* Number of chars in -placeholdertext */
+    XColor *placeholderColorPtr;/* Color value of -placeholderforeground */
+    GC placeholderGC;		/* For drawing -placeholdertext text. */
 
     /*
      * Fields whose values are derived from the current values of the
