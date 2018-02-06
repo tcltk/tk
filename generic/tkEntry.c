@@ -56,7 +56,7 @@ enum validateType {
 };
 #define DEF_ENTRY_VALIDATE	"none"
 #define DEF_ENTRY_INVALIDCMD	""
-#define DEF_ENTRY_PLACEHOLDERTEXT	""
+#define DEF_ENTRY_PLACEHOLDER	""
 #define DEF_ENTRY_PLACEHOLDERFG	"#b3b3b3"
 
 /*
@@ -85,8 +85,8 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	Tk_Offset(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground", "PlaceholderForeground",
 	DEF_ENTRY_PLACEHOLDERFG, -1, Tk_Offset(Entry, placeholderColorPtr), 0, 0, 0},
-    {TK_OPTION_STRING, "-placeholdertext", "placeholderText", "PlaceholderText",
-	DEF_ENTRY_PLACEHOLDERTEXT, -1, Tk_Offset(Entry, placeholderString),
+    {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
+	DEF_ENTRY_PLACEHOLDER, -1, Tk_Offset(Entry, placeholderString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, -1,

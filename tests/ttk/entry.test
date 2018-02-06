@@ -280,11 +280,11 @@ test entry-9.1 "Index range invariants" -setup {
     destroy .e
 }
 
-test entry-10.1 {configuration option: "-placeholdertext"} -setup {
+test entry-10.1 {configuration option: "-placeholder"} -setup {
     pack [entry .e]
 } -body {
-    .e configure -placeholdertext {Some text}
-    .e cget -placeholdertext
+    .e configure -placeholder {Some text}
+    .e cget -placeholder
 } -cleanup {
     destroy .e
 } -result {Some text}
@@ -293,7 +293,7 @@ test entry-10.2 {style option: "-placeholderforeground"} -setup {
     pack [entry .e]
 } -body {
     ttk::style configure TEntry -foreground red
-    .e configure -placeholdertext {Some text}
+    .e configure -placeholder {Some text}
     update
     ttk::style configure TEntry -foreground #b3b3b3
     update
@@ -301,10 +301,10 @@ test entry-10.2 {style option: "-placeholderforeground"} -setup {
     destroy .e
 } -result {}
 
-test entry-10.3 {placeholdertext on/off shown} -setup {
+test entry-10.3 {placeholder on/off shown} -setup {
     pack [entry .e]
 } -body {
-    .e configure -placeholdertext {placeholder} -textvariable ::_e
+    .e configure -placeholder {placeholder} -textvariable ::_e
     update; after 1000
     set ::_e entry
     update; after 1000
