@@ -132,10 +132,10 @@ typedef struct {
      * Fields used in displaying help text if entry value is empty
      */
     Tk_TextLayout placeholderLayout;/* Cached placeholder text layout information. */
-    char *placeholderString;	/* String value of -placeholdertext */
-    int placeholderChars;	/* Number of chars in -placeholdertext */
+    char *placeholderString;	/* String value of -placeholder */
+    int placeholderChars;	/* Number of chars in -placeholder */
     XColor *placeholderColorPtr;/* Color value of -placeholderforeground */
-    GC placeholderGC;		/* For drawing -placeholdertext text. */
+    GC placeholderGC;		/* For drawing -placeholder text. */
 
     /*
      * Fields whose values are derived from the current values of the

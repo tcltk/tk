@@ -119,7 +119,7 @@ typedef struct {
 
     Tcl_Obj *stateObj;		/* Compatibility option -- see CheckStateObj */
 
-    Tcl_Obj *placeholderTextObj;/* Text to display for placeholder text */
+    Tcl_Obj *placeholderObj;	/* Text to display for placeholder text */
 
     /*
      * Derived resources:
@@ -159,8 +159,8 @@ typedef struct {
 #define DEF_LIST_HEIGHT	"10"
 
 static Tk_OptionSpec EntryOptionSpecs[] = {
-    {TK_OPTION_STRING, "-placeholdertext", "placeholderText", "PlaceholderText",
-	NULL, Tk_Offset(Entry, entry.placeholderTextObj), -1,
+    {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
+	NULL, Tk_Offset(Entry, entry.placeholderObj), -1,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
         "ExportSelection", "1", -1, Tk_Offset(Entry, entry.exportSelection),
@@ -321,14 +321,14 @@ static void EntryUpdateTextLayout(Entry *entryPtr)
     int length;
     char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
-    if (entryPtr->entry.numChars>0 || entryPtr->entry.placeholderTextObj==NULL) {
+    if (entryPtr->entry.numChars>0 || entryPtr->entry.placeholderObj==NULL) {
       entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    entryPtr->entry.displayString, entryPtr->entry.numChars,
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     } else {
-      text = Tcl_GetStringFromObj(entryPtr->entry.placeholderTextObj,&length);
+      text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj,&length);
       entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    text,length,
@@ -1293,8 +1293,8 @@ static void EntryDisplay(void *clientData, Drawable d)
     /* Draw the text:
      */
     if (*(entryPtr->entry.displayString) == '\0'
-		&& entryPtr->entry.placeholderTextObj != NULL) {
-	/* When no display text and -placeholdertext given */
+		&& entryPtr->entry.placeholderObj != NULL) {
+	/* When no display text and -placeholder given */
 	Tcl_GetStringFromObj(es.placeholderForegroundObj,&rightIndex);
 	if (++rightIndex > 1) {
 	    foregroundObj = es.placeholderForegroundObj;
