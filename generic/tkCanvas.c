@@ -2536,7 +2536,7 @@ DecomposeMaskToShiftAndBits(
 
 #define OVERDRAW_PIXELS 32        /* How much larger we make the pixmap that the canvas objects are drawn into */
 /* From stackoverflow.com/questions/2100331/c-macro-definition-to-determine-big-endian-or-little-endian-machine */
-#define IS_BIG_ENDIAN (*(uint16_t *)"\0\xff" < 0x100)
+#define IS_BIG_ENDIAN (*(unsigned short *)"\0\xff" < 0x100)
 #define BYTE_SWAP16(n) ((((unsigned short)n)>>8) | (((unsigned short)n)<<8))
 #define BYTE_SWAP32(n) (((n>>24)&0x000000FF) | ((n<<8)&0x00FF0000) | ((n>>8)&0x0000FF00) | ((n<<24)&0xFF000000))
 
@@ -2563,6 +2563,9 @@ DrawCanvas(
         pixmapX1, pixmapY1, pixmapX2, pixmapY2, pmWidth, pmHeight,
         bitsPerPixel, bytesPerPixel, x, y, result = TCL_OK,
         rshift, gshift, bshift, rbits, gbits, bbits;
+#ifdef DEBUG_DRAWCANVAS
+    char buffer[128];
+#endif
 
     if ((tkwin = canvasPtr->tkwin) == NULL) {
         Tcl_AppendResult(interp, "canvas tkwin is NULL!", NULL);
@@ -2693,6 +2696,46 @@ DrawCanvas(
         goto done;
     }
     
+#ifdef DEBUG_DRAWCANVAS
+    Tcl_AppendResult(interp, "ximagePtr {", NULL);
+    sprintf(buffer,"%d",ximagePtr->width);              Tcl_AppendResult(interp, " width ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->height);             Tcl_AppendResult(interp, " height ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->xoffset);            Tcl_AppendResult(interp, " xoffset ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->format);             Tcl_AppendResult(interp, " format ", buffer, NULL);
+                                                        Tcl_AppendResult(interp, " ximagePtr->data", NULL);
+    if (ximagePtr->data != NULL) {
+		int ix, iy;
+		Tcl_AppendResult(interp, " {", NULL);
+		for (iy = 0; iy < ximagePtr->height; ++ iy) {
+			Tcl_AppendResult(interp, " {", NULL);
+			for (ix = 0; ix < ximagePtr->bytes_per_line; ++ ix) {
+				sprintf(buffer," 0x%2.2x",ximagePtr->data[ximagePtr->bytes_per_line * iy + ix]&0xFF);
+				Tcl_AppendResult(interp, buffer, NULL);
+			}
+			Tcl_AppendResult(interp, " }", NULL);
+		}
+		Tcl_AppendResult(interp, " }", NULL);
+	} else
+		sprintf(buffer," NULL");
+    sprintf(buffer,"%d",ximagePtr->byte_order);         Tcl_AppendResult(interp, " byte_order ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->bitmap_unit);        Tcl_AppendResult(interp, " bitmap_unit ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->bitmap_bit_order);   Tcl_AppendResult(interp, " bitmap_bit_order ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->bitmap_pad);         Tcl_AppendResult(interp, " bitmap_pad ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->depth);              Tcl_AppendResult(interp, " depth ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->bytes_per_line);     Tcl_AppendResult(interp, " bytes_per_line ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->bits_per_pixel);     Tcl_AppendResult(interp, " bits_per_pixel ", buffer, NULL);
+    sprintf(buffer,"0x%8.8lx",ximagePtr->red_mask);      Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
+    sprintf(buffer,"0x%8.8lx",ximagePtr->green_mask);    Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
+    sprintf(buffer,"0x%8.8lx",ximagePtr->blue_mask);     Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
+    Tcl_AppendResult(interp, " }", NULL);
+    
+    Tcl_AppendResult(interp, "\nvisualPtr {", NULL);
+    sprintf(buffer,"0x%8.8lx",visualPtr->red_mask);      Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
+    sprintf(buffer,"0x%8.8lx",visualPtr->green_mask);    Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
+    sprintf(buffer,"0x%8.8lx",visualPtr->blue_mask);     Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
+    Tcl_AppendResult(interp, " }", NULL);
+    
+#endif
     /*
      * Fill in the PhotoImageBlock structure abd allocate a block of memory for the converted image data.
      * Note we allocate an alpha channel even though we don't use one, because this layout helps Tk_PhotoPutBlock()
@@ -2715,39 +2758,40 @@ DrawCanvas(
     DecomposeMaskToShiftAndBits(visualPtr->green_mask,&gshift,&gbits);
     DecomposeMaskToShiftAndBits(visualPtr->blue_mask,&bshift,&bbits);
 #ifdef DEBUG_DRAWCANVAS
-    char buffer[128];
-    Tcl_AppendResult(interp, "Converted_image {", NULL);
+    sprintf(buffer,"%d",rshift);  Tcl_AppendResult(interp, "\nbits { rshift ", buffer, NULL);
+    sprintf(buffer,"%d",gshift);  Tcl_AppendResult(interp, " gshift ", buffer, NULL);
+    sprintf(buffer,"%d",bshift);  Tcl_AppendResult(interp, " bshift ", buffer, NULL);
+    sprintf(buffer,"%d",rbits);   Tcl_AppendResult(interp, " rbits ", buffer, NULL);
+    sprintf(buffer,"%d",gbits);   Tcl_AppendResult(interp, " gbits ", buffer, NULL);
+    sprintf(buffer,"%d",bbits);   Tcl_AppendResult(interp, " bbits ", buffer, " }", NULL);
+    Tcl_AppendResult(interp, "\nConverted_image {", NULL);
 #endif
-    bytesPerPixel = ximagePtr->bitmap_unit/8;
+    /* SVP: Ok I had to use ximagePtr->bits_per_pixel here and in the switch (...) below to get this to work on Windows. X11 correctly
+     * sets the bitmap_pad and bitmap_unit fields to 32, but on Windows they are 0 and 8 respectively! */
+    bytesPerPixel = ximagePtr->bits_per_pixel/8;
     for (y = 0; y < blockPtr.height; ++y) {
 #ifdef DEBUG_DRAWCANVAS
-        sprintf(buffer,"%d",y);
-        Tcl_AppendResult(interp, " line ", buffer, " data {", NULL);
+        Tcl_AppendResult(interp, " {", NULL);
 #endif
         for(x = 0; x < blockPtr.width; ++x) {
             unsigned long pixel;
-            switch (ximagePtr->bitmap_unit) {
+#ifdef DEBUG_DRAWCANVAS
+            Tcl_AppendResult(interp, " {", NULL);
+#endif
+			switch (ximagePtr->bits_per_pixel) {
 
                 /*
                  * Get an 8 bit pixel from the XImage.
                  */
                 case 8 :
-                    pixel = *((uint8_t *)(ximagePtr->data + bytesPerPixel * x + ximagePtr->bytes_per_line * y));
-#ifdef DEBUG_DRAWCANVAS
-                    sprintf(buffer,"0x%2.2lx",pixel);
-                    Tcl_AppendResult(interp, " ", buffer, NULL);
-#endif
+                   pixel = *((unsigned char *)(ximagePtr->data + bytesPerPixel * x + ximagePtr->bytes_per_line * y));
                     break;
 
                 /*
                  * Get a 16 bit pixel from the XImage, and correct the byte order as necessary.
                  */
                 case 16 :
-                    pixel = *((uint16_t *)(ximagePtr->data + bytesPerPixel * x + ximagePtr->bytes_per_line * y));
-#ifdef DEBUG_DRAWCANVAS
-                    sprintf(buffer,"0x%4.4lx",pixel);
-                    Tcl_AppendResult(interp, " ", buffer, NULL);
-#endif
+                    pixel = *((unsigned short *)(ximagePtr->data + bytesPerPixel * x + ximagePtr->bytes_per_line * y));
                     if ((IS_BIG_ENDIAN && ximagePtr->byte_order == LSBFirst) || (!IS_BIG_ENDIAN && ximagePtr->byte_order == MSBFirst))
                         pixel = BYTE_SWAP16(pixel);
                     break;
@@ -2756,11 +2800,7 @@ DrawCanvas(
                  * Grab a 32 bit pixel from the XImage, and correct the byte order as necessary.
                  */
                 case 32 :
-                    pixel = *((uint32_t *)(ximagePtr->data + bytesPerPixel * x + ximagePtr->bytes_per_line * y));
-#ifdef DEBUG_DRAWCANVAS
-                    sprintf(buffer,"0x%8.8lx",pixel);
-                    Tcl_AppendResult(interp, " ", buffer, NULL);
-#endif
+                    pixel = *((unsigned long *)(ximagePtr->data + bytesPerPixel * x + ximagePtr->bytes_per_line * y));
                     if ((IS_BIG_ENDIAN && ximagePtr->byte_order == LSBFirst) || (!IS_BIG_ENDIAN && ximagePtr->byte_order == MSBFirst))
                         pixel = BYTE_SWAP32(pixel);
                     break;
@@ -2769,31 +2809,36 @@ DrawCanvas(
             /*
              * We have a pixel with the correct byte order, so pull out the colours and place them in the photo block.
              * Perhaps we could just not bother with the alpha byte because we are using TK_PHOTO_COMPOSITE_SET later?
+             * ***Windows: We have to swap the red and blue values. The XImage storage is B - G - R - A which becomes a
+             * 32bit ARGB quad. However the visual mask is a 32bit ABGR quad. And Tk_PhotoPutBlock() wants R-G-B-A which is
+             * a 32bit ABGR quad. If the visual mask was correct there would be no need to swap anything here.
              */
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +0] = (pixel & visualPtr->red_mask) >> rshift;
+#ifdef _WIN32
+#define   R_OFFSET 2
+#define   B_OFFSET 0
+#else
+#define   R_OFFSET 0
+#define   B_OFFSET 2
+#endif
+            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + R_OFFSET] = (pixel & visualPtr->red_mask) >> rshift;
             blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +1] = (pixel & visualPtr->green_mask) >> gshift;
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +2] = (pixel & visualPtr->blue_mask) >> bshift;
+            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + B_OFFSET] = (pixel & visualPtr->blue_mask) >> bshift;
             blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +3] = 0xFF;
+#ifdef DEBUG_DRAWCANVAS
+            {
+				int ix;
+				for (ix = 0; ix < 3; ++ix)
+					sprintf(buffer,"0x%2.2x",blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + ix]&0xFF); Tcl_AppendResult(interp, " ", buffer, NULL);
+            }
+#endif
         }
 #ifdef DEBUG_DRAWCANVAS
         Tcl_AppendResult(interp, " }", NULL);
 #endif
     }
 #ifdef DEBUG_DRAWCANVAS
-    sprintf(buffer,"%d",ximagePtr->bitmap_unit); Tcl_AppendResult(interp, " ximagePtr_bitmap_unit ", buffer, NULL);
-    sprintf(buffer,"%d",ximagePtr->bytes_per_line); Tcl_AppendResult(interp, " ximagePtr_bytes_per_line ", buffer, NULL);
-    sprintf(buffer,"0x%8.8lx",visualPtr->red_mask); Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
-    sprintf(buffer,"0x%8.8lx",visualPtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
-    sprintf(buffer,"0x%8.8lx",visualPtr->blue_mask); Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
-    sprintf(buffer,"%d",rshift); Tcl_AppendResult(interp, " rshift ", buffer, NULL);
-    sprintf(buffer,"%d",gshift); Tcl_AppendResult(interp, " gshift ", buffer, NULL);
-    sprintf(buffer,"%d",bshift); Tcl_AppendResult(interp, " bshift ", buffer, NULL);
-    sprintf(buffer,"%d",rbits); Tcl_AppendResult(interp, " rbits ", buffer, NULL);
-    sprintf(buffer,"%d",gbits); Tcl_AppendResult(interp, " gbits ", buffer, NULL);
-    sprintf(buffer,"%d",bbits); Tcl_AppendResult(interp, " bbits ", buffer, NULL);
     Tcl_AppendResult(interp, " }", NULL);
 #endif
-
     /*
      * Now put the copied pixmap into the photo.
      * If either zoom or subsample are not 1, we use the zoom function.

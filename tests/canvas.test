@@ -985,7 +985,7 @@ test canvas-20.1 {canvas image} -setup {
 } -cleanup {
     destroy .c
     image delete testimage
-}  1
+} -result 1
 
 test canvas-20.2 {canvas image with subsample} -setup {
     canvas .c
@@ -1003,7 +1003,7 @@ test canvas-20.2 {canvas image with subsample} -setup {
 } -cleanup {
     destroy .c
     image delete testimage
-}  1
+} -result 1
 
 test canvas-20.2 {canvas image with subsample and zoom} -setup {
     canvas .c
@@ -1036,7 +1036,7 @@ test canvas-20.2 {canvas image with subsample and zoom} -setup {
 } -cleanup {
     destroy .c
     image delete testimage
-} 1
+} -result 1
 
 # cleanup
 imageCleanup
