@@ -1296,11 +1296,15 @@ static void EntryDisplay(void *clientData, Drawable d)
 		&& entryPtr->entry.placeholderObj != NULL) {
 	/* When no display text and -placeholder given */
 	Tcl_GetStringFromObj(es.placeholderForegroundObj,&rightIndex);
-	if (++rightIndex > 1) {
+	/* Check on setting of placeholder foreground. May be better? */
+	if (rightIndex > 1) {
 	    foregroundObj = es.placeholderForegroundObj;
 	} else {
             foregroundObj = es.foregroundObj;
 	}
+	/* Use our own text width */
+	leftIndex = 0;
+        Tcl_GetStringFromObj(entryPtr->entry.placeholderObj,&rightIndex);
     } else {
         foregroundObj = es.foregroundObj;
     }
