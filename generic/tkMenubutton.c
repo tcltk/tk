@@ -882,6 +882,19 @@ MenuButtonTextVarProc(
     unsigned len;
 
     /*
+     * See ticket [5d991b82].
+     */
+
+    if (mbPtr->textVarName == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    MenuButtonTextVarProc, clientData);
+	}
+	return NULL;
+    }
+
+    /*
      * If the variable is unset, then immediately recreate it unless the whole
      * interpreter is going away.
      */
