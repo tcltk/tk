@@ -67,8 +67,6 @@ See the \fBttk::entry\fR manual for information about using the
 The following subcommands are possible for spinbox widgets in addition to
 the commands described for the \fBttk::entry\fR widget:
 .TP
-\fIpathName \fBcurrent \fIindex\fR
-.TP
 \fIpathName \fBget\fR
 Returns the spinbox's current value.
 .TP
