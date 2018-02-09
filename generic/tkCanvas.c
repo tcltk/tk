@@ -2820,9 +2820,9 @@ DrawCanvas(
 #define   R_OFFSET 0
 #define   B_OFFSET 2
 #endif
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + R_OFFSET] = (pixel & visualPtr->red_mask) >> rshift;
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +1] = (pixel & visualPtr->green_mask) >> gshift;
-            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + B_OFFSET] = (pixel & visualPtr->blue_mask) >> bshift;
+            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + R_OFFSET] = (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
+            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +1] = (unsigned char)((pixel & visualPtr->green_mask) >> gshift);
+            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + B_OFFSET] = (unsigned char)((pixel & visualPtr->blue_mask) >> bshift);
             blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +3] = 0xFF;
 #ifdef DEBUG_DRAWCANVAS
             {
