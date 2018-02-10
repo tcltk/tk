@@ -2709,7 +2709,13 @@ DrawCanvas(
 		for (iy = 0; iy < ximagePtr->height; ++ iy) {
 			Tcl_AppendResult(interp, " {", NULL);
 			for (ix = 0; ix < ximagePtr->bytes_per_line; ++ ix) {
-				sprintf(buffer," 0x%2.2x",ximagePtr->data[ximagePtr->bytes_per_line * iy + ix]&0xFF);
+				if (ix > 0) {
+                    if (ix % 4 == 0)
+                        Tcl_AppendResult(interp, "-", NULL);
+                    else
+                        Tcl_AppendResult(interp, " ", NULL);
+                }
+				sprintf(buffer,"%2.2x",ximagePtr->data[ximagePtr->bytes_per_line * iy + ix]&0xFF);
 				Tcl_AppendResult(interp, buffer, NULL);
 			}
 			Tcl_AppendResult(interp, " }", NULL);
@@ -2775,9 +2781,6 @@ DrawCanvas(
 #endif
         for(x = 0; x < blockPtr.width; ++x) {
             unsigned long pixel;
-#ifdef DEBUG_DRAWCANVAS
-            Tcl_AppendResult(interp, " {", NULL);
-#endif
 			switch (ximagePtr->bits_per_pixel) {
 
                 /*
@@ -2827,8 +2830,13 @@ DrawCanvas(
 #ifdef DEBUG_DRAWCANVAS
             {
 				int ix;
-				for (ix = 0; ix < 3; ++ix)
-					sprintf(buffer,"0x%2.2x",blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + ix]&0xFF); Tcl_AppendResult(interp, " ", buffer, NULL);
+                if (x > 0)
+                    Tcl_AppendResult(interp, "-", NULL);
+				for (ix = 0; ix < 4; ++ix) {
+                    if (ix > 0)
+                        Tcl_AppendResult(interp, " ", NULL);
+					sprintf(buffer,"%2.2x",blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + ix]&0xFF); Tcl_AppendResult(interp, buffer, NULL);
+                }
             }
 #endif
         }
