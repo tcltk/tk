@@ -2726,10 +2726,14 @@ InsertChars(
     }
 
     /*
-     * Invalidate any selection retrievals in progress.
+     * Invalidate any selection retrievals in progress, and send an event
+     * that the selection changed if that is the case.
      */
 
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {
+        if (TkBTreeCharTagged(indexPtr, tPtr->selTagPtr)) {
+            TkTextSelectionEvent(tPtr);
+        }
 	tPtr->abortSelections = 1;
     }
 
@@ -3069,6 +3073,9 @@ DeleteIndexRange(
     int *lineAndByteIndex;
     int resetViewCount;
     int pixels[2*PIXEL_CLIENTS];
+    Tcl_HashSearch search;
+    Tcl_HashEntry *hPtr;
+    int i;
 
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -3133,42 +3140,36 @@ DeleteIndexRange(
 	}
     }
 
-    if (line1 < line2) {
-	/*
-	 * We are deleting more than one line. For speed, we remove all tags
-	 * from the range first. If we don't do this, the code below can (when
-	 * there are many tags) grow non-linearly in execution time.
-	 */
+    /*
+     * For speed, we remove all tags from the range first. If we don't
+     * do this, the code below can (when there are many tags) grow
+     * non-linearly in execution time.
+     */
 
-	Tcl_HashSearch search;
-	Tcl_HashEntry *hPtr;
-	int i;
+    for (i=0, hPtr=Tcl_FirstHashEntry(&sharedTextPtr->tagTable, &search);
+	    hPtr != NULL; i++, hPtr = Tcl_NextHashEntry(&search)) {
+        TkTextTag *tagPtr = Tcl_GetHashValue(hPtr);
 
-	for (i=0, hPtr=Tcl_FirstHashEntry(&sharedTextPtr->tagTable, &search);
-		hPtr != NULL; i++, hPtr = Tcl_NextHashEntry(&search)) {
-	    TkTextTag *tagPtr = Tcl_GetHashValue(hPtr);
+        TkBTreeTag(&index1, &index2, tagPtr, 0);
+    }
 
-	    TkBTreeTag(&index1, &index2, tagPtr, 0);
-	}
+    /*
+     * Special case for the sel tag which is not in the hash table. We
+     * need to do this once for each peer text widget.
+     */
 
-	/*
-	 * Special case for the sel tag which is not in the hash table. We
-	 * need to do this once for each peer text widget.
-	 */
+    for (tPtr = sharedTextPtr->peers; tPtr != NULL ;
+	    tPtr = tPtr->next) {
+        if (TkBTreeTag(&index1, &index2, tPtr->selTagPtr, 0)) {
+	    /*
+	     * Send an event that the selection changed. This is
+	     * equivalent to:
+	     *	event generate $textWidget <<Selection>>
+	     */
 
-	for (tPtr = sharedTextPtr->peers; tPtr != NULL ;
-		tPtr = tPtr->next) {
-	    if (TkBTreeTag(&index1, &index2, tPtr->selTagPtr, 0)) {
-		/*
-		 * Send an event that the selection changed. This is
-		 * equivalent to:
-		 *	event generate $textWidget <<Selection>>
-		 */
-
-		TkTextSelectionEvent(textPtr);
-		tPtr->abortSelections = 1;
-	    }
-	}
+	    TkTextSelectionEvent(textPtr);
+	    tPtr->abortSelections = 1;
+        }
     }
 
     /*
