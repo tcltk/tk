@@ -658,7 +658,7 @@ command, above), but the cursor position may
 be set even when the item does not have the focus.
 This command returns an empty string.
 .TP
-\fIpathName \fBimage \fIimagename ?\fIsubsample\fR? ?\fIzoom\fR?\fR
+\fIpathName \fBimage \fIimagename\fR ?\fIsubsample\fR? ?\fIzoom\fR?
 .
 Draw the canvas into the Tk photo image named \fIimagename\fR. If a \fB-scrollregion\fR
 has been defined then this will be the boundaries of the canvas region drawn and the
