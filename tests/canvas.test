@@ -968,7 +968,7 @@ test canvas-20.1 {canvas image} -setup {
     canvas .c
     image create photo testimage
 } -body  {
-    .c configure -background #c0c000 -scrollregion {0 0 9 9}
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
     .c create rectangle 0 0 0 9 -fill #000080 -outline #000080
     .c image testimage
     matchPixels [testimage data] { \
