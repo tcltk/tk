@@ -289,32 +289,4 @@ test entry-10.1 {configuration option: "-placeholder"} -setup {
     destroy .e
 } -result {Some text}
 
-test entry-10.2 {style option: "-placeholderforeground"} -setup {
-    pack [entry .e]
-} -body {
-    ttk::style configure TEntry -foreground red
-    .e configure -placeholder {Some text}
-    update
-    ttk::style configure TEntry -foreground #b3b3b3
-    update
-} -cleanup {
-    destroy .e
-} -result {}
-
-test entry-10.3 {placeholder on/off shown} -setup {
-    pack [entry .e]
-} -body {
-    .e configure -placeholder {placeholder} -textvariable ::_e
-    update; after 1000
-    set ::_e entry
-    update; after 1000
-    set ::_e {}
-    update; after 1000
-    set ::_e entry
-    update; after 1000
-} -cleanup {
-    destroy .e
-    unset ::_e
-} -result {}
-
 tcltest::cleanupTests
