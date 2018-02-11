@@ -56,8 +56,6 @@ enum validateType {
 };
 #define DEF_ENTRY_VALIDATE	"none"
 #define DEF_ENTRY_INVALIDCMD	""
-#define DEF_ENTRY_PLACEHOLDER	""
-#define DEF_ENTRY_PLACEHOLDERFG	"#b3b3b3"
 
 /*
  * Information used for Entry objv parsing.
@@ -83,11 +81,6 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_ENTRY_DISABLED_FG, -1,
 	Tk_Offset(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground", "PlaceholderForeground",
-	DEF_ENTRY_PLACEHOLDERFG, -1, Tk_Offset(Entry, placeholderColorPtr), 0, 0, 0},
-    {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
-	DEF_ENTRY_PLACEHOLDER, -1, Tk_Offset(Entry, placeholderString),
-	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	"ExportSelection", DEF_ENTRY_EXPORT_SELECTION, -1,
 	Tk_Offset(Entry, exportSelection), 0, 0, 0},
@@ -125,6 +118,12 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	NULL, 0, -1, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
+    {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
+	DEF_ENTRY_PLACEHOLDER, -1, Tk_Offset(Entry, placeholderString),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
+        "PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, -1,
+        Tk_Offset(Entry, placeholderColorPtr), 0, 0, 0},
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
 	"ReadonlyBackground", DEF_ENTRY_READONLY_BG_COLOR, -1,
 	Tk_Offset(Entry, readonlyBorder), TK_OPTION_NULL_OK,
@@ -545,6 +544,7 @@ Tk_EntryObjCmd(
     entryPtr->validate		= VALIDATE_NONE;
 
     entryPtr->placeholderGC	= None;
+
     /*
      * Keep a hold of the associated tkwin until we destroy the entry,
      * otherwise Tk might free it while we still need it.
@@ -1756,8 +1756,8 @@ DisplayEntry(
      * selected portion on top of it.
      */
 
-    if (entryPtr->numChars || entryPtr->placeholderChars == 0) {
-	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+    if ((entryPtr->numChars != 0) || (entryPtr->placeholderChars == 0)) {
+        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
 	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
 	    entryPtr->leftIndex, entryPtr->numChars);
     } else {
@@ -1978,9 +1978,9 @@ EntryComputeGeometry(
     }
 
     if (entryPtr->placeholderString) {
-      entryPtr->placeholderChars = strlen(entryPtr->placeholderString);
+        entryPtr->placeholderChars = strlen(entryPtr->placeholderString);
     } else {
-      entryPtr->placeholderChars = 0;
+        entryPtr->placeholderChars = 0;
     }
     Tk_FreeTextLayout(entryPtr->placeholderLayout);
     entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
@@ -3695,6 +3695,7 @@ Tk_SpinboxObjCmd(
     sbPtr->buRelief		= TK_RELIEF_FLAT;
 
     entryPtr->placeholderGC	= None;
+
     /*
      * Keep a hold of the associated tkwin until we destroy the spinbox,
      * otherwise Tk might free it while we still need it.
