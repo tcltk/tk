@@ -1985,7 +1985,7 @@ EntryComputeGeometry(
     Tk_FreeTextLayout(entryPtr->placeholderLayout);
     entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
 	    entryPtr->placeholderString, entryPtr->placeholderChars, 0,
-	    entryPtr->justify, TK_IGNORE_NEWLINES, &totalLength, &height);
+	    entryPtr->justify, TK_IGNORE_NEWLINES, NULL, NULL);
 
     Tk_FreeTextLayout(entryPtr->textLayout);
     entryPtr->textLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
