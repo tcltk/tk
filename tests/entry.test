@@ -3519,22 +3519,6 @@ test entry-24.1 {textvariable lives in a non-existing namespace} -setup {
   destroy .e
 } -result {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
 
-test entry-25.1 {-placeholder on/off shown} -setup {
-    pack [entry .e]
-} -body {
-    .e configure -placeholder {placeholder} -textvariable ::_e
-    update; after 1000
-    set ::_e entry
-    update; after 1000
-    set ::_e {}
-    update; after 1000
-    set ::_e entry
-    update; after 1000
-} -cleanup {
-    destroy .e
-    unset ::_e
-} -result {}
-
 # Gathered comments about lacks
 # XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,
 # and EntryTextVarProc.
