@@ -1296,8 +1296,7 @@ static void EntryDisplay(void *clientData, Drawable d)
     if ((*(entryPtr->entry.displayString) == '\0')
 		&& (entryPtr->entry.placeholderObj != NULL)) {
 	/* No text displayed, but -placeholder is given */
-	Tcl_GetStringFromObj(es.placeholderForegroundObj,&rightIndex);
-	if (rightIndex > 1) {
+	if (Tcl_GetCharLength(es.placeholderForegroundObj) > 0) {
 	    foregroundObj = es.placeholderForegroundObj;
 	} else {
             foregroundObj = es.foregroundObj;
