@@ -150,18 +150,15 @@ typedef struct {
 /*
  * Default option values:
  */
-#define DEF_SELECT_BG	"#000000"
-#define DEF_SELECT_FG	"#ffffff"
+#define DEF_SELECT_BG		"#000000"
+#define DEF_SELECT_FG		"#ffffff"
 #define DEF_PLACEHOLDER_FG	"#b3b3b3"
-#define DEF_INSERT_BG	"black"
-#define DEF_ENTRY_WIDTH	"20"
-#define DEF_ENTRY_FONT	"TkTextFont"
-#define DEF_LIST_HEIGHT	"10"
+#define DEF_INSERT_BG		"black"
+#define DEF_ENTRY_WIDTH		"20"
+#define DEF_ENTRY_FONT		"TkTextFont"
+#define DEF_LIST_HEIGHT		"10"
 
 static Tk_OptionSpec EntryOptionSpecs[] = {
-    {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
-	NULL, Tk_Offset(Entry, entry.placeholderObj), -1,
-	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
         "ExportSelection", "1", -1, Tk_Offset(Entry, entry.exportSelection),
 	0,0,0 },
@@ -174,6 +171,9 @@ static Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	"left", -1, Tk_Offset(Entry, entry.justify),
 	0, 0, GEOMETRY_CHANGED},
+    {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
+	NULL, Tk_Offset(Entry, entry.placeholderObj), -1,
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-show", "show", "Show",
         NULL, -1, Tk_Offset(Entry, entry.showChar),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -198,14 +198,15 @@ static Tk_OptionSpec EntryOptionSpecs[] = {
 
     /* EntryStyleData options:
      */
-    {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground", "PlaceholderForeground",
-	NULL, Tk_Offset(Entry, entry.styleData.placeholderForegroundObj), -1,
+    {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
+	NULL, Tk_Offset(Entry, entry.styleData.backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
 	NULL, Tk_Offset(Entry, entry.styleData.foregroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
-    {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
-	NULL, Tk_Offset(Entry, entry.styleData.backgroundObj), -1,
+    {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
+        "PlaceholderForeground", NULL,
+        Tk_Offset(Entry, entry.styleData.placeholderForegroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -321,17 +322,17 @@ static void EntryUpdateTextLayout(Entry *entryPtr)
     int length;
     char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
-    if (entryPtr->entry.numChars>0 || entryPtr->entry.placeholderObj==NULL) {
-      entryPtr->entry.textLayout = Tk_ComputeTextLayout(
+    if ((entryPtr->entry.numChars != 0) || (entryPtr->entry.placeholderObj == NULL)) {
+        entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    entryPtr->entry.displayString, entryPtr->entry.numChars,
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     } else {
-      text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj,&length);
-      entryPtr->entry.textLayout = Tk_ComputeTextLayout(
+        text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &length);
+        entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
-	    text,length,
+	    text, length,
 	    0/*wraplength*/, TK_JUSTIFY_LEFT, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     }
@@ -1292,17 +1293,16 @@ static void EntryDisplay(void *clientData, Drawable d)
 
     /* Draw the text:
      */
-    if (*(entryPtr->entry.displayString) == '\0'
-		&& entryPtr->entry.placeholderObj != NULL) {
-	/* When no display text and -placeholder given */
+    if ((*(entryPtr->entry.displayString) == '\0')
+		&& (entryPtr->entry.placeholderObj != NULL)) {
+	/* No text displayed, but -placeholder is given */
 	Tcl_GetStringFromObj(es.placeholderForegroundObj,&rightIndex);
-	/* Check on setting of placeholder foreground. May be better? */
 	if (rightIndex > 1) {
 	    foregroundObj = es.placeholderForegroundObj;
 	} else {
             foregroundObj = es.foregroundObj;
 	}
-	/* Use our own text width */
+	/* Use placeholder text width */
 	leftIndex = 0;
         Tcl_GetStringFromObj(entryPtr->entry.placeholderObj,&rightIndex);
     } else {
