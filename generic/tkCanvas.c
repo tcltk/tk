@@ -2138,7 +2138,7 @@ CanvasWidgetCmd(
         Tk_PhotoHandle photohandle;
         int subsample = 1, zoom = 1;
 
-        if (objc < 3 && objc > 5) {
+        if (objc < 3 || objc > 5) {
             Tcl_WrongNumArgs(interp, 2, objv, "imagename ?subsample? ?zoom?");
             result = TCL_ERROR;
             goto done;
