@@ -950,6 +950,94 @@ test canvas-19.11 {rchars method - errors} -setup {
     destroy .c
 } -returnCodes error -result {bad index "foo"}
 
+# Procedure used in test cases 20.1 20.2 20.3
+proc matchPixels {pixels expected} {
+    set matched 1
+    foreach pline $pixels eline $expected {
+        foreach ppixel $pline epixel $eline {
+            if {$ppixel != $epixel} {
+                set matched 0
+                break
+            }
+        }
+    }
+    return $matched
+}
+
+test canvas-20.1 {canvas image} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 0 9 -fill #000080 -outline #000080
+    .c image testimage
+    matchPixels [testimage data] { \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
+
+test canvas-20.2 {canvas image with subsample} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 1 9 -fill #008000 -outline #008000
+    .c image testimage 2
+    matchPixels [testimage data] { \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
+
+test canvas-20.3 {canvas image with subsample and zoom} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 9 0 -fill #800000 -outline #800000
+    .c image testimage 1 2
+    matchPixels [testimage data] { \
+        {#800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000} \
+        {#800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
+
 # cleanup
 imageCleanup
 cleanupTests
