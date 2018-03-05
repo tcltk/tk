@@ -264,6 +264,12 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	NULL, 0, -1, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
+    {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
+	DEF_ENTRY_PLACEHOLDER, -1, Tk_Offset(Entry, placeholderString),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
+        "PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, -1,
+        Tk_Offset(Entry, placeholderColorPtr), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_ENTRY_RELIEF, -1, Tk_Offset(Entry, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
@@ -1762,8 +1768,8 @@ DisplayEntry(
 	    entryPtr->leftIndex, entryPtr->numChars);
     } else {
 	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->placeholderGC,
-	    entryPtr->placeholderLayout, entryPtr->inset, entryPtr->layoutY,
-	    0, entryPtr->placeholderChars);
+	    entryPtr->placeholderLayout, entryPtr->placeholderX, entryPtr->layoutY,
+	    entryPtr->placeholderLeftIndex, entryPtr->placeholderChars);
     }
 
     if (showSelection && (entryPtr->state != STATE_DISABLED)
@@ -1977,15 +1983,57 @@ EntryComputeGeometry(
 	*p = '\0';
     }
 
+    /* Recompute layout of placeholder text.
+     * Only the placeholderX and placeholderLeftIndex value is needed.
+     * We use the same font so we can use the layoutY value from below.
+     */
+
+    Tk_FreeTextLayout(entryPtr->placeholderLayout);
     if (entryPtr->placeholderString) {
         entryPtr->placeholderChars = strlen(entryPtr->placeholderString);
+        entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
+	        entryPtr->placeholderString, entryPtr->placeholderChars, 0,
+	        entryPtr->justify, TK_IGNORE_NEWLINES, &totalLength, NULL);
+	overflow = totalLength -
+	        (Tk_Width(entryPtr->tkwin) - 2*entryPtr->inset - entryPtr->xWidth);
+	if (overflow <= 0) {
+	    entryPtr->placeholderLeftIndex = 0;
+	    if (entryPtr->justify == TK_JUSTIFY_LEFT) {
+		entryPtr->placeholderX = entryPtr->inset;
+	    } else if (entryPtr->justify == TK_JUSTIFY_RIGHT) {
+		entryPtr->placeholderX = Tk_Width(entryPtr->tkwin) - entryPtr->inset
+		        - entryPtr->xWidth - totalLength;
+	    } else {
+		entryPtr->placeholderX = (Tk_Width(entryPtr->tkwin)
+		        - entryPtr->xWidth - totalLength)/2;
+	    }
+    	} else {
+
+	    /*
+	     * The whole string can't fit in the window. Compute the maximum
+	     * number of characters that may be off-screen to the left without
+	     * leaving empty space on the right of the window, then don't let
+	     * placeholderLeftIndex be any greater than that.
+	     */
+
+	    maxOffScreen = Tk_PointToChar(entryPtr->placeholderLayout, overflow, 0);
+	    Tk_CharBbox(entryPtr->placeholderLayout, maxOffScreen,
+		&rightX, NULL, NULL, NULL);
+	    if (rightX < overflow) {
+		maxOffScreen++;
+	    }
+	    entryPtr->placeholderLeftIndex = maxOffScreen;
+	    Tk_CharBbox(entryPtr->placeholderLayout, entryPtr->placeholderLeftIndex, &rightX,
+		NULL, NULL, NULL);
+	    entryPtr->placeholderX = entryPtr->inset -rightX;
+        }
     } else {
         entryPtr->placeholderChars = 0;
+        entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
+	        entryPtr->placeholderString, 0, 0,
+	        entryPtr->justify, TK_IGNORE_NEWLINES, NULL, NULL);
+	entryPtr->placeholderX = entryPtr->inset;
     }
-    Tk_FreeTextLayout(entryPtr->placeholderLayout);
-    entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
-	    entryPtr->placeholderString, entryPtr->placeholderChars, 0,
-	    entryPtr->justify, TK_IGNORE_NEWLINES, NULL, NULL);
 
     Tk_FreeTextLayout(entryPtr->textLayout);
     entryPtr->textLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
