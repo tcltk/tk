@@ -1059,6 +1059,16 @@ TkDrawAngledChars(
 		    x <= maxCoord - metrics.width &&
 		    y <= maxCoord - metrics.height) {
 
+			/*
+			 * NOTE:
+			 * The whole algorithm has a design problem, the choice of
+			 * NUM_SPEC is arbitrary, and so the inter-glyph spacing will
+			 * look arbitrary. This algorithm has to draw the whole string
+			 * at once (or whole blocks with same font), this requires a
+			 * dynamic 'glyphs' array. In case of overflow the array has to
+			 * be divided until the maximal string will fit. (GC)
+			 */
+
 		    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
 			    originX, originY, glyphs, nglyph);
 		}
