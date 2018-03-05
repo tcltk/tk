@@ -1314,7 +1314,7 @@ tkMacOSXScrlbr.o: $(MAC_OSX_DIR)/tkMacOSXScrlbr.c
 tkMacOSXSend.o: $(MAC_OSX_DIR)/tkMacOSXSend.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXSend.c
 
-tkMacOSXServices.o: $(MAC_OSX_DIR)/tkMacOSXImage.c
+tkMacOSXServices.o: $(MAC_OSX_DIR)/tkMacOSXServices.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXServices.c
 
 tkMacOSXSubwindows.o: $(MAC_OSX_DIR)/tkMacOSXSubwindows.c
