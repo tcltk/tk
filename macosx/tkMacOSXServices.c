@@ -155,7 +155,7 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
 
 
 /* Register a specific widget to access the Services menu. */
-int RegisterServiceWidget (ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
+int TkMacOSXRegisterServiceWidgetObjCmd (ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
 
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
@@ -204,31 +204,16 @@ int RegisterServiceWidget (ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CON
 
 
 //initalize the package in the tcl interpreter, create tcl commands
-int Tclservices_Init (Tcl_Interp *interp) {
+int Tk_MacOSXServices_Init (Tcl_Interp *interp) {
 
-  //set up an autorelease pool
+  /* Set up an autorelease pool. */
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-  if (Tcl_InitStubs(interp, "8.5", 0) == NULL) {
-    return TCL_ERROR;  
-  }
-  if (Tk_InitStubs(interp, "8.5", 0) == NULL) {
-    return TCL_ERROR;
-  }
 
-
-  Tcl_CreateObjCommand(interp, "::tclservices::registerservicewidget", RegisterServiceWidget,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
- 
-
-  //initialize instance of TclServices to provide service functionality
-  TclService *service = [[TclService alloc] init];
-  myInterp = interp;
+  /* Initialize instance of TclServices to provide service functionality. */
+  TkService *service = [[TkService alloc] init];
+  Service_Interp = interp;
   [NSApp setServicesProvider:service];
-
-
-  if (Tcl_PkgProvide(interp, "tclservices", "1.0") != TCL_OK) {
-    return TCL_ERROR;
-  }
 
   [pool release];
       
@@ -236,8 +221,5 @@ int Tclservices_Init (Tcl_Interp *interp) {
 	
 }
 
-int Tclservices_SafeInit(Tcl_Interp *interp) {
-  return Tclservices_Init(interp);
-}
 
 
