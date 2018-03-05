@@ -154,13 +154,12 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
 @end
 
 
-//register a specific widget to access the Services menu
+/* Register a specific widget to access the Services menu. */
 int RegisterServiceWidget (ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
 
-  //set up an autorelease pool
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-  //need proper number of args	    
+  /* Need proper number of args. */	    
   if(objc != 2) {        
     Tcl_WrongNumArgs(ip, 1, objv, "path?");        
     return TCL_ERROR;    
@@ -179,8 +178,8 @@ int RegisterServiceWidget (ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CON
   Tk_MapWindow(path);
   Drawable d = Tk_WindowId(path);
 
-  //get NSView from Tk window and add subview
-  TclService *serviceview = [[TclService alloc] init];
+  /* Get NSView from Tk window and add subview. */
+  TkService *serviceview = [[TkService alloc] init];
   NSView *view = TkMacOSXGetRootControl(d);
   if ([serviceview superview] != view) {
     [view addSubview:serviceview];
@@ -188,7 +187,7 @@ int RegisterServiceWidget (ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CON
 
   TkMacOSXWinBounds((TkWindow*)path, &bounds);
 
-  //hack to make sure subview is set to take up entire geometry of window
+  /* Hack to make sure subview is set to take up entire geometry of window. */
   frame = NSMakeRect(bounds.left, bounds.top, 100000, 100000);
   frame.origin.y = 0;
 
