@@ -137,6 +137,9 @@ typedef struct {
     int placeholderChars;	/* Number of chars in placeholder. */
     XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
     GC placeholderGC;		/* For drawing placeholder text. */
+    int placeholderX;		/* Origin for layout. */
+    int placeholderLeftIndex;	/* Character index of left-most character
+				 * visible in window. */
 
     /*
      * Fields whose values are derived from the current values of the
