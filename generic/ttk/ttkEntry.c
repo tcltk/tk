@@ -333,7 +333,7 @@ static void EntryUpdateTextLayout(Entry *entryPtr)
         entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    text, length,
-	    0/*wraplength*/, TK_JUSTIFY_LEFT, TK_IGNORE_NEWLINES,
+	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     }
 }
