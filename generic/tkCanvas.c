@@ -2823,7 +2823,7 @@ DrawCanvas(
 #endif
 
         for(x = 0; x < blockPtr.width; ++x) {
-            unsigned long pixel;
+            unsigned long pixel = 0;
 
             switch (ximagePtr->bits_per_pixel) {
 
