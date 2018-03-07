@@ -682,6 +682,21 @@ if {[tk windowingsystem] eq "aqua"} {
     namespace eval ::tk::mac {
 	set useCustomMDEF 0
     }
+
+    #stub proc for NSServices API, must be replaced with custom implementation
+    proc ::tk::mac::PerformService {args} {
+
+	tk_messageBox -icon info -title "Services Example" -message "This data was sent to Wish with the NSServices API:\n\n$args"
+    }
+}
+
+#register to send data to macOS Services
+
+proc ::tk::RegisterServiceWidget {w} {
+
+if {[tk windowingsytem] eq "aqua"} {
+    ::tk::mac::registerServiceWidget $w
+  }
 }
 
 # Run the Ttk themed widget set initialization

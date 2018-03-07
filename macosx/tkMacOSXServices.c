@@ -26,7 +26,6 @@
 #include <string.h>
 
 static Tcl_Interp *ServicesInterp;
-char *myExportData[80];
 
 
 /* These two assist with asynchronous Tcl proc calling. */
@@ -54,7 +53,7 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
 @end
 
 /* Class methods. */
-@implementation TclService 
+@implementation TkService
 
 + (void) initialize {
   
@@ -90,9 +89,9 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
     return NO; 
   } 
 
-  Tcl_Eval(Services_Interp,"clipboard get");
+  Tcl_Eval(ServicesInterp,"clipboard get");
   char *copystring;
-  copystring = Tcl_GetString(Tcl_GetObjResult(myInterp));
+  copystring = Tcl_GetString(Tcl_GetObjResult(ServicesInterp));
 
   NSString *writestring = [NSString stringWithUTF8String:copystring];
   typesDeclared = [NSArray arrayWithObject:NSStringPboardType]; 
@@ -112,7 +111,13 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
     }
     returnText = [pboard stringForType:NSStringPboardType];
     char *returnData = [returnText UTF8String];
-    Tcl_Eval(Services_Interp,"clipboard clear; clipboard append %s", returnData);
+    Tcl_DString clip;
+    Tcl_DStringInit(&clip);
+    Tcl_DStringAppend(&clip, "clipboard clear; ", -1);
+    Tcl_DStringAppend(&clip, "clipboard append ", -1);
+    Tcl_DStringAppend(&clip, returnData, -1);
+    Tcl_Eval(ServicesInterp, &clip);
+    Tcl_DStringFree(&clip);
     return YES;
 }
 
@@ -139,8 +144,8 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
 
     /* Get output from service proc, return to interp, and write to pasteboard. */
     char *output;
-    output = Tcl_GetString(Tcl_GetObjResult(Services_Interp));
-    Tcl_SetResult(Services_Interp, output, NULL);
+    output = Tcl_GetString(Tcl_GetObjResult(ServicesInterp));
+    Tcl_SetResult(ServicesInterp, output, NULL);
     NSString *serviceOutput = [NSString stringWithUTF8String:output];
     [pboard clearContents];
     [pboard writeObjects:[NSArray arrayWithObject:serviceOutput]];
@@ -212,7 +217,7 @@ int Tk_MacOSXServices_Init (Tcl_Interp *interp) {
 
   /* Initialize instance of TclServices to provide service functionality. */
   TkService *service = [[TkService alloc] init];
-  Service_Interp = interp;
+  ServicesInterp = interp;
   [NSApp setServicesProvider:service];
 
   [pool release];
