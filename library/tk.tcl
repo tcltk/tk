@@ -694,7 +694,7 @@ if {[tk windowingsystem] eq "aqua"} {
 
 proc ::tk::RegisterServiceWidget {w} {
 
-if {[tk windowingsytem] eq "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     ::tk::mac::registerServiceWidget $w
   }
 }
