@@ -348,6 +348,7 @@ proc ttk::entry::Press {w x} {
     set State(x) $x
     set State(selectMode) char
     set State(anchor) [$w index insert]
+    ::tk::RegisterServiceWidget $w
 }
 
 ## Shift-Press -- Shift-ButtonPress-1 binding.
@@ -607,7 +608,7 @@ proc ttk::entry::Delete {w} {
     }
 }
 
-if {[tk windowingsystem] eq "aqua"] {
+if {[tk windowingsystem] eq "aqua"} {
     # ::ttk::CheckEntrySelection --
     #
     # Writes selected text to the clipboard on macOS.

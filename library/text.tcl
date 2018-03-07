@@ -43,6 +43,7 @@
 bind Text <1> {
     tk::TextButton1 %W %x %y
     %W tag remove sel 0.0 end
+    ::tk::RegisterServiceWidget %W
 }
 bind Text <B1-Motion> {
     set tk::Priv(x) %x
@@ -400,7 +401,6 @@ bind Text <<Selection>> {
     set selected [%W get sel.first sel.last]
     clipboard append $selected
 }
-
 # End of Mac only bindings
 }
 

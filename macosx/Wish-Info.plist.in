@@ -79,16 +79,18 @@
 	<key>NSHighResolutionCapable</key>
 	<string>True</string>
 	 <key>NSServices</key>
-    <array>
+	 <array>
+	   <dict>
             <key>NSMenuItem</key>
             <dict>
                 <key>default</key>
-                <string>Wish: Run Tcl Script</string>
+                <string>Wish: Display Test Data</string>
             </dict>
             <key>NSMessage</key>
             <string>provideService</string>
             <key>NSPortName</key>
             <string>Wish</string>
+
             <key>NSSendTypes</key>
             <array>
                 <string>NSStringPboardType</string>
@@ -99,5 +101,6 @@
             </array>
         </dict>
     </array>
+
 </dict>
 </plist>
