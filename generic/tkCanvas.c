@@ -268,6 +268,7 @@ static int		ConfigureCanvas(Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, int argc,
 			    Tcl_Obj *const *argv, int flags);
 static void		DestroyCanvas(char *memPtr);
+static int              DrawCanvas(Tcl_Interp *interp, ClientData clientData, Tk_PhotoHandle photohandle, int subsample, int zoom);
 static void		DisplayCanvas(ClientData clientData);
 static void		DoItem(Tcl_Obj *accumObj,
 			    Tk_Item *itemPtr, Tk_Uid tag);
@@ -805,6 +806,7 @@ CanvasWidgetCmd(
 	"canvasy",	"cget",		"configure",	"coords",
 	"create",	"dchars",	"delete",	"dtag",
 	"find",		"focus",	"gettags",	"icursor",
+        "image",
 	"imove",	"index",	"insert",	"itemcget",
 	"itemconfigure",
 	"lower",	"move",		"moveto",	"postscript",
@@ -817,6 +819,7 @@ CanvasWidgetCmd(
 	CANV_CANVASY,	CANV_CGET,	CANV_CONFIGURE,	CANV_COORDS,
 	CANV_CREATE,	CANV_DCHARS,	CANV_DELETE,	CANV_DTAG,
 	CANV_FIND,	CANV_FOCUS,	CANV_GETTAGS,	CANV_ICURSOR,
+        CANV_IMAGE,
 	CANV_IMOVE,	CANV_INDEX,	CANV_INSERT,	CANV_ITEMCGET,
 	CANV_ITEMCONFIGURE,
 	CANV_LOWER,	CANV_MOVE,	CANV_MOVETO,	CANV_POSTSCRIPT,
@@ -2131,6 +2134,46 @@ CanvasWidgetCmd(
 	CanvasSetOrigin(canvasPtr, canvasPtr->xOrigin, newY);
 	break;
     }
+    case CANV_IMAGE: {
+        Tk_PhotoHandle photohandle;
+        int subsample = 1, zoom = 1;
+
+        if (objc < 3 || objc > 5) {
+            Tcl_WrongNumArgs(interp, 2, objv, "imagename ?subsample? ?zoom?");
+            result = TCL_ERROR;
+            goto done;
+        }
+
+        if ((photohandle = Tk_FindPhoto(interp, Tcl_GetString(objv[2]) )) == 0) {
+            result = TCL_ERROR;
+            goto done;
+        }
+
+        /*
+         * If we are given a subsample or a zoom then grab them.
+         */
+
+        if (objc >= 4 && Tcl_GetIntFromObj(interp, objv[3], &subsample) != TCL_OK) {
+            result = TCL_ERROR;
+            goto done;
+        }
+        if (objc >= 5 && Tcl_GetIntFromObj(interp, objv[4], &zoom) != TCL_OK) {
+            result = TCL_ERROR;
+            goto done;
+        }
+
+        /*
+         * Set the image size to zero, which allows the DrawCanvas() function
+         * to expand the image automatically when it copies the pixmap into it.
+         */
+
+        if (Tk_PhotoSetSize(interp, photohandle, 0, 0) != TCL_OK) {
+            result = TCL_ERROR;
+            goto done;
+        }
+
+        result = DrawCanvas(interp, clientData, photohandle, subsample, zoom);
+    }
     }
 
   done:
@@ -2416,6 +2459,500 @@ CanvasWorldChanged(
 	    canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin));
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * DecomposeMaskToShiftAndBits --
+ *
+ *      Given a 32 bit pixel mask, we find the position of the lowest bit and the
+ *      width of the mask bits.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+*       None.
+ *
+ *----------------------------------------------------------------------
+ */
+static void
+DecomposeMaskToShiftAndBits(
+    unsigned long mask,     /* The pixel mask to examine */
+    int *shift,             /* Where to put the shift count (position of lowest bit) */
+    int *bits)              /* Where to put the bit count (width of the pixel mask) */
+{
+    int i;
+    
+    *shift = 0;
+    *bits = 0;
+    
+    /*
+     * Find the lowest '1' bit in the mask.
+     */
+
+    for (i = 0; i < 32; ++i) {
+        if (mask & 1 << i)
+            break;
+    }
+    if (i < 32) {
+        *shift = i;
+        
+        /*
+        * Now find the next '0' bit and the width of the mask.
+        */
+ 
+        for ( ; i < 32; ++i) {
+            if ((mask & 1 << i) == 0)
+                break;
+            else
+                ++*bits;
+        }
+        
+        /*
+        * Limit to the top 8 bits if the mask was wider than 8.
+        */
+
+        if (*bits > 8) {
+            *shift += *bits - 8;
+            *bits = 8;
+        }
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawCanvas --
+ *
+ *      This function draws the contents of a canvas into the given Photo image.
+ *      This function is called from the widget "image" subcommand.
+ *      The canvas does not need to be mapped (one of it's ancestors must be)
+ *      in order for this function to work. 
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *      Canvas contents from within the -scrollregion or widget size are rendered
+ *      into the Photo. Any errors are left in the result.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#define OVERDRAW_PIXELS 32        /* How much larger we make the pixmap
+                                   * that the canvas objects are drawn into */
+
+/* From stackoverflow.com/questions/2100331/c-macro-definition-to-determine-big-endian-or-little-endian-machine */
+#define IS_BIG_ENDIAN (*(unsigned short *)"\0\xff" < 0x100)
+
+#define BYTE_SWAP16(n) ((((unsigned short)n)>>8) | (((unsigned short)n)<<8))
+#define BYTE_SWAP32(n) (((n>>24)&0x000000FF) | ((n<<8)&0x00FF0000) | ((n>>8)&0x0000FF00) | ((n<<24)&0xFF000000))
+
+static int
+DrawCanvas(
+    Tcl_Interp *interp,           /* As passed to the widget command, and we will leave errors here */
+    ClientData clientData,
+    Tk_PhotoHandle photohandle,   /* The photo we are rendering into */
+    int subsample,                /* If either subsample or zoom are not 1 then we call Tk_PhotoPutZoomedBlock() */
+    int zoom)
+{
+    TkCanvas * canvasPtr = clientData;
+    Tk_Window tkwin;
+    Display *displayPtr;
+    Tk_PhotoImageBlock blockPtr = {0};
+    Window wid;
+    Tk_Item * itemPtr;
+    Pixmap pixmap = 0;
+    XImage *ximagePtr = NULL;
+    Visual *visualPtr;
+    GC xgc = 0;
+    XGCValues xgcValues;
+    int canvasX1, canvasY1, canvasX2, canvasY2, cWidth, cHeight,
+        pixmapX1, pixmapY1, pixmapX2, pixmapY2, pmWidth, pmHeight,
+        bitsPerPixel, bytesPerPixel, x, y, result = TCL_OK,
+        rshift, gshift, bshift, rbits, gbits, bbits;
+
+#ifdef DEBUG_DRAWCANVAS
+    char buffer[128];
+#endif
+
+    if ((tkwin = canvasPtr->tkwin) == NULL) {
+        Tcl_AppendResult(interp, "canvas tkwin is NULL!", NULL);
+        result = TCL_ERROR;
+        goto done;
+    }
+
+    /*
+     * If this canvas is unmapped, then we won't have a window id, so we will
+     * try the ancestors of the canvas until we find a window that has a
+     * valid window id. The Tk_GetPixmap() call requires a valid window id.
+     */
+
+    do {
+
+        if ((displayPtr = Tk_Display(tkwin)) == NULL) {
+            Tcl_AppendResult(interp, "canvas (or parent) display is NULL!", NULL);
+            result = TCL_ERROR;
+            goto done;
+        }
+
+        if ((wid = Tk_WindowId(tkwin)) != 0) {
+            continue;
+        }
+
+        if ((tkwin = Tk_Parent(tkwin)) == NULL) {
+            Tcl_AppendResult(interp, "canvas has no parent with a valid window id! Is the toplevel window mapped?", NULL);
+            result = TCL_ERROR;
+            goto done;
+        }
+
+    } while (wid == 0);
+
+    bitsPerPixel = Tk_Depth(tkwin);
+    visualPtr = Tk_Visual(tkwin);
+
+    if (subsample == 0) {
+        Tcl_AppendResult(interp, "subsample cannot be zero", NULL);
+        result = TCL_ERROR;
+        goto done;
+    }
+
+    /*
+    * Scan through the item list, registering the bounding box for all items
+    * that didn't do that for the final coordinates yet. This can be
+    * determined by the FORCE_REDRAW flag.
+    */
+
+    for (itemPtr = canvasPtr -> firstItemPtr; itemPtr != NULL; 
+            itemPtr = itemPtr -> nextPtr) {
+        if (itemPtr -> redraw_flags & FORCE_REDRAW) {
+            itemPtr -> redraw_flags &= ~FORCE_REDRAW;
+            EventuallyRedrawItem(canvasPtr, itemPtr);
+            itemPtr -> redraw_flags &= ~FORCE_REDRAW;
+        }
+    }
+
+    /*
+     * The DisplayCanvas() function works out the region that needs redrawing,
+     * but we don't do this. We grab the whole scrollregion or canvas window
+     * area. If we have a defined -scrollregion we use that as the drawing
+     * region, otherwise use the canvas window height and width with an origin
+     * of 0,0.
+     */
+    if (canvasPtr->scrollX1 != 0 || canvasPtr->scrollY1 != 0 ||
+            canvasPtr->scrollX2 != 0 || canvasPtr->scrollY2 != 0) {
+
+        canvasX1 = canvasPtr->scrollX1;
+        canvasY1 = canvasPtr->scrollY1;
+        canvasX2 = canvasPtr->scrollX2;
+        canvasY2 = canvasPtr->scrollY2;
+        cWidth = canvasX2 - canvasX1 + 1;
+        cHeight = canvasY2 - canvasY1 + 1;
+
+    } else {
+
+        cWidth = Tk_Width(tkwin);
+        cHeight = Tk_Height(tkwin);
+        canvasX1 = 0;
+        canvasY1 = 0;
+        canvasX2 = canvasX1 + cWidth - 1;
+        canvasY2 = canvasY1 + cHeight - 1;
+    }
+    
+    /*
+     * Allocate a pixmap to draw into. We add OVERDRAW_PIXELS in the same way
+     * that DisplayCanvas() does to avoid problems on some systems when objects
+     * are being drawn too close to the edge.
+     */
+
+    pixmapX1 = canvasX1 - OVERDRAW_PIXELS;
+    pixmapY1 = canvasY1 - OVERDRAW_PIXELS;
+    pixmapX2 = canvasX2 + OVERDRAW_PIXELS;
+    pixmapY2 = canvasY2 + OVERDRAW_PIXELS;
+    pmWidth = pixmapX2 - pixmapX1 + 1;
+    pmHeight = pixmapY2 - pixmapY1 + 1;
+    if ((pixmap = Tk_GetPixmap(displayPtr, Tk_WindowId(tkwin), pmWidth, pmHeight,
+            bitsPerPixel)) == 0) {
+        Tcl_AppendResult(interp, "failed to create drawing Pixmap", NULL);
+        result = TCL_ERROR;
+        goto done;
+    }
+
+    /*
+     * Before we can draw the canvas objects into the pixmap it's background
+     * should be filled with canvas background colour.
+     */
+
+    xgcValues.function = GXcopy;
+    xgcValues.foreground = Tk_3DBorderColor(canvasPtr->bgBorder)->pixel;
+    xgc = XCreateGC(displayPtr, pixmap, GCFunction|GCForeground, &xgcValues);
+    XFillRectangle(displayPtr,pixmap,xgc,0,0,pmWidth,pmHeight);
+
+    /*
+     * Draw all the cavas items into the pixmap
+     */
+
+    canvasPtr->drawableXOrigin = pixmapX1;
+    canvasPtr->drawableYOrigin = pixmapY1;
+    for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
+            itemPtr = itemPtr->nextPtr) {
+        if ((itemPtr->x1 >= pixmapX2) || (itemPtr->y1 >= pixmapY2) ||
+                (itemPtr->x2 < pixmapX1) || (itemPtr->y2 < pixmapY1)) {
+            if (!AlwaysRedraw(itemPtr)) {
+                continue;
+            }
+        }
+        if (itemPtr->state == TK_STATE_HIDDEN || 
+                (itemPtr->state == TK_STATE_NULL && canvasPtr->canvas_state
+                == TK_STATE_HIDDEN)) {
+            continue;
+        }
+        ItemDisplay(canvasPtr, itemPtr, pixmap, pixmapX1, pixmapY1, pmWidth,
+                pmHeight);
+    }
+    
+    /*
+     * Copy the Pixmap into an ZPixmap format XImage so we can copy it across
+     * to the photo image. This seems to be the only way to get Pixmap image
+     * data out of an image. Note we have to account for the OVERDRAW_PIXELS
+     * border width.
+     */
+
+    if ((ximagePtr = XGetImage(displayPtr, pixmap, -pixmapX1, -pixmapY1, cWidth,
+            cHeight, AllPlanes, ZPixmap)) == NULL) {
+        Tcl_AppendResult(interp, "failed to copy Pixmap to XImage", NULL);
+        result = TCL_ERROR;
+        goto done;
+    }
+    
+#ifdef DEBUG_DRAWCANVAS
+    Tcl_AppendResult(interp, "ximagePtr {", NULL);
+    sprintf(buffer,"%d",ximagePtr->width);   Tcl_AppendResult(interp, " width ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->height);  Tcl_AppendResult(interp, " height ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->xoffset); Tcl_AppendResult(interp, " xoffset ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->format);  Tcl_AppendResult(interp, " format ", buffer, NULL);
+                                             Tcl_AppendResult(interp, " ximagePtr->data", NULL);
+    if (ximagePtr->data != NULL) {
+	int ix, iy;
+
+        Tcl_AppendResult(interp, " {", NULL);
+	for (iy = 0; iy < ximagePtr->height; ++ iy) {
+	    Tcl_AppendResult(interp, " {", NULL);
+	    for (ix = 0; ix < ximagePtr->bytes_per_line; ++ ix) {
+	        if (ix > 0) {
+                    if (ix % 4 == 0)
+                        Tcl_AppendResult(interp, "-", NULL);
+                    else
+                        Tcl_AppendResult(interp, " ", NULL);
+                }
+	        sprintf(buffer,"%2.2x",ximagePtr->data[ximagePtr->bytes_per_line * iy + ix]&0xFF);
+	        Tcl_AppendResult(interp, buffer, NULL);
+	    }
+	    Tcl_AppendResult(interp, " }", NULL);
+	}
+	Tcl_AppendResult(interp, " }", NULL);
+    } else
+	sprintf(buffer," NULL");
+    sprintf(buffer,"%d",ximagePtr->byte_order);       Tcl_AppendResult(interp, " byte_order ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->bitmap_unit);      Tcl_AppendResult(interp, " bitmap_unit ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->bitmap_bit_order); Tcl_AppendResult(interp, " bitmap_bit_order ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->bitmap_pad);       Tcl_AppendResult(interp, " bitmap_pad ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->depth);            Tcl_AppendResult(interp, " depth ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->bytes_per_line);   Tcl_AppendResult(interp, " bytes_per_line ", buffer, NULL);
+    sprintf(buffer,"%d",ximagePtr->bits_per_pixel);   Tcl_AppendResult(interp, " bits_per_pixel ", buffer, NULL);
+    sprintf(buffer,"0x%8.8lx",ximagePtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
+    sprintf(buffer,"0x%8.8lx",ximagePtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
+    sprintf(buffer,"0x%8.8lx",ximagePtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
+    Tcl_AppendResult(interp, " }", NULL);
+    
+    Tcl_AppendResult(interp, "\nvisualPtr {", NULL);
+    sprintf(buffer,"0x%8.8lx",visualPtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
+    sprintf(buffer,"0x%8.8lx",visualPtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
+    sprintf(buffer,"0x%8.8lx",visualPtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
+    Tcl_AppendResult(interp, " }", NULL);
+    
+#endif
+
+    /*
+     * Fill in the PhotoImageBlock structure abd allocate a block of memory
+     * for the converted image data. Note we allocate an alpha channel even
+     * though we don't use one, because this layout helps Tk_PhotoPutBlock()
+     * use memcpy() instead of the slow pixel or line copy.
+     */
+
+    blockPtr.width = cWidth;
+    blockPtr.height = cHeight;
+    blockPtr.pixelSize = 4;
+    blockPtr.pitch = blockPtr.pixelSize * blockPtr.width;
+    blockPtr.offset[0] = 0;
+    blockPtr.offset[1] = 1;
+    blockPtr.offset[2] = 2;
+    blockPtr.offset[3] = 3;
+    blockPtr.pixelPtr = ckalloc(blockPtr.pixelSize * blockPtr.height * blockPtr.width);
+
+    /*
+     * Now convert the image data pixel by pixel from XImage to 32bit RGBA
+     * format suitable for Tk_PhotoPutBlock().
+     */
+
+    DecomposeMaskToShiftAndBits(visualPtr->red_mask,&rshift,&rbits);
+    DecomposeMaskToShiftAndBits(visualPtr->green_mask,&gshift,&gbits);
+    DecomposeMaskToShiftAndBits(visualPtr->blue_mask,&bshift,&bbits);
+
+#ifdef DEBUG_DRAWCANVAS
+    sprintf(buffer,"%d",rshift); Tcl_AppendResult(interp, "\nbits { rshift ", buffer, NULL);
+    sprintf(buffer,"%d",gshift); Tcl_AppendResult(interp, " gshift ", buffer, NULL);
+    sprintf(buffer,"%d",bshift); Tcl_AppendResult(interp, " bshift ", buffer, NULL);
+    sprintf(buffer,"%d",rbits);  Tcl_AppendResult(interp, " rbits ", buffer, NULL);
+    sprintf(buffer,"%d",gbits);  Tcl_AppendResult(interp, " gbits ", buffer, NULL);
+    sprintf(buffer,"%d",bbits);  Tcl_AppendResult(interp, " bbits ", buffer, " }", NULL);
+    Tcl_AppendResult(interp, "\nConverted_image {", NULL);
+#endif
+
+    /* Ok, had to use ximagePtr->bits_per_pixel here and in the switch (...)
+     * below to get this to work on Windows. X11 correctly sets the bitmap
+     *_pad and bitmap_unit fields to 32, but on Windows they are 0 and 8
+     * respectively!
+     */
+
+    bytesPerPixel = ximagePtr->bits_per_pixel/8;
+    for (y = 0; y < blockPtr.height; ++y) {
+
+#ifdef DEBUG_DRAWCANVAS
+        Tcl_AppendResult(interp, " {", NULL);
+#endif
+
+        for(x = 0; x < blockPtr.width; ++x) {
+            unsigned long pixel = 0;
+
+            switch (ximagePtr->bits_per_pixel) {
+
+                /*
+                 * Get an 8 bit pixel from the XImage.
+                 */
+
+                case 8 :
+                    pixel = *((unsigned char *)(ximagePtr->data + bytesPerPixel * x
+                            + ximagePtr->bytes_per_line * y));
+                    break;
+
+                /*
+                 * Get a 16 bit pixel from the XImage, and correct the
+                 * byte order as necessary.
+                 */
+
+                case 16 :
+                    pixel = *((unsigned short *)(ximagePtr->data + bytesPerPixel * x
+                            + ximagePtr->bytes_per_line * y));
+                    if ((IS_BIG_ENDIAN && ximagePtr->byte_order == LSBFirst)
+                            || (!IS_BIG_ENDIAN && ximagePtr->byte_order == MSBFirst))
+                        pixel = BYTE_SWAP16(pixel);
+                    break;
+
+                /*
+                 * Grab a 32 bit pixel from the XImage, and correct the
+                 * byte order as necessary.
+                 */
+
+                case 32 :
+                    pixel = *((unsigned long *)(ximagePtr->data + bytesPerPixel * x
+                            + ximagePtr->bytes_per_line * y));
+                    if ((IS_BIG_ENDIAN && ximagePtr->byte_order == LSBFirst)
+                            || (!IS_BIG_ENDIAN && ximagePtr->byte_order == MSBFirst))
+                        pixel = BYTE_SWAP32(pixel);
+                    break;
+            }
+
+            /*
+             * We have a pixel with the correct byte order, so pull out the
+             * colours and place them in the photo block. Perhaps we could
+             * just not bother with the alpha byte because we are using
+             * TK_PHOTO_COMPOSITE_SET later?
+             * ***Windows: We have to swap the red and blue values. The
+             * XImage storage is B - G - R - A which becomes a 32bit ARGB
+             * quad. However the visual mask is a 32bit ABGR quad. And
+             * Tk_PhotoPutBlock() wants R-G-B-A which is a 32bit ABGR quad.
+             * If the visual mask was correct there would be no need to
+             * swap anything here.
+             */
+
+#ifdef _WIN32
+#define   R_OFFSET 2
+#define   B_OFFSET 0
+#else
+#define   R_OFFSET 0
+#define   B_OFFSET 2
+#endif
+            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + R_OFFSET] =
+                    (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
+            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +1] =
+                    (unsigned char)((pixel & visualPtr->green_mask) >> gshift);
+            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + B_OFFSET] =
+                    (unsigned char)((pixel & visualPtr->blue_mask) >> bshift);
+            blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +3] = 0xFF;
+
+#ifdef DEBUG_DRAWCANVAS
+            {
+		int ix;
+                if (x > 0)
+                    Tcl_AppendResult(interp, "-", NULL);
+	        for (ix = 0; ix < 4; ++ix) {
+                    if (ix > 0)
+                        Tcl_AppendResult(interp, " ", NULL);
+		    sprintf(buffer,"%2.2x",blockPtr.pixelPtr[blockPtr.pitch * y
+                            + blockPtr.pixelSize * x + ix]&0xFF);
+                    Tcl_AppendResult(interp, buffer, NULL);
+                }
+            }
+#endif
+
+        }
+
+#ifdef DEBUG_DRAWCANVAS
+        Tcl_AppendResult(interp, " }", NULL);
+#endif
+
+    }
+
+#ifdef DEBUG_DRAWCANVAS
+    Tcl_AppendResult(interp, " }", NULL);
+#endif
+
+    /*
+     * Now put the copied pixmap into the photo.
+     * If either zoom or subsample are not 1, we use the zoom function.
+     */
+
+    if (subsample != 1 || zoom != 1) {
+        if ((result = Tk_PhotoPutZoomedBlock(interp, photohandle, &blockPtr,
+                0, 0, cWidth * zoom / subsample, cHeight * zoom / subsample,
+                zoom, zoom, subsample, subsample, TK_PHOTO_COMPOSITE_SET))
+                != TCL_OK) {
+            goto done;
+        }
+    } else {
+        if ((result = Tk_PhotoPutBlock(interp, photohandle, &blockPtr, 0, 0,
+            cWidth, cHeight, TK_PHOTO_COMPOSITE_SET)) != TCL_OK) {
+            goto done;
+        }
+    }
+
+    /*
+     * Clean up anything we have allocated and exit.
+     */
+
+done:
+    if (blockPtr.pixelPtr)
+        ckfree(blockPtr.pixelPtr);
+    if (pixmap)
+        Tk_FreePixmap(Tk_Display(tkwin), pixmap);
+    if (ximagePtr)
+        XDestroyImage(ximagePtr);
+    if (xgc)
+        XFreeGC(displayPtr,xgc);
+    return result;
+}
+
 /*
  *----------------------------------------------------------------------
  *

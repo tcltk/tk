@@ -245,7 +245,7 @@ test winWm-5.2 {UpdateGeometryInfo: menu resizing} -constraints win -setup {
     update
     set y [winfo rooty .t]
     lappend result [winfo height .t]
-    menu .t.m
+    menu .t.m -tearoff 1
     .t configure -menu .t.m
     .t.m add command -label foo
     .t.m add command -label "thisisreallylong"

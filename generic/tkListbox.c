@@ -3431,14 +3431,27 @@ static char *
 ListboxListVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Not used. */
-    const char *name2,		/* Not used. */
+    const char *name1,		/* Name of variable. */
+    const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     Listbox *listPtr = clientData;
     Tcl_Obj *oldListObj, *varListObj;
     int oldLength, i;
     Tcl_HashEntry *entry;
+
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (listPtr->listVarName == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    ListboxListVarProc, clientData);
+	}
+	return NULL;
+    }
 
     /*
      * Bwah hahahaha! Puny mortal, you can't unset a -listvar'd variable!
