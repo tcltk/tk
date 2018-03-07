@@ -395,6 +395,12 @@ bind Text <Control-v> {
     tk::TextScrollPages %W 1
 }
 
+bind Text <<Selection>> {
+    clipboard clear
+    set selected [%W get sel.first sel.last]
+    clipboard append $selected
+}
+
 # End of Mac only bindings
 }
 
