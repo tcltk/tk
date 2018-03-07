@@ -113,6 +113,9 @@ bind Entry <B1-Enter> {
 }
 bind Entry <ButtonRelease-1> {
     tk::CancelRepeat
+    if {[tk windowingsystem] eq "aqua"} {
+    ::tk::CheckEntrySelection %W
+    }
 }
 bind Entry <Control-1> {
     %W icursor @%x
@@ -651,4 +654,21 @@ proc ::tk::EntryGetSelection {w} {
 		[string length $entryString]]
     }
     return $entryString
+}
+
+
+if {[tk windowingsystem] eq "aqua"]{
+# ::tk::CheckEntrySelection --
+#
+# Writes selected text to the clipboard on macOS.
+#
+# Arguments:
+# w -         The entry window from which the text to get
+
+proc ::tk::CheckEntrySelection {w} {
+    if {[$w selection present]} {
+	clipboard clear
+	clipboard append [::tk::EntryGetSelection $w]
+    }
+}
 }

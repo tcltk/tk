@@ -427,6 +427,9 @@ proc ttk::entry::Release {w} {
     variable State
     set State(selectMode) none
     ttk::CancelRepeat 	;# suspend autoscroll
+    if {[tk windowingsystem] eq "aqua"} {
+	::ttk::CheckEntrySelection $w
+    }	
 }
 
 ## AutoScroll
@@ -603,5 +606,22 @@ proc ttk::entry::Delete {w} {
 	$w delete insert
     }
 }
+
+if {[tk windowingsystem] eq "aqua"] {
+    # ::ttk::CheckEntrySelection --
+    #
+    # Writes selected text to the clipboard on macOS.
+    #
+    # Arguments:
+    # w -         The entry window from which the text to get
+
+    proc ::ttk::CheckEntrySelection {w} {
+	if {[$w selection present]} {
+	    clipboard clear
+	    clipboard append [::ttk::EntrySelection $w]
+	}
+    }
+}
+
 
 #*EOF*

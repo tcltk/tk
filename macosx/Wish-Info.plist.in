@@ -78,5 +78,26 @@
 	<string>Wish.sdef</string>
 	<key>NSHighResolutionCapable</key>
 	<string>True</string>
+	 <key>NSServices</key>
+    <array>
+            <key>NSMenuItem</key>
+            <dict>
+                <key>default</key>
+                <string>Wish: Run Tcl Script</string>
+            </dict>
+            <key>NSMessage</key>
+            <string>provideService</string>
+            <key>NSPortName</key>
+            <string>Wish</string>
+            <key>NSSendTypes</key>
+            <array>
+                <string>NSStringPboardType</string>
+            </array>
+            <key>NSReturnTypes</key>
+            <array>
+                <string>NSStringPboardType</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>
