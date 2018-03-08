@@ -684,9 +684,12 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 
     #stub proc for NSServices API, must be replaced with custom implementation
-    proc ::tk::mac::PerformService {args} {
+    proc ::tk::mac::PerformService {} {
 
-	tk_messageBox -icon info -title "Services Example" -message "This data was sent to Wish with the NSServices API:\n\n$args"
+	set data [clipboard get]
+
+	tk_messageBox -icon info -title "Services Example" -message "This data was sent to Wish with the NSServices API:\n\n$data"
+
     }
 }
 
