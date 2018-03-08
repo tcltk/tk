@@ -58,9 +58,7 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
 + (void) initialize {
   
   NSArray *sendTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
-  NSArray *returnTypes = [NSArray arrayWithObjects:NSStringPboardType,
-                    nil];
-  [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:returnTypes];
+  [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:nil];
   NSUpdateDynamicServices();
   return;
 }
@@ -141,15 +139,6 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
     event->header.proc = ServicesEventProc;
     strcpy(event->script, "::tk::mac::PerformService");
     Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
-
-    /* Get output from service proc, return to interp, and write to pasteboard. */
-    char *output;
-    output = Tcl_GetString(Tcl_GetObjResult(ServicesInterp));
-    Tcl_SetResult(ServicesInterp, output, NULL);
-    NSString *serviceOutput = [NSString stringWithUTF8String:output];
-    [pboard clearContents];
-    [pboard writeObjects:[NSArray arrayWithObject:serviceOutput]];
-    
   } else {
     return;
   }

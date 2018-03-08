@@ -398,8 +398,8 @@ bind Text <Control-v> {
 
 bind Text <<Selection>> {
     clipboard clear
-    set selected [%W get sel.first sel.last]
-    clipboard append $selected
+    catch { set selected [%W get sel.first sel.last]}
+    catch {clipboard append $selected}
 }
 # End of Mac only bindings
 }

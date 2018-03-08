@@ -95,10 +95,6 @@
             <array>
                 <string>NSStringPboardType</string>
             </array>
-            <key>NSReturnTypes</key>
-            <array>
-                <string>NSStringPboardType</string>
-            </array>
         </dict>
     </array>
 

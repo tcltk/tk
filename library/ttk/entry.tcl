@@ -619,7 +619,7 @@ if {[tk windowingsystem] eq "aqua"} {
     proc ::ttk::CheckEntrySelection {w} {
 	if {[$w selection present]} {
 	    clipboard clear
-	    clipboard append [::ttk::EntrySelection $w]
+	    clipboard append [::ttk::entry::EntrySelection $w]
 	}
     }
 }
