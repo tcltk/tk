@@ -80,45 +80,6 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
   return YES;
 }
 
-/* Get selected text, copy to pasteboard. */
-- (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard  types:(NSArray *)types { 
-  NSArray *typesDeclared; 
-  if ([types containsObject:NSStringPboardType] == NO) { 
-    return NO; 
-  } 
-
-  Tcl_Eval(ServicesInterp,"clipboard get");
-  char *copystring;
-  copystring = Tcl_GetString(Tcl_GetObjResult(ServicesInterp));
-
-  NSString *writestring = [NSString stringWithUTF8String:copystring];
-  typesDeclared = [NSArray arrayWithObject:NSStringPboardType]; 
-  [pboard declareTypes:typesDeclared owner:nil]; 
-  return [pboard setString:writestring forType:NSStringPboardType]; 
-}
-
-/* Read return data from clipboard.  */
-- (BOOL)readSelectionFromPasteboard:(NSPasteboard *)pboard
-{
-    NSArray *types;
-    NSString *returnText;
- 
-    types = [pboard types];
-    if ( [types containsObject:NSStringPboardType] == NO ) {
-        return NO;
-    }
-    returnText = [pboard stringForType:NSStringPboardType];
-    char *returnData = [returnText UTF8String];
-    Tcl_DString clip;
-    Tcl_DStringInit(&clip);
-    Tcl_DStringAppend(&clip, "clipboard clear; ", -1);
-    Tcl_DStringAppend(&clip, "clipboard append ", -1);
-    Tcl_DStringAppend(&clip, returnData, -1);
-    Tcl_Eval(ServicesInterp, &clip);
-    Tcl_DStringFree(&clip);
-    return YES;
-}
-
 
 /* This is the method that actually calls the Tk service; this is the method that must be defined in info.plist */
 
