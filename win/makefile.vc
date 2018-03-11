@@ -635,6 +635,10 @@ install-binaries:
 !if "$(TKLIB)" != "$(TKIMPLIB)"
 	@$(CPY) "$(TKLIB)" "$(BIN_INSTALL_DIR)\"
 !endif
+!if $(SYMBOLS)
+	@echo Installing PDBs
+	@for %f in ("$(OUT_DIR)\*.pdb") do @$(COPY) %f "$(BIN_INSTALL_DIR)"
+!endif
 	@$(CPY) "$(TKIMPLIB)" "$(LIB_INSTALL_DIR)\"
 	@$(CPY) "$(TKSTUBLIB)" "$(LIB_INSTALL_DIR)\"
 !if !$(STATIC_BUILD)
