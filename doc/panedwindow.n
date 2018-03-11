@@ -42,6 +42,14 @@ option will be used.
 .OP \-opaqueresize opaqueResize OpaqueResize
 Specifies whether panes should be resized as a sash is moved (true),
 or if resizing should be deferred until the sash is placed (false).
+In the latter case, a
+.QW ghost
+version of the sash is displayed during the resizing to show where the
+panes will be resized to when releasing the mouse button. This
+.QW ghost
+version of the sash is the proxy. It's rendering can be configured
+using the \fB-proxybackground\fR, \fB-proxyborderwidth\fR and
+\fB-proxyrelief\fR options.
 .OP \-sashcursor sashCursor SashCursor
 Mouse cursor to use when over a sash.  If null,
 \fBsb_h_double_arrow\fR will be used for horizontal panedwindows, and
