@@ -195,10 +195,18 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 } else {
     bind Listbox <MouseWheel> {
-        %W yview scroll [expr {- (%D / 120) * 4}] units
+        incr tk::Priv(wheel_acc_v_%W) %D
+        if {abs($tk::Priv(wheel_acc_v_%W)) >= 120} {
+            %W yview scroll [expr {- ($tk::Priv(wheel_acc_v_%W) / 120) * 4}] units
+            set tk::Priv(wheel_acc_v_%W) 0
+        }
     }
     bind Listbox <Shift-MouseWheel> {
-        %W xview scroll [expr {- (%D / 120) * 4}] units
+        incr tk::Priv(wheel_acc_h_%W) %D
+        if {abs($tk::Priv(wheel_acc_h_%W)) >= 120} {
+            %W xview scroll [expr {- ($tk::Priv(wheel_acc_h_%W) / 120) * 4}] units
+            set tk::Priv(wheel_acc_h_%W) 0
+        }
     }
 }
 
