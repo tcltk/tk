@@ -1131,7 +1131,26 @@ GenerateXEvent(
 	 */
 
 	switch (message) {
-	case WM_MOUSEWHEEL:
+	case WM_MOUSEWHEEL: {
+
+            /* 
+	     * Support for high resolution wheels
+	     */
+
+            static DWORD dwTickCountPrev = 0;
+	    static short wheel_acc = 0;
+	    DWORD dwTickCount;
+
+	    dwTickCount = GetTickCount();
+	    if (dwTickCount - dwTickCountPrev < 1500) {
+		wheel_acc += (short) HIWORD(wParam);
+	    } else {
+		wheel_acc = (short) HIWORD(wParam);
+	    }
+	    dwTickCountPrev = dwTickCount;
+
+	    if (abs(wheel_acc) < WHEEL_DELTA) return;
+
 	    /*
 	     * We have invented a new X event type to handle this event. It
 	     * still uses the KeyPress struct. However, the keycode field has
@@ -1143,9 +1162,12 @@ GenerateXEvent(
 	    event.type = MouseWheelEvent;
 	    event.xany.send_event = -1;
 	    event.xkey.nbytes = 0;
-	    event.xkey.keycode = (short) HIWORD(wParam);
+	    event.xkey.keycode = wheel_acc / WHEEL_DELTA * WHEEL_DELTA;
+	    wheel_acc = wheel_acc % WHEEL_DELTA;
 	    break;
-	case WM_SYSKEYDOWN:
+	}
+
+        case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
 	    /*
 	     * Check for translated characters in the event queue. Setting
