@@ -8973,7 +8973,9 @@ GetCommand(
     const TkSharedText *sharedTextPtr,
     const TkTextUndoToken *token)
 {
+    assert(token);
     assert(token->undoType->commandProc);
+
     return token->undoType->commandProc(sharedTextPtr, token);
 }
 
@@ -9408,7 +9410,7 @@ MakeEditInfo(
 	    }
 	    if (tagPtr->recentChangePriorityToken && tagPtr->savedPriority != tagPtr->priority) {
 		Tcl_ListObjAppendElement(interp, listPtr,
-			GetCommand(sharedTextPtr, tagPtr->recentTagAddRemoveToken));
+			GetCommand(sharedTextPtr, tagPtr->recentChangePriorityToken));
 	    }
 	}
 
