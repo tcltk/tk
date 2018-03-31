@@ -82,6 +82,8 @@ typedef struct ThreadSpecificData {
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
     int surrogateBuffer;	/* Buffer for first of surrogate pair. */
+    DWORD wheelTickPrev;	/* For high resolution wheels. */
+    short wheelAcc;		/* For high resolution wheels. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -608,6 +610,8 @@ TkpOpenDisplay(
     ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
+    tsdPtr->wheelTickPrev = GetTickCount();
+    tsdPtr->wheelAcc = 0;
 
     return tsdPtr->winDisplay;
 }
@@ -1132,24 +1136,21 @@ GenerateXEvent(
 
 	switch (message) {
 	case WM_MOUSEWHEEL: {
-
-            /* 
-	     * Support for high resolution wheels
+	    /*
+	     * Support for high resolution wheels.
 	     */
 
-            static DWORD dwTickCountPrev = 0;
-	    static short wheel_acc = 0;
-	    DWORD dwTickCount;
+	    DWORD wheelTick = GetTickCount();
 
-	    dwTickCount = GetTickCount();
-	    if (dwTickCount - dwTickCountPrev < 1500) {
-		wheel_acc += (short) HIWORD(wParam);
+	    if (wheelTick - tsdPtr->wheelTickPrev < 1500) {
+		tsdPtr->wheelAcc += (short) HIWORD(wParam);
 	    } else {
-		wheel_acc = (short) HIWORD(wParam);
+		tsdPtr->wheelAcc = (short) HIWORD(wParam);
 	    }
-	    dwTickCountPrev = dwTickCount;
-
-	    if (abs(wheel_acc) < WHEEL_DELTA) return;
+	    tsdPtr->wheelTickPrev = wheelTick;
+	    if (abs(tsdPtr->wheelAcc) < WHEEL_DELTA) {
+		return;
+	    }
 
 	    /*
 	     * We have invented a new X event type to handle this event. It
@@ -1162,12 +1163,11 @@ GenerateXEvent(
 	    event.type = MouseWheelEvent;
 	    event.xany.send_event = -1;
 	    event.xkey.nbytes = 0;
-	    event.xkey.keycode = wheel_acc / WHEEL_DELTA * WHEEL_DELTA;
-	    wheel_acc = wheel_acc % WHEEL_DELTA;
+	    event.xkey.keycode = tsdPtr->wheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    tsdPtr->wheelAcc = tsdPtr->wheelAcc % WHEEL_DELTA;
 	    break;
 	}
-
-        case WM_SYSKEYDOWN:
+	case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
 	    /*
 	     * Check for translated characters in the event queue. Setting
