@@ -19,12 +19,6 @@
 # listboxSelection -	All of the items that were selected before the
 #			current selection operation (such as a mouse
 #			drag) started;  used to cancel an operation.
-# wheel_acc_h_%W -   accumulated deltas from the <MouseWheel> event, in
-#                    horizontal direction for window %W
-# wheel_acc_v_%W -   accumulated deltas from the <MouseWheel> event, in
-#                    vertical direction for window %W
-# x -                x mouse position
-# y -                y mouse position
 #--------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------
