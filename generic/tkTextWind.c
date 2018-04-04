@@ -287,12 +287,12 @@ UndoLinkSegmentDestroy(
     TkTextUndoToken *item,
     bool reused)
 {
-    UndoTokenLinkSegment *token = (UndoTokenLinkSegment *) item;
+    if (!reused) {
+	UndoTokenLinkSegment *token = (UndoTokenLinkSegment *) item;
 
-    assert(!reused);
-
-    if (--token->segPtr->refCount == 0) {
-	ReleaseEmbeddedWindow(token->segPtr);
+	if (--token->segPtr->refCount == 0) {
+	    ReleaseEmbeddedWindow(token->segPtr);
+	}
     }
 }
 

@@ -3733,7 +3733,7 @@ LayoutChars(
 	    }
 	}
     }
-  
+
     return true;
 }
 
@@ -8739,6 +8739,7 @@ DisplayText(
 	    }
 	    dlPtr = dlPtr->nextPtr;
 	}
+
 	/*
 	 * Scan through the lines following the copied ones to see if we are
 	 * going to overwrite them with the copy operation. If so, mark them

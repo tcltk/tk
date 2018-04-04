@@ -1566,28 +1566,30 @@ UndoDeleteDestroy(
     TkTextUndoToken *token,
     bool reused)
 {
-    TkTextSegment **segments = ((UndoTokenDelete *) token)->segments;
-    unsigned numSegments = ((UndoTokenDelete *) token)->numSegments;
+    if (!reused) {
+	UndoTokenDelete *tokDel = (UndoTokenDelete *) token;
+	TkTextSegment **segments = tokDel->segments;
+	unsigned numSegments = tokDel->numSegments;
 
-    assert(!reused);
+	if (numSegments > 0) {
+	    TkTextSegment *segPtr;
 
-    if (numSegments > 0) {
-	TkTextSegment *segPtr;
+	    for (segPtr = *segments++; numSegments > 0; segPtr = *segments++, --numSegments) {
+		while (segPtr) {
+		    TkTextSegment *nextPtr;
 
-	for (segPtr = *segments++; numSegments > 0; segPtr = *segments++, --numSegments) {
-	    while (segPtr) {
-		TkTextSegment *nextPtr;
+		    assert(segPtr->typePtr);
+		    assert(segPtr->typePtr->deleteProc);
 
-		assert(segPtr->typePtr);
-		assert(segPtr->typePtr->deleteProc);
-
-		nextPtr = (segPtr->nextPtr && !segPtr->sectionPtr) ? segPtr->nextPtr : NULL;
-		segPtr->typePtr->deleteProc(sharedTextPtr, segPtr, DELETE_BRANCHES | DELETE_MARKS);
-		segPtr = nextPtr;
+		    nextPtr = (segPtr->nextPtr && !segPtr->sectionPtr) ? segPtr->nextPtr : NULL;
+		    segPtr->typePtr->deleteProc(sharedTextPtr, segPtr, DELETE_BRANCHES | DELETE_MARKS);
+		    segPtr = nextPtr;
+		}
 	    }
-	}
 
-	free(((UndoTokenDelete *) token)->segments);
+	    tokDel->numSegments = 0;
+	    free(tokDel->segments);
+	}
     }
 }
 
@@ -2004,17 +2006,17 @@ UndoClearTagsDestroy(
     TkTextUndoToken *token,
     bool reused)
 {
-    UndoTokenTagClear *myToken = (UndoTokenTagClear *) token;
-    UndoTagChange *changeList = myToken->changeList;
-    unsigned i, n = myToken->changeListSize;
+    if (!reused) {
+	UndoTokenTagClear *myToken = (UndoTokenTagClear *) token;
+	UndoTagChange *changeList = myToken->changeList;
+	unsigned i, n = myToken->changeListSize;
 
-    assert(!reused);
+	for (i = 0; i < n; ++i) {
+	    TkTextTagSetDecrRefCount(changeList[i].tagInfoPtr);
+	}
 
-    for (i = 0; i < n; ++i) {
-	TkTextTagSetDecrRefCount(changeList[i].tagInfoPtr);
+	free(changeList);
     }
-
-    free(changeList);
 }
 
 static void
