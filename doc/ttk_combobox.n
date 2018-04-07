@@ -110,6 +110,74 @@ The combobox widget generates a \fB<<ComboboxSelected>>\fR virtual event
 when the user selects an element from the list of values.
 If the selection action unposts the listbox,
 this event is delivered after the listbox is unposted.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::combobox\fP is \fBTCombobox\fP.
+The \fBttk::combobox\fP uses the pre-ttk \fBentry\fP and
+\fBlistbox\fP widgets internally.
+.PP
+\fBTCombobox\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+-background
+.RS
+.br
+maps: disabled, readonly
+.RE
+.br
+-foreground
+.br
+.RS
+maps: disabled, readonly
+.RE
+.br
+-fieldbackground
+.br
+.RS
+Can only be changed when using non-native and non-graphical themes.
+.br
+maps: disabled, readonly
+.RE
+.br
+-selectbackground
+.br
+.RS
+Text entry select background.
+.RE
+.br
+-selectforeground
+.br
+.RS
+Text entry select foreground.
+.RE
+.br
+-bordercolor
+.br
+.RS
+Used by the Clam theme and derivatives.
+.RE
+.br
+.mycombobox configure -font \fIfont\fP
+.br
+option add *TCombobox*Listbox.background \fIcolor\fP
+.br
+option add *TCombobox*Listbox.foreground \fIcolor\fP
+.br
+option add *TCombobox*Listbox.selectBackground \fIcolor\fP
+.br
+option add *TCombobox*Listbox.selectForeground \fIcolor\fP
+.br
+option add *TCombobox*Listbox.font \fIfont\fP
+.PP
+To set the font size for a specific listbox (subject to future change):
+.PP
+set popdown [ttk::combobox::PopdownWindow .mycombobox]
+.br
+$popdown.f.l configure -font namedfont
+.br
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::entry(n)
 .SH KEYWORDS
