@@ -461,6 +461,51 @@ and a different background is used in the \fBreadonly\fR state.
 .PP
 The entry widget sets the \fBinvalid\fR state if revalidation fails,
 and clears it whenever validation succeeds.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::entry\fP is \fBTEntry\fP.
+.PP
+Dynamic states: disabled, focus, readonly.
+.PP
+\fBTEntry\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-background\fP
+.br
+.RS
+When using the aqua theme (Mac OS X), changes the -fieldbackground.
+.RE
+.br
+\fB-bordercolor\fP
+.br
+\fB-darkcolor\fP
+.br
+\fB-fieldbackground\fP
+.br
+.RS
+Does not work with the aqua theme (Mac OS X).
+.br
+Some themes use a graphical background and their field background colors cannot be changed.
+.RE
+.br
+\fB-foreground\fP
+.br
+\fB-lightcolor\fP
+.br
+\fB-insertwidth\fP
+.br
+\fB-padding\fP
+.br
+\fB-relief\fP
+.br
+\fB-selectbackground\fP
+.br
+\fB-selectborderwidth\fP
+.br
+\fB-selectforeground\fP
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), entry(n)
 .SH KEYWORDS

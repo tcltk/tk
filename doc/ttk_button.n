@@ -61,28 +61,44 @@ themes, which is useful for creating widgets for toolbars.
 .PP
 The class name for a \fBttk::button\fP is \fBTButton\fP.
 .PP
+Dynamic states: active, disabled, pressed, readonly.
+.PP
 \fBTButton\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
--background
-.RS
+\fB-anchor\fP
 .br
-maps: active, disabled, readonly
+\fB-background\fP
+.br
+\fB-bordercolor\fP
+.br
+\fB-darkcolor\fP
+.br
+\fB-foreground\fP
+.br
+\fB-font\fP
+.br
+\fB-highlightcolor\fP
+.br
+\fB-highlightthickness\fP
+.br
+\fB-lightcolor\fP
+.br
+\fB-padding\fP
+.br
+\fB-relief\fP
+.br
+\fB-shiftrelief\fP
+.br
+.RS
+-shiftrelief specifies how far the button contents are
+shifted down and right in the \fIpressed\fP state.
+This action provides additional skeumorphic feedback.
 .RE
 .br
--foreground
-.br
-.RS
-maps: active, disabled, readonly
-.RE
-.br
--font
-.br
--bordercolor
-.br
--lightcolor
-.br
--darkcolor
+\fB-width\fP
+.PP
+Some options are only available for specific themes.
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.
