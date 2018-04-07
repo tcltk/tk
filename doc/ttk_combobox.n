@@ -115,13 +115,18 @@ this event is delivered after the listbox is unposted.
 The class name for a \fBttk::combobox\fP is \fBTCombobox\fP.
 The \fBttk::combobox\fP uses the \fBentry\fP and
 \fBlistbox\fP widgets internally.
+The listbox frame has a class name of \fBComboboxPopdownFrame\fP.
 .PP
-Dynamic states: disabled, readonly.
+Dynamic states: disabled, focus, pressed, readonly.
 .PP
 \fBTCombobox\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
+\fB-arrowcolor\fP
+.br
 \fB-background\fP
+.br
+\fB-focusfill\fP
 .br
 \fB-foreground\fP
 .br
@@ -130,6 +135,12 @@ are:
 .RS
 Can only be changed when using non-native and non-graphical themes.
 .RE
+.br
+\fB-insertwidth\fP
+.br
+\fB-padding\fP
+.br
+\fB-postoffset\fP
 .br
 \fB-selectbackground\fP
 .br
@@ -156,10 +167,18 @@ option add *TCombobox*Listbox.selectForeground \fIcolor\fP
 option add *TCombobox*Listbox.font \fIfont\fP
 .PP
 To set the font size for a specific listbox (subject to future change):
-.PP
+.CS
 set popdown [ttk::combobox::PopdownWindow .mycombobox]
-.br
 $popdown.f.l configure -font namedfont
+.CE
+.PP
+\fBComboboxPopdownFrame\fP
+styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-borderwidth\fP
+.br
+\fB-relief\fP
 .PP
 Some options are only available for specific themes.
 .PP
