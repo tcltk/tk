@@ -474,6 +474,59 @@ to determine the affected item or items.
 '\" Not yet:
 '\" In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
 '\" of the virtual event.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::treeview\fP is \fBTreeview\fP.
+The treeview header class name is \fBHeading\fP.
+The treeview item class name is \fBItem\fP.
+The treeview cell class name is \fBCell\fP.
+.PP
+Dynamic states: disabled, selected.
+.PP
+\fBTreeview\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-background\fP
+.br
+\fB-fieldbackground\fP
+.br
+\fB-font\fP
+.br
+\fB-foreground\fP
+.br
+\fB-rowheight\fP
+.PP
+\fBHeading\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-background\fP
+.br
+\fB-font\fP
+.br
+\fB-relief\fP
+.PP
+\fBItem\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-diameter\fP
+.br
+\fB-foreground\fP
+.br
+\fB-indicatormargins\fP
+.br
+\fB-indicatorsize\fP
+.br
+\fB-padding\fP
+.PP
+\fBCell\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-padding\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), listbox(n), image(n), bind(n)
 '\" Local Variables:
