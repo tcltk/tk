@@ -80,6 +80,49 @@ is set directly.
 The spinbox widget generates a \fB<<Increment>>\fR virtual event when
 the user presses <Up>, and a \fB<<Decrement>>\fR virtual event when the
 user presses <Down>.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::button\fP is \fBTSpinbox\fP.
+.PP
+Dynamic states: active, focus, disabled, readonly
+.PP
+\fBTSpinbox\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-arrowcolor\fP
+.br
+\fB-arrowsize\fP
+.br
+\fB-background\fP
+.br
+.RS
+When using the aqua theme (Mac OS X), changes the -fieldbackground.
+.RE
+.br
+\fB-bordercolor\fP
+.br
+\fB-darkcolor\fP
+.br
+\fB-fieldbackground\fP
+.br
+.RS
+Does not work with the aqua theme (Mac OS X).
+.RE
+.br
+\fB-foreground\fP
+.br
+\fB-lightcolor\fP
+.br
+\fB-padding\fP
+.br
+\fB-selectbackground\fP
+.br
+\fB-selectforeground\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::entry(n), spinbox(n)
 .SH KEYWORDS
