@@ -72,29 +72,31 @@ standard themes, which is useful for creating widgets for toolbars.
 .PP
 The class name for a \fBttk::checkbutton\fP is \fBTCheckbutton\fP.
 .PP
+Dynamic states: active, alternate, disabled, pressed, selected, readonly.
+.PP
 \fBTCheckbutton\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
--background
-.RS
 .br
-maps: active, disabled, readonly
+\fB-background\fP
+.br
+\fB-foreground\fP
+.br
+\fB-indicatorbackground\fP
+.br
+\fB-indicatorcolor\fP
+.br
+\fB-indicatormargin\fP
+.br
+.RS
+This is a padding value.
 .RE
 .br
--foreground
+\fB-indicatorrelief\fP
 .br
-.RS
-maps: active, disabled, readonly
-.RE
-.br
--font
-.br
--indicatorcolor
-.RS
-.br
-maps: selected, pressed
-.br
-.RE
+\fB-padding\fP
+.PP
+Some options are only available for specific themes.
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.
