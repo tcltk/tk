@@ -154,6 +154,33 @@ grid $f.hsb \-row 1 \-column 0 \-sticky nsew
 grid columnconfigure $f 0 \-weight 1
 grid rowconfigure $f 0 \-weight 1
 .CE
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::scrollbar\fP is \fBTScrollbar\fP.
+.PP
+Dynamic states: active, disabled.
+.PP
+\fBTScrollbar\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-arrowcolor\fP
+.br
+\fB-background\fP
+.br
+\fB-bordercolor\fP
+.br
+\fB-darkcolor\fP
+.br
+\fB-foreground\fP
+.br
+\fB-lightcolor\fP
+.br
+\fB-troughcolor\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), scrollbar(n)
 .SH KEYWORDS

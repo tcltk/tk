@@ -82,7 +82,7 @@ the user presses <Up>, and a \fB<<Decrement>>\fR virtual event when the
 user presses <Down>.
 .SH "STYLING OPTIONS"
 .PP
-The class name for a \fBttk::button\fP is \fBTSpinbox\fP.
+The class name for a \fBttk::spinbox\fP is \fBTSpinbox\fP.
 .PP
 Dynamic states: active, focus, disabled, readonly
 .PP
