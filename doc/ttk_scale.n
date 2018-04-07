@@ -91,6 +91,35 @@ Modify or query the widget state; see \fIttk::widget(n)\fR.
 Get the coordinates corresponding to \fIvalue\fR, or the coordinates
 corresponding to the current value of the \fB\-value\fR option if \fIvalue\fR
 is omitted.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::scale\fP is \fBTProgressbar\fP.
+.PP
+Dynamic states: active.
+.PP
+\fBTProgressbar\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-background\fP
+.br
+\fB-borderwidth\fP
+.br
+\fB-darkcolor\fP
+.br
+\fB-groovewidth\fP
+.br
+\fB-lightcolor\fP
+.br
+\fB-sliderwidth\fP
+.br
+\fB-troughcolor\fP
+.br
+\fB-troughrelief\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), scale(n)
 .SH KEYWORDS

@@ -208,6 +208,53 @@ pack [\fBttk::notebook\fR .nb]
 \&.nb select .nb.f2
 ttk::notebook::enableTraversal .nb
 .CE
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::notebook\fP is \fBTNotebook\fP.  The tab has
+a class name of \fBTNotebook.Tab\fP
+.PP
+Dynamic states: active, disabled, selected
+.PP
+\fBTNotebook\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-background\fP
+.br
+\fB-darkcolor\fP
+.br
+\fB-expand\fP
+.br
+.RS
+-expand is a padding value.
+.RE
+.br
+\fB-lightcolor\fP
+.br
+\fB-foreground\fP
+.br
+\fB-padding\fP
+.br
+\fB-tabmargins\fP
+.br
+\fB-tabposition\fP
+.PP
+\fBTNotebook.Tab\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB-background\fP
+.br
+\fB-bordercolor\fP
+.br
+\fB-font\fP
+.br
+\fB-foreground\fP
+.br
+\fB-padding\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), grid(n)
 .SH "KEYWORDS"
