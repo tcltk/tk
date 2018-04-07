@@ -61,20 +61,20 @@ themes, which is useful for creating widgets for toolbars.
 .PP
 The class name for a \fBttk::button\fP is \fBTButton\fP.
 .PP
-TButton styling options configurable with ttk::style for TButton are:
+TButton styling options configurable with \fBttk::style\fP
+for \fBTButton\fP are:
 .PP
-.in +.5i
 -background
+.RS
 .br
-.in +.5i
 maps: active, disabled, readonly
-.in
+.RE
 .br
 -foreground
 .br
-.in +.5i
+.RS
 maps: active, disabled, readonly
-.in
+.RE
 .br
 -font
 .br
@@ -83,7 +83,9 @@ maps: active, disabled, readonly
 -lightcolor
 .br
 -darkcolor
-.in
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), button(n)
 .SH "KEYWORDS"
