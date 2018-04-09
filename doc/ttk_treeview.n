@@ -508,7 +508,7 @@ in your program, your users may have it set in their .wishrc.
 .PP
 .CS
 ttk::style configure Treeview \\
-     \-rowheight [expr {[font metrics \fBfont\fP \-linespace] + 2}]
+     \-rowheight [expr {[font metrics \fIfont\fP \-linespace] + 2}]
 .CE
 .PP
 \fBHeading\fP styling options configurable with \fBttk::style\fP
