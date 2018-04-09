@@ -128,7 +128,7 @@ are:
 .br
 \fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB\-focusfill\fP
+\fB\-focusfill\fP \fIcolor\fP
 .br
 \fB\-foreground\fP \fIcolor\fP
 .br
