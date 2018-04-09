@@ -84,40 +84,36 @@ user presses <Down>.
 .PP
 The class name for a \fBttk::spinbox\fP is \fBTSpinbox\fP.
 .PP
-Dynamic states: active, focus, disabled, readonly
+Dynamic states: \fBactive\fP, \fBdisabled\fP, \fBfocus\fP, \fBreadonly\fP.
 .PP
 \fBTSpinbox\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-arrowcolor\fP
+\fB-arrowcolor\fP \fIcolor\fP
 .br
-\fB-arrowsize\fP
+\fB-arrowsize\fP \fIamount\fP
 .br
-\fB-background\fP
-.br
+\fB-background\fP \fIcolor\fP
 .RS
-When using the aqua theme (Mac OS X), changes the -fieldbackground.
+When using the aqua theme (Mac OS X), changes the \fB-fieldbackground\fP.
 .RE
+\fB-bordercolor\fP \fIcolor\fP
 .br
-\fB-bordercolor\fP
+\fB-darkcolor\fP \fIcolor\fP
 .br
-\fB-darkcolor\fP
-.br
-\fB-fieldbackground\fP
-.br
+\fB-fieldbackground\fP \fIcolor\fP
 .RS
 Does not work with the aqua theme (Mac OS X).
 .RE
+\fB-foreground\fP \fIcolor\fP
 .br
-\fB-foreground\fP
+\fB-lightcolor\fP \fIcolor\fP
 .br
-\fB-lightcolor\fP
+\fB-padding\fP \fIpadding\fP
 .br
-\fB-padding\fP
+\fB-selectbackground\fP \fIcolor\fP
 .br
-\fB-selectbackground\fP
-.br
-\fB-selectforeground\fP
+\fB-selectforeground\fP \fIcolor\fP
 .PP
 Some options are only available for specific themes.
 .PP

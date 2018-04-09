@@ -117,68 +117,67 @@ The \fBttk::combobox\fP uses the \fBentry\fP and
 \fBlistbox\fP widgets internally.
 The listbox frame has a class name of \fBComboboxPopdownFrame\fP.
 .PP
-Dynamic states: disabled, focus, pressed, readonly.
+Dynamic states: \fBdisabled\fP, \fBfocus\fP, \fBpressed\fP, \fBreadonly\fP.
 .PP
 \fBTCombobox\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-arrowcolor\fP
+\fB-arrowcolor\fP \fIcolor\fP
 .br
-\fB-background\fP
+\fB-background\fP \fIcolor\fP
+.br
+\fB-bordercolor\fP \fIcolor\fP
 .br
 \fB-focusfill\fP
 .br
-\fB-foreground\fP
+\fB-foreground\fP \fIcolor\fP
 .br
-\fB-fieldbackground\fP
-.br
+\fB-fieldbackground\fP \fIcolor\fP
 .RS
 Can only be changed when using non-native and non-graphical themes.
 .RE
+\fB-insertwidth\fP \fIamount\fP
 .br
-\fB-insertwidth\fP
+\fB-padding\fP \fIpadding\fP
 .br
-\fB-padding\fP
+\fB-postoffset\fP \fIpadding\fP
 .br
-\fB-postoffset\fP
-.br
-\fB-selectbackground\fP
-.br
+\fB-selectbackground\fP \fIcolor\fP
 .RS
 Text entry select background.
 .RE
-.br
-\fB-selectforeground\fP
-.br
+\fB-selectforeground\fP \fIcolor\fP
 .RS
 Text entry select foreground.
 .RE
-.br
-\fB-bordercolor\fP
-.br
+.PP
+The \fBttk::combobox\fP popdown listbox cannot be configured using
+\fBttk::style\fP nor via the widget \fBconfigure\fP command.  The listbox
+can be configured using the option database.
+.PP
 option add *TCombobox*Listbox.background \fIcolor\fP
+.br
+option add *TCombobox*Listbox.font \fIfont\fP
 .br
 option add *TCombobox*Listbox.foreground \fIcolor\fP
 .br
 option add *TCombobox*Listbox.selectBackground \fIcolor\fP
 .br
 option add *TCombobox*Listbox.selectForeground \fIcolor\fP
-.br
-option add *TCombobox*Listbox.font \fIfont\fP
 .PP
-To set the font size for a specific listbox (subject to future change):
+To configure a specific listbox (subject to future change):
 .CS
 set popdown [ttk::combobox::PopdownWindow .mycombobox]
-$popdown.f.l configure -font namedfont
+$popdown.f.l configure -font \fIfont\fP
 .CE
 .PP
 \fBComboboxPopdownFrame\fP
 styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-borderwidth\fP
+\fB-borderwidth\fP \fIamount\fP
 .br
-\fB-relief\fP
+\fB-relief\fP \fIrelief\fP
 .PP
 Some options are only available for specific themes.
 .PP
