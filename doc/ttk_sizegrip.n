@@ -62,12 +62,12 @@ the sizegrip widget will not resize the window.
 resizing.
 .SH "STYLING OPTIONS"
 .PP
-The class name for a \fBttk::frame\fP is \fBTSizegrip\fP.
+The class name for a \fBttk::sizegrip\fP is \fBTSizegrip\fP.
 .PP
 \fBTSizegrip\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP
+\fB-background\fP \fIcolor\fP
 .PP
 Some options are only available for specific themes.
 .PP

@@ -465,44 +465,40 @@ and clears it whenever validation succeeds.
 .PP
 The class name for a \fBttk::entry\fP is \fBTEntry\fP.
 .PP
-Dynamic states: disabled, focus, readonly.
+Dynamic states: \fBdisabled\fP, \fBfocus\fP, \fBreadonly\fP.
 .PP
 \fBTEntry\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP
-.br
+\fB-background\fP \fIcolor\fP
 .RS
-When using the aqua theme (Mac OS X), changes the -fieldbackground.
+When using the aqua theme (Mac OS X), changes the \fB-fieldbackground\fP.
 .RE
+\fB-bordercolor\fP \fIcolor\fP
 .br
-\fB-bordercolor\fP
+\fB-darkcolor\fP \fIcolor\fP
 .br
-\fB-darkcolor\fP
-.br
-\fB-fieldbackground\fP
-.br
+\fB-fieldbackground\fP \fIcolor\fP
 .RS
 Does not work with the aqua theme (Mac OS X).
 .br
 Some themes use a graphical background and their field background colors cannot be changed.
 .RE
+\fB-foreground\fP \fIcolor\fP
 .br
-\fB-foreground\fP
+\fB-insertwidth\fP \fIamount\fP
 .br
-\fB-lightcolor\fP
+\fB-lightcolor\fP \fIcolor\fP
 .br
-\fB-insertwidth\fP
+\fB-padding\fP \fIpadding\fP
 .br
-\fB-padding\fP
+\fB-relief\fP \fIrelief\fP
 .br
-\fB-relief\fP
+\fB-selectbackground\fP \fIcolor\fP
 .br
-\fB-selectbackground\fP
+\fB-selectborderwidth\fP \fIamount\fP
 .br
-\fB-selectborderwidth\fP
-.br
-\fB-selectforeground\fP
+\fB-selectforeground\fP \fIcolor\fP
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.

@@ -71,35 +71,35 @@ The class name for a \fBttk::labelframe\fP is \fBTLabelframe\fP.
 The text label
 has a class of \fBTLabelframe.Label\fP.
 .PP
-Dynamic states: disabled, readonly.
+Dynamic states: \fBdisabled\fP, \fBreadonly\fP.
 .PP
 \fBTLabelframe\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP
+\fB-background\fP \fIcolor\fP
 .br
-\fB-bordercolor\fP
+\fB-bordercolor\fP \fIcolor\fP
 .br
-\fB-borderwidth\fP
+\fB-borderwidth\fP \fIamount\fP
 .br
-\fB-darkcolor\fP
+\fB-darkcolor\fP \fIcolor\fP
 .br
-\fB-labeloutside\fP
+\fB-labelmargins\fP \fIamount\fP
 .br
-\fB-labelmargins\fP
+\fB-labeloutside\fP \fIboolean\fP
 .br
-\fB-lightcolor\fP
+\fB-lightcolor\fP \fIcolor\fP
 .br
-\fB-relief\fP
+\fB-relief\fP \fIrelief\fP
 .PP
 \fBTLabelframe.Label\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP
+\fB-background\fP \fIcolor\fP
 .br
-\fB-font\fP
+\fB-font\fP \fIfont\fP
 .br
-\fB-foreground\fP
+\fB-foreground\fP \fIcolor\fP
 .PP
 Some options are only available for specific themes.
 .PP
