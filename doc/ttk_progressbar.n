@@ -93,23 +93,23 @@ The class name for a \fBttk::progressbar\fP is \fBTProgressbar\fP.
 \fBTProgressbar\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP \fIcolor\fP
+\fB\-background\fP \fIcolor\fP
 .br
-\fB-bordercolor\fP \fIcolor\fP
+\fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB-darkcolor\fP \fIcolor\fP
+\fB\-darkcolor\fP \fIcolor\fP
 .br
-\fB-lightcolor\fP \fIcolor\fP
+\fB\-lightcolor\fP \fIcolor\fP
 .br
-\fB-maxphase\fP
+\fB\-maxphase\fP
 .RS
 For the aqua theme.
 .RE
-\fB-period\fP
+\fB\-period\fP
 .RS
 For the aqua theme.
 .RE
-\fB-troughcolor\fP \fIcolor\fP
+\fB\-troughcolor\fP \fIcolor\fP
 .PP
 Some options are only available for specific themes.
 .PP

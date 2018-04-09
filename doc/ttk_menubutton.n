@@ -54,19 +54,19 @@ Dynamic states: \fBactive\fP, \fBdisabled\fP, \fBreadonly\fP.
 \fBTMenubutton\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-arrowsize\fP \fIamount\fP
+\fB\-arrowsize\fP \fIamount\fP
 .br
-\fB-background\fP \fIcolor\fP
+\fB\-background\fP \fIcolor\fP
 .br
-\fB-foreground\fP \fIcolor\fP
+\fB\-foreground\fP \fIcolor\fP
 .br
-\fB-font\fP \fIfont\fP
+\fB\-font\fP \fIfont\fP
 .br
-\fB-padding\fP \fIpadding\fP
+\fB\-padding\fP \fIpadding\fP
 .br
-\fB-relief\fP \fIrelief\fP
+\fB\-relief\fP \fIrelief\fP
 .br
-\fB-width\fP \fIamount\fP
+\fB\-width\fP \fIamount\fP
 .PP
 Some options are only available for specific themes.
 .PP
