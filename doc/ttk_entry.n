@@ -470,35 +470,35 @@ Dynamic states: \fBdisabled\fP, \fBfocus\fP, \fBreadonly\fP.
 \fBTEntry\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP \fIcolor\fP
+\fB\-background\fP \fIcolor\fP
 .RS
-When using the aqua theme (Mac OS X), changes the \fB-fieldbackground\fP.
+When using the aqua theme (Mac OS X), changes the \fB\-fieldbackground\fP.
 .RE
-\fB-bordercolor\fP \fIcolor\fP
+\fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB-darkcolor\fP \fIcolor\fP
+\fB\-darkcolor\fP \fIcolor\fP
 .br
-\fB-fieldbackground\fP \fIcolor\fP
+\fB\-fieldbackground\fP \fIcolor\fP
 .RS
 Does not work with the aqua theme (Mac OS X).
 .br
 Some themes use a graphical background and their field background colors cannot be changed.
 .RE
-\fB-foreground\fP \fIcolor\fP
+\fB\-foreground\fP \fIcolor\fP
 .br
-\fB-insertwidth\fP \fIamount\fP
+\fB\-insertwidth\fP \fIamount\fP
 .br
-\fB-lightcolor\fP \fIcolor\fP
+\fB\-lightcolor\fP \fIcolor\fP
 .br
-\fB-padding\fP \fIpadding\fP
+\fB\-padding\fP \fIpadding\fP
 .br
-\fB-relief\fP \fIrelief\fP
+\fB\-relief\fP \fIrelief\fP
 .br
-\fB-selectbackground\fP \fIcolor\fP
+\fB\-selectbackground\fP \fIcolor\fP
 .br
-\fB-selectborderwidth\fP \fIamount\fP
+\fB\-selectborderwidth\fP \fIamount\fP
 .br
-\fB-selectforeground\fP \fIcolor\fP
+\fB\-selectforeground\fP \fIcolor\fP
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.

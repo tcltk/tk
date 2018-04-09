@@ -128,28 +128,28 @@ sash has a class name of \fBSash\fP.
 \fBTPanedwindow\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP \fIcolor\fP
+\fB\-background\fP \fIcolor\fP
 .PP
 \fBSash\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP \fIcolor\fP
+\fB\-background\fP \fIcolor\fP
 .br
-\fB-bordercolor\fP \fIcolor\fP
+\fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB-gripcount\fP \fIcount\fP
+\fB\-gripcount\fP \fIcount\fP
 .br
-\fB-handlepad\fP \fIamount\fP
+\fB\-handlepad\fP \fIamount\fP
 .br
-\fB-handlesize\fP \fIamount\fP
+\fB\-handlesize\fP \fIamount\fP
 .br
-\fB-lightcolor\fP \fIcolor\fP
+\fB\-lightcolor\fP \fIcolor\fP
 .br
-\fB-sashpad\fP \fIamount\fP
+\fB\-sashpad\fP \fIamount\fP
 .br
-\fB-sashrelief\fP \fIrelief\fP
+\fB\-sashrelief\fP \fIrelief\fP
 .br
-\fB-sashthickness\fP \fIamount\fP
+\fB\-sashthickness\fP \fIamount\fP
 .PP
 Some options are only available for specific themes.
 .PP

@@ -218,39 +218,39 @@ Dynamic states: \fBactive\fP, \fBdisabled\fP, \fBselected\fP.
 \fBTNotebook\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP \fIcolor\fP
+\fB\-background\fP \fIcolor\fP
 .br
-\fB-darkcolor\fP \fIcolor\fP
+\fB\-darkcolor\fP \fIcolor\fP
 .br
-\fB-foreground\fP \fIcolor\fP
+\fB\-foreground\fP \fIcolor\fP
 .br
-\fB-lightcolor\fP \fIcolor\fP
+\fB\-lightcolor\fP \fIcolor\fP
 .br
-\fB-padding\fP \fIpadding\fP
+\fB\-padding\fP \fIpadding\fP
 .br
-\fB-tabmargins\fP \fIpadding\fP
+\fB\-tabmargins\fP \fIpadding\fP
 .br
-\fB-tabposition\fP \fIside\fP
+\fB\-tabposition\fP \fIside\fP
 .br
 .PP
 \fBTNotebook.Tab\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP \fIcolor\fP
+\fB\-background\fP \fIcolor\fP
 .br
-\fB-bordercolor\fP \fIcolor\fP
+\fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB-expand\fP \fIpadding\fP
+\fB\-expand\fP \fIpadding\fP
 .RS
 Defines how much the tab grows in size.  Usually used with the
-\fBselected\fP dynamic state.  \fB-tabmargins\fP should be
+\fBselected\fP dynamic state.  \fB\-tabmargins\fP should be
 set appropriately so that there is room for the tab growth.
 .RE
-\fB-font\fP \fIfont\fP
+\fB\-font\fP \fIfont\fP
 .br
-\fB-foreground\fP \fIcolor\fP
+\fB\-foreground\fP \fIcolor\fP
 .br
-\fB-padding\fP \fIpadding\fP
+\fB\-padding\fP \fIpadding\fP
 .PP
 Some options are only available for specific themes.
 .PP

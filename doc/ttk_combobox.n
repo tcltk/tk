@@ -122,31 +122,31 @@ Dynamic states: \fBdisabled\fP, \fBfocus\fP, \fBpressed\fP, \fBreadonly\fP.
 \fBTCombobox\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-arrowcolor\fP \fIcolor\fP
+\fB\-arrowcolor\fP \fIcolor\fP
 .br
-\fB-background\fP \fIcolor\fP
+\fB\-background\fP \fIcolor\fP
 .br
-\fB-bordercolor\fP \fIcolor\fP
+\fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB-focusfill\fP
+\fB\-focusfill\fP
 .br
-\fB-foreground\fP \fIcolor\fP
+\fB\-foreground\fP \fIcolor\fP
 .br
-\fB-fieldbackground\fP \fIcolor\fP
+\fB\-fieldbackground\fP \fIcolor\fP
 .RS
 Can only be changed when using non-native and non-graphical themes.
 .RE
-\fB-insertwidth\fP \fIamount\fP
+\fB\-insertwidth\fP \fIamount\fP
 .br
-\fB-padding\fP \fIpadding\fP
+\fB\-padding\fP \fIpadding\fP
 .br
-\fB-postoffset\fP \fIpadding\fP
+\fB\-postoffset\fP \fIpadding\fP
 .br
-\fB-selectbackground\fP \fIcolor\fP
+\fB\-selectbackground\fP \fIcolor\fP
 .RS
 Text entry select background.
 .RE
-\fB-selectforeground\fP \fIcolor\fP
+\fB\-selectforeground\fP \fIcolor\fP
 .RS
 Text entry select foreground.
 .RE
@@ -168,16 +168,16 @@ option add *TCombobox*Listbox.selectForeground \fIcolor\fP
 To configure a specific listbox (subject to future change):
 .CS
 set popdown [ttk::combobox::PopdownWindow .mycombobox]
-$popdown.f.l configure -font \fIfont\fP
+$popdown.f.l configure \-font \fIfont\fP
 .CE
 .PP
 \fBComboboxPopdownFrame\fP
 styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-borderwidth\fP \fIamount\fP
+\fB\-borderwidth\fP \fIamount\fP
 .br
-\fB-relief\fP \fIrelief\fP
+\fB\-relief\fP \fIrelief\fP
 .PP
 Some options are only available for specific themes.
 .PP

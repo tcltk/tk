@@ -79,19 +79,19 @@ Dynamic states: \fBactive\fP, \fBalternate\fP, \fBdisabled\fP,
 are:
 .PP
 .br
-\fB-background\fP \fIcolor\fP
+\fB\-background\fP \fIcolor\fP
 .br
-\fB-foreground\fP \fIcolor\fP
+\fB\-foreground\fP \fIcolor\fP
 .br
-\fB-indicatorbackground\fP \fIcolor\fP
+\fB\-indicatorbackground\fP \fIcolor\fP
 .br
-\fB-indicatorcolor\fP \fIcolor\fP
+\fB\-indicatorcolor\fP \fIcolor\fP
 .br
-\fB-indicatormargin\fP \fIpadding\fP
+\fB\-indicatormargin\fP \fIpadding\fP
 .br
-\fB-indicatorrelief\fP \fIrelief\fP
+\fB\-indicatorrelief\fP \fIrelief\fP
 .br
-\fB-padding\fP \fIpadding\fP
+\fB\-padding\fP \fIpadding\fP
 .PP
 Some options are only available for specific themes.
 .PP
