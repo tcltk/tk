@@ -95,26 +95,26 @@ is omitted.
 .PP
 The class name for a \fBttk::scale\fP is \fBTProgressbar\fP.
 .PP
-Dynamic states: active.
+Dynamic states: \fBactive\fP.
 .PP
 \fBTProgressbar\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-background\fP
+\fB-background\fP \fIcolor\fP
 .br
-\fB-borderwidth\fP
+\fB-borderwidth\fP \fIamount\fP
 .br
-\fB-darkcolor\fP
+\fB-darkcolor\fP \fIcolor\fP
 .br
-\fB-groovewidth\fP
+\fB-groovewidth\fP \fIamount\fP
 .br
-\fB-lightcolor\fP
+\fB-lightcolor\fP \fIcolor\fP
 .br
-\fB-sliderwidth\fP
+\fB-sliderwidth\fP \fIamount\fP
 .br
-\fB-troughcolor\fP
+\fB-troughcolor\fP \fIcolor\fP
 .br
-\fB-troughrelief\fP
+\fB-troughrelief\fP \fIrelief\fP
 .PP
 Some options are only available for specific themes.
 .PP

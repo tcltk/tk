@@ -61,42 +61,40 @@ themes, which is useful for creating widgets for toolbars.
 .PP
 The class name for a \fBttk::button\fP is \fBTButton\fP.
 .PP
-Dynamic states: active, disabled, pressed, readonly.
+Dynamic states: \fBactive\fP, \fBdisabled\fP, \fBpressed\fP, \fBreadonly\fP.
 .PP
 \fBTButton\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-anchor\fP
+\fB-anchor\fP \fIanchor\fP
 .br
-\fB-background\fP
+\fB-background\fP \fIcolor\fP
 .br
-\fB-bordercolor\fP
+\fB-bordercolor\fP \fIcolor\fP
 .br
-\fB-darkcolor\fP
+\fB-darkcolor\fP \fIcolor\fP
 .br
-\fB-foreground\fP
+\fB-foreground\fP \fIcolor\fP
 .br
-\fB-font\fP
+\fB-font\fP \fIfont\fP
 .br
-\fB-highlightcolor\fP
+\fB-highlightcolor\fP \fIcolor\fP
 .br
-\fB-highlightthickness\fP
+\fB-highlightthickness\fP \fIamount\fP
 .br
-\fB-lightcolor\fP
+\fB-lightcolor\fP \fIcolor\fP
 .br
-\fB-padding\fP
+\fB-padding\fP \fIpadding\fP
 .br
-\fB-relief\fP
+\fB-relief\fP \fIrelief\fP
 .br
-\fB-shiftrelief\fP
-.br
+\fB-shiftrelief\fP \fIamount\fP
 .RS
 -shiftrelief specifies how far the button contents are
 shifted down and right in the \fIpressed\fP state.
 This action provides additional skeumorphic feedback.
 .RE
-.br
-\fB-width\fP
+\fB-width\fP \fIamount\fP
 .PP
 Some options are only available for specific themes.
 .PP

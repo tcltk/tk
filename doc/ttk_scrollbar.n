@@ -158,24 +158,24 @@ grid rowconfigure $f 0 \-weight 1
 .PP
 The class name for a \fBttk::scrollbar\fP is \fBTScrollbar\fP.
 .PP
-Dynamic states: active, disabled.
+Dynamic states: \fBactive\fP, \fBdisabled\fP.
 .PP
 \fBTScrollbar\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
-\fB-arrowcolor\fP
+\fB-arrowcolor\fP \fIcolor\fP
 .br
-\fB-background\fP
+\fB-background\fP \fIcolor\fP
 .br
-\fB-bordercolor\fP
+\fB-bordercolor\fP \fIcolor\fP
 .br
-\fB-darkcolor\fP
+\fB-darkcolor\fP \fIcolor\fP
 .br
-\fB-foreground\fP
+\fB-foreground\fP \fIcolor\fP
 .br
-\fB-lightcolor\fP
+\fB-lightcolor\fP \fIcolor\fP
 .br
-\fB-troughcolor\fP
+\fB-troughcolor\fP \fIcolor\fP
 .PP
 Some options are only available for specific themes.
 .PP
