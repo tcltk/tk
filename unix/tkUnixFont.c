@@ -406,8 +406,7 @@ ControlUtfProc(
 {
     const char *srcStart, *srcEnd;
     char *dstStart, *dstEnd;
-    int ch;
-    int result;
+    int ch, result;
     static const char hexChars[] = "0123456789abcdef";
     static const char mapChars[] = {
 	0, 0, 0, 0, 0, 0, 0,
@@ -1018,7 +1017,7 @@ Tk_MeasureChars(
 {
     UnixFont *fontPtr;
     SubFont *lastSubFontPtr;
-    int curX, curByte;
+    int curX, curByte, ch;
 
     /*
      * Unix does not use kerning or fractional character widths when
@@ -1036,7 +1035,6 @@ Tk_MeasureChars(
 	curByte = 0;
     } else if (maxLength < 0) {
 	const char *p, *end, *next;
-	int ch;
 	SubFont *thisSubFontPtr;
 	FontFamily *familyPtr;
 	Tcl_DString runString;
@@ -1090,7 +1088,6 @@ Tk_MeasureChars(
     } else {
 	const char *p, *end, *next, *term;
 	int newX, termX, sawNonSpace, dstWrote;
-	Tcl_UniChar ch;
 	FontFamily *familyPtr;
 	XChar2b buf[8];
 
@@ -1100,7 +1097,7 @@ Tk_MeasureChars(
 	 * individually.
 	 */
 
-	next = source + Tcl_UtfToUniChar(source, &ch);
+	next = source + TkUtfToUniChar(source, &ch);
 	newX = curX = termX = 0;
 
 	term = source;
@@ -1135,7 +1132,7 @@ Tk_MeasureChars(
 		break;
 	    }
 
-	    next += Tcl_UtfToUniChar(next, &ch);
+	    next += TkUtfToUniChar(next, &ch);
 	    if ((ch < 256) && isspace(ch)) {
 		if (sawNonSpace) {
 		    term = p;
@@ -1160,13 +1157,13 @@ Tk_MeasureChars(
 	     */
 
 	    curX = newX;
-	    p += Tcl_UtfToUniChar(p, &ch);
+	    p += TkUtfToUniChar(p, &ch);
 	}
 	if ((flags & TK_AT_LEAST_ONE) && (term == source) && (p < end)) {
 	    term = p;
 	    termX = curX;
 	    if (term == source) {
-		term += Tcl_UtfToUniChar(term, &ch);
+		term += TkUtfToUniChar(term, &ch);
 		termX = newX;
 	    }
 	} else if ((p >= end) || !(flags & TK_WHOLE_WORDS)) {
@@ -1278,8 +1275,7 @@ Tk_DrawChars(
     SubFont *thisSubFontPtr, *lastSubFontPtr;
     Tcl_DString runString;
     const char *p, *end, *next;
-    int xStart, needWidth, window_width, do_width;
-    Tcl_UniChar ch;
+    int xStart, needWidth, window_width, do_width, ch;
     FontFamily *familyPtr;
 #ifdef TK_DRAW_CHAR_XWINDOW_CHECK
     int rx, ry;
@@ -1314,7 +1310,7 @@ Tk_DrawChars(
     needWidth = fontPtr->font.fa.underline + fontPtr->font.fa.overstrike;
     for (p = source; p <= end; ) {
 	if (p < end) {
-	    next = p + Tcl_UtfToUniChar(p, &ch);
+	    next = p + TkUtfToUniChar(p, &ch);
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	} else {
 	    next = p + 1;
@@ -1849,7 +1845,9 @@ AllocFontFamily(
 	if ((familyPtr->faceName == fa.fa.family)
 		&& (familyPtr->foundry == fa.xa.foundry)
 		&& (familyPtr->encoding == encoding)) {
-	    Tcl_FreeEncoding(encoding);
+	    if (encoding) {
+		Tcl_FreeEncoding(encoding);
+	    }
 	    familyPtr->refCount++;
 	    return familyPtr;
 	}
@@ -1922,7 +1920,9 @@ FreeFontFamily(
     if (familyPtr->refCount-- > 1) {
 	return;
     }
-    Tcl_FreeEncoding(familyPtr->encoding);
+    if (familyPtr->encoding) {
+	Tcl_FreeEncoding(familyPtr->encoding);
+    }
     for (i = 0; i < FONTMAP_PAGES; i++) {
 	if (familyPtr->fontMap[i] != NULL) {
 	    ckfree(familyPtr->fontMap[i]);
@@ -2212,7 +2212,7 @@ FontMapLoadPage(
     int row)			/* Index of the page to be loaded into the
 				 * cache. */
 {
-    char buf[16], src[4];
+    char buf[16], src[6];
     int minHi, maxHi, minLo, maxLo, scale, checkLo;
     int i, end, bitOffset, isTwoByteFont, n;
     Tcl_Encoding encoding;
@@ -2250,7 +2250,7 @@ FontMapLoadPage(
     for (i = row << FONTMAP_SHIFT; i < end; i++) {
 	int hi, lo;
 
-	if (Tcl_UtfToExternal(NULL, encoding, src, Tcl_UniCharToUtf(i, src),
+	if (Tcl_UtfToExternal(NULL, encoding, src, TkUniCharToUtf(i, src),
 		TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
 	    continue;
@@ -2416,7 +2416,7 @@ CanUseFallback(
     unsigned bestScore[2];
     char **nameList;
     char **nameListOrig;
-    char src[4];
+    char src[6];
     FontAttributes want, got;
     Display *display;
     SubFont subFont;
@@ -2446,7 +2446,7 @@ CanUseFallback(
     }
     nameListOrig = nameList;
 
-    srcLen = Tcl_UniCharToUtf(ch, src);
+    srcLen = TkUniCharToUtf(ch, src);
 
     want.fa = fontPtr->font.fa;
     want.xa = fontPtr->xa;
