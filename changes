@@ -7495,3 +7495,32 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2017-12-18 (bug)[b77626] Make [tk busy -cursor] silent no-op on macOS (vogel)
 
 --- Released 8.6.8, December 22, 2017 --- http://core.tcl.tk/tk/ for details
+
+Changes to 8.7a1 include all changes to the 8.6 line through 8.6.7,
+plus the following, which focuses on the high-level feature changes
+in this changeset (new minor version) rather than bug fixes:
+
+2016-03-07 (feature)[841280] spinbox autoswap -to/-from to get ordering (vogel)
+
+2016-03-27 (feature)[38dc27] Support <Button-6> & <Button-7> (nijtmans)
+
+2016-08-29 (TIP 449) [text] undo/redo return character range (vogel)
+
+2016-11-02 (feature) Removed undocumented command [tk_getFileType] (vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2017-02-05 (bug)[c0dbdd] Compatibility fonts shadowed system fonts (vogel)
+
+2017-03-21 (TIP 442) display text in a progressbar (zaumseil)
+
+2017-04-13 \u escaped content in msg files converted to true utf-8 (nijtmans)
+
+2017-08-24 (bug)[f1a3ca] Memleak in text operations (hume)
+
+2017-08-24 (bug)[ee40fd] Error reporting from failed console init (the)
+
+2017-08-24 (bug)[3295446] Keep console cursor visible when using history (goth)
+
+2017-08-28 (TIP 166) Extended color notation for alpha channel (bachmann)
+
+--- Released 8.7a1, September 8, 2017 --- http://core.tcl.tk/tk/ for details

@@ -26,7 +26,7 @@ typedef struct {
     int charOffset;		/* The offset of the next char to retrieve. */
     int byteOffset;		/* The expected byte offset of the next
 				 * chunk. */
-    char buffer[TCL_UTF_MAX];	/* A buffer to hold part of a UTF character
+    char buffer[4];		/* A buffer to hold part of a UTF character
 				 * that is split across chunks. */
     char command[1];		/* Command to invoke. Actual space is
 				 * allocated as large as necessary. This must

@@ -188,7 +188,7 @@ int Ttk_TagSetAdd(Ttk_TagSet tagset, Ttk_Tag tag)
 	    return 0;
 	}
     }
-    tagset->tags = ckrealloc(tagset->tags, 
+    tagset->tags = ckrealloc(tagset->tags,
 	    (tagset->nTags+1)*sizeof(tagset->tags[0]));
     tagset->tags[tagset->nTags++] = tag;
     return 1;

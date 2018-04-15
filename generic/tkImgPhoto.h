@@ -201,7 +201,7 @@ struct PhotoInstance {
 				 * this particular colormap. */
     PhotoInstance *nextPtr;	/* Pointer to the next instance in the list of
 				 * instances associated with this master. */
-    int refCount;		/* Number of instances using this structure. */
+    size_t refCount;		/* Number of instances using this structure. */
     Tk_Uid palette;		/* Palette for these particular instances. */
     double gamma;		/* Gamma value for these instances. */
     Tk_Uid defaultPalette;	/* Default palette to use if a palette is not
