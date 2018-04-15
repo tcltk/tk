@@ -550,6 +550,10 @@ EXTERN void		TkDrawAngledChars(Display *display,
 				Drawable drawable, GC gc, Tk_Font tkfont,
 				const char *source, int numBytes, double x,
 				double y, double angle);
+/* 185 */
+EXTERN int		TkDebugPhotoStringMatchDef(Tcl_Interp *inter,
+				Tcl_Obj *data, Tcl_Obj *formatString,
+				int *widthPtr, int *heightPtr);
 
 typedef struct TkIntStubs {
     int magic;
@@ -767,6 +771,7 @@ typedef struct TkIntStubs {
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */
     void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, double x, double y, double angle); /* 184 */
+    int (*tkDebugPhotoStringMatchDef) (Tcl_Interp *inter, Tcl_Obj *data, Tcl_Obj *formatString, int *widthPtr, int *heightPtr); /* 185 */
 } TkIntStubs;
 
 extern const TkIntStubs *tkIntStubsPtr;
@@ -1139,6 +1144,8 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkIntersectAngledTextLayout) /* 183 */
 #define TkDrawAngledChars \
 	(tkIntStubsPtr->tkDrawAngledChars) /* 184 */
+#define TkDebugPhotoStringMatchDef \
+	(tkIntStubsPtr->tkDebugPhotoStringMatchDef) /* 185 */
 
 #endif /* defined(USE_TK_STUBS) */
 

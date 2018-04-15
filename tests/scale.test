@@ -324,7 +324,7 @@ test scale-2.1 {Tk_ScaleCmd procedure} -body {
     scale
 } -returnCodes error -result {wrong # args: should be "scale pathName ?-option value ...?"}
 test scale-2.2 {Tk_ScaleCmd procedure} -body {
-    scale foo 
+    scale foo
 } -returnCodes error -result {bad window path name "foo"}
 test scale-2.3 {Tk_ScaleCmd procedure} -body {
     catch {scale foo}

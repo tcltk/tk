@@ -40,9 +40,9 @@ static const char *	StartEnd(TkText *textPtr, const char *string,
 static int		GetIndex(Tcl_Interp *interp, TkSharedText *sharedPtr,
 			    TkText *textPtr, const char *string,
 			    TkTextIndex *indexPtr, int *canCachePtr);
-static int              IndexCountBytesOrdered(CONST TkText *textPtr,
-                            CONST TkTextIndex *indexPtr1,
-                            CONST TkTextIndex *indexPtr2);
+static int              IndexCountBytesOrdered(const TkText *textPtr,
+                            const TkTextIndex *indexPtr1,
+                            const TkTextIndex *indexPtr2);
 
 /*
  * The "textindex" Tcl_Obj definition:
@@ -387,7 +387,7 @@ TkTextMakeByteIndex(
     TkTextSegment *segPtr;
     int index;
     const char *p, *start;
-    Tcl_UniChar ch;
+    int ch;
 
     indexPtr->tree = tree;
     if (lineIndex < 0) {
@@ -437,7 +437,7 @@ TkTextMakeByteIndex(
 
 		start = segPtr->body.chars + (byteIndex - index);
 		p = Tcl_UtfPrev(start, segPtr->body.chars);
-		p += Tcl_UtfToUniChar(p, &ch);
+		p += TkUtfToUniChar(p, &ch);
 		indexPtr->byteIndex += p - start;
 	    }
 	    break;
@@ -480,7 +480,7 @@ TkTextMakeCharIndex(
     register TkTextSegment *segPtr;
     char *p, *start, *end;
     int index, offset;
-    Tcl_UniChar ch;
+    int ch;
 
     indexPtr->tree = tree;
     if (lineIndex < 0) {
@@ -527,7 +527,7 @@ TkTextMakeCharIndex(
 		    return indexPtr;
 		}
 		charIndex--;
-		offset = Tcl_UtfToUniChar(p, &ch);
+		offset = TkUtfToUniChar(p, &ch);
 		index += offset;
 	    }
 	} else {
@@ -1475,7 +1475,7 @@ TkTextIndexForwChars(
     TkTextElideInfo *infoPtr = NULL;
     int byteOffset;
     char *start, *end, *p;
-    Tcl_UniChar ch;
+    int ch;
     int elide = 0;
     int checkElided = (type & COUNT_DISPLAY);
 
@@ -1574,7 +1574,7 @@ TkTextIndexForwChars(
 		if (segPtr->typePtr == &tkTextCharType) {
 		    start = segPtr->body.chars + byteOffset;
 		    end = segPtr->body.chars + segPtr->size;
-		    for (p = start; p < end; p += Tcl_UtfToUniChar(p, &ch)) {
+		    for (p = start; p < end; p += TkUtfToUniChar(p, &ch)) {
 			if (charCount == 0) {
 			    dstPtr->byteIndex += (p - start);
 			    goto forwardCharDone;
@@ -1636,9 +1636,9 @@ TkTextIndexForwChars(
 
 int
 TkTextIndexCountBytes(
-    CONST TkText *textPtr,
-    CONST TkTextIndex *indexPtr1, /* Index describing one location. */
-    CONST TkTextIndex *indexPtr2) /* Index describing second location. */
+    const TkText *textPtr,
+    const TkTextIndex *indexPtr1, /* Index describing one location. */
+    const TkTextIndex *indexPtr2) /* Index describing second location. */
 {
     int compare = TkTextIndexCmp(indexPtr1, indexPtr2);
 
@@ -1653,11 +1653,11 @@ TkTextIndexCountBytes(
 
 static int
 IndexCountBytesOrdered(
-    CONST TkText *textPtr,
-    CONST TkTextIndex *indexPtr1,
+    const TkText *textPtr,
+    const TkTextIndex *indexPtr1,
 				/* Index describing location of character from
 				 * which to count. */
-    CONST TkTextIndex *indexPtr2)
+    const TkTextIndex *indexPtr2)
 				/* Index describing location of last character
 				 * at which to stop the count. */
 {

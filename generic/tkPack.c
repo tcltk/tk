@@ -122,8 +122,10 @@ static int		ConfigureSlaves(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
 static void		DestroyPacker(void *memPtr);
 static Packer *		GetPacker(Tk_Window tkwin);
+#ifndef TK_NO_DEPRECATED
 static int		PackAfter(Tcl_Interp *interp, Packer *prevPtr,
 			    Packer *masterPtr, int objc,Tcl_Obj *const objv[]);
+#endif /* !TK_NO_DEPRECATED */
 static void		PackStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		Unlink(Packer *packPtr);
@@ -197,11 +199,14 @@ Tk_PackObjCmd(
     Tk_Window tkwin = clientData;
     const char *argv2;
     static const char *const optionStrings[] = {
-	/* after, append, before and unpack are deprecated */
+#ifndef TK_NO_DEPRECATED
 	"after", "append", "before", "unpack",
+#endif /* !TK_NO_DEPRECATED */
 	"configure", "forget", "info", "propagate", "slaves", NULL };
     enum options {
+#ifndef TK_NO_DEPRECATED
 	PACK_AFTER, PACK_APPEND, PACK_BEFORE, PACK_UNPACK,
+#endif /* !TK_NO_DEPRECATED */
 	PACK_CONFIGURE, PACK_FORGET, PACK_INFO, PACK_PROPAGATE, PACK_SLAVES };
     int index;
 
@@ -219,6 +224,7 @@ Tk_PackObjCmd(
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+#ifndef TK_NO_DEPRECATED
 	/*
 	 * Call it again without the deprecated ones to get a proper error
 	 * message. This works well since there can't be any ambiguity between
@@ -228,11 +234,13 @@ Tk_PackObjCmd(
 	Tcl_ResetResult(interp);
 	Tcl_GetIndexFromObjStruct(interp, objv[1], &optionStrings[4],
 		sizeof(char *), "option", 0, &index);
+#endif /* TK_NO_DEPRECATED */
 	return TCL_ERROR;
     }
 
     argv2 = Tcl_GetString(objv[2]);
     switch ((enum options) index) {
+#ifndef TK_NO_DEPRECATED
     case PACK_AFTER: {
 	Packer *prevPtr;
 	Tk_Window tkwin2;
@@ -297,6 +305,7 @@ Tk_PackObjCmd(
 	}
 	return PackAfter(interp, prevPtr, masterPtr, objc-3, objv+3);
     }
+#endif /* !TK_NO_DEPRECATED */
     case PACK_CONFIGURE:
 	if (argv2[0] != '.') {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -458,6 +467,7 @@ Tk_PackObjCmd(
 	Tcl_SetObjResult(interp, resultObj);
 	break;
     }
+#ifndef TK_NO_DEPRECATED
     case PACK_UNPACK: {
 	Tk_Window tkwin2;
 	Packer *packPtr;
@@ -481,6 +491,7 @@ Tk_PackObjCmd(
 	}
 	break;
     }
+#endif /* !TK_NO_DEPRECATED */
     }
 
     return TCL_OK;
@@ -1087,6 +1098,7 @@ GetPacker(
  *------------------------------------------------------------------------
  */
 
+#ifndef TK_NO_DEPRECATED
 static int
 PackAfter(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
@@ -1307,6 +1319,7 @@ PackAfter(
     }
     return TCL_OK;
 }
+#endif /* !TK_NO_DEPRECATED */
 
 /*
  *----------------------------------------------------------------------
