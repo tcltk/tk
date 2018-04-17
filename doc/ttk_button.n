@@ -90,7 +90,7 @@ are:
 .br
 \fB\-shiftrelief\fP \fIamount\fP
 .RS
-\-shiftrelief specifies how far the button contents are
+\fB\-shiftrelief\fP specifies how far the button contents are
 shifted down and right in the \fIpressed\fP state.
 This action provides additional skeumorphic feedback.
 .RE
