@@ -220,6 +220,8 @@ are:
 .PP
 \fB\-background\fP \fIcolor\fP
 .br
+\fB\-bordercolor\fP \fIcolor\fP
+.br
 \fB\-darkcolor\fP \fIcolor\fP
 .br
 \fB\-foreground\fP \fIcolor\fP

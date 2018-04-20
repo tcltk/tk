@@ -128,6 +128,8 @@ are:
 .br
 \fB\-bordercolor\fP \fIcolor\fP
 .br
+\fB\-darkcolor\fP \fIcolor\fP
+.br
 \fB\-focusfill\fP \fIcolor\fP
 .br
 \fB\-foreground\fP \fIcolor\fP
@@ -137,6 +139,8 @@ are:
 Can only be changed when using non-native and non-graphical themes.
 .RE
 \fB\-insertwidth\fP \fIamount\fP
+.br
+\fB\-lightcolor\fP \fIcolor\fP
 .br
 \fB\-padding\fP \fIpadding\fP
 .br
