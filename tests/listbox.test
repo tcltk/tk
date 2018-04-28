@@ -3177,36 +3177,6 @@ test listbox-31.2 {<<ListboxSelect>> event on lost selection} -setup {
     destroy .l
 } -result {{.l 0} {{} {}}}
 
-test listbox-32 {<MouseWheel> event win32} -constraints {
-	win
-} -setup {
-    destroy .l
-    listbox .l -width 10 -height 5
-    pack .l
-    update
-} -body {
-    set log {}
-    .l insert 0 a b c d e f g h i j k l m n o p q r s t
-    .l yview 8
-    update
-    record yv {*}[.l yview]
-	for {set i 0} {$i < 20} {incr i} { event generate .l <MouseWheel> -delta 6 }
-	update
-    record yv {*}[.l yview]
-	for {set i 0} {$i < 20} {incr i} { event generate .l <MouseWheel> -delta 6 }
-	update
-    record yv {*}[.l yview]
-	for {set i 0} {$i < 20} {incr i} { event generate .l <MouseWheel> -delta -6 }
-	update
-    record yv {*}[.l yview]
-	for {set i 0} {$i < 20} {incr i} { event generate .l <MouseWheel> -delta -6 }
-	update
-    record yv {*}[.l yview]
-    set log
-} -cleanup {
-    destroy .l
-} -result {{yv 0.4 0.65} {yv 0.2 0.45} {yv 0 0.25} {yv 0.2 0.45} {yv 0.4 0.65}}
-
 resetGridInfo
 deleteWindows
 option clear
