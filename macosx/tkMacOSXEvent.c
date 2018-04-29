@@ -101,10 +101,6 @@ enum {
     default:
 	break; /* return theEvent */
     }
-    /* Update the inactivity timer */
-    TkDisplay *display = TkGetDisplayList();
-    display->lastActivityTime = TkpGetMS();
-    /* Return the processed event. */
     return processedEvent;
 }
 @end

@@ -903,8 +903,50 @@ long
 Tk_GetUserInactiveTime(
     Display *dpy)
 {
+    io_registry_entry_t regEntry;
+    CFMutableDictionaryRef props = NULL;
+    CFTypeRef timeObj;
+    long ret = -1l;
+    uint64_t time;
+    IOReturn result;
+
+    regEntry = IOServiceGetMatchingService(kIOMasterPortDefault,
+	    IOServiceMatching("IOHIDSystem"));
+
+    if (regEntry == 0) {
+	return -1l;
+    }
+
+    result = IORegistryEntryCreateCFProperties(regEntry, &props,
+	    kCFAllocatorDefault, 0);
+    IOObjectRelease(regEntry);
+
+    if (result != KERN_SUCCESS || props == NULL) {
+	return -1l;
+    }
+
+    timeObj = CFDictionaryGetValue(props, CFSTR("HIDIdleTime"));
+
+    if (timeObj) {
+	    CFNumberGetValue((CFNumberRef)timeObj,
+		    kCFNumberSInt64Type, &time);
+	    /* Convert nanoseconds to milliseconds. */
+	    ret = (long) (time/kMillisecondScale);
+    }
+    /* Cleanup */
+    CFRelease(props);
+
+    /* 
+     * If the idle time reported by the system is larger than the elapsed
+     * time since the last reset, return the elapsed time.
+     */
     TkDisplay* display = TkGetDisplayList();
-    return TkpGetMS() - display->lastActivityTime;
+    long elapsed = (long)(TkpGetMS() - display->lastInactivityReset); 
+    if (ret > elapsed) {
+    	ret = elapsed;
+    }
+    
+    return ret;
 }
 
 /*
@@ -929,7 +971,7 @@ Tk_ResetUserInactiveTime(
     Display *dpy)
 {
     TkDisplay* display = TkGetDisplayList();
-    display->lastActivityTime = TkpGetMS();
+    display->lastInactivityReset = TkpGetMS();
 }
 
 /*
