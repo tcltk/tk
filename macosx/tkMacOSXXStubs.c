@@ -40,12 +40,12 @@ CGFloat tkMacOSXZeroScreenTop = 0;
  * Declarations of static variables used in this file.
  */
 
-    /* The unique Macintosh display. */
+/* The unique Macintosh display. */
 static TkDisplay *gMacDisplay = NULL;
-    /* Default name of the Macintosh display. */				
+/* The default name of the Macintosh display. */
 static const char *macScreenName = ":0";
-    /* Timestamp showing the last reset of the inactivity timer. */
-static Time lastInactivityReset;
+/* Timestamp showing the last reset of the inactivity timer. */
+static Time lastInactivityReset = 0;
 
 
 /*
