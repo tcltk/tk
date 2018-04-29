@@ -40,10 +40,13 @@ CGFloat tkMacOSXZeroScreenTop = 0;
  * Declarations of static variables used in this file.
  */
 
+    /* The unique Macintosh display. */
 static TkDisplay *gMacDisplay = NULL;
-				/* Macintosh display. */
+    /* Default name of the Macintosh display. */				
 static const char *macScreenName = ":0";
-				/* Default name of macintosh display. */
+    /* Timestamp showing the last reset of the inactivity timer. */
+static Time lastInactivityReset;
+
 
 /*
  * Forward declarations of procedures used in this file.
@@ -936,16 +939,15 @@ Tk_GetUserInactiveTime(
     /* Cleanup */
     CFRelease(props);
 
-    /* 
+    /*
      * If the idle time reported by the system is larger than the elapsed
      * time since the last reset, return the elapsed time.
      */
-    TkDisplay* display = TkGetDisplayList();
-    long elapsed = (long)(TkpGetMS() - display->lastInactivityReset); 
+    long elapsed = (long)(TkpGetMS() - lastInactivityReset);
     if (ret > elapsed) {
     	ret = elapsed;
     }
-    
+
     return ret;
 }
 
@@ -970,8 +972,7 @@ void
 Tk_ResetUserInactiveTime(
     Display *dpy)
 {
-    TkDisplay* display = TkGetDisplayList();
-    display->lastInactivityReset = TkpGetMS();
+    lastInactivityReset = TkpGetMS();
 }
 
 /*

@@ -158,8 +158,6 @@ typedef struct TkDisplay {
 				 * removed). Malloc-ed. */
     Time lastEventTime;		/* Time of last event received for this
 				 * display. */
-    Time lastInactivityReset;   /* Time when the inactivity time was last reset.
-				   (Currently used only by macOS.) */
 
     /*
      * Information used primarily by tk3d.c:
