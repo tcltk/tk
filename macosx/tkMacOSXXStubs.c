@@ -903,7 +903,7 @@ long
 Tk_GetUserInactiveTime(
     Display *dpy)
 {
-    TkDisplay* display = (TkDisplay*)dpy;
+    TkDisplay* display = TkGetDisplayList();
     return TkpGetMS() - display->lastActivityTime;
 }
 
@@ -928,7 +928,7 @@ void
 Tk_ResetUserInactiveTime(
     Display *dpy)
 {
-    TkDisplay* display = (TkDisplay*)dpy;
+    TkDisplay* display = TkGetDisplayList();
     display->lastActivityTime = TkpGetMS();
 }
 
