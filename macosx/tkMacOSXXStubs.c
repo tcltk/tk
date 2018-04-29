@@ -903,53 +903,8 @@ long
 Tk_GetUserInactiveTime(
     Display *dpy)
 {
-    io_registry_entry_t regEntry;
-    CFMutableDictionaryRef props = NULL;
-    CFTypeRef timeObj;
-    long ret = -1l;
-    uint64_t time;
-    IOReturn result;
-
-    regEntry = IOServiceGetMatchingService(kIOMasterPortDefault,
-	    IOServiceMatching("IOHIDSystem"));
-
-    if (regEntry == 0) {
-	return -1l;
-    }
-
-    result = IORegistryEntryCreateCFProperties(regEntry, &props,
-	    kCFAllocatorDefault, 0);
-    IOObjectRelease(regEntry);
-
-    if (result != KERN_SUCCESS || props == NULL) {
-	return -1l;
-    }
-
-    timeObj = CFDictionaryGetValue(props, CFSTR("HIDIdleTime"));
-
-    if (timeObj) {
-	CFTypeID type = CFGetTypeID(timeObj);
-
-	if (type == CFDataGetTypeID()) { /* Jaguar */
-	    CFDataGetBytes((CFDataRef) timeObj,
-		    CFRangeMake(0, sizeof(time)), (UInt8 *) &time);
-	    /* Convert nanoseconds to milliseconds. */
-	    /* ret /= kMillisecondScale; */
-	    ret = (long) (time/kMillisecondScale);
-	} else if (type == CFNumberGetTypeID()) { /* Panther+ */
-	    CFNumberGetValue((CFNumberRef)timeObj,
-		    kCFNumberSInt64Type, &time);
-	    /* Convert nanoseconds to milliseconds. */
-	    /* ret /= kMillisecondScale; */
-	    ret = (long) (time/kMillisecondScale);
-	} else {
-	    ret = -1l;
-	}
-    }
-    /* Cleanup */
-    CFRelease(props);
-
-    return ret;
+    TkDisplay* display = (TkDisplay*)dpy;
+    return TkpGetMS() - display->lastActivityTime;
 }
 
 /*
@@ -973,28 +928,8 @@ void
 Tk_ResetUserInactiveTime(
     Display *dpy)
 {
-    IOGPoint loc = {0, 0};
-    kern_return_t kr;
-    NXEvent nullEvent = {NX_NULLEVENT, {0, 0}, 0, -1, 0};
-    enum { kNULLEventPostThrottle = 10 };
-    static io_connect_t io_connection = MACH_PORT_NULL;
-
-    if (io_connection == MACH_PORT_NULL) {
-	io_service_t service = IOServiceGetMatchingService(
-		kIOMasterPortDefault, IOServiceMatching(kIOHIDSystemClass));
-
-	if (service == MACH_PORT_NULL) {
-	    return;
-	}
-	kr = IOServiceOpen(service, mach_task_self(), kIOHIDParamConnectType,
-		&io_connection);
-	IOObjectRelease(service);
-	if (kr != KERN_SUCCESS) {
-	    return;
-	}
-    }
-    kr = IOHIDPostEvent(io_connection, NX_NULLEVENT, loc, &nullEvent.data,
-	    FALSE, 0, FALSE);
+    TkDisplay* display = (TkDisplay*)dpy;
+    display->lastActivityTime = TkpGetMS();
 }
 
 /*
