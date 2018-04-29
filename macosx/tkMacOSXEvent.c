@@ -101,6 +101,12 @@ enum {
     default:
 	break; /* return theEvent */
     }
+    /* Update the inactivity timer */
+    TkWindow *winPtr = TkMacOSXGetTkWindow([theEvent window]);
+    if (winPtr) {
+	TkDisplay *display = winPtr->dispPtr;
+	display->lastActivityTime = TkpGetMS();
+    }
     return processedEvent;
 }
 @end
