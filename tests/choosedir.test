@@ -97,10 +97,12 @@ test choosedir-1.3 {tk_chooseDirectory command} -constraints unix -body {
 test choosedir-1.4 {tk_chooseDirectory command} -constraints unix -body {
     tk_chooseDirectory -title
 } -returnCodes error -result {value for "-title" missing}
-
-test choosedir-1.5 {tk_chooseDirectory command} -constraints unix -body {
+test choosedir-1.5.1 {tk_chooseDirectory command} -constraints {unix notAqua} -body {
     tk_chooseDirectory -foo bar
 } -returnCodes error -result {bad option "-foo": must be -initialdir, -mustexist, -parent, or -title}
+test choosedir-1.5.2 {tk_chooseDirectory command} -constraints aqua -body {
+    tk_chooseDirectory -foo bar
+} -returnCodes error -result {bad option "-foo": -initialdir, -message, -mustexist, -parent, -title, or -command}
 test choosedir-1.6 {tk_chooseDirectory command} -constraints unix -body {
     tk_chooseDirectory -parent foo.bar
 } -returnCodes error -result {bad window path name "foo.bar"}
