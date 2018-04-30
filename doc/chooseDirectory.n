@@ -27,6 +27,10 @@ user-selected directory for the application. If the
 parameter specifies a relative path, the return value will convert the
 relative path to an absolute path.
 .TP
+\fB\-message\fR \fIstring\fR
+Specifies a message to include in the client area of the dialog.
+This is only available on Mac OS X.
+.TP
 \fB\-mustexist\fR \fIboolean\fR
 Specifies whether the user may specify non-existent directories.  If
 this parameter is true, then the user may only select directories that
