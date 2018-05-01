@@ -155,7 +155,7 @@ proc ::tk::MessageBox {args} {
 
     if {$data(-icon) ni {info warning error question}} {
 	return -code error -errorcode [list TK LOOKUP ICON $data(-icon)] \
-	    "bad -icon value \"$data(-icon)\": must be error, info, question, or warning"
+	    "bad value \"$data(-icon)\": must be error, info, question, or warning"
     }
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "aqua"} {
@@ -207,7 +207,7 @@ proc ::tk::MessageBox {args} {
 	}
 	default {
 	    return -code error -errorcode [list TK LOOKUP DLG_TYPE $data(-type)] \
-		"bad -type value \"$data(-type)\": must be\
+		"bad value \"$data(-type)\": must be\
 		abortretryignore, ok, okcancel, retrycancel,\
 		yesno, or yesnocancel"
 	}
