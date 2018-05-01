@@ -27,11 +27,11 @@
 
 
 /*
- * Default insets for controls
+ * Default insets for controls - used to adjust button metrics.
  */
 
-#define DEF_INSET_LEFT 12
-#define DEF_INSET_RIGHT 12
+#define DEF_INSET_LEFT 0
+#define DEF_INSET_RIGHT 0
 #define DEF_INSET_TOP 1
 #define DEF_INSET_BOTTOM 1
 
@@ -318,9 +318,8 @@ TkpComputeButtonGeometry(
 		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
 		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
-	/*Remove extraneous padding around label widgets.*/
 	txtWidth = butPtr->textWidth;
-	txtHeight = butPtr->textHeight + DEF_INSET_BOTTOM + DEF_INSET_TOP;
+	txtHeight = butPtr->textHeight;
 	charWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
 	Tk_GetFontMetrics(butPtr->tkfont, &fm);
 	haveText = (txtWidth != 0 && txtHeight != 0);
@@ -396,7 +395,9 @@ TkpComputeButtonGeometry(
         int paddingx = 0;
         int paddingy = 0;
 
-    	tmpRect = CGRectMake(0, 0, width, height);
+    	tmpRect = CGRectMake(0, 0,
+			     width + DEF_INSET_LEFT + DEF_INSET_RIGHT,
+			     height + DEF_INSET_BOTTOM + DEF_INSET_TOP);
 
         HIThemeGetButtonContentBounds(&tmpRect, &mbPtr->drawinfo, &contBounds);
         /* If the content region has a minimum height, match it. */
@@ -649,7 +650,7 @@ DrawButtonImageAndText(
 			  butPtr->textHeight, &x, &y);
 	x += butPtr->indicatorSpace;
 	Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
-			  x, y - DEF_INSET_BOTTOM, 0, -1);
+			  x + DEF_INSET_LEFT, y - DEF_INSET_BOTTOM, 0, -1);
     }
 
     /*
