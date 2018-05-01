@@ -14,7 +14,7 @@ namespace import -force tcltest::test
 test msgbox-1.1.1 {tk_messageBox command} -constraints notAqua -body {
     tk_messageBox -foo
 } -returnCodes error -result {bad option "-foo": must be -default, -detail, -icon, -message, -parent, -title, or -type}
-test msgbox-1.1.2 {tk_messageBox command} -constraints notAqua -body {
+test msgbox-1.1.2 {tk_messageBox command} -constraints aqua -body {
     tk_messageBox -foo
 } -returnCodes error -result {bad option "-foo": must be -default, -detail, -icon, -message, -parent, -title, -type, or -command}
 test msgbox-1.2.1 {tk_messageBox command} -constraints notAqua -body {
