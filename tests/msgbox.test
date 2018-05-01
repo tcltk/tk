@@ -50,34 +50,50 @@ test msgbox-1.10 {tk_messageBox command} -body {
     tk_messageBox -default
 } -returnCodes error -result {value for "-default" missing}
 
-test msgbox-1.11 {tk_messageBox command} -body {
+test msgbox-1.11.1 {tk_messageBox command} -constraints notAqua -body {
+    tk_messageBox -type foo
+} -returnCodes error -result {bad -type value "foo": must be abortretryignore, ok, okcancel, retrycancel, yesno, or yesnocancel}
+test msgbox-1.11.2 {tk_messageBox command} -constraints aqua -body {
     tk_messageBox -type foo
 } -returnCodes error -result {bad value "foo": must be abortretryignore, ok, okcancel, retrycancel, yesno, or yesnocancel}
 
 test msgbox-1.12 {tk_messageBox command} -constraints x11 -body {
     tk_messageBox -default 1.1
 } -returnCodes error -result {invalid default button "1.1"}
-test msgbox-1.13 {tk_messageBox command} -constraints aquaOrWin32 -body {
+test msgbox-1.13 {tk_messageBox command} -constraints aqua -body {
     tk_messageBox -default 1.1
 } -returnCodes error -result {bad value "1.1": must be abort, retry, ignore, ok, cancel, yes, or no}
+test msgbox-1.13a {tk_messageBox command} -constraints win -body {
+    tk_messageBox -default 1.1
+} -returnCodes error -result {bad -default value "1.1": must be abort, retry, ignore, ok, cancel, no, or yes}
 
 test msgbox-1.14 {tk_messageBox command} -constraints x11 -body {
     tk_messageBox -default foo
 } -returnCodes error -result {invalid default button "foo"}
-test msgbox-1.15 {tk_messageBox command} -constraints aquaOrWin32 -body {
+test msgbox-1.15 {tk_messageBox command} -constraints aqua -body {
     tk_messageBox -default foo
 } -returnCodes error -result {bad value "foo": must be abort, retry, ignore, ok, cancel, yes, or no}
+test msgbox-1.15a {tk_messageBox command} -constraints win -body {
+    tk_messageBox -default foo
+} -returnCodes error -result {bad -default value "foo": must be abort, retry, ignore, ok, cancel, no, or yes}
 
 test msgbox-1.16 {tk_messageBox command} -constraints x11 -body {
     tk_messageBox -type yesno -default 3
 } -returnCodes error -result {invalid default button "3"}
-test msgbox-1.17 {tk_messageBox command} -constraints aquaOrWin32 -body {
+test msgbox-1.17 {tk_messageBox command} -constraints aqua -body {
     tk_messageBox -type yesno -default 3
 } -returnCodes error -result {bad value "3": must be abort, retry, ignore, ok, cancel, yes, or no}
+test msgbox-1.17a {tk_messageBox command} -constraints win -body {
+    tk_messageBox -type yesno -default 3
+} -returnCodes error -result {bad -default value "3": must be abort, retry, ignore, ok, cancel, no, or yes}
 
-test msgbox-1.18 {tk_messageBox command} -body {
+test msgbox-1.18 {tk_messageBox command} -constraints notAqua -body {
+    tk_messageBox -icon foo
+} -returnCodes error -result {bad -icon value "foo": must be error, info, question, or warning}
+test msgbox-1.18a {tk_messageBox command} -constraints aqua -body {
     tk_messageBox -icon foo
 } -returnCodes error -result {bad value "foo": must be error, info, question, or warning}
+
 test msgbox-1.19 {tk_messageBox command} -body {
     tk_messageBox -parent foo.bar
 } -returnCodes error -result {bad window path name "foo.bar"}
