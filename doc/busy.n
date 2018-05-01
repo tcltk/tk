@@ -170,12 +170,12 @@ option add *Frame.BusyCursor gumby
 .CE
 .RE
 .TP
-.TP
 \fBtk busy current \fR?\fIpattern\fR?
 .
 Returns the pathnames of all widgets that are currently busy. If a
 \fIpattern\fR is given, only the path names of busy widgets matching
 \fIpattern\fR are returned.
+.TP
 \fBtk busy forget \fIwindow\fR ?\fIwindow\fR?...
 .
 Releases resources allocated by the \fBtk busy\fR command for \fIwindow\fR,
