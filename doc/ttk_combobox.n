@@ -20,6 +20,7 @@ values in the list.
 .SO ttk_widget
 \-class	\-cursor	\-takefocus
 \-style
+.SE
 .SO ttk_entry
 \-placeholder
 .SE
