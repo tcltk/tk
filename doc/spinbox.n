@@ -67,6 +67,14 @@ A floating-point value specifying the increment.  When used with
 \fB\-from\fR and \fB\-to\fR, the value in the widget will be adjusted by
 \fB\-increment\fR when a spin button is pressed (up adds the value,
 down subtracts the value).
+.OP \-placeholder placeHolder PlaceHolder
+Specifies an help text to display if no text is otherwise displayed.
+The displayed text will be displayed using the \fB\-font\fR and
+\fB\-justify\fR options.
+.OP \-placeholderforeground placeholderForeground PlaceholderForeground
+Specifies the foreground color to use when the placeholder text is displayed.
+If this option is the empty string, the normal placeholder foreground color
+is used.
 .OP \-readonlybackground readonlyBackground ReadonlyBackground
 Specifies the background color to use when the spinbox is readonly.  If
 this option is the empty string, the normal background color is used.

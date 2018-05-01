@@ -25,7 +25,7 @@ to a Tcl variable.
 \-takefocus	\-xscrollcommand
 .SE
 .SO ttk_entry
-\-validate	\-validatecommand
+\-placeholder	\-validate	\-validatecommand
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-command command Command
