@@ -47,6 +47,11 @@ One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 .\" MAYBE: .OP \-selectbackground selectBackground Foreground
 .\" MAYBE: .OP \-selectborderwidth selectBorderWidth BorderWidth
 .\" MAYBE: .OP \-selectforeground selectForeground Background
+.OP \-placeholder placeHolder PlaceHolder
+Specifies an help text to display if no text is otherwise displayed.
+The displayed text will be displayed using the \fB\-font\fR and
+\fB\-justify\fR options. The foreground color of the displayed text
+can be changed using the \fB\-placeholderforeground\fR style option.
 .OP \-show show Show
 If this option is specified, then the true contents of the entry
 are not displayed in the window.
