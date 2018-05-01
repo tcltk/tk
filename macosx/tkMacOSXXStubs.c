@@ -40,10 +40,13 @@ CGFloat tkMacOSXZeroScreenTop = 0;
  * Declarations of static variables used in this file.
  */
 
+/* The unique Macintosh display. */
 static TkDisplay *gMacDisplay = NULL;
-				/* Macintosh display. */
+/* The default name of the Macintosh display. */
 static const char *macScreenName = ":0";
-				/* Default name of macintosh display. */
+/* Timestamp showing the last reset of the inactivity timer. */
+static Time lastInactivityReset = 0;
+
 
 /*
  * Forward declarations of procedures used in this file.
@@ -920,26 +923,22 @@ Tk_GetUserInactiveTime(
     timeObj = CFDictionaryGetValue(props, CFSTR("HIDIdleTime"));
 
     if (timeObj) {
-	CFTypeID type = CFGetTypeID(timeObj);
-
-	if (type == CFDataGetTypeID()) { /* Jaguar */
-	    CFDataGetBytes((CFDataRef) timeObj,
-		    CFRangeMake(0, sizeof(time)), (UInt8 *) &time);
-	    /* Convert nanoseconds to milliseconds. */
-	    /* ret /= kMillisecondScale; */
-	    ret = (long) (time/kMillisecondScale);
-	} else if (type == CFNumberGetTypeID()) { /* Panther+ */
 	    CFNumberGetValue((CFNumberRef)timeObj,
 		    kCFNumberSInt64Type, &time);
 	    /* Convert nanoseconds to milliseconds. */
-	    /* ret /= kMillisecondScale; */
 	    ret = (long) (time/kMillisecondScale);
-	} else {
-	    ret = -1l;
-	}
     }
     /* Cleanup */
     CFRelease(props);
+
+    /*
+     * If the idle time reported by the system is larger than the elapsed
+     * time since the last reset, return the elapsed time.
+     */
+    long elapsed = (long)(TkpGetMS() - lastInactivityReset);
+    if (ret > elapsed) {
+    	ret = elapsed;
+    }
 
     return ret;
 }
@@ -965,28 +964,7 @@ void
 Tk_ResetUserInactiveTime(
     Display *dpy)
 {
-    IOGPoint loc = {0, 0};
-    kern_return_t kr;
-    NXEvent nullEvent = {NX_NULLEVENT, {0, 0}, 0, -1, 0};
-    enum { kNULLEventPostThrottle = 10 };
-    static io_connect_t io_connection = MACH_PORT_NULL;
-
-    if (io_connection == MACH_PORT_NULL) {
-	io_service_t service = IOServiceGetMatchingService(
-		kIOMasterPortDefault, IOServiceMatching(kIOHIDSystemClass));
-
-	if (service == MACH_PORT_NULL) {
-	    return;
-	}
-	kr = IOServiceOpen(service, mach_task_self(), kIOHIDParamConnectType,
-		&io_connection);
-	IOObjectRelease(service);
-	if (kr != KERN_SUCCESS) {
-	    return;
-	}
-    }
-    kr = IOHIDPostEvent(io_connection, NX_NULLEVENT, loc, &nullEvent.data,
-	    FALSE, 0, FALSE);
+    lastInactivityReset = TkpGetMS();
 }
 
 /*
