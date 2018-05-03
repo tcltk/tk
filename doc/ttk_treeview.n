@@ -474,6 +474,72 @@ to determine the affected item or items.
 '\" Not yet:
 '\" In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
 '\" of the virtual event.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::treeview\fP is \fBTreeview\fP.
+The treeview header class name is \fBHeading\fP.
+The treeview item class name is \fBItem\fP.
+The treeview cell class name is \fBCell\fP.
+.PP
+Dynamic states: \fBdisabled\fP, \fBselected\fP.
+.PP
+\fBTreeview\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-fieldbackground\fP \fIcolor\fP
+.br
+\fB\-font\fP \fIfont\fP
+.br
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-rowheight\fP \fIamount\fP
+.RS
+The \fB\-rowheight\fP value is not corrected by the \fBtk scaling\fP
+value or by the configured font size and must always be set.  Also make
+sure that the \fB\-rowheight\fP is large enough to contain any images.
+.PP
+To adjust the \fB\-rowheight\fP for the Treeview style, use the following code
+after \fBtk scaling\fP has been applied.
+Note that even if you do not support or change \fBtk scaling\fP
+in your program, your users may have it set in their .wishrc.
+.RE
+.PP
+.CS
+ttk::style configure Treeview \\
+     \-rowheight [expr {[font metrics \fIfont\fP \-linespace] + 2}]
+.CE
+.PP
+\fBHeading\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-font\fP \fIfont\fP
+.br
+\fB\-relief\fP \fIrelief\fP
+.PP
+\fBItem\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-indicatormargins\fP \fIpadding\fP
+.br
+\fB\-indicatorsize\fP \fIamount\fP
+.br
+\fB\-padding\fP \fIpadding\fP
+.PP
+\fBCell\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-padding\fP \fIpadding\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), listbox(n), image(n), bind(n)
 '\" Local Variables:
