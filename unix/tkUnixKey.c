@@ -146,9 +146,15 @@ TkpGetString(
     XDisplayKeycodes(winPtr->dispPtr->display, &mincode, &maxcode);
     if ((eventPtr->xkey.keycode < mincode) ||
 	(eventPtr->xkey.keycode > maxcode)) {
-	len = 0;
-	Tcl_DStringSetLength(dsPtr, len);
-	goto done;
+        if (eventPtr->xkey.keycode != 0) {
+	    len = 0;
+	    Tcl_DStringSetLength(dsPtr, len);
+	    goto done;
+        }
+        /*
+         * Keycode 0 seems to come from e.g. ibus input methods,
+         * we let this pass and hope for the best.
+         */
     }
 
 #ifdef TK_USE_INPUT_METHODS
