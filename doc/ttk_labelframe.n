@@ -65,6 +65,46 @@ If specified, the widget's requested height in pixels.
 Supports the standard widget commands
 \fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR;
 see \fIttk::widget(n)\fR.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::labelframe\fP is \fBTLabelframe\fP.
+The text label
+has a class of \fBTLabelframe.Label\fP.
+.PP
+Dynamic states: \fBdisabled\fP, \fBreadonly\fP.
+.PP
+\fBTLabelframe\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-borderwidth\fP \fIamount\fP
+.br
+\fB\-darkcolor\fP \fIcolor\fP
+.br
+\fB\-labelmargins\fP \fIamount\fP
+.br
+\fB\-labeloutside\fP \fIboolean\fP
+.br
+\fB\-lightcolor\fP \fIcolor\fP
+.br
+\fB\-relief\fP \fIrelief\fP
+.PP
+\fBTLabelframe.Label\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-font\fP \fIfont\fP
+.br
+\fB\-foreground\fP \fIcolor\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::frame(n), labelframe(n)
 .SH "KEYWORDS"
