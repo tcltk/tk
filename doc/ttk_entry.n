@@ -26,7 +26,7 @@ standard \fB\-xscrollcommand\fR option and \fBxview\fR widget command.
 \-class	\-cursor
 \-font	\-foreground
 \-style
-\-takefocus	\-xscrollcommand
+\-takefocus	\-xscrollcommand	\-placeholder
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-exportselection exportSelection ExportSelection
@@ -44,12 +44,6 @@ See \fBVALIDATION\fR below for more information.
 .OP \-justify justify Justify
 Specifies how the text is aligned within the entry widget.
 One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
-.OP \-placeholder placeHolder PlaceHolder
-Specifies a help text string to display if no text is otherwise displayed,
-that is when the widget is empty. The placeholder text is displayed using
-the values of the \fB\-font\fR and \fB\-justify\fR options. The foreground
-color of the placeholder text can be changed using the
-\fB\-placeholderforeground\fR style option.
 .\" MAYBE: .OP \-selectbackground selectBackground Foreground
 .\" MAYBE: .OP \-selectborderwidth selectBorderWidth BorderWidth
 .\" MAYBE: .OP \-selectforeground selectForeground Background

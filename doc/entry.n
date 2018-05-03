@@ -23,6 +23,7 @@ entry \- Create and manipulate 'entry' one-line text entry widgets
 \-foreground	\-insertwidth	\-xscrollcommand
 \-highlightbackground	\-justify
 \-highlightcolor	\-relief
+\-placeholder	\-placeholderforeground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-disabledbackground disabledBackground DisabledBackground
@@ -36,14 +37,6 @@ Specifies a script to eval when \fB\-validatecommand\fR returns 0.
 Setting it to {} disables this feature (the default).  The best use
 of this option is to set it to \fIbell\fR.  See \fBVALIDATION\fR
 below for more information.
-.OP \-placeholder placeHolder PlaceHolder
-Specifies a help text string to display if no text is otherwise displayed,
-that is when the widget is empty. The placeholder text is displayed using
-the values of the \fB\-font\fR and \fB\-justify\fR options.
-.OP \-placeholderforeground placeholderForeground PlaceholderForeground
-Specifies the foreground color to use when the placeholder text is
-displayed. If this option is the empty string, the default color gray70
-is used.
 .OP \-readonlybackground readonlyBackground ReadonlyBackground
 Specifies the background color to use when the entry is readonly.  If
 this option is the empty string, the normal background color is used.
