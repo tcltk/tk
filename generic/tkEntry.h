@@ -221,7 +221,7 @@ typedef struct {
 				 * value that the users requests. Malloc'ed */
     char *valueFormat;		/* Sprintf conversion specifier used for the
 				 * value. */
-    char digitFormat[10];	/* Sprintf conversion specifier computed from
+    char digitFormat[16];	/* Sprintf conversion specifier computed from
 				 * digits and other information; used for the
 				 * value. */
 
