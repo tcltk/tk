@@ -101,6 +101,7 @@ Tk_BellObjCmd(
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
     Tk_Window tkwin = clientData;
     int i, index, nice = 0;
+    Tk_ErrorHandler handler;
 
     if (objc > 4) {
     wrongArgs:
@@ -128,11 +129,13 @@ Tk_BellObjCmd(
 	    break;
 	}
     }
+    handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1, NULL, NULL);
     XBell(Tk_Display(tkwin), 0);
     if (!nice) {
 	XForceScreenSaver(Tk_Display(tkwin), ScreenSaverReset);
     }
     XFlush(Tk_Display(tkwin));
+    Tk_DeleteErrorHandler(handler);
     return TCL_OK;
 }
 
