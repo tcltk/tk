@@ -63,6 +63,25 @@ than the specified value.
 Supports the standard widget commands
 \fBconfigure\fR, \fBcget\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR;
 see \fIttk::widget(n)\fR.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::label\fP is \fBTLabel\fP.
+.PP
+Dynamic states: \fBdisabled\fP, \fBreadonly\fP.
+.PP
+\fBTLabel\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-font\fP \fIfont\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), label(n)
 '\" Local Variables:
