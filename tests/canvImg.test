@@ -173,7 +173,7 @@ test canvImg-4.2 {ConfiugreImage procedure} -constraints testImageType -setup {
 	.c delete all
 	image delete foo
 	image delete foo2
-} -result {{{foo free}} {{foo2 get} {foo2 display 0 0 80 60 30 30}} {50 100 130 160}}
+} -result {{{foo free}} {{foo2 get} {foo2 display 0 0 80 60}} {50 100 130 160}}
 test canvImg-4.3 {ConfiugreImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
@@ -733,7 +733,7 @@ test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo
-} -result {{foo display 2 4 6 8 30 30}}
+} -result {{foo display 2 4 6 8}}
 
 test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
@@ -748,7 +748,7 @@ test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo
-} -result {{foo display 0 0 40 50 30 30}}
+} -result {{foo display 0 0 40 50}}
 test canvImg-11.2 {ImageChangedProc procedure} -constraints {
 	testImageType
 } -setup {
@@ -784,7 +784,7 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 } -cleanup {
 	.c delete all
 	image delete foo foo2
-} -result {{foo2 display 0 0 20 40 50 40}}
+} -result {{foo2 display 0 0 20 40}}
 
 # cleanup
 imageFinish
