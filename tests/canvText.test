@@ -55,8 +55,8 @@ test canvText-1.10 {configuration options: good value for "stipple"} -body {
     list [lindex [.c itemconfigure test -stipple] 4] [.c itemcget test -stipple]
 } -result {gray50 gray50}
 test canvasText-1.11 {configuration options: bad value for "stipple"} -body {
-    .c itemconfigure test -stipple xyz
-} -returnCodes error -result {bitmap "xyz" not defined}
+    .c itemconfigure test -stipple abcxyz
+} -returnCodes error -result {bitmap "abcxyz" not defined}
 test canvText-1.12 {configuration options: good value for "underline"} -body {
     .c itemconfigure test -underline 0
     list [lindex [.c itemconfigure test -underline] 4] [.c itemcget test -underline]
