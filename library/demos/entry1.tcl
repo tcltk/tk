@@ -25,7 +25,7 @@ pack $btns -side bottom -fill x
 
 entry $w.e1
 entry $w.e2
-entry $w.e3
+entry $w.e3 -placeholder {Enter text here} -placeholderforeground gray75
 pack $w.e1 $w.e2 $w.e3 -side top -pady 5 -padx 10 -fill x
 
 $w.e1 insert 0 "Initial value"

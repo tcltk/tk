@@ -44,3 +44,4 @@ $w.frame.e1 insert 0 "Initial value"
 $w.frame.e2 insert end "This entry contains a long value, much too long "
 $w.frame.e2 insert end "to fit in the window at one time, so long in fact "
 $w.frame.e2 insert end "that you'll have to scan or scroll to see the end."
+$w.frame.e3 configure -placeholder {Enter text here} -placeholderforeground gray75

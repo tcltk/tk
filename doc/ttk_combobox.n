@@ -19,7 +19,7 @@ the user may select the value of the text field from among the
 values in the list.
 .SO ttk_widget
 \-class	\-cursor	\-takefocus
-\-style
+\-style	\-placeholder
 .SE
 .\" ALSO: Other entry widget options
 .SH "WIDGET-SPECIFIC OPTIONS"

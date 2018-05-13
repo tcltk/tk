@@ -23,6 +23,7 @@ spinbox \- Create and manipulate 'spinbox' value spinner widgets
 \-foreground	\-justify	\-xscrollcommand
 \-highlightbackground	\-relief
 \-highlightcolor	\-repeatdelay
+\-placeholder	\-placeholderforeground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-buttonbackground buttonBackground Background
