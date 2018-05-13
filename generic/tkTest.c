@@ -1560,9 +1560,8 @@ ImageDisplay(
     TImageInstance *instPtr = (TImageInstance *) clientData;
     char buffer[200 + TCL_INTEGER_SPACE * 6];
 
-    sprintf(buffer, "%s display %d %d %d %d %d %d",
-	    instPtr->masterPtr->imageName, imageX, imageY, width, height,
-	    drawableX, drawableY);
+    sprintf(buffer, "%s display %d %d %d %d",
+	    instPtr->masterPtr->imageName, imageX, imageY, width, height);
     Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
 	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     if (width > (instPtr->masterPtr->width - imageX)) {
