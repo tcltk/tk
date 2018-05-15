@@ -321,6 +321,7 @@ TK_OBJS = \
 	tkImgGIF.$(OBJEXT) \
 	tkImgPNG.$(OBJEXT) \
 	tkImgPPM.$(OBJEXT) \
+	tkImgSVGnano.$(OBJEXT) \
 	tkImgPhoto.$(OBJEXT) \
 	tkImgPhInstance.$(OBJEXT) \
 	tkImgUtil.$(OBJEXT) \
