@@ -1,0 +1,65 @@
+# This file is a Tcl script to test out the code in tkImgSVGnano.c, which reads
+# and write SVG-format image files for photo widgets. The files is organized
+# in the standard fashion for Tcl tests.
+#
+# Copyright (c) 2018 Rene Zaumseil
+# All rights reserved.
+
+package require tcltest 2.2
+namespace import ::tcltest::*
+eval tcltest::configure $argv
+tcltest::loadTestedCommands
+imageInit
+
+namespace eval svgnano {
+    variable data
+    set data(plus) {<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+<path fill="none" stroke="#000000" d="M0 0 h16 v16 h-16 z"/>
+<path fill="none" stroke="#000000" d="M8 4 v 8 M4 8 h 8"/>
+<circle fill="yellow" stroke="red" cx="10" cy="80" r="10" />
+<ellipse fill="none" stroke="blue" stroke-width="3" cx="60" cy="60" rx="10" ry="20" />
+<line x1="10" y1="90" x2="50" y2="99"/>
+<rect fill="none" stroke="green"  x="20" y="20" width="60" height="50" rx="3" ry="3"/>
+<polyline fill="red" stroke="purple" points="80,10 90,20 85,40"/>
+<polygon fill ="yellow" points="80,80 70,85 90,90"/>
+</svg>}
+    set data(bad) {<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0:w
+">
+</svg>}
+
+test imgSVGnano-1.1 {reading simple image} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -data $data(plus)
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {100 100}
+
+test imgSVGnano-1.2 {simple image with options} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -data $data(plus) -format {svgnano -dpi 100 -scale 3}
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {300 300}
+
+test imgSVGnano-2.1 {reading a bad image} -body {
+    image create photo foo -format svgnano -data $data(bad)
+} -returnCodes error -result {couldn't recognize image data}
+test imgSVGnano-2.2 {using bad option} -body {
+    image create photo -data $data(plus) -format {svgnano -scale 0}
+} -returnCodes error -result {couldn't recognize image data}
+
+};# end of namespace svgnano
+
+namespace delete svgnano
+imageFinish
+cleanupTests
+return
+
+# Local Variables:
+# mode: tcl
+# fill-column: 78
+# End:
