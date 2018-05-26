@@ -26,8 +26,8 @@ static char *
 VarTraceProc(
     ClientData clientData,	/* Widget record pointer */
     Tcl_Interp *interp, 	/* Interpreter containing variable. */
-    const char *name1,		/* (unused) */
-    const char *name2,		/* (unused) */
+    const char *name1,		/* Name of variable. */
+    const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     Ttk_TraceHandle *tracePtr = clientData;
@@ -35,6 +35,17 @@ VarTraceProc(
     Tcl_Obj *valuePtr;
 
     if (flags & TCL_INTERP_DESTROYED) {
+	return NULL;
+    }
+
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (tracePtr->varnameObj == NULL) {
+	Tcl_UntraceVar2(interp, name1, name2,
+		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		VarTraceProc, clientData);
 	return NULL;
     }
 
