@@ -192,7 +192,7 @@ static const char *const timesAliases[] = {
 #ifdef PLATFORM_SDL
     "DejaVu Serif",
     "DejaVu LGC Serif",
-#ifdef ANDROID
+#if defined(ANDROID) || defined(__HAIKU__)
     "Droid Serif",
     "Noto Serif",
 #else
@@ -211,6 +211,8 @@ static const char *const helveticaAliases[] = {
     "DejaVu LGC Sans",
 #ifdef ANDROID
     "Roboto",
+#endif
+#if defined(ANDROID) || defined(__HAIKU__)
     "Droid Sans Fallback",
     "Droid Sans",
 #else
@@ -227,7 +229,7 @@ static const char *const courierAliases[] = {
 #ifdef PLATFORM_SDL
     "DejaVu Sans Mono",
     "DejaVu LGC Sans Mono",
-#ifdef ANDROID
+#if defined(ANDROID) || defined(__HAIKU__)
     "Droid Sans Mono",
 #else
     "Liberation Mono",
@@ -296,7 +298,7 @@ static const char *const systemClass[] = {
 
 static const char *const serifClass[] = {
 #ifdef PLATFORM_SDL
-#ifdef ANDROID
+#if defined(ANDROID) || defined(__HAIKU__)
     "droid serif", "noto serif",
 #endif
     "dejavu lgc serif", "dejavu serif", "liberation serif",
@@ -312,8 +314,10 @@ static const char *const serifClass[] = {
 
 static const char *const sansClass[] = {
 #ifdef PLATFORM_SDL
-#ifdef ANDROID
+#if defined(ANDROID) || defined(__HAIKU__)
     "droid sans fallback", "droid sans",
+#endif
+#ifdef ANDROID
     "droid sans hebrew", "droid arabic kufi",
     "droid arabic nashk",
     "droid sans japanese", "droid sans thai",
@@ -332,7 +336,7 @@ static const char *const sansClass[] = {
 
 static const char *const monoClass[] = {
 #ifdef PLATFORM_SDL
-#ifdef ANDROID
+#if defined(ANDROID) || defined(__HAIKU__)
     "droid sans mono",
 #endif
     "dejavu lgc sans mono", "dejavu sans mono", "liberation mono",
@@ -371,8 +375,11 @@ static const char *const *const fontFallbacks[] = {
 
 static const char *const globalFontClass[] = {
 #ifdef PLATFORM_SDL
+#if defined(ANDROID) || defined(__HAIKU__)
+    "droid sans fallback",
+#endif
 #ifdef ANDROID
-    "droid sans fallback", "droid arabic nashk",
+    "droid arabic nashk",
     "droid sans hebrew", "droid sans", "roboto",
 #endif
     "dejavu lgc sans", "dejavu sans", "liberation sans",

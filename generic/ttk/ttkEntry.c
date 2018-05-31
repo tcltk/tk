@@ -337,7 +337,8 @@ EntryFetchSelection(
     const char *string;
     const char *selStart, *selEnd;
 
-    if (entryPtr->entry.selectFirst < 0 || !entryPtr->entry.exportSelection) {
+    if (entryPtr->entry.selectFirst < 0 || (!entryPtr->entry.exportSelection)
+	    || Tcl_IsSafe(entryPtr->core.interp)) {
 	return -1;
     }
     string = entryPtr->entry.displayString;
@@ -372,11 +373,12 @@ static void EntryLostSelection(ClientData clientData)
 
 /* EntryOwnSelection --
  * 	Assert ownership of the PRIMARY selection,
- * 	if -exportselection set and selection is present.
+ * 	if -exportselection set and selection is present and interp is unsafe.
  */
 static void EntryOwnSelection(Entry *entryPtr)
 {
     if (entryPtr->entry.exportSelection
+	&& (!Tcl_IsSafe(entryPtr->core.interp))
 	&& !(entryPtr->core.flags & GOT_SELECTION)) {
 	Tk_OwnSelection(entryPtr->core.tkwin, XA_PRIMARY, EntryLostSelection,
 		(ClientData) entryPtr);
@@ -999,7 +1001,8 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 
     /* Claim the selection, in case we've suddenly started exporting it.
      */
-    if (entryPtr->entry.exportSelection && entryPtr->entry.selectFirst != -1) {
+    if (entryPtr->entry.exportSelection && (entryPtr->entry.selectFirst != -1)
+	    && (!Tcl_IsSafe(entryPtr->core.interp))) {
 	EntryOwnSelection(entryPtr);
     }
 

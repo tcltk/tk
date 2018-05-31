@@ -1131,8 +1131,10 @@ TkpCreateBusy(
 	 */
 
 	if (XQueryTree(Tk_Display(tkRef), Tk_WindowId(tkRef), &root,
-		&parent, &dummy, &count) > 0) {
-	    XFree(dummy);
+		&parent, &dummy, &count)) {
+	    if (dummy != NULL) {
+		XFree((void *) dummy);
+	    }
 	    *parentPtr = parent;
 	} else {
 	    *parentPtr = None;

@@ -437,7 +437,7 @@ TkTextMakeByteIndex(
 		 */
 
 		start = segPtr->body.chars + (byteIndex - index);
-		p = TkUtfPrev(start, segPtr->body.chars);
+		p = Tcl_UtfPrev(start, segPtr->body.chars);
 		p += TkUtfToUniChar(p, &ch);
 		indexPtr->byteIndex += p - start;
 	    }

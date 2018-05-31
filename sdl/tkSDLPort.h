@@ -181,10 +181,8 @@
  * This should perhaps use the real size of an XID.
  */
 
-#ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "%#08lx", (unsigned long) (w))
-#endif
+	sprintf((buf), "%#" TCL_LL_MODIFIER "x", (Tcl_WideInt) (w))
 
 extern unsigned long TkpGetPixel(XColor *);
 

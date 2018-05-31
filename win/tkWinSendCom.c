@@ -450,13 +450,14 @@ Send(
 	    TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
     Tcl_DecrRefCount(scriptPtr);
     if (pvResult != NULL) {
+	Tcl_Obj *obj;
 	const char *src;
-	int len;
 
 	VariantInit(pvResult);
 	pvResult->vt = VT_BSTR;
-	src = Tcl_GetStringFromObj(Tcl_GetObjResult(interp), &len);
-	Tcl_WinUtfToTChar(src, len, &ds);
+	obj = Tcl_GetObjResult(interp);
+	src = Tcl_GetString(obj);
+	Tcl_WinUtfToTChar(src, obj->length, &ds);
 	pvResult->bstrVal = SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
     }

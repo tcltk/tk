@@ -38,7 +38,8 @@ proc fontchooserVisibility {w} {
 }
 proc fontchooserFocus {w} {
     tk fontchooser configure -font [$w cget -font] \
-	    -command [list fontchooserFontSel $w]
+	    -command [list fontchooserFontSel $w] \
+	    -parent [winfo toplevel $w]
 }
 proc fontchooserFontSel {w font args} {
     $w configure -font [font actual $font]

@@ -88,6 +88,8 @@ typedef struct ThreadSpecificData {
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
     int surrogateBuffer;	/* Buffer for first of surrogate pair. */
+    DWORD wheelTickPrev;	/* For high resolution wheels. */
+    short wheelAcc;		/* For high resolution wheels. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -614,6 +616,8 @@ TkpOpenDisplay(
     ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
+    tsdPtr->wheelTickPrev = GetTickCount();
+    tsdPtr->wheelAcc = 0;
 
     return tsdPtr->winDisplay;
 }
@@ -1144,7 +1148,23 @@ GenerateXEvent(
 	 */
 
 	switch (message) {
-	case WM_MOUSEWHEEL:
+	case WM_MOUSEWHEEL: {
+	    /*
+	     * Support for high resolution wheels.
+	     */
+
+	    DWORD wheelTick = GetTickCount();
+
+	    if (wheelTick - tsdPtr->wheelTickPrev < 1500) {
+		tsdPtr->wheelAcc += (short) HIWORD(wParam);
+	    } else {
+		tsdPtr->wheelAcc = (short) HIWORD(wParam);
+	    }
+	    tsdPtr->wheelTickPrev = wheelTick;
+	    if (abs(tsdPtr->wheelAcc) < WHEEL_DELTA) {
+		return;
+	    }
+
 	    /*
 	     * We have invented a new X event type to handle this event. It
 	     * still uses the KeyPress struct. However, the keycode field has
@@ -1156,8 +1176,10 @@ GenerateXEvent(
 	    event.type = MouseWheelEvent;
 	    event.xany.send_event = -1;
 	    event.xkey.nbytes = 0;
-	    event.xkey.keycode = (short) HIWORD(wParam);
+	    event.xkey.keycode = tsdPtr->wheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    tsdPtr->wheelAcc = tsdPtr->wheelAcc % WHEEL_DELTA;
 	    break;
+	}
 	case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
 	    /*

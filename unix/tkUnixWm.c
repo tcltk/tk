@@ -351,6 +351,8 @@ static int		ParseGeometry(Tcl_Interp *interp, const char *string,
 			    TkWindow *winPtr);
 static void		ReparentEvent(WmInfo *wmPtr, XReparentEvent *eventPtr);
 static void		PropertyEvent(WmInfo *wmPtr, XPropertyEvent *eventPtr);
+static void		SetTransientForHintEx(Display *display, WmInfo *wmInfo,
+			    Window window, Window propWindow);
 static void		TkWmStackorderToplevelWrapperMap(TkWindow *winPtr,
 			    Display *display, Tcl_HashTable *reparentTable);
 static void		TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
@@ -476,6 +478,83 @@ static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
+
+/*
+ *--------------------------------------------------------------
+ *
+ * SetTransientForHintEx --
+ *
+ *	Similar to XSetTransientForHint() but tries to deal with
+ *	embedded toplevels and redirects the master window up to
+ *	the container's toplevel.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The WM_TRANSIENT_FOR property for the given window is set.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+SetTransientForHintEx(
+    Display *display,		/* Pointer to X display. */
+    WmInfo *wmInfo,		/* Window-manager-related info. */
+    Window window,		/* Transient window. */
+    Window propWindow)		/* Master window. */
+{
+    Window current, parent, root, *children = NULL;
+    unsigned int count;
+    Status status;
+
+    if (wmInfo->vRoot != None) {
+	status = XQueryTree(display, wmInfo->vRoot, &root, &parent,
+			&children, &count);
+    } else {
+	status = XQueryTree(display, propWindow, &root, &parent,
+			&children, &count);
+	if (children != NULL) {
+	    XFree((void *) children);
+	    children = NULL;
+	}
+	if (status) {
+	    status = XQueryTree(display, root, &root, &parent,
+			    &children, &count);
+	}
+    }
+    if (status && count) {
+	current = propWindow;
+	while (1) {
+	    Window *tmp = NULL;
+	    unsigned int n;
+
+	    status = XQueryTree(display, current, &root, &parent, &tmp, &n);
+	    if (tmp != NULL) {
+		XFree((void *) tmp);
+	    }
+	    if (status == 0) {
+		break;
+	    }
+	    if ((parent == root) || (parent == wmInfo->vRoot)) {
+		break;
+	    }
+	    for (n = 0; n < count; n++) {
+		if (parent == children[n]) {
+		    propWindow = current;
+		    goto done;
+		}
+	    }
+	    current = parent;
+	}
+done:
+	;
+    }
+    if (children != NULL) {
+	XFree((void *) children);
+    }
+    XSetTransientForHint(display, window, propWindow);
+}
 
 /*
  *--------------------------------------------------------------
@@ -700,7 +779,8 @@ TkWmMapWindow(
 	     * if we are withdrawn. [Bug 1163496]
 	     */
 
-	    XSetTransientForHint(winPtr->display, wmPtr->wrapperPtr->window,
+	    SetTransientForHintEx(winPtr->display, wmPtr,
+		    wmPtr->wrapperPtr->window,
 		    wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
 	}
 
@@ -1827,10 +1907,10 @@ WmForgetCmd(
 		~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 	RemapWindows(winPtr, winPtr->parentPtr);
 
-        /*
-         * Make sure wm no longer manages this window
-         */
-        Tk_ManageGeometry(frameWin, NULL, NULL);
+	/*
+	 * Make sure wm no longer manages this window
+	 */
+	Tk_ManageGeometry(frameWin, NULL, NULL);
 
 	/*
 	 * Flags (above) must be cleared before calling TkMapTopFrame (below).
@@ -3630,7 +3710,7 @@ WmTransientCmd(
 	    }
 	} else {
 	    if (wmPtr->masterPtr != NULL) {
-		XSetTransientForHint(winPtr->display,
+		SetTransientForHintEx(winPtr->display, wmPtr,
 			wmPtr->wrapperPtr->window,
 			wmPtr->masterPtr->wmInfoPtr->wrapperPtr->window);
 	    } else {
@@ -4218,7 +4298,9 @@ ReparentEvent(
 	    Tk_DeleteErrorHandler(handler);
 	    goto noReparent;
 	}
-	XFree((char *) children);
+	if (children != NULL) {
+	    XFree((void *) children);
+	}
 	if ((ancestor == vRoot) ||
 		(ancestor == RootWindow(wrapperPtr->display,
 		wrapperPtr->screenNum))) {
@@ -5698,7 +5780,7 @@ Tk_GetRootCoords(
     int *xPtr,			/* Where to store x-displacement of (0,0). */
     int *yPtr)			/* Where to store y-displacement of (0,0). */
 {
-    int x, y;
+    int x, y, compY = 0;
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
     /*
@@ -5718,7 +5800,8 @@ Tk_GetRootCoords(
 	     * then continue with the toplevel (in case it's embedded).
 	     */
 
-	    y -= winPtr->wmInfoPtr->menuHeight;
+	    compY = winPtr->wmInfoPtr->menuHeight;
+	    y -= compY;
 	    winPtr = winPtr->wmInfoPtr->winPtr;
 	    continue;
 	}
@@ -5745,7 +5828,7 @@ Tk_GetRootCoords(
 		XTranslateCoordinates(winPtr->display, winPtr->window,
 			root, 0, 0, &rootX, &rootY, &dummyChild);
 		x += rootX;
-		y += rootY;
+		y += rootY - compY;
 		break;
 	    } else {
 		/*
@@ -6429,8 +6512,8 @@ TkWmStackorderToplevel(
 	 */
 
 	*window_ptr = NULL;
-	if (numChildren) {
-	    XFree((char *) children);
+	if (children != NULL) {
+	    XFree((void *) children);
 	}
     }
 
@@ -6838,7 +6921,7 @@ TkSetTransientFor(Tk_Window tkwin, Tk_Window parent)
     if (((TkWindow *)parent)->wmInfoPtr->wrapperPtr == NULL) {
 	CreateWrapper(((TkWindow *)parent)->wmInfoPtr);
     }
-    XSetTransientForHint(Tk_Display(tkwin),
+    SetTransientForHintEx(Tk_Display(tkwin), ((TkWindow *)tkwin)->wmInfoPtr,
 	((TkWindow *)tkwin)->wmInfoPtr->wrapperPtr->window,
 	((TkWindow *)parent)->wmInfoPtr->wrapperPtr->window);
 }

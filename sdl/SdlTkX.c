@@ -1,9 +1,11 @@
 #if defined(linux) || defined(__FreeBSD__)
 #define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #if defined(__arm__) || defined(__aarch64__) || defined(ANDROID)
 #include <sys/eventfd.h>
 #endif
 #include <dlfcn.h>
+#include <grp.h>
 #endif
 #ifdef _WIN32
 #include <windows.h>
@@ -163,7 +165,7 @@ SdlTkNotify(void)
 }
 
 /*
- * Undocumented Xlib internal function
+ * Undocumented Xlib internal function.
  */
 
 int
@@ -184,7 +186,7 @@ XAllocClassHint(void)
 int
 XAllocColor(Display *display, Colormap colormap, XColor *color)
 {
-    /* NOTE: If this changes, update TkpGetPixel */
+    /* NOTE: If this changes, update TkpGetPixel(). */
     Uint8 r = (color->red / 65535.0) * 255.0;
     Uint8 g = (color->green / 65535.0) * 255.0;
     Uint8 b = (color->blue / 65535.0) * 255.0;
@@ -202,7 +204,6 @@ XAllocNamedColor(display, colormap, color_name, screen_def_return,
     XColor* screen_def_return;
     XColor* exact_def_return;
 {
-    /* xcolors.c */
     if (XParseColor(display, colormap, color_name, exact_def_return) == 1) {
 	*screen_def_return = *exact_def_return;
 	return XAllocColor(display, colormap, screen_def_return);
@@ -319,7 +320,7 @@ XChangeProperty(Display *display, Window w, Atom property, Atom type,
 	_w->title = ckalloc(nelements + 1); /* UTF-8 */
 	strcpy((char *) _w->title, (char *) data);
 
-	/* Redraw frame titlebar */
+	/* Redraw frame titlebar. */
 	if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	    SdlTkDecSetDraw(_w->parent, 1);
 	    SdlTkScreenChanged();
@@ -483,9 +484,12 @@ SdlTkChangeWindowAttributes(Display *display, Window w,
     if (valueMask & CWEventMask) {
 	_w->atts.your_event_mask = attributes->event_mask;
     }
+    if (valueMask & CWDontPropagate) {
+	_w->atts.do_not_propagate_mask = attributes->do_not_propagate_mask;
+    }
     if (valueMask & CWOverrideRedirect) {
 
-	/* Tk won't call us unless it changed */
+	/* Tk won't call us unless it changed. */
 	_w->atts.override_redirect = attributes->override_redirect;
 
 	if (attributes->override_redirect) {
@@ -493,17 +497,17 @@ SdlTkChangeWindowAttributes(Display *display, Window w,
 	    /*
 	     * Is override_redirect, wasn't before.
 	     * Decorative frame may not have been allocated yet
-	     * if the window was never mapped
+	     * if the window was never mapped.
 	     */
 
 	    if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
-		/* Reparent to root */
+		/* Reparent to root. */
 		SdlTkReparentWindow(display, w, SdlTkX.screen->root,
 				    _w->parent->atts.x, _w->parent->atts.y);
 		SdlTkGenerateConfigureNotify(NULL, w);
 	    }
 	} else {
-	    /* Was override_redirect, isn't now */
+	    /* Was override_redirect, isn't now. */
 	    SdlTkUnmapWindow(display, w);
 	    SdlTkMapWindow(display, w);
 	}
@@ -564,7 +568,7 @@ XCloseDisplay(Display *display)
 	display->display_name = NULL;
     }
 
-    /* Remove left over windows */
+    /* Remove left over windows. */
     _w = ((_Window *) SdlTkX.screen->root)->child;
     while (_w != NULL) {
 	if (_w->display == display) {
@@ -581,7 +585,7 @@ XCloseDisplay(Display *display)
     }
 #endif
 
-    /* Cleanup event queues */
+    /* Cleanup event queues. */
     Tcl_MutexLock((Tcl_Mutex *) &display->qlock);
     qevent = display->head;
     while (qevent != NULL) {
@@ -600,7 +604,7 @@ XCloseDisplay(Display *display)
     Tcl_MutexUnlock((Tcl_Mutex *) &display->qlock);
     Tcl_MutexFinalize((Tcl_Mutex *) &display->qlock);
 
-    /* Dequeue cloned display */
+    /* Dequeue cloned display. */
     prev = SdlTkX.display;
     curr = prev->next_display;
     while ((curr != NULL) && (curr != display)) {
@@ -617,7 +621,7 @@ XCloseDisplay(Display *display)
 	XDestroyAgg2D(display, display->agg2d);
     }
 
-    /* Free GCs and Pixmaps */
+    /* Free GCs and Pixmaps. */
     while (display->gcs != NULL) {
 	XGCValues *next = display->gcs->next;
 
@@ -672,7 +676,7 @@ XConfigureWindow(Display *display, Window w, unsigned int value_mask,
 	SdlTkScreenChanged();
     }
 
-    /* Need this for Tk_RestackWindow and Tk_MakeWindowExist */
+    /* Need this for Tk_RestackWindow() and Tk_MakeWindowExist(). */
     if (value_mask & CWStackMode) {
 	_Window *sibling = NULL;
 
@@ -681,7 +685,7 @@ XConfigureWindow(Display *display, Window w, unsigned int value_mask,
 	}
 
 	SdlTkRestackWindow(_w, sibling, values->stack_mode);
-	/*SdlTkRestackTransients(_w); -- this isn't a toplevel */
+	/*SdlTkRestackTransients(_w); this isn't a toplevel. */
 
 	SdlTkScreenChanged();
     }
@@ -752,7 +756,7 @@ XCreateBitmapFromData(Display *display, Drawable d, _Xconst char *data,
 
     SdlTkLock(display);
 
-    /* Use 1 byte-per-pixel for efficient drawing/stippling */
+    /* Use 1 byte-per-pixel for efficient drawing/stippling. */
     sdl = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height,
 			       8, 0, 0, 0, 0);
     if (sdl == NULL) {
@@ -760,8 +764,8 @@ XCreateBitmapFromData(Display *display, Drawable d, _Xconst char *data,
     }
 
     /*
-     * New 8-bit surfaces have an empty palette. Set the palette
-     * to black and white.
+     * New 8-bit surfaces have an empty palette.
+     * Set the palette to black and white.
      */
 
     colors[0].r = colors[0].g = colors[0].b = 0;
@@ -1244,8 +1248,8 @@ SdlTkCreateWindow(Display *display, Window parent, int x, int y,
 
     /*
      * A window's requested width/height are *inside* its borders.
-     * It doesn't look like Tk uses this border_width anywhere, it is
-     * different than the -borderwidth option.
+     * It doesn't look like Tk uses this border_width anywhere,
+     * it is different than the -borderwidth option.
      */
 
     _w->parentWidth = width + 2 * border_width;
@@ -1257,12 +1261,12 @@ SdlTkCreateWindow(Display *display, Window parent, int x, int y,
 
     _w->clazz = (clazz == InputOnly) ? InputOnly : InputOutput;
 
-    /* Make first child of parent */
+    /* Make first child of parent. */
     _w->next = _parent->child;
     _parent->child = _w;
 
     if (_parent->atts.your_event_mask & SubstructureNotifyMask) {
-	/* Make CreateNotify */
+	/* Make CreateNotify event. */
 	XEvent event;
 
 	memset(&event, 0, sizeof (event));
@@ -1460,7 +1464,7 @@ SdlTkDestroyWindow(Display *display, Window w)
     SdlTkX.nwfree++;
 
     /*
-     * Remove properties
+     * Remove properties.
      */
     if (prop_initialized) {
 	Tcl_HashEntry *hPtr;
@@ -1482,8 +1486,8 @@ SdlTkDestroyWindow(Display *display, Window w)
     /*
      * Destroy decorative frame:
      * actually this shouldn't happen, since Tk reparents the wrapper
-     * to the root before destroying it, and reparenting should destroy the
-     * decorative frame
+     * to the root before destroying it, and reparenting should destroy
+     * the decorative frame.
      */
 
     if (wdec != NULL) {
@@ -1871,7 +1875,7 @@ SdlTkQueueEvent(XEvent *event)
 	display->head = qevent;
 	trigger = 1;
     }
-    /* Delay trigger for (Graphics)Expose with count greater zero */
+    /* Delay trigger for (Graphics)Expose with count greater zero. */
     if ((event->xany.type == Expose) && (event->xexpose.count > 0)) {
 	trigger = 0;
     } else if ((event->xany.type == GraphicsExpose) &&
@@ -2223,7 +2227,7 @@ XGetImage(Display *display, Drawable d, int x, int y,
 	/* Allocate a block of pixels to hold the result. */
 	pixels = ckalloc(width * height * _p->sdl->format->BytesPerPixel);
 
-	/* Create an SDL surface that uses the pixels we allocated above */
+	/* Create an SDL surface that uses the pixels we allocated above. */
 	sdl = SDL_CreateRGBSurfaceFrom(pixels, width, height,
 				       _p->sdl->format->BitsPerPixel,
 				       /* pitch */
@@ -2251,7 +2255,7 @@ XGetImage(Display *display, Drawable d, int x, int y,
 	pixels = ckalloc(width * height *
 			 SdlTkX.sdlsurf->format->BytesPerPixel);
 
-	/* Create an SDL surface that uses the pixels we allocated above */
+	/* Create an SDL surface that uses the pixels we allocated above. */
 	sdl = SDL_CreateRGBSurfaceFrom(pixels, width, height,
 				       SdlTkX.sdlsurf->format->BitsPerPixel,
 				       /* pitch */
@@ -2278,15 +2282,15 @@ XGetImage(Display *display, Drawable d, int x, int y,
     fakeGC.clip_mask = None;
     fakeGC.graphics_exposures = False;
 
-    /* Copy from the drawable to our pixmap */
+    /* Copy from the drawable to our pixmap. */
     SdlTkGfxCopyArea(d, (Pixmap) &rp, &fakeGC, x, y, width, height, 0, 0);
 
-    /* Free the surface. The pixels are *not* freed */
+    /* Free the surface. The pixels are *not* freed. */
     SDL_FreeSurface(sdl);
 
     SdlTkUnlock(display);
 
-    /* Allocate the XImage using the pixels we allocated above */
+    /* Allocate the XImage using the pixels we allocated above. */
     return XCreateImage(display, SdlTkX.screen->root_visual,
 			bpp, ZPixmap, 0, pixels, width, height, 0, 0);
 }
@@ -3639,7 +3643,7 @@ SdlTkUtf2KeySym(const char *utf, int len, int *lenret)
     return NoSymbol;
 }
 
-/* Needed for TkpGetString */
+/* Needed for TkpGetString(). */
 int
 XLookupString(XKeyEvent *event_struct, char *buffer_return, int bytes_buffer,
 	      KeySym *keysym_return, XComposeStatus *status_in_out)
@@ -3656,7 +3660,7 @@ XLookupString(XKeyEvent *event_struct, char *buffer_return, int bytes_buffer,
 	}
 	*keysym_return = XKeycodeToKeysym(NULL, event_struct->keycode, 0);
     }
-    /* Already converted to UTF-8 by SdlTkTranslateEvent */
+    /* Already converted to UTF-8 by SdlTkTranslateEvent(). */
 conv:
     memcpy(buffer_return, event_struct->trans_chars, event_struct->nbytes);
     return event_struct->nbytes; /* length */
@@ -3786,8 +3790,10 @@ SdlTkMapWindow(Display *display, Window w)
 	SdlTkReparentWindow(display, w, wdec,
 			    SdlTkX.dec_frame_width, SdlTkX.dec_title_height);
 
-	/* Let Tk know I moved the window. You would think the <Reparent>
-	 * event would be a good clue */
+	/*
+	 * Let Tk know I moved the window. You would think the <Reparent>
+	 * event would be a good clue.
+	 */
 	if (doconf) {
 	    SdlTkGenerateConfigureNotify(NULL, w);
 	}
@@ -3795,14 +3801,14 @@ SdlTkMapWindow(Display *display, Window w)
 	SdlTkGenerateConfigureNotify(NULL, w);
     }
 
-    /* Map decorative frame */
+    /* Map decorative frame. */
     if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	_w->parent->atts.map_state = IsViewable;
     }
 
     _w->atts.map_state = IsViewable;
 
-    /* Tk only cares about this for wrapper windows */
+    /* Tk only cares about this for wrapper windows. */
     if (_w->atts.your_event_mask & StructureNotifyMask) {
 	event.type = MapNotify;
 	event.xmap.serial = _w->display->request;
@@ -4051,10 +4057,10 @@ SdlTkMoveResizeWindow(Display *display, Window w, int x, int y,
 	}
     }
 
-    /* "wm geom +x+y" will call this, even though the size doesn't change */
+    /* "wm geom +x+y" will call this, even though the size doesn't change. */
     if ((_w->atts.width != width) || (_w->atts.height != height)) {
 
-	/* If this window has a decorative frame, resize it */
+	/* If this window has a decorative frame, resize it. */
 	if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	    _Window *wdec = _w->parent;
 
@@ -4158,16 +4164,16 @@ again:
     qevent = display->head;
     if (qevent != NULL) {
 	*event_return = qevent->event;
-	/* Remove from front of queue */
+	/* Remove from front of queue. */
 	display->head = qevent->next;
 	if (display->head == NULL) {
 	    display->tail = NULL;
 	}
-	/* Add to front of free list */
+	/* Add to front of free list. */
 	qevent->next = display->qfree;
 	display->qfree = qevent;
 	display->qlen--;
-	/* Shrink free list down to 4 times initial pre-allocated size */
+	/* Shrink free list down to 4 times initial pre-allocated size. */
 	n = 0;
 	while (display->nqtotal > 4 * 128) {
 	    qevent = display->qfree;
@@ -4201,7 +4207,7 @@ again:
 	xe->name = Tk_GetUid((const char *) xe->name);
 	EVLOG("VirtualEvent '%s'", (char *) xe->name);
     } else if (event_return->xany.type == PointerUpdate) {
-	/* Pointer updates handled similar to Windows */
+	/* Pointer updates handled similar to Windows. */
 	XUpdatePointerEvent *pe = (XUpdatePointerEvent *) event_return;
 
 	if (((_Window *) pe->window)->display == display) {
@@ -4209,7 +4215,7 @@ again:
 	}
     } else if ((event_return->xany.type == ConfigureNotify) &&
 	       (event_return->xconfigure.event == display->screens[0].root)) {
-	/* Size change of root window handled specially */
+	/* Size change of root window handled specially. */
 	int oldw = display->screens[0].width;
 	int oldh = display->screens[0].height;
 	int neww = event_return->xconfigure.width;
@@ -4958,9 +4964,9 @@ SdlTkSetWindowOpacity(double opacity)
  *
  * TimerCallback --
  *
- *	SDL timer callback function invoked every 20 ms. If enabled
- *	sends an SDL_USEREVENT message to the SDL event queue to
- *	wake up EventThread().
+ *	SDL timer callback function invoked every 10/20/200/400 ms.
+ *	If enabled sends an SDL_USEREVENT message to the SDL event
+ *	queue to wake up EventThread().
  *
  *----------------------------------------------------------------------
  */
@@ -5107,6 +5113,80 @@ done:
 
 #endif
 
+#if defined(linux) && !defined(ANDROID)
+/*
+ *----------------------------------------------------------------------
+ *
+ * CheckGroups --
+ *
+ *	See if calling process is in the "input" group.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+CheckGroups(int how)
+{
+    gid_t gids[NGROUPS_MAX + 1];
+    int i, n;
+    struct group *gp;
+
+    if (how <= 0) {
+	return 0;
+    }
+    if (geteuid() == 0) {
+	return 0;
+    }
+    gids[0] = getegid();
+    n = getgroups(NGROUPS_MAX, gids);
+    if (n < 0) {
+	return -1;
+    }
+    ++n;
+    setgrent();
+    for (i = 0; i < n; i++) {
+	gp = getgrgid(gids[i]);
+	if (gp == NULL) {
+	    continue;
+	}
+	if ((how & 1) && strcmp(gp->gr_name, "input") == 0) {
+	    how &= ~1;
+	}
+	if ((how & 2) && strcmp(gp->gr_name, "tty") == 0) {
+	    how &= ~2;
+	}
+    }
+    endgrent();
+    return (how != 0) ? -1 : 0;
+}
+#endif
+
+#ifdef linux
+/*
+ *----------------------------------------------------------------------
+ *
+ * DoSDLQuit --
+ *
+ *	Last resort atexit() handler. This is required for
+ *	the KMSDRM video driver to restore graphics state.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+DoSDLQuit(void)
+{
+    const struct timespec ms500 = { 0, 500000000 };
+
+    /*
+     * Timing problem ahead, without the delay crashes occur
+     * sometimes at the end of the event thread.
+     */
+    nanosleep(&ms500, NULL);
+    SDL_Quit();
+}
+#endif
+
 /*
  *----------------------------------------------------------------------
  *
@@ -5134,10 +5214,14 @@ PerformSDLInit(int *root_width, int *root_height)
 #ifndef ANDROID
     int tfmt = SDL_PIXELFORMAT_RGB888;
 #endif
+#ifdef linux
+    int setQuit = 0, checkInput = 0;
+    char *p;
+#endif
     XGCValues values;
 
 #ifdef AGG_CUSTOM_ALLOCATOR
-    /* init AGG custom allocator functions */
+    /* Init AGG custom allocator functions. */
     agg_custom_alloc = (void *(*)(unsigned int)) Tcl_Alloc;
     agg_custom_free = (void (*)(void *)) Tcl_Free;
 #endif
@@ -5149,20 +5233,97 @@ PerformSDLInit(int *root_width, int *root_height)
     /*
      * Wayland: if SDL_VIDEODRIVER is unset but WAYLAND_DISPLAY
      * is set, prefer the Wayland video driver if available.
+     * KMSDRM: if there's no WAYLAND_DISPLAY and no DISPLAY,
+     * prefer the KMSDRM video driver if available.
      */
-    if (getenv("SDL_VIDEODRIVER") == NULL) {
-	char *p = getenv("WAYLAND_DISPLAY");
+    p = getenv("SDL_VIDEODRIVER");
+    if ((p == NULL) || (p[0] == '\0')) {
+	int n = SDL_GetNumVideoDrivers();
+	int wl = 0, kms = 0;
 
-	if ((p != NULL) && p[0]) {
-	    int n = SDL_GetNumVideoDrivers();
-
+	p = getenv("WAYLAND_DISPLAY");
+	if ((p != NULL) && (p[0] != '\0')) {
 	    for (i = 0; i < n; i++) {
 		if (strcmp(SDL_GetVideoDriver(i), "wayland") == 0) {
-		    setenv("SDL_VIDEODRIVER", "wayland", 1);
+		    wl = 1;
 		    break;
 		}
 	    }
+	} else {
+	    p = getenv("DISPLAY");
+	    if ((p == NULL) || (p[0] == '\0')) {
+		for (i = 0; i < n; i++) {
+		    if (strcmp(SDL_GetVideoDriver(i), "KMSDRM") == 0) {
+			kms = 1;
+			checkInput = 1;
+			break;
+		    }
+		}
+	    }
 	}
+	if (wl) {
+	    setenv("SDL_VIDEODRIVER", "wayland", 1);
+	} else if (kms) {
+	    setenv("SDL_VIDEODRIVER", "KMSDRM", 1);
+	    setQuit = 1;
+	    checkInput = 1;
+	    if (!SdlTkX.arg_nogl) {
+		/* Try to pre-load libGL.so for 3D canvas. */
+		dlopen("libGL.so.1", RTLD_NOW | RTLD_GLOBAL);
+	    }
+	}
+	/*
+	 * Raspberry tweakery: no check/support for OpenGL.
+	 */
+	for (i = 0; i < n; i++) {
+	    if (strcmp(SDL_GetVideoDriver(i), "RPI") == 0) {
+		char *p = getenv("DISPLAY");
+
+		if ((p != NULL) && (p[0] != '\0')) {
+		    SdlTkX.arg_nogl = 1;
+		    setenv("SDL_RENDER_DRIVER", "software", 1);
+		} else {
+#if 0
+		    /*
+		     * This enables the OpenGLES 2 render driver
+		     * but its performance is worse compared to the
+		     * software renderer. It is still possible to use
+		     * it by setting environment variables:
+		     *
+		     *    SDL_VIDEODRIVER=RPI
+		     *    SDL_RENDER_DRIVER=opengles2
+		     */
+		    SdlTkX.arg_nogl = -1;
+#else
+		    SdlTkX.arg_nogl = 1;
+#endif
+		    /*
+		     * To restore keyboard state it is
+		     * necessary to call SQL_Quit at exit.
+		     */
+		    setQuit = 1;
+		    checkInput = 1;
+		}
+	    }
+	}
+    } else if (strcmp(p, "RPI") == 0) {
+	/*
+	 * See above, keyboard state.
+	 */
+	setQuit = 1;
+	checkInput = 1;
+    } else if (strcmp(p, "KMSDRM") == 0) {
+	setQuit = 1;
+	checkInput = 1;
+	if (!SdlTkX.arg_nogl) {
+	    /* Try to pre-load libGL.so for 3D canvas. */
+	    dlopen("libGL.so.1", RTLD_NOW | RTLD_GLOBAL);
+	}
+    }
+    if (CheckGroups(checkInput) < 0) {
+	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+			"Permission problem, exiting");
+	goto fatal;
     }
 #endif
 retryInit:
@@ -5191,7 +5352,13 @@ fatal:
     }
 #endif
 
-    /* preset some defaults */
+#ifdef linux
+    if (setQuit) {
+	atexit(DoSDLQuit);
+    }
+#endif
+
+    /* Preset some defaults. */
     SdlTkX.dec_frame_width = 6;
     SdlTkX.dec_title_height = 20;
     SdlTkX.dec_font_size = 12;
@@ -5278,7 +5445,7 @@ fatal:
 	*root_width = *root_height = 0;
     }
 #ifndef ANDROID
-    if (SdlTkX.arg_nogl) {
+    if (SdlTkX.arg_nogl > 0) {
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
     } else {
 #ifndef _WIN32
@@ -5332,15 +5499,19 @@ retry:
 			    "Couldn't create SDL Window : %s", SDL_GetError());
 	goto fatal;
 #else
-	SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-			"Couldn't create SDL window: %s", SDL_GetError());
 	if (SdlTkX.arg_nogl) {
-	    /* no retry possible */
+	    /* No retry possible. */
+	    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+			    "Couldn't create SDL window: %s", SDL_GetError());
 	    goto fatal;
 	}
+	SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+		    "Couldn't create SDL window: %s", SDL_GetError());
 	SdlTkX.arg_nogl = 1;
 	videoFlags &= ~SDL_WINDOW_OPENGL;
 	SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+	SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+		    "Retrying init with software renderer");
 	goto retry;
 #endif
     }
@@ -5412,7 +5583,7 @@ retry:
      */
 #else
     if (!SdlTkX.arg_nogl) {
-	/* check for OpenGL >= 2.x, otherwise fall back to SW renderer */
+	/* Check for OpenGL >= 2.x, otherwise fall back to SW renderer. */
 	int glvernum = -1;
 	int hasFBO = 0;
 	SDL_GLContext ctx;
@@ -5461,7 +5632,7 @@ ctxRetry:
 	}
 	if ((glvernum >= 0) && (glvernum < 1))
 #else
-	/* _WIN32 GL 1.4 on Intel GMA is broken, so we want 2.x at least */
+	/* _WIN32 GL 1.4 on Intel GMA is broken, so we want 2.x at least. */
 	if ((glvernum >= 0) && (glvernum < 2))
 #endif
 	{
@@ -5519,7 +5690,7 @@ ctxRetry:
     }
 
 #if defined(SDL_RENDERER_HAS_TARGET_3D) && !defined(ANDROID)
-    /* Probe for 3d canvas if we can create FBO textures */
+    /* Probe for 3d canvas if we can create FBO textures. */
     if (!SdlTkX.arg_nogl) {
 	SDL_Texture *tex;
 
@@ -5535,7 +5706,7 @@ ctxRetry:
     }
 #endif
 
-    /* From win/tkWinX.c TkpOpenDisplay */
+    /* From win/tkWinX.c TkpOpenDisplay(). */
     display = (Display *) ckalloc(sizeof (Display));
     memset(display, 0, sizeof (Display));
 
@@ -5561,7 +5732,7 @@ ctxRetry:
     display->proto_minor_version = 6;
     display->release = 0;
 
-    /* TkWinDisplayChanged */
+    /* See TkWinDisplayChanged(). */
     screen->width = width;
     screen->height = height;
     xdpi = SdlTkX.arg_xdpi;
@@ -5708,7 +5879,7 @@ ctxRetry:
     screen->cmap = XCreateColormap(display, None, screen->root_visual,
 				   AllocNone);
 
-    /* Create the root (desktop) window */
+    /* Create the root (desktop) window. */
     _w = (_Window *) ckalloc(sizeof (_Window));
     memset(_w, 0, sizeof (_Window));
     _w->type = DT_WINDOW;
@@ -5735,11 +5906,11 @@ ctxRetry:
 		  GCGraphicsExposures|GCForeground|GCBackground,
 		  &values);
 
-    /* Nasty globals */
+    /* Nasty globals. */
     SdlTkX.display = display;
     SdlTkX.screen = screen;
 
-    /* See TkpDoOneEvent */
+    /* See TkpDoOneEvent(). */
     SDL_VERSION(&wminfo.version);
 #ifdef _WIN32
     display->fd = INVALID_HANDLE_VALUE;
@@ -5842,7 +6013,7 @@ ctxRetry:
     }
 #endif
 
-    /* Pre-allocate some events */
+    /* Pre-allocate some events. */
     display->head = display->tail = NULL;
     display->qfree = NULL;
     display->qlen = display->qlenmax = 0;
@@ -5859,6 +6030,17 @@ ctxRetry:
     SdlTkX.draw_later &= ~(SDLTKX_SCALED | SDLTKX_RENDCLR);
 #ifdef ANDROID
     SdlTkX.draw_later |= SDLTKX_DRAW | SDLTKX_DRAWALL;
+    /* Mode is always framebuffer on Android. */
+    SdlTkX.is_framebuffer = 1;
+#else
+    /* Determine framebuffer mode from video driver. */
+    if (strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") == 0) {
+	SdlTkX.is_framebuffer = 1;
+    } else if (strcmp(SDL_GetCurrentVideoDriver(), "RPI") == 0) {
+	SdlTkX.is_framebuffer = 1;
+    } else {
+	SdlTkX.is_framebuffer = 0;
+    }
 #endif
     SdlTkX.scale = SdlTkX.scale_min = 1.0f;
     SdlTkX.outrect = NULL;
@@ -5867,7 +6049,7 @@ ctxRetry:
     SdlTkX.viewport.w = SdlTkX.sdlsurf->w;
     SdlTkX.viewport.h = SdlTkX.sdlsurf->h;
 
-    /* Inflate event queue mutex */
+    /* Inflate event queue mutex. */
     Tcl_MutexLock((Tcl_Mutex *) &display->qlock);
     Tcl_MutexUnlock((Tcl_Mutex *) &display->qlock);
 
@@ -5875,7 +6057,7 @@ ctxRetry:
 
     SDL_EnableScreenSaver();
 
-    /* Some well known atoms */
+    /* Some well known atoms. */
     SdlTkX.mwm_atom = XInternAtom(NULL, "_MOTIF_WM_HINTS", False);
     SdlTkX.nwmn_atom = XInternAtom(NULL, "_NET_WM_NAME", False);
     SdlTkX.nwms_atom = XInternAtom(NULL, "_NET_WM_STATE", False);
@@ -5887,7 +6069,7 @@ ctxRetry:
     SdlTkX.wm_prot_atom = XInternAtom(NULL, "WM_PROTOCOLS", False);
     SdlTkX.wm_dele_atom = XInternAtom(NULL, "WM_DELETE_WINDOW", False);
 
-    /* Pre-allocate some _Window structs */
+    /* Pre-allocate some _Window structs. */
     for (i = 0; i < 128; i++) {
 	_w = (_Window *) ckalloc(sizeof (_Window));
 	memset(_w, 0, sizeof (_Window));
@@ -5927,8 +6109,8 @@ EventThread(ClientData clientData)
     SDL_Event sdl_event;
     XEvent event;
     SDL_TimerID timerId;
-    int skipRefresh = 0, overrun, initSuccess;
-#ifndef ANDROID
+    int skipRefresh = 0, overrun, initSuccess, timerSlow;
+#if !defined(ANDROID) && defined(SDL_KEYBOARDEVENT_HAS_RATE_AND_DELAY)
     /* Key repeat handling for Wayland. */
     SDL_Event key_event = { 0 }, txt_event = { 0 };
     int key_rpt_state = 0, key_rpt_time = 0;
@@ -5991,6 +6173,7 @@ EventThread(ClientData clientData)
 
     timerId = SDL_AddTimer(1000 / SDLTK_FRAMERATE, TimerCallback,
 			   (void *) &SdlTkX.time_count);
+    timerSlow = 0;
     EVLOG("EventThread enter loop");
     /*
      * Add all pending SDL events to the X event queues and
@@ -6007,6 +6190,12 @@ EventThread(ClientData clientData)
 	if (SdlTkX.sdlscreen == NULL) {
 	    break;
 	}
+	if (sdl_event.type == SDL_APP_DIDENTERBACKGROUND) {
+	    SDL_RemoveTimer(timerId);
+	    timerId = SDL_AddTimer(20 * 1000 / SDLTK_FRAMERATE, TimerCallback,
+				   (void *) &SdlTkX.time_count);
+	    timerSlow = 1;
+	}
 	memset(&event, 0, sizeof (event));
 	SdlTkLock(NULL);
 	if ((sdl_event.type == SDL_USEREVENT) &&
@@ -6019,9 +6208,9 @@ EventThread(ClientData clientData)
 	    }
 	    overrun = (SdlTkX.time_count - sdl_event.user.code) > 0;
 	    skipRefresh = !skipRefresh && overrun;
-	    /* Mark event to be skipped in SdlTkTranslateEvent() */
+	    /* Mark event to be skipped in SdlTkTranslateEvent(). */
 	    sdl_event.type = SDL_USEREVENT + 0x1000;
-#ifndef ANDROID
+#if !defined(ANDROID) && defined(SDL_KEYBOARDEVENT_HAS_RATE_AND_DELAY)
 	    /* Key repeat handling for Wayland. */
 	    if (key_rpt_state && (SdlTkX.time_count - key_rpt_time >= 0)) {
 		if (key_event.key.rate) {
@@ -6039,7 +6228,7 @@ EventThread(ClientData clientData)
 	    }
 #endif
 	}
-#ifndef ANDROID
+#if !defined(ANDROID) && defined(SDL_KEYBOARDEVENT_HAS_RATE_AND_DELAY)
 	/* Key repeat handling for Wayland. */
 	if ((sdl_event.type == SDL_KEYDOWN) && sdl_event.key.rate &&
 	    sdl_event.key.delay && !sdl_event.key.repeat) {
@@ -6060,14 +6249,14 @@ EventThread(ClientData clientData)
 	    (sdl_event.user.data1 == HandlePanZoom) &&
 	    (sdl_event.user.data2 != NULL)) {
 	    HandlePanZoom((struct PanZoomRequest *) sdl_event.user.data2);
-	    /* Mark event to be skipped in SdlTkTranslateEvent() */
+	    /* Mark event to be skipped in SdlTkTranslateEvent(). */
 	    sdl_event.type = SDL_USEREVENT + 0x1001;
 	}
 	if ((sdl_event.type == SDL_USEREVENT) &&
 	    (sdl_event.user.data1 == HandleRootSize) &&
 	    (sdl_event.user.data2 != NULL)) {
 	    HandleRootSize((struct RootSizeRequest *) sdl_event.user.data2);
-	    /* Mark event to be skipped in SdlTkTranslateEvent() */
+	    /* Mark event to be skipped in SdlTkTranslateEvent(). */
 	    sdl_event.type = SDL_USEREVENT + 0x1002;
 	}
 #ifndef ANDROID
@@ -6075,7 +6264,7 @@ EventThread(ClientData clientData)
 	    (sdl_event.user.data1 == HandleWindowFlags) &&
 	    (sdl_event.user.data2 != NULL)) {
 	    HandleWindowFlags((struct WindowFlagsRequest *) sdl_event.user.data2);
-	    /* Mark event to be skipped in SdlTkTranslateEvent() */
+	    /* Mark event to be skipped in SdlTkTranslateEvent(). */
 	    sdl_event.type = SDL_USEREVENT + 0x1003;
 	}
 #endif
@@ -6083,7 +6272,14 @@ EventThread(ClientData clientData)
 	    SdlTkQueueEvent(&event);
 	}
 	SdlTkUnlock(NULL);
-	/* Remove left over events from SdlTkX.display */
+	if (timerSlow && (!SdlTkX.in_background ||
+			  sdl_event.type == SDL_APP_WILLENTERFOREGROUND)) {
+	    SDL_RemoveTimer(timerId);
+	    timerId = SDL_AddTimer(1000 / SDLTK_FRAMERATE, TimerCallback,
+				   (void *) &SdlTkX.time_count);
+	    timerSlow = 0;
+	}
+	/* Remove left over events from SdlTkX.display. */
 	Tcl_MutexLock((Tcl_Mutex *) &SdlTkX.display->qlock);
 	qevent = SdlTkX.display->head;
 	while (qevent != NULL) {
@@ -6100,7 +6296,7 @@ EventThread(ClientData clientData)
 	Tcl_MutexUnlock((Tcl_Mutex *) &SdlTkX.display->qlock);
     }
     SDL_RemoveTimer(timerId);
-    /* tear down font manager/engine */
+    /* Tear down font manager/engine. */
     SdlTkGfxDeinitFC();
 eventThreadEnd:
 #ifdef __APPLE__
@@ -6188,7 +6384,7 @@ XOpenDisplay(_Xconst char *display_name)
     if (SdlTkX.display == NULL) {
 	OpenVeryFirstDisplay(&root_width, &root_height);
 	if (SdlTkX.display != NULL) {
-	    /* Set title for window */
+	    /* Set title for window. */
 	    SDL_SetWindowTitle(SdlTkX.sdlscreen, display_name);
 	}
     }
@@ -6265,7 +6461,7 @@ XOpenDisplay(_Xconst char *display_name)
     }
 #endif
 
-    /* Pre-allocate some events */
+    /* Pre-allocate some events. */
     display->head = display->tail = NULL;
     display->qfree = NULL;
     display->qlen = display->qlenmax = 0;
@@ -6279,11 +6475,11 @@ XOpenDisplay(_Xconst char *display_name)
 	display->nqtotal++;
     }
 
-    /* Inflate event queue mutex */
+    /* Inflate event queue mutex. */
     Tcl_MutexLock((Tcl_Mutex *) &display->qlock);
     Tcl_MutexUnlock((Tcl_Mutex *) &display->qlock);
 
-    /* Queue cloned display */
+    /* Queue cloned display. */
     display->next_display = SdlTkX.display->next_display;
     SdlTkX.display->next_display = display;
 
@@ -6297,10 +6493,10 @@ XOpenDisplay(_Xconst char *display_name)
     Android_JNI_SetupThread();
 #endif
 
-    /* Wait for server grabs being released */
+    /* Wait for server grabs being released. */
     SdlTkLock(display);
     if (i == 1) {
-	/* First display, let refresh complete */
+	/* First display, let refresh complete. */
 	SdlTkWaitVSync();
     }
     SdlTkUnlock(display);
@@ -6357,7 +6553,7 @@ XPutImage(Display *display, Drawable d, GC gc, XImage *image,
     return 0;
 }
 
-/* TkTreeCtrl loupe uses this */
+/* TkTreeCtrl loupe uses this. */
 void
 XQueryColors(Display *display, Colormap colormap, XColor *defs_in_out,
 	     int ncolors)
@@ -6398,7 +6594,7 @@ XQueryPointer(Display *display, Window w, Window *root_return,
 
     state = SdlTkGetMouseState(root_x_return, root_y_return);
 
-    /* CHECK THIS: win_x/y_return not used in Tk library */
+    /* CHECK THIS: win_x/y_return not used in Tk library. */
 
     *win_x_return = *root_x_return;
     *win_y_return = *root_y_return;
@@ -6442,14 +6638,14 @@ XQueryTree(Display *display, Window w, Window *root_return,
 	goto done;
     }
 
-    /* Count children */
+    /* Count children. */
     child = _w->child;
     while (child != NULL) {
 	n++;
 	child = child->next;
     }
 
-    /* Make array of children */
+    /* Make array of children. */
     *children_return = (Window *) ckalloc(sizeof (Window) * n);
     k = n;
     child = _w->child;
@@ -6492,14 +6688,16 @@ XReconfigureWMWindow(Display *display, Window w, int screen_number,
 
 	SdlTkScreenChanged();
 
-	/* Attempting to restack a wrapper? Restack decframe instead. */
-	/* override_redirects won't have a decframe however */
+	/*
+	 * Attempting to restack a wrapper? Restack decframe instead.
+	 * override_redirects won't have a decframe however.
+	 */
 	if ((parent != NULL) && (parent->dec != NULL)) {
 	    _w = parent;
 	    parent = parent->parent;
 	}
 
-	/* Stack above/below decframe of sibling if any */
+	/* Stack above/below decframe of sibling if any. */
 	if (mask & CWSibling) {
 	    sibling = (_Window *) changes->sibling;
 	    if (sibling->parent->dec != NULL) {
@@ -6542,7 +6740,7 @@ SdlTkReparentWindow(Display *display, Window w, Window parent, int x, int y)
     }
     memset(&event, 0, sizeof (event));
 
-    /* Remove from old parent */
+    /* Remove from old parent. */
     if (_w->parent != NULL) {
 	if (_w->parent->dec != NULL) {
 	    wdec = _w->parent;
@@ -6550,12 +6748,12 @@ SdlTkReparentWindow(Display *display, Window w, Window parent, int x, int y)
 	SdlTkRemoveFromParent(_w);
     }
 
-    /* Add to new parent */
+    /* Add to new parent. */
     _w->parent = _parent;
     _w->next = _parent->child;
     _parent->child = _w;
 
-    /* Update position */
+    /* Update position. */
     _w->atts.x = x;
     _w->atts.y = y;
 
@@ -6591,7 +6789,7 @@ SdlTkReparentWindow(Display *display, Window w, Window parent, int x, int y)
 	}
     }
 
-    /* Destroy decorative frame */
+    /* Destroy decorative frame. */
     if ((wdec != NULL) && (wdec->child == NULL)) {
 	SdlTkDestroyWindow(display, (Window) wdec);
     }
@@ -6637,7 +6835,7 @@ SdlTkResizeWindow(Display *display, Window w,
 
     flags = VRC_CHANGED | VRC_DO_PARENT;
 
-    /* If this window has a decorative frame, resize it */
+    /* If this window has a decorative frame, resize it. */
     if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	_Window *wdec = _w->parent;
 
@@ -7055,7 +7253,7 @@ SdlTkSetSelectionOwner(Display *display, Atom selection, Window owner,
     }
     memset(&event, 0, sizeof (event));
     if (selection == None) {
-	/* called through SDL_CLIPBOARDUPDATE */
+	/* Caused by SDL_CLIPBOARDUPDATE. */
 	if (SdlTkX.current_primary != None) {
 	    clear = SdlTkX.current_primary;
 	    SdlTkX.current_primary = None;
@@ -7145,7 +7343,7 @@ XSetTransientForHint(Display *display, Window w, Window prop_window)
 	    SdlTkSetInputFocus(SdlTkX.display,
 			       (Window) SdlTkWrapperForWindow(_w),
 			       RevertToParent, CurrentTime);
-	    /* Frames need redrawing if the focus changed */
+	    /* Frames need redrawing if the focus changed. */
 	    SdlTkScreenChanged();
 	}
     }
@@ -7447,14 +7645,14 @@ SdlTkUnmapWindow(Display *display, Window w)
 	return;
     }
 
-    /* Unmap decorative frame */
+    /* Unmap decorative frame. */
     if ((_w->parent != NULL) && (_w->parent->dec != NULL)) {
 	_w->parent->atts.map_state = IsUnmapped;
     }
 
     _w->atts.map_state = IsUnmapped;
 
-    /* Tk only cares about this for wrapper windows */
+    /* Tk only cares about this for wrapper windows. */
     if (_w->atts.your_event_mask & StructureNotifyMask) {
 	memset(&event, 0, sizeof (event));
 	event.type = UnmapNotify;
@@ -7475,7 +7673,7 @@ SdlTkUnmapWindow(Display *display, Window w)
 
     /*
      * "All FocusOut events caused by a window unmap are
-     * generated after any UnmapNotify event"
+     * generated after any UnmapNotify event."
      */
 
     if (SdlTkX.focus_window_not_override == w) {
@@ -7935,7 +8133,7 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 	    }
 	    SDL_FreeSurface(surf);
 	    SDL_SetRenderTarget(rend, NULL);
-	    /* wait for next screen refresh */
+	    /* Wait for next screen refresh. */
 	    do {
 		Tcl_ConditionWait(&time_cond, &xlib_lock, NULL);
 	    } while (wait_refr && (SdlTkX.frame_count == frame_count));
@@ -7968,7 +8166,7 @@ SdlTkGLXSwapBuffers(Display *display, Window w)
 	}
     }
     if (doClear) {
-	/* no texture or some other problem: clear window to black */
+	/* No texture or some other problem: clear window to black. */
 	memset(&xgc, 0, sizeof (xgc));
 	xgc.foreground = SdlTkX.screen->black_pixel;
 	SdlTkGfxFillRect(w, &xgc, 0, 0, _w->atts.width, _w->atts.height);

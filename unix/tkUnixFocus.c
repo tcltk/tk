@@ -88,6 +88,7 @@ TkpChangeFocus(
 	    if ((window == PointerRoot) || (window == None)) {
 		goto done;
 	    }
+	    children = NULL;
 	    XQueryTree(dispPtr->display, window, &root, &parent, &children,
 		    &numChildren);
 	    if (children != NULL) {

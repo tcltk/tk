@@ -514,6 +514,10 @@ void Agg2D::fillLinearGradient(double x1, double y1, double x2, double y2, int c
 {
     int i, j, lastOffset = 0;
     Color c(0, 0, 0);
+    if (count > 0)
+    {
+        c = colors[0];
+    }
     for (i = j = 0; j < count; j++)
     {
         int currOffset = offsets[j] * 255;
@@ -738,6 +742,10 @@ void Agg2D::fillRadialGradient(double x, double y, double xf, double yf, double 
 {
     int i, j, lastOffset = 0;
     Color c(0, 0, 0);
+    if (count > 0)
+    {
+        c = colors[0];
+    }
     for (i = j = 0; j < count; j++)
     {
         int currOffset = offsets[j] * 255;

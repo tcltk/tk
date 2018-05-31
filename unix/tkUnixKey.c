@@ -136,21 +136,6 @@ TkpGetString(
 	goto done;
     }
 
-    /*
-     * Filter keycodes out of range, otherwise
-     * further Xlib function behavior might be undefined.
-     */
-
-    mincode = 0;
-    maxcode = -1;
-    XDisplayKeycodes(winPtr->dispPtr->display, &mincode, &maxcode);
-    if ((eventPtr->xkey.keycode < mincode) ||
-	(eventPtr->xkey.keycode > maxcode)) {
-	len = 0;
-	Tcl_DStringSetLength(dsPtr, len);
-	goto done;
-    }
-
 #ifdef TK_USE_INPUT_METHODS
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
 	    && (winPtr->dispPtr->inputContext != NULL)
@@ -266,7 +251,7 @@ TkpSetKeycodeAndState(
     XEvent *eventPtr)
 {
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
-    int state;
+    int state, mincode, maxcode;
     KeyCode keycode;
 
     if (keySym == NoSymbol) {
@@ -288,6 +273,21 @@ TkpSetKeycodeAndState(
 	    }
 	}
     }
+
+    /*
+     * Filter keycodes out of range, otherwise further Xlib function
+     * behavior might be undefined, in particular XIM could cause crashes.
+     */
+
+    mincode = 0;
+    maxcode = -1;
+    XDisplayKeycodes(dispPtr->display, &mincode, &maxcode);
+    if (keycode < mincode) {
+	keycode = mincode;
+    } else if (keycode > maxcode) {
+	keycode = maxcode;
+    }
+
     eventPtr->xkey.keycode = keycode;
 }
 

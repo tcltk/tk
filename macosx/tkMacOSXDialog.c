@@ -58,30 +58,30 @@ enum colorOptions {
 static const char *const openOptionStrings[] = {
     "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
     "-message", "-multiple", "-parent", "-title", "-typevariable",
-    "-command", NULL
+    "-command", "-nativeonly", NULL
 };
 enum openOptions {
     OPEN_DEFAULT, OPEN_FILETYPES, OPEN_INITDIR, OPEN_INITFILE,
     OPEN_MESSAGE, OPEN_MULTIPLE, OPEN_PARENT, OPEN_TITLE,
-    OPEN_TYPEVARIABLE, OPEN_COMMAND,
+    OPEN_TYPEVARIABLE, OPEN_COMMAND, OPEN_NATIVEONLY
 };
 static const char *const saveOptionStrings[] = {
     "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
     "-message", "-parent", "-title", "-typevariable", "-command",
-    "-confirmoverwrite", NULL
+    "-confirmoverwrite", "-nativeonly", NULL
 };
 enum saveOptions {
     SAVE_DEFAULT, SAVE_FILETYPES, SAVE_INITDIR, SAVE_INITFILE,
     SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE, SAVE_COMMAND,
-    SAVE_CONFIRMOW
+    SAVE_CONFIRMOW, SAVE_NATIVEONLY
 };
 static const char *const chooseOptionStrings[] = {
     "-initialdir", "-message", "-mustexist", "-parent", "-title", "-command",
-    NULL
+    "-nativeonly", NULL
 };
 enum chooseOptions {
     CHOOSE_INITDIR, CHOOSE_MESSAGE, CHOOSE_MUSTEXIST, CHOOSE_PARENT,
-    CHOOSE_TITLE, CHOOSE_COMMAND,
+    CHOOSE_TITLE, CHOOSE_COMMAND, CHOOSE_NATIVEONLY
 };
 typedef struct {
     Tcl_Interp *interp;
@@ -117,7 +117,7 @@ enum alertIconOptions {
     ICON_ERROR, ICON_INFO, ICON_QUESTION, ICON_WARNING
 };
 static const char *const alertButtonStrings[] = {
-    "abort", "retry", "ignore", "ok", "cancel", "yes", "no", NULL
+    "abort", "retry", "ignore", "ok", "cancel", "no", "yes", NULL
 };
 
 static const NSString *const alertButtonNames[][3] = {
@@ -559,7 +559,7 @@ Tk_GetOpenFileObjCmd(
     Tk_Window tkwin = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
-    int index, len, multiple = 0;
+    int index, len, multiple = 0, dummy;
     Tcl_Obj *cmdObj = NULL, *typeVariablePtr = NULL, *fileTypesPtr = NULL;
     FilePanelCallbackInfo callbackInfoStruct;
     FilePanelCallbackInfo *callbackInfo = &callbackInfoStruct;
@@ -628,6 +628,12 @@ Tk_GetOpenFileObjCmd(
 	    break;
 	case OPEN_COMMAND:
 	    cmdObj = objv[i+1];
+	    break;
+	case OPEN_NATIVEONLY:
+	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
+		    &dummy) != TCL_OK) {
+		goto end;
+	    }
 	    break;
 	}
     }
@@ -824,7 +830,7 @@ Tk_GetSaveFileObjCmd(
     Tk_Window tkwin = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
-    int confirmOverwrite = 1;
+    int confirmOverwrite = 1, dummy;
     int index, len;
     Tcl_Obj *cmdObj = NULL, *typeVariablePtr = NULL, *fileTypesPtr = NULL;
     FilePanelCallbackInfo callbackInfoStruct;
@@ -848,62 +854,68 @@ Tk_GetSaveFileObjCmd(
 	    goto end;
 	}
 	switch (index) {
-	    case SAVE_DEFAULT:
-		str = Tcl_GetStringFromObj(objv[i + 1], &len);
-		while (*str && (*str == '*' || *str == '.')) {
-		    str++;
-		}
-		if (*str) {
-		    defaultType = [[[NSString alloc] initWithUTF8String:str]
-			    autorelease];
-		}
-		break;
-	    case SAVE_FILETYPES:
-		fileTypesPtr = objv[i + 1];
-		break;
-	    case SAVE_INITDIR:
-		str = Tcl_GetStringFromObj(objv[i + 1], &len);
-		if (len) {
-		    directory = [[[NSString alloc] initWithUTF8String:str]
-			    autorelease];
-		}
-		break;
-	    case SAVE_INITFILE:
-		str = Tcl_GetStringFromObj(objv[i + 1], &len);
-		if (len) {
-		    filename = [[[NSString alloc] initWithUTF8String:str]
-			    autorelease];
-		    [savepanel setNameFieldStringValue:filename];
-		}
-		break;
-	    case SAVE_MESSAGE:
-		message = [[NSString alloc] initWithUTF8String:
-			Tcl_GetString(objv[i + 1])];
-		break;
-	    case SAVE_PARENT:
-		str = Tcl_GetStringFromObj(objv[i + 1], &len);
-		tkwin = Tk_NameToWindow(interp, str, tkwin);
-		if (!tkwin) {
-		    goto end;
-		}
-		haveParentOption = 1;
-		break;
-	    case SAVE_TITLE:
-		title = [[NSString alloc] initWithUTF8String:
-			Tcl_GetString(objv[i + 1])];
-		break;
-	    case SAVE_TYPEVARIABLE:
-		typeVariablePtr = objv[i + 1];
-		break;
-	    case SAVE_COMMAND:
-		cmdObj = objv[i+1];
-		break;
-	    case SAVE_CONFIRMOW:
-		if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
-			&confirmOverwrite) != TCL_OK) {
-		    goto end;
-		}
-		break;
+	case SAVE_DEFAULT:
+	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
+	    while (*str && (*str == '*' || *str == '.')) {
+		str++;
+	    }
+	    if (*str) {
+		defaultType = [[[NSString alloc] initWithUTF8String:str]
+			autorelease];
+	    }
+	    break;
+	case SAVE_FILETYPES:
+	    fileTypesPtr = objv[i + 1];
+	    break;
+	case SAVE_INITDIR:
+	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
+	    if (len) {
+		directory = [[[NSString alloc] initWithUTF8String:str]
+			autorelease];
+	    }
+	    break;
+	case SAVE_INITFILE:
+	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
+	    if (len) {
+		filename = [[[NSString alloc] initWithUTF8String:str]
+			autorelease];
+		[savepanel setNameFieldStringValue:filename];
+	    }
+	    break;
+	case SAVE_MESSAGE:
+	    message = [[NSString alloc] initWithUTF8String:
+		    Tcl_GetString(objv[i + 1])];
+	    break;
+	case SAVE_PARENT:
+	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
+	    tkwin = Tk_NameToWindow(interp, str, tkwin);
+	    if (!tkwin) {
+		goto end;
+	    }
+	    haveParentOption = 1;
+	    break;
+	case SAVE_TITLE:
+	    title = [[NSString alloc] initWithUTF8String:
+		    Tcl_GetString(objv[i + 1])];
+	    break;
+	case SAVE_TYPEVARIABLE:
+	    typeVariablePtr = objv[i + 1];
+	    break;
+	case SAVE_COMMAND:
+	    cmdObj = objv[i+1];
+	    break;
+	case SAVE_CONFIRMOW:
+	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
+		    &confirmOverwrite) != TCL_OK) {
+		goto end;
+	    }
+	    break;
+	case SAVE_NATIVEONLY:
+	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
+		    &dummy) != TCL_OK) {
+		goto end;
+	    }
+	    break;
 	}
     }
 
@@ -1059,7 +1071,7 @@ Tk_ChooseDirectoryObjCmd(
     Tk_Window tkwin = clientData;
     char *str;
     int i, result = TCL_ERROR, haveParentOption = 0;
-    int index, len, mustexist = 0;
+    int index, len, mustexist = 0, dummy;
     Tcl_Obj *cmdObj = NULL;
     FilePanelCallbackInfo callbackInfoStruct;
     FilePanelCallbackInfo *callbackInfo = &callbackInfoStruct;
@@ -1117,6 +1129,12 @@ Tk_ChooseDirectoryObjCmd(
 	    break;
 	case CHOOSE_COMMAND:
 	    cmdObj = objv[i+1];
+	    break;
+	case CHOOSE_NATIVEONLY:
+	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
+		    &dummy) != TCL_OK) {
+		goto end;
+	    }
 	    break;
 	}
     }
@@ -1330,7 +1348,7 @@ Tk_MessageBoxObjCmd(
 
 	case ALERT_ICON:
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertIconStrings,
-		    sizeof(char *), "value", TCL_EXACT, &iconIndex) != TCL_OK) {
+		    sizeof(char *), "-icon value", TCL_EXACT, &iconIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -1360,7 +1378,7 @@ Tk_MessageBoxObjCmd(
 
 	case ALERT_TYPE:
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertTypeStrings,
-		    sizeof(char *), "value", TCL_EXACT, &typeIndex) != TCL_OK) {
+		    sizeof(char *), "-type value", TCL_EXACT, &typeIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -1376,7 +1394,7 @@ Tk_MessageBoxObjCmd(
 	 */
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[indexDefaultOption + 1],
-		alertButtonStrings, sizeof(char *), "value", TCL_EXACT, &index) != TCL_OK) {
+		alertButtonStrings, sizeof(char *), "-default value", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 

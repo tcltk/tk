@@ -50,6 +50,9 @@ namespace agg
         template<class FilterF> void calculate(const FilterF& filter,
                                                bool normalization=true)
         {
+#ifdef _MSC_VER
+            filter; // prevent erroneous C4100 in MSVC
+#endif
             double r = filter.radius();
             realloc_lut(r);
             unsigned i;

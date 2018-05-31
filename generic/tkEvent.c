@@ -1198,8 +1198,8 @@ ParentXId(
      * Do some cleanup; gotta return "None" if we got an error.
      */
 
-    Tk_DeleteErrorHandler(handler);
     XSync(display, False);
+    Tk_DeleteErrorHandler(handler);
     if (status != 0 && childList != NULL) {
 	XFree(childList);
     }

@@ -1250,6 +1250,7 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 				Colormap map, const char* spec,
 				XColor * colorPtr);
 #endif
+
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #endif
@@ -1266,6 +1267,10 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
     MODULE_SCOPE int TkUtfCharComplete(const char *, int);
     MODULE_SCOPE const char *TkUtfPrev(const char *, const char *);
     MODULE_SCOPE const char *TkUtfNext(const char *);
+#endif
+
+#ifdef TK_USE_POLL
+MODULE_SCOPE TkDisplay * TkGetDisplayListExt(struct pollfd **pollTablePtr);
 #endif
 
 /*

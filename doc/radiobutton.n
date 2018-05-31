@@ -63,9 +63,8 @@ alternative relief is used when the mouse cursor is over the radiobutton.
 The empty string is the default value.
 .OP \-selectcolor selectColor Background
 Specifies a background color to use when the button is selected.
-If \fB\-indicatoron\fR is true then the color applies to the indicator.
-Under Windows, this color is used as the background for the indicator
-regardless of the select state.
+If \fBindicatorOn\fR is true then the color is used as the background for
+the indicator regardless of the select state.
 If \fB\-indicatoron\fR is false, this color is used as the background
 for the entire widget, in place of \fB\-background\fR or \fB\-activeBackground\fR,
 whenever the widget is selected.

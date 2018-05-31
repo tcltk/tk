@@ -82,8 +82,8 @@ Tk_CreateErrorHandler(
 				 * errors. */
     ClientData clientData)	/* Arbitrary value to pass to errorProc. */
 {
-    register TkErrorHandler *errorPtr;
-    register TkDisplay *dispPtr;
+    TkErrorHandler *errorPtr;
+    TkDisplay *dispPtr;
 
     /*
      * Find the display. If Tk doesn't know about this display then it's an
@@ -110,7 +110,7 @@ Tk_CreateErrorHandler(
     errorPtr = ckalloc(sizeof(TkErrorHandler));
     errorPtr->dispPtr = dispPtr;
     errorPtr->firstRequest = NextRequest(display);
-    errorPtr->lastRequest = (unsigned) -1;
+    errorPtr->lastRequest = (unsigned long) -1;
     errorPtr->error = error;
     errorPtr->request = request;
     errorPtr->minorCode = minorCode;
@@ -147,8 +147,8 @@ Tk_DeleteErrorHandler(
     Tk_ErrorHandler handler)	/* Token for handler to delete; was previous
 				 * return value from Tk_CreateErrorHandler. */
 {
-    register TkErrorHandler *errorPtr = (TkErrorHandler *) handler;
-    register TkDisplay *dispPtr = errorPtr->dispPtr;
+    TkErrorHandler *errorPtr = (TkErrorHandler *) handler;
+    TkDisplay *dispPtr = errorPtr->dispPtr;
 
     errorPtr->lastRequest = NextRequest(dispPtr->display) - 1;
 
@@ -165,18 +165,34 @@ Tk_DeleteErrorHandler(
      */
 
     dispPtr->deleteCount += 1;
-    if (dispPtr->deleteCount >= 10) {
-	register TkErrorHandler *prevPtr;
-	TkErrorHandler *nextPtr;
-	int lastSerial;
 
+    /*
+     * Ensure that no user callback for this handler is invoked any further.
+     */
+
+    errorPtr->errorProc = NULL;
+
+    if (dispPtr->deleteCount >= 10) {
+	TkErrorHandler *prevPtr;
+	TkErrorHandler *nextPtr;
+	unsigned long lastSerial = LastKnownRequestProcessed(dispPtr->display);
+
+	/*
+	 * Last chance to catch errors for this handler: if no event/error
+	 * processing took place to follow up the end of this error handler
+	 * we need a round trip with the X server now.
+	 */
+
+	if (errorPtr->lastRequest > lastSerial) {
+	    XSync(dispPtr->display, False);
+	    lastSerial = LastKnownRequestProcessed(dispPtr->display);
+	}
 	dispPtr->deleteCount = 0;
-	lastSerial = LastKnownRequestProcessed(dispPtr->display);
 	errorPtr = dispPtr->errorPtr;
 	for (prevPtr = NULL; errorPtr != NULL; errorPtr = nextPtr) {
 	    nextPtr = errorPtr->nextPtr;
 	    if ((errorPtr->lastRequest != (unsigned long) -1)
-		    && (errorPtr->lastRequest <= (unsigned long) lastSerial)) {
+		    && (errorPtr->lastRequest <= lastSerial)) {
 		if (prevPtr == NULL) {
 		    dispPtr->errorPtr = nextPtr;
 		} else {
@@ -213,11 +229,11 @@ Tk_DeleteErrorHandler(
 static int
 ErrorProc(
     Display *display,		/* Display for which error occurred. */
-    register XErrorEvent *errEventPtr)
+    XErrorEvent *errEventPtr)
 				/* Information about error. */
 {
-    register TkDisplay *dispPtr;
-    register TkErrorHandler *errorPtr;
+    TkDisplay *dispPtr;
+    TkErrorHandler *errorPtr;
 
     /*
      * See if we know anything about the display. If not, then invoke the

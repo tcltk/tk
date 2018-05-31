@@ -119,6 +119,211 @@ static void DrawCharsInContext(Display *display, Drawable drawable, GC gc,
 /*
  *---------------------------------------------------------------------------
  *
+ * NumUTF16Chars --
+ *
+ *	Like Tcl_NumUtfChars() but result is count of UTF16Chars,
+ *	i.e. a surrogate pair counts as two UTF16Chars and not
+ *	as a single entity.
+ *
+ * Results:
+ *	As above.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+#if TCL_UTF_MAX == 3
+
+/* No special code for BMP needed. */
+#define NumUTF16Chars Tcl_NumUtfChars
+
+#else
+
+static int
+NumUTF16Chars(
+    const char *src,		/* The UTF-8 string to measure. */
+    int length)			/* The length of the string in bytes, or -1
+				 * for strlen(string). */
+{
+    Tcl_UniChar ch = 0;
+    int i = 0;
+
+    if (length < 0) {
+	while (*src != '\0') {
+	    src += Tcl_UtfToUniChar(src, &ch);
+#if TCL_UTF_MAX > 4
+	    if (ch > 0xFFFF) {
+		/* A surrogate pair in UTF16Char representation. */
+		i++;
+	    }
+#endif
+            i++;
+        }
+	if (i < 0) {
+	    i = INT_MAX;
+	}
+    } else {
+	const char *endPtr = src + length - 4;
+
+	while (src < endPtr) {
+	    src += Tcl_UtfToUniChar(src, &ch);
+#if TCL_UTF_MAX > 4
+	    if (ch > 0xFFFF) {
+		/* A surrogate pair in UTF16Char representation. */
+		i++;
+	    }
+#endif
+	    i++;
+	}
+	endPtr += 4;
+	while ((src < endPtr) && Tcl_UtfCharComplete(src, endPtr - src)) {
+	    src += Tcl_UtfToUniChar(src, &ch);
+#if TCL_UTF_MAX > 4
+	    if (ch > 0xFFFF) {
+		/* A surrogate pair in UTF16Char representation. */
+		i++;
+	    }
+#endif
+	    i++;
+	}
+	if (src < endPtr) {
+	    i += endPtr - src;
+	}
+    }
+    return i;
+}
+
+#endif
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * UTF16CharAtIndex
+ *
+ *      Like Tcl_UtfAtIndex() but counting in UTF16Char entities.
+ *	Returns a pointer to the specified character position in
+ *	the given UTF-8 string.
+ *
+ * Results:
+ *      As above.
+ *
+ * Side effects:
+ *      None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static const char *
+UTF16CharAtIndex(
+    const char *src,		/* The UTF-8 string. */
+    int length,			/* The length of the string in bytes, or -1
+				 * for strlen(string). */
+    int index)			/* The position of the desired character. */
+{
+    const char *end;
+    Tcl_UniChar ch = 0;
+
+    if (length < 0) {
+	length = strlen(src);
+    }
+    end = src + length;
+    while (src < end && index > 0) {
+	--index;
+	if (Tcl_UtfCharComplete(src, end - src)) {
+	    src += Tcl_UtfToUniChar(src, &ch);
+	} else {
+	    ch = *src++ & 0x00FF;
+	}
+#if TCL_UTF_MAX > 4
+	if (ch > 0xFFFF) {
+	    /* A surrogate pair in UTF16Char representation. */
+	    --index;
+	}
+#endif
+    }
+    return src;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * UtfToUTF16DString --
+ *
+ *	Convert an UTF-8 string to an UTF16Char string using the provided
+ *	Tcl_DString as result buffer. Invalid data is silently replaced
+ *	with "\uFFFD". The Tcl_DString is initialized by this function
+ *	and must be free'd by the caller.
+ *
+ * Results:
+ *	Pointer to UTF16Char string.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+static UTF16Char *
+UtfToUTF16DString(
+    const char *src,		/* Input UTF-8 string to be converted.
+				 * Need not be '\0' terminated. */
+    int numBytes,		/* Maximum number of bytes to consider from
+				 * source string in all. */
+    Tcl_DString *dsPtr,		/* Tcl_DString receiving the result. */
+    int *lengthPtr)		/* Number of UTF16Chars in result buffer. */
+{
+    Tcl_UniChar ch = 0;
+    UTF16Char utf16;
+    const char *end;
+
+    Tcl_DStringInit(dsPtr);
+    if (numBytes > 0) {
+	Tcl_DStringSetLength(dsPtr, numBytes * sizeof(utf16));
+	Tcl_DStringSetLength(dsPtr, 0);
+    }
+    end = src + numBytes;
+    while (src < end) {
+	int len;
+
+	if (Tcl_UtfCharComplete(src, end - src)) {
+	    len = Tcl_UtfToUniChar(src, &ch);
+	} else {
+	    len = 1;
+	    ch = *src & 0x00FF;
+	}
+
+	utf16 = ch;
+#if TCL_UTF_MAX < 4
+	if (ch >= 0xD800 && ch <= 0xDFFF) {
+	    utf16 = 0xFFFD;
+	}
+#elif TCL_UTF_MAX == 4
+	if (ch >= 0xD800 && ch <= 0xDFFF) {
+	    if ((*src & 0xF8) != 0xF0) {
+		utf16 = 0xFFFD;
+	    }
+	}
+#else
+	if (ch >= 0xD800 && ch <= 0xDFFF) {
+	    utf16 = 0xFFFD;
+	} else if (ch > 0xFFFF) {
+	    utf16 = (((ch - 0x10000) >> 10) & 0x3FF) | 0xD800;
+	    Tcl_DStringAppend(dsPtr, (char *) &utf16, sizeof(utf16));
+	    utf16 = ((ch - 0x10000) & 0x3FF) | 0xDC00;
+	}
+#endif
+	Tcl_DStringAppend(dsPtr, (char *) &utf16, sizeof(utf16));
+	src += len;
+    }
+    *lengthPtr = Tcl_DStringLength(dsPtr) / sizeof(utf16);
+    return (UTF16Char *) Tcl_DStringValue(dsPtr);
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
  * GetTkFontAttributesForNSFont --
  *
  *	Fill in TkFontAttributes for given NSFont.
@@ -259,7 +464,7 @@ InitFont(
     }
     fontPtr->nsFont = nsFont;
     // some don't like antialiasing on fixed-width even if bigger than limit
-    // dontAA = [nsFont isFixedPitch] && fontPtr->font.fa.size <= 10;
+    //dontAA = [nsFont isFixedPitch] && fontPtr->font.fa.size <= 10;
     if (antialiasedTextEnabled >= 0/* || dontAA*/) {
 	renderingMode = (antialiasedTextEnabled == 0/* || dontAA*/) ?
 		NSFontIntegerAdvancementsRenderingMode :
@@ -679,10 +884,18 @@ TkpGetFontAttrsForChar(
     NSFont *nsFont = fontPtr->nsFont;
     *faPtr = fontPtr->font.fa;
     if (nsFont && ![[nsFont coveredCharacterSet] characterIsMember:c]) {
-	UTF16Char ch = (UTF16Char) c;
+	UTF16Char ch[2];
 
-	nsFont = [nsFont bestMatchingFontForCharacters:&ch
-		length:1 attributes:nil actualCoveredLength:NULL];
+	if (c > 0xFFFF) {
+	    ch[0] = (((c - 0x10000) >> 10) & 0x3FF) | 0xD800;
+	    ch[1] = ((c - 0x10000) & 0x3FF) | 0xDC00;
+	    nsFont = [nsFont bestMatchingFontForCharacters:ch
+		    length:2 attributes:nil actualCoveredLength:NULL];
+	} else {
+	    ch[0] = (UTF16Char) c;
+	    nsFont = [nsFont bestMatchingFontForCharacters:ch
+		    length:1 attributes:nil actualCoveredLength:NULL];
+	}
 	if (nsFont) {
 	    GetTkFontAttributesForNSFont(nsFont, faPtr);
 	}
@@ -811,7 +1024,9 @@ TkpMeasureCharsInContext(
     CGFloat offset = 0;
     CFIndex index;
     double width;
-    int length, fit;
+    int length, fit, utf16Len;
+    UTF16Char *utf16String;
+    Tcl_DString ds;
 
     if (rangeStart < 0 || rangeLength <= 0 ||
 	    rangeStart + rangeLength > numBytes ||
@@ -822,8 +1037,9 @@ TkpMeasureCharsInContext(
     if (maxLength > 32767) {
 	maxLength = 32767;
     }
-    string = [[NSString alloc] initWithBytesNoCopy:(void*)source
-		length:numBytes encoding:NSUTF8StringEncoding freeWhenDone:NO];
+    utf16String = UtfToUTF16DString(source, numBytes, &ds, &utf16Len);
+    string = [[NSString alloc] initWithCharactersNoCopy:(void*)utf16String
+		length:utf16Len freeWhenDone:NO];
     if (!string) {
 	length = 0;
 	fit = rangeLength;
@@ -833,8 +1049,8 @@ TkpMeasureCharsInContext(
 	    attributes:fontPtr->nsAttributes];
     typesetter = CTTypesetterCreateWithAttributedString(
 	    (CFAttributedStringRef)attributedString);
-    start = Tcl_NumUtfChars(source, rangeStart);
-    len = Tcl_NumUtfChars(source + rangeStart, rangeLength);
+    start = NumUTF16Chars(source, rangeStart);
+    len = NumUTF16Chars(source + rangeStart, rangeLength);
     if (start > 0) {
 	range.length = start;
 	line = CTTypesetterCreateLine(typesetter, range);
@@ -901,8 +1117,9 @@ TkpMeasureCharsInContext(
     [attributedString release];
     [string release];
     length = ceil(width - offset);
-    fit = (Tcl_UtfAtIndex(source, index) - source) - rangeStart;
+    fit = (UTF16CharAtIndex(source, numBytes, index) - source) - rangeStart;
 done:
+    Tcl_DStringFree(&ds);
 #ifdef TK_MAC_DEBUG_FONTS
     TkMacOSXDbgMsg("measure: source=\"%s\" range=\"%.*s\" maxLength=%d "
 	    "flags='%s%s%s%s' -> width=%d bytesFit=%d\n", source, rangeLength,
@@ -1061,16 +1278,20 @@ DrawCharsInContext(
     CGColorRef fg;
     NSFont *nsFont;
     CGAffineTransform t;
-    int h;
+    int h, utf16Len;
+    Tcl_DString ds;
+    UTF16Char *utf16String;
 
     if (rangeStart < 0 || rangeLength <= 0 ||
 	    rangeStart + rangeLength > numBytes ||
 	    !TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
 	return;
     }
-    string = [[NSString alloc] initWithBytesNoCopy:(void*)source
-		length:numBytes encoding:NSUTF8StringEncoding freeWhenDone:NO];
+    utf16String = UtfToUTF16DString(source, numBytes, &ds, &utf16Len);
+    string = [[NSString alloc] initWithCharactersNoCopy:(void*)utf16String
+		length:utf16Len freeWhenDone:NO];
     if (!string) {
+	Tcl_DStringFree(&ds);
 	return;
     }
     context = drawingContext.context;
@@ -1097,8 +1318,8 @@ DrawCharsInContext(
     }
     CGContextConcatCTM(context, t);
     CGContextSetTextPosition(context, x, y);
-    start = Tcl_NumUtfChars(source, rangeStart);
-    len = Tcl_NumUtfChars(source, rangeStart + rangeLength);
+    start = NumUTF16Chars(source, rangeStart);
+    len = NumUTF16Chars(source, rangeStart + rangeLength);
     if (start > 0) {
 	CGRect clipRect = CGRectInfinite, startBounds;
 	line = CTTypesetterCreateLine(typesetter, CFRangeMake(0, start));
@@ -1114,6 +1335,7 @@ DrawCharsInContext(
     [attributedString release];
     [string release];
     [attributes release];
+    Tcl_DStringFree(&ds);
     TkMacOSXRestoreDrawingContext(&drawingContext);
 }
 

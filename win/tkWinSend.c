@@ -747,7 +747,6 @@ Send(
     DISPID dispid;
     Tcl_DString ds;
     const char *src;
-    int len;
 
     cmd = Tcl_ConcatObj(objc, objv);
 
@@ -761,8 +760,8 @@ Send(
     memset(&ei, 0, sizeof(ei));
 
     vCmd.vt = VT_BSTR;
-    src = Tcl_GetStringFromObj(cmd, &len);
-    Tcl_WinUtfToTChar(src, len, &ds);
+    src = Tcl_GetString(cmd);
+    Tcl_WinUtfToTChar(src, cmd->length, &ds);
     vCmd.bstrVal = SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
 
@@ -851,7 +850,6 @@ TkWinSend_SetExcepInfo(
     HRESULT hr;
     Tcl_DString ds;
     const char *src;
-    int len;
 
     if (!pExcepInfo) {
 	return;
@@ -870,13 +868,13 @@ TkWinSend_SetExcepInfo(
     Tcl_ListObjAppendElement(interp, opErrorCode, opErrorInfo);
     /* TODO: Handle failure to append */
 
-    src = Tcl_GetStringFromObj(opError, &len);
-    Tcl_WinUtfToTChar(src, len, &ds);
+    src = Tcl_GetString(opError);
+    Tcl_WinUtfToTChar(src, opError->length, &ds);
     pExcepInfo->bstrDescription =
 	    SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
-    src = Tcl_GetStringFromObj(opErrorCode, &len);
-    Tcl_WinUtfToTChar(src, len, &ds);
+    src = Tcl_GetString(opErrorCode);
+    Tcl_WinUtfToTChar(src, opErrorCode->length, &ds);
     pExcepInfo->bstrSource =
 	    SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
