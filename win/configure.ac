@@ -62,12 +62,6 @@ AC_OBJEXT
 AC_EXEEXT
 
 #--------------------------------------------------------------------
-# Check whether --enable-threads or --disable-threads was given.
-#--------------------------------------------------------------------
-
-SC_ENABLE_THREADS
-
-#--------------------------------------------------------------------
 # The statements below define a collection of symbols related to
 # building libtk as a shared library instead of a static library.
 #--------------------------------------------------------------------
