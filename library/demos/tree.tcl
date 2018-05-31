@@ -41,6 +41,7 @@ proc populateTree {tree node} {
     set filelist {}
     catch {set filelist [lsort -dictionary [glob -nocomplain -dir $path *]]}
     foreach f $filelist {
+	set f [file normalize $f]
 	if {[catch {file type $f} type]} {
 	    set type "unknown"
 	}

@@ -1264,7 +1264,7 @@ TkUniCharToUtf(
     char *buf)
 {
     int size = Tcl_UniCharToUtf(ch, buf);
-    if ((ch > 0xffff) && (ch <= 0x10ffff) && (size < 4)) {
+    if ((((unsigned)(ch - 0x10000) <= 0xFFFFF)) && (size < 4)) {
 	/* Hey, this is wrong, we must be running TCL_UTF_MAX==3
 	 * The best thing we can do is spit out 2 surrogates */
 	ch -= 0x10000;

@@ -527,8 +527,101 @@ TkpDoOneXEvent(
     Tcl_Time *timePtr)		/* Specifies the absolute time when the call
 				 * should time out. */
 {
+#ifdef TK_USE_POLL
     TkDisplay *dispPtr;
-    static fd_mask readMask[MASK_SIZE];
+    Tcl_Time now;
+    struct pollfd *pollFds;
+    int blockTime, index;
+
+    /*
+     * Look for queued events first.
+     */
+
+    if (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
+	return 1;
+    }
+
+    /*
+     * Compute the next block time and check to see if we have timed out.
+     */
+
+    if (timePtr) {
+	Tcl_Time tmp;
+
+	TclpGetMonotonicTime(&now);
+	tmp.sec = timePtr->sec;
+	tmp.usec = timePtr->usec - now.usec;
+	if (tmp.usec < 0) {
+	    now.sec += 1;
+	    tmp.usec += 1000000;
+	}
+	if (tmp.sec - now.sec < 0) {
+	    tmp.sec = 0;
+	    tmp.usec = 0;
+	    blockTime = 0;
+	} else {
+	    tmp.sec -= now.sec;
+	    blockTime = tmp.sec * 1000 + tmp.usec / 1000;
+	    if (blockTime < 0) {
+		blockTime = INT_MAX;
+	    }
+	}
+    } else {
+	blockTime = -1;
+    }
+
+    /*
+     * Set up the poll array for all of the displays. If a display has data
+     * pending, then we want to poll instead of blocking.
+     */
+
+    for (dispPtr = TkGetDisplayListExt(&pollFds), index = 0; dispPtr != NULL;
+	    dispPtr = dispPtr->nextPtr, index++) {
+	XFlush(dispPtr->display);
+	if (QLength(dispPtr->display) > 0) {
+	    blockTime = 0;
+	}
+	pollFds[index].fd = ConnectionNumber(dispPtr->display);
+	pollFds[index].events = POLLIN;
+	pollFds[index].revents = 0;
+    }
+    (void) poll(pollFds, index, blockTime);
+
+    /*
+     * Process any new events on the display connections.
+     */
+
+    for (dispPtr = TkGetDisplayList(), index = 0; dispPtr != NULL;
+	    dispPtr = dispPtr->nextPtr, index++) {
+	if ((pollFds[index].revents & POLLIN) || (QLength(dispPtr->display) > 0)) {
+	    DisplayFileProc(dispPtr, TCL_READABLE);
+	}
+    }
+    if (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {
+	return 1;
+    }
+
+    /*
+     * Check to see if we timed out.
+     */
+
+    if (timePtr) {
+	TclpGetMonotonicTime(&now);
+	if ((now.sec - timePtr->sec > 0) || ((now.sec == timePtr->sec)
+		&& (now.usec > timePtr->usec))) {
+	    return 0;
+	}
+    }
+
+    /*
+     * We had an event but we did not generate a Tcl event from it. Behave as
+     * though we dealt with it. (JYL&SS)
+     */
+
+    return 1;
+#else
+    TkDisplay *dispPtr;
+    fd_mask readMask[MASK_SIZE];
     struct timeval blockTime, *timeoutPtr;
     Tcl_Time now;
     int fd, index, numFound, numFdBits = 0;
@@ -543,25 +636,27 @@ TkpDoOneXEvent(
     }
 
     /*
-     * Compute the next block time and check to see if we have timed out. Note
-     * that HP-UX defines tv_sec to be unsigned so we have to be careful in
-     * our arithmetic.
+     * Compute the next block time and check to see if we have timed out.
      */
 
     if (timePtr) {
+	Tcl_Time tmp;
+
 	TclpGetMonotonicTime(&now);
-	blockTime.tv_sec = timePtr->sec;
-	blockTime.tv_usec = timePtr->usec - now.usec;
-	if (blockTime.tv_usec < 0) {
+	tmp.sec = timePtr->sec;
+	tmp.usec = timePtr->usec - now.usec;
+	if (tmp.usec < 0) {
 	    now.sec += 1;
-	    blockTime.tv_usec += 1000000;
+	    tmp.usec += 1000000;
 	}
-	if (blockTime.tv_sec < now.sec) {
-	    blockTime.tv_sec = 0;
-	    blockTime.tv_usec = 0;
+	if (tmp.sec - now.sec < 0) {
+	    tmp.sec = 0;
+	    tmp.usec = 0;
 	} else {
-	    blockTime.tv_sec -= now.sec;
+	    tmp.sec -= now.sec;
 	}
+	blockTime.tv_sec = tmp.sec;
+	blockTime.tv_usec = tmp.usec;
 	timeoutPtr = &blockTime;
     } else {
 	timeoutPtr = NULL;
@@ -623,7 +718,7 @@ TkpDoOneXEvent(
 
     if (timePtr) {
 	TclpGetMonotonicTime(&now);
-	if ((now.sec > timePtr->sec) || ((now.sec == timePtr->sec)
+	if ((now.sec - timePtr->sec > 0) || ((now.sec == timePtr->sec)
 		&& (now.usec > timePtr->usec))) {
 	    return 0;
 	}
@@ -635,6 +730,7 @@ TkpDoOneXEvent(
      */
 
     return 1;
+#endif
 }
 
 /*

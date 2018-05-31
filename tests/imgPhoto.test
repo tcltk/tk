@@ -821,7 +821,7 @@ test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constrain
     file delete ./-teapotPhotoFile
 } -result {}
 test imgPhoto-4.76 {ImgPhotoCmd procedure: copy to same image} -constraints {
-    hasTeapotPhoto 
+    hasTeapotPhoto
 } -setup {
     imageCleanup
     image create photo photo1 -file $teapotPhotoFile

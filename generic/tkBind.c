@@ -31,6 +31,10 @@
 #endif
 #endif
 
+#if defined(MAC_OSX_TK) && !defined(PLATFORM_SDL)
+#include "tkMacOSXInt.h"
+#endif
+
 /*
  * File structure:
  *

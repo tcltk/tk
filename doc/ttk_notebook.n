@@ -208,6 +208,56 @@ pack [\fBttk::notebook\fR .nb]
 \&.nb select .nb.f2
 ttk::notebook::enableTraversal .nb
 .CE
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::notebook\fP is \fBTNotebook\fP.  The tab has
+a class name of \fBTNotebook.Tab\fP
+.PP
+Dynamic states: \fBactive\fP, \fBdisabled\fP, \fBselected\fP.
+.PP
+\fBTNotebook\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-darkcolor\fP \fIcolor\fP
+.br
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-lightcolor\fP \fIcolor\fP
+.br
+\fB\-padding\fP \fIpadding\fP
+.br
+\fB\-tabmargins\fP \fIpadding\fP
+.br
+\fB\-tabposition\fP \fIside\fP
+.br
+.PP
+\fBTNotebook.Tab\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-expand\fP \fIpadding\fP
+.RS
+Defines how much the tab grows in size.  Usually used with the
+\fBselected\fP dynamic state.  \fB\-tabmargins\fP should be
+set appropriately so that there is room for the tab growth.
+.RE
+\fB\-font\fP \fIfont\fP
+.br
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-padding\fP \fIpadding\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), grid(n)
 .SH "KEYWORDS"

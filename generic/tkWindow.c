@@ -57,11 +57,19 @@ typedef struct ThreadSpecificData {
 				 * the current thread. */
     int initialized;		/* 0 means the structures above need
 				 * initializing. */
+#ifdef TK_USE_POLL
+    int numDisplays;		/* Number of items in displayList. */
+    struct pollfd *pollTable;	/* Array of pollfd structures, depending on
+				 * numDisplays points to staticPollTable
+				 * or an allocated larger array. */
+    struct pollfd staticPollTable[16];
+				/* Pre-allocated pollTable. */
+#endif
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
 /*
- * The Mutex below is used to lock access to the Tk_Uid structs above.
+ * The Mutex below is used to lock access to static variables.
  */
 
 TCL_DECLARE_MUTEX(windowMutex)
@@ -405,6 +413,11 @@ CreateTopLevelWindow(
 
     if (!tsdPtr->initialized) {
 	tsdPtr->initialized = 1;
+#ifdef TK_USE_POLL
+	tsdPtr->numDisplays = 0;
+	tsdPtr->pollTable = tsdPtr->staticPollTable;
+	memset(tsdPtr->staticPollTable, 0, sizeof(tsdPtr->staticPollTable));
+#endif
 
 	/*
 	 * Create built-in image types.
@@ -504,6 +517,9 @@ GetScreen(
     const char *p;
     int screenId;
     size_t length;
+#ifdef TK_USE_POLL
+    size_t sizeNeeded;
+#endif
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -552,6 +568,22 @@ GetScreen(
 	    }
 	    dispPtr->nextPtr = tsdPtr->displayList; /* TkGetDisplayList(); */
 	    tsdPtr->displayList = dispPtr;
+#ifdef TK_USE_POLL
+	    tsdPtr->numDisplays++;
+	    sizeNeeded = tsdPtr->numDisplays * sizeof(struct pollfd);
+	    if (sizeNeeded > sizeof(tsdPtr->staticPollTable)) {
+		if (tsdPtr->pollTable != tsdPtr->staticPollTable) {
+		    tsdPtr->pollTable =
+			ckrealloc(tsdPtr->pollTable, sizeNeeded);
+		} else {
+		    tsdPtr->pollTable = ckalloc(sizeNeeded);
+		    memcpy(tsdPtr->pollTable, tsdPtr->staticPollTable,
+			    sizeof(tsdPtr->staticPollTable));
+		}
+	    }
+	    memset(&tsdPtr->pollTable[tsdPtr->numDisplays - 1], 0,
+		    sizeof(struct pollfd));
+#endif
 
 	    dispPtr->lastEventTime = CurrentTime;
 	    dispPtr->bindInfoStale = 1;
@@ -656,6 +688,22 @@ TkGetDisplayList(void)
 
     return tsdPtr->displayList;
 }
+
+#ifdef TK_USE_POLL
+
+TkDisplay *
+TkGetDisplayListExt(struct pollfd **pollTablePtr)
+{
+    ThreadSpecificData *tsdPtr =
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (pollTablePtr != NULL) {
+	*pollTablePtr = tsdPtr->pollTable;
+    }
+    return tsdPtr->displayList;
+}
+
+#endif
 
 /*
  *--------------------------------------------------------------
@@ -2873,6 +2921,20 @@ DeleteWindowsExitProc(
 	Tcl_Release(interp);
     }
 
+#if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(PLATFORM_SDL)
+    /*
+     * Let error handlers catch up before actual close of displays.
+     * Must be done before tsdPtr->displayList is cleared, otherwise
+     * ErrorProc() in tkError.c cannot associate the pending X errors
+     * to the remaining error handlers.
+     */
+
+    for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
+	    dispPtr = dispPtr->nextPtr) {
+	XSync(dispPtr->display, False);
+    }
+#endif
+
     /*
      * Iterate destroying the displays until no more displays remain. It is
      * possible for displays to get recreated during exit by any code that
@@ -2893,6 +2955,9 @@ DeleteWindowsExitProc(
 
 	for (tsdPtr->displayList = NULL; dispPtr != NULL; dispPtr = nextPtr) {
 	    nextPtr = dispPtr->nextPtr;
+#ifdef TK_USE_POLL
+	    tsdPtr->numDisplays--;
+#endif
 	    TkCloseDisplay(dispPtr);
 	}
     }
@@ -2900,6 +2965,15 @@ DeleteWindowsExitProc(
     tsdPtr->numMainWindows = 0;
     tsdPtr->mainWindowList = NULL;
     tsdPtr->initialized = 0;
+#ifdef TK_USE_POLL
+    if ((tsdPtr->pollTable != NULL) &&
+	(tsdPtr->pollTable != tsdPtr->staticPollTable)) {
+	ckfree(tsdPtr->pollTable);
+    }
+    tsdPtr->numDisplays = 0;
+    tsdPtr->pollTable = tsdPtr->staticPollTable;
+    memset(tsdPtr->staticPollTable, 0, sizeof(tsdPtr->staticPollTable));
+#endif
 }
 
 #if defined(_WIN32) && !defined(PLATFORM_SDL)

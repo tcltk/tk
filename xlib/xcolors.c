@@ -395,6 +395,16 @@ XParseColor(
 	 * digits in the spec. Ergo, it is not a vailid color string.
 	 * (Bug f0188aca9e)
 	 */
+
+	if (*p != '\0') {
+	    return 0;
+	}
+
+	/*
+	 * If *p does not point to the end of the string, there were invalid
+	 * digits in the spec. Ergo, it is not a vailid color string.
+	 * (Bug f0188aca9e)
+	 */
 	
 	if (*p != '\0') {
 	    return 0;

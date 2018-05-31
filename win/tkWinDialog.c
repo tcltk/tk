@@ -1395,29 +1395,27 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
         goto vamoose;
 
     if (optsPtr->extObj != NULL) {
-	Tcl_DString ds;
-	const char *src;
-	int len;
+        Tcl_DString ds;
+        const char *src;
 
-	src = Tcl_GetStringFromObj(optsPtr->extObj, &len);
-	wstr = (LPWSTR) Tcl_WinUtfToTChar(src, len, &ds);
+        src = Tcl_GetString(optsPtr->extObj);
+        wstr = (LPWSTR) Tcl_WinUtfToTChar(src, optsPtr->extObj->length, &ds);
         if (wstr[0] == L'.')
             ++wstr;
         hr = fdlgIf->lpVtbl->SetDefaultExtension(fdlgIf, wstr);
-	Tcl_DStringFree(&ds);
+        Tcl_DStringFree(&ds);
         if (FAILED(hr))
             goto vamoose;
     }
 
     if (optsPtr->titleObj != NULL) {
-	Tcl_DString ds;
-	const char *src;
-	int len;
+        Tcl_DString ds;
+        const char *src;
 
-	src = Tcl_GetStringFromObj(optsPtr->titleObj, &len);
-	wstr = (LPWSTR) Tcl_WinUtfToTChar(src, len, &ds);
+        src = Tcl_GetString(optsPtr->titleObj);
+        wstr = (LPWSTR) Tcl_WinUtfToTChar(src, optsPtr->titleObj->length, &ds);
         hr = fdlgIf->lpVtbl->SetTitle(fdlgIf, wstr);
-	Tcl_DStringFree(&ds);
+        Tcl_DStringFree(&ds);
         if (FAILED(hr))
             goto vamoose;
     }
@@ -1499,7 +1497,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                                 interp, multiObj,
                                 Tcl_NewStringObj(Tcl_DStringValue(&fnds),
                                                  Tcl_DStringLength(&fnds)));
-			    Tcl_DStringFree(&fnds);
+                            Tcl_DStringFree(&fnds);
                         }
                         itemIf->lpVtbl->Release(itemIf);
                         if (FAILED(hr))
@@ -1516,8 +1514,8 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
             IShellItem *resultIf;
             hr = fdlgIf->lpVtbl->GetResult(fdlgIf, &resultIf);
             if (SUCCEEDED(hr)) {
-                hr = resultIf->lpVtbl->GetDisplayName(resultIf,
-                                                      SIGDN_FILESYSPATH, &wstr);
+                hr = resultIf->lpVtbl->GetDisplayName(resultIf, SIGDN_FILESYSPATH,
+                                                      &wstr);
                 if (SUCCEEDED(hr)) {
                     Tcl_DString fnds;
 
@@ -1525,7 +1523,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                     resultObj = Tcl_NewStringObj(Tcl_DStringValue(&fnds),
                                                  Tcl_DStringLength(&fnds));
                     CoTaskMemFree(wstr);
-		    Tcl_DStringFree(&fnds);
+                    Tcl_DStringFree(&fnds);
                 }
                 resultIf->lpVtbl->Release(resultIf);
             }
@@ -1538,15 +1536,15 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                 if (SUCCEEDED(hr)) {
                     /* Note ftix is a 1-based index */
                     if (ftix > 0 && ftix <= nfilters) {
-			Tcl_DString ftds;
-			Tcl_Obj *ftobj;
+                        Tcl_DString ftds;
+                        Tcl_Obj *ftobj;
 
-			Tcl_WinTCharToUtf(filterPtr[ftix-1].pszName, -1, &ftds);
-			ftobj = Tcl_NewStringObj(Tcl_DStringValue(&ftds),
-				Tcl_DStringLength(&ftds));
+                        Tcl_WinTCharToUtf(filterPtr[ftix-1].pszName, -1, &ftds);
+                        ftobj = Tcl_NewStringObj(Tcl_DStringValue(&ftds),
+                                Tcl_DStringLength(&ftds));
                         Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
-				ftobj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
-			Tcl_DStringFree(&ftds);
+                                ftobj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
+                        Tcl_DStringFree(&ftds);
                     }
                 }
             }
@@ -1805,9 +1803,10 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	    Tcl_SetObjResult(interp, returnList);
 	    Tcl_DStringFree(&ds);
 	} else {
-	    ConvertExternalFilename(ofn.lpstrFile, &ds);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    ConvertExternalFilename(ofn.lpstrFile, &ds), -1));
 	    gotFilename = (Tcl_DStringLength(&ds) > 0);
-	    Tcl_DStringResult(interp, &ds);
+	    Tcl_DStringFree(&ds);
 	}
 	result = TCL_OK;
 	if ((ofn.nFilterIndex > 0) && gotFilename && optsPtr->typeVariableObj
@@ -2612,8 +2611,9 @@ Tk_ChooseDirectoryObjCmd(
     if (*path) {
 	Tcl_DString ds;
 
-	ConvertExternalFilename(path, &ds);
-	Tcl_DStringResult(interp, &ds);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		ConvertExternalFilename(path, &ds), -1));
+	Tcl_DStringFree(&ds);
     }
 
     CleanupOFNOptions(&ofnOpts);
@@ -2961,11 +2961,11 @@ Tk_MessageBoxObjCmd(
     tsdPtr->hBigIcon   = TkWinGetIcon(parent, ICON_BIG);
     tsdPtr->hMsgBoxHook = SetWindowsHookEx(WH_CBT, MsgBoxCBTProc, NULL,
 	    GetCurrentThreadId());
-    src = Tcl_GetStringFromObj(tmpObj, &i);
-    tmpPtr = Tcl_WinUtfToTChar(src, i, &tmpBuf);
+    src = Tcl_GetString(tmpObj);
+    tmpPtr = Tcl_WinUtfToTChar(src, tmpObj->length, &tmpBuf);
     if (titleObj != NULL) {
-	src = Tcl_GetStringFromObj(titleObj, &i);
-	titlePtr = Tcl_WinUtfToTChar(src, i, &titleBuf);
+	src = Tcl_GetString(titleObj);
+	titlePtr = Tcl_WinUtfToTChar(src, titleObj->length, &titleBuf);
     } else {
 	titlePtr = L"";
 	Tcl_DStringInit(&titleBuf);

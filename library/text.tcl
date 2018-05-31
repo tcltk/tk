@@ -490,7 +490,8 @@ if {"x11" eq [tk windowingsystem]} {
 }
 
 # ::tk::TextSetInput
-# On Android set text input rectangle for on-screen keyboard
+# In a SDL2 based windowing system set the text input rectangle for
+# the (optional) on-screen keyboard.
 #
 # Arguments:
 # w -		The text window.
@@ -1091,13 +1092,13 @@ proc ::tk_textCut w {
         # make <<Cut>> an atomic operation on the Undo stack,
         # i.e. separate it from other delete operations on either side
 	set oldSeparator [$w cget -autoseparators]
-	if {$oldSeparator} {
+	if {([$w cget -state] eq "normal") && $oldSeparator} {
 	    $w edit separator
 	}
 	clipboard clear -displayof $w
 	clipboard append -displayof $w $data
 	$w delete sel.first sel.last
-	if {$oldSeparator} {
+	if {([$w cget -state] eq "normal") && $oldSeparator} {
 	    $w edit separator
 	}
     }

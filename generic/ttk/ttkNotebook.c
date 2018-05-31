@@ -632,7 +632,7 @@ static void SelectTab(Notebook *nb, int index)
     }
 
     /* Must be set before calling NotebookPlaceSlave(), otherwise it may
-     * happen that NotebookPlaceSlaves(), triggered by an interveaning
+     * happen that NotebookPlaceSlaves(), triggered by an intervening
      * geometry request, will swap to old index. */
     nb->notebook.currentIndex = index;
 

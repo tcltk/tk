@@ -301,7 +301,7 @@ tkMacOSXProcessFiles(
 
     fileSpecDesc = [event aeDesc];
     if (fileSpecDesc == nil ) {
-    	return;
+	return;
     }
 
     /*
@@ -321,7 +321,7 @@ tkMacOSXProcessFiles(
 
     if (AECountItems(fileSpecDesc, &count) != noErr) {
 	AEDisposeDesc(&contents);
-    	return;
+	return;
     }
 
     /*

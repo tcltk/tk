@@ -81,7 +81,7 @@ struct _Pixmap {
 /* X11 Window internal rep */
 struct _Window {
     int type; /* must be first */
-    _Window *parent; /* May be root; NULL for root */
+    _Window *parent; /* may be root; NULL for root */
     _Window *child; /* first child (highest in stacking order) */
     _Window *next; /* next sibling (lower in stacking order) */
     _Window *master; /* Master if this is a transient */
@@ -93,9 +93,9 @@ struct _Window {
     int fullscreen;
     int clazz;
     XSizeHints size;
-    int parentWidth, parentHeight; /* Our width/height + 2*atts.border_width */
+    int parentWidth, parentHeight; /* our width/height + 2*atts.border_width */
     TkWindow *tkwin; /* NULL for decorative frame */
-    DecFrame dec; /* Only for decorative frame */
+    DecFrame dec; /* only for decorative frame */
 #ifdef ANDROID
     int gl_flags;
 #else
@@ -210,12 +210,13 @@ typedef struct SdlTkXInfo {
     Tcl_HashTable sdlcursors;
 #endif
 
-    /* Screen refresh, life-cycle */
+    /* Screen refresh, life-cycle, etc. */
     Region screen_dirty_region;
     Region screen_update_region;
     int in_background;
     int draw_later;
     Tcl_ThreadId event_tid;
+    int is_framebuffer;
 
     /* Command line */
     char *arg_width;

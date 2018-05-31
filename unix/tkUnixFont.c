@@ -410,8 +410,7 @@ ControlUtfProc(
 {
     const char *srcStart, *srcEnd;
     char *dstStart, *dstEnd;
-    Tcl_UniChar ch;
-    int result;
+    int ch, result;
     static char hexChars[] = "0123456789abcdef";
     static char mapChars[] = {
 	0, 0, 0, 0, 0, 0, 0,
@@ -1014,7 +1013,7 @@ Tk_MeasureChars(
 {
     UnixFont *fontPtr;
     SubFont *lastSubFontPtr;
-    int curX, curByte;
+    int curX, curByte, ch;
 
     /*
      * Unix does not use kerning or fractional character widths when
@@ -1032,7 +1031,6 @@ Tk_MeasureChars(
 	curByte = 0;
     } else if (maxLength < 0) {
 	const char *p, *end, *next;
-	Tcl_UniChar ch;
 	SubFont *thisSubFontPtr;
 	FontFamily *familyPtr;
 	Tcl_DString runString;
@@ -1086,7 +1084,6 @@ Tk_MeasureChars(
     } else {
 	const char *p, *end, *next, *term;
 	int newX, termX, sawNonSpace, dstWrote;
-	int ch;
 	FontFamily *familyPtr;
 	XChar2b buf[8];
 
@@ -1274,8 +1271,7 @@ Tk_DrawChars(
     SubFont *thisSubFontPtr, *lastSubFontPtr;
     Tcl_DString runString;
     const char *p, *end, *next;
-    int xStart, needWidth, window_width, do_width;
-    int ch;
+    int xStart, needWidth, window_width, do_width, ch;
     FontFamily *familyPtr;
 #ifdef TK_DRAW_CHAR_XWINDOW_CHECK
     int rx, ry;
@@ -1845,7 +1841,9 @@ AllocFontFamily(
 	if ((familyPtr->faceName == fa.fa.family)
 		&& (familyPtr->foundry == fa.xa.foundry)
 		&& (familyPtr->encoding == encoding)) {
-	    Tcl_FreeEncoding(encoding);
+	    if (encoding) {
+		Tcl_FreeEncoding(encoding);
+	    }
 	    familyPtr->refCount++;
 	    return familyPtr;
 	}
@@ -1919,7 +1917,9 @@ FreeFontFamily(
     if (familyPtr->refCount > 0) {
 	return;
     }
-    Tcl_FreeEncoding(familyPtr->encoding);
+    if (familyPtr->encoding) {
+	Tcl_FreeEncoding(familyPtr->encoding);
+    }
     for (i = 0; i < FONTMAP_PAGES; i++) {
 	if (familyPtr->fontMap[i] != NULL) {
 	    ckfree(familyPtr->fontMap[i]);
@@ -2209,7 +2209,7 @@ FontMapLoadPage(
     int row)			/* Index of the page to be loaded into the
 				 * cache. */
 {
-    char buf[16], src[TCL_UTF_MAX];
+    char buf[16], src[6];
     int minHi, maxHi, minLo, maxLo, scale, checkLo;
     int i, end, bitOffset, isTwoByteFont, n;
     Tcl_Encoding encoding;
@@ -2247,7 +2247,7 @@ FontMapLoadPage(
     for (i = row << FONTMAP_SHIFT; i < end; i++) {
 	int hi, lo;
 
-	if (Tcl_UtfToExternal(NULL, encoding, src, Tcl_UniCharToUtf(i, src),
+	if (Tcl_UtfToExternal(NULL, encoding, src, TkUniCharToUtf(i, src),
 		TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
 	    continue;
@@ -2413,7 +2413,7 @@ CanUseFallback(
     unsigned bestScore[2];
     char **nameList;
     char **nameListOrig;
-    char src[TCL_UTF_MAX];
+    char src[6];
     FontAttributes want, got;
     Display *display;
     SubFont subFont;
@@ -2443,7 +2443,7 @@ CanUseFallback(
     }
     nameListOrig = nameList;
 
-    srcLen = Tcl_UniCharToUtf(ch, src);
+    srcLen = TkUniCharToUtf(ch, src);
 
     want.fa = fontPtr->font.fa;
     want.xa = fontPtr->xa;

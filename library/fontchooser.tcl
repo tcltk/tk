@@ -133,6 +133,9 @@ proc ::tk::fontchooser::Configure {args} {
 proc ::tk::fontchooser::Create {} {
     variable S
     set windowName __tk__fontchooser
+    if {![winfo exists $S(-parent)]} {
+        set S(-parent) .
+    } 
     if {$S(-parent) eq "."} {
         set S(W) .$windowName
     } else {

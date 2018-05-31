@@ -124,13 +124,26 @@ TkpScanWindowId(
     const char *string,
     Window *idPtr)
 {
-    int value;
+    int result;
+    Tcl_WideInt number;
+    Tcl_Obj obj;
 
-    if (Tcl_GetInt(interp, string, &value) != TCL_OK) {
-	return TCL_ERROR;
+    obj.refCount = 1;
+    obj.bytes = (char *) string;        /* DANGER?! */
+    obj.length = strlen(string);
+    obj.typePtr = NULL;
+
+    result = Tcl_GetWideIntFromObj(interp, &obj, (Tcl_WideInt *) &number);
+    if (obj.refCount > 1) {
+	Tcl_Panic("invalid sharing of Tcl_Obj on C stack");
     }
-    *idPtr = (Window) value;
-    return TCL_OK;
+    if (obj.typePtr && obj.typePtr->freeIntRepProc) {
+	obj.typePtr->freeIntRepProc(&obj);
+    }
+    if (result == TCL_OK) {
+	*idPtr = (Window) number;
+    }
+    return result;
 }
 
 /*

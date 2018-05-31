@@ -329,6 +329,7 @@ TkWinClipboardRender(
      */
 
 #ifdef UNICODE
+	Tcl_DStringInit(&ds);
 	Tcl_WinUtfToTChar(rawText, -1, &ds);
 	ckfree(rawText);
 	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
