@@ -377,6 +377,7 @@ ParseSVGWithOptions(
 
 	if (objc < 2) {
 	    ckfree(inputCopy);
+	    inputCopy = NULL;
 	    Tcl_WrongNumArgs(interp, 1, objv, "value");
 	    goto error;
 	}
