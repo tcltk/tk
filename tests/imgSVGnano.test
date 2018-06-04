@@ -45,6 +45,17 @@ test imgSVGnano-1.2 {simple image with options} -setup {
     rename foo ""
 } -result {300 300}
 
+# test on crash found by Koen Danckaert
+test imgSVGnano-1.3 {reformat image options} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -data $data(plus)
+    foo configure -format {svgnano -scale}
+    list {}
+} -cleanup {
+    rename foo ""
+} -result {}
+
 test imgSVGnano-2.1 {reading a bad image} -body {
     image create photo foo -format svgnano -data $data(bad)
 } -returnCodes error -result {couldn't recognize image data}
