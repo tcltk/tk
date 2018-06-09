@@ -2785,7 +2785,6 @@ DeleteWindowsExitProc(
 	Tcl_Release(interp);
     }
 
-#if !defined(_WIN32) && !defined(MAC_OSX_TK)
     /*
      * Let error handlers catch up before actual close of displays.
      * Must be done before tsdPtr->displayList is cleared, otherwise
@@ -2797,7 +2796,6 @@ DeleteWindowsExitProc(
            dispPtr = dispPtr->nextPtr) {
        XSync(dispPtr->display, False);
     }
-#endif
 
     /*
      * Iterate destroying the displays until no more displays remain. It is
