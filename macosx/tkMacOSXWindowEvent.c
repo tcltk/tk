@@ -848,7 +848,6 @@ ConfigureRestrictProc(
 	/*
 	 * Try to prevent flickers and flashes.
 	 */
-	[w disableFlushWindow];
 	NSDisableScreenUpdates();
 
 	/* Disable Tk drawing until the window has been completely configured.*/
@@ -871,8 +870,7 @@ ConfigureRestrictProc(
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
 	[self generateExposeEvents: shape];
 	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
-	[w enableFlushWindow];
-	[w flushWindowIfNeeded];
+	[w displayIfNeeded];
 	NSEnableScreenUpdates();
 	[NSApp _unlockAutoreleasePool];
     }
