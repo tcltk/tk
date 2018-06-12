@@ -2787,6 +2787,18 @@ DeleteWindowsExitProc(
     }
 
     /*
+     * Let error handlers catch up before actual close of displays.
+     * Must be done before tsdPtr->displayList is cleared, otherwise
+     * ErrorProc() in tkError.c cannot associate the pending X errors
+     * to the remaining error handlers.
+     */
+
+    for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
+           dispPtr = dispPtr->nextPtr) {
+       XSync(dispPtr->display, False);
+    }
+
+    /*
      * Iterate destroying the displays until no more displays remain. It is
      * possible for displays to get recreated during exit by any code that
      * calls GetScreen, so we must destroy these new displays as well as the
