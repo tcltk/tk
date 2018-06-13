@@ -23,6 +23,7 @@ entry \- Create and manipulate 'entry' one-line text entry widgets
 \-foreground	\-insertwidth	\-xscrollcommand
 \-highlightbackground	\-justify
 \-highlightcolor	\-relief
+\-placeholder	\-placeholderforeground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-disabledbackground disabledBackground DisabledBackground

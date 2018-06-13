@@ -26,7 +26,7 @@ standard \fB\-xscrollcommand\fR option and \fBxview\fR widget command.
 \-class	\-cursor
 \-font	\-foreground
 \-style
-\-takefocus	\-xscrollcommand
+\-takefocus	\-xscrollcommand	\-placeholder
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-exportselection exportSelection ExportSelection
@@ -461,6 +461,47 @@ and a different background is used in the \fBreadonly\fR state.
 .PP
 The entry widget sets the \fBinvalid\fR state if revalidation fails,
 and clears it whenever validation succeeds.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::entry\fP is \fBTEntry\fP.
+.PP
+Dynamic states: \fBdisabled\fP, \fBfocus\fP, \fBreadonly\fP.
+.PP
+\fBTEntry\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.RS
+When using the aqua theme (Mac OS X), changes the \fB\-fieldbackground\fP.
+.RE
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-darkcolor\fP \fIcolor\fP
+.br
+\fB\-fieldbackground\fP \fIcolor\fP
+.RS
+Does not work with the aqua theme (Mac OS X).
+.br
+Some themes use a graphical background and their field background colors cannot be changed.
+.RE
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-insertwidth\fP \fIamount\fP
+.br
+\fB\-lightcolor\fP \fIcolor\fP
+.br
+\fB\-padding\fP \fIpadding\fP
+.br
+\fB\-relief\fP \fIrelief\fP
+.br
+\fB\-selectbackground\fP \fIcolor\fP
+.br
+\fB\-selectborderwidth\fP \fIamount\fP
+.br
+\fB\-selectforeground\fP \fIcolor\fP
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), entry(n)
 .SH KEYWORDS
