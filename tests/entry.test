@@ -627,6 +627,23 @@ test entry-1.58 {configuration option: "xscrollcommand" for entry} -setup {
     destroy .e
 } -result {Some command}
 
+test entry-1.59 {configuration option: "-placeholder"} -setup {
+    pack [entry .e]
+} -body {
+    .e configure -placeholder {Some text}
+    .e cget -placeholder
+} -cleanup {
+    destroy .e
+} -result {Some text}
+
+test entry-1.60 {configuration option: "-placeholderforeground"} -setup {
+    pack [entry .e]
+} -body {
+    .e configure -placeholder {Some text} -placeholderforeground red
+    .e cget -placeholderforeground
+} -cleanup {
+    destroy .e
+} -result {red}
 
 
 test entry-2.1 {Tk_EntryCmd procedure} -body {
@@ -808,7 +825,7 @@ test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     llength [.e configure]
 } -cleanup {
     destroy .e
-} -result {36}
+} -result {38}
 test entry-3.16 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     entry .e
 } -body {
