@@ -50,11 +50,29 @@ test imgSVGnano-1.3 {reformat image options} -setup {
     catch {rename foo ""}
 } -body {
     image create photo foo -data $data(plus)
-    foo configure -format {svgnano -scale}
+    catch {foo configure -format {svgnano -scale}}
     list {}
 } -cleanup {
     rename foo ""
-} -result {}
+} -result {{}}
+
+test imgSVGnano-1.4 {image options} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -data $data(plus)
+    foo configure -format {svgnano -scale 2}
+    foo configure -format {svgnano -x 20 -y -10}
+    foo configure -format {svgnano -unit pt}
+    foo configure -format {svgnano -unit mm}
+    foo configure -format {svgnano -unit cm}
+    foo configure -format {svgnano -unit in}
+    foo configure -format {svgnano -unit px}
+    foo configure -format {svgnano -dpi 600}
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {100 100}
+
 
 test imgSVGnano-2.1 {reading a bad image} -body {
     image create photo foo -format svgnano -data $data(bad)
