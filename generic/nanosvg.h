@@ -85,6 +85,20 @@ extern "C" {
 #define NANOSVG_free free
 #endif
 
+// float emulation for MS VC6++ compiler
+#if (_MSC_VER == 1200)
+#define tanf(a) (float)tan(a)
+#define cosf(a) (float)cos(a)
+#define sinf(a) (float)sin(a)
+#define sqrtf(a) (float)sqrt(a)
+#define fabsf(a) (float)abs(a)
+#define acosf(a) (float)acos(a)
+#define atan2f(a,b) (float)atan2(a,b)
+#define ceilf(a) (float)ceil(a)
+#define fmodf(a,b) (float)fmod(a,b)
+#define floorf(a) (float)floor(a)
+#endif
+
 enum NSVGpaintType {
 	NSVG_PAINT_NONE = 0,
 	NSVG_PAINT_COLOR = 1,
@@ -1129,7 +1143,11 @@ static double nsvg__atof(const char* s)
 	char* cur = (char*)s;
 	char* end = NULL;
 	double res = 0.0, sign = 1.0;
+#if (_MSC_VER == 1200)
+	__int64 intPart = 0, fracPart = 0;
+#else
 	long long intPart = 0, fracPart = 0;
+#endif
 	char hasIntPart = 0, hasFracPart = 0;
 
 	// Parse optional sign
@@ -1143,7 +1161,11 @@ static double nsvg__atof(const char* s)
 	// Parse integer part
 	if (nsvg__isdigit(*cur)) {
 		// Parse digit sequence
+#if (_MSC_VER == 1200)
+		intPart = strtol(cur, &end, 10);
+#else
 		intPart = strtoll(cur, &end, 10);
+#endif
 		if (cur != end) {
 			res = (double)intPart;
 			hasIntPart = 1;
@@ -1156,7 +1178,11 @@ static double nsvg__atof(const char* s)
 		cur++; // Skip '.'
 		if (nsvg__isdigit(*cur)) {
 			// Parse digit sequence
+#if (_MSC_VER == 1200)
+			fracPart = strtol(cur, &end, 10);
+#else
 			fracPart = strtoll(cur, &end, 10);
+#endif
 			if (cur != end) {
 				res += (double)fracPart / pow(10.0, (double)(end - cur));
 				hasFracPart = 1;
