@@ -1465,7 +1465,7 @@ TextWidgetObjCmd(
 		 * unnecessarily.
 		 */
 
-		int deleteInsertOffset, insertLength, j;
+		int deleteInsertOffset, insertLength, j, indexFromLine, indexFromByteOffset;
 
 		insertLength = 0;
 		for (j = 4; j < objc; j += 2) {
@@ -1483,6 +1483,9 @@ TextWidgetObjCmd(
 		    deleteInsertOffset = insertLength;
 		}
 
+                indexFromLine = TkBTreeLinesTo(textPtr, indexFromPtr->linePtr);
+                indexFromByteOffset = indexFromPtr->byteIndex;
+
 		result = TextReplaceCmd(textPtr, interp, indexFromPtr,
 			indexToPtr, objc, objv, 0);
 
@@ -1491,8 +1494,11 @@ TextWidgetObjCmd(
 		     * Move the insertion position to the correct place.
 		     */
 
-                    indexFromPtr = TkTextGetIndexFromObj(interp, textPtr, objv[2]);
-		    TkTextIndexForwChars(NULL, indexFromPtr,
+                    TkTextIndex indexTmp;
+
+                    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, indexFromLine,
+                            indexFromByteOffset, &indexTmp);
+                    TkTextIndexForwChars(NULL, &indexTmp,
 			    deleteInsertOffset, &index, COUNT_INDICES);
 		    TkBTreeUnlinkSegment(textPtr->insertMarkPtr,
 			    textPtr->insertMarkPtr->body.mark.linePtr);
