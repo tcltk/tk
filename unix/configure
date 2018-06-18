@@ -4796,7 +4796,7 @@ echo "$as_me: error: CYGWIN compile is only supported with --enable-threads" >&2
 	    LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
 	    SHLIB_CFLAGS="-fPIC"
 	    SHLIB_SUFFIX=".so"
-	    SHLIB_LD='${CC} -shared ${CFLAGS} ${LDFLAGS}'
+	    SHLIB_LD='${CC} ${CFLAGS} ${LDFLAGS} -shared'
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-lroot"
 	    echo "$as_me:$LINENO: checking for inet_ntoa in -lnetwork" >&5
@@ -5225,7 +5225,7 @@ fi
 	    # get rid of the warnings.
 	    #CFLAGS_OPTIMIZE="${CFLAGS_OPTIMIZE} -D__NO_STRING_INLINES -D__NO_MATH_INLINES"
 
-	    SHLIB_LD='${CC} -shared ${CFLAGS} ${LDFLAGS}'
+	    SHLIB_LD='${CC} ${CFLAGS} ${LDFLAGS} -shared'
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS="-ldl"
 	    LDFLAGS="$LDFLAGS -Wl,--export-dynamic"
@@ -5367,7 +5367,7 @@ fi
 		SHLIB_CFLAGS="-fpic"
 		;;
 	    esac
-	    SHLIB_LD='${CC} -shared ${SHLIB_CFLAGS}'
+	    SHLIB_LD='${CC} ${SHLIB_CFLAGS} -shared'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
@@ -5396,7 +5396,7 @@ fi
 	NetBSD-*)
 	    # NetBSD has ELF and can use 'cc -shared' to build shared libs
 	    SHLIB_CFLAGS="-fPIC"
-	    SHLIB_LD='${CC} -shared ${SHLIB_CFLAGS}'
+	    SHLIB_LD='${CC} ${SHLIB_CFLAGS} -shared'
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
@@ -7397,6 +7397,134 @@ echo "${ECHO_T}$tcl_cv_struct_dirent64" >&6
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_STRUCT_DIRENT64 1
+_ACEOF
+
+	fi
+
+	echo "$as_me:$LINENO: checking for DIR64" >&5
+echo $ECHO_N "checking for DIR64... $ECHO_C" >&6
+if test "${tcl_cv_DIR64+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+	    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <sys/types.h>
+#include <dirent.h>
+int
+main ()
+{
+struct dirent64 *p; DIR64 d = opendir64(".");
+            p = readdir64(d); rewinddir64(d); closedir64(d);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  tcl_cv_DIR64=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+tcl_cv_DIR64=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: $tcl_cv_DIR64" >&5
+echo "${ECHO_T}$tcl_cv_DIR64" >&6
+	if test "x${tcl_cv_DIR64}" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_DIR64 1
+_ACEOF
+
+	fi
+
+	echo "$as_me:$LINENO: checking for DIR64" >&5
+echo $ECHO_N "checking for DIR64... $ECHO_C" >&6
+if test "${tcl_cv_DIR64+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+	    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <sys/types.h>
+#include <dirent.h>
+int
+main ()
+{
+struct dirent64 *p; DIR64 d = opendir64(".");
+            p = readdir64(d); rewinddir64(d); closedir64(d);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  tcl_cv_DIR64=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+tcl_cv_DIR64=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+echo "$as_me:$LINENO: result: $tcl_cv_DIR64" >&5
+echo "${ECHO_T}$tcl_cv_DIR64" >&6
+	if test "x${tcl_cv_DIR64}" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_DIR64 1
 _ACEOF
 
 	fi
